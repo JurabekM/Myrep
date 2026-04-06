@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="description" content="Secure Finance Management PWA">
+    <title>Finance Secure Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0a0a0a',
+                        accent: '#4f8ef7',
+                        income: '#22c55e',
+                        expense: '#ef4444',
+                        capital: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        .stat-card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: linear-gradient(145deg, #4f8ef7, #3a7bd5);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+        .btn-secondary {
+            background: #2a2a2a;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 1px solid #3a3a3a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .input-field {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: white;
+            width: 100%;
+            font-size: 1rem;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #4f8ef7;
+        }
+        .transaction-item {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid;
+        }
+        .transaction-income { border-left-color: #22c55e; }
+        .transaction-expense { border-left-color: #ef4444; }
+        .transaction-capital { border-left-color: #3b82f6; }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .hidden { display: none !important; }
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        @media (max-width: 640px) {
+            .stat-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <h1 class="text-3xl font-bold text-center mb-2">Finance Secure Pro</h1>
+            <p class="text-gray-400 text-center mb-8">Secure PIN-based Authentication</p>
+            
+            <div id="setupSection" class="hidden">
+                <h2 class="text-xl font-semibold mb-4">Setup Your PIN</h2>
+                <input type="password" id="setupPin" class="input-field mb-4" placeholder="Enter 6-digit PIN" maxlength="6">
+                <input type="password" id="confirmPin" class="input-field mb-4" placeholder="Confirm PIN" maxlength="6">
+                <button onclick="app.setupPIN()" class="btn-primary w-full">Setup PIN</button>
+            </div>
+            
+            <div id="loginSection">
+                <h2 class="text-xl font-semibold mb-4">Enter PIN</h2>
+                <input type="password" id="loginPin" class="input-field mb-4" placeholder="Enter PIN" maxlength="6">
+                <button onclick="app.login()" class="btn-primary w-full mb-4">Login</button>
+                <p id="loginError" class="text-red-500 text-center hidden">Invalid PIN</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="bg-dark border-b border-gray-800 p-4 sticky top-0 z-50">
+            <div class="flex justify-between items-center max-w-6xl mx-auto">
+                <h1 class="text-xl font-bold">Finance Secure Pro</h1>
+                <div class="flex gap-2">
+                    <button onclick="app.showBudgetModal()" class="btn-secondary text-sm py-2 px-3">📊 Budgets</button>
+                    <button onclick="app.exportData()" class="btn-secondary text-sm py-2 px-3">📥 Export</button>
+                    <button onclick="app.logout()" class="btn-secondary text-sm py-2 px-3">🔒 Lock</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-4 max-w-6xl mx-auto">
+            <!-- Stats Cards -->
+            <div class="stat-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card">
+                    <p class="text-gray-400 text-sm">Capital Fund</p>
+                    <p class="text-2xl font-bold text-capital" id="capitalAmount">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-gray-400 text-sm">Current Balance</p>
+                    <p class="text-2xl font-bold text-accent" id="balanceAmount">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-gray-400 text-sm">Total Income</p>
+                    <p class="text-2xl font-bold text-income" id="incomeAmount">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-gray-400 text-sm">Total Expense</p>
+                    <p class="text-2xl font-bold text-expense" id="expenseAmount">$0.00</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                <div class="stat-card">
+                    <h3 class="font-semibold mb-4">Income vs Expense</h3>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3 class="font-semibold mb-4">Category Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Transaction -->
+            <div class="stat-card mb-6">
+                <h3 class="font-semibold mb-4">Add Transaction</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <select id="transType" class="input-field">
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                        <option value="Capital">Capital</option>
+                    </select>
+                    <input type="text" id="transCategory" class="input-field" placeholder="Category" list="categories">
+                    <datalist id="categories">
+                        <option value="Salary">
+                        <option value="Business">
+                        <option value="Investment">
+                        <option value="Food">
+                        <option value="Transport">
+                        <option value="Utilities">
+                        <option value="Entertainment">
+                        <option value="Shopping">
+                        <option value="Healthcare">
+                        <option value="Other">
+                    </datalist>
+                    <input type="number" id="transAmount" class="input-field" placeholder="Amount" step="0.01">
+                    <input type="text" id="transDescription" class="input-field" placeholder="Description">
+                    <button onclick="app.addTransaction()" class="btn-primary">Add</button>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <input type="text" id="searchTrans" class="input-field flex-1" placeholder="Search transactions..." oninput="app.filterTransactions()">
+                <select id="filterType" class="input-field w-full md:w-48" onchange="app.filterTransactions()">
+                    <option value="all">All Types</option>
+                    <option value="Income">Income</option>
+                    <option value="Expense">Expense</option>
+                    <option value="Capital">Capital</option>
+                </select>
+            </div>
+
+            <!-- Transactions List -->
+            <div class="stat-card">
+                <h3 class="font-semibold mb-4">Transaction History</h3>
+                <div id="transactionsList" class="max-h-96 overflow-y-auto">
+                    <!-- Transactions will be rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budgetModal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4">Set Budget Limits</h3>
+            <div id="budgetInputs"></div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="app.saveBudgets()" class="btn-primary flex-1">Save</button>
+                <button onclick="app.hideBudgetModal()" class="btn-secondary flex-1">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Capital Modification Modal -->
+    <div id="capitalModal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4">Modify Capital Fund</h3>
+            <p class="text-gray-400 text-sm mb-4">Session Key Required for high-security action</p>
+            <input type="number" id="capitalAmountInput" class="input-field mb-4" placeholder="New Capital Amount" step="0.01">
+            <input type="password" id="sessionKeyInput" class="input-field mb-4" placeholder="Enter Session Key">
+            <div class="flex gap-2">
+                <button onclick="app.updateCapital()" class="btn-primary flex-1">Update</button>
+                <button onclick="app.hideCapitalModal()" class="btn-secondary flex-1">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Alert Toast -->
+    <div id="budgetAlert" class="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-lg hidden max-w-sm">
+        <p class="font-semibold">⚠️ Budget Warning!</p>
+        <p id="alertMessage" class="text-sm"></p>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registered'))
+                .catch(err => console.error('SW registration failed:', err));
+        }
+    </script>
+</body>
+</html>
