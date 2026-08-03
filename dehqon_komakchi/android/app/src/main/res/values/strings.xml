@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dehqon Ko\'makchi</string>
+
+    <!-- Common -->
+    <string name="action_continue">Davom etish</string>
+    <string name="action_back">Orqaga</string>
+    <string name="action_save">Saqlash</string>
+    <string name="action_cancel">Bekor qilish</string>
+    <string name="action_delete">O\'chirish</string>
+    <string name="action_edit">Tahrirlash</string>
+    <string name="action_retry">Qayta urinish</string>
+    <string name="action_close">Yopish</string>
+    <string name="action_share">Ulashish</string>
+    <string name="action_send">Yuborish</string>
+    <string name="action_report">Shikoyat qilish</string>
+    <string name="action_add">Qo\'shish</string>
+    <string name="action_export">Eksport qilish</string>
+    <string name="action_skip">O\'tkazib yuborish</string>
+    <string name="status_offline">Oflayn rejim — internet yo\'q</string>
+    <string name="status_loading">Yuklanmoqda…</string>
+    <string name="status_error_generic">Xatolik yuz berdi. Qayta urinib ko\'ring.</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_som">so\'m</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_diagnose">Tekshirish</string>
+    <string name="nav_irrigation">Sug\'orish</string>
+    <string name="nav_ledger">Daftar</string>
+    <string name="nav_market">Bozor</string>
+    <string name="nav_settings">Sozlamalar</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Dehqon Ko\'makchiga xush kelibsiz</string>
+    <string name="onboarding_welcome_subtitle">Pomidor ekiningiz uchun aqlli yordamchi: kasallikni tekshirish, sug\'orish maslahati, xarajat daftari va bozor.</string>
+    <string name="onboarding_language_title">Tilni tanlang</string>
+    <string name="onboarding_language_uz">O\'zbekcha (lotin)</string>
+    <string name="onboarding_region_title">Viloyatingizni tanlang</string>
+    <string name="onboarding_district_title">Tumaningizni tanlang</string>
+    <string name="onboarding_planting_date_title">Pomidor qachon ekilgan?</string>
+    <string name="onboarding_planting_date_hint">Taxminiy sanani tanlang</string>
+    <string name="onboarding_notif_title">Bildirishnomalar</string>
+    <string name="onboarding_notif_subtitle">Sug\'orish va ob-havo eslatmalarini olish uchun ruxsat bering.</string>
+    <string name="onboarding_notif_allow">Ruxsat berish</string>
+    <string name="onboarding_finish">Boshlash</string>
+
+    <!-- Diagnose -->
+    <string name="diagnose_title">Tekshirish</string>
+    <string name="diagnose_intro">Pomidor bargi yoki mevasining suratini oling. Sun\'iy intellekt taxminiy tahlil beradi.</string>
+    <string name="diagnose_take_photo">Surat olish</string>
+    <string name="diagnose_pick_gallery">Galereyadan tanlash</string>
+    <string name="diagnose_disclaimer">Diqqat: bu umumiy yo\'nalish, yakuniy tashxis emas. Shubha bo\'lsa, agronomga murojaat qiling.</string>
+    <string name="diagnose_analyzing">Surat tahlil qilinmoqda…</string>
+    <string name="diagnose_retake_title">Surat sifati past</string>
+    <string name="diagnose_retake_hint">Yorug\'roq joyda, bargga yaqinroq va aniq (blur bo\'lmagan) surat oling.</string>
+    <string name="diagnose_result_title">Tahlil natijasi</string>
+    <string name="diagnose_confidence_low">Ishonch darajasi past — bu faqat taxmin</string>
+    <string name="diagnose_confidence_medium">O\'rtacha ishonch darajasi</string>
+    <string name="diagnose_confidence_high">Yuqori ishonch darajasi</string>
+    <string name="diagnose_cause_label">Ehtimoliy sabab</string>
+    <string name="diagnose_steps_label">Xavfsiz birinchi qadamlar</string>
+    <string name="diagnose_watch_label">Kuzatish kerak bo\'lgan belgilar</string>
+    <string name="diagnose_consult_label">Qachon agronomga murojaat qilish kerak</string>
+    <string name="diagnose_rate_question">Bu natija foydali bo\'ldimi?</string>
+    <string name="diagnose_rate_useful">Foydali</string>
+    <string name="diagnose_rate_not_useful">Foydali emas</string>
+    <string name="diagnose_rate_thanks">Rahmat, fikringiz qabul qilindi</string>
+    <string name="diagnose_history_title">Tekshiruvlar tarixi</string>
+    <string name="diagnose_history_empty">Hali tekshiruvlar yo\'q</string>
+
+    <!-- Categories -->
+    <string name="category_pest">Zararkunanda</string>
+    <string name="category_fungal">Zamburug\' kasalligi ehtimoli</string>
+    <string name="category_nutrient">Oziqa yetishmovchiligi</string>
+    <string name="category_watering">Sug\'orish muammosi</string>
+    <string name="category_heat">Issiqlik/quyosh stressi</string>
+    <string name="category_unclear">Aniq emas</string>
+
+    <!-- Irrigation -->
+    <string name="irrigation_title">Sug\'orish</string>
+    <string name="irrigation_current_weather">Hozirgi ob-havo</string>
+    <string name="irrigation_forecast">Keyingi kunlar</string>
+    <string name="irrigation_suggestion_title">Sug\'orish bo\'yicha tavsiya</string>
+    <string name="irrigation_log_watering">Sug\'organimni belgilash</string>
+    <string name="irrigation_last_watered">Oxirgi sug\'orish</string>
+    <string name="irrigation_last_watered_never">Hali belgilanmagan</string>
+    <string name="irrigation_reminder_title">Sug\'orish eslatmasi</string>
+    <string name="irrigation_reminder_body">Ehtimol, ekinni sug\'orish vaqti keldi. Ob-havoni tekshiring.</string>
+    <string name="irrigation_offline_notice">Internet yo\'q — oxirgi saqlangan ma\'lumot ko\'rsatilmoqda</string>
+    <string name="irrigation_temp_label">Harorat</string>
+    <string name="irrigation_rain_label">Yog\'ingarchilik ehtimoli</string>
+
+    <!-- Ledger -->
+    <string name="ledger_title">Daftar</string>
+    <string name="ledger_tab_expense">Xarajat</string>
+    <string name="ledger_tab_harvest">Hosil</string>
+    <string name="ledger_tab_sale">Sotuv</string>
+    <string name="ledger_tab_summary">Xulosa</string>
+    <string name="ledger_add_expense">Xarajat qo\'shish</string>
+    <string name="ledger_add_harvest">Hosil qo\'shish</string>
+    <string name="ledger_add_sale">Sotuv qo\'shish</string>
+    <string name="ledger_expense_category">Xarajat turi</string>
+    <string name="ledger_expense_amount">Summasi</string>
+    <string name="ledger_expense_note">Izoh (ixtiyoriy)</string>
+    <string name="ledger_expense_date">Sana</string>
+    <string name="ledger_harvest_quantity">Miqdori</string>
+    <string name="ledger_harvest_unit">O\'lchov birligi</string>
+    <string name="ledger_sale_product">Mahsulot</string>
+    <string name="ledger_sale_quantity">Miqdori</string>
+    <string name="ledger_sale_price">Narxi</string>
+    <string name="ledger_sale_buyer_type">Xaridor turi</string>
+    <string name="ledger_summary_total_expense">Jami xarajat</string>
+    <string name="ledger_summary_total_revenue">Jami daromad</string>
+    <string name="ledger_summary_profit">Foyda/zarar</string>
+    <string name="ledger_summary_cost_per_kg">1 kg tannarxi</string>
+    <string name="ledger_export_csv">CSV formatda eksport qilish</string>
+    <string name="ledger_export_success">Fayl saqlandi</string>
+    <string name="ledger_empty">Hali yozuvlar yo\'q</string>
+
+    <string name="expense_category_seed">Urug\'</string>
+    <string name="expense_category_fertilizer">O\'g\'it</string>
+    <string name="expense_category_pesticide">Dorilar</string>
+    <string name="expense_category_water">Suv</string>
+    <string name="expense_category_labor">Ish haqi</string>
+    <string name="expense_category_transport">Transport</string>
+    <string name="expense_category_other">Boshqa</string>
+
+    <string name="buyer_type_wholesaler">Ulgurji xaridor</string>
+    <string name="buyer_type_market">Bozor</string>
+    <string name="buyer_type_neighbor">Qo\'shni/tanish</string>
+    <string name="buyer_type_processor">Qayta ishlash korxonasi</string>
+    <string name="buyer_type_other">Boshqa</string>
+
+    <!-- Market -->
+    <string name="market_title">Bozor</string>
+    <string name="market_listings_tab">E\'lonlar</string>
+    <string name="market_groups_tab">Guruhlar</string>
+    <string name="market_new_listing">Yangi e\'lon</string>
+    <string name="market_listing_variety">Pomidor navi</string>
+    <string name="market_listing_quantity">Miqdori (kg)</string>
+    <string name="market_listing_price">Narxi</string>
+    <string name="market_listing_negotiable">Kelishiladi</string>
+    <string name="market_listing_region">Viloyat</string>
+    <string name="market_listing_availability">Tayyor bo\'lish sanasi</string>
+    <string name="market_listing_photo">Surat qo\'shish</string>
+    <string name="market_listing_contact">Aloqa usuli</string>
+    <string name="market_contact_phone">Telefon</string>
+    <string name="market_contact_telegram">Telegram</string>
+    <string name="market_consent_title">Kontakt ma\'lumotini ko\'rsatish</string>
+    <string name="market_consent_body">Telefon raqamingiz e\'londa ko\'rinadimi? Buyurtma faqat sizning roziligingiz bilan ko\'rsatiladi.</string>
+    <string name="market_consent_allow">Roziman, ko\'rsatilsin</string>
+    <string name="market_consent_deny">Yo\'q, yashirin qolsin</string>
+    <string name="market_filter_region">Viloyat bo\'yicha</string>
+    <string name="market_filter_volume">Miqdor bo\'yicha</string>
+    <string name="market_empty">Hozircha e\'lonlar yo\'q</string>
+    <string name="market_report_reason_title">Shikoyat sababi</string>
+    <string name="market_report_spam">Spam</string>
+    <string name="market_report_fraud">Firibgarlik</string>
+    <string name="market_report_inappropriate">Nomaqbul kontent</string>
+    <string name="market_report_other">Boshqa</string>
+    <string name="market_report_submitted">Shikoyatingiz qabul qilindi</string>
+
+    <string name="group_create">Guruh yaratish</string>
+    <string name="group_join">Guruhga qo\'shilish</string>
+    <string name="group_name">Guruh nomi</string>
+    <string name="group_total_quantity">Umumiy miqdor</string>
+    <string name="group_members">A\'zolar</string>
+    <string name="group_send_offer">Xaridorga taklif yuborish</string>
+    <string name="group_admin_only_notice">Bu amalni faqat guruh admini bajara oladi</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Sozlamalar</string>
+    <string name="settings_region">Viloyat va tuman</string>
+    <string name="settings_planting_date">Ekish sanasi</string>
+    <string name="settings_notifications">Bildirishnomalar</string>
+    <string name="settings_text_size">Matn o\'lchami</string>
+    <string name="settings_theme">Mavzu</string>
+    <string name="settings_theme_light">Yorug\'</string>
+    <string name="settings_theme_dark">Qorong\'i</string>
+    <string name="settings_theme_system">Tizim bo\'yicha</string>
+    <string name="settings_privacy_policy">Maxfiylik siyosati</string>
+    <string name="settings_terms">Foydalanish shartlari</string>
+    <string name="settings_delete_data">Ma\'lumotlarni o\'chirish</string>
+    <string name="settings_delete_data_confirm">Barcha mahalliy ma\'lumotlar butunlay o\'chiriladi. Davom etasizmi?</string>
+    <string name="settings_about">Ilova haqida</string>
+    <string name="settings_version">Versiya</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="cd_camera_icon">Kamera bilan surat olish</string>
+    <string name="cd_gallery_icon">Galereyadan tanlash</string>
+    <string name="cd_status_ok">Holat: yaxshi</string>
+    <string name="cd_status_warn">Holat: ehtiyot bo\'ling</string>
+    <string name="cd_status_danger">Holat: xavfli</string>
+    <string name="cd_delete_listing">E\'lonni o\'chirish</string>
+    <string name="cd_report_listing">E\'longa shikoyat bildirish</string>
+    <string name="cd_photo_preview">Yuklangan surat ko\'rinishi</string>
+</resources>

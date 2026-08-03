@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#1B5E20</color>
+
+    <color name="md_primary">#4CAF50</color>
+    <color name="md_on_primary">#00390B</color>
+    <color name="md_primary_container">#005313</color>
+    <color name="md_on_primary_container">#A7F6A0</color>
+
+    <color name="md_secondary">#B7CCB0</color>
+    <color name="md_on_secondary">#233523</color>
+
+    <color name="md_tertiary">#9ECAE6</color>
+    <color name="md_on_tertiary">#00344A</color>
+
+    <color name="md_error">#FFB4AB</color>
+    <color name="md_on_error">#690005</color>
+
+    <color name="md_background_dark">#10140F</color>
+    <color name="md_on_background_dark">#E1E3DC</color>
+    <color name="md_surface_dark">#10140F</color>
+    <color name="md_on_surface_dark">#E1E3DC</color>
+
+    <color name="md_background_light">#FBFDF7</color>
+    <color name="md_on_background_light">#1A1C18</color>
+    <color name="md_surface_light">#FBFDF7</color>
+    <color name="md_on_surface_light">#1A1C18</color>
+
+    <!-- Status colors used with icon + text, never color alone -->
+    <color name="status_ok">#2E7D32</color>
+    <color name="status_warn">#F9A825</color>
+    <color name="status_danger">#C62828</color>
+</resources>
