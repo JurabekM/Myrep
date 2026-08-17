@@ -1,0 +1,156 @@
+2026-07-12 10:25:17 - src.core.config - INFO - Using default configuration
+2026-07-12 10:25:17 - src.core.config - INFO - Configuration saved to C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\config.yaml
+2026-07-12 10:25:18 - src.database.engine - INFO - Connected to SQLite database at C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\data\db\erp_database.db
+2026-07-12 10:25:18 - src.database.migration - INFO - All database tables created / verified.
+2026-07-12 10:25:18 - src.database.migration - INFO - No pending migrations.
+2026-07-12 10:25:18 - src.database.seed - INFO - Starting database seeding …
+2026-07-12 10:25:18 - src.database.seed - INFO - Roles seeded (9 enum members).
+2026-07-12 10:25:18 - src.database.engine - ERROR - Session error — rolled back: (sqlite3.ProgrammingError) Error binding parameter 1: type 'UserRole' is not supported
+[SQL: SELECT roles.name, roles.display_name, roles.description, roles.is_system, roles.id, roles.created_at, roles.updated_at, roles.is_deleted, roles.deleted_at, roles.created_by, roles.updated_by, permissions_1.role_id, permissions_1.module, permissions_1.permission, permissions_1.id AS id_1, permissions_1.created_at AS created_at_1, permissions_1.updated_at AS updated_at_1, permissions_1.is_deleted AS is_deleted_1, permissions_1.deleted_at AS deleted_at_1, permissions_1.created_by AS created_by_1, permissions_1.updated_by AS updated_by_1 
+FROM roles LEFT OUTER JOIN permissions AS permissions_1 ON roles.id = permissions_1.role_id 
+WHERE roles.name = ?]
+[parameters: (<UserRole.ADMINISTRATOR: 'administrator'>,)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-12 10:25:18 - __main__ - ERROR - Seeding error
+Traceback (most recent call last):
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Error binding parameter 1: type 'UserRole' is not supported
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\src\database\engine.py", line 226, in get_session
+    yield session
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\src\database\seed.py", line 267, in seed_permissions
+    role = session.execute(
+           ~~~~~~~~~~~~~~~^
+        select(Role).where(Role.name == role_name)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).scalar_one_or_none()
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2362, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2247, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\context.py", line 293, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.ProgrammingError: (sqlite3.ProgrammingError) Error binding parameter 1: type 'UserRole' is not supported
+[SQL: SELECT roles.name, roles.display_name, roles.description, roles.is_system, roles.id, roles.created_at, roles.updated_at, roles.is_deleted, roles.deleted_at, roles.created_by, roles.updated_by, permissions_1.role_id, permissions_1.module, permissions_1.permission, permissions_1.id AS id_1, permissions_1.created_at AS created_at_1, permissions_1.updated_at AS updated_at_1, permissions_1.is_deleted AS is_deleted_1, permissions_1.deleted_at AS deleted_at_1, permissions_1.created_by AS created_by_1, permissions_1.updated_by AS updated_by_1 
+FROM roles LEFT OUTER JOIN permissions AS permissions_1 ON roles.id = permissions_1.role_id 
+WHERE roles.name = ?]
+[parameters: (<UserRole.ADMINISTRATOR: 'administrator'>,)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\src\database\seed.py", line 147, in seed_all
+    self.seed_permissions()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\src\database\seed.py", line 233, in seed_permissions
+    with self.session_factory() as session:
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\src\database\engine.py", line 231, in get_session
+    raise DatabaseError(f"Database session error: {exc}") from exc
+src.core.exceptions.DatabaseError: Database session error: (sqlite3.ProgrammingError) Error binding parameter 1: type 'UserRole' is not supported
+[SQL: SELECT roles.name, roles.display_name, roles.description, roles.is_system, roles.id, roles.created_at, roles.updated_at, roles.is_deleted, roles.deleted_at, roles.created_by, roles.updated_by, permissions_1.role_id, permissions_1.module, permissions_1.permission, permissions_1.id AS id_1, permissions_1.created_at AS created_at_1, permissions_1.updated_at AS updated_at_1, permissions_1.is_deleted AS is_deleted_1, permissions_1.deleted_at AS deleted_at_1, permissions_1.created_by AS created_by_1, permissions_1.updated_by AS updated_by_1 
+FROM roles LEFT OUTER JOIN permissions AS permissions_1 ON roles.id = permissions_1.role_id 
+WHERE roles.name = ?]
+[parameters: (<UserRole.ADMINISTRATOR: 'administrator'>,)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\run.py", line 206, in bootstrap
+    seeder.seed_all()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\src\database\seed.py", line 152, in seed_all
+    raise DatabaseError(f"Database seeding failed: {exc}") from exc
+src.core.exceptions.DatabaseError: Database seeding failed: Database session error: (sqlite3.ProgrammingError) Error binding parameter 1: type 'UserRole' is not supported
+[SQL: SELECT roles.name, roles.display_name, roles.description, roles.is_system, roles.id, roles.created_at, roles.updated_at, roles.is_deleted, roles.deleted_at, roles.created_by, roles.updated_by, permissions_1.role_id, permissions_1.module, permissions_1.permission, permissions_1.id AS id_1, permissions_1.created_at AS created_at_1, permissions_1.updated_at AS updated_at_1, permissions_1.is_deleted AS is_deleted_1, permissions_1.deleted_at AS deleted_at_1, permissions_1.created_by AS created_by_1, permissions_1.updated_by AS updated_by_1 
+FROM roles LEFT OUTER JOIN permissions AS permissions_1 ON roles.id = permissions_1.role_id 
+WHERE roles.name = ?]
+[parameters: (<UserRole.ADMINISTRATOR: 'administrator'>,)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-12 10:25:18 - src.core.plugin_manager - INFO - Discovered 0 plugin(s)
+2026-07-12 10:25:18 - src.database.backup - INFO - Auto-backup triggered.
+2026-07-12 10:25:18 - src.database.backup - INFO - Backup created: C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\data\backups\erp_backup_20260712_102518.db
+2026-07-12 10:25:18 - src.database.backup - WARNING - Failed to emit 'backup_created' event: EventBus.emit() takes 2 positional arguments but 3 were given
+2026-07-12 10:25:18 - __main__ - INFO - Flask API module not available yet — web server skipped
+2026-07-12 10:25:18 - __main__ - INFO - Desktop GUI module not available yet: No module named 'src.ui'

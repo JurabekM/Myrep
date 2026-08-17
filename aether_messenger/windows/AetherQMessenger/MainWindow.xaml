@@ -1,0 +1,64 @@
+<Window x:Class="AetherQMessenger.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AETHER-Q Messenger" Height="640" Width="960" WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Brush.Background}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
+            <DockPanel Margin="16,10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="10" Height="10" Fill="{StaticResource Brush.Accent}" Margin="0,0,10,0" />
+                    <TextBlock Text="AETHER-Q Messenger" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Content="Self-test" Click="SelfTestButton_Click" Margin="6,0" />
+                    <Button Content="Mening kartam" Click="MyCardButton_Click" Margin="6,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource Brush.Background}"
+                BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <Button DockPanel.Dock="Bottom" Content="+ Kontakt qo'shish" Style="{StaticResource AccentButton}"
+                        Margin="12" Click="AddContactButton_Click" />
+                <TextBlock DockPanel.Dock="Top" Text="KONTAKTLAR" Foreground="{StaticResource Brush.TextSecondary}"
+                           FontSize="11" FontWeight="Bold" Margin="16,14,0,4" />
+                <ListBox x:Name="ContactsListBox" DisplayMemberPath="DisplayName" Margin="8,0"
+                         SelectionChanged="ContactsListBox_SelectionChanged" />
+            </DockPanel>
+        </Border>
+
+        <DockPanel Grid.Row="1" Grid.Column="1" Background="{StaticResource Brush.Background}">
+            <Border DockPanel.Dock="Bottom" Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
+                <DockPanel Margin="12">
+                    <Button DockPanel.Dock="Right" Content="Yuborish" Style="{StaticResource AccentButton}"
+                            Padding="18,7" Margin="8,0,0,0" Click="SendButton_Click" />
+                    <TextBox x:Name="MessageInputTextBox" VerticalContentAlignment="Center"
+                             KeyDown="MessageInputTextBox_KeyDown" />
+                </DockPanel>
+            </Border>
+            <ListBox x:Name="MessagesListBox" Margin="12" Background="Transparent">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{Binding Background}" CornerRadius="12" Padding="12,8" Margin="4"
+                                HorizontalAlignment="{Binding Alignment}" MaxWidth="480">
+                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Grid>
+</Window>

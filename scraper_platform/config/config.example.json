@@ -1,0 +1,41 @@
+{
+  "scraper": {
+    "timeout": 30,
+    "max_retries": 3,
+    "retry_backoff": 1.5,
+    "concurrency": 50,
+    "request_delay": 0.0,
+    "verify_ssl": true,
+    "follow_redirects": true,
+    "default_engine": "auto",
+    "respect_robots": true,
+    "render_wait": 3.0,
+    "scroll_pause": 1.0,
+    "max_scroll": 20
+  },
+  "crawler": {
+    "strategy": "bfs",
+    "max_depth": 2,
+    "max_pages": 100,
+    "same_domain_only": true,
+    "use_sitemap": true
+  },
+  "database": {
+    "engine": "sqlite",
+    "sqlite_path": "data/scraper.db",
+    "pg_host": "localhost",
+    "pg_port": 5432,
+    "pg_database": "scraper",
+    "pg_user": "postgres"
+  },
+  "proxy": {
+    "enabled": false,
+    "rotate": true,
+    "health_check": true,
+    "check_url": "http://httpbin.org/ip",
+    "check_timeout": 10,
+    "proxies": []
+  },
+  "log_level": "INFO",
+  "theme": "dark"
+}

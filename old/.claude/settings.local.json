@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pip install --quiet pytest pytest-asyncio pydantic pydantic-settings email-validator structlog openai anthropic)",
+      "Bash(python -m pytest tests/unit tests/security -q --no-header)",
+      "Bash(python -m pytest tests/unit tests/security -q --no-header -p no:cacheprovider --no-cov)",
+      "Bash(python -m compileall -q backend/app)",
+      "Bash(npm install *)"
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+"""ORM model package. Importing it registers every table on ``Base.metadata``."""
+
+from app.models.base import Base, IdMixin, SoftDeleteMixin, TimestampMixin
+from app.models.crm import (
+    Lead,
+    LeadActivity,
+    MarketingCampaign,
+    MarketingSource,
+    RevenueRecord,
+    Tag,
+    lead_tags,
+)
+from app.models.intelligence import (
+    AIInteraction,
+    AIProfile,
+    KnowledgeBaseAttachment,
+    KnowledgeBaseItem,
+    ScoringRule,
+)
+from app.models.messaging import (
+    Attachment,
+    ChannelConnection,
+    Conversation,
+    ConversationAssignment,
+    Message,
+    QuickReply,
+)
+from app.models.operations import (
+    Booking,
+    Call,
+    CallAnalysis,
+    CallTranscript,
+    Notification,
+    OperatorPerformanceSnapshot,
+    ScheduleSlot,
+    Task,
+)
+from app.models.organization import (
+    Branch,
+    Company,
+    Permission,
+    Role,
+    Service,
+    User,
+    role_permissions,
+)
+from app.models.system import AppSetting, AuditLog, IntegrationConfig, SchemaVersion
+
+__all__ = [
+    "Base",
+    "IdMixin",
+    "SoftDeleteMixin",
+    "TimestampMixin",
+    "Permission",
+    "Role",
+    "Company",
+    "Branch",
+    "Service",
+    "User",
+    "role_permissions",
+    "Tag",
+    "Lead",
+    "LeadActivity",
+    "lead_tags",
+    "MarketingSource",
+    "MarketingCampaign",
+    "RevenueRecord",
+    "ChannelConnection",
+    "Conversation",
+    "Message",
+    "Attachment",
+    "ConversationAssignment",
+    "QuickReply",
+    "AIProfile",
+    "AIInteraction",
+    "ScoringRule",
+    "KnowledgeBaseItem",
+    "KnowledgeBaseAttachment",
+    "Booking",
+    "ScheduleSlot",
+    "Task",
+    "Notification",
+    "Call",
+    "CallTranscript",
+    "CallAnalysis",
+    "OperatorPerformanceSnapshot",
+    "IntegrationConfig",
+    "AuditLog",
+    "AppSetting",
+    "SchemaVersion",
+]

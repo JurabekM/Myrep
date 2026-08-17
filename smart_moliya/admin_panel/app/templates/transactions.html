@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Tranzaksiyalar — Smart Moliya Admin{% endblock %}
+{% block content %}
+<h2>Tranzaksiyalar (so'nggi {{ transactions|length }})</h2>
+<table>
+    <tr><th>Sana</th><th>Foydalanuvchi</th><th>Turi</th><th>Summa</th><th>Izoh</th></tr>
+    {% for t in transactions %}
+    <tr>
+        <td>{{ t.occurred_at }}</td>
+        <td>{{ t.phone or t.user_id }}</td>
+        <td>{{ t.type }}</td>
+        <td>{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+        <td>{{ t.note or "—" }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">Tranzaksiyalar yo'q</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

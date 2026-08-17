@@ -1,0 +1,4 @@
+PySide6>=6.7
+cryptography>=46.0      # ML-KEM-768 va ML-DSA-65 shu versiyadan boshlab bor
+argon2-cffi>=23.1
+cbor2>=5.6

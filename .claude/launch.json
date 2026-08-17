@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "agrovision",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["AgricultureDashboard/run.py", "--no-browser", "--yes"],
+      "port": 8080
+    },
+    {
+      "name": "uzerp-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["erp_platform/run.py", "--web-only", "--no-install"],
+      "port": 8000
+    }
+  ]
+}

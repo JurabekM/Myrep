@@ -1,0 +1,77 @@
+# Smart Moliya - to'liq lokal/staging muhit
+# Ishga tushirish (repo root'dan):  docker compose -f infra/docker-compose.yml up --build
+name: smart-moliya
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: smartmoliya
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartmoliya}
+      POSTGRES_DB: smartmoliya
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartmoliya"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/docker/backend.Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://smartmoliya:${POSTGRES_PASSWORD:-smartmoliya}@postgres:5432/smartmoliya
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Konteyner ishga tushganda migratsiyalarni qo'llab, so'ng serverni boshlaydi
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  ai_service:
+    build:
+      context: ..
+      dockerfile: infra/docker/ai_service.Dockerfile
+
+  admin_panel:
+    build:
+      context: ..
+      dockerfile: infra/docker/admin_panel.Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://smartmoliya:${POSTGRES_PASSWORD:-smartmoliya}@postgres:5432/smartmoliya
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_SECRET_KEY: ${ADMIN_SECRET_KEY:-change-me-admin-secret}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    ports:
+      - "8081:8200"   # admin panel to'g'ridan-to'g'ri host portida (nginx orqali emas - ichki vosita)
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+      - ai_service
+
+volumes:
+  postgres_data:

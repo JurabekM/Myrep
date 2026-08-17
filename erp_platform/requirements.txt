@@ -1,0 +1,21 @@
+# ============================================================
+# UzERP — Python paketlari
+# Eslatma: `python run.py` yetishmagan paketlarni O'ZI o'rnatadi.
+# Bu fayl faqat qo'lda o'rnatmoqchi bo'lganlar uchun.
+# ============================================================
+
+# --- Majburiy (web-server va konfiguratsiya) ---
+flask>=3.0
+PyYAML>=6.0
+
+# --- Desktop GUI (bittasi yetarli; PyQt6 birinchi tanlov) ---
+PyQt6>=6.6
+# PySide6>=6.6
+
+# --- Eksport (Excel / PDF / Word) ---
+openpyxl>=3.1
+fpdf2>=2.7
+python-docx>=1.1
+
+# --- Ixtiyoriy: PostgreSQL (bo'lmasa SQLite avtomatik ishlatiladi) ---
+# psycopg2-binary>=2.9

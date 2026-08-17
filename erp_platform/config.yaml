@@ -1,0 +1,45 @@
+# ============================================================
+# UzERP konfiguratsiya fayli (avtomatik yaratilgan).
+# O'zgartirishdan keyin dasturni qayta ishga tushiring.
+# ============================================================
+app:
+  name: UzERP
+  version: 1.0.0
+  language: uz
+  currency: UZS
+  company_name: Mening kompaniyam
+  secret_key: 6830f05a038131c658db2f8bfc058b9635ac1901879d4d0a62d2faf310cc9f85
+server:
+  host: 127.0.0.1
+  port: 8000
+  debug: false
+database:
+  engine: auto
+  sqlite_path: data/erp.db
+  postgresql:
+    host: localhost
+    port: 5432
+    dbname: uzerp
+    user: postgres
+    password: ''
+security:
+  session_timeout_minutes: 30
+  max_login_attempts: 5
+  lockout_minutes: 15
+  password_min_length: 8
+  rate_limit_per_minute: 120
+backup:
+  auto_backup: true
+  interval_hours: 24
+  keep_last: 30
+accounting:
+  vat_rate: 12.0
+  income_tax_rate: 12.0
+  pension_rate: 0.1
+  fiscal_year_start: 01-01
+ui:
+  theme: dark
+  page_size: 25
+logging:
+  level: INFO
+  keep_days: 30

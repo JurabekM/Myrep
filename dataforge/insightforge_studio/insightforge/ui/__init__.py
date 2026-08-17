@@ -1,0 +1,2 @@
+"""InsightForge desktop interface."""
+

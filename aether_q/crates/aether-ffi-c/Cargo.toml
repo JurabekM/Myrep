@@ -1,0 +1,13 @@
+[package]
+name = "aether-ffi-c"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "aether_ffi_c"
+crate-type = ["cdylib"]
+
+[dependencies]
+aether-core = { path = "../aether-core" }
+aether-primitives = { path = "../aether-primitives" }

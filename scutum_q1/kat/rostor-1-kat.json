@@ -1,0 +1,71 @@
+{
+  "kat_version": "1.1",
+  "domain_separators": [
+    "ROSTOR-1/roster-update",
+    "ROSTOR-1/registrar-approval",
+    "ROSTOR-1/idc-endorsement",
+    "ROSTOR-1/log-entry",
+    "ROSTOR-1/submission-receipt",
+    "ROSTOR-1/sth",
+    "ROSTOR-1/witness-cosign",
+    "ROSTOR-1/txn-request",
+    "ROSTOR-1/txn-response",
+    "ROSTOR-1/payment-intent",
+    "ROSTOR-1/payee-token",
+    "ROSTOR-1/quorum-approval",
+    "ROSTOR-1/reporter-proof",
+    "ROSTOR-1/report-target",
+    "ROSTOR-1/report-content",
+    "ROSTOR-1/apk-attestation",
+    "ROSTOR-1/smt-key",
+    "ROSTOR-1/smt-empty",
+    "ROSTOR-1/empty-log",
+    "ROSTOR-1/call-context"
+  ],
+  "smt": {
+    "empty_leaf_default": "e02c592903f460f681e59ad2a1ec372df73f6e224b92adf88c2e1341acb16dde",
+    "leaf_rule": "SHA3-256(0x03 || key || value)",
+    "node_rule": "SHA3-256(0x04 || L || R)",
+    "keys": [
+      "7afd4de53d0ada772f96b2c42d99de4efdc8026d195be5bfd344ac3d9c43cf95",
+      "9c7bd8338c784002bb1cae04e9f4ef927faeaeb6fc1f4dc78277ce946ad14e11",
+      "14f985b8ca671e41ef60f48c46f4ada27f7b6f0efff756a8456814f8cf8ab40d",
+      "0fad9edaf5a8a62afe7488867b69b0192df47c9c495883d497cfbf056724a014"
+    ],
+    "root": "45264738ac08db51ac9d005082369883d7d9a64f14bf64a96edb5f7a62285d3e",
+    "inclusion_proof_key0_siblings_sha3": "007fa589b64153303715e3c99d965209156afabf50e378c71fdc8a3decbde767",
+    "non_inclusion_value_is_none": true,
+    "non_inclusion_siblings_sha3": "a0712c23b5e1fc3b868eff057be2e28c1957a631a44dcbcb293223abab0b4f15"
+  },
+  "registrar_approval": {
+    "log_id": "37fe8778a63794e9f8756fc39d1db04c",
+    "action": "issue_ic",
+    "roster_epoch": 0,
+    "target_hash": "88de23d2eb803be87c1c6de54d9304a3d312814a7059309c32ab566750a497ca",
+    "signed_payload_sha3": "21bf3b62c366a64ee32aba3851a2f69d2c6e7c806a55136e88f73c6e855c983e"
+  },
+  "idc_endorsement": {
+    "institution_id": "4cdd06737b84b4a6834b491f1c1fd3cb",
+    "dc_hash": "b6c8c93d935ca96618989353fdaa65cd357e628445ddf9679479c59344a8fb44",
+    "issued_at": 1767225600,
+    "expires_at": 1767830400,
+    "signed_payload_sha3": "a0bf3f67fd20a8fc9419e0abf9a68d31bf410483b909820e2d256d5e583fb7cd"
+  },
+  "txn_confirm": {
+    "request_signed_payload_sha3": "2a3a575c123a9f0a9a67737af918160be1c3aee45435d576c0856f0106b359f8",
+    "request_hash": "c0a846c3483e0da0970f7fd1447489717b035da91d7a39bedb6d5489a3ec29be",
+    "response_signed_payload_sha3": "01b6f358bb619dd4cbcc011203c41a29088c2bfaa942f833dbf52523180c0a52"
+  },
+  "payment": {
+    "issuer_ed25519_pk": "4b5b64e72b242f2d1ce3109fc060042ce2789a86f912aa84933d427945e65e34",
+    "nonce": "b3501a9cb3fbaede10121ded1a8df0d7",
+    "payee_token": "7df9742bf51b5eff805ebc3b431d3ef058ca5f1ff8e7d0ce17850c61a6075f3b"
+  },
+  "apk": {
+    "sample_apk_sha256": "01d4821b23def9615998a78bb1027fc55b24e1db5669f5a0bd7395067807f03b",
+    "note": "hashlib.sha256 (Android native), SHA3-256 EMAS"
+  },
+  "fraud_report": {
+    "target_hash_phone": "8517cb0a9a5a0842fa517bb9aba8487df3a563ffcbd701bb04653f5903fff0f4"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "description": "Automatic scheduled backup",
+  "created_at": "2026-07-12T10:25:18.309423",
+  "backup_file": "erp_backup_20260712_102518.db"
+}

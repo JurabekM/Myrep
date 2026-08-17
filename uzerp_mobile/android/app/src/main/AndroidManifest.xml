@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MUHIM: bu faylda ataylab android.permission.INTERNET va
+    ACCESS_NETWORK_STATE ruxsatlari YO'Q. Android xavfsizlik modeliga
+    ko'ra, ilova manifestida INTERNET ruxsati bo'lmasa, u operatsion
+    tizim darajasida hech qanday tarmoq so'rovini yubora olmaydi —
+    bu "to'liq avtonom, tarmoqqa ulanmaydi" talabini kodning o'zi
+    emas, balki Android platformasi kafolatlaydi.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Faqat Android 9 va pastda (API<=28) hisobot/zaxira fayllarini
+        Yuklab olinganlar papkasiga yozish uchun kerak (Android 10+ da
+        MediaStore orqali ruxsatsiz ishlaydi). Bu ham TARMOQ ruxsati EMAS —
+        faqat mahalliy fayl tizimiga yozish, avtonomlik talabiga zid emas.
+    -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:name=".UzErpApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.UzErp"
+        android:usesCleartextTraffic="false">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.UzErp"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

@@ -1,0 +1,18 @@
+[package]
+name = "aether-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+aether-core = { version = "0.1.0", path = "../aether-core" }
+aether-primitives = { version = "0.1.0", path = "../aether-primitives" }
+thiserror = "2.0.19"
+uniffi = { version = "0.32.0", features = ["cli"] }
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"

@@ -1,0 +1,10 @@
+2026-07-21 10:00:00 [info] Kuzatuv boshlandi: Band B7, holat: Есть подключение
+2026-07-21 10:01:00 [warning] RSRP sifati pasaydi: Yaxshi → Yomon (-87 → -110)
+2026-07-21 10:01:00 [warning] SINR sifati pasaydi: Yaxshi → Yomon (13 → -2)
+2026-07-21 10:02:00 [critical] Ulanish uzildi: Oxirgi band: B7
+2026-07-21 10:02:00 [info] Carrier aggregation kamaydi: SCC soni: 1 → 0
+2026-07-21 10:03:00 [success] Qayta ulandi: Band B3
+2026-07-21 10:03:00 [info] Carrier aggregation ko'paydi: SCC soni: 0 → 2
+2026-07-21 10:04:00 [info] Handover (uyali minora almashdi): CID 382CE09→382CE09, PCID 58→99
+
+total events: 8

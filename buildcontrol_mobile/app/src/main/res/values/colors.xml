@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bc_background">#111827</color>
+    <color name="bc_sidebar">#0D131F</color>
+    <color name="bc_accent">#3B82F6</color>
+</resources>

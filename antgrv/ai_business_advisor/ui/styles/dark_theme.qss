@@ -1,0 +1,109 @@
+/* Ultra Dark Premium Theme for PyQt6 */
+
+QMainWindow {
+    background-color: #0d1117;
+    color: #c9d1d9;
+}
+
+QWidget {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 14px;
+}
+
+/* Sidebar */
+#Sidebar {
+    background-color: #161b22;
+    border-right: 1px solid #30363d;
+}
+
+QPushButton {
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
+    padding: 8px 16px;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: #30363d;
+    border-color: #8b949e;
+}
+
+QPushButton:pressed {
+    background-color: #282e33;
+}
+
+QPushButton#PrimaryButton {
+    background-color: #2f81f7;
+    color: #ffffff;
+    border: none;
+}
+
+QPushButton#PrimaryButton:hover {
+    background-color: #388bfd;
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 8px;
+    color: #c9d1d9;
+    selection-background-color: #2f81f7;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border: 1px solid #2f81f7;
+}
+
+/* Chat Bubbles */
+#UserBubble {
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px;
+    margin: 5px;
+}
+
+#AIBubble {
+    background-color: #161b22;
+    border: 1px solid #2f81f7;
+    border-radius: 12px;
+    padding: 12px;
+    margin: 5px;
+}
+
+/* Scrollbar */
+QScrollBar:vertical {
+    border: none;
+    background: #0d1117;
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle:vertical {
+    background: #30363d;
+    min-height: 20px;
+    border-radius: 5px;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+
+/* Labels */
+QLabel {
+    color: #c9d1d9;
+}
+QLabel#HeaderLabel {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+}
+QLabel#SubHeaderLabel {
+    font-size: 18px;
+    font-weight: bold;
+    color: #8b949e;
+}

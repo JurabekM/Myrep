@@ -1,0 +1,23 @@
+[package]
+name = "aether-primitives"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+aes-gcm = "0.11.0"
+chacha20poly1305 = "0.11.0"
+ed25519-dalek = { version = "3.0.0", features = ["rand_core"] }
+getrandom = { version = "0.4.3", features = ["sys_rng"] }
+ml-dsa = "0.1.1"
+ml-kem = { version = "0.3.2", features = ["getrandom", "zeroize"] }
+pqcrypto-hqc = "0.2.2"
+pqcrypto-traits = "0.3.5"
+rand = "0.10.2"
+rand_core = "0.10.1"
+sha3 = "0.12.0"
+shake = "0.1.0"
+subtle = "2.6.1"
+thiserror = "2.0.19"
+x25519-dalek = { version = "3.0.0", features = ["static_secrets", "getrandom"] }
+zeroize = { version = "1.9.0", features = ["derive"] }

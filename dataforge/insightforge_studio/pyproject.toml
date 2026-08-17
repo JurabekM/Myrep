@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "insightforge-studio"
+version = "0.1.0"
+description = "Local-first visual data analysis studio"
+requires-python = ">=3.11"
+dependencies = [
+  "PySide6>=6.8,<7",
+  "pandas>=2.2,<4",
+  "numpy>=2.0,<3",
+  "scikit-learn>=1.5,<2",
+  "matplotlib>=3.9,<4",
+  "openpyxl>=3.1,<4",
+  "pyarrow>=17,<24",
+  "requests>=2.32,<3",
+  "chardet>=5.2,<6",
+  "joblib>=1.4,<2",
+]
+
+[project.scripts]
+insightforge = "insightforge.app:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

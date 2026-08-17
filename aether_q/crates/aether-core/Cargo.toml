@@ -1,0 +1,16 @@
+[package]
+name = "aether-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+aether-primitives = { version = "0.1.0", path = "../aether-primitives" }
+rand = "0.10.2"
+sha3 = "0.12.0"
+subtle = "2.6.1"
+thiserror = "2.0.19"
+zeroize = { version = "1.9.0", features = ["derive"] }
+
+[dev-dependencies]
+hex = "0.4.3"

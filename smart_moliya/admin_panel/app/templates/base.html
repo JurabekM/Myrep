@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Moliya Admin{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6f4; color: #1a1a1a; }
+        header { background: #1B5E20; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 18px; }
+        nav a { color: #c8e6c9; text-decoration: none; margin-left: 16px; font-size: 14px; }
+        nav a:hover, nav a.active { color: #fff; text-decoration: underline; }
+        main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        .card .value { font-size: 26px; font-weight: 600; color: #1B5E20; }
+        .card .label { font-size: 13px; color: #666; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        th, td { padding: 10px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #eee; }
+        th { background: #e8f0e8; font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+        .btn { display: inline-block; padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; text-decoration: none; }
+        .btn-primary { background: #1B5E20; color: #fff; }
+        .btn-danger { background: #b71c1c; color: #fff; }
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .badge { padding: 3px 8px; border-radius: 10px; font-size: 12px; }
+        .badge-active { background: #c8e6c9; color: #1B5E20; }
+        .badge-blocked { background: #ffcdd2; color: #b71c1c; }
+        .badge-warn { background: #fff3cd; color: #856404; }
+        form.inline { display: inline; }
+        .form-box { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); max-width: 480px; }
+        .form-box label { display: block; font-size: 13px; margin: 12px 0 4px; color: #444; }
+        .form-box input, .form-box textarea, .form-box select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .flash { padding: 10px 14px; border-radius: 8px; background: #c8e6c9; color: #1B5E20; margin-bottom: 16px; font-size: 14px; }
+        h2 { margin-bottom: 16px; font-size: 20px; }
+        .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+        .bar-row .bar { height: 14px; background: #1B5E20; border-radius: 4px; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>💰 Smart Moliya Admin</h1>
+    {% if authenticated %}
+    <nav>
+        <a href="/">Dashboard</a>
+        <a href="/users">Foydalanuvchilar</a>
+        <a href="/transactions">Tranzaksiyalar</a>
+        <a href="/fraud">Fraud</a>
+        <a href="/analytics">Analitika</a>
+        <a href="/notifications">Xabarlar</a>
+        <a href="/logout">Chiqish</a>
+    </nav>
+    {% endif %}
+</header>
+<main>
+    {% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

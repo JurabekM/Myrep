@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Xabarlar markazi — Smart Moliya Admin{% endblock %}
+{% block content %}
+<h2>Xabar yuborish</h2>
+<div class="form-box">
+    <form method="post" action="/notifications">
+        <label>Qabul qiluvchi</label>
+        <select name="user_id">
+            <option value="">Barcha faol foydalanuvchilar</option>
+            {% for u in users %}
+            <option value="{{ u.id }}">{{ u.phone or u.email or u.id }}</option>
+            {% endfor %}
+        </select>
+        <label>Sarlavha</label>
+        <input type="text" name="title" required maxlength="255">
+        <label>Matn</label>
+        <textarea name="body" rows="4" required maxlength="1000"></textarea>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Yuborish</button>
+    </form>
+</div>
+{% endblock %}

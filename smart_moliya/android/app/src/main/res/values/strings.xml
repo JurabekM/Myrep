@@ -1,0 +1,5 @@
+<resources>
+    <!-- app_name har flavor'da resValue orqali beriladi (online: "Smart Moliya",
+         offline: "Smart Moliya Offline") - shu yerda takrorlanmasin. -->
+    <string name="dashboard_title">Bosh sahifa</string>
+</resources>

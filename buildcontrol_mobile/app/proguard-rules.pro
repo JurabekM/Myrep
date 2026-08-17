@@ -1,0 +1,4 @@
+-keepattributes *Annotation*, InnerClasses
+-dontwarn kotlinx.serialization.**
+-keep,includedescriptorclasses class uz.buildcontrol.mobile.**$$serializer { *; }
+-keepclassmembers class uz.buildcontrol.mobile.** { *** Companion; }

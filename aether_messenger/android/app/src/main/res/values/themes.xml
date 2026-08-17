@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme.Material (suffiksiz) — Android'ning asl Material tema oilasida standart
+         qorong'i variant (Light aynan shundan hosil qilingan), shu sababli har doim mavjud. -->
+    <style name="Theme.AetherMessenger" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/aether_background</item>
+        <item name="android:navigationBarColor">@color/aether_background</item>
+        <item name="android:statusBarColor">@color/aether_background</item>
+    </style>
+</resources>

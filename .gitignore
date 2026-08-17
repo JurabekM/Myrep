@@ -1,0 +1,44 @@
+# --- Generated / dependency artifacts (repo-wide) ---
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+node_modules/
+build/
+dist/
+.gradle/
+target/
+.pytest_cache/
+.mypy_cache/
+.tmp_test/
+*.egg-info/
+.nicegui/
+
+# --- Secrets found during audit (2026-08-17) — real key material,
+#     never committed even under a broad "commit everything" request ---
+old/.env
+AgricultureDashboard/data/secret.key
+scraper_platform/config/.secret.key
+
+# --- Android release signing keystores — real signing key material ---
+aether_messenger/android/aetherq-release.keystore
+agrovision_app/android/app/agrovision-release.keystore
+agrovision_mobile/android/app/agrovision-release.keystore
+uzerp_mobile/android/uzerp-release.keystore
+
+# --- Build output / installers / compiled binaries (generated, not source) ---
+.next/
+*.exe
+*.dll
+*.apk
+*.aab
+*.dex
+obj/
+publish/
+installer_output/
+dist_installer/
+*.rlib
+*.a
+*.pdb

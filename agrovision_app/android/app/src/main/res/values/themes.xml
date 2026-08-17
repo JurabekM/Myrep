@@ -1,0 +1,6 @@
+<resources>
+    <!-- Compose butun UI ni o'zi chizadi; bu tema faqat oyna foni va status bar uchun. -->
+    <style name="Theme.AgroVision" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#1B5E20</item>
+    </style>
+</resources>

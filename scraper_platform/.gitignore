@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+
+# Loyiha ma'lumotlari
+data/
+logs/*.log
+logs/*.zip
+
+# Maxfiy fayllar (HECH QACHON commit qilmang)
+config/config.json
+config/.secret.key
+config/.secrets.enc
+proxy/proxies.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp

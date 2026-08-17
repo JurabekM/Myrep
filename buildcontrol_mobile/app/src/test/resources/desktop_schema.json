@@ -1,0 +1,1274 @@
+[
+ {
+  "entity": "Role",
+  "table": "roles",
+  "cols": [
+   [
+    "code",
+    "String"
+   ],
+   [
+    "name_uz",
+    "String"
+   ],
+   [
+    "name_en",
+    "String"
+   ],
+   [
+    "description",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ]
+  ],
+  "fks": {}
+ },
+ {
+  "entity": "User",
+  "table": "users",
+  "cols": [
+   [
+    "username",
+    "String"
+   ],
+   [
+    "full_name",
+    "String"
+   ],
+   [
+    "password_hash",
+    "String"
+   ],
+   [
+    "role_id",
+    "Integer"
+   ],
+   [
+    "email",
+    "String"
+   ],
+   [
+    "phone",
+    "String"
+   ],
+   [
+    "is_active",
+    "Boolean"
+   ],
+   [
+    "last_login",
+    "DateTime"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {
+   "role_id": "roles"
+  }
+ },
+ {
+  "entity": "RefItem",
+  "table": "ref_items",
+  "cols": [
+   [
+    "kind",
+    "String"
+   ],
+   [
+    "code",
+    "String"
+   ],
+   [
+    "name_uz",
+    "String"
+   ],
+   [
+    "name_en",
+    "String"
+   ],
+   [
+    "order_index",
+    "Integer"
+   ],
+   [
+    "is_system",
+    "Boolean"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {}
+ },
+ {
+  "entity": "CompanySettings",
+  "table": "company_settings",
+  "cols": [
+   [
+    "name",
+    "String"
+   ],
+   [
+    "logo_path",
+    "String"
+   ],
+   [
+    "address",
+    "String"
+   ],
+   [
+    "phone",
+    "String"
+   ],
+   [
+    "requisites",
+    "Text"
+   ],
+   [
+    "currency",
+    "String"
+   ],
+   [
+    "language",
+    "String"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ]
+  ],
+  "fks": {}
+ },
+ {
+  "entity": "Counterparty",
+  "table": "counterparties",
+  "cols": [
+   [
+    "kind",
+    "String"
+   ],
+   [
+    "name",
+    "String"
+   ],
+   [
+    "tin",
+    "String"
+   ],
+   [
+    "phone",
+    "String"
+   ],
+   [
+    "email",
+    "String"
+   ],
+   [
+    "address",
+    "String"
+   ],
+   [
+    "bank_details",
+    "Text"
+   ],
+   [
+    "category",
+    "String"
+   ],
+   [
+    "rating",
+    "Float"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "contract_amount",
+    "Float"
+   ],
+   [
+    "paid_amount",
+    "Float"
+   ],
+   [
+    "completed_work",
+    "Float"
+   ],
+   [
+    "delay_days",
+    "Integer"
+   ],
+   [
+    "quality_score",
+    "Float"
+   ],
+   [
+    "disputes",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {}
+ },
+ {
+  "entity": "Material",
+  "table": "materials",
+  "cols": [
+   [
+    "sku",
+    "String"
+   ],
+   [
+    "name",
+    "String"
+   ],
+   [
+    "category",
+    "String"
+   ],
+   [
+    "unit",
+    "String"
+   ],
+   [
+    "min_stock",
+    "Float"
+   ],
+   [
+    "standard_price",
+    "Float"
+   ],
+   [
+    "supplier_id",
+    "Integer"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {
+   "supplier_id": "counterparties"
+  }
+ },
+ {
+  "entity": "Project",
+  "table": "projects",
+  "cols": [
+   [
+    "code",
+    "String"
+   ],
+   [
+    "name",
+    "String"
+   ],
+   [
+    "client",
+    "String"
+   ],
+   [
+    "address",
+    "String"
+   ],
+   [
+    "project_type",
+    "String"
+   ],
+   [
+    "start_date",
+    "Date"
+   ],
+   [
+    "end_date",
+    "Date"
+   ],
+   [
+    "manager_id",
+    "Integer"
+   ],
+   [
+    "planned_budget",
+    "Float"
+   ],
+   [
+    "currency",
+    "String"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "notes",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {
+   "manager_id": "users"
+  }
+ },
+ {
+  "entity": "ProjectMember",
+  "table": "project_members",
+  "cols": [
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "user_id",
+    "Integer"
+   ],
+   [
+    "role_in_project",
+    "String"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "project_id": "projects",
+   "user_id": "users"
+  }
+ },
+ {
+  "entity": "EstimateVersion",
+  "table": "estimate_versions",
+  "cols": [
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "version_no",
+    "Integer"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "is_current",
+    "Boolean"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "created_by_id",
+    "Integer"
+   ],
+   [
+    "approved_by_id",
+    "Integer"
+   ],
+   [
+    "approved_at",
+    "DateTime"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "project_id": "projects",
+   "created_by_id": "users",
+   "approved_by_id": "users"
+  }
+ },
+ {
+  "entity": "EstimateSection",
+  "table": "estimate_sections",
+  "cols": [
+   [
+    "version_id",
+    "Integer"
+   ],
+   [
+    "parent_id",
+    "Integer"
+   ],
+   [
+    "code",
+    "String"
+   ],
+   [
+    "name",
+    "String"
+   ],
+   [
+    "order_index",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "version_id": "estimate_versions",
+   "parent_id": "estimate_sections"
+  }
+ },
+ {
+  "entity": "EstimateItem",
+  "table": "estimate_items",
+  "cols": [
+   [
+    "section_id",
+    "Integer"
+   ],
+   [
+    "code",
+    "String"
+   ],
+   [
+    "name",
+    "String"
+   ],
+   [
+    "category",
+    "String"
+   ],
+   [
+    "unit",
+    "String"
+   ],
+   [
+    "quantity",
+    "Float"
+   ],
+   [
+    "plan_unit_price",
+    "Float"
+   ],
+   [
+    "actual_cost",
+    "Float"
+   ],
+   [
+    "progress_percent",
+    "Float"
+   ],
+   [
+    "responsible_id",
+    "Integer"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "order_index",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "section_id": "estimate_sections",
+   "responsible_id": "users"
+  }
+ },
+ {
+  "entity": "PurchaseRequest",
+  "table": "purchase_requests",
+  "cols": [
+   [
+    "number",
+    "String"
+   ],
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "estimate_item_id",
+    "Integer"
+   ],
+   [
+    "off_estimate",
+    "Boolean"
+   ],
+   [
+    "title",
+    "String"
+   ],
+   [
+    "unit",
+    "String"
+   ],
+   [
+    "quantity",
+    "Float"
+   ],
+   [
+    "est_price",
+    "Float"
+   ],
+   [
+    "needed_date",
+    "Date"
+   ],
+   [
+    "delivery_address",
+    "String"
+   ],
+   [
+    "responsible_id",
+    "Integer"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {
+   "project_id": "projects",
+   "estimate_item_id": "estimate_items",
+   "responsible_id": "users"
+  }
+ },
+ {
+  "entity": "SupplierQuote",
+  "table": "supplier_quotes",
+  "cols": [
+   [
+    "request_id",
+    "Integer"
+   ],
+   [
+    "supplier_id",
+    "Integer"
+   ],
+   [
+    "supplier_name",
+    "String"
+   ],
+   [
+    "contact",
+    "String"
+   ],
+   [
+    "unit_price",
+    "Float"
+   ],
+   [
+    "delivery_cost",
+    "Float"
+   ],
+   [
+    "delivery_days",
+    "Integer"
+   ],
+   [
+    "payment_terms",
+    "String"
+   ],
+   [
+    "file_path",
+    "String"
+   ],
+   [
+    "is_selected",
+    "Boolean"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "request_id": "purchase_requests",
+   "supplier_id": "counterparties"
+  }
+ },
+ {
+  "entity": "PurchaseOrder",
+  "table": "purchase_orders",
+  "cols": [
+   [
+    "order_no",
+    "String"
+   ],
+   [
+    "request_id",
+    "Integer"
+   ],
+   [
+    "quote_id",
+    "Integer"
+   ],
+   [
+    "supplier_id",
+    "Integer"
+   ],
+   [
+    "order_date",
+    "Date"
+   ],
+   [
+    "total_amount",
+    "Float"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "request_id": "purchase_requests",
+   "quote_id": "supplier_quotes",
+   "supplier_id": "counterparties"
+  }
+ },
+ {
+  "entity": "WarehouseTransaction",
+  "table": "warehouse_transactions",
+  "cols": [
+   [
+    "tx_date",
+    "Date"
+   ],
+   [
+    "kind",
+    "String"
+   ],
+   [
+    "material_id",
+    "Integer"
+   ],
+   [
+    "quantity",
+    "Float"
+   ],
+   [
+    "unit_price",
+    "Float"
+   ],
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "estimate_item_id",
+    "Integer"
+   ],
+   [
+    "user_id",
+    "Integer"
+   ],
+   [
+    "doc_path",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "material_id": "materials",
+   "project_id": "projects",
+   "estimate_item_id": "estimate_items",
+   "user_id": "users"
+  }
+ },
+ {
+  "entity": "WorkStage",
+  "table": "work_stages",
+  "cols": [
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "name",
+    "String"
+   ],
+   [
+    "section_id",
+    "Integer"
+   ],
+   [
+    "plan_start",
+    "Date"
+   ],
+   [
+    "plan_end",
+    "Date"
+   ],
+   [
+    "actual_start",
+    "Date"
+   ],
+   [
+    "actual_end",
+    "Date"
+   ],
+   [
+    "progress_percent",
+    "Float"
+   ],
+   [
+    "responsible_id",
+    "Integer"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "dependencies",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "order_index",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {
+   "project_id": "projects",
+   "section_id": "estimate_sections",
+   "responsible_id": "users"
+  }
+ },
+ {
+  "entity": "DailySiteLog",
+  "table": "daily_site_logs",
+  "cols": [
+   [
+    "log_date",
+    "Date"
+   ],
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "stage_id",
+    "Integer"
+   ],
+   [
+    "work_done",
+    "Text"
+   ],
+   [
+    "progress_percent",
+    "Float"
+   ],
+   [
+    "workers_count",
+    "Integer"
+   ],
+   [
+    "issue",
+    "Text"
+   ],
+   [
+    "photo_path",
+    "String"
+   ],
+   [
+    "author_id",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "project_id": "projects",
+   "stage_id": "work_stages",
+   "author_id": "users"
+  }
+ },
+ {
+  "entity": "Expense",
+  "table": "expenses",
+  "cols": [
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "category",
+    "String"
+   ],
+   [
+    "estimate_item_id",
+    "Integer"
+   ],
+   [
+    "counterparty_id",
+    "Integer"
+   ],
+   [
+    "amount",
+    "Float"
+   ],
+   [
+    "currency",
+    "String"
+   ],
+   [
+    "pay_date",
+    "Date"
+   ],
+   [
+    "method",
+    "String"
+   ],
+   [
+    "invoice_no",
+    "String"
+   ],
+   [
+    "doc_path",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "status",
+    "String"
+   ],
+   [
+    "created_by_id",
+    "Integer"
+   ],
+   [
+    "approved_by_id",
+    "Integer"
+   ],
+   [
+    "approved_at",
+    "DateTime"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ],
+   [
+    "is_archived",
+    "Boolean"
+   ]
+  ],
+  "fks": {
+   "project_id": "projects",
+   "estimate_item_id": "estimate_items",
+   "counterparty_id": "counterparties",
+   "created_by_id": "users",
+   "approved_by_id": "users"
+  }
+ },
+ {
+  "entity": "Payment",
+  "table": "payments",
+  "cols": [
+   [
+    "expense_id",
+    "Integer"
+   ],
+   [
+    "amount",
+    "Float"
+   ],
+   [
+    "pay_date",
+    "Date"
+   ],
+   [
+    "method",
+    "String"
+   ],
+   [
+    "note",
+    "Text"
+   ],
+   [
+    "created_by_id",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "expense_id": "expenses",
+   "created_by_id": "users"
+  }
+ },
+ {
+  "entity": "Attachment",
+  "table": "attachments",
+  "cols": [
+   [
+    "entity_type",
+    "String"
+   ],
+   [
+    "entity_id",
+    "Integer"
+   ],
+   [
+    "title",
+    "String"
+   ],
+   [
+    "file_path",
+    "String"
+   ],
+   [
+    "user_id",
+    "Integer"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ],
+   [
+    "created_at",
+    "DateTime"
+   ],
+   [
+    "updated_at",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "user_id": "users"
+  }
+ },
+ {
+  "entity": "AuditLog",
+  "table": "audit_logs",
+  "cols": [
+   [
+    "ts",
+    "DateTime"
+   ],
+   [
+    "user_id",
+    "Integer"
+   ],
+   [
+    "username",
+    "String"
+   ],
+   [
+    "action",
+    "String"
+   ],
+   [
+    "entity_type",
+    "String"
+   ],
+   [
+    "entity_id",
+    "Integer"
+   ],
+   [
+    "project_id",
+    "Integer"
+   ],
+   [
+    "description",
+    "Text"
+   ],
+   [
+    "old_value",
+    "Text"
+   ],
+   [
+    "new_value",
+    "Text"
+   ],
+   [
+    "uid",
+    "String"
+   ],
+   [
+    "sync_ts",
+    "DateTime"
+   ]
+  ],
+  "fks": {
+   "user_id": "users",
+   "project_id": "projects"
+  }
+ }
+]

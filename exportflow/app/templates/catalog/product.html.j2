@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ product.name }} — {{ company.name }}</title>
+<meta name="description" content="{{ product.short_description }}">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container row">
+    <div class="brand">
+      {% if logo_file %}<img src="../assets/{{ logo_file }}" alt="{{ company.name }}">{% endif %}
+      <div>
+        <h1><a href="../index.html">{{ company.name }}</a></h1>
+        <p>{{ catalog.title }}</p>
+      </div>
+    </div>
+    <a class="btn" href="mailto:{{ contact_email }}?subject={{ (t.request_subject ~ ' — ' ~ product.name) | urlencode }}">{{ t.request }}</a>
+  </div>
+</header>
+
+<main class="container">
+  <p class="breadcrumb"><a href="../index.html">{{ t.products }}</a> / {{ product.name }}</p>
+  <div class="detail">
+    <div class="gallery">
+      {% if product.photo_files %}
+        {% for file in product.photo_files %}<img src="../assets/{{ file }}" alt="{{ product.name }}">{% endfor %}
+      {% else %}
+        <div class="card"><div class="thumb"><span>{{ t.no_photo }}</span></div></div>
+      {% endif %}
+    </div>
+    <div>
+      <h2>{{ product.name }}</h2>
+      <p class="sku">{{ t.sku }}: {{ product.sku }}</p>
+      <p>{{ product.description | replace('\n', '<br>') | safe }}</p>
+
+      <table class="specs">
+        {% if product.hs_code %}<tr><th>{{ t.hs }}</th><td>{{ product.hs_code }}</td></tr>{% endif %}
+        <tr><th>{{ t.origin }}</th><td>{{ product.origin_country }}</td></tr>
+        {% if product.moq %}<tr><th>{{ t.moq }}</th><td>{{ product.moq }} {{ product.unit }}</td></tr>{% endif %}
+        {% if product.lead_time_days %}<tr><th>{{ t.lead_time }}</th><td>{{ product.lead_time_days }} {{ t.days }}</td></tr>{% endif %}
+        {% if product.capacity_month %}<tr><th>{{ t.capacity }}</th><td>{{ product.capacity_month }} {{ product.unit }}/{{ t.month }}</td></tr>{% endif %}
+        {% if product.packaging_type %}<tr><th>{{ t.packaging }}</th><td>{{ product.packaging_type }}</td></tr>{% endif %}
+        {% if product.net_weight %}<tr><th>{{ t.net_weight }}</th><td>{{ product.net_weight }} kg</td></tr>{% endif %}
+        {% if product.gross_weight %}<tr><th>{{ t.gross_weight }}</th><td>{{ product.gross_weight }} kg</td></tr>{% endif %}
+        {% if product.shelf_life %}<tr><th>{{ t.shelf_life }}</th><td>{{ product.shelf_life }}</td></tr>{% endif %}
+        {% if product.storage_condition %}<tr><th>{{ t.storage }}</th><td>{{ product.storage_condition }}</td></tr>{% endif %}
+        {% if product.price_text %}<tr><th>{{ t.price }}</th><td>{{ product.price_text }}</td></tr>{% endif %}
+      </table>
+
+      {% if product.specifications %}
+      <h3>{{ t.specs }}</h3>
+      <table class="specs">
+        {% for spec in product.specifications %}
+        <tr><th>{{ spec.name }}</th><td>{{ spec.value }}</td></tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+
+      {% if product.certificates %}
+      <h3>{{ t.certificates }}</h3>
+      <div class="tags">
+        {% for cert in product.certificates %}<span class="tag">{{ cert }}</span>{% endfor %}
+      </div>
+      {% else %}
+      <p class="callout">{{ t.cert_note }}</p>
+      {% endif %}
+
+      <div class="callout">
+        <p><strong>{{ t.request }}</strong></p>
+        <a class="btn" href="mailto:{{ contact_email }}?subject={{ (t.request_subject ~ ' — ' ~ product.name) | urlencode }}&amp;body={{ (t.request_body ~ ' ' ~ product.sku) | urlencode }}">{{ contact_email }}</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="container">
+    <p><strong>{{ company.name }}</strong> — {{ catalog.title }}, v{{ catalog.version }} · {{ generated_at }}</p>
+    <p>{{ t.footer_note }}</p>
+  </div>
+</footer>
+</body>
+</html>

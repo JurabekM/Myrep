@@ -1,0 +1,10 @@
+2026-07-12 12:40:01 | INFO     | uzerp.bootstrap | UzERP ishga tushmoqda... (base_dir=C:\Users\comp_2.1\Downloads\claude_cowork)
+2026-07-12 12:40:01 | INFO     | uzerp.db | PostgreSQL topilmadi (ModuleNotFoundError) — SQLite ishlatiladi.
+2026-07-12 12:40:01 | INFO     | uzerp.db | SQLite ulanish ochildi: C:\Users\comp_2.1\Downloads\claude_cowork\data\erp.db
+2026-07-12 12:40:01 | INFO     | uzerp.migrations | Migratsiya qo'llanmoqda: v1 initial_schema
+2026-07-12 12:40:01 | INFO     | uzerp.migrations | Migratsiya qo'llanmoqda: v2 seed_defaults
+2026-07-12 12:40:01 | INFO     | uzerp.migrations | Migratsiya qo'llanmoqda: v3 seed_defaults_v2
+2026-07-12 12:40:01 | INFO     | uzerp.migrations | 3 ta migratsiya qo'llandi.
+2026-07-12 12:40:02 | INFO     | uzerp.auth | Admin foydalanuvchi yaratildi (parol: data/admin_credentials.txt)
+2026-07-12 12:40:02 | INFO     | uzerp.bootstrap | Bootstrap tugadi: db=sqlite, jadval=32 ta
+2026-07-12 12:40:02 | INFO     | uzerp.web | Web-server: http://127.0.0.1:8000

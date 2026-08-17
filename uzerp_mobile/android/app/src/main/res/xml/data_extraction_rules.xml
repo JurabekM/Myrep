@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- allowBackup=false bo'lgani uchun bu qoidalar amalda ishlatilmaydi,
+     lekin Android 12+ ogohlantirishlarini oldini olish uchun kerak. -->
+<data-extraction-rules>
+    <cloud-backup disableIfNoEncryptionCapability="true">
+        <exclude domain="database" />
+    </cloud-backup>
+</data-extraction-rules>

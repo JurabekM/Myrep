@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>AetherQMessenger</RootNamespace>
+    <AssemblyName>AetherQMessenger</AssemblyName>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- Bu mashinada faqat .NET 10 runtime o'rnatilgan (.NET 8 SDK-only) — net8.0 TFM
+         eng keng moslikni saqlaydi, RollForward esa mavjud runtime'da ishga tushirishga imkon beradi. -->
+    <RollForward>LatestMajor</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Rust'da qurilgan raw C ABI kutubxonasi (aether-ffi-c) — build chiqishiga nusxalanadi. -->
+    <None Include="native\aether_ffi_c.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>aether_ffi_c.dll</Link>
+    </None>
+  </ItemGroup>
+
+</Project>

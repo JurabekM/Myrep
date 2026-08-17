@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ catalog.title }} — {{ company.name }}</title>
+<meta name="description" content="{{ catalog.subtitle or catalog.title }} — {{ company.name }}, {{ company.country }}">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site">
+  <div class="container row">
+    <div class="brand">
+      {% if logo_file %}<img src="assets/{{ logo_file }}" alt="{{ company.name }}">{% endif %}
+      <div>
+        <h1>{{ company.name }}</h1>
+        <p>{{ company.country }}{% if company.city %}, {{ company.city }}{% endif %}</p>
+      </div>
+    </div>
+    <a class="btn" href="mailto:{{ contact_email }}?subject={{ t.request_subject | urlencode }}">{{ t.request }}</a>
+  </div>
+</header>
+
+<main class="container">
+  <div class="hero">
+    <h2>{{ catalog.title }}</h2>
+    {% if catalog.subtitle %}<p>{{ catalog.subtitle }}</p>{% endif %}
+    {% if catalog.cover_note %}<p style="margin-top:12px">{{ catalog.cover_note }}</p>{% endif %}
+  </div>
+
+  {% if about_text %}
+  <section>
+    <h3>{{ t.about }}</h3>
+    <p>{{ about_text | replace('\n', '<br>') | safe }}</p>
+  </section>
+  {% endif %}
+
+  <section>
+    <h3>{{ t.products }} ({{ products | length }})</h3>
+    <div class="grid">
+      {% for product in products %}
+      <article class="card">
+        <a class="thumb" href="products/{{ product.slug }}.html">
+          {% if product.photo_file %}
+            <img src="assets/{{ product.photo_file }}" alt="{{ product.name }}" loading="lazy">
+          {% else %}
+            <span>{{ t.no_photo }}</span>
+          {% endif %}
+        </a>
+        <div class="body">
+          <span class="sku">{{ product.sku }}</span>
+          <h4><a href="products/{{ product.slug }}.html">{{ product.name }}</a></h4>
+          <p class="desc">{{ product.short_description }}</p>
+          <div class="tags">
+            {% if product.moq %}<span class="tag">{{ t.moq }}: {{ product.moq }} {{ product.unit }}</span>{% endif %}
+            {% if product.hs_code %}<span class="tag">HS {{ product.hs_code }}</span>{% endif %}
+            {% for cert in product.certificates %}<span class="tag">{{ cert }}</span>{% endfor %}
+          </div>
+          <a class="btn ghost" href="products/{{ product.slug }}.html">{{ t.details }}</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if catalog.include_certificates %}
+  <section>
+    <h3>{{ t.certificates }}</h3>
+    {% if certificates %}
+    <table class="specs">
+      <tr><th>{{ t.certificate }}</th><th>{{ t.issuer }}</th><th>{{ t.valid_until }}</th></tr>
+      {% for cert in certificates %}
+      <tr><td>{{ cert.name }}</td><td>{{ cert.issuer or '—' }}</td><td>{{ cert.expiry_date or '—' }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>{{ t.cert_note }}</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section>
+    <h3>{{ t.contacts }}</h3>
+    <div class="callout">
+      <p><strong>{{ company.name }}</strong><br>
+      {{ company.address or '' }}</p>
+      <p>
+        {% if company.export_contact_name %}{{ company.export_contact_name }}<br>{% endif %}
+        {% if contact_phone %}<a href="tel:{{ contact_phone }}">{{ contact_phone }}</a><br>{% endif %}
+        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a><br>
+        {% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener">{{ company.website }}</a>{% endif %}
+      </p>
+      <a class="btn" href="mailto:{{ contact_email }}?subject={{ t.request_subject | urlencode }}">{{ t.request }}</a>
+    </div>
+    {% if catalog.contact_text %}<p>{{ catalog.contact_text | replace('\n', '<br>') | safe }}</p>{% endif %}
+  </section>
+</main>
+
+<footer class="site">
+  <div class="container">
+    <p><strong>{{ company.name }}</strong> — {{ catalog.title }}, v{{ catalog.version }} · {{ generated_at }}</p>
+    <p>{{ t.footer_note }}</p>
+  </div>
+</footer>
+</body>
+</html>

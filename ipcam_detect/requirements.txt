@@ -1,0 +1,33 @@
+# ============================================================================
+# ipcam_detect — runtime bog'liqliklari (torch YO'Q!)
+# O'rnatish:  pip install -r requirements.txt
+# ============================================================================
+
+# --- Asosiy (majburiy) ---
+numpy>=1.24,<3.0
+opencv-python-headless>=4.8.0        # headless server uchun (GUI kutubxonalarsiz)
+# GUI (--show) kerak bo'lsa yuqoridagi qatorni izohga oling va buni yoqing:
+# opencv-python>=4.8.0
+# `light` tracker (MOSSE/KCF) kerak bo'lsa:
+# opencv-contrib-python>=4.8.0
+
+# --- Video dekod (tavsiya etiladi) ---
+av>=12.0.0                           # PyAV — FFmpeg binding, HW dekod + aniq timeout
+
+# --- Inference backend (kamida bittasi) ---
+onnxruntime>=1.17.0                  # CPU (universal, tavsiya)
+# onnxruntime-gpu>=1.17.0            # NVIDIA CUDA
+# onnxruntime-directml>=1.17.0       # Windows GPU (DirectML)
+# openvino>=2024.0.0                 # Intel CPU/iGPU/NPU — eng tejamkor
+
+# --- Resurs monitoringi ---
+psutil>=5.9.0
+
+# --- GUI (gui.py / run_gui.bat uchun). CLI rejimida kerak emas ---
+PyQt6>=6.5.0
+
+# ============================================================================
+# Faqat MODEL EKSPORTI uchun (export_model.py). Runtime uchun KERAK EMAS —
+# alohida virtual muhitda o'rnatish tavsiya etiladi:
+#     pip install ultralytics onnx onnxsim
+# ============================================================================

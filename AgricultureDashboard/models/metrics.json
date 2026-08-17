@@ -1,0 +1,23 @@
+{
+  "trained_at": "2026-07-11T17:15:00",
+  "yield": {
+    "algorithm": "random_forest",
+    "r2": 0.968,
+    "rows": 700
+  },
+  "disease": {
+    "algorithm": "gradient_boosting",
+    "accuracy": 0.762,
+    "rows": 1742
+  },
+  "water": {
+    "algorithm": "random_forest",
+    "r2": 0.962,
+    "rows": 1380
+  },
+  "crop": {
+    "algorithm": "random_forest",
+    "accuracy": 1.0,
+    "rows": 120
+  }
+}

@@ -1,0 +1,66 @@
+classDiagram
+    class Transaction {
+        +UUID id
+        +UUID walletId
+        +UUID categoryId
+        +TransactionType type
+        +Decimal amount
+        +String currency
+        +DateTime occurredAt
+        +SyncStatus syncStatus
+        +int version
+    }
+    class Wallet {
+        +UUID id
+        +String name
+        +String currency
+        +Decimal balance
+        +bool isShared
+        +applyTransaction(Transaction)
+    }
+    class Budget {
+        +UUID id
+        +Period period
+        +Decimal limitAmount
+        +Decimal spent
+        +isOverLimit() bool
+    }
+    class Goal {
+        +UUID id
+        +String title
+        +Decimal targetAmount
+        +Decimal currentAmount
+        +Date targetDate
+        +monthlyRequiredSaving() Decimal
+    }
+    class Loan {
+        +Decimal principal
+        +Decimal interestRate
+        +Date dueDate
+        +calculatePenalty(Date now) Decimal
+    }
+    class Debt {
+        +DebtDirection direction
+        +String counterparty
+        +Decimal amount
+        +Date dueDate
+    }
+    class BankProvider {
+        <<interface>>
+        +fetchBalance(accountId) Decimal
+        +fetchTransactions(accountId) List~Transaction~
+    }
+    class MockBankProvider {
+        +fetchBalance(accountId) Decimal
+        +fetchTransactions(accountId) List~Transaction~
+    }
+    class AsakaAdapter
+    class NBUAdapter
+
+    BankProvider <|.. MockBankProvider
+    BankProvider <|.. AsakaAdapter
+    BankProvider <|.. NBUAdapter
+
+    Wallet "1" o-- "many" Transaction
+    Budget "1" o-- "many" Transaction : tracks category spend
+    Goal --> Wallet : linked savings

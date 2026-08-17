@@ -1,0 +1,8 @@
+/* AgroVision — qo'shimcha statik uslublar.
+   Asosiy tema app/theme.py ichida dasturiy ravishda yuklanadi; ushbu fayl
+   korporativ brendlashtirish uchun kengaytirish nuqtasi sifatida saqlanadi. */
+:root {
+    --agro-primary: #2e7d32;
+    --agro-secondary: #66bb6a;
+    --agro-accent: #f9a825;
+}

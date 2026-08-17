@@ -1,0 +1,34 @@
+app:
+  name: Enterprise ERP
+  version: 1.0.0
+database:
+  type: sqlite
+  path: C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\data\db\erp_database.db
+  postgresql:
+    host: localhost
+    port: 5432
+    name: erp_database
+    user: erp_user
+    password: ''
+server:
+  host: 0.0.0.0
+  port: 8000
+  debug: false
+security:
+  secret_key: 4faf1f3e2c684401ae87cbfaa6a1cc0bbacf8712cb57490f8c66ff917efc4452
+  session_timeout: 3600
+  max_login_attempts: 5
+  password_min_length: 8
+company:
+  name: My Company
+  currency: UZS
+  vat_rate: 0.12
+  language: uz
+backup:
+  auto_backup: true
+  interval_hours: 24
+  max_backups: 30
+  path: C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\data\backups
+logging:
+  level: INFO
+  file: C:\Users\comp_2.1\Downloads\claude_cowork\antigravity\data\logs\erp.log

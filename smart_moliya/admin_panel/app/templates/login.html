@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Kirish — Smart Moliya Admin{% endblock %}
+{% block content %}
+<div class="form-box" style="margin: 60px auto;">
+    <h2>Admin panelga kirish</h2>
+    {% if error %}<div class="flash" style="background:#ffcdd2;color:#b71c1c;">{{ error }}</div>{% endif %}
+    <form method="post" action="/login">
+        <label>Login</label>
+        <input type="text" name="username" required autofocus>
+        <label>Parol</label>
+        <input type="password" name="password" required>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Kirish</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Foydalanuvchilar — Smart Moliya Admin{% endblock %}
+{% block content %}
+<h2>Foydalanuvchilar</h2>
+<table>
+    <tr><th>Telefon / Email</th><th>Ism</th><th>Provayder</th><th>Holat</th><th>Ro'yxatdan o'tgan</th><th></th></tr>
+    {% for u in users %}
+    <tr>
+        <td>{{ u.phone or u.email or "—" }}</td>
+        <td>{{ u.full_name or "—" }}</td>
+        <td>{{ u.auth_provider }}</td>
+        <td>
+            {% if u.is_active %}
+            <span class="badge badge-active">Faol</span>
+            {% else %}
+            <span class="badge badge-blocked">Bloklangan</span>
+            {% endif %}
+        </td>
+        <td>{{ u.created_at }}</td>
+        <td>
+            <form class="inline" method="post" action="/users/{{ u.id }}/toggle">
+                {% if u.is_active %}
+                <button type="submit" class="btn btn-danger">Bloklash</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Faollashtirish</button>
+                {% endif %}
+            </form>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">Foydalanuvchilar yo'q</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Fraud Detection — Smart Moliya Admin{% endblock %}
+{% block content %}
+<h2>Shubhali tranzaksiyalar</h2>
+<p style="font-size:13px;color:#666;margin-bottom:16px;">
+    Foydalanuvchi + kategoriya bo'yicha o'rtacha xarajatdan 2.5+ standart chetlanish
+    ko'rsatgan xarajatlar (kamida 3 ta tranzaksiya tarixi bo'lgan holatlarda).
+</p>
+<table>
+    <tr><th>Sana</th><th>Foydalanuvchi</th><th>Summa</th><th>Z-score</th><th>Izoh</th></tr>
+    {% for t in suspicious %}
+    <tr>
+        <td>{{ t.occurred_at }}</td>
+        <td>{{ t.phone or t.user_id }}</td>
+        <td>{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+        <td><span class="badge badge-warn">{{ t.z_score }}σ</span></td>
+        <td>{{ t.note or "—" }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">Shubhali tranzaksiyalar topilmadi ✅</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

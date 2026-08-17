@@ -1,0 +1,28 @@
+# AgroVision — zarur kutubxonalar (run.py ularni avtomatik tekshiradi/o'rnatadi)
+nicegui>=2.0
+sqlalchemy>=2.0
+pandas>=2.0
+numpy>=1.26
+requests>=2.31
+openpyxl>=3.1
+folium>=0.15
+fpdf2>=2.7
+scikit-learn>=1.4
+
+# --- Ixtiyoriy kuchaytirgichlar (platforma ularsiz ham to'liq ishlaydi) ---
+# xgboost          # hosil prognozi uchun qo'shimcha algoritm
+# lightgbm         # hosil prognozi uchun qo'shimcha algoritm
+# catboost         # hosil prognozi uchun qo'shimcha algoritm
+# tensorflow       # chuqur o'rganish plaginlari uchun
+# geopandas        # kengaytirilgan geo-tahlil
+# shapely          # aniq geometriya hisob-kitoblari
+# pyproj           # aniq maydon hisoblash (EPSG:6933)
+# fiona            # qo'shimcha geo-formatlar
+# rasterio         # GeoTIFF/NDVI raster tahlili
+# pyshp            # Shapefile importi
+# python-docx      # Word hisobotlari
+# matplotlib       # PNG dashboard snapshot
+# meteostat        # qo'shimcha ob-havo manbasi
+# earthengine-api  # Google Earth Engine (Sentinel-2) integratsiyasi
+# Pillow           # JPG/PNG dron tasvirlari
+# cryptography     # shifrlangan zaxira nusxalar

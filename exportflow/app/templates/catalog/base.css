@@ -1,0 +1,167 @@
+:root {
+  --bg: #0f1623;
+  --surface: #16203044;
+  --card: #1a2434;
+  --line: #24314a;
+  --ink: #e6edf7;
+  --muted: #94a3b8;
+  --brand: #3b82f6;
+  --brand-soft: #1e3a8a33;
+  --radius: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f8fc;
+    --card: #ffffff;
+    --line: #e2e8f0;
+    --ink: #111827;
+    --muted: #64748b;
+    --brand-soft: #dbeafe;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+header.site {
+  border-bottom: 1px solid var(--line);
+  padding: 22px 0;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+header.site .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand img { max-height: 46px; max-width: 160px; }
+.brand h1 { font-size: 1.1rem; margin: 0; }
+.brand p { margin: 0; color: var(--muted); font-size: .82rem; }
+
+.btn {
+  display: inline-block;
+  background: var(--brand);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .88rem;
+}
+.btn:hover { filter: brightness(1.1); text-decoration: none; }
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+
+.hero { padding: 56px 0 34px; }
+.hero h2 { font-size: 2.1rem; margin: 0 0 10px; }
+.hero p { color: var(--muted); max-width: 62ch; margin: 0; }
+
+section { padding: 26px 0; }
+section h3 {
+  font-size: 1.15rem;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .16s ease, border-color .16s ease;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--brand); }
+
+.card .thumb {
+  aspect-ratio: 4 / 3;
+  background: var(--brand-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card .thumb span { color: var(--muted); font-size: .8rem; }
+
+.card .body { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.card h4 { margin: 0; font-size: 1rem; }
+.card .sku { color: var(--muted); font-size: .76rem; letter-spacing: .04em; }
+.card .desc { color: var(--muted); font-size: .85rem; flex: 1; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  font-size: .72rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border: 1px solid var(--line);
+}
+
+table.specs { width: 100%; border-collapse: collapse; font-size: .87rem; }
+table.specs th, table.specs td {
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+table.specs th { color: var(--muted); font-weight: 500; width: 42%; }
+
+.detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+.detail .gallery img {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.callout {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 18px 0;
+}
+
+footer.site {
+  border-top: 1px solid var(--line);
+  margin-top: 40px;
+  padding: 26px 0 40px;
+  color: var(--muted);
+  font-size: .85rem;
+}
+footer.site strong { color: var(--ink); }
+
+.breadcrumb { font-size: .82rem; color: var(--muted); margin: 22px 0 8px; }
+
+@media (max-width: 860px) {
+  .detail { grid-template-columns: 1fr; }
+  .hero h2 { font-size: 1.6rem; }
+}

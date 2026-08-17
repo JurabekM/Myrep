@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Analitika — Smart Moliya Admin{% endblock %}
+{% block content %}
+<h2>Kunlik faol foydalanuvchilar (DAU, so'nggi 14 kun)</h2>
+<div class="form-box" style="max-width: 700px;">
+    {% for d in dau %}
+    <div class="bar-row">
+        <span style="width:90px;">{{ d.day }}</span>
+        <div class="bar" style="width: {{ (d.active_users / max_dau * 400)|int }}px;"></div>
+        <span>{{ d.active_users }}</span>
+    </div>
+    {% else %}
+    <p>So'nggi 14 kunda faollik qayd etilmagan</p>
+    {% endfor %}
+</div>
+{% endblock %}

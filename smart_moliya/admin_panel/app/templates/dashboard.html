@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Smart Moliya Admin{% endblock %}
+{% block content %}
+<h2>Dashboard</h2>
+<div class="cards">
+    <div class="card">
+        <div class="value">{{ stats.users_total }}</div>
+        <div class="label">Jami foydalanuvchilar</div>
+    </div>
+    <div class="card">
+        <div class="value">{{ stats.users_active }}</div>
+        <div class="label">Faol foydalanuvchilar</div>
+    </div>
+    <div class="card">
+        <div class="value">{{ stats.monthly_active_users }}</div>
+        <div class="label">MAU (30 kun)</div>
+    </div>
+    <div class="card">
+        <div class="value">{{ stats.transactions_total }}</div>
+        <div class="label">Jami tranzaksiyalar</div>
+    </div>
+    <div class="card">
+        <div class="value">{{ "{:,.0f}".format(stats.expense_volume) }}</div>
+        <div class="label">Xarajatlar hajmi (UZS)</div>
+    </div>
+</div>
+
+<h2>So'nggi tranzaksiyalar</h2>
+<table>
+    <tr><th>Sana</th><th>Foydalanuvchi</th><th>Turi</th><th>Summa</th><th>Izoh</th></tr>
+    {% for t in transactions %}
+    <tr>
+        <td>{{ t.occurred_at }}</td>
+        <td>{{ t.phone or t.user_id }}</td>
+        <td>{{ t.type }}</td>
+        <td>{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+        <td>{{ t.note or "—" }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">Hozircha tranzaksiya yo'q</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

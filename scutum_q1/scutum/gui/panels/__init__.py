@@ -1,0 +1,12 @@
+from .attacks import AttacksPanel  # noqa: F401
+from .devices import DevicesPanel  # noqa: F401
+from .fraud_lab import FraudLabPanel  # noqa: F401
+from .inspector import InspectorPanel  # noqa: F401
+from .institutions import InstitutionsPanel  # noqa: F401
+from .overview import OverviewPanel  # noqa: F401
+from .sfile import SFilePanel  # noqa: F401
+from .ratchet import RatchetPanel  # noqa: F401
+from .session import SessionPanel  # noqa: F401
+from .tests import TestsPanel  # noqa: F401
+from .transparency_panel import TransparencyPanel  # noqa: F401
+from .txn_confirm_panel import TxnConfirmPanel  # noqa: F401

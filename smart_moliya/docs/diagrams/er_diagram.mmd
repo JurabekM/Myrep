@@ -1,0 +1,130 @@
+erDiagram
+    USERS ||--o{ WALLETS : owns
+    USERS ||--o{ CARDS : owns
+    USERS ||--o{ TRANSACTIONS : creates
+    USERS ||--o{ GOALS : sets
+    USERS ||--o{ LOANS : has
+    USERS ||--o{ DEBTS : has
+    USERS ||--o{ INVESTMENTS : holds
+    USERS ||--o{ BUDGETS : defines
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ ACHIEVEMENTS : earns
+    USERS ||--o{ AI_LOGS : generates
+    USERS }o--o{ FAMILY_GROUPS : member_of
+
+    WALLETS ||--o{ TRANSACTIONS : holds
+    CARDS ||--o{ TRANSACTIONS : holds
+    CATEGORIES ||--o{ TRANSACTIONS : classifies
+    BUDGETS ||--o{ CATEGORIES : tracks
+
+    FAMILY_GROUPS ||--o{ USERS : parent_child
+    FAMILY_GROUPS ||--o{ WALLETS : shared_wallet
+
+    USERS {
+        uuid id PK
+        string phone
+        string email
+        string password_hash
+        string auth_provider
+        string language
+        datetime created_at
+    }
+    WALLETS {
+        uuid id PK
+        uuid user_id FK
+        string name
+        string currency
+        decimal balance
+        bool is_shared
+        int version
+    }
+    CARDS {
+        uuid id PK
+        uuid user_id FK
+        string bank_code
+        string last4
+        string type
+    }
+    TRANSACTIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid wallet_id FK
+        uuid category_id FK
+        string type
+        decimal amount
+        string currency
+        string source
+        datetime occurred_at
+        string sync_status
+        int version
+    }
+    CATEGORIES {
+        uuid id PK
+        uuid user_id FK
+        string name
+        string type
+        string icon
+    }
+    BUDGETS {
+        uuid id PK
+        uuid user_id FK
+        string period
+        decimal limit_amount
+        datetime start_date
+    }
+    GOALS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        decimal target_amount
+        decimal current_amount
+        date target_date
+    }
+    LOANS {
+        uuid id PK
+        uuid user_id FK
+        decimal principal
+        decimal interest_rate
+        date due_date
+        decimal penalty
+    }
+    DEBTS {
+        uuid id PK
+        uuid user_id FK
+        string direction
+        string counterparty
+        decimal amount
+        date due_date
+    }
+    INVESTMENTS {
+        uuid id PK
+        uuid user_id FK
+        string asset_type
+        decimal quantity
+        decimal avg_price
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        string type
+        string payload
+        bool is_read
+    }
+    ACHIEVEMENTS {
+        uuid id PK
+        uuid user_id FK
+        string badge_code
+        datetime earned_at
+    }
+    AI_LOGS {
+        uuid id PK
+        uuid user_id FK
+        string model
+        string input_ref
+        string output_ref
+    }
+    FAMILY_GROUPS {
+        uuid id PK
+        uuid owner_user_id FK
+        string name
+    }

@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor U as Foydalanuvchi
+    participant App as Flutter App
+    participant Local as SQLite (offline)
+    participant Sync as SyncEngine
+    participant API as Core Backend
+    participant AI as AI Service
+    participant DB as PostgreSQL
+
+    U->>App: "85000 so'm ovqatga" (ovoz/matn/chek)
+    App->>AI: kategoriya/summa aniqlash so'rovi (online bo'lsa)
+    AI-->>App: {category: "Food", amount: 85000}
+    App->>Local: tranzaksiya yozish (sync_status=pending)
+    Local-->>App: OK (darhol UI yangilanadi)
+
+    alt Internet mavjud
+        App->>Sync: push pending yozuvlar
+        Sync->>API: POST /api/v1/transactions
+        API->>DB: INSERT transaction
+        API-->>Sync: 201 Created {id, version}
+        Sync->>Local: sync_status=synced, version=...
+    else Offline
+        App-->>U: "Offline saqlandi, internet bo'lganda sinxronlanadi"
+    end
+
+    API->>AI: anomaliya tekshiruvi (async)
+    AI-->>API: risk_score
+    API->>API: agar risk_score yuqori bo'lsa notification yaratish

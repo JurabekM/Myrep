@@ -1,0 +1,32 @@
+2026-07-11 17:14:58 | INFO     | database.seed | Demo ma'lumotlar yaratilmoqda (birinchi ishga tushirish)...
+2026-07-11 17:14:59 | INFO     | database.seed | Demo ma'lumotlar tayyor: 13 viloyat, 26 tuman, 140 dala.
+2026-07-11 17:14:59 | INFO     | root | Birinchi ishga tushirish yakunlandi: demo ma'lumotlar yaratildi.
+2026-07-11 17:15:00 | INFO     | root | ML modellari o'qitilmoqda (birinchi marta, ~10-30 soniya)...
+2026-07-11 17:15:01 | INFO     | ml.service | ML modellari o'qitildi: yield R²=0.968 (random_forest)
+2026-07-11 17:15:02 | INFO     | database.backup | Zaxira nusxa yaratildi: agriculture_20260711_171502_selfcheck.db
+2026-07-11 17:17:08 | INFO     | api.routes | REST API marshrutlari ro'yxatdan o'tdi (/api/*).
+2026-07-11 17:17:08 | INFO     | core.plugin_manager | Plugin yuklandi: Tuproq tahlili (soil_analysis.py)
+2026-07-11 17:17:08 | INFO     | core.background | Periodic job 'auto-backup' started (every 86400s)
+2026-07-11 17:17:08 | INFO     | core.background | Periodic job 'weather-refresh' started (every 3600s)
+2026-07-11 17:17:08 | INFO     | app.main | Dashboard ishga tushmoqda: http://127.0.0.1:8080
+2026-07-11 17:17:12 | INFO     | weather.service | Ob-havo yangilandi: 42 yozuv.
+2026-07-11 18:10:25 | INFO     | api.routes | REST API marshrutlari ro'yxatdan o'tdi (/api/*).
+2026-07-11 18:10:25 | INFO     | core.plugin_manager | Plugin yuklandi: Tuproq tahlili (soil_analysis.py)
+2026-07-11 18:10:25 | INFO     | core.background | Periodic job 'auto-backup' started (every 86400s)
+2026-07-11 18:10:25 | INFO     | core.background | Periodic job 'weather-refresh' started (every 3600s)
+2026-07-11 18:10:25 | INFO     | app.main | Dashboard ishga tushmoqda: http://127.0.0.1:8080
+2026-07-11 20:24:53 | INFO     | api.routes | REST API marshrutlari ro'yxatdan o'tdi (/api/*).
+2026-07-11 20:24:53 | INFO     | core.plugin_manager | Plugin yuklandi: Tuproq tahlili (soil_analysis.py)
+2026-07-11 20:24:53 | INFO     | core.background | Periodic job 'auto-backup' started (every 86400s)
+2026-07-11 20:24:53 | INFO     | core.background | Periodic job 'weather-refresh' started (every 3600s)
+2026-07-11 20:24:53 | INFO     | app.main | Dashboard ishga tushmoqda: http://127.0.0.1:8080
+2026-07-11 21:20:08 | ERROR    | asyncio | Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\comp_2.1\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение
