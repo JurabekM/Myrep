@@ -1,0 +1,161 @@
+"""DistribOS AI desktop — kirish nuqtasi.
+
+Uch xil usulda ishga tushadi (testda qulflangan):
+
+* ``python run.py``
+* ``python -m distribos.main``
+* ``python apps/desktop/src/distribos/main.py``
+"""
+
+from __future__ import annotations
+
+import logging
+import sys
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
+# Fayl to'g'ridan-to'g'ri ishga tushirilganda paket topilishi uchun.
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from distribos.infrastructure.config import (  # noqa: E402
+    PUBLIC_PILOT_WARNING,
+    AppSettings,
+    ConfigError,
+    load_settings,
+)
+
+logger = logging.getLogger("distribos")
+
+
+def configure_logging(settings: AppSettings) -> None:
+    """Fayl + konsol jurnali, aylanish bilan.
+
+    Jurnalda maxfiy payload, kalit yoki mijoz ma'lumoti BO'LMASLIGI kerak —
+    buni `tests/security/test_logging.py` tekshiradi.
+    """
+    settings.paths.ensure()
+    log_file = settings.paths.log_dir / "distribos.log"
+
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)-7s %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
+    file_handler = RotatingFileHandler(
+        log_file, maxBytes=5 * 1024 * 1024, backupCount=5, encoding="utf-8"
+    )
+    file_handler.setFormatter(formatter)
+
+    console = logging.StreamHandler(sys.stderr)
+    console.setFormatter(formatter)
+
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.handlers.clear()
+    root.addHandler(file_handler)
+    root.addHandler(console)
+
+    # Kutubxonalar juda gapiruvchan; ularni jimroq qilamiz.
+    logging.getLogger("paho").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+
+
+def run_gui(argv: list[str] | None = None) -> int:
+    """Grafik ilovani ishga tushiradi."""
+    from PySide6.QtWidgets import QApplication, QMessageBox
+
+    from distribos.app_context import build_context
+    from distribos.presentation.main_window import MainWindow
+    from distribos.presentation.theme import stylesheet
+
+    try:
+        settings = load_settings()
+    except ConfigError as exc:
+        # Qt hali yo'q — konsolga chiqaramiz.
+        print(f"Konfiguratsiya xatosi:\n{exc}", file=sys.stderr)
+        return 2
+
+    configure_logging(settings)
+    logger.info("DistribOS AI ishga tushmoqda (profil: %s)", settings.mqtt.profile.value)
+
+    application = QApplication(argv if argv is not None else sys.argv)
+    application.setApplicationName("DistribOS AI")
+    application.setOrganizationName("DistribOS")
+    application.setStyleSheet(stylesheet())
+
+    try:
+        context = build_context(settings, allow_insecure_secrets=True)
+    except Exception as exc:
+        logger.exception("Ishga tushirib bo'lmadi")
+        QMessageBox.critical(
+            None, "Ishga tushmadi",
+            f"Dasturni ishga tushirib bo'lmadi.\n\n{exc}\n\n"
+            f"Jurnal: {settings.paths.log_dir / 'distribos.log'}",
+        )
+        return 1
+
+    if settings.requires_public_pilot_consent:
+        answer = QMessageBox.warning(
+            None, "Ochiq broker rejimi",
+            PUBLIC_PILOT_WARNING + "\n\nDavom etasizmi?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            context.close()
+            return 0
+
+    window = MainWindow(context)
+    window.show()
+
+    # Brokerga ulanish UI ko'ringandan KEYIN — ulanish sekin bo'lsa ham
+    # oyna darhol chiqadi va dastur "qotib qolgan"dek ko'rinmaydi.
+    try:
+        if context.transport is not None:
+            context.transport.connect()   # type: ignore[union-attr]
+    except Exception as exc:
+        logger.warning("Brokerga ulanib bo'lmadi: %s", exc)
+        window.statusBar().showMessage(
+            "Brokerga ulanib bo'lmadi — dastur ulanishsiz ishlashda davom etadi", 8000
+        )
+
+    window.start_sync()
+    return application.exec()
+
+
+def run_console() -> int:
+    """Grafik muhitsiz holat tekshiruvi (CI va diagnostika uchun)."""
+    from distribos.app_context import build_context
+
+    settings = load_settings()
+    configure_logging(settings)
+    context = build_context(settings, allow_insecure_secrets=True)
+    try:
+        health = context.provider.protocol_health_check()
+        queued, dead = context.engine.queue_depth()
+        print("DistribOS AI — holat")
+        print(f"  Protokol       : AETHER-Q {health.protocol_version} "
+              f"(profil 0x{health.profile_id:02x})")
+        print(f"  Kalit avlodi   : #{health.epoch}")
+        print(f"  Qurilma        : {health.device_id_masked}")
+        print(f"  Qurilmalar     : {health.peers_known} "
+              f"({health.peers_revoked} bekor qilingan)")
+        print(f"  Broker profili : {settings.mqtt.profile.value}")
+        print(f"  Broker         : {settings.mqtt.host}:{settings.mqtt.port}")
+        print(f"  Navbat         : {queued} yuborilmagan, {dead} xato")
+        print(f"  Baza           : {settings.paths.database_path}")
+        if health.blocking_reasons:
+            print("  E'tibor        : " + "; ".join(health.blocking_reasons))
+        return 0
+    finally:
+        context.close()
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = list(argv if argv is not None else sys.argv[1:])
+    if "--check" in arguments or "--status" in arguments:
+        return run_console()
+    return run_gui()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
