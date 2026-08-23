@@ -1,0 +1,44 @@
+# DIQQAT: barcha katalog qoidalari `/` bilan ANCHOR qilingan.
+# Anchor'siz `data/` yoki `build/` qoidasi manba kodni ham yutib yuboradi
+# (masalan `apps/android/.../data/` — bu Clean Architecture qatlami!).
+# O'zgartirgandan keyin `git status --ignored` bilan tekshiring.
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+/.venv/
+/apps/desktop/.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Ishga tushirish vaqtidagi ma'lumot (manba kod EMAS) ---
+/apps/desktop/var/
+/apps/desktop/*.sqlite3
+/apps/desktop/*.sqlite3-wal
+/apps/desktop/*.sqlite3-shm
+
+# --- Build chiqishi (anchor'langan, faqat ildizdan) ---
+/dist/
+/packaging/out/
+/apps/desktop/build/
+/apps/android/build/
+/apps/android/*/build/
+/apps/android/.gradle/
+/apps/android/local.properties
+/apps/android/.kotlin/
+
+# --- Sirlar: HECH QACHON commit qilinmaydi ---
+*.keystore
+*.jks
+/apps/android/keystore.properties
+.env
+.env.*
+!.env.example
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

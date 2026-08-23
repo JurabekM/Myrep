@@ -1,0 +1,22 @@
+# Butun repo uchun LF normallashtirish.
+* text=auto eol=lf
+
+# KRITIK: vendor qilingan AETHER-Q yadrosi BAYTMA-BAYT saqlanadi.
+# Windows'da git avtomatik LF->CRLF qilsa, SHA-256 manifest testi toza
+# klonda YIQILADI (yoki undan ham yomoni — manifest CRLF bo'yicha qayta
+# yozilsa, auditdan o'tgan bayt bilan bog'liqlik uziladi).
+# `-text` = hech qanday konvertatsiya yo'q.
+apps/desktop/src/distribos/aether_q/vendor/** -text
+
+# KAT va test vektorlari ham baytma-bayt taqqoslanadi.
+tests/interoperability/*.json -text
+apps/android/**/shared-kat/*.json -text
+
+# Binar fayllar
+*.png binary
+*.jpg binary
+*.pdf binary
+*.keystore binary
+*.jks binary
+*.apk binary
+*.aab binary
