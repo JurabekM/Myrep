@@ -123,31 +123,77 @@ def run_gui(argv: list[str] | None = None) -> int:
 
 
 def run_console() -> int:
-    """Grafik muhitsiz holat tekshiruvi (CI va diagnostika uchun)."""
+    """Grafik muhitsiz holat tekshiruvi (CI va diagnostika uchun).
+
+    DIQQAT: paketlangan (`--windowed`) build'da `sys.stdout` yo'q va
+    ko'tarilgan istisno PyInstaller'ning MODAL dialogiga aylanadi —
+    tashqaridan bu "dastur osilib qoldi" bo'lib ko'rinadi. Shuning
+    uchun bu yerda hamma narsa ushlanadi va natija:
+
+    * stdout ga (bo'lsa),
+    * jurnal fayliga (doim),
+    * `--check` uchun `status.txt` ga
+
+    yoziladi. Chiqish kodi ham to'g'ri qaytariladi.
+    """
     from distribos.app_context import build_context
 
     settings = load_settings()
     configure_logging(settings)
-    context = build_context(settings, allow_insecure_secrets=True)
+
+    lines: list[str] = []
+
+    def emit(text: str = "") -> None:
+        lines.append(text)
+        try:
+            print(text)
+        except Exception:
+            pass   # windowed build'da stdout yo'q — jurnal baribir bor
+
+    try:
+        context = build_context(settings, allow_insecure_secrets=True)
+    except Exception as exc:
+        logger.exception("Holat tekshiruvi bajarilmadi")
+        emit(f"XATOLIK: {type(exc).__name__}: {exc}")
+        _write_status(settings, lines)
+        return 1
+
     try:
         health = context.provider.protocol_health_check()
         queued, dead = context.engine.queue_depth()
-        print("DistribOS AI — holat")
-        print(f"  Protokol       : AETHER-Q {health.protocol_version} "
-              f"(profil 0x{health.profile_id:02x})")
-        print(f"  Kalit avlodi   : #{health.epoch}")
-        print(f"  Qurilma        : {health.device_id_masked}")
-        print(f"  Qurilmalar     : {health.peers_known} "
-              f"({health.peers_revoked} bekor qilingan)")
-        print(f"  Broker profili : {settings.mqtt.profile.value}")
-        print(f"  Broker         : {settings.mqtt.host}:{settings.mqtt.port}")
-        print(f"  Navbat         : {queued} yuborilmagan, {dead} xato")
-        print(f"  Baza           : {settings.paths.database_path}")
+        emit("DistribOS AI — holat")
+        emit(f"  Protokol       : AETHER-Q {health.protocol_version} "
+             f"(profil 0x{health.profile_id:02x})")
+        emit(f"  Kalit avlodi   : #{health.epoch}")
+        emit(f"  Qurilma        : {health.device_id_masked}")
+        emit(f"  Qurilmalar     : {health.peers_known} "
+             f"({health.peers_revoked} bekor qilingan)")
+        emit(f"  Broker profili : {settings.mqtt.profile.value}")
+        emit(f"  Broker         : {settings.mqtt.host}:{settings.mqtt.port}")
+        emit(f"  Navbat         : {queued} yuborilmagan, {dead} xato")
+        emit(f"  Baza           : {settings.paths.database_path}")
         if health.blocking_reasons:
-            print("  E'tibor        : " + "; ".join(health.blocking_reasons))
+            emit("  E'tibor        : " + "; ".join(health.blocking_reasons))
+        _write_status(settings, lines)
         return 0
+    except Exception as exc:
+        logger.exception("Holat tekshiruvi bajarilmadi")
+        emit(f"XATOLIK: {type(exc).__name__}: {exc}")
+        _write_status(settings, lines)
+        return 1
     finally:
         context.close()
+
+
+def _write_status(settings: AppSettings, lines: list[str]) -> None:
+    """Holatni faylga yozadi — grafik build'da stdout ishonchsiz."""
+    try:
+        settings.paths.ensure()
+        (settings.paths.log_dir / "status.txt").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
+    except OSError:
+        logger.warning("status.txt yozilmadi", exc_info=True)
 
 
 def main(argv: list[str] | None = None) -> int:

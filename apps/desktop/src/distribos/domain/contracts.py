@@ -16,9 +16,16 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
-#: `apps/desktop/src/distribos/domain/contracts.py` -> repo ildizi
-_REPO_ROOT = Path(__file__).resolve().parents[5]
-REGISTRY_PATH = _REPO_ROOT / "contracts" / "events" / "registry.json"
+def _registry_path() -> Path:
+    """Kontrakt faylining yo'li.
+
+    Paketda va manba daraxtida BOSHQA-BOSHQA joyda yotadi, shuning uchun
+    `infrastructure.resources` orqali hisoblanadi (u yerdagi izohga
+    qarang — bu tasodifan "ishlaydigan" xato sinfini yopadi).
+    """
+    from distribos.infrastructure.resources import resource_path
+
+    return resource_path("contracts", "events", "registry.json")
 
 
 class ContractError(ValueError):
@@ -156,7 +163,7 @@ def _check_type(context: str, name: str, expected: str, value: Any) -> None:
 @cache
 def load_registry(path: Path | None = None) -> ContractRegistry:
     """Kontraktlarni yuklaydi (bir marta, keshlanadi)."""
-    source = path or REGISTRY_PATH
+    source = path or _registry_path()
     if not source.exists():
         raise ContractError(f"Kontrakt fayli topilmadi: {source}")
 
