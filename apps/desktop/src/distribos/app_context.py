@@ -51,6 +51,7 @@ class AppContext:
     command: CommandService
     engine: SyncEngine
     invitations: InvitationRegistry
+    provisioning: object
     secret_store: SecretStore
     device_id: bytes
     tenant_id: bytes
@@ -182,19 +183,31 @@ def build_context(
     projector = Projector()
     command = CommandService(store, projector, actor_role="owner")
 
+    from distribos.sync.provisioning import ProvisioningService
+
+    invitations = InvitationRegistry()
+    provisioning = ProvisioningService(
+        invitations,
+        tenant_id=tenant_id,
+        host_device_id=device_id,
+        host_sign_public_key=keys.sign_public_key,
+        secret_store=secret_store,
+    )
+
     transport = _build_transport(resolved, tenant_id, device_id)
     engine = SyncEngine(
         device_id=device_id, store=store, provider=provider,
         transport=transport, session_factory=database.session, projector=projector,
     )
+    engine.attach_provisioning(provisioning)
     if hasattr(transport, "attach_engine"):
         transport.attach_engine(engine)   # type: ignore[attr-defined]
 
     return AppContext(
         settings=resolved, database=database, provider=provider, store=store,
-        command=command, engine=engine, invitations=InvitationRegistry(),
-        secret_store=secret_store, device_id=device_id, tenant_id=tenant_id,
-        transport=transport,
+        command=command, engine=engine, invitations=invitations,
+        provisioning=provisioning, secret_store=secret_store,
+        device_id=device_id, tenant_id=tenant_id, transport=transport,
     )
 
 

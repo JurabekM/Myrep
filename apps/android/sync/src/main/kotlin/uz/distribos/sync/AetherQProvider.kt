@@ -195,13 +195,20 @@ class AndroidAetherQProvider(
             throw AetherQException(RejectReason.FOREIGN_TENANT)
         }
 
-        // 7. Jo'natuvchi ma'lum va bekor qilinmagan.
+        // 7. Jo'natuvchi ma'lum, TASDIQLANGAN va bekor qilinmagan.
+        //
         //    DIQQAT: bu imzo tekshiruvidan OLDIN. Bekor qilingan
         //    qurilmaning imzosi matematik jihatdan hali ham TO'G'RI.
+        //
+        //    FAQAT "ACTIVE" qabul qilinadi: "INVITED" yetarli bo'lsa,
+        //    egasining qo'lda tasdig'i ma'nosiz bo'lardi.
         val senderHex = header.senderDeviceId.joinToString("") { "%02x".format(it) }
         val peer = dao.peer(senderHex) ?: throw AetherQException(RejectReason.UNKNOWN_SENDER)
         if (peer.state == "REVOKED") {
             throw AetherQException(RejectReason.REVOKED_SENDER)
+        }
+        if (peer.state != "ACTIVE") {
+            throw AetherQException(RejectReason.UNKNOWN_SENDER, "holat: ${peer.state}")
         }
 
         // 8. Imzo

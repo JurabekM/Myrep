@@ -76,14 +76,21 @@ Sana: 2026-08-23
 
 Bular ochiq va ular haqida da'vo qilinmaydi.
 
-### 5.1. Desktop ↔ Android jonli sinxronizatsiya
+### 5.1. Android tomonidagi ulash ekrani
 
-Protokol **baytma-bayt tasdiqlangan** (KAT testlari), lekin ikki qurilma
-bir-birini avtomatik topmaydi: QR provisioning oqimi desktopda yaratiladi,
-ammo Android tomonida skanerlash ekrani yozilmagan va epoch kalitini
-uzatuvchi AETHER-Q sessiyasi UI'ga ulanmagan.
+**Yangilandi:** BOOT-1 ulash protokoli yozildi va to'liq sinaldi
+(`tests/end-to-end/test_provisioning.py`, 8 test). Endi yangi qurilma
+QR taklif orqali qo'shiladi, epoch kalitini oladi va shundan keyin
+oddiy DES-1 sinxronizatsiyasi ikki tomonlama ishlaydi — bu **avtomatik
+test bilan tasdiqlangan**.
 
-Ya'ni: **transport ishlaydi, kripto ishlaydi, ulash oqimi tugallanmagan.**
+Desktop tomoni to'liq: taklif yaratish, JOIN_REQUEST ni tekshirish,
+javob berish, qurilmani tasdiqlash — hammasi UI'da bor.
+
+**Qolgan ish:** Android tomonida QR **skanerlash ekrani** yozilmagan
+(CameraX va ML Kit bog'liqliklari qo'shilgan, ekran yo'q). Ya'ni oqim
+protokol darajasida ishlaydi va sinalgan, lekin telefonda foydalanuvchi
+uni boshlay olmaydi.
 
 ### 5.2. Unumdorlik
 

@@ -279,14 +279,23 @@ class RealAetherQProvider:
             if not des1.tenant_tag_matches(header, keys):
                 raise AetherQError(RejectReason.FOREIGN_TENANT)
 
-            # 7. Jo'natuvchi ma'lum va bekor qilinmagan.
+            # 7. Jo'natuvchi ma'lum, TASDIQLANGAN va bekor qilinmagan.
+            #
             #    DIQQAT: bu imzo tekshiruvidan OLDIN turadi — bekor qilingan
             #    qurilmaning imzosi hali ham matematik jihatdan to'g'ri.
+            #
+            #    FAQAT `ACTIVE` qabul qilinadi. `INVITED` yetarli emas:
+            #    aks holda egasining qo'lda tasdig'i ma'nosiz bo'lardi —
+            #    QR ni ushlab olgan qurilma tasdiqsiz ham yoza olardi.
             peer = session.get(PeerDevice, header.sender_device_id)
             if peer is None:
                 raise AetherQError(RejectReason.UNKNOWN_SENDER)
             if peer.is_revoked:
                 raise AetherQError(RejectReason.REVOKED_SENDER)
+            if peer.state != DeviceState.ACTIVE:
+                raise AetherQError(
+                    RejectReason.UNKNOWN_SENDER, f"holat: {peer.state}"
+                )
 
             # 8. Imzo
             if not des1.verify_signature(packed, ciphertext, signature, peer.sign_public_key):

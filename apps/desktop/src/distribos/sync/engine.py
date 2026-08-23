@@ -68,6 +68,15 @@ class Transport(Protocol):
         message_expiry_seconds: int | None = None,
     ) -> int: ...
 
+    def publish_raw(self, wire: bytes, channel: Channel) -> int:
+        """Muhrlanmagan baytlarni yuboradi.
+
+        FAQAT BOOT-1 uchun: qurilmani ulashda peer'da hali epoch kaliti
+        yo'q. Boshqa hech qanday holatda ishlatilmaydi — buni
+        `tests/security/test_no_plaintext_publish.py` qulflaydi.
+        """
+        ...
+
     def is_connected(self) -> bool: ...
 
 
@@ -233,11 +242,18 @@ class SyncEngine:
     # --- kirish yo'nalishi ------------------------------------------------
 
     def handle_inbound(self, wire: bytes, channel: Channel | None = None) -> None:
-        """Kelgan DES-1 envelope'ni ochadi va qo'llaydi.
+        """Kelgan xabarni ochadi va qo'llaydi.
 
         Har qanday rad etish sababi lokal yoziladi, lekin **tarmoqqa
         qaytarilmaydi** (AETHER-Q N15 — oracle himoyasi).
         """
+        # BOOT-1 (qurilmani ulash) DES-1 EMAS: yangi qurilmada epoch
+        # kaliti hali yo'q, shuning uchun uni DES-1 bilan ocholmaymiz.
+        # U faqat `protocol-control` kanalida keladi.
+        if channel is Channel.PROTOCOL_CONTROL:
+            self._handle_bootstrap(wire)
+            return
+
         try:
             opened = self._provider.open_message(wire)
         except AetherQError as exc:
@@ -486,6 +502,51 @@ class SyncEngine:
         self._push_ranges(
             {k: list(v) for k, v in ranges.items()}, opened.sender_device_id
         )
+
+    # --- qurilmani ulash (BOOT-1) -----------------------------------------
+
+    def attach_provisioning(self, service: object) -> None:
+        """Ulash xizmatini ulaydi (desktop tomonida)."""
+        self._provisioning = service
+
+    def _handle_bootstrap(self, wire: bytes) -> None:
+        """JOIN_REQUEST ni qayta ishlaydi va javob yuboradi.
+
+        Ulash xizmati ulanmagan bo'lsa (masalan telefonda) xabar
+        e'tiborsiz qoldiriladi — bu xato emas.
+        """
+        service = getattr(self, "_provisioning", None)
+        if service is None:
+            return
+
+        from distribos.aether_q import boot1
+        from distribos.aether_q.onboarding import OnboardingError
+
+        try:
+            if boot1.peek_kind(wire) is not boot1.Boot1Kind.JOIN_REQUEST:
+                return
+        except boot1.Boot1Error:
+            return
+
+        try:
+            with self._session_factory() as session:
+                outcome = service.handle_join_request(session, wire)
+                session.commit()
+        except (OnboardingError, boot1.Boot1Error) as exc:
+            # Sabab tarmoqqa qaytarilmaydi — faqat lokal jurnal.
+            logger.warning("Qurilmani ulash rad etildi: %s", exc)
+            self.stats.note_rejection("JOIN_REJECTED")
+            return
+
+        if not self._transport.is_connected():
+            logger.warning("Ulash javobi yuborilmadi: ulanish yo'q")
+            return
+
+        # Javob DES-1 emas, xom BOOT-1 — telefonda hali epoch kaliti yo'q.
+        self._transport.publish_raw(
+            outcome.response_wire, Channel.PROTOCOL_CONTROL,
+        )
+        logger.info("Qurilma ulandi (tasdiq kutmoqda): %s", outcome.display_name)
 
     # --- diagnostika ------------------------------------------------------
 

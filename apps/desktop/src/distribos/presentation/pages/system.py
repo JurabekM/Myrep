@@ -276,6 +276,10 @@ class SecurityPage(BasePage):
         self._rotate.clicked.connect(self._on_rotate)
         self.header.add_action(self._rotate)
 
+        self._confirm = ghost_button("Qurilmani tasdiqlash")
+        self._confirm.clicked.connect(self._on_confirm)
+        self.header.add_action(self._confirm)
+
         self._revoke = danger_button("Qurilmani bekor qilish")
         self._revoke.clicked.connect(self._on_revoke)
         self.header.add_action(self._revoke)
@@ -363,8 +367,53 @@ class SecurityPage(BasePage):
             broker_port=self.context.settings.mqtt.port,
             environment=self.context.settings.environment,
         )
+        # Ulash xizmati sirni eslab qolishi kerak — usiz kelgan
+        # JOIN_REQUEST ni ocholmaydi.
+        self.context.provisioning.remember(invitation)   # type: ignore[attr-defined]
         ShowInvitationDialog(self, invitation).exec()
         self.refresh()
+
+    @Slot()
+    def _on_confirm(self) -> None:
+        """Tasdiq kutayotgan qurilmani faollashtiradi.
+
+        Bu qadam ATAYLAB qo'lda: tarmoqdagi hujumchi taklifni ushlab
+        olsa ham, egasi tanimagan qurilma ro'yxatda paydo bo'ladi va
+        tasdiqlanmaydi.
+        """
+        from distribos.sync.provisioning import confirm_pending_device
+
+        selected = self.table.selected_row()
+        if selected is None:
+            self.warn("Avval jadvaldan qurilmani tanlang.")
+            return
+
+        name = selected[0]
+        with self.context.database.session() as session:
+            devices = [d for d in queries.list_devices(session) if d.display_name == name]
+        if not devices:
+            self.warn("Qurilma topilmadi.")
+            return
+        device = devices[0]
+
+        if device.state == "ACTIVE":
+            self.notify(f"«{name}» allaqachon faol.", "Tasdiqlash")
+            return
+        if not self.confirm(
+            f"«{name}» ({role_name(device.role)}) qurilmasi tasdiqlansinmi?\n\n"
+            "Tasdiqlangandan keyin u ma'lumot yubora va qabul qila boshlaydi.",
+            "Qurilmani tasdiqlash",
+        ):
+            return
+
+        try:
+            with self.context.database.unit_of_work() as session:
+                confirm_pending_device(session, device.device_id)
+        except Exception as exc:
+            self.report_error(exc, "Qurilmani tasdiqlash")
+            return
+        self.refresh()
+        self.notify(f"«{name}» faollashtirildi.", "Tasdiqlandi")
 
     @Slot()
     def _on_rotate(self) -> None:

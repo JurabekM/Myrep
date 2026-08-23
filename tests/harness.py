@@ -83,6 +83,18 @@ class LoopbackBus:
             else:
                 self.queued.append((recipient, sender, channel, envelope.wire))
 
+    def publish_raw(self, sender: bytes, wire: bytes, channel: Channel) -> None:
+        """Muhrlanmagan BOOT-1 baytlari."""
+        self.log.append((sender, channel, len(wire)))
+        self.wire_log.append(wire)
+        for recipient in self.subscribers:
+            if recipient == sender:
+                continue
+            if recipient in self.online and sender in self.online:
+                self.inflight.append((recipient, channel, wire))
+            else:
+                self.queued.append((recipient, sender, channel, wire))
+
     def pump(self, rounds: int = 10) -> int:
         """Yo'ldagi xabarlarni yetkazadi. Yetkazilgan xabarlar sonini qaytaradi."""
         delivered = 0
@@ -136,6 +148,15 @@ class BusTransport:
         if not self.connected:
             raise ConnectionError("offline")
         self._bus.publish(self._device_id, envelope, channel, target_device_id)
+        return 0
+
+    def publish_raw(self, wire: bytes, channel: Channel) -> int:
+        """FAQAT BOOT-1 uchun — qurilmani ulashda epoch kaliti hali yo'q."""
+        if channel is not Channel.PROTOCOL_CONTROL:
+            raise ValueError("publish_raw faqat protocol-control uchun")
+        if not self.connected:
+            raise ConnectionError("offline")
+        self._bus.publish_raw(self._device_id, wire, channel)
         return 0
 
     def is_connected(self) -> bool:

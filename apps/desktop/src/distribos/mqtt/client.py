@@ -25,7 +25,7 @@ from paho.mqtt.properties import Properties
 
 from distribos.aether_q.provider import SealedEnvelope
 from distribos.infrastructure.config import MqttSettings
-from distribos.mqtt.topics import RETAIN_ALLOWED, Channel, TopicSpace
+from distribos.mqtt.topics import CHANNEL_QOS, RETAIN_ALLOWED, Channel, TopicSpace
 
 logger = logging.getLogger(__name__)
 
@@ -276,13 +276,36 @@ class MqttTransport:
         )
         return int(info.mid)
 
+    def publish_raw(self, wire: bytes, channel: Channel) -> int:
+        """Muhrlanmagan baytlarni yuboradi — FAQAT qurilmani ulash uchun.
+
+        Yangi qurilmada epoch kaliti hali yo'q, ya'ni DES-1 envelope
+        ochilmaydi. BOOT-1 esa taklif siri bilan alohida shifrlangan
+        (`specs/distribos-event-seal/BOOT-1.md`), ya'ni bu yerda ham
+        ochiq matn tarmoqqa chiqmaydi.
+
+        Boshqa kanallarda ishlatish TAQIQLANADI va bu qulflangan.
+        """
+        if channel is not Channel.PROTOCOL_CONTROL:
+            raise MqttTransportError(
+                f"publish_raw faqat protocol-control uchun, {channel.value} emas"
+            )
+        if len(wire) > self._settings.max_payload_bytes:
+            raise MqttTransportError(f"{len(wire)} bayt — chegara oshdi")
+
+        info = self._client.publish(
+            self._topics.publish_topic(channel, "boot"),
+            payload=wire,
+            qos=CHANNEL_QOS[channel],
+            retain=False,
+        )
+        return int(info.mid)
+
     def is_connected(self) -> bool:
         return self.status.connected
 
 
 def _qos_for(channel: Channel) -> int:
-    from distribos.mqtt.topics import CHANNEL_QOS
-
     return CHANNEL_QOS[channel]
 
 
