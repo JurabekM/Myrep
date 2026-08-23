@@ -388,36 +388,56 @@ class SyncEngine:
         self._transport.publish(envelope, Channel.SYNC_REQUESTS)
 
     def _handle_digest(self, opened: OpenedEnvelope) -> None:
-        """Peer digest'ini ko'rib, YETISHMAYOTGANIMIZNI so'raymiz."""
+        """Peer digest'ini ko'rib IKKI tomonlama ish qiladi.
+
+        1. **Tortish (pull):** bizda yo'q, peer'da bor hodisalarni so'raymiz.
+        2. **Itarish (push):** peer'da yo'q, bizda bor hodisalarni yuboramiz.
+
+        Ikkalasi ham kerak. Faqat tortish bo'lsa, hodisani YO'QOTGAN
+        tomon o'zi digest yuborishi shart bo'lardi — lekin u nimani
+        yo'qotganini bilmaydi (yo'qolgan xabar haqida xabari yo'q).
+        Itarish shu bo'shliqni yopadi.
+        """
         try:
             remote = cbor2.loads(opened.payload)["digest"]
         except Exception:
             return
 
+        if not self._transport.is_connected():
+            return
+
         local = self.build_digest()
+
+        # 1. Tortish.
         wanted: dict[str, list[int]] = {}
         for device_hex, remote_highest in remote.items():
             local_highest = local.get(device_hex, 0)
             if remote_highest > local_highest:
                 wanted[device_hex] = [local_highest + 1, remote_highest]
 
-        if not wanted or not self._transport.is_connected():
-            return
+        if wanted:
+            envelope = self._provider.seal_message(
+                cbor2.dumps({"ranges": wanted}), ContentType.SYNC_REQUEST
+            )
+            self._transport.publish(
+                envelope, Channel.SYNC_REQUESTS,
+                target_device_id=opened.sender_device_id,
+            )
 
-        envelope = self._provider.seal_message(
-            cbor2.dumps({"ranges": wanted}), ContentType.SYNC_REQUEST
-        )
-        self._transport.publish(
-            envelope, Channel.SYNC_REQUESTS, target_device_id=opened.sender_device_id
-        )
+        # 2. Itarish.
+        missing_for_peer: dict[str, list[int]] = {}
+        for device_hex, local_highest in local.items():
+            remote_highest = remote.get(device_hex, 0)
+            if local_highest > remote_highest:
+                missing_for_peer[device_hex] = [remote_highest + 1, local_highest]
 
-    def _handle_sync_request(self, opened: OpenedEnvelope) -> None:
-        """Yetishmayotgan oraliqni topib, qayta yuboradi."""
-        try:
-            ranges = cbor2.loads(opened.payload)["ranges"]
-        except Exception:
-            return
+        if missing_for_peer:
+            self._push_ranges(missing_for_peer, opened.sender_device_id)
 
+    def _push_ranges(
+        self, ranges: dict[str, list[int]], target_device_id: bytes
+    ) -> None:
+        """Ko'rsatilgan oraliqdagi hodisalarni peer'ga qayta yuboradi."""
         batch: list[dict[str, Any]] = []
         with self._session_factory() as session:
             for device_hex, (start, end) in ranges.items():
@@ -427,16 +447,29 @@ class SyncEngine:
                 )
                 batch.extend(self._event_to_dict(event) for event in events)
 
-        if not batch or not self._transport.is_connected():
+        if not batch:
             return
 
-        # Qayta yuborishda hodisalar QAYTA muhrlanadi (yangi nonce), lekin
-        # `event_id` o'zgarmaydi — qabul qiluvchi dedup qiladi.
+        # Qayta muhrlanadi (yangi nonce — replay oynasidan o'tadi), lekin
+        # `event_id` o'zgarmaydi, ya'ni qabul qiluvchi dedup qiladi.
         envelope = self._provider.seal_message(
             cbor2.dumps({"events": batch}), ContentType.EVENT_BATCH
         )
         self._transport.publish(
-            envelope, Channel.SYNC_RESPONSES, target_device_id=opened.sender_device_id
+            envelope, Channel.SYNC_RESPONSES, target_device_id=target_device_id
+        )
+
+    def _handle_sync_request(self, opened: OpenedEnvelope) -> None:
+        """Yetishmayotgan oraliqni topib, qayta yuboradi."""
+        try:
+            ranges = cbor2.loads(opened.payload)["ranges"]
+        except Exception:
+            return
+
+        if not self._transport.is_connected():
+            return
+        self._push_ranges(
+            {k: list(v) for k, v in ranges.items()}, opened.sender_device_id
         )
 
     # --- diagnostika ------------------------------------------------------
