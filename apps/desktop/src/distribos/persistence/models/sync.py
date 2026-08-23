@@ -111,6 +111,12 @@ class EventLog(Base):
     recorded_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow
     )
+    #: Proyektor necha marta urinib ko'rdi. Hodisa ota-ona yozuvidan
+    #: OLDIN kelishi mumkin (tartib buzilishi) — shunda u kechiktiriladi
+    #: va keyingi urinishda qayta ko'riladi, YO'QOTILMAYDI.
+    projection_attempts: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
 
     __table_args__ = (
         # Anti-entropy yadrosi: "shu qurilmadan N..M oralig'ini ber".

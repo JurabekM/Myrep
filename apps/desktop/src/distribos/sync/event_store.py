@@ -137,9 +137,10 @@ class EventStore:
             idempotency_key=event.idempotency_key,
             payload=cbor2.dumps(event.payload),
             is_local=True,
-            # Lokal hodisa darhol qo'llangan hisoblanadi — biznes jadvali
-            # shu tranzaksiyada allaqachon yangilangan.
-            applied_at=utcnow(),
+            # Lokal hodisa ham proyektor orqali qo'llanadi (applied_at=None).
+            # Yagona kod yo'li: desktop va telefon BIR XIL hodisalardan
+            # BIR XIL holatni hisoblaydi — bu determinizmning asosi.
+            applied_at=None,
         )
         session.add(record)
         session.flush()
@@ -187,7 +188,7 @@ class EventStore:
         ).scalar_one_or_none()
 
         if inbox is not None:
-            inbox.duplicate_count += 1
+            inbox.duplicate_count = (inbox.duplicate_count or 0) + 1
             return None
 
         session.add(

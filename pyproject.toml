@@ -34,6 +34,8 @@ packages = ["apps/desktop/src/distribos"]
 testpaths = ["tests", "apps/desktop/tests"]
 pythonpath = ["apps/desktop/src"]
 addopts = "-q"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = ["error::DeprecationWarning:distribos.*"]
 
 [tool.ruff]
 line-length = 100
