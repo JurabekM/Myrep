@@ -171,6 +171,108 @@ def aead_vectors() -> list[dict]:
     return cases
 
 
+def signature_vectors() -> list[dict]:
+    """Python yaratgan HAQIQIY ML-DSA-65 imzolari.
+
+    Kotlin tomoni ularni TEKSHIRA olishi kerak. Imzo baytlari
+    solishtirilmaydi — ML-DSA hedged va har safar boshqa qiymat beradi.
+    Muhimi: bir tomon imzolagan xabarni ikkinchisi qabul qilsin.
+    """
+    from distribos.aether_q.vendor import sig
+
+    cases = []
+    for label, message in (
+        ("empty", b""),
+        ("short", b"distribos"),
+        ("des1-signed-bytes", des1.SIG_CONTEXT + bytes(range(66)) + bytes(32)),
+        ("large", bytes(range(256)) * 8),
+    ):
+        public_key, private_key = sig.MLDSA65.keygen()
+        signature = sig.MLDSA65.sign(private_key, message)
+        assert sig.MLDSA65.verify(public_key, signature, message)
+        cases.append({
+            "name": label,
+            "public_key": b64(public_key),
+            "message": b64(message),
+            "signature": b64(signature),
+        })
+
+    # Salbiy holat: imzo to'g'ri, lekin BOSHQA xabar uchun.
+    public_key, private_key = sig.MLDSA65.keygen()
+    signature = sig.MLDSA65.sign(private_key, b"asl xabar")
+    cases.append({
+        "name": "wrong-message",
+        "public_key": b64(public_key),
+        "message": b64(b"boshqa xabar"),
+        "signature": b64(signature),
+        "expect_valid": False,
+    })
+
+    # Salbiy holat: begona qurilma kaliti bilan tekshirish.
+    foreign_public, _ = sig.MLDSA65.keygen()
+    cases.append({
+        "name": "foreign-key",
+        "public_key": b64(foreign_public),
+        "message": b64(b"asl xabar"),
+        "signature": b64(signature),
+        "expect_valid": False,
+    })
+    return cases
+
+
+def event_batch_vectors() -> list[dict]:
+    """Hodisa batch'ining SIM ustidagi CBOR shakli.
+
+    Bu vektorlar aynan bir sinf xatoni qulflaydi: Python vaqtni ISO
+    matn, Kotlin esa millisekund sifatida yuborsa, ikkala tomon ham
+    "ishlaydi", lekin bir-birini TUSHUNMAYDI. Bunday nomuvofiqlik faqat
+    ikki qurilma birga sinalganda ko'rinadi.
+    """
+    import cbor2
+
+    cases = []
+    for name, events in (
+        ("single", [{
+            "event_id": "01a02cfe-2a61-761b-924f-e90b9307cf10",
+            "event_type": "ORDER_CREATED",
+            "schema_version": 1,
+            "aggregate_type": "Order",
+            "aggregate_id": "01a02cfe-2a61-761b-924f-e90b9307cf11",
+            "occurred_at_ms": 1787443200000,
+            "logical_timestamp": "1787443200000.00000.6cc2a1b3",
+            "device_sequence": 42,
+            "payload": cbor2.dumps({"order_id": "o1", "total": 15000000}),
+            "actor_id": "user-1",
+        }]),
+        ("batch-with-optionals-missing", [
+            {
+                "event_id": f"evt-{index:04d}",
+                "event_type": "INVENTORY_MOVED",
+                "schema_version": 1,
+                "aggregate_type": "Inventory",
+                "aggregate_id": f"prod-{index}",
+                "occurred_at_ms": 1787443200000 + index * 1000,
+                "logical_timestamp": f"1787443200{index:03d}.00000.dev00001",
+                "device_sequence": index + 1,
+                "payload": cbor2.dumps({"quantity": "10.5"}),
+            }
+            for index in range(3)
+        ]),
+    ):
+        cases.append({
+            "name": name,
+            "events": [
+                {
+                    key: (b64(value) if isinstance(value, bytes) else value)
+                    for key, value in event.items()
+                }
+                for event in events
+            ],
+            "cbor": b64(cbor2.dumps({"events": events})),
+        })
+    return cases
+
+
 def main() -> int:
     payload = {
         "generated_by": "tools/gen_des1_kat.py",
@@ -185,6 +287,8 @@ def main() -> int:
         "nonce": nonce_vectors(),
         "header": header_vectors(),
         "aead": aead_vectors(),
+        "signatures": signature_vectors(),
+        "event_batch": event_batch_vectors(),
     }
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -206,6 +310,8 @@ def main() -> int:
         "nonce": len(payload["nonce"]),
         "header": len(payload["header"]),
         "aead": len(payload["aead"]),
+        "signatures": len(payload["signatures"]),
+        "event_batch": len(payload["event_batch"]),
     }
     print(f"KAT yozildi: {OUTPUT}")
     for name, count in counts.items():

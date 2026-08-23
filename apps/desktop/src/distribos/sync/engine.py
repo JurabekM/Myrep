@@ -198,22 +198,37 @@ class SyncEngine:
 
     @staticmethod
     def _event_to_dict(event: EventLog) -> dict[str, Any]:
-        """Hodisani sim ustidagi shaklga aylantiradi."""
-        return {
+        """Hodisani sim ustidagi shaklga aylantiradi.
+
+        Vaqt **Unix millisekund** (butun son) sifatida uzatiladi, ISO matn
+        emas. Sabab: ISO matnda vaqt mintaqasi, aniqlik va formatlash
+        farqlari bor — Python `2026-08-23T10:00:00+00:00`, Kotlin esa
+        `2026-08-23T10:00Z` yozishi mumkin va ikkalasi bir xil daqiqani
+        boshqacha ifodalaydi. Butun son bunday farqlarga o'rin qoldirmaydi.
+
+        `None` qiymatlar CBOR'ga umuman KIRITILMAYDI: Kotlin tomonida
+        `null` va "maydon yo'q" bir xil ma'noga ega bo'lishi kerak.
+        """
+        wire: dict[str, Any] = {
             "event_id": event.event_id,
             "event_type": event.event_type,
             "schema_version": event.schema_version,
             "aggregate_type": event.aggregate_type,
             "aggregate_id": event.aggregate_id,
-            "actor_id": event.actor_id,
-            "occurred_at": event.occurred_at.isoformat(),
+            "occurred_at_ms": int(event.occurred_at.timestamp() * 1000),
             "logical_timestamp": event.logical_timestamp,
             "device_sequence": event.device_sequence,
-            "correlation_id": event.correlation_id,
-            "causation_id": event.causation_id,
-            "idempotency_key": event.idempotency_key,
             "payload": event.payload,
         }
+        for key, value in (
+            ("actor_id", event.actor_id),
+            ("correlation_id", event.correlation_id),
+            ("causation_id", event.causation_id),
+            ("idempotency_key", event.idempotency_key),
+        ):
+            if value is not None:
+                wire[key] = value
+        return wire
 
     # --- kirish yo'nalishi ------------------------------------------------
 
@@ -266,7 +281,7 @@ class SyncEngine:
                     actor_id=item.get("actor_id"),
                     sender_device_id=opened.sender_device_id,
                     sender_sequence=int(item["device_sequence"]),
-                    occurred_at=_parse_iso(item["occurred_at"]),
+                    occurred_at=_from_millis(item["occurred_at_ms"]),
                     logical_timestamp=item["logical_timestamp"],
                     payload=item["payload"],
                     epoch=opened.epoch,
@@ -506,6 +521,10 @@ class SyncEngine:
         return int(outbox), int(dead)
 
 
-def _parse_iso(value: str) -> dt.datetime:
-    parsed = dt.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=dt.UTC)
+def _from_millis(value: int) -> dt.datetime:
+    """Unix millisekunddan tz-aware UTC datetime.
+
+    tzinfo DOIM qo'yiladi: naive datetime bazadagi timestamptz bilan
+    solishtirilganda jimgina noto'g'ri natija beradi.
+    """
+    return dt.datetime.fromtimestamp(int(value) / 1000, tz=dt.UTC)

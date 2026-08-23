@@ -49,3 +49,5 @@ Desktop.ini
 /apps/android/*/build/
 /apps/android/local.properties
 /apps/android/.kotlin/
+/apps/android/*.keystore
+/apps/android/keystore.properties

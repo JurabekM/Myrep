@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Zaxira nusxa qoidalari.
+
+  Maxfiy material Android'ning oddiy backup'iga TUSHMASLIGI kerak:
+  epoch kaliti, qurilma imzo kaliti va hodisa jurnali chiqib ketsa,
+  butun tenant ochiladi. Shuning uchun baza va sozlamalar chiqarib
+  tashlanadi — tiklash boshqa qurilmadan snapshot orqali bo'ladi.
+-->
+<full-backup-content>
+    <exclude domain="database" path="distribos.db" />
+    <exclude domain="database" path="distribos.db-wal" />
+    <exclude domain="database" path="distribos.db-shm" />
+    <exclude domain="sharedpref" path="distribos_identity.xml" />
+    <exclude domain="file" path="datastore/" />
+</full-backup-content>

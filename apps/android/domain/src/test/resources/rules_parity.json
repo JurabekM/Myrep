@@ -1,0 +1,996 @@
+{
+  "generated_by": "tools/gen_rules_parity.py",
+  "note": "Python va Kotlin domen qoidalari bir xil natija berishini qulflaydi. Chekka holatlar ataylab kiritilgan.",
+  "order_transitions": [
+    {
+      "current": "DRAFT",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "CONFIRMED",
+      "allowed": true
+    },
+    {
+      "current": "DRAFT",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "DRAFT",
+      "target": "CANCELLED",
+      "allowed": true
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "APPROVED",
+      "allowed": true
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "CONFIRMED",
+      "target": "CANCELLED",
+      "allowed": true
+    },
+    {
+      "current": "APPROVED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "ALLOCATED",
+      "allowed": true
+    },
+    {
+      "current": "APPROVED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "APPROVED",
+      "target": "CANCELLED",
+      "allowed": true
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "PICKED",
+      "allowed": true
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "ALLOCATED",
+      "target": "CANCELLED",
+      "allowed": true
+    },
+    {
+      "current": "PICKED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "SHIPPED",
+      "allowed": true
+    },
+    {
+      "current": "PICKED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "PICKED",
+      "target": "CANCELLED",
+      "allowed": true
+    },
+    {
+      "current": "SHIPPED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "DELIVERED",
+      "allowed": true
+    },
+    {
+      "current": "SHIPPED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "SHIPPED",
+      "target": "CANCELLED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "DELIVERED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": true
+    },
+    {
+      "current": "DELIVERED",
+      "target": "RETURNED",
+      "allowed": true
+    },
+    {
+      "current": "DELIVERED",
+      "target": "CANCELLED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "RETURNED",
+      "allowed": true
+    },
+    {
+      "current": "PARTIALLY_RETURNED",
+      "target": "CANCELLED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "RETURNED",
+      "target": "CANCELLED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "DRAFT",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "CONFIRMED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "APPROVED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "ALLOCATED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "PICKED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "SHIPPED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "DELIVERED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "PARTIALLY_RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "RETURNED",
+      "allowed": false
+    },
+    {
+      "current": "CANCELLED",
+      "target": "CANCELLED",
+      "allowed": false
+    }
+  ],
+  "line_totals": [
+    {
+      "quantity": "10",
+      "unit_price": 15000,
+      "discount_percent": "0",
+      "line_total": 150000
+    },
+    {
+      "quantity": "10",
+      "unit_price": 15000,
+      "discount_percent": "10",
+      "line_total": 135000
+    },
+    {
+      "quantity": "3",
+      "unit_price": 3333,
+      "discount_percent": "15",
+      "line_total": 8499
+    },
+    {
+      "quantity": "1",
+      "unit_price": 1,
+      "discount_percent": "50",
+      "line_total": 1
+    },
+    {
+      "quantity": "1",
+      "unit_price": 3,
+      "discount_percent": "50",
+      "line_total": 2
+    },
+    {
+      "quantity": "1",
+      "unit_price": 5,
+      "discount_percent": "50",
+      "line_total": 3
+    },
+    {
+      "quantity": "7",
+      "unit_price": 142857,
+      "discount_percent": "33.33",
+      "line_total": 666699
+    },
+    {
+      "quantity": "0.001",
+      "unit_price": 1000000,
+      "discount_percent": "0",
+      "line_total": 1000
+    },
+    {
+      "quantity": "12.345",
+      "unit_price": 987654,
+      "discount_percent": "7.5",
+      "line_total": 11278144
+    },
+    {
+      "quantity": "1000000",
+      "unit_price": 999999999,
+      "discount_percent": "0",
+      "line_total": 999999999000000
+    },
+    {
+      "quantity": "5",
+      "unit_price": 20000,
+      "discount_percent": "100",
+      "line_total": 0
+    },
+    {
+      "quantity": "0",
+      "unit_price": 15000,
+      "discount_percent": "0",
+      "line_total": 0
+    }
+  ],
+  "order_totals": [
+    {
+      "lines": [
+        {
+          "quantity": "10",
+          "unit_price": 15000,
+          "discount_percent": "10"
+        },
+        {
+          "quantity": "2",
+          "unit_price": 50000,
+          "discount_percent": "0"
+        }
+      ],
+      "subtotal": 250000,
+      "discount_total": 15000,
+      "total": 235000
+    },
+    {
+      "lines": [
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        },
+        {
+          "quantity": "3",
+          "unit_price": 3333,
+          "discount_percent": "15"
+        }
+      ],
+      "subtotal": 99990,
+      "discount_total": 15000,
+      "total": 84990
+    },
+    {
+      "lines": [
+        {
+          "quantity": "1.5",
+          "unit_price": 199999,
+          "discount_percent": "2.5"
+        },
+        {
+          "quantity": "0.25",
+          "unit_price": 800000,
+          "discount_percent": "0"
+        },
+        {
+          "quantity": "100",
+          "unit_price": 1,
+          "discount_percent": "99"
+        }
+      ],
+      "subtotal": 500099,
+      "discount_total": 7599,
+      "total": 492500
+    },
+    {
+      "lines": [],
+      "subtotal": 0,
+      "discount_total": 0,
+      "total": 0
+    }
+  ],
+  "prices": [
+    {
+      "prices": {
+        "retail_price": 20000,
+        "wholesale_price": 17000,
+        "agent_price": 15000
+      },
+      "price_tier": "retail",
+      "unit_price": 20000,
+      "error": null
+    },
+    {
+      "prices": {
+        "retail_price": 20000,
+        "wholesale_price": 17000,
+        "agent_price": 15000
+      },
+      "price_tier": "wholesale",
+      "unit_price": 17000,
+      "error": null
+    },
+    {
+      "prices": {
+        "retail_price": 20000,
+        "wholesale_price": 17000,
+        "agent_price": 15000
+      },
+      "price_tier": "agent",
+      "unit_price": 15000,
+      "error": null
+    },
+    {
+      "prices": {
+        "retail_price": 20000,
+        "wholesale_price": 0,
+        "agent_price": 0
+      },
+      "price_tier": "agent",
+      "unit_price": 20000,
+      "error": null
+    },
+    {
+      "prices": {
+        "retail_price": 0,
+        "wholesale_price": 5000,
+        "agent_price": 0
+      },
+      "price_tier": "retail",
+      "unit_price": 5000,
+      "error": null
+    },
+    {
+      "prices": {
+        "retail_price": 20000,
+        "wholesale_price": 17000
+      },
+      "price_tier": "noma'lum-toifa",
+      "unit_price": 17000,
+      "error": null
+    }
+  ],
+  "credit": [
+    {
+      "current_debt": 800000,
+      "credit_limit": 1000000,
+      "order_total": 300000,
+      "allowed": false,
+      "projected_debt": 1100000
+    },
+    {
+      "current_debt": 500000,
+      "credit_limit": 1000000,
+      "order_total": 300000,
+      "allowed": true,
+      "projected_debt": 800000
+    },
+    {
+      "current_debt": 9000000,
+      "credit_limit": 0,
+      "order_total": 5000000,
+      "allowed": true,
+      "projected_debt": 14000000
+    },
+    {
+      "current_debt": -200000,
+      "credit_limit": 1000000,
+      "order_total": 300000,
+      "allowed": true,
+      "projected_debt": 100000
+    },
+    {
+      "current_debt": 1000000,
+      "credit_limit": 1000000,
+      "order_total": 0,
+      "allowed": true,
+      "projected_debt": 1000000
+    },
+    {
+      "current_debt": 0,
+      "credit_limit": 1000000,
+      "order_total": 1000001,
+      "allowed": false,
+      "projected_debt": 1000001
+    }
+  ],
+  "stock": [
+    {
+      "movements": [
+        {
+          "type": "RECEIPT",
+          "quantity": "100"
+        },
+        {
+          "type": "SALE",
+          "quantity": "30"
+        },
+        {
+          "type": "RETURN_IN",
+          "quantity": "5"
+        },
+        {
+          "type": "WRITE_OFF",
+          "quantity": "2"
+        }
+      ],
+      "on_hand": "73",
+      "reserved": "0",
+      "available": "73"
+    },
+    {
+      "movements": [
+        {
+          "type": "RECEIPT",
+          "quantity": "100"
+        },
+        {
+          "type": "SALE",
+          "quantity": "30"
+        },
+        {
+          "type": "SALE",
+          "quantity": "40"
+        }
+      ],
+      "on_hand": "30",
+      "reserved": "0",
+      "available": "30"
+    },
+    {
+      "movements": [
+        {
+          "type": "RECEIPT",
+          "quantity": "100"
+        },
+        {
+          "type": "RESERVATION",
+          "quantity": "25"
+        },
+        {
+          "type": "RELEASE",
+          "quantity": "10"
+        }
+      ],
+      "on_hand": "100",
+      "reserved": "15",
+      "available": "85"
+    },
+    {
+      "movements": [
+        {
+          "type": "RECEIPT",
+          "quantity": "50"
+        },
+        {
+          "type": "ADJUSTMENT",
+          "quantity": "-8"
+        }
+      ],
+      "on_hand": "42",
+      "reserved": "0",
+      "available": "42"
+    },
+    {
+      "movements": [
+        {
+          "type": "RECEIPT",
+          "quantity": "12.345"
+        },
+        {
+          "type": "SALE",
+          "quantity": "0.345"
+        }
+      ],
+      "on_hand": "12.000",
+      "reserved": "0",
+      "available": "12.000"
+    },
+    {
+      "movements": [
+        {
+          "type": "TRANSFER_IN",
+          "quantity": "10"
+        },
+        {
+          "type": "TRANSFER_OUT",
+          "quantity": "3"
+        }
+      ],
+      "on_hand": "7",
+      "reserved": "0",
+      "available": "7"
+    },
+    {
+      "movements": [],
+      "on_hand": "0",
+      "reserved": "0",
+      "available": "0"
+    }
+  ],
+  "payment_allocations": [
+    {
+      "amount": 500000,
+      "open_orders": [
+        {
+          "order_id": "o1",
+          "outstanding": 300000
+        },
+        {
+          "order_id": "o2",
+          "outstanding": 400000
+        }
+      ],
+      "allocations": [
+        {
+          "order_id": "o1",
+          "amount": 300000
+        },
+        {
+          "order_id": "o2",
+          "amount": 200000
+        }
+      ]
+    },
+    {
+      "amount": 1000000,
+      "open_orders": [
+        {
+          "order_id": "o1",
+          "outstanding": 300000
+        }
+      ],
+      "allocations": [
+        {
+          "order_id": "o1",
+          "amount": 300000
+        }
+      ]
+    },
+    {
+      "amount": 100000,
+      "open_orders": [
+        {
+          "order_id": "o1",
+          "outstanding": 0
+        },
+        {
+          "order_id": "o2",
+          "outstanding": 250000
+        }
+      ],
+      "allocations": [
+        {
+          "order_id": "o2",
+          "amount": 100000
+        }
+      ]
+    },
+    {
+      "amount": 0,
+      "open_orders": [
+        {
+          "order_id": "o1",
+          "outstanding": 100000
+        }
+      ],
+      "allocations": []
+    }
+  ],
+  "movement_types": [
+    "RECEIPT",
+    "SALE",
+    "RETURN_IN",
+    "RETURN_OUT",
+    "TRANSFER_OUT",
+    "TRANSFER_IN",
+    "WRITE_OFF",
+    "ADJUSTMENT",
+    "RESERVATION",
+    "RELEASE"
+  ],
+  "order_states": [
+    "DRAFT",
+    "CONFIRMED",
+    "APPROVED",
+    "ALLOCATED",
+    "PICKED",
+    "SHIPPED",
+    "DELIVERED",
+    "PARTIALLY_RETURNED",
+    "RETURNED",
+    "CANCELLED"
+  ]
+}
