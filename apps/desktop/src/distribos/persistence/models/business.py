@@ -342,6 +342,10 @@ class Order(Base):
         Index("ix_order_customer", "customer_id"),
         Index("ix_order_state_date", "state", "ordered_at"),
         Index("ix_order_agent", "agent_id"),
+        # Ro'yxat DOIM sana bo'yicha teskari tartiblanadi. Kompozit
+        # (state, ordered_at) indeksi bunda ishlamaydi — `state`
+        # qat'iy bo'lmaganda SQLite vaqtinchalik B-tree quradi.
+        Index("ix_order_date", "ordered_at"),
     )
 
 
