@@ -1,0 +1,186 @@
+{
+  "contract_version": 1,
+  "description": "DistribOS AI hodisa kontraktlari. Python va Kotlin SHU faylni o'qiydi — model qo'lda ikki joyda yuritilmaydi.",
+  "envelope_fields": [
+    "event_id",
+    "event_type",
+    "schema_version",
+    "tenant_id",
+    "aggregate_type",
+    "aggregate_id",
+    "actor_id",
+    "device_id",
+    "occurred_at",
+    "logical_timestamp",
+    "device_sequence",
+    "correlation_id",
+    "causation_id",
+    "idempotency_key",
+    "payload"
+  ],
+  "events": {
+    "PRODUCT_CREATED": {
+      "schema_version": 1,
+      "aggregate_type": "Product",
+      "conflict_strategy": "FIELD_VERSION",
+      "required": ["product_id", "sku", "name", "unit"],
+      "optional": ["barcode", "category_id", "brand", "pack_size", "purchase_price", "retail_price", "wholesale_price", "agent_price", "min_stock"],
+      "types": {
+        "product_id": "string", "sku": "string", "name": "string", "unit": "string",
+        "barcode": "string", "category_id": "string", "brand": "string",
+        "pack_size": "decimal", "purchase_price": "money", "retail_price": "money",
+        "wholesale_price": "money", "agent_price": "money", "min_stock": "decimal"
+      }
+    },
+    "PRODUCT_PRICE_CHANGED": {
+      "schema_version": 1,
+      "aggregate_type": "Product",
+      "conflict_strategy": "FIELD_VERSION",
+      "required": ["product_id", "field", "new_price"],
+      "optional": ["old_price", "reason"],
+      "types": {
+        "product_id": "string", "field": "string",
+        "new_price": "money", "old_price": "money", "reason": "string"
+      }
+    },
+    "PRODUCT_UPDATED": {
+      "schema_version": 1,
+      "aggregate_type": "Product",
+      "conflict_strategy": "FIELD_VERSION",
+      "required": ["product_id", "changes"],
+      "optional": [],
+      "types": { "product_id": "string", "changes": "map" }
+    },
+    "CUSTOMER_CREATED": {
+      "schema_version": 1,
+      "aggregate_type": "Customer",
+      "conflict_strategy": "FIELD_VERSION",
+      "required": ["customer_id", "code", "name", "kind"],
+      "optional": ["phone", "address", "territory_id", "assigned_agent_id", "price_tier", "credit_limit", "payment_term_days", "latitude", "longitude", "notes"],
+      "types": {
+        "customer_id": "string", "code": "string", "name": "string", "kind": "string",
+        "phone": "string", "address": "string", "territory_id": "string",
+        "assigned_agent_id": "string", "price_tier": "string",
+        "credit_limit": "money", "payment_term_days": "int",
+        "latitude": "decimal", "longitude": "decimal", "notes": "string"
+      }
+    },
+    "CUSTOMER_UPDATED": {
+      "schema_version": 1,
+      "aggregate_type": "Customer",
+      "conflict_strategy": "FIELD_VERSION",
+      "required": ["customer_id", "changes"],
+      "optional": [],
+      "types": { "customer_id": "string", "changes": "map" }
+    },
+    "ORDER_CREATED": {
+      "schema_version": 1,
+      "aggregate_type": "Order",
+      "conflict_strategy": "STATE_MACHINE",
+      "required": ["order_id", "number", "customer_id", "ordered_at", "lines"],
+      "optional": ["warehouse_id", "agent_id", "note", "currency", "delivery_due"],
+      "types": {
+        "order_id": "string", "number": "string", "customer_id": "string",
+        "ordered_at": "timestamp", "lines": "list", "warehouse_id": "string",
+        "agent_id": "string", "note": "string", "currency": "string",
+        "delivery_due": "date"
+      },
+      "line_fields": {
+        "required": ["line_id", "product_id", "quantity", "unit_price"],
+        "optional": ["discount_percent"],
+        "types": {
+          "line_id": "string", "product_id": "string", "quantity": "decimal",
+          "unit_price": "money", "discount_percent": "decimal"
+        }
+      }
+    },
+    "ORDER_STATE_CHANGED": {
+      "schema_version": 1,
+      "aggregate_type": "Order",
+      "conflict_strategy": "STATE_MACHINE",
+      "required": ["order_id", "from_state", "to_state"],
+      "optional": ["reason"],
+      "types": {
+        "order_id": "string", "from_state": "string",
+        "to_state": "string", "reason": "string"
+      }
+    },
+    "INVENTORY_MOVED": {
+      "schema_version": 1,
+      "aggregate_type": "Inventory",
+      "conflict_strategy": "APPEND_ONLY",
+      "required": ["movement_id", "warehouse_id", "product_id", "movement_type", "quantity", "occurred_at"],
+      "optional": ["batch_id", "unit_cost", "reference_type", "reference_id", "note"],
+      "types": {
+        "movement_id": "string", "warehouse_id": "string", "product_id": "string",
+        "movement_type": "string", "quantity": "decimal", "occurred_at": "timestamp",
+        "batch_id": "string", "unit_cost": "money", "reference_type": "string",
+        "reference_id": "string", "note": "string"
+      }
+    },
+    "PAYMENT_RECORDED": {
+      "schema_version": 1,
+      "aggregate_type": "Payment",
+      "conflict_strategy": "APPEND_ONLY",
+      "required": ["payment_id", "number", "direction", "amount", "occurred_at"],
+      "optional": ["customer_id", "cash_register_id", "method", "currency", "exchange_rate", "allocations", "note"],
+      "types": {
+        "payment_id": "string", "number": "string", "direction": "string",
+        "amount": "money", "occurred_at": "timestamp", "customer_id": "string",
+        "cash_register_id": "string", "method": "string", "currency": "string",
+        "exchange_rate": "decimal", "allocations": "list", "note": "string"
+      }
+    },
+    "PAYMENT_REVERSED": {
+      "schema_version": 1,
+      "aggregate_type": "Payment",
+      "conflict_strategy": "APPEND_ONLY",
+      "required": ["payment_id", "reverses_payment_id", "number", "amount", "occurred_at"],
+      "optional": ["reason"],
+      "types": {
+        "payment_id": "string", "reverses_payment_id": "string", "number": "string",
+        "amount": "money", "occurred_at": "timestamp", "reason": "string"
+      }
+    },
+    "VISIT_RECORDED": {
+      "schema_version": 1,
+      "aggregate_type": "Visit",
+      "conflict_strategy": "LAST_WRITE_WINS",
+      "required": ["visit_id", "customer_id", "agent_id"],
+      "optional": ["route_id", "started_at", "finished_at", "outcome", "latitude", "longitude", "photo_path", "note"],
+      "types": {
+        "visit_id": "string", "customer_id": "string", "agent_id": "string",
+        "route_id": "string", "started_at": "timestamp", "finished_at": "timestamp",
+        "outcome": "string", "latitude": "decimal", "longitude": "decimal",
+        "photo_path": "string", "note": "string"
+      }
+    },
+    "DEVICE_REVOKED": {
+      "schema_version": 1,
+      "aggregate_type": "Device",
+      "conflict_strategy": "APPEND_ONLY",
+      "required": ["device_id", "reason", "revoked_at"],
+      "optional": [],
+      "types": { "device_id": "string", "reason": "string", "revoked_at": "timestamp" }
+    },
+    "USER_CREATED": {
+      "schema_version": 1,
+      "aggregate_type": "User",
+      "conflict_strategy": "FIELD_VERSION",
+      "required": ["user_id", "username", "full_name", "role"],
+      "optional": ["phone", "territory_id"],
+      "types": {
+        "user_id": "string", "username": "string", "full_name": "string",
+        "role": "string", "phone": "string", "territory_id": "string"
+      }
+    }
+  },
+  "conflict_strategies": {
+    "FIELD_VERSION": "Maydon darajasidagi versiya + HLC. Har maydon alohida solishtiriladi.",
+    "STATE_MACHINE": "Holat mashinasi. Noqonuniy o'tish rad etiladi, zid o'tish konflikt sifatida ko'rsatiladi.",
+    "APPEND_ONLY": "Qo'shimcha yozuv. Hech qachon overwrite qilinmaydi — tuzatish uchun yangi yozuv.",
+    "LAST_WRITE_WINS": "HLC bo'yicha eng kechi yutadi. Faqat kritik bo'lmagan ma'lumot uchun."
+  },
+  "money_note": "Barcha `money` maydonlari BUTUN SON (tiyin). Suzuvchi nuqta ishlatilmaydi — SUM() aniqligi buzilmasin.",
+  "decimal_note": "`decimal` maydonlari matn sifatida uzatiladi (masalan \"12.500\") — float yaxlitlash xatosi bo'lmasin."
+}
