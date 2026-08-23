@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
@@ -22,7 +23,7 @@ import kotlin.random.Random
  */
 class MqttTransport(
     private val settings: BrokerSettings,
-    private val topics: Topics.Space,
+    private var topics: Topics.Space,
     private val deviceId: ByteArray,
     private val onMessage: (ByteArray, Topics.Channel?) -> Unit,
 ) {
@@ -89,6 +90,7 @@ class MqttTransport(
     fun isConnected(): Boolean = _status.value.connected
 
     fun connect() {
+        android.util.Log.i("DistribOS", "MQTT connect: ${settings.host}:${settings.port}")
         val builder = MqttClient.builder()
             .useMqttVersion5()
             .identifier("distribos-${deviceId.take(8).joinToString("") { "%02x".format(it) }}")
@@ -122,6 +124,9 @@ class MqttTransport(
 
         connect.send().whenComplete { ack, error ->
             if (error != null) {
+                // Sabab YOZILADI. Foydalanuvchiga «Internet yo'q» deyish
+                // yetarli emas — diagnostikada haqiqiy sabab kerak.
+                android.util.Log.e("DistribOS", "MQTT ulanmadi", error)
                 _status.value = _status.value.copy(
                     connected = false,
                     lastError = error.message,
@@ -140,9 +145,25 @@ class MqttTransport(
         }
     }
 
-    private fun subscribeAll(async: Mqtt5AsyncClient) {
+    /**
+     * Hozir obuna bo'lingan topiklar.
+     *
+     * Obuna IDEMPOTENT bo'lishi shart. `subscribeAll` ikki joydan
+     * chaqiriladi — ulanish tugaganda va topik fazasi almashganda — va
+     * ularning tartibi kafolatlanmagan. Bir xil topikka ikki marta
+     * obuna bo'lingan qurilma har xabarni ikki nusxada oladi;
+     * ikkinchisi takror himoyasida «HUJUM» bo'lib qayd etiladi.
+     *
+     * Bu xato reliz build'ida ko'rindi, debug'da esa ko'rinmadi —
+     * chunki u vaqtga bog'liq poyga edi.
+     */
+    private val subscribed = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
+    private fun subscribeAll(async: Mqtt5AsyncClient): CompletableFuture<Void> {
+        val pending = mutableListOf<CompletableFuture<*>>()
         for ((topic, qos) in topics.subscriptions(deviceId)) {
-            async.subscribeWith()
+            if (!subscribed.add(topic)) continue
+            pending += async.subscribeWith()
                 .topicFilter(topic)
                 .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_LEAST_ONCE)
                 .callback { message ->
@@ -161,11 +182,13 @@ class MqttTransport(
                 }
                 .send()
         }
+        return CompletableFuture.allOf(*pending.toTypedArray())
     }
 
     fun disconnect() {
         client?.disconnect()
         client = null
+        subscribed.clear()
         _status.value = _status.value.copy(connected = false)
     }
 
@@ -197,6 +220,74 @@ class MqttTransport(
             // Retained faqat presence uchun (ADR-0003): broker ma'lumotlar
             // ombori emas.
             .retain(channel in Topics.RETAIN_ALLOWED)
+            .send()
+
+        _status.value = _status.value.copy(published = _status.value.published + 1)
+    }
+
+    /**
+     * Muhrlanmagan baytlarni yuboradi — FAQAT qurilmani ulash uchun.
+     *
+     * Yangi qurilmada epoch kaliti hali yo'q, ya'ni DES-1 envelope
+     * ochilmaydi. BOOT-1 esa taklif siri bilan ALOHIDA shifrlangan, ya'ni
+     * bu yerda ham ochiq matn tarmoqqa chiqmaydi.
+     *
+     * Boshqa kanalda ishlatish TAQIQLANADI.
+     */
+    /**
+     * Topik fazosini almashtiradi (qurilmani ulash vaqtida).
+     *
+     * Ulanmagan telefon o'zining vaqtinchalik fazosida turadi. Taklif
+     * o'qilgach u kompaniyaning fazosiga o'tishi SHART — aks holda
+     * yuborgan xabarini hech kim eshitmaydi.
+     *
+     * Eski obunalar bekor qilinmaydi: ular bizning tasodifiy fazomiz,
+     * u yerga hech kim yozmaydi va keyingi ulanishda ular yo'qoladi.
+     */
+    fun useTenantSpace(space: Topics.Space, onReady: () -> Unit = {}) {
+        // Bir xil fazaga QAYTA obuna bo'lmaymiz. Bu chaqiruv ikki
+        // joydan keladi (taklifni o'qiganda va kompaniya qabul
+        // qilinganda) va odatda ikkalasi ham bir xil fazani beradi.
+        // Ikki marta obuna bo'lish har xabarni ikki nusxada keltiradi,
+        // ikkinchisi esa takror himoyasida «hujum» bo'lib qayd etiladi.
+        if (space == topics) {
+            onReady()
+            return
+        }
+
+        val async = client
+        if (async != null) {
+            // Eski fazadan chiqamiz — u vaqtinchalik edi va u yerda
+            // biz uchun hech narsa yo'q.
+            for ((topic, _) in topics.subscriptions(deviceId)) {
+                if (!subscribed.remove(topic)) continue
+                runCatching { async.unsubscribeWith().topicFilter(topic).send() }
+            }
+        }
+        topics = space
+        if (async == null) {
+            onReady()
+            return
+        }
+        // Obuna TASDIQLANGUNCHA kutamiz. Aks holda birinchi javob
+        // yo'qoladi: broker obuna bo'lmagan mijozga xabar yubormaydi.
+        // Ulash oqimida bu «javob kutilmoqda» da abadiy qolish demak —
+        // va u vaqtga bog'liq, ya'ni goh ishlaydi, goh ishlamaydi.
+        subscribeAll(async).whenComplete { _, _ -> onReady() }
+    }
+
+    fun publishRaw(wire: ByteArray, channel: Topics.Channel) {
+        require(channel == Topics.Channel.PROTOCOL_CONTROL) {
+            "publishRaw faqat protocol-control uchun, ${channel.value} emas"
+        }
+        val async = client ?: return
+        if (wire.size > settings.maxPayloadBytes) return
+
+        async.publishWith()
+            .topic(topics.publishTopic(channel, "boot"))
+            .payload(wire)
+            .qos(MqttQos.AT_LEAST_ONCE)
+            .retain(false)
             .send()
 
         _status.value = _status.value.copy(published = _status.value.published + 1)

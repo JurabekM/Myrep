@@ -47,6 +47,11 @@ extend-exclude = ["apps/desktop/src/distribos/aether_q/vendor"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
+[tool.ruff.lint.per-file-ignores]
+# Pul summasidagi ajratgich ATAYLAB uzilmas probel (U+00A0): raqam
+# satr oxirida bo'linib ketmasin. Bu chalkashlik emas, talab.
+"apps/desktop/src/distribos/domain/formatting.py" = ["RUF001"]
+
 [tool.mypy]
 python_version = "3.13"
 strict = true

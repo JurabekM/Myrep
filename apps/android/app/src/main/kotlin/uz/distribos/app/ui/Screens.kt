@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Receipt
@@ -59,12 +60,23 @@ object RoleTabs {
     private val INVENTORY = TabItem("inventory", "Ombor", Icons.Filled.Inventory)
     private val PAYMENTS = TabItem("payments", "To'lovlar", Icons.Filled.Payments)
     private val SYNC = TabItem("sync", "Holat", Icons.Filled.Sync)
+    private val JOIN = TabItem("join", "Ulash", Icons.Filled.QrCodeScanner)
 
-    fun forRole(role: String): List<TabItem> = when (role) {
-        "warehouse" -> listOf(INVENTORY, ORDERS, SYNC)
-        "cashier" -> listOf(PAYMENTS, CUSTOMERS, SYNC)
-        "manager", "owner" -> listOf(ORDERS, CUSTOMERS, INVENTORY, PAYMENTS, SYNC)
-        else -> listOf(ORDERS, CUSTOMERS, PAYMENTS, SYNC)   // agent
+    /**
+     * @param provisioned qurilma kompyuterga ulanganmi.
+     *
+     * Ulanmagan telefonda FAQAT «Ulash» ekrani ko'rsatiladi: bo'sh
+     * ro'yxatlarni ko'rsatish foydalanuvchini chalg'itadi va u dastur
+     * buzilgan deb o'ylaydi.
+     */
+    fun forRole(role: String, provisioned: Boolean = true): List<TabItem> {
+        if (!provisioned) return listOf(JOIN)
+        return when (role) {
+            "warehouse" -> listOf(INVENTORY, ORDERS, SYNC)
+            "cashier" -> listOf(PAYMENTS, CUSTOMERS, SYNC)
+            "manager", "owner" -> listOf(ORDERS, CUSTOMERS, INVENTORY, PAYMENTS, SYNC)
+            else -> listOf(ORDERS, CUSTOMERS, PAYMENTS, SYNC)   // agent
+        }
     }
 }
 
@@ -306,6 +318,11 @@ fun SyncScreen(state: SyncState, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         val (label, tone) = when {
+            // Muammo bo'lsa «hammasi joyida» DEYILMAYDI. Aks holda
+            // foydalanuvchi pastdagi sonni ko'radi va yuqoridagi yashil
+            // yozuvga ishonmay qoladi.
+            state.deadLetters > 0 ->
+                "${state.deadLetters} ta yozuv qabul qilinmadi" to StatusTone.WARNING
             state.connected && state.queued == 0 -> "Hammasi sinxronlangan" to StatusTone.OK
             state.connected -> "Yuborilmoqda (${state.queued})" to StatusTone.PROGRESS
             state.queued > 0 ->
@@ -333,7 +350,11 @@ fun SyncScreen(state: SyncState, modifier: Modifier = Modifier) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 InfoLine("Ulangan qurilmalar", state.devices.toString())
                 InfoLine("Navbatdagi yozuvlar", state.queued.toString())
-                InfoLine("Yuborilmagan", state.deadLetters.toString())
+                // «Yuborilmagan» EMAS: bu bizdan chiqmagan yozuvlar
+                // emas, bizga kelib rad etilganlari. Ikkisi butunlay
+                // boshqa muammo va ularni chalkashtirish diagnostikani
+                // noto'g'ri yo'nalishga buradi.
+                InfoLine("Qabul qilinmagan", state.deadLetters.toString())
                 InfoLine("Xavfsizlik protokoli", "AETHER-Q ${state.protocolVersion}")
                 InfoLine("Kalit avlodi", "#${state.epoch}")
             }
@@ -378,9 +399,15 @@ fun DistribosApp(
     stock: List<StockRow>,
     payments: List<PaymentRow>,
     syncState: SyncState,
+    provisioned: Boolean = true,
+    joinState: JoinUiState = JoinUiState.Idle,
+    onQrScanned: (ByteArray) -> Unit = {},
+    onManualCode: (String) -> Unit = {},
+    onStartScan: () -> Unit = {},
+    onCancelJoin: () -> Unit = {},
 ) {
-    val tabs = remember(role) { RoleTabs.forRole(role) }
-    var selected by remember(role) { mutableStateOf(tabs.first().key) }
+    val tabs = remember(role, provisioned) { RoleTabs.forRole(role, provisioned) }
+    var selected by remember(role, provisioned) { mutableStateOf(tabs.first().key) }
 
     Scaffold(
         topBar = {
@@ -420,6 +447,13 @@ fun DistribosApp(
                 "inventory" -> InventoryScreen(stock)
                 "payments" -> PaymentsScreen(payments)
                 "sync" -> SyncScreen(syncState)
+                "join" -> JoinScreen(
+                    state = joinState,
+                    onQrScanned = onQrScanned,
+                    onManualCode = onManualCode,
+                    onStartScan = onStartScan,
+                    onCancel = onCancelJoin,
+                )
             }
         }
     }

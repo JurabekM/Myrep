@@ -94,7 +94,9 @@ def resolve_unit_price(product_prices: dict[str, int], price_tier: str) -> int:
     raise DomainError("Mahsulot uchun narx belgilanmagan")
 
 
-def line_total(quantity: Decimal | str, unit_price: int, discount_percent: Decimal | str = 0) -> int:
+def line_total(
+    quantity: Decimal | str, unit_price: int, discount_percent: Decimal | str = 0
+) -> int:
     """Qator summasi (tiyinda, butun son).
 
     Yaxlitlash ROUND_HALF_UP — moliyaviy hisobda odatiy. Butun songa
@@ -174,7 +176,9 @@ def check_credit_limit(current_debt: int, credit_limit: int, order_total: int) -
 # --- ombor qoldig'i -------------------------------------------------------
 
 
-def apply_movement(quantity_on_hand: Decimal, movement_type: str, quantity: Decimal | str) -> Decimal:
+def apply_movement(
+    quantity_on_hand: Decimal, movement_type: str, quantity: Decimal | str
+) -> Decimal:
     """Bitta harakatni qoldiqqa qo'llaydi.
 
     Qoldiq HECH QACHON to'g'ridan-to'g'ri yozilmaydi — u shu funksiya

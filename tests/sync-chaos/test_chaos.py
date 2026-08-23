@@ -17,17 +17,16 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from harness import shared_tenant_setup  # noqa: E402
-
-from distribos.aether_q.provider import AetherQError, ContentType  # noqa: E402
-from distribos.domain.ids import uuid7_str  # noqa: E402
-from distribos.persistence.models import (  # noqa: E402
+from distribos.aether_q.provider import AetherQError, ContentType
+from distribos.domain.ids import uuid7_str
+from distribos.persistence.models import (
     ConflictRecord,
     DeadLetter,
     Order,
     Product,
 )
-from distribos.sync.event_store import NewEvent  # noqa: E402
+from distribos.sync.event_store import NewEvent
+from harness import shared_tenant_setup
 
 
 @pytest.fixture
@@ -251,8 +250,8 @@ def test_oversized_packet_is_rejected(pair) -> None:
 
 def test_foreign_tenant_message_is_rejected() -> None:
     """Boshqa tenantning xabari rad etiladi."""
-    from harness import LoopbackBus, build_node
     from distribos.domain.ids import new_tenant_id
+    from harness import LoopbackBus, build_node
 
     bus = LoopbackBus()
     tenant_a, tenant_b = new_tenant_id(), new_tenant_id()
@@ -296,7 +295,6 @@ def test_unknown_event_type_does_not_crash(pair) -> None:
     desktop.sync()
 
     import cbor2
-
     from distribos.persistence.models import EventLog
 
     with desktop.database.session() as session:

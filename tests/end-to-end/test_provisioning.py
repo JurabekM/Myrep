@@ -17,31 +17,30 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from harness import LoopbackBus, build_node  # noqa: E402
-
-from distribos.aether_q import boot1  # noqa: E402
-from distribos.aether_q.onboarding import (  # noqa: E402
+from distribos.aether_q import boot1
+from distribos.aether_q.onboarding import (
     Invitation,
     InvitationRegistry,
     OnboardingError,
 )
-from distribos.domain.ids import (  # noqa: E402
+from distribos.domain.ids import (
     new_tenant_id,
     opaque_tenant_topic_id,
     uuid7_str,
 )
-from distribos.persistence.models import (  # noqa: E402
+from distribos.persistence.models import (
     DeviceState,
     EpochKeyRecord,
     Order,
     PeerDevice,
     Product,
 )
-from distribos.sync.event_store import NewEvent  # noqa: E402
-from distribos.sync.provisioning import (  # noqa: E402
+from distribos.sync.event_store import NewEvent
+from distribos.sync.provisioning import (
     ProvisioningService,
     confirm_pending_device,
 )
+from harness import LoopbackBus, build_node
 
 
 @pytest.fixture
@@ -122,9 +121,9 @@ def _install_response(phone, invitation: Invitation, wire: bytes) -> None:
         ))
 
     # Telefonning provayderi va hodisa do'koni yangi tenant bilan ishlashi kerak.
-    phone.provider._tenant_id = response.tenant_id      # noqa: SLF001
-    phone.provider._key_cache.clear()                   # noqa: SLF001
-    phone.store._tenant_id = response.tenant_id         # noqa: SLF001
+    phone.provider._tenant_id = response.tenant_id
+    phone.provider._key_cache.clear()
+    phone.store._tenant_id = response.tenant_id
     phone.tenant_id = response.tenant_id
 
 
@@ -146,6 +145,10 @@ def test_full_join_then_live_sync(desktop_and_phone) -> None:
     assert decoded.invitation_id == invitation.invitation_id
     # QR kodda epoch kaliti YO'Q — faqat bir martalik teg.
     assert invitation.secret in payload
+    # Va u qo'lda kiritish uchun yetarlicha KICHIK bo'lishi kerak:
+    # to'liq ML-DSA kaliti (1952 bayt) QR ga sig'sa ham, uni qo'lda
+    # kiritish 4000 belgi degani — amalda ishlamaydi.
+    assert len(payload) < 300, f"QR payload juda katta: {len(payload)} bayt"
     request_wire = _join(phone, decoded)
 
     # 4-6. Desktop tekshiradi va javob beradi.

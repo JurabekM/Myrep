@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class AndroidAetherQProvider(
     private val dao: SyncDao,
-    private val tenantId: ByteArray,
+    private var tenantId: ByteArray,
     private val deviceId: ByteArray,
     private val signPublicKey: ByteArray,
     private val signPrivateKey: ByteArray,
@@ -317,5 +317,16 @@ class AndroidAetherQProvider(
             return if (little.size >= BITMAP_BYTES) little.copyOf(BITMAP_BYTES)
             else little + ByteArray(BITMAP_BYTES - little.size)
         }
+    }
+
+    /**
+     * Kompaniya identifikatorini almashtiradi (faqat ulash paytida).
+     *
+     * Bu qiymat DES-1 muhriga kiradi, ya'ni uni ish vaqtida o'zgartirish
+     * eski hodisalarni o'qib bo'lmaydigan qilib qo'yadi. Shuning uchun
+     * u FAQAT hali hech narsa muhrlanmagan yangi qurilmada chaqiriladi.
+     */
+    fun useTenant(adopted: ByteArray) {
+        tenantId = adopted
     }
 }

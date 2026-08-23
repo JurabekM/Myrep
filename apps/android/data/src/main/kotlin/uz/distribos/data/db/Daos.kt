@@ -272,6 +272,19 @@ interface SyncDao {
     @Query("SELECT * FROM peer_device WHERE deviceIdHex = :deviceIdHex")
     suspend fun peer(deviceIdHex: String): PeerDeviceEntity?
 
+    /** O'zimizdan boshqa FAOL qurilmalar soni — «ulanganmi» mezoni. */
+    @Query(
+        "SELECT COUNT(*) FROM peer_device " +
+            "WHERE deviceIdHex != :ownDeviceIdHex AND state = 'ACTIVE'"
+    )
+    suspend fun activePeerCount(ownDeviceIdHex: String): Int
+
+    @Query(
+        "SELECT COUNT(*) FROM peer_device " +
+            "WHERE deviceIdHex != :ownDeviceIdHex AND state = 'ACTIVE'"
+    )
+    fun observeActivePeerCount(ownDeviceIdHex: String): Flow<Int>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPeer(peer: PeerDeviceEntity)
 

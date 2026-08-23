@@ -37,6 +37,20 @@ object Des1 {
 
     const val MIN_ENVELOPE_SIZE = HEADER_SIZE + AEAD_TAG_SIZE + SIGNATURE_SIZE
 
+    /**
+     * Muhrni OCHMASDAN yuboruvchini o'qiydi.
+     *
+     * Header ochiq matn — bu arzon. Qiymat hali AUTENTIFIKATSIYALANMAGAN,
+     * shuning uchun unga qaror bog'lash mumkin emas. Yagona ruxsat
+     * etilgan foydalanish: o'z aks-sadomizni tashlab yuborish.
+     *
+     * Nega kerak: aks-sado ochilganda replay oynasi uni HUJUM deb qayd
+     * etadi. Jonli sinovda 3 daqiqada 83 ta soxta «replay» yozuvi
+     * to'plandi va haqiqiy hujum ular ichida ko'rinmay qolardi.
+     */
+    fun peekSenderDeviceId(wire: ByteArray): ByteArray? =
+        if (wire.size < HEADER_SIZE) null else wire.copyOfRange(32, 48)
+
     val LABEL: ByteArray = "DistribOS-DES-1/AETHER-Q-v5.1/v1".toByteArray(Charsets.US_ASCII)
     val SIG_CONTEXT: ByteArray = "DES1/sig/v1".toByteArray(Charsets.US_ASCII)
 

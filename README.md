@@ -21,8 +21,10 @@ tasdiqlangan:
 | Desktop ishga tushadi | Installer o'rnatildi, `DistribOS.exe` repo tashqarisida **1.1 s** da ishga tushdi |
 | Desktop ekranlari | 15 ta ekran GUI testida ochilib, ma'lumot yuklanishi tekshirildi |
 | Android ishga tushadi | Release APK emulyatorda o'rnatildi va ochildi, crash yo'q |
+| **Jonli sinxronizatsiya** | Haqiqiy `broker.hivemq.com` orqali: telefon ulandi, 4 hodisa kompyuterga yetdi, kompyuterning mahsuloti telefonga yetdi, 0 rad etilgan xabar |
+| **Reliz APK jonli sinovi** | Minifikatsiyalangan APK ham xuddi shu yo'l bilan ulandi — R8 aynan shu yerda xato chiqargan edi |
 | Android ekranlari | 4 ta ekran emulyatorda qo'lda ochib chiqildi, suratlari `docs/screenshots/` da |
-| Kripto mosligi | Python ↔ Kotlin **baytma-bayt**: 22 test (SHA3, HKDF, KMAC, cSHAKE, DES-1, ML-DSA-65) |
+| Kripto mosligi | Python ↔ Kotlin **baytma-bayt**: 32 test (SHA3, HKDF, KMAC, cSHAKE, DES-1, BOOT-1, ML-DSA-65) |
 | Domen qoidalari mosligi | Python ↔ Kotlin **159 vektor**, 9 test (yaxlitlash chegaralari bilan) |
 | Offline buyurtma | Uzilish → telefonda buyurtma → ulanish → desktopda paydo bo'ldi (avtomatik test) |
 | Dublikat va tartib buzilishi | Xaos testlari: 10× dublikat, teskari tartib, yo'qolgan xabar |
@@ -31,9 +33,6 @@ tasdiqlangan:
 
 **Hali tekshirilmagan** (halol ro'yxat, `docs/HOLAT.md` da batafsil):
 
-* desktop ↔ Android o'rtasida **jonli** sinxronizatsiya — QR provisioning
-  oqimi UI'da to'liq ulanmagan; protokol baytma-bayt tasdiqlangan, lekin
-  ikki qurilma bir-birini avtomatik topmaydi;
 * haqiqiy qurilmada (emulyator emas) sinov;
 * 100 000 mahsulot / 1 million hodisada unumdorlik o'lchovi;
 * uzoq muddatli (soak) sinov.

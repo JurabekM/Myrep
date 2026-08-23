@@ -13,10 +13,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from harness import shared_tenant_setup  # noqa: E402
-
-from distribos.domain.ids import uuid7_str  # noqa: E402
-from distribos.persistence.models import (  # noqa: E402
+from distribos.domain.ids import uuid7_str
+from distribos.persistence.models import (
     DeliveryState,
     InboxEntry,
     Order,
@@ -24,7 +22,8 @@ from distribos.persistence.models import (  # noqa: E402
     OutboxEntry,
     Product,
 )
-from distribos.sync.event_store import NewEvent  # noqa: E402
+from distribos.sync.event_store import NewEvent
+from harness import shared_tenant_setup
 
 
 @pytest.fixture
@@ -110,7 +109,7 @@ def test_application_ack_marks_peer_applied(cluster) -> None:
     product_id, customer_id = _seed_catalog(desktop)
     desktop.sync()
 
-    order_id = _create_order(phone, customer_id, product_id)
+    _create_order(phone, customer_id, product_id)
     phone.sync()
 
     with phone.database.session() as session:
@@ -162,7 +161,6 @@ def test_resent_event_deduplicated_by_inbox(cluster) -> None:
 
     # Aynan shu hodisani qo'lda QAYTA muhrlab yuboramiz.
     import cbor2
-
     from distribos.aether_q.provider import ContentType
     from distribos.persistence.models import EventLog
 

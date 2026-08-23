@@ -17,8 +17,8 @@ Qat'iy qoidalar (topshiriq §11):
 
 from __future__ import annotations
 
-import hashlib
 import datetime as dt
+import hashlib
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -131,9 +131,7 @@ def _row_to_dict(row: Any) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for column in row.__table__.columns:
         value = getattr(row, column.name)
-        if isinstance(value, dt.datetime):
-            value = value.isoformat()
-        elif isinstance(value, dt.date):
+        if isinstance(value, dt.datetime) or isinstance(value, dt.date):
             value = value.isoformat()
         elif isinstance(value, bytes):
             value = value.hex()

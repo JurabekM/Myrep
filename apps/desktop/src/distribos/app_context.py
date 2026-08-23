@@ -8,6 +8,7 @@ qiyinlashadi.
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -65,11 +66,34 @@ class AppContext:
                 logger.debug("Transportni yopishda xato", exc_info=True)
         self.database.dispose()
 
+    #: Digest almashuvi shu oraliqda takrorlanadi (soniya).
+    #:
+    #: Har aylanishda yubormaymiz: digest butun qurilmalar kesimini
+    #: tashiydi va tez-tez yuborilsa ochiq brokerda keraksiz trafik
+    #: bo'ladi. Har aylanishda yubormaslik yo'qotishga olib kelmaydi —
+    #: u shunchaki biroz kechroq tiklanadi.
+    digest_interval_seconds: float = 30.0
+    _last_digest_at: float = -1.0
+
     def run_sync_cycle(self) -> tuple[int, int, int, int]:
         """Bitta sinxronizatsiya aylanishi. Fon oqimidan chaqiriladi."""
         published = self.engine.publish_pending()
         with self.database.unit_of_work() as session:
             self.command.replay_pending(session)
+
+        # Anti-entropiya. Busiz qurilma FAQAT o'zi tinglab turgan paytdagi
+        # hodisalarni oladi: ulanishdan oldin yoki oflayn paytda yaratilgan
+        # hodisalar unga hech qachon yetib bormaydi.
+        now = time.monotonic()
+        if now - self._last_digest_at >= self.digest_interval_seconds:
+            self._last_digest_at = now
+            try:
+                self.engine.send_digest()
+            except Exception:
+                # Digest yuborilmasa ish to'xtamaydi — keyingi aylanishda
+                # qayta urinamiz.
+                logger.debug("Digest yuborilmadi", exc_info=True)
+
         queued, dead = self.engine.queue_depth()
         return published, self.engine.stats.received_events, queued, dead
 
@@ -146,6 +170,30 @@ def _load_private(raw: bytes) -> object:
     return load_der_private_key(raw, password=None)
 
 
+
+class ForeignDatabaseError(RuntimeError):
+    """Ma'lumot fayli boshqa kompaniyaga tegishli."""
+
+
+def _guard_tenant(database: Database, tenant_id: bytes) -> None:
+    """Fayldagi kompaniya bilan qurilma kompaniyasini solishtiradi.
+
+    Bu holat amalda shunday yuzaga keladi: foydalanuvchi eski `data`
+    papkasini saqlab, kalitlarni yo'qotadi (yoki aksincha). Shunda yangi
+    identitet yaratiladi, lekin baza eskisiniki bo'lib qoladi. Jimgina
+    davom etish — ikki kompaniya yozuvlarini bir faylga qo'shish demak.
+    """
+    with database.session() as session:
+        existing = session.execute(select(EpochKeyRecord.tenant_id)).scalars().first()
+    if existing is not None and bytes(existing) != tenant_id:
+        raise ForeignDatabaseError(
+            "Bu ma'lumot fayli boshqa kompaniyaga tegishli. Fayl ochilmadi.\n\n"
+            "Sabab: dastur kalitlari almashtirilgan yoki boshqa kompyuterning "
+            "ma'lumot papkasi ko'chirilgan.\n"
+            "Yechim: to'g'ri kalitlarni tiklang yoki bo'sh papkadan boshlang."
+        )
+
+
 def build_context(
     settings: AppSettings | None = None, *, allow_insecure_secrets: bool = False
 ) -> AppContext:
@@ -167,6 +215,11 @@ def build_context(
         profile_id=resolved.aether_profile_id,
         max_payload_bytes=resolved.mqtt.max_payload_bytes,
     )
+
+    # Bitta ma'lumot fayli — bitta kompaniya. Fayl boshqa kompaniyaga
+    # tegishli bo'lsa OCHILMAYDI: aks holda ikki kompaniya ma'lumoti bir
+    # faylda aralashib ketadi va buni keyin ajratib bo'lmaydi.
+    _guard_tenant(database, tenant_id)
 
     # Birinchi ishga tushirishda epoch kaliti yaratiladi.
     with database.session() as session:
@@ -220,7 +273,7 @@ def _build_transport(settings: AppSettings, tenant_id: bytes, device_id: bytes):
     transport = MqttTransport(settings.mqtt, topics, device_id)
 
     def attach_engine(engine: SyncEngine) -> None:
-        transport._on_message = _make_message_handler(engine)  # noqa: SLF001
+        transport._on_message = _make_message_handler(engine)
 
     transport.attach_engine = attach_engine   # type: ignore[attr-defined]
     return transport

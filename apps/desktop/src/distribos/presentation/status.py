@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from distribos.aether_q.provider import RejectReason
+
 # Formatlash `domain.formatting` da — UI, hisobot va hujjat bir xil ko'rinsin.
 from distribos.domain.formatting import money, quantity
 from distribos.persistence.models import DeliveryState, OrderState

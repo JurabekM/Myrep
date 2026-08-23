@@ -16,6 +16,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+
 def _registry_path() -> Path:
     """Kontrakt faylining yo'li.
 

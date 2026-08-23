@@ -38,6 +38,12 @@ class MainActivity : ComponentActivity() {
                     stock = state.stock,
                     payments = state.payments,
                     syncState = state.sync,
+                    provisioned = state.provisioned,
+                    joinState = state.join,
+                    onQrScanned = viewModel::onQrScanned,
+                    onManualCode = viewModel::onManualCode,
+                    onStartScan = viewModel::startScan,
+                    onCancelJoin = viewModel::cancelJoin,
                 )
             }
         }

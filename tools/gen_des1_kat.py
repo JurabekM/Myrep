@@ -273,6 +273,86 @@ def event_batch_vectors() -> list[dict]:
     return cases
 
 
+def boot1_vectors() -> dict:
+    """BOOT-1 (qurilmani ulash) vektorlari.
+
+    Ulash oqimi Python va Kotlin o'rtasida ishlashi kerak: desktop
+    taklif beradi, telefon JOIN_REQUEST yuboradi, desktop javob qaytaradi.
+    Kalit ajratish yoki nonce farq qilsa, ulash umuman ishlamaydi.
+    """
+    from distribos.aether_q import boot1
+
+    secret = bytes(range(32, 64))
+    keys = boot1.derive_keys(secret)
+
+    key_cases = [{
+        "invitation_secret": b64(secret),
+        "request_key": b64(keys.request_key),
+        "request_iv": b64(keys.request_iv),
+        "response_key": b64(keys.response_key),
+        "response_iv": b64(keys.response_iv),
+    }]
+    for extra in (bytes(32), bytes([0xFF] * 32)):
+        derived = boot1.derive_keys(extra)
+        key_cases.append({
+            "invitation_secret": b64(extra),
+            "request_key": b64(derived.request_key),
+            "request_iv": b64(derived.request_iv),
+            "response_key": b64(derived.response_key),
+            "response_iv": b64(derived.response_iv),
+        })
+
+    proof_cases = []
+    for device_id, sign_pk in (
+        (bytes([0x11] * 16), bytes(1952)),
+        (bytes(range(16)), bytes([0xAB] * 1952)),
+    ):
+        proof_cases.append({
+            "invitation_secret": b64(secret),
+            "device_id": b64(device_id),
+            "sign_public_key": b64(sign_pk),
+            "proof": b64(boot1.join_proof(keys, device_id, sign_pk)),
+        })
+
+    # To'liq envelope: Python yozgan, Kotlin ochishi kerak.
+    invitation_id = bytes([0xC0, 0xFF, 0xEE, 0x00, 0x11, 0x22, 0x33, 0x44])
+    request = boot1.build_join_request(
+        invitation_id=invitation_id, invitation_secret=secret,
+        device_id=bytes([0x11] * 16),
+        sign_public_key=bytes(1952), kem_public_key=bytes(1184),
+        platform="android", display_name="Aziz telefoni",
+    )
+    response = boot1.build_join_response(
+        invitation_id=invitation_id, invitation_secret=secret,
+        tenant_id=bytes([0x22] * 16), epoch=7, key_id=3,
+        epoch_root_secret=bytes(range(32)), profile_id=0x01, role="agent",
+        host_device_id=bytes([0x33] * 16), host_sign_public_key=bytes(1952),
+    )
+    return {
+        "keys": key_cases,
+        "proof": proof_cases,
+        "envelopes": [
+            {
+                "name": "join-request", "kind": 1,
+                "invitation_secret": b64(secret),
+                "invitation_id": b64(invitation_id),
+                "wire": b64(request),
+                "expect_device_id": b64(bytes([0x11] * 16)),
+                "expect_platform": "android",
+            },
+            {
+                "name": "join-response", "kind": 2,
+                "invitation_secret": b64(secret),
+                "invitation_id": b64(invitation_id),
+                "wire": b64(response),
+                "expect_epoch": 7,
+                "expect_role": "agent",
+                "expect_epoch_root_secret": b64(bytes(range(32))),
+            },
+        ],
+    }
+
+
 def main() -> int:
     payload = {
         "generated_by": "tools/gen_des1_kat.py",
@@ -289,6 +369,7 @@ def main() -> int:
         "aead": aead_vectors(),
         "signatures": signature_vectors(),
         "event_batch": event_batch_vectors(),
+        "boot1": boot1_vectors(),
     }
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -312,6 +393,9 @@ def main() -> int:
         "aead": len(payload["aead"]),
         "signatures": len(payload["signatures"]),
         "event_batch": len(payload["event_batch"]),
+        "boot1.keys": len(payload["boot1"]["keys"]),
+        "boot1.proof": len(payload["boot1"]["proof"]),
+        "boot1.envelopes": len(payload["boot1"]["envelopes"]),
     }
     print(f"KAT yozildi: {OUTPUT}")
     for name, count in counts.items():

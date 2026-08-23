@@ -7,6 +7,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -76,7 +77,7 @@ class SyncPage(BasePage):
         self._card_queue = Card("Navbatdagi yozuvlar", "0")
         self._card_devices = Card("Ulangan qurilmalar", "0")
         self._card_conflicts = Card("Tekshiruv talab qiladi", "0")
-        self._card_errors = Card("Yuborilmagan", "0")
+        self._card_errors = Card("Qabul qilinmagan", "0")
         for column, card in enumerate(
             (self._card_queue, self._card_devices, self._card_conflicts, self._card_errors)
         ):
@@ -96,7 +97,7 @@ class SyncPage(BasePage):
         )
         tabs.addTab(self.devices_table, "Qurilmalar")
         tabs.addTab(self.outbox_table, "Navbat")
-        tabs.addTab(self.dead_table, "Yuborilmaganlar")
+        tabs.addTab(self.dead_table, "Qabul qilinmaganlar")
         self.add(tabs, 1)
 
     def refresh(self) -> None:
@@ -664,7 +665,8 @@ class SettingsPage(BasePage):
             f"  Manzil                : {settings.mqtt.host}:{settings.mqtt.port}",
             f"  TLS                   : {'yoqilgan' if settings.mqtt.tls_required else 'YO`Q'}",
             f"  Holat                 : {'ulangan' if connected else 'ulanmagan'}",
-            f"  Sessiya muddati (broker javobi): {negotiated if negotiated is not None else 'noma`lum'}",
+            "  Sessiya muddati (broker javobi): "
+            f"{negotiated if negotiated is not None else 'noma`lum'}",
             f"  Xabar hajmi chegarasi : {settings.mqtt.max_payload_bytes // 1024} KiB",
             "",
             "XAVFSIZLIK",
@@ -677,8 +679,8 @@ class SettingsPage(BasePage):
             f"  Takror himoyasi oynasi: {health.replay_window_size} ta yozuv",
             "",
             "NAVBAT",
-            f"  Yuborilmagan          : {queued}",
-            f"  Xatolar               : {dead}",
+            f"  Navbatda              : {queued}",
+            f"  Qabul qilinmagan      : {dead}",
             "",
             "PAPKALAR",
             f"  Ma'lumot              : {settings.paths.data_dir}",
@@ -790,20 +792,33 @@ class ShowInvitationDialog(QDialog):
         image = _render_qr(payload)
         if image is not None:
             layout.addWidget(image, 1)
-        else:
-            fallback = QTextEdit()
-            fallback.setReadOnly(True)
-            fallback.setPlainText(payload.hex())
-            layout.addWidget(fallback, 1)
-            layout.addWidget(QLabel(
-                "QR kutubxonasi topilmadi — kodni qo'lda kiriting."
-            ))
+
+        # Matnli kod DOIM ko'rsatiladi, QR bo'lsa ham. Omborda telefon
+        # kamerasi ko'pincha ishlamaydi (qorong'i, iflos linza), shuning
+        # uchun qo'lda kiritish zaxira emas — to'liq huquqli yo'l.
+        layout.addWidget(QLabel("Yoki telefonga shu kodni kiriting:"))
+        code = QTextEdit()
+        code.setReadOnly(True)
+        code.setPlainText(payload.hex())
+        code.setMaximumHeight(90 if image is not None else 260)
+        layout.addWidget(code, 0 if image is not None else 1)
+
+        # Lambda ISHLATILMAYDI (`presentation/background.py` 1-qoidasi) —
+        # bog'langan metod, kodni esa `self` da saqlaymiz.
+        self._code_text = payload.hex()
+        copy_button = ghost_button("Kodni nusxalash")
+        copy_button.clicked.connect(self._on_copy)
+        layout.addWidget(copy_button)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         buttons.accepted.connect(self.accept)
         buttons.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.accept)
         layout.addWidget(buttons)
+
+    @Slot()
+    def _on_copy(self) -> None:
+        QApplication.clipboard().setText(self._code_text)
 
 
 def _render_qr(payload: bytes):

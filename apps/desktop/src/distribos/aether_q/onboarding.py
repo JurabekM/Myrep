@@ -61,9 +61,14 @@ class Invitation:
     role: str
     display_name: str
     expires_at: str
-    #: Desktop (taklif beruvchi) ning ML-DSA-65 ochiq kaliti — telefon
-    #: server'ni shu bilan tanidi, MITM qila olmaydi.
-    host_sign_public_key: bytes
+    #: Desktop kalitining BARMOQ IZI (16 bayt), kalitning o'zi emas.
+    #:
+    #: ML-DSA-65 ochiq kaliti 1952 bayt — uni QR ga qo'yish payload'ni
+    #: ~2 KB ga cho'zadi va qo'lda kiritish uchun 4000 belgi kerak
+    #: bo'lardi, ya'ni amalda ishlamaydi. Kalitning O'ZI JOIN_RESPONSE
+    #: ichida keladi va u allaqachon taklif siri bilan
+    #: autentifikatsiyalangan. Barmoq izi qo'shimcha tekshiruv beradi.
+    host_key_fingerprint: bytes
     broker_host: str
     broker_port: int
     environment: str
@@ -78,7 +83,7 @@ class Invitation:
             "r": self.role,
             "n": self.display_name,
             "e": self.expires_at,
-            "k": self.host_sign_public_key,
+            "k": self.host_key_fingerprint,
             "bh": self.broker_host,
             "bp": self.broker_port,
             "env": self.environment,
@@ -102,7 +107,7 @@ class Invitation:
                 role=data["r"],
                 display_name=data["n"],
                 expires_at=data["e"],
-                host_sign_public_key=bytes(data["k"]),
+                host_key_fingerprint=bytes(data["k"]),
                 broker_host=data["bh"],
                 broker_port=int(data["bp"]),
                 environment=data.get("env", "pilot"),
@@ -181,7 +186,7 @@ class InvitationRegistry:
             role=role,
             display_name=display_name,
             expires_at=expires_at.isoformat(),
-            host_sign_public_key=host_sign_public_key,
+            host_key_fingerprint=key_fingerprint(host_sign_public_key),
             broker_host=broker_host,
             broker_port=broker_port,
             environment=environment,
@@ -313,3 +318,11 @@ def pending_devices(session: Session) -> list[PeerDevice]:
 
 def new_invitation_secret() -> bytes:
     return os.urandom(32)
+
+
+def key_fingerprint(public_key: bytes) -> bytes:
+    """Ochiq kalitning 16 baytli barmoq izi.
+
+    Domain-ajratilgan hash: boshqa kontekstdagi hash bilan chalkashmaydi.
+    """
+    return hashlib.sha3_256(b"DistribOS/key-fingerprint/v1" + public_key).digest()[:16]

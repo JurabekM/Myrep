@@ -41,6 +41,8 @@ class SyncEngine(
     private val deviceId: ByteArray,
 ) {
 
+    private val deviceIdHex: String = deviceId.joinToString("") { "%02x".format(it) }
+
     data class Stats(
         val publishedEvents: Long = 0,
         val receivedEvents: Long = 0,
@@ -66,6 +68,15 @@ class SyncEngine(
      */
     suspend fun publishPending(limit: Int = MAX_BATCH): Int = publishLock.withLock {
         if (!transport.isConnected()) return 0
+
+        // Ulanmagan qurilma HECH NARSA yubormaydi. Uning kompaniyasi
+        // hali yo'q — vaqtinchalik, o'zi o'ylab topgan manzil bor xolos.
+        // U yerga yozish foydasiz (hech kim eshitmaydi) va zararli
+        // (ochiq brokerda keraksiz iz qoldiradi).
+        //
+        // Hodisalar YO'QOLMAYDI: ular outbox'da turadi va ulangandan
+        // keyin odatdagidek yuboriladi.
+        if (dao.activePeerCount(deviceIdHex) == 0) return 0
 
         val now = System.currentTimeMillis()
         val pending = dao.pendingOutbox(now, limit)
@@ -130,20 +141,40 @@ class SyncEngine(
     // --- kirish yo'nalishi ------------------------------------------------
 
     suspend fun handleInbound(wire: ByteArray, channel: Topics.Channel? = null) {
+        // O'Z AKS-SADOMIZ — muhrni OCHMASDAN tashlanadi. Ochishga
+        // urinish replay oynasiga tushadi va SOXTA hujum yozuvi
+        // yaratadi (jonli sinovda 3 daqiqada 83 ta).
+        if (uz.distribos.crypto.Des1.peekSenderDeviceId(wire)?.contentEquals(deviceId) == true) {
+            return
+        }
+
         val opened = try {
             provider.open(wire)
         } catch (exception: AetherQException) {
             noteRejection(exception.reason.name)
+            // Kim yuborganini YOZAMIZ. Busiz «xabar rad etildi» yozuvi
+            // bilan hech nima qilib bo'lmaydi: qaysi qurilma, qaysi
+            // ketma-ketlik — hech biri ko'rinmaydi. Qiymat
+            // autentifikatsiyalanmagan, shuning uchun u faqat
+            // DIAGNOSTIKA uchun va qaror qabul qilishda ishlatilmaydi.
+            val sender = uz.distribos.crypto.Des1.peekSenderDeviceId(wire)
+                ?.joinToString("") { "%02x".format(it) }?.take(12)
             dao.insertDeadLetter(
                 DeadLetterEntity(
                     eventId = null, channel = channel?.value ?: "unknown",
-                    reason = exception.reason.name, detail = null,
+                    reason = exception.reason.name,
+                    detail = if (sender != null) "yuboruvchi $sender" else null,
                     rawSizeBytes = wire.size, occurredAtMs = System.currentTimeMillis(),
                     resolvedAtMs = null,
                 )
             )
             return
         }
+
+        // Ikkinchi to'siq — endi AUTENTIFIKATSIYALANGAN qiymat bo'yicha.
+        // Yuqoridagi tekshiruv tez, lekin ishonchsiz headerga tayanadi;
+        // bu esa qat'iy. Ikkalasi ham kerak.
+        if (opened.senderDeviceId.contentEquals(deviceId)) return
 
         when (opened.contentType) {
             ContentType.EVENT_BATCH -> handleEventBatch(opened)

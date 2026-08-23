@@ -7,7 +7,6 @@ etilgani tasdiqlanadi.
 from __future__ import annotations
 
 import pytest
-
 from distribos.aether_q import des1
 from distribos.aether_q.vendor import sig
 

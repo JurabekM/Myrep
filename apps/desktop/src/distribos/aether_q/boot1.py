@@ -304,4 +304,18 @@ def parse_join_response(wire: bytes, invitation_secret: bytes) -> JoinResponse:
         raise Boot1Error("epoch root secret 32 bayt bo'lishi kerak")
     if response.profile_id not in (0x01, 0x03):
         raise Boot1Error(f"qo'llab-quvvatlanmaydigan profil: {response.profile_id}")
+    if len(response.host_sign_public_key) != 1952:
+        raise Boot1Error("host ochiq kaliti 1952 bayt bo'lishi kerak")
     return response
+
+
+def verify_host_fingerprint(response: JoinResponse, expected: bytes) -> bool:
+    """Javobdagi kalit QR dagi barmoq iziga mos kelishini tekshiradi.
+
+    Javob allaqachon taklif siri bilan autentifikatsiyalangan, shuning
+    uchun bu qo'shimcha qatlam. Lekin u arzon va egaga kalitni ko'z
+    bilan solishtirish imkonini beradi.
+    """
+    from .onboarding import key_fingerprint
+
+    return kdf.ct_eq(key_fingerprint(response.host_sign_public_key), expected)

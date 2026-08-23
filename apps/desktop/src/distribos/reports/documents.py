@@ -13,13 +13,13 @@ from __future__ import annotations
 import datetime as dt
 import html
 from dataclasses import dataclass
-from decimal import Decimal
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from distribos.domain.formatting import money as _money_fmt, quantity as _qty
+from distribos.domain.formatting import money as _money_fmt
+from distribos.domain.formatting import quantity as _qty
 from distribos.persistence.models import (
     Customer,
     Order,
@@ -169,7 +169,8 @@ def render_payment_receipt(session: Session, payment_id: str) -> str:
         "<table class='meta'>"
         f"<tr><td>Kvitansiya:</td><td><b>{_escape(payment.number)}</b></td>"
         f"<td>Sana:</td><td>{payment.occurred_at:%d.%m.%Y %H:%M}</td></tr>"
-        f"<tr><td>Mijoz:</td><td colspan='3'>{_escape(customer.name if customer else '—')}</td></tr>"
+        "<tr><td>Mijoz:</td><td colspan='3'>"
+        f"{_escape(customer.name if customer else '—')}</td></tr>"
         f"<tr><td>Yo'nalish:</td><td>{_escape(direction)}</td>"
         f"<td>Usul:</td><td>{_escape(payment.method)}</td></tr>"
         "</table>"

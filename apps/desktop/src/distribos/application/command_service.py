@@ -27,7 +27,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from distribos.application.permissions import PermissionDenied, ensure_allowed
-from distribos.application.projector import Projector, ProjectionResult
+from distribos.application.projector import ProjectionResult, Projector
 from distribos.domain.contracts import ContractError, load_registry
 from distribos.persistence.models import EventLog
 from distribos.sync.event_store import EventStore, NewEvent

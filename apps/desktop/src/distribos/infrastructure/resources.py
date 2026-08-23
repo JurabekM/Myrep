@@ -33,7 +33,7 @@ def resource_root() -> Path:
     * manba daraxtida — repo ildizi.
     """
     if is_frozen():
-        return Path(sys._MEIPASS)  # type: ignore[attr-defined]  # noqa: SLF001
+        return Path(sys._MEIPASS)  # type: ignore[attr-defined]
     # .../apps/desktop/src/distribos/infrastructure/resources.py
     #  -> parents[5] = repo ildizi
     return Path(__file__).resolve().parents[5]

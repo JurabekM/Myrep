@@ -246,7 +246,10 @@ class EmptyState(QWidget):
 class WarningBanner(QFrame):
     """Muhim ogohlantirish (masalan ochiq broker rejimi)."""
 
-    def __init__(self, text: str, action_text: str = "", on_action: Callable[[], None] | None = None) -> None:
+    def __init__(
+        self, text: str, action_text: str = "",
+        on_action: Callable[[], None] | None = None,
+    ) -> None:
         super().__init__()
         self.setObjectName("WarningBanner")
         layout = QHBoxLayout(self)

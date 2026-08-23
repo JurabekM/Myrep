@@ -23,6 +23,7 @@ import cbor2
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from distribos.aether_q import des1
 from distribos.aether_q.provider import (
     AetherQError,
     ContentType,
@@ -254,12 +255,28 @@ class SyncEngine:
             self._handle_bootstrap(wire)
             return
 
+        # O'Z AKS-SADOMIZ — muhrni OCHMASDAN tashlanadi.
+        #
+        # Broker xabarni barcha obunachilarga, shu jumladan
+        # yuboruvchining o'ziga ham qaytaradi. Uni ochishga urinish
+        # replay oynasiga tushadi va SOXTA hujum yozuvi yaratadi:
+        # jonli sinovda 3 daqiqada 83 ta shunday yozuv to'plandi.
+        # Haqiqiy hujum ular orasida ko'rinmay qolardi.
+        if des1.peek_sender_device_id(wire) == self._device_id:
+            return
+
         try:
             opened = self._provider.open_message(wire)
         except AetherQError as exc:
             self._dead_letter(reason=exc.reason, channel=channel, size=len(wire))
             self.stats.rejected += 1
             self.stats.note_rejection(exc.reason.name)
+            return
+
+        # Ikkinchi to'siq — endi AUTENTIFIKATSIYALANGAN qiymat bo'yicha.
+        # Yuqoridagi tekshiruv tez, lekin ishonchsiz headerga tayanadi;
+        # bu esa qat'iy. Ikkalasi ham kerak.
+        if opened.sender_device_id == self._device_id:
             return
 
         if opened.content_type is ContentType.EVENT_BATCH:

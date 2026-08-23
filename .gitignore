@@ -51,3 +51,7 @@ Desktop.ini
 /apps/android/.kotlin/
 /apps/android/*.keystore
 /apps/android/keystore.properties
+
+# JVM halokat hisobotlari (Gradle/Kotlin demoni yiqilganda paydo bo'ladi).
+hs_err_pid*.log
+replay_pid*.log

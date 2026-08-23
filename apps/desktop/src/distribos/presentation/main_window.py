@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
             "sinxronlanadi.",
         )
 
-    def closeEvent(self, event) -> None:   # noqa: N802 (Qt nomlanishi)
+    def closeEvent(self, event) -> None:
         """Yopishdan oldin fon oqimini TARTIB BILAN to'xtatadi.
 
         `terminate()` ishlatilmaydi: u SQLite tranzaksiyasini yarim yo'lda

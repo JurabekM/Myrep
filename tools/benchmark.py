@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import gc
-import json
 import statistics
 import sys
 import time
@@ -35,14 +34,6 @@ from distribos.application import queries  # noqa: E402
 from distribos.domain.ids import uuid7_str  # noqa: E402
 from distribos.persistence.base import Database  # noqa: E402
 from distribos.persistence.models import (  # noqa: E402
-    Customer,
-    EventLog,
-    InventoryMovement,
-    Order,
-    OrderLine,
-    Product,
-    StockSnapshot,
-    Warehouse,
     utcnow,
 )
 from distribos.persistence.triggers import install_triggers  # noqa: E402
@@ -188,7 +179,7 @@ def run(quick: bool) -> list[Measurement]:
             assert rows, "qidiruv natija bermadi"
     results.append(search)
 
-    listing = Measurement(f"Mahsulot ro'yxati (birinchi 500)", "≤ 300 ms")
+    listing = Measurement("Mahsulot ro'yxati (birinchi 500)", "≤ 300 ms")
     with database.session() as session:
         for _ in range(repeats):
             with timed(listing):

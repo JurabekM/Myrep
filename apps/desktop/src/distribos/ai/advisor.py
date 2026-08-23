@@ -28,7 +28,8 @@ from decimal import Decimal
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
-from distribos.domain.formatting import money as _money_fmt, quantity as _qty
+from distribos.domain.formatting import money as _money_fmt
+from distribos.domain.formatting import quantity as _qty
 from distribos.persistence.models import (
     Customer,
     InventoryMovement,

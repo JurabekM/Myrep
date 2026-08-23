@@ -42,6 +42,11 @@ class LoopbackBus:
     #: Offline qurilmalar uchun navbat.
     queued: list[tuple[bytes, bytes | None, Channel, bytes]] = field(default_factory=list)
 
+    #: Haqiqiy broker yuborilgan xabarni YUBORUVCHIGA HAM qaytaradi.
+    #: Avval bu stend uni chetlab o'tardi va shu sababli «o'z aks-sadosi»
+    #: xatosi sinovlarda ko'rinmay, faqat jonli brokerda ochildi.
+    echo_to_sender: bool = True
+
     duplicate_factor: int = 1
     reorder: bool = False
     #: Yetkazilgan xabarlar tarixi (audit va tekshiruv uchun).
@@ -72,11 +77,11 @@ class LoopbackBus:
     ) -> None:
         self.log.append((sender, channel, len(envelope.wire)))
         self.wire_log.append(envelope.wire)
-        recipients = [target] if target is not None else [
-            device for device in self.subscribers if device != sender
-        ]
+        recipients = [target] if target is not None else list(self.subscribers)
         for recipient in recipients:
-            if recipient is None or recipient == sender:
+            if recipient is None:
+                continue
+            if recipient == sender and not (self.echo_to_sender and target is None):
                 continue
             if recipient in self.online and sender in self.online:
                 self.inflight.append((recipient, channel, envelope.wire))
@@ -88,7 +93,7 @@ class LoopbackBus:
         self.log.append((sender, channel, len(wire)))
         self.wire_log.append(wire)
         for recipient in self.subscribers:
-            if recipient == sender:
+            if recipient == sender and not self.echo_to_sender:
                 continue
             if recipient in self.online and sender in self.online:
                 self.inflight.append((recipient, channel, wire))
@@ -210,8 +215,8 @@ def build_node(
     epoch: int = 1, key_id: int = 1, profile_id: int = 0x01,
 ) -> Node:
     """Yangi qurilma yaratadi va avtobusga ulaydi."""
-    from distribos.infrastructure.secret_store import default_secret_store
     from distribos.aether_q.real import _key_context
+    from distribos.infrastructure.secret_store import default_secret_store
 
     database = Database.in_memory()
     database.create_all()

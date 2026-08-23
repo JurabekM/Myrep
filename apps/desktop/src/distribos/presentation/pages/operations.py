@@ -17,7 +17,6 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
-    QWidget,
 )
 
 from distribos.application import queries

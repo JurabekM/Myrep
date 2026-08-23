@@ -24,8 +24,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 pytest.importorskip("PySide6", reason="PySide6 o'rnatilmagan")
 
-from PySide6.QtWidgets import QApplication  # noqa: E402
-
 from distribos.app_context import build_context  # noqa: E402
 from distribos.domain.ids import uuid7_str  # noqa: E402
 from distribos.infrastructure.config import (  # noqa: E402
@@ -36,6 +34,7 @@ from distribos.infrastructure.config import (  # noqa: E402
 from distribos.presentation.main_window import NAVIGATION, MainWindow  # noqa: E402
 from distribos.presentation.theme import stylesheet  # noqa: E402
 from distribos.sync.event_store import NewEvent  # noqa: E402
+from PySide6.QtWidgets import QApplication  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -122,7 +121,7 @@ def window(app, context):
     main.show()
     app.processEvents()
     yield main
-    main._sync.stop()   # noqa: SLF001 — testda fon oqimini to'xtatamiz
+    main._sync.stop()
     main.hide()
 
 
@@ -136,18 +135,18 @@ def test_window_opens(window) -> None:
 
 def test_every_navigation_entry_has_a_page(window) -> None:
     """Navigatsiyada bor, lekin sahifasi yo'q punkt bo'lmasin."""
-    missing = [key for key in ALL_PAGE_KEYS if key not in window._pages]  # noqa: SLF001
+    missing = [key for key in ALL_PAGE_KEYS if key not in window._pages]
     assert not missing, f"Sahifasi yo'q bo'limlar: {missing}"
 
 
 @pytest.mark.parametrize("key", ALL_PAGE_KEYS)
 def test_page_opens_and_refreshes(window, app, key: str) -> None:
     """Har bir ekranni ochib, ma'lumot yuklanishini tekshiradi."""
-    window._select(key)   # noqa: SLF001
+    window._select(key)
     app.processEvents()
 
-    page = window._pages[key]   # noqa: SLF001
-    assert window._stack.currentWidget() is page   # noqa: SLF001
+    page = window._pages[key]
+    assert window._stack.currentWidget() is page
     assert page.isVisible()
 
     # `refresh()` ni yana bir marta — ikki marta chaqirilganda ham yiqilmasin.
@@ -167,63 +166,63 @@ def test_pages_with_data_are_not_empty(window, app) -> None:
         "orders": "Buyurtmalar ro'yxati",
     }
     for key, label in expectations.items():
-        window._select(key)   # noqa: SLF001
+        window._select(key)
         app.processEvents()
-        page = window._pages[key]   # noqa: SLF001
+        page = window._pages[key]
         assert page.table.row_count() > 0, f"{label} bo'sh chiqdi"
 
 
 def test_inventory_shows_computed_stock(window, app) -> None:
-    window._select("inventory")   # noqa: SLF001
+    window._select("inventory")
     app.processEvents()
-    page = window._pages["inventory"]   # noqa: SLF001
+    page = window._pages["inventory"]
     assert page.stock_table.row_count() > 0, "qoldiq jadvali bo'sh"
     assert page.movement_table.row_count() > 0, "harakatlar jadvali bo'sh"
 
 
 def test_sync_page_reports_device_state(window, app) -> None:
-    window._select("sync")   # noqa: SLF001
+    window._select("sync")
     app.processEvents()
-    page = window._pages["sync"]   # noqa: SLF001
-    assert "yozuv" in page.header._subtitle.text()   # noqa: SLF001
+    page = window._pages["sync"]
+    assert "yozuv" in page.header._subtitle.text()
 
 
 def test_reports_page_builds_every_report(window, app) -> None:
     """Har bir hisobot turini shakllantiradi — biror so'rov buzuq bo'lmasin."""
-    window._select("reports")   # noqa: SLF001
+    window._select("reports")
     app.processEvents()
-    page = window._pages["reports"]   # noqa: SLF001
+    page = window._pages["reports"]
 
-    for index in range(page._choice.count()):   # noqa: SLF001
-        page._choice.setCurrentIndex(index)   # noqa: SLF001
-        page._on_build()   # noqa: SLF001
+    for index in range(page._choice.count()):
+        page._choice.setCurrentIndex(index)
+        page._on_build()
         app.processEvents()
-        assert page._report is not None, (   # noqa: SLF001
-            f"hisobot shakllanmadi: {page._choice.itemText(index)}"   # noqa: SLF001
+        assert page._report is not None, (
+            f"hisobot shakllanmadi: {page._choice.itemText(index)}"
         )
 
 
 def test_assistant_produces_suggestions(window, app) -> None:
     """Namuna ma'lumotda qoldiq minimaldan past — tavsiya chiqishi kerak."""
-    window._select("assistant")   # noqa: SLF001
+    window._select("assistant")
     app.processEvents()
-    page = window._pages["assistant"]   # noqa: SLF001
+    page = window._pages["assistant"]
     assert page.table.row_count() > 0, "AI hech qanday tavsiya bermadi"
 
 
 def test_security_page_shows_protocol(window, app) -> None:
-    window._select("security")   # noqa: SLF001
+    window._select("security")
     app.processEvents()
-    page = window._pages["security"]   # noqa: SLF001
-    assert "AETHER-Q" in page._card_protocol._value.text()   # noqa: SLF001
+    page = window._pages["security"]
+    assert "AETHER-Q" in page._card_protocol._value.text()
 
 
 def test_settings_page_hides_no_secrets(window, app) -> None:
     """Diagnostika matnida kalit yoki maxfiy material BO'LMASLIGI kerak."""
-    window._select("settings")   # noqa: SLF001
+    window._select("settings")
     app.processEvents()
-    page = window._pages["settings"]   # noqa: SLF001
-    text = page._info.toPlainText()   # noqa: SLF001
+    page = window._pages["settings"]
+    text = page._info.toPlainText()
 
     assert "AETHER-Q" in text
     for forbidden in ("BEGIN PRIVATE", "sign_sk", "root_secret", "aead_key"):
@@ -239,9 +238,9 @@ def test_no_technical_jargon_in_user_interface(window, app) -> None:
 
     findings: list[str] = []
     for key in ALL_PAGE_KEYS:
-        window._select(key)   # noqa: SLF001
+        window._select(key)
         app.processEvents()
-        page = window._pages[key]   # noqa: SLF001
+        page = window._pages[key]
         widgets = list(page.findChildren(QLabel)) + list(page.findChildren(QPushButton))
         for widget in widgets:
             text = widget.text().lower()

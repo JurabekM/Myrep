@@ -311,6 +311,7 @@ class Projector:
         if product is None:
             return Outcome.DEFERRED   # PRODUCT_CREATED hali kelmagan
 
+        versions = self._field_versions(product.field_versions)
         for field, value in payload["changes"].items():
             if not hasattr(product, field):
                 continue
@@ -437,7 +438,9 @@ class Projector:
             ))
         return Outcome.APPLIED
 
-    def _apply_order_state_changed(self, session: Session, record: EventLog, payload: dict) -> Outcome:
+    def _apply_order_state_changed(
+        self, session: Session, record: EventLog, payload: dict
+    ) -> Outcome:
         order = session.get(Order, payload["order_id"])
         if order is None:
             return Outcome.DEFERRED   # ORDER_CREATED hali kelmagan

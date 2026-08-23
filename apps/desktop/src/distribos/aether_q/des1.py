@@ -124,7 +124,7 @@ class Des1Header:
         )
 
     @classmethod
-    def unpack(cls, raw: bytes) -> "Des1Header":
+    def unpack(cls, raw: bytes) -> Des1Header:
         if len(raw) < HEADER_SIZE:
             raise Des1FormatError("header qisqa")
         version, profile_id, content_type, epoch, key_id = _HEADER_STRUCT.unpack(raw[:16])
@@ -139,6 +139,27 @@ class Des1Header:
             sequence=int.from_bytes(raw[48:60], "little"),
             rand=raw[60:66],
         )
+
+
+def peek_sender_device_id(wire: bytes) -> bytes | None:
+    """Muhrni OCHMASDAN yuboruvchini o'qiydi.
+
+    Header ochiq matn, shuning uchun bu arzon. U hali
+    autentifikatsiyalanmagan — ya'ni bu qiymatga QAROR bog'lash mumkin
+    emas. Yagona ruxsat etilgan foydalanish: **o'z aks-sadomizni**
+    tashlab yuborish.
+
+    Nega bu xavfsiz: begona qurilma bizning identifikatorimizni yozib
+    qo'ysa, biz uning xabarini tashlaymiz — lekin u xabar imzo
+    tekshiruvidan baribir o'tmasdi. Ya'ni natija bir xil, faqat arzonroq.
+
+    Nega bu kerak: aks-sado ochilganda replay oynasi uni HUJUM deb qayd
+    etadi. Bir necha daqiqada yuzlab soxta «replay» yozuvi to'planadi va
+    ular ichida HAQIQIY hujum ko'rinmay qoladi.
+    """
+    if len(wire) < HEADER_SIZE:
+        return None
+    return wire[32:48]
 
 
 def _nonce(seq: int, iv: bytes) -> bytes:

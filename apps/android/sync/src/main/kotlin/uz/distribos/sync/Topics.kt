@@ -68,6 +68,22 @@ object Topics {
 
     class Space(private val tenantTopicId: String, private val environment: String) {
 
+        /**
+         * Fazoning o'ziga xosligi.
+         *
+         * Ikki faza teng bo'lsa ularga QAYTA obuna bo'lish kerak emas.
+         * Bu muhim: bir xil topikka ikki marta obuna bo'lingan qurilma
+         * har xabarni IKKI NUSXADA oladi va ikkinchisi takror himoyasi
+         * tomonidan «hujum» deb rad etiladi.
+         */
+        val id: String get() = "$tenantTopicId/$environment"
+
+        override fun equals(other: Any?): Boolean =
+            this === other || (other is Space && other.id == id)
+
+        override fun hashCode(): Int = id.hashCode()
+
+
         init {
             for (segment in listOf(tenantTopicId, environment)) {
                 if (!SEGMENT.matches(segment)) {
@@ -119,6 +135,17 @@ object Topics {
         companion object {
             fun create(tenantId: ByteArray, environment: String): Space =
                 Space(opaqueTenantId(tenantId), environment.lowercase())
+
+            /**
+             * Taklifdan kelgan tayyor topik identifikatoridan quriladi.
+             *
+             * Ulanmagan telefonda kompaniya identifikatorining O'ZI yo'q —
+             * QR faqat uning yopiq (opaque) topik ko'rinishini tashiydi.
+             * JOIN_REQUEST ni AYNAN shu fazoga yuborish kerak, aks holda
+             * kompyuter uni hech qachon eshitmaydi.
+             */
+            fun fromTopicId(tenantTopicId: String, environment: String): Space =
+                Space(tenantTopicId, environment.lowercase())
         }
     }
 

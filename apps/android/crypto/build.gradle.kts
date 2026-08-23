@@ -24,6 +24,8 @@ kotlin {
 
 dependencies {
     api(libs.bouncycastle)
+    // CBOR BOOT-1 payload'i uchun kerak (kodek darajasida).
+    api(libs.cbor)
 
     testImplementation(libs.junit)
     testImplementation("org.json:json:20250517")

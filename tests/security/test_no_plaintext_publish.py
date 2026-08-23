@@ -19,9 +19,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from distribos.aether_q.provider import SealedEnvelope  # noqa: E402
-from distribos.mqtt.client import MqttTransport, MqttTransportError  # noqa: E402
-from distribos.mqtt.topics import Channel  # noqa: E402
+from distribos.aether_q.provider import SealedEnvelope
+from distribos.mqtt.client import MqttTransport, MqttTransportError
+from distribos.mqtt.topics import Channel
 
 
 def test_publish_accepts_only_sealed_envelopes() -> None:
@@ -147,10 +147,9 @@ def test_boot1_request_does_not_leak_invitation_secret() -> None:
 
 def test_business_data_never_reaches_the_wire() -> None:
     """To'liq oqim: hodisa yaratiladi va simdagi baytlar tekshiriladi."""
-    from harness import shared_tenant_setup
-
     from distribos.domain.ids import uuid7_str
     from distribos.sync.event_store import NewEvent
+    from harness import shared_tenant_setup
 
     bus, _tenant, (desktop, _phone) = shared_tenant_setup("desktop-1", "android-1")
 

@@ -14,10 +14,12 @@ import uz.distribos.sync.EventProjector
 import uz.distribos.sync.KeyVault
 import uz.distribos.sync.KeystoreVault
 import uz.distribos.sync.MqttTransport
+import uz.distribos.sync.ProvisioningClient
 import uz.distribos.sync.SyncEngine
 import uz.distribos.sync.Topics
 import java.security.SecureRandom
 import android.util.Base64
+import android.util.Log
 
 /**
  * Bog'lash nuqtasi (composition root).
@@ -40,7 +42,8 @@ class AppContainer private constructor(context: Context) {
     private val signKeys: MlDsa65.KeyPair
 
     val role: String get() = preferences.getString(KEY_ROLE, "agent") ?: "agent"
-    val tenantId: ByteArray
+    var tenantId: ByteArray
+        private set
 
     init {
         val stored = preferences.getString(KEY_DEVICE_ID, null)
@@ -110,6 +113,10 @@ class AppContainer private constructor(context: Context) {
     private val pendingInbound =
         java.util.concurrent.ConcurrentLinkedQueue<Pair<ByteArray, Topics.Channel?>>()
 
+    /** Oxirgi ulash natijasi — UI shuni kuzatadi. */
+    @Volatile
+    var lastJoinResult: ProvisioningClient.Result? = null
+
     val engine = SyncEngine(
         dao = database.sync(),
         provider = provider,
@@ -117,6 +124,45 @@ class AppContainer private constructor(context: Context) {
         projector = projector,
         deviceId = deviceId,
     )
+
+    val provisioning = ProvisioningClient(
+        dao = database.sync(),
+        provider = provider,
+        transport = transport,
+        deviceId = deviceId,
+        signPublicKey = signKeys.publicKey,
+        kemPublicKey = ByteArray(1184),   // ML-KEM hozircha ishlatilmaydi
+        onTenantAdopted = ::adoptTenant,
+    )
+
+    /**
+     * Kompyuterning kompaniyasini qabul qiladi.
+     *
+     * Ulanishgacha telefonning kompaniya identifikatori vaqtinchalik va
+     * tasodifiy. Ulangach u DOIMIY ravishda kompyuternikiga almashadi:
+     * topik fazosi, DES-1 muhri va epoch kaliti — hammasi shunga
+     * bog'lanadi.
+     */
+    private fun adoptTenant(adopted: ByteArray) {
+        if (adopted.contentEquals(tenantId)) return
+        tenantId = adopted
+        preferences.edit { putString(KEY_TENANT_ID, adopted.encode()) }
+        provider.useTenant(adopted)
+        transport.useTenantSpace(Topics.Space.create(adopted, "pilot"))
+    }
+
+    /**
+     * Qurilma desktopga ulanganmi.
+     *
+     * Mezon: o'zimizdan boshqa FAOL qurilma bormi. Ulanmagan telefonda
+     * birinchi ekran «Ulash» bo'ladi — bo'sh ro'yxatlar emas.
+     */
+    suspend fun isProvisioned(): Boolean =
+        database.sync().activePeerCount(deviceIdHex) > 0
+
+    val deviceIdHex: String = deviceId.joinToString("") { "%02x".format(it) }
+
+    fun observeProvisioned() = database.sync().observeActivePeerCount(deviceIdHex)
 
     suspend fun ensureReady() {
         // Namuna ma'lumot FAQAT debug build'da. Reliz build'da
@@ -133,11 +179,10 @@ class AppContainer private constructor(context: Context) {
         }
         // O'z-o'zini reyestrga qo'shamiz: o'z hodisalarimizni ham
         // proyektor bir xil yo'ldan qo'llaydi.
-        val hex = deviceId.joinToString("") { "%02x".format(it) }
-        if (database.sync().peer(hex) == null) {
+        if (database.sync().peer(deviceIdHex) == null) {
             database.sync().upsertPeer(
                 PeerDeviceEntity(
-                    deviceIdHex = hex,
+                    deviceIdHex = deviceIdHex,
                     displayName = "Bu telefon",
                     platform = "android",
                     role = role,
@@ -154,8 +199,21 @@ class AppContainer private constructor(context: Context) {
     }
 
     fun connect() {
+        // Xato JIMGINA yutilmaydi. Aynan shu `runCatching` reliz
+        // build'idagi ulanish nosozligini yashirdi: foydalanuvchi
+        // «Internet yo'q» ko'rardi, sabab esa hech qayerda yozilmasdi.
         runCatching { transport.connect() }
+            .onFailure { Log.e(TAG, "Brokerga ulanib bo'lmadi", it) }
     }
+
+    /**
+     * Oxirgi digest vaqti.
+     *
+     * Har aylanishda yubormaymiz: digest butun qurilmalar kesimini
+     * tashiydi. Kechikish yo'qotish emas — hodisa keyingi almashuvda
+     * baribir tiklanadi.
+     */
+    private var lastDigestAtMs = 0L
 
     /** Bitta sinxronizatsiya aylanishi. UI holatini qaytaradi. */
     suspend fun runSyncCycle(): SyncState {
@@ -164,11 +222,28 @@ class AppContainer private constructor(context: Context) {
         // Navbatdagi kelgan xabarlarni qayta ishlaymiz.
         while (true) {
             val (payload, channel) = pendingInbound.poll() ?: break
-            engine.handleInbound(payload, channel)
+            if (channel == Topics.Channel.PROTOCOL_CONTROL) {
+                // BOOT-1 DES-1 EMAS: ulash paytida epoch kaliti hali yo'q.
+                lastJoinResult = provisioning.handleResponse(payload) ?: lastJoinResult
+            } else {
+                engine.handleInbound(payload, channel)
+            }
         }
 
         engine.publishPending()
         commands.replayPending()
+
+        // Anti-entropiya. Busiz telefon FAQAT o'zi tinglab turgan
+        // paytdagi hodisalarni oladi — ulanishdan oldin yoki oflayn
+        // paytda kompyuterda yaratilgan hodisalar unga hech qachon yetib
+        // bormaydi. Bu aynan jonli sinovda ko'rindi: telefon buyurtmalarni
+        // yubordi, lekin kompyuterning mahsulotini olmadi.
+        val now = System.currentTimeMillis()
+        if (now - lastDigestAtMs >= DIGEST_INTERVAL_MS) {
+            lastDigestAtMs = now
+            runCatching { engine.sendDigest() }
+                .onFailure { android.util.Log.w(TAG, "Digest yuborilmadi", it) }
+        }
 
         val (queued, dead) = engine.queueDepth()
         val epoch = database.sync().currentEpochKey()?.epoch ?: 0
@@ -190,6 +265,7 @@ class AppContainer private constructor(context: Context) {
     private fun String.decode(): ByteArray = Base64.decode(this, Base64.NO_WRAP)
 
     companion object {
+        private const val DIGEST_INTERVAL_MS = 30_000L
         private const val TAG = "DistribOS"
         private const val PREFS = "distribos_identity"
         private const val KEY_DEVICE_ID = "device_id"

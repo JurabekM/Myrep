@@ -7,7 +7,6 @@ Offscreen ishlaydi — monitor kerak emas, CI'da ham yuradi.
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -20,14 +19,13 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "apps" / "desktop" / "src"))
 
-from PySide6.QtWidgets import QApplication  # noqa: E402
-
 from distribos.app_context import build_context  # noqa: E402
 from distribos.domain.ids import uuid7_str  # noqa: E402
 from distribos.infrastructure.config import AppSettings, MqttSettings, PathSettings  # noqa: E402
 from distribos.presentation.main_window import NAVIGATION, MainWindow  # noqa: E402
 from distribos.presentation.theme import stylesheet  # noqa: E402
 from distribos.sync.event_store import NewEvent  # noqa: E402
+from PySide6.QtWidgets import QApplication  # noqa: E402
 
 
 def seed(context) -> None:
@@ -175,7 +173,7 @@ def main() -> int:
     saved = []
     for _, items in NAVIGATION:
         for key, title in items:
-            window._select(key)   # noqa: SLF001
+            window._select(key)
             application.processEvents()
             application.processEvents()
             path = output / f"{key}.png"
@@ -183,7 +181,7 @@ def main() -> int:
             saved.append((key, title, path))
             print(f"  {title:24s} -> {path.name}")
 
-    window._sync.stop()   # noqa: SLF001
+    window._sync.stop()
     context.close()
     print(f"\n{len(saved)} ta ekran surati: {output}")
     return 0

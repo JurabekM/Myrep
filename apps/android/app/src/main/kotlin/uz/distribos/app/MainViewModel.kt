@@ -16,7 +16,9 @@ import uz.distribos.app.ui.OrderRow
 import uz.distribos.app.ui.PaymentRow
 import uz.distribos.app.ui.StatusTone
 import uz.distribos.app.ui.StockRow
+import uz.distribos.app.ui.JoinUiState
 import uz.distribos.app.ui.SyncState
+import uz.distribos.sync.ProvisioningClient
 
 /**
  * Asosiy ekran holati.
@@ -37,6 +39,8 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
             connected = false, queued = 0, deadLetters = 0, devices = 0,
             publicPilot = true, protocolVersion = "5.1.0", epoch = 0,
         ),
+        val provisioned: Boolean = true,
+        val join: JoinUiState = JoinUiState.Idle,
     )
 
     private val _state = MutableStateFlow(UiState(role = container.role))
@@ -140,6 +144,70 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
                 )
             }
         }
+
+        // Ulanganlik holati: o'zimizdan boshqa faol qurilma bormi.
+        viewModelScope.launch {
+            container.observeProvisioned().collect { peers ->
+                _state.value = _state.value.copy(provisioned = peers > 0)
+            }
+        }
+    }
+
+    // --- qurilmani ulash --------------------------------------------------
+
+    fun startScan() {
+        _state.value = _state.value.copy(join = JoinUiState.Scanning)
+    }
+
+    fun cancelJoin() {
+        container.provisioning.cancel()
+        _state.value = _state.value.copy(join = JoinUiState.Idle)
+    }
+
+    /** QR kod baytlari (binar CBOR). */
+    fun onQrScanned(payload: ByteArray) = join(payload)
+
+    /**
+     * Qo'lda kiritilgan kod — QR payload'ining o'n oltilik ko'rinishi.
+     *
+     * Kamera ishlamasa yoki ruxsat berilmasa zaxira yo'l. Omborda
+     * telefon kamerasi ko'pincha ishlamaydi, shuning uchun bu zaxira
+     * emas, to'liq huquqli yo'l.
+     */
+    fun onManualCode(code: String) {
+        val cleaned = code.filter { !it.isWhitespace() }
+        val bytes = try {
+            require(cleaned.length % 2 == 0 && cleaned.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' })
+            cleaned.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        } catch (_: Exception) {
+            _state.value = _state.value.copy(
+                join = JoinUiState.Failed("Kod noto'g'ri. Kompyuterdagi kodni to'liq nusxalang.")
+            )
+            return
+        }
+        join(bytes)
+    }
+
+    private fun join(payload: ByteArray) {
+        viewModelScope.launch {
+            val invitation = try {
+                ProvisioningClient.Invitation.fromQrPayload(payload)
+            } catch (exception: Exception) {
+                _state.value = _state.value.copy(
+                    join = JoinUiState.Failed(exception.message ?: "Kod o'qilmadi")
+                )
+                return@launch
+            }
+
+            try {
+                container.provisioning.requestJoin(invitation)
+                _state.value = _state.value.copy(join = JoinUiState.Waiting)
+            } catch (exception: Exception) {
+                _state.value = _state.value.copy(
+                    join = JoinUiState.Failed(exception.message ?: "Yuborilmadi")
+                )
+            }
+        }
     }
 
     /** Jonli sinxronizatsiya aylanishi (ilova ekranda turganda). */
@@ -150,6 +218,22 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
                 runCatching { container.runSyncCycle() }
                     .onSuccess { snapshot ->
                         _state.value = _state.value.copy(sync = snapshot)
+                        // Ulash javobi asinxron keladi — aylanishda tekshiramiz.
+                        when (val result = container.lastJoinResult) {
+                            is ProvisioningClient.Result.Joined -> {
+                                container.lastJoinResult = null
+                                _state.value = _state.value.copy(
+                                    join = JoinUiState.Joined(result.role)
+                                )
+                            }
+                            is ProvisioningClient.Result.Failed -> {
+                                container.lastJoinResult = null
+                                _state.value = _state.value.copy(
+                                    join = JoinUiState.Failed(result.reason)
+                                )
+                            }
+                            null -> Unit
+                        }
                     }
                 delay(SYNC_INTERVAL_MS)
             }

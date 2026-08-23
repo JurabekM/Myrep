@@ -18,7 +18,7 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from distribos.infrastructure.config import (  # noqa: E402
+from distribos.infrastructure.config import (
     PUBLIC_PILOT_WARNING,
     AppSettings,
     ConfigError,
