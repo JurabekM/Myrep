@@ -13,6 +13,7 @@ ham yo'q qiladi.
 
 from __future__ import annotations
 
+import contextlib
 import datetime as dt
 from dataclasses import dataclass, field
 from typing import Any
@@ -202,10 +203,9 @@ class EventStore:
 
         # Kelgan tamg'ani hisobga olamiz — mahalliy soat oldinga suriladi
         # (HLC qoidasi), lekin haddan tashqari kelajak qabul qilinmaydi.
-        try:
+        # buzuq tamg'a hodisani rad etmaydi — u imzo bilan tasdiqlangan
+        with contextlib.suppress(ValueError, AttributeError):
             self._clock.observe(HybridTimestamp.decode(logical_timestamp))
-        except (ValueError, AttributeError):
-            pass  # buzuq tamg'a hodisani rad etmaydi — u imzo bilan tasdiqlangan
 
         record = EventLog(
             event_id=event_id,

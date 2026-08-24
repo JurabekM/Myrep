@@ -55,3 +55,6 @@ Desktop.ini
 # JVM halokat hisobotlari (Gradle/Kotlin demoni yiqilganda paydo bo'ladi).
 hs_err_pid*.log
 replay_pid*.log
+
+# Alembic autogenerate uchun vaqtinchalik baza.
+.alembic-autogen.db

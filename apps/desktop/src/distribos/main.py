@@ -9,6 +9,7 @@ Uch xil usulda ishga tushadi (testda qulflangan):
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
@@ -145,10 +146,9 @@ def run_console() -> int:
 
     def emit(text: str = "") -> None:
         lines.append(text)
-        try:
+        # windowed build'da stdout yo'q — jurnal baribir bor
+        with contextlib.suppress(Exception):
             print(text)
-        except Exception:
-            pass   # windowed build'da stdout yo'q — jurnal baribir bor
 
     try:
         context = build_context(settings, allow_insecure_secrets=True)

@@ -131,7 +131,7 @@ def _row_to_dict(row: Any) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for column in row.__table__.columns:
         value = getattr(row, column.name)
-        if isinstance(value, dt.datetime) or isinstance(value, dt.date):
+        if isinstance(value, dt.datetime | dt.date):
             value = value.isoformat()
         elif isinstance(value, bytes):
             value = value.hex()

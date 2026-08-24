@@ -156,9 +156,8 @@ def _check_type(context: str, name: str, expected: str, value: Any) -> None:
     elif expected == "list":
         if not isinstance(value, list):
             raise ContractError(f"{context}.{name}: ro'yxat kutildi")
-    elif expected == "map":
-        if not isinstance(value, dict):
-            raise ContractError(f"{context}.{name}: obyekt kutildi")
+    elif expected == "map" and not isinstance(value, dict):
+        raise ContractError(f"{context}.{name}: obyekt kutildi")
 
 
 @cache

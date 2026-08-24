@@ -4,7 +4,7 @@ Bu hujjat «nima tayyor» degan savolga **o'zini maqtamasdan** javob
 beradi. «Test o'tdi» va «ishlaydi» — ikki xil narsa, shuning uchun har
 qator uchun **qanday tekshirilgani** ko'rsatilgan.
 
-Sana: 2026-08-23
+Sana: 2026-08-24
 
 ---
 
@@ -122,19 +122,81 @@ Faqat emulyator (Medium_Phone_API_36) sinaldi — lekin **haqiqiy ochiq
 broker orqali**, soxta transport bilan emas. Haqiqiy telefonda —
 xususan zaif qurilmada va yomon tarmoqda — sinalmagan.
 
-### 5.4. Lokal konteynerli MQTT broker
+### 5.4. Lokal konteynerli MQTT broker — BAJARILDI
 
-Integratsion testlar uchun Mosquitto/HiveMQ CE konteyneri **sozlanmagan**.
-Hozircha sinxronizatsiya mantiqi soxta transport ustida sinaladi.
+`tests/integration/broker.py` — Docker'da TLS yoqilgan Mosquitto
+(`eclipse-mosquitto:2`), o'z-o'zini imzolagan sertifikat bilan. Uchta
+sinov (`tests/integration/test_live_broker_sync.py`, `pytest -m
+integration`) **haqiqiy soket** ustida ishlaydi — `LoopbackBus` emas:
 
-### 5.5. Boshqalar
+* hodisa haqiqiy broker orqali boshqa tugunga yetadi;
+* o'z aks-sadosi (broker xabarni yuboruvchiga ham qaytaradi) hech qanday
+  behuda `dead_letter` yozuvi qoldirmaydi;
+* ikki yo'nalishli sinxronizatsiya ishlaydi.
 
-* Alembic migratsiyalari yozilmagan (hozircha `create_all`);
+Sinov Docker mavjud bo'lmasa JIMGINA o'tkazib yuboriladi (CI muhitida
+odatda bor). Bu haqiqiy `broker.hivemq.com`ga BOG'LIQ EMAS (ADR-0002).
+
+**Muhim topilma:** birinchi urinishda ikki tugun `Database.in_memory()`
+(StaticPool — bitta ulanish barcha oqimlar orasida) bilan qurilganda
+`StaleDataError` chiqdi. Sabab MQTT'ning FON OQIMI (paho `loop_start()`)
+bilan asosiy oqim BIR XIL ulanishga bir vaqtda yozishga urinishi edi.
+Bu production xatosi EMAS — production fayl-asosli baza (WAL, alohida
+ulanishlar) ishlatadi. Sinov shunga moslashtirildi va daraja **A**.
+
+### 5.5. Alembic migratsiyalari — BAJARILDI
+
+`alembic/versions/0001_boshlangich_sxema.py` — joriy modeldan
+avtogeneratsiya qilingan boshlang'ich migratsiya.
+`distribos.persistence.migrations.ensure_schema()` uchta holatni
+farqlaydi:
+
+1. bo'sh baza — Alembic barcha migratsiyalarni qo'llaydi;
+2. `create_all()` bilan yaratilgan ESKI baza (Alembic tarixisiz, lekin
+   jadvallar bor) — qayta yaratilmaydi, faqat "head" deb belgilanadi
+   (`stamp`), aks holda `CREATE TABLE` "jadval allaqachon bor" xatosi
+   bilan yiqilardi;
+3. allaqachon migratsiyalangan baza — oddiy `upgrade`.
+
+**Real yangilash stsenariysi sinaldi** (daraja A): PyInstaller bilan
+yig'ilgan `.exe` eski (`create_all()` bilan yaratilgan, ichida haqiqiy
+mahsulot yozuvi bor) bazaga ko'rsatildi — mahsulot saqlanib qoldi,
+`alembic_version` to'g'ri "0001" ga stamp qilindi, `CREATE TABLE` xatosi
+chiqmadi.
+
+Bu yo'lda ikkita xato topildi va tuzatildi:
+
+* `alembic` `pyproject.toml`da e'lon qilingan edi, lekin muhitda
+  **o'rnatilmagan** edi;
+* `alembic/env.py` PyInstaller'ning statik import skaneridan tashqarida
+  qoladi (u `--add-data` bilan ko'chiriladi va `exec` orqali yuklanadi),
+  shuning uchun `logging.config` moduli paketlangan build'da
+  `ModuleNotFoundError` bilan yiqilardi — bu FAQAT reliz paketida
+  ko'rinardi, manba daraxtida yoki avvalgi smoke testda emas.
+
+4 sinov (`tests/contract/test_migrations.py`) uchta holatni ham qamrab
+oladi, jumladan `create_all()` va Alembic orasida jadval to'plami
+drift qilmasligini tekshiruvchi sinov.
+
+### 5.6. CI (GitHub Actions) — YOZILDI
+
+`.github/workflows/ci.yml` — to'rt ish: `python` (ruff + pytest),
+`python-integration` (§5.4 dagi lokal broker sinovi), `kotlin-pure`
+(crypto/domain/core — Android SDK'siz), `kotlin-android`
+(sync/data/app — Android SDK bilan). Daraja **C**: yozilgan va mantiqiy
+tekshirilgan, lekin bu sessiyada haqiqiy GitHub Actions runner'ida
+ISHGA TUSHIRILMAGAN — buni faqat push qilib, natijani kuzatib
+tasdiqlash mumkin.
+
+### 5.7. Boshqalar
+
 * ovozli buyurtma (speech-to-text) — yo'q;
 * tashqi AI provayder abstraksiyasi — faqat lokal maslahatchi bor;
 * uz-Kirill va rus tillari — kalitlar tayyor, tarjimalar yo'q;
-* CI (GitHub Actions) — sozlanmagan;
-* soak test — bajarilmagan.
+* soak test — bajarilmagan;
+* mypy strict rejimda 131 xato (asosan `presentation/` UI qatlamida,
+  tur izohlari yetishmaydi) — funksional emas, lekin halol aytilishi
+  kerak: mypy CI'ga QO'SHILMADI, chunki hozir yashil bo'lmaydi.
 
 ---
 
@@ -201,11 +263,17 @@ JIMGINA yutilardi. Endi sabab logga yoziladi.
 
 ## 7. Keyingi qadam uchun tavsiya
 
-Ustuvorlik tartibida:
+Bajarildi: QR provisioning oqimi (§5.1), lokal konteynerli broker bilan
+integratsion test (§5.4), unumdorlik o'lchovi (§5.2, `docs/BENCHMARK.md`),
+Alembic migratsiyalari (§5.5), CI workflow yozildi (§5.6).
 
-1. QR provisioning oqimini ikkala tomonda tugatish — hozir bu yagona
-   uzilgan halqa.
-2. Lokal konteynerli broker bilan integratsion test.
-3. Unumdorlik o'lchovi (100k mahsulot, 1M hodisa).
-4. Alembic migratsiyalari — sxema o'zgarishi ma'lumotni yo'qotmasin.
-5. DES-1 uchun mustaqil kriptografik ko'rib chiqish.
+Qolgan, ustuvorlik tartibida:
+
+1. **CI'ni haqiqiy GitHub Actions'da tekshirish** — `.github/workflows/ci.yml`
+   hali push qilib ishga tushirilmagan (§5.6, daraja C).
+2. DES-1 uchun mustaqil kriptografik ko'rib chiqish (loyihadan tashqari
+   auditor kerak).
+3. Haqiqiy telefonda (emulyator emas) sinov.
+4. uz-Kirill va rus tarjimalari.
+5. `presentation/` qatlamida mypy strict xatolarini tuzatish (131 ta,
+   §5.7) — funksional emas, lekin CI'ga mypy qo'shishni imkonli qiladi.

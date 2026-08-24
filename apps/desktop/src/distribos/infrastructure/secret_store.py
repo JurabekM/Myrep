@@ -17,7 +17,7 @@ import os
 import sys
 from ctypes import wintypes
 from dataclasses import dataclass
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from distribos.aether_q.vendor import kdf
 
@@ -41,7 +41,11 @@ class SecretStore(Protocol):
 
 
 class _DataBlob(ctypes.Structure):
-    _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))]
+    # `ctypes.Structure` bu maydonni maxsus qoidaga ko'ra o'qiydi —
+    # ClassVar FAQAT tip yozuvi, ishga ta'sir qilmaydi.
+    _fields_: ClassVar = [
+        ("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))
+    ]
 
 
 def _blob(data: bytes) -> _DataBlob:

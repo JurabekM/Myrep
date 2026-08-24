@@ -33,7 +33,13 @@ packages = ["apps/desktop/src/distribos"]
 [tool.pytest.ini_options]
 testpaths = ["tests", "apps/desktop/tests"]
 pythonpath = ["apps/desktop/src"]
-addopts = "-q"
+# Integratsion sinovlar (`tests/integration/`) Docker talab qiladi va
+# sekinroq — kundalik ishlashda o'chiq, CI'da alohida bosqichda
+# `pytest -m integration` bilan yoqiladi.
+addopts = "-q -m 'not integration'"
+markers = [
+    "integration: Docker'dagi haqiqiy MQTT broker talab qiladi (sekin)",
+]
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = ["error::DeprecationWarning:distribos.*"]
 

@@ -224,9 +224,8 @@ def test_invitation_works_only_once(desktop_and_phone) -> None:
         service.handle_join_request(session, _join(phone, invitation))
 
     second = build_node("android-2", new_tenant_id(), bus)
-    with pytest.raises(OnboardingError):
-        with desktop.database.unit_of_work() as session:
-            service.handle_join_request(session, _join(second, invitation))
+    with pytest.raises(OnboardingError), desktop.database.unit_of_work() as session:
+        service.handle_join_request(session, _join(second, invitation))
 
 
 def test_expired_invitation_rejected(desktop_and_phone) -> None:
@@ -243,9 +242,8 @@ def test_expired_invitation_rejected(desktop_and_phone) -> None:
     service.remember(invitation)
 
     assert invitation.is_expired
-    with pytest.raises(OnboardingError):
-        with desktop.database.unit_of_work() as session:
-            service.handle_join_request(session, _join(phone, invitation))
+    with pytest.raises(OnboardingError), desktop.database.unit_of_work() as session:
+        service.handle_join_request(session, _join(phone, invitation))
 
 
 def test_wrong_secret_rejected(desktop_and_phone) -> None:
@@ -263,9 +261,8 @@ def test_wrong_secret_rejected(desktop_and_phone) -> None:
         kem_public_key=phone.keys.kem_public_key,
         platform="android", display_name="Soxta",
     )
-    with pytest.raises(OnboardingError):
-        with desktop.database.unit_of_work() as session:
-            service.handle_join_request(session, forged)
+    with pytest.raises(OnboardingError), desktop.database.unit_of_work() as session:
+        service.handle_join_request(session, forged)
 
 
 def test_proof_bound_to_device_identity(desktop_and_phone) -> None:
@@ -290,9 +287,11 @@ def test_proof_bound_to_device_identity(desktop_and_phone) -> None:
         boot1.Boot1Kind.JOIN_REQUEST,
         bytes.fromhex(invitation.invitation_id), keys,
     )
-    with pytest.raises(OnboardingError, match="yaroqsiz"):
-        with desktop.database.unit_of_work() as session:
-            service.handle_join_request(session, wire)
+    with (
+        pytest.raises(OnboardingError, match="yaroqsiz"),
+        desktop.database.unit_of_work() as session,
+    ):
+        service.handle_join_request(session, wire)
 
 
 def test_unconfirmed_device_events_are_not_accepted(desktop_and_phone) -> None:

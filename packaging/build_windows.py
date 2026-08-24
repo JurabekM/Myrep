@@ -64,8 +64,23 @@ def build_exe() -> Path:
         "--paths", str(_ROOT / "apps" / "desktop" / "src"),
         # Kontraktlar va spetsifikatsiyalar ilova ichida kerak.
         "--add-data", f"{_ROOT / 'contracts'};contracts",
+        # Alembic migratsiyalari — bazani sxemaga olib kelish uchun
+        # ishga tushishda kerak (`persistence/migrations.py`). Busiz
+        # o'rnatilgan dastur "script_location topilmadi" bilan yiqiladi
+        # — lekin bu FAQAT paketda ko'rinadi, manba daraxtida emas.
+        "--add-data", f"{_ROOT / 'alembic'};alembic",
         "--hidden-import", "distribos.persistence.models",
         "--hidden-import", "distribos.aether_q.vendor",
+        "--hidden-import", "alembic",
+        "--collect-submodules", "alembic",
+        # `alembic/env.py` PyInstaller'ning statik skaneridan TASHQARIDA:
+        # u `--add-data` bilan ko'chirilgan va ishga tushishda `exec`
+        # orqali yuklanadi (`load_python_file`), shuning uchun uning
+        # importlari kod tahlilida ko'rinmaydi. `logging.config` faqat
+        # o'sha faylda ishlatiladi — boshqa hech joyda emas, shuning
+        # uchun uni ANIQ ko'rsatish kerak (aks holda paketda
+        # yiqiladi, manba daraxtida esa hech qachon ko'rinmaydi).
+        "--hidden-import", "logging.config",
         # Kerak bo'lmagan og'ir Qt modullari — installer hajmi uchun.
         "--exclude-module", "PySide6.QtWebEngineCore",
         "--exclude-module", "PySide6.QtWebEngineWidgets",

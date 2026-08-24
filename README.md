@@ -30,12 +30,16 @@ tasdiqlangan:
 | Dublikat va tartib buzilishi | Xaos testlari: 10× dublikat, teskari tartib, yo'qolgan xabar |
 | Zaxira nusxa | Shifrlash → tekshirish → tiklash zanjiri testda |
 | Installer | O'rnatildi, ishga tushdi, o'chirishda baza tegilmasligi qoidasi yozilgan |
+| **Lokal broker integratsiyasi** | Docker'dagi haqiqiy Mosquitto (TLS) orqali: hodisa yetdi, aks-sado behuda yozuv qoldirmadi, ikki yo'nalish ishladi — `broker.hivemq.com`ga bog'liq emas |
+| **Alembic migratsiyasi** | Real reliz `.exe` eski (`create_all()`) bazani ochib, ma'lumotni yo'qotmasdan sxemaga stamp qildi |
+| Unumdorlik | 100k mahsulot / 1M hodisada o'lchandi (`docs/BENCHMARK.md`) — bitta ochiq savol bor (izohlangan) |
 
 **Hali tekshirilmagan** (halol ro'yxat, `docs/HOLAT.md` da batafsil):
 
+* CI (`.github/workflows/ci.yml`) yozilgan, lekin haqiqiy GitHub Actions'da hali ishga tushirilmagan;
 * haqiqiy qurilmada (emulyator emas) sinov;
-* 100 000 mahsulot / 1 million hodisada unumdorlik o'lchovi;
-* uzoq muddatli (soak) sinov.
+* uzoq muddatli (soak) sinov;
+* DES-1 uchun mustaqil kriptografik ko'rib chiqish.
 
 ---
 
@@ -125,12 +129,16 @@ Batafsil: [docs/BUILDING.md](docs/BUILDING.md)
 ### Testlar
 
 ```bash
-python -m pytest
+python -m pytest                              # tezkor (integratsion sinovsiz)
+python -m pytest tests/integration -m integration   # Docker talab qiladi
 ```
 
 ```bash
 cd apps/android && ./gradlew :crypto:test :domain:test
 ```
+
+CI: `.github/workflows/ci.yml` — ruff, pytest, lokal broker integratsion
+sinovi va Kotlin testlari har push/PR'da.
 
 ---
 

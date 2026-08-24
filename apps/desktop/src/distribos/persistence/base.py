@@ -93,9 +93,13 @@ class Database:
         return cls(create_memory_engine())
 
     def create_all(self) -> None:
-        """Jadvallarni yaratadi (test va birinchi ishga tushirish uchun).
+        """Jadvallarni yaratadi — FAQAT test va vositalar uchun.
 
-        Production'da migratsiya Alembic orqali bajariladi.
+        Bu chaqiruv Alembic tarixini bilmaydi (`alembic_version` yozilmaydi).
+        Ishlayotgan dastur bazasini shu bilan boshqarmaydi —
+        `distribos.persistence.migrations.ensure_schema()` ishlatadi,
+        chunki foydalanuvchi bazasi yangilanishda ustunlarni yo'qotmasligi
+        kerak, `create_all()` esa faqat "hali yo'q" jadvallarni yaratadi.
         """
         from distribos.persistence import models  # noqa: F401  (jadvallarni ro'yxatga oladi)
 

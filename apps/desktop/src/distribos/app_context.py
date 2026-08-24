@@ -26,6 +26,7 @@ from distribos.domain.ids import HybridClock, new_device_id, new_tenant_id
 from distribos.infrastructure.config import AppSettings, load_settings
 from distribos.infrastructure.secret_store import SecretStore, default_secret_store
 from distribos.persistence.base import Database
+from distribos.persistence.migrations import ensure_schema
 from distribos.persistence.models import EpochKeyRecord
 from distribos.persistence.triggers import install_triggers
 from distribos.sync.engine import SyncEngine
@@ -205,7 +206,11 @@ def build_context(
     device_id, tenant_id, keys = load_or_create_identity(resolved, secret_store)
 
     database = Database.open(resolved.paths.database_path)
-    database.create_all()
+    # `create_all()` EMAS: production bazasi Alembic orqali sxemaga
+    # olib kelinadi, chunki keyingi yangilanishlarda eski
+    # foydalanuvchi ma'lumoti YO'QOTILMASLIGI kerak (`create_all()`
+    # buni kafolatlamaydi — u faqat "hali yo'q" jadvallarni yaratadi).
+    ensure_schema(database.engine)
     install_triggers(database.engine)
 
     provider = RealAetherQProvider(
