@@ -110,11 +110,14 @@ chiqargan edi (§6.2).
 
 Bu sinovlar to'qqizta xatoni ochdi, ular tuzatildi (§6.1, §6.2).
 
-### 5.2. Unumdorlik
+### 5.2. Unumdorlik — O'LCHANDI
 
-Topshiriqdagi mezonlar (100 000 mahsulot, 1 million hodisa, 50 000
-mahsulotli mobil katalog) **o'lchanmagan**. Indekslar qo'yilgan, lekin
-benchmark yo'q. Desktop ishga tushishi o'lchandi: 1.1 s.
+`docs/BENCHMARK.md` — 100 000 mahsulot, 1 000 000 hodisa, 50 000
+buyurtmada o'lchandi (`python tools/benchmark.py`). Ko'p mezon
+maqsadga (≤300 ms) sig'adi; bitta ochiq savol bor (buyurtmalar
+ro'yxati stend ichida 410 ms, stend tashqarisida xuddi shu so'rov 6 ms
+— sabab hujjatda halol yozilgan, "tuzatilmagan"). Desktop ishga
+tushishi: 1.1 s.
 
 ### 5.3. Haqiqiy qurilma
 
@@ -178,15 +181,26 @@ Bu yo'lda ikkita xato topildi va tuzatildi:
 oladi, jumladan `create_all()` va Alembic orasida jadval to'plami
 drift qilmasligini tekshiruvchi sinov.
 
-### 5.6. CI (GitHub Actions) — YOZILDI
+### 5.6. CI (GitHub Actions) — BAJARILDI
 
 `.github/workflows/ci.yml` — to'rt ish: `python` (ruff + pytest),
 `python-integration` (§5.4 dagi lokal broker sinovi), `kotlin-pure`
 (crypto/domain/core — Android SDK'siz), `kotlin-android`
-(sync/data/app — Android SDK bilan). Daraja **C**: yozilgan va mantiqiy
-tekshirilgan, lekin bu sessiyada haqiqiy GitHub Actions runner'ida
-ISHGA TUSHIRILMAGAN — buni faqat push qilib, natijani kuzatib
-tasdiqlash mumkin.
+(sync/data/app — Android SDK bilan). **Haqiqiy GitHub Actions
+runner'ida sinaldi** (daraja A) — birinchi push uchta xatoni ochdi:
+
+* `apps/android/gradlew` Git'da bajarilmaydigan (100644) rejimda
+  saqlangan edi — Windows'da sezilmaydi, Linux runner'da "Permission
+  denied";
+* `gradle/actions/setup-gradle@v4` da `build-root-directory` degan
+  parametr YO'Q edi — noto'g'ri taxmin qilingan;
+* GUI smoke sinovi Linux runner'da `libEGL.so.1` yo'qligi bilan
+  yiqilardi — `tlambert03/setup-qt-libs` va `xvfb-run` bilan tuzatildi.
+
+Bundan tashqari: `pyproject.toml` dagi `ruff>=0.8` ochiq versiya
+diapazoni tufayli CI HAR DOIM eng yangi `ruff`ni oladi. Lokal muhitda
+keshlangan eski versiya (0.8.4) 34 ta yangi qoidani (`RUF059`, `UP042`)
+ko'rmagan edi — bularning barchasi oldingi kod edi, tuzatildi.
 
 ### 5.7. Boshqalar
 
@@ -269,11 +283,9 @@ Alembic migratsiyalari (§5.5), CI workflow yozildi (§5.6).
 
 Qolgan, ustuvorlik tartibida:
 
-1. **CI'ni haqiqiy GitHub Actions'da tekshirish** — `.github/workflows/ci.yml`
-   hali push qilib ishga tushirilmagan (§5.6, daraja C).
-2. DES-1 uchun mustaqil kriptografik ko'rib chiqish (loyihadan tashqari
+1. DES-1 uchun mustaqil kriptografik ko'rib chiqish (loyihadan tashqari
    auditor kerak).
-3. Haqiqiy telefonda (emulyator emas) sinov.
-4. uz-Kirill va rus tarjimalari.
-5. `presentation/` qatlamida mypy strict xatolarini tuzatish (131 ta,
+2. Haqiqiy telefonda (emulyator emas) sinov.
+3. uz-Kirill va rus tarjimalari.
+4. `presentation/` qatlamida mypy strict xatolarini tuzatish (131 ta,
    §5.7) — funksional emas, lekin CI'ga mypy qo'shishni imkonli qiladi.
