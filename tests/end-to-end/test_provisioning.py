@@ -132,7 +132,7 @@ def _install_response(phone, invitation: Invitation, wire: bytes) -> None:
 
 def test_full_join_then_live_sync(desktop_and_phone) -> None:
     """QR taklif → ulash → epoch kaliti → oddiy sinxronizatsiya."""
-    bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
+    _bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
 
     # 1. Egasi taklif yaratadi.
     invitation = _issue(registry, service, tenant_id, desktop)
@@ -231,7 +231,7 @@ def test_invitation_works_only_once(desktop_and_phone) -> None:
 def test_expired_invitation_rejected(desktop_and_phone) -> None:
     import datetime as dt
 
-    bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
+    _bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
     invitation = registry.issue(
         tenant_topic_id=opaque_tenant_topic_id(tenant_id),
         role="agent", display_name="Kech qolgan",
@@ -250,7 +250,7 @@ def test_wrong_secret_rejected(desktop_and_phone) -> None:
     """Taklif ID to'g'ri, lekin sir noto'g'ri — rad etiladi."""
     import os
 
-    bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
+    _bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
     invitation = _issue(registry, service, tenant_id, desktop)
 
     forged = boot1.build_join_request(
@@ -296,7 +296,7 @@ def test_proof_bound_to_device_identity(desktop_and_phone) -> None:
 
 def test_unconfirmed_device_events_are_not_accepted(desktop_and_phone) -> None:
     """Egasi tasdiqlamaguncha qurilma hodisalari QABUL QILINMAYDI."""
-    bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
+    _bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
     invitation = _issue(registry, service, tenant_id, desktop)
 
     with desktop.database.unit_of_work() as session:
@@ -323,7 +323,7 @@ def test_unconfirmed_device_events_are_not_accepted(desktop_and_phone) -> None:
 
 def test_join_request_cannot_be_replayed_as_response(desktop_and_phone) -> None:
     """Yo'nalishli kalitlar: so'rovni javob sifatida ochib bo'lmaydi."""
-    bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
+    _bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
     invitation = _issue(registry, service, tenant_id, desktop)
 
     request_wire = _join(phone, invitation)
@@ -333,7 +333,7 @@ def test_join_request_cannot_be_replayed_as_response(desktop_and_phone) -> None:
 
 def test_response_carries_no_plaintext_secret(desktop_and_phone) -> None:
     """Epoch kaliti javob ichida OCHIQ ko'rinmaydi."""
-    bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
+    _bus, desktop, phone, registry, service, tenant_id = desktop_and_phone
     invitation = _issue(registry, service, tenant_id, desktop)
 
     with desktop.database.unit_of_work() as session:

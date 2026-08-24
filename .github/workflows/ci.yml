@@ -58,8 +58,8 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: apps/android
+      - name: gradlew bajarilish huquqi
+        run: chmod +x apps/android/gradlew
       - name: Testlar (kripto va domen mosligi)
         working-directory: apps/android
         run: ./gradlew :crypto:test :domain:test :core:test --console=plain
@@ -79,8 +79,8 @@ jobs:
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: apps/android
+      - name: gradlew bajarilish huquqi
+        run: chmod +x apps/android/gradlew
       - name: Testlar (unit — emulyatorsiz)
         working-directory: apps/android
         run: ./gradlew :sync:testDebugUnitTest :data:testDebugUnitTest :app:testDebugUnitTest --console=plain

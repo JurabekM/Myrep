@@ -24,17 +24,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 pytest.importorskip("PySide6", reason="PySide6 o'rnatilmagan")
 
-from distribos.app_context import build_context  # noqa: E402
-from distribos.domain.ids import uuid7_str  # noqa: E402
-from distribos.infrastructure.config import (  # noqa: E402
+from distribos.app_context import build_context
+from distribos.domain.ids import uuid7_str
+from distribos.infrastructure.config import (
     AppSettings,
     MqttSettings,
     PathSettings,
 )
-from distribos.presentation.main_window import NAVIGATION, MainWindow  # noqa: E402
-from distribos.presentation.theme import stylesheet  # noqa: E402
-from distribos.sync.event_store import NewEvent  # noqa: E402
-from PySide6.QtWidgets import QApplication  # noqa: E402
+from distribos.presentation.main_window import NAVIGATION, MainWindow
+from distribos.presentation.theme import stylesheet
+from distribos.sync.event_store import NewEvent
+from PySide6.QtWidgets import QApplication
 
 
 @pytest.fixture(scope="module")

@@ -28,7 +28,7 @@ from harness import shared_tenant_setup
 
 @pytest.fixture
 def cluster():
-    bus, tenant_id, (desktop, phone) = shared_tenant_setup("desktop-1", "android-1")
+    bus, _tenant_id, (desktop, phone) = shared_tenant_setup("desktop-1", "android-1")
     return bus, desktop, phone
 
 
@@ -105,7 +105,7 @@ def test_offline_order_reaches_desktop_after_reconnect(cluster) -> None:
 
 def test_application_ack_marks_peer_applied(cluster) -> None:
     """Broker ACK emas, PEER QO'LLADI degan holat."""
-    bus, desktop, phone = cluster
+    _bus, desktop, phone = cluster
     product_id, customer_id = _seed_catalog(desktop)
     desktop.sync()
 
@@ -152,7 +152,7 @@ def test_resent_event_deduplicated_by_inbox(cluster) -> None:
     (yangi nonce, ya'ni replay oynasi uni to'xtatmaydi), lekin `event_id`
     o'zgarmaydi. Biznes natijasi baribir BIR marta qo'llanishi kerak.
     """
-    bus, desktop, phone = cluster
+    _bus, desktop, phone = cluster
     product_id, customer_id = _seed_catalog(desktop)
     desktop.sync()
 
@@ -205,7 +205,7 @@ def test_out_of_order_delivery_still_converges(cluster) -> None:
 
 
 def test_stock_is_computed_from_movements(cluster) -> None:
-    bus, desktop, phone = cluster
+    _bus, desktop, phone = cluster
     product_id, _ = _seed_catalog(desktop)
     warehouse_id = uuid7_str()
 
@@ -234,7 +234,7 @@ def test_stock_is_computed_from_movements(cluster) -> None:
 
 def test_no_plaintext_business_data_on_the_wire(cluster) -> None:
     """Simga chiqqan XOM baytlarda ochiq biznes matni bo'lmasligi kerak."""
-    bus, desktop, phone = cluster
+    bus, desktop, _phone = cluster
     _seed_catalog(desktop)
     desktop.sync()
 

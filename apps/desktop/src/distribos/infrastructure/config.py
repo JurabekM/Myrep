@@ -21,7 +21,7 @@ PUBLIC_PILOT_HOSTS: frozenset[str] = frozenset(
 PUBLIC_PILOT_TLS_PORT = 8883
 
 
-class MqttProfile(str, enum.Enum):
+class MqttProfile(enum.StrEnum):
     PUBLIC_PILOT = "PUBLIC_PILOT"
     PRIVATE_PRODUCTION = "PRIVATE_PRODUCTION"
 

@@ -191,7 +191,7 @@ def test_concurrent_edit_resolves_deterministically(pair) -> None:
 
 def test_illegal_state_transition_becomes_conflict(pair) -> None:
     """Noqonuniy holat o'tishi JIMGINA qabul qilinmaydi."""
-    bus, desktop, phone = pair
+    _bus, desktop, _phone = pair
     product_id = _product(desktop)
     customer_id = _customer(desktop)
     order_id = _order(desktop, customer_id, product_id)
@@ -242,7 +242,7 @@ def test_truncated_packet_is_rejected(pair) -> None:
 
 def test_oversized_packet_is_rejected(pair) -> None:
     """Haddan tashqari katta paket kripto qatlamiga YETIB BORMAYDI."""
-    _bus, desktop, phone = pair
+    _bus, _desktop, phone = pair
     huge = b"\x00" * (2 * 1024 * 1024)
     phone.engine.handle_inbound(huge)
     assert phone.engine.stats.rejections.get("TOO_LARGE", 0) >= 1
@@ -267,7 +267,7 @@ def test_foreign_tenant_message_is_rejected() -> None:
 
 def test_revoked_device_messages_rejected(pair) -> None:
     """Bekor qilingan qurilmaning hodisalari qabul qilinmaydi."""
-    bus, desktop, phone = pair
+    _bus, desktop, phone = pair
     product_id = _product(desktop)
     desktop.sync()
 
@@ -290,7 +290,7 @@ def test_revoked_device_messages_rejected(pair) -> None:
 
 def test_unknown_event_type_does_not_crash(pair) -> None:
     """Noma'lum hodisa turi rad etiladi, lekin tizimni yiqitmaydi."""
-    bus, desktop, phone = pair
+    _bus, desktop, phone = pair
     _product(desktop)
     desktop.sync()
 
@@ -355,7 +355,7 @@ def test_snapshot_resumes_after_interruption(pair) -> None:
     """Snapshot uzilib qolsa — faqat yetishmagan qismlar so'raladi."""
     from distribos.sync.snapshot import SnapshotAssembler, build_snapshot
 
-    bus, desktop, phone = pair
+    _bus, desktop, _phone = pair
     for index in range(40):
         _product(desktop, f"Mahsulot {index}")
     _customer(desktop)
@@ -383,7 +383,7 @@ def test_snapshot_resumes_after_interruption(pair) -> None:
 def test_snapshot_integrity_is_verified(pair) -> None:
     from distribos.sync.snapshot import SnapshotAssembler, SnapshotError, build_snapshot
 
-    bus, desktop, phone = pair
+    _bus, desktop, _phone = pair
     _product(desktop)
 
     with desktop.database.session() as session:
@@ -404,7 +404,7 @@ def test_snapshot_is_role_scoped(pair) -> None:
     """Agentga moliyaviy jadval YUBORILMAYDI."""
     from distribos.sync.snapshot import build_snapshot
 
-    bus, desktop, phone = pair
+    _bus, desktop, _phone = pair
     _product(desktop)
     customer_id = _customer(desktop)
 
@@ -417,10 +417,10 @@ def test_snapshot_is_role_scoped(pair) -> None:
         ))
 
     with desktop.database.session() as session:
-        owner_manifest, owner_chunks = build_snapshot(
+        _owner_manifest, owner_chunks = build_snapshot(
             session, role="owner", snapshot_id="s3"
         )
-        warehouse_manifest, warehouse_chunks = build_snapshot(
+        _warehouse_manifest, warehouse_chunks = build_snapshot(
             session, role="warehouse", snapshot_id="s4"
         )
 

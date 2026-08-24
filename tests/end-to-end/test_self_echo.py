@@ -90,7 +90,7 @@ def test_aks_sado_soxta_hujum_yozuvi_yaratmaydi(juftlik):
     qoldiradi. Jonli sinovda 3 daqiqada 83 ta shunday yozuv to'plandi —
     va HAQIQIY hujum ular orasida ko'rinmay qolardi.
     """
-    bus, alfa, beta = juftlik
+    bus, alfa, _beta = juftlik
 
     for _ in range(5):
         with alfa.database.unit_of_work() as session:

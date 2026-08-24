@@ -26,11 +26,11 @@ from __future__ import annotations
 
 import logging
 
+from alembic.config import Config
 from sqlalchemy import inspect
 from sqlalchemy.engine import Engine
 
 from alembic import command
-from alembic.config import Config
 from distribos.infrastructure.resources import resource_path
 
 logger = logging.getLogger(__name__)
