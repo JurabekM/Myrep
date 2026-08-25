@@ -1,0 +1,28 @@
+DistribOS AI — mulkiy dasturiy ta'minot
+
+Copyright (c) 2026 DistribOS
+
+Bu dastur va uning manba kodi mualliflik huquqi bilan himoyalangan.
+Foydalanish shartlari alohida shartnoma bilan belgilanadi.
+
+UCHINCHI TOMON KOMPONENTLARI
+----------------------------
+Dastur tarkibida quyidagi ochiq kodli komponentlar ishlatiladi va
+ularning litsenziyalari saqlanadi:
+
+  PySide6 / Qt          LGPL-3.0
+  SQLAlchemy            MIT
+  Alembic               MIT
+  Pydantic              MIT
+  cryptography          Apache-2.0 / BSD-3-Clause
+  paho-mqtt             EPL-2.0 / EDL-1.0
+  cbor2                 MIT
+  structlog             Apache-2.0 / MIT
+  BouncyCastle          MIT (Android)
+  HiveMQ MQTT Client    Apache-2.0 (Android)
+
+AETHER-Q v5.1
+-------------
+AETHER-Q protokoli va uning referens implementatsiyasi loyiha egasiga
+tegishli. Uning maqomi: tadqiqot/demo — tayyor; pilot — shartli;
+production — mustaqil audit SHART. Batafsil: docs/SECURITY.md

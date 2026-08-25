@@ -1,0 +1,15 @@
+{
+  "version": "5.1.0",
+  "upstream": "aether_q_v3/aether_q_v51",
+  "files": {
+    "dos.py": "4fe0415ce7f27a1e3647f9008beb950081d01866c82b7bbb3cb05d31095673b8",
+    "early.py": "a38352cc3b5bc62f212f811b82cc5839019b0250e8c3e46f68fb0b42e91daacc",
+    "field.py": "f4ae1fc6efabf3eaed4a4e3910dfbcdf87e3f634fdddb2c4a0f91218b6ba976e",
+    "handshake.py": "9ab68b13a48de881f72ffd5e219d45ca5110329e57da5a1dd3738e76f1fc5250",
+    "hybrid.py": "91b4b8d6e797ca2441fe1b2086ceaee437f3befdeb964cef442774f5a9c12c1a",
+    "kdf.py": "40d7950c671edbd2395f5c2883702981ae82f6a25d95b9e71770ae354de99a6d",
+    "kem.py": "8dbf12598d98c6f478bc1049bcf2d64204eb4314dbeb23765806e94564d561d5",
+    "sig.py": "8c421544b83781c5eced48e5418f8421d6fb6211c217bf39022c3058962631a8",
+    "transport.py": "e69b6a6d3fc17388fb37e3f8b81b95490560c25099d394eee331ee6063319ebc"
+  }
+}

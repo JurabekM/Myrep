@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Bir xil branch uchun eski ishlayotgan run bekor qilinadi — navbatga
+# tiqilib qolmasin.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python — ruff + pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      # GUI smoke sinovi (`test_gui_smoke.py`) haqiqiy PySide6/Qt ni
+      # import qiladi — bu esa Linux'da tizim darajasidagi grafik
+      # kutubxonalarni (libEGL va h.k.) talab qiladi, ular yalang'och
+      # `ubuntu-latest` runner'da yo'q. Bu action ularni o'rnatadi va
+      # virtual displey (Xvfb) beradi.
+      - uses: tlambert03/setup-qt-libs@v1
+      - name: Bog'liqliklarni o'rnatish
+        run: python -m pip install -e ".[dev]"
+      - name: ruff
+        run: python -m ruff check apps/desktop/src tools tests
+      - name: pytest (tezkor — integratsion sinovsiz)
+        run: xvfb-run -a python -m pytest tests/ -v
+
+  python-integration:
+    name: Python — lokal broker integratsion sinovi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Bog'liqliklarni o'rnatish
+        run: python -m pip install -e ".[dev]"
+      - name: Mosquitto image'ini oldindan tortish
+        run: docker pull eclipse-mosquitto:2
+      - name: pytest -m integration
+        # `ubuntu-latest` da Docker standart o'rnatilgan (ADR-0002:
+        # CI `broker.hivemq.com` ga bog'liq bo'lmasligi kerak — shuning
+        # uchun bu yerda LOKAL, konteynerlashtirilgan broker ishlatiladi,
+        # tashqi tarmoqqa emas).
+        run: python -m pytest tests/integration -m integration -v
+
+  kotlin-pure:
+    name: Kotlin — crypto/domain/core (sof JVM, Android SDK'siz)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: gradlew bajarilish huquqi
+        run: chmod +x apps/android/gradlew
+      - name: Testlar (kripto va domen mosligi)
+        working-directory: apps/android
+        run: ./gradlew :crypto:test :domain:test :core:test --console=plain
+
+  kotlin-android:
+    name: Kotlin — sync/data/app (Android SDK talab qiladi)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+      - name: Android platformasini o'rnatish
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: gradlew bajarilish huquqi
+        run: chmod +x apps/android/gradlew
+      - name: Testlar (unit — emulyatorsiz)
+        working-directory: apps/android
+        run: ./gradlew :sync:testDebugUnitTest :data:testDebugUnitTest :app:testDebugUnitTest --console=plain
