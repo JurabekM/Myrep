@@ -229,6 +229,35 @@ def test_settings_page_hides_no_secrets(window, app) -> None:
         assert forbidden not in text, f"diagnostikada maxfiy material: {forbidden}"
 
 
+def test_language_switch_persists_to_disk(window, app, monkeypatch) -> None:
+    """Til tanlagichi diskka yozadi — keyingi ishga tushirishda o'qiladi.
+
+    Qo'lda sinov (`docs/HOLAT.md` §5.7) haqiqiy oynada tasdiqladi:
+    navigatsiya va menyu darhol rus tiliga o'tadi. Bu yerda faqat
+    SAQLASH mexanizmi tekshiriladi — combo box'ni chertish emas,
+    slotni to'g'ridan-to'g'ri chaqirish (offscreen, sichqonchasiz).
+
+    `notify()` MODAL `QMessageBox` ochadi — offscreen rejimda uni
+    hech kim yopolmaydi va sinov ABADIY OSILIB QOLADI. Shuning uchun
+    bu yerda soxtalashtiriladi (haqiqiy ilovada muammo emas: foydalanuvchi
+    uni bosib yopadi).
+    """
+    from distribos.i18n import prefs
+
+    window._select("settings")
+    app.processEvents()
+    page = window._pages["settings"]
+    monkeypatch.setattr(page, "notify", lambda *a, **k: None)
+
+    ru_index = page._language.findData("ru")
+    assert ru_index >= 0, "rus tili tanlov ro'yxatida yo'q"
+
+    page._on_language_changed(ru_index)
+
+    saved = prefs.load_saved_locale(window._context.settings.paths.data_dir)
+    assert saved == "ru"
+
+
 def test_no_technical_jargon_in_user_interface(window, app) -> None:
     """Foydalanuvchi «aggregate», «outbox», «projector» ko'rmasligi kerak."""
     from PySide6.QtWidgets import QLabel, QPushButton

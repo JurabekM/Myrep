@@ -69,6 +69,10 @@ def build_exe() -> Path:
         # o'rnatilgan dastur "script_location topilmadi" bilan yiqiladi
         # — lekin bu FAQAT paketda ko'rinadi, manba daraxtida emas.
         "--add-data", f"{_ROOT / 'alembic'};alembic",
+        # Rus tili tarjimalari — busiz o'rnatilgan dasturda til
+        # almashtirish "asosiy tilga tushib qoladi" (fayl topilmaydi,
+        # `i18n._load_translations()` jimgina bo'sh lug'at qaytaradi).
+        "--add-data", f"{_ROOT / 'i18n'};i18n",
         "--hidden-import", "distribos.persistence.models",
         "--hidden-import", "distribos.aether_q.vendor",
         "--hidden-import", "alembic",

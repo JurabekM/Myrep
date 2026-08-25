@@ -33,10 +33,13 @@ tasdiqlangan:
 | **Lokal broker integratsiyasi** | Docker'dagi haqiqiy Mosquitto (TLS) orqali: hodisa yetdi, aks-sado behuda yozuv qoldirmadi, ikki yo'nalish ishladi — `broker.hivemq.com`ga bog'liq emas |
 | **Alembic migratsiyasi** | Real reliz `.exe` eski (`create_all()`) bazani ochib, ma'lumotni yo'qotmasdan sxemaga stamp qildi |
 | Unumdorlik | 100k mahsulot / 1M hodisada o'lchandi (`docs/BENCHMARK.md`) — bitta ochiq savol bor (izohlangan) |
+| CI (GitHub Actions) | 4 ish (`python`, `python-integration`, `kotlin-pure`, `kotlin-android`) haqiqiy runnerda yashil |
+| `presentation/` mypy strict | 0/47 xato — ikkita haqiqiy xato tuzatildi (tur izohi emas) |
+| **Lokalizatsiya (rus)** | Paketlangan `.exe` `DISTRIBOS_LANGUAGE=ru` bilan ishga tushirilib, skrinshot bilan tasdiqlandi — navigatsiya va menyu to'liq rus tilida |
 
 **Hali tekshirilmagan** (halol ro'yxat, `docs/HOLAT.md` da batafsil):
 
-* CI (`.github/workflows/ci.yml`) yozilgan, lekin haqiqiy GitHub Actions'da hali ishga tushirilmagan;
+* rus tarjimasi faqat navigatsiya + Sozlamalar sahifasida — qolgan ekranlar hali uz-Latn;
 * haqiqiy qurilmada (emulyator emas) sinov;
 * uzoq muddatli (soak) sinov;
 * DES-1 uchun mustaqil kriptografik ko'rib chiqish.

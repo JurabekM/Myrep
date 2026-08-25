@@ -202,11 +202,47 @@ diapazoni tufayli CI HAR DOIM eng yangi `ruff`ni oladi. Lokal muhitda
 keshlangan eski versiya (0.8.4) 34 ta yangi qoidani (`RUF059`, `UP042`)
 ko'rmagan edi — bularning barchasi oldingi kod edi, tuzatildi.
 
+### 5.6b. Lokalizatsiya (uz-Latn + rus) — BOSHLANDI
+
+Topshiriqda so'ralgan uz-Kirill **buyurtma beruvchi tomonidan olib
+tashlandi** — endi faqat uz-Latn (asosiy) va rus tili kerak.
+
+`distribos.i18n` moduli (`apps/desktop/src/distribos/i18n/`) —
+`gettext` uslubidagi `tr(matn)`: kalit — o'zbekcha matnning O'ZI,
+alohida identifikator emas (loyihada allaqachon yozilgan yuzlab
+literal satrga sun'iy kalit o'ylab topish o'rniga). Tarjima topilmasa
+— ASL MATN qaytadi, hech qachon bo'sh yoki xato bermaydi.
+
+**Haqiqatan tekshirildi** (daraja A): paketlangan `.exe`
+`DISTRIBOS_LANGUAGE=ru` bilan ishga tushirilib, haqiqiy oynaning
+skrinshoti olindi — navigatsiya, bo'lim sarlavhalari va menyu ("Файл",
+"Справка", "ПРОДАЖИ" va h.k.) to'g'ri rus tilida chiqdi.
+
+**Qamrov — halol ro'yxat:** faqat `main_window.py` (butun navigatsiya,
+menyu, holat satri, "dastur haqida") va `system.py`dagi Sozlamalar
+sahifasi (shu jumladan yangi til tanlagichi) tarjima qilingan. Qolgan
+barcha sahifa (`sales.py`, `operations.py`, `reporting.py` va
+boshqalar) hali **faqat o'zbekcha** — ularning matni tarjima
+qilinmagan, lekin `tr()` orqali o'tkazilmagani uchun `ru.json`da ham
+yo'q va sinov buni ushlamaydi (chunki ular umuman `tr()` chaqirmaydi).
+
+Til o'zgarishi **qayta ishga tushirishni talab qiladi** — Qt'ning
+to'liq `retranslateUi` mexanizmi qurilmagan (loyiha hajmida ortiqcha
+murakkablik). Tanlov `<data_dir>/language.json`ga saqlanadi va
+`AppSettings.language` (muhit o'zgaruvchisi)dan USTUN turadi.
+
+9 sinov (`tests/contract/test_i18n.py`): `tr()` xavfsizligi (noma'lum
+til RAD ETILADI — Kirill ham shu qatorda), va eng muhimi —
+**to'liqlik tekshiruvi**: manba koddagi HAR bir `tr()` chaqiruvi
+`ru.json`da borligini va aksincha (ishlatilmay qolgan kalit yo'qligini)
+tasdiqlaydi. Bu sinov ataylab yozildi: `tr()` o'zi hech qachon xato
+bermaganligi sababli, tarjimasi yetishmagan yangi matn boshqacha hech
+qachon payqalmasdi.
+
 ### 5.7. Boshqalar
 
 * ovozli buyurtma (speech-to-text) — yo'q;
 * tashqi AI provayder abstraksiyasi — faqat lokal maslahatchi bor;
-* uz-Kirill va rus tillari — kalitlar tayyor, tarjimalar yo'q;
 * soak test — bajarilmagan;
 * mypy strict rejimda `presentation/` qatlami **TOZALANDI** (0/47,
   daraja B — GUI smoke test to'liq to'plami o'zgarishlardan keyin ham
@@ -287,14 +323,16 @@ JIMGINA yutilardi. Endi sabab logga yoziladi.
 
 Bajarildi: QR provisioning oqimi (§5.1), lokal konteynerli broker bilan
 integratsion test (§5.4), unumdorlik o'lchovi (§5.2, `docs/BENCHMARK.md`),
-Alembic migratsiyalari (§5.5), CI workflow yozildi (§5.6), `presentation/`
-qatlamida mypy strict tozalandi (§5.7).
+Alembic migratsiyalari (§5.5), CI workflow yozildi (§5.6), uz-Latn/rus
+lokalizatsiyasi boshlandi (§5.6b), `presentation/` qatlamida mypy strict
+tozalandi (§5.7).
 
 Qolgan, ustuvorlik tartibida:
 
 1. DES-1 uchun mustaqil kriptografik ko'rib chiqish (loyihadan tashqari
    auditor kerak).
 2. Haqiqiy telefonda (emulyator emas) sinov.
-3. uz-Lotin/rus lokalizatsiyasi qolgan ekranlarga yoyilishi.
+3. Rus tarjimasini qolgan sahifalarga yoyish (`sales.py`, `operations.py`,
+   `reporting.py`) — §5.6b.
 4. mypy strict xatolarini `presentation/` tashqarisida ham tuzatish
    (67 ta qoldi) — CI'ga mypy qo'shishni imkonli qiladi.

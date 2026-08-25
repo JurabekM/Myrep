@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from distribos.app_context import AppContext
+from distribos.i18n import tr
 from distribos.presentation.background import SyncController
 from distribos.presentation.status import connection_status
 from distribos.presentation.theme import PALETTE, SPACE_LG, SPACE_MD, SPACE_SM
@@ -31,6 +32,11 @@ from distribos.presentation.widgets import Badge
 logger = logging.getLogger(__name__)
 
 #: (bo'lim, sarlavha, sahifa fabrikasi nomi)
+#:
+#: DIQQAT: bu yerdagi matnlar hali `tr()` orqali O'TKAZILMAGAN — bu
+#: modul darajasidagi doimiy va IMPORT vaqtida (til o'rnatilishidan
+#: OLDIN) baholanadi. Tarjima FAQAT widget qurilish paytida
+#: (`_build_navigation()`, chaqiruv vaqtida ishlaydi) qo'llaniladi.
 NAVIGATION: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
     ("SAVDO", (
         ("orders", "Buyurtmalar"),
@@ -109,7 +115,7 @@ class MainWindow(QMainWindow):
         brand.setObjectName("NavBrand")
         layout.addWidget(brand)
 
-        subtitle = QLabel("Ulgurji savdo tizimi")
+        subtitle = QLabel(tr("Ulgurji savdo tizimi"))
         subtitle.setObjectName("NavSubtitle")
         layout.addWidget(subtitle)
 
@@ -118,11 +124,11 @@ class MainWindow(QMainWindow):
         self._nav_buttons: dict[str, QPushButton] = {}
 
         for section, items in NAVIGATION:
-            header = QLabel(section)
+            header = QLabel(tr(section))
             header.setObjectName("NavSection")
             layout.addWidget(header)
             for key, title in items:
-                button = QPushButton(title)
+                button = QPushButton(tr(title))
                 button.setObjectName("NavItem")
                 button.setCheckable(True)
                 button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -139,42 +145,42 @@ class MainWindow(QMainWindow):
     def _build_status_bar(self) -> None:
         bar = self.statusBar()
 
-        self._sync_badge = Badge("Tekshirilmoqda…", "progress")
+        self._sync_badge = Badge(tr("Tekshirilmoqda…"), "progress")
         bar.addPermanentWidget(self._sync_badge)
 
         self._broker_label = QLabel()
         mqtt = self._context.settings.mqtt
         if mqtt.is_public_pilot:
-            self._broker_label.setText("Ochiq broker (sinov rejimi)")
+            self._broker_label.setText(tr("Ochiq broker (sinov rejimi)"))
             self._broker_label.setStyleSheet(f"color: {PALETTE.warning};")
-            self._broker_label.setToolTip(
+            self._broker_label.setToolTip(tr(
                 "Xabarlar AETHER-Q bilan himoyalangan, lekin brokerning "
                 "mavjudligi kafolatlanmaydi. Haqiqiy ish uchun xususiy "
                 "broker sozlang."
-            )
+            ))
         else:
-            self._broker_label.setText("Xususiy broker")
+            self._broker_label.setText(tr("Xususiy broker"))
             self._broker_label.setStyleSheet(f"color: {PALETTE.ok};")
         bar.addPermanentWidget(self._broker_label)
 
-        bar.showMessage("Tayyor")
+        bar.showMessage(tr("Tayyor"))
 
     def _build_menu(self) -> None:
-        file_menu = self.menuBar().addMenu("&Fayl")
+        file_menu = self.menuBar().addMenu(tr("&Fayl"))
 
-        sync_now = QAction("Hozir sinxronlash", self)
+        sync_now = QAction(tr("Hozir sinxronlash"), self)
         sync_now.setShortcut(QKeySequence("F5"))
         sync_now.triggered.connect(self._on_sync_now)
         file_menu.addAction(sync_now)
 
         file_menu.addSeparator()
-        quit_action = QAction("Chiqish", self)
+        quit_action = QAction(tr("Chiqish"), self)
         quit_action.setShortcut(QKeySequence.StandardKey.Quit)
         quit_action.triggered.connect(self.close)
         file_menu.addAction(quit_action)
 
-        help_menu = self.menuBar().addMenu("&Yordam")
-        about = QAction("Dastur haqida", self)
+        help_menu = self.menuBar().addMenu(tr("&Yordam"))
+        about = QAction(tr("Dastur haqida"), self)
         about.triggered.connect(self._on_about)
         help_menu.addAction(about)
 
@@ -218,7 +224,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def _on_sync_now(self) -> None:
         self._sync.trigger()
-        self.statusBar().showMessage("Sinxronizatsiya boshlandi…", 3000)
+        self.statusBar().showMessage(tr("Sinxronizatsiya boshlandi…"), 3000)
 
     @Slot(int, int, int, int)
     def _on_sync_status(self, published: int, received: int, queued: int, errors: int) -> None:
@@ -228,7 +234,9 @@ class MainWindow(QMainWindow):
         )
         self._sync_badge.apply(connection_status(connected, queued))
         if published:
-            self.statusBar().showMessage(f"{published} ta yozuv yuborildi", 4000)
+            self.statusBar().showMessage(
+                tr("{n} ta yozuv yuborildi").format(n=published), 4000
+            )
 
         page = self._stack.currentWidget()
         if hasattr(page, "refresh_if_live"):
@@ -237,23 +245,27 @@ class MainWindow(QMainWindow):
     @Slot(str)
     def _on_sync_error(self, message: str) -> None:
         logger.warning("Sinxronizatsiya xatosi: %s", message)
-        self.statusBar().showMessage("Sinxronizatsiyada xatolik", 5000)
+        self.statusBar().showMessage(tr("Sinxronizatsiyada xatolik"), 5000)
 
     # --- oyna hodisalari --------------------------------------------------
 
     @Slot()
     def _on_about(self) -> None:
         health = self._context.provider.protocol_health_check()
-        QMessageBox.information(
-            self, "DistribOS AI",
+        body = tr(
             "DistribOS AI — serversiz, offline-first savdo tizimi\n\n"
-            f"Xavfsizlik protokoli: AETHER-Q v{health.protocol_version}\n"
-            f"Qurilma: {health.device_id_masked}\n"
-            f"Ulangan qurilmalar: {health.peers_known}\n\n"
+            "Xavfsizlik protokoli: AETHER-Q v{protocol_version}\n"
+            "Qurilma: {device_id}\n"
+            "Ulangan qurilmalar: {peers}\n\n"
             "Dastur markaziy serversiz ishlaydi: barcha ma'lumot shu "
             "kompyuterda saqlanadi va qurilmalar o'zaro to'g'ridan-to'g'ri "
-            "sinxronlanadi.",
+            "sinxronlanadi."
+        ).format(
+            protocol_version=health.protocol_version,
+            device_id=health.device_id_masked,
+            peers=health.peers_known,
         )
+        QMessageBox.information(self, "DistribOS AI", body)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Yopishdan oldin fon oqimini TARTIB BILAN to'xtatadi.

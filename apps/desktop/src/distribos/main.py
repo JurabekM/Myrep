@@ -78,6 +78,22 @@ def run_gui(argv: list[str] | None = None) -> int:
     configure_logging(settings)
     logger.info("DistribOS AI ishga tushmoqda (profil: %s)", settings.mqtt.profile.value)
 
+    # Til — widget yaratilishidan OLDIN o'rnatilishi kerak, aks holda
+    # birinchi ekran noto'g'ri tilda chizilib qoladi (til o'zgarishi
+    # qayta ishga tushirishni talab qiladi, jonli qayta chizish yo'q).
+    #
+    # Foydalanuvchining Sozlamalar orqali qilgan tanlovi (diskda
+    # saqlangan) `LANGUAGE` muhit o'zgaruvchisidan USTUN turadi.
+    from distribos import i18n
+    from distribos.i18n import prefs
+
+    locale = prefs.load_saved_locale(settings.paths.data_dir) or settings.language
+    try:
+        i18n.set_locale(locale)
+    except i18n.UnsupportedLocaleError:
+        logger.warning("Noma'lum til %r — asosiy tilga qaytildi", locale)
+        i18n.set_locale(i18n.DEFAULT_LOCALE)
+
     application = QApplication(argv if argv is not None else sys.argv)
     application.setApplicationName("DistribOS AI")
     application.setOrganizationName("DistribOS")

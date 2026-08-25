@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -26,6 +27,8 @@ from PySide6.QtWidgets import (
 
 from distribos.app_context import AppContext
 from distribos.application import queries
+from distribos.i18n import LOCALE_NAMES, SUPPORTED_LOCALES, current_locale, tr
+from distribos.i18n import prefs as language_prefs
 from distribos.presentation.pages.base import BasePage
 from distribos.presentation.status import (
     device_platform,
@@ -645,15 +648,52 @@ class SettingsPage(BasePage):
     """Sozlamalar va diagnostika."""
 
     def __init__(self, context: AppContext) -> None:
-        super().__init__(context, "Sozlamalar", "Ulanish, til va diagnostika.")
+        super().__init__(
+            context, tr("Sozlamalar"), tr("Ulanish, til va diagnostika."),
+        )
 
-        self._bundle = ghost_button("Yordam to'plamini yaratish")
+        self._bundle = ghost_button(tr("Yordam to'plamini yaratish"))
         self._bundle.clicked.connect(self._on_bundle)
         self.header.add_action(self._bundle)
+
+        language_row = QWidget()
+        language_layout = QHBoxLayout(language_row)
+        language_layout.setContentsMargins(0, 0, 0, 0)
+        language_layout.addWidget(QLabel(tr("Til")))
+        self._language = QComboBox()
+        for locale in SUPPORTED_LOCALES:
+            self._language.addItem(LOCALE_NAMES[locale], locale)
+        active_index = self._language.findData(current_locale())
+        if active_index >= 0:
+            self._language.setCurrentIndex(active_index)
+        # Lambda YO'Q — bog'langan slot (background.py 1-qoida).
+        self._language.currentIndexChanged.connect(self._on_language_changed)
+        language_layout.addWidget(self._language)
+        language_layout.addStretch(1)
+        self.add(language_row)
 
         self._info = QTextEdit()
         self._info.setReadOnly(True)
         self.add(self._info, 1)
+
+    @Slot(int)
+    def _on_language_changed(self, index: int) -> None:
+        locale = self._language.itemData(index)
+        if not isinstance(locale, str) or locale == current_locale():
+            return
+        # Joriy sessiyada DARHOL o'zgarmaydi: allaqachon qurilgan
+        # widget'larni qayta chizish (`retranslateUi`) bu loyiha
+        # hajmida ortiqcha murakkablik bo'lardi. Tanlov diskka
+        # yoziladi va KEYINGI ishga tushirishda kuchga kiradi — bu
+        # foydalanuvchiga ANIQ aytiladi, jimgina emas.
+        language_prefs.save_locale(self.context.settings.paths.data_dir, locale)
+        self.notify(
+            tr(
+                "Til o'zgartirildi. Kuchga kirishi uchun dasturni "
+                "qayta ishga tushiring."
+            ),
+            tr("Til"),
+        )
 
     def refresh(self) -> None:
         settings = self.context.settings
@@ -709,20 +749,22 @@ class SettingsPage(BasePage):
     @Slot()
     def _on_bundle(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Yordam to'plamini saqlash",
-            str(Path.home() / "distribos-diagnostika.txt"), "Matn (*.txt)",
+            self, tr("Yordam to'plamini saqlash"),
+            str(Path.home() / "distribos-diagnostika.txt"), tr("Matn (*.txt)"),
         )
         if not path:
             return
         try:
             Path(path).write_text(self._info.toPlainText(), encoding="utf-8")
         except OSError as exc:
-            self.report_error(exc, "Yordam to'plamini saqlash")
+            self.report_error(exc, tr("Yordam to'plamini saqlash"))
             return
         self.notify(
-            "To'plam saqlandi.\n\nUnda maxfiy ma'lumot, kalit yoki mijoz "
-            "ma'lumotlari YO'Q — faqat texnik holat.",
-            "Yordam to'plami",
+            tr(
+                "To'plam saqlandi.\n\nUnda maxfiy ma'lumot, kalit yoki mijoz "
+                "ma'lumotlari YO'Q — faqat texnik holat."
+            ),
+            tr("Yordam to'plami"),
         )
 
 
