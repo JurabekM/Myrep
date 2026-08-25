@@ -31,6 +31,11 @@ _RU_PATH = _REPO_ROOT / "i18n" / "ru.json"
 _WRAPPED_FILES = (
     "apps/desktop/src/distribos/presentation/main_window.py",
     "apps/desktop/src/distribos/presentation/pages/system.py",
+    "apps/desktop/src/distribos/presentation/pages/sales.py",
+    "apps/desktop/src/distribos/presentation/pages/operations.py",
+    "apps/desktop/src/distribos/presentation/pages/reporting.py",
+    "apps/desktop/src/distribos/presentation/pages/base.py",
+    "apps/desktop/src/distribos/presentation/status.py",
 )
 
 #: `main_window.NAVIGATION` — bo'lim va sahifa nomlari `tr(section)` /

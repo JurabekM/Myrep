@@ -61,34 +61,34 @@ class SyncPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Sinxronizatsiya",
-            "Qurilmalar, navbat va xatolar. Bu sahifa texnik xizmat uchun.",
+            context, tr("Sinxronizatsiya"),
+            tr("Qurilmalar, navbat va xatolar. Bu sahifa texnik xizmat uchun."),
         )
-        self._sync_now = primary_button("Hozir sinxronlash")
+        self._sync_now = primary_button(tr("Hozir sinxronlash"))
         self._sync_now.clicked.connect(self._on_sync_now)
         self.header.add_action(self._sync_now)
 
-        self._retry = ghost_button("Xatolarni qayta urinish")
+        self._retry = ghost_button(tr("Xatolarni qayta urinish"))
         self._retry.clicked.connect(self._on_retry)
         self.header.add_action(self._retry)
 
         if context.settings.mqtt.is_public_pilot:
-            self.add(WarningBanner(
+            self.add(WarningBanner(tr(
                 "Ochiq (public) MQTT brokeri ishlatilmoqda. Xabar mazmuni "
                 "AETHER-Q bilan himoyalangan, biroq brokerning mavjudligi, "
                 "metama'lumotlar maxfiyligi va xabarlarning saqlanishi "
                 "kafolatlanmaydi. Haqiqiy mijoz ma'lumotlari bilan ishlash "
                 "uchun Sozlamalar bo'limidan xususiy broker ko'rsating."
-            ))
+            )))
 
         cards = QWidget()
         grid = QGridLayout(cards)
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(SPACE_MD)
-        self._card_queue = Card("Navbatdagi yozuvlar", "0")
-        self._card_devices = Card("Ulangan qurilmalar", "0")
-        self._card_conflicts = Card("Tekshiruv talab qiladi", "0")
-        self._card_errors = Card("Qabul qilinmagan", "0")
+        self._card_queue = Card(tr("Navbatdagi yozuvlar"), "0")
+        self._card_devices = Card(tr("Ulangan qurilmalar"), "0")
+        self._card_conflicts = Card(tr("Tekshiruv talab qiladi"), "0")
+        self._card_errors = Card(tr("Qabul qilinmagan"), "0")
         for column, card in enumerate(
             (self._card_queue, self._card_devices, self._card_conflicts, self._card_errors)
         ):
@@ -97,18 +97,21 @@ class SyncPage(BasePage):
 
         tabs = QTabWidget()
         self.devices_table = DataTable(
-            ["Nomi", "Turi", "Rol", "Holat", "Oxirgi aloqa", "Qabul qilingan"],
+            [tr("Nomi"), tr("Turi"), tr("Rol"), tr("Holat"), tr("Oxirgi aloqa"),
+             tr("Qabul qilingan")],
             searchable=False,
         )
         self.outbox_table = DataTable(
-            ["Vaqt", "Amal", "Holat", "Urinishlar", "Xato"], searchable=False
+            [tr("Vaqt"), tr("Amal"), tr("Holat"), tr("Urinishlar"), tr("Xato")],
+            searchable=False,
         )
         self.dead_table = DataTable(
-            ["Vaqt", "Kanal", "Sabab", "Tafsilot", "Hajm"], searchable=False
+            [tr("Vaqt"), tr("Kanal"), tr("Sabab"), tr("Tafsilot"), tr("Hajm")],
+            searchable=False,
         )
-        tabs.addTab(self.devices_table, "Qurilmalar")
-        tabs.addTab(self.outbox_table, "Navbat")
-        tabs.addTab(self.dead_table, "Qabul qilinmaganlar")
+        tabs.addTab(self.devices_table, tr("Qurilmalar"))
+        tabs.addTab(self.outbox_table, tr("Navbat"))
+        tabs.addTab(self.dead_table, tr("Qabul qilinmaganlar"))
         self.add(tabs, 1)
 
     def refresh(self) -> None:
@@ -128,12 +131,14 @@ class SyncPage(BasePage):
         self._card_errors.set_value(str(summary.dead_letters))
         self._card_errors.set_tone("error" if summary.dead_letters else "ok")
 
+        device_states = {
+            "ACTIVE": tr("Faol"), "INVITED": tr("Tasdiq kutmoqda"),
+            "REVOKED": tr("Bekor qilingan"), "SUSPENDED": tr("To'xtatilgan"),
+        }
         self.devices_table.set_rows([
             (device.display_name, device_platform(device.platform),
              role_name(device.role),
-             {"ACTIVE": "Faol", "INVITED": "Tasdiq kutmoqda",
-              "REVOKED": "Bekor qilingan", "SUSPENDED": "To'xtatilgan"}.get(
-                  device.state, device.state),
+             device_states.get(device.state, device.state),
              device.last_seen_at.strftime("%d.%m.%Y %H:%M") if device.last_seen_at else "—",
              device.last_applied_sequence)
             for device in devices
@@ -157,8 +162,9 @@ class SyncPage(BasePage):
         ])
 
         self.header.set_subtitle(
-            f"Jami {summary.total_events} ta yozuv · "
-            f"{summary.unapplied_events} tasi qo'llanmagan"
+            tr("Jami {total} ta yozuv · {unapplied} tasi qo'llanmagan").format(
+                total=summary.total_events, unapplied=summary.unapplied_events
+            )
         )
 
     @Slot()
@@ -166,12 +172,14 @@ class SyncPage(BasePage):
         try:
             published, _, queued, _ = self.context.run_sync_cycle()
         except Exception as exc:
-            self.report_error(exc, "Sinxronizatsiya")
+            self.report_error(exc, tr("Sinxronizatsiya"))
             return
         self.refresh()
         self.notify(
-            f"{published} ta yozuv yuborildi. Navbatda {queued} ta qoldi.",
-            "Sinxronizatsiya",
+            tr("{published} ta yozuv yuborildi. Navbatda {queued} ta qoldi.").format(
+                published=published, queued=queued
+            ),
+            tr("Sinxronizatsiya"),
         )
 
     @Slot()
@@ -197,7 +205,10 @@ class SyncPage(BasePage):
             ).update({DeadLetter.resolved_at: utcnow()})
 
         self.refresh()
-        self.notify(f"{count} ta yozuv qayta navbatga qo'yildi.", "Qayta urinish")
+        self.notify(
+            tr("{n} ta yozuv qayta navbatga qo'yildi.").format(n=count),
+            tr("Qayta urinish"),
+        )
 
 
 class ConflictsPage(BasePage):
@@ -207,24 +218,27 @@ class ConflictsPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Tekshiruv navbati",
-            "Ikki qurilmada zid o'zgarish bo'lganda, qaysi biri to'g'ri "
-            "ekanini siz hal qilasiz.",
+            context, tr("Tekshiruv navbati"),
+            tr(
+                "Ikki qurilmada zid o'zgarish bo'lganda, qaysi biri to'g'ri "
+                "ekanini siz hal qilasiz."
+            ),
         )
-        self._resolve = primary_button("Ko'rib chiqildi deb belgilash")
+        self._resolve = primary_button(tr("Ko'rib chiqildi deb belgilash"))
         self._resolve.clicked.connect(self._on_resolve)
         self.header.add_action(self._resolve)
 
         self.table = DataTable(
-            ["Vaqt", "Nima", "Qaysi yozuv", "Sabab", "Bizda", "Kelgan"],
+            [tr("Vaqt"), tr("Nima"), tr("Qaysi yozuv"), tr("Sabab"), tr("Bizda"),
+             tr("Kelgan")],
             searchable=False,
         )
         self.add(self.table, 1)
 
-        self._empty_note = QLabel(
+        self._empty_note = QLabel(tr(
             "Hozircha tekshiruv talab qiladigan holat yo'q — hamma "
             "o'zgarishlar avtomatik hal qilindi."
-        )
+        ))
         self._empty_note.setStyleSheet(f"color: {PALETTE.text_muted};")
         self.add(self._empty_note)
 
@@ -277,22 +291,22 @@ class SecurityPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Xavfsizlik",
-            "Qurilma kalitlari, protokol holati va qurilmani bekor qilish.",
+            context, tr("Xavfsizlik"),
+            tr("Qurilma kalitlari, protokol holati va qurilmani bekor qilish."),
         )
-        self._invite = primary_button("Yangi qurilma qo'shish")
+        self._invite = primary_button(tr("Yangi qurilma qo'shish"))
         self._invite.clicked.connect(self._on_invite)
         self.header.add_action(self._invite)
 
-        self._rotate = ghost_button("Kalitlarni yangilash")
+        self._rotate = ghost_button(tr("Kalitlarni yangilash"))
         self._rotate.clicked.connect(self._on_rotate)
         self.header.add_action(self._rotate)
 
-        self._confirm = ghost_button("Qurilmani tasdiqlash")
+        self._confirm = ghost_button(tr("Qurilmani tasdiqlash"))
         self._confirm.clicked.connect(self._on_confirm)
         self.header.add_action(self._confirm)
 
-        self._revoke = danger_button("Qurilmani bekor qilish")
+        self._revoke = danger_button(tr("Qurilmani bekor qilish"))
         self._revoke.clicked.connect(self._on_revoke)
         self.header.add_action(self._revoke)
 
@@ -300,10 +314,10 @@ class SecurityPage(BasePage):
         grid = QGridLayout(cards)
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(SPACE_MD)
-        self._card_protocol = Card("Xavfsizlik protokoli", "—")
-        self._card_epoch = Card("Kalit avlodi", "—")
-        self._card_devices = Card("Qurilmalar", "—")
-        self._card_ready = Card("Holat", "—")
+        self._card_protocol = Card(tr("Xavfsizlik protokoli"), "—")
+        self._card_epoch = Card(tr("Kalit avlodi"), "—")
+        self._card_devices = Card(tr("Qurilmalar"), "—")
+        self._card_ready = Card(tr("Holat"), "—")
         for column, card in enumerate(
             (self._card_protocol, self._card_epoch, self._card_devices, self._card_ready)
         ):
@@ -311,7 +325,8 @@ class SecurityPage(BasePage):
         self.add(cards)
 
         self.table = DataTable(
-            ["Nomi", "Turi", "Rol", "Holat", "To'liq nusxa"], searchable=False
+            [tr("Nomi"), tr("Turi"), tr("Rol"), tr("Holat"), tr("To'liq nusxa")],
+            searchable=False,
         )
         self.add(self.table, 1)
 
@@ -397,24 +412,26 @@ class SecurityPage(BasePage):
 
         selected = self.table.selected_row()
         if selected is None:
-            self.warn("Avval jadvaldan qurilmani tanlang.")
+            self.warn(tr("Avval jadvaldan qurilmani tanlang."))
             return
 
         name = selected[0]
         with self.context.database.session() as session:
             devices = [d for d in queries.list_devices(session) if d.display_name == name]
         if not devices:
-            self.warn("Qurilma topilmadi.")
+            self.warn(tr("Qurilma topilmadi."))
             return
         device = devices[0]
 
         if device.state == "ACTIVE":
-            self.notify(f"«{name}» allaqachon faol.", "Tasdiqlash")
+            self.notify(tr("«{name}» allaqachon faol.").format(name=name), tr("Tasdiqlash"))
             return
         if not self.confirm(
-            f"«{name}» ({role_name(device.role)}) qurilmasi tasdiqlansinmi?\n\n"
-            "Tasdiqlangandan keyin u ma'lumot yubora va qabul qila boshlaydi.",
-            "Qurilmani tasdiqlash",
+            tr(
+                "«{name}» ({role}) qurilmasi tasdiqlansinmi?\n\n"
+                "Tasdiqlangandan keyin u ma'lumot yubora va qabul qila boshlaydi."
+            ).format(name=name, role=role_name(device.role)),
+            tr("Qurilmani tasdiqlash"),
         ):
             return
 
@@ -422,58 +439,66 @@ class SecurityPage(BasePage):
             with self.context.database.unit_of_work() as session:
                 confirm_pending_device(session, device.device_id)
         except Exception as exc:
-            self.report_error(exc, "Qurilmani tasdiqlash")
+            self.report_error(exc, tr("Qurilmani tasdiqlash"))
             return
         self.refresh()
-        self.notify(f"«{name}» faollashtirildi.", "Tasdiqlandi")
+        self.notify(tr("«{name}» faollashtirildi.").format(name=name), tr("Tasdiqlandi"))
 
     @Slot()
     def _on_rotate(self) -> None:
         if not self.confirm(
-            "Xavfsizlik kalitlari yangilansinmi?\n\n"
-            "Eski kalitlar o'chirilmaydi — uzoq vaqt ulanmagan qurilmalar "
-            "qaytganda ularning eski yozuvlari baribir o'qiladi.",
-            "Kalitlarni yangilash",
+            tr(
+                "Xavfsizlik kalitlari yangilansinmi?\n\n"
+                "Eski kalitlar o'chirilmaydi — uzoq vaqt ulanmagan qurilmalar "
+                "qaytganda ularning eski yozuvlari baribir o'qiladi."
+            ),
+            tr("Kalitlarni yangilash"),
         ):
             return
         try:
             epoch = self.context.provider.rotate_keys()
         except Exception as exc:
-            self.report_error(exc, "Kalitlarni yangilash")
+            self.report_error(exc, tr("Kalitlarni yangilash"))
             return
         self.refresh()
-        self.notify(f"Yangi kalit avlodi: #{epoch}", "Kalitlar yangilandi")
+        self.notify(
+            tr("Yangi kalit avlodi: #{epoch}").format(epoch=epoch), tr("Kalitlar yangilandi")
+        )
 
     @Slot()
     def _on_revoke(self) -> None:
         selected = self.table.selected_row()
         if selected is None:
-            self.warn("Avval jadvaldan qurilmani tanlang.")
+            self.warn(tr("Avval jadvaldan qurilmani tanlang."))
             return
 
         name = selected[0]
         with self.context.database.session() as session:
             devices = [d for d in queries.list_devices(session) if d.display_name == name]
         if not devices:
-            self.warn("Qurilma topilmadi.")
+            self.warn(tr("Qurilma topilmadi."))
             return
         device = devices[0]
 
         if device.device_id == self.context.device_id:
-            self.warn("Shu kompyuterni o'zini bekor qilib bo'lmaydi.")
+            self.warn(tr("Shu kompyuterni o'zini bekor qilib bo'lmaydi."))
             return
         if not self.confirm(
-            f"«{name}» qurilmasi bekor qilinsinmi?\n\n"
-            "Undan keyin kelgan barcha yozuvlar rad etiladi. Bu amalni "
-            "qaytarish uchun qurilmani qaytadan qo'shish kerak bo'ladi.",
-            "Qurilmani bekor qilish",
+            tr(
+                "«{name}» qurilmasi bekor qilinsinmi?\n\n"
+                "Undan keyin kelgan barcha yozuvlar rad etiladi. Bu amalni "
+                "qaytarish uchun qurilmani qaytadan qo'shish kerak bo'ladi."
+            ).format(name=name),
+            tr("Qurilmani bekor qilish"),
         ):
             return
 
         try:
-            self.context.provider.revoke_device(device.device_id, "Foydalanuvchi bekor qildi")
+            self.context.provider.revoke_device(
+                device.device_id, tr("Foydalanuvchi bekor qildi")
+            )
         except Exception as exc:
-            self.report_error(exc, "Qurilmani bekor qilish")
+            self.report_error(exc, tr("Qurilmani bekor qilish"))
             return
         self.refresh()
 
@@ -483,30 +508,33 @@ class BackupPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Zaxira nusxa",
-            "Server yo'q — nusxa yagona himoyangiz. Uni tashqi diskda "
-            "ham saqlang.",
+            context, tr("Zaxira nusxa"),
+            tr(
+                "Server yo'q — nusxa yagona himoyangiz. Uni tashqi diskda "
+                "ham saqlang."
+            ),
         )
-        self._create = primary_button("Nusxa yaratish")
+        self._create = primary_button(tr("Nusxa yaratish"))
         self._create.clicked.connect(self._on_create)
         self.header.add_action(self._create)
 
-        self._verify = ghost_button("Nusxani tekshirish")
+        self._verify = ghost_button(tr("Nusxani tekshirish"))
         self._verify.clicked.connect(self._on_verify)
         self.header.add_action(self._verify)
 
-        self._restore = danger_button("Nusxadan tiklash")
+        self._restore = danger_button(tr("Nusxadan tiklash"))
         self._restore.clicked.connect(self._on_restore)
         self.header.add_action(self._restore)
 
-        self.add(WarningBanner(
+        self.add(WarningBanner(tr(
             "Agar barcha qurilmalar yo'qolsa va tashqi nusxa bo'lmasa, "
             "ma'lumotni tiklash imkoni BO'LMAYDI. MQTT broker ma'lumot "
             "ombori emas."
-        ))
+        )))
 
         self.table = DataTable(
-            ["Yaratilgan", "Fayl", "Hajm", "Dastur versiyasi"], searchable=False
+            [tr("Yaratilgan"), tr("Fayl"), tr("Hajm"), tr("Dastur versiyasi")],
+            searchable=False,
         )
         self.add(self.table, 1)
 
@@ -520,7 +548,9 @@ class BackupPage(BasePage):
             for info in backups
         ])
         self.header.set_subtitle(
-            f"{len(backups)} ta nusxa · {self.context.settings.paths.backup_dir}"
+            tr("{n} ta nusxa · {dir}").format(
+                n=len(backups), dir=self.context.settings.paths.backup_dir
+            )
         )
 
     @Slot()
@@ -528,8 +558,8 @@ class BackupPage(BasePage):
         from distribos.infrastructure.backup import create_backup, default_backup_name
 
         password = PasswordDialog.ask(
-            self, "Nusxa uchun parol",
-            "Nusxa shifrlanadi. Parolni yo'qotsangiz, uni ochib bo'lmaydi.",
+            self, tr("Nusxa uchun parol"),
+            tr("Nusxa shifrlanadi. Parolni yo'qotsangiz, uni ochib bo'lmaydi."),
             confirm=True,
         )
         if password is None:
@@ -539,14 +569,16 @@ class BackupPage(BasePage):
         try:
             info = create_backup(self.context.database, target, password)
         except Exception as exc:
-            self.report_error(exc, "Nusxa yaratish")
+            self.report_error(exc, tr("Nusxa yaratish"))
             return
 
         self.refresh()
         self.notify(
-            f"Nusxa yaratildi: {info.path.name}\nHajmi: {info.human_size}\n\n"
-            "Uni tashqi diskka yoki boshqa kompyuterga ham ko'chiring.",
-            "Zaxira nusxa tayyor",
+            tr(
+                "Nusxa yaratildi: {name}\nHajmi: {size}\n\n"
+                "Uni tashqi diskka yoki boshqa kompyuterga ham ko'chiring."
+            ).format(name=info.path.name, size=info.human_size),
+            tr("Zaxira nusxa tayyor"),
         )
 
     @Slot()
@@ -554,27 +586,31 @@ class BackupPage(BasePage):
         from distribos.infrastructure.backup import verify_backup
 
         path, _ = QFileDialog.getOpenFileName(
-            self, "Nusxani tanlang",
+            self, tr("Nusxani tanlang"),
             str(self.context.settings.paths.backup_dir),
-            "DistribOS nusxasi (*.dbak)",
+            tr("DistribOS nusxasi (*.dbak)"),
         )
         if not path:
             return
-        password = PasswordDialog.ask(self, "Nusxa paroli", "Nusxa parolini kiriting.")
+        password = PasswordDialog.ask(self, tr("Nusxa paroli"), tr("Nusxa parolini kiriting."))
         if password is None:
             return
 
         try:
             info = verify_backup(Path(path), password)
         except Exception as exc:
-            self.warn(str(exc), "Tekshiruv muvaffaqiyatsiz")
+            self.warn(str(exc), tr("Tekshiruv muvaffaqiyatsiz"))
             return
 
         self.notify(
-            f"Nusxa BUTUN va ochiladi.\n\n"
-            f"Yaratilgan: {info.created_at.strftime('%d.%m.%Y %H:%M')}\n"
-            f"Hajmi: {info.human_size}",
-            "Nusxa tekshirildi",
+            tr(
+                "Nusxa BUTUN va ochiladi.\n\n"
+                "Yaratilgan: {created}\n"
+                "Hajmi: {size}"
+            ).format(
+                created=info.created_at.strftime("%d.%m.%Y %H:%M"), size=info.human_size
+            ),
+            tr("Nusxa tekshirildi"),
         )
 
     @Slot()
@@ -582,22 +618,24 @@ class BackupPage(BasePage):
         from distribos.infrastructure.backup import restore_backup
 
         path, _ = QFileDialog.getOpenFileName(
-            self, "Nusxani tanlang",
+            self, tr("Nusxani tanlang"),
             str(self.context.settings.paths.backup_dir),
-            "DistribOS nusxasi (*.dbak)",
+            tr("DistribOS nusxasi (*.dbak)"),
         )
         if not path:
             return
         if not self.confirm(
-            "Joriy ma'lumotlar nusxadagi ma'lumotlar bilan ALMASHTIRILADI.\n\n"
-            "Joriy baza o'chirilmaydi — u chetga olinadi va kerak bo'lsa "
-            "qaytarish mumkin.\n\n"
-            "Tiklashdan so'ng dastur qayta ishga tushirilishi kerak.",
-            "Nusxadan tiklash",
+            tr(
+                "Joriy ma'lumotlar nusxadagi ma'lumotlar bilan ALMASHTIRILADI.\n\n"
+                "Joriy baza o'chirilmaydi — u chetga olinadi va kerak bo'lsa "
+                "qaytarish mumkin.\n\n"
+                "Tiklashdan so'ng dastur qayta ishga tushirilishi kerak."
+            ),
+            tr("Nusxadan tiklash"),
         ):
             return
 
-        password = PasswordDialog.ask(self, "Nusxa paroli", "Nusxa parolini kiriting.")
+        password = PasswordDialog.ask(self, tr("Nusxa paroli"), tr("Nusxa parolini kiriting."))
         if password is None:
             return
 
@@ -606,13 +644,14 @@ class BackupPage(BasePage):
                 Path(path), password, self.context.settings.paths.database_path
             )
         except Exception as exc:
-            self.warn(str(exc), "Tiklash muvaffaqiyatsiz")
+            self.warn(str(exc), tr("Tiklash muvaffaqiyatsiz"))
             return
 
         QMessageBox.information(
-            self, "Tiklandi",
-            f"{info.created_at.strftime('%d.%m.%Y %H:%M')} dagi nusxa tiklandi.\n\n"
-            "Dasturni yopib, qaytadan oching.",
+            self, tr("Tiklandi"),
+            tr("{when} dagi nusxa tiklandi.\n\nDasturni yopib, qaytadan oching.").format(
+                when=info.created_at.strftime("%d.%m.%Y %H:%M")
+            ),
         )
 
 
@@ -623,13 +662,15 @@ class AuditPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Audit jurnali",
-            "Bu jurnal o'zgartirilmaydi va o'chirilmaydi — buni ma'lumotlar "
-            "bazasining o'zi majburlaydi.",
+            context, tr("Audit jurnali"),
+            tr(
+                "Bu jurnal o'zgartirilmaydi va o'chirilmaydi — buni ma'lumotlar "
+                "bazasining o'zi majburlaydi."
+            ),
         )
         self.table = DataTable(
-            ["Vaqt", "Amal", "Nima", "Yozuv", "Tavsif"],
-            placeholder="Amal yoki tavsif bo'yicha qidirish…",
+            [tr("Vaqt"), tr("Amal"), tr("Nima"), tr("Yozuv"), tr("Tavsif")],
+            placeholder=tr("Amal yoki tavsif bo'yicha qidirish…"),
         )
         self.add(self.table, 1)
 
@@ -641,7 +682,7 @@ class AuditPage(BasePage):
              entity_type or "—", (entity_id or "")[:12], summary)
             for occurred, action, entity_type, entity_id, summary in rows
         ])
-        self.header.set_subtitle(f"Oxirgi {len(rows)} ta yozuv")
+        self.header.set_subtitle(tr("Oxirgi {n} ta yozuv").format(n=len(rows)))
 
 
 class SettingsPage(BasePage):
@@ -774,23 +815,23 @@ class SettingsPage(BasePage):
 class InviteDialog(QDialog):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Yangi qurilma")
+        self.setWindowTitle(tr("Yangi qurilma"))
         self.setMinimumWidth(400)
 
         self._name = QLineEdit()
-        self._name.setPlaceholderText("Masalan: Aziz — savdo agenti")
+        self._name.setPlaceholderText(tr("Masalan: Aziz — savdo agenti"))
         self._role = QComboBox()
         for key in ("agent", "warehouse", "cashier", "manager", "viewer"):
             self._role.addItem(role_name(key), key)
 
         form = QFormLayout()
-        form.addRow("Qurilma nomi *", self._name)
-        form.addRow("Rol", self._role)
+        form.addRow(tr("Qurilma nomi *"), self._name)
+        form.addRow(tr("Rol"), self._role)
 
-        note = QLabel(
+        note = QLabel(tr(
             "Taklif 10 daqiqa amal qiladi va faqat BIR MARTA ishlaydi. "
             "QR kodda uzoq muddatli kalit saqlanmaydi."
-        )
+        ))
         note.setWordWrap(True)
         note.setStyleSheet(f"color: {PALETTE.text_muted};")
 
@@ -808,7 +849,7 @@ class InviteDialog(QDialog):
     @Slot()
     def _on_accept(self) -> None:
         if not self._name.text().strip():
-            QMessageBox.warning(self, "To'ldirilmagan", "Qurilma nomini kiriting.")
+            QMessageBox.warning(self, tr("To'ldirilmagan"), tr("Qurilma nomini kiriting."))
             return
         self.accept()
 
@@ -821,19 +862,19 @@ class ShowInvitationDialog(QDialog):
 
     def __init__(self, parent: QWidget, invitation: Invitation) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Qurilmani ulash")
+        self.setWindowTitle(tr("Qurilmani ulash"))
         self.setMinimumSize(460, 420)
 
         layout = QVBoxLayout(self)
 
-        heading = QLabel(f"«{invitation.display_name}» uchun taklif")
+        heading = QLabel(tr("«{name}» uchun taklif").format(name=invitation.display_name))
         heading.setObjectName("PageTitle")
         layout.addWidget(heading)
 
-        note = QLabel(
+        note = QLabel(tr(
             "Telefondagi DistribOS ilovasida «Qurilmani ulash» ni tanlang "
             "va shu kodni skanerlang. Taklif 10 daqiqa amal qiladi."
-        )
+        ))
         note.setWordWrap(True)
         note.setStyleSheet(f"color: {PALETTE.text_muted};")
         layout.addWidget(note)
@@ -846,7 +887,7 @@ class ShowInvitationDialog(QDialog):
         # Matnli kod DOIM ko'rsatiladi, QR bo'lsa ham. Omborda telefon
         # kamerasi ko'pincha ishlamaydi (qorong'i, iflos linza), shuning
         # uchun qo'lda kiritish zaxira emas — to'liq huquqli yo'l.
-        layout.addWidget(QLabel("Yoki telefonga shu kodni kiriting:"))
+        layout.addWidget(QLabel(tr("Yoki telefonga shu kodni kiriting:")))
         code = QTextEdit()
         code.setReadOnly(True)
         code.setPlainText(payload.hex())
@@ -856,7 +897,7 @@ class ShowInvitationDialog(QDialog):
         # Lambda ISHLATILMAYDI (`presentation/background.py` 1-qoidasi) —
         # bog'langan metod, kodni esa `self` da saqlaymiz.
         self._code_text = payload.hex()
-        copy_button = ghost_button("Kodni nusxalash")
+        copy_button = ghost_button(tr("Kodni nusxalash"))
         copy_button.clicked.connect(self._on_copy)
         layout.addWidget(copy_button)
 
@@ -924,9 +965,9 @@ class PasswordDialog(QDialog):
         note.setStyleSheet(f"color: {PALETTE.text_muted};")
 
         form = QFormLayout()
-        form.addRow("Parol", self._password)
+        form.addRow(tr("Parol"), self._password)
         if confirm:
-            form.addRow("Takrorlang", self._repeat)
+            form.addRow(tr("Takrorlang"), self._repeat)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -943,11 +984,11 @@ class PasswordDialog(QDialog):
     def _on_accept(self) -> None:
         if len(self._password.text()) < 8:
             QMessageBox.warning(
-                self, "Parol qisqa", "Parol kamida 8 belgidan iborat bo'lsin."
+                self, tr("Parol qisqa"), tr("Parol kamida 8 belgidan iborat bo'lsin.")
             )
             return
         if self._confirm and self._password.text() != self._repeat.text():
-            QMessageBox.warning(self, "Mos kelmadi", "Parollar bir xil emas.")
+            QMessageBox.warning(self, tr("Mos kelmadi"), tr("Parollar bir xil emas."))
             return
         self.accept()
 

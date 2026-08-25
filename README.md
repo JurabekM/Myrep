@@ -35,11 +35,11 @@ tasdiqlangan:
 | Unumdorlik | 100k mahsulot / 1M hodisada o'lchandi (`docs/BENCHMARK.md`) — bitta ochiq savol bor (izohlangan) |
 | CI (GitHub Actions) | 4 ish (`python`, `python-integration`, `kotlin-pure`, `kotlin-android`) haqiqiy runnerda yashil |
 | `presentation/` mypy strict | 0/47 xato — ikkita haqiqiy xato tuzatildi (tur izohi emas) |
-| **Lokalizatsiya (rus)** | Paketlangan `.exe` `DISTRIBOS_LANGUAGE=ru` bilan ishga tushirilib, skrinshot bilan tasdiqlandi — navigatsiya va menyu to'liq rus tilida |
+| **Lokalizatsiya (rus)** | `presentation/` qatlami TO'LIQ — 384 kalit, 9 sinov, paketlangan `.exe`da skrinshot bilan tasdiqlandi |
 
 **Hali tekshirilmagan** (halol ro'yxat, `docs/HOLAT.md` da batafsil):
 
-* rus tarjimasi faqat navigatsiya + Sozlamalar sahifasida — qolgan ekranlar hali uz-Latn;
+* rus tarjimasi hisobot/hujjat/AI matnlarida yo'q (`reports/`, `ai/` — ataylab, eksport tili masalasi hal qilinmagan);
 * haqiqiy qurilmada (emulyator emas) sinov;
 * uzoq muddatli (soak) sinov;
 * DES-1 uchun mustaqil kriptografik ko'rib chiqish.

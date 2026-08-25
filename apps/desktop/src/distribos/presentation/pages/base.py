@@ -7,6 +7,7 @@ import logging
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
 
 from distribos.app_context import AppContext
+from distribos.i18n import tr
 from distribos.presentation.theme import SPACE_MD
 from distribos.presentation.widgets import PageHeader
 
@@ -49,15 +50,19 @@ class BasePage(QWidget):
 
     # --- yordamchilar -----------------------------------------------------
 
-    def notify(self, text: str, title: str = "Bajarildi") -> None:
-        QMessageBox.information(self, title, text)
+    def notify(self, text: str, title: str | None = None) -> None:
+        # Standart sarlavha PARAMETR SUKUTIDA emas, TANADA `tr()`
+        # qilinadi: sukut qiymati funksiya TA'RIFLANGANDA (import
+        # vaqtida, til o'rnatilishidan OLDIN) bir marta hisoblanadi va
+        # muzlab qolardi.
+        QMessageBox.information(self, title if title is not None else tr("Bajarildi"), text)
 
-    def warn(self, text: str, title: str = "Diqqat") -> None:
-        QMessageBox.warning(self, title, text)
+    def warn(self, text: str, title: str | None = None) -> None:
+        QMessageBox.warning(self, title if title is not None else tr("Diqqat"), text)
 
-    def confirm(self, text: str, title: str = "Tasdiqlang") -> bool:
+    def confirm(self, text: str, title: str | None = None) -> bool:
         answer = QMessageBox.question(
-            self, title, text,
+            self, title if title is not None else tr("Tasdiqlang"), text,
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -70,8 +75,10 @@ class BasePage(QWidget):
         """
         logger.exception("%s bajarilmadi", action)
         QMessageBox.critical(
-            self, "Xatolik",
-            f"{action} bajarilmadi.\n\n{exc}\n\n"
-            "Ma'lumotlaringiz saqlanib qoldi. Qayta urinib ko'ring yoki "
-            "Sozlamalar > Diagnostika bo'limidan yordam to'plamini yarating.",
+            self, tr("Xatolik"),
+            tr(
+                "{action} bajarilmadi.\n\n{error}\n\n"
+                "Ma'lumotlaringiz saqlanib qoldi. Qayta urinib ko'ring yoki "
+                "Sozlamalar > Diagnostika bo'limidan yordam to'plamini yarating."
+            ).format(action=action, error=exc),
         )

@@ -15,6 +15,7 @@ from distribos.aether_q.provider import RejectReason
 
 # Formatlash `domain.formatting` da — UI, hisobot va hujjat bir xil ko'rinsin.
 from distribos.domain.formatting import money, quantity
+from distribos.i18n import tr
 from distribos.persistence.models import DeliveryState, OrderState
 
 __all__ = [
@@ -32,61 +33,73 @@ class StatusLabel:
     hint: str = ""
 
 
-_DELIVERY: dict[str, StatusLabel] = {
-    DeliveryState.LOCAL_COMMITTED: StatusLabel(
-        "Qurilmada saqlandi", "progress",
-        "Ma'lumot shu kompyuterda saqlandi. Internet paydo bo'lishi bilan "
-        "boshqa qurilmalarga yuboriladi.",
-    ),
-    DeliveryState.SEALED: StatusLabel("Yuborishga tayyor", "progress"),
-    DeliveryState.QUEUED: StatusLabel("Navbatda", "progress"),
-    DeliveryState.MQTT_PUBLISHED: StatusLabel(
-        "Yuborilmoqda", "progress",
-        "Yuborildi, boshqa qurilma qabul qilganini kutmoqdamiz.",
-    ),
-    DeliveryState.MQTT_ACKNOWLEDGED: StatusLabel("Yuborildi", "progress"),
-    DeliveryState.PEER_RECEIVED: StatusLabel("Boshqa qurilmaga yetkazildi", "progress"),
-    DeliveryState.PEER_APPLIED: StatusLabel(
-        "Sinxronlandi", "ok", "Barcha qurilmalarda hisobga olindi.",
-    ),
-    DeliveryState.PEER_REJECTED: StatusLabel(
-        "Tekshiruv talab qiladi", "warning",
-        "Boshqa qurilma bu yozuvni qabul qilmadi. Sinxronizatsiya "
-        "bo'limidan sababni ko'ring.",
-    ),
-    DeliveryState.CONFLICT: StatusLabel(
-        "Tekshiruv talab qiladi", "warning",
-        "Ikki qurilmada bir-biriga zid o'zgarish bo'lgan. Qaysi biri "
-        "to'g'ri ekanini siz tanlashingiz kerak.",
-    ),
-    DeliveryState.DEAD_LETTER: StatusLabel(
-        "Xatolik yuz berdi", "error",
-        "Bir necha marta urinildi, lekin yuborilmadi. Sinxronizatsiya "
-        "bo'limidan qayta urinib ko'ring.",
-    ),
-}
+def _delivery_labels() -> dict[str, StatusLabel]:
+    # Funksiya sifatida: `tr()` HAR CHAQIRISHDA joriy tilni o'qishi
+    # kerak — modul darajasidagi doimiy bo'lsa import vaqtidagi
+    # (til o'rnatilishidan OLDINGI) tilda muzlab qolardi.
+    return {
+        DeliveryState.LOCAL_COMMITTED: StatusLabel(
+            tr("Qurilmada saqlandi"), "progress",
+            tr(
+                "Ma'lumot shu kompyuterda saqlandi. Internet paydo bo'lishi "
+                "bilan boshqa qurilmalarga yuboriladi."
+            ),
+        ),
+        DeliveryState.SEALED: StatusLabel(tr("Yuborishga tayyor"), "progress"),
+        DeliveryState.QUEUED: StatusLabel(tr("Navbatda"), "progress"),
+        DeliveryState.MQTT_PUBLISHED: StatusLabel(
+            tr("Yuborilmoqda"), "progress",
+            tr("Yuborildi, boshqa qurilma qabul qilganini kutmoqdamiz."),
+        ),
+        DeliveryState.MQTT_ACKNOWLEDGED: StatusLabel(tr("Yuborildi"), "progress"),
+        DeliveryState.PEER_RECEIVED: StatusLabel(
+            tr("Boshqa qurilmaga yetkazildi"), "progress"
+        ),
+        DeliveryState.PEER_APPLIED: StatusLabel(
+            tr("Sinxronlandi"), "ok", tr("Barcha qurilmalarda hisobga olindi."),
+        ),
+        DeliveryState.PEER_REJECTED: StatusLabel(
+            tr("Tekshiruv talab qiladi"), "warning",
+            tr(
+                "Boshqa qurilma bu yozuvni qabul qilmadi. Sinxronizatsiya "
+                "bo'limidan sababni ko'ring."
+            ),
+        ),
+        DeliveryState.CONFLICT: StatusLabel(
+            tr("Tekshiruv talab qiladi"), "warning",
+            tr(
+                "Ikki qurilmada bir-biriga zid o'zgarish bo'lgan. Qaysi biri "
+                "to'g'ri ekanini siz tanlashingiz kerak."
+            ),
+        ),
+        DeliveryState.DEAD_LETTER: StatusLabel(
+            tr("Xatolik yuz berdi"), "error",
+            tr(
+                "Bir necha marta urinildi, lekin yuborilmadi. Sinxronizatsiya "
+                "bo'limidan qayta urinib ko'ring."
+            ),
+        ),
+    }
 
 
 def delivery_status(state: str) -> StatusLabel:
-    return _DELIVERY.get(state, StatusLabel("Noma'lum holat", "warning"))
-
-
-_ORDER_STATES: dict[str, str] = {
-    OrderState.DRAFT: "Qoralama",
-    OrderState.CONFIRMED: "Tasdiqlangan",
-    OrderState.APPROVED: "Ma'qullangan",
-    OrderState.ALLOCATED: "Ajratilgan",
-    OrderState.PICKED: "Yig'ilgan",
-    OrderState.SHIPPED: "Jo'natilgan",
-    OrderState.DELIVERED: "Yetkazilgan",
-    OrderState.PARTIALLY_RETURNED: "Qisman qaytarilgan",
-    OrderState.RETURNED: "Qaytarilgan",
-    OrderState.CANCELLED: "Bekor qilingan",
-}
+    return _delivery_labels().get(state, StatusLabel(tr("Noma'lum holat"), "warning"))
 
 
 def order_state(state: str) -> str:
-    return _ORDER_STATES.get(state, state)
+    labels: dict[str, str] = {
+        OrderState.DRAFT: tr("Qoralama"),
+        OrderState.CONFIRMED: tr("Tasdiqlangan"),
+        OrderState.APPROVED: tr("Ma'qullangan"),
+        OrderState.ALLOCATED: tr("Ajratilgan"),
+        OrderState.PICKED: tr("Yig'ilgan"),
+        OrderState.SHIPPED: tr("Jo'natilgan"),
+        OrderState.DELIVERED: tr("Yetkazilgan"),
+        OrderState.PARTIALLY_RETURNED: tr("Qisman qaytarilgan"),
+        OrderState.RETURNED: tr("Qaytarilgan"),
+        OrderState.CANCELLED: tr("Bekor qilingan"),
+    }
+    return labels.get(state, state)
 
 
 def order_state_tone(state: str) -> str:
@@ -100,59 +113,66 @@ def order_state_tone(state: str) -> str:
 
 
 #: Rad etish sabablari. Foydalanuvchiga NIMA QILISH kerakligi aytiladi.
-_REJECTIONS: dict[RejectReason, StatusLabel] = {
-    RejectReason.MALFORMED: StatusLabel(
-        "Buzilgan xabar", "error", "Xabar yo'lda buzilgan. Qayta yuboriladi.",
-    ),
-    RejectReason.UNKNOWN_VERSION: StatusLabel(
-        "Eski yoki yangi dastur", "warning",
-        "Boshqa qurilmada dasturning boshqa versiyasi. Ikkalasini ham "
-        "yangilang.",
-    ),
-    RejectReason.UNSUPPORTED_PROFILE: StatusLabel(
-        "Mos kelmaydigan xavfsizlik sozlamasi", "error",
-    ),
-    RejectReason.UNKNOWN_EPOCH: StatusLabel(
-        "Eskirgan xavfsizlik kaliti", "warning",
-        "Bu qurilma kalit yangilanishidan oldingi xabarni yubordi.",
-    ),
-    RejectReason.UNKNOWN_KEY: StatusLabel(
-        "Kalit topilmadi", "warning",
-        "Qurilmani qayta ulash kerak bo'lishi mumkin.",
-    ),
-    RejectReason.FOREIGN_TENANT: StatusLabel(
-        "Begona korxona xabari", "error",
-        "Bu xabar boshqa korxonaga tegishli va rad etildi.",
-    ),
-    RejectReason.UNKNOWN_SENDER: StatusLabel(
-        "Notanish qurilma", "warning",
-        "Qurilma ro'yxatdan o'tmagan. Sozlamalar > Qurilmalar bo'limida "
-        "qo'shing.",
-    ),
-    RejectReason.REVOKED_SENDER: StatusLabel(
-        "Bekor qilingan qurilma", "error",
-        "Bu qurilma ro'yxatdan chiqarilgan, uning ma'lumotlari qabul "
-        "qilinmaydi.",
-    ),
-    RejectReason.BAD_SIGNATURE: StatusLabel(
-        "Imzo to'g'ri kelmadi", "error",
-        "Xabar haqiqiyligi tasdiqlanmadi va rad etildi.",
-    ),
-    RejectReason.REPLAY: StatusLabel(
-        "Takroriy xabar", "ok", "Bu xabar allaqachon qabul qilingan edi.",
-    ),
-    RejectReason.AEAD_FAILURE: StatusLabel(
-        "Xabar ochilmadi", "error", "Xabar buzilgan yoki o'zgartirilgan.",
-    ),
-    RejectReason.SCHEMA_INVALID: StatusLabel(
-        "Tanib bo'lmaydigan ma'lumot", "warning",
-        "Ehtimol boshqa qurilmada dasturning yangiroq versiyasi.",
-    ),
-    RejectReason.TOO_LARGE: StatusLabel(
-        "Xabar juda katta", "warning",
-    ),
-    RejectReason.STALE: StatusLabel("Eskirgan xabar", "warning"),
-}
+def _rejection_labels() -> dict[RejectReason, StatusLabel]:
+    return {
+        RejectReason.MALFORMED: StatusLabel(
+            tr("Buzilgan xabar"), "error", tr("Xabar yo'lda buzilgan. Qayta yuboriladi."),
+        ),
+        RejectReason.UNKNOWN_VERSION: StatusLabel(
+            tr("Eski yoki yangi dastur"), "warning",
+            tr(
+                "Boshqa qurilmada dasturning boshqa versiyasi. Ikkalasini ham "
+                "yangilang."
+            ),
+        ),
+        RejectReason.UNSUPPORTED_PROFILE: StatusLabel(
+            tr("Mos kelmaydigan xavfsizlik sozlamasi"), "error",
+        ),
+        RejectReason.UNKNOWN_EPOCH: StatusLabel(
+            tr("Eskirgan xavfsizlik kaliti"), "warning",
+            tr("Bu qurilma kalit yangilanishidan oldingi xabarni yubordi."),
+        ),
+        RejectReason.UNKNOWN_KEY: StatusLabel(
+            tr("Kalit topilmadi"), "warning",
+            tr("Qurilmani qayta ulash kerak bo'lishi mumkin."),
+        ),
+        RejectReason.FOREIGN_TENANT: StatusLabel(
+            tr("Begona korxona xabari"), "error",
+            tr("Bu xabar boshqa korxonaga tegishli va rad etildi."),
+        ),
+        RejectReason.UNKNOWN_SENDER: StatusLabel(
+            tr("Notanish qurilma"), "warning",
+            tr(
+                "Qurilma ro'yxatdan o'tmagan. Sozlamalar > Qurilmalar bo'limida "
+                "qo'shing."
+            ),
+        ),
+        RejectReason.REVOKED_SENDER: StatusLabel(
+            tr("Bekor qilingan qurilma"), "error",
+            tr(
+                "Bu qurilma ro'yxatdan chiqarilgan, uning ma'lumotlari qabul "
+                "qilinmaydi."
+            ),
+        ),
+        RejectReason.BAD_SIGNATURE: StatusLabel(
+            tr("Imzo to'g'ri kelmadi"), "error",
+            tr("Xabar haqiqiyligi tasdiqlanmadi va rad etildi."),
+        ),
+        RejectReason.REPLAY: StatusLabel(
+            tr("Takroriy xabar"), "ok", tr("Bu xabar allaqachon qabul qilingan edi."),
+        ),
+        RejectReason.AEAD_FAILURE: StatusLabel(
+            tr("Xabar ochilmadi"), "error", tr("Xabar buzilgan yoki o'zgartirilgan."),
+        ),
+        RejectReason.SCHEMA_INVALID: StatusLabel(
+            tr("Tanib bo'lmaydigan ma'lumot"), "warning",
+            tr("Ehtimol boshqa qurilmada dasturning yangiroq versiyasi."),
+        ),
+        RejectReason.TOO_LARGE: StatusLabel(
+            tr("Xabar juda katta"), "warning",
+        ),
+        RejectReason.STALE: StatusLabel(tr("Eskirgan xabar"), "warning"),
+    }
 
 
 def rejection_status(reason: RejectReason | str) -> StatusLabel:
@@ -160,38 +180,40 @@ def rejection_status(reason: RejectReason | str) -> StatusLabel:
         try:
             reason = RejectReason[reason]
         except KeyError:
-            return StatusLabel("Noma'lum sabab", "warning")
-    return _REJECTIONS.get(reason, StatusLabel("Rad etildi", "warning"))
+            return StatusLabel(tr("Noma'lum sabab"), "warning")
+    return _rejection_labels().get(reason, StatusLabel(tr("Rad etildi"), "warning"))
 
 
 def connection_status(connected: bool, queued: int) -> StatusLabel:
     """Yuqoridagi holat chizig'i uchun."""
     if connected and queued == 0:
-        return StatusLabel("Hammasi sinxronlangan", "ok")
+        return StatusLabel(tr("Hammasi sinxronlangan"), "ok")
     if connected and queued:
-        return StatusLabel(f"Yuborilmoqda ({queued})", "progress")
+        return StatusLabel(tr("Yuborilmoqda ({n})").format(n=queued), "progress")
     if queued:
         return StatusLabel(
-            f"Ulanish yo'q — {queued} ta yozuv navbatda", "warning",
-            "Ishlashda davom eting. Internet paydo bo'lishi bilan hammasi "
-            "avtomatik yuboriladi.",
+            tr("Ulanish yo'q — {n} ta yozuv navbatda").format(n=queued), "warning",
+            tr(
+                "Ishlashda davom eting. Internet paydo bo'lishi bilan hammasi "
+                "avtomatik yuboriladi."
+            ),
         )
     return StatusLabel(
-        "Ulanish yo'q", "warning",
-        "Dastur ulanishsiz ham to'liq ishlaydi.",
+        tr("Ulanish yo'q"), "warning",
+        tr("Dastur ulanishsiz ham to'liq ishlaydi."),
     )
 
 
 def device_platform(platform: str) -> str:
-    return {"desktop": "Kompyuter", "android": "Telefon"}.get(platform, platform)
+    return {"desktop": tr("Kompyuter"), "android": tr("Telefon")}.get(platform, platform)
 
 
 def role_name(role: str) -> str:
     return {
-        "owner": "Egasi",
-        "manager": "Rahbar",
-        "agent": "Savdo agenti",
-        "warehouse": "Omborchi",
-        "cashier": "Kassir",
-        "viewer": "Kuzatuvchi",
+        "owner": tr("Egasi"),
+        "manager": tr("Rahbar"),
+        "agent": tr("Savdo agenti"),
+        "warehouse": tr("Omborchi"),
+        "cashier": tr("Kassir"),
+        "viewer": tr("Kuzatuvchi"),
     }.get(role, role)

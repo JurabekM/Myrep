@@ -26,6 +26,7 @@ from distribos.app_context import AppContext
 from distribos.application import queries
 from distribos.application.command_service import CommandRejected, build_payload
 from distribos.domain.ids import uuid7_str
+from distribos.i18n import tr
 from distribos.persistence.models import MovementType
 from distribos.presentation.pages.base import BasePage
 from distribos.presentation.status import money, quantity
@@ -37,19 +38,25 @@ from distribos.presentation.widgets import (
 )
 from distribos.sync.event_store import NewEvent
 
-#: Foydalanuvchi ko'radigan nomlar.
-MOVEMENT_LABELS: dict[str, str] = {
-    MovementType.RECEIPT: "Kirim",
-    MovementType.SALE: "Sotuv",
-    MovementType.RETURN_IN: "Qaytarib olindi",
-    MovementType.RETURN_OUT: "Qaytarib berildi",
-    MovementType.TRANSFER_OUT: "Chiqib ketdi (transfer)",
-    MovementType.TRANSFER_IN: "Kirib keldi (transfer)",
-    MovementType.WRITE_OFF: "Hisobdan chiqarish",
-    MovementType.ADJUSTMENT: "Tuzatish",
-    MovementType.RESERVATION: "Rezerv",
-    MovementType.RELEASE: "Rezervdan chiqarish",
-}
+
+def movement_labels() -> dict[str, str]:
+    """Foydalanuvchi ko'radigan nomlar.
+
+    Funksiya sifatida: modul darajasidagi doimiy `tr()`ni import
+    vaqtida (til o'rnatilishidan OLDIN) muzlatib qo'yardi.
+    """
+    return {
+        MovementType.RECEIPT: tr("Kirim"),
+        MovementType.SALE: tr("Sotuv"),
+        MovementType.RETURN_IN: tr("Qaytarib olindi"),
+        MovementType.RETURN_OUT: tr("Qaytarib berildi"),
+        MovementType.TRANSFER_OUT: tr("Chiqib ketdi (transfer)"),
+        MovementType.TRANSFER_IN: tr("Kirib keldi (transfer)"),
+        MovementType.WRITE_OFF: tr("Hisobdan chiqarish"),
+        MovementType.ADJUSTMENT: tr("Tuzatish"),
+        MovementType.RESERVATION: tr("Rezerv"),
+        MovementType.RELEASE: tr("Rezervdan chiqarish"),
+    }
 
 
 class InventoryPage(BasePage):
@@ -59,29 +66,32 @@ class InventoryPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Ombor",
-            "Qoldiq harakatlardan hisoblanadi — u hech qachon qo'lda "
-            "qayta yozilmaydi.",
+            context, tr("Ombor"),
+            tr(
+                "Qoldiq harakatlardan hisoblanadi — u hech qachon qo'lda "
+                "qayta yozilmaydi."
+            ),
         )
-        self._receipt = primary_button("Kirim/chiqim qo'shish")
+        self._receipt = primary_button(tr("Kirim/chiqim qo'shish"))
         self._receipt.clicked.connect(self._on_movement)
         self.header.add_action(self._receipt)
 
-        self._warehouse = ghost_button("Yangi ombor")
+        self._warehouse = ghost_button(tr("Yangi ombor"))
         self._warehouse.clicked.connect(self._on_new_warehouse)
         self.header.add_action(self._warehouse)
 
         tabs = QTabWidget()
         self.stock_table = DataTable(
-            ["Ombor", "SKU", "Mahsulot", "Qoldiq", "Rezerv", "Mavjud", "Minimal"],
-            placeholder="Mahsulot bo'yicha qidirish…",
+            [tr("Ombor"), tr("SKU"), tr("Mahsulot"), tr("Qoldiq"), tr("Rezerv"),
+             tr("Mavjud"), tr("Minimal")],
+            placeholder=tr("Mahsulot bo'yicha qidirish…"),
         )
         self.movement_table = DataTable(
-            ["Sana", "Ombor", "SKU", "Mahsulot", "Amal", "Miqdor"],
-            placeholder="Harakatlar bo'yicha qidirish…",
+            [tr("Sana"), tr("Ombor"), tr("SKU"), tr("Mahsulot"), tr("Amal"), tr("Miqdor")],
+            placeholder=tr("Harakatlar bo'yicha qidirish…"),
         )
-        tabs.addTab(self.stock_table, "Qoldiq")
-        tabs.addTab(self.movement_table, "Harakatlar")
+        tabs.addTab(self.stock_table, tr("Qoldiq"))
+        tabs.addTab(self.movement_table, tr("Harakatlar"))
         self.add(tabs, 1)
 
     def refresh(self) -> None:
@@ -99,16 +109,17 @@ class InventoryPage(BasePage):
             if row.below_minimum:
                 self.stock_table.set_row_tone(index, "warning")
 
+        labels = movement_labels()
         self.movement_table.set_rows([
             (occurred.strftime("%d.%m.%Y %H:%M"), warehouse, sku, name,
-             MOVEMENT_LABELS.get(movement_type, movement_type), quantity(amount))
+             labels.get(movement_type, movement_type), quantity(amount))
             for occurred, warehouse, sku, name, movement_type, amount in movements
         ])
 
         low = sum(1 for row in stock if row.below_minimum)
-        subtitle = f"{len(stock)} ta pozitsiya"
+        subtitle = tr("{n} ta pozitsiya").format(n=len(stock))
         if low:
-            subtitle += f" · {low} tasida qoldiq kam"
+            subtitle += tr(" · {n} tasida qoldiq kam").format(n=low)
         self.header.set_subtitle(subtitle)
 
     @Slot()
@@ -123,7 +134,7 @@ class InventoryPage(BasePage):
             with self.context.database.unit_of_work() as session:
                 session.add(Warehouse(id=uuid7_str(), code=code, name=name))
         except Exception as exc:
-            self.report_error(exc, "Ombor qo'shish")
+            self.report_error(exc, tr("Ombor qo'shish"))
             return
         self.refresh()
 
@@ -134,10 +145,10 @@ class InventoryPage(BasePage):
             products = queries.list_products(session)
 
         if not warehouses:
-            self.warn("Avval ombor qo'shing.", "Ombor yo'q")
+            self.warn(tr("Avval ombor qo'shing."), tr("Ombor yo'q"))
             return
         if not products:
-            self.warn("Avval mahsulot qo'shing.", "Mahsulot yo'q")
+            self.warn(tr("Avval mahsulot qo'shing."), tr("Mahsulot yo'q"))
             return
 
         dialog = MovementDialog(self, warehouses, products)
@@ -152,10 +163,10 @@ class InventoryPage(BasePage):
                     build_payload(movement_id=uuid7_str(), occurred_at=_now_iso(), **data),
                 ))
         except CommandRejected as exc:
-            self.warn(str(exc), "Saqlanmadi")
+            self.warn(str(exc), tr("Saqlanmadi"))
             return
         except Exception as exc:
-            self.report_error(exc, "Ombor harakati")
+            self.report_error(exc, tr("Ombor harakati"))
             return
         self.refresh()
 
@@ -167,28 +178,30 @@ class FinancePage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Kassa va to'lovlar",
-            "To'lov o'chirilmaydi — xato bo'lsa teskari yozuv yaratiladi.",
+            context, tr("Kassa va to'lovlar"),
+            tr("To'lov o'chirilmaydi — xato bo'lsa teskari yozuv yaratiladi."),
         )
-        self._payment = primary_button("To'lov qabul qilish")
+        self._payment = primary_button(tr("To'lov qabul qilish"))
         self._payment.clicked.connect(self._on_payment)
         self.header.add_action(self._payment)
 
-        self._reverse = ghost_button("To'lovni bekor qilish")
+        self._reverse = ghost_button(tr("To'lovni bekor qilish"))
         self._reverse.clicked.connect(self._on_reverse)
         self.header.add_action(self._reverse)
 
         tabs = QTabWidget()
         self.payments_table = DataTable(
-            ["Raqam", "Sana", "Yo'nalish", "Mijoz", "Summa", "Usul", "Holat"],
-            placeholder="Raqam yoki mijoz bo'yicha qidirish…",
+            [tr("Raqam"), tr("Sana"), tr("Yo'nalish"), tr("Mijoz"), tr("Summa"),
+             tr("Usul"), tr("Holat")],
+            placeholder=tr("Raqam yoki mijoz bo'yicha qidirish…"),
         )
         self.debt_table = DataTable(
-            ["Kod", "Mijoz", "Telefon", "Kredit limiti", "Qarzdorlik", "Holat"],
-            placeholder="Mijoz bo'yicha qidirish…",
+            [tr("Kod"), tr("Mijoz"), tr("Telefon"), tr("Kredit limiti"),
+             tr("Qarzdorlik"), tr("Holat")],
+            placeholder=tr("Mijoz bo'yicha qidirish…"),
         )
-        tabs.addTab(self.payments_table, "To'lovlar")
-        tabs.addTab(self.debt_table, "Qarzdorlik")
+        tabs.addTab(self.payments_table, tr("To'lovlar"))
+        tabs.addTab(self.debt_table, tr("Qarzdorlik"))
         self.add(tabs, 1)
 
     def refresh(self) -> None:
@@ -198,9 +211,9 @@ class FinancePage(BasePage):
 
         self.payments_table.set_rows([
             (row.number, row.occurred_at.strftime("%d.%m.%Y %H:%M"),
-             "Kirim" if row.direction == "IN" else "Chiqim",
+             tr("Kirim") if row.direction == "IN" else tr("Chiqim"),
              row.customer_name, money(row.amount), row.method,
-             "Bekor qilingan" if row.is_reversed else "Amalda")
+             tr("Bekor qilingan") if row.is_reversed else tr("Amalda"))
             for row in payments
         ])
         for index, row in enumerate(payments):
@@ -210,9 +223,10 @@ class FinancePage(BasePage):
         debtors = [c for c in customers if c.debt != 0]
         self.debt_table.set_rows([
             (row.code, row.name, row.phone or "—",
-             money(row.credit_limit) if row.credit_limit else "Cheklanmagan",
+             money(row.credit_limit) if row.credit_limit else tr("Cheklanmagan"),
              money(row.debt),
-             "Limit oshgan" if row.over_limit else ("Qarz bor" if row.debt > 0 else "Avans"))
+             tr("Limit oshgan") if row.over_limit
+             else (tr("Qarz bor") if row.debt > 0 else tr("Avans")))
             for row in debtors
         ])
         for index, debtor in enumerate(debtors):
@@ -221,7 +235,9 @@ class FinancePage(BasePage):
 
         total_debt = sum(c.debt for c in customers if c.debt > 0)
         self.header.set_subtitle(
-            f"{len(payments)} ta to'lov · umumiy qarzdorlik {money(total_debt)}"
+            tr("{n} ta to'lov · umumiy qarzdorlik {debt}").format(
+                n=len(payments), debt=money(total_debt)
+            )
         )
 
     @Slot()
@@ -229,7 +245,7 @@ class FinancePage(BasePage):
         with self.context.database.session() as session:
             customers = queries.list_customers(session)
         if not customers:
-            self.warn("Avval mijoz qo'shing.", "Mijoz yo'q")
+            self.warn(tr("Avval mijoz qo'shing."), tr("Mijoz yo'q"))
             return
 
         dialog = PaymentDialog(self, customers)
@@ -306,11 +322,11 @@ class VisitsPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Tashriflar", "Savdo agentlarining mijozlarga tashriflari.",
+            context, tr("Tashriflar"), tr("Savdo agentlarining mijozlarga tashriflari."),
         )
         self.table = DataTable(
-            ["Sana", "Mijoz", "Natija", "Izoh"],
-            placeholder="Mijoz bo'yicha qidirish…",
+            [tr("Sana"), tr("Mijoz"), tr("Natija"), tr("Izoh")],
+            placeholder=tr("Mijoz bo'yicha qidirish…"),
         )
         self.add(self.table, 1)
 
@@ -322,7 +338,7 @@ class VisitsPage(BasePage):
              customer, outcome or "—", note or "")
             for started, customer, outcome, note in visits
         ])
-        self.header.set_subtitle(f"{len(visits)} ta tashrif")
+        self.header.set_subtitle(tr("{n} ta tashrif").format(n=len(visits)))
 
 
 # --- dialoglar ------------------------------------------------------------
@@ -331,15 +347,15 @@ class VisitsPage(BasePage):
 class WarehouseDialog(QDialog):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Yangi ombor")
+        self.setWindowTitle(tr("Yangi ombor"))
         self.setMinimumWidth(360)
 
         self._code = QLineEdit()
         self._name = QLineEdit()
 
         form = QFormLayout()
-        form.addRow("Kod *", self._code)
-        form.addRow("Nomi *", self._name)
+        form.addRow(tr("Kod *"), self._code)
+        form.addRow(tr("Nomi *"), self._name)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -354,7 +370,7 @@ class WarehouseDialog(QDialog):
     @Slot()
     def _on_accept(self) -> None:
         if not self._code.text().strip() or not self._name.text().strip():
-            QMessageBox.warning(self, "To'ldirilmagan", "Kod va nom majburiy.")
+            QMessageBox.warning(self, tr("To'ldirilmagan"), tr("Kod va nom majburiy."))
             return
         self.accept()
 
@@ -368,7 +384,7 @@ class MovementDialog(QDialog):
         products: Sequence[queries.ProductRow],
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Ombor harakati")
+        self.setWindowTitle(tr("Ombor harakati"))
         self.setMinimumWidth(460)
 
         self._warehouse = QComboBox()
@@ -379,11 +395,12 @@ class MovementDialog(QDialog):
         for product in products:
             self._product.addItem(f"{product.sku} — {product.name}", product.id)
 
+        labels = movement_labels()
         self._type = QComboBox()
         for key in (MovementType.RECEIPT, MovementType.WRITE_OFF,
                     MovementType.ADJUSTMENT, MovementType.RETURN_IN,
                     MovementType.TRANSFER_IN, MovementType.TRANSFER_OUT):
-            self._type.addItem(MOVEMENT_LABELS[key], key)
+            self._type.addItem(labels[key], key)
 
         self._quantity = QDoubleSpinBox()
         self._quantity.setRange(-1_000_000, 1_000_000)
@@ -393,16 +410,16 @@ class MovementDialog(QDialog):
         self._note = QLineEdit()
 
         form = QFormLayout()
-        form.addRow("Ombor", self._warehouse)
-        form.addRow("Mahsulot", self._product)
-        form.addRow("Amal", self._type)
-        form.addRow("Miqdor", self._quantity)
-        form.addRow("Izoh", self._note)
+        form.addRow(tr("Ombor"), self._warehouse)
+        form.addRow(tr("Mahsulot"), self._product)
+        form.addRow(tr("Amal"), self._type)
+        form.addRow(tr("Miqdor"), self._quantity)
+        form.addRow(tr("Izoh"), self._note)
 
-        hint = QLabel(
+        hint = QLabel(tr(
             "«Tuzatish» amalida miqdor manfiy bo'lishi mumkin. Qolgan "
             "amallarda musbat son kiriting."
-        )
+        ))
         hint.setWordWrap(True)
         hint.setStyleSheet(f"color: {PALETTE.text_muted};")
 
@@ -420,12 +437,14 @@ class MovementDialog(QDialog):
     @Slot()
     def _on_accept(self) -> None:
         if self._quantity.value() == 0:
-            QMessageBox.warning(self, "Noto'g'ri miqdor", "Miqdor 0 bo'lishi mumkin emas.")
+            QMessageBox.warning(
+                self, tr("Noto'g'ri miqdor"), tr("Miqdor 0 bo'lishi mumkin emas.")
+            )
             return
         if self._type.currentData() != MovementType.ADJUSTMENT and self._quantity.value() < 0:
             QMessageBox.warning(
-                self, "Noto'g'ri miqdor",
-                "Manfiy miqdor faqat «Tuzatish» amalida ishlatiladi.",
+                self, tr("Noto'g'ri miqdor"),
+                tr("Manfiy miqdor faqat «Tuzatish» amalida ishlatiladi."),
             )
             return
         self.accept()
@@ -443,18 +462,18 @@ class MovementDialog(QDialog):
 class PaymentDialog(QDialog):
     def __init__(self, parent: QWidget, customers: Sequence[queries.CustomerRow]) -> None:
         super().__init__(parent)
-        self.setWindowTitle("To'lov")
+        self.setWindowTitle(tr("To'lov"))
         self.setMinimumWidth(420)
 
         self._direction = QComboBox()
-        self._direction.addItem("Kirim (mijozdan)", "IN")
-        self._direction.addItem("Chiqim", "OUT")
+        self._direction.addItem(tr("Kirim (mijozdan)"), "IN")
+        self._direction.addItem(tr("Chiqim"), "OUT")
 
         self._customer = QComboBox()
         for customer in customers:
             label = f"{customer.name} ({customer.code})"
             if customer.debt > 0:
-                label += f" — qarz {money(customer.debt)}"
+                label += tr(" — qarz {debt}").format(debt=money(customer.debt))
             self._customer.addItem(label, customer.id)
 
         self._amount = QDoubleSpinBox()
@@ -463,17 +482,18 @@ class PaymentDialog(QDialog):
         self._amount.setGroupSeparatorShown(True)
 
         self._method = QComboBox()
+        # DIQQAT: to'lov usuli KODLARI (bazaga yoziladi), tarjima qilinmaydi.
         self._method.addItems(["cash", "card", "transfer"])
 
         self._note = QTextEdit()
         self._note.setMaximumHeight(70)
 
         form = QFormLayout()
-        form.addRow("Yo'nalish", self._direction)
-        form.addRow("Mijoz", self._customer)
-        form.addRow("Summa (so'm)", self._amount)
-        form.addRow("Usul", self._method)
-        form.addRow("Izoh", self._note)
+        form.addRow(tr("Yo'nalish"), self._direction)
+        form.addRow(tr("Mijoz"), self._customer)
+        form.addRow(tr("Summa (so'm)"), self._amount)
+        form.addRow(tr("Usul"), self._method)
+        form.addRow(tr("Izoh"), self._note)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel

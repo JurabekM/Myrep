@@ -202,7 +202,7 @@ diapazoni tufayli CI HAR DOIM eng yangi `ruff`ni oladi. Lokal muhitda
 keshlangan eski versiya (0.8.4) 34 ta yangi qoidani (`RUF059`, `UP042`)
 ko'rmagan edi — bularning barchasi oldingi kod edi, tuzatildi.
 
-### 5.6b. Lokalizatsiya (uz-Latn + rus) — BOSHLANDI
+### 5.6b. Lokalizatsiya (uz-Latn + rus) — PRESENTATION QATLAMI TO'LIQ
 
 Topshiriqda so'ralgan uz-Kirill **buyurtma beruvchi tomonidan olib
 tashlandi** — endi faqat uz-Latn (asosiy) va rus tili kerak.
@@ -218,18 +218,46 @@ literal satrga sun'iy kalit o'ylab topish o'rniga). Tarjima topilmasa
 skrinshoti olindi — navigatsiya, bo'lim sarlavhalari va menyu ("Файл",
 "Справка", "ПРОДАЖИ" va h.k.) to'g'ri rus tilida chiqdi.
 
-**Qamrov — halol ro'yxat:** faqat `main_window.py` (butun navigatsiya,
-menyu, holat satri, "dastur haqida") va `system.py`dagi Sozlamalar
-sahifasi (shu jumladan yangi til tanlagichi) tarjima qilingan. Qolgan
-barcha sahifa (`sales.py`, `operations.py`, `reporting.py` va
-boshqalar) hali **faqat o'zbekcha** — ularning matni tarjima
-qilinmagan, lekin `tr()` orqali o'tkazilmagani uchun `ru.json`da ham
-yo'q va sinov buni ushlamaydi (chunki ular umuman `tr()` chaqirmaydi).
+**Qamrov — halol ro'yxat:** `presentation/` qatlamidagi BARCHA sahifa
+va dialog tarjima qilingan — `main_window.py` (navigatsiya, menyu,
+holat satri, "dastur haqida"), `system.py` (barcha 6 sahifa: Sozlamalar
+til tanlagichi bilan, Sinxronizatsiya, Tekshiruv navbati, Xavfsizlik,
+Zaxira nusxa, Audit jurnali — va 3 dialog), `sales.py` (Mahsulotlar,
+Mijozlar, Buyurtmalar — va 5 dialog), `operations.py` (Ombor, Kassa,
+Tashriflar — va 3 dialog), `reporting.py` (Hisobotlar, Hujjatlar, AI
+yordamchi), `status.py` (barcha status/holat yorliqlari — bu markazlashgan
+fayl bo'lgani uchun eng yuqori qamrov beradi) va `pages/base.py`
+(umumiy xabar oynalari). Jami **384 ta tarjima kaliti**.
+
+**Ataylab TARJIMA QILINMAGAN** (halol chegara, ikkita sabab bilan):
+
+1. **Ma'lumot kodlari, UI matni emas** — o'lchov birligi (`dona`,
+   `kg`...), narx toifasi (`wholesale`/`retail`/`agent`), to'lov usuli
+   (`cash`/`card`/`transfer`) kodlari. Bular bazaga yoziladi va
+   qurilmalar orasida sinxronlanadi — tarjima qilinsa, rus tilidagi
+   qurilmada yaratilgan yozuv o'zbek tilidagi qurilmada noto'g'ri
+   o'qilardi.
+2. **`reports/builders.py`, `reports/documents.py`, `ai/advisor.py`**
+   — hisobot sarlavhalari, hujjat turlari va AI tavsiyalari matni. Bu
+   fayllar CSV/PDF EKSPORT matnini ham belgilaydi, shuning uchun
+   tarjima qilish alohida qaror talab qiladi (eksport qilingan fayl
+   tili qaysi bo'lishi kerak — ishga tushirilgan tilmi, doim
+   o'zbekchami?). Kod ichida bu ochiq izohlangan.
 
 Til o'zgarishi **qayta ishga tushirishni talab qiladi** — Qt'ning
 to'liq `retranslateUi` mexanizmi qurilmagan (loyiha hajmida ortiqcha
 murakkablik). Tanlov `<data_dir>/language.json`ga saqlanadi va
 `AppSettings.language` (muhit o'zgaruvchisi)dan USTUN turadi.
+
+**Amaliy tuzoq va uning yechimi:** ko'p joyda status/holat lug'ati
+(masalan `status.py`dagi `_DELIVERY`, `_ORDER_STATES`, `operations.py`
+dagi `MOVEMENT_LABELS`) avval MODUL DARAJASIDAGI o'zgarmas edi. Agar
+`tr()` shunday joyda chaqirilsa, u IMPORT vaqtida — til
+o'rnatilishidan OLDIN — bir marta hisoblanib, doim asosiy tilda
+muzlab qolardi. Barchasi FUNKSIYAGA aylantirildi (masalan
+`movement_labels()`), shunda `tr()` har chaqiruvda joriy tilni o'qiydi.
+Xuddi shu sabab bilan `BasePage.notify()/warn()/confirm()` dagi standart
+sarlavha PARAMETR SUKUTIDAN funksiya TANASIGA ko'chirildi.
 
 9 sinov (`tests/contract/test_i18n.py`): `tr()` xavfsizligi (noma'lum
 til RAD ETILADI — Kirill ham shu qatorda), va eng muhimi —
@@ -237,7 +265,8 @@ til RAD ETILADI — Kirill ham shu qatorda), va eng muhimi —
 `ru.json`da borligini va aksincha (ishlatilmay qolgan kalit yo'qligini)
 tasdiqlaydi. Bu sinov ataylab yozildi: `tr()` o'zi hech qachon xato
 bermaganligi sababli, tarjimasi yetishmagan yangi matn boshqacha hech
-qachon payqalmasdi.
+qachon payqalmasdi. Sinov ikki marta HAQIQIY ravishda ishlatildi:
+kod yozilgandan keyin 342 ta yetishmagan tarjimani to'g'ri topib berdi.
 
 ### 5.7. Boshqalar
 
@@ -332,7 +361,8 @@ Qolgan, ustuvorlik tartibida:
 1. DES-1 uchun mustaqil kriptografik ko'rib chiqish (loyihadan tashqari
    auditor kerak).
 2. Haqiqiy telefonda (emulyator emas) sinov.
-3. Rus tarjimasini qolgan sahifalarga yoyish (`sales.py`, `operations.py`,
-   `reporting.py`) — §5.6b.
+3. Rus tarjimasini `reports/builders.py`, `reports/documents.py`,
+   `ai/advisor.py` ga yoyish — §5.6b (ataylab qoldirilgan, chunki
+   eksport tili masalasi hal qilinishi kerak).
 4. mypy strict xatolarini `presentation/` tashqarisida ham tuzatish
    (67 ta qoldi) — CI'ga mypy qo'shishni imkonli qiladi.

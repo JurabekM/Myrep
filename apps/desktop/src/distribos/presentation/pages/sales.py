@@ -28,6 +28,7 @@ from distribos.application import queries
 from distribos.application.command_service import CommandRejected, build_payload
 from distribos.domain.ids import uuid7_str
 from distribos.domain.rules import DomainError, check_credit_limit, compute_order_totals
+from distribos.i18n import tr
 from distribos.presentation.pages.base import BasePage
 from distribos.presentation.status import money, order_state, quantity
 
@@ -49,20 +50,21 @@ class ProductsPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Mahsulotlar",
-            "Katalog, narxlar va qoldiq. Qidirish uchun yozishni boshlang.",
+            context, tr("Mahsulotlar"),
+            tr("Katalog, narxlar va qoldiq. Qidirish uchun yozishni boshlang."),
         )
-        self._new = primary_button("Yangi mahsulot")
+        self._new = primary_button(tr("Yangi mahsulot"))
         self._new.clicked.connect(self._on_new)
         self.header.add_action(self._new)
 
-        self._price = ghost_button("Narxni o'zgartirish")
+        self._price = ghost_button(tr("Narxni o'zgartirish"))
         self._price.clicked.connect(self._on_change_price)
         self.header.add_action(self._price)
 
         self.table = DataTable(
-            ["SKU", "Nomi", "Birlik", "Ulgurji", "Chakana", "Agent", "Qoldiq", "Holat"],
-            placeholder="SKU, nom yoki shtrix-kod bo'yicha qidirish…",
+            [tr("SKU"), tr("Nomi"), tr("Birlik"), tr("Ulgurji"), tr("Chakana"),
+             tr("Agent"), tr("Qoldiq"), tr("Holat")],
+            placeholder=tr("SKU, nom yoki shtrix-kod bo'yicha qidirish…"),
         )
         self.add(self.table, 1)
 
@@ -74,13 +76,14 @@ class ProductsPage(BasePage):
             (row.sku, row.name, row.unit, money(row.wholesale_price),
              money(row.retail_price), money(row.agent_price),
              quantity(row.stock),
-             "Kam qoldi" if row.below_minimum else ("Faol" if row.is_active else "Faol emas"))
+             tr("Kam qoldi") if row.below_minimum
+             else (tr("Faol") if row.is_active else tr("Faol emas")))
             for row in rows
         ])
         for index, row in enumerate(rows):
             if row.below_minimum:
                 self.table.set_row_tone(index, "warning")
-        self.header.set_subtitle(f"{len(rows)} ta mahsulot")
+        self.header.set_subtitle(tr("{n} ta mahsulot").format(n=len(rows)))
 
     @Slot()
     def _on_new(self) -> None:
@@ -96,10 +99,10 @@ class ProductsPage(BasePage):
                     build_payload(product_id=product_id, **data),
                 ))
         except (CommandRejected, DomainError) as exc:
-            self.warn(str(exc), "Saqlanmadi")
+            self.warn(str(exc), tr("Saqlanmadi"))
             return
         except Exception as exc:
-            self.report_error(exc, "Mahsulot qo'shish")
+            self.report_error(exc, tr("Mahsulot qo'shish"))
             return
         self.refresh()
 
@@ -107,14 +110,14 @@ class ProductsPage(BasePage):
     def _on_change_price(self) -> None:
         selected = self.table.selected_row()
         if selected is None:
-            self.warn("Avval jadvaldan mahsulotni tanlang.")
+            self.warn(tr("Avval jadvaldan mahsulotni tanlang."))
             return
 
         sku = selected[0]
         with self.context.database.session() as session:
             matches = queries.list_products(session, search=sku, limit=1)
         if not matches:
-            self.warn("Mahsulot topilmadi.")
+            self.warn(tr("Mahsulot topilmadi."))
             return
         product = matches[0]
 
@@ -129,7 +132,7 @@ class ProductsPage(BasePage):
                     {"product_id": product.id, "field": field, "new_price": new_price},
                 ))
         except CommandRejected as exc:
-            self.warn(str(exc), "Saqlanmadi")
+            self.warn(str(exc), tr("Saqlanmadi"))
             return
         self.refresh()
 
@@ -141,16 +144,16 @@ class CustomersPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Mijozlar", "Aloqa ma'lumotlari, narx toifasi va qarzdorlik.",
+            context, tr("Mijozlar"), tr("Aloqa ma'lumotlari, narx toifasi va qarzdorlik."),
         )
-        self._new = primary_button("Yangi mijoz")
+        self._new = primary_button(tr("Yangi mijoz"))
         self._new.clicked.connect(self._on_new)
         self.header.add_action(self._new)
 
         self.table = DataTable(
-            ["Kod", "Nomi", "Telefon", "Narx toifasi", "Kredit limiti",
-             "Qarzdorlik", "Buyurtmalar"],
-            placeholder="Nom, kod yoki telefon bo'yicha qidirish…",
+            [tr("Kod"), tr("Nomi"), tr("Telefon"), tr("Narx toifasi"), tr("Kredit limiti"),
+             tr("Qarzdorlik"), tr("Buyurtmalar")],
+            placeholder=tr("Nom, kod yoki telefon bo'yicha qidirish…"),
         )
         self.add(self.table, 1)
 
@@ -160,14 +163,14 @@ class CustomersPage(BasePage):
 
         self.table.set_rows([
             (row.code, row.name, row.phone or "—", row.price_tier,
-             money(row.credit_limit) if row.credit_limit else "Cheklanmagan",
+             money(row.credit_limit) if row.credit_limit else tr("Cheklanmagan"),
              money(row.debt), row.order_count)
             for row in rows
         ])
         for index, row in enumerate(rows):
             if row.over_limit:
                 self.table.set_row_tone(index, "error")
-        self.header.set_subtitle(f"{len(rows)} ta mijoz")
+        self.header.set_subtitle(tr("{n} ta mijoz").format(n=len(rows)))
 
     @Slot()
     def _on_new(self) -> None:
@@ -183,10 +186,10 @@ class CustomersPage(BasePage):
                     build_payload(customer_id=customer_id, **data),
                 ))
         except CommandRejected as exc:
-            self.warn(str(exc), "Saqlanmadi")
+            self.warn(str(exc), tr("Saqlanmadi"))
             return
         except Exception as exc:
-            self.report_error(exc, "Mijoz qo'shish")
+            self.report_error(exc, tr("Mijoz qo'shish"))
             return
         self.refresh()
 
@@ -198,21 +201,21 @@ class OrdersPage(BasePage):
 
     def __init__(self, context: AppContext) -> None:
         super().__init__(
-            context, "Buyurtmalar",
-            "Buyurtma yaratish, tasdiqlash va yetkazish holati.",
+            context, tr("Buyurtmalar"),
+            tr("Buyurtma yaratish, tasdiqlash va yetkazish holati."),
         )
-        self._new = primary_button("Yangi buyurtma")
+        self._new = primary_button(tr("Yangi buyurtma"))
         self._new.clicked.connect(self._on_new)
         self.header.add_action(self._new)
 
-        self._advance = ghost_button("Holatni o'zgartirish")
+        self._advance = ghost_button(tr("Holatni o'zgartirish"))
         self._advance.clicked.connect(self._on_advance)
         self.header.add_action(self._advance)
 
         self.table = DataTable(
-            ["Raqam", "Mijoz", "Sana", "Holat", "Qatorlar", "Summa",
-             "To'langan", "Sinxronizatsiya"],
-            placeholder="Raqam yoki mijoz bo'yicha qidirish…",
+            [tr("Raqam"), tr("Mijoz"), tr("Sana"), tr("Holat"), tr("Qatorlar"), tr("Summa"),
+             tr("To'langan"), tr("Sinxronizatsiya")],
+            placeholder=tr("Raqam yoki mijoz bo'yicha qidirish…"),
         )
         self.add(self.table, 1)
 
@@ -229,7 +232,7 @@ class OrdersPage(BasePage):
              money(row.paid_total), delivery_status(row.delivery_state).text)
             for row in rows
         ])
-        self.header.set_subtitle(f"{len(rows)} ta buyurtma")
+        self.header.set_subtitle(tr("{n} ta buyurtma").format(n=len(rows)))
 
     @Slot()
     def _on_new(self) -> None:
@@ -302,22 +305,24 @@ class OrdersPage(BasePage):
 
         selected = self.table.selected_row()
         if selected is None:
-            self.warn("Avval jadvaldan buyurtmani tanlang.")
+            self.warn(tr("Avval jadvaldan buyurtmani tanlang."))
             return
 
         number = selected[0]
         with self.context.database.session() as session:
             order = session.query(Order).filter_by(number=number).one_or_none()
             if order is None:
-                self.warn("Buyurtma topilmadi.")
+                self.warn(tr("Buyurtma topilmadi."))
                 return
             order_id, current = order.id, OrderState(order.state)
 
         allowed = sorted(ORDER_TRANSITIONS.get(current, frozenset()))
         if not allowed:
             self.warn(
-                f"«{order_state(current)}» yakuniy holat — uni o'zgartirib "
-                "bo'lmaydi.", "O'zgartirib bo'lmaydi",
+                tr("«{state}» yakuniy holat — uni o'zgartirib bo'lmaydi.").format(
+                    state=order_state(current)
+                ),
+                tr("O'zgartirib bo'lmaydi"),
             )
             return
 
@@ -329,7 +334,7 @@ class OrdersPage(BasePage):
             # `_choice` bo'sh emas (`allowed` bo'sh bo'lsa yuqorida
             # qaytamiz) — bu holat amalda yuz bermaydi, lekin qat'iy
             # tekshiruv aniqroq xato beradi jimgina yiqilishdan ko'ra.
-            self.warn("Yangi holat tanlanmadi.", "O'zgartirilmadi")
+            self.warn(tr("Yangi holat tanlanmadi."), tr("O'zgartirilmadi"))
             return
 
         try:
@@ -340,7 +345,7 @@ class OrdersPage(BasePage):
                      "to_state": target.value},
                 ))
         except CommandRejected as exc:
-            self.warn(str(exc), "O'zgartirilmadi")
+            self.warn(str(exc), tr("O'zgartirilmadi"))
             return
         self.refresh()
 
@@ -351,7 +356,7 @@ class OrdersPage(BasePage):
 class ProductDialog(QDialog):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Yangi mahsulot")
+        self.setWindowTitle(tr("Yangi mahsulot"))
         self.setMinimumWidth(440)
 
         form = QFormLayout()
@@ -359,6 +364,10 @@ class ProductDialog(QDialog):
         self._name = QLineEdit()
         self._barcode = QLineEdit()
         self._unit = QComboBox()
+        # DIQQAT: bu O'LCHOV BIRLIGI KODLARI (bazaga yoziladi), UI
+        # matni EMAS — shuning uchun tarjima qilinmaydi. Aks holda
+        # rus tilida saqlangan buyurtma o'zbekcha muhitda o'qib
+        # bo'lmas edi.
         self._unit.addItems(["dona", "kg", "litr", "quti", "metr", "to'plam"])
         self._wholesale = _money_input()
         self._retail = _money_input()
@@ -367,14 +376,14 @@ class ProductDialog(QDialog):
         self._min_stock.setRange(0, 1_000_000)
         self._min_stock.setDecimals(3)
 
-        form.addRow("SKU *", self._sku)
-        form.addRow("Nomi *", self._name)
-        form.addRow("Shtrix-kod", self._barcode)
-        form.addRow("O'lchov birligi", self._unit)
-        form.addRow("Ulgurji narx (so'm)", self._wholesale)
-        form.addRow("Chakana narx (so'm)", self._retail)
-        form.addRow("Agent narxi (so'm)", self._agent)
-        form.addRow("Minimal qoldiq", self._min_stock)
+        form.addRow(tr("SKU *"), self._sku)
+        form.addRow(tr("Nomi *"), self._name)
+        form.addRow(tr("Shtrix-kod"), self._barcode)
+        form.addRow(tr("O'lchov birligi"), self._unit)
+        form.addRow(tr("Ulgurji narx (so'm)"), self._wholesale)
+        form.addRow(tr("Chakana narx (so'm)"), self._retail)
+        form.addRow(tr("Agent narxi (so'm)"), self._agent)
+        form.addRow(tr("Minimal qoldiq"), self._min_stock)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -389,7 +398,7 @@ class ProductDialog(QDialog):
     @Slot()
     def _on_accept(self) -> None:
         if not self._sku.text().strip() or not self._name.text().strip():
-            QMessageBox.warning(self, "To'ldirilmagan", "SKU va nom majburiy.")
+            QMessageBox.warning(self, tr("To'ldirilmagan"), tr("SKU va nom majburiy."))
             return
         self.accept()
 
@@ -407,33 +416,32 @@ class ProductDialog(QDialog):
 
 
 class PriceDialog(QDialog):
-    _FIELDS = (
-        ("Ulgurji narx", "wholesale_price"),
-        ("Chakana narx", "retail_price"),
-        ("Agent narxi", "agent_price"),
-        ("Xarid narxi", "purchase_price"),
-    )
-
     def __init__(self, parent: QWidget, product: queries.ProductRow) -> None:
         super().__init__(parent)
-        self.setWindowTitle(f"Narx: {product.name}")
+        self.setWindowTitle(tr("Narx: {name}").format(name=product.name))
         self.setMinimumWidth(380)
 
+        fields = (
+            (tr("Ulgurji narx"), "wholesale_price"),
+            (tr("Chakana narx"), "retail_price"),
+            (tr("Agent narxi"), "agent_price"),
+            (tr("Xarid narxi"), "purchase_price"),
+        )
         self._field = QComboBox()
-        for label, key in self._FIELDS:
+        for label, key in fields:
             self._field.addItem(label, key)
 
         self._price = _money_input()
         self._price.setValue(product.wholesale_price / 100)
 
         form = QFormLayout()
-        form.addRow("Qaysi narx", self._field)
-        form.addRow("Yangi qiymat (so'm)", self._price)
+        form.addRow(tr("Qaysi narx"), self._field)
+        form.addRow(tr("Yangi qiymat (so'm)"), self._price)
 
-        note = QLabel(
+        note = QLabel(tr(
             "Narx o'zgarishi barcha qurilmalarga yuboriladi. Mavjud "
             "buyurtmalardagi narx O'ZGARMAYDI."
-        )
+        ))
         note.setWordWrap(True)
         note.setStyleSheet(f"color: {PALETTE.text_muted};")
 
@@ -455,16 +463,17 @@ class PriceDialog(QDialog):
 class CustomerDialog(QDialog):
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Yangi mijoz")
+        self.setWindowTitle(tr("Yangi mijoz"))
         self.setMinimumWidth(440)
 
         self._code = QLineEdit()
         self._name = QLineEdit()
         self._phone = QLineEdit()
         self._kind = QComboBox()
-        self._kind.addItem("Yuridik shaxs", "COMPANY")
-        self._kind.addItem("Jismoniy shaxs", "INDIVIDUAL")
+        self._kind.addItem(tr("Yuridik shaxs"), "COMPANY")
+        self._kind.addItem(tr("Jismoniy shaxs"), "INDIVIDUAL")
         self._tier = QComboBox()
+        # DIQQAT: narx toifasi KODLARI (bazaga yoziladi), tarjima qilinmaydi.
         self._tier.addItems(["wholesale", "retail", "agent"])
         self._credit = _money_input()
         self._terms = QSpinBox()
@@ -473,14 +482,14 @@ class CustomerDialog(QDialog):
         self._address.setMaximumHeight(70)
 
         form = QFormLayout()
-        form.addRow("Kod *", self._code)
-        form.addRow("Nomi *", self._name)
-        form.addRow("Turi", self._kind)
-        form.addRow("Telefon", self._phone)
-        form.addRow("Narx toifasi", self._tier)
-        form.addRow("Kredit limiti (so'm)", self._credit)
-        form.addRow("To'lov muddati (kun)", self._terms)
-        form.addRow("Manzil", self._address)
+        form.addRow(tr("Kod *"), self._code)
+        form.addRow(tr("Nomi *"), self._name)
+        form.addRow(tr("Turi"), self._kind)
+        form.addRow(tr("Telefon"), self._phone)
+        form.addRow(tr("Narx toifasi"), self._tier)
+        form.addRow(tr("Kredit limiti (so'm)"), self._credit)
+        form.addRow(tr("To'lov muddati (kun)"), self._terms)
+        form.addRow(tr("Manzil"), self._address)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -495,7 +504,7 @@ class CustomerDialog(QDialog):
     @Slot()
     def _on_accept(self) -> None:
         if not self._code.text().strip() or not self._name.text().strip():
-            QMessageBox.warning(self, "To'ldirilmagan", "Kod va nom majburiy.")
+            QMessageBox.warning(self, tr("To'ldirilmagan"), tr("Kod va nom majburiy."))
             return
         self.accept()
 
@@ -520,7 +529,7 @@ class OrderDialog(QDialog):
         customers: Sequence[queries.CustomerRow], products: Sequence[queries.ProductRow],
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Yangi buyurtma")
+        self.setWindowTitle(tr("Yangi buyurtma"))
         self.setMinimumSize(720, 520)
         self._customers = customers
         self._products = products
@@ -530,7 +539,7 @@ class OrderDialog(QDialog):
         for customer in customers:
             label = f"{customer.name} ({customer.code})"
             if customer.debt:
-                label += f" — qarz {money(customer.debt)}"
+                label += tr(" — qarz {debt}").format(debt=money(customer.debt))
             self._customer.addItem(label, customer)
 
         self._product = QComboBox()
@@ -546,11 +555,11 @@ class OrderDialog(QDialog):
         self._discount.setRange(0, 100)
         self._discount.setSuffix(" %")
 
-        add = primary_button("Qatorni qo'shish")
+        add = primary_button(tr("Qatorni qo'shish"))
         add.clicked.connect(self._on_add_line)
 
         top = QFormLayout()
-        top.addRow("Mijoz", self._customer)
+        top.addRow(tr("Mijoz"), self._customer)
 
         line_row = QHBoxLayout()
         line_row.addWidget(self._product, 3)
@@ -559,10 +568,11 @@ class OrderDialog(QDialog):
         line_row.addWidget(add)
 
         self.table = DataTable(
-            ["Mahsulot", "Miqdor", "Narx", "Chegirma", "Summa"], searchable=False
+            [tr("Mahsulot"), tr("Miqdor"), tr("Narx"), tr("Chegirma"), tr("Summa")],
+            searchable=False,
         )
 
-        self._total = QLabel("Jami: 0 UZS")
+        self._total = QLabel(tr("Jami: {total}").format(total=money(0)))
         self._total.setObjectName("CardValue")
 
         buttons = QDialogButtonBox(
@@ -592,7 +602,7 @@ class OrderDialog(QDialog):
                 customer.price_tier,
             )
         except DomainError as exc:
-            QMessageBox.warning(self, "Narx yo'q", str(exc))
+            QMessageBox.warning(self, tr("Narx yo'q"), str(exc))
             return
 
         self._lines.append({
@@ -619,7 +629,7 @@ class OrderDialog(QDialog):
             ))
         self.table.set_rows(rows)
         totals = compute_order_totals(self._lines)
-        self._total.setText(f"Jami: {money(totals.total)}")
+        self._total.setText(tr("Jami: {total}").format(total=money(totals.total)))
 
     def values(self) -> tuple[Any, list[dict[str, Any]]]:
         return self._customer.currentData(), self._lines
@@ -630,7 +640,7 @@ class StateDialog(QDialog):
         self, parent: QWidget, current: OrderState, allowed: Sequence[OrderState],
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Buyurtma holati")
+        self.setWindowTitle(tr("Buyurtma holati"))
         self.setMinimumWidth(360)
 
         self._choice = QComboBox()
@@ -638,8 +648,8 @@ class StateDialog(QDialog):
             self._choice.addItem(order_state(state), state)
 
         form = QFormLayout()
-        form.addRow("Joriy holat", QLabel(order_state(current)))
-        form.addRow("Yangi holat", self._choice)
+        form.addRow(tr("Joriy holat"), QLabel(order_state(current)))
+        form.addRow(tr("Yangi holat"), self._choice)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
