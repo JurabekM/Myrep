@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from distribos.app_context import AppContext
 from distribos.application import queries
 from distribos.presentation.pages.base import BasePage
 from distribos.presentation.status import (
@@ -31,6 +33,12 @@ from distribos.presentation.status import (
     role_name,
 )
 from distribos.presentation.theme import PALETTE, SPACE_MD
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QLabel as QLabelType
+
+    from distribos.aether_q.onboarding import Invitation
+
 from distribos.presentation.widgets import (
     Card,
     DataTable,
@@ -48,7 +56,7 @@ class SyncPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Sinxronizatsiya",
             "Qurilmalar, navbat va xatolar. Bu sahifa texnik xizmat uchun.",
@@ -194,7 +202,7 @@ class ConflictsPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Tekshiruv navbati",
             "Ikki qurilmada zid o'zgarish bo'lganda, qaysi biri to'g'ri "
@@ -264,7 +272,7 @@ class ConflictsPage(BasePage):
 class SecurityPage(BasePage):
     """Xavfsizlik markazi — protokol holati, qurilmalar, kalitlar."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Xavfsizlik",
             "Qurilma kalitlari, protokol holati va qurilmani bekor qilish.",
@@ -470,7 +478,7 @@ class SecurityPage(BasePage):
 class BackupPage(BasePage):
     """Zaxira nusxa va tiklash."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Zaxira nusxa",
             "Server yo'q — nusxa yagona himoyangiz. Uni tashqi diskda "
@@ -610,7 +618,7 @@ class AuditPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Audit jurnali",
             "Bu jurnal o'zgartirilmaydi va o'chirilmaydi — buni ma'lumotlar "
@@ -636,7 +644,7 @@ class AuditPage(BasePage):
 class SettingsPage(BasePage):
     """Sozlamalar va diagnostika."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(context, "Sozlamalar", "Ulanish, til va diagnostika.")
 
         self._bundle = ghost_button("Yordam to'plamini yaratish")
@@ -722,7 +730,7 @@ class SettingsPage(BasePage):
 
 
 class InviteDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setWindowTitle("Yangi qurilma")
         self.setMinimumWidth(400)
@@ -769,7 +777,7 @@ class InviteDialog(QDialog):
 class ShowInvitationDialog(QDialog):
     """Taklifni ko'rsatadi (QR yoki matn)."""
 
-    def __init__(self, parent, invitation) -> None:
+    def __init__(self, parent: QWidget, invitation: Invitation) -> None:
         super().__init__(parent)
         self.setWindowTitle("Qurilmani ulash")
         self.setMinimumSize(460, 420)
@@ -821,7 +829,7 @@ class ShowInvitationDialog(QDialog):
         QApplication.clipboard().setText(self._code_text)
 
 
-def _render_qr(payload: bytes):
+def _render_qr(payload: bytes) -> QLabelType | None:
     """QR kodni chizadi. Kutubxona bo'lmasa `None`."""
     try:
         import qrcode
@@ -856,7 +864,9 @@ def _render_qr(payload: bytes):
 class PasswordDialog(QDialog):
     """Parol so'raydi. Parol HECH QAYERGA yozilmaydi."""
 
-    def __init__(self, parent, title: str, message: str, *, confirm: bool = False) -> None:
+    def __init__(
+        self, parent: QWidget, title: str, message: str, *, confirm: bool = False,
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setMinimumWidth(420)
@@ -901,7 +911,7 @@ class PasswordDialog(QDialog):
 
     @classmethod
     def ask(
-        cls, parent, title: str, message: str, *, confirm: bool = False
+        cls, parent: QWidget, title: str, message: str, *, confirm: bool = False
     ) -> str | None:
         dialog = cls(parent, title, message, confirm=confirm)
         if dialog.exec() != QDialog.DialogCode.Accepted:

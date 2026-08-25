@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
+from typing import Any
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
@@ -17,8 +19,10 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
+from distribos.app_context import AppContext
 from distribos.application import queries
 from distribos.application.command_service import CommandRejected, build_payload
 from distribos.domain.ids import uuid7_str
@@ -53,7 +57,7 @@ class InventoryPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Ombor",
             "Qoldiq harakatlardan hisoblanadi — u hech qachon qo'lda "
@@ -161,7 +165,7 @@ class FinancePage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Kassa va to'lovlar",
             "To'lov o'chirilmaydi — xato bo'lsa teskari yozuv yaratiladi.",
@@ -211,8 +215,8 @@ class FinancePage(BasePage):
              "Limit oshgan" if row.over_limit else ("Qarz bor" if row.debt > 0 else "Avans"))
             for row in debtors
         ])
-        for index, row in enumerate(debtors):
-            if row.over_limit:
+        for index, debtor in enumerate(debtors):
+            if debtor.over_limit:
                 self.debt_table.set_row_tone(index, "error")
 
         total_debt = sum(c.debt for c in customers if c.debt > 0)
@@ -300,7 +304,7 @@ class VisitsPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Tashriflar", "Savdo agentlarining mijozlarga tashriflari.",
         )
@@ -325,7 +329,7 @@ class VisitsPage(BasePage):
 
 
 class WarehouseDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setWindowTitle("Yangi ombor")
         self.setMinimumWidth(360)
@@ -359,7 +363,10 @@ class WarehouseDialog(QDialog):
 
 
 class MovementDialog(QDialog):
-    def __init__(self, parent, warehouses, products) -> None:
+    def __init__(
+        self, parent: QWidget, warehouses: Sequence[tuple[str, str, str]],
+        products: Sequence[queries.ProductRow],
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Ombor harakati")
         self.setMinimumWidth(460)
@@ -423,7 +430,7 @@ class MovementDialog(QDialog):
             return
         self.accept()
 
-    def values(self) -> dict:
+    def values(self) -> dict[str, Any]:
         return {
             "warehouse_id": self._warehouse.currentData(),
             "product_id": self._product.currentData(),
@@ -434,7 +441,7 @@ class MovementDialog(QDialog):
 
 
 class PaymentDialog(QDialog):
-    def __init__(self, parent, customers) -> None:
+    def __init__(self, parent: QWidget, customers: Sequence[queries.CustomerRow]) -> None:
         super().__init__(parent)
         self.setWindowTitle("To'lov")
         self.setMinimumWidth(420)
@@ -478,7 +485,7 @@ class PaymentDialog(QDialog):
         layout.addLayout(form)
         layout.addWidget(buttons)
 
-    def values(self) -> dict:
+    def values(self) -> dict[str, Any]:
         return {
             "direction": self._direction.currentData(),
             "customer_id": self._customer.currentData(),

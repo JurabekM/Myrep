@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QButtonGroup,
     QHBoxLayout,
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
         self._stack.setCurrentWidget(page)
         if hasattr(page, "refresh"):
             try:
-                page.refresh()   # type: ignore[attr-defined]
+                page.refresh()
             except Exception:
                 logger.exception("Sahifani yangilashda xato: %s", key)
 
@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
 
         page = self._stack.currentWidget()
         if hasattr(page, "refresh_if_live"):
-            page.refresh_if_live()   # type: ignore[attr-defined]
+            page.refresh_if_live()
 
     @Slot(str)
     def _on_sync_error(self, message: str) -> None:
@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
             "sinxronlanadi.",
         )
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         """Yopishdan oldin fon oqimini TARTIB BILAN to'xtatadi.
 
         `terminate()` ishlatilmaydi: u SQLite tranzaksiyasini yarim yo'lda

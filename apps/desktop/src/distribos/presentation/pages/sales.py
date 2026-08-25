@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
+from typing import TYPE_CHECKING, Any, cast
 
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
@@ -18,14 +20,19 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
+from distribos.app_context import AppContext
 from distribos.application import queries
 from distribos.application.command_service import CommandRejected, build_payload
 from distribos.domain.ids import uuid7_str
 from distribos.domain.rules import DomainError, check_credit_limit, compute_order_totals
 from distribos.presentation.pages.base import BasePage
 from distribos.presentation.status import money, order_state, quantity
+
+if TYPE_CHECKING:
+    from distribos.persistence.models import OrderState
 from distribos.presentation.theme import PALETTE
 from distribos.presentation.widgets import (
     DataTable,
@@ -40,7 +47,7 @@ class ProductsPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Mahsulotlar",
             "Katalog, narxlar va qoldiq. Qidirish uchun yozishni boshlang.",
@@ -132,7 +139,7 @@ class CustomersPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Mijozlar", "Aloqa ma'lumotlari, narx toifasi va qarzdorlik.",
         )
@@ -189,7 +196,7 @@ class OrdersPage(BasePage):
 
     live = True
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Buyurtmalar",
             "Buyurtma yaratish, tasdiqlash va yetkazish holati.",
@@ -318,6 +325,12 @@ class OrdersPage(BasePage):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         target = dialog.value()
+        if target is None:
+            # `_choice` bo'sh emas (`allowed` bo'sh bo'lsa yuqorida
+            # qaytamiz) — bu holat amalda yuz bermaydi, lekin qat'iy
+            # tekshiruv aniqroq xato beradi jimgina yiqilishdan ko'ra.
+            self.warn("Yangi holat tanlanmadi.", "O'zgartirilmadi")
+            return
 
         try:
             with self.context.database.unit_of_work() as session:
@@ -336,7 +349,7 @@ class OrdersPage(BasePage):
 
 
 class ProductDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setWindowTitle("Yangi mahsulot")
         self.setMinimumWidth(440)
@@ -380,7 +393,7 @@ class ProductDialog(QDialog):
             return
         self.accept()
 
-    def values(self) -> dict:
+    def values(self) -> dict[str, Any]:
         return {
             "sku": self._sku.text().strip(),
             "name": self._name.text().strip(),
@@ -401,7 +414,7 @@ class PriceDialog(QDialog):
         ("Xarid narxi", "purchase_price"),
     )
 
-    def __init__(self, parent, product) -> None:
+    def __init__(self, parent: QWidget, product: queries.ProductRow) -> None:
         super().__init__(parent)
         self.setWindowTitle(f"Narx: {product.name}")
         self.setMinimumWidth(380)
@@ -440,7 +453,7 @@ class PriceDialog(QDialog):
 
 
 class CustomerDialog(QDialog):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setWindowTitle("Yangi mijoz")
         self.setMinimumWidth(440)
@@ -486,7 +499,7 @@ class CustomerDialog(QDialog):
             return
         self.accept()
 
-    def values(self) -> dict:
+    def values(self) -> dict[str, Any]:
         return {
             "code": self._code.text().strip(),
             "name": self._name.text().strip(),
@@ -502,13 +515,16 @@ class CustomerDialog(QDialog):
 class OrderDialog(QDialog):
     """Buyurtma yaratish — mijoz + qatorlar."""
 
-    def __init__(self, parent, customers, products) -> None:
+    def __init__(
+        self, parent: QWidget,
+        customers: Sequence[queries.CustomerRow], products: Sequence[queries.ProductRow],
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Yangi buyurtma")
         self.setMinimumSize(720, 520)
         self._customers = customers
         self._products = products
-        self._lines: list[dict] = []
+        self._lines: list[dict[str, Any]] = []
 
         self._customer = QComboBox()
         for customer in customers:
@@ -605,12 +621,14 @@ class OrderDialog(QDialog):
         totals = compute_order_totals(self._lines)
         self._total.setText(f"Jami: {money(totals.total)}")
 
-    def values(self):
+    def values(self) -> tuple[Any, list[dict[str, Any]]]:
         return self._customer.currentData(), self._lines
 
 
 class StateDialog(QDialog):
-    def __init__(self, parent, current, allowed) -> None:
+    def __init__(
+        self, parent: QWidget, current: OrderState, allowed: Sequence[OrderState],
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Buyurtma holati")
         self.setMinimumWidth(360)
@@ -633,8 +651,10 @@ class StateDialog(QDialog):
         layout.addLayout(form)
         layout.addWidget(buttons)
 
-    def value(self):
-        return self._choice.currentData()
+    def value(self) -> OrderState | None:
+        # `currentData()` PySide6 stublarida `Any` — biz `addItem()` da
+        # o'zimiz `OrderState` qo'yganimiz uchun bu xavfsiz.
+        return cast("OrderState | None", self._choice.currentData())
 
 
 # --- yordamchilar ---------------------------------------------------------
@@ -654,7 +674,7 @@ def _now_iso() -> str:
     return dt.datetime.now(dt.UTC).isoformat()
 
 
-def _next_order_number(context) -> str:
+def _next_order_number(context: AppContext) -> str:
     """Buyurtma raqami — qurilma prefiksi bilan.
 
     Prefiks SHART: ikki qurilma offline'da bir vaqtda buyurtma yaratsa,

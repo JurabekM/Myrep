@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from distribos.app_context import AppContext
 from distribos.presentation.pages.base import BasePage
 from distribos.presentation.theme import PALETTE, SPACE_SM
 from distribos.presentation.widgets import (
@@ -29,7 +30,7 @@ from distribos.reports import builders
 class ReportsPage(BasePage):
     """Filtrlanadigan, eksport qilinadigan hisobotlar."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Hisobotlar", "Davrni tanlang va eksport qiling.",
         )
@@ -71,7 +72,7 @@ class ReportsPage(BasePage):
         self.table = DataTable([], placeholder="Natijalar ichida qidirish…")
         self.add(self.table, 1)
 
-        self._report = None
+        self._report: builders.Report | None = None
 
     def refresh(self) -> None:
         if self._report is None:
@@ -104,7 +105,7 @@ class ReportsPage(BasePage):
         self._rebuild_table(report)
         self.header.set_subtitle(f"{report.description} · {report.row_count} qator")
 
-    def _rebuild_table(self, report) -> None:
+    def _rebuild_table(self, report: builders.Report) -> None:
         """Ustunlar hisobotdan hisobotga o'zgargani uchun jadval qayta quriladi."""
         layout = self._layout
         layout.removeWidget(self.table)
@@ -165,7 +166,7 @@ class ReportsPage(BasePage):
 class DocumentsPage(BasePage):
     """Bosma hujjatlar — buyurtmadan PDF."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "Hujjatlar",
             "Buyurtmani tanlang va kerakli hujjatni chiqaring.",
@@ -252,7 +253,7 @@ class DocumentsPage(BasePage):
 class AssistantPage(BasePage):
     """AI yordamchi — tavsiyalar, tasdiqlash bilan."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: AppContext) -> None:
         super().__init__(
             context, "AI yordamchi",
             "Tavsiyalar. Hech qanday amal siz tasdiqlamaguningizcha "

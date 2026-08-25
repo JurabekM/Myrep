@@ -208,9 +208,17 @@ ko'rmagan edi — bularning barchasi oldingi kod edi, tuzatildi.
 * tashqi AI provayder abstraksiyasi — faqat lokal maslahatchi bor;
 * uz-Kirill va rus tillari — kalitlar tayyor, tarjimalar yo'q;
 * soak test — bajarilmagan;
-* mypy strict rejimda 131 xato (asosan `presentation/` UI qatlamida,
-  tur izohlari yetishmaydi) — funksional emas, lekin halol aytilishi
-  kerak: mypy CI'ga QO'SHILMADI, chunki hozir yashil bo'lmaydi.
+* mypy strict rejimda `presentation/` qatlami **TOZALANDI** (0/47,
+  daraja B — GUI smoke test to'liq to'plami o'zgarishlardan keyin ham
+  o'tadi). Bu yo'lda ikkita HAQIQIY xato topildi (faqat tur izohi emas):
+  `operations.py`da ikkita turli xil `for` sikli bitta `row` nomini
+  qayta ishlatgani — `PaymentRow`ni `CustomerRow.over_limit`
+  deb chaqirishga olib kelardi (runtime'da ishlagan, lekin nozik va
+  keyingi tahrirda buzilishi mumkin edi); `reports/builders.py`da
+  `AVAILABLE_REPORTS` uchinchi elementi `object` deb yozilgani hisobot
+  qurish funksiyalarini mypy'dan butunlay yashirgan edi. Qolgan 67 xato
+  `presentation/` TASHQARISIDA (`reports/`, `application/`, `mqtt/`,
+  `domain/rules.py` va h.k.) — bu sessiya doirasiga kirmagan.
 
 ---
 
@@ -279,13 +287,14 @@ JIMGINA yutilardi. Endi sabab logga yoziladi.
 
 Bajarildi: QR provisioning oqimi (§5.1), lokal konteynerli broker bilan
 integratsion test (§5.4), unumdorlik o'lchovi (§5.2, `docs/BENCHMARK.md`),
-Alembic migratsiyalari (§5.5), CI workflow yozildi (§5.6).
+Alembic migratsiyalari (§5.5), CI workflow yozildi (§5.6), `presentation/`
+qatlamida mypy strict tozalandi (§5.7).
 
 Qolgan, ustuvorlik tartibida:
 
 1. DES-1 uchun mustaqil kriptografik ko'rib chiqish (loyihadan tashqari
    auditor kerak).
 2. Haqiqiy telefonda (emulyator emas) sinov.
-3. uz-Kirill va rus tarjimalari.
-4. `presentation/` qatlamida mypy strict xatolarini tuzatish (131 ta,
-   §5.7) — funksional emas, lekin CI'ga mypy qo'shishni imkonli qiladi.
+3. uz-Lotin/rus lokalizatsiyasi qolgan ekranlarga yoyilishi.
+4. mypy strict xatolarini `presentation/` tashqarisida ham tuzatish
+   (67 ta qoldi) — CI'ga mypy qo'shishni imkonli qiladi.

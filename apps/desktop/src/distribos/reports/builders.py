@@ -8,13 +8,16 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import case, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import InstrumentedAttribute, Session
+from sqlalchemy.sql import Select
+from sqlalchemy.sql.selectable import Subquery
 
 from distribos.domain.formatting import money as _money_fmt
 from distribos.domain.formatting import quantity as _qty
@@ -42,7 +45,12 @@ class Report:
     title: str
     description: str
     columns: Sequence[str]
-    rows: list[Sequence[object]] = field(default_factory=list)
+    # `Sequence` (kovariant), `list` EMAS: qurilish paytida turlicha
+    # tuple shakllari (`tuple[str, str, int, ...]`) uzatiladi va ular
+    # `list[Sequence[object]]`ga invariantlik sababli mos kelmaydi.
+    # `rows` hech qachon o'zgartirilmaydi (faqat o'qiladi), shuning
+    # uchun bu xavfsiz.
+    rows: Sequence[Sequence[object]] = field(default_factory=list)
     generated_at: dt.datetime = field(default_factory=lambda: dt.datetime.now(dt.UTC))
     #: Pastdagi yakuniy qator (jami), bo'lsa.
     footer: Sequence[object] | None = None
@@ -64,8 +72,10 @@ class Report:
         return path
 
 
-def _money(value: object) -> str:
-    return _money_fmt(int(value or 0))
+def _money(value: int | None) -> str:
+    # Pul har doim butun son (tiyin) — loyiha qoidasi. `func.sum()`
+    # natijasi qatorda yo'q bo'lsa (mos yozuv topilmasa) `None` beradi.
+    return _money_fmt(value or 0)
 
 
 def _period(start: dt.date | None, end: dt.date | None) -> str:
@@ -95,10 +105,11 @@ def daily_sales(
     stmt = _apply_dates(stmt, Order.ordered_at, start, end)
 
     rows: list[Sequence[object]] = []
-    total_sum = total_paid = 0
+    total_sum = total_paid = total_orders = 0
     for day, count, amount, paid in session.execute(stmt).all():
         total_sum += int(amount or 0)
         total_paid += int(paid or 0)
+        total_orders += int(count or 0)
         rows.append((day, count, _money(amount), _money(paid),
                      _money(int(amount or 0) - int(paid or 0))))
 
@@ -107,7 +118,7 @@ def daily_sales(
         description=f"Davr: {_period(start, end)}",
         columns=["Sana", "Buyurtmalar", "Summa", "To'langan", "Qarz"],
         rows=rows,
-        footer=("JAMI", sum(int(r[1]) for r in rows), _money(total_sum),
+        footer=("JAMI", total_orders, _money(total_sum),
                 _money(total_paid), _money(total_sum - total_paid)),
     )
 
@@ -227,7 +238,7 @@ def stock_report(session: Session, *, only_below_minimum: bool = False) -> Repor
     )
 
 
-def _net_payments():
+def _net_payments() -> Subquery:
     """Mijoz bo'yicha sof to'lov (IN - OUT).
 
     Bekor qilingan to'lov teskari yozuv bilan o'z-o'zidan nolga chiqadi.
@@ -347,7 +358,7 @@ def profit_margin(
             _money(int(cost)), _money(int(margin)), f"{percent:.1f} %",
         ))
 
-    rows.sort(key=lambda row: row[0])
+    rows.sort(key=lambda row: str(row[0]))
     return Report(
         key="profit_margin", title="Foyda marjasi",
         description=(
@@ -434,7 +445,10 @@ def device_security(session: Session) -> Report:
     )
 
 
-def _apply_dates(stmt, column, start: dt.date | None, end: dt.date | None):
+def _apply_dates(
+    stmt: Select[Any], column: InstrumentedAttribute[dt.datetime],
+    start: dt.date | None, end: dt.date | None,
+) -> Select[Any]:
     if start:
         stmt = stmt.where(column >= dt.datetime.combine(start, dt.time.min, dt.UTC))
     if end:
@@ -443,7 +457,12 @@ def _apply_dates(stmt, column, start: dt.date | None, end: dt.date | None):
 
 
 #: UI'da ko'rsatiladigan hisobotlar ro'yxati.
-AVAILABLE_REPORTS: tuple[tuple[str, str, object], ...] = (
+#:
+#: Uchinchi element imzosi bir xil emas — ba'zilari `start`/`end`
+#: qabul qiladi, ba'zilari yo'q (chaqiruvchi `TypeError`ni tutib,
+#: parametrsiz qayta chaqiradi). `Callable[..., Report]` shu
+#: heterogenlikni to'g'ri ifodalaydi.
+AVAILABLE_REPORTS: tuple[tuple[str, str, Callable[..., Report]], ...] = (
     ("daily_sales", "Kunlik savdo", daily_sales),
     ("sales_by_product", "Mahsulot bo'yicha savdo", sales_by_product),
     ("sales_by_customer", "Mijoz bo'yicha savdo", sales_by_customer),
