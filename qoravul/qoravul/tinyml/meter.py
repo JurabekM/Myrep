@@ -115,18 +115,23 @@ class VirtualMeter:
         self.scale = float(self.rng.uniform(0.6, 1.8) if scale is None else scale)
         self.phase = float(self.rng.normal(0.0, 0.7) if phase is None else phase)
         self.attack: str | None = None
+        self.attack_start = 0  # absolute minute from which the attack is switched on
 
-    def attack_active(self, hour: float) -> bool:
-        if self.attack is None:
+    def attack_active(self, minute: int) -> bool:
+        if self.attack is None or minute < self.attack_start:
             return False
         if self.attack == "night_load":
-            return NIGHT_HOURS[0] <= hour % 24.0 < NIGHT_HOURS[1]
+            return NIGHT_HOURS[0] <= (minute / 60.0) % 24.0 < NIGHT_HOURS[1]
         return True
+
+    def first_active(self, end_minute: int) -> int | None:
+        """First minute in [attack_start, end_minute) at which the attack acts."""
+        return next((m for m in range(self.attack_start, end_minute) if self.attack_active(m)), None)
 
     def window(self, minute: int) -> tuple[dict, np.ndarray]:
         """Measurements and features for absolute simulated ``minute``."""
         hour = (minute / 60.0) % 24.0
-        att = self.attack if self.attack_active(hour) else None
+        att = self.attack if self.attack_active(minute) else None
         raw = simulate(np.array([hour]), self.scale, self.phase, self.rng, att)
         raw = {k: float(v[0]) for k, v in raw.items()}
         return raw, features({k: np.array([v]) for k, v in raw.items()})[0]

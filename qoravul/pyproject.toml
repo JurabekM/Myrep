@@ -15,3 +15,4 @@ packages = ["qoravul", "qoravul.crypto", "qoravul.protocol", "qoravul.tinyml",
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
