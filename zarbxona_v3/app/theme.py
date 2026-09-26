@@ -62,6 +62,7 @@ QProgressBar::chunk {{ background: {aksent}; border-radius: 5px; }}
 QPlainTextEdit#monitor {{ background: #000000; color: {ok}; border: 1px solid {chegara}; }}
 QTableWidget {{ background: {panel}; gridline-color: {chegara}; border: 1px solid {chegara};
     border-radius: 6px; alternate-background-color: {panel_alt}; }}
+QHeaderView {{ background: {panel_alt}; }}
 QHeaderView::section {{ background: {panel_alt}; color: {xira}; border: none;
     border-bottom: 1px solid {chegara}; padding: 6px; }}
 QTableWidget::item:selected {{ background: {aksent_toq}; color: {matn}; }}

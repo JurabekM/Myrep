@@ -106,6 +106,7 @@ def jadval_toldir(t: QTableWidget, qatorlar: list[list], kalitlar: list | None =
         t.blockSignals(False)
         t.setUpdatesEnabled(True)
     t.resizeColumnsToContents()
+    h.setStretchLastSection(False)
     h.setStretchLastSection(True)
 
 

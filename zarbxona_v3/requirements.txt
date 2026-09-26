@@ -1,0 +1,6 @@
+PySide6>=6.6
+cryptography>=47        # ML-DSA-65, ChaCha20-Poly1305
+paho-mqtt>=2.0
+pytest>=8               # dev
+pycryptodome>=3.20      # dev: faqat T2 testi va tools/kat_tekshir.py (standart KMAC farqini isbotlash)
+# aetherq_core          # IXTIYORIY, faqat onlayn topshirish uchun (SPEC §13.3); PyPI da yo'q

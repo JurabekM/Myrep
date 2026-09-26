@@ -3,7 +3,7 @@ avval taymer va oqimlar to'xtatilib kutiladi, KEYIN baza yopiladi."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import QThread, QTimer, Slot
+from PySide6.QtCore import QSize, QThread, QTimer, Slot
 from PySide6.QtWidgets import (QHBoxLayout, QListWidget, QListWidgetItem, QMainWindow,
                                QStackedWidget, QWidget)
 
@@ -48,7 +48,9 @@ class Oyna(QMainWindow):
         self.stek = QStackedWidget()
         self.sahifalar: dict[str, object] = {}
         for kalit, nom, cls in MENYU:
-            self.menyu.addItem(QListWidgetItem(nom))
+            it = QListWidgetItem(nom)
+            it.setSizeHint(QSize(0, 40))
+            self.menyu.addItem(it)
             s = cls(self)
             self.sahifalar[kalit] = s
             self.stek.addWidget(s)

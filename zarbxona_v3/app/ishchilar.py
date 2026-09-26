@@ -66,6 +66,12 @@ class ZarbIshchisi(QThread):
         else:
             self._pauza.clear()
 
+    def satr_qosh(self, s: str) -> None:
+        """UI oqimidan: satr monitorga ishchi buferi ORQALI tushadi — tartib buzilmaydi
+        (bufer hali chiqarilmagan kupyura satrlari PAUZA dan oldin turadi)."""
+        with self._qulf:
+            self._bufer.append(s)
+
     @property
     def pauzada_mi(self) -> bool:
         return self._pauza.is_set()

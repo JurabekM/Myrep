@@ -59,6 +59,7 @@ class ZarbSahifasi(Sahifa):
         self.hajm.setRange(1, 100_000)
         self.hajm.setValue(500)
         self.hajm.setSuffix(" kupyura / partiya")
+        self.hajm.valueChanged.connect(self.summa_ozgardi)
         f.addRow("Summa", self.summa)
         f.addRow("Zaxira qulfi", self.qulf)
         f.addRow("Toifalar", self.toifalar)
@@ -212,7 +213,7 @@ class ZarbSahifasi(Sahifa):
     def pauza_bos(self) -> None:
         if self.ishlayapti():
             self.ishchi.pauza(True)
-            self.konveyer.satrlar([f"[{time.strftime('%H:%M:%S')}] PAUZA"])
+            self.ishchi.satr_qosh(f"[{time.strftime('%H:%M:%S')}] PAUZA")
             self.holat("pauza — DAVOM bilan davom ettiring")
         self.tugmalar()
 
@@ -220,7 +221,7 @@ class ZarbSahifasi(Sahifa):
     def davom_bos(self) -> None:
         if self.ishlayapti():
             self.ishchi.pauza(False)
-            self.konveyer.satrlar([f"[{time.strftime('%H:%M:%S')}] DAVOM"])
+            self.ishchi.satr_qosh(f"[{time.strftime('%H:%M:%S')}] DAVOM")
             self.holat("davom etmoqda")
         self.tugmalar()
 
