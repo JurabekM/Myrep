@@ -37,6 +37,17 @@ make -C firmware qemu-m33        # 500/500 parity on an emulated Cortex-M33 (mps
 make -C firmware qemu-bench-m33  # instruction count per window (QEMU icount proxy)
 ```
 
+### liboqs backend (opt-in)
+
+`import oqs` may try to download and build liboqs and hang, so it is never imported
+unless requested. Install liboqs first (e.g. 0.16.0 with
+`-DOQS_MINIMAL_BUILD="KEM_ml_kem_768;SIG_ml_dsa_65"`), then `pip install liboqs-python==0.16.0.1`:
+
+```bash
+QORAVUL_PQ_BACKEND=liboqs python -m bench.bench              # HYBRID handshake ~0.6 ms instead of ~90 ms
+QORAVUL_TEST_LIBOQS=1 pytest -q tests/test_liboqs_interop.py # liboqs <-> pure-Python interop
+```
+
 ## Measured results (x86_64 host, pure-Python PQ)
 
 | Item | Result |

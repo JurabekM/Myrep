@@ -108,6 +108,15 @@ medianasi, 4 baytli uzunlik prefiksi bilan; host vaqtlari yugurishdan yugurishga
 | HYBRID | 4592 | 4475 | 9067 | 49.7 | 40.0 | 89.6 |
 | RESUME (PSK, 3.1) | 126 | 108 | **234** | 0.07 | 0.10 | 0.16 |
 
+**liboqs backend** (kengaytma 9.3; liboqs 0.16.0 faqat ML-KEM-768 + ML-DSA-65 bilan
+manbadan build qilingan, `QORAVUL_PQ_BACKEND=liboqs python -m bench.bench --runs 30`):
+HYBRID handshake jami **0.63 ms** (pure-Python'da 89.6 ms), CLASSIC 0.69 ms, PQ_ONLY 0.58 ms;
+hajmlar bir xil. Interop: bir tomon liboqs, ikkinchisi pure-Python — ML-KEM, ML-DSA
+(kontekst bilan) va to'liq HYBRID handshake ikki yo'nalishda ishlaydi
+(`QORAVUL_TEST_LIBOQS=1 pytest tests/test_liboqs_interop.py` → 6/6). Butun test to'plami
+liboqs backend bilan ham yashil. liboqs'ning "constant-time" xususiyatlari uchun liboqs
+hujjatiga qarang; pure-Python backend constant-time **emas**.
+
 * Record overhead: **34 B** (ver 1 + type 1 + sid 8 + seq 8 + tag 16) + 4 B uzunlik.
 * MAC soni: har yozuvda **1** Poly1305 teg (16 B); handshake'da **2** ML-DSA-65
   imzo (node + gateway) va **2** tekshiruv.
@@ -379,7 +388,6 @@ bo'lsa handshake har kun qo'shiladi: to'liq 9067 B yoki PSK resumption bilan 234
 
 ## 11. Keyingi qadamlar
 
-* liboqs backend bilan interop testi (bir tomon liboqs, ikkinchisi pure-Python).
 * PQ on-MCU benchmark (`firmware/BENCHMARKS.md`).
 * Ledger `head` xeshini tashqi joyga davriy e'lon qilish (anchoring).
 * Real ma'lumotda qayta o'rgatish; sekin/kichik o'g'irlik hujumlarini modellash;
