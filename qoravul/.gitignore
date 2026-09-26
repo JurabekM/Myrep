@@ -6,3 +6,4 @@ firmware/*.o
 firmware/build/
 runs/
 *.jsonl
+firmware/bench_host

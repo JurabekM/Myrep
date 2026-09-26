@@ -41,3 +41,9 @@ QORAVUL_PQ_BACKEND=liboqs ...           # opt-in liboqs backend (default pure-Py
 6. `import oqs` may hang trying to build liboqs from source -> opt-in only.
 7. Do not ship the alert signature as hex inside JSON (2x size). Binary payload.
 8. In bandwidth comparisons add the handshake size to the raw-stream baseline too.
+9. (v0.1) Pooled 99.9-percentile activation calibration lets wide hidden units
+   saturate on >0.1% of windows; the threshold then absorbs those errors
+   (quant threshold 28836 vs float 2485). Use the max over per-unit percentiles.
+10. (v0.1) A plain AE's night_load TPR is an init-seed lottery (4%..99%): it
+   extrapolates linearly off-manifold. Denoising training (input noise 0.5 in
+   z-units) makes it 98-100% on every seed. Never pick seeds by attack TPR.
