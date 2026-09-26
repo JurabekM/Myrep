@@ -252,6 +252,13 @@ barcha 5 hujum TPR **100%** (har biri 5000 oyna). O'rgatish 4.9 s.
 | M33 instruksiyalar (QEMU icount proxy) | ~4305 instr/oyna (`-O2`) | `make -C firmware qemu-bench-m33` |
 | STM32U5 @160 MHz da vaqt | **TAXMIN** 27–40 µs: `4305 · CPI / 160e6`, CPI ∈ [1.0, 1.5] | — |
 
+**PQ on-MCU** (kengaytma 9.2, batafsil: [`firmware/BENCHMARKS.md`](firmware/BENCHMARKS.md)):
+mlkem-native / mldsa-native Cortex-M33 (QEMU) da, KAT Python referensi bilan
+bayt-ma-bayt mos. Instruksiyalar (stack peak): ML-KEM-768 keypair 0.99 M (13.8 KB),
+encaps 1.10 M (16.9 KB), decaps 1.34 M (18.1 KB); ML-DSA-65 keypair 3.64 M (49.4 KB),
+sign 4.61 M (72.9 KB), verify 3.57 M (45.0 KB). Node HYBRID handshake ≈ 10.5 M
+instruksiya → **TAXMIN** 66–98 ms @160 MHz (`10.5e6 · CPI / 160e6`, CPI 1.0–1.5).
+
 QEMU DWT_CYCCNT ni modellamaydi, shuning uchun haqiqiy cycle soni faqat
 apparatda o'lchanadi (yo'l xaritasi, 11-bo'lim). Heap yo'q; ma'lumot buferlari stekda ~72 B (**TAXMIN**: `2·16 + 8 + 8·4` bayt, registr saqlashlarisiz; aniq stack peak apparatda stack painting bilan o'lchanadi).
 
@@ -375,7 +382,8 @@ bo'lsa handshake har kun qo'shiladi: to'liq 9067 B yoki PSK resumption bilan 234
 1. **Renode STM32U5** — `nucleo_u575zi_q` Zephyr ilovasi 500 vektorni UART'ga
    chiqaradi, `.resc` + `.robot` bilan `parity: 500/500` avtomatik test.
    *v0.1 holati:* Renode o'rnatilmagan; o'rniga eng yaqin Cortex-M33 platforma —
-   QEMU `mps2-an505` da parity 500/500 va instruksiya soni o'lchandi.
+   QEMU `mps2-an505` da detektor parity 500/500, ML-KEM-768/ML-DSA-65 KAT,
+   instruksiya soni va stack peak o'lchandi (`firmware/BENCHMARKS.md`).
 2. **NUCLEO-U575ZI-Q + ADE9153A** — haqiqiy metrologiya (V, I, I_n, PF, THD, f),
    DWT_CYCCNT bilan cycle o'lchovi, stack painting, energiya iste'moli;
    ML-KEM-768 / ML-DSA-65 on-MCU (mlkem-native / mldsa-native yoki PQClean M4).
@@ -388,7 +396,7 @@ bo'lsa handshake har kun qo'shiladi: to'liq 9067 B yoki PSK resumption bilan 234
 
 ## 11. Keyingi qadamlar
 
-* PQ on-MCU benchmark (`firmware/BENCHMARKS.md`).
+* Haqiqiy cycle soni: NUCLEO-U575 da DWT_CYCCNT; pqm4 (M4 assembler) bilan solishtirish.
 * Ledger `head` xeshini tashqi joyga davriy e'lon qilish (anchoring).
 * Real ma'lumotda qayta o'rgatish; sekin/kichik o'g'irlik hujumlarini modellash;
   per-meter kalibrlash (uy xo'jaligi profili drift'i).

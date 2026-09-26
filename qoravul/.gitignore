@@ -8,3 +8,5 @@ runs/
 *.jsonl
 firmware/bench_host
 firmware/m33/*.elf
+firmware/third_party/
+firmware/pq_m33/*.elf

@@ -35,6 +35,8 @@ Optional, needs `arm-none-eabi-gcc` and `qemu-system-arm`:
 make -C firmware size-m33        # Cortex-M33 code size
 make -C firmware qemu-m33        # 500/500 parity on an emulated Cortex-M33 (mps2-an505)
 make -C firmware qemu-bench-m33  # instruction count per window (QEMU icount proxy)
+make -C firmware pq-m33          # ML-KEM-768 / ML-DSA-65 on M33: KAT output, instructions, stack peak
+QORAVUL_TEST_PQ_M33=1 pytest -q tests/test_pq_m33.py   # MCU output == kyber-py / dilithium-py
 ```
 
 ### liboqs backend (opt-in)
@@ -58,6 +60,7 @@ QORAVUL_TEST_LIBOQS=1 pytest -q tests/test_liboqs_interop.py # liboqs <-> pure-P
 | Detector code + constants on Cortex-M33 | 1444 B |
 | HYBRID handshake | 4592 B HELLO + 4475 B ACCEPT, ~90 ms total |
 | PSK resumption | 126 B + 108 B = 234 B, single-use tickets |
+| ML-KEM-768 / ML-DSA-65 on Cortex-M33 (QEMU) | KAT byte-exact; sign 4.61 M instr, 72.9 KB stack ([BENCHMARKS](firmware/BENCHMARKS.md)) |
 | Record overhead | 34 B + 4 B length prefix |
 | Fleet 30 nodes / 6 thieves / 24 h | 6/6 detected, 0 false alerts, ledger intact, 87.2% bandwidth saved |
 | Honest fleet 2000 meters x 24 h | 0 false incidents |
