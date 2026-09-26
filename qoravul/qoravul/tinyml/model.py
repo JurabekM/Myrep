@@ -26,12 +26,15 @@ ENV_MARGIN = 12
 ENV_PCT = (0.002, 99.998)
 THRESH_PCT = 99.9  # lesson 4
 ACT_PCT = 99.9
-# Denoising (input noise, z-units). Without it the AE spends bottleneck capacity
-# copying independent noise features and extrapolates linearly to off-manifold
-# inputs; night_load TPR then varied 4%..99% with the init seed. With 0.5 it is
-# 98-100% on every seed tried (0..5), because a DAE's reconstruction points
-# towards high-density regions (r(x) - x ~ grad log p(x)).
-DAE_NOISE = 0.5
+# Denoising noise (z-units) added to the training *inputs*; targets stay clean.
+# A plain AE (or one with noise on every feature) detects night_load only by
+# luck of the seed (16%..100%): high current is normal in the evening, and the
+# model may equally "explain" a night spike by moving the hour features, whose
+# range is only +-22 in x_q. The hour is a noise-free clock, so it gets no
+# noise; the measurement features get sigma = 1.5. The AE must then pull
+# current back towards what is plausible *for that hour*. Chosen on selection
+# seeds (smallest sigma robust on 8/8 seeds); see ARCHITECTURE.md section 5.
+DAE_NOISE = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 0.0, 0.0])
 
 
 # ---------------------------------------------------------------- float model
@@ -57,7 +60,7 @@ class FloatAE:
         return acts
 
     def fit(self, z: np.ndarray, epochs: int = 40, batch: int = 256, lr: float = 3e-3, seed: int = 0,
-            noise: float = 0.0) -> list[float]:
+            noise=0.0) -> list[float]:
         rng = np.random.default_rng(seed)
         params = self.W + self.b
         m = [np.zeros_like(p) for p in params]
@@ -71,7 +74,7 @@ class FloatAE:
             tot = 0.0
             for s in range(0, len(z), batch):
                 xb = z[perm[s : s + batch]]
-                xin = xb + rng.normal(0.0, noise, xb.shape) if noise else xb
+                xin = xb + rng.normal(0.0, 1.0, xb.shape) * noise if np.any(noise) else xb
                 acts = self.forward(xin)
                 diff = acts[-1] - xb
                 tot += float((diff**2).sum())

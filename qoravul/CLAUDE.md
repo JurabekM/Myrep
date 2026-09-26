@@ -44,6 +44,9 @@ QORAVUL_PQ_BACKEND=liboqs ...           # opt-in liboqs backend (default pure-Py
 9. (v0.1) Pooled 99.9-percentile activation calibration lets wide hidden units
    saturate on >0.1% of windows; the threshold then absorbs those errors
    (quant threshold 28836 vs float 2485). Use the max over per-unit percentiles.
-10. (v0.1) A plain AE's night_load TPR is an init-seed lottery (4%..99%): it
-   extrapolates linearly off-manifold. Denoising training (input noise 0.5 in
-   z-units) makes it 98-100% on every seed. Never pick seeds by attack TPR.
+10. (v0.1) A plain AE's night_load TPR is a seed lottery (16%..100% over
+   data/init seeds): high current is normal in the evening and the AE may
+   "explain" a night spike by moving the hour features (range only +-22 x_q).
+   Fix: denoising training with sigma=1.5 on measurement features and NO noise
+   on the hour (it is a clean clock) -> 100% on 8/8 seeds. Changing only the init
+   seed hides this; always vary the data seed too. Never pick seeds by attack TPR.

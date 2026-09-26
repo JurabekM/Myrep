@@ -172,3 +172,13 @@ def test_e2e_fleet(tmp_path, model):
     assert not rep["gateway_errors"] and not rep["rejects"]
     assert rep["saving"] > 0.70, rep["saving"]
     assert rep["summaries"] == 8 * 6 * 60 // 15
+
+
+def test_night_load_robust_to_training_seed():
+    """Lesson 10: night_load must not depend on the init/data seed (was 16%..100% without hour-clean DAE)."""
+    from qoravul.tinyml.model import train_and_quantize
+
+    q, _ = train_and_quantize(seed=3)
+    x = dataset(meters=4096, n=3000, seed=9090, attack="night_load")
+    assert q.detect(x)["anomaly"].mean() > 0.95
+    assert q.detect(dataset(meters=4096, n=30_000, seed=9091))["anomaly"].mean() < 0.005
