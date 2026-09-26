@@ -88,6 +88,15 @@ def test_c_parity_bit_exact():
     assert "parity: 500/500 vectors bit-exact" in out.stdout
 
 
+@pytest.mark.skipif(shutil.which("arm-none-eabi-gcc") is None or shutil.which("qemu-system-arm") is None,
+                    reason="needs arm-none-eabi-gcc and qemu-system-arm")
+def test_c_parity_on_cortex_m33_qemu():
+    out = subprocess.run(["make", "-s", "-C", str(ROOT / "firmware"), "qemu-m33"], capture_output=True, text=True,
+                         timeout=300)
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert "parity: 500/500 vectors bit-exact" in out.stdout
+
+
 def test_exported_header_matches_model(model):
     text = (ROOT / "firmware" / "qv_model.h").read_text()
     assert f"#define QV_THRESHOLD {model.threshold}" in text

@@ -7,3 +7,4 @@ firmware/build/
 runs/
 *.jsonl
 firmware/bench_host
+firmware/m33/*.elf
