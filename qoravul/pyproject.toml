@@ -1,0 +1,17 @@
+[project]
+name = "qoravul"
+version = "0.1.0"
+description = "Post-quantum secure TinyML edge device for smart electricity meters"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26", "cryptography>=41", "kyber-py>=1.2", "dilithium-py>=1.4"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+liboqs = ["liboqs-python"]
+
+[tool.setuptools]
+packages = ["qoravul", "qoravul.crypto", "qoravul.protocol", "qoravul.tinyml",
+            "qoravul.edge", "qoravul.gateway", "qoravul.sim"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
