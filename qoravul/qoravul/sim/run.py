@@ -25,7 +25,8 @@ DEFAULT_MODEL = ROOT / "models" / "qv_model.json"
 
 
 async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed: int = 7, start_hour: float = 0.0,
-                    model: QuantAE | None = None, ledger_path: str | Path | None = None) -> dict:
+                    model: QuantAE | None = None, ledger_path: str | Path | None = None,
+                    reconnect_hours: float | None = None, resume: bool = True) -> dict:
     rng = np.random.default_rng(seed)
     model = model or QuantAE.load(DEFAULT_MODEL)
     minutes = int(round(hours * 60))
@@ -38,7 +39,7 @@ async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed
     fleet: list[EdgeNode] = []
     for i in range(nodes):
         meter = VirtualMeter(seed=int(rng.integers(2**31)))
-        fleet.append(EdgeNode(Identity.generate(), gw_id.pk, model, meter))
+        fleet.append(EdgeNode(Identity.generate(), gw_id.pk, model, meter, resume=resume))
     registry = {n.identity.node_id: n.identity.pk for n in fleet}
     gw = Gateway(gw_id, registry, ledger)
     port = await gw.start()
@@ -56,7 +57,19 @@ async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed
                                            "first_active": meter.first_active(start + minutes)}
 
     t0 = time.time()
-    stats = await asyncio.gather(*(n.run("127.0.0.1", port, start, minutes) for n in fleet))
+    per = int(round(reconnect_hours * 60)) if reconnect_hours else minutes
+
+    async def node_life(node: EdgeNode) -> dict:
+        tot = {"tx": 0, "rx": 0, "handshake": 0, "raw_baseline": 0, "sessions": 0, "resumed": 0}
+        for s0 in range(start, start + minutes, per):
+            st = await node.run("127.0.0.1", port, s0, min(per, start + minutes - s0))
+            for k in ("tx", "rx", "handshake", "raw_baseline"):
+                tot[k] += st[k]
+            tot["sessions"] += 1
+            tot["resumed"] += int(st["resumed"])
+        return tot
+
+    stats = await asyncio.gather(*(node_life(n) for n in fleet))
     wall = time.time() - t0
     await gw.stop()
 
@@ -95,6 +108,8 @@ async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed
         "bytes_handshake": hs_bytes,
         "saving": 1.0 - qv_bytes / raw_bytes,
         "summaries": sum(len(v) for v in gw.summaries.values()),
+        "sessions": sum(s["sessions"] for s in stats),
+        "resumed_sessions": sum(s["resumed"] for s in stats),
         "wall_s": wall,
     }
 
@@ -108,11 +123,14 @@ def main(argv=None) -> int:
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--model", default=str(DEFAULT_MODEL))
     ap.add_argument("--ledger", default=None)
+    ap.add_argument("--reconnect-hours", type=float, default=None,
+                    help="close and reopen each node's session this often (PSK resumption after the first)")
+    ap.add_argument("--no-resume", action="store_true", help="always run the full handshake")
     ap.add_argument("--json", action="store_true", help="print the full report as JSON")
     args = ap.parse_args(argv)
 
     rep = asyncio.run(run_fleet(args.nodes, args.thieves, args.hours, args.seed, args.start_hour,
-                                QuantAE.load(args.model), args.ledger))
+                                QuantAE.load(args.model), args.ledger, args.reconnect_hours, not args.no_resume))
     if args.json:
         print(json.dumps(rep, indent=1))
     else:
@@ -126,6 +144,7 @@ def main(argv=None) -> int:
               f" ({rep['ledger_path']})")
         print(f"bandwidth        : QORAVUL {rep['bytes_qoravul']} B vs raw stream {rep['bytes_raw_stream']} B "
               f"(both incl. {rep['bytes_handshake']} B handshakes) -> saving {rep['saving'] * 100:.1f}%")
+        print(f"sessions         : {rep['sessions']} ({rep['resumed_sessions']} resumed)")
         if rep["gateway_errors"] or rep["rejects"]:
             print(f"gateway errors   : {rep['gateway_errors']} rejects: {rep['rejects']}")
     ok = (rep["detected"] == rep["thieves"] and rep["false_alerts"] == 0 and rep["ledger_ok"]

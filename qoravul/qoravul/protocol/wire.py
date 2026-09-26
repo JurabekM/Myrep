@@ -25,6 +25,8 @@ class FrameType(IntEnum):
     ALERT = 4
     REJECT = 5
     CLOSE = 6
+    RESUME = 7  # extension: PSK resumption (protocol/resume.py)
+    RESUMED = 8
 
 
 class Suite(IntEnum):

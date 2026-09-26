@@ -14,6 +14,7 @@ from pathlib import Path
 from ..crypto import backend as pq
 from ..edge.node import EVIDENCE_CTX, canonical, decode_alert
 from ..protocol.handshake import DEFAULT_POLICY, GatewayHandshake, Identity
+from ..protocol.resume import GatewayResume, TicketStore
 from ..protocol.wire import FrameType, ProtocolError, encode_stream, read_frame, write_frame
 
 GENESIS = "0" * 64
@@ -70,7 +71,10 @@ class Gateway:
         self.identity = identity
         self.registry = registry
         self.ledger = ledger
-        self.hs = GatewayHandshake(identity, registry, allowed)
+        self.tickets = TicketStore()
+        self.hs = GatewayHandshake(identity, registry, allowed, self.tickets)
+        self.resumer = GatewayResume(self.tickets, allowed)
+        self.resumptions = 0
         self.summaries: dict[str, list[dict]] = defaultdict(list)
         self.alerts: list[dict] = []
         self.rejects: list[str] = []
@@ -105,7 +109,11 @@ class Gateway:
         node_hex = "?"
         try:
             hello = await read_frame(reader)
-            res = self.hs.respond(hello)
+            if hello[1:2] == bytes([FrameType.RESUME]):
+                res = self.resumer.respond(hello)
+                self.resumptions += res.session is not None
+            else:
+                res = self.hs.respond(hello)
             await write_frame(writer, res.frame)
             if res.session is None:
                 self.rejects.append(res.reason)

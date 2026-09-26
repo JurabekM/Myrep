@@ -11,6 +11,7 @@ import numpy as np
 
 from ..crypto import backend as pq
 from ..protocol.handshake import Identity, NodeHandshake
+from ..protocol.resume import NodeResume
 from ..protocol.session import RECORD_OVERHEAD, Session
 from ..protocol.wire import FrameType, ProtocolError, Suite, encode_stream, read_frame, write_frame
 from ..tinyml.meter import FEATURES, VirtualMeter
@@ -74,8 +75,10 @@ class EdgeNode:
     """Runs the detector on each window and emits (FrameType, plaintext) messages."""
 
     def __init__(self, identity: Identity, gateway_pk: bytes, model: QuantAE, meter: VirtualMeter,
-                 suite: Suite = Suite.HYBRID) -> None:
+                 suite: Suite = Suite.HYBRID, resume: bool = True) -> None:
         self.identity = identity
+        self.resume = resume
+        self.ticket = None  # resumption ticket from the last session
         self.gateway_pk = gateway_pk
         self.model = model
         self.meter = meter
@@ -134,18 +137,38 @@ class EdgeNode:
         return out
 
     # ------------------------------------------------------------------ client
-    async def run(self, host: str, port: int, start_minute: int, minutes: int) -> dict:
-        """Connect, handshake, stream ``minutes`` windows, then CLOSE. Returns byte counters."""
+    async def _connect(self, host: str, port: int, stats: dict):
+        """Resume with a stored ticket if possible, otherwise run the full handshake."""
+        if self.resume and self.ticket is not None:
+            reader, writer = await asyncio.open_connection(host, port)
+            nr = NodeResume(self.ticket)
+            self.ticket = None  # single use, whatever the outcome
+            first = nr.hello()
+            await write_frame(writer, first)
+            reply = await read_frame(reader)
+            try:
+                session = nr.finish(reply)
+                stats["resumed"] = True
+                return reader, writer, session, first, reply
+            except ProtocolError:
+                writer.close()
+                stats["resume_failed"] = True
         reader, writer = await asyncio.open_connection(host, port)
-        stats = {"tx": 0, "rx": 0, "handshake": 0}
+        hs = NodeHandshake(self.identity, self.gateway_pk, self.suite)
+        first = hs.hello()
+        await write_frame(writer, first)
+        reply = await read_frame(reader)
+        return reader, writer, hs.finish(reply), first, reply
+
+    async def run(self, host: str, port: int, start_minute: int, minutes: int) -> dict:
+        """Connect, handshake (or resume), stream ``minutes`` windows, then CLOSE. Returns byte counters."""
+        stats = {"tx": 0, "rx": 0, "handshake": 0, "resumed": False}
+        raw_before = self.raw_payload_bytes
+        reader, writer, session, first, reply = await self._connect(host, port, stats)
         try:
-            hs = NodeHandshake(self.identity, self.gateway_pk, self.suite)
-            hello = hs.hello()
-            await write_frame(writer, hello)
-            accept = await read_frame(reader)
-            session: Session = hs.finish(accept)
-            stats["tx"] += len(encode_stream(hello))
-            stats["rx"] += len(encode_stream(accept))
+            self.ticket = session.ticket
+            stats["tx"] += len(encode_stream(first))
+            stats["rx"] += len(encode_stream(reply))
             stats["handshake"] = stats["tx"] + stats["rx"]
             for m in range(start_minute, start_minute + minutes):
                 for ftype, pt in self.step(m):
@@ -162,7 +185,8 @@ class EdgeNode:
                 await writer.wait_closed()
             except (ConnectionError, OSError):
                 pass
-        stats["raw_baseline"] = stats["handshake"] + self.raw_payload_bytes + 4 + RECORD_OVERHEAD  # + CLOSE
+        # baseline: same handshake + one raw record per minute + CLOSE
+        stats["raw_baseline"] = stats["handshake"] + (self.raw_payload_bytes - raw_before) + 4 + RECORD_OVERHEAD
         return stats
 
 

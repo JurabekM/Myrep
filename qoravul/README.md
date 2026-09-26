@@ -23,8 +23,9 @@ Architecture, threat model and measured results (in Uzbek): [ARCHITECTURE.md](AR
 pip install -r requirements.txt
 python -m qoravul.tinyml.train                        # train, quantise, export models/ + firmware/*.h
 make -C firmware test                                 # parity: 500/500 vectors bit-exact
-pytest -q                                             # 47 tests
+pytest -q                                             # 55 tests
 python -m qoravul.sim.run --nodes 30 --thieves 6 --hours 24
+python -m qoravul.sim.run --reconnect-hours 4         # reconnect every 4 h with PSK resumption
 python -m bench.bench --fleet-meters 2000             # handshake sizes/latency, overhead, false incidents
 ```
 
@@ -44,7 +45,8 @@ make -C firmware qemu-bench-m33  # instruction count per window (QEMU icount pro
 | TPR bypass / magnet / sag / freq / night_load | 100 / 100 / 100 / 100 / 100% |
 | C parity, host and Cortex-M33 (QEMU) | 500/500 bit-exact |
 | Detector code + constants on Cortex-M33 | 1444 B |
-| HYBRID handshake | 4592 B HELLO + 4475 B ACCEPT, ~102 ms total |
+| HYBRID handshake | 4592 B HELLO + 4475 B ACCEPT, ~90 ms total |
+| PSK resumption | 126 B + 108 B = 234 B, single-use tickets |
 | Record overhead | 34 B + 4 B length prefix |
 | Fleet 30 nodes / 6 thieves / 24 h | 6/6 detected, 0 false alerts, ledger intact, 87.2% bandwidth saved |
 | Honest fleet 2000 meters x 24 h | 0 false incidents |
@@ -56,6 +58,7 @@ qoravul/crypto/backend.py      PQ abstraction (RLock-guarded; liboqs opt-in)
 qoravul/protocol/wire.py       framing, TLV-lite, FrameType, Suite, ProtocolError
 qoravul/protocol/handshake.py  Identity, NodeHandshake, GatewayHandshake
 qoravul/protocol/session.py    ReplayWindow, Session (seal/open)
+qoravul/protocol/resume.py     PSK resumption: Ticket, TicketStore, NodeResume, GatewayResume
 qoravul/tinyml/meter.py        VirtualMeter, 8 features, 5 attacks
 qoravul/tinyml/model.py        FloatAE (numpy Adam), QuantAE (int8), quantize_multiplier
 qoravul/tinyml/export_c.py     qv_model.h + qv_vectors.h

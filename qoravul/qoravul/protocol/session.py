@@ -73,6 +73,7 @@ class Session:
         self.send_seq = 0
         self.window = ReplayWindow()
         self.closed = False
+        self.ticket = None  # resumption ticket minted by the handshake, if any
 
     @property
     def needs_rekey(self) -> bool:

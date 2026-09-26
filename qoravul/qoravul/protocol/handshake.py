@@ -18,6 +18,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from ..crypto import backend as pq
+from .resume import Ticket, TicketStore
 from .session import Session
 from .wire import FrameType, ProtocolError, Suite, make_frame, pack_fields, parse_frame, reject_frame, unpack_fields
 
@@ -110,7 +111,9 @@ class NodeHandshake:
         th = hashlib.sha384(self.hello_frame + frame).digest()
         k_up, k_down, sid = derive_keys(ss_x, ss_kem, th)
         self._x_priv = self._dk = None
-        return Session("node", k_up, k_down, sid)
+        s = Session("node", k_up, k_down, sid)
+        s.ticket = Ticket.derive(ss_x + ss_kem, th, self.suite, self.identity.node_id)
+        return s
 
 
 @dataclass
@@ -124,10 +127,12 @@ class HandshakeResult:
 class GatewayHandshake:
     """Responder. ``registry`` maps node_id -> node ML-DSA public key."""
 
-    def __init__(self, identity: Identity, registry: dict[bytes, bytes], allowed=DEFAULT_POLICY) -> None:
+    def __init__(self, identity: Identity, registry: dict[bytes, bytes], allowed=DEFAULT_POLICY,
+                 tickets: TicketStore | None = None) -> None:
         self.identity = identity
         self.registry = registry
         self.allowed = frozenset(Suite(s) for s in allowed)
+        self.tickets = tickets
 
     def respond(self, hello: bytes) -> HandshakeResult:
         try:
@@ -173,4 +178,8 @@ class GatewayHandshake:
         accept = make_frame(FrameType.ACCEPT, pack_fields(fields + [gsig]))
         th = hashlib.sha384(hello + accept).digest()
         k_up, k_down, sid = derive_keys(ss_x, ss_kem, th)
-        return HandshakeResult(accept, Session("gateway", k_up, k_down, sid, node_id), node_id)
+        session = Session("gateway", k_up, k_down, sid, node_id)
+        session.ticket = Ticket.derive(ss_x + ss_kem, th, suite, node_id)
+        if self.tickets is not None:
+            self.tickets.put(session.ticket)
+        return HandshakeResult(accept, session, node_id)

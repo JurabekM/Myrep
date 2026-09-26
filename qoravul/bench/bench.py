@@ -16,6 +16,7 @@ import numpy as np
 from qoravul.crypto import backend as pq
 from qoravul.edge.node import EVIDENCE_CTX, IncidentFSM, canonical, encode_alert
 from qoravul.protocol.handshake import GatewayHandshake, Identity, NodeHandshake
+from qoravul.protocol.resume import GatewayResume, NodeResume, TicketStore
 from qoravul.protocol.session import RECORD_OVERHEAD
 from qoravul.protocol.wire import FrameType, Suite, encode_stream
 from qoravul.tinyml.meter import features, simulate
@@ -51,6 +52,25 @@ def bench_handshake(runs: int) -> None:
         h, a = len(encode_stream(hello)), len(encode_stream(res.frame))
         print(f"{suite.name:<8} {h:>8} {a:>9} {h + a:>8} {_ms(t_node):>8.2f} {_ms(t_gw):>7.2f} "
               f"{_ms(t_node) + _ms(t_gw):>9.2f}")
+    store = TicketStore()
+    gwh = GatewayHandshake(gw, reg, tickets=store)
+    nh = NodeHandshake(node, gw.pk)
+    ticket = nh.finish(gwh.respond(nh.hello()).frame).ticket
+    gr, t_node, t_gw = GatewayResume(store, {Suite.HYBRID}), [], []
+    for _ in range(runs):
+        nr = NodeResume(ticket)
+        t0 = time.perf_counter()
+        first = nr.hello()
+        t1 = time.perf_counter()
+        res = gr.respond(first)
+        t2 = time.perf_counter()
+        ticket = nr.finish(res.frame).ticket
+        t3 = time.perf_counter()
+        t_node.append((t1 - t0) + (t3 - t2))
+        t_gw.append(t2 - t1)
+    h, a = len(encode_stream(first)), len(encode_stream(res.frame))
+    print(f"{'RESUME':<8} {h:>8} {a:>9} {h + a:>8} {_ms(t_node):>8.2f} {_ms(t_gw):>7.2f} "
+          f"{_ms(t_node) + _ms(t_gw):>9.2f}   (PSK resumption of a HYBRID session)")
     print("sizes include the 4-byte stream length prefix")
     print("authenticators per handshake: 2 ML-DSA-65 signatures (node + gateway), 2 verifications")
 

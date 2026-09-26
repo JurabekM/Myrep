@@ -98,25 +98,54 @@ Replay: 64-bitli RFC 4303 bitmap; `seq = 0` rad etiladi; oyna faqat AEAD
 tekshiruvidan **keyin** yangilanadi (soxta paket oynani siljita olmaydi).
 `REKEY_AFTER = 2^20` yozuv.
 
-**O'lchangan hajmlar** (`python -m bench.bench`, 20 ta ishga tushirish medianasi,
-4 baytli uzunlik prefiksi bilan):
+**O'lchangan hajmlar** (`python -m bench.bench --runs 30`, 30 ta ishga tushirish
+medianasi, 4 baytli uzunlik prefiksi bilan; host vaqtlari yugurishdan yugurishga ±20% o'zgaradi):
 
 | Suite | HELLO, B | ACCEPT, B | Jami, B | Node, ms | Gateway, ms | Jami, ms |
 |---|---|---|---|---|---|---|
-| CLASSIC | 3408 | 3387 | 6795 | 44.4 | 45.0 | 89.4 |
-| PQ_ONLY | 4560 | 4443 | 9003 | 55.9 | 48.1 | 104.0 |
-| HYBRID | 4592 | 4475 | 9067 | 49.5 | 52.9 | 102.3 |
+| CLASSIC | 3408 | 3387 | 6795 | 43.2 | 42.2 | 85.5 |
+| PQ_ONLY | 4560 | 4443 | 9003 | 53.5 | 51.7 | 105.2 |
+| HYBRID | 4592 | 4475 | 9067 | 49.7 | 40.0 | 89.6 |
+| RESUME (PSK, 3.1) | 126 | 108 | **234** | 0.07 | 0.10 | 0.16 |
 
 * Record overhead: **34 B** (ver 1 + type 1 + sid 8 + seq 8 + tag 16) + 4 B uzunlik.
 * MAC soni: har yozuvda **1** Poly1305 teg (16 B); handshake'da **2** ML-DSA-65
   imzo (node + gateway) va **2** tekshiruv.
-* seal+open (100 B): 6.3 µs; ML-DSA-65 sign 41.8 ms, verify 8.1 ms (host, pure-Python).
+* seal+open (100 B): 10.1 µs; ML-DSA-65 sign 28.0 ms, verify 6.9 ms (host, pure-Python).
 * ALERT yozuvi: **3554 B** (dalil 205 B + xom imzo 3309 B). Imzo hex ko'rinishida
   JSON ichida bo'lsa ~6873 B bo'lardi (**TAXMIN**: `len(ev) + 2·3309 + 12 + 38`) — shuning
   uchun binary payload (saboq 7).
 
 Handshake hajmining asosiy qismi — ML-DSA-65 imzolari (2 × 3309 B), ML-KEM-768
 qo'shimchasi atigi +2272 B (ek 1184 + ct 1088).
+
+### 3.1 PSK resumption (kengaytma 9.4)
+
+To'liq handshake'dan keyin ikkala tomon qo'shimcha xabarsiz ticket chiqaradi:
+`rms = HKDF(ikm, salt=TH, "QVL/1 resumption", 32)`, `ticket_id = HKDF(..., "QVL/1 ticket id", 16)`.
+Keyingi ulanishda:
+
+```
+RESUME  = [ticket_id, Nn, X25519_pub] + HMAC-SHA384(rms, "QVL1-RESUME" ‖ fields)[:32]
+RESUMED = [Ng, X25519_pub]            + HMAC-SHA384(rms, "QVL1-RESUMED" ‖ SHA384(RESUME) ‖ fields)[:32]
+OKM     = HKDF-SHA384(rms ‖ ss_x, salt=SHA384(RESUME ‖ RESUMED), "QVL/1 resumed traffic keys", 72)
+```
+
+* Ticket **bir martalik**: MAC tekshirilgandan keyin o'chiriladi → qayta yuborilgan
+  RESUME `"unknown ticket"`; soxta RESUME esa haqiqiy ticketni "yoqib" yubora olmaydi.
+* Ticket o'zini chiqargan sessiya suite'ini eslaydi; u joriy siyosatda bo'lmasa
+  `"suite below policy"` — resumption orqali siyosatdan pastga tushib bo'lmaydi.
+* Yangi X25519 almashinuvi ticket keyinchalik oshkor bo'lsa ham o'tgan sessiyalarni
+  himoya qiladi (forward secrecy); PQ mustahkamlik `rms` dan (gibrid handshake'dan) keladi.
+* Muddati: 7 kun. Har resumed sessiya keyingi ticketni o'z transkriptidan chiqaradi.
+* Hajm: **9067 B → 234 B** (−97.4%), vaqt ~0.16 ms (ML-DSA yo'q).
+
+Sim, har node 4 soatda qayta ulanadi (30 node, 24 soat, 180 sessiya):
+
+| Rejim | Handshake trafigi | Jami QORAVUL trafigi | Tejam (xom oqimga nisbatan) |
+|---|---|---|---|
+| Faqat to'liq handshake | 1 632 060 B | 2 026 748 B | 69.1% |
+| PSK resumption (150/180 resumed) | 307 110 B | 701 798 B | 86.6% |
 
 ## 4. Xususiyatlar
 
@@ -267,6 +296,11 @@ regulyatorga) davriy e'lon qilish kerak (keyingi qadamlar).
 | DATA → ALERT tur almashtirish | type AAD ichida | `test_type_confusion_data_to_alert` |
 | Yozuvni yuboruvchiga qaytarish (reflection) | Yo'nalishga xos kalit + nonce | `test_reflection_rejected` |
 | Boshqa sessiya yozuvini qo'yish | session_id AAD da | `test_wrong_session_id_rejected` |
+| RESUME'ni qayta yuborish | Bir martalik ticket | `test_resume_replay_rejected` |
+| RESUME'ni o'zgartirish | HMAC; soxta xabar ticketni yoqmaydi | `test_resume_tamper_rejected` |
+| Eski (CLASSIC) ticket orqali downgrade | Ticket suite'i joriy siyosat bilan tekshiriladi | `test_resume_cannot_downgrade_policy` |
+| Eskirgan ticket | 7 kunlik muddat | `test_resume_expired_ticket` |
+| Soxta gateway resumption'da | RESUMED MAC `rms` bilan, RESUME xeshiga bog'langan | `test_resume_rogue_gateway` |
 | Nonce tugashi | `REKEY_AFTER = 2^20` | `test_rekey_limit` |
 | Buzilgan freymlar / DoS | Uzunlik, versiya, tur tekshiruvlari; REJECT, crash yo'q | `test_malformed_frames`, `test_garbage_hello_is_reject_not_crash` |
 | Neytral orqali aylanib o'tish | Envelope (`n_imb`) | `test_attack_tpr[bypass]`, `test_culprit_points_at_tampered_feature[bypass-n_imb]` |
@@ -315,10 +349,12 @@ umumiy hajmda katta ulush egallaydi (saboq 8).
 kanonik JSON `{t, v, i, in, pf, thd, f}` (~76 B) + 38 B overhead, **plyus** o'sha
 HYBRID handshake. Ya'ni solishtirish bir xil kriptografik kanal ustida.
 
+Qayta ulanish bilan (PSK resumption): `test_e2e_fleet_with_resumption`
+(4 node, 3 soat, har soatda qayta ulanish → 12 sessiya, 8 tasi resumed) va 3.1-bo'limdagi jadval.
+
 Oylik trafik (**TAXMIN**, chiziqli ekstrapolyatsiya): `22 033 B × 30 ≈ 0.66 MB/node/oy`
 (QORAVUL) va `172 773 B × 30 ≈ 5.2 MB/node/oy` (xom). Har kuni qayta ulanish
-bo'lsa handshake har kun qo'shiladi (9067 B) — PSK resumption bu qismni
-kamaytiradi (keyingi qadamlar).
+bo'lsa handshake har kun qo'shiladi: to'liq 9067 B yoki PSK resumption bilan 234 B (3.1-bo'lim).
 
 > **Ogohlantirish.** Hujum signaturalari model yaratuvchisi tomonidan
 > yozilgan; detektor ularni osonlikcha ajratadigan joylarga (envelope)
@@ -343,7 +379,6 @@ kamaytiradi (keyingi qadamlar).
 
 ## 11. Keyingi qadamlar
 
-* PSK resumption (kundalik handshake ~9 KB → ~200 B), downgrade/replay testlari bilan.
 * liboqs backend bilan interop testi (bir tomon liboqs, ikkinchisi pure-Python).
 * PQ on-MCU benchmark (`firmware/BENCHMARKS.md`).
 * Ledger `head` xeshini tashqi joyga davriy e'lon qilish (anchoring).

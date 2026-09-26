@@ -200,3 +200,101 @@ def test_session_rejects_non_record_type(ids):
         node_s.seal(FrameType.HELLO, b"x")
     with pytest.raises(ProtocolError):
         gw_s.open(make_frame(FrameType.ACCEPT, b"\x00" * 40))
+
+
+# ------------------------------------------------------------- PSK resumption
+from qoravul.protocol.resume import GatewayResume, NodeResume, Ticket, TicketStore  # noqa: E402
+from qoravul.protocol.wire import encode_stream  # noqa: E402
+
+
+def full_then_store(ids, suite=Suite.HYBRID, allowed=None):
+    store = TicketStore()
+    node, gw = ids["node"], ids["gw"]
+    gwh = GatewayHandshake(gw, {node.node_id: node.pk}, allowed=allowed or {Suite.HYBRID}, tickets=store)
+    nh = NodeHandshake(node, gw.pk, suite)
+    res = gwh.respond(nh.hello())
+    return nh.finish(res.frame), res.session, store
+
+
+def test_resumption_roundtrip_and_size(ids):
+    node_s, gw_s, store = full_then_store(ids)
+    assert node_s.ticket.ticket_id == gw_s.ticket.ticket_id and len(store) == 1
+    nr = NodeResume(node_s.ticket)
+    first = nr.hello()
+    res = GatewayResume(store, {Suite.HYBRID}).respond(first)
+    assert res.session is not None, res.reason
+    n2 = nr.finish(res.frame)
+    g2 = res.session
+    assert g2.peer_id == ids["node"].node_id
+    assert n2.session_id == g2.session_id != node_s.session_id
+    assert g2.open(n2.seal(FrameType.DATA, b"up"))[1] == b"up"
+    assert n2.open(g2.seal(FrameType.DATA, b"dn"))[1] == b"dn"
+    size = len(encode_stream(first)) + len(encode_stream(res.frame))
+    assert size < 300, size  # vs ~9 KB for the full HYBRID handshake
+    # the resumed session minted the next ticket; the old one is gone
+    assert n2.ticket.ticket_id == g2.ticket.ticket_id != node_s.ticket.ticket_id
+    assert store.peek(node_s.ticket.ticket_id) is None and len(store) == 1
+
+
+def test_resumption_chain(ids):
+    node_s, _, store = full_then_store(ids)
+    ticket = node_s.ticket
+    gr = GatewayResume(store, {Suite.HYBRID})
+    for _ in range(3):
+        nr = NodeResume(ticket)
+        res = gr.respond(nr.hello())
+        ticket = nr.finish(res.frame).ticket
+    assert len(store) == 1
+
+
+def test_resume_replay_rejected(ids):
+    node_s, _, store = full_then_store(ids)
+    first = NodeResume(node_s.ticket).hello()
+    gr = GatewayResume(store, {Suite.HYBRID})
+    assert gr.respond(first).session is not None
+    res = gr.respond(first)  # captured RESUME replayed
+    assert res.session is None and res.reason == "unknown ticket"
+
+
+def test_resume_tamper_rejected(ids):
+    node_s, _, store = full_then_store(ids)
+    first = bytearray(NodeResume(node_s.ticket).hello())
+    first[30] ^= 1  # inside Nn
+    res = GatewayResume(store, {Suite.HYBRID}).respond(bytes(first))
+    assert res.session is None and res.reason == "bad resume mac"
+    assert len(store) == 1  # a forged RESUME must not burn the genuine ticket
+
+
+def test_resume_cannot_downgrade_policy(ids):
+    # ticket minted while CLASSIC was still allowed ...
+    node_s, _, store = full_then_store(ids, suite=Suite.CLASSIC, allowed={Suite.CLASSIC, Suite.HYBRID})
+    assert node_s.ticket.suite == Suite.CLASSIC
+    # ... is useless once policy is HYBRID-only
+    res = GatewayResume(store, {Suite.HYBRID}).respond(NodeResume(node_s.ticket).hello())
+    assert res.session is None and res.reason == "suite below policy"
+
+
+def test_resume_expired_ticket(ids):
+    node_s, _, store = full_then_store(ids)
+    res = GatewayResume(store, {Suite.HYBRID}).respond(NodeResume(node_s.ticket).hello(),
+                                                        now=node_s.ticket.issued + 8 * 24 * 3600)
+    assert res.session is None and res.reason == "ticket expired"
+
+
+def test_resume_rogue_gateway(ids):
+    node_s, _, _ = full_then_store(ids)
+    nr = NodeResume(node_s.ticket)
+    first = nr.hello()
+    fake = Ticket(node_s.ticket.ticket_id, b"\x00" * 32, Suite.HYBRID, node_s.ticket.node_id, node_s.ticket.issued)
+    rogue_store = TicketStore()
+    rogue_store.put(fake)
+    # the rogue cannot even validate the RESUME, and cannot forge RESUMED
+    assert GatewayResume(rogue_store, {Suite.HYBRID}).respond(first).reason == "bad resume mac"
+    other = Ticket.derive(b"x" * 32, b"y" * 48, Suite.HYBRID, node_s.ticket.node_id)
+    other.ticket_id = node_s.ticket.ticket_id
+    store2 = TicketStore()
+    store2.put(other)
+    nr2 = NodeResume(other)
+    res = GatewayResume(store2, {Suite.HYBRID}).respond(nr2.hello())
+    with pytest.raises(ProtocolError, match="gateway resume mac invalid"):
+        nr.finish(res.frame)  # RESUMED keyed with a different secret

@@ -191,3 +191,11 @@ def test_night_load_robust_to_training_seed():
     x = dataset(meters=4096, n=3000, seed=9090, attack="night_load")
     assert q.detect(x)["anomaly"].mean() > 0.95
     assert q.detect(dataset(meters=4096, n=30_000, seed=9091))["anomaly"].mean() < 0.005
+
+
+def test_e2e_fleet_with_resumption(tmp_path, model):
+    rep = asyncio.run(run_fleet(nodes=4, thieves=1, hours=3, seed=5, model=model, reconnect_hours=1,
+                                ledger_path=tmp_path / "ledger.jsonl"))
+    assert rep["detected"] == 1 and rep["false_alerts"] == 0 and rep["ledger_ok"]
+    assert rep["sessions"] == 12 and rep["resumed_sessions"] == 8
+    assert not rep["gateway_errors"] and not rep["rejects"]
