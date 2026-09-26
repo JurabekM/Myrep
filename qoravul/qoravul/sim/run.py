@@ -26,11 +26,16 @@ DEFAULT_MODEL = ROOT / "models" / "qv_model.json"
 
 async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed: int = 7, start_hour: float = 0.0,
                     model: QuantAE | None = None, ledger_path: str | Path | None = None,
-                    reconnect_hours: float | None = None, resume: bool = True) -> dict:
+                    reconnect_hours: float | None = None, resume: bool = True,
+                    export_dir: str | Path | None = None) -> dict:
     rng = np.random.default_rng(seed)
     model = model or QuantAE.load(DEFAULT_MODEL)
     minutes = int(round(hours * 60))
     start = int(round(start_hour * 60))
+    if export_dir is not None:
+        Path(export_dir).mkdir(parents=True, exist_ok=True)
+        ledger_path = Path(export_dir) / "ledger.jsonl"
+        ledger_path.unlink(missing_ok=True)
     if ledger_path is None:
         ledger_path = Path(tempfile.mkdtemp(prefix="qoravul_")) / "ledger.jsonl"
     ledger = EvidenceLedger(ledger_path)
@@ -86,7 +91,7 @@ async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed
     qv_bytes = sum(s["tx"] + s["rx"] for s in stats)
     raw_bytes = sum(s["raw_baseline"] for s in stats)
     hs_bytes = sum(s["handshake"] for s in stats)
-    return {
+    report = {
         "nodes": nodes,
         "thieves": thieves,
         "hours": hours,
@@ -112,6 +117,16 @@ async def run_fleet(nodes: int = 30, thieves: int = 6, hours: float = 24.0, seed
         "resumed_sessions": sum(s["resumed"] for s in stats),
         "wall_s": wall,
     }
+    if export_dir is not None:
+        _export(Path(export_dir), fleet, gw, report)
+    return report
+
+
+def _export(out: Path, fleet: list[EdgeNode], gw: Gateway, report: dict) -> None:
+    """Write what the gateway operator sees (for the dashboard) plus the ground-truth report."""
+    (out / "nodes.json").write_text(json.dumps({n.node_hex: {"pk": n.identity.pk.hex()} for n in fleet}))
+    (out / "summaries.json").write_text(json.dumps(gw.summaries))
+    (out / "report.json").write_text(json.dumps(report, indent=1))
 
 
 def main(argv=None) -> int:
@@ -123,6 +138,8 @@ def main(argv=None) -> int:
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--model", default=str(DEFAULT_MODEL))
     ap.add_argument("--ledger", default=None)
+    ap.add_argument("--export", default=None, metavar="DIR",
+                    help="write ledger.jsonl, summaries.json, nodes.json, report.json for the dashboard")
     ap.add_argument("--reconnect-hours", type=float, default=None,
                     help="close and reopen each node's session this often (PSK resumption after the first)")
     ap.add_argument("--no-resume", action="store_true", help="always run the full handshake")
@@ -130,7 +147,8 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     rep = asyncio.run(run_fleet(args.nodes, args.thieves, args.hours, args.seed, args.start_hour,
-                                QuantAE.load(args.model), args.ledger, args.reconnect_hours, not args.no_resume))
+                                QuantAE.load(args.model), args.ledger, args.reconnect_hours, not args.no_resume,
+                                args.export))
     if args.json:
         print(json.dumps(rep, indent=1))
     else:

@@ -8,10 +8,11 @@ dependencies = ["numpy>=1.26", "cryptography>=41", "kyber-py>=1.2", "dilithium-p
 [project.optional-dependencies]
 test = ["pytest>=8"]
 liboqs = ["liboqs-python"]
+dashboard = ["PyQt6", "pyqtgraph"]
 
 [tool.setuptools]
 packages = ["qoravul", "qoravul.crypto", "qoravul.protocol", "qoravul.tinyml",
-            "qoravul.edge", "qoravul.gateway", "qoravul.sim"]
+            "qoravul.edge", "qoravul.gateway", "qoravul.sim", "qoravul.dashboard"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

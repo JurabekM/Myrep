@@ -377,6 +377,15 @@ bo'lsa handshake har kun qo'shiladi: to'liq 9067 B yoki PSK resumption bilan 234
 > tushadi. Haqiqiy o'g'rilar kichik va sekin (masalan, 10% under-reading)
 > hujum qiladi — bular v0.1 da o'lchanmagan va ehtimol ushlanmaydi.
 
+### Dashboard (kengaytma 9.5)
+
+`python -m qoravul.sim.run --export runs/day1 && python -m qoravul.dashboard.app runs/day1`
+— qora fon, neon cyan/magenta, monospace; dalil reestri (har yozuv ML-DSA imzosi
+node ochiq kaliti bilan qayta tekshiriladi), incidentlar (faol/yopilgan), 15 daqiqalik
+kWh grafigi (flot o'rtachasi va tanlangan hisoblagich, alert chiziqlari), zanjir holati,
+uz/en almashtirgich. Reestr o'zgartirilsa zanjir "BUZILGAN" va imzo "IMZO XATO" bo'ladi
+(`test_dashboard_flags_tampering`). Skrinshot: `docs/dashboard.png`.
+
 ## 10. Apparat yo'l xaritasi
 
 1. **Renode STM32U5** — `nucleo_u575zi_q` Zephyr ilovasi 500 vektorni UART'ga
@@ -401,4 +410,3 @@ bo'lsa handshake har kun qo'shiladi: to'liq 9067 B yoki PSK resumption bilan 234
 * Real ma'lumotda qayta o'rgatish; sekin/kichik o'g'irlik hujumlarini modellash;
   per-meter kalibrlash (uy xo'jaligi profili drift'i).
 * Model yangilanishi uchun imzolangan OTA (model versiyasi dalilga kiritiladi).
-* PyQt6 dashboard (ledger, incidentlar, kWh grafigi, uz/en).

@@ -17,6 +17,9 @@ python -m qoravul.sim.run --nodes 30 --thieves 6 --hours 24
 python -m bench.bench                   # handshake sizes / latency / record overhead
 make -C firmware size-m33               # optional, needs arm-none-eabi-gcc
 QORAVUL_PQ_BACKEND=liboqs ...           # opt-in liboqs backend (default pure-Python)
+make -C firmware qemu-m33 pq-m33        # Cortex-M33 parity / PQ KAT+bench under QEMU (optional)
+QORAVUL_TEST_LIBOQS=1 QORAVUL_TEST_PQ_M33=1 pytest -q   # opt-in interop / MCU tests
+python -m qoravul.sim.run --export runs/day1 && python -m qoravul.dashboard.app runs/day1
 ```
 
 ## Rules
