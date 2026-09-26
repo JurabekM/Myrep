@@ -159,7 +159,18 @@ class Zarbxona:
         try:
             self.jurnal.yop()
         finally:
-            self.qulf.ozod()
+            if self.qulf is not None:
+                self.qulf.ozod()
+
+    def oqim_nusxasi(self) -> Zarbxona:
+        """Fon oqimi uchun: o'z jurnal ulanishi, qulf esa asl nusxada qoladi (§16.5).
+        Nusxa o'sha oqimda yaratiladi va yopiladi; qulfni ozod qilmaydi."""
+        n = object.__new__(Zarbxona)
+        n.papka, n.sk, n.pk, n.soat_ms = self.papka, self.sk, self.pk, self.soat_ms
+        n.qulf = None
+        n.jurnal = Jurnal(self.papka / "jurnal.db")
+        n.sertifikat = self.sertifikat
+        return n
 
     # --- sertifikat va limit ---------------------------------------------------
 

@@ -135,9 +135,9 @@ class Jurnal:
         if holatlar:
             q = ",".join("?" * len(holatlar))
             rs = self.db.execute(f"SELECT * FROM buyurtmalar WHERE holat IN ({q})"
-                                 " ORDER BY yaratilgan_ms DESC", holatlar).fetchall()
+                                 " ORDER BY yaratilgan_ms DESC, rowid DESC", holatlar).fetchall()
         else:
-            rs = self.db.execute("SELECT * FROM buyurtmalar ORDER BY yaratilgan_ms DESC")\
+            rs = self.db.execute("SELECT * FROM buyurtmalar ORDER BY yaratilgan_ms DESC, rowid DESC")\
                 .fetchall()
         return [BuyurtmaYozuvi(*r) for r in rs]
 
