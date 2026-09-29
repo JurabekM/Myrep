@@ -4,12 +4,13 @@ avval taymer va oqimlar to'xtatilib kutiladi, KEYIN baza yopiladi."""
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, QThread, QTimer, Slot
-from PySide6.QtWidgets import (QHBoxLayout, QListWidget, QListWidgetItem, QMainWindow,
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMainWindow,
                                QStackedWidget, QWidget)
 
 from app import dialog
 from app.sahifalar.boshqaruv import BoshqaruvSahifasi
 from app.sahifalar.buyurtmalar import BuyurtmalarSahifasi
+from app.sahifalar.demo_bank import DemoBankSahifasi
 from app.sahifalar.kalit import KalitSahifasi
 from app.sahifalar.partiyalar import PartiyalarSahifasi
 from app.sahifalar.qanday import QandaySahifasi
@@ -30,11 +31,13 @@ MENYU = [("boshqaruv", "Boshqaruv paneli", BoshqaruvSahifasi),
 
 
 class Oyna(QMainWindow):
-    def __init__(self, z: Zarbxona):
+    def __init__(self, z: Zarbxona, demo_bank=None):
         super().__init__()
         self.z = z
+        self.demo_bank = demo_bank
         self.oqimlar: list[QThread] = []
-        self.setWindowTitle(f"AETHER-Q Zarbxona v{VERSIYA} — {iz(z.pk)}")
+        belgi = "[DEMO] " if demo_bank else ""
+        self.setWindowTitle(f"{belgi}AETHER-Q Zarbxona v{VERSIYA} — {iz(z.pk)}")
         self.setWindowIcon(ikonka())
         self.resize(1180, 780)
 
@@ -47,7 +50,9 @@ class Oyna(QMainWindow):
         self.menyu.setFixedWidth(210)
         self.stek = QStackedWidget()
         self.sahifalar: dict[str, object] = {}
-        for kalit, nom, cls in MENYU:
+        self.menyu_royxati = MENYU + ([("demo", "Demo bank", DemoBankSahifasi)]
+                                      if demo_bank else [])
+        for kalit, nom, cls in self.menyu_royxati:
             it = QListWidgetItem(nom)
             it.setSizeHint(QSize(0, 40))
             self.menyu.addItem(it)
@@ -64,6 +69,10 @@ class Oyna(QMainWindow):
         self.taymer.setInterval(3000)
         self.taymer.timeout.connect(self.davriy)
         self.taymer.start()
+        if demo_bank:
+            b = QLabel("  DEMO REJIMI — haqiqiy bank emas, sessiya shifrlanmaydi  ")
+            b.setObjectName("demo_belgi")
+            self.statusBar().addPermanentWidget(b)
         self.holat("tayyor")
 
     # --- kontekst (sahifalar uchun) ------------------------------------------------
@@ -80,7 +89,7 @@ class Oyna(QMainWindow):
         self.oqimlar = [t for t in self.oqimlar if t.isRunning()]
 
     def sahifaga_ot(self, kalit: str) -> None:
-        self.menyu.setCurrentRow([m[0] for m in MENYU].index(kalit))
+        self.menyu.setCurrentRow([m[0] for m in self.menyu_royxati].index(kalit))
 
     def hammasini_yangila(self) -> None:
         for s in self.sahifalar.values():

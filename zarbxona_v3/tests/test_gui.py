@@ -321,3 +321,121 @@ def test_14_ishga_tushishda_ogohlantirish(ilova, tmp_path, kalitlar, monkeypatch
     o.sahifaga_ot("zarb")
     assert "3 kundan keyin" in o.sahifalar["zarb"].vakolat_matn.text()
     o.close()
+
+
+def test_31_demo_rejimi_gui(ilova, tmp_path, kalitlar, monkeypatch):
+    """3.1: demo oynasi — Demo bank sahifasi, zarb, onlayn topshirish demo bankka."""
+    from app.oyna import Oyna
+    from core.demo_bank import demo_tayyorla
+    d = Dialoglar(tmp_path, tmp_path / "s.aqcert")
+    d.ornat(monkeypatch)
+    z = Zarbxona(tmp_path / "data_demo", kalitlar[0])
+    db = demo_tayyorla(z)
+    o = Oyna(z, demo_bank=db)
+    o.dialoglar = d
+    o.show()
+    assert o.windowTitle().startswith("[DEMO]")
+    ds = o.sahifalar["demo"]
+    o.sahifaga_ot("demo")
+    assert "iz" in ds.bank.text()
+    assert ds.qulflar.rowCount() == 1
+    for t in (ds.t_yangila, ds.t_qulf):
+        assert bos_va_javob(o, t)
+    assert ds.qulflar.rowCount() == 2
+    ds.qulf_summa.setText("abc")
+    assert bos_va_javob(o, ds.t_qulf) and d.chaqiriqlar[-1][0] == "xato"
+
+    # zarb: qulf ro'yxatida demo qulf avtomatik tanlangan
+    zs = o.sahifalar["zarb"]
+    o.sahifaga_ot("zarb")
+    assert zs.qulf.currentText().startswith("AQ-DEMO-")
+    zs.summa.setText("12345")
+    zs.hajm.setValue(4)
+    zs.surat.rejim.setCurrentIndex(zs.surat.rejim.findData("cheklovsiz"))
+    assert bos_va_javob(o, zs.t_zarb)
+    assert kut(lambda: not zs.ishlayapti() and zs.t_zarb.isEnabled())
+    n = len(z.jurnal.partiyalar())
+    assert n >= 2
+
+    # onlayn topshirish — aetherq_core'siz, demo bankka
+    ps = o.sahifalar["partiyalar"]
+    o.sahifaga_ot("partiyalar")
+    assert not ps.broker.isEnabled() and "DEMO" in ps.aq.text()
+    assert bos_va_javob(o, ps.t_topshir)
+    assert kut(lambda: ps.ishchi is not None and not ps.ishchi.isRunning(), 60)
+    QCoreApplication.processEvents()
+    assert z.jurnal.topshirilmaganlar() == [], ps.log.toPlainText()
+    assert "topshirildi" in ps.log.toPlainText()
+    o.sahifaga_ot("demo")
+    assert ds.qabul.rowCount() == n
+
+    # sertifikatni qayta berish
+    eski = z.sertifikat.cert_id
+    assert bos_va_javob(o, ds.t_sert)
+    assert z.sertifikat.cert_id != eski and z.sertifikat.bank_public_key == db.pk
+    o.close()
+
+
+@pytest.mark.parametrize("bayroq,kutilgan_kod,demo_bolsin", [
+    (["--demo"], 0, True),      # yangi profil — demo tayyorlanadi
+    ([], 0, False),             # oddiy rejim — demo bank yo'q
+])
+def test_31_main_demo_ulanishi(ilova, tmp_path, kalitlar, monkeypatch, bayroq, kutilgan_kod,
+                               demo_bolsin):
+    import app.kirish
+    import app.main
+    import app.oyna
+    from PySide6.QtWidgets import QDialog
+    ochilgan = {}
+
+    class SoxtaKirish:
+        def __init__(self, papka):
+            self.zarbxona = Zarbxona(papka, kalitlar[0])
+            self.tiklash = None
+
+        def exec(self):
+            return QDialog.DialogCode.Accepted
+
+    asl_oyna = app.oyna.Oyna
+
+    def oyna(z, demo_bank=None):
+        o = asl_oyna(z, demo_bank=demo_bank)
+        ochilgan["o"] = o
+        return o
+    monkeypatch.setattr(app.kirish, "KirishDialogi", SoxtaKirish)
+    monkeypatch.setattr(app.oyna, "Oyna", oyna)
+    monkeypatch.setattr(QApplication, "exec", lambda self: 0)
+    Dialoglar(tmp_path, tmp_path).ornat(monkeypatch)
+    kod = app.main.main([*bayroq, "--papka", str(tmp_path / "p")])
+    assert kod == kutilgan_kod
+    o = ochilgan["o"]
+    assert (o.demo_bank is not None) == demo_bolsin
+    assert ("demo" in o.sahifalar) == demo_bolsin
+    o.close()
+
+
+def test_31_main_demo_haqiqiy_profilni_rad_etadi(ilova, tmp_path, kalitlar, sertifikat,
+                                                 monkeypatch):
+    import app.kirish
+    import app.main
+    from PySide6.QtWidgets import QDialog
+    papka = tmp_path / "data"
+    z0 = Zarbxona(papka, kalitlar[0], soat_ms=lambda: HOZIR)
+    sertifikat.yoz(tmp_path / "s.aqcert")
+    z0.sertifikat_import(tmp_path / "s.aqcert")
+    z0.yop()
+
+    class SoxtaKirish:
+        def __init__(self, p):
+            self.zarbxona = Zarbxona(p, kalitlar[0])
+            self.tiklash = None
+
+        def exec(self):
+            return QDialog.DialogCode.Accepted
+    monkeypatch.setattr(app.kirish, "KirishDialogi", SoxtaKirish)
+    d = Dialoglar(tmp_path, tmp_path)
+    d.ornat(monkeypatch)
+    assert app.main.main(["--demo", "--papka", str(papka)]) == 1
+    assert d.chaqiriqlar[-1][0] == "xato" and "haqiqiy bank" in d.chaqiriqlar[-1][2]
+    assert not (papka / "demo_bank").exists()
+    Zarbxona(papka, kalitlar[0]).yop()        # qulf ozod qilingan

@@ -15,8 +15,10 @@ from core.konstanta import VERSIYA  # noqa: E402
 
 def argumentlar(argv=None) -> argparse.Namespace:
     a = argparse.ArgumentParser(prog="zarbxona", description="AETHER-Q Zarbxona v3")
-    a.add_argument("--papka", type=Path, default=ILDIZ / "data",
-                   help="profil papkasi (default: dastur yonidagi data/)")
+    a.add_argument("--papka", type=Path, default=None,
+                   help="profil papkasi (default: dastur yonidagi data/, --demo da data_demo/)")
+    a.add_argument("--demo", action="store_true",
+                   help="DEMO rejimi: o'rnatilgan soxta bank bilan to'liq halqa (haqiqiy emas)")
     a.add_argument("--selftest", action="store_true", help="Qt'siz o'z-o'zini sinash")
     a.add_argument("--version", action="version", version=f"Zarbxona {VERSIYA}")
     return a.parse_args(argv)
@@ -29,6 +31,8 @@ def main(argv=None) -> int:
         except (AttributeError, ValueError):
             pass
     args = argumentlar(argv)
+    if args.papka is None:
+        args.papka = ILDIZ / ("data_demo" if args.demo else "data")
     if args.selftest:
         from app.selftest import selftest
         return selftest(ILDIZ / "selftest_natija.txt")
@@ -46,7 +50,17 @@ def main(argv=None) -> int:
     d = KirishDialogi(args.papka)
     if d.exec() != QDialog.DialogCode.Accepted or d.zarbxona is None:
         return 0
-    oyna = Oyna(d.zarbxona)
+    from core.demo_bank import DemoBank, DemoXatosi, demo_tayyorla
+    demo = None
+    if args.demo or DemoBank.bormi(args.papka):
+        try:
+            demo = demo_tayyorla(d.zarbxona)
+        except DemoXatosi as e:
+            from app import dialog
+            dialog.xato(None, "Demo rejimi", str(e))
+            d.zarbxona.yop()
+            return 1
+    oyna = Oyna(d.zarbxona, demo_bank=demo)
     oyna.show()
     oyna.tiklashni_korsat(d.tiklash)
     oyna.ogohlantirishlarni_korsat()

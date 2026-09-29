@@ -18,6 +18,7 @@ python -m pip install -r requirements.txt
 | `run.bat` (Windows) / `./run.sh` | paketlari o'rnatilgan Python'ni o'zi topadi. `aetherq_core` bor muhit afzal |
 | `python run.py` · `python -m app.main` · `python app/main.py` | uchalasi bir xil ishlaydi |
 | `--papka D:\zarbxona_data` | profil papkasi (default: dastur yonidagi `data/`) |
+| `--demo` | **DEMO rejimi**: o'rnatilgan soxta bank bilan to'liq halqa. Profil: `data_demo/` |
 | `--selftest` | Qt'siz o'z-o'zini sinash. Natija konsolga va `selftest_natija.txt` ga yoziladi |
 | `--version` | versiya |
 
@@ -31,6 +32,29 @@ python -m pip install -r requirements.txt
 python tools/kat_tekshir.py kat/zarbxona_kat_v1.json      # → NATIJA: HAMMASI MOS
 python -m pytest tests/test_kat.py -v                     # v3 yadrosi o'sha KAT bilan
 ```
+
+## Demo rejimi (haqiqiy banksiz)
+
+```bat
+run.bat --demo
+```
+
+Haqiqiy bank va `aetherq_core` bo'lmasa ham to'liq halqani ko'rsatadi:
+**sertifikat → zarb → onlayn topshirish → bank qabul qiladi.**
+
+- Alohida profil ishlatiladi (`data_demo/`), haqiqiy `data/` ga tegilmaydi.
+- Birinchi kirishda demo bank avtomatik sertifikat (100 mln so'm, 365 kun) va zaxira
+  qulfi (50 mln) beradi.
+- «Partiyalar» → «Topshirilmaganlarni hozir topshirish» partiyalarni demo bankka
+  yuboradi. Bank §11 qoidalarini to'liq tekshiradi: imzo, Merkle, isbotlar, limit,
+  qulf, takroriy partiya.
+- «Demo bank» sahifasida bank qabul qilgan partiyalar va qulflar ko'rinadi. U yerda
+  yangi qulf ochish va sertifikatni qayta berish mumkin.
+- Oynada doim sariq **DEMO REJIMI** belgisi turadi.
+
+⚠ Bu haqiqiy bank emas: sessiya shifrlanmaydi, bank kaliti `data_demo/demo_bank/`
+da ochiq saqlanadi. Himoya sifatida haqiqiy bank sertifikati yoki partiyalari bor
+profil demo'ga aylantirilmaydi.
 
 ## Ish tartibi
 
@@ -84,6 +108,7 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   konstanta.py   §3   kupyura.py §4   merkle.py §5   partiya.py §6+§10   cheklov.py §7
   sertifikat.py  §8   ombor.py §9     tekshiruv.py §12   buzish.py §12 (demo)
   zanjir.py      jurnal xesh-zanjiri (ichki format, bank protokoliga kirmaydi)
+  demo_bank.py   DEMO rejimi va testlar uchun soxta bank (§11 qoidalari, holati saqlanadi)
   surat.py       §14 Surat, Ritm (pauza bilan)
   buyurtma.py    §15 buyurtma, tiklash, yagona yozuvchi   jurnal.py §15.3
   protokol.py    §13.4–13.6 xabarlar, mavzular, wire AQW1

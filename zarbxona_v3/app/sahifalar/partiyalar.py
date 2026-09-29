@@ -53,7 +53,8 @@ class PartiyalarSahifasi(Sahifa):
         k.qosh(iq)
         self.qosh(k)
 
-        o = Karta("Onlayn topshirish (MQTT + AETHER-Q sessiyasi)")
+        o = Karta("Onlayn topshirish (DEMO bank)" if self.ctx.demo_bank is not None
+                  else "Onlayn topshirish (MQTT + AETHER-Q sessiyasi)")
         f = QFormLayout()
         z = self.ctx.z
         self.broker = QLineEdit(z.jurnal.sozlama("broker", "broker.hivemq.com"))
@@ -63,7 +64,14 @@ class PartiyalarSahifasi(Sahifa):
         f.addRow("Broker", self.broker)
         f.addRow("Port", self.port)
         o.qosh(f)
-        self.aq = yorliq("" if aetherq_core_bormi() else f"⚠ {AETHERQ_YOQ}.", "ogoh")
+        if self.ctx.demo_bank is not None:
+            self.aq = yorliq("DEMO: partiyalar o'rnatilgan demo bankka xotira kanali orqali "
+                             "yuboriladi — MQTT ham, post-kvant shifrlash ham yo'q. Bank §11 "
+                             "qoidalarini to'liq tekshiradi.", "ogoh")
+            self.broker.setEnabled(False)
+            self.port.setEnabled(False)
+        else:
+            self.aq = yorliq("" if aetherq_core_bormi() else f"⚠ {AETHERQ_YOQ}.", "ogoh")
         o.qosh(self.aq)
         tq = QHBoxLayout()
         self.t_topshir = QPushButton("Topshirilmaganlarni hozir topshirish")
@@ -182,8 +190,13 @@ class PartiyalarSahifasi(Sahifa):
 
     # --- onlayn ------------------------------------------------------------------------
 
+    def _demo_mijoz(self):
+        z = self.ctx.z
+        return self.ctx.demo_bank.mijoz(z.sk, z.sertifikat, log=self.ishchi.log.emit)
+
     def _ishga(self, avto: bool) -> bool:
-        if not aetherq_core_bormi():
+        demo = self.ctx.demo_bank is not None
+        if not demo and not aetherq_core_bormi():
             dialog.xato(self, "Onlayn topshirish", AETHERQ_YOQ)
             self.holat(AETHERQ_YOQ)
             return False
@@ -196,7 +209,8 @@ class PartiyalarSahifasi(Sahifa):
         self.ctx.z.jurnal.sozlama_yoz("broker", self.broker.text().strip())
         self.ctx.z.jurnal.sozlama_yoz("port", str(self.port.value()))
         self.ishchi = TopshirishIshchisi(self.ctx.z, self.broker.text().strip(),
-                                         self.port.value(), avto)
+                                         self.port.value(), avto,
+                                         mijoz_yarat=self._demo_mijoz if demo else None)
         self.ishchi.log.connect(self.log_satr)
         self.ishchi.tugadi.connect(self.ish_tugadi)
         self.ishchi.finished.connect(self._tugmalar)

@@ -181,15 +181,20 @@ class TopshirishIshchisi(QThread):
     log = Signal(str)
     tugadi = Signal(str)
 
-    def __init__(self, z: Zarbxona, broker: str, port: int, avto: bool):
+    def __init__(self, z: Zarbxona, broker: str, port: int, avto: bool,
+                 mijoz_yarat: Callable[[], Mijoz] | None = None):
+        """`mijoz_yarat` berilsa (DEMO bank) — MQTT va aetherq_core o'rniga shu."""
         super().__init__()
         self.z_asl, self.broker, self.port, self.avto = z, broker, port, avto
+        self.mijoz_yarat = mijoz_yarat
         self._toxta = threading.Event()
 
     def toxtat(self) -> None:
         self._toxta.set()
 
     def _mijoz(self) -> Mijoz:
+        if self.mijoz_yarat is not None:
+            return self.mijoz_yarat()
         sert = self.z_asl.sertifikat
         fabrika = AetherQFabrika()
         kanal = MqttKanal(self.broker, self.port, sert.bank_public_key)

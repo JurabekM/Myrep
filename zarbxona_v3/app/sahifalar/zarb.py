@@ -130,7 +130,13 @@ class ZarbSahifasi(Sahifa):
                           for o in z.ogohlantirishlar()))
         joriy = self.qulf.currentText()
         self.qulf.clear()
-        self.qulf.addItems(z.jurnal.oxirgi_qulflar())
+        qulflar = z.jurnal.oxirgi_qulflar()
+        if self.ctx.demo_bank is not None:
+            qulflar = list(self.ctx.demo_bank.qulflar()) + [q for q in qulflar if q not in
+                                                            self.ctx.demo_bank.qulflar()]
+        self.qulf.addItems(qulflar)
+        if not joriy and qulflar and self.ctx.demo_bank is not None:
+            joriy = qulflar[0]
         self.qulf.setEditText(joriy)
         self.tugmalar()
 
