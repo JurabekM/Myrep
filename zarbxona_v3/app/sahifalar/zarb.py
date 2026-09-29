@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateTimeEdit, QFormLayout,
 
 from app import dialog
 from app.ishchilar import ZarbIshchisi
-from app.sahifalar.kartalar import KonveyerKarta, SuratKarta
+from app.sahifalar.kartalar import GrafikKarta, KonveyerKarta, SuratKarta
 from app.vidjetlar import Karta, Sahifa, som, yorliq
 from core.buyurtma import BuyurtmaXatosi
 from core.cheklov import CheklovXatosi, cheklov_json
@@ -90,6 +90,8 @@ class ZarbSahifasi(Sahifa):
         self.qosh(t)
         self.konveyer = KonveyerKarta()
         self.qosh(self.konveyer)
+        self.grafik = GrafikKarta()
+        self.qosh(self.grafik)
         self.oxiri()
 
         s = self.ctx.z.jurnal.sozlama("surat")
@@ -191,6 +193,8 @@ class ZarbSahifasi(Sahifa):
         self.ishchi = ZarbIshchisi(self.ctx.z, buyurtma_id, s)
         self.ishchi.satrlar.connect(self.konveyer.satrlar)
         self.ishchi.jarayon.connect(self.jarayon)
+        self.ishchi.namuna.connect(self.namuna)
+        self.grafik.tozala()
         self.ishchi.tugadi.connect(self.tugadi)
         self.ishchi.finished.connect(self.tugmalar)
         self.ctx.oqim_qosh(self.ishchi)
@@ -205,6 +209,10 @@ class ZarbSahifasi(Sahifa):
         if d.get("kupyura_ms") and not self.surat.olchangan_ms:
             self.surat.olchangan_ms = d["kupyura_ms"]
             self.surat.kupyura_soni(self.surat.soni)
+
+    @Slot(dict)
+    def namuna(self, d: dict) -> None:
+        self.grafik.namuna(d)
 
     @Slot(object)
     def tugadi(self, r) -> None:

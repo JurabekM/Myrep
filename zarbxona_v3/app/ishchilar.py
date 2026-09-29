@@ -29,10 +29,16 @@ def _soat() -> str:
     return time.strftime("%H:%M:%S")
 
 
+NAMUNA_ORALIQ = 1.0
+
+
 class ZarbIshchisi(QThread):
     satrlar = Signal(list)
     jarayon = Signal(dict)
     tugadi = Signal(object)
+    namuna = Signal(dict)      # jonli grafiklar: har ~1 s da bitta o'lchov
+
+    namuna_oraliq = NAMUNA_ORALIQ
 
     def __init__(self, z: Zarbxona, buyurtma_id: str, surat: Surat | None = None):
         super().__init__()
@@ -53,6 +59,13 @@ class ZarbIshchisi(QThread):
         self._ish_cpu = 0.0
         self._olchangan_ms: float | None = None
         self._oxirgi_thread = 0.0
+        # grafik namunalari: oxirgi o'lchov nuqtasi va holat
+        self._n_t = 0.0
+        self._n_soni = 0
+        self._n_cpu = 0.0
+        self._sovutish_gacha = 0.0
+        self._nishon: float | None = None
+        self._byudjet = 1.0
 
     # --- boshqaruv (UI oqimidan) -----------------------------------------------
 
@@ -125,14 +138,36 @@ class ZarbIshchisi(QThread):
         self._satr(f"[{_soat()}] #{q.seq:<8} {q.nominal:>5} so'm   {q.note_id.hex()[:24]}…"
                    f"  muhr {len(q.muhr)} B  ✓")
         self._progress(i + 1 == soni)
+        self._namuna()
+
+    def _namuna(self, majburiy: bool = False) -> None:
+        """Oyna bo'yicha O'LCHANGAN tezlik va CPU ulushi (o'rtacha emas — oxirgi ~1 s)."""
+        hozir = time.monotonic()
+        dt = hozir - self._n_t
+        if dt < self.namuna_oraliq and not (majburiy and dt > 0.05):
+            return
+        cpu = time.process_time()
+        n = self._bajarildi_sessiya
+        if self._pauza.is_set():
+            holat = "pauza"
+        elif hozir < self._sovutish_gacha:
+            holat = "sovutish"
+        else:
+            holat = "ish"
+        self.namuna.emit({"t": hozir - self._bosh_devor, "tezlik": (n - self._n_soni) / dt,
+                          "cpu": max(0.0, (cpu - self._n_cpu) / dt), "holat": holat,
+                          "nishon": self._nishon, "byudjet": self._byudjet})
+        self._n_t, self._n_soni, self._n_cpu = hozir, n, cpu
 
     def _tanaffus(self, x: float) -> None:
+        self._sovutish_gacha = time.monotonic() + x
         self._satr(f"[{_soat()}] — sovutish rejimi ({x:.1f} soniya) —")
 
     def _pauzada(self) -> bool:
         # Ritm har 0,1 s da so'raydi — to'plangan satrlar shu yerda ham chiqadi
         self._chiqar()
         self._progress()
+        self._namuna()
         self._oxirgi_thread = time.thread_time()   # uyqu CPU o'lchoviga kirmasin
         return self._pauza.is_set()
 
@@ -140,6 +175,9 @@ class ZarbIshchisi(QThread):
         if tur == "partiya_boshlandi":
             self._asos, self._jami, self._p_soni = d["bajarilgan"], d["jami_kupyura"], d["soni"]
             self._p_bajarildi = 0
+            if self.surat is not None:
+                rs = self.surat.ritm_sozlamasi(max(1, d["jami_kupyura"]))
+                self._nishon, self._byudjet = rs.tezlik, rs.byudjet
             s = d["birinchi_seq"]
             self._satr(f"[{_soat()}] partiya boshlandi · {d['soni']} kupyura · "
                        f"seq {s}..{s + d['soni'] - 1}")
@@ -156,6 +194,7 @@ class ZarbIshchisi(QThread):
     def run(self) -> None:
         self._bosh_devor = time.monotonic()
         self._bosh_cpu = time.process_time()
+        self._n_t, self._n_cpu = self._bosh_devor, self._bosh_cpu
         self._oxirgi_thread = time.thread_time()
         z = None
         natija: object
@@ -172,6 +211,7 @@ class ZarbIshchisi(QThread):
                 z.yop()
         self._chiqar(True)
         self._progress(True)
+        self._namuna(True)
         self.tugadi.emit(natija)
 
 

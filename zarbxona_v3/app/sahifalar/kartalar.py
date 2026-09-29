@@ -135,3 +135,33 @@ class KonveyerKarta(Karta):
         pz = " · PAUZA" if d.get("pauza") else ""
         self.holat.setText(f"{d['b_bajarildi']} / {d['b_jami']} · haqiqiy tezlik {tz} · "
                            f"haqiqiy CPU {cpu} · qolgan {qolgan}{pz}")
+
+
+class GrafikKarta(Karta):
+    """Jonli grafiklar: tezlik va CPU ulushi — IKKI alohida grafik (bitta y-o'q qoidasi)."""
+
+    def __init__(self):
+        from PySide6.QtWidgets import QHBoxLayout
+
+        from app.grafik import CPU_RANG, TEZLIK_RANG, JonliGrafik
+        super().__init__("Jonli grafiklar (o'lchangan, har ~1 soniya)")
+        q = QHBoxLayout()
+        q.setSpacing(12)
+        self.tezlik = JonliGrafik("Tezlik, kupyura/s", "/s", TEZLIK_RANG, "nishon")
+        self.cpu = JonliGrafik("CPU ulushi", "%", CPU_RANG, "byudjet")
+        q.addWidget(self.tezlik, 1)
+        q.addWidget(self.cpu, 1)
+        self.qosh(q)
+        self.qosh(yorliq("Kulrang fon — sovutish tanaffusi, sariq fon — pauza, uzuq chiziq — "
+                         "sozlangan nishon tezlik va CPU byudjeti. Sichqonchani grafik ustida "
+                         "yurgizing — o'sha soniyadagi qiymat chiqadi. Oxirgi qiymat grafik "
+                         "o'ng tomonida va holat satrida.", "xira"))
+
+    def tozala(self) -> None:
+        self.tezlik.tozala()
+        self.cpu.tozala()
+
+    def namuna(self, d: dict) -> None:
+        self.tezlik.qosh(d["t"], d["tezlik"], d["holat"], d.get("nishon"))
+        b = d.get("byudjet") or 1.0
+        self.cpu.qosh(d["t"], d["cpu"] * 100, d["holat"], b * 100 if b < 1 else None)

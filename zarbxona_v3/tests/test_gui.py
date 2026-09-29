@@ -149,6 +149,7 @@ def test_t15_toliq_aylanish(oyna):
     assert "partiya yopildi" in matn and "Merkle ildizi" in matn and "TO'XTATILDI" in matn
     assert "muhr 72 B" in matn
     assert "haqiqiy tezlik" in zs.konveyer.holat.text()
+    assert zs.grafik.tezlik.namunalar and zs.grafik.cpu.namunalar      # 3.2 jonli grafiklar
 
     # 5. buyurtmalar: davom ettirish (cheklovsiz — tez tugaydi), bekor qilish
     s.rejim.setCurrentIndex(s.rejim.findData("cheklovsiz"))

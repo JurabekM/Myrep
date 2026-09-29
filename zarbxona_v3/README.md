@@ -77,6 +77,12 @@ profil demo'ga aylantirilmaydi.
    Keyin **ZARB** ni bosing. Jarayonni **PAUZA / DAVOM / TO'XTATISH** bilan boshqarasiz.
 5. Konveyer monitorida har kupyura, sovutish tanaffuslari va partiya yopilishi ko'rinadi.
    Holat satrida haqiqiy tezlik, haqiqiy CPU ulushi va qolgan vaqt chiqadi.
+   **Jonli grafiklar** kartasida ikkita alohida grafik bor:
+   - tezlik (kupyura/s) va nishon tezlik;
+   - CPU ulushi (%) va byudjet chegarasi.
+
+   Grafiklar har ~1 soniyada o'lchanadi, sovutish (kulrang) va pauza (sariq) fonda
+   belgilanadi. Sichqoncha grafik ustida o'sha soniyadagi qiymatni ko'rsatadi.
 6. **Partiyalar** sahifasida topshirishning ikki yo'li bor:
    - fayl orqali: eksport qilasiz, keyin «Topshirildi deb belgilash» ni bosasiz;
    - onlayn: MQTT orqali, avto-topshirish bilan. Buning uchun `aetherq_core` kerak.
@@ -114,7 +120,7 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   protokol.py    §13.4–13.6 xabarlar, mavzular, wire AQW1
   kanal.py       §13.2 MQTT + xotira kanali    sessiya.py §13.3 adapter
   topshirish.py  §13.5 + §15.7 avto-topshirish
-app/           PySide6: main.py, theme.py, ishchilar.py (QThread), kirish.py, oyna.py,
+app/           PySide6: main.py, theme.py, ishchilar.py (QThread), kirish.py, oyna.py, grafik.py,
                sahifalar/ (har sahifa alohida fayl), selftest.py, assets/zarbxona.ico
 tests/         pytest (T1–T15) + soxta_bank.py
 tools/         kat_tekshir.py, kat_yarat.py, broker_smoke.py, ikonka_yarat.py
