@@ -12,6 +12,10 @@ from .ibtido import imzo_togri, imzola, tagged_hash, u64be
 from .konstanta import CERT_FORMAT, L_CERT, ML_DSA_IMZO_UZ, ML_DSA_PK_UZ, SERT_ID_UZ
 
 
+OGOHLANTIRISH_KUN = 30
+KUN_MS = 86_400_000
+
+
 class SertifikatXatosi(ValueError):
     pass
 
@@ -50,6 +54,22 @@ class Sertifikat:
         if hozir > self.valid_until_ms:
             return "sertifikat muddati o'tgan"
         return None
+
+    def ogohlantirish(self, hozir_ms: int | None = None) -> str | None:
+        """Muddat tugashiga ≤ 30 kun qolsa — ogohlantirish matni. Muddati o'tgan yoki
+        hali kuchga kirmagan bo'lsa None: bular `muammo()` ning ishi."""
+        hozir = int(time.time() * 1000) if hozir_ms is None else hozir_ms
+        if not self.valid_from_ms <= hozir <= self.valid_until_ms:
+            return None
+        qolgan = self.valid_until_ms - hozir
+        if qolgan > OGOHLANTIRISH_KUN * KUN_MS:
+            return None
+        sana = time.strftime("%Y-%m-%d %H:%M", time.localtime(self.valid_until_ms / 1000))
+        if qolgan < KUN_MS:
+            return (f"sertifikat muddati {max(1, qolgan // 3_600_000)} soatdan keyin tugaydi "
+                    f"({sana}) — bankdan yangisini so'rang")
+        kun = -(-qolgan // KUN_MS)
+        return f"sertifikat muddati {kun} kundan keyin tugaydi ({sana}) — bankdan yangisini so'rang"
 
     # --- fayl -------------------------------------------------------------
 

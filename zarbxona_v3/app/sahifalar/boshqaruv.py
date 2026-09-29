@@ -75,10 +75,12 @@ class BoshqaruvSahifasi(Sahifa):
                 self.qiymatlar[k].setText("—")
         else:
             m = s.muammo(z.pk, z.soat_ms())
+            ogoh = s.ogohlantirish(z.soat_ms())
+            rang = "#F87171" if m else ("#FBBF24" if ogoh else "#4ADE80")
+            kun = f" · ⚠ {ogoh.split(' (')[0]}" if ogoh else ""
             self.qiymatlar["sert"].setText(
-                f"<span style='color:{'#F87171' if m else '#4ADE80'}'>"
-                f"{m or 'yaroqli'}</span><br><span style='font-size:12px;color:#98A0B3'>"
-                f"{s.label}</span>")
+                f"<span style='color:{rang}'>{m or 'yaroqli'}</span><br>"
+                f"<span style='font-size:12px;color:#98A0B3'>{s.label}{kun}</span>")
             self.qiymatlar["limit"].setText(som(s.limit_amount))
             self.qiymatlar["chiq"].setText(som(z.chiqarilgan()))
             self.qiymatlar["qolgan"].setText(som(z.qolgan_limit()))

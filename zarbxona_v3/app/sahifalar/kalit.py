@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QHBoxLayout, QPushButton
 from app import dialog
 from app.vidjetlar import Karta, Sahifa, som, yorliq
 from core.ibtido import iz
+from core.ombor import MIN_PAROL, OmborXatosi, ombor_zaxira, parol_almashtir
 from core.sertifikat import SertifikatXatosi
 
 
@@ -33,7 +34,12 @@ class KalitSahifasi(Sahifa):
         q = QHBoxLayout()
         self.t_eksport = QPushButton("Ochiq kalitni eksport qilish…")
         self.t_eksport.clicked.connect(self.eksport_bos)
-        q.addWidget(self.t_eksport)
+        self.t_parol = QPushButton("Parolni o'zgartirish…")
+        self.t_parol.clicked.connect(self.parol_bos)
+        self.t_zaxira = QPushButton("Shifrlangan zaxira nusxa…")
+        self.t_zaxira.clicked.connect(self.zaxira_bos)
+        for w in (self.t_eksport, self.t_parol, self.t_zaxira):
+            q.addWidget(w)
         q.addStretch(1)
         k.qosh(q)
         self.qosh(k)
@@ -41,6 +47,8 @@ class KalitSahifasi(Sahifa):
         s = Karta("Bank sertifikati (vakolat)")
         self.sert = yorliq("")
         s.qosh(self.sert)
+        self.ogoh = yorliq("", "ogoh")
+        s.qosh(self.ogoh)
         sq = QHBoxLayout()
         self.t_import = QPushButton("Sertifikatni import qilish…")
         self.t_import.setObjectName("asosiy")
@@ -54,6 +62,7 @@ class KalitSahifasi(Sahifa):
     def yangila(self) -> None:
         z = self.ctx.z
         self.iz.setText(f"<span style='font-family:monospace'>{iz(z.pk)}</span>")
+        self.ogoh.setText("<br>".join("⚠ " + m for m in z.ogohlantirishlar()))
         c = z.sertifikat
         if c is None:
             self.sert.setText("Sertifikat import qilinmagan. Bank bergan <b>.aqcert</b> "
@@ -81,6 +90,43 @@ class KalitSahifasi(Sahifa):
                                          "fingerprint": iz(z.pk)}, indent=2),
                              encoding="utf-8")
         self.holat(f"ochiq kalit saqlandi: {yol}")
+
+    @Slot()
+    def parol_bos(self) -> None:
+        r = dialog.parol_almashtirish(self)
+        if r is None:
+            self.holat("parol o'zgartirilmadi")
+            return
+        eski, yangi, takror = r
+        if yangi != takror:
+            dialog.xato(self, "Parol", "Yangi parollar mos emas.")
+            return
+        try:
+            parol_almashtir(self.ctx.z.papka / "kalit.json", eski, yangi)
+        except OmborXatosi as e:
+            dialog.xato(self, "Parol", str(e))
+            self.holat(f"parol o'zgartirilmadi: {e}")
+            return
+        self.holat("parol o'zgartirildi")
+        dialog.xabar(self, "Parol", "Parol o'zgartirildi. Kalit va uning izi o'zgarmadi.\n"
+                     "Eski zaxira nusxalar ESKI parol bilan ochiladi — yangisini oling.")
+
+    @Slot()
+    def zaxira_bos(self) -> None:
+        yol = dialog.fayl_saqla(self, "Kalit zaxirasi", "zarbxona_kalit_zaxira.json",
+                                "JSON (*.json)")
+        if not yol:
+            self.holat("zaxira bekor qilindi")
+            return
+        try:
+            pk = ombor_zaxira(self.ctx.z.papka / "kalit.json", Path(yol))
+        except (OmborXatosi, OSError) as e:
+            dialog.xato(self, "Zaxira", str(e))
+            return
+        self.holat(f"kalit zaxirasi saqlandi: {yol}")
+        dialog.xabar(self, "Zaxira", f"Saqlandi: {yol}\nIz: {iz(pk)}\n\nFayl parol bilan "
+                     f"shifrlangan. Uni boshqa diskda yoki USB'da saqlang; parolsiz "
+                     f"(kamida {MIN_PAROL} belgi) uni ochib bo'lmaydi.")
 
     @Slot()
     def import_bos(self) -> None:

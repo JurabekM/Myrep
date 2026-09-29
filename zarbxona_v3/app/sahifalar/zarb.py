@@ -125,7 +125,9 @@ class ZarbSahifasi(Sahifa):
                 f"<b>{s.label}</b> · limit {som(s.limit_amount)} · qolgan "
                 f"{som(z.qolgan_limit())} · band (faol buyurtmalar) {som(z.band_summa())}<br>"
                 f"<span style='color:{rang}'>{m or 'yaroqli'}</span> · amal qiladi "
-                f"{time.strftime('%Y-%m-%d', time.localtime(s.valid_until_ms / 1000))} gacha")
+                f"{time.strftime('%Y-%m-%d', time.localtime(s.valid_until_ms / 1000))} gacha"
+                + "".join(f"<br><span style='color:#FBBF24'>⚠ {o}</span>"
+                          for o in z.ogohlantirishlar()))
         joriy = self.qulf.currentText()
         self.qulf.clear()
         self.qulf.addItems(z.jurnal.oxirgi_qulflar())

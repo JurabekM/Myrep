@@ -97,6 +97,12 @@ class Oyna(QMainWindow):
         if getattr(w, "davriy_yangilansin", False):
             w.yangila()
 
+    def ogohlantirishlarni_korsat(self) -> None:
+        q = self.z.ogohlantirishlar()
+        if q:
+            self.holat("⚠ " + q[0])
+            dialog.xabar(self, "Ogohlantirish", "\n\n".join(q))
+
     def tiklashni_korsat(self, t: TiklashHisoboti | None) -> None:
         if t is None or t.bosh:
             return

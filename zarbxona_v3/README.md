@@ -38,6 +38,9 @@ python -m pytest tests/test_kat.py -v                     # v3 yadrosi o'sha KAT
    safar kalit izi ko'rsatiladi va parol so'raladi.
 2. **Kalit va sertifikat** sahifasi → «Ochiq kalitni eksport qilish». Faylni bankka
    bering, izni bank operatori bilan ko'z bilan solishtiring.
+   Shu sahifada **parolni o'zgartirish** va kalitning **shifrlangan zaxira nusxasini**
+   olish mumkin. Zaxirani boshqa diskda saqlang. Yangi kompyuterda kirish oynasidagi
+   «Zaxiradan tiklash…» uni o'sha parol bilan ochadi.
 3. Bank bergan `.aqcert` → «Sertifikatni import qilish». Bank kaliti sertifikatdan
    olinadi va onlayn ulanishda aynan shu kalit pinlanadi.
 4. **Zarb** sahifasida quyidagilarni kiriting:
@@ -56,6 +59,9 @@ python -m pytest tests/test_kat.py -v                     # v3 yadrosi o'sha KAT
 7. **Tekshiruv** sahifasida butun jurnalni tekshirish va «buzib ko'rish» demosi bor.
    Demo jurnal va tanlangan partiyaning **vaqtinchalik nusxasini** buzadi. Haqiqiy
    profil o'zgarmaydi, demo o'rtasida tok o'chsa ham.
+
+Sertifikat muddati tugashiga 30 kun yoki undan kam qolganda, yoki limitning 90 % i
+ishlatilganda, dastur ochilishida va paneldagi kartalarda ogohlantirish chiqadi.
 
 Dastur uzilsa, qayta ochilganda quyidagilar bajariladi (§15.5):
 - `*.yarim` fayllar o'chiriladi;

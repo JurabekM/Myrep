@@ -49,6 +49,7 @@ def main(argv=None) -> int:
     oyna = Oyna(d.zarbxona)
     oyna.show()
     oyna.tiklashni_korsat(d.tiklash)
+    oyna.ogohlantirishlarni_korsat()
     return ilova.exec()
 
 

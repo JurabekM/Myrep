@@ -47,6 +47,9 @@ class Dialoglar:
                    lambda o, s, nom, f: self._q("fayl_saqla", str(self.tmp / nom)))
         mp.setattr(dialog, "papka_tanla", lambda *a: self._q("papka_tanla", str(self.tmp)))
         mp.setattr(dialog, "parol", self._qaytar("parol", None))
+        self.parol_javob = None
+        mp.setattr(dialog, "parol_almashtirish",
+                   lambda *a: self._q("parol_almashtirish", self.parol_javob))
 
     def _q(self, nom, javob):
         self.chaqiriqlar.append((nom,))
@@ -245,3 +248,76 @@ def test_ombor_yozish_va_ochish(tmp_path):
     assert ombor_och(tmp_path / "k.json", "parol-12345").public_key().public_bytes_raw() == \
         sk.public_key().public_bytes_raw()
     assert not (tmp_path / "k.json.tmp").exists()
+
+
+def test_14_kalit_sahifasi_parol_va_zaxira(ilova, tmp_path, kalitlar, sertifikat, monkeypatch):
+    """1.4: parolni o'zgartirish, zaxira nusxa, ogohlantirish — GUI orqali."""
+    from app.kirish import KirishDialogi
+    from app.oyna import Oyna
+    from core.ibtido import ochiq_kalit
+    d = Dialoglar(tmp_path, tmp_path / "s.aqcert")
+    d.ornat(monkeypatch)
+    papka = tmp_path / "p"
+    ombor_yarat(papka / "kalit.json", "eski-parol-1", n=4096)
+    k = KirishDialogi(papka)
+    k.parol1.setText("eski-parol-1")
+    k.tugma.click()
+    z = k.zarbxona
+    o = Oyna(z)
+    o.dialoglar = d
+    ks = o.sahifalar["kalit"]
+    o.sahifaga_ot("kalit")
+    # bekor qilindi
+    assert bos_va_javob(o, ks.t_parol)
+    # takror mos emas
+    d.parol_javob = ("eski-parol-1", "yangi-parol-2", "boshqa")
+    assert bos_va_javob(o, ks.t_parol) and d.chaqiriqlar[-1][0] == "xato"
+    # eski noto'g'ri
+    d.parol_javob = ("xato-parol-0", "yangi-parol-2", "yangi-parol-2")
+    assert bos_va_javob(o, ks.t_parol) and d.chaqiriqlar[-1][0] == "xato"
+    # muvaffaqiyat
+    d.parol_javob = ("eski-parol-1", "yangi-parol-2", "yangi-parol-2")
+    assert bos_va_javob(o, ks.t_parol) and d.chaqiriqlar[-1][0] == "xabar"
+    assert ochiq_kalit(ombor_och(papka / "kalit.json", "yangi-parol-2")) == z.pk
+    # zaxira
+    assert bos_va_javob(o, ks.t_zaxira)
+    zaxira = tmp_path / "zarbxona_kalit_zaxira.json"
+    assert zaxira.exists()
+    o.close()
+
+    # zaxiradan boshqa profilga tiklash (login oynasi)
+    d.fayl_och_javob = str(zaxira)
+    k2 = KirishDialogi(tmp_path / "p2")
+    assert k2.yangi and k2.t_tikla.isVisibleTo(k2)
+    k2.t_tikla.click()
+    assert "parol" in k2.xabar.text() and k2.zarbxona is None
+    k2.parol1.setText("notogri-parol")
+    k2.t_tikla.click()
+    assert "parol noto'g'ri" in k2.xabar.text()
+    assert not (tmp_path / "p2" / "kalit.json").exists()
+    k2.parol1.setText("yangi-parol-2")
+    k2.t_tikla.click()
+    assert k2.zarbxona is not None
+    assert k2.zarbxona.pk == z.pk
+    k2.zarbxona.yop()
+
+
+def test_14_ishga_tushishda_ogohlantirish(ilova, tmp_path, kalitlar, monkeypatch):
+    from app.oyna import Oyna
+    from core.sertifikat import KUN_MS, sertifikat_yarat
+    zsk, zpk, bsk, bpk = kalitlar
+    d = Dialoglar(tmp_path, tmp_path / "s.aqcert")
+    d.ornat(monkeypatch)
+    s = sertifikat_yarat(bsk, bpk, zpk, bytes(16), "T", 1000, HOZIR - KUN_MS, HOZIR + 3 * KUN_MS)
+    s.yoz(tmp_path / "s.aqcert")
+    z = Zarbxona(tmp_path / "p", zsk, soat_ms=lambda: HOZIR)
+    z.sertifikat_import(tmp_path / "s.aqcert")
+    o = Oyna(z)
+    o.dialoglar = d
+    o.ogohlantirishlarni_korsat()
+    assert d.chaqiriqlar[-1][0] == "xabar" and "3 kundan keyin" in d.chaqiriqlar[-1][2]
+    o.sahifaga_ot("boshqaruv")
+    assert "⚠" in o.sahifalar["boshqaruv"].qiymatlar["sert"].text()
+    o.sahifaga_ot("zarb")
+    assert "3 kundan keyin" in o.sahifalar["zarb"].vakolat_matn.text()
+    o.close()

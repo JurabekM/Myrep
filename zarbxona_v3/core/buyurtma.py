@@ -24,6 +24,7 @@ from .tekshiruv import Hisobot, faylni_tekshir, partiyani_tekshir
 from .ibtido import ochiq_kalit
 
 DEFAULT_PARTIYA_HAJMI = 500
+LIMIT_OGOHLANTIRISH = 0.9
 
 
 class BandXatosi(RuntimeError):
@@ -192,6 +193,22 @@ class Zarbxona:
         if not self.sertifikat:
             return 0
         return self.sertifikat.limit_amount - self.chiqarilgan()
+
+    def ogohlantirishlar(self) -> list[str]:
+        """Operatorga erta ogohlantirishlar: sertifikat muddati va limit tugashi."""
+        s = self.sertifikat
+        if s is None:
+            return []
+        q = []
+        m = s.ogohlantirish(self.soat_ms())
+        if m:
+            q.append(m)
+        if s.limit_amount > 0 and s.muammo(self.pk, self.soat_ms()) is None:
+            ishlatilgan = self.chiqarilgan() / s.limit_amount
+            if ishlatilgan >= LIMIT_OGOHLANTIRISH:
+                q.append(f"sertifikat limitining {ishlatilgan * 100:.0f} % ishlatilgan — "
+                         f"qolgan {self.qolgan_limit():,} so'm".replace(",", " "))
+        return q
 
     def band_summa(self, bundan_tashqari: str | None = None) -> int:
         """Boshqa faol/pauza buyurtmalarning hali zarb qilinmagan summasi."""

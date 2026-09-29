@@ -94,3 +94,49 @@ def ombor_lugatdan_och(d: dict, parol: str) -> bytes:
 def ombor_och(yol: Path, parol: str):
     """Maxfiy kalit obyekti."""
     return kalit_urugdan(ombor_lugatdan_och(_oqi(yol), parol))
+
+
+def _atomik_yoz(yol: Path, matn: str) -> None:
+    yol = Path(yol)
+    tmp = yol.with_name(yol.name + ".tmp")
+    tmp.write_text(matn, encoding="utf-8")
+    os.replace(tmp, yol)
+
+
+def parol_almashtir(yol: Path, eski: str, yangi: str) -> None:
+    """Urug' o'zgarmaydi (kalit va izi o'sha), faqat shifrlovchi parol. scrypt `n`
+    fayldagidan kichraymaydi. Eski parol noto'g'ri bo'lsa fayl o'zgarmaydi."""
+    d = _oqi(yol)
+    urug = ombor_lugatdan_och(d, eski)
+    if len(yangi) < MIN_PAROL:
+        raise OmborXatosi(f"yangi parol kamida {MIN_PAROL} belgi bo'lsin")
+    if yangi == eski:
+        raise OmborXatosi("yangi parol eskisi bilan bir xil")
+    n = max(int(d["kdf"]["n"]), N_ISHLAB_CHIQARISH)
+    _atomik_yoz(yol, json.dumps(ombor_lugat(urug, yangi, n), indent=2))
+
+
+def ombor_zaxira(yol: Path, manzil: Path) -> bytes:
+    """Shifrlangan kalit faylining zaxira nusxasi (o'sha parol bilan ochiladi).
+    Qaytaradi: ochiq kalit — izni ko'rsatish uchun."""
+    pk = ombor_ochiq_kalit(yol)
+    manzil = Path(manzil)
+    if manzil.resolve() == Path(yol).resolve():
+        raise OmborXatosi("zaxira kalit faylining o'zi bo'lishi mumkin emas")
+    _atomik_yoz(manzil, Path(yol).read_text(encoding="utf-8"))
+    if ombor_ochiq_kalit(manzil) != pk:
+        raise OmborXatosi("zaxira yozilishi tekshiruvdan o'tmadi")
+    return pk
+
+
+def ombor_tikla(zaxira: Path, yol: Path, parol: str):
+    """Zaxiradan profilga. Avval parol bilan OCHIB tekshiriladi; mavjud kalit ustiga
+    yozilmaydi. Qaytaradi: maxfiy kalit obyekti."""
+    yol = Path(yol)
+    if yol.exists():
+        raise OmborXatosi("profilda kalit allaqachon bor — ustiga yozilmaydi")
+    d = _oqi(zaxira)
+    urug = ombor_lugatdan_och(d, parol)
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    _atomik_yoz(yol, json.dumps(d, indent=2))
+    return kalit_urugdan(urug)
