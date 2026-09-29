@@ -145,14 +145,17 @@ def faylni_tekshir(yol: Path, zarbxona_pk: bytes, sert: Sertifikat | None,
 
 
 def jurnalni_tekshir(jurnal: Jurnal, papka: Path, zarbxona_pk: bytes,
-                     sert: Sertifikat | None) -> Hisobot:
-    """Jurnal ↔ fayllar."""
+                     sert: Sertifikat | None, faqat: set[str] | None = None) -> Hisobot:
+    """Jurnal ↔ fayllar. `faqat` — fayllari tekshiriladigan partiya id'lari
+    (demo nusxa uchun); jurnalning o'z qoidalari baribir hamma yozuvga qo'llanadi."""
     h = Hisobot()
     papka = Path(papka)
     yozuvlar = jurnal.partiyalar()
     h.tekshirildi.append("jurnal")
     royxat = set()
     for y in yozuvlar:
+        if faqat is not None and y.partiya_id not in faqat:
+            continue
         w = f"jurnal {y.partiya_id[:12]}"
         yol = papka / y.fayl
         royxat.add(y.fayl)

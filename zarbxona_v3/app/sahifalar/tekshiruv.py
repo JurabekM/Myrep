@@ -11,7 +11,7 @@ from app import dialog
 from app.ishchilar import FonIsh
 from app.theme import mono_shrift
 from app.vidjetlar import Karta, Sahifa, yorliq
-from core.buzish import TURLAR, Buzuvchi, BuzishXatosi
+from core.buzish import TURLAR, BuzishXatosi, DemoNusxa
 from core.tekshiruv import Hisobot, faylni_tekshir, jurnalni_tekshir
 
 
@@ -25,7 +25,7 @@ class TekshiruvSahifasi(Sahifa):
     def __init__(self, ctx):
         super().__init__(ctx)
         self.ish: FonIsh | None = None
-        self.buzuvchi = Buzuvchi(ctx.z.partiya_papka, ctx.z.jurnal)
+        self.demo: DemoNusxa | None = None
         k = Karta("Tekshirish")
         k.qosh(yorliq("Partiya noldan qayta hisoblanadi: tartib, nominal, cheklov, muhr, "
                       "Merkle ildizi (hamma bargdan), isbotlar, ML-DSA imzo, sertifikat va "
@@ -50,8 +50,9 @@ class TekshiruvSahifasi(Sahifa):
         self.qosh(k)
 
         d = Karta("Buzib ko'rish demosi")
-        d.qosh(yorliq("Fayl yoki jurnal ataylab buziladi — tekshiruv buni topishi kerak. "
-                      "«Tiklash» asl baytlarni qaytaradi. Buzish qiymati har doim joriy "
+        d.qosh(yorliq("Jurnal va tanlangan partiya faylining VAQTINCHALIK NUSXASI ataylab "
+                      "buziladi — tekshiruv buni topishi kerak. Haqiqiy profil o'zgarmaydi. "
+                      "«Tiklash» nusxani asl holatga qaytaradi. Buzish qiymati har doim joriy "
                       "qiymatdan farq qiladi.", "xira"))
         bq = QHBoxLayout()
         self.partiya = QComboBox()
@@ -82,7 +83,7 @@ class TekshiruvSahifasi(Sahifa):
         i = self.partiya.findData(joriy)
         if i >= 0:
             self.partiya.setCurrentIndex(i)
-        self.t_tikla.setEnabled(self.buzuvchi.buzilgan)
+        self.t_tikla.setEnabled(self.demo is not None and self.demo.buzuvchi.buzilgan)
 
     def korsat(self, h: Hisobot, nima: str) -> None:
         if h.ok:
@@ -131,29 +132,44 @@ class TekshiruvSahifasi(Sahifa):
             r = h
         self.korsat(r, "jurnal")
 
+    def _demo_yop(self) -> None:
+        if self.demo is not None:
+            self.demo.yop()
+            self.demo = None
+
     @Slot()
     def buz_bos(self) -> None:
         pid = self.partiya.currentData()
         if not pid:
             dialog.xato(self, "Buzish", "Jurnalda partiya yo'q — avval zarb qiling.")
             return
-        zarb = self.ctx.sahifalar["zarb"]
-        if zarb.ishlayapti():
-            dialog.xato(self, "Buzish", "Zarb ketayotganda demo o'tkazilmaydi.")
-            return
+        z = self.ctx.z
+        if self.demo is None or self.demo.partiya_id != pid:
+            self._demo_yop()
+            try:
+                self.demo = DemoNusxa(z.jurnal.yol, z.partiya_papka, pid)
+            except (BuzishXatosi, OSError) as e:
+                dialog.xato(self, "Buzish", f"demo nusxa yaratilmadi: {e}")
+                return
         try:
-            t = self.buzuvchi.buz(self.tur.currentData(), pid)
+            t = self.demo.buz(self.tur.currentData())
         except BuzishXatosi as e:
             dialog.xato(self, "Buzish", str(e))
             return
-        self.buzish_holat.setText(f"BUZILDI: {t}. Endi «Butun jurnalni tekshirish» — "
-                                  "keyin «Tiklash».")
-        self.korsat(_jurnal_ishi(self.ctx.z), "buzilgan jurnal")
+        self.buzish_holat.setText(f"NUSXA BUZILDI: {t}. Haqiqiy profil o'zgarmadi. "
+                                  "«Tiklash» nusxani qaytaradi.")
+        self.korsat(self.demo.tekshir(z.pk, z.sertifikat), "buzilgan nusxa")
         self.t_tikla.setEnabled(True)
 
     @Slot()
     def tikla_bos(self) -> None:
-        n = self.buzuvchi.tikla()
-        self.buzish_holat.setText(f"tiklandi ({n} ob'ekt)" if n else "tiklash kerak emas")
-        self.korsat(_jurnal_ishi(self.ctx.z), "tiklangan jurnal")
+        if self.demo is None:
+            self.holat("tiklash kerak emas — demo nusxa yo'q")
+            return
+        n = self.demo.tikla()
+        self.buzish_holat.setText(f"nusxa tiklandi ({n} ob'ekt)" if n else "tiklash kerak emas")
+        self.korsat(self.demo.tekshir(self.ctx.z.pk, self.ctx.z.sertifikat), "tiklangan nusxa")
         self.t_tikla.setEnabled(False)
+
+    def toxtat(self) -> None:
+        self._demo_yop()

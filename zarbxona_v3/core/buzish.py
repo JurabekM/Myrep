@@ -1,12 +1,19 @@
 """§12 — «Buzib ko'rish» demosi: faylni yoki jurnalni ataylab buzadi,
 tekshiruv topishini ko'rsatadi, «Tiklash» asl holatga qaytaradi.
 
+Demo HECH QACHON haqiqiy profilga tegmaydi: `DemoNusxa` jurnalning va tanlangan
+partiya faylining vaqtinchalik nusxasini yaratadi, buzish faqat shu nusxada
+bo'ladi. Demo o'rtasida dastur yopilsa yoki tok o'chsa, haqiqiy ma'lumot butun
+qoladi — eng yomoni tizim temp papkasida keraksiz nusxa qoladi.
+
 ⚠ Buzish qiymati joriy qiymatdan FARQ qilishi shart (v2 dagi xato).
 """
 
 from __future__ import annotations
 
+import shutil
 import sqlite3
+import tempfile
 from pathlib import Path
 
 from .jurnal import Jurnal
@@ -138,3 +145,58 @@ class Buzuvchi:
         self._fayllar.clear()
         self._jurnal.clear()
         return n
+
+
+class DemoNusxa:
+    """Haqiqiy jurnal va bitta partiya faylining vaqtinchalik nusxasi.
+
+    Jurnal SQLite backup API bilan ko'chiriladi (WAL rejimida ham izchil nusxa);
+    fayldan faqat tanlangan partiya olinadi — katta profilda ham tez.
+    """
+
+    def __init__(self, jurnal_yoli: Path, partiya_papka: Path, partiya_id: str):
+        self.partiya_id = partiya_id
+        self.papka = Path(tempfile.mkdtemp(prefix="zarbxona-demo-"))
+        self.jurnal: Jurnal | None = None
+        try:
+            manba = sqlite3.connect(Path(jurnal_yoli))
+            nishon = sqlite3.connect(self.papka / "jurnal.db")
+            try:
+                manba.backup(nishon)
+            finally:
+                nishon.close()
+                manba.close()
+            self.jurnal = Jurnal(self.papka / "jurnal.db")
+            y = self.jurnal.partiya(partiya_id)
+            if y is None:
+                raise BuzishXatosi("partiya jurnalda topilmadi")
+            self.partiya_papka.mkdir()
+            asl = Path(partiya_papka) / y.fayl
+            if not asl.exists():
+                raise BuzishXatosi(f"partiya fayli yo'q: {y.fayl}")
+            shutil.copy2(asl, self.partiya_papka / y.fayl)
+        except BaseException:
+            self.yop()
+            raise
+        self.buzuvchi = Buzuvchi(self.partiya_papka, self.jurnal)
+
+    @property
+    def partiya_papka(self) -> Path:
+        return self.papka / "partiyalar"
+
+    def buz(self, tur: str) -> str:
+        return self.buzuvchi.buz(tur, self.partiya_id)
+
+    def tikla(self) -> int:
+        return self.buzuvchi.tikla()
+
+    def tekshir(self, zarbxona_pk: bytes, sert):
+        from .tekshiruv import jurnalni_tekshir
+        return jurnalni_tekshir(self.jurnal, self.partiya_papka, zarbxona_pk, sert,
+                                faqat={self.partiya_id})
+
+    def yop(self) -> None:
+        if self.jurnal is not None:
+            self.jurnal.yop()
+            self.jurnal = None
+        shutil.rmtree(self.papka, ignore_errors=True)

@@ -54,6 +54,8 @@ python -m pytest tests/test_kat.py -v                     # v3 yadrosi o'sha KAT
    - fayl orqali: eksport qilasiz, keyin «Topshirildi deb belgilash» ni bosasiz;
    - onlayn: MQTT orqali, avto-topshirish bilan. Buning uchun `aetherq_core` kerak.
 7. **Tekshiruv** sahifasida butun jurnalni tekshirish va «buzib ko'rish» demosi bor.
+   Demo jurnal va tanlangan partiyaning **vaqtinchalik nusxasini** buzadi. Haqiqiy
+   profil o'zgarmaydi, demo o'rtasida tok o'chsa ham.
 
 Dastur uzilsa, qayta ochilganda quyidagilar bajariladi (§15.5):
 - `*.yarim` fayllar o'chiriladi;

@@ -8,7 +8,7 @@ import sqlite3
 import pytest
 
 from core.buyurtma import BandXatosi, BuyurtmaXatosi, Zarbxona
-from core.buzish import KUTILGAN_QOIDA, TURLAR, Buzuvchi, BuzishXatosi
+from core.buzish import KUTILGAN_QOIDA, TURLAR, BuzishXatosi, DemoNusxa
 from core.cheklov import cheklov_json
 from core.ibtido import imzo_togri
 from core.kupyura import muhrni_och
@@ -76,6 +76,12 @@ def test_fayl_ochilmasa_muammo(tmp_path, kalitlar):
     assert p is None and not h.ok and "fayl" in h.qoidalar()
 
 
+def _suratlar(z):
+    """Profilning hamma faylini baytlari bilan (jurnal WAL ham)."""
+    return {f.relative_to(z.papka): f.read_bytes() for f in sorted(z.papka.rglob("*"))
+            if f.is_file() and f.name != "zarbxona.lock"}
+
+
 @pytest.mark.parametrize("tur", list(TURLAR))
 def test_t4_buzish(zarbxona, tur):
     z = zarbxona
@@ -83,15 +89,24 @@ def test_t4_buzish(zarbxona, tur):
     assert z.buyurtmani_bajar(b.buyurtma_id).holat == "tugadi"
     pid = z.jurnal.partiyalar()[0].partiya_id
     assert jurnalni_tekshir(z.jurnal, z.partiya_papka, z.pk, z.sertifikat).ok
-    bz = Buzuvchi(z.partiya_papka, z.jurnal)
-    tavsif = bz.buz(tur, pid)
-    eski, yangi = tavsif.split(": ", 1)[1].split(" → ")
-    assert eski != yangi
-    h = jurnalni_tekshir(z.jurnal, z.partiya_papka, z.pk, z.sertifikat)
-    assert not h.ok
-    assert KUTILGAN_QOIDA[tur] in h.qoidalar(), (tur, h.matn())
-    bz.tikla()
-    assert jurnalni_tekshir(z.jurnal, z.partiya_papka, z.pk, z.sertifikat).ok
+    oldin = _suratlar(z)
+    d = DemoNusxa(z.jurnal.yol, z.partiya_papka, pid)
+    try:
+        assert d.tekshir(z.pk, z.sertifikat).ok               # nusxa ham toza boshlanadi
+        tavsif = d.buz(tur)
+        eski, yangi = tavsif.split(": ", 1)[1].split(" → ")
+        assert eski != yangi
+        h = d.tekshir(z.pk, z.sertifikat)
+        assert not h.ok
+        assert KUTILGAN_QOIDA[tur] in h.qoidalar(), (tur, h.matn())
+        # 1.1: haqiqiy profil bayt-ma-bayt o'zgarmagan
+        assert _suratlar(z) == oldin
+        assert jurnalni_tekshir(z.jurnal, z.partiya_papka, z.pk, z.sertifikat).ok
+        d.tikla()
+        assert d.tekshir(z.pk, z.sertifikat).ok
+    finally:
+        d.yop()
+    assert not d.papka.exists()
 
 
 def test_t4_nominal_5000_ham_buziladi(zarbxona):
@@ -100,10 +115,35 @@ def test_t4_nominal_5000_ham_buziladi(zarbxona):
     b = z.buyurtma_yarat(5000, "AQ-RES-0003", "", TEZ)
     z.buyurtmani_bajar(b.buyurtma_id)
     y = z.jurnal.partiyalar()[0]
-    p = partiya_oqi(z.partiya_papka / y.fayl)
-    assert p.qatorlar[0].nominal == 5000
-    Buzuvchi(z.partiya_papka, z.jurnal).buz("nominal", y.partiya_id)
-    assert partiya_oqi(z.partiya_papka / y.fayl).qatorlar[0].nominal != 5000
+    assert partiya_oqi(z.partiya_papka / y.fayl).qatorlar[0].nominal == 5000
+    d = DemoNusxa(z.jurnal.yol, z.partiya_papka, y.partiya_id)
+    try:
+        d.buz("nominal")
+        assert partiya_oqi(d.partiya_papka / y.fayl).qatorlar[0].nominal != 5000
+        assert partiya_oqi(z.partiya_papka / y.fayl).qatorlar[0].nominal == 5000
+    finally:
+        d.yop()
+
+
+def test_demo_nusxa_uzilsa_haqiqiy_profil_butun(zarbxona):
+    """Demo o'rtasida «tok o'chdi»: tikla() ham, yop() ham chaqirilmadi."""
+    z = zarbxona
+    b = z.buyurtma_yarat(5000 * 2, "AQ-RES-0004", "", TEZ)
+    z.buyurtmani_bajar(b.buyurtma_id)
+    pid = z.jurnal.partiyalar()[0].partiya_id
+    d = DemoNusxa(z.jurnal.yol, z.partiya_papka, pid)
+    for tur in TURLAR:
+        try:
+            d.buz(tur)
+        except BuzishXatosi:
+            pass
+    assert jurnalni_tekshir(z.jurnal, z.partiya_papka, z.pk, z.sertifikat).ok
+    d.yop()
+
+
+def test_demo_nusxa_notogri_partiya(zarbxona):
+    with pytest.raises(BuzishXatosi):
+        DemoNusxa(zarbxona.jurnal.yol, zarbxona.partiya_papka, "yoq")
 
 
 def test_buzish_farqsiz_qiymat_rad_etiladi():
