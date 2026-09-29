@@ -11,11 +11,12 @@ from pathlib import Path
 
 from .cheklov import cheklov_xeshi
 from .ibtido import imzo_togri
-from .jurnal import Jurnal
+from .jurnal import ZANJIR_BOSH, ZANJIR_VERSIYA, Jurnal
 from .konstanta import MAX_KUPYURA, MUHR_UZ, NOMINALLAR, XAZINA
 from .merkle import Daraxt, isbot_ajrat, isbot_togri
 from .partiya import FaylXatosi, Partiya, partiya_oqi
 from .sertifikat import Sertifikat
+from .zanjir import zanjirni_tekshir
 
 ISBOT_NAMUNA = 2000
 
@@ -185,6 +186,11 @@ def jurnalni_tekshir(jurnal: Jurnal, papka: Path, zarbxona_pk: bytes,
         if a2 <= b1:
             h.qosh(f"jurnal {p1[:12]} / {p2[:12]}", "seq-kesishma",
                    f"seq oraliqlari kesishadi: {a1}..{b1} va {a2}..{b2}")
+
+    for qayerda, qoida, izoh in zanjirni_tekshir(
+            yozuvlar, jurnal.zanjir_boginlari(), jurnal.sozlama(ZANJIR_BOSH),
+            jurnal.sozlama(ZANJIR_VERSIYA), zarbxona_pk):
+        h.qosh(qayerda, qoida, izoh)
 
     if sert is not None:
         jami = jurnal.sert_jami(sert.cert_id.hex())

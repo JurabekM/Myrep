@@ -60,6 +60,13 @@ python -m pytest tests/test_kat.py -v                     # v3 yadrosi o'sha KAT
    Demo jurnal va tanlangan partiyaning **vaqtinchalik nusxasini** buzadi. Haqiqiy
    profil o'zgarmaydi, demo o'rtasida tok o'chsa ham.
 
+**Jurnal xesh-zanjiri.** Har partiya yozuvi oldingisining xeshini o'z ichiga oladi.
+Zanjir boshi zarbxona kaliti bilan imzolanadi. Kalitsiz odam `jurnal.db` da yozuvni
+o'zgartirsa, o'chirsa yoki qo'shsa, zanjirni qayta hisoblasa ham «Tekshiruv» buni topadi.
+Eski (zanjirsiz) jurnal birinchi ochilishda bir marta migratsiya qilinadi.
+⚠ Chegarasi: butun jurnalni o'sha kalit imzolagan **eski nusxasiga qaytarishni** zanjir
+o'zi sezmaydi. Buning uchun tashqi nuqta kerak, masalan bankning qabul yozuvlari.
+
 Sertifikat muddati tugashiga 30 kun yoki undan kam qolganda, yoki limitning 90 % i
 ishlatilganda, dastur ochilishida va paneldagi kartalarda ogohlantirish chiqadi.
 
@@ -76,6 +83,7 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   ibtido.py      §2  sha3, AQ-KMAC256 (⚠ standart emas), HKDF, AEAD, ML-DSA, lp/tagged_hash, iz
   konstanta.py   §3   kupyura.py §4   merkle.py §5   partiya.py §6+§10   cheklov.py §7
   sertifikat.py  §8   ombor.py §9     tekshiruv.py §12   buzish.py §12 (demo)
+  zanjir.py      jurnal xesh-zanjiri (ichki format, bank protokoliga kirmaydi)
   surat.py       §14 Surat, Ritm (pauza bilan)
   buyurtma.py    §15 buyurtma, tiklash, yagona yozuvchi   jurnal.py §15.3
   protokol.py    §13.4–13.6 xabarlar, mavzular, wire AQW1

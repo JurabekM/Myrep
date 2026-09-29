@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .partiya import Partiya
+from .zanjir import NOL, bogin_xeshi, bosh_json, bosh_xabari
 
 _SXEMA = """
 CREATE TABLE IF NOT EXISTS sozlama (kalit TEXT PRIMARY KEY, qiymat TEXT NOT NULL);
@@ -44,7 +45,16 @@ CREATE TABLE IF NOT EXISTS partiyalar (
     topshirilgan_ms INTEGER,
     topshirish_xatosi TEXT
 );
+
+CREATE TABLE IF NOT EXISTS zanjir (
+    tartib      INTEGER PRIMARY KEY,
+    partiya_id  TEXT UNIQUE NOT NULL,
+    oldingi     TEXT NOT NULL,
+    xesh        TEXT NOT NULL
+);
 """
+ZANJIR_VERSIYA = "zanjir_versiya"
+ZANJIR_BOSH = "zanjir_bosh"
 
 HOLATLAR = ("faol", "pauza", "tugadi", "bekor")
 
@@ -105,6 +115,45 @@ class Jurnal:
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.executescript(_SXEMA)
         self.db.commit()
+        if self.sozlama(ZANJIR_VERSIYA) is None and not self._partiya_bormi():
+            self.sozlama_yoz(ZANJIR_VERSIYA, "1")     # yangi jurnal — zanjir boshidan
+
+    def _partiya_bormi(self) -> bool:
+        return self.db.execute("SELECT 1 FROM partiyalar LIMIT 1").fetchone() is not None
+
+    # --- xesh-zanjir ---------------------------------------------------------
+
+    def zanjir_migratsiya_kerak(self) -> bool:
+        """Zanjirsiz (eski v3) jurnal: belgisi yo'q, partiyalar bor."""
+        return self.sozlama(ZANJIR_VERSIYA) is None and self._partiya_bormi()
+
+    def zanjir_migratsiya(self, imzolovchi) -> int:
+        """Eski jurnalga zanjirni bir marta quradi. Faqat belgisi yo'q bo'lsa —
+        mavjud zanjirni hech qachon «tuzatmaydi» (bu buzilishni yashirardi)."""
+        if not self.zanjir_migratsiya_kerak():
+            return 0
+        with self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            self.db.execute("DELETE FROM zanjir")
+            x = NOL
+            ys = self.partiyalar()
+            for i, y in enumerate(ys):
+                yangi = bogin_xeshi(x, y)
+                self.db.execute("INSERT INTO zanjir VALUES (?,?,?,?)",
+                                (i, y.partiya_id, x.hex(), yangi.hex()))
+                x = yangi
+            self._bosh_yoz(len(ys), x, imzolovchi)
+            self.db.execute("INSERT OR REPLACE INTO sozlama VALUES (?,?)", (ZANJIR_VERSIYA, "1"))
+        return len(ys)
+
+    def _bosh_yoz(self, tartib: int, xesh: bytes, imzolovchi) -> None:
+        imzo = imzolovchi(bosh_xabari(tartib, xesh))
+        self.db.execute("INSERT OR REPLACE INTO sozlama VALUES (?,?)",
+                        (ZANJIR_BOSH, bosh_json(tartib, xesh, imzo)))
+
+    def zanjir_boginlari(self) -> list[tuple[int, str, str, str]]:
+        return [tuple(r) for r in self.db.execute(
+            "SELECT tartib, partiya_id, oldingi, xesh FROM zanjir ORDER BY tartib")]
 
     def yop(self) -> None:
         self.db.close()
@@ -154,9 +203,10 @@ class Jurnal:
         r = self.db.execute("SELECT MAX(oxirgi_seq) FROM partiyalar").fetchone()
         return (r[0] or 0) + 1
 
-    def partiya_yoz(self, p: Partiya, fayl: str, buyurtma_id: str | None) -> None:
-        """§15.4-5 — BITTA tranzaksiya: INSERT partiya + UPDATE buyurtma.
-        `birinchi_seq` shu yerda qayta tekshiriladi."""
+    def partiya_yoz(self, p: Partiya, fayl: str, buyurtma_id: str | None, *,
+                    imzolovchi) -> None:
+        """§15.4-5 — BITTA tranzaksiya: INSERT partiya + zanjir bo'g'ini + imzolangan
+        zanjir boshi + UPDATE buyurtma. `birinchi_seq` shu yerda qayta tekshiriladi."""
         try:
             with self.db:
                 self.db.execute("BEGIN IMMEDIATE")
@@ -168,6 +218,15 @@ class Jurnal:
                     (p.partiya_id.hex(), buyurtma_id, p.sert_id.hex(), p.ildiz.hex(), p.soni,
                      p.jami, p.birinchi_seq, p.oxirgi_seq, p.zaxira_qulfi, p.cheklov,
                      p.zarb_ms, p.davomiylik_s * 1000, fayl, None, None))
+                if self.sozlama(ZANJIR_VERSIYA) is None:
+                    raise JurnalXatosi("jurnal zanjiri migratsiya qilinmagan")
+                r = self.db.execute("SELECT tartib, xesh FROM zanjir ORDER BY tartib DESC"
+                                    " LIMIT 1").fetchone()
+                tartib, oldingi = (r[0] + 1, bytes.fromhex(r[1])) if r else (0, NOL)
+                yangi = bogin_xeshi(oldingi, self.partiya(p.partiya_id.hex()))
+                self.db.execute("INSERT INTO zanjir VALUES (?,?,?,?)",
+                                (tartib, p.partiya_id.hex(), oldingi.hex(), yangi.hex()))
+                self._bosh_yoz(tartib + 1, yangi, imzolovchi)
                 if buyurtma_id is not None:
                     c = self.db.execute(
                         "UPDATE buyurtmalar SET bajarilgan_kupyura = bajarilgan_kupyura + ?,"

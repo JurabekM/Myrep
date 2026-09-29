@@ -21,7 +21,7 @@ from .partiya import (YARIM, FaylXatosi, Partiya, ZarbKirishi, ZarbXatosi, nomin
 from .sertifikat import Sertifikat, SertifikatXatosi
 from .surat import BekorQilindi, Ritm, Surat
 from .tekshiruv import Hisobot, faylni_tekshir, partiyani_tekshir
-from .ibtido import ochiq_kalit
+from .ibtido import imzola, ochiq_kalit
 
 DEFAULT_PARTIYA_HAJMI = 500
 LIMIT_OGOHLANTIRISH = 0.9
@@ -135,6 +135,7 @@ class Zarbxona:
             self.partiya_papka.mkdir(exist_ok=True)
             self.karantin_papka.mkdir(exist_ok=True)
             self.jurnal = Jurnal(self.papka / "jurnal.db")
+            self.jurnal.zanjir_migratsiya(self._imzo)     # eski jurnal bo'lsa — bir marta
             self.sertifikat: Sertifikat | None = None
             if self.sert_yoli.exists():
                 self.sertifikat = Sertifikat.oqi(self.sert_yoli)
@@ -162,6 +163,9 @@ class Zarbxona:
         finally:
             if self.qulf is not None:
                 self.qulf.ozod()
+
+    def _imzo(self, xabar: bytes) -> bytes:
+        return imzola(self.sk, xabar)
 
     def oqim_nusxasi(self) -> Zarbxona:
         """Fon oqimi uchun: o'z jurnal ulanishi, qulf esa asl nusxada qoladi (§16.5).
@@ -326,7 +330,7 @@ class Zarbxona:
                                    tayyor, h)
             yol = partiya_yoz(p, self.partiya_papka)
             try:
-                self.jurnal.partiya_yoz(p, yol.name, buyurtma_id)
+                self.jurnal.partiya_yoz(p, yol.name, buyurtma_id, imzolovchi=self._imzo)
             except (JurnalXatosi, Exception) as e:
                 yol.unlink(missing_ok=True)   # jurnalda yo'q partiya diskda qolmasin
                 return self._pauza(buyurtma_id, f"jurnalga yozilmadi: {e}", tayyor)
@@ -385,7 +389,7 @@ class Zarbxona:
                 egasi = b.buyurtma_id
                 break
         try:
-            self.jurnal.partiya_yoz(p, f.name, egasi)
+            self.jurnal.partiya_yoz(p, f.name, egasi, imzolovchi=self._imzo)
         except JurnalXatosi as e:
             return f"jurnalga yozilmadi: {e}"
         if egasi:

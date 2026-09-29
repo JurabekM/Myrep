@@ -27,13 +27,16 @@ TURLAR = {
     "isbot": "Merkle isbotini buzish",
     "cheklov": "e'lon qilingan cheklovni o'zgartirish",
     "jurnal-summa": "jurnaldagi summani o'zgartirish",
+    "jurnal-ochirish": "jurnaldan partiya yozuvini o'chirish (zanjiri bilan)",
     "fayl-ochirish": "partiya faylini o'chirish",
 }
 
-# har tur tekshiruvda qaysi qoida bilan topilishi kerak
+# har tur tekshiruvda qaysi qoida(lar)dan biri bilan topilishi kerak. Jurnal yozuvini
+# o'chirish: o'rtadagisi — zanjir bo'g'ini, oxirgisi (dum) — imzolangan zanjir boshi.
 KUTILGAN_QOIDA = {
-    "nominal": "jami", "egasi": "egasi", "seq": "tartib", "imzo": "imzo", "isbot": "isbot",
-    "cheklov": "cheklov", "jurnal-summa": "jurnal-summa", "fayl-ochirish": "fayl",
+    "nominal": {"jami"}, "egasi": {"egasi"}, "seq": {"tartib"}, "imzo": {"imzo"},
+    "isbot": {"isbot"}, "cheklov": {"cheklov"}, "jurnal-summa": {"jurnal-summa", "zanjir"},
+    "jurnal-ochirish": {"zanjir", "zanjir-bosh"}, "fayl-ochirish": {"fayl"},
 }
 
 
@@ -56,10 +59,11 @@ class Buzuvchi:
         self.jurnal = jurnal
         self._fayllar: dict[Path, bytes] = {}
         self._jurnal: list[tuple[str, int]] = []
+        self._ochirilgan: list[tuple[tuple, tuple | None]] = []
 
     @property
     def buzilgan(self) -> bool:
-        return bool(self._fayllar or self._jurnal)
+        return bool(self._fayllar or self._jurnal or self._ochirilgan)
 
     def _saqla(self, yol: Path) -> None:
         if yol not in self._fayllar:
@@ -122,6 +126,17 @@ class Buzuvchi:
             self._jurnal.append((partiya_id, eski))
             self.jurnal._xom_yangila("UPDATE partiyalar SET jami=? WHERE partiya_id=?",
                                      (yangi, partiya_id))
+        elif tur == "jurnal-ochirish":
+            # «aqlli» bosqinchi: partiya yozuvini ham, uning zanjir bo'g'inini ham o'chiradi
+            db = self.jurnal.db
+            qator = db.execute("SELECT * FROM partiyalar WHERE partiya_id=?",
+                               (partiya_id,)).fetchone()
+            bogin = db.execute("SELECT * FROM zanjir WHERE partiya_id=?",
+                               (partiya_id,)).fetchone()
+            self._ochirilgan.append((tuple(qator), tuple(bogin) if bogin else None))
+            self.jurnal._xom_yangila("DELETE FROM zanjir WHERE partiya_id=?", (partiya_id,))
+            self.jurnal._xom_yangila("DELETE FROM partiyalar WHERE partiya_id=?", (partiya_id,))
+            eski, yangi = f"{y.partiya_id[:12]} jurnalda", "o'chirildi"
         elif tur == "fayl-ochirish":
             self._saqla(yol)
             yol.unlink()
@@ -142,8 +157,15 @@ class Buzuvchi:
             self.jurnal._xom_yangila("UPDATE partiyalar SET jami=? WHERE partiya_id=?",
                                      (jami, pid))
             n += 1
+        for qator, bogin in reversed(self._ochirilgan):
+            q = ",".join("?" * len(qator))
+            self.jurnal._xom_yangila(f"INSERT INTO partiyalar VALUES ({q})", qator)
+            if bogin:
+                self.jurnal._xom_yangila("INSERT INTO zanjir VALUES (?,?,?,?)", bogin)
+            n += 1
         self._fayllar.clear()
         self._jurnal.clear()
+        self._ochirilgan.clear()
         return n
 
 

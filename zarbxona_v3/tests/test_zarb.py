@@ -98,7 +98,7 @@ def test_t4_buzish(zarbxona, tur):
         assert eski != yangi
         h = d.tekshir(z.pk, z.sertifikat)
         assert not h.ok
-        assert KUTILGAN_QOIDA[tur] in h.qoidalar(), (tur, h.matn())
+        assert KUTILGAN_QOIDA[tur] & h.qoidalar(), (tur, h.matn())
         # 1.1: haqiqiy profil bayt-ma-bayt o'zgarmagan
         assert _suratlar(z) == oldin
         assert jurnalni_tekshir(z.jurnal, z.partiya_papka, z.pk, z.sertifikat).ok

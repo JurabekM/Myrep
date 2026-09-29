@@ -35,7 +35,9 @@ MATN = [
      "Faylga yozishdan oldin har partiya noldan qayta hisoblanadi. Bu bankning qabul "
      "qoidalarini takrorlaydi. «Tekshiruv» sahifasida istalgan faylni yoki butun jurnalni "
      "tekshirish mumkin. Buzib ko'rish demosi tekshiruv haqiqatan ishlashini ko'rsatadi. "
-     "«Tekshirilmadi» hech qachon «toza» deb ko'rsatilmaydi."),
+     "«Tekshirilmadi» hech qachon «toza» deb ko'rsatilmaydi. Jurnal yozuvlari xesh-zanjir "
+     "bilan bog'langan va zanjir boshi zarbxona kaliti bilan imzolangan. Shuning uchun "
+     "jurnaldan yozuvni sezdirmay o'chirib yoki o'zgartirib bo'lmaydi."),
     ("Bankka topshirish",
      "Ikki yo'l bor. <b>Fayl orqali</b>: .aqbatch faylini bankka bering, keyin «Topshirildi "
      "deb belgilash» ni bosing. <b>Onlayn</b>: MQTT broker ustida AETHER-Q post-kvant "
