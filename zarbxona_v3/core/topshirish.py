@@ -18,6 +18,7 @@ from .surat import BekorQilindi
 SOROV_MUDDATI = 60.0
 HANDSHAKE_MUDDATI = 90.0
 ABORT_MUDDATI = 5.0
+KUTISH_BOLAGI = 0.2
 ALLAQACHON = "allaqachon qabul qilingan"
 
 
@@ -47,10 +48,14 @@ class Mijoz:
     def __init__(self, kanal: Kanal, fabrika: SessiyaFabrikasi, sert: Sertifikat, sk, *,
                  muddat: float = SOROV_MUDDATI, hs_muddat: float = HANDSHAKE_MUDDATI,
                  soat: Callable[[], float] = time.monotonic,
-                 log: Callable[[str], None] | None = None):
+                 log: Callable[[str], None] | None = None,
+                 bekormi: Callable[[], bool] | None = None):
+        """`bekormi` — har kutishda ~0,2 s da tekshiriladi: to'xtatish handshake yoki
+        bank javobini kutayotganda ham darhol ishlaydi (60–90 s muddatni kutmaydi)."""
         self.kanal, self.fabrika, self.sert, self.sk = kanal, fabrika, sert, sk
         self.muddat, self.hs_muddat, self.soat = muddat, hs_muddat, soat
         self.log = log or (lambda s: None)
+        self.bekormi = bekormi
         self._id = 0
         self.sessiya = None
         self.wire: Wire | None = None
@@ -59,10 +64,15 @@ class Mijoz:
     # --- ulanish ------------------------------------------------------------------
 
     def _qabul(self, oxiri: float, nima: str) -> bytes:
-        p = self.kanal.qabul(oxiri - self.soat())
-        if p is None:
-            raise TarmoqXatosi(f"{nima}: javob kelmadi (muddat tugadi)")
-        return p
+        while True:
+            if self.bekormi and self.bekormi():
+                raise BekorQilindi()
+            qolgan = oxiri - self.soat()
+            if qolgan <= 0:
+                raise TarmoqXatosi(f"{nima}: javob kelmadi (muddat tugadi)")
+            p = self.kanal.qabul(min(KUTISH_BOLAGI, qolgan))
+            if p is not None:
+                return p
 
     def ulan(self) -> dict:
         oxiri = self.soat() + self.hs_muddat
@@ -209,19 +219,21 @@ class AvtoTopshiruvchi:
         self.kutish = KUTISH_BOSHI
 
     def bir_aylanish(self, bekormi: Callable[[], bool] | None = None) -> str:
-        """Qaytaradi: 'bosh' | 'bajarildi' | 'tarmoq' | 'rad'."""
+        """Qaytaradi: 'bosh' | 'bajarildi' | 'tarmoq' | 'rad' | 'toxtatildi'."""
         navbat = self.jurnal.topshirilmaganlar()
         if not navbat:
             return "bosh"
         if navbat[0].topshirish_xatosi and navbat[0].topshirish_xatosi.startswith(RAD):
             return "rad"
         mijoz = None
+        joriy = navbat[0]      # xato AYNAN yuborilayotgan partiyaga yoziladi
         try:
             mijoz = self.mijoz_yarat()
             mijoz.ulan()
             for y in navbat:
                 if bekormi and bekormi():
                     break
+                joriy = y
                 try:
                     p = partiya_oqi(self.papka / y.fayl)
                 except FaylXatosi as e:
@@ -243,16 +255,16 @@ class AvtoTopshiruvchi:
             self.kutish = KUTISH_BOSHI
             return "bajarildi"
         except BekorQilindi:
-            return "bajarildi"
+            return "toxtatildi"
         except (TarmoqXatosi, KanalXatosi, ProtokolXatosi, OSError) as e:
-            self.jurnal.topshirish_xatosi(navbat[0].partiya_id, f"tarmoq: {e}")
+            self.jurnal.topshirish_xatosi(joriy.partiya_id, f"tarmoq: {e}")
             self.log(f"tarmoq xatosi: {e} — {self.kutish:.0f} s dan keyin qayta urinish")
             return "tarmoq"
         except BankXatosi as e:  # mint_auth rad etildi
             if e.vaqtinchalik:
-                self.jurnal.topshirish_xatosi(navbat[0].partiya_id, f"tarmoq: {e}")
+                self.jurnal.topshirish_xatosi(joriy.partiya_id, f"tarmoq: {e}")
                 return "tarmoq"
-            self.jurnal.topshirish_xatosi(navbat[0].partiya_id, RAD + str(e))
+            self.jurnal.topshirish_xatosi(joriy.partiya_id, RAD + str(e))
             self.log(f"BANK RAD ETDI: {e}")
             return "rad"
         finally:

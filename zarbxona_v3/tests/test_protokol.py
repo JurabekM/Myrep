@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import socket
+import threading
+import time
+
 import pytest
 
 from core.buyurtma import Zarbxona
@@ -257,3 +261,76 @@ def test_t13_bank_rad_etsa_keyingilari_yuborilmaydi(profil, kalitlar, sertifikat
     z.jurnal.topshirish_xatosi(ys[1].partiya_id, None)
     assert a.bir_aylanish() == "bajarildi"
     assert z.jurnal.topshirilmaganlar() == []
+
+
+# --- Codex review (JurabekM/Myrep#4) regressiya testlari ----------------------------
+
+
+def test_tarmoq_xatosi_aynan_yiqilgan_partiyaga_yoziladi(profil, kalitlar, sertifikat, bank):
+    """P2: 1-partiya topshirildi, 2-sida tarmoq uzildi — xato 2-siga yozilishi kerak,
+    allaqachon topshirilgan 1-siga emas."""
+    z = profil
+    b = z.buyurtma_yarat(5000 * 4, "AQ-RES-1", "", Surat(rejim="cheklovsiz"), partiya_hajmi=2)
+    z.buyurtmani_bajar(b.buyurtma_id)
+    sanoq = [0]
+
+    class UziladiganMijoz(Mijoz):
+        def partiya_topshir(self, p, **kw):
+            sanoq[0] += 1
+            if sanoq[0] == 2:
+                raise TarmoqXatosi("aloqa uzildi")
+            return super().partiya_topshir(p, **kw)
+
+    def mijoz_yarat():
+        mk, bk = XotiraKanali.juft()
+        SoxtaBank(bk, kalitlar[3], bank)
+        return UziladiganMijoz(mk, SoxtaFabrika(), sertifikat, kalitlar[0], muddat=3,
+                               hs_muddat=3)
+
+    a = AvtoTopshiruvchi(z.jurnal, z.partiya_papka, mijoz_yarat, soat_ms=lambda: HOZIR)
+    assert a.bir_aylanish() == "tarmoq"
+    y1, y2 = z.jurnal.partiyalar()
+    assert y1.topshirilgan_ms == HOZIR and y1.topshirish_xatosi is None
+    assert y2.topshirilgan_ms is None and y2.topshirish_xatosi == "tarmoq: aloqa uzildi"
+
+
+def test_mijoz_kutishi_toxtatiladi(kalitlar, sertifikat):
+    """P1: bank javob bermayapti (hs_muddat 30 s) — to'xtatish ~0,2 s da ishlaydi."""
+    mk, _bk = XotiraKanali.juft()                 # bank uchi hech narsa qilmaydi
+    toxta = threading.Event()
+    m = Mijoz(mk, SoxtaFabrika(), sertifikat, kalitlar[0], muddat=30, hs_muddat=30,
+              bekormi=toxta.is_set)
+    threading.Timer(0.3, toxta.set).start()
+    t0 = time.monotonic()
+    with pytest.raises(BekorQilindi):
+        m.ulan()
+    assert time.monotonic() - t0 < 1.5
+
+
+def test_avto_ulanishda_toxtatilsa_toxtatildi(profil, kalitlar, sertifikat):
+    z = profil
+    z.buyurtmani_bajar(z.buyurtma_yarat(5, "AQ-RES-1", "", Surat(rejim="cheklovsiz"))
+                       .buyurtma_id)
+    toxta = threading.Event()
+
+    def mijoz_yarat():
+        mk, _ = XotiraKanali.juft()
+        return Mijoz(mk, SoxtaFabrika(), sertifikat, kalitlar[0], muddat=30, hs_muddat=30,
+                     bekormi=toxta.is_set)
+    threading.Timer(0.3, toxta.set).start()
+    a = AvtoTopshiruvchi(z.jurnal, z.partiya_papka, mijoz_yarat, soat_ms=lambda: HOZIR)
+    assert a.bir_aylanish(bekormi=toxta.is_set) == "toxtatildi"
+    assert z.jurnal.partiyalar()[0].topshirish_xatosi is None   # to'xtatish xato emas
+
+
+def test_mqtt_rad_etilgan_ulanish_tez_xato_beradi():
+    """connect_async: ulanish rad etilsa (port yopiq) on_connect_fail orqali tez xato."""
+    from core.kanal import KanalXatosi, MqttKanal
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()                                     # bo'sh port — ulanish rad etiladi
+    t0 = time.monotonic()
+    with pytest.raises(KanalXatosi):
+        MqttKanal("127.0.0.1", port, b"\x00" * 1952, tayyor_muddat=10)
+    assert time.monotonic() - t0 < 8

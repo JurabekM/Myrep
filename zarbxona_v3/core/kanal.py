@@ -5,9 +5,12 @@ from __future__ import annotations
 import queue
 import secrets
 import threading
+import time
+from collections.abc import Callable
 from typing import Protocol
 
 from .protokol import mavzular
+from .surat import BekorQilindi
 
 
 class KanalXatosi(Exception):
@@ -58,7 +61,10 @@ class MqttKanal:
     `taraf="bank"` — teskari (faqat broker_smoke uchun oyna)."""
 
     def __init__(self, broker: str, port: int, bank_pk: bytes, sessiya_id: str | None = None,
-                 taraf: str = "mijoz", tayyor_muddat: float = 20.0):
+                 taraf: str = "mijoz", tayyor_muddat: float = 20.0,
+                 bekormi: Callable[[], bool] | None = None):
+        """Ulanish ham, obuna tasdig'ini kutish ham to'xtatib bo'ladigan: `connect_async`
+        (DNS/TCP fonda) + ~0,2 s bo'laklarda kutish, har bo'lakda `bekormi` so'raladi."""
         import paho.mqtt.client as mqtt
 
         self.sessiya_id = sessiya_id or secrets.token_bytes(8).hex()
@@ -74,15 +80,29 @@ class MqttKanal:
         self.c.on_connect = self._on_connect
         self.c.on_subscribe = self._on_subscribe
         self.c.on_message = self._on_message
+        self.c.on_connect_fail = self._on_connect_fail
         try:
-            self.c.connect(broker, port, keepalive=60)
-        except OSError as e:
+            self.c.connect_async(broker, port, keepalive=60)
+        except (OSError, ValueError) as e:
             raise KanalXatosi(f"brokerga ulanib bo'lmadi ({broker}:{port}): {e}") from e
         self.c.loop_start()
         # ⚠ obuna TASDIQLANMAGUNCHA hech narsa yubormaymiz (§13.2)
-        if not self._tayyor.wait(tayyor_muddat):
+        oxiri = time.monotonic() + tayyor_muddat
+        while not self._tayyor.wait(min(0.2, max(0.0, oxiri - time.monotonic()))):
+            if bekormi and bekormi():
+                self.yop()
+                raise BekorQilindi()
+            if time.monotonic() >= oxiri:
+                self.yop()
+                raise KanalXatosi(f"broker {tayyor_muddat:.0f} s ichida javob bermadi "
+                                  f"({broker}:{port})")
+        if self._xato:
             self.yop()
-            raise KanalXatosi(self._xato or f"broker {tayyor_muddat:.0f} s ichida javob bermadi")
+            raise KanalXatosi(self._xato)
+
+    def _on_connect_fail(self, client, userdata):
+        self._xato = "brokerga ulanib bo'lmadi"
+        self._tayyor.set()
 
     def _on_connect(self, client, userdata, flags, reason_code, properties=None):
         if reason_code.is_failure:

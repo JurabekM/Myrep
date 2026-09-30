@@ -415,6 +415,36 @@ def test_31_main_demo_ulanishi(ilova, tmp_path, kalitlar, monkeypatch, bayroq, k
     o.close()
 
 
+def test_oyna_ishlayotgan_oqim_bilan_yopilmaydi(ilova, tmp_path, kalitlar, monkeypatch):
+    """Codex review P1: fon oqimi to'xtamasa oyna yopilmaydi (QThread destroyed while
+    running bo'lmasin), baza ochiq qoladi; oqim tugagach oyna yopiladi."""
+    from PySide6.QtCore import QThread
+
+    from app.oyna import Oyna
+    d = Dialoglar(tmp_path, tmp_path)
+    d.ornat(monkeypatch)
+
+    class Qaysar(QThread):
+        def run(self):
+            time.sleep(1.0)          # to'xtatishni e'tiborsiz qoldiradi
+
+    z = Zarbxona(tmp_path / "p", kalitlar[0])
+    o = Oyna(z)
+    o.dialoglar = d
+    o.show()
+    o.OQIM_KUTISH_MS = 50
+    t = Qaysar()
+    o.oqim_qosh(t)
+    t.start()
+    assert o.close() is False and o.isVisible()
+    assert d.chaqiriqlar[-1][0] == "xato" and "fon ishi" in d.chaqiriqlar[-1][2]
+    assert z.jurnal.partiyalar() == []          # baza hali ochiq
+    assert o.taymer.isActive()
+    t.wait(5000)
+    assert o.close() is True and not o.isVisible()
+    assert o.close() is True                     # takror yopish — xavfsiz
+
+
 def test_31_main_demo_haqiqiy_profilni_rad_etadi(ilova, tmp_path, kalitlar, sertifikat,
                                                  monkeypatch):
     import app.kirish

@@ -192,7 +192,8 @@ class PartiyalarSahifasi(Sahifa):
 
     def _demo_mijoz(self):
         z = self.ctx.z
-        return self.ctx.demo_bank.mijoz(z.sk, z.sertifikat, log=self.ishchi.log.emit)
+        return self.ctx.demo_bank.mijoz(z.sk, z.sertifikat, log=self.ishchi.log.emit,
+                                        bekormi=self.ishchi.toxtatildi)
 
     def _ishga(self, avto: bool) -> bool:
         demo = self.ctx.demo_bank is not None

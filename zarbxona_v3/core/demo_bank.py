@@ -327,12 +327,13 @@ class DemoBank:
 
     # --- onlayn sessiya (xotira kanali, MQTT'siz) -----------------------------------
 
-    def mijoz(self, zarbxona_sk, sert: Sertifikat, log=None):
+    def mijoz(self, zarbxona_sk, sert: Sertifikat, log=None, bekormi=None):
         """Yangi sessiya: bank tomoni alohida oqimda. Qaytaradi: topshirish.Mijoz."""
         from .topshirish import Mijoz
         mk, bk = XotiraKanali.juft()
         SoxtaBank(bk, self.pk, self.holat)
-        return Mijoz(mk, SoxtaFabrika(), sert, zarbxona_sk, muddat=30, hs_muddat=30, log=log)
+        return Mijoz(mk, SoxtaFabrika(), sert, zarbxona_sk, muddat=30, hs_muddat=30, log=log,
+                     bekormi=bekormi)
 
 
 class DemoXatosi(RuntimeError):

@@ -31,10 +31,13 @@ MENYU = [("boshqaruv", "Boshqaruv paneli", BoshqaruvSahifasi),
 
 
 class Oyna(QMainWindow):
+    OQIM_KUTISH_MS = 15000
+
     def __init__(self, z: Zarbxona, demo_bank=None):
         super().__init__()
         self.z = z
         self.demo_bank = demo_bank
+        self._yopildi = False
         self.oqimlar: list[QThread] = []
         belgi = "[DEMO] " if demo_bank else ""
         self.setWindowTitle(f"{belgi}AETHER-Q Zarbxona v{VERSIYA} — {iz(z.pk)}")
@@ -131,11 +134,27 @@ class Oyna(QMainWindow):
                                  "Joriy partiya yozilmaydi, buyurtma keyin davom etadi."):
             e.ignore()
             return
+        if self._yopildi:
+            e.accept()
+            return
         self.taymer.stop()
         for s in self.sahifalar.values():
             if hasattr(s, "toxtat"):
                 s.toxtat()
+        # Tarmoq kutishlari ~0,2 s da to'xtatishni sezadi; baribir oqim tugamasa oyna
+        # YOPILMAYDI — aks holda Qt «QThread: Destroyed while thread is still running»
+        # bilan yiqiladi va baza oqim ostidan yopiladi.
         for t in list(self.oqimlar):
-            t.wait(15000)
+            t.wait(self.OQIM_KUTISH_MS)
+        tirik = [t for t in self.oqimlar if t.isRunning()]
+        if tirik:
+            e.ignore()
+            self.taymer.start()
+            self.holat("fon ishlari hali to'xtamoqda — birozdan keyin qayta yoping")
+            dialog.xato(self, "Chiqish", f"{len(tirik)} ta fon ishi hali tugamadi (masalan, "
+                        "tarmoq javobini kutyapti). Ular to'xtatildi — bir necha soniyadan "
+                        "keyin oynani qayta yoping.")
+            return
+        self._yopildi = True
         self.z.yop()      # oqimlardan KEYIN
         e.accept()

@@ -232,14 +232,20 @@ class TopshirishIshchisi(QThread):
     def toxtat(self) -> None:
         self._toxta.set()
 
+    def toxtatildi(self) -> bool:
+        """Har bir tarmoq kutishi shuni ~0,2 s da so'raydi — oyna yopilishi kutib qolmaydi."""
+        return self._toxta.is_set()
+
     def _mijoz(self) -> Mijoz:
         if self.mijoz_yarat is not None:
             return self.mijoz_yarat()
         sert = self.z_asl.sertifikat
         fabrika = AetherQFabrika()
-        kanal = MqttKanal(self.broker, self.port, sert.bank_public_key)
+        kanal = MqttKanal(self.broker, self.port, sert.bank_public_key,
+                          bekormi=self.toxtatildi)
         self.log.emit(f"broker {self.broker}:{self.port} · sessiya {kanal.sessiya_id}")
-        return Mijoz(kanal, fabrika, sert, self.z_asl.sk, log=self.log.emit)
+        return Mijoz(kanal, fabrika, sert, self.z_asl.sk, log=self.log.emit,
+                     bekormi=self.toxtatildi)
 
     def run(self) -> None:
         z = None
