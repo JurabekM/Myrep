@@ -137,13 +137,19 @@ class KonveyerKarta(Karta):
                            f"haqiqiy CPU {cpu} · qolgan {qolgan}{pz}")
 
 
+JADVAL_QATOR = 120
+HOLAT_MATN = {"ish": "zarb", "sovutish": "sovutish", "pauza": "pauza"}
+
+
 class GrafikKarta(Karta):
-    """Jonli grafiklar: tezlik va CPU ulushi — IKKI alohida grafik (bitta y-o'q qoidasi)."""
+    """Jonli grafiklar: tezlik va CPU ulushi — IKKI alohida grafik (bitta y-o'q qoidasi).
+    «Jadval» — xuddi shu qiymatlar jadvalda (grafik va tooltip'siz ham o'qiladi)."""
 
     def __init__(self):
-        from PySide6.QtWidgets import QHBoxLayout
+        from PySide6.QtWidgets import QHBoxLayout, QPushButton
 
         from app.grafik import CPU_RANG, TEZLIK_RANG, JonliGrafik
+        from app.vidjetlar import jadval
         super().__init__("Jonli grafiklar (o'lchangan, har ~1 soniya)")
         q = QHBoxLayout()
         q.setSpacing(12)
@@ -156,12 +162,45 @@ class GrafikKarta(Karta):
                          "sozlangan nishon tezlik va CPU byudjeti. Sichqonchani grafik ustida "
                          "yurgizing — o'sha soniyadagi qiymat chiqadi. Oxirgi qiymat grafik "
                          "o'ng tomonida va holat satrida.", "xira"))
+        t = QHBoxLayout()
+        self.t_jadval = QPushButton("Jadval ko'rinishi")
+        self.t_jadval.setCheckable(True)
+        self.t_jadval.clicked.connect(self.jadval_korsat)
+        t.addWidget(self.t_jadval)
+        t.addStretch(1)
+        self.qosh(t)
+        self.jadval = jadval(["Vaqt", "Tezlik, kupyura/s", "Nishon", "CPU, %", "Byudjet, %",
+                              "Holat"])
+        self.jadval.setVisible(False)
+        self.qosh(self.jadval)
+        self._qatorlar: list[list] = []
+
+    @Slot(bool)
+    def jadval_korsat(self, yoq: bool) -> None:
+        self.jadval.setVisible(yoq)
+        if yoq:
+            self._jadval_toldir()
+
+    def _jadval_toldir(self) -> None:
+        from app.vidjetlar import jadval_toldir
+        jadval_toldir(self.jadval, self._qatorlar[::-1])     # eng yangisi tepada
 
     def tozala(self) -> None:
         self.tezlik.tozala()
         self.cpu.tozala()
+        self._qatorlar.clear()
+        if self.t_jadval.isChecked():
+            self._jadval_toldir()
 
     def namuna(self, d: dict) -> None:
         self.tezlik.qosh(d["t"], d["tezlik"], d["holat"], d.get("nishon"))
         b = d.get("byudjet") or 1.0
         self.cpu.qosh(d["t"], d["cpu"] * 100, d["holat"], b * 100 if b < 1 else None)
+        nishon = d.get("nishon")
+        self._qatorlar.append([f"{d['t']:.0f} s", f"{d['tezlik']:.1f}",
+                               "—" if nishon is None else f"{nishon:.1f}",
+                               f"{d['cpu'] * 100:.1f}", "—" if b >= 1 else f"{b * 100:.0f}",
+                               HOLAT_MATN.get(d["holat"], d["holat"])])
+        del self._qatorlar[:-JADVAL_QATOR]
+        if self.t_jadval.isChecked():
+            self._jadval_toldir()

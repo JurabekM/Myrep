@@ -101,3 +101,23 @@ def test_ishchi_namunalari_haqiqiy_zarbda(ilova, tmp_path, kalitlar, sertifikat)
     assert all(0 <= n["cpu"] < 2 for n in namunalar)
     ts = [n["t"] for n in namunalar]
     assert ts == sorted(ts)
+
+
+def test_grafik_jadval_korinishi(ilova):
+    """Grafik qiymatlari jadvalda ham (tooltip'siz o'qiladi), eng yangisi tepada."""
+    from app.sahifalar.kartalar import JADVAL_QATOR, GrafikKarta
+    k = GrafikKarta()
+    for i in range(JADVAL_QATOR + 10):
+        k.namuna({"t": float(i), "tezlik": 8.0, "cpu": 0.03, "holat": "ish" if i % 5 else
+                  "sovutish", "nishon": 8.0, "byudjet": 0.25})
+    assert not k.jadval.isVisibleTo(k) and k.jadval.rowCount() == 0     # yashirin — arzon
+    k.t_jadval.click()
+    assert k.jadval.isVisibleTo(k) and k.jadval.rowCount() == JADVAL_QATOR
+    assert k.jadval.item(0, 0).text() == f"{JADVAL_QATOR + 9} s"
+    assert [k.jadval.item(0, j).text() for j in range(1, 6)] == ["8.0", "8.0", "3.0", "25",
+                                                                  "zarb"]
+    k.namuna({"t": 999.0, "tezlik": 0.0, "cpu": 0.0, "holat": "pauza", "nishon": None,
+              "byudjet": 1.0})
+    assert k.jadval.item(0, 5).text() == "pauza" and k.jadval.item(0, 2).text() == "—"
+    k.tozala()
+    assert k.jadval.rowCount() == 0
