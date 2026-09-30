@@ -10,7 +10,10 @@ ILDIZ = Path(__file__).resolve().parent.parent
 if __package__ in (None, ""):        # `python app/main.py`
     sys.path.insert(0, str(ILDIZ))
 
+from app.yollar import dastur_papkasi  # noqa: E402
 from core.konstanta import VERSIYA  # noqa: E402
+
+DASTUR = dastur_papkasi()          # data/, selftest_natija.txt (paketda — .exe yonida)
 
 
 def argumentlar(argv=None) -> argparse.Namespace:
@@ -36,10 +39,10 @@ def main(argv=None) -> int:
         return cli_main(royxat)
     args = argumentlar(argv)
     if args.papka is None:
-        args.papka = ILDIZ / ("data_demo" if args.demo else "data")
+        args.papka = DASTUR / ("data_demo" if args.demo else "data")
     if args.selftest:
         from app.selftest import selftest
-        return selftest(ILDIZ / "selftest_natija.txt")
+        return selftest(DASTUR / "selftest_natija.txt")
 
     from PySide6.QtWidgets import QApplication, QDialog
 

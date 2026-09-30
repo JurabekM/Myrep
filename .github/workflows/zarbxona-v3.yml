@@ -60,3 +60,35 @@ jobs:
 
       - name: pytest
         run: python -m pytest -q -rs -o faulthandler_timeout=300
+
+  exe:
+    name: Windows .exe (PyInstaller)
+    needs: test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: zarbxona_v3
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: zarbxona_v3/requirements.txt
+
+      - name: Paketlar
+        run: python -m pip install -r requirements.txt "pyinstaller>=6.10"
+
+      - name: Yig'ish va paketni tekshirish (--version, --selftest)
+        run: python tools/exe_yig.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Zarbxona-windows
+          path: zarbxona_v3/dist/Zarbxona
+          if-no-files-found: error
+          retention-days: 14

@@ -26,6 +26,24 @@ python -m pip install -r requirements.txt
 `where python` dagi har bir interpreterni alohida sinaydi. Majburan tanlash uchun
 `set ZARBXONA_PYTHON=C:\...\python.exe` bering.
 
+### Python'siz ishlaydigan paket (.exe)
+
+```bat
+py -m pip install "pyinstaller>=6.10"
+py tools\exe_yig.py
+```
+
+Natija `dist\Zarbxona\` papkasida chiqadi. Unda ikkita dastur bor:
+- `Zarbxona.exe` — oynali GUI;
+- `zarbxona-cli.exe` — konsol: CLI buyruqlari va `--selftest`.
+
+Skript oxirida paketni `--version` va `--selftest` bilan o'zi tekshiradi. `data\` va
+`selftest_natija.txt` `.exe` yonida yaratiladi. Papkani butunligicha boshqa kompyuterga
+ko'chirsa bo'ladi. CI har push'da Windows paketini yig'adi va tekshiradi. U GitHub'da
+Actions → zarbxona-v3 → **Zarbxona-windows** artifact sifatida 14 kun saqlanadi.
+⚠ `.exe` kod imzosi (code signing) bilan imzolanmagan, shuning uchun Windows SmartScreen
+ogohlantirishi chiqishi mumkin.
+
 ### GUI'siz rejim (server, Raspberry Pi)
 
 ```bash

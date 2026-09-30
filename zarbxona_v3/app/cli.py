@@ -27,6 +27,7 @@ import threading
 import time
 from pathlib import Path
 
+from app.yollar import dastur_papkasi
 from core.buyurtma import BandXatosi, BuyurtmaXatosi, Zarbxona
 from core.cheklov import CheklovXatosi, cheklov_json
 from core.ombor import OmborXatosi, ombor_och
@@ -35,7 +36,7 @@ from core.tasdiq import TasdiqXatosi
 from core.tekshiruv import jurnalni_tekshir
 
 BUYRUQLAR = ("holat", "zarb", "davom", "tasdiqla", "buyurtmalar", "tekshir")
-ILDIZ = Path(__file__).resolve().parent.parent
+ILDIZ = dastur_papkasi()
 
 
 def _chiq(s: str = "") -> None:

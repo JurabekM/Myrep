@@ -53,3 +53,12 @@ def test_selftest_qt_import_qilmaydi():
                        env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     assert r.returncode == 0, r.stdout + r.stderr
     (ILDIZ / "selftest_natija.txt").unlink(missing_ok=True)
+
+
+def test_dastur_papkasi_paketda_exe_yonida(monkeypatch, tmp_path):
+    """PyInstaller paketida data/ va selftest natijasi .exe yonida (_internal ichida emas)."""
+    from app.yollar import dastur_papkasi
+    assert dastur_papkasi() == ILDIZ
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(tmp_path / "Zarbxona" / "Zarbxona.exe"))
+    assert dastur_papkasi() == (tmp_path / "Zarbxona").resolve()
