@@ -130,3 +130,25 @@ def test_notogri_surat():
         surat_tahlil("tez", 0.25, "0:0")
     with pytest.raises(ValueError):
         surat_tahlil("tezlik:0", 0.25, "0:0")
+
+
+def test_nul_stdin_interaktiv_emas(monkeypatch):
+    """Windows regressiyasi: DEVNULL (NUL) stdin isatty()=True beradi — chiqish ushlangan
+    bo'lsa parol SO'RALMAYDI (getpass osilib qolardi)."""
+    import app.cli as c
+
+    class Tty:
+        def __init__(self, t):
+            self.t = t
+
+        def isatty(self):
+            return self.t
+    monkeypatch.delenv("ZARBXONA_TASDIQCHI_PAROL", raising=False)
+    monkeypatch.setattr(c.getpass, "getpass", lambda *_: pytest.fail("getpass chaqirildi"))
+    monkeypatch.setattr(c.sys, "stdin", Tty(True))
+    monkeypatch.setattr(c.sys, "stdout", Tty(False))
+    assert c.interaktiv() is False
+    assert c._parol("ZARBXONA_TASDIQCHI_PAROL", "?") is None
+    monkeypatch.setattr(c.sys, "stdout", Tty(True))
+    monkeypatch.setattr(c.getpass, "getpass", lambda *_: "terminaldan")
+    assert c._parol("ZARBXONA_TASDIQCHI_PAROL", "?") == "terminaldan"

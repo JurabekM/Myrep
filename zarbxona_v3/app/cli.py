@@ -59,11 +59,21 @@ def surat_tahlil(s: str, byudjet: float, sovutish: str) -> Surat:
     return sur
 
 
+def interaktiv() -> bool:
+    """Haqiqiy terminalmi. stdin YOLG'IZ yetmaydi: Windows'da NUL qurilmasi (masalan
+    subprocess DEVNULL) isatty() da True beradi va getpass konsolni kutib osilib qoladi.
+    Chiqish ushlangan (pipe/fayl) bo'lsa — bu interaktiv sessiya emas."""
+    try:
+        return sys.stdin.isatty() and sys.stdout.isatty()
+    except (AttributeError, ValueError):
+        return False
+
+
 def _parol(env: str, savol: str) -> str | None:
     p = os.environ.get(env)
     if p:
         return p
-    if not sys.stdin.isatty():
+    if not interaktiv():
         return None
     return getpass.getpass(savol)
 
