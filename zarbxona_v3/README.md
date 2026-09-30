@@ -90,6 +90,15 @@ profil demo'ga aylantirilmaydi.
    Demo jurnal va tanlangan partiyaning **vaqtinchalik nusxasini** buzadi. Haqiqiy
    profil o'zgarmaydi, demo o'rtasida tok o'chsa ham.
 
+**Soat himoyasi.** Kompyuter soati jurnal ko'rgan eng keyingi vaqtdan 5 daqiqadan
+ko'proq orqaga ketsa, yangi buyurtma ham, zarb ham to'xtaydi. Aks holda soatni
+orqaga qo'yib, muddati o'tgan sertifikat bilan zarb qilish mumkin bo'lardi.
+
+**Partiya sirlari** (partiya kaliti va master) `bytearray` da saqlanadi. Zarb tugagach
+yoki bekor qilinganda ular nol bilan to'ldiriladi. ⚠ Python buni to'liq kafolatlamaydi:
+vaqtinchalik nusxalar va hosila kalitlar xotirada qolishi mumkin. Bu choralar faqat
+sirning xotirada yashash vaqtini qisqartiradi.
+
 **Ikki kishilik tasdiq.** "Kalit va sertifikat" → "Ikki kishilik tasdiq" kartasida
 ikkinchi operator (tasdiqchi) o'z parolini kiritib ro'yxatdan o'tadi. Shunda
 `tasdiqchi.json` ichida alohida ML-DSA-65 kalit yaratiladi va chegara belgilanadi

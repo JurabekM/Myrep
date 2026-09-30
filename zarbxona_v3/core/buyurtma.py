@@ -24,6 +24,7 @@ from .tekshiruv import Hisobot, faylni_tekshir, partiyani_tekshir
 from .ibtido import imzola, ochiq_kalit
 
 DEFAULT_PARTIYA_HAJMI = 500
+SOAT_TOLERANS_MS = 5 * 60_000     # NTP tuzatishi, yozgi vaqt va h.k. uchun zaxira
 LIMIT_OGOHLANTIRISH = 0.9
 
 
@@ -224,9 +225,23 @@ class Zarbxona:
 
     # --- buyurtma ----------------------------------------------------------------
 
+    def soat_muammosi(self) -> str | None:
+        """§1.3: kompyuter soati jurnal ko'rgan eng keyingi vaqtdan orqaga ketgan bo'lsa —
+        muddati o'tgan sertifikat bilan zarb qilishga yo'l qo'yilmaydi."""
+        hozir, oxirgi = self.soat_ms(), self.jurnal.eng_oxirgi_vaqt()
+        if hozir < oxirgi - SOAT_TOLERANS_MS:
+            fark = (oxirgi - hozir) // 60_000
+            return (f"kompyuter soati orqaga ketgan (~{fark} daqiqa): oxirgi yozuv "
+                    f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(oxirgi / 1000))} — "
+                    "soatni to'g'rilang")
+        return None
+
     def buyurtma_yarat(self, summa: int, zaxira_qulfi: str, cheklov: str = "",
                        surat: Surat | None = None,
                        partiya_hajmi: int = DEFAULT_PARTIYA_HAJMI) -> BuyurtmaYozuvi:
+        sm = self.soat_muammosi()
+        if sm:
+            raise BuyurtmaXatosi(sm)
         s = self.sertifikat
         if s is None:
             raise BuyurtmaXatosi("sertifikat yo'q — avval bank vakolatini import qiling")
@@ -251,6 +266,7 @@ class Zarbxona:
             partiya_hajmi=partiya_hajmi, zaxira_qulfi=zaxira_qulfi.strip(), cheklov=cheklov,
             surat=surat.json(), holat="faol", yaratilgan_ms=self.soat_ms(), tugagan_ms=None)
         self.jurnal.buyurtma_qosh(b)
+        self.jurnal.vaqt_belgila(b.yaratilgan_ms)
         if self.tasdiq.kerakmi(b):
             self.jurnal.tasdiq_kutish(b.buyurtma_id)
         return b
@@ -304,6 +320,9 @@ class Zarbxona:
         while b.bajarilgan_kupyura < b.kupyura_soni:
             if bekormi and bekormi():
                 return self._pauza(buyurtma_id, "TO'XTATILDI", tayyor, holat="toxtatildi")
+            sm = self.soat_muammosi()
+            if sm:
+                return self._pauza(buyurtma_id, sm, tayyor)
             s = self.sertifikat
             if s is None:
                 return self._pauza(buyurtma_id, "sertifikat yo'q", tayyor)
@@ -346,6 +365,7 @@ class Zarbxona:
             except (JurnalXatosi, Exception) as e:
                 yol.unlink(missing_ok=True)   # jurnalda yo'q partiya diskda qolmasin
                 return self._pauza(buyurtma_id, f"jurnalga yozilmadi: {e}", tayyor)
+            self.jurnal.vaqt_belgila(self.soat_ms())
             tayyor.append(p)
             hodisa("partiya_yopildi", {"partiya": p, "fayl": yol.name})
             b = self.jurnal.buyurtma(buyurtma_id)

@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS tasdiqlar (
 );
 """
 ZANJIR_VERSIYA = "zanjir_versiya"
+OXIRGI_VAQT = "oxirgi_vaqt_ms"
 ZANJIR_BOSH = "zanjir_bosh"
 
 HOLATLAR = ("faol", "pauza", "tugadi", "bekor")
@@ -271,6 +272,15 @@ class Jurnal:
         with self.db:
             self.db.execute("UPDATE partiyalar SET topshirish_xatosi=? WHERE partiya_id=?",
                             (matn, partiya_id))
+
+    def eng_oxirgi_vaqt(self) -> int:
+        """Jurnal ko'rgan eng keyingi vaqt: saqlangan belgi va partiyalarning zarb_ms."""
+        r = self.db.execute("SELECT COALESCE(MAX(zarb_ms),0) FROM partiyalar").fetchone()
+        return max(int(r[0]), int(self.sozlama(OXIRGI_VAQT, "0") or 0))
+
+    def vaqt_belgila(self, ms: int) -> None:
+        if ms > int(self.sozlama(OXIRGI_VAQT, "0") or 0):
+            self.sozlama_yoz(OXIRGI_VAQT, str(ms))
 
     def sert_jami(self, sert_id_hex: str) -> int:
         r = self.db.execute("SELECT COALESCE(SUM(jami),0) FROM partiyalar WHERE sert_id=?",

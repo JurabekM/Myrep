@@ -153,8 +153,30 @@ def zarb_qil(k: ZarbKirishi, zarbxona_kaliti, *,
     """
     _tekshir_kirish(k)
     partiya_id = partiya_id if partiya_id is not None else secrets.token_bytes(PARTIYA_ID_UZ)
-    partiya_kaliti = partiya_kaliti if partiya_kaliti is not None else secrets.token_bytes(SIR_UZ)
-    master = master if master is not None else secrets.token_bytes(SIR_UZ)
+    # Sirlar o'zgaruvchan bytearray'da: ish tugagach (yoki bekor qilinganda) NOL bilan
+    # to'ldiriladi. Python kafolat bermaydi (vaqtinchalik nusxalar, hosila kalitlar
+    # qolishi mumkin) — bu faqat sirning xotirada yashash vaqtini qisqartiradi (§20).
+    partiya_kaliti = _sir(partiya_kaliti)
+    master = _sir(master)
+    try:
+        return _zarb(k, zarbxona_kaliti, partiya_id, partiya_kaliti, master, zarb_ms, ritm,
+                     kuzatuv, jarayon, bekormi, soat)
+    finally:
+        _tozala(partiya_kaliti)
+        _tozala(master)
+
+
+def _sir(berilgan: bytes | None) -> bytearray:
+    return bytearray(berilgan if berilgan is not None else secrets.token_bytes(SIR_UZ))
+
+
+def _tozala(b: bytearray) -> None:
+    for i in range(len(b)):
+        b[i] = 0
+
+
+def _zarb(k, zarbxona_kaliti, partiya_id, partiya_kaliti, master, zarb_ms, ritm, kuzatuv,
+          jarayon, bekormi, soat) -> Partiya:
     zarb_ms = zarb_ms if zarb_ms is not None else int(time.time() * 1000)  # partiyaga BITTA vaqt
     cx = _cheklov_xeshi(k.cheklov)
     soni = len(k.nominallar)
@@ -176,7 +198,6 @@ def zarb_qil(k: ZarbKirishi, zarbxona_kaliti, *,
             raise BekorQilindi()
         if bekormi and (har_safar or (i + 1) % CHEKLOVSIZ_TEKSHIRUV == 0) and bekormi():
             raise BekorQilindi()
-    del partiya_kaliti, master  # xotirada ham uzoq turmasin
 
     daraxt = Daraxt(barglar)     # BIR MARTA quriladi
     for i, q in enumerate(qatorlar):
