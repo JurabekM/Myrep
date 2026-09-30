@@ -470,3 +470,79 @@ def test_31_main_demo_haqiqiy_profilni_rad_etadi(ilova, tmp_path, kalitlar, sert
     assert d.chaqiriqlar[-1][0] == "xato" and "haqiqiy bank" in d.chaqiriqlar[-1][2]
     assert not (papka / "demo_bank").exists()
     Zarbxona(papka, kalitlar[0]).yop()        # qulf ozod qilingan
+
+
+def test_33_ikki_kishilik_tasdiq_gui(ilova, tmp_path, kalitlar, sertifikat, monkeypatch):
+    """3.3: tasdiqchini ro'yxatdan o'tkazish, katta buyurtma zarbda tasdiq so'raydi,
+    Buyurtmalar sahifasidan tasdiqlash, chegarani o'zgartirish."""
+    from app.oyna import Oyna
+    d = Dialoglar(tmp_path, tmp_path / "s.aqcert")
+    d.ornat(monkeypatch)
+    parollar = []
+    monkeypatch.setattr(dialog, "parol",
+                        lambda *a: d._q("parol", parollar.pop(0) if parollar else None))
+    sertifikat.yoz(tmp_path / "s.aqcert")
+    z = Zarbxona(tmp_path / "p", kalitlar[0], soat_ms=lambda: HOZIR)
+    z.sertifikat_import(tmp_path / "s.aqcert")
+    o = Oyna(z)
+    o.dialoglar = d
+    o.show()
+    ks = o.sahifalar["kalit"]
+    o.sahifaga_ot("kalit")
+    tk = ks.tasdiq
+    assert "O'chiq" in tk.holat_matn.text() and not tk.t_chegara.isEnabled()
+    # ro'yxat: parollar mos emas → xato; keyin muvaffaqiyat
+    tk.chegara.setText("1 000 000")
+    parollar[:] = ["tasdiqchi-parol-1", "boshqa-parol-22"]
+    assert bos_va_javob(o, tk.t_royxat) and d.chaqiriqlar[-1][0] == "xato"
+    assert not z.tasdiq.yoqilgan
+    parollar[:] = ["tasdiqchi-parol-1", "tasdiqchi-parol-1"]
+    assert bos_va_javob(o, tk.t_royxat) and d.chaqiriqlar[-1][0] == "xabar"
+    assert z.tasdiq.chegara() == 1_000_000 and "Yoqilgan" in tk.holat_matn.text()
+    assert not tk.t_royxat.isEnabled() and tk.t_chegara.isEnabled()
+
+    # zarb: 2 mln — tasdiq so'raladi; parol berilmasa zarb boshlanmaydi
+    zs = o.sahifalar["zarb"]
+    o.sahifaga_ot("zarb")
+    zs.summa.setText("2 000 000")
+    zs.qulf.setEditText("AQ-RES-2")
+    zs.hajm.setValue(1000)
+    zs.surat.rejim.setCurrentIndex(zs.surat.rejim.findData("cheklovsiz"))
+    parollar[:] = []
+    assert bos_va_javob(o, zs.t_zarb)
+    assert not zs.ishlayapti() and "tasdiq berilmadi" in o.statusBar().currentMessage()
+    b = z.jurnal.buyurtmalar()[0]
+    assert z.tasdiq.holat(b) == "kutilmoqda"
+
+    # Buyurtmalar: noto'g'ri parol → xato; to'g'ri → tasdiqlangan; davom → zarb
+    bs = o.sahifalar["buyurtmalar"]
+    o.sahifaga_ot("buyurtmalar")
+    bs.jadval.selectRow(0)
+    assert bs.t_tasdiq.isEnabled() and bs.jadval.item(0, 2).text() == "kutilmoqda"
+    parollar[:] = ["xato-parol-000"]
+    assert bos_va_javob(o, bs.t_tasdiq) and d.chaqiriqlar[-1][0] == "xato"
+    parollar[:] = ["tasdiqchi-parol-1"]
+    assert bos_va_javob(o, bs.t_tasdiq)
+    assert z.tasdiq.holat(z.jurnal.buyurtma(b.buyurtma_id)) == "tasdiqlangan"
+    bs.jadval.selectRow(0)
+    assert not bs.t_tasdiq.isEnabled()
+    assert bos_va_javob(o, bs.t_davom)
+    assert kut(lambda: not zs.ishlayapti() and zs.t_zarb.isEnabled(), 60)
+    assert z.jurnal.buyurtma(b.buyurtma_id).holat == "tugadi"
+
+    # zarbda darhol tasdiqlash (to'g'ri parol)
+    o.sahifaga_ot("zarb")
+    zs.summa.setText("1 500 000")
+    parollar[:] = ["tasdiqchi-parol-1"]
+    assert bos_va_javob(o, zs.t_zarb)
+    assert kut(lambda: not zs.ishlayapti() and zs.t_zarb.isEnabled(), 60)
+    assert z.jurnal.buyurtmalar()[0].holat == "tugadi"
+
+    # chegarani o'zgartirish
+    o.sahifaga_ot("kalit")
+    tk.chegara.setText("5000000")
+    parollar[:] = ["xato-parol-000"]
+    assert bos_va_javob(o, tk.t_chegara) and d.chaqiriqlar[-1][0] == "xato"
+    parollar[:] = ["tasdiqchi-parol-1"]
+    assert bos_va_javob(o, tk.t_chegara) and z.tasdiq.chegara() == 5_000_000
+    o.close()

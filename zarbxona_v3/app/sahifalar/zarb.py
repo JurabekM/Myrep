@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDateTimeEdit, QFormLayout,
 
 from app import dialog
 from app.ishchilar import ZarbIshchisi
+from app.sahifalar.buyurtmalar import tasdiq_sorov
 from app.sahifalar.kartalar import GrafikKarta, KonveyerKarta, SuratKarta
 from app.vidjetlar import Karta, Sahifa, som, yorliq
 from core.buyurtma import BuyurtmaXatosi
@@ -183,6 +184,9 @@ class ZarbSahifasi(Sahifa):
             dialog.xato(self, "Buyurtma yaratilmadi", str(e))
             self.holat(f"buyurtma yaratilmadi: {e}")
             return
+        if self.ctx.z.tasdiq.holat(b) == "kutilmoqda" and not tasdiq_sorov(
+                self, self.ctx.z, b.buyurtma_id):
+            return                    # buyurtma saqlandi, tasdiqdan keyin davom ettiriladi
         self.ishga_tushir(b.buyurtma_id)
 
     def ishga_tushir(self, buyurtma_id: str) -> None:

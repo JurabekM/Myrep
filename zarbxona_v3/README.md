@@ -90,6 +90,20 @@ profil demo'ga aylantirilmaydi.
    Demo jurnal va tanlangan partiyaning **vaqtinchalik nusxasini** buzadi. Haqiqiy
    profil o'zgarmaydi, demo o'rtasida tok o'chsa ham.
 
+**Ikki kishilik tasdiq.** "Kalit va sertifikat" → "Ikki kishilik tasdiq" kartasida
+ikkinchi operator (tasdiqchi) o'z parolini kiritib ro'yxatdan o'tadi. Shunda
+`tasdiqchi.json` ichida alohida ML-DSA-65 kalit yaratiladi va chegara belgilanadi
+(default 10 mln so'm).
+- Chegaradan katta buyurtma tasdiqchi imzosisiz zarb qilinmaydi. Zarb bosilganda
+  tasdiqchi paroli so'raladi. Keyinroq "Buyurtmalar" → "Ikkinchi tasdiq" orqali ham
+  tasdiqlash mumkin.
+- Imzo buyurtmaning summa, qulf, cheklov va sertifikat maydonlariga bog'langan. Biror
+  maydon o'zgartirilsa, tasdiq YAROQSIZ bo'ladi.
+- Chegarani ham faqat tasdiqchi o'zgartira oladi. Chegara imzosi buzilsa, har buyurtma
+  tasdiq talab qiladi.
+- ⚠ Bu ilova ichidagi nazorat. `jurnal.db` ni to'g'ridan-to'g'ri tahrirlay oladigan odamni
+  u to'xtatmaydi.
+
 **Jurnal xesh-zanjiri.** Har partiya yozuvi oldingisining xeshini o'z ichiga oladi.
 Zanjir boshi zarbxona kaliti bilan imzolanadi. Kalitsiz odam `jurnal.db` da yozuvni
 o'zgartirsa, o'chirsa yoki qo'shsa, zanjirni qayta hisoblasa ham «Tekshiruv» buni topadi.
@@ -114,6 +128,7 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   konstanta.py   §3   kupyura.py §4   merkle.py §5   partiya.py §6+§10   cheklov.py §7
   sertifikat.py  §8   ombor.py §9     tekshiruv.py §12   buzish.py §12 (demo)
   zanjir.py      jurnal xesh-zanjiri (ichki format, bank protokoliga kirmaydi)
+  tasdiq.py      ikki kishilik tasdiq: tasdiqchi kaliti, imzolangan chegara
   demo_bank.py   DEMO rejimi va testlar uchun soxta bank (§11 qoidalari, holati saqlanadi)
   surat.py       §14 Surat, Ritm (pauza bilan)
   buyurtma.py    §15 buyurtma, tiklash, yagona yozuvchi   jurnal.py §15.3

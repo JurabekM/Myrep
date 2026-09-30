@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS zanjir (
     oldingi     TEXT NOT NULL,
     xesh        TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS tasdiqlar (
+    buyurtma_id   TEXT PRIMARY KEY,
+    tasdiqchi_iz  TEXT,
+    imzo          TEXT,
+    vaqt_ms       INTEGER
+);
 """
 ZANJIR_VERSIYA = "zanjir_versiya"
 ZANJIR_BOSH = "zanjir_bosh"
@@ -280,6 +287,23 @@ class Jurnal:
         rs = self.db.execute("SELECT zaxira_qulfi, MAX(yaratilgan_ms) m FROM buyurtmalar"
                              " GROUP BY zaxira_qulfi ORDER BY m DESC LIMIT ?", (n,)).fetchall()
         return [r[0] for r in rs]
+
+    # --- ikki kishilik tasdiq (core/tasdiq.py) ------------------------------------
+
+    def tasdiq(self, buyurtma_id: str) -> dict | None:
+        r = self.db.execute("SELECT tasdiqchi_iz, imzo, vaqt_ms FROM tasdiqlar"
+                            " WHERE buyurtma_id=?", (buyurtma_id,)).fetchone()
+        return None if r is None else {"iz": r[0], "imzo": r[1], "vaqt_ms": r[2]}
+
+    def tasdiq_kutish(self, buyurtma_id: str) -> None:
+        with self.db:
+            self.db.execute("INSERT OR IGNORE INTO tasdiqlar VALUES (?,?,?,?)",
+                            (buyurtma_id, None, None, None))
+
+    def tasdiq_yoz(self, buyurtma_id: str, iz: str, imzo_hex: str, vaqt_ms: int) -> None:
+        with self.db:
+            self.db.execute("INSERT OR REPLACE INTO tasdiqlar VALUES (?,?,?,?)",
+                            (buyurtma_id, iz, imzo_hex, vaqt_ms))
 
     # --- buzish demosi uchun (faqat tekshiruv sahifasi) ----------------------
 

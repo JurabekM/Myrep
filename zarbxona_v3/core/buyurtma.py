@@ -251,7 +251,15 @@ class Zarbxona:
             partiya_hajmi=partiya_hajmi, zaxira_qulfi=zaxira_qulfi.strip(), cheklov=cheklov,
             surat=surat.json(), holat="faol", yaratilgan_ms=self.soat_ms(), tugagan_ms=None)
         self.jurnal.buyurtma_qosh(b)
+        if self.tasdiq.kerakmi(b):
+            self.jurnal.tasdiq_kutish(b.buyurtma_id)
         return b
+
+    @property
+    def tasdiq(self):
+        """Ikki kishilik tasdiq (core/tasdiq.py)."""
+        from .tasdiq import IkkiTasdiq
+        return IkkiTasdiq(self)
 
     def buyurtma_bekor(self, buyurtma_id: str) -> None:
         b = self.jurnal.buyurtma(buyurtma_id)
@@ -283,6 +291,10 @@ class Zarbxona:
             raise BuyurtmaXatosi("buyurtma topilmadi")
         if b.holat in ("tugadi", "bekor"):
             raise BuyurtmaXatosi(f"buyurtma holati: {b.holat}")
+        th = self.tasdiq.holat(b)
+        if th in ("kutilmoqda", "yaroqsiz"):
+            return self._pauza(buyurtma_id, "ikkinchi operator (tasdiqchi) tasdig'i kerak"
+                               + (" — mavjud imzo YAROQSIZ" if th == "yaroqsiz" else ""), [])
         surat = surat or Surat.json_dan(b.surat)
         surat.tekshir()
         rs = surat.ritm_sozlamasi(b.kupyura_soni)

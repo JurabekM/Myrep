@@ -10,6 +10,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QHBoxLayout, QPushButton
 
 from app import dialog
+from app.sahifalar.tasdiq_karta import TasdiqKarta
 from app.vidjetlar import Karta, Sahifa, som, yorliq
 from core.ibtido import iz
 from core.ombor import MIN_PAROL, OmborXatosi, ombor_zaxira, parol_almashtir
@@ -57,12 +58,15 @@ class KalitSahifasi(Sahifa):
         sq.addStretch(1)
         s.qosh(sq)
         self.qosh(s)
+        self.tasdiq = TasdiqKarta(ctx)
+        self.qosh(self.tasdiq)
         self.oxiri()
 
     def yangila(self) -> None:
         z = self.ctx.z
         self.iz.setText(f"<span style='font-family:monospace'>{iz(z.pk)}</span>")
         self.ogoh.setText("<br>".join("⚠ " + m for m in z.ogohlantirishlar()))
+        self.tasdiq.yangila()
         c = z.sertifikat
         if c is None:
             self.sert.setText("Sertifikat import qilinmagan. Bank bergan <b>.aqcert</b> "
