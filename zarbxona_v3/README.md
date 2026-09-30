@@ -26,6 +26,25 @@ python -m pip install -r requirements.txt
 `where python` dagi har bir interpreterni alohida sinaydi. Majburan tanlash uchun
 `set ZARBXONA_PYTHON=C:\...\python.exe` bering.
 
+### GUI'siz rejim (server, Raspberry Pi)
+
+```bash
+export ZARBXONA_PAROL=...                  # yoki so'raladi
+python run.py holat
+python run.py zarb --summa 1234567 --qulf AQ-RES-0001 --surat davomiylik:30 --byudjet 0.25
+python run.py davom --buyurtma <id>        # Ctrl+C bilan to'xtatilganidan keyin
+python run.py tasdiqla --buyurtma <id>     # ikkinchi operator (ZARBXONA_TASDIQCHI_PAROL)
+python run.py buyurtmalar
+python run.py tekshir                      # 0 — toza, 1 — muammo
+```
+
+- Sur'at quyidagicha beriladi: `tezlik:K` · `davomiylik:D` (daqiqa) · `cheklovsiz`.
+  Sovutish: `--sovutish N:X`.
+- Ctrl+C — TO'XTATISH: joriy partiya yozilmaydi.
+- Chiqish kodlari: 0 — muvaffaqiyat, 1 — xato yoki muammo, 3 — to'xtatildi yoki tasdiq
+  kutilmoqda.
+- Kalit va sertifikat bir marta GUI orqali tayyorlanadi.
+
 ### Birinchi qadam — KAT
 
 ```bash
@@ -144,7 +163,7 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   protokol.py    §13.4–13.6 xabarlar, mavzular, wire AQW1
   kanal.py       §13.2 MQTT + xotira kanali    sessiya.py §13.3 adapter
   topshirish.py  §13.5 + §15.7 avto-topshirish
-app/           PySide6: main.py, theme.py, ishchilar.py (QThread), kirish.py, oyna.py, grafik.py,
+app/           PySide6: main.py, cli.py (GUI'siz), theme.py, ishchilar.py (QThread), kirish.py, oyna.py, grafik.py,
                sahifalar/ (har sahifa alohida fayl), selftest.py, assets/zarbxona.ico
 tests/         pytest (T1–T15) + soxta_bank.py
 tools/         kat_tekshir.py, kat_yarat.py, broker_smoke.py, ikonka_yarat.py

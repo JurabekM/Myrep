@@ -30,6 +30,10 @@ def main(argv=None) -> int:
             oqim.reconfigure(encoding="utf-8")
         except (AttributeError, ValueError):
             pass
+    royxat = list(sys.argv[1:] if argv is None else argv)
+    if royxat and royxat[0] in ("holat", "zarb", "davom", "tasdiqla", "buyurtmalar", "tekshir"):
+        from app.cli import main as cli_main      # GUI'siz — Qt yuklanmaydi
+        return cli_main(royxat)
     args = argumentlar(argv)
     if args.papka is None:
         args.papka = ILDIZ / ("data_demo" if args.demo else "data")
