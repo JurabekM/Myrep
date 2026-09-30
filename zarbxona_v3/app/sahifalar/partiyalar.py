@@ -15,7 +15,7 @@ from app.ishchilar import TopshirishIshchisi
 from app.sahifalar.boshqaruv import vaqt
 from app.theme import mono_shrift
 from app.vidjetlar import Karta, Sahifa, jadval, jadval_toldir, som, tanlangan_kalit, yorliq
-from core.merkle import isbot_ajrat
+from core.isbot import isbot_paketi, qr_png
 from core.partiya import FaylXatosi, partiya_oqi
 from core.sessiya import AETHERQ_YOQ, aetherq_core_bormi
 
@@ -47,8 +47,11 @@ class PartiyalarSahifasi(Sahifa):
         self.indeks.setPrefix("kupyura #")
         self.t_isbot = QPushButton("Merkle isbotini JSON ga eksport")
         self.t_isbot.clicked.connect(self.isbot_bos)
+        self.t_qr = QPushButton("Isbot QR kodi (PNG)…")
+        self.t_qr.clicked.connect(self.qr_bos)
         iq.addWidget(self.indeks)
         iq.addWidget(self.t_isbot)
+        iq.addWidget(self.t_qr)
         iq.addStretch(1)
         k.qosh(iq)
         self.qosh(k)
@@ -158,35 +161,55 @@ class PartiyalarSahifasi(Sahifa):
         self.yangila()
 
     @Slot()
-    def isbot_bos(self) -> None:
+    def _kupyura(self):
+        """(partiya_id, Partiya, indeks) yoki None — xato dialog bilan."""
         pid = self._tanlangan()
         if not pid:
-            return
+            return None
         y = self.ctx.z.jurnal.partiya(pid)
         try:
             p = partiya_oqi(self.ctx.z.partiya_papka / y.fayl)
         except FaylXatosi as e:
             dialog.xato(self, "Isbot", str(e))
-            return
+            return None
         i = self.indeks.value()
         if i >= p.soni:
             dialog.xato(self, "Isbot", f"Partiyada {p.soni} ta kupyura bor (0..{p.soni - 1}).")
+            return None
+        return pid, p, i
+
+    @Slot()
+    def isbot_bos(self) -> None:
+        r = self._kupyura()
+        if r is None:
             return
-        q = p.qatorlar[i]
-        d = {"format": "AETHER-Q-CBDC-NOTE-PROOF", "version": 1, "batch_id": pid,
-             "root": p.ildiz.hex(), "note_count": p.soni, "leaf_index": i,
-             "note": {"note_id": q.note_id.hex(), "denomination": q.nominal, "owner": q.egasi,
-                      "seq": q.seq, "constraints_hash": q.cheklov_xeshi.hex()},
-             "leaf": q.barg().hex(), "proof": [x.hex() for x in isbot_ajrat(q.isbot)],
-             "batch_signature": p.imzo.hex(), "total": p.jami, "reserve_lock": p.zaxira_qulfi,
-             "minted_ms": p.zarb_ms}
+        pid, p, i = r
         yol = dialog.fayl_saqla(self, "Isbotni saqlash", f"isbot-{pid[:12]}-{i}.json",
                                 "JSON (*.json)")
         if not yol:
             self.holat("isbot eksporti bekor qilindi")
             return
+        d = isbot_paketi(p, i, toliq=True)
         Path(yol).write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
-        self.holat(f"isbot saqlandi: {yol}")
+        self.holat(f"isbot saqlandi: {yol} — tekshirish: tools/isbot_tekshir.py")
+
+    @Slot()
+    def qr_bos(self) -> None:
+        r = self._kupyura()
+        if r is None:
+            return
+        pid, p, i = r
+        yol = dialog.fayl_saqla(self, "QR kodni saqlash", f"isbot-{pid[:12]}-{i}.png",
+                                "PNG (*.png)")
+        if not yol:
+            self.holat("QR eksporti bekor qilindi")
+            return
+        try:
+            qr_png(isbot_paketi(p, i), yol)
+        except ImportError:
+            dialog.xato(self, "QR", "QR uchun 'segno' paketi kerak: pip install segno")
+            return
+        self.holat(f"QR saqlandi: {yol} (maxfiy ma'lumot yo'q — sarlavha va Merkle isboti)")
 
     # --- onlayn ------------------------------------------------------------------------
 

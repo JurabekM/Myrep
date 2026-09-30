@@ -1,6 +1,7 @@
 PySide6>=6.6
 cryptography>=47        # ML-DSA-65, ChaCha20-Poly1305
 paho-mqtt>=2.0
+segno>=1.6              # kupyura isboti QR kodi (sof Python)
 pytest>=8               # dev
 hypothesis>=6.100       # dev: xossaga asoslangan va fuzz testlar (tests/test_xossa.py)
 pycryptodome>=3.20      # dev: faqat T2 testi va tools/kat_tekshir.py (standart KMAC farqini isbotlash)

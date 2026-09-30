@@ -139,6 +139,20 @@ Eski (zanjirsiz) jurnal birinchi ochilishda bir marta migratsiya qilinadi.
 ⚠ Chegarasi: butun jurnalni o'sha kalit imzolagan **eski nusxasiga qaytarishni** zanjir
 o'zi sezmaydi. Buning uchun tashqi nuqta kerak, masalan bankning qabul yozuvlari.
 
+**Buyurtma hisoboti (PDF).** "Buyurtmalar" → "Hisobot (PDF)…" audit uchun hujjat tuzadi.
+Unda buyurtma, tasdiq, vakolat, partiyalar (Merkle ildizlari bilan), tekshiruv natijasi
+va jurnal zanjiri boshi bor. PDF qo'shimcha kutubxonasiz, Qt'ning o'zi bilan yaratiladi.
+
+**Kupyura isboti va QR.** "Partiyalar" sahifasida tanlangan kupyuraning isbotini ikki
+ko'rinishda olish mumkin:
+- JSON fayl: partiya imzosi bilan birga;
+- QR kod (PNG): siqiq ko'rinish.
+
+Ikkalasida ham maxfiy ma'lumot (muhr, nazorat kaliti) yo'q. Oflayn tekshirish:
+```bash
+python tools/isbot_tekshir.py isbot.json --kalit zarbxona_ochiq_kalit.json
+```
+
 Sertifikat muddati tugashiga 30 kun yoki undan kam qolganda, yoki limitning 90 % i
 ishlatilganda, dastur ochilishida va paneldagi kartalarda ogohlantirish chiqadi.
 
@@ -157,6 +171,8 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   sertifikat.py  §8   ombor.py §9     tekshiruv.py §12   buzish.py §12 (demo)
   zanjir.py      jurnal xesh-zanjiri (ichki format, bank protokoliga kirmaydi)
   tasdiq.py      ikki kishilik tasdiq: tasdiqchi kaliti, imzolangan chegara
+  isbot.py       kupyura isboti paketi (JSON/QR) va oflayn tekshiruv
+  hisobot.py     buyurtma hisoboti (HTML → ilovada PDF)
   demo_bank.py   DEMO rejimi va testlar uchun soxta bank (§11 qoidalari, holati saqlanadi)
   surat.py       §14 Surat, Ritm (pauza bilan)
   buyurtma.py    §15 buyurtma, tiklash, yagona yozuvchi   jurnal.py §15.3
@@ -166,7 +182,7 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
 app/           PySide6: main.py, cli.py (GUI'siz), theme.py, ishchilar.py (QThread), kirish.py, oyna.py, grafik.py,
                sahifalar/ (har sahifa alohida fayl), selftest.py, assets/zarbxona.ico
 tests/         pytest (T1–T15) + soxta_bank.py
-tools/         kat_tekshir.py, kat_yarat.py, broker_smoke.py, ikonka_yarat.py
+tools/         kat_tekshir.py, kat_yarat.py, broker_smoke.py, ikonka_yarat.py, isbot_tekshir.py
 kat/  docs/    KAT vektorlari va to'liq SPEC
 ```
 

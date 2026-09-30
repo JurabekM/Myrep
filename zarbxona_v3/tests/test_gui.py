@@ -546,3 +546,47 @@ def test_33_ikki_kishilik_tasdiq_gui(ilova, tmp_path, kalitlar, sertifikat, monk
     parollar[:] = ["tasdiqchi-parol-1"]
     assert bos_va_javob(o, tk.t_chegara) and z.tasdiq.chegara() == 5_000_000
     o.close()
+
+
+def test_34_35_hisobot_pdf_va_qr(ilova, tmp_path, kalitlar, sertifikat, monkeypatch):
+    from app.oyna import Oyna
+    from core.isbot import isbot_tekshir
+    from core.surat import Surat
+    d = Dialoglar(tmp_path, tmp_path / "s.aqcert")
+    d.ornat(monkeypatch)
+    sertifikat.yoz(tmp_path / "s.aqcert")
+    z = Zarbxona(tmp_path / "p", kalitlar[0], soat_ms=lambda: HOZIR)
+    z.sertifikat_import(tmp_path / "s.aqcert")
+    b = z.buyurtma_yarat(12_345, "AQ-RES-1", "", Surat(rejim="cheklovsiz"), partiya_hajmi=4)
+    z.buyurtmani_bajar(b.buyurtma_id)
+    o = Oyna(z)
+    o.dialoglar = d
+    o.show()
+    bs = o.sahifalar["buyurtmalar"]
+    o.sahifaga_ot("buyurtmalar")
+    bs.jadval.selectRow(0)
+    assert bos_va_javob(o, bs.t_hisobot)
+    pdf = tmp_path / f"hisobot-{b.buyurtma_id}.pdf"
+    assert pdf.read_bytes()[:5] == b"%PDF-" and pdf.stat().st_size > 2000
+    # regressiya: matn sahifa bo'ylab to'g'ri masshtabda (1200 dpi xatosida mitti edi)
+    QtPdf = pytest.importorskip("PySide6.QtPdf")
+    from PySide6.QtCore import QSize
+    hujjat = QtPdf.QPdfDocument()
+    hujjat.load(str(pdf))
+    rasm = hujjat.render(0, QSize(450, 636))
+    qora = sum(1 for x in range(225, 440, 3) for y in range(20, 300, 3)       # fon shaffof
+               if rasm.pixelColor(x, y).alpha() > 128 and rasm.pixelColor(x, y).lightness() < 128)
+    assert qora > 50, qora
+    ps = o.sahifalar["partiyalar"]
+    o.sahifaga_ot("partiyalar")
+    ps.jadval.selectRow(0)
+    ps.indeks.setValue(2)
+    assert bos_va_javob(o, ps.t_isbot)
+    j = next(tmp_path.glob("isbot-*-2.json"))
+    assert isbot_tekshir(j.read_text(encoding="utf-8"), z.pk)[0]
+    pytest.importorskip("segno")
+    assert bos_va_javob(o, ps.t_qr)
+    assert next(tmp_path.glob("isbot-*-2.png")).read_bytes()[:4] == b"\x89PNG"
+    ps.indeks.setValue(99)
+    assert bos_va_javob(o, ps.t_qr) and d.chaqiriqlar[-1][0] == "xato"
+    o.close()

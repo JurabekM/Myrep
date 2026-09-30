@@ -10,9 +10,26 @@ from app.sahifalar.boshqaruv import vaqt
 from app.vidjetlar import Karta, Sahifa, jadval, jadval_toldir, som, tanlangan_kalit, yorliq
 from core.buyurtma import BuyurtmaXatosi
 from core.cheklov import cheklov_tavsif
+from core.hisobot import buyurtma_hisoboti
 from core.surat import Surat
 from core.tasdiq import HOLAT_NOMI as TASDIQ_NOMI
 from core.tasdiq import TasdiqXatosi
+
+
+def pdf_yoz(html_matn: str, yol: str) -> None:
+    """HTML → PDF (A4) Qt'ning o'zi bilan — qo'shimcha bog'liqlik yo'q."""
+    from PySide6.QtGui import QPageLayout, QPageSize, QPdfWriter, QTextDocument
+    from PySide6.QtCore import QMarginsF
+    w = QPdfWriter(str(yol))
+    w.setResolution(96)          # QTextDocument 96 dpi da o'lchaydi — aks holda matn mitti
+    w.setPageLayout(QPageLayout(QPageSize(QPageSize.PageSizeId.A4),
+                                QPageLayout.Orientation.Portrait, QMarginsF(15, 15, 15, 15),
+                                QPageLayout.Unit.Millimeter))
+    w.setTitle("AETHER-Q Zarbxona — buyurtma hisoboti")
+    d = QTextDocument()
+    d.setHtml(html_matn)
+    d.setPageSize(w.pageLayout().paintRectPixels(w.resolution()).size().toSizeF())
+    d.print_(w)
 
 
 def tasdiq_sorov(ota, z, buyurtma_id: str) -> bool:
@@ -53,7 +70,9 @@ class BuyurtmalarSahifasi(Sahifa):
         self.t_bekor.setObjectName("xavfli")
         self.t_yangila = QPushButton("Yangilash")
         self.t_tasdiq = QPushButton("Ikkinchi tasdiq…")
+        self.t_hisobot = QPushButton("Hisobot (PDF)…")
         for w, fn in ((self.t_davom, self.davom_bos), (self.t_tasdiq, self.tasdiq_bos),
+                      (self.t_hisobot, self.hisobot_bos),
                       (self.t_bekor, self.bekor_bos), (self.t_yangila, self.yangila_bos)):
             w.clicked.connect(fn)
             q.addWidget(w)
@@ -111,6 +130,19 @@ class BuyurtmalarSahifasi(Sahifa):
             return
         if tasdiq_sorov(self, self.ctx.z, bid):
             self.yangila()
+
+    @Slot()
+    def hisobot_bos(self) -> None:
+        bid = tanlangan_kalit(self.jadval)
+        if not bid:
+            dialog.xato(self, "Hisobot", "Avval jadvaldan buyurtmani tanlang.")
+            return
+        yol = dialog.fayl_saqla(self, "Hisobotni saqlash", f"hisobot-{bid}.pdf", "PDF (*.pdf)")
+        if not yol:
+            self.holat("hisobot bekor qilindi")
+            return
+        pdf_yoz(buyurtma_hisoboti(self.ctx.z, bid), yol)
+        self.holat(f"hisobot saqlandi: {yol}")
 
     @Slot()
     def bekor_bos(self) -> None:
