@@ -269,11 +269,25 @@ ekranda baholanadi.
 
 ## Holat: nima qilindi, nima sinaldi, nima sinalmadi
 
-**Qilindi va bulutda sinaldi (71 test o'tadi):**
-- SPEC §2–§17 hammasi, T1–T15.
-- KAT'ning hamma qiymati birinchi urinishdayoq bayt-ma-bayt mos keldi.
-- Onlayn protokol faqat **soxta** sessiya va soxta bank bilan sinaldi: xavfsizlik
-  qatlami sinalmagan, faqat yuqori qatlam.
+**Qilindi va sinaldi.** Bulutda 164 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
+skip. CI'da Linux va Windows, Python 3.12 va 3.13, hamda Windows `.exe` yig'ilishi.
+- SPEC §2–§17 hammasi, T1–T15. KAT'ning hamma qiymati bayt-ma-bayt mos.
+- SPEC'dan tashqari qo'shimchalar:
+  - buzish demosi faqat nusxada ishlaydi;
+  - jurnal xesh-zanjiri;
+  - parol almashtirish, kalit zaxirasi va ogohlantirishlar;
+  - demo bank;
+  - jonli grafiklar va ularning jadvali;
+  - ikki kishilik tasdiq;
+  - soat himoyasi;
+  - sirlarni xotiradan tozalash;
+  - GUI'siz CLI;
+  - PDF hisobot, isbot QR va oflayn tekshiruv;
+  - `.exe` paketi.
+- Xossaga asoslangan va fuzz testlar (hypothesis). Codex review'ning 2 ta topilmasi
+  tuzatildi va regressiya testlari bilan qulflandi.
+- Onlayn protokol faqat **soxta** sessiya, soxta bank va demo bank bilan sinaldi.
+  Xavfsizlik qatlami (AETHER-Q sessiyasi) sinalmagan, faqat yuqori qatlam sinalgan.
 
 **Sinalmadi (bulutda imkonsiz):**
 - A1–A6.
@@ -281,7 +295,10 @@ ekranda baholanadi.
 - Haqiqiy bank qabuli.
 - Haqiqiy MQTT broker: bulut konteyneridan `broker.hivemq.com:1883` ga TCP ulanish
   bloklangan, `broker_smoke.py` «brokerga ulanib bo'lmadi» dedi.
-- `run.bat`: Linux'da yozilgan, Windows'da ishga tushirilmagan.
+- `run.bat`: Linux'da yozilgan, Windows'da ishga tushirilmagan. CI Windows'da
+  testlarni va `.exe` ni sinaydi, lekin `run.bat` ning o'zini emas.
+- Windows `.exe`: CI'da yig'iladi va `--selftest` bilan tekshiriladi. GUI oynasi haqiqiy
+  Windows ekranida ochib ko'rilmagan.
 - Haqiqiy ekrandagi ko'rinish: faqat offscreen skrinshotlar ko'rildi.
 - Uzoq sekin zarbdagi CPU ulushi. Monitor ko'rsatadigan CPU va tezlik ish vaqtida
   **o'lchanadi**, taxminiy vaqt esa «TAXMINIY» deb aniq belgilanadi.
