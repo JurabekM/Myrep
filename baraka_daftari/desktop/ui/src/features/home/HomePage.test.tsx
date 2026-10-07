@@ -18,6 +18,8 @@ const money = (formatted: string) => ({ minor: '0', currency: 'UZS', formatted }
 const home: HomeDto = {
   month: '2026-10',
   previous_month: '2026-09',
+  today: '2026-10-07',
+  week_start: '2026-10-02',
   self_paid: money("400 000 so'm"),
   self_paid_bp: 500,
   income: money("8 000 000 so'm"),

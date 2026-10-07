@@ -44,8 +44,22 @@ beforeEach(() => {
   vi.mocked(commands.listCategories).mockResolvedValue({
     status: 'ok',
     data: [
-      { id: 'c1', name: 'Oziq-ovqat', necessity: 'ZARUR', is_charity: false, is_habit: false, last_change: null },
-      { id: 'c2', name: 'Gazak va ichimlik', necessity: 'HAVAS', is_charity: false, is_habit: false, last_change: null },
+      {
+        id: 'c1',
+        name: 'Oziq-ovqat',
+        necessity: 'ZARUR',
+        is_charity: false,
+        is_habit: false,
+        last_change: null,
+      },
+      {
+        id: 'c2',
+        name: 'Gazak va ichimlik',
+        necessity: 'HAVAS',
+        is_charity: false,
+        is_habit: false,
+        last_change: null,
+      },
     ],
   });
   vi.mocked(commands.suggestCategory).mockResolvedValue({ status: 'ok', data: 'c2' });
@@ -64,8 +78,17 @@ describe('WeekSheet', () => {
   it("hafta kunlari juma'dan bugungacha ko'rsatiladi (kelajak sanasi yo'q)", async () => {
     renderSheet();
     const date = await screen.findByLabelText('Sana');
-    const options = within(date).getAllByRole('option').map((o) => o.textContent);
-    expect(options).toEqual(['2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07']);
+    const options = within(date)
+      .getAllByRole('option')
+      .map((o) => o.textContent);
+    expect(options).toEqual([
+      '2026-10-02',
+      '2026-10-03',
+      '2026-10-04',
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-07',
+    ]);
   });
 
   it("izoh yozilganda kategoriya oxirgi shunday xarajatdan avtomatik to'ldiriladi", async () => {
@@ -83,7 +106,10 @@ describe('WeekSheet', () => {
   it("summada Enter yangi qator ochadi, Ctrl+Enter hamma to'ldirilgan qatorni saqlaydi", async () => {
     renderSheet();
     await screen.findByRole('option', { name: 'Oziq-ovqat' });
-    await userEvent.type(screen.getAllByLabelText('Summa (so\'m)')[0] as HTMLElement, '12000{Enter}');
+    await userEvent.type(
+      screen.getAllByLabelText("Summa (so'm)")[0] as HTMLElement,
+      '12000{Enter}',
+    );
     const amounts = screen.getAllByLabelText("Summa (so'm)");
     expect(amounts).toHaveLength(2);
     await userEvent.type(amounts[1] as HTMLElement, '5000');
@@ -94,7 +120,12 @@ describe('WeekSheet', () => {
     });
     const items = vi.mocked(commands.addExpenses).mock.calls[0]?.[0] ?? [];
     expect(items).toHaveLength(2);
-    expect(items[0]).toMatchObject({ date: '2026-10-07', amount: '12000', channel: 'CASH', is_gift: false });
+    expect(items[0]).toMatchObject({
+      date: '2026-10-07',
+      amount: '12000',
+      channel: 'CASH',
+      is_gift: false,
+    });
     expect(items[1]).toMatchObject({ amount: '5000', category_id: 'c1' });
   });
 
@@ -104,8 +135,11 @@ describe('WeekSheet', () => {
     expect(screen.getByRole('button', { name: 'Saqlash (0)' })).toBeDisabled();
   });
 
-  it('belgilar (sovg\'a, qarzga) Rustga yuboriladi va xato ko\'rsatiladi', async () => {
-    vi.mocked(commands.addExpenses).mockResolvedValue({ status: 'error', error: { kind: 'InvalidAmount' } });
+  it("belgilar (sovg'a, qarzga) Rustga yuboriladi va xato ko'rsatiladi", async () => {
+    vi.mocked(commands.addExpenses).mockResolvedValue({
+      status: 'error',
+      error: { kind: 'InvalidAmount' },
+    });
     renderSheet();
     await screen.findByRole('option', { name: 'Oziq-ovqat' });
     await userEvent.type(screen.getByLabelText("Summa (so'm)"), 'abc');
@@ -115,6 +149,9 @@ describe('WeekSheet', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Summani raqam bilan yozing');
     });
-    expect(vi.mocked(commands.addExpenses).mock.calls[0]?.[0][0]).toMatchObject({ is_gift: true, funded_by_debt: true });
+    expect(vi.mocked(commands.addExpenses).mock.calls[0]?.[0][0]).toMatchObject({
+      is_gift: true,
+      funded_by_debt: true,
+    });
   });
 });

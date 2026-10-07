@@ -30,6 +30,8 @@ beforeEach(() => {
     data: {
       month: '2026-10',
       previous_month: '2026-09',
+      today: '2026-10-07',
+      week_start: '2026-10-02',
       self_paid: money("0 so'm"),
       self_paid_bp: 0,
       income: money("0 so'm"),

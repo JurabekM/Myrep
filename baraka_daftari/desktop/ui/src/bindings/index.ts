@@ -39,6 +39,37 @@ export const commands = {
 	setTaskDone: (chapterId: string, taskId: string, done: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_task_done", { chapterId, taskId, done })),
 	savePage: (chapterId: string, body: string) => typedError<null, CommandError>(__TAURI_INVOKE("save_page", { chapterId, body })),
 	setUnlockPolicy: (input: PolicyInput) => typedError<null, CommandError>(__TAURI_INVOKE("set_unlock_policy", { input })),
+	listMembers: () => typedError<MemberDto[], CommandError>(__TAURI_INVOKE("list_members")),
+	/**  Yangi a'zo. PIN berilsa, shu zahoti o'rnatiladi. */
+	addMember: (name: string, role: string, pin: string | null) => typedError<MemberDto, CommandError>(__TAURI_INVOKE("add_member", { name, role, pin })),
+	changeMemberPin: (memberId: string, oldPin: string | null, newPin: string) => typedError<null, CommandError>(__TAURI_INVOKE("change_member_pin", { memberId, oldPin, newPin })),
+	listCategories: () => typedError<CategoryDto[], CommandError>(__TAURI_INVOKE("list_categories")),
+	setNecessity: (categoryId: string, necessityText: string, memberId: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_necessity", { categoryId, necessityText, memberId })),
+	addCategory: (input: CategoryInput) => typedError<CategoryDto, CommandError>(__TAURI_INVOKE("add_category", { input })),
+	setHabit: (categoryId: string, isHabit: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_habit", { categoryId, isHabit })),
+	/**  «Hafta varag'i»: barcha qatorlar bitta tranzaksiyada. */
+	addExpenses: (items: ExpenseInput[]) => typedError<number, CommandError>(__TAURI_INVOKE("add_expenses", { items })),
+	listExpenses: (from: string, to: string) => typedError<ExpenseDto[], CommandError>(__TAURI_INVOKE("list_expenses", { from, to })),
+	removeExpense: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_expense", { id })),
+	/**  Shu izoh bilan oxirgi yozilgan xarajat kategoriyasi (avtomatik to'ldirish uchun). */
+	suggestCategory: (note: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("suggest_category", { note })),
+	havasReport: (monthText: string) => typedError<HavasDto, CommandError>(__TAURI_INVOKE("havas_report", { monthText })),
+	/**  Yangi chegara taklif qiladi: taklif qiluvchi o'z PIN'ini kiritadi. */
+	proposeLimit: (memberId: string, pin: string, amountText: string) => typedError<null, CommandError>(__TAURI_INVOKE("propose_limit", { memberId, pin, amountText })),
+	/**  Har bir kattalar o'z PIN'i bilan rozilik beradi. */
+	consentLimit: (limitId: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("consent_limit", { limitId, memberId, pin })),
+	listTreats: () => typedError<TreatDto[], CommandError>(__TAURI_INVOKE("list_treats")),
+	addTreat: (name: string, amountText: string, weekday: number) => typedError<null, CommandError>(__TAURI_INVOKE("add_treat", { name, amountText, weekday })),
+	setTreatActive: (id: string, active: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_treat_active", { id, active })),
+	removeTreat: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_treat", { id })),
+	logTreat: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("log_treat", { id })),
+	habitStats: () => typedError<HabitDto[], CommandError>(__TAURI_INVOKE("habit_stats")),
+	/**
+	 *  Bayonnomani PDF qiladi va foydalanuvchi **OS «saqlash» oynasida** tanlagan joyga yozadi.
+	 *  Fayl faqat Rust tomonida yoziladi (frontendga fayl tizimi ruxsati berilmaydi).
+	 *  Foydalanuvchi bekor qilsa `None`; muvaffaqiyatda saqlangan fayl nomi.
+	 */
+	exportCouncilPdf: (monthText: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_council_pdf", { monthText })),
 };
 
 /* Types */
@@ -48,6 +79,23 @@ export type BlockDto = {
 	source: string | null,
 	/**  Ulamo tekshiruvidan o'tmagan (faqat ishlab chiqish rejimida ko'rinadi). */
 	unreviewed: boolean,
+};
+
+export type CategoryDto = {
+	id: string,
+	name: string,
+	/**  `ZARUR` | `KERAK` | `HAVAS` | `None` (belgilanmagan). */
+	necessity: string | null,
+	is_charity: boolean,
+	is_habit: boolean,
+	/**  Oxirgi o'zgartirgan a'zo va sana: «Dilnoza, 2026-10-09». */
+	last_change: string | null,
+};
+
+export type CategoryInput = {
+	name: string,
+	necessity: string | null,
+	is_habit: boolean,
 };
 
 export type CategoryTotalDto = {
@@ -82,13 +130,69 @@ export type ChapterEntryDto = {
 export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kind: "Locked"; retry_after_secs: number } | { kind: "NotInitialized" } | { kind: "AlreadyInitialized" } | { kind: "KeyringMissing" } | 
 /**  Summa matni noto'g'ri (masalan, "12abc"). */
 { kind: "InvalidAmount" } | { kind: "Invalid"; message: string } | { kind: "NotFound" } | { kind: "InsufficientFunds" } | { kind: "OpeningBalanceExists" } | 
+/**  A'zoning PIN'i noto'g'ri (havas chegarasiga rozilik). */
+{ kind: "MemberWrongPin" } | { kind: "MemberPinLocked"; retry_after_secs: number } | { kind: "MemberNoPin" } | 
 /**  "Kelajagim"dan pul olish pauzasi tugamagan. */
 { kind: "Cooling"; remaining_secs: number } | { kind: "Internal"; message: string };
 
 export type DemoError = { kind: "InvalidInput"; message: string };
 
+export type ExpenseDto = {
+	id: string,
+	date: string,
+	category_id: string,
+	amount: MoneyDto,
+	channel: string,
+	note: string | null,
+	is_gift: boolean,
+	is_ostentation: boolean,
+	funded_by_debt: boolean,
+};
+
+export type ExpenseInput = {
+	/**  `YYYY-MM-DD`. */
+	date: string,
+	category_id: string,
+	amount: string,
+	/**  `CASH` | `CARD`. */
+	channel: string,
+	note: string | null,
+	/**  `None` — kategoriya toifasi. */
+	necessity: string | null,
+	is_gift: boolean,
+	is_ostentation: boolean,
+	funded_by_debt: boolean,
+};
+
+export type HabitDto = {
+	category_id: string,
+	name: string,
+	window_total: MoneyDto,
+	week: MoneyDto,
+	month: MoneyDto,
+	year: MoneyDto,
+};
+
+export type HavasDto = {
+	month: string,
+	/**  Faqat barcha kattalar rozi bo'lgan chegara. */
+	limit: MoneyDto | null,
+	pending: PendingLimitDto | null,
+	spent: MoneyDto,
+	/**  `OK` | `NEAR` | `OVER`; chegara faol bo'lmasa `None`. */
+	state: string | null,
+	used_bp: number | null,
+	ostentation: MoneyDto,
+	debt_funded: MoneyDto,
+	charity: MoneyDto,
+	gifts_excluded: MoneyDto,
+};
+
 export type HomeDto = {
 	month: string,
+	/**  Bugungi lokal sana (`YYYY-MM-DD`) va shu haftaning boshi (juma). */
+	today: string,
+	week_start: string,
 	previous_month: string,
 	self_paid: MoneyDto,
 	/**  Oylik daromadga nisbatan, bazis punkt (500 = 5%). */
@@ -133,6 +237,19 @@ export type JourneyDto = {
 	week_done: number,
 	unlock: UnlockDto | null,
 	policy: PolicyDto,
+};
+
+export type MemberDto = {
+	id: string,
+	name: string,
+	/**  `ADULT` | `CHILD` | `VIEWER`. */
+	role: string,
+	has_pin: boolean,
+};
+
+export type MemberRef = {
+	id: string,
+	name: string,
 };
 
 /**  Pul DTO (DESKTOP_PROMPT 3.2): `minor` JS 2^53 chegarasidan himoya uchun string. */
@@ -182,6 +299,14 @@ export type OwnerShareDto = {
 	bp: number,
 };
 
+export type PendingLimitDto = {
+	limit_id: string,
+	amount: MoneyDto,
+	consented: string[],
+	/**  Hali rozi bo'lmagan kattalar: (ID, ism). */
+	missing: MemberRef[],
+};
+
 export type PolicyDto = {
 	window_weeks: number,
 	min_satisfied_weeks: number,
@@ -222,6 +347,17 @@ export type TaskDto = {
 	auto_detected: boolean,
 	/**  Foydalanuvchi qo'lda belgilaydigan vazifa. */
 	manual: boolean,
+};
+
+export type TreatDto = {
+	id: string,
+	name: string,
+	amount: MoneyDto,
+	/**  1 = dushanba ... 7 = yakshanba. */
+	weekday: number,
+	active: boolean,
+	due_today: boolean,
+	logged_today: boolean,
 };
 
 export type UnlockDto = {

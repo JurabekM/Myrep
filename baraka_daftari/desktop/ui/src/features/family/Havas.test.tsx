@@ -49,14 +49,14 @@ beforeEach(() => {
 describe('HavasStatus', () => {
   it("80% dan keyin yumshoq ogohlantirish, taqiqsiz; 100% dan keyin ham taqiq yo'q", () => {
     const { rerender } = wrap(<HavasStatus report={base} />);
-    expect(screen.getByRole('status')).toHaveTextContent('Taqiq yo‘q'.replace('‘', "'"));
+    expect(screen.getByRole('status')).toHaveTextContent("Taqiq yo'q");
     rerender(
       <QueryClientProvider client={new QueryClient()}>
         <HavasStatus report={{ ...base, state: 'OVER', used_bp: 12000 }} />
       </QueryClientProvider>,
     );
     expect(screen.getByRole('status')).toHaveTextContent('Chegaradan oshdi');
-    expect(screen.getByRole('status')).toHaveTextContent('Taqiq yo\'q');
+    expect(screen.getByRole('status')).toHaveTextContent("Taqiq yo'q");
   });
 
   it("chegara faol bo'lmasa ogohlantirish yo'q va tushuntirish bor", () => {
@@ -68,7 +68,12 @@ describe('HavasStatus', () => {
   it("sadaqa, sovg'a va qarz bilan havas alohida ko'rsatiladi", () => {
     wrap(
       <HavasStatus
-        report={{ ...base, charity: money("100 000 so'm"), gifts_excluded: money("40 000 so'm"), debt_funded: money("200 000 so'm") }}
+        report={{
+          ...base,
+          charity: money("100 000 so'm"),
+          gifts_excluded: money("40 000 so'm"),
+          debt_funded: money("200 000 so'm"),
+        }}
       />,
     );
     expect(screen.getByText(/Sadaqa \(isrof emas, alohida\)/)).toBeInTheDocument();
@@ -90,7 +95,7 @@ describe('ConsentPanel', () => {
     },
   };
 
-  it("rozilik faqat 6 raqamli PIN bilan yuboriladi va PIN tozalanadi", async () => {
+  it('rozilik faqat 6 raqamli PIN bilan yuboriladi va PIN tozalanadi', async () => {
     wrap(<ConsentPanel report={pending} />);
     const pin = screen.getByLabelText("Dilnoza PIN'i");
     const agree = screen.getByRole('button', { name: 'Roziman' });
@@ -107,7 +112,10 @@ describe('ConsentPanel', () => {
   });
 
   it("noto'g'ri PIN xatosi ko'rsatiladi", async () => {
-    vi.mocked(commands.consentLimit).mockResolvedValue({ status: 'error', error: { kind: 'MemberWrongPin' } });
+    vi.mocked(commands.consentLimit).mockResolvedValue({
+      status: 'error',
+      error: { kind: 'MemberWrongPin' },
+    });
     wrap(<ConsentPanel report={pending} />);
     await userEvent.type(screen.getByLabelText("Dilnoza PIN'i"), '000000');
     await userEvent.click(screen.getByRole('button', { name: 'Roziman' }));
@@ -129,7 +137,7 @@ describe('ProposeForm', () => {
     await screen.findByRole('option', { name: 'Karim' });
     expect(screen.queryByRole('option', { name: 'Aziza' })).not.toBeInTheDocument();
     const button = screen.getByRole('button', { name: 'Chegara taklif qilish' });
-    await userEvent.type(screen.getByLabelText('Oylik chegara (so\'m)'), '1000000');
+    await userEvent.type(screen.getByLabelText("Oylik chegara (so'm)"), '1000000');
     expect(button).toBeDisabled();
     await userEvent.type(screen.getByLabelText('Sizning PIN'), '111111');
     expect(button).toBeEnabled();

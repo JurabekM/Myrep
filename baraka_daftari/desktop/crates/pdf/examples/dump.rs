@@ -1,4 +1,6 @@
 //! Qo'lda tekshiruv: `cargo run -p pdf --example dump -- out.pdf`
+#![allow(clippy::expect_used)]
+
 use pdf::{council_minutes, CouncilMinutes, MinutesCategory, MinutesConsent};
 
 fn main() {
