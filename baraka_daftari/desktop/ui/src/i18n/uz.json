@@ -34,7 +34,8 @@
     "family": "Oila",
     "subscriptions": "Obunalar",
     "envelopes": "Konvertlar",
-    "rescue": "Qutqarilgan pul"
+    "rescue": "Qutqarilgan pul",
+    "prices": "Narx daftari"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -126,7 +127,9 @@
     "withdrawRequest": "So'rov yuborish",
     "availableAt": "Tasdiqlash mumkin: {{at}}",
     "confirm": "Tasdiqlash",
-    "cancel": "Bekor qilish"
+    "cancel": "Bekor qilish",
+    "emergency": "Bu haqiqatan favqulodda holat (qora kun)",
+    "refill": "Pul olingach, keyingi ajratmalar avval qorovul maqsadini qayta to'ldiradi."
   },
   "audit": {
     "month": "Oy",
@@ -383,5 +386,86 @@
     "doneDetails": "Takror: {{dup}}, xarajat emas: {{skipped}}, xato: {{errors}}",
     "errorLine": "{{line}}-qator: {{reason}}",
     "close": "Yopish"
+  },
+  "guard": {
+    "title": "Qorovul pul — favqulodda zaxira",
+    "hint": "Qora kunda qarz eshigiga yugurmaslik uchun: oylik zarur va kerakli xarajatlaringizning 6 oylik zaxirasi. Bu pul «o'smadi» deb baholanmaydi.",
+    "months": "{{have}} / {{need}} oylik zaxira",
+    "noData": "Maqsadni hisoblash uchun avval xarajatlarni yoki doimiy majburiyatlarni kiriting.",
+    "amounts": "Bor: {{balance}} · Maqsad: {{target}}",
+    "need": "Oylik zarur va kerakli xarajat (o'rtacha): {{amount}}",
+    "milestone": "Birinchi bosqich (3 oy): {{amount}}",
+    "milestoneDone": "Birinchi bosqich (3 oy) bajarildi: {{amount}}",
+    "gap": "Maqsadgacha yana {{amount}} kerak.",
+    "untouchable": "Bu pul qarzga ham, sheriklikka ham sarflanmaydi. Tez olinadigan joyda turadi."
+  },
+  "gate": {
+    "title": "O'sadigan pul",
+    "hint": "Jangga yarador askar yuborilmaydi: avval qorovul pul tayyor bo'lsin. Taqiq yo'q — nima yetishmayotganini ko'rsatamiz.",
+    "open": "Bo'lim ochiq.",
+    "openBypassed": "Bo'lim siz ongli tanlovingiz bilan ochilgan.",
+    "growing": "O'sadigan pul: {{amount}}.",
+    "growingHint": "Faqat halol (ribosiz) yo'nalishlar uchun. Funksiyalari keyingi boblarda ochiladi.",
+    "locked": "Bo'lim hozircha qulflangan. Ochilish shartlari:",
+    "reason": {
+      "GUARD_BELOW_TARGET": "Qorovul pul: {{have}} / {{need}} oy — kamida {{need}} oy bo'lishi kerak.",
+      "INTEREST_DEBT_NO_PLAN": "Foizli qarz bor, lekin qarzdan chiqish rejasi yo'q — yoping yoki reja tuzing."
+    },
+    "bypass": "Qulfni ongli chetlab o'tish",
+    "bypassWarning": "Zaxirasiz o'sadigan pulga o'tish xavfli: qora kunda qarzga tushib qolishingiz mumkin. Bu tanlov mahalliy qayd qilinadi.",
+    "bypassUnderstood": "Xavfni tushundim, o'z tanlovim",
+    "bypassConfirm": "Tasdiqlash va ochish",
+    "revoke": "Qulfni qaytarish",
+    "debtTitle": "Qarz holati (qarz daftari tayyor bo'lgunga qadar qo'lda)",
+    "debtHint": "Keyingi vazifada qarzlar ro'yxatidan avtomatik olinadi.",
+    "hasInterestDebt": "Foizli qarzim bor",
+    "hasDebtPlan": "Qarzdan chiqish rejam bor"
+  },
+  "incomeType": {
+    "label": "Daromad turi (ixtiyoriy)",
+    "none": "Belgilanmagan",
+    "TER": "Ter (mehnat)",
+    "MOL": "Mol (savdo)",
+    "TAVAKKAL": "Tavakkal (sheriklik)",
+    "RIBO": "Foizli daromad (ribo)"
+  },
+  "prices": {
+    "intro": "Siz uchun muhim mahsulotlar narxini vaqti-vaqti bilan yozib boring: narxlar tarixi shaxsiy inflyatsiyangizni ko'rsatadi. Faqat o'zingiz kiritgan narxlar ishlatiladi.",
+    "index": "Shaxsiy inflyatsiya indeksi",
+    "indexSpan": "{{days}} kun davomida savat narxi shuncha o'zgargan.",
+    "indexEmpty": "Indeks uchun kamida ikkita mahsulotga ikki martadan narx kiriting.",
+    "weight": "og'irlik {{w}}",
+    "remind": "Bu hafta hali narx kiritmadingiz — bitta mahsulot narxi yetarli.",
+    "loggedThisWeek": "Bu hafta narx kiritdingiz.",
+    "streak": "Ketma-ket {{n}} hafta.",
+    "basket": "Mahsulotlar savati",
+    "itemName": "Mahsulot",
+    "unit": "Birlik",
+    "weightLabel": "Og'irlik (%)",
+    "addItem": "Qo'shish",
+    "empty": "Savat bo'sh: go'sht, non, un, benzin kabi mahsulotlarni qo'shing.",
+    "fromTo": "{{fromDate}}: {{from}} → {{toDate}}: {{to}}",
+    "onlyOne": "{{date}}: {{price}} (taqqoslash uchun yana bir narx kerak)",
+    "noPrice": "Hali narx kiritilmagan.",
+    "price": "Narx (so'm)",
+    "priceFor": "{{name}} narxi",
+    "place": "Joy (ixtiyoriy)",
+    "log": "Narx yozish",
+    "history": "Tarix",
+    "remove": "O'chirish"
+  },
+  "mouse": {
+    "title": "Sichqon kemirgani",
+    "hint": "Yotgan jamg'arma narxlar o'sishi bilan sezdirmay qadrsizlanadi. Maqsad — qo'rqitish emas, tushuntirish.",
+    "percent": "Taxminiy yillik narx o'sishi (%)",
+    "years": "Necha yildan keyin",
+    "item": "Mahsulot",
+    "noItem": "Tanlanmagan",
+    "calc": "Hisoblash",
+    "nominal": "Hozir Kelajagimda: {{amount}}",
+    "real": "{{years}} yildan keyin shu pul bugungi narxlarda {{amount}} turadi.",
+    "example": "Hozir shu pulga {{now}} {{unit}} {{name}} olinadi; {{years}} yildan keyin — taxminan {{later}} {{unit}}.",
+    "next": "Keyingi qadam: avval qorovul pulni tayyorlang, so'ng o'sadigan pulga o'ting.",
+    "toVault": "Kelajagimga o'tish"
   }
 }

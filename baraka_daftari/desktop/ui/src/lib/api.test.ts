@@ -1,6 +1,14 @@
 import i18n from '../i18n';
 
-import { ApiError, errorMessage, formatBp, unwrap } from './api';
+import {
+  ApiError,
+  errorMessage,
+  formatBp,
+  formatMilli,
+  formatSignedBp,
+  formatX100,
+  unwrap,
+} from './api';
 
 describe('formatBp', () => {
   it("bazis punktni foizga o'giradi", () => {
@@ -29,5 +37,23 @@ describe('unwrap / errorMessage', () => {
       'Sababni yozing',
     );
     expect(errorMessage(t, new Error('boom'))).toBe(t('errors.Internal'));
+  });
+});
+
+describe('matn formatlari', () => {
+  it('ishorali bazis punkt', () => {
+    expect(formatSignedBp(6250)).toBe('+62,5%');
+    expect(formatSignedBp(-550)).toBe('−5,5%');
+    expect(formatSignedBp(0)).toBe('0%');
+  });
+  it('oylar x100', () => {
+    expect(formatX100(140)).toBe('1,4');
+    expect(formatX100(600)).toBe('6');
+    expect(formatX100(5)).toBe('0,05');
+  });
+  it('miqdor 1/1000', () => {
+    expect(formatMilli('12345')).toBe('12,3');
+    expect(formatMilli('2000')).toBe('2');
+    expect(formatMilli('99')).toBe('0');
   });
 });

@@ -122,6 +122,7 @@ fn income_and_expense_roundtrip_with_nullable_future_fields() {
         channel: PaymentChannel::Cash,
         amount: Money::new(800_000_000, Currency::Uzs),
         received_on: day(),
+        source_type: Some(IncomeSourceType::Ter),
     };
     repo::insert(w.db.conn(), &income).unwrap();
     assert_eq!(
@@ -174,6 +175,7 @@ fn assets_snapshots_vault_and_remaining_tables_roundtrip() {
         unit: "tiyin".into(),
         currency: Some(Currency::Uzs),
         acquired_at: w.fx.clock.now(),
+        vault_type: Some(VaultType::Qorovul),
     };
     repo::insert(c, &asset).unwrap();
     let snap = AssetSnapshot {
@@ -394,6 +396,7 @@ fn v2_fields_roundtrip_nasiya_owner_audit_and_withdrawal() {
         unit: "tiyin".into(),
         currency: Some(Currency::Uzs),
         acquired_at: w.fx.clock.now(),
+        vault_type: Some(VaultType::Qorovul),
     };
     repo::insert(c, &asset).unwrap();
     let req = WithdrawalRequest {

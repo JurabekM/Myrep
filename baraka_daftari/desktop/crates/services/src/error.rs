@@ -24,3 +24,14 @@ pub enum ServiceError {
     #[error("pauza tugamagan: {remaining_secs} soniya qoldi")]
     Cooling { remaining_secs: i64 },
 }
+
+impl From<domain::GuardError> for ServiceError {
+    fn from(e: domain::GuardError) -> Self {
+        match e {
+            domain::GuardError::NoWeights => Self::Invalid("savat og'irliklari yig'indisi 0"),
+            domain::GuardError::InvalidPrice => Self::Invalid("narx noto'g'ri"),
+            domain::GuardError::InvalidAmount => Self::Invalid("summa noto'g'ri"),
+            domain::GuardError::Money(m) => Self::Money(m),
+        }
+    }
+}

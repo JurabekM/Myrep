@@ -38,6 +38,14 @@ export function IncomePage() {
             <span>
               {i.received_on} · {t(`source.${i.source}`, { defaultValue: i.source })} ·{' '}
               {t(`channel.${i.channel}`)}
+              {i.source_type ? (
+                <span
+                  className={`ml-2 rounded border px-1.5 text-xs ${i.source_type === 'RIBO' ? 'border-current font-semibold' : 'border-accent/40'}`}
+                  data-testid={`income-type-${i.source_type}`}
+                >
+                  {t(`incomeType.${i.source_type}`)}
+                </span>
+              ) : null}
             </span>
             <span className="font-medium">{i.amount.formatted}</span>
           </li>

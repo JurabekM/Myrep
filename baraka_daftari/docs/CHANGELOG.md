@@ -56,3 +56,13 @@
 - **Tray + `Ctrl+Alt+B`** tez xarajat oynasi: daftar qulfli bo'lsa hech qanday summa/ma'lumot so'ralmaydi (UI testi bilan tasdiqlangan).
 - **CSV import:** fayl faqat Rust tomonida ochiladi; ustunlarni moslash, sinov (dry-run), takrorlarni o'tkazib yuborish, bitta tranzaksiya.
 - Kechiktirildi: Windows'da tray/qisqa tugma amaliy sinovi, bildirishnomalar, boshqa kodirovkali CSV.
+
+## D8 — 3-qonun: qorovul/o'sadigan pul, narx daftari, darvoza, ribo filtri
+- **Vektorlar (avval):** `emergency_target` (31 mln namunasi), `guard_months`, `personal_inflation` (5625 bp namunasi), `readiness_gate` (to'liq matritsa), `allocation_priority`, `purchasing_power`.
+- **Sxema v6:** `assets.vault_type` (mavjud «Kelajagim» → `QOROVUL`, balans va tranzaksiyalar o'zgarmaydi — migratsiya testi), `incomes.source_type` (`TER|MOL|TAVAKKAL|RIBO`), `price_items`, `price_points`, `gate_bypasses`. Eski bazalarga `OSADIGAN` aktivi idempotent qo'shiladi.
+- **Qorovul maqsadi:** oxirgi 3 tugagan oyning `ZARUR+KERAK` xarajati + doimiy majburiyatlar o'rtachasi × 6 (3 oy — birinchi bosqich). Ajratma avval qorovulga; ortig'i faqat darvoza ochiq bo'lsa «o'sadigan»ga.
+- **Darvoza:** qorovul ≥ 6 oy **va** (foizli qarz yo'q yoki reja bor). Qulfli ekranda sabablar va progress; tasdiq bilan **ongli chetlab o'tish** (mahalliy qayd, qaytarish mumkin).
+- **Pul olish:** «bu haqiqatan favqulodda holatmi?» tasdig'i Rust tomonida majburiy; faqat qorovuldan olinadi.
+- **Narx daftari:** savat (og'irlik %), narxlar tarixi, shaxsiy indeks, haftalik eslatma va ketma-ketlik. **«Sichqon kemirgani»:** real qiymat va mahsulot miqdori (foydalanuvchi kiritgan yillik o'sish bilan), har doim keyingi qadam bilan yakunlanadi.
+- **Ribo filtri:** daromad turi (ixtiyoriy; `RIBO` alohida belgilanadi); i18n matnlarida taqiqlangan iboralar testi (uz/ru).
+- Kechiktirildi: rasmiy CPI, narx eslatmasi bildirishnomasi (D15), o'sadigan pul funksiyalari (keyingi boblar), qarz inventari (D9 — hozircha darvoza qarz holatini qo'lda bayon qilish bilan).

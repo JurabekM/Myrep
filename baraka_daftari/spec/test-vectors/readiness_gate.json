@@ -1,0 +1,250 @@
+{
+  "suite": "readiness_gate",
+  "version": 1,
+  "description": "Tayyorgarlik darvozasi: qorovul >= talab VA (foizli qarz yo'q YOKI reja bor). Sabablar tartibi qat'iy",
+  "cases": [
+    {
+      "id": "gate-001",
+      "input": {
+        "guard_months_x100": 0,
+        "has_interest_debt": false,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-002",
+      "input": {
+        "guard_months_x100": 0,
+        "has_interest_debt": false,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-003",
+      "input": {
+        "guard_months_x100": 0,
+        "has_interest_debt": true,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET",
+          "INTEREST_DEBT_NO_PLAN"
+        ]
+      }
+    },
+    {
+      "id": "gate-004",
+      "input": {
+        "guard_months_x100": 0,
+        "has_interest_debt": true,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-005",
+      "input": {
+        "guard_months_x100": 599,
+        "has_interest_debt": false,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-006",
+      "input": {
+        "guard_months_x100": 599,
+        "has_interest_debt": false,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-007",
+      "input": {
+        "guard_months_x100": 599,
+        "has_interest_debt": true,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET",
+          "INTEREST_DEBT_NO_PLAN"
+        ]
+      }
+    },
+    {
+      "id": "gate-008",
+      "input": {
+        "guard_months_x100": 599,
+        "has_interest_debt": true,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "GUARD_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-009",
+      "input": {
+        "guard_months_x100": 600,
+        "has_interest_debt": false,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-010",
+      "input": {
+        "guard_months_x100": 600,
+        "has_interest_debt": false,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-011",
+      "input": {
+        "guard_months_x100": 600,
+        "has_interest_debt": true,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "INTEREST_DEBT_NO_PLAN"
+        ]
+      }
+    },
+    {
+      "id": "gate-012",
+      "input": {
+        "guard_months_x100": 600,
+        "has_interest_debt": true,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-013",
+      "input": {
+        "guard_months_x100": 1000,
+        "has_interest_debt": false,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-014",
+      "input": {
+        "guard_months_x100": 1000,
+        "has_interest_debt": false,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-015",
+      "input": {
+        "guard_months_x100": 1000,
+        "has_interest_debt": true,
+        "has_debt_plan": false,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "LOCKED",
+        "reasons": [
+          "INTEREST_DEBT_NO_PLAN"
+        ]
+      }
+    },
+    {
+      "id": "gate-016",
+      "input": {
+        "guard_months_x100": 1000,
+        "has_interest_debt": true,
+        "has_debt_plan": true,
+        "required_x100": 600
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-017",
+      "input": {
+        "guard_months_x100": 450,
+        "has_interest_debt": false,
+        "has_debt_plan": false,
+        "required_x100": 300
+      },
+      "expected": {
+        "status": "OPEN",
+        "reasons": []
+      }
+    }
+  ]
+}

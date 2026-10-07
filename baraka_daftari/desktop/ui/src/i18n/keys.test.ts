@@ -34,6 +34,8 @@ describe('i18n kalitlari', () => {
       'Cooling',
       'Internal',
     ].map((k) => `errors.${k}`),
+    ...['TER', 'MOL', 'TAVAKKAL', 'RIBO'].map((k) => `incomeType.${k}`),
+    ...['GUARD_BELOW_TARGET', 'INTEREST_DEBT_NO_PLAN'].map((k) => `gate.reason.${k}`),
     'audit.previous',
     'audit.current',
   ];

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { commands, type WithdrawalDto } from '../../bindings';
 import { errorMessage, formatBp, unwrap } from '../../lib/api';
 
+import { GuardPanel } from './GuardPanel';
+
 function useInvalidate() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries();
@@ -171,15 +173,17 @@ function WithdrawalCard() {
   const invalidate = useInvalidate();
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [emergency, setEmergency] = useState(false);
   const pending = useQuery({
     queryKey: ['withdrawals'],
     queryFn: () => unwrap(commands.listWithdrawals()),
   });
   const request = useMutation({
-    mutationFn: () => unwrap(commands.requestWithdrawal(amount, reason)),
+    mutationFn: () => unwrap(commands.requestWithdrawal(amount, reason, emergency)),
     onSuccess: async () => {
       setAmount('');
       setReason('');
+      setEmergency(false);
       await invalidate();
     },
   });
@@ -212,7 +216,22 @@ function WithdrawalCard() {
             setReason(e.target.value);
           }}
         />
-        <button type="submit" className="rounded border border-accent px-3 py-1">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={emergency}
+            onChange={(e) => {
+              setEmergency(e.target.checked);
+            }}
+          />
+          {t('vault.emergency')}
+        </label>
+        <p className="text-xs opacity-70">{t('vault.refill')}</p>
+        <button
+          type="submit"
+          className="rounded border border-accent px-3 py-1 disabled:opacity-50"
+          disabled={!emergency}
+        >
           {t('vault.withdrawRequest')}
         </button>
       </form>
@@ -246,6 +265,7 @@ export function VaultPage() {
             <RuleCard rule={home.data.rule} />
             <OpeningBalanceCard />
             <WithdrawalCard />
+            <GuardPanel />
           </div>
         </>
       )}

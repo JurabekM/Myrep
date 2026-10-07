@@ -106,6 +106,12 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "forgotten_subscription" => Ok(run_forgotten_subscription),
         "envelope" => Ok(run_envelope),
         "money_parse_signed" => Ok(run_money_parse_signed),
+        "emergency_target" => Ok(run_emergency_target),
+        "guard_months" => Ok(run_guard_months),
+        "personal_inflation" => Ok(run_personal_inflation),
+        "readiness_gate" => Ok(run_readiness_gate),
+        "allocation_priority" => Ok(run_allocation_priority),
+        "purchasing_power" => Ok(run_purchasing_power),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -451,4 +457,137 @@ fn run_money_parse_signed(input: &Value) -> Result<Value, String> {
             Err(e) => error_json(&e),
         },
     )
+}
+
+fn guard_error_code(e: &domain::GuardError) -> &'static str {
+    match e {
+        domain::GuardError::NoWeights => "NO_WEIGHTS",
+        domain::GuardError::InvalidPrice => "INVALID_PRICE",
+        domain::GuardError::InvalidAmount => "INVALID_AMOUNT",
+        domain::GuardError::Money(m) => error_code(m),
+    }
+}
+
+fn guard_error(e: &domain::GuardError) -> Value {
+    serde_json::json!({ "error": guard_error_code(e) })
+}
+
+fn run_emergency_target(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let months = input
+        .get("months")
+        .and_then(Value::as_array)
+        .ok_or("months massivi kerak")?
+        .iter()
+        .map(|v| {
+            v.as_str()
+                .ok_or_else(|| "oy summasi matn bo'lishi kerak".to_owned())
+                .and_then(parse_minor)
+                .map(|m| Money::new(m, currency))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let n = u32_field(input, "target_months")?;
+    Ok(match domain::emergency_target(&months, n, currency) {
+        Ok(t) => serde_json::json!({ "target": t.minor().to_string() }),
+        Err(e) => guard_error(&e),
+    })
+}
+
+fn run_guard_months(input: &Value) -> Result<Value, String> {
+    let balance = parse_money(input, "balance", "currency")?;
+    let target = parse_money(input, "target", "currency")?;
+    let n = u32_field(input, "target_months")?;
+    Ok(match domain::guard_months_x100(balance, target, n) {
+        Ok(m) => serde_json::json!({ "months_x100": m }),
+        Err(e) => guard_error(&e),
+    })
+}
+
+fn run_personal_inflation(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let lines = input
+        .get("items")
+        .and_then(Value::as_array)
+        .ok_or("items massivi kerak")?
+        .iter()
+        .map(|v| {
+            Ok(domain::BasketLine {
+                weight_bp: u32_field(v, "weight_bp")?,
+                first: Money::new(parse_minor(str_field(v, "first")?)?, currency),
+                last: Money::new(parse_minor(str_field(v, "last")?)?, currency),
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(match domain::personal_inflation(&lines) {
+        Ok(i) => serde_json::json!({ "per_item_bp": i.per_item_bp, "index_bp": i.index_bp }),
+        Err(e) => guard_error(&e),
+    })
+}
+
+fn run_readiness_gate(input: &Value) -> Result<Value, String> {
+    let flag = |key: &str| {
+        input
+            .get(key)
+            .and_then(Value::as_bool)
+            .ok_or_else(|| format!("{key} (bool) kerak"))
+    };
+    let g = domain::readiness_gate(
+        u32_field(input, "guard_months_x100")?,
+        flag("has_interest_debt")?,
+        flag("has_debt_plan")?,
+        u32_field(input, "required_x100")?,
+    );
+    Ok(serde_json::json!({
+        "status": if g.open { "OPEN" } else { "LOCKED" },
+        "reasons": g.reasons.iter().map(|r| r.code()).collect::<Vec<_>>(),
+    }))
+}
+
+fn run_allocation_priority(input: &Value) -> Result<Value, String> {
+    let share = parse_money(input, "share", "currency")?;
+    let balance = parse_money(input, "guard_balance", "currency")?;
+    let target = parse_money(input, "guard_target", "currency")?;
+    let open = input
+        .get("gate_open")
+        .and_then(Value::as_bool)
+        .ok_or("gate_open (bool) kerak")?;
+    Ok(
+        match domain::split_allocation(share, balance, target, open) {
+            Ok((g, r)) => serde_json::json!({
+                "guard": g.minor().to_string(),
+                "growing": r.minor().to_string(),
+            }),
+            Err(e) => guard_error(&e),
+        },
+    )
+}
+
+fn run_purchasing_power(input: &Value) -> Result<Value, String> {
+    let amount = parse_money(input, "amount", "currency")?;
+    match str_field(input, "op")? {
+        "real_value" | "future_price" => {
+            let bp = u32_field(input, "annual_bp")?;
+            let years = u32_field(input, "years")?;
+            let res = if str_field(input, "op")? == "real_value" {
+                domain::real_value(amount, bp, years)
+            } else {
+                domain::future_price(amount, bp, years)
+            };
+            Ok(match res {
+                Ok(m) => serde_json::json!({ "amount": m.minor().to_string() }),
+                Err(e) => guard_error(&e),
+            })
+        }
+        "quantity_milli" => {
+            let price = Money::new(
+                parse_minor(str_field(input, "unit_price")?)?,
+                amount.currency(),
+            );
+            Ok(match domain::quantity_milli(amount, price) {
+                Ok(q) => serde_json::json!({ "milli": q }),
+                Err(e) => guard_error(&e),
+            })
+        }
+        other => Err(format!("noma'lum op: {other}")),
+    }
 }

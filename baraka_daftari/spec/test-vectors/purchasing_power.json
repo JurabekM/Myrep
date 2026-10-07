@@ -1,0 +1,159 @@
+{
+  "suite": "purchasing_power",
+  "version": 1,
+  "description": "Sichqon kemirgani: real qiymat va kelajak narx yil-yilga half-up yaxlitlanadi; miqdor (1/1000 birlik) = round_half_up(summa*1000/narx)",
+  "cases": [
+    {
+      "id": "power-001",
+      "input": {
+        "op": "real_value",
+        "amount": "1000000000",
+        "annual_bp": 1500,
+        "years": 3,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "657516232"
+      }
+    },
+    {
+      "id": "power-002",
+      "input": {
+        "op": "real_value",
+        "amount": "1000000000",
+        "annual_bp": 0,
+        "years": 5,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "1000000000"
+      }
+    },
+    {
+      "id": "power-003",
+      "input": {
+        "op": "real_value",
+        "amount": "1000000000",
+        "annual_bp": 1000,
+        "years": 1,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "909090909"
+      }
+    },
+    {
+      "id": "power-004",
+      "input": {
+        "op": "real_value",
+        "amount": "777",
+        "annual_bp": 1000,
+        "years": 2,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "642"
+      }
+    },
+    {
+      "id": "power-005",
+      "input": {
+        "op": "real_value",
+        "amount": "1000000000",
+        "annual_bp": 1500,
+        "years": 0,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "1000000000"
+      }
+    },
+    {
+      "id": "power-006",
+      "input": {
+        "op": "future_price",
+        "amount": "13000000",
+        "annual_bp": 1500,
+        "years": 3,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "19771375"
+      }
+    },
+    {
+      "id": "power-007",
+      "input": {
+        "op": "future_price",
+        "amount": "13000000",
+        "annual_bp": 1000,
+        "years": 1,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "14300000"
+      }
+    },
+    {
+      "id": "power-008",
+      "input": {
+        "op": "future_price",
+        "amount": "333",
+        "annual_bp": 1000,
+        "years": 2,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amount": "403"
+      }
+    },
+    {
+      "id": "power-009",
+      "input": {
+        "op": "quantity_milli",
+        "amount": "1000000000",
+        "unit_price": "13000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "milli": 76923
+      }
+    },
+    {
+      "id": "power-010",
+      "input": {
+        "op": "quantity_milli",
+        "amount": "100",
+        "unit_price": "300",
+        "currency": "UZS"
+      },
+      "expected": {
+        "milli": 333
+      }
+    },
+    {
+      "id": "power-011",
+      "input": {
+        "op": "quantity_milli",
+        "amount": "5",
+        "unit_price": "3",
+        "currency": "UZS"
+      },
+      "expected": {
+        "milli": 1667
+      }
+    },
+    {
+      "id": "power-012",
+      "input": {
+        "op": "quantity_milli",
+        "amount": "100",
+        "unit_price": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

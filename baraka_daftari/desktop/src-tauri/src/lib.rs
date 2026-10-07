@@ -6,6 +6,7 @@
 mod commands;
 mod dto;
 mod family;
+mod guard;
 mod ledger;
 mod saving;
 mod session;
@@ -107,6 +108,20 @@ fn specta_builder() -> Builder<tauri::Wry> {
         saving::csv_open,
         saving::csv_dry_run,
         saving::csv_import,
+        guard::guard_overview,
+        guard::gate_status,
+        guard::set_debt_declaration,
+        guard::bypass_gate,
+        guard::revoke_gate_bypass,
+        guard::list_price_items,
+        guard::add_price_item,
+        guard::set_price_item,
+        guard::remove_price_item,
+        guard::add_price,
+        guard::price_history,
+        guard::remove_price,
+        guard::price_book,
+        guard::purchasing_power,
         hide_quick_window,
     ])
 }

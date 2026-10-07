@@ -1,0 +1,91 @@
+{
+  "suite": "guard_months",
+  "version": 1,
+  "description": "Qorovul necha oylik: floor(balans*N*100/maqsad); maqsad 0 bo'lsa 0 (2 xona aniqlik)",
+  "cases": [
+    {
+      "id": "gmonths-001",
+      "input": {
+        "balance": "1400000000",
+        "target": "3100000000",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 270
+      }
+    },
+    {
+      "id": "gmonths-002",
+      "input": {
+        "balance": "3100000000",
+        "target": "3100000000",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 600
+      }
+    },
+    {
+      "id": "gmonths-003",
+      "input": {
+        "balance": "0",
+        "target": "3100000000",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 0
+      }
+    },
+    {
+      "id": "gmonths-004",
+      "input": {
+        "balance": "100",
+        "target": "0",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 0
+      }
+    },
+    {
+      "id": "gmonths-005",
+      "input": {
+        "balance": "5000000000",
+        "target": "3100000000",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 967
+      }
+    },
+    {
+      "id": "gmonths-006",
+      "input": {
+        "balance": "1549999999",
+        "target": "3100000000",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 299
+      }
+    },
+    {
+      "id": "gmonths-007",
+      "input": {
+        "balance": "1",
+        "target": "3100000000",
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months_x100": 0
+      }
+    }
+  ]
+}

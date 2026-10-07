@@ -49,6 +49,14 @@ str_enum!(
     /// «Qutqarilgan pul» manbasi.
     RescueKind { HavasDrop => "HAVAS_DROP", Subscription => "SUBSCRIPTION" }
 );
+str_enum!(
+    /// «Kelajagim» ikkiga bo'linadi (SPEC 2C.3).
+    VaultType { Qorovul => "QOROVUL", Osadigan => "OSADIGAN" }
+);
+str_enum!(
+    /// Daromad manbasi: ter / mol / tavakkal testi (SPEC 2C.5). `Ribo` — foizli daromad, alohida ko'rsatiladi.
+    IncomeSourceType { Ter => "TER", Mol => "MOL", Tavakkal => "TAVAKKAL", Ribo => "RIBO" }
+);
 
 #[cfg(test)]
 mod tests {

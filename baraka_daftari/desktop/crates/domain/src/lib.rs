@@ -5,6 +5,7 @@
 mod entities;
 mod enums;
 mod flow;
+mod guard;
 mod havas;
 mod meta;
 mod savings;
@@ -16,6 +17,7 @@ mod withdrawal;
 pub use entities::*;
 pub use enums::*;
 pub use flow::*;
+pub use guard::*;
 pub use havas::*;
 pub use meta::{Clock, IdGen, Meta, SystemClock, UuidV7Gen};
 pub use savings::*;

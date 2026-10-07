@@ -10,6 +10,8 @@ import { useDebounced } from '../../lib/useDebounced';
 
 const SOURCES = ['DAILY_WORK', 'ORDER', 'SALARY', 'OTHER'] as const;
 const CHANNELS = ['CASH', 'CARD'] as const;
+/** Ixtiyoriy «ter / mol / tavakkal» testi; `RIBO` — foizli daromad, alohida ko'rsatiladi. */
+const SOURCE_TYPES = ['TER', 'MOL', 'TAVAKKAL', 'RIBO'] as const;
 
 /**
  * Tez kiritish (`Ctrl+N`): summa → Enter. Ilova darhol "shundan X so'm — kelajagingiz uchun"
@@ -43,6 +45,7 @@ function QuickEntryForm({ onDone }: { onDone: () => void }) {
   const [amount, setAmount] = useState('');
   const [source, setSource] = useState<(typeof SOURCES)[number]>('DAILY_WORK');
   const [channel, setChannel] = useState<(typeof CHANNELS)[number]>('CASH');
+  const [sourceType, setSourceType] = useState('');
   const [shareText, setShareText] = useState<string | null>(null);
 
   const debounced = useDebounced(amount.trim());
@@ -54,7 +57,16 @@ function QuickEntryForm({ onDone }: { onDone: () => void }) {
   });
 
   const save = useMutation({
-    mutationFn: () => unwrap(commands.recordIncome({ amount, source, channel, share: shareText })),
+    mutationFn: () =>
+      unwrap(
+        commands.recordIncome({
+          amount,
+          source,
+          channel,
+          share: shareText,
+          source_type: sourceType === '' ? null : sourceType,
+        }),
+      ),
     onSuccess: async () => {
       await queryClient.invalidateQueries();
       onDone();
@@ -122,6 +134,24 @@ function QuickEntryForm({ onDone }: { onDone: () => void }) {
           </select>
         </label>
       </div>
+
+      <label className="block">
+        <span className="block text-sm">{t('incomeType.label')}</span>
+        <select
+          className="mt-1 w-full rounded border border-accent bg-transparent p-2"
+          value={sourceType}
+          onChange={(e) => {
+            setSourceType(e.target.value);
+          }}
+        >
+          <option value="">{t('incomeType.none')}</option>
+          {SOURCE_TYPES.map((s) => (
+            <option key={s} value={s}>
+              {t(`incomeType.${s}`)}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label className="block">
         <span className="block text-sm">{t('quick.shareOverride')}</span>

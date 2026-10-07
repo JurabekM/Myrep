@@ -1,0 +1,119 @@
+{
+  "suite": "allocation_priority",
+  "version": 1,
+  "description": "Ajratma ustuvorligi: avval qorovul maqsadigacha; darvoza yopiq bo'lsa hammasi qorovulga",
+  "cases": [
+    {
+      "id": "alloc-001",
+      "input": {
+        "share": "1000",
+        "guard_balance": "0",
+        "guard_target": "5000",
+        "gate_open": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "1000",
+        "growing": "0"
+      }
+    },
+    {
+      "id": "alloc-002",
+      "input": {
+        "share": "1000",
+        "guard_balance": "4500",
+        "guard_target": "5000",
+        "gate_open": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "500",
+        "growing": "500"
+      }
+    },
+    {
+      "id": "alloc-003",
+      "input": {
+        "share": "1000",
+        "guard_balance": "5000",
+        "guard_target": "5000",
+        "gate_open": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "0",
+        "growing": "1000"
+      }
+    },
+    {
+      "id": "alloc-004",
+      "input": {
+        "share": "1000",
+        "guard_balance": "6000",
+        "guard_target": "5000",
+        "gate_open": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "0",
+        "growing": "1000"
+      }
+    },
+    {
+      "id": "alloc-005",
+      "input": {
+        "share": "1000",
+        "guard_balance": "4500",
+        "guard_target": "5000",
+        "gate_open": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "1000",
+        "growing": "0"
+      }
+    },
+    {
+      "id": "alloc-006",
+      "input": {
+        "share": "1000",
+        "guard_balance": "0",
+        "guard_target": "0",
+        "gate_open": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "1000",
+        "growing": "0"
+      }
+    },
+    {
+      "id": "alloc-007",
+      "input": {
+        "share": "0",
+        "guard_balance": "100",
+        "guard_target": "5000",
+        "gate_open": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "0",
+        "growing": "0"
+      }
+    },
+    {
+      "id": "alloc-008",
+      "input": {
+        "share": "1000",
+        "guard_balance": "4999",
+        "guard_target": "5000",
+        "gate_open": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "guard": "1",
+        "growing": "999"
+      }
+    }
+  ]
+}

@@ -40,3 +40,26 @@ export function formatBp(bp: number): string {
   if (frac === 0) return `${String(whole)}%`;
   return `${String(whole)},${frac.toString().padStart(2, '0').replace(/0+$/, '')}%`;
 }
+
+/** Ishorali bazis punkt: 6250 → "+62,5%", -550 → "−5,5%". Pul emas, faqat matn. */
+export function formatSignedBp(bp: number): string {
+  if (bp === 0) return '0%';
+  return `${bp < 0 ? '−' : '+'}${formatBp(Math.abs(bp))}`;
+}
+
+/** Oylar ×100 → "1,4" (140), "6" (600). */
+export function formatX100(v: number): string {
+  const whole = Math.trunc(v / 100);
+  const frac = v % 100;
+  if (frac === 0) return String(whole);
+  return `${String(whole)},${frac.toString().padStart(2, '0').replace(/0+$/, '')}`;
+}
+
+/** Birlikning 1/1000 ulushlari (matn) → "12,3" (bir xonali kasr, quyiga). Miqdor, pul emas. */
+export function formatMilli(milli: string): string {
+  const n = BigInt(milli);
+  const tenths = n / 100n;
+  const whole = tenths / 10n;
+  const frac = tenths % 10n;
+  return frac === 0n ? whole.toString() : `${whole.toString()},${frac.toString()}`;
+}

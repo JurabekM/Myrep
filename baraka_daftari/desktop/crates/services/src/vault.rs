@@ -1,7 +1,8 @@
 //! "Kelajagim" jamg'armasi: balans, ajratma, boshlang'ich balans va pauzali pul olish.
 use domain::{
     available_at, check_confirm, ts_to_string, Asset, AssetSnapshot, AssetType, ConfirmCheck, Date,
-    Meta, VaultSource, VaultTransaction, VaultTxKind, WithdrawalRequest, WithdrawalStatus,
+    Meta, VaultSource, VaultTransaction, VaultTxKind, VaultType, WithdrawalRequest,
+    WithdrawalStatus,
 };
 use money::Money;
 use storage::Connection;
@@ -9,17 +10,45 @@ use storage::{repo, Database};
 
 use crate::{local_date, sum_money, Ctx, Env, ServiceError, YearMonth};
 
-fn vault_asset(conn: &Connection, ctx: &Ctx) -> Result<Asset, ServiceError> {
+/// Belgilanmagan (eski) «Kelajagim» qorovul hisoblanadi.
+fn vault_asset_of(conn: &Connection, ctx: &Ctx, vt: VaultType) -> Result<Asset, ServiceError> {
     repo::list::<Asset>(conn, &ctx.household_id)?
         .into_iter()
-        .find(|a| a.asset_type == AssetType::Vault)
+        .find(|a| {
+            a.asset_type == AssetType::Vault && a.vault_type.unwrap_or(VaultType::Qorovul) == vt
+        })
         .ok_or(ServiceError::NotFound)
 }
 
+/// Qorovul pul (favqulodda zaxira) balansi.
+///
+/// # Errors
+/// Baza xatosi.
+pub fn guard_balance(conn: &Connection, ctx: &Ctx) -> Result<Money, ServiceError> {
+    Ok(Money::new(
+        vault_asset_of(conn, ctx, VaultType::Qorovul)?.quantity,
+        ctx.currency,
+    ))
+}
+
+/// O'sadigan (ishlayotgan) pul balansi; bo'lim hali yaratilmagan bo'lsa `0`.
+///
+/// # Errors
+/// Baza xatosi.
+pub fn growing_balance(conn: &Connection, ctx: &Ctx) -> Result<Money, ServiceError> {
+    match vault_asset_of(conn, ctx, VaultType::Osadigan) {
+        Ok(a) => Ok(Money::new(a.quantity, ctx.currency)),
+        Err(ServiceError::NotFound) => Ok(ctx.zero()),
+        Err(e) => Err(e),
+    }
+}
+
+/// «Kelajagim» jami: qorovul + o'sadigan.
+///
 /// # Errors
 /// Baza xatosi.
 pub fn balance(conn: &Connection, ctx: &Ctx) -> Result<Money, ServiceError> {
-    Ok(Money::new(vault_asset(conn, ctx)?.quantity, ctx.currency))
+    Ok(guard_balance(conn, ctx)?.checked_add(growing_balance(conn, ctx)?)?)
 }
 
 fn transactions(conn: &Connection, ctx: &Ctx) -> Result<Vec<VaultTransaction>, ServiceError> {
@@ -43,6 +72,17 @@ pub(crate) fn apply(
     ctx: &Ctx,
     mv: &VaultMove<'_>,
 ) -> Result<(), ServiceError> {
+    apply_to(conn, env, ctx, VaultType::Qorovul, mv)
+}
+
+/// Xuddi [`apply`], lekin berilgan bo'limga (qorovul yoki o'sadigan).
+pub(crate) fn apply_to(
+    conn: &Connection,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    vt: VaultType,
+    mv: &VaultMove<'_>,
+) -> Result<(), ServiceError> {
     let VaultMove {
         kind,
         amount,
@@ -53,7 +93,7 @@ pub(crate) fn apply(
     if amount.minor() <= 0 || amount.currency() != ctx.currency {
         return Err(ServiceError::Invalid("summa musbat bo'lishi kerak"));
     }
-    let mut asset = vault_asset(conn, ctx)?;
+    let mut asset = vault_asset_of(conn, ctx, vt)?;
     let now = env.clock.now();
     let new_qty = match kind {
         VaultTxKind::Deposit => asset.quantity.checked_add(amount.minor()),
@@ -153,7 +193,8 @@ pub fn allocated_in(conn: &Connection, ctx: &Ctx, ym: YearMonth) -> Result<Money
     )?)
 }
 
-/// Pul olish so'rovi: pul darrov chiqmaydi, pauza tugagach tasdiqlanadi.
+/// Qorovul puldan pul olish so'rovi: favqulodda ekani tasdiqlanishi shart; pul darrov chiqmaydi,
+/// pauza tugagach tasdiqlanadi.
 ///
 /// # Errors
 /// Summa yoki sabab yaroqsiz, yoki balansdan ko'p bo'lsa.
@@ -164,7 +205,13 @@ pub fn request_withdrawal(
     amount: Money,
     reason: &str,
     cooldown_secs: i64,
+    emergency_confirmed: bool,
 ) -> Result<WithdrawalRequest, ServiceError> {
+    if !emergency_confirmed {
+        return Err(ServiceError::Invalid(
+            "bu favqulodda holat ekanini tasdiqlang",
+        ));
+    }
     let reason = reason.trim();
     if reason.is_empty() {
         return Err(ServiceError::Invalid("sababni yozing"));
@@ -172,7 +219,7 @@ pub fn request_withdrawal(
     if amount.minor() <= 0 || amount.currency() != ctx.currency {
         return Err(ServiceError::Invalid("summa musbat bo'lishi kerak"));
     }
-    let asset = vault_asset(db.conn(), ctx)?;
+    let asset = vault_asset_of(db.conn(), ctx, VaultType::Qorovul)?;
     if amount.minor() > asset.quantity {
         return Err(ServiceError::InsufficientFunds);
     }

@@ -1,7 +1,7 @@
 //! Birinchi ishga tushirish: xonadon, a'zo, standart kategoriyalar, "Kelajagim" va 5% qoidasi.
 use domain::{
     AllocationKind, AllocationRule, Asset, AssetType, Category, Household, Member, MemberRole,
-    Meta, MoneyOwner, Necessity,
+    Meta, MoneyOwner, Necessity, VaultType,
 };
 use money::Currency;
 use storage::{repo, Database};
@@ -105,8 +105,10 @@ pub fn ensure_household(db: &mut Database, env: &Env<'_>) -> Result<Ctx, Service
                 unit: "tiyin".into(),
                 currency: Some(Currency::Uzs),
                 acquired_at: env.clock.now(),
+                vault_type: Some(VaultType::Qorovul),
             },
         )?;
+        insert_growing(tx, env, &hid)?;
         repo::insert(
             tx,
             &AllocationRule {
@@ -126,7 +128,13 @@ pub fn ensure_household(db: &mut Database, env: &Env<'_>) -> Result<Ctx, Service
 /// toifaga tegmaydi. Idempotent.
 fn ensure_defaults(db: &mut Database, env: &Env<'_>, ctx: &Ctx) -> Result<(), ServiceError> {
     let existing = repo::list::<Category>(db.conn(), &ctx.household_id)?;
+    let has_growing = repo::list::<Asset>(db.conn(), &ctx.household_id)?
+        .iter()
+        .any(|a| a.vault_type == Some(VaultType::Osadigan));
     db.transaction::<(), ServiceError>(|tx| {
+        if !has_growing {
+            insert_growing(tx, env, &ctx.household_id)?;
+        }
         for d in &DEFAULT_CATEGORIES {
             match existing.iter().find(|c| c.name == d.name) {
                 None => repo::insert(
@@ -166,4 +174,26 @@ fn find(db: &Database) -> Result<Option<Ctx>, ServiceError> {
         member_id: member.meta.id,
         currency: h.base_currency,
     }))
+}
+
+/// «O'sadigan» bo'lim (SPEC 2C.3): balansi 0 dan boshlanadi; darvoza ochilmaguncha unga pul tushmaydi.
+fn insert_growing(
+    conn: &storage::Connection,
+    env: &Env<'_>,
+    household_id: &str,
+) -> Result<(), ServiceError> {
+    repo::insert(
+        conn,
+        &Asset {
+            meta: Meta::new(env.ids, env.clock, household_id, env.device_id),
+            asset_type: AssetType::Vault,
+            name: "O'sadigan pul".into(),
+            quantity: 0,
+            unit: "tiyin".into(),
+            currency: Some(Currency::Uzs),
+            acquired_at: env.clock.now(),
+            vault_type: Some(VaultType::Osadigan),
+        },
+    )?;
+    Ok(())
 }

@@ -1,6 +1,7 @@
 //! Daromad kiritish va ulush taklifi (SPEC 2.1).
 use domain::{
-    suggest_share, Date, Income, Meta, PaymentChannel, ShareRule, VaultSource, VaultTxKind,
+    suggest_share, Date, Income, IncomeSourceType, Meta, PaymentChannel, ShareRule, VaultSource,
+    VaultTxKind, VaultType,
 };
 use money::Money;
 use storage::Connection;
@@ -48,6 +49,8 @@ pub struct NewIncome {
     /// `None` — taklif qilingan ulush; `Some` — foydalanuvchi o'zgartirgan summa (0 ham mumkin).
     pub share: Option<Money>,
     pub member_id: Option<String>,
+    /// Ter / mol / tavakkal testi (ixtiyoriy).
+    pub source_type: Option<IncomeSourceType>,
 }
 
 #[derive(Debug, Clone)]
@@ -106,21 +109,32 @@ pub fn record(
             channel: new.channel,
             amount: new.amount,
             received_on,
+            source_type: new.source_type,
         };
         repo::insert(tx, &income)?;
         if share.minor() > 0 {
-            vault::apply(
-                tx,
-                env,
-                ctx,
-                &vault::VaultMove {
-                    kind: VaultTxKind::Deposit,
-                    amount: share,
-                    source: VaultSource::Allocation,
-                    income_id: Some(&income.meta.id),
-                    note: None,
-                },
-            )?;
+            // Avval qorovul maqsadiga; ortig'i faqat darvoza ochiq bo'lsa o'sadiganga.
+            let (to_guard, to_growing) = crate::guard::split_share(tx, env, ctx, share)?;
+            for (vt, amount) in [
+                (VaultType::Qorovul, to_guard),
+                (VaultType::Osadigan, to_growing),
+            ] {
+                if amount.minor() > 0 {
+                    vault::apply_to(
+                        tx,
+                        env,
+                        ctx,
+                        vt,
+                        &vault::VaultMove {
+                            kind: VaultTxKind::Deposit,
+                            amount,
+                            source: VaultSource::Allocation,
+                            income_id: Some(&income.meta.id),
+                            note: None,
+                        },
+                    )?;
+                }
+            }
         }
         Ok(Recorded {
             income_id: income.meta.id,

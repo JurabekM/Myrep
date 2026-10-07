@@ -5,11 +5,11 @@
 use domain::{
     date_to_string, ts_to_string, AllocationKind, AllocationRule, Asset, AssetSnapshot, AssetType,
     BillingPeriod, Category, ChapterProgress, DaftarPage, Envelope, EnvelopePeriod, Expense,
-    FxRateRecord, HavasLimit, Household, Income, LimitConsent, Member, MemberCredential,
-    MemberRole, Meta, MoneyOwner, Necessity, NecessityChange, Obligation, ObligationKind,
-    OffsetDateTime, PaymentChannel, RescueKind, SavingsRescue, ScheduledTreat, Setting,
-    Subscription, TaskCompletion, VaultSource, VaultTransaction, VaultTxKind, WithdrawalRequest,
-    WithdrawalStatus,
+    FxRateRecord, GateBypass, HavasLimit, Household, Income, IncomeSourceType, LimitConsent,
+    Member, MemberCredential, MemberRole, Meta, MoneyOwner, Necessity, NecessityChange, Obligation,
+    ObligationKind, OffsetDateTime, PaymentChannel, PriceItem, PricePoint, RescueKind,
+    SavingsRescue, ScheduledTreat, Setting, Subscription, TaskCompletion, VaultSource,
+    VaultTransaction, VaultTxKind, VaultType, WithdrawalRequest, WithdrawalStatus,
 };
 use money::Money;
 use rusqlite::{types::Value, Connection, OptionalExtension, Row};
@@ -266,6 +266,7 @@ impl Record for Income {
         "amount_minor",
         "currency",
         "received_on",
+        "source_type",
     ];
     fn meta(&self) -> &Meta {
         &self.meta
@@ -279,6 +280,7 @@ impl Record for Income {
             minor,
             cur,
             date_val(self.received_on)?,
+            opt_text(self.source_type.map(IncomeSourceType::as_str)),
         ])
     }
     fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
@@ -289,6 +291,7 @@ impl Record for Income {
             channel: row::parsed(r, 9, PaymentChannel::parse)?,
             amount: row::money(r, 10, 11)?,
             received_on: row::date(r, 12)?,
+            source_type: row::opt_parsed(r, 13, IncomeSourceType::parse)?,
         })
     }
 }
@@ -359,6 +362,7 @@ impl Record for Asset {
         "unit",
         "currency",
         "acquired_at",
+        "vault_type",
     ];
     fn meta(&self) -> &Meta {
         &self.meta
@@ -371,6 +375,7 @@ impl Record for Asset {
             t(&self.unit),
             opt_text(self.currency.map(money::Currency::code)),
             ts_val(self.acquired_at)?,
+            opt_text(self.vault_type.map(VaultType::as_str)),
         ])
     }
     fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
@@ -382,6 +387,7 @@ impl Record for Asset {
             unit: r.get(10)?,
             currency: row::opt_currency(r, 11)?,
             acquired_at: row::ts(r, 12)?,
+            vault_type: row::opt_parsed(r, 13, VaultType::parse)?,
         })
     }
 }
@@ -966,6 +972,76 @@ impl Record for SavingsRescue {
             week_start: opt_row_date(r, 10)?,
             note: r.get(11)?,
             transferred_at: row::opt_ts(r, 12)?,
+        })
+    }
+}
+
+impl Record for PriceItem {
+    const TABLE: &'static str = "price_items";
+    const COLS: &'static [&'static str] = &["name", "unit", "weight_bp", "active"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.name),
+            t(&self.unit),
+            Value::Integer(i64::from(self.weight_bp)),
+            Value::Integer(i64::from(self.active)),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            unit: r.get(8)?,
+            weight_bp: r.get(9)?,
+            active: r.get::<_, i64>(10)? != 0,
+        })
+    }
+}
+
+impl Record for PricePoint {
+    const TABLE: &'static str = "price_points";
+    const COLS: &'static [&'static str] =
+        &["item_id", "price_minor", "currency", "observed_on", "place"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.price);
+        Ok(vec![
+            t(&self.item_id),
+            minor,
+            cur,
+            date_val(self.observed_on)?,
+            opt_text(self.place.as_deref()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            item_id: r.get(7)?,
+            price: row::money(r, 8, 9)?,
+            observed_on: row::date(r, 10)?,
+            place: r.get(11)?,
+        })
+    }
+}
+
+impl Record for GateBypass {
+    const TABLE: &'static str = "gate_bypasses";
+    const COLS: &'static [&'static str] = &["guard_months_x100"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![Value::Integer(i64::from(self.guard_months_x100))])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            guard_months_x100: r.get(7)?,
         })
     }
 }

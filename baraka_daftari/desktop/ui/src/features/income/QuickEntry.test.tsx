@@ -61,6 +61,7 @@ describe('QuickEntry', () => {
         source: 'DAILY_WORK',
         channel: 'CASH',
         share: null,
+        source_type: null,
       });
     });
     await waitFor(() => {
@@ -76,6 +77,21 @@ describe('QuickEntry', () => {
     await waitFor(() => {
       expect(recordIncome).toHaveBeenCalledWith(
         expect.objectContaining({ amount: '500000', share: '0' }),
+      );
+    });
+  });
+
+  it('daromad turi tanlansa (ribo ham) yuboriladi; tanlanmasa null', async () => {
+    renderEntry();
+    await userEvent.type(screen.getByLabelText("Summa (so'm)"), '100000');
+    await userEvent.selectOptions(
+      screen.getByLabelText('Daromad turi (ixtiyoriy)'),
+      'Foizli daromad (ribo)',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Saqlash' }));
+    await waitFor(() => {
+      expect(recordIncome).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: '100000', source_type: 'RIBO' }),
       );
     });
   });

@@ -23,7 +23,7 @@ export const commands = {
 	listIncomes: (monthText: string) => typedError<IncomeDto[], CommandError>(__TAURI_INVOKE("list_incomes", { monthText })),
 	setRule: (input: RuleInput) => typedError<null, CommandError>(__TAURI_INVOKE("set_rule", { input })),
 	setOpeningBalance: (amountText: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("set_opening_balance", { amountText })),
-	requestWithdrawal: (amountText: string, reason: string) => typedError<WithdrawalDto, CommandError>(__TAURI_INVOKE("request_withdrawal", { amountText, reason })),
+	requestWithdrawal: (amountText: string, reason: string, emergencyConfirmed: boolean) => typedError<WithdrawalDto, CommandError>(__TAURI_INVOKE("request_withdrawal", { amountText, reason, emergencyConfirmed })),
 	confirmWithdrawal: (id: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("confirm_withdrawal", { id })),
 	cancelWithdrawal: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("cancel_withdrawal", { id })),
 	listWithdrawals: () => typedError<WithdrawalDto[], CommandError>(__TAURI_INVOKE("list_withdrawals")),
@@ -103,6 +103,23 @@ export const commands = {
 	/**  Xaritalashni sinash: nima import qilinishini ko'rsatadi, hech narsa yozmaydi. */
 	csvDryRun: (token: string, input: CsvMappingInput) => typedError<CsvResultDto, CommandError>(__TAURI_INVOKE("csv_dry_run", { token, input })),
 	csvImport: (token: string, input: CsvMappingInput, defaultCategoryId: string) => typedError<CsvResultDto, CommandError>(__TAURI_INVOKE("csv_import", { token, input, defaultCategoryId })),
+	guardOverview: () => typedError<GuardDto, CommandError>(__TAURI_INVOKE("guard_overview")),
+	gateStatus: () => typedError<GateDto, CommandError>(__TAURI_INVOKE("gate_status")),
+	setDebtDeclaration: (hasInterestDebt: boolean, hasDebtPlan: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_debt_declaration", { hasInterestDebt, hasDebtPlan })),
+	/**  Qulfni ongli chetlab o'tish: tasdiq UI'da so'raladi, `confirmed` Rustda tekshiriladi. */
+	bypassGate: (confirmed: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("bypass_gate", { confirmed })),
+	revokeGateBypass: () => typedError<null, CommandError>(__TAURI_INVOKE("revoke_gate_bypass")),
+	listPriceItems: () => typedError<PriceItemDto[], CommandError>(__TAURI_INVOKE("list_price_items")),
+	addPriceItem: (name: string, unit: string, weightBp: number) => typedError<null, CommandError>(__TAURI_INVOKE("add_price_item", { name, unit, weightBp })),
+	setPriceItem: (id: string, weightBp: number, active: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_price_item", { id, weightBp, active })),
+	removePriceItem: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_price_item", { id })),
+	/**  `date` — `YYYY-MM-DD`; `None` — bugun. */
+	addPrice: (itemId: string, price: string, date: string | null, place: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("add_price", { itemId, price, date, place })),
+	priceHistory: (itemId: string) => typedError<PricePointDto[], CommandError>(__TAURI_INVOKE("price_history", { itemId })),
+	removePrice: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_price", { id })),
+	priceBook: () => typedError<PriceBookDto, CommandError>(__TAURI_INVOKE("price_book")),
+	/**  `annual_percent` — foydalanuvchi kiritgan taxminiy yillik narx o'sishi (masalan, `12,5`). */
+	purchasingPower: (annualPercent: string, years: number, itemId: string | null) => typedError<PurchasingDto, CommandError>(__TAURI_INVOKE("purchasing_power", { annualPercent, years, itemId })),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
@@ -249,6 +266,32 @@ export type ExpenseInput = {
 	funded_by_debt: boolean,
 };
 
+export type GateDto = {
+	rules_open: boolean,
+	bypassed: boolean,
+	open: boolean,
+	/**  `GUARD_BELOW_TARGET` | `INTEREST_DEBT_NO_PLAN`. */
+	reasons: string[],
+	months_x100: number,
+	required_x100: number,
+	has_interest_debt: boolean,
+	has_debt_plan: boolean,
+};
+
+export type GuardDto = {
+	monthly_need: MoneyDto,
+	target: MoneyDto,
+	milestone: MoneyDto,
+	balance: MoneyDto,
+	growing_balance: MoneyDto,
+	gap: MoneyDto,
+	/**  Necha oylik zaxira ×100 (140 = 1,4 oy). */
+	months_x100: number,
+	milestone_reached: boolean,
+	full_reached: boolean,
+	basis_months: number,
+};
+
 export type HabitDto = {
 	category_id: string,
 	name: string,
@@ -299,6 +342,8 @@ export type IncomeDto = {
 	channel: string,
 	amount: MoneyDto,
 	received_on: string,
+	/**  `TER` | `MOL` | `TAVAKKAL` | `RIBO` yoki belgilanmagan. */
+	source_type: string | null,
 };
 
 export type IncomeInput = {
@@ -310,6 +355,30 @@ export type IncomeInput = {
 	channel: string,
 	/**  `None` — taklif qilingan ulush. */
 	share: string | null,
+	/**  `TER` | `MOL` | `TAVAKKAL` | `RIBO` (ixtiyoriy; ter / mol / tavakkal testi). */
+	source_type: string | null,
+};
+
+export type InflationDto = {
+	index_bp: number,
+	items: InflationItemDto[],
+	span_days: number,
+};
+
+export type InflationItemDto = {
+	name: string,
+	change_bp: number,
+	weight_bp: number,
+};
+
+export type ItemExampleDto = {
+	name: string,
+	unit: string,
+	price_today: MoneyDto,
+	price_future: MoneyDto,
+	/**  Birlikning 1/1000 ulushlarida (kg uchun gramm). */
+	quantity_now_milli: string,
+	quantity_future_milli: string,
 };
 
 export type JourneyDto = {
@@ -402,6 +471,43 @@ export type PolicyInput = {
 	window_weeks: number,
 	min_satisfied_weeks: number,
 	min_tasks_per_week: number,
+};
+
+export type PriceBookDto = {
+	/**  `None` — ma'lumot yetarli emas (kamida 2 ta narxli mahsulot kerak). */
+	inflation: InflationDto | null,
+	streak_weeks: number,
+	best_streak_weeks: number,
+	/**  Shu haftada narx kiritilganmi (haftalik eslatma). */
+	logged_this_week: boolean,
+};
+
+export type PriceItemDto = {
+	id: string,
+	name: string,
+	unit: string,
+	weight_bp: number,
+	active: boolean,
+	first: PricePointDto | null,
+	last: PricePointDto | null,
+	points: number,
+	/**  Birinchi → oxirgi narx o'zgarishi, bazis punkt (6250 = +62,5%). */
+	change_bp: number | null,
+};
+
+export type PricePointDto = {
+	id: string,
+	price: MoneyDto,
+	observed_on: string,
+	place: string | null,
+};
+
+export type PurchasingDto = {
+	nominal: MoneyDto,
+	real: MoneyDto,
+	years: number,
+	annual_bp: number,
+	example: ItemExampleDto | null,
 };
 
 export type RecordedDto = {

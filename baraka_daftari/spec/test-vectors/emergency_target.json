@@ -1,0 +1,105 @@
+{
+  "suite": "emergency_target",
+  "version": 1,
+  "description": "Qorovul maqsadi = round_half_up(sum(ZARUR+KERAK oylar) * N / k). Ma'lumot yo'q bo'lsa 0",
+  "cases": [
+    {
+      "id": "guard-001",
+      "input": {
+        "months": [
+          "520000000",
+          "500000000",
+          "530000000"
+        ],
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "3100000000"
+      }
+    },
+    {
+      "id": "guard-002",
+      "input": {
+        "months": [
+          "520000000",
+          "500000000",
+          "530000000"
+        ],
+        "target_months": 3,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "1550000000"
+      }
+    },
+    {
+      "id": "guard-003",
+      "input": {
+        "months": [
+          "100"
+        ],
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "600"
+      }
+    },
+    {
+      "id": "guard-004",
+      "input": {
+        "months": [
+          "100",
+          "101"
+        ],
+        "target_months": 3,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "302"
+      }
+    },
+    {
+      "id": "guard-005",
+      "input": {
+        "months": [
+          "333",
+          "333",
+          "334"
+        ],
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "2000"
+      }
+    },
+    {
+      "id": "guard-006",
+      "input": {
+        "months": [],
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "0"
+      }
+    },
+    {
+      "id": "guard-007",
+      "input": {
+        "months": [
+          "0",
+          "0",
+          "0"
+        ],
+        "target_months": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "target": "0"
+      }
+    }
+  ]
+}

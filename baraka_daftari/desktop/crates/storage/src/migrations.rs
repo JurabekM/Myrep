@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 5;
+pub const SCHEMA_VERSION: usize = 6;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -194,6 +194,36 @@ CREATE TABLE scheduled_treats (
 );
 ";
 
+/// D8 (3-qonun): mavjud «Kelajagim» → QOROVUL (balans o'zgarmaydi), daromad manbasi turi,
+/// narx daftari, darvozani chetlab o'tish qaydi.
+const V6: &str = "
+ALTER TABLE assets ADD COLUMN vault_type TEXT CHECK (vault_type IN ('QOROVUL','OSADIGAN'));
+UPDATE assets SET vault_type = 'QOROVUL' WHERE asset_type = 'VAULT';
+ALTER TABLE incomes ADD COLUMN source_type TEXT CHECK (source_type IN ('TER','MOL','TAVAKKAL','RIBO'));
+CREATE TABLE price_items (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, unit TEXT NOT NULL, weight_bp INTEGER NOT NULL CHECK (weight_bp BETWEEN 0 AND 10000),
+  active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1))
+);
+CREATE UNIQUE INDEX uq_price_item_name ON price_items (household_id, name) WHERE deleted_at IS NULL;
+CREATE TABLE price_points (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  item_id TEXT NOT NULL REFERENCES price_items(id), price_minor INTEGER NOT NULL CHECK (price_minor > 0),
+  currency TEXT NOT NULL, observed_on TEXT NOT NULL, place TEXT
+);
+CREATE INDEX idx_price_points_item ON price_points (item_id, observed_on);
+CREATE TABLE gate_bypasses (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  guard_months_x100 INTEGER NOT NULL CHECK (guard_months_x100 >= 0)
+);
+";
+
 /// D7: obunalar, konvertlar (+ yopilgan haftalar), qutqarilgan pul.
 const V5: &str = "
 CREATE TABLE subscriptions (
@@ -238,7 +268,14 @@ CREATE UNIQUE INDEX uq_rescue_week ON savings_rescues (household_id, week_start)
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(V1), M::up(V2), M::up(V3), M::up(V4), M::up(V5)])
+    Migrations::new(vec![
+        M::up(V1),
+        M::up(V2),
+        M::up(V3),
+        M::up(V4),
+        M::up(V5),
+        M::up(V6),
+    ])
 }
 
 #[cfg(test)]
@@ -274,7 +311,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 25);
+        assert_eq!(tables.len(), 28);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))
@@ -326,5 +363,39 @@ mod tests {
             })
             .unwrap();
         assert_eq!(cat_owner, None);
+    }
+
+    /// v5 → v6: mavjud «Kelajagim» QOROVUL bo'ladi, balans va tranzaksiyalar o'zgarmaydi.
+    #[test]
+    fn v6_migrates_vault_to_qorovul_without_losing_balance() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        migrations().to_version(&mut conn, 5).unwrap();
+        conn.execute_batch(
+            "INSERT INTO households VALUES ('h','h','t','t',NULL,1,'d','Oila','UZS');
+             INSERT INTO assets VALUES ('a','h','t','t',NULL,1,'d','VAULT','Kelajagim',777000,'tiyin','UZS','t');
+             INSERT INTO assets VALUES ('c','h','t','t',NULL,1,'d','CASH','Naqd',5,'tiyin','UZS','t');
+             INSERT INTO vault_transactions (id,household_id,created_at,updated_at,version,origin_device_id,asset_id,kind,amount_minor,currency,occurred_at)
+               VALUES ('v','h','t','t',1,'d','a','DEPOSIT',777000,'UZS','t');",
+        )
+        .unwrap();
+        migrations().to_latest(&mut conn).unwrap();
+        let (qty, vt): (i64, Option<String>) = conn
+            .query_row(
+                "SELECT quantity, vault_type FROM assets WHERE id='a'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!((qty, vt.as_deref()), (777_000, Some("QOROVUL")));
+        let other: Option<String> = conn
+            .query_row("SELECT vault_type FROM assets WHERE id='c'", [], |r| {
+                r.get(0)
+            })
+            .unwrap();
+        assert_eq!(other, None);
+        let n: i64 = conn
+            .query_row("SELECT COUNT(*) FROM vault_transactions", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1);
     }
 }

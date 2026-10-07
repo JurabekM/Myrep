@@ -2,8 +2,9 @@ use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    AllocationKind, AssetType, BillingPeriod, MemberRole, Meta, MoneyOwner, Necessity,
-    ObligationKind, PaymentChannel, RescueKind, VaultSource, VaultTxKind, WithdrawalStatus,
+    AllocationKind, AssetType, BillingPeriod, IncomeSourceType, MemberRole, Meta, MoneyOwner,
+    Necessity, ObligationKind, PaymentChannel, RescueKind, VaultSource, VaultTxKind, VaultType,
+    WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,6 +42,8 @@ pub struct Income {
     pub channel: PaymentChannel,
     pub amount: Money,
     pub received_on: Date,
+    /// Ter / mol / tavakkal testi (ixtiyoriy). `Ribo` — foizli daromad, alohida ko'rsatiladi.
+    pub source_type: Option<IncomeSourceType>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,6 +77,8 @@ pub struct Asset {
     pub unit: String,
     pub currency: Option<Currency>,
     pub acquired_at: OffsetDateTime,
+    /// Faqat `Vault` aktivlari uchun: qorovul yoki o'sadigan.
+    pub vault_type: Option<VaultType>,
 }
 
 /// Balans tarixi (zakotdagi hawl hisobi uchun).
@@ -274,4 +279,32 @@ pub struct SavingsRescue {
     pub week_start: Option<Date>,
     pub note: Option<String>,
     pub transferred_at: Option<OffsetDateTime>,
+}
+
+/// «Narx daftari» savatidagi mahsulot (SPEC 2C.1). `weight_bp` — savatdagi og'irlik.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PriceItem {
+    pub meta: Meta,
+    pub name: String,
+    /// Narx qaysi birlik uchun (kg, litr, dona).
+    pub unit: String,
+    pub weight_bp: u32,
+    pub active: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PricePoint {
+    pub meta: Meta,
+    pub item_id: String,
+    pub price: Money,
+    pub observed_on: Date,
+    pub place: Option<String>,
+}
+
+/// Tayyorgarlik darvozasini ongli chetlab o'tish (tasdiq bilan). Faqat mahalliy qayd.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GateBypass {
+    pub meta: Meta,
+    /// Tasdiq paytidagi qorovul zaxirasi (oy × 100).
+    pub guard_months_x100: u32,
 }

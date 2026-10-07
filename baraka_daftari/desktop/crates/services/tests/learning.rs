@@ -88,6 +88,7 @@ impl World {
                 received_on: None,
                 share: None,
                 member_id: None,
+                source_type: None,
             },
         )
         .unwrap();

@@ -8,6 +8,7 @@ import { FamilyPage } from '../features/family/FamilyPage';
 import { AuditWizardPage } from '../features/audit/AuditPage';
 import { HomePage } from '../features/home/HomePage';
 import { IncomePage } from '../features/income/IncomePage';
+import { PricesPage } from '../features/prices/PricesPage';
 import { QuickEntry } from '../features/income/QuickEntry';
 import { RescuePage } from '../features/rescue/RescuePage';
 import { StudyPage } from '../features/study/StudyPage';
@@ -27,6 +28,7 @@ const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'envelopes', labelKey: 'nav.envelopes' },
   { id: 'subscriptions', labelKey: 'nav.subscriptions' },
   { id: 'rescue', labelKey: 'nav.rescue' },
+  { id: 'prices', labelKey: 'nav.prices' },
   { id: 'family', labelKey: 'nav.family' },
   { id: 'study', labelKey: 'nav.study' },
 ];
@@ -57,6 +59,8 @@ function CurrentPage({ page }: { page: Page }) {
       return <EnvelopesPage />;
     case 'rescue':
       return <RescuePage />;
+    case 'prices':
+      return <PricesPage />;
   }
 }
 

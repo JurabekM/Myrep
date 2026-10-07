@@ -86,6 +86,7 @@ fn new_income(amount: i64, share: Option<i64>) -> income::NewIncome {
         received_on: None,
         share: share.map(uzs),
         member_id: None,
+        source_type: None,
     }
 }
 
@@ -284,13 +285,31 @@ fn withdrawal_requires_cooldown_and_enough_money() {
     .unwrap();
 
     assert!(matches!(
-        vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(10_000_001), "dori", 86_400),
+        vault::request_withdrawal(
+            &mut w.db,
+            &env,
+            &w.ctx,
+            uzs(10_000_001),
+            "dori",
+            86_400,
+            true
+        ),
         Err(ServiceError::InsufficientFunds)
     ));
-    assert!(vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(1), "  ", 86_400).is_err());
+    assert!(
+        vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(1), "  ", 86_400, true).is_err()
+    );
 
-    let req =
-        vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(4_000_000), "Dori", 86_400).unwrap();
+    let req = vault::request_withdrawal(
+        &mut w.db,
+        &env,
+        &w.ctx,
+        uzs(4_000_000),
+        "Dori",
+        86_400,
+        true,
+    )
+    .unwrap();
     // So'rov pulni ushlamaydi va darrov chiqarmaydi.
     assert_eq!(
         vault::balance(w.db.conn(), &w.ctx).unwrap().minor(),
@@ -338,8 +357,10 @@ fn withdrawal_can_be_cancelled_and_balance_is_rechecked_at_confirm() {
         new_income(10_000_000, Some(10_000_000)),
     )
     .unwrap();
-    let a = vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(8_000_000), "A", 10).unwrap();
-    let b = vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(8_000_000), "B", 10).unwrap();
+    let a =
+        vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(8_000_000), "A", 10, true).unwrap();
+    let b =
+        vault::request_withdrawal(&mut w.db, &env, &w.ctx, uzs(8_000_000), "B", 10, true).unwrap();
     vault::cancel_withdrawal(&mut w.db, &env, &w.ctx, &b.meta.id).unwrap();
     assert!(vault::cancel_withdrawal(&mut w.db, &env, &w.ctx, &b.meta.id).is_err());
     w.clock.advance(Duration::seconds(11));

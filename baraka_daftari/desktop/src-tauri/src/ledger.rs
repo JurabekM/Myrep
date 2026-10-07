@@ -92,6 +92,8 @@ pub struct IncomeInput {
     pub channel: String,
     /// `None` — taklif qilingan ulush.
     pub share: Option<String>,
+    /// `TER` | `MOL` | `TAVAKKAL` | `RIBO` (ixtiyoriy; ter / mol / tavakkal testi).
+    pub source_type: Option<String>,
 }
 
 #[derive(Debug, Serialize, Type)]
@@ -108,6 +110,8 @@ pub struct IncomeDto {
     pub channel: String,
     pub amount: MoneyDto,
     pub received_on: String,
+    /// `TER` | `MOL` | `TAVAKKAL` | `RIBO` yoki belgilanmagan.
+    pub source_type: Option<String>,
 }
 
 fn income_dto(i: &Income) -> IncomeDto {
@@ -117,6 +121,7 @@ fn income_dto(i: &Income) -> IncomeDto {
         channel: i.channel.as_str().to_owned(),
         amount: m(i.amount),
         received_on: domain::date_to_string(i.received_on).unwrap_or_default(),
+        source_type: i.source_type.map(|t| t.as_str().to_owned()),
     }
 }
 
@@ -272,6 +277,14 @@ pub fn record_income(
                 .as_deref()
                 .map(|t| amount_or_zero(ctx, t))
                 .transpose()?;
+            let source_type = input
+                .source_type
+                .as_deref()
+                .map(|t| {
+                    domain::IncomeSourceType::parse(t)
+                        .ok_or(ServiceError::Invalid("manba turi noto'g'ri"))
+                })
+                .transpose()?;
             let rec = income::record(
                 db,
                 env,
@@ -283,6 +296,7 @@ pub fn record_income(
                     received_on: None,
                     share,
                     member_id: None,
+                    source_type,
                 },
             )?;
             Ok(RecordedDto {
@@ -360,6 +374,7 @@ pub fn set_opening_balance(
 pub fn request_withdrawal(
     amount_text: String,
     reason: String,
+    emergency_confirmed: bool,
     state: State<'_, AppSession>,
 ) -> Result<WithdrawalDto, CommandError> {
     with_session(&state, |s| {
@@ -371,6 +386,7 @@ pub fn request_withdrawal(
                 amount(ctx, &amount_text)?,
                 &reason,
                 DEFAULT_COOLDOWN_SECS,
+                emergency_confirmed,
             )?;
             Ok(withdrawal_dto(&req))
         })

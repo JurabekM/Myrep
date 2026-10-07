@@ -151,13 +151,17 @@ impl Facts {
     }
 }
 
-fn setting(conn: &Connection, ctx: &Ctx, key: &str) -> Result<Option<Setting>, ServiceError> {
+pub(crate) fn setting(
+    conn: &Connection,
+    ctx: &Ctx,
+    key: &str,
+) -> Result<Option<Setting>, ServiceError> {
     Ok(repo::list::<Setting>(conn, &ctx.household_id)?
         .into_iter()
         .find(|s| s.key == key))
 }
 
-fn put_setting(
+pub(crate) fn put_setting(
     conn: &Connection,
     env: &Env<'_>,
     ctx: &Ctx,

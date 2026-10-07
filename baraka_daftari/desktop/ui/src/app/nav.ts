@@ -12,7 +12,8 @@ export type Page =
   | 'council'
   | 'subscriptions'
   | 'envelopes'
-  | 'rescue';
+  | 'rescue'
+  | 'prices';
 
 interface NavState {
   page: Page;

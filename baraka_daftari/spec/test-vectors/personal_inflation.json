@@ -1,0 +1,169 @@
+{
+  "suite": "personal_inflation",
+  "version": 1,
+  "description": "Shaxsiy inflyatsiya: har mahsulot (oxirgi-birinchi)*10000/birinchi (half-up), indeks = og'irlik bo'yicha o'rtacha (half-up)",
+  "cases": [
+    {
+      "id": "infl-001",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 5000,
+            "first": "8000000",
+            "last": "13000000"
+          },
+          {
+            "weight_bp": 5000,
+            "first": "200000",
+            "last": "300000"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "per_item_bp": [
+          6250,
+          5000
+        ],
+        "index_bp": 5625
+      }
+    },
+    {
+      "id": "infl-002",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 10000,
+            "first": "100",
+            "last": "100"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "per_item_bp": [
+          0
+        ],
+        "index_bp": 0
+      }
+    },
+    {
+      "id": "infl-003",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 7000,
+            "first": "300",
+            "last": "200"
+          },
+          {
+            "weight_bp": 3000,
+            "first": "1000",
+            "last": "1500"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "per_item_bp": [
+          -3333,
+          5000
+        ],
+        "index_bp": -833
+      }
+    },
+    {
+      "id": "infl-004",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 3333,
+            "first": "333",
+            "last": "500"
+          },
+          {
+            "weight_bp": 3333,
+            "first": "777",
+            "last": "901"
+          },
+          {
+            "weight_bp": 3334,
+            "first": "10",
+            "last": "11"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "per_item_bp": [
+          5015,
+          1596,
+          1000
+        ],
+        "index_bp": 2537
+      }
+    },
+    {
+      "id": "infl-005",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 5000,
+            "first": "0",
+            "last": "100"
+          },
+          {
+            "weight_bp": 5000,
+            "first": "100",
+            "last": "100"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_PRICE"
+      }
+    },
+    {
+      "id": "infl-006",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 0,
+            "first": "100",
+            "last": "200"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "NO_WEIGHTS"
+      }
+    },
+    {
+      "id": "infl-007",
+      "input": {
+        "items": [
+          {
+            "weight_bp": 5000,
+            "first": "100",
+            "last": "200"
+          },
+          {
+            "weight_bp": 0,
+            "first": "100",
+            "last": "900"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "per_item_bp": [
+          10000,
+          80000
+        ],
+        "index_bp": 10000
+      }
+    }
+  ]
+}

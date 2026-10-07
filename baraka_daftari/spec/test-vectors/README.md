@@ -31,3 +31,9 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | forgotten_subscription | `started_on`, `last_used_on` (null bo'lishi mumkin), `today`, `threshold_days` | `{"forgotten": bool}` |
 | envelope | `limit`, `spent`, `leftover_cash?` | `{"remaining","state","used_bp","cash_to_fill","difference?"}` yoki `{"error":"INVALID_LIMIT"}` |
 | money_parse_signed | `text`, `currency` | `{"negative": bool, "minor"}` yoki `{"error":"PARSE"}` |
+| emergency_target | `months[]` (ZARUR+KERAK oylar), `target_months`, `currency` | `{"target"}` (ma'lumot yo'q → 0) |
+| guard_months | `balance`, `target`, `target_months`, `currency` | `{"months_x100"}` (floor; maqsad 0 → 0) |
+| personal_inflation | `items[{weight_bp,first,last}]`, `currency` | `{"per_item_bp":[...],"index_bp"}` yoki `{"error":"NO_WEIGHTS"\|"INVALID_PRICE"}` |
+| readiness_gate | `guard_months_x100`, `has_interest_debt`, `has_debt_plan`, `required_x100` | `{"status":"OPEN"\|"LOCKED","reasons":["GUARD_BELOW_TARGET","INTEREST_DEBT_NO_PLAN"]}` |
+| allocation_priority | `share`, `guard_balance`, `guard_target`, `gate_open`, `currency` | `{"guard","growing"}` |
+| purchasing_power | `op` = `real_value`\|`future_price`\|`quantity_milli`, ... | `{"amount"}` yoki `{"milli"}` yoki `{"error":"INVALID_AMOUNT"}` |
