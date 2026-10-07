@@ -11,3 +11,4 @@ pub mod repo;
 pub use db::{Database, DB_KEY_LEN};
 pub use error::StorageError;
 pub use migrations::{migrations, SCHEMA_VERSION};
+pub use rusqlite::Connection;

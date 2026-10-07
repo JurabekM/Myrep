@@ -1,0 +1,217 @@
+{
+  "suite": "money_parse",
+  "version": 1,
+  "description": "Foydalanuvchi kiritgan summa (asosiy birlikda, so'm) -> minor. Probel va NBSP guruhlash, `,` yoki `.` kasr (1-2 xona). Manfiy, ilmiy yozuv va 3+ kasr xona rad etiladi",
+  "cases": [
+    {
+      "id": "parse-001",
+      "input": {
+        "text": "800000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "80000000"
+      }
+    },
+    {
+      "id": "parse-002",
+      "input": {
+        "text": "800 000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "80000000"
+      }
+    },
+    {
+      "id": "parse-003",
+      "input": {
+        "text": "8 000 000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "800000000"
+      }
+    },
+    {
+      "id": "parse-004",
+      "input": {
+        "text": "1500,50",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "150050"
+      }
+    },
+    {
+      "id": "parse-005",
+      "input": {
+        "text": "1500.5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "150050"
+      }
+    },
+    {
+      "id": "parse-006",
+      "input": {
+        "text": "0,99",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "99"
+      }
+    },
+    {
+      "id": "parse-007",
+      "input": {
+        "text": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "0"
+      }
+    },
+    {
+      "id": "parse-008",
+      "input": {
+        "text": "  12 345,6  ",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "1234560"
+      }
+    },
+    {
+      "id": "parse-009",
+      "input": {
+        "text": "1 000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "100000"
+      }
+    },
+    {
+      "id": "parse-010",
+      "input": {
+        "text": "",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-011",
+      "input": {
+        "text": "abc",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-012",
+      "input": {
+        "text": "1,234,56",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-013",
+      "input": {
+        "text": "1,234",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-014",
+      "input": {
+        "text": "12,",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-015",
+      "input": {
+        "text": ",5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-016",
+      "input": {
+        "text": "-5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-017",
+      "input": {
+        "text": "1e6",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-018",
+      "input": {
+        "text": "99999999999999999999",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "OVERFLOW"
+      }
+    },
+    {
+      "id": "parse-019",
+      "input": {
+        "text": "123,45",
+        "currency": "USD"
+      },
+      "expected": {
+        "minor": "12345"
+      }
+    },
+    {
+      "id": "parse-020",
+      "input": {
+        "text": "1.5.0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "parse-021",
+      "input": {
+        "text": "٣٠٠",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    }
+  ]
+}

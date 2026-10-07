@@ -1,0 +1,127 @@
+{
+  "suite": "share_suggestion",
+  "version": 1,
+  "description": "Daromaddan taklif qilinadigan ulush: foiz (percent_of qoidasi) yoki oylik aniq summa",
+  "cases": [
+    {
+      "id": "share-001",
+      "input": {
+        "rule": {
+          "kind": "PERCENT",
+          "value": "500"
+        },
+        "income": "800000000",
+        "allocated_this_month": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "40000000"
+      }
+    },
+    {
+      "id": "share-002",
+      "input": {
+        "rule": {
+          "kind": "PERCENT",
+          "value": "1000"
+        },
+        "income": "800000000",
+        "allocated_this_month": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "80000000"
+      }
+    },
+    {
+      "id": "share-003",
+      "input": {
+        "rule": {
+          "kind": "PERCENT",
+          "value": "1000"
+        },
+        "income": "12345",
+        "allocated_this_month": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "1235"
+      }
+    },
+    {
+      "id": "share-004",
+      "input": {
+        "rule": {
+          "kind": "MONTHLY_FIXED",
+          "value": "30000000"
+        },
+        "income": "100000000",
+        "allocated_this_month": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "30000000"
+      }
+    },
+    {
+      "id": "share-005",
+      "input": {
+        "rule": {
+          "kind": "MONTHLY_FIXED",
+          "value": "30000000"
+        },
+        "income": "100000000",
+        "allocated_this_month": "25000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "5000000"
+      }
+    },
+    {
+      "id": "share-006",
+      "input": {
+        "rule": {
+          "kind": "MONTHLY_FIXED",
+          "value": "30000000"
+        },
+        "income": "100000000",
+        "allocated_this_month": "30000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "0"
+      }
+    },
+    {
+      "id": "share-007",
+      "input": {
+        "rule": {
+          "kind": "MONTHLY_FIXED",
+          "value": "30000000"
+        },
+        "income": "10000000",
+        "allocated_this_month": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "10000000"
+      }
+    },
+    {
+      "id": "share-008",
+      "input": {
+        "rule": {
+          "kind": "PERCENT",
+          "value": "500"
+        },
+        "income": "0",
+        "allocated_this_month": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "minor": "0"
+      }
+    }
+  ]
+}

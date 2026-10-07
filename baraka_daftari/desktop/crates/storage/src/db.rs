@@ -70,17 +70,18 @@ impl Database {
         &self.conn
     }
 
-    /// Yozuvlar guruhini bitta tranzaksiyada bajaradi.
+    /// Yozuvlar guruhini bitta tranzaksiyada bajaradi; xato bo'lsa hammasi bekor qilinadi.
+    /// Xato turi chaqiruvchida (`E: From<StorageError>`), shuning uchun servis xatolari yo'qolmaydi.
     ///
     /// # Errors
-    /// Ichki xato bo'lsa tranzaksiya bekor qilinadi.
-    pub fn transaction<T>(
+    /// Closure xatosi yoki tranzaksiya boshlash/commit xatosi.
+    pub fn transaction<T, E: From<StorageError>>(
         &mut self,
-        f: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T, StorageError>,
-    ) -> Result<T, StorageError> {
-        let tx = self.conn.transaction()?;
+        f: impl FnOnce(&rusqlite::Transaction<'_>) -> Result<T, E>,
+    ) -> Result<T, E> {
+        let tx = self.conn.transaction().map_err(StorageError::from)?;
         let out = f(&tx)?;
-        tx.commit()?;
+        tx.commit().map_err(StorageError::from)?;
         Ok(out)
     }
 }

@@ -4,7 +4,9 @@
 
 use std::{fs, path::Path};
 
-use money::{allocate, format_money, percent_of, Currency, FxRate, Locale, Money, MoneyError};
+use money::{
+    allocate, format_money, parse_amount, percent_of, Currency, FxRate, Locale, Money, MoneyError,
+};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -91,6 +93,10 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "percent_of" => Ok(run_percent_of),
         "fx_convert" => Ok(run_fx_convert),
         "money_format" => Ok(run_money_format),
+        "money_parse" => Ok(run_money_parse),
+        "unexplained_gap" => Ok(run_unexplained_gap),
+        "streak" => Ok(run_streak),
+        "share_suggestion" => Ok(run_share_suggestion),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -196,4 +202,85 @@ fn run_money_format(input: &Value) -> Result<Value, String> {
         other => return Err(format!("noma'lum locale `{other}`")),
     };
     Ok(serde_json::json!({ "text": format_money(amount, locale) }))
+}
+
+fn run_unexplained_gap(input: &Value) -> Result<Value, String> {
+    let m = |key| parse_money(input, key, "currency");
+    let (income, obligations, expenses, savings) = (
+        m("income")?,
+        m("obligations")?,
+        m("expenses")?,
+        m("savings")?,
+    );
+    let result = domain::month_result(income, obligations, expenses).map_err(|e| e.to_string())?;
+    let gap = domain::unexplained_gap(income, obligations, expenses, savings)
+        .map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({
+        "month_result": result.minor().to_string(),
+        "unexplained": gap.minor().to_string(),
+    }))
+}
+
+fn parse_weekday(s: &str) -> Result<time::Weekday, String> {
+    use time::Weekday::{Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday};
+    Ok(match s {
+        "MONDAY" => Monday,
+        "TUESDAY" => Tuesday,
+        "WEDNESDAY" => Wednesday,
+        "THURSDAY" => Thursday,
+        "FRIDAY" => Friday,
+        "SATURDAY" => Saturday,
+        "SUNDAY" => Sunday,
+        other => return Err(format!("noma'lum hafta kuni `{other}`")),
+    })
+}
+
+fn run_streak(input: &Value) -> Result<Value, String> {
+    let dates = input
+        .get("dates")
+        .and_then(Value::as_array)
+        .ok_or("`dates` massiv bo'lishi kerak")?
+        .iter()
+        .map(|d| {
+            d.as_str()
+                .ok_or_else(|| "sana string bo'lishi kerak".to_owned())
+                .and_then(|s| domain::date_from_str(s).map_err(|e| e.to_string()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let today = domain::date_from_str(str_field(input, "today")?).map_err(|e| e.to_string())?;
+    let anchor = parse_weekday(str_field(input, "anchor")?)?;
+    let s = domain::compute_streak(&dates, today, anchor);
+    Ok(serde_json::json!({
+        "current_weeks": s.current_weeks,
+        "best_weeks": s.best_weeks,
+        "saved_days": s.saved_days,
+    }))
+}
+
+fn run_share_suggestion(input: &Value) -> Result<Value, String> {
+    let income = parse_money(input, "income", "currency")?;
+    let allocated = parse_money(input, "allocated_this_month", "currency")?;
+    let rule = input.get("rule").ok_or("`rule` kerak")?;
+    let value = parse_minor(str_field(rule, "value")?)?;
+    let rule = match str_field(rule, "kind")? {
+        "PERCENT" => domain::ShareRule::Percent {
+            bp: u32::try_from(value).map_err(|e| e.to_string())?,
+        },
+        "MONTHLY_FIXED" => domain::ShareRule::MonthlyFixed {
+            target: Money::new(value, income.currency()),
+        },
+        other => return Err(format!("noma'lum qoida `{other}`")),
+    };
+    Ok(match domain::suggest_share(rule, income, allocated) {
+        Ok(m) => serde_json::json!({ "minor": m.minor().to_string() }),
+        Err(e) => error_json(&e),
+    })
+}
+
+fn run_money_parse(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    Ok(match parse_amount(str_field(input, "text")?, currency) {
+        Ok(m) => serde_json::json!({ "minor": m.minor().to_string() }),
+        Err(e) => error_json(&e),
+    })
 }

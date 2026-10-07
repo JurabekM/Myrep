@@ -1,0 +1,132 @@
+{
+  "suite": "streak",
+  "version": 1,
+  "description": "Hafta (anchor kunidan boshlanadi) ajratma bo'lsa bajarilgan; joriy tugamagan hafta ketma-ketlikni uzmaydi",
+  "cases": [
+    {
+      "id": "streak-001",
+      "input": {
+        "dates": [],
+        "today": "2026-10-07",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 0,
+        "best_weeks": 0,
+        "saved_days": 0
+      }
+    },
+    {
+      "id": "streak-002",
+      "input": {
+        "dates": [
+          "2026-10-03",
+          "2026-09-26",
+          "2026-09-19"
+        ],
+        "today": "2026-10-07",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 3,
+        "best_weeks": 3,
+        "saved_days": 3
+      }
+    },
+    {
+      "id": "streak-003",
+      "input": {
+        "dates": [
+          "2026-09-19",
+          "2026-09-27"
+        ],
+        "today": "2026-10-07",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 2,
+        "best_weeks": 2,
+        "saved_days": 2
+      }
+    },
+    {
+      "id": "streak-004",
+      "input": {
+        "dates": [
+          "2026-09-12",
+          "2026-09-19",
+          "2026-10-03"
+        ],
+        "today": "2026-10-07",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 1,
+        "best_weeks": 2,
+        "saved_days": 3
+      }
+    },
+    {
+      "id": "streak-005",
+      "input": {
+        "dates": [
+          "2026-10-03",
+          "2026-10-03",
+          "2026-11-01"
+        ],
+        "today": "2026-10-07",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 1,
+        "best_weeks": 1,
+        "saved_days": 1
+      }
+    },
+    {
+      "id": "streak-006",
+      "input": {
+        "dates": [
+          "2026-10-02"
+        ],
+        "today": "2026-10-02",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 1,
+        "best_weeks": 1,
+        "saved_days": 1
+      }
+    },
+    {
+      "id": "streak-007",
+      "input": {
+        "dates": [
+          "2026-10-01"
+        ],
+        "today": "2026-10-02",
+        "anchor": "FRIDAY"
+      },
+      "expected": {
+        "current_weeks": 1,
+        "best_weeks": 1,
+        "saved_days": 1
+      }
+    },
+    {
+      "id": "streak-008",
+      "input": {
+        "dates": [
+          "2026-10-05"
+        ],
+        "today": "2026-10-07",
+        "anchor": "MONDAY"
+      },
+      "expected": {
+        "current_weeks": 1,
+        "best_weeks": 1,
+        "saved_days": 1
+      }
+    }
+  ]
+}

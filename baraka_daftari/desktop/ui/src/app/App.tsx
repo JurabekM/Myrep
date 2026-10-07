@@ -1,59 +1,89 @@
-import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { commands, type MoneyDto } from '../bindings';
+import { AuditWizardPage } from '../features/audit/AuditPage';
+import { HomePage } from '../features/home/HomePage';
+import { IncomePage } from '../features/income/IncomePage';
+import { QuickEntry } from '../features/income/QuickEntry';
+import { ObligationsPage } from '../features/obligations/ObligationsPage';
+import { VaultPage } from '../features/vault/VaultPage';
 
-/** Frontend pul hisoblamaydi: summa string sifatida Rustga yuboriladi va tayyor `formatted` qaytadi. */
+import { useNav, type Page } from './nav';
+
+const PAGES: { id: Page; labelKey: string }[] = [
+  { id: 'home', labelKey: 'nav.home' },
+  { id: 'income', labelKey: 'nav.income' },
+  { id: 'vault', labelKey: 'nav.vault' },
+  { id: 'budget', labelKey: 'nav.budget' },
+  { id: 'obligations', labelKey: 'nav.obligations' },
+];
+
+function CurrentPage({ page }: { page: Page }) {
+  switch (page) {
+    case 'home':
+      return <HomePage />;
+    case 'income':
+      return <IncomePage />;
+    case 'vault':
+      return <VaultPage />;
+    case 'budget':
+      return <AuditWizardPage />;
+    case 'obligations':
+      return <ObligationsPage />;
+  }
+}
+
+/** Ilova qobig'i: chap navigatsiya + ish maydoni. `Ctrl+N` — tez kiritish. */
 export function App() {
   const { t } = useTranslation();
-  const [total, setTotal] = useState('100');
+  const { page, setPage, openQuickEntry } = useNav();
 
-  const split = useMutation({
-    mutationFn: async (): Promise<MoneyDto[]> => {
-      const res = await commands.allocateDemo(total, [70, 20, 10]);
-      if (res.status === 'error') throw new Error(res.error.message);
-      return res.data;
-    },
-  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        openQuickEntry();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [openQuickEntry]);
 
   return (
-    <main className="mx-auto max-w-xl p-8">
-      <h1 className="text-2xl font-semibold">{t('app.title')}</h1>
-      <h2 className="mt-6 text-lg">{t('demo.heading')}</h2>
-      <label className="mt-4 block">
-        <span className="block text-sm">{t('demo.total')}</span>
-        <input
-          className="mt-1 w-full rounded border border-accent bg-transparent p-2"
-          inputMode="numeric"
-          value={total}
-          onChange={(e) => {
-            setTotal(e.target.value);
-          }}
-        />
-      </label>
-      <button
-        type="button"
-        className="mt-4 rounded bg-accent px-4 py-2 text-paper"
-        onClick={() => {
-          split.mutate();
-        }}
-      >
-        {t('demo.run')}
-      </button>
-      {split.data && (
-        <ul aria-label={t('demo.result')} className="mt-4 list-disc pl-6">
-          {split.data.map((m, i) => (
-            <li key={i}>{m.formatted}</li>
+    <div className="flex min-h-screen">
+      <nav aria-label={t('nav.label')} className="w-52 shrink-0 border-r border-accent/30 p-4">
+        <p className="mb-4 text-lg font-semibold">{t('app.title')}</p>
+        <ul className="space-y-1">
+          {PAGES.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                aria-current={page === p.id ? 'page' : undefined}
+                className={`w-full rounded px-3 py-2 text-left ${page === p.id ? 'bg-accent text-paper' : 'hover:bg-accent/10'}`}
+                onClick={() => {
+                  setPage(p.id);
+                }}
+              >
+                {t(p.labelKey)}
+              </button>
+            </li>
           ))}
         </ul>
-      )}
-      {split.error && (
-        <p role="alert" className="mt-4">
-          {t('demo.error')}: {split.error.message}
-        </p>
-      )}
-      <footer className="mt-10 text-xs opacity-70">{t('disclaimer')}</footer>
-    </main>
+        <button
+          type="button"
+          className="mt-6 w-full rounded border border-accent px-3 py-2 text-left"
+          onClick={openQuickEntry}
+        >
+          {t('nav.quickEntry')} <kbd className="ml-1 text-xs opacity-70">Ctrl+N</kbd>
+        </button>
+      </nav>
+      <main className="flex-1 p-8">
+        <CurrentPage page={page} />
+        <footer className="mt-10 text-xs opacity-70">{t('disclaimer')}</footer>
+      </main>
+      <QuickEntry />
+    </div>
   );
 }

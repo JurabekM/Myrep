@@ -15,3 +15,13 @@
 - Tauri: `vault_state`, `setup_pin`, `unlock`, `lock`, `activity` commandlari; 5 soniyalik avto-qulf oqimi; `contentProtected` oynada yoqilgan.
 - UI: `Gate` (qulfda kontent render qilinmaydi), `LockScreen` (PIN o'rnatish/ochish, kutish soniyalari), `Ctrl+L`.
 - Kechiktirildi: Windows Hello (ixtiyoriy, OPEN_QUESTIONS), PIN almashtirish, tashqi keyring o'zgarishi bilan tiklash oqimi.
+
+## D4 — Daromad, «Kelajagim», audit, «Kimning puli?», bosh sahifa
+- **Vektorlar (avval vektor, keyin kod):** `unexplained_gap`, `streak`, `share_suggestion`, `money_parse` (+ runner'lar). Barchasi yashil.
+- `money::parse_amount`: foydalanuvchi matni (`8 000 000`, `1500,50`) → minor; frontend pulni hisoblamaydi va parse qilmaydi.
+- `domain` (sof): `suggest_share` (foiz / oylik aniq summa), `suggest_rate_increase` (progressiv: 4 hafta streak + 4 hafta shu stavkada → +1%), `compute_streak` (hafta jumadan boshlanadi), `unexplained_gap`, `month_result`, `whose_money`, pul olish pauzasi (`check_confirm`, 24 soat).
+- **Sxema v2** (faqat `ADD COLUMN` + 1 jadval; v1 ma'lumotlari saqlanishi testlangan): `vault_transactions.source/income_id`, `obligations.kind/owner/creditor/remaining_minor`, `categories.owner`, `expenses.audit_month`, `withdrawal_requests`.
+- Yangi `services` crate: `setup` (xonadon, a'zo, 11 standart kategoriya, «Kelajagim», 5% qoidasi), `income` (taklif + daromad va ajratma bitta tranzaksiyada), `rules`, `vault` (ro'molcha/boshlang'ich balans — bir marta, «o'zingizga to'langan»ga kirmaydi; pauzali pul olish), `audit` (oylik jami almashtiriladi, ikki marta hisoblanmaydi), `obligations` (doimiy to'lovlar + nasiya daftari), `home`.
+- Tauri: 17 ta yangi command (`ledger.rs`), sessiya endi `Ctx` va barqaror `device_id` saqlaydi.
+- UI: ilova qobig'i + navigatsiya, **bosh sahifa slot arxitekturasi** (birinchi slot — «o'zingizga to'ladingiz»), `Ctrl+N` tez kiritish (summa → Enter), Kelajagim sahifasi, Byudjet sahifasi va audit ustasi (faqat klaviatura: Enter/Shift+Enter/Esc), «Kimning puli?», majburiyatlar va nasiya. i18n kalitlari testi (uz/ru).
+- Kechiktirildi / ataylab qilinmadi: daromadni tahrirlash/o'chirish, oila a'zosini tanlash (D6 oila rejimi), oylik davr boshlanish kuni sozlamasi, haftalik vazifa va juma bobi (D5), tauri-driver E2E (D15).

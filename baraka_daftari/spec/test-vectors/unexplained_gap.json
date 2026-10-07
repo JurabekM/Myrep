@@ -1,0 +1,63 @@
+{
+  "suite": "unexplained_gap",
+  "version": 1,
+  "description": "Izohsiz summa = daromad - majburiyat - xarajat - jamg'arma; oy yakuni = daromad - majburiyat - xarajat",
+  "cases": [
+    {
+      "id": "gap-001",
+      "input": {
+        "income": "800000000",
+        "obligations": "535000000",
+        "expenses": "165000000",
+        "savings": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "month_result": "100000000",
+        "unexplained": "100000000"
+      }
+    },
+    {
+      "id": "gap-002",
+      "input": {
+        "income": "800000000",
+        "obligations": "535000000",
+        "expenses": "165000000",
+        "savings": "40000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "month_result": "100000000",
+        "unexplained": "60000000"
+      }
+    },
+    {
+      "id": "gap-003",
+      "input": {
+        "income": "100",
+        "obligations": "80",
+        "expenses": "50",
+        "savings": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "month_result": "-30",
+        "unexplained": "-30"
+      }
+    },
+    {
+      "id": "gap-004",
+      "input": {
+        "income": "0",
+        "obligations": "0",
+        "expenses": "0",
+        "savings": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "month_result": "0",
+        "unexplained": "0"
+      }
+    }
+  ]
+}

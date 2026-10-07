@@ -32,6 +32,19 @@ str_enum!(AssetType {
 });
 str_enum!(VaultTxKind { Deposit => "DEPOSIT", Withdraw => "WITHDRAW" });
 str_enum!(AllocationKind { Percent => "PERCENT", FixedAmount => "FIXED_AMOUNT" });
+str_enum!(
+    /// "Kimning puli?" ekrani egalari (SPEC 2.4). "O'zingiz" va "izohsiz" hisoblanadi, saqlanmaydi.
+    MoneyOwner {
+        Landlord => "LANDLORD", Bank => "BANK", Shop => "SHOP", State => "STATE",
+        Fuel => "FUEL", Other => "OTHER",
+    }
+);
+str_enum!(ObligationKind { Recurring => "RECURRING", Nasiya => "NASIYA" });
+str_enum!(
+    /// Kelajagim yozuvining manbasi: faqat `Allocation` "o'zingizga to'langan" va streak hisobiga kiradi.
+    VaultSource { Allocation => "ALLOCATION", Opening => "OPENING", Manual => "MANUAL" }
+);
+str_enum!(WithdrawalStatus { Pending => "PENDING", Confirmed => "CONFIRMED", Cancelled => "CANCELLED" });
 
 #[cfg(test)]
 mod tests {

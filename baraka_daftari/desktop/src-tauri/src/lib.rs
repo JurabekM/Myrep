@@ -5,6 +5,7 @@
 
 mod commands;
 mod dto;
+mod ledger;
 mod session;
 
 use std::{sync::Mutex, time::Duration};
@@ -35,6 +36,23 @@ fn specta_builder() -> Builder<tauri::Wry> {
         commands::unlock,
         commands::lock,
         commands::activity,
+        ledger::home_summary,
+        ledger::suggest_share,
+        ledger::record_income,
+        ledger::list_incomes,
+        ledger::set_rule,
+        ledger::set_opening_balance,
+        ledger::request_withdrawal,
+        ledger::confirm_withdrawal,
+        ledger::cancel_withdrawal,
+        ledger::list_withdrawals,
+        ledger::audit_overview,
+        ledger::audit_set_category,
+        ledger::list_obligations,
+        ledger::add_obligation,
+        ledger::add_nasiya,
+        ledger::pay_nasiya,
+        ledger::remove_obligation,
     ])
 }
 

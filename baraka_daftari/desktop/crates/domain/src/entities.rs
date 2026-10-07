@@ -1,7 +1,10 @@
 use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
-use crate::{AllocationKind, AssetType, MemberRole, Meta, Necessity, PaymentChannel, VaultTxKind};
+use crate::{
+    AllocationKind, AssetType, MemberRole, Meta, MoneyOwner, Necessity, ObligationKind,
+    PaymentChannel, VaultSource, VaultTxKind, WithdrawalStatus,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Household {
@@ -22,6 +25,8 @@ pub struct Category {
     pub meta: Meta,
     pub name: String,
     pub necessity: Option<Necessity>,
+    /// "Kimning puli?" egasi (masalan, benzin → `Fuel`).
+    pub owner: Option<MoneyOwner>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,6 +53,8 @@ pub struct Expense {
     pub is_gift: Option<bool>,
     pub is_ostentation: Option<bool>,
     pub funded_by_debt: Option<bool>,
+    /// Oylik audit ustasi kiritgan jami (`YYYY-MM`); oddiy xarajatda `None`.
+    pub audit_month: Option<String>,
 }
 
 /// Har bir qiymat saqlovchi narsa `Asset` (SPEC 4.3). `quantity` minor birlikda
@@ -80,6 +87,9 @@ pub struct VaultTransaction {
     pub amount: Money,
     pub occurred_at: OffsetDateTime,
     pub note: Option<String>,
+    pub source: Option<VaultSource>,
+    /// Ajratma qaysi daromaddan qilingan.
+    pub income_id: Option<String>,
 }
 
 /// `value`: `Percent` uchun bazis punkt, `FixedAmount` uchun minor birlik.
@@ -91,12 +101,18 @@ pub struct AllocationRule {
     pub currency: Option<Currency>,
 }
 
+/// Doimiy to'lov (`Recurring`: `amount` — oylik) yoki nasiya daftari qarzi (`Nasiya`: `amount` —
+/// jami, `remaining` — qolgan, `creditor` — do'kondor). `Nasiya` D9 da `Debt` (SHOP) ga ko'chadi.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Obligation {
     pub meta: Meta,
     pub name: String,
     pub amount: Money,
     pub due_day: u8,
+    pub kind: ObligationKind,
+    pub owner: MoneyOwner,
+    pub creditor: Option<String>,
+    pub remaining: Option<Money>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -108,4 +124,15 @@ pub struct FxRateRecord {
     pub rate_den: i64,
     pub date: Date,
     pub source: String,
+}
+
+/// "Kelajagim"dan pul olish so'rovi: pauza tugaguncha pul chiqmaydi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WithdrawalRequest {
+    pub meta: Meta,
+    pub asset_id: String,
+    pub amount: Money,
+    pub reason: String,
+    pub available_at: OffsetDateTime,
+    pub status: WithdrawalStatus,
 }

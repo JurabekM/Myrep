@@ -16,13 +16,78 @@ export const commands = {
 	lock: () => typedError<null, CommandError>(__TAURI_INVOKE("lock")),
 	/**  Foydalanuvchi faolligi: avto-qulf hisoblagichini yangilaydi. */
 	activity: () => typedError<null, CommandError>(__TAURI_INVOKE("activity")),
+	homeSummary: () => typedError<HomeDto, CommandError>(__TAURI_INVOKE("home_summary")),
+	/**  Daromad summasi yozilganda darhol "shundan X so'm — kelajagingiz uchun". */
+	suggestShare: (amountText: string) => typedError<SuggestionDto, CommandError>(__TAURI_INVOKE("suggest_share", { amountText })),
+	recordIncome: (input: IncomeInput) => typedError<RecordedDto, CommandError>(__TAURI_INVOKE("record_income", { input })),
+	listIncomes: (monthText: string) => typedError<IncomeDto[], CommandError>(__TAURI_INVOKE("list_incomes", { monthText })),
+	setRule: (input: RuleInput) => typedError<null, CommandError>(__TAURI_INVOKE("set_rule", { input })),
+	setOpeningBalance: (amountText: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("set_opening_balance", { amountText })),
+	requestWithdrawal: (amountText: string, reason: string) => typedError<WithdrawalDto, CommandError>(__TAURI_INVOKE("request_withdrawal", { amountText, reason })),
+	confirmWithdrawal: (id: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("confirm_withdrawal", { id })),
+	cancelWithdrawal: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("cancel_withdrawal", { id })),
+	listWithdrawals: () => typedError<WithdrawalDto[], CommandError>(__TAURI_INVOKE("list_withdrawals")),
+	auditOverview: (monthText: string) => typedError<OverviewDto, CommandError>(__TAURI_INVOKE("audit_overview", { monthText })),
+	auditSetCategory: (monthText: string, categoryId: string, amountText: string) => typedError<null, CommandError>(__TAURI_INVOKE("audit_set_category", { monthText, categoryId, amountText })),
+	listObligations: () => typedError<ObligationDto[], CommandError>(__TAURI_INVOKE("list_obligations")),
+	addObligation: (input: ObligationInput) => typedError<ObligationDto, CommandError>(__TAURI_INVOKE("add_obligation", { input })),
+	addNasiya: (creditor: string, totalText: string) => typedError<ObligationDto, CommandError>(__TAURI_INVOKE("add_nasiya", { creditor, totalText })),
+	payNasiya: (id: string, amountText: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("pay_nasiya", { id, amountText })),
+	removeObligation: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_obligation", { id })),
 };
 
 /* Types */
+export type CategoryTotalDto = {
+	category_id: string,
+	name: string,
+	owner: string | null,
+	amount: MoneyDto,
+};
+
 /**  Frontendga qaytadigan xatolar. Matnlarda summa, ism yoki PIN bo'lmaydi. */
-export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kind: "Locked"; retry_after_secs: number } | { kind: "NotInitialized" } | { kind: "AlreadyInitialized" } | { kind: "KeyringMissing" } | { kind: "Internal"; message: string };
+export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kind: "Locked"; retry_after_secs: number } | { kind: "NotInitialized" } | { kind: "AlreadyInitialized" } | { kind: "KeyringMissing" } | 
+/**  Summa matni noto'g'ri (masalan, "12abc"). */
+{ kind: "InvalidAmount" } | { kind: "Invalid"; message: string } | { kind: "NotFound" } | { kind: "InsufficientFunds" } | { kind: "OpeningBalanceExists" } | 
+/**  "Kelajagim"dan pul olish pauzasi tugamagan. */
+{ kind: "Cooling"; remaining_secs: number } | { kind: "Internal"; message: string };
 
 export type DemoError = { kind: "InvalidInput"; message: string };
+
+export type HomeDto = {
+	month: string,
+	previous_month: string,
+	self_paid: MoneyDto,
+	/**  Oylik daromadga nisbatan, bazis punkt (500 = 5%). */
+	self_paid_bp: number,
+	income: MoneyDto,
+	month_result: MoneyDto,
+	vault_balance: MoneyDto,
+	streak_weeks: number,
+	best_streak_weeks: number,
+	saved_days: number,
+	rule: RuleDto,
+	rate_suggestion_bp: number | null,
+	pending_withdrawals: number,
+};
+
+export type IncomeDto = {
+	id: string,
+	source: string,
+	channel: string,
+	amount: MoneyDto,
+	received_on: string,
+};
+
+export type IncomeInput = {
+	/**  Foydalanuvchi yozgan summa (so'mda), Rustda parse qilinadi. */
+	amount: string,
+	/**  `DAILY_WORK` | `ORDER` | `SALARY` | `OTHER`. */
+	source: string,
+	/**  `CASH` | `CARD`. */
+	channel: string,
+	/**  `None` — taklif qilingan ulush. */
+	share: string | null,
+};
 
 /**  Pul DTO (DESKTOP_PROMPT 3.2): `minor` JS 2^53 chegarasidan himoya uchun string. */
 export type MoneyDto = {
@@ -31,7 +96,74 @@ export type MoneyDto = {
 	formatted: string,
 };
 
+export type ObligationDto = {
+	id: string,
+	name: string,
+	/**  `RECURRING` | `NASIYA`. */
+	kind: string,
+	owner: string,
+	amount: MoneyDto,
+	due_day: number,
+	creditor: string | null,
+	remaining: MoneyDto | null,
+};
+
+export type ObligationInput = {
+	name: string,
+	amount: string,
+	due_day: number,
+	/**  `LANDLORD` | `BANK` | `SHOP` | `STATE` | `FUEL` | `OTHER`. */
+	owner: string,
+};
+
+export type OverviewDto = {
+	month: string,
+	income: MoneyDto,
+	obligations: MoneyDto,
+	expenses: MoneyDto,
+	savings: MoneyDto,
+	month_result: MoneyDto,
+	unexplained: MoneyDto,
+	categories: CategoryTotalDto[],
+	owners: OwnerShareDto[],
+	self_paid_bp: number,
+};
+
+export type OwnerShareDto = {
+	/**  `None` — o'zingiz bo'lmagan "boshqa"; egalar `LANDLORD`, `BANK`, `SHOP`, `STATE`, `FUEL`, `OTHER`. */
+	owner: string | null,
+	amount: MoneyDto,
+	bp: number,
+};
+
+export type RecordedDto = {
+	income_id: string,
+	share: MoneyDto,
+	vault_balance: MoneyDto,
+};
+
+export type RuleDto = { kind: "Percent"; bp: number } | { kind: "MonthlyFixed"; target: MoneyDto };
+
+export type RuleInput = {
+	/**  `PERCENT` (value — bazis punkt, masalan "500") yoki `MONTHLY_FIXED` (value — so'mda summa). */
+	kind: string,
+	value: string,
+};
+
+export type SuggestionDto = {
+	share: MoneyDto,
+	allocated_this_month: MoneyDto,
+	rule: RuleDto,
+};
+
 export type VaultStateDto = { kind: "Uninitialized" } | { kind: "Locked"; retry_after_secs: number } | { kind: "Unlocked" };
+
+export type WithdrawalDto = {
+	id: string,
+	amount: MoneyDto,
+	reason: string,
+	available_at: string,
+};
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {

@@ -10,6 +10,7 @@ mod error;
 mod format;
 mod fx;
 mod money;
+mod parse;
 mod rounding;
 
 pub use allocate::{allocate, percent_of};
@@ -18,4 +19,5 @@ pub use error::MoneyError;
 pub use format::{format_money, Locale};
 pub use fx::FxRate;
 pub use money::Money;
+pub use parse::parse_amount;
 pub use rounding::round_half_up;

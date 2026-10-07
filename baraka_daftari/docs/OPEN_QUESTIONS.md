@@ -12,3 +12,11 @@
 10. **PIN unutilsa** tiklash yo'li yo'q (ataylab). Onboarding (D15) da bu ochiq ogohlantirilishi kerak.
 11. **Lockout fayli** (`vault.json`) hujumchi tomonidan tahrirlanishi mumkin; lekin fayl bor hujumchi baribir Argon2id + keyring sirini buzishi kerak. Lockout faqat onlayn taxminlardan himoya.
 12. **Ekran qulfi bilan qulflash** (Windows sessiya qulfi hodisasi) hali ulanmagan — hozir faqat harakatsizlik taymeri va `Ctrl+L`.
+13. **Nasiya modeli vaqtinchalik.** SPEC bo'yicha nasiya `Debt (SHOP)` ga birlashadi (D9). Hozir `obligations` (`kind = NASIYA`) da turadi; D9 migratsiyasi uni `debts` ga ko'chiradi. Tasdiqlang.
+14. **Oy yakuni va izohsiz summa ta'rifi.** `oy yakuni = daromad − majburiyat − xarajat` (jamg'arma egasida qoladi), `izohsiz = oy yakuni − jamg'arma`. Vektor `unexplained_gap` shu ta'rifda. Mobil bilan tasdiqlash kerak.
+15. **Streak ta'rifi:** hafta "bajarilgan" — unda kamida bitta `ALLOCATION` bor; joriy (tugamagan) hafta ketma-ketlikni uzmaydi. Boshlang'ich balans va qo'lda olish/qo'yish hisobga kirmaydi. Mobil bilan tasdiqlash kerak (`streak.json`).
+16. **Audit va oddiy xarajat** bir oyda ikkalasi kiritilsa yig'iladi (audit — kiritilmagan oy uchun mo'ljallangan). Kerak bo'lsa kategoriya bo'yicha "audit oddiy xarajatni almashtiradi" qoidasini qo'shamiz.
+17. **Doimiy majburiyatlar har oy to'langan deb hisoblanadi** (alohida to'lov yozuvi yo'q). To'lov tarixi va eslatmalar D7 da (bildirishnomalar).
+18. **Toshkent vaqti** = UTC+5 qat'iy ofset (`chrono-tz` kerak emas). O'zbekistonda yozgi vaqt yo'q; qoida o'zgarsa `TASHKENT_OFFSET_HOURS` yagona joyda.
+19. **Pul olish pauzasi 24 soat** (spetsifikatsiyada raqam yo'q — biz tanladik). «Bu haqiqatan favqulodda holatmi?» savoli D8 (qorovul pul) da qo'shiladi.
+20. **Server xabarlari o'zbekcha** (`Invalid.message`), rus tilida ham o'zbekcha ko'rinadi; kodlangan xato turlari ikkala tilda tarjima qilingan.

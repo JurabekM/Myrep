@@ -1,8 +1,9 @@
 use std::sync::Mutex;
 
-use money::{allocate, Currency, Locale, Money};
+use money::{allocate, Currency, Locale, Money, MoneyError};
 use security::{KeyringStore, SecurityError};
 use serde::Serialize;
+use services::ServiceError;
 use specta::Type;
 use tauri::State;
 use zeroize::Zeroizing;
@@ -20,11 +21,48 @@ pub type AppSession = Mutex<Session<KeyringStore>>;
 pub enum CommandError {
     InvalidPin,
     WrongPin,
-    Locked { retry_after_secs: u32 },
+    Locked {
+        retry_after_secs: u32,
+    },
     NotInitialized,
     AlreadyInitialized,
     KeyringMissing,
-    Internal { message: String },
+    /// Summa matni noto'g'ri (masalan, "12abc").
+    InvalidAmount,
+    Invalid {
+        message: String,
+    },
+    NotFound,
+    InsufficientFunds,
+    OpeningBalanceExists,
+    /// "Kelajagim"dan pul olish pauzasi tugamagan.
+    Cooling {
+        remaining_secs: u32,
+    },
+    Internal {
+        message: String,
+    },
+}
+
+impl From<ServiceError> for CommandError {
+    fn from(e: ServiceError) -> Self {
+        match e {
+            ServiceError::Money(MoneyError::Parse(_)) => Self::InvalidAmount,
+            ServiceError::Invalid(m) => Self::Invalid {
+                message: m.to_owned(),
+            },
+            ServiceError::NotFound => Self::NotFound,
+            ServiceError::InsufficientFunds => Self::InsufficientFunds,
+            ServiceError::OpeningBalanceExists => Self::OpeningBalanceExists,
+            ServiceError::Cooling { remaining_secs } => Self::Cooling {
+                remaining_secs: u32::try_from(remaining_secs.max(0)).unwrap_or(u32::MAX),
+            },
+            // Ichki xato matnlarida ma'lumot bo'lmasligi uchun umumiy xabar.
+            ServiceError::Storage(_) | ServiceError::Money(_) => Self::Internal {
+                message: "xizmat xatosi".into(),
+            },
+        }
+    }
 }
 
 fn secs(v: u64) -> u32 {
@@ -53,6 +91,7 @@ impl From<SessionError> for CommandError {
             SessionError::Storage(_) => Self::Internal {
                 message: "baza xatosi".into(),
             },
+            SessionError::Service(s) => s.into(),
         }
     }
 }
@@ -83,7 +122,7 @@ pub fn unix_now() -> i64 {
         .map_or(0, |d| i64::try_from(d.as_secs()).unwrap_or(i64::MAX))
 }
 
-fn with_session<T>(
+pub fn with_session<T>(
     state: &State<'_, AppSession>,
     f: impl FnOnce(&mut Session<KeyringStore>) -> Result<T, SessionError>,
 ) -> Result<T, CommandError> {

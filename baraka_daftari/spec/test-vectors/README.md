@@ -15,3 +15,11 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | percent_of | `{"minor": "80000000"}` |
 | fx_convert | `{"minor": "...", "currency": "UZS"}` yoki `{"error": "CURRENCY_MISMATCH" \| "INVALID_RATE"}` |
 | money_format | `{"text": "8 000 000 so'm"}` |
+
+### D4 da qo'shilgan suite'lar
+| suite | kirish | expected |
+|---|---|---|
+| unexplained_gap | `income, obligations, expenses, savings, currency` | `{"month_result", "unexplained"}` (manfiy bo'lishi mumkin) |
+| streak | `dates[], today, anchor` (`FRIDAY` ...) | `{"current_weeks", "best_weeks", "saved_days"}` |
+| share_suggestion | `rule {kind: PERCENT\|MONTHLY_FIXED, value}`, `income`, `allocated_this_month` | `{"minor"}` |
+| money_parse | `text`, `currency` | `{"minor"}` yoki `{"error": "PARSE" \| "OVERFLOW"}` |

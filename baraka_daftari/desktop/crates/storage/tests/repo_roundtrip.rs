@@ -77,6 +77,7 @@ fn world() -> World {
         meta: fx.meta(&hid),
         name: "Somsa".into(),
         necessity: Some(Necessity::Havas),
+        owner: None,
     };
     repo::insert(db.conn(), &category).unwrap();
     World {
@@ -138,6 +139,7 @@ fn income_and_expense_roundtrip_with_nullable_future_fields() {
         is_gift: None,
         is_ostentation: None,
         funded_by_debt: None,
+        audit_month: None,
     };
     let full = Expense {
         meta: w.fx.meta(hid),
@@ -185,6 +187,8 @@ fn assets_snapshots_vault_and_remaining_tables_roundtrip() {
         amount: Money::new(80_000_000, Currency::Uzs),
         occurred_at: w.fx.clock.now(),
         note: Some("ro'molcha".into()),
+        source: Some(VaultSource::Opening),
+        income_id: None,
     };
     repo::insert(c, &tx).unwrap();
     let rule = AllocationRule {
@@ -199,6 +203,10 @@ fn assets_snapshots_vault_and_remaining_tables_roundtrip() {
         name: "Ijara".into(),
         amount: Money::new(300_000_000, Currency::Uzs),
         due_day: 5,
+        kind: ObligationKind::Recurring,
+        owner: MoneyOwner::Landlord,
+        creditor: None,
+        remaining: None,
     };
     repo::insert(c, &ob).unwrap();
     let rate = FxRateRecord {
@@ -300,6 +308,7 @@ fn transaction_rolls_back_on_error() {
         meta: w.fx.meta(&hid),
         name: "Yangi".into(),
         necessity: None,
+        owner: None,
     };
     let dup = extra.clone(); // bir xil id => ikkinchi insert xato beradi
     let res: Result<(), StorageError> = w.db.transaction(|tx| {
@@ -311,4 +320,94 @@ fn transaction_rolls_back_on_error() {
         repo::list::<Category>(w.db.conn(), &hid).unwrap().len(),
         before
     );
+}
+
+#[test]
+fn v2_fields_roundtrip_nasiya_owner_audit_and_withdrawal() {
+    let w = world();
+    let hid = &w.household.meta.id;
+    let c = w.db.conn();
+
+    let fuel = Category {
+        meta: w.fx.meta(hid),
+        name: "Benzin".into(),
+        necessity: None,
+        owner: Some(MoneyOwner::Fuel),
+    };
+    repo::insert(c, &fuel).unwrap();
+    assert_eq!(
+        repo::get::<Category>(c, &fuel.meta.id).unwrap().unwrap(),
+        fuel
+    );
+
+    let nasiya = Obligation {
+        meta: w.fx.meta(hid),
+        name: "Do'kon nasiyasi".into(),
+        amount: Money::new(50_000_000, Currency::Uzs),
+        due_day: 1,
+        kind: ObligationKind::Nasiya,
+        owner: MoneyOwner::Shop,
+        creditor: Some("Salim aka do'koni".into()),
+        remaining: Some(Money::new(30_000_000, Currency::Uzs)),
+    };
+    repo::insert(c, &nasiya).unwrap();
+    assert_eq!(
+        repo::get::<Obligation>(c, &nasiya.meta.id)
+            .unwrap()
+            .unwrap(),
+        nasiya
+    );
+
+    let audit = Expense {
+        meta: w.fx.meta(hid),
+        member_id: w.member.meta.id.clone(),
+        category_id: fuel.meta.id.clone(),
+        amount: Money::new(70_000_000, Currency::Uzs),
+        spent_on: day(),
+        payment_channel: PaymentChannel::Cash,
+        necessity: None,
+        envelope_id: None,
+        is_gift: None,
+        is_ostentation: None,
+        funded_by_debt: None,
+        audit_month: Some("2026-09".into()),
+    };
+    repo::insert(c, &audit).unwrap();
+    assert_eq!(
+        repo::get::<Expense>(c, &audit.meta.id).unwrap().unwrap(),
+        audit
+    );
+
+    let asset = Asset {
+        meta: w.fx.meta(hid),
+        asset_type: AssetType::Vault,
+        name: "Kelajagim".into(),
+        quantity: 0,
+        unit: "tiyin".into(),
+        currency: Some(Currency::Uzs),
+        acquired_at: w.fx.clock.now(),
+    };
+    repo::insert(c, &asset).unwrap();
+    let req = WithdrawalRequest {
+        meta: w.fx.meta(hid),
+        asset_id: asset.meta.id.clone(),
+        amount: Money::new(1_000_000, Currency::Uzs),
+        reason: "Dori".into(),
+        available_at: w.fx.clock.now(),
+        status: WithdrawalStatus::Pending,
+    };
+    repo::insert(c, &req).unwrap();
+    assert_eq!(
+        repo::get::<WithdrawalRequest>(c, &req.meta.id)
+            .unwrap()
+            .unwrap(),
+        req
+    );
+    // CHECK: summa musbat bo'lishi shart.
+    let bad = WithdrawalRequest {
+        meta: w.fx.meta(hid),
+        amount: Money::new(0, Currency::Uzs),
+        ..req
+    };
+    assert!(repo::insert(c, &bad).is_err());
 }

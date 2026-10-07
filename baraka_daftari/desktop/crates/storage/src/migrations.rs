@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 1;
+pub const SCHEMA_VERSION: usize = 2;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -89,10 +89,34 @@ CREATE TABLE fx_rates (
 );
 ";
 
+/// D4: Kelajagim manbasi va daromadga bog'lanish, majburiyat turlari/egalari, nasiya, audit,
+/// pul olish so'rovlari. Faqat `ADD COLUMN` va yangi jadvallar: v1 ma'lumotlari saqlanadi.
+const V2: &str = "
+ALTER TABLE vault_transactions ADD COLUMN source TEXT CHECK (source IN ('ALLOCATION','OPENING','MANUAL'));
+ALTER TABLE vault_transactions ADD COLUMN income_id TEXT REFERENCES incomes(id);
+CREATE INDEX idx_vault_tx_asset_time ON vault_transactions (asset_id, occurred_at);
+ALTER TABLE obligations ADD COLUMN kind TEXT NOT NULL DEFAULT 'RECURRING' CHECK (kind IN ('RECURRING','NASIYA'));
+ALTER TABLE obligations ADD COLUMN owner TEXT NOT NULL DEFAULT 'OTHER'
+  CHECK (owner IN ('LANDLORD','BANK','SHOP','STATE','FUEL','OTHER'));
+ALTER TABLE obligations ADD COLUMN creditor TEXT;
+ALTER TABLE obligations ADD COLUMN remaining_minor INTEGER;
+ALTER TABLE categories ADD COLUMN owner TEXT CHECK (owner IN ('LANDLORD','BANK','SHOP','STATE','FUEL','OTHER'));
+ALTER TABLE expenses ADD COLUMN audit_month TEXT;
+CREATE INDEX idx_expenses_audit ON expenses (household_id, audit_month);
+CREATE TABLE withdrawal_requests (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  asset_id TEXT NOT NULL REFERENCES assets(id), amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  currency TEXT NOT NULL, reason TEXT NOT NULL, available_at TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('PENDING','CONFIRMED','CANCELLED'))
+);
+";
+
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(V1)])
+    Migrations::new(vec![M::up(V1), M::up(V2)])
 }
 
 #[cfg(test)]
@@ -128,7 +152,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 11);
+        assert_eq!(tables.len(), 12);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))
@@ -149,5 +173,36 @@ mod tests {
                 assert!(cols.iter().any(|x| x == c), "{t} da {c} yo'q");
             }
         }
+    }
+
+    /// v1 bazasi (ma'lumot bilan) v2 ga yangilanganda hech narsa yo'qolmaydi, yangi ustunlar standart qiymat oladi.
+    #[test]
+    fn v1_data_survives_upgrade_to_v2() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        migrations().to_version(&mut conn, 1).unwrap();
+        conn.execute_batch(
+            "INSERT INTO households VALUES ('h','h','t','t',NULL,1,'d','Oila','UZS');
+             INSERT INTO obligations VALUES ('o','h','t','t',NULL,1,'d','Ijara',300000000,'UZS',5);
+             INSERT INTO categories VALUES ('c','h','t','t',NULL,1,'d','Non',NULL);",
+        )
+        .unwrap();
+        migrations().to_latest(&mut conn).unwrap();
+        let (name, kind, owner, remaining): (String, String, String, Option<i64>) = conn
+            .query_row(
+                "SELECT name, kind, owner, remaining_minor FROM obligations WHERE id='o'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+            )
+            .unwrap();
+        assert_eq!(
+            (name.as_str(), kind.as_str(), owner.as_str(), remaining),
+            ("Ijara", "RECURRING", "OTHER", None)
+        );
+        let cat_owner: Option<String> = conn
+            .query_row("SELECT owner FROM categories WHERE id='c'", [], |r| {
+                r.get(0)
+            })
+            .unwrap();
+        assert_eq!(cat_owner, None);
     }
 }

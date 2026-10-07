@@ -2,13 +2,6 @@
   "app": {
     "title": "Baraka daftari"
   },
-  "demo": {
-    "heading": "Pulni bo'lish (D1 namunasi)",
-    "total": "Summa (tiyinda)",
-    "run": "Bo'lish",
-    "result": "Natija",
-    "error": "Xato"
-  },
   "disclaimer": "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas.",
   "lock": {
     "pin": "PIN (6 raqam)",
@@ -27,5 +20,139 @@
       "mismatch": "PIN'lar bir xil emas.",
       "wait": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring."
     }
+  },
+  "nav": {
+    "label": "Asosiy menyu",
+    "home": "Bosh sahifa",
+    "income": "Daromad",
+    "vault": "Kelajagim",
+    "budget": "Byudjet",
+    "obligations": "Majburiyatlar",
+    "quickEntry": "Tez kiritish"
+  },
+  "errors": {
+    "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
+    "WrongPin": "PIN noto'g'ri.",
+    "Locked": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring.",
+    "NotInitialized": "Daftar hali sozlanmagan.",
+    "AlreadyInitialized": "Daftar allaqachon sozlangan.",
+    "KeyringMissing": "Daftar kaliti topilmadi.",
+    "InvalidAmount": "Summani raqam bilan yozing (masalan: 150 000 yoki 1500,50).",
+    "Invalid": "Ma'lumot noto'g'ri.",
+    "NotFound": "Topilmadi.",
+    "InsufficientFunds": "Kelajagimda mablag' yetarli emas.",
+    "OpeningBalanceExists": "Boshlang'ich balans allaqachon kiritilgan.",
+    "Cooling": "Hali erta: yana {{count}} soniya kutish kerak.",
+    "Internal": "Kutilmagan xato. Qayta urinib ko'ring."
+  },
+  "source": {
+    "DAILY_WORK": "Kunlik ish",
+    "ORDER": "Buyurtma",
+    "SALARY": "Oylik",
+    "OTHER": "Boshqa"
+  },
+  "channel": {
+    "CASH": "Naqd",
+    "CARD": "Karta"
+  },
+  "owner": {
+    "LANDLORD": "Uy egasi",
+    "BANK": "Bank",
+    "SHOP": "Do'kondor",
+    "STATE": "Davlat",
+    "FUEL": "Yoqilg'i",
+    "OTHER": "Boshqa xarajatlar"
+  },
+  "home": {
+    "selfPaid": "Shu oy o'zingizga to'ladingiz",
+    "ofIncome": "Daromadingizning {{bp}} qismi ({{income}} dan)",
+    "raiseRate": "Ketma-ket yaxshi ketyapti. Ulushni {{bp}} ga oshiramizmi?",
+    "raiseAccept": "Ha, oshiramiz",
+    "vault": "Kelajagim",
+    "openVault": "Kelajagimni ochish",
+    "pendingWithdrawals": "Kutilayotgan pul olish so'rovlari: {{count}}",
+    "streak": "Ketma-ketlik",
+    "weeks": "{{count}} hafta",
+    "streakDetails": "Eng uzog'i: {{best}} hafta · ajratilgan kunlar: {{days}}",
+    "monthResult": "Oy yakuni",
+    "weekTasks": "Shu haftaning vazifalari",
+    "fridayChapter": "Juma qissasi",
+    "comingSoon": "Tez orada."
+  },
+  "quick": {
+    "title": "Yangi daromad",
+    "description": "Daromad summasini yozing va Enter bosing.",
+    "amount": "Summa (so'm)",
+    "suggestion": "Shundan {{share}} — kelajagingiz uchun.",
+    "source": "Manba",
+    "channel": "Kanal",
+    "shareOverride": "Ulushni o'zgartirish (ixtiyoriy)",
+    "save": "Saqlash"
+  },
+  "income": {
+    "add": "Yangi daromad",
+    "monthTotal": "Shu oy jami: {{total}}",
+    "empty": "Hali daromad kiritilmagan."
+  },
+  "vault": {
+    "untouchable": "Bu pulga tegilmaydi: undan olish uchun pauza va tasdiq kerak.",
+    "rule": "Ulush qoidasi",
+    "rulePercent": "Har bir daromaddan {{bp}}",
+    "ruleFixed": "Oyiga {{amount}}",
+    "fixedLabel": "Oyiga aniq summa (so'm)",
+    "fixedSave": "Saqlash",
+    "opening": "Boshlang'ich balans",
+    "openingHint": "Ilovadan oldin yig'ilgan jamg'armani (masalan, ro'molchadagi pulni) bir marta kiriting. U \"o'zingizga to'langan\"ga qo'shilmaydi.",
+    "openingLabel": "Boshlang'ich balans (so'm)",
+    "openingSave": "Kiritish",
+    "withdraw": "Pul olish",
+    "withdrawHint": "Pul darrov chiqmaydi: so'rov yuborasiz, 24 soatdan keyin tasdiqlaysiz. Shu orada o'ylab ko'rish uchun vaqt bor.",
+    "withdrawAmount": "Summa (so'm)",
+    "withdrawReason": "Nima uchun kerak?",
+    "withdrawRequest": "So'rov yuborish",
+    "availableAt": "Tasdiqlash mumkin: {{at}}",
+    "confirm": "Tasdiqlash",
+    "cancel": "Bekor qilish"
+  },
+  "audit": {
+    "month": "Oy",
+    "previous": "O'tgan oy",
+    "current": "Joriy oy",
+    "income": "Daromad",
+    "obligations": "Majburiyatlar",
+    "expenses": "Xarajatlar",
+    "savings": "Kelajagimga ajratilgan",
+    "result": "Oy yakuni",
+    "unexplainedLabel": "Izohsiz qolgan",
+    "start": "Auditni boshlash",
+    "progress": "{{current}} / {{total}}",
+    "currentValue": "Hozir yozilgan: {{amount}}",
+    "keys": "Enter — saqlab keyingisiga · Shift+Enter — orqaga · Esc — yopish. Bo'sh qoldirsangiz o'zgarmaydi, 0 yozsangiz o'chadi.",
+    "summary": "Audit natijasi",
+    "unexplained": "Hisobga olinmagan summa: {{amount}}",
+    "unexplainedHint": "Bu pul qayerga ketganini eslab ko'ring: mayda xarajatlar odatda shu yerda yashirinadi.",
+    "finish": "Tayyor"
+  },
+  "whose": {
+    "title": "Kimning puli?",
+    "you": "O'zingiz"
+  },
+  "obl": {
+    "recurring": "Doimiy to'lovlar",
+    "nasiya": "Nasiya daftari",
+    "name": "Nomi",
+    "amount": "Oylik summa (so'm)",
+    "dueDay": "To'lov kuni",
+    "owner": "Kimga",
+    "add": "Qo'shish",
+    "remove": "O'chirish",
+    "day": "har oyning {{day}}-kuni",
+    "creditor": "Do'kondor",
+    "nasiyaTotal": "Qarz summasi (so'm)",
+    "addNasiya": "Nasiya qo'shish",
+    "remaining": "qoldi {{amount}}",
+    "of": "jami {{amount}}",
+    "pay": "To'lov (so'm)",
+    "payButton": "To'lash"
   }
 }

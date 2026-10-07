@@ -20,6 +20,8 @@ thiserror = { workspace = true }
 money = { path = "../crates/money" }
 security = { path = "../crates/security" }
 storage = { path = "../crates/storage" }
+domain = { path = "../crates/domain" }
+services = { path = "../crates/services" }
 zeroize = "1"
 
 [dev-dependencies]
