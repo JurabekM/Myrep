@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 2;
+pub const SCHEMA_VERSION: usize = 3;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -113,10 +113,44 @@ CREATE TABLE withdrawal_requests (
 );
 ";
 
+/// D5: kontent jarayoni. Partial UNIQUE indekslar faqat faol (o'chirilmagan) yozuvlarni cheklaydi,
+/// shuning uchun tombstone'lar (kelajakdagi sinxronlash) to'qnashmaydi.
+const V3: &str = "
+CREATE TABLE task_completions (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  chapter_id TEXT NOT NULL, task_id TEXT NOT NULL, week_start TEXT NOT NULL, completed_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_task_completion ON task_completions (household_id, task_id, week_start)
+  WHERE deleted_at IS NULL;
+CREATE TABLE chapter_progress (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  chapter_id TEXT NOT NULL, opened_on TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_chapter_progress ON chapter_progress (household_id, chapter_id) WHERE deleted_at IS NULL;
+CREATE TABLE daftar_pages (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  chapter_id TEXT NOT NULL, body TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_daftar_page ON daftar_pages (household_id, chapter_id) WHERE deleted_at IS NULL;
+CREATE TABLE settings (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  key TEXT NOT NULL, value TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_setting ON settings (household_id, key) WHERE deleted_at IS NULL;
+";
+
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(V1), M::up(V2)])
+    Migrations::new(vec![M::up(V1), M::up(V2), M::up(V3)])
 }
 
 #[cfg(test)]
@@ -152,7 +186,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 12);
+        assert_eq!(tables.len(), 16);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

@@ -2,9 +2,9 @@ name: baraka-desktop
 
 on:
   push:
-    paths: ['baraka_daftari/desktop/**', 'baraka_daftari/spec/**', '.github/workflows/baraka-desktop.yml']
+    paths: ['baraka_daftari/desktop/**', 'baraka_daftari/spec/**', 'baraka_daftari/content/**', '.github/workflows/baraka-desktop.yml']
   pull_request:
-    paths: ['baraka_daftari/desktop/**', 'baraka_daftari/spec/**', '.github/workflows/baraka-desktop.yml']
+    paths: ['baraka_daftari/desktop/**', 'baraka_daftari/spec/**', 'baraka_daftari/content/**', '.github/workflows/baraka-desktop.yml']
 
 defaults:
   run:

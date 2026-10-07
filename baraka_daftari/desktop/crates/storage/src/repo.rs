@@ -4,9 +4,10 @@
 
 use domain::{
     date_to_string, ts_to_string, AllocationKind, AllocationRule, Asset, AssetSnapshot, AssetType,
-    Category, Expense, FxRateRecord, Household, Income, Member, MemberRole, Meta, MoneyOwner,
-    Necessity, Obligation, ObligationKind, OffsetDateTime, PaymentChannel, VaultSource,
-    VaultTransaction, VaultTxKind, WithdrawalRequest, WithdrawalStatus,
+    Category, ChapterProgress, DaftarPage, Expense, FxRateRecord, Household, Income, Member,
+    MemberRole, Meta, MoneyOwner, Necessity, Obligation, ObligationKind, OffsetDateTime,
+    PaymentChannel, Setting, TaskCompletion, VaultSource, VaultTransaction, VaultTxKind,
+    WithdrawalRequest, WithdrawalStatus,
 };
 use money::Money;
 use rusqlite::{types::Value, Connection, OptionalExtension, Row};
@@ -578,6 +579,85 @@ impl Record for WithdrawalRequest {
             reason: r.get(10)?,
             available_at: row::ts(r, 11)?,
             status: row::parsed(r, 12, WithdrawalStatus::parse)?,
+        })
+    }
+}
+
+impl Record for TaskCompletion {
+    const TABLE: &'static str = "task_completions";
+    const COLS: &'static [&'static str] = &["chapter_id", "task_id", "week_start", "completed_at"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.chapter_id),
+            t(&self.task_id),
+            date_val(self.week_start)?,
+            ts_val(self.completed_at)?,
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            chapter_id: r.get(7)?,
+            task_id: r.get(8)?,
+            week_start: row::date(r, 9)?,
+            completed_at: row::ts(r, 10)?,
+        })
+    }
+}
+
+impl Record for ChapterProgress {
+    const TABLE: &'static str = "chapter_progress";
+    const COLS: &'static [&'static str] = &["chapter_id", "opened_on"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![t(&self.chapter_id), date_val(self.opened_on)?])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            chapter_id: r.get(7)?,
+            opened_on: row::date(r, 8)?,
+        })
+    }
+}
+
+impl Record for DaftarPage {
+    const TABLE: &'static str = "daftar_pages";
+    const COLS: &'static [&'static str] = &["chapter_id", "body"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![t(&self.chapter_id), t(&self.body)])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            chapter_id: r.get(7)?,
+            body: r.get(8)?,
+        })
+    }
+}
+
+impl Record for Setting {
+    const TABLE: &'static str = "settings";
+    const COLS: &'static [&'static str] = &["key", "value"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![t(&self.key), t(&self.value)])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            key: r.get(7)?,
+            value: r.get(8)?,
         })
     }
 }

@@ -25,3 +25,13 @@
 - Tauri: 17 ta yangi command (`ledger.rs`), sessiya endi `Ctx` va barqaror `device_id` saqlaydi.
 - UI: ilova qobig'i + navigatsiya, **bosh sahifa slot arxitekturasi** (birinchi slot — «o'zingizga to'ladingiz»), `Ctrl+N` tez kiritish (summa → Enter), Kelajagim sahifasi, Byudjet sahifasi va audit ustasi (faqat klaviatura: Enter/Shift+Enter/Esc), «Kimning puli?», majburiyatlar va nasiya. i18n kalitlari testi (uz/ru).
 - Kechiktirildi / ataylab qilinmadi: daromadni tahrirlash/o'chirish, oila a'zosini tanlash (D6 oila rejimi), oylik davr boshlanish kuni sozlamasi, haftalik vazifa va juma bobi (D5), tauri-driver E2E (D15).
+
+## D5 — Kontent dvigateli (5 bob)
+- `baraka_daftari/content/ch01..ch05.json` (placeholder, asl matn ko'chirilmagan; format `content/README.md` da). Har bobda aniq 3 ta haftalik vazifa, «Daftar sahifasi» savoli, diniy bloklar `PENDING` (manba majburiy).
+- Yangi `content` crate (sof): JSON yuklash va tekshirish (ID takrori, 3 vazifa, diniy blokda manba), **`visible_blocks` — `Release` rejimida tasdiqlanmagan diniy matn hech qachon chiqmaydi** (butun o'rnatilgan kontent bo'yicha test), `TaskTrigger` + `trigger_met`, `UnlockPolicy` + `decide`.
+- Vektor: `chapter_unlock.json` (12 case) — mobil ham shunga mos bo'lishi shart.
+- Sxema v3: `task_completions`, `chapter_progress`, `daftar_pages`, `settings` (partial UNIQUE indekslar: tombstone'lar to'qnashmaydi).
+- `services::learning`: yo'l (`journey`), bob tafsiloti, qo'lda vazifa belgilash, Daftar sahifasi, sozlanadigan siyosat. Bob ochilishi odat asosida: faqat **tugagan** haftalar, oxirgi N haftaning kamida M tasida kamida K vazifa (standart 3/2/2); haftada ko'pi bilan bitta bob; vaqt o'zi yetmaydi (testlangan).
+- Audit qayta kiritilganda yozuv yangilanadi (o'chirib qayta yaratilmaydi), shunda eski haftalar vazifasi «audit» yo'qolmaydi.
+- Tauri: 5 command (`study.rs`); UI: «Boblar» sahifasi (o'qish, Daftar sahifasi, vazifalar, ochilish sharti sozlamasi), bosh sahifadagi «haftalik vazifalar» va «juma qissasi» slotlari haqiqiy ma'lumot bilan.
+- Kechiktirildi: audio, qissa matnlari (litsenziya), 6–12-boblar, bildirishnomalar (D7).

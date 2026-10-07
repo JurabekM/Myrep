@@ -34,14 +34,48 @@ export const commands = {
 	addNasiya: (creditor: string, totalText: string) => typedError<ObligationDto, CommandError>(__TAURI_INVOKE("add_nasiya", { creditor, totalText })),
 	payNasiya: (id: string, amountText: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("pay_nasiya", { id, amountText })),
 	removeObligation: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_obligation", { id })),
+	journey: () => typedError<JourneyDto, CommandError>(__TAURI_INVOKE("journey")),
+	chapterDetail: (id: string) => typedError<ChapterDetailDto, CommandError>(__TAURI_INVOKE("chapter_detail", { id })),
+	setTaskDone: (chapterId: string, taskId: string, done: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_task_done", { chapterId, taskId, done })),
+	savePage: (chapterId: string, body: string) => typedError<null, CommandError>(__TAURI_INVOKE("save_page", { chapterId, body })),
+	setUnlockPolicy: (input: PolicyInput) => typedError<null, CommandError>(__TAURI_INVOKE("set_unlock_policy", { input })),
 };
 
 /* Types */
+export type BlockDto = {
+	id: string,
+	text: string,
+	source: string | null,
+	/**  Ulamo tekshiruvidan o'tmagan (faqat ishlab chiqish rejimida ko'rinadi). */
+	unreviewed: boolean,
+};
+
 export type CategoryTotalDto = {
 	category_id: string,
 	name: string,
 	owner: string | null,
 	amount: MoneyDto,
+};
+
+export type ChapterDetailDto = {
+	id: string,
+	title: string,
+	law: number,
+	placeholder: boolean,
+	blocks: BlockDto[],
+	page_prompt: string,
+	page_body: string,
+	tasks: TaskDto[],
+};
+
+export type ChapterEntryDto = {
+	id: string,
+	title: string,
+	law: number,
+	order: number,
+	opened: boolean,
+	opened_on: string | null,
+	is_current: boolean,
 };
 
 /**  Frontendga qaytadigan xatolar. Matnlarda summa, ism yoki PIN bo'lmaydi. */
@@ -87,6 +121,18 @@ export type IncomeInput = {
 	channel: string,
 	/**  `None` — taklif qilingan ulush. */
 	share: string | null,
+};
+
+export type JourneyDto = {
+	chapters: ChapterEntryDto[],
+	current_id: string,
+	current_title: string,
+	opened_this_week: boolean,
+	week_start: string,
+	week_tasks: TaskDto[],
+	week_done: number,
+	unlock: UnlockDto | null,
+	policy: PolicyDto,
 };
 
 /**  Pul DTO (DESKTOP_PROMPT 3.2): `minor` JS 2^53 chegarasidan himoya uchun string. */
@@ -136,6 +182,18 @@ export type OwnerShareDto = {
 	bp: number,
 };
 
+export type PolicyDto = {
+	window_weeks: number,
+	min_satisfied_weeks: number,
+	min_tasks_per_week: number,
+};
+
+export type PolicyInput = {
+	window_weeks: number,
+	min_satisfied_weeks: number,
+	min_tasks_per_week: number,
+};
+
 export type RecordedDto = {
 	income_id: string,
 	share: MoneyDto,
@@ -154,6 +212,24 @@ export type SuggestionDto = {
 	share: MoneyDto,
 	allocated_this_month: MoneyDto,
 	rule: RuleDto,
+};
+
+export type TaskDto = {
+	id: string,
+	title: string,
+	done: boolean,
+	/**  Ma'lumotdan avtomatik aniqlangan. */
+	auto_detected: boolean,
+	/**  Foydalanuvchi qo'lda belgilaydigan vazifa. */
+	manual: boolean,
+};
+
+export type UnlockDto = {
+	unlocked: boolean,
+	satisfied_weeks: number,
+	needed_weeks: number,
+	/**  Hali birorta ham hafta tugamagan bo'lsa 0. */
+	weeks_in_window: number,
 };
 
 export type VaultStateDto = { kind: "Uninitialized" } | { kind: "Locked"; retry_after_secs: number } | { kind: "Unlocked" };

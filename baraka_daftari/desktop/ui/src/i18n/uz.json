@@ -28,7 +28,8 @@
     "vault": "Kelajagim",
     "budget": "Byudjet",
     "obligations": "Majburiyatlar",
-    "quickEntry": "Tez kiritish"
+    "quickEntry": "Tez kiritish",
+    "study": "Boblar"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -77,7 +78,11 @@
     "monthResult": "Oy yakuni",
     "weekTasks": "Shu haftaning vazifalari",
     "fridayChapter": "Juma qissasi",
-    "comingSoon": "Tez orada."
+    "comingSoon": "Tez orada.",
+    "tasksProgress": "Bajarildi: {{done}} / {{total}}",
+    "openTasks": "Vazifalarni ochish",
+    "newChapter": "Yangi bob ochildi!",
+    "readChapter": "Qissani o'qish"
   },
   "quick": {
     "title": "Yangi daromad",
@@ -154,5 +159,24 @@
     "of": "jami {{amount}}",
     "pay": "To'lov (so'm)",
     "payButton": "To'lash"
+  },
+  "study": {
+    "law": "{{n}}-qonun",
+    "locked": "Qulflangan",
+    "unreviewed": "Tekshirilmagan",
+    "page": "Daftar sahifasi",
+    "savePage": "Saqlash",
+    "tasks": "Shu haftaning vazifalari",
+    "autoTask": "(avtomatik aniqlanadi)",
+    "lastChapter": "Bu hozircha oxirgi bob.",
+    "unlockedSoon": "Keyingi bob shu juma ochiladi.",
+    "unlockFirstWeek": "Keyingi bob: birinchi hafta tugagach vazifalaringiz tekshiriladi (juma kuni).",
+    "unlockProgress": "Keyingi bobgacha: {{done}} / {{needed}} hafta yetarli bajarilgan. Shoshilmang: bob odat shakllangach ochiladi.",
+    "policy": "Ochilish shartini sozlash",
+    "policyHint": "Keyingi bob oxirgi N haftaning kamida M tasida kamida K ta vazifa bajarilganda ochiladi.",
+    "policyWindow": "Oxirgi N hafta",
+    "policyWeeks": "Kamida M hafta",
+    "policyTasks": "Haftasiga K vazifa",
+    "policySave": "Saqlash"
   }
 }

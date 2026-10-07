@@ -1,0 +1,345 @@
+{
+  "suite": "chapter_unlock",
+  "version": 1,
+  "description": "Bob ochilish siyosati (SPEC 2C.6): faqat tugagan haftalar baholanadi; oyna siljiydi",
+  "cases": [
+    {
+      "id": "unlock-001",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-07",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 3
+          }
+        ]
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 0,
+        "needed_weeks": 2,
+        "weeks_in_window": 0
+      },
+      "note": "Ochilgan haftada hech narsa baholanmaydi"
+    },
+    {
+      "id": "unlock-002",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-17",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 2
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 3
+          }
+        ]
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 1,
+        "needed_weeks": 2,
+        "weeks_in_window": 1
+      },
+      "note": "Ikkinchi hafta hali tugamagan (payshanba)"
+    },
+    {
+      "id": "unlock-003",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-18",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 2
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 3
+          }
+        ]
+      },
+      "expected": {
+        "decision": "UNLOCKED"
+      },
+      "note": "Ikki yaxshi hafta tugadi (juma) -> ochiladi"
+    },
+    {
+      "id": "unlock-004",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-18",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 1
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 1
+          }
+        ]
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 0,
+        "needed_weeks": 2,
+        "weeks_in_window": 2
+      },
+      "note": "Zaif haftalar sanalmaydi"
+    },
+    {
+      "id": "unlock-005",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-18",
+        "anchor": "FRIDAY",
+        "results": []
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 0,
+        "needed_weeks": 2,
+        "weeks_in_window": 2
+      },
+      "note": "Natijasiz hafta = 0 vazifa"
+    },
+    {
+      "id": "unlock-006",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-10-09",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 0
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 0
+          },
+          {
+            "week_start": "2026-09-18",
+            "completed_tasks": 2
+          },
+          {
+            "week_start": "2026-09-25",
+            "completed_tasks": 0
+          },
+          {
+            "week_start": "2026-10-02",
+            "completed_tasks": 3
+          }
+        ]
+      },
+      "expected": {
+        "decision": "UNLOCKED"
+      },
+      "note": "Oyna siljiydi: eski yomon haftalar unutiladi"
+    },
+    {
+      "id": "unlock-007",
+      "input": {
+        "policy": {
+          "window_weeks": 2,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-10-09",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 0
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 0
+          },
+          {
+            "week_start": "2026-09-18",
+            "completed_tasks": 2
+          },
+          {
+            "week_start": "2026-09-25",
+            "completed_tasks": 0
+          },
+          {
+            "week_start": "2026-10-02",
+            "completed_tasks": 3
+          }
+        ]
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 1,
+        "needed_weeks": 2,
+        "weeks_in_window": 2
+      },
+      "note": "Tor oyna (2 hafta): bitta yaxshi hafta yetmaydi"
+    },
+    {
+      "id": "unlock-008",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 1,
+          "min_tasks_per_week": 1
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-11",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 1
+          }
+        ]
+      },
+      "expected": {
+        "decision": "UNLOCKED"
+      },
+      "note": "Yumshoq shart (1 hafta, 1 vazifa)"
+    },
+    {
+      "id": "unlock-009",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 3,
+          "min_tasks_per_week": 3
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-25",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 3
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 3
+          },
+          {
+            "week_start": "2026-09-18",
+            "completed_tasks": 2
+          }
+        ]
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 2,
+        "needed_weeks": 3,
+        "weeks_in_window": 3
+      },
+      "note": "Qattiq shart (3 hafta, 3 vazifa)"
+    },
+    {
+      "id": "unlock-010",
+      "input": {
+        "policy": {
+          "window_weeks": 1,
+          "min_satisfied_weeks": 0,
+          "min_tasks_per_week": 0
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-10",
+        "anchor": "FRIDAY",
+        "results": []
+      },
+      "expected": {
+        "decision": "LOCKED",
+        "satisfied_weeks": 0,
+        "needed_weeks": 0,
+        "weeks_in_window": 0
+      },
+      "note": "Talab 0 bo'lsa ham kamida bitta tugagan hafta kerak"
+    },
+    {
+      "id": "unlock-011",
+      "input": {
+        "policy": {
+          "window_weeks": 1,
+          "min_satisfied_weeks": 0,
+          "min_tasks_per_week": 0
+        },
+        "opened_week": "2026-09-04",
+        "today": "2026-09-11",
+        "anchor": "FRIDAY",
+        "results": []
+      },
+      "expected": {
+        "decision": "UNLOCKED"
+      },
+      "note": "Talab 0, bitta hafta tugadi"
+    },
+    {
+      "id": "unlock-012",
+      "input": {
+        "policy": {
+          "window_weeks": 3,
+          "min_satisfied_weeks": 2,
+          "min_tasks_per_week": 2
+        },
+        "opened_week": "2026-09-06",
+        "today": "2026-09-18",
+        "anchor": "FRIDAY",
+        "results": [
+          {
+            "week_start": "2026-09-04",
+            "completed_tasks": 2
+          },
+          {
+            "week_start": "2026-09-11",
+            "completed_tasks": 2
+          }
+        ]
+      },
+      "expected": {
+        "decision": "UNLOCKED"
+      },
+      "note": "Ochilgan sana o'z haftasiga keltiriladi (yakshanba -> oldingi juma)"
+    }
+  ]
+}

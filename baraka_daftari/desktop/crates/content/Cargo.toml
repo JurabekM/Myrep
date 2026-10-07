@@ -1,6 +1,6 @@
 [package]
-name = "vectors"
-description = "spec/test-vectors oltin vektorlarini yuklaydi va money crate'ga qarshi ishga tushiradi"
+name = "content"
+description = "Kontent dvigateli: bob JSON'lari, diniy blok filtri, vazifa triggerlari, bob ochilish siyosati (sof, IO yo'q)"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
@@ -8,12 +8,10 @@ publish.workspace = true
 
 [dependencies]
 domain = { path = "../domain" }
-content = { path = "../content" }
-money = { path = "../money" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-time = { version = "0.3", features = ["parsing", "macros"] }
+time = { version = "0.3", features = ["macros"] }
 
 [lints]
 workspace = true

@@ -20,3 +20,8 @@
 18. **Toshkent vaqti** = UTC+5 qat'iy ofset (`chrono-tz` kerak emas). O'zbekistonda yozgi vaqt yo'q; qoida o'zgarsa `TASHKENT_OFFSET_HOURS` yagona joyda.
 19. **Pul olish pauzasi 24 soat** (spetsifikatsiyada raqam yo'q — biz tanladik). «Bu haqiqatan favqulodda holatmi?» savoli D8 (qorovul pul) da qo'shiladi.
 20. **Server xabarlari o'zbekcha** (`Invalid.message`), rus tilida ham o'zbekcha ko'rinadi; kodlangan xato turlari ikkala tilda tarjima qilingan.
+21. **Bob ochilish ta'rifi (mobil bilan tasdiqlash):** faqat tugagan haftalar baholanadi (joriy hafta hisobga olinmaydi); oyna — oxirgi N tugagan hafta; hafta «yetarli» — kamida K vazifa; ochilish uchun kamida M yetarli hafta va kamida bitta tugagan hafta. Yangi bob ochilgan haftasi o'sha bobning 0-haftasi. `chapter_unlock.json` shuni qotiradi.
+22. **«3 hafta ichida 2 tasida vazifalar bajarilgan» — «vazifalar» ni biz «kamida 2 ta (3 tadan)» deb tushundik.** Boshqa ma'no bo'lsa `min_tasks_per_week` standartini o'zgartiramiz (hozir foydalanuvchi sozlay oladi).
+23. **Vazifa triggerlari:** 2–5-boblarning ko'p vazifalari hozircha `MANUAL` (kerakli funksiyalar — xarajat yozish, narx daftari, qarz inventari — keyingi vazifalarda). Ular qurilgach JSON'da trigger almashtiriladi, sxema o'zgarmaydi.
+24. **Bob tarkibi (qissa matni) litsenziya hal bo'lguncha placeholder.** Diniy matnlar ham placeholder: `PENDING`, shuning uchun release build'da ko'rinmaydi. Ulamo tekshiruvi tugagach `APPROVED` qilinadi.
+25. **Ochilgan bob ortga qaytmaydi** (qulflanmaydi), vazifalar esa har hafta qaytadan baholanadi. Foydalanuvchi qulfni «chetlab o'tishi» (SPEC 2C.4 dagi kabi) bu yerda yo'q: ochilish sharti sozlanadi, lekin o'chirib bo'lmaydi (kamida bitta tugagan hafta).

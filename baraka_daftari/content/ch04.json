@@ -1,0 +1,51 @@
+{
+  "id": "ch04",
+  "law": 4,
+  "order": 4,
+  "title": "Ribodan qoch! Qarzga tushsang — reja bilan chiq!",
+  "placeholder": true,
+  "blocks": [
+    {
+      "kind": "TEXT",
+      "id": "ch04-b1",
+      "text": "[Placeholder] Qissa matni «Asaxiy Invest» × Abdukarim Mirzayev bilan litsenziya hal bo'lguncha shu yerda turadi."
+    },
+    {
+      "kind": "TEXT",
+      "id": "ch04-b2",
+      "text": "Qarz — o'z qo'li bilan taqilgan kishan. Zarurat uchun qarz olinsa, u foizsiz, yozma va to'lash niyati bilan olinadi; qarzdan esa reja bilan chiqiladi."
+    },
+    {
+      "kind": "RELIGIOUS",
+      "id": "ch04-b3",
+      "text": "[Diniy matn o'rni — ulamo tekshiruvi kutilmoqda]",
+      "source": "Manba tekshiruvdan keyin ko'rsatiladi",
+      "review_status": "PENDING"
+    }
+  ],
+  "page_prompt": "Qarzlaringiz ro'yxatini va ularni yopish rejangizni o'z so'zingiz bilan yozing.",
+  "tasks": [
+    {
+      "id": "ch04-t1",
+      "title": "Barcha qarzlaringizni (norasmiylarini ham) ro'yxatga yozing",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    },
+    {
+      "id": "ch04-t2",
+      "title": "Eng og'ir qarz uchun qo'shimcha to'lov rejasini tuzing",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    },
+    {
+      "id": "ch04-t3",
+      "title": "Bu hafta bitta ajratma qiling: qarz bilan ham o'zingizga to'lang",
+      "trigger": {
+        "type": "ALLOCATION_MADE",
+        "min_days": 1
+      }
+    }
+  ]
+}

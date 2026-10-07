@@ -97,6 +97,7 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "unexplained_gap" => Ok(run_unexplained_gap),
         "streak" => Ok(run_streak),
         "share_suggestion" => Ok(run_share_suggestion),
+        "chapter_unlock" => Ok(run_chapter_unlock),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -283,4 +284,52 @@ fn run_money_parse(input: &Value) -> Result<Value, String> {
         Ok(m) => serde_json::json!({ "minor": m.minor().to_string() }),
         Err(e) => error_json(&e),
     })
+}
+
+fn u32_field(v: &Value, key: &str) -> Result<u32, String> {
+    u32::try_from(int_field(v, key)?).map_err(|e| e.to_string())
+}
+
+fn run_chapter_unlock(input: &Value) -> Result<Value, String> {
+    let p = input.get("policy").ok_or("`policy` kerak")?;
+    let policy = content::UnlockPolicy::new(
+        u32_field(p, "window_weeks")?,
+        u32_field(p, "min_satisfied_weeks")?,
+        u32_field(p, "min_tasks_per_week")?,
+    )
+    .map_err(|e| e.to_string())?;
+    let opened =
+        domain::date_from_str(str_field(input, "opened_week")?).map_err(|e| e.to_string())?;
+    let today = domain::date_from_str(str_field(input, "today")?).map_err(|e| e.to_string())?;
+    let anchor = parse_weekday(str_field(input, "anchor")?)?;
+    let results = input
+        .get("results")
+        .and_then(Value::as_array)
+        .ok_or("`results` massiv bo'lishi kerak")?
+        .iter()
+        .map(|r| {
+            Ok(content::WeekResult {
+                week_start: domain::date_from_str(str_field(r, "week_start")?)
+                    .map_err(|e| e.to_string())?,
+                completed_tasks: u32_field(r, "completed_tasks")?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(
+        match content::decide(policy, opened, today, anchor, &results) {
+            content::UnlockDecision::Unlocked => serde_json::json!({ "decision": "UNLOCKED" }),
+            content::UnlockDecision::Locked {
+                satisfied_weeks,
+                needed_weeks,
+                weeks_in_window,
+            } => {
+                serde_json::json!({
+                    "decision": "LOCKED",
+                    "satisfied_weeks": satisfied_weeks,
+                    "needed_weeks": needed_weeks,
+                    "weeks_in_window": weeks_in_window,
+                })
+            }
+        },
+    )
 }

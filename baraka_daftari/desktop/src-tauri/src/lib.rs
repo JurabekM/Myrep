@@ -7,6 +7,7 @@ mod commands;
 mod dto;
 mod ledger;
 mod session;
+mod study;
 
 use std::{sync::Mutex, time::Duration};
 
@@ -53,6 +54,11 @@ fn specta_builder() -> Builder<tauri::Wry> {
         ledger::add_nasiya,
         ledger::pay_nasiya,
         ledger::remove_obligation,
+        study::journey,
+        study::chapter_detail,
+        study::set_task_done,
+        study::save_page,
+        study::set_unlock_policy,
     ])
 }
 

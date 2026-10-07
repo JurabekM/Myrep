@@ -242,6 +242,7 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 name = "baraka-desktop"
 version = "0.1.0"
 dependencies = [
+ "content",
  "domain",
  "money",
  "security",
@@ -640,6 +641,17 @@ name = "const-oid"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+
+[[package]]
+name = "content"
+version = "0.1.0"
+dependencies = [
+ "domain",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "time",
+]
 
 [[package]]
 name = "cookie"
@@ -3820,6 +3832,7 @@ dependencies = [
 name = "services"
 version = "0.1.0"
 dependencies = [
+ "content",
  "domain",
  "money",
  "storage",
@@ -4909,6 +4922,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vectors"
 version = "0.1.0"
 dependencies = [
+ "content",
  "domain",
  "money",
  "serde",

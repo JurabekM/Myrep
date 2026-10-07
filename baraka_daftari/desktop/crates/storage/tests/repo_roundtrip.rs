@@ -411,3 +411,85 @@ fn v2_fields_roundtrip_nasiya_owner_audit_and_withdrawal() {
     };
     assert!(repo::insert(c, &bad).is_err());
 }
+
+#[test]
+fn v3_content_tables_roundtrip_and_partial_unique_indexes() {
+    let w = world();
+    let hid = &w.household.meta.id;
+    let c = w.db.conn();
+
+    let done = TaskCompletion {
+        meta: w.fx.meta(hid),
+        chapter_id: "ch01".into(),
+        task_id: "ch01-t1".into(),
+        week_start: day(),
+        completed_at: w.fx.clock.now(),
+    };
+    repo::insert(c, &done).unwrap();
+    assert_eq!(
+        repo::get::<TaskCompletion>(c, &done.meta.id)
+            .unwrap()
+            .unwrap(),
+        done
+    );
+    // Bir hafta + bir vazifa uchun ikkinchi faol yozuv mumkin emas...
+    let dup = TaskCompletion {
+        meta: w.fx.meta(hid),
+        ..done.clone()
+    };
+    assert!(repo::insert(c, &dup).is_err());
+    // ...lekin o'chirilgandan keyin (tombstone) qayta belgilash mumkin.
+    repo::soft_delete::<TaskCompletion>(c, &done.meta.id, w.fx.clock.now()).unwrap();
+    repo::insert(c, &dup).unwrap();
+
+    let progress = ChapterProgress {
+        meta: w.fx.meta(hid),
+        chapter_id: "ch01".into(),
+        opened_on: day(),
+    };
+    repo::insert(c, &progress).unwrap();
+    assert_eq!(
+        repo::list::<ChapterProgress>(c, hid).unwrap(),
+        vec![progress.clone()]
+    );
+    let dup = ChapterProgress {
+        meta: w.fx.meta(hid),
+        ..progress
+    };
+    assert!(repo::insert(c, &dup).is_err());
+
+    let page = DaftarPage {
+        meta: w.fx.meta(hid),
+        chapter_id: "ch01".into(),
+        body: "O'z so'zim bilan".into(),
+    };
+    repo::insert(c, &page).unwrap();
+    assert_eq!(
+        repo::get::<DaftarPage>(c, &page.meta.id).unwrap().unwrap(),
+        page
+    );
+    assert!(repo::insert(
+        c,
+        &DaftarPage {
+            meta: w.fx.meta(hid),
+            ..page
+        }
+    )
+    .is_err());
+
+    let s = Setting {
+        meta: w.fx.meta(hid),
+        key: "unlock.window_weeks".into(),
+        value: "3".into(),
+    };
+    repo::insert(c, &s).unwrap();
+    assert_eq!(repo::get::<Setting>(c, &s.meta.id).unwrap().unwrap(), s);
+    assert!(repo::insert(
+        c,
+        &Setting {
+            meta: w.fx.meta(hid),
+            ..s
+        }
+    )
+    .is_err());
+}

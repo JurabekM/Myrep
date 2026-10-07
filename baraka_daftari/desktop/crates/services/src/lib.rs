@@ -8,6 +8,7 @@ mod error;
 pub mod audit;
 pub mod home;
 pub mod income;
+pub mod learning;
 pub mod obligations;
 pub mod rules;
 pub mod setup;

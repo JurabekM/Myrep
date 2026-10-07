@@ -136,3 +136,38 @@ pub struct WithdrawalRequest {
     pub available_at: OffsetDateTime,
     pub status: WithdrawalStatus,
 }
+
+/// Qo'lda belgilangan haftalik vazifa (avtomatik triggerlar ma'lumotdan hisoblanadi, saqlanmaydi).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskCompletion {
+    pub meta: Meta,
+    pub chapter_id: String,
+    pub task_id: String,
+    /// Hafta boshi (juma).
+    pub week_start: Date,
+    pub completed_at: OffsetDateTime,
+}
+
+/// Bob qachon ochilgan (hafta boshi). Xonadon va bob bo'yicha bitta faol yozuv.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChapterProgress {
+    pub meta: Meta,
+    pub chapter_id: String,
+    pub opened_on: Date,
+}
+
+/// «Daftar sahifasi»: foydalanuvchi qonunni o'z so'zi bilan yozadi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DaftarPage {
+    pub meta: Meta,
+    pub chapter_id: String,
+    pub body: String,
+}
+
+/// Xonadon sozlamasi (kalit-qiymat).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Setting {
+    pub meta: Meta,
+    pub key: String,
+    pub value: String,
+}

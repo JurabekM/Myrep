@@ -1,0 +1,43 @@
+{
+  "id": "ch05",
+  "law": 5,
+  "order": 5,
+  "title": "Pulni halol ishga sol",
+  "placeholder": true,
+  "blocks": [
+    {
+      "kind": "TEXT",
+      "id": "ch05-b1",
+      "text": "[Placeholder] Qissa matni «Asaxiy Invest» × Abdukarim Mirzayev bilan litsenziya hal bo'lguncha shu yerda turadi."
+    },
+    {
+      "kind": "TEXT",
+      "id": "ch05-b2",
+      "text": "Bir odamning puli bekor yotadi, boshqasining hunari pulsizlikdan bekor turadi. Sheriklik — sadaqa ham, qarz ham emas: teng huquqli kelishuv, unda tavakkal bo'lishiladi."
+    }
+  ],
+  "page_prompt": "Oilangizda bekor yotgan qaysi hunar bor va u qanday ishga aylanishi mumkin? O'z so'zingiz bilan yozing.",
+  "tasks": [
+    {
+      "id": "ch05-t1",
+      "title": "Oilangizdagi bekor yotgan hunarlarni ro'yxatga yozing",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    },
+    {
+      "id": "ch05-t2",
+      "title": "Bitta hunar uchun boshlang'ich xarajatni taxminan hisoblang",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    },
+    {
+      "id": "ch05-t3",
+      "title": "Kafolatli foyda va'da qilgan takliflardan ehtiyot bo'lish qoidasini yozib qo'ying",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    }
+  ]
+}

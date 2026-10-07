@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -102,22 +102,73 @@ function ResultSlot({ home }: SlotProps) {
   );
 }
 
-/** D5 (kontent dvigateli) da to'ldiriladi; slot joyi hozirdan band. */
-function PlaceholderSlot({ titleKey, textKey }: { titleKey: string; textKey: string }) {
+function useJourney() {
+  return useQuery({ queryKey: ['journey'], queryFn: () => unwrap(commands.journey()) });
+}
+
+/** Shu haftaning 3 ta vazifasi (joriy bob). */
+function WeekTasksSlot() {
   const { t } = useTranslation();
+  const openChapter = useNav((s) => s.openChapter);
+  const { data } = useJourney();
   return (
-    <Card title={t(titleKey)}>
-      <p className="text-sm opacity-70">{t(textKey)}</p>
+    <Card title={t('home.weekTasks')}>
+      {data && (
+        <>
+          <p className="text-sm opacity-80" data-testid="week-progress">
+            {t('home.tasksProgress', { done: data.week_done, total: data.week_tasks.length })}
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {data.week_tasks.map((task) => (
+              <li key={task.id} className={task.done ? 'line-through opacity-60' : ''}>
+                {task.done ? '✓ ' : '○ '}
+                {task.title}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="mt-2 text-sm underline"
+            onClick={() => {
+              openChapter(data.current_id);
+            }}
+          >
+            {t('home.openTasks')}
+          </button>
+        </>
+      )}
     </Card>
   );
 }
 
-function WeekTasksSlot() {
-  return <PlaceholderSlot titleKey="home.weekTasks" textKey="home.comingSoon" />;
-}
-
+/** Juma qissasi: har juma yangi bob ochilishi mumkin. */
 function FridayChapterSlot() {
-  return <PlaceholderSlot titleKey="home.fridayChapter" textKey="home.comingSoon" />;
+  const { t } = useTranslation();
+  const openChapter = useNav((s) => s.openChapter);
+  const { data } = useJourney();
+  return (
+    <Card title={t('home.fridayChapter')}>
+      {data && (
+        <>
+          {data.opened_this_week && (
+            <p className="mb-1 text-sm font-semibold" data-testid="new-chapter">
+              {t('home.newChapter')}
+            </p>
+          )}
+          <p className="text-lg font-semibold">{data.current_title}</p>
+          <button
+            type="button"
+            className="mt-2 rounded bg-accent px-3 py-1 text-paper"
+            onClick={() => {
+              openChapter(data.current_id);
+            }}
+          >
+            {t('home.readChapter')}
+          </button>
+        </>
+      )}
+    </Card>
+  );
 }
 
 /**

@@ -121,16 +121,26 @@ pub fn set_category_total(
     let month_text = ym.text();
     db.transaction(|tx| {
         let now = env.clock.now();
-        for old in repo::list::<Expense>(tx, &ctx.household_id)?
+        let mut existing: Vec<Expense> = repo::list::<Expense>(tx, &ctx.household_id)?
             .into_iter()
             .filter(|e| {
                 e.audit_month.as_deref() == Some(month_text.as_str())
                     && e.category_id == category_id
             })
-        {
+            .collect();
+        // Mavjud yozuv qayta ishlatiladi (tarix: qachon yaratilgani saqlanadi); ortiqchalari o'chiriladi.
+        let keep = if amount.minor() > 0 && !existing.is_empty() {
+            Some(existing.remove(0))
+        } else {
+            None
+        };
+        for old in &existing {
             repo::soft_delete::<Expense>(tx, &old.meta.id, now)?;
         }
-        if amount.minor() > 0 {
+        if let Some(mut row) = keep {
+            row.amount = amount;
+            repo::update(tx, &row, now)?;
+        } else if amount.minor() > 0 {
             repo::insert(
                 tx,
                 &Expense {

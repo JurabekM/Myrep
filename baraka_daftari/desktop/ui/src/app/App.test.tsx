@@ -16,6 +16,7 @@ vi.mock('../bindings', () => ({
     recordIncome: vi.fn(),
     listIncomes: vi.fn(),
     listObligations: vi.fn(),
+    journey: vi.fn(),
   },
 }));
 
@@ -40,6 +41,20 @@ beforeEach(() => {
       rule: { kind: 'Percent', bp: 500 },
       rate_suggestion_bp: null,
       pending_withdrawals: 0,
+    },
+  });
+  vi.mocked(commands.journey).mockResolvedValue({
+    status: 'ok',
+    data: {
+      chapters: [],
+      current_id: 'ch01',
+      current_title: 'Bob',
+      opened_this_week: false,
+      week_start: '2026-10-02',
+      week_tasks: [],
+      week_done: 0,
+      unlock: null,
+      policy: { window_weeks: 3, min_satisfied_weeks: 2, min_tasks_per_week: 2 },
     },
   });
   vi.mocked(commands.listObligations).mockResolvedValue({ status: 'ok', data: [] });

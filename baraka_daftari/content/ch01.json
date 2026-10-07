@@ -1,0 +1,52 @@
+{
+  "id": "ch01",
+  "law": 1,
+  "order": 1,
+  "title": "Avval o'zingga to'la",
+  "placeholder": true,
+  "blocks": [
+    {
+      "kind": "TEXT",
+      "id": "ch01-b1",
+      "text": "[Placeholder] Qissa matni «Asaxiy Invest» × Abdukarim Mirzayev bilan litsenziya hal bo'lguncha shu yerda turadi."
+    },
+    {
+      "kind": "TEXT",
+      "id": "ch01-b2",
+      "text": "Har bir halol daromadning kamida o'ndan biri «kelajakdagi o'zingniki» bo'ladi va unga tegilmaydi. Miqdordan ko'ra odat muhimroq: kichikdan boshlang va to'xtamang."
+    },
+    {
+      "kind": "RELIGIOUS",
+      "id": "ch01-b3",
+      "text": "[Diniy matn o'rni — ulamo tekshiruvi kutilmoqda]",
+      "source": "Manba tekshiruvdan keyin ko'rsatiladi",
+      "review_status": "PENDING"
+    }
+  ],
+  "page_prompt": "Bu qonunni o'z so'zingiz bilan yozing: daromadingizdan o'zingizga qancha va qachon ajratasiz?",
+  "tasks": [
+    {
+      "id": "ch01-t1",
+      "title": "Bu hafta kamida bitta daromadni kiriting",
+      "trigger": {
+        "type": "INCOME_RECORDED",
+        "min": 1
+      }
+    },
+    {
+      "id": "ch01-t2",
+      "title": "Daromaddan «Kelajagim»ga ulush ajrating",
+      "trigger": {
+        "type": "ALLOCATION_MADE",
+        "min_days": 1
+      }
+    },
+    {
+      "id": "ch01-t3",
+      "title": "O'tgan oy uchun «Pul qayerga ketdi?» auditini to'ldiring",
+      "trigger": {
+        "type": "AUDIT_COMPLETED"
+      }
+    }
+  ]
+}

@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'income' | 'vault' | 'budget' | 'obligations';
+export type Page = 'home' | 'income' | 'vault' | 'budget' | 'obligations' | 'study';
 
 interface NavState {
   page: Page;
   quickEntryOpen: boolean;
+  /** Boblar sahifasida ochiq bob (bosh sahifadan havola uchun). */
+  chapterId: string | null;
   setPage: (page: Page) => void;
+  openChapter: (id: string) => void;
   openQuickEntry: () => void;
   closeQuickEntry: () => void;
 }
@@ -14,8 +17,12 @@ interface NavState {
 export const useNav = create<NavState>((set) => ({
   page: 'home',
   quickEntryOpen: false,
+  chapterId: null,
   setPage: (page) => {
     set({ page });
+  },
+  openChapter: (id) => {
+    set({ page: 'study', chapterId: id });
   },
   openQuickEntry: () => {
     set({ quickEntryOpen: true });

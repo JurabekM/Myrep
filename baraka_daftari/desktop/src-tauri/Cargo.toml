@@ -22,6 +22,7 @@ security = { path = "../crates/security" }
 storage = { path = "../crates/storage" }
 domain = { path = "../crates/domain" }
 services = { path = "../crates/services" }
+content = { path = "../crates/content" }
 zeroize = "1"
 
 [dev-dependencies]

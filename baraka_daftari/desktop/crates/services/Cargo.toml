@@ -8,6 +8,7 @@ publish.workspace = true
 
 [dependencies]
 domain = { path = "../domain" }
+content = { path = "../content" }
 money = { path = "../money" }
 storage = { path = "../storage" }
 thiserror = { workspace = true }

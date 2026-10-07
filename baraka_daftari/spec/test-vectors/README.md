@@ -4,7 +4,7 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 
 - Pul qiymatlari string (minor birlikda). Case `id` lari o'zgarmaydi; xato topilsa yangi `version` chiqariladi.
 - Desktop runner: `cargo test -p vectors` (`desktop/crates/vectors`).
-- Hozirgi suite'lar: `allocate`, `percent_of`, `fx_convert`, `money_format`.
+- Hozirgi suite'lar: `allocate`, `percent_of`, `fx_convert`, `money_format`, `money_parse`, `unexplained_gap`, `streak`, `share_suggestion`, `chapter_unlock`.
 - Keyingi vazifalarda (D4, D8, D10, D12) qo'shiladi: `amortization`, `profit_distribution`,
   `emergency_target`, `personal_inflation`, `unexplained_gap`, `readiness_gate`, `debt_recovery_split`.
 
@@ -23,3 +23,4 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | streak | `dates[], today, anchor` (`FRIDAY` ...) | `{"current_weeks", "best_weeks", "saved_days"}` |
 | share_suggestion | `rule {kind: PERCENT\|MONTHLY_FIXED, value}`, `income`, `allocated_this_month` | `{"minor"}` |
 | money_parse | `text`, `currency` | `{"minor"}` yoki `{"error": "PARSE" \| "OVERFLOW"}` |
+| chapter_unlock | `policy{window_weeks,min_satisfied_weeks,min_tasks_per_week}`, `opened_week`, `today`, `anchor`, `results[{week_start,completed_tasks}]` | `{"decision":"UNLOCKED"}` yoki `{"decision":"LOCKED","satisfied_weeks","needed_weeks","weeks_in_window"}` |

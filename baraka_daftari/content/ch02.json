@@ -1,0 +1,43 @@
+{
+  "id": "ch02",
+  "law": 2,
+  "order": 2,
+  "title": "Xurjunning teshigini yama",
+  "placeholder": true,
+  "blocks": [
+    {
+      "kind": "TEXT",
+      "id": "ch02-b1",
+      "text": "[Placeholder] Qissa matni «Asaxiy Invest» × Abdukarim Mirzayev bilan litsenziya hal bo'lguncha shu yerda turadi."
+    },
+    {
+      "kind": "TEXT",
+      "id": "ch02-b2",
+      "text": "Xarajatni yozmaguningcha uni boshqara olmaysan. Pul ko'pincha katta xarajatlarga emas, ko'plab mayda va «arzimagan» xarajatlarga ketadi."
+    }
+  ],
+  "page_prompt": "Bu hafta qaysi mayda xarajatlaringiz eng ko'p pul olib ketayotganini o'z so'zingiz bilan yozing.",
+  "tasks": [
+    {
+      "id": "ch02-t1",
+      "title": "Bu hafta har kuni xarajatlaringizni yozib boring",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    },
+    {
+      "id": "ch02-t2",
+      "title": "Eng ko'p ketadigan bitta mayda xarajatni toping",
+      "trigger": {
+        "type": "MANUAL"
+      }
+    },
+    {
+      "id": "ch02-t3",
+      "title": "Majburiyatlar ro'yxatini to'ldiring",
+      "trigger": {
+        "type": "OBLIGATION_ADDED"
+      }
+    }
+  ]
+}

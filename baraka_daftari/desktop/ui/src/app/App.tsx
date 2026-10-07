@@ -5,6 +5,7 @@ import { AuditWizardPage } from '../features/audit/AuditPage';
 import { HomePage } from '../features/home/HomePage';
 import { IncomePage } from '../features/income/IncomePage';
 import { QuickEntry } from '../features/income/QuickEntry';
+import { StudyPage } from '../features/study/StudyPage';
 import { ObligationsPage } from '../features/obligations/ObligationsPage';
 import { VaultPage } from '../features/vault/VaultPage';
 
@@ -16,6 +17,7 @@ const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'vault', labelKey: 'nav.vault' },
   { id: 'budget', labelKey: 'nav.budget' },
   { id: 'obligations', labelKey: 'nav.obligations' },
+  { id: 'study', labelKey: 'nav.study' },
 ];
 
 function CurrentPage({ page }: { page: Page }) {
@@ -30,6 +32,8 @@ function CurrentPage({ page }: { page: Page }) {
       return <AuditWizardPage />;
     case 'obligations':
       return <ObligationsPage />;
+    case 'study':
+      return <StudyPage />;
   }
 }
 

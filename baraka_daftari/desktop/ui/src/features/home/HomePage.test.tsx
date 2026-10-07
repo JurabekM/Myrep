@@ -4,13 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, vi } from 'vitest';
 
 import '../../i18n';
-import { commands, type HomeDto } from '../../bindings';
+import { commands, type HomeDto, type JourneyDto } from '../../bindings';
 
 import { HomePage } from './HomePage';
 import { homeSlots } from './slots';
 
 vi.mock('../../bindings', () => ({
-  commands: { homeSummary: vi.fn(), setRule: vi.fn() },
+  commands: { homeSummary: vi.fn(), setRule: vi.fn(), journey: vi.fn() },
 }));
 
 const money = (formatted: string) => ({ minor: '0', currency: 'UZS', formatted });
@@ -31,8 +31,25 @@ const home: HomeDto = {
   pending_withdrawals: 0,
 };
 
+const journey: JourneyDto = {
+  chapters: [],
+  current_id: 'ch01',
+  current_title: "Avval o'zingga to'la",
+  opened_this_week: true,
+  week_start: '2026-10-02',
+  week_tasks: [
+    { id: 't1', title: 'Daromad kiriting', done: true, auto_detected: true, manual: false },
+    { id: 't2', title: 'Ulush ajrating', done: false, auto_detected: false, manual: false },
+    { id: 't3', title: 'Audit', done: false, auto_detected: false, manual: false },
+  ],
+  week_done: 1,
+  unlock: null,
+  policy: { window_weeks: 3, min_satisfied_weeks: 2, min_tasks_per_week: 2 },
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(commands.journey).mockResolvedValue({ status: 'ok', data: journey });
   vi.mocked(commands.homeSummary).mockResolvedValue({ status: 'ok', data: home });
   vi.mocked(commands.setRule).mockResolvedValue({ status: 'ok', data: null });
 });
@@ -77,5 +94,13 @@ describe('HomePage', () => {
     renderHome();
     await screen.findByTestId('self-paid');
     expect(screen.queryByRole('button', { name: 'Ha, oshiramiz' })).not.toBeInTheDocument();
+  });
+
+  it("haftalik vazifalar va juma qissasi slotlari bobdan to'ldiriladi", async () => {
+    renderHome();
+    expect(await screen.findByTestId('week-progress')).toHaveTextContent('Bajarildi: 1 / 3');
+    expect(screen.getByText(/Daromad kiriting/)).toBeInTheDocument();
+    expect(await screen.findByTestId('new-chapter')).toHaveTextContent('Yangi bob ochildi');
+    expect(screen.getByText("Avval o'zingga to'la")).toBeInTheDocument();
   });
 });
