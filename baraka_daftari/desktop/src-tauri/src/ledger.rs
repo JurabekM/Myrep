@@ -57,6 +57,9 @@ fn rule_dto(r: ShareRule) -> RuleDto {
 #[derive(Debug, Serialize, Type)]
 pub struct HomeDto {
     pub month: String,
+    /// Bugungi lokal sana (`YYYY-MM-DD`) va shu haftaning boshi (juma).
+    pub today: String,
+    pub week_start: String,
     pub previous_month: String,
     pub self_paid: MoneyDto,
     /// Oylik daromadga nisbatan, bazis punkt (500 = 5%).
@@ -216,6 +219,8 @@ pub fn home_summary(state: State<'_, AppSession>) -> Result<HomeDto, CommandErro
             let h = home::summary(db.conn(), env, ctx)?;
             Ok(HomeDto {
                 month: h.month.text(),
+                today: domain::date_to_string(h.today).unwrap_or_default(),
+                week_start: domain::date_to_string(h.week_start).unwrap_or_default(),
                 previous_month: h.month.previous().text(),
                 self_paid: m(h.self_paid),
                 self_paid_bp: bp32(h.self_paid_bp),

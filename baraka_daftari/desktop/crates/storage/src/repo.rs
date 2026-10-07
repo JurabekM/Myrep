@@ -4,10 +4,11 @@
 
 use domain::{
     date_to_string, ts_to_string, AllocationKind, AllocationRule, Asset, AssetSnapshot, AssetType,
-    Category, ChapterProgress, DaftarPage, Expense, FxRateRecord, Household, Income, Member,
-    MemberRole, Meta, MoneyOwner, Necessity, Obligation, ObligationKind, OffsetDateTime,
-    PaymentChannel, Setting, TaskCompletion, VaultSource, VaultTransaction, VaultTxKind,
-    WithdrawalRequest, WithdrawalStatus,
+    Category, ChapterProgress, DaftarPage, Expense, FxRateRecord, HavasLimit, Household, Income,
+    LimitConsent, Member, MemberCredential, MemberRole, Meta, MoneyOwner, Necessity,
+    NecessityChange, Obligation, ObligationKind, OffsetDateTime, PaymentChannel, ScheduledTreat,
+    Setting, TaskCompletion, VaultSource, VaultTransaction, VaultTxKind, WithdrawalRequest,
+    WithdrawalStatus,
 };
 use money::Money;
 use rusqlite::{types::Value, Connection, OptionalExtension, Row};
@@ -230,7 +231,7 @@ impl Record for Member {
 
 impl Record for Category {
     const TABLE: &'static str = "categories";
-    const COLS: &'static [&'static str] = &["name", "necessity", "owner"];
+    const COLS: &'static [&'static str] = &["name", "necessity", "owner", "is_charity", "is_habit"];
     fn meta(&self) -> &Meta {
         &self.meta
     }
@@ -239,6 +240,8 @@ impl Record for Category {
             t(&self.name),
             opt_text(self.necessity.map(Necessity::as_str)),
             opt_text(self.owner.map(MoneyOwner::as_str)),
+            Value::Integer(i64::from(self.is_charity)),
+            Value::Integer(i64::from(self.is_habit)),
         ])
     }
     fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
@@ -247,6 +250,8 @@ impl Record for Category {
             name: r.get(7)?,
             necessity: row::opt_parsed(r, 8, Necessity::parse)?,
             owner: row::opt_parsed(r, 9, MoneyOwner::parse)?,
+            is_charity: r.get(10)?,
+            is_habit: r.get(11)?,
         })
     }
 }
@@ -302,6 +307,7 @@ impl Record for Expense {
         "is_ostentation",
         "funded_by_debt",
         "audit_month",
+        "note",
     ];
     fn meta(&self) -> &Meta {
         &self.meta
@@ -321,6 +327,7 @@ impl Record for Expense {
             opt_bool(self.is_ostentation),
             opt_bool(self.funded_by_debt),
             opt_text(self.audit_month.as_deref()),
+            opt_text(self.note.as_deref()),
         ])
     }
     fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
@@ -337,6 +344,7 @@ impl Record for Expense {
             is_ostentation: r.get(16)?,
             funded_by_debt: r.get(17)?,
             audit_month: r.get(18)?,
+            note: r.get(19)?,
         })
     }
 }
@@ -658,6 +666,131 @@ impl Record for Setting {
             meta: row::meta(r)?,
             key: r.get(7)?,
             value: r.get(8)?,
+        })
+    }
+}
+
+impl Record for MemberCredential {
+    const TABLE: &'static str = "member_credentials";
+    const COLS: &'static [&'static str] = &["member_id", "pin_hash", "failures", "locked_until"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.member_id),
+            t(&self.pin_hash),
+            Value::Integer(i64::from(self.failures)),
+            Value::Integer(self.locked_until),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            member_id: r.get(7)?,
+            pin_hash: r.get(8)?,
+            failures: r.get(9)?,
+            locked_until: r.get(10)?,
+        })
+    }
+}
+
+impl Record for NecessityChange {
+    const TABLE: &'static str = "necessity_changes";
+    const COLS: &'static [&'static str] = &[
+        "category_id",
+        "from_necessity",
+        "to_necessity",
+        "changed_by",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.category_id),
+            opt_text(self.from.map(Necessity::as_str)),
+            t(self.to.as_str()),
+            t(&self.changed_by),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            category_id: r.get(7)?,
+            from: row::opt_parsed(r, 8, Necessity::parse)?,
+            to: row::parsed(r, 9, Necessity::parse)?,
+            changed_by: r.get(10)?,
+        })
+    }
+}
+
+impl Record for HavasLimit {
+    const TABLE: &'static str = "havas_limits";
+    const COLS: &'static [&'static str] = &["amount_minor", "currency", "proposed_by"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![minor, cur, t(&self.proposed_by)])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            amount: row::money(r, 7, 8)?,
+            proposed_by: r.get(9)?,
+        })
+    }
+}
+
+impl Record for LimitConsent {
+    const TABLE: &'static str = "limit_consents";
+    const COLS: &'static [&'static str] = &["limit_id", "member_id", "consented_at"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.limit_id),
+            t(&self.member_id),
+            ts_val(self.consented_at)?,
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            limit_id: r.get(7)?,
+            member_id: r.get(8)?,
+            consented_at: row::ts(r, 9)?,
+        })
+    }
+}
+
+impl Record for ScheduledTreat {
+    const TABLE: &'static str = "scheduled_treats";
+    const COLS: &'static [&'static str] =
+        &["name", "amount_minor", "currency", "weekday", "active"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![
+            t(&self.name),
+            minor,
+            cur,
+            Value::Integer(i64::from(self.weekday)),
+            Value::Integer(i64::from(self.active)),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            amount: row::money(r, 8, 9)?,
+            weekday: r.get(10)?,
+            active: r.get(11)?,
         })
     }
 }

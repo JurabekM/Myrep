@@ -10,6 +10,7 @@ mod autolock;
 mod error;
 mod keystore;
 mod lockout;
+mod pin;
 mod secret;
 mod vault;
 
@@ -17,5 +18,6 @@ pub use autolock::AutoLock;
 pub use error::SecurityError;
 pub use keystore::{KeyStore, KeyringStore, MemoryStore};
 pub use lockout::lockout_delay_secs;
+pub use pin::{hash_pin, is_valid_pin, verify_pin};
 pub use secret::SecretKey;
 pub use vault::{KdfParams, UnixClock, Vault, VaultStatus};

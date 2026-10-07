@@ -140,6 +140,7 @@ pub fn pay_nasiya(
                 is_ostentation: None,
                 funded_by_debt: None,
                 audit_month: None,
+                note: None,
             },
         )?;
         o.remaining = Some(left);

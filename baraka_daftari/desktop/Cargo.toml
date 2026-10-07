@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/money", "crates/vectors", "crates/domain", "crates/content", "crates/security", "crates/storage", "crates/services", "src-tauri"]
+members = ["crates/money", "crates/vectors", "crates/domain", "crates/content", "crates/pdf", "crates/security", "crates/storage", "crates/services", "src-tauri"]
 
 [workspace.package]
 edition = "2021"
@@ -21,3 +21,18 @@ unsafe_code = "forbid"
 float_arithmetic = "deny"
 unwrap_used = "deny"
 expect_used = "deny"
+
+# Disk va CI vaqtini tejash: typst/tauri kabi katta bog'liqliklar uchun to'liq debug ma'lumoti kerak emas.
+[profile.dev]
+debug = "line-tables-only"
+incremental = false
+
+[profile.dev.package."*"]
+debug = false
+
+[profile.test]
+debug = "line-tables-only"
+incremental = false
+
+[profile.test.package."*"]
+debug = false

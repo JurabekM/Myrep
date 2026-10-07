@@ -27,6 +27,10 @@ pub struct Category {
     pub necessity: Option<Necessity>,
     /// "Kimning puli?" egasi (masalan, benzin → `Fuel`).
     pub owner: Option<MoneyOwner>,
+    /// Sadaqa (SPEC 2B.8): havas emas va «oqib ketish» hisobiga kirmaydi.
+    pub is_charity: bool,
+    /// Foydalanuvchi o'zi kuzatadigan odat (masalan, chekish): faqat statistika.
+    pub is_habit: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -55,6 +59,8 @@ pub struct Expense {
     pub funded_by_debt: Option<bool>,
     /// Oylik audit ustasi kiritgan jami (`YYYY-MM`); oddiy xarajatda `None`.
     pub audit_month: Option<String>,
+    /// Erkin izoh («somsa», «benzin»): «Hafta varag'i» kategoriyani shundan avtomatik topadi.
+    pub note: Option<String>,
 }
 
 /// Har bir qiymat saqlovchi narsa `Asset` (SPEC 4.3). `quantity` minor birlikda
@@ -170,4 +176,52 @@ pub struct Setting {
     pub meta: Meta,
     pub key: String,
     pub value: String,
+}
+
+/// A'zoning shaxsiy PIN tekshiruvchisi (Argon2id). Havas chegarasiga rozilik shu PIN bilan beriladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemberCredential {
+    pub meta: Meta,
+    pub member_id: String,
+    pub pin_hash: String,
+    pub failures: u32,
+    /// Unix soniya; `0` — bloklanmagan.
+    pub locked_until: i64,
+}
+
+/// Kategoriya toifasi o'zgarishi tarixi: kim va qachon (`meta.created_at`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NecessityChange {
+    pub meta: Meta,
+    pub category_id: String,
+    pub from: Option<Necessity>,
+    pub to: Necessity,
+    pub changed_by: String,
+}
+
+/// Oylik havas chegarasi taklifi. Faqat barcha `ADULT` a'zolar rozilik bergandan keyin kuchga kiradi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HavasLimit {
+    pub meta: Meta,
+    pub amount: Money,
+    pub proposed_by: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LimitConsent {
+    pub meta: Meta,
+    pub limit_id: String,
+    pub member_id: String,
+    pub consented_at: OffsetDateTime,
+}
+
+/// «Juma shirinligi»: kundalik havasni haftalik ritualga aylantirish.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScheduledTreat {
+    pub meta: Meta,
+    pub name: String,
+    pub amount: Money,
+    /// ISO hafta kuni: 1 = dushanba ... 5 = juma ... 7 = yakshanba.
+    pub weekday: u8,
+    pub active: bool,
 }

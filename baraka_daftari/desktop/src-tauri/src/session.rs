@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use domain::{IdGen, SystemClock, UuidV7Gen};
 use security::{AutoLock, KdfParams, KeyStore, SecurityError, Vault, VaultStatus};
-use services::{setup, Ctx, Env, ServiceError};
+use services::{members, setup, Ctx, Env, ServiceError};
 use storage::{Database, StorageError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,10 +48,16 @@ pub struct Session<S: KeyStore> {
     db: Option<Database>,
     ctx: Option<Ctx>,
     data_dir: PathBuf,
+    kdf: KdfParams,
     autolock: AutoLock,
 }
 
 impl<S: KeyStore> Session<S> {
+    #[must_use]
+    pub const fn kdf(&self) -> KdfParams {
+        self.kdf
+    }
+
     #[must_use]
     pub fn new(data_dir: &std::path::Path, store: S, kdf: KdfParams, now: i64) -> Self {
         Self {
@@ -60,6 +66,7 @@ impl<S: KeyStore> Session<S> {
             db: None,
             ctx: None,
             data_dir: data_dir.to_path_buf(),
+            kdf,
             autolock: AutoLock::new(AutoLock::DEFAULT_TIMEOUT_SECS, now),
         }
     }
@@ -83,6 +90,7 @@ impl<S: KeyStore> Session<S> {
     pub fn setup(&mut self, pin: &str, now: i64) -> Result<(), SessionError> {
         let key = self.vault.setup(pin)?;
         self.open_db(key.as_bytes())?;
+        self.ensure_first_member_pin(pin)?;
         self.autolock.touch(now);
         Ok(())
     }
@@ -95,6 +103,7 @@ impl<S: KeyStore> Session<S> {
         }
         let key = self.vault.unlock(pin)?;
         self.open_db(key.as_bytes())?;
+        self.ensure_first_member_pin(pin)?;
         self.autolock.touch(now);
         Ok(())
     }
@@ -109,6 +118,25 @@ impl<S: KeyStore> Session<S> {
         };
         self.ctx = Some(setup::ensure_household(&mut db, &env)?);
         self.db = Some(db);
+        Ok(())
+    }
+
+    /// Birinchi (asosiy) a'zoning shaxsiy PIN'i seyf PIN'i bilan bir xil boshlanadi; boshqa a'zolar
+    /// o'z PIN'ini oila kengashida o'rnatadi. Allaqachon bor bo'lsa tegilmaydi.
+    fn ensure_first_member_pin(&mut self, pin: &str) -> Result<(), SessionError> {
+        let (Some(db), Some(ctx)) = (self.db.as_mut(), self.ctx.as_ref()) else {
+            return Err(SessionError::Locked);
+        };
+        if members::has_pin(db.conn(), ctx, &ctx.member_id)? {
+            return Ok(());
+        }
+        let device_id = device_id(&self.data_dir)?;
+        let env = Env {
+            clock: &SystemClock,
+            ids: &UuidV7Gen,
+            device_id: &device_id,
+        };
+        members::set_pin(db, &env, ctx, &ctx.member_id, pin, self.kdf)?;
         Ok(())
     }
 
@@ -255,5 +283,22 @@ mod tests {
             std::fs::read_to_string(dir.path().join("device_id")).unwrap(),
             dev
         );
+    }
+
+    #[test]
+    fn first_member_gets_the_vault_pin_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut s = session(dir.path());
+        s.setup("123456", 1000).unwrap();
+        s.run(|db, env, ctx| {
+            members::verify(db, env, ctx, &ctx.member_id, "123456")?;
+            // Keyingi ochilishda (boshqa PIN bilan emas) qayta yozilmaydi.
+            Ok(())
+        })
+        .unwrap();
+        s.lock();
+        s.unlock("123456", 1001).unwrap();
+        s.run(|db, env, ctx| members::verify(db, env, ctx, &ctx.member_id, "123456"))
+            .unwrap();
     }
 }

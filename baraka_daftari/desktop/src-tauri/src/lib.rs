@@ -5,6 +5,7 @@
 
 mod commands;
 mod dto;
+mod family;
 mod ledger;
 mod session;
 mod study;
@@ -59,6 +60,27 @@ fn specta_builder() -> Builder<tauri::Wry> {
         study::set_task_done,
         study::save_page,
         study::set_unlock_policy,
+        family::list_members,
+        family::add_member,
+        family::change_member_pin,
+        family::list_categories,
+        family::set_necessity,
+        family::add_category,
+        family::set_habit,
+        family::add_expenses,
+        family::list_expenses,
+        family::remove_expense,
+        family::suggest_category,
+        family::havas_report,
+        family::propose_limit,
+        family::consent_limit,
+        family::list_treats,
+        family::add_treat,
+        family::set_treat_active,
+        family::remove_treat,
+        family::log_treat,
+        family::habit_stats,
+        family::export_council_pdf,
     ])
 }
 
@@ -77,6 +99,7 @@ pub fn run() {
         .expect("TS bindinglarni yozib bo'lmadi");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);

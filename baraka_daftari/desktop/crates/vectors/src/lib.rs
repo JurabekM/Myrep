@@ -98,6 +98,8 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "streak" => Ok(run_streak),
         "share_suggestion" => Ok(run_share_suggestion),
         "chapter_unlock" => Ok(run_chapter_unlock),
+        "havas_status" => Ok(run_havas_status),
+        "habit_projection" => Ok(run_habit_projection),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -332,4 +334,41 @@ fn run_chapter_unlock(input: &Value) -> Result<Value, String> {
             }
         },
     )
+}
+
+fn havas_error_code(e: &domain::HavasError) -> &'static str {
+    match e {
+        domain::HavasError::InvalidLimit => "INVALID_LIMIT",
+        domain::HavasError::InvalidAmount => "INVALID_AMOUNT",
+        domain::HavasError::Money(m) => error_code(m),
+    }
+}
+
+fn run_havas_status(input: &Value) -> Result<Value, String> {
+    let spent = parse_money(input, "spent", "currency")?;
+    let limit = parse_money(input, "limit", "currency")?;
+    Ok(match domain::havas_status(spent, limit) {
+        Ok(s) => serde_json::json!({
+            "state": match s.state {
+                domain::HavasState::Ok => "OK",
+                domain::HavasState::Near => "NEAR",
+                domain::HavasState::Over => "OVER",
+            },
+            "used_bp": s.used_bp,
+        }),
+        Err(e) => serde_json::json!({ "error": havas_error_code(&e) }),
+    })
+}
+
+fn run_habit_projection(input: &Value) -> Result<Value, String> {
+    let total = parse_money(input, "total", "currency")?;
+    let days = u32_field(input, "window_days")?;
+    Ok(match domain::habit_projection(total, days) {
+        Ok(p) => serde_json::json!({
+            "week": p.week.minor().to_string(),
+            "month": p.month.minor().to_string(),
+            "year": p.year.minor().to_string(),
+        }),
+        Err(e) => serde_json::json!({ "error": havas_error_code(&e) }),
+    })
 }

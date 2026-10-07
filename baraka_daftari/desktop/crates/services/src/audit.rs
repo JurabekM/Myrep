@@ -156,6 +156,7 @@ pub fn set_category_total(
                     is_ostentation: None,
                     funded_by_debt: None,
                     audit_month: Some(month_text.clone()),
+                    note: None,
                 },
             )?;
         }

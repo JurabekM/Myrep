@@ -9,6 +9,9 @@ use crate::{audit, local_date, rules, vault, Ctx, Env, ServiceError, YearMonth};
 #[derive(Debug, Clone)]
 pub struct Home {
     pub month: YearMonth,
+    /// Bugungi lokal sana va shu haftaning boshi (juma).
+    pub today: domain::Date,
+    pub week_start: domain::Date,
     pub self_paid: Money,
     pub self_paid_bp: i64,
     pub income: Money,
@@ -41,6 +44,8 @@ pub fn summary(conn: &Connection, env: &Env<'_>, ctx: &Ctx) -> Result<Home, Serv
     };
     Ok(Home {
         month: ym,
+        today,
+        week_start: domain::week_start(today, WEEK_ANCHOR),
         self_paid: overview.whose.self_paid,
         self_paid_bp: overview.whose.self_paid_bp,
         income: overview.income,

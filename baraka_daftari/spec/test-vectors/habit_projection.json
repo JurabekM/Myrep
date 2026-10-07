@@ -1,0 +1,72 @@
+{
+  "suite": "habit_projection",
+  "version": 1,
+  "description": "Odat xarajati prognozi: oxirgi N kun jami -> haftasiga (x7/N), oyiga (x30/N), yiliga (x365/N), half-up. Faqat statistika",
+  "cases": [
+    {
+      "id": "habit-001",
+      "input": {
+        "total": "28000000",
+        "window_days": 28,
+        "currency": "UZS"
+      },
+      "expected": {
+        "week": "7000000",
+        "month": "30000000",
+        "year": "365000000"
+      }
+    },
+    {
+      "id": "habit-002",
+      "input": {
+        "total": "10000000",
+        "window_days": 28,
+        "currency": "UZS"
+      },
+      "expected": {
+        "week": "2500000",
+        "month": "10714286",
+        "year": "130357143"
+      }
+    },
+    {
+      "id": "habit-003",
+      "input": {
+        "total": "0",
+        "window_days": 28,
+        "currency": "UZS"
+      },
+      "expected": {
+        "week": "0",
+        "month": "0",
+        "year": "0"
+      }
+    },
+    {
+      "id": "habit-004",
+      "input": {
+        "total": "100",
+        "window_days": 7,
+        "currency": "UZS"
+      },
+      "expected": {
+        "week": "100",
+        "month": "429",
+        "year": "5214"
+      }
+    },
+    {
+      "id": "habit-005",
+      "input": {
+        "total": "1",
+        "window_days": 28,
+        "currency": "UZS"
+      },
+      "expected": {
+        "week": "0",
+        "month": "1",
+        "year": "13"
+      }
+    }
+  ]
+}

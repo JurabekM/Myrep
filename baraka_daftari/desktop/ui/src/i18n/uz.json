@@ -29,7 +29,9 @@
     "budget": "Byudjet",
     "obligations": "Majburiyatlar",
     "quickEntry": "Tez kiritish",
-    "study": "Boblar"
+    "study": "Boblar",
+    "expenses": "Xarajatlar",
+    "family": "Oila"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -44,7 +46,10 @@
     "InsufficientFunds": "Kelajagimda mablag' yetarli emas.",
     "OpeningBalanceExists": "Boshlang'ich balans allaqachon kiritilgan.",
     "Cooling": "Hali erta: yana {{count}} soniya kutish kerak.",
-    "Internal": "Kutilmagan xato. Qayta urinib ko'ring."
+    "Internal": "Kutilmagan xato. Qayta urinib ko'ring.",
+    "MemberWrongPin": "PIN noto'g'ri.",
+    "MemberPinLocked": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring.",
+    "MemberNoPin": "Bu a'zo uchun PIN o'rnatilmagan."
   },
   "source": {
     "DAILY_WORK": "Kunlik ish",
@@ -178,5 +183,110 @@
     "policyWeeks": "Kamida M hafta",
     "policyTasks": "Haftasiga K vazifa",
     "policySave": "Saqlash"
+  },
+  "role": {
+    "ADULT": "Katta",
+    "CHILD": "Bola",
+    "VIEWER": "Kuzatuvchi"
+  },
+  "necessity": {
+    "ZARUR": "Zarur",
+    "KERAK": "Kerak",
+    "HAVAS": "Havas"
+  },
+  "weekday": {
+    "1": "Dushanba",
+    "2": "Seshanba",
+    "3": "Chorshanba",
+    "4": "Payshanba",
+    "5": "Juma",
+    "6": "Shanba",
+    "7": "Yakshanba"
+  },
+  "sheet": {
+    "title": "Hafta varag'i",
+    "hint": "Haftaning barcha xarajatlarini ketma-ket yozing. Tab — keyingi katak, summada Enter — yangi qator, Ctrl+Enter — saqlash.",
+    "date": "Sana",
+    "note": "Nima uchun",
+    "category": "Kategoriya",
+    "amount": "Summa (so'm)",
+    "channel": "Kanal",
+    "flags": "Belgilar",
+    "gift": "Sovg'a",
+    "ostentation": "Obro' uchun",
+    "debt": "Qarzga",
+    "addRow": "Qator qo'shish",
+    "save": "Saqlash ({{count}})",
+    "thisWeek": "Shu hafta yozilganlar",
+    "empty": "Bu hafta hali xarajat yozilmagan."
+  },
+  "havas": {
+    "title": "Havas uchun oylik chegara",
+    "spent": "Shu oy havasga ketdi: {{amount}}",
+    "limit": "Chegara: {{amount}}",
+    "noLimit": "Faol chegara yo'q. Havas taqiqlanmaydi — unga kelishilgan chegara qo'yiladi.",
+    "near": "Chegaraning 80% idan o'tdingiz. Taqiq yo'q — shunchaki hushyor bo'ling.",
+    "over": "Chegaradan oshdi. Taqiq yo'q: oilaviy kengashda gaplashib olamiz.",
+    "debt": "Shundan qarz bilan qilingan havas: {{amount}}",
+    "gifts": "Sovg'alar (hisobga kirmagan): {{amount}}",
+    "ostentation": "Obro' uchun xarajatlar: {{amount}}",
+    "charity": "Sadaqa (isrof emas, alohida): {{amount}}",
+    "pendingTitle": "Kelishilmagan taklif",
+    "pendingHint": "Chegara barcha kattalar o'z PIN'i bilan rozi bo'lgandagina kuchga kiradi.",
+    "agreed": "Rozi bo'lganlar: {{names}}",
+    "pinOf": "{{name}} PIN'i",
+    "agree": "Roziman",
+    "propose": "Chegara taklif qilish",
+    "proposer": "Kim taklif qiladi",
+    "amount": "Oylik chegara (so'm)",
+    "yourPin": "Sizning PIN"
+  },
+  "family": {
+    "members": "Oila a'zolari",
+    "name": "Ism",
+    "role": "Rol",
+    "pin": "PIN (6 raqam)",
+    "add": "Qo'shish"
+  },
+  "treats": {
+    "title": "Juma shirinligi",
+    "hint": "Kundalik havasni haftalik ritualga aylantiring: shirinlik haftada bir marta, hammaning ko'z o'ngida.",
+    "name": "Nomi",
+    "amount": "Summa (so'm)",
+    "weekday": "Kun",
+    "add": "Qo'shish",
+    "logToday": "Bugun yozish",
+    "logged": "Bugun yozilgan",
+    "pause": "To'xtatish",
+    "resume": "Davom ettirish"
+  },
+  "habits": {
+    "title": "Odatlar",
+    "hint": "O'zingiz tanlagan odatlar uchun faqat statistika. Hech kim ayblanmaydi.",
+    "projection": "oyiga {{month}}, yiliga {{year}}",
+    "stop": "Kuzatmaslik",
+    "pick": "Kategoriyani tanlang",
+    "track": "Kuzatish"
+  },
+  "council": {
+    "title": "Oila kengashi",
+    "start": "Oila kengashini boshlash",
+    "exit": "Chiqish",
+    "steps": "Qadamlar",
+    "step": {
+      "review": "Oyni ko'rib chiqish",
+      "categories": "Toifalarni kelishish",
+      "limit": "Havas chegarasi",
+      "minutes": "Bayonnoma"
+    },
+    "back": "Orqaga",
+    "next": "Keyingisi",
+    "categoriesHint": "Har bir xarajat toifasini birgalikda belgilang: Zarur — usiz bo'lmaydi, Kerak — qiyin bo'ladi, Havas — usiz ham yashasa bo'ladi.",
+    "changedBy": "Kim o'zgartiryapti:",
+    "charity": "sadaqa",
+    "limitHint": "Chegarani bir kishi bir o'zi belgilamaydi: har bir katta o'z PIN'i bilan rozilik beradi.",
+    "minutesHint": "Kelishuv PDF bayonnoma qilib saqlanadi; chop etib imzolash mumkin.",
+    "savePdf": "PDF bayonnomani saqlash",
+    "saved": "Saqlandi: {{name}}"
   }
 }

@@ -5,6 +5,7 @@
 mod entities;
 mod enums;
 mod flow;
+mod havas;
 mod meta;
 mod share;
 mod streak;
@@ -14,6 +15,7 @@ mod withdrawal;
 pub use entities::*;
 pub use enums::*;
 pub use flow::*;
+pub use havas::*;
 pub use meta::{Clock, IdGen, Meta, SystemClock, UuidV7Gen};
 pub use share::*;
 pub use streak::*;

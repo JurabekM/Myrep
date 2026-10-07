@@ -1,0 +1,125 @@
+{
+  "suite": "havas_status",
+  "version": 1,
+  "description": "Havas chegarasi holati: 80% dan boshlab yumshoq ogohlantirish (NEAR), 100% va undan ortiq OVER. Bloklash yo'q. Foiz bazis punktda, half-up",
+  "cases": [
+    {
+      "id": "havas-001",
+      "input": {
+        "spent": "0",
+        "limit": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "OK",
+        "used_bp": 0
+      }
+    },
+    {
+      "id": "havas-002",
+      "input": {
+        "spent": "79990000",
+        "limit": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "OK",
+        "used_bp": 7999
+      }
+    },
+    {
+      "id": "havas-003",
+      "input": {
+        "spent": "80000000",
+        "limit": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "NEAR",
+        "used_bp": 8000
+      }
+    },
+    {
+      "id": "havas-004",
+      "input": {
+        "spent": "99990000",
+        "limit": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "NEAR",
+        "used_bp": 9999
+      }
+    },
+    {
+      "id": "havas-005",
+      "input": {
+        "spent": "100000000",
+        "limit": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "OVER",
+        "used_bp": 10000
+      }
+    },
+    {
+      "id": "havas-006",
+      "input": {
+        "spent": "250000000",
+        "limit": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "OVER",
+        "used_bp": 25000
+      }
+    },
+    {
+      "id": "havas-007",
+      "input": {
+        "spent": "1",
+        "limit": "3",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "OK",
+        "used_bp": 3333
+      }
+    },
+    {
+      "id": "havas-008",
+      "input": {
+        "spent": "5",
+        "limit": "6",
+        "currency": "UZS"
+      },
+      "expected": {
+        "state": "NEAR",
+        "used_bp": 8333
+      }
+    },
+    {
+      "id": "havas-009",
+      "input": {
+        "spent": "5",
+        "limit": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_LIMIT"
+      }
+    },
+    {
+      "id": "havas-010",
+      "input": {
+        "spent": "-5",
+        "limit": "100",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

@@ -35,3 +35,14 @@
 - Audit qayta kiritilganda yozuv yangilanadi (o'chirib qayta yaratilmaydi), shunda eski haftalar vazifasi «audit» yo'qolmaydi.
 - Tauri: 5 command (`study.rs`); UI: «Boblar» sahifasi (o'qish, Daftar sahifasi, vazifalar, ochilish sharti sozlamasi), bosh sahifadagi «haftalik vazifalar» va «juma qissasi» slotlari haqiqiy ma'lumot bilan.
 - Kechiktirildi: audio, qissa matnlari (litsenziya), 6–12-boblar, bildirishnomalar (D7).
+
+## D6 — Uch toifa, havas chegarasi, oila kengashi
+- **Vektorlar:** `havas_status` (80% → NEAR, 100% → OVER; chegaralar yaxlitlanmagan aniq solishtiriladi), `habit_projection` (haftalik/oylik/yillik prognoz).
+- **Sxema v4:** `member_credentials` (a'zoning shaxsiy PIN'i, Argon2id), `necessity_changes` (kim va qachon), `havas_limits`, `limit_consents`, `scheduled_treats`; `categories.is_charity/is_habit`, `expenses.note`.
+- **Uch toifa:** barcha standart kategoriyalarga standart toifa; eski bazalarga idempotent to'ldiriladi (foydalanuvchi tanloviga tegilmaydi). Toifa o'zgarishi tarixga yoziladi. Xarajatda toifani alohida belgilash mumkin.
+- **Havas chegarasi:** faqat **barcha `ADULT` a'zolar o'z PIN'i bilan** rozilik berganda faol; yangi taklif kelishilgunga qadar eski chegara amalda; kattalar qo'shilsa chegara yangi a'zo rozi bo'lguncha to'xtaydi; bola/kuzatuvchi rozilik bera olmaydi; eskirgan taklifga rozilik rad etiladi. Xato PIN urinishlari sekinlashtiriladi (vault bilan bir jadval). Bloklash yo'q — yumshoq ogohlantirish.
+- **Sadaqa** havas ham, obro' ham hisobiga kirmaydi (toifasi qanday belgilanganidan qat'i nazar); **sovg'a** havas hisobiga kirmaydi; **qarz bilan qilingan havas** alohida ko'rsatiladi.
+- **Hafta varag'i** (ommaviy kiritish, bitta tranzaksiya, izohdan kategoriya avtomatik), **Juma shirinligi**, **odatlar** statistikasi (oyiga/yiliga, faqat statistika).
+- **Oila kengashi** (to'liq ekran, 4 qadam) va **PDF bayonnoma** (`typst`, DejaVu Sans ilovaga o'rnatilgan): ʻ/ʼ belgilari PDF matn snapshot testi bilan tasdiqlangan; foydalanuvchi matnlari typst string literal sifatida qo'yiladi (markup injection yo'q). PDF OS «saqlash» oynasi orqali Rust tomonida yoziladi.
+- Dev profil: `debug = "line-tables-only"` (typst bilan `target/` 28 GB ga yetgan edi).
+- Kechiktirildi: shaxsiy havas ulushi (a'zo bo'yicha), chop etish dialogi (D15 bilan), bildirishnoma («Juma shirinligi» eslatmasi — D7), bayonnomani ruscha chiqarish.

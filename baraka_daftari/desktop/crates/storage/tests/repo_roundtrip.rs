@@ -78,6 +78,8 @@ fn world() -> World {
         name: "Somsa".into(),
         necessity: Some(Necessity::Havas),
         owner: None,
+        is_charity: false,
+        is_habit: false,
     };
     repo::insert(db.conn(), &category).unwrap();
     World {
@@ -140,6 +142,7 @@ fn income_and_expense_roundtrip_with_nullable_future_fields() {
         is_ostentation: None,
         funded_by_debt: None,
         audit_month: None,
+        note: None,
     };
     let full = Expense {
         meta: w.fx.meta(hid),
@@ -309,6 +312,8 @@ fn transaction_rolls_back_on_error() {
         name: "Yangi".into(),
         necessity: None,
         owner: None,
+        is_charity: false,
+        is_habit: false,
     };
     let dup = extra.clone(); // bir xil id => ikkinchi insert xato beradi
     let res: Result<(), StorageError> = w.db.transaction(|tx| {
@@ -333,6 +338,8 @@ fn v2_fields_roundtrip_nasiya_owner_audit_and_withdrawal() {
         name: "Benzin".into(),
         necessity: None,
         owner: Some(MoneyOwner::Fuel),
+        is_charity: false,
+        is_habit: false,
     };
     repo::insert(c, &fuel).unwrap();
     assert_eq!(
@@ -371,6 +378,7 @@ fn v2_fields_roundtrip_nasiya_owner_audit_and_withdrawal() {
         is_ostentation: None,
         funded_by_debt: None,
         audit_month: Some("2026-09".into()),
+        note: None,
     };
     repo::insert(c, &audit).unwrap();
     assert_eq!(

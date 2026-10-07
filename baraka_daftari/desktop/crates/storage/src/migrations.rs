@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 3;
+pub const SCHEMA_VERSION: usize = 4;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -147,10 +147,57 @@ CREATE TABLE settings (
 CREATE UNIQUE INDEX uq_setting ON settings (household_id, key) WHERE deleted_at IS NULL;
 ";
 
+/// D6: toifalar tarixi, havas chegarasi va rozilik, shaxsiy PIN, «Juma shirinligi», sadaqa/odat belgilari.
+const V4: &str = "
+ALTER TABLE categories ADD COLUMN is_charity INTEGER NOT NULL DEFAULT 0 CHECK (is_charity IN (0,1));
+ALTER TABLE categories ADD COLUMN is_habit INTEGER NOT NULL DEFAULT 0 CHECK (is_habit IN (0,1));
+ALTER TABLE expenses ADD COLUMN note TEXT;
+CREATE TABLE member_credentials (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  member_id TEXT NOT NULL REFERENCES members(id), pin_hash TEXT NOT NULL,
+  failures INTEGER NOT NULL DEFAULT 0, locked_until INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX uq_member_credential ON member_credentials (member_id) WHERE deleted_at IS NULL;
+CREATE TABLE necessity_changes (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  category_id TEXT NOT NULL REFERENCES categories(id),
+  from_necessity TEXT CHECK (from_necessity IN ('ZARUR','KERAK','HAVAS')),
+  to_necessity TEXT NOT NULL CHECK (to_necessity IN ('ZARUR','KERAK','HAVAS')),
+  changed_by TEXT NOT NULL REFERENCES members(id)
+);
+CREATE INDEX idx_necessity_changes_cat ON necessity_changes (category_id, created_at);
+CREATE TABLE havas_limits (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL,
+  proposed_by TEXT NOT NULL REFERENCES members(id)
+);
+CREATE TABLE limit_consents (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  limit_id TEXT NOT NULL REFERENCES havas_limits(id), member_id TEXT NOT NULL REFERENCES members(id),
+  consented_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_limit_consent ON limit_consents (limit_id, member_id) WHERE deleted_at IS NULL;
+CREATE TABLE scheduled_treats (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL,
+  weekday INTEGER NOT NULL CHECK (weekday BETWEEN 1 AND 7), active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1))
+);
+";
+
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(V1), M::up(V2), M::up(V3)])
+    Migrations::new(vec![M::up(V1), M::up(V2), M::up(V3), M::up(V4)])
 }
 
 #[cfg(test)]
@@ -186,7 +233,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 16);
+        assert_eq!(tables.len(), 21);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

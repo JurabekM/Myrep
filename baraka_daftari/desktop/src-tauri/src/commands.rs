@@ -35,6 +35,12 @@ pub enum CommandError {
     NotFound,
     InsufficientFunds,
     OpeningBalanceExists,
+    /// A'zoning PIN'i noto'g'ri (havas chegarasiga rozilik).
+    MemberWrongPin,
+    MemberPinLocked {
+        retry_after_secs: u32,
+    },
+    MemberNoPin,
     /// "Kelajagim"dan pul olish pauzasi tugamagan.
     Cooling {
         remaining_secs: u32,
@@ -54,6 +60,11 @@ impl From<ServiceError> for CommandError {
             ServiceError::NotFound => Self::NotFound,
             ServiceError::InsufficientFunds => Self::InsufficientFunds,
             ServiceError::OpeningBalanceExists => Self::OpeningBalanceExists,
+            ServiceError::WrongPin => Self::MemberWrongPin,
+            ServiceError::PinLocked { retry_after_secs } => Self::MemberPinLocked {
+                retry_after_secs: secs(retry_after_secs),
+            },
+            ServiceError::NoPin => Self::MemberNoPin,
             ServiceError::Cooling { remaining_secs } => Self::Cooling {
                 remaining_secs: u32::try_from(remaining_secs.max(0)).unwrap_or(u32::MAX),
             },

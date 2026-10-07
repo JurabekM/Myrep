@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CouncilMode } from '../features/council/CouncilMode';
+import { ExpensesPage } from '../features/expenses/ExpensesPage';
+import { FamilyPage } from '../features/family/FamilyPage';
 import { AuditWizardPage } from '../features/audit/AuditPage';
 import { HomePage } from '../features/home/HomePage';
 import { IncomePage } from '../features/income/IncomePage';
@@ -16,7 +19,9 @@ const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'income', labelKey: 'nav.income' },
   { id: 'vault', labelKey: 'nav.vault' },
   { id: 'budget', labelKey: 'nav.budget' },
+  { id: 'expenses', labelKey: 'nav.expenses' },
   { id: 'obligations', labelKey: 'nav.obligations' },
+  { id: 'family', labelKey: 'nav.family' },
   { id: 'study', labelKey: 'nav.study' },
 ];
 
@@ -34,6 +39,12 @@ function CurrentPage({ page }: { page: Page }) {
       return <ObligationsPage />;
     case 'study':
       return <StudyPage />;
+    case 'expenses':
+      return <ExpensesPage />;
+    case 'family':
+      return <FamilyPage />;
+    case 'council':
+      return <CouncilMode />;
   }
 }
 
@@ -54,6 +65,11 @@ export function App() {
       window.removeEventListener('keydown', onKey);
     };
   }, [openQuickEntry]);
+
+  // Oila kengashi — to'liq ekran rejimi (navigatsiyasiz).
+  if (page === 'council') {
+    return <CouncilMode />;
+  }
 
   return (
     <div className="flex min-h-screen">

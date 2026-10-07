@@ -14,6 +14,7 @@ keyring = { version = "3", features = ["windows-native", "apple-native", "sync-s
 serde.workspace = true
 serde_json.workspace = true
 sha2 = "0.11.0"
+subtle = "2.6.1"
 thiserror.workspace = true
 zeroize = "1.9.1"
 

@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'income' | 'vault' | 'budget' | 'obligations' | 'study';
+export type Page =
+  | 'home'
+  | 'income'
+  | 'vault'
+  | 'budget'
+  | 'obligations'
+  | 'study'
+  | 'expenses'
+  | 'family'
+  | 'council';
 
 interface NavState {
   page: Page;

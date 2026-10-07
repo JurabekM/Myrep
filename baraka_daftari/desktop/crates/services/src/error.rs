@@ -15,6 +15,12 @@ pub enum ServiceError {
     OpeningBalanceExists,
     #[error("Kelajagimda mablag' yetarli emas")]
     InsufficientFunds,
+    #[error("PIN noto'g'ri")]
+    WrongPin,
+    #[error("juda ko'p urinish: {retry_after_secs} soniyadan keyin")]
+    PinLocked { retry_after_secs: u64 },
+    #[error("a'zo uchun PIN o'rnatilmagan")]
+    NoPin,
     #[error("pauza tugamagan: {remaining_secs} soniya qoldi")]
     Cooling { remaining_secs: i64 },
 }
