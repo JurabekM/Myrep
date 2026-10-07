@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-paper: #fbf6ea;
+  --color-ink: #2b2118;
+  --color-accent: #8a5a1c;
+}
+
+:root[data-theme='dark'] {
+  --color-paper: #1d1913;
+  --color-ink: #efe6d2;
+  --color-accent: #d9a45b;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: system-ui, sans-serif;
+}

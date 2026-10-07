@@ -1,0 +1,29 @@
+{
+  "suite": "percent_of",
+  "version": 1,
+  "description": "percent_of = allocate(m, [bp, 10000-bp])[0]",
+  "cases": [
+    {
+      "id": "pct-001",
+      "input": {
+        "amount": "800000000",
+        "currency": "UZS",
+        "bp": 1000
+      },
+      "expected": {
+        "minor": "80000000"
+      }
+    },
+    {
+      "id": "pct-002",
+      "input": {
+        "amount": "12345",
+        "currency": "UZS",
+        "bp": 1000
+      },
+      "expected": {
+        "minor": "1235"
+      }
+    }
+  ]
+}

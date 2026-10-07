@@ -42,3 +42,7 @@ dist_installer/
 *.rlib
 *.a
 *.pdb
+
+# --- Baraka daftari desktop ---
+baraka_daftari/desktop/src-tauri/gen/
+baraka_daftari/desktop/target/

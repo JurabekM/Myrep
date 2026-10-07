@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "Asosiy oyna: faqat o'zimizning commandlar. shell, http va keng fs pluginlari yoqilmaydi.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

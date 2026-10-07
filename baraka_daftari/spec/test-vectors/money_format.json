@@ -1,0 +1,84 @@
+{
+  "suite": "money_format",
+  "version": 1,
+  "description": "Formatlash: probel bilan guruhlash, vergulli kasr, nol kasr tushiriladi",
+  "cases": [
+    {
+      "id": "fmt-001",
+      "input": {
+        "minor": "800000000",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "8 000 000 so'm"
+      }
+    },
+    {
+      "id": "fmt-002",
+      "input": {
+        "minor": "800000050",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "8 000 000,50 so'm"
+      }
+    },
+    {
+      "id": "fmt-003",
+      "input": {
+        "minor": "99",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "0,99 so'm"
+      }
+    },
+    {
+      "id": "fmt-004",
+      "input": {
+        "minor": "0",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "0 so'm"
+      }
+    },
+    {
+      "id": "fmt-005",
+      "input": {
+        "minor": "-150000",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "-1 500 so'm"
+      }
+    },
+    {
+      "id": "fmt-006",
+      "input": {
+        "minor": "800000000",
+        "currency": "UZS",
+        "locale": "ru"
+      },
+      "expected": {
+        "text": "8 000 000 сум"
+      }
+    },
+    {
+      "id": "fmt-007",
+      "input": {
+        "minor": "12345",
+        "currency": "USD",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "123,45 USD"
+      }
+    }
+  ]
+}

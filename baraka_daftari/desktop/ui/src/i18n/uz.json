@@ -1,0 +1,11 @@
+{
+  "app": { "title": "Baraka daftari" },
+  "demo": {
+    "heading": "Pulni bo'lish (D1 namunasi)",
+    "total": "Summa (tiyinda)",
+    "run": "Bo'lish",
+    "result": "Natija",
+    "error": "Xato"
+  },
+  "disclaimer": "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas."
+}

@@ -1,0 +1,110 @@
+{
+  "suite": "fx_convert",
+  "version": 1,
+  "description": "Kurs bo'yicha konvertatsiya, half-up yaxlitlash; valyuta mos kelmasa xato",
+  "cases": [
+    {
+      "id": "fx-001",
+      "input": {
+        "amount": "10000",
+        "currency": "USD",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "1265050",
+        "rate_den": "100"
+      },
+      "expected": {
+        "minor": "126505000",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-002",
+      "input": {
+        "amount": "1",
+        "currency": "USD",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "1",
+        "rate_den": "2"
+      },
+      "expected": {
+        "minor": "1",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-003",
+      "input": {
+        "amount": "3",
+        "currency": "USD",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "1",
+        "rate_den": "2"
+      },
+      "expected": {
+        "minor": "2",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-004",
+      "input": {
+        "amount": "4",
+        "currency": "USD",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "1",
+        "rate_den": "3"
+      },
+      "expected": {
+        "minor": "1",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-005",
+      "input": {
+        "amount": "5",
+        "currency": "USD",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "1",
+        "rate_den": "3"
+      },
+      "expected": {
+        "minor": "2",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-006",
+      "input": {
+        "amount": "100",
+        "currency": "EUR",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "1",
+        "rate_den": "1"
+      },
+      "expected": {
+        "error": "CURRENCY_MISMATCH"
+      }
+    },
+    {
+      "id": "fx-007",
+      "input": {
+        "amount": "100",
+        "currency": "USD",
+        "from": "USD",
+        "to": "UZS",
+        "rate_num": "0",
+        "rate_den": "1"
+      },
+      "expected": {
+        "error": "INVALID_RATE"
+      }
+    }
+  ]
+}

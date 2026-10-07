@@ -1,0 +1,199 @@
+//! `spec/test-vectors/*.json` oltin vektorlarini yuklaydi va `money` crate'ga qarshi ishga tushiradi.
+//! Pul qiymatlari JSON'da string (minor birlikda) ko'rinishida.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
+use std::{fs, path::Path};
+
+use money::{allocate, format_money, percent_of, Currency, FxRate, Locale, Money, MoneyError};
+use serde::Deserialize;
+use serde_json::Value;
+
+#[derive(Debug, thiserror::Error)]
+pub enum VectorError {
+    #[error("fayl o'qilmadi: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("JSON noto'g'ri ({file}): {source}")]
+    Json {
+        file: String,
+        source: serde_json::Error,
+    },
+    #[error("noma'lum suite: {0}")]
+    UnknownSuite(String),
+}
+
+#[derive(Debug, Deserialize)]
+struct Suite {
+    suite: String,
+    cases: Vec<Case>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Case {
+    id: String,
+    input: Value,
+    expected: Value,
+}
+
+#[derive(Debug, Default)]
+pub struct Report {
+    pub passed: usize,
+    pub failures: Vec<String>,
+}
+
+impl Report {
+    #[must_use]
+    pub fn is_green(&self) -> bool {
+        self.failures.is_empty()
+    }
+}
+
+/// Katalogdagi barcha `*.json` suite'larni ishga tushiradi (fayl nomi bo'yicha tartiblangan).
+///
+/// # Errors
+/// Fayl o'qilmasa, JSON noto'g'ri bo'lsa yoki suite noma'lum bo'lsa.
+pub fn run_dir(dir: &Path) -> Result<Report, VectorError> {
+    let mut files: Vec<_> = fs::read_dir(dir)?
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|e| e == "json"))
+        .collect();
+    files.sort();
+
+    let mut report = Report::default();
+    for path in files {
+        let text = fs::read_to_string(&path)?;
+        let suite: Suite = serde_json::from_str(&text).map_err(|source| VectorError::Json {
+            file: path.display().to_string(),
+            source,
+        })?;
+        let runner = runner_for(&suite.suite)?;
+        for case in suite.cases {
+            match runner(&case.input) {
+                Ok(actual) if actual == case.expected => report.passed += 1,
+                Ok(actual) => report.failures.push(format!(
+                    "{}/{}: kutilgan {}, olingan {actual}",
+                    suite.suite, case.id, case.expected
+                )),
+                Err(msg) => report
+                    .failures
+                    .push(format!("{}/{}: {msg}", suite.suite, case.id)),
+            }
+        }
+    }
+    Ok(report)
+}
+
+type Runner = fn(&Value) -> Result<Value, String>;
+
+fn runner_for(suite: &str) -> Result<Runner, VectorError> {
+    match suite {
+        "allocate" => Ok(run_allocate),
+        "percent_of" => Ok(run_percent_of),
+        "fx_convert" => Ok(run_fx_convert),
+        "money_format" => Ok(run_money_format),
+        other => Err(VectorError::UnknownSuite(other.to_owned())),
+    }
+}
+
+fn str_field<'a>(v: &'a Value, key: &str) -> Result<&'a str, String> {
+    v.get(key)
+        .and_then(Value::as_str)
+        .ok_or_else(|| format!("`{key}` string bo'lishi kerak"))
+}
+
+fn int_field(v: &Value, key: &str) -> Result<u64, String> {
+    v.get(key)
+        .and_then(Value::as_u64)
+        .ok_or_else(|| format!("`{key}` butun son bo'lishi kerak"))
+}
+
+fn parse_minor(s: &str) -> Result<i64, String> {
+    s.parse::<i64>()
+        .map_err(|e| format!("`{s}` summa emas: {e}"))
+}
+
+fn parse_currency(v: &Value, key: &str) -> Result<Currency, String> {
+    Currency::from_code(str_field(v, key)?).map_err(|e| e.to_string())
+}
+
+fn parse_money(v: &Value, amount_key: &str, currency_key: &str) -> Result<Money, String> {
+    Ok(Money::new(
+        parse_minor(str_field(v, amount_key)?)?,
+        parse_currency(v, currency_key)?,
+    ))
+}
+
+fn money_json(m: Money) -> Value {
+    serde_json::json!({ "minor": m.minor().to_string(), "currency": m.currency().code() })
+}
+
+fn error_code(e: &MoneyError) -> &'static str {
+    match e {
+        MoneyError::CurrencyMismatch { .. } => "CURRENCY_MISMATCH",
+        MoneyError::Overflow => "OVERFLOW",
+        MoneyError::InvalidRatios => "INVALID_RATIOS",
+        MoneyError::InvalidBasisPoints => "INVALID_BASIS_POINTS",
+        MoneyError::InvalidRate => "INVALID_RATE",
+        MoneyError::UnknownCurrency(_) => "UNKNOWN_CURRENCY",
+        MoneyError::Parse(_) => "PARSE",
+    }
+}
+
+fn error_json(e: &MoneyError) -> Value {
+    serde_json::json!({ "error": error_code(e) })
+}
+
+fn run_allocate(input: &Value) -> Result<Value, String> {
+    let total = parse_money(input, "total", "currency")?;
+    let ratios: Vec<u64> = input
+        .get("ratios")
+        .and_then(Value::as_array)
+        .ok_or("`ratios` massiv bo'lishi kerak")?
+        .iter()
+        .map(|r| {
+            r.as_u64()
+                .ok_or_else(|| "nisbat butun son bo'lishi kerak".to_owned())
+        })
+        .collect::<Result<_, _>>()?;
+    Ok(match allocate(total, &ratios) {
+        Ok(parts) => {
+            serde_json::json!({ "parts": parts.iter().map(|m| m.minor().to_string()).collect::<Vec<_>>() })
+        }
+        Err(e) => error_json(&e),
+    })
+}
+
+fn run_percent_of(input: &Value) -> Result<Value, String> {
+    let amount = parse_money(input, "amount", "currency")?;
+    let bp = u32::try_from(int_field(input, "bp")?).map_err(|e| e.to_string())?;
+    Ok(match percent_of(amount, bp) {
+        Ok(m) => serde_json::json!({ "minor": m.minor().to_string() }),
+        Err(e) => error_json(&e),
+    })
+}
+
+fn run_fx_convert(input: &Value) -> Result<Value, String> {
+    let amount = parse_money(input, "amount", "currency")?;
+    let rate = FxRate {
+        from: parse_currency(input, "from")?,
+        to: parse_currency(input, "to")?,
+        rate_num: parse_minor(str_field(input, "rate_num")?)?,
+        rate_den: parse_minor(str_field(input, "rate_den")?)?,
+        date: "vector".into(),
+        source: "vector".into(),
+    };
+    Ok(match rate.convert(amount) {
+        Ok(m) => money_json(m),
+        Err(e) => error_json(&e),
+    })
+}
+
+fn run_money_format(input: &Value) -> Result<Value, String> {
+    let amount = parse_money(input, "minor", "currency")?;
+    let locale = match str_field(input, "locale")? {
+        "uz" => Locale::Uz,
+        "ru" => Locale::Ru,
+        other => return Err(format!("noma'lum locale `{other}`")),
+    };
+    Ok(serde_json::json!({ "text": format_money(amount, locale) }))
+}
