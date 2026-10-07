@@ -1,0 +1,20 @@
+[package]
+name = "storage"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+domain = { version = "0.1.0", path = "../domain" }
+money = { version = "0.1.0", path = "../money" }
+rusqlite = { version = "0.40.2", features = ["bundled-sqlcipher-vendored-openssl"] }
+rusqlite_migration = "2.6.0"
+thiserror.workspace = true
+zeroize = "1.9.1"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tempfile = "3.27.0"

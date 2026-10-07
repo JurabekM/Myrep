@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Baraka daftari" },
+  "app": {
+    "title": "Baraka daftari"
+  },
   "demo": {
     "heading": "Pulni bo'lish (D1 namunasi)",
     "total": "Summa (tiyinda)",
@@ -7,5 +9,23 @@
     "result": "Natija",
     "error": "Xato"
   },
-  "disclaimer": "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas."
+  "disclaimer": "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas.",
+  "lock": {
+    "pin": "PIN (6 raqam)",
+    "newPin": "Yangi PIN (6 raqam)",
+    "confirmPin": "PIN'ni takrorlang",
+    "unlock": "Ochish",
+    "setup": "PIN o'rnatish",
+    "setupHint": "Daftaringizni himoya qilish uchun 6 raqamli PIN o'rnating. PIN'ni unutsangiz, ma'lumotlarni tiklab bo'lmaydi.",
+    "unlockHint": "Daftarni ochish uchun PIN'ni kiriting.",
+    "errors": {
+      "wrongPin": "PIN noto'g'ri.",
+      "invalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
+      "locked": "Daftar qulflangan.",
+      "keyringMissing": "Bu kompyuterda daftar kaliti topilmadi. Daftar boshqa kompyuterdan ko'chirilgan bo'lishi mumkin; zaxira fayldan (.baraka) tiklang.",
+      "internal": "Kutilmagan xato. Qayta urinib ko'ring.",
+      "mismatch": "PIN'lar bir xil emas.",
+      "wait": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring."
+    }
+  }
 }

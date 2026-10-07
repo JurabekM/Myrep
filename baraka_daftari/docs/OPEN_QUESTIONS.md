@@ -7,3 +7,8 @@
 5. **Papka joylashuvi:** spetsifikatsiya `baraka-desktop/` ildizini nazarda tutadi; monorepoda `baraka_daftari/desktop/` ostida, `spec/` esa mobil bilan umumiy bo'lishi uchun `baraka_daftari/spec/` da.
 6. **`ʻ` (U+02BB) / `ʼ` (U+02BC)** belgilari: `format_money` hozircha ASCII `'` ishlatadi (`so'm`). Spetsifikatsiya misoli ham shunday.
 7. Ikonlar vaqtinchalik bir rangli placeholder; brend ikonlari kerak.
+8. **Windows Hello** (`UserConsentVerifier`) D3 da qilinmadi: ixtiyoriy, `unsafe` va WinRT bog'liqliklarini talab qiladi. Alohida vazifa sifatida qo'shamizmi?
+9. **Keyring yo'qolsa** (Windows profili tiklangan, boshqa kompyuterga ko'chirilgan) baza faqat `.baraka` zaxira fayldan (D14) tiklanadi. UI hozircha shuni aytadi; tiklash oqimi D14 da.
+10. **PIN unutilsa** tiklash yo'li yo'q (ataylab). Onboarding (D15) da bu ochiq ogohlantirilishi kerak.
+11. **Lockout fayli** (`vault.json`) hujumchi tomonidan tahrirlanishi mumkin; lekin fayl bor hujumchi baribir Argon2id + keyring sirini buzishi kerak. Lockout faqat onlayn taxminlardan himoya.
+12. **Ekran qulfi bilan qulflash** (Windows sessiya qulfi hodisasi) hali ulanmagan — hozir faqat harakatsizlik taymeri va `Ctrl+L`.

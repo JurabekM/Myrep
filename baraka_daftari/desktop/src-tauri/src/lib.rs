@@ -5,12 +5,37 @@
 
 mod commands;
 mod dto;
+mod session;
 
+use std::{sync::Mutex, time::Duration};
+
+use security::{KdfParams, KeyringStore};
+use session::Session;
 use specta_typescript::Typescript;
+use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
 
+/// Har 5 soniyada harakatsizlikni tekshiradi; muddat o'tsa bazani yopadi.
+fn spawn_autolock(app: tauri::AppHandle) {
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(5));
+        let state = app.state::<commands::AppSession>();
+        let mut guard = state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        guard.tick(commands::unix_now());
+    });
+}
+
 fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![commands::allocate_demo])
+    Builder::<tauri::Wry>::new().commands(collect_commands![
+        commands::allocate_demo,
+        commands::vault_state,
+        commands::setup_pin,
+        commands::unlock,
+        commands::lock,
+        commands::activity,
+    ])
 }
 
 /// Ilovani ishga tushiradi.
@@ -31,6 +56,17 @@ pub fn run() {
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);
+            // Har bir Windows foydalanuvchisi uchun alohida: %APPDATA%\BarakaDaftari.
+            let data_dir = app.path().data_dir()?.join("BarakaDaftari");
+            let store = KeyringStore::new("uz.baraka.daftari.desktop", "db-device-secret")?;
+            let session = Session::new(
+                &data_dir,
+                store,
+                KdfParams::production(),
+                commands::unix_now(),
+            );
+            app.manage(Mutex::new(session));
+            spawn_autolock(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())

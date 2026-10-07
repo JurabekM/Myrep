@@ -8,11 +8,21 @@ export const commands = {
 	 *  Namunaviy command (D1): summani nisbatlar bo'yicha bo'ladi.
 	 *  Summa string sifatida keladi va Rustda parse qilinadi (frontend pul hisoblamaydi).
 	 */
-	allocateDemo: (totalMinor: string, ratios: number[]) => typedError<MoneyDto[], CommandError>(__TAURI_INVOKE("allocate_demo", { totalMinor, ratios })),
+	allocateDemo: (totalMinor: string, ratios: number[]) => typedError<MoneyDto[], DemoError>(__TAURI_INVOKE("allocate_demo", { totalMinor, ratios })),
+	vaultState: () => typedError<VaultStateDto, CommandError>(__TAURI_INVOKE("vault_state")),
+	/**  Birinchi ishga tushirish: PIN o'rnatadi va bazani ochadi. */
+	setupPin: (pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("setup_pin", { pin })),
+	unlock: (pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("unlock", { pin })),
+	lock: () => typedError<null, CommandError>(__TAURI_INVOKE("lock")),
+	/**  Foydalanuvchi faolligi: avto-qulf hisoblagichini yangilaydi. */
+	activity: () => typedError<null, CommandError>(__TAURI_INVOKE("activity")),
 };
 
 /* Types */
-export type CommandError = { kind: "InvalidInput"; message: string };
+/**  Frontendga qaytadigan xatolar. Matnlarda summa, ism yoki PIN bo'lmaydi. */
+export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kind: "Locked"; retry_after_secs: number } | { kind: "NotInitialized" } | { kind: "AlreadyInitialized" } | { kind: "KeyringMissing" } | { kind: "Internal"; message: string };
+
+export type DemoError = { kind: "InvalidInput"; message: string };
 
 /**  Pul DTO (DESKTOP_PROMPT 3.2): `minor` JS 2^53 chegarasidan himoya uchun string. */
 export type MoneyDto = {
@@ -20,6 +30,8 @@ export type MoneyDto = {
 	currency: string,
 	formatted: string,
 };
+
+export type VaultStateDto = { kind: "Uninitialized" } | { kind: "Locked"; retry_after_secs: number } | { kind: "Unlocked" };
 
 /* Tauri Specta runtime */
 async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {

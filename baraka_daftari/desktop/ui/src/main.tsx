@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './app/App';
+import { Gate } from './features/lock/Gate';
 import './i18n';
 import './index.css';
 
@@ -13,7 +14,9 @@ if (!root) throw new Error('#root topilmadi');
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <Gate>
+        <App />
+      </Gate>
     </QueryClientProvider>
   </StrictMode>,
 );

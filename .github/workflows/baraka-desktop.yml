@@ -60,6 +60,9 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: test
         run: cargo test --workspace --exclude vectors
+      - name: haqiqiy OS keyring (Windows Credential Manager / Keychain)
+        if: matrix.os != 'ubuntu-latest'
+        run: cargo test -p security -- --ignored
       # Mobil ilova CI'si ham aynan shu vektorlardan o'tishi shart.
       - name: test vektorlari
         run: cargo test -p vectors
