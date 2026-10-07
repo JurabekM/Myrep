@@ -249,3 +249,30 @@ pub fn report(conn: &Connection, ctx: &Ctx, ym: YearMonth) -> Result<Report, Ser
         gifts_excluded: sum_money(cur, gifts)?,
     })
 }
+
+/// `from..=to` oralig'idagi havas jami (sovg'a va sadaqasiz): hafta bo'yicha «qutqarilgan pul» va
+/// «Havas» konverti uchun.
+///
+/// # Errors
+/// Baza xatosi yoki valyuta mos kelmasa.
+pub fn spent_between(
+    conn: &Connection,
+    ctx: &Ctx,
+    from: domain::Date,
+    to: domain::Date,
+) -> Result<Money, ServiceError> {
+    let categories: HashMap<String, Category> = repo::list::<Category>(conn, &ctx.household_id)?
+        .into_iter()
+        .map(|c| (c.meta.id.clone(), c))
+        .collect();
+    let amounts = repo::list::<Expense>(conn, &ctx.household_id)?
+        .into_iter()
+        .filter(|e| e.spent_on >= from && e.spent_on <= to)
+        .filter_map(|e| {
+            let cat = categories.get(&e.category_id)?;
+            let nec = effective_necessity(e.necessity, cat.necessity);
+            counts_as_havas(nec, e.is_gift == Some(true), cat.is_charity).then_some(e.amount)
+        })
+        .collect::<Vec<_>>();
+    Ok(sum_money(ctx.currency, amounts)?)
+}

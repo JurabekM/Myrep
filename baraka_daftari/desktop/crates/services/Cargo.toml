@@ -15,6 +15,7 @@ security = { path = "../security" }
 pdf = { path = "../pdf" }
 thiserror = { workspace = true }
 time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+csv = "1.4.0"
 
 [dev-dependencies]
 tempfile = "3.27.0"

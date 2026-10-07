@@ -46,6 +46,23 @@ pub fn parse_amount(text: &str, currency: Currency) -> Result<Money, MoneyError>
         .map_err(|_| MoneyError::Overflow)
 }
 
+/// Bank ko'chirmasi summasi: oldida `+`, `-` yoki `−` (U+2212) bo'lishi mumkin. `(manfiymi, modul)`.
+/// Belgi va raqam orasida probel bo'lishi mumkin; ikki belgi, yolg'iz belgi yoki bo'sh matn — xato.
+///
+/// # Errors
+/// [`parse_amount`] xatolari.
+pub fn parse_signed_amount(text: &str, currency: Currency) -> Result<(bool, Money), MoneyError> {
+    let t = text.trim_matches(|c: char| c == ' ' || c == '\u{a0}');
+    let (negative, rest) = match t.chars().next() {
+        Some('-' | '\u{2212}') => (true, &t[t.chars().next().map_or(0, char::len_utf8)..]),
+        Some('+') => (false, &t[1..]),
+        _ => (false, t),
+    };
+    let money = parse_amount(rest, currency)?;
+    // "-0" manfiy hisoblanmaydi.
+    Ok((negative && money.minor() != 0, money))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -88,5 +105,18 @@ mod tests {
             parse_amount("1,5", Currency::Usd).unwrap().currency(),
             Currency::Usd
         );
+    }
+
+    #[test]
+    fn signed_amounts() {
+        let p = |s: &str| parse_signed_amount(s, Currency::Uzs).map(|(n, m)| (n, m.minor()));
+        assert_eq!(p("-150 000,50"), Ok((true, 15_000_050)));
+        assert_eq!(p("+8 000 000"), Ok((false, 800_000_000)));
+        assert_eq!(p("1500"), Ok((false, 150_000)));
+        assert_eq!(p("\u{2212} 25 000"), Ok((true, 2_500_000)));
+        assert_eq!(p("-0"), Ok((false, 0)));
+        for bad in ["--5", "-", "- -5", "abc", "", "+-5"] {
+            assert!(matches!(p(bad), Err(MoneyError::Parse(_))), "{bad:?}");
+        }
     }
 }

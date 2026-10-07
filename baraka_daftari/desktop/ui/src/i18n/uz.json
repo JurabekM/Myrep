@@ -31,7 +31,10 @@
     "quickEntry": "Tez kiritish",
     "study": "Boblar",
     "expenses": "Xarajatlar",
-    "family": "Oila"
+    "family": "Oila",
+    "subscriptions": "Obunalar",
+    "envelopes": "Konvertlar",
+    "rescue": "Qutqarilgan pul"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -87,7 +90,8 @@
     "tasksProgress": "Bajarildi: {{done}} / {{total}}",
     "openTasks": "Vazifalarni ochish",
     "newChapter": "Yangi bob ochildi!",
-    "readChapter": "Qissani o'qish"
+    "readChapter": "Qissani o'qish",
+    "rescue": "Bu hafta qancha qutqardingiz?"
   },
   "quick": {
     "title": "Yangi daromad",
@@ -288,5 +292,96 @@
     "minutesHint": "Kelishuv PDF bayonnoma qilib saqlanadi; chop etib imzolash mumkin.",
     "savePdf": "PDF bayonnomani saqlash",
     "saved": "Saqlandi: {{name}}"
+  },
+  "period": {
+    "WEEKLY": "haftasiga",
+    "MONTHLY": "oyiga",
+    "QUARTERLY": "choragiga",
+    "YEARLY": "yiliga"
+  },
+  "quickWindow": {
+    "title": "Tez xarajat",
+    "locked": "Daftar qulflangan. Asosiy oynada PIN kiriting."
+  },
+  "subs": {
+    "hint": "Obunalar va avtoto'lovlar «tuynuk»ni topishga yordam beradi: oyiga arzimas ko'ringan to'lov yiliga ancha summaga aylanadi.",
+    "total": "Faol obunalar: oyiga {{monthly}}, yiliga {{yearly}}",
+    "cost": "oyiga {{monthly}} · yiliga {{yearly}}",
+    "lastUsed": "oxirgi marta ishlatilgan: {{date}}",
+    "neverUsed": "ishlatilgani belgilanmagan",
+    "forgotten": "Uzoq vaqtdan beri ishlatilgani belgilanmadi. Hali ham kerakmi?",
+    "used": "Ishlatdim",
+    "needed": "Kerakmi?",
+    "yes": "Ha",
+    "no": "Yo'q",
+    "cancel": "Bekor qildim",
+    "cancelledOn": "Bekor qilingan: {{date}}",
+    "empty": "Obunalar hali kiritilmagan.",
+    "name": "Nomi",
+    "amount": "Narx (so'm)",
+    "period": "Davriylik",
+    "add": "Qo'shish"
+  },
+  "env": {
+    "hint": "Har hafta uchun limitli konvertlar. Karta bilan to'langan xarajat ham konvertdan ayriladi, shuning uchun pul «sezilmay» ketmaydi.",
+    "empty": "Konvertlar hali yo'q.",
+    "limit": "haftasiga {{amount}}",
+    "spent": "Sarflandi: {{spent}} ({{bp}})",
+    "fill": "Konvertga hozir soling: {{amount}}",
+    "remaining": "Qoldiq: {{amount}}",
+    "near": "Konvert 80% dan o'tdi. Taqiq yo'q — hushyor bo'ling.",
+    "over": "Konvert limitidan oshdi. Taqiq yo'q: keyingi hafta qayta ko'rib chiqamiz.",
+    "closed": "Hafta yopildi: naqd qoldiq {{leftover}}, farq {{diff}}",
+    "leftover": "Hafta oxirida naqd qoldiq (so'm)",
+    "close": "Haftani yopish",
+    "name": "Nomi",
+    "weeklyLimit": "Haftalik limit (so'm)",
+    "counts": "Nimani hisoblaydi",
+    "countsNone": "Faqat qo'lda biriktirilganlarni",
+    "byNecessity": "Toifa bo'yicha",
+    "byCategory": "Kategoriya bo'yicha",
+    "add": "Konvert qo'shish"
+  },
+  "rescue": {
+    "hint": "Qutqarilgan pul — havas oldingi haftaga nisbatan kamaygan miqdor va bekor qilingan obunalar. Zarur xarajat yoki sadaqani kamaytirish yutuq hisoblanmaydi.",
+    "compare": "Hafta {{week}}: oldingi hafta havas {{before}}, bu hafta {{now}}",
+    "available": "«Kelajagim»ga o'tkazishga tayyor: {{amount}}",
+    "transfer": "Kelajagimga o'tkazish",
+    "transferred": "o'tkazilgan",
+    "kind": {
+      "HAVAS_DROP": "Havas kamaydi",
+      "SUBSCRIPTION": "Obuna bekor qilindi"
+    }
+  },
+  "csv": {
+    "title": "CSV import",
+    "hint": "Bank ko'chirmasini (UTF-8) tanlang: sana, summa va izoh ustunlarini ko'rsatasiz, ilova xarajat sifatida yozadi. Takror qatorlar o'tkazib yuboriladi.",
+    "choose": "CSV faylni tanlash",
+    "preview": "Fayl ko'rigi",
+    "rows": "Jami qatorlar: {{n}}",
+    "dateCol": "Sana ustuni",
+    "amountCol": "Summa ustuni",
+    "noteCol": "Izoh ustuni",
+    "dateFormat": "Sana formati",
+    "sign": "Qaysi qatorlar xarajat",
+    "defaultCategory": "Standart kategoriya",
+    "fmt": {
+      "ISO": "2026-10-07",
+      "DMY_DOTS": "07.10.2026",
+      "DMY_SLASHES": "07/10/2026",
+      "YMD_SLASHES": "2026/10/07"
+    },
+    "signs": {
+      "NEGATIVE_ARE_EXPENSES": "Manfiy (-) summalar",
+      "POSITIVE_ARE_EXPENSES": "Musbat (+) summalar",
+      "ABSOLUTE_ALL": "Hammasi"
+    },
+    "dry": "Sinov: {{ok}} ta xarajat, {{skipped}} ta o'tkazib yuboriladi, {{errors}} ta xato qator.",
+    "import": "{{n}} ta xarajatni import qilish",
+    "cancel": "Bekor qilish",
+    "done": "Import qilindi: {{n}} ta xarajat",
+    "doneDetails": "Takror: {{dup}}, xarajat emas: {{skipped}}, xato: {{errors}}",
+    "errorLine": "{{line}}-qator: {{reason}}",
+    "close": "Yopish"
   }
 }

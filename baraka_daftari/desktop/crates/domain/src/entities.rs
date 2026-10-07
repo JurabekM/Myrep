@@ -2,8 +2,8 @@ use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    AllocationKind, AssetType, MemberRole, Meta, MoneyOwner, Necessity, ObligationKind,
-    PaymentChannel, VaultSource, VaultTxKind, WithdrawalStatus,
+    AllocationKind, AssetType, BillingPeriod, MemberRole, Meta, MoneyOwner, Necessity,
+    ObligationKind, PaymentChannel, RescueKind, VaultSource, VaultTxKind, WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -224,4 +224,54 @@ pub struct ScheduledTreat {
     /// ISO hafta kuni: 1 = dushanba ... 5 = juma ... 7 = yakshanba.
     pub weekday: u8,
     pub active: bool,
+}
+
+/// Takroriy to'lov (obuna, avtoto'lov). MVP'da qo'lda kiritiladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Subscription {
+    pub meta: Meta,
+    pub name: String,
+    /// Bir davr uchun narx.
+    pub amount: Money,
+    pub period: BillingPeriod,
+    pub started_on: Date,
+    /// Oxirgi «ishlatdim» belgisi.
+    pub last_used_on: Option<Date>,
+    pub cancelled_on: Option<Date>,
+    /// «Kerakmi?» savoliga javob: `None` — hali javob berilmagan.
+    pub needed: Option<bool>,
+}
+
+/// Haftalik konvert (SPEC 2B.6). Xarajat unga `envelope_id`, kategoriya yoki toifa bo'yicha tegishli bo'ladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Envelope {
+    pub meta: Meta,
+    pub name: String,
+    pub weekly_limit: Money,
+    pub category_id: Option<String>,
+    pub necessity: Option<Necessity>,
+    pub active: bool,
+}
+
+/// Konvertning yopilgan haftasi: hafta oxirida kiritilgan naqd qoldiq va farq.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnvelopePeriod {
+    pub meta: Meta,
+    pub envelope_id: String,
+    pub week_start: Date,
+    pub limit: Money,
+    pub spent: Money,
+    pub leftover_cash: Money,
+    pub difference: Money,
+}
+
+/// «Qutqarilgan pul» yozuvi: havas kamaygani yoki bekor qilingan obuna. `transferred_at` — «Kelajagim»ga o'tkazilgan vaqt.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SavingsRescue {
+    pub meta: Meta,
+    pub kind: RescueKind,
+    pub amount: Money,
+    pub week_start: Option<Date>,
+    pub note: Option<String>,
+    pub transferred_at: Option<OffsetDateTime>,
 }

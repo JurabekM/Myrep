@@ -26,3 +26,8 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | chapter_unlock | `policy{window_weeks,min_satisfied_weeks,min_tasks_per_week}`, `opened_week`, `today`, `anchor`, `results[{week_start,completed_tasks}]` | `{"decision":"UNLOCKED"}` yoki `{"decision":"LOCKED","satisfied_weeks","needed_weeks","weeks_in_window"}` |
 | havas_status | `spent`, `limit`, `currency` | `{"state": "OK"\|"NEAR"\|"OVER", "used_bp"}` yoki `{"error": "INVALID_LIMIT"\|"INVALID_AMOUNT"}` |
 | habit_projection | `total`, `window_days`, `currency` | `{"week","month","year"}` (minor, string) |
+| rescued_money | `baseline`, `current`, `currency` | `{"rescued"}` (manfiy holat → 0) yoki `{"error":"INVALID_AMOUNT"}` |
+| subscription_cost | `period` (WEEKLY\|MONTHLY\|QUARTERLY\|YEARLY), `amount` | `{"monthly","yearly"}` |
+| forgotten_subscription | `started_on`, `last_used_on` (null bo'lishi mumkin), `today`, `threshold_days` | `{"forgotten": bool}` |
+| envelope | `limit`, `spent`, `leftover_cash?` | `{"remaining","state","used_bp","cash_to_fill","difference?"}` yoki `{"error":"INVALID_LIMIT"}` |
+| money_parse_signed | `text`, `currency` | `{"negative": bool, "minor"}` yoki `{"error":"PARSE"}` |

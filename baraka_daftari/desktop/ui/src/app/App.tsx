@@ -2,14 +2,17 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { CouncilMode } from '../features/council/CouncilMode';
+import { EnvelopesPage } from '../features/envelopes/EnvelopesPage';
 import { ExpensesPage } from '../features/expenses/ExpensesPage';
 import { FamilyPage } from '../features/family/FamilyPage';
 import { AuditWizardPage } from '../features/audit/AuditPage';
 import { HomePage } from '../features/home/HomePage';
 import { IncomePage } from '../features/income/IncomePage';
 import { QuickEntry } from '../features/income/QuickEntry';
+import { RescuePage } from '../features/rescue/RescuePage';
 import { StudyPage } from '../features/study/StudyPage';
 import { ObligationsPage } from '../features/obligations/ObligationsPage';
+import { SubscriptionsPage } from '../features/subscriptions/SubscriptionsPage';
 import { VaultPage } from '../features/vault/VaultPage';
 
 import { useNav, type Page } from './nav';
@@ -21,6 +24,9 @@ const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'budget', labelKey: 'nav.budget' },
   { id: 'expenses', labelKey: 'nav.expenses' },
   { id: 'obligations', labelKey: 'nav.obligations' },
+  { id: 'envelopes', labelKey: 'nav.envelopes' },
+  { id: 'subscriptions', labelKey: 'nav.subscriptions' },
+  { id: 'rescue', labelKey: 'nav.rescue' },
   { id: 'family', labelKey: 'nav.family' },
   { id: 'study', labelKey: 'nav.study' },
 ];
@@ -45,6 +51,12 @@ function CurrentPage({ page }: { page: Page }) {
       return <FamilyPage />;
     case 'council':
       return <CouncilMode />;
+    case 'subscriptions':
+      return <SubscriptionsPage />;
+    case 'envelopes':
+      return <EnvelopesPage />;
+    case 'rescue':
+      return <RescuePage />;
   }
 }
 

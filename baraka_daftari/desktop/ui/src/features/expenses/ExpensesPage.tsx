@@ -5,6 +5,8 @@ import { commands } from '../../bindings';
 import { unwrap } from '../../lib/api';
 import { useCategories, useHome } from '../../lib/hooks';
 
+import { CsvImport } from '../import/CsvImport';
+
 import { WeekSheet } from './WeekSheet';
 
 export function ExpensesPage() {
@@ -23,6 +25,7 @@ export function ExpensesPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">{t('nav.expenses')}</h1>
       <WeekSheet />
+      <CsvImport />
       <section>
         <h2 className="text-lg font-semibold">{t('sheet.thisWeek')}</h2>
         <ul className="mt-2 divide-y divide-accent/20">

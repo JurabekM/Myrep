@@ -501,3 +501,140 @@ fn v3_content_tables_roundtrip_and_partial_unique_indexes() {
     )
     .is_err());
 }
+
+#[test]
+fn v5_tables_roundtrip_and_constraints() {
+    let w = world();
+    let hid = &w.household.meta.id;
+    let c = w.db.conn();
+    let uzs = |v| Money::new(v, Currency::Uzs);
+
+    let sub = Subscription {
+        meta: w.fx.meta(hid),
+        name: "Netflix".into(),
+        amount: uzs(9_000_000),
+        period: BillingPeriod::Monthly,
+        started_on: day(),
+        last_used_on: Some(day()),
+        cancelled_on: None,
+        needed: Some(true),
+    };
+    repo::insert(c, &sub).unwrap();
+    assert_eq!(
+        repo::get::<Subscription>(c, &sub.meta.id).unwrap().unwrap(),
+        sub
+    );
+    let open = Subscription {
+        meta: w.fx.meta(hid),
+        last_used_on: None,
+        needed: None,
+        ..sub
+    };
+    repo::insert(c, &open).unwrap();
+    assert_eq!(
+        repo::get::<Subscription>(c, &open.meta.id)
+            .unwrap()
+            .unwrap(),
+        open
+    );
+
+    let env = Envelope {
+        meta: w.fx.meta(hid),
+        name: "Bozor".into(),
+        weekly_limit: uzs(50_000_000),
+        category_id: Some(w.category.meta.id.clone()),
+        necessity: None,
+        active: true,
+    };
+    repo::insert(c, &env).unwrap();
+    assert_eq!(
+        repo::get::<Envelope>(c, &env.meta.id).unwrap().unwrap(),
+        env
+    );
+    let bad = Envelope {
+        meta: w.fx.meta(hid),
+        weekly_limit: uzs(0),
+        ..env.clone()
+    };
+    assert!(
+        repo::insert(c, &bad).is_err(),
+        "limit musbat bo'lishi shart"
+    );
+
+    let period = EnvelopePeriod {
+        meta: w.fx.meta(hid),
+        envelope_id: env.meta.id.clone(),
+        week_start: day(),
+        limit: uzs(50_000_000),
+        spent: uzs(40_000_000),
+        leftover_cash: uzs(9_000_000),
+        difference: uzs(1_000_000),
+    };
+    repo::insert(c, &period).unwrap();
+    assert_eq!(
+        repo::get::<EnvelopePeriod>(c, &period.meta.id)
+            .unwrap()
+            .unwrap(),
+        period
+    );
+    assert!(repo::insert(
+        c,
+        &EnvelopePeriod {
+            meta: w.fx.meta(hid),
+            ..period
+        }
+    )
+    .is_err());
+
+    let rescue = SavingsRescue {
+        meta: w.fx.meta(hid),
+        kind: RescueKind::HavasDrop,
+        amount: uzs(2_000_000),
+        week_start: Some(day()),
+        note: None,
+        transferred_at: None,
+    };
+    repo::insert(c, &rescue).unwrap();
+    assert_eq!(
+        repo::get::<SavingsRescue>(c, &rescue.meta.id)
+            .unwrap()
+            .unwrap(),
+        rescue
+    );
+    // Bir hafta uchun ikkinchi HAVAS_DROP yozuvi mumkin emas; obuna yozuvlari cheklanmaydi.
+    assert!(repo::insert(
+        c,
+        &SavingsRescue {
+            meta: w.fx.meta(hid),
+            ..rescue.clone()
+        }
+    )
+    .is_err());
+    let sub_rescue = SavingsRescue {
+        meta: w.fx.meta(hid),
+        kind: RescueKind::Subscription,
+        week_start: None,
+        note: Some("Netflix".into()),
+        ..rescue.clone()
+    };
+    repo::insert(c, &sub_rescue).unwrap();
+    repo::insert(
+        c,
+        &SavingsRescue {
+            meta: w.fx.meta(hid),
+            ..sub_rescue
+        },
+    )
+    .unwrap();
+    assert!(repo::insert(
+        c,
+        &SavingsRescue {
+            meta: w.fx.meta(hid),
+            amount: uzs(0),
+            kind: RescueKind::Subscription,
+            week_start: None,
+            ..rescue
+        }
+    )
+    .is_err());
+}

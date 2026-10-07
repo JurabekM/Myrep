@@ -10,7 +10,7 @@ publish.workspace = true
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["tray-icon"] }
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 specta = "=2.0.0-rc.25"
 specta-typescript = "0.0.12"
@@ -24,6 +24,7 @@ domain = { path = "../crates/domain" }
 services = { path = "../crates/services" }
 content = { path = "../crates/content" }
 tauri-plugin-dialog = "2"
+tauri-plugin-global-shortcut = "2"
 zeroize = "1"
 
 [dev-dependencies]

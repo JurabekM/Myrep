@@ -5,7 +5,8 @@
 use std::{fs, path::Path};
 
 use money::{
-    allocate, format_money, parse_amount, percent_of, Currency, FxRate, Locale, Money, MoneyError,
+    allocate, format_money, parse_amount, parse_signed_amount, percent_of, Currency, FxRate,
+    Locale, Money, MoneyError,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -100,6 +101,11 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "chapter_unlock" => Ok(run_chapter_unlock),
         "havas_status" => Ok(run_havas_status),
         "habit_projection" => Ok(run_habit_projection),
+        "rescued_money" => Ok(run_rescued_money),
+        "subscription_cost" => Ok(run_subscription_cost),
+        "forgotten_subscription" => Ok(run_forgotten_subscription),
+        "envelope" => Ok(run_envelope),
+        "money_parse_signed" => Ok(run_money_parse_signed),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -371,4 +377,78 @@ fn run_habit_projection(input: &Value) -> Result<Value, String> {
         }),
         Err(e) => serde_json::json!({ "error": havas_error_code(&e) }),
     })
+}
+
+fn run_rescued_money(input: &Value) -> Result<Value, String> {
+    let baseline = parse_money(input, "baseline", "currency")?;
+    let current = parse_money(input, "current", "currency")?;
+    Ok(match domain::rescued_money(baseline, current) {
+        Ok(m) => serde_json::json!({ "rescued": m.minor().to_string() }),
+        Err(e) => serde_json::json!({ "error": havas_error_code(&e) }),
+    })
+}
+
+fn run_subscription_cost(input: &Value) -> Result<Value, String> {
+    let amount = parse_money(input, "amount", "currency")?;
+    let period =
+        domain::BillingPeriod::parse(str_field(input, "period")?).ok_or("noma'lum davriylik")?;
+    Ok(match domain::subscription_cost(amount, period) {
+        Ok(c) => serde_json::json!({
+            "monthly": c.monthly.minor().to_string(),
+            "yearly": c.yearly.minor().to_string(),
+        }),
+        Err(e) => serde_json::json!({ "error": havas_error_code(&e) }),
+    })
+}
+
+fn run_forgotten_subscription(input: &Value) -> Result<Value, String> {
+    let date = |key: &str| -> Result<domain::Date, String> {
+        domain::date_from_str(str_field(input, key)?).map_err(|e| e.to_string())
+    };
+    let last = match input.get("last_used_on") {
+        Some(Value::String(s)) => Some(domain::date_from_str(s).map_err(|e| e.to_string())?),
+        _ => None,
+    };
+    let days = i64::try_from(int_field(input, "threshold_days")?).map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({
+        "forgotten": domain::is_forgotten(last, date("started_on")?, date("today")?, days)
+    }))
+}
+
+fn run_envelope(input: &Value) -> Result<Value, String> {
+    let limit = parse_money(input, "limit", "currency")?;
+    let spent = parse_money(input, "spent", "currency")?;
+    let status = match domain::envelope_status(limit, spent) {
+        Ok(s) => s,
+        Err(e) => return Ok(serde_json::json!({ "error": havas_error_code(&e) })),
+    };
+    let fill = domain::cash_to_fill(limit, spent).map_err(|e| e.to_string())?;
+    let mut out = serde_json::json!({
+        "remaining": status.remaining.minor().to_string(),
+        "state": match status.state {
+            domain::HavasState::Ok => "OK",
+            domain::HavasState::Near => "NEAR",
+            domain::HavasState::Over => "OVER",
+        },
+        "used_bp": status.used_bp,
+        "cash_to_fill": fill.minor().to_string(),
+    });
+    if input.get("leftover_cash").is_some() {
+        let left = parse_money(input, "leftover_cash", "currency")?;
+        let diff = domain::closing_difference(limit, spent, left).map_err(|e| e.to_string())?;
+        out["difference"] = Value::String(diff.minor().to_string());
+    }
+    Ok(out)
+}
+
+fn run_money_parse_signed(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    Ok(
+        match parse_signed_amount(str_field(input, "text")?, currency) {
+            Ok((negative, m)) => {
+                serde_json::json!({ "negative": negative, "minor": m.minor().to_string() })
+            }
+            Err(e) => error_json(&e),
+        },
+    )
 }

@@ -1,0 +1,95 @@
+{
+  "suite": "rescued_money",
+  "version": 1,
+  "description": "Qutqarilgan pul = max(0, avvalgi davr havasi - joriy davr havasi). Joriy davr ko'p bo'lsa (manfiy holat) natija 0, hech qachon manfiy emas",
+  "cases": [
+    {
+      "id": "rescue-001",
+      "input": {
+        "baseline": "50000000",
+        "current": "30000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rescued": "20000000"
+      }
+    },
+    {
+      "id": "rescue-002",
+      "input": {
+        "baseline": "30000000",
+        "current": "30000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rescued": "0"
+      }
+    },
+    {
+      "id": "rescue-003",
+      "input": {
+        "baseline": "30000000",
+        "current": "50000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rescued": "0"
+      }
+    },
+    {
+      "id": "rescue-004",
+      "input": {
+        "baseline": "0",
+        "current": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rescued": "0"
+      }
+    },
+    {
+      "id": "rescue-005",
+      "input": {
+        "baseline": "0",
+        "current": "10",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rescued": "0"
+      }
+    },
+    {
+      "id": "rescue-006",
+      "input": {
+        "baseline": "10",
+        "current": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rescued": "10"
+      }
+    },
+    {
+      "id": "rescue-007",
+      "input": {
+        "baseline": "-5",
+        "current": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "rescue-008",
+      "input": {
+        "baseline": "5",
+        "current": "-1",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

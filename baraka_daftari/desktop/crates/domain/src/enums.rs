@@ -45,6 +45,10 @@ str_enum!(
     VaultSource { Allocation => "ALLOCATION", Opening => "OPENING", Manual => "MANUAL" }
 );
 str_enum!(WithdrawalStatus { Pending => "PENDING", Confirmed => "CONFIRMED", Cancelled => "CANCELLED" });
+str_enum!(
+    /// «Qutqarilgan pul» manbasi.
+    RescueKind { HavasDrop => "HAVAS_DROP", Subscription => "SUBSCRIPTION" }
+);
 
 #[cfg(test)]
 mod tests {

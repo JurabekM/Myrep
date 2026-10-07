@@ -1,0 +1,91 @@
+{
+  "suite": "forgotten_subscription",
+  "version": 1,
+  "description": "Unutilgan obuna: oxirgi ishlatilgan (yo'q bo'lsa — boshlangan) sanadan beri kamida threshold_days kun o'tgan",
+  "cases": [
+    {
+      "id": "forgot-001",
+      "input": {
+        "started_on": "2026-01-01",
+        "last_used_on": null,
+        "today": "2026-03-01",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": false
+      }
+    },
+    {
+      "id": "forgot-002",
+      "input": {
+        "started_on": "2026-01-01",
+        "last_used_on": null,
+        "today": "2026-03-02",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": true
+      }
+    },
+    {
+      "id": "forgot-003",
+      "input": {
+        "started_on": "2026-01-01",
+        "last_used_on": "2026-08-01",
+        "today": "2026-09-29",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": false
+      }
+    },
+    {
+      "id": "forgot-004",
+      "input": {
+        "started_on": "2026-01-01",
+        "last_used_on": "2026-08-01",
+        "today": "2026-09-30",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": true
+      }
+    },
+    {
+      "id": "forgot-005",
+      "input": {
+        "started_on": "2026-01-01",
+        "last_used_on": "2026-10-10",
+        "today": "2026-10-07",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": false
+      }
+    },
+    {
+      "id": "forgot-006",
+      "input": {
+        "started_on": "2026-10-01",
+        "last_used_on": null,
+        "today": "2026-10-07",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": false
+      }
+    },
+    {
+      "id": "forgot-007",
+      "input": {
+        "started_on": "2020-01-01",
+        "last_used_on": "2026-10-07",
+        "today": "2026-10-07",
+        "threshold_days": 60
+      },
+      "expected": {
+        "forgotten": false
+      }
+    }
+  ]
+}

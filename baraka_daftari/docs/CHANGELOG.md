@@ -46,3 +46,13 @@
 - **Oila kengashi** (to'liq ekran, 4 qadam) va **PDF bayonnoma** (`typst`, DejaVu Sans ilovaga o'rnatilgan): ʻ/ʼ belgilari PDF matn snapshot testi bilan tasdiqlangan; foydalanuvchi matnlari typst string literal sifatida qo'yiladi (markup injection yo'q). PDF OS «saqlash» oynasi orqali Rust tomonida yoziladi.
 - Dev profil: `debug = "line-tables-only"` (typst bilan `target/` 28 GB ga yetgan edi).
 - Kechiktirildi: shaxsiy havas ulushi (a'zo bo'yicha), chop etish dialogi (D15 bilan), bildirishnoma («Juma shirinligi» eslatmasi — D7), bayonnomani ruscha chiqarish.
+
+## D7 — Obunalar, konvertlar, «Qutqarilgan pul», tray, CSV import
+- **Vektorlar (avval):** `rescued_money` (manfiy farq → 0), `subscription_cost`, `forgotten_subscription` (≥60 kun), `envelope`, `money_parse_signed`.
+- **Sxema v5:** `subscriptions`, `envelopes`, `envelope_periods`, `savings_rescues` (haftaga bir marta HAVAS_DROP).
+- **Obunalar:** oylik/yillik jami, «unutilgan» ogohlantirish, bekor qilish — bir oylik narx qutqarilgan pul bo'ladi.
+- **Konvertlar:** haftalik chegara, qolgan summa, naqd to'ldirish, hafta yopilganda farq.
+- **«Qutqarilgan pul»:** havas xarajatining o'tgan haftaga nisbatan kamayishi; hafta uchun bir marta da'vo qilinadi; «Kelajagim»ga o'tkaziladi («Qutqarilgan pul» izohi bilan).
+- **Tray + `Ctrl+Alt+B`** tez xarajat oynasi: daftar qulfli bo'lsa hech qanday summa/ma'lumot so'ralmaydi (UI testi bilan tasdiqlangan).
+- **CSV import:** fayl faqat Rust tomonida ochiladi; ustunlarni moslash, sinov (dry-run), takrorlarni o'tkazib yuborish, bitta tranzaksiya.
+- Kechiktirildi: Windows'da tray/qisqa tugma amaliy sinovi, bildirishnomalar, boshqa kodirovkali CSV.

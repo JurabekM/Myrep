@@ -7,8 +7,10 @@ mod commands;
 mod dto;
 mod family;
 mod ledger;
+mod saving;
 mod session;
 mod study;
+mod tray;
 
 use std::{sync::Mutex, time::Duration};
 
@@ -28,6 +30,13 @@ fn spawn_autolock(app: tauri::AppHandle) {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         guard.tick(commands::unix_now());
     });
+}
+
+/// Tez xarajat oynasini yashiradi.
+#[tauri::command]
+#[specta::specta]
+fn hide_quick_window(app: tauri::AppHandle) {
+    tray::hide_quick(&app);
 }
 
 fn specta_builder() -> Builder<tauri::Wry> {
@@ -81,6 +90,24 @@ fn specta_builder() -> Builder<tauri::Wry> {
         family::log_treat,
         family::habit_stats,
         family::export_council_pdf,
+        saving::list_subscriptions,
+        saving::add_subscription,
+        saving::mark_subscription_used,
+        saving::set_subscription_needed,
+        saving::cancel_subscription,
+        saving::remove_subscription,
+        saving::list_envelopes,
+        saving::add_envelope,
+        saving::set_envelope_active,
+        saving::remove_envelope,
+        saving::close_envelope_week,
+        saving::rescue_report,
+        saving::transfer_rescue,
+        saving::transfer_all_rescue,
+        saving::csv_open,
+        saving::csv_dry_run,
+        saving::csv_import,
+        hide_quick_window,
     ])
 }
 
@@ -100,6 +127,8 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tray::shortcut_plugin())
+        .manage(saving::ImportStore::default())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);
@@ -114,6 +143,7 @@ pub fn run() {
             );
             app.manage(Mutex::new(session));
             spawn_autolock(app.handle().clone());
+            tray::setup(app)?;
             Ok(())
         })
         .run(tauri::generate_context!())

@@ -1,0 +1,154 @@
+{
+  "suite": "envelope",
+  "version": 1,
+  "description": "Haftalik konvert: qoldiq (manfiy bo'lishi mumkin), holat (80%/100%), solinadigan naqd (>=0) va hafta oxiridagi farq (kutilgan naqd qoldiq - haqiqiy)",
+  "cases": [
+    {
+      "id": "env-001",
+      "input": {
+        "limit": "100000",
+        "spent": "30000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "remaining": "70000",
+        "state": "OK",
+        "used_bp": 3000,
+        "cash_to_fill": "70000"
+      }
+    },
+    {
+      "id": "env-002",
+      "input": {
+        "limit": "100000",
+        "spent": "80000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "remaining": "20000",
+        "state": "NEAR",
+        "used_bp": 8000,
+        "cash_to_fill": "20000"
+      }
+    },
+    {
+      "id": "env-003",
+      "input": {
+        "limit": "100000",
+        "spent": "130000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "remaining": "-30000",
+        "state": "OVER",
+        "used_bp": 13000,
+        "cash_to_fill": "0"
+      }
+    },
+    {
+      "id": "env-004",
+      "input": {
+        "limit": "100000",
+        "spent": "80000",
+        "currency": "UZS",
+        "leftover_cash": "20000"
+      },
+      "expected": {
+        "remaining": "20000",
+        "state": "NEAR",
+        "used_bp": 8000,
+        "cash_to_fill": "20000",
+        "difference": "0"
+      }
+    },
+    {
+      "id": "env-005",
+      "input": {
+        "limit": "100000",
+        "spent": "80000",
+        "currency": "UZS",
+        "leftover_cash": "15000"
+      },
+      "expected": {
+        "remaining": "20000",
+        "state": "NEAR",
+        "used_bp": 8000,
+        "cash_to_fill": "20000",
+        "difference": "5000"
+      }
+    },
+    {
+      "id": "env-006",
+      "input": {
+        "limit": "100000",
+        "spent": "80000",
+        "currency": "UZS",
+        "leftover_cash": "25000"
+      },
+      "expected": {
+        "remaining": "20000",
+        "state": "NEAR",
+        "used_bp": 8000,
+        "cash_to_fill": "20000",
+        "difference": "-5000"
+      }
+    },
+    {
+      "id": "env-007",
+      "input": {
+        "limit": "100000",
+        "spent": "130000",
+        "currency": "UZS",
+        "leftover_cash": "0"
+      },
+      "expected": {
+        "remaining": "-30000",
+        "state": "OVER",
+        "used_bp": 13000,
+        "cash_to_fill": "0",
+        "difference": "0"
+      }
+    },
+    {
+      "id": "env-008",
+      "input": {
+        "limit": "0",
+        "spent": "5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_LIMIT"
+      }
+    },
+    {
+      "id": "env-009",
+      "input": {
+        "limit": "100000",
+        "spent": "0",
+        "currency": "UZS",
+        "leftover_cash": "100000"
+      },
+      "expected": {
+        "remaining": "100000",
+        "state": "OK",
+        "used_bp": 0,
+        "cash_to_fill": "100000",
+        "difference": "0"
+      }
+    },
+    {
+      "id": "env-010",
+      "input": {
+        "limit": "100000",
+        "spent": "99999",
+        "currency": "UZS"
+      },
+      "expected": {
+        "remaining": "1",
+        "state": "NEAR",
+        "used_bp": 10000,
+        "cash_to_fill": "1"
+      }
+    }
+  ]
+}

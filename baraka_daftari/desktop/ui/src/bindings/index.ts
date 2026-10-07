@@ -70,6 +70,41 @@ export const commands = {
 	 *  Foydalanuvchi bekor qilsa `None`; muvaffaqiyatda saqlangan fayl nomi.
 	 */
 	exportCouncilPdf: (monthText: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_council_pdf", { monthText })),
+	listSubscriptions: () => typedError<SubscriptionsDto, CommandError>(__TAURI_INVOKE("list_subscriptions")),
+	addSubscription: (name: string, amountText: string, period: string) => typedError<null, CommandError>(__TAURI_INVOKE("add_subscription", { name, amountText, period })),
+	markSubscriptionUsed: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("mark_subscription_used", { id })),
+	setSubscriptionNeeded: (id: string, needed: boolean | null) => typedError<null, CommandError>(__TAURI_INVOKE("set_subscription_needed", { id, needed })),
+	/**  Bekor qiladi; qutqarilgan summa (bir oylik narx) qaytadi (bepul obunada `None`). */
+	cancelSubscription: (id: string) => typedError<{
+	minor: string,
+	currency: string,
+	formatted: string,
+} | null, CommandError>(__TAURI_INVOKE("cancel_subscription", { id })),
+	removeSubscription: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_subscription", { id })),
+	listEnvelopes: () => typedError<EnvelopeDto[], CommandError>(__TAURI_INVOKE("list_envelopes")),
+	addEnvelope: (name: string, limitText: string, categoryId: string | null, necessity: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("add_envelope", { name, limitText, categoryId, necessity })),
+	setEnvelopeActive: (id: string, active: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_envelope_active", { id, active })),
+	removeEnvelope: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_envelope", { id })),
+	/**  Haftani yopadi: hafta oxiridagi naqd qoldiq kiritiladi; farq (kam/ortiq naqd) qaytadi. */
+	closeEnvelopeWeek: (id: string, leftoverText: string) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("close_envelope_week", { id, leftoverText })),
+	/**  Haftalik hisobot; kerak bo'lsa tugagan haftaning qutqarilgan pulini yozadi. */
+	rescueReport: () => typedError<RescueDto, CommandError>(__TAURI_INVOKE("rescue_report")),
+	transferRescue: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("transfer_rescue", { id })),
+	/**  Bir bosishda hammasini «Kelajagim»ga o'tkazadi; o'tkazilgan jami. */
+	transferAllRescue: () => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("transfer_all_rescue")),
+	/**  OS dialogida CSV tanlanadi; Rust o'qiydi va ko'rik qaytaradi. Bekor qilinsa `None`. */
+	csvOpen: () => typedError<{
+	token: string,
+	headers: string[],
+	rows: string[][],
+	total_rows: number,
+	delimiter: string,
+} | null, CommandError>(__TAURI_INVOKE("csv_open")),
+	/**  Xaritalashni sinash: nima import qilinishini ko'rsatadi, hech narsa yozmaydi. */
+	csvDryRun: (token: string, input: CsvMappingInput) => typedError<CsvResultDto, CommandError>(__TAURI_INVOKE("csv_dry_run", { token, input })),
+	csvImport: (token: string, input: CsvMappingInput, defaultCategoryId: string) => typedError<CsvResultDto, CommandError>(__TAURI_INVOKE("csv_import", { token, input, defaultCategoryId })),
+	/**  Tez xarajat oynasini yashiradi. */
+	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
 
 /* Types */
@@ -135,7 +170,57 @@ export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kin
 /**  "Kelajagim"dan pul olish pauzasi tugamagan. */
 { kind: "Cooling"; remaining_secs: number } | { kind: "Internal"; message: string };
 
+export type CsvMappingInput = {
+	date_col: number,
+	amount_col: number,
+	note_col: number | null,
+	/**  `ISO` | `DMY_DOTS` | `DMY_SLASHES` | `YMD_SLASHES`. */
+	date_format: string,
+	/**  `NEGATIVE_ARE_EXPENSES` | `POSITIVE_ARE_EXPENSES` | `ABSOLUTE_ALL`. */
+	sign: string,
+};
+
+export type CsvPreviewDto = {
+	token: string,
+	headers: string[],
+	rows: string[][],
+	total_rows: number,
+	delimiter: string,
+};
+
+export type CsvResultDto = {
+	imported: number,
+	duplicates: number,
+	skipped_sign: number,
+	/**  Birinchi 50 ta xato qator. */
+	errors: CsvRowError[],
+	error_count: number,
+};
+
+export type CsvRowError = {
+	line: number,
+	reason: string,
+};
+
 export type DemoError = { kind: "InvalidInput"; message: string };
+
+export type EnvelopeDto = {
+	id: string,
+	name: string,
+	limit: MoneyDto,
+	spent: MoneyDto,
+	/**  Qoldiq (manfiy bo'lishi mumkin). */
+	remaining: MoneyDto,
+	/**  Jismoniy konvertga hozir solinadigan naqd. */
+	cash_to_fill: MoneyDto,
+	/**  `OK` | `NEAR` | `OVER`. */
+	state: string,
+	used_bp: number,
+	week_start: string,
+	/**  Shu hafta yopilgan bo'lsa: kiritilgan naqd qoldiq va farq. */
+	closed_leftover: MoneyDto | null,
+	closed_difference: MoneyDto | null,
+};
 
 export type ExpenseDto = {
 	id: string,
@@ -325,12 +410,56 @@ export type RecordedDto = {
 	vault_balance: MoneyDto,
 };
 
+export type RescueDto = {
+	/**  Tugagan oxirgi hafta (jumasi). */
+	week: string,
+	baseline: MoneyDto,
+	current: MoneyDto,
+	rescued: MoneyDto,
+	claimed: boolean,
+	/**  Hali «Kelajagim»ga o'tkazilmagan jami. */
+	available: MoneyDto,
+	items: RescueItemDto[],
+};
+
+export type RescueItemDto = {
+	id: string,
+	/**  `HAVAS_DROP` | `SUBSCRIPTION`. */
+	kind: string,
+	amount: MoneyDto,
+	note: string | null,
+	transferred: boolean,
+};
+
 export type RuleDto = { kind: "Percent"; bp: number } | { kind: "MonthlyFixed"; target: MoneyDto };
 
 export type RuleInput = {
 	/**  `PERCENT` (value — bazis punkt, masalan "500") yoki `MONTHLY_FIXED` (value — so'mda summa). */
 	kind: string,
 	value: string,
+};
+
+export type SubscriptionDto = {
+	id: string,
+	name: string,
+	amount: MoneyDto,
+	/**  `WEEKLY` | `MONTHLY` | `QUARTERLY` | `YEARLY`. */
+	period: string,
+	monthly: MoneyDto,
+	yearly: MoneyDto,
+	started_on: string,
+	last_used_on: string | null,
+	cancelled_on: string | null,
+	/**  «Kerakmi?» javobi; `None` — javob berilmagan. */
+	needed: boolean | null,
+	active: boolean,
+	forgotten: boolean,
+};
+
+export type SubscriptionsDto = {
+	items: SubscriptionDto[],
+	monthly_total: MoneyDto,
+	yearly_total: MoneyDto,
 };
 
 export type SuggestionDto = {

@@ -1,0 +1,102 @@
+{
+  "suite": "subscription_cost",
+  "version": 1,
+  "description": "Obuna narxi: davriyligidan oylik va yillik ekvivalent (haftalik = x52 yiliga, oyiga x52/12; barchasi half-up)",
+  "cases": [
+    {
+      "id": "sub-001",
+      "input": {
+        "period": "MONTHLY",
+        "amount": "5000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "5000000",
+        "yearly": "60000000"
+      }
+    },
+    {
+      "id": "sub-002",
+      "input": {
+        "period": "WEEKLY",
+        "amount": "1000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "4333333",
+        "yearly": "52000000"
+      }
+    },
+    {
+      "id": "sub-003",
+      "input": {
+        "period": "QUARTERLY",
+        "amount": "3000001",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "1000000",
+        "yearly": "12000004"
+      }
+    },
+    {
+      "id": "sub-004",
+      "input": {
+        "period": "YEARLY",
+        "amount": "1200005",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "100000",
+        "yearly": "1200005"
+      }
+    },
+    {
+      "id": "sub-005",
+      "input": {
+        "period": "YEARLY",
+        "amount": "1800000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "150000",
+        "yearly": "1800000"
+      }
+    },
+    {
+      "id": "sub-006",
+      "input": {
+        "period": "WEEKLY",
+        "amount": "7",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "30",
+        "yearly": "364"
+      }
+    },
+    {
+      "id": "sub-007",
+      "input": {
+        "period": "MONTHLY",
+        "amount": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "monthly": "0",
+        "yearly": "0"
+      }
+    },
+    {
+      "id": "sub-008",
+      "input": {
+        "period": "MONTHLY",
+        "amount": "-1",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

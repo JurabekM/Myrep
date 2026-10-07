@@ -31,3 +31,8 @@
 29. **Havas hisobi:** amaldagi toifa `HAVAS` + sovg'a emas + sadaqa emas. Audit ustasi kiritgan oylik jamilar ham toifasiga ko'ra hisoblanadi. Xarajatning o'z toifasi kategoriyanikidan ustun.
 30. **Habit prognozi:** oxirgi 28 kun jami → hafta (×7/28), oy (×30/28), yil (×365/28), half-up. `habit_projection.json` shuni qotiradi; mobil bilan tasdiqlash kerak.
 31. **Bayonnoma shrifti:** DejaVu Sans (Bitstream Vera/DejaVu litsenziyasi) repoga qo'shilgan (`crates/pdf/fonts/`). Brend shrifti tanlansa almashtiriladi — faqat `ʻ` U+02BB va `ʼ` U+02BC qoplamasi saqlansin (test bor).
+32. **Qutqarilgan pul** = faqat havas xarajatining o'tgan tugagan haftaning undan oldingi haftaga nisbatan kamayishi (manfiy bo'lsa 0). Bekor qilingan obuna bir oylik narxni qo'shadi. Boshqa ta'rif kerak bo'lsa `rescued_money` vektorlarini o'zgartiramiz.
+33. **Obunalar** oylik majburiyatlar va auditga hozircha qo'shilmaydi (alohida ro'yxat).
+34. **Konvert mosligi:** xarajatda aniq konvert bo'lsa shu; bo'lmasa kategoriya yoki toifa bo'yicha; sadaqa hech qachon konvertga kirmaydi. Hafta farqi = chegara − sarflangan.
+35. **CSV:** faqat UTF-8, 5 MB / 20 000 qator limiti; takror = (sana, summa, izoh) mos kelishi. Kategoriya izoh tarixidan, bo'lmasa standart.
+36. **Global qisqa tugma** boshqa dastur band qilgan bo'lsa jimgina ishlamasligi mumkin; tray va qisqa tugma Windows'da sinalmagan (Linux headless).

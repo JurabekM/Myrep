@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { commands, type HomeDto } from '../../bindings';
 import { useNav } from '../../app/nav';
 import { formatBp, unwrap } from '../../lib/api';
+import { RescuePanel } from '../rescue/RescuePanel';
 
 export interface SlotProps {
   home: HomeDto;
@@ -171,6 +172,16 @@ function FridayChapterSlot() {
   );
 }
 
+/** Juma hisoboti: «Bu hafta qancha qutqardingiz?» (D7). */
+function RescueSlot() {
+  const { t } = useTranslation();
+  return (
+    <Card title={t('home.rescue')}>
+      <RescuePanel />
+    </Card>
+  );
+}
+
 /**
  * Slot arxitekturasi: bosh sahifa shu ro'yxat bo'yicha chiziladi. Keyingi vazifalar (D5: vazifa va
  * bob, D6: havas, ...) yangi slotni shu yerga qo'shadi, sahifaning o'zini o'zgartirmaydi.
@@ -181,6 +192,7 @@ export const homeSlots: { id: string; Component: ComponentType<SlotProps> }[] = 
   { id: 'vault', Component: VaultSlot },
   { id: 'streak', Component: StreakSlot },
   { id: 'month-result', Component: ResultSlot },
+  { id: 'rescue', Component: RescueSlot },
   { id: 'week-tasks', Component: WeekTasksSlot },
   { id: 'friday-chapter', Component: FridayChapterSlot },
 ];

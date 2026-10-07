@@ -4,10 +4,11 @@
 
 use domain::{
     date_to_string, ts_to_string, AllocationKind, AllocationRule, Asset, AssetSnapshot, AssetType,
-    Category, ChapterProgress, DaftarPage, Expense, FxRateRecord, HavasLimit, Household, Income,
-    LimitConsent, Member, MemberCredential, MemberRole, Meta, MoneyOwner, Necessity,
-    NecessityChange, Obligation, ObligationKind, OffsetDateTime, PaymentChannel, ScheduledTreat,
-    Setting, TaskCompletion, VaultSource, VaultTransaction, VaultTxKind, WithdrawalRequest,
+    BillingPeriod, Category, ChapterProgress, DaftarPage, Envelope, EnvelopePeriod, Expense,
+    FxRateRecord, HavasLimit, Household, Income, LimitConsent, Member, MemberCredential,
+    MemberRole, Meta, MoneyOwner, Necessity, NecessityChange, Obligation, ObligationKind,
+    OffsetDateTime, PaymentChannel, RescueKind, SavingsRescue, ScheduledTreat, Setting,
+    Subscription, TaskCompletion, VaultSource, VaultTransaction, VaultTxKind, WithdrawalRequest,
     WithdrawalStatus,
 };
 use money::Money;
@@ -791,6 +792,180 @@ impl Record for ScheduledTreat {
             amount: row::money(r, 8, 9)?,
             weekday: r.get(10)?,
             active: r.get(11)?,
+        })
+    }
+}
+
+fn opt_date(v: Option<domain::Date>) -> Result<Value, StorageError> {
+    v.map_or(Ok(Value::Null), date_val)
+}
+
+fn opt_row_date(r: &Row<'_>, idx: usize) -> rusqlite::Result<Option<domain::Date>> {
+    r.get::<_, Option<String>>(idx)?
+        .map(|s| {
+            domain::date_from_str(&s).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    idx,
+                    rusqlite::types::Type::Text,
+                    Box::new(e),
+                )
+            })
+        })
+        .transpose()
+}
+
+impl Record for Subscription {
+    const TABLE: &'static str = "subscriptions";
+    const COLS: &'static [&'static str] = &[
+        "name",
+        "amount_minor",
+        "currency",
+        "period",
+        "started_on",
+        "last_used_on",
+        "cancelled_on",
+        "needed",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![
+            t(&self.name),
+            minor,
+            cur,
+            t(self.period.as_str()),
+            date_val(self.started_on)?,
+            opt_date(self.last_used_on)?,
+            opt_date(self.cancelled_on)?,
+            opt_bool(self.needed),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            amount: row::money(r, 8, 9)?,
+            period: row::parsed(r, 10, BillingPeriod::parse)?,
+            started_on: row::date(r, 11)?,
+            last_used_on: opt_row_date(r, 12)?,
+            cancelled_on: opt_row_date(r, 13)?,
+            needed: r.get(14)?,
+        })
+    }
+}
+
+impl Record for Envelope {
+    const TABLE: &'static str = "envelopes";
+    const COLS: &'static [&'static str] = &[
+        "name",
+        "weekly_limit_minor",
+        "currency",
+        "category_id",
+        "necessity",
+        "active",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.weekly_limit);
+        Ok(vec![
+            t(&self.name),
+            minor,
+            cur,
+            opt_text(self.category_id.as_deref()),
+            opt_text(self.necessity.map(Necessity::as_str)),
+            Value::Integer(i64::from(self.active)),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            weekly_limit: row::money(r, 8, 9)?,
+            category_id: r.get(10)?,
+            necessity: row::opt_parsed(r, 11, Necessity::parse)?,
+            active: r.get(12)?,
+        })
+    }
+}
+
+impl Record for EnvelopePeriod {
+    const TABLE: &'static str = "envelope_periods";
+    const COLS: &'static [&'static str] = &[
+        "envelope_id",
+        "week_start",
+        "limit_minor",
+        "spent_minor",
+        "leftover_minor",
+        "difference_minor",
+        "currency",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.envelope_id),
+            date_val(self.week_start)?,
+            Value::Integer(self.limit.minor()),
+            Value::Integer(self.spent.minor()),
+            Value::Integer(self.leftover_cash.minor()),
+            Value::Integer(self.difference.minor()),
+            t(self.limit.currency().code()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 13)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            envelope_id: r.get(7)?,
+            week_start: row::date(r, 8)?,
+            limit: Money::new(r.get(9)?, cur),
+            spent: Money::new(r.get(10)?, cur),
+            leftover_cash: Money::new(r.get(11)?, cur),
+            difference: Money::new(r.get(12)?, cur),
+        })
+    }
+}
+
+impl Record for SavingsRescue {
+    const TABLE: &'static str = "savings_rescues";
+    const COLS: &'static [&'static str] = &[
+        "kind",
+        "amount_minor",
+        "currency",
+        "week_start",
+        "note",
+        "transferred_at",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![
+            t(self.kind.as_str()),
+            minor,
+            cur,
+            opt_date(self.week_start)?,
+            opt_text(self.note.as_deref()),
+            self.transferred_at
+                .map(ts_val)
+                .transpose()?
+                .unwrap_or(Value::Null),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            kind: row::parsed(r, 7, RescueKind::parse)?,
+            amount: row::money(r, 8, 9)?,
+            week_start: opt_row_date(r, 10)?,
+            note: r.get(11)?,
+            transferred_at: row::opt_ts(r, 12)?,
         })
     }
 }

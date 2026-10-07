@@ -9,7 +9,10 @@ export type Page =
   | 'study'
   | 'expenses'
   | 'family'
-  | 'council';
+  | 'council'
+  | 'subscriptions'
+  | 'envelopes'
+  | 'rescue';
 
 interface NavState {
   page: Page;

@@ -1,0 +1,112 @@
+{
+  "suite": "money_parse_signed",
+  "version": 1,
+  "description": "Bank ko'chirmasi summasi: oldida + yoki - (yoki U+2212) bo'lishi mumkin; qolgani money_parse qoidalari bilan. Natija: ishora va modul",
+  "cases": [
+    {
+      "id": "psign-001",
+      "input": {
+        "text": "-150 000,50",
+        "currency": "UZS"
+      },
+      "expected": {
+        "negative": true,
+        "minor": "15000050"
+      }
+    },
+    {
+      "id": "psign-002",
+      "input": {
+        "text": "+8 000 000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "negative": false,
+        "minor": "800000000"
+      }
+    },
+    {
+      "id": "psign-003",
+      "input": {
+        "text": "1500",
+        "currency": "UZS"
+      },
+      "expected": {
+        "negative": false,
+        "minor": "150000"
+      }
+    },
+    {
+      "id": "psign-004",
+      "input": {
+        "text": "− 25 000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "negative": true,
+        "minor": "2500000"
+      }
+    },
+    {
+      "id": "psign-005",
+      "input": {
+        "text": "-0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "negative": false,
+        "minor": "0"
+      }
+    },
+    {
+      "id": "psign-006",
+      "input": {
+        "text": "--5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "psign-007",
+      "input": {
+        "text": "-",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "psign-008",
+      "input": {
+        "text": "- -5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "psign-009",
+      "input": {
+        "text": "abc",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    },
+    {
+      "id": "psign-010",
+      "input": {
+        "text": "",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "PARSE"
+      }
+    }
+  ]
+}

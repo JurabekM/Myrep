@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 4;
+pub const SCHEMA_VERSION: usize = 5;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -194,10 +194,51 @@ CREATE TABLE scheduled_treats (
 );
 ";
 
+/// D7: obunalar, konvertlar (+ yopilgan haftalar), qutqarilgan pul.
+const V5: &str = "
+CREATE TABLE subscriptions (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor >= 0), currency TEXT NOT NULL,
+  period TEXT NOT NULL CHECK (period IN ('WEEKLY','MONTHLY','QUARTERLY','YEARLY')),
+  started_on TEXT NOT NULL, last_used_on TEXT, cancelled_on TEXT,
+  needed INTEGER CHECK (needed IN (0,1))
+);
+CREATE TABLE envelopes (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, weekly_limit_minor INTEGER NOT NULL CHECK (weekly_limit_minor > 0), currency TEXT NOT NULL,
+  category_id TEXT REFERENCES categories(id),
+  necessity TEXT CHECK (necessity IN ('ZARUR','KERAK','HAVAS')),
+  active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1))
+);
+CREATE TABLE envelope_periods (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  envelope_id TEXT NOT NULL REFERENCES envelopes(id), week_start TEXT NOT NULL,
+  limit_minor INTEGER NOT NULL, spent_minor INTEGER NOT NULL, leftover_minor INTEGER NOT NULL,
+  difference_minor INTEGER NOT NULL, currency TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_envelope_period ON envelope_periods (envelope_id, week_start) WHERE deleted_at IS NULL;
+CREATE TABLE savings_rescues (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('HAVAS_DROP','SUBSCRIPTION')),
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL,
+  week_start TEXT, note TEXT, transferred_at TEXT
+);
+CREATE UNIQUE INDEX uq_rescue_week ON savings_rescues (household_id, week_start)
+  WHERE kind = 'HAVAS_DROP' AND deleted_at IS NULL;
+";
+
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(V1), M::up(V2), M::up(V3), M::up(V4)])
+    Migrations::new(vec![M::up(V1), M::up(V2), M::up(V3), M::up(V4), M::up(V5)])
 }
 
 #[cfg(test)]
@@ -233,7 +274,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 21);
+        assert_eq!(tables.len(), 25);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))
