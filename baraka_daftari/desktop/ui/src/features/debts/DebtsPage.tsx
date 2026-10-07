@@ -1,11 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { commands, type DebtDto } from '../../bindings';
 import { errorMessage, formatBp, formatMilli, unwrap } from '../../lib/api';
 
 import { AddDebt } from './AddDebt';
+import { Contributors } from './Contributors';
+import { Planner } from './Planner';
+import { RecoveryCard } from './RecoveryCard';
+import { Sellables } from './Sellables';
 import { ReceiptPanel } from './ReceiptPanel';
 import { GoalsSection, ReceivablesSection } from './ReceivablesGoals';
 
@@ -209,6 +213,7 @@ function DebtCard({ d }: { d: DebtDto }) {
             </button>
           </form>
           <p className="text-xs opacity-70">{t('debts.earlyDisclaimer')}</p>
+          <Contributors debtId={d.id} />
           <ReceiptPanel kind="DEBT" id={d.id} />
         </div>
       )}
@@ -220,6 +225,9 @@ function DebtCard({ d }: { d: DebtDto }) {
     </li>
   );
 }
+
+// ECharts og'ir: kalkulyator kerak bo'lgandagina yuklanadi (sovuq start tez bo'lishi uchun).
+const Calculator = lazy(() => import('./Calculator').then((m) => ({ default: m.Calculator })));
 
 export function DebtsPage() {
   const { t } = useTranslation();
@@ -242,6 +250,7 @@ export function DebtsPage() {
         )}
       </div>
       <Overview />
+      <RecoveryCard />
       {adding && (
         <AddDebt
           onDone={() => {
@@ -260,7 +269,12 @@ export function DebtsPage() {
         {list.data?.length === 0 && <p className="mt-2 opacity-70">{t('debts.empty')}</p>}
         {list.error ? <p role="alert">{errorMessage(t, list.error)}</p> : null}
       </section>
+      <Planner />
+      <Suspense fallback={null}>
+        <Calculator />
+      </Suspense>
       <div className="grid gap-4 lg:grid-cols-2">
+        <Sellables />
         <ReceivablesSection />
         <GoalsSection />
       </div>

@@ -2,6 +2,7 @@
 //! D3 da faqat sxema v1 uchun kerakli entity'lar bor; qolganlari keyingi vazifalarda qo'shiladi.
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
+mod amortization;
 mod debts;
 mod entities;
 mod enums;
@@ -15,6 +16,7 @@ mod streak;
 mod time_ext;
 mod withdrawal;
 
+pub use amortization::*;
 pub use debts::*;
 pub use entities::*;
 pub use enums::*;

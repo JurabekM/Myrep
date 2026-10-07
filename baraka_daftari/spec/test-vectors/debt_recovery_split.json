@@ -1,0 +1,123 @@
+{
+  "suite": "debt_recovery_split",
+  "version": 1,
+  "description": "DEBT_RECOVERY: 70/20/10 (ro'zg'or / qo'shimcha qarz to'lovi / Kelajagim). Yig'indi 10000 bp, jamg'arma ulushi kamida 100 bp (1%) — 0 bo'lishi mumkin emas. Taqsimot largest remainder",
+  "cases": [
+    {
+      "id": "split-001",
+      "input": {
+        "total": "800000000",
+        "living_bp": 7000,
+        "extra_bp": 2000,
+        "savings_bp": 1000,
+        "currency": "UZS"
+      },
+      "expected": {
+        "living": "560000000",
+        "extra": "160000000",
+        "savings": "80000000"
+      }
+    },
+    {
+      "id": "split-002",
+      "input": {
+        "total": "100",
+        "living_bp": 7000,
+        "extra_bp": 2000,
+        "savings_bp": 1000,
+        "currency": "UZS"
+      },
+      "expected": {
+        "living": "70",
+        "extra": "20",
+        "savings": "10"
+      }
+    },
+    {
+      "id": "split-003",
+      "input": {
+        "total": "12345",
+        "living_bp": 7000,
+        "extra_bp": 2000,
+        "savings_bp": 1000,
+        "currency": "UZS"
+      },
+      "expected": {
+        "living": "8642",
+        "extra": "2469",
+        "savings": "1234"
+      }
+    },
+    {
+      "id": "split-004",
+      "input": {
+        "total": "800000000",
+        "living_bp": 7000,
+        "extra_bp": 3000,
+        "savings_bp": 0,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "SAVINGS_TOO_LOW"
+      }
+    },
+    {
+      "id": "split-005",
+      "input": {
+        "total": "800000000",
+        "living_bp": 7000,
+        "extra_bp": 2900,
+        "savings_bp": 100,
+        "currency": "UZS"
+      },
+      "expected": {
+        "living": "560000000",
+        "extra": "232000000",
+        "savings": "8000000"
+      }
+    },
+    {
+      "id": "split-006",
+      "input": {
+        "total": "800000000",
+        "living_bp": 6000,
+        "extra_bp": 2000,
+        "savings_bp": 1000,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_SPLIT"
+      }
+    },
+    {
+      "id": "split-007",
+      "input": {
+        "total": "0",
+        "living_bp": 7000,
+        "extra_bp": 2000,
+        "savings_bp": 1000,
+        "currency": "UZS"
+      },
+      "expected": {
+        "living": "0",
+        "extra": "0",
+        "savings": "0"
+      }
+    },
+    {
+      "id": "split-008",
+      "input": {
+        "total": "800000000",
+        "living_bp": 5000,
+        "extra_bp": 4500,
+        "savings_bp": 500,
+        "currency": "UZS"
+      },
+      "expected": {
+        "living": "400000000",
+        "extra": "360000000",
+        "savings": "40000000"
+      }
+    }
+  ]
+}

@@ -49,3 +49,17 @@ impl From<domain::ScheduleError> for ServiceError {
         }
     }
 }
+
+impl From<domain::PlanError> for ServiceError {
+    fn from(e: domain::PlanError) -> Self {
+        use domain::PlanError as P;
+        match e {
+            P::InvalidAmount => Self::Invalid("summa noto'g'ri"),
+            P::InvalidMonths => Self::Invalid("oylar soni 1 dan 1200 gacha bo'lsin"),
+            P::InvalidSplit => Self::Invalid("ulushlar yig'indisi 100% bo'lishi kerak"),
+            P::SavingsTooLow => Self::Invalid("jamg'arma ulushi kamida 1% bo'lishi kerak"),
+            P::InvalidOrder => Self::Invalid("tartib noto'g'ri"),
+            P::Money(m) => Self::Money(m),
+        }
+    }
+}

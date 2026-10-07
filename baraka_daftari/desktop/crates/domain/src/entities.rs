@@ -4,7 +4,8 @@ use time::{Date, OffsetDateTime};
 use crate::{
     AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CreditorType,
     IncomeSourceType, MemberRole, Meta, MoneyOwner, Necessity, ObligationKind, PaymentChannel,
-    ReceiptKind, RescueKind, ScheduleKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
+    ReceiptKind, RescueKind, ScheduleKind, SellStatus, VaultSource, VaultTxKind, VaultType,
+    WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -394,4 +395,29 @@ pub struct LoanReceipt {
     pub ref_id: String,
     pub witnesses: Vec<String>,
     pub confirmed_by_counterparty: bool,
+}
+
+/// Qarzni to'lovchi qo'shimcha a'zo (oilaviy yelkadoshlik, SPEC 2D.4). To'lov tarixi `DebtPayment` da.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DebtContributor {
+    pub meta: Meta,
+    pub debt_id: String,
+    pub member_id: String,
+    /// Shu a'zoning oylik ulushi (reja).
+    pub monthly_share: Money,
+}
+
+/// «Sotiladigan buyumlar» (SPEC 2D.7): uyda ishlatilmayotgan qimmatbaho narsalar.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SellableItem {
+    pub meta: Meta,
+    pub name: String,
+    pub estimated_price: Money,
+    /// Qachondan beri ishlatilmaydi.
+    pub unused_since: Option<Date>,
+    pub status: SellStatus,
+    pub sold_amount: Option<Money>,
+    pub sold_on: Option<Date>,
+    /// Tushum yo'naltirilgan qarz.
+    pub debt_id: Option<String>,
 }

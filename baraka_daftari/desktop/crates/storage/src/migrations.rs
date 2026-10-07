@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 7;
+pub const SCHEMA_VERSION: usize = 8;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -194,6 +194,26 @@ CREATE TABLE scheduled_treats (
 );
 ";
 
+/// D10 (4-qonun): qarz bo'yicha qo'shimcha to'lovchilar va sotiladigan buyumlar.
+const V8: &str = "
+CREATE TABLE debt_contributors (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  debt_id TEXT NOT NULL REFERENCES debts(id), member_id TEXT NOT NULL REFERENCES members(id),
+  monthly_share_minor INTEGER NOT NULL CHECK (monthly_share_minor >= 0), currency TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_debt_contributor ON debt_contributors (debt_id, member_id) WHERE deleted_at IS NULL;
+CREATE TABLE sellable_items (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, price_minor INTEGER NOT NULL CHECK (price_minor > 0), currency TEXT NOT NULL,
+  unused_since TEXT, status TEXT NOT NULL CHECK (status IN ('LISTED','SOLD')),
+  sold_minor INTEGER, sold_on TEXT, debt_id TEXT REFERENCES debts(id)
+);
+";
+
 /// D9 (4-qonun): qarz inventari, to'lov jadvali, to'lovlar, berilgan qarzlar (foizsiz), maqsadlar, tilxat.
 const V7: &str = "
 CREATE TABLE debts (
@@ -333,6 +353,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V5),
         M::up(V6),
         M::up(V7),
+        M::up(V8),
     ])
 }
 
@@ -369,7 +390,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 34);
+        assert_eq!(tables.len(), 36);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

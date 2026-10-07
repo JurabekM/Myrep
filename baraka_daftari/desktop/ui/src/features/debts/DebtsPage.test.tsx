@@ -171,12 +171,15 @@ describe('DebtsPage', () => {
     await userEvent.selectOptions(screen.getByLabelText('Foizsiz muqobil bormi?'), 'Qorovul pul');
     await userEvent.click(screen.getByRole('button', { name: 'Davom etish' }));
 
-    const save = screen.getByRole('button', { name: 'Saqlash' });
+    const form = screen.getByRole('heading', { name: 'Yangi qarz' }).closest('form');
+    if (!form) throw new Error('forma yo‘q');
+    const f = within(form);
+    const save = f.getByRole('button', { name: 'Saqlash' });
     expect(save).toBeDisabled();
-    await userEvent.type(screen.getByLabelText('Kreditor'), 'Anor bank');
-    await userEvent.type(screen.getByLabelText("Asosiy summa (so'm)"), '3 000 000');
-    await userEvent.type(screen.getByLabelText("1-to'lov sanasi"), '2026-11-07');
-    await userEvent.type(screen.getByLabelText("1-to'lov summasi"), '3 000 000');
+    await userEvent.type(f.getByLabelText('Kreditor'), 'Anor bank');
+    await userEvent.type(f.getByLabelText("Asosiy summa (so'm)"), '3 000 000');
+    await userEvent.type(f.getByLabelText("1-to'lov sanasi"), '2026-11-07');
+    await userEvent.type(f.getByLabelText("1-to'lov summasi"), '3 000 000');
     expect(await screen.findByTestId('burden-preview')).toHaveTextContent('25%');
     await userEvent.click(save);
     await waitFor(() => {
@@ -197,13 +200,13 @@ describe('DebtsPage', () => {
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: "Qarz qo'shish" }));
     await userEvent.click(screen.getByLabelText(/allaqachon olganman/));
-    await userEvent.selectOptions(
-      screen.getByLabelText('Jadval turi'),
-      "Teng bo'laklar (ustama bilan)",
-    );
+    const form = screen.getByRole('heading', { name: 'Yangi qarz' }).closest('form');
+    if (!form) throw new Error('forma yo‘q');
+    const f = within(form);
+    await userEvent.selectOptions(f.getByLabelText('Jadval turi'), "Teng bo'laklar (ustama bilan)");
     expect(screen.queryByTestId('markup-warning')).toBeNull();
-    await userEvent.clear(screen.getByLabelText("Ustama jami (so'm)"));
-    await userEvent.type(screen.getByLabelText("Ustama jami (so'm)"), '500 000');
+    await userEvent.clear(f.getByLabelText("Ustama jami (so'm)"));
+    await userEvent.type(f.getByLabelText("Ustama jami (so'm)"), '500 000');
     expect(screen.getByTestId('markup-warning')).toHaveTextContent('ribo');
   });
 

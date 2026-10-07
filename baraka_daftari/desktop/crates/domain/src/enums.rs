@@ -80,6 +80,11 @@ str_enum!(
     }
 );
 str_enum!(ReceiptKind { Debt => "DEBT", Receivable => "RECEIVABLE" });
+str_enum!(SellStatus { Listed => "LISTED", Sold => "SOLD" });
+str_enum!(
+    /// Byudjet rejimi (SPEC 2D.1).
+    BudgetMode { Standard => "STANDARD", DebtRecovery => "DEBT_RECOVERY" }
+);
 
 #[cfg(test)]
 mod tests {

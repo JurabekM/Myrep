@@ -189,7 +189,7 @@ pub fn get(
 }
 
 /// Daromadga nisbatan oylik yuk uchun daromad: joriy oy, bo'lmasa oldingi oy; ikkalasi ham 0 bo'lsa `None`.
-fn reference_income(
+pub(crate) fn reference_income(
     conn: &Connection,
     env: &Env<'_>,
     ctx: &Ctx,
@@ -371,6 +371,8 @@ pub fn pay(
         }
         Ok(())
     })?;
+    // Oxirgi qarz yopilsa `DEBT_RECOVERY` avtomatik `STANDARD` ga qaytadi.
+    crate::recovery::sync(db, env, ctx)?;
     get(db.conn(), env, ctx, debt_id)
 }
 

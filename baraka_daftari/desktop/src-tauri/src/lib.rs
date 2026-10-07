@@ -9,6 +9,7 @@ mod dto;
 mod family;
 mod guard;
 mod ledger;
+mod payoff;
 mod saving;
 mod session;
 mod study;
@@ -141,6 +142,22 @@ fn specta_builder() -> Builder<tauri::Wry> {
         debts::receipt_details,
         debts::save_receipt_details,
         debts::export_receipt_pdf,
+        payoff::recovery_status,
+        payoff::set_budget_mode,
+        payoff::set_recovery_split,
+        payoff::dismiss_recovery_notice,
+        payoff::payoff_sources,
+        payoff::payoff_plan,
+        payoff::set_closing_order,
+        payoff::clear_closing_order,
+        payoff::loan_calculator,
+        payoff::list_contributors,
+        payoff::set_contributor_share,
+        payoff::remove_contributor,
+        payoff::list_sellables,
+        payoff::add_sellable,
+        payoff::sell_item,
+        payoff::remove_sellable,
         hide_quick_window,
     ])
 }

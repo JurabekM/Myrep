@@ -78,3 +78,13 @@
 - **Darvoza (D8) bilan bog'lanish:** «foizli qarz» endi qarz inventaridan aniqlanadi (qo'lda belgi olib tashlandi); faqat «reja bor» bayoni qoldi (D10 gacha).
 - Qarz to'lovi «Qarz to'lovi» (ZARUR) xarajati sifatida yoziladi; bosh sahifada faol qarz kartochkasi.
 - Kechiktirildi: `DEBT_RECOVERY` 70/20/10 va to'lov rejalovchisi, annuitet/differensial simulyator, `DebtContributor` (D10); sotiladigan buyumlar (D10 bilan); ikki tomonlama tasdiq havolasi (sinxronlash/D14 gacha — hozir qo'lda belgi); do'kon nasiyasini `Debt` ga to'liq birlashtirish.
+
+## D10 — Qarzdan chiqish: 70/20/10, rejalovchi, simulyator, «Qarzsiz kun»
+- **Vektorlar:** `amortization.json` (amort-001…003 spetsifikatsiya raqamlari **to'liq jadvallar bilan** yashil: 322 147 684 / 14·9·8 oy / jami foiz 610 067 573·397 018 667·341 756 885; 9-oy misoli), qo'shimcha amort-004…006 (extra qoldiqdan katta, 0% stavka, kichik P) va differensial diff-001…003; `debt_recovery_split.json` (70/20/10 va jamg'arma ≥ 1%); `payoff_plan.json` (bir necha qarz, snowball, bir martalik manba).
+- **Domen:** `amortize` (annuitet to'lovi aniq kasrda — `num-bigint`, `typst` orqali allaqachon lock'da), `recovery_split`, `payoff_plan`, `closing_order`.
+- **`DEBT_RECOVERY` rejimi:** faol qarz bo'lsa taklif; 70/20/10 oila tomonidan sozlanadi, jamg'arma ulushi **0 bo'la olmaydi** (min 1%, Rustda tekshiriladi); rejimda daromaddan ulush taklifi = jamg'arma qismi; **barcha qarz yopilganda avtomatik `STANDARD` ga qaytadi** va bo'shagan ulushni qorovul pulga yo'naltirish taklif qilinadi.
+- **Rejalovchi:** odatiy va tezlashtirilgan grafik yonma-yon, necha oy erta, «qarzsiz kun»; manbalar — 20% ulush, qutqarilgan pul, sotiladigan buyumlar; yopish tartibi (standart: ustamali qarz — eng yuqorisidan, so'ng qarindosh/do'st — muddati yaqinidan; qo'lda o'zgartirish ↑↓).
+- **Kalkulyator:** annuitet/differensial «nima bo'ladi, agar» (Anvar: 14 → 9 oy); **ECharts** grafigi va **virtualizatsiyalangan katta jadval** (1200 oygacha), kalkulyator kerak bo'lganda yuklanadi.
+- **To'lovchilar** (`DebtContributor`): a'zoning oylik ulushi va haqiqiy to'lagan jami. **Sotiladigan buyumlar:** sotilgach tushum bir bosishda qarzga qo'shimcha to'lov.
+- Sxema v8: `debt_contributors`, `sellable_items`.
+- Kechiktirildi: taklif havolasi orqali ishtirokchi (sinxronlash/D14), to'y rejasi bilan bog'lash (D11), e'lon saytlariga eksport.

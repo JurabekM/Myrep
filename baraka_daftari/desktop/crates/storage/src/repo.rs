@@ -1280,3 +1280,71 @@ impl Record for LoanReceipt {
         })
     }
 }
+
+use domain::{DebtContributor, SellStatus, SellableItem};
+
+impl Record for DebtContributor {
+    const TABLE: &'static str = "debt_contributors";
+    const COLS: &'static [&'static str] =
+        &["debt_id", "member_id", "monthly_share_minor", "currency"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.monthly_share);
+        Ok(vec![t(&self.debt_id), t(&self.member_id), minor, cur])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            debt_id: r.get(7)?,
+            member_id: r.get(8)?,
+            monthly_share: row::money(r, 9, 10)?,
+        })
+    }
+}
+
+impl Record for SellableItem {
+    const TABLE: &'static str = "sellable_items";
+    const COLS: &'static [&'static str] = &[
+        "name",
+        "price_minor",
+        "currency",
+        "unused_since",
+        "status",
+        "sold_minor",
+        "sold_on",
+        "debt_id",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.estimated_price);
+        Ok(vec![
+            t(&self.name),
+            minor,
+            cur,
+            opt_date(self.unused_since)?,
+            t(self.status.as_str()),
+            self.sold_amount
+                .map_or(Value::Null, |m| Value::Integer(m.minor())),
+            opt_date(self.sold_on)?,
+            opt_text(self.debt_id.as_deref()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 9)?;
+        let sold: Option<i64> = r.get(12)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            estimated_price: Money::new(r.get(8)?, cur),
+            unused_since: opt_row_date(r, 10)?,
+            status: row::parsed(r, 11, SellStatus::parse)?,
+            sold_amount: sold.map(|m| Money::new(m, cur)),
+            sold_on: opt_row_date(r, 13)?,
+            debt_id: r.get(14)?,
+        })
+    }
+}

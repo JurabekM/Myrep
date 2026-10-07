@@ -41,6 +41,8 @@ describe('i18n kalitlari', () => {
     ...['NEED', 'LUXURY'].map((k) => `debts.friction.needOptions.${k}`),
     ...['NONE', 'GUARD', 'RELATIVE', 'SELL_ITEM'].map((k) => `debts.friction.alternatives.${k}`),
     ...['PRINT', 'DRAW'].map((k) => `receipt.mode.${k}`),
+    ...['STANDARD', 'DEBT_RECOVERY'].map((k) => `recovery.modes.${k}`),
+    ...['month', 'interest', 'principal', 'extra', 'balance'].map((k) => `calc.cols.${k}`),
     'audit.previous',
     'audit.current',
   ];

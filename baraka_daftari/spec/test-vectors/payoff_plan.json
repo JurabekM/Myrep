@@ -1,0 +1,374 @@
+{
+  "suite": "payoff_plan",
+  "version": 1,
+  "description": "Bir necha qarzni yopish rejasi (oyma-oy). Har oy har qarzning jadvaldagi to'lovi to'lanadi (min(qator, qoldiq)); so'ng hovuz (oylik qo'shimcha + 0-oyda bir martalik + snowball bo'lsa oldin yopilgan qarzlarning shu oydagi jadval qatorlari) ustuvorlik tartibida qoldiqqa yo'naltiriladi. Qarz yopilgan oy raqami (1 dan) qaytadi",
+  "cases": [
+    {
+      "id": "plan-001",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100",
+              "100"
+            ]
+          }
+        ],
+        "order": [
+          0
+        ],
+        "monthly_extra": "0",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 4,
+        "per_debt_months": [
+          4
+        ]
+      }
+    },
+    {
+      "id": "plan-002",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100",
+              "100"
+            ]
+          }
+        ],
+        "order": [
+          0
+        ],
+        "monthly_extra": "100",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 2,
+        "per_debt_months": [
+          2
+        ]
+      }
+    },
+    {
+      "id": "plan-003",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100"
+            ]
+          },
+          {
+            "rows": [
+              "50",
+              "50",
+              "50",
+              "50",
+              "50",
+              "50"
+            ]
+          }
+        ],
+        "order": [
+          0,
+          1
+        ],
+        "monthly_extra": "0",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 6,
+        "per_debt_months": [
+          3,
+          6
+        ]
+      }
+    },
+    {
+      "id": "plan-004",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100"
+            ]
+          },
+          {
+            "rows": [
+              "50",
+              "50",
+              "50",
+              "50",
+              "50",
+              "50"
+            ]
+          }
+        ],
+        "order": [
+          0,
+          1
+        ],
+        "monthly_extra": "100",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 3,
+        "per_debt_months": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "plan-005",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100"
+            ]
+          },
+          {
+            "rows": [
+              "50",
+              "50",
+              "50",
+              "50",
+              "50",
+              "50"
+            ]
+          }
+        ],
+        "order": [
+          0,
+          1
+        ],
+        "monthly_extra": "100",
+        "one_off": "0",
+        "snowball": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 3,
+        "per_debt_months": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "plan-006",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100"
+            ]
+          },
+          {
+            "rows": [
+              "50",
+              "50",
+              "50",
+              "50",
+              "50",
+              "50"
+            ]
+          }
+        ],
+        "order": [
+          1,
+          0
+        ],
+        "monthly_extra": "100",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 3,
+        "per_debt_months": [
+          3,
+          2
+        ]
+      }
+    },
+    {
+      "id": "plan-007",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100",
+              "100"
+            ]
+          },
+          {
+            "rows": [
+              "50",
+              "50",
+              "50",
+              "50",
+              "50",
+              "50"
+            ]
+          }
+        ],
+        "order": [
+          0,
+          1
+        ],
+        "monthly_extra": "0",
+        "one_off": "250",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 3,
+        "per_debt_months": [
+          1,
+          3
+        ]
+      }
+    },
+    {
+      "id": "plan-008",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000",
+              "1000"
+            ]
+          },
+          {
+            "rows": [
+              "300",
+              "300",
+              "300",
+              "300",
+              "300",
+              "300",
+              "300",
+              "300",
+              "300",
+              "300"
+            ]
+          },
+          {
+            "rows": [
+              "70",
+              "70",
+              "70",
+              "70",
+              "70"
+            ]
+          }
+        ],
+        "order": [
+          1,
+          0,
+          2
+        ],
+        "monthly_extra": "200",
+        "one_off": "500",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 10,
+        "per_debt_months": [
+          10,
+          5,
+          5
+        ]
+      }
+    },
+    {
+      "id": "plan-009",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "30",
+              "0",
+              "70"
+            ]
+          }
+        ],
+        "order": [
+          0
+        ],
+        "monthly_extra": "10",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 3,
+        "per_debt_months": [
+          3
+        ]
+      }
+    },
+    {
+      "id": "plan-010",
+      "input": {
+        "debts": [
+          {
+            "rows": [
+              "100",
+              "100"
+            ]
+          }
+        ],
+        "order": [
+          0
+        ],
+        "monthly_extra": "1000000",
+        "one_off": "0",
+        "snowball": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 1,
+        "per_debt_months": [
+          1
+        ]
+      }
+    }
+  ]
+}

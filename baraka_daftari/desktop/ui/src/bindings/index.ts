@@ -144,11 +144,54 @@ export const commands = {
 	 *  `None` — chop etib qo'lda imzolash. Foydalanuvchi bekor qilsa `None` qaytadi.
 	 */
 	exportReceiptPdf: (kind: string, id: string, lenderSignature: number[] | null, borrowerSignature: number[] | null) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_receipt_pdf", { kind, id, lenderSignature, borrowerSignature })),
+	recoveryStatus: () => typedError<RecoveryDto, CommandError>(__TAURI_INVOKE("recovery_status")),
+	/**  `mode`: `STANDARD` | `DEBT_RECOVERY`. */
+	setBudgetMode: (mode: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_budget_mode", { mode })),
+	setRecoverySplit: (livingBp: number, extraBp: number, savingsBp: number) => typedError<null, CommandError>(__TAURI_INVOKE("set_recovery_split", { livingBp, extraBp, savingsBp })),
+	dismissRecoveryNotice: () => typedError<null, CommandError>(__TAURI_INVOKE("dismiss_recovery_notice")),
+	payoffSources: () => typedError<SourcesDto, CommandError>(__TAURI_INVOKE("payoff_sources")),
+	/**  `monthly_extra` va `one_off` — foydalanuvchi matni (bo'sh — 0). */
+	payoffPlan: (monthlyExtra: string, oneOff: string) => typedError<{
+	order: string[],
+	manual_order: boolean,
+	lines: DebtLineDto[],
+	baseline_months: number,
+	accelerated_months: number,
+	months_saved: number,
+	/**  «Qarzsiz kun» (`YYYY-MM-DD`, oyning oxirgi kuni). */
+	debt_free_baseline: string | null,
+	debt_free_accelerated: string | null,
+} | null, CommandError>(__TAURI_INVOKE("payoff_plan", { monthlyExtra, oneOff })),
+	setClosingOrder: (ids: string[]) => typedError<null, CommandError>(__TAURI_INVOKE("set_closing_order", { ids })),
+	clearClosingOrder: () => typedError<null, CommandError>(__TAURI_INVOKE("clear_closing_order")),
+	/**
+	 *  Kalkulyator: `kind` — `ANNUITY` | `DIFFERENTIATED`; `annual_percent` — yillik foiz matni
+	 *  (masalan, `24`). Natija faqat taxminiy.
+	 */
+	loanCalculator: (kind: string, principal: string, annualPercent: string, months: number, extra: string) => typedError<CalculatorDto, CommandError>(__TAURI_INVOKE("loan_calculator", { kind, principal, annualPercent, months, extra })),
+	listContributors: (debtId: string) => typedError<ContributorDto[], CommandError>(__TAURI_INVOKE("list_contributors", { debtId })),
+	setContributorShare: (debtId: string, memberId: string, share: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_contributor_share", { debtId, memberId, share })),
+	removeContributor: (debtId: string, memberId: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_contributor", { debtId, memberId })),
+	listSellables: () => typedError<SellableDto[], CommandError>(__TAURI_INVOKE("list_sellables")),
+	addSellable: (name: string, price: string, unusedSince: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("add_sellable", { name, price, unusedSince })),
+	/**
+	 *  Sotildi: tushum `debt_id` qarziga (qoldiqdan oshmagan qismi) qo'shimcha to'lov bo'ladi.
+	 *  To'langan summani qaytaradi.
+	 */
+	sellItem: (id: string, soldFor: string, debtId: string | null) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("sell_item", { id, soldFor, debtId })),
+	removeSellable: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_sellable", { id })),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
 
 /* Types */
+export type AmortizationDto = {
+	first_payment: MoneyDto,
+	months: number,
+	total_interest: MoneyDto,
+	schedule: ScheduleRowDto[],
+};
+
 export type BlockDto = {
 	id: string,
 	text: string,
@@ -163,6 +206,13 @@ export type BorrowCheckDto = {
 	/**  `NONE` | `GUARD` | `RELATIVE` | `SELL_ITEM`. */
 	alternative: string,
 	burden_bp: number,
+};
+
+export type CalculatorDto = {
+	baseline: AmortizationDto,
+	accelerated: AmortizationDto,
+	months_saved: number,
+	interest_saved: MoneyDto,
 };
 
 export type CategoryDto = {
@@ -225,6 +275,13 @@ export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kin
 { kind: "MemberWrongPin" } | { kind: "MemberPinLocked"; retry_after_secs: number } | { kind: "MemberNoPin" } | 
 /**  "Kelajagim"dan pul olish pauzasi tugamagan. */
 { kind: "Cooling"; remaining_secs: number } | { kind: "Internal"; message: string };
+
+export type ContributorDto = {
+	member_id: string,
+	name: string,
+	monthly_share: MoneyDto | null,
+	paid: MoneyDto,
+};
 
 export type CsvMappingInput = {
 	date_col: number,
@@ -307,6 +364,13 @@ export type DebtInput = {
 	borrowed_on: string | null,
 	early_terms: string | null,
 	check: CheckInput | null,
+};
+
+export type DebtLineDto = {
+	id: string,
+	creditor: string,
+	baseline_months: number,
+	accelerated_months: number,
 };
 
 export type DebtOverviewDto = {
@@ -590,6 +654,18 @@ export type PendingLimitDto = {
 	missing: MemberRef[],
 };
 
+export type PlanDto = {
+	order: string[],
+	manual_order: boolean,
+	lines: DebtLineDto[],
+	baseline_months: number,
+	accelerated_months: number,
+	months_saved: number,
+	/**  «Qarzsiz kun» (`YYYY-MM-DD`, oyning oxirgi kuni). */
+	debt_free_baseline: string | null,
+	debt_free_accelerated: string | null,
+};
+
 export type PolicyDto = {
 	window_weeks: number,
 	min_satisfied_weeks: number,
@@ -677,6 +753,18 @@ export type RecordedDto = {
 	vault_balance: MoneyDto,
 };
 
+export type RecoveryDto = {
+	/**  `STANDARD` | `DEBT_RECOVERY`. */
+	mode: string,
+	living_bp: number,
+	extra_bp: number,
+	savings_bp: number,
+	suggest_recovery: boolean,
+	/**  Barcha qarz yopilgani uchun rejim avtomatik qaytdi. */
+	reverted_notice: boolean,
+	amounts: SplitAmountsDto | null,
+};
+
 export type RescueDto = {
 	/**  Tugagan oxirgi hafta (jumasi). */
 	week: string,
@@ -709,6 +797,37 @@ export type RuleInput = {
 	/**  `PERCENT` (value — bazis punkt, masalan "500") yoki `MONTHLY_FIXED` (value — so'mda summa). */
 	kind: string,
 	value: string,
+};
+
+export type ScheduleRowDto = {
+	month: number,
+	interest: MoneyDto,
+	principal: MoneyDto,
+	extra: MoneyDto,
+	balance: MoneyDto,
+};
+
+export type SellableDto = {
+	id: string,
+	name: string,
+	estimated_price: MoneyDto,
+	unused_since: string | null,
+	/**  `LISTED` | `SOLD`. */
+	status: string,
+	sold_amount: MoneyDto | null,
+	sold: boolean,
+};
+
+export type SourcesDto = {
+	monthly_share: MoneyDto | null,
+	rescued_available: MoneyDto,
+	sellable_listed: MoneyDto,
+};
+
+export type SplitAmountsDto = {
+	living: MoneyDto,
+	extra: MoneyDto,
+	savings: MoneyDto,
 };
 
 export type SubscriptionDto = {

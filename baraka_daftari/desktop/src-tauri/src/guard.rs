@@ -387,7 +387,7 @@ pub fn purchasing_power(
 }
 
 /// «12,5» → 1250 bp. Faqat butun va bir-ikki xonali kasr; manfiy yoki 1000% dan katta emas.
-fn percent_to_bp(text: &str) -> Result<u32, ServiceError> {
+pub(crate) fn percent_to_bp(text: &str) -> Result<u32, ServiceError> {
     let t = text.trim().replace(',', ".");
     let bad = ServiceError::Invalid("foiz noto'g'ri (masalan, 12,5)");
     let (int, frac) = t.split_once('.').unwrap_or((&t, ""));

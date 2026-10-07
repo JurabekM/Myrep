@@ -40,3 +40,6 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | debt_schedule | `op`=`fixed_markup` (`principal`,`markup`,`months`,`first_due`) yoki `summary` (`principal`,`rows[]`), `currency` | `{"rows":[{"due","amount"}]}` / `{"total","markup"}` yoki `{"error":"EMPTY_SCHEDULE"\|"NON_POSITIVE"\|"BELOW_PRINCIPAL"\|"INVALID_MONTHS"\|"INVALID_AMOUNT"}` |
 | debt_cost | `principal`, `paid`, `remaining_scheduled`, `currency` | `{"total","excess","excess_bp"}` yoki `{"error":"INVALID_AMOUNT"}` |
 | debt_burden | `monthly`, `income`, `currency` | `{"burden_bp"}` yoki `{"error":"INVALID_AMOUNT"}` |
+| amortization | `kind` (ANNUITY\|DIFFERENTIATED), `principal`, `annual_bp`, `months`, `extra`, `currency` | `{"first_payment","months","total_interest","schedule":[{month,interest,principal,extra,balance}]}` |
+| debt_recovery_split | `total`, `living_bp`, `extra_bp`, `savings_bp`, `currency` | `{"living","extra","savings"}` yoki `{"error":"INVALID_SPLIT"\|"SAVINGS_TOO_LOW"}` |
+| payoff_plan | `debts[{rows[]}]`, `order[]` (indekslar, birinchisi — ustuvor), `monthly_extra`, `one_off`, `snowball`, `currency` | `{"months","per_debt_months":[...]}` |

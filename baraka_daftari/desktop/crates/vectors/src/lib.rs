@@ -115,6 +115,9 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "debt_schedule" => Ok(run_debt_schedule),
         "debt_cost" => Ok(run_debt_cost),
         "debt_burden" => Ok(run_debt_burden),
+        "amortization" => Ok(run_amortization),
+        "debt_recovery_split" => Ok(run_recovery_split),
+        "payoff_plan" => Ok(run_payoff_plan),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -666,4 +669,103 @@ fn run_debt_burden(input: &Value) -> Result<Value, String> {
         Ok(b) => serde_json::json!({ "burden_bp": b }),
         Err(e) => sched_error(&e),
     })
+}
+
+fn plan_error(e: &domain::PlanError) -> Value {
+    serde_json::json!({ "error": e.code() })
+}
+
+fn run_amortization(input: &Value) -> Result<Value, String> {
+    let principal = parse_money(input, "principal", "currency")?;
+    let extra = parse_money(input, "extra", "currency")?;
+    let kind = match str_field(input, "kind")? {
+        "ANNUITY" => domain::LoanKind::Annuity,
+        "DIFFERENTIATED" => domain::LoanKind::Differentiated,
+        other => return Err(format!("noma'lum kind: {other}")),
+    };
+    let bp = u32_field(input, "annual_bp")?;
+    let months = u32_field(input, "months")?;
+    Ok(match domain::amortize(kind, principal, bp, months, extra) {
+        Ok(a) => serde_json::json!({
+            "first_payment": a.first_payment.minor().to_string(),
+            "months": a.months,
+            "total_interest": a.total_interest.minor().to_string(),
+            "schedule": a.schedule.iter().map(|r| serde_json::json!({
+                "month": r.month,
+                "interest": r.interest.minor().to_string(),
+                "principal": r.principal.minor().to_string(),
+                "extra": r.extra.minor().to_string(),
+                "balance": r.balance.minor().to_string(),
+            })).collect::<Vec<_>>(),
+        }),
+        Err(e) => plan_error(&e),
+    })
+}
+
+fn run_recovery_split(input: &Value) -> Result<Value, String> {
+    let total = parse_money(input, "total", "currency")?;
+    let split = domain::RecoverySplit {
+        living_bp: u32_field(input, "living_bp")?,
+        extra_bp: u32_field(input, "extra_bp")?,
+        savings_bp: u32_field(input, "savings_bp")?,
+    };
+    Ok(match domain::recovery_split(total, split) {
+        Ok(s) => serde_json::json!({
+            "living": s.living.minor().to_string(),
+            "extra": s.extra.minor().to_string(),
+            "savings": s.savings.minor().to_string(),
+        }),
+        Err(e) => plan_error(&e),
+    })
+}
+
+fn run_payoff_plan(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let debts = input
+        .get("debts")
+        .and_then(Value::as_array)
+        .ok_or("debts massivi kerak")?
+        .iter()
+        .map(|d| {
+            let rows = d
+                .get("rows")
+                .and_then(Value::as_array)
+                .ok_or_else(|| "rows massivi kerak".to_owned())?
+                .iter()
+                .map(|v| {
+                    v.as_str()
+                        .ok_or_else(|| "qator matn bo'lishi kerak".to_owned())
+                        .and_then(parse_minor)
+                        .map(|m| Money::new(m, currency))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(domain::PlanDebt { rows })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let order = input
+        .get("order")
+        .and_then(Value::as_array)
+        .ok_or("order massivi kerak")?
+        .iter()
+        .map(|v| {
+            v.as_u64()
+                .and_then(|n| usize::try_from(n).ok())
+                .ok_or_else(|| "order indeksi noto'g'ri".to_owned())
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let extra = parse_money(input, "monthly_extra", "currency")?;
+    let one_off = parse_money(input, "one_off", "currency")?;
+    let snowball = input
+        .get("snowball")
+        .and_then(Value::as_bool)
+        .ok_or("snowball (bool) kerak")?;
+    Ok(
+        match domain::payoff_plan(&debts, &order, extra, one_off, snowball) {
+            Ok(p) => serde_json::json!({
+                "months": p.months,
+                "per_debt_months": p.per_debt_months,
+            }),
+            Err(e) => plan_error(&e),
+        },
+    )
 }

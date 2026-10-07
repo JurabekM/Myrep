@@ -1376,6 +1376,7 @@ name = "domain"
 version = "0.1.0"
 dependencies = [
  "money",
+ "num-bigint",
  "serde",
  "thiserror 2.0.21",
  "time",

@@ -32,8 +32,13 @@ pub fn suggest(
     let rule = rules::current(conn, ctx)?.rule;
     let ym = YearMonth::of(local_date(env.clock.now()));
     let allocated = vault::allocated_in(conn, ctx, ym)?;
+    // «Qarzdan chiqish» rejimida ulush — jamg'arma qismi (kamida 1%, hech qachon 0 emas).
+    let share = match crate::recovery::savings_share(conn, ctx, amount)? {
+        Some(s) => s,
+        None => suggest_share(rule, amount, allocated)?,
+    };
     Ok(Suggestion {
-        share: suggest_share(rule, amount, allocated)?,
+        share,
         rule,
         allocated_this_month: allocated,
     })
