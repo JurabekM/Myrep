@@ -66,3 +66,15 @@
 - **Narx daftari:** savat (og'irlik %), narxlar tarixi, shaxsiy indeks, haftalik eslatma va ketma-ketlik. **«Sichqon kemirgani»:** real qiymat va mahsulot miqdori (foydalanuvchi kiritgan yillik o'sish bilan), har doim keyingi qadam bilan yakunlanadi.
 - **Ribo filtri:** daromad turi (ixtiyoriy; `RIBO` alohida belgilanadi); i18n matnlarida taqiqlangan iboralar testi (uz/ru).
 - Kechiktirildi: rasmiy CPI, narx eslatmasi bildirishnomasi (D15), o'sadigan pul funksiyalari (keyingi boblar), qarz inventari (D9 — hozircha darvoza qarz holatini qo'lda bayon qilish bilan).
+
+## D9 — 4-qonun: qarz inventari, haqiqiy narx, friction, tilxat
+- **Vektorlar (avval):** `debt_schedule` (teng bo'laklar va jadval jami/ustamasi), `debt_cost` (Karim aka: 40 mln → 69 mln), `debt_burden`.
+- **Sxema v7:** `debts`, `debt_instalments`, `debt_payments`, `receivables`, `goals`, `loan_receipts`.
+- **Qarz inventari:** bank / do'kon / qarindosh / do'st / boshqa; **to'lov jadvalisiz qarz saqlanmaydi** (bo'sh, asosiydan kam yoki musbat bo'lmagan qator rad etiladi — testlangan). Ustama alohida kiritilmaydi: u jadval jamidan chiqadi (jami − asosiy); ustama bor qarz qizil belgilanadi.
+- **Haqiqiy narx:** «asosiy → jami → ortiqcha» va ulush; **imkoniyat narxi** — ortiqcha summa foydalanuvchi maqsadlariga necha marta teng.
+- **Friction («to'xta va o'yla»):** zarurat/hashamat, foizsiz muqobil, oylik yukning daromadga nisbati; natija qarz yozuvida saqlanadi.
+- **Berilgan qarzlar (`Receivable`):** foiz maydoni **tipda ham, bazada ham yo'q** (test: maydonlar to'liq sanab o'tilgan + sxema ustunlari tekshiruvi); muddat kelganda yumshoq eslatma.
+- **Tilxat PDF** (typst): tomonlar, summa, jadval, guvohlar, imzo joylari; imzo — chop etib qo'lda yoki sichqoncha/pero bilan chizilgan PNG. Matn snapshot testi (ʻ/ʼ saqlanadi), markup injection testi, noto'g'ri/katta rasm rad etiladi.
+- **Darvoza (D8) bilan bog'lanish:** «foizli qarz» endi qarz inventaridan aniqlanadi (qo'lda belgi olib tashlandi); faqat «reja bor» bayoni qoldi (D10 gacha).
+- Qarz to'lovi «Qarz to'lovi» (ZARUR) xarajati sifatida yoziladi; bosh sahifada faol qarz kartochkasi.
+- Kechiktirildi: `DEBT_RECOVERY` 70/20/10 va to'lov rejalovchisi, annuitet/differensial simulyator, `DebtContributor` (D10); sotiladigan buyumlar (D10 bilan); ikki tomonlama tasdiq havolasi (sinxronlash/D14 gacha — hozir qo'lda belgi); do'kon nasiyasini `Debt` ga to'liq birlashtirish.

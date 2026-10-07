@@ -35,3 +35,17 @@ impl From<domain::GuardError> for ServiceError {
         }
     }
 }
+
+impl From<domain::ScheduleError> for ServiceError {
+    fn from(e: domain::ScheduleError) -> Self {
+        use domain::ScheduleError as S;
+        match e {
+            S::Empty => Self::Invalid("to'lov rejasi bo'sh: qarz rejasiz saqlanmaydi"),
+            S::NonPositive => Self::Invalid("har bir to'lov summasi musbat bo'lishi kerak"),
+            S::BelowPrincipal => Self::Invalid("jadval jami asosiy summadan kam"),
+            S::InvalidMonths => Self::Invalid("oylar soni 1 dan 120 gacha bo'lsin"),
+            S::InvalidAmount => Self::Invalid("summa noto'g'ri"),
+            S::Money(m) => Self::Money(m),
+        }
+    }
+}

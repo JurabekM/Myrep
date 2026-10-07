@@ -45,7 +45,7 @@ pub struct CouncilMinutes {
 }
 
 /// typst string literal: `\` va `"` ekranlanadi, boshqaruv belgilari olib tashlanadi.
-fn lit(s: &str) -> String {
+pub(crate) fn lit(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 2);
     out.push('"');
     for c in s.chars() {

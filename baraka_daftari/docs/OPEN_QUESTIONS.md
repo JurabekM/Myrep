@@ -43,3 +43,10 @@
 41. **Narx indeksi:** har mahsulot uchun *birinchi* va *oxirgi* kiritilgan narx solishtiriladi (davr tanlovi yo'q); og'irliklar yig'indisi 100% bo'lishi shart emas (normallanadi). Manfiy o'zgarish half-up (+∞ tomon) yaxlitlanadi — mobil bilan tasdiqlash kerak.
 42. **«Sichqon kemirgani»:** yillik o'sishni foydalanuvchi o'zi kiritadi (standart yo'q, o'ylab topilmadi). Real qiymat va kelajak narx yil-yilga half-up yaxlitlanadi (`purchasing_power.json`) — mobil ham xuddi shunday hisoblashi kerak.
 43. **Taqiqlangan iboralar ro'yxati** (`i18n/forbidden.test.ts`) dastlabki variant; kengaytirish uchun tahrir kerak bo'lsa ayting. «Foizli qarz» va «foizli daromad (ribo)» matnlari ogohlantirish sifatida ruxsat etilgan.
+44. **Annuitet/differensial jadvallar D9 da hisoblanmaydi:** foydalanuvchi bank shartnomasidagi jadvalni qator-qator kiritadi (tur faqat belgi). Simulyator va `amortization.json` D10 da. Faqat «teng bo'laklar» (`FIXED_MARKUP`) ilova tomonidan hisoblanadi (qoldiq birinchi to'lovlarga).
+45. **Oylik to'lov** = jadval jami / qatorlar soni (o'rtacha, half-up); oylik yuk shu yig'indining joriy oy (yo'q bo'lsa oldingi oy) daromadiga nisbati. Daromad bo'lmasa yuk ko'rsatilmaydi (friction javobida 0 saqlanadi — «noma'lum»).
+46. **Jadval bo'yicha «keyingi to'lov»:** to'lovlar jadval qatorlariga ketma-ket taqsimlanadi (qisman to'lov keyingi qatorga o'tadi); muddati o'tgan = birinchi to'lanmagan qator sanasi bugundan oldin.
+47. **Qarz to'lovi xarajati** bitta «Qarz to'lovi» kategoriyasida (egasi: Bank) — «Kimning puli?» da qarindosh/do'stga to'lovlar ham «Bank» ostida ko'rinadi. Kerak bo'lsa kreditor turiga qarab egani bo'lamiz.
+48. **Do'kon nasiyasi** (D4) hali alohida `obligations` da; jami qarzga qo'shib ko'rsatiladi, lekin jadvalsiz. `Debt (SHOP)` ga ko'chirish keyingi vazifada (migratsiya: qoldiq → bitta qatorli jadval).
+49. **Ikkinchi tomon tasdig'i:** oflayn ilovada havola yo'q — hozir qo'lda belgi («tasdiqladi»). Haqiqiy ikki tomonlama tasdiq `.baraka` almashinuvi (D14) bilan.
+50. **Tilxat yuridik kuchi** haqida va'da yo'q (PDF'da yozilgan); yurist matni kerak bo'lsa alohida. Imzo rasmi ≤ 300 KB PNG.

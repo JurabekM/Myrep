@@ -8,7 +8,7 @@ use domain::{
 };
 use money::{Currency, Money};
 use services::{
-    categories,
+    categories, debts,
     expenses::{self, NewExpense},
     guard, income, obligations, prices, setup, vault, Ctx, Env, ServiceError,
 };
@@ -141,6 +141,32 @@ impl World {
         .unwrap()
     }
 
+    /// 300 000 so'm asosiy, 330 000 so'm jami (ustamali) qarz.
+    fn markup_debt(&mut self) {
+        let env = env!(self);
+        debts::add(
+            &mut self.db,
+            &env,
+            &self.ctx,
+            debts::NewDebt {
+                creditor: "Do'kon".into(),
+                creditor_type: domain::CreditorType::Shop,
+                reason: None,
+                principal: uzs(30_000_000),
+                schedule_kind: domain::ScheduleKind::FixedMarkup,
+                schedule: debts::ScheduleInput::FixedMarkup {
+                    markup: uzs(3_000_000),
+                    months: 3,
+                    first_due: d("2026-11-07"),
+                },
+                borrowed_on: None,
+                early_repayment_terms: None,
+                check: None,
+            },
+        )
+        .unwrap();
+    }
+
     fn deposit_guard(&mut self, amount: i64) {
         let env = env!(self);
         vault::set_opening_balance(&mut self.db, &env, &self.ctx, uzs(amount)).unwrap();
@@ -219,14 +245,14 @@ fn gate_matrix_and_locked_reasons() {
     let g = w.gate();
     assert!(g.open && g.rules_open && !g.bypassed);
 
-    // Foizli qarz bor, rejasi yo'q → qulf.
+    // Foizli (ustamali) qarz bor, rejasi yo'q → qulf.
+    w.markup_debt();
     let env = env!(w);
-    guard::set_debt_declaration(&mut w.db, &env, &w.ctx, true, false).unwrap();
     let g = w.gate();
     assert!(!g.open);
     assert_eq!(g.reasons, vec![GateReason::InterestDebtNoPlan]);
     // Reja bor → ochiq.
-    guard::set_debt_declaration(&mut w.db, &env, &w.ctx, true, true).unwrap();
+    guard::set_debt_plan_declaration(&mut w.db, &env, &w.ctx, true).unwrap();
     assert!(w.gate().open);
 }
 

@@ -112,6 +112,9 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "readiness_gate" => Ok(run_readiness_gate),
         "allocation_priority" => Ok(run_allocation_priority),
         "purchasing_power" => Ok(run_purchasing_power),
+        "debt_schedule" => Ok(run_debt_schedule),
+        "debt_cost" => Ok(run_debt_cost),
+        "debt_burden" => Ok(run_debt_burden),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -590,4 +593,77 @@ fn run_purchasing_power(input: &Value) -> Result<Value, String> {
         }
         other => Err(format!("noma'lum op: {other}")),
     }
+}
+
+fn sched_error(e: &domain::ScheduleError) -> Value {
+    serde_json::json!({ "error": e.code() })
+}
+
+fn run_debt_schedule(input: &Value) -> Result<Value, String> {
+    let principal = parse_money(input, "principal", "currency")?;
+    let currency = principal.currency();
+    match str_field(input, "op")? {
+        "fixed_markup" => {
+            let markup = parse_money(input, "markup", "currency")?;
+            let first =
+                domain::date_from_str(str_field(input, "first_due")?).map_err(|e| e.to_string())?;
+            let months = u32_field(input, "months")?;
+            Ok(
+                match domain::fixed_markup_schedule(principal, markup, months, first) {
+                    Ok(rows) => serde_json::json!({
+                        "rows": rows.iter().map(|(d, m)| serde_json::json!({
+                            "due": domain::date_to_string(*d).unwrap_or_default(),
+                            "amount": m.minor().to_string(),
+                        })).collect::<Vec<_>>()
+                    }),
+                    Err(e) => sched_error(&e),
+                },
+            )
+        }
+        "summary" => {
+            let rows = input
+                .get("rows")
+                .and_then(Value::as_array)
+                .ok_or("rows massivi kerak")?
+                .iter()
+                .map(|v| {
+                    v.as_str()
+                        .ok_or_else(|| "qator matn bo'lishi kerak".to_owned())
+                        .and_then(parse_minor)
+                        .map(|m| Money::new(m, currency))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(match domain::schedule_summary(principal, &rows) {
+                Ok(s) => serde_json::json!({
+                    "total": s.total.minor().to_string(),
+                    "markup": s.markup.minor().to_string(),
+                }),
+                Err(e) => sched_error(&e),
+            })
+        }
+        other => Err(format!("noma'lum op: {other}")),
+    }
+}
+
+fn run_debt_cost(input: &Value) -> Result<Value, String> {
+    let principal = parse_money(input, "principal", "currency")?;
+    let paid = parse_money(input, "paid", "currency")?;
+    let rest = parse_money(input, "remaining_scheduled", "currency")?;
+    Ok(match domain::debt_cost(principal, paid, rest) {
+        Ok(c) => serde_json::json!({
+            "total": c.total.minor().to_string(),
+            "excess": c.excess.minor().to_string(),
+            "excess_bp": c.excess_bp,
+        }),
+        Err(e) => sched_error(&e),
+    })
+}
+
+fn run_debt_burden(input: &Value) -> Result<Value, String> {
+    let monthly = parse_money(input, "monthly", "currency")?;
+    let income = parse_money(input, "income", "currency")?;
+    Ok(match domain::burden_bp(monthly, income) {
+        Ok(b) => serde_json::json!({ "burden_bp": b }),
+        Err(e) => sched_error(&e),
+    })
 }

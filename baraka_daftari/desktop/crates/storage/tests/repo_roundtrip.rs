@@ -641,3 +641,158 @@ fn v5_tables_roundtrip_and_constraints() {
     )
     .is_err());
 }
+
+#[test]
+fn v7_tables_roundtrip_and_constraints() {
+    let w = world();
+    let hid = &w.household.meta.id;
+    let c = w.db.conn();
+    let uzs = |v| Money::new(v, Currency::Uzs);
+
+    let debt = Debt {
+        meta: w.fx.meta(hid),
+        creditor: "Bank".into(),
+        creditor_type: CreditorType::Bank,
+        reason: Some("avtokredit".into()),
+        principal: uzs(3_900_000_000),
+        schedule_kind: ScheduleKind::Annuity,
+        monthly_payment: uzs(300_000_000),
+        due_date: day(),
+        borrowed_on: day(),
+        early_repayment_terms: Some("jarima 1%".into()),
+        priority: Some(1),
+        closed_on: None,
+        check: Some(BorrowCheck {
+            need: BorrowNeed::Need,
+            alternative: BorrowAlternative::Relative,
+            burden_bp: 2_500,
+        }),
+    };
+    repo::insert(c, &debt).unwrap();
+    assert_eq!(repo::get::<Debt>(c, &debt.meta.id).unwrap().unwrap(), debt);
+    let plain = Debt {
+        meta: w.fx.meta(hid),
+        reason: None,
+        early_repayment_terms: None,
+        priority: None,
+        check: None,
+        ..debt.clone()
+    };
+    repo::insert(c, &plain).unwrap();
+    assert_eq!(
+        repo::get::<Debt>(c, &plain.meta.id).unwrap().unwrap(),
+        plain
+    );
+
+    let inst = DebtInstalment {
+        meta: w.fx.meta(hid),
+        debt_id: debt.meta.id.clone(),
+        due_on: day(),
+        amount: uzs(300_000_000),
+    };
+    repo::insert(c, &inst).unwrap();
+    assert_eq!(
+        repo::list::<DebtInstalment>(c, hid).unwrap(),
+        vec![inst.clone()]
+    );
+    let pay = DebtPayment {
+        meta: w.fx.meta(hid),
+        debt_id: debt.meta.id.clone(),
+        member_id: w.member.meta.id.clone(),
+        paid_on: day(),
+        amount: uzs(100),
+        expense_id: None,
+    };
+    repo::insert(c, &pay).unwrap();
+    assert_eq!(repo::list::<DebtPayment>(c, hid).unwrap(), vec![pay]);
+
+    let rec = Receivable {
+        meta: w.fx.meta(hid),
+        debtor: "Qo'shni".into(),
+        amount: uzs(20_000_000),
+        given_on: day(),
+        due_on: Some(day()),
+        note: None,
+        returned: uzs(5_000_000),
+    };
+    repo::insert(c, &rec).unwrap();
+    assert_eq!(
+        repo::get::<Receivable>(c, &rec.meta.id).unwrap().unwrap(),
+        rec
+    );
+    let goal = Goal {
+        meta: w.fx.meta(hid),
+        name: "Yosh oila".into(),
+        target: uzs(100_000_000),
+        saved: uzs(1),
+        due_on: None,
+    };
+    repo::insert(c, &goal).unwrap();
+    assert_eq!(repo::get::<Goal>(c, &goal.meta.id).unwrap().unwrap(), goal);
+
+    let receipt = LoanReceipt {
+        meta: w.fx.meta(hid),
+        kind: ReceiptKind::Debt,
+        ref_id: debt.meta.id.clone(),
+        witnesses: vec!["Anvar".into(), "Dilshod".into()],
+        confirmed_by_counterparty: true,
+    };
+    repo::insert(c, &receipt).unwrap();
+    assert_eq!(
+        repo::get::<LoanReceipt>(c, &receipt.meta.id)
+            .unwrap()
+            .unwrap(),
+        receipt
+    );
+    // Bitta qarzga bitta tilxat.
+    let dup = LoanReceipt {
+        meta: w.fx.meta(hid),
+        ..receipt
+    };
+    assert!(repo::insert(c, &dup).is_err());
+    // Asosiy summa 0 bo'lgan qarz bazada ham rad etiladi.
+    let zero = Debt {
+        meta: w.fx.meta(hid),
+        principal: uzs(0),
+        ..plain
+    };
+    assert!(repo::insert(c, &zero).is_err());
+}
+
+/// Qabul mezoni (D9): `Receivable` da foiz maydoni yo'q — na tipda, na bazada.
+#[test]
+fn receivable_has_no_interest_field() {
+    // Barcha maydonlar sanab o'tilgan: yangi maydon (masalan, `interest`) qo'shilsa bu kod kompilyatsiya
+    // bo'lmaydi va qarori ongli ravishda qayta ko'rib chiqiladi.
+    let Receivable {
+        meta: _,
+        debtor: _,
+        amount: _,
+        given_on: _,
+        due_on: _,
+        note: _,
+        returned: _,
+    } = Receivable {
+        meta: Fx::new().meta("h"),
+        debtor: String::new(),
+        amount: Money::new(1, Currency::Uzs),
+        given_on: day(),
+        due_on: None,
+        note: None,
+        returned: Money::new(0, Currency::Uzs),
+    };
+    let w = world();
+    let cols: Vec<String> =
+        w.db.conn()
+            .prepare("SELECT name FROM pragma_table_info('receivables')")
+            .unwrap()
+            .query_map([], |r| r.get(0))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect();
+    for c in &cols {
+        for bad in ["interest", "markup", "rate", "foiz", "ustama", "percent"] {
+            assert!(!c.to_lowercase().contains(bad), "receivables.{c}");
+        }
+    }
+}

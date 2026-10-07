@@ -35,7 +35,8 @@
     "subscriptions": "Obunalar",
     "envelopes": "Konvertlar",
     "rescue": "Qutqarilgan pul",
-    "prices": "Narx daftari"
+    "prices": "Narx daftari",
+    "debts": "Qarzlar"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -416,10 +417,11 @@
     "bypassUnderstood": "Xavfni tushundim, o'z tanlovim",
     "bypassConfirm": "Tasdiqlash va ochish",
     "revoke": "Qulfni qaytarish",
-    "debtTitle": "Qarz holati (qarz daftari tayyor bo'lgunga qadar qo'lda)",
-    "debtHint": "Keyingi vazifada qarzlar ro'yxatidan avtomatik olinadi.",
-    "hasInterestDebt": "Foizli qarzim bor",
-    "hasDebtPlan": "Qarzdan chiqish rejam bor"
+    "debtTitle": "Qarzdan chiqish rejasi",
+    "debtHint": "Foizli qarz «Qarzlar» sahifasidagi jadvallardan avtomatik aniqlanadi. Rejalovchi tayyor bo'lguncha reja borligini o'zingiz belgilaysiz.",
+    "hasDebtPlan": "Qarzdan chiqish rejam bor",
+    "derivedInterestDebt": "Qarz daftarida ustamali (foizli) qarz bor.",
+    "derivedNoInterestDebt": "Qarz daftarida ustamali qarz yo'q."
   },
   "incomeType": {
     "label": "Daromad turi (ixtiyoriy)",
@@ -467,5 +469,135 @@
     "example": "Hozir shu pulga {{now}} {{unit}} {{name}} olinadi; {{years}} yildan keyin — taxminan {{later}} {{unit}}.",
     "next": "Keyingi qadam: avval qorovul pulni tayyorlang, so'ng o'sadigan pulga o'ting.",
     "toVault": "Kelajagimga o'tish"
+  },
+  "debts": {
+    "slotTitle": "Qarzlar",
+    "open": "Qarzlar sahifasi",
+    "wound": "Qarz — teshik emas, yara: avval hajmini ko'ramiz, so'ng reja bilan davolaymiz.",
+    "monthlyLoad": "Oylik to'lov: {{amount}}",
+    "ofIncome": "daromadning {{bp}} qismi",
+    "overdueNote": "Muddati o'tgan to'lov bor.",
+    "inventory": "Qarz inventari",
+    "inventoryHint": "Hech qanday qarz tashlab ketilmaydi: bank, do'kon, qarindosh va do'stlar.",
+    "empty": "Hozircha qarz kiritilmagan.",
+    "add": "Qarz qo'shish",
+    "addTitle": "Yangi qarz",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "existing": "Bu qarzni allaqachon olganman (faqat ro'yxatga kiritaman)",
+    "excessTotal": "Asosiydan ortiqcha to'lov (haqiqiy narx): {{amount}}",
+    "nasiyaIncluded": "Shundan do'kon nasiyasi: {{amount}}",
+    "receivablesOut": "Sizga qaytishi kerak (berilgan qarz): {{amount}}",
+    "markupDebtNote": "Ustamali (foizli) qarz bor. Ilova foizli qarz olishni tavsiya qilmaydi; reja bilan chiqing.",
+    "realCost": "Qarzning haqiqiy narxi",
+    "costLine": "Asosiy summa: {{principal}} → Jami to'lanadi: {{total}} → Ortiqcha: {{excess}}",
+    "costShare": "To'lovning {{bp}} qismi asosiy summadan ortiqcha.",
+    "equals": "Bu ortiqcha summa «{{goal}}» maqsadining {{times}} baravariga teng.",
+    "closed": "yopilgan: {{date}}",
+    "line": "Oylik: {{monthly}} · oxirgi to'lov: {{due}} · {{kind}}",
+    "nextDue": "Keyingi to'lov: {{date}} — {{amount}}",
+    "overdue": "Muddati o'tgan: {{date}} — {{amount}}",
+    "markupFlag": "Ustama bor: {{amount}} (jadval jami asosiydan ko'p).",
+    "checkSaved": "Olishdan oldingi o'ylash: {{need}}; muqobil: {{alt}}.",
+    "payAmount": "{{name}}: to'lov summasi",
+    "payPlaceholder": "To'lov (so'm)",
+    "pay": "To'lash",
+    "showDetails": "Jadval va tilxat",
+    "hideDetails": "Yashirish",
+    "remove": "O'chirish",
+    "plan": "To'lov rejasi",
+    "earlyTerms": "Muddatidan oldin to'lash shartlari",
+    "earlyTermsHint": "jarima, komissiya, qayta hisoblash (shartnomadan)",
+    "saveTerms": "Saqlash",
+    "earlyDisclaimer": "Kalkulyator faqat taxminiy natija beradi: muddatidan oldin to'lash shartlari shartnomaga bog'liq.",
+    "creditor": "Kreditor",
+    "creditorType": "Kreditor turi",
+    "principal": "Asosiy summa (so'm)",
+    "reason": "Sababi (to'y, mashina, ro'zg'or...)",
+    "creditorTypes": {
+      "BANK": "Bank",
+      "SHOP": "Do'kon",
+      "RELATIVE": "Qarindosh",
+      "FRIEND": "Do'st",
+      "OTHER": "Boshqa"
+    },
+    "planHint": "To'lov rejasisiz qarz saqlanmaydi. Ustama alohida kiritilmaydi: u jadval jamidan chiqadi.",
+    "scheduleKind": "Jadval turi",
+    "kinds": {
+      "MANUAL": "Qo'lda kiritilgan",
+      "ANNUITY": "Annuitet (bank jadvali)",
+      "DIFFERENTIATED": "Differensial (bank jadvali)",
+      "FIXED_MARKUP": "Teng bo'laklar (ustama bilan)"
+    },
+    "markup": "Ustama jami (so'm)",
+    "months": "Oylar soni",
+    "firstDue": "Birinchi to'lov sanasi",
+    "rowDue": "{{n}}-to'lov sanasi",
+    "rowAmount": "{{n}}-to'lov summasi",
+    "rowAdd": "Qator qo'shish",
+    "rowRemove": "Olib tashlash",
+    "markupWarning": "Diqqat: ustama (foiz) kiritildi. Foizli qarz — ribo; imkon bo'lsa foizsiz muqobilni ko'ring.",
+    "friction": {
+      "title": "To'xta va o'yla",
+      "hint": "Maqsad — taqiqlash emas, ongli qaror qabul qilish. Javoblar qarz yozuvida saqlanadi.",
+      "need": "Bu qarz kerakmi?",
+      "needOptions": {
+        "NEED": "Zarurat",
+        "LUXURY": "Hashamat"
+      },
+      "alternative": "Foizsiz muqobil bormi?",
+      "alternatives": {
+        "NONE": "Yo'q",
+        "GUARD": "Qorovul pul",
+        "RELATIVE": "Qarindosh (foizsiz)",
+        "SELL_ITEM": "Buyum sotish"
+      },
+      "burdenNext": "Keyingi qadamda oylik yukingiz daromadingizning necha foizi bo'lishini ko'rasiz.",
+      "continue": "Davom etish",
+      "burden": "Bu qarzdan keyin oylik qarz yuki daromadning {{bp}} qismi bo'ladi."
+    }
+  },
+  "rec": {
+    "title": "Berilgan qarzlar",
+    "hint": "Faqat foizsiz (qarzi hasana). Foiz kiritish imkoni yo'q. Muddat kelganda xushmuomala eslatma chiqadi.",
+    "debtor": "Kimga",
+    "amount": "Summa (so'm)",
+    "due": "Qaytarish muddati",
+    "add": "Qo'shish",
+    "noDue": "muddatsiz",
+    "line": "Berilgan: {{amount}} · qaytgan: {{returned}} · muddat: {{date}}",
+    "dueGentle": "{{name}} bilan kelishgan muddat keldi — yumshoq eslatib qo'yish mumkin.",
+    "returnAmount": "{{name}}: qaytgan summa",
+    "returned": "Qaytdi",
+    "receipt": "Tilxat"
+  },
+  "goals": {
+    "title": "Maqsadlar",
+    "hint": "Masalan, to'yona o'rniga yosh oila uchun jamg'arma yoki farzandning o'qishi. Hozircha virtual: faqat kuzatuv.",
+    "name": "Maqsad",
+    "target": "Summa (so'm)",
+    "add": "Qo'shish",
+    "progress": "{{saved}} / {{target}}",
+    "contribute": "{{name}}: hissa",
+    "addSaved": "Hissa qo'shish"
+  },
+  "receipt": {
+    "title": "Qarz tilxati",
+    "parties": "{{lender}} → {{borrower}}: {{amount}}",
+    "markupWarning": "Jadval jami berilgan summadan ko'p: bu foizsiz qarz emas.",
+    "witness": "{{n}}-guvoh",
+    "confirmed": "Ikkinchi tomon yozuvni tasdiqladi",
+    "signMode": "Imzolash usuli",
+    "mode": {
+      "PRINT": "Chop etib qo'lda imzolash",
+      "DRAW": "Sichqoncha / pero bilan chizish"
+    },
+    "lenderSignature": "Qarz bergan: {{name}}",
+    "borrowerSignature": "Qarz olgan: {{name}}",
+    "clearSignature": "Tozalash",
+    "legal": "Bu hujjat shaxsiy hisob uchun yozuv; yuridik kuchi haqida va'da berilmaydi.",
+    "save": "Guvohlarni saqlash",
+    "exportPdf": "PDF saqlash",
+    "saved": "Saqlandi: {{name}}"
   }
 }

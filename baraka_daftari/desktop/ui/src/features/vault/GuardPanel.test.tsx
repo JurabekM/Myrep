@@ -12,7 +12,7 @@ vi.mock('../../bindings', () => ({
   commands: {
     guardOverview: vi.fn(),
     gateStatus: vi.fn(),
-    setDebtDeclaration: vi.fn(),
+    setDebtPlanDeclaration: vi.fn(),
     bypassGate: vi.fn(),
     revokeGateBypass: vi.fn(),
   },
@@ -59,7 +59,7 @@ beforeEach(() => {
   vi.mocked(commands.guardOverview).mockResolvedValue({ status: 'ok', data: guard });
   vi.mocked(commands.gateStatus).mockResolvedValue({ status: 'ok', data: lockedGate });
   vi.mocked(commands.bypassGate).mockResolvedValue({ status: 'ok', data: null });
-  vi.mocked(commands.setDebtDeclaration).mockResolvedValue({ status: 'ok', data: null });
+  vi.mocked(commands.setDebtPlanDeclaration).mockResolvedValue({ status: 'ok', data: null });
 });
 
 describe('GuardPanel', () => {
@@ -111,7 +111,7 @@ describe('GuardPanel', () => {
     renderPanel();
     await userEvent.click(await screen.findByLabelText('Qarzdan chiqish rejam bor'));
     await waitFor(() => {
-      expect(commands.setDebtDeclaration).toHaveBeenCalledWith(true, true);
+      expect(commands.setDebtPlanDeclaration).toHaveBeenCalledWith(true);
     });
   });
 });

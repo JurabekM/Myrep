@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 6;
+pub const SCHEMA_VERSION: usize = 7;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -194,6 +194,63 @@ CREATE TABLE scheduled_treats (
 );
 ";
 
+/// D9 (4-qonun): qarz inventari, to'lov jadvali, to'lovlar, berilgan qarzlar (foizsiz), maqsadlar, tilxat.
+const V7: &str = "
+CREATE TABLE debts (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  creditor TEXT NOT NULL,
+  creditor_type TEXT NOT NULL CHECK (creditor_type IN ('BANK','SHOP','RELATIVE','FRIEND','OTHER')),
+  reason TEXT, principal_minor INTEGER NOT NULL CHECK (principal_minor > 0), currency TEXT NOT NULL,
+  schedule_kind TEXT NOT NULL CHECK (schedule_kind IN ('ANNUITY','DIFFERENTIATED','FIXED_MARKUP','MANUAL')),
+  monthly_minor INTEGER NOT NULL CHECK (monthly_minor > 0), due_date TEXT NOT NULL, borrowed_on TEXT NOT NULL,
+  early_terms TEXT, priority INTEGER, closed_on TEXT,
+  check_need TEXT CHECK (check_need IN ('NEED','LUXURY')),
+  check_alternative TEXT CHECK (check_alternative IN ('NONE','GUARD','RELATIVE','SELL_ITEM')),
+  check_burden_bp INTEGER
+);
+CREATE TABLE debt_instalments (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  debt_id TEXT NOT NULL REFERENCES debts(id), due_on TEXT NOT NULL,
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL
+);
+CREATE INDEX idx_instalments_debt ON debt_instalments (debt_id, due_on);
+CREATE TABLE debt_payments (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  debt_id TEXT NOT NULL REFERENCES debts(id), member_id TEXT NOT NULL REFERENCES members(id),
+  paid_on TEXT NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL,
+  expense_id TEXT REFERENCES expenses(id)
+);
+CREATE INDEX idx_debt_payments_debt ON debt_payments (debt_id, paid_on);
+CREATE TABLE receivables (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  debtor TEXT NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL,
+  given_on TEXT NOT NULL, due_on TEXT, note TEXT, returned_minor INTEGER NOT NULL DEFAULT 0 CHECK (returned_minor >= 0)
+);
+CREATE TABLE goals (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, target_minor INTEGER NOT NULL CHECK (target_minor > 0), currency TEXT NOT NULL,
+  saved_minor INTEGER NOT NULL DEFAULT 0 CHECK (saved_minor >= 0), due_on TEXT
+);
+CREATE TABLE loan_receipts (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  ref_kind TEXT NOT NULL CHECK (ref_kind IN ('DEBT','RECEIVABLE')), ref_id TEXT NOT NULL,
+  witnesses TEXT NOT NULL DEFAULT '', confirmed INTEGER NOT NULL DEFAULT 0 CHECK (confirmed IN (0,1))
+);
+CREATE UNIQUE INDEX uq_receipt_ref ON loan_receipts (ref_kind, ref_id) WHERE deleted_at IS NULL;
+";
+
 /// D8 (3-qonun): mavjud «Kelajagim» → QOROVUL (balans o'zgarmaydi), daromad manbasi turi,
 /// narx daftari, darvozani chetlab o'tish qaydi.
 const V6: &str = "
@@ -275,6 +332,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V4),
         M::up(V5),
         M::up(V6),
+        M::up(V7),
     ])
 }
 
@@ -311,7 +369,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 28);
+        assert_eq!(tables.len(), 34);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

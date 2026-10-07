@@ -1045,3 +1045,238 @@ impl Record for GateBypass {
         })
     }
 }
+
+use domain::{
+    BorrowAlternative, BorrowCheck, BorrowNeed, CreditorType, Debt, DebtInstalment, DebtPayment,
+    Goal, LoanReceipt, ReceiptKind, Receivable, ScheduleKind,
+};
+
+impl Record for Debt {
+    const TABLE: &'static str = "debts";
+    const COLS: &'static [&'static str] = &[
+        "creditor",
+        "creditor_type",
+        "reason",
+        "principal_minor",
+        "currency",
+        "schedule_kind",
+        "monthly_minor",
+        "due_date",
+        "borrowed_on",
+        "early_terms",
+        "priority",
+        "closed_on",
+        "check_need",
+        "check_alternative",
+        "check_burden_bp",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.principal);
+        Ok(vec![
+            t(&self.creditor),
+            t(self.creditor_type.as_str()),
+            opt_text(self.reason.as_deref()),
+            minor,
+            cur,
+            t(self.schedule_kind.as_str()),
+            Value::Integer(self.monthly_payment.minor()),
+            date_val(self.due_date)?,
+            date_val(self.borrowed_on)?,
+            opt_text(self.early_repayment_terms.as_deref()),
+            self.priority
+                .map_or(Value::Null, |p| Value::Integer(i64::from(p))),
+            opt_date(self.closed_on)?,
+            opt_text(self.check.map(|c| c.need.as_str())),
+            opt_text(self.check.map(|c| c.alternative.as_str())),
+            self.check
+                .map_or(Value::Null, |c| Value::Integer(i64::from(c.burden_bp))),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 11)?;
+        let need = row::opt_parsed(r, 19, BorrowNeed::parse)?;
+        let alt = row::opt_parsed(r, 20, BorrowAlternative::parse)?;
+        let burden: Option<u32> = r.get(21)?;
+        let check = match (need, alt, burden) {
+            (Some(need), Some(alternative), Some(burden_bp)) => Some(BorrowCheck {
+                need,
+                alternative,
+                burden_bp,
+            }),
+            _ => None,
+        };
+        Ok(Self {
+            meta: row::meta(r)?,
+            creditor: r.get(7)?,
+            creditor_type: row::parsed(r, 8, CreditorType::parse)?,
+            reason: r.get(9)?,
+            principal: Money::new(r.get(10)?, cur),
+            schedule_kind: row::parsed(r, 12, ScheduleKind::parse)?,
+            monthly_payment: Money::new(r.get(13)?, cur),
+            due_date: row::date(r, 14)?,
+            borrowed_on: row::date(r, 15)?,
+            early_repayment_terms: r.get(16)?,
+            priority: r.get(17)?,
+            closed_on: opt_row_date(r, 18)?,
+            check,
+        })
+    }
+}
+
+impl Record for DebtInstalment {
+    const TABLE: &'static str = "debt_instalments";
+    const COLS: &'static [&'static str] = &["debt_id", "due_on", "amount_minor", "currency"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![t(&self.debt_id), date_val(self.due_on)?, minor, cur])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            debt_id: r.get(7)?,
+            due_on: row::date(r, 8)?,
+            amount: row::money(r, 9, 10)?,
+        })
+    }
+}
+
+impl Record for DebtPayment {
+    const TABLE: &'static str = "debt_payments";
+    const COLS: &'static [&'static str] = &[
+        "debt_id",
+        "member_id",
+        "paid_on",
+        "amount_minor",
+        "currency",
+        "expense_id",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![
+            t(&self.debt_id),
+            t(&self.member_id),
+            date_val(self.paid_on)?,
+            minor,
+            cur,
+            opt_text(self.expense_id.as_deref()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            debt_id: r.get(7)?,
+            member_id: r.get(8)?,
+            paid_on: row::date(r, 9)?,
+            amount: row::money(r, 10, 11)?,
+            expense_id: r.get(12)?,
+        })
+    }
+}
+
+impl Record for Receivable {
+    const TABLE: &'static str = "receivables";
+    const COLS: &'static [&'static str] = &[
+        "debtor",
+        "amount_minor",
+        "currency",
+        "given_on",
+        "due_on",
+        "note",
+        "returned_minor",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![
+            t(&self.debtor),
+            minor,
+            cur,
+            date_val(self.given_on)?,
+            opt_date(self.due_on)?,
+            opt_text(self.note.as_deref()),
+            Value::Integer(self.returned.minor()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 9)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            debtor: r.get(7)?,
+            amount: Money::new(r.get(8)?, cur),
+            given_on: row::date(r, 10)?,
+            due_on: opt_row_date(r, 11)?,
+            note: r.get(12)?,
+            returned: Money::new(r.get(13)?, cur),
+        })
+    }
+}
+
+impl Record for Goal {
+    const TABLE: &'static str = "goals";
+    const COLS: &'static [&'static str] =
+        &["name", "target_minor", "currency", "saved_minor", "due_on"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.target);
+        Ok(vec![
+            t(&self.name),
+            minor,
+            cur,
+            Value::Integer(self.saved.minor()),
+            opt_date(self.due_on)?,
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 9)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            target: Money::new(r.get(8)?, cur),
+            saved: Money::new(r.get(10)?, cur),
+            due_on: opt_row_date(r, 11)?,
+        })
+    }
+}
+
+impl Record for LoanReceipt {
+    const TABLE: &'static str = "loan_receipts";
+    const COLS: &'static [&'static str] = &["ref_kind", "ref_id", "witnesses", "confirmed"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(self.kind.as_str()),
+            t(&self.ref_id),
+            t(&self.witnesses.join("\n")),
+            Value::Integer(i64::from(self.confirmed_by_counterparty)),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let w: String = r.get(9)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            kind: row::parsed(r, 7, ReceiptKind::parse)?,
+            ref_id: r.get(8)?,
+            witnesses: w
+                .split('\n')
+                .filter(|s| !s.is_empty())
+                .map(str::to_owned)
+                .collect(),
+            confirmed_by_counterparty: r.get::<_, i64>(10)? != 0,
+        })
+    }
+}

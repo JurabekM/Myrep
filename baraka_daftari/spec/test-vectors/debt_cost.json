@@ -1,0 +1,101 @@
+{
+  "suite": "debt_cost",
+  "version": 1,
+  "description": "Qarzning haqiqiy narxi: jami = to'langan + jadvaldagi qoldiq; ortiqcha = max(0, jami - asosiy); ulush bp half-up (Karim aka: 40 mln -> 69 mln)",
+  "cases": [
+    {
+      "id": "cost-001",
+      "input": {
+        "principal": "4000000000",
+        "paid": "6000000000",
+        "remaining_scheduled": "900000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "6900000000",
+        "excess": "2900000000",
+        "excess_bp": 4203
+      }
+    },
+    {
+      "id": "cost-002",
+      "input": {
+        "principal": "4000000000",
+        "paid": "0",
+        "remaining_scheduled": "4000000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "4000000000",
+        "excess": "0",
+        "excess_bp": 0
+      }
+    },
+    {
+      "id": "cost-003",
+      "input": {
+        "principal": "3900000000",
+        "paid": "1000000000",
+        "remaining_scheduled": "3500000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "4500000000",
+        "excess": "600000000",
+        "excess_bp": 1333
+      }
+    },
+    {
+      "id": "cost-004",
+      "input": {
+        "principal": "100",
+        "paid": "50",
+        "remaining_scheduled": "40",
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "90",
+        "excess": "0",
+        "excess_bp": 0
+      }
+    },
+    {
+      "id": "cost-005",
+      "input": {
+        "principal": "100",
+        "paid": "0",
+        "remaining_scheduled": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "0",
+        "excess": "0",
+        "excess_bp": 0
+      }
+    },
+    {
+      "id": "cost-006",
+      "input": {
+        "principal": "0",
+        "paid": "1",
+        "remaining_scheduled": "1",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "cost-007",
+      "input": {
+        "principal": "100",
+        "paid": "-1",
+        "remaining_scheduled": "5",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

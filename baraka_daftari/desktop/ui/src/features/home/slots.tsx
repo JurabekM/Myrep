@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { commands, type HomeDto } from '../../bindings';
 import { useNav } from '../../app/nav';
 import { formatBp, unwrap } from '../../lib/api';
+import { DebtSummary } from '../debts/DebtSummary';
 import { RescuePanel } from '../rescue/RescuePanel';
 
 export interface SlotProps {
@@ -187,8 +188,14 @@ function RescueSlot() {
  * bob, D6: havas, ...) yangi slotni shu yerga qo'shadi, sahifaning o'zini o'zgartirmaydi.
  * Tartib muhim: birinchisi — "o'zingizga to'langan".
  */
+/** Qarz ekrani byudjet va jamg'armadan ustun turadi (SPEC 2C.7): faol qarz bo'lsa bosh sahifada «o'zingizga to'ladingiz»dan keyin darhol (birinchi raqam o'zgarmaydi). */
+function DebtSlot() {
+  return <DebtSummary />;
+}
+
 export const homeSlots: { id: string; Component: ComponentType<SlotProps> }[] = [
   { id: 'self-paid', Component: SelfPaidSlot },
+  { id: 'debts', Component: DebtSlot },
   { id: 'vault', Component: VaultSlot },
   { id: 'streak', Component: StreakSlot },
   { id: 'month-result', Component: ResultSlot },

@@ -2,9 +2,9 @@ use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    AllocationKind, AssetType, BillingPeriod, IncomeSourceType, MemberRole, Meta, MoneyOwner,
-    Necessity, ObligationKind, PaymentChannel, RescueKind, VaultSource, VaultTxKind, VaultType,
-    WithdrawalStatus,
+    AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CreditorType,
+    IncomeSourceType, MemberRole, Meta, MoneyOwner, Necessity, ObligationKind, PaymentChannel,
+    ReceiptKind, RescueKind, ScheduleKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -307,4 +307,91 @@ pub struct GateBypass {
     pub meta: Meta,
     /// Tasdiq paytidagi qorovul zaxirasi (oy × 100).
     pub guard_months_x100: u32,
+}
+
+/// «To'xta va o'yla» so'rovi natijasi (SPEC 2D.6): qarz yozuvida saqlanadi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BorrowCheck {
+    pub need: BorrowNeed,
+    pub alternative: BorrowAlternative,
+    /// Yangi qarzdan keyingi oylik yuk daromadga nisbatan (bp).
+    pub burden_bp: u32,
+}
+
+/// Qarz (SPEC 2C.7, 2D). Ustama alohida kiritilmaydi: u to'lov jadvalidan chiqadi
+/// (jami − asosiy). Jadvalsiz qarz saqlanmaydi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Debt {
+    pub meta: Meta,
+    pub creditor: String,
+    pub creditor_type: CreditorType,
+    pub reason: Option<String>,
+    pub principal: Money,
+    pub schedule_kind: ScheduleKind,
+    /// Jadval jami / qatorlar soni (o'rtacha oylik to'lov).
+    pub monthly_payment: Money,
+    /// Oxirgi to'lov sanasi.
+    pub due_date: Date,
+    pub borrowed_on: Date,
+    /// Muddatidan oldin to'lash shartlari (jarima, komissiya) — foydalanuvchi kiritadi.
+    pub early_repayment_terms: Option<String>,
+    /// Yopish tartibi (kichik raqam — avval); `None` — standart tartib.
+    pub priority: Option<u32>,
+    pub closed_on: Option<Date>,
+    pub check: Option<BorrowCheck>,
+}
+
+/// To'lov jadvalining bitta qatori (`RepaymentSchedule`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DebtInstalment {
+    pub meta: Meta,
+    pub debt_id: String,
+    pub due_on: Date,
+    pub amount: Money,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DebtPayment {
+    pub meta: Meta,
+    pub debt_id: String,
+    /// Kim to'ladi (oilaviy yelkadoshlik: D10 da to'liq).
+    pub member_id: String,
+    pub paid_on: Date,
+    pub amount: Money,
+    /// Xarajat sifatida yozilgan bo'lsa shu yozuv.
+    pub expense_id: Option<String>,
+}
+
+/// Foydalanuvchi bergan qarz (qarzi hasana). **Foiz/ustama maydoni ataylab yo'q**: ribo bilan
+/// qarz berish mumkin emas (SPEC 2D.5). Maydon qo'shilsa `receivable_has_no_interest_field` testi buziladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Receivable {
+    pub meta: Meta,
+    pub debtor: String,
+    pub amount: Money,
+    pub given_on: Date,
+    pub due_on: Option<Date>,
+    pub note: Option<String>,
+    /// Qaytarilgan qismi.
+    pub returned: Money,
+}
+
+/// Maqsadli jamg'arma (masalan, to'yona o'rniga). MVP'da virtual.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Goal {
+    pub meta: Meta,
+    pub name: String,
+    pub target: Money,
+    pub saved: Money,
+    pub due_on: Option<Date>,
+}
+
+/// Qarz tilxati tafsilotlari (guvohlar, ikki tomonlama tasdiq).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoanReceipt {
+    pub meta: Meta,
+    pub kind: ReceiptKind,
+    pub ref_id: String,
+    pub witnesses: Vec<String>,
+    pub confirmed_by_counterparty: bool,
 }

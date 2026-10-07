@@ -30,7 +30,7 @@ const fn dc(
     }
 }
 
-pub const DEFAULT_CATEGORIES: [DefaultCategory; 13] = [
+pub const DEFAULT_CATEGORIES: [DefaultCategory; 14] = [
     dc("Oziq-ovqat", Necessity::Zarur, None, false),
     dc("Yo'lkira", Necessity::Zarur, None, false),
     dc("Benzin", Necessity::Zarur, Some(MoneyOwner::Fuel), false),
@@ -48,12 +48,21 @@ pub const DEFAULT_CATEGORIES: [DefaultCategory; 13] = [
     ),
     dc("Sadaqa", Necessity::Kerak, None, true),
     dc("Juma shirinligi", Necessity::Havas, None, false),
+    dc(
+        "Qarz to'lovi",
+        Necessity::Zarur,
+        Some(MoneyOwner::Bank),
+        false,
+    ),
     dc("Boshqa", Necessity::Kerak, None, false),
 ];
 
 pub const TREAT_CATEGORY: &str = "Juma shirinligi";
 
 pub const NASIYA_CATEGORY: &str = "Nasiya to'lovi";
+
+/// Qarz inventaridagi qarzlarga to'lovlar shu kategoriyada xarajat bo'lib yoziladi (`ZARUR`).
+pub const DEBT_PAYMENT_CATEGORY: &str = "Qarz to'lovi";
 
 /// Xonadon bor bo'lsa uni qaytaradi, yo'q bo'lsa hammasini bitta tranzaksiyada yaratadi.
 ///

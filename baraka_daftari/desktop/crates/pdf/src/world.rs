@@ -48,6 +48,8 @@ fn fonts() -> &'static Fonts {
 struct OneFileWorld {
     library: LazyHash<Library>,
     source: Source,
+    /// Qo'shimcha ikkilik fayllar (imzo rasmlari): nom (`/` siz) → bayt.
+    files: Vec<(String, Bytes)>,
 }
 
 impl World for OneFileWorld {
@@ -72,7 +74,13 @@ impl World for OneFileWorld {
     }
 
     fn file(&self, id: FileId) -> FileResult<Bytes> {
-        Err(FileError::NotFound(id.vpath().get_with_slash().into()))
+        let path = id.vpath().get_with_slash();
+        let name = path.trim_start_matches('/');
+        self.files
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, b)| b.clone())
+            .ok_or_else(|| FileError::NotFound(path.into()))
     }
 
     fn font(&self, index: usize) -> Option<Font> {
@@ -90,11 +98,23 @@ impl World for OneFileWorld {
 /// # Errors
 /// Shablon xatosi yoki eksport xatosi.
 pub fn render_pdf(markup: &str) -> Result<Vec<u8>, PdfError> {
+    render_pdf_with_files(markup, &[])
+}
+
+/// Xuddi [`render_pdf`], lekin shablon `files` dagi rasmlarni (masalan, `sig-lender.png`) ishlata oladi.
+///
+/// # Errors
+/// Shablon xatosi yoki eksport xatosi.
+pub fn render_pdf_with_files(markup: &str, files: &[(&str, Vec<u8>)]) -> Result<Vec<u8>, PdfError> {
     let vpath = VirtualPath::new("main.typ").map_err(|e| PdfError::Compile(e.to_string()))?;
     let id = FileId::new(RootedPath::new(VirtualRoot::Project, vpath));
     let world = OneFileWorld {
         library: LazyHash::new(Library::default()),
         source: Source::new(id, markup.to_owned()),
+        files: files
+            .iter()
+            .map(|(n, b)| ((*n).to_owned(), Bytes::new(b.clone())))
+            .collect(),
     };
     let compiled = typst::compile::<PagedDocument>(&world);
     let document = compiled.output.map_err(|errors| {

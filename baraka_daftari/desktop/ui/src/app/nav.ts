@@ -13,7 +13,8 @@ export type Page =
   | 'subscriptions'
   | 'envelopes'
   | 'rescue'
-  | 'prices';
+  | 'prices'
+  | 'debts';
 
 interface NavState {
   page: Page;

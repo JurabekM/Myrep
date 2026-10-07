@@ -1,0 +1,312 @@
+{
+  "suite": "debt_schedule",
+  "version": 1,
+  "description": "Qarz to'lov jadvali: fixed_markup (teng bo'laklar, qoldiq birinchi to'lovlarga, sana oy oxiriga qisqartiriladi) va summary (jami, ustama = jami - asosiy; rejasiz yoki asosiydan kam jadval xato)",
+  "cases": [
+    {
+      "id": "sched-001",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "300000000",
+        "markup": "60000000",
+        "months": 6,
+        "first_due": "2026-10-31",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "due": "2026-10-31",
+            "amount": "60000000"
+          },
+          {
+            "due": "2026-11-30",
+            "amount": "60000000"
+          },
+          {
+            "due": "2026-12-31",
+            "amount": "60000000"
+          },
+          {
+            "due": "2027-01-31",
+            "amount": "60000000"
+          },
+          {
+            "due": "2027-02-28",
+            "amount": "60000000"
+          },
+          {
+            "due": "2027-03-31",
+            "amount": "60000000"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sched-002",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "100",
+        "markup": "0",
+        "months": 3,
+        "first_due": "2026-01-31",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "due": "2026-01-31",
+            "amount": "34"
+          },
+          {
+            "due": "2026-02-28",
+            "amount": "33"
+          },
+          {
+            "due": "2026-03-31",
+            "amount": "33"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sched-003",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "1000",
+        "markup": "1",
+        "months": 7,
+        "first_due": "2026-12-15",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "due": "2026-12-15",
+            "amount": "143"
+          },
+          {
+            "due": "2027-01-15",
+            "amount": "143"
+          },
+          {
+            "due": "2027-02-15",
+            "amount": "143"
+          },
+          {
+            "due": "2027-03-15",
+            "amount": "143"
+          },
+          {
+            "due": "2027-04-15",
+            "amount": "143"
+          },
+          {
+            "due": "2027-05-15",
+            "amount": "143"
+          },
+          {
+            "due": "2027-06-15",
+            "amount": "143"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sched-004",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "5000000000",
+        "markup": "0",
+        "months": 12,
+        "first_due": "2026-10-07",
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "due": "2026-10-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2026-11-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2026-12-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2027-01-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2027-02-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2027-03-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2027-04-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2027-05-07",
+            "amount": "416666667"
+          },
+          {
+            "due": "2027-06-07",
+            "amount": "416666666"
+          },
+          {
+            "due": "2027-07-07",
+            "amount": "416666666"
+          },
+          {
+            "due": "2027-08-07",
+            "amount": "416666666"
+          },
+          {
+            "due": "2027-09-07",
+            "amount": "416666666"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sched-005",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "100",
+        "markup": "0",
+        "months": 0,
+        "first_due": "2026-10-07",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_MONTHS"
+      }
+    },
+    {
+      "id": "sched-006",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "100",
+        "markup": "0",
+        "months": 121,
+        "first_due": "2026-10-07",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_MONTHS"
+      }
+    },
+    {
+      "id": "sched-007",
+      "input": {
+        "op": "fixed_markup",
+        "principal": "0",
+        "markup": "10",
+        "months": 3,
+        "first_due": "2026-10-07",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "sched-008",
+      "input": {
+        "op": "summary",
+        "principal": "300000000",
+        "rows": [
+          "100000000",
+          "100000000",
+          "100000000"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "300000000",
+        "markup": "0"
+      }
+    },
+    {
+      "id": "sched-009",
+      "input": {
+        "op": "summary",
+        "principal": "300000000",
+        "rows": [
+          "100000000",
+          "100000000",
+          "130000000"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "330000000",
+        "markup": "30000000"
+      }
+    },
+    {
+      "id": "sched-010",
+      "input": {
+        "op": "summary",
+        "principal": "300000000",
+        "rows": [
+          "100000000",
+          "100000000"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "BELOW_PRINCIPAL"
+      }
+    },
+    {
+      "id": "sched-011",
+      "input": {
+        "op": "summary",
+        "principal": "300000000",
+        "rows": [],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "EMPTY_SCHEDULE"
+      }
+    },
+    {
+      "id": "sched-012",
+      "input": {
+        "op": "summary",
+        "principal": "300000000",
+        "rows": [
+          "100000000",
+          "0",
+          "200000000"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "NON_POSITIVE"
+      }
+    },
+    {
+      "id": "sched-013",
+      "input": {
+        "op": "summary",
+        "principal": "0",
+        "rows": [
+          "1"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

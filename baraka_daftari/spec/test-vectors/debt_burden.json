@@ -1,0 +1,84 @@
+{
+  "suite": "debt_burden",
+  "version": 1,
+  "description": "Oylik qarz yuki daromadga nisbatan, bazis punkt (half-up); daromad 0 yoki manfiy bo'lsa xato",
+  "cases": [
+    {
+      "id": "burden-001",
+      "input": {
+        "monthly": "150000000",
+        "income": "800000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "burden_bp": 1875
+      }
+    },
+    {
+      "id": "burden-002",
+      "input": {
+        "monthly": "0",
+        "income": "800000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "burden_bp": 0
+      }
+    },
+    {
+      "id": "burden-003",
+      "input": {
+        "monthly": "1",
+        "income": "3",
+        "currency": "UZS"
+      },
+      "expected": {
+        "burden_bp": 3333
+      }
+    },
+    {
+      "id": "burden-004",
+      "input": {
+        "monthly": "800000000",
+        "income": "800000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "burden_bp": 10000
+      }
+    },
+    {
+      "id": "burden-005",
+      "input": {
+        "monthly": "1600000000",
+        "income": "800000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "burden_bp": 20000
+      }
+    },
+    {
+      "id": "burden-006",
+      "input": {
+        "monthly": "5",
+        "income": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "burden-007",
+      "input": {
+        "monthly": "-1",
+        "income": "10",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

@@ -3,9 +3,11 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 mod minutes;
+mod receipt;
 mod world;
 
 pub use minutes::{
     council_markup, council_minutes, CouncilMinutes, MinutesCategory, MinutesConsent,
 };
-pub use world::{render_pdf, PdfError, EMBEDDED_FONTS};
+pub use receipt::{loan_receipt, receipt_markup, LoanReceiptDoc, ReceiptSignatures};
+pub use world::{render_pdf, render_pdf_with_files, PdfError, EMBEDDED_FONTS};

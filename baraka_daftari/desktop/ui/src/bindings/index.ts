@@ -105,7 +105,7 @@ export const commands = {
 	csvImport: (token: string, input: CsvMappingInput, defaultCategoryId: string) => typedError<CsvResultDto, CommandError>(__TAURI_INVOKE("csv_import", { token, input, defaultCategoryId })),
 	guardOverview: () => typedError<GuardDto, CommandError>(__TAURI_INVOKE("guard_overview")),
 	gateStatus: () => typedError<GateDto, CommandError>(__TAURI_INVOKE("gate_status")),
-	setDebtDeclaration: (hasInterestDebt: boolean, hasDebtPlan: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_debt_declaration", { hasInterestDebt, hasDebtPlan })),
+	setDebtPlanDeclaration: (hasDebtPlan: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_debt_plan_declaration", { hasDebtPlan })),
 	/**  Qulfni ongli chetlab o'tish: tasdiq UI'da so'raladi, `confirmed` Rustda tekshiriladi. */
 	bypassGate: (confirmed: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("bypass_gate", { confirmed })),
 	revokeGateBypass: () => typedError<null, CommandError>(__TAURI_INVOKE("revoke_gate_bypass")),
@@ -120,6 +120,30 @@ export const commands = {
 	priceBook: () => typedError<PriceBookDto, CommandError>(__TAURI_INVOKE("price_book")),
 	/**  `annual_percent` — foydalanuvchi kiritgan taxminiy yillik narx o'sishi (masalan, `12,5`). */
 	purchasingPower: (annualPercent: string, years: number, itemId: string | null) => typedError<PurchasingDto, CommandError>(__TAURI_INVOKE("purchasing_power", { annualPercent, years, itemId })),
+	debtOverview: () => typedError<DebtOverviewDto, CommandError>(__TAURI_INVOKE("debt_overview")),
+	listDebts: () => typedError<DebtDto[], CommandError>(__TAURI_INVOKE("list_debts")),
+	/**  Friction ekrani uchun: yangi qarzdan keyingi oylik yuk (bp); daromad ma'lum bo'lmasa `None`. */
+	debtBurdenPreview: (input: DebtInput) => typedError<number | null, CommandError>(__TAURI_INVOKE("debt_burden_preview", { input })),
+	addDebt: (input: DebtInput) => typedError<DebtDto, CommandError>(__TAURI_INVOKE("add_debt", { input })),
+	payDebt: (id: string, amountText: string) => typedError<DebtDto, CommandError>(__TAURI_INVOKE("pay_debt", { id, amountText })),
+	setDebtEarlyTerms: (id: string, terms: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_debt_early_terms", { id, terms })),
+	removeDebt: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_debt", { id })),
+	listReceivables: () => typedError<ReceivableDto[], CommandError>(__TAURI_INVOKE("list_receivables")),
+	addReceivable: (input: ReceivableInput) => typedError<null, CommandError>(__TAURI_INVOKE("add_receivable", { input })),
+	returnReceivable: (id: string, amountText: string) => typedError<null, CommandError>(__TAURI_INVOKE("return_receivable", { id, amountText })),
+	removeReceivable: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_receivable", { id })),
+	listGoals: () => typedError<GoalDto[], CommandError>(__TAURI_INVOKE("list_goals")),
+	addGoal: (name: string, target: string, dueOn: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("add_goal", { name, target, dueOn })),
+	contributeGoal: (id: string, amountText: string) => typedError<null, CommandError>(__TAURI_INVOKE("contribute_goal", { id, amountText })),
+	removeGoal: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_goal", { id })),
+	/**  `kind`: `DEBT` | `RECEIVABLE`. */
+	receiptDetails: (kind: string, id: string) => typedError<ReceiptDto, CommandError>(__TAURI_INVOKE("receipt_details", { kind, id })),
+	saveReceiptDetails: (kind: string, id: string, witnesses: string[], confirmed: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("save_receipt_details", { kind, id, witnesses, confirmed })),
+	/**
+	 *  Tilxat PDF'ini OS «saqlash» oynasi orqali yozadi. Imzolar: PNG baytlari (sichqoncha/pero) yoki
+	 *  `None` — chop etib qo'lda imzolash. Foydalanuvchi bekor qilsa `None` qaytadi.
+	 */
+	exportReceiptPdf: (kind: string, id: string, lenderSignature: number[] | null, borrowerSignature: number[] | null) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_receipt_pdf", { kind, id, lenderSignature, borrowerSignature })),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
@@ -131,6 +155,14 @@ export type BlockDto = {
 	source: string | null,
 	/**  Ulamo tekshiruvidan o'tmagan (faqat ishlab chiqish rejimida ko'rinadi). */
 	unreviewed: boolean,
+};
+
+export type BorrowCheckDto = {
+	/**  `NEED` | `LUXURY`. */
+	need: string,
+	/**  `NONE` | `GUARD` | `RELATIVE` | `SELL_ITEM`. */
+	alternative: string,
+	burden_bp: number,
 };
 
 export type CategoryDto = {
@@ -178,6 +210,13 @@ export type ChapterEntryDto = {
 	is_current: boolean,
 };
 
+export type CheckInput = {
+	/**  `NEED` | `LUXURY`. */
+	need: string,
+	/**  `NONE` | `GUARD` | `RELATIVE` | `SELL_ITEM`. */
+	alternative: string,
+};
+
 /**  Frontendga qaytadigan xatolar. Matnlarda summa, ism yoki PIN bo'lmaydi. */
 export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kind: "Locked"; retry_after_secs: number } | { kind: "NotInitialized" } | { kind: "AlreadyInitialized" } | { kind: "KeyringMissing" } | 
 /**  Summa matni noto'g'ri (masalan, "12abc"). */
@@ -219,6 +258,70 @@ export type CsvRowError = {
 	reason: string,
 };
 
+export type DebtCostDto = {
+	total: MoneyDto,
+	excess: MoneyDto,
+	/**  Ortiqcha ulushi jamiga nisbatan, bazis punkt. */
+	excess_bp: number,
+};
+
+export type DebtDto = {
+	id: string,
+	creditor: string,
+	/**  `BANK` | `SHOP` | `RELATIVE` | `FRIEND` | `OTHER`. */
+	creditor_type: string,
+	reason: string | null,
+	principal: MoneyDto,
+	/**  `ANNUITY` | `DIFFERENTIATED` | `FIXED_MARKUP` | `MANUAL`. */
+	schedule_kind: string,
+	monthly: MoneyDto,
+	due_date: string,
+	borrowed_on: string,
+	early_terms: string | null,
+	closed_on: string | null,
+	active: boolean,
+	paid: MoneyDto,
+	total_scheduled: MoneyDto,
+	remaining: MoneyDto,
+	markup: MoneyDto,
+	has_markup: boolean,
+	cost: DebtCostDto,
+	next_due: InstalmentDto | null,
+	overdue: boolean,
+	instalments: InstalmentDto[],
+	check: BorrowCheckDto | null,
+	/**  Imkoniyat narxi: ortiqcha to'lov maqsadlarga necha marta teng. */
+	equivalences: EquivalenceDto[],
+};
+
+export type DebtInput = {
+	creditor: string,
+	creditor_type: string,
+	reason: string | null,
+	principal: string,
+	schedule_kind: string,
+	/**  `FIXED_MARKUP` uchun. */
+	fixed: FixedInput | null,
+	/**  Boshqa turlar uchun jadval qatorlari. */
+	rows: RowInput[],
+	borrowed_on: string | null,
+	early_terms: string | null,
+	check: CheckInput | null,
+};
+
+export type DebtOverviewDto = {
+	active_count: number,
+	total_remaining: MoneyDto,
+	nasiya_remaining: MoneyDto,
+	monthly_load: MoneyDto,
+	/**  Daromadga nisbatan oylik yuk (bp); daromad bo'lmasa `None`. */
+	burden_bp: number | null,
+	excess_total: MoneyDto,
+	has_markup_debt: boolean,
+	any_overdue: boolean,
+	receivables_outstanding: MoneyDto,
+};
+
 export type DemoError = { kind: "InvalidInput"; message: string };
 
 export type EnvelopeDto = {
@@ -237,6 +340,13 @@ export type EnvelopeDto = {
 	/**  Shu hafta yopilgan bo'lsa: kiritilgan naqd qoldiq va farq. */
 	closed_leftover: MoneyDto | null,
 	closed_difference: MoneyDto | null,
+};
+
+export type EquivalenceDto = {
+	goal_name: string,
+	goal_target: MoneyDto,
+	/**  Necha marta (1/1000 aniqlikda, matn). */
+	times_milli: string,
 };
 
 export type ExpenseDto = {
@@ -266,6 +376,12 @@ export type ExpenseInput = {
 	funded_by_debt: boolean,
 };
 
+export type FixedInput = {
+	markup: string,
+	months: number,
+	first_due: string,
+};
+
 export type GateDto = {
 	rules_open: boolean,
 	bypassed: boolean,
@@ -276,6 +392,14 @@ export type GateDto = {
 	required_x100: number,
 	has_interest_debt: boolean,
 	has_debt_plan: boolean,
+};
+
+export type GoalDto = {
+	id: string,
+	name: string,
+	target: MoneyDto,
+	saved: MoneyDto,
+	due_on: string | null,
 };
 
 export type GuardDto = {
@@ -369,6 +493,11 @@ export type InflationItemDto = {
 	name: string,
 	change_bp: number,
 	weight_bp: number,
+};
+
+export type InstalmentDto = {
+	due_on: string,
+	amount: MoneyDto,
 };
 
 export type ItemExampleDto = {
@@ -510,6 +639,38 @@ export type PurchasingDto = {
 	example: ItemExampleDto | null,
 };
 
+export type ReceiptDto = {
+	lender: string,
+	borrower: string,
+	amount: MoneyDto,
+	given_on: string,
+	due_on: string | null,
+	has_markup: boolean,
+	witnesses: string[],
+	confirmed_by_counterparty: boolean,
+};
+
+export type ReceivableDto = {
+	id: string,
+	debtor: string,
+	amount: MoneyDto,
+	returned: MoneyDto,
+	outstanding: MoneyDto,
+	given_on: string,
+	due_on: string | null,
+	note: string | null,
+	/**  Muddat keldi: xushmuomala eslatma. */
+	due: boolean,
+};
+
+export type ReceivableInput = {
+	debtor: string,
+	amount: string,
+	given_on: string | null,
+	due_on: string | null,
+	note: string | null,
+};
+
 export type RecordedDto = {
 	income_id: string,
 	share: MoneyDto,
@@ -535,6 +696,11 @@ export type RescueItemDto = {
 	amount: MoneyDto,
 	note: string | null,
 	transferred: boolean,
+};
+
+export type RowInput = {
+	due: string,
+	amount: string,
 };
 
 export type RuleDto = { kind: "Percent"; bp: number } | { kind: "MonthlyFixed"; target: MoneyDto };

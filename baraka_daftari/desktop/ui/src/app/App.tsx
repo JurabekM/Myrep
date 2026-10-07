@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { CouncilMode } from '../features/council/CouncilMode';
+import { DebtsPage } from '../features/debts/DebtsPage';
 import { EnvelopesPage } from '../features/envelopes/EnvelopesPage';
 import { ExpensesPage } from '../features/expenses/ExpensesPage';
 import { FamilyPage } from '../features/family/FamilyPage';
@@ -20,6 +21,7 @@ import { useNav, type Page } from './nav';
 
 const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'home', labelKey: 'nav.home' },
+  { id: 'debts', labelKey: 'nav.debts' },
   { id: 'income', labelKey: 'nav.income' },
   { id: 'vault', labelKey: 'nav.vault' },
   { id: 'budget', labelKey: 'nav.budget' },
@@ -61,6 +63,8 @@ function CurrentPage({ page }: { page: Page }) {
       return <RescuePage />;
     case 'prices':
       return <PricesPage />;
+    case 'debts':
+      return <DebtsPage />;
   }
 }
 

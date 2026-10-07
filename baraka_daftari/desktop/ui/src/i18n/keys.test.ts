@@ -36,6 +36,11 @@ describe('i18n kalitlari', () => {
     ].map((k) => `errors.${k}`),
     ...['TER', 'MOL', 'TAVAKKAL', 'RIBO'].map((k) => `incomeType.${k}`),
     ...['GUARD_BELOW_TARGET', 'INTEREST_DEBT_NO_PLAN'].map((k) => `gate.reason.${k}`),
+    ...['BANK', 'SHOP', 'RELATIVE', 'FRIEND', 'OTHER'].map((k) => `debts.creditorTypes.${k}`),
+    ...['MANUAL', 'ANNUITY', 'DIFFERENTIATED', 'FIXED_MARKUP'].map((k) => `debts.kinds.${k}`),
+    ...['NEED', 'LUXURY'].map((k) => `debts.friction.needOptions.${k}`),
+    ...['NONE', 'GUARD', 'RELATIVE', 'SELL_ITEM'].map((k) => `debts.friction.alternatives.${k}`),
+    ...['PRINT', 'DRAW'].map((k) => `receipt.mode.${k}`),
     'audit.previous',
     'audit.current',
   ];

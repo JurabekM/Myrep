@@ -108,15 +108,12 @@ pub fn gate_status(state: State<'_, AppSession>) -> Result<GateDto, CommandError
 
 #[tauri::command]
 #[specta::specta]
-pub fn set_debt_declaration(
-    has_interest_debt: bool,
+pub fn set_debt_plan_declaration(
     has_debt_plan: bool,
     state: State<'_, AppSession>,
 ) -> Result<(), CommandError> {
     with_session(&state, |s| {
-        s.run(|db, env, ctx| {
-            guard::set_debt_declaration(db, env, ctx, has_interest_debt, has_debt_plan)
-        })
+        s.run(|db, env, ctx| guard::set_debt_plan_declaration(db, env, ctx, has_debt_plan))
     })
 }
 

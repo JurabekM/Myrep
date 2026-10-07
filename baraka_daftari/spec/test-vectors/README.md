@@ -37,3 +37,6 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | readiness_gate | `guard_months_x100`, `has_interest_debt`, `has_debt_plan`, `required_x100` | `{"status":"OPEN"\|"LOCKED","reasons":["GUARD_BELOW_TARGET","INTEREST_DEBT_NO_PLAN"]}` |
 | allocation_priority | `share`, `guard_balance`, `guard_target`, `gate_open`, `currency` | `{"guard","growing"}` |
 | purchasing_power | `op` = `real_value`\|`future_price`\|`quantity_milli`, ... | `{"amount"}` yoki `{"milli"}` yoki `{"error":"INVALID_AMOUNT"}` |
+| debt_schedule | `op`=`fixed_markup` (`principal`,`markup`,`months`,`first_due`) yoki `summary` (`principal`,`rows[]`), `currency` | `{"rows":[{"due","amount"}]}` / `{"total","markup"}` yoki `{"error":"EMPTY_SCHEDULE"\|"NON_POSITIVE"\|"BELOW_PRINCIPAL"\|"INVALID_MONTHS"\|"INVALID_AMOUNT"}` |
+| debt_cost | `principal`, `paid`, `remaining_scheduled`, `currency` | `{"total","excess","excess_bp"}` yoki `{"error":"INVALID_AMOUNT"}` |
+| debt_burden | `monthly`, `income`, `currency` | `{"burden_bp"}` yoki `{"error":"INVALID_AMOUNT"}` |

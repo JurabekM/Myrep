@@ -84,8 +84,7 @@ function GateCard() {
   const [asking, setAsking] = useState(false);
   const [understood, setUnderstood] = useState(false);
   const declare = useMutation({
-    mutationFn: (v: { debt: boolean; plan: boolean }) =>
-      unwrap(commands.setDebtDeclaration(v.debt, v.plan)),
+    mutationFn: (plan: boolean) => unwrap(commands.setDebtPlanDeclaration(plan)),
     onSuccess: refresh,
   });
   const bypass = useMutation({
@@ -197,22 +196,15 @@ function GateCard() {
       <fieldset className="mt-4 text-sm">
         <legend className="font-medium">{t('gate.debtTitle')}</legend>
         <p className="opacity-80">{t('gate.debtHint')}</p>
+        <p className="mt-1" data-testid="derived-debt">
+          {g.has_interest_debt ? t('gate.derivedInterestDebt') : t('gate.derivedNoInterestDebt')}
+        </p>
         <label className="mt-1 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={g.has_interest_debt}
-            onChange={(e) => {
-              declare.mutate({ debt: e.target.checked, plan: g.has_debt_plan });
-            }}
-          />
-          {t('gate.hasInterestDebt')}
-        </label>
-        <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={g.has_debt_plan}
             onChange={(e) => {
-              declare.mutate({ debt: g.has_interest_debt, plan: e.target.checked });
+              declare.mutate(e.target.checked);
             }}
           />
           {t('gate.hasDebtPlan')}

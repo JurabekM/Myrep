@@ -57,6 +57,29 @@ str_enum!(
     /// Daromad manbasi: ter / mol / tavakkal testi (SPEC 2C.5). `Ribo` — foizli daromad, alohida ko'rsatiladi.
     IncomeSourceType { Ter => "TER", Mol => "MOL", Tavakkal => "TAVAKKAL", Ribo => "RIBO" }
 );
+str_enum!(
+    /// Kreditor turi (SPEC 2C.7). Do'kon nasiyasi ham shu yerga birlashadi.
+    CreditorType { Bank => "BANK", Shop => "SHOP", Relative => "RELATIVE", Friend => "FRIEND", Other => "OTHER" }
+);
+str_enum!(
+    /// Jadval turi: `Annuity`/`Differentiated` bank shartnomasidagi jadval (simulyator D10 da);
+    /// `FixedMarkup` — teng bo'laklar; `Manual` — foydalanuvchi qatorlari.
+    ScheduleKind {
+        Annuity => "ANNUITY", Differentiated => "DIFFERENTIATED",
+        FixedMarkup => "FIXED_MARKUP", Manual => "MANUAL",
+    }
+);
+str_enum!(
+    /// Friction so'rovi: zaruratmi yoki hashamatmi (SPEC 2D.6).
+    BorrowNeed { Need => "NEED", Luxury => "LUXURY" }
+);
+str_enum!(
+    /// Friction so'rovi: foizsiz muqobil ko'rib chiqildimi.
+    BorrowAlternative {
+        None => "NONE", Guard => "GUARD", Relative => "RELATIVE", SellItem => "SELL_ITEM",
+    }
+);
+str_enum!(ReceiptKind { Debt => "DEBT", Receivable => "RECEIVABLE" });
 
 #[cfg(test)]
 mod tests {

@@ -15,7 +15,6 @@ use crate::{
     local_date, obligations, sum_money, vault, Ctx, Env, ServiceError, YearMonth,
 };
 
-const KEY_INTEREST_DEBT: &str = "gate.interest_debt";
 const KEY_DEBT_PLAN: &str = "gate.debt_plan";
 /// Maqsad hisobiga olinadigan oxirgi tugagan oylar soni.
 const BASIS_MONTHS: usize = 3;
@@ -140,11 +139,17 @@ fn bypasses(conn: &Connection, ctx: &Ctx) -> Result<Vec<GateBypass>, ServiceErro
 /// Baza xatosi.
 pub fn gate(conn: &Connection, env: &Env<'_>, ctx: &Ctx) -> Result<Gate, ServiceError> {
     let ov = overview(conn, env, ctx)?;
-    gate_with(conn, ctx, ov.months_x100)
+    gate_with(conn, env, ctx, ov.months_x100)
 }
 
-fn gate_with(conn: &Connection, ctx: &Ctx, months_x100: u32) -> Result<Gate, ServiceError> {
-    let has_interest_debt = flag(conn, ctx, KEY_INTEREST_DEBT)?;
+/// «Foizli qarz» — qarz inventaridagi faol, ustamali qarz (jadval jami asosiydan ko'p).
+fn gate_with(
+    conn: &Connection,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    months_x100: u32,
+) -> Result<Gate, ServiceError> {
+    let has_interest_debt = crate::debts::has_markup_debt(conn, env, ctx)?;
     let has_debt_plan = flag(conn, ctx, KEY_DEBT_PLAN)?;
     let status = readiness_gate(
         months_x100,
@@ -165,34 +170,24 @@ fn gate_with(conn: &Connection, ctx: &Ctx, months_x100: u32) -> Result<Gate, Ser
     })
 }
 
-/// Foizli qarz va qarzdan chiqish rejasi haqida foydalanuvchi bayoni. Qarz inventari (D9) tayyor
-/// bo'lgach bu qiymatlar undan olinadi.
+/// Qarzdan chiqish rejasi bor-yo'qligi haqida bayon. Foizli qarz o'zi qarz inventaridan olinadi;
+/// `DEBT_RECOVERY` rejimi va to'lov rejalovchisi (D10) tayyor bo'lgach reja ham undan olinadi.
 ///
 /// # Errors
 /// Baza xatosi.
-pub fn set_debt_declaration(
+pub fn set_debt_plan_declaration(
     db: &mut Database,
     env: &Env<'_>,
     ctx: &Ctx,
-    has_interest_debt: bool,
     has_debt_plan: bool,
 ) -> Result<(), ServiceError> {
-    db.transaction(|tx| {
-        put_setting(
-            tx,
-            env,
-            ctx,
-            KEY_INTEREST_DEBT,
-            if has_interest_debt { "1" } else { "0" },
-        )?;
-        put_setting(
-            tx,
-            env,
-            ctx,
-            KEY_DEBT_PLAN,
-            if has_debt_plan { "1" } else { "0" },
-        )
-    })
+    put_setting(
+        db.conn(),
+        env,
+        ctx,
+        KEY_DEBT_PLAN,
+        if has_debt_plan { "1" } else { "0" },
+    )
 }
 
 /// Darvozani ongli chetlab o'tish: tasdiq majburiy; qayd saqlanadi (mahalliy analitika).
@@ -248,6 +243,6 @@ pub(crate) fn split_share(
     share: Money,
 ) -> Result<(Money, Money), ServiceError> {
     let ov = overview(conn, env, ctx)?;
-    let g = gate_with(conn, ctx, ov.months_x100)?;
+    let g = gate_with(conn, env, ctx, ov.months_x100)?;
     Ok(split_allocation(share, ov.balance, ov.target, g.open)?)
 }

@@ -4,6 +4,7 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 mod commands;
+mod debts;
 mod dto;
 mod family;
 mod guard;
@@ -110,7 +111,7 @@ fn specta_builder() -> Builder<tauri::Wry> {
         saving::csv_import,
         guard::guard_overview,
         guard::gate_status,
-        guard::set_debt_declaration,
+        guard::set_debt_plan_declaration,
         guard::bypass_gate,
         guard::revoke_gate_bypass,
         guard::list_price_items,
@@ -122,6 +123,24 @@ fn specta_builder() -> Builder<tauri::Wry> {
         guard::remove_price,
         guard::price_book,
         guard::purchasing_power,
+        debts::debt_overview,
+        debts::list_debts,
+        debts::debt_burden_preview,
+        debts::add_debt,
+        debts::pay_debt,
+        debts::set_debt_early_terms,
+        debts::remove_debt,
+        debts::list_receivables,
+        debts::add_receivable,
+        debts::return_receivable,
+        debts::remove_receivable,
+        debts::list_goals,
+        debts::add_goal,
+        debts::contribute_goal,
+        debts::remove_goal,
+        debts::receipt_details,
+        debts::save_receipt_details,
+        debts::export_receipt_pdf,
         hide_quick_window,
     ])
 }
