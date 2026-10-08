@@ -7,6 +7,7 @@ mod error;
 
 pub mod audit;
 pub mod categories;
+pub mod ceremonies;
 pub mod contributors;
 pub mod council;
 pub mod csv_import;

@@ -1,0 +1,163 @@
+{
+  "suite": "ceremony_totals",
+  "version": 1,
+  "description": "Marosim byudjeti: qator jami = miqdor * birlik narxi; manbalar bo'yicha yig'indi; qarz ulushi bp half-up (jami 0 bo'lsa 0). Miqdor >= 1, narx >= 0",
+  "cases": [
+    {
+      "id": "cer-001",
+      "input": {
+        "lines": [
+          {
+            "qty": 200,
+            "unit_price": "15000000",
+            "funding": "SAVINGS"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "3000000000",
+        "savings": "3000000000",
+        "family": "0",
+        "expected_gifts": "0",
+        "debt": "0",
+        "debt_bp": 0
+      }
+    },
+    {
+      "id": "cer-002",
+      "input": {
+        "lines": [
+          {
+            "qty": 200,
+            "unit_price": "15000000",
+            "funding": "DEBT"
+          },
+          {
+            "qty": 1,
+            "unit_price": "500000000",
+            "funding": "FAMILY"
+          },
+          {
+            "qty": 1,
+            "unit_price": "300000000",
+            "funding": "EXPECTED_GIFTS"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "3800000000",
+        "savings": "0",
+        "family": "500000000",
+        "expected_gifts": "300000000",
+        "debt": "3000000000",
+        "debt_bp": 7895
+      }
+    },
+    {
+      "id": "cer-003",
+      "input": {
+        "lines": [
+          {
+            "qty": 100,
+            "unit_price": "15000000",
+            "funding": "SAVINGS"
+          },
+          {
+            "qty": 1,
+            "unit_price": "200000000",
+            "funding": "DEBT"
+          },
+          {
+            "qty": 3,
+            "unit_price": "33333333",
+            "funding": "DEBT"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "1799999999",
+        "savings": "1500000000",
+        "family": "0",
+        "expected_gifts": "0",
+        "debt": "299999999",
+        "debt_bp": 1667
+      }
+    },
+    {
+      "id": "cer-004",
+      "input": {
+        "lines": [],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "0",
+        "savings": "0",
+        "family": "0",
+        "expected_gifts": "0",
+        "debt": "0",
+        "debt_bp": 0
+      }
+    },
+    {
+      "id": "cer-005",
+      "input": {
+        "lines": [
+          {
+            "qty": 0,
+            "unit_price": "100",
+            "funding": "SAVINGS"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "cer-006",
+      "input": {
+        "lines": [
+          {
+            "qty": 1,
+            "unit_price": "-1",
+            "funding": "SAVINGS"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "cer-007",
+      "input": {
+        "lines": [
+          {
+            "qty": 7,
+            "unit_price": "1",
+            "funding": "DEBT"
+          },
+          {
+            "qty": 1,
+            "unit_price": "2",
+            "funding": "SAVINGS"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "total": "9",
+        "savings": "2",
+        "family": "0",
+        "expected_gifts": "0",
+        "debt": "7",
+        "debt_bp": 7778
+      }
+    }
+  ]
+}

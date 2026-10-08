@@ -43,6 +43,11 @@ describe('i18n kalitlari', () => {
     ...['PRINT', 'DRAW'].map((k) => `receipt.mode.${k}`),
     ...['STANDARD', 'DEBT_RECOVERY'].map((k) => `recovery.modes.${k}`),
     ...['month', 'interest', 'principal', 'extra', 'balance'].map((k) => `calc.cols.${k}`),
+    ...['WEDDING', 'BESHIK', 'SUNNAT', 'MARAKA', 'OTHER'].map((k) => `cer.kinds.${k}`),
+    ...['DRAFT', 'CONFIRMED'].map((k) => `cer.statuses.${k}`),
+    ...['SAVINGS', 'FAMILY', 'EXPECTED_GIFTS', 'DEBT'].map((k) => `cer.sources.${k}`),
+    ...['smaller', 'longer', 'gifts', 'sell', 'family'].map((k) => `cer.prompts.${k}`),
+    ...['DISCUSSION_REQUIRED', 'DATE_REQUIRED'].map((k) => `cer.blockers.${k}`),
     'audit.previous',
     'audit.current',
   ];

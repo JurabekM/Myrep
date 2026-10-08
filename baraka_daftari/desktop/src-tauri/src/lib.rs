@@ -3,6 +3,7 @@
 
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
+mod ceremonies;
 mod commands;
 mod debts;
 mod dto;
@@ -158,6 +159,18 @@ fn specta_builder() -> Builder<tauri::Wry> {
         payoff::add_sellable,
         payoff::sell_item,
         payoff::remove_sellable,
+        ceremonies::list_ceremonies,
+        ceremonies::create_ceremony,
+        ceremonies::set_ceremony_date,
+        ceremonies::add_ceremony_line,
+        ceremonies::update_ceremony_line,
+        ceremonies::remove_ceremony_line,
+        ceremonies::record_ceremony_discussion,
+        ceremonies::set_ceremony_status,
+        ceremonies::remove_ceremony,
+        ceremonies::compare_ceremonies,
+        ceremonies::open_gift_goal,
+        ceremonies::export_ceremony_pdf,
         hide_quick_window,
     ])
 }

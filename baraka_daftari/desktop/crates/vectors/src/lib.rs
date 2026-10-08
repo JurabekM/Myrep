@@ -118,6 +118,8 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "amortization" => Ok(run_amortization),
         "debt_recovery_split" => Ok(run_recovery_split),
         "payoff_plan" => Ok(run_payoff_plan),
+        "ceremony_totals" => Ok(run_ceremony_totals),
+        "repay_months" => Ok(run_repay_months),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -768,4 +770,44 @@ fn run_payoff_plan(input: &Value) -> Result<Value, String> {
             Err(e) => plan_error(&e),
         },
     )
+}
+
+fn run_ceremony_totals(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let lines = input
+        .get("lines")
+        .and_then(Value::as_array)
+        .ok_or("lines massivi kerak")?
+        .iter()
+        .map(|l| {
+            Ok(domain::LineInput {
+                qty: u32_field(l, "qty")?,
+                unit_price: Money::new(parse_minor(str_field(l, "unit_price")?)?, currency),
+                funding: domain::FundingSource::parse(str_field(l, "funding")?)
+                    .ok_or_else(|| "noma'lum funding".to_owned())?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(match domain::ceremony_totals(&lines, currency) {
+        Ok(t) => serde_json::json!({
+            "total": t.total.minor().to_string(),
+            "savings": t.savings.minor().to_string(),
+            "family": t.family.minor().to_string(),
+            "expected_gifts": t.expected_gifts.minor().to_string(),
+            "debt": t.debt.minor().to_string(),
+            "debt_bp": t.debt_bp,
+        }),
+        Err(e) => serde_json::json!({ "error": e.code() }),
+    })
+}
+
+fn run_repay_months(input: &Value) -> Result<Value, String> {
+    let debt = parse_money(input, "debt", "currency")?;
+    let capacity = parse_money(input, "capacity", "currency")?;
+    let bp = u32_field(input, "annual_bp")?;
+    Ok(match domain::months_to_repay(debt, bp, capacity) {
+        Ok(n) => serde_json::json!({ "months": n }),
+        Err(domain::PlanError::InvalidMonths) => serde_json::json!({ "error": "TOO_LONG" }),
+        Err(e) => serde_json::json!({ "error": e.code() }),
+    })
 }

@@ -63,3 +63,15 @@ impl From<domain::PlanError> for ServiceError {
         }
     }
 }
+
+impl From<domain::CeremonyError> for ServiceError {
+    fn from(e: domain::CeremonyError) -> Self {
+        use domain::CeremonyError as C;
+        match e {
+            C::InvalidAmount => Self::Invalid("miqdor kamida 1, narx manfiy bo'lmasin"),
+            C::DiscussionRequired => Self::Invalid("avval qarzsiz muhokamani o'tkazing"),
+            C::DateRequired => Self::Invalid("marosim sanasini belgilang"),
+            C::Money(m) => Self::Money(m),
+        }
+    }
+}

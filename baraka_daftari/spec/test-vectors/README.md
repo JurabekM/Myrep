@@ -43,3 +43,5 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | amortization | `kind` (ANNUITY\|DIFFERENTIATED), `principal`, `annual_bp`, `months`, `extra`, `currency` | `{"first_payment","months","total_interest","schedule":[{month,interest,principal,extra,balance}]}` |
 | debt_recovery_split | `total`, `living_bp`, `extra_bp`, `savings_bp`, `currency` | `{"living","extra","savings"}` yoki `{"error":"INVALID_SPLIT"\|"SAVINGS_TOO_LOW"}` |
 | payoff_plan | `debts[{rows[]}]`, `order[]` (indekslar, birinchisi — ustuvor), `monthly_extra`, `one_off`, `snowball`, `currency` | `{"months","per_debt_months":[...]}` |
+| ceremony_totals | `lines[{qty,unit_price,funding}]`, `currency` (funding: SAVINGS\|FAMILY\|EXPECTED_GIFTS\|DEBT) | `{"total","savings","family","expected_gifts","debt","debt_bp"}` yoki `{"error":"INVALID_AMOUNT"}` |
+| repay_months | `debt`, `annual_bp`, `capacity`, `currency` | `{"months"}` yoki `{"error":"INVALID_AMOUNT"\|"TOO_LONG"}` |

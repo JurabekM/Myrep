@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 8;
+pub const SCHEMA_VERSION: usize = 9;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -194,6 +194,28 @@ CREATE TABLE scheduled_treats (
 );
 ";
 
+/// D11 (4-qonun): marosim rejalari va byudjet qatorlari.
+const V9: &str = "
+CREATE TABLE ceremony_plans (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('WEDDING','BESHIK','SUNNAT','MARAKA','OTHER')),
+  ceremony_date TEXT, status TEXT NOT NULL CHECK (status IN ('DRAFT','CONFIRMED')),
+  discussed INTEGER NOT NULL DEFAULT 0 CHECK (discussed IN (0,1)), discussion_note TEXT
+);
+CREATE TABLE ceremony_lines (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  plan_id TEXT NOT NULL REFERENCES ceremony_plans(id), name TEXT NOT NULL,
+  qty INTEGER NOT NULL CHECK (qty >= 1), unit_price_minor INTEGER NOT NULL CHECK (unit_price_minor >= 0),
+  currency TEXT NOT NULL,
+  funding TEXT NOT NULL CHECK (funding IN ('SAVINGS','FAMILY','EXPECTED_GIFTS','DEBT'))
+);
+CREATE INDEX idx_ceremony_lines_plan ON ceremony_lines (plan_id);
+";
+
 /// D10 (4-qonun): qarz bo'yicha qo'shimcha to'lovchilar va sotiladigan buyumlar.
 const V8: &str = "
 CREATE TABLE debt_contributors (
@@ -354,6 +376,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V6),
         M::up(V7),
         M::up(V8),
+        M::up(V9),
     ])
 }
 
@@ -390,7 +413,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 36);
+        assert_eq!(tables.len(), 38);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

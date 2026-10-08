@@ -2,10 +2,10 @@ use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CreditorType,
-    IncomeSourceType, MemberRole, Meta, MoneyOwner, Necessity, ObligationKind, PaymentChannel,
-    ReceiptKind, RescueKind, ScheduleKind, SellStatus, VaultSource, VaultTxKind, VaultType,
-    WithdrawalStatus,
+    AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CeremonyKind,
+    CeremonyStatus, CreditorType, FundingSource, IncomeSourceType, MemberRole, Meta, MoneyOwner,
+    Necessity, ObligationKind, PaymentChannel, ReceiptKind, RescueKind, ScheduleKind, SellStatus,
+    VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -420,4 +420,29 @@ pub struct SellableItem {
     pub sold_on: Option<Date>,
     /// Tushum yo'naltirilgan qarz.
     pub debt_id: Option<String>,
+}
+
+/// Marosim rejasi (SPEC 2D.8). Stsenariylarni solishtirish uchun har bir stsenariy alohida reja
+/// («3 kunlik, 200 kishi», «1 kunlik, 100 kishi»).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CeremonyPlan {
+    pub meta: Meta,
+    pub name: String,
+    pub kind: CeremonyKind,
+    pub date: Option<Date>,
+    pub status: CeremonyStatus,
+    /// «Buni qarzsiz qanday o'tkazamiz?» oilaviy muhokamasi o'tkazilgan.
+    pub discussed: bool,
+    pub discussion_note: Option<String>,
+}
+
+/// Byudjet qatori: `qty × unit_price`, moliyalash manbasi bilan.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CeremonyLine {
+    pub meta: Meta,
+    pub plan_id: String,
+    pub name: String,
+    pub qty: u32,
+    pub unit_price: Money,
+    pub funding: FundingSource,
 }

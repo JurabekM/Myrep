@@ -1,0 +1,139 @@
+{
+  "suite": "repay_months",
+  "version": 1,
+  "description": "Qarzni qaytarish muddati: oylik imkoniyatga sig'adigan eng kichik n (1..=600), annuitet to'lovi (amortization bilan bir xil formula; stavka 0 -> round_half_up(P/n)) <= imkoniyat. 600 oyda ham sig'masa TOO_LONG",
+  "cases": [
+    {
+      "id": "repay-001",
+      "input": {
+        "debt": "2000000000",
+        "annual_bp": 0,
+        "capacity": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 20
+      }
+    },
+    {
+      "id": "repay-002",
+      "input": {
+        "debt": "2000000000",
+        "annual_bp": 0,
+        "capacity": "150000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 14
+      }
+    },
+    {
+      "id": "repay-003",
+      "input": {
+        "debt": "2000000000",
+        "annual_bp": 1800,
+        "capacity": "150000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 15
+      }
+    },
+    {
+      "id": "repay-004",
+      "input": {
+        "debt": "2000000000",
+        "annual_bp": 2400,
+        "capacity": "100000000",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 26
+      }
+    },
+    {
+      "id": "repay-005",
+      "input": {
+        "debt": "3900000000",
+        "annual_bp": 2400,
+        "capacity": "322147684",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 14
+      }
+    },
+    {
+      "id": "repay-006",
+      "input": {
+        "debt": "3900000000",
+        "annual_bp": 2400,
+        "capacity": "322147683",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 15
+      }
+    },
+    {
+      "id": "repay-007",
+      "input": {
+        "debt": "0",
+        "annual_bp": 0,
+        "capacity": "1",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 0
+      }
+    },
+    {
+      "id": "repay-008",
+      "input": {
+        "debt": "100",
+        "annual_bp": 0,
+        "capacity": "0",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "repay-009",
+      "input": {
+        "debt": "1000000000000",
+        "annual_bp": 0,
+        "capacity": "1",
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "TOO_LONG"
+      }
+    },
+    {
+      "id": "repay-010",
+      "input": {
+        "debt": "500",
+        "annual_bp": 0,
+        "capacity": "500",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 1
+      }
+    },
+    {
+      "id": "repay-011",
+      "input": {
+        "debt": "500",
+        "annual_bp": 0,
+        "capacity": "499",
+        "currency": "UZS"
+      },
+      "expected": {
+        "months": 2
+      }
+    }
+  ]
+}

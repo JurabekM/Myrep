@@ -14,7 +14,8 @@ export type Page =
   | 'envelopes'
   | 'rescue'
   | 'prices'
-  | 'debts';
+  | 'debts'
+  | 'ceremonies';
 
 interface NavState {
   page: Page;

@@ -2,10 +2,12 @@
 //! `ʻ` (U+02BB) va `ʼ` (U+02BC) belgilari tizim shriftlariga bog'liq bo'lmay to'g'ri chiqadi.
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
+mod budget;
 mod minutes;
 mod receipt;
 mod world;
 
+pub use budget::{budget_markup, ceremony_budget, BudgetLine, CeremonyBudgetDoc};
 pub use minutes::{
     council_markup, council_minutes, CouncilMinutes, MinutesCategory, MinutesConsent,
 };

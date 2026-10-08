@@ -88,3 +88,13 @@
 - **To'lovchilar** (`DebtContributor`): a'zoning oylik ulushi va haqiqiy to'lagan jami. **Sotiladigan buyumlar:** sotilgach tushum bir bosishda qarzga qo'shimcha to'lov.
 - Sxema v8: `debt_contributors`, `sellable_items`.
 - Kechiktirildi: taklif havolasi orqali ishtirokchi (sinxronlash/D14), to'y rejasi bilan bog'lash (D11), e'lon saytlariga eksport.
+
+## D11 — Marosim rejalovchisi
+- **Vektorlar (avval):** `ceremony_totals` (qator jami, manbalar bo'yicha yig'indi, qarz ulushi bp), `repay_months` (qarz muddati: D10 annuitet formulasi bo'yicha oylik imkoniyatga sig'adigan eng kichik n; 600 oydan uzun → `TOO_LONG`).
+- **Sxema v9:** `ceremony_plans`, `ceremony_lines`.
+- **Byudjet:** marosim turlari (to'y, beshik, sunnat, ma'raka...), qatorlar `miqdor × birlik narxi`, moliyalash manbasi — jamg'arma / oila hissasi / kutilayotgan to'yona / **qarz**.
+- **Asosiy qoida:** qarz bilan moliyalangan qator bo'lsa, «Buni qarzsiz qanday o'tkazamiz?» oilaviy muhokamasi (xulosa matni majburiy) o'tkazilmaguncha `CONFIRMED` ga o'tib bo'lmaydi; sana ham shart. Domen darajasida (`check_ceremony_confirm`), servisda va UI da testlangan. Tasdiqlangan rejaga qator qo'shilsa/o'zgarsa yoki sana olinsa — qoralamaga qaytadi.
+- **Stsenariylarni solishtirish (2–3):** umumiy narx, eng qimmatdan qancha arzon, qarz va ulushi, **qaytarish muddati (D10 simulyatori formulasi)**, shu pulga erishiladigan muqobil maqsadlar (D9 `Goal`).
+- **To'yona o'rniga:** yosh oila uchun maqsad (`Goal`) ochish (virtual).
+- **Chop etiladigan smeta** (typst PDF): qatorlar, manbalar, qarz ogohlantirishi, muhokama xulosasi; matn snapshot testi (ʻ/ʼ), markup-injection testi.
+- Kechiktirildi: mehmonlar hissasi uchun ulashiladigan havola (hamkor bank bilan), qatorni tahrirlash (hozir o'chirib qayta qo'shiladi), muhokamani oila kengashi PINlari bilan bog'lash.

@@ -1348,3 +1348,77 @@ impl Record for SellableItem {
         })
     }
 }
+
+use domain::{CeremonyKind, CeremonyLine, CeremonyPlan, CeremonyStatus, FundingSource};
+
+impl Record for CeremonyPlan {
+    const TABLE: &'static str = "ceremony_plans";
+    const COLS: &'static [&'static str] = &[
+        "name",
+        "kind",
+        "ceremony_date",
+        "status",
+        "discussed",
+        "discussion_note",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.name),
+            t(self.kind.as_str()),
+            opt_date(self.date)?,
+            t(self.status.as_str()),
+            Value::Integer(i64::from(self.discussed)),
+            opt_text(self.discussion_note.as_deref()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            kind: row::parsed(r, 8, CeremonyKind::parse)?,
+            date: opt_row_date(r, 9)?,
+            status: row::parsed(r, 10, CeremonyStatus::parse)?,
+            discussed: r.get::<_, i64>(11)? != 0,
+            discussion_note: r.get(12)?,
+        })
+    }
+}
+
+impl Record for CeremonyLine {
+    const TABLE: &'static str = "ceremony_lines";
+    const COLS: &'static [&'static str] = &[
+        "plan_id",
+        "name",
+        "qty",
+        "unit_price_minor",
+        "currency",
+        "funding",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.unit_price);
+        Ok(vec![
+            t(&self.plan_id),
+            t(&self.name),
+            Value::Integer(i64::from(self.qty)),
+            minor,
+            cur,
+            t(self.funding.as_str()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            plan_id: r.get(7)?,
+            name: r.get(8)?,
+            qty: r.get(9)?,
+            unit_price: row::money(r, 10, 11)?,
+            funding: row::parsed(r, 12, FundingSource::parse)?,
+        })
+    }
+}

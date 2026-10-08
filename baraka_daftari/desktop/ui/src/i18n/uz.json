@@ -36,7 +36,8 @@
     "envelopes": "Konvertlar",
     "rescue": "Qutqarilgan pul",
     "prices": "Narx daftari",
-    "debts": "Qarzlar"
+    "debts": "Qarzlar",
+    "ceremonies": "Marosimlar"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -695,5 +696,85 @@
     "toDebt": "{{name}}: qaysi qarzga",
     "noDebt": "Qarzga yo'naltirmaslik",
     "sold": "Sotildi"
+  },
+  "cer": {
+    "intro": "To'y va marosimlarni oldindan rejalang: byudjet qatorlari, moliyalash manbasi va qarzsiz muqobillar. Har bir stsenariy — alohida reja.",
+    "empty": "Hozircha marosim rejasi yo'q.",
+    "name": "Nomi",
+    "namePlaceholder": "3 kunlik, 200 kishi",
+    "kind": "Turi",
+    "date": "Sana",
+    "create": "Reja yaratish",
+    "kinds": {
+      "WEDDING": "To'y",
+      "BESHIK": "Beshik to'y",
+      "SUNNAT": "Sunnat to'y",
+      "MARAKA": "Ma'raka",
+      "OTHER": "Boshqa"
+    },
+    "statuses": {
+      "DRAFT": "Qoralama",
+      "CONFIRMED": "Tasdiqlangan"
+    },
+    "sources": {
+      "SAVINGS": "Jamg'arma",
+      "FAMILY": "Oila hissasi",
+      "EXPECTED_GIFTS": "Kutilayotgan to'yona",
+      "DEBT": "Qarz"
+    },
+    "lines": "Byudjet qatorlari",
+    "lineName": "Qator",
+    "linePlaceholder": "Osh, musiqa, kiyim, sarpo...",
+    "qty": "Miqdor",
+    "unit": "Narx",
+    "unitPrice": "Birlik narxi (so'm)",
+    "lineTotal": "Jami",
+    "source": "Manba",
+    "addLine": "Qator qo'shish",
+    "removeLine": "{{name}} qatorini o'chirish",
+    "totalIs": "Jami xarajat: {{amount}}",
+    "debtWarning": "Diqqat: {{amount}} ({{bp}}) qarz bilan moliyalanadi. Qarz — o'z qo'li bilan taqilgan qog'oz kishan.",
+    "discussTitle": "Buni qarzsiz qanday o'tkazamiz?",
+    "discussHint": "Qarz bilan moliyalanadigan qatorlar bor. Tasdiqlashdan oldin oila bilan o'ylab ko'ring:",
+    "prompts": {
+      "smaller": "Ixchamroq doira yoki bir kunlik marosim bo'lsa-chi?",
+      "longer": "Sanani surib, jamg'arma yig'ishga vaqt bersak-chi?",
+      "gifts": "Yosh oila uchun maqsadli jamg'arma (to'yona o'rniga) ochsak-chi?",
+      "sell": "Ishlatilmayotgan buyumlarni sotsak-chi?",
+      "family": "Oila va qarindoshlar hissasini oldindan kelishsak-chi?"
+    },
+    "proverb": "El uch kun gapiradi, to'rtinchi kuni o'z dardi bilan ovora bo'ladi.",
+    "discussNote": "Muhokama xulosasi",
+    "discussDone": "Muhokama o'tkazildi",
+    "openCouncil": "Oila kengashi rejimiga o'tish",
+    "discussed": "Muhokama o'tkazilgan: {{note}}",
+    "confirm": "Tasdiqlash",
+    "reopen": "Qoralamaga qaytarish",
+    "blockers": {
+      "DISCUSSION_REQUIRED": "Qarz bor: avval oilaviy muhokamani o'tkazing.",
+      "DATE_REQUIRED": "Avval marosim sanasini belgilang."
+    },
+    "printBudget": "Smetani PDF qilish",
+    "remove": "Rejani o'chirish",
+    "giftGoalTitle": "To'yona o'rniga jamg'arma",
+    "giftGoalHint": "Yosh oila uchun maqsadli jamg'arma ochiladi. Hozircha virtual: mehmonlar hissasi keyinroq hamkor bank orqali bo'ladi.",
+    "giftTarget": "Maqsad summasi (so'm)",
+    "giftOpen": "Maqsad ochish",
+    "compareTitle": "Stsenariylarni solishtirish",
+    "compareHint": "2–3 ta rejani yonma-yon ko'ring: umumiy narx, qarz, qaytarish muddati va shu pulga erishiladigan muqobil maqsadlar.",
+    "pick": "Solishtiriladigan rejalar",
+    "capacity": "Oylik to'lov imkoniyati (so'm)",
+    "percent": "Qarz foizi (%, ixtiyoriy)",
+    "compare": "Solishtirish",
+    "metric": "Ko'rsatkich",
+    "total": "Umumiy narx",
+    "cheaper": "Eng qimmatdan arzon",
+    "debt": "Qarz",
+    "debtShare": "Qarz ulushi",
+    "repay": "Qarzni qaytarish muddati",
+    "months": "{{n}} oy",
+    "tooLong": "50 yildan uzoq",
+    "alternatives": "Shu pulga muqobil",
+    "equals": "«{{goal}}» maqsadining {{times}} baravari"
   }
 }

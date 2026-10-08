@@ -55,3 +55,7 @@
 53. **Rejimdagi ulush:** `DEBT_RECOVERY` da daromad kiritilganda taklif ulushi = jamg'arma qismi (standart 10%); foydalanuvchi baribir o'zgartira oladi (0 ham): taqiq faqat sozlamada. Kerak bo'lsa daromaddagi 0 ni ham to'sib qo'yamiz.
 54. **Yangi bog'liqlik:** `num-bigint` (domain) — annuitet to'lovidagi `(1+r)^n` `i128` ga sig'maydi; allaqachon `Cargo.lock` da (typst orqali). UI: `echarts`, `@tanstack/react-virtual` (ADR'dagi ECharts/virtualizatsiya). `@tanstack/react-table` hozircha kerak bo'lmadi.
 55. **Grafikdagi qiymatlar** (`Number(minor)/100`) faqat chizish uchun JS son — pul hisobi emas; katta summalarda aniqlik grafikka ta'sir qilmaydi.
+56. **`CeremonyScenario` alohida entity emas:** har bir stsenariy — alohida `CeremonyPlan` («3 kunlik, 200 kishi»); solishtirish 2–3 rejani tanlaydi. Spetsifikatsiya entity'si kerak bo'lsa, rejalarni guruhlovchi maydon qo'shiladi.
+57. **Muhokama** hozir bitta yozuv (xulosa matni); kim qatnashgani kuzatilmaydi. Havas chegarasidagi kabi barcha kattalar PIN roziligi talab qilinsinmi? — hal qilinmagan (hozir: bitta foydalanuvchi qayd etadi, «Oila kengashi» rejimiga havola bor).
+58. **Qaytarish muddati:** qarz foizsiz deb olinadi (stavka bo'sh = 0), foydalanuvchi stavka kiritsa annuitet formulasi; oylik imkoniyatni foydalanuvchi o'zi yozadi. 600 oyda ham sig'masa «50 yildan uzoq».
+59. **Muqobil maqsadlar** faqat foydalanuvchi kiritgan `Goal`lar bilan taqqoslanadi (o'qish/boshpana kabi standart maqsadlar to'qilmadi); nisbat 0,1 dan kam bo'lsa ko'rsatilmaydi.

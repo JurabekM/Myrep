@@ -3,6 +3,7 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 mod amortization;
+mod ceremony;
 mod debts;
 mod entities;
 mod enums;
@@ -17,6 +18,7 @@ mod time_ext;
 mod withdrawal;
 
 pub use amortization::*;
+pub use ceremony::*;
 pub use debts::*;
 pub use entities::*;
 pub use enums::*;

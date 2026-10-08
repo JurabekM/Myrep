@@ -180,11 +180,36 @@ export const commands = {
 	 */
 	sellItem: (id: string, soldFor: string, debtId: string | null) => typedError<MoneyDto, CommandError>(__TAURI_INVOKE("sell_item", { id, soldFor, debtId })),
 	removeSellable: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_sellable", { id })),
+	listCeremonies: () => typedError<CeremonyDto[], CommandError>(__TAURI_INVOKE("list_ceremonies")),
+	createCeremony: (name: string, kind: string, date: string | null) => typedError<CeremonyDto, CommandError>(__TAURI_INVOKE("create_ceremony", { name, kind, date })),
+	setCeremonyDate: (id: string, date: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("set_ceremony_date", { id, date })),
+	addCeremonyLine: (planId: string, name: string, qty: number, unitPrice: string, fundingSource: string) => typedError<null, CommandError>(__TAURI_INVOKE("add_ceremony_line", { planId, name, qty, unitPrice, fundingSource })),
+	updateCeremonyLine: (lineId: string, qty: number, unitPrice: string, fundingSource: string) => typedError<null, CommandError>(__TAURI_INVOKE("update_ceremony_line", { lineId, qty, unitPrice, fundingSource })),
+	removeCeremonyLine: (lineId: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_ceremony_line", { lineId })),
+	recordCeremonyDiscussion: (id: string, note: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_ceremony_discussion", { id, note })),
+	/**  `status`: `DRAFT` | `CONFIRMED`. */
+	setCeremonyStatus: (id: string, status: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_ceremony_status", { id, status })),
+	removeCeremony: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_ceremony", { id })),
+	/**
+	 *  2–3 stsenariyni solishtiradi. `capacity` — oylik to'lov imkoniyati (bo'sh — hisoblanmaydi);
+	 *  `annual_percent` — qarz foizi (bo'sh — 0, qarzi hasana).
+	 */
+	compareCeremonies: (ids: string[], capacity: string, annualPercent: string) => typedError<ScenarioDto[], CommandError>(__TAURI_INVOKE("compare_ceremonies", { ids, capacity, annualPercent })),
+	openGiftGoal: (planId: string, target: string) => typedError<null, CommandError>(__TAURI_INVOKE("open_gift_goal", { planId, target })),
+	/**  Smetani OS «saqlash» oynasi orqali PDF qilib yozadi; bekor qilinsa `None`. */
+	exportCeremonyPdf: (planId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_ceremony_pdf", { planId })),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
 
 /* Types */
+export type AlternativeDto = {
+	goal_name: string,
+	goal_target: MoneyDto,
+	/**  Necha marta (1/1000 aniqlikda, matn). */
+	times_milli: string,
+};
+
 export type AmortizationDto = {
 	first_payment: MoneyDto,
 	months: number,
@@ -237,6 +262,41 @@ export type CategoryTotalDto = {
 	name: string,
 	owner: string | null,
 	amount: MoneyDto,
+};
+
+export type CeremonyDto = {
+	id: string,
+	name: string,
+	/**  `WEDDING` | `BESHIK` | `SUNNAT` | `MARAKA` | `OTHER`. */
+	kind: string,
+	date: string | null,
+	/**  `DRAFT` | `CONFIRMED`. */
+	status: string,
+	discussed: boolean,
+	discussion_note: string | null,
+	lines: CeremonyLineDto[],
+	totals: CeremonyTotalsDto,
+	/**  Hozir tasdiqlab bo'lmasa sababi: `DISCUSSION_REQUIRED` | `DATE_REQUIRED`. */
+	confirm_blocker: string | null,
+};
+
+export type CeremonyLineDto = {
+	id: string,
+	name: string,
+	qty: number,
+	unit_price: MoneyDto,
+	total: MoneyDto,
+	/**  `SAVINGS` | `FAMILY` | `EXPECTED_GIFTS` | `DEBT`. */
+	funding: string,
+};
+
+export type CeremonyTotalsDto = {
+	total: MoneyDto,
+	savings: MoneyDto,
+	family: MoneyDto,
+	expected_gifts: MoneyDto,
+	debt: MoneyDto,
+	debt_bp: number,
 };
 
 export type ChapterDetailDto = {
@@ -797,6 +857,15 @@ export type RuleInput = {
 	/**  `PERCENT` (value — bazis punkt, masalan "500") yoki `MONTHLY_FIXED` (value — so'mda summa). */
 	kind: string,
 	value: string,
+};
+
+export type ScenarioDto = {
+	plan: CeremonyDto,
+	cheaper_than_max: MoneyDto,
+	/**  Qarzni qaytarish muddati (oy); imkoniyat berilmagan yoki sig'masa `None`. */
+	repay_months: number | null,
+	repay_too_long: boolean,
+	alternatives: AlternativeDto[],
 };
 
 export type ScheduleRowDto = {

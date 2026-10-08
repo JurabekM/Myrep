@@ -85,6 +85,19 @@ str_enum!(
     /// Byudjet rejimi (SPEC 2D.1).
     BudgetMode { Standard => "STANDARD", DebtRecovery => "DEBT_RECOVERY" }
 );
+str_enum!(
+    /// Marosim turi (SPEC 2D.8).
+    CeremonyKind {
+        Wedding => "WEDDING", Beshik => "BESHIK", Sunnat => "SUNNAT", Maraka => "MARAKA", Other => "OTHER",
+    }
+);
+str_enum!(
+    /// Byudjet qatorining moliyalash manbasi.
+    FundingSource {
+        Savings => "SAVINGS", Family => "FAMILY", ExpectedGifts => "EXPECTED_GIFTS", Debt => "DEBT",
+    }
+);
+str_enum!(CeremonyStatus { Draft => "DRAFT", Confirmed => "CONFIRMED" });
 
 #[cfg(test)]
 mod tests {

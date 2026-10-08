@@ -83,6 +83,40 @@ fn annuity_payment(principal: i64, annual_bp: u32, n: u32) -> Result<i64, PlanEr
     i64::try_from(q).map_err(|_| PlanError::Money(MoneyError::Overflow))
 }
 
+/// Muddat chegarasi (50 yil) — `months_to_repay` uchun.
+pub const MAX_REPAY_MONTHS: u32 = 600;
+
+/// Oylik imkoniyatga sig'adigan eng kichik muddat (oy): annuitet to'lovi (`amortize` bilan bir xil
+/// formula) `capacity` dan oshmaydigan eng kichik `n` (1..=600). Qarz `0` bo'lsa `0` oy.
+///
+/// # Errors
+/// Imkoniyat ≤ 0, qarz < 0 yoki 600 oyda ham sig'masa ([`PlanError::InvalidMonths`]).
+pub fn months_to_repay(debt: Money, annual_bp: u32, capacity: Money) -> Result<u32, PlanError> {
+    if capacity.minor() <= 0 || debt.minor() < 0 {
+        return Err(PlanError::InvalidAmount);
+    }
+    if debt.minor() == 0 {
+        return Ok(0);
+    }
+    let fits = |n: u32| -> Result<bool, PlanError> {
+        Ok(annuity_payment(debt.minor(), annual_bp, n)? <= capacity.minor())
+    };
+    // To'lov n ortishi bilan kamaymaydi o'smaydi → binar qidiruv.
+    if !fits(MAX_REPAY_MONTHS)? {
+        return Err(PlanError::InvalidMonths);
+    }
+    let (mut lo, mut hi) = (1_u32, MAX_REPAY_MONTHS);
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        if fits(mid)? {
+            hi = mid;
+        } else {
+            lo = mid + 1;
+        }
+    }
+    Ok(lo)
+}
+
 /// Jadvalni simulyatsiya qiladi (muddatni qisqartirish: oylik to'lov o'zgarmaydi, `extra` har oy qo'shiladi).
 ///
 /// # Errors
