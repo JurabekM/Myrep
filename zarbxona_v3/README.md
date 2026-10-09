@@ -269,7 +269,9 @@ ekranda baholanadi.
 
 ## Holat: nima qilindi, nima sinaldi, nima sinalmadi
 
-**Qilindi va sinaldi.** Bulutda 164 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
+Davom ettirish uchun eslatma (keyingi qadam — 4.x): [`docs/DAVOM_ETTIRISH.md`](docs/DAVOM_ETTIRISH.md).
+
+**Qilindi va sinaldi.** Bulutda 165 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
 skip. CI'da Linux va Windows, Python 3.12 va 3.13, hamda Windows `.exe` yig'ilishi.
 - SPEC §2–§17 hammasi, T1–T15. KAT'ning hamma qiymati bayt-ma-bayt mos.
 - SPEC'dan tashqari qo'shimchalar:
