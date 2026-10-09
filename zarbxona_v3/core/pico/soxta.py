@@ -30,6 +30,7 @@ QURILMA_VERSIYASI = "soxta-pico 1.0"
 IMKONIYATLAR = 0x01          # bit0: IMZO_PARTIYA/BOSH/MINT_AUTH (ML-DSA-65)
 
 Tugma = Callable[[str], str]
+_BOSH_JOY = " \t\n\r\x0b\x0c\x1c\x1d\x1e\x1f"   # ichki dastur bilan bir xil (ASCII)
 
 
 def avto_tugma(kechikish: float = 0.0, javob: str = "ha") -> Tugma:
@@ -262,16 +263,16 @@ class SoxtaPico:
         self._ochiq()
         ildiz, pid = f[0], f[1]
         soni, jami, zarb_ms = P.son(f[2], 8), P.son(f[3], 16), P.son(f[5], 8)
-        qulf = f[4]
+        qulf = f[4].decode("utf-8")           # yaroqsiz UTF-8 — FORMAT (ValueError)
         if len(ildiz) != 32 or len(pid) != PARTIYA_ID_UZ or soni < 1 or jami < 1 \
-                or not qulf or len(qulf) > P.MAX_QULF_UZ:
+                or not qulf or len(f[4]) > P.MAX_QULF_UZ or qulf != qulf.strip(_BOSH_JOY):
             raise P.RamkaXatosi("partiya maydonlari")
         if not self._ruxsat_faol():
             raise P.PicoXatosi(P.X_RUXSAT_YOQ)
         if jami > self.ruxsat["byudjet"]:
             raise P.PicoXatosi(P.X_BYUDJET, "", [P.u128(self.ruxsat["byudjet"])])
         self.ruxsat["byudjet"] -= jami
-        return self._imzo(imzo_xabari(ildiz, pid, soni, jami, qulf.decode("utf-8"), zarb_ms))
+        return self._imzo(imzo_xabari(ildiz, pid, soni, jami, qulf, zarb_ms))
 
     def _imzo_bosh(self, f, x):
         self._soni(f, 2)

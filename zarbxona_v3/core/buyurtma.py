@@ -317,10 +317,11 @@ class Zarbxona:
         surat = surat or Surat.json_dan(b.surat)
         surat.tekshir()
         rs = surat.ritm_sozlamasi(b.kupyura_soni)
-        try:            # 4.x: Pico'da operator tugmani bosadi — qolgan summagacha ruxsat
-            self.imz.ruxsat(buyurtma_id, b.qolgan_summa)
-        except ImzolovchiXatosi as e:
-            return self._pauza(buyurtma_id, f"imzolovchi ruxsat bermadi: {e}", [])
+        if b.qolgan_kupyura > 0 and b.qolgan_summa > 0:
+            try:        # 4.x: Pico'da operator tugmani bosadi — qolgan summagacha ruxsat
+                self.imz.ruxsat(buyurtma_id, b.qolgan_summa)
+            except ImzolovchiXatosi as e:
+                return self._pauza(buyurtma_id, f"imzolovchi ruxsat bermadi: {e}", [])
         self.jurnal.buyurtma_holat(buyurtma_id, "faol")
         tayyor: list[Partiya] = []
 

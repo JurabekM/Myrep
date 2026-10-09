@@ -180,6 +180,29 @@ Dastur uzilsa, qayta ochilganda quyidagilar bajariladi (§15.5):
   ko'chiriladi;
 - tugallanmagan buyurtma «Buyurtmalar» sahifasida davom ettirishga taklif qilinadi.
 
+## Pico imzo kaliti (4.x)
+
+Oddiy Raspberry Pi Pico (RP2040) zarbxona kalitining **apparat saqlovchisi** (HSM) bo'ladi.
+To'liq qo'llanma — ulanish, `.uf2` yuklash va xavfsizlik cheklovlari:
+[`firmware/pico_hsm/README.md`](firmware/pico_hsm/README.md). Protokol:
+[`docs/PICO_PROTOKOL.md`](docs/PICO_PROTOKOL.md).
+
+- **Kalit qurilmadan chiqmaydi.** Kompyuter faqat imzo maydonlarini yuboradi va tayyor
+  imzoni oladi. Har bir imzo kompyuterda ochiq kalit bilan qayta tekshiriladi.
+- **Tugma bilan ruxsat.** Har buyurtma boshida Pico qolgan summa uchun ruxsat so'raydi:
+  operator tugmani bosadi. Shundan keyin Pico faqat **shu summagacha** partiya imzolaydi.
+  Kompyuterdagi zararli dastur tugmasiz ortiqcha pul chiqara olmaydi.
+- **PIN.** Kirishda parol o'rniga Pico PIN'i so'raladi. 5 ta xato urinishdan keyin kalit
+  o'chiriladi. Dastur yopilganda Pico qulflanadi.
+- **Uzilish.** Pico sug'urilsa yoki ruxsat muddati tugasa, joriy partiya yozilmaydi va
+  buyurtma pauzaga o'tadi. Qayta ulang ("Kalit" → "Qayta ulash (PIN)…") va davom ettiring.
+- **Sozlash.** "Kalit va sertifikat" → "Pico'ni sozlash…" yoki `python run.py pico sozla
+  --import|--yangi`. Profilda `imzolovchi.json` paydo bo'ladi.
+- **Apparatsiz sinash.** Port o'rniga `soxta:<fayl>` yozilsa, kompyuterdagi soxta Pico
+  ishlaydi. Bu faqat sinash uchun.
+- ⚠ **RP2040 flash'i himoyalanmagan va secure boot yo'q.** Uzun PIN ishlating, Pico'ni
+  seyfda saqlang. Haqiqiy pul uchun Pico 2 (RP2350) kerak.
+
 ## Arxitektura
 
 ```
@@ -197,10 +220,14 @@ core/          Qt'siz; hamma mantiq shu yerda va shu yerda sinaladi
   protokol.py    §13.4–13.6 xabarlar, mavzular, wire AQW1
   kanal.py       §13.2 MQTT + xotira kanali    sessiya.py §13.3 adapter
   topshirish.py  §13.5 + §15.7 avto-topshirish
+  imzolovchi.py  4.x imzolovchi interfeysi: FaylImzolovchi (kalit.json) yoki Pico
+  pico/          4.x Pico HSM: protokol.py (AQP1), qurilma.py (xost), soxta.py (etalon),
+                 saqlash.py (flash yozuvi, PIN), ulanish.py (port, imzolovchi.json)
 app/           PySide6: main.py, cli.py (GUI'siz), theme.py, ishchilar.py (QThread), kirish.py, oyna.py, grafik.py,
                sahifalar/ (har sahifa alohida fayl), selftest.py, assets/zarbxona.ico
 tests/         pytest (T1–T15) + soxta_bank.py
 tools/         kat_tekshir.py, kat_yarat.py, broker_smoke.py, ikonka_yarat.py, isbot_tekshir.py
+firmware/      pico_hsm/ — Pico ichki dasturi (C, pico-sdk, mldsa-native); kompyuter uchun test varianti
 kat/  docs/    KAT vektorlari va to'liq SPEC
 ```
 
@@ -219,6 +246,8 @@ python -m pytest -q                      # GUI testi uchun: QT_QPA_PLATFORM=offs
 | T11–T13 | `test_protokol.py` | `SoxtaFabrika` + §11 qoidalarini takrorlaydigan soxta bank; wire; avto-topshirish |
 | T14 | `test_kirish_nuqta.py` | uchala kirish nuqtasi va `--selftest` subprocess bilan |
 | T15 | `test_gui.py` | offscreen: har sahifa, har tugma, haqiqiy zarb, PAUZA/DAVOM/TO'XTATISH, buzish demosi |
+| 4.x | `test_pico.py` | protokol (ramka, CRC, fuzz), qurilma qoidalari (PIN, ruxsat byudjeti, tugma, tartib), zarbxona bilan halqa, uzilish va davom |
+| 4.x | `test_pico_ichki.py` | C ichki dasturi (`AQ_PICO_HOST`) etalon bilan bir xil testlarda; kalit/imzo `cryptography` bilan mos; flash yozuvi Python bilan mos; differensial fuzz; stek o'lchovi |
 
 ## §18.2 — foydalanuvchi mashinasida qabul sinovlari
 
@@ -269,10 +298,14 @@ ekranda baholanadi.
 
 ## Holat: nima qilindi, nima sinaldi, nima sinalmadi
 
-Davom ettirish uchun eslatma (keyingi qadam — 4.x): [`docs/DAVOM_ETTIRISH.md`](docs/DAVOM_ETTIRISH.md).
+Davom ettirish uchun eslatma: [`docs/DAVOM_ETTIRISH.md`](docs/DAVOM_ETTIRISH.md).
 
-**Qilindi va sinaldi.** Bulutda 165 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
-skip. CI'da Linux va Windows, Python 3.12 va 3.13, hamda Windows `.exe` yig'ilishi.
+**Qilindi va sinaldi.** Bulutda 223 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
+skip. Pico ichki dasturi testlari faqat `AQ_PICO_HOST` berilganda ishlaydi (CI'da Linux).
+CI'da quyidagilar bor:
+- Linux va Windows, Python 3.12 va 3.13;
+- Windows `.exe` yig'ilishi;
+- Pico `.uf2` yig'ilishi.
 - SPEC §2–§17 hammasi, T1–T15. KAT'ning hamma qiymati bayt-ma-bayt mos.
 - SPEC'dan tashqari qo'shimchalar:
   - buzish demosi faqat nusxada ishlaydi;
@@ -285,7 +318,8 @@ skip. CI'da Linux va Windows, Python 3.12 va 3.13, hamda Windows `.exe` yig'ilis
   - sirlarni xotiradan tozalash;
   - GUI'siz CLI;
   - PDF hisobot, isbot QR va oflayn tekshiruv;
-  - `.exe` paketi.
+  - `.exe` paketi;
+  - 4.x Pico imzo kaliti (xost tomoni, soxta Pico etaloni va C ichki dasturi).
 - Xossaga asoslangan va fuzz testlar (hypothesis). Codex review'ning 2 ta topilmasi
   tuzatildi va regressiya testlari bilan qulflandi.
 - Onlayn protokol faqat **soxta** sessiya, soxta bank va demo bank bilan sinaldi.
@@ -302,6 +336,9 @@ skip. CI'da Linux va Windows, Python 3.12 va 3.13, hamda Windows `.exe` yig'ilis
 - Windows `.exe`: CI'da yig'iladi va `--selftest` bilan tekshiriladi. GUI oynasi haqiqiy
   Windows ekranida ochib ko'rilmagan.
 - Haqiqiy ekrandagi ko'rinish: faqat offscreen skrinshotlar ko'rildi.
+- **Pico ichki dasturi haqiqiy RP2040'da ishga tushirilmagan.** Uning yadrosi kompyuterda
+  to'liq sinalgan va `.uf2` yig'iladi. Lekin USB deskriptorlari, flash yozish, tugma/LED va
+  imzo tezligi faqat Pico'ning o'zida tekshiriladi (`firmware/pico_hsm/README.md`, 5-bo'lim).
 - Uzoq sekin zarbdagi CPU ulushi. Monitor ko'rsatadigan CPU va tezlik ish vaqtida
   **o'lchanadi**, taxminiy vaqt esa «TAXMINIY» deb aniq belgilanadi.
 

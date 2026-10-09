@@ -443,3 +443,15 @@ def test_ramka_formati_hujjatga_mos():
     assert b[:8] == b"AQ\x01\x01\x01\x00\x00\x00"
     assert struct.unpack("<I", b[8:])[0] == zlib.crc32(b[:8])
     assert b.hex() == "4151010101000000" + struct.pack("<I", zlib.crc32(b[:8])).hex()
+
+
+def test_hamma_partiya_yozilgan_buyurtma_ruxsat_soramaydi(pico_zarbxona):
+    """Uzilish oxirgi partiyadan keyin, «tugadi» belgisidan oldin bo'lgan: qolgan summa 0 —
+    Pico'dan 0 so'mlik ruxsat so'ralmaydi (aks holda buyurtma abadiy pauzada qolardi)."""
+    z, q, t, pico, tugma = pico_zarbxona
+    b = z.buyurtma_yarat(5_000, "AQ-RES", "", TEZ, partiya_hajmi=1)
+    assert z.buyurtmani_bajar(b.buyurtma_id).holat == "tugadi"
+    z.jurnal.buyurtma_holat(b.buyurtma_id, "faol")      # «tugadi» yozilmay qolgan holat
+    n = len(tugma.matnlar)
+    r = z.buyurtmani_bajar(b.buyurtma_id)
+    assert r.holat == "tugadi" and len(tugma.matnlar) == n

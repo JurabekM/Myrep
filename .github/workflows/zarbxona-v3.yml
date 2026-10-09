@@ -58,6 +58,13 @@ jobs:
       - name: selftest
         run: python run.py --selftest
 
+      - name: Pico ichki dasturi — kompyuter uchun yig'ish (4.x testlari)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S firmware/pico_hsm -B "$RUNNER_TEMP/pico-host" -DAQ_HOST=ON
+          cmake --build "$RUNNER_TEMP/pico-host" -j4
+          echo "AQ_PICO_HOST=$RUNNER_TEMP/pico-host/pico_hsm_host" >> "$GITHUB_ENV"
+
       - name: pytest
         run: python -m pytest -q -rs -o faulthandler_timeout=300
 
@@ -92,3 +99,37 @@ jobs:
           path: zarbxona_v3/dist/Zarbxona
           if-no-files-found: error
           retention-days: 14
+
+  pico:
+    name: Pico ichki dasturi (.uf2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ARM kompilyatori
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+
+      - name: pico-sdk 2.1.1
+        run: |
+          git clone -q --depth 1 --branch 2.1.1 https://github.com/raspberrypi/pico-sdk.git "$RUNNER_TEMP/pico-sdk"
+          git -C "$RUNNER_TEMP/pico-sdk" submodule update -q --init --depth 1 lib/tinyusb
+
+      - name: Yig'ish
+        working-directory: zarbxona_v3/firmware/pico_hsm
+        run: |
+          cmake -S . -B build -DPICO_SDK_PATH="$RUNNER_TEMP/pico-sdk"
+          cmake --build build -j4
+          arm-none-eabi-size build/zarbxona_pico_hsm.elf
+          sha256sum build/zarbxona_pico_hsm.uf2 | tee build/zarbxona_pico_hsm.uf2.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zarbxona-pico-hsm-uf2
+          path: |
+            zarbxona_v3/firmware/pico_hsm/build/zarbxona_pico_hsm.uf2
+            zarbxona_v3/firmware/pico_hsm/build/zarbxona_pico_hsm.uf2.sha256
+          if-no-files-found: error
+          retention-days: 30

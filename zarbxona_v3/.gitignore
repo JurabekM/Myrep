@@ -5,3 +5,4 @@ data/
 data_demo/
 *.aqbatch.yarim
 selftest_natija.txt
+firmware/pico_hsm/build*/

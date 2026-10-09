@@ -1,95 +1,106 @@
 # Zarbxona v3 — davom ettirish uchun eslatma
 
-*Yozilgan: 2026-10-09. Keyingi sessiya shu fayldan boshlasin.*
+*Yangilangan: 2026-10-09. Keyingi sessiya shu fayldan boshlasin.*
 
 ## 1. Loyiha qayerda to'xtagan
 
-**Dasturiy qism tugagan, 4.x apparat qismi hali BOSHLANMAGAN.** 4.x faqat reja holida.
+**Dasturiy qism tugagan.** 4.x (Pico imzo kaliti) ning 1- va 2-bosqichlari kodda tayyor va
+kompyuterda sinalgan. **Haqiqiy Pico'da hali sinalmagan.**
 
-- **Git holati:**
-  - tarmoq `claude/focused-galileo-1pmwcp`, oxirgi kommit `6a2b208`;
-  - PR: https://github.com/JurabekM/Myrep/pull/4 — ochiq, CI yashil, konfliktsiz, `master` ga hali merge qilinmagan;
-  - PR kuzatuvi foydalanuvchi so'rovi bilan to'xtatilgan.
-- **Testlar:** lokal 165 o'tdi, 1 skip (A1 — haqiqiy AETHER-Q yo'q).
-- **CI:**
-  - ubuntu va windows, Python 3.12 va 3.13;
-  - Windows `.exe` yig'ilib, `--version` va `--selftest` dan o'tdi (artifact `Zarbxona-windows`).
-- **Bajarilgan takliflar tartibi:**
-  - 1.1 buzish demosi (nusxada);
-  - 2.1 CI;
-  - 1.4 parol, zaxira va ogohlantirishlar;
-  - 1.2 jurnal xesh-zanjiri;
-  - 3.1 demo bank;
-  - 3.2 jonli grafiklar;
-  - 3.3 ikki kishilik tasdiq;
-  - 3.4 PDF hisobot va 3.5 isbot/QR;
-  - CLI, `.exe` paketi, soat himoyasi, sirlarni tozalash.
-- **Hali sinalmagan** (batafsil: `README.md`, «Holat» bo'limi):
-  - A1–A6 va haqiqiy `aetherq_core`;
-  - haqiqiy MQTT broker;
-  - `run.bat` va GUI haqiqiy Windows ekranida;
-  - kod imzolash.
+**Git:**
+- tarmoq: `claude/focused-galileo-1pmwcp`;
+- PR: https://github.com/JurabekM/Myrep/pull/4 — ochiq, `master` ga merge qilinmagan;
+- PR kuzatuvi foydalanuvchi so'rovi bilan to'xtatilgan.
 
-## 2. Keyingi ish: 4.x — Pico asosidagi imzo kaliti (HSM)
+**Testlar:**
+- lokal 223 o'tdi, 1 skip (A1);
+- Pico ichki dasturi testlari faqat `AQ_PICO_HOST` berilganda ishlaydi.
 
-**Maqsad:** ML-DSA-65 maxfiy kaliti hech qachon kompyuter xotirasiga tushmasin. Kompyuter faqat imzolanadigan xabarni yuboradi va tayyor imzoni oladi. Har bir imzo jismoniy tugma bilan tasdiqlanadi.
+**CI:**
+- ubuntu va windows, Python 3.12 va 3.13;
+- Windows `.exe`;
+- Pico `.uf2` (artifact `zarbxona-pico-hsm-uf2`);
+- Linux'da ichki dasturning kompyuter varianti bilan testlar.
 
-**Foydalanuvchidagi jihoz:**
-- Raspberry Pi **Pico (RP2040)** — chip yozuvi `RP2-B2`, ya'ni Pico 2 emas.
-- Cheklovlar:
-  - RP2040 da secure boot va OTP yo'q;
-  - flash'ni BOOTSEL orqali o'qib olish mumkin.
-- Shuning uchun:
-  - kalit flash'da PIN'dan olingan kalit bilan shifrlanib saqlanadi;
-  - bu prototip/demo darajasi; haqiqiy pul uchun keyin Pico 2 (RP2350) ga o'tiladi.
-- Dastur ikkala platani ham qo'llaydigan qilib yoziladi.
+**Bajarilganlar:**
+- takliflar 1.1, 2.1, 1.4, 1.2, 3.1, 3.2, 3.3, 3.4, 3.5;
+- CLI, `.exe`, soat himoyasi;
+- 4.x (1–2-bosqich).
 
-**Kerakli qo'shimcha jihozlar:** tugma, 1–2 LED, 220–330 Ω rezistorlar, ma'lumot o'tkazadigan micro-USB kabel.
+**Hali sinalmagan** (batafsil: `README.md`, «Holat» bo'limi):
+- A1–A6 va haqiqiy `aetherq_core`;
+- haqiqiy MQTT broker;
+- GUI va `run.bat` haqiqiy Windows'da;
+- **Pico ichki dasturi haqiqiy RP2040'da**.
 
-### 1-bosqich — apparatsiz (keyingi sessiya SHUNDAN boshlaydi)
-1. **`core/imzolovchi.py` — `Imzolovchi` interfeysi.**
-   - Metodlar: `ochiq_kalit()` va `imzola(xabar) -> imzo`.
-   - Ikki turi bo'ladi:
-     - `FaylImzolovchi` — hozirgi `kalit.json`, xatti-harakati o'zgarmaydi;
-     - `PicoImzolovchi` — USB orqali.
-   - `Zarbxona._imzo`, jurnal zanjir boshi imzosi va `partiya.zarb_qil` ichidagi imzo shu interfeysdan o'tadi.
-2. **`docs/PICO_PROTOKOL.md` — USB CDC protokoli.**
-   - Ramka: sehrli bayt, versiya, buyruq, uzunlik, ma'lumot, CRC.
-   - Buyruqlar: `SALOM`/versiya, `OCHIQ_KALIT`, `KALIT_YARAT`, `PIN_OCH`, `IMZOLA`, `HOLAT`.
-   - Xato kodlari; tugmani kutish uchun vaqt chegarasi.
-   - `IMZOLA` uchun qurilma qo'shimcha ravishda imzo hisoblagichini (counter) qaytaradi.
-3. **`core/soxta_pico.py` — kompyuterda ishlaydigan soxta Pico.**
-   - Protokolni to'liq bajaradi.
-   - «Tugma bosildi/bosilmadi» va «uzildi» holatlarini simulyatsiya qiladi.
-4. **Testlar:**
-   - protokol ramkalari (hypothesis bilan fuzz);
-   - soxta Pico bilan to'liq zarb sikli;
-   - tugma bosilmasa zarb to'xtashi;
-   - qurilma uzilsa buyurtma pauzaga o'tib, keyin davom etishi.
-5. **GUI:**
-   - Kalit sahifasida «Imzolovchi: fayl / Pico» tanlovi va Pico holati.
-   - Zarb paytida «tugmani bosing» ko'rsatkichi.
+## 2. 4.x — nima qilindi
 
-### 2-bosqich — Pico ichki dasturi (Pico qo'lda)
-- **Til:** C (pico-sdk). MicroPython ML-DSA uchun juda sekin va xotirasi kam.
-- **ML-DSA-65:** tekshirilgan ochiq implementatsiya (masalan, PQClean yoki mldsa-native) ishlatiladi.
-  - KAT orqali kompyuterdagi `cryptography` imzolari bilan tekshiriladi.
-  - Tezlik Pico'da o'lchanadi; oldindan taxmin qilinmaydi.
-- **Xavfsizlik:**
-  - kalit qurilma ichida yaratiladi va eksport buyrug'i yo'q;
-  - flash'da PIN bilan shifrlanadi;
-  - har imzoda tugma bosilishi shart, LED holatni ko'rsatadi.
+**Foydalanuvchidagi jihoz:** Raspberry Pi Pico (RP2040, chip `RP2-B2`).
 
-### 3-bosqich — ESP32 panel (ixtiyoriy)
-Zarb holatini alohida ekranda ko'rsatadi.
+**Xost tomoni:**
 
-## 3. Ish qoidalari (o'zgarmaydi)
-- `tools/kat_tekshir.py` ni **bulutda ishga tushirmaslik** — bu foydalanuvchining fayli, uni o'zi ishga tushiradi.
+| Fayl | Nima |
+|---|---|
+| `core/imzolovchi.py` | `Imzolovchi` interfeysi: fayl yoki Pico. Imzo turlari: partiya, jurnal boshi, mint_auth |
+| `core/pico/` | AQP1 protokoli, `PicoImzolovchi`, soxta Pico (etalon), flash yozuvi (PIN), port va `imzolovchi.json` |
+
+Zarbxona bilan bog'lanishi:
+
+- Buyurtma boshida `ruxsat` — tugma; Pico faqat shu summagacha imzolaydi.
+- Imzo olinmasa (rad, uzilish, ruxsat tugadi) — buyurtma pauzaga o'tadi.
+
+Interfeyslar:
+
+- **GUI:** kirishda Pico PIN; "Kalit" sahifasida Pico kartasi; tugma banneri; chiqishda QULFLA.
+- **CLI:** `pico portlar | holat | sozla --import|--yangi | qaytish`, `ZARBXONA_PICO_PIN`.
+
+**Ichki dastur:** `firmware/pico_hsm/` (C, pico-sdk 2.1.1, mldsa-native v2.0.0).
+
+- `aq_hsm.c` — SDK'siz yadro; `main_pico.c` — RP2040 HAL.
+- RP2040 HAL: USB CDC, flash'ning oxirgi sektori, GP14 tugma, GP15 LED, ROSC tasodifi,
+  32 KB stek.
+- `main_host.c` — kompyuter varianti (testlar uchun).
+
+**Hujjatlar:** `docs/PICO_PROTOKOL.md` (protokol), `firmware/pico_hsm/README.md` (ulanish,
+yuklash, xavfsizlik).
+
+## 3. Keyingi qadamlar
+
+1. **Foydalanuvchi Pico'da sinaydi** — `firmware/pico_hsm/README.md`, 5-bo'lim. Natijalarni
+   yozib qo'yish kerak:
+   - port ko'rindimi;
+   - `pico holat` ishladimi;
+   - kalit yaratish va imzo qancha soniya oldi;
+   - tugma, LED va USB uzilishi to'g'ri ishladimi.
+
+   Muammo bo'lsa, eng ehtimoliy joylar:
+   - `main_pico.c` (stdio_usb, flash_safe_execute);
+   - xostdagi `ODDIY_KUTISH_S` (imzo sekin bo'lsa).
+2. **Pico 2 (RP2350) ga ko'chirish** — haqiqiy pul uchun:
+   - kalit OTP'da yoki OTP kalit bilan shifrlangan;
+   - secure boot, debug portni yopish, TRNG.
+
+   Faqat HAL (`main_pico.c`) va CMake'dagi `PICO_BOARD` o'zgaradi.
+3. **3-bosqich — ESP32 panel (yoki Pico'ga kichik OLED):** tugma nimani tasdiqlayotganini
+   (buyurtma id, summa) qurilmaning o'zi ko'rsatsin. Hozir matnni faqat kompyuter ko'rsatadi.
+
+## 4. Ish qoidalari (o'zgarmaydi)
+
+- `tools/kat_tekshir.py` ni **bulutda ishga tushirmaslik** — bu foydalanuvchining fayli.
 - Push faqat `claude/focused-galileo-1pmwcp` ga qilinadi.
-  - Agar PR #4 merge bo'lgan bo'lsa: tarmoqni `master` dan qayta boshlab, yangi PR ochiladi.
+  - PR #4 merge bo'lgan bo'lsa: tarmoqni `master` dan qayta boshlash kerak.
   - Yangi PR faqat foydalanuvchi so'rasa ochiladi.
-- **Testlarni ishga tushirish:**
+- **Testlar:**
+
   ```
   QT_QPA_PLATFORM=offscreen python -m pytest -q
   ```
+
   Python 3.12+ va `cryptography>=47` kerak.
+
+- **Pico ichki dasturi testlari:**
+
+  ```
+  cmake -S firmware/pico_hsm -B /tmp/ph -DAQ_HOST=ON && cmake --build /tmp/ph
+  AQ_PICO_HOST=/tmp/ph/pico_hsm_host python -m pytest -q tests/test_pico_ichki.py
+  ```
