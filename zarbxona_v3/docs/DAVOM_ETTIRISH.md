@@ -87,7 +87,15 @@ yuklash, xavfsizlik).
 3. **3-bosqich — ESP32 panel (yoki Pico'ga kichik OLED):** tugma nimani tasdiqlayotganini
    (buyurtma id, summa) qurilmaning o'zi ko'rsatsin. Hozir matnni faqat kompyuter ko'rsatadi.
 
-## 4. Ish qoidalari (o'zgarmaydi)
+## 4. Ochiq masala: PySide6 6.12
+
+`requirements.txt` da `PySide6<6.12` mahkamlangan. 6.12.0 da GC Qt ob'ektlarini yig'ayotganda
+jarayon yiqiladi: CI'da, 2026-10-09, ubuntu va windows'da segfault/access violation.
+GC'ni faqat asosiy oqimda ishlatish (`app/gc_nazorat.py`) yiqilishlarni kamaytirdi, lekin
+to'liq yo'qotmadi. PySide6 ning yangi patch versiyasi chiqqach, cheklovni olib tashlab CI'da
+sinab ko'rish kerak.
+
+## 5. Ish qoidalari (o'zgarmaydi)
 
 - `tools/kat_tekshir.py` ni **bulutda ishga tushirmaslik** — bu foydalanuvchining fayli.
 - Push faqat `claude/focused-galileo-1pmwcp` ga qilinadi.
