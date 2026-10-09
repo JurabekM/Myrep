@@ -590,3 +590,73 @@ def test_34_35_hisobot_pdf_va_qr(ilova, tmp_path, kalitlar, sertifikat, monkeypa
     ps.indeks.setValue(99)
     assert bos_va_javob(o, ps.t_qr) and d.chaqiriqlar[-1][0] == "xato"
     o.close()
+
+
+def test_4x_pico_sozlash_kirish_va_zarb(ilova, tmp_path, kalitlar, sertifikat, monkeypatch):
+    """4.x: kalit.json → Pico (soxta) ga ko'chirish, PIN bilan kirish, tugma banneri,
+    holat, chiqishda qulflash, fayl kalitiga qaytish."""
+    from app.kirish import KirishDialogi
+    from app.oyna import Oyna
+    from core.pico.qurilma import PicoImzolovchi
+    from core.pico.ulanish import sozlama_oqi
+    d = Dialoglar(tmp_path, tmp_path / "s.aqcert")
+    d.ornat(monkeypatch)
+    papka = tmp_path / "p"
+    ombor_yarat(papka / "kalit.json", "fayl-parol-1", n=4096, urug=bytes(range(1, 33)))
+    sertifikat.yoz(tmp_path / "s.aqcert")
+    port = f"soxta:{tmp_path / 'flash.json'}"
+    javob = {"port": port, "rejim": "import", "pin": "4321", "pin2": "4321",
+             "parol": "fayl-parol-1"}
+    monkeypatch.setattr(dialog, "pico_sozlash", lambda *a: dict(javob))
+
+    z = Zarbxona(papka, ombor_och(papka / "kalit.json", "fayl-parol-1"), soat_ms=lambda: HOZIR)
+    z.sertifikat_import(tmp_path / "s.aqcert")
+    o = Oyna(z)
+    o.dialoglar = d
+    o.sahifaga_ot("kalit")
+    pk_karta = o.sahifalar["kalit"].pico
+    assert pk_karta.t_sozla.isVisibleTo(pk_karta) and not pk_karta.t_holat.isVisibleTo(pk_karta)
+    assert bos_va_javob(o, pk_karta.t_sozla)            # qisqa PIN — rad
+    assert d.chaqiriqlar[-1][0] == "xato" and "PIN" in d.chaqiriqlar[-1][2]
+    javob.update(pin="pico-pin-77", pin2="pico-pin-77")
+    pk_karta.t_sozla.click()
+    assert kut(lambda: pk_karta.ish is not None and pk_karta.ish.isFinished())
+    assert kut(lambda: d.chaqiriqlar[-1][0] == "xabar")
+    assert "Kalit o'sha" in d.chaqiriqlar[-1][2]
+    s = sozlama_oqi(papka)
+    assert s.public_key == z.pk and s.port == port
+    o.close()
+
+    # kirish: Pico rejimi
+    k = KirishDialogi(papka)
+    assert k.pico is not None and not k.parol2.isVisibleTo(k) and "Pico" in k.izoh.text()
+    k.parol1.setText("xato-pin-00")
+    k.tugma.click()
+    assert "PIN noto'g'ri" in k.xabar.text() and "qolgan urinish: 4" in k.xabar.text()
+    k.parol1.setText("pico-pin-77")
+    k.tugma.click()
+    z = k.zarbxona
+    assert isinstance(z.imz, PicoImzolovchi) and z.pk == s.public_key
+    z.soat_ms = lambda: HOZIR
+    o = Oyna(z)
+    o.dialoglar = d
+    kutishlar = []
+    o.pico_kutish.connect(kutishlar.append)
+    b = z.buyurtma_yarat(12_345, "AQ-RES-PICO", "", None, partiya_hajmi=5)
+    from core.surat import Surat
+    r = z.buyurtmani_bajar(b.buyurtma_id, surat=Surat(rejim="cheklovsiz"))
+    QCoreApplication.processEvents()
+    assert r.holat == "tugadi", r.xabar
+    assert kutishlar[0].startswith("RUXSAT") and kutishlar[-1] is None
+    assert not o.pico_banner.isVisibleTo(o)
+    ks = o.sahifalar["kalit"]
+    o.sahifaga_ot("kalit")
+    assert not ks.pico.t_sozla.isVisibleTo(ks.pico) and "Pico" in ks.izoh.text()
+    ks.pico.t_holat.click()
+    assert kut(lambda: "ruxsat faol" in ks.pico.natija.text(), 10), ks.pico.natija.text()
+    qurilma = z.imz.t.q
+    # fayl kalitiga qaytish (kalit.json bor)
+    assert bos_va_javob(o, ks.pico.t_qaytish)
+    assert sozlama_oqi(papka) is None
+    o.close()
+    assert qurilma.sk is None                        # chiqishda Pico qulflandi

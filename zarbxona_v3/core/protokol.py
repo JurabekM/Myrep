@@ -7,7 +7,7 @@ import hmac
 import json
 import struct
 
-from .ibtido import imzola, sha3, tagged_hash
+from .ibtido import sha3, tagged_hash
 from .konstanta import L_MINT_AUTH, L_SRV_ID, L_WIRE, MAX_XABAR
 from .kupyura import Qator
 from .partiya import Partiya
@@ -38,7 +38,9 @@ def mint_auth_xesh(bank_pk: bytes, chaqiriq: bytes, cert_id: bytes) -> bytes:
 
 
 def mint_auth_imzo(sk, bank_pk: bytes, chaqiriq: bytes, cert_id: bytes) -> bytes:
-    return imzola(sk, mint_auth_xesh(bank_pk, chaqiriq, cert_id))
+    """`sk` — kalit yoki imzolovchi (4.x Pico)."""
+    from .imzolovchi import imzolovchi
+    return imzolovchi(sk).mint_auth_imzosi(bank_pk, chaqiriq, cert_id)
 
 
 # --- JSON xabarlar (§13.4) ------------------------------------------------------

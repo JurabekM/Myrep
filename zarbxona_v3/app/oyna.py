@@ -3,9 +3,9 @@ avval taymer va oqimlar to'xtatilib kutiladi, KEYIN baza yopiladi."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, QThread, QTimer, Slot
+from PySide6.QtCore import QSize, QThread, QTimer, Signal, Slot
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QMainWindow,
-                               QStackedWidget, QWidget)
+                               QStackedWidget, QVBoxLayout, QWidget)
 
 from app import dialog
 from app.sahifalar.boshqaruv import BoshqaruvSahifasi
@@ -20,6 +20,7 @@ from app.theme import ikonka
 from core.buyurtma import TiklashHisoboti, Zarbxona
 from core.ibtido import iz
 from core.konstanta import VERSIYA
+from core.pico.qurilma import PicoImzolovchi
 
 MENYU = [("boshqaruv", "Boshqaruv paneli", BoshqaruvSahifasi),
          ("zarb", "Zarb", ZarbSahifasi),
@@ -32,6 +33,7 @@ MENYU = [("boshqaruv", "Boshqaruv paneli", BoshqaruvSahifasi),
 
 class Oyna(QMainWindow):
     OQIM_KUTISH_MS = 15000
+    pico_kutish = Signal(object)        # 4.x: Pico tugmani kutmoqda (matn) / tugadi (None)
 
     def __init__(self, z: Zarbxona, demo_bank=None):
         super().__init__()
@@ -63,7 +65,16 @@ class Oyna(QMainWindow):
             self.sahifalar[kalit] = s
             self.stek.addWidget(s)
         q.addWidget(self.menyu)
-        q.addWidget(self.stek, 1)
+        ong = QVBoxLayout()
+        ong.setContentsMargins(0, 0, 0, 0)
+        ong.setSpacing(0)
+        self.pico_banner = QLabel()
+        self.pico_banner.setObjectName("pico_banner")
+        self.pico_banner.setWordWrap(True)
+        self.pico_banner.hide()
+        ong.addWidget(self.pico_banner)
+        ong.addWidget(self.stek, 1)
+        q.addLayout(ong, 1)
         self.setCentralWidget(ich)
         self.menyu.currentRowChanged.connect(self.sahifa_almashdi)
         self.menyu.setCurrentRow(0)
@@ -76,7 +87,20 @@ class Oyna(QMainWindow):
             b = QLabel("  DEMO REJIMI — haqiqiy bank emas, sessiya shifrlanmaydi  ")
             b.setObjectName("demo_belgi")
             self.statusBar().addPermanentWidget(b)
+        self.pico_kutish.connect(self._pico_kutish)
+        if isinstance(z.imz, PicoImzolovchi):
+            z.imz.kutish_xabari = self.pico_kutish.emit      # fon oqimidan — signal orqali
         self.holat("tayyor")
+
+    @Slot(object)
+    def _pico_kutish(self, matn: str | None) -> None:
+        if matn:
+            self.pico_banner.setText(f"⏳ PICO TUGMASINI BOSING — {matn}. Qisqa bosish — "
+                                     f"tasdiq, uzun (2 s) — rad; 30 s ichida.")
+            self.pico_banner.show()
+            self.holat(f"Pico tugmani kutmoqda: {matn}")
+        else:
+            self.pico_banner.hide()
 
     # --- kontekst (sahifalar uchun) ------------------------------------------------
 
@@ -157,4 +181,11 @@ class Oyna(QMainWindow):
             return
         self._yopildi = True
         self.z.yop()      # oqimlardan KEYIN
+        if isinstance(self.z.imz, PicoImzolovchi):
+            self.z.imz.kutish_xabari = None
+            try:
+                self.z.imz.qulfla()           # chiqishda Pico qulflanadi: keyingi safar PIN
+            except Exception:  # noqa: BLE001 — uzilgan bo'lsa ham chiqish to'xtamasin
+                pass
+            self.z.imz.yop()
         e.accept()

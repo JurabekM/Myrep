@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .partiya import Partiya
-from .zanjir import NOL, bogin_xeshi, bosh_json, bosh_xabari
+from .zanjir import NOL, bogin_xeshi, bosh_json
 
 _SXEMA = """
 CREATE TABLE IF NOT EXISTS sozlama (kalit TEXT PRIMARY KEY, qiymat TEXT NOT NULL);
@@ -155,7 +155,7 @@ class Jurnal:
         return len(ys)
 
     def _bosh_yoz(self, tartib: int, xesh: bytes, imzolovchi) -> None:
-        imzo = imzolovchi(bosh_xabari(tartib, xesh))
+        imzo = imzolovchi(tartib, xesh)     # (tartib, xesh) -> imzo; xabarni imzolovchi quradi
         self.db.execute("INSERT OR REPLACE INTO sozlama VALUES (?,?)",
                         (ZANJIR_BOSH, bosh_json(tartib, xesh, imzo)))
 

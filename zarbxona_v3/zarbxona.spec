@@ -13,7 +13,7 @@ a = Analysis(
     [str(ILDIZ / "run.py")],
     pathex=[str(ILDIZ)],
     datas=[(str(ILDIZ / "app" / "assets"), "app/assets")],
-    hiddenimports=["app.cli", "app.selftest", "segno"],
+    hiddenimports=["app.cli", "app.selftest", "segno", "serial", "serial.tools.list_ports"],
     excludes=["tkinter", "pytest", "hypothesis", "Crypto", "PySide6.QtWebEngineCore",
               "PySide6.QtQml", "PySide6.QtQuick", "PySide6.Qt3DCore"],
     noarchive=False,

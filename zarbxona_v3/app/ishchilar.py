@@ -286,3 +286,21 @@ class FonIsh(QThread):
             if z is not None:
                 z.yop()
         self.natija.emit(r)
+
+
+class Fonda(QThread):
+    """Zarbxonasiz fon ishi (masalan, Pico tugmasini kutish): `ish()` → `natija` signali.
+    Istisno bo'lsa — istisno obyektining o'zi qaytadi."""
+
+    natija = Signal(object)
+
+    def __init__(self, ish: Callable[[], object]):
+        super().__init__()
+        self.ish = ish
+
+    def run(self) -> None:
+        try:
+            r = self.ish()
+        except Exception as e:  # noqa: BLE001
+            r = e
+        self.natija.emit(r)

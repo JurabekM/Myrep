@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .cheklov import cheklov_xeshi as _cheklov_xeshi
-from .ibtido import imzola, lp, u64le, u128le
+from .ibtido import lp, u64le, u128le
 from .konstanta import (BATCH_MAGIC, BATCH_VERSION, L_ROOT, MAX_KUPYURA, NOMINALLAR,
                         PARTIYA_ID_UZ, SERT_ID_UZ, SIR_UZ, XAZINA)
 from .kupyura import Qator, kupyura_yasa
@@ -207,7 +207,9 @@ def _zarb(k, zarbxona_kaliti, partiya_id, partiya_kaliti, master, zarb_ms, ritm,
                 birinchi_seq=k.birinchi_seq, jami=jami, zaxira_qulfi=k.zaxira_qulfi.strip(),
                 zarb_ms=zarb_ms, imzo=b"", mint_label=k.mint_label, cheklov=k.cheklov,
                 qatorlar=qatorlar)
-    p.imzo = imzola(zarbxona_kaliti, p.imzo_xabari())
+    from .imzolovchi import imzolovchi     # aylanma importdan qochish
+    p.imzo = imzolovchi(zarbxona_kaliti).partiya_imzosi(
+        p.ildiz, p.partiya_id, p.soni, p.jami, p.zaxira_qulfi, p.zarb_ms)
     p.davomiylik_s = soat() - t0
     return p
 

@@ -7,9 +7,11 @@ Qt import qilinmaydi.
     python run.py tasdiqla   --buyurtma ID
     python run.py buyurtmalar
     python run.py tekshir
+    python run.py pico       portlar | holat | sozla (--import | --yangi) [--port P] | qaytish
 
 Parol: `ZARBXONA_PAROL` muhit o'zgaruvchisi yoki so'raladi (getpass). Tasdiqchi paroli:
-`ZARBXONA_TASDIQCHI_PAROL` yoki so'raladi. Ctrl+C — TO'XTATISH: joriy partiya
+`ZARBXONA_TASDIQCHI_PAROL` yoki so'raladi. Pico rejimida (4.x) parol o'rniga Pico PIN'i:
+`ZARBXONA_PICO_PIN` yoki so'raladi; buyurtma boshida Pico tugmasini bosing. Ctrl+C — TO'XTATISH: joriy partiya
 yozilmaydi, buyurtma keyin `davom` bilan davom etadi.
 
 Chiqish kodlari: 0 — muvaffaqiyat/toza; 1 — xato yoki tekshiruvda muammo;
@@ -30,12 +32,17 @@ from pathlib import Path
 from app.yollar import dastur_papkasi
 from core.buyurtma import BandXatosi, BuyurtmaXatosi, Zarbxona
 from core.cheklov import CheklovXatosi, cheklov_json
-from core.ombor import OmborXatosi, ombor_och
+from core.ibtido import iz
+from core.ombor import OmborXatosi, ombor_och, ombor_urug
+from core.pico import protokol as PP
+from core.pico.qurilma import PicoImzolovchi
+from core.pico.ulanish import (PicoSozlama, portlar, sozlama_ochir, sozlama_oqi, sozlama_yoz,
+                               ulan)
 from core.surat import Surat, tezlik_matni, vaqt_matni
 from core.tasdiq import TasdiqXatosi
 from core.tekshiruv import jurnalni_tekshir
 
-BUYRUQLAR = ("holat", "zarb", "davom", "tasdiqla", "buyurtmalar", "tekshir")
+BUYRUQLAR = ("holat", "zarb", "davom", "tasdiqla", "buyurtmalar", "tekshir", "pico")
 ILDIZ = dastur_papkasi()
 
 
@@ -78,14 +85,40 @@ def _parol(env: str, savol: str) -> str | None:
     return getpass.getpass(savol)
 
 
+def _pico_kutish(matn: str | None) -> None:
+    if matn:
+        _chiq(f"⏳ PICO TUGMASINI BOSING: {matn} (qisqa — tasdiq, uzun — rad; 30 s)")
+
+
+def _pico_och(papka: Path, s: PicoSozlama) -> Zarbxona:
+    pin = _parol("ZARBXONA_PICO_PIN", "Pico PIN: ")
+    if pin is None:
+        raise OmborXatosi("Pico PIN berilmadi (ZARBXONA_PICO_PIN yoki interaktiv terminal)")
+    pico = ulan(s, kutish_xabari=_pico_kutish)
+    try:
+        pico.pin_och(pin)
+        return Zarbxona(papka, pico)
+    except BaseException:
+        pico.yop()
+        raise
+
+
 def _och(papka: Path) -> Zarbxona:
+    s = sozlama_oqi(papka)
+    if s is not None:
+        z = _pico_och(papka, s)
+        _chiq(f"imzolovchi: Pico · iz {iz(z.pk)}")
+        return _tayyorla(z)
     kalit = papka / "kalit.json"
     if not kalit.exists():
         raise OmborXatosi(f"kalit yo'q: {kalit} — avval GUI bilan kalit yarating")
     parol = _parol("ZARBXONA_PAROL", "zarbxona paroli: ")
     if parol is None:
         raise OmborXatosi("parol berilmadi (ZARBXONA_PAROL yoki interaktiv terminal)")
-    z = Zarbxona(papka, ombor_och(kalit, parol))
+    return _tayyorla(Zarbxona(papka, ombor_och(kalit, parol)))
+
+
+def _tayyorla(z: Zarbxona) -> Zarbxona:
     t = z.tiklash()
     if not t.bosh:
         _chiq("tiklash: " + t.matn().replace("\n", "\n         "))
@@ -224,6 +257,78 @@ def davom(z: Zarbxona, a) -> int:
     return _bajar(z, b.buyurtma_id, sur)
 
 
+# --- 4.x: Pico (profil OCHILMASDAN) ------------------------------------------------------
+
+
+def pico(a) -> int:
+    papka: Path = a.papka
+    if a.amal == "portlar":
+        p = portlar()
+        for port, tavsif in p:
+            _chiq(f"{port}  {tavsif}")
+        if not p:
+            _chiq("Raspberry Pi USB qurilmasi topilmadi")
+        return 0 if p else 1
+    if a.amal == "qaytish":
+        if not (papka / "kalit.json").exists():
+            _chiq("XATO: kalit.json yo'q — Pico ichidagi kalitni eksport qilib bo'lmaydi")
+            return 1
+        sozlama_ochir(papka)
+        _chiq("keyingi ochilishda kalit.json ishlatiladi")
+        return 0
+    s = sozlama_oqi(papka)
+    if a.amal == "holat":
+        s = s or PicoSozlama(port=a.port)
+        q = ulan(s)
+        try:
+            sal, h = q.salom(), q.holat()
+        finally:
+            q.yop()
+        _chiq(f"qurilma {sal.versiya} · seriya {sal.seriya.hex()}")
+        _chiq("kalit: " + ("yo'q" if not sal.kalit_bor else
+                           ("ochiq · iz " + iz(sal.pk)) if sal.ochiq else "bor, QULFLANGAN"))
+        _chiq(f"PIN urinishlari qolgan: {sal.qolgan_urinish}")
+        _chiq(f"ruxsat: qolgan {h.byudjet:,} so'm, {h.qolgan_s // 60} daqiqa".replace(",", " ")
+              if h.ruxsat_faol else "ruxsat: yo'q")
+        return 0
+    # sozla
+    if s is not None:
+        _chiq("XATO: profil allaqachon Pico rejimida (`pico qaytish` bilan bekor qiling)")
+        return 1
+    urug = None
+    if a.rejim == "import":
+        parol = _parol("ZARBXONA_PAROL", "kalit.json paroli: ")
+        if parol is None:
+            _chiq("XATO: kalit.json paroli berilmadi")
+            return 1
+        urug = bytearray(ombor_urug(papka / "kalit.json", parol))
+    pin = _parol("ZARBXONA_PICO_PIN", "yangi Pico PIN: ")
+    if pin is None:
+        _chiq("XATO: Pico PIN berilmadi (ZARBXONA_PICO_PIN yoki interaktiv terminal)")
+        return 1
+    if "ZARBXONA_PICO_PIN" not in os.environ and getpass.getpass("PIN (takror): ") != pin:
+        _chiq("XATO: PIN'lar mos emas")
+        return 1
+    q = ulan(PicoSozlama(port=a.port), kutish_xabari=_pico_kutish)
+    try:
+        if q.salom().kalit_bor:
+            _chiq("XATO: bu Pico'da kalit allaqachon bor")
+            return 1
+        pk = q.kalit_import(pin, bytes(urug)) if urug is not None else q.kalit_yarat(pin)
+        seriya = q.salom().seriya
+        q.qulfla()
+    finally:
+        q.yop()
+        if urug is not None:
+            for i in range(len(urug)):
+                urug[i] = 0
+    sozlama_yoz(papka, PicoSozlama(port=a.port, public_key=pk, seriya=seriya))
+    _chiq(f"Pico sozlandi · seriya {seriya.hex()} · iz {iz(pk)}")
+    if urug is None:
+        _chiq("YANGI kalit: bankdan shu kalitga yangi sertifikat oling")
+    return 0
+
+
 def argumentlar(argv) -> argparse.Namespace:
     a = argparse.ArgumentParser(prog="zarbxona", description="Zarbxona v3 — GUI'siz rejim")
     sub = a.add_subparsers(dest="buyruq", required=True)
@@ -249,14 +354,31 @@ def argumentlar(argv) -> argparse.Namespace:
     d.set_defaults(surat=None)
     t = sub.add_parser("tasdiqla", parents=[umumiy])
     t.add_argument("--buyurtma", required=True)
+    p = sub.add_parser("pico", parents=[umumiy], help="4.x: Raspberry Pi Pico imzo kaliti")
+    p.add_argument("amal", choices=("portlar", "holat", "sozla", "qaytish"))
+    p.add_argument("--port", default="auto", help="auto · COM5 · /dev/ttyACM0 · soxta:FAYL")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--import", dest="rejim", action="store_const", const="import",
+                   help="kalit.json dagi kalitni Pico'ga ko'chirish (sertifikat saqlanadi)")
+    g.add_argument("--yangi", dest="rejim", action="store_const", const="yangi",
+                   help="Pico ichida yangi kalit (bankdan yangi sertifikat kerak)")
     return a.parse_args(argv)
 
 
 def main(argv) -> int:
     a = argumentlar(argv)
+    if a.buyruq == "pico":
+        if a.amal == "sozla" and a.rejim is None:
+            _chiq("XATO: --import yoki --yangi ni tanlang")
+            return 2
+        try:
+            return pico(a)
+        except (OmborXatosi, PP.PicoXatosi) as e:
+            _chiq(f"XATO: {e}")
+            return 1
     try:
         z = _och(a.papka)
-    except (OmborXatosi, BandXatosi) as e:
+    except (OmborXatosi, BandXatosi, PP.PicoXatosi) as e:
         _chiq(f"XATO: {e}")
         return 1
     try:
@@ -264,3 +386,9 @@ def main(argv) -> int:
                 "buyurtmalar": buyurtmalar, "tekshir": tekshir}[a.buyruq](z, a)
     finally:
         z.yop()
+        if isinstance(z.imz, PicoImzolovchi):
+            try:
+                z.imz.qulfla()            # chiqishda Pico qulflanadi
+            except PP.PicoXatosi:
+                pass
+            z.imz.yop()

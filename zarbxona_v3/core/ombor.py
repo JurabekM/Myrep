@@ -91,6 +91,11 @@ def ombor_lugatdan_och(d: dict, parol: str) -> bytes:
     return urug
 
 
+def ombor_urug(yol: Path, parol: str) -> bytes:
+    """32 baytli urug' — FAQAT kalitni Pico'ga ko'chirish (KALIT_IMPORT) uchun."""
+    return ombor_lugatdan_och(_oqi(yol), parol)
+
+
 def ombor_och(yol: Path, parol: str):
     """Maxfiy kalit obyekti."""
     return kalit_urugdan(ombor_lugatdan_och(_oqi(yol), parol))

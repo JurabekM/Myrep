@@ -10,6 +10,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QHBoxLayout, QPushButton
 
 from app import dialog
+from app.sahifalar.pico_karta import PicoKarta
 from app.sahifalar.tasdiq_karta import TasdiqKarta
 from app.vidjetlar import Karta, Sahifa, som, yorliq
 from core.ibtido import iz
@@ -29,9 +30,8 @@ class KalitSahifasi(Sahifa):
         k = Karta("Zarbxona kaliti (ML-DSA-65)")
         self.iz = yorliq("", "katta")
         k.qosh(self.iz)
-        k.qosh(yorliq("Bankka ochiq kalitni bering. Bank sertifikatni aynan shu kalitga "
-                      "chiqaradi. Izni bank operatori bilan ko'z bilan solishtiring. Maxfiy "
-                      "kalit faqat parol bilan shifrlangan holda kalit.json da turadi.", "xira"))
+        self.izoh = yorliq("", "xira")
+        k.qosh(self.izoh)
         q = QHBoxLayout()
         self.t_eksport = QPushButton("Ochiq kalitni eksport qilish…")
         self.t_eksport.clicked.connect(self.eksport_bos)
@@ -58,6 +58,8 @@ class KalitSahifasi(Sahifa):
         sq.addStretch(1)
         s.qosh(sq)
         self.qosh(s)
+        self.pico = PicoKarta(ctx)
+        self.qosh(self.pico)
         self.tasdiq = TasdiqKarta(ctx)
         self.qosh(self.tasdiq)
         self.oxiri()
@@ -65,6 +67,15 @@ class KalitSahifasi(Sahifa):
     def yangila(self) -> None:
         z = self.ctx.z
         self.iz.setText(f"<span style='font-family:monospace'>{iz(z.pk)}</span>")
+        fayl_bor = (z.papka / "kalit.json").exists()
+        self.t_parol.setEnabled(fayl_bor)
+        self.t_zaxira.setEnabled(fayl_bor)
+        joyi = ("Maxfiy kalit Raspberry Pi Pico ichida — kompyuterga chiqmaydi."
+                if self.pico.pico is not None else
+                "Maxfiy kalit faqat parol bilan shifrlangan holda kalit.json da turadi.")
+        self.izoh.setText("Bankka ochiq kalitni bering. Bank sertifikatni aynan shu kalitga "
+                          "chiqaradi. Izni bank operatori bilan ko'z bilan solishtiring. " + joyi)
+        self.pico.yangila()
         self.ogoh.setText("<br>".join("⚠ " + m for m in z.ogohlantirishlar()))
         self.tasdiq.yangila()
         c = z.sertifikat

@@ -68,6 +68,8 @@ QHeaderView::section {{ background: {panel_alt}; color: {xira}; border: none;
 QTableWidget::item:selected {{ background: {aksent_toq}; color: {matn}; }}
 QLabel#demo_belgi {{ background: {ogoh}; color: #1A1204; font-weight: 700;
     border-radius: 4px; padding: 2px 6px; }}
+QLabel#pico_banner {{ background: {ogoh}; color: #1A1204; font-weight: 700;
+    padding: 10px 16px; }}
 QStatusBar {{ background: {panel}; color: {xira}; border-top: 1px solid {chegara}; }}
 QScrollBar:vertical {{ background: {fon}; width: 10px; }}
 QScrollBar::handle:vertical {{ background: {chegara}; border-radius: 5px; min-height: 30px; }}

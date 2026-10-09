@@ -152,3 +152,33 @@ def test_nul_stdin_interaktiv_emas(monkeypatch):
     monkeypatch.setattr(c.sys, "stdout", Tty(True))
     monkeypatch.setattr(c.getpass, "getpass", lambda *_: "terminaldan")
     assert c._parol("ZARBXONA_TASDIQCHI_PAROL", "?") == "terminaldan"
+
+
+def test_pico_cli_sozlash_zarb_va_qaytish(profil, tmp_path):
+    """4.x: `pico sozla --import` (soxta Pico), keyin zarb Pico PIN bilan, `pico holat`,
+    `pico qaytish`."""
+    papka, _ = profil
+    port = f"soxta:{tmp_path / 'flash.json'}"
+    pin = {"ZARBXONA_PICO_PIN": "cli-pin-123"}
+    r = cli("pico", "sozla", "--papka", str(papka), "--port", port)
+    assert r.returncode == 2 and "--import" in r.stdout
+    r = cli("pico", "sozla", "--papka", str(papka), "--port", port, "--import", env=pin)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "Pico sozlandi" in r.stdout and "YANGI" not in r.stdout
+    assert "TUGMASINI BOSING" in r.stdout               # soxta Pico tugmani «bosdi»
+    r = cli("zarb", "--papka", str(papka), "--summa", "7777", "--qulf", "Q", "--hajm", "3",
+            "--surat", "cheklovsiz", env={"ZARBXONA_PAROL": "", **pin})
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "imzolovchi: Pico" in r.stdout and "RUXSAT" in r.stdout and "TUGADI" in r.stdout
+    assert cli("tekshir", "--papka", str(papka), env=pin).returncode == 0
+    r = cli("zarb", "--papka", str(papka), "--summa", "5", "--qulf", "Q",
+            env={"ZARBXONA_PICO_PIN": "xato-pin-00"})
+    assert r.returncode == 1 and "PIN noto'g'ri" in r.stdout
+    r = cli("pico", "holat", "--papka", str(papka))
+    assert r.returncode == 0 and "QULFLANGAN" in r.stdout and "urinishlari qolgan: 4" in r.stdout
+    r = cli("pico", "sozla", "--papka", str(papka), "--port", port, "--yangi", env=pin)
+    assert r.returncode == 1 and "allaqachon Pico" in r.stdout
+    r = cli("pico", "qaytish", "--papka", str(papka))
+    assert r.returncode == 0
+    r = cli("holat", "--papka", str(papka))                  # yana kalit.json paroli
+    assert r.returncode == 0 and "imzolovchi: Pico" not in r.stdout

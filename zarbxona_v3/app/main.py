@@ -34,7 +34,8 @@ def main(argv=None) -> int:
         except (AttributeError, ValueError):
             pass
     royxat = list(sys.argv[1:] if argv is None else argv)
-    if royxat and royxat[0] in ("holat", "zarb", "davom", "tasdiqla", "buyurtmalar", "tekshir"):
+    cli_buyruqlari = ("holat", "zarb", "davom", "tasdiqla", "buyurtmalar", "tekshir", "pico")
+    if royxat and royxat[0] in cli_buyruqlari:
         from app.cli import main as cli_main      # GUI'siz — Qt yuklanmaydi
         return cli_main(royxat)
     args = argumentlar(argv)

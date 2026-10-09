@@ -21,7 +21,7 @@ from .partiya import (YARIM, FaylXatosi, Partiya, ZarbKirishi, ZarbXatosi, nomin
 from .sertifikat import Sertifikat, SertifikatXatosi
 from .surat import BekorQilindi, Ritm, Surat
 from .tekshiruv import Hisobot, faylni_tekshir, partiyani_tekshir
-from .ibtido import imzola, ochiq_kalit
+from .imzolovchi import Imzolovchi, ImzolovchiXatosi, imzolovchi
 
 DEFAULT_PARTIYA_HAJMI = 500
 SOAT_TOLERANS_MS = 5 * 60_000     # NTP tuzatishi, yozgi vaqt va h.k. uchun zaxira
@@ -130,8 +130,9 @@ class Zarbxona:
         self.papka.mkdir(parents=True, exist_ok=True)
         self.qulf = YagonaYozuvchi(self.papka / "zarbxona.lock")
         try:
-            self.sk = sk
-            self.pk = ochiq_kalit(sk)
+            self.sk = sk                       # kalit yoki imzolovchi (4.x Pico)
+            self.imz: Imzolovchi = imzolovchi(sk)
+            self.pk = self.imz.ochiq_kalit()
             self.soat_ms = soat_ms
             self.partiya_papka.mkdir(exist_ok=True)
             self.karantin_papka.mkdir(exist_ok=True)
@@ -165,14 +166,16 @@ class Zarbxona:
             if self.qulf is not None:
                 self.qulf.ozod()
 
-    def _imzo(self, xabar: bytes) -> bytes:
-        return imzola(self.sk, xabar)
+    def _imzo(self, tartib: int, xesh: bytes) -> bytes:
+        """Jurnal zanjiri boshi imzosi (`Jurnal.partiya_yoz` uchun)."""
+        return self.imz.bosh_imzosi(tartib, xesh)
 
     def oqim_nusxasi(self) -> Zarbxona:
         """Fon oqimi uchun: o'z jurnal ulanishi, qulf esa asl nusxada qoladi (§16.5).
         Nusxa o'sha oqimda yaratiladi va yopiladi; qulfni ozod qilmaydi."""
         n = object.__new__(Zarbxona)
-        n.papka, n.sk, n.pk, n.soat_ms = self.papka, self.sk, self.pk, self.soat_ms
+        n.papka, n.sk, n.imz, n.pk = self.papka, self.sk, self.imz, self.pk
+        n.soat_ms = self.soat_ms
         n.qulf = None
         n.jurnal = Jurnal(self.papka / "jurnal.db")
         n.sertifikat = self.sertifikat
@@ -314,6 +317,10 @@ class Zarbxona:
         surat = surat or Surat.json_dan(b.surat)
         surat.tekshir()
         rs = surat.ritm_sozlamasi(b.kupyura_soni)
+        try:            # 4.x: Pico'da operator tugmani bosadi — qolgan summagacha ruxsat
+            self.imz.ruxsat(buyurtma_id, b.qolgan_summa)
+        except ImzolovchiXatosi as e:
+            return self._pauza(buyurtma_id, f"imzolovchi ruxsat bermadi: {e}", [])
         self.jurnal.buyurtma_holat(buyurtma_id, "faol")
         tayyor: list[Partiya] = []
 
@@ -345,7 +352,7 @@ class Zarbxona:
             try:
                 p = zarb_qil(ZarbKirishi(noms, s.cert_id, b.zaxira_qulfi, seq, b.cheklov,
                                          mint_label=s.label),
-                             self.sk, ritm=ritm, kuzatuv=kuzatuv, jarayon=jarayon,
+                             self.imz, ritm=ritm, kuzatuv=kuzatuv, jarayon=jarayon,
                              bekormi=bekormi, soat=soat)
             except BekorQilindi:
                 hodisa("toxtatildi", {})
@@ -353,6 +360,10 @@ class Zarbxona:
                                    holat="toxtatildi")
             except ZarbXatosi as e:
                 return self._pauza(buyurtma_id, f"zarb xatosi: {e}", tayyor)
+            except ImzolovchiXatosi as e:
+                hodisa("imzolovchi_xato", {"xabar": str(e)})
+                return self._pauza(buyurtma_id, f"imzo olinmadi — partiya yozilmadi: {e}",
+                                   tayyor)
 
             h = partiyani_tekshir(p, self.pk, s, hozir_ms=self.soat_ms(), limit_qolgan=qolgan)
             if not h.ok:
