@@ -101,9 +101,9 @@ jobs:
           retention-days: 14
 
   pico:
-    name: Pico ichki dasturi (.uf2)
+    name: Pico ichki dasturi (.uf2 + emulyator)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -124,6 +124,32 @@ jobs:
           cmake --build build -j4
           arm-none-eabi-size build/zarbxona_pico_hsm.elf
           sha256sum build/zarbxona_pico_hsm.uf2 | tee build/zarbxona_pico_hsm.uf2.sha256
+          echo "AQ_PICO_UF2=$PWD/build/zarbxona_pico_hsm.uf2" >> "$GITHUB_ENV"
+          echo "AQ_PICO_FLASH_ISH=$(arm-none-eabi-nm build/zarbxona_pico_hsm.elf | awk '$3=="flash_ish"{print $1}')" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: RP2040 emulyatori (rp2040js, aniq commit)
+        run: |
+          git clone -q https://github.com/wokwi/rp2040js.git "$RUNNER_TEMP/rp2040js"
+          git -C "$RUNNER_TEMP/rp2040js" checkout -q a304c7486f329dae64be5f65baf28795d62ceb95
+          (cd "$RUNNER_TEMP/rp2040js" && npm ci --no-audit --no-fund --ignore-scripts)
+          cp zarbxona_v3/tools/pico_emulyator/pico-hsm-run.ts "$RUNNER_TEMP/rp2040js/demo/"
+          echo "AQ_PICO_EMU=$RUNNER_TEMP/rp2040js" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: zarbxona_v3/requirements.txt
+
+      - name: .uf2 ni emulyatorda sinash
+        working-directory: zarbxona_v3
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pytest -q -rs -s tests/test_pico_emulyator.py
 
       - uses: actions/upload-artifact@v4
         with:

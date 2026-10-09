@@ -4,8 +4,9 @@
 
 ## 1. Loyiha qayerda to'xtagan
 
-**Dasturiy qism tugagan.** 4.x (Pico imzo kaliti) ning 1- va 2-bosqichlari kodda tayyor va
-kompyuterda sinalgan. **Haqiqiy Pico'da hali sinalmagan.**
+**Dasturiy qism tugagan.** 4.x (Pico imzo kaliti) ning 1- va 2-bosqichlari kodda tayyor.
+Ular kompyuterda sinalgan, `.uf2` esa RP2040 emulyatorida (rp2040js) ham sinalgan.
+**Haqiqiy Pico'da hali sinalmagan.**
 
 **Git:**
 - tarmoq: `claude/focused-galileo-1pmwcp`;
@@ -13,13 +14,13 @@ kompyuterda sinalgan. **Haqiqiy Pico'da hali sinalmagan.**
 - PR kuzatuvi foydalanuvchi so'rovi bilan to'xtatilgan.
 
 **Testlar:**
-- lokal 223 o'tdi, 1 skip (A1);
-- Pico ichki dasturi testlari faqat `AQ_PICO_HOST` berilganda ishlaydi.
+- lokal 224 o'tdi, 1 skip (A1); emulyator testlari (2 ta) alohida ishlaydi;
+- Pico ichki dasturi testlari faqat `AQ_PICO_HOST` yoki `AQ_PICO_EMU` berilganda ishlaydi.
 
 **CI:**
 - ubuntu va windows, Python 3.12 va 3.13;
 - Windows `.exe`;
-- Pico `.uf2` (artifact `zarbxona-pico-hsm-uf2`);
+- Pico `.uf2` (artifact `zarbxona-pico-hsm-uf2`) va uni emulyatorda sinash;
 - Linux'da ichki dasturning kompyuter varianti bilan testlar.
 
 **Bajarilganlar:**
@@ -73,8 +74,10 @@ yuklash, xavfsizlik).
    - kalit yaratish va imzo qancha soniya oldi;
    - tugma, LED va USB uzilishi to'g'ri ishladimi.
 
+   Emulyatordagi vaqtlar: PIN ~2 s, imzo 0,8–2,4 s.
+
    Muammo bo'lsa, eng ehtimoliy joylar:
-   - `main_pico.c` (stdio_usb, flash_safe_execute);
+   - `main_pico.c` — `flash_safe_execute`; emulyator uni sinamaydi;
    - xostdagi `ODDIY_KUTISH_S` (imzo sekin bo'lsa).
 2. **Pico 2 (RP2350) ga ko'chirish** — haqiqiy pul uchun:
    - kalit OTP'da yoki OTP kalit bilan shifrlangan;

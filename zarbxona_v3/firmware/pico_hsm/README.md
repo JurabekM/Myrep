@@ -9,11 +9,22 @@ Oddiy Raspberry Pi Pico (RP2040) zarbxonaning ML-DSA-65 imzo kalitiga aylanadi.
 Protokol: [`docs/PICO_PROTOKOL.md`](../../docs/PICO_PROTOKOL.md).
 
 > **Holat:**
-> - Ichki dastur kompyuterda to'liq sinalgan: C yadro Python etaloni bilan bir xil testlardan
->   o'tadi, kalit va imzolar `cryptography` bilan mos.
-> - RP2040 uchun yig'iladi (CI'da `.uf2`).
-> - **Haqiqiy Pico'da hali ishga tushirib ko'rilmagan.** Birinchi sinov — quyidagi
+> - C yadro kompyuterda Python etaloni bilan bir xil testlardan o'tadi; kalit va imzolar
+>   `cryptography` bilan mos.
+> - Yig'ilgan **`.uf2` RP2040 emulyatorida (rp2040js) ishlaydi**: USB, tugma, imzolar va
+>   qayta yoqishdan keyingi flash yozuvi sinalgan (`tests/test_pico_emulyator.py`, CI'da).
+> - **Haqiqiy Pico'da hali ishga tushirib ko'rilmagan.** Flash yozish (ROM funksiyalari)
+>   va haqiqiy tezlik faqat Pico'ning o'zida tekshiriladi. Birinchi sinov — quyidagi
 >   "Tekshirish" bo'limi.
+
+**Kutiladigan vaqtlar** (emulyator, 125 MHz, taxminiy):
+
+| Amal | Vaqt |
+|---|---|
+| PIN bilan ochish | ~2 s |
+| Kalit yaratish yoki import | ~2,5 s (tugmadan keyin) |
+| Bitta partiya imzosi | 0,8–2,4 s (ML-DSA tasodifiy) |
+| Jurnal boshi imzosi | 0,7–1,7 s |
 
 ## 1. Kerakli narsalar
 
@@ -105,7 +116,8 @@ Pico ishlaydi (tugma avtomatik bosiladi). Bu faqat sinash uchun — haqiqiy himo
 6. Rad etishni sinang: buyurtma boshida tugmani 2 s bosib turing — buyurtma pauzaga o'tishi kerak.
 7. USB'ni zarb paytida sug'urib oling — partiya yozilmasligi va buyurtma pauzaga o'tishi
    kerak. Qayta ulang: "Kalit" sahifasi → "Qayta ulash (PIN)…" → davom ettiring.
-8. Har bir imzo qancha vaqt olganini yozib qo'ying (bu hali o'lchanmagan).
+8. Har bir imzo qancha vaqt olganini yozib qo'ying va yuqoridagi emulyator jadvali bilan
+   solishtiring.
 
 ## 6. Manbadan yig'ish
 
@@ -146,6 +158,7 @@ AQ_PICO_HOST=$PWD/build-host/pico_hsm_host python -m pytest ../../tests/test_pic
 | `src/aq_mldsa.c` | mldsa-native (bitta kompilyatsiya birligi, `aq_mldsa_config.h`) |
 | `src/main_pico.c` | RP2040: USB CDC, flash (oxirgi 4 KB sektor), tugma/LED, tasodif, 32 KB stek |
 | `src/main_host.c` | kompyuter: stdin/stdout, flash fayli, `AQ_TUGMA` navbati, stek o'lchovi |
+| `../../tools/pico_emulyator/` | `.uf2` ni rp2040js emulyatorida ishga tushirish (tugma, flash, vaqtlar) |
 
 **Xotira:**
 
@@ -159,7 +172,7 @@ AQ_PICO_HOST=$PWD/build-host/pico_hsm_host python -m pytest ../../tests/test_pic
 ## 8. Xavfsizlik — RP2040 cheklovlari (MUHIM)
 
 - **Flash himoyalanmagan.** Pico'ni qo'lga olgan odam BOOTSEL orqali flash'ni o'qib olishi
-  mumkin. Kalit flash'da PIN'dan olingan kalit bilan shifrlangan (4096 marta SHA3), lekin
+  mumkin. Kalit flash'da PIN'dan olingan kalit bilan shifrlangan (1024 marta SHA3), lekin
   qisqa PIN oflayn tez topiladi. **Uzun PIN** (12+ belgi yoki ibora) ishlating va Pico'ni
   seyfda saqlang. 5 ta xato urinishdan keyin kalit o'chirilishi faqat qurilmaning o'zi
   orqali qilinadigan taxminlarga qarshi ishlaydi.

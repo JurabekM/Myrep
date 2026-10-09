@@ -57,7 +57,7 @@ enum {
 
 /* --- saqlash (core/pico/saqlash.py) ------------------------------------------------- */
 #ifndef AQ_PIN_ITER
-#define AQ_PIN_ITER 4096
+#define AQ_PIN_ITER 1024
 #endif
 #define SALT_UZ 16
 #define TAG_UZ 16

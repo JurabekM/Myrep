@@ -172,7 +172,7 @@ tugma so'raladi.
 **Kalit:**
 
 - Kalit urug'i flash'da PIN'dan olingan kalit bilan shifrlanib saqlanadi:
-  `core/pico/saqlash.py`, `PIN_ITER = 4096`.
+  `core/pico/saqlash.py`, `PIN_ITER = 1024`.
 - Yangi kalit urug'i = `SHA3-256(L_KEYGEN ‖ qurilma tasodifi ‖ xost entropiyasi)`.
 
 ## 8. Xost qanday ishlatadi

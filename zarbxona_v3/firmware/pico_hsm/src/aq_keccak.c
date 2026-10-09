@@ -21,25 +21,46 @@ static const uint8_t ROT[24] = {1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
 static const uint8_t PI[24] = {10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4,
                                15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1};
 
-static uint64_t rotl(uint64_t x, unsigned n) { return (x << n) | (x >> (64 - n)); }
+static inline uint64_t rotl(uint64_t x, unsigned n) { return (x << n) | (x >> (64 - n)); }
 
+/* `%` va ichki sikllarsiz (Cortex-M0+ da bo'lish va 64 bitli amallar qimmat). */
 static void keccak_f(uint64_t s[25]) {
-    uint64_t c[5], t;
+    uint64_t c0, c1, c2, c3, c4, d0, d1, d2, d3, d4, t, u;
     for (int r = 0; r < 24; r++) {
-        for (int x = 0; x < 5; x++) c[x] = s[x] ^ s[x + 5] ^ s[x + 10] ^ s[x + 15] ^ s[x + 20];
-        for (int x = 0; x < 5; x++) {
-            t = c[(x + 4) % 5] ^ rotl(c[(x + 1) % 5], 1);
-            for (int y = 0; y < 25; y += 5) s[y + x] ^= t;
+        c0 = s[0] ^ s[5] ^ s[10] ^ s[15] ^ s[20];
+        c1 = s[1] ^ s[6] ^ s[11] ^ s[16] ^ s[21];
+        c2 = s[2] ^ s[7] ^ s[12] ^ s[17] ^ s[22];
+        c3 = s[3] ^ s[8] ^ s[13] ^ s[18] ^ s[23];
+        c4 = s[4] ^ s[9] ^ s[14] ^ s[19] ^ s[24];
+        d0 = c4 ^ rotl(c1, 1);
+        d1 = c0 ^ rotl(c2, 1);
+        d2 = c1 ^ rotl(c3, 1);
+        d3 = c2 ^ rotl(c4, 1);
+        d4 = c3 ^ rotl(c0, 1);
+        for (int y = 0; y < 25; y += 5) {
+            s[y] ^= d0;
+            s[y + 1] ^= d1;
+            s[y + 2] ^= d2;
+            s[y + 3] ^= d3;
+            s[y + 4] ^= d4;
         }
         t = s[1];
         for (int i = 0; i < 24; i++) {
-            uint64_t u = s[PI[i]];
+            u = s[PI[i]];
             s[PI[i]] = rotl(t, ROT[i]);
             t = u;
         }
         for (int y = 0; y < 25; y += 5) {
-            for (int x = 0; x < 5; x++) c[x] = s[y + x];
-            for (int x = 0; x < 5; x++) s[y + x] = c[x] ^ ((~c[(x + 1) % 5]) & c[(x + 2) % 5]);
+            c0 = s[y];
+            c1 = s[y + 1];
+            c2 = s[y + 2];
+            c3 = s[y + 3];
+            c4 = s[y + 4];
+            s[y] = c0 ^ (~c1 & c2);
+            s[y + 1] = c1 ^ (~c2 & c3);
+            s[y + 2] = c2 ^ (~c3 & c4);
+            s[y + 3] = c3 ^ (~c4 & c0);
+            s[y + 4] = c4 ^ (~c0 & c1);
         }
         s[0] ^= RC[r];
     }
@@ -63,6 +84,16 @@ void aq_sha3_256_init(aq_keccak *k) { boshla(k, 0x06); }
 void aq_shake256_init(aq_keccak *k) { boshla(k, 0x1F); }
 
 void aq_keccak_update(aq_keccak *k, const uint8_t *d, size_t n) {
+    while (k->pos == 0 && n >= k->rate) { /* to'liq bloklar — 8 baytdan */
+        for (size_t w = 0; w < k->rate / 8; w++) {
+            uint64_t x = 0;
+            for (int j = 7; j >= 0; j--) x = (x << 8) | d[8 * w + (size_t)j];
+            k->s[w] ^= x;
+        }
+        keccak_f(k->s);
+        d += k->rate;
+        n -= k->rate;
+    }
     for (size_t i = 0; i < n; i++) {
         xor_bayt(k->s, k->pos++, d[i]);
         if (k->pos == k->rate) {

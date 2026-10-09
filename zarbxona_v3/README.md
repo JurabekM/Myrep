@@ -248,6 +248,7 @@ python -m pytest -q                      # GUI testi uchun: QT_QPA_PLATFORM=offs
 | T15 | `test_gui.py` | offscreen: har sahifa, har tugma, haqiqiy zarb, PAUZA/DAVOM/TO'XTATISH, buzish demosi |
 | 4.x | `test_pico.py` | protokol (ramka, CRC, fuzz), qurilma qoidalari (PIN, ruxsat byudjeti, tugma, tartib), zarbxona bilan halqa, uzilish va davom |
 | 4.x | `test_pico_ichki.py` | C ichki dasturi (`AQ_PICO_HOST`) etalon bilan bir xil testlarda; kalit/imzo `cryptography` bilan mos; flash yozuvi Python bilan mos; differensial fuzz; stek o'lchovi |
+| 4.x | `test_pico_emulyator.py` | haqiqiy `.uf2` RP2040 emulyatorida (rp2040js): USB, tugma, imzolar, qayta yoqish, zarbxona buyurtmasi |
 
 ## §18.2 — foydalanuvchi mashinasida qabul sinovlari
 
@@ -300,8 +301,8 @@ ekranda baholanadi.
 
 Davom ettirish uchun eslatma: [`docs/DAVOM_ETTIRISH.md`](docs/DAVOM_ETTIRISH.md).
 
-**Qilindi va sinaldi.** Bulutda 223 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
-skip. Pico ichki dasturi testlari faqat `AQ_PICO_HOST` berilganda ishlaydi (CI'da Linux).
+**Qilindi va sinaldi.** Bulutda 224 test o'tadi, 1 tasi (A1) AETHER-Q yo'qligi uchun
+skip. Pico ichki dasturi testlari faqat `AQ_PICO_HOST` (kompyuter varianti) yoki emulyator o'zgaruvchilari berilganda ishlaydi (CI'da).
 CI'da quyidagilar bor:
 - Linux va Windows, Python 3.12 va 3.13;
 - Windows `.exe` yig'ilishi;
@@ -336,9 +337,14 @@ CI'da quyidagilar bor:
 - Windows `.exe`: CI'da yig'iladi va `--selftest` bilan tekshiriladi. GUI oynasi haqiqiy
   Windows ekranida ochib ko'rilmagan.
 - Haqiqiy ekrandagi ko'rinish: faqat offscreen skrinshotlar ko'rildi.
-- **Pico ichki dasturi haqiqiy RP2040'da ishga tushirilmagan.** Uning yadrosi kompyuterda
-  to'liq sinalgan va `.uf2` yig'iladi. Lekin USB deskriptorlari, flash yozish, tugma/LED va
-  imzo tezligi faqat Pico'ning o'zida tekshiriladi (`firmware/pico_hsm/README.md`, 5-bo'lim).
+- **Pico ichki dasturi haqiqiy RP2040'da ishga tushirilmagan.** Yadrosi kompyuterda, `.uf2`
+  esa RP2040 emulyatorida sinalgan. Faqat Pico'ning o'zida tekshiriladiganlar:
+  - flash yozish (ROM funksiyalari);
+  - Windows'da USB deskriptorlari;
+  - haqiqiy tugma/LED;
+  - aniq tezlik.
+
+  Batafsil: `firmware/pico_hsm/README.md`, 5-bo'lim.
 - Uzoq sekin zarbdagi CPU ulushi. Monitor ko'rsatadigan CPU va tezlik ish vaqtida
   **o'lchanadi**, taxminiy vaqt esa «TAXMINIY» deb aniq belgilanadi.
 
