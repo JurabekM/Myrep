@@ -26,10 +26,19 @@ HOZIR = 1_800_000_000_000
 
 @pytest.fixture(scope="module")
 def ilova():
+    """Ilovadagidek: avtomatik GC o'chiq, yig'ish faqat asosiy oqimda (app/gc_nazorat.py)."""
+    import gc
+
+    from app import gc_nazorat
     from app.theme import mavzuni_qol
     a = QApplication.instance() or QApplication([])
     mavzuni_qol(a)
-    return a
+    t = gc_nazorat.ornat(a)
+    yield a
+    t.stop()
+    QCoreApplication.processEvents()
+    gc.collect()
+    gc.disable()          # conftest siyosati: sessiya oxirigacha o'chiq
 
 
 class Dialoglar:
@@ -660,3 +669,25 @@ def test_4x_pico_sozlash_kirish_va_zarb(ilova, tmp_path, kalitlar, sertifikat, m
     assert sozlama_oqi(papka) is None
     o.close()
     assert qurilma.sk is None                        # chiqishda Pico qulflandi
+
+
+def test_gc_faqat_asosiy_oqimda(ilova):
+    """PYSIDE-810: avtomatik GC o'chiq; asosiy oqimdagi taymer halqalarni yig'adi."""
+    import gc
+
+    from app import gc_nazorat
+
+    class Halqa:
+        pass
+    t = gc_nazorat.ornat(ilova, oraliq_ms=10)
+    try:
+        assert not gc.isenabled()
+        h = Halqa()
+        h.o = h
+        import weakref
+        w = weakref.ref(h)
+        del h
+        assert w() is not None                      # avtomatik yig'ilmadi
+        assert kut(lambda: w() is None, 5)          # taymer asosiy oqimda yig'di
+    finally:
+        t.stop()

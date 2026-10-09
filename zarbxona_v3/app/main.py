@@ -53,6 +53,8 @@ def main(argv=None) -> int:
 
     ilova = QApplication.instance() or QApplication(sys.argv)
     ilova.setApplicationName("Zarbxona")
+    from app import gc_nazorat
+    gc_nazorat.ornat(ilova)                 # GC faqat asosiy oqimda (PYSIDE-810)
     mavzuni_qol(ilova)
     ilova.setWindowIcon(ikonka())
     d = KirishDialogi(args.papka)
