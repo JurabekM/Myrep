@@ -3,7 +3,6 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
-from .api import ApiClient
 from .config import DesktopConfig
 from .offline.store import LocalStore
 from .security import get_or_create_db_key, get_or_create_store_key
@@ -19,12 +18,13 @@ def main() -> int:
     apply_theme(app)
 
     config = DesktopConfig.from_env()
-    api = ApiClient(config.api_base_url)
-    if not run_login(api):
-        return 0
-
     Path(config.local_db_path).parent.mkdir(parents=True, exist_ok=True)
     local = LocalStore(config.local_db_path, key=get_or_create_db_key())
+    user = run_login(local)
+    if user is None:
+        local.close()
+        return 0
+
     mqtt = MqttSync(
         get_or_create_store_key(),
         device_id=local.device_id(),
@@ -33,13 +33,12 @@ def main() -> int:
         port=config.mqtt_port,
         tls=config.mqtt_tls,
     )
-    window = PosWindow(api, config, local=local, mqtt=mqtt)
+    window = PosWindow(config, local=local, mqtt=mqtt)
     window.show()
     window.start()
     code = app.exec()
     mqtt.stop()
     local.close()
-    api.close()
     return code
 
 

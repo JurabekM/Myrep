@@ -35,6 +35,17 @@ class LocalDb {
     'CREATE TABLE sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL)',
   ];
 
+  /// v2: do'kon ma'lumoti va foydalanuvchilar (serversiz login, MQTT orqali sinxronlanadi).
+  static const _schemaV2 = [
+    '''CREATE TABLE IF NOT EXISTS store_info (
+        store_id TEXT PRIMARY KEY, name TEXT NOT NULL, updated_ts TEXT NOT NULL DEFAULT '')''',
+    '''CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY, store_id TEXT NOT NULL, login TEXT NOT NULL, name TEXT NOT NULL,
+        role TEXT NOT NULL, salt TEXT NOT NULL, pw_hash TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1, updated_ts TEXT NOT NULL DEFAULT '')''',
+    'CREATE INDEX IF NOT EXISTS users_store_login ON users (store_id, login)',
+  ];
+
   /// [password] — SQLCipher paroli. [factory] — testda sqflite_common_ffi (shifrsiz).
   static Future<LocalDb> open(
     String path, {
@@ -42,8 +53,16 @@ class LocalDb {
     DatabaseFactory? factory,
   }) async {
     Future<void> onCreate(Database db, int _) async {
-      for (final statement in _schema) {
+      for (final statement in [..._schema, ..._schemaV2]) {
         await db.execute(statement);
+      }
+    }
+
+    Future<void> onUpgrade(Database db, int from, int _) async {
+      if (from < 2) {
+        for (final statement in _schemaV2) {
+          await db.execute(statement);
+        }
       }
     }
 
@@ -52,13 +71,18 @@ class LocalDb {
       db = await openDatabase(
         path,
         password: password,
-        version: 1,
+        version: 2,
         onCreate: onCreate,
+        onUpgrade: onUpgrade,
       );
     } else {
       db = await (factory ?? databaseFactory).openDatabase(
         path,
-        options: OpenDatabaseOptions(version: 1, onCreate: onCreate),
+        options: OpenDatabaseOptions(
+          version: 2,
+          onCreate: onCreate,
+          onUpgrade: onUpgrade,
+        ),
       );
     }
     return LocalDb._(db);
@@ -315,6 +339,16 @@ class LocalDb {
       whereArgs: [storeId],
     );
     final shift = await openShift(storeId);
+    final info = await _db.query(
+      'store_info',
+      where: 'store_id = ?',
+      whereArgs: [storeId],
+    );
+    final userRows = await _db.query(
+      'users',
+      where: 'store_id = ?',
+      whereArgs: [storeId],
+    );
     final totals = <String, Decimal>{};
     for (final m in movements) {
       final pid = m['product_id'] as String;
@@ -341,7 +375,103 @@ class LocalDb {
           if (e.value != Decimal.zero) e.key: e.value.toString(),
       },
       'open_shift': shift,
+      'store': info.isEmpty
+          ? null
+          : {
+              'name': info.first['name'],
+              'updated_ts': info.first['updated_ts'],
+            },
+      'users': [
+        for (final u in userRows)
+          {
+            'id': u['id'],
+            'login': u['login'],
+            'name': u['name'],
+            'role': u['role'],
+            'salt': u['salt'],
+            'pw_hash': u['pw_hash'],
+            'active': u['active'] == 1,
+            'updated_ts': u['updated_ts'],
+          },
+      ],
     };
+  }
+
+  // --- do'kon va foydalanuvchilar ----------------------------------------
+
+  Future<String?> storeName(String storeId) async {
+    final rows = await _db.query(
+      'store_info',
+      columns: ['name'],
+      where: 'store_id = ?',
+      whereArgs: [storeId],
+    );
+    return rows.isEmpty ? null : rows.first['name'] as String;
+  }
+
+  /// Faol foydalanuvchi (login bo'yicha, katta-kichik harfga bog'liq emas). Xesh va tuz ham qaytadi.
+  Future<Map<String, dynamic>?> findUser(String storeId, String login) async {
+    final rows = await _db.query(
+      'users',
+      where: 'store_id = ? AND login = ? AND active = 1',
+      whereArgs: [storeId, login.trim().toLowerCase()],
+      orderBy: 'updated_ts DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<void> _upsertStore(
+    DatabaseExecutor txn,
+    String storeId,
+    String name,
+    String ts,
+  ) async {
+    final rows = await txn.query(
+      'store_info',
+      columns: ['updated_ts'],
+      where: 'store_id = ?',
+      whereArgs: [storeId],
+    );
+    if (rows.isNotEmpty &&
+        (rows.first['updated_ts'] as String).compareTo(ts) >= 0) {
+      return;
+    }
+    await txn.insert('store_info', {
+      'store_id': storeId,
+      'name': name,
+      'updated_ts': ts,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// Foydalanuvchi: eng so'nggi o'zgarish g'olib (LWW), tovar kabi.
+  Future<void> _upsertUser(
+    DatabaseExecutor txn,
+    String storeId,
+    Map<String, dynamic> u,
+    String ts,
+  ) async {
+    final rows = await txn.query(
+      'users',
+      columns: ['updated_ts'],
+      where: 'id = ?',
+      whereArgs: [u['id']],
+    );
+    if (rows.isNotEmpty &&
+        (rows.first['updated_ts'] as String).compareTo(ts) >= 0) {
+      return;
+    }
+    await txn.insert('users', {
+      'id': u['id'],
+      'store_id': storeId,
+      'login': u['login'],
+      'name': u['name'],
+      'role': u['role'],
+      'salt': u['salt'],
+      'pw_hash': u['pw_hash'],
+      'active': u['active'] == false ? 0 : 1,
+      'updated_ts': ts,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // --- qo'llash -----------------------------------------------------------------------
@@ -374,6 +504,20 @@ class LocalDb {
             p['product_id'] as String,
             Decimal.parse('${p['qty']}'),
             p['kind'] as String,
+          );
+        case ops.opUser:
+          await _upsertUser(
+            txn,
+            op['store_id'] as String,
+            op['payload'] as Map<String, dynamic>,
+            op['ts'] as String,
+          );
+        case ops.opStore:
+          await _upsertStore(
+            txn,
+            op['store_id'] as String,
+            (op['payload'] as Map<String, dynamic>)['name'] as String,
+            op['ts'] as String,
           );
         case ops.opProduct:
           await _upsertProduct(
@@ -506,6 +650,24 @@ class LocalDb {
     Map<String, dynamic> op,
   ) async {
     final p = op['payload'] as Map<String, dynamic>;
+    final store = p['store'] as Map<String, dynamic>?;
+    if (store != null) {
+      await _upsertStore(
+        txn,
+        op['store_id'] as String,
+        store['name'] as String,
+        store['updated_ts'] as String,
+      );
+    }
+    for (final user in (p['users'] as List? ?? const [])) {
+      final u = user as Map<String, dynamic>;
+      await _upsertUser(
+        txn,
+        op['store_id'] as String,
+        u,
+        u['updated_ts'] as String,
+      );
+    }
     for (final product in (p['products'] as List)) {
       final m = product as Map<String, dynamic>;
       await _upsertProduct(txn, m, m['updated_ts'] as String);

@@ -1,9 +1,8 @@
 # Sinxronizatsiya: faqat MQTT (broker.hivemq.com)
 
-Qaror (foydalanuvchi tomonidan tasdiqlangan): ilovalar ma'lumot almashinuvi uchun faqat MQTT broker
-`broker.hivemq.com` dan foydalanadi. Ma'lumot almashinuvi (savdo, qaytarish, smena, tovar, qoldiq) faqat
-shu protokol orqali o'tadi. REST faqat autentifikatsiya va do'konlar ro'yxati uchun qoldi (`/v1/auth/*`,
-`/v1/stores`); `/v1/sync/*` va savdo/smena endpointlari klientlar tomonidan ishlatilmaydi.
+Qaror: ilovalar **serversiz** ishlaydi. Login, do'kon, tovar, savdo, smena — hammasi qurilmada (shifrlangan
+lokal baza). Qurilmalar bir-biri bilan faqat MQTT broker `broker.hivemq.com` orqali gaplashadi. Backend
+(`backend/`, `infra/`) klientlar tomonidan ishlatilmaydi.
 
 ## Xavfsizlik modeli
 
@@ -43,7 +42,9 @@ Operatsiya turlari:
 | `shift_close`      | operatsiya UUID             | Smena yopish, hisobot (summary) bilan                            |
 | `movement`         | operatsiya UUID             | Kirim / tuzatish (qoldiq o'zgarishi)                             |
 | `product`          | operatsiya UUID             | Tovar qo'shish / tahrirlash / o'chirish (LWW, `ts` bo'yicha)     |
-| `snapshot`         | operatsiya UUID             | Yangi qurilmaga to'liq holat: tovarlar, qoldiqlar, ochiq smena  |
+| `store`            | operatsiya UUID             | Do'kon nomi (LWW, `ts` bo'yicha)                                 |
+| `user`             | operatsiya UUID             | Foydalanuvchi: login, ism, rol, tuz, parol xeshi, faolligi (LWW) |
+| `snapshot`         | operatsiya UUID             | Yangi qurilmaga to'liq holat: do'kon, foydalanuvchilar, tovarlar, qoldiqlar, ochiq smena |
 | `snapshot_request` | operatsiya UUID             | Yangi qurilma so'raydi; boshqa qurilma `snapshot` yuboradi       |
 
 ## Semantika
@@ -57,8 +58,26 @@ Operatsiya turlari:
 - Qaytarish: `refund:<sale_id>` op_id hamma qurilmada bir xil, shuning uchun bir chekni ikki qurilmadan
   qaytarish ham qoldiqni ikki marta tiklamaydi. Chek allaqachon `refunded` bo'lsa e'tiborsiz.
 - Yangi qurilma (bo'sh bazasi bilan) ulanganda `snapshot_request` yuboradi. Boshqa qurilma (eng birinchi
-  javob beruvchi) `snapshot` bilan javob beradi: tovarlar, qoldiqlar, ochiq smena. `snapshot` faqat
-  `applied_ops` bo'sh qurilmada qo'llanadi. Qurilmada allaqachon ma'lumot bo'lsa u e'tiborsiz qoldiriladi.
+  javob beruvchi) `snapshot` bilan javob beradi: do'kon, foydalanuvchilar, tovarlar, qoldiqlar, ochiq smena.
+  `snapshot` faqat `applied_ops` bo'sh qurilmada qo'llanadi. Qurilmada allaqachon ma'lumot bo'lsa u e'tiborsiz.
+
+## Serversiz autentifikatsiya
+
+- **Do'kon yaratish:** birinchi qurilma `store_id` (UUID) va 32 baytli kalit yaratadi, `store` va egasining
+  `user` operatsiyasini yuboradi.
+- **Juftlash kodi:** `<store_id>:<kalit hex>`. Ikkinchi qurilma kodni kiritadi, kalit va do'kon id'sini saqlaydi,
+  so'ng snapshot so'raydi. Kod kalitni o'z ichiga oladi: uni ishonchli kanal orqali uzating.
+- **Parol:** PBKDF2-HMAC-SHA256, 100 000 iteratsiya, 16 baytli tasodifiy tuz, 32 baytli natija. Desktop (Python)
+  va mobil (Dart) bir xil natija beradi (`test_auth.py`, `auth_test.dart` da tekshirilgan). Parol matni hech qayerda
+  saqlanmaydi va yuborilmaydi.
+- **Login:** lokal `users` jadvalidan `login` bo'yicha (katta-kichik harfga bog'liq emas) topiladi, xesh
+  solishtiriladi. Faqat faol (`active`) foydalanuvchi kiradi.
+- **Foydalanuvchi o'zgarishi:** `user` operatsiyasi, LWW (`ts` bo'yicha). Parol o'zgarsa, yangi tuz va xesh
+  yuboriladi.
+
+**Xavf:** parol xeshi do'kon kaliti bilan shifrlangan holda tarqaladi. Kalit tarqalsa, xeshdan parolni
+taxmin qilish mumkin. Shuning uchun parollar kuchli bo'lishi va kalit faqat ishonchli qurilmalarga berilishi
+kerak. Bu serversiz rejimning narxi.
 - Qurilma o'zining xabarini (`device == o'zim`) qayta qo'llamaydi.
 
 ## Ma'lum cheklovlar (muhim)

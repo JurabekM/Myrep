@@ -31,7 +31,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..api import ApiClient
 from ..cart import Cart
 from ..config import DesktopConfig
 from ..escpos import build_receipt_bytes, send_to_network_printer
@@ -63,7 +62,6 @@ class _Bridge(QObject):
 class PosWindow(QMainWindow):
     def __init__(
         self,
-        api: ApiClient,
         config: DesktopConfig,
         runner: Any | None = None,
         local: LocalStore | None = None,
@@ -71,7 +69,6 @@ class PosWindow(QMainWindow):
         refresh_interval_ms: int = 15_000,
     ) -> None:
         super().__init__()
-        self.api = api
         self.config = config
         self.runner = runner or BackgroundRunner(self)
         self.local = local or LocalStore()
@@ -240,32 +237,21 @@ class PosWindow(QMainWindow):
             self.runner.run(self.mqtt.start, self._on_mqtt_started, self._on_mqtt_failed)
         self._load_saved_store()
         self._sync_timer.start()
-        self.runner.run(self.api.stores, self._on_stores_loaded, self._on_stores_failed)
 
     def _load_saved_store(self) -> None:
+        """Do'kon id'si bor bo'lsa ishlaydi. Nomi snapshot kelgach ham yangilanadi (joinlangan qurilma)."""
         store_id = self.local.get_state("store_id")
-        name = self.local.get_state("store_name")
-        if store_id and name:
-            self.store = {"id": store_id, "name": name}
-            self.store_label.setText(f"Do'kon: <b>{name}</b>")
+        if store_id:
+            self.store = {"id": store_id, "name": self.local.store_name(store_id) or ""}
+            self._refresh_store_label()
             self._show_shift_state()
 
-    def _on_stores_loaded(self, stores: list[dict[str, Any]]) -> None:
-        if not stores:
-            self._warn("Do'kon yo'q", "Hisobingizga biriktirilgan do'kon topilmadi.")
-            return
-        self.store = stores[0]
-        self.local.set_state("store_id", str(self.store["id"]))
-        self.local.set_state("store_name", str(self.store["name"]))
-        self.store_label.setText(f"Do'kon: <b>{self.store['name']}</b>")
-        self._show_shift_state()
-        self._refresh_sync_state()
-
-    def _on_stores_failed(self, exc: Exception) -> None:
+    def _refresh_store_label(self) -> None:
         if self.store is None:
-            self._on_error(exc)
-        else:
-            self._status("Server bilan aloqa yo'q: saqlangan do'kon ishlatilmoqda")
+            return
+        name = self.local.store_name(self.store["id"]) or self.store["name"]
+        self.store["name"] = name
+        self.store_label.setText(f"Do'kon: <b>{name or '…'}</b>")
 
     def _on_mqtt_started(self, _result: Any) -> None:
         self._refresh_sync_state()
@@ -563,6 +549,7 @@ class PosWindow(QMainWindow):
 
     def _refresh_sync_state(self) -> None:
         connected = bool(self.mqtt and self.mqtt.connected)
+        self._refresh_store_label()
         self._update_sync_label()
         if not connected:
             return

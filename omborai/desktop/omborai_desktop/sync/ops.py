@@ -11,10 +11,12 @@ SHIFT_OPEN = "shift_open"
 SHIFT_CLOSE = "shift_close"
 MOVEMENT = "movement"
 PRODUCT = "product"
+USER = "user"
+STORE = "store"
 SNAPSHOT = "snapshot"
 SNAPSHOT_REQUEST = "snapshot_request"
 
-APPLIED_TYPES = frozenset({SALE, REFUND, SHIFT_OPEN, SHIFT_CLOSE, MOVEMENT, PRODUCT, SNAPSHOT})
+APPLIED_TYPES = frozenset({SALE, REFUND, SHIFT_OPEN, SHIFT_CLOSE, MOVEMENT, PRODUCT, USER, STORE, SNAPSHOT})
 
 
 def new_op(

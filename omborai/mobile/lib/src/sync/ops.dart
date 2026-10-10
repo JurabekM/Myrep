@@ -7,6 +7,8 @@ const opShiftOpen = 'shift_open';
 const opShiftClose = 'shift_close';
 const opMovement = 'movement';
 const opProduct = 'product';
+const opUser = 'user';
+const opStore = 'store';
 const opSnapshot = 'snapshot';
 const opSnapshotRequest = 'snapshot_request';
 

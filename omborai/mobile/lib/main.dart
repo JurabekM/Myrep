@@ -2,24 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-import 'src/api/api_client.dart';
 import 'src/app_session.dart';
-import 'src/config.dart';
 import 'src/offline/local_db.dart';
 import 'src/screens/home_screen.dart';
 import 'src/screens/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Lokal baza SQLCipher bilan shifrlanadi; paroli Android Keystore'da saqlanadi.
+  final password = await DbPasswordStore().load();
   final db = await LocalDb.open(
     p.join(await getDatabasesPath(), 'omborai_local.db'),
+    password: password,
   );
-  final session = AppSession(
-    api: ApiClient(baseUrl: apiBaseUrl),
-    db: db,
-    tokens: SecureTokenStorage(),
-    keys: StoreKeyStore(),
-  );
+  final session = AppSession(db: db, keys: StoreKeyStore());
   runApp(OmborApp(session: session));
 }
 

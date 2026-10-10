@@ -7,40 +7,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 
-import 'api/api_client.dart';
+import 'auth.dart';
 import 'domain/cart.dart';
 import 'offline/local_db.dart';
 import 'sync/crypto.dart';
 import 'sync/mqtt_sync.dart';
 import 'sync/ops.dart' as ops;
-
-/// Tokenlarni qurilmaning xavfsiz xotirasida saqlaydi (Android Keystore).
-class SecureTokenStorage implements TokenStorage {
-  SecureTokenStorage([FlutterSecureStorage? storage])
-    : _storage = storage ?? const FlutterSecureStorage();
-
-  final FlutterSecureStorage _storage;
-
-  @override
-  Future<Tokens?> read() async {
-    final access = await _storage.read(key: 'access');
-    final refresh = await _storage.read(key: 'refresh');
-    if (access == null || refresh == null) return null;
-    return Tokens(access, refresh);
-  }
-
-  @override
-  Future<void> write(Tokens tokens) async {
-    await _storage.write(key: 'access', value: tokens.access);
-    await _storage.write(key: 'refresh', value: tokens.refresh);
-  }
-
-  @override
-  Future<void> clear() async {
-    await _storage.delete(key: 'access');
-    await _storage.delete(key: 'refresh');
-  }
-}
 
 /// Lokal baza paroli: birinchi ishga tushirishda tasodifiy 256-bit, Keystore'da saqlanadi.
 class DbPasswordStore {
@@ -70,7 +42,7 @@ class StoreKeyStore {
 
   Future<Uint8List?> read() async {
     final hex = await _storage.read(key: 'store_key');
-    return hex == null ? null : _fromHex(hex);
+    return hex == null ? null : fromHex(hex);
   }
 
   Future<Uint8List> ensure() async {
@@ -82,7 +54,7 @@ class StoreKeyStore {
   }
 
   Future<void> write(Uint8List key) =>
-      _storage.write(key: 'store_key', value: _toHex(key));
+      _storage.write(key: 'store_key', value: toHex(key));
 
   /// Juftlash: boshqa qurilmadagi kalit (64 hex belgi).
   Future<void> importHex(String hex) async {
@@ -90,13 +62,13 @@ class StoreKeyStore {
     if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(cleaned)) {
       throw ArgumentError("Kalit 64 belgili hex bo'lishi kerak");
     }
-    await write(_fromHex(cleaned));
+    await write(fromHex(cleaned));
   }
 
-  static String _toHex(Uint8List bytes) =>
+  static String toHex(Uint8List bytes) =>
       bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 
-  static Uint8List _fromHex(String hex) {
+  static Uint8List fromHex(String hex) {
     final out = Uint8List(hex.length ~/ 2);
     for (var i = 0; i < out.length; i++) {
       out[i] = int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16);
@@ -108,9 +80,7 @@ class StoreKeyStore {
 /// Ilova holati: sessiya, do'kon, smena, MQTT aloqasi va navbat. Barcha amallar MQTT operatsiyasi.
 class AppSession extends ChangeNotifier {
   AppSession({
-    required this.api,
     required this.db,
-    required this.tokens,
     required this.keys,
     this.syncInterval = const Duration(seconds: 15),
     this.mqttHost = 'broker.hivemq.com',
@@ -118,9 +88,7 @@ class AppSession extends ChangeNotifier {
     this.mqttSecure = true,
   });
 
-  final ApiClient api;
   final LocalDb db;
-  final TokenStorage tokens;
   final StoreKeyStore keys;
   final Duration syncInterval;
   final String mqttHost;
@@ -143,29 +111,102 @@ class AppSession extends ChangeNotifier {
   /// Joriy do'kon smenasi ochiqmi (refreshCounts orqali yangilanadi).
   bool shiftOpen = false;
 
-  /// Saqlangan sessiya bo'lsa, ilovani qayta ochadi. Internet bo'lmasa ham keshdan ishlaydi.
+  /// Ilova ochilganda: do'kon va sessiya lokal holatdan tiklanadi. Sessiya bo'lmasa false
+  /// (kirish oynasi). Tarmoq kerak emas.
   Future<bool> restore() async {
-    final saved = await tokens.read();
-    if (saved == null) return false;
-    api.restoreTokens(saved);
     _storeId = await db.getState('store_id');
-    storeName = await db.getState('store_name');
-    await _startMqtt();
-    _startTimer();
-    await refreshCounts();
-    notifyListeners();
+    storeName = _storeId == null ? null : await db.storeName(_storeId!);
+    final userId = await db.getState('session_user');
+    if (_storeId == null || userId == null || userId.isEmpty) return false;
+    await _startSession();
     return true;
   }
 
-  Future<void> login(String email, String password) async {
-    await api.login(email, password);
-    final stores = await api.stores();
-    if (stores.isEmpty) throw ApiException(404, "Do'kon topilmadi");
-    _storeId = stores.first['id'] as String;
-    storeName = stores.first['name'] as String;
-    await db.setState('store_id', _storeId!);
-    await db.setState('store_name', storeName!);
-    await keys.ensure();
+  /// Foydalanuvchi login/parol bilan kiradi. Foydalanuvchi ma'lumoti lokal bazada (MQTT orqali kelgan).
+  Future<void> login(String login, String password) async {
+    final storeId = _storeId;
+    final user = storeId == null ? null : await db.findUser(storeId, login);
+    if (user == null) {
+      throw const AuthException(
+        "Foydalanuvchi topilmadi. Do'kon ma'lumoti hali kelmagan bo'lishi mumkin (internet va MQTT'ni tekshiring).",
+      );
+    }
+    final ok = await verifyPassword(
+      password,
+      user['salt'] as String,
+      user['pw_hash'] as String,
+    );
+    if (!ok) throw const AuthException("Login yoki parol noto'g'ri");
+    await db.setState('session_user', user['id'] as String);
+    await _startSession();
+  }
+
+  /// Yangi do'kon: kalit, do'kon nomi va egasi hisobi. Hammasi MQTT operatsiyasi sifatida yuboriladi.
+  Future<void> createStore({
+    required String storeName,
+    required String ownerName,
+    required String login,
+    required String password,
+  }) async {
+    final storeId = const Uuid().v4();
+    await keys.write(generateStoreKey());
+    await db.setState('store_id', storeId);
+    _storeId = storeId;
+    this.storeName = storeName;
+    final device = await db.deviceId();
+    final hash = await hashPassword(password);
+    await _emit(
+      ops.newOp(
+        type: ops.opStore,
+        storeId: storeId,
+        deviceId: device,
+        payload: {'name': storeName},
+      ),
+    );
+    await _emit(
+      ops.newOp(
+        type: ops.opUser,
+        storeId: storeId,
+        deviceId: device,
+        payload: {
+          'id': const Uuid().v4(),
+          'login': normalizeLogin(login),
+          'name': ownerName,
+          'role': 'owner',
+          'salt': hash.salt,
+          'pw_hash': hash.hash,
+          'active': true,
+        },
+      ),
+    );
+    await db.setState('store_name', storeName);
+    await db.setState(
+      'session_user',
+      (await db.findUser(storeId, login))!['id'] as String,
+    );
+    await _startSession();
+  }
+
+  /// Mavjud do'konga qo'shilish: juftlash kodi (store_id:kalit). Ma'lumot snapshot orqali keladi.
+  Future<void> joinStore(String code) async {
+    final (storeId, keyHex) = parsePairingCode(code);
+    await keys.write(StoreKeyStore.fromHex(keyHex));
+    await db.setState('store_id', storeId);
+    _storeId = storeId;
+    await _startMqtt();
+    _startTimer();
+    notifyListeners();
+  }
+
+  /// Boshqa qurilmaga berish uchun juftlash kodi (kalit mavjud bo'lsa).
+  Future<String?> pairingCode() async {
+    final storeId = _storeId;
+    final key = await keys.read();
+    if (storeId == null || key == null) return null;
+    return makePairingCode(storeId, StoreKeyStore.toHex(key));
+  }
+
+  Future<void> _startSession() async {
     await _startMqtt();
     _startTimer();
     await refreshCounts();
@@ -410,6 +451,7 @@ class AppSession extends ChangeNotifier {
     pending = await db.pendingCount();
     if (_storeId != null) {
       shiftOpen = (await db.openShift(storeId)) != null;
+      storeName = await db.storeName(storeId) ?? storeName;
     }
   }
 
@@ -421,13 +463,13 @@ class AppSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sessiyani yopadi. Do'kon, kalit va ma'lumotlar qoladi: qayta kirish uchun login yetarli.
   Future<void> logout() async {
     _timer?.cancel();
     _timer = null;
     await _mqtt?.stop();
     _mqtt = null;
-    api.clearSession();
-    await tokens.clear();
+    await db.setState('session_user', '');
     notifyListeners();
   }
 

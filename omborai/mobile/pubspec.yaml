@@ -12,7 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_secure_storage: ^11.2.0
-  http: ^1.6.0
   mqtt_client: ^10.12.0
   path: ^1.9.1
   permission_handler: ^11.4.0

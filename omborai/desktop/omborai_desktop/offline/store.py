@@ -63,6 +63,23 @@ CREATE TABLE IF NOT EXISTS outbox (
     op TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS store_info (
+    store_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    updated_ts TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    store_id TEXT NOT NULL,
+    login TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    pw_hash TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    updated_ts TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS users_store_login ON users (store_id, login);
 CREATE TABLE IF NOT EXISTS applied_ops (op_id TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
@@ -285,6 +302,8 @@ class LocalStore:
             open_shift = self._db.execute(
                 "SELECT * FROM shifts WHERE store_id = ? AND closed_at IS NULL", (store_id,)
             ).fetchone()
+            info = self._db.execute("SELECT * FROM store_info WHERE store_id = ?", (store_id,)).fetchone()
+            users = self._db.execute("SELECT * FROM users WHERE store_id = ?", (store_id,)).fetchall()
         totals: dict[str, Decimal] = {}
         for row in balances:
             totals[row["product_id"]] = totals.get(row["product_id"], Decimal(0)) + Decimal(row["qty"])
@@ -305,6 +324,20 @@ class LocalStore:
             ],
             "balances": {pid: str(qty) for pid, qty in totals.items() if qty != 0},
             "open_shift": dict(open_shift) if open_shift else None,
+            "store": {"name": info["name"], "updated_ts": info["updated_ts"]} if info else None,
+            "users": [
+                {
+                    "id": u["id"],
+                    "login": u["login"],
+                    "name": u["name"],
+                    "role": u["role"],
+                    "salt": u["salt"],
+                    "pw_hash": u["pw_hash"],
+                    "active": bool(u["active"]),
+                    "updated_ts": u["updated_ts"],
+                }
+                for u in users
+            ],
         }
 
     # --- qo'llash (barcha operatsiya turlari) -------------------------------
@@ -408,8 +441,74 @@ class LocalStore:
     def _apply_product(self, op: dict[str, Any]) -> None:
         self._upsert_product(op["payload"], op["ts"])
 
+    def _apply_store(self, op: dict[str, Any]) -> None:
+        self._upsert_store(op["store_id"], op["payload"]["name"], op["ts"])
+
+    def _apply_user(self, op: dict[str, Any]) -> None:
+        self._upsert_user(op["store_id"], op["payload"], op["ts"])
+
+    def _upsert_store(self, store_id: str, name: str, ts: str) -> None:
+        row = self._db.execute("SELECT updated_ts FROM store_info WHERE store_id = ?", (store_id,)).fetchone()
+        if row is not None and row["updated_ts"] >= ts:
+            return
+        self._db.execute(
+            "INSERT INTO store_info (store_id, name, updated_ts) VALUES (?, ?, ?) "
+            "ON CONFLICT(store_id) DO UPDATE SET name=excluded.name, updated_ts=excluded.updated_ts",
+            (store_id, name, ts),
+        )
+
+    def _upsert_user(self, store_id: str, user: dict[str, Any], ts: str) -> None:
+        """Foydalanuvchi: eng so'nggi o'zgarish g'olib (LWW), xuddi tovar kabi."""
+        row = self._db.execute("SELECT updated_ts FROM users WHERE id = ?", (user["id"],)).fetchone()
+        if row is not None and row["updated_ts"] >= ts:
+            return
+        self._db.execute(
+            "INSERT INTO users (id, store_id, login, name, role, salt, pw_hash, active, updated_ts) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET login=excluded.login, "
+            "name=excluded.name, role=excluded.role, salt=excluded.salt, pw_hash=excluded.pw_hash, "
+            "active=excluded.active, updated_ts=excluded.updated_ts",
+            (
+                user["id"],
+                store_id,
+                user["login"],
+                user["name"],
+                user["role"],
+                user["salt"],
+                user["pw_hash"],
+                1 if user.get("active", True) else 0,
+                ts,
+            ),
+        )
+
+    def store_name(self, store_id: str) -> str | None:
+        with self._lock:
+            row = self._db.execute("SELECT name FROM store_info WHERE store_id = ?", (store_id,)).fetchone()
+        return None if row is None else str(row["name"])
+
+    def find_user(self, store_id: str, login: str) -> dict[str, Any] | None:
+        """Faol foydalanuvchini login bo'yicha topadi (xesh bilan). Login katta-kichik harfga bog'liq emas."""
+        with self._lock:
+            row = self._db.execute(
+                "SELECT * FROM users WHERE store_id = ? AND login = ? AND active = 1 "
+                "ORDER BY updated_ts DESC LIMIT 1",
+                (store_id, login.strip().lower()),
+            ).fetchone()
+        return None if row is None else dict(row)
+
+    def list_users(self, store_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT id, login, name, role, active FROM users WHERE store_id = ? ORDER BY name",
+                (store_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def _apply_snapshot(self, op: dict[str, Any]) -> None:
         payload = op["payload"]
+        if payload.get("store"):
+            self._upsert_store(op["store_id"], payload["store"]["name"], payload["store"]["updated_ts"])
+        for user in payload.get("users", []):
+            self._upsert_user(op["store_id"], user, user["updated_ts"])
         for product in payload["products"]:
             self._upsert_product(product, product["updated_ts"])
         for product_id, qty in payload["balances"].items():
@@ -463,5 +562,7 @@ class LocalStore:
         o.SHIFT_CLOSE: _apply_shift_close,
         o.MOVEMENT: _apply_movement,
         o.PRODUCT: _apply_product,
+        o.USER: _apply_user,
+        o.STORE: _apply_store,
         o.SNAPSHOT: _apply_snapshot,
     }

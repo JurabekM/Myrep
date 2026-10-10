@@ -4,6 +4,7 @@ Kalit OS xavfsiz xotirasida saqlanadi (Windows Credential Manager, macOS Keychai
 Faylda saqlanmaydi. Birinchi ishga tushirishda tasodifiy 256-bitli kalit yaratiladi.
 """
 
+import os
 import secrets
 
 import keyring
@@ -38,3 +39,14 @@ def get_or_create_store_key() -> bytes:
         keyring.set_password(SERVICE, STORE_KEY_ACCOUNT, key.hex())
         return key
     return bytes.fromhex(stored)
+
+
+def save_store_key(key: bytes) -> None:
+    """Juftlashda olingan do'kon kalitini OS xavfsiz xotirasiga yozadi."""
+    keyring.set_password(SERVICE, STORE_KEY_ACCOUNT, key.hex())
+
+
+def has_store_key() -> bool:
+    if os.environ.get("OMBORAI_STORE_KEY"):
+        return True
+    return keyring.get_password(SERVICE, STORE_KEY_ACCOUNT) is not None

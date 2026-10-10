@@ -15,11 +15,6 @@ STORE_ID = str(uuid.uuid4())
 SUT_ID = str(uuid.uuid4())
 
 
-class FakeApi:
-    def stores(self):
-        return [{"id": STORE_ID, "name": "Test do'kon"}]
-
-
 class FakeMqtt:
     def __init__(self) -> None:
         self.connected = True
@@ -69,10 +64,13 @@ def dialogs(monkeypatch):
     return shown, warnings
 
 
-def _window(qtbot, local=None, mqtt=None):
-    window = mw.PosWindow(
-        FakeApi(), DesktopConfig(), runner=SyncRunner(), local=local or LocalStore(), mqtt=mqtt or FakeMqtt()
-    )
+def _window(qtbot, local=None, mqtt=None, seed=True):
+    local = local or LocalStore()
+    if local.get_state("store_id") is None:
+        local.set_state("store_id", STORE_ID)
+    if seed and local.applied_count() == 0:
+        local.apply_op(o.new_op(o.STORE, STORE_ID, {"name": "Test do'kon"}, device_id=local.device_id()))
+    window = mw.PosWindow(DesktopConfig(), runner=SyncRunner(), local=local, mqtt=mqtt or FakeMqtt())
     qtbot.addWidget(window)
     window.start()
     return window
@@ -244,7 +242,7 @@ def test_catalog_add_edit_delete_are_operations(qtbot, dialogs):
 
 def test_fresh_device_requests_snapshot_and_peer_answers(qtbot, dialogs):
     mqtt = FakeMqtt()
-    window = _window(qtbot, mqtt=mqtt)
+    window = _window(qtbot, mqtt=mqtt, seed=False)  # joinlangan, hali hech narsa qo'llanmagan qurilma
     window._refresh_sync_state()  # noqa: SLF001 - bo'sh qurilma
     requests = [op for op in mqtt.sent if op["type"] == o.SNAPSHOT_REQUEST]
     assert len(requests) == 1

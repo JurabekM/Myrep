@@ -41,14 +41,14 @@ class LoginDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("OmborAI — kirish")
         self.email = QLineEdit(default_email)
-        self.email.setPlaceholderText("email@example.uz")
+        self.email.setPlaceholderText("login")
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.error = QLabel("")
         self.error.setStyleSheet("color: #b91c1c;")
 
         form = QFormLayout()
-        form.addRow("Email", self.email)
+        form.addRow("Login", self.email)
         form.addRow("Parol", self.password)
 
         buttons = QDialogButtonBox(
@@ -67,7 +67,7 @@ class LoginDialog(QDialog):
 
     def _accept_if_filled(self) -> None:
         if not self.email.text().strip() or not self.password.text():
-            self.error.setText("Email va parolni kiriting")
+            self.error.setText("Login va parolni kiriting")
             return
         self.accept()
 
