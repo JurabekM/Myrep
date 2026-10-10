@@ -81,3 +81,38 @@ async def record_movement(
     session.add(movement)
     await session.flush()
     return movement
+
+
+async def manual_movement(
+    session: AsyncSession,
+    *,
+    tenant_id: uuid.UUID,
+    user_id: uuid.UUID,
+    store_id: uuid.UUID,
+    product_id: uuid.UUID,
+    kind: str,
+    qty: Decimal,
+    note: str | None = None,
+) -> StockMovement:
+    """Tuzatish (adjustment, ishorali) yoki yo'qotish (writeoff, musbat kiritiladi, ishorasi serverda)."""
+    await get_store(session, store_id)
+    if kind == "writeoff":
+        if qty <= 0:
+            raise ProblemError(422, "Yo'qotish miqdori musbat bo'lishi kerak")
+        signed = -qty
+    elif kind == "adjustment":
+        if qty == 0:
+            raise ProblemError(422, "Tuzatish miqdori noldan farqli bo'lishi kerak")
+        signed = qty
+    else:
+        raise ProblemError(422, "Noma'lum harakat turi")
+    return await record_movement(
+        session,
+        tenant_id=tenant_id,
+        store_id=store_id,
+        product_id=product_id,
+        qty=signed,
+        kind=kind,
+        created_by=user_id,
+        note=note,
+    )

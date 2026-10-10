@@ -6,10 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db
 from ..deps import Principal, get_principal, require_roles
-from ..errors import ProblemError
 from ..models import Product, StockMovement
 from ..schemas import BalanceOut, MovementIn, MovementOut
-from ..services.stock import get_store, record_movement
+from ..services.stock import get_store, manual_movement
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -23,25 +22,14 @@ async def create_movement(
     session: AsyncSession = Depends(get_db),
 ) -> StockMovement:
     """Qo'lda harakat: tuzatish (adjustment) yoki yo'qotish/buzilish (writeoff)."""
-    await get_store(session, body.store_id)
-
-    if body.kind == "writeoff":
-        if body.qty <= 0:
-            raise ProblemError(422, "Yo'qotish miqdori musbat bo'lishi kerak")
-        qty = -body.qty
-    else:
-        qty = body.qty
-        if qty == 0:
-            raise ProblemError(422, "Tuzatish miqdori noldan farqli bo'lishi kerak")
-
-    movement = await record_movement(
+    movement = await manual_movement(
         session,
         tenant_id=principal.tenant_id,
+        user_id=principal.user_id,
         store_id=body.store_id,
         product_id=body.product_id,
-        qty=qty,
         kind=body.kind,
-        created_by=principal.user_id,
+        qty=body.qty,
         note=body.note,
     )
     await session.commit()

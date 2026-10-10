@@ -123,6 +123,7 @@ class Product(AuditMixin, Base):
         CheckConstraint("cost_price >= 0", name="ck_product_cost_price"),
         CheckConstraint("min_stock >= 0", name="ck_product_min_stock"),
         CheckConstraint(f"unit IN {UNITS}", name="ck_product_unit"),
+        Index("ix_products_tenant_updated", "tenant_id", "updated_at", "id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -191,6 +192,7 @@ class StockMovement(Base):
         CheckConstraint(f"kind IN {MOVEMENT_KINDS}", name="ck_movement_kind"),
         CheckConstraint("qty <> 0", name="ck_movement_qty_nonzero"),
         Index("ix_stock_movements_store_product", "store_id", "product_id"),
+        Index("ix_stock_movements_store_created", "store_id", "created_at", "id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -247,6 +249,7 @@ class Sale(Base):
     __table_args__ = (
         CheckConstraint("status IN ('completed', 'refunded')", name="ck_sale_status"),
         CheckConstraint("total >= 0", name="ck_sale_total"),
+        Index("ix_sales_store_updated", "store_id", "updated_at", "id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
@@ -261,6 +264,9 @@ class Sale(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
     client_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class SaleItem(Base):
@@ -289,3 +295,17 @@ class Payment(Base):
     sale_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("sales.id"), index=True)
     method: Mapped[str] = mapped_column(String(20))
     amount: Mapped[int] = mapped_column(BigInteger)
+
+
+class SyncOp(Base):
+    """Offline navbatdan kelgan operatsiya. op_id (klient UUID) qayta yuborishda dublikatni to'xtatadi."""
+
+    __tablename__ = "sync_ops"
+
+    op_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    op_type: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20))  # applied | rejected
+    error_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

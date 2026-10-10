@@ -308,3 +308,70 @@ class ShiftSummaryOut(BaseModel):
     expected_cash: int
     closing_cash: int | None
     difference: int | None
+
+
+# ---------------------------------------------------------------------------
+# Faza 4: offline sinxronizatsiya (push / pull)
+# ---------------------------------------------------------------------------
+from typing import Annotated  # noqa: E402
+
+from pydantic import model_validator  # noqa: E402
+
+
+class SyncSaleOp(BaseModel):
+    type: Literal["sale"]
+    op_id: uuid.UUID
+    payload: SaleIn
+
+    @model_validator(mode="after")
+    def _same_id(self) -> "SyncSaleOp":
+        if self.payload.id != self.op_id:
+            raise ValueError("Savdo uchun op_id va payload.id bir xil bo'lishi kerak")
+        return self
+
+
+class SyncMovementOp(BaseModel):
+    type: Literal["movement"]
+    op_id: uuid.UUID
+    payload: MovementIn
+
+
+SyncOpIn = Annotated[SyncSaleOp | SyncMovementOp, Field(discriminator="type")]
+
+
+class SyncPushIn(BaseModel):
+    ops: list[SyncOpIn] = Field(min_length=1, max_length=100)
+
+
+class SyncResultOut(BaseModel):
+    op_id: uuid.UUID
+    status: Literal["applied", "rejected"]
+    duplicate: bool = False
+    error_title: str | None = None
+    error_detail: str | None = None
+
+
+class SyncPushOut(BaseModel):
+    results: list[SyncResultOut]
+
+
+class SyncProductOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    unit: str
+    category_id: uuid.UUID | None
+    sale_price: int
+    cost_price: int
+    min_stock: Decimal
+    is_active: bool
+    barcodes: list[str]
+    version: int
+    deleted: bool
+
+
+class SyncPullOut(BaseModel):
+    products: list[SyncProductOut]
+    movements: list[MovementOut]
+    sales: list["SaleOut"]
+    cursors: dict[str, str]
+    has_more: bool

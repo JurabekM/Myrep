@@ -31,7 +31,7 @@ def _escape_like(text: str) -> str:
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-async def _to_out(
+async def to_product_out(
     session: AsyncSession,
     products: list[Product],
     store_id: uuid.UUID | None,
@@ -214,7 +214,7 @@ async def list_products(
     has_more = len(found) > limit
     page = found[:limit]
     return ProductPage(
-        items=await _to_out(session, page, store_id),
+        items=await to_product_out(session, page, store_id),
         next_cursor=page[-1].id if has_more and page else None,
     )
 
@@ -234,7 +234,7 @@ async def get_by_barcode(
     )
     if product is None:
         raise ProblemError(404, "Tovar topilmadi", "Bu shtrix-kod bo'yicha tovar yo'q")
-    return (await _to_out(session, [product], store_id))[0]
+    return (await to_product_out(session, [product], store_id))[0]
 
 
 @products.post("", status_code=201, response_model=ProductOut)
@@ -261,7 +261,7 @@ async def create_product(
         await session.commit()
     except IntegrityError as exc:
         raise _barcode_conflict(exc) from exc
-    return (await _to_out(session, [product], store_id))[0]
+    return (await to_product_out(session, [product], store_id))[0]
 
 
 @products.get("/{product_id}", response_model=ProductOut)
@@ -272,7 +272,7 @@ async def get_product(
     session: AsyncSession = Depends(get_db),
 ) -> ProductOut:
     product = await _load_product(session, product_id)
-    return (await _to_out(session, [product], store_id))[0]
+    return (await to_product_out(session, [product], store_id))[0]
 
 
 @products.patch("/{product_id}", response_model=ProductOut)
@@ -299,7 +299,7 @@ async def update_product(
         await session.commit()
     except IntegrityError as exc:
         raise _barcode_conflict(exc) from exc
-    return (await _to_out(session, [product], store_id))[0]
+    return (await to_product_out(session, [product], store_id))[0]
 
 
 @products.delete("/{product_id}", status_code=204)

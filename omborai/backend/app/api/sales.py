@@ -16,7 +16,7 @@ from ..services.stock import get_store
 router = APIRouter(prefix="/sales", tags=["sales"])
 
 
-async def _to_out(session: AsyncSession, sale: Sale) -> SaleOut:
+async def to_sale_out(session: AsyncSession, sale: Sale) -> SaleOut:
     items = (await session.execute(select(SaleItem).where(SaleItem.sale_id == sale.id))).scalars().all()
     payments = (await session.execute(select(Payment).where(Payment.sale_id == sale.id))).scalars().all()
     return SaleOut(
@@ -57,7 +57,7 @@ async def create_sale_endpoint(
     existing = await find_sale(session, body.id)
     if existing is not None:
         response.status_code = 200
-        return await _to_out(session, existing)
+        return await to_sale_out(session, existing)
 
     await get_store(session, body.store_id)
     roles = set(
@@ -82,10 +82,10 @@ async def create_sale_endpoint(
         if existing is None:
             raise ProblemError(409, "Savdo to'qnashuvi") from exc
         response.status_code = 200
-        return await _to_out(session, existing)
+        return await to_sale_out(session, existing)
 
     response.status_code = 201
-    return await _to_out(session, sale)
+    return await to_sale_out(session, sale)
 
 
 @router.get("", response_model=list[SaleOut])
@@ -98,7 +98,7 @@ async def list_sales(
     rows = await session.execute(
         select(Sale).where(Sale.store_id == store_id).order_by(Sale.created_at.desc()).limit(limit)
     )
-    return [await _to_out(session, s) for s in rows.scalars().all()]
+    return [await to_sale_out(session, s) for s in rows.scalars().all()]
 
 
 @router.get("/{sale_id}", response_model=SaleOut)
@@ -110,7 +110,7 @@ async def get_sale(
     sale = await find_sale(session, sale_id)
     if sale is None:
         raise ProblemError(404, "Chek topilmadi")
-    return await _to_out(session, sale)
+    return await to_sale_out(session, sale)
 
 
 @router.post("/{sale_id}/refund", response_model=SaleOut)
@@ -123,4 +123,4 @@ async def refund(
         session, sale_id=sale_id, user_id=principal.user_id, tenant_id=principal.tenant_id
     )
     await session.commit()
-    return await _to_out(session, sale)
+    return await to_sale_out(session, sale)

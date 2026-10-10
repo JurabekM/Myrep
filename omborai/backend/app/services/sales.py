@@ -158,6 +158,7 @@ async def refund_sale(
             reference_id=sale.id,
         )
     sale.status = "refunded"
+    sale.updated_at = func.now()
     await session.flush()
     return sale
 

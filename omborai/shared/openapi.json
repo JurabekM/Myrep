@@ -1467,6 +1467,142 @@
           }
         }
       }
+    },
+    "/v1/sync/push": {
+      "post": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Push",
+        "operationId": "push_v1_sync_push_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPushIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPushOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/sync/pull": {
+      "get": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Pull",
+        "operationId": "pull_v1_sync_pull_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "products_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Products Cursor"
+            }
+          },
+          {
+            "name": "movements_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Movements Cursor"
+            }
+          },
+          {
+            "name": "sales_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Sales Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 200,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPullOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2838,6 +2974,272 @@
           "phone"
         ],
         "title": "SupplierOut"
+      },
+      "SyncMovementOp": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "movement",
+            "title": "Type"
+          },
+          "op_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Op Id"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/MovementIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "op_id",
+          "payload"
+        ],
+        "title": "SyncMovementOp"
+      },
+      "SyncProductOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "sale_price": {
+            "type": "integer",
+            "title": "Sale Price"
+          },
+          "cost_price": {
+            "type": "integer",
+            "title": "Cost Price"
+          },
+          "min_stock": {
+            "type": "string",
+            "title": "Min Stock"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "barcodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Barcodes"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "deleted": {
+            "type": "boolean",
+            "title": "Deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "unit",
+          "category_id",
+          "sale_price",
+          "cost_price",
+          "min_stock",
+          "is_active",
+          "barcodes",
+          "version",
+          "deleted"
+        ],
+        "title": "SyncProductOut"
+      },
+      "SyncPullOut": {
+        "properties": {
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/SyncProductOut"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "movements": {
+            "items": {
+              "$ref": "#/components/schemas/MovementOut"
+            },
+            "type": "array",
+            "title": "Movements"
+          },
+          "sales": {
+            "items": {
+              "$ref": "#/components/schemas/SaleOut"
+            },
+            "type": "array",
+            "title": "Sales"
+          },
+          "cursors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Cursors"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More"
+          }
+        },
+        "type": "object",
+        "required": [
+          "products",
+          "movements",
+          "sales",
+          "cursors",
+          "has_more"
+        ],
+        "title": "SyncPullOut"
+      },
+      "SyncPushIn": {
+        "properties": {
+          "ops": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SyncSaleOp"
+                },
+                {
+                  "$ref": "#/components/schemas/SyncMovementOp"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "type",
+                "mapping": {
+                  "movement": "#/components/schemas/SyncMovementOp",
+                  "sale": "#/components/schemas/SyncSaleOp"
+                }
+              }
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Ops"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ops"
+        ],
+        "title": "SyncPushIn"
+      },
+      "SyncPushOut": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SyncResultOut"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "SyncPushOut"
+      },
+      "SyncResultOut": {
+        "properties": {
+          "op_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Op Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate",
+            "default": false
+          },
+          "error_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Title"
+          },
+          "error_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "op_id",
+          "status"
+        ],
+        "title": "SyncResultOut"
+      },
+      "SyncSaleOp": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sale",
+            "title": "Type"
+          },
+          "op_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Op Id"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/SaleIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "op_id",
+          "payload"
+        ],
+        "title": "SyncSaleOp"
       },
       "TokenOut": {
         "properties": {

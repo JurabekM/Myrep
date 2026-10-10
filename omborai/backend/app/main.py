@@ -1,6 +1,6 @@
 from fastapi import APIRouter, FastAPI
 
-from .api import auth, catalog, health, me, purchases, sales, shifts, stock, stores
+from .api import auth, catalog, health, me, purchases, sales, shifts, stock, stores, sync
 from .config import get_settings
 from .errors import install_error_handlers
 
@@ -28,6 +28,7 @@ def create_app() -> FastAPI:
     v1.include_router(purchases.router)
     v1.include_router(shifts.router)
     v1.include_router(sales.router)
+    v1.include_router(sync.router)
     app.include_router(v1)
     return app
 
