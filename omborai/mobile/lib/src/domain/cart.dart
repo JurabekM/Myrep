@@ -73,23 +73,32 @@ class Cart {
 
   void clear() => _lines.clear();
 
-  /// Serverga yuboriladigan savdo. Narx yoki jami summa yuborilmaydi.
+  /// MQTT orqali yuboriladigan savdo (desktop bilan bir xil shakl). Narx va jami qurilmada hisoblanadi.
   Map<String, dynamic> toSalePayload({
     required String storeId,
     required String method,
-    required int amount,
     String? saleId,
   }) {
+    final total = this.total;
     return {
       'id': saleId ?? const Uuid().v4(),
       'store_id': storeId,
       'items': [
         for (final line in _lines)
-          {'product_id': line.productId, 'qty': line.qty.toString()},
+          {
+            'product_id': line.productId,
+            'qty': line.qty.toString(),
+            'product_name': line.name,
+            'unit': line.unit,
+            'unit_price': line.unitPrice,
+            'line_total': line.lineTotal,
+          },
       ],
       'discount': 0,
+      'subtotal': subtotal,
+      'total': total,
       'payments': [
-        {'method': method, 'amount': amount},
+        {'method': method, 'amount': total},
       ],
     };
   }

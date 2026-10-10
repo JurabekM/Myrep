@@ -1,7 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 
-import '../api/api_client.dart';
 import '../app_session.dart';
 import '../domain/cart.dart';
 import '../money.dart';
@@ -14,7 +13,7 @@ const _methods = {
   'payme': 'Payme',
 };
 
-/// Mobil kassa. Savat va to'lov server qoidalari bo'yicha; aloqa bo'lmasa savdo navbatga tushadi.
+/// Mobil kassa. Savdo MQTT orqali; aloqa bo'lmasa navbatga tushadi.
 class SaleScreen extends StatefulWidget {
   const SaleScreen({super.key, required this.session});
 
@@ -43,26 +42,21 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> _search(String text) async {
-    final session = widget.session;
-    List<Map<String, dynamic>> found;
-    try {
-      found = text.length >= 4 && int.tryParse(text) != null
-          ? [?await session.api.productByBarcode(text, session.storeId)]
-          : await session.api.searchProducts(text, session.storeId);
-    } on OfflineException {
-      found = text.length >= 4 && int.tryParse(text) != null
-          ? [?await session.db.productByBarcode(text, session.storeId)]
-          : await session.db.searchProducts(text, session.storeId);
-    } on ApiException catch (e) {
-      _toast(e.message);
+    final db = widget.session.db;
+    final storeId = widget.session.storeId;
+    final isCode = text.length >= 4 && int.tryParse(text) != null;
+    if (isCode) {
+      final product = await db.productByBarcode(text, storeId);
+      if (product != null) {
+        _add(product);
+        _query.clear();
+        setState(() => _results = const []);
+      } else {
+        _toast('Tovar topilmadi: $text');
+      }
       return;
     }
-    if (found.length == 1 && int.tryParse(text) != null) {
-      _add(found.first);
-      _query.clear();
-      setState(() => _results = const []);
-      return;
-    }
+    final found = await db.searchProducts(text, storeId);
     if (mounted) setState(() => _results = found);
   }
 
@@ -82,18 +76,13 @@ class _SaleScreenState extends State<SaleScreen> {
 
   Future<void> _pay() async {
     if (_cart.isEmpty || _busy) return;
-    if (!widget.session.hasStore) return;
     setState(() => _busy = true);
     try {
-      final outcome = await widget.session.submitSale(_cart, _method);
+      final payload = await widget.session.submitSale(_cart, _method);
       setState(_cart.clear);
-      _toast(
-        outcome.saved
-            ? 'Chek #${outcome.saleNumber} saqlandi'
-            : 'Offline saqlandi. Aloqa tiklanganda yuboriladi',
-      );
-    } on ApiException catch (e) {
-      _toast('Savdo rad etildi: ${e.message}');
+      _toast('Chek #${payload['number']} saqlandi');
+    } on StateError catch (e) {
+      _toast(e.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -102,19 +91,17 @@ class _SaleScreenState extends State<SaleScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final shiftWarning = !widget.session.shiftOpen;
     return Scaffold(
       appBar: AppBar(title: const Text('Kassa')),
       body: Column(
         children: [
-          if (shiftWarning)
+          if (!widget.session.connected)
             Container(
               width: double.infinity,
-              color: scheme.errorContainer,
+              color: scheme.tertiaryContainer,
               padding: const EdgeInsets.all(8),
-              child: Text(
-                "Smena ochilmagan ko'rinadi. Savdo serverda smena ochiq bo'lsagina qabul qilinadi.",
-                style: TextStyle(color: scheme.onErrorContainer),
+              child: const Text(
+                "Offline: savdolar aloqa tiklanganda yuboriladi",
               ),
             ),
           Padding(
@@ -125,8 +112,8 @@ class _SaleScreenState extends State<SaleScreen> {
                   child: TextField(
                     controller: _query,
                     autofocus: true,
-                    keyboardType: TextInputType.text,
                     onSubmitted: _search,
+                    onChanged: (t) => _search(t),
                     decoration: const InputDecoration(
                       hintText: 'Shtrix-kod yoki nom',
                       prefixIcon: Icon(Icons.search),
@@ -152,12 +139,13 @@ class _SaleScreenState extends State<SaleScreen> {
                       dense: true,
                       title: Text(p['name'] as String),
                       subtitle: Text(
-                        '${formatSom((p['sale_price'] as num).toInt())} so\'m',
+                        "${formatSom((p['sale_price'] as num).toInt())} so'm · "
+                        '${formatQty(Decimal.parse('${p['stock_qty']}'))} ${p['unit']}',
                       ),
                       onTap: () {
                         _add(p);
-                        setState(() => _results = const []);
                         _query.clear();
+                        setState(() => _results = const []);
                       },
                     ),
                 ],
@@ -177,7 +165,7 @@ class _SaleScreenState extends State<SaleScreen> {
                         ListTile(
                           title: Text(line.name),
                           subtitle: Text(
-                            '${formatSom(line.unitPrice)} so\'m × ${formatQty(line.qty)} ${line.unit}',
+                            "${formatSom(line.unitPrice)} so'm × ${formatQty(line.qty)} ${line.unit}",
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -218,7 +206,7 @@ class _SaleScreenState extends State<SaleScreen> {
                     children: [
                       const Text('Jami', style: TextStyle(fontSize: 18)),
                       Text(
-                        '${formatSom(_cart.total)} so\'m',
+                        "${formatSom(_cart.total)} so'm",
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,

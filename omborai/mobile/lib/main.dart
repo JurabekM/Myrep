@@ -18,6 +18,7 @@ Future<void> main() async {
     api: ApiClient(baseUrl: apiBaseUrl),
     db: db,
     tokens: SecureTokenStorage(),
+    keys: StoreKeyStore(),
   );
   runApp(OmborApp(session: session));
 }

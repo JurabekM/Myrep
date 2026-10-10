@@ -1,11 +1,11 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 
-import '../api/api_client.dart';
 import '../app_session.dart';
 import '../money.dart';
-import 'scanner_screen.dart';
+import 'product_form_screen.dart';
 
+/// Tovarlar katalogi: qidiruv, qo'shish, tahrirlash. Har bir o'zgarish MQTT operatsiyasi.
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key, required this.session});
 
@@ -18,12 +18,11 @@ class ProductsScreen extends StatefulWidget {
 class _ProductsScreenState extends State<ProductsScreen> {
   final _query = TextEditingController();
   List<Map<String, dynamic>> _items = const [];
-  String? _message;
 
   @override
   void initState() {
     super.initState();
-    _search('');
+    _load();
   }
 
   @override
@@ -32,77 +31,60 @@ class _ProductsScreenState extends State<ProductsScreen> {
     super.dispose();
   }
 
-  Future<void> _search(String text) async {
+  Future<void> _load() async {
     final session = widget.session;
-    try {
-      final items = await session.api.searchProducts(text, session.storeId);
-      if (mounted) {
-        setState(() {
-          _items = items;
-          _message = null;
-        });
-      }
-    } on OfflineException {
-      final items = await session.db.searchProducts(text, session.storeId);
-      if (mounted) {
-        setState(() {
-          _items = items;
-          _message = 'Offline: mahalliy kesh';
-        });
-      }
-    } on ApiException catch (e) {
-      if (mounted) setState(() => _message = e.message);
-    }
+    final text = _query.text.trim().toLowerCase();
+    final all = await session.db.searchProducts(
+      '',
+      session.storeId,
+      limit: 1000,
+    );
+    if (!mounted) return;
+    setState(() {
+      _items = text.isEmpty
+          ? all
+          : all
+                .where(
+                  (p) => (p['name'] as String).toLowerCase().contains(text),
+                )
+                .toList();
+    });
   }
 
-  Future<void> _scan() async {
-    final code = await Navigator.push<String>(
+  Future<void> _open([Map<String, dynamic>? product]) async {
+    await Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (_) => const ScannerScreen()),
+      MaterialPageRoute(
+        builder: (_) =>
+            ProductFormScreen(session: widget.session, product: product),
+      ),
     );
-    if (code == null || code.isEmpty) return;
-    _query.text = code;
-    await _search(code);
+    await _load();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Tovarlar')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _open(),
+        icon: const Icon(Icons.add),
+        label: const Text('Yangi tovar'),
+      ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _query,
-                    onChanged: _search,
-                    decoration: const InputDecoration(
-                      hintText: 'Nom yoki shtrix-kod',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  tooltip: 'Skanerlash',
-                  onPressed: _scan,
-                  icon: const Icon(Icons.qr_code_scanner),
-                ),
-              ],
-            ),
-          ),
-          if (_message != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(_message!),
+            child: TextField(
+              controller: _query,
+              onChanged: (_) => _load(),
+              decoration: const InputDecoration(
+                hintText: 'Nom bo\'yicha qidirish',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
             ),
+          ),
           Expanded(
             child: ListView.separated(
               itemCount: _items.length,
@@ -115,9 +97,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 return ListTile(
                   title: Text(p['name'] as String),
                   subtitle: Text(
-                    '${formatSom((p['sale_price'] as num).toInt())} so\'m',
+                    "${formatSom((p['sale_price'] as num).toInt())} so'm · "
+                    '${(p['barcodes'] as List).join(', ')}',
                   ),
                   trailing: Text('$stock ${p['unit']}'),
+                  onTap: () => _open(p),
                 );
               },
             ),

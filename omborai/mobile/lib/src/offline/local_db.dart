@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
-/// Mahalliy baza: tovar keshi, qoldiq harakatlari nusxasi, sinxron holati va outbox navbati.
-///
-/// Qoldiq = serverdan kelgan harakatlar - hali serverga yetmagan (pending/applied) savdolar.
+import '../sync/ops.dart' as ops;
+
+/// Lokal baza (SQLCipher, shifrlangan). Barcha ma'lumot MQTT operatsiyalaridan quriladi (docs/sync-mqtt.md).
+/// Qoidalar desktop bilan bir xil: qoldiq = movements; tovar LWW; bitta ochiq smena; qaytarish op_id bo'yicha.
 class LocalDb {
   LocalDb._(this._db);
 
@@ -13,37 +15,31 @@ class LocalDb {
 
   static const _schema = [
     '''CREATE TABLE products (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        unit TEXT NOT NULL,
-        sale_price INTEGER NOT NULL,
-        barcodes TEXT NOT NULL,
-        deleted INTEGER NOT NULL DEFAULT 0)''',
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, unit TEXT NOT NULL,
+        sale_price INTEGER NOT NULL, cost_price INTEGER NOT NULL DEFAULT 0,
+        min_stock TEXT NOT NULL DEFAULT '0', barcodes TEXT NOT NULL DEFAULT '[]',
+        deleted INTEGER NOT NULL DEFAULT 0, updated_ts TEXT NOT NULL DEFAULT '')''',
     '''CREATE TABLE movements (
-        id TEXT PRIMARY KEY,
-        store_id TEXT NOT NULL,
-        product_id TEXT NOT NULL,
-        qty TEXT NOT NULL,
-        kind TEXT NOT NULL)''',
+        id TEXT PRIMARY KEY, store_id TEXT NOT NULL, product_id TEXT NOT NULL,
+        qty TEXT NOT NULL, kind TEXT NOT NULL)''',
     'CREATE INDEX movements_store_product ON movements (store_id, product_id)',
+    '''CREATE TABLE sales (
+        id TEXT PRIMARY KEY, store_id TEXT NOT NULL, shift_id TEXT, number TEXT NOT NULL,
+        status TEXT NOT NULL, total INTEGER NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL)''',
+    '''CREATE TABLE shifts (
+        id TEXT PRIMARY KEY, store_id TEXT NOT NULL, opened_at TEXT NOT NULL,
+        opening_cash INTEGER NOT NULL, closed_at TEXT, closing_cash INTEGER, summary TEXT)''',
     '''CREATE TABLE outbox (
-        op_id TEXT PRIMARY KEY,
-        op_type TEXT NOT NULL,
-        store_id TEXT NOT NULL,
-        payload TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        error_title TEXT,
-        error_detail TEXT,
-        created_at TEXT NOT NULL)''',
+        op_id TEXT PRIMARY KEY, store_id TEXT NOT NULL, op TEXT NOT NULL, created_at TEXT NOT NULL)''',
+    'CREATE TABLE applied_ops (op_id TEXT PRIMARY KEY)',
     'CREATE TABLE sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL)',
   ];
 
-  /// [path] — fayl yo'li yoki ':memory:'. [password] berilsa, baza SQLCipher (AES-256) bilan shifrlanadi.
-  /// [factory] — testda sqflite_common_ffi.
+  /// [password] — SQLCipher paroli. [factory] — testda sqflite_common_ffi (shifrsiz).
   static Future<LocalDb> open(
     String path, {
-    DatabaseFactory? factory,
     String? password,
+    DatabaseFactory? factory,
   }) async {
     Future<void> onCreate(Database db, int _) async {
       for (final statement in _schema) {
@@ -70,191 +66,7 @@ class LocalDb {
 
   Future<void> close() => _db.close();
 
-  // --- tovarlar keshi ------------------------------------------------------
-
-  Future<void> upsertProducts(List<Map<String, dynamic>> products) async {
-    final batch = _db.batch();
-    for (final p in products) {
-      batch.insert('products', {
-        'id': p['id'],
-        'name': p['name'],
-        'unit': p['unit'],
-        'sale_price': (p['sale_price'] as num).toInt(),
-        'barcodes': jsonEncode(p['barcodes'] ?? const <String>[]),
-        'deleted': p['deleted'] == true ? 1 : 0,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-    await batch.commit(noResult: true);
-  }
-
-  Future<Map<String, dynamic>?> productByBarcode(
-    String code,
-    String storeId,
-  ) async {
-    final rows = await _db.query('products', where: 'deleted = 0');
-    for (final row in rows) {
-      final codes = (jsonDecode(row['barcodes'] as String) as List<dynamic>)
-          .cast<String>();
-      if (codes.contains(code)) return _productMap(row, storeId);
-    }
-    return null;
-  }
-
-  Future<List<Map<String, dynamic>>> searchProducts(
-    String query,
-    String storeId, {
-    int limit = 50,
-  }) async {
-    final needle = query.trim().toLowerCase();
-    final rows = await _db.query(
-      'products',
-      where: 'deleted = 0',
-      orderBy: 'name',
-    );
-    final found = <Map<String, dynamic>>[];
-    for (final row in rows) {
-      if (needle.isEmpty ||
-          (row['name'] as String).toLowerCase().contains(needle)) {
-        found.add(await _productMap(row, storeId));
-        if (found.length >= limit) break;
-      }
-    }
-    return found;
-  }
-
-  Future<Map<String, dynamic>> _productMap(
-    Map<String, Object?> row,
-    String storeId,
-  ) async {
-    final productId = row['id'] as String;
-    return {
-      'id': productId,
-      'name': row['name'],
-      'unit': row['unit'],
-      'sale_price': row['sale_price'],
-      'barcodes': jsonDecode(row['barcodes'] as String),
-      'stock_qty': (await balance(storeId, productId)).toString(),
-    };
-  }
-
-  // --- qoldiq -----------------------------------------------------------------
-
-  Future<Decimal> balance(String storeId, String productId) async {
-    final rows = await _db.query(
-      'movements',
-      columns: ['qty'],
-      where: 'store_id = ? AND product_id = ?',
-      whereArgs: [storeId, productId],
-    );
-    var confirmed = Decimal.zero;
-    for (final row in rows) {
-      confirmed += Decimal.parse(row['qty'] as String);
-    }
-    return confirmed - await _pendingSold(storeId, productId);
-  }
-
-  Future<Decimal> _pendingSold(String storeId, String productId) async {
-    final rows = await _db.query(
-      'outbox',
-      columns: ['payload'],
-      where: "op_type = 'sale' AND store_id = ? AND status IN ('pending', 'applied')",
-      whereArgs: [storeId],
-    );
-    var total = Decimal.zero;
-    for (final row in rows) {
-      final payload =
-          jsonDecode(row['payload'] as String) as Map<String, dynamic>;
-      for (final item
-          in (payload['items'] as List<dynamic>).cast<Map<String, dynamic>>()) {
-        if (item['product_id'] == productId) {
-          total += Decimal.parse('${item['qty']}');
-        }
-      }
-    }
-    return total;
-  }
-
-  // --- outbox -------------------------------------------------------------------
-
-  Future<void> enqueueSale(
-    String storeId,
-    Map<String, dynamic> payload, {
-    required String createdAt,
-  }) async {
-    await _db.insert('outbox', {
-      'op_id': payload['id'],
-      'op_type': 'sale',
-      'store_id': storeId,
-      'payload': jsonEncode(payload),
-      'created_at': createdAt,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
-  }
-
-  Future<List<PendingOp>> pendingOps({int limit = 100, String? storeId}) async {
-    final rows = await _db.query(
-      'outbox',
-      where: storeId == null
-          ? "status = 'pending'"
-          : "status = 'pending' AND store_id = ?",
-      whereArgs: storeId == null ? null : [storeId],
-      orderBy: 'created_at, op_id',
-      limit: limit,
-    );
-    return [
-      for (final r in rows)
-        PendingOp(
-          opId: r['op_id'] as String,
-          opType: r['op_type'] as String,
-          storeId: r['store_id'] as String,
-          payload: jsonDecode(r['payload'] as String) as Map<String, dynamic>,
-        ),
-    ];
-  }
-
-  Future<int> pendingCount() async {
-    final rows = await _db.rawQuery(
-      "SELECT COUNT(*) AS n FROM outbox WHERE status = 'pending'",
-    );
-    return rows.first['n'] as int;
-  }
-
-  Future<List<Map<String, Object?>>> rejectedOps() =>
-      _db.query('outbox', where: "status = 'rejected'", orderBy: 'created_at');
-
-  Future<void> acknowledgeRejected(String opId) => _db.delete(
-    'outbox',
-    where: "op_id = ? AND status = 'rejected'",
-    whereArgs: [opId],
-  );
-
-  Future<void> applyPushResults(List<Map<String, dynamic>> results) async {
-    await _db.transaction((txn) async {
-      for (final result in results) {
-        if (result['status'] == 'applied') {
-          // Qoldiq harakati pull orqali kelgandan keyin o'chiriladi (applyPull)
-          await txn.update(
-            'outbox',
-            {'status': 'applied'},
-            where: "op_id = ? AND status = 'pending'",
-            whereArgs: [result['op_id']],
-          );
-        } else {
-          await txn.update(
-            'outbox',
-            {
-              'status': 'rejected',
-              'error_title': result['error_title'],
-              'error_detail': result['error_detail'],
-            },
-            where: 'op_id = ?',
-            whereArgs: [result['op_id']],
-          );
-        }
-      }
-    });
-  }
-
-  // --- sinxron holati ------------------------------------------------------------
+  // --- holat -----------------------------------------------------------------
 
   Future<String?> getState(String name) async {
     final rows = await _db.query(
@@ -272,75 +84,480 @@ class LocalDb {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<Map<String, String>> cursors() async {
-    final rows = await _db.query('sync_state');
-    return {for (final r in rows) r['name'] as String: r['value'] as String};
+  Future<String> deviceId() async {
+    final existing = await getState('device_id');
+    if (existing != null) return existing;
+    final value = const Uuid().v4();
+    await setState('device_id', value);
+    return value;
   }
 
-  Future<void> applyPull(Map<String, dynamic> page) async {
-    await _db.transaction((txn) async {
-      final products = _maps(page['products']);
-      for (final p in products) {
-        await txn.insert('products', {
-          'id': p['id'],
-          'name': p['name'],
-          'unit': p['unit'],
-          'sale_price': (p['sale_price'] as num).toInt(),
-          'barcodes': jsonEncode(p['barcodes'] ?? const <String>[]),
-          'deleted': p['deleted'] == true ? 1 : 0,
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
-      }
+  Future<String> nextReceiptNumber() async {
+    final current = int.tryParse(await getState('receipt_seq') ?? '0') ?? 0;
+    final next = current + 1;
+    await setState('receipt_seq', '$next');
+    final id = await deviceId();
+    return '${id.substring(0, 4)}-$next';
+  }
 
-      final movements = _maps(page['movements']);
-      for (final m in movements) {
-        await txn.insert('movements', {
-          'id': m['id'],
-          'store_id': m['store_id'],
-          'product_id': m['product_id'],
-          'qty': '${m['qty']}',
-          'kind': m['kind'],
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-        final reference = m['reference_id'];
-        if (reference != null) {
-          // Serverda qo'llangan savdo: navbat yozuvi endi keraksiz
-          await txn.delete(
-            'outbox',
-            where: "op_id = ? AND status = 'applied'",
-            whereArgs: [reference],
+  // --- navbat -------------------------------------------------------------------
+
+  Future<void> enqueue(Map<String, dynamic> op) async {
+    await _db.insert('outbox', {
+      'op_id': op['op_id'],
+      'store_id': op['store_id'],
+      'op': jsonEncode(op),
+      'created_at': op['ts'],
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<List<Map<String, dynamic>>> pendingOps({int limit = 50}) async {
+    final rows = await _db.query(
+      'outbox',
+      orderBy: 'created_at, op_id',
+      limit: limit,
+    );
+    return [
+      for (final r in rows)
+        jsonDecode(r['op'] as String) as Map<String, dynamic>,
+    ];
+  }
+
+  Future<int> pendingCount() async {
+    final rows = await _db.rawQuery('SELECT COUNT(*) AS n FROM outbox');
+    return rows.first['n'] as int;
+  }
+
+  Future<void> dropOutbox(String opId) =>
+      _db.delete('outbox', where: 'op_id = ?', whereArgs: [opId]);
+
+  // --- o'qish ---------------------------------------------------------------------
+
+  Future<Decimal> balance(String storeId, String productId) async {
+    final rows = await _db.query(
+      'movements',
+      columns: ['qty'],
+      where: 'store_id = ? AND product_id = ?',
+      whereArgs: [storeId, productId],
+    );
+    var total = Decimal.zero;
+    for (final r in rows) {
+      total += Decimal.parse(r['qty'] as String);
+    }
+    return total;
+  }
+
+  Future<Map<String, dynamic>> _productMap(
+    Map<String, Object?> row,
+    String storeId,
+  ) async {
+    final id = row['id'] as String;
+    return {
+      'id': id,
+      'name': row['name'],
+      'unit': row['unit'],
+      'sale_price': row['sale_price'],
+      'cost_price': row['cost_price'],
+      'min_stock': row['min_stock'],
+      'barcodes': jsonDecode(row['barcodes'] as String),
+      'stock_qty': (await balance(storeId, id)).toString(),
+    };
+  }
+
+  Future<Map<String, dynamic>?> getProduct(
+    String productId,
+    String storeId,
+  ) async {
+    final rows = await _db.query(
+      'products',
+      where: 'id = ? AND deleted = 0',
+      whereArgs: [productId],
+    );
+    return rows.isEmpty ? null : _productMap(rows.first, storeId);
+  }
+
+  Future<Map<String, dynamic>?> productByBarcode(
+    String code,
+    String storeId,
+  ) async {
+    final rows = await _db.query('products', where: 'deleted = 0');
+    for (final r in rows) {
+      if ((jsonDecode(r['barcodes'] as String) as List).contains(code)) {
+        return _productMap(r, storeId);
+      }
+    }
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> searchProducts(
+    String query,
+    String storeId, {
+    int limit = 50,
+  }) async {
+    final needle = query.trim().toLowerCase();
+    final rows = await _db.query(
+      'products',
+      where: 'deleted = 0',
+      orderBy: 'name',
+    );
+    final found = <Map<String, dynamic>>[];
+    for (final r in rows) {
+      if (needle.isEmpty ||
+          (r['name'] as String).toLowerCase().contains(needle)) {
+        found.add(await _productMap(r, storeId));
+        if (found.length >= limit) break;
+      }
+    }
+    return found;
+  }
+
+  /// Katalog (o'chirilganlarsiz), qoldiqsiz — tahrirlash ro'yxati uchun.
+  Future<List<Map<String, dynamic>>> allProducts() async {
+    final rows = await _db.query(
+      'products',
+      where: 'deleted = 0',
+      orderBy: 'name',
+    );
+    return [
+      for (final r in rows)
+        {
+          'id': r['id'],
+          'name': r['name'],
+          'unit': r['unit'],
+          'sale_price': r['sale_price'],
+          'cost_price': r['cost_price'],
+          'min_stock': r['min_stock'],
+          'barcodes': jsonDecode(r['barcodes'] as String),
+        },
+    ];
+  }
+
+  Future<Map<String, dynamic>?> openShift(String storeId) async {
+    final rows = await _db.query(
+      'shifts',
+      where: 'store_id = ? AND closed_at IS NULL',
+      whereArgs: [storeId],
+    );
+    return rows.isEmpty ? null : Map<String, dynamic>.from(rows.first);
+  }
+
+  Future<List<Map<String, dynamic>>> sales(
+    String storeId, {
+    int limit = 50,
+  }) async {
+    final rows = await _db.query(
+      'sales',
+      where: 'store_id = ?',
+      whereArgs: [storeId],
+      orderBy: 'created_at DESC',
+      limit: limit,
+    );
+    return [
+      for (final r in rows)
+        {...r, 'payload': jsonDecode(r['payload'] as String)},
+    ];
+  }
+
+  Future<Map<String, dynamic>?> getSale(String saleId) async {
+    final rows = await _db.query('sales', where: 'id = ?', whereArgs: [saleId]);
+    if (rows.isEmpty) return null;
+    return {
+      ...rows.first,
+      'payload': jsonDecode(rows.first['payload'] as String),
+    };
+  }
+
+  Future<Map<String, dynamic>> shiftSummary(String shiftId) async {
+    final rows = await _db.query(
+      'sales',
+      where: 'shift_id = ?',
+      whereArgs: [shiftId],
+    );
+    final summary = <String, dynamic>{
+      'sales_count': 0,
+      'total_sales': 0,
+      'refunds_count': 0,
+      'total_refunds': 0,
+      'by_method': <String, int>{},
+    };
+    final byMethod = summary['by_method'] as Map<String, int>;
+    for (final r in rows) {
+      if (r['status'] == 'refunded') {
+        summary['refunds_count'] = (summary['refunds_count'] as int) + 1;
+        summary['total_refunds'] =
+            (summary['total_refunds'] as int) + (r['total'] as int);
+        continue;
+      }
+      summary['sales_count'] = (summary['sales_count'] as int) + 1;
+      summary['total_sales'] =
+          (summary['total_sales'] as int) + (r['total'] as int);
+      final payload =
+          jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+      for (final p in (payload['payments'] as List)) {
+        final m = p as Map<String, dynamic>;
+        byMethod[m['method'] as String] =
+            (byMethod[m['method'] as String] ?? 0) + (m['amount'] as int);
+      }
+    }
+    return summary;
+  }
+
+  Future<int> appliedCount() async {
+    final rows = await _db.rawQuery('SELECT COUNT(*) AS n FROM applied_ops');
+    return rows.first['n'] as int;
+  }
+
+  Future<Map<String, dynamic>> snapshotPayload(String storeId) async {
+    final products = await _db.query('products');
+    final movements = await _db.query(
+      'movements',
+      where: 'store_id = ?',
+      whereArgs: [storeId],
+    );
+    final shift = await openShift(storeId);
+    final totals = <String, Decimal>{};
+    for (final m in movements) {
+      final pid = m['product_id'] as String;
+      totals[pid] =
+          (totals[pid] ?? Decimal.zero) + Decimal.parse(m['qty'] as String);
+    }
+    return {
+      'products': [
+        for (final p in products)
+          {
+            'id': p['id'],
+            'name': p['name'],
+            'unit': p['unit'],
+            'sale_price': p['sale_price'],
+            'cost_price': p['cost_price'],
+            'min_stock': p['min_stock'],
+            'barcodes': jsonDecode(p['barcodes'] as String),
+            'deleted': p['deleted'] == 1,
+            'updated_ts': p['updated_ts'],
+          },
+      ],
+      'balances': {
+        for (final e in totals.entries)
+          if (e.value != Decimal.zero) e.key: e.value.toString(),
+      },
+      'open_shift': shift,
+    };
+  }
+
+  // --- qo'llash -----------------------------------------------------------------------
+
+  /// Operatsiyani bir marta qo'llaydi. Yangi bo'lsa true; dublikat yoki e'tiborsiz bo'lsa false.
+  Future<bool> applyOp(Map<String, dynamic> op) async {
+    final kind = op['type'] as String;
+    if (kind == ops.opSnapshotRequest) return false;
+    return _db.transaction((txn) async {
+      if (kind == ops.opSnapshot && await _appliedCount(txn) > 0) return false;
+      final inserted = await txn.insert('applied_ops', {
+        'op_id': op['op_id'],
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      if (inserted == 0) return false;
+      switch (kind) {
+        case ops.opSale:
+          await _applySale(txn, op);
+        case ops.opRefund:
+          await _applyRefund(txn, op);
+        case ops.opShiftOpen:
+          await _applyShiftOpen(txn, op);
+        case ops.opShiftClose:
+          await _applyShiftClose(txn, op);
+        case ops.opMovement:
+          final p = op['payload'] as Map<String, dynamic>;
+          await _insertMovement(
+            txn,
+            op['op_id'] as String,
+            op['store_id'] as String,
+            p['product_id'] as String,
+            Decimal.parse('${p['qty']}'),
+            p['kind'] as String,
           );
-        }
+        case ops.opProduct:
+          await _upsertProduct(
+            txn,
+            op['payload'] as Map<String, dynamic>,
+            op['ts'] as String,
+          );
+        case ops.opSnapshot:
+          await _applySnapshot(txn, op);
+        default:
+          throw ArgumentError("Noma'lum operatsiya turi: $kind");
       }
-
-      final cursors = {
-        for (final e in (page['cursors'] as Map).entries)
-          '${e.key}': '${e.value}',
-      };
-      for (final entry in cursors.entries) {
-        await txn.insert('sync_state', {
-          'name': entry.key,
-          'value': entry.value,
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
-      }
+      return true;
     });
   }
-}
 
-/// JSON ro'yxatini `Map<String, dynamic>` lar ro'yxatiga aylantiradi (literal tiplari farq qilsa ham).
-List<Map<String, dynamic>> _maps(Object? value) => [
-  for (final item in (value as List<dynamic>? ?? const []))
-    Map<String, dynamic>.from(item as Map),
-];
+  Future<int> _appliedCount(DatabaseExecutor txn) async {
+    final rows = await txn.rawQuery('SELECT COUNT(*) AS n FROM applied_ops');
+    return rows.first['n'] as int;
+  }
 
-class PendingOp {
-  const PendingOp({
-    required this.opId,
-    required this.opType,
-    required this.storeId,
-    required this.payload,
-  });
+  Future<void> _insertMovement(
+    DatabaseExecutor txn,
+    String id,
+    String storeId,
+    String productId,
+    Decimal qty,
+    String kind,
+  ) async {
+    await txn.insert('movements', {
+      'id': id,
+      'store_id': storeId,
+      'product_id': productId,
+      'qty': qty.toString(),
+      'kind': kind,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
 
-  final String opId;
-  final String opType;
-  final String storeId;
-  final Map<String, dynamic> payload;
+  Future<void> _applySale(DatabaseExecutor txn, Map<String, dynamic> op) async {
+    final p = op['payload'] as Map<String, dynamic>;
+    for (final item in (p['items'] as List)) {
+      final i = item as Map<String, dynamic>;
+      await _insertMovement(
+        txn,
+        '${op['op_id']}:${i['product_id']}',
+        op['store_id'] as String,
+        i['product_id'] as String,
+        -Decimal.parse('${i['qty']}'),
+        'sale',
+      );
+    }
+    await txn.insert('sales', {
+      'id': p['id'],
+      'store_id': op['store_id'],
+      'shift_id': p['shift_id'],
+      'number': '${p['number']}',
+      'status': 'completed',
+      'total': p['total'],
+      'payload': jsonEncode(p),
+      'created_at': p['created_at'],
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<void> _applyRefund(
+    DatabaseExecutor txn,
+    Map<String, dynamic> op,
+  ) async {
+    final saleId = (op['payload'] as Map<String, dynamic>)['sale_id'] as String;
+    final rows = await txn.query('sales', where: 'id = ?', whereArgs: [saleId]);
+    if (rows.isEmpty || rows.first['status'] != 'completed') return;
+    final payload =
+        jsonDecode(rows.first['payload'] as String) as Map<String, dynamic>;
+    for (final item in (payload['items'] as List)) {
+      final i = item as Map<String, dynamic>;
+      await _insertMovement(
+        txn,
+        'refund:$saleId:${i['product_id']}',
+        op['store_id'] as String,
+        i['product_id'] as String,
+        Decimal.parse('${i['qty']}'),
+        'sale_return',
+      );
+    }
+    await txn.update(
+      'sales',
+      {'status': 'refunded'},
+      where: 'id = ?',
+      whereArgs: [saleId],
+    );
+  }
+
+  Future<void> _applyShiftOpen(
+    DatabaseExecutor txn,
+    Map<String, dynamic> op,
+  ) async {
+    final p = op['payload'] as Map<String, dynamic>;
+    final open = await txn.query(
+      'shifts',
+      where: 'store_id = ? AND closed_at IS NULL',
+      whereArgs: [op['store_id']],
+    );
+    if (open.isNotEmpty) return; // ikkinchi ochiq smena e'tiborsiz
+    await txn.insert('shifts', {
+      'id': p['shift_id'],
+      'store_id': op['store_id'],
+      'opened_at': op['ts'],
+      'opening_cash': p['opening_cash'],
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<void> _applyShiftClose(
+    DatabaseExecutor txn,
+    Map<String, dynamic> op,
+  ) async {
+    final p = op['payload'] as Map<String, dynamic>;
+    await txn.update(
+      'shifts',
+      {
+        'closed_at': op['ts'],
+        'closing_cash': p['closing_cash'],
+        'summary': jsonEncode(p['summary'] ?? {}),
+      },
+      where: 'id = ? AND closed_at IS NULL',
+      whereArgs: [p['shift_id']],
+    );
+  }
+
+  Future<void> _applySnapshot(
+    DatabaseExecutor txn,
+    Map<String, dynamic> op,
+  ) async {
+    final p = op['payload'] as Map<String, dynamic>;
+    for (final product in (p['products'] as List)) {
+      final m = product as Map<String, dynamic>;
+      await _upsertProduct(txn, m, m['updated_ts'] as String);
+    }
+    final balances = p['balances'] as Map<String, dynamic>;
+    for (final entry in balances.entries) {
+      await _insertMovement(
+        txn,
+        'snapshot:${op['op_id']}:${entry.key}',
+        op['store_id'] as String,
+        entry.key,
+        Decimal.parse(entry.value as String),
+        'snapshot',
+      );
+    }
+    final shift = p['open_shift'] as Map<String, dynamic>?;
+    if (shift != null) {
+      await txn.insert('shifts', {
+        'id': shift['id'],
+        'store_id': op['store_id'],
+        'opened_at': shift['opened_at'],
+        'opening_cash': shift['opening_cash'],
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+  }
+
+  /// Eng so'nggi o'zgarish g'olib: eski ts'li operatsiya yangisini o'chirmaydi.
+  Future<void> _upsertProduct(
+    DatabaseExecutor txn,
+    Map<String, dynamic> p,
+    String ts,
+  ) async {
+    final rows = await txn.query(
+      'products',
+      columns: ['updated_ts'],
+      where: 'id = ?',
+      whereArgs: [p['id']],
+    );
+    if (rows.isNotEmpty &&
+        (rows.first['updated_ts'] as String).compareTo(ts) >= 0) {
+      return;
+    }
+    await txn.insert('products', {
+      'id': p['id'],
+      'name': p['name'],
+      'unit': p['unit'],
+      'sale_price': (p['sale_price'] as num).toInt(),
+      'cost_price': ((p['cost_price'] ?? 0) as num).toInt(),
+      'min_stock': '${p['min_stock'] ?? '0'}',
+      'barcodes': jsonEncode(p['barcodes'] ?? const <String>[]),
+      'deleted': p['deleted'] == true ? 1 : 0,
+      'updated_ts': ts,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 }

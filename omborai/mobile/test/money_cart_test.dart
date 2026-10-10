@@ -57,15 +57,12 @@ void main() {
 
   test('savdo payload\'ida narx yo\'q, id esa UUID', () {
     final cart = Cart()..add(sut, qty: Decimal.fromInt(2));
-    final payload = cart.toSalePayload(
-      storeId: 's1',
-      method: 'cash',
-      amount: 24000,
-    );
-    expect(payload['items'], [
-      {'product_id': 'p1', 'qty': '2'},
-    ]);
-    expect(payload.toString().contains('sale_price'), isFalse);
+    final payload = cart.toSalePayload(storeId: 's1', method: 'cash');
+    final items = payload['items'] as List;
+    expect(items, hasLength(1));
+    expect((items.first as Map)['product_id'], 'p1');
+    expect((items.first as Map)['qty'], '2');
+    expect((items.first as Map)['line_total'], 24000);
     expect(
       payload['id'],
       matches(

@@ -57,25 +57,22 @@ void main() {
   test('problem+json xatosi ApiException bo\'ladi', () async {
     final client = MockClient(
       (_) async => http.Response(
-        jsonEncode({
-          'title': 'Qoldiq yetarli emas',
-          'detail': 'Joriy qoldiq: 1',
-        }),
-        409,
+        jsonEncode({'title': 'Ruxsat yo\'q', 'detail': 'Do\'kon topilmadi'}),
+        403,
         headers: {'content-type': 'application/problem+json'},
       ),
     );
     final api = ApiClient(baseUrl: _base, client: client)
       ..restoreTokens(const Tokens('a', 'r'));
     await expectLater(
-      api.createSale({'id': 'x'}),
+      api.stores(),
       throwsA(
         isA<ApiException>()
-            .having((e) => e.status, 'status', 409)
+            .having((e) => e.status, 'status', 403)
             .having(
               (e) => e.message,
               'message',
-              'Qoldiq yetarli emas: Joriy qoldiq: 1',
+              'Ruxsat yo\'q: Do\'kon topilmadi',
             ),
       ),
     );
@@ -88,15 +85,5 @@ void main() {
     final api = ApiClient(baseUrl: _base, client: client)
       ..restoreTokens(const Tokens('a', 'r'));
     await expectLater(api.stores(), throwsA(isA<OfflineException>()));
-  });
-
-  test('ochiq smena yo\'q bo\'lsa (409) null qaytaradi', () async {
-    final client = MockClient(
-      (_) async =>
-          http.Response(jsonEncode({'title': 'Smena ochilmagan'}), 409),
-    );
-    final api = ApiClient(baseUrl: _base, client: client)
-      ..restoreTokens(const Tokens('a', 'r'));
-    expect(await api.currentShift('s1'), isNull);
   });
 }

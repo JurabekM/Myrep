@@ -34,6 +34,7 @@ void main() {
       ),
       db: db!,
       tokens: _MemoryTokens(),
+      keys: StoreKeyStore(),
     );
     await tester.pumpWidget(MaterialApp(home: LoginScreen(session: session)));
 

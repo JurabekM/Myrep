@@ -7,11 +7,13 @@ environment:
   sdk: ^3.13.5
 
 dependencies:
+  cryptography: ^2.9.0
   decimal: ^3.2.6
   flutter:
     sdk: flutter
   flutter_secure_storage: ^11.2.0
   http: ^1.6.0
+  mqtt_client: ^10.12.0
   path: ^1.9.1
   permission_handler: ^11.4.0
   sqflite_sqlcipher: ^3.4.1

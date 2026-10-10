@@ -18,7 +18,7 @@ class ApiException implements Exception {
   String toString() => 'ApiException($status, $title)';
 }
 
-/// Server bilan aloqa yo'q (tarmoq uzilgan yoki vaqt tugagan). Offline rejimga o'tish uchun.
+/// Server bilan aloqa yo'q (tarmoq uzilgan yoki vaqt tugagan).
 class OfflineException implements Exception {
   OfflineException(this.cause);
 
@@ -35,13 +35,14 @@ class Tokens {
   final String refresh;
 }
 
-/// Tokenlarni saqlash (production'da xavfsiz xotira, testda oddiy xotira).
+/// Tokenlarni saqlash (Android Keystore; testda xotira).
 abstract class TokenStorage {
   Future<Tokens?> read();
   Future<void> write(Tokens tokens);
   Future<void> clear();
 }
 
+/// REST klient: faqat autentifikatsiya (login) va do'kon ro'yxati. Ma'lumot almashinuvi MQTT orqali.
 class ApiClient {
   ApiClient({
     required this.baseUrl,
@@ -57,7 +58,6 @@ class ApiClient {
   String? _refresh;
   Future<bool>? _refreshing;
 
-  /// Tokenlar o'zgarganda chaqiriladi (saqlash uchun).
   void Function(Tokens tokens)? onTokensChanged;
 
   bool get hasSession => _access != null;
@@ -74,7 +74,7 @@ class ApiClient {
 
   void close() => _client.close();
 
-  // --- autentifikatsiya -----------------------------------------------------
+  static const _json = {'Content-Type': 'application/json; charset=utf-8'};
 
   Future<void> login(String email, String password) async {
     final data = await _send(
@@ -122,20 +122,15 @@ class ApiClient {
     return true;
   }
 
-  // --- so'rovlar -------------------------------------------------------------
-
-  static const _json = {'Content-Type': 'application/json; charset=utf-8'};
-
   Future<dynamic> _send(
     String method,
     String path, {
     Object? body,
-    Map<String, Object?>? query,
     bool auth = true,
   }) async {
-    var resp = await _raw(method, path, body: body, query: query, auth: auth);
+    var resp = await _raw(method, path, body: body, auth: auth);
     if (resp.statusCode == 401 && auth && await _tryRefresh()) {
-      resp = await _raw(method, path, body: body, query: query, auth: auth);
+      resp = await _raw(method, path, body: body, auth: auth);
     }
     if (resp.statusCode >= 400) throw _errorFrom(resp);
     if (resp.bodyBytes.isEmpty) return null;
@@ -146,11 +141,9 @@ class ApiClient {
     String method,
     String path, {
     Object? body,
-    Map<String, Object?>? query,
     required bool auth,
   }) async {
-    final uri = Uri.parse('$baseUrl$path')
-        .replace(queryParameters: query?.map((k, v) => MapEntry(k, '$v')));
+    final uri = Uri.parse('$baseUrl$path');
     final headers = {
       ..._json,
       if (auth && _access != null) 'Authorization': 'Bearer $_access',
@@ -160,7 +153,7 @@ class ApiClient {
       final future = switch (method) {
         'GET' => _client.get(uri, headers: headers),
         'POST' => _client.post(uri, headers: headers, body: encoded),
-        _ => throw ArgumentError('Noma\'lum metod: $method'),
+        _ => throw ArgumentError("Noma'lum metod: $method"),
       };
       return await future.timeout(timeout);
     } on TimeoutException catch (e) {
@@ -185,115 +178,8 @@ class ApiClient {
     }
   }
 
-  // --- biznes so'rovlari ----------------------------------------------------
-
   Future<List<Map<String, dynamic>>> stores() async {
     final data = await _send('GET', '/v1/stores') as List<dynamic>;
     return data.cast<Map<String, dynamic>>();
-  }
-
-  /// Ochiq smena yo'q bo'lsa null (server 409 qaytaradi).
-  Future<Map<String, dynamic>?> currentShift(String storeId) async {
-    try {
-      return await _send(
-        'GET',
-        '/v1/shifts/current',
-        query: {'store_id': storeId},
-      ) as Map<String, dynamic>;
-    } on ApiException catch (e) {
-      if (e.status == 409) return null;
-      rethrow;
-    }
-  }
-
-  Future<Map<String, dynamic>> openShift(
-    String storeId,
-    int openingCash,
-  ) async {
-    return await _send(
-      'POST',
-      '/v1/shifts',
-      body: {'store_id': storeId, 'opening_cash': openingCash},
-    ) as Map<String, dynamic>;
-  }
-
-  Future<Map<String, dynamic>> closeShift(
-    String shiftId,
-    int closingCash,
-  ) async {
-    return await _send(
-      'POST',
-      '/v1/shifts/$shiftId/close',
-      body: {'closing_cash': closingCash},
-    ) as Map<String, dynamic>;
-  }
-
-  Future<Map<String, dynamic>?> productByBarcode(
-    String code,
-    String storeId,
-  ) async {
-    try {
-      return await _send(
-        'GET',
-        '/v1/products/by-barcode/$code',
-        query: {'store_id': storeId},
-      ) as Map<String, dynamic>;
-    } on ApiException catch (e) {
-      if (e.status == 404) return null;
-      rethrow;
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> searchProducts(
-    String query,
-    String storeId, {
-    int limit = 50,
-  }) async {
-    final page = await _send(
-      'GET',
-      '/v1/products',
-      query: {'q': query, 'store_id': storeId, 'limit': limit},
-    ) as Map<String, dynamic>;
-    return (page['items'] as List<dynamic>).cast<Map<String, dynamic>>();
-  }
-
-  Future<List<Map<String, dynamic>>> balances(
-    String storeId, {
-    bool lowOnly = false,
-  }) async {
-    final data = await _send(
-      'GET',
-      '/v1/stock/balances',
-      query: {'store_id': storeId, 'low_only': lowOnly},
-    ) as List<dynamic>;
-    return data.cast<Map<String, dynamic>>();
-  }
-
-  Future<Map<String, dynamic>> createSale(Map<String, dynamic> payload) async {
-    return await _send('POST', '/v1/sales', body: payload)
-        as Map<String, dynamic>;
-  }
-
-  Future<Map<String, dynamic>> syncPush(List<Map<String, dynamic>> ops) async {
-    return await _send('POST', '/v1/sync/push', body: {'ops': ops})
-        as Map<String, dynamic>;
-  }
-
-  Future<Map<String, dynamic>> syncPull(
-    String storeId,
-    Map<String, String> cursors, {
-    int limit = 200,
-  }) async {
-    return await _send(
-      'GET',
-      '/v1/sync/pull',
-      query: {
-        'store_id': storeId,
-        'products_cursor': cursors['products'] ?? '',
-        'movements_cursor': cursors['movements'] ?? '',
-        'sales_cursor': cursors['sales'] ?? '',
-        'limit': limit,
-      },
-    ) as Map<String, dynamic>;
   }
 }
