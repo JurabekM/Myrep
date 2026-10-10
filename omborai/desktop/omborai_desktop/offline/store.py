@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS outbox (
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS applied_ops (op_id TEXT PRIMARY KEY);
 """
 
 
@@ -198,6 +199,38 @@ class LocalStore:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def drop_outbox(self, op_id: str) -> None:
+        """MQTT orqali yuborilib, qo'llangan navbat yozuvini o'chiradi (qoldiq endi movements'da)."""
+        with self._lock:
+            self._db.execute("DELETE FROM outbox WHERE op_id = ?", (op_id,))
+            self._db.commit()
+
+    def device_id(self) -> str:
+        """Qurilmaning doimiy id'si (birinchi ishga tushirishda yaratiladi)."""
+        import uuid
+
+        with self._lock:
+            row = self._db.execute("SELECT value FROM sync_state WHERE name = 'device_id'").fetchone()
+            if row:
+                return str(row["value"])
+            value = str(uuid.uuid4())
+            self._db.execute("INSERT INTO sync_state (name, value) VALUES ('device_id', ?)", (value,))
+            self._db.commit()
+            return value
+
+    def next_receipt_number(self) -> int:
+        """Qurilma bo'yicha chek raqami. Atomik: bir vaqtda ikki chek bir raqam olmaydi."""
+        with self._lock:
+            row = self._db.execute("SELECT value FROM sync_state WHERE name = 'receipt_seq'").fetchone()
+            number = int(row["value"]) + 1 if row else 1
+            self._db.execute(
+                "INSERT INTO sync_state (name, value) VALUES ('receipt_seq', ?) "
+                "ON CONFLICT(name) DO UPDATE SET value = excluded.value",
+                (str(number),),
+            )
+            self._db.commit()
+            return number
+
     def acknowledge_rejected(self, op_id: str) -> None:
         with self._lock:
             self._db.execute("DELETE FROM outbox WHERE op_id = ? AND status = 'rejected'", (op_id,))
@@ -219,6 +252,69 @@ class LocalStore:
                         (result.get("error_title"), result.get("error_detail"), result["op_id"]),
                     )
             self._db.commit()
+
+    # --- MQTT operatsiyalari (docs/sync-mqtt.md) ----------------------------
+
+    def apply_op(self, op: dict[str, Any]) -> bool:
+        """Operatsiyani bir marta qo'llaydi. Qaytaradi: yangi bo'lsa True, dublikat bo'lsa False.
+
+        Dedupe va qo'llash bitta tranzaksiyada: yarim qo'llangan operatsiya bo'lmaydi.
+        """
+        op_id = op["op_id"]
+        store_id = op["store_id"]
+        payload = op["payload"]
+        with self._lock:
+            try:
+                inserted = self._db.execute("INSERT OR IGNORE INTO applied_ops (op_id) VALUES (?)", (op_id,))
+                if inserted.rowcount == 0:
+                    self._db.commit()
+                    return False
+                kind = op["type"]
+                if kind in ("sale", "refund"):
+                    sign = -1 if kind == "sale" else 1
+                    movement_kind = "sale" if kind == "sale" else "sale_return"
+                    for item in payload["items"]:
+                        self._insert_movement(
+                            f"{op_id}:{item['product_id']}",
+                            store_id,
+                            item["product_id"],
+                            sign * Decimal(str(item["qty"])),
+                            movement_kind,
+                        )
+                elif kind == "movement":
+                    self._insert_movement(
+                        op_id, store_id, payload["product_id"], Decimal(str(payload["qty"])), payload["kind"]
+                    )
+                elif kind == "product":
+                    self._db.execute(
+                        "INSERT INTO products (id, name, unit, sale_price, barcodes, deleted) "
+                        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, "
+                        "unit=excluded.unit, sale_price=excluded.sale_price, barcodes=excluded.barcodes, "
+                        "deleted=excluded.deleted",
+                        (
+                            payload["id"],
+                            payload["name"],
+                            payload["unit"],
+                            int(payload["sale_price"]),
+                            json.dumps(payload.get("barcodes", []), ensure_ascii=False),
+                            1 if payload.get("deleted") else 0,
+                        ),
+                    )
+                else:
+                    raise ValueError(f"Noma'lum operatsiya turi: {kind}")
+                self._db.commit()
+                return True
+            except Exception:
+                self._db.rollback()
+                raise
+
+    def _insert_movement(
+        self, movement_id: str, store_id: str, product_id: str, qty: Decimal, kind: str
+    ) -> None:
+        self._db.execute(
+            "INSERT OR IGNORE INTO movements (id, store_id, product_id, qty, kind) VALUES (?, ?, ?, ?, ?)",
+            (movement_id, store_id, product_id, str(qty), kind),
+        )
 
     # --- sinxronizatsiya holati ---------------------------------------------
 

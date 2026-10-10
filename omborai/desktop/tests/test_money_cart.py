@@ -56,14 +56,18 @@ def test_cart_set_qty_zero_removes_line():
     assert cart.is_empty
 
 
-def test_sale_payload_never_contains_prices():
+def test_sale_payload_carries_locally_computed_prices():
     cart = Cart()
     cart.add(SUT, Decimal(2))
     payload = cart.to_sale_payload(str(uuid.uuid4()), [("cash", 24000)])
 
     assert uuid.UUID(payload["id"])
-    assert payload["items"] == [{"product_id": SUT["id"], "qty": "2"}]
-    assert "sale_price" not in str(payload) and "unit_price" not in str(payload)
+    item = payload["items"][0]
+    assert item["product_id"] == SUT["id"]
+    assert item["qty"] == "2"
+    assert item["unit_price"] == 12000
+    assert item["line_total"] == 24000
+    assert payload["total"] == 24000
     assert payload["payments"] == [{"method": "cash", "amount": 24000}]
 
 

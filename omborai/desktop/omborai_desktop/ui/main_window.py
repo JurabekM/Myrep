@@ -33,7 +33,6 @@ from ..config import DesktopConfig
 from ..escpos import build_receipt_bytes, send_to_network_printer
 from ..money import format_qty, format_som
 from ..offline.store import LocalStore
-from ..offline.sync import SyncService
 from ..receipt import render_receipt
 from .dialogs import CloseShiftDialog, OpenShiftDialog, PaymentDialog, ReceiptDialog, RefundDialog, parse_som
 from .tasks import BackgroundRunner
@@ -48,23 +47,24 @@ class PosWindow(QMainWindow):
         config: DesktopConfig,
         runner: Any | None = None,
         local: LocalStore | None = None,
-        sync_interval_ms: int = 15_000,
+        mqtt: Any | None = None,
+        refresh_interval_ms: int = 15_000,
     ) -> None:
         super().__init__()
         self.api = api
         self.config = config
         self.runner = runner or BackgroundRunner(self)
         self.local = local or LocalStore()
-        self.sync = SyncService(api, self.local)
+        self.mqtt = mqtt  # MqttSync: savdo faqat MQTT orqali (docs/sync-mqtt.md)
         self.store: dict[str, Any] | None = None
         self.shift: dict[str, Any] | None = None
         self.cart = Cart()
         self._pending: dict[str, Any] | None = None  # serverga yuborilayotgan savdo (bir vaqtda bitta)
         self._filling_table = False
-        self._syncing = False
+        self._flushing = False
         self._sync_timer = QTimer(self)
-        self._sync_timer.setInterval(sync_interval_ms)
-        self._sync_timer.timeout.connect(self.sync_now)
+        self._sync_timer.setInterval(refresh_interval_ms)
+        self._sync_timer.timeout.connect(self._refresh_sync_state)
         self._build_ui()
         self._build_shortcuts()
 
@@ -194,7 +194,17 @@ class PosWindow(QMainWindow):
     # --- boshlash: do'kon va smena -----------------------------------------
 
     def start(self) -> None:
+        if self.mqtt is not None:
+            self.runner.run(self.mqtt.start, self._on_mqtt_started, self._on_mqtt_failed)
+        self._sync_timer.start()
         self.runner.run(self.api.stores, self._on_stores_loaded, self._on_error)
+
+    def _on_mqtt_started(self, _result: Any) -> None:
+        self._refresh_sync_state()
+
+    def _on_mqtt_failed(self, exc: Exception) -> None:
+        self._update_sync_label(ok=False)
+        self._status(f"MQTT ulanmadi: {exc}")
 
     def _on_stores_loaded(self, stores: list[dict[str, Any]]) -> None:
         if not stores:
@@ -210,8 +220,7 @@ class PosWindow(QMainWindow):
     def _on_shift_loaded(self, shift: dict[str, Any] | None) -> None:
         self.shift = shift
         self._show_shift_state()
-        self._sync_timer.start()
-        self.sync_now()
+        self._refresh_sync_state()
         if shift is None:
             self._open_shift_dialog()
 
@@ -402,10 +411,8 @@ class PosWindow(QMainWindow):
     # --- to'lov va savdo ---------------------------------------------------
 
     def pay(self) -> None:
-        if (
-            self._pending is not None
-        ):  # oldingi urinish muvaffaqiyatsiz bo'lgan: o'sha savdoni qayta yuboramiz
-            self._send_sale(self._pending)
+        if self._pending is not None:
+            self._status("Oldingi savdo yuborilmoqda, kuting")
             return
         if self.cart.is_empty:
             self._status("Savat bo'sh")
@@ -417,94 +424,108 @@ class PosWindow(QMainWindow):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         payload = self.cart.to_sale_payload(self.store_id, [(dialog.method, self.cart.total)])
+        payload["number"] = self.local.next_receipt_number()
+        payload["created_at"] = datetime.now(UTC).isoformat()
         self._pending = {"payload": payload, "change": dialog.change}
         self._send_sale(self._pending)
 
     def _send_sale(self, pending: dict[str, Any]) -> None:
-        payload = pending["payload"]  # bir xil id: qayta yuborish dublikat chek yaratmaydi
+        payload = pending["payload"]
+        if self.mqtt is None or not self.mqtt.connected:
+            self._queue_offline(pending)
+            return
         self.btn_pay.setEnabled(False)
         self._status("Savdo yuborilmoqda...")
+        mqtt = self.mqtt
         self.runner.run(
-            lambda: self.api.create_sale(payload),
-            lambda sale: self._on_sale_saved(sale, pending["change"]),
-            lambda exc: self._on_sale_failed(exc),
+            lambda: mqtt.publish("sale", self.store_id, payload, op_id=payload["id"]),
+            lambda op: self._on_sale_published(op, pending),
+            lambda exc: self._on_sale_publish_failed(exc, pending),
         )
 
-    def _on_sale_saved(self, sale: dict[str, Any], change: int) -> None:
+    def _on_sale_published(self, op: dict[str, Any], pending: dict[str, Any]) -> None:
+        self.local.apply_op(op)  # o'z savdomizni mahalliy qoldiqqa darhol qo'llaymiz
+        self._finish_sale(pending)
+
+    def _on_sale_publish_failed(self, exc: Exception, pending: dict[str, Any]) -> None:
+        # Yuborilganmi-yo'qmi noma'lum bo'lsa ham navbatga qo'yamiz: qayta yuborishda qabul qiluvchilar
+        # op_id bo'yicha dublikatni rad etadi, shuning uchun ikki marta hisoblanmaydi
+        self._queue_offline(pending)
+
+    def _finish_sale(self, pending: dict[str, Any]) -> None:
         self._pending = None
         self.btn_pay.setEnabled(True)
-        self.btn_pay.setText("To'lash (F12)")
+        payload = pending["payload"]
         store_name = self.store["name"] if self.store else self.config.store_name_fallback
-        text = render_receipt(sale, store_name, width=self.config.receipt_width, change=change)
+        text = render_receipt(payload, store_name, width=self.config.receipt_width, change=pending["change"])
         self.cart.clear()
         self._refresh_cart()
-        self._status(f"Chek #{sale['number']} saqlandi")
+        self._update_sync_label()
+        self._status(f"Chek #{payload['number']} saqlandi")
         dialog = ReceiptDialog(text, can_print=bool(self.config.printer_host), parent=self)
         dialog.exec()
         if dialog.print_requested:
             self._print(text)
 
-    def _on_sale_failed(self, exc: Exception) -> None:
-        self.btn_pay.setEnabled(True)
-        if isinstance(exc, ApiError):
-            # Server rad etdi (qoldiq, to'lov, smena): savat saqlanadi, tuzatib qayta urinish mumkin
-            self._pending = None
-            self.btn_pay.setText("To'lash (F12)")
-            QMessageBox.warning(self, "Savdo rad etildi", exc.message)
-        elif isinstance(exc, httpx.HTTPError):
-            # Aloqa uzildi: savdo mahalliy navbatga tushadi, aloqa tiklanganda yuboriladi.
-            # Savdo ID'si o'zgarmaydi, shuning uchun dublikat chek bo'lmaydi.
-            self._queue_offline(self._pending)
-        else:
-            self._pending = None
-            self.btn_pay.setText("To'lash (F12)")
-            self._on_error(exc)
-
-    def _queue_offline(self, pending: dict[str, Any] | None) -> None:
-        if pending is None:
-            return
+    def _queue_offline(self, pending: dict[str, Any]) -> None:
         self._pending = None
+        self.btn_pay.setEnabled(True)
         self.local.enqueue_sale(self.store_id, pending["payload"], datetime.now(UTC).isoformat())
+        self._finish_sale_without_receipt(pending)
+
+    def _finish_sale_without_receipt(self, pending: dict[str, Any]) -> None:
         self.cart.clear()
         self._refresh_cart()
         self._update_sync_label()
-        self._status(
-            f"Offline saqlandi. Aloqa tiklanganda yuboriladi (navbatda: {self.local.pending_count()})"
-        )
+        self._status(f"Navbatga qo'yildi (aloqa tiklanganda yuboriladi): {self.local.pending_count()} ta")
 
-    # --- sinxronizatsiya ---------------------------------------------------
+    # --- sinxronizatsiya (MQTT) -----------------------------------------------
 
-    def sync_now(self) -> None:
-        if self.store is None or self._syncing:
+    def _refresh_sync_state(self) -> None:
+        if self.mqtt is None:
+            self._update_sync_label(ok=None)
             return
-        self._syncing = True
-        store_id = self.store_id
-        self.runner.run(lambda: self.sync.run_once(store_id), self._on_sync_done, self._on_sync_failed)
+        connected = bool(self.mqtt.connected)
+        self._update_sync_label(ok=connected)
+        if connected:
+            self._flush_outbox()
 
-    def _on_sync_done(self, report: Any) -> None:
-        self._syncing = False
+    def _flush_outbox(self) -> None:
+        if self._flushing or self.mqtt is None or not self.mqtt.connected:
+            return
+        ops = self.local.pending_ops(limit=50)
+        if not ops:
+            return
+        self._flushing = True
+        mqtt = self.mqtt
+
+        def publish_all() -> list[dict[str, Any]]:
+            return [mqtt.publish("sale", op.store_id, op.payload, op_id=op.op_id) for op in ops]
+
+        self.runner.run(publish_all, self._on_outbox_flushed, self._on_outbox_flush_failed)
+
+    def _on_outbox_flushed(self, published: list[dict[str, Any]]) -> None:
+        for op in published:
+            self.local.apply_op(op)
+            self.local.drop_outbox(op["op_id"])
+        self._flushing = False
         self._update_sync_label(ok=True)
-        if report.rejected:
-            self._status(f"{report.rejected} ta offline savdo serverda rad etildi")
 
-    def _on_sync_failed(self, exc: Exception) -> None:
-        self._syncing = False
+    def _on_outbox_flush_failed(self, exc: Exception) -> None:
+        self._flushing = False
         self._update_sync_label(ok=False)
 
     def _update_sync_label(self, ok: bool | None = None) -> None:
         pending = self.local.pending_count()
-        rejected = len(self.local.rejected_ops())
-        if ok is None:
+        if self.mqtt is None or ok is None:
             state = "—"
         elif ok:
-            state = "<span style='color:#15803d'>✓</span>"
+            state = "<span style='color:#15803d'>MQTT ulangan</span>"
         else:
-            state = "<span style='color:#b91c1c'>aloqa yo'q</span>"
+            state = "<span style='color:#b91c1c'>MQTT uzilgan</span>"
         parts = [f"Sinxron: {state}"]
         if pending:
             parts.append(f"navbatda <b>{pending}</b>")
-        if rejected:
-            parts.append(f"<span style='color:#b91c1c'>rad etilgan: {rejected}</span>")
         self.sync_label.setText("  ·  ".join(parts))
 
     def _print(self, text: str) -> None:

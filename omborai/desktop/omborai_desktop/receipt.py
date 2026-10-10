@@ -58,5 +58,7 @@ def render_receipt(sale: dict[str, Any], store_name: str, *, width: int = 32, ch
     if change > 0:
         out.append(_two_cols("Qaytim", format_som(change), width))
     out.append(rule)
+    out.append("Fiskal chek:".center(width))
+    out.append("ishlab chiqish jarayonida".center(width))
     out.append("Xaridingiz uchun rahmat!".center(width))
     return "\n".join(out) + "\n"

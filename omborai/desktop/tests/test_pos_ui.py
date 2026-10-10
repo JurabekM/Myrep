@@ -2,12 +2,11 @@ import uuid
 from decimal import Decimal
 from typing import Any
 
-import httpx
 import pytest
 from PySide6.QtWidgets import QDialog
 
-from omborai_desktop.api import ApiError
 from omborai_desktop.config import DesktopConfig
+from omborai_desktop.offline.store import LocalStore
 from omborai_desktop.ui import main_window as mw
 from omborai_desktop.ui.tasks import SyncRunner
 
@@ -24,10 +23,10 @@ SUT = {
 
 
 class FakeApi:
-    def __init__(self, *, shift: dict | None = None, sale_error: Exception | None = None) -> None:
-        self.shift = shift or {"id": str(uuid.uuid4()), "store_id": STORE_ID}
-        self.sale_error = sale_error
-        self.sales_posted: list[dict[str, Any]] = []
+    """Faqat do'kon, smena, tovar qidiruvi va barcode uchun (savdo endi MQTT orqali)."""
+
+    def __init__(self) -> None:
+        self.shift: dict | None = {"id": str(uuid.uuid4()), "store_id": STORE_ID}
 
     def stores(self):
         return [{"id": STORE_ID, "name": "Test do'kon"}]
@@ -41,33 +40,33 @@ class FakeApi:
     def search_products(self, query, store_id):
         return [SUT] if "sut" in query.lower() else []
 
-    def create_sale(self, payload):
-        self.sales_posted.append(payload)
-        if self.sale_error is not None:
-            raise self.sale_error
-        return {
-            "id": payload["id"],
-            "number": 1042,
-            "created_at": "2026-10-10T14:32:00",
-            "subtotal": 24000,
-            "discount": 0,
-            "total": 24000,
-            "items": [
-                {
-                    "product_name": "Sut 1 L",
-                    "qty": "2",
-                    "unit": "dona",
-                    "unit_price": 12000,
-                    "line_total": 24000,
-                }
-            ],
-            "payments": [{"method": "cash", "amount": 24000}],
-        }
+
+class FakeMqtt:
+    """MqttSync o'rnida: nashr qilingan operatsiyalarni yozib boradi."""
+
+    def __init__(self) -> None:
+        self.connected = True
+        self.published: list[dict[str, Any]] = []
+        self.fail_next = False
+
+    def start(self, timeout: float = 10.0) -> None:
+        return None
+
+    def stop(self) -> None:
+        return None
+
+    def publish(self, op_type, store_id, payload, *, op_id=None):
+        if not self.connected or self.fail_next:
+            self.fail_next = False
+            raise ConnectionError("broker yo'q")
+        op = {"op_id": op_id or str(uuid.uuid4()), "type": op_type, "store_id": store_id, "payload": payload}
+        self.published.append(op)
+        return op
 
 
 @pytest.fixture
 def no_blocking_dialogs(monkeypatch):
-    """Modal dialoglar testda bloklamasin: javobni oldindan belgilaymiz."""
+    """Modal dialoglar testda bloklamasin."""
     shown: list[str] = []
 
     class FakeReceipt:
@@ -96,25 +95,38 @@ def no_blocking_dialogs(monkeypatch):
     return shown
 
 
-def _window(qtbot, api):
-    window = mw.PosWindow(api, DesktopConfig(), runner=SyncRunner())
+def _window(qtbot, api=None, mqtt=None, local=None):
+    window = mw.PosWindow(
+        api or FakeApi(),
+        DesktopConfig(),
+        runner=SyncRunner(),
+        local=local or LocalStore(),
+        mqtt=mqtt or FakeMqtt(),
+    )
     qtbot.addWidget(window)
     window.start()
     return window
 
 
+def _scan_and_pay(window):
+    window.search.setText("4780012300123")
+    window._on_search_submitted()  # noqa: SLF001
+    window.search.setText("4780012300123")
+    window._on_search_submitted()  # noqa: SLF001
+    window.pay()
+
+
 def test_start_loads_store_and_open_shift(qtbot):
-    api = FakeApi()
-    window = _window(qtbot, api)
+    window = _window(qtbot)
     assert window.store["id"] == STORE_ID
     assert window.shift is not None
     assert "ochiq" in window.shift_label.text()
 
 
 def test_barcode_scan_adds_product_and_quantity_edit_updates_total(qtbot):
-    window = _window(qtbot, FakeApi())
+    window = _window(qtbot)
     window.search.setText("4780012300123")
-    window._on_search_submitted()  # noqa: SLF001 - Enter bosilgan holat
+    window._on_search_submitted()  # noqa: SLF001
     window.search.setText("4780012300123")
     window._on_search_submitted()  # noqa: SLF001
 
@@ -127,106 +139,75 @@ def test_barcode_scan_adds_product_and_quantity_edit_updates_total(qtbot):
 
 
 def test_unknown_barcode_is_reported_not_added(qtbot):
-    window = _window(qtbot, FakeApi())
+    window = _window(qtbot)
     window.search.setText("9999999999999")
     window._on_search_submitted()  # noqa: SLF001
     assert window.cart.is_empty
 
 
-def test_successful_payment_posts_sale_once_and_clears_cart(qtbot, no_blocking_dialogs):
-    api = FakeApi()
-    window = _window(qtbot, api)
-    window.search.setText("4780012300123")
-    window._on_search_submitted()  # noqa: SLF001
-    window.search.setText("4780012300123")
-    window._on_search_submitted()  # noqa: SLF001
+def test_successful_payment_publishes_sale_over_mqtt_and_applies_locally(qtbot, no_blocking_dialogs):
+    mqtt = FakeMqtt()
+    local = LocalStore()
+    window = _window(qtbot, mqtt=mqtt, local=local)
+    _scan_and_pay(window)
 
-    window.pay()
-
-    assert len(api.sales_posted) == 1
-    posted = api.sales_posted[0]
-    assert posted["payments"] == [{"method": "cash", "amount": 24000}]
-    assert "unit_price" not in str(posted)
+    assert len(mqtt.published) == 1
+    op = mqtt.published[0]
+    assert op["type"] == "sale"
+    assert op["payload"]["payments"] == [{"method": "cash", "amount": 24000}]
+    assert op["payload"]["items"][0]["unit_price"] == 12000  # narx qurilmada hisoblanadi
     assert window.cart.is_empty
-    assert window._pending is None  # noqa: SLF001
+    assert window.local.pending_count() == 0
     assert len(no_blocking_dialogs) == 1
-    assert "Chek #1042" in no_blocking_dialogs[0]
+    assert "Chek #1" in no_blocking_dialogs[0]
 
 
-def test_server_rejection_keeps_cart_and_drops_pending(qtbot, monkeypatch, no_blocking_dialogs):
-    api = FakeApi(sale_error=ApiError(409, "Qoldiq yetarli emas"))
-    window = _window(qtbot, api)
-    window.search.setText("4780012300123")
-    window._on_search_submitted()  # noqa: SLF001
+def test_publish_failure_queues_sale_with_same_id_and_flushes_later(qtbot, no_blocking_dialogs):
+    mqtt = FakeMqtt()
+    mqtt.connected = False
+    window = _window(qtbot, mqtt=mqtt)
+    _scan_and_pay(window)
 
-    window.pay()
-
-    assert not window.cart.is_empty
-    assert window._pending is None  # noqa: SLF001
-
-
-def test_network_failure_queues_sale_offline_with_same_id(qtbot, no_blocking_dialogs):
-    class Offline(FakeApi):
-        def create_sale(self, payload):
-            self.sales_posted.append(payload)
-            raise httpx.ConnectError("uzildi")
-
-    api = Offline()
-    window = _window(qtbot, api)
-    window.search.setText("4780012300123")
-    window._on_search_submitted()  # noqa: SLF001
-
-    window.pay()
-
-    assert window._pending is None  # noqa: SLF001
     assert window.cart.is_empty
     queued = window.local.pending_ops()
     assert len(queued) == 1
-    assert queued[0].op_id == api.sales_posted[0]["id"]
-    assert window.local.pending_count() == 1
+    sale_id = queued[0].op_id
 
-
-def test_offline_sale_is_pushed_by_sync_and_leaves_outbox(qtbot, no_blocking_dialogs):
-    class Recovering(FakeApi):
-        def __init__(self):
-            super().__init__()
-            self.online = False
-
-        def create_sale(self, payload):
-            if not self.online:
-                raise httpx.ConnectError("uzildi")
-            return super().create_sale(payload)
-
-        def sync_push(self, body):
-            return {
-                "results": [
-                    {"op_id": op["op_id"], "status": "applied", "duplicate": False} for op in body["ops"]
-                ]
-            }
-
-        def sync_pull(self, store_id, cursors, limit=200):
-            return {"products": [], "movements": [], "sales": [], "cursors": cursors, "has_more": False}
-
-    api = Recovering()
-    window = _window(qtbot, api)
-    window.search.setText("4780012300123")
-    window._on_search_submitted()  # noqa: SLF001
-    window.pay()
-    assert window.local.pending_count() == 1
-
-    api.online = True
-    window.sync_now()
-
+    mqtt.connected = True
+    window._refresh_sync_state()  # noqa: SLF001 - ulanish tiklandi
+    assert [op["op_id"] for op in mqtt.published] == [sale_id]
     assert window.local.pending_count() == 0
-    assert "navbatda" not in window.sync_label.text()
+
+
+def test_sale_is_not_double_applied_if_broker_ack_was_lost(qtbot, no_blocking_dialogs):
+    class AckLost(FakeMqtt):
+        def publish(self, op_type, store_id, payload, *, op_id=None):
+            op = super().publish(op_type, store_id, payload, op_id=op_id)
+            if len(self.published) == 1:
+                raise ConnectionError("ack yetmadi")  # xabar yetib bordi, lekin javob kelmadi
+            return op
+
+    mqtt = AckLost()
+    local = LocalStore()
+    window = _window(qtbot, mqtt=mqtt, local=local)
+    _scan_and_pay(window)
+    assert window.local.pending_count() == 1
+
+    window._refresh_sync_state()  # noqa: SLF001 - qayta yuborish
+    # Bir xil op_id ikki marta nashr qilindi, lekin qo'llanish bir marta
+    assert [op["op_id"] for op in mqtt.published] == [mqtt.published[0]["op_id"]] * 2
+    assert window.local.balance(STORE_ID, SUT_ID) == Decimal(-2)
+    local.close()
 
 
 def test_offline_search_uses_local_cache(qtbot):
     class Down(FakeApi):
         def search_products(self, query, store_id):
+            import httpx
+
             raise httpx.ConnectError("yo'q")
 
-    window = _window(qtbot, Down())
+    window = _window(qtbot, api=Down())
     window.local.upsert_products(
         [
             {
@@ -241,3 +222,13 @@ def test_offline_search_uses_local_cache(qtbot):
     window.search.setText("sut")
     window._on_search_submitted()  # noqa: SLF001
     assert window.results.count() == 1
+
+
+def test_mqtt_status_label_reflects_connection(qtbot):
+    mqtt = FakeMqtt()
+    window = _window(qtbot, mqtt=mqtt)
+    window._refresh_sync_state()  # noqa: SLF001
+    assert "MQTT ulangan" in window.sync_label.text()
+    mqtt.connected = False
+    window._refresh_sync_state()  # noqa: SLF001
+    assert "MQTT uzilgan" in window.sync_label.text()

@@ -84,13 +84,32 @@ class Cart:
         self.discount = amount
 
     def to_sale_payload(
-        self, store_id: str, payments: list[tuple[str, int]], sale_id: uuid.UUID | None = None
+        self,
+        store_id: str,
+        payments: list[tuple[str, int]],
+        sale_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
-        """Backend'ga yuboriladigan savdo. Narx yuborilmaydi — faqat tovar va miqdor."""
+        """MQTT orqali yuboriladigan savdo. Serverda narx tekshiruvi yo'q: narx va jami qurilmada hisoblanadi.
+
+        Chek raqami va vaqti chaqiruvchi tomonidan qo'shiladi.
+        """
+        items = [
+            {
+                "product_id": line.product_id,
+                "qty": str(line.qty),
+                "product_name": line.name,
+                "unit": line.unit,
+                "unit_price": line.unit_price,
+                "line_total": line.line_total,
+            }
+            for line in self.lines
+        ]
         return {
             "id": str(sale_id or uuid.uuid4()),
             "store_id": store_id,
-            "items": [{"product_id": line.product_id, "qty": str(line.qty)} for line in self.lines],
+            "items": items,
             "discount": self.discount,
+            "subtotal": self.subtotal,
+            "total": self.total,
             "payments": [{"method": method, "amount": amount} for method, amount in payments],
         }

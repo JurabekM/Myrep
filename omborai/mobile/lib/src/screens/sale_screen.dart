@@ -226,6 +226,11 @@ class _SaleScreenState extends State<SaleScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fiskal chek: ishlab chiqish jarayonida',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
                     segments: [
