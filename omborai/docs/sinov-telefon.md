@@ -58,6 +58,9 @@ cd omborai/mobile
 flutter build apk --debug --dart-define=OMBORAI_API_URL=http://<LAN-IP>
 ```
 
+Emulyatorda (Android Studio AVD, kompyuterida virtualizatsiya yoqilgan bo'lsa) manzil boshqacha:
+`--dart-define=OMBORAI_API_URL=http://10.0.2.2` (port yozilmaydi: server 80-portda, 8000 kompyuterga chiqarilmagan).
+
 APK: `build/app/outputs/flutter-apk/app-debug.apk`. Telefonga o'tkazing va o'rnating (noma'lum manbadan
 o'rnatishga ruxsat bering). Debug build HTTP'ga ruxsat beradi; release build faqat HTTPS bilan ishlaydi.
 
