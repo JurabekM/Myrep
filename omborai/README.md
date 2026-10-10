@@ -2,13 +2,28 @@
 
 Kichik do'konlar uchun ombor, kassa (savdo), qarz daftari va hisobotlar tizimi.
 
-- `backend/` — FastAPI + PostgreSQL (RLS bilan tenant izolyatsiyasi)
-- `desktop/` — Python + PySide6 (kassa va ofis ilovasi) — *Faza 3*
-- `mobile/` — Flutter + Kotlin (Android) — *Faza 5*
-- `shared/` — API shartnomasi (`openapi.json`)
-- `infra/` — Docker Compose, Caddy (TLS), PostgreSQL init
-- `design/` — ekran eskizlari (HTML prototip)
-- `docs/reja.md` — to'liq loyiha rejasi
+## Holat
+
+| Faza | Natija | Holat |
+|---|---|---|
+| 0 | Reja, 3 ekran eskizi (kassa, tovarlar, bosh sahifa; yorug'/tungi, uz/ru) | tayyor |
+| 1 | Backend skeleti, auth (JWT + refresh rotatsiya), tenant izolyatsiyasi (RLS), CI | tayyor |
+| 2 | Tovar, shtrix-kod, kirim, qoldiq ledger'i (o'zgarmas), parallel oversell'dan himoya | tayyor |
+| 3 | Smena, savdo (server narxlari, idempotent), to'lov, qaytarish; desktop kassa (PySide6) | tayyor |
+| 4 | Offline sinxronizatsiya (push/pull, op_id dedupe), desktop offline navbat | tayyor |
+| 5 | Mobil ilova: Flutter UI + Kotlin (CameraX + ML Kit skaner), offline kassa | tayyor (Dart testlari va Kotlin kompilyatsiyasi; qurilmada sinalmagan) |
+
+Keyingi fazalar (6+): qarz daftari, hisobotlar, Click/Payme, Telegram bot, fon sinxronizatsiyasi, iOS, AI prognoz.
+
+## Papkalar
+
+- `backend/` — FastAPI + PostgreSQL (RLS bilan tenant izolyatsiyasi). Batafsil: `backend/README` bo'limlari ichida.
+- `desktop/` — Python + PySide6 (kassa va ofis ilovasi). Batafsil: `desktop/README.md`.
+- `mobile/` — Flutter + Kotlin (Android). Batafsil: `mobile/README.md`.
+- `shared/` — API shartnomasi (`openapi.json`), CI tekshiradi.
+- `infra/` — Docker Compose, Caddy (TLS), PostgreSQL init.
+- `design/` — ekran eskizlari (HTML prototip).
+- `docs/reja.md` — to'liq loyiha rejasi.
 
 ## Tez ishga tushirish (lokal)
 
