@@ -198,7 +198,7 @@ async def pull(
     )
     p_more = len(rows) > limit
     p_page = rows[:limit]
-    p_out = await to_product_out(session, p_page, None)
+    p_out = await to_product_out(session, list(p_page), None)
     products = [
         SyncProductOut(**out.model_dump(exclude={"stock_qty"}), deleted=p.deleted_at is not None)
         for out, p in zip(p_out, p_page, strict=True)
