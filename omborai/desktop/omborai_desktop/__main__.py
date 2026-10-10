@@ -1,9 +1,11 @@
 import sys
+from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
 from .api import ApiClient
 from .config import DesktopConfig
+from .offline.store import LocalStore
 from .ui.login import run_login
 from .ui.main_window import PosWindow
 from .ui.theme import apply_theme
@@ -19,10 +21,13 @@ def main() -> int:
     if not run_login(api):
         return 0
 
-    window = PosWindow(api, config)
+    Path(config.local_db_path).parent.mkdir(parents=True, exist_ok=True)
+    local = LocalStore(config.local_db_path)
+    window = PosWindow(api, config, local=local)
     window.show()
     window.start()
     code = app.exec()
+    local.close()
     api.close()
     return code
 

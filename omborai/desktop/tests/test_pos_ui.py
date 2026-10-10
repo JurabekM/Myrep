@@ -165,28 +165,79 @@ def test_server_rejection_keeps_cart_and_drops_pending(qtbot, monkeypatch, no_bl
     assert window._pending is None  # noqa: SLF001
 
 
-def test_network_failure_keeps_same_sale_id_for_retry(qtbot, no_blocking_dialogs):
-    class Flaky(FakeApi):
-        def __init__(self):
-            super().__init__()
-            self.calls = 0
-
+def test_network_failure_queues_sale_offline_with_same_id(qtbot, no_blocking_dialogs):
+    class Offline(FakeApi):
         def create_sale(self, payload):
-            self.calls += 1
-            if self.calls == 1:  # birinchi urinish tarmoqda uziladi
-                self.sales_posted.append(payload)
-                raise httpx.ConnectError("uzildi")
-            return super().create_sale(payload)
+            self.sales_posted.append(payload)
+            raise httpx.ConnectError("uzildi")
 
-    api = Flaky()
+    api = Offline()
     window = _window(qtbot, api)
     window.search.setText("4780012300123")
     window._on_search_submitted()  # noqa: SLF001
 
     window.pay()
-    assert window._pending is not None  # noqa: SLF001
-    first_id = api.sales_posted[0]["id"]
 
-    window.pay()  # qayta yuborish
-    assert [p["id"] for p in api.sales_posted] == [first_id, first_id]
+    assert window._pending is None  # noqa: SLF001
     assert window.cart.is_empty
+    queued = window.local.pending_ops()
+    assert len(queued) == 1
+    assert queued[0].op_id == api.sales_posted[0]["id"]
+    assert window.local.pending_count() == 1
+
+
+def test_offline_sale_is_pushed_by_sync_and_leaves_outbox(qtbot, no_blocking_dialogs):
+    class Recovering(FakeApi):
+        def __init__(self):
+            super().__init__()
+            self.online = False
+
+        def create_sale(self, payload):
+            if not self.online:
+                raise httpx.ConnectError("uzildi")
+            return super().create_sale(payload)
+
+        def sync_push(self, body):
+            return {
+                "results": [
+                    {"op_id": op["op_id"], "status": "applied", "duplicate": False} for op in body["ops"]
+                ]
+            }
+
+        def sync_pull(self, store_id, cursors, limit=200):
+            return {"products": [], "movements": [], "sales": [], "cursors": cursors, "has_more": False}
+
+    api = Recovering()
+    window = _window(qtbot, api)
+    window.search.setText("4780012300123")
+    window._on_search_submitted()  # noqa: SLF001
+    window.pay()
+    assert window.local.pending_count() == 1
+
+    api.online = True
+    window.sync_now()
+
+    assert window.local.pending_count() == 0
+    assert "navbatda" not in window.sync_label.text()
+
+
+def test_offline_search_uses_local_cache(qtbot):
+    class Down(FakeApi):
+        def search_products(self, query, store_id):
+            raise httpx.ConnectError("yo'q")
+
+    window = _window(qtbot, Down())
+    window.local.upsert_products(
+        [
+            {
+                "id": SUT_ID,
+                "name": "Sut 1 L",
+                "unit": "dona",
+                "sale_price": 12000,
+                "barcodes": ["4780012300123"],
+            }
+        ]
+    )
+    window.search.setText("sut")
+    window._on_search_submitted()  # noqa: SLF001
+    assert window.results.count() == 1

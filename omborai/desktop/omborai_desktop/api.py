@@ -114,6 +114,19 @@ class ApiClient:
     def create_sale(self, payload: dict[str, Any]) -> dict[str, Any]:
         return self._send("POST", "/v1/sales", json=payload)
 
+    def sync_push(self, body: dict[str, Any]) -> dict[str, Any]:
+        return self._send("POST", "/v1/sync/push", json=body)
+
+    def sync_pull(self, store_id: str, cursors: dict[str, str], limit: int = 200) -> dict[str, Any]:
+        params = {
+            "store_id": store_id,
+            "products_cursor": cursors.get("products", ""),
+            "movements_cursor": cursors.get("movements", ""),
+            "sales_cursor": cursors.get("sales", ""),
+            "limit": limit,
+        }
+        return self._send("GET", "/v1/sync/pull", params=params)
+
     def list_sales(self, store_id: str, limit: int = 30) -> list[dict[str, Any]]:
         return self._send("GET", "/v1/sales", params={"store_id": store_id, "limit": limit})
 

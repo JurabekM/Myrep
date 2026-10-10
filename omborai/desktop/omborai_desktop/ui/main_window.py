@@ -1,11 +1,12 @@
 """Kassa (POS) oynasi. Barcha tarmoq chaqiruvlari fon oqimida; savdo idempotent yuboriladi."""
 
 from collections.abc import Callable
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import httpx
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -31,6 +32,8 @@ from ..cart import Cart
 from ..config import DesktopConfig
 from ..escpos import build_receipt_bytes, send_to_network_printer
 from ..money import format_qty, format_som
+from ..offline.store import LocalStore
+from ..offline.sync import SyncService
 from ..receipt import render_receipt
 from .dialogs import CloseShiftDialog, OpenShiftDialog, PaymentDialog, ReceiptDialog, RefundDialog, parse_som
 from .tasks import BackgroundRunner
@@ -39,16 +42,29 @@ ROLE_PRODUCT_ID = Qt.ItemDataRole.UserRole
 
 
 class PosWindow(QMainWindow):
-    def __init__(self, api: ApiClient, config: DesktopConfig, runner: Any | None = None) -> None:
+    def __init__(
+        self,
+        api: ApiClient,
+        config: DesktopConfig,
+        runner: Any | None = None,
+        local: LocalStore | None = None,
+        sync_interval_ms: int = 15_000,
+    ) -> None:
         super().__init__()
         self.api = api
         self.config = config
         self.runner = runner or BackgroundRunner(self)
+        self.local = local or LocalStore()
+        self.sync = SyncService(api, self.local)
         self.store: dict[str, Any] | None = None
         self.shift: dict[str, Any] | None = None
         self.cart = Cart()
-        self._pending: dict[str, Any] | None = None  # yuborilmagan/qayta yuboriladigan savdo
+        self._pending: dict[str, Any] | None = None  # serverga yuborilayotgan savdo (bir vaqtda bitta)
         self._filling_table = False
+        self._syncing = False
+        self._sync_timer = QTimer(self)
+        self._sync_timer.setInterval(sync_interval_ms)
+        self._sync_timer.timeout.connect(self.sync_now)
         self._build_ui()
         self._build_shortcuts()
 
@@ -63,6 +79,7 @@ class PosWindow(QMainWindow):
         self.shift_label.setStyleSheet("font-weight: bold;")
         self.btn_shift = QPushButton("Smena")
         self.btn_shift.clicked.connect(self._on_shift_clicked)
+        self.sync_label = QLabel("Sinxron: —")
         self.btn_refund = QPushButton("Qaytarish")
         self.btn_refund.clicked.connect(self._on_refund_clicked)
 
@@ -71,6 +88,7 @@ class PosWindow(QMainWindow):
         top.addSpacing(24)
         top.addWidget(self.shift_label)
         top.addStretch(1)
+        top.addWidget(self.sync_label)
         top.addWidget(self.btn_refund)
         top.addWidget(self.btn_shift)
 
@@ -192,6 +210,8 @@ class PosWindow(QMainWindow):
     def _on_shift_loaded(self, shift: dict[str, Any] | None) -> None:
         self.shift = shift
         self._show_shift_state()
+        self._sync_timer.start()
+        self.sync_now()
         if shift is None:
             self._open_shift_dialog()
 
@@ -253,14 +273,25 @@ class PosWindow(QMainWindow):
             self.runner.run(
                 lambda: self.api.product_by_barcode(text, self.store_id),
                 lambda product: self._on_barcode_found(text, product),
-                self._on_error,
+                lambda exc: self._lookup_offline(text, exc, barcode=True),
             )
         else:
             self.runner.run(
                 lambda: self.api.search_products(text, self.store_id),
                 self._on_search_results,
-                self._on_error,
+                lambda exc: self._lookup_offline(text, exc, barcode=False),
             )
+
+    def _lookup_offline(self, text: str, exc: Exception, *, barcode: bool) -> None:
+        """Server bilan aloqa bo'lmasa, mahalliy keshdan qidiriladi."""
+        if not isinstance(exc, httpx.HTTPError):
+            self._on_error(exc)
+            return
+        self._status("Offline qidiruv (mahalliy kesh)")
+        if barcode:
+            self._on_barcode_found(text, self.local.product_by_barcode(text, self.store_id))
+        else:
+            self._on_search_results(self.local.search_products(text, self.store_id))
 
     def _on_barcode_found(self, code: str, product: dict[str, Any] | None) -> None:
         if product is None:
@@ -273,7 +304,7 @@ class PosWindow(QMainWindow):
     def _on_search_results(self, products: list[dict[str, Any]]) -> None:
         self.results.clear()
         for product in products:
-            stock = format_qty(Decimal(product["stock_qty"] or 0))
+            stock = format_qty(Decimal(product.get("stock_qty") or 0))
             price = format_som(product["sale_price"])
             item = QListWidgetItem(f"{product['name']}  ·  {price} so'm  ·  {stock} {product['unit']}")
             item.setData(ROLE_PRODUCT_ID, product)
@@ -421,13 +452,60 @@ class PosWindow(QMainWindow):
             self.btn_pay.setText("To'lash (F12)")
             QMessageBox.warning(self, "Savdo rad etildi", exc.message)
         elif isinstance(exc, httpx.HTTPError):
-            # Aloqa uzildi: savdo ID'si saqlanadi, qayta yuborish bir xil chekni yaratadi
-            self.btn_pay.setText("Qayta yuborish (F12)")
-            self._status("Aloqa yo'q. Savdo saqlandi, F12 bilan qayta yuboring.")
+            # Aloqa uzildi: savdo mahalliy navbatga tushadi, aloqa tiklanganda yuboriladi.
+            # Savdo ID'si o'zgarmaydi, shuning uchun dublikat chek bo'lmaydi.
+            self._queue_offline(self._pending)
         else:
             self._pending = None
             self.btn_pay.setText("To'lash (F12)")
             self._on_error(exc)
+
+    def _queue_offline(self, pending: dict[str, Any] | None) -> None:
+        if pending is None:
+            return
+        self._pending = None
+        self.local.enqueue_sale(self.store_id, pending["payload"], datetime.now(UTC).isoformat())
+        self.cart.clear()
+        self._refresh_cart()
+        self._update_sync_label()
+        self._status(
+            f"Offline saqlandi. Aloqa tiklanganda yuboriladi (navbatda: {self.local.pending_count()})"
+        )
+
+    # --- sinxronizatsiya ---------------------------------------------------
+
+    def sync_now(self) -> None:
+        if self.store is None or self._syncing:
+            return
+        self._syncing = True
+        store_id = self.store_id
+        self.runner.run(lambda: self.sync.run_once(store_id), self._on_sync_done, self._on_sync_failed)
+
+    def _on_sync_done(self, report: Any) -> None:
+        self._syncing = False
+        self._update_sync_label(ok=True)
+        if report.rejected:
+            self._status(f"{report.rejected} ta offline savdo serverda rad etildi")
+
+    def _on_sync_failed(self, exc: Exception) -> None:
+        self._syncing = False
+        self._update_sync_label(ok=False)
+
+    def _update_sync_label(self, ok: bool | None = None) -> None:
+        pending = self.local.pending_count()
+        rejected = len(self.local.rejected_ops())
+        if ok is None:
+            state = "—"
+        elif ok:
+            state = "<span style='color:#15803d'>✓</span>"
+        else:
+            state = "<span style='color:#b91c1c'>aloqa yo'q</span>"
+        parts = [f"Sinxron: {state}"]
+        if pending:
+            parts.append(f"navbatda <b>{pending}</b>")
+        if rejected:
+            parts.append(f"<span style='color:#b91c1c'>rad etilgan: {rejected}</span>")
+        self.sync_label.setText("  ·  ".join(parts))
 
     def _print(self, text: str) -> None:
         host = self.config.printer_host
