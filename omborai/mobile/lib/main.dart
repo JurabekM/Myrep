@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'src/api/api_client.dart';
 import 'src/app_session.dart';

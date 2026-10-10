@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -219,5 +221,23 @@ class AppSession extends ChangeNotifier {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+}
+
+/// Lokal baza paroli: birinchi ishga tushirishda tasodifiy 256-bit yaratiladi va Keystore'da saqlanadi.
+class DbPasswordStore {
+  DbPasswordStore([FlutterSecureStorage? storage])
+    : _storage = storage ?? const FlutterSecureStorage();
+
+  final FlutterSecureStorage _storage;
+
+  Future<String> load() async {
+    final existing = await _storage.read(key: 'db_password');
+    if (existing != null) return existing;
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+    final password = base64Url.encode(bytes);
+    await _storage.write(key: 'db_password', value: password);
+    return password;
   }
 }

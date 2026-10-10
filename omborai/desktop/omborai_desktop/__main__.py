@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication
 from .api import ApiClient
 from .config import DesktopConfig
 from .offline.store import LocalStore
+from .security import get_or_create_db_key
 from .ui.login import run_login
 from .ui.main_window import PosWindow
 from .ui.theme import apply_theme
@@ -22,7 +23,7 @@ def main() -> int:
         return 0
 
     Path(config.local_db_path).parent.mkdir(parents=True, exist_ok=True)
-    local = LocalStore(config.local_db_path)
+    local = LocalStore(config.local_db_path, key=get_or_create_db_key())
     window = PosWindow(api, config, local=local)
     window.show()
     window.start()

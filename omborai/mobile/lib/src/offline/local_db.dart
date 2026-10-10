@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 /// Mahalliy baza: tovar keshi, qoldiq harakatlari nusxasi, sinxron holati va outbox navbati.
 ///
@@ -38,19 +38,33 @@ class LocalDb {
     'CREATE TABLE sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL)',
   ];
 
-  /// [path] — fayl yo'li yoki ':memory:'. [factory] — testda sqflite_common_ffi.
-  static Future<LocalDb> open(String path, {DatabaseFactory? factory}) async {
-    final db = await (factory ?? databaseFactory).openDatabase(
-      path,
-      options: OpenDatabaseOptions(
+  /// [path] — fayl yo'li yoki ':memory:'. [password] berilsa, baza SQLCipher (AES-256) bilan shifrlanadi.
+  /// [factory] — testda sqflite_common_ffi.
+  static Future<LocalDb> open(
+    String path, {
+    DatabaseFactory? factory,
+    String? password,
+  }) async {
+    Future<void> onCreate(Database db, int _) async {
+      for (final statement in _schema) {
+        await db.execute(statement);
+      }
+    }
+
+    final Database db;
+    if (password != null) {
+      db = await openDatabase(
+        path,
+        password: password,
         version: 1,
-        onCreate: (db, _) async {
-          for (final statement in _schema) {
-            await db.execute(statement);
-          }
-        },
-      ),
-    );
+        onCreate: onCreate,
+      );
+    } else {
+      db = await (factory ?? databaseFactory).openDatabase(
+        path,
+        options: OpenDatabaseOptions(version: 1, onCreate: onCreate),
+      );
+    }
     return LocalDb._(db);
   }
 

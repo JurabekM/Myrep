@@ -501,22 +501,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.2"
-  sqflite:
-    dependency: "direct main"
-    description:
-      name: sqflite
-      sha256: "7419d02d128023f38586481c81e14e5692167f75b7f411a914b1eb50d28c010e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.4+1"
-  sqflite_android:
-    dependency: transitive
-    description:
-      name: sqflite_android
-      sha256: "805b27c6fa10d8883253795e644818fbd5c87ce665459db84fbe71326cbb5421"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.4"
   sqflite_common:
     dependency: transitive
     description:
@@ -533,22 +517,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.3"
-  sqflite_darwin:
-    dependency: transitive
+  sqflite_sqlcipher:
+    dependency: "direct main"
     description:
-      name: sqflite_darwin
-      sha256: dbdda396f975f74d611ffd3e6fb280ee3ee4cd2319b89278533f427e0140cf0b
+      name: sqflite_sqlcipher
+      sha256: "50d05fe0495ed96a85503d9850a49c0936502f44fdba96f403c97e4c9c7043e7"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.4"
-  sqflite_platform_interface:
-    dependency: transitive
-    description:
-      name: sqflite_platform_interface
-      sha256: c9177b2f3150ed0647b90a94307c28452fe0a5401863044216aed83addd6c7c5
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.2"
+    version: "3.4.1"
   sqlite3:
     dependency: transitive
     description:
@@ -671,4 +647,4 @@ packages:
     version: "3.1.4"
 sdks:
   dart: ">=3.13.5 <4.0.0"
-  flutter: ">=3.44.0"
+  flutter: ">=3.38.4"

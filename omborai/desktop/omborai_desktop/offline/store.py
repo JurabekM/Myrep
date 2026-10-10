@@ -5,6 +5,7 @@ bo'lmasa ham kassir qoldiqni ko'radi, lekin bu server bilan kelishilmagan taxmin
 """
 
 import json
+import re
 import sqlite3
 import threading
 from dataclasses import dataclass
@@ -42,6 +43,27 @@ CREATE TABLE IF NOT EXISTS sync_state (name TEXT PRIMARY KEY, value TEXT NOT NUL
 """
 
 
+def _dict_row(cursor, row):  # type: ignore[no-untyped-def]
+    """sqlite3 va sqlcipher3 uchun bir xil qator shakli (lug'at)."""
+    return {column[0]: row[index] for index, column in enumerate(cursor.description)}
+
+
+HEX_KEY = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _open_encrypted(path: str, key: str):  # type: ignore[no-untyped-def]
+    """SQLCipher ochiladi. key: 64 belgili hex (32 bayt). Faqat shu shakl qabul qilinadi."""
+    import sqlcipher3
+
+    if not HEX_KEY.match(key):
+        raise ValueError("Baza kaliti 64 belgili hex bo'lishi kerak")
+    db = sqlcipher3.connect(path, check_same_thread=False)
+    db.execute(f"PRAGMA key = \"x'{key}'\"")
+    # Noto'g'ri kalitda bu yerda DatabaseError ko'tariladi
+    db.execute("SELECT count(*) FROM sqlite_master").fetchone()
+    return db
+
+
 @dataclass(frozen=True)
 class PendingOp:
     op_id: str
@@ -51,9 +73,13 @@ class PendingOp:
 
 
 class LocalStore:
-    def __init__(self, path: str = ":memory:") -> None:
-        self._db = sqlite3.connect(path, check_same_thread=False)
-        self._db.row_factory = sqlite3.Row
+    def __init__(self, path: str = ":memory:", *, key: str | None = None) -> None:
+        """key berilsa, baza SQLCipher (AES-256) bilan shifrlanadi. Kalitsiz fayl o'qilmaydi."""
+        if key is not None:
+            self._db = _open_encrypted(path, key)
+        else:
+            self._db = sqlite3.connect(path, check_same_thread=False)
+        self._db.row_factory = _dict_row
         self._lock = threading.RLock()
         with self._lock:
             self._db.executescript(SCHEMA)
@@ -102,7 +128,7 @@ class LocalStore:
         found = [self._product_dict(r, store_id) for r in rows if needle in r["name"].lower()]
         return found[:limit]
 
-    def _product_dict(self, row: sqlite3.Row, store_id: str) -> dict[str, Any]:
+    def _product_dict(self, row: dict[str, Any], store_id: str) -> dict[str, Any]:
         return {
             "id": row["id"],
             "name": row["name"],
@@ -162,7 +188,8 @@ class LocalStore:
 
     def pending_count(self) -> int:
         with self._lock:
-            return int(self._db.execute("SELECT COUNT(*) FROM outbox WHERE status = 'pending'").fetchone()[0])
+            row = self._db.execute("SELECT COUNT(*) AS n FROM outbox WHERE status = 'pending'").fetchone()
+            return int(row["n"])
 
     def rejected_ops(self) -> list[dict[str, Any]]:
         with self._lock:
