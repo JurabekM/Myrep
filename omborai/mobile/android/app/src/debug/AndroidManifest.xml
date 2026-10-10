@@ -4,4 +4,7 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Faqat debug: telefon kompyuterdagi serverga LAN orqali HTTP bilan ulanadi (sinov uchun).
+         Release build'da bu yo'q, u faqat HTTPS bilan ishlaydi. -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>
