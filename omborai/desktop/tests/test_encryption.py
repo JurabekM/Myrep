@@ -5,16 +5,23 @@ import sqlcipher3
 
 from omborai_desktop.offline.store import LocalStore
 from omborai_desktop.security import get_or_create_db_key
+from omborai_desktop.sync import ops as o
 
 KEY = "ab" * 32
 WRONG = "cd" * 32
 SECRET_NAME = "Maxfiy-tovar-7731"
+STORE = str(uuid.uuid4())
 
 
 def _seed(path: str) -> None:
     store = LocalStore(path, key=KEY)
-    store.upsert_products(
-        [{"id": str(uuid.uuid4()), "name": SECRET_NAME, "unit": "dona", "sale_price": 1000}]
+    store.apply_op(
+        o.new_op(
+            o.PRODUCT,
+            STORE,
+            {"id": str(uuid.uuid4()), "name": SECRET_NAME, "unit": "dona", "sale_price": 1000},
+            device_id="dev",
+        )
     )
     store.close()
 
@@ -31,7 +38,7 @@ def test_correct_key_reads_data(tmp_path):
     path = str(tmp_path / "local.db")
     _seed(path)
     reopened = LocalStore(path, key=KEY)
-    assert [p["name"] for p in reopened.search_products("maxfiy", str(uuid.uuid4()))] == [SECRET_NAME]
+    assert [p["name"] for p in reopened.search_products("maxfiy", STORE)] == [SECRET_NAME]
     reopened.close()
 
 

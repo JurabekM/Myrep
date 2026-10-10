@@ -1,12 +1,16 @@
-"""Kassa (POS) oynasi. Barcha tarmoq chaqiruvlari fon oqimida; savdo idempotent yuboriladi."""
+"""Kassa (POS) oynasi. Savdo, smena, qaytarish va katalog — hammasi MQTT operatsiyasi (docs/sync-mqtt.md).
 
+Oqim: amal → operatsiya yaratiladi → lokal bazaga darhol qo'llanadi → broker'ga yuboriladi
+(ulanmagan bo'lsa navbatga qo'yiladi va ulanganda yuboriladi).
+"""
+
+import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-import httpx
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -27,17 +31,33 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..api import ApiClient, ApiError
+from ..api import ApiClient
 from ..cart import Cart
 from ..config import DesktopConfig
 from ..escpos import build_receipt_bytes, send_to_network_printer
 from ..money import format_qty, format_som
 from ..offline.store import LocalStore
 from ..receipt import render_receipt
-from .dialogs import CloseShiftDialog, OpenShiftDialog, PaymentDialog, ReceiptDialog, RefundDialog, parse_som
+from ..sync import ops as o
+from .dialogs import (
+    CloseShiftDialog,
+    OpenShiftDialog,
+    PaymentDialog,
+    ReceiptDialog,
+    RefundDialog,
+    parse_som,
+)
+from .products_dialog import ProductsDialog
 from .tasks import BackgroundRunner
 
 ROLE_PRODUCT_ID = Qt.ItemDataRole.UserRole
+SNAPSHOT_REQUEST_INTERVAL_S = 60
+
+
+class _Bridge(QObject):
+    """MQTT oqimidan (paho) asosiy (UI) oqimiga o'tkazish uchun."""
+
+    snapshot_requested = Signal(object)
 
 
 class PosWindow(QMainWindow):
@@ -55,13 +75,15 @@ class PosWindow(QMainWindow):
         self.config = config
         self.runner = runner or BackgroundRunner(self)
         self.local = local or LocalStore()
-        self.mqtt = mqtt  # MqttSync: savdo faqat MQTT orqali (docs/sync-mqtt.md)
+        self.mqtt = mqtt
         self.store: dict[str, Any] | None = None
-        self.shift: dict[str, Any] | None = None
         self.cart = Cart()
-        self._pending: dict[str, Any] | None = None  # serverga yuborilayotgan savdo (bir vaqtda bitta)
+        self._pending: dict[str, Any] | None = None  # yuborilayotgan savdo (bir vaqtda bitta)
         self._filling_table = False
         self._flushing = False
+        self._last_snapshot_request = 0.0
+        self._bridge = _Bridge(self)
+        self._bridge.snapshot_requested.connect(self._on_snapshot_requested)
         self._sync_timer = QTimer(self)
         self._sync_timer.setInterval(refresh_interval_ms)
         self._sync_timer.timeout.connect(self._refresh_sync_state)
@@ -77,11 +99,13 @@ class PosWindow(QMainWindow):
         self.store_label = QLabel("Do'kon: —")
         self.shift_label = QLabel("Smena: —")
         self.shift_label.setStyleSheet("font-weight: bold;")
+        self.sync_label = QLabel("Sinxron: —")
         self.btn_shift = QPushButton("Smena")
         self.btn_shift.clicked.connect(self._on_shift_clicked)
-        self.sync_label = QLabel("Sinxron: —")
         self.btn_refund = QPushButton("Qaytarish")
         self.btn_refund.clicked.connect(self._on_refund_clicked)
+        self.btn_products = QPushButton("Tovarlar")
+        self.btn_products.clicked.connect(self._open_products)
 
         top = QHBoxLayout()
         top.addWidget(self.store_label)
@@ -89,10 +113,10 @@ class PosWindow(QMainWindow):
         top.addWidget(self.shift_label)
         top.addStretch(1)
         top.addWidget(self.sync_label)
+        top.addWidget(self.btn_products)
         top.addWidget(self.btn_refund)
         top.addWidget(self.btn_shift)
 
-        # Chap: skaner va qidiruv
         self.search = QLineEdit()
         self.search.setPlaceholderText("Shtrix-kod skanerlang yoki nom yozing (F2)")
         self.search.setMinimumHeight(48)
@@ -105,7 +129,6 @@ class PosWindow(QMainWindow):
         left_layout.addWidget(QLabel("Natijalar (Enter yoki ikki marta bosing):"))
         left_layout.addWidget(self.results)
 
-        # O'ng: savat
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Tovar", "Miqdor", "Narx", "Summa"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -147,6 +170,7 @@ class PosWindow(QMainWindow):
         row.addWidget(self.btn_remove)
         row.addWidget(self.btn_clear)
         right_layout.addLayout(row)
+        right_layout.addWidget(QLabel("Fiskal chek: ishlab chiqish jarayonida"))
         right_layout.addWidget(self.btn_pay)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -161,6 +185,7 @@ class PosWindow(QMainWindow):
         self.setCentralWidget(central)
         self.statusBar().showMessage("Tayyor")
         self._refresh_cart()
+        self._show_shift_state()
 
     def _build_shortcuts(self) -> None:
         self._bind_shortcut("F2", self.search.setFocus)
@@ -172,7 +197,7 @@ class PosWindow(QMainWindow):
         shortcut = QShortcut(QKeySequence(key), parent or self)
         shortcut.activated.connect(action)
 
-    # --- yordamchilar ------------------------------------------------------
+    # --- yordamchilar -------------------------------------------------------
 
     @property
     def store_id(self) -> str:
@@ -183,49 +208,82 @@ class PosWindow(QMainWindow):
     def _status(self, text: str) -> None:
         self.statusBar().showMessage(text, 8000)
 
-    def _on_error(self, exc: Exception) -> None:
-        if isinstance(exc, ApiError):
-            QMessageBox.warning(self, "Xatolik", exc.message)
-        elif isinstance(exc, httpx.HTTPError):
-            self._status("Serverga ulanib bo'lmadi. Internet yoki server holatini tekshiring.")
-        else:
-            QMessageBox.critical(self, "Kutilmagan xatolik", str(exc))
+    def _warn(self, title: str, text: str) -> None:
+        QMessageBox.warning(self, title, text)
 
-    # --- boshlash: do'kon va smena -----------------------------------------
+    def _emit(self, op: dict[str, Any]) -> None:
+        """Operatsiyani lokal qo'llaydi va broker'ga yuboradi (yoki navbatga qo'yadi)."""
+        self.local.apply_op(op)
+        if self.mqtt is None or not self.mqtt.connected:
+            self.local.enqueue(op)
+            self._update_sync_label()
+            return
+        mqtt = self.mqtt
+
+        def send() -> None:
+            mqtt.send(op)
+
+        self.runner.run(send, lambda _r: self._update_sync_label(), lambda _e: self._queue(op))
+
+    def _queue(self, op: dict[str, Any]) -> None:
+        self.local.enqueue(op)
+        self._update_sync_label()
+
+    def _new_op(self, op_type: str, payload: dict[str, Any], op_id: str | None = None) -> dict[str, Any]:
+        return o.new_op(op_type, self.store_id, payload, device_id=self.local.device_id(), op_id=op_id)
+
+    # --- boshlash ------------------------------------------------------------
 
     def start(self) -> None:
         if self.mqtt is not None:
+            self.mqtt.on_request = self._bridge.snapshot_requested.emit
             self.runner.run(self.mqtt.start, self._on_mqtt_started, self._on_mqtt_failed)
+        self._load_saved_store()
         self._sync_timer.start()
-        self.runner.run(self.api.stores, self._on_stores_loaded, self._on_error)
+        self.runner.run(self.api.stores, self._on_stores_loaded, self._on_stores_failed)
+
+    def _load_saved_store(self) -> None:
+        store_id = self.local.get_state("store_id")
+        name = self.local.get_state("store_name")
+        if store_id and name:
+            self.store = {"id": store_id, "name": name}
+            self.store_label.setText(f"Do'kon: <b>{name}</b>")
+            self._show_shift_state()
+
+    def _on_stores_loaded(self, stores: list[dict[str, Any]]) -> None:
+        if not stores:
+            self._warn("Do'kon yo'q", "Hisobingizga biriktirilgan do'kon topilmadi.")
+            return
+        self.store = stores[0]
+        self.local.set_state("store_id", str(self.store["id"]))
+        self.local.set_state("store_name", str(self.store["name"]))
+        self.store_label.setText(f"Do'kon: <b>{self.store['name']}</b>")
+        self._show_shift_state()
+        self._refresh_sync_state()
+
+    def _on_stores_failed(self, exc: Exception) -> None:
+        if self.store is None:
+            self._on_error(exc)
+        else:
+            self._status("Server bilan aloqa yo'q: saqlangan do'kon ishlatilmoqda")
 
     def _on_mqtt_started(self, _result: Any) -> None:
         self._refresh_sync_state()
 
     def _on_mqtt_failed(self, exc: Exception) -> None:
-        self._update_sync_label(ok=False)
+        self._update_sync_label()
         self._status(f"MQTT ulanmadi: {exc}")
 
-    def _on_stores_loaded(self, stores: list[dict[str, Any]]) -> None:
-        if not stores:
-            QMessageBox.warning(self, "Do'kon yo'q", "Hisobingizga biriktirilgan do'kon topilmadi.")
-            return
-        self.store = stores[0]
-        self.store_label.setText(f"Do'kon: <b>{self.store['name']}</b>")
-        self._load_shift()
+    def _on_error(self, exc: Exception) -> None:
+        self._warn("Xatolik", str(exc))
 
-    def _load_shift(self) -> None:
-        self.runner.run(lambda: self.api.current_shift(self.store_id), self._on_shift_loaded, self._on_error)
-
-    def _on_shift_loaded(self, shift: dict[str, Any] | None) -> None:
-        self.shift = shift
-        self._show_shift_state()
-        self._refresh_sync_state()
-        if shift is None:
-            self._open_shift_dialog()
+    # --- smena (MQTT) ----------------------------------------------------------
 
     def _show_shift_state(self) -> None:
-        if self.shift is None:
+        if self.store is None:
+            return
+        shift = self.local.open_shift(self.store_id)
+        if shift is None:
             self.shift_label.setText("Smena: <span style='color:#b91c1c'>yopiq</span>")
             self.btn_shift.setText("Smena ochish")
         else:
@@ -233,71 +291,63 @@ class PosWindow(QMainWindow):
             self.btn_shift.setText("Smenani yopish")
 
     def _on_shift_clicked(self) -> None:
-        if self.shift is None:
-            self._open_shift_dialog()
+        if self.store is None:
+            return
+        if self.local.open_shift(self.store_id) is None:
+            open_dialog = OpenShiftDialog(self)
+            if open_dialog.exec() == QDialog.DialogCode.Accepted:
+                self.open_shift(open_dialog.opening_cash())
         else:
-            self._close_shift_dialog()
+            close_dialog = CloseShiftDialog(parent=self)
+            if close_dialog.exec() == QDialog.DialogCode.Accepted:
+                self.close_shift(close_dialog.closing_cash())
 
-    def _open_shift_dialog(self) -> None:
-        dialog = OpenShiftDialog(self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+    def open_shift(self, opening_cash: int) -> None:
+        if self.local.open_shift(self.store_id) is not None:
+            self._warn("Smena", "Smena allaqachon ochiq.")
             return
-        cash = dialog.opening_cash()
-        self.runner.run(
-            lambda: self.api.open_shift(self.store_id, cash),
-            self._on_shift_loaded,
-            self._on_error,
+        shift_id = str(uuid.uuid4())
+        self._emit(
+            self._new_op(o.SHIFT_OPEN, {"shift_id": shift_id, "opening_cash": opening_cash}, op_id=shift_id)
         )
+        self._show_shift_state()
 
-    def _close_shift_dialog(self) -> None:
-        dialog = CloseShiftDialog(parent=self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        shift_id, cash = str(self.shift["id"]), dialog.closing_cash()  # type: ignore[index]
-
-        def on_closed(summary: dict[str, Any]) -> None:
-            self.shift = None
-            self._show_shift_state()
-            methods = ", ".join(f"{k}: {format_som(v)}" for k, v in summary["by_method"].items()) or "—"
-            QMessageBox.information(
-                self,
-                "Smena yopildi",
-                f"Savdolar: {summary['sales_count']} ta, {format_som(summary['total_sales'])} so'm\n"
-                f"Qaytarishlar: {summary['refunds_count']} ta, {format_som(summary['total_refunds'])} so'm\n"
-                f"To'lov turlari: {methods}\n"
-                f"Kutilgan naqd: {format_som(summary['expected_cash'])} so'm\n"
-                f"Haqiqiy naqd: {format_som(cash)} so'm\n"
-                f"Farq: {format_som(summary['difference'] or 0)} so'm",
+    def close_shift(self, closing_cash: int) -> dict[str, Any] | None:
+        shift = self.local.open_shift(self.store_id)
+        if shift is None:
+            self._warn("Smena", "Ochiq smena yo'q.")
+            return None
+        summary = self.local.shift_summary(shift["id"])
+        expected = int(shift["opening_cash"]) + int(summary["by_method"].get("cash", 0))
+        self._emit(
+            self._new_op(
+                o.SHIFT_CLOSE,
+                {"shift_id": shift["id"], "closing_cash": closing_cash, "summary": summary},
             )
-
-        self.runner.run(lambda: self.api.close_shift(shift_id, cash), on_closed, self._on_error)
+        )
+        self._show_shift_state()
+        methods = ", ".join(f"{k}: {format_som(v)}" for k, v in summary["by_method"].items()) or "—"
+        QMessageBox.information(
+            self,
+            "Smena yopildi",
+            f"Savdolar: {summary['sales_count']} ta, {format_som(summary['total_sales'])} so'm\n"
+            f"Qaytarishlar: {summary['refunds_count']} ta, {format_som(summary['total_refunds'])} so'm\n"
+            f"To'lov turlari: {methods}\n"
+            f"Kutilgan naqd: {format_som(expected)} so'm\n"
+            f"Haqiqiy naqd: {format_som(closing_cash)} so'm\n"
+            f"Farq: {format_som(closing_cash - expected)} so'm",
+        )
+        return summary
 
     # --- qidiruv va savat ----------------------------------------------------
 
     def _on_search_submitted(self) -> None:
+        if self.store is None:
+            return
         text = self.search.text().strip()
         if not text:
             return
         if text.isdigit() and len(text) >= 4:  # skaner odatda raqamli kod yuboradi
-            self.runner.run(
-                lambda: self.api.product_by_barcode(text, self.store_id),
-                lambda product: self._on_barcode_found(text, product),
-                lambda exc: self._lookup_offline(text, exc, barcode=True),
-            )
-        else:
-            self.runner.run(
-                lambda: self.api.search_products(text, self.store_id),
-                self._on_search_results,
-                lambda exc: self._lookup_offline(text, exc, barcode=False),
-            )
-
-    def _lookup_offline(self, text: str, exc: Exception, *, barcode: bool) -> None:
-        """Server bilan aloqa bo'lmasa, mahalliy keshdan qidiriladi."""
-        if not isinstance(exc, httpx.HTTPError):
-            self._on_error(exc)
-            return
-        self._status("Offline qidiruv (mahalliy kesh)")
-        if barcode:
             self._on_barcode_found(text, self.local.product_by_barcode(text, self.store_id))
         else:
             self._on_search_results(self.local.search_products(text, self.store_id))
@@ -408,125 +458,54 @@ class PosWindow(QMainWindow):
             self._status(str(exc))
         self._refresh_cart()
 
-    # --- to'lov va savdo ---------------------------------------------------
+    # --- savdo (MQTT) ----------------------------------------------------------
 
     def pay(self) -> None:
         if self._pending is not None:
             self._status("Oldingi savdo yuborilmoqda, kuting")
             return
-        if self.cart.is_empty:
+        if self.store is None or self.cart.is_empty:
             self._status("Savat bo'sh")
             return
-        if self.shift is None:
-            QMessageBox.warning(self, "Smena", "Avval smenani oching.")
+        shift = self.local.open_shift(self.store_id)
+        if shift is None:
+            self._warn("Smena", "Avval smenani oching.")
+            return
+        short = self._insufficient_stock()
+        if short:
+            self._warn("Qoldiq yetarli emas", short)
             return
         dialog = PaymentDialog(self.cart.total, self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
-        payload = self.cart.to_sale_payload(self.store_id, [(dialog.method, self.cart.total)])
+        payload = self.cart.to_sale_payload(self.store_id, [(dialog.method, self.cart.total)], sale_id=None)
+        payload["shift_id"] = shift["id"]
         payload["number"] = self.local.next_receipt_number()
         payload["created_at"] = datetime.now(UTC).isoformat()
-        self._pending = {"payload": payload, "change": dialog.change}
-        self._send_sale(self._pending)
+        self._complete_sale(payload, dialog.change)
 
-    def _send_sale(self, pending: dict[str, Any]) -> None:
-        payload = pending["payload"]
-        if self.mqtt is None or not self.mqtt.connected:
-            self._queue_offline(pending)
-            return
-        self.btn_pay.setEnabled(False)
-        self._status("Savdo yuborilmoqda...")
-        mqtt = self.mqtt
-        self.runner.run(
-            lambda: mqtt.publish("sale", self.store_id, payload, op_id=payload["id"]),
-            lambda op: self._on_sale_published(op, pending),
-            lambda exc: self._on_sale_publish_failed(exc, pending),
-        )
+    def _insufficient_stock(self) -> str | None:
+        for line in self.cart.lines:
+            available = self.local.balance(self.store_id, line.product_id)
+            if line.qty > available:
+                return (
+                    f"«{line.name}»: qoldiq {format_qty(available)} {line.unit}, "
+                    f"so'ralgan {format_qty(line.qty)}"
+                )
+        return None
 
-    def _on_sale_published(self, op: dict[str, Any], pending: dict[str, Any]) -> None:
-        self.local.apply_op(op)  # o'z savdomizni mahalliy qoldiqqa darhol qo'llaymiz
-        self._finish_sale(pending)
-
-    def _on_sale_publish_failed(self, exc: Exception, pending: dict[str, Any]) -> None:
-        # Yuborilganmi-yo'qmi noma'lum bo'lsa ham navbatga qo'yamiz: qayta yuborishda qabul qiluvchilar
-        # op_id bo'yicha dublikatni rad etadi, shuning uchun ikki marta hisoblanmaydi
-        self._queue_offline(pending)
-
-    def _finish_sale(self, pending: dict[str, Any]) -> None:
-        self._pending = None
-        self.btn_pay.setEnabled(True)
-        payload = pending["payload"]
+    def _complete_sale(self, payload: dict[str, Any], change: int) -> None:
+        op = self._new_op(o.SALE, payload, op_id=payload["id"])
+        self._emit(op)
         store_name = self.store["name"] if self.store else self.config.store_name_fallback
-        text = render_receipt(payload, store_name, width=self.config.receipt_width, change=pending["change"])
+        text = render_receipt(payload, store_name, width=self.config.receipt_width, change=change)
         self.cart.clear()
         self._refresh_cart()
-        self._update_sync_label()
         self._status(f"Chek #{payload['number']} saqlandi")
         dialog = ReceiptDialog(text, can_print=bool(self.config.printer_host), parent=self)
         dialog.exec()
         if dialog.print_requested:
             self._print(text)
-
-    def _queue_offline(self, pending: dict[str, Any]) -> None:
-        self._pending = None
-        self.btn_pay.setEnabled(True)
-        self.local.enqueue_sale(self.store_id, pending["payload"], datetime.now(UTC).isoformat())
-        self._finish_sale_without_receipt(pending)
-
-    def _finish_sale_without_receipt(self, pending: dict[str, Any]) -> None:
-        self.cart.clear()
-        self._refresh_cart()
-        self._update_sync_label()
-        self._status(f"Navbatga qo'yildi (aloqa tiklanganda yuboriladi): {self.local.pending_count()} ta")
-
-    # --- sinxronizatsiya (MQTT) -----------------------------------------------
-
-    def _refresh_sync_state(self) -> None:
-        if self.mqtt is None:
-            self._update_sync_label(ok=None)
-            return
-        connected = bool(self.mqtt.connected)
-        self._update_sync_label(ok=connected)
-        if connected:
-            self._flush_outbox()
-
-    def _flush_outbox(self) -> None:
-        if self._flushing or self.mqtt is None or not self.mqtt.connected:
-            return
-        ops = self.local.pending_ops(limit=50)
-        if not ops:
-            return
-        self._flushing = True
-        mqtt = self.mqtt
-
-        def publish_all() -> list[dict[str, Any]]:
-            return [mqtt.publish("sale", op.store_id, op.payload, op_id=op.op_id) for op in ops]
-
-        self.runner.run(publish_all, self._on_outbox_flushed, self._on_outbox_flush_failed)
-
-    def _on_outbox_flushed(self, published: list[dict[str, Any]]) -> None:
-        for op in published:
-            self.local.apply_op(op)
-            self.local.drop_outbox(op["op_id"])
-        self._flushing = False
-        self._update_sync_label(ok=True)
-
-    def _on_outbox_flush_failed(self, exc: Exception) -> None:
-        self._flushing = False
-        self._update_sync_label(ok=False)
-
-    def _update_sync_label(self, ok: bool | None = None) -> None:
-        pending = self.local.pending_count()
-        if self.mqtt is None or ok is None:
-            state = "—"
-        elif ok:
-            state = "<span style='color:#15803d'>MQTT ulangan</span>"
-        else:
-            state = "<span style='color:#b91c1c'>MQTT uzilgan</span>"
-        parts = [f"Sinxron: {state}"]
-        if pending:
-            parts.append(f"navbatda <b>{pending}</b>")
-        self.sync_label.setText("  ·  ".join(parts))
 
     def _print(self, text: str) -> None:
         host = self.config.printer_host
@@ -536,30 +515,123 @@ class PosWindow(QMainWindow):
         self.runner.run(
             lambda: send_to_network_printer(host, data),
             lambda _r: self._status("Chek chop etildi"),
-            lambda exc: self._on_print_failed(exc),
+            lambda exc: self._warn("Printer", f"Chop etib bo'lmadi: {exc}"),
         )
 
-    def _on_print_failed(self, exc: Exception) -> None:
-        QMessageBox.warning(self, "Printer", f"Chop etib bo'lmadi: {exc}")
-
-    # --- qaytarish ---------------------------------------------------------
+    # --- qaytarish (MQTT) -----------------------------------------------------
 
     def _on_refund_clicked(self) -> None:
-        self.runner.run(lambda: self.api.list_sales(self.store_id), self._open_refund_dialog, self._on_error)
-
-    def _open_refund_dialog(self, sales: list[dict[str, Any]]) -> None:
-        dialog = RefundDialog(sales, self)
+        if self.store is None:
+            return
+        dialog = RefundDialog(self.local.sales(self.store_id), self)
         if dialog.exec() != QDialog.DialogCode.Accepted or dialog.sale_id is None:
             return
-        sale_id = dialog.sale_id
+        self.refund_sale(dialog.sale_id)
 
-        def on_refunded(sale: dict[str, Any]) -> None:
-            self._status(f"Chek #{sale['number']} qaytarildi")
-            self.runner.run(
-                lambda: self.api.current_shift(self.store_id), self._on_shift_loaded, self._on_error
-            )
+    def refund_sale(self, sale_id: str) -> bool:
+        sale = self.local.get_sale(sale_id)
+        if sale is None or sale["status"] != "completed":
+            self._warn("Qaytarish", "Bu chekni qaytarib bo'lmaydi.")
+            return False
+        # op_id = refund:<sale_id>: barcha qurilmalarda bir chek faqat bir marta qaytariladi
+        self._emit(self._new_op(o.REFUND, {"sale_id": sale_id}, op_id=o.refund_op_id(sale_id)))
+        self._status(f"Chek #{sale['number']} qaytarildi")
+        return True
 
-        self.runner.run(lambda: self.api.refund_sale(sale_id), on_refunded, self._on_error)
+    # --- tovarlar katalogi (MQTT) -----------------------------------------------
+
+    def _open_products(self) -> None:
+        if self.store is None:
+            return
+        dialog = ProductsDialog(
+            provider=self.local.all_products,
+            on_save=self.save_product,
+            on_delete=self.delete_product,
+            parent=self,
+        )
+        dialog.exec()
+        self._refresh_cart()
+
+    def save_product(self, product: dict[str, Any]) -> None:
+        self._emit(self._new_op(o.PRODUCT, product))
+
+    def delete_product(self, product: dict[str, Any]) -> None:
+        payload = {**product, "deleted": True}
+        self._emit(self._new_op(o.PRODUCT, payload))
+
+    # --- sinxronizatsiya ------------------------------------------------------
+
+    def _refresh_sync_state(self) -> None:
+        connected = bool(self.mqtt and self.mqtt.connected)
+        self._update_sync_label()
+        if not connected:
+            return
+        self._flush_outbox()
+        if self.local.applied_count() == 0:
+            self._request_snapshot()
+
+    def _flush_outbox(self) -> None:
+        if self._flushing or self.mqtt is None or not self.mqtt.connected:
+            return
+        pending = self.local.pending_ops(limit=50)
+        if not pending:
+            return
+        self._flushing = True
+        mqtt = self.mqtt
+
+        def publish_all() -> list[str]:
+            sent: list[str] = []
+            for op in pending:
+                mqtt.send(op)
+                sent.append(op["op_id"])
+            return sent
+
+        self.runner.run(publish_all, self._on_outbox_flushed, self._on_outbox_flush_failed)
+
+    def _on_outbox_flushed(self, sent: list[str]) -> None:
+        for op_id in sent:
+            self.local.drop_outbox(op_id)
+        self._flushing = False
+        self._update_sync_label()
+
+    def _on_outbox_flush_failed(self, _exc: Exception) -> None:
+        self._flushing = False
+        self._update_sync_label()
+
+    def _request_snapshot(self) -> None:
+        """Yangi qurilma: boshqa qurilmalardan katalog va qoldiqni so'raydi (rate-limit bilan)."""
+        now = datetime.now(UTC).timestamp()
+        if now - self._last_snapshot_request < SNAPSHOT_REQUEST_INTERVAL_S or self.store is None:
+            return
+        self._last_snapshot_request = now
+        request = self._new_op(o.SNAPSHOT_REQUEST, {})
+        self._send_async(request)
+
+    def _on_snapshot_requested(self, request: dict[str, Any]) -> None:
+        """Boshqa qurilma so'radi: bizda ma'lumot bo'lsa, snapshot yuboramiz."""
+        if self.store is None or request.get("store_id") != self.store_id or self.local.applied_count() == 0:
+            return
+        snapshot = self._new_op(o.SNAPSHOT, self.local.snapshot_payload(self.store_id))
+        self._send_async(snapshot)
+
+    def _send_async(self, op: dict[str, Any]) -> None:
+        if self.mqtt is None or not self.mqtt.connected:
+            return
+        mqtt = self.mqtt
+        self.runner.run(lambda: mqtt.send(op), lambda _r: None, lambda _e: None)
+
+    def _update_sync_label(self) -> None:
+        pending = self.local.pending_count()
+        if self.mqtt is None:
+            state = "—"
+        elif self.mqtt.connected:
+            state = "<span style='color:#15803d'>MQTT ulangan</span>"
+        else:
+            state = "<span style='color:#b91c1c'>MQTT uzilgan</span>"
+        parts = [f"Sinxron: {state}"]
+        if pending:
+            parts.append(f"navbatda <b>{pending}</b>")
+        self.sync_label.setText("  ·  ".join(parts))
 
 
 __all__ = ["PosWindow"]

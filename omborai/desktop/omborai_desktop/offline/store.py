@@ -1,16 +1,22 @@
-"""Mahalliy SQLite: tovar keshi, qoldiq harakatlari nusxasi, sinxronizatsiya holati va outbox navbati.
+"""Lokal baza (SQLCipher, shifrlangan). Barcha ma'lumot MQTT operatsiyalaridan quriladi (docs/sync-mqtt.md).
 
-Qoldiq = serverdan kelgan harakatlar yig'indisi - hali yuborilmagan savdolar. Shu tariqa internet
-bo'lmasa ham kassir qoldiqni ko'radi, lekin bu server bilan kelishilmagan taxminiy raqam.
+Qoidalar:
+- Qoldiq = movements yig'indisi. Savdo, qaytarish, tuzatish, snapshot — hammasi movements orqali.
+- Tovar: eng so'nggi o'zgarish g'olib (updated_ts bo'yicha, LWW).
+- Smena: do'konda bir vaqtda bitta ochiq smena; ikkinchi ochish e'tiborsiz qoldiriladi.
+- Qaytarish op_id = refund:<sale_id>: bir chek faqat bir marta qaytariladi (barcha qurilmalarda).
 """
 
 import json
 import re
-import sqlite3
 import threading
-from dataclasses import dataclass
+import uuid
 from decimal import Decimal
 from typing import Any
+
+from ..sync import ops as o
+
+HEX_KEY = re.compile(r"^[0-9a-f]{64}$")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS products (
@@ -18,8 +24,11 @@ CREATE TABLE IF NOT EXISTS products (
     name TEXT NOT NULL,
     unit TEXT NOT NULL,
     sale_price INTEGER NOT NULL,
+    cost_price INTEGER NOT NULL DEFAULT 0,
+    min_stock TEXT NOT NULL DEFAULT '0',
     barcodes TEXT NOT NULL DEFAULT '[]',
-    deleted INTEGER NOT NULL DEFAULT 0
+    deleted INTEGER NOT NULL DEFAULT 0,
+    updated_ts TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS movements (
     id TEXT PRIMARY KEY,
@@ -29,27 +38,39 @@ CREATE TABLE IF NOT EXISTS movements (
     kind TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS movements_store_product ON movements (store_id, product_id);
-CREATE TABLE IF NOT EXISTS outbox (
-    op_id TEXT PRIMARY KEY,
-    op_type TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS sales (
+    id TEXT PRIMARY KEY,
     store_id TEXT NOT NULL,
+    shift_id TEXT,
+    number TEXT NOT NULL,
+    status TEXT NOT NULL,
+    total INTEGER NOT NULL,
     payload TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending',
-    error_title TEXT,
-    error_detail TEXT,
     created_at TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS shifts (
+    id TEXT PRIMARY KEY,
+    store_id TEXT NOT NULL,
+    opened_at TEXT NOT NULL,
+    opening_cash INTEGER NOT NULL,
+    closed_at TEXT,
+    closing_cash INTEGER,
+    summary TEXT
+);
+CREATE TABLE IF NOT EXISTS outbox (
+    op_id TEXT PRIMARY KEY,
+    store_id TEXT NOT NULL,
+    op TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS applied_ops (op_id TEXT PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS sync_state (name TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
 
 
 def _dict_row(cursor, row):  # type: ignore[no-untyped-def]
     """sqlite3 va sqlcipher3 uchun bir xil qator shakli (lug'at)."""
     return {column[0]: row[index] for index, column in enumerate(cursor.description)}
-
-
-HEX_KEY = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _open_encrypted(path: str, key: str):  # type: ignore[no-untyped-def]
@@ -60,25 +81,17 @@ def _open_encrypted(path: str, key: str):  # type: ignore[no-untyped-def]
         raise ValueError("Baza kaliti 64 belgili hex bo'lishi kerak")
     db = sqlcipher3.connect(path, check_same_thread=False)
     db.execute(f"PRAGMA key = \"x'{key}'\"")
-    # Noto'g'ri kalitda bu yerda DatabaseError ko'tariladi
-    db.execute("SELECT count(*) FROM sqlite_master").fetchone()
+    db.execute("SELECT count(*) FROM sqlite_master").fetchone()  # noto'g'ri kalitda shu yerda xato beradi
     return db
-
-
-@dataclass(frozen=True)
-class PendingOp:
-    op_id: str
-    op_type: str
-    store_id: str
-    payload: dict[str, Any]
 
 
 class LocalStore:
     def __init__(self, path: str = ":memory:", *, key: str | None = None) -> None:
-        """key berilsa, baza SQLCipher (AES-256) bilan shifrlanadi. Kalitsiz fayl o'qilmaydi."""
         if key is not None:
             self._db = _open_encrypted(path, key)
         else:
+            import sqlite3
+
             self._db = sqlite3.connect(path, check_same_thread=False)
         self._db.row_factory = _dict_row
         self._lock = threading.RLock()
@@ -90,29 +103,98 @@ class LocalStore:
         with self._lock:
             self._db.close()
 
-    # --- tovarlar keshi ----------------------------------------------------
+    # --- holat -------------------------------------------------------------
 
-    def upsert_products(self, products: list[dict[str, Any]]) -> None:
+    def get_state(self, name: str) -> str | None:
         with self._lock:
-            self._db.executemany(
-                "INSERT INTO products (id, name, unit, sale_price, barcodes, deleted) "
-                "VALUES (?, ?, ?, ?, ?, ?) "
-                "ON CONFLICT(id) DO UPDATE SET name=excluded.name, unit=excluded.unit, "
-                "sale_price=excluded.sale_price, barcodes=excluded.barcodes, "
-                "deleted=excluded.deleted",
-                [
-                    (
-                        p["id"],
-                        p["name"],
-                        p["unit"],
-                        int(p["sale_price"]),
-                        json.dumps(p.get("barcodes", []), ensure_ascii=False),
-                        1 if p.get("deleted") else 0,
-                    )
-                    for p in products
-                ],
+            row = self._db.execute("SELECT value FROM sync_state WHERE name = ?", (name,)).fetchone()
+        return None if row is None else str(row["value"])
+
+    def set_state(self, name: str, value: str) -> None:
+        with self._lock:
+            self._db.execute(
+                "INSERT INTO sync_state (name, value) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET value = "
+                "excluded.value",
+                (name, value),
             )
             self._db.commit()
+
+    def device_id(self) -> str:
+        """Qurilmaning doimiy id'si (birinchi ishga tushirishda yaratiladi)."""
+        existing = self.get_state("device_id")
+        if existing:
+            return existing
+        value = str(uuid.uuid4())
+        self.set_state("device_id", value)
+        return value
+
+    def next_receipt_number(self) -> str:
+        """Chek raqami: qurilma qisqa id + ketma-ket son (ikki qurilmada bir xil raqam bo'lmasligi uchun)."""
+        with self._lock:
+            row = self._db.execute("SELECT value FROM sync_state WHERE name = 'receipt_seq'").fetchone()
+            seq = int(row["value"]) + 1 if row else 1
+            self._db.execute(
+                "INSERT INTO sync_state (name, value) VALUES ('receipt_seq', ?) "
+                "ON CONFLICT(name) DO UPDATE SET value = excluded.value",
+                (str(seq),),
+            )
+            self._db.commit()
+        return f"{self.device_id()[:4]}-{seq}"
+
+    # --- navbat (ulanmagan paytda yuborilmagan operatsiyalar) ---------------
+
+    def enqueue(self, op: dict[str, Any]) -> None:
+        with self._lock:
+            self._db.execute(
+                "INSERT OR IGNORE INTO outbox (op_id, store_id, op, created_at) VALUES (?, ?, ?, ?)",
+                (op["op_id"], op["store_id"], json.dumps(op, ensure_ascii=False), op["ts"]),
+            )
+            self._db.commit()
+
+    def pending_ops(self, limit: int = 50) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT op FROM outbox ORDER BY created_at, op_id LIMIT ?", (limit,)
+            ).fetchall()
+        return [json.loads(r["op"]) for r in rows]
+
+    def pending_count(self) -> int:
+        with self._lock:
+            row = self._db.execute("SELECT COUNT(*) AS n FROM outbox").fetchone()
+        return int(row["n"])
+
+    def drop_outbox(self, op_id: str) -> None:
+        with self._lock:
+            self._db.execute("DELETE FROM outbox WHERE op_id = ?", (op_id,))
+            self._db.commit()
+
+    # --- o'qish -------------------------------------------------------------
+
+    def balance(self, store_id: str, product_id: str) -> Decimal:
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT qty FROM movements WHERE store_id = ? AND product_id = ?", (store_id, product_id)
+            ).fetchall()
+        return sum((Decimal(r["qty"]) for r in rows), Decimal(0))
+
+    def _product_dict(self, row: dict[str, Any], store_id: str) -> dict[str, Any]:
+        return {
+            "id": row["id"],
+            "name": row["name"],
+            "unit": row["unit"],
+            "sale_price": row["sale_price"],
+            "cost_price": row["cost_price"],
+            "min_stock": row["min_stock"],
+            "barcodes": json.loads(row["barcodes"]),
+            "stock_qty": str(self.balance(store_id, row["id"])),
+        }
+
+    def get_product(self, product_id: str, store_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._db.execute(
+                "SELECT * FROM products WHERE id = ? AND deleted = 0", (product_id,)
+            ).fetchone()
+        return None if row is None else self._product_dict(row, store_id)
 
     def product_by_barcode(self, code: str, store_id: str) -> dict[str, Any] | None:
         with self._lock:
@@ -129,184 +211,242 @@ class LocalStore:
         found = [self._product_dict(r, store_id) for r in rows if needle in r["name"].lower()]
         return found[:limit]
 
-    def _product_dict(self, row: dict[str, Any], store_id: str) -> dict[str, Any]:
+    def open_shift(self, store_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._db.execute(
+                "SELECT * FROM shifts WHERE store_id = ? AND closed_at IS NULL", (store_id,)
+            ).fetchone()
+        return None if row is None else dict(row)
+
+    def sales(self, store_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT * FROM sales WHERE store_id = ? ORDER BY created_at DESC LIMIT ?", (store_id, limit)
+            ).fetchall()
+        return [{**dict(r), "payload": json.loads(r["payload"])} for r in rows]
+
+    def get_sale(self, sale_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._db.execute("SELECT * FROM sales WHERE id = ?", (sale_id,)).fetchone()
+        return None if row is None else {**dict(row), "payload": json.loads(row["payload"])}
+
+    def shift_summary(self, shift_id: str) -> dict[str, Any]:
+        """Smena yopilganda hisobot: savdolar, qaytarishlar, to'lov turlari bo'yicha summa."""
+        with self._lock:
+            rows = self._db.execute("SELECT * FROM sales WHERE shift_id = ?", (shift_id,)).fetchall()
+        summary: dict[str, Any] = {
+            "sales_count": 0,
+            "total_sales": 0,
+            "refunds_count": 0,
+            "total_refunds": 0,
+            "by_method": {},
+        }
+        for row in rows:
+            payload = json.loads(row["payload"])
+            if row["status"] == "refunded":
+                summary["refunds_count"] += 1
+                summary["total_refunds"] += int(row["total"])
+                continue
+            summary["sales_count"] += 1
+            summary["total_sales"] += int(row["total"])
+            for payment in payload["payments"]:
+                method = payment["method"]
+                summary["by_method"][method] = summary["by_method"].get(method, 0) + int(payment["amount"])
+        return summary
+
+    def all_products(self) -> list[dict[str, Any]]:
+        """Katalog (o'chirilganlarsiz), ism bo'yicha."""
+        with self._lock:
+            rows = self._db.execute("SELECT * FROM products WHERE deleted = 0 ORDER BY name").fetchall()
+        return [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "unit": r["unit"],
+                "sale_price": r["sale_price"],
+                "cost_price": r["cost_price"],
+                "min_stock": r["min_stock"],
+                "barcodes": json.loads(r["barcodes"]),
+            }
+            for r in rows
+        ]
+
+    def applied_count(self) -> int:
+        with self._lock:
+            return int(self._db.execute("SELECT COUNT(*) AS n FROM applied_ops").fetchone()["n"])
+
+    def snapshot_payload(self, store_id: str) -> dict[str, Any]:
+        """Yangi qurilmaga uzatiladigan holat: katalog, qoldiqlar, ochiq smena."""
+        with self._lock:
+            products = self._db.execute("SELECT * FROM products").fetchall()
+            balances = self._db.execute(
+                "SELECT product_id, qty FROM movements WHERE store_id = ?", (store_id,)
+            ).fetchall()
+            open_shift = self._db.execute(
+                "SELECT * FROM shifts WHERE store_id = ? AND closed_at IS NULL", (store_id,)
+            ).fetchone()
+        totals: dict[str, Decimal] = {}
+        for row in balances:
+            totals[row["product_id"]] = totals.get(row["product_id"], Decimal(0)) + Decimal(row["qty"])
         return {
-            "id": row["id"],
-            "name": row["name"],
-            "unit": row["unit"],
-            "sale_price": row["sale_price"],
-            "barcodes": json.loads(row["barcodes"]),
-            "stock_qty": str(self.balance(store_id, row["id"])),
+            "products": [
+                {
+                    "id": p["id"],
+                    "name": p["name"],
+                    "unit": p["unit"],
+                    "sale_price": p["sale_price"],
+                    "cost_price": p["cost_price"],
+                    "min_stock": p["min_stock"],
+                    "barcodes": json.loads(p["barcodes"]),
+                    "deleted": bool(p["deleted"]),
+                    "updated_ts": p["updated_ts"],
+                }
+                for p in products
+            ],
+            "balances": {pid: str(qty) for pid, qty in totals.items() if qty != 0},
+            "open_shift": dict(open_shift) if open_shift else None,
         }
 
-    # --- qoldiq -------------------------------------------------------------
-
-    def balance(self, store_id: str, product_id: str) -> Decimal:
-        with self._lock:
-            rows = self._db.execute(
-                "SELECT qty FROM movements WHERE store_id = ? AND product_id = ?", (store_id, product_id)
-            ).fetchall()
-        confirmed = sum((Decimal(r["qty"]) for r in rows), Decimal(0))
-        return confirmed - self._pending_sold(store_id, product_id)
-
-    def _pending_sold(self, store_id: str, product_id: str) -> Decimal:
-        """Hali serverdan qaytmagan savdolar: navbatda (pending) va serverda qo'llangan (applied)."""
-        with self._lock:
-            rows = self._db.execute(
-                "SELECT payload FROM outbox WHERE op_type = 'sale' AND store_id = ? "
-                "AND status IN ('pending', 'applied')",
-                (store_id,),
-            ).fetchall()
-        total = Decimal(0)
-        for row in rows:
-            for item in json.loads(row["payload"])["items"]:
-                if item["product_id"] == product_id:
-                    total += Decimal(str(item["qty"]))
-        return total
-
-    # --- outbox ----------------------------------------------------------------
-
-    def enqueue_sale(self, store_id: str, payload: dict[str, Any], created_at: str) -> None:
-        with self._lock:
-            self._db.execute(
-                "INSERT OR IGNORE INTO outbox (op_id, op_type, store_id, payload, created_at) "
-                "VALUES (?, 'sale', ?, ?, ?)",
-                (payload["id"], store_id, json.dumps(payload, ensure_ascii=False), created_at),
-            )
-            self._db.commit()
-
-    def pending_ops(self, limit: int = 100, store_id: str | None = None) -> list[PendingOp]:
-        sql = "SELECT * FROM outbox WHERE status = 'pending'"
-        args: list[Any] = []
-        if store_id is not None:
-            sql += " AND store_id = ?"
-            args.append(store_id)
-        sql += " ORDER BY created_at, op_id LIMIT ?"
-        args.append(limit)
-        with self._lock:
-            rows = self._db.execute(sql, args).fetchall()
-        return [PendingOp(r["op_id"], r["op_type"], r["store_id"], json.loads(r["payload"])) for r in rows]
-
-    def pending_count(self) -> int:
-        with self._lock:
-            row = self._db.execute("SELECT COUNT(*) AS n FROM outbox WHERE status = 'pending'").fetchone()
-            return int(row["n"])
-
-    def rejected_ops(self) -> list[dict[str, Any]]:
-        with self._lock:
-            rows = self._db.execute(
-                "SELECT * FROM outbox WHERE status = 'rejected' ORDER BY created_at"
-            ).fetchall()
-        return [dict(r) for r in rows]
-
-    def drop_outbox(self, op_id: str) -> None:
-        """MQTT orqali yuborilib, qo'llangan navbat yozuvini o'chiradi (qoldiq endi movements'da)."""
-        with self._lock:
-            self._db.execute("DELETE FROM outbox WHERE op_id = ?", (op_id,))
-            self._db.commit()
-
-    def device_id(self) -> str:
-        """Qurilmaning doimiy id'si (birinchi ishga tushirishda yaratiladi)."""
-        import uuid
-
-        with self._lock:
-            row = self._db.execute("SELECT value FROM sync_state WHERE name = 'device_id'").fetchone()
-            if row:
-                return str(row["value"])
-            value = str(uuid.uuid4())
-            self._db.execute("INSERT INTO sync_state (name, value) VALUES ('device_id', ?)", (value,))
-            self._db.commit()
-            return value
-
-    def next_receipt_number(self) -> int:
-        """Qurilma bo'yicha chek raqami. Atomik: bir vaqtda ikki chek bir raqam olmaydi."""
-        with self._lock:
-            row = self._db.execute("SELECT value FROM sync_state WHERE name = 'receipt_seq'").fetchone()
-            number = int(row["value"]) + 1 if row else 1
-            self._db.execute(
-                "INSERT INTO sync_state (name, value) VALUES ('receipt_seq', ?) "
-                "ON CONFLICT(name) DO UPDATE SET value = excluded.value",
-                (str(number),),
-            )
-            self._db.commit()
-            return number
-
-    def acknowledge_rejected(self, op_id: str) -> None:
-        with self._lock:
-            self._db.execute("DELETE FROM outbox WHERE op_id = ? AND status = 'rejected'", (op_id,))
-            self._db.commit()
-
-    def apply_push_results(self, results: list[dict[str, Any]]) -> None:
-        with self._lock:
-            for result in results:
-                if result["status"] == "applied":
-                    # Qoldiq harakati pull orqali kelgandan keyin o'chiriladi (apply_pull)
-                    self._db.execute(
-                        "UPDATE outbox SET status = 'applied' WHERE op_id = ? AND status = 'pending'",
-                        (result["op_id"],),
-                    )
-                else:
-                    self._db.execute(
-                        "UPDATE outbox SET status = 'rejected', error_title = ?, error_detail = ? "
-                        "WHERE op_id = ?",
-                        (result.get("error_title"), result.get("error_detail"), result["op_id"]),
-                    )
-            self._db.commit()
-
-    # --- MQTT operatsiyalari (docs/sync-mqtt.md) ----------------------------
+    # --- qo'llash (barcha operatsiya turlari) -------------------------------
 
     def apply_op(self, op: dict[str, Any]) -> bool:
-        """Operatsiyani bir marta qo'llaydi. Qaytaradi: yangi bo'lsa True, dublikat bo'lsa False.
+        """Operatsiyani bir marta qo'llaydi. Yangi bo'lsa True; dublikat yoki e'tiborsiz bo'lsa False.
 
         Dedupe va qo'llash bitta tranzaksiyada: yarim qo'llangan operatsiya bo'lmaydi.
         """
-        op_id = op["op_id"]
-        store_id = op["store_id"]
-        payload = op["payload"]
+        kind = op["type"]
+        if kind == o.SNAPSHOT_REQUEST:
+            return False  # ma'lumot emas, javob talab qiladi
         with self._lock:
             try:
-                inserted = self._db.execute("INSERT OR IGNORE INTO applied_ops (op_id) VALUES (?)", (op_id,))
+                if kind == o.SNAPSHOT and self.applied_count() > 0:
+                    return False  # snapshot faqat bo'sh (yangi) qurilmaga
+                inserted = self._db.execute(
+                    "INSERT OR IGNORE INTO applied_ops (op_id) VALUES (?)", (op["op_id"],)
+                )
                 if inserted.rowcount == 0:
                     self._db.commit()
                     return False
-                kind = op["type"]
-                if kind in ("sale", "refund"):
-                    sign = -1 if kind == "sale" else 1
-                    movement_kind = "sale" if kind == "sale" else "sale_return"
-                    for item in payload["items"]:
-                        self._insert_movement(
-                            f"{op_id}:{item['product_id']}",
-                            store_id,
-                            item["product_id"],
-                            sign * Decimal(str(item["qty"])),
-                            movement_kind,
-                        )
-                elif kind == "movement":
-                    self._insert_movement(
-                        op_id, store_id, payload["product_id"], Decimal(str(payload["qty"])), payload["kind"]
-                    )
-                elif kind == "product":
-                    self._db.execute(
-                        "INSERT INTO products (id, name, unit, sale_price, barcodes, deleted) "
-                        "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, "
-                        "unit=excluded.unit, sale_price=excluded.sale_price, barcodes=excluded.barcodes, "
-                        "deleted=excluded.deleted",
-                        (
-                            payload["id"],
-                            payload["name"],
-                            payload["unit"],
-                            int(payload["sale_price"]),
-                            json.dumps(payload.get("barcodes", []), ensure_ascii=False),
-                            1 if payload.get("deleted") else 0,
-                        ),
-                    )
-                else:
+                handler = self._handlers.get(kind)
+                if handler is None:
                     raise ValueError(f"Noma'lum operatsiya turi: {kind}")
+                handler(self, op)
                 self._db.commit()
                 return True
             except Exception:
                 self._db.rollback()
                 raise
+
+    def _apply_sale(self, op: dict[str, Any]) -> None:
+        payload = op["payload"]
+        for item in payload["items"]:
+            self._insert_movement(
+                f"{op['op_id']}:{item['product_id']}",
+                op["store_id"],
+                item["product_id"],
+                -Decimal(str(item["qty"])),
+                "sale",
+            )
+        self._db.execute(
+            "INSERT OR IGNORE INTO sales "
+            "(id, store_id, shift_id, number, status, total, payload, created_at) "
+            "VALUES (?, ?, ?, ?, 'completed', ?, ?, ?)",
+            (
+                payload["id"],
+                op["store_id"],
+                payload.get("shift_id"),
+                str(payload["number"]),
+                int(payload["total"]),
+                json.dumps(payload, ensure_ascii=False),
+                payload["created_at"],
+            ),
+        )
+
+    def _apply_refund(self, op: dict[str, Any]) -> None:
+        sale_id = op["payload"]["sale_id"]
+        row = self._db.execute("SELECT * FROM sales WHERE id = ?", (sale_id,)).fetchone()
+        if row is None or row["status"] != "completed":
+            return
+        for item in json.loads(row["payload"])["items"]:
+            self._insert_movement(
+                f"refund:{sale_id}:{item['product_id']}",
+                op["store_id"],
+                item["product_id"],
+                Decimal(str(item["qty"])),
+                "sale_return",
+            )
+        self._db.execute("UPDATE sales SET status = 'refunded' WHERE id = ?", (sale_id,))
+
+    def _apply_shift_open(self, op: dict[str, Any]) -> None:
+        payload = op["payload"]
+        if self.open_shift(op["store_id"]) is not None:
+            return  # do'konda ochiq smena bor: ikkinchisi e'tiborsiz
+        self._db.execute(
+            "INSERT OR IGNORE INTO shifts (id, store_id, opened_at, opening_cash) VALUES (?, ?, ?, ?)",
+            (payload["shift_id"], op["store_id"], op["ts"], int(payload["opening_cash"])),
+        )
+
+    def _apply_shift_close(self, op: dict[str, Any]) -> None:
+        payload = op["payload"]
+        self._db.execute(
+            "UPDATE shifts SET closed_at = ?, closing_cash = ?, summary = ? WHERE id = ? AND closed_at IS "
+            "NULL",
+            (
+                op["ts"],
+                int(payload["closing_cash"]),
+                json.dumps(payload.get("summary", {})),
+                payload["shift_id"],
+            ),
+        )
+
+    def _apply_movement(self, op: dict[str, Any]) -> None:
+        payload = op["payload"]
+        self._insert_movement(
+            op["op_id"], op["store_id"], payload["product_id"], Decimal(str(payload["qty"])), payload["kind"]
+        )
+
+    def _apply_product(self, op: dict[str, Any]) -> None:
+        self._upsert_product(op["payload"], op["ts"])
+
+    def _apply_snapshot(self, op: dict[str, Any]) -> None:
+        payload = op["payload"]
+        for product in payload["products"]:
+            self._upsert_product(product, product["updated_ts"])
+        for product_id, qty in payload["balances"].items():
+            self._insert_movement(
+                f"snapshot:{op['op_id']}:{product_id}", op["store_id"], product_id, Decimal(qty), "snapshot"
+            )
+        if payload.get("open_shift"):
+            shift = payload["open_shift"]
+            self._db.execute(
+                "INSERT OR IGNORE INTO shifts (id, store_id, opened_at, opening_cash) VALUES (?, ?, ?, ?)",
+                (shift["id"], op["store_id"], shift["opened_at"], int(shift["opening_cash"])),
+            )
+
+    def _upsert_product(self, product: dict[str, Any], ts: str) -> None:
+        """Eng so'nggi o'zgarish g'olib: eski ts'li operatsiya yangisini o'chirmaydi."""
+        row = self._db.execute("SELECT updated_ts FROM products WHERE id = ?", (product["id"],)).fetchone()
+        if row is not None and row["updated_ts"] >= ts:
+            return
+        self._db.execute(
+            "INSERT INTO products (id, name, unit, sale_price, cost_price, min_stock, barcodes, deleted, "
+            "updated_ts) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, "
+            "unit=excluded.unit, sale_price=excluded.sale_price, cost_price=excluded.cost_price, "
+            "min_stock=excluded.min_stock, barcodes=excluded.barcodes, deleted=excluded.deleted, "
+            "updated_ts=excluded.updated_ts",
+            (
+                product["id"],
+                product["name"],
+                product["unit"],
+                int(product["sale_price"]),
+                int(product.get("cost_price", 0)),
+                str(product.get("min_stock", "0")),
+                json.dumps(product.get("barcodes", []), ensure_ascii=False),
+                1 if product.get("deleted") else 0,
+                ts,
+            ),
+        )
 
     def _insert_movement(
         self, movement_id: str, store_id: str, product_id: str, qty: Decimal, kind: str
@@ -316,33 +456,12 @@ class LocalStore:
             (movement_id, store_id, product_id, str(qty), kind),
         )
 
-    # --- sinxronizatsiya holati ---------------------------------------------
-
-    def cursors(self) -> dict[str, str]:
-        with self._lock:
-            rows = self._db.execute("SELECT name, value FROM sync_state").fetchall()
-        return {r["name"]: r["value"] for r in rows}
-
-    def apply_pull(self, page: dict[str, Any]) -> None:
-        self.upsert_products(page["products"])
-        with self._lock:
-            self._db.executemany(
-                "INSERT OR IGNORE INTO movements (id, store_id, product_id, qty, kind) "
-                "VALUES (?, ?, ?, ?, ?)",
-                [
-                    (m["id"], m["store_id"], m["product_id"], str(m["qty"]), m["kind"])
-                    for m in page["movements"]
-                ],
-            )
-            # Serverdan qaytgan savdo harakatlari — mahalliy 'applied' yozuvlar endi keraksiz
-            sale_refs = [m["reference_id"] for m in page["movements"] if m.get("reference_id")]
-            self._db.executemany(
-                "DELETE FROM outbox WHERE op_id = ? AND status = 'applied'",
-                [(ref,) for ref in sale_refs],
-            )
-            self._db.executemany(
-                "INSERT INTO sync_state (name, value) VALUES (?, ?) "
-                "ON CONFLICT(name) DO UPDATE SET value = excluded.value",
-                list(page["cursors"].items()),
-            )
-            self._db.commit()
+    _handlers = {
+        o.SALE: _apply_sale,
+        o.REFUND: _apply_refund,
+        o.SHIFT_OPEN: _apply_shift_open,
+        o.SHIFT_CLOSE: _apply_shift_close,
+        o.MOVEMENT: _apply_movement,
+        o.PRODUCT: _apply_product,
+        o.SNAPSHOT: _apply_snapshot,
+    }
