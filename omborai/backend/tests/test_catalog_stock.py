@@ -214,3 +214,21 @@ async def test_product_list_pagination_with_cursor(client):
         if cursor is None:
             break
     assert len(seen) == 5 and len(set(seen)) == 5
+
+
+async def test_create_response_includes_barcodes_after_commit(client):
+    """Regressiya: commit'dan keyingi javob ham RLS kontekstida tuzilishi kerak (barcode bo'sh qolmasin)."""
+    tokens = await register(client, "javob@example.uz")
+    store_id = await first_store_id(client, tokens)
+    resp = await client.post(
+        "/v1/products",
+        json={"name": "Choy", "sale_price": 22000, "barcodes": ["4780012300031"]},
+        headers=bearer(tokens),
+    )
+    assert resp.status_code == 201
+    assert resp.json()["barcodes"] == ["4780012300031"]
+    assert resp.json()["stock_qty"] is None
+    with_stock = await client.get(
+        f"/v1/products/{resp.json()['id']}?store_id={store_id}", headers=bearer(tokens)
+    )
+    assert with_stock.json()["stock_qty"] == "0.000"

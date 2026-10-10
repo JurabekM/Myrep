@@ -221,3 +221,90 @@ class BalanceOut(BaseModel):
     qty: Decimal
     min_stock: Decimal
     low: bool
+
+
+# ---------------------------------------------------------------------------
+# Faza 3: kassa smenasi va savdo
+# ---------------------------------------------------------------------------
+
+PaymentMethod = Literal["cash", "card", "click", "payme"]
+
+
+class SaleItemIn(BaseModel):
+    product_id: uuid.UUID
+    qty: Decimal = Field(gt=0, max_digits=14, decimal_places=3)
+
+
+class PaymentIn(BaseModel):
+    method: PaymentMethod
+    amount: int = Field(gt=0, le=MAX_MONEY)
+
+
+class SaleIn(BaseModel):
+    id: uuid.UUID = Field(description="Klient tomonidan yaratilgan UUID (idempotentlik kaliti)")
+    store_id: uuid.UUID
+    items: list[SaleItemIn] = Field(min_length=1, max_length=200)
+    discount: int = Field(default=0, ge=0, le=MAX_MONEY)
+    payments: list[PaymentIn] = Field(min_length=1, max_length=5)
+    client_created_at: datetime | None = None
+
+
+class SaleItemOut(BaseModel):
+    product_id: uuid.UUID
+    product_name: str
+    unit: str
+    qty: Decimal
+    unit_price: int
+    line_total: int
+
+
+class PaymentOut(BaseModel):
+    method: str
+    amount: int
+
+
+class SaleOut(BaseModel):
+    id: uuid.UUID
+    number: int
+    store_id: uuid.UUID
+    shift_id: uuid.UUID
+    status: str
+    subtotal: int
+    discount: int
+    total: int
+    created_by: uuid.UUID
+    created_at: datetime
+    client_created_at: datetime | None
+    items: list[SaleItemOut]
+    payments: list[PaymentOut]
+
+
+class ShiftOpenIn(BaseModel):
+    store_id: uuid.UUID
+    opening_cash: int = Field(default=0, ge=0, le=MAX_MONEY)
+
+
+class ShiftCloseIn(BaseModel):
+    closing_cash: int = Field(ge=0, le=MAX_MONEY)
+
+
+class ShiftOut(BaseModel):
+    id: uuid.UUID
+    store_id: uuid.UUID
+    opened_by: uuid.UUID
+    opened_at: datetime
+    closed_at: datetime | None
+    opening_cash: int
+    closing_cash: int | None
+
+
+class ShiftSummaryOut(BaseModel):
+    shift: ShiftOut
+    sales_count: int
+    total_sales: int
+    refunds_count: int
+    total_refunds: int
+    by_method: dict[str, int]
+    expected_cash: int
+    closing_cash: int | None
+    difference: int | None

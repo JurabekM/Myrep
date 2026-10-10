@@ -15,6 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     func,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -203,3 +204,88 @@ class StockMovement(Base):
     note: Mapped[str | None] = mapped_column(String(300), nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ---------------------------------------------------------------------------
+# Faza 3: kassa smenasi, savdo (chek), to'lovlar
+# ---------------------------------------------------------------------------
+
+PAYMENT_METHODS = ("cash", "card", "click", "payme")
+
+
+class Shift(AuditMixin, Base):
+    """Kassa smenasi. Bir do'konda bir vaqtda faqat bitta ochiq smena bo'ladi (partial unique index)."""
+
+    __tablename__ = "shifts"
+    __table_args__ = (
+        Index(
+            "uq_open_shift_per_store",
+            "store_id",
+            unique=True,
+            postgresql_where=text("closed_at IS NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("stores.id"))
+    opened_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    closed_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"), nullable=True)
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    opening_cash: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    closing_cash: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
+
+class Sale(Base):
+    """Chek. id klient tomonidan yaratiladi (UUID): offline yuborish va qayta urinishda dublikat bo'lmaydi.
+
+    Narxlar va jami summa faqat serverda hisoblanadi.
+    """
+
+    __tablename__ = "sales"
+    __table_args__ = (
+        CheckConstraint("status IN ('completed', 'refunded')", name="ck_sale_status"),
+        CheckConstraint("total >= 0", name="ck_sale_total"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("stores.id"), index=True)
+    shift_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("shifts.id"), index=True)
+    number: Mapped[int] = mapped_column(BigInteger, server_default=text("nextval('sale_number_seq')"))
+    status: Mapped[str] = mapped_column(String(20), default="completed", server_default="completed")
+    subtotal: Mapped[int] = mapped_column(BigInteger)
+    discount: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    total: Mapped[int] = mapped_column(BigInteger)
+    created_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    client_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SaleItem(Base):
+    __tablename__ = "sale_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    sale_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("sales.id"), index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("products.id"))
+    product_name: Mapped[str] = mapped_column(String(200))  # tarixiy nom (tovar keyin o'zgarsa ham)
+    unit: Mapped[str] = mapped_column(String(10))
+    qty: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    unit_price: Mapped[int] = mapped_column(BigInteger)
+    line_total: Mapped[int] = mapped_column(BigInteger)
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    __table_args__ = (
+        CheckConstraint("method IN ('cash', 'card', 'click', 'payme')", name="ck_payment_method"),
+        CheckConstraint("amount > 0", name="ck_payment_amount"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    sale_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("sales.id"), index=True)
+    method: Mapped[str] = mapped_column(String(20))
+    amount: Mapped[int] = mapped_column(BigInteger)

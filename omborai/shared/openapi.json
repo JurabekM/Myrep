@@ -1107,6 +1107,366 @@
           }
         ]
       }
+    },
+    "/v1/shifts": {
+      "post": {
+        "tags": [
+          "shifts"
+        ],
+        "summary": "Open Shift",
+        "operationId": "open_shift_v1_shifts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShiftOpenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/shifts/current": {
+      "get": {
+        "tags": [
+          "shifts"
+        ],
+        "summary": "Current Shift",
+        "operationId": "current_shift_v1_shifts_current_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Store Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/shifts/{shift_id}/close": {
+      "post": {
+        "tags": [
+          "shifts"
+        ],
+        "summary": "Close Shift",
+        "operationId": "close_shift_v1_shifts__shift_id__close_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "shift_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shift Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShiftCloseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftSummaryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sales": {
+      "post": {
+        "tags": [
+          "sales"
+        ],
+        "summary": "Create Sale Endpoint",
+        "description": "Idempotent: bir xil id qayta yuborilsa, 200 bilan mavjud chek qaytadi (yangi chek yaratilmaydi).",
+        "operationId": "create_sale_endpoint_v1_sales_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOut"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Yangi chek yaratildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "sales"
+        ],
+        "summary": "List Sales",
+        "operationId": "list_sales_v1_sales_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SaleOut"
+                  },
+                  "title": "Response List Sales V1 Sales Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sales/{sale_id}": {
+      "get": {
+        "tags": [
+          "sales"
+        ],
+        "summary": "Get Sale",
+        "operationId": "get_sale_v1_sales__sale_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sale_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sale Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sales/{sale_id}/refund": {
+      "post": {
+        "tags": [
+          "sales"
+        ],
+        "summary": "Refund",
+        "operationId": "refund_v1_sales__sale_id__refund_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sale_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sale Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1420,6 +1780,50 @@
           "created_at"
         ],
         "title": "MovementOut"
+      },
+      "PaymentIn": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "card",
+              "click",
+              "payme"
+            ],
+            "title": "Method"
+          },
+          "amount": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "amount"
+        ],
+        "title": "PaymentIn"
+      },
+      "PaymentOut": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "amount"
+        ],
+        "title": "PaymentOut"
       },
       "ProductIn": {
         "properties": {
@@ -1951,6 +2355,391 @@
           "store_name"
         ],
         "title": "RegisterIn"
+      },
+      "SaleIn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Klient tomonidan yaratilgan UUID (idempotentlik kaliti)"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SaleItemIn"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Items"
+          },
+          "discount": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Discount",
+            "default": 0
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentIn"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Payments"
+          },
+          "client_created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "store_id",
+          "items",
+          "payments"
+        ],
+        "title": "SaleIn"
+      },
+      "SaleItemIn": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "qty"
+        ],
+        "title": "SaleItemIn"
+      },
+      "SaleItemOut": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "unit_price": {
+            "type": "integer",
+            "title": "Unit Price"
+          },
+          "line_total": {
+            "type": "integer",
+            "title": "Line Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "product_name",
+          "unit",
+          "qty",
+          "unit_price",
+          "line_total"
+        ],
+        "title": "SaleItemOut"
+      },
+      "SaleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "shift_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shift Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "subtotal": {
+            "type": "integer",
+            "title": "Subtotal"
+          },
+          "discount": {
+            "type": "integer",
+            "title": "Discount"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "client_created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Created At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SaleItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentOut"
+            },
+            "type": "array",
+            "title": "Payments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "store_id",
+          "shift_id",
+          "status",
+          "subtotal",
+          "discount",
+          "total",
+          "created_by",
+          "created_at",
+          "client_created_at",
+          "items",
+          "payments"
+        ],
+        "title": "SaleOut"
+      },
+      "ShiftCloseIn": {
+        "properties": {
+          "closing_cash": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Closing Cash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "closing_cash"
+        ],
+        "title": "ShiftCloseIn"
+      },
+      "ShiftOpenIn": {
+        "properties": {
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "opening_cash": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Opening Cash",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "store_id"
+        ],
+        "title": "ShiftOpenIn"
+      },
+      "ShiftOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "opened_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Opened By"
+          },
+          "opened_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Opened At"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "opening_cash": {
+            "type": "integer",
+            "title": "Opening Cash"
+          },
+          "closing_cash": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Cash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "store_id",
+          "opened_by",
+          "opened_at",
+          "closed_at",
+          "opening_cash",
+          "closing_cash"
+        ],
+        "title": "ShiftOut"
+      },
+      "ShiftSummaryOut": {
+        "properties": {
+          "shift": {
+            "$ref": "#/components/schemas/ShiftOut"
+          },
+          "sales_count": {
+            "type": "integer",
+            "title": "Sales Count"
+          },
+          "total_sales": {
+            "type": "integer",
+            "title": "Total Sales"
+          },
+          "refunds_count": {
+            "type": "integer",
+            "title": "Refunds Count"
+          },
+          "total_refunds": {
+            "type": "integer",
+            "title": "Total Refunds"
+          },
+          "by_method": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Method"
+          },
+          "expected_cash": {
+            "type": "integer",
+            "title": "Expected Cash"
+          },
+          "closing_cash": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Cash"
+          },
+          "difference": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shift",
+          "sales_count",
+          "total_sales",
+          "refunds_count",
+          "total_refunds",
+          "by_method",
+          "expected_cash",
+          "closing_cash",
+          "difference"
+        ],
+        "title": "ShiftSummaryOut"
       },
       "StoreIn": {
         "properties": {

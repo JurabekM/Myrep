@@ -70,7 +70,7 @@ async def _to_out(
             min_stock=p.min_stock,
             is_active=p.is_active,
             barcodes=sorted(codes[p.id]),
-            stock_qty=stock.get(p.id, Decimal(0)) if store_id is not None else None,
+            stock_qty=stock.get(p.id, Decimal("0.000")) if store_id is not None else None,
             version=p.version,
         )
         for p in products
