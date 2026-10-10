@@ -229,3 +229,13 @@ Tasdiqlangandan keyin:
 1. Monorepo skeletini yaratish (`backend/`, `desktop/`, `mobile/`, `shared/`, `infra/`, `docs/`).
 2. Faza 1 ni boshlash: Docker Compose, CI, auth va tenant.
 3. Hammasi `claude/wonderful-dirac-gdu5x2` branch'ida commit va push qilinadi.
+
+---
+
+## Qarorlar (foydalanuvchi javoblari)
+
+- **Platforma:** mobil ilova faqat Android uchun (iOS rejadan chiqarildi).
+- **Fiskal kassa / OFD / soliq:** MVP'ga kiradi. Aniq talablar (provayder, chek formati, API) hali aniqlanmagan — keyingi bosqichda aniqlanadi.
+- **Hosting:** javob berilmagan. Eslatma: `broker.hivemq.com` ommaviy (public) MQTT broker bo'lib, autentifikatsiyasiz va hamma uchun ochiq. Savdo ma'lumotlari uchun mos emas; faqat sinov/IoT uchun.
+- **Pilot soha:** aniq soha tanlanmagan. Loyiha foydalanuvchi va AI yordamchi bilan birgalikda pilot sifatida amalga oshiriladi.
+- **Jamoa:** foydalanuvchi va Claude (AI yordamchi).
