@@ -275,10 +275,915 @@
           }
         ]
       }
+    },
+    "/v1/categories": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List Categories",
+        "operationId": "list_categories_v1_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Categories V1 Categories Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Create Category",
+        "operationId": "create_category_v1_categories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/suppliers": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List Suppliers",
+        "operationId": "list_suppliers_v1_suppliers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Suppliers V1 Suppliers Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Create Supplier",
+        "operationId": "create_supplier_v1_suppliers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/products": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List Products",
+        "description": "Keyset pagination: cursor — oxirgi ko'rilgan tovar id'si.",
+        "operationId": "list_products_v1_products_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nom yoki shtrix-kod bo'yicha",
+              "title": "Q"
+            },
+            "description": "Nom yoki shtrix-kod bo'yicha"
+          },
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "low_stock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Low Stock"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Create Product",
+        "operationId": "create_product_v1_products_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/products/by-barcode/{code}": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Get By Barcode",
+        "description": "Kassa skaneri uchun: shtrix-kod bo'yicha tezkor qidiruv.",
+        "operationId": "get_by_barcode_v1_products_by_barcode__code__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/products/{product_id}": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Get Product",
+        "operationId": "get_product_v1_products__product_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Update Product",
+        "operationId": "update_product_v1_products__product_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Delete Product",
+        "description": "Yumshoq o'chirish: tarix (ledger, cheklar) saqlanadi.",
+        "operationId": "delete_product_v1_products__product_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stock/movements": {
+      "post": {
+        "tags": [
+          "stock"
+        ],
+        "summary": "Create Movement",
+        "description": "Qo'lda harakat: tuzatish (adjustment) yoki yo'qotish/buzilish (writeoff).",
+        "operationId": "create_movement_v1_stock_movements_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovementIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "stock"
+        ],
+        "summary": "List Movements",
+        "operationId": "list_movements_v1_stock_movements_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MovementOut"
+                  },
+                  "title": "Response List Movements V1 Stock Movements Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stock/balances": {
+      "get": {
+        "tags": [
+          "stock"
+        ],
+        "summary": "List Balances",
+        "description": "Filial bo'yicha qoldiq. low_only=true — faqat minimal chegaradan past tovarlar.",
+        "operationId": "list_balances_v1_stock_balances_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "low_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Low Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BalanceOut"
+                  },
+                  "title": "Response List Balances V1 Stock Balances Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/purchases": {
+      "get": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "List Purchases",
+        "operationId": "list_purchases_v1_purchases_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Purchases V1 Purchases Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Create Purchase",
+        "description": "Kirim hujjati: hujjat, qatorlar va har bir qator uchun 'receipt' harakati bitta tranzaksiyada.",
+        "operationId": "create_purchase_v1_purchases_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "BalanceOut": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "min_stock": {
+            "type": "string",
+            "title": "Min Stock"
+          },
+          "low": {
+            "type": "boolean",
+            "title": "Low"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "name",
+          "unit",
+          "qty",
+          "min_stock",
+          "low"
+        ],
+        "title": "BalanceOut"
+      },
+      "CategoryIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CategoryIn"
+      },
+      "CategoryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "CategoryOut"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -377,6 +1282,618 @@
         ],
         "title": "MembershipOut"
       },
+      "MovementIn": {
+        "properties": {
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "adjustment",
+              "writeoff"
+            ],
+            "title": "Kind"
+          },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Qty",
+            "description": "adjustment: ishorali (+ qo'shish, - kamaytirish); writeoff: musbat miqdor"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "store_id",
+          "product_id",
+          "kind",
+          "qty"
+        ],
+        "title": "MovementIn"
+      },
+      "MovementOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "reference_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Type"
+          },
+          "reference_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "store_id",
+          "product_id",
+          "qty",
+          "kind",
+          "reference_type",
+          "reference_id",
+          "note",
+          "created_by",
+          "created_at"
+        ],
+        "title": "MovementOut"
+      },
+      "ProductIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "dona",
+              "kg",
+              "litr",
+              "metr",
+              "quti",
+              "paket"
+            ],
+            "title": "Unit",
+            "default": "dona"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "sale_price": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Sale Price",
+            "description": "So'mda, butun son"
+          },
+          "cost_price": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Cost Price",
+            "default": 0
+          },
+          "min_stock": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Min Stock",
+            "default": "0"
+          },
+          "barcodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Barcodes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "sale_price"
+        ],
+        "title": "ProductIn"
+      },
+      "ProductOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "sale_price": {
+            "type": "integer",
+            "title": "Sale Price"
+          },
+          "cost_price": {
+            "type": "integer",
+            "title": "Cost Price"
+          },
+          "min_stock": {
+            "type": "string",
+            "title": "Min Stock"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "barcodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Barcodes"
+          },
+          "stock_qty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Qty"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "unit",
+          "category_id",
+          "sale_price",
+          "cost_price",
+          "min_stock",
+          "is_active",
+          "barcodes",
+          "version"
+        ],
+        "title": "ProductOut"
+      },
+      "ProductPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ProductPage"
+      },
+      "ProductPatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "dona",
+                  "kg",
+                  "litr",
+                  "metr",
+                  "quti",
+                  "paket"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "sale_price": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Price"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Price"
+          },
+          "min_stock": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Stock"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "barcodes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcodes"
+          }
+        },
+        "type": "object",
+        "title": "ProductPatch"
+      },
+      "PurchaseIn": {
+        "properties": {
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseItemIn"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "store_id",
+          "items"
+        ],
+        "title": "PurchaseIn"
+      },
+      "PurchaseItemIn": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Qty"
+          },
+          "unit_cost": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "minimum": 0.0,
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "qty",
+          "unit_cost"
+        ],
+        "title": "PurchaseItemIn"
+      },
+      "PurchaseItemOut": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Product Id"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "unit_cost": {
+            "type": "integer",
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "qty",
+          "unit_cost"
+        ],
+        "title": "PurchaseItemOut"
+      },
+      "PurchaseOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Store Id"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "total_cost": {
+            "type": "integer",
+            "title": "Total Cost"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "store_id",
+          "supplier_id",
+          "note",
+          "total_cost",
+          "created_at",
+          "items"
+        ],
+        "title": "PurchaseOut"
+      },
       "RefreshIn": {
         "properties": {
           "refresh_token": {
@@ -474,6 +1991,64 @@
           "created_at"
         ],
         "title": "StoreOut"
+      },
+      "SupplierIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SupplierIn"
+      },
+      "SupplierOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "phone"
+        ],
+        "title": "SupplierOut"
       },
       "TokenOut": {
         "properties": {

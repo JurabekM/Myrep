@@ -1,7 +1,14 @@
+import re
 import uuid
 from datetime import datetime
+from decimal import Decimal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+# ---------------------------------------------------------------------------
+# Auth va tenant
+# ---------------------------------------------------------------------------
 
 
 class RegisterIn(BaseModel):
@@ -51,3 +58,166 @@ class MeOut(BaseModel):
     full_name: str
     tenant_id: uuid.UUID
     memberships: list[MembershipOut]
+
+
+# ---------------------------------------------------------------------------
+# Katalog (tovar, kategoriya, yetkazuvchi)
+# ---------------------------------------------------------------------------
+
+Unit = Literal["dona", "kg", "litr", "metr", "quti", "paket"]
+BARCODE_RE = re.compile(r"^[A-Za-z0-9-]{4,64}$")
+MAX_MONEY = 10**12
+
+
+def _clean_barcodes(value: list[str]) -> list[str]:
+    cleaned = [code.strip() for code in value]
+    for code in cleaned:
+        if not BARCODE_RE.match(code):
+            raise ValueError(f"Noto'g'ri shtrix-kod: {code!r}")
+    if len(set(cleaned)) != len(cleaned):
+        raise ValueError("Shtrix-kodlar takrorlangan")
+    return cleaned
+
+
+class CategoryIn(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+
+
+class CategoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+
+
+class ProductIn(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    unit: Unit = "dona"
+    category_id: uuid.UUID | None = None
+    sale_price: int = Field(ge=0, le=MAX_MONEY, description="So'mda, butun son")
+    cost_price: int = Field(default=0, ge=0, le=MAX_MONEY)
+    min_stock: Decimal = Field(default=Decimal(0), ge=0)
+    barcodes: list[str] = Field(default_factory=list, max_length=10)
+
+    @field_validator("barcodes")
+    @classmethod
+    def _check_barcodes(cls, value: list[str]) -> list[str]:
+        return _clean_barcodes(value)
+
+
+class ProductPatch(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=200)
+    unit: Unit | None = None
+    category_id: uuid.UUID | None = None
+    sale_price: int | None = Field(default=None, ge=0, le=MAX_MONEY)
+    cost_price: int | None = Field(default=None, ge=0, le=MAX_MONEY)
+    min_stock: Decimal | None = Field(default=None, ge=0)
+    is_active: bool | None = None
+    barcodes: list[str] | None = Field(default=None, max_length=10)
+
+    @field_validator("barcodes")
+    @classmethod
+    def _check_barcodes(cls, value: list[str] | None) -> list[str] | None:
+        return None if value is None else _clean_barcodes(value)
+
+
+class ProductOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    unit: str
+    category_id: uuid.UUID | None
+    sale_price: int
+    cost_price: int
+    min_stock: Decimal
+    is_active: bool
+    barcodes: list[str]
+    stock_qty: Decimal | None = None
+    version: int
+
+
+class ProductPage(BaseModel):
+    items: list[ProductOut]
+    next_cursor: uuid.UUID | None
+
+
+class SupplierIn(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    phone: str | None = Field(default=None, max_length=32)
+
+
+class SupplierOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    phone: str | None
+
+
+# ---------------------------------------------------------------------------
+# Kirim, ombor harakatlari, qoldiq
+# ---------------------------------------------------------------------------
+
+
+class PurchaseItemIn(BaseModel):
+    product_id: uuid.UUID
+    qty: Decimal = Field(gt=0, max_digits=14, decimal_places=3)
+    unit_cost: int = Field(ge=0, le=MAX_MONEY)
+
+
+class PurchaseIn(BaseModel):
+    store_id: uuid.UUID
+    supplier_id: uuid.UUID | None = None
+    note: str | None = Field(default=None, max_length=300)
+    items: list[PurchaseItemIn] = Field(min_length=1, max_length=200)
+
+
+class PurchaseItemOut(BaseModel):
+    product_id: uuid.UUID
+    qty: Decimal
+    unit_cost: int
+
+
+class PurchaseOut(BaseModel):
+    id: uuid.UUID
+    store_id: uuid.UUID
+    supplier_id: uuid.UUID | None
+    note: str | None
+    total_cost: int
+    created_at: datetime
+    items: list[PurchaseItemOut]
+
+
+class MovementIn(BaseModel):
+    store_id: uuid.UUID
+    product_id: uuid.UUID
+    kind: Literal["adjustment", "writeoff"]
+    qty: Decimal = Field(
+        max_digits=14,
+        decimal_places=3,
+        description="adjustment: ishorali (+ qo'shish, - kamaytirish); writeoff: musbat miqdor",
+    )
+    note: str | None = Field(default=None, max_length=300)
+
+
+class MovementOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    store_id: uuid.UUID
+    product_id: uuid.UUID
+    qty: Decimal
+    kind: str
+    reference_type: str | None
+    reference_id: uuid.UUID | None
+    note: str | None
+    created_by: uuid.UUID
+    created_at: datetime
+
+
+class BalanceOut(BaseModel):
+    product_id: uuid.UUID
+    name: str
+    unit: str
+    qty: Decimal
+    min_stock: Decimal
+    low: bool
