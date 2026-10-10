@@ -48,6 +48,7 @@ from .dialogs import (
 )
 from .products_dialog import ProductsDialog
 from .tasks import BackgroundRunner
+from .users_dialog import UsersDialog
 
 ROLE_PRODUCT_ID = Qt.ItemDataRole.UserRole
 SNAPSHOT_REQUEST_INTERVAL_S = 60
@@ -63,6 +64,7 @@ class PosWindow(QMainWindow):
     def __init__(
         self,
         config: DesktopConfig,
+        user: dict[str, Any] | None = None,
         runner: Any | None = None,
         local: LocalStore | None = None,
         mqtt: Any | None = None,
@@ -70,6 +72,7 @@ class PosWindow(QMainWindow):
     ) -> None:
         super().__init__()
         self.config = config
+        self.user = user
         self.runner = runner or BackgroundRunner(self)
         self.local = local or LocalStore()
         self.mqtt = mqtt
@@ -103,6 +106,9 @@ class PosWindow(QMainWindow):
         self.btn_refund.clicked.connect(self._on_refund_clicked)
         self.btn_products = QPushButton("Tovarlar")
         self.btn_products.clicked.connect(self._open_products)
+        self.btn_users = QPushButton("Foydalanuvchilar")
+        self.btn_users.clicked.connect(self._open_users)
+        self.btn_users.setVisible(self._is_owner())
 
         top = QHBoxLayout()
         top.addWidget(self.store_label)
@@ -111,6 +117,7 @@ class PosWindow(QMainWindow):
         top.addStretch(1)
         top.addWidget(self.sync_label)
         top.addWidget(self.btn_products)
+        top.addWidget(self.btn_users)
         top.addWidget(self.btn_refund)
         top.addWidget(self.btn_shift)
 
@@ -525,6 +532,23 @@ class PosWindow(QMainWindow):
         return True
 
     # --- tovarlar katalogi (MQTT) -----------------------------------------------
+
+    def _is_owner(self) -> bool:
+        return self.user is not None and self.user.get("role") == "owner"
+
+    def _open_users(self) -> None:
+        """Foydalanuvchilar oynasi faqat do'kon egasi uchun."""
+        if self.store is None or not self._is_owner():
+            return
+        dialog = UsersDialog(
+            self.local,
+            self.store_id,
+            self.local.device_id(),
+            submit=self._emit,
+            parent=self,
+        )
+        dialog.exec()
+        self._refresh_sync_state()
 
     def _open_products(self) -> None:
         if self.store is None:

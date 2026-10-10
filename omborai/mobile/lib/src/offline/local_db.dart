@@ -421,6 +421,31 @@ class LocalDb {
     return rows.isEmpty ? null : rows.first;
   }
 
+  Future<Map<String, dynamic>?> getUser(String userId) async {
+    final rows = await _db.query('users', where: 'id = ?', whereArgs: [userId]);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Login band bo'lsa true (nofaol foydalanuvchilar ham hisobga olinadi).
+  Future<bool> loginExists(String storeId, String login) async {
+    final rows = await _db.query(
+      'users',
+      columns: ['id'],
+      where: 'store_id = ? AND login = ?',
+      whereArgs: [storeId, login.trim().toLowerCase()],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  Future<List<Map<String, dynamic>>> listUsers(String storeId) => _db.query(
+    'users',
+    columns: ['id', 'login', 'name', 'role', 'active'],
+    where: 'store_id = ?',
+    whereArgs: [storeId],
+    orderBy: 'name',
+  );
+
   Future<void> _upsertStore(
     DatabaseExecutor txn,
     String storeId,

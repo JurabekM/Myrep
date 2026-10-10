@@ -9,6 +9,9 @@ import 'package:cryptography/cryptography.dart';
 const pbkdf2Iterations = 100000;
 const _saltBytes = 16;
 
+/// Parolning eng kam uzunligi (desktop `users.MIN_PASSWORD` bilan bir xil).
+const minPasswordLength = 8;
+
 final _uuidPattern = RegExp(
   r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
 );

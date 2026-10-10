@@ -6,6 +6,7 @@ import 'login_screen.dart';
 import 'pairing_screen.dart';
 import 'products_screen.dart';
 import 'refunds_screen.dart';
+import 'users_screen.dart';
 import 'sale_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -182,6 +183,17 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text('Tovarlar'),
             ),
           ),
+          if (session.isOwner) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _open(UsersScreen(session: session)),
+              icon: const Icon(Icons.people_outline),
+              label: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 14),
+                child: Text('Foydalanuvchilar'),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: session.hasStore

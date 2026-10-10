@@ -495,6 +495,20 @@ class LocalStore:
             ).fetchone()
         return None if row is None else dict(row)
 
+    def get_user(self, user_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return None if row is None else dict(row)
+
+    def login_exists(self, store_id: str, login: str) -> bool:
+        """Login band bo'lsa True (nofaol foydalanuvchilar ham hisobga olinadi)."""
+        with self._lock:
+            row = self._db.execute(
+                "SELECT COUNT(*) AS n FROM users WHERE store_id = ? AND login = ?",
+                (store_id, login.strip().lower()),
+            ).fetchone()
+        return int(row["n"]) > 0
+
     def list_users(self, store_id: str) -> list[dict[str, Any]]:
         with self._lock:
             rows = self._db.execute(

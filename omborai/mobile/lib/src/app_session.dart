@@ -101,6 +101,11 @@ class AppSession extends ChangeNotifier {
   bool _flushing = false;
   String? _storeId;
   String? storeName;
+
+  /// Joriy foydalanuvchi (login qilingan). Egasi bo'lsa `role == 'owner'`.
+  Map<String, dynamic>? currentUser;
+
+  bool get isOwner => currentUser?['role'] == 'owner';
   String? lastMessage;
   int pending = 0;
   bool connected = false;
@@ -207,6 +212,10 @@ class AppSession extends ChangeNotifier {
   }
 
   Future<void> _startSession() async {
+    final userId = await db.getState('session_user');
+    currentUser = userId == null || userId.isEmpty
+        ? null
+        : await db.getUser(userId);
     await _startMqtt();
     _startTimer();
     await refreshCounts();
@@ -463,6 +472,75 @@ class AppSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Foydalanuvchilar ro'yxati (faqat egasi ko'radi).
+  Future<List<Map<String, dynamic>>> users() async {
+    if (!isOwner) throw const AuthException("Faqat do'kon egasi uchun");
+    return db.listUsers(storeId);
+  }
+
+  /// Yangi kassir. Parol xeshi va tuz qurilmada hisoblanadi, matn hech qayerga yuborilmaydi.
+  Future<void> addCashier({
+    required String name,
+    required String login,
+    required String password,
+  }) async {
+    if (!isOwner) throw const AuthException("Faqat do'kon egasi uchun");
+    final cleanName = name.trim();
+    final cleanLogin = normalizeLogin(login);
+    if (cleanName.isEmpty || cleanLogin.isEmpty) {
+      throw const AuthException('Ism va loginni kiriting');
+    }
+    if (password.length < minPasswordLength) {
+      throw AuthException("Parol kamida $minPasswordLength belgi bo'lsin");
+    }
+    if (await db.loginExists(storeId, cleanLogin)) {
+      throw const AuthException('Bu login band');
+    }
+    final hash = await hashPassword(password);
+    await _emit(
+      ops.newOp(
+        type: ops.opUser,
+        storeId: storeId,
+        deviceId: await db.deviceId(),
+        payload: {
+          'id': const Uuid().v4(),
+          'login': cleanLogin,
+          'name': cleanName,
+          'role': 'cashier',
+          'salt': hash.salt,
+          'pw_hash': hash.hash,
+          'active': true,
+        },
+      ),
+    );
+  }
+
+  /// Kassirni faollashtirish yoki o'chirish (egasini emas).
+  Future<void> setUserActive(String userId, {required bool active}) async {
+    if (!isOwner) throw const AuthException("Faqat do'kon egasi uchun");
+    final row = await db.getUser(userId);
+    if (row == null) throw const AuthException('Foydalanuvchi topilmadi');
+    if (row['role'] == 'owner') {
+      throw const AuthException("Do'kon egasini o'chirib bo'lmaydi");
+    }
+    await _emit(
+      ops.newOp(
+        type: ops.opUser,
+        storeId: storeId,
+        deviceId: await db.deviceId(),
+        payload: {
+          'id': row['id'],
+          'login': row['login'],
+          'name': row['name'],
+          'role': row['role'],
+          'salt': row['salt'],
+          'pw_hash': row['pw_hash'],
+          'active': active,
+        },
+      ),
+    );
+  }
+
   /// Sessiyani yopadi. Do'kon, kalit va ma'lumotlar qoladi: qayta kirish uchun login yetarli.
   Future<void> logout() async {
     _timer?.cancel();
@@ -470,6 +548,7 @@ class AppSession extends ChangeNotifier {
     await _mqtt?.stop();
     _mqtt = null;
     await db.setState('session_user', '');
+    currentUser = null;
     notifyListeners();
   }
 

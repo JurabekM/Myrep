@@ -33,7 +33,7 @@ def main() -> int:
         port=config.mqtt_port,
         tls=config.mqtt_tls,
     )
-    window = PosWindow(config, local=local, mqtt=mqtt)
+    window = PosWindow(config, local=local, mqtt=mqtt, user=user)
     window.show()
     window.start()
     code = app.exec()
