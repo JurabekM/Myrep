@@ -50,3 +50,16 @@ def has_store_key() -> bool:
     if os.environ.get("OMBORAI_STORE_KEY"):
         return True
     return keyring.get_password(SERVICE, STORE_KEY_ACCOUNT) is not None
+
+
+DEVICE_SEED_ACCOUNT = "device-sign-seed"
+
+
+def get_or_create_device_seed() -> bytes:
+    """Qurilmaning Ed25519 kaliti (imzo uchun). Birinchi ishga tushirishda yaratiladi, keyringda saqlanadi."""
+    stored = keyring.get_password(SERVICE, DEVICE_SEED_ACCOUNT)
+    if stored is None:
+        seed = secrets.token_bytes(32)
+        keyring.set_password(SERVICE, DEVICE_SEED_ACCOUNT, seed.hex())
+        return seed
+    return bytes.fromhex(stored)

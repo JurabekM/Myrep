@@ -8,7 +8,7 @@ class DesktopConfig:
     store_name_fallback: str = "OmborAI"
     printer_host: str | None = None  # bo'sh bo'lsa chek faqat ekranda ko'rsatiladi
     receipt_width: int = 32
-    local_db_path: str = str(Path.home() / ".omborai" / "local.db")
+    local_db_path: str = str(Path.home() / ".omborai" / "local_v2.db")  # v2: eski v1 bazadan ajratilgan
     mqtt_host: str = "broker.hivemq.com"
     mqtt_port: int = 8883
     mqtt_tls: bool = True

@@ -18,12 +18,17 @@ POLL_INTERVAL_MS = 500
 REQUEST_INTERVAL_MS = 15_000
 RETRY_INTERVAL_MS = 5_000
 HINT_AFTER_MS = 60_000  # shuncha kutilgandan keyin egasi qurilmasini tekshirish eslatmasi chiqadi
+DEFAULT_LABEL = "Desktop kassa"
 
 
-def has_users(local: LocalStore) -> bool:
-    """Do'kon foydalanuvchilari lokal bazada bormi (snapshot yoki do'kon yaratish orqali)."""
-    store_id = local.get_state("store_id")
-    return store_id is not None and bool(local.list_users(store_id))
+def is_store_ready(local: LocalStore) -> bool:
+    """Do'kon holati to'liq: egasi (do'konni yaratgan) yoki egasi snapshot'i orqali."""
+    return local.is_bootstrapped()
+
+
+def _is_approved(local: LocalStore) -> bool:
+    row = local.device_row(local.device_id())
+    return row is not None and bool(row["active"])
 
 
 def _app_object() -> QObject:
@@ -45,8 +50,10 @@ class SnapshotWaitDialog(QDialog):
         poll_interval_ms: int = POLL_INTERVAL_MS,
         request_interval_ms: int = REQUEST_INTERVAL_MS,
         retry_interval_ms: int = RETRY_INTERVAL_MS,
+        label: str = DEFAULT_LABEL,
     ) -> None:
         super().__init__(parent)
+        self._label = label
         self.setWindowTitle("OmborAI — do'kon ma'lumoti")
         self.setModal(True)
         self.setMinimumWidth(420)
@@ -59,8 +66,8 @@ class SnapshotWaitDialog(QDialog):
         self.status = QLabel("MQTT'ga ulanmoqda...")
         self.status.setWordWrap(True)
         self.hint = QLabel(
-            "Do'kon ma'lumoti boshqa qurilmadan (egasi yoki kassir) keladi. Shu qurilma internetga "
-            "ulangan bo'lishi va o'sha qurilmada OmborAI ochiq turishi kerak."
+            "Bu qurilmani do'kon egasi qurilmasi tasdiqlashi va do'kon ma'lumotini yuborishi kerak. "
+            "Egasi qurilmasi internetga ulangan va OmborAI ochiq turishi kerak."
         )
         self.hint.setWordWrap(True)
         cancel = QPushButton("Bekor qilish")
@@ -117,18 +124,23 @@ class SnapshotWaitDialog(QDialog):
         store_id = self._local.get_state("store_id")
         if not self._mqtt.connected or not store_id:
             return
-        request = o.new_op(o.SNAPSHOT_REQUEST, store_id, {}, device_id=self._local.device_id())
+        if _is_approved(self._local):
+            self.status.setText("Tasdiqlandi. Do'kon ma'lumoti so'ralmoqda...")
+            request = self._local.new_op(o.SNAPSHOT_REQUEST, {})
+        else:
+            self.status.setText("Egasi qurilmasi bu qurilmani tasdiqlashi kutilmoqda...")
+            request = self._local.join_request(self._label)
         self._runner.run(lambda: self._mqtt.send(request), lambda _r: None, lambda _e: None)
 
     def _check(self) -> None:
-        if has_users(self._local):
+        if is_store_ready(self._local):
             self.accept()
             return
         self._waited_ms += self._poll_interval_ms
         if self._waited_ms >= HINT_AFTER_MS:
             self.status.setText(
-                "Hali ma'lumot kelmadi. Egasi (yoki boshqa kassir) qurilmasi yoqilganini va "
-                "internetga ulanganini tekshiring."
+                "Hali tasdiq yoki ma'lumot kelmadi. Egasi qurilmasi yoqilganini, internetga ulanganini "
+                "va OmborAI ochiq ekanini tekshiring."
             )
 
 
@@ -141,8 +153,9 @@ def wait_for_store(
     poll_interval_ms: int = POLL_INTERVAL_MS,
     request_interval_ms: int = REQUEST_INTERVAL_MS,
     retry_interval_ms: int = RETRY_INTERVAL_MS,
+    label: str = DEFAULT_LABEL,
 ) -> bool:
-    """Do'kon foydalanuvchilari kelguncha kutadi. True — ma'lumot keldi; False — foydalanuvchi bekor qildi."""
+    """Egasi tasdig'i va do'kon ma'lumoti kelguncha kutadi. True: tayyor; False: foydalanuvchi bekor qildi."""
     dialog = SnapshotWaitDialog(
         local,
         mqtt,
@@ -151,6 +164,7 @@ def wait_for_store(
         poll_interval_ms=poll_interval_ms,
         request_interval_ms=request_interval_ms,
         retry_interval_ms=retry_interval_ms,
+        label=label,
     )
     accepted = dialog.exec() == QDialog.DialogCode.Accepted
     dialog.deleteLater()

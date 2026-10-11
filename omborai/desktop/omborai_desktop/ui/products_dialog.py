@@ -56,7 +56,7 @@ class ProductFormDialog(QDialog):
         self.barcodes = QLineEdit(", ".join(self._product.get("barcodes", [])))
         self.barcodes.setPlaceholderText("4780012300017, 4780012300024")
         self.error = QLabel("")
-        self.error.setStyleSheet("color: #b91c1c;")
+        self.error.setStyleSheet("color: #F87171;")
 
         form = QFormLayout()
         form.addRow("Nomi", self.name)

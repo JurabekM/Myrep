@@ -1,207 +1,113 @@
-import shutil
-import socket
-import subprocess
-import threading
-import time
+"""MQTT qatlami (protokol v2): konvert, mavzu, xabarlarni yo'naltirish va xatolarga chidamlilik (Y2)."""
+
+import json
+import os
 import uuid
-from decimal import Decimal
-from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+from helpers import STORE_ID, Device, make_owner, product_op
 
-from omborai_desktop.offline.store import LocalStore
+from omborai_desktop.sync import crypto
 from omborai_desktop.sync import ops as o
-from omborai_desktop.sync.crypto import DecryptionError, generate_store_key, open_envelope, seal, topic_for
+from omborai_desktop.sync.crypto import DecryptionError, open_envelope, seal, topic_for
 from omborai_desktop.sync.mqtt_sync import MqttSync
 
-STORE = str(uuid.uuid4())
-PRODUCT = str(uuid.uuid4())
 
-
-# --- shifrlash ----------------------------------------------------------------
-
-
-def test_roundtrip_and_no_plaintext_on_wire():
-    key = generate_store_key()
+def test_envelope_roundtrip_and_topic_binding():
+    key = os.urandom(32)
     topic = topic_for(key)
-    raw = seal(key, {"secret": "Maxfiy-savdo-42"}, topic)
-    assert b"Maxfiy-savdo-42" not in raw
-    assert open_envelope(key, raw, topic) == {"secret": "Maxfiy-savdo-42"}
+    assert topic.startswith("omborai/v2/") and topic.endswith("/ops")
+    message = {"hello": "dunyo", "n": 1}
+    raw = seal(key, message, topic)
+    assert json.loads(raw)["v"] == 2
+    assert open_envelope(key, raw, topic) == message
+    with pytest.raises(DecryptionError):
+        open_envelope(key, raw, topic + "x")  # AAD: boshqa mavzu
+    with pytest.raises(DecryptionError):
+        open_envelope(os.urandom(32), raw, topic)  # boshqa kalit
 
 
-def test_wrong_key_wrong_topic_or_tampering_is_rejected():
-    key, other = generate_store_key(), generate_store_key()
+def test_v1_envelope_is_rejected():
+    key = os.urandom(32)
     topic = topic_for(key)
-    raw = seal(key, {"a": 1}, topic)
+    raw = json.loads(seal(key, {"a": 1}, topic))
+    raw["v"] = 1
     with pytest.raises(DecryptionError):
-        open_envelope(other, raw, topic_for(other))
+        open_envelope(key, json.dumps(raw).encode(), topic)
+
+
+@pytest.mark.parametrize("junk", [b"[]", b'"x"', b"123", b"not json", b"{}"])
+def test_malformed_payloads_raise_only_decryption_error(junk):
+    """Y2: JSON ob'ekt bo'lmagan xabar ham DecryptionError bo'lishi kerak (thread o'lmasin)."""
     with pytest.raises(DecryptionError):
-        open_envelope(key, raw, topic + "x")
-    tampered = raw.replace(b'"c": "', b'"c": "A')
-    with pytest.raises(DecryptionError):
-        open_envelope(key, tampered, topic)
+        open_envelope(os.urandom(32), junk, topic_for(os.urandom(32)))
 
 
-def test_topic_is_deterministic_and_unrelated_to_key_bytes():
-    key = generate_store_key()
-    assert topic_for(key) == topic_for(key)
-    assert key.hex() not in topic_for(key)
-    assert topic_for(key) != topic_for(generate_store_key())
-
-
-def test_key_length_enforced():
-    with pytest.raises(ValueError):
-        topic_for(b"short")
-
-
-# --- haqiqiy broker (lokal Mosquitto) -----------------------------------------
-
-MOSQUITTO = shutil.which("mosquitto")
-
-
-def _free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
-
-
-@pytest.fixture
-def broker(tmp_path: Path):
-    if MOSQUITTO is None:
-        pytest.skip("mosquitto o'rnatilmagan")
-    port = _free_port()
-    conf = tmp_path / "mosquitto.conf"
-    conf.write_text(f"listener {port} 127.0.0.1\nallow_anonymous true\npersistence false\n")
-    # Sinov uchun o'rnatilgan mosquitto (foydalanuvchi kiritmasi emas)
-    proc = subprocess.Popen(  # noqa: S603
-        [MOSQUITTO, "-c", str(conf)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
-    time.sleep(0.5)
-    yield port
-    proc.terminate()
-    proc.wait(timeout=5)
-
-
-def _device(key: bytes, device_id: str, store: LocalStore, port: int, **kw) -> MqttSync:
+def _sync(device_id: str, applied: list, requests: list, joins: list) -> MqttSync:
+    key = bytes(range(32))
     return MqttSync(
-        key, device_id=device_id, apply_op=store.apply_op, host="127.0.0.1", port=port, tls=False, **kw
+        key,
+        device_id=device_id,
+        apply_op=lambda op: applied.append(op) or "applied",
+        on_request=requests.append,
+        on_join_request=joins.append,
+        tls=False,
     )
 
 
-def _wait_until(predicate, timeout: float = 8.0) -> bool:
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        if predicate():
-            return True
-        time.sleep(0.05)
-    return False
+def _message(sync: MqttSync, payload: dict, key: bytes = bytes(range(32))) -> SimpleNamespace:
+    return SimpleNamespace(payload=seal(key, payload, sync.topic))
 
 
-def _catalog_op(device: str) -> dict:
-    return o.new_op(
-        o.PRODUCT,
-        STORE,
-        {"id": PRODUCT, "name": "Shakar", "unit": "kg", "sale_price": 14500, "barcodes": []},
-        device_id=device,
-    )
+def test_dispatch_routes_requests_and_applies_others():
+    applied, requests, joins = [], [], []
+    sync = _sync(str(uuid.uuid4()), applied, requests, joins)
+    base = {
+        "op_id": str(uuid.uuid4()),
+        "device": str(uuid.uuid4()),
+        "ts": "2026-10-11T10:00:00.000000Z",
+        "store_id": STORE_ID,
+        "payload": {},
+        "sig": "x",
+    }
+    sync._on_message(None, None, _message(sync, {**base, "type": o.PRODUCT}))
+    sync._on_message(None, None, _message(sync, {**base, "type": o.SNAPSHOT_REQUEST}))
+    sync._on_message(None, None, _message(sync, {**base, "type": o.JOIN_REQUEST}))
+    assert [op["type"] for op in applied] == [o.PRODUCT]
+    assert [op["type"] for op in requests] == [o.SNAPSHOT_REQUEST]
+    assert [op["type"] for op in joins] == [o.JOIN_REQUEST]
 
 
-def _receipt_op(device: str, qty: str) -> dict:
-    return o.new_op(
-        o.MOVEMENT, STORE, {"product_id": PRODUCT, "kind": "receipt", "qty": qty}, device_id=device
-    )
+def test_own_messages_are_ignored():
+    applied = []
+    own = str(uuid.uuid4())
+    sync = _sync(own, applied, [], [])
+    sync._on_message(None, None, _message(sync, {"type": o.PRODUCT, "device": own}))
+    assert applied == []
 
 
-def test_two_devices_share_sales_through_broker(broker):
-    key = generate_store_key()
-    store_a, store_b = LocalStore(), LocalStore()
-    dev_a = _device(key, "dev-a", store_a, broker)
-    dev_b = _device(key, "dev-b", store_b, broker)
-    dev_a.start()
-    dev_b.start()
-    try:
-        for op in (_catalog_op("dev-a"), _receipt_op("dev-a", "10")):
-            store_a.apply_op(op)
-            dev_a.send(op)
-        assert _wait_until(lambda: store_b.balance(STORE, PRODUCT) == Decimal(10))
+def test_callback_exceptions_do_not_escape_the_mqtt_thread(caplog):
+    """Y2: buzilgan xabar yoki ishlovchi xatosi paho thread'ini to'xtatmasligi kerak."""
 
-        shift = o.new_op(
-            o.SHIFT_OPEN, STORE, {"shift_id": "sh1", "opening_cash": 0}, device_id="dev-a", op_id="sh1"
-        )
-        store_a.apply_op(shift)
-        dev_a.send(shift)
-        assert _wait_until(lambda: store_b.open_shift(STORE) is not None)
+    def boom(_op):
+        raise RuntimeError("ichki xato")
 
-        sale_id = str(uuid.uuid4())
-        sale = o.new_op(
-            o.SALE,
-            STORE,
-            {
-                "id": sale_id,
-                "shift_id": "sh1",
-                "number": "dev-a-1",
-                "created_at": "t",
-                "total": 43500,
-                "items": [{"product_id": PRODUCT, "qty": "3"}],
-                "payments": [],
-            },
-            device_id="dev-a",
-            op_id=sale_id,
-        )
-        store_a.apply_op(sale)
-        dev_a.send(sale)
-        assert _wait_until(lambda: store_b.balance(STORE, PRODUCT) == Decimal(7))
-        time.sleep(0.5)
-        assert store_a.balance(STORE, PRODUCT) == Decimal(7)  # o'z xabari qaytganda ikki marta hisoblanmaydi
-        assert store_b.balance(STORE, PRODUCT) == Decimal(7)
-    finally:
-        dev_a.stop()
-        dev_b.stop()
-        store_a.close()
-        store_b.close()
+    sync = MqttSync(bytes(range(32)), device_id="d", apply_op=boom, tls=False)
+    sync._on_message(None, None, SimpleNamespace(payload=b"[]"))  # buzilgan
+    sync._on_message(None, None, _message(sync, {"type": "x", "device": "other"}))  # ishlovchi xatosi
+    assert "Xabarni qayta ishlashda xato" in caplog.text
 
 
-def test_device_with_other_key_sees_nothing(broker):
-    key, intruder_key = generate_store_key(), generate_store_key()
-    store_a, store_x = LocalStore(), LocalStore()
-    dev_a = _device(key, "dev-a", store_a, broker)
-    spy = _device(intruder_key, "spy", store_x, broker)
-    dev_a.start()
-    spy.start()
-    try:
-        dev_a.send(_catalog_op("dev-a"))
-        dev_a.send(_receipt_op("dev-a", "10"))
-        time.sleep(1.0)
-        assert store_x.balance(STORE, PRODUCT) == Decimal(0)
-        assert store_x.applied_count() == 0
-    finally:
-        dev_a.stop()
-        spy.stop()
-        store_a.close()
-        store_x.close()
+def test_signed_product_op_passes_through_envelope_intact():
+    owner = make_owner(3)
+    op = product_op(owner, str(uuid.UUID(int=9)), 1000)
+    key = bytes(range(32))
+    back = open_envelope(key, seal(key, op, topic_for(key)), topic_for(key))
+    assert crypto.verify_op(back, owner.identity.public_key_hex)
+    assert back["device"] == owner.id
 
 
-def test_new_device_bootstraps_from_peer_snapshot(broker):
-    key = generate_store_key()
-    store_a, store_new = LocalStore(), LocalStore()
-    store_a.apply_op(_catalog_op("dev-a"))
-    store_a.apply_op(_receipt_op("dev-a", "6"))
-
-    def answer(request):
-        # Javob bu yerda alohida oqimda yuboriladi (paho callback ichida kutish deadlock beradi)
-        snap = o.new_op(o.SNAPSHOT, STORE, store_a.snapshot_payload(STORE), device_id="dev-a")
-        threading.Thread(target=dev_a.send, args=(snap,), daemon=True).start()
-
-    dev_a = _device(key, "dev-a", store_a, broker, on_request=answer)
-    dev_new = _device(key, "dev-new", store_new, broker)
-    dev_a.start()
-    dev_new.start()
-    try:
-        dev_new.send(o.new_op(o.SNAPSHOT_REQUEST, STORE, {}, device_id="dev-new"))
-        assert _wait_until(lambda: store_new.balance(STORE, PRODUCT) == Decimal(6))
-        assert store_new.get_product(PRODUCT, STORE)["name"] == "Shakar"
-    finally:
-        dev_a.stop()
-        dev_new.stop()
-        store_a.close()
-        store_new.close()
+def test_device_helper_is_usable_with_sync_identity():
+    device = Device(4)
+    assert len(device.identity.public_key_hex) == 64

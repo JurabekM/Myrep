@@ -24,10 +24,10 @@ from ..offline.store import LocalStore
 from ..security import has_store_key, save_store_key
 from ..sync import ops as o
 from ..sync.crypto import generate_store_key
-from .bootstrap import has_users
+from .bootstrap import is_store_ready
 from .dialogs import LoginDialog
 
-ERROR_STYLE = "color: #b91c1c;"
+ERROR_STYLE = "color: #F87171;"
 
 
 class StartDialog(QDialog):
@@ -131,30 +131,26 @@ class JoinDialog(QDialog):
 
 
 def create_store(local: LocalStore, store_name: str, owner_name: str, login: str, password: str) -> None:
-    """Yangi do'kon yaratadi: kalit, do'kon nomi va egasi hisobi navbatga qo'yiladi."""
+    """Yangi do'kon: kalit saqlanadi, bu qurilma egasi bo'ladi, do'kon va egasi hisobi imzolanib qo'yiladi."""
     store_id = str(uuid.uuid4())
-    key = generate_store_key()
-    save_store_key(key)
-    device = local.device_id()
+    save_store_key(generate_store_key())
+    local.init_owner(store_id, "egasi")
     salt, pw_hash = auth.hash_password(password)
     ops: list[dict[str, Any]] = [
-        o.new_op(o.STORE, store_id, {"name": store_name}, device_id=device),
-        o.new_op(
+        local.new_op(o.STORE, {"name": store_name}),
+        local.new_op(
             o.USER,
-            store_id,
             {
                 "id": str(uuid.uuid4()),
                 "login": auth.normalize_login(login),
                 "name": owner_name,
-                "role": "owner",
+                "role": o.ROLE_OWNER,
                 "salt": salt,
                 "pw_hash": pw_hash,
                 "active": True,
             },
-            device_id=device,
         ),
     ]
-    local.set_state("store_id", store_id)
     local.set_state("store_name", store_name)
     for op in ops:
         local.apply_op(op)
@@ -162,20 +158,22 @@ def create_store(local: LocalStore, store_name: str, owner_name: str, login: str
 
 
 def join_store(local: LocalStore, code: str) -> None:
-    """Juftlash kodi bo'yicha do'konga qo'shiladi. Ma'lumot MQTT snapshot orqali keladi."""
-    store_id, key_hex = auth.parse_pairing_code(code)
+    """Juftlash kodi: do'kon, egasi ishonchi va kalit saqlanadi. Ma'lumot egasi snapshot'i orqali keladi."""
+    store_id, owner_device_id, owner_public_key, key_hex = auth.parse_pairing_code(code)
     save_store_key(bytes.fromhex(key_hex))
-    local.set_state("store_id", store_id)
+    local.set_pairing(store_id, owner_device_id, owner_public_key)
 
 
 def pairing_code(local: LocalStore) -> str | None:
-    """Boshqa qurilmaga berish uchun juftlash kodi (kalit saqlangan bo'lsa)."""
+    """Juftlash kodi. Faqat egasi qurilmasi beradi (kalit + egasi ishonchi); boshqalarda None."""
     from ..security import get_or_create_store_key
 
     store_id = local.get_state("store_id")
-    if not store_id or not has_store_key():
+    if not store_id or not has_store_key() or not local.is_owner_device(local.device_id()):
         return None
-    return auth.make_pairing_code(store_id, get_or_create_store_key().hex())
+    return auth.make_pairing_code(
+        store_id, local.device_id(), local.public_key_hex(), get_or_create_store_key().hex()
+    )
 
 
 def _login_once(local: LocalStore, dialog: LoginDialog) -> dict[str, Any] | None:
@@ -229,7 +227,7 @@ def run_login(
             return None
         join_store(local, join_dialog.code.text())
 
-    if bootstrap is not None and not has_users(local) and not bootstrap():
+    if bootstrap is not None and not is_store_ready(local) and not bootstrap():
         return None
 
     dialog = LoginDialog(parent, default_email="")

@@ -1,37 +1,34 @@
-"""Juftlash bilan qo'shilgan qurilma: do'kon ma'lumoti (snapshot) kelguncha login oynasi ochilmaydi (K1).
+"""Juftlash va bootstrap (K1, K5): egasi tasdig'i va snapshot kelguncha login oynasi ochilmaydi.
 
-Ilgari login MQTT ishga tushishidan oldin kutardi, snapshot esa so'ralmasdi: qurilma do'konga kira olmasdi.
+Ssenariy: yangi qurilma kodni kiritadi -> join_request -> egasi tasdiqlaydi -> snapshot -> login.
 """
 
 import os
-import uuid
 from typing import Any
 
 import pytest
+from helpers import OWNER_LOGIN, OWNER_PASSWORD, STORE_ID, Device, add_user_op, device_op, make_owner
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QDialog
 
 from omborai_desktop import auth
-from omborai_desktop.offline.store import LocalStore
+from omborai_desktop.offline.store import APPLIED
 from omborai_desktop.sync import ops as o
 from omborai_desktop.ui import bootstrap as bs
 from omborai_desktop.ui import login as lg
 from omborai_desktop.ui.dialogs import LoginDialog
 from omborai_desktop.ui.tasks import SyncRunner
 
-STORE_ID = str(uuid.uuid4())
-OWNER_LOGIN = "egasi"
-OWNER_PASSWORD = "parol-12345"
-
 
 class FakeMqtt:
-    """MqttSync o'rnida: ulanish, yuborish va so'rovni kuzatadi."""
+    """MqttSync o'rnida: ulanish, yuborish va so'rovlarni kuzatadi."""
 
     def __init__(self) -> None:
         self.connected = False
         self.start_calls = 0
         self.sent: list[dict[str, Any]] = []
         self.on_request = None
+        self.on_join_request = None
 
     def start(self, timeout: float = 10.0) -> None:
         self.start_calls += 1
@@ -45,9 +42,12 @@ class FakeMqtt:
             raise ConnectionError("broker yo'q")
         self.sent.append(op)
 
+    def types(self) -> list[str]:
+        return [op["type"] for op in self.sent]
+
 
 class FlakyMqtt(FakeMqtt):
-    """Birinchi ulanish muvaffaqiyatsiz bo'ladi (broker vaqtincha yo'q)."""
+    """Birinchi ulanish muvaffaqiyatsiz (broker vaqtincha yo'q)."""
 
     def start(self, timeout: float = 10.0) -> None:
         self.start_calls += 1
@@ -56,35 +56,23 @@ class FlakyMqtt(FakeMqtt):
         self.connected = True
 
 
-def _owner_user_op(device: str = "d-owner") -> dict[str, Any]:
-    salt, digest = auth.hash_password(OWNER_PASSWORD)
-    return o.new_op(
-        o.USER,
-        STORE_ID,
-        {
-            "id": str(uuid.uuid4()),
-            "login": OWNER_LOGIN,
-            "name": "Egasi",
-            "role": "owner",
-            "salt": salt,
-            "pw_hash": digest,
-            "active": True,
-        },
-        device_id=device,
-    )
-
-
 @pytest.fixture
 def no_keyring(monkeypatch):
-    """Haqiqiy OS keyring'ga yozmaslik; OMBORAI_STORE_KEY bo'lsa has_store_key() True."""
     monkeypatch.setattr(lg, "save_store_key", lambda key: None)
     monkeypatch.setenv("OMBORAI_STORE_KEY", "00" * 32)
 
 
 @pytest.fixture
-def scripted(monkeypatch):
-    """Boshlash/juftlash dialoglari avtomatik javob beradi; kirish urinishlari sanaladi."""
-    state = {"code": auth.make_pairing_code(STORE_ID, os.urandom(32).hex()), "login_attempts": 0}
+def scripted(monkeypatch, request):
+    """Boshlash/juftlash/kirish dialoglari avtomatik javob beradi."""
+    owner = make_owner(1)
+    state = {
+        "code": auth.make_pairing_code(
+            STORE_ID, owner.id, owner.identity.public_key_hex, os.urandom(32).hex()
+        ),
+        "login_attempts": 0,
+        "owner": owner,
+    }
 
     def start_exec(self):
         self.choice = lg.StartDialog.JOIN
@@ -105,81 +93,115 @@ def scripted(monkeypatch):
     return state
 
 
-def test_joined_device_logs_in_after_snapshot_arrives(qtbot, no_keyring, scripted):
-    local = LocalStore()
+def _owner_snapshot_and_approval(owner: Device, newcomer: Device):
+    """Egasi tasdiqlaydi (device op) va snapshot yuboradi — tarmoqdan kelgandek."""
+    approval = device_op(owner, newcomer)
+    owner.local.apply_op(approval)
+    snapshot = owner.op(o.SNAPSHOT, owner.local.snapshot_payload(STORE_ID))
+    return approval, snapshot
+
+
+def test_joined_device_logs_in_only_after_owner_approval_and_snapshot(qtbot, no_keyring, scripted):
+    """K1: join -> tasdiq -> snapshot -> login. Login oynasi snapshot'dan oldin ochilmaydi."""
+    owner = scripted["owner"]
+    owner.local.apply_op(add_user_op(owner))
+    newcomer = Device(2)
+    approval, snapshot = _owner_snapshot_and_approval(owner, newcomer)
     peer = FakeMqtt()
-    # Boshqa qurilma (egasi) snapshot'ni yuboradi: bu login oynasidan oldin kutiladi
-    QTimer.singleShot(100, lambda: local.apply_op(_owner_user_op()))
+    seen: dict[str, Any] = {}
+
+    def deliver_approval():
+        seen["join_before_approval"] = "join_request" in peer.types()
+        newcomer.local.apply_op(approval)
+
+    QTimer.singleShot(150, deliver_approval)
+    QTimer.singleShot(300, lambda: newcomer.local.apply_op(snapshot))
 
     def bootstrap() -> bool:
         return bs.wait_for_store(
-            local, peer, runner=SyncRunner(), poll_interval_ms=20, request_interval_ms=10_000
+            newcomer.local,
+            peer,
+            runner=SyncRunner(),
+            poll_interval_ms=20,
+            request_interval_ms=50,
+            retry_interval_ms=20,
         )
 
-    user = lg.run_login(local, bootstrap=bootstrap)
+    user = lg.run_login(newcomer.local, bootstrap=bootstrap)
 
+    assert seen.get("join_before_approval") is True  # tasdiqdan oldin so'rov yuborilgan
     assert user is not None and user["login"] == OWNER_LOGIN
-    assert peer.start_calls == 1
     assert scripted["login_attempts"] == 1
+    assert peer.start_calls == 1
+    assert newcomer.local.is_bootstrapped()
 
 
 def test_cancelled_bootstrap_never_shows_login(qtbot, no_keyring, scripted):
-    local = LocalStore()
+    local = Device(3).local
     assert lg.run_login(local, bootstrap=lambda: False) is None
     assert scripted["login_attempts"] == 0
 
 
-def test_bootstrap_runs_again_when_store_has_no_users(qtbot, no_keyring, scripted):
-    """Juftlash yarim qolgan (snapshot kelmagan) bo'lsa, keyingi ishga tushirishda yana kutiladi."""
-    local = LocalStore()
-    local.set_state("store_id", STORE_ID)
-    local.set_state("device_id", str(uuid.uuid4()))
+def test_bootstrap_runs_again_when_store_is_not_ready(qtbot, no_keyring, scripted):
+    """Juftlash yarim qolgan: keyingi ishga tushirishda yana kutiladi."""
+    owner = scripted["owner"]
+    newcomer = Device(4)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
     calls: list[bool] = []
 
     def bootstrap() -> bool:
         calls.append(True)
         return False
 
-    assert lg.run_login(local, bootstrap=bootstrap) is None
+    assert lg.run_login(newcomer.local, bootstrap=bootstrap) is None
     assert calls == [True]
 
 
-def test_bootstrap_skipped_when_store_already_has_users(qtbot, no_keyring, scripted):
-    local = LocalStore()
-    local.apply_op(_owner_user_op())
-    local.set_state("store_id", STORE_ID)
+def test_bootstrap_skipped_for_owner_device(qtbot, no_keyring, scripted):
+    owner = scripted["owner"]
+    owner.local.apply_op(add_user_op(owner))
     calls: list[bool] = []
-
-    user = lg.run_login(local, bootstrap=lambda: calls.append(True) or False)
-
+    user = lg.run_login(owner.local, bootstrap=lambda: calls.append(True) or False)
     assert user is not None and user["login"] == OWNER_LOGIN
     assert calls == []
 
 
-def test_wait_requests_snapshot_while_waiting(qtbot):
-    local = LocalStore()
-    local.set_state("store_id", STORE_ID)
-    local.set_state("device_id", str(uuid.uuid4()))
+def test_wait_sends_join_request_then_snapshot_request(qtbot):
+    owner = make_owner(1)
+    newcomer = Device(5)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    approval, snapshot = _owner_snapshot_and_approval(owner, newcomer)
     peer = FakeMqtt()
-    QTimer.singleShot(200, lambda: local.apply_op(_owner_user_op()))
+    QTimer.singleShot(150, lambda: newcomer.local.apply_op(approval))
+    QTimer.singleShot(300, lambda: newcomer.local.apply_op(snapshot))
 
-    ok = bs.wait_for_store(local, peer, runner=SyncRunner(), poll_interval_ms=20, request_interval_ms=20)
+    ok = bs.wait_for_store(
+        newcomer.local,
+        peer,
+        runner=SyncRunner(),
+        poll_interval_ms=20,
+        request_interval_ms=40,
+        retry_interval_ms=20,
+    )
 
     assert ok is True
-    requests = [op for op in peer.sent if op["type"] == o.SNAPSHOT_REQUEST]
-    assert len(requests) >= 2
-    assert all(op["store_id"] == STORE_ID for op in requests)
+    types = peer.types()
+    assert types[0] == o.JOIN_REQUEST
+    assert o.SNAPSHOT_REQUEST in types
+    assert types.index(o.SNAPSHOT_REQUEST) > types.index(o.JOIN_REQUEST)
 
 
 def test_wait_retries_after_connection_failure(qtbot):
-    local = LocalStore()
-    local.set_state("store_id", STORE_ID)
-    local.set_state("device_id", str(uuid.uuid4()))
+    owner = make_owner(1)
+    newcomer = Device(6)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    approval, snapshot = _owner_snapshot_and_approval(owner, newcomer)
     peer = FlakyMqtt()
-    QTimer.singleShot(300, lambda: local.apply_op(_owner_user_op()))
+    QTimer.singleShot(200, lambda: newcomer.local.apply_op(approval))
+    QTimer.singleShot(350, lambda: newcomer.local.apply_op(snapshot))
 
     ok = bs.wait_for_store(
-        local,
+        newcomer.local,
         peer,
         runner=SyncRunner(),
         poll_interval_ms=20,
@@ -192,13 +214,23 @@ def test_wait_retries_after_connection_failure(qtbot):
 
 
 def test_wait_cancel_returns_false(qtbot):
-    local = LocalStore()
-    local.set_state("store_id", STORE_ID)
-    local.set_state("device_id", str(uuid.uuid4()))
+    owner = make_owner(1)
+    newcomer = Device(7)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
     QTimer.singleShot(100, lambda: QApplication.activeModalWidget().reject())
 
     ok = bs.wait_for_store(
-        local, FakeMqtt(), runner=SyncRunner(), poll_interval_ms=20, request_interval_ms=10_000
+        newcomer.local, FakeMqtt(), runner=SyncRunner(), poll_interval_ms=20, request_interval_ms=10_000
     )
 
     assert ok is False
+
+
+def test_owner_approval_makes_new_device_active(qtbot):
+    owner = make_owner(1)
+    newcomer = Device(8)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    approval = device_op(owner, newcomer)
+    assert owner.local.apply_op(approval) == APPLIED
+    assert newcomer.local.apply_op(approval) == APPLIED
+    assert bs._is_approved(newcomer.local)

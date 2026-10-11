@@ -45,7 +45,7 @@ class LoginDialog(QDialog):
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.error = QLabel("")
-        self.error.setStyleSheet("color: #b91c1c;")
+        self.error.setStyleSheet("color: #F87171;")
 
         form = QFormLayout()
         form.addRow("Login", self.email)
@@ -160,7 +160,7 @@ class PaymentDialog(QDialog):
         form.addRow("Qaytim", self.change_label)
 
         self.error = QLabel("")
-        self.error.setStyleSheet("color: #b91c1c;")
+        self.error.setStyleSheet("color: #F87171;")
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )

@@ -1,6 +1,7 @@
-"""MQTT transport: operatsiyalarni shifrlab nashr qiladi, boshqa qurilmalardan oladi.
+"""MQTT transport (protokol v2): operatsiyalarni shifrlab nashr qiladi, boshqa qurilmalardan oladi.
 
-Broker manzili sozlamada (production: broker.hivemq.com, TLS 8883). Testda lokal Mosquitto.
+Qabul qilish: konvert ochiladi, so'rovlar (snapshot_request, join_request) alohida callback'ga, qolgani
+apply_op() ga beriladi. Har qanday xato ushlanadi: MQTT thread o'lmaydi (Y2). Protokol: docs/sync-mqtt.md.
 """
 
 import logging
@@ -11,9 +12,11 @@ from typing import Any
 import paho.mqtt.client as mqtt
 
 from .crypto import DecryptionError, open_envelope, seal, topic_for
-from .ops import SNAPSHOT_REQUEST
+from .ops import JOIN_REQUEST, SNAPSHOT_REQUEST
 
 log = logging.getLogger(__name__)
+
+Handler = Callable[[dict[str, Any]], None]
 
 
 class MqttSync:
@@ -22,21 +25,20 @@ class MqttSync:
         key: bytes,
         *,
         device_id: str,
-        apply_op: Callable[[dict[str, Any]], bool],
-        on_request: Callable[[dict[str, Any]], None] | None = None,
+        apply_op: Callable[[dict[str, Any]], str],
+        on_request: Handler | None = None,
+        on_join_request: Handler | None = None,
         host: str = "broker.hivemq.com",
         port: int = 8883,
         tls: bool = True,
     ) -> None:
-        """apply_op(op) -> True agar operatsiya yangi bo'lib qo'llangan bo'lsa.
-
-        on_request(op): snapshot_request kelganda chaqiriladi (yangi qurilmaga ma'lumot uzatish uchun).
-        """
+        """apply_op(op) -> natija (LocalStore.apply_op). on_request / on_join_request — so'rovlar uchun."""
         self._key = key
         self._topic = topic_for(key)
         self._device_id = device_id
         self._apply = apply_op
         self._on_request = on_request
+        self._on_join_request = on_join_request
         self._subscribed = threading.Event()
         self._connected = False
         self._client = mqtt.Client(
@@ -61,12 +63,20 @@ class MqttSync:
         return self._connected
 
     @property
-    def on_request(self) -> Callable[[dict[str, Any]], None] | None:
+    def on_request(self) -> Handler | None:
         return self._on_request
 
     @on_request.setter
-    def on_request(self, handler: Callable[[dict[str, Any]], None] | None) -> None:
+    def on_request(self, handler: Handler | None) -> None:
         self._on_request = handler
+
+    @property
+    def on_join_request(self) -> Handler | None:
+        return self._on_join_request
+
+    @on_join_request.setter
+    def on_join_request(self, handler: Handler | None) -> None:
+        self._on_join_request = handler
 
     def start(self, timeout: float = 10.0) -> None:
         self._client.connect(self._host, self._port, keepalive=30)
@@ -79,7 +89,7 @@ class MqttSync:
         self._client.disconnect()
 
     def send(self, op: dict[str, Any]) -> None:
-        """Tayyor operatsiyani shifrlab nashr qiladi va broker tasdig'ini kutadi. Ulanmagan bo'lsa xato."""
+        """Tayyor (imzolangan) operatsiyani shifrlab nashr qiladi va broker tasdig'ini kutadi."""
         if not self._connected:
             raise ConnectionError("MQTT broker bilan ulanmagan")
         info = self._client.publish(self._topic, seal(self._key, op, self._topic), qos=1)
@@ -99,14 +109,25 @@ class MqttSync:
 
     def _on_message(self, client, userdata, msg) -> None:  # type: ignore[no-untyped-def]
         try:
-            op = open_envelope(self._key, msg.payload, self._topic)
+            self._dispatch(msg.payload)
+        except Exception:  # xato thread'ni to'xtatmasin (paho callback istisnosini qayta ko'taradi)
+            log.exception("Xabarni qayta ishlashda xato")
+
+    def _dispatch(self, payload: bytes) -> None:
+        try:
+            op = open_envelope(self._key, payload, self._topic)
         except DecryptionError:
             log.warning("Shifrlangan xabar ochilmadi (boshqa kalit yoki buzilgan)")
             return
         if op.get("device") == self._device_id:
             return  # o'z xabarimiz: allaqachon mahalliy qo'llangan
-        if op.get("type") == SNAPSHOT_REQUEST:
+        kind = op.get("type")
+        if kind == SNAPSHOT_REQUEST:
             if self._on_request is not None:
                 self._on_request(op)
+            return
+        if kind == JOIN_REQUEST:
+            if self._on_join_request is not None:
+                self._on_join_request(op)
             return
         self._apply(op)

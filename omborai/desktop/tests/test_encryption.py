@@ -6,6 +6,7 @@ import sqlcipher3
 from omborai_desktop.offline.store import LocalStore
 from omborai_desktop.security import get_or_create_db_key
 from omborai_desktop.sync import ops as o
+from omborai_desktop.sync.identity import DeviceIdentity
 
 KEY = "ab" * 32
 WRONG = "cd" * 32
@@ -14,13 +15,12 @@ STORE = str(uuid.uuid4())
 
 
 def _seed(path: str) -> None:
-    store = LocalStore(path, key=KEY)
+    """Imzolangan egasi operatsiyasi bilan to'ldiriladi (protokol v2: imzosiz operatsiya rad etiladi)."""
+    store = LocalStore(path, key=KEY, identity=DeviceIdentity(bytes(range(1, 33))))
+    store.init_owner(STORE, "egasi")
     store.apply_op(
-        o.new_op(
-            o.PRODUCT,
-            STORE,
-            {"id": str(uuid.uuid4()), "name": SECRET_NAME, "unit": "dona", "sale_price": 1000},
-            device_id="dev",
+        store.new_op(
+            o.PRODUCT, {"id": str(uuid.uuid4()), "name": SECRET_NAME, "unit": "dona", "sale_price": 1000}
         )
     )
     store.close()

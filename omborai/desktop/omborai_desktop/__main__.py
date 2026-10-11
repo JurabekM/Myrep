@@ -6,7 +6,8 @@ from PySide6.QtWidgets import QApplication
 
 from .config import DesktopConfig
 from .offline.store import LocalStore
-from .security import get_or_create_db_key, get_or_create_store_key
+from .security import get_or_create_db_key, get_or_create_device_seed, get_or_create_store_key
+from .sync.identity import DeviceIdentity
 from .sync.mqtt_sync import MqttSync
 from .ui.bootstrap import wait_for_store
 from .ui.login import run_login
@@ -34,7 +35,8 @@ def main() -> int:
 
     config = DesktopConfig.from_env()
     Path(config.local_db_path).parent.mkdir(parents=True, exist_ok=True)
-    local = LocalStore(config.local_db_path, key=get_or_create_db_key())
+    identity = DeviceIdentity(get_or_create_device_seed())
+    local = LocalStore(config.local_db_path, key=get_or_create_db_key(), identity=identity)
     mqtt: MqttSync | None = None
 
     def bootstrap() -> bool:

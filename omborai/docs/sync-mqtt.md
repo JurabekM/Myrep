@@ -1,100 +1,156 @@
-# Sinxronizatsiya: faqat MQTT (broker.hivemq.com)
+# Sinxronizatsiya protokoli v2: imzolangan operatsiyalar (MQTT)
 
-Qaror: ilovalar **serversiz** ishlaydi. Login, do'kon, tovar, savdo, smena — hammasi qurilmada (shifrlangan
-lokal baza). Qurilmalar bir-biri bilan faqat MQTT broker `broker.hivemq.com` orqali gaplashadi. Backend
-(`backend/`, `infra/`) klientlar tomonidan ishlatilmaydi.
+Holat: amalga oshirilmoqda (2026-10-11). Desktop (Python) va mobil (Dart) bir xil shartnomaga amal qiladi.
+Versiya `v: 2`. v1 bilan mos emas: eski qurilmalar qayta o'rnatiladi.
 
-## Xavfsizlik modeli
+## 1. Tahdid modeli
 
-- Broker ommaviy: autentifikatsiya yo'q, har kim mavzuni kuzatishi mumkin. Shuning uchun **barcha xabarlar
-  ilova ichida shifrlanadi** (AES-256-GCM). Broker faqat shifrlangan baytlarni ko'radi.
-- Do'kon kaliti (32 bayt) qurilmalar o'rtasida qo'lda juftlanadi (QR yoki matn). Kalit ilovada xavfsiz
-  xotirada saqlanadi (desktop: OS keyring, mobil: Android Keystore). Kalit hech qayerga yuborilmaydi.
-- Mavzu nomi kalitdan HKDF orqali olinadi: `omborai/v1/<hex>/ops`. Kalitsiz mavzuni topib bo'lmaydi.
-- Metama'lumot (vaqt, xabar hajmi, mavzu band bo'lishi) broker tomonidan ko'rinadi. Bu qabul qilingan xavf.
+- **Kassir qurilmasi ishonchsiz.** U do'kon kalitini biladi, lekin egasi nomidan operatsiya yubora olmaydi, narxni
+  o'zgartira olmaydi, egani nofaol qila olmaydi, yangi qurilma qo'sha olmaydi.
+- Har bir operatsiya muallif qurilmasining Ed25519 kaliti bilan **imzolanadi**. Qabul qiluvchi imzoni, muallifning
+  faolligini va turiga mos ruxsatni tekshiradi.
+- Broker ommaviy (`broker.hivemq.com`). Mavzu va xabar `K` (do'kon kaliti) bilan shifrlanadi.
+- **Ochiq qolgan xavf:** `K` kassirda ham bor, shuning uchun kassir shifrlangan ma'lumotni (jumladan parol xeshlarini)
+  o'qiy oladi. Bu imzolash bilan hal bo'lmaydi; alohida bosqichda hal qilinadi (10-bo'lim).
 
-## Kalit va mavzu
+## 2. Kalitlar
 
-- `K` — do'kon kaliti, 32 bayt tasodifiy.
-- `topic = "omborai/v1/" + hex(HKDF-SHA256(K, info="topic", len=16)) + "/ops"`
-- Shifrlash: `AES-256-GCM(K)`, nonce 12 bayt (tasodifiy), AAD = `topic` baytlari.
+| Kalit | Kim yaratadi | Qayerda saqlanadi | Vazifasi |
+|---|---|---|---|
+| `K` (32 bayt) | do'konni yaratgan qurilma | OS keyring / Android Keystore | xabarni shifrlash, mavzu nomi |
+| Qurilma kaliti (Ed25519, 32 baytlik seed) | har qurilma o'zi | OS keyring / Android Keystore | operatsiyani imzolash |
 
-## Xabar formati (JSON, QoS 1)
+Mavzu: `omborai/v2/` + `hex(HKDF-SHA256(K, salt=None, info="topic", L=16))` + `/ops`.
+
+## 3. Juftlash kodi
+
+`<store_id>:<owner_device_id>:<owner_public_key_hex>:<store_key_hex>`
+
+- Egasi qurilmasi (role `owner`) ko'rsatadi. Boshqa rollarga bu ekran ko'rinmaydi.
+- Kod sir: `K` va egasining ochiq kaliti shu yerda. Ishonch ildizi shu kod.
+
+## 4. Konvert (broker ko'radigan bayt)
 
 ```json
-{"v": 1, "n": "<base64 nonce>", "c": "<base64 ciphertext+tag>"}
+{"v": 2, "n": "<base64, 12 bayt>", "c": "<base64, shifrlangan matn || 16 bayt GCM tegi>"}
 ```
 
-Ochiq matn (shifrdan keyin) — operatsiya:
+AES-256-GCM, kalit `K`, nonce tasodifiy, AAD = mavzu nomining UTF-8 baytlari.
+
+## 5. Operatsiya (shifrlangan JSON)
 
 ```json
-{"op_id": "<uuid>", "type": "<tur>",
- "device": "<uuid>", "ts": "<ISO 8601>", "store_id": "<uuid>", "payload": {...}}
+{"op_id": "<uuid>", "type": "<tur>", "device": "<device_id>", "ts": "<ts>",
+ "store_id": "<uuid>", "payload": {...}, "sig": "<base64, 64 bayt>"}
 ```
 
-Operatsiya turlari:
+- `ts`: UTC, **aniq shu format**: `YYYY-MM-DDTHH:MM:SS.ffffffZ` (6 ta kasr raqam). Solishtirish satr bo'yicha.
+- **Imzo:** `Ed25519_sign(qurilma_kaliti, canonical(op))`, bunda `op` da `sig` maydoni yo'q.
+- **Canonical JSON:** kalitlar Unicode tartibida saralangan (rekursiv), bo'shliqsiz (`,` `:`), `ensure_ascii=false`,
+  faqat butun sonlar (float yo'q), UTF-8 baytlar. Boshqaruv belgilari (U+0000–U+001F) qiymatlarda ishlatilmaydi.
+- Qabul qiluvchi `device` maydoni orqali muallifni roster'dan topadi va imzoni shu kalit bilan tekshiradi.
 
-| `type`             | `op_id`                     | Mazmuni                                                          |
-|--------------------|-----------------------------|------------------------------------------------------------------|
-| `sale`             | sotuv UUID                  | Chek: items (product_id, qty), payments, total; qoldiq kamayadi  |
-| `refund`           | `refund:<sale_id>`          | Qaytarish: qoldiq tiklanadi, chek `refunded`. Bir chek bir marta |
-| `shift_open`       | smena UUID                  | Smena ochish. Ochiq smena bor bo'lsa e'tiborsiz                  |
-| `shift_close`      | operatsiya UUID             | Smena yopish, hisobot (summary) bilan                            |
-| `movement`         | operatsiya UUID             | Kirim / tuzatish (qoldiq o'zgarishi)                             |
-| `product`          | operatsiya UUID             | Tovar qo'shish / tahrirlash / o'chirish (LWW, `ts` bo'yicha)     |
-| `store`            | operatsiya UUID             | Do'kon nomi (LWW, `ts` bo'yicha)                                 |
-| `user`             | operatsiya UUID             | Foydalanuvchi: login, ism, rol, tuz, parol xeshi, faolligi (LWW) |
-| `snapshot`         | operatsiya UUID             | Yangi qurilmaga to'liq holat: do'kon, foydalanuvchilar, tovarlar, qoldiqlar, ochiq smena |
-| `snapshot_request` | operatsiya UUID             | Yangi qurilma so'raydi; boshqa qurilma `snapshot` yuboradi       |
+## 6. Operatsiya turlari va ruxsatlar
 
-## Semantika
+| `type` | Imzolovchi | Payload | Qo'llash |
+|---|---|---|---|
+| `device` | owner | `{device_id, public_key, role, label, active}` | Qurilma qo'shish, rol, bloklash. `public_key` o'zgarmaydi. LWW |
+| `join_request` | o'zi (imzo `payload.public_key` bilan) | `{device_id, public_key, label}` | Yangi qurilma so'rovi. Egasi tasdiqlaydi. Qo'llanmaydi |
+| `store` | owner | `{name}` | LWW |
+| `user` | owner | `{id, login, name, role, salt, pw_hash, active}` | LWW |
+| `product` | owner | `{id, name, unit, sale_price, cost_price, min_stock, barcodes, deleted}` | LWW; narx tarixi saqlanadi |
+| `movement` | owner | `{product_id, qty, kind}`, kind: `receipt`, `adjustment`, `writeoff` | Qoldiq |
+| `sale` | owner yoki kassir qurilmasi | chek (5.1) | Narxlar katalogga mos bo'lishi shart |
+| `shift_open` | faol qurilma | `{shift_id, opening_cash}` | Qurilmada bitta ochiq smena |
+| `shift_close` | smena ochgan qurilma yoki owner | `{shift_id, closing_cash, summary}` | Faqat ochiq smenani yopadi |
+| `refund` | owner | `{sale_id, items: [{product_id, qty}]}` | Qaytarish o'z mahsulotlarini olib yuradi; bir chek bir marta |
+| `snapshot` | owner | 5.2 | Yangi qurilmaga to'liq holat. Faqat bootstrap bo'lmagan qurilma qabul qiladi |
+| `snapshot_request` | faol qurilma | `{}` | Qo'llanmaydi. Owner javob beradi |
 
-- Har bir operatsiya `op_id` (UUID) bilan noyob. Qabul qiluvchi `applied_ops` jadvalida dublikatni rad etadi
-  (QoS 1 "kamida bir marta" kafolatlaydi, dedupe esa "bir marta" ta'sirini beradi).
-- Qurilma o'z operatsiyasini avval o'zida qo'llaydi, keyin nashr qiladi. Boshqa qurilmalar xuddi shu
-  operatsiyani qo'llaydi. Natijada hamma qurilmada qoldiq bir xil bo'ladi (hodisalar ketma-ketligi).
-- Tovar (`product`) o'zgarishlari: oxirgi yozgan g'olib (`ts`, keyin `device`). Qoldiq: append-only
-  (`movements` jadvali; sotuv manfiy, qaytarish musbat yozuv).
-- Qaytarish: `refund:<sale_id>` op_id hamma qurilmada bir xil, shuning uchun bir chekni ikki qurilmadan
-  qaytarish ham qoldiqni ikki marta tiklamaydi. Chek allaqachon `refunded` bo'lsa e'tiborsiz.
-- Yangi qurilma (bo'sh bazasi bilan) ulanganda `snapshot_request` yuboradi. Boshqa qurilma (eng birinchi
-  javob beruvchi) `snapshot` bilan javob beradi: do'kon, foydalanuvchilar, tovarlar, qoldiqlar, ochiq smena.
-  `snapshot` faqat `applied_ops` bo'sh qurilmada qo'llanadi. Qurilmada allaqachon ma'lumot bo'lsa u e'tiborsiz.
+`op_id` qoidalari: `sale` = sotuv UUID; `refund` = `refund:<sale_id>`; `shift_open` = smena UUID; qolganlari UUID.
+Bir xil `op_id` ikki marta qo'llanmaydi (`applied_ops`).
 
-## Serversiz autentifikatsiya
+### 6.1. Sotuv tekshiruvi (hamma qurilmada bir xil)
 
-- **Do'kon yaratish:** birinchi qurilma `store_id` (UUID) va 32 baytli kalit yaratadi, `store` va egasining
-  `user` operatsiyasini yuboradi.
-- **Juftlash kodi:** `<store_id>:<kalit hex>`. Ikkinchi qurilma kodni kiritadi, kalit va do'kon id'sini saqlaydi,
-  so'ng snapshot so'raydi. Kod kalitni o'z ichiga oladi: uni ishonchli kanal orqali uzating.
-- **Parol:** PBKDF2-HMAC-SHA256, 100 000 iteratsiya, 16 baytli tasodifiy tuz, 32 baytli natija. Desktop (Python)
-  va mobil (Dart) bir xil natija beradi (`test_auth.py`, `auth_test.dart` da tekshirilgan). Parol matni hech qayerda
-  saqlanmaydi va yuborilmaydi.
-- **Login:** lokal `users` jadvalidan `login` bo'yicha (katta-kichik harfga bog'liq emas) topiladi, xesh
-  solishtiriladi. Faqat faol (`active`) foydalanuvchi kiradi.
-- **Foydalanuvchi o'zgarishi:** `user` operatsiyasi, LWW (`ts` bo'yicha). Parol o'zgarsa, yangi tuz va xesh
-  yuboriladi.
+- Har `items[i]`: `qty > 0`, `unit_price` = `ts` vaqtidagi katalog narxi (narx tarixidan, `ts` dan oldingi oxirgi yozuv),
+  `line_total = round_half_up(qty * unit_price)`.
+- `subtotal = sum(line_total)`, `0 <= discount <= subtotal`, `total = subtotal - discount`.
+- Katalog narxi hali kelmagan bo'lsa — operatsiya **kutiladi** (pending). Narx mos kelmasa — **rad etiladi**.
 
-**Xavf:** parol xeshi do'kon kaliti bilan shifrlangan holda tarqaladi. Kalit tarqalsa, xeshdan parolni
-taxmin qilish mumkin. Shuning uchun parollar kuchli bo'lishi va kalit faqat ishonchli qurilmalarga berilishi
-kerak. Bu serversiz rejimning narxi.
-- Qurilma o'zining xabarini (`device == o'zim`) qayta qo'llamaydi.
+### 6.2. Qaytarish
 
-## Ma'lum cheklovlar (muhim)
+- `refund` egasi tomonidan imzolanadi. `items` o'z-o'zidan to'liq: sotuv qatori bo'lmasa ham qoldiq tiklanadi.
+- Qoldiq yozuvi `refund:<sale_id>:<product_id>`, `kind = sale_return`. Chek allaqachon qaytarilgan bo'lsa — rad.
+- Sotuv qatori bor bo'lsa, `status = refunded`. Qaytarish sotuvdan oldin kelsa, `refunded_sales` da yoziladi;
+  sotuv keyin kelganda shu yerdan `refunded` bo'ladi. Qoldiq natijasi tartibga bog'liq emas.
 
-- **Markaziy hakam yo'q.** Ikki oflayn qurilma bir vaqtda oxirgi donani sotsa, qoldiq manfiyga tushishi
-  mumkin. Bunday holat aniqlanadi va hisobotda belgilanadi, lekin oldindan to'xtatib bo'lmaydi.
-- **Yetkazib berish kafolati broker darajasida.** Ommaviy brokerda uzoq muddatli xabar saqlash va uptime
-  kafolati yo'q. Uzilish paytida yuborilgan xabar yo'qolishi mumkin. Qurilma o'z outbox'ini saqlaydi va
-  ulanganda qayta nashr qiladi (dedupe himoya qiladi).
-- **Snapshot poygasi.** Snapshot va shu paytda kelgan jonli operatsiyalar tartibi kafolatlanmaydi. Snapshot
-  tugallangach, tashqarida qolgan yozuvlar qo'lda tekshirilishi kerak (kichik oynada qoldiq farqi bo'lishi
-  mumkin). Hozircha hal qilinmagan.
-- **Chek va qaytarish tarixi** faqat qurilmalarda saqlanadi (server bazasi yo'q). Hisobotlar qurilma
-  ichida hisoblanadi.
-- Xususiy broker (Mosquitto, TLS + login) bilan ishlash uchun faqat manzil va autentifikatsiya sozlamasi
-  o'zgaradi, protokol o'zgarmaydi.
+### 6.3. Smena
 
-## Fiskal kassa / OFD
+- Har bir qurilmaning o'z smenasi bor (kassa yashigi qurilmada). `shift_open` qurilma ochiq smenasi bo'lsa rad.
+- `opened_at = op.ts`. Smena UI'si shu qurilmaning smenasini ko'rsatadi.
 
-Hozirda ishlab chiqish jarayonida. Ilovalarda "Fiskal chek: ishlab chiqish jarayonida" deb ko'rsatiladi.
+## 7. Qurilma qo'shish (juftlash va tasdiqlash)
+
+1. **Yangi qurilma** kodni kiritadi: `store_id`, egasi `device_id` va ochiq kalit, `K` saqlanadi. Roster'da faqat egasi.
+   Yangi qurilma o'z kalitini yaratadi (agar bo'lmasa).
+2. Yangi qurilma `join_request` yuboradi (o'z kaliti bilan imzolangan), har 15 soniyada, tasdiq kelguncha.
+3. **Egasi** qurilmasi so'rovni ko'radi (imzo tekshiriladi) va so'raydi: kassir / egasi sifatida qo'shilsinmi yoki rad.
+   Tasdiqlansa `device` operatsiyasini yuboradi (egasi imzosi bilan).
+4. Yangi qurilma o'z `device` yozuvini egasi imzosi bilan oladi (bootstrap oldin ham qabul qilinadi) va
+   `snapshot_request` yuboradi.
+5. Egasi `snapshot` yuboradi. Yangi qurilma uni qabul qiladi, bootstrap bo'ladi, login ochiladi.
+
+Egasi qurilmasi o'chiq bo'lsa, yangi qurilma kutadi va "egasi qurilmasini tekshiring" xabarini ko'rsatadi.
+
+## 8. Qabul qilish tartibi
+
+1. Konvertni oching (`v == 2`, GCM tegi). Xato — tashlanadi.
+2. JSON va majburiy maydonlarni tekshiring. Xato — tashlanadi.
+3. `snapshot_request` / `join_request` — 7-bo'limga qarang, operatsiya sifatida qo'llanmaydi.
+4. **Bootstrap bo'lmagan qurilma** (`bootstrapped = 0`):
+   - Owner imzosidagi `device` va owner imzosidagi `snapshot` qo'llanadi.
+   - Qolgan hamma operatsiya **bufer**ga (pending) yoziladi. Holat o'zgarmaydi.
+5. **Bootstrap bo'lgan qurilma:**
+   - `op.ts <= bootstrap_ts` (`device` va `snapshot` bundan mustasno) — snapshot ichida, tashlanadi.
+   - Muallif (`device`) roster'da bo'lmasa — pending.
+   - Imzo noto'g'ri yoki muallif faol emas — tashlanadi.
+   - Tur bo'yicha ruxsat (6-jadval) va 6.1–6.3 tekshiruvi. Rad — tashlanadi; kutish — pending.
+   - Qo'llash (bitta tranzaksiyada, `applied_ops` bilan birga).
+6. `device`, `product` yoki `snapshot` qo'llanganidan keyin pending ro'yxati qayta ko'rib chiqiladi.
+
+LWW (`store`, `user`, `product`, `device`): kalit `(ts, op_id)`. Yangisi g'olib. Teng bo'lsa `op_id` katta bo'lgani.
+
+## 9. Snapshot va bootstrap
+
+`snapshot` payload (owner imzosi bilan):
+
+```json
+{"store": {"name": "...", "updated_ts": "..."},
+ "devices": [{"device_id", "public_key", "role", "label", "active", "updated_ts"}],
+ "users": [{"id", "login", "name", "role", "salt", "pw_hash", "active", "updated_ts"}],
+ "products": [{"id", "name", "unit", "sale_price", "cost_price", "min_stock", "barcodes", "deleted", "updated_ts"}],
+ "balances": {"<product_id>": "<qty>"},
+ "open_shifts": [{"id", "device", "opening_cash", "opened_at"}]}
+```
+
+- Snapshot `ts = T`. Qabul qilinganda: `bootstrapped = 1`, `bootstrap_ts = T`.
+- Bootstrap oldin kelgan jonli operatsiyalar bufer'da. Bootstrapdan keyin: `ts > T` bo'lganlari qo'llanadi, `ts <= T` bo'lganlari tashlanadi
+  (ular snapshot ichida). Shunday qilib jonli operatsiya snapshot'ni rad ettirmaydi (K5).
+- Ma'lum cheklov: `ts <= T` bo'lgan, lekin egaga `T` gacha yetib bormagan operatsiya yo'qoladi. Vaqt xatosi (soat siljishi) ham
+  shu oynani o'zgartiradi. Qisqa oyna, hujjatlangan.
+- Sotuv tarixi snapshot'ga kirmaydi. Qaytarish o'z-o'zidan to'liq bo'lgani uchun buning ta'siri yo'q.
+
+## 10. Cheklovlar (ochiq)
+
+- **Maxfiylik:** `K` kassirda bor, u shifrlangan ma'lumotni o'qiydi (parol xeshlari ham). Keyingi bosqich: xabarlarni
+  qurilmaga alohida shifrlash yoki parol xeshlarini egasiga cheklash.
+- Qoldiq: ikki qurilma bir vaqtda oxirgi donani sotsa, qoldiq manfiy bo'lishi mumkin (qabul qilingan).
+- Broker kafolati yo'q: outbox + dedupe. Mobil ulanish `clean session` bilan emas (persistent), PUBACK kelgandan keyin navbat o'chadi.
+- Vaqt manbai — qurilma soati (NTP tavsiya etiladi).
+
+## 11. Test vektorlari
+
+Kross-platforma (desktop va mobil bir xil natija berishi shart):
+- `K` = bayt `0x00..0x1f`. Mavzu: `omborai/v2/<hex>/ops` — testlarda hisoblanadi (`tests/test_vectors.py`, `test/vectors_test.dart`).
+- Qurilma kaliti seed `0x01..0x20` bo'lsa, imzo va public key qiymatlari testda qayd etiladi.
+- Canonical JSON va imzo qiymatlari ikki tilda ham bir xil bo'lishi shart.

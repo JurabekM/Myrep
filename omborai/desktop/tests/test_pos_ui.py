@@ -1,51 +1,58 @@
-import uuid
+"""Kassa oynasi (PosWindow) GUI testlari: har bir tugma bosilib tekshiriladi (qoida: tugma ishlasin yoki o'chiq)."""
+
 from decimal import Decimal
-from typing import Any
 
 import pytest
+from helpers import STORE_ID, Device, bootstrapped_pair, make_owner, movement_op, product_op, shift_open_op
 from PySide6.QtWidgets import QDialog
 
 from omborai_desktop.config import DesktopConfig
-from omborai_desktop.offline.store import LocalStore
+from omborai_desktop.offline.store import APPLIED, REJECTED
+from omborai_desktop.sync import crypto
 from omborai_desktop.sync import ops as o
 from omborai_desktop.ui import main_window as mw
 from omborai_desktop.ui.tasks import SyncRunner
 
-STORE_ID = str(uuid.uuid4())
-SUT_ID = str(uuid.uuid4())
+PID = "00000000-0000-0000-0000-00000000abcd"
 
 
 class FakeMqtt:
-    def __init__(self) -> None:
-        self.connected = True
-        self.sent: list[dict[str, Any]] = []
+    def __init__(self, connected: bool = True) -> None:
+        self.connected = connected
+        self.sent: list[dict] = []
         self.on_request = None
+        self.on_join_request = None
 
     def start(self, timeout: float = 10.0) -> None:
-        return None
+        self.connected = True
 
     def stop(self) -> None:
-        return None
+        self.connected = False
 
-    def send(self, op: dict[str, Any]) -> None:
+    def send(self, op: dict) -> None:
         if not self.connected:
             raise ConnectionError("broker yo'q")
         self.sent.append(op)
 
+    def types(self) -> list[str]:
+        return [op["type"] for op in self.sent]
+
 
 @pytest.fixture
-def dialogs(monkeypatch):
-    shown: list[str] = []
-    warnings: list[str] = []
-
-    class FakeReceipt:
-        print_requested = False
-
-        def __init__(self, text, *, can_print, parent=None):
-            shown.append(text)
-
-        def exec(self):
-            return QDialog.DialogCode.Rejected
+def ui(monkeypatch):
+    """Dialoglar va xabarlar soxtalashtirilgan: testda modal oyna ochilmaydi, javoblar yozib olinadi."""
+    log = {
+        "warn": [],
+        "info": [],
+        "payment": 0,
+        "receipt": 0,
+        "products": 0,
+        "users": 0,
+        "open_cash": None,
+        "close_cash": None,
+        "ask_join": [],
+        "join_answer": o.ROLE_CASHIER,
+    }
 
     class FakePayment:
         method = "cash"
@@ -55,201 +62,282 @@ def dialogs(monkeypatch):
             self.total = total
 
         def exec(self):
+            log["payment"] += 1
             return QDialog.DialogCode.Accepted
 
-    monkeypatch.setattr(mw, "ReceiptDialog", FakeReceipt)
+    class FakeReceipt:
+        print_requested = False
+
+        def __init__(self, text, *, can_print, parent=None):
+            pass
+
+        def exec(self):
+            log["receipt"] += 1
+            return QDialog.DialogCode.Rejected
+
+    class FakeOpenShift:
+        def __init__(self, parent=None):
+            pass
+
+        def exec(self):
+            return QDialog.DialogCode.Accepted
+
+        def opening_cash(self):
+            return 5000
+
+    class FakeCloseShift:
+        def __init__(self, parent=None):
+            pass
+
+        def exec(self):
+            return QDialog.DialogCode.Accepted
+
+        def closing_cash(self):
+            return 5000
+
+    class FakeProducts:
+        def __init__(self, **kwargs):
+            pass
+
+        def exec(self):
+            log["products"] += 1
+            return QDialog.DialogCode.Rejected
+
+    class FakeUsers:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def exec(self):
+            log["users"] += 1
+            return QDialog.DialogCode.Rejected
+
     monkeypatch.setattr(mw, "PaymentDialog", FakePayment)
-    monkeypatch.setattr(mw.QMessageBox, "warning", lambda _p, _t, text, *a, **k: warnings.append(text))
-    monkeypatch.setattr(mw.QMessageBox, "information", lambda *a, **k: None)
-    return shown, warnings
+    monkeypatch.setattr(mw, "ReceiptDialog", FakeReceipt)
+    monkeypatch.setattr(mw, "OpenShiftDialog", FakeOpenShift)
+    monkeypatch.setattr(mw, "CloseShiftDialog", FakeCloseShift)
+    monkeypatch.setattr(mw, "ProductsDialog", FakeProducts)
+    monkeypatch.setattr(mw, "UsersDialog", FakeUsers)
+    monkeypatch.setattr(mw.QMessageBox, "warning", lambda _p, title, text, *a, **k: log["warn"].append(text))
+    monkeypatch.setattr(mw.QMessageBox, "information", lambda *a, **k: log["info"].append(a))
+
+    def ask_join(self, label):
+        log["ask_join"].append(label)
+        return log["join_answer"]
+
+    monkeypatch.setattr(mw.PosWindow, "_ask_join", ask_join)
+    return log
 
 
-def _window(qtbot, local=None, mqtt=None, seed=True):
-    local = local or LocalStore()
-    if local.get_state("store_id") is None:
-        local.set_state("store_id", STORE_ID)
-    if seed and local.applied_count() == 0:
-        local.apply_op(o.new_op(o.STORE, STORE_ID, {"name": "Test do'kon"}, device_id=local.device_id()))
-    window = mw.PosWindow(DesktopConfig(), runner=SyncRunner(), local=local, mqtt=mqtt or FakeMqtt())
-    qtbot.addWidget(window)
-    window.start()
-    return window
+def _window(local, user_role: str, mqtt=None, user_login: str = "u"):
+    user = {"id": f"user-{user_role}", "login": user_login, "role": user_role}
+    win = mw.PosWindow(DesktopConfig(), user=user, runner=SyncRunner(), local=local, mqtt=mqtt or FakeMqtt())
+    win._load_saved_store()
+    return win
 
 
-def _seed_catalog(window, qty="10"):
-    device = window.local.device_id()
-    window.local.apply_op(
-        o.new_op(
-            o.PRODUCT,
-            STORE_ID,
-            {
-                "id": SUT_ID,
-                "name": "Sut 1 L",
-                "unit": "dona",
-                "sale_price": 12000,
-                "barcodes": ["4780012300123"],
-            },
-            device_id=device,
-        )
-    )
-    window.local.apply_op(
-        o.new_op(
-            o.MOVEMENT,
-            STORE_ID,
-            {
-                "product_id": SUT_ID,
-                "kind": "receipt",
-                "qty": qty,
-            },
-            device_id=device,
-        )
-    )
+def _stock(owner: Device, qty: str = "10") -> None:
+    owner.local.apply_op(product_op(owner, PID, 1000))
+    owner.local.apply_op(movement_op(owner, PID, qty))
 
 
-def _scan(window, code="4780012300123", times=2):
-    for _ in range(times):
-        window.search.setText(code)
-        window._on_search_submitted()  # noqa: SLF001
+def test_owner_window_enables_manage_buttons(qtbot, ui):
+    owner = make_owner(1)
+    win = _window(owner.local, o.ROLE_OWNER)
+    qtbot.addWidget(win)
+    assert win.btn_refund.isEnabled() and win.btn_products.isEnabled() and win.btn_users.isEnabled()
+    assert win.btn_refund.toolTip() == ""
 
 
-def test_store_is_loaded_and_remembered(qtbot):
-    window = _window(qtbot)
-    assert window.store["id"] == STORE_ID
-    assert window.local.get_state("store_id") == STORE_ID
+def test_cashier_window_disables_manage_buttons_with_reason(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    win = _window(cashier.local, o.ROLE_CASHIER)
+    qtbot.addWidget(win)
+    for button in (win.btn_refund, win.btn_products, win.btn_users):
+        assert not button.isEnabled()
+        assert "egasi" in button.toolTip().lower()
 
 
-def test_sale_requires_open_shift(qtbot, dialogs):
-    _, warnings = dialogs
-    window = _window(qtbot)
-    _seed_catalog(window)
-    _scan(window)
-    window.pay()
-    assert warnings == ["Avval smenani oching."]
-    assert not any(op["type"] == o.SALE for op in window.mqtt.sent)
+def test_disabled_buttons_do_nothing_when_clicked(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    win = _window(cashier.local, o.ROLE_CASHIER)
+    qtbot.addWidget(win)
+    win.btn_products.click()
+    win.btn_users.click()
+    win.btn_refund.click()
+    assert ui["products"] == 0 and ui["users"] == 0 and ui["warn"] == []
 
 
-def test_sale_publishes_priced_op_and_reduces_local_stock(qtbot, dialogs):
-    window = _window(qtbot)
-    _seed_catalog(window)
-    window.open_shift(0)
-    _scan(window)
-    window.pay()
-
-    sales = [op for op in window.mqtt.sent if op["type"] == o.SALE]
-    assert len(sales) == 1
-    payload = sales[0]["payload"]
-    assert payload["items"][0]["unit_price"] == 12000
-    assert payload["shift_id"] == window.local.open_shift(STORE_ID)["id"]
-    assert window.local.balance(STORE_ID, SUT_ID) == Decimal(8)
-    assert window.cart.is_empty
+def test_owner_buttons_open_their_dialogs(qtbot, ui):
+    owner = make_owner(1)
+    win = _window(owner.local, o.ROLE_OWNER)
+    qtbot.addWidget(win)
+    win.btn_products.click()
+    win.btn_users.click()
+    assert ui["products"] == 1 and ui["users"] == 1
 
 
-def test_insufficient_stock_blocks_sale_before_publishing(qtbot, dialogs):
-    _, warnings = dialogs
-    window = _window(qtbot)
-    _seed_catalog(window, qty="1")
-    window.open_shift(0)
-    _scan(window, times=1)
-    window.table.item(0, 1).setText("3")
-    window.pay()
-    assert warnings and warnings[0].startswith("«Sut 1 L»")
-    assert not any(op["type"] == o.SALE for op in window.mqtt.sent)
+def test_shift_button_opens_and_closes_shift_on_this_device(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    win = _window(cashier.local, o.ROLE_CASHIER)
+    qtbot.addWidget(win)
+    assert win.shift_label.text().endswith("yopiq</span>")
+    win.btn_shift.click()  # ochish
+    assert cashier.local.open_shift_for_device(cashier.id) is not None
+    assert win.btn_shift.text() == "Smenani yopish"
+    win.btn_shift.click()  # yopish
+    assert cashier.local.open_shift_for_device(cashier.id) is None
 
 
-def test_offline_sale_is_queued_then_published_on_reconnect(qtbot, dialogs):
+def test_sale_is_signed_applied_and_sent(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    _stock(owner)
+    for d in (cashier,):
+        d.local.apply_op(product_op(owner, PID, 1000))
+        d.local.apply_op(movement_op(owner, PID, "10"))
     mqtt = FakeMqtt()
-    mqtt.connected = False
-    window = _window(qtbot, mqtt=mqtt)
-    _seed_catalog(window)
-    window.open_shift(0)
-    _scan(window)
-    window.pay()
-    assert window.local.pending_count() >= 1
-    queued_sales = [op for op in window.local.pending_ops() if op["type"] == o.SALE]
-    assert len(queued_sales) == 1
-
-    mqtt.connected = True
-    window._refresh_sync_state()  # noqa: SLF001 - ulanish tiklandi
-    assert [op["op_id"] for op in mqtt.sent if op["type"] == o.SALE] == [queued_sales[0]["op_id"]]
-    assert window.local.pending_count() == 0
+    win = _window(cashier.local, o.ROLE_CASHIER, mqtt=mqtt)
+    qtbot.addWidget(win)
+    assert win.open_shift(0) is None
+    win.cart.add(cashier.local.get_product(PID, STORE_ID))
+    win.cart.set_qty(PID, Decimal(2))
+    win._refresh_cart()
+    win.pay()
+    sale_ops = [op for op in mqtt.sent if op["type"] == o.SALE]
+    assert len(sale_ops) == 1 and ui["payment"] == 1
+    assert crypto.verify_op(sale_ops[0], cashier.identity.public_key_hex)
+    assert cashier.local.balance(STORE_ID, PID) == Decimal(8)
 
 
-def test_refund_publishes_deterministic_op_once(qtbot, dialogs):
-    window = _window(qtbot)
-    _seed_catalog(window)
-    window.open_shift(0)
-    _scan(window)
-    window.pay()
-    sale_id = next(op["op_id"] for op in window.mqtt.sent if op["type"] == o.SALE)
-
-    assert window.refund_sale(sale_id) is True
-    refunds = [op for op in window.mqtt.sent if op["type"] == o.REFUND]
-    assert refunds[0]["op_id"] == o.refund_op_id(sale_id)
-    assert window.local.get_sale(sale_id)["status"] == "refunded"
-    assert window.local.balance(STORE_ID, SUT_ID) == Decimal(10)
-    assert window.refund_sale(sale_id) is False  # ikkinchi marta qaytarib bo'lmaydi
+def test_sale_without_shift_is_blocked(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    cashier.local.apply_op(product_op(owner, PID, 1000))
+    win = _window(cashier.local, o.ROLE_CASHIER)
+    qtbot.addWidget(win)
+    win.cart.add(cashier.local.get_product(PID, STORE_ID))
+    win.pay()
+    assert ui["payment"] == 0 and any("smena" in w.lower() for w in ui["warn"])
 
 
-def test_shift_close_publishes_summary_and_clears_open_shift(qtbot, dialogs):
-    window = _window(qtbot)
-    _seed_catalog(window)
-    window.open_shift(1000)
-    _scan(window)
-    window.pay()
-    summary = window.close_shift(13000)
-    assert summary["sales_count"] == 1
-    assert window.local.open_shift(STORE_ID) is None
-    closes = [op for op in window.mqtt.sent if op["type"] == o.SHIFT_CLOSE]
-    assert closes[0]["payload"]["summary"]["by_method"] == {"cash": 24000}
+def test_owner_refund_button_refunds_completed_sale(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    _stock(owner)
+    shift = shift_open_op(cashier)
+    owner.local.apply_op(shift)
+    from helpers import sale_op
+
+    sale = sale_op(cashier, PID, "3", 1000, shift_id=shift["op_id"])
+    owner.local.apply_op(sale)
+    win = _window(owner.local, o.ROLE_OWNER)
+    qtbot.addWidget(win)
+    assert win.refund_sale(sale["op_id"]) is True
+    assert owner.local.get_sale(sale["op_id"])["status"] == "refunded"
+    assert owner.local.balance(STORE_ID, PID) == Decimal(10)
 
 
-def test_catalog_add_edit_delete_are_operations(qtbot, dialogs):
-    window = _window(qtbot)
-    new_id = str(uuid.uuid4())
-    window.save_product(
+def test_cashier_cannot_refund_even_when_called_directly(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    _stock(owner)
+    from helpers import sale_op
+
+    sale = sale_op(cashier, PID, "1", 1000)
+    owner.local.apply_op(sale)
+    win = _window(cashier.local, o.ROLE_CASHIER)
+    qtbot.addWidget(win)
+    assert win.refund_sale(sale["op_id"]) is False
+    assert any("egasi" in w.lower() for w in ui["warn"])
+
+
+def test_rejected_local_change_is_not_sent(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    mqtt = FakeMqtt()
+    win = _window(cashier.local, o.ROLE_CASHIER, mqtt=mqtt)
+    qtbot.addWidget(win)
+    win.save_product(
         {
-            "id": new_id,
-            "name": "Choy",
-            "unit": "quti",
-            "sale_price": 22000,
-            "cost_price": 15000,
-            "min_stock": "2",
-            "barcodes": ["4780012300031"],
+            "id": PID,
+            "name": "Hile",
+            "unit": "dona",
+            "sale_price": 1,
+            "cost_price": 0,
+            "min_stock": "0",
+            "barcodes": [],
             "deleted": False,
         }
     )
-    assert window.local.get_product(new_id, STORE_ID)["name"] == "Choy"
-
-    window.save_product(
-        {
-            "id": new_id,
-            "name": "Choy premium",
-            "unit": "quti",
-            "sale_price": 25000,
-            "cost_price": 15000,
-            "min_stock": "2",
-            "barcodes": ["4780012300031"],
-            "deleted": False,
-        }
-    )
-    assert window.local.get_product(new_id, STORE_ID)["sale_price"] == 25000
-
-    window.delete_product(window.local.get_product(new_id, STORE_ID))
-    assert window.local.get_product(new_id, STORE_ID) is None
-    catalog_ops = [op["type"] for op in window.mqtt.sent if op["type"] != o.SNAPSHOT_REQUEST]
-    assert catalog_ops == [o.PRODUCT, o.PRODUCT, o.PRODUCT]
+    assert mqtt.sent == []
+    assert cashier.local.get_product(PID, STORE_ID) is None
+    assert ui["warn"]
 
 
-def test_fresh_device_requests_snapshot_and_peer_answers(qtbot, dialogs):
+def test_join_request_prompt_approves_cashier_and_is_asked_once(qtbot, ui):
+    owner = make_owner(1)
+    newcomer = Device(3)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    request = newcomer.local.join_request("Kassa-2")
     mqtt = FakeMqtt()
-    window = _window(qtbot, mqtt=mqtt, seed=False)  # joinlangan, hali hech narsa qo'llanmagan qurilma
-    window._refresh_sync_state()  # noqa: SLF001 - bo'sh qurilma
-    requests = [op for op in mqtt.sent if op["type"] == o.SNAPSHOT_REQUEST]
-    assert len(requests) == 1
+    win = _window(owner.local, o.ROLE_OWNER, mqtt=mqtt, user_login="egasi")
+    qtbot.addWidget(win)
+    win._on_join_requested(request)
+    win._on_join_requested(request)  # takror so'rov: dialog qayta chiqmasin
+    assert ui["ask_join"] == ["Kassa-2"]
+    device = owner.local.device_row(newcomer.id)
+    assert device is not None and device["active"] and device["role"] == o.ROLE_CASHIER
+    assert o.DEVICE in mqtt.types()
 
-    other = _window(qtbot, mqtt=FakeMqtt())
-    _seed_catalog(other)
-    other._on_snapshot_requested(requests[0])  # noqa: SLF001 - boshqa qurilma javob beradi
-    snaps = [op for op in other.mqtt.sent if op["type"] == o.SNAPSHOT]
-    assert len(snaps) == 1
-    assert snaps[0]["payload"]["balances"] == {SUT_ID: "10"}
+
+def test_join_request_rejected_by_owner_changes_nothing(qtbot, ui):
+    owner = make_owner(1)
+    newcomer = Device(4)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    ui["join_answer"] = None
+    mqtt = FakeMqtt()
+    win = _window(owner.local, o.ROLE_OWNER, mqtt=mqtt, user_login="egasi")
+    qtbot.addWidget(win)
+    win._on_join_requested(newcomer.local.join_request("Begona"))
+    assert owner.local.device_row(newcomer.id) is None
+    assert mqtt.sent == []
+
+
+def test_join_request_ignored_by_cashier_window(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    newcomer = Device(5)
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    win = _window(cashier.local, o.ROLE_CASHIER)
+    qtbot.addWidget(win)
+    win._on_join_requested(newcomer.local.join_request("x"))
+    assert ui["ask_join"] == []
+
+
+def test_snapshot_request_is_answered_only_by_owner_device(qtbot, ui):
+    owner, cashier = bootstrapped_pair()
+    newcomer = Device(6)
+    owner_mqtt = FakeMqtt()
+    owner_win = _window(owner.local, o.ROLE_OWNER, mqtt=owner_mqtt, user_login="egasi")
+    qtbot.addWidget(owner_win)
+    # Yangi qurilma egasi tomonidan tasdiqlangan bo'lishi kerak (roster'da faol)
+    from helpers import device_op
+
+    owner.local.apply_op(device_op(owner, newcomer))
+    newcomer.local.set_pairing(STORE_ID, owner.id, owner.identity.public_key_hex)
+    request = newcomer.local.new_op(o.SNAPSHOT_REQUEST, {})
+    owner_win._on_snapshot_requested(request)
+    assert o.SNAPSHOT in owner_mqtt.types()
+
+    cashier_mqtt = FakeMqtt()
+    cashier_win = _window(cashier.local, o.ROLE_CASHIER, mqtt=cashier_mqtt)
+    qtbot.addWidget(cashier_win)
+    cashier_win._on_snapshot_requested(request)
+    assert cashier_mqtt.sent == []
+
+
+def test_sync_label_shows_pending_outbox(qtbot, ui):
+    owner = make_owner(1)
+    win = _window(owner.local, o.ROLE_OWNER, mqtt=FakeMqtt(connected=False))
+    qtbot.addWidget(win)
+    owner.local.enqueue(product_op(owner, PID, 100))
+    win._update_sync_label()
+    assert "navbatda" in win.sync_label.text() and "MQTT uzilgan" in win.sync_label.text()
+
+
+def test_apply_result_constants_match_protocol():
+    assert APPLIED == "applied" and REJECTED == "rejected"

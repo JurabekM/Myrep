@@ -1,9 +1,11 @@
-"""Foydalanuvchilar oynasi (faqat do'kon egasi): ro'yxat, kassir qo'shish, faollashtirish/o'chirish."""
+"""Foydalanuvchilar va qurilmalar oynasi (faqat egasi qurilmasi): hisoblar, qurilmalar, juftlash kodi."""
 
 from collections.abc import Callable
 from typing import Any
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
@@ -20,8 +22,10 @@ from PySide6.QtWidgets import (
 
 from .. import users as u
 from ..offline.store import LocalStore
+from ..sync import ops as o
 
 ROLE_NAMES = {u.ROLE_OWNER: "Egasi", u.ROLE_CASHIER: "Kassir"}
+ROLE_ID = 0x0100  # Qt.UserRole
 
 
 class AddCashierDialog(QDialog):
@@ -35,7 +39,7 @@ class AddCashierDialog(QDialog):
         self.password2 = QLineEdit()
         self.password2.setEchoMode(QLineEdit.EchoMode.Password)
         self.error = QLabel("")
-        self.error.setStyleSheet("color: #b91c1c;")
+        self.error.setStyleSheet("color: #F87171;")
 
         form = QFormLayout()
         form.addRow("Ism", self.name)
@@ -65,53 +69,107 @@ class AddCashierDialog(QDialog):
         return self.name.text(), self.login.text(), self.password.text()
 
 
+class PairingDialog(QDialog):
+    """Juftlash kodi: faqat egasi ko'radi. Kod — sir (do'kon kaliti va egasi ishonchi)."""
+
+    def __init__(self, code: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Juftlash kodi")
+        self.code_label = QLabel(code)
+        self.code_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.code_label.setWordWrap(True)
+        warning = QLabel("Bu kod do'kon kalitini o'z ichiga oladi. Uni faqat ishonchli qurilmaga yuboring.")
+        warning.setWordWrap(True)
+        warning.setStyleSheet("color: #F87171;")
+        copy_button = QPushButton("Nusxalash")
+        copy_button.clicked.connect(lambda: QApplication.clipboard().setText(code))
+        close = QPushButton("Yopish")
+        close.clicked.connect(self.accept)
+        buttons = QHBoxLayout()
+        buttons.addWidget(copy_button)
+        buttons.addStretch(1)
+        buttons.addWidget(close)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.code_label)
+        layout.addWidget(warning)
+        layout.addLayout(buttons)
+        self.setMinimumWidth(520)
+
+
 class UsersDialog(QDialog):
-    """`submit(op)` — operatsiyani qo'llash va yuborish (PosWindow._emit)."""
+    """`submit(op)` — operatsiyani qo'llash va yuborish (PosWindow._emit). `pairing()` — juftlash kodi."""
 
     def __init__(
         self,
         local: LocalStore,
-        store_id: str,
-        device_id: str,
-        submit: Callable[[dict[str, Any]], None],
+        submit: Callable[[dict[str, Any]], bool],
+        pairing: Callable[[], str | None] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Foydalanuvchilar")
+        self.setWindowTitle("Foydalanuvchilar va qurilmalar")
         self.local = local
-        self.store_id = store_id
-        self.device_id = device_id
         self.submit = submit
-        self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["Ism", "Login", "Rol", "Holat"])
-        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pairing = pairing
+        self.store_id = local.get_state("store_id") or ""
+
+        self.users_table = self._table(["Ism", "Login", "Rol", "Holat"])
+        self.devices_table = self._table(["Qurilma", "Rol", "Holat", "ID"])
         self.message = QLabel("")
-        self.message.setStyleSheet("color: #b91c1c;")
+        self.message.setStyleSheet("color: #F87171;")
 
         self.btn_add = QPushButton("Kassir qo'shish")
         self.btn_toggle = QPushButton("Faollashtirish / o'chirish")
         self.btn_add.clicked.connect(self._add)
         self.btn_toggle.clicked.connect(self._toggle)
-        buttons = QHBoxLayout()
-        buttons.addWidget(self.btn_add)
-        buttons.addWidget(self.btn_toggle)
-        buttons.addStretch(1)
+        self.btn_block = QPushButton("Qurilmani bloklash / faollashtirish")
+        self.btn_role = QPushButton("Egasi / kassir qilish")
+        self.btn_block.clicked.connect(self._toggle_device)
+        self.btn_role.clicked.connect(self._toggle_device_role)
+        self.btn_pairing = QPushButton("Juftlash kodi")
+        self.btn_pairing.clicked.connect(self._show_pairing)
+        self.btn_pairing.setEnabled(pairing is not None)
+
+        users_buttons = QHBoxLayout()
+        users_buttons.addWidget(self.btn_add)
+        users_buttons.addWidget(self.btn_toggle)
+        users_buttons.addStretch(1)
+        devices_buttons = QHBoxLayout()
+        devices_buttons.addWidget(self.btn_block)
+        devices_buttons.addWidget(self.btn_role)
+        devices_buttons.addStretch(1)
+        devices_buttons.addWidget(self.btn_pairing)
+
         close = QPushButton("Yopish")
         close.clicked.connect(self.accept)
-        buttons.addWidget(close)
+        footer = QHBoxLayout()
+        footer.addStretch(1)
+        footer.addWidget(close)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.table)
+        layout.addWidget(QLabel("Foydalanuvchilar (login/parol hisoblari)"))
+        layout.addWidget(self.users_table)
+        layout.addLayout(users_buttons)
+        layout.addWidget(QLabel("Qurilmalar (ruxsatlar qurilma darajasida)"))
+        layout.addWidget(self.devices_table)
+        layout.addLayout(devices_buttons)
         layout.addWidget(self.message)
-        layout.addLayout(buttons)
-        self.resize(640, 420)
+        layout.addLayout(footer)
+        self.resize(760, 560)
         self._reload()
+
+    @staticmethod
+    def _table(headers: list[str]) -> QTableWidget:
+        table = QTableWidget(0, len(headers))
+        table.setHorizontalHeaderLabels(headers)
+        table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        return table
 
     def _reload(self) -> None:
         rows = self.local.list_users(self.store_id)
-        self.table.setRowCount(len(rows))
+        self.users_table.setRowCount(len(rows))
         for r, row in enumerate(rows):
             cells = [
                 row["name"],
@@ -121,13 +179,32 @@ class UsersDialog(QDialog):
             ]
             for c, text in enumerate(cells):
                 item = QTableWidgetItem(str(text))
-                item.setData(0x0100, row["id"])  # Qt.UserRole: foydalanuvchi id'si
-                self.table.setItem(r, c, item)
+                item.setData(ROLE_ID, row["id"])
+                self.users_table.setItem(r, c, item)
+
+        devices = self.local.list_devices(self.store_id)
+        self.devices_table.setRowCount(len(devices))
+        for r, device in enumerate(devices):
+            cells = [
+                device["label"] or "—",
+                ROLE_NAMES.get(device["role"], device["role"]),
+                "faol" if device["active"] else "bloklangan",
+                device["device_id"][:8],
+            ]
+            for c, text in enumerate(cells):
+                item = QTableWidgetItem(str(text))
+                item.setData(ROLE_ID, device["device_id"])
+                self.devices_table.setItem(r, c, item)
 
     def _selected_user_id(self) -> str | None:
-        row = self.table.currentRow()
-        item = self.table.item(row, 0) if row >= 0 else None
-        return None if item is None else str(item.data(0x0100))
+        row = self.users_table.currentRow()
+        item = self.users_table.item(row, 0) if row >= 0 else None
+        return None if item is None else str(item.data(ROLE_ID))
+
+    def _selected_device_id(self) -> str | None:
+        row = self.devices_table.currentRow()
+        item = self.devices_table.item(row, 0) if row >= 0 else None
+        return None if item is None else str(item.data(ROLE_ID))
 
     def _add(self) -> None:
         dialog = AddCashierDialog(self)
@@ -135,7 +212,7 @@ class UsersDialog(QDialog):
             return
         name, login, password = dialog.values()
         try:
-            op = u.add_cashier(self.local, self.store_id, self.device_id, name, login, password)
+            op = u.add_cashier(self.local, name, login, password)
         except u.UserError as exc:
             self.message.setText(str(exc))
             return
@@ -152,10 +229,66 @@ class UsersDialog(QDialog):
         if current is None:
             return
         try:
-            op = u.set_active(self.local, self.store_id, self.device_id, user_id, not bool(current["active"]))
+            op = u.set_active(self.local, user_id, not bool(current["active"]))
         except u.UserError as exc:
             self.message.setText(str(exc))
             return
         self.submit(op)
         self.message.setText("")
         self._reload()
+
+    def _device_op(self, device_id: str, **changes: Any) -> dict[str, Any] | None:
+        device = self.local.device_row(device_id)
+        if device is None:
+            self.message.setText("Qurilma topilmadi")
+            return None
+        if device["role"] == o.ROLE_OWNER:
+            self.message.setText("Egasi qurilmasini o'zgartirib bo'lmaydi")
+            return None
+        payload = {
+            "device_id": device["device_id"],
+            "public_key": device["public_key"],
+            "role": device["role"],
+            "label": device["label"],
+            "active": device["active"],
+            **changes,
+        }
+        return self.local.new_op(o.DEVICE, payload)
+
+    def _toggle_device(self) -> None:
+        device_id = self._selected_device_id()
+        if device_id is None:
+            self.message.setText("Avval qurilmani tanlang")
+            return
+        device = self.local.device_row(device_id)
+        if device is None:
+            return
+        op = self._device_op(device_id, active=not device["active"])
+        if op is None:
+            return
+        self.submit(op)
+        self.message.setText("")
+        self._reload()
+
+    def _toggle_device_role(self) -> None:
+        device_id = self._selected_device_id()
+        if device_id is None:
+            self.message.setText("Avval qurilmani tanlang")
+            return
+        device = self.local.device_row(device_id)
+        if device is None:
+            return
+        new_role = o.ROLE_OWNER if device["role"] == o.ROLE_CASHIER else o.ROLE_CASHIER
+        op = self._device_op(device_id, role=new_role)
+        if op is None:
+            return
+        self.submit(op)
+        self.message.setText("")
+        self._reload()
+
+    def _show_pairing(self) -> None:
+        code = self.pairing() if self.pairing is not None else None
+        if not code:
+            self.message.setText("Juftlash kodi faqat egasi qurilmasida ko'rinadi")
+            return
+        PairingDialog(code, self).exec()
