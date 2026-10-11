@@ -33,7 +33,6 @@ pub fn open_quick(app: &AppHandle) {
     .resizable(false)
     .always_on_top(true)
     .center()
-    .content_protected(true)
     .build();
 }
 

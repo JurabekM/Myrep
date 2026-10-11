@@ -80,3 +80,4 @@
 78. **E2E (`tauri-driver`) va Windows'ga xos tekshiruvlar bajarilmagan:** muhit Linux; High Contrast CSS, DPI, tray/hotkey/dialoglar, sovuq start (oyna bilan), SmartScreen — RELEASE_CHECKLIST C bo'limi.
 79. **Axe qamrovi cheklangan:** to'rt sahifa; rang kontrasti jsdom'da hisoblanmaydi — qo'lda WCAG AA tekshiruvi kerak.
 80. **Onboarding matni** (ayniqsa rus tili) kontent egasi/muharrir ko'rigidan o'tmagan; «5%» boshlang'ich ulush matn ichida (`START_BP` o'zgarsa yangilanishi kerak).
+81. **Ekran yozib olishdan himoya (`contentProtected`) o'chirildi:** Windows'da (VM/masofaviy ish stoli/ba'zi drayverlar) oyna mazmuni o'rniga ish stoli ko'rinib qolishi kuzatildi. Himoya keyinchalik **sozlamada ixtiyoriy** yoqiladigan qilib qaytariladi; hozircha qulf ekrani va qulfli holatda summalarni yashirish (ilova darajasida) saqlanadi.
