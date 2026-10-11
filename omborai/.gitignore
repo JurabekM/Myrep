@@ -22,3 +22,4 @@ desktop/dist/
 mobile/build/
 mobile/.dart_tool/
 mobile/android/.gradle/
+mobile/android/build/
