@@ -98,3 +98,15 @@
 - **To'yona o'rniga:** yosh oila uchun maqsad (`Goal`) ochish (virtual).
 - **Chop etiladigan smeta** (typst PDF): qatorlar, manbalar, qarz ogohlantirishi, muhokama xulosasi; matn snapshot testi (ʻ/ʼ), markup-injection testi.
 - Kechiktirildi: mehmonlar hissasi uchun ulashiladigan havola (hamkor bank bilan), qatorni tahrirlash (hozir o'chirib qayta qo'shiladi), muhokamani oila kengashi PINlari bilan bog'lash.
+
+## D12 — Sheriklik domeni, shartnoma, buyout
+- **Vektorlar:** `profit_distribution.json` — **dist-001…004 spetsifikatsiya raqamlari bilan yashil** (+ dist-005…014: beparvolik, ko'p kapital egasi, xato holatlar); `buyout.json` (kamayib boruvchi sheriklik jadvali, teng bo'laklar).
+- **Domen qoidalari (2E.1):** foyda — kelishilgan ulush; mudarabada zarar kapital egasi(lar)i zimmasida, ishchi 0 (faqat `negligence` + izoh bilan ishchi zimmasiga); musharakada zarar `capital_i / Σcapital`; ulushlar yig'indisi 100%; **kafolatli summa/daromad domen darajasida bloklanadi** («Bu sheriklik emas — ribo yoki qarz»): shartnoma ustasida kiritishga urinish rad etiladi va tushuntirish chiqadi.
+- **Sxema v10:** `partnerships`, `partnership_parties`, `partnership_capital`, `partnership_signatures`, `partnership_versions`, `buyout_plans`, `buyout_payments`.
+- **Shartnoma ustasi (2E.2):** tomonlar va rollar, kapital (pul/uskuna narxi bilan), ulushlar, muddat, hisobot davri, tugash va nizo tartibi, guvohlar. **Shartnomasiz sheriklik yo'q** (yozuv shartnoma bilan birga yaratiladi).
+- **Tasdiqlar va versiyalash:** a'zo tomon o'z PIN'i bilan, tashqi tomon va guvoh qo'lda; tasdiq faqat shartnomaning **joriy versiyasi** uchun. **Shartlar o'zgarsa versiya oshadi, barcha imzolar qayta so'raladi**, faol sheriklik qoralamaga qaytadi (testlangan); versiyalar matn tarixi saqlanadi.
+- **Gate (2E.6):** kapital **kiritish** tayyorgarlik darvozasiga bo'ysunadi (faollashtirishda tekshiriladi); kapital **qabul qilish** darvozasiz, lekin barcha kattalarning oilaviy roziligi (PIN) shart; UI mudarabada kapital qarz emasligini tushuntiradi.
+- **Shartnoma PDF** (typst): tomonlar, kapital qatorlari, qoidalar, muddat, buyout, imzo va guvoh joylari (ilovada tasdiqlangan sanasi bilan); yurist/ulamo tasdig'idan o'tmagani ochiq yozilgan; matn snapshot testi (ʻ/ʼ), injection testi.
+- **Buyout:** musharakada kapital egasi ulushini davrma-davr sotib olish: reja (teng bo'laklar) va haqiqiy to'lovlar jadvali, ulush vizualizatsiyasi, yakunda «sherik mustaqil bo'ldi».
+- **Taqsimot hisobi** (foyda/zarar, beparvolik izohi majburiy). Avtomatik davr yopilishi va ledger — D13.
+- Kechiktirildi: ledger/davrni yopish va buyout ayirmasini taqsimotga avtomatik qo'llash (D13), ikkinchi tomon masofadan tasdig'i (D14), shartnoma ulamo tasdig'i (`PENDING`).

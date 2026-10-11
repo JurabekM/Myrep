@@ -198,6 +198,23 @@ export const commands = {
 	openGiftGoal: (planId: string, target: string) => typedError<null, CommandError>(__TAURI_INVOKE("open_gift_goal", { planId, target })),
 	/**  Smetani OS «saqlash» oynasi orqali PDF qilib yozadi; bekor qilinsa `None`. */
 	exportCeremonyPdf: (planId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_ceremony_pdf", { planId })),
+	listPartnerships: () => typedError<PartnershipDto[], CommandError>(__TAURI_INVOKE("list_partnerships")),
+	createPartnership: (input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("create_partnership", { input })),
+	revisePartnership: (id: string, input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("revise_partnership", { id, input })),
+	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
+	signPartnership: (id: string, partyId: string | null, witness: string | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, pin })),
+	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
+	activatePartnership: (id: string) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("activate_partnership", { id })),
+	endPartnership: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("end_partnership", { id })),
+	/**
+	 *  Foyda yoki zarar taqsimoti hisobi. `outcome`: `PROFIT` | `LOSS`; `negligence_note` — mudarabada
+	 *  ishchining beparvoligi izohi (bo'sh emas bo'lsa zarar ishchi zimmasiga o'tadi).
+	 */
+	previewDistribution: (id: string, outcome: string, amountText: string, negligenceNote: string | null) => typedError<ShareAmountDto[], CommandError>(__TAURI_INVOKE("preview_distribution", { id, outcome, amountText, negligenceNote })),
+	setBuyoutPlan: (id: string, providerPartyId: string, periods: number, startDate: string | null) => typedError<BuyoutDto, CommandError>(__TAURI_INVOKE("set_buyout_plan", { id, providerPartyId, periods, startDate })),
+	recordBuyoutPayment: (id: string, amountText: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_buyout_payment", { id, amountText })),
+	/**  Shartnoma PDF'ini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None`. */
+	exportContractPdf: (id: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_contract_pdf", { id })),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
@@ -233,11 +250,47 @@ export type BorrowCheckDto = {
 	burden_bp: number,
 };
 
+export type BuyoutDto = {
+	provider_party_id: string,
+	provider_name: string,
+	total_value: MoneyDto,
+	stake: MoneyDto,
+	periods: number,
+	start_date: string,
+	planned: BuyoutRowDto[],
+	actual: BuyoutRowDto[],
+	completed: boolean,
+};
+
+export type BuyoutRowDto = {
+	period: number,
+	date: string | null,
+	applied: MoneyDto,
+	remaining: MoneyDto,
+	provider_bp: number,
+	worker_bp: number,
+};
+
 export type CalculatorDto = {
 	baseline: AmortizationDto,
 	accelerated: AmortizationDto,
 	months_saved: number,
 	interest_saved: MoneyDto,
+};
+
+export type CapitalInput = {
+	description: string,
+	/**  `CASH` | `EQUIPMENT`. */
+	kind: string,
+	value: string,
+};
+
+export type CapitalItemDto = {
+	description: string,
+	kind: string,
+	value: MoneyDto,
+	/**  Tahrirlash uchun qayta kiritish mumkin bo'lgan summa matni (so'm). */
+	value_text: string,
 };
 
 export type CategoryDto = {
@@ -335,6 +388,12 @@ export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kin
 { kind: "MemberWrongPin" } | { kind: "MemberPinLocked"; retry_after_secs: number } | { kind: "MemberNoPin" } | 
 /**  "Kelajagim"dan pul olish pauzasi tugamagan. */
 { kind: "Cooling"; remaining_secs: number } | { kind: "Internal"; message: string };
+
+export type ConsentDto = {
+	member_id: string,
+	name: string,
+	consented: boolean,
+};
 
 export type ContributorDto = {
 	member_id: string,
@@ -706,6 +765,65 @@ export type OwnerShareDto = {
 	bp: number,
 };
 
+export type PartnershipDto = {
+	id: string,
+	name: string,
+	kind: string,
+	term_months: number,
+	report_period: string,
+	end_clause: string,
+	dispute_clause: string,
+	version: number,
+	/**  `DRAFT` | `ACTIVE` | `ENDED`. */
+	status: string,
+	parties: PartyDto[],
+	witnesses: WitnessDto[],
+	total_capital: MoneyDto,
+	self_provides_capital: boolean,
+	self_receives_capital: boolean,
+	consents: ConsentDto[],
+	versions: VersionDto[],
+	/**  `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` | `FAMILY_CONSENT` | `GATE_CLOSED`. */
+	blocker: string | null,
+	buyout: BuyoutDto | null,
+};
+
+export type PartnershipInput = {
+	name: string,
+	/**  `MUDARABA` | `MUSHARAKA`. */
+	kind: string,
+	term_months: number,
+	/**  `MONTHLY` | `QUARTERLY` | `YEARLY`. */
+	report_period: string,
+	end_clause: string,
+	dispute_clause: string,
+	witnesses: string[],
+	parties: PartyInputDto[],
+};
+
+export type PartyDto = {
+	id: string,
+	name: string,
+	role: string,
+	share_bp: number,
+	member_id: string | null,
+	capital_total: MoneyDto,
+	items: CapitalItemDto[],
+	signed: boolean,
+};
+
+export type PartyInputDto = {
+	name: string,
+	/**  `CAPITAL_PROVIDER` | `WORKER` | `PARTNER`. */
+	role: string,
+	/**  Foyda ulushi, bazis punkt (5000 = 50%). */
+	share_bp: number,
+	member_id: string | null,
+	capital: CapitalInput[],
+	/**  Kafolatli summa kiritishga urinish: doim rad etiladi, tushuntirish bilan. */
+	fixed_return: string | null,
+};
+
 export type PendingLimitDto = {
 	limit_id: string,
 	amount: MoneyDto,
@@ -887,6 +1005,12 @@ export type SellableDto = {
 	sold: boolean,
 };
 
+export type ShareAmountDto = {
+	name: string,
+	/**  Zarar manfiy ko'rsatiladi. */
+	amount: MoneyDto,
+};
+
 export type SourcesDto = {
 	monthly_share: MoneyDto | null,
 	rescued_available: MoneyDto,
@@ -959,11 +1083,21 @@ export type UnlockDto = {
 
 export type VaultStateDto = { kind: "Uninitialized" } | { kind: "Locked"; retry_after_secs: number } | { kind: "Unlocked" };
 
+export type VersionDto = {
+	version: number,
+	snapshot: string,
+};
+
 export type WithdrawalDto = {
 	id: string,
 	amount: MoneyDto,
 	reason: string,
 	available_at: string,
+};
+
+export type WitnessDto = {
+	name: string,
+	signed: boolean,
 };
 
 /* Tauri Specta runtime */

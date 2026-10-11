@@ -1,0 +1,403 @@
+{
+  "suite": "profit_distribution",
+  "version": 1,
+  "description": "Foyda va zarar taqsimoti (2E.1). MUDARABA: foyda — kelishilgan ulush; zarar — kapital egasi(lar)i kapitaliga mutanosib, ishchi 0 (negligence=true bo'lsa — ishchi(lar) ulushi bo'yicha ishchi zimmasida). MUSHARAKA: foyda — ulush, zarar — kapitalga mutanosib. fixed_return berilsa GUARANTEED_RETURN_FORBIDDEN. Ulushlar yig'indisi 10000. Largest remainder",
+  "cases": [
+    {
+      "id": "dist-001",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "300000000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000000000",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "150000000",
+          "150000000"
+        ]
+      }
+    },
+    {
+      "id": "dist-002",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "LOSS",
+        "amount": "200000000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000000000",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "-200000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "dist-003",
+      "input": {
+        "kind": "MUSHARAKA",
+        "result": "LOSS",
+        "amount": "300000000",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600000000",
+            "share_bp": 5000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "200000000",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "-225000000",
+          "-75000000"
+        ]
+      }
+    },
+    {
+      "id": "dist-004",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "300000000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000000000",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "fixed_return": "50000000"
+      },
+      "expected": {
+        "error": "GUARANTEED_RETURN_FORBIDDEN"
+      }
+    },
+    {
+      "id": "dist-005",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "LOSS",
+        "amount": "200000000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000000000",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "0",
+          "-200000000"
+        ]
+      }
+    },
+    {
+      "id": "dist-006",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "100",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "500",
+            "share_bp": 3333
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 3333
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 3334
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "33",
+          "33",
+          "34"
+        ]
+      }
+    },
+    {
+      "id": "dist-007",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "LOSS",
+        "amount": "100",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "300",
+            "share_bp": 4000
+          },
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "100",
+            "share_bp": 2000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "-75",
+          "-25",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "dist-008",
+      "input": {
+        "kind": "MUSHARAKA",
+        "result": "PROFIT",
+        "amount": "1000",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 7000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 3000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "700",
+          "300"
+        ]
+      }
+    },
+    {
+      "id": "dist-009",
+      "input": {
+        "kind": "MUSHARAKA",
+        "result": "LOSS",
+        "amount": "100",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "1",
+            "share_bp": 3333
+          },
+          {
+            "role": "PARTNER",
+            "capital": "1",
+            "share_bp": 3333
+          },
+          {
+            "role": "PARTNER",
+            "capital": "1",
+            "share_bp": 3334
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "-34",
+          "-33",
+          "-33"
+        ]
+      }
+    },
+    {
+      "id": "dist-010",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "100",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "500",
+            "share_bp": 6000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 3000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_SHARES"
+      }
+    },
+    {
+      "id": "dist-011",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "100",
+        "parties": [
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_PARTIES"
+      }
+    },
+    {
+      "id": "dist-012",
+      "input": {
+        "kind": "MUSHARAKA",
+        "result": "PROFIT",
+        "amount": "100",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "0",
+            "share_bp": 5000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_PARTIES"
+      }
+    },
+    {
+      "id": "dist-013",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "0",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "500",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "amounts": [
+          "0",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "dist-014",
+      "input": {
+        "kind": "MUDARABA",
+        "result": "PROFIT",
+        "amount": "-5",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "500",
+            "share_bp": 5000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 5000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

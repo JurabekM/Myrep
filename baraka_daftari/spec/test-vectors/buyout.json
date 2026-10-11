@@ -1,0 +1,339 @@
+{
+  "suite": "buyout",
+  "version": 1,
+  "description": "Bosqichma-bosqich sotib olish (kamayib boruvchi musharaka): har davrda ishchi to'lovi kapital egasi ulushidan ayriladi (qoldiqdan oshmaydi); kapital egasi ulushi bp = round_half_up(qoldiq*10000/umumiy qiymat). op=equal — teng bo'laklar (allocate), davrlar 1..=240",
+  "cases": [
+    {
+      "id": "buyout-001",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "600",
+        "payments": [
+          "100",
+          "100",
+          "100",
+          "100",
+          "100",
+          "100"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "period": 1,
+            "applied": "100",
+            "remaining": "500",
+            "provider_bp": 5000,
+            "worker_bp": 5000
+          },
+          {
+            "period": 2,
+            "applied": "100",
+            "remaining": "400",
+            "provider_bp": 4000,
+            "worker_bp": 6000
+          },
+          {
+            "period": 3,
+            "applied": "100",
+            "remaining": "300",
+            "provider_bp": 3000,
+            "worker_bp": 7000
+          },
+          {
+            "period": 4,
+            "applied": "100",
+            "remaining": "200",
+            "provider_bp": 2000,
+            "worker_bp": 8000
+          },
+          {
+            "period": 5,
+            "applied": "100",
+            "remaining": "100",
+            "provider_bp": 1000,
+            "worker_bp": 9000
+          },
+          {
+            "period": 6,
+            "applied": "100",
+            "remaining": "0",
+            "provider_bp": 0,
+            "worker_bp": 10000
+          }
+        ],
+        "completed": true
+      }
+    },
+    {
+      "id": "buyout-002",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "600",
+        "payments": [
+          "200",
+          "200",
+          "500"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "period": 1,
+            "applied": "200",
+            "remaining": "400",
+            "provider_bp": 4000,
+            "worker_bp": 6000
+          },
+          {
+            "period": 2,
+            "applied": "200",
+            "remaining": "200",
+            "provider_bp": 2000,
+            "worker_bp": 8000
+          },
+          {
+            "period": 3,
+            "applied": "200",
+            "remaining": "0",
+            "provider_bp": 0,
+            "worker_bp": 10000
+          }
+        ],
+        "completed": true
+      }
+    },
+    {
+      "id": "buyout-003",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "600",
+        "payments": [],
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [],
+        "completed": false
+      }
+    },
+    {
+      "id": "buyout-004",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "1001",
+        "payments": [
+          "1"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "buyout-005",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "600",
+        "payments": [
+          "100",
+          "-1"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "buyout-006",
+      "input": {
+        "op": "schedule",
+        "total_value": "900",
+        "provider_stake": "300",
+        "payments": [
+          "100",
+          "100",
+          "100"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "period": 1,
+            "applied": "100",
+            "remaining": "200",
+            "provider_bp": 2222,
+            "worker_bp": 7778
+          },
+          {
+            "period": 2,
+            "applied": "100",
+            "remaining": "100",
+            "provider_bp": 1111,
+            "worker_bp": 8889
+          },
+          {
+            "period": 3,
+            "applied": "100",
+            "remaining": "0",
+            "provider_bp": 0,
+            "worker_bp": 10000
+          }
+        ],
+        "completed": true
+      }
+    },
+    {
+      "id": "buyout-007",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "333",
+        "payments": [
+          "111",
+          "111",
+          "111",
+          "5"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "period": 1,
+            "applied": "111",
+            "remaining": "222",
+            "provider_bp": 2220,
+            "worker_bp": 7780
+          },
+          {
+            "period": 2,
+            "applied": "111",
+            "remaining": "111",
+            "provider_bp": 1110,
+            "worker_bp": 8890
+          },
+          {
+            "period": 3,
+            "applied": "111",
+            "remaining": "0",
+            "provider_bp": 0,
+            "worker_bp": 10000
+          },
+          {
+            "period": 4,
+            "applied": "0",
+            "remaining": "0",
+            "provider_bp": 0,
+            "worker_bp": 10000
+          }
+        ],
+        "completed": true
+      }
+    },
+    {
+      "id": "buyout-008",
+      "input": {
+        "op": "schedule",
+        "total_value": "1000",
+        "provider_stake": "1000",
+        "payments": [
+          "500",
+          "500"
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "rows": [
+          {
+            "period": 1,
+            "applied": "500",
+            "remaining": "500",
+            "provider_bp": 5000,
+            "worker_bp": 5000
+          },
+          {
+            "period": 2,
+            "applied": "500",
+            "remaining": "0",
+            "provider_bp": 0,
+            "worker_bp": 10000
+          }
+        ],
+        "completed": true
+      }
+    },
+    {
+      "id": "buyout-009",
+      "input": {
+        "op": "equal",
+        "provider_stake": "1000",
+        "periods": 6,
+        "currency": "UZS"
+      },
+      "expected": {
+        "payments": [
+          "167",
+          "167",
+          "167",
+          "167",
+          "166",
+          "166"
+        ]
+      }
+    },
+    {
+      "id": "buyout-010",
+      "input": {
+        "op": "equal",
+        "provider_stake": "100",
+        "periods": 7,
+        "currency": "UZS"
+      },
+      "expected": {
+        "payments": [
+          "15",
+          "15",
+          "14",
+          "14",
+          "14",
+          "14",
+          "14"
+        ]
+      }
+    },
+    {
+      "id": "buyout-011",
+      "input": {
+        "op": "equal",
+        "provider_stake": "100",
+        "periods": 0,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    },
+    {
+      "id": "buyout-012",
+      "input": {
+        "op": "equal",
+        "provider_stake": "0",
+        "periods": 3,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_AMOUNT"
+      }
+    }
+  ]
+}

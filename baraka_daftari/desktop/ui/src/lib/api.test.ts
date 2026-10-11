@@ -7,6 +7,7 @@ import {
   formatMilli,
   formatSignedBp,
   formatX100,
+  percentToBp,
   unwrap,
 } from './api';
 
@@ -55,5 +56,15 @@ describe('matn formatlari', () => {
     expect(formatMilli('12345')).toBe('12,3');
     expect(formatMilli('2000')).toBe('2');
     expect(formatMilli('99')).toBe('0');
+  });
+});
+
+describe('percentToBp', () => {
+  it('foizni bazis punktga o‘giradi', () => {
+    expect(percentToBp('50')).toBe(5000);
+    expect(percentToBp('33,33')).toBe(3333);
+    expect(percentToBp('62.5')).toBe(6250);
+    expect(percentToBp(' 100 ')).toBe(10000);
+    for (const bad of ['', 'abc', '101', '-5', '1,234', '5%']) expect(percentToBp(bad)).toBeNull();
   });
 });

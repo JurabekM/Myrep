@@ -3,11 +3,13 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 mod budget;
+mod contract;
 mod minutes;
 mod receipt;
 mod world;
 
 pub use budget::{budget_markup, ceremony_budget, BudgetLine, CeremonyBudgetDoc};
+pub use contract::{contract_markup, partnership_contract, ContractDoc, ContractParty};
 pub use minutes::{
     council_markup, council_minutes, CouncilMinutes, MinutesCategory, MinutesConsent,
 };

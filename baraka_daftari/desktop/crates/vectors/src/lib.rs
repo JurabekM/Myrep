@@ -120,6 +120,8 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "payoff_plan" => Ok(run_payoff_plan),
         "ceremony_totals" => Ok(run_ceremony_totals),
         "repay_months" => Ok(run_repay_months),
+        "profit_distribution" => Ok(run_profit_distribution),
+        "buyout" => Ok(run_buyout),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -810,4 +812,95 @@ fn run_repay_months(input: &Value) -> Result<Value, String> {
         Err(domain::PlanError::InvalidMonths) => serde_json::json!({ "error": "TOO_LONG" }),
         Err(e) => serde_json::json!({ "error": e.code() }),
     })
+}
+
+fn partnership_error(e: &domain::PartnershipError) -> Value {
+    serde_json::json!({ "error": e.code() })
+}
+
+fn run_profit_distribution(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let kind = domain::PartnershipKind::parse(str_field(input, "kind")?).ok_or("noma'lum kind")?;
+    let outcome = match str_field(input, "result")? {
+        "PROFIT" => domain::Outcome::Profit,
+        "LOSS" => domain::Outcome::Loss,
+        other => return Err(format!("noma'lum result: {other}")),
+    };
+    let amount = Money::new(parse_minor(str_field(input, "amount")?)?, currency);
+    let parties = input
+        .get("parties")
+        .and_then(Value::as_array)
+        .ok_or("parties massivi kerak")?
+        .iter()
+        .map(|p| {
+            Ok(domain::PartyInput {
+                role: domain::PartyRole::parse(str_field(p, "role")?)
+                    .ok_or_else(|| "noma'lum role".to_owned())?,
+                capital: Money::new(parse_minor(str_field(p, "capital")?)?, currency),
+                share_bp: u32_field(p, "share_bp")?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let negligence = input
+        .get("negligence")
+        .and_then(Value::as_bool)
+        .ok_or("negligence (bool) kerak")?;
+    let fixed = match input.get("fixed_return") {
+        Some(Value::String(s)) => Some(Money::new(parse_minor(s)?, currency)),
+        _ => None,
+    };
+    Ok(
+        match domain::distribute(kind, outcome, amount, &parties, negligence, fixed) {
+            Ok(v) => serde_json::json!({
+                "amounts": v.iter().map(|m| m.minor().to_string()).collect::<Vec<_>>()
+            }),
+            Err(e) => partnership_error(&e),
+        },
+    )
+}
+
+fn run_buyout(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    match str_field(input, "op")? {
+        "schedule" => {
+            let total = parse_money(input, "total_value", "currency")?;
+            let stake = parse_money(input, "provider_stake", "currency")?;
+            let payments = input
+                .get("payments")
+                .and_then(Value::as_array)
+                .ok_or("payments massivi kerak")?
+                .iter()
+                .map(|v| {
+                    v.as_str()
+                        .ok_or_else(|| "to'lov matn bo'lishi kerak".to_owned())
+                        .and_then(parse_minor)
+                        .map(|m| Money::new(m, currency))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(match domain::buyout_schedule(total, stake, &payments) {
+                Ok(s) => serde_json::json!({
+                    "rows": s.rows.iter().map(|r| serde_json::json!({
+                        "period": r.period,
+                        "applied": r.applied.minor().to_string(),
+                        "remaining": r.remaining.minor().to_string(),
+                        "provider_bp": r.provider_bp,
+                        "worker_bp": r.worker_bp,
+                    })).collect::<Vec<_>>(),
+                    "completed": s.completed,
+                }),
+                Err(e) => partnership_error(&e),
+            })
+        }
+        "equal" => {
+            let stake = parse_money(input, "provider_stake", "currency")?;
+            let periods = u32_field(input, "periods")?;
+            Ok(match domain::equal_buyout_payments(stake, periods) {
+                Ok(p) => serde_json::json!({
+                    "payments": p.iter().map(|m| m.minor().to_string()).collect::<Vec<_>>()
+                }),
+                Err(e) => partnership_error(&e),
+            })
+        }
+        other => Err(format!("noma'lum op: {other}")),
+    }
 }

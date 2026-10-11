@@ -48,6 +48,14 @@ describe('i18n kalitlari', () => {
     ...['SAVINGS', 'FAMILY', 'EXPECTED_GIFTS', 'DEBT'].map((k) => `cer.sources.${k}`),
     ...['smaller', 'longer', 'gifts', 'sell', 'family'].map((k) => `cer.prompts.${k}`),
     ...['DISCUSSION_REQUIRED', 'DATE_REQUIRED'].map((k) => `cer.blockers.${k}`),
+    ...['MUDARABA', 'MUSHARAKA'].map((k) => `partner.kinds.${k}`),
+    ...['MONTHLY', 'QUARTERLY', 'YEARLY'].map((k) => `partner.periods.${k}`),
+    ...['CAPITAL_PROVIDER', 'WORKER', 'PARTNER'].map((k) => `partner.roles.${k}`),
+    ...['CASH', 'EQUIPMENT'].map((k) => `partner.capKinds.${k}`),
+    ...['DRAFT', 'ACTIVE', 'ENDED'].map((k) => `partner.statuses.${k}`),
+    ...['PARTY_SIGNATURES', 'WITNESS_SIGNATURES', 'FAMILY_CONSENT', 'GATE_CLOSED'].map(
+      (k) => `partner.blockers.${k}`,
+    ),
     'audit.previous',
     'audit.current',
   ];

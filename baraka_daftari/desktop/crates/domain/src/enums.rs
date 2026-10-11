@@ -98,6 +98,21 @@ str_enum!(
     }
 );
 str_enum!(CeremonyStatus { Draft => "DRAFT", Confirmed => "CONFIRMED" });
+str_enum!(
+    /// Sheriklik turi (SPEC 2E.1).
+    PartnershipKind { Mudaraba => "MUDARABA", Musharaka => "MUSHARAKA" }
+);
+str_enum!(
+    /// Tomon roli: mudarabada kapital egasi / ishchi; musharakada ikkala tomon sherik.
+    PartyRole { CapitalProvider => "CAPITAL_PROVIDER", Worker => "WORKER", Partner => "PARTNER" }
+);
+str_enum!(PartnershipStatus { Draft => "DRAFT", Active => "ACTIVE", Ended => "ENDED" });
+str_enum!(ReportPeriod { Monthly => "MONTHLY", Quarterly => "QUARTERLY", Yearly => "YEARLY" });
+str_enum!(CapitalKind { Cash => "CASH", Equipment => "EQUIPMENT" });
+str_enum!(
+    /// Shartnoma tasdig'i turi: tomon, guvoh yoki oilaviy rozilik (kapital qabul qilishda).
+    SignatureKind { Party => "PARTY", Witness => "WITNESS", FamilyConsent => "FAMILY_CONSENT" }
+);
 
 #[cfg(test)]
 mod tests {

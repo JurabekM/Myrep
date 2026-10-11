@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 9;
+pub const SCHEMA_VERSION: usize = 10;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -194,6 +194,69 @@ CREATE TABLE scheduled_treats (
 );
 ";
 
+/// D12 (5-qonun): sheriklik shartnomasi, tomonlar, kapital, tasdiqlar, versiyalar va buyout.
+const V10: &str = "
+CREATE TABLE partnerships (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('MUDARABA','MUSHARAKA')),
+  term_months INTEGER NOT NULL CHECK (term_months BETWEEN 1 AND 120),
+  report_period TEXT NOT NULL CHECK (report_period IN ('MONTHLY','QUARTERLY','YEARLY')),
+  end_clause TEXT NOT NULL, dispute_clause TEXT NOT NULL, witnesses TEXT NOT NULL DEFAULT '',
+  contract_version INTEGER NOT NULL CHECK (contract_version >= 1),
+  status TEXT NOT NULL CHECK (status IN ('DRAFT','ACTIVE','ENDED'))
+);
+CREATE TABLE partnership_parties (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), name TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('CAPITAL_PROVIDER','WORKER','PARTNER')),
+  share_bp INTEGER NOT NULL CHECK (share_bp BETWEEN 0 AND 10000),
+  member_id TEXT REFERENCES members(id)
+);
+CREATE TABLE partnership_capital (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), party_id TEXT NOT NULL REFERENCES partnership_parties(id),
+  description TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('CASH','EQUIPMENT')),
+  value_minor INTEGER NOT NULL CHECK (value_minor >= 0), currency TEXT NOT NULL
+);
+CREATE TABLE partnership_signatures (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), contract_version INTEGER NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('PARTY','WITNESS','FAMILY_CONSENT')),
+  signer TEXT NOT NULL, signer_name TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_partnership_signature ON partnership_signatures (partnership_id, contract_version, kind, signer)
+  WHERE deleted_at IS NULL;
+CREATE TABLE partnership_versions (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), contract_version INTEGER NOT NULL, snapshot TEXT NOT NULL
+);
+CREATE TABLE buyout_plans (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), provider_party_id TEXT NOT NULL REFERENCES partnership_parties(id),
+  periods INTEGER NOT NULL CHECK (periods BETWEEN 1 AND 240), start_date TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_buyout_partnership ON buyout_plans (partnership_id) WHERE deleted_at IS NULL;
+CREATE TABLE buyout_payments (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  plan_id TEXT NOT NULL REFERENCES buyout_plans(id), paid_on TEXT NOT NULL,
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL
+);
+";
+
 /// D11 (4-qonun): marosim rejalari va byudjet qatorlari.
 const V9: &str = "
 CREATE TABLE ceremony_plans (
@@ -377,6 +440,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V7),
         M::up(V8),
         M::up(V9),
+        M::up(V10),
     ])
 }
 
@@ -413,7 +477,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 38);
+        assert_eq!(tables.len(), 45);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

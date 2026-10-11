@@ -1422,3 +1422,229 @@ impl Record for CeremonyLine {
         })
     }
 }
+
+use domain::{
+    BuyoutPayment, BuyoutPlan, CapitalKind, Partnership, PartnershipCapital, PartnershipKind,
+    PartnershipParty, PartnershipSignature, PartnershipStatus, PartnershipVersion, PartyRole,
+    ReportPeriod, SignatureKind,
+};
+
+impl Record for Partnership {
+    const TABLE: &'static str = "partnerships";
+    const COLS: &'static [&'static str] = &[
+        "name",
+        "kind",
+        "term_months",
+        "report_period",
+        "end_clause",
+        "dispute_clause",
+        "witnesses",
+        "contract_version",
+        "status",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.name),
+            t(self.kind.as_str()),
+            Value::Integer(i64::from(self.term_months)),
+            t(self.report_period.as_str()),
+            t(&self.end_clause),
+            t(&self.dispute_clause),
+            t(&self.witnesses.join("\n")),
+            Value::Integer(i64::from(self.version)),
+            t(self.status.as_str()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let w: String = r.get(13)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            kind: row::parsed(r, 8, PartnershipKind::parse)?,
+            term_months: r.get(9)?,
+            report_period: row::parsed(r, 10, ReportPeriod::parse)?,
+            end_clause: r.get(11)?,
+            dispute_clause: r.get(12)?,
+            witnesses: w
+                .split('\n')
+                .filter(|s| !s.is_empty())
+                .map(str::to_owned)
+                .collect(),
+            version: r.get(14)?,
+            status: row::parsed(r, 15, PartnershipStatus::parse)?,
+        })
+    }
+}
+
+impl Record for PartnershipParty {
+    const TABLE: &'static str = "partnership_parties";
+    const COLS: &'static [&'static str] =
+        &["partnership_id", "name", "role", "share_bp", "member_id"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.partnership_id),
+            t(&self.name),
+            t(self.role.as_str()),
+            Value::Integer(i64::from(self.share_bp)),
+            opt_text(self.member_id.as_deref()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            name: r.get(8)?,
+            role: row::parsed(r, 9, PartyRole::parse)?,
+            share_bp: r.get(10)?,
+            member_id: r.get(11)?,
+        })
+    }
+}
+
+impl Record for PartnershipCapital {
+    const TABLE: &'static str = "partnership_capital";
+    const COLS: &'static [&'static str] = &[
+        "partnership_id",
+        "party_id",
+        "description",
+        "kind",
+        "value_minor",
+        "currency",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.value);
+        Ok(vec![
+            t(&self.partnership_id),
+            t(&self.party_id),
+            t(&self.description),
+            t(self.kind.as_str()),
+            minor,
+            cur,
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            party_id: r.get(8)?,
+            description: r.get(9)?,
+            kind: row::parsed(r, 10, CapitalKind::parse)?,
+            value: row::money(r, 11, 12)?,
+        })
+    }
+}
+
+impl Record for PartnershipSignature {
+    const TABLE: &'static str = "partnership_signatures";
+    const COLS: &'static [&'static str] = &[
+        "partnership_id",
+        "contract_version",
+        "kind",
+        "signer",
+        "signer_name",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.partnership_id),
+            Value::Integer(i64::from(self.version)),
+            t(self.kind.as_str()),
+            t(&self.signer),
+            t(&self.signer_name),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            version: r.get(8)?,
+            kind: row::parsed(r, 9, SignatureKind::parse)?,
+            signer: r.get(10)?,
+            signer_name: r.get(11)?,
+        })
+    }
+}
+
+impl Record for PartnershipVersion {
+    const TABLE: &'static str = "partnership_versions";
+    const COLS: &'static [&'static str] = &["partnership_id", "contract_version", "snapshot"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.partnership_id),
+            Value::Integer(i64::from(self.version)),
+            t(&self.snapshot),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            version: r.get(8)?,
+            snapshot: r.get(9)?,
+        })
+    }
+}
+
+impl Record for BuyoutPlan {
+    const TABLE: &'static str = "buyout_plans";
+    const COLS: &'static [&'static str] = &[
+        "partnership_id",
+        "provider_party_id",
+        "periods",
+        "start_date",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.partnership_id),
+            t(&self.provider_party_id),
+            Value::Integer(i64::from(self.periods)),
+            date_val(self.start_date)?,
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            provider_party_id: r.get(8)?,
+            periods: r.get(9)?,
+            start_date: row::date(r, 10)?,
+        })
+    }
+}
+
+impl Record for BuyoutPayment {
+    const TABLE: &'static str = "buyout_payments";
+    const COLS: &'static [&'static str] = &["plan_id", "paid_on", "amount_minor", "currency"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![t(&self.plan_id), date_val(self.paid_on)?, minor, cur])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            plan_id: r.get(7)?,
+            paid_on: row::date(r, 8)?,
+            amount: row::money(r, 9, 10)?,
+        })
+    }
+}

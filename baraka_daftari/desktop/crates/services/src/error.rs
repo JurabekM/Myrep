@@ -75,3 +75,20 @@ impl From<domain::CeremonyError> for ServiceError {
         }
     }
 }
+
+impl From<domain::PartnershipError> for ServiceError {
+    fn from(e: domain::PartnershipError) -> Self {
+        use domain::PartnershipError as P;
+        match e {
+            P::GuaranteedReturnForbidden => Self::Invalid(
+                "Bu sheriklik emas — ribo yoki qarz: foyda faqat sof foydaning foizi bo'lishi mumkin, kafolatlangan summa emas",
+            ),
+            P::InvalidShares => Self::Invalid("foyda ulushlari yig'indisi 100% bo'lishi kerak"),
+            P::InvalidParties => {
+                Self::Invalid("tomonlar roli yoki kapitali shartnoma turiga mos emas")
+            }
+            P::InvalidAmount => Self::Invalid("summa noto'g'ri"),
+            P::Money(m) => Self::Money(m),
+        }
+    }
+}

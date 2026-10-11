@@ -10,6 +10,7 @@ mod dto;
 mod family;
 mod guard;
 mod ledger;
+mod partnerships;
 mod payoff;
 mod saving;
 mod session;
@@ -171,6 +172,17 @@ fn specta_builder() -> Builder<tauri::Wry> {
         ceremonies::compare_ceremonies,
         ceremonies::open_gift_goal,
         ceremonies::export_ceremony_pdf,
+        partnerships::list_partnerships,
+        partnerships::create_partnership,
+        partnerships::revise_partnership,
+        partnerships::sign_partnership,
+        partnerships::partnership_family_consent,
+        partnerships::activate_partnership,
+        partnerships::end_partnership,
+        partnerships::preview_distribution,
+        partnerships::set_buyout_plan,
+        partnerships::record_buyout_payment,
+        partnerships::export_contract_pdf,
         hide_quick_window,
     ])
 }

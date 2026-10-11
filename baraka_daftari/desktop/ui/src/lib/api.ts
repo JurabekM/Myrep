@@ -63,3 +63,12 @@ export function formatMilli(milli: string): string {
   const frac = tenths % 10n;
   return frac === 0n ? whole.toString() : `${whole.toString()},${frac.toString()}`;
 }
+
+/** Foiz matni → bazis punkt: "50" → 5000, "33,33" → 3333. Noto'g'ri bo'lsa `null`. Pul emas. */
+export function percentToBp(text: string): number | null {
+  const m = /^(\d{1,3})(?:[.,](\d{1,2}))?$/.exec(text.trim());
+  if (!m?.[1]) return null;
+  const frac = (m[2] ?? '').padEnd(2, '0');
+  const bp = Number.parseInt(m[1], 10) * 100 + Number.parseInt(frac || '0', 10);
+  return bp > 10_000 ? null : bp;
+}

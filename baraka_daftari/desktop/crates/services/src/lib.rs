@@ -23,6 +23,7 @@ pub mod income;
 pub mod learning;
 pub mod members;
 pub mod obligations;
+pub mod partnerships;
 pub mod payoff;
 pub mod prices;
 pub mod receipts;

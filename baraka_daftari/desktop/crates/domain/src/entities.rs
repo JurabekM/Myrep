@@ -2,9 +2,10 @@ use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CeremonyKind,
-    CeremonyStatus, CreditorType, FundingSource, IncomeSourceType, MemberRole, Meta, MoneyOwner,
-    Necessity, ObligationKind, PaymentChannel, ReceiptKind, RescueKind, ScheduleKind, SellStatus,
+    AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CapitalKind,
+    CeremonyKind, CeremonyStatus, CreditorType, FundingSource, IncomeSourceType, MemberRole, Meta,
+    MoneyOwner, Necessity, ObligationKind, PartnershipKind, PartnershipStatus, PartyRole,
+    PaymentChannel, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind, SellStatus, SignatureKind,
     VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
 };
 
@@ -445,4 +446,84 @@ pub struct CeremonyLine {
     pub qty: u32,
     pub unit_price: Money,
     pub funding: FundingSource,
+}
+
+/// Sheriklik shartnomasi (SPEC 2E.2). Shartnomasiz sheriklik yaratib bo'lmaydi: yozuv shartnoma bilan
+/// birga paydo bo'ladi. Shartlar o'zgarsa `version` oshadi va tasdiqlar qayta so'raladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Partnership {
+    pub meta: Meta,
+    pub name: String,
+    pub kind: PartnershipKind,
+    pub term_months: u32,
+    pub report_period: ReportPeriod,
+    /// Muddat tugaganda nima bo'lishi.
+    pub end_clause: String,
+    /// Nizolarni hal qilish tartibi.
+    pub dispute_clause: String,
+    pub witnesses: Vec<String>,
+    pub version: u32,
+    pub status: PartnershipStatus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PartnershipParty {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub name: String,
+    pub role: PartyRole,
+    /// Foyda ulushi, bazis punkt.
+    pub share_bp: u32,
+    /// Xonadon a'zosi bo'lsa — uning identifikatori (tasdiq PIN bilan).
+    pub member_id: Option<String>,
+}
+
+/// Kiritilgan kapital: pul yoki uskuna (narxi bilan).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PartnershipCapital {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub party_id: String,
+    pub description: String,
+    pub kind: CapitalKind,
+    pub value: Money,
+}
+
+/// Shartnomaning ma'lum versiyasiga tasdiq: boshqa versiyaga o'tilsa e'tiborga olinmaydi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PartnershipSignature {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub version: u32,
+    pub kind: SignatureKind,
+    /// Tomon uchun — tomon identifikatori; guvoh uchun — ismi; rozilik uchun — a'zo identifikatori.
+    pub signer: String,
+    pub signer_name: String,
+}
+
+/// Shartnoma versiyasining matn nusxasi (tarix).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PartnershipVersion {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub version: u32,
+    pub snapshot: String,
+}
+
+/// Kamayib boruvchi sheriklik rejasi: ishchi kapital egasining ulushini davrma-davr sotib oladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BuyoutPlan {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub provider_party_id: String,
+    pub periods: u32,
+    pub start_date: Date,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BuyoutPayment {
+    pub meta: Meta,
+    pub plan_id: String,
+    pub paid_on: Date,
+    pub amount: Money,
 }
