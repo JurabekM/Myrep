@@ -241,7 +241,10 @@ class PosWindow(QMainWindow):
     def start(self) -> None:
         if self.mqtt is not None:
             self.mqtt.on_request = self._bridge.snapshot_requested.emit
-            self.runner.run(self.mqtt.start, self._on_mqtt_started, self._on_mqtt_failed)
+            if self.mqtt.connected:  # juftlashda allaqachon ulangan (ui/bootstrap.py)
+                self._on_mqtt_started(None)
+            else:
+                self.runner.run(self.mqtt.start, self._on_mqtt_started, self._on_mqtt_failed)
         self._load_saved_store()
         self._sync_timer.start()
 

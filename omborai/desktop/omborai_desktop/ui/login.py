@@ -5,6 +5,7 @@ va ulanganda boshqa qurilmalarga yuboriladi.
 """
 
 import uuid
+from collections.abc import Callable
 from typing import Any
 
 from PySide6.QtWidgets import (
@@ -23,6 +24,7 @@ from ..offline.store import LocalStore
 from ..security import has_store_key, save_store_key
 from ..sync import ops as o
 from ..sync.crypto import generate_store_key
+from .bootstrap import has_users
 from .dialogs import LoginDialog
 
 ERROR_STYLE = "color: #b91c1c;"
@@ -194,8 +196,18 @@ def _login_once(local: LocalStore, dialog: LoginDialog) -> dict[str, Any] | None
     return user
 
 
-def run_login(local: LocalStore, parent: QWidget | None = None) -> dict[str, Any] | None:
-    """Kirish oqimi. Muvaffaqiyatli bo'lsa foydalanuvchi lug'atini, bekor qilinsa None qaytaradi."""
+def run_login(
+    local: LocalStore,
+    parent: QWidget | None = None,
+    *,
+    bootstrap: Callable[[], bool] | None = None,
+) -> dict[str, Any] | None:
+    """Kirish oqimi. Muvaffaqiyatli bo'lsa foydalanuvchi lug'atini, bekor qilinsa None qaytaradi.
+
+    bootstrap: do'kon foydalanuvchilari hali lokal bazada bo'lmasa (juftlashdan keyin) chaqiriladi va
+    do'kon ma'lumoti kelishini kutadi. False qaytarsa, kirish bekor qilinadi. Login aynan shundan keyin
+    ochiladi: foydalanuvchilar snapshot'dan keladi (K1).
+    """
     if local.get_state("store_id") is None or not has_store_key():
         start = StartDialog(parent)
         if start.exec() != QDialog.DialogCode.Accepted:
@@ -216,6 +228,9 @@ def run_login(local: LocalStore, parent: QWidget | None = None) -> dict[str, Any
         if join_dialog.exec() != QDialog.DialogCode.Accepted:
             return None
         join_store(local, join_dialog.code.text())
+
+    if bootstrap is not None and not has_users(local) and not bootstrap():
+        return None
 
     dialog = LoginDialog(parent, default_email="")
     while dialog.exec() == QDialog.DialogCode.Accepted:
