@@ -25,7 +25,7 @@ export function Distribution({ p }: { p: PartnershipDto }) {
   });
   return (
     <div className="rounded border border-accent/30 p-3" data-testid="distribution">
-      <h4 className="font-semibold">{t('partner.distTitle')}</h4>
+      <h3 className="font-semibold">{t('partner.distTitle')}</h3>
       <p className="text-xs opacity-70">{t('partner.distHint')}</p>
       <form
         className="mt-2 flex flex-wrap items-end gap-3 text-sm"

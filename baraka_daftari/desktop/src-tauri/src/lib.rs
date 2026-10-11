@@ -203,6 +203,9 @@ fn specta_builder() -> Builder<tauri::Wry> {
         exchange::import_baraka_preview,
         exchange::import_baraka_apply,
         exchange::import_baraka_cancel,
+        exchange::onboarding_done,
+        exchange::complete_onboarding,
+        exchange::app_info,
         hide_quick_window,
     ])
 }

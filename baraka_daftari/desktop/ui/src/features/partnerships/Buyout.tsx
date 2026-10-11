@@ -80,7 +80,7 @@ export function Buyout({ p }: { p: PartnershipDto }) {
   const error = [plan.error, record.error].find((e) => e !== null);
   return (
     <div className="rounded border border-accent/30 p-3" data-testid="buyout">
-      <h4 className="font-semibold">{t('partner.buyoutTitle')}</h4>
+      <h3 className="font-semibold">{t('partner.buyoutTitle')}</h3>
       <p className="text-xs opacity-70">{t('partner.buyoutHint')}</p>
       <form
         className="mt-2 flex flex-wrap items-end gap-3 text-sm"

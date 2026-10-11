@@ -128,3 +128,11 @@
 - **Servis/Tauri:** `services::interchange`, `exchange.rs` (OS dialogi Rust tomonida; tanlangan fayl xotirada, parol qayta kiritilishi mumkin; `Zeroizing`).
 - **UI:** «Almashish» sahifasi: eksport (parol + takror, to'liq/inkremental), import (fayl → tekshirish → ziddiyatlar → birlashtirish).
 - **Testlar:** round-trip 1:1 (yangi baza), seed bazaga import (dublikatsiz), preview = apply hisoboti, versiya/tombstone, teng versiya ziddiyati, soxta fayl bilan yopilgan davr/shartnoma himoyasi, boshqa qurilmada yopilgan davrni olish, inkremental, noto'g'ri/qisqa parol, yangiroq format, noma'lum ustun/jadval; UI 3 test.
+
+## D15 — Reliz tayyorgarligi
+- **Onboarding:** 5 qadamli tanishtiruv (xush kelibsiz → daromad → «Kelajagim» va qarzlar → havas chegarasi → xavfsizlik va nusxa), o'tkazib yuborish mumkin; bajarilgani bazada eslab qolinadi (`services::onboarding`).
+- **Accessibility:** `axe-core` sinovlari (Almashish, Hunardan ishga, Sheriklik, Onboarding) — haqiqiy topilma tuzatildi (sarlavha tartibi h2→h4); global `:focus-visible`, `prefers-reduced-motion`, Windows **High Contrast** (`forced-colors`) CSS, DPI uchun rem birliklari.
+- **«Anvar» ssenariysi:** `crates/services/tests/anvar.rs` — daromad → audit → havas chegarasi → obuna bekor qilish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → sheriklik (yopiq darvozada faollashmaydi, ochilgach faollashadi) → taqsimot → eksport → yangi bazaga import 1:1. Windows `tauri-driver` E2E spetsifikatsiyasi `desktop/e2e/` da yozilgan (**ishga tushirilmagan**).
+- **Reliz to'sig'i:** `pdf::TEMPLATES_APPROVED = false` — shartnoma shabloni tasdiqlanmagani ilovada ogohlantirish sifatida ko'rinadi; `release_gate` testi (`--ignored`) tasdiq berilmaguncha qizil.
+- **Imzolash va updater:** `src-tauri/tauri.release.conf.template.json`, `docs/SIGNING_AND_UPDATER.md` — sertifikat/kalit yo'qligi sababli faqat shablon va qadamlar; updater plagini ulanmagan.
+- `docs/RELEASE_CHECKLIST.md` (avtomatik / to'siqlar / Windows'da qo'lda), `tests/startup_budget.rs` (Rust qismi ~40 ms).

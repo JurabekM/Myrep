@@ -17,3 +17,7 @@ pub use minutes::{
 pub use period::{period_markup, period_report, PeriodReportDoc, ReportEntry};
 pub use receipt::{loan_receipt, receipt_markup, LoanReceiptDoc, ReceiptSignatures};
 pub use world::{render_pdf, render_pdf_with_files, PdfError, EMBEDDED_FONTS};
+
+/// Sheriklik shartnomasi shabloni yurist va ulamo tasdig'idan o'tganmi (SPEC 8). Tasdiq olinmaguncha
+/// `false`: ilova ogohlantirish ko'rsatadi, reliz tekshiruvi (`release_gate` testi) to'sib turadi.
+pub const TEMPLATES_APPROVED: bool = false;

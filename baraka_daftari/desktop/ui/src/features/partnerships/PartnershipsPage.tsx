@@ -271,9 +271,19 @@ export function PartnershipsPage() {
     queryKey: ['partnerships'],
     queryFn: () => unwrap(commands.listPartnerships()),
   });
+  const info = useQuery({ queryKey: ['app-info'], queryFn: () => commands.appInfo() });
   const reviseTarget = list.data?.find((p) => p.id === mode);
   return (
     <div className="space-y-4">
+      {info.data?.templates_approved === false && (
+        <p
+          role="note"
+          className="rounded border border-accent/50 p-3 text-sm"
+          data-testid="template-notice"
+        >
+          {t('partner.templateUnapproved')}
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{t('nav.partnerships')}</h1>
         {mode === 'list' && (

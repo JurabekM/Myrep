@@ -17,3 +17,55 @@ body {
   color: var(--color-ink);
   font-family: system-ui, sans-serif;
 }
+
+/* Accessibility (DESKTOP_PROMPT 7): klaviatura fokusi har doim ko'rinadi. */
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* DPI 125–200%: o'lchamlar rem/Tailwind birliklarida, shuning uchun WebView2 masshtabi bilan
+ * birga o'sadi; uzun matnlar kesilmasdan o'raladi. */
+body {
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Windows High Contrast (forced-colors): tizim ranglari, chegaralar va holat belgilari yo'qolmasin. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid Highlight;
+  }
+
+  button,
+  input,
+  select,
+  textarea,
+  [role='dialog'],
+  section {
+    border: 1px solid ButtonText;
+  }
+
+  button[aria-current='page'] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  button:disabled,
+  input:disabled {
+    border-style: dashed;
+    color: GrayText;
+  }
+
+  /* Svetofor hukmlari faqat rangga tayanmaydi: matn va qalin chegara bor. */
+  [data-verdict] {
+    border-width: 3px;
+  }
+}

@@ -76,3 +76,7 @@
 74. **PIN xeshlari eksport qilinmaydi:** yangi qurilmada a'zolar PIN'ni qaytadan o'rnatadi. Shartnoma tasdiqlari (imzolar) esa fayl bilan ko'chadi.
 75. **Eksport faylining himoyasi — faqat parol kuchiga bog'liq** (Argon2id 64 MiB/3/1); parol siyosati (≥ 8 belgi) minimal.
 76. **Inkremental eksport** oxirgi muvaffaqiyatli eksport vaqtidan (`settings.interchange.last_export`) boshlanadi; ikkinchi qurilmaga bir necha marta ketma-ket eksport qilishda fayllarni ketma-ket qo'llash tavsiya etiladi (ota yozuv yo'q bo'lsa `REJECTED`).
+77. **Updater ulanmagan:** kalit juftligi va manifest serveri bo'lmagani uchun `tauri-plugin-updater` kodga qo'shilmadi (ishlamaydigan sozlama o'rniga hujjatlangan shablon). CSP hozir tashqi hostga ruxsat bermaydi.
+78. **E2E (`tauri-driver`) va Windows'ga xos tekshiruvlar bajarilmagan:** muhit Linux; High Contrast CSS, DPI, tray/hotkey/dialoglar, sovuq start (oyna bilan), SmartScreen — RELEASE_CHECKLIST C bo'limi.
+79. **Axe qamrovi cheklangan:** to'rt sahifa; rang kontrasti jsdom'da hisoblanmaydi — qo'lda WCAG AA tekshiruvi kerak.
+80. **Onboarding matni** (ayniqsa rus tili) kontent egasi/muharrir ko'rigidan o'tmagan; «5%» boshlang'ich ulush matn ichida (`START_BP` o'zgarsa yangilanishi kerak).

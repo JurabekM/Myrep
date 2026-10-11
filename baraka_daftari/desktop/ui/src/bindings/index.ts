@@ -246,6 +246,9 @@ export const commands = {
 	/**  Birlashtirishni qo'llaydi (yagona tranzaksiya) va tanlangan faylni xotiradan tozalaydi. */
 	importBarakaApply: (password: string) => typedError<ImportReportDto, CommandError>(__TAURI_INVOKE("import_baraka_apply", { password })),
 	importBarakaCancel: () => __TAURI_INVOKE<void>("import_baraka_cancel"),
+	onboardingDone: () => typedError<boolean, CommandError>(__TAURI_INVOKE("onboarding_done")),
+	completeOnboarding: () => typedError<null, CommandError>(__TAURI_INVOKE("complete_onboarding")),
+	appInfo: () => __TAURI_INVOKE<AppInfoDto>("app_info"),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
@@ -263,6 +266,12 @@ export type AmortizationDto = {
 	months: number,
 	total_interest: MoneyDto,
 	schedule: ScheduleRowDto[],
+};
+
+export type AppInfoDto = {
+	version: string,
+	/**  Sheriklik shartnomasi shabloni ulamo/yurist tasdig'idan o'tganmi (reliz to'sig'i, OPEN_QUESTIONS 65). */
+	templates_approved: boolean,
 };
 
 export type AttachmentDto = {

@@ -5,6 +5,7 @@ import { beforeEach, vi } from 'vitest';
 
 import '../../i18n';
 import { commands } from '../../bindings';
+import { a11yViolations } from '../../lib/axe';
 
 import { ExchangePage } from './ExchangePage';
 
@@ -106,5 +107,11 @@ describe('ExchangePage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tekshirish' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Parol noto');
     expect(screen.queryByTestId('import-report')).not.toBeInTheDocument();
+  });
+
+  it('accessibility: axe buzilish topmaydi', async () => {
+    const { container } = renderPage();
+    await screen.findByLabelText('Fayl paroli');
+    expect(await a11yViolations(container)).toEqual([]);
   });
 });

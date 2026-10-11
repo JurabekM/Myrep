@@ -5,6 +5,8 @@
 mod env;
 mod error;
 
+pub use pdf::TEMPLATES_APPROVED;
+
 pub mod audit;
 pub mod categories;
 pub mod ceremonies;
@@ -25,6 +27,7 @@ pub mod interchange;
 pub mod learning;
 pub mod members;
 pub mod obligations;
+pub mod onboarding;
 pub mod partnerships;
 pub mod payoff;
 pub mod prices;

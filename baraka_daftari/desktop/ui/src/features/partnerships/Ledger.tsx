@@ -156,7 +156,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
   const error = [add.error, close.error, report.error].find((x) => x !== null);
   return (
     <section className="rounded border border-accent/30 p-3" data-testid="ledger">
-      <h4 className="font-semibold">{t('ledger.title')}</h4>
+      <h3 className="font-semibold">{t('ledger.title')}</h3>
       <p className="text-xs opacity-70">{t('ledger.separate')}</p>
       {l.read_only && (
         <p role="status" className="mt-1 text-sm font-medium" data-testid="read-only">
@@ -165,9 +165,9 @@ export function Ledger({ p }: { p: PartnershipDto }) {
       )}
       {l.open && (
         <div className="mt-2">
-          <h5 className="text-sm font-medium">
+          <h4 className="text-sm font-medium">
             {t('ledger.openPeriod', { n: l.open.period_no, from: l.open.start_date })}
-          </h5>
+          </h4>
           <ul className="divide-y divide-accent/20">
             {l.open.entries.map((e) => (
               <EntryRow key={e.id} e={e} locked={false} readOnly={l.read_only} />
@@ -284,7 +284,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
       )}
       {l.closed.length > 0 && (
         <div className="mt-3">
-          <h5 className="text-sm font-medium">{t('ledger.closedTitle')}</h5>
+          <h4 className="text-sm font-medium">{t('ledger.closedTitle')}</h4>
           {l.closed.map((c) => (
             <details
               key={c.id}

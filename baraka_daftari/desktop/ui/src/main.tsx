@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './app/App';
 import { Gate } from './features/lock/Gate';
+import { Onboarding } from './features/onboarding/Onboarding';
 import { QuickExpenseWindow } from './features/quick/QuickExpenseWindow';
 import './i18n';
 import './index.css';
@@ -23,6 +24,7 @@ createRoot(root).render(
       ) : (
         <Gate>
           <App />
+          <Onboarding />
         </Gate>
       )}
     </QueryClientProvider>

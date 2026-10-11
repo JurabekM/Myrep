@@ -5,6 +5,7 @@ import { beforeEach, vi } from 'vitest';
 
 import '../../i18n';
 import { commands, type PartnershipDto } from '../../bindings';
+import { a11yViolations } from '../../lib/axe';
 
 import { PartnershipsPage } from './PartnershipsPage';
 
@@ -22,6 +23,7 @@ vi.mock('../../bindings', () => ({
     setBuyoutPlan: vi.fn(),
     recordBuyoutPayment: vi.fn(),
     exportContractPdf: vi.fn(),
+    appInfo: vi.fn(),
   },
 }));
 
@@ -89,6 +91,7 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(commands.appInfo).mockResolvedValue({ version: '0.1.0', templates_approved: false });
   vi.mocked(commands.listPartnerships).mockResolvedValue({ status: 'ok', data: [base] });
   vi.mocked(commands.listMembers).mockResolvedValue({
     status: 'ok',
@@ -105,6 +108,17 @@ beforeEach(() => {
 });
 
 describe('PartnershipsPage', () => {
+  it('accessibility: axe buzilish topmaydi', async () => {
+    const { container } = renderPage();
+    await screen.findByTestId('ps-Ustaxona');
+    expect(await a11yViolations(container)).toEqual([]);
+  });
+
+  it('tasdiqlanmagan shablon haqida ogohlantiradi', async () => {
+    renderPage();
+    expect(await screen.findByTestId('template-notice')).toHaveTextContent('ulamo tasdig');
+  });
+
   it('faollashtirish tugmasi to‘siq bor paytda o‘chiq va sabab ko‘rinadi', async () => {
     renderPage();
     const card = await screen.findByTestId('ps-Ustaxona');

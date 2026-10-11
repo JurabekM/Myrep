@@ -887,7 +887,8 @@
     "ownershipBar": "Kapital egasi {{provider}}, sotib oluvchi {{worker}}",
     "buyoutPay": "To'lov (so'm)",
     "buyoutRecord": "To'lovni qayd etish",
-    "buyoutDone": "Sotib olish yakunlandi: sherik mustaqil bo'ldi."
+    "buyoutDone": "Sotib olish yakunlandi: sherik mustaqil bo'ldi.",
+    "templateUnapproved": "Shartnoma shabloni hali yurist va ulamo tasdig'idan o'tmagan: undan faqat tanishish uchun foydalaning, imzolashdan oldin mutaxassisga ko'rsating."
   },
   "ledger": {
     "title": "Korxona daftari",
@@ -1014,6 +1015,35 @@
       "KEPT_LOCAL": "lokal qoldi",
       "TOOK_INCOMING": "fayldagisi olindi",
       "SKIPPED": "o'tkazib yuborildi"
+    }
+  },
+  "onboarding": {
+    "progress": "{{n}}-qadam / {{total}}",
+    "skip": "O'tkazib yuborish",
+    "back": "Orqaga",
+    "next": "Keyingi",
+    "finish": "Boshlash",
+    "steps": {
+      "welcome": {
+        "title": "Baraka daftariga xush kelibsiz",
+        "body": "Bu daftar pulingizni tartibga solishga yordam beradi: daromad, xarajat, qarz va oilaviy rejalar bir joyda. Ilova pulni saqlamaydi va o'tkazmaydi, bank yoki kredit emas. Ma'lumotlaringiz faqat shu kompyuterda, shifrlangan holda turadi."
+      },
+      "income": {
+        "title": "Daromadni yozing",
+        "body": "Har bir tushgan summani «Daromad» bo'limida yoki Ctrl+N bilan yozing. Ilova undan o'zingiz uchun ajratiladigan ulushni (boshlanishda 5%) taklif qiladi — qabul qilsangiz «Kelajagim»ga yoziladi."
+      },
+      "vault": {
+        "title": "«Kelajagim» va qarzlar",
+        "body": "«Kelajagim» — sizning to'planmangiz. Qarzlaringiz bo'lsa, «Qarzlar» bo'limida ularni yozing: ilova to'lov rejasini tuzadi va qarz yopilgach darvoza ochiladi."
+      },
+      "havas": {
+        "title": "Havas chegarasi va oila",
+        "body": "Oila a'zolari bilan «kerak» va «havas» xarajatlarni kelishib, chegarani har bir kattaning o'z PIN'i bilan tasdiqlaysiz. Maqsad — uyaltirish emas, birgalikda ongli qaror."
+      },
+      "safety": {
+        "title": "Xavfsizlik va nusxa",
+        "body": "PIN'ni unutmang: u tiklanmaydi. Ma'lumotni telefon yoki zaxira uchun «Almashish» bo'limidan parolli .baraka fayliga eksport qiling. Ta'limiy material. Fatvo yoki moliyaviy maslahat emas."
+      }
     }
   }
 }

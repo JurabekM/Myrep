@@ -232,3 +232,37 @@ pub fn import_baraka_apply(
 pub fn import_baraka_cancel(pending: State<'_, PendingImport>) {
     pending.set(None);
 }
+
+// ---------------------------------------------------------------- onboarding va ilova ma'lumoti
+
+#[tauri::command]
+#[specta::specta]
+pub fn onboarding_done(state: State<'_, AppSession>) -> Result<bool, CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, _, ctx| services::onboarding::is_done(db.conn(), ctx))
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn complete_onboarding(state: State<'_, AppSession>) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| services::onboarding::complete(db.conn(), env, ctx))
+    })
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct AppInfoDto {
+    pub version: String,
+    /// Sheriklik shartnomasi shabloni ulamo/yurist tasdig'idan o'tganmi (reliz to'sig'i, OPEN_QUESTIONS 65).
+    pub templates_approved: bool,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn app_info() -> AppInfoDto {
+    AppInfoDto {
+        version: env!("CARGO_PKG_VERSION").into(),
+        templates_approved: services::TEMPLATES_APPROVED,
+    }
+}

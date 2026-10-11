@@ -5,6 +5,7 @@ import { beforeEach, vi } from 'vitest';
 
 import '../../i18n';
 import { commands } from '../../bindings';
+import { a11yViolations } from '../../lib/axe';
 
 import { CraftsPage } from './CraftsPage';
 
@@ -77,5 +78,11 @@ describe('CraftsPage', () => {
       expect.objectContaining({ guaranteed_profit: true }),
     );
     expect(screen.getByTestId('verdict')).toHaveTextContent('Foyda kafolatlanmoqda');
+  });
+
+  it('accessibility: axe buzilish topmaydi', async () => {
+    const { container } = renderPage();
+    await screen.findByText('Tikuv sexi');
+    expect(await a11yViolations(container)).toEqual([]);
   });
 });

@@ -1,0 +1,18 @@
+{
+  "$comment": "SHABLON. Haqiqiy qiymatlarsiz ishlamaydi. `cargo tauri build --config src-tauri/tauri.release.conf.json` bilan asosiy tauri.conf.json ustiga qo'shiladi. Nusxa: tauri.release.conf.json (gitignore'da, sirlarsiz). Qarang: docs/SIGNING_AND_UPDATER.md",
+  "bundle": {
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "certificateThumbprint": "<SERTIFIKAT_BARMOQ_IZI_SHA1>",
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "<TIMESTAMP_SERVER_URL>"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "<`cargo tauri signer generate` NATIJASIDAGI OCHIQ KALIT>",
+      "endpoints": ["https://<HOST>/baraka-daftari/latest.json"],
+      "windows": { "installMode": "passive" }
+    }
+  }
+}

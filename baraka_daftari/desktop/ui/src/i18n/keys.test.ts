@@ -54,6 +54,10 @@ describe('i18n kalitlari', () => {
       (k) => `exchange.kinds.${k}`,
     ),
     ...['KEPT_LOCAL', 'TOOK_INCOMING', 'SKIPPED'].map((k) => `exchange.resolutions.${k}`),
+    ...['welcome', 'income', 'vault', 'havas', 'safety'].flatMap((k) => [
+      `onboarding.steps.${k}.title`,
+      `onboarding.steps.${k}.body`,
+    ]),
     ...['pess', 'avg', 'opt'].map((k) => `craft.scenarios.${k}`),
     ...['GREEN', 'YELLOW', 'RED'].flatMap((k) => [`offer.verdicts.${k}`, `offer.verdictText.${k}`]),
     ...[
