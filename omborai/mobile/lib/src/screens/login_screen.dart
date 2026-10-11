@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_session.dart';
 import '../auth.dart';
+import 'home_screen.dart';
 
 /// Serversiz kirish: do'kon bo'lmasa yaratish yoki juftlash; bor bo'lsa login/parol.
 class LoginScreen extends StatefulWidget {
@@ -69,6 +70,11 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     await _run(() => widget.session.login(_login.text, _password.text));
+    if (widget.session.currentUser != null && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => HomeScreen(session: widget.session)),
+      );
+    }
   }
 
   Future<void> _submitCreate() async {
@@ -92,6 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _password.text,
       ),
     );
+    if (widget.session.currentUser != null && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => HomeScreen(session: widget.session)),
+      );
+    }
   }
 
   Future<void> _submitJoin() async {
