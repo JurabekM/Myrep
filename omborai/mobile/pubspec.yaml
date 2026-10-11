@@ -1,0 +1,29 @@
+name: omborai_mobile
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  cryptography: any
+  decimal: any
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: any
+  mqtt_client: any
+  path: any
+  permission_handler: any
+  sqflite_sqlcipher: "<3.4.1"
+  uuid: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+  sqflite_common_ffi: "<2.4.0"
+  mocktail: any
+
+flutter:
+  uses-material-design: true

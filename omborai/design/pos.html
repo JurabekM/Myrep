@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="uz-Latn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OmborAI — Kassa (eskiz)</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    html[lang^="uz"] .lang-ru { display: none; }
+    html[lang="ru"] .lang-uz { display: none; }
+
+    .pos { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+    @media (max-width: 960px) { .pos { grid-template-columns: 1fr; } }
+
+    .search-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chip {
+      min-height: 40px; padding: 0 14px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+      font: inherit; font-weight: 600; cursor: pointer;
+    }
+    .chip[aria-pressed="true"] { background: var(--primary-soft); color: var(--text); border-color: var(--primary); }
+
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); gap: 12px; }
+    .tile {
+      padding: 14px; text-align: left; cursor: pointer;
+      min-height: 124px; display: flex; flex-direction: column; justify-content: space-between;
+      font: inherit; color: var(--text);
+    }
+    .tile .name { font-weight: 600; }
+    .tile .price { font-size: 17px; font-weight: 700; }
+    .tile .stock { font-size: 13px; color: var(--muted); }
+    .tile.low .stock { color: var(--warning); }
+
+    .cart { display: flex; flex-direction: column; position: sticky; top: 84px; }
+    .cart header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
+    .cart h2 { font-size: 16px; margin: 0; }
+    .line { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .line .qty { display: inline-flex; align-items: center; gap: 6px; }
+    .qty button {
+      width: 40px; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text); font: inherit; font-size: 18px; cursor: pointer;
+    }
+    .line .sum { text-align: right; font-weight: 700; }
+    .totals { padding: 14px 16px; display: grid; gap: 6px; }
+    .totals .grand { font-size: 22px; font-weight: 800; margin-top: 6px; }
+    .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px 10px; }
+    .pay-grid .btn { min-height: 52px; }
+    .pay-main { padding: 0 16px 16px; }
+    .pay-main .btn { width: 100%; }
+    .customer { padding: 0 16px 12px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Ombor<span>AI</span></div>
+    <nav class="nav" aria-label="Asosiy">
+      <a href="pos.html" aria-current="page" data-i18n="brand.nav.pos">Kassa</a>
+      <a href="inventory.html" data-i18n="brand.nav.inventory">Tovarlar</a>
+      <a href="dashboard.html" data-i18n="brand.nav.dashboard">Bosh sahifa</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="shift" data-i18n="shift.open">Smena ochiq</span>
+    <div class="seg" role="group" aria-label="Til">
+      <button data-lang-btn="uz" aria-pressed="true">UZ</button>
+      <button data-lang-btn="ru" aria-pressed="false">RU</button>
+    </div>
+    <div class="seg" role="group" aria-label="Mavzu">
+      <button data-theme-btn="system" aria-pressed="true">Auto</button>
+      <button data-theme-btn="light" aria-pressed="false" data-i18n="theme.light">Yorug'</button>
+      <button data-theme-btn="dark" aria-pressed="false" data-i18n="theme.dark">Tungi</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="pos">
+      <section aria-label="Tovarlar">
+        <div class="search-row">
+          <input type="search" data-i18n-placeholder="pos.search" placeholder="Shtrix-kod yoki nom bo'yicha qidirish" autofocus>
+        </div>
+        <div class="chips" role="group">
+          <button class="chip" aria-pressed="true"><span class="lang-uz">Hammasi</span><span class="lang-ru">Все</span></button>
+          <button class="chip" aria-pressed="false"><span class="lang-uz">Sut mahsulotlari</span><span class="lang-ru">Молочные</span></button>
+          <button class="chip" aria-pressed="false"><span class="lang-uz">Oziq-ovqat</span><span class="lang-ru">Бакалея</span></button>
+          <button class="chip" aria-pressed="false"><span class="lang-uz">Ichimliklar</span><span class="lang-ru">Напитки</span></button>
+        </div>
+
+        <div class="tiles">
+          <button class="card tile">
+            <span class="name"><span class="lang-uz">Sut 1 L</span><span class="lang-ru">Молоко 1 л</span></span>
+            <span class="price num">12 000</span>
+            <span class="stock num"><span class="lang-uz">qoldiq: 24 dona</span><span class="lang-ru">остаток: 24 шт.</span></span>
+          </button>
+          <button class="card tile">
+            <span class="name"><span class="lang-uz">Non (oq)</span><span class="lang-ru">Хлеб белый</span></span>
+            <span class="price num">4 000</span>
+            <span class="stock num"><span class="lang-uz">qoldiq: 40 dona</span><span class="lang-ru">остаток: 40 шт.</span></span>
+          </button>
+          <button class="card tile low">
+            <span class="name"><span class="lang-uz">Shakar 1 kg</span><span class="lang-ru">Сахар 1 кг</span></span>
+            <span class="price num">14 500</span>
+            <span class="stock num"><span class="lang-uz">qoldiq: 6 dona (kam)</span><span class="lang-ru">остаток: 6 шт. (мало)</span></span>
+          </button>
+          <button class="card tile">
+            <span class="name"><span class="lang-uz">Tuxum 10 dona</span><span class="lang-ru">Яйца 10 шт.</span></span>
+            <span class="price num">19 000</span>
+            <span class="stock num"><span class="lang-uz">qoldiq: 15 dona</span><span class="lang-ru">остаток: 15 шт.</span></span>
+          </button>
+          <button class="card tile">
+            <span class="name"><span class="lang-uz">Yog' 1 L</span><span class="lang-ru">Масло 1 л</span></span>
+            <span class="price num">38 000</span>
+            <span class="stock num"><span class="lang-uz">qoldiq: 8 dona</span><span class="lang-ru">остаток: 8 шт.</span></span>
+          </button>
+          <button class="card tile">
+            <span class="name"><span class="lang-uz">Choy 100 g</span><span class="lang-ru">Чай 100 г</span></span>
+            <span class="price num">22 000</span>
+            <span class="stock num"><span class="lang-uz">qoldiq: 31 dona</span><span class="lang-ru">остаток: 31 шт.</span></span>
+          </button>
+        </div>
+      </section>
+
+      <aside class="card cart" aria-label="Savat">
+        <header>
+          <h2 data-i18n="pos.cart">Savat</h2>
+          <button class="btn ghost small" data-i18n="pos.clear">Tozalash</button>
+        </header>
+
+        <div class="line">
+          <div><strong><span class="lang-uz">Sut 1 L</span><span class="lang-ru">Молоко 1 л</span></strong><div class="muted small num">12 000 × 2</div></div>
+          <div class="sum num">24 000</div>
+          <div class="qty"><button aria-label="kamaytirish">−</button><span class="num" style="min-width:24px;text-align:center">2</span><button aria-label="ko'paytirish">+</button></div>
+          <div></div>
+        </div>
+        <div class="line">
+          <div><strong><span class="lang-uz">Shakar 1 kg</span><span class="lang-ru">Сахар 1 кг</span></strong><div class="muted small num">14 500 × 1</div></div>
+          <div class="sum num">14 500</div>
+          <div class="qty"><button aria-label="kamaytirish">−</button><span class="num" style="min-width:24px;text-align:center">1</span><button aria-label="ko'paytirish">+</button></div>
+          <div></div>
+        </div>
+
+        <div class="totals">
+          <div class="muted" style="display:flex;justify-content:space-between"><span data-i18n="pos.subtotal">Jami</span><span class="num">38 500</span></div>
+          <div class="muted" style="display:flex;justify-content:space-between"><span data-i18n="pos.discount">Chegirma</span><span class="num">0</span></div>
+          <div class="grand" style="display:flex;justify-content:space-between"><span data-i18n="pos.total">To'lov summasi</span><span class="num">38 500 <span class="small muted" data-i18n="unit.sum">so'm</span></span></div>
+        </div>
+
+        <div class="customer">
+          <input type="text" data-i18n-placeholder="pos.customer" placeholder="Mijoz (qarzga sotuv uchun)">
+        </div>
+
+        <div class="pay-grid">
+          <button class="btn" data-i18n="pos.pay.cash">Naqd</button>
+          <button class="btn" data-i18n="pos.pay.card">Karta</button>
+          <button class="btn" data-i18n="pos.pay.click">Click</button>
+          <button class="btn" data-i18n="pos.pay.payme">Payme</button>
+        </div>
+        <div class="pay-main">
+          <button class="btn primary lg" data-i18n="pos.pay">To'lash</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+name: omborai
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: omborai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD kerak}
+      OMBORAI_APP_PASSWORD: ${OMBORAI_APP_PASSWORD:?OMBORAI_APP_PASSWORD kerak}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d omborai"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD kerak}"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    build: ../backend
+    image: omborai-backend:latest
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      OMBORAI_ENV: ${OMBORAI_ENV:-prod}
+      OMBORAI_MIGRATION_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@postgres:5432/omborai
+      OMBORAI_DATABASE_URL: postgresql+asyncpg://omborai_app:${OMBORAI_APP_PASSWORD}@postgres:5432/omborai
+      OMBORAI_JWT_SECRET: ${OMBORAI_JWT_SECRET:?OMBORAI_JWT_SECRET kerak}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: ../backend
+    image: omborai-backend:latest
+    environment:
+      OMBORAI_ENV: ${OMBORAI_ENV:-prod}
+      OMBORAI_DATABASE_URL: postgresql+asyncpg://omborai_app:${OMBORAI_APP_PASSWORD}@postgres:5432/omborai
+      OMBORAI_JWT_SECRET: ${OMBORAI_JWT_SECRET:?OMBORAI_JWT_SECRET kerak}
+      OMBORAI_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      OMBORAI_DOMAIN: ${OMBORAI_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:
