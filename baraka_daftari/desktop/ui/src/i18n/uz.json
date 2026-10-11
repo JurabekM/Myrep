@@ -39,7 +39,8 @@
     "debts": "Qarzlar",
     "ceremonies": "Marosimlar",
     "partnerships": "Sheriklik",
-    "crafts": "Hunardan ishga"
+    "crafts": "Hunardan ishga",
+    "exchange": "Almashish"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -57,7 +58,10 @@
     "Internal": "Kutilmagan xato. Qayta urinib ko'ring.",
     "MemberWrongPin": "PIN noto'g'ri.",
     "MemberPinLocked": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring.",
-    "MemberNoPin": "Bu a'zo uchun PIN o'rnatilmagan."
+    "MemberNoPin": "Bu a'zo uchun PIN o'rnatilmagan.",
+    "WrongPassword": "Parol noto'g'ri yoki fayl buzilgan.",
+    "WeakPassword": "Parol kamida 8 ta belgidan iborat bo'lsin.",
+    "BadFile": "Fayl yaroqsiz."
   },
   "source": {
     "DAILY_WORK": "Kunlik ish",
@@ -971,6 +975,45 @@
       "RECRUITMENT_REQUIRED": "Odam jalb qilish talab etiladi",
       "PRESSURE": "Shoshiltirish bosimi",
       "NO_WRITTEN_CONTRACT": "Yozma shartnoma yo'q"
+    }
+  },
+  "exchange": {
+    "title": "Telefon ↔ kompyuter almashish",
+    "intro": "Ma'lumotlar parol bilan shifrlangan .baraka fayliga yoziladi. Server yo'q: faylni o'zingiz ko'chirasiz.",
+    "exportTitle": "Eksport",
+    "password": "Fayl paroli",
+    "passwordConfirm": "Parolni takrorlang",
+    "mismatch": "Parollar bir xil emas.",
+    "passwordHint": "Kamida 8 ta belgi. Parolni yo'qotsangiz, faylni ochib bo'lmaydi. PIN fayl bilan ketmaydi.",
+    "full": "To'liq eksport",
+    "incremental": "Faqat o'zgarganlar (oxirgi eksportdan keyin)",
+    "lastExport": "Oxirgi eksport: {{when}}",
+    "noExport": "Hali eksport qilinmagan.",
+    "export": "Eksport qilish",
+    "exported": "Saqlandi: {{name}}",
+    "importTitle": "Import",
+    "pick": "Faylni tanlash",
+    "picked": "Tanlandi: {{name}}",
+    "importPassword": "Fayl paroli (import)",
+    "check": "Tekshirish",
+    "apply": "Birlashtirish",
+    "cancel": "Bekor qilish",
+    "reportTitle": "Import hisoboti",
+    "summary": "Yangi: {{inserted}} · Yangilangan: {{updated}} · O'zgarmagan: {{unchanged}} · Lokal qoldi: {{kept}}",
+    "noConflicts": "Ziddiyat yo'q.",
+    "conflictsTitle": "Ziddiyatlar ({{n}})",
+    "applied": "Birlashtirildi.",
+    "rules": "Qoida: versiyasi katta yozuv yutadi; teng bo'lsa kechroq o'zgargani. Yopilgan davrlar va imzolangan shartnomalar o'zgarmaydi.",
+    "kinds": {
+      "DIVERGED": "Ikki qurilmada turlicha tahrir",
+      "CLOSED_PERIOD": "Yopilgan davr o'zgartirilmadi",
+      "SIGNED_CONTRACT": "Imzolangan shartnoma o'zgartirilmadi",
+      "REJECTED": "Bazaga sig'madi, o'tkazib yuborildi"
+    },
+    "resolutions": {
+      "KEPT_LOCAL": "lokal qoldi",
+      "TOOK_INCOMING": "fayldagisi olindi",
+      "SKIPPED": "o'tkazib yuborildi"
     }
   }
 }

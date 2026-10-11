@@ -236,6 +236,16 @@ export const commands = {
 	/**  Bir bosishda sheriklik shartnomasi qoralamasi. */
 	craftToContract: (ideaId: string, providerName: string) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("craft_to_contract", { ideaId, providerName })),
 	checkOffer: (input: OfferInput) => __TAURI_INVOKE<OfferDto>("check_offer", { input }),
+	exchangeStatus: () => typedError<ExchangeStatusDto, CommandError>(__TAURI_INVOKE("exchange_status")),
+	/**  `.baraka` faylini OS «saqlash» oynasi orqali yozadi. Bekor qilinsa `None`. */
+	exportBaraka: (password: string, incremental: boolean) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_baraka", { password, incremental })),
+	/**  Import faylini tanlaydi (hali ochmaydi). Qaytadi: fayl nomi; bekor qilinsa `None`. */
+	importBarakaPick: () => typedError<string | null, CommandError>(__TAURI_INVOKE("import_baraka_pick")),
+	/**  Ziddiyatlar ro'yxati: hech narsa saqlanmaydi. */
+	importBarakaPreview: (password: string) => typedError<ImportReportDto, CommandError>(__TAURI_INVOKE("import_baraka_preview", { password })),
+	/**  Birlashtirishni qo'llaydi (yagona tranzaksiya) va tanlangan faylni xotiradan tozalaydi. */
+	importBarakaApply: (password: string) => typedError<ImportReportDto, CommandError>(__TAURI_INVOKE("import_baraka_apply", { password })),
+	importBarakaCancel: () => __TAURI_INVOKE<void>("import_baraka_cancel"),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
@@ -425,7 +435,23 @@ export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kin
 /**  A'zoning PIN'i noto'g'ri (havas chegarasiga rozilik). */
 { kind: "MemberWrongPin" } | { kind: "MemberPinLocked"; retry_after_secs: number } | { kind: "MemberNoPin" } | 
 /**  "Kelajagim"dan pul olish pauzasi tugamagan. */
-{ kind: "Cooling"; remaining_secs: number } | { kind: "Internal"; message: string };
+{ kind: "Cooling"; remaining_secs: number } | 
+/**  Eksport paroli noto'g'ri yoki fayl buzilgan. */
+{ kind: "WrongPassword" } | 
+/**  Eksport paroli 8 belgidan qisqa. */
+{ kind: "WeakPassword" } | 
+/**  Almashish fayli yaroqsiz yoki yangiroq versiyada. */
+{ kind: "BadFile"; message: string } | { kind: "Internal"; message: string };
+
+export type ConflictDto = {
+	table: string,
+	id: string,
+	/**  `DIVERGED` | `CLOSED_PERIOD` | `SIGNED_CONTRACT` | `REJECTED`. */
+	kind: string,
+	/**  `KEPT_LOCAL` | `TOOK_INCOMING` | `SKIPPED`. */
+	resolution: string,
+	label: string,
+};
 
 export type ConsentDto = {
 	member_id: string,
@@ -606,6 +632,11 @@ export type EquivalenceDto = {
 	times_milli: string,
 };
 
+export type ExchangeStatusDto = {
+	/**  Oxirgi muvaffaqiyatli eksport (RFC 3339) — inkremental eksport shundan boshlanadi. */
+	last_export: string | null,
+};
+
 export type ExpenseDto = {
 	id: string,
 	date: string,
@@ -737,6 +768,14 @@ export type IdeaInput = {
 	expense: string[],
 	/**  Sheriklik bo'lsa mening ulushim (bp). */
 	share_bp: number | null,
+};
+
+export type ImportReportDto = {
+	inserted: number,
+	updated: number,
+	unchanged: number,
+	kept_local: number,
+	conflicts: ConflictDto[],
 };
 
 export type IncomeDto = {

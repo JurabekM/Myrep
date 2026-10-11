@@ -1,0 +1,27 @@
+{
+  "format": "baraka-export",
+  "format_version": 1,
+  "schema_version": 11,
+  "exported_at": "2026-10-11T05:00:00Z",
+  "device_id": "phone-1",
+  "household_id": "00000000-0000-7000-8000-000000000001",
+  "since": null,
+  "tables": [
+    {
+      "name": "households",
+      "rows": [
+        {
+          "id": "00000000-0000-7000-8000-000000000001",
+          "household_id": "00000000-0000-7000-8000-000000000001",
+          "created_at": "2026-10-11T05:00:00Z",
+          "updated_at": "2026-10-11T05:00:00Z",
+          "deleted_at": null,
+          "version": 1,
+          "origin_device_id": "phone-1",
+          "name": "Oila",
+          "base_currency": "UZS"
+        }
+      ]
+    }
+  ]
+}

@@ -13,6 +13,7 @@ money = { path = "../money" }
 storage = { path = "../storage" }
 security = { path = "../security" }
 pdf = { path = "../pdf" }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
 csv = "1.4.0"

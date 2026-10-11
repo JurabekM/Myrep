@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://baraka.example/spec/interchange/export-format.schema.json",
+  "title": "Baraka daftari — .baraka almashish hujjati (shifrlashdan oldingi JSON)",
+  "description": "Telefon (mobil) va desktop ilovalari uchun umumiy. Fayl = shifrlangan konteyner (README.md), ichida shu sxemaga mos UTF-8 JSON.",
+  "type": "object",
+  "required": [
+    "format",
+    "format_version",
+    "schema_version",
+    "exported_at",
+    "device_id",
+    "household_id",
+    "since",
+    "tables"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "baraka-export"
+    },
+    "format_version": {
+      "const": 1
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 11,
+      "description": "Eksport qilgan ilovaning baza sxemasi versiyasi; import qiluvchi undan yangi bo'lmasligi kerak."
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "device_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "household_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "since": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Inkremental eksport: shu vaqtdan keyin o'zgargan yozuvlar. To'liq eksportda null."
+    },
+    "tables": {
+      "type": "array",
+      "description": "Ota jadvallar oldin (FK tartibi). Bo'sh jadval bo'lishi mumkin.",
+      "items": {
+        "$ref": "#/$defs/table"
+      }
+    }
+  },
+  "$defs": {
+    "tableName": {
+      "enum": [
+        "households",
+        "members",
+        "categories",
+        "incomes",
+        "expenses",
+        "assets",
+        "asset_snapshots",
+        "vault_transactions",
+        "allocation_rules",
+        "obligations",
+        "fx_rates",
+        "withdrawal_requests",
+        "task_completions",
+        "chapter_progress",
+        "daftar_pages",
+        "necessity_changes",
+        "havas_limits",
+        "limit_consents",
+        "scheduled_treats",
+        "venture_periods",
+        "venture_entries",
+        "venture_attachments",
+        "venture_distributions",
+        "craft_ideas",
+        "craft_capex",
+        "partnerships",
+        "partnership_parties",
+        "partnership_capital",
+        "partnership_signatures",
+        "partnership_versions",
+        "buyout_plans",
+        "buyout_payments",
+        "ceremony_plans",
+        "ceremony_lines",
+        "debt_contributors",
+        "sellable_items",
+        "debts",
+        "debt_instalments",
+        "debt_payments",
+        "receivables",
+        "goals",
+        "loan_receipts",
+        "price_items",
+        "price_points",
+        "gate_bypasses",
+        "subscriptions",
+        "envelopes",
+        "envelope_periods",
+        "savings_rescues"
+      ]
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "name",
+        "rows"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/tableName"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/row"
+          }
+        }
+      }
+    },
+    "row": {
+      "type": "object",
+      "description": "Yozuv: jadval ustunlari nomi → qiymat. Har bir yozuvda umumiy meta maydonlar bor. Pul — butun son (eng kichik birlik, masalan tiyin), kasr son yo'q.",
+      "required": [
+        "id",
+        "household_id",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "version",
+        "origin_device_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "household_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deleted_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "null bo'lmasa — tombstone (o'chirilgan)."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "origin_device_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/value"
+      }
+    },
+    "value": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/blob"
+        }
+      ]
+    },
+    "blob": {
+      "type": "object",
+      "required": [
+        "$blob"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "$blob": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$",
+          "description": "Kichik harfli hex"
+        }
+      }
+    }
+  }
+}

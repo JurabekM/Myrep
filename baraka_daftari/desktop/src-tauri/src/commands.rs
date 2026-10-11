@@ -45,6 +45,14 @@ pub enum CommandError {
     Cooling {
         remaining_secs: u32,
     },
+    /// Eksport paroli noto'g'ri yoki fayl buzilgan.
+    WrongPassword,
+    /// Eksport paroli 8 belgidan qisqa.
+    WeakPassword,
+    /// Almashish fayli yaroqsiz yoki yangiroq versiyada.
+    BadFile {
+        message: String,
+    },
     Internal {
         message: String,
     },
@@ -65,6 +73,9 @@ impl From<ServiceError> for CommandError {
                 retry_after_secs: secs(retry_after_secs),
             },
             ServiceError::NoPin => Self::MemberNoPin,
+            ServiceError::WrongPassword => Self::WrongPassword,
+            ServiceError::WeakPassword => Self::WeakPassword,
+            ServiceError::BadFile(message) => Self::BadFile { message },
             ServiceError::Cooling { remaining_secs } => Self::Cooling {
                 remaining_secs: u32::try_from(remaining_secs.max(0)).unwrap_or(u32::MAX),
             },

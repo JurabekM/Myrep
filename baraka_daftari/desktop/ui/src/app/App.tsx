@@ -11,6 +11,7 @@ import { AuditWizardPage } from '../features/audit/AuditPage';
 import { HomePage } from '../features/home/HomePage';
 import { IncomePage } from '../features/income/IncomePage';
 import { CraftsPage } from '../features/crafts/CraftsPage';
+import { ExchangePage } from '../features/exchange/ExchangePage';
 import { PartnershipsPage } from '../features/partnerships/PartnershipsPage';
 import { PricesPage } from '../features/prices/PricesPage';
 import { QuickEntry } from '../features/income/QuickEntry';
@@ -28,6 +29,7 @@ const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'ceremonies', labelKey: 'nav.ceremonies' },
   { id: 'partnerships', labelKey: 'nav.partnerships' },
   { id: 'crafts', labelKey: 'nav.crafts' },
+  { id: 'exchange', labelKey: 'nav.exchange' },
   { id: 'income', labelKey: 'nav.income' },
   { id: 'vault', labelKey: 'nav.vault' },
   { id: 'budget', labelKey: 'nav.budget' },
@@ -77,6 +79,8 @@ function CurrentPage({ page }: { page: Page }) {
       return <PartnershipsPage />;
     case 'crafts':
       return <CraftsPage />;
+    case 'exchange':
+      return <ExchangePage />;
   }
 }
 

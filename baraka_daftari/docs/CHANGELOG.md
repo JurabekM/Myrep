@@ -119,3 +119,12 @@
 - **Taklif detektori:** tekshiruv ro'yxati → yashil/sariq/qizil; ta'limiy ogohlantirish bilan (ribo filtri nomida «kafolatlangan foyda» iborasi ishlatilmaydi).
 - UI: `Ledger` (sheriklik kartasida), `CraftsPage` («Hunardan ishga»), uz/ru matnlar, 7 yangi UI testi.
 
+
+## D14 — `.baraka` eksport/import (telefon ↔ desktop)
+- **Format:** `spec/interchange/` — `export-format.schema.json` (JSON Schema, test bilan jadval ro'yxati va sxema versiyasiga bog'langan), `README.md` (konteyner bayt tuzilmasi, birlashtirish qoidalari — mobil ilova uchun umumiy), `example-export.json`.
+- **Konteyner** (`security::container`): `Argon2id(parol) → XChaCha20-Poly1305`, sarlavha AAD sifatida himoyalangan, KDF chegaralari tekshiriladi, parol ≥ 8 belgi; noto'g'ri parol — aniq xato (`WrongPassword`), buzilgan sarlavha — «bu .baraka fayli emas».
+- **Hujjat** (`storage::interchange`): jadval nomlari va ustunlar faqat lokal sxemadan (PRAGMA) olinadi (SQL injection yo'q); FK bo'yicha topologik tartib; PIN xeshlari va qurilma sozlamalari eksport qilinmaydi; to'liq va inkremental (`updated_at > since`, tombstone'lar bilan).
+- **Birlashtirish:** `id` bo'yicha; `version` katta yutadi, teng bo'lsa `updated_at`, teng bo'lsa lokal; tombstone qo'llanadi; teng versiyada turlicha tarkib — ziddiyat ro'yxati. **Yopilgan davrlar, taqsimotlar, imzolangan shartnoma versiyalari va imzolar import orqali o'zgarmaydi** (ziddiyat sifatida ko'rsatiladi). Seed yozuvlar (toifalar, «Men», «Kelajagim», qoida) tabiiy kalit bo'yicha ulanadi — dublikat yo'q; xonadon `id` si lokalga moslanadi. Bazaga sig'maydigan yozuv `REJECTED` bo'ladi. Oldindan ko'rish va qo'llash bir xil kod yo'lidan o'tadi (ko'rish — orqaga qaytariladigan savepoint).
+- **Servis/Tauri:** `services::interchange`, `exchange.rs` (OS dialogi Rust tomonida; tanlangan fayl xotirada, parol qayta kiritilishi mumkin; `Zeroizing`).
+- **UI:** «Almashish» sahifasi: eksport (parol + takror, to'liq/inkremental), import (fayl → tekshirish → ziddiyatlar → birlashtirish).
+- **Testlar:** round-trip 1:1 (yangi baza), seed bazaga import (dublikatsiz), preview = apply hisoboti, versiya/tombstone, teng versiya ziddiyati, soxta fayl bilan yopilgan davr/shartnoma himoyasi, boshqa qurilmada yopilgan davrni olish, inkremental, noto'g'ri/qisqa parol, yangiroq format, noma'lum ustun/jadval; UI 3 test.

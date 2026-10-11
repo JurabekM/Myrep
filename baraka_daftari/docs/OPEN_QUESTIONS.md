@@ -70,3 +70,9 @@
 68. **Buyout to'lovchisi:** buyout ayirmasi birinchi kapital-bo'lmagan (ishchi/sotib oluvchi) tomon ulushidan olinadi; ko'p sotib oluvchi bo'lsa ulush bo'yicha bo'lish keyin.
 69. **Davr qoidasi:** bitta ochiq davr; yopilgach keyingisi avtomatik ochiladi; yopilgan davr o'zgarmas (servis + DB trigger). Foring-major faqat chiqim sifatida belgilanadi va taqsimot qoidasini o'zgartirmaydi (faqat izoh/dalil).
 70. **Taklif detektori** hukm emas, ogohlantirish: RED — kafolatlangan foyda / odam jalb qilish / haqiqiy faoliyat yo'qligi; YELLOW — zarar taqsimlanmasligi, shoshiltirish, yozma shartnoma yo'qligi.
+71. **Mobil bilan moslik tasdiqlanmagan:** mobil ilova kodi bu omborda yo'q; format `spec/interchange/` da hujjatlangan, lekin mobil tomonda o'qish/yozish hali sinalmagan (umumiy golden `.baraka` fayli mobil jamoa bilan kelishilishi kerak).
+72. **Hujjat JSON'da butun sonlar** (i64) va BLOB — kichik harfli hex (2× hajm; base64 kerak bo'lsa `format_version` 2).
+73. **Seed tabiiy kalitlari** (kategoriya nomi, a'zo nomi+roli, VAULT aktivi, taqsimlash qoidasi) — bir xil nomli ikki haqiqiy yozuv bitta deb olinadi; mobil ilova ham shu qoidaga amal qilishi kerak.
+74. **PIN xeshlari eksport qilinmaydi:** yangi qurilmada a'zolar PIN'ni qaytadan o'rnatadi. Shartnoma tasdiqlari (imzolar) esa fayl bilan ko'chadi.
+75. **Eksport faylining himoyasi — faqat parol kuchiga bog'liq** (Argon2id 64 MiB/3/1); parol siyosati (≥ 8 belgi) minimal.
+76. **Inkremental eksport** oxirgi muvaffaqiyatli eksport vaqtidan (`settings.interchange.last_export`) boshlanadi; ikkinchi qurilmaga bir necha marta ketma-ket eksport qilishda fayllarni ketma-ket qo'llash tavsiya etiladi (ota yozuv yo'q bo'lsa `REJECTED`).

@@ -7,6 +7,7 @@ mod ceremonies;
 mod commands;
 mod debts;
 mod dto;
+mod exchange;
 mod family;
 mod guard;
 mod ledger;
@@ -196,6 +197,12 @@ fn specta_builder() -> Builder<tauri::Wry> {
         ventures::remove_craft_idea,
         ventures::craft_to_contract,
         ventures::check_offer,
+        exchange::exchange_status,
+        exchange::export_baraka,
+        exchange::import_baraka_pick,
+        exchange::import_baraka_preview,
+        exchange::import_baraka_apply,
+        exchange::import_baraka_cancel,
         hide_quick_window,
     ])
 }
@@ -218,6 +225,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tray::shortcut_plugin())
         .manage(saving::ImportStore::default())
+        .manage(exchange::PendingImport::default())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);

@@ -18,6 +18,10 @@ pub enum SecurityError {
     Io(String),
     #[error("seyf fayli buzilgan: {0}")]
     Corrupt(String),
+    #[error("parol noto'g'ri yoki fayl buzilgan")]
+    WrongPassword,
+    #[error("parol kamida 8 ta belgidan iborat bo'lsin")]
+    WeakPassword,
     #[error("kriptografiya xatosi")]
     Crypto,
 }

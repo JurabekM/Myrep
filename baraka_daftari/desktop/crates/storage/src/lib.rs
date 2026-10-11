@@ -6,6 +6,7 @@ mod error;
 mod migrations;
 mod row;
 
+pub mod interchange;
 pub mod repo;
 
 pub use db::{Database, DB_KEY_LEN};

@@ -21,6 +21,7 @@ pub mod habits;
 pub mod havas;
 pub mod home;
 pub mod income;
+pub mod interchange;
 pub mod learning;
 pub mod members;
 pub mod obligations;

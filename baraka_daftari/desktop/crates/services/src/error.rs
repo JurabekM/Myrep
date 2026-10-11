@@ -21,6 +21,12 @@ pub enum ServiceError {
     PinLocked { retry_after_secs: u64 },
     #[error("a'zo uchun PIN o'rnatilmagan")]
     NoPin,
+    #[error("eksport paroli noto'g'ri yoki fayl buzilgan")]
+    WrongPassword,
+    #[error("parol kamida 8 ta belgidan iborat bo'lsin")]
+    WeakPassword,
+    #[error("almashish fayli yaroqsiz: {0}")]
+    BadFile(String),
     #[error("pauza tugamagan: {remaining_secs} soniya qoldi")]
     Cooling { remaining_secs: i64 },
 }

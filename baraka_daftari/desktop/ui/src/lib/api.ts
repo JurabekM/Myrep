@@ -23,6 +23,7 @@ export function errorMessage(t: TFunction, e: unknown): string {
   const err = e.error;
   switch (err.kind) {
     case 'Invalid':
+    case 'BadFile':
       return err.message;
     case 'Cooling':
       return t('errors.Cooling', { count: err.remaining_secs });

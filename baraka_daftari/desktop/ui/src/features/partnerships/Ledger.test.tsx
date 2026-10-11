@@ -120,7 +120,7 @@ describe('Ledger', () => {
       open: null,
       closed: [
         {
-          ...(open),
+          ...open,
           id: 'per0',
           closed: true,
           end_date: '2025-12-31',

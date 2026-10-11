@@ -7,6 +7,7 @@
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 mod autolock;
+pub mod container;
 mod error;
 mod keystore;
 mod lockout;

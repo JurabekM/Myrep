@@ -61,7 +61,7 @@ impl KdfParams {
     }
 
     /// Fayldan o'qilgan parametrlar DoS uchun cheklanadi.
-    fn validate(self) -> Result<Self, SecurityError> {
+    pub(crate) fn validate(self) -> Result<Self, SecurityError> {
         if self.m_kib < 8
             || self.m_kib > 1 << 20
             || self.t == 0
