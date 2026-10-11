@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../app_session.dart';
 import '../auth.dart';
+import '../sync/ops.dart' as ops;
+import '../theme.dart';
 
-/// Foydalanuvchilar (faqat do'kon egasi): ro'yxat, kassir qo'shish, faollashtirish/o'chirish.
+/// Foydalanuvchilar va qurilmalar (faqat egasi qurilmasi va egasi hisobi): tasdiq, bloklash, kassirlar.
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key, required this.session});
 
@@ -17,29 +19,46 @@ const _roleNames = {'owner': 'Egasi', 'cashier': 'Kassir'};
 
 class _UsersScreenState extends State<UsersScreen> {
   List<Map<String, dynamic>> _users = const [];
+  List<Map<String, dynamic>> _devices = const [];
 
   @override
   void initState() {
     super.initState();
+    widget.session.addListener(_reload);
     _reload();
   }
 
+  @override
+  void dispose() {
+    widget.session.removeListener(_reload);
+    super.dispose();
+  }
+
   Future<void> _reload() async {
-    final users = await widget.session.users();
-    if (!mounted) return;
-    setState(() => _users = users);
+    try {
+      final users = await widget.session.users();
+      final devices = await widget.session.devices();
+      if (!mounted) return;
+      setState(() {
+        _users = users;
+        _devices = devices;
+      });
+    } on AuthException catch (e) {
+      _showError(e);
+    }
   }
 
   void _showError(Object e) {
+    if (!mounted) return;
     final text = e is AuthException ? e.message : '$e';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Future<void> _toggle(Map<String, dynamic> user, bool active) async {
+  Future<void> _run(Future<void> Function() action) async {
     try {
-      await widget.session.setUserActive(user['id'] as String, active: active);
+      await action();
       await _reload();
-    } on AuthException catch (e) {
+    } on Object catch (e) {
       _showError(e);
     }
   }
@@ -54,29 +73,145 @@ class _UsersScreenState extends State<UsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final requests = widget.session.joinRequests;
     return Scaffold(
-      appBar: AppBar(title: const Text('Foydalanuvchilar')),
+      appBar: AppBar(title: const Text('Foydalanuvchilar va qurilmalar')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addCashier,
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text("Kassir qo'shish"),
       ),
-      body: ListView.separated(
-        itemCount: _users.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
-        itemBuilder: (context, i) {
-          final u = _users[i];
-          final isOwner = u['role'] == 'owner';
-          return SwitchListTile(
-            title: Text(u['name'] as String),
-            subtitle: Text(
-              '${u['login']} · ${_roleNames[u['role']] ?? u['role']}',
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 96),
+        children: [
+          _Section(title: 'Tasdiq kutayotgan qurilmalar (${requests.length})'),
+          if (requests.isEmpty)
+            const ListTile(
+              title: Text("Yangi so'rov yo'q"),
+              subtitle: Text("Qurilma juftlash kodi bilan so'raganda shu yerda ko'rinadi"),
             ),
-            value: u['active'] == 1,
-            onChanged: isOwner ? null : (v) => _toggle(u, v),
-          );
-        },
+          for (final request in requests)
+            _JoinRequestTile(
+              request: request,
+              onApprove: (role) => _run(
+                () => widget.session.approveJoin(request, role: role),
+              ),
+              onReject: () {
+                widget.session.rejectJoin(request);
+                setState(() {});
+              },
+            ),
+          const Divider(height: 24),
+          const _Section(title: 'Qurilmalar'),
+          for (final d in _devices)
+            _DeviceTile(
+              device: d,
+              onActive: (v) => _run(
+                () => widget.session.setDeviceState(d['device_id'] as String, active: v),
+              ),
+              onRole: () => _run(
+                () => widget.session.setDeviceState(
+                  d['device_id'] as String,
+                  role: d['role'] == ops.roleCashier ? ops.roleOwner : ops.roleCashier,
+                ),
+              ),
+            ),
+          const Divider(height: 24),
+          const _Section(title: 'Foydalanuvchilar (kassirlar)'),
+          for (final u in _users)
+            SwitchListTile(
+              title: Text(u['name'] as String),
+              subtitle: Text('${u['login']} · ${_roleNames[u['role']] ?? u['role']}'),
+              value: u['active'] == true,
+              onChanged: u['role'] == 'owner'
+                  ? null
+                  : (v) => _run(() => widget.session.setUserActive(u['id'] as String, active: v)),
+            ),
+        ],
       ),
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Text(title, style: const TextStyle(color: kMuted, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _JoinRequestTile extends StatelessWidget {
+  const _JoinRequestTile({
+    required this.request,
+    required this.onApprove,
+    required this.onReject,
+  });
+
+  final Map<String, dynamic> request;
+  final void Function(String role) onApprove;
+  final VoidCallback onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    final payload = request['payload'] as Map<String, dynamic>;
+    final label = (payload['label'] ?? '').toString();
+    return ListTile(
+      leading: const Icon(Icons.devices_other),
+      title: Text(label.isEmpty ? 'Yangi qurilma' : label),
+      subtitle: Text('ID: ${(payload['device_id'] as String).substring(0, 8)}'),
+      trailing: Wrap(
+        spacing: 4,
+        children: [
+          TextButton(onPressed: () => onApprove(ops.roleCashier), child: const Text('Kassir')),
+          TextButton(onPressed: () => onApprove(ops.roleOwner), child: const Text('Egasi')),
+          TextButton(onPressed: onReject, child: const Text('Rad')),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeviceTile extends StatelessWidget {
+  const _DeviceTile({required this.device, required this.onActive, required this.onRole});
+
+  final Map<String, dynamic> device;
+  final void Function(bool active) onActive;
+  final VoidCallback onRole;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOwner = device['role'] == ops.roleOwner;
+    final active = device['active'] == true;
+    return ListTile(
+      leading: Icon(
+        isOwner ? Icons.admin_panel_settings_outlined : Icons.point_of_sale,
+        color: active ? kSuccess : kDanger,
+      ),
+      title: Text((device['label'] ?? '').toString().isEmpty ? 'Qurilma' : device['label'] as String),
+      subtitle: Text(
+        '${_roleNames[device['role']] ?? device['role']} · '
+        '${active ? 'faol' : 'bloklangan'} · ${(device['device_id'] as String).substring(0, 8)}',
+      ),
+      trailing: isOwner
+          ? const Text('egasi', style: TextStyle(color: kMuted))
+          : Wrap(
+              spacing: 4,
+              children: [
+                IconButton(
+                  tooltip: 'Rolni almashtirish',
+                  onPressed: onRole,
+                  icon: const Icon(Icons.swap_horiz),
+                ),
+                Switch(value: active, onChanged: onActive),
+              ],
+            ),
     );
   }
 }

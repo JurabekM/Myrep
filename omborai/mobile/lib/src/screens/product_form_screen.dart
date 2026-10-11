@@ -121,7 +121,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _unit,
+            initialValue: _unit,
             decoration: const InputDecoration(labelText: 'Birlik'),
             items: [
               for (final u in _units)

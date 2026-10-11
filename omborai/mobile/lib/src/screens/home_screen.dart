@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_session.dart';
 import '../money.dart';
+import '../theme.dart';
 import 'login_screen.dart';
 import 'pairing_screen.dart';
 import 'products_screen.dart';
@@ -101,8 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(session.storeName ?? 'OmborAI'),
         actions: [
           IconButton(
-            tooltip: 'Juftlash (kalit)',
-            onPressed: () => _open(PairingScreen(session: session)),
+            tooltip: session.canManage
+                ? 'Juftlash (kalit)'
+                : "Faqat do'kon egasi qurilmasida",
+            onPressed: session.canManage
+                ? () => _open(PairingScreen(session: session))
+                : null,
             icon: const Icon(Icons.key_outlined),
           ),
           IconButton(
@@ -174,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: session.hasStore
+            onPressed: session.hasStore && session.canManage
                 ? () => _open(ProductsScreen(session: session))
                 : null,
             icon: const Icon(Icons.inventory_2_outlined),
@@ -183,20 +188,24 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text('Tovarlar'),
             ),
           ),
-          if (session.isOwner) ...[
+          if (session.canManage) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => _open(UsersScreen(session: session)),
               icon: const Icon(Icons.people_outline),
-              label: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Text('Foydalanuvchilar'),
+              label: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Text(
+                  session.joinRequests.isEmpty
+                      ? 'Foydalanuvchilar va qurilmalar'
+                      : 'Foydalanuvchilar: ${session.joinRequests.length} ta tasdiq kutilmoqda',
+                ),
               ),
             ),
           ],
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: session.hasStore
+            onPressed: session.hasStore && session.canManage
                 ? () => _open(RefundsScreen(session: session))
                 : null,
             icon: const Icon(Icons.undo),
@@ -205,6 +214,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text('Qaytarish'),
             ),
           ),
+          if (!session.canManage)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Text(
+                "Tovar, qaytarish va foydalanuvchilar faqat do'kon egasi qurilmasida "
+                "egasi hisobi bilan bajariladi.",
+                style: TextStyle(color: kMuted),
+              ),
+            ),
         ],
       ),
     );

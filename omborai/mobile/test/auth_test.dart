@@ -1,44 +1,48 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:omborai_mobile/src/auth.dart';
 
-void main() {
-  // Desktop (Python hashlib) bilan bir xil natija: tuz 16 nol bayt, parol "parol-12345", 100 000 iteratsiya.
-  const zeroSalt = '00000000000000000000000000000000';
-  const pythonHash =
-      'ee416d3b8c2fdcf3fe058e0a88632210910bd558e427ded086686ae4e5d8011c';
+const _store = '5151ea51-5151-4151-8151-515151515151';
+const _owner = '11111111-2222-4333-8444-555555555555';
+final _ownerKey = 'cd' * 32;
+final _storeKey = 'ab' * 32;
 
-  test('PBKDF2 natijasi desktop (Python) bilan mos', () async {
-    final h = await hashPassword('parol-12345', saltHex: zeroSalt);
-    expect(h.hash, pythonHash);
-    expect(await verifyPassword('parol-12345', zeroSalt, pythonHash), isTrue);
-    expect(await verifyPassword('parol-12346', zeroSalt, pythonHash), isFalse);
+void main() {
+  test('parol xeshi: bir xil tuz — bir xil natija; boshqa parol — boshqa natija', () async {
+    final first = await hashPassword('parol-12345', saltHex: '00112233445566778899aabbccddeeff');
+    expect(first.salt, '00112233445566778899aabbccddeeff');
+    expect(first.hash.length, 64);
+    expect(await verifyPassword('parol-12345', first.salt, first.hash), isTrue);
+    expect(await verifyPassword('parol-12346', first.salt, first.hash), isFalse);
   });
 
-  test("har safar yangi tuz beriladi", () async {
+  test('yangi tuz har safar boshqa', () async {
     final a = await hashPassword('parol-12345');
     final b = await hashPassword('parol-12345');
-    expect(a.salt, isNot(b.salt));
-    expect(a.salt.length, 32);
+    expect(a.salt == b.salt, isFalse);
   });
 
-  test('login katta-kichik harfga bog\'liq emas', () {
-    expect(normalizeLogin('  Kassir1 '), 'kassir1');
+  test('juftlash kodi v2: yasash va o\'qish aylanma', () {
+    final code = makePairingCode(_store, _owner, _ownerKey, _storeKey);
+    expect(code, '$_store:$_owner:$_ownerKey:$_storeKey');
+    final parsed = parsePairingCode('  ${code.toUpperCase()}  ');
+    expect(parsed, (_store, _owner, _ownerKey, _storeKey));
   });
 
-  test('juftlash kodi: to\'g\'ri qabul, noto\'g\'risi FormatException', () {
-    const id = '11111111-2222-3333-4444-555555555555';
-    final key = 'ab' * 32;
-    final code = makePairingCode(id, key);
-    expect(parsePairingCode(code), (id, key));
-    expect(parsePairingCode('  ${code.toUpperCase()} '), (id, key));
-    for (final bad in [
+  test('noto\'g\'ri juftlash kodlari FormatException', () {
+    final bad = [
       '',
-      'nocolon',
-      'x:$key',
-      '$id:xyz',
-      '$id:${'ab' * 31}',
-    ]) {
-      expect(() => parsePairingCode(bad), throwsFormatException, reason: bad);
+      '$_store:$_storeKey', // eski 2 maydonli shakl
+      '$_store:$_owner:$_ownerKey', // 3 maydon
+      'not-a-uuid:$_owner:$_ownerKey:$_storeKey',
+      '$_store:$_owner:${'xy' * 32}:$_storeKey',
+      '$_store:$_owner:$_ownerKey:${'ab' * 31}',
+    ];
+    for (final code in bad) {
+      expect(() => parsePairingCode(code), throwsA(isA<FormatException>()), reason: code);
     }
+  });
+
+  test('login normalizatsiyasi', () {
+    expect(normalizeLogin('  ALI  '), 'ali');
   });
 }

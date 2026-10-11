@@ -6,16 +6,18 @@ import 'src/app_session.dart';
 import 'src/offline/local_db.dart';
 import 'src/screens/home_screen.dart';
 import 'src/screens/login_screen.dart';
+import 'src/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Lokal baza SQLCipher bilan shifrlanadi; paroli Android Keystore'da saqlanadi.
+  // v2 fayl nomi: eski (v1) baza bilan aralashmasligi uchun.
   final password = await DbPasswordStore().load();
   final db = await LocalDb.open(
-    p.join(await getDatabasesPath(), 'omborai_local.db'),
+    p.join(await getDatabasesPath(), 'omborai_local_v2.db'),
     password: password,
   );
-  final session = AppSession(db: db, keys: StoreKeyStore());
+  final session = AppSession(db: db, keys: StoreKeyStore(), deviceSeeds: DeviceSeedStore());
   runApp(OmborApp(session: session));
 }
 
@@ -29,16 +31,10 @@ class OmborApp extends StatelessWidget {
     return MaterialApp(
       title: 'OmborAI',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF0F766E),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: const Color(0xFF2DD4BF),
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system,
+      // Har doim tungi mavzu (desktop bilan bir xil): yorug' rejim yo'q
+      theme: appTheme(),
+      darkTheme: appTheme(),
+      themeMode: ThemeMode.dark,
       home: _Bootstrap(session: session),
     );
   }

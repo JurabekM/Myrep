@@ -62,24 +62,40 @@ Future<bool> verifyPassword(
 
 String normalizeLogin(String login) => login.trim().toLowerCase();
 
-String makePairingCode(String storeId, String keyHex) => '$storeId:$keyHex';
+/// Juftlash kodi (v2): `<store_id>:<owner_device_id>:<owner_public_key_hex>:<store_key_hex>`.
+/// Faqat egasi qurilmasi ko'rsatadi (docs/sync-mqtt.md, 3-bo'lim).
+String makePairingCode(
+  String storeId,
+  String ownerDeviceId,
+  String ownerPublicKeyHex,
+  String keyHex,
+) => '$storeId:$ownerDeviceId:$ownerPublicKeyHex:$keyHex';
 
-/// Juftlash kodini tekshiradi va (store_id, kalit hex) qaytaradi. Noto'g'ri bo'lsa FormatException.
-(String, String) parsePairingCode(String code) {
-  final cleaned = code.trim().toLowerCase();
-  final sep = cleaned.indexOf(':');
-  if (sep < 0) throw const FormatException("Juftlash kodi noto'g'ri formatda");
-  final storeId = cleaned.substring(0, sep);
-  final keyHex = cleaned.substring(sep + 1);
-  if (!_uuidPattern.hasMatch(storeId)) {
-    throw const FormatException("Juftlash kodida do'kon ID noto'g'ri");
+/// Juftlash kodini tekshiradi: (store_id, owner_device_id, owner_public_key_hex, key_hex).
+/// Noto'g'ri bo'lsa FormatException.
+(String, String, String, String) parsePairingCode(String code) {
+  final parts = code.trim().toLowerCase().split(':');
+  if (parts.length != 4) {
+    throw const FormatException("Juftlash kodi noto'g'ri formatda");
+  }
+  final storeId = parts[0];
+  final ownerDeviceId = parts[1];
+  final ownerKey = parts[2];
+  final keyHex = parts[3];
+  if (!_uuidPattern.hasMatch(storeId) || !_uuidPattern.hasMatch(ownerDeviceId)) {
+    throw const FormatException("Juftlash kodida ID noto'g'ri");
+  }
+  if (!_hex64.hasMatch(ownerKey)) {
+    throw const FormatException(
+      "Juftlash kodida egasi kaliti noto'g'ri (64 belgi kerak)",
+    );
   }
   if (!_hex64.hasMatch(keyHex)) {
     throw const FormatException(
-      "Juftlash kodida kalit noto'g'ri (64 belgi kerak)",
+      "Juftlash kodida do'kon kaliti noto'g'ri (64 belgi kerak)",
     );
   }
-  return (storeId, keyHex);
+  return (storeId, ownerDeviceId, ownerKey, keyHex);
 }
 
 bool _constantTimeEquals(String a, String b) {

@@ -9,27 +9,40 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import 'crypto.dart';
 import 'ops.dart';
 
-/// MQTT transport (docs/sync-mqtt.md). Desktop bilan bir xil protokol.
+/// MQTT transport (protokol v2, docs/sync-mqtt.md, 8-bo'lim). Desktop `mqtt_sync.py` bilan bir xil.
 ///
-/// [applyOp] — operatsiyani lokal bazaga qo'llaydi (dedupe bazada). [onRequest] — snapshot_request kelganda.
+/// - Sessiya persistent (`clean start` yo'q): ulanish uzilganda broker xabarlarni saqlaydi.
+/// - [send] PUBACK kelguncha kutadi: chaqiruvchi navbatdan faqat shundan keyin o'chiradi (K4).
+/// - Xabarni qayta ishlash xatolari ushlanadi: qabul oqimi o'lmaydi (Y2).
 class MqttSync {
   MqttSync({
     required this.key,
     required this.deviceId,
     required this.applyOp,
     this.onRequest,
+    this.onJoinRequest,
     this.host = 'broker.hivemq.com',
     this.port = 8883,
     this.secure = true,
+    this.ackTimeout = const Duration(seconds: 10),
   });
 
   final Uint8List key;
   final String deviceId;
-  final Future<bool> Function(Map<String, dynamic> op) applyOp;
+
+  /// Operatsiyani qo'llaydi (LocalDb.applyOp). Natija: resultApplied, resultRejected, ...
+  final Future<String> Function(Map<String, dynamic> op) applyOp;
+
+  /// snapshot_request kelganda (faqat egasi qurilmasi javob beradi).
   void Function(Map<String, dynamic> request)? onRequest;
+
+  /// join_request kelganda (egasi tasdig'i uchun).
+  void Function(Map<String, dynamic> request)? onJoinRequest;
+
   final String host;
   final int port;
   final bool secure;
+  final Duration ackTimeout;
 
   MqttServerClient? _client;
   StreamSubscription<dynamic>? _updates;
@@ -45,13 +58,12 @@ class MqttSync {
       ..secure = secure
       ..keepAlivePeriod = 30
       ..autoReconnect = true
-      ..logging(on: false);
-    client.onConnected = () {
-      _connected = true;
-    };
-    client.onDisconnected = () {
-      _connected = false;
-    };
+      ..resubscribeOnAutoReconnect = true
+      ..logging(on: false)
+      // Persistent sessiya: startClean() chaqirilmaydi (mqtt_client default'i clean start)
+      ..connectionMessage = MqttConnectMessage().withClientIdentifier('omborai-$deviceId');
+    client.onConnected = () => _connected = true;
+    client.onDisconnected = () => _connected = false;
     if (secure) client.securityContext = SecurityContext.defaultContext;
     _client = client;
 
@@ -73,11 +85,12 @@ class MqttSync {
 
   Future<void> stop() async {
     await _updates?.cancel();
+    _updates = null;
     _client?.disconnect();
     _connected = false;
   }
 
-  /// Operatsiyani shifrlab nashr qiladi. Ulanmagan bo'lsa StateError.
+  /// Operatsiyani shifrlab nashr qiladi va broker PUBACK'ini kutadi. Ulanmagan bo'lsa StateError.
   Future<void> send(Map<String, dynamic> op) async {
     final client = _client;
     final topic = _topic;
@@ -85,25 +98,46 @@ class MqttSync {
       throw StateError('MQTT broker bilan ulanmagan');
     }
     final envelope = await seal(key, op, topic);
-    final builder = MqttClientPayloadBuilder()
-      ..addString(utf8.decode(envelope));
-    client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+    final builder = MqttClientPayloadBuilder()..addString(utf8.decode(envelope));
+    // PUBACK oqimi nashrdan OLDIN tinglanishi kerak: mqtt_client faqat tinglovchi bo'lsa xabar beradi
+    final acked = Completer<void>();
+    int? messageId;
+    final subscription = client.published!.listen((message) {
+      if (messageId != null && message.variableHeader?.messageIdentifier == messageId) {
+        if (!acked.isCompleted) acked.complete();
+      }
+    });
+    try {
+      messageId = client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+      await acked.future.timeout(ackTimeout);
+    } on TimeoutException {
+      throw StateError('PUBACK kelmadi: broker tasdiqlamadi');
+    } finally {
+      await subscription.cancel();
+    }
   }
 
   Future<void> _onMessage(Uint8List raw) async {
-    final topic = _topic;
-    if (topic == null) return;
-    final Map<String, dynamic> op;
     try {
-      op = await openEnvelope(key, raw, topic);
-    } on DecryptionException {
-      return; // boshqa kalit yoki buzilgan xabar
+      final topic = _topic;
+      if (topic == null) return;
+      final Map<String, dynamic> op;
+      try {
+        op = await openEnvelope(key, raw, topic);
+      } on DecryptionException {
+        return; // boshqa kalit yoki buzilgan xabar
+      }
+      if (op['device'] == deviceId) return; // o'z xabarimiz allaqachon qo'llangan
+      switch (op['type']) {
+        case opSnapshotRequest:
+          onRequest?.call(op);
+        case opJoinRequest:
+          onJoinRequest?.call(op);
+        default:
+          await applyOp(op);
+      }
+    } on Object {
+      // Xato ilovani to'xtatmasin: keyingi xabarlar qayta ishlanadi
     }
-    if (op['device'] == deviceId) return; // o'z xabarimiz allaqachon qo'llangan
-    if (op['type'] == opSnapshotRequest) {
-      onRequest?.call(op);
-      return;
-    }
-    await applyOp(op);
   }
 }
