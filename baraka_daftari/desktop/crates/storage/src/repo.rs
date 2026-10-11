@@ -1648,3 +1648,217 @@ impl Record for BuyoutPayment {
         })
     }
 }
+
+use domain::{
+    CraftCapex, CraftIdea, LedgerKind, PeriodStatus, VentureAttachment, VentureDistribution,
+    VentureEntry, VenturePeriod,
+};
+
+impl Record for VenturePeriod {
+    const TABLE: &'static str = "venture_periods";
+    const COLS: &'static [&'static str] = &[
+        "partnership_id",
+        "period_no",
+        "start_date",
+        "end_date",
+        "status",
+        "net_minor",
+        "currency",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.partnership_id),
+            Value::Integer(i64::from(self.period_no)),
+            date_val(self.start_date)?,
+            opt_date(self.end_date)?,
+            t(self.status.as_str()),
+            self.net.map_or(Value::Null, |m| Value::Integer(m.minor())),
+            t(self.net.map_or("UZS", |m| m.currency().code())),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 13)?;
+        let net: Option<i64> = r.get(12)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            period_no: r.get(8)?,
+            start_date: row::date(r, 9)?,
+            end_date: opt_row_date(r, 10)?,
+            status: row::parsed(r, 11, PeriodStatus::parse)?,
+            net: net.map(|m| Money::new(m, cur)),
+        })
+    }
+}
+
+impl Record for VentureEntry {
+    const TABLE: &'static str = "venture_entries";
+    const COLS: &'static [&'static str] = &[
+        "partnership_id",
+        "period_id",
+        "kind",
+        "description",
+        "amount_minor",
+        "currency",
+        "occurred_on",
+        "note",
+        "force_majeure",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.amount);
+        Ok(vec![
+            t(&self.partnership_id),
+            t(&self.period_id),
+            t(self.kind.as_str()),
+            t(&self.description),
+            minor,
+            cur,
+            date_val(self.occurred_on)?,
+            opt_text(self.note.as_deref()),
+            Value::Integer(i64::from(self.force_majeure)),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            partnership_id: r.get(7)?,
+            period_id: r.get(8)?,
+            kind: row::parsed(r, 9, LedgerKind::parse)?,
+            description: r.get(10)?,
+            amount: row::money(r, 11, 12)?,
+            occurred_on: row::date(r, 13)?,
+            note: r.get(14)?,
+            force_majeure: r.get::<_, i64>(15)? != 0,
+        })
+    }
+}
+
+impl Record for VentureAttachment {
+    const TABLE: &'static str = "venture_attachments";
+    const COLS: &'static [&'static str] = &["entry_id", "filename", "mime", "data"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.entry_id),
+            t(&self.filename),
+            t(&self.mime),
+            Value::Blob(self.data.clone()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            entry_id: r.get(7)?,
+            filename: r.get(8)?,
+            mime: r.get(9)?,
+            data: r.get(10)?,
+        })
+    }
+}
+
+impl Record for VentureDistribution {
+    const TABLE: &'static str = "venture_distributions";
+    const COLS: &'static [&'static str] = &[
+        "period_id",
+        "party_id",
+        "amount_minor",
+        "buyout_minor",
+        "currency",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.period_id),
+            t(&self.party_id),
+            Value::Integer(self.amount.minor()),
+            Value::Integer(self.buyout_delta.minor()),
+            t(self.amount.currency().code()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 11)?;
+        Ok(Self {
+            meta: row::meta(r)?,
+            period_id: r.get(7)?,
+            party_id: r.get(8)?,
+            amount: Money::new(r.get(9)?, cur),
+            buyout_delta: Money::new(r.get(10)?, cur),
+        })
+    }
+}
+
+impl Record for CraftIdea {
+    const TABLE: &'static str = "craft_ideas";
+    const COLS: &'static [&'static str] = &[
+        "name",
+        "note",
+        "currency",
+        "income_pess",
+        "income_avg",
+        "income_opt",
+        "expense_pess",
+        "expense_avg",
+        "expense_opt",
+        "share_bp",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.name),
+            opt_text(self.note.as_deref()),
+            t(self.income[0].currency().code()),
+            Value::Integer(self.income[0].minor()),
+            Value::Integer(self.income[1].minor()),
+            Value::Integer(self.income[2].minor()),
+            Value::Integer(self.expense[0].minor()),
+            Value::Integer(self.expense[1].minor()),
+            Value::Integer(self.expense[2].minor()),
+            self.share_bp
+                .map_or(Value::Null, |b| Value::Integer(i64::from(b))),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let cur = row::currency(r, 9)?;
+        let m = |i: usize| -> rusqlite::Result<Money> { Ok(Money::new(r.get(i)?, cur)) };
+        Ok(Self {
+            meta: row::meta(r)?,
+            name: r.get(7)?,
+            note: r.get(8)?,
+            income: [m(10)?, m(11)?, m(12)?],
+            expense: [m(13)?, m(14)?, m(15)?],
+            share_bp: r.get(16)?,
+        })
+    }
+}
+
+impl Record for CraftCapex {
+    const TABLE: &'static str = "craft_capex";
+    const COLS: &'static [&'static str] = &["idea_id", "item", "price_minor", "currency"];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, cur] = money_vals(self.price);
+        Ok(vec![t(&self.idea_id), t(&self.item), minor, cur])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            idea_id: r.get(7)?,
+            item: r.get(8)?,
+            price: row::money(r, 9, 10)?,
+        })
+    }
+}

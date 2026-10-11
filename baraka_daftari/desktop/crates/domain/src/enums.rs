@@ -113,6 +113,8 @@ str_enum!(
     /// Shartnoma tasdig'i turi: tomon, guvoh yoki oilaviy rozilik (kapital qabul qilishda).
     SignatureKind { Party => "PARTY", Witness => "WITNESS", FamilyConsent => "FAMILY_CONSENT" }
 );
+str_enum!(LedgerKind { Income => "INCOME", Expense => "EXPENSE" });
+str_enum!(PeriodStatus { Open => "OPEN", Closed => "CLOSED" });
 
 #[cfg(test)]
 mod tests {

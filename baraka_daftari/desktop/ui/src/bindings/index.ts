@@ -215,6 +215,27 @@ export const commands = {
 	recordBuyoutPayment: (id: string, amountText: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_buyout_payment", { id, amountText })),
 	/**  Shartnoma PDF'ini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None`. */
 	exportContractPdf: (id: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_contract_pdf", { id })),
+	ventureLedger: (partnershipId: string) => typedError<LedgerDto, CommandError>(__TAURI_INVOKE("venture_ledger", { partnershipId })),
+	addVentureEntry: (partnershipId: string, input: EntryInput) => typedError<EntryDto, CommandError>(__TAURI_INVOKE("add_venture_entry", { partnershipId, input })),
+	removeVentureEntry: (entryId: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_venture_entry", { entryId })),
+	/**  Chek/rasm tanlash oynasi (PNG, JPEG, PDF) — fayl Rust tomonida o'qiladi. Bekor qilinsa `None`. */
+	attachEvidence: (entryId: string) => typedError<{
+	id: string,
+	filename: string,
+	mime: string,
+	size: number,
+} | null, CommandError>(__TAURI_INVOKE("attach_evidence", { entryId })),
+	/**  Dalilni OS «saqlash» oynasi orqali nusxalaydi. */
+	exportEvidence: (id: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_evidence", { id })),
+	closeVenturePeriod: (partnershipId: string, endDate: string | null, negligenceNote: string | null) => typedError<PeriodDto, CommandError>(__TAURI_INVOKE("close_venture_period", { partnershipId, endDate, negligenceNote })),
+	/**  Yopilgan davr hisoboti (PDF) — OS «saqlash» oynasi orqali. */
+	exportPeriodReport: (periodId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_period_report", { periodId })),
+	listCraftIdeas: () => typedError<IdeaDto[], CommandError>(__TAURI_INVOKE("list_craft_ideas")),
+	addCraftIdea: (input: IdeaInput) => typedError<IdeaDto, CommandError>(__TAURI_INVOKE("add_craft_idea", { input })),
+	removeCraftIdea: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("remove_craft_idea", { id })),
+	/**  Bir bosishda sheriklik shartnomasi qoralamasi. */
+	craftToContract: (ideaId: string, providerName: string) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("craft_to_contract", { ideaId, providerName })),
+	checkOffer: (input: OfferInput) => __TAURI_INVOKE<OfferDto>("check_offer", { input }),
 	/**  Tez xarajat oynasini yashiradi. */
 	hideQuickWindow: () => __TAURI_INVOKE<void>("hide_quick_window"),
 };
@@ -232,6 +253,13 @@ export type AmortizationDto = {
 	months: number,
 	total_interest: MoneyDto,
 	schedule: ScheduleRowDto[],
+};
+
+export type AttachmentDto = {
+	id: string,
+	filename: string,
+	mime: string,
+	size: number,
 };
 
 export type BlockDto = {
@@ -276,6 +304,16 @@ export type CalculatorDto = {
 	accelerated: AmortizationDto,
 	months_saved: number,
 	interest_saved: MoneyDto,
+};
+
+export type CapexInput = {
+	item: string,
+	price: string,
+};
+
+export type CapexItemDto = {
+	item: string,
+	price: MoneyDto,
 };
 
 export type CapitalInput = {
@@ -402,6 +440,12 @@ export type ContributorDto = {
 	paid: MoneyDto,
 };
 
+export type CraftScenarioDto = {
+	net: MoneyDto,
+	net_after_share: MoneyDto,
+	payback_months: number | null,
+};
+
 export type CsvMappingInput = {
 	date_col: number,
 	amount_col: number,
@@ -506,6 +550,36 @@ export type DebtOverviewDto = {
 };
 
 export type DemoError = { kind: "InvalidInput"; message: string };
+
+export type DistributionDto = {
+	party_name: string,
+	/**  `CAPITAL_PROVIDER` | `WORKER` | `PARTNER`. */
+	role: string,
+	amount: MoneyDto,
+	buyout_delta: MoneyDto,
+};
+
+export type EntryDto = {
+	id: string,
+	/**  `INCOME` | `EXPENSE`. */
+	kind: string,
+	description: string,
+	amount: MoneyDto,
+	occurred_on: string,
+	note: string | null,
+	force_majeure: boolean,
+	attachments: AttachmentDto[],
+};
+
+export type EntryInput = {
+	/**  `INCOME` | `EXPENSE`. */
+	kind: string,
+	description: string,
+	amount: string,
+	occurred_on: string | null,
+	note: string | null,
+	force_majeure: boolean,
+};
 
 export type EnvelopeDto = {
 	id: string,
@@ -643,6 +717,28 @@ export type HomeDto = {
 	pending_withdrawals: number,
 };
 
+export type IdeaDto = {
+	id: string,
+	name: string,
+	note: string | null,
+	capex: CapexItemDto[],
+	capex_total: MoneyDto,
+	share_bp: number | null,
+	/**  Pessimistik, o'rtacha, optimistik. */
+	scenarios: CraftScenarioDto[],
+};
+
+export type IdeaInput = {
+	name: string,
+	note: string | null,
+	capex: CapexInput[],
+	/**  Oylik kirim: pessimistik, o'rtacha, optimistik. */
+	income: string[],
+	expense: string[],
+	/**  Sheriklik bo'lsa mening ulushim (bp). */
+	share_bp: number | null,
+};
+
 export type IncomeDto = {
 	id: string,
 	source: string,
@@ -705,6 +801,14 @@ export type JourneyDto = {
 	policy: PolicyDto,
 };
 
+export type LedgerDto = {
+	open: PeriodDto | null,
+	closed: PeriodDto[],
+	/**  Xonadon faqat kapital egasi: o'qish rejimi. */
+	read_only: boolean,
+	active: boolean,
+};
+
 export type MemberDto = {
 	id: string,
 	name: string,
@@ -743,6 +847,21 @@ export type ObligationInput = {
 	due_day: number,
 	/**  `LANDLORD` | `BANK` | `SHOP` | `STATE` | `FUEL` | `OTHER`. */
 	owner: string,
+};
+
+export type OfferDto = {
+	/**  `GREEN` | `YELLOW` | `RED`. */
+	verdict: string,
+	flags: string[],
+};
+
+export type OfferInput = {
+	guaranteed_profit: boolean,
+	loss_shared: boolean,
+	real_goods_or_work: boolean,
+	requires_recruiting: boolean,
+	pressure_to_hurry: boolean,
+	written_contract: boolean,
 };
 
 export type OverviewDto = {
@@ -830,6 +949,19 @@ export type PendingLimitDto = {
 	consented: string[],
 	/**  Hali rozi bo'lmagan kattalar: (ID, ism). */
 	missing: MemberRef[],
+};
+
+export type PeriodDto = {
+	id: string,
+	period_no: number,
+	start_date: string,
+	end_date: string | null,
+	closed: boolean,
+	income: MoneyDto,
+	expenses: MoneyDto,
+	net: MoneyDto,
+	entries: EntryDto[],
+	distribution: DistributionDto[],
 };
 
 export type PlanDto = {

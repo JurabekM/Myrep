@@ -122,6 +122,9 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "repay_months" => Ok(run_repay_months),
         "profit_distribution" => Ok(run_profit_distribution),
         "buyout" => Ok(run_buyout),
+        "venture_settlement" => Ok(run_venture_settlement),
+        "craft_payback" => Ok(run_craft_payback),
+        "offer_check" => Ok(run_offer_check),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -903,4 +906,110 @@ fn run_buyout(input: &Value) -> Result<Value, String> {
         }
         other => Err(format!("noma'lum op: {other}")),
     }
+}
+
+fn parse_parties(input: &Value, currency: Currency) -> Result<Vec<domain::PartyInput>, String> {
+    input
+        .get("parties")
+        .and_then(Value::as_array)
+        .ok_or("parties massivi kerak")?
+        .iter()
+        .map(|p| {
+            Ok(domain::PartyInput {
+                role: domain::PartyRole::parse(str_field(p, "role")?)
+                    .ok_or_else(|| "noma'lum role".to_owned())?,
+                capital: Money::new(parse_minor(str_field(p, "capital")?)?, currency),
+                share_bp: u32_field(p, "share_bp")?,
+            })
+        })
+        .collect()
+}
+
+fn run_venture_settlement(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let kind = domain::PartnershipKind::parse(str_field(input, "kind")?).ok_or("noma'lum kind")?;
+    let net = Money::new(parse_minor_signed(str_field(input, "net")?)?, currency);
+    let parties = parse_parties(input, currency)?;
+    let negligence = input
+        .get("negligence")
+        .and_then(Value::as_bool)
+        .ok_or("negligence (bool) kerak")?;
+    let buyout = match input.get("buyout") {
+        Some(b) => Some(domain::BuyoutDue {
+            payer: usize::try_from(int_field(b, "payer")?).map_err(|e| e.to_string())?,
+            seller: usize::try_from(int_field(b, "seller")?).map_err(|e| e.to_string())?,
+            due: Money::new(parse_minor(str_field(b, "due")?)?, currency),
+        }),
+        None => None,
+    };
+    Ok(
+        match domain::settle_period(kind, net, &parties, negligence, buyout) {
+            Ok(s) => serde_json::json!({
+                "shares": s.shares.iter().map(|m| m.minor().to_string()).collect::<Vec<_>>(),
+                "buyout_applied": s.buyout_applied.minor().to_string(),
+            }),
+            Err(_) => serde_json::json!({ "error": "INVALID_PARTIES" }),
+        },
+    )
+}
+
+fn parse_minor_signed(s: &str) -> Result<i64, String> {
+    s.parse::<i64>()
+        .map_err(|_| format!("noto'g'ri butun son: {s}"))
+}
+
+fn run_craft_payback(input: &Value) -> Result<Value, String> {
+    let currency = parse_currency(input, "currency")?;
+    let capex = parse_money(input, "capex", "currency")?;
+    let scenarios = input
+        .get("scenarios")
+        .and_then(Value::as_array)
+        .ok_or("scenarios massivi kerak")?
+        .iter()
+        .map(|s| {
+            Ok(domain::CraftScenarioInput {
+                income: Money::new(parse_minor(str_field(s, "income")?)?, currency),
+                expense: Money::new(parse_minor(str_field(s, "expense")?)?, currency),
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let share = match input.get("share_bp") {
+        Some(v) => Some(
+            v.as_u64()
+                .and_then(|n| u32::try_from(n).ok())
+                .ok_or("share_bp noto'g'ri")?,
+        ),
+        None => None,
+    };
+    Ok(match domain::craft_payback(capex, &scenarios, share) {
+        Ok(r) => serde_json::json!({
+            "scenarios": r.iter().map(|s| serde_json::json!({
+                "net": s.net.minor().to_string(),
+                "net_after_share": s.net_after_share.minor().to_string(),
+                "payback_months": s.payback_months,
+            })).collect::<Vec<_>>()
+        }),
+        Err(e) => serde_json::json!({ "error": e.code() }),
+    })
+}
+
+fn run_offer_check(input: &Value) -> Result<Value, String> {
+    let b = |k: &str| {
+        input
+            .get(k)
+            .and_then(Value::as_bool)
+            .ok_or_else(|| format!("{k} (bool) kerak"))
+    };
+    let r = domain::offer_check(domain::OfferAnswers {
+        guaranteed_profit: b("guaranteed_profit")?,
+        loss_shared: b("loss_shared")?,
+        real_goods_or_work: b("real_goods_or_work")?,
+        requires_recruiting: b("requires_recruiting")?,
+        pressure_to_hurry: b("pressure_to_hurry")?,
+        written_contract: b("written_contract")?,
+    });
+    Ok(serde_json::json!({
+        "verdict": r.verdict.code(),
+        "flags": r.flags.iter().map(|f| f.code()).collect::<Vec<_>>(),
+    }))
 }

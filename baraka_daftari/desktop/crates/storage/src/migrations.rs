@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 10;
+pub const SCHEMA_VERSION: usize = 11;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -192,6 +192,84 @@ CREATE TABLE scheduled_treats (
   name TEXT NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL,
   weekday INTEGER NOT NULL CHECK (weekday BETWEEN 1 AND 7), active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1))
 );
+";
+
+/// D13 (5-qonun): venture ledger (davrlar, yozuvlar, dalillar, taqsimot) va «Hunardan ishga».
+/// **Yopilgan davr o'zgarmasligi bazada triggerlar bilan ham ta'minlanadi.**
+const V11: &str = "
+CREATE TABLE venture_periods (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), period_no INTEGER NOT NULL CHECK (period_no >= 1),
+  start_date TEXT NOT NULL, end_date TEXT, status TEXT NOT NULL CHECK (status IN ('OPEN','CLOSED')),
+  net_minor INTEGER, currency TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_venture_period_no ON venture_periods (partnership_id, period_no) WHERE deleted_at IS NULL;
+CREATE TABLE venture_entries (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  partnership_id TEXT NOT NULL REFERENCES partnerships(id), period_id TEXT NOT NULL REFERENCES venture_periods(id),
+  kind TEXT NOT NULL CHECK (kind IN ('INCOME','EXPENSE')), description TEXT NOT NULL,
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0), currency TEXT NOT NULL, occurred_on TEXT NOT NULL,
+  note TEXT, force_majeure INTEGER NOT NULL DEFAULT 0 CHECK (force_majeure IN (0,1))
+);
+CREATE INDEX idx_venture_entries_period ON venture_entries (period_id);
+CREATE TABLE venture_attachments (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  entry_id TEXT NOT NULL REFERENCES venture_entries(id), filename TEXT NOT NULL, mime TEXT NOT NULL, data BLOB NOT NULL
+);
+CREATE TABLE venture_distributions (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  period_id TEXT NOT NULL REFERENCES venture_periods(id), party_id TEXT NOT NULL REFERENCES partnership_parties(id),
+  amount_minor INTEGER NOT NULL, buyout_minor INTEGER NOT NULL, currency TEXT NOT NULL
+);
+CREATE TABLE craft_ideas (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  name TEXT NOT NULL, note TEXT, currency TEXT NOT NULL,
+  income_pess INTEGER NOT NULL, income_avg INTEGER NOT NULL, income_opt INTEGER NOT NULL,
+  expense_pess INTEGER NOT NULL, expense_avg INTEGER NOT NULL, expense_opt INTEGER NOT NULL,
+  share_bp INTEGER CHECK (share_bp BETWEEN 0 AND 10000)
+);
+CREATE TABLE craft_capex (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  idea_id TEXT NOT NULL REFERENCES craft_ideas(id), item TEXT NOT NULL,
+  price_minor INTEGER NOT NULL CHECK (price_minor >= 0), currency TEXT NOT NULL
+);
+CREATE TRIGGER trg_entries_closed_ins BEFORE INSERT ON venture_entries
+WHEN (SELECT status FROM venture_periods WHERE id = NEW.period_id) = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_entries_closed_upd BEFORE UPDATE ON venture_entries
+WHEN (SELECT status FROM venture_periods WHERE id = OLD.period_id) = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_entries_closed_del BEFORE DELETE ON venture_entries
+WHEN (SELECT status FROM venture_periods WHERE id = OLD.period_id) = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_attach_closed_ins BEFORE INSERT ON venture_attachments
+WHEN (SELECT p.status FROM venture_entries e JOIN venture_periods p ON p.id = e.period_id WHERE e.id = NEW.entry_id) = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_attach_closed_upd BEFORE UPDATE ON venture_attachments
+WHEN (SELECT p.status FROM venture_entries e JOIN venture_periods p ON p.id = e.period_id WHERE e.id = OLD.entry_id) = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_period_closed_upd BEFORE UPDATE ON venture_periods
+WHEN OLD.status = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_period_closed_del BEFORE DELETE ON venture_periods
+WHEN OLD.status = 'CLOSED'
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_dist_upd BEFORE UPDATE ON venture_distributions
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
+CREATE TRIGGER trg_dist_del BEFORE DELETE ON venture_distributions
+BEGIN SELECT RAISE(ABORT, 'closed_period'); END;
 ";
 
 /// D12 (5-qonun): sheriklik shartnomasi, tomonlar, kapital, tasdiqlar, versiyalar va buyout.
@@ -441,6 +519,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V8),
         M::up(V9),
         M::up(V10),
+        M::up(V11),
     ])
 }
 
@@ -477,7 +556,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 45);
+        assert_eq!(tables.len(), 51);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))

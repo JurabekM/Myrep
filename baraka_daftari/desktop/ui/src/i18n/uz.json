@@ -38,7 +38,8 @@
     "prices": "Narx daftari",
     "debts": "Qarzlar",
     "ceremonies": "Marosimlar",
-    "partnerships": "Sheriklik"
+    "partnerships": "Sheriklik",
+    "crafts": "Hunardan ishga"
   },
   "errors": {
     "InvalidPin": "PIN aniq 6 ta raqamdan iborat bo'lishi kerak.",
@@ -883,5 +884,93 @@
     "buyoutPay": "To'lov (so'm)",
     "buyoutRecord": "To'lovni qayd etish",
     "buyoutDone": "Sotib olish yakunlandi: sherik mustaqil bo'ldi."
+  },
+  "ledger": {
+    "title": "Korxona daftari",
+    "separate": "Biznes puli shaxsiy budjetdan alohida yuritiladi.",
+    "readOnly": "Sheriklik faol emas — daftar faqat o'qish uchun.",
+    "openPeriod": "Ochiq davr №{{n}} ({{from}} dan)",
+    "totals": "Kirim: {{income}} · Chiqim: {{expenses}} · Sof: {{net}}",
+    "kind": "Turi",
+    "kinds": {
+      "INCOME": "Kirim",
+      "EXPENSE": "Chiqim"
+    },
+    "desc": "Tavsif",
+    "amount": "Summa (so'm)",
+    "note": "Izoh",
+    "forceMajeure": "Foring-major (ofat)",
+    "forceMajeureLabel": "Bu foring-major (ofat) tufayli zarar",
+    "add": "Yozuvni qo'shish",
+    "attach": "Dalil biriktirish: {{name}}",
+    "evidence": "Dalilni saqlash: {{name}}",
+    "negligence": "Mudorib e'tiborsizligi (izoh, bo'lsa)",
+    "close": "Davrni yopish",
+    "closeHint": "Yopilgan davr o'zgarmaydi. Taqsimot shartnoma bo'yicha hisoblanadi.",
+    "closedTitle": "Yopilgan davrlar",
+    "closedPeriod": "Davr №{{n}}: {{from}} — {{to}}, sof {{net}}",
+    "immutable": "Yopilgan davr tahrirlanmaydi.",
+    "report": "Hisobot (PDF)",
+    "buyoutDelta": "sotib olish: {{amount}}"
+  },
+  "craft": {
+    "intro": "Hunarni ishga aylantiring: asbob-uskuna xarajati va uch xil (yomon/o'rta/yaxshi) senariy bo'yicha qaytim muddati.",
+    "newTitle": "Yangi g'oya",
+    "name": "Nomi",
+    "noteLabel": "Izoh",
+    "share": "Sherik ulushi (%)",
+    "capexTitle": "Boshlang'ich xarajat",
+    "capexItem": "Asbob {{k}}",
+    "capexPrice": "Narx {{k}} (so'm)",
+    "capexAdd": "Qator qo'shish",
+    "income": "Oylik kirim ({{s}})",
+    "expense": "Oylik chiqim ({{s}})",
+    "save": "G'oyani saqlash",
+    "capex": "Boshlang'ich xarajat: {{amount}}",
+    "scenario": "Senariy",
+    "net": "Sof/oy",
+    "afterShare": "Ulushdan keyin",
+    "payback": "Qaytim",
+    "never": "qaytmaydi",
+    "months": "{{n}} oy",
+    "providerName": "Kapital beruvchi ismi",
+    "toContract": "Shartnoma loyihasiga aylantirish",
+    "scenarios": {
+      "pess": "Yomon",
+      "avg": "O'rta",
+      "opt": "Yaxshi"
+    }
+  },
+  "offer": {
+    "title": "Haddan tashqari foyda va'dasi detektori",
+    "hint": "Taklif haqida belgilang — natija ogohlantiruvchi ko'rsatma, hukm emas.",
+    "run": "Tekshirish",
+    "rule": "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas.",
+    "q": {
+      "guaranteed": "Foyda kafolatlanadi",
+      "lossShared": "Zarar ham taqsimlanadi",
+      "real": "Haqiqiy tovar yoki ish bor",
+      "recruit": "Yangi odam jalb qilish talab etiladi",
+      "pressure": "Shoshiltirishyapti",
+      "written": "Yozma shartnoma bor"
+    },
+    "verdicts": {
+      "GREEN": "Yashil",
+      "YELLOW": "Sariq",
+      "RED": "Qizil"
+    },
+    "verdictText": {
+      "GREEN": "Aniq xavf belgisi topilmadi. Baribir shartnomani o'qing.",
+      "YELLOW": "Ehtiyot bo'ling: ba'zi shartlar noaniq.",
+      "RED": "Jiddiy xavf belgisi: shoshilmang, mutaxassis bilan maslahatlashing."
+    },
+    "flags": {
+      "GUARANTEED_PROFIT": "Foyda kafolatlanmoqda",
+      "NO_LOSS_SHARING": "Zarar taqsimlanmaydi",
+      "NO_REAL_ACTIVITY": "Haqiqiy faoliyat yo'q",
+      "RECRUITMENT_REQUIRED": "Odam jalb qilish talab etiladi",
+      "PRESSURE": "Shoshiltirish bosimi",
+      "NO_WRITTEN_CONTRACT": "Yozma shartnoma yo'q"
+    }
   }
 }

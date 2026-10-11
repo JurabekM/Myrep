@@ -10,6 +10,7 @@ import { FamilyPage } from '../features/family/FamilyPage';
 import { AuditWizardPage } from '../features/audit/AuditPage';
 import { HomePage } from '../features/home/HomePage';
 import { IncomePage } from '../features/income/IncomePage';
+import { CraftsPage } from '../features/crafts/CraftsPage';
 import { PartnershipsPage } from '../features/partnerships/PartnershipsPage';
 import { PricesPage } from '../features/prices/PricesPage';
 import { QuickEntry } from '../features/income/QuickEntry';
@@ -26,6 +27,7 @@ const PAGES: { id: Page; labelKey: string }[] = [
   { id: 'debts', labelKey: 'nav.debts' },
   { id: 'ceremonies', labelKey: 'nav.ceremonies' },
   { id: 'partnerships', labelKey: 'nav.partnerships' },
+  { id: 'crafts', labelKey: 'nav.crafts' },
   { id: 'income', labelKey: 'nav.income' },
   { id: 'vault', labelKey: 'nav.vault' },
   { id: 'budget', labelKey: 'nav.budget' },
@@ -73,6 +75,8 @@ function CurrentPage({ page }: { page: Page }) {
       return <CeremoniesPage />;
     case 'partnerships':
       return <PartnershipsPage />;
+    case 'crafts':
+      return <CraftsPage />;
   }
 }
 

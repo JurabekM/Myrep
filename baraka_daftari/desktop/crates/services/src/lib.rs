@@ -10,6 +10,7 @@ pub mod categories;
 pub mod ceremonies;
 pub mod contributors;
 pub mod council;
+pub mod crafts;
 pub mod csv_import;
 pub mod debts;
 pub mod envelopes;
@@ -36,6 +37,7 @@ pub mod setup;
 pub mod subscriptions;
 pub mod treats;
 pub mod vault;
+pub mod ventures;
 
 pub use env::{local_date, sum_money, Ctx, Env, YearMonth, TASHKENT_OFFSET_HOURS};
 pub use error::ServiceError;

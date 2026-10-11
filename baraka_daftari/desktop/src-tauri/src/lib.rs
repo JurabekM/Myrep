@@ -16,6 +16,7 @@ mod saving;
 mod session;
 mod study;
 mod tray;
+mod ventures;
 
 use std::{sync::Mutex, time::Duration};
 
@@ -183,6 +184,18 @@ fn specta_builder() -> Builder<tauri::Wry> {
         partnerships::set_buyout_plan,
         partnerships::record_buyout_payment,
         partnerships::export_contract_pdf,
+        ventures::venture_ledger,
+        ventures::add_venture_entry,
+        ventures::remove_venture_entry,
+        ventures::attach_evidence,
+        ventures::export_evidence,
+        ventures::close_venture_period,
+        ventures::export_period_report,
+        ventures::list_craft_ideas,
+        ventures::add_craft_idea,
+        ventures::remove_craft_idea,
+        ventures::craft_to_contract,
+        ventures::check_offer,
         hide_quick_window,
     ])
 }

@@ -5,6 +5,7 @@
 mod budget;
 mod contract;
 mod minutes;
+mod period;
 mod receipt;
 mod world;
 
@@ -13,5 +14,6 @@ pub use contract::{contract_markup, partnership_contract, ContractDoc, ContractP
 pub use minutes::{
     council_markup, council_minutes, CouncilMinutes, MinutesCategory, MinutesConsent,
 };
+pub use period::{period_markup, period_report, PeriodReportDoc, ReportEntry};
 pub use receipt::{loan_receipt, receipt_markup, LoanReceiptDoc, ReceiptSignatures};
 pub use world::{render_pdf, render_pdf_with_files, PdfError, EMBEDDED_FONTS};

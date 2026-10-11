@@ -47,3 +47,6 @@ Mobil (Dart) va desktop (Rust) ilovalari shu fayllardan o'tishi shart (`docs/DES
 | repay_months | `debt`, `annual_bp`, `capacity`, `currency` | `{"months"}` yoki `{"error":"INVALID_AMOUNT"\|"TOO_LONG"}` |
 | profit_distribution | `kind` (MUDARABA\|MUSHARAKA), `result` (PROFIT\|LOSS), `amount`, `parties[{role,capital,share_bp}]` (role: CAPITAL_PROVIDER\|WORKER\|PARTNER), `negligence`, `fixed_return?` | `{"amounts":[...]}` (zarar manfiy) yoki `{"error":"GUARANTEED_RETURN_FORBIDDEN"\|"INVALID_SHARES"\|"INVALID_PARTIES"\|"INVALID_AMOUNT"}` |
 | buyout | `op`=`schedule` (`total_value`,`provider_stake`,`payments[]`) yoki `equal` (`provider_stake`,`periods`) | `{"rows":[{period,applied,remaining,provider_bp,worker_bp}],"completed"}` / `{"payments":[...]}` / `{"error":"INVALID_AMOUNT"}` |
+| venture_settlement | `kind`, `net` (musbat — foyda, manfiy — zarar), `parties[]`, `negligence`, `buyout?{payer,seller,due}` | `{"shares":[...],"buyout_applied"}` yoki `{"error":"INVALID_PARTIES"}` |
+| craft_payback | `capex`, `scenarios[{income,expense}]` (oylik), `share_bp?` | `{"scenarios":[{"net","net_after_share","payback_months"}]}` |
+| offer_check | 6 ta bool: `guaranteed_profit`, `loss_shared`, `real_goods_or_work`, `requires_recruiting`, `pressure_to_hurry`, `written_contract` | `{"verdict":"RED"\|"YELLOW"\|"GREEN","flags":[...]}` |

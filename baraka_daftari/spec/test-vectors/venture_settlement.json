@@ -1,0 +1,342 @@
+{
+  "suite": "venture_settlement",
+  "version": 1,
+  "description": "Davr yopilishi: sof natija (kirim-xarajat) 2E.1 qoidalari bo'yicha taqsimlanadi; foyda bo'lsa buyout to'lovi (payer ulushidan, qoldiqdan oshmaydi) seller ulushiga o'tadi; zararda buyout yo'q",
+  "cases": [
+    {
+      "id": "settle-001",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "1000",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 6000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "shares": [
+          "600",
+          "400"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-002",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "1000",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 6000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "buyout": {
+          "payer": 1,
+          "seller": 0,
+          "due": "300"
+        }
+      },
+      "expected": {
+        "shares": [
+          "900",
+          "100"
+        ],
+        "buyout_applied": "300"
+      }
+    },
+    {
+      "id": "settle-003",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "1000",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 6000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "buyout": {
+          "payer": 1,
+          "seller": 0,
+          "due": "5000"
+        }
+      },
+      "expected": {
+        "shares": [
+          "1000",
+          "0"
+        ],
+        "buyout_applied": "400"
+      }
+    },
+    {
+      "id": "settle-004",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "-1000",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 6000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "buyout": {
+          "payer": 1,
+          "seller": 0,
+          "due": "300"
+        }
+      },
+      "expected": {
+        "shares": [
+          "-600",
+          "-400"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-005",
+      "input": {
+        "kind": "MUDARABA",
+        "net": "1000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000",
+            "share_bp": 4000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 6000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "shares": [
+          "400",
+          "600"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-006",
+      "input": {
+        "kind": "MUDARABA",
+        "net": "-1000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000",
+            "share_bp": 4000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 6000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "shares": [
+          "-1000",
+          "0"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-007",
+      "input": {
+        "kind": "MUDARABA",
+        "net": "-1000",
+        "parties": [
+          {
+            "role": "CAPITAL_PROVIDER",
+            "capital": "1000",
+            "share_bp": 4000
+          },
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 6000
+          }
+        ],
+        "negligence": true,
+        "currency": "UZS"
+      },
+      "expected": {
+        "shares": [
+          "0",
+          "-1000"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-008",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "0",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 6000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "buyout": {
+          "payer": 1,
+          "seller": 0,
+          "due": "300"
+        }
+      },
+      "expected": {
+        "shares": [
+          "0",
+          "0"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-009",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "1",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "600",
+            "share_bp": 6000
+          },
+          {
+            "role": "PARTNER",
+            "capital": "400",
+            "share_bp": 4000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "buyout": {
+          "payer": 1,
+          "seller": 0,
+          "due": "300"
+        }
+      },
+      "expected": {
+        "shares": [
+          "1",
+          "0"
+        ],
+        "buyout_applied": "0"
+      }
+    },
+    {
+      "id": "settle-010",
+      "input": {
+        "kind": "MUDARABA",
+        "net": "1000",
+        "parties": [
+          {
+            "role": "WORKER",
+            "capital": "0",
+            "share_bp": 10000
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS"
+      },
+      "expected": {
+        "error": "INVALID_PARTIES"
+      }
+    },
+    {
+      "id": "settle-011",
+      "input": {
+        "kind": "MUSHARAKA",
+        "net": "333",
+        "parties": [
+          {
+            "role": "PARTNER",
+            "capital": "1",
+            "share_bp": 3333
+          },
+          {
+            "role": "PARTNER",
+            "capital": "1",
+            "share_bp": 3333
+          },
+          {
+            "role": "PARTNER",
+            "capital": "1",
+            "share_bp": 3334
+          }
+        ],
+        "negligence": false,
+        "currency": "UZS",
+        "buyout": {
+          "payer": 2,
+          "seller": 0,
+          "due": "50"
+        }
+      },
+      "expected": {
+        "shares": [
+          "161",
+          "111",
+          "61"
+        ],
+        "buyout_applied": "50"
+      }
+    }
+  ]
+}

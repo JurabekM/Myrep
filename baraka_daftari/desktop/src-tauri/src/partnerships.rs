@@ -311,7 +311,7 @@ fn dto(v: &PartnershipView, buyout: Option<&BuyoutView>) -> PartnershipDto {
     }
 }
 
-fn full(
+pub(crate) fn full(
     conn: &storage::Connection,
     env: &Env<'_>,
     ctx: &Ctx,

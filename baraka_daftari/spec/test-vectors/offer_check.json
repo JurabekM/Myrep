@@ -1,0 +1,1222 @@
+{
+  "suite": "offer_check",
+  "version": 1,
+  "description": "Taklif detektori (2E.5): QIZIL — kafolatlangan foyda YOKI a'zo jalb qilish talabi YOKI real mol/ish yo'q; SARIQ (qizil emas) — zarar bo'lishilmaydi YOKI shoshiltirish YOKI yozma shartnoma yo'q; aks holda YASHIL. Bayroqlar qat'iy tartibda. To'liq 64 kombinatsiya",
+  "cases": [
+    {
+      "id": "offer-001",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-002",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY"
+        ]
+      }
+    },
+    {
+      "id": "offer-003",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-004",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-005",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-006",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-007",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-008",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-009",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-010",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "NO_LOSS_SHARING"
+        ]
+      }
+    },
+    {
+      "id": "offer-011",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-012",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-013",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-014",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-015",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-016",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-017",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-018",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY"
+        ]
+      }
+    },
+    {
+      "id": "offer-019",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-020",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-021",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-022",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-023",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-024",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-025",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-026",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "GREEN",
+        "flags": []
+      }
+    },
+    {
+      "id": "offer-027",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-028",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-029",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-030",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-031",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-032",
+      "input": {
+        "guaranteed_profit": false,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-033",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-034",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY"
+        ]
+      }
+    },
+    {
+      "id": "offer-035",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-036",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-037",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-038",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-039",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-040",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-041",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-042",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING"
+        ]
+      }
+    },
+    {
+      "id": "offer-043",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-044",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-045",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-046",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-047",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-048",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": false,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_LOSS_SHARING",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-049",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-050",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY"
+        ]
+      }
+    },
+    {
+      "id": "offer-051",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-052",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-053",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-054",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-055",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-056",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": false,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_REAL_ACTIVITY",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-057",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-058",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT"
+        ]
+      }
+    },
+    {
+      "id": "offer-059",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-060",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": false,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "PRESSURE"
+        ]
+      }
+    },
+    {
+      "id": "offer-061",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "RECRUITMENT_REQUIRED",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-062",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": false,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "RECRUITMENT_REQUIRED"
+        ]
+      }
+    },
+    {
+      "id": "offer-063",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": false
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE",
+          "NO_WRITTEN_CONTRACT"
+        ]
+      }
+    },
+    {
+      "id": "offer-064",
+      "input": {
+        "guaranteed_profit": true,
+        "loss_shared": true,
+        "real_goods_or_work": true,
+        "requires_recruiting": true,
+        "pressure_to_hurry": true,
+        "written_contract": true
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          "GUARANTEED_PROFIT",
+          "RECRUITMENT_REQUIRED",
+          "PRESSURE"
+        ]
+      }
+    }
+  ]
+}

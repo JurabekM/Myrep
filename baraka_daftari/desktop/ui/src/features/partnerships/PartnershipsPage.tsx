@@ -8,6 +8,7 @@ import { errorMessage, formatBp, unwrap } from '../../lib/api';
 import { Buyout } from './Buyout';
 import { ContractForm } from './ContractForm';
 import { Distribution } from './Distribution';
+import { Ledger } from './Ledger';
 
 function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
   const { t } = useTranslation();
@@ -241,6 +242,7 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
       <div className="mt-4 space-y-3">
         <Distribution p={p} />
         {p.kind === 'MUSHARAKA' && <Buyout p={p} />}
+        {p.status !== 'DRAFT' && <Ledger p={p} />}
       </div>
 
       <details className="mt-3 text-sm">

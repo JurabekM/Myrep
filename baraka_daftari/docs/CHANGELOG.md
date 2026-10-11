@@ -110,3 +110,12 @@
 - **Buyout:** musharakada kapital egasi ulushini davrma-davr sotib olish: reja (teng bo'laklar) va haqiqiy to'lovlar jadvali, ulush vizualizatsiyasi, yakunda «sherik mustaqil bo'ldi».
 - **Taqsimot hisobi** (foyda/zarar, beparvolik izohi majburiy). Avtomatik davr yopilishi va ledger — D13.
 - Kechiktirildi: ledger/davrni yopish va buyout ayirmasini taqsimotga avtomatik qo'llash (D13), ikkinchi tomon masofadan tasdig'i (D14), shartnoma ulamo tasdig'i (`PENDING`).
+
+## D13 — Korxona daftari, davr taqsimoti, «Hunardan ishga», taklif detektori
+- **Vektorlar:** `venture_settlement.json` (buyout ayirmasi bilan davr taqsimoti), `craft_payback.json` (qaytim = ceil(capex / sof), sheriklik ulushidan keyin), `offer_check.json` (yashil/sariq/qizil, belgilar tartibi) — mustaqil Python hisobi.
+- **Sxema v11:** `venture_periods`, `venture_entries`, `venture_attachments`, `venture_distributions`, `craft_ideas`, `craft_capex`; **yopilgan davr** SQLite triggerlari bilan ham o'zgarmas (servis qatlamidan tashqari ikkinchi himoya).
+- **Kassa daftari:** kirim/chiqim yozuvlari (biznes puli uy budjetidan alohida), foring-major belgisi, chek/rasm dalili (PNG/JPEG/PDF, shifrlangan bazada), davrni yopish → avtomatik taqsimot (mudarabada beparvolik izohi), buyout ayirmasi taqsimotga qo'llanadi, davr hisoboti PDF (typst, snapshot testi). Kapital egasi uchun faqat o'qish; faol bo'lmagan sheriklikda yozuv yo'q.
+- **Hunardan ishga:** asbob xarajati (CAPEX) + 3 senariy (yomon/o'rta/yaxshi), qaytim muddati, bir bosishda shartnoma qoralamasi.
+- **Taklif detektori:** tekshiruv ro'yxati → yashil/sariq/qizil; ta'limiy ogohlantirish bilan (ribo filtri nomida «kafolatlangan foyda» iborasi ishlatilmaydi).
+- UI: `Ledger` (sheriklik kartasida), `CraftsPage` («Hunardan ishga»), uz/ru matnlar, 7 yangi UI testi.
+

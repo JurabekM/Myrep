@@ -1,0 +1,249 @@
+{
+  "suite": "craft_payback",
+  "version": 1,
+  "description": "Hunardan ishga: har stsenariy uchun sof oylik foyda, sheriklik ulushidan keyingi foyda (half-up) va qoplanish muddati = ceil(boshlang'ich xarajat / foyda) (foyda <= 0 -> null; xarajat 0 -> 0)",
+  "cases": [
+    {
+      "id": "craft-001",
+      "input": {
+        "capex": "800000000",
+        "scenarios": [
+          {
+            "income": "300000000",
+            "expense": "200000000"
+          },
+          {
+            "income": "500000000",
+            "expense": "250000000"
+          },
+          {
+            "income": "700000000",
+            "expense": "300000000"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "net": "100000000",
+            "net_after_share": "100000000",
+            "payback_months": 8
+          },
+          {
+            "net": "250000000",
+            "net_after_share": "250000000",
+            "payback_months": 4
+          },
+          {
+            "net": "400000000",
+            "net_after_share": "400000000",
+            "payback_months": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "craft-002",
+      "input": {
+        "capex": "800000000",
+        "scenarios": [
+          {
+            "income": "300000000",
+            "expense": "200000000"
+          },
+          {
+            "income": "500000000",
+            "expense": "250000000"
+          },
+          {
+            "income": "700000000",
+            "expense": "300000000"
+          }
+        ],
+        "currency": "UZS",
+        "share_bp": 6000
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "net": "100000000",
+            "net_after_share": "60000000",
+            "payback_months": 14
+          },
+          {
+            "net": "250000000",
+            "net_after_share": "150000000",
+            "payback_months": 6
+          },
+          {
+            "net": "400000000",
+            "net_after_share": "240000000",
+            "payback_months": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "craft-003",
+      "input": {
+        "capex": "800000000",
+        "scenarios": [
+          {
+            "income": "100",
+            "expense": "200"
+          },
+          {
+            "income": "200",
+            "expense": "200"
+          },
+          {
+            "income": "300",
+            "expense": "100"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "net": "-100",
+            "net_after_share": "-100",
+            "payback_months": null
+          },
+          {
+            "net": "0",
+            "net_after_share": "0",
+            "payback_months": null
+          },
+          {
+            "net": "200",
+            "net_after_share": "200",
+            "payback_months": 4000000
+          }
+        ]
+      }
+    },
+    {
+      "id": "craft-004",
+      "input": {
+        "capex": "0",
+        "scenarios": [
+          {
+            "income": "1",
+            "expense": "0"
+          },
+          {
+            "income": "0",
+            "expense": "0"
+          },
+          {
+            "income": "5",
+            "expense": "10"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "net": "1",
+            "net_after_share": "1",
+            "payback_months": 0
+          },
+          {
+            "net": "0",
+            "net_after_share": "0",
+            "payback_months": 0
+          },
+          {
+            "net": "-5",
+            "net_after_share": "-5",
+            "payback_months": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "craft-005",
+      "input": {
+        "capex": "1000",
+        "scenarios": [
+          {
+            "income": "10",
+            "expense": "0"
+          },
+          {
+            "income": "3",
+            "expense": "0"
+          },
+          {
+            "income": "7",
+            "expense": "0"
+          }
+        ],
+        "currency": "UZS",
+        "share_bp": 3333
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "net": "10",
+            "net_after_share": "3",
+            "payback_months": 334
+          },
+          {
+            "net": "3",
+            "net_after_share": "1",
+            "payback_months": 1000
+          },
+          {
+            "net": "7",
+            "net_after_share": "2",
+            "payback_months": 500
+          }
+        ]
+      }
+    },
+    {
+      "id": "craft-006",
+      "input": {
+        "capex": "1001",
+        "scenarios": [
+          {
+            "income": "10",
+            "expense": "0"
+          },
+          {
+            "income": "10",
+            "expense": "0"
+          },
+          {
+            "income": "10",
+            "expense": "0"
+          }
+        ],
+        "currency": "UZS"
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "net": "10",
+            "net_after_share": "10",
+            "payback_months": 101
+          },
+          {
+            "net": "10",
+            "net_after_share": "10",
+            "payback_months": 101
+          },
+          {
+            "net": "10",
+            "net_after_share": "10",
+            "payback_months": 101
+          }
+        ]
+      }
+    }
+  ]
+}

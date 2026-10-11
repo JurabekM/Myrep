@@ -3,10 +3,10 @@ use time::{Date, OffsetDateTime};
 
 use crate::{
     AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CapitalKind,
-    CeremonyKind, CeremonyStatus, CreditorType, FundingSource, IncomeSourceType, MemberRole, Meta,
-    MoneyOwner, Necessity, ObligationKind, PartnershipKind, PartnershipStatus, PartyRole,
-    PaymentChannel, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind, SellStatus, SignatureKind,
-    VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
+    CeremonyKind, CeremonyStatus, CreditorType, FundingSource, IncomeSourceType, LedgerKind,
+    MemberRole, Meta, MoneyOwner, Necessity, ObligationKind, PartnershipKind, PartnershipStatus,
+    PartyRole, PaymentChannel, PeriodStatus, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind,
+    SellStatus, SignatureKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -526,4 +526,76 @@ pub struct BuyoutPayment {
     pub plan_id: String,
     pub paid_on: Date,
     pub amount: Money,
+}
+
+/// Sheriklik hisobot davri (venture ledger, SPEC 2E.3). Yopilgan davr o'zgarmaydi (bazada ham himoyalangan).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VenturePeriod {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub period_no: u32,
+    pub start_date: Date,
+    pub end_date: Option<Date>,
+    pub status: PeriodStatus,
+    /// Yopilganda: sof natija (zarar manfiy).
+    pub net: Option<Money>,
+}
+
+/// Sheriklik kassa daftari yozuvi. Biznes puli uy pulidan ajratilgan: xonadon byudjetiga faqat
+/// taqsimlangan foyda ulushi orqali bog'lanadi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VentureEntry {
+    pub meta: Meta,
+    pub partnership_id: String,
+    pub period_id: String,
+    pub kind: LedgerKind,
+    pub description: String,
+    pub amount: Money,
+    pub occurred_on: Date,
+    pub note: Option<String>,
+    /// Fors-major hodisasi (masalan, «omborni suv bosdi»): izoh va dalillar bilan.
+    pub force_majeure: bool,
+}
+
+/// Yozuvga biriktirilgan chek/rasm (bazaning o'zida, SQLCipher bilan shifrlangan).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VentureAttachment {
+    pub meta: Meta,
+    pub entry_id: String,
+    pub filename: String,
+    pub mime: String,
+    pub data: Vec<u8>,
+}
+
+/// Yopilgan davrdagi taqsimot yozuvi (o'zgarmas).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VentureDistribution {
+    pub meta: Meta,
+    pub period_id: String,
+    pub party_id: String,
+    /// Foyda musbat, zarar manfiy (buyout hisobga olingan).
+    pub amount: Money,
+    /// Shu davrda buyout sifatida ayirilgan (to'lovchi) yoki qo'shilgan (sotuvchi) summa.
+    pub buyout_delta: Money,
+}
+
+/// «Hunardan ishga» g'oyasi (SPEC 2E.4): uch stsenariy (pessimistik, o'rtacha, optimistik).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CraftIdea {
+    pub meta: Meta,
+    pub name: String,
+    pub note: Option<String>,
+    /// Oylik kirim va xarajat: `[pessimistic, average, optimistic]`.
+    pub income: [Money; 3],
+    pub expense: [Money; 3],
+    /// Sheriklik bo'lsa mening foyda ulushim (bp).
+    pub share_bp: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CraftCapex {
+    pub meta: Meta,
+    pub idea_id: String,
+    pub item: String,
+    pub price: Money,
 }

@@ -16,6 +16,7 @@ mod savings;
 mod share;
 mod streak;
 mod time_ext;
+mod venture;
 mod withdrawal;
 
 pub use amortization::*;
@@ -33,4 +34,5 @@ pub use share::*;
 pub use streak::*;
 pub use time::{Date, OffsetDateTime};
 pub use time_ext::{date_from_str, date_to_string, ts_from_str, ts_to_string, TimeError};
+pub use venture::*;
 pub use withdrawal::*;
