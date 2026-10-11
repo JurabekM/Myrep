@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="uz-Latn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OmborAI — Tovarlar (eskiz)</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    html[lang^="uz"] .lang-ru { display: none; }
+    html[lang="ru"] .lang-uz { display: none; }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .toolbar input[type="search"] { flex: 1; min-width: 240px; }
+    .toggle {
+      min-height: 44px; display: inline-flex; align-items: center; gap: 8px;
+      padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+    }
+    .toggle[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
+    .page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+    h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { font-size: 13px; color: var(--muted); font-weight: 600; background: var(--surface-2); }
+    tbody tr:hover { background: var(--surface-2); }
+    td.num, th.num { text-align: right; }
+    .name strong { display: block; }
+    .row-actions { display: inline-flex; gap: 6px; }
+    .row-actions .btn { min-height: 40px; padding: 0 12px; font-size: 14px; }
+    .stock-val { font-weight: 700; }
+    .stock-val.low { color: var(--warning); }
+    .stock-val.out { color: var(--danger); }
+
+    .mobile-list { display: none; }
+    @media (max-width: 860px) {
+      .table-wrap { display: none; }
+      .mobile-list { display: grid; gap: 10px; }
+      .item-card { padding: 14px; display: grid; gap: 8px; }
+      .item-card .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+      .item-card .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+      .item-card .row-actions { width: 100%; }
+      .item-card .row-actions .btn { flex: 1; min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Ombor<span>AI</span></div>
+    <nav class="nav" aria-label="Asosiy">
+      <a href="pos.html" data-i18n="brand.nav.pos">Kassa</a>
+      <a href="inventory.html" aria-current="page" data-i18n="brand.nav.inventory">Tovarlar</a>
+      <a href="dashboard.html" data-i18n="brand.nav.dashboard">Bosh sahifa</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="Til">
+      <button data-lang-btn="uz" aria-pressed="true">UZ</button>
+      <button data-lang-btn="ru" aria-pressed="false">RU</button>
+    </div>
+    <div class="seg" role="group" aria-label="Mavzu">
+      <button data-theme-btn="system" aria-pressed="true">Auto</button>
+      <button data-theme-btn="light" aria-pressed="false" data-i18n="theme.light">Yorug'</button>
+      <button data-theme-btn="dark" aria-pressed="false" data-i18n="theme.dark">Tungi</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-head">
+      <h1 data-i18n="inv.title">Tovarlar va qoldiq</h1>
+      <button class="btn primary" data-i18n="inv.btn.new">Yangi tovar</button>
+    </div>
+
+    <div class="toolbar">
+      <input type="search" data-i18n-placeholder="inv.search" placeholder="Tovar nomi yoki shtrix-kod">
+      <button class="toggle" aria-pressed="true"><span data-i18n="inv.filter.low">Faqat kam qolganlar</span></button>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="inv.col.name">Tovar</th>
+            <th data-i18n="inv.col.barcode">Shtrix-kod</th>
+            <th class="num" data-i18n="inv.col.stock">Qoldiq</th>
+            <th class="num" data-i18n="inv.col.min">Minimal</th>
+            <th class="num" data-i18n="inv.col.price">Sotuv narxi</th>
+            <th data-i18n="inv.col.status">Holat</th>
+            <th data-i18n="inv.col.actions">Amallar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name"><strong><span class="lang-uz">Shakar 1 kg</span><span class="lang-ru">Сахар 1 кг</span></strong></td>
+            <td class="num">4780012300017</td>
+            <td class="num"><span class="stock-val low num">6</span></td>
+            <td class="num">10</td>
+            <td class="num">14 500</td>
+            <td><span class="badge low" data-i18n="inv.status.low">Kam qoldi</span></td>
+            <td><div class="row-actions"><button class="btn" data-i18n="inv.btn.in">Kirim</button><button class="btn ghost" data-i18n="inv.btn.adjust">Tuzatish</button></div></td>
+          </tr>
+          <tr>
+            <td class="name"><strong><span class="lang-uz">Gugurt (quti)</span><span class="lang-ru">Спички (коробок)</span></strong></td>
+            <td class="num">4780012300048</td>
+            <td class="num"><span class="stock-val out num">0</span></td>
+            <td class="num">20</td>
+            <td class="num">1 000</td>
+            <td><span class="badge out" data-i18n="inv.status.out">Tugagan</span></td>
+            <td><div class="row-actions"><button class="btn" data-i18n="inv.btn.in">Kirim</button><button class="btn ghost" data-i18n="inv.btn.adjust">Tuzatish</button></div></td>
+          </tr>
+          <tr>
+            <td class="name"><strong><span class="lang-uz">Sut 1 L</span><span class="lang-ru">Молоко 1 л</span></strong></td>
+            <td class="num">4780012300123</td>
+            <td class="num"><span class="stock-val num">24</span></td>
+            <td class="num">12</td>
+            <td class="num">12 000</td>
+            <td><span class="badge ok" data-i18n="inv.status.ok">Yetarli</span></td>
+            <td><div class="row-actions"><button class="btn" data-i18n="inv.btn.in">Kirim</button><button class="btn ghost" data-i18n="inv.btn.adjust">Tuzatish</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Telefon uchun ro'yxat ko'rinishi -->
+    <div class="mobile-list">
+      <div class="card item-card">
+        <div class="top">
+          <strong><span class="lang-uz">Shakar 1 kg</span><span class="lang-ru">Сахар 1 кг</span></strong>
+          <span class="badge low" data-i18n="inv.status.low">Kam qoldi</span>
+        </div>
+        <div class="meta"><span class="num">4780012300017</span><span class="num">14 500 <span data-i18n="unit.sum">so'm</span></span></div>
+        <div class="meta"><span data-i18n="inv.col.stock">Qoldiq</span><span class="stock-val low num">6 / <span data-i18n="inv.col.min">Minimal</span> 10</span></div>
+        <div class="row-actions"><button class="btn primary" data-i18n="inv.btn.in">Kirim</button><button class="btn" data-i18n="inv.btn.adjust">Tuzatish</button></div>
+      </div>
+      <div class="card item-card">
+        <div class="top">
+          <strong><span class="lang-uz">Gugurt (quti)</span><span class="lang-ru">Спички (коробок)</span></strong>
+          <span class="badge out" data-i18n="inv.status.out">Tugagan</span>
+        </div>
+        <div class="meta"><span class="num">4780012300048</span><span class="num">1 000 <span data-i18n="unit.sum">so'm</span></span></div>
+        <div class="meta"><span data-i18n="inv.col.stock">Qoldiq</span><span class="stock-val out num">0 / <span data-i18n="inv.col.min">Minimal</span> 20</span></div>
+        <div class="row-actions"><button class="btn primary" data-i18n="inv.btn.in">Kirim</button><button class="btn" data-i18n="inv.btn.adjust">Tuzatish</button></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/app.js" defer></script>
+</body>
+</html>
