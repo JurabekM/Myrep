@@ -270,6 +270,8 @@ export type AmortizationDto = {
 
 export type AppInfoDto = {
 	version: string,
+	/**  Shartnoma PDF'ini chiqarish mumkinmi (relizda shablon tasdiqlanmaguncha `false`). */
+	contract_pdf_available: boolean,
 	/**  Sheriklik shartnomasi shabloni ulamo/yurist tasdig'idan o'tganmi (reliz to'sig'i, OPEN_QUESTIONS 65). */
 	templates_approved: boolean,
 };

@@ -123,7 +123,12 @@ describe('ConsentPanel', () => {
         report={{
           ...pending,
           pending: {
-            ...pending.pending!,
+            ...(pending.pending ?? {
+              limit_id: 'L1',
+              amount: money("1 000 000 so'm"),
+              consented: [],
+              missing: [],
+            }),
             missing: [{ id: 'm3', name: 'Anvar', has_pin: false }],
           },
         }}

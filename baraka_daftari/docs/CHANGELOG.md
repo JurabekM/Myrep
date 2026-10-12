@@ -145,3 +145,8 @@
 - `.baraka` importda telefondan kelgan kattalar **PIN'siz** keladi (PIN xeshlari eksport qilinmaydi): ular havas chegarasiga rozilik bera olmaydi. Import hisobotida «PIN o'rnatilishi kerak» ro'yxati chiqadi; havas ekranida shunday a'zo uchun avval «PIN o'rnatish» ko'rsatiladi (rozilik tugmasi yo'q).
 - A'zo nomlari registri va chekka bo'shliqqa bog'liq emas («anvar» ↔ «Anvar»): dublikat a'zo yaratilmaydi; tabiiy kalit ustunlari lokal qiymatga tenglashtiriladi (faqat registr farqi ziddiyat bo'lmaydi).
 - Testlar: PIN'siz kattaning rozilik qabul qilinmasligi va PIN o'rnatilgach kuchga kirishi; ism moslashtirish; import PIN yozuvi yaratmasligi.
+
+## Reliz: sheriklik shartnoma shabloni to'sig'i
+- `pdf::templates_releasable(debug_build)`: dev build'da shablon ko'rinadi (ogohlantirish bilan); **release build'da shartnoma PDF'i chiqmaydi**, tasdiqlanmaguncha (`TEMPLATES_APPROVED = false`). Servis qatlamida ham to'siq bor (UI'ga bog'liq emas).
+- UI: relizda «Shartnoma PDF» tugmasi yashirin; ogohlantirish qoladi.
+- CI: `baraka-release-gate` workflow — versiya tegida (`v*`) `release_gate --ignored` testi ishlaydi; shablon tasdiqlanmaguncha qizil.

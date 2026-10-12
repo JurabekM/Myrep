@@ -5,7 +5,7 @@
 mod env;
 mod error;
 
-pub use pdf::TEMPLATES_APPROVED;
+pub use pdf::{templates_releasable, TEMPLATES_APPROVED};
 
 pub mod audit;
 pub mod categories;

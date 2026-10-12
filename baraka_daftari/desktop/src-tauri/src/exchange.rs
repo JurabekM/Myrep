@@ -257,6 +257,8 @@ pub fn complete_onboarding(state: State<'_, AppSession>) -> Result<(), CommandEr
 #[derive(Debug, Serialize, Type)]
 pub struct AppInfoDto {
     pub version: String,
+    /// Shartnoma PDF'ini chiqarish mumkinmi (relizda shablon tasdiqlanmaguncha `false`).
+    pub contract_pdf_available: bool,
     /// Sheriklik shartnomasi shabloni ulamo/yurist tasdig'idan o'tganmi (reliz to'sig'i, OPEN_QUESTIONS 65).
     pub templates_approved: bool,
 }
@@ -267,5 +269,6 @@ pub fn app_info() -> AppInfoDto {
     AppInfoDto {
         version: env!("CARGO_PKG_VERSION").into(),
         templates_approved: services::TEMPLATES_APPROVED,
+        contract_pdf_available: services::templates_releasable(cfg!(debug_assertions)),
     }
 }

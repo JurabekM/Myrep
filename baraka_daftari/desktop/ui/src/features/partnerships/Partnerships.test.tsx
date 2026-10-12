@@ -91,7 +91,11 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(commands.appInfo).mockResolvedValue({ version: '0.1.0', templates_approved: false });
+  vi.mocked(commands.appInfo).mockResolvedValue({
+    version: '0.1.0',
+    templates_approved: false,
+    contract_pdf_available: true,
+  });
   vi.mocked(commands.listPartnerships).mockResolvedValue({ status: 'ok', data: [base] });
   vi.mocked(commands.listMembers).mockResolvedValue({
     status: 'ok',
@@ -108,6 +112,20 @@ beforeEach(() => {
 });
 
 describe('PartnershipsPage', () => {
+  it('relizda shablon tasdiqlanmagan bo‘lsa shartnoma PDF tugmasi yashirin', async () => {
+    vi.mocked(commands.appInfo).mockResolvedValue({
+      version: '0.1.0',
+      templates_approved: false,
+      contract_pdf_available: false,
+    });
+    renderPage();
+    const card = await screen.findByTestId('ps-Ustaxona');
+    await waitFor(() => {
+      expect(within(card).queryByRole('button', { name: 'Shartnoma PDF' })).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('template-notice')).toBeInTheDocument();
+  });
+
   it('accessibility: axe buzilish topmaydi', async () => {
     const { container } = renderPage();
     await screen.findByTestId('ps-Ustaxona');

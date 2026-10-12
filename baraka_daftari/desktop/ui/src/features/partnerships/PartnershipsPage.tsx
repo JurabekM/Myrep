@@ -53,6 +53,9 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
   const error = [sign.error, consent.error, activate.error, end.error, pdf.error].find(
     (e) => e !== null,
   );
+  const info = useQuery({ queryKey: ['app-info'], queryFn: () => commands.appInfo() });
+  // Relizda shablon tasdiqlanmagan bo'lsa shartnoma PDF tugmasi yashirin (SPEC 8).
+  const contractPdf = info.data?.contract_pdf_available === true;
   const draft = p.status === 'DRAFT';
   return (
     <section className="rounded-lg border border-line p-5" data-testid={`ps-${p.name}`}>
@@ -212,15 +215,17 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
             {t('partner.revise')}
           </button>
         )}
-        <button
-          type="button"
-          className="underline"
-          onClick={() => {
-            pdf.mutate();
-          }}
-        >
-          {t('partner.pdf')}
-        </button>
+        {contractPdf && (
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              pdf.mutate();
+            }}
+          >
+            {t('partner.pdf')}
+          </button>
+        )}
         {p.status === 'ACTIVE' && (
           <button
             type="button"

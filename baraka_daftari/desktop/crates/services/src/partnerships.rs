@@ -869,6 +869,12 @@ pub fn contract_pdf(
     ctx: &Ctx,
     id: &str,
 ) -> Result<Vec<u8>, ServiceError> {
+    // Relizda tasdiqlanmagan shartnoma shabloni PDF bo'lib chiqmaydi (SPEC 8, OPEN_QUESTIONS 65).
+    if !pdf::templates_releasable(cfg!(debug_assertions)) {
+        return Err(ServiceError::Invalid(
+            "shartnoma shabloni hali yurist va ulamo tasdig'idan o'tmagan: PDF chiqarilmaydi",
+        ));
+    }
     let v = view(conn, env, ctx, id)?;
     let fm = |m: Money| format_money(m, Locale::Uz);
     let date_of = |signer: &str, kind: SignatureKind| -> Result<Option<String>, ServiceError> {

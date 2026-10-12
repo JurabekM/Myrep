@@ -1,0 +1,22 @@
+name: baraka-release-gate
+
+# Versiya tegi (v*) bilan ishga tushadi. Asosiy CI'ni qizil qilmaslik uchun alohida workflow.
+# Shartnoma shabloni yurist va ulamo tasdig'idan o'tmaguncha bu job QIZIL bo'ladi (SPEC 8, OPEN_QUESTIONS 65).
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  template-approval:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_daftari/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_daftari/desktop
+      - name: Sheriklik shartnomasi shabloni tasdiqlangan (release_gate)
+        run: cargo test -p services --test release_gate -- --ignored
