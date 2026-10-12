@@ -57,7 +57,8 @@ fn database_open_migrate_and_seed_is_fast() {
     .unwrap();
     let again = t.elapsed();
     eprintln!("birinchi ishga tushirish: {first:?}, keyingisi: {again:?}");
-    // Debug build uchun keng chegara; reliz build'da bir necha o'n millisekund.
-    assert!(first.as_millis() < 1_500, "{first:?}");
+    // Debug build va sekin CI diskida (Windows runner ~1,7 s ko'rsatdi) birinchi ochish keng chegara bilan;
+    // reliz build'da bir necha o'n millisekund. Bu test faqat jiddiy regressiya signali.
+    assert!(first.as_millis() < 5_000, "{first:?}");
     assert!(again.as_millis() < 1_500, "{again:?}");
 }
