@@ -111,6 +111,9 @@ pub struct ImportReport {
     pub unchanged: u32,
     pub kept_local: u32,
     pub conflicts: Vec<Conflict>,
+    /// Xonadondagi `ADULT` a'zolar, ularning PIN'i yo'q (import qilingan kattalar shu ro'yxatda).
+    /// PIN'siz kattalar havas chegarasiga rozilik bera olmaydi: avval PIN o'rnatilishi kerak.
+    pub adults_without_pin: Vec<String>,
 }
 
 struct TableInfo {
@@ -366,6 +369,11 @@ fn natural_match(
         }
         match row.get(*c) {
             Some(Json::Null) | None => conds.push(format!("\"{c}\" IS NULL")),
+            // Matn: «Anvar», «anvar», « Anvar » bir xil a'zo deb olinadi (dublikat bo'lmasin).
+            Some(Json::String(s)) => {
+                params.push(Value::Text(s.trim().to_lowercase()));
+                conds.push(format!("lower(trim(\"{c}\")) = ?{}", params.len()));
+            }
             Some(v) => {
                 params.push(from_json(v)?);
                 conds.push(format!("\"{c}\" = ?{}", params.len()));
@@ -607,6 +615,18 @@ pub fn apply(
                     taken.insert(lid.clone());
                     local = local_row(conn, t, &lid)?;
                     id_map.insert((t.name.clone(), inc_id.clone()), lid.clone());
+                    // Tabiiy kalit ustunlari lokal qiymatga tenglashtiriladi: «anvar» ↔ «Anvar»
+                    // faqat registr farqi ziddiyat hisoblanmasin.
+                    if let (Some(loc), Some((_, keys, _))) = (
+                        local.as_ref(),
+                        NATURAL_KEYS.iter().find(|(n, _, _)| *n == t.name),
+                    ) {
+                        for k in keys.iter() {
+                            if let Some(v) = loc.get(*k) {
+                                row.insert((*k).to_owned(), v.clone());
+                            }
+                        }
+                    }
                     row.insert("id".into(), Json::String(lid));
                 }
             }
@@ -683,7 +703,23 @@ pub fn apply(
             write_row(conn, t, &row, true)?;
         }
     }
+    report.adults_without_pin = adults_without_pin(conn, &target_household)?;
     Ok(report)
+}
+
+/// Xonadondagi faol `ADULT` a'zolar, PIN (`member_credentials`) yozuvi yo'q bo'lganlari.
+fn adults_without_pin(conn: &Connection, household_id: &str) -> Result<Vec<String>, StorageError> {
+    let mut stmt = conn.prepare(
+        "SELECT m.display_name FROM members m \
+         WHERE m.household_id = ?1 AND m.role = 'ADULT' AND m.deleted_at IS NULL \
+           AND NOT EXISTS (SELECT 1 FROM member_credentials c \
+                           WHERE c.member_id = m.id AND c.deleted_at IS NULL) \
+         ORDER BY m.display_name",
+    )?;
+    let names = stmt
+        .query_map([household_id], |r| r.get::<_, String>(0))?
+        .collect::<Result<_, _>>()?;
+    Ok(names)
 }
 
 #[cfg(test)]

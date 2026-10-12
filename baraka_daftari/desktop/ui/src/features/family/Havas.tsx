@@ -101,6 +101,14 @@ export function ConsentPanel({ report }: { report: HavasDto }) {
       setPins((p) => ({ ...p, [v.memberId]: '' }));
     },
   });
+  const setPin = useMutation({
+    mutationFn: (v: { memberId: string; pin: string }) =>
+      unwrap(commands.changeMemberPin(v.memberId, null, v.pin)),
+    onSuccess: async (_d, v) => {
+      setPins((p) => ({ ...p, [v.memberId]: '' }));
+      await queryClient.invalidateQueries();
+    },
+  });
   const pending = report.pending;
   if (!pending) return null;
   return (
@@ -111,31 +119,56 @@ export function ConsentPanel({ report }: { report: HavasDto }) {
       <p className="text-sm opacity-80">{t('havas.pendingHint')}</p>
       <p className="mt-1 text-sm">{t('havas.agreed', { names: pending.consented.join(', ') })}</p>
       <ul className="mt-2 space-y-2">
-        {pending.missing.map((m) => (
-          <li key={m.id} className="flex items-center gap-2">
-            <span className="w-32">{m.name}</span>
-            <PinField
-              label={t('havas.pinOf', { name: m.name })}
-              value={pins[m.id] ?? ''}
-              onChange={(v) => {
-                setPins((p) => ({ ...p, [m.id]: v }));
-              }}
-            />
-            <button
-              type="button"
-              className="rounded bg-accent px-3 py-1 text-paper disabled:opacity-50"
-              disabled={(pins[m.id] ?? '').length !== 6 || consent.isPending}
-              onClick={() => {
-                consent.mutate({ memberId: m.id, pin: pins[m.id] ?? '' });
-              }}
-            >
-              {t('havas.agree')}
-            </button>
-          </li>
-        ))}
+        {pending.missing.map((m) =>
+          m.has_pin ? (
+            <li key={m.id} className="flex items-center gap-2">
+              <span className="w-32">{m.name}</span>
+              <PinField
+                label={t('havas.pinOf', { name: m.name })}
+                value={pins[m.id] ?? ''}
+                onChange={(v) => {
+                  setPins((p) => ({ ...p, [m.id]: v }));
+                }}
+              />
+              <button
+                type="button"
+                className="rounded bg-accent px-3 py-1 text-paper disabled:opacity-50"
+                disabled={(pins[m.id] ?? '').length !== 6 || consent.isPending}
+                onClick={() => {
+                  consent.mutate({ memberId: m.id, pin: pins[m.id] ?? '' });
+                }}
+              >
+                {t('havas.agree')}
+              </button>
+            </li>
+          ) : (
+            <li key={`${m.id}-nopin`} className="flex flex-wrap items-center gap-2">
+              <span className="w-32">{m.name}</span>
+              <span className="text-sm opacity-80">{t('havas.noPin')}</span>
+              <PinField
+                label={t('havas.newPinOf', { name: m.name })}
+                value={pins[m.id] ?? ''}
+                onChange={(v) => {
+                  setPins((p) => ({ ...p, [m.id]: v }));
+                }}
+              />
+              <button
+                type="button"
+                className="rounded border border-accent px-3 py-1 disabled:opacity-50"
+                disabled={(pins[m.id] ?? '').length !== 6 || setPin.isPending}
+                onClick={() => {
+                  setPin.mutate({ memberId: m.id, pin: pins[m.id] ?? '' });
+                }}
+              >
+                {t('havas.setPin')}
+              </button>
+            </li>
+          ),
+        )}
       </ul>
       <div role="alert" className="mt-1 min-h-5 text-sm">
         {consent.error ? errorMessage(t, consent.error) : null}
+        {setPin.error ? errorMessage(t, setPin.error) : null}
       </div>
     </section>
   );

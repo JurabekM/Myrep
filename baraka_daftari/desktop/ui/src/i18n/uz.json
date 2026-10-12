@@ -254,7 +254,10 @@
     "propose": "Chegara taklif qilish",
     "proposer": "Kim taklif qiladi",
     "amount": "Oylik chegara (so'm)",
-    "yourPin": "Sizning PIN"
+    "yourPin": "Sizning PIN",
+    "noPin": "PIN o'rnatilmagan: bu a'zo avval PIN o'rnatishi kerak.",
+    "setPin": "PIN o'rnatish",
+    "newPinOf": "{{name}} uchun yangi PIN"
   },
   "family": {
     "members": "Oila a'zolari",
@@ -1015,7 +1018,8 @@
       "KEPT_LOCAL": "lokal qoldi",
       "TOOK_INCOMING": "fayldagisi olindi",
       "SKIPPED": "o'tkazib yuborildi"
-    }
+    },
+    "needsPin": "PIN o'rnatilishi kerak: {{names}}. Shu a'zolar PIN o'rnatmaguncha havas chegarasiga rozilik bera olmaydi."
   },
   "onboarding": {
     "progress": "{{n}}-qadam / {{total}}",

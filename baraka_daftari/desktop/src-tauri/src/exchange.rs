@@ -66,6 +66,8 @@ pub struct ImportReportDto {
     pub unchanged: u32,
     pub kept_local: u32,
     pub conflicts: Vec<ConflictDto>,
+    /// PIN'siz kattalar: ularga PIN o'rnatilmaguncha havas chegarasiga rozilik bera olmaydi.
+    pub adults_without_pin: Vec<String>,
 }
 
 fn report_dto(r: &ImportReport) -> ImportReportDto {
@@ -75,6 +77,7 @@ fn report_dto(r: &ImportReport) -> ImportReportDto {
         updated: r.updated,
         unchanged: r.unchanged,
         kept_local: r.kept_local,
+        adults_without_pin: r.adults_without_pin.clone(),
         conflicts: r
             .conflicts
             .iter()

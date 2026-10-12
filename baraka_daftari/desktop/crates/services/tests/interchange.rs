@@ -3,12 +3,13 @@
 use std::cell::Cell;
 
 use domain::{
-    date_from_str, CapitalKind, Category, Clock, IdGen, LedgerKind, OffsetDateTime,
-    PartnershipKind, PartyRole, ReportPeriod,
+    date_from_str, CapitalKind, Category, Clock, IdGen, LedgerKind, Member, MemberRole,
+    OffsetDateTime, PartnershipKind, PartyRole, ReportPeriod,
 };
 use money::{Currency, Money};
 use security::{container, KdfParams, SecurityError};
 use services::{
+    havas,
     interchange::{self, ConflictKind, Resolution},
     members,
     partnerships::{self, NewCapital, NewPartnership, NewParty, Signer},
@@ -643,4 +644,138 @@ fn unknown_columns_or_tables_are_rejected_without_changes() {
         Err(ServiceError::BadFile(_))
     ));
     assert_eq!(b.dump(), before);
+}
+
+/// Import qilingan kattalar (telefondan) PIN'siz keladi: ular havas chegarasiga rozilik bera olmaydi,
+/// PIN o'rnatilgach esa bera oladi.
+#[test]
+fn imported_adults_need_a_pin_before_they_can_consent() {
+    let mut phone = World::new("phone", 0, true);
+    let pctx = phone.ctx();
+    members::add(
+        &mut phone.db,
+        &env!(phone),
+        &pctx,
+        "Anvar",
+        MemberRole::Adult,
+    )
+    .unwrap();
+
+    let mut desk = World::new("desktop", 5_000_000, true);
+    let dctx = desk.ctx();
+    let men = dctx.member_id.clone();
+    members::set_pin(&mut desk.db, &env!(desk), &dctx, &men, "222222", FAST).unwrap();
+
+    let report = interchange::import(&mut desk.db, &dctx, &phone.export(false), PW).unwrap();
+    assert_eq!(
+        report.adults_without_pin,
+        vec!["Anvar".to_owned()],
+        "{report:?}"
+    );
+
+    havas::propose(
+        &mut desk.db,
+        &env!(desk),
+        &dctx,
+        &men,
+        "222222",
+        uzs(200_000),
+    )
+    .unwrap();
+    let (effective, pending) = havas::effective_and_pending(desk.db.conn(), &dctx).unwrap();
+    assert!(effective.is_none());
+    let pending = pending.unwrap();
+    let anvar = repo::list::<Member>(desk.db.conn(), &dctx.household_id)
+        .unwrap()
+        .into_iter()
+        .find(|m| m.display_name == "Anvar")
+        .unwrap();
+    assert_eq!(pending.without_pin, vec![anvar.meta.id.clone()]);
+
+    // PIN'siz rozilik rad etiladi.
+    assert!(matches!(
+        havas::consent(
+            &mut desk.db,
+            &env!(desk),
+            &dctx,
+            &pending.limit_id,
+            &anvar.meta.id,
+            "123456"
+        ),
+        Err(ServiceError::NoPin)
+    ));
+
+    // PIN o'rnatilgach rozilik qabul qilinadi va chegara kuchga kiradi.
+    members::set_pin(
+        &mut desk.db,
+        &env!(desk),
+        &dctx,
+        &anvar.meta.id,
+        "654321",
+        FAST,
+    )
+    .unwrap();
+    havas::consent(
+        &mut desk.db,
+        &env!(desk),
+        &dctx,
+        &pending.limit_id,
+        &anvar.meta.id,
+        "654321",
+    )
+    .unwrap();
+    let (effective, pending) = havas::effective_and_pending(desk.db.conn(), &dctx).unwrap();
+    assert!(pending.is_none());
+    assert_eq!(effective.unwrap().amount, uzs(200_000));
+}
+
+/// Ism registri va chekka bo'shliqlar boshqacha bo'lsa ham bitta a'zo bo'ladi (dublikat yo'q).
+#[test]
+fn member_names_match_ignoring_case_and_surrounding_spaces() {
+    let mut phone = World::new("phone", 0, true);
+    let pctx = phone.ctx();
+    members::add(
+        &mut phone.db,
+        &env!(phone),
+        &pctx,
+        "anvar",
+        MemberRole::Adult,
+    )
+    .unwrap();
+
+    let mut desk = World::new("desktop", 5_000_000, true);
+    let dctx = desk.ctx();
+    members::add(&mut desk.db, &env!(desk), &dctx, "Anvar", MemberRole::Adult).unwrap();
+    let before = repo::list::<Member>(desk.db.conn(), &dctx.household_id)
+        .unwrap()
+        .len();
+
+    let report = interchange::import(&mut desk.db, &dctx, &phone.export(false), PW).unwrap();
+    let after = repo::list::<Member>(desk.db.conn(), &dctx.household_id).unwrap();
+    assert_eq!(after.len(), before, "dublikat a'zo paydo bo'ldi: {after:?}");
+    assert_eq!(
+        after
+            .iter()
+            .filter(|m| m.display_name.eq_ignore_ascii_case("anvar"))
+            .count(),
+        1
+    );
+    assert!(report.conflicts.is_empty(), "{report:?}");
+}
+
+/// Import hech qachon PIN yozuvini yaratmaydi: hatto eksport fayli PIN xeshiga ega bo'lsa ham.
+#[test]
+fn import_never_creates_pin_credentials() {
+    let mut a = World::new("phone", 0, true);
+    let actx = a.ctx();
+    let me = actx.member_id.clone();
+    members::set_pin(&mut a.db, &env!(a), &actx, &me, "111111", FAST).unwrap();
+    let mut b = World::new("desktop", 5_000_000, true);
+    let bctx = b.ctx();
+    interchange::import(&mut b.db, &bctx, &a.export(false), PW).unwrap();
+    let n: i64 =
+        b.db.conn()
+            .query_row("SELECT count(*) FROM member_credentials", [], |r| r.get(0))
+            .unwrap();
+    assert_eq!(n, 0);
 }

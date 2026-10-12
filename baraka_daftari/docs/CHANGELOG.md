@@ -140,3 +140,8 @@
 ## Dizayn: Dark mavzu va ilova ikonkasi
 - **Mavzu:** Claude Desktop Dark uslubi (fon `#262624`, yon panel `#1f1e1d`, kartalar `#30302e`, matn `#faf9f5`, urg'u terrakota `#d97757`); sarlavhalar serif shriftda; yorug' mavzu `data-theme="light"` orqali ixtiyoriy. Barcha ranglar `ui/src/index.css` tokenlarida.
 - **Ikonka:** terrakota daftar + oltin niho («baraka» — o'sish), manba `desktop/branding/icon.svg`; `src-tauri/icons/` to'liq to'plam (`cargo tauri icon`). Oyna `backgroundColor` — yuklanishda oq chaqnash yo'q.
+
+## Import: a'zolar siyosati (tuzatish)
+- `.baraka` importda telefondan kelgan kattalar **PIN'siz** keladi (PIN xeshlari eksport qilinmaydi): ular havas chegarasiga rozilik bera olmaydi. Import hisobotida «PIN o'rnatilishi kerak» ro'yxati chiqadi; havas ekranida shunday a'zo uchun avval «PIN o'rnatish» ko'rsatiladi (rozilik tugmasi yo'q).
+- A'zo nomlari registri va chekka bo'shliqqa bog'liq emas («anvar» ↔ «Anvar»): dublikat a'zo yaratilmaydi; tabiiy kalit ustunlari lokal qiymatga tenglashtiriladi (faqat registr farqi ziddiyat bo'lmaydi).
+- Testlar: PIN'siz kattaning rozilik qabul qilinmasligi va PIN o'rnatilgach kuchga kirishi; ism moslashtirish; import PIN yozuvi yaratmasligi.

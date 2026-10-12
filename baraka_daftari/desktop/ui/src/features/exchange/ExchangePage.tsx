@@ -132,6 +132,11 @@ function Report({ r }: { r: ImportReportDto }) {
           kept: r.kept_local,
         })}
       </p>
+      {r.adults_without_pin.length > 0 && (
+        <p role="note" data-testid="needs-pin" className="rounded border border-line-strong p-2">
+          {t('exchange.needsPin', { names: r.adults_without_pin.join(', ') })}
+        </p>
+      )}
       {r.conflicts.length === 0 ? (
         <p>{t('exchange.noConflicts')}</p>
       ) : (

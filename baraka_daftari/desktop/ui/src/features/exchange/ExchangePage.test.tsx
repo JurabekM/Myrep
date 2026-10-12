@@ -35,6 +35,7 @@ const report = {
   updated: 2,
   unchanged: 10,
   kept_local: 1,
+  adults_without_pin: [],
   conflicts: [
     {
       table: 'venture_periods',

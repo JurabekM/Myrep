@@ -785,6 +785,8 @@ export type ImportReportDto = {
 	unchanged: number,
 	kept_local: number,
 	conflicts: ConflictDto[],
+	/**  PIN'siz kattalar: ularga PIN o'rnatilmaguncha havas chegarasiga rozilik bera olmaydi. */
+	adults_without_pin: string[],
 };
 
 export type IncomeDto = {
@@ -868,6 +870,8 @@ export type MemberDto = {
 export type MemberRef = {
 	id: string,
 	name: string,
+	/**  `false` bo'lsa avval shu a'zoga PIN o'rnatiladi (PIN'siz rozilik berilmaydi). */
+	has_pin: boolean,
 };
 
 /**  Pul DTO (DESKTOP_PROMPT 3.2): `minor` JS 2^53 chegarasidan himoya uchun string. */

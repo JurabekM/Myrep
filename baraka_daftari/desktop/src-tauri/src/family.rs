@@ -391,6 +391,8 @@ pub struct PendingLimitDto {
 pub struct MemberRef {
     pub id: String,
     pub name: String,
+    /// `false` bo'lsa avval shu a'zoga PIN o'rnatiladi (PIN'siz rozilik berilmaydi).
+    pub has_pin: bool,
 }
 
 #[derive(Debug, Serialize, Type)]
@@ -413,18 +415,22 @@ fn havas_dto(r: havas::Report) -> HavasDto {
     HavasDto {
         month: r.month.text(),
         limit: r.limit.map(m),
-        pending: r.pending.map(|p| PendingLimitDto {
-            limit_id: p.limit_id,
-            amount: m(p.amount),
-            consented: p.consented.into_iter().map(|x| x.display_name).collect(),
-            missing: p
-                .missing
-                .into_iter()
-                .map(|x| MemberRef {
-                    id: x.meta.id,
-                    name: x.display_name,
-                })
-                .collect(),
+        pending: r.pending.map(|p| {
+            let p_without_pin = p.without_pin.clone();
+            PendingLimitDto {
+                limit_id: p.limit_id,
+                amount: m(p.amount),
+                consented: p.consented.into_iter().map(|x| x.display_name).collect(),
+                missing: p
+                    .missing
+                    .into_iter()
+                    .map(|x| MemberRef {
+                        has_pin: !p_without_pin.contains(&x.meta.id),
+                        id: x.meta.id,
+                        name: x.display_name,
+                    })
+                    .collect(),
+            }
         }),
         spent: m(r.spent),
         state: r.status.map(|s| {

@@ -9,7 +9,12 @@ import { commands, type HavasDto } from '../../bindings';
 import { ConsentPanel, HavasStatus, ProposeForm } from './Havas';
 
 vi.mock('../../bindings', () => ({
-  commands: { consentLimit: vi.fn(), proposeLimit: vi.fn(), listMembers: vi.fn() },
+  commands: {
+    consentLimit: vi.fn(),
+    proposeLimit: vi.fn(),
+    listMembers: vi.fn(),
+    changeMemberPin: vi.fn(),
+  },
 }));
 
 const money = (formatted: string, minor = '1') => ({ minor, currency: 'UZS', formatted });
@@ -91,7 +96,7 @@ describe('ConsentPanel', () => {
       limit_id: 'L1',
       amount: money("1 000 000 so'm"),
       consented: ['Karim'],
-      missing: [{ id: 'm2', name: 'Dilnoza' }],
+      missing: [{ id: 'm2', name: 'Dilnoza', has_pin: true }],
     },
   };
 
@@ -108,6 +113,31 @@ describe('ConsentPanel', () => {
     });
     await waitFor(() => {
       expect(pin).toHaveValue('');
+    });
+  });
+
+  it("PIN'siz a'zo avval PIN o'rnatadi; rozilik faqat shundan keyin", async () => {
+    vi.mocked(commands.changeMemberPin).mockResolvedValue({ status: 'ok', data: null });
+    wrap(
+      <ConsentPanel
+        report={{
+          ...pending,
+          pending: {
+            ...pending.pending!,
+            missing: [{ id: 'm3', name: 'Anvar', has_pin: false }],
+          },
+        }}
+      />,
+    );
+    // Rozilik tugmasi yo'q: PIN'siz a'zo rozilik bera olmaydi.
+    expect(screen.queryByRole('button', { name: 'Rozilik berish' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText("PIN o'rnatilmagan: bu a'zo avval PIN o'rnatishi kerak."),
+    ).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Anvar uchun yangi PIN'), '246810');
+    await userEvent.click(screen.getByRole('button', { name: "PIN o'rnatish" }));
+    await waitFor(() => {
+      expect(commands.changeMemberPin).toHaveBeenCalledWith('m3', null, '246810');
     });
   });
 

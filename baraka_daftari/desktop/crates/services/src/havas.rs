@@ -18,6 +18,8 @@ pub struct Pending {
     pub amount: Money,
     pub consented: Vec<Member>,
     pub missing: Vec<Member>,
+    /// `missing` ichida PIN'i yo'q a'zolarning ID'lari: ular avval PIN o'rnatishi kerak.
+    pub without_pin: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -174,19 +176,29 @@ pub fn effective_and_pending(
             .is_some_and(|set| adults.iter().all(|a| set.contains(&a.meta.id)))
     };
     let effective = limits.iter().rev().find(|l| covered(l)).cloned();
-    let pending = limits.last().filter(|l| !covered(l)).map(|l| {
-        let set = by_limit.get(&l.meta.id).cloned().unwrap_or_default();
-        let (consented, missing) = adults
-            .iter()
-            .cloned()
-            .partition(|a| set.contains(&a.meta.id));
-        Pending {
-            limit_id: l.meta.id.clone(),
-            amount: l.amount,
-            consented,
-            missing,
+    let pending = match limits.last().filter(|l| !covered(l)) {
+        None => None,
+        Some(l) => {
+            let set = by_limit.get(&l.meta.id).cloned().unwrap_or_default();
+            let (consented, missing): (Vec<Member>, Vec<Member>) = adults
+                .iter()
+                .cloned()
+                .partition(|a| set.contains(&a.meta.id));
+            let mut without_pin = Vec::new();
+            for m in &missing {
+                if !members::has_pin(conn, ctx, &m.meta.id)? {
+                    without_pin.push(m.meta.id.clone());
+                }
+            }
+            Some(Pending {
+                limit_id: l.meta.id.clone(),
+                amount: l.amount,
+                consented,
+                missing,
+                without_pin,
+            })
         }
-    });
+    };
     Ok((effective, pending))
 }
 
