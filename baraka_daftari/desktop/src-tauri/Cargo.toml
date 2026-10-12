@@ -22,13 +22,27 @@ security = { path = "../crates/security" }
 storage = { path = "../crates/storage" }
 domain = { path = "../crates/domain" }
 services = { path = "../crates/services" }
+api = { path = "../crates/api" }
 content = { path = "../crates/content" }
 tauri-plugin-dialog = "2"
 tauri-plugin-global-shortcut = "2"
 zeroize = "1"
 
-[dev-dependencies]
-tempfile = "3"
+# Testlar `api` crate ida. Tauri'ga bog'langan lib va ilova binary'sining test harness'i
+# Windows'da ishlamaydi (0xc0000139), shuning uchun ular o'chirilgan.
+[lib]
+test = false
+doctest = false
+
+[[bin]]
+name = "baraka-desktop"
+path = "src/main.rs"
+test = false
+
+[[bin]]
+name = "export-bindings"
+path = "src/bin/export_bindings.rs"
+test = false
 
 [lints]
 workspace = true

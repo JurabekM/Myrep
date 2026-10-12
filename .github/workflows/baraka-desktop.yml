@@ -59,13 +59,7 @@ jobs:
       - name: clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: test
-        if: matrix.os != 'windows-latest'
         run: cargo test --workspace --exclude vectors
-      # Windows: Tauri'ga bog'langan test .exe Common Controls v6 manifestisiz yuklanmaydi
-      # (0xc0000139), shuning uchun baraka-desktop unit testlari faqat Linux/macOS'da ishlaydi.
-      - name: test (Windows, baraka-desktop'siz)
-        if: matrix.os == 'windows-latest'
-        run: cargo test --workspace --exclude vectors --exclude baraka-desktop
       - name: haqiqiy OS keyring (Windows Credential Manager / Keychain)
         if: matrix.os != 'ubuntu-latest'
         run: cargo test -p security -- --ignored
@@ -73,6 +67,9 @@ jobs:
       - name: test vektorlari
         run: cargo test -p vectors
 
+      # Bindinglar testdan emas, alohida bin'dan yoziladi: har OS'da ishlaydi.
+      - name: TS bindinglarni qayta yozish
+        run: cargo run -p baraka-desktop --bin export-bindings
       - name: TS bindinglar yangilangan (commit qilinganiga teng)
         shell: bash
         run: git diff --exit-code -- ui/src/bindings

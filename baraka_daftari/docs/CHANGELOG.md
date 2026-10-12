@@ -150,3 +150,8 @@
 - `pdf::templates_releasable(debug_build)`: dev build'da shablon ko'rinadi (ogohlantirish bilan); **release build'da shartnoma PDF'i chiqmaydi**, tasdiqlanmaguncha (`TEMPLATES_APPROVED = false`). Servis qatlamida ham to'siq bor (UI'ga bog'liq emas).
 - UI: relizda «Shartnoma PDF» tugmasi yashirin; ogohlantirish qoladi.
 - CI: `baraka-release-gate` workflow — versiya tegida (`v*`) `release_gate --ignored` testi ishlaydi; shablon tasdiqlanmaguncha qizil.
+
+## Windows testlari: Tauri'siz `api` crate
+- Muammo: Tauri'ga bog'langan test binary'si Windows'da `STATUS_ENTRYPOINT_NOT_FOUND` (0xc0000139) bilan ishlamasdi; shu sabab Windows CI'da `baraka-desktop` testlari o'tkazib yuborilardi.
+- Yechim: xato xaritalash (`CommandError`), sessiya (`Session`), DTO va foiz parsing `crates/api` ga chiqarildi (Tauri'siz). `src-tauri` da `[lib]` va `[[bin]]` (app) test harness'lari o'chirildi; bindinglar `export-bindings` bin'idan yoziladi (`cargo run -p baraka-desktop --bin export-bindings`) — har OS'da.
+- CI: Windows'da endi hamma testlar ishlaydi (`baraka-desktop` ning 10 ta testi `api` ga ko'chirildi); istisno yo'q.

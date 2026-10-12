@@ -1,0 +1,22 @@
+[package]
+name = "api"
+description = "Tauri'siz buyruq qatlami: xato xaritalash, sessiya, DTO. Testlari har qanday platformada ishlaydi (Windows CI uchun)."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+domain = { path = "../domain" }
+money = { path = "../money" }
+security = { path = "../security" }
+services = { path = "../services" }
+storage = { path = "../storage" }
+serde = { workspace = true }
+specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

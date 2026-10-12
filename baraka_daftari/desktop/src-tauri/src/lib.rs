@@ -46,7 +46,8 @@ fn hide_quick_window(app: tauri::AppHandle) {
     tray::hide_quick(&app);
 }
 
-fn specta_builder() -> Builder<tauri::Wry> {
+/// TS bindinglar va `invoke_handler` uchun yagona commandlar ro'yxati.
+pub fn specta_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new().commands(collect_commands![
         commands::allocate_demo,
         commands::vault_state,
@@ -248,17 +249,4 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("Tauri ishga tushmadi");
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// CI: bindinglar har doim yangilanganini tekshirish uchun faylni qayta yozadi.
-    #[test]
-    fn exports_typescript_bindings() {
-        specta_builder()
-            .export(Typescript::default(), "../ui/src/bindings/index.ts")
-            .unwrap();
-    }
 }

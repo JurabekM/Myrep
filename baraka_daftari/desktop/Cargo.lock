@@ -84,6 +84,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "domain",
+ "money",
+ "security",
+ "serde",
+ "services",
+ "specta",
+ "storage",
+ "tempfile",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -287,6 +301,7 @@ checksum = "be5eb007b7cacc6c660343e96f650fedf4b5a77512399eb952ca6642cf8d13f7"
 name = "baraka-desktop"
 version = "0.1.0"
 dependencies = [
+ "api",
  "content",
  "domain",
  "money",
@@ -302,7 +317,6 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-global-shortcut",
  "tauri-specta",
- "tempfile",
  "thiserror 2.0.21",
  "zeroize",
 ]
