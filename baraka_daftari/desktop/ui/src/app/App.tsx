@@ -109,7 +109,10 @@ export function App() {
 
   return (
     <div className="flex min-h-screen">
-      <nav aria-label={t('nav.label')} className="w-52 shrink-0 border-r border-accent/30 p-4">
+      <nav
+        aria-label={t('nav.label')}
+        className="w-56 shrink-0 border-r border-line bg-sidebar p-4"
+      >
         <p className="mb-4 text-lg font-semibold">{t('app.title')}</p>
         <ul className="space-y-1">
           {PAGES.map((p) => (
@@ -117,7 +120,7 @@ export function App() {
               <button
                 type="button"
                 aria-current={page === p.id ? 'page' : undefined}
-                className={`w-full rounded px-3 py-2 text-left ${page === p.id ? 'bg-accent text-paper' : 'hover:bg-accent/10'}`}
+                className={`w-full rounded px-3 py-2 text-left ${page === p.id ? 'bg-accent text-paper' : 'hover:bg-white/5'}`}
                 onClick={() => {
                   setPage(p.id);
                 }}

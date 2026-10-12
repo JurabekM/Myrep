@@ -62,7 +62,7 @@ function Mapper({ preview, onDone }: { preview: CsvPreviewDto; onDone: () => voi
     <label className="block text-sm">
       {label}
       <select
-        className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+        className="mt-1 block rounded border border-line-strong bg-transparent p-1"
         value={value}
         onChange={(e) => {
           set(Number(e.target.value));
@@ -108,7 +108,7 @@ function Mapper({ preview, onDone }: { preview: CsvPreviewDto; onDone: () => voi
           <thead>
             <tr>
               {h.map((name, i) => (
-                <th key={i} className="border-b border-accent/30 px-2 text-left">
+                <th key={i} className="border-b border-line px-2 text-left">
                   {name}
                 </th>
               ))}
@@ -135,7 +135,7 @@ function Mapper({ preview, onDone }: { preview: CsvPreviewDto; onDone: () => voi
         <label className="block text-sm">
           {t('csv.dateFormat')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={dateFormat}
             onChange={(e) => {
               setDateFormat(e.target.value as (typeof DATE_FORMATS)[number]);
@@ -151,7 +151,7 @@ function Mapper({ preview, onDone }: { preview: CsvPreviewDto; onDone: () => voi
         <label className="block text-sm">
           {t('csv.sign')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={sign}
             onChange={(e) => {
               setSign(e.target.value as (typeof SIGNS)[number]);
@@ -167,7 +167,7 @@ function Mapper({ preview, onDone }: { preview: CsvPreviewDto; onDone: () => voi
         <label className="block text-sm">
           {t('csv.defaultCategory')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={chosen}
             onChange={(e) => {
               setCategoryId(e.target.value);
@@ -223,7 +223,7 @@ export function CsvImport() {
     },
   });
   return (
-    <section aria-label={t('csv.title')} className="rounded-lg border border-accent/30 p-5">
+    <section aria-label={t('csv.title')} className="rounded-lg border border-line p-5">
       <h2 className="text-lg font-semibold">{t('csv.title')}</h2>
       <p className="text-sm opacity-80">{t('csv.hint')}</p>
       {preview ? (

@@ -33,7 +33,7 @@ export function Contributors({ debtId }: { debtId: string }) {
   });
   const error = [set.error, remove.error].find((e) => e !== null);
   return (
-    <div className="rounded border border-accent/30 p-3" data-testid="contributors">
+    <div className="rounded border border-line p-3" data-testid="contributors">
       <h4 className="font-semibold">{t('contrib.title')}</h4>
       <ul className="mt-1 space-y-1 text-sm">
         {list.data?.map((c) => (
@@ -70,7 +70,7 @@ export function Contributors({ debtId }: { debtId: string }) {
         <label className="block">
           {t('contrib.member')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={memberId}
             onChange={(e) => {
               setMemberId(e.target.value);
@@ -88,7 +88,7 @@ export function Contributors({ debtId }: { debtId: string }) {
           {t('contrib.monthly')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-32 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-32 rounded border border-line-strong bg-transparent p-1"
             value={share}
             onChange={(e) => {
               setShare(e.target.value);

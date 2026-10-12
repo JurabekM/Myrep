@@ -155,7 +155,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
   if (!l?.active) return null;
   const error = [add.error, close.error, report.error].find((x) => x !== null);
   return (
-    <section className="rounded border border-accent/30 p-3" data-testid="ledger">
+    <section className="rounded border border-line p-3" data-testid="ledger">
       <h3 className="font-semibold">{t('ledger.title')}</h3>
       <p className="text-xs opacity-70">{t('ledger.separate')}</p>
       {l.read_only && (
@@ -168,7 +168,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
           <h4 className="text-sm font-medium">
             {t('ledger.openPeriod', { n: l.open.period_no, from: l.open.start_date })}
           </h4>
-          <ul className="divide-y divide-accent/20">
+          <ul className="divide-y divide-line">
             {l.open.entries.map((e) => (
               <EntryRow key={e.id} e={e} locked={false} readOnly={l.read_only} />
             ))}
@@ -194,7 +194,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
             <label className="block">
               {t('ledger.kind')}
               <select
-                className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block rounded border border-line-strong bg-transparent p-1"
                 value={fm ? 'EXPENSE' : kind}
                 disabled={fm}
                 onChange={(e) => {
@@ -208,7 +208,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
             <label className="block">
               {t('ledger.desc')}
               <input
-                className="mt-1 block w-44 rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-44 rounded border border-line-strong bg-transparent p-1"
                 value={desc}
                 onChange={(e) => {
                   setDesc(e.target.value);
@@ -219,7 +219,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
               {t('ledger.amount')}
               <input
                 inputMode="decimal"
-                className="mt-1 block w-32 rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-32 rounded border border-line-strong bg-transparent p-1"
                 value={amountText}
                 onChange={(e) => {
                   setAmountText(e.target.value);
@@ -229,7 +229,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
             <label className="block">
               {t('ledger.note')}
               <input
-                className="mt-1 block w-44 rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-44 rounded border border-line-strong bg-transparent p-1"
                 value={note}
                 onChange={(e) => {
                   setNote(e.target.value);
@@ -266,7 +266,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
                 <label className="block">
                   {t('ledger.negligence')}
                   <input
-                    className="mt-1 block w-56 rounded border border-accent/50 bg-transparent p-1"
+                    className="mt-1 block w-56 rounded border border-line-strong bg-transparent p-1"
                     value={negligence}
                     onChange={(e) => {
                       setNegligence(e.target.value);
@@ -299,7 +299,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
                   net: c.net.formatted,
                 })}
               </summary>
-              <ul className="divide-y divide-accent/20">
+              <ul className="divide-y divide-line">
                 {c.entries.map((e) => (
                   <EntryRow key={e.id} e={e} locked readOnly={l.read_only} />
                 ))}

@@ -17,7 +17,7 @@ function IndexCard() {
   const b = book.data;
   if (!b) return null;
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid="inflation">
+    <section className="rounded-lg border border-line p-5" data-testid="inflation">
       <h2 className="font-semibold">{t('prices.index')}</h2>
       {b.inflation ? (
         <>
@@ -106,7 +106,7 @@ function ItemRow({ it }: { it: PriceItemDto }) {
         <input
           aria-label={t('prices.priceFor', { name: it.name })}
           placeholder={t('prices.price')}
-          className="w-36 rounded border border-accent/50 bg-transparent p-1"
+          className="w-36 rounded border border-line-strong bg-transparent p-1"
           value={price}
           onChange={(e) => {
             setPrice(e.target.value);
@@ -115,7 +115,7 @@ function ItemRow({ it }: { it: PriceItemDto }) {
         <input
           aria-label={t('prices.place')}
           placeholder={t('prices.place')}
-          className="w-36 rounded border border-accent/50 bg-transparent p-1"
+          className="w-36 rounded border border-line-strong bg-transparent p-1"
           value={place}
           onChange={(e) => {
             setPlace(e.target.value);
@@ -126,7 +126,7 @@ function ItemRow({ it }: { it: PriceItemDto }) {
         </button>
         <button
           type="button"
-          className="rounded border border-accent/50 px-3 py-0.5"
+          className="rounded border border-line-strong px-3 py-0.5"
           onClick={() => {
             setShowHistory((v) => !v);
           }}
@@ -135,7 +135,7 @@ function ItemRow({ it }: { it: PriceItemDto }) {
         </button>
         <button
           type="button"
-          className="rounded border border-accent/50 px-3 py-0.5"
+          className="rounded border border-line-strong px-3 py-0.5"
           onClick={() => {
             remove.mutate();
           }}
@@ -189,7 +189,7 @@ function AddItemForm() {
       <label className="block text-sm">
         {t('prices.itemName')}
         <input
-          className="mt-1 block w-44 rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block w-44 rounded border border-line-strong bg-transparent p-1"
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -199,7 +199,7 @@ function AddItemForm() {
       <label className="block text-sm">
         {t('prices.unit')}
         <input
-          className="mt-1 block w-20 rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block w-20 rounded border border-line-strong bg-transparent p-1"
           value={unit}
           onChange={(e) => {
             setUnit(e.target.value);
@@ -210,7 +210,7 @@ function AddItemForm() {
         {t('prices.weightLabel')}
         <input
           inputMode="numeric"
-          className="mt-1 block w-20 rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block w-20 rounded border border-line-strong bg-transparent p-1"
           value={weight}
           onChange={(e) => {
             setWeight(e.target.value);
@@ -252,7 +252,7 @@ function PurchasingCard({ items }: { items: PriceItemDto[] }) {
   });
   const r = calc.data;
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid="mouse">
+    <section className="rounded-lg border border-line p-5" data-testid="mouse">
       <h2 className="font-semibold">{t('mouse.title')}</h2>
       <p className="mt-1 text-sm opacity-80">{t('mouse.hint')}</p>
       <form
@@ -266,7 +266,7 @@ function PurchasingCard({ items }: { items: PriceItemDto[] }) {
           {t('mouse.percent')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-24 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-24 rounded border border-line-strong bg-transparent p-1"
             value={percent}
             onChange={(e) => {
               setPercent(e.target.value);
@@ -277,7 +277,7 @@ function PurchasingCard({ items }: { items: PriceItemDto[] }) {
           {t('mouse.years')}
           <input
             inputMode="numeric"
-            className="mt-1 block w-16 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-16 rounded border border-line-strong bg-transparent p-1"
             value={years}
             onChange={(e) => {
               setYears(e.target.value);
@@ -287,7 +287,7 @@ function PurchasingCard({ items }: { items: PriceItemDto[] }) {
         <label className="block text-sm">
           {t('mouse.item')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={itemId}
             onChange={(e) => {
               setItemId(e.target.value);
@@ -335,7 +335,7 @@ function PurchasingCard({ items }: { items: PriceItemDto[] }) {
           )}
         </div>
       )}
-      <div className="mt-4 border-t border-accent/20 pt-3">
+      <div className="mt-4 border-t border-line pt-3">
         <p className="text-sm">{t('mouse.next')}</p>
         <button
           type="button"
@@ -365,10 +365,10 @@ export function PricesPage() {
         <IndexCard />
         <PurchasingCard items={items.data ?? []} />
       </div>
-      <section className="rounded-lg border border-accent/30 p-5">
+      <section className="rounded-lg border border-line p-5">
         <h2 className="font-semibold">{t('prices.basket')}</h2>
         <AddItemForm />
-        <ul className="mt-3 divide-y divide-accent/20">
+        <ul className="mt-3 divide-y divide-line">
           {items.data?.map((it) => (
             <ItemRow key={it.id} it={it} />
           ))}

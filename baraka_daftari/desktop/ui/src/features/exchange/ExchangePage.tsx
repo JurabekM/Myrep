@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { commands, type ImportReportDto } from '../../bindings';
 import { errorMessage, unwrap } from '../../lib/api';
 
-const inp = 'mt-1 block w-64 rounded border border-accent/50 bg-transparent p-1';
+const inp = 'mt-1 block w-64 rounded border border-line-strong bg-transparent p-1';
 
 function ExportSection() {
   const { t } = useTranslation();
@@ -36,7 +36,7 @@ function ExportSection() {
     if (pw !== '' && pw === pw2) exp.mutate();
   };
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('exchange.exportTitle')}</h2>
       <form onSubmit={submit} className="mt-2 space-y-2 text-sm">
         <label className="block">
@@ -137,7 +137,7 @@ function Report({ r }: { r: ImportReportDto }) {
       ) : (
         <>
           <h4 className="font-medium">{t('exchange.conflictsTitle', { n: r.conflicts.length })}</h4>
-          <ul className="divide-y divide-accent/20">
+          <ul className="divide-y divide-line">
             {r.conflicts.map((c) => (
               <li key={`${c.table}-${c.id}`} className="py-1" data-testid={`conflict-${c.kind}`}>
                 <strong>{c.label}</strong> — {t(`exchange.kinds.${c.kind}`)} (
@@ -192,7 +192,7 @@ function ImportSection() {
   });
   const error = pick.error ?? preview.error ?? apply.error;
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('exchange.importTitle')}</h2>
       <div className="mt-2 space-y-2 text-sm">
         <button

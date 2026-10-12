@@ -59,7 +59,7 @@ export function ReceiptPanel({ kind, id }: { kind: 'DEBT' | 'RECEIVABLE'; id: st
   if (!d) return null;
   const error = [save.error, exportPdf.error].find((e) => e !== null);
   return (
-    <div className="mt-3 space-y-3 rounded border border-accent/30 p-3" data-testid="receipt-panel">
+    <div className="mt-3 space-y-3 rounded border border-line p-3" data-testid="receipt-panel">
       <h4 className="font-semibold">{t('receipt.title')}</h4>
       <p className="text-sm opacity-80">
         {t('receipt.parties', {
@@ -78,7 +78,7 @@ export function ReceiptPanel({ kind, id }: { kind: 'DEBT' | 'RECEIVABLE'; id: st
           <label key={i} className="block text-sm">
             {t('receipt.witness', { n: i + 1 })}
             <input
-              className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+              className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
               value={w}
               onChange={(e) => {
                 setWitnesses((prev) => prev.map((x, j) => (j === i ? e.target.value : x)));

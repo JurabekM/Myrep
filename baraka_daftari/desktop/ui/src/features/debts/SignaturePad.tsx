@@ -45,7 +45,7 @@ export function SignaturePad({
         aria-label={label}
         width={320}
         height={110}
-        className="mt-1 touch-none rounded border border-accent/50 bg-white"
+        className="mt-1 touch-none rounded border border-line-strong bg-white"
         onPointerDown={(e) => {
           const ctx = canvas.current?.getContext('2d');
           if (!ctx) return;

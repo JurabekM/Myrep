@@ -133,7 +133,7 @@ export function SubscriptionsPage() {
           })}
         </p>
       )}
-      <ul className="divide-y divide-accent/20">
+      <ul className="divide-y divide-line">
         {list.data?.items.map((s) => (
           <Row key={s.id} s={s} />
         ))}
@@ -149,7 +149,7 @@ export function SubscriptionsPage() {
         <input
           aria-label={t('subs.name')}
           placeholder={t('subs.name')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -158,7 +158,7 @@ export function SubscriptionsPage() {
         <input
           aria-label={t('subs.amount')}
           placeholder={t('subs.amount')}
-          className="w-36 rounded border border-accent/50 bg-transparent p-1"
+          className="w-36 rounded border border-line-strong bg-transparent p-1"
           value={amount}
           onChange={(e) => {
             setAmount(e.target.value);
@@ -166,7 +166,7 @@ export function SubscriptionsPage() {
         />
         <select
           aria-label={t('subs.period')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={period}
           onChange={(e) => {
             setPeriod(e.target.value as (typeof PERIODS)[number]);

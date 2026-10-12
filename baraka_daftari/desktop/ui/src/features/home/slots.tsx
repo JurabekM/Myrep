@@ -14,7 +14,7 @@ export interface SlotProps {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="text-sm uppercase tracking-wide opacity-70">{title}</h2>
       <div className="mt-2">{children}</div>
     </section>

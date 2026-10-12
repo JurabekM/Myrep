@@ -20,7 +20,7 @@ function EnvelopeCard({ e }: { e: EnvelopeDto }) {
     onSuccess: refresh,
   });
   return (
-    <li className="rounded-lg border border-accent/30 p-4" data-testid={`env-${e.name}`}>
+    <li className="rounded-lg border border-line p-4" data-testid={`env-${e.name}`}>
       <div className="flex items-baseline justify-between">
         <strong className="text-lg">{e.name}</strong>
         <span>{t('env.limit', { amount: e.limit.formatted })}</span>
@@ -66,7 +66,7 @@ function EnvelopeCard({ e }: { e: EnvelopeDto }) {
         <input
           aria-label={t('env.leftover')}
           placeholder={t('env.leftover')}
-          className="flex-1 rounded border border-accent/50 bg-transparent p-1"
+          className="flex-1 rounded border border-line-strong bg-transparent p-1"
           value={leftover}
           onChange={(ev) => {
             setLeftover(ev.target.value);
@@ -150,7 +150,7 @@ export function EnvelopesPage() {
         <input
           aria-label={t('env.name')}
           placeholder={t('env.name')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={name}
           onChange={(ev) => {
             setName(ev.target.value);
@@ -159,7 +159,7 @@ export function EnvelopesPage() {
         <input
           aria-label={t('env.weeklyLimit')}
           placeholder={t('env.weeklyLimit')}
-          className="w-36 rounded border border-accent/50 bg-transparent p-1"
+          className="w-36 rounded border border-line-strong bg-transparent p-1"
           value={limit}
           onChange={(ev) => {
             setLimit(ev.target.value);
@@ -167,7 +167,7 @@ export function EnvelopesPage() {
         />
         <select
           aria-label={t('env.counts')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={target}
           onChange={(ev) => {
             setTarget(ev.target.value);

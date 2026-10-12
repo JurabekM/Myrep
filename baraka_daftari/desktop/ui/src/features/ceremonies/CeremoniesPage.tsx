@@ -41,7 +41,7 @@ function NewPlan() {
       <label className="block text-sm">
         {t('cer.name')}
         <input
-          className="mt-1 block w-56 rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block w-56 rounded border border-line-strong bg-transparent p-1"
           placeholder={t('cer.namePlaceholder')}
           value={name}
           onChange={(e) => {
@@ -52,7 +52,7 @@ function NewPlan() {
       <label className="block text-sm">
         {t('cer.kind')}
         <select
-          className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block rounded border border-line-strong bg-transparent p-1"
           value={kind}
           onChange={(e) => {
             setKind(e.target.value as (typeof KINDS)[number]);
@@ -69,7 +69,7 @@ function NewPlan() {
         {t('cer.date')}
         <input
           type="date"
-          className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block rounded border border-line-strong bg-transparent p-1"
           value={date}
           onChange={(e) => {
             setDate(e.target.value);
@@ -129,7 +129,7 @@ function Discussion({ p }: { p: CeremonyDto }) {
           <label className="block text-sm">
             {t('cer.discussNote')}
             <textarea
-              className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+              className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
               rows={2}
               value={note}
               onChange={(e) => {
@@ -225,14 +225,14 @@ function PlanCard({ p }: { p: CeremonyDto }) {
     pdf.error,
   ].find((e) => e !== null);
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid={`plan-${p.name}`}>
+    <section className="rounded-lg border border-line p-5" data-testid={`plan-${p.name}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold">
           {p.name}{' '}
           <span className="text-sm font-normal opacity-70">· {t(`cer.kinds.${p.kind}`)}</span>
         </h2>
         <span
-          className={`rounded border px-2 text-sm ${confirmed ? 'border-current font-semibold' : 'border-accent/40'}`}
+          className={`rounded border px-2 text-sm ${confirmed ? 'border-current font-semibold' : 'border-line-strong'}`}
           data-testid="status"
         >
           {t(`cer.statuses.${p.status}`)}
@@ -242,7 +242,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
         {t('cer.date')}
         <input
           type="date"
-          className="ml-2 rounded border border-accent/50 bg-transparent p-1"
+          className="ml-2 rounded border border-line-strong bg-transparent p-1"
           value={p.date ?? ''}
           onChange={(e) => {
             setDate.mutate(e.target.value);
@@ -299,7 +299,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
         <label className="block text-sm">
           {t('cer.lineName')}
           <input
-            className="mt-1 block w-44 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-44 rounded border border-line-strong bg-transparent p-1"
             placeholder={t('cer.linePlaceholder')}
             value={name}
             onChange={(e) => {
@@ -311,7 +311,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
           {t('cer.qty')}
           <input
             inputMode="numeric"
-            className="mt-1 block w-16 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-16 rounded border border-line-strong bg-transparent p-1"
             value={qty}
             onChange={(e) => {
               setQty(e.target.value);
@@ -322,7 +322,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
           {t('cer.unitPrice')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-32 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-32 rounded border border-line-strong bg-transparent p-1"
             value={price}
             onChange={(e) => {
               setPrice(e.target.value);
@@ -332,7 +332,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
         <label className="block text-sm">
           {t('cer.source')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={source}
             onChange={(e) => {
               setSource(e.target.value as (typeof SOURCES)[number]);
@@ -442,7 +442,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
       )}
 
       <form
-        className="mt-4 flex flex-wrap items-end gap-2 border-t border-accent/20 pt-3"
+        className="mt-4 flex flex-wrap items-end gap-2 border-t border-line pt-3"
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
           goal.mutate();
@@ -456,7 +456,7 @@ function PlanCard({ p }: { p: CeremonyDto }) {
           {t('cer.giftTarget')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-36 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-36 rounded border border-line-strong bg-transparent p-1"
             value={target}
             onChange={(e) => {
               setTarget(e.target.value);
@@ -491,7 +491,7 @@ export function CeremoniesPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">{t('nav.ceremonies')}</h1>
       <p className="text-sm opacity-80">{t('cer.intro')}</p>
-      <section className="rounded-lg border border-accent/30 p-5">
+      <section className="rounded-lg border border-line p-5">
         <NewPlan />
       </section>
       {plans.map((p) => (

@@ -159,7 +159,7 @@ function QuickEntryForm({ onDone }: { onDone: () => void }) {
           inputMode="decimal"
           autoComplete="off"
           placeholder={suggestion.data?.share.formatted ?? ''}
-          className="mt-1 w-full rounded border border-accent/50 bg-transparent p-2"
+          className="mt-1 w-full rounded border border-line-strong bg-transparent p-2"
           value={shareText ?? ''}
           onChange={(e) => {
             setShareText(e.target.value === '' ? null : e.target.value);

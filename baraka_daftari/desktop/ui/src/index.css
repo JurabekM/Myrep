@@ -1,21 +1,81 @@
 @import 'tailwindcss';
 
+/*
+ * Mavzu: Claude Desktop'ning Dark uslubi — iliq qora-kulrang fon, qaymoq rangli matn,
+ * terrakota (#d97757) urg'u. Qiymatlar faqat shu yerda; komponentlar `paper/ink/accent/...` nomlarini ishlatadi.
+ */
 @theme {
-  --color-paper: #fbf6ea;
-  --color-ink: #2b2118;
-  --color-accent: #8a5a1c;
+  --color-paper: #262624;
+  --color-ink: #faf9f5;
+  --color-accent: #d97757;
+  --color-sidebar: #1f1e1d;
+  --color-surface: #30302e;
+  --color-line: #43423e;
+  --color-line-strong: #5a5953;
+  --color-muted: #b7b5a9;
 }
 
-:root[data-theme='dark'] {
-  --color-paper: #1d1913;
-  --color-ink: #efe6d2;
-  --color-accent: #d9a45b;
+/* Ixtiyoriy yorug' mavzu (hozircha hech qayerda yoqilmaydi): <html data-theme="light"> */
+:root[data-theme='light'] {
+  --color-paper: #faf9f5;
+  --color-ink: #2b2118;
+  --color-accent: #b4532f;
+  --color-sidebar: #f0eee6;
+  --color-surface: #ffffff;
+  --color-line: #e1ded2;
+  --color-line-strong: #c9c5b6;
+  --color-muted: #6b665a;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: system-ui, sans-serif;
+  font-family: ui-sans-serif, system-ui, 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sarlavhalar Claude uslubidagi serif shriftda. */
+h1,
+h2 {
+  font-family: ui-serif, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.01em;
+}
+
+/* Kartalar: asosiy maydondagi bo'limlar fondan biroz yorqinroq. */
+main section {
+  background: var(--color-surface);
+}
+
+main section section {
+  background: transparent;
+}
+
+select option {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 0.8;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
 }
 
 /* Accessibility (DESKTOP_PROMPT 7): klaviatura fokusi har doim ko'rinadi. */

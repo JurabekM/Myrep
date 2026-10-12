@@ -45,7 +45,7 @@ function Row({ item }: { item: SellableDto }) {
           <input
             aria-label={t('sell.soldPrice', { name: item.name })}
             placeholder={t('sell.soldPlaceholder')}
-            className="w-32 rounded border border-accent/50 bg-transparent p-1"
+            className="w-32 rounded border border-line-strong bg-transparent p-1"
             value={price}
             onChange={(e) => {
               setPrice(e.target.value);
@@ -53,7 +53,7 @@ function Row({ item }: { item: SellableDto }) {
           />
           <select
             aria-label={t('sell.toDebt', { name: item.name })}
-            className="rounded border border-accent/50 bg-transparent p-1"
+            className="rounded border border-line-strong bg-transparent p-1"
             value={debtId}
             onChange={(e) => {
               setDebtId(e.target.value);
@@ -112,7 +112,7 @@ export function Sellables() {
     },
   });
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid="sellables">
+    <section className="rounded-lg border border-line p-5" data-testid="sellables">
       <h2 className="font-semibold">{t('sell.title')}</h2>
       <p className="text-sm opacity-80">{t('sell.hint')}</p>
       <form
@@ -125,7 +125,7 @@ export function Sellables() {
         <label className="block text-sm">
           {t('sell.name')}
           <input
-            className="mt-1 block w-40 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-40 rounded border border-line-strong bg-transparent p-1"
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -136,7 +136,7 @@ export function Sellables() {
           {t('sell.price')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-32 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-32 rounded border border-line-strong bg-transparent p-1"
             value={price}
             onChange={(e) => {
               setPrice(e.target.value);
@@ -147,7 +147,7 @@ export function Sellables() {
           {t('sell.since')}
           <input
             type="date"
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={since}
             onChange={(e) => {
               setSince(e.target.value);
@@ -167,7 +167,7 @@ export function Sellables() {
           {errorMessage(t, add.error)}
         </p>
       ) : null}
-      <ul className="mt-2 divide-y divide-accent/20">
+      <ul className="mt-2 divide-y divide-line">
         {list.data?.map((i) => (
           <Row key={i.id} item={i} />
         ))}

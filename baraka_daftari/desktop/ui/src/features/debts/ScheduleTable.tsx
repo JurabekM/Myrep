@@ -30,7 +30,7 @@ export function ScheduleTable({ rows }: { rows: ScheduleRowDto[] }) {
       aria-rowcount={rows.length + 1}
       className="text-sm"
     >
-      <div role="row" className="grid grid-cols-5 border-b border-accent/40 font-semibold">
+      <div role="row" className="grid grid-cols-5 border-b border-line-strong font-semibold">
         {(['month', 'interest', 'principal', 'extra', 'balance'] as const).map((c) => (
           <div key={c} role="columnheader" className={c === 'month' ? '' : 'text-right'}>
             {t(`calc.cols.${c}`)}

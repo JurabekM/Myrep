@@ -116,7 +116,7 @@ export function RecoveryCard() {
             {t(key)}
             <input
               inputMode="numeric"
-              className="mt-1 block w-20 rounded border border-accent/50 bg-transparent p-1"
+              className="mt-1 block w-20 rounded border border-line-strong bg-transparent p-1"
               value={value}
               onChange={(e) => {
                 set(e.target.value);

@@ -19,7 +19,7 @@ export function Compare({ plans }: { plans: CeremonyDto[] }) {
   };
   const rows = run.data;
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid="compare">
+    <section className="rounded-lg border border-line p-5" data-testid="compare">
       <h2 className="font-semibold">{t('cer.compareTitle')}</h2>
       <p className="text-sm opacity-80">{t('cer.compareHint')}</p>
       <form
@@ -49,7 +49,7 @@ export function Compare({ plans }: { plans: CeremonyDto[] }) {
             {t('cer.capacity')}
             <input
               inputMode="decimal"
-              className="mt-1 block w-36 rounded border border-accent/50 bg-transparent p-1"
+              className="mt-1 block w-36 rounded border border-line-strong bg-transparent p-1"
               value={capacity}
               onChange={(e) => {
                 setCapacity(e.target.value);
@@ -60,7 +60,7 @@ export function Compare({ plans }: { plans: CeremonyDto[] }) {
             {t('cer.percent')}
             <input
               inputMode="decimal"
-              className="mt-1 block w-20 rounded border border-accent/50 bg-transparent p-1"
+              className="mt-1 block w-20 rounded border border-line-strong bg-transparent p-1"
               value={percent}
               onChange={(e) => {
                 setPercent(e.target.value);

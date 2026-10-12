@@ -59,7 +59,7 @@ function IdeaCard({ i }: { i: IdeaDto }) {
         <label className="block">
           {t('craft.providerName')}
           <input
-            className="mt-1 block w-40 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-40 rounded border border-line-strong bg-transparent p-1"
             value={provider}
             onChange={(e) => {
               setProvider(e.target.value);
@@ -130,7 +130,7 @@ function IdeaForm() {
       await queryClient.invalidateQueries();
     },
   });
-  const inp = 'mt-1 block rounded border border-accent/50 bg-transparent p-1';
+  const inp = 'mt-1 block rounded border border-line-strong bg-transparent p-1';
   const labels = ['pess', 'avg', 'opt'] as const;
   return (
     <form
@@ -185,7 +185,7 @@ function IdeaForm() {
           <div key={k} className="mt-1 flex gap-2">
             <input
               aria-label={t('craft.capexItem', { k: k + 1 })}
-              className="flex-1 rounded border border-accent/50 bg-transparent p-1"
+              className="flex-1 rounded border border-line-strong bg-transparent p-1"
               value={c.item}
               onChange={(e) => {
                 setCapex((p) => p.map((x, j) => (j === k ? { ...x, item: e.target.value } : x)));
@@ -194,7 +194,7 @@ function IdeaForm() {
             <input
               aria-label={t('craft.capexPrice', { k: k + 1 })}
               inputMode="decimal"
-              className="w-36 rounded border border-accent/50 bg-transparent p-1"
+              className="w-36 rounded border border-line-strong bg-transparent p-1"
               value={c.price}
               onChange={(e) => {
                 setCapex((p) => p.map((x, j) => (j === k ? { ...x, price: e.target.value } : x)));
@@ -214,7 +214,7 @@ function IdeaForm() {
       </fieldset>
       <div className="grid gap-2 sm:grid-cols-3 text-sm">
         {labels.map((l, k) => (
-          <fieldset key={l} className="rounded border border-accent/30 p-2">
+          <fieldset key={l} className="rounded border border-line p-2">
             <legend className="px-1">{t(`craft.scenarios.${l}`)}</legend>
             <label className="block">
               {t('craft.income', { s: t(`craft.scenarios.${l}`) })}
@@ -284,7 +284,7 @@ function OfferCheck() {
   ] as const;
   const r = check.data;
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid="offer">
+    <section className="rounded-lg border border-line p-5" data-testid="offer">
       <h2 className="font-semibold">{t('offer.title')}</h2>
       <p className="text-sm opacity-80">{t('offer.hint')}</p>
       <ul className="mt-2 space-y-1 text-sm">
@@ -342,10 +342,10 @@ export function CraftsPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">{t('nav.crafts')}</h1>
       <p className="text-sm opacity-80">{t('craft.intro')}</p>
-      <section className="rounded-lg border border-accent/30 p-5">
+      <section className="rounded-lg border border-line p-5">
         <h2 className="font-semibold">{t('craft.newTitle')}</h2>
         <IdeaForm />
-        <ul className="mt-3 divide-y divide-accent/20">
+        <ul className="mt-3 divide-y divide-line">
           {ideas.data?.map((i) => (
             <IdeaCard key={i.id} i={i} />
           ))}

@@ -20,7 +20,7 @@ export function GuardPanel() {
   });
   const g = guard.data;
   return (
-    <section className="rounded-lg border border-accent/30 p-5 lg:col-span-2" data-testid="guard">
+    <section className="rounded-lg border border-line p-5 lg:col-span-2" data-testid="guard">
       <h2 className="font-semibold">{t('guard.title')}</h2>
       <p className="mt-1 text-sm opacity-80">{t('guard.hint')}</p>
       {g && (
@@ -103,7 +103,7 @@ function GateCard() {
   if (!g) return null;
   const error = [declare.error, bypass.error, revoke.error].find((e) => e !== null);
   return (
-    <div className="mt-5 border-t border-accent/20 pt-4" data-testid="gate">
+    <div className="mt-5 border-t border-line pt-4" data-testid="gate">
       <h3 className="font-semibold">{t('gate.title')}</h3>
       <p className="mt-1 text-sm opacity-80">{t('gate.hint')}</p>
       {g.open ? (
@@ -152,7 +152,7 @@ function GateCard() {
             </button>
           ) : (
             <div
-              className="mt-3 space-y-2 rounded border border-accent/40 p-3"
+              className="mt-3 space-y-2 rounded border border-line-strong p-3"
               role="group"
               aria-label={t('gate.bypass')}
             >

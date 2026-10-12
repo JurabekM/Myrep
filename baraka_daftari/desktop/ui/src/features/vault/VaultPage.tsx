@@ -25,7 +25,7 @@ function RuleCard({
     onSuccess: invalidate,
   });
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('vault.rule')}</h2>
       <p className="mt-1 text-sm" data-testid="current-rule">
         {rule.kind === 'Percent'
@@ -56,7 +56,7 @@ function RuleCard({
         <input
           aria-label={t('vault.fixedLabel')}
           placeholder={t('vault.fixedLabel')}
-          className="flex-1 rounded border border-accent/50 bg-transparent p-2"
+          className="flex-1 rounded border border-line-strong bg-transparent p-2"
           value={fixed}
           onChange={(e) => {
             setFixed(e.target.value);
@@ -91,13 +91,13 @@ function OpeningBalanceCard() {
     save.mutate();
   };
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('vault.opening')}</h2>
       <p className="mt-1 text-sm opacity-80">{t('vault.openingHint')}</p>
       <form className="mt-3 flex gap-2" onSubmit={onSubmit}>
         <input
           aria-label={t('vault.openingLabel')}
-          className="flex-1 rounded border border-accent/50 bg-transparent p-2"
+          className="flex-1 rounded border border-line-strong bg-transparent p-2"
           value={amount}
           onChange={(e) => {
             setAmount(e.target.value);
@@ -188,7 +188,7 @@ function WithdrawalCard() {
     },
   });
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('vault.withdraw')}</h2>
       <p className="mt-1 text-sm opacity-80">{t('vault.withdrawHint')}</p>
       <form
@@ -201,7 +201,7 @@ function WithdrawalCard() {
         <input
           aria-label={t('vault.withdrawAmount')}
           placeholder={t('vault.withdrawAmount')}
-          className="w-full rounded border border-accent/50 bg-transparent p-2"
+          className="w-full rounded border border-line-strong bg-transparent p-2"
           value={amount}
           onChange={(e) => {
             setAmount(e.target.value);
@@ -210,7 +210,7 @@ function WithdrawalCard() {
         <input
           aria-label={t('vault.withdrawReason')}
           placeholder={t('vault.withdrawReason')}
-          className="w-full rounded border border-accent/50 bg-transparent p-2"
+          className="w-full rounded border border-line-strong bg-transparent p-2"
           value={reason}
           onChange={(e) => {
             setReason(e.target.value);
@@ -240,7 +240,7 @@ function WithdrawalCard() {
           {errorMessage(t, request.error)}
         </p>
       ) : null}
-      <ul className="mt-3 divide-y divide-accent/20">
+      <ul className="mt-3 divide-y divide-line">
         {pending.data?.map((w) => (
           <WithdrawalRow key={w.id} w={w} />
         ))}

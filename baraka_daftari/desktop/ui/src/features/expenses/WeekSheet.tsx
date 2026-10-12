@@ -140,7 +140,7 @@ export function WeekSheet() {
               <td>
                 <select
                   aria-label={t('sheet.date')}
-                  className="rounded border border-accent/40 bg-transparent p-1"
+                  className="rounded border border-line-strong bg-transparent p-1"
                   value={r.date}
                   onChange={(e) => {
                     update(r.key, { date: e.target.value });
@@ -157,7 +157,7 @@ export function WeekSheet() {
                 <input
                   data-col="note"
                   aria-label={t('sheet.note')}
-                  className="w-full rounded border border-accent/40 bg-transparent p-1"
+                  className="w-full rounded border border-line-strong bg-transparent p-1"
                   value={r.note}
                   onChange={(e) => {
                     update(r.key, { note: e.target.value });
@@ -170,7 +170,7 @@ export function WeekSheet() {
               <td>
                 <select
                   aria-label={t('sheet.category')}
-                  className="rounded border border-accent/40 bg-transparent p-1"
+                  className="rounded border border-line-strong bg-transparent p-1"
                   value={r.categoryId}
                   onChange={(e) => {
                     update(r.key, { categoryId: e.target.value });
@@ -188,7 +188,7 @@ export function WeekSheet() {
                 <input
                   aria-label={t('sheet.amount')}
                   inputMode="decimal"
-                  className="w-28 rounded border border-accent/40 bg-transparent p-1 text-right"
+                  className="w-28 rounded border border-line-strong bg-transparent p-1 text-right"
                   value={r.amount}
                   onChange={(e) => {
                     update(r.key, { amount: e.target.value });
@@ -201,7 +201,7 @@ export function WeekSheet() {
               <td>
                 <select
                   aria-label={t('sheet.channel')}
-                  className="rounded border border-accent/40 bg-transparent p-1"
+                  className="rounded border border-line-strong bg-transparent p-1"
                   value={r.channel}
                   onChange={(e) => {
                     update(r.key, { channel: e.target.value as Row['channel'] });

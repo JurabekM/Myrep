@@ -10,7 +10,7 @@ export function RescuePage() {
       <h1 className="text-2xl font-semibold">{t('nav.rescue')}</h1>
       <p className="text-sm opacity-80">{t('rescue.hint')}</p>
       <RescuePanel />
-      <ul className="divide-y divide-accent/20">
+      <ul className="divide-y divide-line">
         {rescue.data?.items.map((i) => (
           <li key={i.id} className="flex justify-between py-2">
             <span>

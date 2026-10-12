@@ -76,7 +76,7 @@ function PinField({
       maxLength={6}
       aria-label={label}
       placeholder={label}
-      className="w-28 rounded border border-accent/50 bg-transparent p-1 text-center tracking-widest"
+      className="w-28 rounded border border-line-strong bg-transparent p-1 text-center tracking-widest"
       value={value}
       onChange={(e) => {
         onChange(e.target.value.replace(/\D/g, ''));
@@ -104,7 +104,7 @@ export function ConsentPanel({ report }: { report: HavasDto }) {
   const pending = report.pending;
   if (!pending) return null;
   return (
-    <section className="rounded border border-accent/40 p-3" aria-label={t('havas.pendingTitle')}>
+    <section className="rounded border border-line-strong p-3" aria-label={t('havas.pendingTitle')}>
       <h3 className="font-semibold">
         {t('havas.pendingTitle')}: {pending.amount.formatted}
       </h3>
@@ -173,7 +173,7 @@ export function ProposeForm() {
     >
       <select
         aria-label={t('havas.proposer')}
-        className="rounded border border-accent/50 bg-transparent p-1"
+        className="rounded border border-line-strong bg-transparent p-1"
         value={who}
         onChange={(e) => {
           setMemberId(e.target.value);
@@ -188,7 +188,7 @@ export function ProposeForm() {
       <input
         aria-label={t('havas.amount')}
         placeholder={t('havas.amount')}
-        className="w-40 rounded border border-accent/50 bg-transparent p-1"
+        className="w-40 rounded border border-line-strong bg-transparent p-1"
         value={amount}
         onChange={(e) => {
           setAmount(e.target.value);

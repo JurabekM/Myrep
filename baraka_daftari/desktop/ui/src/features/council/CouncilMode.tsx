@@ -62,7 +62,7 @@ function CategoriesStep() {
       <label className="block text-lg">
         {t('council.changedBy')}{' '}
         <select
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={changer}
           onChange={(e) => {
             setBy(e.target.value);
@@ -80,7 +80,7 @@ function CategoriesStep() {
       <table className="w-full max-w-3xl text-lg">
         <tbody>
           {categories.data?.map((c) => (
-            <tr key={c.id} className="border-b border-accent/20">
+            <tr key={c.id} className="border-b border-line">
               <td className="py-1">
                 {c.name}
                 {c.is_charity ? ` (${t('council.charity')})` : ''}

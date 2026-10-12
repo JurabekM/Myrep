@@ -136,3 +136,7 @@
 - **Reliz to'sig'i:** `pdf::TEMPLATES_APPROVED = false` — shartnoma shabloni tasdiqlanmagani ilovada ogohlantirish sifatida ko'rinadi; `release_gate` testi (`--ignored`) tasdiq berilmaguncha qizil.
 - **Imzolash va updater:** `src-tauri/tauri.release.conf.template.json`, `docs/SIGNING_AND_UPDATER.md` — sertifikat/kalit yo'qligi sababli faqat shablon va qadamlar; updater plagini ulanmagan.
 - `docs/RELEASE_CHECKLIST.md` (avtomatik / to'siqlar / Windows'da qo'lda), `tests/startup_budget.rs` (Rust qismi ~40 ms).
+
+## Dizayn: Dark mavzu va ilova ikonkasi
+- **Mavzu:** Claude Desktop Dark uslubi (fon `#262624`, yon panel `#1f1e1d`, kartalar `#30302e`, matn `#faf9f5`, urg'u terrakota `#d97757`); sarlavhalar serif shriftda; yorug' mavzu `data-theme="light"` orqali ixtiyoriy. Barcha ranglar `ui/src/index.css` tokenlarida.
+- **Ikonka:** terrakota daftar + oltin niho («baraka» — o'sish), manba `desktop/branding/icon.svg`; `src-tauri/icons/` to'liq to'plam (`cargo tauri icon`). Oyna `backgroundColor` — yuklanishda oq chaqnash yo'q.

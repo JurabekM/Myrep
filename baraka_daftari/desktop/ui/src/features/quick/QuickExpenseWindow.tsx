@@ -111,7 +111,7 @@ function UnlockedForm() {
         <label className="block">
           <span className="block text-sm">{t('sheet.note')}</span>
           <input
-            className="mt-1 w-full rounded border border-accent/50 bg-transparent p-2"
+            className="mt-1 w-full rounded border border-line-strong bg-transparent p-2"
             value={note}
             onChange={(e) => {
               setNote(e.target.value);
@@ -124,7 +124,7 @@ function UnlockedForm() {
         <label className="block">
           <span className="block text-sm">{t('sheet.category')}</span>
           <select
-            className="mt-1 w-full rounded border border-accent/50 bg-transparent p-2"
+            className="mt-1 w-full rounded border border-line-strong bg-transparent p-2"
             value={chosen}
             onChange={(e) => {
               setCategoryId(e.target.value);

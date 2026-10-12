@@ -24,7 +24,7 @@ export function Distribution({ p }: { p: PartnershipDto }) {
       ),
   });
   return (
-    <div className="rounded border border-accent/30 p-3" data-testid="distribution">
+    <div className="rounded border border-line p-3" data-testid="distribution">
       <h3 className="font-semibold">{t('partner.distTitle')}</h3>
       <p className="text-xs opacity-70">{t('partner.distHint')}</p>
       <form
@@ -37,7 +37,7 @@ export function Distribution({ p }: { p: PartnershipDto }) {
         <label className="block">
           {t('partner.distOutcome')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={outcome}
             onChange={(e) => {
               setOutcome(e.target.value as 'PROFIT' | 'LOSS');
@@ -51,7 +51,7 @@ export function Distribution({ p }: { p: PartnershipDto }) {
           {t('partner.distAmount')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-36 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-36 rounded border border-line-strong bg-transparent p-1"
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
@@ -74,7 +74,7 @@ export function Distribution({ p }: { p: PartnershipDto }) {
           <label className="block">
             {t('partner.negligenceNote')}
             <input
-              className="mt-1 block w-56 rounded border border-accent/50 bg-transparent p-1"
+              className="mt-1 block w-56 rounded border border-line-strong bg-transparent p-1"
               value={note}
               onChange={(e) => {
                 setNote(e.target.value);

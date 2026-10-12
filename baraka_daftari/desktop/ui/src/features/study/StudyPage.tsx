@@ -46,7 +46,7 @@ function PolicyForm({ policy }: { policy: PolicyDto }) {
         type="number"
         min={0}
         max={max}
-        className="mt-1 w-24 rounded border border-accent/50 bg-transparent p-1"
+        className="mt-1 w-24 rounded border border-line-strong bg-transparent p-1"
         value={value}
         onChange={(e) => {
           set(e.target.value);
@@ -55,7 +55,7 @@ function PolicyForm({ policy }: { policy: PolicyDto }) {
     </label>
   );
   return (
-    <details className="rounded border border-accent/30 p-3">
+    <details className="rounded border border-line p-3">
       <summary className="cursor-pointer text-sm">{t('study.policy')}</summary>
       <p className="mt-2 text-sm opacity-80">{t('study.policyHint')}</p>
       <form

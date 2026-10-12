@@ -28,7 +28,7 @@ function MembersCard() {
     },
   });
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('family.members')}</h2>
       <ul className="mt-2 text-sm">
         {members.data?.map((m) => (
@@ -47,7 +47,7 @@ function MembersCard() {
         <input
           aria-label={t('family.name')}
           placeholder={t('family.name')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -55,7 +55,7 @@ function MembersCard() {
         />
         <select
           aria-label={t('family.role')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={role}
           onChange={(e) => {
             setRole(e.target.value);
@@ -73,7 +73,7 @@ function MembersCard() {
           maxLength={6}
           aria-label={t('family.pin')}
           placeholder={t('family.pin')}
-          className="w-28 rounded border border-accent/50 bg-transparent p-1 text-center"
+          className="w-28 rounded border border-line-strong bg-transparent p-1 text-center"
           value={pin}
           onChange={(e) => {
             setPin(e.target.value.replace(/\D/g, ''));
@@ -124,7 +124,7 @@ function TreatsCard() {
     onSuccess: refresh,
   });
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('treats.title')}</h2>
       <p className="text-sm opacity-80">{t('treats.hint')}</p>
       <ul className="mt-2 space-y-2">
@@ -176,7 +176,7 @@ function TreatsCard() {
         <input
           aria-label={t('treats.name')}
           placeholder={t('treats.name')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -185,7 +185,7 @@ function TreatsCard() {
         <input
           aria-label={t('treats.amount')}
           placeholder={t('treats.amount')}
-          className="w-32 rounded border border-accent/50 bg-transparent p-1"
+          className="w-32 rounded border border-line-strong bg-transparent p-1"
           value={amount}
           onChange={(e) => {
             setAmount(e.target.value);
@@ -193,7 +193,7 @@ function TreatsCard() {
         />
         <select
           aria-label={t('treats.weekday')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={weekday}
           onChange={(e) => {
             setWeekday(e.target.value);
@@ -233,7 +233,7 @@ function HabitsCard() {
   const habitIds = new Set(stats.data?.map((h) => h.category_id));
   const candidates = categories.data?.filter((c) => !habitIds.has(c.id) && !c.is_charity) ?? [];
   return (
-    <section className="rounded-lg border border-accent/30 p-5">
+    <section className="rounded-lg border border-line p-5">
       <h2 className="font-semibold">{t('habits.title')}</h2>
       <p className="text-sm opacity-80">{t('habits.hint')}</p>
       <ul className="mt-2 space-y-1 text-sm">
@@ -258,7 +258,7 @@ function HabitsCard() {
       <div className="mt-2 flex gap-2">
         <select
           aria-label={t('habits.pick')}
-          className="rounded border border-accent/50 bg-transparent p-1"
+          className="rounded border border-line-strong bg-transparent p-1"
           value={pick}
           onChange={(e) => {
             setPick(e.target.value);
@@ -307,7 +307,7 @@ export function FamilyPage() {
           {t('council.start')}
         </button>
       </div>
-      <section className="space-y-3 rounded-lg border border-accent/30 p-5">
+      <section className="space-y-3 rounded-lg border border-line p-5">
         <h2 className="font-semibold">{t('havas.title')}</h2>
         {havas.data && <HavasStatus report={havas.data} />}
         {havas.data && <ConsentPanel report={havas.data} />}

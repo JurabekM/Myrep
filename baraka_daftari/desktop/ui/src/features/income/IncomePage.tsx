@@ -32,7 +32,7 @@ export function IncomePage() {
       <p className="mt-2 text-sm opacity-80">
         {t('income.monthTotal', { total: home.data?.income.formatted ?? '' })}
       </p>
-      <ul className="mt-4 divide-y divide-accent/20">
+      <ul className="mt-4 divide-y divide-line">
         {list.data?.map((i) => (
           <li key={i.id} className="flex justify-between py-2">
             <span>
@@ -40,7 +40,7 @@ export function IncomePage() {
               {t(`channel.${i.channel}`)}
               {i.source_type ? (
                 <span
-                  className={`ml-2 rounded border px-1.5 text-xs ${i.source_type === 'RIBO' ? 'border-current font-semibold' : 'border-accent/40'}`}
+                  className={`ml-2 rounded border px-1.5 text-xs ${i.source_type === 'RIBO' ? 'border-current font-semibold' : 'border-line-strong'}`}
                   data-testid={`income-type-${i.source_type}`}
                 >
                   {t(`incomeType.${i.source_type}`)}

@@ -45,7 +45,7 @@ export function Calculator() {
     [r, t],
   );
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid="calculator">
+    <section className="rounded-lg border border-line p-5" data-testid="calculator">
       <h2 className="font-semibold">{t('calc.title')}</h2>
       <p className="text-sm opacity-80">{t('calc.hint')}</p>
       <form
@@ -58,7 +58,7 @@ export function Calculator() {
         <label className="block text-sm">
           {t('calc.kind')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={kind}
             onChange={(e) => {
               setKind(e.target.value as 'ANNUITY' | 'DIFFERENTIATED');
@@ -80,7 +80,7 @@ export function Calculator() {
             {t(key)}
             <input
               inputMode="decimal"
-              className={`mt-1 block ${width} rounded border border-accent/50 bg-transparent p-1`}
+              className={`mt-1 block ${width} rounded border border-line-strong bg-transparent p-1`}
               value={value}
               onChange={(e) => {
                 set(e.target.value);

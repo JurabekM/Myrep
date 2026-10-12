@@ -79,7 +79,7 @@ export function Buyout({ p }: { p: PartnershipDto }) {
   const b = p.buyout;
   const error = [plan.error, record.error].find((e) => e !== null);
   return (
-    <div className="rounded border border-accent/30 p-3" data-testid="buyout">
+    <div className="rounded border border-line p-3" data-testid="buyout">
       <h3 className="font-semibold">{t('partner.buyoutTitle')}</h3>
       <p className="text-xs opacity-70">{t('partner.buyoutHint')}</p>
       <form
@@ -92,7 +92,7 @@ export function Buyout({ p }: { p: PartnershipDto }) {
         <label className="block">
           {t('partner.buyoutSeller')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={providerId}
             onChange={(e) => {
               setProviderId(e.target.value);
@@ -109,7 +109,7 @@ export function Buyout({ p }: { p: PartnershipDto }) {
           {t('partner.buyoutPeriods')}
           <input
             inputMode="numeric"
-            className="mt-1 block w-20 rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-20 rounded border border-line-strong bg-transparent p-1"
             value={periods}
             onChange={(e) => {
               setPeriods(e.target.value);
@@ -141,7 +141,7 @@ export function Buyout({ p }: { p: PartnershipDto }) {
               {t('partner.buyoutPay')}
               <input
                 inputMode="decimal"
-                className="mt-1 block w-36 rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-36 rounded border border-line-strong bg-transparent p-1"
                 value={pay}
                 onChange={(e) => {
                   setPay(e.target.value);

@@ -62,13 +62,13 @@ function DaftarPage({
   return (
     <section
       aria-label={t('study.page')}
-      className="rounded-lg border border-accent/30 bg-[repeating-linear-gradient(transparent,transparent_27px,rgba(138,90,28,0.15)_28px)] p-4"
+      className="rounded-lg border border-line bg-[repeating-linear-gradient(transparent,transparent_27px,rgba(138,90,28,0.15)_28px)] p-4"
     >
       <h3 className="font-semibold">{t('study.page')}</h3>
       <p className="mt-1 text-sm opacity-80">{prompt}</p>
       <textarea
         aria-label={t('study.page')}
-        className="mt-2 h-40 w-full resize-y rounded border border-accent/40 bg-transparent p-2 leading-7"
+        className="mt-2 h-40 w-full resize-y rounded border border-line-strong bg-transparent p-2 leading-7"
         maxLength={MAX_CHARS}
         value={text}
         onChange={(e) => {
@@ -139,7 +139,7 @@ export function ChapterView({ id }: { id: string }) {
       <DaftarPage chapterId={data.id} prompt={data.page_prompt} body={data.page_body} />
       <section>
         <h3 className="font-semibold">{t('study.tasks')}</h3>
-        <ul className="divide-y divide-accent/20">
+        <ul className="divide-y divide-line">
           {data.tasks.map((task) => (
             <TaskRow key={task.id} chapterId={data.id} task={task} />
           ))}

@@ -101,7 +101,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
         <label className="block text-sm">
           {t('debts.friction.alternative')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={alternative}
             onChange={(e) => {
               setAlternative(e.target.value as (typeof ALTERNATIVES)[number]);
@@ -160,7 +160,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
         <label className="block text-sm">
           {t('debts.creditor')}
           <input
-            className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
             value={creditor}
             onChange={(e) => {
               setCreditor(e.target.value);
@@ -170,7 +170,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
         <label className="block text-sm">
           {t('debts.creditorType')}
           <select
-            className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
             value={creditorType}
             onChange={(e) => {
               setCreditorType(e.target.value as (typeof CREDITORS)[number]);
@@ -187,7 +187,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
           {t('debts.principal')}
           <input
             inputMode="decimal"
-            className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
             value={principal}
             onChange={(e) => {
               setPrincipal(e.target.value);
@@ -197,7 +197,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
         <label className="block text-sm">
           {t('debts.reason')}
           <input
-            className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
             value={reason}
             onChange={(e) => {
               setReason(e.target.value);
@@ -206,13 +206,13 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
         </label>
       </div>
 
-      <fieldset className="space-y-2 rounded border border-accent/30 p-3">
+      <fieldset className="space-y-2 rounded border border-line p-3">
         <legend className="px-1 text-sm font-medium">{t('debts.plan')}</legend>
         <p className="text-sm opacity-80">{t('debts.planHint')}</p>
         <label className="block text-sm">
           {t('debts.scheduleKind')}
           <select
-            className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+            className="mt-1 block rounded border border-line-strong bg-transparent p-1"
             value={kind}
             onChange={(e) => {
               setKind(e.target.value as (typeof KINDS)[number]);
@@ -231,7 +231,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
               {t('debts.markup')}
               <input
                 inputMode="decimal"
-                className="mt-1 block w-32 rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-32 rounded border border-line-strong bg-transparent p-1"
                 value={markup}
                 onChange={(e) => {
                   setMarkup(e.target.value);
@@ -242,7 +242,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
               {t('debts.months')}
               <input
                 inputMode="numeric"
-                className="mt-1 block w-20 rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-20 rounded border border-line-strong bg-transparent p-1"
                 value={months}
                 onChange={(e) => {
                   setMonths(e.target.value);
@@ -253,7 +253,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
               {t('debts.firstDue')}
               <input
                 type="date"
-                className="mt-1 block rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block rounded border border-line-strong bg-transparent p-1"
                 value={firstDue}
                 onChange={(e) => {
                   setFirstDue(e.target.value);
@@ -268,7 +268,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
                 <input
                   type="date"
                   aria-label={t('debts.rowDue', { n: i + 1 })}
-                  className="rounded border border-accent/50 bg-transparent p-1"
+                  className="rounded border border-line-strong bg-transparent p-1"
                   value={r.due}
                   onChange={(e) => {
                     setRows((p) => p.map((x, j) => (j === i ? { ...x, due: e.target.value } : x)));
@@ -277,7 +277,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
                 <input
                   inputMode="decimal"
                   aria-label={t('debts.rowAmount', { n: i + 1 })}
-                  className="w-36 rounded border border-accent/50 bg-transparent p-1"
+                  className="w-36 rounded border border-line-strong bg-transparent p-1"
                   value={r.amount}
                   onChange={(e) => {
                     setRows((p) =>
@@ -319,7 +319,7 @@ export function AddDebt({ onDone }: { onDone: () => void }) {
       <label className="block text-sm">
         {t('debts.earlyTerms')}
         <input
-          className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+          className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
           placeholder={t('debts.earlyTermsHint')}
           value={terms}
           onChange={(e) => {

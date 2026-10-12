@@ -133,7 +133,7 @@ export function ContractForm({
     });
   };
 
-  const input = 'mt-1 block w-full rounded border border-accent/50 bg-transparent p-1';
+  const input = 'mt-1 block w-full rounded border border-line-strong bg-transparent p-1';
   return (
     <form
       className="space-y-3 rounded-lg border border-accent p-5"
@@ -211,7 +211,7 @@ export function ContractForm({
       </div>
 
       {parties.map((p, i) => (
-        <fieldset key={i} className="space-y-2 rounded border border-accent/30 p-3">
+        <fieldset key={i} className="space-y-2 rounded border border-line p-3">
           <legend className="px-1 text-sm font-medium">{t('partner.partyN', { n: i + 1 })}</legend>
           <div className="grid gap-2 sm:grid-cols-4">
             <label className="block text-sm">
@@ -274,7 +274,7 @@ export function ContractForm({
               <input
                 aria-label={t('partner.capDesc', { n: i + 1, k: k + 1 })}
                 placeholder={t('partner.capDescPh')}
-                className="flex-1 rounded border border-accent/50 bg-transparent p-1"
+                className="flex-1 rounded border border-line-strong bg-transparent p-1"
                 value={c.description}
                 onChange={(e) => {
                   update(i, {
@@ -286,7 +286,7 @@ export function ContractForm({
               />
               <select
                 aria-label={t('partner.capKind', { n: i + 1, k: k + 1 })}
-                className="rounded border border-accent/50 bg-transparent p-1"
+                className="rounded border border-line-strong bg-transparent p-1"
                 value={c.kind}
                 onChange={(e) => {
                   update(i, {
@@ -303,7 +303,7 @@ export function ContractForm({
                 aria-label={t('partner.capValue', { n: i + 1, k: k + 1 })}
                 inputMode="decimal"
                 placeholder={t('partner.capValuePh')}
-                className="w-36 rounded border border-accent/50 bg-transparent p-1"
+                className="w-36 rounded border border-line-strong bg-transparent p-1"
                 value={c.value}
                 onChange={(e) => {
                   update(i, {

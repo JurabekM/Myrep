@@ -147,7 +147,7 @@ function DebtCard({ d }: { d: DebtDto }) {
           <input
             aria-label={t('debts.payAmount', { name: d.creditor })}
             placeholder={t('debts.payPlaceholder')}
-            className="w-40 rounded border border-accent/50 bg-transparent p-1"
+            className="w-40 rounded border border-line-strong bg-transparent p-1"
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
@@ -201,7 +201,7 @@ function DebtCard({ d }: { d: DebtDto }) {
             <label className="flex-1">
               {t('debts.earlyTerms')}
               <input
-                className="mt-1 block w-full rounded border border-accent/50 bg-transparent p-1"
+                className="mt-1 block w-full rounded border border-line-strong bg-transparent p-1"
                 value={terms}
                 onChange={(e) => {
                   setTerms(e.target.value);
@@ -258,10 +258,10 @@ export function DebtsPage() {
           }}
         />
       )}
-      <section className="rounded-lg border border-accent/30 p-5">
+      <section className="rounded-lg border border-line p-5">
         <h2 className="font-semibold">{t('debts.inventory')}</h2>
         <p className="text-sm opacity-80">{t('debts.inventoryHint')}</p>
-        <ul className="mt-2 divide-y divide-accent/20">
+        <ul className="mt-2 divide-y divide-line">
           {list.data?.map((d) => (
             <DebtCard key={d.id} d={d} />
           ))}

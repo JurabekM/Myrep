@@ -55,7 +55,7 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
   );
   const draft = p.status === 'DRAFT';
   return (
-    <section className="rounded-lg border border-accent/30 p-5" data-testid={`ps-${p.name}`}>
+    <section className="rounded-lg border border-line p-5" data-testid={`ps-${p.name}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold">
           {p.name}{' '}
@@ -63,7 +63,7 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
             · {t(`partner.kinds.${p.kind}`)} · {t('partner.versionN', { n: p.version })}
           </span>
         </h2>
-        <span className="rounded border border-accent/40 px-2 text-sm" data-testid="ps-status">
+        <span className="rounded border border-line-strong px-2 text-sm" data-testid="ps-status">
           {t(`partner.statuses.${p.status}`)}
         </span>
       </div>
@@ -89,7 +89,7 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
                       inputMode="numeric"
                       maxLength={6}
                       aria-label={t('partner.pinFor', { name: x.name })}
-                      className="w-24 rounded border border-accent/50 bg-transparent p-1"
+                      className="w-24 rounded border border-line-strong bg-transparent p-1"
                       value={pins[x.id] ?? ''}
                       onChange={(e) => {
                         setPin(x.id, e.target.value);
@@ -163,7 +163,7 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
                       inputMode="numeric"
                       maxLength={6}
                       aria-label={t('partner.pinFor', { name: c.name })}
-                      className="w-24 rounded border border-accent/50 bg-transparent p-1"
+                      className="w-24 rounded border border-line-strong bg-transparent p-1"
                       value={pins[`c-${c.member_id}`] ?? ''}
                       onChange={(e) => {
                         setPin(`c-${c.member_id}`, e.target.value);
@@ -278,7 +278,7 @@ export function PartnershipsPage() {
       {info.data?.templates_approved === false && (
         <p
           role="note"
-          className="rounded border border-accent/50 p-3 text-sm"
+          className="rounded border border-line-strong p-3 text-sm"
           data-testid="template-notice"
         >
           {t('partner.templateUnapproved')}

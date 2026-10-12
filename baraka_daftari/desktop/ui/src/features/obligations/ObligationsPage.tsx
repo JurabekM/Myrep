@@ -39,7 +39,7 @@ function RecurringForm() {
       <input
         aria-label={t('obl.name')}
         placeholder={t('obl.name')}
-        className="rounded border border-accent/50 bg-transparent p-2"
+        className="rounded border border-line-strong bg-transparent p-2"
         value={name}
         onChange={(e) => {
           setName(e.target.value);
@@ -48,7 +48,7 @@ function RecurringForm() {
       <input
         aria-label={t('obl.amount')}
         placeholder={t('obl.amount')}
-        className="rounded border border-accent/50 bg-transparent p-2"
+        className="rounded border border-line-strong bg-transparent p-2"
         value={amount}
         onChange={(e) => {
           setAmount(e.target.value);
@@ -59,7 +59,7 @@ function RecurringForm() {
         type="number"
         min={1}
         max={31}
-        className="rounded border border-accent/50 bg-transparent p-2"
+        className="rounded border border-line-strong bg-transparent p-2"
         value={dueDay}
         onChange={(e) => {
           setDueDay(e.target.value);
@@ -67,7 +67,7 @@ function RecurringForm() {
       />
       <select
         aria-label={t('obl.owner')}
-        className="rounded border border-accent/50 bg-transparent p-2"
+        className="rounded border border-line-strong bg-transparent p-2"
         value={owner}
         onChange={(e) => {
           setOwner(e.target.value as (typeof OWNERS)[number]);
@@ -115,7 +115,7 @@ function NasiyaForm() {
       <input
         aria-label={t('obl.creditor')}
         placeholder={t('obl.creditor')}
-        className="rounded border border-accent/50 bg-transparent p-2"
+        className="rounded border border-line-strong bg-transparent p-2"
         value={creditor}
         onChange={(e) => {
           setCreditor(e.target.value);
@@ -124,7 +124,7 @@ function NasiyaForm() {
       <input
         aria-label={t('obl.nasiyaTotal')}
         placeholder={t('obl.nasiyaTotal')}
-        className="rounded border border-accent/50 bg-transparent p-2"
+        className="rounded border border-line-strong bg-transparent p-2"
         value={total}
         onChange={(e) => {
           setTotal(e.target.value);
@@ -170,7 +170,7 @@ function NasiyaRow({ o }: { o: ObligationDto }) {
         <input
           aria-label={t('obl.pay')}
           placeholder={t('obl.pay')}
-          className="flex-1 rounded border border-accent/50 bg-transparent p-1"
+          className="flex-1 rounded border border-line-strong bg-transparent p-1"
           value={pay}
           onChange={(e) => {
             setPay(e.target.value);
@@ -222,7 +222,7 @@ export function ObligationsPage() {
       <h1 className="text-2xl font-semibold">{t('nav.obligations')}</h1>
       <section>
         <h2 className="text-lg font-semibold">{t('obl.recurring')}</h2>
-        <ul className="divide-y divide-accent/20">
+        <ul className="divide-y divide-line">
           {recurring.map((o) => (
             <li key={o.id} className="flex items-center justify-between py-2">
               <span>
@@ -239,7 +239,7 @@ export function ObligationsPage() {
       </section>
       <section>
         <h2 className="text-lg font-semibold">{t('obl.nasiya')}</h2>
-        <ul className="divide-y divide-accent/20">
+        <ul className="divide-y divide-line">
           {nasiya.map((o) => (
             <NasiyaRow key={o.id} o={o} />
           ))}

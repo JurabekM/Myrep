@@ -28,7 +28,7 @@ export function ExpensesPage() {
       <CsvImport />
       <section>
         <h2 className="text-lg font-semibold">{t('sheet.thisWeek')}</h2>
-        <ul className="mt-2 divide-y divide-accent/20">
+        <ul className="mt-2 divide-y divide-line">
           {list.data?.map((e) => (
             <li key={e.id} className="flex justify-between py-1 text-sm">
               <span>
