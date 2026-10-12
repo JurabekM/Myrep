@@ -86,8 +86,15 @@ pub fn setup(app: &tauri::App) -> tauri::Result<()> {
     }
     tray.build(app)?;
 
-    let _ = app.global_shortcut().register(quick_shortcut());
+    // Band bo'lsa (boshqa dastur ishlatayotgan bo'lsa) ilova ishlayveradi; UI buni ko'rsatadi.
+    let registered = app.global_shortcut().register(quick_shortcut()).is_ok();
+    app.manage(HotkeyStatus { registered });
     Ok(())
+}
+
+/// `Ctrl+Alt+B` ro'yxatdan o'tganmi (UI ogohlantirish uchun).
+pub struct HotkeyStatus {
+    pub registered: bool,
 }
 
 /// Global tugma plugini: faqat `Ctrl+Alt+B` bosilganda tez xarajat oynasi ochiladi.

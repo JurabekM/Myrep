@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, vi } from 'vitest';
 
@@ -17,6 +17,8 @@ vi.mock('../bindings', () => ({
     listIncomes: vi.fn(),
     listObligations: vi.fn(),
     journey: vi.fn(),
+    appInfo: vi.fn(),
+    lock: vi.fn(),
   },
 }));
 
@@ -61,6 +63,12 @@ beforeEach(() => {
   });
   vi.mocked(commands.listObligations).mockResolvedValue({ status: 'ok', data: [] });
   vi.mocked(commands.listIncomes).mockResolvedValue({ status: 'ok', data: [] });
+  vi.mocked(commands.appInfo).mockResolvedValue({
+    version: '0.1.0',
+    templates_approved: false,
+    contract_pdf_available: false,
+    quick_hotkey_registered: true,
+  });
 });
 
 function renderApp() {
@@ -86,5 +94,49 @@ describe('App', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Majburiyatlar' }));
     expect(await screen.findByRole('heading', { name: "Doimiy to'lovlar" })).toBeInTheDocument();
     expect(screen.getByText(/Fatvo yoki moliyaviy maslahat emas/)).toBeInTheDocument();
+  });
+
+  it('Ctrl+K palitrasi: matn bilan filtrlanadi va sahifaga o‘tadi', async () => {
+    renderApp();
+    await screen.findByTestId('self-paid');
+    await userEvent.keyboard('{Control>}k{/Control}');
+    const input = await screen.findByPlaceholderText('Sahifa yoki amal nomini yozing…');
+    await userEvent.type(input, 'qarz');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => {
+      expect(useNav.getState().page).toBe('debts');
+    });
+    expect(useNav.getState().paletteOpen).toBe(false);
+  });
+
+  it('Ctrl+K palitrasi Esc bilan yopiladi', async () => {
+    renderApp();
+    await screen.findByTestId('self-paid');
+    await userEvent.keyboard('{Control>}k{/Control}');
+    await screen.findByPlaceholderText('Sahifa yoki amal nomini yozing…');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(useNav.getState().paletteOpen).toBe(false);
+    });
+  });
+
+  it('Ctrl+P chop etish oynasini ochadi', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    renderApp();
+    await screen.findByTestId('self-paid');
+    await userEvent.keyboard('{Control>}p{/Control}');
+    expect(print).toHaveBeenCalledTimes(1);
+    print.mockRestore();
+  });
+
+  it("Ctrl+Alt+B band bo'lsa ogohlantirish ko'rinadi", async () => {
+    vi.mocked(commands.appInfo).mockResolvedValue({
+      version: '0.1.0',
+      templates_approved: false,
+      contract_pdf_available: false,
+      quick_hotkey_registered: false,
+    });
+    renderApp();
+    expect(await screen.findByRole('note')).toHaveTextContent('Ctrl+Alt+B band');
   });
 });

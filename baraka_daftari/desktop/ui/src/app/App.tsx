@@ -1,5 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { commands } from '../bindings';
 
 import { CouncilMode } from '../features/council/CouncilMode';
 import { CeremoniesPage } from '../features/ceremonies/CeremoniesPage';
@@ -21,27 +24,8 @@ import { ObligationsPage } from '../features/obligations/ObligationsPage';
 import { SubscriptionsPage } from '../features/subscriptions/SubscriptionsPage';
 import { VaultPage } from '../features/vault/VaultPage';
 
-import { useNav, type Page } from './nav';
-
-const PAGES: { id: Page; labelKey: string }[] = [
-  { id: 'home', labelKey: 'nav.home' },
-  { id: 'debts', labelKey: 'nav.debts' },
-  { id: 'ceremonies', labelKey: 'nav.ceremonies' },
-  { id: 'partnerships', labelKey: 'nav.partnerships' },
-  { id: 'crafts', labelKey: 'nav.crafts' },
-  { id: 'exchange', labelKey: 'nav.exchange' },
-  { id: 'income', labelKey: 'nav.income' },
-  { id: 'vault', labelKey: 'nav.vault' },
-  { id: 'budget', labelKey: 'nav.budget' },
-  { id: 'expenses', labelKey: 'nav.expenses' },
-  { id: 'obligations', labelKey: 'nav.obligations' },
-  { id: 'envelopes', labelKey: 'nav.envelopes' },
-  { id: 'subscriptions', labelKey: 'nav.subscriptions' },
-  { id: 'rescue', labelKey: 'nav.rescue' },
-  { id: 'prices', labelKey: 'nav.prices' },
-  { id: 'family', labelKey: 'nav.family' },
-  { id: 'study', labelKey: 'nav.study' },
-];
+import { CommandPalette } from './CommandPalette';
+import { PAGE_LINKS, useNav, type Page } from './nav';
 
 function CurrentPage({ page }: { page: Page }) {
   switch (page) {
@@ -87,20 +71,29 @@ function CurrentPage({ page }: { page: Page }) {
 /** Ilova qobig'i: chap navigatsiya + ish maydoni. `Ctrl+N` — tez kiritish. */
 export function App() {
   const { t } = useTranslation();
-  const { page, setPage, openQuickEntry } = useNav();
+  const { page, setPage, openQuickEntry, openPalette } = useNav();
+  const info = useQuery({ queryKey: ['app-info'], queryFn: () => commands.appInfo() });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+      if (!e.ctrlKey) return;
+      const key = e.key.toLowerCase();
+      if (key === 'n') {
         e.preventDefault();
         openQuickEntry();
+      } else if (key === 'k') {
+        e.preventDefault();
+        openPalette();
+      } else if (key === 'p') {
+        e.preventDefault();
+        window.print();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
     };
-  }, [openQuickEntry]);
+  }, [openQuickEntry, openPalette]);
 
   // Oila kengashi — to'liq ekran rejimi (navigatsiyasiz).
   if (page === 'council') {
@@ -115,7 +108,7 @@ export function App() {
       >
         <p className="mb-4 text-lg font-semibold">{t('app.title')}</p>
         <ul className="space-y-1">
-          {PAGES.map((p) => (
+          {PAGE_LINKS.map((p) => (
             <li key={p.id}>
               <button
                 type="button"
@@ -137,12 +130,18 @@ export function App() {
         >
           {t('nav.quickEntry')} <kbd className="ml-1 text-xs opacity-70">Ctrl+N</kbd>
         </button>
+        {info.data?.quick_hotkey_registered === false && (
+          <p role="note" className="mt-3 text-xs opacity-80">
+            {t('hotkey.unavailable')}
+          </p>
+        )}
       </nav>
       <main className="flex-1 p-8">
         <CurrentPage page={page} />
         <footer className="mt-10 text-xs opacity-70">{t('disclaimer')}</footer>
       </main>
       <QuickEntry />
+      <CommandPalette />
     </div>
   );
 }

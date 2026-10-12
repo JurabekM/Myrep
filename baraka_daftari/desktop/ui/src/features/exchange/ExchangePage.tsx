@@ -17,10 +17,12 @@ function ExportSection() {
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [incremental, setIncremental] = useState(false);
+  const [withAttachments, setWithAttachments] = useState(true);
   const [saved, setSaved] = useState<string | null>(null);
   const last = status.data?.last_export ?? null;
   const exp = useMutation({
-    mutationFn: () => unwrap(commands.exportBaraka(pw, incremental && last !== null)),
+    mutationFn: () =>
+      unwrap(commands.exportBaraka(pw, incremental && last !== null, withAttachments)),
     onSuccess: async (name) => {
       if (name !== null) {
         setSaved(name);
@@ -94,6 +96,17 @@ function ExportSection() {
             {t('exchange.incremental')}
           </label>
         </fieldset>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={withAttachments}
+            onChange={(e) => {
+              setWithAttachments(e.target.checked);
+            }}
+          />
+          {t('exchange.withAttachments')}
+        </label>
+        <p className="text-xs opacity-70">{t('exchange.attachmentsHint')}</p>
         <p className="text-xs opacity-70">
           {last === null ? t('exchange.noExport') : t('exchange.lastExport', { when: last })}
         </p>

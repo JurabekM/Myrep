@@ -155,3 +155,11 @@
 - Muammo: Tauri'ga bog'langan test binary'si Windows'da `STATUS_ENTRYPOINT_NOT_FOUND` (0xc0000139) bilan ishlamasdi; shu sabab Windows CI'da `baraka-desktop` testlari o'tkazib yuborilardi.
 - Yechim: xato xaritalash (`CommandError`), sessiya (`Session`), DTO va foiz parsing `crates/api` ga chiqarildi (Tauri'siz). `src-tauri` da `[lib]` va `[[bin]]` (app) test harness'lari o'chirildi; bindinglar `export-bindings` bin'idan yoziladi (`cargo run -p baraka-desktop --bin export-bindings`) — har OS'da.
 - CI: Windows'da endi hamma testlar ishlaydi (`baraka-desktop` ning 10 ta testi `api` ga ko'chirildi); istisno yo'q.
+
+## Klaviatura, chop etish, hajm, o'rnatuvchi, tezkor tugma ogohlantirishi
+- **Ctrl+K — buyruqlar palitrasi:** sahifalar va amallar (tez kiritish, chop etish, qulflash); matn bilan filtr, strelkalar, Enter, Esc.
+- **Ctrl+P — chop etish:** WebView2 `window.print()` (tizimning chop etish oynasi); chop uchun oq fon va boshqaruv tugmalari yashirin (`@media print`).
+- **`.baraka` hajmi:** eksport `512 MB` chegarasidan oshsa yozilmaydi va aniq xabar chiqadi; import ham shu chegarada. Eksportda «chek rasmlari bilan» belgisi qo'shildi (rasmsiz eksport hajmni keskin kamaytiradi). Blob kodlash hozircha hex (format v1, OPEN_QUESTIONS 72).
+- **O'rnatuvchi:** NSIS tillari `Russian` va `English`, til tanlash oynasi bilan (NSIS to'plamida o'zbek tili yo'q).
+- **Ctrl+Alt+B ogohlantirishi:** tugma band bo'lsa (boshqa dastur ishlatayotgan bo'lsa) ilova ishlaydi, yon panelda aniq xabar chiqadi.
+- Testlar: palitra (filtr, Enter, Esc), Ctrl+P, ogohlantirish, rasmsiz eksport (biriktirmalar fayldan chiqadi, yozuvlar qoladi), chegaradan katta fayl rad etiladi.

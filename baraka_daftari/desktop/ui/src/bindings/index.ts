@@ -238,7 +238,7 @@ export const commands = {
 	checkOffer: (input: OfferInput) => __TAURI_INVOKE<OfferDto>("check_offer", { input }),
 	exchangeStatus: () => typedError<ExchangeStatusDto, CommandError>(__TAURI_INVOKE("exchange_status")),
 	/**  `.baraka` faylini OS «saqlash» oynasi orqali yozadi. Bekor qilinsa `None`. */
-	exportBaraka: (password: string, incremental: boolean) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_baraka", { password, incremental })),
+	exportBaraka: (password: string, incremental: boolean, includeAttachments: boolean) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_baraka", { password, incremental, includeAttachments })),
 	/**  Import faylini tanlaydi (hali ochmaydi). Qaytadi: fayl nomi; bekor qilinsa `None`. */
 	importBarakaPick: () => typedError<string | null, CommandError>(__TAURI_INVOKE("import_baraka_pick")),
 	/**  Ziddiyatlar ro'yxati: hech narsa saqlanmaydi. */
@@ -272,6 +272,8 @@ export type AppInfoDto = {
 	version: string,
 	/**  Shartnoma PDF'ini chiqarish mumkinmi (relizda shablon tasdiqlanmaguncha `false`). */
 	contract_pdf_available: boolean,
+	/**  `Ctrl+Alt+B` tez xarajat tugmasi ro'yxatdan o'tdimi (boshqa dastur band qilgan bo'lishi mumkin). */
+	quick_hotkey_registered: boolean,
 	/**  Sheriklik shartnomasi shabloni ulamo/yurist tasdig'idan o'tganmi (reliz to'sig'i, OPEN_QUESTIONS 65). */
 	templates_approved: boolean,
 };

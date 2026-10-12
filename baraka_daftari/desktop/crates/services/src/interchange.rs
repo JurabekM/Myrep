@@ -53,11 +53,34 @@ pub fn mark_exported(db: &Database, env: &Env<'_>, ctx: &Ctx) -> Result<(), Serv
     learning::put_setting(db.conn(), env, ctx, KEY_LAST_EXPORT, &now)
 }
 
-/// Shifrlangan `.baraka` baytlari. `incremental` bo'lsa faqat oxirgi eksportdan keyingi o'zgarishlar
-/// (oldin eksport bo'lmagan bo'lsa to'liq).
+/// `.baraka` fayl hajmining yuqori chegarasi (shifrlangan, baytlarda). Eksport ham, import ham shu chegarada.
+/// Biriktirmalar BLOB sifatida hex bilan yoziladi (2x), shuning uchun chegara ataylab keng.
+pub const MAX_FILE_BYTES: usize = 512 * 1024 * 1024;
+
+/// Eksport sozlamalari.
+#[derive(Debug, Clone, Copy)]
+pub struct ExportOptions {
+    /// Faqat oxirgi eksportdan keyingi o'zgarishlar.
+    pub incremental: bool,
+    /// Chek/rasm biriktirmalari (`venture_attachments`) bilan birga. Hajm katta bo'lsa `false`.
+    pub include_attachments: bool,
+    pub max_bytes: usize,
+}
+
+impl Default for ExportOptions {
+    fn default() -> Self {
+        Self {
+            incremental: false,
+            include_attachments: true,
+            max_bytes: MAX_FILE_BYTES,
+        }
+    }
+}
+
+/// Shifrlangan `.baraka` baytlari (to'liq, biriktirmalar bilan, standart chegarada).
 ///
 /// # Errors
-/// Parol qisqa, baza yoki kriptografiya xatosi.
+/// Parol qisqa, baza yoki kriptografiya xatosi, yoki fayl chegaradan katta.
 pub fn export_bytes(
     db: &Database,
     env: &Env<'_>,
@@ -66,20 +89,54 @@ pub fn export_bytes(
     incremental: bool,
     kdf: KdfParams,
 ) -> Result<Vec<u8>, ServiceError> {
-    let since = if incremental {
+    export_bytes_with(
+        db,
+        env,
+        ctx,
+        password,
+        kdf,
+        ExportOptions {
+            incremental,
+            ..ExportOptions::default()
+        },
+    )
+}
+
+/// [`export_bytes`] bilan bir xil, lekin sozlamalar bilan.
+///
+/// # Errors
+/// [`export_bytes`] dagidek; fayl `opts.max_bytes` dan katta bo'lsa `Invalid`.
+pub fn export_bytes_with(
+    db: &Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    password: &str,
+    kdf: KdfParams,
+    opts: ExportOptions,
+) -> Result<Vec<u8>, ServiceError> {
+    let since = if opts.incremental {
         last_export(db, ctx)?
     } else {
         None
     };
-    let doc = interchange::export(
+    let mut doc = interchange::export(
         db.conn(),
         &ctx.household_id,
         env.device_id,
         env.clock.now(),
         since,
     )?;
+    if !opts.include_attachments {
+        doc.tables.retain(|t| t.name != "venture_attachments");
+    }
     let json = serde_json::to_vec(&doc).map_err(bad)?;
-    container::seal(&json, password, kdf).map_err(map_sec)
+    let sealed = container::seal(&json, password, kdf).map_err(map_sec)?;
+    if sealed.len() > opts.max_bytes {
+        return Err(ServiceError::Invalid(
+            "eksport fayli juda katta: biriktirmalarni chiqarib tashlang yoki o'zgarishlar (qisman) eksportini tanlang",
+        ));
+    }
+    Ok(sealed)
 }
 
 fn decode(bytes: &[u8], password: &str) -> Result<ExportDoc, ServiceError> {

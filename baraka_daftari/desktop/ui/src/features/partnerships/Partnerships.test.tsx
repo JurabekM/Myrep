@@ -95,6 +95,7 @@ beforeEach(() => {
     version: '0.1.0',
     templates_approved: false,
     contract_pdf_available: true,
+    quick_hotkey_registered: true,
   });
   vi.mocked(commands.listPartnerships).mockResolvedValue({ status: 'ok', data: [base] });
   vi.mocked(commands.listMembers).mockResolvedValue({
@@ -117,6 +118,7 @@ describe('PartnershipsPage', () => {
       version: '0.1.0',
       templates_approved: false,
       contract_pdf_available: false,
+      quick_hotkey_registered: true,
     });
     renderPage();
     const card = await screen.findByTestId('ps-Ustaxona');

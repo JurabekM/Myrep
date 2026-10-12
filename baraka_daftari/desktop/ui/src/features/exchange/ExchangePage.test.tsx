@@ -72,7 +72,7 @@ describe('ExchangePage', () => {
     expect(screen.getByLabelText(/Faqat o‘zgarganlar|Faqat o'zgarganlar/)).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Eksport qilish' }));
     await waitFor(() => {
-      expect(commands.exportBaraka).toHaveBeenCalledWith('parol-12345', false);
+      expect(commands.exportBaraka).toHaveBeenCalledWith('parol-12345', false, true);
     });
     expect(await screen.findByRole('status')).toHaveTextContent('baraka.baraka');
   });

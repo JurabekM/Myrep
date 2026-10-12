@@ -13,9 +13,7 @@ use tauri_plugin_dialog::DialogExt;
 use zeroize::Zeroizing;
 
 use crate::commands::{with_session, AppSession, CommandError};
-
-/// Eksport/import fayli chegarasi (dalil rasmlari bilan birga ham sig'adi).
-const MAX_FILE_BYTES: u64 = 256 * 1024 * 1024;
+use crate::tray;
 
 #[derive(Default)]
 pub struct PendingImport(Mutex<Option<Vec<u8>>>);
@@ -121,20 +119,19 @@ pub fn exchange_status(state: State<'_, AppSession>) -> Result<ExchangeStatusDto
 pub async fn export_baraka(
     password: String,
     incremental: bool,
+    include_attachments: bool,
     app: AppHandle,
     state: State<'_, AppSession>,
 ) -> Result<Option<String>, CommandError> {
     let password = Zeroizing::new(password);
+    let opts = interchange::ExportOptions {
+        incremental,
+        include_attachments,
+        ..interchange::ExportOptions::default()
+    };
     let bytes = with_session(&state, |s| {
         s.run(|db, env, ctx| {
-            interchange::export_bytes(
-                db,
-                env,
-                ctx,
-                &password,
-                incremental,
-                KdfParams::production(),
-            )
+            interchange::export_bytes_with(db, env, ctx, &password, KdfParams::production(), opts)
         })
     })?;
     let Some(file) = app
@@ -183,9 +180,9 @@ pub async fn import_baraka_pick(
         .into_path()
         .map_err(|_| internal("fayl yo'li noto'g'ri"))?;
     let meta = std::fs::metadata(&path).map_err(|_| internal("faylni o'qib bo'lmadi"))?;
-    if meta.len() > MAX_FILE_BYTES {
+    if meta.len() > u64::try_from(interchange::MAX_FILE_BYTES).unwrap_or(u64::MAX) {
         return Err(CommandError::BadFile {
-            message: "fayl juda katta".into(),
+            message: "fayl juda katta (512 MB dan ko'p)".into(),
         });
     }
     let data = std::fs::read(&path).map_err(|_| internal("faylni o'qib bo'lmadi"))?;
@@ -259,16 +256,19 @@ pub struct AppInfoDto {
     pub version: String,
     /// Shartnoma PDF'ini chiqarish mumkinmi (relizda shablon tasdiqlanmaguncha `false`).
     pub contract_pdf_available: bool,
+    /// `Ctrl+Alt+B` tez xarajat tugmasi ro'yxatdan o'tdimi (boshqa dastur band qilgan bo'lishi mumkin).
+    pub quick_hotkey_registered: bool,
     /// Sheriklik shartnomasi shabloni ulamo/yurist tasdig'idan o'tganmi (reliz to'sig'i, OPEN_QUESTIONS 65).
     pub templates_approved: bool,
 }
 
 #[tauri::command]
 #[specta::specta]
-pub fn app_info() -> AppInfoDto {
+pub fn app_info(hotkey: State<'_, tray::HotkeyStatus>) -> AppInfoDto {
     AppInfoDto {
         version: env!("CARGO_PKG_VERSION").into(),
         templates_approved: services::TEMPLATES_APPROVED,
         contract_pdf_available: services::templates_releasable(cfg!(debug_assertions)),
+        quick_hotkey_registered: hotkey.registered,
     }
 }

@@ -779,3 +779,67 @@ fn import_never_creates_pin_credentials() {
             .unwrap();
     assert_eq!(n, 0);
 }
+
+/// Biriktirmalarsiz eksport: chek rasmlari fayldan chiqariladi, yozuvlar qoladi.
+#[test]
+fn export_without_attachments_keeps_entries_but_drops_files() {
+    let mut a = World::new("phone", 0, true);
+    a.business();
+    let ctx = a.ctx();
+    let bytes = interchange::export_bytes_with(
+        &a.db,
+        &env!(a),
+        &ctx,
+        PW,
+        FAST,
+        interchange::ExportOptions {
+            include_attachments: false,
+            ..interchange::ExportOptions::default()
+        },
+    )
+    .unwrap();
+    let doc = parse(&bytes);
+    let att = doc
+        .tables
+        .iter()
+        .find(|t| t.name == "venture_attachments")
+        .map(|t| t.rows.len());
+    assert_eq!(
+        att, None,
+        "biriktirmalar jadvali fayldan chiqarilishi kerak"
+    );
+    let entries = doc
+        .tables
+        .iter()
+        .find(|t| t.name == "venture_entries")
+        .map(|t| t.rows.len())
+        .unwrap_or(0);
+    assert!(entries >= 3, "yozuvlar saqlanishi kerak: {entries}");
+
+    // Import qilinadi va xato bermaydi (biriktirmasiz ham to'liq daftar).
+    let mut b = World::new("desktop", 5_000_000, true);
+    let bctx = b.ctx();
+    let r = interchange::import(&mut b.db, &bctx, &bytes, PW).unwrap();
+    assert!(r.conflicts.is_empty(), "{r:?}");
+}
+
+/// Chegaradan katta fayl eksport qilinmaydi (aniq xabar bilan), yozilmaydi.
+#[test]
+fn export_over_the_size_limit_is_refused() {
+    let mut a = World::new("phone", 0, true);
+    a.business();
+    let ctx = a.ctx();
+    let err = interchange::export_bytes_with(
+        &a.db,
+        &env!(a),
+        &ctx,
+        PW,
+        FAST,
+        interchange::ExportOptions {
+            max_bytes: 64,
+            ..interchange::ExportOptions::default()
+        },
+    )
+    .unwrap_err();
+    assert!(matches!(err, ServiceError::Invalid(m) if m.contains("juda katta")));
+}

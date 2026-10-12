@@ -129,3 +129,32 @@ body {
     border-width: 3px;
   }
 }
+
+/* Chop etish (Ctrl+P): qog'oz uchun oq fon, qora matn; boshqaruv elementlari yashiriladi. */
+@media print {
+  :root {
+    --color-paper: #ffffff;
+    --color-ink: #000000;
+    --color-accent: #000000;
+    --color-sidebar: #ffffff;
+    --color-surface: #ffffff;
+    --color-line: #999999;
+    --color-line-strong: #666666;
+    --color-muted: #333333;
+  }
+
+  nav,
+  button,
+  footer button,
+  [role='dialog'] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  main section {
+    break-inside: avoid;
+  }
+}
