@@ -3,10 +3,12 @@
 //! Har bir voqea kelishuv jurnaliga append-only yozuv sifatida tushadi. Nizo ochilganda kelishuv
 //! `IN_DISPUTE` holatiga o'tadi va taqsimot bloklanadi (`ventures::close_period`).
 
-use domain::{can_transition, AgreementStatus, Answer, JournalEntry, JournalKind};
-use storage::Database;
+use domain::{can_transition, date_to_string, AgreementStatus, Answer, JournalEntry, JournalKind};
+use money::{format_money, Locale};
+use storage::{Connection, Database};
 
 use crate::agreements;
+use crate::review;
 use crate::{journal, local_date, Ctx, Env, ServiceError};
 
 /// «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi.
@@ -161,4 +163,146 @@ pub fn resolve_dispute(
         Ok(entry)
     })?;
     Ok(entry)
+}
+
+/// Hakam uchun ish papkasi (PDF, SPEC 2F.8): mundarija bilan — versiyalar, hisob yozuvlari, zanjir holati,
+/// ko'rik bayonnomalari (zanjir boshi bilan), vazifa hodisalari, talablar va hakam qarorlari.
+/// Shablon tasdiqlanmagan relizda chiqmaydi (SPEC 8).
+///
+/// # Errors
+/// Shablon tasdiqlanmagan, kelishuv topilmasa yoki PDF yaratib bo'lmasa.
+pub fn folder_pdf(
+    conn: &Connection,
+    ctx: &Ctx,
+    agreement_id: &str,
+) -> Result<Vec<u8>, ServiceError> {
+    if !pdf::templates_releasable(cfg!(debug_assertions)) {
+        return Err(ServiceError::Invalid(
+            "kelishuv shabloni hali yurist va ulamo tasdig'idan o'tmagan: PDF chiqarilmaydi",
+        ));
+    }
+    let v = agreements::view(conn, ctx, agreement_id)?;
+    let all = journal::entries(conn, ctx, agreement_id)?;
+    let names: Vec<(String, String)> = match v.doc.as_ref().map(|d| &d.questions.parties) {
+        Some(Answer::Answered(ps)) => ps.iter().map(|p| (p.id.clone(), p.name.clone())).collect(),
+        _ => Vec::new(),
+    };
+    let name_of = |pid: Option<&str>| -> String {
+        pid.and_then(|id| names.iter().find(|(i, _)| i == id))
+            .map_or_else(String::new, |(_, n)| n.clone())
+    };
+    let date_of = |e: &JournalEntry| date_to_string(e.entry_date).unwrap_or_default();
+    let amount_of = |e: &JournalEntry| {
+        e.amount.map_or_else(String::new, |m| {
+            format!(" · {}", format_money(m, Locale::Uz))
+        })
+    };
+    let versions = v
+        .versions
+        .iter()
+        .map(|ver| {
+            let head: String = ver.content_hash.chars().take(12).collect();
+            let when = date_to_string(local_date(ver.created_at)).unwrap_or_default();
+            format!("v{} · {when} · xesh {head}", ver.version_no)
+        })
+        .collect();
+    let is_event = |k: JournalKind| {
+        matches!(
+            k,
+            JournalKind::ReviewAck
+                | JournalKind::ReviewClosed
+                | JournalKind::DutyIncident
+                | JournalKind::DisputeOpened
+                | JournalKind::DisputeResolved
+        )
+    };
+    let entries = all
+        .iter()
+        .filter(|e| !is_event(e.kind))
+        .map(|e| {
+            format!(
+                "#{} · {} · {} · {}{} — {}",
+                e.seq,
+                date_of(e),
+                review::kind_label(e.kind),
+                name_of(e.party_id.as_deref()),
+                amount_of(e),
+                e.note
+            )
+        })
+        .collect();
+    let mut reviews = Vec::new();
+    for e in all.iter().filter(|e| e.kind == JournalKind::ReviewClosed) {
+        let Some(period) = e
+            .reference
+            .as_deref()
+            .and_then(|r| r.split_once('|'))
+            .map(|(p, _)| p)
+        else {
+            continue;
+        };
+        let rv = review::view(conn, ctx, agreement_id, period)?;
+        let head: String = rv
+            .recorded_head
+            .clone()
+            .unwrap_or_default()
+            .chars()
+            .take(12)
+            .collect();
+        let verdict = if rv.head_matches == Some(true) {
+            "boshi mos keladi"
+        } else {
+            "BOSHI MOS KELMAYDI"
+        };
+        reviews.push(format!("{period} · yopilgan boshi: {head} · {verdict}"));
+    }
+    let incidents = all
+        .iter()
+        .filter(|e| e.kind == JournalKind::DutyIncident)
+        .map(|e| {
+            format!(
+                "{} · {} · {}",
+                date_of(e),
+                name_of(e.party_id.as_deref()),
+                e.note
+            )
+        })
+        .collect();
+    let claims = all
+        .iter()
+        .filter(|e| e.kind == JournalKind::DisputeOpened)
+        .map(|e| {
+            format!(
+                "{} · {} · {}",
+                date_of(e),
+                name_of(e.party_id.as_deref()),
+                e.note
+            )
+        })
+        .collect();
+    let decisions = all
+        .iter()
+        .filter(|e| e.kind == JournalKind::DisputeResolved)
+        .map(|e| format!("{} · {}", date_of(e), e.note))
+        .collect();
+    let chain_status = match v.chain.broken_seq {
+        Some(n) => format!("Zanjir buzilgan: yozuv #{n}"),
+        None => format!("Zanjir buzilmagan ({} ta yozuv)", v.chain.length),
+    };
+    let doc = pdf::DisputeFolderDoc {
+        title: v.agreement.title.clone(),
+        status: agreements::status_text(v.agreement.status).to_owned(),
+        chain_status,
+        chain_head: v.chain.head.clone(),
+        versions,
+        entries,
+        reviews,
+        incidents,
+        claims,
+        decisions,
+        legal_note: "Shablon yurist va ulamo tasdig'idan o'tmagan: yuridik kuchi va islomiy muvofiqligi haqida va'da berilmaydi. Hakam qarorini ilova almashtirmaydi.".to_owned(),
+        disclaimer: "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas.".to_owned(),
+    };
+    pdf::dispute_folder_pdf(&doc)
+        .map_err(|_| ServiceError::Invalid("hakam papkasini yaratib bo'lmadi"))
 }

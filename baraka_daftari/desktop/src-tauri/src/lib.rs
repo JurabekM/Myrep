@@ -187,6 +187,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         partnerships::record_review_answer,
         partnerships::close_review,
         partnerships::export_review_pdf,
+        partnerships::export_dispute_folder_pdf,
         partnerships::sign_partnership,
         partnerships::partnership_family_consent,
         partnerships::activate_partnership,

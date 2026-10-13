@@ -31,6 +31,7 @@ vi.mock('../../bindings', () => ({
     recordReviewAnswer: vi.fn(),
     closeReview: vi.fn(),
     exportReviewPdf: vi.fn(),
+    exportDisputeFolderPdf: vi.fn(),
     appInfo: vi.fn(),
   },
 }));
@@ -508,5 +509,24 @@ describe('oylik ko‘rik', () => {
     });
     renderPage();
     expect(await screen.findByTestId('review-head')).toHaveTextContent('MOS KELMAYDI');
+  });
+});
+
+describe('hakam ish papkasi', () => {
+  it('nizo ochiq bo‘lsa, papka PDF’i saqlash oynasi orqali chiqariladi', async () => {
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [{ ...base, status: 'ACTIVE', agreement: agreementOf('IN_DISPUTE') }],
+    });
+    vi.mocked(commands.exportDisputeFolderPdf).mockResolvedValue({
+      status: 'ok',
+      data: 'hakam-ish-papkasi.pdf',
+    });
+    renderPage();
+    const box = within(await screen.findByTestId('dispute-active'));
+    await userEvent.click(box.getByRole('button', { name: 'Hakam ish papkasi (PDF)' }));
+    await waitFor(() => {
+      expect(commands.exportDisputeFolderPdf).toHaveBeenCalledWith('p1');
+    });
   });
 });

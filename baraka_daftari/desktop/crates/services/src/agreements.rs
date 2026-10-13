@@ -885,7 +885,7 @@ fn kind_text(t: AgreementType) -> &'static str {
     }
 }
 
-fn status_text(s: AgreementStatus) -> &'static str {
+pub(crate) fn status_text(s: AgreementStatus) -> &'static str {
     match s {
         AgreementStatus::Draft => "Qoralama",
         AgreementStatus::Signed => "Imzolangan",

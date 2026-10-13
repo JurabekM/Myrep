@@ -5,6 +5,7 @@
 mod agreement;
 mod budget;
 mod contract;
+mod dispute;
 mod minutes;
 mod period;
 mod receipt;
@@ -14,6 +15,7 @@ mod world;
 pub use agreement::{agreement_markup, agreement_pdf, AgreementPdfDoc};
 pub use budget::{budget_markup, ceremony_budget, BudgetLine, CeremonyBudgetDoc};
 pub use contract::{contract_markup, partnership_contract, ContractDoc, ContractParty};
+pub use dispute::{dispute_folder_markup, dispute_folder_pdf, DisputeFolderDoc};
 pub use minutes::{
     council_markup, council_minutes, CouncilMinutes, MinutesCategory, MinutesConsent,
 };

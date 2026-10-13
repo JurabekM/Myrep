@@ -787,6 +787,44 @@ pub fn close_review(
     })
 }
 
+/// Hakam uchun ish papkasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None` (SPEC 2F.8).
+#[tauri::command]
+#[specta::specta]
+pub async fn export_dispute_folder_pdf(
+    partnership_id: String,
+    app: AppHandle,
+    state: State<'_, AppSession>,
+) -> Result<Option<String>, CommandError> {
+    let bytes = with_session(&state, |s| {
+        s.run(|db, _env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            services::events::folder_pdf(db.conn(), ctx, &agreement)
+        })
+    })?;
+    let Some(file) = app
+        .dialog()
+        .file()
+        .add_filter("PDF", &["pdf"])
+        .set_file_name("hakam-ish-papkasi.pdf")
+        .blocking_save_file()
+    else {
+        return Ok(None);
+    };
+    let mut path = file.into_path().map_err(|_| CommandError::Internal {
+        message: "fayl yo'li noto'g'ri".into(),
+    })?;
+    if path
+        .extension()
+        .is_none_or(|e| !e.eq_ignore_ascii_case("pdf"))
+    {
+        path.set_extension("pdf");
+    }
+    std::fs::write(&path, bytes).map_err(|_| CommandError::Internal {
+        message: "faylni yozib bo'lmadi".into(),
+    })?;
+    Ok(path.file_name().map(|n| n.to_string_lossy().into_owned()))
+}
+
 /// Ko'rik bayonnomasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None`.
 #[tauri::command]
 #[specta::specta]

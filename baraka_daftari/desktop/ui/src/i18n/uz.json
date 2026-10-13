@@ -960,7 +960,8 @@
       "disputeActive": "Nizo ochiq: taqsimot bloklangan",
       "disputeHint": "Hakam qarorini yozing: nizo shu qaror bilan yopiladi va taqsimot ochiladi.",
       "decision": "Hakam qarori",
-      "submitDecision": "Qarorni yozib, nizoni yopish"
+      "submitDecision": "Qarorni yozib, nizoni yopish",
+      "folderPdf": "Hakam ish papkasi (PDF)"
     },
     "review": {
       "title": "Oylik ko'rik: {{period}}",

@@ -162,7 +162,10 @@ function Dispute({ p }: { p: PartnershipDto }) {
       await refresh();
     },
   });
-  const error = [open.error, resolve.error].find((x) => x !== null);
+  const folder = useMutation({
+    mutationFn: () => unwrap(commands.exportDisputeFolderPdf(p.id)),
+  });
+  const error = [open.error, resolve.error, folder.error].find((x) => x !== null);
   if (status === 'ACTIVE') {
     return (
       <details className="rounded border border-line p-2" data-testid="dispute-open">
@@ -232,6 +235,18 @@ function Dispute({ p }: { p: PartnershipDto }) {
       <section className="rounded border border-accent p-3" data-testid="dispute-active">
         <p className="font-medium">{t('partner.events.disputeActive')}</p>
         <p className="text-xs opacity-80">{t('partner.events.disputeHint')}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              folder.mutate();
+            }}
+          >
+            {t('partner.events.folderPdf')}
+          </button>
+          {folder.data && <span role="status">{t('receipt.saved', { name: folder.data })}</span>}
+        </div>
         <form
           className="mt-2 space-y-2"
           onSubmit={(e) => {

@@ -1047,3 +1047,33 @@ fn tampering_is_detected_against_the_recorded_chain_head() {
     let doc = services::review::pdf(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
     assert!(doc.starts_with(b"%PDF"));
 }
+
+/// SPEC 2F.8: hakam ish papkasi — nizo ochilgach PDF chiqadi (mundarija bilan); nizo bo'lmasa ham xato emas.
+#[test]
+fn arbiter_folder_pdf_is_produced_while_a_dispute_is_open() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Buyurtma 1",
+        500_000_000,
+        "2026-10-12",
+    )
+    .unwrap();
+    let agreement = agreement_of(&w, &pid);
+    let karim = party_id(&w, &pid, "Karim aka");
+    services::events::open_dispute(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        &karim,
+        "Foyda hisobi",
+        "Ulush 60/40 emas, 50/50 bo'lishi kerak edi",
+    )
+    .unwrap();
+    let pdf = services::events::folder_pdf(w.db.conn(), &w.ctx, &agreement).unwrap();
+    assert!(pdf.starts_with(b"%PDF"));
+}
