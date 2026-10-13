@@ -488,9 +488,8 @@ fn cash(v: i64) -> NewCapital {
     }
 }
 
-fn musharaka(w: &mut World) -> String {
-    let env = env!(w);
-    let new = NewPartnership {
+fn musharaka_input() -> NewPartnership {
+    NewPartnership {
         details: Default::default(),
         name: "Yetkazib berish".into(),
         kind: PartnershipKind::Musharaka,
@@ -517,8 +516,12 @@ fn musharaka(w: &mut World) -> String {
                 fixed_return: None,
             },
         ],
-    };
-    let v = partnerships::create(&mut w.db, &env, &w.ctx, new).unwrap();
+    }
+}
+
+fn musharaka(w: &mut World) -> String {
+    let env = env!(w);
+    let v = partnerships::create(&mut w.db, &env, &w.ctx, musharaka_input()).unwrap();
     v.partnership.meta.id
 }
 
@@ -740,4 +743,56 @@ fn debt_payment_is_journaled_when_the_debt_has_an_agreement() {
             .broken_seq,
         None
     );
+}
+
+fn partnership_count(w: &World) -> usize {
+    repo::list::<domain::Partnership>(w.db.conn(), &w.ctx.household_id)
+        .unwrap()
+        .len()
+}
+
+/// Jonli ustа: saqlanmagan qoralama javobsiz savollarni ko'rsatadi va önizleme PDF beradi; hech narsa yozmaydi.
+#[test]
+fn draft_check_reports_missing_questions_and_writes_nothing() {
+    let w = World::new();
+    let env = env!(w);
+    let before = partnership_count(&w);
+    let c = partnerships::draft_check(w.db.conn(), &env, &w.ctx, &musharaka_input()).unwrap();
+    assert!(
+        c.missing.contains(&3),
+        "vazifalar hali yo'q: {:?}",
+        c.missing
+    );
+    assert!(c.pdf.as_deref().is_some_and(|b| b.starts_with(b"%PDF")));
+    assert_eq!(before, partnership_count(&w));
+}
+
+#[test]
+fn draft_check_is_complete_when_all_nine_answers_are_given() {
+    let w = World::new();
+    let env = env!(w);
+    let mut input = musharaka_input();
+    input.details = partnerships::PartnershipDetails {
+        duties: vec![partnerships::DutyInput {
+            text: "Yetkazib berish va hisobot".into(),
+            owner_name: "Dilshod".into(),
+            if_not_done: "1 kun ichida xabar beradi va o'rnini topadi".into(),
+        }],
+        custody_place: "Anvar hisobi, Dilshod ko'chirma oladi".into(),
+        arbiter_name: "Usta Olim".into(),
+        review_date: Some(d("2027-10-01")),
+    };
+    let c = partnerships::draft_check(w.db.conn(), &env, &w.ctx, &input).unwrap();
+    assert!(c.missing.is_empty(), "{:?}", c.missing);
+    assert!(c.errors.is_empty(), "{:?}", c.errors);
+}
+
+/// Sheriklik PDF'i endi 9 savolli kelishuv hujjatidan chiqadi (joriy versiya bo'lsa).
+#[test]
+fn partnership_contract_pdf_uses_the_agreement_document() {
+    let mut w = World::new();
+    let pid = musharaka(&mut w);
+    let env = env!(w);
+    let bytes = partnerships::contract_pdf(w.db.conn(), &env, &w.ctx, &pid).unwrap();
+    assert!(bytes.starts_with(b"%PDF"));
 }

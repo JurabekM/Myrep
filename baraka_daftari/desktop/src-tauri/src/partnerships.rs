@@ -522,6 +522,43 @@ pub fn create_partnership(
     })
 }
 
+/// Saqlanmagan shartnoma qoralamasi: javobsiz savollar, qoidaga zid javoblar va önizleme PDF.
+#[derive(Debug, Serialize, Type)]
+pub struct DraftCheckDto {
+    /// Javobsiz savollar (1–9).
+    pub missing_questions: Vec<u8>,
+    pub errors: Vec<AgreementIssueDto>,
+    /// Önizleme PDF baytlari; relizda shablon tasdiqlanmagan bo'lsa `null`.
+    pub pdf: Option<Vec<u8>>,
+}
+
+/// Ustaning jonli önizlemasi uchun: hech narsa saqlanmaydi.
+#[tauri::command]
+#[specta::specta]
+pub fn check_partnership_draft(
+    input: PartnershipInput,
+    state: State<'_, AppSession>,
+) -> Result<DraftCheckDto, CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let new = parse_input(ctx, input)?;
+            let c = partnerships::draft_check(db.conn(), env, ctx, &new)?;
+            Ok(DraftCheckDto {
+                missing_questions: c.missing,
+                errors: c
+                    .errors
+                    .into_iter()
+                    .map(|i| AgreementIssueDto {
+                        question: i.question,
+                        code: i.code.to_owned(),
+                    })
+                    .collect(),
+                pdf: c.pdf,
+            })
+        })
+    })
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn revise_partnership(

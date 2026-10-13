@@ -141,7 +141,7 @@ fn current_doc(
 }
 
 /// Hisob yurituvchi qurilma: hujjatda ko'rsatilmasa, kelishuvni yaratgan qurilma.
-fn prepare(env: &Env<'_>, mut doc: AgreementDoc) -> AgreementDoc {
+pub(crate) fn prepare(env: &Env<'_>, mut doc: AgreementDoc) -> AgreementDoc {
     if let Answer::Answered(c) = &mut doc.questions.custody {
         if c.keeper_device_id
             .as_deref()
@@ -919,6 +919,74 @@ pub fn pdf(conn: &Connection, ctx: &Ctx, id: &str) -> Result<Vec<u8>, ServiceErr
     let doc = v.doc.as_ref().ok_or(ServiceError::Invalid(
         "eski matnli versiya PDF qilinmaydi: avval 9 savolli yangi versiya yarating",
     ))?;
+    let signatures = v
+        .required
+        .iter()
+        .map(|r| {
+            let signed = v
+                .signatures
+                .iter()
+                .find(|s| s.kind == r.kind && s.signer_key == r.key)
+                .map(|s| date_to_string(local_date(s.meta.created_at)).unwrap_or_default());
+            (r.name.clone(), signed)
+        })
+        .collect();
+    let a = &v.agreement;
+    let document = document_of(
+        doc,
+        &a.title,
+        a.agreement_type,
+        a.current_version,
+        a.status,
+        a.effective_from,
+        signatures,
+    );
+    pdf::agreement_pdf(&document)
+        .map_err(|_| ServiceError::Invalid("kelishuv PDF'ini yaratib bo'lmadi"))
+}
+
+/// Saqlanmagan qoralama hujjatining PDF'i (jonli önizleme). Imzolar hali kutilmoqda deb chiqadi.
+/// Relizda shablon tasdiqlanmagan bo'lsa `None` qaytadi (xato emas: önizleme shunchaki ko'rsatilmaydi).
+///
+/// # Errors
+/// PDF yaratib bo'lmasa.
+pub fn draft_pdf(
+    doc: &AgreementDoc,
+    title: &str,
+    kind: AgreementType,
+    effective_from: Date,
+) -> Result<Option<Vec<u8>>, ServiceError> {
+    if !pdf::templates_releasable(cfg!(debug_assertions)) {
+        return Ok(None);
+    }
+    let signatures = required_signatures(doc)
+        .into_iter()
+        .map(|r| (r.name, None))
+        .collect();
+    let document = document_of(
+        doc,
+        title,
+        kind,
+        1,
+        AgreementStatus::Draft,
+        effective_from,
+        signatures,
+    );
+    pdf::agreement_pdf(&document)
+        .map(Some)
+        .map_err(|_| ServiceError::Invalid("kelishuv PDF'ini yaratib bo'lmadi"))
+}
+
+/// Hujjat ma'lumotidan PDF modeli (matn ko'rinishida; servis qatlamida formatlanadi).
+fn document_of(
+    doc: &AgreementDoc,
+    title: &str,
+    kind: AgreementType,
+    version: u32,
+    status: AgreementStatus,
+    effective_from: Date,
+    signatures: Vec<(String, Option<String>)>,
+) -> pdf::AgreementPdfDoc {
     let fm = |m: Money| format_money(m, Locale::Uz);
     let party_name = |pid: &str| -> String {
         match &doc.questions.parties {
@@ -1001,25 +1069,12 @@ pub fn pdf(conn: &Connection, ctx: &Ctx, id: &str) -> Result<Vec<u8>, ServiceErr
         }
         _ => "Kelishilmagan".to_owned(),
     };
-    let signatures = v
-        .required
-        .iter()
-        .map(|r| {
-            let signed = v
-                .signatures
-                .iter()
-                .find(|s| s.kind == r.kind && s.signer_key == r.key)
-                .map(|s| date_to_string(local_date(s.meta.created_at)).unwrap_or_default());
-            (r.name.clone(), signed)
-        })
-        .collect();
-    let agreement = &v.agreement;
-    let document = pdf::AgreementPdfDoc {
-        title: agreement.title.clone(),
-        kind: kind_text(agreement.agreement_type).to_owned(),
-        version: agreement.current_version,
-        status: status_text(agreement.status).to_owned(),
-        effective_from: date_to_string(agreement.effective_from).unwrap_or_default(),
+    pdf::AgreementPdfDoc {
+        title: title.to_owned(),
+        kind: kind_text(kind).to_owned(),
+        version,
+        status: status_text(status).to_owned(),
+        effective_from: date_to_string(effective_from).unwrap_or_default(),
         parties: match &doc.questions.parties {
             Answer::Answered(ps) => ps.iter().map(|p| (p.name.clone(), p.role.clone())).collect(),
             _ => Vec::new(),
@@ -1036,9 +1091,7 @@ pub fn pdf(conn: &Connection, ctx: &Ctx, id: &str) -> Result<Vec<u8>, ServiceErr
         signatures,
         legal_note: "Shablon yurist va ulamo tasdig'idan o'tmagan: yuridik kuchi va islomiy muvofiqligi haqida va'da berilmaydi. Ilova pul o'tkazmaydi va sheriklarni topishtirmaydi.".to_owned(),
         disclaimer: "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas.".to_owned(),
-    };
-    pdf::agreement_pdf(&document)
-        .map_err(|_| ServiceError::Invalid("kelishuv PDF'ini yaratib bo'lmadi"))
+    }
 }
 
 #[cfg(test)]

@@ -1058,6 +1058,10 @@ pub fn contract_pdf(
         ));
     }
     let v = view(conn, env, ctx, id)?;
+    // 9 savolli joriy versiya: kelishuv PDF'i (SPEC 2F.2). Eski matnli versiya — eski shablon.
+    if let Some(a) = v.agreement.as_ref().filter(|a| a.doc.is_some()) {
+        return agreements::pdf(conn, ctx, &a.agreement.meta.id);
+    }
     let fm = |m: Money| format_money(m, Locale::Uz);
     let sigs: Vec<AgreementSignature> = v
         .agreement
@@ -1142,6 +1146,48 @@ pub fn contract_pdf(
     };
     pdf::partnership_contract(&doc)
         .map_err(|_| ServiceError::Invalid("shartnoma PDF'ini yaratib bo'lmadi"))
+}
+
+/// Hali saqlanmagan sheriklik qoralamasining tekshiruvi: shartnoma ustasining jonli holati uchun.
+#[derive(Debug, Clone)]
+pub struct DraftCheck {
+    /// Javobsiz savollar (1..=9).
+    pub missing: Vec<u8>,
+    /// Javob bor, lekin qoidaga zid.
+    pub errors: Vec<domain::Issue>,
+    /// Önizleme PDF; relizda shablon tasdiqlanmagan bo'lsa `None`.
+    pub pdf: Option<Vec<u8>>,
+}
+
+/// Kiritilayotgan (hali yozilmagan) shartnoma uchun to'liqlik va önizleme. Hech narsa yozmaydi.
+///
+/// # Errors
+/// Kiritilgan ma'lumot yaroqsiz bo'lsa (masalan, nom bo'sh yoki tomon nomlari takrorlangan).
+pub fn draft_check(
+    conn: &Connection,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    new: &NewPartnership,
+) -> Result<DraftCheck, ServiceError> {
+    validate(conn, ctx, new)?;
+    let effective = local_date(env.clock.now());
+    let placeholder_ids: Vec<String> = (0..new.parties.len())
+        .map(|i| format!("draft-{i}"))
+        .collect();
+    // Saqlashda kabi: hisob yurituvchi bo'sh bo'lsa, yaratayotgan qurilma.
+    let doc = agreements::prepare(env, build_doc(new, &placeholder_ids, effective));
+    let c = domain::completeness(&doc);
+    let pdf = agreements::draft_pdf(
+        &doc,
+        &clean(&new.name, 80),
+        AgreementType::Partnership,
+        effective,
+    )?;
+    Ok(DraftCheck {
+        missing: c.missing,
+        errors: c.errors,
+        pdf,
+    })
 }
 
 #[cfg(test)]

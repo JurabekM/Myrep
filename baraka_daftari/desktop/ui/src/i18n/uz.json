@@ -909,7 +909,40 @@
     "buyoutPay": "To'lov (so'm)",
     "buyoutRecord": "To'lovni qayd etish",
     "buyoutDone": "Sotib olish yakunlandi: sherik mustaqil bo'ldi.",
-    "templateUnapproved": "Shartnoma shabloni hali yurist va ulamo tasdig'idan o'tmagan: undan faqat tanishish uchun foydalaning, imzolashdan oldin mutaxassisga ko'rsating."
+    "templateUnapproved": "Shartnoma shabloni hali yurist va ulamo tasdig'idan o'tmagan: undan faqat tanishish uchun foydalaning, imzolashdan oldin mutaxassisga ko'rsating.",
+    "wizard": {
+      "progress": "{{n}} / 9 savol tayyor",
+      "done": "tayyor",
+      "todo": "javob kerak",
+      "wrong": "tuzating"
+    },
+    "steps": {
+      "1": "Tomonlar",
+      "2": "Kim nima qo'shadi",
+      "3": "Kim nima qiladi",
+      "4": "Foyda qanday bo'linadi",
+      "5": "Zarar bo'lsa",
+      "6": "Pul va hisob",
+      "7": "Qanday ajralib chiqiladi",
+      "8": "Kelisha olmasak, kim hakam",
+      "9": "Qachon yangilanadi"
+    },
+    "advice": {
+      "1": "Kim bu ishda ishtirok etadi? Har bir kishining ismini to'liq yozing. Oila a'zosi bo'lsa, ro'yxatdan tanlang.",
+      "2": "Pul, uskuna yoki mehnat: har kim qo'shadigan narsasini aniq yozsin. Kapitali yo'q tomonning hissasi mehnat bo'lishi mumkin.",
+      "3": "Har bir vazifaga bitta mas'ul kishi tayinlang. «Bajarilmasa» bandida nima qilishni oldindan kelishing: maqsad aybdor qidirish emas, kelishuvga qaytish.",
+      "4": "Foyda faqat sof natijadan, kelishilgan foizda bo'linadi. Jami 100% bo'lishi kerak. Kafolatlangan summa yozilmaydi.",
+      "5": "Zarar qoidasi shartnoma turiga qarab yoziladi. Uni birga o'qing va bir-biringizga kim qancha ulush bilan qatnashishini ayting.",
+      "6": "Pul qayerda turadi va hisobni kim yuritadi? Hisob yurituvchi qurilma jurnalga yozadi, boshqalar faqat ko'radi. Ko'rik davriyligini tanlang.",
+      "7": "Biror kishi ketmoqchi bo'lsa, necha kun oldin xabar berishini va mol-mulk qanday bo'linishini yozing. Eng qiyin paytda shu band sizni asraydi.",
+      "8": "Kelisha olmasangiz, kim hakam bo'ladi? Hakam tomonlardan biri bo'lmasin. Nizo bandi ham shu yerda.",
+      "9": "Shartnoma qancha davr amal qiladi? Qayta ko'rib chiqish sanasini belgilang: shu kuni birga o'tirib, hisobni ochiq ko'rasiz."
+    },
+    "adviceTitle": "Sobir hoji maslahati",
+    "previewTitle": "Shartnoma önizlemasi (PDF)",
+    "previewWaiting": "Ma'lumotni to'ldiring: önizleme shu yerda chiqadi.",
+    "previewLoading": "Önizleme tayyorlanmoqda…",
+    "previewBlocked": "Relizda shablon hali yurist va ulamo tasdig'idan o'tmagan: önizleme chiqarilmaydi."
   },
   "ledger": {
     "title": "Korxona daftari",

@@ -179,6 +179,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         partnerships::list_partnerships,
         partnerships::create_partnership,
         partnerships::revise_partnership,
+        partnerships::check_partnership_draft,
         partnerships::sign_partnership,
         partnerships::partnership_family_consent,
         partnerships::activate_partnership,

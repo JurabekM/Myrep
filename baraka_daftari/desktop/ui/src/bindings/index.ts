@@ -201,6 +201,8 @@ export const commands = {
 	listPartnerships: () => typedError<PartnershipDto[], CommandError>(__TAURI_INVOKE("list_partnerships")),
 	createPartnership: (input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("create_partnership", { input })),
 	revisePartnership: (id: string, input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("revise_partnership", { id, input })),
+	/**  Ustaning jonli önizlemasi uchun: hech narsa saqlanmaydi. */
+	checkPartnershipDraft: (input: PartnershipInput) => typedError<DraftCheckDto, CommandError>(__TAURI_INVOKE("check_partnership_draft", { input })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
@@ -631,6 +633,15 @@ export type DistributionDto = {
 	role: string,
 	amount: MoneyDto,
 	buyout_delta: MoneyDto,
+};
+
+/**  Saqlanmagan shartnoma qoralamasi: javobsiz savollar, qoidaga zid javoblar va önizleme PDF. */
+export type DraftCheckDto = {
+	/**  Javobsiz savollar (1–9). */
+	missing_questions: number[],
+	errors: AgreementIssueDto[],
+	/**  Önizleme PDF baytlari; relizda shablon tasdiqlanmagan bo'lsa `null`. */
+	pdf: number[] | null,
 };
 
 export type DutyInputDto = {

@@ -23,6 +23,7 @@ vi.mock('../../bindings', () => ({
     setBuyoutPlan: vi.fn(),
     recordBuyoutPayment: vi.fn(),
     exportContractPdf: vi.fn(),
+    checkPartnershipDraft: vi.fn(),
     appInfo: vi.fn(),
   },
 }));
@@ -102,6 +103,10 @@ beforeEach(() => {
   vi.mocked(commands.listMembers).mockResolvedValue({
     status: 'ok',
     data: [{ id: 'm1', name: 'Men', role: 'ADULT', has_pin: true }],
+  });
+  vi.mocked(commands.checkPartnershipDraft).mockResolvedValue({
+    status: 'ok',
+    data: { missing_questions: [], errors: [], pdf: null },
   });
   for (const k of [
     'signPartnership',
@@ -277,5 +282,51 @@ describe('PartnershipsPage', () => {
       expect(commands.revisePartnership).toHaveBeenCalledTimes(1);
     });
     expect(vi.mocked(commands.revisePartnership).mock.calls[0]?.[0]).toBe('p1');
+  });
+});
+
+describe('shartnoma ustasi: 9 qadam, maslahat va önizleme', () => {
+  it('progress har savolning holatini ko‘rsatadi va önizleme bloklanganini aytadi', async () => {
+    vi.mocked(commands.checkPartnershipDraft).mockResolvedValue({
+      status: 'ok',
+      data: {
+        missing_questions: [3, 8, 9],
+        errors: [{ question: 4, code: 'PROFIT_SHARES_NOT_100' }],
+        pdf: null,
+      },
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Yangi shartnoma' }));
+    const side = within(screen.getByTestId('wizard-progress'));
+    expect(await side.findByText('5 / 9 savol tayyor')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-step-3')).toHaveAttribute('data-state', 'todo');
+    expect(screen.getByTestId('wizard-step-4')).toHaveAttribute('data-state', 'wrong');
+    expect(screen.getByTestId('wizard-step-1')).toHaveAttribute('data-state', 'done');
+    expect(await screen.findByTestId('draft-preview-blocked')).toBeInTheDocument();
+  });
+
+  it('maydonga o‘tilganda o‘sha savolning maslahati chiqadi', async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Yangi shartnoma' }));
+    const f = within(screen.getByTestId('contract-form'));
+    await userEvent.click(f.getByLabelText('1-tomon foyda ulushi (%)'));
+    expect(
+      within(screen.getByTestId('wizard-advice')).getByText(/Foyda faqat sof natijadan/),
+    ).toBeInTheDocument();
+  });
+
+  it('PDF baytlari kelsa, önizleme iframe’da chiqadi', async () => {
+    const createURL = vi.fn(() => 'blob:draft');
+    Object.defineProperty(URL, 'createObjectURL', { value: createURL, configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true });
+    vi.mocked(commands.checkPartnershipDraft).mockResolvedValue({
+      status: 'ok',
+      data: { missing_questions: [], errors: [], pdf: [37, 80, 68, 70] },
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: 'Yangi shartnoma' }));
+    const frame = await screen.findByTitle('Shartnoma önizlemasi (PDF)');
+    expect(frame).toHaveAttribute('src', 'blob:draft');
+    expect(createURL).toHaveBeenCalled();
   });
 });
