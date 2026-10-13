@@ -2,6 +2,7 @@
 //! `ʻ` (U+02BB) va `ʼ` (U+02BC) belgilari tizim shriftlariga bog'liq bo'lmay to'g'ri chiqadi.
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
+mod agreement;
 mod budget;
 mod contract;
 mod minutes;
@@ -9,6 +10,7 @@ mod period;
 mod receipt;
 mod world;
 
+pub use agreement::{agreement_markup, agreement_pdf, AgreementPdfDoc};
 pub use budget::{budget_markup, ceremony_budget, BudgetLine, CeremonyBudgetDoc};
 pub use contract::{contract_markup, partnership_contract, ContractDoc, ContractParty};
 pub use minutes::{

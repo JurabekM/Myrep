@@ -13,6 +13,12 @@ interface CapitalRow {
   value: string;
 }
 
+interface DutyRow {
+  text: string;
+  owner: string;
+  ifNotDone: string;
+}
+
 interface PartyRow {
   name: string;
   role: string;
@@ -81,6 +87,16 @@ export function ContractForm({
           { name: '', role: 'WORKER', share: '50', memberId: '', fixedReturn: '', capital: [] },
         ],
   );
+  const [duties, setDuties] = useState<DutyRow[]>(
+    existing?.agreement?.duties.map((d) => ({
+      text: d.text,
+      owner: d.owner_name,
+      ifNotDone: d.if_not_done,
+    })) ?? [],
+  );
+  const [custodyPlace, setCustodyPlace] = useState(existing?.agreement?.custody_place ?? '');
+  const [arbiterName, setArbiterName] = useState(existing?.agreement?.arbiter_name ?? '');
+  const [reviewDate, setReviewDate] = useState(existing?.agreement?.review_date ?? '');
   const [localError, setLocalError] = useState<string | null>(null);
 
   const save = useMutation({
@@ -130,6 +146,12 @@ export function ContractForm({
         .map((w) => w.trim())
         .filter((w) => w !== ''),
       parties: rows,
+      duties: duties
+        .filter((d) => d.text.trim() !== '')
+        .map((d) => ({ text: d.text, owner_name: d.owner, if_not_done: d.ifNotDone })),
+      custody_place: custodyPlace,
+      arbiter_name: arbiterName,
+      review_date: reviewDate === '' ? null : reviewDate,
     });
   };
 
@@ -370,6 +392,110 @@ export function ContractForm({
           {t('partner.addParty')}
         </button>
       )}
+
+      <fieldset
+        className="space-y-2 rounded border border-line p-3"
+        data-testid="agreement-questions"
+      >
+        <legend className="px-1 text-sm font-semibold">{t('partner.questionsTitle')}</legend>
+        <p className="text-xs opacity-70">{t('partner.questionsHint')}</p>
+        {duties.map((d, i) => (
+          <div
+            key={i}
+            className="grid gap-2 sm:grid-cols-[2fr_1fr_2fr_auto]"
+            data-testid={'duty-' + String(i)}
+          >
+            <input
+              aria-label={t('partner.dutyText')}
+              className={input}
+              placeholder={t('partner.dutyText')}
+              value={d.text}
+              onChange={(e) => {
+                setDuties((x) => x.map((y, j) => (j === i ? { ...y, text: e.target.value } : y)));
+              }}
+            />
+            <select
+              aria-label={t('partner.dutyOwner')}
+              className={input}
+              value={d.owner}
+              onChange={(e) => {
+                setDuties((x) => x.map((y, j) => (j === i ? { ...y, owner: e.target.value } : y)));
+              }}
+            >
+              <option value="">{t('partner.dutyOwnerPick')}</option>
+              {parties
+                .filter((p) => p.name.trim() !== '')
+                .map((p) => (
+                  <option key={p.name} value={p.name.trim()}>
+                    {p.name.trim()}
+                  </option>
+                ))}
+            </select>
+            <input
+              aria-label={t('partner.dutyIfNotDone')}
+              className={input}
+              placeholder={t('partner.dutyIfNotDone')}
+              value={d.ifNotDone}
+              onChange={(e) => {
+                setDuties((x) =>
+                  x.map((y, j) => (j === i ? { ...y, ifNotDone: e.target.value } : y)),
+                );
+              }}
+            />
+            <button
+              type="button"
+              className="text-sm underline"
+              onClick={() => {
+                setDuties((x) => x.filter((_, j) => j !== i));
+              }}
+            >
+              {t('partner.removeDuty')}
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="text-sm underline"
+          onClick={() => {
+            setDuties((x) => [...x, { text: '', owner: '', ifNotDone: '' }]);
+          }}
+        >
+          {t('partner.addDuty')}
+        </button>
+        <label className="block text-sm">
+          {t('partner.custodyPlace')}
+          <input
+            className={input}
+            value={custodyPlace}
+            onChange={(e) => {
+              setCustodyPlace(e.target.value);
+            }}
+          />
+        </label>
+        <label className="block text-sm">
+          {t('partner.arbiterName')}
+          <input
+            className={input}
+            value={arbiterName}
+            onChange={(e) => {
+              setArbiterName(e.target.value);
+            }}
+          />
+          <span className="text-xs opacity-70">{t('partner.arbiterHint')}</span>
+        </label>
+        <label className="block text-sm">
+          {t('partner.reviewDate')}
+          <input
+            type="date"
+            className={input}
+            value={reviewDate}
+            onChange={(e) => {
+              setReviewDate(e.target.value);
+            }}
+          />
+          <span className="text-xs opacity-70">{t('partner.reviewHint')}</span>
+        </label>
+      </fieldset>
 
       <label className="block text-sm">
         {t('partner.endClause')}

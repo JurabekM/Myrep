@@ -6,12 +6,14 @@
 //!   boshlang'ich holat esa bitta `OPENING_BALANCE` jurnal yozuvi bo'ladi. Ko'chirilgan kelishuvni 9/9 yangi
 //!   versiya bilan yangilash majburiy (OPEN_QUESTIONS 87).
 use domain::{
-    can_transition, canonical, completeness, required_signatures, sha256_hex, warnings, Agreement,
-    AgreementDoc, AgreementSignKind, AgreementSignature, AgreementStatus, AgreementType,
-    AgreementVersion, Answer, Completeness, Date, Debt, JournalKind, LoanReceipt, MemberRole, Meta,
-    Partnership, PartnershipCapital, PartnershipSignature, PartnershipStatus, PartnershipVersion,
-    ReceiptKind, Receivable, RequiredSignature, SignMethod, SignatureKind, SubjectKind, Warning,
+    can_transition, canonical, completeness, date_to_string, required_signatures, sha256_hex,
+    warnings, Agreement, AgreementDoc, AgreementSignKind, AgreementSignature, AgreementStatus,
+    AgreementType, AgreementVersion, Answer, Completeness, Date, Debt, JournalKind, LoanReceipt,
+    MemberRole, Meta, Partnership, PartnershipCapital, PartnershipSignature, PartnershipStatus,
+    PartnershipVersion, ReceiptKind, Receivable, ReportPeriod, RequiredSignature, SignMethod,
+    SignatureKind, SubjectKind, Warning,
 };
+use money::{format_money, Locale, Money};
 use storage::{repo, Connection, Database};
 use time::OffsetDateTime;
 
@@ -332,6 +334,21 @@ pub fn save_version(
     view(db.conn(), ctx, id)
 }
 
+/// Obyektga bog'langan kelishuv (sheriklik, qarz yoki berilgan qarz).
+///
+/// # Errors
+/// Baza xatosi.
+pub fn agreement_of_subject(
+    conn: &Connection,
+    ctx: &Ctx,
+    kind: SubjectKind,
+    subject_id: &str,
+) -> Result<Option<Agreement>, ServiceError> {
+    Ok(repo::list::<Agreement>(conn, &ctx.household_id)?
+        .into_iter()
+        .find(|a| a.subject_kind == kind && a.subject_id.as_deref() == Some(subject_id)))
+}
+
 /// Sheriklikka bog'langan kelishuv (subject = sheriklik id).
 ///
 /// # Errors
@@ -341,12 +358,7 @@ pub fn agreement_of_partnership(
     ctx: &Ctx,
     partnership_id: &str,
 ) -> Result<Option<Agreement>, ServiceError> {
-    Ok(repo::list::<Agreement>(conn, &ctx.household_id)?
-        .into_iter()
-        .find(|a| {
-            a.subject_kind == SubjectKind::Partnership
-                && a.subject_id.as_deref() == Some(partnership_id)
-        }))
+    agreement_of_subject(conn, ctx, SubjectKind::Partnership, partnership_id)
 }
 
 /// Kelishuvning joriy versiyasidagi tasdiqlar (ko'rinish uchun).
@@ -860,6 +872,173 @@ pub fn adopt_legacy(db: &mut Database, env: &Env<'_>, ctx: &Ctx) -> Result<usize
         }
         Ok(partnerships.len() + loans)
     })
+}
+
+fn kind_text(t: AgreementType) -> &'static str {
+    match t {
+        AgreementType::Partnership => "Sheriklik (mudaraba yoki musharaka)",
+        AgreementType::Loan => "Qarz tilxati",
+        AgreementType::Rent => "Ijara",
+        AgreementType::Service => "Xizmat yoki ish",
+        AgreementType::Family => "Oilaviy kelishuv",
+        AgreementType::Other => "Boshqa kelishuv",
+    }
+}
+
+fn status_text(s: AgreementStatus) -> &'static str {
+    match s {
+        AgreementStatus::Draft => "Qoralama",
+        AgreementStatus::Signed => "Imzolangan",
+        AgreementStatus::Active => "Faol",
+        AgreementStatus::InDispute => "Nizoli",
+        AgreementStatus::Closed => "Yopilgan",
+    }
+}
+
+/// Bazis punkt → «50%» / «33,33%» (butun son arifmetikasi).
+fn percent(bp: u32) -> String {
+    let (whole, frac) = (bp / 100, bp % 100);
+    match frac {
+        0 => format!("{whole}%"),
+        f if f % 10 == 0 => format!("{whole},{}%", f / 10),
+        f => format!("{whole},{f:02}%"),
+    }
+}
+
+/// Kelishuv PDF'i (joriy versiya, 9 savol bo'limlari bilan). Shablon tasdiqlanmagan relizda chiqmaydi.
+///
+/// # Errors
+/// Shablon tasdiqlanmagan, eski matnli versiya yoki PDF yaratib bo'lmasa.
+pub fn pdf(conn: &Connection, ctx: &Ctx, id: &str) -> Result<Vec<u8>, ServiceError> {
+    if !pdf::templates_releasable(cfg!(debug_assertions)) {
+        return Err(ServiceError::Invalid(
+            "kelishuv shabloni hali yurist va ulamo tasdig'idan o'tmagan: PDF chiqarilmaydi",
+        ));
+    }
+    let v = view(conn, ctx, id)?;
+    let doc = v.doc.as_ref().ok_or(ServiceError::Invalid(
+        "eski matnli versiya PDF qilinmaydi: avval 9 savolli yangi versiya yarating",
+    ))?;
+    let fm = |m: Money| format_money(m, Locale::Uz);
+    let party_name = |pid: &str| -> String {
+        match &doc.questions.parties {
+            Answer::Answered(ps) => ps
+                .iter()
+                .find(|p| p.id == pid)
+                .map(|p| p.name.clone())
+                .unwrap_or_default(),
+            _ => String::new(),
+        }
+    };
+    let contributions = match &doc.questions.contributions {
+        Answer::Answered(cs) => cs
+            .iter()
+            .map(|c| {
+                let amount = c
+                    .amount
+                    .map_or_else(String::new, |a| format!(": {}", fm(a)));
+                format!("{} — {}{amount}", party_name(&c.party_id), c.description)
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let duties = match &doc.questions.duties {
+        Answer::Answered(ds) => ds
+            .iter()
+            .map(|d| {
+                (
+                    d.text.clone(),
+                    d.owner_party_id
+                        .as_deref()
+                        .map(party_name)
+                        .unwrap_or_default(),
+                    d.if_not_done.clone(),
+                )
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let profit = match &doc.questions.profit {
+        Answer::Answered(p) => p
+            .shares
+            .iter()
+            .map(|s| format!("{} — {}", party_name(&s.party_id), percent(s.share_bp)))
+            .collect(),
+        _ => Vec::new(),
+    };
+    let loss = match &doc.questions.loss {
+        Answer::Answered(l) => l.text.clone(),
+        _ => "Kelishilmagan".to_owned(),
+    };
+    let custody = match &doc.questions.custody {
+        Answer::Answered(c) => Some((
+            c.place.clone(),
+            match c.review_every {
+                ReportPeriod::Monthly => "har oy".to_owned(),
+                ReportPeriod::Quarterly => "har chorak".to_owned(),
+                ReportPeriod::Yearly => "har yil".to_owned(),
+            },
+        )),
+        _ => None,
+    };
+    let exit = match &doc.questions.exit {
+        Answer::Answered(e) => e.text.clone(),
+        _ => "Kelishilmagan".to_owned(),
+    };
+    let arbiter = match &doc.questions.arbiter {
+        Answer::Answered(a) => Some(a.name.clone()),
+        _ => None,
+    };
+    let term = match &doc.questions.term {
+        Answer::Answered(t) => {
+            let months = t
+                .months
+                .map_or_else(|| "muddatsiz".to_owned(), |m| format!("{m} oy"));
+            format!(
+                "{months}; yangilash sanasi: {}",
+                date_to_string(t.review_date).unwrap_or_default()
+            )
+        }
+        _ => "Kelishilmagan".to_owned(),
+    };
+    let signatures = v
+        .required
+        .iter()
+        .map(|r| {
+            let signed = v
+                .signatures
+                .iter()
+                .find(|s| s.kind == r.kind && s.signer_key == r.key)
+                .map(|s| date_to_string(local_date(s.meta.created_at)).unwrap_or_default());
+            (r.name.clone(), signed)
+        })
+        .collect();
+    let agreement = &v.agreement;
+    let document = pdf::AgreementPdfDoc {
+        title: agreement.title.clone(),
+        kind: kind_text(agreement.agreement_type).to_owned(),
+        version: agreement.current_version,
+        status: status_text(agreement.status).to_owned(),
+        effective_from: date_to_string(agreement.effective_from).unwrap_or_default(),
+        parties: match &doc.questions.parties {
+            Answer::Answered(ps) => ps.iter().map(|p| (p.name.clone(), p.role.clone())).collect(),
+            _ => Vec::new(),
+        },
+        contributions,
+        duties,
+        profit,
+        loss,
+        custody,
+        exit,
+        arbiter,
+        term,
+        witnesses: doc.witnesses.clone(),
+        signatures,
+        legal_note: "Shablon yurist va ulamo tasdig'idan o'tmagan: yuridik kuchi va islomiy muvofiqligi haqida va'da berilmaydi. Ilova pul o'tkazmaydi va sheriklarni topishtirmaydi.".to_owned(),
+        disclaimer: "Ta'limiy material. Fatvo yoki moliyaviy maslahat emas.".to_owned(),
+    };
+    pdf::agreement_pdf(&document)
+        .map_err(|_| ServiceError::Invalid("kelishuv PDF'ini yaratib bo'lmadi"))
 }
 
 #[cfg(test)]

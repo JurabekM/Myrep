@@ -278,6 +278,19 @@ pub struct AgreementStatusDto {
     pub journal_length: u32,
     /// Jurnal zanjiri buzilmagan.
     pub journal_intact: bool,
+    /// Joriy versiyadagi foydalanuvchi javoblari (tahrirlashda forma shulardan boshlanadi).
+    pub duties: Vec<AgreementDutyDto>,
+    pub custody_place: String,
+    pub arbiter_name: String,
+    /// `YYYY-MM-DD`; javob berilmagan bo'lsa bo'sh.
+    pub review_date: String,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct AgreementDutyDto {
+    pub text: String,
+    pub owner_name: String,
+    pub if_not_done: String,
 }
 
 #[derive(Debug, Serialize, Type)]
@@ -295,7 +308,48 @@ pub struct SignatureNeedDto {
 }
 
 fn agreement_dto(a: &AgreementView) -> AgreementStatusDto {
+    let doc = a.doc.as_ref();
+    let party_name = |id: &str| -> String {
+        doc.and_then(|d| match &d.questions.parties {
+            domain::Answer::Answered(ps) => ps.iter().find(|p| p.id == id).map(|p| p.name.clone()),
+            _ => None,
+        })
+        .unwrap_or_default()
+    };
+    let duties = match doc.map(|d| &d.questions.duties) {
+        Some(domain::Answer::Answered(ds)) => ds
+            .iter()
+            .map(|d| AgreementDutyDto {
+                text: d.text.clone(),
+                owner_name: d
+                    .owner_party_id
+                    .as_deref()
+                    .map(party_name)
+                    .unwrap_or_default(),
+                if_not_done: d.if_not_done.clone(),
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let custody_place = match doc.map(|d| &d.questions.custody) {
+        Some(domain::Answer::Answered(c)) => c.place.clone(),
+        _ => String::new(),
+    };
+    let arbiter_name = match doc.map(|d| &d.questions.arbiter) {
+        Some(domain::Answer::Answered(x)) => x.name.clone(),
+        _ => String::new(),
+    };
+    let review_date = match doc.map(|d| &d.questions.term) {
+        Some(domain::Answer::Answered(t)) => {
+            domain::date_to_string(t.review_date).unwrap_or_default()
+        }
+        _ => String::new(),
+    };
     AgreementStatusDto {
+        duties,
+        custody_place,
+        arbiter_name,
+        review_date,
         id: a.agreement.meta.id.clone(),
         status: a.agreement.status.as_str().to_owned(),
         current_version: a.agreement.current_version,

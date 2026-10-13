@@ -179,3 +179,4 @@
 - **Almashish:** yangi jadvallar eksportga kiradi; versiya va imzolar — import orqali o'zgarmaydi (`JOURNAL` ziddiyat turi qo'shildi, UI matni uz/ru). Sxema versiyasi 12.
 - **Tauri/UI:** sheriklik formasiga 3 ta javob (vazifalar, pul joyi, hakam) va yangilash sanasi; kelishuv holati (javobsiz savollar soni, hakam tasdig'i tugmasi); bindinglar yangilangan.
 - **Qolgan (D8A keyingi qismi):** 9 savolli to'liq wizard UI, kelishuv PDF'i va uning snapshot testi, qarz to'lovlarining `PAYMENT` yozuvi (D9), import da zanjir tekshiruvi va fork aniqlash (D14).
+- **Qo'shimcha (D8A, 3-qism):** kelishuv PDF'i (`pdf::agreement_pdf`, 9 bo'lim, tasdiq bloklari, matn snapshot testi); qarz to'lovi kelishuvga bog'langan bo'lsa `PAYMENT` jurnal yozuvi; sheriklik formasiga vazifalar, pul joyi, hakam va yangilash sanasi; forma joriy javoblardan boshlanadi (`AgreementStatusDto.duties/custody_place/arbiter_name/review_date`).

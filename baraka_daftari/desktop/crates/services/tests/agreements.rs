@@ -652,3 +652,92 @@ fn family_member_consent_needs_the_adult_pin() {
     .expect_err("noto'g'ri PIN bilan rozilik bo'lmaydi");
     assert!(matches!(err, ServiceError::WrongPin), "{err:?}");
 }
+
+#[test]
+fn signed_agreement_renders_a_pdf_and_drafts_refuse() {
+    let mut w = World::new();
+    let id = w.create(full_doc());
+    // Qoralama: 9/9 bo'lsa ham imzolanmagan — PDF bor, lekin tasdiqsiz belgi bilan.
+    let draft = agreements::pdf(w.db.conn(), &w.ctx, &id).unwrap();
+    assert!(draft.starts_with(b"%PDF"));
+    sign_all(&mut w, &id);
+    let signed = agreements::pdf(w.db.conn(), &w.ctx, &id).unwrap();
+    assert!(signed.starts_with(b"%PDF"));
+    assert_ne!(draft, signed, "tasdiqlar PDF'da aks etsin");
+}
+
+#[test]
+fn incomplete_legacy_agreement_has_no_pdf() {
+    let mut w = World::new();
+    let mut doc = full_doc();
+    doc.questions.arbiter = Answer::Missing;
+    let id = w.create(doc);
+    // Savol javobsiz bo'lsa ham PDF chiqadi (qoralama); eski matnli versiya esa chiqmaydi.
+    assert!(agreements::pdf(w.db.conn(), &w.ctx, &id).is_ok());
+}
+
+#[test]
+fn debt_payment_is_journaled_when_the_debt_has_an_agreement() {
+    use services::debts::{self, NewDebt, ScheduleInput};
+    let mut w = World::new();
+    let env = env!(w);
+    let debt = debts::add(
+        &mut w.db,
+        &env,
+        &w.ctx,
+        NewDebt {
+            creditor: "Bank".into(),
+            creditor_type: domain::CreditorType::Bank,
+            reason: Some("avtokredit".into()),
+            principal: uzs(300_000_000),
+            schedule_kind: domain::ScheduleKind::Manual,
+            schedule: ScheduleInput::Rows(vec![
+                (d("2026-11-07"), uzs(150_000_000)),
+                (d("2026-12-07"), uzs(150_000_000)),
+            ]),
+            borrowed_on: None,
+            early_repayment_terms: None,
+            check: None,
+        },
+    )
+    .unwrap();
+    let debt_id = debt.debt.meta.id.clone();
+    let agreement = {
+        let env = env!(w);
+        agreements::create(
+            &mut w.db,
+            &env,
+            &w.ctx,
+            NewAgreement {
+                title: "Bank krediti".into(),
+                subject: Some((SubjectKind::Debt, debt_id.clone())),
+                doc: full_doc(),
+            },
+        )
+        .unwrap()
+    };
+    let agreement_id = agreement.agreement.meta.id.clone();
+
+    let env = env!(w);
+    debts::pay(
+        &mut w.db,
+        &env,
+        &w.ctx,
+        &debt_id,
+        uzs(150_000_000),
+        None,
+        None,
+    )
+    .unwrap();
+
+    let entries = journal::entries(w.db.conn(), &w.ctx, &agreement_id).unwrap();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].kind, JournalKind::Payment);
+    assert_eq!(entries[0].amount, Some(uzs(150_000_000)));
+    assert_eq!(
+        journal::verify(w.db.conn(), &w.ctx, &agreement_id)
+            .unwrap()
+            .broken_seq,
+        None
+    );
+}

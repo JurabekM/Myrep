@@ -254,6 +254,12 @@ export const commands = {
 };
 
 /* Types */
+export type AgreementDutyDto = {
+	text: string,
+	owner_name: string,
+	if_not_done: string,
+};
+
 export type AgreementIssueDto = {
 	question: number,
 	code: string,
@@ -275,6 +281,12 @@ export type AgreementStatusDto = {
 	journal_length: number,
 	/**  Jurnal zanjiri buzilmagan. */
 	journal_intact: boolean,
+	/**  Joriy versiyadagi foydalanuvchi javoblari (tahrirlashda forma shulardan boshlanadi). */
+	duties: AgreementDutyDto[],
+	custody_place: string,
+	arbiter_name: string,
+	/**  `YYYY-MM-DD`; javob berilmagan bo'lsa bo'sh. */
+	review_date: string,
 };
 
 export type AlternativeDto = {

@@ -333,6 +333,13 @@ pub fn pay(
         .find(|c| c.name == DEBT_PAYMENT_CATEGORY)
         .ok_or(ServiceError::NotFound)?;
     let closes = amount.minor() == view.remaining.minor();
+    // D8A: qarz kelishuvga bog'langan bo'lsa, to'lov kelishuv jurnaliga ham yoziladi (SPEC 2F.6).
+    let linked = crate::agreements::agreement_of_subject(
+        db.conn(),
+        ctx,
+        domain::SubjectKind::Debt,
+        debt_id,
+    )?;
     db.transaction::<(), ServiceError>(|tx| {
         let expense_id = {
             let e = Expense {
@@ -353,17 +360,32 @@ pub fn pay(
             repo::insert(tx, &e)?;
             e.meta.id
         };
-        repo::insert(
-            tx,
-            &DebtPayment {
-                meta: Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id),
-                debt_id: debt_id.to_owned(),
-                member_id: member,
-                paid_on: date,
-                amount,
-                expense_id: Some(expense_id),
-            },
-        )?;
+        let payment = DebtPayment {
+            meta: Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id),
+            debt_id: debt_id.to_owned(),
+            member_id: member,
+            paid_on: date,
+            amount,
+            expense_id: Some(expense_id),
+        };
+        repo::insert(tx, &payment)?;
+        if let Some(agreement) = &linked {
+            crate::journal::append(
+                tx,
+                env,
+                ctx,
+                agreement,
+                crate::journal::NewEntry {
+                    kind: domain::JournalKind::Payment,
+                    party_id: None,
+                    amount: Some(amount),
+                    date,
+                    note: &format!("To'lov: {}", view.debt.creditor),
+                    reference: Some(payment.meta.id.as_str()),
+                    corrects: None,
+                },
+            )?;
+        }
         if closes {
             let mut d = view.debt.clone();
             d.closed_on = Some(date);
