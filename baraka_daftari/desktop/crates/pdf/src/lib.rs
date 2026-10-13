@@ -8,6 +8,7 @@ mod contract;
 mod minutes;
 mod period;
 mod receipt;
+mod review;
 mod world;
 
 pub use agreement::{agreement_markup, agreement_pdf, AgreementPdfDoc};
@@ -18,6 +19,7 @@ pub use minutes::{
 };
 pub use period::{period_markup, period_report, PeriodReportDoc, ReportEntry};
 pub use receipt::{loan_receipt, receipt_markup, LoanReceiptDoc, ReceiptSignatures};
+pub use review::{review_markup, review_pdf, ReviewPdfDoc};
 pub use world::{render_pdf, render_pdf_with_files, PdfError, EMBEDDED_FONTS};
 
 /// Sheriklik shartnomasi shabloni yurist va ulamo tasdig'idan o'tganmi (SPEC 8). Tasdiq olinmaguncha

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { commands, type PartnershipDto } from '../../bindings';
 import { errorMessage, unwrap } from '../../lib/api';
 
+import { ReviewSession } from './ReviewSession';
+
 const input = 'mt-1 block w-full rounded border border-line-strong bg-transparent p-1';
 
 /**
@@ -25,6 +27,7 @@ export function AgreementEvents({ p }: { p: PartnershipDto }) {
     <div className="mt-3 space-y-3 text-sm" data-testid="agreement-events">
       <DutyList p={p} />
       <Dispute p={p} />
+      <ReviewSession p={p} />
     </div>
   );
 }

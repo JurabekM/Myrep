@@ -38,6 +38,7 @@ pub mod receipts;
 pub mod receivables;
 pub mod recovery;
 pub mod rescue;
+pub mod review;
 pub mod rules;
 pub mod sellables;
 pub mod setup;

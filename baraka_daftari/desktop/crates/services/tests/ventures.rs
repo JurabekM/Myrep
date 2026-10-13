@@ -900,3 +900,150 @@ fn duty_incident_is_journaled_for_the_owner_with_the_clause() {
             .unwrap_err();
     assert_eq!(invalid_message(&no_such), "bunday vazifa bandi yo'q");
 }
+
+/// SPEC 2F.5, 2F.6: oylik ko'rik — barcha tomonlar javob beradi, yakunda zanjir boshi qayd etiladi.
+#[test]
+fn monthly_review_records_answers_and_seals_the_chain_head() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Buyurtma 1",
+        500_000_000,
+        "2026-10-12",
+    )
+    .unwrap();
+    let agreement = agreement_of(&w, &pid);
+    let karim = party_id(&w, &pid, "Karim aka");
+    let zamira = party_id(&w, &pid, "Zamira");
+    services::review::record_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        "2026-10",
+        &karim,
+        services::review::ReviewAnswer::Agree,
+    )
+    .unwrap();
+    let early =
+        services::review::close(&mut w.db, &env!(w), &w.ctx, &agreement, "2026-10").unwrap_err();
+    assert!(invalid_message(&early).contains("barcha tomonlar"));
+    let blank = services::review::record_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        "2026-10",
+        &zamira,
+        services::review::ReviewAnswer::Object("  ".into()),
+    )
+    .unwrap_err();
+    assert!(invalid_message(&blank).contains("izoh"));
+    services::review::record_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        "2026-10",
+        &zamira,
+        services::review::ReviewAnswer::Object("Yo'l xarajati hisobga olinmagan".into()),
+    )
+    .unwrap();
+    let open = services::review::view(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
+    assert!(!open.closed);
+    assert_eq!(open.ledger.len(), 1);
+    let zam = open.parties.iter().find(|p| p.party_id == zamira).unwrap();
+    assert_eq!(zam.agree, Some(false));
+    assert_eq!(zam.note.as_deref(), Some("Yo'l xarajati hisobga olinmagan"));
+    services::review::close(&mut w.db, &env!(w), &w.ctx, &agreement, "2026-10").unwrap();
+    let sealed = services::review::view(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
+    assert!(sealed.closed);
+    assert_eq!(sealed.head_matches, Some(true));
+    let after = services::review::record_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        "2026-10",
+        &karim,
+        services::review::ReviewAnswer::Agree,
+    )
+    .unwrap_err();
+    assert!(invalid_message(&after).contains("yakunlangan"));
+    let pdf = services::review::pdf(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
+    assert!(pdf.starts_with(b"%PDF"));
+}
+
+/// SPEC 2F.6, D13A qabul mezoni: yozuv o'zgartirilsa, bayonnomadagi zanjir boshi bilan solishtirilganda aniqlanadi.
+#[test]
+fn tampering_is_detected_against_the_recorded_chain_head() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    let income = w
+        .entry(
+            &pid,
+            LedgerKind::Income,
+            "Buyurtma 1",
+            500_000_000,
+            "2026-10-12",
+        )
+        .unwrap();
+    let agreement = agreement_of(&w, &pid);
+    for who in [
+        party_id(&w, &pid, "Karim aka"),
+        party_id(&w, &pid, "Zamira"),
+    ] {
+        services::review::record_answer(
+            &mut w.db,
+            &env!(w),
+            &w.ctx,
+            &agreement,
+            "2026-10",
+            &who,
+            services::review::ReviewAnswer::Agree,
+        )
+        .unwrap();
+    }
+    services::review::close(&mut w.db, &env!(w), &w.ctx, &agreement, "2026-10").unwrap();
+    let before = services::review::view(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
+    assert_eq!(before.head_matches, Some(true));
+    assert!(before.chain.broken_seq.is_none());
+
+    // Sinov uchun: triggerni o'chirib, yozuvning matnini o'zgartiramiz (xesh ustuni o'zgarmaydi).
+    w.db.conn()
+        .execute_batch("DROP TRIGGER trg_journal_upd;")
+        .unwrap();
+    let journal_id: String =
+        w.db.conn()
+            .query_row(
+                "SELECT id FROM journal_entries WHERE reference = ?1",
+                [income.meta.id.as_str()],
+                |r| r.get(0),
+            )
+            .unwrap();
+    let changed =
+        w.db.conn()
+            .execute(
+                "UPDATE journal_entries SET note = 'Soxta izoh' WHERE id = ?1",
+                [journal_id.as_str()],
+            )
+            .unwrap();
+    assert_eq!(changed, 1, "tekshiriladigan yozuv topilishi kerak");
+
+    let after = services::review::view(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
+    assert!(
+        after.chain.broken_seq.is_some(),
+        "zanjir buzilishi aniqlanishi kerak"
+    );
+    assert_eq!(
+        after.head_matches,
+        Some(false),
+        "bayonnoma boshi mos kelmasligi kerak"
+    );
+    let doc = services::review::pdf(w.db.conn(), &w.ctx, &agreement, "2026-10").unwrap();
+    assert!(doc.starts_with(b"%PDF"));
+}

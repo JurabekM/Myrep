@@ -43,11 +43,11 @@ fn text(s: &str) -> String {
     format!("[#{}]", lit(s))
 }
 
-fn section(title: &str) -> String {
+pub(crate) fn section(title: &str) -> String {
     format!("== #{}\n", lit(title))
 }
 
-fn table(rows: &[Vec<String>]) -> String {
+pub(crate) fn table(rows: &[Vec<String>]) -> String {
     let cells: Vec<String> = rows.iter().flatten().map(|c| text(c)).collect();
     format!(
         "#table(columns: (auto, 1fr), stroke: 0.4pt + luma(160), inset: 5pt,\n  {}\n)\n",
@@ -55,7 +55,7 @@ fn table(rows: &[Vec<String>]) -> String {
     )
 }
 
-fn bullets(items: &[String]) -> String {
+pub(crate) fn bullets(items: &[String]) -> String {
     items
         .iter()
         .map(|i| format!("- #{}\n", lit(i)))

@@ -27,6 +27,10 @@ vi.mock('../../bindings', () => ({
     reportDutyIncident: vi.fn(),
     openPartnershipDispute: vi.fn(),
     resolvePartnershipDispute: vi.fn(),
+    reviewView: vi.fn(),
+    recordReviewAnswer: vi.fn(),
+    closeReview: vi.fn(),
+    exportReviewPdf: vi.fn(),
     appInfo: vi.fn(),
   },
 }));
@@ -115,9 +119,26 @@ beforeEach(() => {
     'reportDutyIncident',
     'openPartnershipDispute',
     'resolvePartnershipDispute',
+    'recordReviewAnswer',
+    'closeReview',
   ] as const) {
     vi.mocked(commands[k]).mockResolvedValue({ status: 'ok', data: null });
   }
+  vi.mocked(commands.reviewView).mockResolvedValue({
+    status: 'ok',
+    data: {
+      period: '2026-10',
+      closed: false,
+      chain_length: 0,
+      chain_intact: true,
+      broken_seq: null,
+      recorded_head: null,
+      head_matches: null,
+      parties: [],
+      ledger: [],
+      incidents: [],
+    },
+  });
   for (const k of [
     'signPartnership',
     'partnershipFamilyConsent',
@@ -341,8 +362,8 @@ describe('shartnoma ustasi: 9 qadam, maslahat va önizleme', () => {
   });
 });
 
-describe('kelishuv voqealari: bajara olmayapman va nizo', () => {
-  const agreement = (status: string): NonNullable<PartnershipDto['agreement']> => ({
+function agreementOf(status: string): NonNullable<PartnershipDto['agreement']> {
+  return {
     id: 'ag1',
     status,
     current_version: 1,
@@ -363,7 +384,11 @@ describe('kelishuv voqealari: bajara olmayapman va nizo', () => {
     custody_place: 'Anvar hisobi',
     arbiter_name: 'Usta Olim',
     review_date: '2027-10-01',
-  });
+  };
+}
+
+describe('kelishuv voqealari: bajara olmayapman va nizo', () => {
+  const agreement = agreementOf;
 
   it('bajara olmayapman: band darhol ko‘rinadi va hodisa jurnalga yuboriladi', async () => {
     vi.mocked(commands.listPartnerships).mockResolvedValue({
@@ -416,5 +441,72 @@ describe('kelishuv voqealari: bajara olmayapman va nizo', () => {
     await waitFor(() => {
       expect(commands.resolvePartnershipDispute).toHaveBeenCalledWith('p1', 'Ulush 50/50');
     });
+  });
+});
+
+describe('oylik ko‘rik', () => {
+  it('bir tomon javob bermasa ko‘rik yakunlanmaydi; e‘tiroz izoh bilan yuboriladi', async () => {
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [{ ...base, status: 'ACTIVE', agreement: agreementOf('ACTIVE') }],
+    });
+    vi.mocked(commands.reviewView).mockResolvedValue({
+      status: 'ok',
+      data: {
+        period: '2026-10',
+        closed: false,
+        chain_length: 4,
+        chain_intact: true,
+        broken_seq: null,
+        recorded_head: null,
+        head_matches: null,
+        parties: [
+          { party_id: 'a', name: 'Karim aka', agree: true, note: null },
+          { party_id: 'b', name: 'Zamira', agree: null, note: null },
+        ],
+        ledger: [],
+        incidents: [],
+      },
+    });
+    renderPage();
+    const session = within(await screen.findByTestId('review-session'));
+    expect(session.getByRole('button', { name: "Ko'rikni yakunlash" })).toBeDisabled();
+    const zamira = within(screen.getByTestId('review-party-Zamira'));
+    await userEvent.click(zamira.getByRole('button', { name: "E'tirozim bor" }));
+    await userEvent.type(zamira.getByLabelText("E'tiroz izohi"), 'Yo‘l xarajati');
+    await userEvent.click(zamira.getByRole('button', { name: "E'tirozni yozish" }));
+    await waitFor(() => {
+      expect(commands.recordReviewAnswer).toHaveBeenCalledWith(
+        'p1',
+        expect.stringMatching(/^\d{4}-\d{2}$/),
+        'b',
+        false,
+        'Yo‘l xarajati',
+      );
+    });
+  });
+
+  it('yopilgan ko‘rikda zanjir boshi mos kelmasa, ogohlantirish chiqadi', async () => {
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [{ ...base, status: 'ACTIVE', agreement: agreementOf('ACTIVE') }],
+    });
+    vi.mocked(commands.reviewView).mockResolvedValue({
+      status: 'ok',
+      data: {
+        period: '2026-10',
+        closed: true,
+        chain_length: 6,
+        chain_intact: true,
+        broken_seq: null,
+        recorded_head: 'ab12',
+        head_matches: false,
+        parties: [{ party_id: 'a', name: 'Karim aka', agree: true, note: null }],
+        ledger: [],
+        incidents: [],
+      },
+    });
+    renderPage();
+    expect(await screen.findByTestId('review-head')).toHaveTextContent('MOS KELMAYDI');
   });
 });

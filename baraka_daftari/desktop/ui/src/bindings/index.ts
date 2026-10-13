@@ -209,6 +209,14 @@ export const commands = {
 	resolvePartnershipDispute: (partnershipId: string, decision: string) => typedError<null, CommandError>(__TAURI_INVOKE("resolve_partnership_dispute", { partnershipId, decision })),
 	/**  «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi (SPEC 2F.4). */
 	reportDutyIncident: (partnershipId: string, dutyIndex: number, reason: string, proposal: string) => typedError<null, CommandError>(__TAURI_INVOKE("report_duty_incident", { partnershipId, dutyIndex, reason, proposal })),
+	/**  Davr (`YYYY-MM`) ko'rigi holati. */
+	reviewView: (partnershipId: string, period: string) => typedError<ReviewDto, CommandError>(__TAURI_INVOKE("review_view", { partnershipId, period })),
+	/**  Tomonning javobi: roziman (`agree = true`) yoki e'tiroz + izoh. */
+	recordReviewAnswer: (partnershipId: string, period: string, partyId: string, agree: boolean, note: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_review_answer", { partnershipId, period, partyId, agree, note })),
+	/**  Ko'rikni yakunlaydi: barcha tomonlar javob bergan bo'lishi kerak. */
+	closeReview: (partnershipId: string, period: string) => typedError<null, CommandError>(__TAURI_INVOKE("close_review", { partnershipId, period })),
+	/**  Ko'rik bayonnomasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None`. */
+	exportReviewPdf: (partnershipId: string, period: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_review_pdf", { partnershipId, period })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
@@ -1223,6 +1231,40 @@ export type RescueItemDto = {
 	amount: MoneyDto,
 	note: string | null,
 	transferred: boolean,
+};
+
+/**  Oylik ko'rik holati (SPEC 2F.5): zanjir tekshiruvi, tomonlar javobi va davr yozuvlari. */
+export type ReviewDto = {
+	period: string,
+	closed: boolean,
+	chain_length: number,
+	chain_intact: boolean,
+	broken_seq: number | null,
+	/**  Yopilgandagi zanjir boshi (bayonnomada); hali yopilmagan bo'lsa `null`. */
+	recorded_head: string | null,
+	/**  Qayd etilgan boshi hozirgi zanjirga mos keladimi; yopilmagan bo'lsa `null`. */
+	head_matches: boolean | null,
+	parties: ReviewPartyDto[],
+	ledger: ReviewLineDto[],
+	incidents: ReviewLineDto[],
+};
+
+export type ReviewLineDto = {
+	/**  `YYYY-MM-DD`. */
+	date: string,
+	label: string,
+	party: string,
+	/**  Formatlangan summa; yo'q bo'lsa bo'sh. */
+	amount: string,
+	note: string,
+};
+
+export type ReviewPartyDto = {
+	party_id: string,
+	name: string,
+	/**  `null` — hali javob yo'q. */
+	agree: boolean | null,
+	note: string | null,
 };
 
 export type RowInput = {

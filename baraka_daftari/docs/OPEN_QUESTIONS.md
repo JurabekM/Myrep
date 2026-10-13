@@ -113,3 +113,8 @@
 111. **Vazifa hodisasi va qurilma:** jurnalga faqat hisob yurituvchi qurilma yozadi, shuning uchun «bajara olmayapman» hodisasini mas'ul tomon boshqa qurilmadan yoza olmaydi. Bu D14 (import/sinxronlash) bilan hal bo'ladi; hozircha xato xabari chiqadi.
 112. **Nizo matni:** jurnal izohi 300 belgidan oshmaydi, shuning uchun da'vo qisqa yoziladi. To'liq da'vo matni va hakam papkasi uchun alohida `disputes` jadvali kerakmi (D13A 2-qism)? Qaror kerak.
 113. **Hakam qarori va yangi versiya:** qaror yozilganda shartnoma avtomatik yangi versiyaga o'tmaydi; kerak bo'lsa foydalanuvchi o'zi yangi versiya yaratadi. Hakam ro'yxati hozircha erkin matn (ism).
+114. **Oylik ko'rikni avtomatik rejalashtirish:** SPEC 2F.5 bo'yicha ilova ko'rikni o'zi rejalashtiradi. Hozircha sessiya joriy oy uchun sheriklik kartasida ochiladi; eslatma (bildirishnoma yoki ochilganda banner) keyingi qadam.
+115. **Yillik yangilash («o'zgarishsiz tasdiqlash»):** `review_date` dan 30 kun oldin eslatma va «o'zgarishsiz tasdiqlash» hozircha yo'q. Bu yangi versiya hisoblanadi, shuning uchun barcha tasdiqlar qayta so'raladi; oqimni (va eslatma matnini) tasdiqlash kerak.
+116. **Bayonnoma qoralamasi:** yopilmagan ko'rik uchun ham PDF chiqadi («Qoralama: hali yakunlanmagan» belgisi bilan). Yopilgandan keyin yozilgan bayonnoma faqat yopilgan zanjir boshi bilan solishtiriladi.
+117. **Tomon javobini o'zgartirish:** ko'rik yopilguncha tomon o'z javobini (oxirgi `REVIEW_ACK`) o'zgartirishi mumkin; yopilgandan keyin javob qulflanadi. Har bir o'zgartirish jurnalda qoladi.
+118. **Hakam ish papkasi, yillik ko'rik, kelishuvlar markazi va oilaviy shablonlar:** D13A ning qolgan qismi (bu bosqichda hali yo'q). Hakam papkasi PDF'i mundarija va sahifa raqamlari bilan, snapshot testi bilan qo'shiladi.

@@ -654,6 +654,178 @@ fn agreement_id_of(
         ))
 }
 
+#[derive(Debug, Serialize, Type)]
+pub struct ReviewPartyDto {
+    pub party_id: String,
+    pub name: String,
+    /// `null` — hali javob yo'q.
+    pub agree: Option<bool>,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct ReviewLineDto {
+    /// `YYYY-MM-DD`.
+    pub date: String,
+    pub label: String,
+    pub party: String,
+    /// Formatlangan summa; yo'q bo'lsa bo'sh.
+    pub amount: String,
+    pub note: String,
+}
+
+/// Oylik ko'rik holati (SPEC 2F.5): zanjir tekshiruvi, tomonlar javobi va davr yozuvlari.
+#[derive(Debug, Serialize, Type)]
+pub struct ReviewDto {
+    pub period: String,
+    pub closed: bool,
+    pub chain_length: u32,
+    pub chain_intact: bool,
+    pub broken_seq: Option<u32>,
+    /// Yopilgandagi zanjir boshi (bayonnomada); hali yopilmagan bo'lsa `null`.
+    pub recorded_head: Option<String>,
+    /// Qayd etilgan boshi hozirgi zanjirga mos keladimi; yopilmagan bo'lsa `null`.
+    pub head_matches: Option<bool>,
+    pub parties: Vec<ReviewPartyDto>,
+    pub ledger: Vec<ReviewLineDto>,
+    pub incidents: Vec<ReviewLineDto>,
+}
+
+fn review_dto(v: &services::review::ReviewView) -> ReviewDto {
+    let name_of = |pid: Option<&str>| {
+        pid.and_then(|id| v.parties.iter().find(|p| p.party_id == id))
+            .map_or_else(String::new, |p| p.name.clone())
+    };
+    let line = |e: &domain::JournalEntry| ReviewLineDto {
+        date: domain::date_to_string(e.entry_date).unwrap_or_default(),
+        label: services::review::kind_label(e.kind).to_owned(),
+        party: name_of(e.party_id.as_deref()),
+        amount: e
+            .amount
+            .map_or_else(String::new, |m| money::format_money(m, Locale::Uz)),
+        note: e.note.clone(),
+    };
+    ReviewDto {
+        period: v.period.clone(),
+        closed: v.closed,
+        chain_length: u32::try_from(v.chain.length).unwrap_or(u32::MAX),
+        chain_intact: v.chain.broken_seq.is_none(),
+        broken_seq: v.chain.broken_seq,
+        recorded_head: v.recorded_head.clone(),
+        head_matches: v.head_matches,
+        parties: v
+            .parties
+            .iter()
+            .map(|p| ReviewPartyDto {
+                party_id: p.party_id.clone(),
+                name: p.name.clone(),
+                agree: p.agree,
+                note: p.note.clone(),
+            })
+            .collect(),
+        ledger: v.ledger.iter().map(line).collect(),
+        incidents: v.incidents.iter().map(line).collect(),
+    }
+}
+
+/// Davr (`YYYY-MM`) ko'rigi holati.
+#[tauri::command]
+#[specta::specta]
+pub fn review_view(
+    partnership_id: String,
+    period: String,
+    state: State<'_, AppSession>,
+) -> Result<ReviewDto, CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, _env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            let v = services::review::view(db.conn(), ctx, &agreement, &period)?;
+            Ok(review_dto(&v))
+        })
+    })
+}
+
+/// Tomonning javobi: roziman (`agree = true`) yoki e'tiroz + izoh.
+#[tauri::command]
+#[specta::specta]
+pub fn record_review_answer(
+    partnership_id: String,
+    period: String,
+    party_id: String,
+    agree: bool,
+    note: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            let answer = if agree {
+                services::review::ReviewAnswer::Agree
+            } else {
+                services::review::ReviewAnswer::Object(note)
+            };
+            services::review::record_answer(db, env, ctx, &agreement, &period, &party_id, answer)?;
+            Ok(())
+        })
+    })
+}
+
+/// Ko'rikni yakunlaydi: barcha tomonlar javob bergan bo'lishi kerak.
+#[tauri::command]
+#[specta::specta]
+pub fn close_review(
+    partnership_id: String,
+    period: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            services::review::close(db, env, ctx, &agreement, &period)?;
+            Ok(())
+        })
+    })
+}
+
+/// Ko'rik bayonnomasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None`.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_review_pdf(
+    partnership_id: String,
+    period: String,
+    app: AppHandle,
+    state: State<'_, AppSession>,
+) -> Result<Option<String>, CommandError> {
+    let bytes = with_session(&state, |s| {
+        s.run(|db, _env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            services::review::pdf(db.conn(), ctx, &agreement, &period)
+        })
+    })?;
+    let Some(file) = app
+        .dialog()
+        .file()
+        .add_filter("PDF", &["pdf"])
+        .set_file_name(format!("kocher-bayonnoma-{period}.pdf"))
+        .blocking_save_file()
+    else {
+        return Ok(None);
+    };
+    let mut path = file.into_path().map_err(|_| CommandError::Internal {
+        message: "fayl yo'li noto'g'ri".into(),
+    })?;
+    if path
+        .extension()
+        .is_none_or(|e| !e.eq_ignore_ascii_case("pdf"))
+    {
+        path.set_extension("pdf");
+    }
+    std::fs::write(&path, bytes).map_err(|_| CommandError::Internal {
+        message: "faylni yozib bo'lmadi".into(),
+    })?;
+    Ok(path.file_name().map(|n| n.to_string_lossy().into_owned()))
+}
+
 /// Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi.
 #[tauri::command]
 #[specta::specta]

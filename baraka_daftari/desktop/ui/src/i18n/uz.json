@@ -961,6 +961,25 @@
       "disputeHint": "Hakam qarorini yozing: nizo shu qaror bilan yopiladi va taqsimot ochiladi.",
       "decision": "Hakam qarori",
       "submitDecision": "Qarorni yozib, nizoni yopish"
+    },
+    "review": {
+      "title": "Oylik ko'rik: {{period}}",
+      "hint": "Har bir tomon ko'rilgan raqamlarni tasdiqlaydi: «ko'rdim, roziman» yoki «e'tirozim bor» va izoh.",
+      "chainOk": "Hisob zanjiri buzilmagan ({{n}} ta yozuv)",
+      "chainBroken": "Hisob zanjiri buzilgan: yozuv #{{n}} o'zgargan bo'lishi mumkin",
+      "headOk": "Bayonnomadagi zanjir boshi mos keladi",
+      "headMismatch": "MOS KELMAYDI: yopilgandan keyin yozuvlar o'zgargan bo'lishi mumkin",
+      "agree": "Ko'rdim, roziman",
+      "object": "E'tirozim bor",
+      "objectionNote": "E'tiroz izohi",
+      "submitObjection": "E'tirozni yozish",
+      "answerAgree": "Roziman",
+      "answerObject": "E'tiroz: {{note}}",
+      "answerNone": "Javob yo'q",
+      "ledgerTitle": "Davr yozuvlari ({{n}})",
+      "incidentsTitle": "Vazifa hodisalari ({{n}})",
+      "close": "Ko'rikni yakunlash",
+      "pdf": "Bayonnoma PDF"
     }
   },
   "ledger": {
