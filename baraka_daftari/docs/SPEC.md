@@ -1,7 +1,7 @@
 # LOYIHA PROMPTI — «BARAKA DAFTARI»
 ### O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillaridagi) shaxsiy moliya Android ilovasi
 
-> Versiya: v0.7 (texnik qarorlar qotirildi) · Qayta ishlangan manbalar: 1-qism («Nimaga qoladi?»), 2-qism («Xurjunning teshigini yama»), 3-qism («Pulning ko'rinmas dushmani va qarz balosi»), 4-qism («Kishanlarning eng qadimiysi va to'y isrofi»), 5-qism («Uxlagan pulni uyg'otish va halol sheriklik»)
+> Versiya: v0.8 · Qayta ishlangan manbalar: 1-qism («Nimaga qoladi?»), 2-qism («Xurjunning teshigini yama»), 3-qism («Pulning ko'rinmas dushmani va qarz balosi»), 4-qism («Kishanlarning eng qadimiysi va to'y isrofi»), 5-qism («Uxlagan pulni uyg'otish va halol sheriklik»), 6-qism («Sheriklik odobi va Chorsucha shartnomaning 9 savoli»)
 > Bu prompt AI-dasturchi (Claude Code va h.k.) uchun yozilgan. Har bir yangi matndan keyin yangilanadi.
 
 ---
@@ -227,6 +227,7 @@ Qonunning mazmuni:
 - Har bir to'lovchining oylik ulushi va to'lov tarixi yuritiladi. Ishtirokchi taklif havolasi orqali ilovaga qo'shiladi va unga faqat o'sha qarz ko'rinadi.
 
 ### 2D.5. Halol qarz qoidalari: raqamli «qarz tilxati»
+> 6-qonundan keyin: tilxat — `Agreement(type = LOAN)`, ya'ni 2F dagi umumiy dvigatelning bir turi.
 Qarz olish yoki berishda (`Debt` / `Receivable`) uchta shart UI darajasida qo'llab-quvvatlanadi:
 1. **Foizsiz.** «Ustama / foiz» maydoni to'ldirilsa, qizil ogohlantirish chiqadi. Foydalanuvchi o'zi **foizli qarz bermoqchi** bo'lsa, ilova bunga yo'l qo'ymaydi: `Receivable` da foiz maydoni umuman yo'q. «Qarzi hasana» standart tur hisoblanadi.
 2. **Yozma va guvohli.** Ilova qarz tilxati hujjatini yaratadi: kim kimdan, qancha, qachongacha, guvoh(lar) va sana. Hujjat PDF yoki rasm sifatida ulashiladi. Ikkinchi tomon havola orqali ilovada **tasdiqlashi** mumkin, shunda ikki tomonda bir xil yozuv saqlanadi.
@@ -277,6 +278,7 @@ Qonunning mazmuni:
 - Ulushlar yig'indisi 100% bo'lishi shart.
 
 ### 2E.2. Sheriklik shartnomasi («bandma-band, guvohlar bilan»)
+> 6-qonundan keyin: sheriklik shartnomasi — `Agreement(type = PARTNERSHIP)`. U 2F dagi 9 savol strukturasidan foydalanadi va 2E.1 qoidalari bilan validatsiya qilinadi.
 - Tamoyil: **«Shartnoma ishonmaydiganlar uchun emas, ishonchni asrab qolmoqchi bo'lganlar uchun yoziladi»**. Shuning uchun shartnomasiz sheriklik yaratib bo'lmaydi.
 - Shartnoma ustasi (wizard) quyidagilarni yig'adi:
   - tomonlar va ularning rollari;
@@ -334,6 +336,108 @@ Qonunning mazmuni:
 - Sheriklik sadaqa yoki minnat sifatida ko'rsatilmaydi. U teng huquqli ish sifatida ko'rsatiladi: «Ot bilan omoch — ikkalasi birga yer haydaydi».
 - «El nima deydi» qo'rquviga qarshi kontent bo'ladi. Erkak yoki oila boshlig'i rozilik bosqichida g'ururni hurmat qiladigan matnlar ishlatiladi.
 
+## 2F. 6-QONUN: «SHERIKLIK ODOBI — KELISHUVNI YOZINGLAR!» — FUNKSIONAL TALABLAR
+Qonunning mazmuni:
+- **Og'zaki kelishuv — qumga qurilgan uy.** Havo ochiq paytda turadi, birinchi sinovda qulaydi.
+- Yozish ishonchsizlik belgisi emas. U **ishonchni asrash vositasi** va diniy ko'rsatma (Baqara 282).
+- «Qog'ozda qattiq bo'lmaganlar keyin bir-biriga qattiq gapiradi.»
+
+Dasturchi uchun bobning asosiy saboqlari:
+1. Har bir tomon og'zaki kelishuvni **o'z foydasiga moslab eslaydi**. Bu yolg'on emas, xotiraning xususiyati. Bunga yechim — yozilgan shartlar va **o'zgarmas hisob yozuvlari**.
+2. Sheriklikning eng xavfli payti **zarar emas, katta foyda** kelgan payt.
+3. Nizoni **daftar**, ya'ni tiklanadigan aniq raqamlar to'xtatadi.
+4. Yozilgan band nizo chiqqanda emas, **muammo chiqqan kuni** ishlaydi. Misol: Dilshod kasal bo'lib, bot ishdan chiqdi → 3-band bo'yicha harakat qilindi → janjal chiqmadi.
+
+### 2F.1. Umumiy «Kelishuv» dvigateli (Agreement engine)
+- 2D.5 dagi qarz tilxati va 2E.2 dagi sheriklik shartnomasi endi **bitta umumiy `Agreement` modelining turlari** bo'ladi (refaktor):
+  `AgreementType`: `PARTNERSHIP | LOAN | RENT (ijara) | SERVICE (xizmat yoki ish) | FAMILY (oilaviy kelishuv) | OTHER`.
+- Har bir tur uchun **«Chorsucha shartnomaning 9 savoli»** asosiy struktura bo'ladi. Tur faqat qo'shimcha maxsus maydonlar va validatsiyalarni beradi (masalan, `PARTNERSHIP` → 2E.1 qoidalari).
+- Hujjat oddiy tilda yoziladi, rasmiy yuridik til shart emas. «Asosiysi — mag'zi.»
+
+### 2F.2. 9 savol → majburiy bo'limlar
+| # | Savol | Ilovadagi bo'lim | Validatsiya |
+|---|---|---|---|
+| 1 | Kim bilan kim? | `parties[]`: to'liq ism-sharif, roli, aloqasi | Kamida 2 tomon |
+| 2 | Kim nima qo'shyapti? | `contributions[]`: pul, mol, mehnat, tanish-bilish — miqdori yoki tavsifi bilan | Har bir tomonda kamida bitta hissa |
+| 3 | Kim nima qiladi? | `duties[]`: vazifa → **yagona mas'ul** tomon. Har bir vazifa uchun **«bajarilmasa»** bandi (masalan: «1 kun ichida xabar beradi va o'rniga yechim topadi») | Egasiz yoki «hamma» ga yozilgan vazifa **qabul qilinmaydi** («hamma hamma narsani qilsa — hech kim hech narsa qilmaydi») |
+| 4 | Foyda qanday bo'linadi? | `profitRule`: faqat **foiz (bp)** | So'mdagi qat'iy summa taqiqlanadi (2E.1) |
+| 5 | Zarar ko'rilsa nima bo'ladi? | `lossRule`: tur bo'yicha avtomatik taklif qilinadi (mudoraba / musharaka) | 2E.1 bilan mos |
+| 6 | Pul qayerda, hisobni kim yuritadi, ikkinchi tomon qachon ko'radi? | `custody`: pul turgan joy, hisob yurituvchi, **ko'rib chiqish davriyligi** (standart — oyiga 1 marta) | Davriylik oyiga 1 martadan siyrak bo'lsa, ogohlantirish chiqadi |
+| 7 | Qanday ajralib chiqiladi? | `exitClause`: oldindan ogohlantirish muddati, ulushni baholash usuli, to'lash muddati va tartibi, mol-mulk qanday bo'linadi | Majburiy |
+| 8 | Kelisha olmasangiz, kim hakam? | `arbiter`: ism-sharif, roli, ikki tomon tomonidan tasdiqlanadi | Majburiy. Hakam tomonlardan biri bo'lishi mumkin emas |
+| 9 | Qachon yangilanadi? | `term` + `reviewDate`: standart holatda yiliga 1 marta | Majburiy |
+
+- **To'liqlik indikatori:** «9 / 9 savolga javob berildi». Barcha 9 bo'lim to'ldirilmaguncha yoki asosli ravishda «tegishli emas» deb belgilanmaguncha **imzolash bosqichi ochilmaydi**. «Tegishli emas» belgisi qo'yish uchun izoh yozish majburiy.
+- Turga qarab ba'zi savollar soddalashtiriladi. Masalan, `LOAN` uchun 3-savol = «qaytarish jadvali», 4–5-savollar = «foiz yo'q» (avtomatik qo'yiladi). Biroq savollar ro'yxati hamma turda bir xil qoladi.
+- «Noqulay» bandlarni ham yozish rag'batlantiriladi. Masalan, «Agar X o'z vazifasini bir hafta bajarmasa...». UI'da Sobir hoji maslahati chiqadi: «Qog'ozda qattiq bo'lsa, keyin bir-biringizga qattiq gapirmaysiz».
+
+### 2F.3. Imzolash, guvohlar va versiyalar
+- Imzolash, guvohlar va versiyalash 2D.5 va 2E.2 dagi tartib bilan bir xil. MVP'da tomonlar shu qurilmada imzo chizadi.
+- **Hakam ham** shartnomani tasdiqlaydi: hakamlikka roziligini imzo bilan bildiradi.
+- **Yillik yangilash:** `reviewDate` dan 30 kun oldin eslatma keladi. Yangilash yangi versiya yaratadi, hech narsa o'zgarmagan bo'lsa ham. Bu holda versiyaga «o'zgarishsiz tasdiqlandi» degan yozuv qo'shiladi.
+
+### 2F.4. Vazifalar va «bajarilmadi» oqimi
+- `duties[]` ning har biri kuzatiladigan majburiyat sifatida saqlanadi.
+- Har bir tomon «vazifamni bajara olmayapman» deb xabar berishi mumkin (`DutyIncident`): sababi, sanasi va o'rniga taklif qilingan yechim.
+- Ilova shartnomaning tegishli bandini darhol ko'rsatadi: «3-band: 1 kun ichida xabar berasiz va o'rnini to'ldirasiz». Hodisa ikkala tomonning tarixida qoladi.
+- Maqsad aybdor qidirish emas. Maqsad — kelishilgan qoidaga qaytish.
+
+### 2F.5. Oylik ochiq hisob ko'rigi (6-savolning ijrosi)
+- Shartnomada belgilangan davriylikda (standart — oyiga 1 marta) **«Hisobni ochiq ko'rish»** sessiyasi o'tkaziladi. Ilova uni o'zi rejalashtiradi.
+- Sessiyada quyidagilar ko'rib chiqiladi: ledger yoki qarz to'lovlari, davr yakuni, ochiq vazifa hodisalari.
+- Har bir tomon ko'rilgan raqamlarni **«ko'rdim, roziman»** yoki **«e'tirozim bor + izoh»** deb tasdiqlaydi.
+- Natijada **ko'rik bayonnomasi** (PDF) chiqadi. U kelajakda nizo chiqqanda asosiy dalil bo'ladi (Usta buvaning daftari kabi).
+
+### 2F.6. O'zgarmas hisob yozuvlari (dalil sifatida)
+- Kelishuvga bog'langan barcha moliyaviy yozuvlar (venture ledger, qarz to'lovlari, taqsimotlar, ko'rik bayonnomalari) **faqat qo'shiladigan (append-only)** jurnal sifatida saqlanadi.
+- Yozuvni tuzatish faqat yangi tuzatuvchi yozuv bilan qilinadi. Eski yozuv o'chirilmaydi va tahrirlanmaydi.
+- **Taklif (muhandislik):** jurnal yozuvlari **xesh-zanjir** bilan bog'lanadi: `hash_n = H(hash_{n-1} ‖ canonical(entry_n))`. Har bir ko'rik bayonnomasida o'sha paytdagi zanjir boshi (`chainHead`) qayd etiladi. Shu tufayli bayonnomadan keyin o'tmishdagi yozuvni sezdirmasdan o'zgartirib bo'lmaydi. Bu MVP'da offline ishlaydi va server talab qilmaydi.
+- **Aniq algoritm** (mobil va desktop bir xil xesh chiqarishi uchun):
+  - `canonical` = RFC 8785 (JCS) bo'yicha JSON. Barcha pul va son qiymatlari **string** ko'rinishida yoziladi;
+  - `H` = SHA-256 (hex, kichik harflarda);
+  - `hash_n = SHA256(prevHashHex + "\n" + canonical(entry_n))`;
+  - genesis uchun `prevHash` = 64 ta `0`;
+  - har bir kelishuvning **o'z zanjiri** bo'ladi.
+  - Test vektori: `spec/test-vectors/journal_chain.json` (`DESKTOP_PROMPT.md` 5.3).
+- **Bitta hisob yurituvchi:** har bir kelishuvning jurnaliga faqat **bitta qurilma** yozuv qo'shadi (`custody.keeperDeviceId` — 6-savoldagi «hisobni kim yuritadi» javobi). Boshqa qurilmalarda jurnal faqat o'qish uchun turadi. Import paytida zanjir ayrilib ketgan bo'lsa (fork), u avtomatik birlashtirilmaydi, foydalanuvchiga hisobot ko'rsatiladi.
+
+### 2F.7. «Katta foyda» ogohlantirishi
+- Bobning saboqlaridan biri: **katta foyda kelganda xotira «o'yin» ko'rsatadi**.
+- Davr foydasi rejadagidan sezilarli darajada oshsa (standart chegara: kutilgandan ≥ 150% yoki o'tgan 3 davr o'rtachasidan ≥ 200%, sozlanadi), ilova taqsimotdan **oldin** quyidagilarni taklif qiladi:
+  - shartnomaning 4–5-bandlarini ikkala tomon qayta o'qib chiqishi;
+  - navbatdan tashqari ochiq hisob ko'rigi o'tkazish.
+- Ohang: tabriklash + ehtiyot. «Barakali foyda — tabriklaymiz! Endi kelishuvni birga qayta o'qib chiqaylik.»
+
+### 2F.8. Nizo va hakam oqimi
+- Har bir tomon `Dispute` ochishi mumkin: mavzu, tegishli bandlar va o'z talabi.
+- Ilova **«hakam uchun ish papkasi»**ni (PDF) avtomatik yig'adi. Unga kiradi:
+  - shartnomaning amaldagi versiyasi va versiyalar tarixi;
+  - tegishli davrlar bo'yicha hisob yozuvlari va zanjir tekshiruvi natijasi;
+  - ko'rik bayonnomalari;
+  - vazifa hodisalari;
+  - ikkala tomonning talablari.
+- Hakam qarorini yozib qo'yish mumkin. Qaror kelishuv tarixiga qo'shiladi. Agar kerak bo'lsa, shartnomaning yangi versiyasi yaratiladi.
+- Maqsad: ishni sudgacha olib bormaslik. Ilova sudga taalluqli yuridik maslahat bermaydi.
+
+### 2F.9. Mavjud og'zaki kelishuvni yozib olish
+- Bu haftaning 1-vazifasi: «Hozir og'zaki davom etayotgan sheriklik, ijara yoki qarz kelishuvini qog'ozga tushiring».
+- Buning uchun alohida tez **ustasi** bo'ladi:
+  - kelishuv o'tgan sanadan boshlangan bo'lishi mumkin (`effectiveFrom` o'tmishda);
+  - shu kungacha bo'lgan holat bitta «boshlang'ich holat» yozuvi sifatida kiritiladi (kim qancha qo'shgan, qancha bo'lingan, qancha qarz qolgan);
+  - tomonlar shu boshlang'ich holatni ham imzolab tasdiqlaydi.
+
+### 2F.10. Oilaviy kelishuvlar (`FAMILY`)
+- Yengil format: guvoh va hakam ixtiyoriy, imzo o'rniga oiladagi `ADULT` a'zolarning tasdig'i yetarli.
+- Namunaviy shablonlar:
+  - «Uyda kim nima qiladi»;
+  - «Pul qayerda turadi va kim yuritadi»;
+  - «Havas chegarasi» (2B.3 bilan bog'lanadi);
+  - «Oylik oila kengashi qachon o'tadi».
+- Ohang: odob va hurmat doirasida, buyruq yoki nazorat ohangisiz.
+
+### 2F.11. Kontent eslatmasi
+- Bobda Qur'on oyati (Baqara 282, mazmunan tarjima) va hadis («Musulmonlar o'z shartlari ustida turadilar») keltirilgan. Ular `religiousReviewStatus` jarayonidan o'tadi: manba, tarjima matni va ulamo tasdig'i talab qilinadi.
+
 ## 3. MAHSULOT CHEKLOVLARI (qat'iy)
 - Ilovada foizli kredit, mikroqarz yoki «tez pul» reklamalari va integratsiyalari **bo'lmaydi**.
 - Kreditlar faqat qarzdan chiqish maqsadida kuzatiladi. Yangi qarz olish rag'batlantirilmaydi.
@@ -343,6 +447,8 @@ Qonunning mazmuni:
 - Ilovadagi hech bir hisob-kitob, prognoz yoki taqqoslash foiz stavkasini «muqobil daromad» sifatida ishlatmaydi. «Bankda tursa X% olardingiz» kabi matnlar taqiqlanadi.
 - Ilovada foizli qarz **berish**ni qayd etish imkoni yo'q.
 - **Diniy matnlar** (oyat, hadis, rivoyat) faqat malakali ulamo tomonidan tekshirilgan va manbasi ko'rsatilgan holda chiqariladi. Ular kontentdagi `religiousReviewStatus` maydoni orqali boshqariladi. Tasdiqlanmagan diniy matn production'ga chiqmaydi.
+- Kelishuv hujjatlarida ilova **yuridik kafolat bermaydi** va yuridik maslahat ko'rsatmaydi. Shablonlar yurist ko'rigidan o'tadi (`reviewStatus`).
+- Hisob jurnalidagi yozuvlar (2F.6) hech qanday holatda tahrirlanmaydi va o'chirilmaydi, faqat tuzatuvchi yozuv qo'shiladi.
 - Ilova baxillikka undamaydi. Tejash ko'rsatkichlari sadaqa yoki zarur xarajatlarni kamaytirishni hech qachon «yutuq» deb ko'rsatmaydi.
 
 ## 4. TEXNOLOGIK STEK — QAT'IY QARORLAR (0-bosqich, ADR)
@@ -408,6 +514,9 @@ Qonunning mazmuni:
 - `Debt` qo'shimcha maydonlari: `principal`, `totalPaid`, `markupAmount`, `earlyRepaymentTerms`, `priority`.
 - 5-qonun bilan qo'shilganlar:
   `Partnership` (`type`: `MUDARABA | MUSHARAKA`; `term`, `status`), `PartnerRole` (`CAPITAL_PROVIDER | WORKER | BOTH`), `CapitalContribution` (pul yoki uskuna), `ProfitShareRule`, `LossRule`, `PartnershipContract` (versiyalangan, `signatures[]`, `witnesses[]`), `BuyoutSchedule`, `VentureLedger`, `VentureEntry`, `ProfitDistribution`, `ForceMajeureEvent` (`negligence` bayrog'i bilan), `Skill`, `VentureIdea` (CAPEX, stsenariylar), `OfferCheck` (kafolatlangan foyda detektori natijasi).
+- 6-qonun bilan qo'shilganlar:
+  `Agreement` (`type`: `PARTNERSHIP | LOAN | RENT | SERVICE | FAMILY | OTHER`; `effectiveFrom`, `term`, `reviewDate`, `status`: `DRAFT | SIGNED | ACTIVE | IN_DISPUTE | CLOSED`), `AgreementVersion`, `AgreementParty`, `Contribution`, `Duty` (`ownerPartyId` — yagona mas'ul, `breachClause`), `DutyIncident`, `CustodyRule` (`reviewEvery`), `ExitClause`, `Arbiter`, `Signature` (`role`: `PARTY | WITNESS | ARBITER`), `QuestionStatus` (9 savol bo'yicha: `ANSWERED | NOT_APPLICABLE + reason`), `OpeningBalance` (og'zaki kelishuvni yozish uchun), `AccountReview` + `ReviewAck` (`AGREE | OBJECT + note`, `chainHead`), `JournalEntry` (append-only, `prevHash`, `hash`), `ProfitSpikeAlert`, `Dispute`, `ArbiterDecision`.
+- **Refaktor:** `LoanReceipt` → `Agreement(type = LOAN)`, `PartnershipContract` → `Agreement(type = PARTNERSHIP)` + `Partnership` (2E.1 qoidalari). `VentureEntry` va `DebtPayment` `JournalEntry` orqali yoziladi.
 - `Expense` qo'shimcha maydonlari: `necessity`, `paymentChannel` (`CASH | CARD`), `envelopeId?`, `isGift`, `isOstentation`, `fundedByDebt`, `memberId`.
 
 ## 6. XAVFSIZLIK TALABLARI
@@ -444,8 +553,8 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 | 3 | Pul ikki xil yashaydi (Pul puldan tug'ilmasin) | ✅ Spetsifikatsiya yozildi |
 | 4 | Ribodan qoch! Qarzga tushsang — reja bilan chiq! | ✅ Spetsifikatsiya yozildi |
 | 5 | Pulni halol ishga sol (savdo va sheriklik) | ✅ Spetsifikatsiya yozildi |
-| 6 | _[taxmin: shartnoma va ishonch — «to'y bilan boshlanib, sud bilan tugashi mumkin bo'lgan» ikki og'ayni voqeasi]_ | ⏳ Ishora: Dilshodning rejasi (ehtimol firibgarlik yoki «kafolatli» sxema) |
-| 7 | _[keyingi qissalardan]_ | ⏳ Ishora: zakot |
+| 6 | Sheriklik odobi — kelishuvni yozinglar! (Chorsucha shartnomaning 9 savoli) | ✅ Spetsifikatsiya yozildi |
+| 7 | _[taxmin: firibgarlar va «kalxatlar» — katta pul bilan qaytgan migrant (Rustam aka, Koreya) uchun qopqonlar]_ | ⏳ Ishora: «Aeroportning o'zidayoq ovchilar kutib turadi». Ehtimoliy funksiyalar: katta tushum rejimi, firibgarlik detektorini kengaytirish (2E.5). Zakot keyingi qissalarda bo'lishi mumkin |
 
 ## 11. ISHLAB CHIQISH BOSQICHLARI
 - **MVP-1:** daromad va xarajatni kiritish, «Kelajagim» virtual jamg'armasi va avto-ulush, «Kimning puli?», oylik audit, 1-bob kontenti va haftalik vazifalar.
@@ -453,9 +562,10 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 - **MVP-3:** «Narx daftari» va shaxsiy inflyatsiya indeksi, «Sichqon kemirgani» kalkulyatori, qorovul pul / o'sadigan pul ajratmasi va avtomatik zaxira maqsadi, tayyorgarlik darvozasi, to'liq qarz inventari va bergan qarzlar ro'yxati, 3-bob kontenti, odat asosida bob ochilishi.
 - **MVP-4:** `DEBT_RECOVERY` rejimi (70/20/10), payoff planner (odatiy va tezlashtirilgan grafik), qarzning haqiqiy narxi, qarz tilxati (PDF va ikki tomonlama tasdiq), yangi qarz oldidan friction so'rovi, sotiladigan buyumlar, marosim rejalovchisi va stsenariylarni taqqoslash, «qarzsiz kun», 4-bob kontenti.
 - **MVP-5:** sheriklik moduli (mudoraba / musharaka validatsiyasi bilan), shartnoma ustasi (PDF va ko'p tomonlama tasdiq), venture ledger va avtomatik foyda/zarar taqsimoti, buyout jadvali, «Hunardan ishga» rejalovchisi, «kafolatlangan foyda» detektori, qorovul pul maqsadi 6 oyga oshirildi, 5-bob kontenti.
+- **MVP-6:** umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori, turlar), tilxat va sheriklik shartnomasini shu dvigatelga ko'chirish, vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnomalar, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish, oilaviy kelishuvlar, 6-bob kontenti.
 - **Keyinroq:** bank tranzaksiyalaridan obunalarni avtomatik aniqlash, rasmiy CPI bilan taqqoslash, sertifikatlangan islomiy moliya hamkorlari, yosh oila jamg'armasiga real pul o'tkazmalari (hamkor bank), e'lon saytlariga eksport.
 - **Keyingi bosqichlar:** keyingi qonunlar bo'yicha qo'shiladi.
-- **Amaliy reja:** MVP-1…5 offline holatda birlashtirilib, 15 ta vazifaga bo'lingan. Batafsil reja `docs/MVP_PLAN.md` da (`MVP_5_QONUN.md`). Backend talab qiladigan funksiyalar MVP'da qurilma ichidagi muqobil bilan almashtiriladi: ikkinchi tomonning tasdig'i (2D.5), to'lovchini taklif qilish (2D.4) va sherik uchun read-only ko'rinish (2E.3).
+- **Amaliy reja:** MVP-1…6 offline holatda birlashtirilib, 17 ta vazifaga bo'lingan (6-qonun uchun 9A va 14A vazifalari qo'shilgan). Batafsil reja `docs/MVP_PLAN.md` da (`MVP_5_QONUN.md`). Backend talab qiladigan funksiyalar MVP'da qurilma ichidagi muqobil bilan almashtiriladi: ikkinchi tomonning tasdig'i (2D.5), to'lovchini taklif qilish (2D.4) va sherik uchun read-only ko'rinish (2E.3).
 
 ## 12. AI-DASTURCHI UCHUN QOIDALAR
 - Har bir modulni alohida va testlari bilan yoz.

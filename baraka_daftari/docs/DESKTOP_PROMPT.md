@@ -1,8 +1,8 @@
 # «BARAKA DAFTARI DESKTOP» — UMUMIY LOYIHA PROMPTI
 ### Tauri 2 + Rust + React · Windows birinchi navbatda · Mobil ilova bilan test vektorlari orqali mos
 
-> Versiya: v1.0 · AI-dasturchi (Claude Code va h.k.) uchun.
-> Funksional manba: `docs/SPEC.md` (= `FINTECH_PROMPT.md` v0.7, 1–5-qonunlar).
+> Versiya: v1.1 (6-qonun qo'shildi) · AI-dasturchi (Claude Code va h.k.) uchun.
+> Funksional manba: `docs/SPEC.md` (= `FINTECH_PROMPT.md` v0.8, 1–6-qonunlar).
 > Bu fayl desktop uchun **stek, arxitektura, farqlar va ish rejasi**ni belgilaydi. SPEC bilan zid kelgan joyda **texnik masalalarda shu fayl**, **mahsulot va diniy-moliyaviy qoidalarda SPEC** ustun turadi.
 
 ---
@@ -12,7 +12,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 
 ## 1. MAHSULOT VA DESKTOPNING O'RNI
 - **«Baraka daftari»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
-- U ta'lim va amaliyotni birlashtiradi: 12 ta qissa orqali **halol boylikning 7 qonuni** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–5-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2E bo'limlarida.
+- U ta'lim va amaliyotni birlashtiradi: 12 ta qissa orqali **halol boylikning 7 qonuni** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–6-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2F bo'limlarida.
 - Mobil ilova (Flutter + Kotlin) kundalik tez kiritish uchun mo'ljallangan. **Desktop esa uning nusxasi emas, «Oila kengashi va biznes stoli»**:
   - katta ekranda oylik audit va oila kengashi (havas chegarasi, marosim stsenariylari);
   - qarzdan chiqish rejasini chuqur tahlil qilish va amortizatsiya jadvallari;
@@ -21,7 +21,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
   - eksport va import orqali telefon bilan ma'lumot almashish.
 - **To'liq offline** ishlaydi. Server ham, akkaunt ham yo'q.
 
-### 1.1. 1–5-qonunlarning qisqa mazmuni (SPEC'ga havola bilan)
+### 1.1. 1–6-qonunlarning qisqa mazmuni (SPEC'ga havola bilan)
 | # | Qonun | Desktopdagi asosiy vositalar | SPEC |
 |---|---|---|---|
 | 1 | Avval o'zingga to'la | Daromad, avto-ulush, «Kelajagim», streak, oylik audit, «Kimning puli?» | 2 |
@@ -29,6 +29,9 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 | 3 | Pul ikki xil yashaydi | Qorovul/O'sadigan jamg'arma (6 oy), «Narx daftari», shaxsiy inflyatsiya, tayyorgarlik darvozasi, ribo filtri | 2C |
 | 4 | Ribodan qoch, reja bilan chiq | Qarz inventari, haqiqiy narx, 70/20/10, payoff planner, tilxat, marosim rejalovchisi | 2D |
 | 5 | Pulni halol ishga sol | Mudoraba/Musharaka, shartnoma, buyout, venture ledger, taklif detektori | 2E |
+| 6 | Sheriklik odobi — kelishuvni yozinglar | Umumiy kelishuv dvigateli (9 savol), vazifalar va hodisalar, oylik ochiq ko'rik va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozish, oilaviy kelishuvlar | 2F |
+
+> **Desktop uchun eng muhim qonun — 6-qonun.** Kelishuvni 9 savol bo'yicha tuzish, oylik ko'rik o'tkazish, hakam papkasini yig'ish va hujjatlarni chop etish katta ekran va klaviaturada eng qulay bajariladi. Shu sababli bu bo'lim desktopning **asosiy ish oqimi** sifatida loyihalanadi.
 
 ## 2. TEXNOLOGIK STEK — QAT'IY QARORLAR (ADR)
 > Bu qarorlar o'zgarmaydi. O'zgartirish kerak bo'lsa, avval sababini yozib, ruxsat so'raysan. Yangi crate yoki npm paket qo'shishdan oldin uning nima uchun kerakligini yozasan.
@@ -190,6 +193,45 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 - `fx_convert.json`, `money_format.json` (`"8 000 000 so'm"`, manfiy qiymatlar, `ru` lokali).
 - `debt_recovery_split.json`: 70/20/10 va jamg'arma ulushi minimal 1% bo'lishi.
 
+**`journal_chain.json`** (6-qonun, SPEC 2F.6) — mobil va desktop **bitma-bit bir xil xesh** chiqarishi shart.
+- **Algoritm:**
+  - `canonical` = RFC 8785 (JCS) JSON: kalitlar tartiblangan, bo'sh joy yo'q, UTF-8; barcha pul va son qiymatlari **string**;
+  - `hash_n = hex(SHA256(prevHash + "\n" + canonical(entry_n)))`, kichik harflarda;
+  - genesis `prevHash` = `"0000…0000"` (64 ta belgi); har bir kelishuvning o'z zanjiri.
+- **Kirish** (kelishuv `0192a000-0000-7000-8000-0000000000a1` — Anvar va Dilshodning yetkazib berish musharakasi):
+```json
+[
+ {"id":"0192a000-0000-7000-8000-000000000001","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"CONTRIBUTION","partyId":"P1","amount":{"minor":"300000000","currency":"UZS"},"date":"2026-10-01","note":"Anvar hissasi"},
+ {"id":"0192a000-0000-7000-8000-000000000002","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"CONTRIBUTION","partyId":"P2","amount":{"minor":"300000000","currency":"UZS"},"date":"2026-10-01","note":"Dilshod hissasi"},
+ {"id":"0192a000-0000-7000-8000-000000000003","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"PROFIT_DISTRIBUTION","partyId":"P1","amount":{"minor":"140000000","currency":"UZS"},"date":"2026-10-31","note":"1-oy foyda ulushi"}
+]
+```
+- **Kutilgan xeshlar:**
+  - `chain-001`: `e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e`
+  - `chain-002`: `fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53`
+  - `chain-003`: `ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903`
+- **Salbiy case:** 2-yozuvning `minor` qiymati `"300000001"` ga o'zgartirilsa, `verifyChain` **2-yozuvni** birinchi buzilgan joy sifatida qaytarishi kerak.
+- **Eslatma:** vektorda kirill yoki maxsus belgilar yo'q. Ular uchun alohida case (`oʻ`, `gʻ` bilan) D8A vazifasida qo'shiladi va JCS'ning UTF-16 tartiblash qoidasi tekshiriladi.
+
+**`profit_spike.json`** (SPEC 2F.7). Qoida butun sonlarda hisoblanadi, bo'lish yo'q:
+- **A shart:** `plan > 0` va `actual × 10000 ≥ plan × 15000`;
+- **B shart:** oxirgi 3 davr ma'lum, ularning yig'indisi `S > 0` va `actual × 3 × 10000 ≥ S × 20000`;
+- `alert = actual > 0 && (A || B)`.
+
+| id | plan | oxirgi 3 davr | actual | expected |
+|---|---|---|---|---|
+| ps-001 | 100000000 | — | 150000000 | `true` |
+| ps-002 | 100000000 | — | 149999999 | `false` |
+| ps-003 | — | [100000000, 120000000, 110000000] | 220000000 | `true` |
+| ps-004 | — | [100000000, 120000000, 110000000] | 219999999 | `false` |
+| ps-005 | 100000000 | — | −50000000 (zarar) | `false` |
+
+**`agreement_completeness.json`** — 9 savol holatlari → `{ complete: bool, missing: [n…], errors: [...] }`:
+- egasiz vazifa → `DUTY_WITHOUT_OWNER`;
+- hakam tomonlardan biri bo'lsa → `ARBITER_IS_PARTY`;
+- `NOT_APPLICABLE` izohsiz → `NA_REASON_REQUIRED`;
+- `PARTNERSHIP` da qat'iy summa → `GUARANTEED_RETURN_FORBIDDEN`.
+
 ### 5.4. Vektorlar bilan ishlash tartibi
 1. Yangi pul funksiyasi **avval vektor bilan** yoziladi (TDD), keyin implementatsiya.
 2. Desktopda topilgan har qanday hisob xatosi vektorga aylantiriladi va mobil jamoaga xabar beriladi (`docs/OPEN_QUESTIONS.md`).
@@ -310,8 +352,24 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 - SPEC 2C: VAULT → QOROVUL migratsiyasi, 6 oylik maqsad (vektor), «Narx daftari» va shaxsiy indeks (vektor), «Sichqon kemirgani», `ReadinessGate` (vektor matritsasi), ongli chetlab o'tish, `IncomeSourceType`, taqiqlangan iboralar i18n testi.
 - **Qabul mezonlari:** `emergency_target`, `personal_inflation` va `readiness_gate` vektorlari yashil; migratsiyada balans yo'qolmaydi.
 
+### D2. 6-qonun poydevori
+**D8A — Kelishuv dvigateli va append-only jurnal** (SPEC 2F.1–2F.3, 2F.6, 2F.9). Bu vazifa D9 va D12 dan **oldin** bajariladi.
+- `domain::agreements`:
+  - `Agreement` (turlar, holatlar, versiyalar), 9 savol strukturasi, `QuestionStatus`;
+  - tur bo'yicha strategiyalar (`LOAN`, `PARTNERSHIP`, `FAMILY`...);
+  - validatsiya xatolari `agreement_completeness.json` dagi kodlar bilan.
+- **`domain::journal`:**
+  - `JournalEntry`, JCS kanonizatsiya (`serde_jcs` yoki o'zimizning implementatsiya — vektorga qarab tanlanadi), SHA-256 (`sha2`), `verify_chain`;
+  - DB darajasida `UPDATE` va `DELETE` uchun `BEFORE` triggerlar `RAISE(ABORT)`; tuzatish faqat `CORRECTION` yozuvi bilan.
+- **9 savol ustasi** (desktop UX):
+  - chap tomonda 9 qadamli progress («N / 9»), o'rtada forma, o'ngda Sobir hoji maslahati va **PDF jonli preview**;
+  - 9/9 bo'lmasa, «Imzolash» tugmasi faol emas.
+- **Imzolar:** tomonlar, guvohlar va hakam. Imzo sichqoncha yoki pero bilan chiziladi, yoki «chop etib qo'lda imzolash → skan biriktirish» rejimi ishlatiladi. Versiya o'zgarsa, imzolar qayta so'raladi.
+- **Og'zaki kelishuvni yozib olish:** `effective_from` o'tmishda va `OpeningBalance` yozuvi bilan.
+- **Qabul mezonlari:** `journal_chain.json` (3 ta xesh + salbiy case) va `agreement_completeness.json` yashil; jurnalni o'zgartirish yoki o'chirishga urinish DB darajasida rad etiladi; 9/9 siz imzolash bloklanadi; kelishuv PDF'i uchun snapshot test bor.
+
 ### E. 4-qonun
-**D9 — Qarz inventari, haqiqiy narx, friction, tilxat**
+**D9 — Qarz inventari, haqiqiy narx, friction, tilxat** (tilxat = `Agreement(type = LOAN)`, D8A dvigateli orqali; `DebtPayment` jurnal orqali yoziladi)
 - `Debt` (jadval turlari: `ANNUITY | DIFFERENTIATED | FIXED_MARKUP | MANUAL`), `DebtPayment`, `Receivable` (foizsiz), `Goal`, `BorrowCheck`, haqiqiy narx va imkoniyat narxi.
 - **Qarz tilxati PDF:** guvohlar va imzo joylari bo'ladi; desktopda imzo sichqoncha, pero yoki «chop etib qo'lda imzolash» rejimi orqali qo'yiladi.
 - **Qabul mezonlari:** `Receivable` da foiz maydoni yo'q (kompilyatsiya darajasida); to'lov rejasisiz qarz saqlanmaydi; tilxat PDF snapshot testi bor.
@@ -325,22 +383,46 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 - **Qabul mezonlari:** muhokamasiz `CONFIRMED` holatiga o'tib bo'lmaydi (test).
 
 ### F. 5-qonun
-**D12 — Sheriklik domeni, shartnoma, buyout**
+**D12 — Sheriklik domeni, shartnoma, buyout** (shartnoma = `Agreement(type = PARTNERSHIP)`, D8A dvigateli orqali)
 - SPEC 2E.1, 2E.2, 2E.6: `MUDARABA` / `MUSHARAKA` validatsiyasi (`profit_distribution.json`), shartnoma ustasi, versiyalash, `typst` PDF, imzolar, buyout jadvali, darvozaning faqat kapital kirituvchiga qo'llanishi, kapital qabul qilishda oilaviy rozilik.
 - **Qabul mezonlari:** dist-001…004 yashil; kafolatli daromad domen darajasida bloklanadi; versiya o'zgarganda imzolar qayta so'raladi.
 
 **D13 — Venture ledger, taqsimot, «Hunardan ishga», taklif detektori**
 - SPEC 2E.3–2E.5: ledger (chek rasmlari shifrlangan holda saqlanadi), davrni yopish va o'zgarmaslik, avtomatik taqsimot va buyout ayirmasi, fors-major, **sherik uchun davr hisoboti PDF**, «Hunardan ishga» (3 stsenariy va payback), `OfferCheck` (yashil / sariq / qizil).
+- Ledger yozuvlari D8A jurnali orqali yoziladi.
 - **Qabul mezonlari:** taqsimot vektorlari yashil; yopilgan davrni o'zgartirib bo'lmaydi; OfferCheck qaror jadvali testlangan.
+
+### F2. 6-qonun
+**D13A — Kelishuvlar markazi: vazifalar, oylik ko'rik, «katta foyda», nizo va hakam, oilaviy kelishuvlar** (SPEC 2F.4, 2F.5, 2F.7, 2F.8, 2F.10)
+- **Kelishuvlar markazi:** barcha kelishuvlar jadvali (TanStack Table) — turi, holati, keyingi ko'rik, ochiq hodisalar, nizolar. Filtr va qidiruv bor.
+- **`DutyIncident`:** «bajara olmayapman» xabari va tegishli bandni darhol ko'rsatish. Hodisa jurnalga yoziladi.
+- **Oylik ochiq hisob ko'rigi** — oila kengashi rejimi uslubidagi to'liq ekran sessiya:
+  - davr yozuvlari, yakun, ochiq hodisalar va `verify_chain` natijasi;
+  - har bir tomonning `AGREE` yoki `OBJECT + izoh` belgisi;
+  - **bayonnoma PDF** (`chain_head` bilan) va chop etish.
+- **`ProfitSpikeAlert`** (`profit_spike.json`): taqsimotdan oldin 4–5-bandlarni qayta o'qish va navbatdan tashqari ko'rik.
+- **Nizo:**
+  - `IN_DISPUTE` holatida taqsimot bloklanadi;
+  - **hakam uchun ish papkasi PDF:** versiyalar, davr yozuvlari, zanjir tekshiruvi, bayonnomalar, hodisalar va talablar. Papka bitta PDF bo'ladi, mundarija va sahifa raqamlari bilan;
+  - hakam qarori yozib qo'yiladi va kerak bo'lsa yangi versiya yaratiladi.
+- **Yillik yangilash:** `review_date` dan 30 kun oldin eslatma; «o'zgarishsiz tasdiqlash» ham yangi versiya hisoblanadi.
+- **Oilaviy kelishuvlar:** 4 ta shablon, `ADULT` a'zolarning PIN bilan tasdig'i.
+- **Qabul mezonlari:** `profit_spike.json` yashil; `IN_DISPUTE` da taqsimot bloklanadi; o'zgartirilgan yozuv bayonnomadagi `chain_head` bilan solishtirilganda aniqlanadi; hakam papkasi PDF'i uchun snapshot test bor.
 
 ### G. Almashish va reliz
 **D14 — `.baraka` eksport/import (telefon ↔ desktop)**
 - 6.3-bo'lim: JSON Schema `spec/interchange/`, shifrlangan konteyner, to'liq va inkremental eksport, birlashtirish qoidalari, ziddiyatlar ekrani, yopilgan davrlar himoyasi.
-- **Qabul mezonlari:** eksport → yangi baza → import natijasi 1:1 (round-trip test); ziddiyat ssenariylari testlangan; noto'g'ri parol aniq xato beradi; sxema mobil ilova bilan bir xil fayl.
+- **Jurnal va almashish** (6-qonun):
+  - har bir kelishuvning **bitta hisob yurituvchi qurilmasi** bor. Bu 6-savoldagi «hisobni kim yuritadi» javobiga bog'lanadi (`custody.keeper_device_id`);
+  - jurnalga faqat shu qurilma yozuv qo'shadi, boshqa qurilmada jurnal **faqat o'qish** rejimida turadi;
+  - import paytida zanjir `verify_chain` bilan tekshiriladi;
+  - zanjir mahalliy nusxadan **ayrilib ketgan bo'lsa** (fork), import to'xtatiladi va foydalanuvchiga aniq hisobot ko'rsatiladi. Hech qachon avtomatik birlashtirilmaydi.
+  - Hisob yurituvchini almashtirish faqat kelishuvning yangi versiyasi orqali qilinadi.
+- **Qabul mezonlari:** eksport → yangi baza → import natijasi 1:1 (round-trip test); ziddiyat ssenariylari testlangan; noto'g'ri parol aniq xato beradi; sxema mobil ilova bilan bir xil fayl; telefondan kelgan jurnal xeshlari desktopda qayta hisoblanganda mos keladi; fork ssenariysi testlangan.
 
 **D15 — Reliz tayyorgarligi**
 - Onboarding (≤ 5 qadam), accessibility tekshiruvi, kod imzolash (Windows), imzolangan updater manifesti, DPI va High Contrast testi.
-- **Yakuniy E2E** (Windows, `tauri-driver`): Anvar ssenariysi boshidan oxirigacha (daromad → audit → havas chegarasi → obuna bekor qilish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → sheriklik → taqsimot → eksport).
+- **Yakuniy E2E** (Windows, `tauri-driver`): Anvar ssenariysi boshidan oxirigacha (daromad → audit → havas chegarasi → obuna bekor qilish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → Dilshod bilan musharaka (9/9 savol, imzolar) → vazifa hodisasi → oylik ko'rik va bayonnoma → taqsimot (1,4 mln) → eksport).
 - `docs/RELEASE_CHECKLIST.md`.
 - **Qabul mezonlari:** E2E yashil; imzolangan installer SmartScreen ogohlantirishisiz o'rnatiladi (sertifikat mavjud bo'lsa); sovuq start < 1,5 s.
 
@@ -358,7 +440,8 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 ## 11. DOIRADAN TASHQARIDA (v1 da qilinmaydi)
 - Server sinxronlashi, akkauntlar.
 - Bank va karta integratsiyalari (CSV importdan tashqari).
-- 6–7-qonunlar (keyingi qissalardan keyin qo'shiladi; `Asset` va `asset_snapshots` zakot uchun allaqachon tayyor).
+- 7-qonun va undan keyingilar (keyingi qissalardan keyin qo'shiladi; `Asset` va `asset_snapshots` zakot uchun allaqachon tayyor).
+- Hakam yoki ikkinchi tomonning o'z qurilmasidan masofadan tasdiqlashi (server kerak).
 - Real pul o'tkazmalari.
 - Sheriklar uchun platforma yoki marketplace.
 - Asl qissa matnlari.

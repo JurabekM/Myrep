@@ -163,3 +163,9 @@
 - **O'rnatuvchi:** NSIS tillari `Russian` va `English`, til tanlash oynasi bilan (NSIS to'plamida o'zbek tili yo'q).
 - **Ctrl+Alt+B ogohlantirishi:** tugma band bo'lsa (boshqa dastur ishlatayotgan bo'lsa) ilova ishlaydi, yon panelda aniq xabar chiqadi.
 - Testlar: palitra (filtr, Enter, Esc), Ctrl+P, ogohlantirish, rasmsiz eksport (biriktirmalar fayldan chiqadi, yozuvlar qoladi), chegaradan katta fayl rad etiladi.
+
+## 6-qonun — hujjatlarni sinxronlash (SPEC v0.8, DESKTOP_PROMPT v1.1)
+- `docs/SPEC.md` v0.8 va `docs/DESKTOP_PROMPT.md` v1.1 yuklangan manbalar bilan yangilandi: 2F bo'limi (6-qonun, 2F.1–2F.11), 1.1 jadvalidagi 6-qonun qatori, 3.1 katalog daraxti, 5.3 vektorlar (`journal_chain.json`, `profit_spike.json`, `agreement_completeness.json`), 6.3 import qoidalari (fork), 9-bo'lim bosqichlari (D8A, D13A, D14, D15).
+- `docs/MVP_PLAN.md` qo'shildi (mobil ilova uchun 17 vazifali reja; 9A va 14A — desktopdagi D8A va D13A bilan bir xil mazmun).
+- Qarorlar `docs/OPEN_QUESTIONS.md` 87–93 bo'limida qayd etildi.
+- Kod o'zgarmadi (doc-only).
