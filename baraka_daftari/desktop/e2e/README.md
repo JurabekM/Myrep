@@ -1,7 +1,7 @@
 # Windows E2E (tauri-driver)
 
-**Holat: yozilgan, lekin hali ishga tushirilmagan.** Bu sessiya Linux konteynerda ishladi (Windows va WebView2 yo'q).
-Qabul mezoni «E2E yashil» faqat Windows mashinada shu spetsifikatsiya yashil bo'lgandan keyin bajarilgan hisoblanadi.
+**Holat: yozilgan, lekin hali ishga tushirilmagan.** Bu sessiyalar Linux konteynerda ishladi (Windows va WebView2 yo'q).
+Qabul mezoni «E2E yashil» faqat Windows mashinada shu spetsifikatsiyalar yashil bo'lgandan keyin bajarilgan hisoblanadi.
 
 ## Tayyorgarlik (Windows)
 1. `cargo install tauri-driver --locked`
@@ -11,6 +11,8 @@ Qabul mezoni «E2E yashil» faqat Windows mashinada shu spetsifikatsiya yashil b
 
 ## Qamrov
 - `specs/anvar.e2e.ts`: PIN o'rnatish → onboarding → `Ctrl+N` daromad → bo'limlar → disklеymer → `Ctrl+L` qulf.
-- Pul hisobi va to'liq «Anvar» zanjiri (audit → havas → obuna → qarz → 70/20/10 → payoff → darvoza → sheriklik → taqsimot → eksport):
-  `crates/services/tests/anvar.rs` (har `cargo test --workspace` da ishlaydi).
+- `specs/musharaka.e2e.ts` (D15): Anvar × Dilshod — shartnoma ustasi (progress, önizleme), tomonlar tasdig'i,
+  faollashtirish, vazifa hodisasi, oylik ko'rik va bayonnoma, «katta foyda» tasdig'i bilan davrni yopish, eksport.
+- Pul hisobi va to'liq «Anvar» zanjiri: `crates/services/tests/anvar.rs` (har `cargo test --workspace` da ishlaydi).
+  Kelishuv, jurnal, ko'rik va import zanjiri: `crates/services/tests/ventures.rs`, `interchange.rs`, `agreements.rs`.
 - OS fayl dialoglari (PDF/.baraka saqlash) WebDriver bilan boshqarilmaydi — qo'lda tekshiriladi (RELEASE_CHECKLIST).

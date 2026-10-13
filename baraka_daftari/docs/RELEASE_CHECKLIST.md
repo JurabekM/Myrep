@@ -23,7 +23,7 @@ Belgilar: ✅ shu repoda avtomatik tekshiriladi · 🟡 qisman · ⬜ qo'lda/tas
 - ⬜ NSIS installer toza Windows 10/11 da administratorsiz o'rnatiladi; o'chirish ma'lumotni o'chirmaydi (yoki so'raydi).
 - ⬜ Imzolangan installer SmartScreen ogohlantirishisiz (sertifikat bo'lgach).
 - ⬜ Sovuq start < 1,5 s (qulf ekrani ko'rinishigacha): Rust qismi (baza ochish + migratsiya) `tests/startup_budget.rs` da ~40 ms (debug, Linux); oyna + WebView2 o'lchanmagan.
-- ⬜ `tauri-driver` E2E (`desktop/e2e`) yashil.
+- ⬜ `tauri-driver` E2E (`desktop/e2e`) yashil: `anvar` va `musharaka` (Anvar × Dilshod) spetsifikatsiyalari yozilgan va TypeScript bo'yicha tekshirilgan, lekin Windows'da hali ishga tushirilmagan.
 - ⬜ DPI 100/125/150/200% — hech bir matn kesilmaydi, jadval va dialoglar sig'adi.
 - ⬜ Windows High Contrast (Aeroning 4 mavzusi): fokus ko'rinadi, tugma/maydon chegaralari, svetofor hukmi matn bilan o'qiladi (`index.css` `forced-colors` bloki yozilgan, sinalmagan).
 - ⬜ Klaviatura: Tab tartibi, `Ctrl+N/L/K/P`, `Esc`; Narrator (ekran o'quvchi) bilan asosiy oqimlar.
