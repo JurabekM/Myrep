@@ -1,0 +1,10 @@
+# Build natijalari
+target/
+bin/
+control/go.sum
+
+# Demo ish papkasi (kalitlar, ma'lumot, loglar)
+run-demo/
+
+# Referens fayllarining zaxira nusxalari (asl manba: aether_q_v3/ — git emas)
+backup/

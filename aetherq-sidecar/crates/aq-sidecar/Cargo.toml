@@ -1,0 +1,10 @@
+[package]
+name = "aq-sidecar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "AETHER-Q sidecar proxy (localhost <-> post-kvant tarmoq)"
+
+[dependencies]
+aq-core = { path = "../aq-core" }
