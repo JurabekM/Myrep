@@ -158,6 +158,9 @@ str_enum!(
         ProfitDistribution => "PROFIT_DISTRIBUTION", LossShare => "LOSS_SHARE",
         BuyoutPayment => "BUYOUT_PAYMENT", Payment => "PAYMENT",
         PeriodClosed => "PERIOD_CLOSED", Correction => "CORRECTION",
+        DutyIncident => "DUTY_INCIDENT", DisputeOpened => "DISPUTE_OPENED",
+        DisputeResolved => "DISPUTE_RESOLVED", ProfitAlertAck => "PROFIT_ALERT_ACK",
+        ReviewAck => "REVIEW_ACK", ReviewClosed => "REVIEW_CLOSED",
     }
 );
 str_enum!(

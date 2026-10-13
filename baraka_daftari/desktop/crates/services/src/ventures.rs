@@ -6,9 +6,9 @@
 //! - **Yopilgan davr o'zgarmaydi**: xizmat qatlamida ham, bazada triggerlar bilan ham.
 //! - Kapital egasi (xonadonda faqat shunday tomon bo'lsa) ledgerni faqat o'qiydi.
 use domain::{
-    net_result, settle_period, Agreement, BuyoutDue, BuyoutPayment, Date, IncomeSourceType,
-    JournalEntry, JournalKind, LedgerKind, Meta, PartnershipStatus, PartyInput, PartyRole,
-    PaymentChannel, PeriodStatus, VentureAttachment, VentureDistribution, VentureEntry,
+    net_result, settle_period, Agreement, AgreementStatus, BuyoutDue, BuyoutPayment, Date,
+    IncomeSourceType, JournalEntry, JournalKind, LedgerKind, Meta, PartnershipStatus, PartyInput,
+    PartyRole, PaymentChannel, PeriodStatus, VentureAttachment, VentureDistribution, VentureEntry,
     VenturePeriod,
 };
 use money::{format_money, Locale, Money};
@@ -65,6 +65,8 @@ pub struct LedgerView {
     /// Xonadon faqat kapital egasi: ledger faqat o'qish rejimida.
     pub read_only: bool,
     pub active: bool,
+    /// Ochiq davr foydasi «katta foyda» chegarasidan oshgan (SPEC 2F.7): taqsimotdan oldin tasdiq kerak.
+    pub spike_alert: bool,
 }
 
 fn read_only(v: &PartnershipView) -> bool {
@@ -172,11 +174,16 @@ pub fn ledger(
             closed.push(v);
         }
     }
+    let spike_alert = match &open {
+        Some(v) => spike_of(conn, ctx, pid, v.net)?,
+        None => false,
+    };
     Ok(LedgerView {
         open,
         closed,
         read_only: read_only(&pv),
         active: pv.partnership.status == PartnershipStatus::Active,
+        spike_alert,
     })
 }
 
@@ -315,6 +322,22 @@ pub fn add_entry(
 }
 
 /// Sheriklikning kelishuvi (jurnal shu yerda yuritiladi).
+/// «Katta foyda» (SPEC 2F.7): sof natija oxirgi 3 yopilgan davr o'rtachasidan ≥200% yoki rejadan ≥150%.
+/// Reja hozircha yo'q (`plan = None`), shuning uchun faqat tarix bo'yicha; 3 ta yopilgan davr bo'lmasa — yo'q.
+fn spike_of(conn: &Connection, ctx: &Ctx, pid: &str, net: Money) -> Result<bool, ServiceError> {
+    let mut closed: Vec<VenturePeriod> = periods(conn, ctx, pid)?
+        .into_iter()
+        .filter(|p| p.status == PeriodStatus::Closed)
+        .collect();
+    closed.sort_by_key(|p| std::cmp::Reverse(p.period_no));
+    let nets: Option<Vec<Money>> = closed.iter().take(3).map(|p| p.net).collect();
+    let last_three = match nets.as_deref() {
+        Some([a, b, c]) => Some([*a, *b, *c]),
+        _ => None,
+    };
+    Ok(domain::profit_spike_alert(net, None, last_three))
+}
+
 fn agreement_of(
     conn: &storage::Connection,
     ctx: &Ctx,
@@ -539,6 +562,7 @@ pub fn close_period(
     pid: &str,
     end_date: Option<Date>,
     negligence_note: Option<&str>,
+    spike_ack: bool,
 ) -> Result<PeriodView, ServiceError> {
     let pv = partnerships::view(db.conn(), env, ctx, pid)?;
     require_writable(&pv)?;
@@ -546,6 +570,12 @@ pub fn close_period(
     if !agreements::is_fully_signed(db.conn(), ctx, &agreement.meta.id)? {
         return Err(ServiceError::Invalid(
             "davrni yopish uchun kelishuvning joriy versiyasi 9/9 va to'liq imzolangan bo'lishi kerak",
+        ));
+    }
+    // Nizo ochiq bo'lsa, taqsimot hakam qarorigacha bloklanadi (SPEC 2F.8).
+    if agreement.status == AgreementStatus::InDispute {
+        return Err(ServiceError::Invalid(
+            "nizoli kelishuvda taqsimot bloklangan: avval hakam qarorini yozing",
         ));
     }
     let open = periods(db.conn(), ctx, pid)?
@@ -566,6 +596,12 @@ pub fn close_period(
     let negligence = negligence_note.is_some_and(|n| !n.trim().is_empty());
     if negligence_note.is_some() && !negligence {
         return Err(ServiceError::Invalid("beparvolik izohini yozing"));
+    }
+    let spike = spike_of(db.conn(), ctx, pid, view.net)?;
+    if spike && !spike_ack {
+        return Err(ServiceError::Invalid(
+            "katta foyda: taqsimotdan oldin ikkala tomon shartnomaning 4–5-bandlarini qayta o'qib tasdiqlasin",
+        ));
     }
     // Buyout: reja bo'lsa va tugamagan bo'lsa — shu davr raqamiga mos teng bo'lak.
     let bo = partnerships::buyout_view(db.conn(), env, ctx, pid)?;
@@ -701,6 +737,27 @@ pub fn close_period(
                 corrects: None,
             },
         )?;
+        if spike {
+            let ack_note = format!(
+                "Katta foyda tasdiqlandi: davr #{}, 4–5-bandlar qayta o'qildi",
+                open.period_no
+            );
+            journal::append(
+                tx,
+                env,
+                ctx,
+                &agreement,
+                journal::NewEntry {
+                    kind: JournalKind::ProfitAlertAck,
+                    party_id: None,
+                    amount: Some(view.net),
+                    date: end,
+                    note: &ack_note,
+                    reference: Some(open.meta.id.as_str()),
+                    corrects: None,
+                },
+            )?;
+        }
         let mut closed = open.clone();
         closed.status = PeriodStatus::Closed;
         closed.end_date = Some(end);

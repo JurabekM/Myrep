@@ -51,7 +51,7 @@ const open: LedgerDto['open'] = {
 function setLedger(over: Partial<LedgerDto>) {
   vi.mocked(commands.ventureLedger).mockResolvedValue({
     status: 'ok',
-    data: { open, closed: [], read_only: false, active: true, ...over },
+    data: { open, closed: [], read_only: false, active: true, spike_alert: false, ...over },
   });
 }
 
@@ -111,7 +111,23 @@ describe('Ledger', () => {
     await screen.findByTestId('entry-Buyurtma');
     await userEvent.click(screen.getByRole('button', { name: 'Davrni yopish' }));
     await waitFor(() => {
-      expect(commands.closeVenturePeriod).toHaveBeenCalledWith('p1', null, null);
+      expect(commands.closeVenturePeriod).toHaveBeenCalledWith('p1', null, null, false);
+    });
+  });
+
+  it('katta foyda: tasdiqsiz davr yopilmaydi, tasdiqdan keyin tasdiq yuboriladi', async () => {
+    setLedger({ spike_alert: true });
+    renderLedger();
+    await screen.findByTestId('entry-Buyurtma');
+    const close = screen.getByRole('button', { name: 'Davrni yopish' });
+    expect(close).toBeDisabled();
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: "Ikkala tomon 4- va 5-bandlarni qayta o'qib chiqdi" }),
+    );
+    expect(close).toBeEnabled();
+    await userEvent.click(close);
+    await waitFor(() => {
+      expect(commands.closeVenturePeriod).toHaveBeenCalledWith('p1', null, null, true);
     });
   });
 

@@ -399,6 +399,7 @@ fn anvar_full_journey() {
         &p2,
         Some(d("2026-10-31")),
         None,
+        false,
     )
     .unwrap();
     // Sof foyda 8 000 000: Anvar 60% = 4 800 000, Karim aka 40% = 3 200 000.

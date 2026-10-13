@@ -87,7 +87,7 @@ fn clean(s: &str, max: usize) -> String {
         .collect()
 }
 
-fn load(conn: &Connection, ctx: &Ctx, id: &str) -> Result<Agreement, ServiceError> {
+pub(crate) fn load(conn: &Connection, ctx: &Ctx, id: &str) -> Result<Agreement, ServiceError> {
     let a = repo::get::<Agreement>(conn, id)?.ok_or(ServiceError::NotFound)?;
     if a.meta.household_id != ctx.household_id {
         return Err(ServiceError::NotFound);
@@ -121,7 +121,7 @@ fn signatures_of(
 }
 
 /// Joriy versiya hujjati. Eski matnli versiya bo'lsa `None` (9 savol yo'q, faqat ko'rish uchun).
-fn current_doc(
+pub(crate) fn current_doc(
     conn: &Connection,
     ctx: &Ctx,
     a: &Agreement,

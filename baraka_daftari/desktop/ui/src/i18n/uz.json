@@ -942,7 +942,26 @@
     "previewTitle": "Shartnoma önizlemasi (PDF)",
     "previewWaiting": "Ma'lumotni to'ldiring: önizleme shu yerda chiqadi.",
     "previewLoading": "Önizleme tayyorlanmoqda…",
-    "previewBlocked": "Relizda shablon hali yurist va ulamo tasdig'idan o'tmagan: önizleme chiqarilmaydi."
+    "previewBlocked": "Relizda shablon hali yurist va ulamo tasdig'idan o'tmagan: önizleme chiqarilmaydi.",
+    "events": {
+      "dutiesTitle": "Vazifalar",
+      "clause": "{{n}}-band: {{text}} (mas'ul: {{owner}})",
+      "cantDo": "Bajara olmayapman",
+      "ifNotDone": "Bajarilmasa: {{text}}",
+      "reason": "Sabab",
+      "proposal": "O'rniga taklif (ixtiyoriy)",
+      "submitIncident": "Hodisani yozish",
+      "incidentSaved": "Hodisa jurnalga yozildi. Maqsad aybdor qidirish emas: kelishuvga qaytish.",
+      "disputeOpen": "Nizo ochish",
+      "claimant": "Da'vogar",
+      "subject": "Mavzu",
+      "claim": "Talab",
+      "submitDispute": "Nizoni ochish",
+      "disputeActive": "Nizo ochiq: taqsimot bloklangan",
+      "disputeHint": "Hakam qarorini yozing: nizo shu qaror bilan yopiladi va taqsimot ochiladi.",
+      "decision": "Hakam qarori",
+      "submitDecision": "Qarorni yozib, nizoni yopish"
+    }
   },
   "ledger": {
     "title": "Korxona daftari",
@@ -970,7 +989,10 @@
     "closedPeriod": "Davr №{{n}}: {{from}} — {{to}}, sof {{net}}",
     "immutable": "Yopilgan davr tahrirlanmaydi.",
     "report": "Hisobot (PDF)",
-    "buyoutDelta": "sotib olish: {{amount}}"
+    "buyoutDelta": "sotib olish: {{amount}}",
+    "spikeTitle": "Barakali foyda: tabriklaymiz! Endi kelishuvni birga qayta o'qib chiqaylik.",
+    "spikeBody": "Davr foydasi oldingi davrlardan ancha yuqori. Taqsimotdan oldin ikkala tomon shartnomaning 4- va 5-bandlarini (foyda va zarar) qayta o'qisin va navbatdan tashqari ko'rik o'tkazsin.",
+    "spikeConfirm": "Ikkala tomon 4- va 5-bandlarni qayta o'qib chiqdi"
   },
   "craft": {
     "intro": "Hunarni ishga aylantiring: asbob-uskuna xarajati va uch xil (yomon/o'rta/yaxshi) senariy bo'yicha qaytim muddati.",

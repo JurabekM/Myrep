@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 12;
+pub const SCHEMA_VERSION: usize = 13;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -571,6 +571,39 @@ CREATE TRIGGER trg_journal_del BEFORE DELETE ON journal_entries
 BEGIN SELECT RAISE(ABORT, 'journal_append_only'); END;
 ";
 
+/// v12 → v13: jurnalga yangi voqea turlari (vazifa hodisasi, nizo, katta foyda tasdig'i, ko'rik) (D13A).
+/// SQLite'da CHECK o'zgartirilmaydi, shuning uchun jadval qayta yaratiladi: barcha yozuvlar, xeshlar va
+/// tuzatish havolalari ko'chiriladi; append-only triggerlar qayta o'rnatiladi. Havolalar tranzaksiya
+/// oxirida tekshiriladi (`defer_foreign_keys`).
+const V13: &str = "
+PRAGMA defer_foreign_keys = ON;
+DROP TRIGGER trg_journal_upd;
+DROP TRIGGER trg_journal_del;
+ALTER TABLE journal_entries RENAME TO journal_entries_v12;
+CREATE TABLE journal_entries (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  agreement_id TEXT NOT NULL REFERENCES agreements(id), seq INTEGER NOT NULL CHECK (seq >= 1),
+  kind TEXT NOT NULL CHECK (kind IN ('OPENING_BALANCE','CONTRIBUTION','VENTURE_INCOME','VENTURE_EXPENSE',
+    'PROFIT_DISTRIBUTION','LOSS_SHARE','BUYOUT_PAYMENT','PAYMENT','PERIOD_CLOSED','CORRECTION',
+    'DUTY_INCIDENT','DISPUTE_OPENED','DISPUTE_RESOLVED','PROFIT_ALERT_ACK','REVIEW_ACK','REVIEW_CLOSED')),
+  party_id TEXT,
+  amount_minor INTEGER, amount_currency TEXT CHECK (amount_currency IN ('UZS','USD','EUR','RUB')),
+  entry_date TEXT NOT NULL, note TEXT NOT NULL CHECK (length(trim(note)) > 0),
+  reference TEXT, corrects TEXT REFERENCES journal_entries(id),
+  prev_hash TEXT NOT NULL CHECK (length(prev_hash) = 64), hash TEXT NOT NULL CHECK (length(hash) = 64),
+  CHECK ((amount_minor IS NULL) = (amount_currency IS NULL))
+);
+INSERT INTO journal_entries SELECT * FROM journal_entries_v12;
+DROP TABLE journal_entries_v12;
+CREATE UNIQUE INDEX uq_journal_seq ON journal_entries (agreement_id, seq);
+CREATE TRIGGER trg_journal_upd BEFORE UPDATE ON journal_entries
+BEGIN SELECT RAISE(ABORT, 'journal_append_only'); END;
+CREATE TRIGGER trg_journal_del BEFORE DELETE ON journal_entries
+BEGIN SELECT RAISE(ABORT, 'journal_append_only'); END;
+";
+
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
@@ -587,6 +620,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V10),
         M::up(V11),
         M::up(V12),
+        M::up(V13),
     ])
 }
 
@@ -710,6 +744,56 @@ mod tests {
             .unwrap();
         assert_eq!(n, 1);
     }
+    /// v12 → v13: jurnal yozuvlari, xeshlar va tuzatish havolasi saqlanadi; yangi turlar qabul qilinadi;
+    /// o'zgartirish va o'chirish hamon rad etiladi (D13A).
+    #[test]
+    fn v12_to_v13_keeps_the_journal_chain_and_accepts_new_kinds() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", true).unwrap();
+        migrations().to_version(&mut conn, 12).unwrap();
+        let zeros = "0".repeat(64);
+        let h1 = "1".repeat(64);
+        let h2 = "2".repeat(64);
+        conn.execute_batch(&format!(
+            "INSERT INTO households VALUES ('h','h','t','t',NULL,1,'d','Oila','UZS');
+             INSERT INTO agreements (id, household_id, created_at, updated_at, deleted_at, version,
+               origin_device_id, agreement_type, title, status, subject_kind, subject_id,
+               current_version, effective_from, keeper_device_id, legacy)
+             VALUES ('a','h','t','t',NULL,1,'d','PARTNERSHIP','Test','ACTIVE','NONE',NULL,1,
+               '2026-10-01','d',0);
+             INSERT INTO journal_entries (id, household_id, created_at, updated_at, deleted_at, version,
+               origin_device_id, agreement_id, seq, kind, party_id, amount_minor, amount_currency,
+               entry_date, note, reference, corrects, prev_hash, hash)
+             VALUES ('j1','h','t','t',NULL,1,'d','a',1,'OPENING_BALANCE',NULL,NULL,NULL,
+               '2026-10-01','Boshlang''ich holat',NULL,NULL,'{zeros}','{h1}'),
+               ('j2','h','t','t',NULL,1,'d','a',2,'CORRECTION',NULL,NULL,NULL,
+               '2026-10-02','Tuzatish',NULL,'j1','{h1}','{h2}');"
+        ))
+        .unwrap();
+        migrations().to_latest(&mut conn).unwrap();
+        let (corrects, hash): (String, String) = conn
+            .query_row(
+                "SELECT corrects, hash FROM journal_entries WHERE id='j2'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!((corrects.as_str(), hash.as_str()), ("j1", h2.as_str()));
+        conn.execute(
+            "INSERT INTO journal_entries (id, household_id, created_at, updated_at, deleted_at, version,
+               origin_device_id, agreement_id, seq, kind, party_id, amount_minor, amount_currency,
+               entry_date, note, reference, corrects, prev_hash, hash)
+             VALUES ('j3','h','t','t',NULL,1,'d','a',3,'DUTY_INCIDENT','p',NULL,NULL,
+               '2026-10-03','Bajara olmayapman',NULL,NULL,?1,?2)",
+            [h2.as_str(), zeros.as_str()],
+        )
+        .unwrap();
+        let upd = conn.execute("UPDATE journal_entries SET note='x' WHERE id='j1'", []);
+        assert!(upd.unwrap_err().to_string().contains("journal_append_only"));
+        let del = conn.execute("DELETE FROM journal_entries WHERE id='j1'", []);
+        assert!(del.unwrap_err().to_string().contains("journal_append_only"));
+    }
+
     /// v11 → v12: kelishuv jadvallari qo'shiladi, mavjud sheriklik ma'lumoti o'zgarmaydi (D8A).
     /// Eski sheriklik keyinroq `agreements` ga ko'chiriladi (services qatlamida, idempotent).
     #[test]

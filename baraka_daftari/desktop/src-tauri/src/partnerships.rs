@@ -575,6 +575,85 @@ pub fn revise_partnership(
     })
 }
 
+/// Sheriklikning joriy kelishuvi bo'yicha nizo ochadi (faqat faol kelishuvda) — SPEC 2F.8.
+#[tauri::command]
+#[specta::specta]
+pub fn open_partnership_dispute(
+    partnership_id: String,
+    claimant_party_id: String,
+    subject: String,
+    claim: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            services::events::open_dispute(
+                db,
+                env,
+                ctx,
+                &agreement,
+                &claimant_party_id,
+                &subject,
+                &claim,
+            )?;
+            Ok(())
+        })
+    })
+}
+
+/// Hakam qarorini yozadi va nizoni yopadi (kelishuv yana faol bo'ladi) — SPEC 2F.8.
+#[tauri::command]
+#[specta::specta]
+pub fn resolve_partnership_dispute(
+    partnership_id: String,
+    decision: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            services::events::resolve_dispute(db, env, ctx, &agreement, &decision)?;
+            Ok(())
+        })
+    })
+}
+
+/// «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi (SPEC 2F.4).
+#[tauri::command]
+#[specta::specta]
+pub fn report_duty_incident(
+    partnership_id: String,
+    duty_index: u32,
+    reason: String,
+    proposal: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
+            let index = usize::try_from(duty_index)
+                .map_err(|_| ServiceError::Invalid("bunday vazifa bandi yo'q"))?;
+            services::events::report_duty_incident(
+                db, env, ctx, &agreement, index, &reason, &proposal,
+            )?;
+            Ok(())
+        })
+    })
+}
+
+fn agreement_id_of(
+    conn: &storage::Connection,
+    ctx: &Ctx,
+    partnership_id: &str,
+) -> Result<String, ServiceError> {
+    services::agreements::agreement_of_partnership(conn, ctx, partnership_id)?
+        .map(|a| a.meta.id)
+        .ok_or(ServiceError::Invalid(
+            "sheriklik kelishuvi topilmadi: sheriklikni qayta saqlang",
+        ))
+}
+
 /// Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi.
 #[tauri::command]
 #[specta::specta]

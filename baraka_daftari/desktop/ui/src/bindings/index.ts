@@ -203,6 +203,12 @@ export const commands = {
 	revisePartnership: (id: string, input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("revise_partnership", { id, input })),
 	/**  Ustaning jonli önizlemasi uchun: hech narsa saqlanmaydi. */
 	checkPartnershipDraft: (input: PartnershipInput) => typedError<DraftCheckDto, CommandError>(__TAURI_INVOKE("check_partnership_draft", { input })),
+	/**  Sheriklikning joriy kelishuvi bo'yicha nizo ochadi (faqat faol kelishuvda) — SPEC 2F.8. */
+	openPartnershipDispute: (partnershipId: string, claimantPartyId: string, subject: string, claim: string) => typedError<null, CommandError>(__TAURI_INVOKE("open_partnership_dispute", { partnershipId, claimantPartyId, subject, claim })),
+	/**  Hakam qarorini yozadi va nizoni yopadi (kelishuv yana faol bo'ladi) — SPEC 2F.8. */
+	resolvePartnershipDispute: (partnershipId: string, decision: string) => typedError<null, CommandError>(__TAURI_INVOKE("resolve_partnership_dispute", { partnershipId, decision })),
+	/**  «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi (SPEC 2F.4). */
+	reportDutyIncident: (partnershipId: string, dutyIndex: number, reason: string, proposal: string) => typedError<null, CommandError>(__TAURI_INVOKE("report_duty_incident", { partnershipId, dutyIndex, reason, proposal })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
@@ -229,7 +235,7 @@ export const commands = {
 } | null, CommandError>(__TAURI_INVOKE("attach_evidence", { entryId })),
 	/**  Dalilni OS «saqlash» oynasi orqali nusxalaydi. */
 	exportEvidence: (id: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_evidence", { id })),
-	closeVenturePeriod: (partnershipId: string, endDate: string | null, negligenceNote: string | null) => typedError<PeriodDto, CommandError>(__TAURI_INVOKE("close_venture_period", { partnershipId, endDate, negligenceNote })),
+	closeVenturePeriod: (partnershipId: string, endDate: string | null, negligenceNote: string | null, spikeAck: boolean) => typedError<PeriodDto, CommandError>(__TAURI_INVOKE("close_venture_period", { partnershipId, endDate, negligenceNote, spikeAck })),
 	/**  Yopilgan davr hisoboti (PDF) — OS «saqlash» oynasi orqali. */
 	exportPeriodReport: (periodId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_period_report", { periodId })),
 	listCraftIdeas: () => typedError<IdeaDto[], CommandError>(__TAURI_INVOKE("list_craft_ideas")),
@@ -913,6 +919,8 @@ export type LedgerDto = {
 	/**  Xonadon faqat kapital egasi: o'qish rejimi. */
 	read_only: boolean,
 	active: boolean,
+	/**  «Katta foyda»: taqsimotdan oldin 4–5-bandlarni qayta o'qish va tasdiq kerak (SPEC 2F.7). */
+	spike_alert: boolean,
 };
 
 export type MemberDto = {

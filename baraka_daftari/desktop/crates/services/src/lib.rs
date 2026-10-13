@@ -17,6 +17,7 @@ pub mod crafts;
 pub mod csv_import;
 pub mod debts;
 pub mod envelopes;
+pub mod events;
 pub mod expenses;
 pub mod goals;
 pub mod guard;

@@ -147,6 +147,8 @@ pub struct LedgerDto {
     /// Xonadon faqat kapital egasi: o'qish rejimi.
     pub read_only: bool,
     pub active: bool,
+    /// «Katta foyda»: taqsimotdan oldin 4–5-bandlarni qayta o'qish va tasdiq kerak (SPEC 2F.7).
+    pub spike_alert: bool,
 }
 
 fn ledger_dto(l: &LedgerView) -> LedgerDto {
@@ -155,6 +157,7 @@ fn ledger_dto(l: &LedgerView) -> LedgerDto {
         closed: l.closed.iter().map(period_dto).collect(),
         read_only: l.read_only,
         active: l.active,
+        spike_alert: l.spike_alert,
     }
 }
 
@@ -305,6 +308,7 @@ pub fn close_venture_period(
     partnership_id: String,
     end_date: Option<String>,
     negligence_note: Option<String>,
+    spike_ack: bool,
     state: State<'_, AppSession>,
 ) -> Result<PeriodDto, CommandError> {
     with_session(&state, |s| {
@@ -316,6 +320,7 @@ pub fn close_venture_period(
                 &partnership_id,
                 opt_date(end_date.as_deref())?,
                 negligence_note.as_deref(),
+                spike_ack,
             )?;
             Ok(period_dto(&p))
         })

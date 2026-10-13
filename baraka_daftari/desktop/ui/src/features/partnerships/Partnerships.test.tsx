@@ -24,6 +24,9 @@ vi.mock('../../bindings', () => ({
     recordBuyoutPayment: vi.fn(),
     exportContractPdf: vi.fn(),
     checkPartnershipDraft: vi.fn(),
+    reportDutyIncident: vi.fn(),
+    openPartnershipDispute: vi.fn(),
+    resolvePartnershipDispute: vi.fn(),
     appInfo: vi.fn(),
   },
 }));
@@ -108,6 +111,13 @@ beforeEach(() => {
     status: 'ok',
     data: { missing_questions: [], errors: [], pdf: null },
   });
+  for (const k of [
+    'reportDutyIncident',
+    'openPartnershipDispute',
+    'resolvePartnershipDispute',
+  ] as const) {
+    vi.mocked(commands[k]).mockResolvedValue({ status: 'ok', data: null });
+  }
   for (const k of [
     'signPartnership',
     'partnershipFamilyConsent',
@@ -328,5 +338,83 @@ describe('shartnoma ustasi: 9 qadam, maslahat va önizleme', () => {
     const frame = await screen.findByTitle('Shartnoma önizlemasi (PDF)');
     expect(frame).toHaveAttribute('src', 'blob:draft');
     expect(createURL).toHaveBeenCalled();
+  });
+});
+
+describe('kelishuv voqealari: bajara olmayapman va nizo', () => {
+  const agreement = (status: string): NonNullable<PartnershipDto['agreement']> => ({
+    id: 'ag1',
+    status,
+    current_version: 1,
+    legacy: false,
+    missing_questions: [],
+    errors: [],
+    warnings: [],
+    missing_signatures: [],
+    journal_length: 0,
+    journal_intact: true,
+    duties: [
+      {
+        text: 'Yetkazib berish va hisobot',
+        owner_name: 'Karim aka',
+        if_not_done: '1 kun ichida xabar beradi',
+      },
+    ],
+    custody_place: 'Anvar hisobi',
+    arbiter_name: 'Usta Olim',
+    review_date: '2027-10-01',
+  });
+
+  it('bajara olmayapman: band darhol ko‘rinadi va hodisa jurnalga yuboriladi', async () => {
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [{ ...base, status: 'ACTIVE', agreement: agreement('ACTIVE') }],
+    });
+    renderPage();
+    const card = within(await screen.findByTestId('ps-Ustaxona'));
+    await userEvent.click(card.getByRole('button', { name: 'Bajara olmayapman' }));
+    expect(card.getByTestId('duty-incident-form')).toHaveTextContent(
+      'Bajarilmasa: 1 kun ichida xabar beradi',
+    );
+    await userEvent.type(card.getByLabelText('Sabab'), 'Yo‘l yopiq edi');
+    await userEvent.click(card.getByRole('button', { name: 'Hodisani yozish' }));
+    await waitFor(() => {
+      expect(commands.reportDutyIncident).toHaveBeenCalledWith('p1', 0, 'Yo‘l yopiq edi', '');
+    });
+    expect(await card.findByRole('status')).toHaveTextContent('Hodisa jurnalga yozildi');
+  });
+
+  it('nizo ochiladi, so‘ng hakam qarori bilan yopiladi', async () => {
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [{ ...base, status: 'ACTIVE', agreement: agreement('ACTIVE') }],
+    });
+    const { unmount } = renderPage();
+    const card = within(await screen.findByTestId('ps-Ustaxona'));
+    await userEvent.click(card.getByText('Nizo ochish'));
+    await userEvent.type(card.getByLabelText('Mavzu'), 'Foyda hisobi');
+    await userEvent.type(card.getByLabelText('Talab'), 'Ulush 60/40 bo‘lsin');
+    await userEvent.click(card.getByRole('button', { name: 'Nizoni ochish' }));
+    await waitFor(() => {
+      expect(commands.openPartnershipDispute).toHaveBeenCalledWith(
+        'p1',
+        'a',
+        'Foyda hisobi',
+        'Ulush 60/40 bo‘lsin',
+      );
+    });
+    unmount();
+
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [{ ...base, status: 'ACTIVE', agreement: agreement('IN_DISPUTE') }],
+    });
+    renderPage();
+    const again = within(await screen.findByTestId('dispute-active'));
+    await userEvent.type(again.getByLabelText('Hakam qarori'), 'Ulush 50/50');
+    await userEvent.click(again.getByRole('button', { name: 'Qarorni yozib, nizoni yopish' }));
+    await waitFor(() => {
+      expect(commands.resolvePartnershipDispute).toHaveBeenCalledWith('p1', 'Ulush 50/50');
+    });
   });
 });

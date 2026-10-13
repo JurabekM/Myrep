@@ -116,6 +116,7 @@ export function Ledger({ p }: { p: PartnershipDto }) {
   const [fm, setFm] = useState(false);
   const [note, setNote] = useState('');
   const [negligence, setNegligence] = useState('');
+  const [spikeReread, setSpikeReread] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const add = useMutation({
     mutationFn: () =>
@@ -139,9 +140,17 @@ export function Ledger({ p }: { p: PartnershipDto }) {
   });
   const close = useMutation({
     mutationFn: () =>
-      unwrap(commands.closeVenturePeriod(p.id, null, negligence.trim() === '' ? null : negligence)),
+      unwrap(
+        commands.closeVenturePeriod(
+          p.id,
+          null,
+          negligence.trim() === '' ? null : negligence,
+          spikeReread,
+        ),
+      ),
     onSuccess: async () => {
       setNegligence('');
+      setSpikeReread(false);
       await refresh();
     },
   });
@@ -262,6 +271,26 @@ export function Ledger({ p }: { p: PartnershipDto }) {
                 close.mutate();
               }}
             >
+              {l.spike_alert && (
+                <div
+                  className="w-full rounded bg-accent/10 p-3"
+                  role="status"
+                  data-testid="spike-alert"
+                >
+                  <p className="font-medium">{t('ledger.spikeTitle')}</p>
+                  <p className="text-xs opacity-80">{t('ledger.spikeBody')}</p>
+                  <label className="mt-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={spikeReread}
+                      onChange={(e) => {
+                        setSpikeReread(e.target.checked);
+                      }}
+                    />
+                    {t('ledger.spikeConfirm')}
+                  </label>
+                </div>
+              )}
               {p.kind === 'MUDARABA' && (
                 <label className="block">
                   {t('ledger.negligence')}
@@ -274,7 +303,11 @@ export function Ledger({ p }: { p: PartnershipDto }) {
                   />
                 </label>
               )}
-              <button type="submit" className="rounded bg-accent px-3 py-1 text-paper">
+              <button
+                type="submit"
+                className="rounded bg-accent px-3 py-1 text-paper disabled:opacity-50"
+                disabled={l.spike_alert && !spikeReread}
+              >
                 {t('ledger.close')}
               </button>
               <span className="text-xs opacity-70">{t('ledger.closeHint')}</span>

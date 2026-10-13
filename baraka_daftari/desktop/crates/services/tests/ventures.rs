@@ -3,8 +3,8 @@
 use std::cell::Cell;
 
 use domain::{
-    date_from_str, CapitalKind, Clock, Date, IdGen, LedgerKind, MemberRole, OfferAnswers,
-    OffsetDateTime, PartnershipKind, PartyRole, ReportPeriod, Verdict,
+    date_from_str, CapitalKind, Clock, Date, IdGen, JournalKind, LedgerKind, MemberRole,
+    OfferAnswers, OffsetDateTime, PartnershipKind, PartyRole, ReportPeriod, Verdict,
 };
 use money::{Currency, Money};
 use security::KdfParams;
@@ -181,6 +181,15 @@ impl World {
     }
 
     fn close(&mut self, pid: &str, end: &str) -> Result<ventures::PeriodView, ServiceError> {
+        self.close_acked(pid, end, false)
+    }
+
+    fn close_acked(
+        &mut self,
+        pid: &str,
+        end: &str,
+        spike_ack: bool,
+    ) -> Result<ventures::PeriodView, ServiceError> {
         ventures::close_period(
             &mut self.db,
             &env!(self),
@@ -188,6 +197,7 @@ impl World {
             pid,
             Some(d(end)),
             None,
+            spike_ack,
         )
     }
 
@@ -410,11 +420,20 @@ fn losses_follow_mudaraba_rules_and_negligence_needs_a_note() {
         &w.ctx,
         &pid,
         Some(d("2026-10-31")),
-        Some("  ")
+        Some("  "),
+        false,
     )
     .is_err());
-    let closed =
-        ventures::close_period(&mut w.db, &env, &w.ctx, &pid, Some(d("2026-10-31")), None).unwrap();
+    let closed = ventures::close_period(
+        &mut w.db,
+        &env,
+        &w.ctx,
+        &pid,
+        Some(d("2026-10-31")),
+        None,
+        false,
+    )
+    .unwrap();
     let shares: Vec<i64> = closed
         .distribution
         .iter()
@@ -439,6 +458,7 @@ fn losses_follow_mudaraba_rules_and_negligence_needs_a_note() {
         &pid,
         Some(d("2026-11-30")),
         Some("ombor yopilmagan"),
+        false,
     )
     .unwrap();
     let s2: Vec<i64> = c2.distribution.iter().map(|x| x.amount.minor()).collect();
@@ -739,4 +759,144 @@ fn offer_check_table_is_applied() {
         Verdict::Yellow
     );
     let _ = MemberRole::Adult;
+}
+
+fn agreement_of(w: &World, pid: &str) -> String {
+    services::agreements::agreement_of_partnership(w.db.conn(), &w.ctx, pid)
+        .unwrap()
+        .unwrap()
+        .meta
+        .id
+}
+
+fn party_id(w: &World, pid: &str, name: &str) -> String {
+    let v = services::partnerships::view(w.db.conn(), &env!(w), &w.ctx, pid).unwrap();
+    v.parties
+        .iter()
+        .find(|p| p.party.name == name)
+        .unwrap()
+        .party
+        .meta
+        .id
+        .clone()
+}
+
+fn invalid_message(e: &ServiceError) -> &'static str {
+    match e {
+        ServiceError::Invalid(m) => m,
+        other => panic!("kutilgan xato emas: {other:?}"),
+    }
+}
+
+/// SPEC 2F.8: nizo ochiq bo'lsa taqsimot bloklanadi; hakam qarori bilan nizo yopiladi va davr yopiladi.
+#[test]
+fn dispute_blocks_distribution_until_the_arbiter_decides() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Buyurtma 1",
+        500_000_000,
+        "2026-10-12",
+    )
+    .unwrap();
+    let agreement = agreement_of(&w, &pid);
+    let karim = party_id(&w, &pid, "Karim aka");
+    services::events::open_dispute(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        &karim,
+        "Foyda hisobi",
+        "Ulush 60/40 emas, 50/50 bo'lishi kerak edi",
+    )
+    .unwrap();
+    let blocked = w.close(&pid, "2026-10-14").unwrap_err();
+    assert!(invalid_message(&blocked).contains("nizoli kelishuvda"));
+    services::events::resolve_dispute(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        "Hakam: foyda shartnoma bo'yicha qayta hisoblansin",
+    )
+    .unwrap();
+    w.close(&pid, "2026-10-14").unwrap();
+    let kinds: Vec<_> = services::journal::entries(w.db.conn(), &w.ctx, &agreement)
+        .unwrap()
+        .iter()
+        .map(|e| e.kind)
+        .collect();
+    assert!(kinds.contains(&JournalKind::DisputeOpened));
+    assert!(kinds.contains(&JournalKind::DisputeResolved));
+}
+
+/// SPEC 2F.7: davr foydasi oxirgi 3 davr o'rtachasidan 200%+ bo'lsa, tasdiqsiz yopilmaydi; tasdiq jurnalga tushadi.
+#[test]
+fn profit_spike_needs_acknowledgement_and_is_journaled() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    for (on, end) in [
+        ("2026-10-12", "2026-10-14"),
+        ("2026-10-16", "2026-10-20"),
+        ("2026-10-22", "2026-10-25"),
+    ] {
+        w.entry(&pid, LedgerKind::Income, "Buyurtma", 100_000_000, on)
+            .unwrap();
+        w.close(&pid, end).unwrap();
+    }
+    assert!(
+        !w.ledger(&pid).spike_alert,
+        "tarix yetarli, lekin hali foyda oddiy"
+    );
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Katta buyurtma",
+        1_000_000_000,
+        "2026-10-27",
+    )
+    .unwrap();
+    assert!(w.ledger(&pid).spike_alert);
+    let refused = w.close(&pid, "2026-10-30").unwrap_err();
+    assert!(invalid_message(&refused).contains("katta foyda"));
+    w.close_acked(&pid, "2026-10-30", true).unwrap();
+    let agreement = agreement_of(&w, &pid);
+    let ack = services::journal::entries(w.db.conn(), &w.ctx, &agreement)
+        .unwrap()
+        .into_iter()
+        .any(|e| e.kind == JournalKind::ProfitAlertAck);
+    assert!(ack, "tasdiq jurnalga yozilishi kerak");
+}
+
+/// SPEC 2F.4: «bajara olmayapman» — mas'ul tomon nomidan, band bilan birga jurnalga yoziladi.
+#[test]
+fn duty_incident_is_journaled_for_the_owner_with_the_clause() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    let agreement = agreement_of(&w, &pid);
+    let zamira = party_id(&w, &pid, "Zamira");
+    let e = services::events::report_duty_incident(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        0,
+        "Yo'l yopiq edi, hisobot kechikdi",
+        "Ertaga topshiraman",
+    )
+    .unwrap();
+    assert_eq!(e.kind, JournalKind::DutyIncident);
+    assert_eq!(e.party_id.as_deref(), Some(zamira.as_str()));
+    assert_eq!(e.reference.as_deref(), Some("v1/duty:0"));
+    assert!(e.note.contains("Taklif: Ertaga topshiraman"));
+    let no_such =
+        services::events::report_duty_incident(&mut w.db, &env!(w), &w.ctx, &agreement, 7, "x", "")
+            .unwrap_err();
+    assert_eq!(invalid_message(&no_such), "bunday vazifa bandi yo'q");
 }

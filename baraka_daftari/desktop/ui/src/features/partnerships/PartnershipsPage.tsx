@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { commands, type PartnershipDto } from '../../bindings';
 import { errorMessage, formatBp, unwrap } from '../../lib/api';
 
+import { AgreementEvents } from './AgreementEvents';
 import { Buyout } from './Buyout';
 import { ContractForm } from './ContractForm';
 import { Distribution } from './Distribution';
@@ -158,6 +159,8 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
           })}
         </p>
       )}
+
+      <AgreementEvents p={p} />
 
       {draft && p.agreement?.missing_signatures.some((x) => x.kind === 'ARBITER') && (
         <div
