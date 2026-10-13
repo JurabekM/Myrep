@@ -1156,3 +1156,103 @@ fn tampered_incoming_journal_is_refused() {
     let refused = storage::interchange::apply(w.db.conn(), &doc, Some(&w.ctx.household_id));
     assert!(refused.is_err(), "o'zgartirilgan zanjir rad etilishi kerak");
 }
+
+/// SPEC 2F.10: oilaviy kelishuv — faqat kattalarning PIN bilan tasdig'i; bola tasdiqlay olmaydi, tomon imzosi o'tmaydi.
+#[test]
+fn family_agreement_is_confirmed_by_adult_pins_only() {
+    use services::family_agreements::{self as family, FamilyDuty, NewFamilyAgreement};
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let dilshod = services::members::add(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        "Dilshod",
+        domain::MemberRole::Adult,
+    )
+    .unwrap()
+    .meta
+    .id;
+    members::set_pin(&mut w.db, &env!(w), &w.ctx, &dilshod, "222222", FAST).unwrap();
+    let kid = services::members::add(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        "Bola",
+        domain::MemberRole::Child,
+    )
+    .unwrap()
+    .meta
+    .id;
+    let created = family::create(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        NewFamilyAgreement {
+            title: "Uy ishlari".into(),
+            adult_ids: vec![me.clone(), dilshod.clone()],
+            duties: vec![
+                FamilyDuty {
+                    text: "Ovqat pishirish".into(),
+                    owner_member_id: dilshod.clone(),
+                    if_not_done: "Ertasi kuni o'zi tuzatadi".into(),
+                },
+                FamilyDuty {
+                    text: "Hovli tozalash".into(),
+                    owner_member_id: me.clone(),
+                    if_not_done: "Dam olish kuni bajariladi".into(),
+                },
+            ],
+            custody_place: "Uy xazinasi".into(),
+            review_date: None,
+        },
+    )
+    .unwrap();
+    let id = created.agreement.meta.id.clone();
+    assert!(
+        created.completeness.is_complete(),
+        "{:?}",
+        created.completeness
+    );
+    assert!(family::consent(&mut w.db, &env!(w), &w.ctx, &id, &kid, "000000").is_err());
+    assert!(family::consent(&mut w.db, &env!(w), &w.ctx, &id, &dilshod, "000000").is_err());
+    let by_party = services::agreements::sign(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        services::agreements::AgreementSigner::Party {
+            party_id: me.clone(),
+            pin: Some("111111".into()),
+        },
+    );
+    assert!(by_party.is_err(), "oilada tomon imzosi o'tmasin");
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &me, "111111").unwrap();
+    let both = family::consent(&mut w.db, &env!(w), &w.ctx, &id, &dilshod, "222222").unwrap();
+    assert_eq!(both.agreement.status, domain::AgreementStatus::Signed);
+    let active = family::activate(&mut w.db, &env!(w), &w.ctx, &id).unwrap();
+    assert_eq!(active.agreement.status, domain::AgreementStatus::Active);
+    assert_eq!(family::list(w.db.conn(), &w.ctx).unwrap().len(), 1);
+}
+
+/// D13A: «o'zgarishsiz tasdiqlash» yangi versiya — barcha tomonlar qayta tasdiqlaydi, faol sheriklik qoralamaga qaytadi.
+#[test]
+fn yearly_confirmation_is_a_new_version_that_needs_new_signatures() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    let v = services::partnerships::confirm_unchanged(&mut w.db, &env!(w), &w.ctx, &pid).unwrap();
+    assert_eq!(v.partnership.version, 2);
+    assert_eq!(v.partnership.status, domain::PartnershipStatus::Draft);
+    let agreement = agreement_of(&w, &pid);
+    let av = services::agreements::view(w.db.conn(), &w.ctx, &agreement).unwrap();
+    assert_eq!(av.agreement.current_version, 2);
+    assert!(
+        !av.missing_signatures.is_empty(),
+        "tomonlar qayta imzolashi kerak"
+    );
+    assert!(av
+        .versions
+        .iter()
+        .any(|x| x.change_note.as_deref() == Some("O'zgarishsiz tasdiqlash")));
+}

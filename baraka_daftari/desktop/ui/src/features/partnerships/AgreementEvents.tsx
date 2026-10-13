@@ -25,6 +25,7 @@ export function AgreementEvents({ p }: { p: PartnershipDto }) {
   }
   return (
     <div className="mt-3 space-y-3 text-sm" data-testid="agreement-events">
+      <YearlyRenewal p={p} />
       <DutyList p={p} />
       <Dispute p={p} />
       <ReviewSession p={p} />
@@ -279,4 +280,50 @@ function Dispute({ p }: { p: PartnershipDto }) {
     );
   }
   return null;
+}
+
+/** Kun hisobi: `YYYY-MM-DD` dan bugungacha kunlar (mahalliy vaqt bo'yicha). */
+function daysUntil(dateText: string): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText);
+  if (!m) return null;
+  const target = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+/**
+ * Yillik yangilash (SPEC 2F.10, D13A): yangilash sanasidan 30 kun oldin eslatma. «O'zgarishsiz tasdiqlash»
+ * ham yangi versiya hisoblanadi — tomonlar qayta tasdiqlaydi.
+ */
+function YearlyRenewal({ p }: { p: PartnershipDto }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const days = p.agreement ? daysUntil(p.agreement.review_date) : null;
+  const confirm = useMutation({
+    mutationFn: () => unwrap(commands.confirmPartnershipUnchanged(p.id)),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries();
+    },
+  });
+  if (days === null || days > 30) return null;
+  return (
+    <section className="rounded border border-accent p-3" data-testid="yearly-renewal">
+      <p className="font-medium">
+        {days < 0 ? t('partner.yearly.overdue') : t('partner.yearly.soon', { n: days })}
+      </p>
+      <p className="text-xs opacity-80">{t('partner.yearly.hint')}</p>
+      <button
+        type="button"
+        className="mt-2 rounded border border-accent px-3 py-0.5 disabled:opacity-50"
+        disabled={confirm.isPending}
+        onClick={() => {
+          confirm.mutate();
+        }}
+      >
+        {t('partner.yearly.confirm')}
+      </button>
+      {confirm.error && <p role="alert">{errorMessage(t, confirm.error)}</p>}
+    </section>
+  );
 }

@@ -981,6 +981,12 @@
       "incidentsTitle": "Vazifa hodisalari ({{n}})",
       "close": "Ko'rikni yakunlash",
       "pdf": "Bayonnoma PDF"
+    },
+    "yearly": {
+      "soon": "Yillik yangilashga {{n}} kun qoldi",
+      "overdue": "Yillik yangilash muddati o'tgan",
+      "hint": "«O'zgarishsiz tasdiqlash» ham yangi versiya: barcha tomonlar shartnomani qayta tasdiqlaydi. Faol sheriklik qoralamaga qaytadi.",
+      "confirm": "O'zgarishsiz tasdiqlash"
     }
   },
   "ledger": {
@@ -1178,5 +1184,60 @@
     "none": "—",
     "monthlyClosed": "Yopilgan",
     "monthlyPending": "Kutilmoqda"
+  },
+  "famagr": {
+    "title": "Oilaviy kelishuvlar",
+    "intro": "Oilaviy kelishuvda imzo o'rniga har bir katta a'zoning PIN bilan tasdig'i yetarli. Bolalar tasdiqlamaydi.",
+    "new": "Yangi kelishuv:",
+    "templates": {
+      "HOUSE_DUTIES": {
+        "title": "Uyda kim nima qiladi",
+        "hint": "Har bir ish bitta mas'ul kishiga beriladi.",
+        "duty": "Ovqat pishirish",
+        "ifNotDone": "Ertasi kuni boshqa katta a'zo bajaradi"
+      },
+      "HOUSE_MONEY": {
+        "title": "Pul qayerda turadi va kim yuritadi",
+        "hint": "Pul joyi va hisobni yurituvchini aniq yozing.",
+        "duty": "Oilaviy hisobni yuritish",
+        "ifNotDone": "Oila kengashida birga ko'rib chiqiladi"
+      },
+      "DESIRE_LIMIT": {
+        "title": "Havas chegarasi",
+        "hint": "Chegara ilovadagi «Havas» bo'limida belgilanadi.",
+        "duty": "Oylik havas chegarasiga rioya qilish",
+        "ifNotDone": "Oila kengashida birga qayta ko'rib chiqiladi"
+      },
+      "COUNCIL_SCHEDULE": {
+        "title": "Oylik oila kengashi qachon o'tadi",
+        "hint": "Yangilash sanasi kengash kunini belgilaydi.",
+        "duty": "Oila kengashini o'tkazish",
+        "ifNotDone": "Keyingi hafta o'tkaziladi"
+      }
+    },
+    "name": "Kelishuv nomi",
+    "adults": "Kattalar (tomonlar)",
+    "duties": "Vazifalar",
+    "dutyText": "Vazifa",
+    "dutyOwner": "Mas'ul",
+    "dutyIfNotDone": "Bajarilmasa",
+    "addDuty": "Vazifa qo'shish",
+    "removeDuty": "O'chirish",
+    "custody": "Pul qayerda turadi",
+    "reviewDate": "Kengash sanasi (ixtiyoriy)",
+    "create": "Qoralama yaratish",
+    "empty": "Hali oilaviy kelishuv yo'q.",
+    "signedBy": "tasdiqladi",
+    "pinFor": "{{name}}: PIN",
+    "confirm": "Tasdiqlash",
+    "activate": "Faollashtirish",
+    "review": "Kengash sanasi: {{date}}",
+    "statuses": {
+      "DRAFT": "Qoralama",
+      "SIGNED": "Imzolangan",
+      "ACTIVE": "Faol",
+      "IN_DISPUTE": "Nizoli",
+      "CLOSED": "Yopilgan"
+    }
   }
 }

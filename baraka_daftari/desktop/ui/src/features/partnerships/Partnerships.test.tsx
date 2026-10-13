@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, vi } from 'vitest';
 
 import '../../i18n';
-import { commands, type PartnershipDto } from '../../bindings';
+import { commands, type FamilyAgreementDto, type PartnershipDto } from '../../bindings';
 import { a11yViolations } from '../../lib/axe';
 
 import { PartnershipsPage } from './PartnershipsPage';
@@ -29,6 +29,11 @@ vi.mock('../../bindings', () => ({
     resolvePartnershipDispute: vi.fn(),
     reviewView: vi.fn(),
     agreementsCenter: vi.fn(),
+    confirmPartnershipUnchanged: vi.fn(),
+    familyAgreementsList: vi.fn(),
+    createFamilyAgreement: vi.fn(),
+    signFamilyAgreement: vi.fn(),
+    activateFamilyAgreement: vi.fn(),
     recordReviewAnswer: vi.fn(),
     closeReview: vi.fn(),
     exportReviewPdf: vi.fn(),
@@ -36,6 +41,24 @@ vi.mock('../../bindings', () => ({
     appInfo: vi.fn(),
   },
 }));
+
+const familyFixture = (over: Partial<FamilyAgreementDto> = {}): FamilyAgreementDto => ({
+  id: 'a1',
+  title: 'Uyda kim nima qiladi',
+  status: 'DRAFT',
+  status_label: 'Qoralama',
+  version: 1,
+  adults: [
+    { member_id: 'm1', name: 'Men', signed: false },
+    { member_id: 'm2', name: 'Zamira', signed: false },
+  ],
+  duties: [{ text: 'Ovqat pishirish', owner_name: 'Zamira', if_not_done: 'Ertasi kuni' }],
+  custody_place: 'Uy xazinasi',
+  review_date: '2027-10-11',
+  missing_questions: [],
+  can_activate: false,
+  ...over,
+});
 
 const money = (formatted: string) => ({ minor: '1', currency: 'UZS', formatted });
 const zero = { minor: '0', currency: 'UZS', formatted: "0 so'm" };
@@ -127,6 +150,7 @@ beforeEach(() => {
     vi.mocked(commands[k]).mockResolvedValue({ status: 'ok', data: null });
   }
   vi.mocked(commands.agreementsCenter).mockResolvedValue({ status: 'ok', data: [] });
+  vi.mocked(commands.familyAgreementsList).mockResolvedValue({ status: 'ok', data: [] });
   vi.mocked(commands.reviewView).mockResolvedValue({
     status: 'ok',
     data: {
@@ -575,5 +599,105 @@ describe('kelishuvlar markazi', () => {
     await userEvent.type(center.getByLabelText("Nom bo'yicha qidirish"), 'qarz');
     expect(screen.queryByTestId('center-row-Ustaxona')).not.toBeInTheDocument();
     expect(screen.getByTestId('center-row-Qarz tilxati')).toBeInTheDocument();
+  });
+});
+
+describe('yillik yangilash', () => {
+  it('yangilash sanasi 30 kun ichida bo‘lsa, o‘zgarishsiz tasdiqlash chiqadi va yuboriladi', async () => {
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 5);
+    const iso = `${String(soon.getFullYear())}-${String(soon.getMonth() + 1).padStart(2, '0')}-${String(soon.getDate()).padStart(2, '0')}`;
+    vi.mocked(commands.listPartnerships).mockResolvedValue({
+      status: 'ok',
+      data: [
+        { ...base, status: 'ACTIVE', agreement: { ...agreementOf('ACTIVE'), review_date: iso } },
+      ],
+    });
+    vi.mocked(commands.confirmPartnershipUnchanged).mockResolvedValue({ status: 'ok', data: base });
+    renderPage();
+    const box = within(await screen.findByTestId('yearly-renewal'));
+    expect(box.getByText('Yillik yangilashga 5 kun qoldi')).toBeInTheDocument();
+    await userEvent.click(box.getByRole('button', { name: "O'zgarishsiz tasdiqlash" }));
+    await waitFor(() => {
+      expect(commands.confirmPartnershipUnchanged).toHaveBeenCalledWith('p1');
+    });
+  });
+});
+
+describe('oilaviy kelishuvlar', () => {
+  it('shablon tanlanadi, qoralama yaratiladi', async () => {
+    vi.mocked(commands.listMembers).mockResolvedValue({
+      status: 'ok',
+      data: [
+        { id: 'm1', name: 'Men', role: 'ADULT', has_pin: true },
+        { id: 'm2', name: 'Zamira', role: 'ADULT', has_pin: false },
+        { id: 'k1', name: 'Bola', role: 'CHILD', has_pin: false },
+      ],
+    });
+    renderPage();
+    const section = within(await screen.findByTestId('family-agreements'));
+    await userEvent.click(section.getByRole('button', { name: 'Uyda kim nima qiladi' }));
+    const form = within(screen.getByTestId('family-form'));
+    await userEvent.type(form.getByLabelText('Pul qayerda turadi'), 'Uy xazinasi');
+    vi.mocked(commands.createFamilyAgreement).mockResolvedValue({
+      status: 'ok',
+      data: familyFixture(),
+    });
+    await userEvent.click(form.getByRole('button', { name: 'Qoralama yaratish' }));
+    await waitFor(() => {
+      expect(commands.createFamilyAgreement).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Uyda kim nima qiladi',
+          adult_ids: ['m1', 'm2'],
+          custody_place: 'Uy xazinasi',
+          review_date: null,
+        }),
+      );
+    });
+  });
+
+  it('kattalar PIN bilan tasdiqlaydi', async () => {
+    vi.mocked(commands.familyAgreementsList).mockResolvedValue({
+      status: 'ok',
+      data: [familyFixture()],
+    });
+    vi.mocked(commands.signFamilyAgreement).mockResolvedValue({
+      status: 'ok',
+      data: familyFixture(),
+    });
+    renderPage();
+    await screen.findByTestId('famagr-card');
+    const row = within(screen.getByTestId('famagr-adult-Men'));
+    await userEvent.type(row.getByLabelText('Men: PIN'), '111111');
+    await userEvent.click(row.getByRole('button', { name: 'Tasdiqlash' }));
+    await waitFor(() => {
+      expect(commands.signFamilyAgreement).toHaveBeenCalledWith('a1', 'm1', '111111');
+    });
+  });
+
+  it('hamma kattalar tasdiqlagach kelishuv faollashtiriladi', async () => {
+    vi.mocked(commands.familyAgreementsList).mockResolvedValue({
+      status: 'ok',
+      data: [
+        familyFixture({
+          status: 'SIGNED',
+          can_activate: true,
+          adults: [
+            { member_id: 'm1', name: 'Men', signed: true },
+            { member_id: 'm2', name: 'Zamira', signed: true },
+          ],
+        }),
+      ],
+    });
+    vi.mocked(commands.activateFamilyAgreement).mockResolvedValue({
+      status: 'ok',
+      data: familyFixture({ status: 'ACTIVE' }),
+    });
+    renderPage();
+    const card = within(await screen.findByTestId('famagr-card'));
+    await userEvent.click(card.getByRole('button', { name: 'Faollashtirish' }));
+    await waitFor(() => {
+      expect(commands.activateFamilyAgreement).toHaveBeenCalledWith('a1');
+    });
   });
 });

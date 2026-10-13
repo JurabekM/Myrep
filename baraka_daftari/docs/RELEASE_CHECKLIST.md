@@ -34,6 +34,8 @@ Belgilar: ✅ shu repoda avtomatik tekshiriladi · 🟡 qisman · ⬜ qo'lda/tas
 - ⬜ Sheriklik ustasi jonli önizlemasi (`iframe`, PDF blob-URL) WebView2 da ko'rinadi; 150% DPI da forma va o'ng ustun sig'adi (OPEN_QUESTIONS 108).
 - ⬜ Import: zanjiri ayrilgan (fork) `.baraka` fayl rad etiladi va hisobot ko'rinadi; buzilgan jurnal fayli rad etiladi (D14).
 - ⬜ «Katta foyda» tasdig'i va nizo bloki (davr yopish, taqsimot) qo'lda sinaladi: ogohlantirish matni, katakcha, tugma holati.
+- ⬜ Oilaviy kelishuv: shablon tanlash, kattalarning PIN bilan tasdig'i (bola va PIN'siz kattalar tasdiqlay olmasligi), faollashtirish — WebView2 da qo'lda sinaladi.
+- ⬜ Yillik yangilash: 30 kunlik eslatma va «O'zgarishsiz tasdiqlash» — tomonlar qayta imzolashi va sheriklikning qoralamaga qaytishi qo'lda tekshiriladi.
 - ⬜ Rus tili: barcha ekranlar ko'zdan kechiriladi (kalit to'liqligi avtomatik, uslub — qo'lda).
 - ⬜ Accessibility: axe faqat ba'zi sahifalarda (Almashish, Hunardan ishga, Sheriklik, Onboarding); qolgan sahifalar qo'lda.
 

@@ -19,6 +19,7 @@ pub mod debts;
 pub mod envelopes;
 pub mod events;
 pub mod expenses;
+pub mod family_agreements;
 pub mod goals;
 pub mod guard;
 pub mod habits;

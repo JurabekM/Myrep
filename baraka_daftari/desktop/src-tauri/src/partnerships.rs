@@ -910,6 +910,21 @@ pub fn agreements_center(state: State<'_, AppSession>) -> Result<Vec<CenterRowDt
     })
 }
 
+/// Yillik yangilash: «o'zgarishsiz tasdiqlash» — yangi versiya; tomonlar qayta tasdiqlaydi (D13A).
+#[tauri::command]
+#[specta::specta]
+pub fn confirm_partnership_unchanged(
+    id: String,
+    state: State<'_, AppSession>,
+) -> Result<PartnershipDto, CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let v = partnerships::confirm_unchanged(db, env, ctx, &id)?;
+            full(db.conn(), env, ctx, &v)
+        })
+    })
+}
+
 /// Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi.
 #[tauri::command]
 #[specta::specta]

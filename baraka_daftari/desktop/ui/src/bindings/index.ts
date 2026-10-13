@@ -221,6 +221,16 @@ export const commands = {
 	exportDisputeFolderPdf: (partnershipId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_dispute_folder_pdf", { partnershipId })),
 	/**  Kelishuvlar markazi: barcha kelishuvlar holati, yangilash eslatmasi va ko'rik holati (D13A). */
 	agreementsCenter: () => typedError<CenterRowDto[], CommandError>(__TAURI_INVOKE("agreements_center")),
+	/**  Yillik yangilash: «o'zgarishsiz tasdiqlash» — yangi versiya; tomonlar qayta tasdiqlaydi (D13A). */
+	confirmPartnershipUnchanged: (id: string) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("confirm_partnership_unchanged", { id })),
+	/**  Xonadonning oilaviy kelishuvlari. */
+	familyAgreementsList: () => typedError<FamilyAgreementDto[], CommandError>(__TAURI_INVOKE("family_agreements_list")),
+	/**  Yangi oilaviy kelishuv (qoralama). Hech kim hali imzolamagan. */
+	createFamilyAgreement: (input: FamilyAgreementInput) => typedError<FamilyAgreementDto, CommandError>(__TAURI_INVOKE("create_family_agreement", { input })),
+	/**  Katta a'zo PIN bilan tasdiqlaydi. */
+	signFamilyAgreement: (agreementId: string, memberId: string, pin: string) => typedError<FamilyAgreementDto, CommandError>(__TAURI_INVOKE("sign_family_agreement", { agreementId, memberId, pin })),
+	/**  Barcha kattalar tasdiqlagach kelishuvni faollashtiradi. */
+	activateFamilyAgreement: (agreementId: string) => typedError<FamilyAgreementDto, CommandError>(__TAURI_INVOKE("activate_family_agreement", { agreementId })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
@@ -763,6 +773,50 @@ export type ExpenseInput = {
 	is_gift: boolean,
 	is_ostentation: boolean,
 	funded_by_debt: boolean,
+};
+
+/**  Xonadon katta a'zosi va uning tasdig'i. */
+export type FamilyAdultDto = {
+	member_id: string,
+	name: string,
+	/**  PIN bilan tasdiqlaganmi (joriy versiya bo'yicha). */
+	signed: boolean,
+};
+
+/**  Oilaviy kelishuv holati: kattalar, vazifalar, pul joyi, yangilash sanasi va tasdiqlar. */
+export type FamilyAgreementDto = {
+	id: string,
+	title: string,
+	/**  `DRAFT` | `SIGNED` | `ACTIVE` | `IN_DISPUTE` | `CLOSED`. */
+	status: string,
+	status_label: string,
+	version: number,
+	adults: FamilyAdultDto[],
+	duties: AgreementDutyDto[],
+	custody_place: string,
+	/**  `YYYY-MM-DD`; javob berilmagan bo'lsa `null`. */
+	review_date: string | null,
+	/**  Javobsiz savollar (1–9). */
+	missing_questions: number[],
+	/**  Barcha kattalar tasdiqlagan: faollashtirish mumkin. */
+	can_activate: boolean,
+};
+
+/**  Yangi oilaviy kelishuv (qoralama). */
+export type FamilyAgreementInput = {
+	title: string,
+	adult_ids: string[],
+	duties: FamilyDutyInput[],
+	custody_place: string,
+	/**  `YYYY-MM-DD`; bo'sh bo'lsa — bir yil keyin. */
+	review_date: string | null,
+};
+
+/**  Vazifa bandi: mas'ul — xonadon katta a'zosi. */
+export type FamilyDutyInput = {
+	text: string,
+	owner_member_id: string,
+	if_not_done: string,
 };
 
 export type FixedInput = {

@@ -1190,6 +1190,65 @@ pub fn draft_check(
     })
 }
 
+/// Yillik yangilash: «o'zgarishsiz tasdiqlash». Shartnoma matni o'zgarmaydi, lekin yangi versiya hisoblanadi
+/// (SPEC 2F.10 / D13A): barcha tomonlar qayta tasdiqlaydi, faol sheriklik qoralamaga qaytadi.
+///
+/// # Errors
+/// Sheriklik tugagan, kelishuv yo'q yoki eski matnli bo'lsa.
+pub fn confirm_unchanged(
+    db: &mut Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    id: &str,
+) -> Result<PartnershipView, ServiceError> {
+    let p = load(db.conn(), ctx, id)?;
+    if p.status == PartnershipStatus::Ended {
+        return Err(ServiceError::Invalid("tugagan sheriklik yangilanmaydi"));
+    }
+    let a = agreements::agreement_of_partnership(db.conn(), ctx, id)?.ok_or(
+        ServiceError::Invalid("sheriklik kelishuvi topilmadi: sheriklikni qayta saqlang"),
+    )?;
+    let doc = agreements::current_doc(db.conn(), ctx, &a)?.ok_or(ServiceError::Invalid(
+        "eski matnli sheriklik yangilanmaydi: avval 9 savolli versiya yarating",
+    ))?;
+    let now = env.clock.now();
+    db.transaction::<(), ServiceError>(|tx| {
+        agreements::save_version_in(
+            tx,
+            env,
+            ctx,
+            &a.meta.id,
+            doc,
+            Some("O'zgarishsiz tasdiqlash"),
+        )?;
+        // Matn o'zgarmagan: oxirgi versiya qatorining mazmuni ko'chiriladi, raqami oshadi.
+        let snapshot = repo::list::<PartnershipVersion>(tx, &ctx.household_id)?
+            .into_iter()
+            .filter(|v| v.partnership_id == id)
+            .max_by_key(|v| v.version)
+            .map(|v| v.snapshot)
+            .unwrap_or_default();
+        let version = p.version + 1;
+        let mut next = p.clone();
+        next.version = version;
+        if next.status == PartnershipStatus::Active {
+            next.status = PartnershipStatus::Draft;
+        }
+        repo::update(tx, &next, now)?;
+        repo::insert(
+            tx,
+            &PartnershipVersion {
+                meta: Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id),
+                partnership_id: id.to_owned(),
+                version,
+                snapshot,
+            },
+        )?;
+        Ok(())
+    })?;
+    view(db.conn(), env, ctx, id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::percent_text;

@@ -234,7 +234,13 @@ pub fn completeness(doc: &AgreementDoc) -> Completeness {
     // 1. Tomonlar: kamida 2, nomlari bor, identifikatorlari takrorlanmaydi.
     let parties = open(&mut s, t, 1, &q.parties);
     if let Some(ps) = parties {
-        if ps.len() < MIN_PARTIES {
+        // Oilada bitta kattaning o'zi ham kelishuv tuza oladi (SPEC 2F.10); boshqa turlarda kamida ikki tomon.
+        let min = if t == AgreementType::Family {
+            1
+        } else {
+            MIN_PARTIES
+        };
+        if ps.len() < min {
             s.err(1, "TOO_FEW_PARTIES");
         }
         if ps.len() > MAX_PARTIES {
@@ -421,10 +427,21 @@ pub struct RequiredSignature {
 pub fn required_signatures(doc: &AgreementDoc) -> Vec<RequiredSignature> {
     let mut out = Vec::new();
     if let Answer::Answered(ps) = &doc.questions.parties {
-        out.extend(ps.iter().map(|p| RequiredSignature {
-            kind: AgreementSignKind::Party,
-            key: p.id.clone(),
-            name: p.name.clone(),
+        out.extend(ps.iter().map(|p| {
+            // Oilaviy kelishuvda imzo o'rniga oiladagi kattalarning PIN bilan tasdig'i yetarli (SPEC 2F.10).
+            if doc.agreement_type == AgreementType::Family {
+                RequiredSignature {
+                    kind: AgreementSignKind::FamilyConsent,
+                    key: p.member_id.clone().unwrap_or_else(|| p.id.clone()),
+                    name: p.name.clone(),
+                }
+            } else {
+                RequiredSignature {
+                    kind: AgreementSignKind::Party,
+                    key: p.id.clone(),
+                    name: p.name.clone(),
+                }
+            }
         }));
     }
     out.extend(doc.witnesses.iter().map(|w| RequiredSignature {
@@ -1046,6 +1063,48 @@ mod tests {
             code: "NOT_APPLICABLE_FORBIDDEN"
         }));
         assert!(!c.errors.iter().any(|i| i.question == 4));
+    }
+
+    #[test]
+    fn family_with_one_adult_needs_that_adults_consent() {
+        let mut doc = full_partnership();
+        doc.agreement_type = Family;
+        doc.questions.parties = Answer::Answered(vec![Party {
+            id: "m1".into(),
+            name: "Ota".into(),
+            role: "Oila a'zosi".into(),
+            member_id: Some("m1".into()),
+        }]);
+        doc.questions.contributions = Answer::NotApplicable {
+            reason: "Oilada kapital qayd etilmaydi".into(),
+        };
+        doc.questions.profit = Answer::NotApplicable {
+            reason: "Oilada foyda taqsimlanmaydi".into(),
+        };
+        doc.questions.loss = Answer::NotApplicable {
+            reason: "Oilada zarar taqsimlanmaydi".into(),
+        };
+        doc.questions.exit = Answer::NotApplicable {
+            reason: "Oila a'zolari ajralmaydi".into(),
+        };
+        doc.questions.arbiter = Answer::NotApplicable {
+            reason: "Oila ichida hakam shart emas".into(),
+        };
+        doc.witnesses.clear();
+        if let Answer::Answered(d) = &mut doc.questions.duties {
+            for x in d.iter_mut() {
+                x.owner_party_id = Some("m1".into());
+            }
+        }
+        assert!(completeness(&doc).is_complete(), "{:?}", completeness(&doc));
+        assert_eq!(
+            required_signatures(&doc),
+            vec![RequiredSignature {
+                kind: AgreementSignKind::FamilyConsent,
+                key: "m1".into(),
+                name: "Ota".into(),
+            }]
+        );
     }
 
     #[test]

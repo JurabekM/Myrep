@@ -9,6 +9,7 @@ mod debts;
 mod dto;
 mod exchange;
 mod family;
+mod family_agreements;
 mod guard;
 mod ledger;
 mod partnerships;
@@ -189,6 +190,11 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         partnerships::export_review_pdf,
         partnerships::export_dispute_folder_pdf,
         partnerships::agreements_center,
+        partnerships::confirm_partnership_unchanged,
+        family_agreements::family_agreements_list,
+        family_agreements::create_family_agreement,
+        family_agreements::sign_family_agreement,
+        family_agreements::activate_family_agreement,
         partnerships::sign_partnership,
         partnerships::partnership_family_consent,
         partnerships::activate_partnership,

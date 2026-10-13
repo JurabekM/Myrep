@@ -411,6 +411,11 @@ pub fn sign(
     }
     let (kind, key, name, method) = match signer {
         AgreementSigner::Party { party_id, pin } => {
+            if doc.agreement_type == AgreementType::Family {
+                return Err(ServiceError::Invalid(
+                    "oilaviy kelishuvda kattalar PIN bilan tasdiqlaydi",
+                ));
+            }
             let party = match &doc.questions.parties {
                 Answer::Answered(ps) => ps.iter().find(|p| p.id == party_id).cloned(),
                 _ => None,
@@ -885,7 +890,7 @@ pub(crate) fn kind_text(t: AgreementType) -> &'static str {
     }
 }
 
-pub(crate) fn status_text(s: AgreementStatus) -> &'static str {
+pub fn status_text(s: AgreementStatus) -> &'static str {
     match s {
         AgreementStatus::Draft => "Qoralama",
         AgreementStatus::Signed => "Imzolangan",

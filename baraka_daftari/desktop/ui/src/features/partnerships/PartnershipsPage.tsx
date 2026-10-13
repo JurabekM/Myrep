@@ -6,6 +6,7 @@ import { commands, type PartnershipDto } from '../../bindings';
 import { errorMessage, formatBp, unwrap } from '../../lib/api';
 
 import { AgreementCenter } from './AgreementCenter';
+import { FamilyAgreements } from './FamilyAgreements';
 import { AgreementEvents } from './AgreementEvents';
 import { Buyout } from './Buyout';
 import { ContractForm } from './ContractForm';
@@ -357,6 +358,7 @@ export function PartnershipsPage() {
         />
       )}
       {mode === 'list' && <AgreementCenter />}
+      {mode === 'list' && <FamilyAgreements />}
       {list.data?.map((p) => (
         <Card
           key={p.id}
