@@ -23,6 +23,7 @@ use std::{sync::Mutex, time::Duration};
 
 use security::{KdfParams, KeyringStore};
 use session::Session;
+#[cfg(debug_assertions)]
 use specta_typescript::Typescript;
 use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
