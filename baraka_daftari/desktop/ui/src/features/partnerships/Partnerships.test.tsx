@@ -77,6 +77,7 @@ const base: PartnershipDto = {
   versions: [{ version: 1, snapshot: 'Ustaxona · 1-versiya' }],
   blocker: 'PARTY_SIGNATURES',
   buyout: null,
+  agreement: null,
 };
 
 function renderPage() {
@@ -155,16 +156,16 @@ describe('PartnershipsPage', () => {
     const c = within(card);
     await userEvent.click(c.getByRole('button', { name: 'Karim aka tasdiqladi' }));
     await waitFor(() => {
-      expect(commands.signPartnership).toHaveBeenCalledWith('p1', 'a', null, null);
+      expect(commands.signPartnership).toHaveBeenCalledWith('p1', 'a', null, null, null);
     });
     await userEvent.type(c.getByLabelText('Zamira: PIN'), '111111');
     await userEvent.click(c.getByRole('button', { name: 'PIN bilan tasdiqlash' }));
     await waitFor(() => {
-      expect(commands.signPartnership).toHaveBeenCalledWith('p1', 'b', null, '111111');
+      expect(commands.signPartnership).toHaveBeenCalledWith('p1', 'b', null, null, '111111');
     });
     await userEvent.click(within(c.getByTestId('witness-Dilshod')).getByRole('button'));
     await waitFor(() => {
-      expect(commands.signPartnership).toHaveBeenCalledWith('p1', null, 'Dilshod', null);
+      expect(commands.signPartnership).toHaveBeenCalledWith('p1', null, 'Dilshod', null, null);
     });
   });
 

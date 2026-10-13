@@ -185,6 +185,7 @@ pub fn idea_to_contract_draft(
         env,
         ctx,
         NewPartnership {
+            details: Default::default(),
             name: v.idea.name.clone(),
             kind: PartnershipKind::Mudaraba,
             term_months: 12,

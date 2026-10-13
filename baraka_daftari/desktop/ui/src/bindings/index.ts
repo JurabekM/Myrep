@@ -202,7 +202,7 @@ export const commands = {
 	createPartnership: (input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("create_partnership", { input })),
 	revisePartnership: (id: string, input: PartnershipInput) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("revise_partnership", { id, input })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
-	signPartnership: (id: string, partyId: string | null, witness: string | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, pin })),
+	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
 	activatePartnership: (id: string) => typedError<PartnershipDto, CommandError>(__TAURI_INVOKE("activate_partnership", { id })),
 	endPartnership: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("end_partnership", { id })),
@@ -254,6 +254,29 @@ export const commands = {
 };
 
 /* Types */
+export type AgreementIssueDto = {
+	question: number,
+	code: string,
+};
+
+/**  Kelishuv holati (6-qonun): 9 savol, xatolar, kutilayotgan tasdiqlar va jurnal zanjiri. */
+export type AgreementStatusDto = {
+	id: string,
+	/**  `DRAFT` | `SIGNED` | `ACTIVE` | `IN_DISPUTE` | `CLOSED`. */
+	status: string,
+	current_version: number,
+	/**  Eski ma'lumotdan ko'chirilgan: 9 savolli yangi versiya kerak. */
+	legacy: boolean,
+	/**  Javobsiz savollar (1–9). */
+	missing_questions: number[],
+	errors: AgreementIssueDto[],
+	warnings: AgreementIssueDto[],
+	missing_signatures: SignatureNeedDto[],
+	journal_length: number,
+	/**  Jurnal zanjiri buzilmagan. */
+	journal_intact: boolean,
+};
+
 export type AlternativeDto = {
 	goal_name: string,
 	goal_target: MoneyDto,
@@ -459,7 +482,7 @@ export type CommandError = { kind: "InvalidPin" } | { kind: "WrongPin" } | { kin
 export type ConflictDto = {
 	table: string,
 	id: string,
-	/**  `DIVERGED` | `CLOSED_PERIOD` | `SIGNED_CONTRACT` | `REJECTED`. */
+	/**  `DIVERGED` | `CLOSED_PERIOD` | `SIGNED_CONTRACT` | `JOURNAL` | `REJECTED`. */
 	kind: string,
 	/**  `KEPT_LOCAL` | `TOOK_INCOMING` | `SKIPPED`. */
 	resolution: string,
@@ -596,6 +619,12 @@ export type DistributionDto = {
 	role: string,
 	amount: MoneyDto,
 	buyout_delta: MoneyDto,
+};
+
+export type DutyInputDto = {
+	text: string,
+	owner_name: string,
+	if_not_done: string,
 };
 
 export type EntryDto = {
@@ -958,9 +987,14 @@ export type PartnershipDto = {
 	self_receives_capital: boolean,
 	consents: ConsentDto[],
 	versions: VersionDto[],
-	/**  `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` | `FAMILY_CONSENT` | `GATE_CLOSED`. */
+	/**
+	 *  `INCOMPLETE_AGREEMENT` | `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` | `ARBITER_SIGNATURE` |
+	 *  `FAMILY_CONSENT` | `GATE_CLOSED`.
+	 */
 	blocker: string | null,
 	buyout: BuyoutDto | null,
+	/**  Kelishuv (shartnoma dvigateli) holati. */
+	agreement: AgreementStatusDto | null,
 };
 
 export type PartnershipInput = {
@@ -974,6 +1008,14 @@ export type PartnershipInput = {
 	dispute_clause: string,
 	witnesses: string[],
 	parties: PartyInputDto[],
+	/**  3-savol: vazifalar; har birida mas'ul tomon (ismi) va «bajarilmasa» bandi. */
+	duties?: DutyInputDto[],
+	/**  6-savol: pul qayerda turadi. */
+	custody_place?: string,
+	/**  8-savol: hakam ismi (tomonlardan biri bo'lmasin). */
+	arbiter_name?: string,
+	/**  9-savol: yangilash sanasi (`YYYY-MM-DD`); bo'sh bo'lsa boshlanishdan bir yil keyin. */
+	review_date?: string | null,
 };
 
 export type PartyDto = {
@@ -1197,6 +1239,13 @@ export type ShareAmountDto = {
 	name: string,
 	/**  Zarar manfiy ko'rsatiladi. */
 	amount: MoneyDto,
+};
+
+export type SignatureNeedDto = {
+	/**  `PARTY` | `WITNESS` | `ARBITER` | `FAMILY_CONSENT`. */
+	kind: string,
+	key: string,
+	name: string,
 };
 
 export type SourcesDto = {

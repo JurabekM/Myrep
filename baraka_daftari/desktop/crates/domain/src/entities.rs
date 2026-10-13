@@ -1,12 +1,14 @@
 use money::{Currency, Money};
 use time::{Date, OffsetDateTime};
 
+use crate::{date_to_string, HashedEntry, TimeError};
 use crate::{
-    AllocationKind, AssetType, BillingPeriod, BorrowAlternative, BorrowNeed, CapitalKind,
-    CeremonyKind, CeremonyStatus, CreditorType, FundingSource, IncomeSourceType, LedgerKind,
-    MemberRole, Meta, MoneyOwner, Necessity, ObligationKind, PartnershipKind, PartnershipStatus,
-    PartyRole, PaymentChannel, PeriodStatus, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind,
-    SellStatus, SignatureKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
+    AgreementSignKind, AgreementStatus, AgreementType, AllocationKind, AssetType, BillingPeriod,
+    BorrowAlternative, BorrowNeed, CapitalKind, CeremonyKind, CeremonyStatus, CreditorType,
+    FundingSource, IncomeSourceType, JournalKind, LedgerKind, MemberRole, Meta, MoneyOwner,
+    Necessity, ObligationKind, PartnershipKind, PartnershipStatus, PartyRole, PaymentChannel,
+    PeriodStatus, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind, SellStatus, SignMethod,
+    SignatureKind, SubjectKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -598,4 +600,88 @@ pub struct CraftCapex {
     pub idea_id: String,
     pub item: String,
     pub price: Money,
+}
+
+/// 6-qonun: kelishuv (umumiy dvigatel, SPEC 2F.1). Joriy holat shu yerda; mazmun `AgreementVersion` da.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Agreement {
+    pub meta: Meta,
+    pub agreement_type: AgreementType,
+    pub title: String,
+    pub status: AgreementStatus,
+    /// Bog'langan obyekt turi: sheriklik, qarz, berilgan qarz yoki `NONE`.
+    pub subject_kind: SubjectKind,
+    /// Bog'langan obyekt identifikatori; `NONE` bo'lsa `None`.
+    pub subject_id: Option<String>,
+    /// Joriy versiya raqami (1 dan).
+    pub current_version: u32,
+    pub effective_from: Date,
+    /// Hisob yurituvchi qurilma: jurnalga faqat shu qurilma yozadi (SPEC 2F.6, OPEN_QUESTIONS 91).
+    pub keeper_device_id: Option<String>,
+    /// Eski ma'lumotdan ko'chirilgan kelishuv: 9 savol to'liq bo'lmasligi mumkin.
+    pub legacy: bool,
+}
+
+/// Kelishuv versiyasi: o'zgarmas. Mazmun — kanonik JSON (yoki eski versiya uchun matn).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AgreementVersion {
+    pub meta: Meta,
+    pub agreement_id: String,
+    pub version_no: u32,
+    pub content: String,
+    pub content_hash: String,
+    pub change_note: Option<String>,
+}
+
+/// Versiyaga tasdiq. Boshqa versiyaga o'tilsa e'tiborga olinmaydi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AgreementSignature {
+    pub meta: Meta,
+    pub agreement_id: String,
+    pub version_no: u32,
+    pub kind: AgreementSignKind,
+    /// Tomon uchun — tomon identifikatori; guvoh uchun — ismi; hakam uchun — `arbiter`; a'zo uchun — a'zo id.
+    pub signer_key: String,
+    pub signer_name: String,
+    pub method: SignMethod,
+}
+
+/// Kelishuv jurnali yozuvi (append-only). `meta` — yozuv id va yozilgan vaqt (xeshga kirmaydi).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JournalEntry {
+    pub meta: Meta,
+    pub agreement_id: String,
+    /// Zanjirdagi tartib raqami (1 dan).
+    pub seq: u32,
+    pub kind: JournalKind,
+    pub party_id: Option<String>,
+    pub amount: Option<Money>,
+    pub entry_date: Date,
+    pub note: String,
+    /// Manba yozuv identifikatori (masalan, venture yozuvi).
+    pub reference: Option<String>,
+    /// Tuzatilayotgan asl yozuv (faqat `CORRECTION`).
+    pub corrects: Option<String>,
+    pub prev_hash: String,
+    pub hash: String,
+}
+
+impl JournalEntry {
+    /// Xeshlanadigan mazmun (sana `YYYY-MM-DD`).
+    ///
+    /// # Errors
+    /// Sana formatlanmasa.
+    pub fn hashed(&self) -> Result<HashedEntry, TimeError> {
+        Ok(HashedEntry {
+            id: self.meta.id.clone(),
+            agreement_id: self.agreement_id.clone(),
+            kind: self.kind,
+            party_id: self.party_id.clone(),
+            amount: self.amount,
+            date: date_to_string(self.entry_date)?,
+            note: self.note.clone(),
+            reference: self.reference.clone(),
+            corrects: self.corrects.clone(),
+        })
+    }
 }

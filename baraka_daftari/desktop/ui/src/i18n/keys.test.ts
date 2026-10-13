@@ -50,7 +50,7 @@ describe('i18n kalitlari', () => {
     ...['SAVINGS', 'FAMILY', 'EXPECTED_GIFTS', 'DEBT'].map((k) => `cer.sources.${k}`),
     ...['smaller', 'longer', 'gifts', 'sell', 'family'].map((k) => `cer.prompts.${k}`),
     ...['DISCUSSION_REQUIRED', 'DATE_REQUIRED'].map((k) => `cer.blockers.${k}`),
-    ...['DIVERGED', 'CLOSED_PERIOD', 'SIGNED_CONTRACT', 'REJECTED'].map(
+    ...['DIVERGED', 'CLOSED_PERIOD', 'SIGNED_CONTRACT', 'JOURNAL', 'REJECTED'].map(
       (k) => `exchange.kinds.${k}`,
     ),
     ...['KEPT_LOCAL', 'TOOK_INCOMING', 'SKIPPED'].map((k) => `exchange.resolutions.${k}`),

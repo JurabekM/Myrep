@@ -29,10 +29,13 @@ pub const FORMAT_VERSION: u32 = 1;
 const EXCLUDED: [&str; 2] = ["member_credentials", "settings"];
 
 /// Import orqali o'zgarmaydigan (faqat qo'shiladigan) jadvallar.
-const IMMUTABLE: [(&str, &str); 3] = [
+const IMMUTABLE: [(&str, &str); 6] = [
     ("venture_distributions", "CLOSED_PERIOD"),
     ("partnership_versions", "SIGNED_CONTRACT"),
     ("partnership_signatures", "SIGNED_CONTRACT"),
+    ("agreement_versions", "SIGNED_CONTRACT"),
+    ("agreement_signatures", "SIGNED_CONTRACT"),
+    ("journal_entries", "JOURNAL"),
 ];
 
 /// Seed yozuvlarni qurilmalar o'rtasida ulash uchun tabiiy kalitlar: (jadval, ustunlar, filtr).
@@ -83,6 +86,8 @@ pub enum ConflictKind {
     ClosedPeriod,
     /// Imzolangan shartnoma versiyasi/imzosi o'zgartirilmadi.
     SignedContract,
+    /// Kelishuv jurnali (append-only, xesh-zanjir) yozuvi o'zgartirilmadi (SPEC 2F.6).
+    Journal,
     /// Yozuv bazaga sig'madi (unikal cheklov yoki ota yozuv yo'q); o'tkazib yuborildi.
     Rejected,
 }
@@ -467,10 +472,10 @@ fn decide(
         return Ok(Decision::Unchanged);
     }
     if let Some((_, kind)) = IMMUTABLE.iter().find(|(n, _)| *n == t.name) {
-        return Ok(Decision::Protected(if *kind == "CLOSED_PERIOD" {
-            ConflictKind::ClosedPeriod
-        } else {
-            ConflictKind::SignedContract
+        return Ok(Decision::Protected(match *kind {
+            "CLOSED_PERIOD" => ConflictKind::ClosedPeriod,
+            "JOURNAL" => ConflictKind::Journal,
+            _ => ConflictKind::SignedContract,
         }));
     }
     if in_closed_period(conn, &t.name, loc)? || in_closed_period(conn, &t.name, inc)? {

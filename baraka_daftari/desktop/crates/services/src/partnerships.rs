@@ -6,16 +6,21 @@
 //!   barcha kattalarning oilaviy roziligi (PIN bilan) talab qilinadi.
 //! - Ilova pul harakatini bajarmaydi va sheriklarni topishtirmaydi: faqat o'zaro tanish tomonlar kelishuvini yozadi.
 use domain::{
-    add_months, buyout_schedule, distribute, equal_buyout_payments, validate_parties,
-    BuyoutPayment, BuyoutPlan, BuyoutSchedule, CapitalKind, Date, MemberRole, Meta, Outcome,
-    Partnership, PartnershipCapital, PartnershipKind, PartnershipParty, PartnershipSignature,
-    PartnershipStatus, PartnershipVersion, PartyInput, PartyRole, ReportPeriod, SignatureKind,
+    add_months, buyout_schedule, distribute, equal_buyout_payments, validate_parties, AgreementDoc,
+    AgreementSignKind, AgreementSignature, AgreementStatus, AgreementType, Answer, Arbiter,
+    BuyoutPayment, BuyoutPlan, BuyoutSchedule, CapitalKind, Contribution, Custody, Date, Duty,
+    ExitClause, LossRule, Meta, Outcome, Partnership, PartnershipCapital, PartnershipKind,
+    PartnershipParty, PartnershipStatus, PartnershipVersion, Party, PartyInput, PartyRole,
+    ProfitRule, ProfitShare, Questions, ReportPeriod, SubjectKind, Term,
 };
 use money::{format_money, Locale, Money};
 use storage::Connection;
 use storage::{repo, Database};
 
-use crate::{guard, local_date, members, sum_money, Ctx, Env, ServiceError};
+use crate::{
+    agreements::{self, AgreementSigner, AgreementView, NewAgreement},
+    guard, local_date, members, sum_money, Ctx, Env, ServiceError,
+};
 
 #[derive(Debug, Clone)]
 pub struct NewCapital {
@@ -42,10 +47,36 @@ pub struct NewPartnership {
     pub kind: PartnershipKind,
     pub term_months: u32,
     pub report_period: ReportPeriod,
+    /// Muddat tugagandagi tartib (7-savol).
     pub end_clause: String,
+    /// Nizolarni hal qilish tartibi (8-savolga tegishli).
     pub dispute_clause: String,
     pub witnesses: Vec<String>,
     pub parties: Vec<NewParty>,
+    /// Foydalanuvchi kiritadigan qism: vazifalar, pul joyi, hakam (SPEC 2F.2).
+    pub details: PartnershipDetails,
+}
+
+/// Shartnomaning foydalanuvchi kiritadigan javoblari (SPEC 2F.2). Qolgan savollar sheriklikdan avtomatik olinadi.
+#[derive(Debug, Clone, Default)]
+pub struct PartnershipDetails {
+    /// 3-savol: vazifalar. Har birida mas'ul tomon (ismi bo'yicha) va «bajarilmasa» bandi bo'lishi shart.
+    pub duties: Vec<DutyInput>,
+    /// 6-savol: pul qayerda turadi. Bo'sh bo'lsa savol javobsiz qoladi.
+    pub custody_place: String,
+    /// 8-savol: hakam ismi. Bo'sh bo'lsa savol javobsiz qoladi.
+    pub arbiter_name: String,
+    /// 9-savol: yangilash sanasi; `None` — boshlanishdan bir yil keyin (standart, SPEC 2F.3).
+    pub review_date: Option<Date>,
+}
+
+#[derive(Debug, Clone)]
+pub struct DutyInput {
+    pub text: String,
+    /// Mas'ul tomonning ismi (sheriklikdagi tomon nomi bo'yicha).
+    pub owner_name: String,
+    /// «Bajarilmasa» bandi: masalan, «1 kun ichida xabar beradi va o'rnini topadi».
+    pub if_not_done: String,
 }
 
 fn clean(s: &str, max: usize) -> String {
@@ -108,6 +139,15 @@ fn validate(conn: &Connection, ctx: &Ctx, new: &NewPartnership) -> Result<(), Se
             capital: party_capital(p, ctx)?,
             share_bp: p.share_bp,
         });
+    }
+    let mut keys: Vec<String> = new
+        .parties
+        .iter()
+        .map(|p| clean(&p.name, 60).to_lowercase())
+        .collect();
+    keys.sort();
+    if keys.windows(2).any(|w| w[0] == w[1]) {
+        return Err(ServiceError::Invalid("tomon nomlari takrorlanmasin"));
     }
     validate_parties(new.kind, &inputs)?;
     Ok(())
@@ -181,10 +221,11 @@ fn insert_content(
     ctx: &Ctx,
     pid: &str,
     new: &NewPartnership,
+    party_metas: &[Meta],
 ) -> Result<(), ServiceError> {
-    for p in &new.parties {
+    for (p, meta) in new.parties.iter().zip(party_metas) {
         let party = PartnershipParty {
-            meta: Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id),
+            meta: meta.clone(),
             partnership_id: pid.to_owned(),
             name: clean(&p.name, 60),
             role: p.role,
@@ -221,6 +262,131 @@ fn witnesses_of(new: &NewPartnership) -> Vec<String> {
         .collect()
 }
 
+fn loss_text(kind: PartnershipKind) -> &'static str {
+    match kind {
+        PartnershipKind::Mudaraba => {
+            "Moliyaviy zarar kapital egasi zimmasida; ishchi mehnatidan ayriladi. Beparvolik bundan mustasno."
+        }
+        PartnershipKind::Musharaka => "Zarar har bir tomon kiritgan kapitaliga mutanosib taqsimlanadi.",
+    }
+}
+
+/// Shartnoma hujjati (9 savol): tomonlar, hissalar, foyda, zarar, chiqish va muddat sheriklikdan olinadi;
+/// vazifalar, pul joyi va hakam — `details` dan. Yetishmasa savol «javobsiz» qoladi (imzolash bloklanadi).
+fn build_doc(new: &NewPartnership, party_ids: &[String], effective: Date) -> AgreementDoc {
+    let parties: Vec<Party> = new
+        .parties
+        .iter()
+        .zip(party_ids)
+        .map(|(p, id)| Party {
+            id: id.clone(),
+            name: clean(&p.name, 60),
+            role: role_text(p.role).to_owned(),
+            member_id: p.member_id.clone(),
+        })
+        .collect();
+    let contributions: Vec<Contribution> = new
+        .parties
+        .iter()
+        .zip(party_ids)
+        .flat_map(|(p, id)| {
+            if p.capital.is_empty() {
+                vec![Contribution {
+                    party_id: id.clone(),
+                    description: "Mehnat (ish)".into(),
+                    amount: None,
+                }]
+            } else {
+                p.capital
+                    .iter()
+                    .map(|c| Contribution {
+                        party_id: id.clone(),
+                        description: clean(&c.description, 80),
+                        amount: Some(c.value),
+                    })
+                    .collect()
+            }
+        })
+        .collect();
+    let owner_of = |name: &str| -> Option<String> {
+        let key = clean(name, 60).to_lowercase();
+        new.parties
+            .iter()
+            .zip(party_ids)
+            .find(|(p, _)| clean(&p.name, 60).to_lowercase() == key)
+            .map(|(_, id)| id.clone())
+    };
+    let duties: Vec<Duty> = new
+        .details
+        .duties
+        .iter()
+        .map(|d| Duty {
+            text: clean(&d.text, 300),
+            owner_party_id: owner_of(&d.owner_name),
+            if_not_done: clean(&d.if_not_done, 300),
+        })
+        .collect();
+    let custody_place = clean(&new.details.custody_place, 200);
+    let arbiter_name = clean(&new.details.arbiter_name, 60);
+    let shares: Vec<ProfitShare> = new
+        .parties
+        .iter()
+        .zip(party_ids)
+        .map(|(p, id)| ProfitShare {
+            party_id: id.clone(),
+            share_bp: p.share_bp,
+        })
+        .collect();
+    AgreementDoc {
+        agreement_type: AgreementType::Partnership,
+        effective_from: effective,
+        witnesses: witnesses_of(new),
+        questions: Questions {
+            parties: Answer::Answered(parties),
+            contributions: Answer::Answered(contributions),
+            duties: if duties.is_empty() {
+                Answer::Missing
+            } else {
+                Answer::Answered(duties)
+            },
+            profit: Answer::Answered(ProfitRule {
+                shares,
+                fixed_amount: None,
+            }),
+            loss: Answer::Answered(LossRule {
+                text: loss_text(new.kind).to_owned(),
+            }),
+            custody: if custody_place.is_empty() {
+                Answer::Missing
+            } else {
+                Answer::Answered(Custody {
+                    place: custody_place,
+                    keeper_device_id: None,
+                    review_every: new.report_period,
+                })
+            },
+            exit: Answer::Answered(ExitClause {
+                text: clean(&new.end_clause, 500),
+            }),
+            arbiter: if arbiter_name.is_empty() {
+                Answer::Missing
+            } else {
+                Answer::Answered(Arbiter {
+                    name: arbiter_name,
+                    party_id: None,
+                })
+            },
+            term: Answer::Answered(Term {
+                months: Some(new.term_months),
+                review_date: new
+                    .details
+                    .review_date
+                    .unwrap_or_else(|| add_months(effective, 12)),
+            }),
+        },
+    }
+}
+
 /// Shartnoma bilan birga sheriklikni yaratadi (1-versiya, qoralama).
 ///
 /// # Errors
@@ -244,9 +410,16 @@ pub fn create(
         version: 1,
         status: PartnershipStatus::Draft,
     };
+    let party_metas: Vec<Meta> = new
+        .parties
+        .iter()
+        .map(|_| Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id))
+        .collect();
+    let party_ids: Vec<String> = party_metas.iter().map(|m| m.id.clone()).collect();
+    let effective = local_date(env.clock.now());
     db.transaction::<(), ServiceError>(|tx| {
         repo::insert(tx, &p)?;
-        insert_content(tx, env, ctx, &p.meta.id, &new)?;
+        insert_content(tx, env, ctx, &p.meta.id, &new, &party_metas)?;
         repo::insert(
             tx,
             &PartnershipVersion {
@@ -254,6 +427,16 @@ pub fn create(
                 partnership_id: p.meta.id.clone(),
                 version: 1,
                 snapshot: snapshot(&new, 1),
+            },
+        )?;
+        agreements::create_in(
+            tx,
+            env,
+            ctx,
+            NewAgreement {
+                title: p.name.clone(),
+                subject: Some((SubjectKind::Partnership, p.meta.id.clone())),
+                doc: build_doc(&new, &party_ids, effective),
             },
         )?;
         Ok(())
@@ -314,6 +497,8 @@ pub fn revise(
         ));
     }
     validate(db.conn(), ctx, &new)?;
+    let agreement =
+        agreements::agreement_of_partnership(db.conn(), ctx, id)?.ok_or(ServiceError::NotFound)?;
     let old_parties = parties_of(db.conn(), ctx, id)?;
     let old_capital = capital_of(db.conn(), ctx, id)?;
     let now = env.clock.now();
@@ -326,6 +511,13 @@ pub fn revise(
     p.witnesses = witnesses_of(&new);
     p.version += 1;
     p.status = PartnershipStatus::Draft;
+    let party_metas: Vec<Meta> = new
+        .parties
+        .iter()
+        .map(|_| Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id))
+        .collect();
+    let party_ids: Vec<String> = party_metas.iter().map(|m| m.id.clone()).collect();
+    let effective = agreement.effective_from;
     db.transaction::<(), ServiceError>(|tx| {
         for c in &old_capital {
             repo::soft_delete::<PartnershipCapital>(tx, &c.meta.id, now)?;
@@ -334,7 +526,7 @@ pub fn revise(
             repo::soft_delete::<PartnershipParty>(tx, &o.meta.id, now)?;
         }
         repo::update(tx, &p, now)?;
-        insert_content(tx, env, ctx, id, &new)?;
+        insert_content(tx, env, ctx, id, &new, &party_metas)?;
         repo::insert(
             tx,
             &PartnershipVersion {
@@ -343,6 +535,14 @@ pub fn revise(
                 version: p.version,
                 snapshot: snapshot(&new, p.version),
             },
+        )?;
+        agreements::save_version_in(
+            tx,
+            env,
+            ctx,
+            &agreement.meta.id,
+            build_doc(&new, &party_ids, effective),
+            Some("Sheriklik shartlari o'zgartirildi"),
         )?;
         Ok(())
     })?;
@@ -383,19 +583,11 @@ pub struct PartnershipView {
     pub self_receives_capital: bool,
     pub consents: Vec<ConsentView>,
     pub versions: Vec<PartnershipVersion>,
-    /// Faollashtirishga to'sqinlik: `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` | `FAMILY_CONSENT` | `GATE_CLOSED`.
+    /// Faollashtirishga to'sqinlik: `INCOMPLETE_AGREEMENT` | `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` |
+    /// `ARBITER_SIGNATURE` | `FAMILY_CONSENT` | `GATE_CLOSED`.
     pub blocker: Option<&'static str>,
-}
-
-fn sigs_for(
-    conn: &Connection,
-    ctx: &Ctx,
-    p: &Partnership,
-) -> Result<Vec<PartnershipSignature>, ServiceError> {
-    Ok(repo::list::<PartnershipSignature>(conn, &ctx.household_id)?
-        .into_iter()
-        .filter(|s| s.partnership_id == p.meta.id && s.version == p.version)
-        .collect())
+    /// Shartnoma (kelishuv dvigateli): 9 savol holati, tasdiqlar va jurnal zanjiri.
+    pub agreement: Option<AgreementView>,
 }
 
 /// # Errors
@@ -407,7 +599,13 @@ pub fn view(
     id: &str,
 ) -> Result<PartnershipView, ServiceError> {
     let p = load(conn, ctx, id)?;
-    let sigs = sigs_for(conn, ctx, &p)?;
+    let agreement = match agreements::agreement_of_partnership(conn, ctx, id)? {
+        Some(a) => Some(agreements::view(conn, ctx, &a.meta.id)?),
+        None => None,
+    };
+    let sigs: Vec<AgreementSignature> = agreement
+        .as_ref()
+        .map_or_else(Vec::new, |a| a.signatures.clone());
     let caps = capital_of(conn, ctx, id)?;
     let parties = parties_of(conn, ctx, id)?
         .into_iter()
@@ -420,7 +618,7 @@ pub fn view(
             let capital_total = sum_money(ctx.currency, capital.iter().map(|c| c.value))?;
             let signed = sigs
                 .iter()
-                .any(|s| s.kind == SignatureKind::Party && s.signer == party.meta.id);
+                .any(|s| s.kind == AgreementSignKind::Party && s.signer_key == party.meta.id);
             Ok(PartyView {
                 party,
                 capital,
@@ -436,7 +634,7 @@ pub fn view(
             name: w.clone(),
             signed: sigs
                 .iter()
-                .any(|s| s.kind == SignatureKind::Witness && &s.signer == w),
+                .any(|s| s.kind == AgreementSignKind::Witness && &s.signer_key == w),
         })
         .collect();
     let total_capital = sum_money(ctx.currency, parties.iter().map(|x| x.capital_total))?;
@@ -452,9 +650,9 @@ pub fn view(
         members::adults(conn, ctx)?
             .into_iter()
             .map(|m| ConsentView {
-                consented: sigs
-                    .iter()
-                    .any(|s| s.kind == SignatureKind::FamilyConsent && s.signer == m.meta.id),
+                consented: sigs.iter().any(|s| {
+                    s.kind == AgreementSignKind::FamilyConsent && s.signer_key == m.meta.id
+                }),
                 member_id: m.meta.id,
                 name: m.display_name,
             })
@@ -468,10 +666,22 @@ pub fn view(
             .filter(|v| v.partnership_id == id)
             .collect();
     versions.sort_by_key(|v| v.version);
-    let blocker = if parties.iter().any(|x| !x.signed) {
+    let complete = agreement
+        .as_ref()
+        .is_some_and(|a| a.completeness.is_complete());
+    let arbiter_pending = agreement.as_ref().is_some_and(|a| {
+        a.missing_signatures
+            .iter()
+            .any(|m| m.kind == AgreementSignKind::Arbiter)
+    });
+    let blocker = if !complete {
+        Some("INCOMPLETE_AGREEMENT")
+    } else if parties.iter().any(|x| !x.signed) {
         Some("PARTY_SIGNATURES")
     } else if witnesses.iter().any(|w| !w.signed) {
         Some("WITNESS_SIGNATURES")
+    } else if arbiter_pending {
+        Some("ARBITER_SIGNATURE")
     } else if consents.iter().any(|c| !c.consented) {
         Some("FAMILY_CONSENT")
     } else if self_provides_capital && !guard::gate(conn, env, ctx)?.open {
@@ -489,6 +699,7 @@ pub fn view(
         consents,
         versions,
         blocker,
+        agreement,
     })
 }
 
@@ -517,35 +728,8 @@ pub enum Signer {
     Witness {
         name: String,
     },
-}
-
-fn add_signature(
-    db: &mut Database,
-    env: &Env<'_>,
-    ctx: &Ctx,
-    p: &Partnership,
-    kind: SignatureKind,
-    signer: &str,
-    name: &str,
-) -> Result<(), ServiceError> {
-    if sigs_for(db.conn(), ctx, p)?
-        .iter()
-        .any(|s| s.kind == kind && s.signer == signer)
-    {
-        return Ok(());
-    }
-    repo::insert(
-        db.conn(),
-        &PartnershipSignature {
-            meta: Meta::new(env.ids, env.clock, &ctx.household_id, env.device_id),
-            partnership_id: p.meta.id.clone(),
-            version: p.version,
-            kind,
-            signer: signer.to_owned(),
-            signer_name: name.to_owned(),
-        },
-    )?;
-    Ok(())
+    /// Hakam: hakamlikka roziligini imzo bilan bildiradi.
+    Arbiter,
 }
 
 /// Shartnomaning **joriy versiyasini** tasdiqlaydi.
@@ -563,33 +747,15 @@ pub fn sign(
     if p.status == PartnershipStatus::Ended {
         return Err(ServiceError::Invalid("sheriklik tugagan"));
     }
-    match signer {
-        Signer::Party { party_id, pin } => {
-            let party = parties_of(db.conn(), ctx, id)?
-                .into_iter()
-                .find(|x| x.meta.id == party_id)
-                .ok_or(ServiceError::NotFound)?;
-            if let Some(member) = &party.member_id {
-                let pin = pin.ok_or(ServiceError::NoPin)?;
-                members::verify(db, env, ctx, member, &pin)?;
-            }
-            add_signature(
-                db,
-                env,
-                ctx,
-                &p,
-                SignatureKind::Party,
-                &party.meta.id,
-                &party.name,
-            )
-        }
-        Signer::Witness { name } => {
-            if !p.witnesses.contains(&name) {
-                return Err(ServiceError::NotFound);
-            }
-            add_signature(db, env, ctx, &p, SignatureKind::Witness, &name, &name)
-        }
-    }
+    let agreement =
+        agreements::agreement_of_partnership(db.conn(), ctx, id)?.ok_or(ServiceError::NotFound)?;
+    let signer = match signer {
+        Signer::Party { party_id, pin } => AgreementSigner::Party { party_id, pin },
+        Signer::Witness { name } => AgreementSigner::Witness { name },
+        Signer::Arbiter => AgreementSigner::Arbiter,
+    };
+    agreements::sign(db, env, ctx, &agreement.meta.id, signer)?;
+    Ok(())
 }
 
 /// Kapital qabul qilinganda barcha kattalarning oilaviy roziligi (a'zoning o'z PIN'i bilan).
@@ -604,24 +770,20 @@ pub fn family_consent(
     member_id: &str,
     pin: &str,
 ) -> Result<(), ServiceError> {
-    let p = load(db.conn(), ctx, id)?;
-    let member = members::list(db.conn(), ctx)?
-        .into_iter()
-        .find(|m| m.meta.id == member_id)
-        .ok_or(ServiceError::NotFound)?;
-    if member.role != MemberRole::Adult {
-        return Err(ServiceError::Invalid("rozilikni faqat kattalar beradi"));
-    }
-    members::verify(db, env, ctx, member_id, pin)?;
-    add_signature(
+    load(db.conn(), ctx, id)?;
+    let agreement =
+        agreements::agreement_of_partnership(db.conn(), ctx, id)?.ok_or(ServiceError::NotFound)?;
+    agreements::sign(
         db,
         env,
         ctx,
-        &p,
-        SignatureKind::FamilyConsent,
-        member_id,
-        &member.display_name,
-    )
+        &agreement.meta.id,
+        AgreementSigner::FamilyConsent {
+            member_id: member_id.to_owned(),
+            pin: pin.to_owned(),
+        },
+    )?;
+    Ok(())
 }
 
 /// Sheriklikni faollashtiradi: barcha tomon va guvoh tasdiqlagan, oilaviy rozilik olingan va (kapital
@@ -643,15 +805,28 @@ pub fn activate(
     }
     if let Some(b) = v.blocker {
         return Err(ServiceError::Invalid(match b {
+            "INCOMPLETE_AGREEMENT" => {
+                "kelishuvning 9 savoli to'liq emas: barcha savollarga javob bering"
+            }
             "PARTY_SIGNATURES" => "barcha tomonlar shartnomaning joriy versiyasini tasdiqlashi kerak",
             "WITNESS_SIGNATURES" => "barcha guvohlar tasdiqlashi kerak",
+            "ARBITER_SIGNATURE" => "hakam kelishuvni tasdiqlashi kerak",
             "FAMILY_CONSENT" => "kapital qabul qilish uchun barcha kattalarning roziligi kerak",
             _ => "kapital kiritish uchun tayyorgarlik darvozasi ochiq bo'lishi kerak (qorovul pul va qarz rejasi)",
         }));
     }
+    let agreement_id = v
+        .agreement
+        .as_ref()
+        .map(|a| a.agreement.meta.id.clone())
+        .ok_or(ServiceError::NotFound)?;
     let mut p = v.partnership;
-    p.status = PartnershipStatus::Active;
-    repo::update(db.conn(), &p, env.clock.now())?;
+    db.transaction::<(), ServiceError>(|tx| {
+        agreements::activate_in(tx, env, ctx, &agreement_id)?;
+        p.status = PartnershipStatus::Active;
+        repo::update(tx, &p, env.clock.now())?;
+        Ok(())
+    })?;
     view(db.conn(), env, ctx, id)
 }
 
@@ -661,9 +836,16 @@ pub fn activate(
 /// Topilmasa.
 pub fn end(db: &mut Database, env: &Env<'_>, ctx: &Ctx, id: &str) -> Result<(), ServiceError> {
     let mut p = load(db.conn(), ctx, id)?;
-    p.status = PartnershipStatus::Ended;
-    repo::update(db.conn(), &p, env.clock.now())?;
-    Ok(())
+    db.transaction::<(), ServiceError>(|tx| {
+        p.status = PartnershipStatus::Ended;
+        repo::update(tx, &p, env.clock.now())?;
+        if let Some(a) = agreements::agreement_of_partnership(tx, ctx, id)? {
+            if a.status != AgreementStatus::Closed {
+                agreements::close_in(tx, env, ctx, &a.meta.id)?;
+            }
+        }
+        Ok(())
+    })
 }
 
 /// Foyda/zarar taqsimoti hisobi (tomonlar tartibida; zarar manfiy). Avtomatik davr yopilishi — D13.
@@ -877,11 +1059,14 @@ pub fn contract_pdf(
     }
     let v = view(conn, env, ctx, id)?;
     let fm = |m: Money| format_money(m, Locale::Uz);
-    let date_of = |signer: &str, kind: SignatureKind| -> Result<Option<String>, ServiceError> {
-        Ok(sigs_for(conn, ctx, &v.partnership)?
-            .into_iter()
-            .find(|s| s.kind == kind && s.signer == signer)
-            .map(|s| domain::date_to_string(local_date(s.meta.created_at)).unwrap_or_default()))
+    let sigs: Vec<AgreementSignature> = v
+        .agreement
+        .as_ref()
+        .map_or_else(Vec::new, |a| a.signatures.clone());
+    let date_of = |signer: &str, kind: AgreementSignKind| -> Option<String> {
+        sigs.iter()
+            .find(|s| s.kind == kind && s.signer_key == signer)
+            .map(|s| domain::date_to_string(local_date(s.meta.created_at)).unwrap_or_default())
     };
     let p = &v.partnership;
     let mut rules = vec![
@@ -930,7 +1115,7 @@ pub fn contract_pdf(
                         .iter()
                         .map(|c| format!("{} \u{2014} {}", c.description, fm(c.value)))
                         .collect(),
-                    signed_at: date_of(&x.party.meta.id, SignatureKind::Party)?,
+                    signed_at: date_of(&x.party.meta.id, AgreementSignKind::Party),
                 })
             })
             .collect::<Result<Vec<_>, ServiceError>>()?,
@@ -949,7 +1134,7 @@ pub fn contract_pdf(
         witnesses: p
             .witnesses
             .iter()
-            .map(|w| Ok((w.clone(), date_of(w, SignatureKind::Witness)?)))
+            .map(|w| Ok((w.clone(), date_of(w, AgreementSignKind::Witness))))
             .collect::<Result<Vec<_>, ServiceError>>()?,
         buyout,
         legal_note: "Shablon yurist va ulamo tasdig'idan o'tmagan: yuridik kuchi va islomiy muvofiqligi haqida va'da berilmaydi. Ilova pul o'tkazmaydi va sheriklarni topishtirmaydi.".to_owned(),

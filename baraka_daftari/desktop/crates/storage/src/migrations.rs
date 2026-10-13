@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 11;
+pub const SCHEMA_VERSION: usize = 12;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -505,6 +505,72 @@ CREATE UNIQUE INDEX uq_rescue_week ON savings_rescues (household_id, week_start)
   WHERE kind = 'HAVAS_DROP' AND deleted_at IS NULL;
 ";
 
+/// D8A (6-qonun): kelishuv dvigateli — kelishuvlar, o'zgarmas versiyalar, tasdiqlar va append-only jurnal (SPEC 2F).
+/// Jurnal va versiyalar UPDATE/DELETE bilan o'zgartirilmaydi: triggerlar `RAISE(ABORT)` qiladi.
+const V12: &str = "
+CREATE TABLE agreements (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  agreement_type TEXT NOT NULL CHECK (agreement_type IN ('PARTNERSHIP','LOAN','RENT','SERVICE','FAMILY','OTHER')),
+  title TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('DRAFT','SIGNED','ACTIVE','IN_DISPUTE','CLOSED')),
+  subject_kind TEXT NOT NULL CHECK (subject_kind IN ('PARTNERSHIP','DEBT','RECEIVABLE','NONE')),
+  subject_id TEXT,
+  current_version INTEGER NOT NULL CHECK (current_version >= 1),
+  effective_from TEXT NOT NULL,
+  keeper_device_id TEXT,
+  legacy INTEGER NOT NULL DEFAULT 0 CHECK (legacy IN (0,1))
+);
+CREATE UNIQUE INDEX uq_agreement_subject ON agreements (subject_kind, subject_id)
+  WHERE subject_id IS NOT NULL AND deleted_at IS NULL;
+CREATE TABLE agreement_versions (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  agreement_id TEXT NOT NULL REFERENCES agreements(id), version_no INTEGER NOT NULL CHECK (version_no >= 1),
+  content TEXT NOT NULL, content_hash TEXT NOT NULL CHECK (length(content_hash) = 64), change_note TEXT
+);
+CREATE UNIQUE INDEX uq_agreement_version ON agreement_versions (agreement_id, version_no);
+CREATE TRIGGER trg_agv_upd BEFORE UPDATE ON agreement_versions
+BEGIN SELECT RAISE(ABORT, 'agreement_version_immutable'); END;
+CREATE TRIGGER trg_agv_del BEFORE DELETE ON agreement_versions
+BEGIN SELECT RAISE(ABORT, 'agreement_version_immutable'); END;
+CREATE TABLE agreement_signatures (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  agreement_id TEXT NOT NULL REFERENCES agreements(id), version_no INTEGER NOT NULL CHECK (version_no >= 1),
+  kind TEXT NOT NULL CHECK (kind IN ('PARTY','WITNESS','ARBITER','FAMILY_CONSENT')),
+  signer_key TEXT NOT NULL, signer_name TEXT NOT NULL,
+  method TEXT NOT NULL CHECK (method IN ('IN_APP','FAMILY_PIN','PRINTED_SCAN'))
+);
+CREATE UNIQUE INDEX uq_agreement_signature ON agreement_signatures (agreement_id, version_no, kind, signer_key);
+CREATE TRIGGER trg_ags_upd BEFORE UPDATE ON agreement_signatures
+BEGIN SELECT RAISE(ABORT, 'agreement_signature_immutable'); END;
+CREATE TRIGGER trg_ags_del BEFORE DELETE ON agreement_signatures
+BEGIN SELECT RAISE(ABORT, 'agreement_signature_immutable'); END;
+CREATE TABLE journal_entries (
+  id TEXT PRIMARY KEY, household_id TEXT NOT NULL REFERENCES households(id), created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL, deleted_at TEXT, version INTEGER NOT NULL CHECK (version >= 1),
+  origin_device_id TEXT NOT NULL,
+  agreement_id TEXT NOT NULL REFERENCES agreements(id), seq INTEGER NOT NULL CHECK (seq >= 1),
+  kind TEXT NOT NULL CHECK (kind IN ('OPENING_BALANCE','CONTRIBUTION','VENTURE_INCOME','VENTURE_EXPENSE',
+    'PROFIT_DISTRIBUTION','LOSS_SHARE','BUYOUT_PAYMENT','PAYMENT','PERIOD_CLOSED','CORRECTION')),
+  party_id TEXT,
+  amount_minor INTEGER, amount_currency TEXT CHECK (amount_currency IN ('UZS','USD','EUR','RUB')),
+  entry_date TEXT NOT NULL, note TEXT NOT NULL CHECK (length(trim(note)) > 0),
+  reference TEXT, corrects TEXT REFERENCES journal_entries(id),
+  prev_hash TEXT NOT NULL CHECK (length(prev_hash) = 64), hash TEXT NOT NULL CHECK (length(hash) = 64),
+  CHECK ((amount_minor IS NULL) = (amount_currency IS NULL))
+);
+CREATE UNIQUE INDEX uq_journal_seq ON journal_entries (agreement_id, seq);
+CREATE TRIGGER trg_journal_upd BEFORE UPDATE ON journal_entries
+BEGIN SELECT RAISE(ABORT, 'journal_append_only'); END;
+CREATE TRIGGER trg_journal_del BEFORE DELETE ON journal_entries
+BEGIN SELECT RAISE(ABORT, 'journal_append_only'); END;
+";
+
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
@@ -520,6 +586,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V9),
         M::up(V10),
         M::up(V11),
+        M::up(V12),
     ])
 }
 
@@ -556,7 +623,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(tables.len(), 51);
+        assert_eq!(tables.len(), 55);
         for t in tables {
             let cols: Vec<String> = conn
                 .prepare(&format!("PRAGMA table_info({t})"))
@@ -642,5 +709,36 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM vault_transactions", [], |r| r.get(0))
             .unwrap();
         assert_eq!(n, 1);
+    }
+    /// v11 → v12: kelishuv jadvallari qo'shiladi, mavjud sheriklik ma'lumoti o'zgarmaydi (D8A).
+    /// Eski sheriklik keyinroq `agreements` ga ko'chiriladi (services qatlamida, idempotent).
+    #[test]
+    fn v11_to_v12_keeps_partnership_data_and_adds_agreement_tables() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        migrations().to_version(&mut conn, 11).unwrap();
+        conn.execute_batch(
+            "INSERT INTO households VALUES ('h','h','t','t',NULL,1,'d','Oila','UZS');
+             INSERT INTO partnerships (id, household_id, created_at, updated_at, deleted_at, version,
+               origin_device_id, name, kind, term_months, report_period, end_clause, dispute_clause,
+               witnesses, contract_version, status)
+             VALUES ('p','h','t','t',NULL,1,'d','Yetkazib berish','MUSHARAKA',12,'MONTHLY','tugash',
+               'nizo','',1,'ACTIVE');",
+        )
+        .unwrap();
+        migrations().to_latest(&mut conn).unwrap();
+        let name: String = conn
+            .query_row("SELECT name FROM partnerships WHERE id='p'", [], |r| {
+                r.get(0)
+            })
+            .unwrap();
+        assert_eq!(name, "Yetkazib berish");
+        let agreements: i64 = conn
+            .query_row("SELECT COUNT(*) FROM agreements", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(agreements, 0);
+        let journal: i64 = conn
+            .query_row("SELECT COUNT(*) FROM journal_entries", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(journal, 0);
     }
 }

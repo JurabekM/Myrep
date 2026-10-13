@@ -6,8 +6,10 @@ use domain::{
 use money::{parse_amount, Locale, Money};
 use serde::{Deserialize, Serialize};
 use services::{
+    agreements::AgreementView,
     partnerships::{
-        self, BuyoutView, NewCapital, NewPartnership, NewParty, PartnershipView, Signer,
+        self, BuyoutView, DutyInput, NewCapital, NewPartnership, NewParty, PartnershipDetails,
+        PartnershipView, Signer,
     },
     Ctx, Env, ServiceError,
 };
@@ -79,6 +81,25 @@ pub struct PartnershipInput {
     pub dispute_clause: String,
     pub witnesses: Vec<String>,
     pub parties: Vec<PartyInputDto>,
+    /// 3-savol: vazifalar; har birida mas'ul tomon (ismi) va «bajarilmasa» bandi.
+    #[serde(default)]
+    pub duties: Vec<DutyInputDto>,
+    /// 6-savol: pul qayerda turadi.
+    #[serde(default)]
+    pub custody_place: String,
+    /// 8-savol: hakam ismi (tomonlardan biri bo'lmasin).
+    #[serde(default)]
+    pub arbiter_name: String,
+    /// 9-savol: yangilash sanasi (`YYYY-MM-DD`); bo'sh bo'lsa boshlanishdan bir yil keyin.
+    #[serde(default)]
+    pub review_date: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Type)]
+pub struct DutyInputDto {
+    pub text: String,
+    pub owner_name: String,
+    pub if_not_done: String,
 }
 
 fn parse_input(ctx: &Ctx, i: PartnershipInput) -> Result<NewPartnership, ServiceError> {
@@ -114,6 +135,26 @@ fn parse_input(ctx: &Ctx, i: PartnershipInput) -> Result<NewPartnership, Service
             })
         })
         .collect::<Result<Vec<_>, ServiceError>>()?;
+    let review_date = i
+        .review_date
+        .filter(|t| !t.trim().is_empty())
+        .map(|t| date_from_str(t.trim()))
+        .transpose()
+        .map_err(|_| ServiceError::Invalid("yangilash sanasi YYYY-MM-DD ko'rinishida bo'lsin"))?;
+    let details = PartnershipDetails {
+        duties: i
+            .duties
+            .into_iter()
+            .map(|d| DutyInput {
+                text: d.text,
+                owner_name: d.owner_name,
+                if_not_done: d.if_not_done,
+            })
+            .collect(),
+        custody_place: i.custody_place,
+        arbiter_name: i.arbiter_name,
+        review_date,
+    };
     Ok(NewPartnership {
         name: i.name,
         kind,
@@ -123,6 +164,7 @@ fn parse_input(ctx: &Ctx, i: PartnershipInput) -> Result<NewPartnership, Service
         dispute_clause: i.dispute_clause,
         witnesses: i.witnesses,
         parties,
+        details,
     })
 }
 
@@ -219,6 +261,77 @@ fn buyout_dto(b: &BuyoutView) -> BuyoutDto {
     }
 }
 
+/// Kelishuv holati (6-qonun): 9 savol, xatolar, kutilayotgan tasdiqlar va jurnal zanjiri.
+#[derive(Debug, Serialize, Type)]
+pub struct AgreementStatusDto {
+    pub id: String,
+    /// `DRAFT` | `SIGNED` | `ACTIVE` | `IN_DISPUTE` | `CLOSED`.
+    pub status: String,
+    pub current_version: u32,
+    /// Eski ma'lumotdan ko'chirilgan: 9 savolli yangi versiya kerak.
+    pub legacy: bool,
+    /// Javobsiz savollar (1–9).
+    pub missing_questions: Vec<u8>,
+    pub errors: Vec<AgreementIssueDto>,
+    pub warnings: Vec<AgreementIssueDto>,
+    pub missing_signatures: Vec<SignatureNeedDto>,
+    pub journal_length: u32,
+    /// Jurnal zanjiri buzilmagan.
+    pub journal_intact: bool,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct AgreementIssueDto {
+    pub question: u8,
+    pub code: String,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct SignatureNeedDto {
+    /// `PARTY` | `WITNESS` | `ARBITER` | `FAMILY_CONSENT`.
+    pub kind: String,
+    pub key: String,
+    pub name: String,
+}
+
+fn agreement_dto(a: &AgreementView) -> AgreementStatusDto {
+    AgreementStatusDto {
+        id: a.agreement.meta.id.clone(),
+        status: a.agreement.status.as_str().to_owned(),
+        current_version: a.agreement.current_version,
+        legacy: a.agreement.legacy,
+        missing_questions: a.completeness.missing.clone(),
+        errors: a
+            .completeness
+            .errors
+            .iter()
+            .map(|i| AgreementIssueDto {
+                question: i.question,
+                code: i.code.to_owned(),
+            })
+            .collect(),
+        warnings: a
+            .warnings
+            .iter()
+            .map(|w| AgreementIssueDto {
+                question: w.question,
+                code: w.code.to_owned(),
+            })
+            .collect(),
+        missing_signatures: a
+            .missing_signatures
+            .iter()
+            .map(|r| SignatureNeedDto {
+                kind: r.kind.as_str().to_owned(),
+                key: r.key.clone(),
+                name: r.name.clone(),
+            })
+            .collect(),
+        journal_length: u32::try_from(a.chain.length).unwrap_or(u32::MAX),
+        journal_intact: a.chain.broken_seq.is_none(),
+    }
+}
+
 #[derive(Debug, Serialize, Type)]
 pub struct PartnershipDto {
     pub id: String,
@@ -238,9 +351,12 @@ pub struct PartnershipDto {
     pub self_receives_capital: bool,
     pub consents: Vec<ConsentDto>,
     pub versions: Vec<VersionDto>,
-    /// `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` | `FAMILY_CONSENT` | `GATE_CLOSED`.
+    /// `INCOMPLETE_AGREEMENT` | `PARTY_SIGNATURES` | `WITNESS_SIGNATURES` | `ARBITER_SIGNATURE` |
+    /// `FAMILY_CONSENT` | `GATE_CLOSED`.
     pub blocker: Option<String>,
     pub buyout: Option<BuyoutDto>,
+    /// Kelishuv (shartnoma dvigateli) holati.
+    pub agreement: Option<AgreementStatusDto>,
 }
 
 fn dto(v: &PartnershipView, buyout: Option<&BuyoutView>) -> PartnershipDto {
@@ -308,6 +424,7 @@ fn dto(v: &PartnershipView, buyout: Option<&BuyoutView>) -> PartnershipDto {
             .collect(),
         blocker: v.blocker.map(str::to_owned),
         buyout: buyout.map(buyout_dto),
+        agreement: v.agreement.as_ref().map(agreement_dto),
     }
 }
 
@@ -374,14 +491,16 @@ pub fn sign_partnership(
     id: String,
     party_id: Option<String>,
     witness: Option<String>,
+    arbiter: Option<bool>,
     pin: Option<String>,
     state: State<'_, AppSession>,
 ) -> Result<(), CommandError> {
     with_session(&state, |s| {
         s.run(|db, env, ctx| {
-            let signer = match (party_id, witness) {
-                (Some(party_id), None) => Signer::Party { party_id, pin },
-                (None, Some(name)) => Signer::Witness { name },
+            let signer = match (party_id, witness, arbiter.unwrap_or(false)) {
+                (Some(party_id), None, false) => Signer::Party { party_id, pin },
+                (None, Some(name), false) => Signer::Witness { name },
+                (None, None, true) => Signer::Arbiter,
                 _ => return Err(ServiceError::Invalid("kim tasdiqlayotganini ko'rsating")),
             };
             partnerships::sign(db, env, ctx, &id, signer)

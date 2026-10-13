@@ -84,8 +84,27 @@ fn party(name: &str, role: PartyRole, share: u32, cap: i64, member: Option<&str>
     }
 }
 
+/// 3, 6, 8-savollar (test uchun): vazifa (mas'ul — `owner`), pul joyi va hakam.
+fn details(owner: &str) -> services::partnerships::PartnershipDetails {
+    services::partnerships::PartnershipDetails {
+        duties: vec![services::partnerships::DutyInput {
+            text: "Yetkazib berish va hisobot".into(),
+            owner_name: owner.into(),
+            if_not_done: "1 kun ichida xabar beradi va o'rnini topadi".into(),
+        }],
+        custody_place: "Kelishilgan hisob".into(),
+        arbiter_name: "Usta Olim".into(),
+        review_date: None,
+    }
+}
+
 fn mudaraba(name: &str, parties: Vec<NewParty>) -> NewPartnership {
+    let owner = parties
+        .iter()
+        .find(|p| p.role == PartyRole::Worker)
+        .map_or_else(String::new, |p| p.name.clone());
     NewPartnership {
+        details: details(&owner),
         name: name.into(),
         kind: PartnershipKind::Mudaraba,
         term_months: 12,
@@ -115,6 +134,18 @@ impl World {
             )
             .unwrap();
         }
+        for w in &v.witnesses {
+            let name = w.name.clone();
+            partnerships::sign(
+                &mut self.db,
+                &env!(self),
+                &self.ctx,
+                id,
+                Signer::Witness { name },
+            )
+            .unwrap();
+        }
+        partnerships::sign(&mut self.db, &env!(self), &self.ctx, id, Signer::Arbiter).unwrap();
         if v.self_receives_capital {
             partnerships::family_consent(&mut self.db, &env!(self), &self.ctx, id, &me, PIN)
                 .unwrap();

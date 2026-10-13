@@ -7,6 +7,7 @@ mod error;
 
 pub use pdf::{templates_releasable, TEMPLATES_APPROVED};
 
+pub mod agreements;
 pub mod audit;
 pub mod categories;
 pub mod ceremonies;
@@ -24,6 +25,7 @@ pub mod havas;
 pub mod home;
 pub mod income;
 pub mod interchange;
+pub mod journal;
 pub mod learning;
 pub mod members;
 pub mod obligations;

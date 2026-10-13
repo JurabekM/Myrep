@@ -50,7 +50,7 @@ pub struct ExchangeStatusDto {
 pub struct ConflictDto {
     pub table: String,
     pub id: String,
-    /// `DIVERGED` | `CLOSED_PERIOD` | `SIGNED_CONTRACT` | `REJECTED`.
+    /// `DIVERGED` | `CLOSED_PERIOD` | `SIGNED_CONTRACT` | `JOURNAL` | `REJECTED`.
     pub kind: String,
     /// `KEPT_LOCAL` | `TOOK_INCOMING` | `SKIPPED`.
     pub resolution: String,
@@ -86,6 +86,7 @@ fn report_dto(r: &ImportReport) -> ImportReportDto {
                     K::Diverged => "DIVERGED",
                     K::ClosedPeriod => "CLOSED_PERIOD",
                     K::SignedContract => "SIGNED_CONTRACT",
+                    K::Journal => "JOURNAL",
                     K::Rejected => "REJECTED",
                 }
                 .into(),

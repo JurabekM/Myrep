@@ -164,3 +164,8 @@ str_enum!(
     /// Kelishuv qaysi domen obyektiga bog'langan (sheriklik, qarz yoki berilgan qarz).
     SubjectKind { Partnership => "PARTNERSHIP", Debt => "DEBT", Receivable => "RECEIVABLE", Unlinked => "NONE" }
 );
+
+str_enum!(
+    /// Imzo usuli: ilovada chizilgan, oilaviy PIN bilan tasdiq yoki chop etilgan va skan qilingan (SPEC 2F.3).
+    SignMethod { InApp => "IN_APP", FamilyPin => "FAMILY_PIN", PrintedScan => "PRINTED_SCAN" }
+);

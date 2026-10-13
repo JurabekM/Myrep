@@ -850,6 +850,9 @@
     "pinFor": "{{name}}: PIN",
     "signPin": "PIN bilan tasdiqlash",
     "signManual": "{{name}} tasdiqladi",
+    "signArbiter": "Hakam sifatida tasdiqlash",
+    "arbiterIs": "Hakam: {{name}}",
+    "questionsDone": "Kelishuv: {{done}}/{{total}} savolga javob berilgan",
     "witnessIs": "Guvoh: {{name}}",
     "consentTitle": "Oilaviy rozilik",
     "consentHint": "Kapital qabul qilinmoqda: barcha kattalar o'z PIN'i bilan rozilik berishi kerak.",
@@ -861,7 +864,9 @@
       "PARTY_SIGNATURES": "Barcha tomonlar joriy versiyani tasdiqlashi kerak.",
       "WITNESS_SIGNATURES": "Barcha guvohlar tasdiqlashi kerak.",
       "FAMILY_CONSENT": "Barcha kattalarning oilaviy roziligi kerak.",
-      "GATE_CLOSED": "Kapital kiritish tayyorgarlik darvozasiga bo'ysunadi: ≥ 6 oylik qorovul pul va qarz rejasi kerak."
+      "GATE_CLOSED": "Kapital kiritish tayyorgarlik darvozasiga bo'ysunadi: ≥ 6 oylik qorovul pul va qarz rejasi kerak.",
+      "INCOMPLETE_AGREEMENT": "Kelishuvning 9 savoli to'liq emas: tahrirlab, barcha savollarga javob bering.",
+      "ARBITER_SIGNATURE": "Hakam kelishuvni tasdiqlashi kerak."
     },
     "revise": "Shartnomani o'zgartirish",
     "pdf": "Shartnoma PDF",
@@ -1012,6 +1017,7 @@
       "DIVERGED": "Ikki qurilmada turlicha tahrir",
       "CLOSED_PERIOD": "Yopilgan davr o'zgartirilmadi",
       "SIGNED_CONTRACT": "Imzolangan shartnoma o'zgartirilmadi",
+      "JOURNAL": "Kelishuv jurnali yozuvi o'zgartirilmadi",
       "REJECTED": "Bazaga sig'madi, o'tkazib yuborildi"
     },
     "resolutions": {

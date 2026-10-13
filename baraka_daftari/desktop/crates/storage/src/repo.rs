@@ -3,12 +3,14 @@
 //! Jadval va ustun nomlari faqat shu faylda, doimiylardan olinadi (SQL injection yo'q).
 
 use domain::{
-    date_to_string, ts_to_string, AllocationKind, AllocationRule, Asset, AssetSnapshot, AssetType,
-    BillingPeriod, Category, ChapterProgress, DaftarPage, Envelope, EnvelopePeriod, Expense,
-    FxRateRecord, GateBypass, HavasLimit, Household, Income, IncomeSourceType, LimitConsent,
-    Member, MemberCredential, MemberRole, Meta, MoneyOwner, Necessity, NecessityChange, Obligation,
-    ObligationKind, OffsetDateTime, PaymentChannel, PriceItem, PricePoint, RescueKind,
-    SavingsRescue, ScheduledTreat, Setting, Subscription, TaskCompletion, VaultSource,
+    date_to_string, ts_to_string, Agreement, AgreementSignKind, AgreementSignature,
+    AgreementStatus, AgreementType, AgreementVersion, AllocationKind, AllocationRule, Asset,
+    AssetSnapshot, AssetType, BillingPeriod, Category, ChapterProgress, DaftarPage, Envelope,
+    EnvelopePeriod, Expense, FxRateRecord, GateBypass, HavasLimit, Household, Income,
+    IncomeSourceType, JournalEntry, JournalKind, LimitConsent, Member, MemberCredential,
+    MemberRole, Meta, MoneyOwner, Necessity, NecessityChange, Obligation, ObligationKind,
+    OffsetDateTime, PaymentChannel, PriceItem, PricePoint, RescueKind, SavingsRescue,
+    ScheduledTreat, Setting, SignMethod, SubjectKind, Subscription, TaskCompletion, VaultSource,
     VaultTransaction, VaultTxKind, VaultType, WithdrawalRequest, WithdrawalStatus,
 };
 use money::Money;
@@ -1859,6 +1861,186 @@ impl Record for CraftCapex {
             idea_id: r.get(7)?,
             item: r.get(8)?,
             price: row::money(r, 9, 10)?,
+        })
+    }
+}
+
+fn opt_money_vals(m: Option<money::Money>) -> [Value; 2] {
+    match m {
+        Some(m) => [Value::Integer(m.minor()), t(m.currency().code())],
+        None => [Value::Null, Value::Null],
+    }
+}
+
+impl Record for Agreement {
+    const TABLE: &'static str = "agreements";
+    const COLS: &'static [&'static str] = &[
+        "agreement_type",
+        "title",
+        "status",
+        "subject_kind",
+        "subject_id",
+        "current_version",
+        "effective_from",
+        "keeper_device_id",
+        "legacy",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(self.agreement_type.as_str()),
+            t(&self.title),
+            t(self.status.as_str()),
+            t(self.subject_kind.as_str()),
+            opt_text(self.subject_id.as_deref()),
+            Value::Integer(i64::from(self.current_version)),
+            date_val(self.effective_from)?,
+            opt_text(self.keeper_device_id.as_deref()),
+            Value::Integer(i64::from(self.legacy)),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            agreement_type: row::parsed(r, 7, AgreementType::parse)?,
+            title: r.get(8)?,
+            status: row::parsed(r, 9, AgreementStatus::parse)?,
+            subject_kind: row::parsed(r, 10, SubjectKind::parse)?,
+            subject_id: r.get(11)?,
+            current_version: r.get(12)?,
+            effective_from: row::date(r, 13)?,
+            keeper_device_id: r.get(14)?,
+            legacy: r.get::<_, i64>(15)? != 0,
+        })
+    }
+}
+
+impl Record for AgreementVersion {
+    const TABLE: &'static str = "agreement_versions";
+    const COLS: &'static [&'static str] = &[
+        "agreement_id",
+        "version_no",
+        "content",
+        "content_hash",
+        "change_note",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.agreement_id),
+            Value::Integer(i64::from(self.version_no)),
+            t(&self.content),
+            t(&self.content_hash),
+            opt_text(self.change_note.as_deref()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            agreement_id: r.get(7)?,
+            version_no: r.get(8)?,
+            content: r.get(9)?,
+            content_hash: r.get(10)?,
+            change_note: r.get(11)?,
+        })
+    }
+}
+
+impl Record for AgreementSignature {
+    const TABLE: &'static str = "agreement_signatures";
+    const COLS: &'static [&'static str] = &[
+        "agreement_id",
+        "version_no",
+        "kind",
+        "signer_key",
+        "signer_name",
+        "method",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        Ok(vec![
+            t(&self.agreement_id),
+            Value::Integer(i64::from(self.version_no)),
+            t(self.kind.as_str()),
+            t(&self.signer_key),
+            t(&self.signer_name),
+            t(self.method.as_str()),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            meta: row::meta(r)?,
+            agreement_id: r.get(7)?,
+            version_no: r.get(8)?,
+            kind: row::parsed(r, 9, AgreementSignKind::parse)?,
+            signer_key: r.get(10)?,
+            signer_name: r.get(11)?,
+            method: row::parsed(r, 12, SignMethod::parse)?,
+        })
+    }
+}
+
+impl Record for JournalEntry {
+    const TABLE: &'static str = "journal_entries";
+    const COLS: &'static [&'static str] = &[
+        "agreement_id",
+        "seq",
+        "kind",
+        "party_id",
+        "amount_minor",
+        "amount_currency",
+        "entry_date",
+        "note",
+        "reference",
+        "corrects",
+        "prev_hash",
+        "hash",
+    ];
+    fn meta(&self) -> &Meta {
+        &self.meta
+    }
+    fn values(&self) -> Result<Vec<Value>, StorageError> {
+        let [minor, currency] = opt_money_vals(self.amount);
+        Ok(vec![
+            t(&self.agreement_id),
+            Value::Integer(i64::from(self.seq)),
+            t(self.kind.as_str()),
+            opt_text(self.party_id.as_deref()),
+            minor,
+            currency,
+            date_val(self.entry_date)?,
+            t(&self.note),
+            opt_text(self.reference.as_deref()),
+            opt_text(self.corrects.as_deref()),
+            t(&self.prev_hash),
+            t(&self.hash),
+        ])
+    }
+    fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
+        let minor: Option<i64> = r.get(11)?;
+        let amount = match (minor, row::opt_currency(r, 12)?) {
+            (Some(m), Some(c)) => Some(Money::new(m, c)),
+            _ => None,
+        };
+        Ok(Self {
+            meta: row::meta(r)?,
+            agreement_id: r.get(7)?,
+            seq: r.get(8)?,
+            kind: row::parsed(r, 9, JournalKind::parse)?,
+            party_id: r.get(10)?,
+            amount,
+            entry_date: row::date(r, 13)?,
+            note: r.get(14)?,
+            reference: r.get(15)?,
+            corrects: r.get(16)?,
+            prev_hash: r.get(17)?,
+            hash: r.get(18)?,
         })
     }
 }

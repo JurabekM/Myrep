@@ -60,6 +60,20 @@ fn uzs(v: i64) -> Money {
     Money::new(v, Currency::Uzs)
 }
 
+/// 3, 6, 8-savollar (test uchun): vazifa (mas'ul — `owner`), pul joyi va hakam.
+fn details(owner: &str) -> services::partnerships::PartnershipDetails {
+    services::partnerships::PartnershipDetails {
+        duties: vec![services::partnerships::DutyInput {
+            text: "Yetkazib berish va hisobot".into(),
+            owner_name: owner.into(),
+            if_not_done: "1 kun ichida xabar beradi va o'rnini topadi".into(),
+        }],
+        custody_place: "Kelishilgan hisob".into(),
+        arbiter_name: "Usta Olim".into(),
+        review_date: None,
+    }
+}
+
 impl World {
     /// `seed` — ensure_household (standart toifalar va hokazo) bilan.
     fn new(device: &'static str, id_base: u64, seed: bool) -> Self {
@@ -120,6 +134,7 @@ impl World {
             &env!(self),
             &ctx,
             NewPartnership {
+                details: details("Zamira"),
                 name: "Ustaxona".into(),
                 kind: PartnershipKind::Mudaraba,
                 term_months: 12,
@@ -159,6 +174,18 @@ impl World {
             )
             .unwrap();
         }
+        for wv in &v.witnesses {
+            let name = wv.name.clone();
+            partnerships::sign(
+                &mut self.db,
+                &env!(self),
+                &ctx,
+                &pid,
+                Signer::Witness { name },
+            )
+            .unwrap();
+        }
+        partnerships::sign(&mut self.db, &env!(self), &ctx, &pid, Signer::Arbiter).unwrap();
         partnerships::family_consent(&mut self.db, &env!(self), &ctx, &pid, &me, "111111").unwrap();
         partnerships::activate(&mut self.db, &env!(self), &ctx, &pid).unwrap();
 
@@ -545,10 +572,11 @@ fn incremental_export_contains_only_changes_after_the_last_export() {
     a.entry(&pid, LedgerKind::Expense, "Ip", 50_000, "2026-11-03");
     let inc = parse(&a.export(true));
     assert!(inc.since.is_some());
+    // Bitta xarajat: venture yozuvi va uning kelishuv jurnali yozuvi (D8A) — ikki qator.
     let rows: usize = inc.tables.iter().map(|t| t.rows.len()).sum();
     assert_eq!(
         rows,
-        1,
+        2,
         "{:?}",
         inc.tables
             .iter()
@@ -567,7 +595,8 @@ fn incremental_export_contains_only_changes_after_the_last_export() {
     .unwrap();
     b.ctx = Some(a.ctx());
     let r = b.import(&a.export(true));
-    assert_eq!(r.inserted, 1, "{r:?}");
+    // Yangi venture yozuvi va uning jurnal yozuvi (D8A).
+    assert_eq!(r.inserted, 2, "{r:?}");
     assert_eq!(a.dump(), b.dump());
 }
 

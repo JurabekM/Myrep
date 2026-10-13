@@ -6,16 +6,17 @@
 //! - **Yopilgan davr o'zgarmaydi**: xizmat qatlamida ham, bazada triggerlar bilan ham.
 //! - Kapital egasi (xonadonda faqat shunday tomon bo'lsa) ledgerni faqat o'qiydi.
 use domain::{
-    net_result, settle_period, BuyoutDue, BuyoutPayment, Date, IncomeSourceType, LedgerKind, Meta,
-    PartnershipStatus, PartyInput, PartyRole, PaymentChannel, PeriodStatus, VentureAttachment,
-    VentureDistribution, VentureEntry, VenturePeriod,
+    net_result, settle_period, Agreement, BuyoutDue, BuyoutPayment, Date, IncomeSourceType,
+    JournalEntry, JournalKind, LedgerKind, Meta, PartnershipStatus, PartyInput, PartyRole,
+    PaymentChannel, PeriodStatus, VentureAttachment, VentureDistribution, VentureEntry,
+    VenturePeriod,
 };
 use money::{format_money, Locale, Money};
 use storage::Connection;
 use storage::{repo, Database};
 
 use crate::{
-    income, local_date,
+    agreements, income, journal, local_date,
     partnerships::{self, PartnershipView},
     sum_money, Ctx, Env, ServiceError,
 };
@@ -282,8 +283,46 @@ pub fn add_entry(
             .map(|n| n.chars().take(300).collect()),
         force_majeure,
     };
-    repo::insert(db.conn(), &e)?;
+    let agreement = agreement_of(db.conn(), ctx, pid)?;
+    let note = if force_majeure {
+        format!("{} (fors-major)", e.description)
+    } else {
+        e.description.clone()
+    };
+    db.transaction::<(), ServiceError>(|tx| {
+        repo::insert(tx, &e)?;
+        journal::append(
+            tx,
+            env,
+            ctx,
+            &agreement,
+            journal::NewEntry {
+                kind: match e.kind {
+                    LedgerKind::Income => JournalKind::VentureIncome,
+                    LedgerKind::Expense => JournalKind::VentureExpense,
+                },
+                party_id: None,
+                amount: Some(e.amount),
+                date: e.occurred_on,
+                note: &note,
+                reference: Some(e.meta.id.as_str()),
+                corrects: None,
+            },
+        )?;
+        Ok(())
+    })?;
     Ok(e)
+}
+
+/// Sheriklikning kelishuvi (jurnal shu yerda yuritiladi).
+fn agreement_of(
+    conn: &storage::Connection,
+    ctx: &Ctx,
+    pid: &str,
+) -> Result<Agreement, ServiceError> {
+    agreements::agreement_of_partnership(conn, ctx, pid)?.ok_or(ServiceError::Invalid(
+        "sheriklik kelishuvi topilmadi: sheriklikni qayta saqlang",
+    ))
 }
 
 fn load_entry(
@@ -314,8 +353,80 @@ pub fn remove_entry(
         return Err(ServiceError::Invalid(CLOSED_MSG));
     }
     require_writable(&partnerships::view(db.conn(), env, ctx, &e.partnership_id)?)?;
-    repo::soft_delete::<VentureEntry>(db.conn(), entry_id, env.clock.now())?;
+    let agreement = agreement_of(db.conn(), ctx, &e.partnership_id)?;
+    let original = original_journal(db.conn(), ctx, &agreement, entry_id)?;
+    let now = env.clock.now();
+    db.transaction::<(), ServiceError>(|tx| {
+        repo::soft_delete::<VentureEntry>(tx, entry_id, now)?;
+        journal::append(
+            tx,
+            env,
+            ctx,
+            &agreement,
+            journal::NewEntry {
+                kind: JournalKind::Correction,
+                party_id: None,
+                amount: original.amount,
+                date: local_date(now),
+                note: "Yozuv bekor qilindi (tuzatish)",
+                reference: Some(entry_id),
+                corrects: Some(original.meta.id.as_str()),
+            },
+        )?;
+        Ok(())
+    })?;
     Ok(())
+}
+
+/// Venture yozuvining asl jurnal yozuvi (tuzatish emas).
+fn original_journal(
+    conn: &storage::Connection,
+    ctx: &Ctx,
+    agreement: &Agreement,
+    entry_id: &str,
+) -> Result<JournalEntry, ServiceError> {
+    journal::entries(conn, ctx, &agreement.meta.id)?
+        .into_iter()
+        .find(|j| j.reference.as_deref() == Some(entry_id) && j.corrects.is_none())
+        .ok_or(ServiceError::NotFound)
+}
+
+/// Yopilgan davrdagi yozuvga tuzatish (SPEC 2F.6, OPEN_QUESTIONS 89): asl yozuv va davr o'zgarmaydi,
+/// jurnalga `CORRECTION` qo'shiladi. Izoh majburiy.
+///
+/// # Errors
+/// Yozuv topilmasa, izoh bo'sh bo'lsa yoki kelishuv jurnali topilmasa.
+pub fn correct_entry(
+    db: &mut Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    entry_id: &str,
+    note: &str,
+) -> Result<JournalEntry, ServiceError> {
+    let note = note.split_whitespace().collect::<Vec<_>>().join(" ");
+    if note.is_empty() {
+        return Err(ServiceError::Invalid("tuzatish izohini yozing"));
+    }
+    let (e, _) = load_entry(db.conn(), ctx, entry_id)?;
+    let agreement = agreement_of(db.conn(), ctx, &e.partnership_id)?;
+    let original = original_journal(db.conn(), ctx, &agreement, entry_id)?;
+    db.transaction::<JournalEntry, ServiceError>(|tx| {
+        journal::append(
+            tx,
+            env,
+            ctx,
+            &agreement,
+            journal::NewEntry {
+                kind: JournalKind::Correction,
+                party_id: None,
+                amount: original.amount,
+                date: local_date(env.clock.now()),
+                note: &note,
+                reference: Some(entry_id),
+                corrects: Some(original.meta.id.as_str()),
+            },
+        )
+    })
 }
 
 fn sniff(data: &[u8]) -> Option<&'static str> {
@@ -431,6 +542,12 @@ pub fn close_period(
 ) -> Result<PeriodView, ServiceError> {
     let pv = partnerships::view(db.conn(), env, ctx, pid)?;
     require_writable(&pv)?;
+    let agreement = agreement_of(db.conn(), ctx, pid)?;
+    if !agreements::is_fully_signed(db.conn(), ctx, &agreement.meta.id)? {
+        return Err(ServiceError::Invalid(
+            "davrni yopish uchun kelishuvning joriy versiyasi 9/9 va to'liq imzolangan bo'lishi kerak",
+        ));
+    }
     let open = periods(db.conn(), ctx, pid)?
         .into_iter()
         .find(|p| p.status == PeriodStatus::Open)
@@ -520,6 +637,70 @@ pub fn close_period(
                 )?;
             }
         }
+        for (i, share) in settlement.shares.iter().enumerate() {
+            if share.minor() == 0 {
+                continue;
+            }
+            let kind = if share.minor() > 0 {
+                JournalKind::ProfitDistribution
+            } else {
+                JournalKind::LossShare
+            };
+            journal::append(
+                tx,
+                env,
+                ctx,
+                &agreement,
+                journal::NewEntry {
+                    kind,
+                    party_id: Some(pv.parties[i].party.meta.id.as_str()),
+                    amount: Some(Money::new(share.minor().abs(), ctx.currency)),
+                    date: end,
+                    note: "Davr taqsimoti",
+                    reference: Some(open.meta.id.as_str()),
+                    corrects: None,
+                },
+            )?;
+        }
+        if settlement.buyout_applied.minor() > 0 {
+            if let Some((_, plan_id)) = &due {
+                journal::append(
+                    tx,
+                    env,
+                    ctx,
+                    &agreement,
+                    journal::NewEntry {
+                        kind: JournalKind::BuyoutPayment,
+                        party_id: None,
+                        amount: Some(settlement.buyout_applied),
+                        date: end,
+                        note: "Buyout to'lovi (davr taqsimotidan)",
+                        reference: Some(plan_id.as_str()),
+                        corrects: None,
+                    },
+                )?;
+            }
+        }
+        let closing_note = format!(
+            "Davr #{} yopildi: sof natija {}",
+            open.period_no,
+            format_money(view.net, Locale::Uz)
+        );
+        journal::append(
+            tx,
+            env,
+            ctx,
+            &agreement,
+            journal::NewEntry {
+                kind: JournalKind::PeriodClosed,
+                party_id: None,
+                amount: None,
+                date: end,
+                note: &closing_note,
+                reference: Some(open.meta.id.as_str()),
+                corrects: None,
+            },
+        )?;
         let mut closed = open.clone();
         closed.status = PeriodStatus::Closed;
         closed.end_date = Some(end);

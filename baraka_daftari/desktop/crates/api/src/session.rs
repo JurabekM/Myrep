@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use domain::{IdGen, SystemClock, UuidV7Gen};
 use security::{AutoLock, KdfParams, KeyStore, SecurityError, Vault, VaultStatus};
-use services::{members, setup, Ctx, Env, ServiceError};
+use services::{agreements, members, setup, Ctx, Env, ServiceError};
 use storage::{Database, StorageError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -116,7 +116,10 @@ impl<S: KeyStore> Session<S> {
             ids: &UuidV7Gen,
             device_id: &device_id,
         };
-        self.ctx = Some(setup::ensure_household(&mut db, &env)?);
+        let ctx = setup::ensure_household(&mut db, &env)?;
+        // D8A: D8A dan oldingi sheriklik va qarz tilxatlari kelishuvlarga ko'chiriladi (idempotent).
+        agreements::adopt_legacy(&mut db, &env, &ctx)?;
+        self.ctx = Some(ctx);
         self.db = Some(db);
         Ok(())
     }

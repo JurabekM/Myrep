@@ -20,12 +20,13 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
     setPins((x) => ({ ...x, [k]: v }));
   };
   const sign = useMutation({
-    mutationFn: (v: { party?: string; witness?: string; pinKey?: string }) =>
+    mutationFn: (v: { party?: string; witness?: string; arbiter?: boolean; pinKey?: string }) =>
       unwrap(
         commands.signPartnership(
           p.id,
           v.party ?? null,
           v.witness ?? null,
+          v.arbiter ? true : null,
           v.pinKey ? (pins[v.pinKey] ?? null) : null,
         ),
       ),
@@ -147,6 +148,37 @@ function Card({ p, onRevise }: { p: PartnershipDto; onRevise: () => void }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {p.agreement && (
+        <p className="mt-2 text-sm opacity-80" data-testid="agreement-status">
+          {t('partner.questionsDone', {
+            done: 9 - p.agreement.missing_questions.length,
+            total: 9,
+          })}
+        </p>
+      )}
+
+      {draft && p.agreement?.missing_signatures.some((x) => x.kind === 'ARBITER') && (
+        <div
+          className="mt-2 flex items-center justify-between gap-2 text-sm"
+          data-testid="arbiter-sign"
+        >
+          <span>
+            {t('partner.arbiterIs', {
+              name: p.agreement.missing_signatures.find((x) => x.kind === 'ARBITER')?.name ?? '',
+            })}
+          </span>
+          <button
+            type="button"
+            className="rounded border border-accent px-3 py-0.5"
+            onClick={() => {
+              sign.mutate({ arbiter: true });
+            }}
+          >
+            {t('partner.signArbiter')}
+          </button>
+        </div>
       )}
 
       {p.self_receives_capital && draft && (

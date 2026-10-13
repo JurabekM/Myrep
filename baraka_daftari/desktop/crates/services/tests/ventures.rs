@@ -133,6 +133,18 @@ impl World {
             )
             .unwrap();
         }
+        for wv in &v.witnesses {
+            let name = wv.name.clone();
+            partnerships::sign(
+                &mut self.db,
+                &env!(self),
+                &self.ctx,
+                &id,
+                Signer::Witness { name },
+            )
+            .unwrap();
+        }
+        partnerships::sign(&mut self.db, &env!(self), &self.ctx, &id, Signer::Arbiter).unwrap();
         if v.self_receives_capital {
             partnerships::family_consent(&mut self.db, &env!(self), &self.ctx, &id, &me, "111111")
                 .unwrap();
@@ -185,8 +197,23 @@ impl World {
 }
 
 /// Karim aka (tashqi kapital egasi) va xonadon a'zosi (ishchi).
+/// 3, 6, 8-savollar (test uchun): vazifa (mas'ul — `owner`), pul joyi va hakam.
+fn details(owner: &str) -> services::partnerships::PartnershipDetails {
+    services::partnerships::PartnershipDetails {
+        duties: vec![services::partnerships::DutyInput {
+            text: "Yetkazib berish va hisobot".into(),
+            owner_name: owner.into(),
+            if_not_done: "1 kun ichida xabar beradi va o'rnini topadi".into(),
+        }],
+        custody_place: "Kelishilgan hisob".into(),
+        arbiter_name: "Usta Olim".into(),
+        review_date: None,
+    }
+}
+
 fn mudaraba_worker(me: &str) -> NewPartnership {
     NewPartnership {
+        details: details("Zamira"),
         name: "Ustaxona".into(),
         kind: PartnershipKind::Mudaraba,
         term_months: 12,
@@ -525,6 +552,7 @@ fn buyout_is_applied_automatically_when_a_period_closes() {
     let mut w = World::new();
     let me = w.ctx.member_id.clone();
     let n = NewPartnership {
+        details: details("Zamira"),
         name: "Oshxona".into(),
         kind: PartnershipKind::Musharaka,
         term_months: 24,

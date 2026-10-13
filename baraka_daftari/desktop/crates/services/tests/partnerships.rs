@@ -10,7 +10,9 @@ use money::{Currency, Money};
 use security::KdfParams;
 use services::{
     members,
-    partnerships::{self, NewCapital, NewPartnership, NewParty, Signer},
+    partnerships::{
+        self, DutyInput, NewCapital, NewPartnership, NewParty, PartnershipDetails, Signer,
+    },
     setup, Ctx, Env, ServiceError,
 };
 use storage::Database;
@@ -117,6 +119,20 @@ fn cash(v: i64) -> NewCapital {
     }
 }
 
+/// 3, 6, 8-savollar: vazifa (mas'ul — `owner`), pul joyi va hakam. Qolganlari sheriklikdan olinadi.
+fn details(owner: &str) -> PartnershipDetails {
+    PartnershipDetails {
+        duties: vec![DutyInput {
+            text: "Yetkazib berish va hisobot".into(),
+            owner_name: owner.into(),
+            if_not_done: "1 kun ichida xabar beradi va o'rnini topadi".into(),
+        }],
+        custody_place: "Kelishilgan hisob".into(),
+        arbiter_name: "Usta Olim".into(),
+        review_date: None,
+    }
+}
+
 fn party(
     name: &str,
     role: PartyRole,
@@ -137,6 +153,7 @@ fn party(
 /// Tashqi kapital egasi (Karim aka) va xonadon a'zosi — ishchi (Zamira = `self`).
 fn mudaraba_inbound(me: &str) -> NewPartnership {
     NewPartnership {
+        details: details("Zamira"),
         name: "Tikuvchilik ustaxonasi".into(),
         kind: PartnershipKind::Mudaraba,
         term_months: 12,
@@ -175,6 +192,7 @@ fn mudaraba_outbound(me: &str) -> NewPartnership {
 
 fn musharaka(me: &str) -> NewPartnership {
     NewPartnership {
+        details: details("Zamira"),
         name: "Oshxona".into(),
         kind: PartnershipKind::Musharaka,
         term_months: 24,
@@ -322,6 +340,9 @@ fn activation_needs_every_signature_witness_and_family_consent() {
         },
     )
     .unwrap();
+    // Hakam ham tasdiqlaydi (6-qonun, 8-savol).
+    assert_eq!(w.view(&id).blocker, Some("ARBITER_SIGNATURE"));
+    w.sign(&id, Signer::Arbiter).unwrap();
     // Kapital qabul qilinadi → barcha kattalarning oilaviy roziligi kerak.
     let v = w.view(&id);
     assert_eq!(v.blocker, Some("FAMILY_CONSENT"));
@@ -390,6 +411,7 @@ fn providing_capital_is_subject_to_the_readiness_gate() {
         },
     )
     .unwrap();
+    w.sign(&id, Signer::Arbiter).unwrap();
     // Qorovul pul yo'q → darvoza yopiq.
     assert_eq!(w.view(&id).blocker, Some("GATE_CLOSED"));
     assert!(w.activate(&id).is_err());
@@ -428,6 +450,7 @@ fn revising_bumps_the_version_and_requires_new_signatures() {
         )
         .unwrap();
     }
+    w.sign(&id, Signer::Arbiter).unwrap();
     assert_eq!(w.view(&id).blocker, None);
     let activated = w.activate(&id).unwrap();
     assert_eq!(activated.partnership.status, PartnershipStatus::Active);
