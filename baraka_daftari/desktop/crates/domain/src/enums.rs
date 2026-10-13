@@ -129,3 +129,38 @@ mod tests {
         assert_eq!(MemberRole::parse("nope"), None);
     }
 }
+
+str_enum!(
+    /// 6-qonun kelishuv turi (SPEC 2F.1). Tur faqat qo'shimcha validatsiyani belgilaydi.
+    AgreementType {
+        Partnership => "PARTNERSHIP", Loan => "LOAN", Rent => "RENT",
+        Service => "SERVICE", Family => "FAMILY", Other => "OTHER",
+    }
+);
+str_enum!(
+    /// Kelishuv holati (SPEC 2F.1). Versiya o'zgarsa qoralamaga qaytadi.
+    AgreementStatus {
+        Draft => "DRAFT", Signed => "SIGNED", Active => "ACTIVE",
+        InDispute => "IN_DISPUTE", Closed => "CLOSED",
+    }
+);
+str_enum!(
+    /// Imzo turi (SPEC 2F.3): tomon, guvoh, hakam (roziligi) yoki oilaviy rozilik (PIN bilan).
+    AgreementSignKind {
+        Party => "PARTY", Witness => "WITNESS", Arbiter => "ARBITER", FamilyConsent => "FAMILY_CONSENT",
+    }
+);
+str_enum!(
+    /// Kelishuvga bog'langan moliyaviy voqea (SPEC 2F.6). Jurnal yozuvi faqat qo'shiladi.
+    JournalKind {
+        OpeningBalance => "OPENING_BALANCE", Contribution => "CONTRIBUTION",
+        VentureIncome => "VENTURE_INCOME", VentureExpense => "VENTURE_EXPENSE",
+        ProfitDistribution => "PROFIT_DISTRIBUTION", LossShare => "LOSS_SHARE",
+        BuyoutPayment => "BUYOUT_PAYMENT", Payment => "PAYMENT",
+        PeriodClosed => "PERIOD_CLOSED", Correction => "CORRECTION",
+    }
+);
+str_enum!(
+    /// Kelishuv qaysi domen obyektiga bog'langan (sheriklik, qarz yoki berilgan qarz).
+    SubjectKind { Partnership => "PARTNERSHIP", Debt => "DEBT", Receivable => "RECEIVABLE", Unlinked => "NONE" }
+);

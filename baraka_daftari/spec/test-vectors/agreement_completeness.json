@@ -1,0 +1,2056 @@
+{
+  "suite": "agreement_completeness",
+  "version": 1,
+  "description": "6-qonun, 9 savol to'liqligi (SPEC 2F.2; DESKTOP 5.3). input — kelishuv hujjati (versiya mazmuni, camelCase, sonlar satr). Savol holati: kalit yo'q = MISSING; {status: ANSWERED, value} yoki {status: NOT_APPLICABLE, reason}. expected: complete (missing va errors bo'sh bo'lsa true), missing (savol raqamlari), errors ([{question, code}]). Kodlar: TOO_FEW_PARTIES, TOO_MANY_PARTIES, PARTY_NAME_REQUIRED, DUPLICATE_PARTY_ID, PARTY_WITHOUT_CONTRIBUTION, UNKNOWN_PARTY, EMPTY_TEXT, DUTIES_REQUIRED, DUTY_WITHOUT_OWNER, DUTY_WITHOUT_IF_NOT_DONE, PROFIT_SHARES_NOT_100, GUARANTEED_RETURN_FORBIDDEN, KEEPER_DEVICE_REQUIRED, ARBITER_IS_PARTY, TERM_OUT_OF_RANGE, NA_REASON_REQUIRED, NOT_APPLICABLE_FORBIDDEN. Mobil jamoa tasdig'i kerak (OPEN_QUESTIONS 94).",
+  "cases": [
+    {
+      "id": "ac-001",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": true,
+        "missing": [],
+        "errors": []
+      }
+    },
+    {
+      "id": "ac-002",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Hamma ishlaydi",
+                "ifNotDone": "Xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 3,
+            "code": "DUTY_WITHOUT_OWNER"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-003",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "dilshod",
+              "partyId": "P2"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 8,
+            "code": "ARBITER_IS_PARTY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-004",
+      "input": {
+        "type": "FAMILY",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "NOT_APPLICABLE",
+            "reason": ""
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 8,
+            "code": "NA_REASON_REQUIRED"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-005",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ],
+              "fixedAmount": {
+                "minor": "10000000",
+                "currency": "UZS"
+              }
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 4,
+            "code": "GUARANTEED_RETURN_FORBIDDEN"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-006",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [
+          6,
+          9
+        ],
+        "errors": []
+      }
+    },
+    {
+      "id": "ac-007",
+      "input": {
+        "type": "LOAN",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Foizsiz qarz"
+          },
+          "loss": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Asosiy summa qaytariladi"
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": true,
+        "missing": [],
+        "errors": []
+      }
+    },
+    {
+      "id": "ac-008",
+      "input": {
+        "type": "FAMILY",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Uy byudjeti umumiy"
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Oilada foyda taqsimlanmaydi"
+          },
+          "loss": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Oilada zarar taqsimlanmaydi"
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Oilaviy kelishuv chiqishsiz"
+          },
+          "arbiter": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Oila ichida hakam shart emas"
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": true,
+        "missing": [],
+        "errors": []
+      }
+    },
+    {
+      "id": "ac-009",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "6000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "3000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 4,
+            "code": "PROFIT_SHARES_NOT_100"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-010",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 2,
+            "code": "PARTY_WITHOUT_CONTRIBUTION"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-011",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Hamma uchun"
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 3,
+            "code": "NOT_APPLICABLE_FORBIDDEN"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-012",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "0",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 9,
+            "code": "TERM_OUT_OF_RANGE"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-013",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 6,
+            "code": "KEEPER_DEVICE_REQUIRED"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-014",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P9",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 3,
+            "code": "UNKNOWN_PARTY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-015",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P1",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "10000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 1,
+            "code": "TOO_FEW_PARTIES"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-016",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [],
+        "questions": {}
+      },
+      "expected": {
+        "complete": false,
+        "missing": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "errors": []
+      }
+    },
+    {
+      "id": "ac-017",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim",
+              "partyId": "P9"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 8,
+            "code": "UNKNOWN_PARTY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-018",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "NOT_APPLICABLE",
+            "reason": "Hakam kerak emas"
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 8,
+            "code": "NOT_APPLICABLE_FORBIDDEN"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ac-019",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": true,
+        "missing": [],
+        "errors": []
+      }
+    },
+    {
+      "id": "ac-020",
+      "input": {
+        "type": "PARTNERSHIP",
+        "effectiveFrom": "2026-10-01",
+        "witnesses": [
+          "Karim aka"
+        ],
+        "questions": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "name": "Anvar",
+                "role": "Kapital egasi"
+              },
+              {
+                "id": "P2",
+                "name": "Dilshod",
+                "role": "Ishchi"
+              },
+              {
+                "id": "P1",
+                "name": "Anvar 2",
+                "role": "Sherik"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "description": "Pul",
+                "amount": {
+                  "minor": "300000000",
+                  "currency": "UZS"
+                }
+              },
+              {
+                "partyId": "P2",
+                "description": "Mehnat"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "text": "Yetkazib berish",
+                "ownerPartyId": "P2",
+                "ifNotDone": "1 kun ichida xabar beradi"
+              }
+            ]
+          },
+          "profit": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": "5000"
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": "5000"
+                }
+              ]
+            }
+          },
+          "loss": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "Kapitalga mutanosib"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "place": "Anvar hisobi",
+              "keeperDeviceId": "dev-1",
+              "reviewEvery": "MONTHLY"
+            }
+          },
+          "exit": {
+            "status": "ANSWERED",
+            "value": {
+              "text": "30 kun oldin xabar"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "name": "Usta Olim"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "months": "12",
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "complete": false,
+        "missing": [],
+        "errors": [
+          {
+            "question": 1,
+            "code": "DUPLICATE_PARTY_ID"
+          }
+        ]
+      }
+    }
+  ]
+}

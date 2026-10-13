@@ -125,6 +125,9 @@ fn runner_for(suite: &str) -> Result<Runner, VectorError> {
         "venture_settlement" => Ok(run_venture_settlement),
         "craft_payback" => Ok(run_craft_payback),
         "offer_check" => Ok(run_offer_check),
+        "journal_chain" => Ok(run_journal_chain),
+        "agreement_completeness" => Ok(run_agreement_completeness),
+        "profit_spike" => Ok(run_profit_spike),
         other => Err(VectorError::UnknownSuite(other.to_owned())),
     }
 }
@@ -1011,5 +1014,115 @@ fn run_offer_check(input: &Value) -> Result<Value, String> {
     Ok(serde_json::json!({
         "verdict": r.verdict.code(),
         "flags": r.flags.iter().map(|f| f.code()).collect::<Vec<_>>(),
+    }))
+}
+
+fn opt_str(v: &Value, key: &str) -> Option<String> {
+    v.get(key).and_then(Value::as_str).map(str::to_owned)
+}
+
+/// Kelishuv jurnali yozuvi (JSON) → xeshlanadigan mazmun. Summa `amount{minor,currency}` ko'rinishida.
+fn journal_entry(v: &Value) -> Result<domain::HashedEntry, String> {
+    let kind_text = str_field(v, "kind")?;
+    let kind = domain::JournalKind::parse(kind_text)
+        .ok_or_else(|| format!("noma'lum yozuv turi: {kind_text}"))?;
+    let amount = match v.get("amount") {
+        None | Some(Value::Null) => None,
+        Some(a) => Some(Money::new(
+            parse_minor(str_field(a, "minor")?)?,
+            parse_currency(a, "currency")?,
+        )),
+    };
+    Ok(domain::HashedEntry {
+        id: str_field(v, "id")?.to_owned(),
+        agreement_id: str_field(v, "agreementId")?.to_owned(),
+        kind,
+        party_id: opt_str(v, "partyId"),
+        amount,
+        date: str_field(v, "date")?.to_owned(),
+        note: str_field(v, "note")?.to_owned(),
+        reference: opt_str(v, "ref"),
+        corrects: opt_str(v, "corrects"),
+    })
+}
+
+/// `op`: `head` (zanjir boshi), `verify` (saqlangan `hash` bilan, buzilgan tartib raqami), `canonical` (JCS).
+fn run_journal_chain(input: &Value) -> Result<Value, String> {
+    match str_field(input, "op")? {
+        "canonical" => {
+            let value = input.get("value").ok_or("value (JSON) kerak")?;
+            Ok(match domain::canonical(value) {
+                Ok(text) => serde_json::json!({ "canonical": text }),
+                Err(e) => serde_json::json!({ "error": e.code() }),
+            })
+        }
+        op @ ("head" | "verify") => {
+            let items = input
+                .get("entries")
+                .and_then(Value::as_array)
+                .ok_or("entries (massiv) kerak")?;
+            let entries = items
+                .iter()
+                .map(journal_entry)
+                .collect::<Result<Vec<_>, String>>()?;
+            if op == "head" {
+                let head = domain::chain_head(&entries).map_err(|e| e.code().to_owned())?;
+                return Ok(serde_json::json!({ "head": head }));
+            }
+            let pairs = items
+                .iter()
+                .zip(entries)
+                .map(|(v, e)| Ok((e, str_field(v, "hash")?.to_owned())))
+                .collect::<Result<Vec<_>, String>>()?;
+            Ok(match domain::first_broken(&pairs) {
+                Ok(None) => serde_json::json!({ "valid": true }),
+                Ok(Some(seq)) => serde_json::json!({ "valid": false, "brokenSeq": seq }),
+                Err(e) => serde_json::json!({ "error": e.code() }),
+            })
+        }
+        other => Err(format!("noma'lum op: {other}")),
+    }
+}
+
+/// 9 savol to'liqligi (SPEC 2F.2). Kirish — kelishuv hujjati (versiya mazmuni).
+fn run_agreement_completeness(input: &Value) -> Result<Value, String> {
+    let doc = domain::AgreementDoc::from_value(input)?;
+    let c = domain::completeness(&doc);
+    let errors: Vec<Value> = c
+        .errors
+        .iter()
+        .map(|i| serde_json::json!({ "question": i.question, "code": i.code }))
+        .collect();
+    Ok(serde_json::json!({
+        "complete": c.is_complete(),
+        "missing": c.missing,
+        "errors": errors,
+    }))
+}
+
+/// «Katta foyda» (SPEC 2F.7): butun sonlar, bo'linmasiz.
+fn run_profit_spike(input: &Value) -> Result<Value, String> {
+    let actual = Money::new(parse_minor(str_field(input, "actual")?)?, Currency::Uzs);
+    let plan = match input.get("plan") {
+        None | Some(Value::Null) => None,
+        Some(_) => Some(Money::new(
+            parse_minor(str_field(input, "plan")?)?,
+            Currency::Uzs,
+        )),
+    };
+    let last3 = match input.get("last3") {
+        None | Some(Value::Null) => None,
+        Some(Value::Array(items)) if items.len() == 3 => {
+            let mut out = [Money::zero(Currency::Uzs); 3];
+            for (slot, v) in out.iter_mut().zip(items) {
+                let text = v.as_str().ok_or("last3: satrlar kerak")?;
+                *slot = Money::new(parse_minor(text)?, Currency::Uzs);
+            }
+            Some(out)
+        }
+        Some(_) => return Err("last3: 3 ta davr kerak".into()),
+    };
+    Ok(serde_json::json!({
+        "alert": domain::profit_spike_alert(actual, plan, last3),
     }))
 }

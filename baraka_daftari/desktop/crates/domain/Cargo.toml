@@ -9,6 +9,8 @@ publish.workspace = true
 money = { version = "0.1.0", path = "../money" }
 num-bigint = "0.4"
 serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+sha2 = "0.11.0"
 thiserror.workspace = true
 time = { version = "0.3.55", features = ["formatting", "parsing", "macros"] }
 uuid = { version = "1.27.0", features = ["v7"] }

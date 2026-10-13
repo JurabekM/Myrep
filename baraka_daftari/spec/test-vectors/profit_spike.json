@@ -1,0 +1,70 @@
+{
+  "suite": "profit_spike",
+  "version": 1,
+  "description": "«Katta foyda» ogohlantirishi (SPEC 2F.7). Butun sonlar, bo'linmasiz: A: plan > 0 va actual×10000 ≥ plan×15000; B: oxirgi 3 davr S > 0 va actual×3×10000 ≥ S×20000; alert = actual > 0 && (A || B).",
+  "cases": [
+    {
+      "id": "ps-001",
+      "input": {
+        "actual": "150000000",
+        "plan": "100000000",
+        "last3": null
+      },
+      "expected": {
+        "alert": true
+      }
+    },
+    {
+      "id": "ps-002",
+      "input": {
+        "actual": "149999999",
+        "plan": "100000000",
+        "last3": null
+      },
+      "expected": {
+        "alert": false
+      }
+    },
+    {
+      "id": "ps-003",
+      "input": {
+        "actual": "220000000",
+        "plan": null,
+        "last3": [
+          "100000000",
+          "120000000",
+          "110000000"
+        ]
+      },
+      "expected": {
+        "alert": true
+      }
+    },
+    {
+      "id": "ps-004",
+      "input": {
+        "actual": "219999999",
+        "plan": null,
+        "last3": [
+          "100000000",
+          "120000000",
+          "110000000"
+        ]
+      },
+      "expected": {
+        "alert": false
+      }
+    },
+    {
+      "id": "ps-005",
+      "input": {
+        "actual": "-50000000",
+        "plan": "100000000",
+        "last3": null
+      },
+      "expected": {
+        "alert": false
+      }
+    }
+  ]
+}

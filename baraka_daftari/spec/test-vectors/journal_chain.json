@@ -1,0 +1,269 @@
+{
+  "suite": "journal_chain",
+  "version": 1,
+  "description": "Kelishuv jurnali (6-qonun, SPEC 2F.6). op=head: zanjir boshi (genesis 64×'0'); op=verify: saqlangan 'hash' lar bilan tekshiruv, buzilgan yozuvning tartib raqami (1 dan); op=canonical: RFC 8785 (JCS) satr, sonlar rad etiladi. Xeshga kiradi: id, agreementId, kind, partyId, amount{minor,currency}, date, note (+ ref, corrects bo'lsa). Metama'lumot (vaqt, qurilma) kirmaydi.",
+  "cases": [
+    {
+      "id": "chain-001",
+      "input": {
+        "op": "head",
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          }
+        ]
+      },
+      "expected": {
+        "head": "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e"
+      }
+    },
+    {
+      "id": "chain-002",
+      "input": {
+        "op": "head",
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          }
+        ]
+      },
+      "expected": {
+        "head": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+      }
+    },
+    {
+      "id": "chain-003",
+      "input": {
+        "op": "head",
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ]
+      },
+      "expected": {
+        "head": "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+      }
+    },
+    {
+      "id": "chain-004",
+      "input": {
+        "op": "head",
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-0000000000b1",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a2",
+            "kind": "OPENING_BALANCE",
+            "partyId": "P1",
+            "amount": {
+              "minor": "150000000",
+              "currency": "UZS"
+            },
+            "date": "2026-09-01",
+            "note": "Ogʻzaki kelishuv: boshlangʻich holat (gʻalla va oʻzbek)"
+          }
+        ]
+      },
+      "expected": {
+        "head": "a7092d950cd0a68ed3a99a300943831e4c90af3cde114edaecc0a747f6405f20"
+      }
+    },
+    {
+      "id": "chain-005",
+      "input": {
+        "op": "verify",
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi",
+            "hash": "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi",
+            "hash": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi",
+            "hash": "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+          }
+        ]
+      },
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "id": "chain-006",
+      "input": {
+        "op": "verify",
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi",
+            "hash": "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000001",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi",
+            "hash": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi",
+            "hash": "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+          }
+        ]
+      },
+      "expected": {
+        "valid": false,
+        "brokenSeq": 2
+      }
+    },
+    {
+      "id": "canonical-001",
+      "input": {
+        "op": "canonical",
+        "value": {
+          "b": "2",
+          "a": {
+            "z": "1",
+            "y": "ʻ"
+          },
+          "c": [
+            true,
+            null,
+            "x"
+          ]
+        }
+      },
+      "expected": {
+        "canonical": "{\"a\":{\"y\":\"ʻ\",\"z\":\"1\"},\"b\":\"2\",\"c\":[true,null,\"x\"]}"
+      }
+    },
+    {
+      "id": "canonical-002",
+      "input": {
+        "op": "canonical",
+        "value": {
+          "minor": 300000000
+        }
+      },
+      "expected": {
+        "error": "NUMBER_NOT_ALLOWED"
+      }
+    }
+  ]
+}
