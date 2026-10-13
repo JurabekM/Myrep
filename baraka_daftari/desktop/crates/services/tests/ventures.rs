@@ -1077,3 +1077,18 @@ fn arbiter_folder_pdf_is_produced_while_a_dispute_is_open() {
     let pdf = services::events::folder_pdf(w.db.conn(), &w.ctx, &agreement).unwrap();
     assert!(pdf.starts_with(b"%PDF"));
 }
+
+/// D13A: markaz yangilash eslatmasini (30 kun ichida) va joriy oy ko'rigi holatini ko'rsatadi.
+#[test]
+fn agreement_center_shows_the_yearly_reminder_and_the_monthly_state() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let mut input = mudaraba_worker(&me);
+    input.details.review_date = Some(d("2026-10-20"));
+    w.activate(input);
+    let rows = services::events::center(w.db.conn(), &env!(w), &w.ctx).unwrap();
+    let row = rows.iter().find(|r| r.title == "Ustaxona").unwrap();
+    assert_eq!(row.days_to_review, Some(9));
+    assert_eq!(row.monthly_closed, Some(false));
+    assert!(!row.dispute_open);
+}

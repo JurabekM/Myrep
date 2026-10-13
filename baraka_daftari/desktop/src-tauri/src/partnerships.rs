@@ -864,6 +864,52 @@ pub async fn export_review_pdf(
     Ok(path.file_name().map(|n| n.to_string_lossy().into_owned()))
 }
 
+#[derive(Debug, Serialize, Type)]
+pub struct CenterRowDto {
+    pub agreement_id: String,
+    pub title: String,
+    pub kind: String,
+    /// `DRAFT` | `SIGNED` | `ACTIVE` | `IN_DISPUTE` | `CLOSED`.
+    pub status: String,
+    pub status_label: String,
+    pub version: u32,
+    /// `YYYY-MM-DD`; javob berilmagan bo'lsa `null`.
+    pub review_date: Option<String>,
+    /// Yangilashgacha kunlar (manfiy — muddati o'tgan); 30 kundan ko'p bo'lsa `null`.
+    pub days_to_review: Option<i32>,
+    pub incidents: u32,
+    pub dispute_open: bool,
+    /// Joriy oy ko'rigi yopilganmi; faqat faol yoki nizoli kelishuvda, aks holda `null`.
+    pub monthly_closed: Option<bool>,
+}
+
+/// Kelishuvlar markazi: barcha kelishuvlar holati, yangilash eslatmasi va ko'rik holati (D13A).
+#[tauri::command]
+#[specta::specta]
+pub fn agreements_center(state: State<'_, AppSession>) -> Result<Vec<CenterRowDto>, CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let rows = services::events::center(db.conn(), env, ctx)?;
+            Ok(rows
+                .into_iter()
+                .map(|r| CenterRowDto {
+                    agreement_id: r.agreement_id,
+                    title: r.title,
+                    kind: r.kind,
+                    status: r.status,
+                    status_label: r.status_label,
+                    version: r.version,
+                    review_date: r.review_date.and_then(|d| domain::date_to_string(d).ok()),
+                    days_to_review: r.days_to_review.and_then(|d| i32::try_from(d).ok()),
+                    incidents: u32::try_from(r.incidents).unwrap_or(u32::MAX),
+                    dispute_open: r.dispute_open,
+                    monthly_closed: r.monthly_closed,
+                })
+                .collect())
+        })
+    })
+}
+
 /// Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi.
 #[tauri::command]
 #[specta::specta]

@@ -1157,5 +1157,26 @@
   },
   "hotkey": {
     "unavailable": "Ctrl+Alt+B band: boshqa dastur uni ishlatayotgan bo'lishi mumkin. Tez xarajat tray belgisi menyusidan ochiladi."
+  },
+  "center": {
+    "title": "Kelishuvlar markazi",
+    "status": "Holat",
+    "search": "Nom bo'yicha qidirish",
+    "all": "Barchasi",
+    "empty": "Hozircha kelishuv yo'q.",
+    "name": "Nomi",
+    "kind": "Turi",
+    "state": "Holat",
+    "version": "Versiya",
+    "review": "Yangilash",
+    "incidents": "Hodisalar",
+    "dispute": "Nizo",
+    "monthly": "Oylik ko'rik",
+    "reminderSoon": "{{n}} kundan keyin yangilanadi",
+    "reminderOverdue": "Yangilash muddati o'tgan",
+    "yes": "Ha",
+    "none": "—",
+    "monthlyClosed": "Yopilgan",
+    "monthlyPending": "Kutilmoqda"
   }
 }

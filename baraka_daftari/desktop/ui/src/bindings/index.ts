@@ -219,6 +219,8 @@ export const commands = {
 	exportReviewPdf: (partnershipId: string, period: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_review_pdf", { partnershipId, period })),
 	/**  Hakam uchun ish papkasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None` (SPEC 2F.8). */
 	exportDisputeFolderPdf: (partnershipId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_dispute_folder_pdf", { partnershipId })),
+	/**  Kelishuvlar markazi: barcha kelishuvlar holati, yangilash eslatmasi va ko'rik holati (D13A). */
+	agreementsCenter: () => typedError<CenterRowDto[], CommandError>(__TAURI_INVOKE("agreements_center")),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
@@ -429,6 +431,24 @@ export type CategoryTotalDto = {
 	name: string,
 	owner: string | null,
 	amount: MoneyDto,
+};
+
+export type CenterRowDto = {
+	agreement_id: string,
+	title: string,
+	kind: string,
+	/**  `DRAFT` | `SIGNED` | `ACTIVE` | `IN_DISPUTE` | `CLOSED`. */
+	status: string,
+	status_label: string,
+	version: number,
+	/**  `YYYY-MM-DD`; javob berilmagan bo'lsa `null`. */
+	review_date: string | null,
+	/**  Yangilashgacha kunlar (manfiy — muddati o'tgan); 30 kundan ko'p bo'lsa `null`. */
+	days_to_review: number | null,
+	incidents: number,
+	dispute_open: boolean,
+	/**  Joriy oy ko'rigi yopilganmi; faqat faol yoki nizoli kelishuvda, aks holda `null`. */
+	monthly_closed: boolean | null,
 };
 
 export type CeremonyDto = {

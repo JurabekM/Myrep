@@ -28,6 +28,7 @@ vi.mock('../../bindings', () => ({
     openPartnershipDispute: vi.fn(),
     resolvePartnershipDispute: vi.fn(),
     reviewView: vi.fn(),
+    agreementsCenter: vi.fn(),
     recordReviewAnswer: vi.fn(),
     closeReview: vi.fn(),
     exportReviewPdf: vi.fn(),
@@ -125,6 +126,7 @@ beforeEach(() => {
   ] as const) {
     vi.mocked(commands[k]).mockResolvedValue({ status: 'ok', data: null });
   }
+  vi.mocked(commands.agreementsCenter).mockResolvedValue({ status: 'ok', data: [] });
   vi.mocked(commands.reviewView).mockResolvedValue({
     status: 'ok',
     data: {
@@ -528,5 +530,50 @@ describe('hakam ish papkasi', () => {
     await waitFor(() => {
       expect(commands.exportDisputeFolderPdf).toHaveBeenCalledWith('p1');
     });
+  });
+});
+
+describe('kelishuvlar markazi', () => {
+  it('jadvalda yangilash eslatmasi va ko‘rik holati ko‘rinadi; qidiruv qatorlarni filtrlaydi', async () => {
+    vi.mocked(commands.listPartnerships).mockResolvedValue({ status: 'ok', data: [] });
+    vi.mocked(commands.agreementsCenter).mockResolvedValue({
+      status: 'ok',
+      data: [
+        {
+          agreement_id: 'a1',
+          title: 'Ustaxona',
+          kind: 'Sheriklik (mudaraba)',
+          status: 'ACTIVE',
+          status_label: 'Faol',
+          version: 2,
+          review_date: '2026-10-20',
+          days_to_review: 9,
+          incidents: 1,
+          dispute_open: false,
+          monthly_closed: false,
+        },
+        {
+          agreement_id: 'a2',
+          title: 'Qarz tilxati',
+          kind: 'Qarz tilxati',
+          status: 'CLOSED',
+          status_label: 'Yopilgan',
+          version: 1,
+          review_date: null,
+          days_to_review: null,
+          incidents: 0,
+          dispute_open: false,
+          monthly_closed: null,
+        },
+      ],
+    });
+    renderPage();
+    const center = within(await screen.findByTestId('agreement-center'));
+    const row = within(await screen.findByTestId('center-row-Ustaxona'));
+    expect(row.getByText('9 kundan keyin yangilanadi')).toBeInTheDocument();
+    expect(row.getByText('Kutilmoqda')).toBeInTheDocument();
+    await userEvent.type(center.getByLabelText("Nom bo'yicha qidirish"), 'qarz');
+    expect(screen.queryByTestId('center-row-Ustaxona')).not.toBeInTheDocument();
+    expect(screen.getByTestId('center-row-Qarz tilxati')).toBeInTheDocument();
   });
 });

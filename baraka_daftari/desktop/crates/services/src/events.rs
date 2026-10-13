@@ -3,12 +3,14 @@
 //! Har bir voqea kelishuv jurnaliga append-only yozuv sifatida tushadi. Nizo ochilganda kelishuv
 //! `IN_DISPUTE` holatiga o'tadi va taqsimot bloklanadi (`ventures::close_period`).
 
-use domain::{can_transition, date_to_string, AgreementStatus, Answer, JournalEntry, JournalKind};
+use domain::{
+    can_transition, date_to_string, AgreementStatus, Answer, Date, JournalEntry, JournalKind,
+};
 use money::{format_money, Locale};
 use storage::{Connection, Database};
 
-use crate::agreements;
-use crate::review;
+use crate::{agreements, review};
+
 use crate::{journal, local_date, Ctx, Env, ServiceError};
 
 /// «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi.
@@ -305,4 +307,77 @@ pub fn folder_pdf(
     };
     pdf::dispute_folder_pdf(&doc)
         .map_err(|_| ServiceError::Invalid("hakam papkasini yaratib bo'lmadi"))
+}
+
+/// Kelishuvlar markazi qatori (D13A): holat, yangilash, ochiq hodisalar va ko'rik holati.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CenterRow {
+    pub agreement_id: String,
+    pub title: String,
+    /// «Sheriklik», «Qarz tilxati» ...
+    pub kind: String,
+    pub status: String,
+    pub status_label: String,
+    pub version: u32,
+    /// Yangilash sanasi (9-savol); javob yo'q bo'lsa `None`.
+    pub review_date: Option<Date>,
+    /// Yangilashgacha kunlar; 30 kundan ko'p bo'lsa `None` (eslatma kerak emas).
+    pub days_to_review: Option<i64>,
+    /// Qayd etilgan vazifa hodisalari soni.
+    pub incidents: usize,
+    pub dispute_open: bool,
+    /// Joriy oy ko'rigi yopilganmi; faqat faol yoki nizoli kelishuvda (aks holda `None`).
+    pub monthly_closed: Option<bool>,
+}
+
+/// Barcha kelishuvlar bo'yicha markaz: yangilash eslatmasi (30 kun ichida), ochiq hodisalar va ko'rik holati.
+///
+/// # Errors
+/// Baza xatosi yoki kelishuv ma'lumoti buzilgan bo'lsa.
+pub fn center(conn: &Connection, env: &Env<'_>, ctx: &Ctx) -> Result<Vec<CenterRow>, ServiceError> {
+    let today = local_date(env.clock.now());
+    let period: String = date_to_string(today)
+        .unwrap_or_default()
+        .chars()
+        .take(7)
+        .collect();
+    let mut rows = Vec::new();
+    for v in agreements::list(conn, ctx)? {
+        let a = &v.agreement;
+        let review_date = match v.doc.as_ref().map(|d| &d.questions.term) {
+            Some(Answer::Answered(t)) => Some(t.review_date),
+            _ => None,
+        };
+        let days_to_review = review_date
+            .map(|r| (r - today).whole_days())
+            .filter(|d| *d <= 30);
+        let all = journal::entries(conn, ctx, &a.meta.id)?;
+        let incidents = all
+            .iter()
+            .filter(|e| e.kind == JournalKind::DutyIncident)
+            .count();
+        let monthly_closed = if matches!(
+            a.status,
+            AgreementStatus::Active | AgreementStatus::InDispute
+        ) {
+            Some(review::view(conn, ctx, &a.meta.id, &period)?.closed)
+        } else {
+            None
+        };
+        rows.push(CenterRow {
+            agreement_id: a.meta.id.clone(),
+            title: a.title.clone(),
+            kind: agreements::kind_text(a.agreement_type).to_owned(),
+            status: a.status.as_str().to_owned(),
+            status_label: agreements::status_text(a.status).to_owned(),
+            version: a.current_version,
+            review_date,
+            days_to_review,
+            incidents,
+            dispute_open: a.status == AgreementStatus::InDispute,
+            monthly_closed,
+        });
+    }
+    rows.sort_by(|x, y| x.title.cmp(&y.title));
+    Ok(rows)
 }

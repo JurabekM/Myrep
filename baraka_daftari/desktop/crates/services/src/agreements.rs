@@ -874,7 +874,7 @@ pub fn adopt_legacy(db: &mut Database, env: &Env<'_>, ctx: &Ctx) -> Result<usize
     })
 }
 
-fn kind_text(t: AgreementType) -> &'static str {
+pub(crate) fn kind_text(t: AgreementType) -> &'static str {
     match t {
         AgreementType::Partnership => "Sheriklik (mudaraba yoki musharaka)",
         AgreementType::Loan => "Qarz tilxati",
