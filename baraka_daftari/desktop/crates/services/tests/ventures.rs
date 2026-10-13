@@ -1092,3 +1092,67 @@ fn agreement_center_shows_the_yearly_reminder_and_the_monthly_state() {
     assert_eq!(row.monthly_closed, Some(false));
     assert!(!row.dispute_open);
 }
+
+/// D14: import oldidan jurnal zanjirini tekshiradi; mahalliy zanjirdan ayrilgan (fork) bo'lsa, hech narsa yozilmaydi.
+#[test]
+fn journal_fork_stops_the_import_and_nothing_is_written() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Buyurtma 1",
+        500_000_000,
+        "2026-10-12",
+    )
+    .unwrap();
+    let agreement = agreement_of(&w, &pid);
+    let now = domain::Clock::now(&w.clock);
+    let doc =
+        storage::interchange::export(w.db.conn(), &w.ctx.household_id, "dev", now, None).unwrap();
+    // Mahalliy zanjir boshqa yo'l bilan o'zgargan (fork): birinchi yozuvning xeshi.
+    w.db.conn()
+        .execute_batch("DROP TRIGGER trg_journal_upd;")
+        .unwrap();
+    w.db.conn()
+        .execute(
+            "UPDATE journal_entries SET hash = ?1 WHERE agreement_id = ?2 AND seq = 1",
+            [("f".repeat(64)).as_str(), agreement.as_str()],
+        )
+        .unwrap();
+    let report = storage::interchange::apply(w.db.conn(), &doc, Some(&w.ctx.household_id)).unwrap();
+    assert!(report
+        .conflicts
+        .iter()
+        .any(|c| c.kind == storage::interchange::ConflictKind::Journal));
+    assert_eq!((report.inserted, report.updated), (0, 0));
+}
+
+/// D14: kelgan jurnal yozuvi o'zgartirilgan bo'lsa, zanjir tekshiruvi importni rad etadi.
+#[test]
+fn tampered_incoming_journal_is_refused() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Buyurtma 1",
+        500_000_000,
+        "2026-10-12",
+    )
+    .unwrap();
+    let now = domain::Clock::now(&w.clock);
+    let mut doc =
+        storage::interchange::export(w.db.conn(), &w.ctx.household_id, "dev", now, None).unwrap();
+    let rows = &mut doc
+        .tables
+        .iter_mut()
+        .find(|t| t.name == "journal_entries")
+        .unwrap()
+        .rows;
+    rows[0].insert("note".into(), "Soxta izoh".into());
+    let refused = storage::interchange::apply(w.db.conn(), &doc, Some(&w.ctx.household_id));
+    assert!(refused.is_err(), "o'zgartirilgan zanjir rad etilishi kerak");
+}

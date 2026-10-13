@@ -120,3 +120,7 @@
 118. **D13A ning qolgan qismi:** hakam ish papkasi PDF'i (mundarija va sahifa raqamlari bilan, snapshot testi) va kelishuvlar markazi jadvali qo'shildi. Hali yo'q: «o'zgarishsiz tasdiqlash» oqimi (115-savol), oilaviy shablonlar (4 ta, ADULT PIN tasdig'i).
 119. **Kelishuvlar markazi jadvali:** TanStack Table o'rnatilmagan; hozircha oddiy jadval (filtr: holat, qidiruv: nom). Hajm ortganda (yuzlab kelishuv) jadval kutubxonasini qo'shish kerak bo'ladi — qaror kerak.
 120. **Yillik eslatma:** faqat ko'rsatiladi (30 kun ichida, markazda va sheriklik kartasida emas). Eslatma bildirishnomasi va «o'zgarishsiz tasdiqlash» (115) keyingi qadam.
+121. **Fork bo'lganda qo'lda hal qilish:** import zanjir ayrilganini aniqlaydi va hech narsa yozmaydi (D14). Foydalanuvchiga qaysi qurilma «asosiy» ekanini tanlash yo'li (yoki faqat eksport qilib ko'rib chiqish) hali yo'q; avtomatik birlashtirish qat'iyan yo'q.
+122. **Hisob yurituvchini almashtirish:** SPEC 2F.6 bo'yicha faqat kelishuvning yangi versiyasi orqali. Bu oqim hali yozilmagan (kalit qurilma hozircha o'zgarmaydi).
+123. **Mobil tomon sxemasi:** `spec/interchange/export-format.schema.json` yangilandi (4 ta jadval, `schema_version` 13). Mobil ilova uchun alohida hujjat (qaysi maydon qaysi tartibda xeshga kirishi) hali yozilmagan; xesh algoritmi test vektorlari bilan qotirilgan.
+124. **Qisman (inkremental) import:** kelgan zanjir mahalliy zanjirga ulanishi shart. Mahalliy bazada oldingi yozuvlar bo'lmasa, import rad etiladi (uzilish). Bu xavfsiz tanlov, lekin foydalanuvchiga tushuntirish matni kerak.

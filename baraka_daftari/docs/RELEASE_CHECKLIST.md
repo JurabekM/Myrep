@@ -17,6 +17,7 @@ Belgilar: ✅ shu repoda avtomatik tekshiriladi · 🟡 qisman · ⬜ qo'lda/tas
 - ⬜ Yangilash kalit juftligi va manifest serveri; updater plaginini ulash.
 - ⬜ Maxfiylik siyosati (O'zbekistonning shaxsiy ma'lumotlar to'g'risidagi qonuni).
 - ⬜ Mobil ilova bilan `.baraka` mosligi: umumiy fayl bilan o'zaro sinov (OPEN_QUESTIONS 71).
+- ⬜ Sobir hoji maslahatlari (uz/ru) yurist va ulamo ko'rigidan o'tishi (OPEN_QUESTIONS 106); önizleme darvozasi relizda shablon tasdig'i bilan birga ochiladi (107).
 
 ## C. Windows'da qo'lda tekshiriladi (bu sessiyada Linux konteyner — bajarilmagan)
 - ⬜ NSIS installer toza Windows 10/11 da administratorsiz o'rnatiladi; o'chirish ma'lumotni o'chirmaydi (yoki so'raydi).
@@ -29,6 +30,10 @@ Belgilar: ✅ shu repoda avtomatik tekshiriladi · 🟡 qisman · ⬜ qo'lda/tas
 - ⬜ Rang kontrasti (WCAG AA) ikkala mavzuda — axe jsdom'da kontrastni hisoblamaydi.
 - ⬜ Tray, global hotkey `Ctrl+Alt+B`, bildirishnomalar; qulfli holatda summa ko'rinmasligi; ekran yozib olishdan himoya (`contentProtected`).
 - ⬜ OS dialoglari: PDF (shartnoma, tilxat, smeta, davr hisoboti) va `.baraka` saqlash/ochish; chop etish.
+- ⬜ Kelishuv PDF'lari: shartnoma, ko'rik bayonnomasi («Bayonnoma PDF»), hakam ish papkasi («Hakam ish papkasi (PDF)») — OS «saqlash» oynasi va PDF mundarijasi (sahifa raqamlari) ochiladi.
+- ⬜ Sheriklik ustasi jonli önizlemasi (`iframe`, PDF blob-URL) WebView2 da ko'rinadi; 150% DPI da forma va o'ng ustun sig'adi (OPEN_QUESTIONS 108).
+- ⬜ Import: zanjiri ayrilgan (fork) `.baraka` fayl rad etiladi va hisobot ko'rinadi; buzilgan jurnal fayli rad etiladi (D14).
+- ⬜ «Katta foyda» tasdig'i va nizo bloki (davr yopish, taqsimot) qo'lda sinaladi: ogohlantirish matni, katakcha, tugma holati.
 - ⬜ Rus tili: barcha ekranlar ko'zdan kechiriladi (kalit to'liqligi avtomatik, uslub — qo'lda).
 - ⬜ Accessibility: axe faqat ba'zi sahifalarda (Almashish, Hunardan ishga, Sheriklik, Onboarding); qolgan sahifalar qo'lda.
 

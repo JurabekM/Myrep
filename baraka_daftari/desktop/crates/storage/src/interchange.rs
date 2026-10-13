@@ -15,7 +15,9 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use domain::{ts_from_str, ts_to_string, OffsetDateTime};
+use domain::{
+    entry_hash, ts_from_str, ts_to_string, HashedEntry, JournalKind, OffsetDateTime, GENESIS_HASH,
+};
 use rusqlite::{types::Value, Connection};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value as Json};
@@ -551,6 +553,140 @@ fn write_row(
 ///
 /// # Errors
 /// Hujjat noto'g'ri/yangi format yoki SQL xatosi (bunda hech narsa saqlanmaydi).
+/// Kelishuv jurnali yozuvi import uchun: xeshni qayta hisoblash uchun hamma maydonlar.
+struct JournalRow {
+    agreement_id: String,
+    seq: u32,
+    prev_hash: String,
+    hash: String,
+    hashed: HashedEntry,
+}
+
+fn journal_row(m: &Map<String, Json>) -> Result<JournalRow, StorageError> {
+    let need = |k: &str| text(m, k).ok_or_else(|| corrupt(format!("jurnal yozuvida {k} yo'q")));
+    let seq = m
+        .get("seq")
+        .and_then(Json::as_u64)
+        .and_then(|v| u32::try_from(v).ok())
+        .ok_or_else(|| corrupt("jurnal tartib raqami yo'q"))?;
+    let kind = JournalKind::parse(&need("kind")?).ok_or_else(|| corrupt("jurnal turi noma'lum"))?;
+    let amount = match m.get("amount_minor").and_then(Json::as_i64) {
+        Some(minor) => {
+            let currency = money::Currency::from_code(&need("amount_currency")?)
+                .map_err(|_| corrupt("jurnal valyutasi noma'lum"))?;
+            Some(money::Money::new(minor, currency))
+        }
+        None => None,
+    };
+    let agreement_id = need("agreement_id")?;
+    let hashed = HashedEntry {
+        id: need("id")?,
+        agreement_id: agreement_id.clone(),
+        kind,
+        party_id: text(m, "party_id"),
+        amount,
+        date: need("entry_date")?,
+        note: need("note")?,
+        reference: text(m, "reference"),
+        corrects: text(m, "corrects"),
+    };
+    Ok(JournalRow {
+        agreement_id,
+        seq,
+        prev_hash: need("prev_hash")?,
+        hash: need("hash")?,
+        hashed,
+    })
+}
+
+/// Import oldidan kelishuv jurnali tekshiriladi (SPEC 2F.6, D14).
+/// (1) Kelgan qatorlar o'zaro bog'langan bo'lishi kerak: ketma-ket tartib, har bir xesh qayta hisoblanadi
+/// va oldingi yozuvga ulanadi. Buzilgan bo'lsa import rad etiladi (xato).
+/// (2) Kelgan zanjir mahalliy zanjirga ulanishi kerak: birinchi yozuv mahalliy zanjirdagi oldingi xeshga
+/// teng bo'lsin, umumiy tartib raqamlaridagi xeshlar bir xil bo'lsin. Aks holda zanjir ayrilib ketgan (fork)
+/// yoki uzilgan: hech narsa yozilmaydi, hisobotda kelishuv ko'rsatiladi (avtomatik birlashtirilmaydi).
+fn check_journals(conn: &Connection, doc: &ExportDoc) -> Result<Vec<Conflict>, StorageError> {
+    let Some(dump) = doc.tables.iter().find(|d| d.name == "journal_entries") else {
+        return Ok(Vec::new());
+    };
+    let mut by_agreement: BTreeMap<String, Vec<JournalRow>> = BTreeMap::new();
+    for raw in &dump.rows {
+        let row = journal_row(raw)?;
+        by_agreement
+            .entry(row.agreement_id.clone())
+            .or_default()
+            .push(row);
+    }
+    let mut diverged = Vec::new();
+    for (agreement, mut rows) in by_agreement {
+        rows.sort_by_key(|r| r.seq);
+        for (i, r) in rows.iter().enumerate() {
+            if r.seq == 0
+                || (i > 0 && (r.seq != rows[i - 1].seq + 1 || r.prev_hash != rows[i - 1].hash))
+            {
+                return Err(corrupt(format!(
+                    "jurnal zanjiri buzilgan: kelishuv {agreement}, yozuv #{}",
+                    r.seq
+                )));
+            }
+            let expected = entry_hash(&r.prev_hash, &r.hashed)
+                .map_err(|_| corrupt("jurnal mazmuni yaroqsiz"))?;
+            if r.hash != expected {
+                return Err(corrupt(format!(
+                    "jurnal zanjiri buzilgan: kelishuv {agreement}, yozuv #{}",
+                    r.seq
+                )));
+            }
+        }
+        let local = local_chain(conn, &agreement)?;
+        let first = &rows[0];
+        let base = if first.seq == 1 {
+            Some(GENESIS_HASH.to_owned())
+        } else {
+            first
+                .seq
+                .checked_sub(1)
+                .and_then(|prev| local.get(&prev).cloned())
+        };
+        let attach_broken = base.as_deref() != Some(first.prev_hash.as_str());
+        let clash = rows
+            .iter()
+            .find(|r| local.get(&r.seq).is_some_and(|h| *h != r.hash))
+            .map(|r| r.seq);
+        if attach_broken {
+            diverged.push((agreement.clone(), first.seq, "mahalliy zanjirga ulanmaydi"));
+        } else if let Some(seq) = clash {
+            diverged.push((agreement.clone(), seq, "zanjir ayrilib ketgan"));
+        }
+    }
+    Ok(diverged
+        .into_iter()
+        .map(|(agreement, seq, why)| Conflict {
+            table: "journal_entries".into(),
+            id: agreement,
+            kind: ConflictKind::Journal,
+            resolution: Resolution::Skipped,
+            label: format!("kelishuv jurnali: {why} (yozuv #{seq}), import to'xtatildi"),
+        })
+        .collect())
+}
+
+/// Mahalliy kelishuv zanjiri: tartib raqami → xesh.
+fn local_chain(conn: &Connection, agreement: &str) -> Result<BTreeMap<u32, String>, StorageError> {
+    let mut stmt = conn.prepare("SELECT seq, hash FROM journal_entries WHERE agreement_id = ?1")?;
+    let rows = stmt.query_map([agreement], |r| {
+        Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?))
+    })?;
+    let mut out = BTreeMap::new();
+    for row in rows {
+        let (seq, hash) = row?;
+        if let Ok(seq) = u32::try_from(seq) {
+            out.insert(seq, hash);
+        }
+    }
+    Ok(out)
+}
+
 pub fn apply(
     conn: &Connection,
     doc: &ExportDoc,
@@ -582,6 +718,14 @@ pub fn apply(
     let mut report = ImportReport::default();
     let dumps: HashMap<&str, &TableDump> =
         doc.tables.iter().map(|d| (d.name.as_str(), d)).collect();
+    // Jurnal zanjiri: buzilgan yoki ayrilib ketgan bo'lsa, hech narsa yozilmaydi.
+    let forks = check_journals(conn, doc)?;
+    if !forks.is_empty() {
+        return Ok(ImportReport {
+            conflicts: forks,
+            ..ImportReport::default()
+        });
+    }
 
     for t in &infos {
         let Some(dump) = dumps.get(t.name.as_str()) else {
