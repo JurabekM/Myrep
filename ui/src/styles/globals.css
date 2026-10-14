@@ -1,0 +1,41 @@
+@import "@fontsource-variable/noto-sans";
+@import "tailwindcss";
+
+/*
+ * Dizayn tokenlari: qorong'i tema (Claude Code desktop uslubi).
+ * Ranglar faqat shu yerda belgilanadi; komponentlarda qattiq rang yozilmaydi.
+ * Noto Sans shrifti ʻ (U+02BB) va ʼ (U+02BC) belgilarini to'g'ri ko'rsatadi.
+ */
+@theme {
+  --font-sans: "Noto Sans Variable", system-ui, sans-serif;
+
+  --color-app: #1f1e1d; /* ilova foni */
+  --color-surface: #262624; /* yon panel, kartalar */
+  --color-raised: #30302e; /* ko'tarilgan yuzalar, faol band */
+  --color-border: #3d3d3a; /* chiziqlar */
+  --color-text: #f0eee6; /* asosiy matn */
+  --color-muted: #b5b2a7; /* ikkinchi darajali matn */
+  --color-subtle: #8c897f; /* yorliqlar, izohlar */
+  --color-accent: #d97757; /* urg'u rangi (clay) */
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-app font-sans text-text antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}

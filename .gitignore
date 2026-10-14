@@ -1,0 +1,29 @@
+# Bog'liqliklar va yig'ish natijalari.
+# Qoidalar ildizga anchorlangan (/), shuning uchun manba kod hech qachon yutilmaydi.
+/node_modules/
+/ui/node_modules/
+/ui/dist/
+/target/
+/src-tauri/gen/schemas/
+
+# Qamrov (coverage) hisobotlari
+/coverage/
+/ui/coverage/
+
+# Muhit va sirlar: haqiqiy qiymatlar repoga tushmasin
+.env
+.env.*
+!.env.example
+
+# Loglar
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Muharrir va operatsion tizim fayllari
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+desktop.ini

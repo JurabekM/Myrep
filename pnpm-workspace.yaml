@@ -1,0 +1,5 @@
+packages:
+  - ui
+minimumReleaseAgeExclude:
+  - "@testing-library/user-event@14.6.8"
+  - lucide-react@1.56.0

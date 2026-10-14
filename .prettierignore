@@ -1,0 +1,13 @@
+# Yig'ish va generatsiya qilingan fayllar
+ui/dist/
+ui/src/bindings/
+src-tauri/gen/
+target/
+node_modules/
+pnpm-lock.yaml
+Cargo.lock
+
+# Hujjatlar: uzun prompt matnlari asl holicha qoladi (foydalanuvchi tomonidan berilgan)
+docs/SPEC.md
+docs/DESKTOP_PROMPT.md
+docs/MVP_PLAN.md

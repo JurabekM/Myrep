@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "Baraka daftari",
+    "tagline": "Ribosiz shaxsiy moliya daftari"
+  },
+  "nav": {
+    "label": "Asosiy navigatsiya",
+    "home": "Bosh sahifa",
+    "income": "Daromad",
+    "expenses": "Xarajatlar",
+    "future": "Kelajagim",
+    "budget": "Byudjet",
+    "debts": "Qarzlar",
+    "ceremonies": "Marosimlar",
+    "partnerships": "Sheriklik",
+    "prices": "Narx daftari",
+    "chapters": "Boblar",
+    "settings": "Sozlamalar"
+  },
+  "common": {
+    "comingSoon": "Bu boʻlim keyingi bosqichda qoʻshiladi",
+    "loading": "Yuklanmoqda…",
+    "disclaimer": "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas."
+  },
+  "home": {
+    "greeting": "Assalomu alaykum!",
+    "subtitle": "Bugun daftaringizga bir qadam qoʻshing. Ilova maʼlumotlari shu kompyuterda qoladi.",
+    "appInfo": {
+      "title": "Ilova maʼlumoti",
+      "version": "Versiya",
+      "platform": "Platforma",
+      "build": "Yigʻish turi",
+      "release": "Reliz",
+      "debug": "Ishlab chiqish",
+      "error": "Ilova maʼlumotini olib boʻlmadi. Ilovani qayta ishga tushiring."
+    }
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "language": {
+      "title": "Til",
+      "hint": "Ilova tilini tanlang. Oʻzgarish darhol qoʻllanadi.",
+      "uz": "Oʻzbekcha (lotin)",
+      "ru": "Русский"
+    },
+    "privacy": {
+      "title": "Maxfiylik",
+      "text": "Maʼlumotlaringiz faqat shu kompyuterda saqlanadi. Server, akkaunt va telemetriya yoʻq."
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "Asosiy oyna uchun minimal ruxsatlar: yadro standarti va faqat get_app_info. shell, http va fs pluginlari yoqilmagan.",
+  "windows": ["main"],
+  "permissions": ["core:default", "allow-get-app-info"]
+}
