@@ -86,8 +86,10 @@ pub async fn accept_share(
 #[specta::specta]
 pub async fn get_vault(session: State<'_, Arc<Session>>) -> Result<VaultDto, ApiError> {
     let session = session.inner().clone();
-    run_blocking(move || session.with_database(|db| finance::vault(db, OffsetDateTime::now_utc())))
-        .await
+    run_blocking(move || {
+        session.with_database(|db| finance::open_vault(db, OffsetDateTime::now_utc()))
+    })
+    .await
 }
 
 /// Progressiv taklifga javob: qabul (+1 %) yoki rad.

@@ -9,8 +9,8 @@ use domain::calendar::{DateRange, month_of, previous_month_of, shift_days, tashk
 use domain::{
     Category, CategoryKey, Channel, DebtPayment, DomainError, Expense, ExpenseDraft, HabitStats,
     Household, Income, IncomeDraft, LedgerInput, Member, MemberRole, MonthLedger, MonthlyReport,
-    Obligation, ObligationDraft, ObligationKind, ShareRule, ShareTarget, ShopDebt, VaultEntry,
-    VaultMovement, build_month_ledger,
+    Obligation, ObligationDraft, ObligationKind, ShareRule, ShareTarget, ShopDebt, TaskTrigger,
+    VaultEntry, VaultMovement, build_month_ledger,
     debt::{outstanding, validate_payment},
     habit_stats, progression_offer, streak_since, suggest_share,
     vault::{balance, saved_in, validate_initial, validate_share, validate_withdrawal},
@@ -25,6 +25,7 @@ use time::format_description::well_known::Iso8601;
 use time::{Date, OffsetDateTime};
 use uuid::Uuid;
 
+use crate::content;
 use crate::dto::{
     AuditDto, AuditStatusDto, CategoryDto, CategorySpentDto, DebtDto, HabitDto, HomeDto, IncomeDto,
     IncomeInputDto, IncomeOutcomeDto, MoneyDto, ObligationDto, ObligationInputDto,
@@ -383,6 +384,8 @@ pub fn accept_share(
             income_id: income.id.clone(),
         },
     )?;
+    content::record_event(db, now, TaskTrigger::IncomeShared)?;
+    content::record_event(db, now, TaskTrigger::VaultFirstDeposit)?;
     vault_overview(db, &ctx, now)
 }
 
@@ -410,6 +413,13 @@ fn insert_vault_entry(
 pub fn vault(db: &Database, now: OffsetDateTime) -> Result<VaultDto, SessionError> {
     let ctx = context(db, now)?;
     vault_overview(db, &ctx, now)
+}
+
+/// «Kelajagim» ekrani ochildi: ma'lumot qaytariladi va `VAULT_OPENED` hodisasi yoziladi.
+pub fn open_vault(db: &Database, now: OffsetDateTime) -> Result<VaultDto, SessionError> {
+    let dto = vault(db, now)?;
+    content::record_event(db, now, TaskTrigger::VaultOpened)?;
+    Ok(dto)
 }
 
 /// Progressiv taklifni qabul qiladi yoki rad etadi. Ikkala holatda ketma-ketlik yangidan sanaladi.
@@ -620,6 +630,7 @@ pub fn add_audit_expense(
         last_day(period)?,
         note,
     )?;
+    content::record_event(db, now, TaskTrigger::ExpenseRecorded)?;
     build_audit(db, &ctx, now, period)
 }
 
@@ -684,6 +695,7 @@ pub fn finish_audit(db: &Database, now: OffsetDateTime) -> Result<AuditDto, Sess
         DEVICE_ID,
     )?;
     ReportRepo::new(db.connection()).insert(&report)?;
+    content::record_event(db, now, TaskTrigger::AuditCompleted)?;
     build_audit(db, &ctx, now, period)
 }
 

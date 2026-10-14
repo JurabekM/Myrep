@@ -34,6 +34,13 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 27. **Nasiya — minimal (D4).** Faqat asl summa, qoldiq va qisman to'lov. Foiz, qarz tilxati va friction — D9 da. _Kerak: D9._
 28. **«Oy yakuni» ta'rifi (D4).** Mobil ta'rifi bo'yicha «Oy yakuni» = `daromad − (yozilmagan majburiyat + xarajat + sof jamg'arma)` — bu izohsiz summa bilan bir xil formula. Ikki ko'rsatkich bir xil bo'lishi to'g'rimi yoki «Oy yakuni» boshqacha (masalan, to'liq majburiyat bilan) hisoblansinmi? _Kerak: D4 ni ko'rib chiqish._
 
+29. **Qissa matnlari placeholder (D5).** Barcha 5 bobning qissa va qonun matnlari `[Placeholder]` bilan turibdi. Litsenziya hal bo'lmaguncha asl matn kelmaydi (kontent egasi — «Asaxiy Invest» × Abdukarim Mirzayev). Asl matn kelganda `spec/content/chapters.json` almashtiriladi va mobil bilan birga sinxronlanadi. _Kerak: kontent litsenziyasi tasdiqlanganda._
+30. **Diniy matnlar ulamo tekshiruvida (D5).** 5 ta `religiousReviewStatus: PENDING` bloki bor. Release'da yashirin (test bor); debug buildda «ulamo tekshiruvida» belgisi bilan ko'rinadi. Tasdiqlanganda JSON'da `APPROVED` ga o'tkaziladi. _Kerak: ulamo tasdig'i._
+31. **Audio (D5).** `audioUrl` hozir hech bir bobda yo'q, pleyer UI ham yo'q. _Kerak: audio tayyor bo'lganda._
+32. **Ochilish parametrlari (D5).** Standart — 2 vazifa va 7 kun (mobil bilan bir xil). Foydalanuvchi sozlashi kerakmi, yoki qat'iy qoladimi? _Kerak: D6 (sozlamalar) oldidan._
+33. **Hodisasiz vazifalar (D5).** `ch02.t2`, `ch02.t3`, `ch03.*`, `ch04.*`, `ch05.t1` uchun modullar hali yo'q: bu vazifalar faqat qo'lda belgilanadi. Modul tayyor bo'lganda shu hodisa `record_event` orqali yoziladi. `ch05.t2` — hodisasi yo'q, qo'lda. _Kerak: D6–D9 har modulida._
+34. **«Daftar sahifasi» uzunligi (D5).** Standart qaror: 5000 belgi (backend va textarea). Mobilda chegara yo'q edi. Chegara to'g'rimi yoki boshqacha bo'lsinmi? _Kerak: tasdiq._
+
 ## Hal qilingan
 
 - **MoneyParser (D4, 2026-10-14).** `money::parse_amount` mobil qoidalari bo'yicha: bo'sh joy, `_`, apostroflar, valyuta belgisi va so'zi; `money_parse.json` (16 vektor, shu jumladan xato holatlari). _(6-band)_

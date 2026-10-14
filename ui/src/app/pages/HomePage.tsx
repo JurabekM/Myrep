@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { AppInfoCard } from "../components/AppInfoCard";
+import { WeeklyTasksCard } from "../components/WeeklyTasksCard";
 import { Alert, Card, PageHeader, PrimaryButton, SecondaryButton, Stat } from "../finance/ui";
 import { fetchers, financeKeys } from "../finance/queries";
 import { useUiStore } from "../store";
@@ -52,6 +53,8 @@ export function HomePage() {
                 : t("home.habit.thisWeekPending")}
             </p>
           </Card>
+
+          <WeeklyTasksCard />
 
           <Card title={t("home.audit.title")}>
             {home.data.audit.done ? (

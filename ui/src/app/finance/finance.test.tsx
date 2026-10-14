@@ -35,6 +35,11 @@ vi.mock("../../bindings/bindings", () => ({
     listDebts: vi.fn(),
     addDebt: vi.fn(),
     payDebt: vi.fn(),
+    listChapters: vi.fn(),
+    getChapter: vi.fn(),
+    getWeeklyTasks: vi.fn(),
+    setTaskDone: vi.fn(),
+    saveDaftarPage: vi.fn(),
   },
 }));
 

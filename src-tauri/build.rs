@@ -30,6 +30,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "list_debts",
             "add_debt",
             "pay_debt",
+            "list_chapters",
+            "get_chapter",
+            "get_weekly_tasks",
+            "set_task_done",
+            "save_daftar_page",
         ]),
     ))?;
     Ok(())

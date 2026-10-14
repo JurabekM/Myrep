@@ -6,17 +6,22 @@
 
 pub mod calendar;
 pub mod category;
+pub mod content;
+pub mod content_parser;
 pub mod debt;
 pub mod expense;
 pub mod habit;
 pub mod income;
 pub mod ledger;
 pub mod obligation;
+pub mod progress;
 pub mod report;
 pub mod share;
+pub mod unlock;
 pub mod vault;
 
 pub use category::{Category, CategoryKey};
+pub use content::{Chapter, ContentBlock, ContentLoadResult, TaskTrigger};
 pub use debt::{DebtPayment, ShopDebt};
 pub use expense::{Expense, ExpenseDraft};
 pub use habit::{HabitStats, habit_stats, streak_since};
@@ -25,8 +30,10 @@ pub use ledger::{
     LedgerInput, MoneyOwner, MonthLedger, ObligationLine, build_month_ledger, whose_money,
 };
 pub use obligation::{Obligation, ObligationDraft, ObligationKind};
+pub use progress::{DaftarPage, TaskCompletion};
 pub use report::MonthlyReport;
 pub use share::{ShareRule, ShareTarget, progression_offer, suggest_share};
+pub use unlock::{ChapterUnlock, ChapterUnlockPolicy, HabitUnlockPolicy, UnlockContext};
 pub use vault::{VaultEntry, VaultMovement};
 
 use thiserror::Error;
@@ -92,6 +99,18 @@ pub enum DomainError {
     /// Izohsiz qolgan summa yo'q: belgilash uchun hech narsa yo'q.
     #[error("izohsiz qolgan summa yo'q")]
     NothingToMark,
+    /// Bob hali ochilmagan: uning sahifasi va vazifalari ochiq emas.
+    #[error("bob hali ochilmagan")]
+    ChapterLocked,
+    /// Vazifa joriy bobga tegishli emas (faqat joriy bobning haftalik vazifalari belgilanadi).
+    #[error("vazifa joriy bobga tegishli emas")]
+    TaskNotCurrent,
+    /// «Daftar sahifasi» matni bo'sh.
+    #[error("sahifa matni bo'sh bo'lmasligi kerak")]
+    BodyRequired,
+    /// «Daftar sahifasi» matni chegaradan uzun.
+    #[error("sahifa matni 5000 belgidan oshmasligi kerak")]
+    BodyTooLong,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -115,6 +134,10 @@ impl DomainError {
             Self::InvalidDay => "INVALID_DAY",
             Self::AuditAlreadyDone => "AUDIT_ALREADY_DONE",
             Self::NothingToMark => "NOTHING_TO_MARK",
+            Self::ChapterLocked => "CHAPTER_LOCKED",
+            Self::TaskNotCurrent => "TASK_NOT_CURRENT",
+            Self::BodyRequired => "BODY_REQUIRED",
+            Self::BodyTooLong => "BODY_TOO_LONG",
             Self::Money(error) => error.code(),
         }
     }

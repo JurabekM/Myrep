@@ -6,6 +6,7 @@
 mod db;
 mod error;
 mod finance;
+mod progress;
 mod repo;
 pub mod schema;
 
@@ -15,4 +16,5 @@ pub use finance::{
     CategoryRepo, DebtRepo, ExpenseRepo, IncomeRepo, ObligationRepo, ReportRepo, RuleRepo,
     StoredRule, VaultRepo,
 };
+pub use progress::{DaftarPageRepo, TaskCompletionRepo};
 pub use repo::{HouseholdRepo, MemberRepo};

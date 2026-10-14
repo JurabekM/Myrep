@@ -76,4 +76,6 @@ export function resetFinanceMocks(): void {
   vi.mocked(commands.listCategories).mockResolvedValue({ status: "ok", data: AUDIT.categories });
   vi.mocked(commands.listObligations).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.listDebts).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.listChapters).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.getWeeklyTasks).mockResolvedValue({ status: "ok", data: null });
 }

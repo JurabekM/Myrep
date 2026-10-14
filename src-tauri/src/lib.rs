@@ -4,6 +4,8 @@
 //! commandlar yupqa bo'ladi (DESKTOP_PROMPT.md 3.2).
 
 mod commands;
+mod content;
+mod content_commands;
 mod dto;
 mod finance;
 mod finance_commands;
@@ -61,6 +63,11 @@ fn specta_builder() -> Builder<tauri::Wry> {
         finance_commands::list_debts,
         finance_commands::add_debt,
         finance_commands::pay_debt,
+        content_commands::list_chapters,
+        content_commands::get_chapter,
+        content_commands::get_weekly_tasks,
+        content_commands::set_task_done,
+        content_commands::save_daftar_page,
     ])
 }
 

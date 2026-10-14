@@ -434,6 +434,137 @@ pub struct DebtDto {
     pub note: Option<String>,
 }
 
+/// Ko'p tilli matn: ikkala til ham doim to'ldirilgan (ruscha yo'q bo'lsa o'zbekcha nusxa).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalizedDto {
+    /// O'zbekcha (asosiy).
+    pub uz: String,
+    /// Ruscha (yo'q bo'lsa — o'zbekcha).
+    pub ru: String,
+}
+
+/// Bob qonuni (sarlavha va matn).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LawDto {
+    /// Qonun raqami.
+    pub number: u32,
+    /// Qonun matni.
+    pub text: LocalizedDto,
+}
+
+/// Bob bloki. Diniy blok release'da faqat tasdiqlangan holda keladi (`approved` har doim `true`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum ContentBlockDto {
+    /// Oddiy abzats.
+    Paragraph {
+        /// Matn.
+        text: LocalizedDto,
+    },
+    /// Iqtibos.
+    Quote {
+        /// Matn.
+        text: LocalizedDto,
+    },
+    /// Oyat yoki hadis. `approved` `false` faqat ishlab chiqish (debug) rejimida chiqadi.
+    Religious {
+        /// Matn.
+        text: LocalizedDto,
+        /// Manba.
+        source: LocalizedDto,
+        /// Ulamo tasdiqlaganmi.
+        approved: bool,
+    },
+}
+
+/// Haftalik vazifa.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskDto {
+    /// Vazifa ID (`ch01.t1`).
+    pub id: String,
+    /// Vazifa matni.
+    pub text: LocalizedDto,
+    /// Ilova avtomatik belgilaydi (ko'rsatma uchun).
+    pub auto_completed: bool,
+    /// Bajarilganmi.
+    pub done: bool,
+}
+
+/// Bob kartochkasi (ro'yxat uchun).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ChapterCardDto {
+    /// Bob ID.
+    pub id: String,
+    /// Tartib raqami (1..5).
+    pub order: u32,
+    /// Sarlavha.
+    pub title: LocalizedDto,
+    /// Hozir ochiqmi.
+    pub unlocked: bool,
+    /// Ochilish sanasi (`YYYY-MM-DD`), aniq bo'lsa.
+    pub unlock_date: Option<String>,
+    /// Oldingi bobdan yana nechta vazifa kerak (yopiq bob uchun).
+    pub tasks_remaining: u32,
+    /// Kun sharti bo'yicha eng erta sana (aniq bo'lsa).
+    pub not_before: Option<String>,
+}
+
+/// «Daftar sahifasi»: foydalanuvchining o'z so'zlari.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DaftarPageDto {
+    /// Bob ID.
+    pub chapter_id: String,
+    /// Qonun raqami.
+    pub law_number: u32,
+    /// Matn.
+    pub body: String,
+    /// Oxirgi yangilanish sanasi (Toshkent, `YYYY-MM-DD`).
+    pub updated_on: String,
+}
+
+/// Bob sahifasi (ochiq bob uchun).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ChapterDto {
+    /// Bob ID.
+    pub id: String,
+    /// Tartib raqami.
+    pub order: u32,
+    /// Sarlavha.
+    pub title: LocalizedDto,
+    /// Bloklar (diniy bloklar release'da tasdiqlangani bilan).
+    pub blocks: Vec<ContentBlockDto>,
+    /// Qonun.
+    pub law: LawDto,
+    /// Haftalik vazifalar. Joriy bob uchun — shu haftaniki; boshqa bob uchun — bir marta bajarilgan bo'lsa `done`.
+    pub weekly_tasks: Vec<TaskDto>,
+    /// Hozirgi (eng so'nggi ochilgan) bob mi — vazifalarni shu hafta belgilash mumkin.
+    pub is_current: bool,
+    /// Audio (https), bo'lsa.
+    pub audio_url: Option<String>,
+    /// «Daftar sahifasi», yozilgan bo'lsa.
+    pub daftar_page: Option<DaftarPageDto>,
+}
+
+/// Joriy bobning shu haftalik vazifalari (bosh sahifa va bob sahifasi uchun).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct WeeklyTasksDto {
+    /// Joriy bob ID.
+    pub chapter_id: String,
+    /// Joriy bob sarlavhasi.
+    pub chapter_title: LocalizedDto,
+    /// Hafta boshi (juma, `YYYY-MM-DD`).
+    pub week_start: String,
+    /// Vazifalar.
+    pub tasks: Vec<TaskDto>,
+}
+
 /// Pul olish ma'lumoti (forma). PIN alohida argument sifatida keladi.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]

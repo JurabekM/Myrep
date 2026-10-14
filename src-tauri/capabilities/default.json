@@ -31,6 +31,11 @@
     "allow-set-obligation-active",
     "allow-list-debts",
     "allow-add-debt",
-    "allow-pay-debt"
+    "allow-pay-debt",
+    "allow-list-chapters",
+    "allow-get-chapter",
+    "allow-get-weekly-tasks",
+    "allow-set-task-done",
+    "allow-save-daftar-page"
   ]
 }

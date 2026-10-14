@@ -2,6 +2,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { AuditPage } from "./pages/AuditPage";
+import { ChaptersPage } from "./pages/ChaptersPage";
 import { HomePage } from "./pages/HomePage";
 import { IncomePage } from "./pages/IncomePage";
 import { ObligationsPage } from "./pages/ObligationsPage";
@@ -82,6 +83,8 @@ function CurrentPage({ page }: { page: PageId }) {
       return <WhoseMoneyPage />;
     case "obligations":
       return <ObligationsPage />;
+    case "chapters":
+      return <ChaptersPage />;
     case "settings":
       return <SettingsPage />;
     default:

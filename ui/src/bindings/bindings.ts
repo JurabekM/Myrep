@@ -59,6 +59,34 @@ export const commands = {
 	addDebt: (creditor: string, amount: string, note: string | null) => typedError<DebtDto[], ApiError>(__TAURI_INVOKE("add_debt", { creditor, amount, note })),
 	/**  Nasiyaga qisman to'lov. */
 	payDebt: (debtId: string, amount: string) => typedError<DebtDto[], ApiError>(__TAURI_INVOKE("pay_debt", { debtId, amount })),
+	/**  Bob ro'yxati: ochiq-yopiqlik, ochilish sanasi va kerakli vazifalar. */
+	listChapters: () => typedError<ChapterCardDto[], ApiError>(__TAURI_INVOKE("list_chapters")),
+	/**  Ochiq bob sahifasi (matn, qonun, vazifalar, «Daftar sahifasi»). */
+	getChapter: (chapterId: string) => typedError<ChapterDto, ApiError>(__TAURI_INVOKE("get_chapter", { chapterId })),
+	/**  Joriy bobning shu haftalik vazifalari. */
+	getWeeklyTasks: () => typedError<{
+	/**  Joriy bob ID. */
+	chapterId: string,
+	/**  Joriy bob sarlavhasi. */
+	chapterTitle: LocalizedDto,
+	/**  Hafta boshi (juma, `YYYY-MM-DD`). */
+	weekStart: string,
+	/**  Vazifalar. */
+	tasks: TaskDto[],
+} | null, ApiError>(__TAURI_INVOKE("get_weekly_tasks")),
+	/**  Joriy bobning vazifasini shu hafta uchun belgilaydi yoki bekor qiladi. */
+	setTaskDone: (taskId: string, done: boolean) => typedError<{
+	/**  Joriy bob ID. */
+	chapterId: string,
+	/**  Joriy bob sarlavhasi. */
+	chapterTitle: LocalizedDto,
+	/**  Hafta boshi (juma, `YYYY-MM-DD`). */
+	weekStart: string,
+	/**  Vazifalar. */
+	tasks: TaskDto[],
+} | null, ApiError>(__TAURI_INVOKE("set_task_done", { taskId, done })),
+	/**  «Daftar sahifasi»ni saqlaydi (bob uchun bitta, yangilanadi). */
+	saveDaftarPage: (chapterId: string, body: string) => typedError<DaftarPageDto, ApiError>(__TAURI_INVOKE("save_daftar_page", { chapterId, body })),
 };
 
 /* Types */
@@ -173,6 +201,77 @@ export type ChannelDto =
 /**  Karta. */
 "CARD";
 
+/**  Bob kartochkasi (ro'yxat uchun). */
+export type ChapterCardDto = {
+	/**  Bob ID. */
+	id: string,
+	/**  Tartib raqami (1..5). */
+	order: number,
+	/**  Sarlavha. */
+	title: LocalizedDto,
+	/**  Hozir ochiqmi. */
+	unlocked: boolean,
+	/**  Ochilish sanasi (`YYYY-MM-DD`), aniq bo'lsa. */
+	unlockDate: string | null,
+	/**  Oldingi bobdan yana nechta vazifa kerak (yopiq bob uchun). */
+	tasksRemaining: number,
+	/**  Kun sharti bo'yicha eng erta sana (aniq bo'lsa). */
+	notBefore: string | null,
+};
+
+/**  Bob sahifasi (ochiq bob uchun). */
+export type ChapterDto = {
+	/**  Bob ID. */
+	id: string,
+	/**  Tartib raqami. */
+	order: number,
+	/**  Sarlavha. */
+	title: LocalizedDto,
+	/**  Bloklar (diniy bloklar release'da tasdiqlangani bilan). */
+	blocks: ContentBlockDto[],
+	/**  Qonun. */
+	law: LawDto,
+	/**  Haftalik vazifalar. Joriy bob uchun — shu haftaniki; boshqa bob uchun — bir marta bajarilgan bo'lsa `done`. */
+	weeklyTasks: TaskDto[],
+	/**  Hozirgi (eng so'nggi ochilgan) bob mi — vazifalarni shu hafta belgilash mumkin. */
+	isCurrent: boolean,
+	/**  Audio (https), bo'lsa. */
+	audioUrl: string | null,
+	/**  «Daftar sahifasi», yozilgan bo'lsa. */
+	daftarPage: DaftarPageDto | null,
+};
+
+/**  Bob bloki. Diniy blok release'da faqat tasdiqlangan holda keladi (`approved` har doim `true`). */
+export type ContentBlockDto = 
+/**  Oddiy abzats. */
+{ type: "paragraph"; 
+/**  Matn. */
+text: LocalizedDto } | 
+/**  Iqtibos. */
+{ type: "quote"; 
+/**  Matn. */
+text: LocalizedDto } | 
+/**  Oyat yoki hadis. `approved` `false` faqat ishlab chiqish (debug) rejimida chiqadi. */
+{ type: "religious"; 
+/**  Matn. */
+text: LocalizedDto; 
+/**  Manba. */
+source: LocalizedDto; 
+/**  Ulamo tasdiqlaganmi. */
+approved: boolean };
+
+/**  «Daftar sahifasi»: foydalanuvchining o'z so'zlari. */
+export type DaftarPageDto = {
+	/**  Bob ID. */
+	chapterId: string,
+	/**  Qonun raqami. */
+	lawNumber: number,
+	/**  Matn. */
+	body: string,
+	/**  Oxirgi yangilanish sanasi (Toshkent, `YYYY-MM-DD`). */
+	updatedOn: string,
+};
+
 /**  Nasiya. */
 export type DebtDto = {
 	/**  Identifikator. */
@@ -249,6 +348,22 @@ export type IncomeOutcomeDto = {
 	income: IncomeDto,
 	/**  «Shundan X so'm — kelajagingiz uchun». `null` — taklif yo'q. */
 	shareSuggestion: MoneyDto | null,
+};
+
+/**  Bob qonuni (sarlavha va matn). */
+export type LawDto = {
+	/**  Qonun raqami. */
+	number: number,
+	/**  Qonun matni. */
+	text: LocalizedDto,
+};
+
+/**  Ko'p tilli matn: ikkala til ham doim to'ldirilgan (ruscha yo'q bo'lsa o'zbekcha nusxa). */
+export type LocalizedDto = {
+	/**  O'zbekcha (asosiy). */
+	uz: string,
+	/**  Ruscha (yo'q bo'lsa — o'zbekcha). */
+	ru: string,
 };
 
 /**  Pul qiymati: minor birlik (satr), valyuta kodi va ko'rsatish uchun formatlangan matn. */
@@ -367,6 +482,18 @@ export type ShareRuleInputDto = {
 	progressive: boolean,
 };
 
+/**  Haftalik vazifa. */
+export type TaskDto = {
+	/**  Vazifa ID (`ch01.t1`). */
+	id: string,
+	/**  Vazifa matni. */
+	text: LocalizedDto,
+	/**  Ilova avtomatik belgilaydi (ko'rsatma uchun). */
+	autoCompleted: boolean,
+	/**  Bajarilganmi. */
+	done: boolean,
+};
+
 /**  «Kelajagim» ekrani. */
 export type VaultDto = {
 	/**  Balans. */
@@ -399,6 +526,18 @@ export type VaultEntryDto = {
 	reason: string | null,
 	/**  Manba daromad (faqat `INCOME_SHARE`). */
 	incomeId: string | null,
+};
+
+/**  Joriy bobning shu haftalik vazifalari (bosh sahifa va bob sahifasi uchun). */
+export type WeeklyTasksDto = {
+	/**  Joriy bob ID. */
+	chapterId: string,
+	/**  Joriy bob sarlavhasi. */
+	chapterTitle: LocalizedDto,
+	/**  Hafta boshi (juma, `YYYY-MM-DD`). */
+	weekStart: string,
+	/**  Vazifalar. */
+	tasks: TaskDto[],
 };
 
 /**  «Kimning puli?» ekrani. */

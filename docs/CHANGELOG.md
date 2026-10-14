@@ -4,6 +4,45 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D5 — Kontent dvigateli: boblar, odat asosidagi ochilish, haftalik vazifalar, «Daftar sahifasi» (2026-10-14)
+
+**Qo'shildi**
+
+- **Kontent (`spec/content/`):** `chapters.json` va `content_schema.json` mobil repo bilan bayt-bayt bir xil (sha256 tekshirilgan). 5 bob, har bobda aniq 3 ta haftalik vazifa, qonun va diniy bloklar. Qissa matnlari hozircha placeholder.
+- **`crates/domain`:**
+  - `content` — `LocalizedText` (`uz` majburiy, `ru` ixtiyoriy), `ContentBlock` (paragraph, quote, religious + `ReligiousReviewStatus`), `Chapter`, `Law`, `WeeklyTask`, `TaskTrigger` (17 hodisa kodi; noma'lum kod bobni yaroqsiz qiladi).
+  - `content_parser` — mobil `ContentParser` qoidalari va xato xabarlari; buzuq bob o'tkazib yuboriladi, butun fayl buzuq bo'lsa — bo'sh natija.
+  - `unlock` — `ChapterUnlockPolicy`; `HabitUnlockPolicy` (standart: 2 vazifa, 7 kun — SPEC 2C.6) va `TimeBasedUnlockPolicy` (mobil bilan paritet).
+  - `progress` — `TaskCompletion` (hafta boshi bo'yicha), `DaftarPage` (bob uchun bitta, 5000 belgigacha).
+  - `DomainError`: `CHAPTER_LOCKED`, `TASK_NOT_CURRENT`, `BODY_REQUIRED`, `BODY_TOO_LONG`.
+- **`crates/storage`:** sxema v3 (faqat yangi jadvallar: `task_completions`, `daftar_pages`; v1 va v2 o'zgarmagan). Repo'lar: `TaskCompletionRepo` (hafta bo'yicha; birinchi bajarilish tarixi mantiqiy o'chirilganlarni ham hisobga oladi), `DaftarPageRepo`.
+- **`src-tauri`:**
+  - `content` servisi: kontent bir marta yuklanadi (kompilyatsiyada `include_str!`); ochilish, joriy bob va bajarilishlar har chaqiriqda hisoblanadi.
+  - Command'lar: `list_chapters`, `get_chapter`, `get_weekly_tasks`, `set_task_done`, `save_daftar_page`.
+  - Avtomatik hodisalar: `VAULT_OPENED` («Kelajagim» ochilganda), `INCOME_SHARED` va `VAULT_FIRST_DEPOSIT` (ulush qabul qilinganda), `EXPENSE_RECORDED` (audit xarajati), `AUDIT_COMPLETED` (audit yakunida), `DAFTAR_PAGE_WRITTEN` (sahifa saqlanganda).
+  - Tasdiqlanmagan diniy blok DTO'ga release'da kirmaydi (`SHOW_PENDING_RELIGIOUS = cfg!(debug_assertions)`).
+  - `ApiError`'ga yangi variant qo'shilmadi: yangi xatolar mavjud `Rule { rule }` orqali yuboriladi.
+- **UI:** «Boblar» (ro'yxat: ochiq/yopiq holat, ochilish sharti), bob sahifasi (qissa bloklari, qonun, haftalik vazifalar, «Daftar sahifasi»), bosh sahifada «Shu haftaning vazifalari» kartasi. Har kontent ekranida disklеymer. i18n: uz va ru (kalitlar parite).
+- **Bog'liqlik:** `crates/domain` ga `serde_json` qo'shildi (kontent JSON'ini domen qatlamida tekshirish uchun). `serde_json` workspace'da allaqachon bor (`vectors`, `src-tauri`); yangi crate emas, ADR o'zgarmadi.
+
+**Qarorlar va sabablar**
+
+- **Ochilish mobil bilan bir xil.** Keyingi bob: oldingi bobning 2 ta vazifasi bajarilgan va kamida 7 kun o'tgan bo'lsa ochiladi. Ochilgan bob qayta yopilmaydi: birinchi bajarilish sanasi mantiqiy o'chirilganda ham saqlanadi.
+- **Joriy bob — eng so'nggi ochilgan bob.** Haftalik vazifalar faqat shu bob uchun shu hafta belgilanadi. Oldingi boblarda vazifalar faqat ko'rsatiladi (bir marta bajarilgan bo'lsa belgisi bilan).
+- **Hafta juma kunidan boshlanadi** (`week_of`, mobil bilan bir xil).
+- **Tasdiqlanmagan diniy blok.** Release'da yashirin: `cargo test --release` da `release_buildda_get_chapter_pending_blokni_chiqarmaydi` shuni tekshiradi. Debug buildda ulamo tekshiruvi uchun ko'rinadi va «ulamo tekshiruvida» belgisi bilan chiqadi.
+- **Avtomatik belgilash idempotent.** Bir hafta ichida bir vazifa ikki marta yozilmaydi; hodisa faqat joriy bobning vazifalariga tegishli.
+- **`VAULT_OPENED`** — «Kelajagim» ma'lumoti yuklanganda yoziladi. Ma'lumot qayta yuklanganda ham chaqiriladi, lekin haftada bir marta yoziladi.
+- **«Daftar sahifasi» — 5000 belgi chegarasi** (standart qaror; mobilda chegara yo'q edi). OPEN_QUESTIONS, 34-band.
+
+**Tekshiruv**
+
+- `cargo test --workspace`: domen (unlock, parser, progress, content), storage (progress oqimlari, migratsiya v3), src-tauri (content servisi: ochilish, hodisa, DTO, Daftar sahifasi), vektorlar — yashil.
+- `cargo test --release -p baraka-daftari release_buildda`: release buildda tasdiqlanmagan diniy blok `get_chapter` javobida yo'q — yashil.
+- `cargo clippy --workspace --all-targets -- -D warnings`: toza. `cargo fmt --all -- --check`: toza.
+- Frontend: `pnpm test` (7 fayl, 34 test), `pnpm lint`, `pnpm typecheck`, `pnpm format:check` — yashil.
+- GUI: dev build (`pnpm dev`) ochilmadi — native oyna avtomatizatsiyaga ulanmadi. Shu sababli React UI in-app brauzerda, IPC soxtasi bilan tekshirildi: ro'yxat, ochiq/yopiq bob, bob sahifasi, vazifa belgilash va olib tashlash, «Daftar sahifasi» saqlash, RU/UZ almashinuvi, «Barcha boblar» va «Boblar roʻyxatiga qaytish» tugmalari, bosh sahifa kartasi. Haqiqiy Tauri IPC bilan E2E hali o'tkazilmagan (OPEN_QUESTIONS, 14-band).
+
 ### D4 — Daromad, «Kelajagim», audit, «Kimning puli?», majburiyat va nasiya, bosh sahifa (2026-10-14)
 
 **Qo'shildi**

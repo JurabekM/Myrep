@@ -259,9 +259,43 @@ CREATE TABLE monthly_reports (
 ) STRICT;
 "#;
 
+/// Sxema v3 (D5, kontent dvigateli): haftalik vazifa bajarilishi va «Daftar sahifasi».
+/// Vazifa belgisi mantiqiy o'chiriladi — birinchi bajarilish tarixi bob ochilishi uchun saqlanadi.
+/// Bob uchun «Daftar sahifasi» bitta (`UNIQUE (household_id, chapter_id)`).
+pub const SCHEMA_V3: &str = r#"
+CREATE TABLE task_completions (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    task_id TEXT NOT NULL CHECK (length(trim(task_id)) > 0),
+    week_start TEXT NOT NULL,
+    is_auto INTEGER NOT NULL CHECK (is_auto IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX task_completions_by_week ON task_completions (household_id, week_start);
+CREATE INDEX task_completions_by_task ON task_completions (household_id, task_id);
+
+CREATE TABLE daftar_pages (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    chapter_id TEXT NOT NULL CHECK (length(trim(chapter_id)) > 0),
+    law_number INTEGER NOT NULL CHECK (law_number >= 1),
+    body TEXT NOT NULL CHECK (length(trim(body)) > 0),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (household_id, chapter_id)
+) STRICT;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(SCHEMA_V1), M::up(SCHEMA_V2)])
+    Migrations::new(vec![M::up(SCHEMA_V1), M::up(SCHEMA_V2), M::up(SCHEMA_V3)])
 }
 
 /// Sxemadagi jadvallar (testlar va hujjat uchun).
@@ -280,4 +314,6 @@ pub const TABLES: &[&str] = &[
     "debts",
     "debt_payments",
     "monthly_reports",
+    "task_completions",
+    "daftar_pages",
 ];

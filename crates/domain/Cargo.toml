@@ -17,6 +17,8 @@ money = { package = "baraka-money", path = "../money" }
 time = "0.3"
 # Xatolar (ADR: thiserror).
 thiserror = "2"
+# Kontent JSON'ini o'qish (spec/content/chapters.json). Workspace'da allaqachon bor (vectors, src-tauri).
+serde_json = "1"
 
 [dev-dependencies]
 # Testlarda aniq vaqt konstantalari uchun (`datetime!`).

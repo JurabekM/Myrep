@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-weekly-tasks"
+description = "Enables the get_weekly_tasks command without any pre-configured scope."
+commands.allow = ["get_weekly_tasks"]
+
+[[permission]]
+identifier = "deny-get-weekly-tasks"
+description = "Denies the get_weekly_tasks command without any pre-configured scope."
+commands.deny = ["get_weekly_tasks"]

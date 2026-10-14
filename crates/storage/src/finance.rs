@@ -24,12 +24,12 @@ const VAULT_ASSET_NAME: &str = "Kelajagim";
 /// Yagona «Kelajagim» hovuzi turi (qorovul; D8 da ajratiladi).
 const VAULT_TYPE: &str = "QOROVUL";
 
-fn format_date(date: Date) -> Result<String, StorageError> {
+pub(crate) fn format_date(date: Date) -> Result<String, StorageError> {
     date.format(&Iso8601::DATE)
         .map_err(|_| StorageError::InvalidData("sana".to_owned()))
 }
 
-fn parse_date(text: &str) -> Result<Date, StorageError> {
+pub(crate) fn parse_date(text: &str) -> Result<Date, StorageError> {
     Date::parse(text, &Iso8601::DATE)
         .map_err(|_| StorageError::InvalidData("sana formati".to_owned()))
 }
@@ -45,7 +45,7 @@ fn currency_code(money: Money) -> &'static str {
 }
 
 /// Bazadagi metama'lumot ustunlari (`created_at`, `updated_at`, `deleted_at`, `version`, `origin_device_id`).
-struct RawMeta {
+pub(crate) struct RawMeta {
     created_at: String,
     updated_at: String,
     deleted_at: Option<String>,
@@ -55,7 +55,7 @@ struct RawMeta {
 
 impl RawMeta {
     /// `start` dan boshlab besh ustunni o'qiydi.
-    fn read(row: &Row<'_>, start: usize) -> rusqlite::Result<Self> {
+    pub(crate) fn read(row: &Row<'_>, start: usize) -> rusqlite::Result<Self> {
         Ok(Self {
             created_at: row.get(start)?,
             updated_at: row.get(start + 1)?,
@@ -65,7 +65,7 @@ impl RawMeta {
         })
     }
 
-    fn into_meta(self) -> Result<Meta, StorageError> {
+    pub(crate) fn into_meta(self) -> Result<Meta, StorageError> {
         Ok(Meta {
             created_at: parse_ts(&self.created_at)?,
             updated_at: parse_ts(&self.updated_at)?,

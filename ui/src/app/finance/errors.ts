@@ -20,6 +20,10 @@ export const RULE_ERROR_KEYS = {
   NOTHING_TO_MARK: "errors.nothingToMark",
   NOT_FOUND: "errors.notFound",
   INVALID_DAY: "errors.invalidDay",
+  CHAPTER_LOCKED: "errors.chapterLocked",
+  TASK_NOT_CURRENT: "errors.taskNotCurrent",
+  BODY_REQUIRED: "errors.bodyRequired",
+  BODY_TOO_LONG: "errors.bodyTooLong",
   PARSE_ERROR: "errors.parseError",
   CURRENCY_MISMATCH: "errors.currencyMismatch",
 } as const;

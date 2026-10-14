@@ -41,7 +41,11 @@
     "notFound": "Yozuv topilmadi. Ehtimol, u oʻchirilgan.",
     "invalidDay": "Kun 1 dan 31 gacha boʻlishi kerak.",
     "parseError": "Summa notoʻgʻri yozilgan. Masalan: 150 000.",
-    "currencyMismatch": "Valyuta mos kelmadi."
+    "currencyMismatch": "Valyuta mos kelmadi.",
+    "chapterLocked": "Bu bob hali ochilmagan.",
+    "taskNotCurrent": "Bu vazifa joriy bobga tegishli emas.",
+    "bodyRequired": "Sahifa matni boʻsh boʻlmasligi kerak.",
+    "bodyTooLong": "Sahifa matni 5000 belgidan oshmasligi kerak."
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -305,5 +309,35 @@
     "internal": "Xatolik yuz berdi. Ilovani qayta ishga tushiring.",
     "statusError": "Xavfsizlik holatini olib boʻlmadi. Ilovani qayta ishga tushiring.",
     "databaseWithoutKey": "Ma'lumotlar bazasi topildi, lekin kalit fayli yo'q. Ilovani qayta ishga tushiring yoki yordam so'rang."
+  },
+  "chapters": {
+    "title": "Boblar",
+    "subtitle": "Har bob bitta odatni oʻrgatadi. Bob vaqt bilan emas, odat bilan ochiladi.",
+    "open": "Ochish",
+    "locked": "Hali ochilmagan",
+    "current": "Joriy bob",
+    "unlockOn": "Ochiladi: {{date}}",
+    "tasksRemaining": "Yana {{count}} ta vazifani bajaring",
+    "notBefore": "Eng erta sana: {{date}}",
+    "back": "Boblar roʻyxatiga qaytish",
+    "lawNumber": "{{number}}-qonun",
+    "law": "Qonun",
+    "tasks": "Haftalik vazifalar",
+    "tasksReadOnly": "Bu bob joriy emas. Bajarilgan vazifalar belgilangan.",
+    "taskAuto": "Ilova avtomatik belgilaydi",
+    "reviewPending": "Ulamo tekshiruvida — hozircha koʻrsatilmaydi",
+    "source": "Manba",
+    "daftarTitle": "«Daftar sahifasi»",
+    "daftarHint": "Qonunni oʻz soʻzlaringiz bilan yozing. Sahifa faqat shu kompyuterda saqlanadi.",
+    "daftarPlaceholder": "Bu qonun hayotimni qanday oʻzgartiradi?",
+    "daftarSave": "Sahifani saqlash",
+    "daftarSaved": "Sahifa saqlandi",
+    "daftarUpdated": "Oxirgi yangilanish: {{date}}",
+    "weekCardTitle": "Shu haftaning vazifalari",
+    "weekCardEmpty": "Hozircha ochiq bob yoʻq.",
+    "weekStart": "Hafta boshi: {{date}}",
+    "weekCardAll": "Barcha boblar",
+    "lockedTitle": "Bu bob hali ochilmagan",
+    "lockedText": "Oldingi bobning vazifalarini bajaring va kun shartini kuting."
   }
 }
