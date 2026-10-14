@@ -57,6 +57,39 @@ pub struct ConflictDto {
     pub label: String,
 }
 
+/// Ayrilib ketgan kelishuv: ikki nusxa tafsiloti va nizo ochish uchun mahalliy tomonlar.
+#[derive(Debug, Serialize, Type)]
+pub struct ForkDto {
+    pub agreement_id: String,
+    /// Kelishuv nomi (mahalliy nusxadan); topilmasa bo'sh.
+    pub title: String,
+    pub reason: String,
+    pub diverged_seq: u32,
+    pub local: JournalSideDto,
+    pub incoming: JournalSideDto,
+    /// Mahalliy kelishuvning tomonlari: nizo ochuvchi shulardan biri bo'ladi.
+    pub parties: Vec<ForkPartyDto>,
+}
+
+/// Kelishuv jurnalining bir tomoni (mahalliy yoki fayldagi).
+#[derive(Debug, Serialize, Type)]
+pub struct JournalSideDto {
+    pub count: u32,
+    pub first_seq: u32,
+    pub last_seq: u32,
+    /// Oxirgi yozuvning xeshi; yozuv bo'lmasa bo'sh.
+    pub head: String,
+    pub last_date: String,
+    pub last_kind: String,
+    pub last_note: String,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct ForkPartyDto {
+    pub id: String,
+    pub name: String,
+}
+
 #[derive(Debug, Serialize, Type)]
 pub struct ImportReportDto {
     pub inserted: u32,
@@ -66,9 +99,63 @@ pub struct ImportReportDto {
     pub conflicts: Vec<ConflictDto>,
     /// PIN'siz kattalar: ularga PIN o'rnatilmaguncha havas chegarasiga rozilik bera olmaydi.
     pub adults_without_pin: Vec<String>,
+    /// Ayrilib ketgan kelishuvlar: ikki nusxa qayerdan farq qilishi (nizo ochish uchun).
+    pub forks: Vec<ForkDto>,
 }
 
-fn report_dto(r: &ImportReport) -> ImportReportDto {
+fn side_dto(s: &interchange::JournalSide) -> JournalSideDto {
+    JournalSideDto {
+        count: s.count,
+        first_seq: s.first_seq,
+        last_seq: s.last_seq,
+        head: s.head.clone(),
+        last_date: s.last_date.clone(),
+        last_kind: s.last_kind.clone(),
+        last_note: s.last_note.clone(),
+    }
+}
+
+/// Fork tafsilotini UI uchun tayyorlaydi: kelishuv nomi va tomonlari mahalliy nusxadan olinadi.
+fn fork_dtos(
+    conn: &storage::Connection,
+    ctx: &services::Ctx,
+    forks: &[interchange::ForkInfo],
+) -> Vec<ForkDto> {
+    forks
+        .iter()
+        .map(|f| {
+            let view = services::agreements::view(conn, ctx, &f.agreement_id).ok();
+            let title = view
+                .as_ref()
+                .map_or_else(String::new, |v| v.agreement.title.clone());
+            let parties = match view
+                .as_ref()
+                .and_then(|v| v.doc.as_ref())
+                .map(|d| &d.questions.parties)
+            {
+                Some(domain::Answer::Answered(ps)) => ps
+                    .iter()
+                    .map(|p| ForkPartyDto {
+                        id: p.id.clone(),
+                        name: p.name.clone(),
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            };
+            ForkDto {
+                agreement_id: f.agreement_id.clone(),
+                title,
+                reason: f.reason.clone(),
+                diverged_seq: f.diverged_seq,
+                local: side_dto(&f.local),
+                incoming: side_dto(&f.incoming),
+                parties,
+            }
+        })
+        .collect()
+}
+
+fn report_dto(r: &ImportReport, forks: Vec<ForkDto>) -> ImportReportDto {
     use interchange::{ConflictKind as K, Resolution as R};
     ImportReportDto {
         inserted: r.inserted,
@@ -76,6 +163,7 @@ fn report_dto(r: &ImportReport) -> ImportReportDto {
         unchanged: r.unchanged,
         kept_local: r.kept_local,
         adults_without_pin: r.adults_without_pin.clone(),
+        forks,
         conflicts: r
             .conflicts
             .iter()
@@ -203,10 +291,14 @@ pub fn import_baraka_preview(
     let bytes = pending.get().ok_or(CommandError::Invalid {
         message: "avval faylni tanlang".into(),
     })?;
-    with_session(&state, |s| {
-        s.run(|db, _, ctx| interchange::preview(db, ctx, &bytes, &password))
-    })
-    .map(|r| report_dto(&r))
+    let (r, forks) = with_session(&state, |s| {
+        s.run(|db, _, ctx| {
+            let r = interchange::preview(db, ctx, &bytes, &password)?;
+            let forks = fork_dtos(db.conn(), ctx, &r.forks);
+            Ok((r, forks))
+        })
+    })?;
+    Ok(report_dto(&r, forks))
 }
 
 /// Birlashtirishni qo'llaydi (yagona tranzaksiya) va tanlangan faylni xotiradan tozalaydi.
@@ -221,11 +313,15 @@ pub fn import_baraka_apply(
     let bytes = pending.get().ok_or(CommandError::Invalid {
         message: "avval faylni tanlang".into(),
     })?;
-    let r = with_session(&state, |s| {
-        s.run(|db, _, ctx| interchange::import(db, ctx, &bytes, &password))
+    let (r, forks) = with_session(&state, |s| {
+        s.run(|db, _, ctx| {
+            let r = interchange::import(db, ctx, &bytes, &password)?;
+            let forks = fork_dtos(db.conn(), ctx, &r.forks);
+            Ok((r, forks))
+        })
     })?;
     pending.set(None);
-    Ok(report_dto(&r))
+    Ok(report_dto(&r, forks))
 }
 
 #[tauri::command]

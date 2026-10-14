@@ -1121,6 +1121,25 @@
       "SKIPPED": "o'tkazib yuborildi"
     },
     "needsPin": "PIN o'rnatilishi kerak: {{names}}. Shu a'zolar PIN o'rnatmaguncha havas chegarasiga rozilik bera olmaydi.",
+    "fork": {
+      "heading": "Kelishuv jurnali ayrilib ketdi (fork)",
+      "explain": "Ikki qurilmada bir xil kelishuv turli yozuvlar bilan yuritilgan. Hech narsa yozilmadi: zanjirlar avtomatik birlashtirilmaydi (SPEC 2F.6).",
+      "diverged": "Farq yozuv #{{seq}} dan boshlanadi.",
+      "local": "Bu qurilmada",
+      "incoming": "Faylda",
+      "entries": "{{n}} ta yozuv (#{{first}}–#{{last}})",
+      "none": "Yozuv yo'q",
+      "lastEntry": "Oxirgi: {{date}} — {{note}}",
+      "openDispute": "Nizo sifatida ochish",
+      "keepHint": "Hozircha hech narsa o'zgarmaydi: bu qurilmadagi nusxa saqlanadi.",
+      "subject": "Kelishuv jurnali ayrilib ketdi",
+      "subjectLabel": "Mavzu",
+      "claimant": "Da'vogar",
+      "claimLabel": "Talab",
+      "claimTemplate": "Bu qurilmada {{local}} ta yozuv, faylda {{incoming}} ta yozuv. Yozuv #{{seq}} dan farq qiladi. Haqiqiy nusxani hakam belgilasin.",
+      "submit": "Nizoni ochish",
+      "opened": "Nizo ochildi: taqsimot bloklandi, hakam qaror beradi."
+    },
     "withAttachments": "Chek rasmlari bilan birga",
     "attachmentsHint": "Chek rasmlari fayl hajmini oshiradi (chegara 512 MB). Hajm katta bo'lsa, rasmlarsiz eksport qiling."
   },

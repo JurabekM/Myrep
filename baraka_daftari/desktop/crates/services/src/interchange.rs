@@ -11,7 +11,9 @@ use storage::{
 
 use crate::{learning, Ctx, Env, ServiceError};
 
-pub use storage::interchange::{Conflict, ConflictKind, ImportReport, Resolution};
+pub use storage::interchange::{
+    Conflict, ConflictKind, ForkInfo, ImportReport, JournalSide, Resolution,
+};
 
 const KEY_LAST_EXPORT: &str = "interchange.last_export";
 

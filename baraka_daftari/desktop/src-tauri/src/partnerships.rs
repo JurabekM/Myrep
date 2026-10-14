@@ -575,6 +575,33 @@ pub fn revise_partnership(
     })
 }
 
+/// Kelishuv bo'yicha nizo ochadi (faqat faol kelishuvda) — SPEC 2F.8. Ayrilib ketgan jurnal (fork)
+/// ogohlantirishidan ham chaqiriladi: nizo taqsimotni bloklaydi, hakam qaror beradi.
+#[tauri::command]
+#[specta::specta]
+pub fn open_agreement_dispute(
+    agreement_id: String,
+    claimant_party_id: String,
+    subject: String,
+    claim: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            services::events::open_dispute(
+                db,
+                env,
+                ctx,
+                &agreement_id,
+                &claimant_party_id,
+                &subject,
+                &claim,
+            )?;
+            Ok(())
+        })
+    })
+}
+
 /// Sheriklikning joriy kelishuvi bo'yicha nizo ochadi (faqat faol kelishuvda) — SPEC 2F.8.
 #[tauri::command]
 #[specta::specta]

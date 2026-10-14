@@ -182,6 +182,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         partnerships::revise_partnership,
         partnerships::check_partnership_draft,
         partnerships::open_partnership_dispute,
+        partnerships::open_agreement_dispute,
         partnerships::resolve_partnership_dispute,
         partnerships::report_duty_incident,
         partnerships::review_view,

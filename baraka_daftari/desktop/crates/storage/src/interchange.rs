@@ -121,6 +121,36 @@ pub struct ImportReport {
     /// Xonadondagi `ADULT` a'zolar, ularning PIN'i yo'q (import qilingan kattalar shu ro'yxatda).
     /// PIN'siz kattalar havas chegarasiga rozilik bera olmaydi: avval PIN o'rnatilishi kerak.
     pub adults_without_pin: Vec<String>,
+    /// Ayrilib ketgan (fork) kelishuvlar tafsiloti: ikki nusxa qayerdan farq qiladi (SPEC 2F.6).
+    pub forks: Vec<ForkInfo>,
+}
+
+/// Kelishuv jurnalining bir tomoni (mahalliy yoki import faylidagi) fork hisobotida.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+pub struct JournalSide {
+    /// Yozuvlar soni.
+    pub count: u32,
+    /// Birinchi va oxirgi tartib raqami (yozuv bo'lmasa 0).
+    pub first_seq: u32,
+    pub last_seq: u32,
+    /// Oxirgi yozuvning xeshi (yozuv bo'lmasa bo'sh satr).
+    pub head: String,
+    /// Oxirgi yozuv: sana (`YYYY-MM-DD`), turi (`UPPER_SNAKE`) va izohi.
+    pub last_date: String,
+    pub last_kind: String,
+    pub last_note: String,
+}
+
+/// Ayrilib ketgan kelishuv jurnali: sabab, farq boshlangan tartib raqami va ikki tomon.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ForkInfo {
+    pub agreement_id: String,
+    /// «zanjir ayrilib ketgan» yoki «mahalliy zanjirga ulanmaydi».
+    pub reason: String,
+    /// Farq boshlangan tartib raqami.
+    pub diverged_seq: u32,
+    pub local: JournalSide,
+    pub incoming: JournalSide,
 }
 
 struct TableInfo {
@@ -605,7 +635,7 @@ fn journal_row(m: &Map<String, Json>) -> Result<JournalRow, StorageError> {
 /// (2) Kelgan zanjir mahalliy zanjirga ulanishi kerak: birinchi yozuv mahalliy zanjirdagi oldingi xeshga
 /// teng bo'lsin, umumiy tartib raqamlaridagi xeshlar bir xil bo'lsin. Aks holda zanjir ayrilib ketgan (fork)
 /// yoki uzilgan: hech narsa yozilmaydi, hisobotda kelishuv ko'rsatiladi (avtomatik birlashtirilmaydi).
-fn check_journals(conn: &Connection, doc: &ExportDoc) -> Result<Vec<Conflict>, StorageError> {
+fn check_journals(conn: &Connection, doc: &ExportDoc) -> Result<Vec<ForkInfo>, StorageError> {
     let Some(dump) = doc.tables.iter().find(|d| d.name == "journal_entries") else {
         return Ok(Vec::new());
     };
@@ -617,7 +647,7 @@ fn check_journals(conn: &Connection, doc: &ExportDoc) -> Result<Vec<Conflict>, S
             .or_default()
             .push(row);
     }
-    let mut diverged = Vec::new();
+    let mut forks = Vec::new();
     for (agreement, mut rows) in by_agreement {
         rows.sort_by_key(|r| r.seq);
         for (i, r) in rows.iter().enumerate() {
@@ -654,21 +684,103 @@ fn check_journals(conn: &Connection, doc: &ExportDoc) -> Result<Vec<Conflict>, S
             .find(|r| local.get(&r.seq).is_some_and(|h| *h != r.hash))
             .map(|r| r.seq);
         if attach_broken {
-            diverged.push((agreement.clone(), first.seq, "mahalliy zanjirga ulanmaydi"));
+            forks.push(fork_info(
+                conn,
+                &agreement,
+                first.seq,
+                "mahalliy zanjirga ulanmaydi",
+                &rows,
+            )?);
         } else if let Some(seq) = clash {
-            diverged.push((agreement.clone(), seq, "zanjir ayrilib ketgan"));
+            forks.push(fork_info(
+                conn,
+                &agreement,
+                seq,
+                "zanjir ayrilib ketgan",
+                &rows,
+            )?);
         }
     }
-    Ok(diverged
-        .into_iter()
-        .map(|(agreement, seq, why)| Conflict {
-            table: "journal_entries".into(),
-            id: agreement,
-            kind: ConflictKind::Journal,
-            resolution: Resolution::Skipped,
-            label: format!("kelishuv jurnali: {why} (yozuv #{seq}), import to'xtatildi"),
-        })
-        .collect())
+    Ok(forks)
+}
+
+/// Fork hisoboti: ikki tomonning holati (mahalliy zanjir va fayldagi qatorlar).
+fn fork_info(
+    conn: &Connection,
+    agreement: &str,
+    diverged_seq: u32,
+    reason: &str,
+    rows: &[JournalRow],
+) -> Result<ForkInfo, StorageError> {
+    Ok(ForkInfo {
+        agreement_id: agreement.to_owned(),
+        reason: reason.to_owned(),
+        diverged_seq,
+        local: local_side(conn, agreement)?,
+        incoming: incoming_side(rows),
+    })
+}
+
+/// Fayldagi kelishuv zanjiri holati (tartib bo'yicha qatorlar).
+fn incoming_side(rows: &[JournalRow]) -> JournalSide {
+    let (Some(first), Some(last)) = (rows.first(), rows.last()) else {
+        return JournalSide::default();
+    };
+    JournalSide {
+        count: u32::try_from(rows.len()).unwrap_or(u32::MAX),
+        first_seq: first.seq,
+        last_seq: last.seq,
+        head: last.hash.clone(),
+        last_date: last.hashed.date.clone(),
+        last_kind: last.hashed.kind.as_str().to_owned(),
+        last_note: last.hashed.note.clone(),
+    }
+}
+
+/// Mahalliy kelishuv zanjiri holati (tartib bo'yicha yozuvlar).
+fn local_side(conn: &Connection, agreement: &str) -> Result<JournalSide, StorageError> {
+    let mut stmt = conn.prepare(
+        "SELECT seq, hash, entry_date, kind, note FROM journal_entries
+         WHERE agreement_id = ?1 ORDER BY seq",
+    )?;
+    let rows = stmt.query_map([agreement], |r| {
+        Ok((
+            r.get::<_, i64>(0)?,
+            r.get::<_, String>(1)?,
+            r.get::<_, String>(2)?,
+            r.get::<_, String>(3)?,
+            r.get::<_, String>(4)?,
+        ))
+    })?;
+    let mut side = JournalSide::default();
+    for row in rows {
+        let (seq, hash, date, kind, note) = row?;
+        let seq = u32::try_from(seq).unwrap_or(u32::MAX);
+        if side.count == 0 {
+            side.first_seq = seq;
+        }
+        side.count += 1;
+        side.last_seq = seq;
+        side.head = hash;
+        side.last_date = date;
+        side.last_kind = kind;
+        side.last_note = note;
+    }
+    Ok(side)
+}
+
+/// Fork hisobotidagi ogohlantirish: import to'xtatilgani va sababi.
+fn fork_conflict(f: &ForkInfo) -> Conflict {
+    Conflict {
+        table: "journal_entries".into(),
+        id: f.agreement_id.clone(),
+        kind: ConflictKind::Journal,
+        resolution: Resolution::Skipped,
+        label: format!(
+            "kelishuv jurnali: {} (yozuv #{}), import to'xtatildi",
+            f.reason, f.diverged_seq
+        ),
+    }
 }
 
 /// Mahalliy kelishuv zanjiri: tartib raqami → xesh.
@@ -722,7 +834,8 @@ pub fn apply(
     let forks = check_journals(conn, doc)?;
     if !forks.is_empty() {
         return Ok(ImportReport {
-            conflicts: forks,
+            conflicts: forks.iter().map(fork_conflict).collect(),
+            forks,
             ..ImportReport::default()
         });
     }

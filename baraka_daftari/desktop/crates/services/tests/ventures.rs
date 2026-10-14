@@ -1127,6 +1127,62 @@ fn journal_fork_stops_the_import_and_nothing_is_written() {
         .iter()
         .any(|c| c.kind == storage::interchange::ConflictKind::Journal));
     assert_eq!((report.inserted, report.updated), (0, 0));
+    assert_eq!(report.forks.len(), 1);
+    let fork = &report.forks[0];
+    assert_eq!(fork.agreement_id, agreement);
+    assert_eq!(fork.diverged_seq, 1);
+    assert_eq!(fork.local.first_seq, 1);
+    assert_eq!(fork.local.count, fork.incoming.count);
+    assert_eq!(fork.incoming.last_seq, fork.incoming.count);
+    assert_eq!(fork.local.head.len(), 64);
+}
+
+/// SPEC 2F.8, D14: ayrilib ketgan kelishuvning mahalliy nusxasida tomon nizo ochadi; taqsimot bloklanadi.
+#[test]
+fn fork_can_be_opened_as_a_dispute_on_the_local_copy() {
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let pid = w.activate(mudaraba_worker(&me));
+    w.entry(
+        &pid,
+        LedgerKind::Income,
+        "Buyurtma 1",
+        500_000_000,
+        "2026-10-12",
+    )
+    .unwrap();
+    let agreement = agreement_of(&w, &pid);
+    let karim = party_id(&w, &pid, "Karim aka");
+    let now = domain::Clock::now(&w.clock);
+    let doc =
+        storage::interchange::export(w.db.conn(), &w.ctx.household_id, "dev", now, None).unwrap();
+    w.db.conn()
+        .execute_batch("DROP TRIGGER trg_journal_upd;")
+        .unwrap();
+    w.db.conn()
+        .execute(
+            "UPDATE journal_entries SET hash = ?1 WHERE agreement_id = ?2 AND seq = 1",
+            [("f".repeat(64)).as_str(), agreement.as_str()],
+        )
+        .unwrap();
+    let report = storage::interchange::apply(w.db.conn(), &doc, Some(&w.ctx.household_id)).unwrap();
+    assert_eq!(report.forks.len(), 1);
+    services::events::open_dispute(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &agreement,
+        &karim,
+        "Kelishuv jurnali ayrilib ketdi",
+        "Ikki nusxa farq qilyapti; hakam belgilasin.",
+    )
+    .unwrap();
+    let view = services::agreements::view(w.db.conn(), &w.ctx, &agreement).unwrap();
+    assert_eq!(view.agreement.status, domain::AgreementStatus::InDispute);
+    let entries = services::journal::entries(w.db.conn(), &w.ctx, &agreement).unwrap();
+    assert!(entries
+        .iter()
+        .any(|e| e.kind == domain::JournalKind::DisputeOpened));
 }
 
 /// D14: kelgan jurnal yozuvi o'zgartirilgan bo'lsa, zanjir tekshiruvi importni rad etadi.

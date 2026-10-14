@@ -205,6 +205,11 @@ export const commands = {
 	checkPartnershipDraft: (input: PartnershipInput) => typedError<DraftCheckDto, CommandError>(__TAURI_INVOKE("check_partnership_draft", { input })),
 	/**  Sheriklikning joriy kelishuvi bo'yicha nizo ochadi (faqat faol kelishuvda) — SPEC 2F.8. */
 	openPartnershipDispute: (partnershipId: string, claimantPartyId: string, subject: string, claim: string) => typedError<null, CommandError>(__TAURI_INVOKE("open_partnership_dispute", { partnershipId, claimantPartyId, subject, claim })),
+	/**
+	 *  Kelishuv bo'yicha nizo ochadi (faqat faol kelishuvda) — SPEC 2F.8. Ayrilib ketgan jurnal (fork)
+	 *  ogohlantirishidan ham chaqiriladi: nizo taqsimotni bloklaydi, hakam qaror beradi.
+	 */
+	openAgreementDispute: (agreementId: string, claimantPartyId: string, subject: string, claim: string) => typedError<null, CommandError>(__TAURI_INVOKE("open_agreement_dispute", { agreementId, claimantPartyId, subject, claim })),
 	/**  Hakam qarorini yozadi va nizoni yopadi (kelishuv yana faol bo'ladi) — SPEC 2F.8. */
 	resolvePartnershipDispute: (partnershipId: string, decision: string) => typedError<null, CommandError>(__TAURI_INVOKE("resolve_partnership_dispute", { partnershipId, decision })),
 	/**  «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi (SPEC 2F.4). */
@@ -854,6 +859,24 @@ export type FixedInput = {
 	first_due: string,
 };
 
+/**  Ayrilib ketgan kelishuv: ikki nusxa tafsiloti va nizo ochish uchun mahalliy tomonlar. */
+export type ForkDto = {
+	agreement_id: string,
+	/**  Kelishuv nomi (mahalliy nusxadan); topilmasa bo'sh. */
+	title: string,
+	reason: string,
+	diverged_seq: number,
+	local: JournalSideDto,
+	incoming: JournalSideDto,
+	/**  Mahalliy kelishuvning tomonlari: nizo ochuvchi shulardan biri bo'ladi. */
+	parties: ForkPartyDto[],
+};
+
+export type ForkPartyDto = {
+	id: string,
+	name: string,
+};
+
 export type GateDto = {
 	rules_open: boolean,
 	bypassed: boolean,
@@ -962,6 +985,8 @@ export type ImportReportDto = {
 	conflicts: ConflictDto[],
 	/**  PIN'siz kattalar: ularga PIN o'rnatilmaguncha havas chegarasiga rozilik bera olmaydi. */
 	adults_without_pin: string[],
+	/**  Ayrilib ketgan kelishuvlar: ikki nusxa qayerdan farq qilishi (nizo ochish uchun). */
+	forks: ForkDto[],
 };
 
 export type IncomeDto = {
@@ -1012,6 +1037,18 @@ export type ItemExampleDto = {
 	/**  Birlikning 1/1000 ulushlarida (kg uchun gramm). */
 	quantity_now_milli: string,
 	quantity_future_milli: string,
+};
+
+/**  Kelishuv jurnalining bir tomoni (mahalliy yoki fayldagi). */
+export type JournalSideDto = {
+	count: number,
+	first_seq: number,
+	last_seq: number,
+	/**  Oxirgi yozuvning xeshi; yozuv bo'lmasa bo'sh. */
+	head: string,
+	last_date: string,
+	last_kind: string,
+	last_note: string,
 };
 
 export type JourneyDto = {

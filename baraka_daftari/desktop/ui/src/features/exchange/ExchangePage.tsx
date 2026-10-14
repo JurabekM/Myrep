@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { commands, type ImportReportDto } from '../../bindings';
+import { commands, type ForkDto, type ImportReportDto, type JournalSideDto } from '../../bindings';
 import { errorMessage, unwrap } from '../../lib/api';
 
 const inp = 'mt-1 block w-64 rounded border border-line-strong bg-transparent p-1';
@@ -165,7 +165,177 @@ function Report({ r }: { r: ImportReportDto }) {
           </ul>
         </>
       )}
+      {r.forks.length > 0 && <ForkPanel forks={r.forks} />}
     </div>
+  );
+}
+
+const area = 'mt-1 block w-full rounded border border-line-strong bg-transparent p-1';
+
+/**
+ * Ayrilib ketgan kelishuv jurnali (fork): ikki nusxa tafsiloti. Import to'xtatilgan, hech narsa yozilmagan;
+ * tomon nizo ochishi mumkin — nizo taqsimotni bloklaydi va hakam qaror beradi (SPEC 2F.6, 2F.8).
+ */
+function ForkPanel({ forks }: { forks: ForkDto[] }) {
+  const { t } = useTranslation();
+  return (
+    <section className="space-y-3 rounded border border-line-strong p-3" data-testid="fork-panel">
+      <h4 className="font-medium">{t('exchange.fork.heading')}</h4>
+      <p className="text-xs opacity-80">{t('exchange.fork.explain')}</p>
+      {forks.map((f) => (
+        <ForkCard key={f.agreement_id} fork={f} />
+      ))}
+    </section>
+  );
+}
+
+function SideBox({ title, side }: { title: string; side: JournalSideDto }) {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded border border-line p-2">
+      <p className="font-medium">{title}</p>
+      <p>
+        {side.count === 0
+          ? t('exchange.fork.none')
+          : t('exchange.fork.entries', {
+              n: side.count,
+              first: side.first_seq,
+              last: side.last_seq,
+            })}
+      </p>
+      {side.count > 0 && (
+        <p className="text-xs opacity-80">
+          {t('exchange.fork.lastEntry', { date: side.last_date, note: side.last_note })}
+        </p>
+      )}
+      <p className="break-all font-mono text-xs opacity-70">
+        {side.head === '' ? '—' : side.head.slice(0, 16)}
+      </p>
+    </div>
+  );
+}
+
+function ForkCard({ fork }: { fork: ForkDto }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [claimant, setClaimant] = useState(fork.parties[0]?.id ?? '');
+  const [subject, setSubject] = useState(() => t('exchange.fork.subject'));
+  const [claim, setClaim] = useState(() =>
+    t('exchange.fork.claimTemplate', {
+      local: fork.local.count,
+      incoming: fork.incoming.count,
+      seq: fork.diverged_seq,
+    }),
+  );
+  const dispute = useMutation({
+    mutationFn: () =>
+      unwrap(
+        commands.openAgreementDispute(fork.agreement_id, claimant, subject.trim(), claim.trim()),
+      ),
+    onSuccess: async () => {
+      setOpen(false);
+      await queryClient.invalidateQueries();
+    },
+  });
+  const canSubmit =
+    claimant !== '' && subject.trim() !== '' && claim.trim() !== '' && !dispute.isPending;
+  return (
+    <article
+      className="space-y-2 rounded border border-line p-2"
+      data-testid={`fork-${fork.agreement_id}`}
+    >
+      <p className="font-medium">{fork.title || fork.agreement_id}</p>
+      <p>{t('exchange.fork.diverged', { seq: fork.diverged_seq })}</p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <SideBox title={t('exchange.fork.local')} side={fork.local} />
+        <SideBox title={t('exchange.fork.incoming')} side={fork.incoming} />
+      </div>
+      {dispute.isSuccess ? (
+        <p role="status">{t('exchange.fork.opened')}</p>
+      ) : open ? (
+        <form
+          className="space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            dispute.mutate();
+          }}
+        >
+          <label className="block">
+            {t('exchange.fork.claimant')}
+            <select
+              className={inp}
+              value={claimant}
+              onChange={(e) => {
+                setClaimant(e.target.value);
+              }}
+            >
+              {fork.parties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            {t('exchange.fork.subjectLabel')}
+            <input
+              className={inp}
+              maxLength={80}
+              value={subject}
+              onChange={(e) => {
+                setSubject(e.target.value);
+              }}
+            />
+          </label>
+          <label className="block">
+            {t('exchange.fork.claimLabel')}
+            <textarea
+              className={area}
+              maxLength={300}
+              rows={3}
+              value={claim}
+              onChange={(e) => {
+                setClaim(e.target.value);
+              }}
+            />
+          </label>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="rounded bg-accent px-3 py-1 text-paper disabled:opacity-50"
+              disabled={!canSubmit}
+            >
+              {t('exchange.fork.submit')}
+            </button>
+            <button
+              type="button"
+              className="text-sm underline"
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              {t('debts.cancel')}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className="rounded border border-accent px-3 py-0.5 disabled:opacity-50"
+            disabled={fork.parties.length === 0}
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            {t('exchange.fork.openDispute')}
+          </button>
+          <p className="text-xs opacity-80">{t('exchange.fork.keepHint')}</p>
+        </div>
+      )}
+      {dispute.error && <p role="alert">{errorMessage(t, dispute.error)}</p>}
+    </article>
   );
 }
 
