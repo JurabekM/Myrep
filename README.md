@@ -44,6 +44,14 @@ pnpm test
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
+cargo test -p baraka-vectors
+```
+
+Pul hisobi (`crates/money`) qamrovi kamida 95 % bo'lishi shart. Qamrovni o'lchash uchun bir martalik o'rnatish:
+`cargo install cargo-llvm-cov --locked` va `rustup component add llvm-tools-preview`. Keyin:
+
+```bash
+cargo llvm-cov -p baraka-money -p baraka-vectors --ignore-filename-regex '(tests|vectors)[\\/]' --summary-only
 ```
 
 `cargo test` TypeScript bindinglarini (`ui/src/bindings/bindings.ts`) qayta yaratadi. Agar fayl o'zgarsa, bu Rust
@@ -69,7 +77,9 @@ scripts/       make_icon.py — ilova ikonkasini yaratadi
 docs/          SPEC.md, DESKTOP_PROMPT.md, MVP_PLAN.md, CHANGELOG.md, OPEN_QUESTIONS.md
 ```
 
-Keyingi bosqichlar uchun Cargo workspace'ga `crates/` (money, domain, storage va boshqalar) qo'shiladi
+Pul hisobi `crates/money` da (Money, allocate, percent_of, FxRate, formatlash). Umumiy test vektorlari
+`spec/test-vectors/` da, ularni yurgizuvchi runner `crates/vectors` da. Keyingi crate'lar (domain, storage va
+boshqalar) keyingi bosqichlarda qo'shiladi
 (DESKTOP_PROMPT.md 3.1).
 
 ## Xavfsizlik

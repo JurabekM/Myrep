@@ -4,6 +4,52 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D2 — `money` crate va test vektorlari runner'i (2026-10-14)
+
+**Qo'shildi**
+
+- `crates/money` (paket `baraka-money`, kodda `money`):
+  - `Money` — butun minor birliklar (tiyin, sent) va valyuta; `checked_add`/`checked_sub` valyuta aralashuvini va chegaradan oshishni xato bilan qaytaradi.
+  - `Currency` — UZS, USD, EUR, RUB; minor birlik ikki xonali.
+  - `round_half_up_div` — loyihadagi yagona yaxlitlash joyi (yarmi noldan uzoqqa).
+  - `allocate` — largest remainder usuli: qismlar yig'indisi aniq teng, teng kasrda kichik indeks ustun, manfiy summa simmetrik.
+  - `percent_of` — basis points (1 % = 100 bp) bo'yicha foiz.
+  - `FxRate` + `convert` — kurs kasr sifatida (`rate_num / rate_den`), yarmi noldan uzoqqa yaxlitlanadi.
+  - `format_money` — `uz` va `ru` lokallari: guruhlash bo'linmas bo'sh joy bilan, kasr faqat tiyin nolga teng bo'lmasa, `soʻm` (U+02BB) / `сум`, `$`, `€`, `₽`.
+  - `MoneyError::code()` — barqaror kodlar (`CURRENCY_MISMATCH`, `OVERFLOW` va hokazo).
+- `crates/vectors` (paket `baraka-vectors`, kodda `vectors`):
+  - suite yuklovchi: `spec/test-vectors/*.json` ni o'qiydi;
+  - pul runner'lari: `allocate` (5 ta), `percent_of` (2 ta), `fx_convert` (5 ta), `money_format` (8 ta) — jami 20 ta vektor. Har bir natija `expected` bilan TO'LIQ solishtiriladi;
+  - qoplanmagan vektor fayli bo'lsa, `har_bir_vektor_fayli_runner_bilan_qoplangan` testi qizil bo'ladi.
+- `spec/test-vectors/` — to'rtta D2 suite (`allocate`, `percent_of`, `fx_convert`, `money_format`) mobil repo'dagi fayllarning bayt-bayt nusxasi (sha256 mos).
+- Xususiyat testlari (proptest, har biri 256 ta tasodifiy holat): taqsimot yig'indisi aniq teng; ishora saqlanadi; har bir qism aniq ulushdan bir minor birlikdan ko'p og'maydi; nisbati nol bo'lgan qism nolga teng; `percent_of` = `allocate([bp, 10000 − bp])[0]`; yaxlitlash simmetrik.
+- CI: alohida «Pul vektorlari» qadami va `coverage` job (`baraka-money` qamrovi ≥ 95 %).
+- README: tekshiruv buyruqlari va qamrov o'lchash.
+
+**Natijalar**
+
+- Testlar: 32 ta unit, 6 ta xususiyat, 5 ta runner — hammasi o'tdi.
+- Qamrov: `baraka-money` satrlari 99,80 % (talab ≥ 95 %).
+- Mutatsiya sinovi: tie-break qoidasi ataylab buzildi — `alloc-001`, `alloc-003`, `alloc-004` qizil bo'ldi. Qoida qaytarilgach, hammasi yana yashil.
+- `cargo fmt --check`, `clippy -D warnings`, Prettier — toza.
+
+**Qarorlar va sabablar**
+
+- **Yaxlitlash — yarmi noldan uzoqqa, manfiy uchun ham.** Vektor `fx-004` talab qiladi: −12 650,5 → −12 651. Mobil `MoneyRounding.defaultMode` bilan bir xil.
+- **Manfiy summa.** `allocate` modulni taqsimlaydi va ishorani qo'yadi (`dist-003`: −300 000 000 kapital bo'yicha → −225 000 000 / −75 000 000).
+- **`percent_of` oraliqdan tashqarida** (masalan, 120 % ustama): `round_half_up(amount × bp / 10 000)`. Desktop spec'da bu holat yo'q; mobil ilova xuddi shunday qiladi. 0..=10 000 oralig'ida ikkala ta'rif teng — xususiyat testi buni tasdiqlaydi.
+- **Vektorlar nusxasi.** Ikki repo bitta vektor to'plamini ishlatadi (DESKTOP_PROMPT.md 5.1). Hozircha nusxa; sinxronlash usuli ochiq (docs/OPEN_QUESTIONS.md, 2-band).
+- **Bog'liqlik yo'nalishi.** `money` vektorlarga bog'lanmaydi; runner `vectors` da. Shu sababli tsikl va ikki nusxadagi tiplar yo'q.
+- **Yangi crate'lar** (ADR bo'yicha sabablari): `thiserror` — xatolar (ADR: xatolar); `time` — `FxRate.date` kurs sanasi (ADR: sana); `proptest` — xususiyat testlari (ADR: testlar); `serde`, `serde_json` — vektor JSON'ini o'qish (faqat `vectors`).
+- **Vositalar.** `cargo-llvm-cov` — qamrov o'lchash (bog'liqlik emas, CI'da o'rnatiladi).
+
+**Hali yo'q (keyingi bosqichlar)**
+
+- Kiritilgan matnni summaga aylantirish (`MoneyParser`) — D4 (forma kiritish) da.
+- `Money` DTO (`{ minor: string, currency, formatted }`) — `src-tauri` commandlarida, D4 da.
+- Qolgan 10 ta vektor suite'i (`amortization`, `personal_inflation`, `emergency_target`, `readiness_gate`, `journal_chain`, `profit_spike`, `profit_distribution`, `agreement_completeness`, `debt_recovery_split`, `unexplained_gap`) — mos vazifalarda runner bilan birga qo'shiladi.
+- CODEOWNERS — vektor o'zgarishi ikki platforma egasining ma'qulligini talab qiladi (DESKTOP_PROMPT.md 5.4); egalar aniqlangach.
+
 ### D1 — Workspace, Tauri skeleti, CI (2026-10-14)
 
 **Qo'shildi**
@@ -43,4 +89,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 - O'rnatuvchi kod imzolanmagan — SmartScreen ogohlantirishi chiqishi mumkin.
 - Silent o'rnatish sinalgan (`/S`). Interaktiv o'rnatish va til tanlovi oynasi qo'lda sinalmagan.
 - Haqiqiy oynada til almashinuvi tugmasi sichqoncha avtomatizatsiyasi bilan to'liq tasdiqlanmadi. Bu jsdom testlari bilan qoplangan; E2E (WebDriver) keyingi bosqichda.
-- Mobil (Flutter) va `spec/test-vectors/` bu bosqichda yo'q — keyingi bosqichlar (docs/OPEN_QUESTIONS.md, 1–2-bandlar).
+- Mobil (Flutter) loyiha bu repo'da yo'q; `spec/test-vectors/` faqat to'rtta D2 suite'iga ega (docs/OPEN_QUESTIONS.md, 1–2-bandlar).

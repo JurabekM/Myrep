@@ -63,6 +63,9 @@ jobs:
       - run: pnpm -C ui build
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
+      # Umumiy pul vektorlari (spec/test-vectors) alohida qadam: qizil bo'lsa, sabab darhol ko'rinadi.
+      - name: "Pul vektorlari (spec/test-vectors)"
+        run: cargo test -p baraka-vectors
       - run: cargo test --workspace
       # cargo test TypeScript bindinglarini qayta yozadi: git'dagi nusxa bilan farq bo'lsa, build qizil.
       - name: TypeScript bindinglari sinxron
@@ -89,3 +92,17 @@ jobs:
           name: baraka-daftari-windows-nsis
           path: target/release/bundle/nsis/*.exe
           if-no-files-found: error
+
+  coverage:
+    name: "Pul moduli qamrovi (95 % dan kam bo'lmasin)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.1
+        with:
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      # money moduli qamrovi kamida 95 % bo'lishi shart (DESKTOP_PROMPT.md, D2 qabul mezonlari).
+      - run: cargo llvm-cov -p baraka-money -p baraka-vectors --ignore-filename-regex '(tests|vectors)[\\/]' --fail-under-lines 95 --summary-only
