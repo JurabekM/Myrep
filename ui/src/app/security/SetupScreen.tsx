@@ -41,11 +41,13 @@ export function SetupScreen() {
       return;
     }
 
-    setError(
-      result.error.code === "KEY_UNAVAILABLE"
-        ? t("security.keyUnavailable")
-        : t("security.internal"),
-    );
+    if (result.error.code === "DATABASE_WITHOUT_KEY") {
+      setError(t("security.databaseWithoutKey"));
+    } else if (result.error.code === "KEY_UNAVAILABLE") {
+      setError(t("security.keyUnavailable"));
+    } else {
+      setError(t("security.internal"));
+    }
   }
 
   return (

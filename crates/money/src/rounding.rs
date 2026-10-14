@@ -1,4 +1,24 @@
-use crate::MoneyError;
+use crate::{Money, MoneyError};
+
+/// `amount` ni `step_minor` karraligacha **yuqoriga** yaxlitlaydi (ceiling). Qadam musbat bo'lishi shart.
+///
+/// Ulush taklifi uchun: 7 500 so'm → 1 000 so'mgacha → 8 000 so'm. Yuqoriga yaxlitlash
+/// [`round_half_up_div`] dan boshqa qoida, shuning uchun u ham shu modulda turadi.
+pub fn ceil_to_step(amount: Money, step_minor: i64) -> Result<Money, MoneyError> {
+    if step_minor <= 0 {
+        return Err(MoneyError::InvalidDenominator);
+    }
+    let minor = i128::from(amount.minor());
+    let step = i128::from(step_minor);
+    let floor_steps = minor.div_euclid(step);
+    let steps = if minor.rem_euclid(step) == 0 {
+        floor_steps
+    } else {
+        floor_steps + 1
+    };
+    let value = i64::try_from(steps * step).map_err(|_| MoneyError::Overflow)?;
+    Ok(Money::new(value, amount.currency()))
+}
 
 /// `numerator / denominator` ni butun songa yaxlitlaydi: yarmi noldan uzoqqa (half-up).
 ///

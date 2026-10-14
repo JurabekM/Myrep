@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant};
 
+use domain::DomainError;
 use security::{
     AUTO_LOCK_TIMEOUT, AutoLockPolicy, KdfParams, SecretStore, SecurityError, create_vault,
     open_vault,
@@ -39,9 +40,7 @@ impl Paths {
 /// Seans holati. Ochiq holatda baza ulanishi bor.
 enum Phase {
     Locked,
-    // Ulanish faqat yashab turishi uchun ushlanadi: qulflanganda (yoki tugaganda) yopiladi.
-    // D4 dan repo'lar shu yerdan o'qiydi, shundan so'ng bu ogohlantirish olib tashlanadi.
-    Unlocked(#[expect(dead_code, reason = "ulanish yopilishi uchun ushlanadi")] Database),
+    Unlocked(Database),
 }
 
 /// Joriy holat: sozlanganmi va ochiqmi.
@@ -62,6 +61,15 @@ pub enum SessionError {
     /// Ma'lumotlar bazasi xatosi.
     #[error(transparent)]
     Storage(#[from] StorageError),
+    /// Domen qoidasi buzildi (masalan, balansdan ko'p pul olish).
+    #[error(transparent)]
+    Domain(#[from] DomainError),
+    /// Baza qulflangan: avval PIN bilan ochish kerak.
+    #[error("baza qulflangan")]
+    Locked,
+    /// Ma'lumotlar bazasi bor, lekin kalit fayli yo'q: sozlab bo'lmaydi (ma'lumot yo'qolmasligi uchun).
+    #[error("ma'lumotlar bazasi bor, lekin kalit fayli topilmadi")]
+    DatabaseWithoutKey,
 }
 
 /// Ilova seansi. Bitta nusxa butun ilova uchun (Tauri holatida saqlanadi).
@@ -99,6 +107,10 @@ impl Session {
     /// Birinchi marta PIN o'rnatadi va bazani ochiq holatda qoldiradi.
     pub fn setup(&self, pin: &str) -> Result<(), SessionError> {
         let mut phase = self.phase();
+        // Kalit fayli yo'q, lekin baza bor: yangi kalit eski bazani ochmaydi; jim ustiga yozmaymiz.
+        if !self.paths.key_file.exists() && self.paths.database.exists() {
+            return Err(SessionError::DatabaseWithoutKey);
+        }
         let key = create_vault(&self.paths.key_file, pin, self.store.as_ref(), self.params)?;
         let database = Database::open(&self.paths.database, &key)?;
         *phase = Phase::Unlocked(database);
@@ -120,6 +132,27 @@ impl Session {
         self.auto_lock_policy().on_focus_gained();
         info!("baza ochildi");
         Ok(())
+    }
+
+    /// PIN to'g'riligini tekshiradi (pul olish tasdig'i uchun). Noto'g'ri urinish ham hisoblanadi.
+    /// Kalit saqlanmaydi: faqat tekshiruv natijasi qaytadi.
+    pub fn verify_pin(&self, pin: &str, now_unix: i64) -> Result<(), SessionError> {
+        let key = open_vault(&self.paths.key_file, pin, self.store.as_ref(), now_unix)?;
+        drop(key);
+        Ok(())
+    }
+
+    /// Ochiq bazada amal bajaradi. Baza qulflangan bo'lsa — [`SessionError::Locked`].
+    /// Amal davomida qulf ushlanadi: bir vaqtda qulflash bazani yopib qo'ymasligi uchun.
+    pub fn with_database<T>(
+        &self,
+        work: impl FnOnce(&Database) -> Result<T, SessionError>,
+    ) -> Result<T, SessionError> {
+        let phase = self.phase();
+        match &*phase {
+            Phase::Unlocked(database) => work(database),
+            Phase::Locked => Err(SessionError::Locked),
+        }
     }
 
     /// Bazani yopadi (ulanish yopiladi). Allaqachon qulflangan bo'lsa — hech narsa qilmaydi.

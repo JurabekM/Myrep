@@ -15,6 +15,50 @@ export const commands = {
 	unlock: (pin: string) => typedError<null, ApiError>(__TAURI_INVOKE("unlock", { pin })),
 	/**  Bazani darhol qulflaydi. */
 	lock: () => typedError<null, ApiError>(__TAURI_INVOKE("lock")),
+	/**  Bosh ekran ko'rsatkichlari. */
+	getHome: () => typedError<HomeDto, ApiError>(__TAURI_INVOKE("get_home")),
+	/**  Shu oydagi daromadlar. */
+	listIncomesThisMonth: () => typedError<IncomeDto[], ApiError>(__TAURI_INVOKE("list_incomes_this_month")),
+	/**  So'nggi daromadlar (tez kiritish shablonlari). */
+	listRecentIncomes: () => typedError<IncomeDto[], ApiError>(__TAURI_INVOKE("list_recent_incomes")),
+	/**  Daromad kiritadi va ulush taklifini qaytaradi. */
+	createIncome: (input: IncomeInputDto) => typedError<IncomeOutcomeDto, ApiError>(__TAURI_INVOKE("create_income", { input })),
+	/**  Ulush taklifini qabul qiladi: summa «Kelajagim»ga yoziladi. */
+	acceptShare: (incomeId: string, amount: string) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("accept_share", { incomeId, amount })),
+	/**  «Kelajagim» ekrani. */
+	getVault: () => typedError<VaultDto, ApiError>(__TAURI_INVOKE("get_vault")),
+	/**  Progressiv taklifga javob: qabul (+1 %) yoki rad. */
+	respondProgression: (accept: boolean) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("respond_progression", { accept })),
+	/**  Ulush qoidasini o'zgartiradi. */
+	setShareRule: (input: ShareRuleInputDto) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("set_share_rule", { input })),
+	/**  Boshlang'ich balans (ro'molcha) — bir marta. */
+	setInitialBalance: (amount: string) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("set_initial_balance", { amount })),
+	/**  Pul olish. PIN qayta tekshiriladi (noto'g'ri urinish hisoblanadi), so'ng yozuv yoziladi. */
+	withdraw: (pin: string, input: WithdrawInputDto) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("withdraw", { pin, input })),
+	/**  O'tgan oy auditi. */
+	getAudit: () => typedError<AuditDto, ApiError>(__TAURI_INVOKE("get_audit")),
+	/**  Audit davriga kategoriya bilan xarajat qo'shadi. */
+	addAuditExpense: (amount: string, categoryId: string, note: string | null) => typedError<AuditDto, ApiError>(__TAURI_INVOKE("add_audit_expense", { amount, categoryId, note })),
+	/**  Izohsiz qolgan summani «mayda kundalik» deb belgilaydi. */
+	markUnexplainedAsDaily: () => typedError<AuditDto, ApiError>(__TAURI_INVOKE("mark_unexplained_as_daily")),
+	/**  Auditni yakunlaydi: davr uchun o'zgarmas hisobot yoziladi. */
+	finishAudit: () => typedError<AuditDto, ApiError>(__TAURI_INVOKE("finish_audit")),
+	/**  «Kimning puli?»: `months_back` oy oldingi davr (0 — joriy oy). */
+	getWhoseMoney: (monthsBack: number) => typedError<WhoseMoneyDto, ApiError>(__TAURI_INVOKE("get_whose_money", { monthsBack })),
+	/**  Kategoriyalar. */
+	listCategories: () => typedError<CategoryDto[], ApiError>(__TAURI_INVOKE("list_categories")),
+	/**  Majburiyatlar. */
+	listObligations: () => typedError<ObligationDto[], ApiError>(__TAURI_INVOKE("list_obligations")),
+	/**  Majburiyat qo'shadi. */
+	addObligation: (input: ObligationInputDto) => typedError<ObligationDto[], ApiError>(__TAURI_INVOKE("add_obligation", { input })),
+	/**  Majburiyatni yoqadi yoki o'chiradi. */
+	setObligationActive: (id: string, active: boolean) => typedError<ObligationDto[], ApiError>(__TAURI_INVOKE("set_obligation_active", { id, active })),
+	/**  Nasiyalar. */
+	listDebts: () => typedError<DebtDto[], ApiError>(__TAURI_INVOKE("list_debts")),
+	/**  Nasiya qo'shadi. */
+	addDebt: (creditor: string, amount: string, note: string | null) => typedError<DebtDto[], ApiError>(__TAURI_INVOKE("add_debt", { creditor, amount, note })),
+	/**  Nasiyaga qisman to'lov. */
+	payDebt: (debtId: string, amount: string) => typedError<DebtDto[], ApiError>(__TAURI_INVOKE("pay_debt", { debtId, amount })),
 };
 
 /* Types */
@@ -37,6 +81,14 @@ retryAfterSeconds: number } |
 { code: "NOT_SET_UP" } | 
 /**  Qurilma kaliti OS keyring'ida yo'q yoki bu bazaga mos emas. */
 { code: "KEY_UNAVAILABLE" } | 
+/**  Baza qulflangan: avval PIN bilan ochish kerak. */
+{ code: "LOCKED" } | 
+/**  Ma'lumotlar bazasi bor, lekin kalit fayli yo'q (sozlab bo'lmaydi). */
+{ code: "DATABASE_WITHOUT_KEY" } | 
+/**  Biznes qoidasi buzildi. `rule` — domen xato kodi (masalan, `INSUFFICIENT_BALANCE`). */
+{ code: "RULE"; 
+/**  Domen xato kodi. */
+rule: string } | 
 /**  Kutilmagan ichki xato (batafsil log'da, foydalanuvchiga umumiy xabar). */
 { code: "INTERNAL" };
 
@@ -54,12 +106,319 @@ export type AppInfo = {
 	buildProfile: string,
 };
 
+/**  Oylik audit ekrani. */
+export type AuditDto = {
+	/**  Davr boshi. */
+	periodStart: string,
+	/**  Davr oxiri (kirmaydi). */
+	periodEnd: string,
+	/**  Audit yakunlanganmi. */
+	done: boolean,
+	/**  Daromad. */
+	income: MoneyDto,
+	/**  Yozilgan xarajatlar. */
+	expenses: MoneyDto,
+	/**  Majburiyatlar jami. */
+	obligationsTotal: MoneyDto,
+	/**  Yozilmagan majburiyatlar. */
+	obligationsUnrecorded: MoneyDto,
+	/**  Sof jamg'arma. */
+	netSavings: MoneyDto,
+	/**  Izohsiz qolgan summa. */
+	unexplained: MoneyDto,
+	/**  Majburiyatlar qatorlari. */
+	lines: ObligationLineDto[],
+	/**  Kategoriyalar bo'yicha xarajatlar. */
+	spent: CategorySpentDto[],
+	/**  Xarajat kiritish uchun kategoriyalar. */
+	categories: CategoryDto[],
+};
+
+/**  Audit holati: o'tkazilganmi va qaysi davr. */
+export type AuditStatusDto = {
+	/**  Audit yakunlanganmi. */
+	done: boolean,
+	/**  Davr boshi (kiradi). */
+	periodStart: string,
+	/**  Davr oxiri (kirmaydi). */
+	periodEnd: string,
+};
+
+/**  Kategoriya. */
+export type CategoryDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Tizim kaliti (standart bo'lsa). */
+	systemKey: string | null,
+};
+
+/**  Kategoriya bo'yicha shu oy xarajatlari. */
+export type CategorySpentDto = {
+	/**  Kategoriya identifikatori; `null` — kategoriyasiz. */
+	categoryId: string | null,
+	/**  Nomi; `null` — kategoriyasiz. */
+	name: string | null,
+	/**  Tizim kaliti (standart kategoriya bo'lsa). */
+	systemKey: string | null,
+	/**  Summa. */
+	amount: MoneyDto,
+};
+
+/**  Kanal (DTO): naqd yoki karta. */
+export type ChannelDto = 
+/**  Naqd pul. */
+"CASH" | 
+/**  Karta. */
+"CARD";
+
+/**  Nasiya. */
+export type DebtDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Kimga qarzdor (do'kon). */
+	creditor: string,
+	/**  Asl summa. */
+	principal: MoneyDto,
+	/**  Qoldiq. */
+	outstanding: MoneyDto,
+	/**  Olingan sana. */
+	incurredOn: string,
+	/**  Izoh. */
+	note: string | null,
+};
+
+/**  Odat (streak) ko'rsatkichlari. */
+export type HabitDto = {
+	/**  Ketma-ket ajratilgan haftalar. */
+	currentStreakWeeks: number,
+	/**  Jami ajratilgan haftalar. */
+	totalWeeks: number,
+	/**  Joriy haftada ajratish bo'lganmi. */
+	thisWeekDone: boolean,
+};
+
+/**  Bosh ekran. */
+export type HomeDto = {
+	/**  «O'zingizga to'langan (shu oy)»: shu oy «Kelajagim»ga ajratilgan. */
+	paidToSelf: MoneyDto,
+	/**  «Kelajagim» balansi. */
+	vaultBalance: MoneyDto,
+	/**  Shu oy daromadi. */
+	income: MoneyDto,
+	/**  Oy yakuni (+/−): daromad − (xarajat + yozilmagan majburiyat + sof jamg'arma). */
+	monthResult: MoneyDto,
+	/**  Odat ko'rsatkichlari. */
+	habit: HabitDto,
+	/**  O'tgan oy auditi holati. */
+	audit: AuditStatusDto,
+};
+
+/**  Daromad yozuvi. */
+export type IncomeDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Manba. */
+	source: string,
+	/**  Kanal. */
+	channel: ChannelDto,
+	/**  Summa. */
+	amount: MoneyDto,
+	/**  Sana. */
+	occurredOn: string,
+	/**  Izoh. */
+	note: string | null,
+};
+
+/**  Daromad kiritish ma'lumoti (forma). */
+export type IncomeInputDto = {
+	/**  Summa matni (masalan, `150 000`). */
+	amount: string,
+	/**  Manba. */
+	source: string,
+	/**  Kanal. */
+	channel: ChannelDto,
+	/**  Izoh. */
+	note: string | null,
+};
+
+/**  Daromad kiritilgandan keyingi natija: yozuv va ulush taklifi. */
+export type IncomeOutcomeDto = {
+	/**  Saqlangan daromad. */
+	income: IncomeDto,
+	/**  «Shundan X so'm — kelajagingiz uchun». `null` — taklif yo'q. */
+	shareSuggestion: MoneyDto | null,
+};
+
+/**  Pul qiymati: minor birlik (satr), valyuta kodi va ko'rsatish uchun formatlangan matn. */
+export type MoneyDto = {
+	/**  Minor birliklar soni (satr: JS sonining 2^53 chegarasidan himoya). */
+	minor: string,
+	/**  ISO valyuta kodi. */
+	currency: string,
+	/**  Ko'rsatish uchun matn (`8 000 000 soʻm`). */
+	formatted: string,
+};
+
+/**  Majburiyat. */
+export type ObligationDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	title: string,
+	/**  Tur kodi. */
+	kind: string,
+	/**  Oylik summa. */
+	amount: MoneyDto,
+	/**  To'lov kuni. */
+	dueDay: number | null,
+	/**  Faolmi. */
+	active: boolean,
+};
+
+/**  Majburiyat kiritish ma'lumoti. */
+export type ObligationInputDto = {
+	/**  Nomi. */
+	title: string,
+	/**  Turi. */
+	kind: ObligationKindDto,
+	/**  Oylik summa matni. */
+	amount: string,
+	/**  To'lov kuni (1..31). */
+	dueDay: number | null,
+};
+
+/**  Majburiyat turi (DTO). */
+export type ObligationKindDto = 
+/**  Ijara. */
+"RENT" | 
+/**  Kredit. */
+"CREDIT" | 
+/**  Kommunal. */
+"UTILITY" | 
+/**  Telefon. */
+"PHONE" | 
+/**  Yoqilg'i. */
+"FUEL" | 
+/**  Boshqa. */
+"OTHER";
+
+/**  Majburiyat va audit qatori. */
+export type ObligationLineDto = {
+	/**  Nomi. */
+	title: string,
+	/**  Tur kodi. */
+	kind: string,
+	/**  Oylik summa. */
+	amount: MoneyDto,
+	/**  Kategoriyada yozilgan qism. */
+	recorded: MoneyDto,
+	/**  Yozilmagan qism. */
+	remainder: MoneyDto,
+};
+
+/**  «Kimning puli?» bo'lagi. */
+export type OwnerPartDto = {
+	/**  Egasi kodi (`LANDLORD`, `BANK`, `SHOP`, `UTILITIES`, `FUEL`, `SELF`, `SADAQA`, `OTHER`, `UNEXPLAINED`). */
+	owner: string,
+	/**  Summa. */
+	amount: MoneyDto,
+	/**  Jamdagi ulushi, basis points (1 % = 100 bp). Frontend shu qiymat bo'yicha bo'lak kengligini chizadi. */
+	shareBp: number,
+};
+
 /**  Xavfsizlik holati DTO: PIN o'rnatilganmi va baza ochiqmi. */
 export type SecurityStatus = {
 	/**  PIN o'rnatilganmi. `false` bo'lsa, birinchi ishga tushirishda sozlash ekrani ko'rsatiladi. */
 	setUp: boolean,
 	/**  Baza ochiqmi. `false` bo'lsa, qulflash ekrani ko'rsatiladi. */
 	unlocked: boolean,
+};
+
+/**  Ulush rejimi (DTO). */
+export type ShareModeDto = 
+/**  Daromadning foizi. */
+"PERCENT" | 
+/**  Oyiga qat'iy summa. */
+"FIXED";
+
+/**  Ulush qoidasi. */
+export type ShareRuleDto = {
+	/**  Rejim. */
+	mode: ShareModeDto,
+	/**  Foiz (bp), faqat `PERCENT` rejimida. */
+	basisPoints: number | null,
+	/**  Oylik summa, faqat `FIXED` rejimida. */
+	fixedAmount: MoneyDto | null,
+	/**  Progressiv rejim. */
+	progressive: boolean,
+};
+
+/**  Qoida kiritish ma'lumoti. */
+export type ShareRuleInputDto = {
+	/**  Rejim. */
+	mode: ShareModeDto,
+	/**  Foiz (bp), `PERCENT` uchun. */
+	basisPoints: number | null,
+	/**  Oylik summa matni, `FIXED` uchun. */
+	fixedAmount: string | null,
+	/**  Progressiv rejim. */
+	progressive: boolean,
+};
+
+/**  «Kelajagim» ekrani. */
+export type VaultDto = {
+	/**  Balans. */
+	balance: MoneyDto,
+	/**  Shu oy ajratilgan summa. */
+	savedThisMonth: MoneyDto,
+	/**  Boshlang'ich balans kiritilganmi. */
+	hasInitial: boolean,
+	/**  Ulush qoidasi. */
+	rule: ShareRuleDto,
+	/**  Odat. */
+	habit: HabitDto,
+	/**  Progressiv taklif: yangi ulush (bp). `null` — taklif yo'q. */
+	progressionOfferBp: number | null,
+	/**  Oxirgi yozuvlar, eng yangisi birinchi. */
+	history: VaultEntryDto[],
+};
+
+/**  «Kelajagim» yozuvi (tarix). */
+export type VaultEntryDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Tur: `INITIAL`, `INCOME_SHARE` yoki `WITHDRAWAL`. */
+	kind: string,
+	/**  Summa. */
+	amount: MoneyDto,
+	/**  Sana. */
+	occurredOn: string,
+	/**  Pul olish sababi (faqat `WITHDRAWAL`). */
+	reason: string | null,
+	/**  Manba daromad (faqat `INCOME_SHARE`). */
+	incomeId: string | null,
+};
+
+/**  «Kimning puli?» ekrani. */
+export type WhoseMoneyDto = {
+	/**  Davr boshi. */
+	periodStart: string,
+	/**  Davr oxiri (kirmaydi). */
+	periodEnd: string,
+	/**  Jami (barcha bo'laklar yig'indisi). */
+	total: MoneyDto,
+	/**  Egalar bo'yicha bo'laklar (faqat musbat). */
+	parts: OwnerPartDto[],
+};
+
+/**  Pul olish ma'lumoti (forma). PIN alohida argument sifatida keladi. */
+export type WithdrawInputDto = {
+	/**  Summa matni. */
+	amount: string,
+	/**  Sabab (majburiy). */
+	reason: string,
 };
 
 /* Tauri Specta runtime */

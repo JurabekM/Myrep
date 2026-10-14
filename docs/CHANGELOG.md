@@ -4,6 +4,74 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D4 — Daromad, «Kelajagim», audit, «Kimning puli?», majburiyat va nasiya, bosh sahifa (2026-10-14)
+
+**Qo'shildi**
+
+- **Vektorlar (`spec/test-vectors/`):**
+  - `unexplained_gap.json` — mobil ilovadagi fayl bilan bayt-bayt bir xil (sha256 tekshirilgan).
+  - `streak.json`, `income_share.json`, `money_parse.json` — yangi. Qoidalar mobil `habit.dart`, `vault_service.dart`, `money_format.dart` va ularning testlaridan olingan. Mobil ilova bu fayllarni hali ishlatmaydi (OPEN_QUESTIONS, 21-band).
+  - `vectors` runner'lari: 8 ta suite, har bir fayl uchun runner bor (qamrov testi buni tekshiradi).
+- `crates/money`: `parse_amount` (MoneyParser qoidalari: bo'sh joy, `_`, apostrof, `so'm`/`soʻm`/`сум`/`$`/`€`/`₽`, kasr aniqligi), `ceil_to_step` (yuqoriga yaxlitlash — yaxlitlashning ikkinchi yagona joyi), `MoneyError::ParseError` (`PARSE_ERROR`).
+- `crates/domain`:
+  - `calendar` — Toshkent sanasi (UTC+5), haftalar jumadan, oylar oylik kunidan (31 → oyning oxirgi kuni).
+  - `habit` — streak (joriy hafta tugamaguncha uzilmaydi), `streak_since` (progressiv taklif uchun).
+  - `share` — `ShareRule` (foiz yoki oylik summa, progressiv), `suggest_share`, `progression_offer` (4 hafta → +1 %, maks 10 %).
+  - `income`, `expense`, `obligation` (tur → standart kategoriya), `category` (13 tizim kalitli kategoriya), `debt` (nasiya qoldig'i), `vault` (balans, ulush, pul olish va boshlang'ich balans qoidalari).
+  - `ledger` — oy hisobi: majburiyat kategoriyadagi yozilgan xarajat bilan qoplanadi (ikki marta hisoblamaslik), izohsiz summa, «Kimning puli?» egalari.
+  - `report` — oylik audit surati (o'zgarmas).
+  - `DomainError` kengaytirildi: har xato barqaror kodga ega (`INSUFFICIENT_BALANCE`, `REASON_REQUIRED`, `INCOME_ALREADY_SHARED` va boshqalar).
+- `crates/storage`:
+  - Sxema v2 (faqat `ALTER TABLE ... ADD COLUMN` va yangi jadvallar; v1 ma'lumotlari saqlanadi — migratsiya testi bor): `households.month_start_day`, `categories.system_key` (xonadonda bir marta), `obligations.kind` va `category_id`, `vault_transactions.income_id`, `allocation_rules.progression_offered_on`. Yangi: `debts`, `debt_payments`, `monthly_reports` (davr uchun bir marta, `UNIQUE`).
+  - Repo'lar: `CategoryRepo`, `IncomeRepo`, `ExpenseRepo`, `ObligationRepo`, `VaultRepo` (aktiv va yozuvlar), `RuleRepo`, `DebtRepo`, `ReportRepo`.
+- `src-tauri`:
+  - `session`: `verify_pin` (pul olish tasdig'i), `with_database` (faqat ochiq bazada ishlaydi), `SessionError::Locked`, `DatabaseWithoutKey` (kalit fayli yo'q, baza bor bo'lsa sozlash rad etiladi — ma'lumot jim ustiga yozilmaydi).
+  - `finance` servisi va 22 ta command (`get_home`, `create_income`, `accept_share`, `withdraw`, `get_audit`, `finish_audit`, `get_whose_money`, `add_obligation`, `pay_debt` va boshqalar). Har command yupqa; biznes mantiq `finance` da.
+  - DTO: pul — `minor` (satr) va tayyor `formatted`; «Kimning puli?» bo'laklari `shareBp` bilan (kenglikni backend hisoblaydi).
+  - `ApiError`: `Locked`, `DatabaseWithoutKey`, `Rule { rule }` (domen kodi).
+- UI:
+  - Tez daromad (`Ctrl+N`): summa → Enter → «Shundan X so'm — kelajagingiz uchun» → Enter bilan ajratish. Taklif matni (`formatted`) qayta kiritiladi.
+  - «Daromad» sahifasi (shu oy), bosh sahifa KPI kartalari («O'zingizga to'langan», «Kelajagim» balansi, «Oy yakuni», odat, audit holati).
+  - «Kelajagim»: balans, odat, progressiv taklif, ulush qoidasi (5 % / 10 % / oylik summa), boshlang'ich balans (bir marta), pul olish (sabab majburiy, 5 soniya o'ylash pauzasi, PIN har safar), tarix.
+  - Oylik audit ustasi (4 qadam): daromad va majburiyatlar, xarajat yozish, izohsiz summani «mayda kundalik» deb belgilash, yakunlash (hisobot o'zgarmas saqlanadi). Klaviatura bilan bajariladi: birinchi boshqaruv fokusda, Enter tasdiqlaydi, Esc orqaga.
+  - «Kimning puli?»: oy bo'yicha o'tish, egalar bo'yicha bo'laklar.
+  - «Majburiyatlar va nasiya»: doimiy to'lovlar (qo'shish, o'chirish), nasiya (qo'shish, qisman to'lash, qoldiq).
+  - i18n: uz va ru; xato kodlari `errors.*` orqali matnga aylanadi.
+
+**Qarorlar va sabablar**
+
+- **Yozuvlarda kalendar sanasi, vaqt emas.** Odat va audit kun darajasida hisoblanadi; Toshkent vaqti (UTC+5) konvertatsiyasi unit testda. Mobil ilova instant saqlaydi — natija bir xil, chunki hafta chegarasi kun darajasida.
+- **Ulush taklifi:** foiz bo'yicha `percent_of`, so'ng 1 000 so'mgacha (kichik summada — butun so'mgacha) yuqoriga, daromaddan oshmaydi. Mobil `suggestShare` bilan bir xil; `income_share.json` bilan tasdiqlangan.
+- **Pul olish: har safar PIN.** Mobildagi 1 daqiqalik PIN ruxsat tokeni o'rniga, PIN buyruqning o'zida qayta tekshiriladi (noto'g'ri urinish `security` da hisoblanadi). Soddaroq va xavfsizroq; tasdiq kerak (OPEN_QUESTIONS, 25-band).
+- **Oy yakuni** = `daromad − (yozilmagan majburiyat + xarajat + sof jamg'arma)`. Mobil ta'rifi bilan bir xil, izohsiz summa bilan bir xil formula (OPEN_QUESTIONS, 28-band).
+- **Xarajat kanali:** `expenses.channel` ustuni majburiy, domen modelida kanal yo'q — hozircha `CASH`. D6 da qo'shiladi (OPEN_QUESTIONS, 23-band).
+- **Bitta xonadon, bitta egasi a'zo («O'zim»).** Oilaviy rejim (2+ a'zo) D6 da (OPEN_QUESTIONS, 24-band).
+- **ID — UUIDv7** (`uuid` crate, ADR: `uuid` v7; `fast-rng` tasodifiy qism uchun). `time` (formatting, parsing, macros) va `thiserror` src-tauri'ga qo'shildi — ikkalasi ham ish joyida allaqachon bor.
+- **`zeroize`** storage crate'ga to'g'ridan-to'g'ri bog'landi (`PRAGMA key` satrini tozalash); versiya `security` bilan bir xil.
+- **Sxema v2 — faqat qo'shish.** Eski v1 migratsiyasi o'zgartirilmadi; yangi ustunlar `DEFAULT` yoki `NULL` bilan.
+- Testlar uchun `security` temp papkalari endi tugagach o'chiriladi (D3 da qolib ketgan).
+
+**Natijalar**
+
+- `cargo test --workspace`: 148 ta test — yashil. D4 ga oid: `baraka-money` (parse, ceil), `baraka-domain` (calendar, habit, share, vault, ledger, debt va boshqalar), `baraka-vectors` (8 suite), `baraka-storage` (v1→v2 migratsiya, daromad → ulush bog'liqligi, cheklovlar, hisobot bir marta), `baraka-daftari` (oqimlar: daromad → ulush → balans, pul olish, ro'molcha, audit).
+- `cargo clippy --workspace --all-targets -D warnings`, `cargo fmt --check` — toza.
+- Frontend: `pnpm test` 22 ta — yashil (ilova qobig'i, xavfsizlik, tez daromad, pul olish pauzasi va PIN, audit klaviatura oqimi, «Kimning puli?» bo'laklari, bosh sahifa). `lint`, `typecheck`, `format:check` — toza.
+- Haqiqiy ilovada qo'lda sinov (ishlab chiqish rejimi, ekran suratlari bilan):
+  - sozlash → bosh sahifa;
+  - `Ctrl+N`: 150 000 → taklif 8 000 → Enter bilan ajratish → bosh sahifada «O'zingizga to'langan» 8 000, «Kelajagim» 8 000, «Oy yakuni» 142 000, odat 1 hafta;
+  - «Kelajagim»: ro'molcha 100 000 (kartochka yo'qoladi, bir marta); pul olish — noto'g'ri PIN xabari va maydon tozalanishi, so'ng to'g'ri PIN bilan 30 000 «Dori» tarixda;
+  - audit: klaviatura bilan 4 qadam (Enter, Enter, Tab-Enter, Enter), «Ijara» 5 000 yozildi, yakunlandi — «Audit yakunlangan» holati;
+  - «Kimning puli?» — izohsiz bo'lak; «Majburiyatlar va nasiya»: nasiya 200 000 qo'shildi, 50 000 to'landi — qoldiq 150 000;
+  - ruscha til: bosh sahifa va yon panel to'g'ri ko'rinadi.
+
+**Ma'lum cheklovlar**
+
+- Audit izohsiz summa bilan yakunlanishi mumkin (majburiy tanlov yo'q) — OPEN_QUESTIONS, 22-band.
+- Pul olish va boshqa yozuvlarning qayta ishga tushirishdan keyingi saqlanishi D4 da alohida tekshirilmadi (baza D3 da sinalgan).
+- Oylik kun (`month_start_day`) sozlamasi UI'da yo'q; standart — 1.
+- Nasiya minimal: foiz, tilxat va friction D9 da.
+- Daromad `source_type` (TER/MOL/TAVAKKAL/RIBO) ustuni ishlatilmaydi — ribo filtri D8 da.
+
 ### D3 — Xavfsizlik va shifrlangan baza (2026-10-14)
 
 **Qo'shildi**

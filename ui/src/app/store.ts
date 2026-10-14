@@ -5,11 +5,18 @@ interface UiState {
   /** Hozir ochiq sahifa. Bu faqat UI holati — moliyaviy ma'lumot emas (DESKTOP_PROMPT.md 2-bo'lim: Zustand). */
   page: PageId;
   setPage: (page: PageId) => void;
+  /** Tez daromad kiritish oynasi ochiqmi (Ctrl+N). */
+  quickEntryOpen: boolean;
+  setQuickEntryOpen: (open: boolean) => void;
 }
 
 export const useUiStore = create<UiState>()((set) => ({
   page: "home",
   setPage: (page) => {
     set({ page });
+  },
+  quickEntryOpen: false,
+  setQuickEntryOpen: (open) => {
+    set({ quickEntryOpen: open });
   },
 }));

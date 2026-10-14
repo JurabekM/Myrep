@@ -10,6 +10,7 @@ mod currency;
 mod error;
 mod format;
 mod fx;
+mod parse;
 mod rounding;
 mod value;
 
@@ -18,5 +19,6 @@ pub use currency::Currency;
 pub use error::MoneyError;
 pub use format::{Locale, format_money};
 pub use fx::{FxRate, convert};
-pub use rounding::round_half_up_div;
+pub use parse::parse_amount;
+pub use rounding::{ceil_to_step, round_half_up_div};
 pub use value::Money;

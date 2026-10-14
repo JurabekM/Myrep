@@ -267,6 +267,8 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 name = "baraka-daftari"
 version = "0.1.0"
 dependencies = [
+ "baraka-domain",
+ "baraka-money",
  "baraka-security",
  "baraka-storage",
  "serde",
@@ -277,14 +279,17 @@ dependencies = [
  "tauri-build",
  "tauri-specta",
  "thiserror 2.0.21",
+ "time",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
 name = "baraka-domain"
 version = "0.1.0"
 dependencies = [
+ "baraka-money",
  "thiserror 2.0.21",
  "time",
 ]
@@ -316,6 +321,7 @@ name = "baraka-storage"
 version = "0.1.0"
 dependencies = [
  "baraka-domain",
+ "baraka-money",
  "baraka-security",
  "rusqlite",
  "rusqlite_migration",
@@ -329,6 +335,7 @@ dependencies = [
 name = "baraka-vectors"
 version = "0.1.0"
 dependencies = [
+ "baraka-domain",
  "baraka-money",
  "serde",
  "serde_json",
@@ -4802,6 +4809,7 @@ checksum = "7cc1186384beb7dd8eedea376413fd654937285ea6c9cfbb928dc3043ea4b606"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
+ "rand",
  "serde_core",
  "wasm-bindgen",
 ]

@@ -13,8 +13,25 @@ const PIN: &str = "135790";
 const WRONG_PIN: &str = "000000";
 const NOW: i64 = 1_800_000_000;
 
+/// Test papkasi: test tugagach (panikada ham) o'chiriladi.
+struct TempDir(PathBuf);
+
+impl std::ops::Deref for TempDir {
+    type Target = PathBuf;
+
+    fn deref(&self) -> &PathBuf {
+        &self.0
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
 /// Har test uchun alohida vaqtinchalik papka.
-fn fresh_dir(name: &str) -> PathBuf {
+fn fresh_dir(name: &str) -> TempDir {
     let dir = std::env::temp_dir().join(format!(
         "baraka-security-{name}-{}-{}",
         std::process::id(),
@@ -24,7 +41,7 @@ fn fresh_dir(name: &str) -> PathBuf {
             .unwrap_or(0)
     ));
     std::fs::create_dir_all(&dir).expect("vaqtinchalik papka");
-    dir
+    TempDir(dir)
 }
 
 fn failed_attempts(path: &PathBuf) -> u32 {

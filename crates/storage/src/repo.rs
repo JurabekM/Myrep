@@ -20,8 +20,8 @@ impl<'a> HouseholdRepo<'a> {
     pub fn insert(&self, household: &Household) -> Result<(), StorageError> {
         let meta = &household.meta;
         self.conn.execute(
-            "INSERT INTO households (id, name, created_at, updated_at, deleted_at, version, origin_device_id) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO households (id, name, created_at, updated_at, deleted_at, version, origin_device_id, month_start_day) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 household.id,
                 household.name,
@@ -30,6 +30,7 @@ impl<'a> HouseholdRepo<'a> {
                 meta.deleted_at.map(format_ts).transpose()?,
                 meta.version,
                 meta.origin_device_id,
+                household.month_start_day,
             ],
         )?;
         Ok(())
@@ -40,7 +41,7 @@ impl<'a> HouseholdRepo<'a> {
         let raw = self
             .conn
             .query_row(
-                "SELECT id, name, created_at, updated_at, deleted_at, version, origin_device_id \
+                "SELECT id, name, created_at, updated_at, deleted_at, version, origin_device_id, month_start_day \
                  FROM households WHERE id = ?1 AND deleted_at IS NULL",
                 [id],
                 RawHousehold::from_row,
@@ -52,7 +53,7 @@ impl<'a> HouseholdRepo<'a> {
     /// Faol xonadonlar, yaratilish vaqti bo'yicha.
     pub fn list(&self) -> Result<Vec<Household>, StorageError> {
         let mut statement = self.conn.prepare(
-            "SELECT id, name, created_at, updated_at, deleted_at, version, origin_device_id \
+            "SELECT id, name, created_at, updated_at, deleted_at, version, origin_device_id, month_start_day \
              FROM households WHERE deleted_at IS NULL ORDER BY created_at, id",
         )?;
         let rows = statement.query_map([], RawHousehold::from_row)?;
@@ -211,6 +212,7 @@ struct RawHousehold {
     deleted_at: Option<String>,
     version: i64,
     origin_device_id: String,
+    month_start_day: u8,
 }
 
 impl RawHousehold {
@@ -223,6 +225,7 @@ impl RawHousehold {
             deleted_at: row.get(4)?,
             version: row.get(5)?,
             origin_device_id: row.get(6)?,
+            month_start_day: row.get(7)?,
         })
     }
 
@@ -230,6 +233,7 @@ impl RawHousehold {
         Ok(Household {
             id: self.id,
             name: self.name,
+            month_start_day: self.month_start_day,
             meta: Meta {
                 created_at: parse_ts(&self.created_at)?,
                 updated_at: parse_ts(&self.updated_at)?,
@@ -288,7 +292,7 @@ impl RawMember {
 }
 
 /// Vaqtni bazaga RFC 3339 (UTC) ko'rinishida yozish.
-fn format_ts(value: OffsetDateTime) -> Result<String, StorageError> {
+pub(crate) fn format_ts(value: OffsetDateTime) -> Result<String, StorageError> {
     value
         .to_offset(UtcOffset::UTC)
         .format(&Rfc3339)
@@ -296,7 +300,7 @@ fn format_ts(value: OffsetDateTime) -> Result<String, StorageError> {
 }
 
 /// Bazadagi RFC 3339 satrini vaqtga aylantirish.
-fn parse_ts(text: &str) -> Result<OffsetDateTime, StorageError> {
+pub(crate) fn parse_ts(text: &str) -> Result<OffsetDateTime, StorageError> {
     OffsetDateTime::parse(text, &Rfc3339)
         .map_err(|_| StorageError::InvalidData("vaqt formati".to_owned()))
 }

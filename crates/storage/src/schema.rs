@@ -189,9 +189,79 @@ CREATE TABLE fx_rates (
 CREATE INDEX fx_rates_by_household ON fx_rates (household_id);
 "#;
 
+/// Sxema v2 (D4): daromad, «Kelajagim», audit va majburiyatlar uchun ustunlar va jadvallar.
+///
+/// Mavjud jadvallarga faqat `ADD COLUMN` qo'shiladi (v1 ma'lumotlari saqlanadi). Yangi jadvallar:
+/// nasiya (`debts`, `debt_payments`) va oylik hisobot (`monthly_reports`, o'zgarmas).
+pub const SCHEMA_V2: &str = r#"
+ALTER TABLE households ADD COLUMN month_start_day INTEGER NOT NULL DEFAULT 1
+    CHECK (month_start_day BETWEEN 1 AND 31);
+
+ALTER TABLE categories ADD COLUMN system_key TEXT
+    CHECK (system_key IS NULL OR system_key IN (
+        'RENT', 'CREDIT', 'GROCERIES', 'DAILY_SMALL', 'SNACKS', 'UTILITIES', 'PHONE',
+        'FUEL', 'TRANSPORT', 'SADAQA', 'CHILDREN', 'CAFE', 'OTHER'));
+CREATE UNIQUE INDEX categories_system_key_per_household
+    ON categories (household_id, system_key) WHERE system_key IS NOT NULL;
+
+ALTER TABLE obligations ADD COLUMN kind TEXT NOT NULL DEFAULT 'OTHER'
+    CHECK (kind IN ('RENT', 'CREDIT', 'UTILITY', 'PHONE', 'FUEL', 'OTHER'));
+ALTER TABLE obligations ADD COLUMN category_id TEXT REFERENCES categories (id);
+
+ALTER TABLE vault_transactions ADD COLUMN income_id TEXT REFERENCES incomes (id);
+
+ALTER TABLE allocation_rules ADD COLUMN progression_offered_on TEXT;
+
+CREATE TABLE debts (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    kind TEXT NOT NULL CHECK (kind IN ('SHOP')),
+    creditor TEXT NOT NULL CHECK (length(trim(creditor)) > 0),
+    principal_minor INTEGER NOT NULL CHECK (principal_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    incurred_on TEXT NOT NULL,
+    note TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX debts_by_household ON debts (household_id);
+
+CREATE TABLE debt_payments (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    debt_id TEXT NOT NULL REFERENCES debts (id),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    paid_on TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX debt_payments_by_debt ON debt_payments (debt_id);
+
+CREATE TABLE monthly_reports (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL,
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    income_minor INTEGER NOT NULL,
+    expenses_minor INTEGER NOT NULL,
+    obligations_minor INTEGER NOT NULL,
+    obligations_unrecorded_minor INTEGER NOT NULL,
+    net_savings_minor INTEGER NOT NULL,
+    unexplained_minor INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (household_id, period_start)
+) STRICT;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(SCHEMA_V1)])
+    Migrations::new(vec![M::up(SCHEMA_V1), M::up(SCHEMA_V2)])
 }
 
 /// Sxemadagi jadvallar (testlar va hujjat uchun).
@@ -207,4 +277,7 @@ pub const TABLES: &[&str] = &[
     "allocation_rules",
     "obligations",
     "fx_rates",
+    "debts",
+    "debt_payments",
+    "monthly_reports",
 ];

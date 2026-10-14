@@ -3,12 +3,26 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { commands } from "../bindings/bindings";
 import { setAppLanguage } from "../i18n";
+import { resetFinanceMocks } from "../test/fixtures";
 import { App } from "./App";
 import { useUiStore } from "./store";
 
 // Testda haqiqiy Tauri IPC yo'q: commandlar javobi soxtalashtiriladi.
 vi.mock("../bindings/bindings", () => ({
-  commands: { getAppInfo: vi.fn(), getSecurityStatus: vi.fn(), lock: vi.fn() },
+  commands: {
+    getAppInfo: vi.fn(),
+    getSecurityStatus: vi.fn(),
+    lock: vi.fn(),
+    getHome: vi.fn(),
+    listIncomesThisMonth: vi.fn(),
+    listRecentIncomes: vi.fn(),
+    getVault: vi.fn(),
+    getAudit: vi.fn(),
+    getWhoseMoney: vi.fn(),
+    listCategories: vi.fn(),
+    listObligations: vi.fn(),
+    listDebts: vi.fn(),
+  },
 }));
 
 const APP_INFO = {
@@ -29,8 +43,9 @@ describe("Baraka daftari ilova qobig'i", () => {
       status: "ok",
       data: { setUp: true, unlocked: true },
     });
+    resetFinanceMocks();
     // Zustand do'koni modul darajasida: har test bosh sahifadan boshlanishi uchun tiklanadi.
-    useUiStore.setState({ page: "home" });
+    useUiStore.setState({ page: "home", quickEntryOpen: false });
   });
 
   afterEach(async () => {
@@ -51,16 +66,17 @@ describe("Baraka daftari ilova qobig'i", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const incomeButton = await screen.findByRole("button", { name: "Daromad" });
-    expect(incomeButton).toHaveAttribute("aria-disabled", "true");
+    // «Xarajatlar» hali tayyor emas (D6); «Daromad» endi ochiq.
+    const expensesButton = await screen.findByRole("button", { name: "Xarajatlar" });
+    expect(expensesButton).toHaveAttribute("aria-disabled", "true");
 
     // Avval sabab ko'rinadi (hover), keyin bosish sinaladi: bosilgach tooltip qayta ochilmaydi (Radix xulqi).
-    await user.hover(incomeButton);
+    await user.hover(expensesButton);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
       "Bu boʻlim keyingi bosqichda qoʻshiladi",
     );
 
-    await user.click(incomeButton);
+    await user.click(expensesButton);
     expect(screen.getByRole("heading", { level: 1, name: UZ_GREETING })).toBeInTheDocument();
   });
 

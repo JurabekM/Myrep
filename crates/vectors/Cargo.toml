@@ -18,6 +18,8 @@ thiserror = "2"
 [dev-dependencies]
 # Runner testlari money kutubxonasiga qarshi ishlaydi. money esa bu crate'ga bog'lanmaydi (tsikl yo'q).
 money = { package = "baraka-money", path = "../money" }
+# D4 suite'lari (streak, income_share, unexplained_gap) domen funksiyalariga qarshi tekshiriladi.
+domain = { package = "baraka-domain", path = "../domain" }
 time = "0.3"
 
 [lints]

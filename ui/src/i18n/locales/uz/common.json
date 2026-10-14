@@ -20,7 +20,28 @@
   "common": {
     "comingSoon": "Bu boʻlim keyingi bosqichda qoʻshiladi",
     "loading": "Yuklanmoqda…",
-    "disclaimer": "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas."
+    "disclaimer": "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas.",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "back": "Orqaga",
+    "next": "Keyingi"
+  },
+  "errors": {
+    "generic": "Xatolik yuz berdi. Qayta urinib koʻring yoki ilovani qayta ishga tushiring.",
+    "reasonRequired": "Sabab kiritilishi shart.",
+    "amountNotPositive": "Summa noldan katta boʻlishi kerak.",
+    "insufficientBalance": "«Kelajagim»da mablagʻ yetarli emas.",
+    "initialAlreadySet": "Boshlangʻich balans allaqachon kiritilgan.",
+    "incomeAlreadyShared": "Bu daromaddan ulush allaqachon ajratilgan.",
+    "shareExceedsIncome": "Ajratilgan summa daromaddan katta boʻlmasligi kerak.",
+    "invalidRule": "Ulush qoidasi notoʻgʻri.",
+    "debtOverpaid": "Toʻlov nasiya qoldigʻidan katta.",
+    "auditAlreadyDone": "Bu oy uchun audit allaqachon yakunlangan.",
+    "nothingToMark": "Izohsiz qolgan summa yoʻq.",
+    "notFound": "Yozuv topilmadi. Ehtimol, u oʻchirilgan.",
+    "invalidDay": "Kun 1 dan 31 gacha boʻlishi kerak.",
+    "parseError": "Summa notoʻgʻri yozilgan. Masalan: 150 000.",
+    "currencyMismatch": "Valyuta mos kelmadi."
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -33,6 +54,235 @@
       "release": "Reliz",
       "debug": "Ishlab chiqish",
       "error": "Ilova maʼlumotini olib boʻlmadi. Ilovani qayta ishga tushiring."
+    },
+    "kpi": {
+      "paidToSelf": "Oʻzingizga toʻlangan (shu oy)",
+      "vault": "«Kelajagim» balansi",
+      "income": "Shu oy daromadi",
+      "monthResult": "Oy yakuni",
+      "monthResultHint": "Daromad − (xarajat + yozilmagan majburiyat + jamgʻarma)"
+    },
+    "habit": {
+      "title": "Odat",
+      "streak": "Ketma-ket {{weeks}} hafta",
+      "noStreak": "Hali ketma-ketlik yoʻq",
+      "thisWeekDone": "Bu hafta ajratildi",
+      "thisWeekPending": "Bu hafta hali ajratilmadi"
+    },
+    "audit": {
+      "title": "Oylik audit",
+      "done": "Oʻtgan oy auditi yakunlangan.",
+      "pending": "Oʻtgan oy uchun audit hali oʻtkazilmagan.",
+      "start": "Auditni boshlash"
+    },
+    "actions": {
+      "income": "Daromad kiritish (Ctrl+N)",
+      "vault": "«Kelajagim»",
+      "whoseMoney": "Kimning puli?",
+      "obligations": "Majburiyatlar va nasiya"
+    }
+  },
+  "quickEntry": {
+    "title": "Yangi daromad",
+    "amount": "Summa",
+    "recentSources": "Soʻnggi manbalar",
+    "source": "Manba",
+    "defaultSource": "Kunlik ish",
+    "channel": "Kanal",
+    "cash": "Naqd",
+    "card": "Karta",
+    "save": "Saqlash",
+    "shareTitle": "«Kelajagim»ga ajratamizmi?",
+    "shareText": "Shundan {{amount}} — kelajagingiz uchun.",
+    "shareAccept": "Ajratish",
+    "shareCustom": "Boshqa summa",
+    "customAmount": "Ajratiladigan summa",
+    "shareSave": "Ajratish",
+    "shareSkip": "Bu safar emas"
+  },
+  "income": {
+    "title": "Daromadlar",
+    "subtitle": "Shu oydagi daromadlar. Yangisini Ctrl+N bilan kiriting.",
+    "new": "Yangi daromad",
+    "empty": "Bu oyda hali daromad kiritilmagan."
+  },
+  "vault": {
+    "title": "«Kelajagim»",
+    "subtitle": "Bu pul sizniki. Undan olish uchun sabab va PIN kerak.",
+    "balanceTitle": "Balans",
+    "balance": "Jami balans",
+    "savedThisMonth": "Shu oy ajratilgan",
+    "totalWeeks": "Jami {{weeks}} hafta",
+    "progression": {
+      "title": "Ulushni oshirish",
+      "text": "4 hafta ketma-ket ajratdingiz. Ulushni {{percent}} % ga oshiraylikmi?",
+      "accept": "Ha, oshirish",
+      "later": "Keyinroq"
+    },
+    "rule": {
+      "title": "Ulush qoidasi",
+      "currentPercent": "Hozirgi qoida: daromadning {{percent}} %i.",
+      "currentFixed": "Hozirgi qoida: oyiga {{amount}}.",
+      "choose": "Qancha ajratamiz?",
+      "percent5": "5 % (boshlangʻich)",
+      "percent10": "10 % (maqsad)",
+      "fixed": "Oyiga qatʼiy summa",
+      "fixedAmount": "Oyiga summa",
+      "progressive": "Progressiv: 4 hafta ketma-ket ajratilsa, +1 % taklif qilinadi",
+      "saved": "Qoida saqlandi."
+    },
+    "initial": {
+      "title": "Boshlangʻich balans (ro'molcha)",
+      "text": "Ilovadan oldin yigʻgan naqd jamgʻarmangizni kiriting. Bu bir marta qilinadi va odatga kirmaydi.",
+      "amount": "Jamgʻarma summasi"
+    },
+    "withdraw": {
+      "title": "Pul olish",
+      "hint": "Bu pul kelajagingiz uchun. Olish uchun sabab yozing va PIN kiriting.",
+      "pause": "Bir oz oʻylab koʻring: {{seconds}} soniya.",
+      "amount": "Summa",
+      "reason": "Sabab",
+      "pin": "PIN",
+      "submit": "Olish",
+      "done": "Pul olindi va daftarga yozildi."
+    },
+    "history": {
+      "title": "Tarix",
+      "empty": "Hali yozuv yoʻq.",
+      "initial": "Boshlangʻich balans",
+      "share": "Daromaddan ulush",
+      "withdrawal": "Pul olish"
+    }
+  },
+  "audit": {
+    "title": "Oylik audit",
+    "period": "Davr: {{start}} dan boshlab",
+    "stepLabel": "Qadam {{current}} / {{total}}",
+    "steps": {
+      "summary": "Daromad va majburiyatlar",
+      "expenses": "Xarajatlar",
+      "unexplained": "Izohsiz summa",
+      "finish": "Yakun"
+    },
+    "income": "Daromad",
+    "obligationsTotal": "Majburiyatlar jami",
+    "expensesTotal": "Yozilgan xarajatlar",
+    "netSavings": "«Kelajagim» (sof)",
+    "remainder": "yozilmagan",
+    "noObligations": "Doimiy majburiyatlar yoʻq.",
+    "unexplainedLeft": "Izohsiz qoldi",
+    "expenses": {
+      "title": "Xarajatlarni yozing",
+      "amount": "Summa",
+      "category": "Kategoriya",
+      "add": "Qoʻshish",
+      "empty": "Bu oy uchun hali xarajat yozilmagan.",
+      "uncategorized": "Kategoriyasiz"
+    },
+    "unexplained": {
+      "title": "Izohsiz qolgan summa",
+      "amount": "Izohsiz",
+      "hint": "Daromad va yozilgan xarajat/majburiyatlar oʻrtasidagi farq.",
+      "markDaily": "Mayda kundalik xarajat deb belgilash",
+      "none": "Hammasi izohlangan. Keyingi qadamga oʻting."
+    },
+    "finish": {
+      "title": "Auditni yakunlash",
+      "text": "Yakunlangach, bu davr hisoboti oʻzgarmas holda saqlanadi.",
+      "submit": "Auditni yakunlash"
+    },
+    "done": {
+      "title": "Audit yakunlangan",
+      "text": "Bu oy uchun audit saqlangan. Oʻzgartirib boʻlmaydi.",
+      "home": "Bosh sahifaga"
+    }
+  },
+  "whoseMoney": {
+    "title": "Kimning puli?",
+    "subtitle": "Daromadingiz kimlarga ketdi: uy egasi, bank, doʻkondor va boshqalar.",
+    "older": "Oldingi oy",
+    "newer": "Keyingi oy",
+    "current": "Joriy oy",
+    "period": "Davr: {{start}} dan",
+    "total": "Jami",
+    "empty": "Bu davrda hali pul harakati yoʻq."
+  },
+  "obligations": {
+    "title": "Majburiyatlar va nasiya",
+    "subtitle": "Har oy takrorlanadigan toʻlovlar va doʻkondagi qarzlar.",
+    "list": {
+      "title": "Doimiy toʻlovlar",
+      "empty": "Hali majburiyat qoʻshilmagan.",
+      "dueDay": "{{day}}-sana",
+      "deactivate": "Oʻchirish"
+    },
+    "add": {
+      "title": "Yangi majburiyat",
+      "name": "Nomi",
+      "kind": "Turi",
+      "amount": "Oylik summa",
+      "dueDay": "Toʻlov kuni (ixtiyoriy)",
+      "submit": "Qoʻshish"
+    },
+    "debts": {
+      "title": "Nasiya daftari",
+      "empty": "Hali nasiya yoʻq.",
+      "principal": "Asl summa: {{amount}}",
+      "outstanding": "Qoldiq",
+      "payAmount": "Toʻlov summasi",
+      "pay": "Toʻlash",
+      "add": "Yangi nasiya",
+      "creditor": "Doʻkon yoki kimga",
+      "amount": "Summa",
+      "note": "Izoh (ixtiyoriy)",
+      "submit": "Qoʻshish"
+    }
+  },
+  "owners": {
+    "LANDLORD": "Uy egasi",
+    "BANK": "Bank",
+    "SHOP": "Doʻkondor",
+    "UTILITIES": "Kommunal va telefon",
+    "FUEL": "Yoqilgʻi va yoʻlkira",
+    "SELF": "Oʻzingiz («Kelajagim»)",
+    "SADAQA": "Sadaqa",
+    "OTHER": "Boshqa",
+    "UNEXPLAINED": "Izohsiz"
+  },
+  "categories": {
+    "RENT": "Ijara",
+    "CREDIT": "Kredit",
+    "GROCERIES": "Oziq-ovqat",
+    "DAILY_SMALL": "Mayda kundalik",
+    "SNACKS": "Gazak va ichimlik",
+    "UTILITIES": "Kommunal",
+    "PHONE": "Telefon",
+    "FUEL": "Yoqilgʻi",
+    "TRANSPORT": "Yoʻlkira",
+    "SADAQA": "Sadaqa",
+    "CHILDREN": "Bolalar",
+    "CAFE": "Kafe",
+    "OTHER": "Boshqa"
+  },
+  "obligationKinds": {
+    "RENT": "Ijara",
+    "CREDIT": "Kredit",
+    "UTILITY": "Kommunal",
+    "PHONE": "Telefon",
+    "FUEL": "Yoqilgʻi",
+    "OTHER": "Boshqa"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "language": {
+      "title": "Til",
+      "hint": "Ilova tilini tanlang. Oʻzgarish darhol qoʻllanadi.",
+      "uz": "Oʻzbekcha (lotin)",
+      "ru": "Русский"
+    },
+    "privacy": {
+      "title": "Maxfiylik",
+      "text": "Maʼlumotlaringiz faqat shu kompyuterda saqlanadi. Server, akkaunt va telemetriya yoʻq."
     }
   },
   "security": {
@@ -53,19 +303,7 @@
     "invalidPin": "PIN aniq 6 ta raqamdan iborat boʻlishi kerak.",
     "keyUnavailable": "Qurilma kaliti topilmadi yoki bu daftarga mos emas. Maʼlumotlar ochilmaydi.",
     "internal": "Xatolik yuz berdi. Ilovani qayta ishga tushiring.",
-    "statusError": "Xavfsizlik holatini olib boʻlmadi. Ilovani qayta ishga tushiring."
-  },
-  "settings": {
-    "title": "Sozlamalar",
-    "language": {
-      "title": "Til",
-      "hint": "Ilova tilini tanlang. Oʻzgarish darhol qoʻllanadi.",
-      "uz": "Oʻzbekcha (lotin)",
-      "ru": "Русский"
-    },
-    "privacy": {
-      "title": "Maxfiylik",
-      "text": "Maʼlumotlaringiz faqat shu kompyuterda saqlanadi. Server, akkaunt va telemetriya yoʻq."
-    }
+    "statusError": "Xavfsizlik holatini olib boʻlmadi. Ilovani qayta ishga tushiring.",
+    "databaseWithoutKey": "Ma'lumotlar bazasi topildi, lekin kalit fayli yo'q. Ilovani qayta ishga tushiring yoki yordam so'rang."
   }
 }

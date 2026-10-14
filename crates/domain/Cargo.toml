@@ -11,6 +11,8 @@ publish.workspace = true
 name = "domain"
 
 [dependencies]
+# Pul hisobi (ADR: money crate). Domen qoidalari shu crate orqali summa bilan ishlaydi.
+money = { package = "baraka-money", path = "../money" }
 # Vaqt qiymatlari (UTC). Joriy vaqtni olish — Clock trait orqali, bu yerda emas.
 time = "0.3"
 # Xatolar (ADR: thiserror).

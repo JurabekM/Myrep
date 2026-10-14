@@ -4,6 +4,31 @@
 //! Barcha entitylar umumiy konvensiyalarga ega: UUIDv7 identifikator, UTC vaqt, mantiqiy o'chirish
 //! va versiya raqami (DESKTOP_PROMPT.md 6.1).
 
+pub mod calendar;
+pub mod category;
+pub mod debt;
+pub mod expense;
+pub mod habit;
+pub mod income;
+pub mod ledger;
+pub mod obligation;
+pub mod report;
+pub mod share;
+pub mod vault;
+
+pub use category::{Category, CategoryKey};
+pub use debt::{DebtPayment, ShopDebt};
+pub use expense::{Expense, ExpenseDraft};
+pub use habit::{HabitStats, habit_stats, streak_since};
+pub use income::{Channel, Income, IncomeDraft};
+pub use ledger::{
+    LedgerInput, MoneyOwner, MonthLedger, ObligationLine, build_month_ledger, whose_money,
+};
+pub use obligation::{Obligation, ObligationDraft, ObligationKind};
+pub use report::MonthlyReport;
+pub use share::{ShareRule, ShareTarget, progression_offer, suggest_share};
+pub use vault::{VaultEntry, VaultMovement};
+
 use thiserror::Error;
 use time::OffsetDateTime;
 
@@ -22,7 +47,7 @@ pub trait IdGen: Send + Sync {
     fn next_id(&self) -> String;
 }
 
-/// Domen qoidalari buzilganda qaytariladigan xatolar.
+/// Domen qoidalari buzilganda qaytariladigan xatolar. [`DomainError::code`] barqaror kod beradi.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum DomainError {
     /// Identifikator UUIDv7 formatida emas.
@@ -34,6 +59,65 @@ pub enum DomainError {
     /// Noma'lum a'zo roli.
     #[error("noma'lum a'zo roli")]
     InvalidRole,
+    /// Sabab (masalan, pul olish sababi) bo'sh.
+    #[error("sabab kiritilishi shart")]
+    ReasonRequired,
+    /// Summa nol yoki manfiy.
+    #[error("summa musbat bo'lishi kerak")]
+    AmountNotPositive,
+    /// «Kelajagim» balansidan ko'p olib bo'lmaydi.
+    #[error("balansda mablag' yetarli emas")]
+    InsufficientBalance,
+    /// Boshlang'ich balans (ro'molcha) allaqachon kiritilgan.
+    #[error("boshlang'ich balans allaqachon kiritilgan")]
+    InitialAlreadySet,
+    /// Shu daromaddan ulush allaqachon ajratilgan.
+    #[error("bu daromaddan ulush allaqachon ajratilgan")]
+    IncomeAlreadyShared,
+    /// Ajratilgan ulush daromaddan katta.
+    #[error("ajratilgan summa daromaddan katta bo'lmasligi kerak")]
+    ShareExceedsIncome,
+    /// Ulush qoidasi noto'g'ri (foiz chegaradan tashqarida, progressiv qat'iy summa bilan).
+    #[error("ulush qoidasi noto'g'ri")]
+    InvalidRule,
+    /// Nasiyani ortiqcha to'lash (qoldiqdan katta).
+    #[error("to'lov nasiya qoldig'idan katta")]
+    DebtOverpaid,
+    /// Oylik to'lov kuni 1 dan 31 gacha bo'lishi kerak.
+    #[error("kun 1 dan 31 gacha bo'lishi kerak")]
+    InvalidDay,
+    /// Shu oy uchun audit allaqachon yakunlangan.
+    #[error("bu oy uchun audit allaqachon yakunlangan")]
+    AuditAlreadyDone,
+    /// Izohsiz qolgan summa yo'q: belgilash uchun hech narsa yo'q.
+    #[error("izohsiz qolgan summa yo'q")]
+    NothingToMark,
+    /// Pul amalidagi xato (valyuta mosligi va boshqalar).
+    #[error(transparent)]
+    Money(#[from] money::MoneyError),
+}
+
+impl DomainError {
+    /// Barqaror xato kodi (SCREAMING_SNAKE_CASE). Frontend shu kod bo'yicha matn tanlaydi.
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::InvalidId => "INVALID_ID",
+            Self::InvalidName => "INVALID_NAME",
+            Self::InvalidRole => "INVALID_ROLE",
+            Self::ReasonRequired => "REASON_REQUIRED",
+            Self::AmountNotPositive => "AMOUNT_NOT_POSITIVE",
+            Self::InsufficientBalance => "INSUFFICIENT_BALANCE",
+            Self::InitialAlreadySet => "INITIAL_ALREADY_SET",
+            Self::IncomeAlreadyShared => "INCOME_ALREADY_SHARED",
+            Self::ShareExceedsIncome => "SHARE_EXCEEDS_INCOME",
+            Self::InvalidRule => "INVALID_RULE",
+            Self::DebtOverpaid => "DEBT_OVERPAID",
+            Self::InvalidDay => "INVALID_DAY",
+            Self::AuditAlreadyDone => "AUDIT_ALREADY_DONE",
+            Self::NothingToMark => "NOTHING_TO_MARK",
+            Self::Money(error) => error.code(),
+        }
+    }
 }
 
 /// UUIDv7 formatini tekshiradi: 8-4-4-4-12 kichik harfli hex, versiya belgisi `7`, variant `8`/`9`/`a`/`b`.
@@ -99,6 +183,8 @@ pub struct Household {
     pub id: String,
     /// Xonadon nomi.
     pub name: String,
+    /// Oylik davr boshlanadigan kun (1..31); standart — 1.
+    pub month_start_day: u8,
     /// Umumiy metama'lumot.
     pub meta: Meta,
 }
@@ -115,8 +201,18 @@ impl Household {
         Ok(Self {
             id: id.to_owned(),
             name: validate_name(name)?,
+            month_start_day: calendar::DEFAULT_MONTH_START_DAY,
             meta: Meta::created(now, origin_device_id),
         })
+    }
+
+    /// Oylik kunni o'zgartiradi (1..31). Noto'g'ri qiymat — [`DomainError::InvalidDay`].
+    pub fn with_month_start_day(mut self, day: u8) -> Result<Self, DomainError> {
+        if !(1..=31).contains(&day) {
+            return Err(DomainError::InvalidDay);
+        }
+        self.month_start_day = day;
+        Ok(self)
     }
 }
 

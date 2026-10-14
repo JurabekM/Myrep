@@ -4,6 +4,9 @@
 //! commandlar yupqa bo'ladi (DESKTOP_PROMPT.md 3.2).
 
 mod commands;
+mod dto;
+mod finance;
+mod finance_commands;
 mod session;
 
 use std::sync::Arc;
@@ -36,6 +39,28 @@ fn specta_builder() -> Builder<tauri::Wry> {
         commands::setup_pin,
         commands::unlock,
         commands::lock,
+        finance_commands::get_home,
+        finance_commands::list_incomes_this_month,
+        finance_commands::list_recent_incomes,
+        finance_commands::create_income,
+        finance_commands::accept_share,
+        finance_commands::get_vault,
+        finance_commands::respond_progression,
+        finance_commands::set_share_rule,
+        finance_commands::set_initial_balance,
+        finance_commands::withdraw,
+        finance_commands::get_audit,
+        finance_commands::add_audit_expense,
+        finance_commands::mark_unexplained_as_daily,
+        finance_commands::finish_audit,
+        finance_commands::get_whose_money,
+        finance_commands::list_categories,
+        finance_commands::list_obligations,
+        finance_commands::add_obligation,
+        finance_commands::set_obligation_active,
+        finance_commands::list_debts,
+        finance_commands::add_debt,
+        finance_commands::pay_debt,
     ])
 }
 

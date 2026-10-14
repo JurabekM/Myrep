@@ -7,6 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use security::SecurityError;
 use serde::Serialize;
 use specta::Type;
+use storage::StorageError;
 use tauri::{AppHandle, State};
 use tracing::error;
 
@@ -59,6 +60,15 @@ pub enum ApiError {
     NotSetUp,
     /// Qurilma kaliti OS keyring'ida yo'q yoki bu bazaga mos emas.
     KeyUnavailable,
+    /// Baza qulflangan: avval PIN bilan ochish kerak.
+    Locked,
+    /// Ma'lumotlar bazasi bor, lekin kalit fayli yo'q (sozlab bo'lmaydi).
+    DatabaseWithoutKey,
+    /// Biznes qoidasi buzildi. `rule` — domen xato kodi (masalan, `INSUFFICIENT_BALANCE`).
+    Rule {
+        /// Domen xato kodi.
+        rule: String,
+    },
     /// Kutilmagan ichki xato (batafsil log'da, foydalanuvchiga umumiy xabar).
     Internal,
 }
@@ -78,6 +88,14 @@ impl From<SessionError> for ApiError {
             SessionError::Security(
                 SecurityError::KeyUnavailable | SecurityError::KeyringMismatch,
             ) => Self::KeyUnavailable,
+            SessionError::Locked => Self::Locked,
+            SessionError::DatabaseWithoutKey => Self::DatabaseWithoutKey,
+            SessionError::Domain(domain_error) => Self::Rule {
+                rule: domain_error.code().to_owned(),
+            },
+            SessionError::Storage(StorageError::NotFound) => Self::Rule {
+                rule: "NOT_FOUND".to_owned(),
+            },
             other => {
                 error!(xato = %other, "xavfsizlik yoki baza amali bajarilmadi");
                 Self::Internal
@@ -143,7 +161,7 @@ pub async fn lock(session: State<'_, Arc<Session>>) -> Result<(), ApiError> {
 }
 
 /// Og'ir amalni (Argon2id, disk, keyring) UI oqimidan tashqarida bajaradi.
-async fn run_blocking<T, F>(work: F) -> Result<T, ApiError>
+pub(crate) async fn run_blocking<T, F>(work: F) -> Result<T, ApiError>
 where
     F: FnOnce() -> Result<T, SessionError> + Send + 'static,
     T: Send + 'static,
@@ -158,7 +176,7 @@ where
 }
 
 /// Joriy vaqt, Unix soniyalarida (lockout hisobi uchun).
-fn now_unix() -> i64 {
+pub(crate) fn now_unix() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .ok()

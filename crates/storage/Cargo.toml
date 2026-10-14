@@ -12,6 +12,8 @@ name = "storage"
 
 [dependencies]
 domain = { package = "baraka-domain", path = "../domain" }
+# Pul qiymatlari (minor birlik + valyuta) bazadan o'qiladi va yoziladi.
+money = { package = "baraka-money", path = "../money" }
 # Bazani ochish kaliti (SecretKey). Kalit baytlari bu crate'da tashqariga chiqarilmaydi.
 security = { package = "baraka-security", path = "../security" }
 # SQLite + SQLCipher, OpenSSL manbadan (ADR: bundled-sqlcipher-vendored-openssl).
@@ -26,3 +28,7 @@ tracing = "0.1"
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+# Testlarda aniq sana va vaqt konstantalari (`date!`, `datetime!`).
+time = { version = "0.3", features = ["macros"] }

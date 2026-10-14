@@ -13,7 +13,16 @@ use vectors::{
 
 /// Runner yozilgan suite'lar. Yangi vektor fayli qo'shilsa, shu ro'yxatga ham qo'shilishi shart:
 /// `har_bir_vektor_fayli_runner_bilan_qoplangan` testi buni talab qiladi.
-const COVERED_SUITES: &[&str] = &["allocate", "fx_convert", "money_format", "percent_of"];
+const COVERED_SUITES: &[&str] = &[
+    "allocate",
+    "fx_convert",
+    "income_share",
+    "money_format",
+    "money_parse",
+    "percent_of",
+    "streak",
+    "unexplained_gap",
+];
 
 /// Kurs sanasi (vektorlarda sana yo'q; konstruktor talab qiladi).
 fn snapshot_date() -> Date {
@@ -150,6 +159,127 @@ fn money_format_vektorlari() {
             json!({ "text": format_money(amount, locale) }),
             &mut failures,
         );
+    }
+    finish(&suite, &failures);
+}
+
+/// Minor birlik maydoni (satr ko'rinishida, masalan `"800000000"`). Maydon yo'q bo'lsa — `None`.
+fn minor_field(object: &Value, key: &str) -> Option<i64> {
+    opt_str_field(object, key).map(|text| text.parse::<i64>().expect("minor birlik butun son"))
+}
+
+/// `YYYY-MM-DD` sanasini o'qiydi (vektorlardagi kalendar sanasi).
+fn parse_date(text: &str) -> Date {
+    let parts: Vec<&str> = text.split('-').collect();
+    let year: i32 = parts[0].parse().expect("yil");
+    let month_number: u8 = parts[1].parse().expect("oy");
+    let day: u8 = parts[2].parse().expect("kun");
+    Date::from_calendar_date(year, Month::try_from(month_number).expect("oy 1..12"), day)
+        .expect("to'g'ri sana")
+}
+
+#[test]
+fn money_parse_vektorlari() {
+    let suite = load_suite("money_parse").expect("money_parse.json");
+    let mut failures = Vec::new();
+    for case in &suite.cases {
+        let text = str_field(&case.input, "text").expect("text");
+        let currency = currency_of(&case.input, "currency");
+        let actual = match money::parse_amount(text, currency) {
+            Ok(value) => json!({ "minor": value.minor().to_string() }),
+            Err(error) => json!({ "error": error.code() }),
+        };
+        check(case, actual, &mut failures);
+    }
+    finish(&suite, &failures);
+}
+
+#[test]
+fn income_share_vektorlari() {
+    use domain::{ShareRule, ShareTarget, suggest_share};
+
+    let suite = load_suite("income_share").expect("income_share.json");
+    let mut failures = Vec::new();
+    for case in &suite.cases {
+        let input = &case.input;
+        let currency = currency_of(input, "currency");
+        let income = Money::new(minor_field(input, "income").expect("income"), currency);
+        let target = match str_field(input, "mode").expect("mode") {
+            "PERCENT" => ShareTarget::Percent(int_field(input, "basis_points").expect("bp")),
+            _ => ShareTarget::Fixed(Money::new(
+                minor_field(input, "monthly_target").expect("monthly_target"),
+                currency,
+            )),
+        };
+        let saved = Money::new(
+            minor_field(input, "saved_this_month").unwrap_or(0),
+            currency,
+        );
+        let rule = ShareRule {
+            target,
+            progressive: false,
+            progression_offered_on: None,
+        };
+        let actual = match suggest_share(income, &rule, saved) {
+            Ok(share) => json!({ "share": share.map(|value| value.minor().to_string()) }),
+            Err(error) => json!({ "error": error.code() }),
+        };
+        check(case, actual, &mut failures);
+    }
+    finish(&suite, &failures);
+}
+
+#[test]
+fn streak_vektorlari() {
+    use domain::{habit_stats, streak_since};
+
+    let suite = load_suite("streak").expect("streak.json");
+    let mut failures = Vec::new();
+    for case in &suite.cases {
+        let input = &case.input;
+        let dates: Vec<Date> = input["saving_dates"]
+            .as_array()
+            .expect("saving_dates massiv")
+            .iter()
+            .map(|value| parse_date(value.as_str().expect("sana matni")))
+            .collect();
+        let today = parse_date(str_field(input, "today").expect("today"));
+        let since = opt_str_field(input, "since").map(parse_date);
+        let actual = match habit_stats(&dates, today) {
+            Some(stats) => json!({
+                "current_streak_weeks": stats.current_streak_weeks,
+                "total_weeks": stats.total_weeks,
+                "this_week_done": stats.this_week_done,
+                "since_streak_weeks": streak_since(&dates, today, since),
+            }),
+            None => json!({ "error": "CALENDAR" }),
+        };
+        check(case, actual, &mut failures);
+    }
+    finish(&suite, &failures);
+}
+
+#[test]
+fn unexplained_gap_vektorlari() {
+    use domain::ledger::unexplained_gap;
+
+    let suite = load_suite("unexplained_gap").expect("unexplained_gap.json");
+    let mut failures = Vec::new();
+    for case in &suite.cases {
+        let input = &case.input;
+        let currency = currency_of(input, "currency");
+        let amount =
+            |key: &str| Money::new(minor_field(input, key).expect("minor maydon"), currency);
+        let actual = match unexplained_gap(
+            amount("income"),
+            amount("obligations"),
+            amount("expenses"),
+            amount("savings"),
+        ) {
+            Ok(gap) => json!({ "gap": gap.minor().to_string() }),
+            Err(error) => json!({ "error": error.code() }),
+        };
+        check(case, actual, &mut failures);
     }
     finish(&suite, &failures);
 }

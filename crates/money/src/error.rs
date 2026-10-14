@@ -26,6 +26,9 @@ pub enum MoneyError {
     /// Noma'lum valyuta kodi.
     #[error("noma'lum valyuta kodi: {0}")]
     UnknownCurrency(String),
+    /// Kiritilgan summa matnini o'qib bo'lmadi (bo'sh, raqam emas, kasr aniqligi oshgan).
+    #[error("summa noto'g'ri yozilgan")]
+    ParseError,
 }
 
 impl MoneyError {
@@ -38,6 +41,7 @@ impl MoneyError {
             Self::InvalidRate => "INVALID_RATE",
             Self::InvalidDenominator => "INVALID_DENOMINATOR",
             Self::UnknownCurrency(_) => "UNKNOWN_CURRENCY",
+            Self::ParseError => "PARSE_ERROR",
         }
     }
 }
@@ -64,6 +68,7 @@ mod tests {
                 MoneyError::UnknownCurrency("XXX".to_owned()),
                 "UNKNOWN_CURRENCY",
             ),
+            (MoneyError::ParseError, "PARSE_ERROR"),
         ];
         for (error, code) in cases {
             assert_eq!(error.code(), code);

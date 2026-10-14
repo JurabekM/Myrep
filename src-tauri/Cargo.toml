@@ -28,6 +28,11 @@ serde = { version = "1", features = ["derive"] }
 # Xavfsizlik (PIN, kalit, lockout, keyring) va shifrlangan baza (SQLCipher). Ichki crate'lar.
 security = { package = "baraka-security", path = "../crates/security" }
 storage = { package = "baraka-storage", path = "../crates/storage" }
+domain = { package = "baraka-domain", path = "../crates/domain" }
+money = { package = "baraka-money", path = "../crates/money" }
+# Identifikator: UUIDv7 (ADR: uuid v7). fast-rng — tasodifiy qism OS manbasidan.
+uuid = { version = "1", features = ["v7", "fast-rng"] }
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
 thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

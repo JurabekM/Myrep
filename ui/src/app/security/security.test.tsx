@@ -4,10 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { commands } from "../../bindings/bindings";
 import uz from "../../i18n/locales/uz/common.json";
 import { setAppLanguage } from "../../i18n";
+import { resetFinanceMocks } from "../../test/fixtures";
 import { App } from "../App";
 import { useUiStore } from "../store";
 
-// Testda haqiqiy Tauri IPC yo'q: xavfsizlik commandlari javobi soxtalashtiriladi.
+// Testda haqiqiy Tauri IPC yo'q: xavfsizlik va moliya commandlari javobi soxtalashtiriladi.
 vi.mock("../../bindings/bindings", () => ({
   commands: {
     getAppInfo: vi.fn(),
@@ -15,6 +16,15 @@ vi.mock("../../bindings/bindings", () => ({
     setupPin: vi.fn(),
     unlock: vi.fn(),
     lock: vi.fn(),
+    getHome: vi.fn(),
+    listIncomesThisMonth: vi.fn(),
+    listRecentIncomes: vi.fn(),
+    getVault: vi.fn(),
+    getAudit: vi.fn(),
+    getWhoseMoney: vi.fn(),
+    listCategories: vi.fn(),
+    listObligations: vi.fn(),
+    listDebts: vi.fn(),
   },
 }));
 
@@ -37,7 +47,8 @@ function status(setUp: boolean, unlocked: boolean) {
 describe("xavfsizlik darvozasi", () => {
   beforeEach(() => {
     vi.mocked(commands.getAppInfo).mockResolvedValue(APP_INFO);
-    useUiStore.setState({ page: "home" });
+    resetFinanceMocks();
+    useUiStore.setState({ page: "home", quickEntryOpen: false });
   });
 
   afterEach(async () => {
