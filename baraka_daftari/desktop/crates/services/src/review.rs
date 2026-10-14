@@ -4,7 +4,9 @@
 //!
 //! Davr `YYYY-MM` ko'rinishida. Javoblar `REVIEW_ACK` (oxirgisi amal qiladi), yakun `REVIEW_CLOSED`.
 
-use domain::{chain_head, date_to_string, AgreementStatus, Answer, JournalEntry, JournalKind};
+use domain::{
+    chain_head, date_to_string, AgreementStatus, AgreementType, Answer, JournalEntry, JournalKind,
+};
 use money::{format_money, Locale};
 use storage::{Connection, Database};
 
@@ -187,10 +189,47 @@ fn open_agreement(
     Ok(a)
 }
 
-/// Tomonning javobini yozadi (jurnalga `REVIEW_ACK`).
+/// Javob yozilishidan oldingi tekshiruv (hech narsa yozmaydi): davr, faol kelishuv, yopilmagan ko'rik,
+/// tomon kelishuvda bormi va izoh to'g'rimi. Jurnalga yoziladigan matnni qaytaradi.
 ///
 /// # Errors
 /// Kelishuv faol emas, davr yakunlangan, tomon topilmasa, yoki e'tiroz izohsiz bo'lsa.
+pub fn prepare_answer(
+    conn: &Connection,
+    ctx: &Ctx,
+    agreement_id: &str,
+    period: &str,
+    party_id: &str,
+    answer: &ReviewAnswer,
+) -> Result<String, ServiceError> {
+    check_period(period)?;
+    open_agreement(conn, ctx, agreement_id)?;
+    let v = view(conn, ctx, agreement_id, period)?;
+    if v.closed {
+        return Err(ServiceError::Invalid(
+            "bu davr ko'rigi allaqachon yakunlangan",
+        ));
+    }
+    if !v.parties.iter().any(|p| p.party_id == party_id) {
+        return Err(ServiceError::Invalid("tomon kelishuvda topilmadi"));
+    }
+    match answer {
+        ReviewAnswer::Agree => Ok(AGREE_NOTE.to_owned()),
+        ReviewAnswer::Object(note) => {
+            let reason = note.trim();
+            if reason.is_empty() {
+                return Err(ServiceError::Invalid("e'tiroz uchun izoh yozing"));
+            }
+            Ok(format!("{OBJECT_PREFIX}{reason}"))
+        }
+    }
+}
+
+/// Tomonning javobini yozadi (jurnalga `REVIEW_ACK`). Oilaviy kelishuvda javob kattaning PIN'i bilan
+/// yoziladi (`services::family_agreements::review_answer`), shuning uchun bu yo'l u yerda rad etiladi.
+///
+/// # Errors
+/// Kelishuv oilaviy bo'lsa, yoki `prepare_answer` dagi xatolar.
 pub fn record_answer(
     db: &mut Database,
     env: &Env<'_>,
@@ -200,27 +239,27 @@ pub fn record_answer(
     party_id: &str,
     answer: ReviewAnswer,
 ) -> Result<JournalEntry, ServiceError> {
-    check_period(period)?;
-    let a = open_agreement(db.conn(), ctx, agreement_id)?;
-    let v = view(db.conn(), ctx, agreement_id, period)?;
-    if v.closed {
+    if agreements::load(db.conn(), ctx, agreement_id)?.agreement_type == AgreementType::Family {
         return Err(ServiceError::Invalid(
-            "bu davr ko'rigi allaqachon yakunlangan",
+            "oilaviy kelishuvda javob kattaning PIN'i bilan beriladi",
         ));
     }
-    if !v.parties.iter().any(|p| p.party_id == party_id) {
-        return Err(ServiceError::Invalid("tomon kelishuvda topilmadi"));
-    }
-    let text = match answer {
-        ReviewAnswer::Agree => AGREE_NOTE.to_owned(),
-        ReviewAnswer::Object(note) => {
-            let reason = note.trim();
-            if reason.is_empty() {
-                return Err(ServiceError::Invalid("e'tiroz uchun izoh yozing"));
-            }
-            format!("{OBJECT_PREFIX}{reason}")
-        }
-    };
+    write_answer(db, env, ctx, agreement_id, period, party_id, answer)
+}
+
+/// Javobni tekshirib, jurnalga yozadi. Oilaviy kelishuvda kattaning PIN'i chaqiruvchi tomonidan
+/// tekshirilgan bo'lishi shart.
+pub(crate) fn write_answer(
+    db: &mut Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    agreement_id: &str,
+    period: &str,
+    party_id: &str,
+    answer: ReviewAnswer,
+) -> Result<JournalEntry, ServiceError> {
+    let text = prepare_answer(db.conn(), ctx, agreement_id, period, party_id, &answer)?;
+    let a = open_agreement(db.conn(), ctx, agreement_id)?;
     let date = local_date(env.clock.now());
     journal::append(
         db.conn(),

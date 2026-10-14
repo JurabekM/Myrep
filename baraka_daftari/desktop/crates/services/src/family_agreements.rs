@@ -3,12 +3,13 @@
 //! Namunaviy shablonlarning matni UI'da (uz/ru); bu yerda kelishuv tuzilmasi va tasdiqlash oqimi.
 
 use domain::{
-    add_months, AgreementDoc, AgreementType, Answer, Custody, Date, Duty, MemberRole, Party,
-    Questions, ReportPeriod, Term,
+    add_months, AgreementDoc, AgreementType, Answer, Custody, Date, Duty, JournalEntry, MemberRole,
+    Party, Questions, ReportPeriod, Term,
 };
 use storage::Database;
 
 use crate::agreements::{self, AgreementSigner, AgreementView, NewAgreement};
+use crate::review::{self, ReviewAnswer};
 use crate::{local_date, members, Ctx, Env, ServiceError};
 
 /// Vazifa bandi: mas'ul — xonadon kattalaridan biri.
@@ -188,4 +189,58 @@ pub fn activate(
     agreement_id: &str,
 ) -> Result<AgreementView, ServiceError> {
     agreements::activate(db, env, ctx, agreement_id)
+}
+
+/// Oylik ko'rikda katta a'zoning javobi: javob kattaning o'z PIN'i bilan yoziladi (boshqa katta nomidan emas).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FamilyReply {
+    pub member_id: String,
+    pub pin: String,
+    pub answer: ReviewAnswer,
+}
+
+/// Oilaviy ko'rikka katta a'zoning javobini yozadi. Avval javob tekshiriladi (davr, faol kelishuv, izoh,
+/// tomon), keyin PIN; PIN noto'g'ri bo'lsa hech narsa yozilmaydi.
+///
+/// # Errors
+/// Kelishuv oilaviy emas, javob yaroqsiz, a'zo katta emas, PIN noto'g'ri yoki qulflangan bo'lsa.
+pub fn review_answer(
+    db: &mut Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    agreement_id: &str,
+    period: &str,
+    reply: FamilyReply,
+) -> Result<JournalEntry, ServiceError> {
+    let a = agreements::load(db.conn(), ctx, agreement_id)?;
+    if a.agreement_type != AgreementType::Family {
+        return Err(ServiceError::Invalid("bu kelishuv oilaviy emas"));
+    }
+    review::prepare_answer(
+        db.conn(),
+        ctx,
+        agreement_id,
+        period,
+        &reply.member_id,
+        &reply.answer,
+    )?;
+    let adult = members::list(db.conn(), ctx)?
+        .into_iter()
+        .find(|m| m.meta.id == reply.member_id)
+        .ok_or(ServiceError::NotFound)?;
+    if adult.role != MemberRole::Adult {
+        return Err(ServiceError::Invalid(
+            "ko'rikda faqat kattalar javob beradi",
+        ));
+    }
+    members::verify(db, env, ctx, &reply.member_id, &reply.pin)?;
+    review::write_answer(
+        db,
+        env,
+        ctx,
+        agreement_id,
+        period,
+        &reply.member_id,
+        reply.answer,
+    )
 }

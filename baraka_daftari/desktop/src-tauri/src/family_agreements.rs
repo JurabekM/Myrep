@@ -4,7 +4,8 @@ use domain::{date_from_str, date_to_string, AgreementSignKind, AgreementStatus, 
 use serde::{Deserialize, Serialize};
 use services::{
     agreements::AgreementView,
-    family_agreements::{self, FamilyDuty, NewFamilyAgreement},
+    family_agreements::{self, FamilyDuty, FamilyReply, NewFamilyAgreement},
+    review::ReviewAnswer,
     ServiceError,
 };
 use specta::Type;
@@ -202,6 +203,42 @@ pub fn activate_family_agreement(
         s.run(|db, env, ctx| {
             let view = family_agreements::activate(db, env, ctx, &agreement_id)?;
             Ok(family_dto(&view))
+        })
+    })
+}
+
+/// Oylik ko'rikda katta a'zoning javobi: kattaning o'z PIN'i bilan. `agree = false` bo'lsa izoh shart.
+#[tauri::command]
+#[specta::specta]
+pub fn record_family_review_answer(
+    agreement_id: String,
+    period: String,
+    member_id: String,
+    pin: String,
+    agree: bool,
+    note: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let answer = if agree {
+                ReviewAnswer::Agree
+            } else {
+                ReviewAnswer::Object(note)
+            };
+            family_agreements::review_answer(
+                db,
+                env,
+                ctx,
+                &agreement_id,
+                &period,
+                FamilyReply {
+                    member_id,
+                    pin,
+                    answer,
+                },
+            )?;
+            Ok(())
         })
     })
 }

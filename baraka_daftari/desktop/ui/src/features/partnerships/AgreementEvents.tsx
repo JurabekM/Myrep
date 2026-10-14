@@ -28,7 +28,7 @@ export function AgreementEvents({ p }: { p: PartnershipDto }) {
       <YearlyRenewal p={p} />
       <DutyList p={p} />
       <Dispute p={p} />
-      <ReviewSession p={p} />
+      <ReviewSession agreementId={agreement.id} status={agreement.status} />
     </div>
   );
 }

@@ -209,14 +209,17 @@ export const commands = {
 	resolvePartnershipDispute: (partnershipId: string, decision: string) => typedError<null, CommandError>(__TAURI_INVOKE("resolve_partnership_dispute", { partnershipId, decision })),
 	/**  «Vazifamni bajara olmayapman»: `duty_index`-dagi bandning mas'ul tomoni hodisani qayd etadi (SPEC 2F.4). */
 	reportDutyIncident: (partnershipId: string, dutyIndex: number, reason: string, proposal: string) => typedError<null, CommandError>(__TAURI_INVOKE("report_duty_incident", { partnershipId, dutyIndex, reason, proposal })),
-	/**  Davr (`YYYY-MM`) ko'rigi holati. */
-	reviewView: (partnershipId: string, period: string) => typedError<ReviewDto, CommandError>(__TAURI_INVOKE("review_view", { partnershipId, period })),
-	/**  Tomonning javobi: roziman (`agree = true`) yoki e'tiroz + izoh. */
-	recordReviewAnswer: (partnershipId: string, period: string, partyId: string, agree: boolean, note: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_review_answer", { partnershipId, period, partyId, agree, note })),
+	/**  Davr (`YYYY-MM`) ko'rigi holati. Kelishuv bo'yicha: sheriklik yoki oilaviy kelishuv. */
+	reviewView: (agreementId: string, period: string) => typedError<ReviewDto, CommandError>(__TAURI_INVOKE("review_view", { agreementId, period })),
+	/**
+	 *  Sheriklik tomonining javobi: roziman (`agree = true`) yoki e'tiroz + izoh. Oilaviy kelishuvda
+	 *  javob PIN bilan (`record_family_review_answer`) yoziladi.
+	 */
+	recordReviewAnswer: (agreementId: string, period: string, partyId: string, agree: boolean, note: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_review_answer", { agreementId, period, partyId, agree, note })),
 	/**  Ko'rikni yakunlaydi: barcha tomonlar javob bergan bo'lishi kerak. */
-	closeReview: (partnershipId: string, period: string) => typedError<null, CommandError>(__TAURI_INVOKE("close_review", { partnershipId, period })),
+	closeReview: (agreementId: string, period: string) => typedError<null, CommandError>(__TAURI_INVOKE("close_review", { agreementId, period })),
 	/**  Ko'rik bayonnomasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None`. */
-	exportReviewPdf: (partnershipId: string, period: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_review_pdf", { partnershipId, period })),
+	exportReviewPdf: (agreementId: string, period: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_review_pdf", { agreementId, period })),
 	/**  Hakam uchun ish papkasini OS «saqlash» oynasi orqali yozadi; bekor qilinsa `None` (SPEC 2F.8). */
 	exportDisputeFolderPdf: (partnershipId: string) => typedError<string | null, CommandError>(__TAURI_INVOKE("export_dispute_folder_pdf", { partnershipId })),
 	/**  Kelishuvlar markazi: barcha kelishuvlar holati, yangilash eslatmasi va ko'rik holati (D13A). */
@@ -231,6 +234,8 @@ export const commands = {
 	signFamilyAgreement: (agreementId: string, memberId: string, pin: string) => typedError<FamilyAgreementDto, CommandError>(__TAURI_INVOKE("sign_family_agreement", { agreementId, memberId, pin })),
 	/**  Barcha kattalar tasdiqlagach kelishuvni faollashtiradi. */
 	activateFamilyAgreement: (agreementId: string) => typedError<FamilyAgreementDto, CommandError>(__TAURI_INVOKE("activate_family_agreement", { agreementId })),
+	/**  Oylik ko'rikda katta a'zoning javobi: kattaning o'z PIN'i bilan. `agree = false` bo'lsa izoh shart. */
+	recordFamilyReviewAnswer: (agreementId: string, period: string, memberId: string, pin: string, agree: boolean, note: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_family_review_answer", { agreementId, period, memberId, pin, agree, note })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),

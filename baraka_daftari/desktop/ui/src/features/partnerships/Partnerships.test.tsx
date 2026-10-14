@@ -37,6 +37,7 @@ vi.mock('../../bindings', () => ({
     recordReviewAnswer: vi.fn(),
     closeReview: vi.fn(),
     exportReviewPdf: vi.fn(),
+    recordFamilyReviewAnswer: vi.fn(),
     exportDisputeFolderPdf: vi.fn(),
     appInfo: vi.fn(),
   },
@@ -145,6 +146,7 @@ beforeEach(() => {
     'openPartnershipDispute',
     'resolvePartnershipDispute',
     'recordReviewAnswer',
+    'recordFamilyReviewAnswer',
     'closeReview',
   ] as const) {
     vi.mocked(commands[k]).mockResolvedValue({ status: 'ok', data: null });
@@ -504,7 +506,7 @@ describe('oylik ko‘rik', () => {
     await userEvent.click(zamira.getByRole('button', { name: "E'tirozni yozish" }));
     await waitFor(() => {
       expect(commands.recordReviewAnswer).toHaveBeenCalledWith(
-        'p1',
+        'ag1',
         expect.stringMatching(/^\d{4}-\d{2}$/),
         'b',
         false,
@@ -698,6 +700,88 @@ describe('oilaviy kelishuvlar', () => {
     await userEvent.click(card.getByRole('button', { name: 'Faollashtirish' }));
     await waitFor(() => {
       expect(commands.activateFamilyAgreement).toHaveBeenCalledWith('a1');
+    });
+  });
+
+  /** Faol oilaviy kelishuv, ikki katta hali javob bermagan oylik ko'rik bilan. */
+  const activeFamilyReview = () => {
+    vi.mocked(commands.familyAgreementsList).mockResolvedValue({
+      status: 'ok',
+      data: [
+        familyFixture({
+          status: 'ACTIVE',
+          adults: [
+            { member_id: 'm1', name: 'Men', signed: true },
+            { member_id: 'm2', name: 'Zamira', signed: true },
+          ],
+        }),
+      ],
+    });
+    vi.mocked(commands.reviewView).mockResolvedValue({
+      status: 'ok',
+      data: {
+        period: '2026-10',
+        closed: false,
+        chain_length: 2,
+        chain_intact: true,
+        broken_seq: null,
+        recorded_head: null,
+        head_matches: null,
+        parties: [
+          { party_id: 'm1', name: 'Men', agree: null, note: null },
+          { party_id: 'm2', name: 'Zamira', agree: null, note: null },
+        ],
+        ledger: [],
+        incidents: [],
+      },
+    });
+  };
+
+  it('oilaviy ko‘rik: roziman faqat kattaning PIN’i bilan yoziladi', async () => {
+    activeFamilyReview();
+    renderPage();
+    const card = within(await screen.findByTestId('famagr-card'));
+    const zamira = within(card.getByTestId('review-party-Zamira'));
+    await userEvent.click(zamira.getByRole('button', { name: "Ko'rdim, roziman" }));
+    const submit = zamira.getByRole('button', { name: 'Roziman deb yozish' });
+    expect(submit).toBeDisabled();
+    await userEvent.type(zamira.getByLabelText('Zamira: PIN'), '222222');
+    expect(submit).toBeEnabled();
+    await userEvent.click(submit);
+    await waitFor(() => {
+      expect(commands.recordFamilyReviewAnswer).toHaveBeenCalledWith(
+        'a1',
+        expect.stringMatching(/^\d{4}-\d{2}$/),
+        'm2',
+        '222222',
+        true,
+        '',
+      );
+    });
+    expect(commands.recordReviewAnswer).not.toHaveBeenCalled();
+  });
+
+  it('oilaviy ko‘rik: e‘tiroz izohi va PIN kiritilmaguncha yuborilmaydi', async () => {
+    activeFamilyReview();
+    renderPage();
+    const card = within(await screen.findByTestId('famagr-card'));
+    const zamira = within(card.getByTestId('review-party-Zamira'));
+    await userEvent.click(zamira.getByRole('button', { name: "E'tirozim bor" }));
+    const submit = zamira.getByRole('button', { name: "E'tirozni yozish" });
+    await userEvent.type(zamira.getByLabelText("E'tiroz izohi"), 'Ovqat kechikdi');
+    expect(submit).toBeDisabled();
+    await userEvent.type(zamira.getByLabelText('Zamira: PIN'), '222222');
+    expect(submit).toBeEnabled();
+    await userEvent.click(submit);
+    await waitFor(() => {
+      expect(commands.recordFamilyReviewAnswer).toHaveBeenCalledWith(
+        'a1',
+        expect.stringMatching(/^\d{4}-\d{2}$/),
+        'm2',
+        '222222',
+        false,
+        'Ovqat kechikdi',
+      );
     });
   });
 });

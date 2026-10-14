@@ -10,6 +10,8 @@ import {
 } from '../../bindings';
 import { errorMessage, unwrap } from '../../lib/api';
 
+import { ReviewSession } from './ReviewSession';
+
 const TEMPLATES = ['HOUSE_DUTIES', 'HOUSE_MONEY', 'DESIRE_LIMIT', 'COUNCIL_SCHEDULE'] as const;
 type TemplateCode = (typeof TEMPLATES)[number];
 
@@ -355,6 +357,7 @@ function FamilyCard({ a, onChange }: { a: FamilyAgreementDto; onChange: () => vo
           {t('famagr.activate')}
         </button>
       )}
+      <ReviewSession agreementId={a.id} status={a.status} family />
       {error && <p role="alert">{errorMessage(t, error)}</p>}
     </article>
   );

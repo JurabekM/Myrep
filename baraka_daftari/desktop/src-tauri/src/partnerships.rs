@@ -728,28 +728,28 @@ fn review_dto(v: &services::review::ReviewView) -> ReviewDto {
     }
 }
 
-/// Davr (`YYYY-MM`) ko'rigi holati.
+/// Davr (`YYYY-MM`) ko'rigi holati. Kelishuv bo'yicha: sheriklik yoki oilaviy kelishuv.
 #[tauri::command]
 #[specta::specta]
 pub fn review_view(
-    partnership_id: String,
+    agreement_id: String,
     period: String,
     state: State<'_, AppSession>,
 ) -> Result<ReviewDto, CommandError> {
     with_session(&state, |s| {
         s.run(|db, _env, ctx| {
-            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
-            let v = services::review::view(db.conn(), ctx, &agreement, &period)?;
+            let v = services::review::view(db.conn(), ctx, &agreement_id, &period)?;
             Ok(review_dto(&v))
         })
     })
 }
 
-/// Tomonning javobi: roziman (`agree = true`) yoki e'tiroz + izoh.
+/// Sheriklik tomonining javobi: roziman (`agree = true`) yoki e'tiroz + izoh. Oilaviy kelishuvda
+/// javob PIN bilan (`record_family_review_answer`) yoziladi.
 #[tauri::command]
 #[specta::specta]
 pub fn record_review_answer(
-    partnership_id: String,
+    agreement_id: String,
     period: String,
     party_id: String,
     agree: bool,
@@ -758,13 +758,20 @@ pub fn record_review_answer(
 ) -> Result<(), CommandError> {
     with_session(&state, |s| {
         s.run(|db, env, ctx| {
-            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
             let answer = if agree {
                 services::review::ReviewAnswer::Agree
             } else {
                 services::review::ReviewAnswer::Object(note)
             };
-            services::review::record_answer(db, env, ctx, &agreement, &period, &party_id, answer)?;
+            services::review::record_answer(
+                db,
+                env,
+                ctx,
+                &agreement_id,
+                &period,
+                &party_id,
+                answer,
+            )?;
             Ok(())
         })
     })
@@ -774,14 +781,13 @@ pub fn record_review_answer(
 #[tauri::command]
 #[specta::specta]
 pub fn close_review(
-    partnership_id: String,
+    agreement_id: String,
     period: String,
     state: State<'_, AppSession>,
 ) -> Result<(), CommandError> {
     with_session(&state, |s| {
         s.run(|db, env, ctx| {
-            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
-            services::review::close(db, env, ctx, &agreement, &period)?;
+            services::review::close(db, env, ctx, &agreement_id, &period)?;
             Ok(())
         })
     })
@@ -829,16 +835,13 @@ pub async fn export_dispute_folder_pdf(
 #[tauri::command]
 #[specta::specta]
 pub async fn export_review_pdf(
-    partnership_id: String,
+    agreement_id: String,
     period: String,
     app: AppHandle,
     state: State<'_, AppSession>,
 ) -> Result<Option<String>, CommandError> {
     let bytes = with_session(&state, |s| {
-        s.run(|db, _env, ctx| {
-            let agreement = agreement_id_of(db.conn(), ctx, &partnership_id)?;
-            services::review::pdf(db.conn(), ctx, &agreement, &period)
-        })
+        s.run(|db, _env, ctx| services::review::pdf(db.conn(), ctx, &agreement_id, &period))
     })?;
     let Some(file) = app
         .dialog()

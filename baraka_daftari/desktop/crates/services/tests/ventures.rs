@@ -1235,6 +1235,155 @@ fn family_agreement_is_confirmed_by_adult_pins_only() {
     assert_eq!(family::list(w.db.conn(), &w.ctx).unwrap().len(), 1);
 }
 
+/// SPEC 2F.10, D13A: oilaviy oylik ko'rik. Javob faqat kattaning o'z PIN'i bilan yoziladi; boshqa katta
+/// nomidan, PIN'siz yoki oddiy ko'rik yo'li orqali yozilmaydi. Ikki javobdan keyin ko'rik yopiladi.
+#[test]
+fn family_review_needs_each_adults_own_pin() {
+    use services::family_agreements::{
+        self as family, FamilyDuty, FamilyReply, NewFamilyAgreement,
+    };
+    use services::review::ReviewAnswer;
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let dilshod = services::members::add(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        "Dilshod",
+        domain::MemberRole::Adult,
+    )
+    .unwrap()
+    .meta
+    .id;
+    members::set_pin(&mut w.db, &env!(w), &w.ctx, &dilshod, "222222", FAST).unwrap();
+    let kid = services::members::add(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        "Bola",
+        domain::MemberRole::Child,
+    )
+    .unwrap()
+    .meta
+    .id;
+    let id = family::create(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        NewFamilyAgreement {
+            title: "Uy ishlari".into(),
+            adult_ids: vec![me.clone(), dilshod.clone()],
+            duties: vec![FamilyDuty {
+                text: "Ovqat pishirish".into(),
+                owner_member_id: dilshod.clone(),
+                if_not_done: "Ertasi kuni o'zi tuzatadi".into(),
+            }],
+            custody_place: "Uy xazinasi".into(),
+            review_date: None,
+        },
+    )
+    .unwrap()
+    .agreement
+    .meta
+    .id;
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &me, "111111").unwrap();
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &dilshod, "222222").unwrap();
+    family::activate(&mut w.db, &env!(w), &w.ctx, &id).unwrap();
+    let period = "2026-10";
+    let reply = |member: &str, pin: &str, answer: ReviewAnswer| FamilyReply {
+        member_id: member.to_owned(),
+        pin: pin.to_owned(),
+        answer,
+    };
+    // Izohsiz e'tiroz PIN tekshirilishidan oldin rad etiladi
+    let blank = family::review_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        reply(&dilshod, "222222", ReviewAnswer::Object(" ".into())),
+    )
+    .unwrap_err();
+    assert!(invalid_message(&blank).contains("izoh"));
+    // Dilshod nomidan «me» PIN'i bilan yozib bo'lmaydi
+    let forged = family::review_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        reply(&dilshod, "111111", ReviewAnswer::Agree),
+    )
+    .unwrap_err();
+    assert!(matches!(forged, ServiceError::WrongPin));
+    // Bola kattalar qatorida emas
+    let child = family::review_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        reply(&kid, "000000", ReviewAnswer::Agree),
+    )
+    .unwrap_err();
+    assert!(invalid_message(&child).contains("tomon"));
+    // Oddiy (sheriklik) ko'rik yo'li oilaviy kelishuvda ishlamaydi
+    let plain = services::review::record_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        &dilshod,
+        ReviewAnswer::Agree,
+    )
+    .unwrap_err();
+    assert!(invalid_message(&plain).contains("PIN"));
+    family::review_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        reply(&me, "111111", ReviewAnswer::Agree),
+    )
+    .unwrap();
+    family::review_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        reply(
+            &dilshod,
+            "222222",
+            ReviewAnswer::Object("Ovqat kechikdi".into()),
+        ),
+    )
+    .unwrap();
+    let open = services::review::view(w.db.conn(), &w.ctx, &id, period).unwrap();
+    let objector = open.parties.iter().find(|p| p.party_id == dilshod).unwrap();
+    assert_eq!(objector.agree, Some(false));
+    assert_eq!(objector.note.as_deref(), Some("Ovqat kechikdi"));
+    services::review::close(&mut w.db, &env!(w), &w.ctx, &id, period).unwrap();
+    let sealed = services::review::view(w.db.conn(), &w.ctx, &id, period).unwrap();
+    assert!(sealed.closed);
+    assert_eq!(sealed.head_matches, Some(true));
+    let late = family::review_answer(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        period,
+        reply(&me, "111111", ReviewAnswer::Agree),
+    )
+    .unwrap_err();
+    assert!(invalid_message(&late).contains("yakunlangan"));
+    let pdf = services::review::pdf(w.db.conn(), &w.ctx, &id, period).unwrap();
+    assert!(pdf.starts_with(b"%PDF"));
+}
+
 /// D13A: «o'zgarishsiz tasdiqlash» yangi versiya — barcha tomonlar qayta tasdiqlaydi, faol sheriklik qoralamaga qaytadi.
 #[test]
 fn yearly_confirmation_is_a_new_version_that_needs_new_signatures() {
