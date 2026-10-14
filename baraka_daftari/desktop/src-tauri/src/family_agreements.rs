@@ -4,17 +4,14 @@ use domain::{date_from_str, date_to_string, AgreementSignKind, AgreementStatus, 
 use serde::{Deserialize, Serialize};
 use services::{
     agreements::AgreementView,
-    family_agreements::{self, FamilyDuty, FamilyReply, NewFamilyAgreement},
+    family_agreements::{self, FamilyDuty, FamilyIncident, FamilyReply, NewFamilyAgreement},
     review::ReviewAnswer,
     ServiceError,
 };
 use specta::Type;
 use tauri::State;
 
-use crate::{
-    commands::{with_session, AppSession, CommandError},
-    partnerships::AgreementDutyDto,
-};
+use crate::commands::{with_session, AppSession, CommandError};
 
 /// Xonadon katta a'zosi va uning tasdig'i.
 #[derive(Debug, Serialize, Type)]
@@ -23,6 +20,15 @@ pub struct FamilyAdultDto {
     pub name: String,
     /// PIN bilan tasdiqlaganmi (joriy versiya bo'yicha).
     pub signed: bool,
+}
+
+/// Oilaviy vazifa bandi: mas'ul katta a'zosi identifikatori bilan (hodisani u yozadi).
+#[derive(Debug, Serialize, Type)]
+pub struct FamilyDutyDto {
+    pub text: String,
+    pub owner_member_id: String,
+    pub owner_name: String,
+    pub if_not_done: String,
 }
 
 /// Oilaviy kelishuv holati: kattalar, vazifalar, pul joyi, yangilash sanasi va tasdiqlar.
@@ -35,7 +41,7 @@ pub struct FamilyAgreementDto {
     pub status_label: String,
     pub version: u32,
     pub adults: Vec<FamilyAdultDto>,
-    pub duties: Vec<AgreementDutyDto>,
+    pub duties: Vec<FamilyDutyDto>,
     pub custody_place: String,
     /// `YYYY-MM-DD`; javob berilmagan bo'lsa `null`.
     pub review_date: Option<String>,
@@ -84,8 +90,9 @@ fn family_dto(v: &AgreementView) -> FamilyAgreementDto {
     let duties = match doc.map(|d| &d.questions.duties) {
         Some(Answer::Answered(ds)) => ds
             .iter()
-            .map(|d| AgreementDutyDto {
+            .map(|d| FamilyDutyDto {
                 text: d.text.clone(),
+                owner_member_id: d.owner_party_id.clone().unwrap_or_default(),
                 owner_name: parties
                     .iter()
                     .find(|(id, _)| d.owner_party_id.as_deref() == Some(id.as_str()))
@@ -203,6 +210,40 @@ pub fn activate_family_agreement(
         s.run(|db, env, ctx| {
             let view = family_agreements::activate(db, env, ctx, &agreement_id)?;
             Ok(family_dto(&view))
+        })
+    })
+}
+
+/// Mas'ul katta o'z PIN'i bilan «bajara olmayapman» deydi: vazifa hodisasi jurnalga yoziladi.
+#[tauri::command]
+#[specta::specta]
+pub fn report_family_duty_incident(
+    agreement_id: String,
+    duty_index: u32,
+    member_id: String,
+    pin: String,
+    reason: String,
+    proposal: String,
+    state: State<'_, AppSession>,
+) -> Result<(), CommandError> {
+    with_session(&state, |s| {
+        s.run(|db, env, ctx| {
+            let index = usize::try_from(duty_index)
+                .map_err(|_| ServiceError::Invalid("bunday vazifa bandi yo'q"))?;
+            family_agreements::report_incident(
+                db,
+                env,
+                ctx,
+                &agreement_id,
+                FamilyIncident {
+                    member_id,
+                    pin,
+                    duty_index: index,
+                    reason,
+                    proposal,
+                },
+            )?;
+            Ok(())
         })
     })
 }

@@ -38,6 +38,7 @@ vi.mock('../../bindings', () => ({
     closeReview: vi.fn(),
     exportReviewPdf: vi.fn(),
     recordFamilyReviewAnswer: vi.fn(),
+    reportFamilyDutyIncident: vi.fn(),
     exportDisputeFolderPdf: vi.fn(),
     appInfo: vi.fn(),
   },
@@ -53,7 +54,14 @@ const familyFixture = (over: Partial<FamilyAgreementDto> = {}): FamilyAgreementD
     { member_id: 'm1', name: 'Men', signed: false },
     { member_id: 'm2', name: 'Zamira', signed: false },
   ],
-  duties: [{ text: 'Ovqat pishirish', owner_name: 'Zamira', if_not_done: 'Ertasi kuni' }],
+  duties: [
+    {
+      text: 'Ovqat pishirish',
+      owner_member_id: 'm2',
+      owner_name: 'Zamira',
+      if_not_done: 'Ertasi kuni',
+    },
+  ],
   custody_place: 'Uy xazinasi',
   review_date: '2027-10-11',
   missing_questions: [],
@@ -147,6 +155,7 @@ beforeEach(() => {
     'resolvePartnershipDispute',
     'recordReviewAnswer',
     'recordFamilyReviewAnswer',
+    'reportFamilyDutyIncident',
     'closeReview',
   ] as const) {
     vi.mocked(commands[k]).mockResolvedValue({ status: 'ok', data: null });
@@ -700,6 +709,40 @@ describe('oilaviy kelishuvlar', () => {
     await userEvent.click(card.getByRole('button', { name: 'Faollashtirish' }));
     await waitFor(() => {
       expect(commands.activateFamilyAgreement).toHaveBeenCalledWith('a1');
+    });
+  });
+
+  it('oilaviy vazifa: mas‘ul katta PIN bilan «bajara olmayapman» hodisasini yozadi', async () => {
+    vi.mocked(commands.familyAgreementsList).mockResolvedValue({
+      status: 'ok',
+      data: [
+        familyFixture({
+          status: 'ACTIVE',
+          adults: [
+            { member_id: 'm1', name: 'Men', signed: true },
+            { member_id: 'm2', name: 'Zamira', signed: true },
+          ],
+        }),
+      ],
+    });
+    renderPage();
+    const row = within(await screen.findByTestId('famagr-duty-0'));
+    await userEvent.click(row.getByRole('button', { name: 'Bajara olmayapman' }));
+    const submit = row.getByRole('button', { name: 'Hodisani yozish' });
+    await userEvent.type(row.getByLabelText('Sabab'), 'Vaqt yetmadi');
+    expect(submit).toBeDisabled();
+    await userEvent.type(row.getByLabelText('Zamira: PIN'), '222222');
+    expect(submit).toBeEnabled();
+    await userEvent.click(submit);
+    await waitFor(() => {
+      expect(commands.reportFamilyDutyIncident).toHaveBeenCalledWith(
+        'a1',
+        0,
+        'm2',
+        '222222',
+        'Vaqt yetmadi',
+        '',
+      );
     });
   });
 

@@ -4,7 +4,8 @@
 //! `IN_DISPUTE` holatiga o'tadi va taqsimot bloklanadi (`ventures::close_period`).
 
 use domain::{
-    can_transition, date_to_string, AgreementStatus, Answer, Date, JournalEntry, JournalKind,
+    can_transition, date_to_string, AgreementStatus, AgreementType, Answer, Date, JournalEntry,
+    JournalKind,
 };
 use money::{format_money, Locale};
 use storage::{Connection, Database};
@@ -20,6 +21,25 @@ use crate::{journal, local_date, Ctx, Env, ServiceError};
 /// Kelishuv imzolanmagan yoki yopilgan bo'lsa, band topilmasa, mas'ul tomon bo'lmasa, izoh bo'sh
 /// yoki juda uzun bo'lsa, yoki qurilma hisob yurituvchi bo'lmasa.
 pub fn report_duty_incident(
+    db: &mut Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    agreement_id: &str,
+    duty_index: usize,
+    reason: &str,
+    proposal: &str,
+) -> Result<JournalEntry, ServiceError> {
+    if agreements::load(db.conn(), ctx, agreement_id)?.agreement_type == AgreementType::Family {
+        return Err(ServiceError::Invalid(
+            "oilaviy kelishuvda vazifa hodisasi kattaning PIN'i bilan yoziladi",
+        ));
+    }
+    write_duty_incident(db, env, ctx, agreement_id, duty_index, reason, proposal)
+}
+
+/// Vazifa hodisasini jurnalga yozadi. Oilaviy kelishuvda mas'ul kattaning PIN'i chaqiruvchi tomonidan
+/// tekshirilgan bo'lishi shart (`family_agreements::report_incident`).
+pub(crate) fn write_duty_incident(
     db: &mut Database,
     env: &Env<'_>,
     ctx: &Ctx,

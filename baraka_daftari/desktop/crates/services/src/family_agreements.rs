@@ -9,6 +9,7 @@ use domain::{
 use storage::Database;
 
 use crate::agreements::{self, AgreementSigner, AgreementView, NewAgreement};
+use crate::events;
 use crate::review::{self, ReviewAnswer};
 use crate::{local_date, members, Ctx, Env, ServiceError};
 
@@ -197,6 +198,65 @@ pub struct FamilyReply {
     pub member_id: String,
     pub pin: String,
     pub answer: ReviewAnswer,
+}
+
+/// Oilaviy vazifa hodisasi: mas'ul katta o'z PIN'i bilan «bajara olmayapman» deydi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FamilyIncident {
+    pub member_id: String,
+    pub pin: String,
+    /// Vazifa bandining tartib raqami (0 dan).
+    pub duty_index: usize,
+    pub reason: String,
+    /// O'rniga taklif (ixtiyoriy).
+    pub proposal: String,
+}
+
+/// Oilaviy vazifa hodisasini yozadi. Faqat shu bandning mas'ul kattasi yozadi va o'z PIN'i bilan tasdiqlaydi.
+/// Band, mas'ul va sabab PIN'dan oldin tekshiriladi; PIN noto'g'ri bo'lsa hech narsa yozilmaydi.
+///
+/// # Errors
+/// Kelishuv oilaviy emas, band topilmasa, a'zo shu bandning mas'ul kattasi bo'lmasa, sabab bo'sh,
+/// PIN noto'g'ri yoki qulflangan bo'lsa.
+pub fn report_incident(
+    db: &mut Database,
+    env: &Env<'_>,
+    ctx: &Ctx,
+    agreement_id: &str,
+    incident: FamilyIncident,
+) -> Result<JournalEntry, ServiceError> {
+    let a = agreements::load(db.conn(), ctx, agreement_id)?;
+    if a.agreement_type != AgreementType::Family {
+        return Err(ServiceError::Invalid("bu kelishuv oilaviy emas"));
+    }
+    let doc = agreements::current_doc(db.conn(), ctx, &a)?.ok_or(ServiceError::Invalid(
+        "eski matnli kelishuvda vazifa bandlari yo'q: avval 9 savolli versiya yarating",
+    ))?;
+    let owner = match &doc.questions.duties {
+        Answer::Answered(ds) => ds
+            .get(incident.duty_index)
+            .and_then(|d| d.owner_party_id.clone()),
+        _ => None,
+    }
+    .ok_or(ServiceError::Invalid("bunday vazifa bandi yo'q"))?;
+    if owner != incident.member_id {
+        return Err(ServiceError::Invalid(
+            "vazifa hodisasini faqat shu bandning mas'ul kattasi yozadi",
+        ));
+    }
+    if incident.reason.trim().is_empty() {
+        return Err(ServiceError::Invalid("vazifa hodisasi uchun sabab yozing"));
+    }
+    members::verify(db, env, ctx, &incident.member_id, &incident.pin)?;
+    events::write_duty_incident(
+        db,
+        env,
+        ctx,
+        agreement_id,
+        incident.duty_index,
+        &incident.reason,
+        &incident.proposal,
+    )
 }
 
 /// Oilaviy ko'rikka katta a'zoning javobini yozadi. Avval javob tekshiriladi (davr, faol kelishuv, izoh,

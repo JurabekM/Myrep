@@ -36,6 +36,7 @@ Belgilar: ✅ shu repoda avtomatik tekshiriladi · 🟡 qisman · ⬜ qo'lda/tas
 - ⬜ «Katta foyda» tasdig'i va nizo bloki (davr yopish, taqsimot) qo'lda sinaladi: ogohlantirish matni, katakcha, tugma holati.
 - ⬜ Oilaviy kelishuv: shablon tanlash, kattalarning PIN bilan tasdig'i (bola va PIN'siz kattalar tasdiqlay olmasligi), faollashtirish — WebView2 da qo'lda sinaladi.
 - ⬜ Oilaviy oylik ko'rik: har bir katta o'z PIN'i bilan javob beradi (noto'g'ri PIN'da javob yozilmaydi, boshqa katta nomidan yozilmaydi), ikki javobdan keyin yopiladi va «Bayonnoma PDF» chiqadi (OPEN_QUESTIONS 128).
+- ⬜ Oilaviy vazifa hodisasi: faqat mas'ul katta o'z PIN'i bilan yozadi (boshqa katta yoki noto'g'ri PIN bilan yozilmaydi); hodisa oylik ko'rikda chiqadi — WebView2 da qo'lda sinaladi (OPEN_QUESTIONS 129).
 - ⬜ Yillik yangilash: 30 kunlik eslatma va «O'zgarishsiz tasdiqlash» — tomonlar qayta imzolashi va sheriklikning qoralamaga qaytishi qo'lda tekshiriladi.
 - ⬜ Rus tili: barcha ekranlar ko'zdan kechiriladi (kalit to'liqligi avtomatik, uslub — qo'lda).
 - ⬜ Accessibility: axe faqat ba'zi sahifalarda (Almashish, Hunardan ishga, Sheriklik, Onboarding); qolgan sahifalar qo'lda.

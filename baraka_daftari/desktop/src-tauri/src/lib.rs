@@ -196,6 +196,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
         family_agreements::sign_family_agreement,
         family_agreements::activate_family_agreement,
         family_agreements::record_family_review_answer,
+        family_agreements::report_family_duty_incident,
         partnerships::sign_partnership,
         partnerships::partnership_family_consent,
         partnerships::activate_partnership,

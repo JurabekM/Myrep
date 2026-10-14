@@ -1384,6 +1384,113 @@ fn family_review_needs_each_adults_own_pin() {
     assert!(pdf.starts_with(b"%PDF"));
 }
 
+/// SPEC 2F.4, D13A: oilaviy vazifa hodisasini faqat shu bandning mas'ul kattasi, o'z PIN'i bilan yozadi.
+#[test]
+fn family_duty_incident_is_written_by_the_owner_with_the_pin() {
+    use services::family_agreements::{
+        self as family, FamilyDuty, FamilyIncident, NewFamilyAgreement,
+    };
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let dilshod = services::members::add(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        "Dilshod",
+        domain::MemberRole::Adult,
+    )
+    .unwrap()
+    .meta
+    .id;
+    members::set_pin(&mut w.db, &env!(w), &w.ctx, &dilshod, "222222", FAST).unwrap();
+    let id = family::create(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        NewFamilyAgreement {
+            title: "Uy ishlari".into(),
+            adult_ids: vec![me.clone(), dilshod.clone()],
+            duties: vec![FamilyDuty {
+                text: "Ovqat pishirish".into(),
+                owner_member_id: dilshod.clone(),
+                if_not_done: "Ertasi kuni o'zi tuzatadi".into(),
+            }],
+            custody_place: "Uy xazinasi".into(),
+            review_date: None,
+        },
+    )
+    .unwrap()
+    .agreement
+    .meta
+    .id;
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &me, "111111").unwrap();
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &dilshod, "222222").unwrap();
+    family::activate(&mut w.db, &env!(w), &w.ctx, &id).unwrap();
+    let incident = |member: &str, pin: &str, reason: &str| FamilyIncident {
+        member_id: member.to_owned(),
+        pin: pin.to_owned(),
+        duty_index: 0,
+        reason: reason.to_owned(),
+        proposal: "Ertaga o'zim pishiraman".to_owned(),
+    };
+    // Boshqa katta bandning mas'uli emas: PIN'i to'g'ri bo'lsa ham yozilmaydi
+    let other = family::report_incident(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        incident(&me, "111111", "Kechikdi"),
+    )
+    .unwrap_err();
+    assert!(invalid_message(&other).contains("mas'ul"));
+    // Sabab bo'sh bo'lsa, PIN tekshirilishidan oldin rad etiladi
+    let blank = family::report_incident(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        incident(&dilshod, "222222", "  "),
+    )
+    .unwrap_err();
+    assert!(invalid_message(&blank).contains("sabab"));
+    // Noto'g'ri PIN: hech narsa yozilmaydi
+    let forged = family::report_incident(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        incident(&dilshod, "111111", "Kechikdi"),
+    )
+    .unwrap_err();
+    assert!(matches!(forged, ServiceError::WrongPin));
+    // Oddiy (sheriklik) yo'li oilaviy kelishuvda ishlamaydi
+    let plain =
+        services::events::report_duty_incident(&mut w.db, &env!(w), &w.ctx, &id, 0, "Kechikdi", "")
+            .unwrap_err();
+    assert!(invalid_message(&plain).contains("PIN"));
+    let entry = family::report_incident(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &id,
+        incident(&dilshod, "222222", "Ovqat tayyor emas"),
+    )
+    .unwrap();
+    assert!(matches!(entry.kind, domain::JournalKind::DutyIncident));
+    assert_eq!(entry.party_id.as_deref(), Some(dilshod.as_str()));
+    assert_eq!(
+        entry.note,
+        "Ovqat tayyor emas. Taklif: Ertaga o'zim pishiraman"
+    );
+    let all = services::journal::entries(w.db.conn(), &w.ctx, &id).unwrap();
+    assert_eq!(
+        all.iter()
+            .filter(|e| e.kind == domain::JournalKind::DutyIncident)
+            .count(),
+        1
+    );
+}
+
 /// D13A: «o'zgarishsiz tasdiqlash» yangi versiya — barcha tomonlar qayta tasdiqlaydi, faol sheriklik qoralamaga qaytadi.
 #[test]
 fn yearly_confirmation_is_a_new_version_that_needs_new_signatures() {

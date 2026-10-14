@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   commands,
   type FamilyAgreementDto,
+  type FamilyDutyDto,
   type FamilyDutyInput,
   type MemberDto,
 } from '../../bindings';
@@ -268,6 +269,134 @@ function FamilyForm({
   );
 }
 
+/**
+ * Oilaviy vazifa bandi. Faol kelishuvda mas'ul katta «bajara olmayapman» deb o'z PIN'i bilan hodisa
+ * yozadi (SPEC 2F.4): boshqa katta yoki noto'g'ri PIN bilan yozilmaydi.
+ */
+function FamilyDutyRow({
+  agreementId,
+  index,
+  duty,
+  active,
+}: {
+  agreementId: string;
+  index: number;
+  duty: FamilyDutyDto;
+  active: boolean;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [pin, setPin] = useState('');
+  const [reason, setReason] = useState('');
+  const [proposal, setProposal] = useState('');
+  const [saved, setSaved] = useState(false);
+  const report = useMutation({
+    mutationFn: () =>
+      unwrap(
+        commands.reportFamilyDutyIncident(
+          agreementId,
+          index,
+          duty.owner_member_id,
+          pin,
+          reason.trim(),
+          proposal.trim(),
+        ),
+      ),
+    onSuccess: async () => {
+      setOpen(false);
+      setPin('');
+      setReason('');
+      setProposal('');
+      setSaved(true);
+      await queryClient.invalidateQueries({ queryKey: ['review', agreementId] });
+    },
+    onError: () => {
+      setPin('');
+    },
+  });
+  return (
+    <li className="rounded border border-line p-2" data-testid={`famagr-duty-${String(index)}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span>{`${duty.text} · ${duty.owner_name} · ${duty.if_not_done}`}</span>
+        {active && (
+          <button
+            type="button"
+            className="underline"
+            aria-expanded={open}
+            onClick={() => {
+              setSaved(false);
+              setOpen((o) => !o);
+            }}
+          >
+            {t('partner.events.cantDo')}
+          </button>
+        )}
+      </div>
+      {open && (
+        <form
+          className="mt-2 space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            report.mutate();
+          }}
+        >
+          <label className="block">
+            {t('partner.events.reason')}
+            <input
+              className={field}
+              required
+              maxLength={200}
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+              }}
+            />
+          </label>
+          <label className="block">
+            {t('partner.events.proposal')}
+            <input
+              className={field}
+              maxLength={80}
+              value={proposal}
+              onChange={(e) => {
+                setProposal(e.target.value);
+              }}
+            />
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              autoComplete="off"
+              aria-label={t('famagr.pinFor', { name: duty.owner_name })}
+              className="w-24 rounded border border-line-strong bg-transparent p-1"
+              value={pin}
+              onChange={(e) => {
+                setPin(e.target.value);
+              }}
+            />
+            <button
+              type="submit"
+              className="rounded border border-accent px-3 py-0.5 disabled:opacity-50"
+              disabled={pin === '' || reason.trim() === '' || report.isPending}
+            >
+              {t('partner.events.submitIncident')}
+            </button>
+          </div>
+        </form>
+      )}
+      {saved && (
+        <p role="status" className="mt-1">
+          {t('partner.events.incidentSaved')}
+        </p>
+      )}
+      {report.error && <p role="alert">{errorMessage(t, report.error)}</p>}
+    </li>
+  );
+}
+
 function FamilyCard({ a, onChange }: { a: FamilyAgreementDto; onChange: () => void }) {
   const { t } = useTranslation();
   const [pins, setPins] = useState<Record<string, string>>({});
@@ -301,7 +430,13 @@ function FamilyCard({ a, onChange }: { a: FamilyAgreementDto; onChange: () => vo
       <p className="text-xs opacity-80">{a.custody_place}</p>
       <ul className="space-y-1">
         {a.duties.map((d, i) => (
-          <li key={i}>{`${d.text} · ${d.owner_name} · ${d.if_not_done}`}</li>
+          <FamilyDutyRow
+            key={i}
+            agreementId={a.id}
+            index={i}
+            duty={d}
+            active={a.status === 'ACTIVE' || a.status === 'IN_DISPUTE'}
+          />
         ))}
       </ul>
       <ul className="space-y-2">

@@ -236,6 +236,8 @@ export const commands = {
 	activateFamilyAgreement: (agreementId: string) => typedError<FamilyAgreementDto, CommandError>(__TAURI_INVOKE("activate_family_agreement", { agreementId })),
 	/**  Oylik ko'rikda katta a'zoning javobi: kattaning o'z PIN'i bilan. `agree = false` bo'lsa izoh shart. */
 	recordFamilyReviewAnswer: (agreementId: string, period: string, memberId: string, pin: string, agree: boolean, note: string) => typedError<null, CommandError>(__TAURI_INVOKE("record_family_review_answer", { agreementId, period, memberId, pin, agree, note })),
+	/**  Mas'ul katta o'z PIN'i bilan «bajara olmayapman» deydi: vazifa hodisasi jurnalga yoziladi. */
+	reportFamilyDutyIncident: (agreementId: string, dutyIndex: number, memberId: string, pin: string, reason: string, proposal: string) => typedError<null, CommandError>(__TAURI_INVOKE("report_family_duty_incident", { agreementId, dutyIndex, memberId, pin, reason, proposal })),
 	/**  Tomon (`party_id`, a'zo bo'lsa `pin` bilan) yoki guvoh (`witness`) joriy versiyani tasdiqlaydi. */
 	signPartnership: (id: string, partyId: string | null, witness: string | null, arbiter: boolean | null, pin: string | null) => typedError<null, CommandError>(__TAURI_INVOKE("sign_partnership", { id, partyId, witness, arbiter, pin })),
 	partnershipFamilyConsent: (id: string, memberId: string, pin: string) => typedError<null, CommandError>(__TAURI_INVOKE("partnership_family_consent", { id, memberId, pin })),
@@ -797,7 +799,7 @@ export type FamilyAgreementDto = {
 	status_label: string,
 	version: number,
 	adults: FamilyAdultDto[],
-	duties: AgreementDutyDto[],
+	duties: FamilyDutyDto[],
 	custody_place: string,
 	/**  `YYYY-MM-DD`; javob berilmagan bo'lsa `null`. */
 	review_date: string | null,
@@ -815,6 +817,14 @@ export type FamilyAgreementInput = {
 	custody_place: string,
 	/**  `YYYY-MM-DD`; bo'sh bo'lsa — bir yil keyin. */
 	review_date: string | null,
+};
+
+/**  Oilaviy vazifa bandi: mas'ul katta a'zosi identifikatori bilan (hodisani u yozadi). */
+export type FamilyDutyDto = {
+	text: string,
+	owner_member_id: string,
+	owner_name: string,
+	if_not_done: string,
 };
 
 /**  Vazifa bandi: mas'ul — xonadon katta a'zosi. */
