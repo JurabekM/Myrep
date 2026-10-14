@@ -17,6 +17,7 @@
   --color-muted: #b5b2a7; /* ikkinchi darajali matn */
   --color-subtle: #8c897f; /* yorliqlar, izohlar */
   --color-accent: #d97757; /* urg'u rangi (clay) */
+  --color-danger: #e8897f; /* xato xabarlari (matn uchun yetarli kontrast) */
 }
 
 @layer base {

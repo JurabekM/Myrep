@@ -4,6 +4,70 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D3 — Xavfsizlik va shifrlangan baza (2026-10-14)
+
+**Qo'shildi**
+
+- `crates/domain` (paket `baraka-domain`): `Household`, `Member`, `MemberRole` (ADULT/CHILD), `Meta` (yaratilgan/yangilangan/o'chirilgan vaqt, `version`, `origin_device_id`), `validate_name`, `validate_uuid_v7`, `Clock` va `IdGen` traitlari.
+- `crates/security` (paket `baraka-security`):
+  - 6 raqamli PIN. Baza kaliti tasodifiy 256 bit; u ikki qatlamda o'raladi: ichki qatlam PIN'dan Argon2id bilan (19 MiB, t=2, p=1), tashqi qatlam OS keyring'idagi qurilma kaliti bilan. Ikkala qatlam XChaCha20-Poly1305.
+  - Kalit fayli `keys.bin` (208 bayt, `BDKEY001`), atomik yoziladi.
+  - Lockout: 3-urinishdan keyin 30 s, 4 — 60 s, 5 — 5 daqiqa, 6 — 15 daqiqa, 7 va undan keyin 1 soat. Keyring kaliti yo'q bo'lsa, urinish hisoblanmaydi.
+  - `AutoLockPolicy`: oyna fokusdan tushib 5 daqiqa o'tsa, qulflash.
+- `crates/storage` (paket `baraka-storage`): SQLCipher bilan shifrlangan baza (`PRAGMA key` 256 bit hex). Sxema v1 — `rusqlite_migration` bilan (`user_version`), 11 ta `STRICT` jadval, CHECK cheklovlari (masalan, `WITHDRAWAL` uchun sabab majburiy). `HouseholdRepo`, `MemberRepo` — mantiqiy o'chirish va optimistik versiya nazorati. Vaqt — RFC 3339, UTC.
+- `src-tauri`:
+  - `session` moduli: qulflangan/ochiq holat, PIN bilan ochish, qulflash, avto-qulflash. Tauri'dan mustaqil.
+  - Commandlar: `get_security_status`, `setup_pin`, `unlock`, `lock`. Xato — `ApiError` (`code`, `retryAfterSeconds`); PIN yoki kalit qiymati hech qachon xatoda yoki logda bo'lmaydi.
+  - Relizda oyna ekran suratidan chiqariladi (`set_content_protected`). Ishlab chiqish rejimida o'chiq.
+  - Ma'lumotlar papkasi: `%APPDATA%\uz.barakadaftari.desktop` (`keys.bin`, `daftar.db`).
+- UI: `SecurityGate` (avval PIN sozlash, keyin qulflash, keyin ilova), `SetupScreen` (PIN ikki marta kiritiladi), `LockScreen` (Enter bilan yuboriladi, noto'g'ri PIN xabari, lockout sanog'i), yon paneldagi «Qulflash» tugmasi va `Ctrl+L`. Tarjimalar uz va ru'da. Yangi rang tokeni `--color-danger`.
+
+**Qarorlar va sabablar**
+
+- **Ikki qatlamli o'rash** (DESKTOP_PROMPT.md 6.2): faqat PIN ham, faqat keyring ham yetarli emas. Keyring yozuvi o'chirilsa, PIN to'g'ri bo'lsa ham baza ochilmaydi.
+- **Tartib:** format → lockout → keyring → PIN. Keyring kaliti yo'q bo'lsa, bu tizim xatosi: PIN tekshirilmaydi va urinish hisoblanmaydi.
+- **Keyring nomi:** xizmat `BarakaDaftari`, hisob `db-device-key-v1` (Windows'da `db-device-key-v1.BarakaDaftari`).
+- **`retryAfterSeconds` — `u32`:** specta TypeScript'da 64-bitli butun sonlarni (`bigint`) taqiqlaydi. Kutish bir soatgacha bo'lgani uchun u sig'adi.
+- **Commandlar `async`:** Argon2id (bir necha yuz millisekund) UI oqimini bloklamasligi uchun `spawn_blocking` ichida bajariladi.
+- **Sozlash bazani ochadi:** PIN kiritilgach yangi o'rnatishda ilova darhol ochiladi.
+- **Ekran surati:** Windows bu oynani ekran suratidan chiqarib tashlaydi (`WDA_EXCLUDEFROMCAPTURE`, affinity `0x11`). Qora to'rtburchak chiqmaydi — oyna ortidagi oyna ko'rinadi. Eski Windows'da xulq boshqacha bo'lishi mumkin (tekshirilmagan).
+- **Windows'da SQLCipher'ni yig'ish** to'liq Perl'ni talab qiladi (OpenSSL Configure). Git bilan kelgan perl yetmaydi; `OPENSSL_SRC_PERL` bilan ko'rsatiladi (README).
+
+**Bog'liqliklar va sabablari** (ADR bo'yicha, DESKTOP_PROMPT.md 2-bo'lim)
+
+- `argon2` 0.6 — PIN'dan kalit (Argon2id).
+- `chacha20poly1305` 0.11 — AEAD (XChaCha20-Poly1305), `zeroize` xususiyati bilan.
+- `keyring` 4.2 — OS xavfsiz saqlash (Windows Credential Manager).
+- `rand` 0.10 — tasodifiy sonlar (OS manbai).
+- `zeroize` 1.9 — kalit xotirasini tozalash (`security` va `storage`).
+- `rusqlite` 0.40, `bundled-sqlcipher-vendored-openssl` — SQLCipher; `rusqlite_migration` 2.6 — migratsiyalar.
+- `time` 0.3, `thiserror` 2 — vaqt va xatolar (`src-tauri` ham `thiserror` ishlatadi).
+- Ichki bog'liqliklar: `src-tauri` → `baraka-security`, `baraka-storage`.
+
+**Natijalar**
+
+- `cargo test --workspace`: yashil. D3 testlari: `baraka-domain` 5; `baraka-security` 15 (unit) + 9 (integratsiya: PIN+keyring ikki qatlam, keyring yo'qolganda PIN yetmasligi, lockout, avto-qulflash); `baraka-storage` 8 (shifrlangan fayl kalitsiz o'qilmaydi, noto'g'ri kalit rad etiladi, migratsiya v1, versiya nomuvofiqligi, tashqi kalit, CHECK); `baraka-daftari` 12 (seans 7, commandlar 4, bindinglar 1).
+- `cargo clippy --workspace --all-targets -D warnings`, `cargo fmt --check` — toza.
+- Frontend: `pnpm test` 17 ta — yashil (App 5, xavfsizlik oqimlari 6, ikonka siyosati, tarjima kalitlari); `lint`, `typecheck`, `format:check` — toza.
+- Haqiqiy ilovada qo'lda sinov (ishlab chiqish rejimi, sichqoncha va klaviatura, har bir ekran suratga olingan):
+  - sozlash: PIN ikki marta, «Saqlash va boshlash» — bosh sahifa ochildi;
+  - «Qulflash» tugmasi va `Ctrl+L` — qulflash ekrani;
+  - noto'g'ri PIN — xabar, maydon tozalanadi, ilova qulflangan qoladi;
+  - uchinchi noto'g'ri urinish — 30 soniyalik kutish, sanoq, maydon va tugma o'chiq; sanoq tugagach maydon qayta yoqildi;
+  - to'g'ri PIN — ilova ochildi;
+  - oyna 5 daqiqa fokusdan tashqarida (minimallashtirilgan) — qayta ochilganda qulflash ekrani;
+  - ilova qayta ishga tushirildi — qulflash ekrani (kalit fayli va keyring saqlangan), to'g'ri PIN bilan ochildi;
+  - keyring yozuvi Windows Credential Manager'dan o'chirildi — to'g'ri PIN ham ochmadi: «Qurilma kaliti topilmadi» xabari.
+- Reliz exe (`target\release`, o'rnatilmagan): ekran surati oyna mazmunini chiqarmadi (yuqoridagi qaror).
+
+**Ma'lum cheklovlar**
+
+- PIN unutilsa, ma'lumotlarni tiklash yo'q (docs/OPEN_QUESTIONS.md, 15-band).
+- Windows Hello yo'q (kechiktirildi, 16-band). OS qulflash hodisasi (Win+L, uyqu) aniqlanmaydi, faqat oyna fokusi va vaqt (17-band).
+- PIN JS tomonida qisqa vaqt matn sifatida turadi; Rust tomonda `zeroize` qilinmaydi (Tauri deserializatsiyasi `String` beradi).
+- Kalit fayli o'chirilib, `daftar.db` qolsa, sozlash eski bazani ochishga urinadi va `INTERNAL` xato beradi (18-band).
+- O'rnatuvchi (NSIS) bu vazifada qayta qurilmadi va o'rnatilmadi; silent o'rnatish va o'chirish sinalmagan (19-band).
+
 ### D2 — `money` crate va test vektorlari runner'i (2026-10-14)
 
 **Qo'shildi**

@@ -1,7 +1,14 @@
 # Baraka Daftari Desktop — Cargo workspace.
 # Yangi crate qo'shishdan oldin sababini docs/CHANGELOG.md da yozing (DESKTOP_PROMPT.md 2-bo'lim).
 [workspace]
-members = ["src-tauri", "crates/money", "crates/vectors"]
+members = [
+  "src-tauri",
+  "crates/money",
+  "crates/vectors",
+  "crates/domain",
+  "crates/security",
+  "crates/storage",
+]
 resolver = "3"
 
 [workspace.package]

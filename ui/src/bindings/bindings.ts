@@ -7,9 +7,39 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	/**  Ilova ma'lumotini qaytaradi. Disk yoki tarmoqqa murojaat qilmaydi. */
 	getAppInfo: () => __TAURI_INVOKE<AppInfo>("get_app_info"),
+	/**  Joriy xavfsizlik holati. */
+	getSecurityStatus: () => typedError<SecurityStatus, ApiError>(__TAURI_INVOKE("get_security_status")),
+	/**  Birinchi marta PIN o'rnatadi (6 raqam) va bazani ochadi. */
+	setupPin: (pin: string) => typedError<null, ApiError>(__TAURI_INVOKE("setup_pin", { pin })),
+	/**  PIN bilan bazani ochadi. */
+	unlock: (pin: string) => typedError<null, ApiError>(__TAURI_INVOKE("unlock", { pin })),
+	/**  Bazani darhol qulflaydi. */
+	lock: () => typedError<null, ApiError>(__TAURI_INVOKE("lock")),
 };
 
 /* Types */
+/**  Commandlar xatosi. `code` frontendda tarjima kalitiga aylanadi; PIN yoki kalit qiymati yo'q. */
+export type ApiError = 
+/**  PIN 6 ta raqamdan iborat emas. */
+{ code: "INVALID_PIN" } | 
+/**  PIN noto'g'ri. */
+{ code: "WRONG_PIN" } | 
+/**  Juda ko'p noto'g'ri urinish: kutish davom etmoqda. */
+{ code: "LOCKED_OUT"; 
+/**
+ *  Qolgan kutish vaqti (soniyalarda). `u32`: TypeScript'da `bigint` bo'lmasligi uchun
+ *  (kutish eng ko'pi bilan bir soat, sig'adi).
+ */
+retryAfterSeconds: number } | 
+/**  PIN allaqachon o'rnatilgan. */
+{ code: "ALREADY_SET_UP" } | 
+/**  PIN hali o'rnatilmagan. */
+{ code: "NOT_SET_UP" } | 
+/**  Qurilma kaliti OS keyring'ida yo'q yoki bu bazaga mos emas. */
+{ code: "KEY_UNAVAILABLE" } | 
+/**  Kutilmagan ichki xato (batafsil log'da, foydalanuvchiga umumiy xabar). */
+{ code: "INTERNAL" };
+
 /**  «Ilova haqida» DTO. Frontendga camelCase maydon nomlari bilan yetib boradi. */
 export type AppInfo = {
 	/**  Mahsulot nomi (tauri.conf.json → productName). */
@@ -23,4 +53,22 @@ export type AppInfo = {
 	/**  Yig'ish turi: "debug" yoki "release". */
 	buildProfile: string,
 };
+
+/**  Xavfsizlik holati DTO: PIN o'rnatilganmi va baza ochiqmi. */
+export type SecurityStatus = {
+	/**  PIN o'rnatilganmi. `false` bo'lsa, birinchi ishga tushirishda sozlash ekrani ko'rsatiladi. */
+	setUp: boolean,
+	/**  Baza ochiqmi. `false` bo'lsa, qulflash ekrani ko'rsatiladi. */
+	unlocked: boolean,
+};
+
+/* Tauri Specta runtime */
+async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {
+    try {
+        return { status: "ok", data: await result };
+    } catch (e) {
+        if (e instanceof Error) throw e;
+        return { status: "error", error: e as any };
+    }
+}
 

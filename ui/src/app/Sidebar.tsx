@@ -1,15 +1,18 @@
 import { useTranslation } from "react-i18next";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { Lock } from "lucide-react";
 import { BrandMark } from "./components/BrandMark";
 import { LanguageToggle } from "./components/LanguageToggle";
 import { NAV_ITEMS, type NavItem } from "./navigation";
+import { useLockSession } from "./security/use-lock-session";
 import { useUiStore } from "./store";
 
-/** Chap navigatsiya paneli: brend, bo'limlar va tilni almashtirish. */
+/** Chap navigatsiya paneli: brend, bo'limlar, qulflash va tilni almashtirish. */
 export function Sidebar() {
   const { t } = useTranslation();
   const page = useUiStore((state) => state.page);
   const setPage = useUiStore((state) => state.setPage);
+  const lock = useLockSession();
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-surface">
@@ -37,7 +40,19 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="border-t border-border p-4">
+      <div className="flex flex-col gap-3 border-t border-border p-4">
+        <button
+          type="button"
+          onClick={() => {
+            void lock();
+          }}
+          aria-keyshortcuts="Control+L"
+          title={t("security.lockHint")}
+          className="flex h-9 w-full items-center gap-3 rounded-lg px-3 text-left text-sm text-muted transition-colors hover:bg-raised hover:text-text"
+        >
+          <Lock aria-hidden="true" className="size-4 shrink-0" />
+          <span className="truncate">{t("security.lock")}</span>
+        </button>
         <LanguageToggle compact />
       </div>
     </aside>

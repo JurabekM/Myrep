@@ -6,9 +6,9 @@ import { setAppLanguage } from "../i18n";
 import { App } from "./App";
 import { useUiStore } from "./store";
 
-// Testda haqiqiy Tauri IPC yo'q: get_app_info javobi soxtalashtiriladi.
+// Testda haqiqiy Tauri IPC yo'q: commandlar javobi soxtalashtiriladi.
 vi.mock("../bindings/bindings", () => ({
-  commands: { getAppInfo: vi.fn() },
+  commands: { getAppInfo: vi.fn(), getSecurityStatus: vi.fn(), lock: vi.fn() },
 }));
 
 const APP_INFO = {
@@ -24,6 +24,11 @@ const UZ_GREETING = "Assalomu alaykum!";
 describe("Baraka daftari ilova qobig'i", () => {
   beforeEach(() => {
     vi.mocked(commands.getAppInfo).mockResolvedValue(APP_INFO);
+    // PIN o'rnatilgan va baza ochiq: asosiy ilova ko'rinadi.
+    vi.mocked(commands.getSecurityStatus).mockResolvedValue({
+      status: "ok",
+      data: { setUp: true, unlocked: true },
+    });
     // Zustand do'koni modul darajasida: har test bosh sahifadan boshlanishi uchun tiklanadi.
     useUiStore.setState({ page: "home" });
   });
@@ -35,7 +40,8 @@ describe("Baraka daftari ilova qobig'i", () => {
   it("standart tilda bosh sahifani va ilova ma'lumotini ko'rsatadi", async () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { level: 1, name: UZ_GREETING })).toBeInTheDocument();
+    // Xavfsizlik darvozasi holatni avval yuklaydi: asosiy ekran asinxron chiqadi.
+    expect(await screen.findByRole("heading", { level: 1, name: UZ_GREETING })).toBeInTheDocument();
     expect(await screen.findByText("0.1.0")).toBeInTheDocument();
     expect(screen.getByText("windows · x86_64")).toBeInTheDocument();
     expect(screen.getByText("Reliz")).toBeInTheDocument();
@@ -45,7 +51,7 @@ describe("Baraka daftari ilova qobig'i", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const incomeButton = screen.getByRole("button", { name: "Daromad" });
+    const incomeButton = await screen.findByRole("button", { name: "Daromad" });
     expect(incomeButton).toHaveAttribute("aria-disabled", "true");
 
     // Avval sabab ko'rinadi (hover), keyin bosish sinaladi: bosilgach tooltip qayta ochilmaydi (Radix xulqi).
@@ -62,7 +68,7 @@ describe("Baraka daftari ilova qobig'i", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Sozlamalar" }));
+    await user.click(await screen.findByRole("button", { name: "Sozlamalar" }));
     expect(screen.getByRole("heading", { level: 1, name: "Sozlamalar" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("radio", { name: "Русский" }));
@@ -75,7 +81,7 @@ describe("Baraka daftari ilova qobig'i", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("radio", { name: "RU" }));
+    await user.click(await screen.findByRole("radio", { name: "RU" }));
 
     expect(
       await screen.findByRole("heading", { level: 1, name: "Ассаламу алейкум!" }),

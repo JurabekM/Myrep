@@ -25,6 +25,10 @@ tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 specta = { version = "=2.0.0-rc.25", features = ["derive"] }
 specta-typescript = "0.0.12"
 serde = { version = "1", features = ["derive"] }
+# Xavfsizlik (PIN, kalit, lockout, keyring) va shifrlangan baza (SQLCipher). Ichki crate'lar.
+security = { package = "baraka-security", path = "../crates/security" }
+storage = { package = "baraka-storage", path = "../crates/storage" }
+thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 

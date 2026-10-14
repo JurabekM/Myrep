@@ -4,7 +4,13 @@
 //! commandlar yupqa bo'ladi (DESKTOP_PROMPT.md 3.2).
 
 mod commands;
+mod session;
 
+use std::sync::Arc;
+
+use security::{KdfParams, KeyringSecretStore};
+use session::{AUTO_LOCK_TICK, Paths, Session};
+use tauri::{App, Manager, WindowEvent};
 use tauri_specta::{Builder, collect_commands};
 
 /// TypeScript bindinglari yoziladigan fayl (frontend tomonida, git'da saqlanadi).
@@ -19,9 +25,18 @@ const BINDINGS_PATH: &str = concat!(
 const BINDINGS_HEADER: &str =
     "// Bu fayl avtomatik yaratiladi (tauri-specta). Qo'lda tahrirlamang.";
 
+/// Asosiy oyna nomi (tauri.conf.json → app.windows[0].label).
+const MAIN_WINDOW: &str = "main";
+
 /// Barcha commandlar bitta ro'yxatda: ham ilova, ham TypeScript bindinglari shu ro'yxatdan olinadi.
 fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![commands::get_app_info])
+    Builder::<tauri::Wry>::new().commands(collect_commands![
+        commands::get_app_info,
+        commands::get_security_status,
+        commands::setup_pin,
+        commands::unlock,
+        commands::lock,
+    ])
 }
 
 /// Ilovani ishga tushiradi. Ishga tushmasa, xatoni logga yozib, jarayon 1 kod bilan tugaydi.
@@ -35,6 +50,7 @@ pub fn run() {
 
     let result = tauri::Builder::default()
         .invoke_handler(builder.invoke_handler())
+        .setup(|app| setup_security(app))
         .run(tauri::generate_context!());
 
     if let Err(err) = result {
@@ -43,8 +59,52 @@ pub fn run() {
     }
 }
 
+/// Seansni yaratadi, oynani himoyalaydi va avto-qulflashni ulaydi.
+///
+/// - Relizda oyna ekran suratiga va ekran yozuvga tushmaydi (`set_content_protected`).
+///   Ishlab chiqishda bu o'chiq: skrinshot bilan tekshirish uchun.
+/// - Oyna fokusdan tushsa, `AutoLockPolicy` taymeri boshlanadi; vaqt o'tsa baza qulflanadi.
+fn setup_security(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
+    let data_dir = app.path().app_data_dir()?;
+    std::fs::create_dir_all(&data_dir)?;
+
+    let session = Arc::new(Session::new(
+        Paths::in_dir(&data_dir),
+        Arc::new(KeyringSecretStore::new()),
+        KdfParams::RECOMMENDED,
+    ));
+    app.manage(Arc::clone(&session));
+
+    let window = app
+        .get_webview_window(MAIN_WINDOW)
+        .ok_or("asosiy oyna topilmadi")?;
+
+    if !cfg!(debug_assertions) {
+        window.set_content_protected(true)?;
+    }
+
+    let focus_session = Arc::clone(&session);
+    window.on_window_event(move |event| {
+        if let WindowEvent::Focused(focused) = event {
+            focus_session.focus_changed(*focused);
+        }
+    });
+
+    let tick_session = Arc::clone(&session);
+    std::thread::Builder::new()
+        .name("avto-qulflash".to_owned())
+        .spawn(move || {
+            loop {
+                std::thread::sleep(AUTO_LOCK_TICK);
+                tick_session.enforce_auto_lock();
+            }
+        })?;
+
+    Ok(())
+}
+
 /// Log darajasi: ishlab chiqishda batafsil, relizda faqat ogohlantirish va xatolar.
-/// Logga summa, ism yoki izoh yozilmaydi (SPEC 6-bo'lim).
+/// Logga summa, ism, izoh, PIN yoki kalit yozilmaydi (SPEC 6-bo'lim).
 fn init_tracing() {
     let default_level = if cfg!(debug_assertions) {
         "info"

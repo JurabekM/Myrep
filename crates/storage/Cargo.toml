@@ -1,0 +1,28 @@
+[package]
+name = "baraka-storage"
+description = "Baraka Daftari — shifrlangan baza: SQLCipher, migratsiyalar (sxema v1), repository'lar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kod ichida import nomi: `storage`.
+[lib]
+name = "storage"
+
+[dependencies]
+domain = { package = "baraka-domain", path = "../domain" }
+# Bazani ochish kaliti (SecretKey). Kalit baytlari bu crate'da tashqariga chiqarilmaydi.
+security = { package = "baraka-security", path = "../security" }
+# SQLite + SQLCipher, OpenSSL manbadan (ADR: bundled-sqlcipher-vendored-openssl).
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+# Migratsiyalar, user_version orqali (ADR: rusqlite_migration).
+rusqlite_migration = "2.6"
+time = { version = "0.3", features = ["formatting", "parsing"] }
+# PRAGMA key satrini tozalash (Zeroizing). Versiya `security` bilan bir xil.
+zeroize = "1.9"
+thiserror = "2"
+tracing = "0.1"
+
+[lints]
+workspace = true

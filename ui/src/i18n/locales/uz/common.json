@@ -35,6 +35,26 @@
       "error": "Ilova maʼlumotini olib boʻlmadi. Ilovani qayta ishga tushiring."
     }
   },
+  "security": {
+    "lock": "Qulflash",
+    "lockHint": "Qulflash (Ctrl+L)",
+    "lockedTitle": "Daftar qulflangan",
+    "lockedText": "Davom etish uchun PIN kiriting.",
+    "pinLabel": "PIN (6 ta raqam)",
+    "unlock": "Ochish",
+    "wrongPin": "PIN notoʻgʻri. Qayta urinib koʻring.",
+    "lockedOut": "Juda koʻp notoʻgʻri urinish. {{seconds}} soniyadan keyin qayta urinib koʻring.",
+    "setupTitle": "PIN oʻrnating",
+    "setupText": "Daftaringizni himoyalash uchun 6 ta raqamdan iborat PIN tanlang.",
+    "setupWarning": "Diqqat: PIN unutilsa, maʼlumotlarni tiklab boʻlmaydi. Uni xavfsiz joyda saqlang.",
+    "confirmLabel": "PIN ni qayta kiriting",
+    "setupButton": "Saqlash va boshlash",
+    "mismatch": "Kiritilgan kodlar mos kelmadi.",
+    "invalidPin": "PIN aniq 6 ta raqamdan iborat boʻlishi kerak.",
+    "keyUnavailable": "Qurilma kaliti topilmadi yoki bu daftarga mos emas. Maʼlumotlar ochilmaydi.",
+    "internal": "Xatolik yuz berdi. Ilovani qayta ishga tushiring.",
+    "statusError": "Xavfsizlik holatini olib boʻlmadi. Ilovani qayta ishga tushiring."
+  },
   "settings": {
     "title": "Sozlamalar",
     "language": {
