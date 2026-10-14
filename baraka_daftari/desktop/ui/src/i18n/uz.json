@@ -1230,6 +1230,12 @@
     "empty": "Hali oilaviy kelishuv yo'q.",
     "signedBy": "tasdiqladi",
     "reviewPin": "Oylik ko'rikda har bir javob kattaning o'z PIN'i bilan yoziladi.",
+    "havas": {
+      "limit": "Faol havas chegarasi: {{amount}}",
+      "none": "Havas chegarasi hali faol emas: kattalar hamon rozilik bermagan.",
+      "pending": "Yangi chegara taklifi kattalarning roziligini kutmoqda.",
+      "hint": "Chegara «Havas» bo'limida belgilanadi; har bir katta o'z PIN'i bilan rozilik beradi."
+    },
     "pinFor": "{{name}}: PIN",
     "confirm": "Tasdiqlash",
     "activate": "Faollashtirish",

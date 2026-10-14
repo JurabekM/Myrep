@@ -71,6 +71,7 @@ impl World {
             effective_from: date_from_str("2026-10-01").unwrap(),
             keeper_device_id: Some("dev-1".into()),
             legacy: false,
+            family_template: None,
         };
         agreement.meta.id = AGREEMENT.into();
         repo::insert(w.db.conn(), &agreement).unwrap();
@@ -258,6 +259,7 @@ fn one_agreement_per_subject() {
         effective_from: date_from_str("2026-10-01").unwrap(),
         keeper_device_id: None,
         legacy: true,
+        family_template: None,
     };
     assert!(
         repo::insert(w.db.conn(), &again).is_err(),

@@ -8,10 +8,10 @@
 use domain::{
     can_transition, canonical, completeness, date_to_string, required_signatures, sha256_hex,
     warnings, Agreement, AgreementDoc, AgreementSignKind, AgreementSignature, AgreementStatus,
-    AgreementType, AgreementVersion, Answer, Completeness, Date, Debt, JournalKind, LoanReceipt,
-    MemberRole, Meta, Partnership, PartnershipCapital, PartnershipSignature, PartnershipStatus,
-    PartnershipVersion, ReceiptKind, Receivable, ReportPeriod, RequiredSignature, SignMethod,
-    SignatureKind, SubjectKind, Warning,
+    AgreementType, AgreementVersion, Answer, Completeness, Date, Debt, FamilyTemplate, JournalKind,
+    LoanReceipt, MemberRole, Meta, Partnership, PartnershipCapital, PartnershipSignature,
+    PartnershipStatus, PartnershipVersion, ReceiptKind, Receivable, ReportPeriod,
+    RequiredSignature, SignMethod, SignatureKind, SubjectKind, Warning,
 };
 use money::{format_money, Locale, Money};
 use storage::{repo, Connection, Database};
@@ -32,6 +32,8 @@ pub struct NewAgreement {
     /// Bog'langan obyekt (sheriklik, qarz, berilgan qarz); `None` — mustaqil kelishuv.
     pub subject: Option<(SubjectKind, String)>,
     pub doc: AgreementDoc,
+    /// Oilaviy kelishuvning shabloni (faqat oilaviy kelishuvda); boshqalarda `None`.
+    pub family_template: Option<FamilyTemplate>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -188,7 +190,7 @@ fn insert_agreement(
     title: &str,
     subject: Option<(SubjectKind, String)>,
     doc: &AgreementDoc,
-    legacy: bool,
+    family_template: Option<FamilyTemplate>,
 ) -> Result<Agreement, ServiceError> {
     let (subject_kind, subject_id) = match subject {
         Some((kind, id)) => (kind, Some(id)),
@@ -205,7 +207,8 @@ fn insert_agreement(
         current_version: 1,
         effective_from: doc.effective_from,
         keeper_device_id: keeper_of(doc).or_else(|| Some(env.device_id.to_owned())),
-        legacy,
+        legacy: false,
+        family_template,
     };
     repo::insert(conn, &agreement)?;
     repo::insert(
@@ -245,7 +248,15 @@ pub fn create_in(
         }
     }
     let doc = prepare(env, new.doc);
-    let a = insert_agreement(conn, env, ctx, &new.title, new.subject, &doc, false)?;
+    let a = insert_agreement(
+        conn,
+        env,
+        ctx,
+        &new.title,
+        new.subject,
+        &doc,
+        new.family_template,
+    )?;
     Ok(a.meta.id)
 }
 
@@ -663,6 +674,7 @@ fn adopt_partnership(
         effective_from,
         keeper_device_id: Some(env.device_id.to_owned()),
         legacy: true,
+        family_template: None,
     };
     repo::insert(conn, &agreement)?;
 
@@ -801,6 +813,7 @@ fn adopt_receipt(
         effective_from: date,
         keeper_device_id: Some(env.device_id.to_owned()),
         legacy: true,
+        family_template: None,
     };
     repo::insert(conn, &agreement)?;
     let (content, hash) = legacy_content(&serde_json::json!({

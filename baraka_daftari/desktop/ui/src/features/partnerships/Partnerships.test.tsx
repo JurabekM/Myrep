@@ -66,6 +66,8 @@ const familyFixture = (over: Partial<FamilyAgreementDto> = {}): FamilyAgreementD
   review_date: '2027-10-11',
   missing_questions: [],
   can_activate: false,
+  template: null,
+  havas: null,
   ...over,
 });
 
@@ -662,6 +664,7 @@ describe('oilaviy kelishuvlar', () => {
           adult_ids: ['m1', 'm2'],
           custody_place: 'Uy xazinasi',
           review_date: null,
+          template: 'HOUSE_DUTIES',
         }),
       );
     });
@@ -744,6 +747,52 @@ describe('oilaviy kelishuvlar', () => {
         '',
       );
     });
+  });
+
+  it('havas chegarasi shabloni: faol chegara ko‘rinadi va faqat o‘qish uchun qoladi', async () => {
+    vi.mocked(commands.familyAgreementsList).mockResolvedValue({
+      status: 'ok',
+      data: [
+        familyFixture({
+          status: 'ACTIVE',
+          template: 'DESIRE_LIMIT',
+          havas: { limit: "1 500 000 so'm", pending: false },
+          adults: [
+            { member_id: 'm1', name: 'Men', signed: true },
+            { member_id: 'm2', name: 'Zamira', signed: true },
+          ],
+        }),
+      ],
+    });
+    renderPage();
+    const havas = within(await screen.findByTestId('famagr-havas'));
+    expect(havas.getByText("Faol havas chegarasi: 1 500 000 so'm")).toBeInTheDocument();
+    expect(havas.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('havas chegarasi hali yo‘q bo‘lsa va taklif kutilayotgan bo‘lsa, holat aytiladi', async () => {
+    vi.mocked(commands.familyAgreementsList).mockResolvedValue({
+      status: 'ok',
+      data: [
+        familyFixture({
+          status: 'ACTIVE',
+          template: 'DESIRE_LIMIT',
+          havas: { limit: null, pending: true },
+          adults: [
+            { member_id: 'm1', name: 'Men', signed: true },
+            { member_id: 'm2', name: 'Zamira', signed: true },
+          ],
+        }),
+      ],
+    });
+    renderPage();
+    const havas = within(await screen.findByTestId('famagr-havas'));
+    expect(
+      havas.getByText('Havas chegarasi hali faol emas: kattalar hamon rozilik bermagan.'),
+    ).toBeInTheDocument();
+    expect(havas.getByRole('status')).toHaveTextContent(
+      'Yangi chegara taklifi kattalarning roziligini kutmoqda.',
+    );
   });
 
   /** Faol oilaviy kelishuv, ikki katta hali javob bermagan oylik ko'rik bilan. */

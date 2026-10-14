@@ -115,6 +115,7 @@ function FamilyForm({
           duties,
           custody_place: custody,
           review_date: review === '' ? null : review,
+          template,
         }),
       ),
     onSuccess: onDone,
@@ -428,6 +429,17 @@ function FamilyCard({ a, onChange }: { a: FamilyAgreementDto; onChange: () => vo
         <p className="text-xs opacity-80">{t('famagr.review', { date: a.review_date })}</p>
       )}
       <p className="text-xs opacity-80">{a.custody_place}</p>
+      {a.havas && (
+        <div className="rounded border border-line p-2" data-testid="famagr-havas">
+          <p>
+            {a.havas.limit
+              ? t('famagr.havas.limit', { amount: a.havas.limit })
+              : t('famagr.havas.none')}
+          </p>
+          {a.havas.pending && <p role="status">{t('famagr.havas.pending')}</p>}
+          <p className="text-xs opacity-80">{t('famagr.havas.hint')}</p>
+        </div>
+      )}
       <ul className="space-y-1">
         {a.duties.map((d, i) => (
           <FamilyDutyRow

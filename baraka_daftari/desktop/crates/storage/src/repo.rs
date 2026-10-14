@@ -1884,6 +1884,7 @@ impl Record for Agreement {
         "effective_from",
         "keeper_device_id",
         "legacy",
+        "family_template",
     ];
     fn meta(&self) -> &Meta {
         &self.meta
@@ -1899,6 +1900,7 @@ impl Record for Agreement {
             date_val(self.effective_from)?,
             opt_text(self.keeper_device_id.as_deref()),
             Value::Integer(i64::from(self.legacy)),
+            opt_text(self.family_template.map(domain::FamilyTemplate::as_str)),
         ])
     }
     fn from_row(r: &Row<'_>) -> rusqlite::Result<Self> {
@@ -1913,6 +1915,7 @@ impl Record for Agreement {
             effective_from: row::date(r, 13)?,
             keeper_device_id: r.get(14)?,
             legacy: r.get::<_, i64>(15)? != 0,
+            family_template: row::opt_parsed(r, 16, domain::FamilyTemplate::parse)?,
         })
     }
 }

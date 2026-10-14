@@ -807,6 +807,10 @@ export type FamilyAgreementDto = {
 	missing_questions: number[],
 	/**  Barcha kattalar tasdiqlagan: faollashtirish mumkin. */
 	can_activate: boolean,
+	/**  Namunaviy shablon kodi (`HOUSE_DUTIES` | `HOUSE_MONEY` | `DESIRE_LIMIT` | `COUNCIL_SCHEDULE`); eski kelishuvda `null`. */
+	template: string | null,
+	/**  Faqat «havas chegarasi» shablonida: havas moduli holati. */
+	havas: FamilyHavasDto | null,
 };
 
 /**  Yangi oilaviy kelishuv (qoralama). */
@@ -817,6 +821,8 @@ export type FamilyAgreementInput = {
 	custody_place: string,
 	/**  `YYYY-MM-DD`; bo'sh bo'lsa — bir yil keyin. */
 	review_date: string | null,
+	/**  Namunaviy shablon kodi; `null` bo'lsa shablonsiz. */
+	template: string | null,
 };
 
 /**  Oilaviy vazifa bandi: mas'ul katta a'zosi identifikatori bilan (hodisani u yozadi). */
@@ -832,6 +838,14 @@ export type FamilyDutyInput = {
 	text: string,
 	owner_member_id: string,
 	if_not_done: string,
+};
+
+/**  Havas chegarasi (havas moduli, faqat o'qish): «havas chegarasi» shabloni uchun. */
+export type FamilyHavasDto = {
+	/**  Faol chegara (formatlangan, masalan «1 500 000 so'm»); belgilanmagan bo'lsa `null`. */
+	limit: string | null,
+	/**  Yangi chegara taklifi bor, lekin hali barcha kattalar rozi emas. */
+	pending: boolean,
 };
 
 export type FixedInput = {

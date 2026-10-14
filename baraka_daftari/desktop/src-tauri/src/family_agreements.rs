@@ -1,6 +1,9 @@
-//! Oilaviy kelishuvlar buyruqlari (SPEC 2F.10, D13A): yaratish, kattalar PIN tasdig'i, faollashtirish.
+//! Oilaviy kelishuvlar buyruqlari (SPEC 2F.10, D13A): yaratish, kattalar PIN tasdig'i, faollashtirish,
+//! oylik ko'rik va vazifa hodisasi. «Havas chegarasi» shabloni havas moduli holatini faqat o'qiydi.
 
-use domain::{date_from_str, date_to_string, AgreementSignKind, AgreementStatus, Answer};
+use domain::{
+    date_from_str, date_to_string, AgreementSignKind, AgreementStatus, Answer, FamilyTemplate,
+};
 use serde::{Deserialize, Serialize};
 use services::{
     agreements::AgreementView,
@@ -31,6 +34,15 @@ pub struct FamilyDutyDto {
     pub if_not_done: String,
 }
 
+/// Havas chegarasi (havas moduli, faqat o'qish): «havas chegarasi» shabloni uchun.
+#[derive(Debug, Serialize, Type)]
+pub struct FamilyHavasDto {
+    /// Faol chegara (formatlangan, masalan «1 500 000 so'm»); belgilanmagan bo'lsa `null`.
+    pub limit: Option<String>,
+    /// Yangi chegara taklifi bor, lekin hali barcha kattalar rozi emas.
+    pub pending: bool,
+}
+
 /// Oilaviy kelishuv holati: kattalar, vazifalar, pul joyi, yangilash sanasi va tasdiqlar.
 #[derive(Debug, Serialize, Type)]
 pub struct FamilyAgreementDto {
@@ -49,6 +61,10 @@ pub struct FamilyAgreementDto {
     pub missing_questions: Vec<u8>,
     /// Barcha kattalar tasdiqlagan: faollashtirish mumkin.
     pub can_activate: bool,
+    /// Namunaviy shablon kodi (`HOUSE_DUTIES` | `HOUSE_MONEY` | `DESIRE_LIMIT` | `COUNCIL_SCHEDULE`); eski kelishuvda `null`.
+    pub template: Option<String>,
+    /// Faqat «havas chegarasi» shablonida: havas moduli holati.
+    pub havas: Option<FamilyHavasDto>,
 }
 
 /// Vazifa bandi: mas'ul — xonadon katta a'zosi.
@@ -68,9 +84,11 @@ pub struct FamilyAgreementInput {
     pub custody_place: String,
     /// `YYYY-MM-DD`; bo'sh bo'lsa — bir yil keyin.
     pub review_date: Option<String>,
+    /// Namunaviy shablon kodi; `null` bo'lsa shablonsiz.
+    pub template: Option<String>,
 }
 
-fn family_dto(v: &AgreementView) -> FamilyAgreementDto {
+fn family_dto(v: &AgreementView, havas: Option<FamilyHavasDto>) -> FamilyAgreementDto {
     let doc = v.doc.as_ref();
     let parties: Vec<(String, String)> = match doc.map(|d| &d.questions.parties) {
         Some(Answer::Answered(ps)) => ps.iter().map(|p| (p.id.clone(), p.name.clone())).collect(),
@@ -123,7 +141,27 @@ fn family_dto(v: &AgreementView) -> FamilyAgreementDto {
         review_date,
         missing_questions: v.completeness.missing.clone(),
         can_activate: v.agreement.status == AgreementStatus::Signed,
+        template: v.agreement.family_template.map(|t| t.as_str().to_owned()),
+        havas,
     }
+}
+
+/// «Havas chegarasi» shablonida havas moduli holatini o'qiydi; boshqa shablonlarda havas bog'lanmaydi.
+fn havas_of(
+    conn: &storage::Connection,
+    ctx: &services::Ctx,
+    v: &AgreementView,
+) -> Result<Option<FamilyHavasDto>, ServiceError> {
+    if v.agreement.family_template != Some(FamilyTemplate::DesireLimit) {
+        return Ok(None);
+    }
+    let link = family_agreements::havas_link(conn, ctx)?;
+    Ok(Some(FamilyHavasDto {
+        limit: link
+            .limit
+            .map(|m| money::format_money(m, money::Locale::Uz)),
+        pending: link.pending,
+    }))
 }
 
 /// Xonadonning oilaviy kelishuvlari.
@@ -135,7 +173,12 @@ pub fn family_agreements_list(
     with_session(&state, |s| {
         s.run(|db, _env, ctx| {
             let views = family_agreements::list(db.conn(), ctx)?;
-            Ok(views.iter().map(family_dto).collect())
+            views
+                .iter()
+                .map(|v| -> Result<FamilyAgreementDto, ServiceError> {
+                    Ok(family_dto(v, havas_of(db.conn(), ctx, v)?))
+                })
+                .collect()
         })
     })
 }
@@ -157,6 +200,14 @@ pub fn create_family_agreement(
                 .map_err(|_| {
                     ServiceError::Invalid("yangilash sanasi YYYY-MM-DD ko'rinishida bo'lsin")
                 })?;
+            let template = input
+                .template
+                .filter(|t| !t.trim().is_empty())
+                .map(|t| {
+                    FamilyTemplate::parse(t.trim())
+                        .ok_or(ServiceError::Invalid("noma'lum namunaviy shablon"))
+                })
+                .transpose()?;
             let view = family_agreements::create(
                 db,
                 env,
@@ -175,9 +226,11 @@ pub fn create_family_agreement(
                         .collect(),
                     custody_place: input.custody_place,
                     review_date,
+                    template,
                 },
             )?;
-            Ok(family_dto(&view))
+            let havas = havas_of(db.conn(), ctx, &view)?;
+            Ok(family_dto(&view, havas))
         })
     })
 }
@@ -194,7 +247,8 @@ pub fn sign_family_agreement(
     with_session(&state, |s| {
         s.run(|db, env, ctx| {
             let view = family_agreements::consent(db, env, ctx, &agreement_id, &member_id, &pin)?;
-            Ok(family_dto(&view))
+            let havas = havas_of(db.conn(), ctx, &view)?;
+            Ok(family_dto(&view, havas))
         })
     })
 }
@@ -209,7 +263,8 @@ pub fn activate_family_agreement(
     with_session(&state, |s| {
         s.run(|db, env, ctx| {
             let view = family_agreements::activate(db, env, ctx, &agreement_id)?;
-            Ok(family_dto(&view))
+            let havas = havas_of(db.conn(), ctx, &view)?;
+            Ok(family_dto(&view, havas))
         })
     })
 }

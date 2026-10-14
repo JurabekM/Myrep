@@ -5,10 +5,10 @@ use crate::{date_to_string, HashedEntry, TimeError};
 use crate::{
     AgreementSignKind, AgreementStatus, AgreementType, AllocationKind, AssetType, BillingPeriod,
     BorrowAlternative, BorrowNeed, CapitalKind, CeremonyKind, CeremonyStatus, CreditorType,
-    FundingSource, IncomeSourceType, JournalKind, LedgerKind, MemberRole, Meta, MoneyOwner,
-    Necessity, ObligationKind, PartnershipKind, PartnershipStatus, PartyRole, PaymentChannel,
-    PeriodStatus, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind, SellStatus, SignMethod,
-    SignatureKind, SubjectKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
+    FamilyTemplate, FundingSource, IncomeSourceType, JournalKind, LedgerKind, MemberRole, Meta,
+    MoneyOwner, Necessity, ObligationKind, PartnershipKind, PartnershipStatus, PartyRole,
+    PaymentChannel, PeriodStatus, ReceiptKind, ReportPeriod, RescueKind, ScheduleKind, SellStatus,
+    SignMethod, SignatureKind, SubjectKind, VaultSource, VaultTxKind, VaultType, WithdrawalStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -620,6 +620,8 @@ pub struct Agreement {
     pub keeper_device_id: Option<String>,
     /// Eski ma'lumotdan ko'chirilgan kelishuv: 9 savol to'liq bo'lmasligi mumkin.
     pub legacy: bool,
+    /// Oilaviy kelishuvning shabloni (faqat `FAMILY`); boshqa kelishuvlarda va eski yozuvda `None`.
+    pub family_template: Option<FamilyTemplate>,
 }
 
 /// Kelishuv versiyasi: o'zgarmas. Mazmun — kanonik JSON (yoki eski versiya uchun matn).

@@ -37,6 +37,7 @@ Belgilar: ✅ shu repoda avtomatik tekshiriladi · 🟡 qisman · ⬜ qo'lda/tas
 - ⬜ Oilaviy kelishuv: shablon tanlash, kattalarning PIN bilan tasdig'i (bola va PIN'siz kattalar tasdiqlay olmasligi), faollashtirish — WebView2 da qo'lda sinaladi.
 - ⬜ Oilaviy oylik ko'rik: har bir katta o'z PIN'i bilan javob beradi (noto'g'ri PIN'da javob yozilmaydi, boshqa katta nomidan yozilmaydi), ikki javobdan keyin yopiladi va «Bayonnoma PDF» chiqadi (OPEN_QUESTIONS 128).
 - ⬜ Oilaviy vazifa hodisasi: faqat mas'ul katta o'z PIN'i bilan yozadi (boshqa katta yoki noto'g'ri PIN bilan yozilmaydi); hodisa oylik ko'rikda chiqadi — WebView2 da qo'lda sinaladi (OPEN_QUESTIONS 129).
+- ⬜ Havas chegarasi shabloni: kartada faol chegara yoki «hali faol emas» holati ko'rinadi; taklif rozilikni kutganda «kutmoqda» belgisi chiqadi — WebView2 da qo'lda sinaladi (OPEN_QUESTIONS 130).
 - ⬜ Yillik yangilash: 30 kunlik eslatma va «O'zgarishsiz tasdiqlash» — tomonlar qayta imzolashi va sheriklikning qoralamaga qaytishi qo'lda tekshiriladi.
 - ⬜ Rus tili: barcha ekranlar ko'zdan kechiriladi (kalit to'liqligi avtomatik, uslub — qo'lda).
 - ⬜ Accessibility: axe faqat ba'zi sahifalarda (Almashish, Hunardan ishga, Sheriklik, Onboarding); qolgan sahifalar qo'lda.

@@ -92,6 +92,7 @@ impl World {
                 title: "Yetkazib berish musharakasi".into(),
                 subject: None,
                 doc,
+                family_template: None,
             },
         )
         .unwrap();
@@ -343,6 +344,7 @@ fn one_agreement_per_subject() {
         title: "Qarz".into(),
         subject: Some((SubjectKind::Debt, subject.into())),
         doc: full_doc(),
+        family_template: None,
     };
     agreements::create(&mut w.db, &env, &w.ctx, new("debt-1")).unwrap();
     let err = agreements::create(&mut w.db, &env, &w.ctx, new("debt-1"))
@@ -715,6 +717,7 @@ fn debt_payment_is_journaled_when_the_debt_has_an_agreement() {
                 title: "Bank krediti".into(),
                 subject: Some((SubjectKind::Debt, debt_id.clone())),
                 doc: full_doc(),
+                family_template: None,
             },
         )
         .unwrap()

@@ -437,6 +437,7 @@ pub fn create(
                 title: p.name.clone(),
                 subject: Some((SubjectKind::Partnership, p.meta.id.clone())),
                 doc: build_doc(&new, &party_ids, effective),
+                family_template: None,
             },
         )?;
         Ok(())

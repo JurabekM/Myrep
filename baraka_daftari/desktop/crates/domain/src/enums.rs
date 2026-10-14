@@ -24,6 +24,15 @@ str_enum!(
     /// SPEC 2B.2. Kelajak maydoni: jadvallarda hozirdan nullable.
     Necessity { Zarur => "ZARUR", Kerak => "KERAK", Havas => "HAVAS" }
 );
+str_enum!(
+    /// Oilaviy kelishuvning namunaviy shabloni (SPEC 2F.10). `DESIRE_LIMIT` havas moduli bilan bog'lanadi.
+    FamilyTemplate {
+        HouseDuties => "HOUSE_DUTIES",
+        HouseMoney => "HOUSE_MONEY",
+        DesireLimit => "DESIRE_LIMIT",
+        CouncilSchedule => "COUNCIL_SCHEDULE",
+    }
+);
 str_enum!(PaymentChannel { Cash => "CASH", Card => "CARD" });
 str_enum!(AssetType {
     Cash => "CASH", BankCard => "BANK_CARD", Vault => "VAULT", Gold => "GOLD",

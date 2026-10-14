@@ -1,7 +1,7 @@
 use rusqlite_migration::{Migrations, M};
 
 /// Joriy sxema versiyasi (`PRAGMA user_version`).
-pub const SCHEMA_VERSION: usize = 13;
+pub const SCHEMA_VERSION: usize = 14;
 
 /// Har bir jadvalda: UUIDv7 `id`, `household_id`, UTC vaqtlar, soft delete, `version`, `origin_device_id`.
 /// Keyingi vazifalar maydonlari (`necessity`, `envelope_id`, ...) hozirdan nullable.
@@ -605,6 +605,13 @@ BEGIN SELECT RAISE(ABORT, 'journal_append_only'); END;
 ";
 
 /// Migratsiyalar ro'yxati. Har bir yangi versiya oxiriga qo'shiladi; mavjudlari o'zgartirilmaydi.
+/// Oilaviy kelishuv shabloni (SPEC 2F.10): «havas chegarasi» shabloni havas moduli bilan bog'lanadi.
+/// Mavjud kelishuvlarda ustun bo'sh (`NULL`) qoladi.
+const V14: &str = "
+ALTER TABLE agreements ADD COLUMN family_template TEXT
+  CHECK (family_template IS NULL OR family_template IN ('HOUSE_DUTIES','HOUSE_MONEY','DESIRE_LIMIT','COUNCIL_SCHEDULE'));
+";
+
 #[must_use]
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -621,6 +628,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(V11),
         M::up(V12),
         M::up(V13),
+        M::up(V14),
     ])
 }
 
@@ -792,6 +800,42 @@ mod tests {
         assert!(upd.unwrap_err().to_string().contains("journal_append_only"));
         let del = conn.execute("DELETE FROM journal_entries WHERE id='j1'", []);
         assert!(del.unwrap_err().to_string().contains("journal_append_only"));
+    }
+
+    /// v13 → v14: kelishuvlar saqlanadi, shablon ustuni bo'sh qoladi; noto'g'ri shablon kodi rad etiladi.
+    #[test]
+    fn v13_to_v14_keeps_agreements_and_checks_the_template_code() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", true).unwrap();
+        migrations().to_version(&mut conn, 13).unwrap();
+        conn.execute_batch(
+            "INSERT INTO households VALUES ('h','h','t','t',NULL,1,'d','Oila','UZS');
+             INSERT INTO agreements (id, household_id, created_at, updated_at, deleted_at, version,
+               origin_device_id, agreement_type, title, status, subject_kind, subject_id,
+               current_version, effective_from, keeper_device_id, legacy)
+             VALUES ('a','h','t','t',NULL,1,'d','FAMILY','Uy','DRAFT','NONE',NULL,1,'2026-10-01','d',0);",
+        )
+        .unwrap();
+        migrations().to_latest(&mut conn).unwrap();
+        let before: Option<String> = conn
+            .query_row(
+                "SELECT family_template FROM agreements WHERE id='a'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(before, None);
+        conn.execute(
+            "UPDATE agreements SET family_template='DESIRE_LIMIT' WHERE id='a'",
+            [],
+        )
+        .unwrap();
+        assert!(conn
+            .execute(
+                "UPDATE agreements SET family_template='NOPE' WHERE id='a'",
+                []
+            )
+            .is_err());
     }
 
     /// v11 → v12: kelishuv jadvallari qo'shiladi, mavjud sheriklik ma'lumoti o'zgarmaydi (D8A).

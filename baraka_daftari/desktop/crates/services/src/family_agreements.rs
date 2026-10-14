@@ -3,10 +3,11 @@
 //! Namunaviy shablonlarning matni UI'da (uz/ru); bu yerda kelishuv tuzilmasi va tasdiqlash oqimi.
 
 use domain::{
-    add_months, AgreementDoc, AgreementType, Answer, Custody, Date, Duty, JournalEntry, MemberRole,
-    Party, Questions, ReportPeriod, Term,
+    add_months, AgreementDoc, AgreementType, Answer, Custody, Date, Duty, FamilyTemplate,
+    JournalEntry, MemberRole, Party, Questions, ReportPeriod, Term,
 };
-use storage::Database;
+use money::Money;
+use storage::{Connection, Database};
 
 use crate::agreements::{self, AgreementSigner, AgreementView, NewAgreement};
 use crate::events;
@@ -33,6 +34,8 @@ pub struct NewFamilyAgreement {
     pub custody_place: String,
     /// Yangilash (oila kengashi) sanasi; berilmasa — bir yil keyin.
     pub review_date: Option<Date>,
+    /// Namunaviy shablon: «havas chegarasi» shabloni havas moduli bilan bog'lanadi.
+    pub template: Option<FamilyTemplate>,
 }
 
 fn clean(s: &str, max: usize) -> String {
@@ -140,6 +143,7 @@ pub fn create(
             title,
             subject: None,
             doc,
+            family_template: new.template,
         },
     )
 }
@@ -198,6 +202,28 @@ pub struct FamilyReply {
     pub member_id: String,
     pub pin: String,
     pub answer: ReviewAnswer,
+}
+
+/// «Havas chegarasi» shabloni uchun havas moduli holati (faqat o'qish).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HavasLink {
+    /// Faol chegara; belgilanmagan bo'lsa `None`.
+    pub limit: Option<Money>,
+    /// Yangi chegara taklifi bor, lekin hali barcha kattalar rozi emas.
+    pub pending: bool,
+}
+
+/// Havas moduli holatini o'qiydi. Chegara havas bo'limida belgilanadi va faqat barcha kattalar o'z PIN'i
+/// bilan rozi bo'lgandagina faol bo'ladi (SPEC 2B.3); bu yerda chegara nusxalanmaydi.
+///
+/// # Errors
+/// Baza xatosi.
+pub fn havas_link(conn: &Connection, ctx: &Ctx) -> Result<HavasLink, ServiceError> {
+    let (effective, pending) = crate::havas::effective_and_pending(conn, ctx)?;
+    Ok(HavasLink {
+        limit: effective.map(|l| l.amount),
+        pending: pending.is_some(),
+    })
 }
 
 /// Oilaviy vazifa hodisasi: mas'ul katta o'z PIN'i bilan «bajara olmayapman» deydi.

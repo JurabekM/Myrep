@@ -1205,6 +1205,7 @@ fn family_agreement_is_confirmed_by_adult_pins_only() {
             ],
             custody_place: "Uy xazinasi".into(),
             review_date: None,
+            template: None,
         },
     )
     .unwrap();
@@ -1280,6 +1281,7 @@ fn family_review_needs_each_adults_own_pin() {
             }],
             custody_place: "Uy xazinasi".into(),
             review_date: None,
+            template: None,
         },
     )
     .unwrap()
@@ -1417,6 +1419,7 @@ fn family_duty_incident_is_written_by_the_owner_with_the_pin() {
             }],
             custody_place: "Uy xazinasi".into(),
             review_date: None,
+            template: None,
         },
     )
     .unwrap()
@@ -1488,6 +1491,79 @@ fn family_duty_incident_is_written_by_the_owner_with_the_pin() {
             .filter(|e| e.kind == domain::JournalKind::DutyIncident)
             .count(),
         1
+    );
+}
+
+/// SPEC 2B.3, 2F.10: «havas chegarasi» shabloni havas moduli bilan bog'lanadi. Shablon saqlanadi, chegara
+/// nusxalanmaydi va faol chegara faqat barcha kattalar o'z PIN'i bilan rozi bo'lgach ko'rinadi.
+#[test]
+fn family_desire_limit_reads_the_havas_limit_only_after_every_adult_consents() {
+    use domain::FamilyTemplate;
+    use services::family_agreements::{self as family, FamilyDuty, NewFamilyAgreement};
+    let mut w = World::new();
+    let me = w.ctx.member_id.clone();
+    let dilshod = services::members::add(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        "Dilshod",
+        domain::MemberRole::Adult,
+    )
+    .unwrap()
+    .meta
+    .id;
+    members::set_pin(&mut w.db, &env!(w), &w.ctx, &dilshod, "222222", FAST).unwrap();
+    let id = family::create(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        NewFamilyAgreement {
+            title: "Havas chegarasi".into(),
+            adult_ids: vec![me.clone(), dilshod.clone()],
+            duties: vec![FamilyDuty {
+                text: "Oylik havas chegarasiga rioya qilish".into(),
+                owner_member_id: me.clone(),
+                if_not_done: "Oila kengashida birga qayta ko'rib chiqiladi".into(),
+            }],
+            custody_place: "Uy xazinasi".into(),
+            review_date: None,
+            template: Some(FamilyTemplate::DesireLimit),
+        },
+    )
+    .unwrap()
+    .agreement
+    .meta
+    .id;
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &me, "111111").unwrap();
+    family::consent(&mut w.db, &env!(w), &w.ctx, &id, &dilshod, "222222").unwrap();
+    family::activate(&mut w.db, &env!(w), &w.ctx, &id).unwrap();
+    let stored = family::list(w.db.conn(), &w.ctx).unwrap();
+    assert_eq!(
+        stored[0].agreement.family_template,
+        Some(FamilyTemplate::DesireLimit)
+    );
+    let none = family::havas_link(w.db.conn(), &w.ctx).unwrap();
+    assert_eq!((none.limit, none.pending), (None, false));
+    // Men taklif qilaman: Dilshod hali rozi emas, chegara faol emas, lekin kutilmoqda
+    let proposal =
+        services::havas::propose(&mut w.db, &env!(w), &w.ctx, &me, "111111", uzs(1_500_000))
+            .unwrap();
+    let waiting = family::havas_link(w.db.conn(), &w.ctx).unwrap();
+    assert_eq!((waiting.limit, waiting.pending), (None, true));
+    // Dilshod rozi bo'lgach chegara faol bo'ladi
+    services::havas::consent(
+        &mut w.db,
+        &env!(w),
+        &w.ctx,
+        &proposal.meta.id,
+        &dilshod,
+        "222222",
+    )
+    .unwrap();
+    let active = family::havas_link(w.db.conn(), &w.ctx).unwrap();
+    assert_eq!(
+        (active.limit, active.pending),
+        (Some(uzs(1_500_000)), false)
     );
 }
 
