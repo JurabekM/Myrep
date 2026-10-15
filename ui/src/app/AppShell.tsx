@@ -17,6 +17,7 @@ import { VaultPage } from "./pages/VaultPage";
 import { WhoseMoneyPage } from "./pages/WhoseMoneyPage";
 import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import { QuickEntry } from "./finance/QuickEntry";
+import { Onboarding } from "./onboarding/Onboarding";
 import { Sidebar } from "./Sidebar";
 import type { PageId } from "./navigation";
 import { useLockSession } from "./security/use-lock-session";
@@ -28,6 +29,7 @@ export function AppShell() {
   const page = useUiStore((state) => state.page);
   const quickEntryOpen = useUiStore((state) => state.quickEntryOpen);
   const setQuickEntryOpen = useUiStore((state) => state.setQuickEntryOpen);
+  const onboardingDone = useUiStore((state) => state.onboardingDone);
   const lock = useLockSession();
 
   // Ctrl+L (macOS'da Cmd+L): daftarni darhol qulflaydi. Ctrl+N: tez daromad kiritish.
@@ -54,6 +56,9 @@ export function AppShell() {
   return (
     <Tooltip.Provider delayDuration={250}>
       <div className="flex h-full w-full">
+        <a href="#main" className="skip-link">
+          {t("a11y.skipToContent")}
+        </a>
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <main id="main" className="min-h-0 flex-1 overflow-y-auto">
@@ -68,6 +73,7 @@ export function AppShell() {
           </footer>
         </div>
       </div>
+      {!onboardingDone ? <Onboarding /> : null}
       {quickEntryOpen ? (
         <QuickEntry
           onClose={() => {

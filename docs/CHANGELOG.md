@@ -4,6 +4,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D15 — Reliz tayyorgarligi (2026-10-15)
+
+**Qo'shildi**
+
+- **Onboarding** (≤ 5 qadam): «Xush kelibsiz» (disklеymer), «Avval daromad», «Kelajagim ulushi», «Xarajat va havas», «Xavfsizlik va telefon» — har qadamda bo'limga o'tish, «O'tkazib yuborish», Esc; holat `localStorage` (`baraka.onboarding`, UI afzalligi). Testlarda standart holda o'tilgan deb olinadi.
+- **Accessibility**: «Asosiy mazmunga o'tish» skip-link (`#main`), `forced-colors` (Windows High Contrast — tizim ranglari, ko'rinadigan chegara va fokus), `prefers-reduced-motion`, `prefers-contrast: more` (kuchliroq chegara/matn tokenlari); o'lchamlar rem'da (DPI 125–200 %).
+- **E2E skeleti**: `e2e/anvar.e2e.ts` (WebdriverIO + `tauri-driver`, accessible-name selektorlari) va `e2e/README.md` (tayyorgarlik, ssenariy 10 bosqich, sovuq startni o'lchash). Ishga tushirilmagan — muhit yo'q (`OPEN_QUESTIONS` 18).
+- `docs/RELEASE_CHECKLIST.md` — 7-bo'lim: D11–D15 qo'lda sinov bandlari, sovuq start, E2E, kod imzolash (to'xtab turibdi).
+- Testlar: UI 2 (5 qadam + saqlash; bo'limga o'tish, Esc, skip-link).
+
+**Build**
+
+- `pnpm build` (NSIS, x64): BUILD_RESULT
+
+**To'xtab turgan (tashqi shart)**
+
+- Kod imzolash sertifikati yo'q → o'rnatuvchi imzolanmagan (SmartScreen ogohlantirishi), imzolangan updater manifesti yo'q (`OPEN_QUESTIONS` 17).
+- Sovuq start o'lchovi va E2E — faqat haqiqiy mashinada; ro'yxatda bo'sh joy qoldirildi.
+- GUI sinovi (D10–D15) — dev bazaning test PIN'i sessiyada tiklanmagani uchun o'tkazilmadi; foydalanuvchi PIN'ni bergach yoki bazani zaxiralab qayta boshlagach har bo'lim bosib tekshiriladi.
+
 ### D14 — `.baraka` eksport/import (telefon ↔ desktop) (2026-10-15)
 
 **Qo'shildi**

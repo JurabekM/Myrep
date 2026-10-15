@@ -44,3 +44,16 @@ o'rnatuvchini haqiqiy Windows mashinasida sinashni talab qiladi.
 - [ ] `docs/CHANGELOG.md` shu reliz uchun yangilangan.
 - [ ] `docs/OPEN_QUESTIONS.md` — ochiq bandlar ko'rib chiqilgan (mahsulot qarorlari «Hal qilingan» bo'limida).
 - [ ] Ma'lum cheklovlar foydalanuvchiga aytilgan (CHANGELOG'dagi «Ma'lum cheklovlar» bo'limlari).
+
+## 7. D11–D15 qo'shimchalari
+
+- [ ] Onboarding: birinchi ochilishda 5 qadam ko'rinadi, «O'tkazib yuborish» va Esc ishlaydi, qayta ochilganda chiqmaydi (`localStorage: baraka.onboarding`).
+- [ ] Accessibility: `Tab` bilan birinchi fokus — «Asosiy mazmunga o'tish» havolasi; har bir tugma va maydon klaviaturadan yetib boriladi; fokus halqasi ko'rinadi.
+- [ ] Windows High Contrast (`forced-colors`): chegaralar va fokus ko'rinadi; `prefers-reduced-motion` da animatsiya yo'q; 125 %, 150 %, 200 % DPI da matn kesilmaydi, jadvallar gorizontal aylanadi.
+- [ ] Marosimlar: stsenariy taqqoslash, qarzli reja muhokamasiz tasdiqlanmaydi, smeta PDF ochiladi.
+- [ ] Sheriklik: darvoza yopiq — kapital kirituvchi yaratolmaydi; rozilik; buyout jadvali; kassa daftari davr yopish va taqsimot; davr hisoboti PDF.
+- [ ] Kelishuvlar markazi: jadval filtri, hodisa bandi, ko'rik sessiyasi va bayonnoma PDF (`chain_head`), nizo → taqsimot bloklanadi, hakam papkasi PDF (mundarija bor), oilaviy shablon PIN bilan.
+- [ ] `.baraka`: eksport → fayl bor; boshqa profilga import → ko'rik → qo'llash; noto'g'ri parol aniq xabar; jurnal fork ssenariysi (ikki qurilmada farqli yozuv) bloklanadi.
+- [ ] Sovuq start < 1,5 s (release): `e2e/README.md` dagi `Measure-Command` bilan o'lchab, natijani shu yerga yozing: ______ ms.
+- [ ] E2E (`e2e/anvar.e2e.ts`, tauri-driver): yashil — yoki qo'lda o'tilgani sana bilan qayd etilgan: ______.
+- [ ] Kod imzolash: sertifikat bo'lsa `bundle.windows.certificateThumbprint` (yoki `signCommand`) `tauri.conf.json` da; `signtool verify /pa` yashil; updater manifesti (`tauri-plugin-updater` kiritilganda) imzolangan. **Sertifikat yo'q — bu band to'xtab turibdi.**

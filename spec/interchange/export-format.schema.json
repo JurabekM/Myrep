@@ -11,7 +11,10 @@
     "schemaVersion": { "const": 1 },
     "exportedAt": { "type": "string", "description": "ISO 8601 vaqt (UTC)" },
     "deviceId": { "type": "string", "minLength": 1 },
-    "householdId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "householdId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
     "since": {
       "type": ["string", "null"],
       "description": "Inkremental eksport: faqat updated_at (yo'q bo'lsa created_at) shu vaqtdan keyingi yozuvlar; null — to'liq"
@@ -43,14 +46,39 @@
     "journalEntry": {
       "type": "object",
       "description": "Append-only jurnal yozuvi; hash = SHA256(prev_hash + \"\\n\" + JCS(entry)) (spec/test-vectors/journal_chain.json)",
-      "required": ["id", "household_id", "agreement_id", "seq", "kind", "party_id", "amount_minor", "currency", "entry_date", "prev_hash", "hash", "created_at", "origin_device_id"],
+      "required": [
+        "id",
+        "household_id",
+        "agreement_id",
+        "seq",
+        "kind",
+        "party_id",
+        "amount_minor",
+        "currency",
+        "entry_date",
+        "prev_hash",
+        "hash",
+        "created_at",
+        "origin_device_id"
+      ],
       "properties": {
         "id": { "type": "string" },
         "household_id": { "type": "string" },
         "agreement_id": { "type": "string" },
         "seq": { "type": "integer", "minimum": 1 },
         "kind": {
-          "enum": ["OPENING_BALANCE", "CONTRIBUTION", "PROFIT_DISTRIBUTION", "LOAN_PAYMENT", "CORRECTION", "VENTURE_INCOME", "VENTURE_EXPENSE", "FORCE_MAJEURE", "LOSS_DISTRIBUTION", "BUYOUT_PAYMENT"]
+          "enum": [
+            "OPENING_BALANCE",
+            "CONTRIBUTION",
+            "PROFIT_DISTRIBUTION",
+            "LOAN_PAYMENT",
+            "CORRECTION",
+            "VENTURE_INCOME",
+            "VENTURE_EXPENSE",
+            "FORCE_MAJEURE",
+            "LOSS_DISTRIBUTION",
+            "BUYOUT_PAYMENT"
+          ]
         },
         "party_id": { "type": "string", "minLength": 1 },
         "amount_minor": { "type": "integer", "minimum": 1 },

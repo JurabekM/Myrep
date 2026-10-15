@@ -4,13 +4,13 @@ Mobil va desktop uchun **umumiy**. DESKTOP_PROMPT.md 6.3, SPEC 2F.6.
 
 ## Konteyner (fayl baytlari)
 
-| Oraliq           | Uzunlik | Mazmun                                                   |
-| ---------------- | ------- | -------------------------------------------------------- |
-| 0–7              | 8       | magic `BARAKA01`                                         |
-| 8–19             | 12      | Argon2id parametrlari: `m_cost_kib`, `t_cost`, `p_cost` (u32 LE) |
-| 20–35            | 16      | tuz                                                      |
-| 36–59            | 24      | XChaCha20-Poly1305 nonce                                 |
-| 60…              | n+16    | shifrmatn + Poly1305 tegi                                |
+| Oraliq | Uzunlik | Mazmun                                                           |
+| ------ | ------- | ---------------------------------------------------------------- |
+| 0–7    | 8       | magic `BARAKA01`                                                 |
+| 8–19   | 12      | Argon2id parametrlari: `m_cost_kib`, `t_cost`, `p_cost` (u32 LE) |
+| 20–35  | 16      | tuz                                                              |
+| 36–59  | 24      | XChaCha20-Poly1305 nonce                                         |
+| 60…    | n+16    | shifrmatn + Poly1305 tegi                                        |
 
 - Kalit = Argon2id(parol UTF-8, trim qilingan; tuz; parametrlar) → 32 bayt. Tavsiya: 19 456 KiB, t=2, p=1.
 - AAD = birinchi 36 bayt (magic + parametrlar + tuz). Sarlavha o'zgartirilsa teg mos kelmaydi.

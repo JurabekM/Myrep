@@ -44,6 +44,9 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 35. **Almashishda xonadon identifikatori (D14).** `.baraka` importi yozuvlarni `id` bo'yicha moslaydi; xonadon (`households.id`) ikkala qurilmada bir xil deb olinadi — ya'ni ikkinchi qurilma birinchisining eksportidan boshlanadi. Har qurilma o'z xonadonini yaratgan bo'lsa, importdan keyin ikki xonadon paydo bo'ladi (ilova birinchisini ishlatadi). Xonadonlarni birlashtirish qoidasi kerakmi yoki «faqat eksportdan boshlash» talab qilinadimi? _Kerak: mobil D14 ekvivalenti oldidan._
 36. **Fayl tanlash dialogi (D14).** `.baraka` yo'li matn maydonida kiritiladi (dialog plugin yoqilmagan, 9-band). Foydalanuvchi uchun qulaymi yoki `tauri-plugin-dialog` + comctl32 manifest yechimi kerakmi? _Kerak: D15 dan keyingi birinchi reliz oldidan._
 
+37. **Kod imzolash sertifikati (D15).** Windows kod imzolash sertifikati (OV/EV) yo'q; imzolanmagan NSIS o'rnatuvchi SmartScreen ogohlantirishi bilan o'rnatiladi. Sertifikat kimdan va qachon olinadi? Kelgach: `tauri.conf.json` → `bundle.windows.certificateThumbprint` / `signCommand`, `tauri-plugin-updater` va imzolangan manifest. _Kerak: ommaviy relizdan oldin._
+38. **E2E muhiti (D15).** `e2e/anvar.e2e.ts` ssenariysi yozildi, lekin `tauri-driver` + Edge WebDriver bu mashinada o'rnatilmagan va `@wdio/*` dev-dependency qo'shilmagan (ADR 2-bo'limga qo'shimcha). Qaysi mashinada va qachon ishga tushiriladi? _Kerak: reliz oldidan; hozircha ro'yxatdagi qo'lda sinov bilan almashtiriladi._
+
 ## Hal qilingan
 
 - **MoneyParser (D4, 2026-10-14).** `money::parse_amount` mobil qoidalari bo'yicha: bo'sh joy, `_`, apostroflar, valyuta belgisi va so'zi; `money_parse.json` (16 vektor, shu jumladan xato holatlari). _(6-band)_

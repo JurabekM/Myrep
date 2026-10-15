@@ -1170,5 +1170,36 @@
     "fork": "Kelishuv {{agreement}}: zanjir {{seq}}-yozuvdan ayrilgan",
     "conflict": "{{table}} / {{id}}…: {{reason}} (mahalliy saqlandi)",
     "importPassword": "Import paroli"
+  },
+  "onboarding": {
+    "progress": "{{step}} / {{total}}",
+    "skip": "O'tkazib yuborish",
+    "finish": "Boshlash",
+    "welcome": {
+      "title": "Xush kelibsiz",
+      "body": "Baraka daftari — ribosiz shaxsiy va oilaviy moliya daftari. Ma'lumotlar faqat shu kompyuterda, server va akkaunt yo'q. Yetti qonun bo'yicha boblar «Boblar» bo'limida."
+    },
+    "income": {
+      "title": "Avval daromad",
+      "body": "Har daromadni kiring kuni yozing — naqd yoki karta, manbasi bilan. Daftar shundan boshlanadi: kirmagan pul hisoblanmaydi.",
+      "action": "Daromad kiritish"
+    },
+    "future": {
+      "title": "«Kelajagim» ulushi",
+      "body": "Har daromaddan avval o'zingizga ulush ajrating — «Kelajagim» ga. Qorovul zaxirasi 6 oylik zarur xarajatga yetguncha qarz va sheriklik darvozasi yopiq turadi.",
+      "action": "Kelajagimni ochish"
+    },
+    "expenses": {
+      "title": "Xarajat va havas",
+      "body": "Xarajatlar uch toifada: zarur, kerak, havas. Havas chegarasi oila bilan kelishiladi; sadaqa havas hisobiga kirmaydi. Oy oxirida audit — «Kimning puli?»",
+      "action": "Xarajatlarga o'tish"
+    },
+    "safety": {
+      "title": "Xavfsizlik va telefon",
+      "body": "Ctrl+L — darhol qulflash; Ctrl+Alt+B — tez xarajat oynasi. PIN unutilsa ma'lumotlar tiklanmaydi — uni xavfsiz saqlang. Telefon bilan almashish — Sozlamalar → .baraka fayli (parol bilan)."
+    }
+  },
+  "a11y": {
+    "skipToContent": "Asosiy mazmunga o'tish"
   }
 }

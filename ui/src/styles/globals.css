@@ -40,3 +40,61 @@
     outline-offset: 2px;
   }
 }
+
+/* Accessibility (D15): skip-link, High Contrast (forced-colors), kam harakat, yuqori kontrast. */
+@layer base {
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0.75rem;
+    z-index: 100;
+    border-radius: 0.5rem;
+    background: var(--color-accent);
+    color: var(--color-app);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .skip-link:focus {
+    left: 0.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    :root {
+      --color-border: #6f6d66;
+      --color-muted: #d9d6ca;
+      --color-subtle: #c2bfb3;
+    }
+  }
+
+  /* Windows High Contrast: tizim ranglari qo'llanadi; chegaralar va fokus ko'rinib turadi. */
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    button,
+    input,
+    select,
+    textarea,
+    [role="dialog"] > div,
+    section {
+      border: 1px solid ButtonText;
+    }
+
+    [role="progressbar"] > div {
+      background: Highlight;
+    }
+  }
+}
