@@ -52,7 +52,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { id: "future", icon: Sprout, enabled: true },
   { id: "budget", icon: Wallet, enabled: true },
   { id: "debts", icon: ScrollText, enabled: true },
-  { id: "ceremonies", icon: CalendarDays, enabled: false },
+  { id: "ceremonies", icon: CalendarDays, enabled: true },
   { id: "partnerships", icon: Briefcase, enabled: true },
   { id: "prices", icon: Tags, enabled: true },
   { id: "chapters", icon: BookOpen, enabled: true },

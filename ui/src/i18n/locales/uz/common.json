@@ -109,7 +109,8 @@
     "repaymentPlanRequired": "To'lash rejasi majburiy: to'lovlar soni kamida 1",
     "planMismatch": "Reja summasi qarzga teng emas",
     "splitNot100": "Ulushlar yig'indisi 100 % bo'lishi kerak",
-    "savingsBelowMinimum": "Jamg'arma ulushi kamida 1 % bo'lishi kerak"
+    "savingsBelowMinimum": "Jamg'arma ulushi kamida 1 % bo'lishi kerak",
+    "familyDiscussionRequired": "Qarzli reja uchun avval oilaviy muhokama o'tkaziladi"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -861,5 +862,75 @@
     "savingsPercent": "Jamg'arma, %",
     "savingsRule": "Yig'indi 100 % bo'lishi va jamg'arma kamida 1 % bo'lishi shart — aks holda saqlanmaydi.",
     "save": "Saqlash"
+  },
+  "ceremonies": {
+    "subtitle": "To'y va marosimlar — byudjet qatorlari, manbalar, stsenariylarni taqqoslash. Qarzsiz o'tkazish yo'li avval muhokama qilinadi.",
+    "quote": "«El uch kun gapiradi, to'rtinchi kuni o'z dardi bilan ovora bo'ladi.»",
+    "empty": "Hali marosim rejasi yo'q. Birinchisini quyida yarating.",
+    "noDate": "sana belgilanmagan",
+    "kind": {
+      "TOY": "To'y",
+      "BESHIK": "Beshik to'yi",
+      "SUNNAT": "Sunnat to'yi",
+      "MARAKA": "Ma'raka",
+      "OTHER": "Boshqa marosim"
+    },
+    "funding": {
+      "SAVINGS": "Jamg'arma",
+      "FAMILY": "Oila hissasi",
+      "EXPECTED_GIFTS": "Kutilayotgan to'yona",
+      "DEBT": "Qarz"
+    },
+    "status": {
+      "PLANNED": "rejalashtirilmoqda",
+      "CONFIRMED": "tasdiqlangan"
+    },
+    "cmp": {
+      "title": "Taqqoslash",
+      "size": "Hajmi",
+      "total": "Umumiy narx",
+      "debt": "Qarz qismi",
+      "payoff": "Qarzni to'lash muddati",
+      "alternative": "Shu pulga muqobil"
+    },
+    "sizeLine": "{{days}} kun, {{guests}} kishi",
+    "monthsValue": "{{months}} oy",
+    "monthsOfNeeds": "{{months}} oylik zarur xarajat",
+    "noIncomeData": "daromad ulushi yo'q",
+    "noNeedsData": "xarajat tarixi yo'q",
+    "chosen": "tanlangan",
+    "noLines": "Qator yo'q. Mehmonlar × narx, osh, xonanda, sarpo… qo'shing.",
+    "lineName": "Qator nomi",
+    "lineQuantity": "Miqdor",
+    "linePrice": "Birlik narxi",
+    "lineFunding": "Manba",
+    "addLine": "Qator qo'shish",
+    "remove": "O'chirish",
+    "removeLine": "{{name}} qatorini o'chirish",
+    "pdf": "Smeta PDF",
+    "pdfSaved": "PDF saqlandi: {{path}}",
+    "newScenario": "Yangi stsenariy (masalan, «3 kun, 200 kishi» yoki «1 kun, 100 kishi, ixcham»)",
+    "scenarioName": "Stsenariy nomi",
+    "guests": "Mehmonlar",
+    "days": "Kunlar",
+    "addScenario": "Stsenariy qo'shish",
+    "debtQuestion": "Buni qarzsiz qanday o'tkazamiz?",
+    "debtHint": "Qarz bilan moliyalashtiriladigan qator bor. Sanani tasdiqlashdan oldin oila bilan muhokama qiling: hajmni kamaytirish, muddatni surish yoki oila hissasini oshirish mumkinmi?",
+    "discussed": "Muhokama o'tkazilgan ✓",
+    "markDiscussed": "Oilaviy muhokama o'tkazildi",
+    "chooseScenario": "Tanlangan stsenariy",
+    "confirm": "Sanani tasdiqlash",
+    "confirmedNote": "Marosim tasdiqlangan: reja o'zgarmaydi.",
+    "goalTitle": "To'yona o'rniga jamg'arma",
+    "goalHint": "Yosh oila uchun maqsadli jamg'arma: mehmonlar sovg'a o'rniga shu maqsadga hissa qo'shadi (MVP'da virtual, havola keyinroq).",
+    "goalLine": "Maqsad: {{name}} — {{amount}}",
+    "goalName": "Maqsad nomi",
+    "goalTarget": "Maqsad summasi",
+    "saveGoal": "Maqsadni saqlash",
+    "newTitle": "Yangi marosim",
+    "kindLabel": "Turi",
+    "titleLabel": "Nomi",
+    "dateLabel": "Sana",
+    "create": "Reja yaratish"
   }
 }

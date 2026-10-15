@@ -1526,3 +1526,153 @@ mod tests {
         assert_eq!(percent.fixed_amount, None);
     }
 }
+
+/// Marosimlar sahifasi (D11).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CeremoniesDto {
+    /// Marosimlar (yaratilish tartibida).
+    pub items: Vec<CeremonyDto>,
+}
+
+/// Marosim rejasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyDto {
+    /// Identifikator.
+    pub id: String,
+    /// Turi: `TOY | BESHIK | SUNNAT | MARAKA | OTHER`.
+    pub kind: String,
+    /// Nomi.
+    pub title: String,
+    /// Sana (`YYYY-MM-DD`), bo'lmasligi mumkin.
+    pub event_on: Option<String>,
+    /// `PLANNED | CONFIRMED`.
+    pub status: String,
+    /// Oilaviy muhokama o'tkazilganmi.
+    pub family_discussed: bool,
+    /// Tanlangan stsenariy.
+    pub chosen_scenario_id: Option<String>,
+    /// Jamg'arma maqsadi nomi (to'yona o'rniga).
+    pub goal_name: Option<String>,
+    /// Maqsad summasi.
+    pub goal_target: Option<MoneyDto>,
+    /// Biror stsenariyda qarz manbasi bormi.
+    pub has_debt: bool,
+    /// Stsenariylar (taqqoslash uchun).
+    pub scenarios: Vec<ScenarioDto>,
+}
+
+/// Marosim stsenariysi (hisoblangan ko'rsatkichlar bilan).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ScenarioDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Mehmonlar soni.
+    pub guests: u32,
+    /// Kunlar soni.
+    pub days: u32,
+    /// Byudjet qatorlari.
+    pub lines: Vec<CeremonyLineDto>,
+    /// Umumiy narx.
+    pub total: MoneyDto,
+    /// Qarz bilan qoplanadigan qism.
+    pub debt_part: MoneyDto,
+    /// Jamg'armadan.
+    pub savings_part: MoneyDto,
+    /// Oila hissasi.
+    pub family_part: MoneyDto,
+    /// Kutilayotgan to'yona.
+    pub gifts_part: MoneyDto,
+    /// Qarz manbasi bormi.
+    pub has_debt: bool,
+    /// Qarz qismini 70/20/10 «qarz» ulushi bilan to'lash muddati (oy); ulush 0 bo'lsa — yo'q.
+    pub payoff_months: Option<u32>,
+    /// Shu pulga necha oylik zarur xarajat chiqadi (muqobil maqsad); ma'lumot bo'lmasa — yo'q.
+    pub months_of_needs: Option<u32>,
+}
+
+/// Byudjet qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyLineDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Miqdor.
+    pub quantity: u32,
+    /// Birlik narxi.
+    pub unit_price: MoneyDto,
+    /// Manba: `SAVINGS | FAMILY | EXPECTED_GIFTS | DEBT`.
+    pub funding: String,
+    /// Qator jami.
+    pub total: MoneyDto,
+}
+
+/// Yangi marosim.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyInputDto {
+    /// Turi.
+    pub kind: String,
+    /// Nomi.
+    pub title: String,
+    /// Sana (`YYYY-MM-DD`), ixtiyoriy.
+    pub event_on: Option<String>,
+}
+
+/// Yangi stsenariy.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ScenarioInputDto {
+    /// Marosim.
+    pub ceremony_id: String,
+    /// Nomi.
+    pub name: String,
+    /// Mehmonlar soni.
+    pub guests: u32,
+    /// Kunlar soni.
+    pub days: u32,
+}
+
+/// Yangi byudjet qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyLineInputDto {
+    /// Stsenariy.
+    pub scenario_id: String,
+    /// Nomi.
+    pub name: String,
+    /// Miqdor.
+    pub quantity: u32,
+    /// Birlik narxi matni.
+    pub unit_price: String,
+    /// Manba.
+    pub funding: String,
+}
+
+/// Tasdiqlash: tanlangan stsenariy bilan.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfirmCeremonyInputDto {
+    /// Marosim.
+    pub id: String,
+    /// Tanlangan stsenariy.
+    pub scenario_id: String,
+}
+
+/// To'yona o'rniga jamg'arma maqsadi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyGoalInputDto {
+    /// Marosim.
+    pub id: String,
+    /// Maqsad nomi.
+    pub name: String,
+    /// Summa matni.
+    pub target: String,
+}

@@ -7,6 +7,8 @@ mod agreement_commands;
 mod agreements;
 mod budget;
 mod budget_commands;
+mod ceremonies;
+mod ceremony_commands;
 mod commands;
 mod content;
 mod content_commands;
@@ -135,6 +137,15 @@ fn specta_builder() -> Builder<tauri::Wry> {
         payoff_commands::simulate_payoff,
         payoff_commands::get_recovery,
         payoff_commands::set_recovery,
+        ceremony_commands::get_ceremonies,
+        ceremony_commands::create_ceremony,
+        ceremony_commands::add_ceremony_scenario,
+        ceremony_commands::add_ceremony_line,
+        ceremony_commands::remove_ceremony_line,
+        ceremony_commands::discuss_ceremony,
+        ceremony_commands::confirm_ceremony,
+        ceremony_commands::set_ceremony_goal,
+        ceremony_commands::create_ceremony_pdf,
     ])
 }
 

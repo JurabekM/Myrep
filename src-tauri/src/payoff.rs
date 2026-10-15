@@ -153,6 +153,13 @@ fn recovery_dto(db: &Database, ctx: &Context) -> Result<RecoveryDto, SessionErro
     })
 }
 
+/// Shu oy daromadining uch qismi (ehtiyoj, qarz, jamg'arma) — boshqa xizmatlar uchun.
+pub(crate) fn split_parts(db: &Database, ctx: &Context) -> Result<[Money; 3], SessionError> {
+    let split = stored_split(db, ctx)?;
+    let income = month_income(db, ctx)?;
+    Ok(recovery_split(income, split)?)
+}
+
 /// Rejim va taqsimot (shu oy daromadi bo'yicha qismlar).
 pub fn recovery(db: &Database, now: OffsetDateTime) -> Result<RecoveryDto, SessionError> {
     let ctx = finance::context(db, now)?;

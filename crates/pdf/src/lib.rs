@@ -15,8 +15,10 @@ use typst::{Library, World};
 
 /// Bayonnoma shrifti. Libertinus Serif ʻ (U+02BB) va ʼ (U+02BC) belgilarini o'z ichiga oladi (testlangan).
 mod agreement;
+mod estimate;
 
 pub use agreement::AgreementDocument;
+pub use estimate::CeremonyEstimate;
 
 pub const FONT_FAMILY: &str = "Libertinus Serif";
 
@@ -63,6 +65,14 @@ pub fn render_council_report(report: &CouncilReport) -> Result<Vec<u8>, PdfError
 /// Kelishuv hujjatini PDF baytlariga aylantiradi.
 pub fn render_agreement(document: &AgreementDocument) -> Result<Vec<u8>, PdfError> {
     let world = ReportWorld::new(agreement::template(document));
+    let warned = typst::compile::<PagedDocument>(&world);
+    let document = warned.output.map_err(|_| PdfError::Compile)?;
+    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)
+}
+
+/// Marosim smetasini PDF baytlariga aylantiradi.
+pub fn render_estimate(estimate: &CeremonyEstimate) -> Result<Vec<u8>, PdfError> {
+    let world = ReportWorld::new(estimate::template(estimate));
     let warned = typst::compile::<PagedDocument>(&world);
     let document = warned.output.map_err(|_| PdfError::Compile)?;
     typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)

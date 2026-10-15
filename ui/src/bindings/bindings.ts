@@ -187,6 +187,24 @@ export const commands = {
 	getRecovery: () => typedError<RecoveryDto, ApiError>(__TAURI_INVOKE("get_recovery")),
 	/**  Rejim va ulushlarni saqlaydi. */
 	setRecovery: (input: RecoveryInputDto) => typedError<RecoveryDto, ApiError>(__TAURI_INVOKE("set_recovery", { input })),
+	/**  Marosimlar sahifasi. */
+	getCeremonies: () => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("get_ceremonies")),
+	/**  Yangi marosim. */
+	createCeremony: (input: CeremonyInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("create_ceremony", { input })),
+	/**  Stsenariy qo'shadi. */
+	addCeremonyScenario: (input: ScenarioInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("add_ceremony_scenario", { input })),
+	/**  Byudjet qatori qo'shadi. */
+	addCeremonyLine: (input: CeremonyLineInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("add_ceremony_line", { input })),
+	/**  Qatorni o'chiradi. */
+	removeCeremonyLine: (lineId: string) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("remove_ceremony_line", { lineId })),
+	/**  Oilaviy muhokama o'tkazilganini qayd etadi. */
+	discussCeremony: (id: string) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("discuss_ceremony", { id })),
+	/**  Tasdiqlaydi (tanlangan stsenariy bilan). */
+	confirmCeremony: (input: ConfirmCeremonyInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("confirm_ceremony", { input })),
+	/**  To'yona o'rniga jamg'arma maqsadi. */
+	setCeremonyGoal: (input: CeremonyGoalInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("set_ceremony_goal", { input })),
+	/**  Smeta PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
+	createCeremonyPdf: (id: string, scenarioId: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_ceremony_pdf", { id, scenarioId })),
 };
 
 /* Types */
@@ -446,6 +464,88 @@ export type CategorySpentDto = {
 	amount: MoneyDto,
 };
 
+/**  Marosimlar sahifasi (D11). */
+export type CeremoniesDto = {
+	/**  Marosimlar (yaratilish tartibida). */
+	items: CeremonyDto[],
+};
+
+/**  Marosim rejasi. */
+export type CeremonyDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Turi: `TOY | BESHIK | SUNNAT | MARAKA | OTHER`. */
+	kind: string,
+	/**  Nomi. */
+	title: string,
+	/**  Sana (`YYYY-MM-DD`), bo'lmasligi mumkin. */
+	eventOn: string | null,
+	/**  `PLANNED | CONFIRMED`. */
+	status: string,
+	/**  Oilaviy muhokama o'tkazilganmi. */
+	familyDiscussed: boolean,
+	/**  Tanlangan stsenariy. */
+	chosenScenarioId: string | null,
+	/**  Jamg'arma maqsadi nomi (to'yona o'rniga). */
+	goalName: string | null,
+	/**  Maqsad summasi. */
+	goalTarget: MoneyDto | null,
+	/**  Biror stsenariyda qarz manbasi bormi. */
+	hasDebt: boolean,
+	/**  Stsenariylar (taqqoslash uchun). */
+	scenarios: ScenarioDto[],
+};
+
+/**  To'yona o'rniga jamg'arma maqsadi. */
+export type CeremonyGoalInputDto = {
+	/**  Marosim. */
+	id: string,
+	/**  Maqsad nomi. */
+	name: string,
+	/**  Summa matni. */
+	target: string,
+};
+
+/**  Yangi marosim. */
+export type CeremonyInputDto = {
+	/**  Turi. */
+	kind: string,
+	/**  Nomi. */
+	title: string,
+	/**  Sana (`YYYY-MM-DD`), ixtiyoriy. */
+	eventOn: string | null,
+};
+
+/**  Byudjet qatori. */
+export type CeremonyLineDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Miqdor. */
+	quantity: number,
+	/**  Birlik narxi. */
+	unitPrice: MoneyDto,
+	/**  Manba: `SAVINGS | FAMILY | EXPECTED_GIFTS | DEBT`. */
+	funding: string,
+	/**  Qator jami. */
+	total: MoneyDto,
+};
+
+/**  Yangi byudjet qatori. */
+export type CeremonyLineInputDto = {
+	/**  Stsenariy. */
+	scenarioId: string,
+	/**  Nomi. */
+	name: string,
+	/**  Miqdor. */
+	quantity: number,
+	/**  Birlik narxi matni. */
+	unitPrice: string,
+	/**  Manba. */
+	funding: string,
+};
+
 /**  Kanal (DTO): naqd yoki karta. */
 export type ChannelDto = 
 /**  Naqd pul. */
@@ -501,6 +601,14 @@ export type CompletenessDto = {
 	missing: number[],
 	/**  Xato kodlari. */
 	errors: string[],
+};
+
+/**  Tasdiqlash: tanlangan stsenariy bilan. */
+export type ConfirmCeremonyInputDto = {
+	/**  Marosim. */
+	id: string,
+	/**  Tanlangan stsenariy. */
+	scenarioId: string,
 };
 
 /**  Bob bloki. Diniy blok release'da faqat tasdiqlangan holda keladi (`approved` har doim `true`). */
@@ -1237,6 +1345,48 @@ export type SaveAnswersInputDto = {
 	version: number,
 	/**  Javoblar. */
 	answers: AgreementAnswersDto,
+};
+
+/**  Marosim stsenariysi (hisoblangan ko'rsatkichlar bilan). */
+export type ScenarioDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Mehmonlar soni. */
+	guests: number,
+	/**  Kunlar soni. */
+	days: number,
+	/**  Byudjet qatorlari. */
+	lines: CeremonyLineDto[],
+	/**  Umumiy narx. */
+	total: MoneyDto,
+	/**  Qarz bilan qoplanadigan qism. */
+	debtPart: MoneyDto,
+	/**  Jamg'armadan. */
+	savingsPart: MoneyDto,
+	/**  Oila hissasi. */
+	familyPart: MoneyDto,
+	/**  Kutilayotgan to'yona. */
+	giftsPart: MoneyDto,
+	/**  Qarz manbasi bormi. */
+	hasDebt: boolean,
+	/**  Qarz qismini 70/20/10 «qarz» ulushi bilan to'lash muddati (oy); ulush 0 bo'lsa — yo'q. */
+	payoffMonths: number | null,
+	/**  Shu pulga necha oylik zarur xarajat chiqadi (muqobil maqsad); ma'lumot bo'lmasa — yo'q. */
+	monthsOfNeeds: number | null,
+};
+
+/**  Yangi stsenariy. */
+export type ScenarioInputDto = {
+	/**  Marosim. */
+	ceremonyId: string,
+	/**  Nomi. */
+	name: string,
+	/**  Mehmonlar soni. */
+	guests: number,
+	/**  Kunlar soni. */
+	days: number,
 };
 
 /**  Jadval (odatiy yoki tezlashtirilgan). */

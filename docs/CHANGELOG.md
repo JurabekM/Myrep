@@ -4,6 +4,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D11 — Marosim rejalovchisi (2026-10-15)
+
+**Qo'shildi**
+
+- Sxema v12: `ceremonies` (tur, nom, sana, holat, oilaviy muhokama, tanlangan stsenariy, jamg'arma maqsadi), `ceremony_scenarios`, `ceremony_lines` (miqdor × birlik narxi, manba `SAVINGS | FAMILY | EXPECTED_GIFTS | DEBT`). Repo: `crates/storage/src/ceremonies.rs`.
+- Xizmat (`src-tauri/src/ceremonies.rs`) va 9 command: `get_ceremonies`, `create_ceremony`, `add_ceremony_scenario`, `add_ceremony_line`, `remove_ceremony_line`, `discuss_ceremony`, `confirm_ceremony`, `set_ceremony_goal`, `create_ceremony_pdf`. Tasdiqlash domen `ceremony::confirm` orqali — qarz qatori bo'lsa muhokamasiz `CONFIRMED` bo'lmaydi (`FAMILY_DISCUSSION_REQUIRED`). Tasdiqlangan reja o'zgarmaydi (`AGREEMENT_LOCKED` kodi qayta ishlatildi).
+- Stsenariylarni taqqoslash: umumiy narx, qarz qismi, **qarzni to'lash muddati** (qarz qismi ÷ 70/20/10 «qarz» ulushi — D10 `split_parts`), **muqobil** (shu pulga necha oylik zarur xarajat — D8 `monthly_essentials`).
+- Smeta PDF: `crates/pdf/src/estimate.rs` (`CeremonyEstimate`, `render_estimate`) + snapshot `tests/snapshots/estimate.pdf`; fayl `reports/smeta-*.pdf`.
+- UI: «Marosimlar» sahifasi (yon panelda yoqildi — endi barcha bo'limlar faol): taqqoslash jadvali, stsenariy bloklari (qatorlar, qo'shish/o'chirish, PDF), «Buni qarzsiz qanday o'tkazamiz?» bloki, tasdiqlash, to'yona o'rniga jamg'arma maqsadi, yangi marosim formasi; «El uch kun gapiradi…» matni.
+- Testlar: Tauri 4 (taqqoslash, muhokamasiz tasdiq rad, qarzsiz darhol tasdiq + PDF, maqsad/o'chirish), storage sxema v12, PDF 2, UI 2.
+
+**Qarorlar**
+
+- «Oila kengashi rejimi» — alohida ekran emas: muhokama tugmasi + izoh (D4 kengash bayonnomasi bilan bog'lash keyingi bosqichga).
+- «Qolgan ulushlar bo'yicha payoff D10 simulyatori bilan» — qarz qismi uchun oddiy bo'linma (foizsiz), chunki oilaviy qarz ustamasiz; ustamali qarz uchun foydalanuvchi D10 rejalashtiruvchisini qo'lda ishlatadi.
+- `Goal` MVP'da virtual: nom + summa; ulashiladigan havola yo'q (SPEC shunday deydi).
+
+**Ma'lum cheklovlar**
+
+- GUI sinovi — D10 dagi sabab (PIN) tufayli kutilmoqda.
+
 ### D10 — Payoff rejalashtiruvchisi, 70/20/10, «Qarzsiz kun» (2026-10-15)
 
 **Qo'shildi**

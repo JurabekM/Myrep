@@ -9,6 +9,7 @@ mod db;
 mod error;
 mod family;
 mod finance;
+mod ceremonies;
 mod loans;
 mod prices;
 mod progress;
@@ -26,6 +27,7 @@ pub use finance::{
     CategoryRepo, DebtRepo, ExpenseRepo, IncomeRepo, ObligationRepo, ReportRepo, RuleRepo,
     StoredRule, VaultRepo,
 };
+pub use ceremonies::{CeremonyRepo, CeremonyRow, LineRow, ScenarioRow};
 pub use loans::{LoanDirection, LoanRepo, LoanRow, PaymentRow};
 pub use prices::PriceRepo;
 pub use progress::{DaftarPageRepo, TaskCompletionRepo};

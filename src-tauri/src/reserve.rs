@@ -22,7 +22,7 @@ const FIRST_TARGET_MONTHS: i64 = 3;
 const LOOKBACK_MONTHS: usize = 12;
 
 /// O'tgan oylarning `ZARUR + KERAK` jami, eng eskidan yangigacha (joriy oy kirmaydi).
-fn monthly_essentials(db: &Database, ctx: &Context) -> Result<Vec<Money>, SessionError> {
+pub(crate) fn monthly_essentials(db: &Database, ctx: &Context) -> Result<Vec<Money>, SessionError> {
     let repo = ExpenseRepo::new(db.connection());
     let mut period =
         month_of(ctx.today, ctx.household.month_start_day).ok_or(DomainError::InvalidDay)?;

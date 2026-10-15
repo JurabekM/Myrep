@@ -67,22 +67,17 @@ describe("Baraka daftari ilova qobig'i", () => {
     expect(screen.getByText("Reliz")).toBeInTheDocument();
   });
 
-  it("faol bo'lmagan bo'lim bosilmaydi va sababi tooltip'da ko'rsatiladi", async () => {
+  it("barcha bo'limlar faol: «Marosimlar» (D11) ochiladi", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // «Marosimlar» hali tayyor emas (D11); «Qarzlar» D9 da ochildi.
-    const expensesButton = await screen.findByRole("button", { name: "Marosimlar" });
-    expect(expensesButton).toHaveAttribute("aria-disabled", "true");
-
-    // Avval sabab ko'rinadi (hover), keyin bosish sinaladi: bosilgach tooltip qayta ochilmaydi (Radix xulqi).
-    await user.hover(expensesButton);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Bu boʻlim keyingi bosqichda qoʻshiladi",
-    );
-
-    await user.click(expensesButton);
-    expect(screen.getByRole("heading", { level: 1, name: UZ_GREETING })).toBeInTheDocument();
+    // D11 bilan yon paneldagi oxirgi bo'lim ham ochildi — hech bir tugma aria-disabled emas.
+    const ceremoniesButton = await screen.findByRole("button", { name: "Marosimlar" });
+    expect(ceremoniesButton).not.toHaveAttribute("aria-disabled", "true");
+    await user.click(ceremoniesButton);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Marosimlar" }),
+    ).toBeInTheDocument();
   });
 
   it("sozlamalar ochiladi va tilni almashtirish darhol qo'llanadi", async () => {

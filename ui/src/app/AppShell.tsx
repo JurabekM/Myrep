@@ -11,6 +11,7 @@ import { IncomePage } from "./pages/IncomePage";
 import { ObligationsPage } from "./pages/ObligationsPage";
 import { PricesPage } from "./pages/PricesPage";
 import { AgreementsPage } from "./agreements/AgreementsPage";
+import { CeremoniesPage } from "./ceremonies/CeremoniesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { VaultPage } from "./pages/VaultPage";
 import { WhoseMoneyPage } from "./pages/WhoseMoneyPage";
@@ -103,6 +104,8 @@ function CurrentPage({ page }: { page: PageId }) {
       return <AgreementsPage />;
     case "debts":
       return <DebtsPage />;
+    case "ceremonies":
+      return <CeremoniesPage />;
     case "settings":
       return <SettingsPage />;
     default:

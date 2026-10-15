@@ -44,6 +44,7 @@ export const RULE_ERROR_KEYS = {
   PLAN_MISMATCH: "errors.planMismatch",
   SPLIT_NOT_100_PERCENT: "errors.splitNot100",
   SAVINGS_BELOW_MINIMUM: "errors.savingsBelowMinimum",
+  FAMILY_DISCUSSION_REQUIRED: "errors.familyDiscussionRequired",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

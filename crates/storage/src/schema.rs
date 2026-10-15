@@ -571,6 +571,51 @@ CREATE TABLE loan_payments (
 CREATE INDEX loan_payments_by_loan ON loan_payments (loan_id);
 "#;
 
+pub const SCHEMA_V12: &str = r#"
+CREATE TABLE ceremonies (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    kind TEXT NOT NULL CHECK (kind IN ('TOY', 'BESHIK', 'SUNNAT', 'MARAKA', 'OTHER')),
+    title TEXT NOT NULL CHECK (length(trim(title)) > 0),
+    event_on TEXT,
+    status TEXT NOT NULL CHECK (status IN ('PLANNED', 'CONFIRMED')),
+    family_discussed INTEGER NOT NULL DEFAULT 0 CHECK (family_discussed IN (0, 1)),
+    chosen_scenario_id TEXT,
+    goal_name TEXT,
+    goal_target_minor INTEGER CHECK (goal_target_minor IS NULL OR goal_target_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX ceremonies_by_household ON ceremonies (household_id);
+
+CREATE TABLE ceremony_scenarios (
+    id TEXT PRIMARY KEY NOT NULL,
+    ceremony_id TEXT NOT NULL REFERENCES ceremonies (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    guests INTEGER NOT NULL CHECK (guests >= 0),
+    days INTEGER NOT NULL CHECK (days >= 1),
+    seq INTEGER NOT NULL CHECK (seq >= 1),
+    created_at TEXT NOT NULL
+) STRICT;
+CREATE INDEX ceremony_scenarios_by_ceremony ON ceremony_scenarios (ceremony_id);
+
+CREATE TABLE ceremony_lines (
+    id TEXT PRIMARY KEY NOT NULL,
+    scenario_id TEXT NOT NULL REFERENCES ceremony_scenarios (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_minor INTEGER NOT NULL CHECK (unit_minor >= 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    funding TEXT NOT NULL CHECK (funding IN ('SAVINGS', 'FAMILY', 'EXPECTED_GIFTS', 'DEBT')),
+    seq INTEGER NOT NULL CHECK (seq >= 1)
+) STRICT;
+CREATE INDEX ceremony_lines_by_scenario ON ceremony_lines (scenario_id);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -585,6 +630,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V9),
         M::up(SCHEMA_V10),
         M::up(SCHEMA_V11),
+        M::up(SCHEMA_V12),
     ])
 }
 
@@ -621,4 +667,7 @@ pub const TABLES: &[&str] = &[
     "loans",
     "loan_installments",
     "loan_payments",
+    "ceremonies",
+    "ceremony_scenarios",
+    "ceremony_lines",
 ];
