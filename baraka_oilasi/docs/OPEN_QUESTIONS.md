@@ -41,6 +41,12 @@
 - **Taklif:** ixtiyoriy, anonim, foydalanuvchi o'zi yuboradigan oylik «odat hisoboti» + test guruhi bilan intervyular.
 - **To'sadi:** U15. **Holat:** OCHIQ.
 
+### OQ-P8. «To'xta va o'yla»: oylik qarz yukining chegarasi va ta'rifi
+- **Masala:** SPEC 2D.6 yukni so'raydi, lekin chegara bermaydi. Oylik yuk qanday hisoblanadi?
+- **Hozirgi standart (U8):** yuk = shu oy davridagi reja to'lovlari / oylik daromad (oxirgi 3 to'liq oy o'rtachasi, u 0 bo'lsa — shu oy). Yangi qarz uchun: joriy yuk + yangi rejaning o'rtacha to'lovi. **30% dan oshsa** — ogohlantirish (`LOAD_HIGH_BP`). Taqiqlamaydi.
+- **Savol:** 30% to'g'rimi (bank amaliyotida 50% gacha)? Birinchi to'lovi keyingi oyda bo'lgan qarz shu oy yukida 0 ko'rinadi — «keyingi 30 kun» ta'rifi yaxshiroqmi?
+- **To'sadi:** U9 (DEBT_RECOVERY rejimi taklifi). **Holat:** OCHIQ.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik

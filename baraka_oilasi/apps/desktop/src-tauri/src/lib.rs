@@ -50,6 +50,15 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::simulate_loan,
             commands::check_agreement,
             commands::export_loan_receipt,
+            commands::debts_overview,
+            commands::preview_borrow_check,
+            commands::add_debt,
+            commands::add_receivable,
+            commands::record_repayment,
+            commands::add_goal,
+            commands::delete_goal,
+            commands::issue_loan_receipt,
+            commands::export_agreement_receipt,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }
@@ -110,5 +119,27 @@ mod tests {
     fn export_bindings() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../ui/src/bindings.ts");
         assert_eq!(super::export_bindings(&path), Ok(()));
+    }
+
+    /// Frontend chaqira oladigan har bir command `build.rs` ro'yxatida va `capabilities/main.json`
+    /// ruxsatlarida bo'lishi shart — aks holda ilova ichida «ruxsat yo'q» xatosi chiqadi.
+    #[test]
+    fn every_command_is_permitted() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let read = |p: &str| std::fs::read_to_string(dir.join(p)).unwrap_or_default();
+        let bindings = read("../ui/src/bindings.ts");
+        let invoked: std::collections::BTreeSet<String> = bindings
+            .split("__TAURI_INVOKE(\"")
+            .skip(1)
+            .filter_map(|s| s.split('"').next().map(str::to_string))
+            .collect();
+        assert!(!invoked.is_empty());
+        let build = read("build.rs");
+        let caps = read("capabilities/main.json");
+        for c in &invoked {
+            assert!(build.contains(&format!("\"{c}\"")), "build.rs: {c}");
+            let perm = format!("\"allow-{}\"", c.replace('_', "-"));
+            assert!(caps.contains(&perm), "capabilities/main.json: {c}");
+        }
     }
 }

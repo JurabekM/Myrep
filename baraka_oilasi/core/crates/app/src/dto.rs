@@ -353,3 +353,246 @@ pub struct LoanReceiptInput {
     pub witnesses: Vec<String>,
     pub note: Option<String>,
 }
+
+/// «To'xta va o'yla» javoblari (uy/SPEC 2D.6).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BorrowCheckInput {
+    /// `NECESSITY` yoki `LUXURY`.
+    pub need: String,
+    /// Mavjud foizsiz muqobillar: `QOROVUL`, `RELATIVE`, `SELL_ITEM`.
+    pub alternatives: Vec<String>,
+}
+
+/// Olingan qarz (inventar). Reja turi bo'yicha: `ANNUITY`/`DIFFERENTIATED` — `annualBp` va `months`,
+/// `FIXED_MARKUP` — `markup` va `months`, `MANUAL` — `schedule` (yig'indisi = summa + ustama).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewDebtInput {
+    /// `BANK`, `SHOP`, `RELATIVE`, `FRIEND`, `OTHER`.
+    pub creditor_type: String,
+    pub creditor: String,
+    pub reason: Option<String>,
+    pub currency: String,
+    /// Reja tuzilayotgan summa (hozirgi qoldiq).
+    pub principal: String,
+    /// Dastlab olingan summa (haqiqiy narx uchun); bo'lmasa — `principal`.
+    pub original_principal: Option<String>,
+    /// Ilovaga kiritilgunga qadar to'langan.
+    pub paid_before: Option<String>,
+    pub plan_kind: String,
+    pub annual_bp: Option<i32>,
+    pub markup: Option<String>,
+    pub months: Option<u32>,
+    /// Bank turlarida — birinchi to'lov sanasi; `MANUAL` da — qarz boshlangan sana. Bo'lmasa — bugun.
+    pub first_date: Option<String>,
+    pub schedule: Vec<ScheduleLineInput>,
+    pub early_repayment_terms: Option<String>,
+    /// Yangi olinayotgan qarz: «to'xta va o'yla» javoblari majburiy.
+    pub is_new: bool,
+    pub borrow_check: Option<BorrowCheckInput>,
+}
+
+/// Bergan qarz. **Foiz yoki ustama maydoni yo'q**: noma'lum maydon (masalan `interestBp`) rad etiladi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NewReceivableInput {
+    pub debtor: String,
+    pub currency: String,
+    pub amount: String,
+    pub lent_on: Option<String>,
+    /// Qaytarish rejasi majburiy; yig'indisi aynan summaga teng.
+    pub schedule: Vec<ScheduleLineInput>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct RepaymentInput {
+    pub amount: String,
+    /// Bo'lmasa — bugun.
+    pub date: Option<String>,
+    /// Rejadan tashqari (muddatidan oldin) to'lov.
+    pub is_prepayment: bool,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewGoalInput {
+    pub title: String,
+    pub target: String,
+    pub currency: String,
+}
+
+/// Tilxat yozish va saqlash: `Agreement(type = LOAN)` + jurnal + qarz yoki bergan qarz yozuvi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IssueLoanReceiptInput {
+    /// `BORROWED` (men oldim) yoki `LENT` (men berdim).
+    pub direction: String,
+    /// `BORROWED` da kreditor turi: `RELATIVE`, `FRIEND` yoki `OTHER` (standart — `FRIEND`).
+    pub creditor_type: Option<String>,
+    pub reason: Option<String>,
+    pub receipt: LoanReceiptInput,
+    pub is_new: bool,
+    pub borrow_check: Option<BorrowCheckInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IssuedReceiptDto {
+    pub agreement_id: String,
+    /// `DEBT` yoki `RECEIVABLE`.
+    pub record_type: String,
+    pub record_id: String,
+    pub short_code: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PlanLineDto {
+    /// `YYYY-MM-DD`.
+    pub date: String,
+    pub amount: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct RepaymentDto {
+    pub id: String,
+    pub amount: MoneyDto,
+    pub date: String,
+    pub is_prepayment: bool,
+    pub note: Option<String>,
+    /// Tilxatga bog'langan bo'lsa — jurnal yozuvining qisqa kodi.
+    pub journal_short_code: Option<String>,
+}
+
+/// Reja bo'yicha holat: keyingi to'lov, kechikkan summa, qoldiq, eslatma.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PlanStatusDto {
+    pub paid: MoneyDto,
+    pub remaining: MoneyDto,
+    pub next_due: Option<PlanLineDto>,
+    pub overdue: MoneyDto,
+    pub payoff_date: Option<String>,
+    /// `DUE_SOON` yoki `OVERDUE`.
+    pub reminder: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GoalEquivalentDto {
+    pub goal_id: String,
+    pub title: String,
+    /// Ortiqcha to'lov maqsadning necha foiziga teng: `45`, `250`.
+    pub percent: String,
+}
+
+/// Qarzning haqiqiy narxi (uy/SPEC 2D.3).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct TrueCostDto {
+    pub original_principal: MoneyDto,
+    pub total_cost: MoneyDto,
+    pub overpay: MoneyDto,
+    pub overpay_percent: String,
+    pub goal_equivalents: Vec<GoalEquivalentDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DebtDto {
+    pub id: String,
+    pub creditor_type: String,
+    pub creditor: String,
+    pub reason: Option<String>,
+    pub plan_kind: String,
+    /// Foizli yoki ustamali — qizil bayroq.
+    pub is_ribo: bool,
+    pub annual_bp: i32,
+    pub status: String,
+    pub principal: MoneyDto,
+    pub true_cost: TrueCostDto,
+    pub status_info: PlanStatusDto,
+    pub plan: Vec<PlanLineDto>,
+    pub payments: Vec<RepaymentDto>,
+    pub early_repayment_terms: Option<String>,
+    pub borrow_warnings: Vec<String>,
+    pub agreement_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReceivableDto {
+    pub id: String,
+    pub debtor: String,
+    pub amount: MoneyDto,
+    pub lent_on: String,
+    pub note: Option<String>,
+    pub status: String,
+    pub status_info: PlanStatusDto,
+    pub plan: Vec<PlanLineDto>,
+    pub payments: Vec<RepaymentDto>,
+    pub agreement_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GoalDto {
+    pub id: String,
+    pub title: String,
+    pub target: MoneyDto,
+}
+
+/// Qarzlar ekrani: «yaraning hajmi» (uy/SPEC 2C.7).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DebtsOverviewDto {
+    pub debts: Vec<DebtDto>,
+    pub receivables: Vec<ReceivableDto>,
+    /// Faol qarzlar qoldig'i, valyuta bo'yicha (asosiy valyuta birinchi).
+    pub total_debt: Vec<MoneyDto>,
+    pub total_receivable: Vec<MoneyDto>,
+    /// Shu oy davridagi reja to'lovlari (asosiy valyutada).
+    pub monthly_due: MoneyDto,
+    /// Oylik yuk hisobidagi daromad: oxirgi 3 to'liq oy o'rtachasi, bo'lmasa — shu oy.
+    pub monthly_income: Option<MoneyDto>,
+    pub load_percent: Option<String>,
+    pub load_high: bool,
+    /// Boshqa valyutadagi qarzlar oylik yukka kirmagan.
+    pub load_excludes_foreign: bool,
+    pub has_ribo_debt: bool,
+    pub goals: Vec<GoalDto>,
+}
+
+/// «To'xta va o'yla» natijasi: taqiqlamaydi, ko'rsatadi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BorrowCheckDto {
+    pub is_ribo: bool,
+    pub projected_load_percent: Option<String>,
+    /// `RIBO`, `LUXURY`, `ALTERNATIVE_AVAILABLE`, `LOAD_HIGH`, `LOAD_UNKNOWN`.
+    pub warnings: Vec<String>,
+    pub plan: Vec<PlanLineDto>,
+    pub true_cost: TrueCostDto,
+}

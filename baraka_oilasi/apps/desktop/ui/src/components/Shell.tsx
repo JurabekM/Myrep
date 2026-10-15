@@ -7,6 +7,7 @@ import { AuditScreen } from "../features/audit/AuditScreen";
 import { LoanScreen } from "../features/debts/LoanScreen";
 import { ExpensesScreen } from "../features/expenses/ExpensesScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
+import { DebtsScreen } from "../features/inventory/DebtsScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { VaultScreen } from "../features/vault/VaultScreen";
@@ -20,6 +21,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "vault", label: "nav.vault" },
   { screen: "expenses", label: "nav.expenses" },
   { screen: "audit", label: "nav.audit" },
+  { screen: "inventory", label: "nav.inventory" },
   { screen: "debts", label: "nav.debts" },
   { screen: "receipt", label: "nav.receipt" },
 ];
@@ -29,6 +31,7 @@ const MENTOR: Record<Screen, string> = {
   vault: "mentor.vault",
   expenses: "mentor.expenses",
   audit: "mentor.audit",
+  inventory: "mentor.inventory",
   debts: "mentor.debts",
   receipt: "mentor.receipt",
 };
@@ -89,8 +92,9 @@ export function Shell() {
         {active && screen === "vault" && <VaultScreen spaceId={active} />}
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}
         {active && screen === "audit" && <AuditScreen spaceId={active} />}
+        {active && screen === "inventory" && <DebtsScreen spaceId={active} />}
         {screen === "debts" && <LoanScreen />}
-        {screen === "receipt" && <ReceiptScreen />}
+        {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />
       {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}

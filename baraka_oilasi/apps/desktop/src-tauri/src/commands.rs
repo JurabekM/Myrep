@@ -214,16 +214,85 @@ pub async fn check_agreement(
     state.session.app()?.check_agreement(&agreement_type, draft)
 }
 
-/// Tilxat PDF'ini yaratib, tizimning «Saqlash» oynasi orqali saqlaydi. Fayl yo'li frontendga
-/// berilmaydi va frontenddan olinmaydi (keng `fs` ruxsati kerak emas). `false` — bekor qilindi.
 #[tauri::command]
 #[specta::specta]
-pub async fn export_loan_receipt(
-    handle: AppHandle,
+pub async fn debts_overview(state: State<'_, Desktop>, space_id: String) -> R<DebtsOverviewDto> {
+    state.session.app()?.debts_overview(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn preview_borrow_check(
     state: State<'_, Desktop>,
-    input: LoanReceiptInput,
-) -> R<bool> {
-    let pdf = state.session.app()?.render_loan_receipt(input)?;
+    space_id: String,
+    input: NewDebtInput,
+) -> R<BorrowCheckDto> {
+    state.session.app()?.preview_borrow_check(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_debt(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: NewDebtInput,
+) -> R<DebtDto> {
+    state.session.app()?.add_debt(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_receivable(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: NewReceivableInput,
+) -> R<ReceivableDto> {
+    state.session.app()?.add_receivable(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn record_repayment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    owner_type: String,
+    id: String,
+    input: RepaymentInput,
+) -> R<RepaymentDto> {
+    state
+        .session
+        .app()?
+        .record_repayment(&space_id, &owner_type, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_goal(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: NewGoalInput,
+) -> R<GoalDto> {
+    state.session.app()?.add_goal(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_goal(state: State<'_, Desktop>, space_id: String, goal_id: String) -> R<()> {
+    state.session.app()?.delete_goal(&space_id, &goal_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn issue_loan_receipt(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: IssueLoanReceiptInput,
+) -> R<IssuedReceiptDto> {
+    state.session.app()?.issue_loan_receipt(&space_id, input)
+}
+
+/// PDF'ni tizimning «Saqlash» oynasi orqali yozadi. `false` — foydalanuvchi bekor qildi.
+fn save_pdf(handle: &AppHandle, pdf: Vec<u8>) -> R<bool> {
     let picked = handle
         .dialog()
         .file()
@@ -238,4 +307,33 @@ pub async fn export_loan_receipt(
         .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
     std::fs::write(path, pdf).map_err(|_| AppError::new("IO_ERROR"))?;
     Ok(true)
+}
+
+/// Saqlangan tilxatni joriy tekshirish kodi bilan PDF qilib saqlaydi.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_agreement_receipt(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    agreement_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .loan_receipt_pdf(&space_id, &agreement_id)?;
+    save_pdf(&handle, pdf)
+}
+
+/// Tilxat PDF'ini yaratib, tizimning «Saqlash» oynasi orqali saqlaydi. Fayl yo'li frontendga
+/// berilmaydi va frontenddan olinmaydi (keng `fs` ruxsati kerak emas). `false` — bekor qilindi.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_loan_receipt(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    input: LoanReceiptInput,
+) -> R<bool> {
+    let pdf = state.session.app()?.render_loan_receipt(input)?;
+    save_pdf(&handle, pdf)
 }

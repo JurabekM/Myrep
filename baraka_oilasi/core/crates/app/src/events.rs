@@ -16,6 +16,7 @@ pub enum Topic {
     AllocationRule,
     Agreements,
     Journal,
+    Debts,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

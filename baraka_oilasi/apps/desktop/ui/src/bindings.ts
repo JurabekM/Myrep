@@ -33,6 +33,16 @@ export const commands = {
 	 *  berilmaydi va frontenddan olinmaydi (keng `fs` ruxsati kerak emas). `false` — bekor qilindi.
 	 */
 	exportLoanReceipt: (input: LoanReceiptInput) => typedError<boolean, AppError>(__TAURI_INVOKE("export_loan_receipt", { input })),
+	debtsOverview: (spaceId: string) => typedError<DebtsOverviewDto, AppError>(__TAURI_INVOKE("debts_overview", { spaceId })),
+	previewBorrowCheck: (spaceId: string, input: NewDebtInput) => typedError<BorrowCheckDto, AppError>(__TAURI_INVOKE("preview_borrow_check", { spaceId, input })),
+	addDebt: (spaceId: string, input: NewDebtInput) => typedError<DebtDto, AppError>(__TAURI_INVOKE("add_debt", { spaceId, input })),
+	addReceivable: (spaceId: string, input: NewReceivableInput) => typedError<ReceivableDto, AppError>(__TAURI_INVOKE("add_receivable", { spaceId, input })),
+	recordRepayment: (spaceId: string, ownerType: string, id: string, input: RepaymentInput) => typedError<RepaymentDto, AppError>(__TAURI_INVOKE("record_repayment", { spaceId, ownerType, id, input })),
+	addGoal: (spaceId: string, input: NewGoalInput) => typedError<GoalDto, AppError>(__TAURI_INVOKE("add_goal", { spaceId, input })),
+	deleteGoal: (spaceId: string, goalId: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_goal", { spaceId, goalId })),
+	issueLoanReceipt: (spaceId: string, input: IssueLoanReceiptInput) => typedError<IssuedReceiptDto, AppError>(__TAURI_INVOKE("issue_loan_receipt", { spaceId, input })),
+	/**  Saqlangan tilxatni joriy tekshirish kodi bilan PDF qilib saqlaydi. */
+	exportAgreementReceipt: (spaceId: string, agreementId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_agreement_receipt", { spaceId, agreementId })),
 };
 
 /** Events */
@@ -102,6 +112,24 @@ export type BootstrapInput = {
 	members: NewMemberInput[],
 };
 
+/**  «To'xta va o'yla» natijasi: taqiqlamaydi, ko'rsatadi. */
+export type BorrowCheckDto = {
+	isRibo: boolean,
+	projectedLoadPercent: string | null,
+	/**  `RIBO`, `LUXURY`, `ALTERNATIVE_AVAILABLE`, `LOAD_HIGH`, `LOAD_UNKNOWN`. */
+	warnings: string[],
+	plan: PlanLineDto[],
+	trueCost: TrueCostDto,
+};
+
+/**  «To'xta va o'yla» javoblari (uy/SPEC 2D.6). */
+export type BorrowCheckInput = {
+	/**  `NECESSITY` yoki `LUXURY`. */
+	need: string,
+	/**  Mavjud foizsiz muqobillar: `QOROVUL`, `RELATIVE`, `SELL_ITEM`. */
+	alternatives: string[],
+};
+
 export type CategoryDto = {
 	id: string,
 	/**  i18n kaliti; `customName` bo'lsa, UI shuni ko'rsatadi. */
@@ -151,6 +179,45 @@ export type Custody = {
 	keeperDeviceId?: string | null,
 };
 
+export type DebtDto = {
+	id: string,
+	creditorType: string,
+	creditor: string,
+	reason: string | null,
+	planKind: string,
+	/**  Foizli yoki ustamali — qizil bayroq. */
+	isRibo: boolean,
+	annualBp: number,
+	status: string,
+	principal: MoneyDto,
+	trueCost: TrueCostDto,
+	statusInfo: PlanStatusDto,
+	plan: PlanLineDto[],
+	payments: RepaymentDto[],
+	earlyRepaymentTerms: string | null,
+	borrowWarnings: string[],
+	agreementId: string | null,
+};
+
+/**  Qarzlar ekrani: «yaraning hajmi» (uy/SPEC 2C.7). */
+export type DebtsOverviewDto = {
+	debts: DebtDto[],
+	receivables: ReceivableDto[],
+	/**  Faol qarzlar qoldig'i, valyuta bo'yicha (asosiy valyuta birinchi). */
+	totalDebt: MoneyDto[],
+	totalReceivable: MoneyDto[],
+	/**  Shu oy davridagi reja to'lovlari (asosiy valyutada). */
+	monthlyDue: MoneyDto,
+	/**  Oylik yuk hisobidagi daromad: oxirgi 3 to'liq oy o'rtachasi, bo'lmasa — shu oy. */
+	monthlyIncome: MoneyDto | null,
+	loadPercent: string | null,
+	loadHigh: boolean,
+	/**  Boshqa valyutadagi qarzlar oylik yukka kirmagan. */
+	loadExcludesForeign: boolean,
+	hasRiboDebt: boolean,
+	goals: GoalDto[],
+};
+
 export type Duty = {
 	id: string,
 	title: string,
@@ -174,6 +241,19 @@ export type ExpenseDto = {
 	necessity: string | null,
 	occurredOn: string,
 	fundedByDebt: boolean,
+};
+
+export type GoalDto = {
+	id: string,
+	title: string,
+	target: MoneyDto,
+};
+
+export type GoalEquivalentDto = {
+	goalId: string,
+	title: string,
+	/**  Ortiqcha to'lov maqsadning necha foiziga teng: `45`, `250`. */
+	percent: string,
 };
 
 export type HouseholdDto = {
@@ -202,6 +282,26 @@ export type IncomeRecordedDto = {
 	progressiveSuggestionBp: number | null,
 	/**  Shu taklif foizda, ko'rsatish uchun: `6`, `6,5`. */
 	progressiveSuggestionPercent: string | null,
+};
+
+/**  Tilxat yozish va saqlash: `Agreement(type = LOAN)` + jurnal + qarz yoki bergan qarz yozuvi. */
+export type IssueLoanReceiptInput = {
+	/**  `BORROWED` (men oldim) yoki `LENT` (men berdim). */
+	direction: string,
+	/**  `BORROWED` da kreditor turi: `RELATIVE`, `FRIEND` yoki `OTHER` (standart — `FRIEND`). */
+	creditorType: string | null,
+	reason: string | null,
+	receipt: LoanReceiptInput,
+	isNew: boolean,
+	borrowCheck: BorrowCheckInput | null,
+};
+
+export type IssuedReceiptDto = {
+	agreementId: string,
+	/**  `DEBT` yoki `RECEIVABLE`. */
+	recordType: string,
+	recordId: string,
+	shortCode: string,
 };
 
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */
@@ -294,6 +394,35 @@ export type NecessityTotalsDto = {
 	unclassified: MoneyDto,
 };
 
+/**
+ *  Olingan qarz (inventar). Reja turi bo'yicha: `ANNUITY`/`DIFFERENTIATED` — `annualBp` va `months`,
+ *  `FIXED_MARKUP` — `markup` va `months`, `MANUAL` — `schedule` (yig'indisi = summa + ustama).
+ */
+export type NewDebtInput = {
+	/**  `BANK`, `SHOP`, `RELATIVE`, `FRIEND`, `OTHER`. */
+	creditorType: string,
+	creditor: string,
+	reason: string | null,
+	currency: string,
+	/**  Reja tuzilayotgan summa (hozirgi qoldiq). */
+	principal: string,
+	/**  Dastlab olingan summa (haqiqiy narx uchun); bo'lmasa — `principal`. */
+	originalPrincipal: string | null,
+	/**  Ilovaga kiritilgunga qadar to'langan. */
+	paidBefore: string | null,
+	planKind: string,
+	annualBp: number | null,
+	markup: string | null,
+	months: number | null,
+	/**  Bank turlarida — birinchi to'lov sanasi; `MANUAL` da — qarz boshlangan sana. Bo'lmasa — bugun. */
+	firstDate: string | null,
+	schedule: ScheduleLineInput[],
+	earlyRepaymentTerms: string | null,
+	/**  Yangi olinayotgan qarz: «to'xta va o'yla» javoblari majburiy. */
+	isNew: boolean,
+	borrowCheck: BorrowCheckInput | null,
+};
+
 export type NewExpenseInput = {
 	amount: string,
 	categoryId: string,
@@ -307,6 +436,12 @@ export type NewExpenseInput = {
 	isOstentation: boolean,
 	fundedByDebt: boolean,
 	note: string | null,
+};
+
+export type NewGoalInput = {
+	title: string,
+	target: string,
+	currency: string,
 };
 
 export type NewIncomeInput = {
@@ -327,10 +462,38 @@ export type NewMemberInput = {
 	role: string,
 };
 
+/**  Bergan qarz. **Foiz yoki ustama maydoni yo'q**: noma'lum maydon (masalan `interestBp`) rad etiladi. */
+export type NewReceivableInput = {
+	debtor: string,
+	currency: string,
+	amount: string,
+	lentOn: string | null,
+	/**  Qaytarish rejasi majburiy; yig'indisi aynan summaga teng. */
+	schedule: ScheduleLineInput[],
+	note: string | null,
+};
+
 export type Party = {
 	id: string,
 	fullName: string,
 	role?: string | null,
+};
+
+export type PlanLineDto = {
+	/**  `YYYY-MM-DD`. */
+	date: string,
+	amount: MoneyDto,
+};
+
+/**  Reja bo'yicha holat: keyingi to'lov, kechikkan summa, qoldiq, eslatma. */
+export type PlanStatusDto = {
+	paid: MoneyDto,
+	remaining: MoneyDto,
+	nextDue: PlanLineDto | null,
+	overdue: MoneyDto,
+	payoffDate: string | null,
+	/**  `DUE_SOON` yoki `OVERDUE`. */
+	reminder: string | null,
 };
 
 export type ProfitRule = {
@@ -342,6 +505,38 @@ export type ProfitRule = {
 export type ProfitShare = {
 	partyId: string,
 	shareBp: number,
+};
+
+export type ReceivableDto = {
+	id: string,
+	debtor: string,
+	amount: MoneyDto,
+	lentOn: string,
+	note: string | null,
+	status: string,
+	statusInfo: PlanStatusDto,
+	plan: PlanLineDto[],
+	payments: RepaymentDto[],
+	agreementId: string | null,
+};
+
+export type RepaymentDto = {
+	id: string,
+	amount: MoneyDto,
+	date: string,
+	isPrepayment: boolean,
+	note: string | null,
+	/**  Tilxatga bog'langan bo'lsa — jurnal yozuvining qisqa kodi. */
+	journalShortCode: string | null,
+};
+
+export type RepaymentInput = {
+	amount: string,
+	/**  Bo'lmasa — bugun. */
+	date: string | null,
+	/**  Rejadan tashqari (muddatidan oldin) to'lov. */
+	isPrepayment: boolean,
+	note: string | null,
 };
 
 export type ScheduleLineInput = {
@@ -397,7 +592,16 @@ export type Term = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts";
+
+/**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
+export type TrueCostDto = {
+	originalPrincipal: MoneyDto,
+	totalCost: MoneyDto,
+	overpay: MoneyDto,
+	overpayPercent: string,
+	goalEquivalents: GoalEquivalentDto[],
+};
 
 /**  «Kelajagim» ekrani: odat ko'rsatkichi summadan oldin (uy/SPEC 2.2). */
 export type VaultDto = {

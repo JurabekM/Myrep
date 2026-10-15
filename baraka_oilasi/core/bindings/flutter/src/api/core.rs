@@ -187,6 +187,71 @@ impl BarakaCore {
         self.session.app()?.render_loan_receipt(input)
     }
 
+    /// Qarzlar ekrani: inventar, bergan qarzlar, haqiqiy narx, oylik yuk, maqsadlar (U8).
+    pub fn debts_overview(&self, space_id: String) -> Result<DebtsOverviewDto, AppError> {
+        self.session.app()?.debts_overview(&space_id)
+    }
+
+    pub fn preview_borrow_check(
+        &self,
+        space_id: String,
+        input: NewDebtInput,
+    ) -> Result<BorrowCheckDto, AppError> {
+        self.session.app()?.preview_borrow_check(&space_id, input)
+    }
+
+    pub fn add_debt(&self, space_id: String, input: NewDebtInput) -> Result<DebtDto, AppError> {
+        self.session.app()?.add_debt(&space_id, input)
+    }
+
+    pub fn add_receivable(
+        &self,
+        space_id: String,
+        input: NewReceivableInput,
+    ) -> Result<ReceivableDto, AppError> {
+        self.session.app()?.add_receivable(&space_id, input)
+    }
+
+    pub fn record_repayment(
+        &self,
+        space_id: String,
+        owner_type: String,
+        id: String,
+        input: RepaymentInput,
+    ) -> Result<RepaymentDto, AppError> {
+        self.session
+            .app()?
+            .record_repayment(&space_id, &owner_type, &id, input)
+    }
+
+    pub fn add_goal(&self, space_id: String, input: NewGoalInput) -> Result<GoalDto, AppError> {
+        self.session.app()?.add_goal(&space_id, input)
+    }
+
+    pub fn delete_goal(&self, space_id: String, goal_id: String) -> Result<(), AppError> {
+        self.session.app()?.delete_goal(&space_id, &goal_id)
+    }
+
+    /// Tilxatni saqlash: kelishuv + jurnal + qarz yozuvi.
+    pub fn issue_loan_receipt(
+        &self,
+        space_id: String,
+        input: IssueLoanReceiptInput,
+    ) -> Result<IssuedReceiptDto, AppError> {
+        self.session.app()?.issue_loan_receipt(&space_id, input)
+    }
+
+    /// Saqlangan tilxat PDF'i (joriy tekshirish kodi bilan).
+    pub fn loan_receipt_pdf(
+        &self,
+        space_id: String,
+        agreement_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session
+            .app()?
+            .loan_receipt_pdf(&space_id, &agreement_id)
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

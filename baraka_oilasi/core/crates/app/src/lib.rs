@@ -7,6 +7,7 @@
 
 mod app;
 mod catalog;
+mod debts;
 mod dto;
 mod error;
 mod events;

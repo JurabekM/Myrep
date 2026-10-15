@@ -7,7 +7,10 @@ use rusqlite_migration::{Migrations, M};
 
 use crate::StorageError;
 
-const MIGRATIONS_SLICE: &[M<'_>] = &[M::up(include_str!("../migrations/001_init.sql"))];
+const MIGRATIONS_SLICE: &[M<'_>] = &[
+    M::up(include_str!("../migrations/001_init.sql")),
+    M::up(include_str!("../migrations/002_debts.sql")),
+];
 const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
 /// Yozuv metama'lumoti: vaqt (UTC, RFC 3339) va yozayotgan qurilma.
@@ -95,7 +98,7 @@ mod tests {
         let key = DbKey::from_bytes([1; 32]);
         {
             let db = Database::open(&path, &key).unwrap();
-            assert_eq!(db.schema_version().unwrap(), 1);
+            assert_eq!(db.schema_version().unwrap(), 2);
         }
         let wrong = DbKey::from_bytes([2; 32]);
         assert!(matches!(

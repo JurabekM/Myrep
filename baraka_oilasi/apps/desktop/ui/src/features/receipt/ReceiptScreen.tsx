@@ -2,17 +2,24 @@ import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { commands, type ScheduleLineInput } from "../../bindings";
+import { type BorrowCheckInput, commands, type IssuedReceiptDto, type ScheduleLineInput } from "../../bindings";
 import { AmountInput } from "../../components/AmountInput";
+import { BorrowCheckFields } from "../../components/BorrowCheckFields";
 import { ErrorText } from "../../components/ErrorText";
+import { ScheduleEditor } from "../../components/ScheduleEditor";
 import { call } from "../../lib/api";
 
+type Direction = "BORROWED" | "LENT";
+
 /**
- * Qarz tilxati (uy/SPEC 2D.5): foizsiz, toʻlov rejasi majburiy, guvohlar bilan.
- * Tekshiruv va formatlash yadroda; PDF tizimning «Saqlash» oynasi orqali yoziladi.
+ * Qarz tilxati (uy/SPEC 2D.5) = `Agreement(type = LOAN)`: foizsiz, toʻlov rejasi majburiy, guvohlar
+ * bilan. Saqlanganda kelishuv, jurnal va qarz yozuvi yaratiladi; PDF tizimning «Saqlash» oynasi
+ * orqali yoziladi. Tekshiruv va formatlash yadroda.
  */
-export function ReceiptScreen() {
+export function ReceiptScreen({ spaceId }: { spaceId: string }) {
   const { t } = useTranslation();
+  const [direction, setDirection] = useState<Direction>("BORROWED");
+  const [creditorType, setCreditorType] = useState("FRIEND");
   const [lender, setLender] = useState("");
   const [borrower, setBorrower] = useState("");
   const [amount, setAmount] = useState("");
@@ -20,40 +27,74 @@ export function ReceiptScreen() {
   const [schedule, setSchedule] = useState<ScheduleLineInput[]>([{ date: "", amount: "" }]);
   const [witnesses, setWitnesses] = useState("");
   const [note, setNote] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [check, setCheck] = useState<BorrowCheckInput>({ need: "NECESSITY", alternatives: [] });
+  const [issued, setIssued] = useState<IssuedReceiptDto | null>(null);
 
   const save = useMutation({
-    mutationFn: () =>
-      call(
-        commands.exportLoanReceipt({
-          lender,
-          borrower,
-          amount,
-          currency: "UZS",
-          issuedOn: null,
-          place,
-          schedule,
-          witnesses: witnesses.split(","),
-          note: note.trim() === "" ? null : note,
+    mutationFn: async () => {
+      const borrowed = direction === "BORROWED";
+      const receipt = await call(
+        commands.issueLoanReceipt(spaceId, {
+          direction,
+          creditorType: borrowed ? creditorType : null,
+          reason: null,
+          receipt: {
+            lender,
+            borrower,
+            amount,
+            currency: "UZS",
+            issuedOn: null,
+            place,
+            schedule,
+            witnesses: witnesses.split(","),
+            note: note.trim() === "" ? null : note,
+          },
+          isNew: borrowed,
+          borrowCheck: borrowed ? check : null,
         }),
-      ),
-    onSuccess: setSaved,
+      );
+      // Tilxat saqlandi; PDF oynasi bekor qilinsa ham keyin «Qarzlar» ekranidan chop etiladi.
+      await call(commands.exportAgreementReceipt(spaceId, receipt.agreementId));
+      return receipt;
+    },
+    onSuccess: setIssued,
   });
-
-  const setLine = (i: number, patch: Partial<ScheduleLineInput>) =>
-    setSchedule((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    setSaved(false);
+    setIssued(null);
     save.mutate();
   };
+
+  if (issued) {
+    return (
+      <section className="flex max-w-3xl flex-col gap-5">
+        <h1 className="text-2xl font-semibold">{t("receipt.title")}</h1>
+        <div role="status" className="card flex flex-col gap-3">
+          <p>{t("receipt.saved")}</p>
+          <p className="text-sm text-ink-muted">{t("receipt.code")}</p>
+          <code className="text-xl tracking-wider text-accent-text">{issued.shortCode}</code>
+          <div>
+            <button className="btn-ghost" onClick={() => setIssued(null)}>{t("receipt.another")}</button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="flex max-w-3xl flex-col gap-5">
       <h1 className="text-2xl font-semibold">{t("receipt.title")}</h1>
       <p className="text-sm text-ink-muted">{t("receipt.intro")}</p>
       <form className="card grid gap-4 md:grid-cols-2" onSubmit={submit}>
+        <div className="flex flex-wrap gap-4 md:col-span-2" role="radiogroup" aria-label={t("receipt.direction")}>
+          {(["BORROWED", "LENT"] as const).map((d) => (
+            <label key={d} className="flex items-center gap-2">
+              <input type="radio" name="direction" checked={direction === d} onChange={() => setDirection(d)} />
+              {t(`receipt.direction.${d}`)}
+            </label>
+          ))}
+        </div>
         <label>
           <span className="label">{t("receipt.lender")}</span>
           <input className="field" value={lender} onChange={(e) => setLender(e.target.value)} required />
@@ -70,33 +111,7 @@ export function ReceiptScreen() {
           <span className="label">{t("receipt.place")}</span>
           <input className="field" value={place} onChange={(e) => setPlace(e.target.value)} required />
         </label>
-
-        <fieldset className="md:col-span-2">
-          <legend className="label">{t("receipt.schedule")}</legend>
-          <div className="flex flex-col gap-2">
-            {schedule.map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  aria-label={`${t("receipt.lineDate")} ${i + 1}`}
-                  inputMode="numeric"
-                  placeholder="15.11.2026"
-                  className="field max-w-40 tabular-nums"
-                  value={row.date}
-                  onChange={(e) => setLine(i, { date: e.target.value })}
-                  required
-                />
-                <AmountInput aria-label={`${t("common.amount")} ${i + 1}`} value={row.amount} onChange={(e) => setLine(i, { amount: e.target.value })} required />
-                <button type="button" className="btn-ghost" disabled={schedule.length === 1} onClick={() => setSchedule((rows) => rows.filter((_, j) => j !== i))}>
-                  {t("receipt.removeLine")}
-                </button>
-              </div>
-            ))}
-          </div>
-          <button type="button" className="btn-ghost mt-2" onClick={() => setSchedule((rows) => [...rows, { date: "", amount: "" }])}>
-            {t("receipt.addLine")}
-          </button>
-        </fieldset>
-
+        <ScheduleEditor value={schedule} onChange={setSchedule} />
         <label className="md:col-span-2">
           <span className="label">{t("receipt.witnesses")}</span>
           <input className="field" value={witnesses} onChange={(e) => setWitnesses(e.target.value)} />
@@ -105,8 +120,18 @@ export function ReceiptScreen() {
           <span className="label">{t("common.note")}</span>
           <input className="field" value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
+        {direction === "BORROWED" && (
+          <>
+            <label>
+              <span className="label">{t("debts.creditorType")}</span>
+              <select className="field" value={creditorType} onChange={(e) => setCreditorType(e.target.value)}>
+                {(["RELATIVE", "FRIEND", "OTHER"] as const).map((c) => <option key={c} value={c}>{t(`debts.creditor.${c}`)}</option>)}
+              </select>
+            </label>
+            <BorrowCheckFields value={check} onChange={setCheck} />
+          </>
+        )}
         <div className="md:col-span-2"><ErrorText error={save.error} /></div>
-        {saved && <p role="status" className="text-sm text-accent-text md:col-span-2">{t("receipt.saved")}</p>}
         <div>
           <button className="btn-primary" disabled={save.isPending}>{t("receipt.save")}</button>
         </div>

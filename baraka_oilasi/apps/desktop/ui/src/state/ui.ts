@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type Screen = "home" | "vault" | "expenses" | "audit" | "debts" | "receipt";
+export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "receipt";
 
 type UiState = {
   screen: Screen;

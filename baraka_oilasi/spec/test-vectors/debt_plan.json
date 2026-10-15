@@ -1,0 +1,490 @@
+{
+  "suite": "debt_plan",
+  "version": 1,
+  "description": "To'lov rejasi (4 tur) va qarzning haqiqiy narxi: asosiy → jami → ortiqcha",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "plan-001-annuity",
+      "input": {
+        "kind": "ANNUITY",
+        "currency": "UZS",
+        "principal": "3900000000",
+        "annualBp": 2400,
+        "months": 14,
+        "firstDate": "2026-11-05",
+        "paidSince": "644295368",
+        "goals": [
+          "1200000000",
+          "60000000000"
+        ]
+      },
+      "expected": {
+        "lines": [
+          {
+            "date": "2026-11-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2026-12-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-01-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-02-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-03-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-04-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-05-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-06-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-07-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-08-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-09-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-10-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-11-05",
+            "amount": "322147684"
+          },
+          {
+            "date": "2027-12-05",
+            "amount": "322147681"
+          }
+        ],
+        "planTotal": "4510067573",
+        "trueCost": {
+          "originalPrincipal": "3900000000",
+          "totalCost": "4510067573",
+          "overpay": "610067573",
+          "overpayBp": 1353,
+          "paidTotal": "644295368",
+          "remaining": "3865772205",
+          "goalsBp": [
+            5084,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-002-differentiated",
+      "input": {
+        "kind": "DIFFERENTIATED",
+        "currency": "UZS",
+        "principal": "1200000000",
+        "annualBp": 2400,
+        "months": 6,
+        "firstDate": "2027-01-31"
+      },
+      "expected": {
+        "lines": [
+          {
+            "date": "2027-01-31",
+            "amount": "224000000"
+          },
+          {
+            "date": "2027-02-28",
+            "amount": "220000000"
+          },
+          {
+            "date": "2027-03-31",
+            "amount": "216000000"
+          },
+          {
+            "date": "2027-04-30",
+            "amount": "212000000"
+          },
+          {
+            "date": "2027-05-31",
+            "amount": "208000000"
+          },
+          {
+            "date": "2027-06-30",
+            "amount": "204000000"
+          }
+        ],
+        "planTotal": "1284000000",
+        "trueCost": {
+          "originalPrincipal": "1200000000",
+          "totalCost": "1284000000",
+          "overpay": "84000000",
+          "overpayBp": 654,
+          "paidTotal": "0",
+          "remaining": "1284000000",
+          "goalsBp": []
+        }
+      }
+    },
+    {
+      "id": "plan-003-fixed-markup",
+      "input": {
+        "kind": "FIXED_MARKUP",
+        "currency": "UZS",
+        "principal": "600000000",
+        "markup": "120000000",
+        "months": 12,
+        "firstDate": "2026-10-20",
+        "goals": [
+          "50000000"
+        ]
+      },
+      "expected": {
+        "lines": [
+          {
+            "date": "2026-10-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2026-11-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2026-12-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-01-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-02-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-03-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-04-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-05-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-06-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-07-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-08-20",
+            "amount": "60000000"
+          },
+          {
+            "date": "2027-09-20",
+            "amount": "60000000"
+          }
+        ],
+        "planTotal": "720000000",
+        "trueCost": {
+          "originalPrincipal": "600000000",
+          "totalCost": "720000000",
+          "overpay": "120000000",
+          "overpayBp": 1667,
+          "paidTotal": "0",
+          "remaining": "720000000",
+          "goalsBp": [
+            24000
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-004-manual-karim",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "900000000",
+        "originalPrincipal": "4000000000",
+        "paidBefore": "5100000000",
+        "firstDate": "2026-10-15",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ]
+      },
+      "expected": {
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "planTotal": "900000000",
+        "trueCost": {
+          "originalPrincipal": "4000000000",
+          "totalCost": "6000000000",
+          "overpay": "2000000000",
+          "overpayBp": 3333,
+          "paidTotal": "5100000000",
+          "remaining": "900000000",
+          "goalsBp": []
+        }
+      }
+    },
+    {
+      "id": "plan-005-manual-hasana",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "200000000",
+        "firstDate": "2026-10-15",
+        "paidSince": "150000000",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "120000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "80000000"
+          }
+        ]
+      },
+      "expected": {
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "120000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "80000000"
+          }
+        ],
+        "planTotal": "200000000",
+        "trueCost": {
+          "originalPrincipal": "200000000",
+          "totalCost": "200000000",
+          "overpay": "0",
+          "overpayBp": 0,
+          "paidTotal": "150000000",
+          "remaining": "50000000",
+          "goalsBp": []
+        }
+      }
+    },
+    {
+      "id": "plan-006-annuity-zero-rate",
+      "input": {
+        "kind": "ANNUITY",
+        "currency": "UZS",
+        "principal": "100000",
+        "annualBp": 0,
+        "months": 3,
+        "firstDate": "2026-12-31"
+      },
+      "expected": {
+        "lines": [
+          {
+            "date": "2026-12-31",
+            "amount": "33333"
+          },
+          {
+            "date": "2027-01-31",
+            "amount": "33333"
+          },
+          {
+            "date": "2027-02-28",
+            "amount": "33334"
+          }
+        ],
+        "planTotal": "100000",
+        "trueCost": {
+          "originalPrincipal": "100000",
+          "totalCost": "100000",
+          "overpay": "0",
+          "overpayBp": 0,
+          "paidTotal": "0",
+          "remaining": "100000",
+          "goalsBp": []
+        }
+      }
+    },
+    {
+      "id": "plan-neg-001-sum",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "200000000",
+        "firstDate": "2026-10-15",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "SCHEDULE_SUM_MISMATCH"
+      }
+    },
+    {
+      "id": "plan-neg-002-order",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "200000000",
+        "firstDate": "2026-10-15",
+        "lines": [
+          {
+            "date": "2026-12-15",
+            "amount": "100000000"
+          },
+          {
+            "date": "2026-11-15",
+            "amount": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "SCHEDULE_DATES_ORDER"
+      }
+    },
+    {
+      "id": "plan-neg-003-before-start",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "100000000",
+        "firstDate": "2026-10-15",
+        "lines": [
+          {
+            "date": "2026-10-14",
+            "amount": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "SCHEDULE_DATES_ORDER"
+      }
+    },
+    {
+      "id": "plan-neg-004-markup-required",
+      "input": {
+        "kind": "FIXED_MARKUP",
+        "currency": "UZS",
+        "principal": "600000000",
+        "months": 12,
+        "firstDate": "2026-10-20"
+      },
+      "expected": {
+        "error": "MARKUP_REQUIRED"
+      }
+    },
+    {
+      "id": "plan-neg-005-term",
+      "input": {
+        "kind": "ANNUITY",
+        "currency": "UZS",
+        "principal": "600000000",
+        "annualBp": 2400,
+        "months": 0,
+        "firstDate": "2026-10-20"
+      },
+      "expected": {
+        "error": "INVALID_TERM"
+      }
+    },
+    {
+      "id": "plan-neg-006-original",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "200000000",
+        "originalPrincipal": "100000000",
+        "firstDate": "2026-10-15",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "200000000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "ORIGINAL_BELOW_PRINCIPAL"
+      }
+    },
+    {
+      "id": "plan-neg-007-empty",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "200000000",
+        "firstDate": "2026-10-15",
+        "lines": []
+      },
+      "expected": {
+        "error": "SCHEDULE_REQUIRED"
+      }
+    },
+    {
+      "id": "plan-neg-008-overpaid",
+      "input": {
+        "kind": "MANUAL",
+        "currency": "UZS",
+        "principal": "200000000",
+        "firstDate": "2026-10-15",
+        "paidSince": "200000001",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "200000000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "PAYMENT_EXCEEDS_REMAINING"
+      }
+    }
+  ]
+}

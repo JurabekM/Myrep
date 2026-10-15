@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import sys
+from datetime import date, timedelta
 from fractions import Fraction
 
 EXPONENT = {"UZS": 2, "USD": 2, "EUR": 2, "RUB": 2, "KZT": 2, "TRY": 2, "GBP": 2, "KRW": 0}
@@ -112,6 +113,124 @@ def amortize(principal: int, annual_bp: int, months: int, extra: int):
         total_interest += interest
         schedule.append({"month": month, "interest": interest, "principal": princ, "extra": ex, "balance": balance})
     return payment, month, total_interest, schedule
+
+
+def amortize_rows(principal: int, annual_bp: int, months: int, differentiated: bool):
+    """Qo'shimcha to'lovsiz jadval; differensialda asosiy qarz teng bo'laklarda (allocate)."""
+    r = Fraction(annual_bp, 10000 * 12)
+    if differentiated:
+        parts = allocate(principal, [1] * months)
+    elif annual_bp == 0:
+        payment = round_half_up(Fraction(principal, months))
+    else:
+        payment = round_half_up(principal * r * (1 + r) ** months / ((1 + r) ** months - 1))
+    balance, month, rows = principal, 0, []
+    while balance > 0:
+        month += 1
+        interest = round_half_up(balance * r)
+        princ = (parts[month - 1] if month <= months else balance) if differentiated else payment - interest
+        if princ >= balance or month >= months:
+            princ = balance
+        princ = max(princ, 0)
+        balance -= princ
+        rows.append(interest + princ)
+    return rows
+
+
+# --- 4-qonun: qarz rejasi, haqiqiy narx, holat, oylik yuk (uy/SPEC 2C.7, 2D.3, 2D.5) -----
+def add_months(d: date, k: int) -> date:
+    """chrono `checked_add_months`: oy oxiridan oshsa — oyning oxirgi kuni."""
+    y, m = divmod(d.month - 1 + k, 12)
+    y, m = d.year + y, m + 1
+    nxt = date(y + (m == 12), m % 12 + 1, 1)
+    return date(y, m, min(d.day, (nxt - timedelta(days=1)).day))
+
+
+def debt_plan(kind, principal, markup=0, annual_bp=0, months=0, first=None, lines=None):
+    """To'lov rejasi qatorlari [(sana, summa)]. MANUAL'da `first` — qarz boshlangan sana."""
+    if principal <= 0:
+        raise OracleError("PRINCIPAL_NOT_POSITIVE")
+    if markup < 0:
+        raise OracleError("MARKUP_NEGATIVE")
+    if kind == "MANUAL":
+        if not lines:
+            raise OracleError("SCHEDULE_REQUIRED")
+        prev = first
+        for d, a in lines:
+            if a <= 0:
+                raise OracleError("AMOUNT_NOT_POSITIVE")
+            if d < prev:
+                raise OracleError("SCHEDULE_DATES_ORDER")
+            prev = d
+        if sum(a for _, a in lines) != principal + markup:
+            raise OracleError("SCHEDULE_SUM_MISMATCH")
+        return list(lines)
+    if not 1 <= months <= 600:
+        raise OracleError("INVALID_TERM")
+    if kind in ("ANNUITY", "DIFFERENTIATED"):
+        if markup != 0:
+            raise OracleError("MARKUP_NOT_ALLOWED")
+        if not 0 <= annual_bp <= 100000:
+            raise OracleError("INVALID_RATE")
+        amounts = amortize_rows(principal, annual_bp, months, kind == "DIFFERENTIATED")
+    elif kind == "FIXED_MARKUP":
+        if markup == 0:
+            raise OracleError("MARKUP_REQUIRED")
+        amounts = allocate(principal + markup, [1] * months)
+    else:
+        raise OracleError("INVALID_PLAN_KIND")
+    return [(add_months(first, k), a) for k, a in enumerate(amounts)]
+
+
+def true_cost(plan_total, principal, original=None, paid_before=0, paid_since=0, goals=()):
+    original = principal if original is None else original
+    if original < principal:
+        raise OracleError("ORIGINAL_BELOW_PRINCIPAL")
+    if paid_before < 0 or paid_since < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    if paid_since > plan_total:
+        raise OracleError("PAYMENT_EXCEEDS_REMAINING")
+    total = paid_before + plan_total
+    overpay = total - original
+    if overpay < 0:
+        raise OracleError("COST_BELOW_PRINCIPAL")
+    if any(g <= 0 for g in goals):
+        raise OracleError("INVALID_GOAL")
+    return {"originalPrincipal": original, "totalCost": total, "overpay": overpay,
+            "overpayBp": round_half_up(Fraction(overpay * 10000, total)),
+            "paidTotal": paid_before + paid_since, "remaining": plan_total - paid_since,
+            "goalsBp": [round_half_up(Fraction(overpay * 10000, g)) for g in goals]}
+
+
+DUE_SOON_DAYS = 3
+
+
+def plan_status(lines, paid, today):
+    total = sum(a for _, a in lines)
+    if paid < 0 or paid > total:
+        raise OracleError("PAYMENT_EXCEEDS_REMAINING")
+    cum, nxt, overdue = 0, None, 0
+    for d, a in lines:
+        prev, cum = cum, cum + a
+        if cum <= paid:
+            continue
+        outstanding = cum - max(prev, paid)
+        if nxt is None:
+            nxt = (d, outstanding)
+        if d < today:
+            overdue += outstanding
+    remaining = total - paid
+    reminder = None
+    if overdue > 0:
+        reminder = "OVERDUE"
+    elif nxt is not None and (nxt[0] - today).days <= DUE_SOON_DAYS:
+        reminder = "DUE_SOON"
+    return {"remaining": remaining, "nextDate": nxt[0] if nxt else None, "nextAmount": nxt[1] if nxt else None,
+            "overdue": overdue, "payoffDate": lines[-1][0] if remaining > 0 else None, "reminder": reminder}
+
+
+def debt_load_bp(payments: int, income: int):
+    return None if income <= 0 else round_half_up(Fraction(payments * 10000, income))
 
 
 # --- 5.9 izohsiz summa ------------------------------------------------------------------
@@ -333,12 +452,88 @@ def build_suites():
         {"id": "chain-neg-001", "input": {"entries": tampered, "storedHashes": CHAIN_HASHES}, "expected": {"firstBroken": verify_chain(tampered, CHAIN_HASHES)}},
         {"id": "chain-utf8-opt-corr-001", "input": {"entries": UTF8_ENTRIES, "withShortCodes": True}, "expected": {"hashes": chain(UTF8_ENTRIES), "shortCodes": [short_code(h) for h in chain(UTF8_ENTRIES)]}},
     ])
+    D = date.fromisoformat
+
+    def plan_case(cid, inp):
+        def run():
+            lines = [(D(l["date"]), int(l["amount"])) for l in inp.get("lines", [])]
+            plan = debt_plan(inp["kind"], int(inp["principal"]), int(inp.get("markup", "0")), inp.get("annualBp", 0),
+                             inp.get("months", 0), D(inp["firstDate"]), lines)
+            tot = sum(a for _, a in plan)
+            tc = true_cost(tot, int(inp["principal"]),
+                           int(inp["originalPrincipal"]) if "originalPrincipal" in inp else None,
+                           int(inp.get("paidBefore", "0")), int(inp.get("paidSince", "0")),
+                           [int(g) for g in inp.get("goals", [])])
+            return {"lines": [{"date": d.isoformat(), "amount": _s(a)} for d, a in plan], "planTotal": _s(tot),
+                    "trueCost": {k: (_s(v) if k != "goalsBp" and k != "overpayBp" else v) for k, v in tc.items()}}
+        return _case(cid, inp, run)
+    ml = lambda *xs: [{"date": d, "amount": a} for d, a in xs]  # noqa: E731
+    suites["debt_plan"] = _suite("debt_plan", "To'lov rejasi (4 tur) va qarzning haqiqiy narxi: asosiy → jami → ortiqcha", [
+        plan_case("plan-001-annuity", {"kind": "ANNUITY", "currency": U, "principal": "3900000000", "annualBp": 2400,
+                                       "months": 14, "firstDate": "2026-11-05", "paidSince": "644295368",
+                                       "goals": ["1200000000", "60000000000"]}),
+        plan_case("plan-002-differentiated", {"kind": "DIFFERENTIATED", "currency": U, "principal": "1200000000",
+                                              "annualBp": 2400, "months": 6, "firstDate": "2027-01-31"}),
+        plan_case("plan-003-fixed-markup", {"kind": "FIXED_MARKUP", "currency": U, "principal": "600000000",
+                                            "markup": "120000000", "months": 12, "firstDate": "2026-10-20",
+                                            "goals": ["50000000"]}),
+        plan_case("plan-004-manual-karim", {"kind": "MANUAL", "currency": U, "principal": "900000000",
+                                            "originalPrincipal": "4000000000", "paidBefore": "5100000000",
+                                            "firstDate": "2026-10-15",
+                                            "lines": ml(("2026-11-15", "300000000"), ("2026-12-15", "300000000"),
+                                                        ("2027-01-15", "300000000"))}),
+        plan_case("plan-005-manual-hasana", {"kind": "MANUAL", "currency": U, "principal": "200000000",
+                                             "firstDate": "2026-10-15", "paidSince": "150000000",
+                                             "lines": ml(("2026-11-15", "120000000"), ("2026-12-15", "80000000"))}),
+        plan_case("plan-006-annuity-zero-rate", {"kind": "ANNUITY", "currency": U, "principal": "100000", "annualBp": 0,
+                                                 "months": 3, "firstDate": "2026-12-31"}),
+        plan_case("plan-neg-001-sum", {"kind": "MANUAL", "currency": U, "principal": "200000000", "firstDate": "2026-10-15",
+                                       "lines": ml(("2026-11-15", "100000000"))}),
+        plan_case("plan-neg-002-order", {"kind": "MANUAL", "currency": U, "principal": "200000000", "firstDate": "2026-10-15",
+                                         "lines": ml(("2026-12-15", "100000000"), ("2026-11-15", "100000000"))}),
+        plan_case("plan-neg-003-before-start", {"kind": "MANUAL", "currency": U, "principal": "100000000",
+                                                "firstDate": "2026-10-15", "lines": ml(("2026-10-14", "100000000"))}),
+        plan_case("plan-neg-004-markup-required", {"kind": "FIXED_MARKUP", "currency": U, "principal": "600000000",
+                                                   "months": 12, "firstDate": "2026-10-20"}),
+        plan_case("plan-neg-005-term", {"kind": "ANNUITY", "currency": U, "principal": "600000000", "annualBp": 2400,
+                                        "months": 0, "firstDate": "2026-10-20"}),
+        plan_case("plan-neg-006-original", {"kind": "MANUAL", "currency": U, "principal": "200000000",
+                                            "originalPrincipal": "100000000", "firstDate": "2026-10-15",
+                                            "lines": ml(("2026-11-15", "200000000"))}),
+        plan_case("plan-neg-007-empty", {"kind": "MANUAL", "currency": U, "principal": "200000000",
+                                         "firstDate": "2026-10-15", "lines": []}),
+        plan_case("plan-neg-008-overpaid", {"kind": "MANUAL", "currency": U, "principal": "200000000",
+                                            "firstDate": "2026-10-15", "paidSince": "200000001",
+                                            "lines": ml(("2026-11-15", "200000000"))}),
+    ])
+
+    def status_case(cid, lines, paid, today):
+        inp = {"currency": U, "lines": ml(*lines), "paid": paid, "today": today}
+
+        def run():
+            st = plan_status([(D(d), int(a)) for d, a in lines], int(paid), D(today))
+            return {k: (v.isoformat() if isinstance(v, date) else _s(v) if isinstance(v, int) else v)
+                    for k, v in st.items()}
+        return _case(cid, inp, run)
+    three = (("2026-11-15", "300000000"), ("2026-12-15", "300000000"), ("2027-01-15", "300000000"))
+    suites["debt_status"] = _suite("debt_status", "To'lovlar rejaga ketma-ket yoziladi: keyingi to'lov, kechikkan, qoldiq, eslatma (≤ 3 kun)", [
+        status_case("status-001-fresh", three, "0", "2026-10-15"),
+        status_case("status-002-due-soon", three, "0", "2026-11-12"),
+        status_case("status-003-partial-overdue", three, "100000000", "2026-12-20"),
+        status_case("status-004-ahead", three, "450000000", "2026-11-20"),
+        status_case("status-005-closed", three, "900000000", "2027-03-01"),
+        status_case("status-neg-001", three, "900000001", "2026-10-15"),
+    ])
+    suites["debt_load"] = _suite("debt_load", "Oylik qarz yuki = shu davrdagi reja to'lovlari / oylik daromad, bp (round_half_up)", [
+        _case(cid, {"currency": U, "payments": _s(p), "income": _s(i)}, lambda p=p, i=i: {"loadBp": debt_load_bp(p, i)})
+        for cid, p, i in (("load-001", 322147684, 1200000000), ("load-002", 0, 800000000),
+                          ("load-003", 150000000, 0), ("load-004", 100000000, 300000000))])
     return suites
 
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
-                 "journal_chain")
+                 "journal_chain", "debt_plan", "debt_status", "debt_load")
 
 
 def generate(directory: str) -> None:
@@ -457,6 +652,16 @@ def selftest() -> None:
     assert chain(extra_field) == CHAIN_HASHES  # whitelist'dan tashqari maydonlar xeshlanmaydi
     _expect_error("JOURNAL_NON_STRING_VALUE", canonical, dict(CHAIN_ENTRIES[0], note=None))
     assert short_code(CHAIN_HASHES[0]) == "E6AE-98E5-45C7-438C"
+    # 4-qonun: qarz
+    assert add_months(date(2027, 1, 31), 1) == date(2027, 2, 28) and add_months(date(2026, 11, 5), 13) == date(2027, 12, 5)
+    anv = debt_plan("ANNUITY", 3900000000, annual_bp=2400, months=14, first=date(2026, 11, 5))
+    assert sum(a for _, a in anv) == 3900000000 + 610067573 and anv[0] == (date(2026, 11, 5), 322147684)
+    assert sum(debt_plan("DIFFERENTIATED", 1000, annual_bp=2400, months=3, first=date(2026, 1, 1))[i][1] for i in range(3)) == 1040
+    karim = true_cost(900000000, 900000000, 4000000000, 5100000000)
+    assert (karim["totalCost"], karim["overpay"], karim["overpayBp"]) == (6000000000, 2000000000, 3333)
+    st = plan_status([(date(2026, 11, 15), 300), (date(2026, 12, 15), 300)], 100, date(2026, 12, 20))
+    assert (st["nextAmount"], st["overdue"], st["reminder"]) == (200, 500, "OVERDUE")
+    assert debt_load_bp(322147684, 1200000000) == 2685 and debt_load_bp(1, 0) is None
     print("oracle selftest: OK")
 
 

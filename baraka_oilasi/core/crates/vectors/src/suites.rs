@@ -3,6 +3,10 @@ use baraka_domain_common::WEEK_ANCHOR;
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
+    debt::{
+        build_plan, debt_load_bp, goal_coverage_bp, plan_status, plan_total, true_cost, PlanKind,
+        PlanLine, PlanSpec, TrueCostInput,
+    },
     emergency::emergency_target,
     gate::{evaluate_gate, GateInput, GatePolicy, InterestDebtPolicy},
     inflation::{personal_index, BasketPoint},
@@ -98,6 +102,9 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "readiness_gate" => gate(input),
         "streak" => streak(input),
         "agreement_completeness" => agreement(input),
+        "debt_plan" => debt_plan(input),
+        "debt_status" => debt_status(input),
+        "debt_load" => debt_load(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -402,4 +409,100 @@ fn agreement(v: &Value) -> R {
         .map_err(|e| E(format!("BAD_VECTOR:draft:{e}")))?;
     let c = check_completeness(kind, &draft);
     serde_json::to_value(c).map_err(|_| bad("completeness"))
+}
+
+fn opt_money(v: &Value, k: &str, c: Currency) -> Result<Money, E> {
+    if v[k].is_null() {
+        Ok(Money::zero(c))
+    } else {
+        money(v, k, c)
+    }
+}
+
+fn plan_lines(v: &Value, c: Currency) -> Result<Vec<PlanLine>, E> {
+    v["lines"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default()
+        .iter()
+        .map(|l| {
+            Ok(PlanLine {
+                date: date(&l["date"])?,
+                amount: money(l, "amount", c)?,
+            })
+        })
+        .collect()
+}
+
+fn lines_json(lines: &[PlanLine]) -> Value {
+    json!(lines
+        .iter()
+        .map(|l| json!({ "date": l.date.to_string(), "amount": l.amount.minor().to_string() }))
+        .collect::<Vec<_>>())
+}
+
+fn debt_plan(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let spec = PlanSpec {
+        kind: PlanKind::parse(s(v, "kind")?).ok_or_else(|| bad("kind"))?,
+        principal: money(v, "principal", c)?,
+        markup: opt_money(v, "markup", c)?,
+        annual_bp: v["annualBp"].as_i64().unwrap_or(0),
+        months: u32::try_from(v["months"].as_i64().unwrap_or(0)).map_err(|_| bad("months"))?,
+        first_date: date(&v["firstDate"])?,
+        lines: plan_lines(v, c)?,
+    };
+    let lines = build_plan(&spec)?;
+    let total = plan_total(&lines, c)?;
+    let original = if v["originalPrincipal"].is_null() {
+        None
+    } else {
+        Some(money(v, "originalPrincipal", c)?)
+    };
+    let tc = true_cost(&TrueCostInput {
+        principal: spec.principal,
+        original_principal: original,
+        paid_before: opt_money(v, "paidBefore", c)?,
+        plan_total: total,
+        paid_since: opt_money(v, "paidSince", c)?,
+    })?;
+    let goals = v["goals"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default()
+        .iter()
+        .map(|g| Ok(goal_coverage_bp(tc.overpay, Money::new(int_str(g)?, c))?))
+        .collect::<Result<Vec<i64>, E>>()?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "lines": lines_json(&lines),
+        "planTotal": m(total),
+        "trueCost": {
+            "originalPrincipal": m(tc.original_principal),
+            "totalCost": m(tc.total_cost),
+            "overpay": m(tc.overpay),
+            "overpayBp": tc.overpay_bp,
+            "paidTotal": m(tc.paid_total),
+            "remaining": m(tc.remaining),
+            "goalsBp": goals,
+        },
+    }))
+}
+
+fn debt_status(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let st = plan_status(&plan_lines(v, c)?, money(v, "paid", c)?, date(&v["today"])?)?;
+    Ok(json!({
+        "remaining": st.remaining.minor().to_string(),
+        "nextDate": st.next.map(|n| n.date.to_string()),
+        "nextAmount": st.next.map(|n| n.amount.minor().to_string()),
+        "overdue": st.overdue.minor().to_string(),
+        "payoffDate": st.payoff_date.map(|d| d.to_string()),
+        "reminder": st.reminder.map(|r| r.as_str()),
+    }))
+}
+
+fn debt_load(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    Ok(json!({ "loadBp": debt_load_bp(money(v, "payments", c)?, money(v, "income", c)?)? }))
 }

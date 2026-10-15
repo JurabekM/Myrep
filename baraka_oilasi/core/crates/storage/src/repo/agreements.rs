@@ -37,6 +37,60 @@ pub fn insert(
     Ok(())
 }
 
+/// Kelishuv ma'lumotlarini (tilxat: tomonlar, joy, guvohlar) JSON sifatida saqlaydi.
+pub fn set_payload(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    payload_json: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "payload_json", payload_json, m)
+}
+
+pub fn set_status(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    status: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "status", status, m)
+}
+
+fn update(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    column: &str,
+    value: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        &format!(
+            "UPDATE agreements SET {column} = ?4, updated_at = ?5, updated_by_device_id = ?6, version = version + 1
+             WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL"
+        ),
+        params![s.household_id, s.space_id, id, value, m.now, m.device_id],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn payload(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<String>, StorageError> {
+    Ok(c.query_row(
+        "SELECT payload_json FROM agreements
+         WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id, id],
+        |r| r.get(0),
+    )
+    .optional()?
+    .flatten())
+}
+
 pub fn get(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<AgreementRow>, StorageError> {
     Ok(c.query_row(
         "SELECT id, type, status, title, keeper_device_id FROM agreements

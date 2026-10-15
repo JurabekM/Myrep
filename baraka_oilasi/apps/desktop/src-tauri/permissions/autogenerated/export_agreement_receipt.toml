@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-agreement-receipt"
+description = "Enables the export_agreement_receipt command without any pre-configured scope."
+commands.allow = ["export_agreement_receipt"]
+
+[[permission]]
+identifier = "deny-export-agreement-receipt"
+description = "Denies the export_agreement_receipt command without any pre-configured scope."
+commands.deny = ["export_agreement_receipt"]

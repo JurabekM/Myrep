@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-preview-borrow-check"
+description = "Enables the preview_borrow_check command without any pre-configured scope."
+commands.allow = ["preview_borrow_check"]
+
+[[permission]]
+identifier = "deny-preview-borrow-check"
+description = "Denies the preview_borrow_check command without any pre-configured scope."
+commands.deny = ["preview_borrow_check"]

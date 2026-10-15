@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-record-repayment"
+description = "Enables the record_repayment command without any pre-configured scope."
+commands.allow = ["record_repayment"]
+
+[[permission]]
+identifier = "deny-record-repayment"
+description = "Denies the record_repayment command without any pre-configured scope."
+commands.deny = ["record_repayment"]

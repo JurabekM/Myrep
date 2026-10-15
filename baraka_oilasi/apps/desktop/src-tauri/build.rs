@@ -21,6 +21,15 @@ const COMMANDS: &[&str] = &[
     "simulate_loan",
     "check_agreement",
     "export_loan_receipt",
+    "debts_overview",
+    "preview_borrow_check",
+    "add_debt",
+    "add_receivable",
+    "record_repayment",
+    "add_goal",
+    "delete_goal",
+    "issue_loan_receipt",
+    "export_agreement_receipt",
 ];
 
 fn main() {

@@ -13,6 +13,7 @@ export const keys = {
   household: ["household"] as const,
   categories: (spaceId: string) => ["categories", spaceId] as const,
   vault: (spaceId: string) => ["vault", spaceId] as const,
+  debts: (spaceId: string) => ["debts", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

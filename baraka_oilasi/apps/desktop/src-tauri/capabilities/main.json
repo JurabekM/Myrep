@@ -27,6 +27,15 @@
     "allow-monthly-summary",
     "allow-simulate-loan",
     "allow-check-agreement",
-    "allow-export-loan-receipt"
+    "allow-export-loan-receipt",
+    "allow-debts-overview",
+    "allow-preview-borrow-check",
+    "allow-add-debt",
+    "allow-add-receivable",
+    "allow-record-repayment",
+    "allow-add-goal",
+    "allow-delete-goal",
+    "allow-issue-loan-receipt",
+    "allow-export-agreement-receipt"
   ]
 }

@@ -163,7 +163,7 @@
   "pdf_chain_hint": "Bu kodni oʻzingizda saqlang. Keyinchalik yozuvlar oʻzgartirilmaganini shu kod bilan tekshirish mumkin.",
   "nav_receipt": "Qarz tilxati",
   "receipt_title": "Qarz tilxati",
-  "receipt_intro": "Ilovada faqat foizsiz qarz yoziladi: ustama yoki jarima maydoni yoʻq. Toʻlov rejasi majburiy.",
+  "receipt_intro": "Ilovada faqat foizsiz qarz yoziladi: ustama yoki jarima maydoni yoʻq. Toʻlov rejasi majburiy. Tilxat jurnalga yoziladi, keyingi toʻlovlar ham.",
   "receipt_lender": "Qarz beruvchi",
   "receipt_borrower": "Qarz oluvchi",
   "receipt_amount": "Qarz summasi",
@@ -174,12 +174,166 @@
   "receipt_addLine": "Qator qoʻshish",
   "receipt_removeLine": "Oʻchirish",
   "receipt_witnesses": "Guvohlar (vergul bilan)",
-  "receipt_save": "PDF saqlash",
-  "receipt_saved": "Tilxat saqlandi. Uni chop etib, ikkala tomon va guvohlar imzolaydi.",
+  "receipt_save": "Tilxatni saqlash va PDF",
+  "receipt_saved": "Tilxat saqlandi va «Qarzlar» roʻyxatiga qoʻshildi. Uni chop etib, ikkala tomon va guvohlar imzolaydi.",
   "mentor_receipt": "Qarz yozilsa, doʻstlik saqlanadi. Muddat va reja aniq boʻlsin — keyin bir-biringizga qattiq gapirmaysiz.",
   "error_SCHEDULE_REQUIRED": "Toʻlov rejasini kiriting — rejasiz qarz yozilmaydi",
   "error_SCHEDULE_SUM_MISMATCH": "Jadvaldagi summalar yigʻindisi qarz summasiga teng boʻlishi kerak",
   "error_SCHEDULE_DATES_ORDER": "Jadval sanalari berilgan sanadan keyin va oʻsib borishi kerak",
   "error_INVALID_DATE": "Sanani toʻgʻri kiriting",
-  "error_SAME_PARTY": "Qarz beruvchi va oluvchi bir kishi boʻlolmaydi"
+  "error_SAME_PARTY": "Qarz beruvchi va oluvchi bir kishi boʻlolmaydi",
+  "nav_inventory": "Qarzlar",
+  "mentor_inventory": "Qarz — teshik emas, yara. Avval hajmini koʻraylik: hech bir qarzni yashirmang, hammasini yozing.",
+  "debts_title": "Qarzlar",
+  "debts_addDebt": "Qarz qoʻshish",
+  "debts_addReceivable": "Bergan qarz",
+  "debts_total": "Jami qarz qoldigʻi",
+  "debts_none": "Yoʻq",
+  "debts_load": "Oylik qarz yuki",
+  "debts_loadUnknown": "Daromad kiritilmagan",
+  "debts_loadOf": "Shu oy: {due} / {income}",
+  "@debts_loadOf": {
+    "placeholders": {
+      "due": {},
+      "income": {}
+    }
+  },
+  "debts_loadForeign": "Boshqa valyutadagi qarzlar hisobga kirmagan",
+  "debts_receivableTotal": "Bergan qarzlarim",
+  "debts_riboBanner": "Foizli (ribo) qarz bor. Uni yopish tartibda birinchi turadi — reja bilan, oz-ozdan.",
+  "debts_myDebts": "Olgan qarzlarim",
+  "debts_emptyDebts": "Qarz yozilmagan.",
+  "debts_receivables": "Bergan qarzlarim",
+  "debts_emptyReceivables": "Bergan qarz yozilmagan.",
+  "debts_remaining": "Qoldiq",
+  "debts_nextDue": "Keyingi toʻlov",
+  "debts_reminder": "Eslatma",
+  "debts_reminder_DUE_SOON": "Toʻlov muddati yaqin",
+  "debts_reminder_OVERDUE": "Kechikkan: {amount}",
+  "@debts_reminder_OVERDUE": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "debts_reminder_gentle_DUE_SOON": "Muddat yaqin — xushmuomala eslatib qoʻyish mumkin",
+  "debts_reminder_gentle_OVERDUE": "Muddat oʻtdi ({amount}). Majburlamang — gaplashib, yangi muddat kelishing",
+  "@debts_reminder_gentle_OVERDUE": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "debts_planAndPayments": "Reja: {plan} ta toʻlov · yozilgan toʻlovlar: {paid}",
+  "@debts_planAndPayments": {
+    "placeholders": {
+      "paid": {},
+      "plan": {}
+    }
+  },
+  "debts_prepayment": "Muddatidan oldin",
+  "debts_creditor_BANK": "Bank",
+  "debts_creditor_SHOP": "Doʻkon (nasiya)",
+  "debts_creditor_RELATIVE": "Qarindosh",
+  "debts_creditor_FRIEND": "Doʻst",
+  "debts_creditor_OTHER": "Boshqa",
+  "debts_ribo": "Foizli",
+  "debts_closed": "Yopilgan",
+  "debts_withReceipt": "Tilxat bor",
+  "debts_trueCost": "Haqiqiy narx",
+  "debts_overpay": "ortiqcha {amount} ({percent}%)",
+  "@debts_overpay": {
+    "placeholders": {
+      "amount": {},
+      "percent": {}
+    }
+  },
+  "debts_goalEquivalent": "Ortiqcha toʻlov «{title}» maqsadingizning {percent}% iga teng",
+  "@debts_goalEquivalent": {
+    "placeholders": {
+      "percent": {},
+      "title": {}
+    }
+  },
+  "debts_checkedWith": "«Toʻxta va oʻyla» natijasi",
+  "debts_recordPayment": "Toʻlov yozish",
+  "debts_recordReturn": "Qaytarilganini yozish",
+  "debts_receiptPdf": "Tilxat PDF",
+  "debts_hasana": "Qarzi hasana",
+  "debts_paidOn": "Sana",
+  "debts_today": "Bugun",
+  "debts_creditorType": "Kimdan",
+  "debts_creditorName": "Kreditor (ism yoki bank)",
+  "debts_principal": "Hozirgi qoldiq",
+  "debts_reason": "Sababi",
+  "debts_reasonHint": "toʻy, mashina, roʻzgʻor…",
+  "debts_planKind": "Toʻlov rejasi",
+  "debts_plan_MANUAL": "Qoʻlda (sana va summa)",
+  "debts_plan_ANNUITY": "Bank: teng oylik toʻlov",
+  "debts_plan_DIFFERENTIATED": "Bank: kamayib boruvchi toʻlov",
+  "debts_plan_FIXED_MARKUP": "Ustamali nasiya",
+  "debts_firstPayment": "Birinchi toʻlov sanasi",
+  "debts_startedOn": "Qarz olingan sana",
+  "debts_markup": "Ustama (jami)",
+  "debts_riboHint": "Foiz yoki ustama bor qarz qizil belgilanadi. Yangi foizli qarz olmaslikka harakat qilamiz.",
+  "debts_history": "Ilovagacha boʻlgan tarix (haqiqiy narx uchun)",
+  "debts_original": "Dastlab olingan summa",
+  "debts_paidBefore": "Shu kungacha toʻlangan",
+  "debts_terms": "Muddatidan oldin toʻlash shartlari (jarima, komissiya)",
+  "debts_isNew": "Bu qarzni hozir olmoqchiman (yangi qarz)",
+  "debts_debtor": "Kimga berdim",
+  "debts_lentOn": "Berilgan sana",
+  "debts_receivableIntro": "Bergan qarzda foiz yoki ustama maydoni yoʻq — faqat qarzi hasana. Qaytarish rejasi majburiy.",
+  "friction_title": "Toʻxta va oʻyla",
+  "friction_intro": "Qarz olishni taqiqlamaymiz. Faqat uch savol: bu ongli qaror boʻlsin.",
+  "friction_need": "Zaruratmi yoki hashamatmi",
+  "friction_need_NECESSITY": "Zarurat",
+  "friction_need_LUXURY": "Hashamat",
+  "friction_alternatives": "Foizsiz muqobil bormi?",
+  "friction_alt_QOROVUL": "Qorovul pul",
+  "friction_alt_RELATIVE": "Qarindoshdan foizsiz",
+  "friction_alt_SELL_ITEM": "Buyum sotish",
+  "friction_warn_RIBO": "Bu qarz foizli (ribo). Foizsiz yoʻlini yana bir bor qidirib koʻring.",
+  "friction_warn_LUXURY": "Hashamat uchun qarz — keyinga qoldirsa boʻladigan narsa.",
+  "friction_warn_ALTERNATIVE_AVAILABLE": "Foizsiz muqobil bor ekan — avval shuni koʻrib chiqing.",
+  "friction_warn_LOAD_HIGH": "Oylik qarz yuki daromadning 30% idan oshadi.",
+  "friction_warn_LOAD_UNKNOWN": "Daromad yozilmagan — oylik yukni hisoblab boʻlmadi.",
+  "friction_check": "Tekshirish",
+  "friction_confirm": "Oʻyladim, saqlash",
+  "friction_allClear": "Xavotirli belgi yoʻq. Reja boʻyicha toʻlang.",
+  "friction_load": "Bu qarz bilan oylik yuk: {percent}%",
+  "@friction_load": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "friction_cost": "Jami toʻlanadi: {total}, shundan ortiqcha: {overpay}",
+  "@friction_cost": {
+    "placeholders": {
+      "overpay": {},
+      "total": {}
+    }
+  },
+  "friction_notForbidden": "Qaror sizniki. Javoblar qarz yozuvida saqlanadi.",
+  "goals_title": "Maqsadlarim",
+  "goals_intro": "Ortiqcha toʻlov shu maqsadlar bilan solishtiriladi (imkoniyat narxi).",
+  "goals_name": "Maqsad",
+  "goals_target": "Summasi",
+  "goals_add": "Qoʻshish",
+  "receipt_direction": "Tilxat turi",
+  "receipt_direction_BORROWED": "Men qarz oldim",
+  "receipt_direction_LENT": "Men qarz berdim",
+  "receipt_code": "Tekshirish kodi (jurnal boshi). Har bir toʻlov yozilganda u yangilanadi:",
+  "receipt_another": "Yangi tilxat",
+  "error_BORROW_CHECK_REQUIRED": "Yangi qarz uchun «Toʻxta va oʻyla» savollariga javob bering",
+  "error_PAYMENT_EXCEEDS_REMAINING": "Toʻlov qoldiqdan katta boʻlmaydi",
+  "error_ALREADY_CLOSED": "Bu qarz allaqachon yopilgan",
+  "error_MARKUP_REQUIRED": "Ustama summasini kiriting",
+  "error_MARKUP_NOT_ALLOWED": "Bank rejasida ustama alohida kiritilmaydi — stavkani kiriting",
+  "error_INVALID_TERM": "Oylar soni 1 dan 600 gacha boʻlsin",
+  "error_INVALID_RATE": "Stavka notoʻgʻri",
+  "error_ORIGINAL_BELOW_PRINCIPAL": "Dastlabki summa hozirgi qoldiqdan kichik boʻlmaydi",
+  "error_COST_BELOW_PRINCIPAL": "Toʻlangan va qolgan summa dastlabki summadan kam chiqdi — raqamlarni tekshiring",
+  "error_PRINCIPAL_NOT_POSITIVE": "Summa noldan katta boʻlishi kerak",
+  "error_NOT_JOURNAL_KEEPER": "Bu tilxat jurnali boshqa qurilmada yuritiladi",
+  "error_PLAN_JOURNAL_MISMATCH": "Reja jurnaldagi yozuvga mos emas — maʼlumot oʻzgartirilgan boʻlishi mumkin",
+  "error_MARKUP_NEGATIVE": "Ustama manfiy boʻlmaydi"
 }
