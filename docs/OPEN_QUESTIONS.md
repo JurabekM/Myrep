@@ -70,3 +70,7 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 - **Chegarani o'zgartirish rozilikni bekor qiladi (D6, qaror: 2026-10-15).** Yangi chegara — yangi rozilik: hammasi qayta PIN kiritadi. Shunday qoldi. _(40-band)_
 
 **44. Kelishuv ustasi va imzolar (D8A).** 9 savol ustasi (UI), jonli PDF preview, imzolash (sichqoncha/pero/skan), oral kelishuv yozuvi va kelishuv PDF snapshot testi hali yo'q. Domen (`domain::agreement`, `domain::journal`) va saqlash (sxema v8) tayyor. Tauri command qatlami ham keyingi bosqichda. _Kerak: D8A ustasi (UI) — alohida vazifa._
+
+**45. Qarz oldidan yuk chegaralari (D9).** `borrow_check`: oylik yuk daromadning 30% dan — ogohlantirish, 50% dan — to'xtash. SPEC raqam bermaydi. _Kerak: mahsulot qarori._
+
+**46. «Kafolatlangan foyda» qoidasi (D13).** OfferCheck: QIZIL — kafolat yoki piramida; SARIQ — shoshiltirish, yozma shartnoma yo'qligi, real mol/ish yo'qligi, «zarar yo'q» deyilishi. Tekshiruv savollari SPEC 2E.5 dan. _Kerak: mahsulot va huquqiy ko'rib chiqish._

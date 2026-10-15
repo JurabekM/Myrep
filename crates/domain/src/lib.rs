@@ -8,6 +8,7 @@ pub mod agreement;
 pub mod amortization;
 pub mod calendar;
 pub mod category;
+pub mod ceremony;
 pub mod content;
 pub mod content_parser;
 pub mod debt;
@@ -18,12 +19,15 @@ pub mod habit;
 pub mod income;
 pub mod income_source;
 pub mod inflation;
+pub mod interchange;
 pub mod journal;
 pub mod ledger;
 pub mod limit;
+pub mod loans;
 pub mod necessity;
 pub mod obligation;
 pub mod odat;
+pub mod offer_check;
 pub mod partnership;
 pub mod profit_spike;
 pub mod progress;
@@ -31,6 +35,7 @@ pub mod readiness;
 pub mod recovery;
 pub mod report;
 pub mod rescue;
+pub mod review;
 pub mod share;
 pub mod subscription;
 pub mod treat;
@@ -158,6 +163,21 @@ pub enum DomainError {
     /// Kafolatli (qat'iy) summa sheriklikda taqiqlangan.
     #[error("kafolatli daromad taqiqlangan")]
     GuaranteedReturnForbidden,
+    /// Qarz uchun to'lash rejasi kiritilmagan: rejasiz qarz saqlanmaydi.
+    #[error("to'lash rejasi majburiy")]
+    RepaymentPlanRequired,
+    /// Reja summasi qarz summasiga teng emas.
+    #[error("reja summasi qarzga teng emas")]
+    PlanMismatch,
+    /// Qarzli marosim: oilaviy muhokama o'tkazilmagan.
+    #[error("tasdiqlashdan oldin oilaviy muhokama kerak")]
+    FamilyDiscussionRequired,
+    /// Kelishuv nizoda: taqsimot bloklangan.
+    #[error("nizo sababli taqsimot bloklangan")]
+    DistributionBlocked,
+    /// Yozuvni faqat hisob yurituvchi qurilma qo'shishi mumkin.
+    #[error("bu qurilma hisob yurituvchi emas")]
+    NotKeeperDevice,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -199,6 +219,11 @@ impl DomainError {
             Self::SavingsBelowMinimum => "SAVINGS_BELOW_MINIMUM",
             Self::ProfitSharesNotHundred => "PROFIT_SHARES_NOT_100",
             Self::GuaranteedReturnForbidden => "GUARANTEED_RETURN_FORBIDDEN",
+            Self::RepaymentPlanRequired => "REPAYMENT_PLAN_REQUIRED",
+            Self::PlanMismatch => "PLAN_MISMATCH",
+            Self::FamilyDiscussionRequired => "FAMILY_DISCUSSION_REQUIRED",
+            Self::DistributionBlocked => "IN_DISPUTE",
+            Self::NotKeeperDevice => "NOT_KEEPER_DEVICE",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

@@ -4,6 +4,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D9, D11, D13, D13A, D14 (domen qismi) — Qarzlar, marosim, taklif tekshiruvi, nizo, almashish (2026-10-15)
+
+**Qo'shildi**
+
+- `domain::loans`: `RepaymentPlan` (bo'sh reja — `REPAYMENT_PLAN_REQUIRED`), `Loan` va `Receivable` (reja summasi = asosiy qarz; `Receivable` da foiz maydoni yo'q), `borrow_check` (`OK / CAUTION / STOP`).
+- `domain::ceremony`: `BudgetLine` (miqdor × narx), `FundingSource` (`SAVINGS | FAMILY_CONTRIBUTION | EXPECTED_GIFT | DEBT`), `confirm` — qarzli qator bo'lsa oilaviy muhokamasiz tasdiqlanmaydi (`FAMILY_DISCUSSION_REQUIRED`).
+- `domain::offer_check`: 6 savol, `GREEN / YELLOW / RED` va har bir bayroqning izohi.
+- `domain::review`: yillik yangilash eslatmasi (`review_date` dan 30 kun oldin), nizoda taqsimot bloklanishi (`IN_DISPUTE`).
+- `domain::interchange`: kalit qurilma (`NOT_KEEPER_DEVICE`) va import oldidan fork aniqlash (birinchi farq, 1 dan).
+- Yangi `DomainError` kodlari: `REPAYMENT_PLAN_REQUIRED`, `PLAN_MISMATCH`, `FAMILY_DISCUSSION_REQUIRED`, `IN_DISPUTE`, `NOT_KEEPER_DEVICE`.
+
+**Qarorlar (mahsulot qarori — tasdiqlash kerak, OPEN_QUESTIONS 45–46)**
+
+- Qarz oldidan yuk chegaralari: daromadning 30% — ogohlantirish, 50% — to'xtash. SPEC aniq raqam bermaydi.
+- OfferCheck qoidasi: QIZIL — kafolatlangan foyda yoki yangi a'zo talab qilinishi; SARIQ — shoshiltirish, yozma shartnoma yo'qligi, real mol/ish yo'qligi yoki «zarar yo'q» deyilishi; YASHIL — qolgani.
+
+**Ma'lum cheklovlar (keyingi ishga qoldirildi)**
+
+- D9: `Debt` jadval turlari (`DIFFERENTIATED`, `FIXED_MARKUP`, `MANUAL`), storage, IOU (tilxat) PDF, «qarzsiz kun» prognozi, friction ekrani — qo'shilmadi. Qarz va bergan qarz tuzilmalari va reja qoidalari bor.
+- D11: stsenariylarni taqqoslash, «Goal» (maqsadli jamg'arma) va chop etiladigan smeta — qo'shilmadi. Tasdiqlash qoidasi bor.
+- D13: venture ledger saqlash, davrni yopish va o'zgarmaslik (storage), avtomatik taqsimot bilan bog'lash, «Hunardan ishga» stsenariylari, sherik uchun davr PDF — qo'shilmadi. OfferCheck va taqsimot bloklash tayyor.
+- D14: `.baraka` konteyner (shifrlash, JSON Schema `spec/interchange/`), eksport/import oqimi — qo'shilmadi. Kalit qurilma va fork qoidalari tayyor.
+- D15: kod imzolash uchun sertifikat talab qilinadi (tashqi); onboarding va E2E — qo'shilmadi. `docs/RELEASE_CHECKLIST.md` yozildi.
+
 ### D10–D13A (domen qismi) — Amortizatsiya, 70/20/10, sheriklik taqsimoti, katta foyda (2026-10-15)
 
 **Qo'shildi**
