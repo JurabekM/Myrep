@@ -87,9 +87,45 @@ export const commands = {
 } | null, ApiError>(__TAURI_INVOKE("set_task_done", { taskId, done })),
 	/**  «Daftar sahifasi»ni saqlaydi (bob uchun bitta, yangilanadi). */
 	saveDaftarPage: (chapterId: string, body: string) => typedError<DaftarPageDto, ApiError>(__TAURI_INVOKE("save_daftar_page", { chapterId, body })),
+	/**  Oylik xulosa: toifalar, sadaqa, sovg'alar, obro' va qarz bayroqlari. */
+	getMonthSummary: () => typedError<MonthSummaryDto, ApiError>(__TAURI_INVOKE("get_month_summary")),
+	/**  Shu oyning xarajatlari. */
+	listMonthExpenses: () => typedError<ExpenseDto[], ApiError>(__TAURI_INVOKE("list_month_expenses")),
+	/**  Xarajat qo'shadi (toifa kategoriyadan olinadi). */
+	addExpense: (input: ExpenseInputDto) => typedError<ExpenseDto, ApiError>(__TAURI_INVOKE("add_expense", { input })),
+	/**  Kategoriyaning toifasini o'zgartiradi (tarix yoziladi). */
+	setCategoryNecessity: (categoryId: string, necessity: string) => typedError<CategoryDto, ApiError>(__TAURI_INVOKE("set_category_necessity", { categoryId, necessity })),
+	/**  Havas chegarasi holati. */
+	getHavasLimit: () => typedError<HavasLimitDto, ApiError>(__TAURI_INVOKE("get_havas_limit")),
+	/**  Havas chegarasini o'rnatadi (yangi rozilik talab qilinadi). */
+	setHavasLimit: (amount: string) => typedError<HavasLimitDto, ApiError>(__TAURI_INVOKE("set_havas_limit", { amount })),
+	/**  Kattaning roziligi: uning o'z PIN'i bilan. */
+	consentHavasLimit: (memberId: string, pin: string) => typedError<HavasLimitDto, ApiError>(__TAURI_INVOKE("consent_havas_limit", { memberId, pin })),
+	/**  Oila a'zolari. */
+	listMembers: () => typedError<MemberDto[], ApiError>(__TAURI_INVOKE("list_members")),
+	/**  Oila a'zosini qo'shadi. Kattaga PIN majburiy. */
+	addMember: (input: MemberInputDto) => typedError<MemberDto, ApiError>(__TAURI_INVOKE("add_member", { input })),
+	/**  Kattaning PIN'ini o'rnatadi yoki almashtiradi. */
+	setMemberPin: (memberId: string, pin: string) => typedError<MemberDto, ApiError>(__TAURI_INVOKE("set_member_pin", { memberId, pin })),
+	/**  Juma shirinligi ro'yxati. */
+	listTreats: () => typedError<TreatDto[], ApiError>(__TAURI_INVOKE("list_treats")),
+	/**  Juma shirinligini qo'shadi. */
+	addTreat: (input: TreatInputDto) => typedError<TreatDto, ApiError>(__TAURI_INVOKE("add_treat", { input })),
 };
 
 /* Types */
+/**  Kattaning havas chegarasiga roziligi. */
+export type AdultConsentDto = {
+	/**  A'zo identifikatori. */
+	memberId: string,
+	/**  Ismi. */
+	name: string,
+	/**  Rozilik bergan mi. */
+	consented: boolean,
+	/**  PIN o'rnatilganmi (rozilik uchun kerak). */
+	hasPin: boolean,
+};
+
 /**  Commandlar xatosi. `code` frontendda tarjima kalitiga aylanadi; PIN yoki kalit qiymati yo'q. */
 export type ApiError = 
 /**  PIN 6 ta raqamdan iborat emas. */
@@ -180,6 +216,8 @@ export type CategoryDto = {
 	name: string,
 	/**  Tizim kaliti (standart bo'lsa). */
 	systemKey: string | null,
+	/**  Toifa kodi: `ZARUR | KERAK | HAVAS`. */
+	necessity: string,
 };
 
 /**  Kategoriya bo'yicha shu oy xarajatlari. */
@@ -288,6 +326,44 @@ export type DebtDto = {
 	note: string | null,
 };
 
+/**  Xarajat yozuvi (ro'yxat va qo'shish natijasi). */
+export type ExpenseDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Sana (`YYYY-MM-DD`, Toshkent). */
+	occurredOn: string,
+	/**  Summa. */
+	amount: MoneyDto,
+	/**  Kategoriya nomi (bo'lsa). */
+	categoryName: string | null,
+	/**  Toifa kodi: `ZARUR | KERAK | HAVAS`. */
+	necessity: string,
+	/**  Izoh. */
+	note: string | null,
+	/**  Sovg'a: havas hisobiga kirmaydi. */
+	isGift: boolean,
+	/**  Obro' xarajati. */
+	isOstentation: boolean,
+	/**  Qarz bilan qilingan (qizil bayroq). */
+	fundedByDebt: boolean,
+};
+
+/**  Xarajat qo'shish formasi. */
+export type ExpenseInputDto = {
+	/**  Summa matni (masalan, `150 000`). */
+	amount: string,
+	/**  Kategoriya (bo'lsa). Toifa kategoriyadan olinadi. */
+	categoryId: string | null,
+	/**  Izoh. */
+	note: string | null,
+	/**  Sovg'a. */
+	isGift: boolean,
+	/**  Obro' xarajati. */
+	isOstentation: boolean,
+	/**  Qarz bilan qilingan. */
+	fundedByDebt: boolean,
+};
+
 /**  Odat (streak) ko'rsatkichlari. */
 export type HabitDto = {
 	/**  Ketma-ket ajratilgan haftalar. */
@@ -296,6 +372,20 @@ export type HabitDto = {
 	totalWeeks: number,
 	/**  Joriy haftada ajratish bo'lganmi. */
 	thisWeekDone: boolean,
+};
+
+/**  Havas chegarasi holati (ekran uchun). */
+export type HavasLimitDto = {
+	/**  Oylik chegara (o'rnatilmagan bo'lsa — `null`). */
+	limit: MoneyDto | null,
+	/**  Shu oy havas sarfi. */
+	spent: MoneyDto,
+	/**  Daraja: `OK | WARNING | REACHED` (faqat faol chegarada yumshoq ogohlantirish). */
+	level: string,
+	/**  Chegara faolmi: barcha kattalar rozi bo'lgan. */
+	active: boolean,
+	/**  Kattalar va ularning roziligi. */
+	adults: AdultConsentDto[],
 };
 
 /**  Bosh ekran. */
@@ -366,6 +456,28 @@ export type LocalizedDto = {
 	ru: string,
 };
 
+/**  Oila a'zosi. */
+export type MemberDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Ismi. */
+	name: string,
+	/**  Rol: `ADULT | CHILD`. */
+	role: string,
+	/**  PIN o'rnatilganmi. */
+	hasPin: boolean,
+};
+
+/**  Oila a'zosini qo'shish formasi. Kattaga PIN majburiy. */
+export type MemberInputDto = {
+	/**  Ismi. */
+	name: string,
+	/**  Rol: `ADULT | CHILD`. */
+	role: string,
+	/**  PIN (6 raqam). Faqat kattalar uchun. */
+	pin: string | null,
+};
+
 /**  Pul qiymati: minor birlik (satr), valyuta kodi va ko'rsatish uchun formatlangan matn. */
 export type MoneyDto = {
 	/**  Minor birliklar soni (satr: JS sonining 2^53 chegarasidan himoya). */
@@ -374,6 +486,28 @@ export type MoneyDto = {
 	currency: string,
 	/**  Ko'rsatish uchun matn (`8 000 000 soʻm`). */
 	formatted: string,
+};
+
+/**  Oylik xulosa: uch toifa va belgilar bo'yicha jamlanma. */
+export type MonthSummaryDto = {
+	/**  Davr boshi (`YYYY-MM-DD`). */
+	periodStart: string,
+	/**  Davr oxiri (kirmaydi, `YYYY-MM-DD`). */
+	periodEnd: string,
+	/**  `ZARUR` toifadagi xarajatlar. */
+	zarur: MoneyDto,
+	/**  `KERAK` toifadagi xarajatlar. */
+	kerak: MoneyDto,
+	/**  Havas hisobi: `HAVAS`, sovg'a va sadaqa bo'lmagan xarajatlar. */
+	havas: MoneyDto,
+	/**  Sadaqa (havas hisobiga kirmaydi). */
+	sadaqa: MoneyDto,
+	/**  Sovg'alar (havas hisobiga kirmaydi). */
+	gifts: MoneyDto,
+	/**  Obro' xarajatlari (isrof tahlilida alohida). */
+	ostentation: MoneyDto,
+	/**  Qarz bilan qilingan xarajatlar (qizil bayroq). */
+	fundedByDebt: MoneyDto,
 };
 
 /**  Majburiyat. */
@@ -492,6 +626,30 @@ export type TaskDto = {
 	autoCompleted: boolean,
 	/**  Bajarilganmi. */
 	done: boolean,
+};
+
+/**  Juma shirinligi (rejalashtirilgan ritual). */
+export type TreatDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Odatiy summa. */
+	amount: MoneyDto,
+	/**  Hafta kuni: 0 dushanba … 6 yakshanba. */
+	weekday: number,
+	/**  Bugun ritual kunimi. */
+	dueToday: boolean,
+};
+
+/**  Juma shirinligini qo'shish formasi. */
+export type TreatInputDto = {
+	/**  Nomi. */
+	name: string,
+	/**  Summa matni. */
+	amount: string,
+	/**  Hafta kuni: 0 dushanba … 6 yakshanba. */
+	weekday: number,
 };
 
 /**  «Kelajagim» ekrani. */

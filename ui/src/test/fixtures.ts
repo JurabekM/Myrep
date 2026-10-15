@@ -49,11 +49,17 @@ export const AUDIT: AuditDto = {
   lines: [],
   spent: [],
   categories: [
-    { id: "0192a000-0000-7000-8000-0000000000c1", name: "Ijara", systemKey: "RENT" },
+    {
+      id: "0192a000-0000-7000-8000-0000000000c1",
+      name: "Ijara",
+      systemKey: "RENT",
+      necessity: "ZARUR",
+    },
     {
       id: "0192a000-0000-7000-8000-0000000000c2",
       name: "Mayda kundalik",
       systemKey: "DAILY_SMALL",
+      necessity: "KERAK",
     },
   ],
 };

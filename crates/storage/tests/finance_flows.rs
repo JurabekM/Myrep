@@ -4,8 +4,9 @@
 use domain::calendar::{DateRange, month_of};
 use domain::{
     Category, CategoryKey, Channel, DebtPayment, Expense, ExpenseDraft, Household, Income,
-    IncomeDraft, LedgerInput, Meta, MonthlyReport, Obligation, ObligationDraft, ObligationKind,
-    ShareRule, ShareTarget, ShopDebt, VaultEntry, VaultMovement, build_month_ledger,
+    IncomeDraft, LedgerInput, Meta, MonthlyReport, Necessity, Obligation, ObligationDraft,
+    ObligationKind, ShareRule, ShareTarget, ShopDebt, VaultEntry, VaultMovement,
+    build_month_ledger,
 };
 use money::{Currency, Money};
 use rusqlite::Connection;
@@ -280,6 +281,10 @@ fn majburiyat_xarajat_va_qoida_saqlanadi() {
             amount: uzs(1_500_000),
             occurred_on: date!(2026 - 10 - 05),
             note: None,
+            necessity: Necessity::Zarur,
+            is_gift: false,
+            is_ostentation: false,
+            funded_by_debt: false,
         },
         NOW,
         DEVICE,

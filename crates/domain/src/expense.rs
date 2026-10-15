@@ -4,6 +4,7 @@ use money::Money;
 use time::{Date, OffsetDateTime};
 
 use crate::income::normalize_note;
+use crate::necessity::Necessity;
 use crate::{DomainError, Meta, validate_uuid_v7};
 
 /// Xarajat yaratish uchun kiritilgan ma'lumot.
@@ -19,6 +20,14 @@ pub struct ExpenseDraft {
     pub occurred_on: Date,
     /// Ixtiyoriy izoh.
     pub note: Option<String>,
+    /// Toifa: kategoriyadan olinadi, foydalanuvchi o'zgartirishi mumkin.
+    pub necessity: Necessity,
+    /// «Siz olib kelsangiz hisobga kirmaydi» — sovg'a (havas hisobiga kirmaydi).
+    pub is_gift: bool,
+    /// Obro' xarajati (ko'rinish uchun, isrof tahlilida alohida).
+    pub is_ostentation: bool,
+    /// Qarz bilan qilingan xarajat (qizil bayroq).
+    pub funded_by_debt: bool,
 }
 
 /// Xarajat yozuvi.
@@ -38,6 +47,14 @@ pub struct Expense {
     pub occurred_on: Date,
     /// Izoh (bo'sh bo'lsa — `None`).
     pub note: Option<String>,
+    /// Toifa (`ZARUR | KERAK | HAVAS`).
+    pub necessity: Necessity,
+    /// Sovg'a: havas hisobiga kirmaydi.
+    pub is_gift: bool,
+    /// Obro' xarajati.
+    pub is_ostentation: bool,
+    /// Qarz bilan qilingan (qizil bayroq).
+    pub funded_by_debt: bool,
     /// Umumiy metama'lumot.
     pub meta: Meta,
 }
@@ -68,6 +85,10 @@ impl Expense {
             amount: draft.amount,
             occurred_on: draft.occurred_on,
             note: normalize_note(draft.note),
+            necessity: draft.necessity,
+            is_gift: draft.is_gift,
+            is_ostentation: draft.is_ostentation,
+            funded_by_debt: draft.funded_by_debt,
             meta: Meta::created(now, origin_device_id),
         })
     }
@@ -91,9 +112,15 @@ mod tests {
             amount: Money::new(500_000, Currency::Uzs),
             occurred_on: date!(2026 - 10 - 14),
             note: None,
+            necessity: Necessity::Kerak,
+            is_gift: false,
+            is_ostentation: false,
+            funded_by_debt: false,
         };
         let now = datetime!(2026-10-14 06:00 UTC);
         let expense = Expense::create(EXPENSE, HOUSEHOLD, draft, now, "device-1").expect("xarajat");
         assert_eq!(expense.category_id, None);
+        assert_eq!(expense.necessity, Necessity::Kerak);
+        assert!(!expense.is_gift && !expense.is_ostentation && !expense.funded_by_debt);
     }
 }

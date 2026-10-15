@@ -35,6 +35,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "get_weekly_tasks",
             "set_task_done",
             "save_daftar_page",
+            "get_month_summary",
+            "list_month_expenses",
+            "add_expense",
+            "set_category_necessity",
+            "get_havas_limit",
+            "set_havas_limit",
+            "consent_havas_limit",
+            "list_members",
+            "add_member",
+            "set_member_pin",
+            "list_treats",
+            "add_treat",
         ]),
     ))?;
     Ok(())

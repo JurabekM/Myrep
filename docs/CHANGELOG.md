@@ -4,6 +4,45 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D6 — Uch toifa, havas chegarasi, oila kengashi (2026-10-15)
+
+**Qo'shildi**
+
+- **`crates/security`:** a'zo PIN verifier (`member_pin`): tuz va Argon2id, solishtirish doimiy vaqtda. PIN saqlanmaydi.
+- **`crates/domain`:**
+  - `necessity` — `ZARUR | KERAK | HAVAS` va `NecessityChange` (kim, qachon, qaysidan qaysiga). Standart toifalar `CategoryKey::default_necessity` da: ZARUR — ijara, kredit, oziq-ovqat, kommunal, yoqilg'i, yo'lkira; HAVAS — gazak, kafe; KERAK — qolganlari, shu jumladan bola ta'limi va sadaqa.
+  - `Category::change_necessity` — o'zgartirish tarix yozuvi bilan birga qaytadi.
+  - `Expense` — `necessity`, `is_gift`, `is_ostentation`, `funded_by_debt`.
+  - `limit` — `HavasLimit`, `LimitConsent`; `is_active` (barcha kattalar rozi); `counts_as_havas` (`HAVAS`, sovg'a emas, sadaqa emas); `level` (80% va 100% — yumshoq darajalar).
+  - `treat` — `ScheduledTreat` (haftalik, hafta kuni bo'yicha).
+  - `DomainError`: `NECESSITY_UNCHANGED`, `PIN_NOT_SET`.
+- **`crates/storage`:** sxema v4. Toifa standart qiymatlari v1 dagi mavjud ustunlarni (`categories.default_necessity`, `expenses.necessity`) to'ldiradi; migratsiya testi bor. Yangi jadvallar: `necessity_changes`, `havas_limits`, `limit_consents` (`UNIQUE`), `scheduled_treats`; `members` ga `pin_failed_attempts`, `pin_failed_at`. Repo'lar: `PinRepo`, `LimitRepo`, `TreatRepo`; `CategoryRepo` — tarix; `ExpenseRepo` — yangi maydonlar.
+- **`src-tauri`:** `family` servisi va 12 command: `get_month_summary`, `list_month_expenses`, `add_expense`, `set_category_necessity`, `get_havas_limit`, `set_havas_limit`, `consent_havas_limit`, `list_members`, `add_member`, `set_member_pin`, `list_treats`, `add_treat`. Xarajat qo'shilganda `EXPENSE_RECORDED` hodisasi yoziladi.
+- **UI:** «Xarajatlar» sahifasi (oy xulosasi, xarajat qo'shish: sovg'a, obro' va qarz bayroqlari, ro'yxat), «Juma shirinligi» kartasi, «Oila kengashi» (to'liq ekran, 4 qadam: oyni ko'rib chiqish, toifalarni kelishish, havas chegarasi va kattalar roziligi — har biri o'z PIN'i bilan, yakun). i18n: uz va ru.
+
+**Qarorlar va sabablar**
+
+- **Toifa xarajat yozilganda kategoriyadan olinadi va xarajatda saqlanadi.** Keyingi o'zgarish eski yozuvlarni o'zgartirmaydi.
+- **Sovg'a va sadaqa havas hisobiga kirmaydi** (testlar bilan). Obro' xarajati havas ichida qoladi, lekin alohida ko'rsatiladi.
+- **Chegara faol emas**, agar bitta katta ham rozi bo'lmasa (test). Yumshoq ogohlantirish faqat faol chegarada ko'rsatiladi; bloklash yo'q.
+- **Chegara o'zgarsa, rozilik qayta olinadi** — yangi chegara, yangi rozilik.
+- **A'zo PIN'i** ilova PIN'i bilan bir xil himoyada: uchta noto'g'ri urinishdan keyin kutish (`retry_after_secs`).
+- **Juma shirinligi** faqat haftalik. Bildirishnoma yo'q (OPEN_QUESTIONS, 38-band).
+
+**Tekshiruv**
+
+- `cargo test --workspace`: yashil (domen 81, storage oila oqimlari 5 va v4 migratsiyasi, security PIN 5, src-tauri oila 6).
+- `cargo clippy --workspace --all-targets -- -D warnings`: toza. `cargo fmt --all -- --check`: toza.
+- Frontend: `pnpm test` (41, shu jumladan 7 ta yangi oila testi), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`: yashil.
+- GUI: dev build ochilmadi (native oyna avtomatizatsiyaga ulanmadi). React UI in-app brauzerda IPC soxtasi bilan tekshirildi: xarajat qo'shish (sovg'a bayrog'i), toifani o'zgartirish, PIN o'rnatish, noto'g'ri PIN xatosi, ikki katta roziligi («Chegara faol»), Escape bilan yopish.
+
+**Hali bajarilmagan (keyingi bosqich)**
+
+- Bayonnoma PDF (`typst`) va uning snapshot testi: `typst` hali qo'shilmagan (OPEN_QUESTIONS, 35-band).
+- «Hafta varag'i» ommaviy kiritish (36-band).
+- Odat statistikasi, SPEC 2B.9 (37-band).
+- Juma shirinligi bildirishnomalari va a'zo tahriri/o'chirish (38–39-bandlar).
+
 ### D5 — Kontent dvigateli: boblar, odat asosidagi ochilish, haftalik vazifalar, «Daftar sahifasi» (2026-10-14)
 
 **Qo'shildi**

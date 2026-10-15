@@ -3,6 +3,7 @@
 
 use time::OffsetDateTime;
 
+use crate::necessity::{Necessity, NecessityChange};
 use crate::{DomainError, Meta, validate_uuid_v7};
 
 /// Kategoriya yozuvi. Tizim kategoriyasida [`Category::system_key`] bor.
@@ -16,12 +17,14 @@ pub struct Category {
     pub name: String,
     /// Tizim kaliti; foydalanuvchi kategoriyasida `None`.
     pub system_key: Option<CategoryKey>,
+    /// Joriy toifa (`ZARUR | KERAK | HAVAS`). Yangi kategoriyada — `KERAK`.
+    pub necessity: Necessity,
     /// Metama'lumot.
     pub meta: Meta,
 }
 
 impl Category {
-    /// Standart (tizim) kategoriya. Nomi — [`CategoryKey::default_name`].
+    /// Standart (tizim) kategoriya. Nomi — [`CategoryKey::default_name`], toifasi — [`CategoryKey::default_necessity`].
     pub fn system(
         id: &str,
         household_id: &str,
@@ -36,8 +39,33 @@ impl Category {
             household_id: household_id.to_owned(),
             name: key.default_name().to_owned(),
             system_key: Some(key),
+            necessity: key.default_necessity(),
             meta: Meta::created(now, origin_device_id),
         })
+    }
+
+    /// Toifani o'zgartiradi. Qaytadi: yangilangan kategoriya va tarix yozuvi (kim, qachon, qaysidan qaysiga).
+    pub fn change_necessity(
+        mut self,
+        to: Necessity,
+        changed_by: &str,
+        change_id: &str,
+        now: OffsetDateTime,
+        origin_device_id: &str,
+    ) -> Result<(Self, NecessityChange), DomainError> {
+        let change = NecessityChange::create(
+            change_id,
+            &self.household_id,
+            &self.id,
+            (self.necessity, to),
+            changed_by,
+            now,
+            origin_device_id,
+        )?;
+        self.necessity = to;
+        self.meta.updated_at = now;
+        self.meta.version += 1;
+        Ok((self, change))
     }
 }
 
@@ -130,6 +158,23 @@ impl CategoryKey {
             Self::Children => "Bolalar",
             Self::Cafe => "Kafe",
             Self::Other => "Boshqa",
+        }
+    }
+
+    /// Standart toifa (SPEC 2B.2). Ijara, kredit, oziq-ovqat, kommunal, yoqilg'i, yo'lkira — `ZARUR`.
+    /// Bola ta'limi — `KERAK`. Gazak va kafe — `HAVAS`. Sadaqa havas emas, lekin `ZARUR` ham emas: `KERAK`.
+    pub const fn default_necessity(self) -> Necessity {
+        match self {
+            Self::Rent
+            | Self::Credit
+            | Self::Groceries
+            | Self::Utilities
+            | Self::Fuel
+            | Self::Transport => Necessity::Zarur,
+            Self::Snacks | Self::Cafe => Necessity::Havas,
+            Self::DailySmall | Self::Phone | Self::Sadaqa | Self::Children | Self::Other => {
+                Necessity::Kerak
+            }
         }
     }
 }

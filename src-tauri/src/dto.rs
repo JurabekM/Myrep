@@ -326,6 +326,8 @@ pub struct CategoryDto {
     pub name: String,
     /// Tizim kaliti (standart bo'lsa).
     pub system_key: Option<String>,
+    /// Toifa kodi: `ZARUR | KERAK | HAVAS`.
+    pub necessity: String,
 }
 
 /// Oylik audit ekrani.
@@ -563,6 +565,156 @@ pub struct WeeklyTasksDto {
     pub week_start: String,
     /// Vazifalar.
     pub tasks: Vec<TaskDto>,
+}
+
+/// Xarajat yozuvi (ro'yxat va qo'shish natijasi).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ExpenseDto {
+    /// Identifikator.
+    pub id: String,
+    /// Sana (`YYYY-MM-DD`, Toshkent).
+    pub occurred_on: String,
+    /// Summa.
+    pub amount: MoneyDto,
+    /// Kategoriya nomi (bo'lsa).
+    pub category_name: Option<String>,
+    /// Toifa kodi: `ZARUR | KERAK | HAVAS`.
+    pub necessity: String,
+    /// Izoh.
+    pub note: Option<String>,
+    /// Sovg'a: havas hisobiga kirmaydi.
+    pub is_gift: bool,
+    /// Obro' xarajati.
+    pub is_ostentation: bool,
+    /// Qarz bilan qilingan (qizil bayroq).
+    pub funded_by_debt: bool,
+}
+
+/// Xarajat qo'shish formasi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ExpenseInputDto {
+    /// Summa matni (masalan, `150 000`).
+    pub amount: String,
+    /// Kategoriya (bo'lsa). Toifa kategoriyadan olinadi.
+    pub category_id: Option<String>,
+    /// Izoh.
+    pub note: Option<String>,
+    /// Sovg'a.
+    pub is_gift: bool,
+    /// Obro' xarajati.
+    pub is_ostentation: bool,
+    /// Qarz bilan qilingan.
+    pub funded_by_debt: bool,
+}
+
+/// Oylik xulosa: uch toifa va belgilar bo'yicha jamlanma.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MonthSummaryDto {
+    /// Davr boshi (`YYYY-MM-DD`).
+    pub period_start: String,
+    /// Davr oxiri (kirmaydi, `YYYY-MM-DD`).
+    pub period_end: String,
+    /// `ZARUR` toifadagi xarajatlar.
+    pub zarur: MoneyDto,
+    /// `KERAK` toifadagi xarajatlar.
+    pub kerak: MoneyDto,
+    /// Havas hisobi: `HAVAS`, sovg'a va sadaqa bo'lmagan xarajatlar.
+    pub havas: MoneyDto,
+    /// Sadaqa (havas hisobiga kirmaydi).
+    pub sadaqa: MoneyDto,
+    /// Sovg'alar (havas hisobiga kirmaydi).
+    pub gifts: MoneyDto,
+    /// Obro' xarajatlari (isrof tahlilida alohida).
+    pub ostentation: MoneyDto,
+    /// Qarz bilan qilingan xarajatlar (qizil bayroq).
+    pub funded_by_debt: MoneyDto,
+}
+
+/// Kattaning havas chegarasiga roziligi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AdultConsentDto {
+    /// A'zo identifikatori.
+    pub member_id: String,
+    /// Ismi.
+    pub name: String,
+    /// Rozilik bergan mi.
+    pub consented: bool,
+    /// PIN o'rnatilganmi (rozilik uchun kerak).
+    pub has_pin: bool,
+}
+
+/// Havas chegarasi holati (ekran uchun).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HavasLimitDto {
+    /// Oylik chegara (o'rnatilmagan bo'lsa — `null`).
+    pub limit: Option<MoneyDto>,
+    /// Shu oy havas sarfi.
+    pub spent: MoneyDto,
+    /// Daraja: `OK | WARNING | REACHED` (faqat faol chegarada yumshoq ogohlantirish).
+    pub level: String,
+    /// Chegara faolmi: barcha kattalar rozi bo'lgan.
+    pub active: bool,
+    /// Kattalar va ularning roziligi.
+    pub adults: Vec<AdultConsentDto>,
+}
+
+/// Oila a'zosi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MemberDto {
+    /// Identifikator.
+    pub id: String,
+    /// Ismi.
+    pub name: String,
+    /// Rol: `ADULT | CHILD`.
+    pub role: String,
+    /// PIN o'rnatilganmi.
+    pub has_pin: bool,
+}
+
+/// Oila a'zosini qo'shish formasi. Kattaga PIN majburiy.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MemberInputDto {
+    /// Ismi.
+    pub name: String,
+    /// Rol: `ADULT | CHILD`.
+    pub role: String,
+    /// PIN (6 raqam). Faqat kattalar uchun.
+    pub pin: Option<String>,
+}
+
+/// Juma shirinligi (rejalashtirilgan ritual).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TreatDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Odatiy summa.
+    pub amount: MoneyDto,
+    /// Hafta kuni: 0 dushanba … 6 yakshanba.
+    pub weekday: u8,
+    /// Bugun ritual kunimi.
+    pub due_today: bool,
+}
+
+/// Juma shirinligini qo'shish formasi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TreatInputDto {
+    /// Nomi.
+    pub name: String,
+    /// Summa matni.
+    pub amount: String,
+    /// Hafta kuni: 0 dushanba … 6 yakshanba.
+    pub weekday: u8,
 }
 
 /// Pul olish ma'lumoti (forma). PIN alohida argument sifatida keladi.

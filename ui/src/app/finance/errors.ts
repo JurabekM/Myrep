@@ -24,6 +24,9 @@ export const RULE_ERROR_KEYS = {
   TASK_NOT_CURRENT: "errors.taskNotCurrent",
   BODY_REQUIRED: "errors.bodyRequired",
   BODY_TOO_LONG: "errors.bodyTooLong",
+  NECESSITY_UNCHANGED: "errors.necessityUnchanged",
+  PIN_NOT_SET: "errors.pinNotSet",
+  INVALID_ROLE: "errors.invalidRole",
   PARSE_ERROR: "errors.parseError",
   CURRENCY_MISMATCH: "errors.currencyMismatch",
 } as const;
@@ -53,6 +56,9 @@ export function useErrorMessage(): (caught: unknown) => string {
       }
       if (caught.code === "WRONG_PIN") {
         return t("security.wrongPin");
+      }
+      if (caught.code === "INVALID_PIN") {
+        return t("security.invalidPin");
       }
       if (caught.code === "LOCKED_OUT") {
         return t("security.lockedOut", { seconds: caught.retryAfterSeconds ?? 0 });

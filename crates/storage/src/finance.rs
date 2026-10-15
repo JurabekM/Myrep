@@ -7,8 +7,8 @@ use domain::Channel;
 use domain::Meta;
 use domain::calendar::DateRange;
 use domain::{
-    Category, CategoryKey, DebtPayment, Expense, Income, MonthlyReport, Obligation, ObligationKind,
-    ShareRule, ShareTarget, ShopDebt, VaultEntry, VaultMovement,
+    Category, CategoryKey, DebtPayment, Expense, Income, MonthlyReport, Necessity, NecessityChange,
+    Obligation, ObligationKind, ShareRule, ShareTarget, ShopDebt, VaultEntry, VaultMovement,
 };
 use money::{Currency, Money};
 use rusqlite::{Connection, OptionalExtension, Row, params};
@@ -91,13 +91,14 @@ impl<'a> CategoryRepo<'a> {
     pub fn insert(&self, category: &Category) -> Result<(), StorageError> {
         let meta = &category.meta;
         self.conn.execute(
-            "INSERT INTO categories (id, household_id, name, system_key, created_at, updated_at, deleted_at, version, origin_device_id) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            "INSERT INTO categories (id, household_id, name, system_key, default_necessity, created_at, updated_at, deleted_at, version, origin_device_id) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             params![
                 category.id,
                 category.household_id,
                 category.name,
                 category.system_key.map(CategoryKey::code),
+                category.necessity.code(),
                 format_ts(meta.created_at)?,
                 format_ts(meta.updated_at)?,
                 meta.deleted_at.map(format_ts).transpose()?,
@@ -111,7 +112,7 @@ impl<'a> CategoryRepo<'a> {
     /// Xonadonning faol kategoriyalari.
     pub fn list(&self, household_id: &str) -> Result<Vec<Category>, StorageError> {
         let mut statement = self.conn.prepare(
-            "SELECT id, household_id, name, system_key, created_at, updated_at, deleted_at, version, origin_device_id \
+            "SELECT id, household_id, name, system_key, COALESCE(default_necessity, 'KERAK'), created_at, updated_at, deleted_at, version, origin_device_id \
              FROM categories WHERE household_id = ?1 AND deleted_at IS NULL ORDER BY created_at, id",
         )?;
         let rows = statement.query_map([household_id], |row| {
@@ -120,12 +121,13 @@ impl<'a> CategoryRepo<'a> {
                 row.get::<_, String>(1)?,
                 row.get::<_, String>(2)?,
                 row.get::<_, Option<String>>(3)?,
-                RawMeta::read(row, 4)?,
+                row.get::<_, String>(4)?,
+                RawMeta::read(row, 5)?,
             ))
         })?;
         let mut out = Vec::new();
         for row in rows {
-            let (id, household_id, name, key, meta) = row?;
+            let (id, household_id, name, key, necessity, meta) = row?;
             out.push(Category {
                 id,
                 household_id,
@@ -137,8 +139,74 @@ impl<'a> CategoryRepo<'a> {
                         })
                     })
                     .transpose()?,
+                necessity: Necessity::from_code(&necessity)
+                    .ok_or_else(|| StorageError::InvalidData("toifa".to_owned()))?,
                 meta: meta.into_meta()?,
             });
+        }
+        Ok(out)
+    }
+
+    /// Kategoriya toifasini va versiyasini yangilaydi.
+    pub fn update_necessity(&self, category: &Category) -> Result<(), StorageError> {
+        let changed = self.conn.execute(
+            "UPDATE categories SET default_necessity = ?2, updated_at = ?3, version = ?4 WHERE id = ?1 AND deleted_at IS NULL",
+            params![
+                category.id,
+                category.necessity.code(),
+                format_ts(category.meta.updated_at)?,
+                category.meta.version,
+            ],
+        )?;
+        if changed == 0 {
+            return Err(StorageError::NotFound);
+        }
+        Ok(())
+    }
+
+    /// Toifa o'zgarishi tarixiga yozuv qo'shadi (kim, qachon, qaysidan qaysiga).
+    pub fn insert_necessity_change(&self, change: &NecessityChange) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT INTO necessity_changes (id, household_id, category_id, from_necessity, to_necessity, changed_by, created_at, origin_device_id) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![
+                change.id,
+                change.household_id,
+                change.category_id,
+                change.from.code(),
+                change.to.code(),
+                change.changed_by,
+                format_ts(change.meta.created_at)?,
+                change.meta.origin_device_id,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Kategoriyaning toifa o'zgarishlari tarixi (eng yangisi birinchi).
+    pub fn list_necessity_changes(
+        &self,
+        category_id: &str,
+    ) -> Result<Vec<(Necessity, Necessity, String)>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT from_necessity, to_necessity, changed_by FROM necessity_changes \
+             WHERE category_id = ?1 ORDER BY created_at DESC, id DESC",
+        )?;
+        let rows = statement.query_map([category_id], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            let (from, to, by) = row?;
+            let from = Necessity::from_code(&from)
+                .ok_or_else(|| StorageError::InvalidData("toifa".to_owned()))?;
+            let to = Necessity::from_code(&to)
+                .ok_or_else(|| StorageError::InvalidData("toifa".to_owned()))?;
+            out.push((from, to, by));
         }
         Ok(out)
     }
@@ -306,8 +374,9 @@ impl<'a> ExpenseRepo<'a> {
         let meta = &expense.meta;
         self.conn.execute(
             "INSERT INTO expenses (id, household_id, member_id, category_id, channel, amount_minor, currency, occurred_on, note, \
+             necessity, is_gift, is_ostentation, funded_by_debt, \
              created_at, updated_at, deleted_at, version, origin_device_id) \
-             VALUES (?1, ?2, ?3, ?4, 'CASH', ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+             VALUES (?1, ?2, ?3, ?4, 'CASH', ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
             params![
                 expense.id,
                 expense.household_id,
@@ -317,6 +386,10 @@ impl<'a> ExpenseRepo<'a> {
                 currency_code(expense.amount),
                 format_date(expense.occurred_on)?,
                 expense.note,
+                expense.necessity.code(),
+                i64::from(expense.is_gift),
+                i64::from(expense.is_ostentation),
+                i64::from(expense.funded_by_debt),
                 format_ts(meta.created_at)?,
                 format_ts(meta.updated_at)?,
                 meta.deleted_at.map(format_ts).transpose()?,
@@ -335,6 +408,7 @@ impl<'a> ExpenseRepo<'a> {
     ) -> Result<Vec<Expense>, StorageError> {
         let mut statement = self.conn.prepare(
             "SELECT id, household_id, member_id, category_id, amount_minor, currency, occurred_on, note, \
+             necessity, is_gift, is_ostentation, funded_by_debt, \
              created_at, updated_at, deleted_at, version, origin_device_id \
              FROM expenses WHERE household_id = ?1 AND deleted_at IS NULL \
              AND occurred_on >= ?2 AND occurred_on < ?3 ORDER BY occurred_on DESC, created_at DESC",
@@ -355,14 +429,31 @@ impl<'a> ExpenseRepo<'a> {
                     row.get::<_, String>(5)?,
                     row.get::<_, String>(6)?,
                     row.get::<_, Option<String>>(7)?,
-                    RawMeta::read(row, 8)?,
+                    row.get::<_, String>(8)?,
+                    row.get::<_, i64>(9)?,
+                    row.get::<_, i64>(10)?,
+                    row.get::<_, i64>(11)?,
+                    RawMeta::read(row, 12)?,
                 ))
             },
         )?;
         let mut out = Vec::new();
         for row in rows {
-            let (id, household_id, member_id, category_id, minor, currency, occurred, note, meta) =
-                row?;
+            let (
+                id,
+                household_id,
+                member_id,
+                category_id,
+                minor,
+                currency,
+                occurred,
+                note,
+                necessity,
+                is_gift,
+                is_ostentation,
+                funded_by_debt,
+                meta,
+            ) = row?;
             out.push(Expense {
                 id,
                 household_id,
@@ -371,6 +462,11 @@ impl<'a> ExpenseRepo<'a> {
                 amount: money_of(minor, &currency)?,
                 occurred_on: parse_date(&occurred)?,
                 note,
+                necessity: Necessity::from_code(&necessity)
+                    .ok_or_else(|| StorageError::InvalidData("toifa".to_owned()))?,
+                is_gift: is_gift == 1,
+                is_ostentation: is_ostentation == 1,
+                funded_by_debt: funded_by_debt == 1,
                 meta: meta.into_meta()?,
             });
         }

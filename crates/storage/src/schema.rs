@@ -293,9 +293,91 @@ CREATE TABLE daftar_pages (
 ) STRICT;
 "#;
 
+/// Sxema v4 (D6): toifa tarixi, havas chegarasi va rozilik, a'zo PIN urinishlari, Juma shirinligi.
+/// Toifa ustunlari v1 da bor (`default_necessity`, `expenses.necessity`): ular faqat to'ldiriladi.
+pub const SCHEMA_V4: &str = r#"
+UPDATE categories SET default_necessity = CASE system_key
+    WHEN 'RENT' THEN 'ZARUR'
+    WHEN 'CREDIT' THEN 'ZARUR'
+    WHEN 'GROCERIES' THEN 'ZARUR'
+    WHEN 'UTILITIES' THEN 'ZARUR'
+    WHEN 'FUEL' THEN 'ZARUR'
+    WHEN 'TRANSPORT' THEN 'ZARUR'
+    WHEN 'SNACKS' THEN 'HAVAS'
+    WHEN 'CAFE' THEN 'HAVAS'
+    ELSE 'KERAK' END
+WHERE default_necessity IS NULL;
+
+CREATE TABLE necessity_changes (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    category_id TEXT NOT NULL REFERENCES categories (id),
+    from_necessity TEXT NOT NULL CHECK (from_necessity IN ('ZARUR', 'KERAK', 'HAVAS')),
+    to_necessity TEXT NOT NULL CHECK (to_necessity IN ('ZARUR', 'KERAK', 'HAVAS')),
+    changed_by TEXT NOT NULL REFERENCES members (id),
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX necessity_changes_by_category ON necessity_changes (category_id);
+
+UPDATE expenses SET necessity = COALESCE(
+    (SELECT c.default_necessity FROM categories c WHERE c.id = expenses.category_id), 'KERAK')
+WHERE necessity IS NULL;
+
+CREATE TABLE havas_limits (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    monthly_minor INTEGER NOT NULL CHECK (monthly_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX havas_limits_by_household ON havas_limits (household_id);
+
+CREATE TABLE limit_consents (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    limit_id TEXT NOT NULL REFERENCES havas_limits (id),
+    member_id TEXT NOT NULL REFERENCES members (id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (limit_id, member_id)
+) STRICT;
+
+ALTER TABLE members ADD COLUMN pin_failed_attempts INTEGER NOT NULL DEFAULT 0
+    CHECK (pin_failed_attempts >= 0);
+ALTER TABLE members ADD COLUMN pin_failed_at TEXT;
+
+CREATE TABLE scheduled_treats (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    weekday INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX scheduled_treats_by_household ON scheduled_treats (household_id);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(SCHEMA_V1), M::up(SCHEMA_V2), M::up(SCHEMA_V3)])
+    Migrations::new(vec![
+        M::up(SCHEMA_V1),
+        M::up(SCHEMA_V2),
+        M::up(SCHEMA_V3),
+        M::up(SCHEMA_V4),
+    ])
 }
 
 /// Sxemadagi jadvallar (testlar va hujjat uchun).
@@ -316,4 +398,8 @@ pub const TABLES: &[&str] = &[
     "monthly_reports",
     "task_completions",
     "daftar_pages",
+    "necessity_changes",
+    "havas_limits",
+    "limit_consents",
+    "scheduled_treats",
 ];

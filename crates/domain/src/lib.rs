@@ -13,10 +13,13 @@ pub mod expense;
 pub mod habit;
 pub mod income;
 pub mod ledger;
+pub mod limit;
+pub mod necessity;
 pub mod obligation;
 pub mod progress;
 pub mod report;
 pub mod share;
+pub mod treat;
 pub mod unlock;
 pub mod vault;
 
@@ -29,10 +32,13 @@ pub use income::{Channel, Income, IncomeDraft};
 pub use ledger::{
     LedgerInput, MoneyOwner, MonthLedger, ObligationLine, build_month_ledger, whose_money,
 };
+pub use limit::{HavasLimit, LimitConsent, LimitLevel};
+pub use necessity::{Necessity, NecessityChange};
 pub use obligation::{Obligation, ObligationDraft, ObligationKind};
 pub use progress::{DaftarPage, TaskCompletion};
 pub use report::MonthlyReport;
 pub use share::{ShareRule, ShareTarget, progression_offer, suggest_share};
+pub use treat::ScheduledTreat;
 pub use unlock::{ChapterUnlock, ChapterUnlockPolicy, HabitUnlockPolicy, UnlockContext};
 pub use vault::{VaultEntry, VaultMovement};
 
@@ -111,6 +117,12 @@ pub enum DomainError {
     /// «Daftar sahifasi» matni chegaradan uzun.
     #[error("sahifa matni 5000 belgidan oshmasligi kerak")]
     BodyTooLong,
+    /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
+    #[error("toifa o'zgarmagan")]
+    NecessityUnchanged,
+    /// A'zoning PIN'i hali o'rnatilmagan: rozilik berib bo'lmaydi.
+    #[error("a'zoning PIN'i o'rnatilmagan")]
+    PinNotSet,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -138,6 +150,8 @@ impl DomainError {
             Self::TaskNotCurrent => "TASK_NOT_CURRENT",
             Self::BodyRequired => "BODY_REQUIRED",
             Self::BodyTooLong => "BODY_TOO_LONG",
+            Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
+            Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),
         }
     }

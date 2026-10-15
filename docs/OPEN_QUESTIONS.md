@@ -41,6 +41,13 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 33. **Hodisasiz vazifalar (D5).** `ch02.t2`, `ch02.t3`, `ch03.*`, `ch04.*`, `ch05.t1` uchun modullar hali yo'q: bu vazifalar faqat qo'lda belgilanadi. Modul tayyor bo'lganda shu hodisa `record_event` orqali yoziladi. `ch05.t2` — hodisasi yo'q, qo'lda. _Kerak: D6–D9 har modulida._
 34. **«Daftar sahifasi» uzunligi (D5).** Standart qaror: 5000 belgi (backend va textarea). Mobilda chegara yo'q edi. Chegara to'g'rimi yoki boshqacha bo'lsinmi? _Kerak: tasdiq._
 
+35. **Bayonnoma PDF (typst) — D6 da bajarilmadi (D6).** Oila kengashining yakuniy PDF bayonnomasi (DESKTOP_PROMPT 7) va uning snapshot testi yo'q: `typst` hali repo'ga qo'shilmagan. Shrift tanlash kerak: `ʻ` (U+02BB) va `ʼ` (U+02BC) to'g'ri chiqishi shart. _Kerak: D6 davomi, typst ADR tasdig'i bilan._
+36. **«Hafta varag'i» ommaviy kiritish (D6).** Bir haftaning xarajatlarini jadvalda ketma-ket kiritish hali yo'q. _Kerak: D6 davomi._
+37. **Odat statistikasi (D6).** SPEC 2B.9: «oyiga X, yiliga Y» ko'rinishidagi odatlar hali yo'q. _Kerak: D6 davomi._
+38. **Juma shirinligi bildirishnomasi (D6).** Ritual faqat ma'lumot va «bugun» belgisi. Tizim bildirishnomasi (`tauri-plugin-notification`) yo'q. _Kerak: bildirishnomalar bosqichi (D8 yoki D15)._
+39. **A'zo PIN'ini o'zgartirish xavfsizligi (D6, qaror kerak).** `set_member_pin` joriy PIN so'ramaydi: ilova ochiq bo'lsa, istalgan kishi kattaning PIN'ini almashtira oladi va shu bilan uning roziligini soxtalashtira oladi. Variantlar: (a) joriy PIN so'rash; (b) faqat egasi o'zgartira oladi; (c) hozirgi holat. Hozircha a'zolarni tahrirlash/o'chirish ham yo'q. _Kerak: D6 xavfsizlik ko'rigi, tasdiq bilan._
+40. **Chegarani o'zgartirish rozilikni bekor qiladi (D6).** Yangi chegara — yangi rozilik (hammasi qayta PIN kiritadi). Bu to'g'rimi yoki oldingi rozilik saqlansinmi? _Kerak: tasdiq._
+
 ## Hal qilingan
 
 - **MoneyParser (D4, 2026-10-14).** `money::parse_amount` mobil qoidalari bo'yicha: bo'sh joy, `_`, apostroflar, valyuta belgisi va so'zi; `money_parse.json` (16 vektor, shu jumladan xato holatlari). _(6-band)_

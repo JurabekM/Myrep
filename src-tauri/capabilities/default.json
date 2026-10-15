@@ -36,6 +36,18 @@
     "allow-get-chapter",
     "allow-get-weekly-tasks",
     "allow-set-task-done",
-    "allow-save-daftar-page"
+    "allow-save-daftar-page",
+    "allow-get-month-summary",
+    "allow-list-month-expenses",
+    "allow-add-expense",
+    "allow-set-category-necessity",
+    "allow-get-havas-limit",
+    "allow-set-havas-limit",
+    "allow-consent-havas-limit",
+    "allow-list-members",
+    "allow-add-member",
+    "allow-set-member-pin",
+    "allow-list-treats",
+    "allow-add-treat"
   ]
 }

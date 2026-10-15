@@ -7,6 +7,8 @@ mod commands;
 mod content;
 mod content_commands;
 mod dto;
+mod family;
+mod family_commands;
 mod finance;
 mod finance_commands;
 mod session;
@@ -68,6 +70,18 @@ fn specta_builder() -> Builder<tauri::Wry> {
         content_commands::get_weekly_tasks,
         content_commands::set_task_done,
         content_commands::save_daftar_page,
+        family_commands::get_month_summary,
+        family_commands::list_month_expenses,
+        family_commands::add_expense,
+        family_commands::set_category_necessity,
+        family_commands::get_havas_limit,
+        family_commands::set_havas_limit,
+        family_commands::consent_havas_limit,
+        family_commands::list_members,
+        family_commands::add_member,
+        family_commands::set_member_pin,
+        family_commands::list_treats,
+        family_commands::add_treat,
     ])
 }
 

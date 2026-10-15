@@ -71,8 +71,8 @@ describe("Baraka daftari ilova qobig'i", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // «Xarajatlar» hali tayyor emas (D6); «Daromad» endi ochiq.
-    const expensesButton = await screen.findByRole("button", { name: "Xarajatlar" });
+    // «Byudjet» hali tayyor emas (keyingi bosqich); «Xarajatlar» D6 da ochildi.
+    const expensesButton = await screen.findByRole("button", { name: "Byudjet" });
     expect(expensesButton).toHaveAttribute("aria-disabled", "true");
 
     // Avval sabab ko'rinadi (hover), keyin bosish sinaladi: bosilgach tooltip qayta ochilmaydi (Radix xulqi).

@@ -5,6 +5,7 @@
 
 mod db;
 mod error;
+mod family;
 mod finance;
 mod progress;
 mod repo;
@@ -12,6 +13,7 @@ pub mod schema;
 
 pub use db::Database;
 pub use error::StorageError;
+pub use family::{LimitRepo, PinRepo, PinState, TreatRepo};
 pub use finance::{
     CategoryRepo, DebtRepo, ExpenseRepo, IncomeRepo, ObligationRepo, ReportRepo, RuleRepo,
     StoredRule, VaultRepo,

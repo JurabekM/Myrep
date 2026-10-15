@@ -9,8 +9,8 @@ use domain::calendar::{DateRange, month_of, previous_month_of, shift_days, tashk
 use domain::{
     Category, CategoryKey, Channel, DebtPayment, DomainError, Expense, ExpenseDraft, HabitStats,
     Household, Income, IncomeDraft, LedgerInput, Member, MemberRole, MonthLedger, MonthlyReport,
-    Obligation, ObligationDraft, ObligationKind, ShareRule, ShareTarget, ShopDebt, TaskTrigger,
-    VaultEntry, VaultMovement, build_month_ledger,
+    Necessity, Obligation, ObligationDraft, ObligationKind, ShareRule, ShareTarget, ShopDebt,
+    TaskTrigger, VaultEntry, VaultMovement, build_month_ledger,
     debt::{outstanding, validate_payment},
     habit_stats, progression_offer, streak_since, suggest_share,
     vault::{balance, saved_in, validate_initial, validate_share, validate_withdrawal},
@@ -143,7 +143,7 @@ fn previous_month(ctx: &Context, date: Date) -> Result<DateRange, SessionError> 
 }
 
 /// Matnni so'm summasiga aylantiradi (`8 000 000`, `12,5`).
-fn parse_money(text: &str) -> Result<Money, SessionError> {
+pub(crate) fn parse_money(text: &str) -> Result<Money, SessionError> {
     Ok(parse_amount(text, CURRENCY).map_err(DomainError::from)?)
 }
 
@@ -586,6 +586,7 @@ fn category_dto(category: &Category) -> CategoryDto {
         id: category.id.clone(),
         name: category.name.clone(),
         system_key: category.system_key.map(|k| k.code().to_owned()),
+        necessity: category.necessity.code().to_owned(),
     }
 }
 
@@ -643,6 +644,15 @@ fn insert_expense(
     occurred_on: Date,
     note: Option<String>,
 ) -> Result<(), SessionError> {
+    // Toifa kategoriyadan olinadi; kategoriyasiz xarajat — `KERAK` (SPEC 2B.2).
+    let necessity = match category_id.as_deref() {
+        Some(id) => CategoryRepo::new(db.connection())
+            .list(&ctx.household.id)?
+            .iter()
+            .find(|category| category.id == id)
+            .map_or(Necessity::Kerak, |category| category.necessity),
+        None => Necessity::Kerak,
+    };
     let expense = Expense::create(
         &domain::IdGen::next_id(&UuidV7),
         &ctx.household.id,
@@ -652,6 +662,10 @@ fn insert_expense(
             amount,
             occurred_on,
             note,
+            necessity,
+            is_gift: false,
+            is_ostentation: false,
+            funded_by_debt: false,
         },
         now,
         DEVICE_ID,

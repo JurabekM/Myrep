@@ -48,7 +48,7 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { id: "home", icon: House, enabled: true },
   { id: "income", icon: Banknote, enabled: true },
-  { id: "expenses", icon: Receipt, enabled: false },
+  { id: "expenses", icon: Receipt, enabled: true },
   { id: "future", icon: Sprout, enabled: true },
   { id: "budget", icon: Wallet, enabled: false },
   { id: "debts", icon: ScrollText, enabled: false },

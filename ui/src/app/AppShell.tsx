@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { AuditPage } from "./pages/AuditPage";
 import { ChaptersPage } from "./pages/ChaptersPage";
+import { ExpensesPage } from "./pages/ExpensesPage";
 import { HomePage } from "./pages/HomePage";
 import { IncomePage } from "./pages/IncomePage";
 import { ObligationsPage } from "./pages/ObligationsPage";
@@ -85,6 +86,8 @@ function CurrentPage({ page }: { page: PageId }) {
       return <ObligationsPage />;
     case "chapters":
       return <ChaptersPage />;
+    case "expenses":
+      return <ExpensesPage />;
     case "settings":
       return <SettingsPage />;
     default:
