@@ -18,6 +18,8 @@ mod finance;
 mod finance_commands;
 mod notify;
 mod report;
+mod reserve;
+mod reserve_commands;
 mod session;
 
 use std::sync::Arc;
@@ -105,6 +107,11 @@ fn specta_builder() -> Builder<tauri::Wry> {
         csv_commands::import_csv_expenses,
         desktop::show_main_window,
         desktop::hide_quick_window,
+        reserve_commands::get_reserve,
+        reserve_commands::get_prices,
+        reserve_commands::add_price_item,
+        reserve_commands::update_price,
+        reserve_commands::remove_price_item,
     ])
 }
 

@@ -320,6 +320,82 @@ pub struct BaselineInputDto {
     pub period_start: String,
 }
 
+/// Qorovul zaxirasi holati (D8). Hisob domen'da; UI faqat ko'rsatadi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReserveDto {
+    /// «Kelajagim» balansi.
+    pub balance: MoneyDto,
+    /// Oylik `ZARUR + KERAK` o'rtachasi (3 ma'lumotli oy bo'yicha); yetarli oy bo'lmasa `null`.
+    pub monthly_average: Option<MoneyDto>,
+    /// Birinchi bosqich maqsadi (3 oy).
+    pub target_first: Option<MoneyDto>,
+    /// To'liq maqsad (6 oy).
+    pub target_full: Option<MoneyDto>,
+    /// Necha oylik zaxira bor, o'ndan bir (14 = 1,4 oy).
+    pub reserve_months_tenths: Option<u32>,
+    /// To'liq maqsad oylari (6).
+    pub target_months: u32,
+    /// Darvoza: `OPEN` yoki `LOCKED`.
+    pub gate: String,
+    /// Darvoza yopiq sabablari (`RESERVE_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`).
+    pub reasons: Vec<String>,
+    /// Ma'lumotli (xarajati bo'lgan) o'tgan oylar soni (12 tagacha).
+    pub data_months: u32,
+}
+
+/// Narx daftari yozuvi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PriceItemDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Bazaviy narx.
+    pub base_price: MoneyDto,
+    /// Joriy narx.
+    pub current_price: MoneyDto,
+    /// Bazaviy xarajatdagi ulush, bp.
+    pub weight_bp: u32,
+    /// O'zgarish, bp (indeks hisoblanmasa `null`).
+    pub change_bp: Option<i32>,
+}
+
+/// Narx daftari: yozuvlar, indeks va «Sichqon kemirgani».
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PricesDto {
+    /// Yozuvlar.
+    pub items: Vec<PriceItemDto>,
+    /// Shaxsiy indeks, bp; og'irlikli yozuv bo'lmasa `null`.
+    pub index_bp: Option<i32>,
+    /// «Kelajagim» balansi (nominal).
+    pub balance: MoneyDto,
+    /// Balansning bugungi narxlardagi real qiymati.
+    pub real_value: Option<MoneyDto>,
+    /// Misol mahsulot nomi (birinchi yozuv).
+    pub example_name: Option<String>,
+    /// Bazaviy narxda nechta birlik.
+    pub example_units_before: Option<u32>,
+    /// Joriy narxda nechta birlik.
+    pub example_units_now: Option<u32>,
+}
+
+/// Narx yozuvi kiritish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PriceItemInputDto {
+    /// Nomi.
+    pub name: String,
+    /// Bazaviy narx matni.
+    pub base_price: String,
+    /// Joriy narx matni.
+    pub current_price: String,
+    /// Ulush, bp (0..=10 000).
+    pub weight_bp: u32,
+}
+
 /// CSV import: ustunlarni moslash.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]

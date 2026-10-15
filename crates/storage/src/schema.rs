@@ -486,6 +486,25 @@ BEGIN
 END;
 "#;
 
+/// Sxema v9 (D8 UI, «Narx daftari»): mahsulot narxlari — bazaviy va joriy, bazaviy xarajatdagi ulush (bp).
+pub const SCHEMA_V9: &str = r#"
+CREATE TABLE price_items (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    base_minor INTEGER NOT NULL CHECK (base_minor > 0),
+    current_minor INTEGER NOT NULL CHECK (current_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    weight_bp INTEGER NOT NULL CHECK (weight_bp BETWEEN 0 AND 10000),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX price_items_by_household ON price_items (household_id);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -497,6 +516,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V6),
         M::up(SCHEMA_V7),
         M::up(SCHEMA_V8),
+        M::up(SCHEMA_V9),
     ])
 }
 
@@ -528,4 +548,5 @@ pub const TABLES: &[&str] = &[
     "household_settings",
     "agreements",
     "journal_entries",
+    "price_items",
 ];

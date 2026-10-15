@@ -163,6 +163,11 @@ fn context_household_id(db: &Database, now: OffsetDateTime) -> Result<String, Se
 }
 
 /// Barcha «Kelajagim» yozuvlari (tarixdan tashqari hisob uchun).
+/// «Kelajagim» balansi (D8 zaxira hisobi uchun).
+pub(crate) fn vault_balance(db: &Database, now: OffsetDateTime) -> Result<Money, SessionError> {
+    Ok(balance(&vault_entries(db, now)?, CURRENCY)?)
+}
+
 fn vault_entries(db: &Database, now: OffsetDateTime) -> Result<Vec<VaultEntry>, SessionError> {
     let asset = vault_asset(db, now)?;
     Ok(VaultRepo::new(db.connection()).list_entries(&asset)?)

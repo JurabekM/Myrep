@@ -3,6 +3,7 @@ import { type SyntheticEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type ShareRuleDto, commands } from "../../bindings/bindings";
 import { unwrap } from "../finance/command-error";
+import { ReserveCard } from "../finance/ReserveCard";
 import { useErrorMessage } from "../finance/errors";
 import { fetchers, financeKeys, useInvalidateFinance } from "../finance/queries";
 import {
@@ -61,6 +62,8 @@ export function VaultPage() {
           {t("vault.totalWeeks", { weeks: data.habit.totalWeeks })}
         </p>
       </Card>
+
+      <ReserveCard />
 
       {data.progressionOfferBp !== null ? <ProgressionCard bp={data.progressionOfferBp} /> : null}
       <RuleCard rule={data.rule} />

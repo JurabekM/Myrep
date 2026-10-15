@@ -15,6 +15,8 @@ export const financeKeys = {
   categories: ["finance", "categories"] as const,
   obligations: ["finance", "obligations"] as const,
   debts: ["finance", "debts"] as const,
+  reserve: ["finance", "reserve"] as const,
+  prices: ["finance", "prices"] as const,
 };
 
 /** Moliyaviy yozuv o'zgarganda barcha moliya keshlarini qayta yuklaydi. */

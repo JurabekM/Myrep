@@ -143,6 +143,16 @@ export const commands = {
 	showMainWindow: () => typedError<null, ApiError>(__TAURI_INVOKE("show_main_window")),
 	/**  Mini oynani yashiradi (Escape yoki saqlashdan keyin). */
 	hideQuickWindow: () => typedError<null, ApiError>(__TAURI_INVOKE("hide_quick_window")),
+	/**  Qorovul zaxirasi: maqsad, necha oylik zaxira, darvoza. */
+	getReserve: () => typedError<ReserveDto, ApiError>(__TAURI_INVOKE("get_reserve")),
+	/**  Narx daftari: yozuvlar, indeks, «Sichqon kemirgani». */
+	getPrices: () => typedError<PricesDto, ApiError>(__TAURI_INVOKE("get_prices")),
+	/**  Narx yozuvi qo'shadi. */
+	addPriceItem: (input: PriceItemInputDto) => typedError<PricesDto, ApiError>(__TAURI_INVOKE("add_price_item", { input })),
+	/**  Joriy narxni yangilaydi. */
+	updatePrice: (id: string, currentPrice: string) => typedError<PricesDto, ApiError>(__TAURI_INVOKE("update_price", { id, currentPrice })),
+	/**  Narx yozuvini o'chiradi. */
+	removePriceItem: (id: string) => typedError<PricesDto, ApiError>(__TAURI_INVOKE("remove_price_item", { id })),
 };
 
 /* Types */
@@ -727,6 +737,52 @@ export type OwnerPartDto = {
 	shareBp: number,
 };
 
+/**  Narx daftari yozuvi. */
+export type PriceItemDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Bazaviy narx. */
+	basePrice: MoneyDto,
+	/**  Joriy narx. */
+	currentPrice: MoneyDto,
+	/**  Bazaviy xarajatdagi ulush, bp. */
+	weightBp: number,
+	/**  O'zgarish, bp (indeks hisoblanmasa `null`). */
+	changeBp: number | null,
+};
+
+/**  Narx yozuvi kiritish. */
+export type PriceItemInputDto = {
+	/**  Nomi. */
+	name: string,
+	/**  Bazaviy narx matni. */
+	basePrice: string,
+	/**  Joriy narx matni. */
+	currentPrice: string,
+	/**  Ulush, bp (0..=10 000). */
+	weightBp: number,
+};
+
+/**  Narx daftari: yozuvlar, indeks va «Sichqon kemirgani». */
+export type PricesDto = {
+	/**  Yozuvlar. */
+	items: PriceItemDto[],
+	/**  Shaxsiy indeks, bp; og'irlikli yozuv bo'lmasa `null`. */
+	indexBp: number | null,
+	/**  «Kelajagim» balansi (nominal). */
+	balance: MoneyDto,
+	/**  Balansning bugungi narxlardagi real qiymati. */
+	realValue: MoneyDto | null,
+	/**  Misol mahsulot nomi (birinchi yozuv). */
+	exampleName: string | null,
+	/**  Bazaviy narxda nechta birlik. */
+	exampleUnitsBefore: number | null,
+	/**  Joriy narxda nechta birlik. */
+	exampleUnitsNow: number | null,
+};
+
 /**  «Qutqarilgan pul» hisobi (joriy davr). Summalar domen'da hisoblangan; UI faqat ko'rsatadi. */
 export type RescueDto = {
 	/**  Havas kamayishi (ko'rsatishda manfiy bo'lsa 0). */
@@ -751,6 +807,28 @@ export type RescueDto = {
 	periodStart: string,
 	/**  Joriy davr tugashi, kirmaydi (`YYYY-MM-DD`). */
 	periodEnd: string,
+};
+
+/**  Qorovul zaxirasi holati (D8). Hisob domen'da; UI faqat ko'rsatadi. */
+export type ReserveDto = {
+	/**  «Kelajagim» balansi. */
+	balance: MoneyDto,
+	/**  Oylik `ZARUR + KERAK` o'rtachasi (3 ma'lumotli oy bo'yicha); yetarli oy bo'lmasa `null`. */
+	monthlyAverage: MoneyDto | null,
+	/**  Birinchi bosqich maqsadi (3 oy). */
+	targetFirst: MoneyDto | null,
+	/**  To'liq maqsad (6 oy). */
+	targetFull: MoneyDto | null,
+	/**  Necha oylik zaxira bor, o'ndan bir (14 = 1,4 oy). */
+	reserveMonthsTenths: number | null,
+	/**  To'liq maqsad oylari (6). */
+	targetMonths: number,
+	/**  Darvoza: `OPEN` yoki `LOCKED`. */
+	gate: string,
+	/**  Darvoza yopiq sabablari (`RESERVE_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`). */
+	reasons: string[],
+	/**  Ma'lumotli (xarajati bo'lgan) o'tgan oylar soni (12 tagacha). */
+	dataMonths: number,
 };
 
 /**  Xavfsizlik holati DTO: PIN o'rnatilganmi va baza ochiqmi. */

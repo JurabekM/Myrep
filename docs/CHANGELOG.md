@@ -4,6 +4,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D8 UI — Qorovul zaxirasi kartasi va «Narx daftari» (2026-10-15)
+
+**Qo'shildi**
+
+- **Kelajagim → «Qorovul pul»** kartasi (`ReserveCard.tsx`, `src-tauri/src/reserve.rs`): oylik `ZARUR + KERAK` o'rtachasi (so'nggi 12 oydan 3 ta ma'lumotli oy, joriy oy kirmaydi), 3 va 6 oylik maqsad (`domain::emergency`), «necha oylik zaxira bor» progressi (o'ndan bir oy, `1,4 / 6 oy`), tayyorgarlik darvozasi (`domain::readiness`) va sabablari. Ma'lumotli oy 3 tadan kam bo'lsa — tushuntirish, raqam emas.
+- **«Narx daftari»** sahifasi (`PricesPage.tsx`, nav ochildi): mahsulot (bazaviy narx → joriy narx, xarajatdagi ulushi), har biri uchun o'zgarish (bp), shaxsiy indeks (`domain::inflation::personal_index`), **«Sichqon kemirgani»** — balansning bugungi narxlardagi real qiymati (`real_value`) va misol («avval N dona, hozir M dona»), keyingi qadam matni. Narxni yangilash (inline), o'chirish (mantiqiy).
+- Sxema v9 `price_items`; `PriceRepo`; commandlar `get_reserve`, `get_prices`, `add_price_item`, `update_price`, `remove_price_item`.
+- Testlar: domen (`real_value`, `units_affordable`), Tauri xizmati (2), UI (`prices.test.tsx`, 3).
+
+**Qarorlar va sabablar**
+
+- Darvozaning qarz sharti (foizli qarz / chiqish rejasi) D9 gacha «yo'q» deb olinadi (MVP_PLAN: stub). D9 da `borrow_check` va qarz ro'yxati ulanadi.
+- Oylik o'rtacha = 3 oylik maqsad / 3: ikkala raqam bir xil uchta oydan, yaxlitlash mos.
+- `PricesDto.example_units_*` — `u32`: specta `i64` ni TS'ga chiqarmaydi (BigInt taqiqi); birliklar soni manfiy bo'lmaydi.
+- `PriceItem::create` 8 argumentdan `PriceDraft` tuzilmasiga o'tdi (clippy `too_many_arguments`, `#[allow]` yo'q).
+
+**GUI sinovi (haqiqiy oyna)**
+
+- Kelajagim: karta ko'rindi («hozir: 0» ma'lumotli oy, darvoza yopiq, sabab). Narx daftari: yozuv qo'shish → +62,5 %, real qiymat 2 461,54; narx yangilash → +100,0 %, 2 000; o'chirish.
+- Topilgan va tuzatilgan nuqson: inline narx maydoni fokuslanmasdi — yozilgan matn yo'qolardi (`autoFocus`).
+
+**Ma'lum cheklovlar**
+
+- «Ongli chetlab o'tish» (qaror: bitta amal, sabab, ADULT PIN) hali UI'da yo'q — D9 qarz oqimi bilan birga.
+- Misoldagi birliklar balans narxdan kichik bo'lsa «0 dona» chiqadi — to'g'ri, lekin matn boyitilishi mumkin.
+
 ### D7 qoldig'i — Tray, Ctrl+Alt+B mini oyna, CSV import ustasi (2026-10-15)
 
 **Qo'shildi**
