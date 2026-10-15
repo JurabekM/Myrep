@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { commands } from "../../bindings";
 import { call } from "../../lib/api";
 import { keys } from "../../lib/queryClient";
+import { showDate } from "../../lib/date";
 import { useUi } from "../../state/ui";
 
 /** Bosh sahifa: 1-raqam — «Oʻzingizga toʻlangan (shu oy)», keyin odat va oy yakuni. */
@@ -12,6 +13,9 @@ export function HomeScreen({ spaceId }: { spaceId: string }) {
   const openIncome = useUi((s) => s.openIncome);
   const summary = useQuery({ queryKey: keys.summary(spaceId, null), queryFn: () => call(commands.monthlySummary(spaceId, null, null)) });
   const vault = useQuery({ queryKey: keys.vault(spaceId), queryFn: () => call(commands.vault(spaceId)) });
+  const debts = useQuery({ queryKey: keys.debts(spaceId), queryFn: () => call(commands.debtsOverview(spaceId)) });
+  const setScreen = useUi((s) => s.setScreen);
+  const free = debts.data?.debtFreeDate;
 
   return (
     <section className="flex flex-col gap-5">
@@ -30,6 +34,16 @@ export function HomeScreen({ spaceId }: { spaceId: string }) {
           <p className="kpi">{summary.data?.monthResult.formatted ?? "…"}</p>
         </div>
       </div>
+      {free && (
+        <button className="card text-left hover:border-accent" onClick={() => setScreen("debts")}>
+          <p className="text-sm text-ink-muted">{t("home.debtFree")}</p>
+          <p data-testid="kpi-debt-free" className="kpi text-accent">{showDate(free)}</p>
+          <p className="text-sm text-ink-muted">
+            {t("payoff.months", { count: debts.data?.debtFreeMonths ?? 0 })}
+            {debts.data?.debtFreeDateWithPlan ? ` · ${t("home.withPlan", { date: showDate(debts.data.debtFreeDateWithPlan) })}` : ""}
+          </p>
+        </button>
+      )}
       <div>
         <button className="btn-primary" onClick={openIncome}>
           {t("home.quickIncome")} <kbd className="text-xs opacity-80">Ctrl+N</kbd>

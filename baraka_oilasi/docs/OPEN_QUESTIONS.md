@@ -45,7 +45,12 @@
 - **Masala:** SPEC 2D.6 yukni so'raydi, lekin chegara bermaydi. Oylik yuk qanday hisoblanadi?
 - **Hozirgi standart (U8):** yuk = shu oy davridagi reja to'lovlari / oylik daromad (oxirgi 3 to'liq oy o'rtachasi, u 0 bo'lsa — shu oy). Yangi qarz uchun: joriy yuk + yangi rejaning o'rtacha to'lovi. **30% dan oshsa** — ogohlantirish (`LOAD_HIGH_BP`). Taqiqlamaydi.
 - **Savol:** 30% to'g'rimi (bank amaliyotida 50% gacha)? Birinchi to'lovi keyingi oyda bo'lgan qarz shu oy yukida 0 ko'rinadi — «keyingi 30 kun» ta'rifi yaxshiroqmi?
-- **To'sadi:** U9 (DEBT_RECOVERY rejimi taklifi). **Holat:** OCHIQ.
+- **To'sadi:** U9 (DEBT_RECOVERY rejimi taklifi). **Holat:** OCHIQ (U9 30% bilan qilindi; o'zgartirish — bitta konstanta).
+
+### OQ-P9. Bank qarzida muddatidan oldingi to'lov: muddatni qisqartirishmi yoki to'lovni kamaytirishmi?
+- **Hozirgi standart (U9):** «muddatni qisqartirish» (oylik to'lov o'zgarmaydi) — `BARAKA_OILASI.md` 5.8 bo'yicha. Komissiya — qo'shimcha to'lovdan bp (`prepayment_fee_bp`), ustiga qo'shiladi.
+- **Savol:** O'zbekiston banklarida ko'pincha mijoz tanlaydi. Har bir qarzga «to'lovni kamaytirish» variantini qo'shamizmi? Komissiya qat'iy summa bo'lgan holatlar uchrayaptimi?
+- **To'sadi:** keyingi bank integratsiyasi. **Holat:** OCHIQ.
 
 ## Oila va maxfiylik
 

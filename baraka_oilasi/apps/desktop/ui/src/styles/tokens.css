@@ -16,6 +16,8 @@
   --bk-warn: #E0A458;
   --bk-danger: #E5786D;
   --bk-focus: #D97757;
+  --bk-chart1: #3987E5;
+  --bk-chart2: #D95926;
   --bk-radius-sm: 6px;
   --bk-radius-md: 10px;
   --bk-radius-lg: 16px;
@@ -51,6 +53,8 @@
   --bk-warn: #9A5B13;
   --bk-danger: #A23B3B;
   --bk-focus: #A9502F;
+  --bk-chart1: #2A78D6;
+  --bk-chart2: #EB6834;
 }
 
 @theme inline {
@@ -69,6 +73,8 @@
   --color-warn: var(--bk-warn);
   --color-danger: var(--bk-danger);
   --color-focus: var(--bk-focus);
+  --color-chart1: var(--bk-chart1);
+  --color-chart2: var(--bk-chart2);
   --radius-sm: var(--bk-radius-sm);
   --radius-md: var(--bk-radius-md);
   --radius-lg: var(--bk-radius-lg);

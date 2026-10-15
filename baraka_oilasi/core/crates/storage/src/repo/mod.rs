@@ -7,6 +7,7 @@ pub mod expenses;
 pub mod household;
 pub mod incomes;
 pub mod journal;
+pub mod recovery;
 pub mod rules;
 pub mod vault;
 

@@ -40,11 +40,13 @@ pub struct DebtRow {
     pub borrow_check_json: Option<String>,
     pub agreement_id: Option<String>,
     pub status: String,
+    pub prepayment_fee_bp: i64,
 }
 
 const DEBT_COLS: &str = "id, creditor_type, creditor, reason, currency, principal_minor,
     original_principal_minor, paid_before_minor, plan_kind, annual_bp, markup_minor, months,
-    started_on, early_repayment_terms, priority, borrow_check_json, agreement_id, status";
+    started_on, early_repayment_terms, priority, borrow_check_json, agreement_id, status,
+    prepayment_fee_bp";
 
 fn map_debt(r: &rusqlite::Row<'_>) -> rusqlite::Result<DebtRow> {
     Ok(DebtRow {
@@ -66,6 +68,7 @@ fn map_debt(r: &rusqlite::Row<'_>) -> rusqlite::Result<DebtRow> {
         borrow_check_json: r.get(15)?,
         agreement_id: r.get(16)?,
         status: r.get(17)?,
+        prepayment_fee_bp: r.get(18)?,
     })
 }
 
@@ -80,12 +83,12 @@ pub fn insert_debt(
             "INSERT INTO debts ({DEBT_COLS}, household_id, space_id, created_at, updated_at,
                 origin_device_id, updated_by_device_id)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18,
-                ?19, ?20, ?21, ?21, ?22, ?22)"
+                ?19, ?20, ?21, ?22, ?22, ?23, ?23)"
         ),
         params![d.id, d.creditor_type, d.creditor, d.reason, d.currency, d.principal_minor,
             d.original_principal_minor, d.paid_before_minor, d.plan_kind, d.annual_bp, d.markup_minor,
             d.months, d.started_on, d.early_repayment_terms, d.priority, d.borrow_check_json,
-            d.agreement_id, d.status, s.household_id, s.space_id, m.now, m.device_id],
+            d.agreement_id, d.status, d.prepayment_fee_bp, s.household_id, s.space_id, m.now, m.device_id],
     )?;
     Ok(())
 }
@@ -196,6 +199,26 @@ pub fn get_receivable(
     .optional()?)
 }
 
+/// Yopish tartibi: foydalanuvchi qo'ygan raqam (`None` — standart tartib).
+pub fn set_priority(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    priority: Option<i64>,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        "UPDATE debts SET priority = ?4, updated_at = ?5, updated_by_device_id = ?6, version = version + 1
+         WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id, id, priority, m.now, m.device_id],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
 /// Qarz yoki bergan qarz holatini o'zgartiradi (`ACTIVE` → `CLOSED`).
 pub fn set_status(
     tx: &Transaction<'_>,
@@ -285,6 +308,7 @@ pub struct RepaymentRow {
     pub is_prepayment: bool,
     pub note: Option<String>,
     pub journal_entry_id: Option<String>,
+    pub contributor_id: Option<String>,
 }
 
 pub fn insert_repayment(
@@ -297,11 +321,12 @@ pub fn insert_repayment(
 ) -> Result<(), StorageError> {
     tx.execute(
         "INSERT INTO repayments (id, household_id, space_id, owner_type, owner_id, amount_minor, currency,
-            paid_on, is_prepayment, note, journal_entry_id, created_at, updated_at, origin_device_id,
-            updated_by_device_id)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12, ?13, ?13)",
+            paid_on, is_prepayment, note, journal_entry_id, contributor_id, created_at, updated_at,
+            origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?13, ?14, ?14)",
         params![p.id, s.household_id, s.space_id, owner.as_str(), owner_id, p.amount_minor, p.currency,
-            p.paid_on, i64::from(p.is_prepayment), p.note, p.journal_entry_id, m.now, m.device_id],
+            p.paid_on, i64::from(p.is_prepayment), p.note, p.journal_entry_id, p.contributor_id, m.now,
+            m.device_id],
     )?;
     Ok(())
 }
@@ -313,7 +338,8 @@ pub fn repayments(
     owner_id: &str,
 ) -> Result<Vec<RepaymentRow>, StorageError> {
     let mut st = c.prepare(
-        "SELECT id, amount_minor, currency, paid_on, is_prepayment, note, journal_entry_id FROM repayments
+        "SELECT id, amount_minor, currency, paid_on, is_prepayment, note, journal_entry_id, contributor_id
+         FROM repayments
          WHERE household_id = ?1 AND space_id = ?2 AND owner_type = ?3 AND owner_id = ?4 AND deleted_at IS NULL
          ORDER BY paid_on, created_at",
     )?;
@@ -328,6 +354,7 @@ pub fn repayments(
                 is_prepayment: opt_bool(r.get(4)?),
                 note: r.get(5)?,
                 journal_entry_id: r.get(6)?,
+                contributor_id: r.get(7)?,
             })
         },
     )?;

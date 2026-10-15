@@ -178,6 +178,63 @@
       "expected": {
         "error": "PAYMENT_EXCEEDS_REMAINING"
       }
+    },
+    {
+      "id": "status-006-prepaid-from-end",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "300000000",
+        "today": "2026-11-20",
+        "prepaid": "400000000"
+      },
+      "expected": {
+        "remaining": "200000000",
+        "nextDate": "2026-12-15",
+        "nextAmount": "200000000",
+        "overdue": "0",
+        "payoffDate": "2026-12-15",
+        "reminder": null
+      }
+    },
+    {
+      "id": "status-neg-002-prepaid",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "300000000",
+        "today": "2026-11-20",
+        "prepaid": "600000001"
+      },
+      "expected": {
+        "error": "PAYMENT_EXCEEDS_REMAINING"
+      }
     }
   ]
 }

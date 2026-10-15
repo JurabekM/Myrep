@@ -1,15 +1,22 @@
-//! 4-qonun use-case'lari (U8): qarz inventari, bergan qarzlar, haqiqiy narx, oylik yuk,
+//! 4-qonun use-case'lari (U8, U9): qarz inventari, bergan qarzlar, haqiqiy narx, oylik yuk,
 //! «to'xta va o'yla», to'lovlar (tilxatga bog'langanlari jurnal orqali) va maqsadlar.
+//!
+//! Har bir qarzning holati (qoldiq, keyingi to'lov, kechikkan summa, «Qarzsiz kun») to'lovlar
+//! tarixidan `domain-uy::payoff` bilan qayta hisoblanadi: bank qarzida muddatidan oldingi to'lov
+//! asosiy qarzni kamaytiradi, ustamali/foizsiz rejada reja oxiridan yopiladi.
 use baraka_domain_common::month_period;
 use baraka_domain_uy::debt::{
-    build_plan, debt_load_bp, due_between, evaluate_borrow, goal_coverage_bp, plan_status,
-    plan_total, true_cost, Alternative, BorrowNeed, CreditorType, PlanKind, PlanLine, PlanSpec,
+    build_plan, debt_load_bp, due_between, evaluate_borrow, goal_coverage_bp, plan_total,
+    status_of, true_cost, Alternative, BorrowNeed, CreditorType, PlanKind, PlanLine, PlanSpec,
     PlanStatus, Receivable, TrueCost, TrueCostInput, LOAD_HIGH_BP,
+};
+use baraka_domain_uy::payoff::{
+    payoff_plan, Amortizing, BankTerms, DebtState, Payment, PlanDebt, Scheduled,
 };
 use baraka_journal::{short_code, EntryKind, JournalAmount, JournalEntry};
 use baraka_money::{format_percent_bp, round_half_up, Currency, Money};
 use baraka_storage::repo::debts::{self, GoalRow, Owner, PlanLineRow, RepaymentRow};
-use baraka_storage::repo::{agreements, incomes, journal};
+use baraka_storage::repo::{agreements, incomes, journal, recovery};
 use baraka_storage::SpaceScope;
 use chrono::{Duration, NaiveDate};
 use serde_json::json;
@@ -44,17 +51,35 @@ fn row_is_ribo(d: &debts::DebtRow) -> bool {
     }
 }
 
-/// Qarzdorlik hisobi uchun kerakli yozuv ma'lumotlari.
-struct Ledger {
-    currency: Currency,
-    status: String,
+/// Tekshirilgan, hali saqlanmagan to'lov.
+pub(crate) struct PreparedRepayment {
+    owner: Owner,
+    id: String,
+    amount: Money,
+    entry: Option<JournalEntry>,
+    pub(crate) row: RepaymentRow,
+    closes: bool,
     agreement_id: Option<String>,
-    lines: Vec<PlanLine>,
-    payments: Vec<RepaymentRow>,
+    debt_free: bool,
+    return_mode: Option<recovery::BudgetRow>,
+    freed: Option<Money>,
+    budget_row_id: String,
+    today: String,
+}
+
+/// Qarzdorlik hisobi uchun kerakli yozuv ma'lumotlari.
+pub(crate) struct Ledger {
+    pub(crate) currency: Currency,
+    pub(crate) status: String,
+    pub(crate) agreement_id: Option<String>,
+    pub(crate) lines: Vec<PlanLine>,
+    pub(crate) payments: Vec<RepaymentRow>,
+    /// Bank qarzi (annuitet yoki differensial) shartlari.
+    pub(crate) bank: Option<BankTerms>,
 }
 
 impl Ledger {
-    fn paid(&self) -> Result<Money, AppError> {
+    pub(crate) fn paid(&self) -> Result<Money, AppError> {
         Ok(Money::sum(
             self.payments
                 .iter()
@@ -62,6 +87,48 @@ impl Ledger {
             self.currency,
         )?)
     }
+
+    /// Bugungi holat; `extra` — hali saqlanmagan to'lov (yopilishni oldindan bilish uchun).
+    pub(crate) fn state(&self, extra: Option<&RepaymentRow>) -> Result<DebtState, AppError> {
+        let payments = self
+            .payments
+            .iter()
+            .chain(extra)
+            .map(|p| {
+                Ok(Payment {
+                    date: parse_date(&p.paid_on)?,
+                    amount: Money::new(p.amount_minor, self.currency),
+                    prepayment: p.is_prepayment,
+                })
+            })
+            .collect::<Result<Vec<_>, AppError>>()?;
+        Ok(match &self.bank {
+            Some(t) => DebtState::Amortizing(Amortizing::replay(t, &payments)?),
+            None => DebtState::Scheduled(Scheduled::new(&self.lines, &payments)?),
+        })
+    }
+}
+
+/// Qarzning hisoblangan ko'rinishi.
+pub(crate) struct View {
+    pub(crate) state: DebtState,
+    /// Qolgan odatiy to'lovlar (bank qarzida — prognozdan).
+    pub(crate) installments: Vec<PlanLine>,
+    pub(crate) status: PlanStatus,
+}
+
+fn bank_terms(d: &debts::DebtRow, cur: Currency) -> Result<Option<BankTerms>, AppError> {
+    let kind = PlanKind::parse(&d.plan_kind).ok_or(AppError::new("CORRUPT_ROW"))?;
+    Ok(match kind {
+        PlanKind::Annuity | PlanKind::Differentiated => Some(BankTerms {
+            differentiated: kind == PlanKind::Differentiated,
+            principal: Money::new(d.principal_minor, cur),
+            annual_bp: d.annual_bp,
+            months: d.months,
+            first_date: parse_date(&d.started_on)?,
+        }),
+        _ => None,
+    })
 }
 
 impl App {
@@ -99,35 +166,94 @@ impl App {
             .collect()
     }
 
+    pub(crate) fn debt_ledger(
+        &self,
+        scope: &SpaceScope,
+        d: &debts::DebtRow,
+    ) -> Result<Ledger, AppError> {
+        let currency = Currency::from_code(&d.currency)?;
+        Ok(Ledger {
+            lines: self.load_plan(scope, Owner::Debt, &d.id, currency)?,
+            payments: self
+                .db
+                .read(|c| debts::repayments(c, scope, Owner::Debt, &d.id))?,
+            bank: bank_terms(d, currency)?,
+            currency,
+            status: d.status.clone(),
+            agreement_id: d.agreement_id.clone(),
+        })
+    }
+
+    fn receivable_ledger(
+        &self,
+        scope: &SpaceScope,
+        r: &debts::ReceivableRow,
+    ) -> Result<Ledger, AppError> {
+        let currency = Currency::from_code(&r.currency)?;
+        Ok(Ledger {
+            lines: self.load_plan(scope, Owner::Receivable, &r.id, currency)?,
+            payments: self
+                .db
+                .read(|c| debts::repayments(c, scope, Owner::Receivable, &r.id))?,
+            bank: None,
+            currency,
+            status: r.status.clone(),
+            agreement_id: r.agreement_id.clone(),
+        })
+    }
+
     fn ledger(&self, scope: &SpaceScope, owner: Owner, id: &str) -> Result<Ledger, AppError> {
-        let (currency, status, agreement_id) = match owner {
+        match owner {
             Owner::Debt => {
                 let d = self
                     .db
                     .read(|c| debts::get_debt(c, scope, id))?
                     .ok_or(AppError::on("NOT_FOUND", "id"))?;
-                (d.currency, d.status, d.agreement_id)
+                self.debt_ledger(scope, &d)
             }
             Owner::Receivable => {
                 let r = self
                     .db
                     .read(|c| debts::get_receivable(c, scope, id))?
                     .ok_or(AppError::on("NOT_FOUND", "id"))?;
-                (r.currency, r.status, r.agreement_id)
+                self.receivable_ledger(scope, &r)
             }
-        };
-        let currency = Currency::from_code(&currency)?;
-        Ok(Ledger {
-            lines: self.load_plan(scope, owner, id, currency)?,
-            payments: self.db.read(|c| debts::repayments(c, scope, owner, id))?,
-            currency,
+        }
+    }
+
+    /// Holat, qolgan to'lovlar va eslatma (qo'shimcha to'lovsiz prognoz).
+    pub(crate) fn view(
+        &self,
+        ctx: &Ctx,
+        l: &Ledger,
+        extra: Option<&RepaymentRow>,
+    ) -> Result<View, AppError> {
+        let state = l.state(extra)?;
+        let today = self.today(ctx);
+        let (proj, _) = payoff_plan(
+            vec![PlanDebt {
+                id: String::new(),
+                state: state.clone(),
+                fee_bp: 0,
+            }],
+            today,
+            Money::zero(l.currency),
+        )?;
+        let installments = proj
+            .into_iter()
+            .next()
+            .map(|p| p.installments)
+            .unwrap_or_default();
+        let status = status_of(&installments, today, l.currency)?;
+        Ok(View {
+            state,
+            installments,
             status,
-            agreement_id,
         })
     }
 
     /// Oylik yuk uchun daromad: oxirgi 3 to'liq oy o'rtachasi; u 0 bo'lsa — shu oy daromadi.
-    fn monthly_income(&self, ctx: &Ctx, scope: &SpaceScope) -> Result<Money, AppError> {
+    pub(crate) fn monthly_income(&self, ctx: &Ctx, scope: &SpaceScope) -> Result<Money, AppError> {
         let cur = ctx.currency;
         let sum_between = |from: NaiveDate, to: NaiveDate| -> Result<Money, AppError> {
             let rows = self
@@ -179,8 +305,8 @@ impl App {
                 foreign = true;
                 continue;
             }
-            let lines = self.load_plan(scope, Owner::Debt, &d.id, cur)?;
-            due = due.checked_add(due_between(&lines, start, end, cur)?)?;
+            let v = self.view(ctx, &self.debt_ledger(scope, &d)?, None)?;
+            due = due.checked_add(due_between(&v.installments, start, end, cur)?)?;
         }
         Ok((due, foreign))
     }
@@ -303,6 +429,7 @@ impl App {
                         .find(|h| &h.entry.id == jid)
                         .map(|h| short_code(&h.hash))
                 }),
+                contributor_id: p.contributor_id.clone(),
             })
             .collect())
     }
@@ -313,17 +440,42 @@ impl App {
         scope: &SpaceScope,
         d: &debts::DebtRow,
     ) -> Result<DebtDto, AppError> {
-        let l = self.ledger(scope, Owner::Debt, &d.id)?;
+        let l = self.debt_ledger(scope, d)?;
         let cur = l.currency;
         let paid = l.paid()?;
+        let v = self.view(ctx, &l, None)?;
+        let st = v.status;
+        // Jami narx = ilovagacha + yozilgan to'lovlar + prognozdagi qolgan to'lovlar.
         let tc = true_cost(&TrueCostInput {
             principal: Money::new(d.principal_minor, cur),
             original_principal: Some(Money::new(d.original_principal_minor, cur)),
             paid_before: Money::new(d.paid_before_minor, cur),
-            plan_total: plan_total(&l.lines, cur)?,
+            plan_total: paid.checked_add(st.remaining)?,
             paid_since: paid,
         })?;
-        let st = plan_status(&l.lines, paid, self.today(ctx))?;
+        let contributors = self
+            .db
+            .read(|c| recovery::contributors(c, scope, &d.id))?
+            .into_iter()
+            .map(|c| {
+                let share = c
+                    .monthly_share_minor
+                    .map(|m| self.money_dto(ctx, Money::new(m, cur)));
+                let by = Money::sum(
+                    l.payments
+                        .iter()
+                        .filter(|p| p.contributor_id.as_deref() == Some(c.id.as_str()))
+                        .map(|p| Money::new(p.amount_minor, cur)),
+                    cur,
+                )?;
+                Ok(ContributorDto {
+                    id: c.id,
+                    name: c.name,
+                    monthly_share: share,
+                    paid: self.money_dto(ctx, by),
+                })
+            })
+            .collect::<Result<Vec<_>, AppError>>()?;
         let warnings = d
             .borrow_check_json
             .as_deref()
@@ -351,6 +503,11 @@ impl App {
             plan: self.plan_dto(ctx, &l.lines),
             payments: self.repayment_dtos(ctx, scope, &l)?,
             early_repayment_terms: d.early_repayment_terms.clone(),
+            prepayment_fee_bp: i32::try_from(d.prepayment_fee_bp)
+                .map_err(|_| AppError::new("CORRUPT_ROW"))?,
+            priority: d.priority.and_then(|p| i32::try_from(p).ok()),
+            balance: self.money_dto(ctx, v.state.balance()),
+            contributors,
             borrow_warnings: warnings,
             agreement_id: d.agreement_id.clone(),
         })
@@ -362,9 +519,9 @@ impl App {
         scope: &SpaceScope,
         r: &debts::ReceivableRow,
     ) -> Result<ReceivableDto, AppError> {
-        let l = self.ledger(scope, Owner::Receivable, &r.id)?;
+        let l = self.receivable_ledger(scope, r)?;
         let paid = l.paid()?;
-        let st = plan_status(&l.lines, paid, self.today(ctx))?;
+        let st = self.view(ctx, &l, None)?.status;
         Ok(ReceivableDto {
             id: r.id.clone(),
             debtor: r.debtor.clone(),
@@ -513,6 +670,10 @@ impl App {
             .ok_or(AppError::on("INVALID_CREDITOR_TYPE", "creditorType"))?;
         let creditor = required(&input.creditor, "creditor")?;
         let (spec, lines, tc, cur) = self.validated_debt(&ctx, &input)?;
+        let fee_bp = i64::from(input.prepayment_fee_bp.unwrap_or(0));
+        if !(0..=10_000).contains(&fee_bp) {
+            return Err(AppError::on("INVALID_BP", "prepaymentFeeBp"));
+        }
         let check = self.borrow_check_json(
             &ctx,
             &scope,
@@ -540,6 +701,7 @@ impl App {
             borrow_check_json: check,
             agreement_id: None,
             status: "ACTIVE".to_string(),
+            prepayment_fee_bp: fee_bp,
         };
         let plan_rows = self.plan_rows(&lines);
         let meta = self.meta();
@@ -600,35 +762,49 @@ impl App {
         self.receivable_dto(&ctx, &scope, &row)
     }
 
-    /// To'lov yozish. Tilxatga bog'langan yozuvda to'lov avval jurnalga (`REPAYMENT`) yoziladi;
-    /// qoldiq 0 bo'lsa, yozuv va kelishuv yopiladi.
-    pub fn record_repayment(
+    /// To'lovni tekshiradi va yozishga tayyorlaydi (yozuvlar hali saqlanmagan).
+    pub(crate) fn prepare_repayment(
         &self,
-        space_id: &str,
-        owner_type: &str,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        owner: Owner,
         id: &str,
-        input: RepaymentInput,
-    ) -> Result<RepaymentDto, AppError> {
-        let ctx = self.ctx()?;
-        let scope = self.scope(&ctx, space_id)?;
-        let owner = parse_owner(owner_type)?;
-        let l = self.ledger(&scope, owner, id)?;
+        input: &RepaymentInput,
+    ) -> Result<PreparedRepayment, AppError> {
+        let l = self.ledger(scope, owner, id)?;
         if l.status != "ACTIVE" {
             return Err(AppError::new("ALREADY_CLOSED"));
         }
         let amount = positive(&input.amount, l.currency, "amount")?;
-        let paid = l.paid()?;
-        let remaining = plan_total(&l.lines, l.currency)?.checked_sub(paid)?;
-        if amount.compare(&remaining)?.is_gt() {
+        let now = self.view(ctx, &l, None)?;
+        // Bank qarzida muddatidan oldingi to'lov asosiy qarzdan oshmaydi; boshqa holatda — qolgan
+        // to'lovlardan.
+        let cap = if input.is_prepayment && l.bank.is_some() {
+            now.state.balance()
+        } else {
+            now.status.remaining
+        };
+        if amount.compare(&cap)?.is_gt() {
             return Err(AppError::on("PAYMENT_EXCEEDS_REMAINING", "amount"));
         }
-        let paid_on = self.date_or_today(&ctx, input.date.as_deref(), "date")?;
+        if let Some(cid) = input.contributor_id.as_deref() {
+            let ok = owner == Owner::Debt
+                && self
+                    .db
+                    .read(|c| recovery::contributors(c, scope, id))?
+                    .iter()
+                    .any(|c| c.id == cid);
+            if !ok {
+                return Err(AppError::on("NOT_FOUND", "contributorId"));
+            }
+        }
+        let paid_on = self.date_or_today(ctx, input.date.as_deref(), "date")?;
         let note = clean_opt(input.note.as_deref());
         let entry = match &l.agreement_id {
             Some(aid) => {
                 let agreement = self
                     .db
-                    .read(|c| agreements::get(c, &scope, aid))?
+                    .read(|c| agreements::get(c, scope, aid))?
                     .ok_or(AppError::new("NOT_FOUND"))?;
                 if agreement.keeper_device_id != self.device_id {
                     return Err(AppError::new("NOT_JOURNAL_KEEPER"));
@@ -664,36 +840,128 @@ impl App {
             is_prepayment: input.is_prepayment,
             note,
             journal_entry_id: entry.as_ref().map(|e| e.id.clone()),
+            contributor_id: input.contributor_id.clone(),
         };
-        let closes = amount == remaining;
-        let meta = self.meta();
-        let stored = self.db.write(|tx| {
-            let stored = match &entry {
-                Some(e) => Some(journal::append(tx, &scope, e, &meta)?),
-                None => None,
-            };
-            debts::insert_repayment(tx, &scope, owner, id, &row, &meta)?;
-            if closes {
-                debts::set_status(tx, &scope, owner, id, "CLOSED", &meta)?;
-                if let Some(aid) = &l.agreement_id {
-                    agreements::set_status(tx, &scope, aid, "CLOSED", &meta)?;
-                }
+        let closes = !self
+            .view(ctx, &l, Some(&row))?
+            .state
+            .balance()
+            .is_positive();
+        let (debt_free, mode_returned, freed) = if closes && owner == Owner::Debt {
+            let others = self
+                .db
+                .read(|c| debts::list_debts(c, scope))?
+                .iter()
+                .any(|d| d.status == "ACTIVE" && d.id != id);
+            let budget = self.db.read(|c| recovery::budget(c, scope))?;
+            let returns = !others && budget.as_ref().is_some_and(|b| b.mode == "DEBT_RECOVERY");
+            // Bo'shagan oylik to'lov — reja qatorlarining o'rtachasi.
+            let n = i128::try_from(l.lines.len().max(1)).map_err(|_| AppError::new("OVERFLOW"))?;
+            let avg = round_half_up(i128::from(plan_total(&l.lines, l.currency)?.minor()), n)?;
+            let avg = i64::try_from(avg).map_err(|_| AppError::new("OVERFLOW"))?;
+            (
+                !others,
+                returns.then_some(budget).flatten(),
+                Some(Money::new(avg, l.currency)),
+            )
+        } else {
+            (false, None, None)
+        };
+        Ok(PreparedRepayment {
+            owner,
+            id: id.to_string(),
+            amount,
+            entry,
+            row,
+            closes,
+            agreement_id: l.agreement_id,
+            debt_free,
+            return_mode: mode_returned,
+            freed,
+            budget_row_id: self.new_id(),
+            today: ymd(self.today(ctx)),
+        })
+    }
+
+    /// Tayyorlangan to'lovni tranzaksiya ichida yozadi: jurnal, to'lov, yopish, rejim qaytishi.
+    pub(crate) fn apply_repayment(
+        tx: &baraka_storage::Transaction<'_>,
+        scope: &SpaceScope,
+        p: &PreparedRepayment,
+        meta: &baraka_storage::Meta,
+    ) -> Result<Option<journal::StoredEntry>, baraka_storage::StorageError> {
+        let stored = match &p.entry {
+            Some(e) => Some(journal::append(tx, scope, e, meta)?),
+            None => None,
+        };
+        debts::insert_repayment(tx, scope, p.owner, &p.id, &p.row, meta)?;
+        if p.closes {
+            debts::set_status(tx, scope, p.owner, &p.id, "CLOSED", meta)?;
+            if let Some(aid) = &p.agreement_id {
+                agreements::set_status(tx, scope, aid, "CLOSED", meta)?;
             }
-            Ok(stored)
-        })?;
+        }
+        if let Some(b) = &p.return_mode {
+            let back = recovery::BudgetRow {
+                mode: "STANDARD".to_string(),
+                changed_on: p.today.clone(),
+                ..b.clone()
+            };
+            recovery::upsert_budget(tx, scope, &p.budget_row_id, &back, meta)?;
+        }
+        Ok(stored)
+    }
+
+    pub(crate) fn repayment_result(
+        &self,
+        ctx: &Ctx,
+        p: PreparedRepayment,
+        stored: Option<journal::StoredEntry>,
+    ) -> RepaymentResultDto {
+        RepaymentResultDto {
+            repayment: RepaymentDto {
+                id: p.row.id,
+                amount: self.money_dto(ctx, p.amount),
+                date: p.row.paid_on,
+                is_prepayment: p.row.is_prepayment,
+                note: p.row.note,
+                journal_short_code: stored.map(|s| short_code(&s.hash)),
+                contributor_id: p.row.contributor_id,
+            },
+            closed: p.closes,
+            debt_free: p.debt_free,
+            mode_returned: p.return_mode.is_some(),
+            freed_monthly: p.freed.map(|m| self.money_dto(ctx, m)),
+        }
+    }
+
+    /// To'lov yozish. Tilxatga bog'langan yozuvda to'lov jurnalga (`REPAYMENT`) ham yoziladi;
+    /// qoldiq 0 bo'lsa, yozuv va kelishuv yopiladi; oxirgi qarz yopilsa, `DEBT_RECOVERY`
+    /// rejimi avtomatik `STANDARD` ga qaytadi.
+    pub fn record_repayment(
+        &self,
+        space_id: &str,
+        owner_type: &str,
+        id: &str,
+        input: RepaymentInput,
+    ) -> Result<RepaymentResultDto, AppError> {
+        let ctx = self.ctx()?;
+        let scope = self.scope(&ctx, space_id)?;
+        let owner = parse_owner(owner_type)?;
+        let p = self.prepare_repayment(&ctx, &scope, owner, id, &input)?;
+        let meta = self.meta();
+        let stored = self
+            .db
+            .write(|tx| Self::apply_repayment(tx, &scope, &p, &meta))?;
         let mut topics = vec![Topic::Debts];
         if stored.is_some() {
             topics.extend([Topic::Journal, Topic::Agreements]);
         }
+        if p.return_mode.is_some() {
+            topics.push(Topic::Budget);
+        }
         self.publish(Some(space_id), &topics);
-        Ok(RepaymentDto {
-            id: row.id,
-            amount: self.money_dto(&ctx, amount),
-            date: row.paid_on,
-            is_prepayment: row.is_prepayment,
-            note: row.note,
-            journal_short_code: stored.map(|s| short_code(&s.hash)),
-        })
+        Ok(self.repayment_result(&ctx, p, stored))
     }
 
     /// Qarzlar ekrani: inventar, bergan qarzlar, jami, oylik yuk, maqsadlar.
@@ -755,7 +1023,23 @@ impl App {
             .into_iter()
             .map(|g| self.goal_dto(&ctx, g))
             .collect::<Result<_, _>>()?;
+        let (plan, _) = self.plan_debts(&ctx, &scope)?;
+        let today = self.today(&ctx);
+        let (_, base) = payoff_plan(plan.clone(), today, Money::zero(ctx.currency))?;
+        let budget = self.db.read(|c| recovery::budget(c, &scope))?;
+        let with_plan = match &budget {
+            Some(b) if b.mode == "DEBT_RECOVERY" => {
+                let extra = self.recovery_extra(&ctx, &scope, b)?;
+                payoff_plan(plan, today, extra)?.1.payoff_date.map(ymd)
+            }
+            _ => None,
+        };
+        let budget_mode = budget.map_or_else(|| "STANDARD".to_string(), |b| b.mode);
         Ok(DebtsOverviewDto {
+            debt_free_date_with_plan: with_plan,
+            debt_free_date: base.payoff_date.map(ymd),
+            debt_free_months: base.months,
+            budget_mode,
             has_ribo_debt: debts.iter().any(|d| d.is_ribo && d.status == "ACTIVE"),
             debts,
             receivables,

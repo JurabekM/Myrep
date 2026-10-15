@@ -255,6 +255,7 @@ impl App {
                     borrow_check_json: check,
                     agreement_id: Some(agreement_id.clone()),
                     status: "ACTIVE".to_string(),
+                    prepayment_fee_bp: 0,
                 };
                 (Owner::Debt, Some(row), None)
             }

@@ -68,7 +68,11 @@ fn to_i64(v: i128) -> Result<i64, DomainError> {
 
 /// `round_half_up(P·r / (1 − (1+r)^−n)) = round_half_up(P·bp·A^n / (B·(A^n − B^n)))`,
 /// bu yerda `B = 120000`, `A = B + bp`. Katta darajalar uchun `BigInt`.
-fn annuity_payment(principal: i64, annual_bp: i64, months: u32) -> Result<i64, DomainError> {
+pub(crate) fn annuity_payment(
+    principal: i64,
+    annual_bp: i64,
+    months: u32,
+) -> Result<i64, DomainError> {
     if annual_bp == 0 {
         return to_i64(round_half_up(i128::from(principal), i128::from(months))?);
     }

@@ -10,6 +10,7 @@ use crate::StorageError;
 const MIGRATIONS_SLICE: &[M<'_>] = &[
     M::up(include_str!("../migrations/001_init.sql")),
     M::up(include_str!("../migrations/002_debts.sql")),
+    M::up(include_str!("../migrations/003_recovery.sql")),
 ];
 const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
@@ -98,7 +99,7 @@ mod tests {
         let key = DbKey::from_bytes([1; 32]);
         {
             let db = Database::open(&path, &key).unwrap();
-            assert_eq!(db.schema_version().unwrap(), 2);
+            assert_eq!(db.schema_version().unwrap(), 3);
         }
         let wrong = DbKey::from_bytes([2; 32]);
         assert!(matches!(

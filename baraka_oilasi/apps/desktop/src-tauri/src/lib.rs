@@ -59,6 +59,15 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::delete_goal,
             commands::issue_loan_receipt,
             commands::export_agreement_receipt,
+            commands::budget_mode,
+            commands::set_budget_mode,
+            commands::payoff_planner,
+            commands::set_debt_order,
+            commands::reset_debt_order,
+            commands::add_contributor,
+            commands::sellable_items,
+            commands::add_sellable_item,
+            commands::sell_item,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

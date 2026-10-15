@@ -1,0 +1,476 @@
+{
+  "suite": "payoff_plan",
+  "version": 1,
+  "description": "Bir nechta qarz: tartib (qo'lda → foizli eng qimmati → foizsiz muddati yaqini), qo'shimcha to'lov tartib bo'yicha birinchi ochiq qarzga; «Qarzsiz kun»",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "plan-all-001-default-order",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-11-01",
+        "poolPerMonth": "240000000",
+        "debts": [
+          {
+            "id": "avto",
+            "debt": {
+              "kind": "ANNUITY",
+              "principal": "3900000000",
+              "annualBp": 2400,
+              "months": 14,
+              "firstDate": "2026-11-05"
+            },
+            "payments": [],
+            "prepaymentFeeBp": 100,
+            "ribo": true,
+            "costBp": 2400,
+            "priority": null
+          },
+          {
+            "id": "toy",
+            "debt": {
+              "kind": "MANUAL",
+              "lines": [
+                {
+                  "date": "2026-11-15",
+                  "amount": "300000000"
+                },
+                {
+                  "date": "2026-12-15",
+                  "amount": "300000000"
+                },
+                {
+                  "date": "2027-01-15",
+                  "amount": "300000000"
+                }
+              ]
+            },
+            "payments": [],
+            "prepaymentFeeBp": 0,
+            "ribo": false,
+            "costBp": 0,
+            "priority": null
+          },
+          {
+            "id": "nasiya",
+            "debt": {
+              "kind": "FIXED_MARKUP",
+              "lines": [
+                {
+                  "date": "2026-10-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2026-11-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2026-12-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-01-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-02-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-03-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-04-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-05-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-06-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-07-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-08-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-09-20",
+                  "amount": "60000000"
+                }
+              ]
+            },
+            "payments": [],
+            "prepaymentFeeBp": 0,
+            "ribo": true,
+            "costBp": 1667,
+            "priority": null
+          }
+        ]
+      },
+      "expected": {
+        "order": [
+          "avto",
+          "nasiya",
+          "toy"
+        ],
+        "base": {
+          "payoffDate": "2027-12-05",
+          "months": 14,
+          "totalInterest": "610067573",
+          "totalFees": "0"
+        },
+        "accelerated": {
+          "payoffDate": "2027-06-20",
+          "months": 8,
+          "totalInterest": "341756885",
+          "totalFees": "16800000",
+          "debts": [
+            {
+              "id": "avto",
+              "payoffDate": "2027-06-05",
+              "months": 8,
+              "interest": "341756885",
+              "fees": "16800000"
+            },
+            {
+              "id": "nasiya",
+              "payoffDate": "2027-06-20",
+              "months": 8,
+              "interest": "0",
+              "fees": "0"
+            },
+            {
+              "id": "toy",
+              "payoffDate": "2027-01-15",
+              "months": 3,
+              "interest": "0",
+              "fees": "0"
+            }
+          ]
+        },
+        "monthsSaved": 6,
+        "interestSaved": "268310688",
+        "netSaved": "251510688"
+      }
+    },
+    {
+      "id": "plan-all-002-manual-order",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-11-01",
+        "poolPerMonth": "240000000",
+        "debts": [
+          {
+            "id": "avto",
+            "debt": {
+              "kind": "ANNUITY",
+              "principal": "3900000000",
+              "annualBp": 2400,
+              "months": 14,
+              "firstDate": "2026-11-05"
+            },
+            "payments": [],
+            "prepaymentFeeBp": 100,
+            "ribo": true,
+            "costBp": 2400,
+            "priority": 2
+          },
+          {
+            "id": "toy",
+            "debt": {
+              "kind": "MANUAL",
+              "lines": [
+                {
+                  "date": "2026-11-15",
+                  "amount": "300000000"
+                },
+                {
+                  "date": "2026-12-15",
+                  "amount": "300000000"
+                },
+                {
+                  "date": "2027-01-15",
+                  "amount": "300000000"
+                }
+              ]
+            },
+            "payments": [],
+            "prepaymentFeeBp": 0,
+            "ribo": false,
+            "costBp": 0,
+            "priority": 1
+          },
+          {
+            "id": "nasiya",
+            "debt": {
+              "kind": "FIXED_MARKUP",
+              "lines": [
+                {
+                  "date": "2026-10-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2026-11-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2026-12-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-01-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-02-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-03-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-04-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-05-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-06-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-07-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-08-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-09-20",
+                  "amount": "60000000"
+                }
+              ]
+            },
+            "payments": [],
+            "prepaymentFeeBp": 0,
+            "ribo": true,
+            "costBp": 1667,
+            "priority": null
+          }
+        ]
+      },
+      "expected": {
+        "order": [
+          "toy",
+          "avto",
+          "nasiya"
+        ],
+        "base": {
+          "payoffDate": "2027-12-05",
+          "months": 14,
+          "totalInterest": "610067573",
+          "totalFees": "0"
+        },
+        "accelerated": {
+          "payoffDate": "2027-07-20",
+          "months": 9,
+          "totalInterest": "386767784",
+          "totalFees": "16200000",
+          "debts": [
+            {
+              "id": "toy",
+              "payoffDate": "2026-12-15",
+              "months": 2,
+              "interest": "0",
+              "fees": "0"
+            },
+            {
+              "id": "avto",
+              "payoffDate": "2027-07-05",
+              "months": 9,
+              "interest": "386767784",
+              "fees": "16200000"
+            },
+            {
+              "id": "nasiya",
+              "payoffDate": "2027-07-20",
+              "months": 9,
+              "interest": "0",
+              "fees": "0"
+            }
+          ]
+        },
+        "monthsSaved": 5,
+        "interestSaved": "223299789",
+        "netSaved": "207099789"
+      }
+    },
+    {
+      "id": "plan-all-003-no-extra",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-11-01",
+        "poolPerMonth": "0",
+        "debts": [
+          {
+            "id": "avto",
+            "debt": {
+              "kind": "ANNUITY",
+              "principal": "3900000000",
+              "annualBp": 2400,
+              "months": 14,
+              "firstDate": "2026-11-05"
+            },
+            "payments": [],
+            "prepaymentFeeBp": 100,
+            "ribo": true,
+            "costBp": 2400,
+            "priority": null
+          },
+          {
+            "id": "toy",
+            "debt": {
+              "kind": "MANUAL",
+              "lines": [
+                {
+                  "date": "2026-11-15",
+                  "amount": "300000000"
+                },
+                {
+                  "date": "2026-12-15",
+                  "amount": "300000000"
+                },
+                {
+                  "date": "2027-01-15",
+                  "amount": "300000000"
+                }
+              ]
+            },
+            "payments": [],
+            "prepaymentFeeBp": 0,
+            "ribo": false,
+            "costBp": 0,
+            "priority": null
+          },
+          {
+            "id": "nasiya",
+            "debt": {
+              "kind": "FIXED_MARKUP",
+              "lines": [
+                {
+                  "date": "2026-10-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2026-11-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2026-12-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-01-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-02-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-03-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-04-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-05-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-06-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-07-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-08-20",
+                  "amount": "60000000"
+                },
+                {
+                  "date": "2027-09-20",
+                  "amount": "60000000"
+                }
+              ]
+            },
+            "payments": [],
+            "prepaymentFeeBp": 0,
+            "ribo": true,
+            "costBp": 1667,
+            "priority": null
+          }
+        ]
+      },
+      "expected": {
+        "order": [
+          "avto",
+          "nasiya",
+          "toy"
+        ],
+        "base": {
+          "payoffDate": "2027-12-05",
+          "months": 14,
+          "totalInterest": "610067573",
+          "totalFees": "0"
+        },
+        "accelerated": {
+          "payoffDate": "2027-12-05",
+          "months": 14,
+          "totalInterest": "610067573",
+          "totalFees": "0",
+          "debts": [
+            {
+              "id": "avto",
+              "payoffDate": "2027-12-05",
+              "months": 14,
+              "interest": "610067573",
+              "fees": "0"
+            },
+            {
+              "id": "nasiya",
+              "payoffDate": "2027-09-20",
+              "months": 11,
+              "interest": "0",
+              "fees": "0"
+            },
+            {
+              "id": "toy",
+              "payoffDate": "2027-01-15",
+              "months": 3,
+              "interest": "0",
+              "fees": "0"
+            }
+          ]
+        },
+        "monthsSaved": 0,
+        "interestSaved": "0",
+        "netSaved": "0"
+      }
+    }
+  ]
+}

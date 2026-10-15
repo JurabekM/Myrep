@@ -1,0 +1,979 @@
+{
+  "suite": "payoff_projection",
+  "version": 1,
+  "description": "Holat to'lovlar tarixidan; kalendar oylari bo'yicha prognoz: avval odatiy to'lov, keyin qo'shimcha; bankda asosiy qarz kamayadi, ustamali/foizsiz rejada oxiridan yopiladi",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "payoff-001-anvar-base",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "ANNUITY",
+          "principal": "3900000000",
+          "annualBp": 2400,
+          "months": 14,
+          "firstDate": "2026-11-05"
+        },
+        "payments": [],
+        "today": "2026-11-01",
+        "extraPerMonth": "0",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "3900000000",
+          "nextDate": "2026-11-05"
+        },
+        "rows": [
+          {
+            "date": "2026-11-05",
+            "due": "322147684",
+            "interest": "78000000",
+            "extra": "0",
+            "fee": "0",
+            "balance": "3655852316"
+          },
+          {
+            "date": "2026-12-05",
+            "due": "322147684",
+            "interest": "73117046",
+            "extra": "0",
+            "fee": "0",
+            "balance": "3406821678"
+          },
+          {
+            "date": "2027-01-05",
+            "due": "322147684",
+            "interest": "68136434",
+            "extra": "0",
+            "fee": "0",
+            "balance": "3152810428"
+          },
+          {
+            "date": "2027-02-05",
+            "due": "322147684",
+            "interest": "63056209",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2893718953"
+          },
+          {
+            "date": "2027-03-05",
+            "due": "322147684",
+            "interest": "57874379",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2629445648"
+          },
+          {
+            "date": "2027-04-05",
+            "due": "322147684",
+            "interest": "52588913",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2359886877"
+          },
+          {
+            "date": "2027-05-05",
+            "due": "322147684",
+            "interest": "47197738",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2084936931"
+          },
+          {
+            "date": "2027-06-05",
+            "due": "322147684",
+            "interest": "41698739",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1804487986"
+          },
+          {
+            "date": "2027-07-05",
+            "due": "322147684",
+            "interest": "36089760",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1518430062"
+          },
+          {
+            "date": "2027-08-05",
+            "due": "322147684",
+            "interest": "30368601",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1226650979"
+          },
+          {
+            "date": "2027-09-05",
+            "due": "322147684",
+            "interest": "24533020",
+            "extra": "0",
+            "fee": "0",
+            "balance": "929036315"
+          },
+          {
+            "date": "2027-10-05",
+            "due": "322147684",
+            "interest": "18580726",
+            "extra": "0",
+            "fee": "0",
+            "balance": "625469357"
+          },
+          {
+            "date": "2027-11-05",
+            "due": "322147684",
+            "interest": "12509387",
+            "extra": "0",
+            "fee": "0",
+            "balance": "315831060"
+          },
+          {
+            "date": "2027-12-05",
+            "due": "322147681",
+            "interest": "6316621",
+            "extra": "0",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 14,
+        "payoffDate": "2027-12-05",
+        "totalInterest": "610067573",
+        "totalFees": "0",
+        "totalPaid": "4510067573"
+      }
+    },
+    {
+      "id": "payoff-002-anvar-1.6m",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "ANNUITY",
+          "principal": "3900000000",
+          "annualBp": 2400,
+          "months": 14,
+          "firstDate": "2026-11-05"
+        },
+        "payments": [],
+        "today": "2026-11-01",
+        "extraPerMonth": "160000000",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "3900000000",
+          "nextDate": "2026-11-05"
+        },
+        "rows": [
+          {
+            "date": "2026-11-05",
+            "due": "322147684",
+            "interest": "78000000",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "3495852316"
+          },
+          {
+            "date": "2026-12-05",
+            "due": "322147684",
+            "interest": "69917046",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "3083621678"
+          },
+          {
+            "date": "2027-01-05",
+            "due": "322147684",
+            "interest": "61672434",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "2663146428"
+          },
+          {
+            "date": "2027-02-05",
+            "due": "322147684",
+            "interest": "53262929",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "2234261673"
+          },
+          {
+            "date": "2027-03-05",
+            "due": "322147684",
+            "interest": "44685233",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "1796799222"
+          },
+          {
+            "date": "2027-04-05",
+            "due": "322147684",
+            "interest": "35935984",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "1350587522"
+          },
+          {
+            "date": "2027-05-05",
+            "due": "322147684",
+            "interest": "27011750",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "895451588"
+          },
+          {
+            "date": "2027-06-05",
+            "due": "322147684",
+            "interest": "17909032",
+            "extra": "160000000",
+            "fee": "0",
+            "balance": "431212936"
+          },
+          {
+            "date": "2027-07-05",
+            "due": "322147684",
+            "interest": "8624259",
+            "extra": "117689511",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 9,
+        "payoffDate": "2027-07-05",
+        "totalInterest": "397018667",
+        "totalFees": "0",
+        "totalPaid": "4297018667"
+      }
+    },
+    {
+      "id": "payoff-003-anvar-2.4m-fee",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "ANNUITY",
+          "principal": "3900000000",
+          "annualBp": 2400,
+          "months": 14,
+          "firstDate": "2026-11-05"
+        },
+        "payments": [],
+        "today": "2026-11-01",
+        "extraPerMonth": "240000000",
+        "prepaymentFeeBp": 100
+      },
+      "expected": {
+        "state": {
+          "balance": "3900000000",
+          "nextDate": "2026-11-05"
+        },
+        "rows": [
+          {
+            "date": "2026-11-05",
+            "due": "322147684",
+            "interest": "78000000",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "3415852316"
+          },
+          {
+            "date": "2026-12-05",
+            "due": "322147684",
+            "interest": "68317046",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "2922021678"
+          },
+          {
+            "date": "2027-01-05",
+            "due": "322147684",
+            "interest": "58440434",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "2418314428"
+          },
+          {
+            "date": "2027-02-05",
+            "due": "322147684",
+            "interest": "48366289",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "1904533033"
+          },
+          {
+            "date": "2027-03-05",
+            "due": "322147684",
+            "interest": "38090661",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "1380476010"
+          },
+          {
+            "date": "2027-04-05",
+            "due": "322147684",
+            "interest": "27609520",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "845937846"
+          },
+          {
+            "date": "2027-05-05",
+            "due": "322147684",
+            "interest": "16918757",
+            "extra": "240000000",
+            "fee": "2400000",
+            "balance": "300708919"
+          },
+          {
+            "date": "2027-06-05",
+            "due": "306723097",
+            "interest": "6014178",
+            "extra": "0",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 8,
+        "payoffDate": "2027-06-05",
+        "totalInterest": "341756885",
+        "totalFees": "16800000",
+        "totalPaid": "4258556885"
+      }
+    },
+    {
+      "id": "payoff-004-anvar-replay",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "ANNUITY",
+          "principal": "3900000000",
+          "annualBp": 2400,
+          "months": 14,
+          "firstDate": "2026-11-05"
+        },
+        "payments": [
+          {
+            "date": "2026-11-05",
+            "amount": "322147684",
+            "prepayment": false
+          },
+          {
+            "date": "2026-12-05",
+            "amount": "322147684",
+            "prepayment": false
+          },
+          {
+            "date": "2026-12-20",
+            "amount": "500000000",
+            "prepayment": true
+          }
+        ],
+        "today": "2027-01-10",
+        "extraPerMonth": "0",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "2906821678",
+          "nextDate": "2027-01-05"
+        },
+        "rows": [
+          {
+            "date": "2027-01-05",
+            "due": "322147684",
+            "interest": "58136434",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2642810428"
+          },
+          {
+            "date": "2027-02-05",
+            "due": "322147684",
+            "interest": "52856209",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2373518953"
+          },
+          {
+            "date": "2027-03-05",
+            "due": "322147684",
+            "interest": "47470379",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2098841648"
+          },
+          {
+            "date": "2027-04-05",
+            "due": "322147684",
+            "interest": "41976833",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1818670797"
+          },
+          {
+            "date": "2027-05-05",
+            "due": "322147684",
+            "interest": "36373416",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1532896529"
+          },
+          {
+            "date": "2027-06-05",
+            "due": "322147684",
+            "interest": "30657931",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1241406776"
+          },
+          {
+            "date": "2027-07-05",
+            "due": "322147684",
+            "interest": "24828136",
+            "extra": "0",
+            "fee": "0",
+            "balance": "944087228"
+          },
+          {
+            "date": "2027-08-05",
+            "due": "322147684",
+            "interest": "18881745",
+            "extra": "0",
+            "fee": "0",
+            "balance": "640821289"
+          },
+          {
+            "date": "2027-09-05",
+            "due": "322147684",
+            "interest": "12816426",
+            "extra": "0",
+            "fee": "0",
+            "balance": "331490031"
+          },
+          {
+            "date": "2027-10-05",
+            "due": "322147684",
+            "interest": "6629801",
+            "extra": "0",
+            "fee": "0",
+            "balance": "15972148"
+          },
+          {
+            "date": "2027-11-05",
+            "due": "16291591",
+            "interest": "319443",
+            "extra": "0",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 11,
+        "payoffDate": "2027-11-05",
+        "totalInterest": "330946753",
+        "totalFees": "0",
+        "totalPaid": "3237768431"
+      }
+    },
+    {
+      "id": "payoff-005-overdue",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "ANNUITY",
+          "principal": "3900000000",
+          "annualBp": 2400,
+          "months": 14,
+          "firstDate": "2026-11-05"
+        },
+        "payments": [],
+        "today": "2027-01-20",
+        "extraPerMonth": "0",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "3900000000",
+          "nextDate": "2026-11-05"
+        },
+        "rows": [
+          {
+            "date": "2027-01-05",
+            "due": "966443052",
+            "interest": "219253480",
+            "extra": "0",
+            "fee": "0",
+            "balance": "3152810428"
+          },
+          {
+            "date": "2027-02-05",
+            "due": "322147684",
+            "interest": "63056209",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2893718953"
+          },
+          {
+            "date": "2027-03-05",
+            "due": "322147684",
+            "interest": "57874379",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2629445648"
+          },
+          {
+            "date": "2027-04-05",
+            "due": "322147684",
+            "interest": "52588913",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2359886877"
+          },
+          {
+            "date": "2027-05-05",
+            "due": "322147684",
+            "interest": "47197738",
+            "extra": "0",
+            "fee": "0",
+            "balance": "2084936931"
+          },
+          {
+            "date": "2027-06-05",
+            "due": "322147684",
+            "interest": "41698739",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1804487986"
+          },
+          {
+            "date": "2027-07-05",
+            "due": "322147684",
+            "interest": "36089760",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1518430062"
+          },
+          {
+            "date": "2027-08-05",
+            "due": "322147684",
+            "interest": "30368601",
+            "extra": "0",
+            "fee": "0",
+            "balance": "1226650979"
+          },
+          {
+            "date": "2027-09-05",
+            "due": "322147684",
+            "interest": "24533020",
+            "extra": "0",
+            "fee": "0",
+            "balance": "929036315"
+          },
+          {
+            "date": "2027-10-05",
+            "due": "322147684",
+            "interest": "18580726",
+            "extra": "0",
+            "fee": "0",
+            "balance": "625469357"
+          },
+          {
+            "date": "2027-11-05",
+            "due": "322147684",
+            "interest": "12509387",
+            "extra": "0",
+            "fee": "0",
+            "balance": "315831060"
+          },
+          {
+            "date": "2027-12-05",
+            "due": "322147681",
+            "interest": "6316621",
+            "extra": "0",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 12,
+        "payoffDate": "2027-12-05",
+        "totalInterest": "610067573",
+        "totalFees": "0",
+        "totalPaid": "4510067573"
+      }
+    },
+    {
+      "id": "payoff-006-differentiated",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "DIFFERENTIATED",
+          "principal": "1200000000",
+          "annualBp": 2400,
+          "months": 6,
+          "firstDate": "2027-01-31"
+        },
+        "payments": [],
+        "today": "2027-01-01",
+        "extraPerMonth": "100000000",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "1200000000",
+          "nextDate": "2027-01-31"
+        },
+        "rows": [
+          {
+            "date": "2027-01-31",
+            "due": "224000000",
+            "interest": "24000000",
+            "extra": "100000000",
+            "fee": "0",
+            "balance": "900000000"
+          },
+          {
+            "date": "2027-02-28",
+            "due": "218000000",
+            "interest": "18000000",
+            "extra": "100000000",
+            "fee": "0",
+            "balance": "600000000"
+          },
+          {
+            "date": "2027-03-31",
+            "due": "212000000",
+            "interest": "12000000",
+            "extra": "100000000",
+            "fee": "0",
+            "balance": "300000000"
+          },
+          {
+            "date": "2027-04-30",
+            "due": "206000000",
+            "interest": "6000000",
+            "extra": "100000000",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 4,
+        "payoffDate": "2027-04-30",
+        "totalInterest": "60000000",
+        "totalFees": "0",
+        "totalPaid": "1260000000"
+      }
+    },
+    {
+      "id": "payoff-007-karim",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "MANUAL",
+          "lines": [
+            {
+              "date": "2026-11-15",
+              "amount": "300000000"
+            },
+            {
+              "date": "2026-12-15",
+              "amount": "300000000"
+            },
+            {
+              "date": "2027-01-15",
+              "amount": "300000000"
+            }
+          ]
+        },
+        "payments": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000",
+            "prepayment": false
+          },
+          {
+            "date": "2026-11-18",
+            "amount": "100000000",
+            "prepayment": true
+          }
+        ],
+        "today": "2026-11-20",
+        "extraPerMonth": "100000000",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "500000000",
+          "nextDate": "2026-12-15"
+        },
+        "rows": [
+          {
+            "date": "2026-11-20",
+            "due": "0",
+            "interest": "0",
+            "extra": "100000000",
+            "fee": "0",
+            "balance": "400000000"
+          },
+          {
+            "date": "2026-12-15",
+            "due": "300000000",
+            "interest": "0",
+            "extra": "100000000",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 2,
+        "payoffDate": "2026-12-15",
+        "totalInterest": "0",
+        "totalFees": "0",
+        "totalPaid": "500000000"
+      }
+    },
+    {
+      "id": "payoff-008-shop-markup",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "FIXED_MARKUP",
+          "lines": [
+            {
+              "date": "2026-10-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2026-11-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2026-12-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-01-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-02-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-03-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-04-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-05-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-06-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-07-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-08-20",
+              "amount": "60000000"
+            },
+            {
+              "date": "2027-09-20",
+              "amount": "60000000"
+            }
+          ]
+        },
+        "payments": [],
+        "today": "2026-10-01",
+        "extraPerMonth": "60000000",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "720000000",
+          "nextDate": "2026-10-20"
+        },
+        "rows": [
+          {
+            "date": "2026-10-20",
+            "due": "60000000",
+            "interest": "0",
+            "extra": "60000000",
+            "fee": "0",
+            "balance": "600000000"
+          },
+          {
+            "date": "2026-11-20",
+            "due": "60000000",
+            "interest": "0",
+            "extra": "60000000",
+            "fee": "0",
+            "balance": "480000000"
+          },
+          {
+            "date": "2026-12-20",
+            "due": "60000000",
+            "interest": "0",
+            "extra": "60000000",
+            "fee": "0",
+            "balance": "360000000"
+          },
+          {
+            "date": "2027-01-20",
+            "due": "60000000",
+            "interest": "0",
+            "extra": "60000000",
+            "fee": "0",
+            "balance": "240000000"
+          },
+          {
+            "date": "2027-02-20",
+            "due": "60000000",
+            "interest": "0",
+            "extra": "60000000",
+            "fee": "0",
+            "balance": "120000000"
+          },
+          {
+            "date": "2027-03-20",
+            "due": "60000000",
+            "interest": "0",
+            "extra": "60000000",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 6,
+        "payoffDate": "2027-03-20",
+        "totalInterest": "0",
+        "totalFees": "0",
+        "totalPaid": "720000000"
+      }
+    },
+    {
+      "id": "payoff-009-zero-rate",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "ANNUITY",
+          "principal": "100000",
+          "annualBp": 0,
+          "months": 3,
+          "firstDate": "2026-12-31"
+        },
+        "payments": [],
+        "today": "2026-12-01",
+        "extraPerMonth": "0",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "state": {
+          "balance": "100000",
+          "nextDate": "2026-12-31"
+        },
+        "rows": [
+          {
+            "date": "2026-12-31",
+            "due": "33333",
+            "interest": "0",
+            "extra": "0",
+            "fee": "0",
+            "balance": "66667"
+          },
+          {
+            "date": "2027-01-31",
+            "due": "33333",
+            "interest": "0",
+            "extra": "0",
+            "fee": "0",
+            "balance": "33334"
+          },
+          {
+            "date": "2027-02-28",
+            "due": "33334",
+            "interest": "0",
+            "extra": "0",
+            "fee": "0",
+            "balance": "0"
+          }
+        ],
+        "months": 3,
+        "payoffDate": "2027-02-28",
+        "totalInterest": "0",
+        "totalFees": "0",
+        "totalPaid": "100000"
+      }
+    },
+    {
+      "id": "payoff-neg-001-overpaid",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "MANUAL",
+          "lines": [
+            {
+              "date": "2026-11-15",
+              "amount": "300000000"
+            },
+            {
+              "date": "2026-12-15",
+              "amount": "300000000"
+            },
+            {
+              "date": "2027-01-15",
+              "amount": "300000000"
+            }
+          ]
+        },
+        "payments": [
+          {
+            "date": "2026-11-15",
+            "amount": "900000001",
+            "prepayment": false
+          }
+        ],
+        "today": "2026-11-20",
+        "extraPerMonth": "0",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "error": "PAYMENT_EXCEEDS_REMAINING"
+      }
+    },
+    {
+      "id": "payoff-neg-002-extra",
+      "input": {
+        "currency": "UZS",
+        "debt": {
+          "kind": "MANUAL",
+          "lines": [
+            {
+              "date": "2026-11-15",
+              "amount": "300000000"
+            },
+            {
+              "date": "2026-12-15",
+              "amount": "300000000"
+            },
+            {
+              "date": "2027-01-15",
+              "amount": "300000000"
+            }
+          ]
+        },
+        "payments": [],
+        "today": "2026-11-20",
+        "extraPerMonth": "-1",
+        "prepaymentFeeBp": 0
+      },
+      "expected": {
+        "error": "EXTRA_NEGATIVE"
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@ mod dto;
 mod error;
 mod events;
 mod receipt;
+mod recovery;
 pub mod session;
 mod text;
 mod uy;

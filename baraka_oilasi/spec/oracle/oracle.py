@@ -205,28 +205,214 @@ def true_cost(plan_total, principal, original=None, paid_before=0, paid_since=0,
 DUE_SOON_DAYS = 3
 
 
-def plan_status(lines, paid, today):
+def remaining_lines(lines, regular, prepaid=0):
+    """Odatiy to'lovlar rejaning boshidan, muddatidan oldingi to'lovlar oxiridan yopiladi."""
     total = sum(a for _, a in lines)
-    if paid < 0 or paid > total:
+    if regular < 0 or prepaid < 0 or regular + prepaid > total:
         raise OracleError("PAYMENT_EXCEEDS_REMAINING")
-    cum, nxt, overdue = 0, None, 0
-    for d, a in lines:
-        prev, cum = cum, cum + a
-        if cum <= paid:
-            continue
-        outstanding = cum - max(prev, paid)
-        if nxt is None:
-            nxt = (d, outstanding)
-        if d < today:
-            overdue += outstanding
-    remaining = total - paid
+    out = [list(x) for x in lines]
+    r = regular
+    for x in out:
+        take = min(r, x[1])
+        x[1] -= take
+        r -= take
+    p = prepaid
+    for x in reversed(out):
+        take = min(p, x[1])
+        x[1] -= take
+        p -= take
+    return [(d, a) for d, a in out if a > 0]
+
+
+def plan_status(lines, paid, today, prepaid=0):
+    rest = remaining_lines(lines, paid, prepaid)
+    nxt = rest[0] if rest else None
+    overdue = sum(a for d, a in rest if d < today)
+    remaining = sum(a for _, a in rest)
     reminder = None
     if overdue > 0:
         reminder = "OVERDUE"
     elif nxt is not None and (nxt[0] - today).days <= DUE_SOON_DAYS:
         reminder = "DUE_SOON"
     return {"remaining": remaining, "nextDate": nxt[0] if nxt else None, "nextAmount": nxt[1] if nxt else None,
-            "overdue": overdue, "payoffDate": lines[-1][0] if remaining > 0 else None, "reminder": reminder}
+            "overdue": overdue, "payoffDate": rest[-1][0] if rest else None, "reminder": reminder}
+
+
+# --- U9: qarzdan chiqish rejalovchisi (uy/SPEC 2D.2, 2D.9) ---------------------------------
+# Holat to'lovlar tarixidan qayta hisoblanadi; prognoz kalendar oylari bo'yicha: har oyda avval
+# shu oyga to'g'ri kelgan odatiy to'lovlar, keyin qo'shimcha to'lov (tartib bo'yicha birinchi
+# ochiq qarzga). Bank qarzlarida qo'shimcha to'lov asosiy qarzni kamaytiradi («muddatni
+# qisqartirish»), ustamali va foizsiz rejalarda reja oxiridan yopiladi (ustama tejalmaydi).
+MAX_WINDOWS = 1200
+
+
+def month_start(d: date) -> date:
+    return date(d.year, d.month, 1)
+
+
+class Amortizing:
+    def __init__(self, kind, principal, bp, months, first, payments):
+        if principal <= 0:
+            raise OracleError("PRINCIPAL_NOT_POSITIVE")
+        if not 1 <= months <= 600:
+            raise OracleError("INVALID_TERM")
+        if not 0 <= bp <= 100000:
+            raise OracleError("INVALID_RATE")
+        self.kind, self.bp, self.first, self.n = kind, bp, first, months
+        self.parts = allocate(principal, [1] * months) if kind == "DIFFERENTIATED" else None
+        if kind == "ANNUITY":
+            r = Fraction(bp, 120000)
+            self.A = round_half_up(Fraction(principal, months)) if bp == 0 else \
+                round_half_up(principal * r * (1 + r) ** months / ((1 + r) ** months - 1))
+        self.B, self.k, self.left = principal, 1, months
+        if any(a <= 0 for _, a, _ in payments):
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        regular = sum(a for _, a, pre in payments if not pre)
+        pre = sorted([(d, a) for d, a, p in payments if p], key=lambda x: x[0])
+        j = 0
+        while True:
+            d = self.next_date()
+            while j < len(pre) and pre[j][0] < d:
+                self.B -= min(pre[j][1], self.B)
+                j += 1
+            if self.B == 0 or self.left == 0:
+                break
+            i_, p_ = self.inst()
+            if regular >= i_ + p_:
+                regular -= i_ + p_
+                self.pay()
+                continue
+            break
+        for _, a in pre[j:]:
+            self.B -= min(a, self.B)
+        self.B -= min(regular, self.B)  # qisman odatiy to'lov — asosiy qarzga
+
+    def next_date(self):
+        return add_months(self.first, self.k - 1)
+
+    def inst(self):
+        i_ = round_half_up(Fraction(self.B * self.bp, 120000))
+        if self.kind == "ANNUITY":
+            p_ = self.A - i_
+        else:
+            p_ = self.parts[self.k - 1] if self.k <= self.n else self.B
+        if p_ >= self.B or self.left <= 1:
+            p_ = self.B
+        return i_, max(p_, 0)
+
+    def pay(self):
+        i_, p_ = self.inst()
+        self.B -= p_
+        self.k += 1
+        self.left -= 1
+        return i_, p_
+
+    def regular(self, window_end):
+        due = interest = 0
+        last = None
+        while self.B > 0 and self.next_date() < window_end:
+            last = self.next_date()
+            i_, p_ = self.pay()
+            due += i_ + p_
+            interest += i_
+        return due, interest, last
+
+    def balance(self):
+        return self.B
+
+    def extra(self, ex):
+        self.B -= ex
+
+    def state(self):
+        return {"balance": self.B, "nextDate": self.next_date() if self.B > 0 else None}
+
+
+class Scheduled:
+    def __init__(self, lines, payments):
+        if any(a <= 0 for _, a, _ in payments):
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        regular = sum(a for _, a, p in payments if not p)
+        prepaid = sum(a for _, a, p in payments if p)
+        self.lines = [list(x) for x in remaining_lines(lines, regular, prepaid)]
+
+    def regular(self, window_end):
+        due, last = 0, None
+        while self.lines and self.lines[0][0] < window_end:
+            d, a = self.lines.pop(0)
+            due += a
+            last = d
+        return due, 0, last
+
+    def balance(self):
+        return sum(a for _, a in self.lines)
+
+    def extra(self, ex):
+        for x in reversed(self.lines):
+            take = min(ex, x[1])
+            x[1] -= take
+            ex -= take
+        self.lines = [x for x in self.lines if x[1] > 0]
+
+    def state(self):
+        return {"balance": self.balance(), "nextDate": self.lines[0][0] if self.lines else None}
+
+
+def make_state(spec, payments):
+    if spec["kind"] in ("ANNUITY", "DIFFERENTIATED"):
+        return Amortizing(spec["kind"], spec["principal"], spec["annualBp"], spec["months"], spec["firstDate"], payments)
+    return Scheduled(spec["lines"], payments)
+
+
+def payoff_plan(debts, today, pool):
+    """debts: tartiblangan [(id, holat, fee_bp)]. Har bir qarz va umumiy natija."""
+    if pool < 0:
+        raise OracleError("EXTRA_NEGATIVE")
+    res = {i: {"rows": [], "payoffDate": None, "months": 0, "interest": 0, "fees": 0, "paid": 0} for i, _, _ in debts}
+    ws0 = month_start(today)
+    w = 0
+    while any(s.balance() > 0 for _, s, _ in debts):
+        if w >= MAX_WINDOWS:
+            raise OracleError("NOT_CONVERGING")
+        ws, we = add_months(ws0, w), add_months(ws0, w + 1)
+        acts = {}
+        for i, s, _ in debts:
+            if s.balance() > 0:
+                acts[i] = list(s.regular(we)) + [0, 0]
+        rest = pool
+        for i, s, fee_bp in debts:
+            if i in acts and s.balance() > 0 and rest > 0:
+                ex = min(rest, s.balance())
+                s.extra(ex)
+                rest -= ex
+                acts[i][3], acts[i][4] = ex, percent_of(ex, fee_bp)
+        for i, s, _ in debts:
+            if i not in acts:
+                continue
+            due, interest, last, ex, fee = acts[i]
+            if due == 0 and ex == 0:
+                continue
+            d = last if last is not None else max(ws, today)
+            r = res[i]
+            r["rows"].append({"date": d, "due": due, "interest": interest, "extra": ex, "fee": fee, "balance": s.balance()})
+            r["interest"] += interest
+            r["fees"] += fee
+            r["paid"] += due + ex + fee
+            if s.balance() == 0:
+                r["payoffDate"], r["months"] = d, w + 1
+        w += 1
+    total = {"payoffDate": max((r["payoffDate"] for r in res.values() if r["payoffDate"]), default=None),
+             "months": max((r["months"] for r in res.values()), default=0),
+             "interest": sum(r["interest"] for r in res.values()), "fees": sum(r["fees"] for r in res.values()),
+             "paid": sum(r["paid"] for r in res.values())}
+    return res, total
+
+
+def default_order(keys):
+    """keys: [(id, ribo, cost_bp, payoff_date, priority)]. Qo'lda tartib bo'lsa — u birinchi; keyin
+    foizli qarzlar (eng qimmati birinchi), keyin foizsizlar (muddati yaqini birinchi)."""
+    far = date(9999, 12, 31)
+    return [k[0] for k in sorted(keys, key=lambda k: (k[4] is None, k[4] or 0, not k[1], -k[2] if k[1] else 0,
+                                                      k[3] or far, k[0]))]
 
 
 def debt_load_bp(payments: int, income: int):
@@ -507,11 +693,13 @@ def build_suites():
                                             "lines": ml(("2026-11-15", "200000000"))}),
     ])
 
-    def status_case(cid, lines, paid, today):
+    def status_case(cid, lines, paid, today, prepaid=None):
         inp = {"currency": U, "lines": ml(*lines), "paid": paid, "today": today}
+        if prepaid is not None:
+            inp["prepaid"] = prepaid
 
         def run():
-            st = plan_status([(D(d), int(a)) for d, a in lines], int(paid), D(today))
+            st = plan_status([(D(d), int(a)) for d, a in lines], int(paid), D(today), int(prepaid or 0))
             return {k: (v.isoformat() if isinstance(v, date) else _s(v) if isinstance(v, int) else v)
                     for k, v in st.items()}
         return _case(cid, inp, run)
@@ -523,6 +711,111 @@ def build_suites():
         status_case("status-004-ahead", three, "450000000", "2026-11-20"),
         status_case("status-005-closed", three, "900000000", "2027-03-01"),
         status_case("status-neg-001", three, "900000001", "2026-10-15"),
+        status_case("status-006-prepaid-from-end", three, "300000000", "2026-11-20", "400000000"),
+        status_case("status-neg-002-prepaid", three, "300000000", "2026-11-20", "600000001"),
+    ])
+
+    def spec_json(sp):
+        out = {"kind": sp["kind"]}
+        if sp["kind"] in ("ANNUITY", "DIFFERENTIATED"):
+            out.update({"principal": sp["principal"], "annualBp": sp["annualBp"], "months": sp["months"],
+                        "firstDate": sp["firstDate"]})
+        else:
+            out["lines"] = ml(*sp["lines"])
+        return out
+
+    def spec_py(sp):
+        if sp["kind"] in ("ANNUITY", "DIFFERENTIATED"):
+            return {"kind": sp["kind"], "principal": int(sp["principal"]), "annualBp": sp["annualBp"],
+                    "months": sp["months"], "firstDate": D(sp["firstDate"])}
+        return {"kind": sp["kind"], "lines": [(D(d), int(a)) for d, a in sp["lines"]]}
+
+    def pays_json(ps):
+        return [{"date": d, "amount": a, "prepayment": pre} for d, a, pre in ps]
+
+    def pays_py(ps):
+        return [(D(d), int(a), pre) for d, a, pre in ps]
+
+    def rows_json(rows):
+        return [{"date": r["date"].isoformat(), "due": _s(r["due"]), "interest": _s(r["interest"]),
+                 "extra": _s(r["extra"]), "fee": _s(r["fee"]), "balance": _s(r["balance"])} for r in rows]
+
+    def proj_case(cid, sp, pays, today, extra, fee_bp=0):
+        inp = {"currency": U, "debt": spec_json(sp), "payments": pays_json(pays), "today": today,
+               "extraPerMonth": extra, "prepaymentFeeBp": fee_bp}
+
+        def run():
+            st = make_state(spec_py(sp), pays_py(pays))
+            state = st.state()
+            res, _ = payoff_plan([("d", st, fee_bp)], D(today), int(extra))
+            r = res["d"]
+            return {"state": {"balance": _s(state["balance"]),
+                              "nextDate": state["nextDate"].isoformat() if state["nextDate"] else None},
+                    "rows": rows_json(r["rows"]), "months": r["months"],
+                    "payoffDate": r["payoffDate"].isoformat() if r["payoffDate"] else None,
+                    "totalInterest": _s(r["interest"]), "totalFees": _s(r["fees"]), "totalPaid": _s(r["paid"])}
+        return _case(cid, inp, run)
+
+    anvar = {"kind": "ANNUITY", "principal": "3900000000", "annualBp": 2400, "months": 14, "firstDate": "2026-11-05"}
+    karim = {"kind": "MANUAL", "lines": three}
+    shop = {"kind": "FIXED_MARKUP", "lines": tuple((add_months(D("2026-10-20"), k).isoformat(), "60000000") for k in range(12))}
+    suites["payoff_projection"] = _suite("payoff_projection", "Holat to'lovlar tarixidan; kalendar oylari bo'yicha prognoz: avval odatiy to'lov, keyin qo'shimcha; bankda asosiy qarz kamayadi, ustamali/foizsiz rejada oxiridan yopiladi", [
+        proj_case("payoff-001-anvar-base", anvar, [], "2026-11-01", "0"),
+        proj_case("payoff-002-anvar-1.6m", anvar, [], "2026-11-01", "160000000"),
+        proj_case("payoff-003-anvar-2.4m-fee", anvar, [], "2026-11-01", "240000000", 100),
+        proj_case("payoff-004-anvar-replay", anvar,
+                  [("2026-11-05", "322147684", False), ("2026-12-05", "322147684", False),
+                   ("2026-12-20", "500000000", True)], "2027-01-10", "0"),
+        proj_case("payoff-005-overdue", anvar, [], "2027-01-20", "0"),
+        proj_case("payoff-006-differentiated", {"kind": "DIFFERENTIATED", "principal": "1200000000", "annualBp": 2400,
+                                                "months": 6, "firstDate": "2027-01-31"}, [], "2027-01-01", "100000000"),
+        proj_case("payoff-007-karim", karim, [("2026-11-15", "300000000", False), ("2026-11-18", "100000000", True)],
+                  "2026-11-20", "100000000"),
+        proj_case("payoff-008-shop-markup", shop, [], "2026-10-01", "60000000"),
+        proj_case("payoff-009-zero-rate", {"kind": "ANNUITY", "principal": "100000", "annualBp": 0, "months": 3,
+                                           "firstDate": "2026-12-31"}, [], "2026-12-01", "0"),
+        proj_case("payoff-neg-001-overpaid", karim, [("2026-11-15", "900000001", False)], "2026-11-20", "0"),
+        proj_case("payoff-neg-002-extra", karim, [], "2026-11-20", "-1"),
+    ])
+
+    def plan_case(cid, debts, today, pool):
+        inp = {"currency": U, "today": today, "poolPerMonth": pool,
+               "debts": [{"id": i, "debt": spec_json(sp), "payments": pays_json(ps), "prepaymentFeeBp": f,
+                          "ribo": rb, "costBp": cb, "priority": pr} for i, sp, ps, f, rb, cb, pr in debts]}
+
+        def run():
+            keys = []
+            states = {}
+            for i, sp, ps, f, rb, cb, pr in debts:
+                st = make_state(spec_py(sp), pays_py(ps))
+                base, _ = payoff_plan([(i, make_state(spec_py(sp), pays_py(ps)), f)], D(today), 0)
+                keys.append((i, rb, cb, base[i]["payoffDate"], pr))
+                states[i] = (st, f)
+            order = default_order(keys)
+            fresh = lambda: [(i, make_state(spec_py(sp), pays_py(ps)), f) for i in order  # noqa: E731
+                             for j, sp, ps, f, *_ in debts if j == i]
+            _, base = payoff_plan(fresh(), D(today), 0)
+            per, acc = payoff_plan(fresh(), D(today), int(pool))
+            iso = lambda d: d.isoformat() if d else None  # noqa: E731
+            return {"order": order,
+                    "base": {"payoffDate": iso(base["payoffDate"]), "months": base["months"],
+                             "totalInterest": _s(base["interest"]), "totalFees": _s(base["fees"])},
+                    "accelerated": {"payoffDate": iso(acc["payoffDate"]), "months": acc["months"],
+                                    "totalInterest": _s(acc["interest"]), "totalFees": _s(acc["fees"]),
+                                    "debts": [{"id": i, "payoffDate": iso(per[i]["payoffDate"]), "months": per[i]["months"],
+                                               "interest": _s(per[i]["interest"]), "fees": _s(per[i]["fees"])} for i in order]},
+                    "monthsSaved": base["months"] - acc["months"],
+                    "interestSaved": _s(base["interest"] - acc["interest"]),
+                    "netSaved": _s(base["interest"] - acc["interest"] - acc["fees"])}
+        return _case(cid, inp, run)
+
+    trio = [("avto", anvar, [], 100, True, 2400, None), ("toy", karim, [], 0, False, 0, None),
+            ("nasiya", shop, [], 0, True, 1667, None)]
+    suites["payoff_plan"] = _suite("payoff_plan", "Bir nechta qarz: tartib (qo'lda → foizli eng qimmati → foizsiz muddati yaqini), qo'shimcha to'lov tartib bo'yicha birinchi ochiq qarzga; «Qarzsiz kun»", [
+        plan_case("plan-all-001-default-order", trio, "2026-11-01", "240000000"),
+        plan_case("plan-all-002-manual-order", [("avto", anvar, [], 100, True, 2400, 2), ("toy", karim, [], 0, False, 0, 1),
+                                                ("nasiya", shop, [], 0, True, 1667, None)], "2026-11-01", "240000000"),
+        plan_case("plan-all-003-no-extra", trio, "2026-11-01", "0"),
     ])
     suites["debt_load"] = _suite("debt_load", "Oylik qarz yuki = shu davrdagi reja to'lovlari / oylik daromad, bp (round_half_up)", [
         _case(cid, {"currency": U, "payments": _s(p), "income": _s(i)}, lambda p=p, i=i: {"loadBp": debt_load_bp(p, i)})
@@ -533,7 +826,7 @@ def build_suites():
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
-                 "journal_chain", "debt_plan", "debt_status", "debt_load")
+                 "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan")
 
 
 def generate(directory: str) -> None:
@@ -662,6 +955,13 @@ def selftest() -> None:
     st = plan_status([(date(2026, 11, 15), 300), (date(2026, 12, 15), 300)], 100, date(2026, 12, 20))
     assert (st["nextAmount"], st["overdue"], st["reminder"]) == (200, 500, "OVERDUE")
     assert debt_load_bp(322147684, 1200000000) == 2685 and debt_load_bp(1, 0) is None
+    # U9: yangi prognoz eski amortizatsiya vektorlari bilan bir xil (birinchi oy — to'lov oyi)
+    for extra, (months, interest) in {0: (14, 610067573), 160000000: (9, 397018667), 240000000: (8, 341756885)}.items():
+        st = Amortizing("ANNUITY", 3900000000, 2400, 14, date(2026, 11, 5), [])
+        res, tot = payoff_plan([("a", st, 0)], date(2026, 11, 1), extra)
+        assert (res["a"]["months"], res["a"]["interest"]) == (months, interest), (extra, res["a"]["months"])
+        assert res["a"]["rows"][-1]["balance"] == 0
+    assert remaining_lines([(1, 300), (2, 300), (3, 300)], 300, 400) == [(2, 200)]
     print("oracle selftest: OK")
 
 

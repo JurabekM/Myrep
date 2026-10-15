@@ -390,6 +390,8 @@ pub struct NewDebtInput {
     pub first_date: Option<String>,
     pub schedule: Vec<ScheduleLineInput>,
     pub early_repayment_terms: Option<String>,
+    /// Muddatidan oldin to'lash jarimasi/komissiyasi: qo'shimcha to'lovdan bp (100 = 1%).
+    pub prepayment_fee_bp: Option<i32>,
     /// Yangi olinayotgan qarz: «to'xta va o'yla» javoblari majburiy.
     pub is_new: bool,
     pub borrow_check: Option<BorrowCheckInput>,
@@ -419,6 +421,8 @@ pub struct RepaymentInput {
     /// Rejadan tashqari (muddatidan oldin) to'lov.
     pub is_prepayment: bool,
     pub note: Option<String>,
+    /// Qarzni kim to'ladi (`DebtContributor`); bo'lmasa — oilaning o'zi.
+    pub contributor_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -476,6 +480,40 @@ pub struct RepaymentDto {
     pub note: Option<String>,
     /// Tilxatga bog'langan bo'lsa — jurnal yozuvining qisqa kodi.
     pub journal_short_code: Option<String>,
+    pub contributor_id: Option<String>,
+}
+
+/// To'lov natijasi: qarz yopildimi, barcha qarzlar tugadimi («Qarzsiz kun»), rejim qaytdimi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct RepaymentResultDto {
+    pub repayment: RepaymentDto,
+    pub closed: bool,
+    /// Bu oxirgi faol qarz edi.
+    pub debt_free: bool,
+    /// `DEBT_RECOVERY` avtomatik `STANDARD` ga qaytdi.
+    pub mode_returned: bool,
+    /// Bo'shagan oylik to'lov (jamg'armaga yo'naltirish taklifi uchun).
+    pub freed_monthly: Option<MoneyDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ContributorDto {
+    pub id: String,
+    pub name: String,
+    pub monthly_share: Option<MoneyDto>,
+    pub paid: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewContributorInput {
+    pub name: String,
+    pub monthly_share: Option<String>,
 }
 
 /// Reja bo'yicha holat: keyingi to'lov, kechikkan summa, qoldiq, eslatma.
@@ -533,6 +571,12 @@ pub struct DebtDto {
     pub plan: Vec<PlanLineDto>,
     pub payments: Vec<RepaymentDto>,
     pub early_repayment_terms: Option<String>,
+    pub prepayment_fee_bp: i32,
+    /// Qo'lda qo'yilgan yopish tartibi (1 — birinchi).
+    pub priority: Option<i32>,
+    /// Bank qarzida — asosiy qarz qoldig'i, boshqalarida — qolgan to'lovlar.
+    pub balance: MoneyDto,
+    pub contributors: Vec<ContributorDto>,
     pub borrow_warnings: Vec<String>,
     pub agreement_id: Option<String>,
 }
@@ -582,6 +626,13 @@ pub struct DebtsOverviewDto {
     pub load_excludes_foreign: bool,
     pub has_ribo_debt: bool,
     pub goals: Vec<GoalDto>,
+    /// «Qarzsiz kun» — qo'shimcha to'lovsiz prognoz (asosiy valyutadagi qarzlar).
+    pub debt_free_date: Option<String>,
+    pub debt_free_months: u32,
+    /// `DEBT_RECOVERY` da: 20% qo'shimcha to'lov bilan «Qarzsiz kun».
+    pub debt_free_date_with_plan: Option<String>,
+    /// `STANDARD` yoki `DEBT_RECOVERY`.
+    pub budget_mode: String,
 }
 
 /// «To'xta va o'yla» natijasi: taqiqlamaydi, ko'rsatadi.
@@ -595,4 +646,167 @@ pub struct BorrowCheckDto {
     pub warnings: Vec<String>,
     pub plan: Vec<PlanLineDto>,
     pub true_cost: TrueCostDto,
+}
+
+/// Byudjet rejimi (uy/SPEC 2D.1). Ulushlar bp: 7000/2000/1000 = 70/20/10.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BudgetModeInput {
+    /// `STANDARD` yoki `DEBT_RECOVERY`.
+    pub mode: String,
+    pub household_bp: i32,
+    pub extra_debt_bp: i32,
+    pub savings_bp: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BudgetModeDto {
+    pub mode: String,
+    pub household_bp: i32,
+    pub extra_debt_bp: i32,
+    pub savings_bp: i32,
+    pub household_percent: String,
+    pub extra_debt_percent: String,
+    pub savings_percent: String,
+    /// Faol qarz bor, rejim esa `STANDARD` — «Qarzdan chiqish» rejimini taklif qilish.
+    pub suggested: bool,
+    pub has_active_debt: bool,
+    /// Oylik daromad (oxirgi 3 to'liq oy o'rtachasi; bo'lmasa — shu oy).
+    pub monthly_income: Option<MoneyDto>,
+    pub household: MoneyDto,
+    pub extra_debt: MoneyDto,
+    pub savings: MoneyDto,
+    /// Shu oy majburiy qarz to'lovlari — ro'zg'or ulushi ichida `ZARUR` sifatida.
+    pub mandatory_debt_payments: MoneyDto,
+    pub household_after_debts: MoneyDto,
+    /// Majburiy to'lovlar ro'zg'or ulushidan oshib ketdi.
+    pub household_short: bool,
+    pub changed_on: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PlannerInput {
+    /// Bo'lmasa: `DEBT_RECOVERY` da — 20% ulush, aks holda — 0.
+    pub extra_per_month: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PlanTotalsDto {
+    pub payoff_date: Option<String>,
+    pub months: u32,
+    pub interest: MoneyDto,
+    pub fees: MoneyDto,
+    pub paid: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PlannerDebtDto {
+    pub id: String,
+    pub creditor: String,
+    pub is_ribo: bool,
+    /// 1 — birinchi yopiladigan.
+    pub order: u32,
+    pub manual_order: bool,
+    pub balance: MoneyDto,
+    pub base_payoff: Option<String>,
+    pub accelerated_payoff: Option<String>,
+    pub months_saved: i32,
+    pub interest_saved: MoneyDto,
+    pub fees: MoneyDto,
+    pub prepayment_fee_bp: i32,
+}
+
+/// Grafik nuqtasi: oy oxiridagi umumiy qoldiq (odatiy va tezlashtirilgan).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct TimelinePointDto {
+    /// `YYYY-MM-01`.
+    pub month: String,
+    pub base_balance: MoneyDto,
+    pub accelerated_balance: MoneyDto,
+}
+
+/// Katta jadval qatori (tezlashtirilgan reja, barcha qarzlar yig'indisi).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct TimelineRowDto {
+    pub month: String,
+    pub due: MoneyDto,
+    pub interest: MoneyDto,
+    pub extra: MoneyDto,
+    pub fee: MoneyDto,
+    pub balance: MoneyDto,
+}
+
+/// Qarzdan chiqish rejalovchisi (uy/SPEC 2D.2, 2D.9). Taxminiy hisob.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PlannerDto {
+    pub extra_per_month: MoneyDto,
+    /// `RECOVERY_SHARE` (20% ulush), `MANUAL` yoki `NONE`.
+    pub extra_source: String,
+    pub base: PlanTotalsDto,
+    pub accelerated: PlanTotalsDto,
+    pub months_saved: i32,
+    pub interest_saved: MoneyDto,
+    /// Tejalgan foiz − jarima/komissiya.
+    pub net_saved: MoneyDto,
+    pub debts: Vec<PlannerDebtDto>,
+    pub timeline: Vec<TimelinePointDto>,
+    pub schedule: Vec<TimelineRowDto>,
+    /// Boshqa valyutadagi qarzlar rejaga kirmagan.
+    pub excluded_foreign: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewSellableItemInput {
+    pub title: String,
+    pub estimated: String,
+    pub currency: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SellableItemDto {
+    pub id: String,
+    pub title: String,
+    pub estimated: MoneyDto,
+    /// `LISTED` yoki `SOLD`.
+    pub status: String,
+    pub sold: Option<MoneyDto>,
+    pub sold_on: Option<String>,
+    pub debt_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SellItemInput {
+    pub price: String,
+    pub date: Option<String>,
+    /// Pul shu qarzga muddatidan oldingi to'lov sifatida yo'naltiriladi (bir bosishda).
+    pub debt_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SellResultDto {
+    pub item: SellableItemDto,
+    pub repayment: Option<RepaymentResultDto>,
 }

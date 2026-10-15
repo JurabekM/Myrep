@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sellable-items"
+description = "Enables the sellable_items command without any pre-configured scope."
+commands.allow = ["sellable_items"]
+
+[[permission]]
+identifier = "deny-sellable-items"
+description = "Denies the sellable_items command without any pre-configured scope."
+commands.deny = ["sellable_items"]

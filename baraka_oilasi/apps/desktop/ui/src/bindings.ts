@@ -37,12 +37,21 @@ export const commands = {
 	previewBorrowCheck: (spaceId: string, input: NewDebtInput) => typedError<BorrowCheckDto, AppError>(__TAURI_INVOKE("preview_borrow_check", { spaceId, input })),
 	addDebt: (spaceId: string, input: NewDebtInput) => typedError<DebtDto, AppError>(__TAURI_INVOKE("add_debt", { spaceId, input })),
 	addReceivable: (spaceId: string, input: NewReceivableInput) => typedError<ReceivableDto, AppError>(__TAURI_INVOKE("add_receivable", { spaceId, input })),
-	recordRepayment: (spaceId: string, ownerType: string, id: string, input: RepaymentInput) => typedError<RepaymentDto, AppError>(__TAURI_INVOKE("record_repayment", { spaceId, ownerType, id, input })),
+	recordRepayment: (spaceId: string, ownerType: string, id: string, input: RepaymentInput) => typedError<RepaymentResultDto, AppError>(__TAURI_INVOKE("record_repayment", { spaceId, ownerType, id, input })),
 	addGoal: (spaceId: string, input: NewGoalInput) => typedError<GoalDto, AppError>(__TAURI_INVOKE("add_goal", { spaceId, input })),
 	deleteGoal: (spaceId: string, goalId: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_goal", { spaceId, goalId })),
 	issueLoanReceipt: (spaceId: string, input: IssueLoanReceiptInput) => typedError<IssuedReceiptDto, AppError>(__TAURI_INVOKE("issue_loan_receipt", { spaceId, input })),
 	/**  Saqlangan tilxatni joriy tekshirish kodi bilan PDF qilib saqlaydi. */
 	exportAgreementReceipt: (spaceId: string, agreementId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_agreement_receipt", { spaceId, agreementId })),
+	budgetMode: (spaceId: string) => typedError<BudgetModeDto, AppError>(__TAURI_INVOKE("budget_mode", { spaceId })),
+	setBudgetMode: (spaceId: string, input: BudgetModeInput) => typedError<BudgetModeDto, AppError>(__TAURI_INVOKE("set_budget_mode", { spaceId, input })),
+	payoffPlanner: (spaceId: string, input: PlannerInput) => typedError<PlannerDto, AppError>(__TAURI_INVOKE("payoff_planner", { spaceId, input })),
+	setDebtOrder: (spaceId: string, debtIds: string[]) => typedError<null, AppError>(__TAURI_INVOKE("set_debt_order", { spaceId, debtIds })),
+	resetDebtOrder: (spaceId: string) => typedError<null, AppError>(__TAURI_INVOKE("reset_debt_order", { spaceId })),
+	addContributor: (spaceId: string, debtId: string, input: NewContributorInput) => typedError<ContributorDto, AppError>(__TAURI_INVOKE("add_contributor", { spaceId, debtId, input })),
+	sellableItems: (spaceId: string) => typedError<SellableItemDto[], AppError>(__TAURI_INVOKE("sellable_items", { spaceId })),
+	addSellableItem: (spaceId: string, input: NewSellableItemInput) => typedError<SellableItemDto, AppError>(__TAURI_INVOKE("add_sellable_item", { spaceId, input })),
+	sellItem: (spaceId: string, itemId: string, input: SellItemInput) => typedError<SellResultDto, AppError>(__TAURI_INVOKE("sell_item", { spaceId, itemId, input })),
 };
 
 /** Events */
@@ -130,6 +139,39 @@ export type BorrowCheckInput = {
 	alternatives: string[],
 };
 
+export type BudgetModeDto = {
+	mode: string,
+	householdBp: number,
+	extraDebtBp: number,
+	savingsBp: number,
+	householdPercent: string,
+	extraDebtPercent: string,
+	savingsPercent: string,
+	/**  Faol qarz bor, rejim esa `STANDARD` — «Qarzdan chiqish» rejimini taklif qilish. */
+	suggested: boolean,
+	hasActiveDebt: boolean,
+	/**  Oylik daromad (oxirgi 3 to'liq oy o'rtachasi; bo'lmasa — shu oy). */
+	monthlyIncome: MoneyDto | null,
+	household: MoneyDto,
+	extraDebt: MoneyDto,
+	savings: MoneyDto,
+	/**  Shu oy majburiy qarz to'lovlari — ro'zg'or ulushi ichida `ZARUR` sifatida. */
+	mandatoryDebtPayments: MoneyDto,
+	householdAfterDebts: MoneyDto,
+	/**  Majburiy to'lovlar ro'zg'or ulushidan oshib ketdi. */
+	householdShort: boolean,
+	changedOn: string | null,
+};
+
+/**  Byudjet rejimi (uy/SPEC 2D.1). Ulushlar bp: 7000/2000/1000 = 70/20/10. */
+export type BudgetModeInput = {
+	/**  `STANDARD` yoki `DEBT_RECOVERY`. */
+	mode: string,
+	householdBp: number,
+	extraDebtBp: number,
+	savingsBp: number,
+};
+
 export type CategoryDto = {
 	id: string,
 	/**  i18n kaliti; `customName` bo'lsa, UI shuni ko'rsatadi. */
@@ -165,6 +207,13 @@ export type Contribution = {
 
 export type ContributionKind = "MONEY" | "GOODS" | "LABOR" | "NETWORK";
 
+export type ContributorDto = {
+	id: string,
+	name: string,
+	monthlyShare: MoneyDto | null,
+	paid: MoneyDto,
+};
+
 /**  Yadrodagi o'zgarish — UI tegishli so'rovlarni qayta o'qiydi. */
 export type CoreChanged = ChangeEvent;
 
@@ -195,6 +244,12 @@ export type DebtDto = {
 	plan: PlanLineDto[],
 	payments: RepaymentDto[],
 	earlyRepaymentTerms: string | null,
+	prepaymentFeeBp: number,
+	/**  Qo'lda qo'yilgan yopish tartibi (1 — birinchi). */
+	priority: number | null,
+	/**  Bank qarzida — asosiy qarz qoldig'i, boshqalarida — qolgan to'lovlar. */
+	balance: MoneyDto,
+	contributors: ContributorDto[],
 	borrowWarnings: string[],
 	agreementId: string | null,
 };
@@ -216,6 +271,13 @@ export type DebtsOverviewDto = {
 	loadExcludesForeign: boolean,
 	hasRiboDebt: boolean,
 	goals: GoalDto[],
+	/**  «Qarzsiz kun» — qo'shimcha to'lovsiz prognoz (asosiy valyutadagi qarzlar). */
+	debtFreeDate: string | null,
+	debtFreeMonths: number,
+	/**  `DEBT_RECOVERY` da: 20% qo'shimcha to'lov bilan «Qarzsiz kun». */
+	debtFreeDateWithPlan: string | null,
+	/**  `STANDARD` yoki `DEBT_RECOVERY`. */
+	budgetMode: string,
 };
 
 export type Duty = {
@@ -394,6 +456,11 @@ export type NecessityTotalsDto = {
 	unclassified: MoneyDto,
 };
 
+export type NewContributorInput = {
+	name: string,
+	monthlyShare: string | null,
+};
+
 /**
  *  Olingan qarz (inventar). Reja turi bo'yicha: `ANNUITY`/`DIFFERENTIATED` — `annualBp` va `months`,
  *  `FIXED_MARKUP` — `markup` va `months`, `MANUAL` — `schedule` (yig'indisi = summa + ustama).
@@ -418,6 +485,8 @@ export type NewDebtInput = {
 	firstDate: string | null,
 	schedule: ScheduleLineInput[],
 	earlyRepaymentTerms: string | null,
+	/**  Muddatidan oldin to'lash jarimasi/komissiyasi: qo'shimcha to'lovdan bp (100 = 1%). */
+	prepaymentFeeBp: number | null,
 	/**  Yangi olinayotgan qarz: «to'xta va o'yla» javoblari majburiy. */
 	isNew: boolean,
 	borrowCheck: BorrowCheckInput | null,
@@ -473,6 +542,12 @@ export type NewReceivableInput = {
 	note: string | null,
 };
 
+export type NewSellableItemInput = {
+	title: string,
+	estimated: string,
+	currency: string,
+};
+
 export type Party = {
 	id: string,
 	fullName: string,
@@ -494,6 +569,53 @@ export type PlanStatusDto = {
 	payoffDate: string | null,
 	/**  `DUE_SOON` yoki `OVERDUE`. */
 	reminder: string | null,
+};
+
+export type PlanTotalsDto = {
+	payoffDate: string | null,
+	months: number,
+	interest: MoneyDto,
+	fees: MoneyDto,
+	paid: MoneyDto,
+};
+
+export type PlannerDebtDto = {
+	id: string,
+	creditor: string,
+	isRibo: boolean,
+	/**  1 — birinchi yopiladigan. */
+	order: number,
+	manualOrder: boolean,
+	balance: MoneyDto,
+	basePayoff: string | null,
+	acceleratedPayoff: string | null,
+	monthsSaved: number,
+	interestSaved: MoneyDto,
+	fees: MoneyDto,
+	prepaymentFeeBp: number,
+};
+
+/**  Qarzdan chiqish rejalovchisi (uy/SPEC 2D.2, 2D.9). Taxminiy hisob. */
+export type PlannerDto = {
+	extraPerMonth: MoneyDto,
+	/**  `RECOVERY_SHARE` (20% ulush), `MANUAL` yoki `NONE`. */
+	extraSource: string,
+	base: PlanTotalsDto,
+	accelerated: PlanTotalsDto,
+	monthsSaved: number,
+	interestSaved: MoneyDto,
+	/**  Tejalgan foiz − jarima/komissiya. */
+	netSaved: MoneyDto,
+	debts: PlannerDebtDto[],
+	timeline: TimelinePointDto[],
+	schedule: TimelineRowDto[],
+	/**  Boshqa valyutadagi qarzlar rejaga kirmagan. */
+	excludedForeign: number,
+};
+
+export type PlannerInput = {
+	/**  Bo'lmasa: `DEBT_RECOVERY` da — 20% ulush, aks holda — 0. */
+	extraPerMonth: string | null,
 };
 
 export type ProfitRule = {
@@ -528,6 +650,7 @@ export type RepaymentDto = {
 	note: string | null,
 	/**  Tilxatga bog'langan bo'lsa — jurnal yozuvining qisqa kodi. */
 	journalShortCode: string | null,
+	contributorId: string | null,
 };
 
 export type RepaymentInput = {
@@ -537,6 +660,20 @@ export type RepaymentInput = {
 	/**  Rejadan tashqari (muddatidan oldin) to'lov. */
 	isPrepayment: boolean,
 	note: string | null,
+	/**  Qarzni kim to'ladi (`DebtContributor`); bo'lmasa — oilaning o'zi. */
+	contributorId: string | null,
+};
+
+/**  To'lov natijasi: qarz yopildimi, barcha qarzlar tugadimi («Qarzsiz kun»), rejim qaytdimi. */
+export type RepaymentResultDto = {
+	repayment: RepaymentDto,
+	closed: boolean,
+	/**  Bu oxirgi faol qarz edi. */
+	debtFree: boolean,
+	/**  `DEBT_RECOVERY` avtomatik `STANDARD` ga qaytdi. */
+	modeReturned: boolean,
+	/**  Bo'shagan oylik to'lov (jamg'armaga yo'naltirish taklifi uchun). */
+	freedMonthly: MoneyDto | null,
 };
 
 export type ScheduleLineInput = {
@@ -551,6 +688,29 @@ export type ScheduleRowDto = {
 	principal: MoneyDto,
 	extra: MoneyDto,
 	balance: MoneyDto,
+};
+
+export type SellItemInput = {
+	price: string,
+	date: string | null,
+	/**  Pul shu qarzga muddatidan oldingi to'lov sifatida yo'naltiriladi (bir bosishda). */
+	debtId: string | null,
+};
+
+export type SellResultDto = {
+	item: SellableItemDto,
+	repayment: RepaymentResultDto | null,
+};
+
+export type SellableItemDto = {
+	id: string,
+	title: string,
+	estimated: MoneyDto,
+	/**  `LISTED` yoki `SOLD`. */
+	status: string,
+	sold: MoneyDto | null,
+	soldOn: string | null,
+	debtId: string | null,
 };
 
 /**  Avto-qulf ishladi — UI qulf ekraniga o'tadi, summalar ko'rinmaydi. */
@@ -591,8 +751,26 @@ export type Term = {
 	reviewDate: string,
 };
 
+/**  Grafik nuqtasi: oy oxiridagi umumiy qoldiq (odatiy va tezlashtirilgan). */
+export type TimelinePointDto = {
+	/**  `YYYY-MM-01`. */
+	month: string,
+	baseBalance: MoneyDto,
+	acceleratedBalance: MoneyDto,
+};
+
+/**  Katta jadval qatori (tezlashtirilgan reja, barcha qarzlar yig'indisi). */
+export type TimelineRowDto = {
+	month: string,
+	due: MoneyDto,
+	interest: MoneyDto,
+	extra: MoneyDto,
+	fee: MoneyDto,
+	balance: MoneyDto,
+};
+
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {

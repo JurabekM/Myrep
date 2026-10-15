@@ -14,6 +14,9 @@ export const keys = {
   categories: (spaceId: string) => ["categories", spaceId] as const,
   vault: (spaceId: string) => ["vault", spaceId] as const,
   debts: (spaceId: string) => ["debts", spaceId] as const,
+  budget: (spaceId: string) => ["budget", spaceId] as const,
+  planner: (spaceId: string, extra: string | null) => ["planner", spaceId, extra] as const,
+  items: (spaceId: string) => ["items", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

@@ -21,6 +21,8 @@ abstract final class BarakaLightColors {
   static const Color warn = Color(0xFF9A5B13);
   static const Color danger = Color(0xFFA23B3B);
   static const Color focus = Color(0xFFA9502F);
+  static const Color chart1 = Color(0xFF2A78D6);
+  static const Color chart2 = Color(0xFFEB6834);
 }
 
 abstract final class BarakaDarkColors {
@@ -39,6 +41,8 @@ abstract final class BarakaDarkColors {
   static const Color warn = Color(0xFFE0A458);
   static const Color danger = Color(0xFFE5786D);
   static const Color focus = Color(0xFFD97757);
+  static const Color chart1 = Color(0xFF3987E5);
+  static const Color chart2 = Color(0xFFD95926);
 }
 
 abstract final class BarakaDimens {

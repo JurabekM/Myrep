@@ -258,7 +258,7 @@ pub async fn record_repayment(
     owner_type: String,
     id: String,
     input: RepaymentInput,
-) -> R<RepaymentDto> {
+) -> R<RepaymentResultDto> {
     state
         .session
         .app()?
@@ -289,6 +289,92 @@ pub async fn issue_loan_receipt(
     input: IssueLoanReceiptInput,
 ) -> R<IssuedReceiptDto> {
     state.session.app()?.issue_loan_receipt(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn budget_mode(state: State<'_, Desktop>, space_id: String) -> R<BudgetModeDto> {
+    state.session.app()?.budget_mode(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn set_budget_mode(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: BudgetModeInput,
+) -> R<BudgetModeDto> {
+    state.session.app()?.set_budget_mode(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn payoff_planner(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: PlannerInput,
+) -> R<PlannerDto> {
+    state.session.app()?.payoff_planner(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn set_debt_order(
+    state: State<'_, Desktop>,
+    space_id: String,
+    debt_ids: Vec<String>,
+) -> R<()> {
+    state.session.app()?.set_debt_order(&space_id, debt_ids)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn reset_debt_order(state: State<'_, Desktop>, space_id: String) -> R<()> {
+    state.session.app()?.reset_debt_order(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_contributor(
+    state: State<'_, Desktop>,
+    space_id: String,
+    debt_id: String,
+    input: NewContributorInput,
+) -> R<ContributorDto> {
+    state
+        .session
+        .app()?
+        .add_contributor(&space_id, &debt_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn sellable_items(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<SellableItemDto>> {
+    state.session.app()?.sellable_items(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_sellable_item(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: NewSellableItemInput,
+) -> R<SellableItemDto> {
+    state.session.app()?.add_sellable_item(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn sell_item(
+    state: State<'_, Desktop>,
+    space_id: String,
+    item_id: String,
+    input: SellItemInput,
+) -> R<SellResultDto> {
+    state.session.app()?.sell_item(&space_id, &item_id, input)
 }
 
 /// PDF'ni tizimning «Saqlash» oynasi orqali yozadi. `false` — foydalanuvchi bekor qildi.

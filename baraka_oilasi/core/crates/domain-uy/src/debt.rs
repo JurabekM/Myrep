@@ -293,37 +293,61 @@ pub struct PlanStatus {
     pub reminder: Option<Reminder>,
 }
 
+/// Rejaning hali to'lanmagan qatorlari: odatiy to'lovlar boshidan, muddatidan oldingi
+/// to'lovlar oxiridan yopiladi («muddatni qisqartirish» — «Qarzsiz kun» oldinga siljiydi).
+pub fn remaining_lines(
+    lines: &[PlanLine],
+    regular: Money,
+    prepaid: Money,
+) -> Result<Vec<PlanLine>, DomainError> {
+    let cur = regular.currency();
+    let total = plan_total(lines, cur)?;
+    if regular.is_negative()
+        || prepaid.is_negative()
+        || regular.checked_add(prepaid)?.compare(&total)?.is_gt()
+    {
+        return Err(DomainError::on("PAYMENT_EXCEEDS_REMAINING", "amount"));
+    }
+    let mut out: Vec<PlanLine> = lines.to_vec();
+    let mut r = regular.minor();
+    for l in out.iter_mut() {
+        let take = r.min(l.amount.minor());
+        l.amount = Money::new(l.amount.minor() - take, cur);
+        r -= take;
+    }
+    let mut p = prepaid.minor();
+    for l in out.iter_mut().rev() {
+        let take = p.min(l.amount.minor());
+        l.amount = Money::new(l.amount.minor() - take, cur);
+        p -= take;
+    }
+    out.retain(|l| l.amount.is_positive());
+    Ok(out)
+}
+
 pub fn plan_status(
     lines: &[PlanLine],
     paid: Money,
+    prepaid: Money,
     today: NaiveDate,
 ) -> Result<PlanStatus, DomainError> {
     let cur = paid.currency();
-    let total = plan_total(lines, cur)?;
-    if paid.is_negative() || paid.compare(&total)?.is_gt() {
-        return Err(DomainError::on("PAYMENT_EXCEEDS_REMAINING", "amount"));
-    }
-    let mut cum = Money::zero(cur);
-    let mut next = None;
-    let mut overdue = Money::zero(cur);
-    for l in lines {
-        let prev = cum;
-        cum = cum.checked_add(l.amount)?;
-        if cum.minor() <= paid.minor() {
-            continue;
-        }
-        let outstanding = cum.checked_sub(prev.max(paid)?)?;
-        if next.is_none() {
-            next = Some(PlanLine {
-                date: l.date,
-                amount: outstanding,
-            });
-        }
-        if l.date < today {
-            overdue = overdue.checked_add(outstanding)?;
-        }
-    }
-    let remaining = total.checked_sub(paid)?;
+    let rest = remaining_lines(lines, paid, prepaid)?;
+    status_of(&rest, today, cur)
+}
+
+/// Qolgan qatorlar bo'yicha holat (bank qarzlarida qatorlar prognozdan olinadi).
+pub fn status_of(
+    rest: &[PlanLine],
+    today: NaiveDate,
+    cur: Currency,
+) -> Result<PlanStatus, DomainError> {
+    let next = rest.first().copied();
+    let overdue = Money::sum(
+        rest.iter().filter(|l| l.date < today).map(|l| l.amount),
+        cur,
+    )?;
+    let remaining = plan_total(rest, cur)?;
     let reminder = if overdue.is_positive() {
         Some(Reminder::Overdue)
     } else {
@@ -334,11 +358,7 @@ pub fn plan_status(
         remaining,
         next,
         overdue,
-        payoff_date: if remaining.is_positive() {
-            lines.last().map(|l| l.date)
-        } else {
-            None
-        },
+        payoff_date: rest.last().map(|l| l.date),
         reminder,
     })
 }

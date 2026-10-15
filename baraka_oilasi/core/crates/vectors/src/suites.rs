@@ -13,6 +13,10 @@ use baraka_domain_uy::{
     partnership::{
         distribute, DistributionInput, Negligence, Partner, PartnerRole, PartnershipKind,
     },
+    payoff::{
+        default_order, payoff_plan, Amortizing, BankTerms, DebtState, OrderKey, Payment, PlanDebt,
+        Scheduled,
+    },
     recovery::RecoverySplit,
     spike::{profit_spike, SpikePolicy},
     streak::compute_streak,
@@ -105,6 +109,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "debt_plan" => debt_plan(input),
         "debt_status" => debt_status(input),
         "debt_load" => debt_load(input),
+        "payoff_projection" => projection(input),
+        "payoff_plan" => plan_all(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -491,7 +497,12 @@ fn debt_plan(v: &Value) -> R {
 
 fn debt_status(v: &Value) -> R {
     let c = cur(v, "currency")?;
-    let st = plan_status(&plan_lines(v, c)?, money(v, "paid", c)?, date(&v["today"])?)?;
+    let st = plan_status(
+        &plan_lines(v, c)?,
+        money(v, "paid", c)?,
+        opt_money(v, "prepaid", c)?,
+        date(&v["today"])?,
+    )?;
     Ok(json!({
         "remaining": st.remaining.minor().to_string(),
         "nextDate": st.next.map(|n| n.date.to_string()),
@@ -505,4 +516,126 @@ fn debt_status(v: &Value) -> R {
 fn debt_load(v: &Value) -> R {
     let c = cur(v, "currency")?;
     Ok(json!({ "loadBp": debt_load_bp(money(v, "payments", c)?, money(v, "income", c)?)? }))
+}
+
+fn debt_state(debt: &Value, payments: &Value, c: Currency) -> Result<DebtState, E> {
+    let pays = payments
+        .as_array()
+        .ok_or_else(|| bad("payments"))?
+        .iter()
+        .map(|p| {
+            Ok(Payment {
+                date: date(&p["date"])?,
+                amount: money(p, "amount", c)?,
+                prepayment: b(p, "prepayment")?,
+            })
+        })
+        .collect::<Result<Vec<_>, E>>()?;
+    Ok(match s(debt, "kind")? {
+        k @ ("ANNUITY" | "DIFFERENTIATED") => DebtState::Amortizing(Amortizing::replay(
+            &BankTerms {
+                differentiated: k == "DIFFERENTIATED",
+                principal: money(debt, "principal", c)?,
+                annual_bp: i(debt, "annualBp")?,
+                months: u32::try_from(i(debt, "months")?).map_err(|_| bad("months"))?,
+                first_date: date(&debt["firstDate"])?,
+            },
+            &pays,
+        )?),
+        _ => DebtState::Scheduled(Scheduled::new(&plan_lines(debt, c)?, &pays)?),
+    })
+}
+
+fn iso(d: Option<NaiveDate>) -> Value {
+    d.map_or(Value::Null, |d| json!(d.to_string()))
+}
+
+fn projection(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let state = debt_state(&v["debt"], &v["payments"], c)?;
+    let st = json!({
+        "balance": state.balance().minor().to_string(),
+        "nextDate": iso(state.next_date()?),
+    });
+    let (p, _) = payoff_plan(
+        vec![PlanDebt {
+            id: "d".into(),
+            state,
+            fee_bp: i(v, "prepaymentFeeBp")?,
+        }],
+        date(&v["today"])?,
+        money(v, "extraPerMonth", c)?,
+    )?;
+    let p = p.into_iter().next().ok_or_else(|| bad("projection"))?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "state": st,
+        "rows": p.rows.iter().map(|r| json!({
+            "date": r.date.to_string(), "due": m(r.due), "interest": m(r.interest),
+            "extra": m(r.extra), "fee": m(r.fee), "balance": m(r.balance),
+        })).collect::<Vec<_>>(),
+        "months": p.months,
+        "payoffDate": iso(p.payoff_date),
+        "totalInterest": m(p.interest),
+        "totalFees": m(p.fees),
+        "totalPaid": m(p.paid),
+    }))
+}
+
+fn plan_all(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let today = date(&v["today"])?;
+    let items = v["debts"].as_array().ok_or_else(|| bad("debts"))?;
+    let build = |d: &Value| -> Result<PlanDebt, E> {
+        Ok(PlanDebt {
+            id: s(d, "id")?.to_string(),
+            state: debt_state(&d["debt"], &d["payments"], c)?,
+            fee_bp: i(d, "prepaymentFeeBp")?,
+        })
+    };
+    let mut keys = Vec::new();
+    for d in items {
+        let one = build(d)?;
+        let (base, _) = payoff_plan(vec![one], today, Money::zero(c))?;
+        keys.push(OrderKey {
+            id: s(d, "id")?.to_string(),
+            ribo: b(d, "ribo")?,
+            cost_bp: i(d, "costBp")?,
+            payoff_date: base.first().and_then(|p| p.payoff_date),
+            priority: d["priority"].as_i64(),
+        });
+    }
+    let order = default_order(&keys);
+    let ordered = || -> Result<Vec<PlanDebt>, E> {
+        order
+            .iter()
+            .map(|id| {
+                let d = items
+                    .iter()
+                    .find(|d| d["id"].as_str() == Some(id))
+                    .ok_or_else(|| bad("id"))?;
+                build(d)
+            })
+            .collect()
+    };
+    let (_, base) = payoff_plan(ordered()?, today, Money::zero(c))?;
+    let (per, acc) = payoff_plan(ordered()?, today, money(v, "poolPerMonth", c)?)?;
+    let m = |x: Money| x.minor().to_string();
+    let saved = base.interest.checked_sub(acc.interest)?;
+    Ok(json!({
+        "order": order,
+        "base": {"payoffDate": iso(base.payoff_date), "months": base.months,
+                 "totalInterest": m(base.interest), "totalFees": m(base.fees)},
+        "accelerated": {
+            "payoffDate": iso(acc.payoff_date), "months": acc.months,
+            "totalInterest": m(acc.interest), "totalFees": m(acc.fees),
+            "debts": per.iter().map(|p| json!({
+                "id": p.id, "payoffDate": iso(p.payoff_date), "months": p.months,
+                "interest": m(p.interest), "fees": m(p.fees),
+            })).collect::<Vec<_>>(),
+        },
+        "monthsSaved": i64::from(base.months) - i64::from(acc.months),
+        "interestSaved": m(saved),
+        "netSaved": m(saved.checked_sub(acc.fees)?),
+    }))
 }

@@ -30,6 +30,15 @@ const COMMANDS: &[&str] = &[
     "delete_goal",
     "issue_loan_receipt",
     "export_agreement_receipt",
+    "budget_mode",
+    "set_budget_mode",
+    "payoff_planner",
+    "set_debt_order",
+    "reset_debt_order",
+    "add_contributor",
+    "sellable_items",
+    "add_sellable_item",
+    "sell_item",
 ];
 
 fn main() {

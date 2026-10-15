@@ -16,3 +16,5 @@ pub mod repo;
 pub use db::{Database, Meta};
 pub use error::StorageError;
 pub use repo::SpaceScope;
+/// Bir nechta repository amalini bitta tranzaksiyada bajarish uchun (`Database::write`).
+pub use rusqlite::Transaction;

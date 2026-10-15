@@ -61,6 +61,7 @@ fn manual_debt(creditor: &str, principal: &str, lines: Vec<ScheduleLineInput>) -
         first_date: None,
         schedule: lines,
         early_repayment_terms: None,
+        prepayment_fee_bp: None,
         is_new: false,
         borrow_check: None,
     }
@@ -264,10 +265,12 @@ fn receivable_has_no_interest_and_reminds_politely() {
                 date: None,
                 is_prepayment: false,
                 note: None,
+                contributor_id: None,
             },
         )
         .unwrap();
-    assert_eq!(p.journal_short_code, None);
+    assert_eq!(p.repayment.journal_short_code, None);
+    assert!(p.closed && !p.debt_free);
     let o = app.debts_overview(&uy).unwrap();
     assert_eq!(o.receivables[0].status, "CLOSED");
     assert!(o.total_receivable.is_empty());
@@ -335,11 +338,12 @@ fn receipt_links_agreement_journal_and_debt() {
                 date: Some("2026-11-14".into()),
                 is_prepayment: false,
                 note: Some("Birinchi toʻlov".into()),
+                contributor_id: None,
             },
         )
     };
     let p1 = pay("1 200 000").unwrap();
-    assert!(p1.journal_short_code.is_some());
+    assert!(p1.repayment.journal_short_code.is_some());
     assert_eq!(
         pay("800 001").unwrap_err().code,
         "PAYMENT_EXCEEDS_REMAINING"

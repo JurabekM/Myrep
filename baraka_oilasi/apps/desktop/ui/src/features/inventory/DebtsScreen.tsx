@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import {
   type BorrowCheckDto,
+  type ContributorDto,
   type BorrowCheckInput,
   commands,
   type DebtDto,
@@ -20,6 +21,7 @@ import { ScheduleEditor } from "../../components/ScheduleEditor";
 import { call, CoreError } from "../../lib/api";
 import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
+import { useUi } from "../../state/ui";
 
 const CREDITOR_TYPES = ["BANK", "SHOP", "RELATIVE", "FRIEND", "OTHER"] as const;
 const PLAN_KINDS = ["MANUAL", "ANNUITY", "DIFFERENTIATED", "FIXED_MARKUP"] as const;
@@ -201,7 +203,8 @@ function DebtCard({ spaceId, debt: d }: { spaceId: string; debt: DebtDto }) {
         )}
       </div>
       <ErrorText error={pdf.error} />
-      {paying && <PaymentForm spaceId={spaceId} ownerType="DEBT" id={d.id} onDone={() => setPaying(false)} />}
+      {paying && <PaymentForm spaceId={spaceId} ownerType="DEBT" id={d.id} contributors={d.contributors} onDone={() => setPaying(false)} />}
+      {d.status === "ACTIVE" && <Contributors spaceId={spaceId} debtId={d.id} items={d.contributors} />}
     </article>
   );
 }
@@ -227,20 +230,45 @@ function ReceivableCard({ spaceId, item: r }: { spaceId: string; item: Receivabl
         )}
       </div>
       <ErrorText error={pdf.error} />
-      {paying && <PaymentForm spaceId={spaceId} ownerType="RECEIVABLE" id={r.id} onDone={() => setPaying(false)} />}
+      {paying && <PaymentForm spaceId={spaceId} ownerType="RECEIVABLE" id={r.id} contributors={[]} onDone={() => setPaying(false)} />}
     </article>
   );
 }
 
-function PaymentForm({ spaceId, ownerType, id, onDone }: { spaceId: string; ownerType: "DEBT" | "RECEIVABLE"; id: string; onDone: () => void }) {
+function PaymentForm({
+  spaceId,
+  ownerType,
+  id,
+  contributors,
+  onDone,
+}: {
+  spaceId: string;
+  ownerType: "DEBT" | "RECEIVABLE";
+  id: string;
+  contributors: ContributorDto[];
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
+  const afterRepayment = useUi((s) => s.afterRepayment);
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [prepayment, setPrepayment] = useState(false);
+  const [payer, setPayer] = useState("");
   const save = useMutation({
     mutationFn: () =>
-      call(commands.recordRepayment(spaceId, ownerType, id, { amount, date: date.trim() === "" ? null : date, isPrepayment: prepayment, note: null })),
-    onSuccess: onDone,
+      call(
+        commands.recordRepayment(spaceId, ownerType, id, {
+          amount,
+          date: date.trim() === "" ? null : date,
+          isPrepayment: prepayment,
+          note: null,
+          contributorId: payer === "" ? null : payer,
+        }),
+      ),
+    onSuccess: (r) => {
+      onDone();
+      afterRepayment(r);
+    },
   });
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -256,6 +284,15 @@ function PaymentForm({ spaceId, ownerType, id, onDone }: { spaceId: string; owne
         <span className="label">{t("debts.paidOn")}</span>
         <input className="field max-w-40 text-lg tabular-nums" inputMode="numeric" placeholder={t("debts.today")} value={date} onChange={(e) => setDate(e.target.value)} />
       </label>
+      {contributors.length > 0 && (
+        <label>
+          <span className="label">{t("debts.payer")}</span>
+          <select className="field text-lg" value={payer} onChange={(e) => setPayer(e.target.value)}>
+            <option value="">{t("debts.payerSelf")}</option>
+            {contributors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
+      )}
       {ownerType === "DEBT" && (
         <label className="flex items-center gap-2 pb-2">
           <input type="checkbox" checked={prepayment} onChange={(e) => setPrepayment(e.target.checked)} />
@@ -265,6 +302,55 @@ function PaymentForm({ spaceId, ownerType, id, onDone }: { spaceId: string; owne
       <button className="btn-primary" disabled={save.isPending}>{t("common.save")}</button>
       <div className="w-full"><ErrorText error={save.error} /></div>
     </form>
+  );
+}
+
+/** Qarzni to'lashga yelkadoshlar (uy/SPEC 2D.4): oylik ulush va to'lagani. */
+function Contributors({ spaceId, debtId, items }: { spaceId: string; debtId: string; items: ContributorDto[] }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [share, setShare] = useState("");
+  const add = useMutation({
+    mutationFn: () => call(commands.addContributor(spaceId, debtId, { name, monthlyShare: optional(share) })),
+    onSuccess: () => {
+      setName("");
+      setShare("");
+      setOpen(false);
+    },
+  });
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    add.mutate();
+  };
+  return (
+    <div className="flex flex-col gap-2 text-sm">
+      {items.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {items.map((c) => (
+            <li key={c.id} className="flex flex-wrap justify-between gap-2 text-ink-muted tabular-nums">
+              <span>{c.name}{c.monthlyShare ? ` · ${t("debts.share", { amount: c.monthlyShare.formatted })}` : ""}</span>
+              <span>{t("debts.contributorPaid", { amount: c.paid.formatted })}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!open && <button className="self-start text-ink-muted underline" onClick={() => setOpen(true)}>{t("debts.addContributor")}</button>}
+      {open && (
+        <form className="flex flex-wrap items-end gap-3 rounded-md border border-line p-3" onSubmit={submit}>
+          <label className="min-w-48 flex-1">
+            <span className="label">{t("debts.contributorName")}</span>
+            <input className="field text-lg" value={name} onChange={(e) => setName(e.target.value)} required />
+          </label>
+          <label>
+            <span className="label">{t("debts.contributorShare")}</span>
+            <AmountInput value={share} onChange={(e) => setShare(e.target.value)} />
+          </label>
+          <button className="btn-ghost">{t("goals.add")}</button>
+          <div className="w-full"><ErrorText error={add.error} /></div>
+        </form>
+      )}
+    </div>
   );
 }
 
@@ -285,6 +371,7 @@ function AddDebtForm({ spaceId, onDone }: { spaceId: string; onDone: () => void 
     original: "",
     paidBefore: "",
     terms: "",
+    feeBp: "",
     isNew: false,
   });
   const [schedule, setSchedule] = useState<ScheduleLineInput[]>([{ date: "", amount: "" }]);
@@ -300,7 +387,10 @@ function AddDebtForm({ spaceId, onDone }: { spaceId: string; onDone: () => void 
 
   const input = (): NewDebtInput => {
     // bp va oylar — pul emas, butun son; notoʻgʻri qiymat yadroga yuborilmaydi.
-    if (generated && (!/^\d+$/.test(f.months) || (bank && !/^\d+$/.test(f.annualBp)))) {
+    if (
+      (generated && (!/^\d+$/.test(f.months) || (bank && !/^\d+$/.test(f.annualBp)))) ||
+      (f.feeBp.trim() !== "" && !/^\d+$/.test(f.feeBp.trim()))
+    ) {
       throw new CoreError({ code: "INVALID_NUMBER", field: null });
     }
     return {
@@ -318,6 +408,7 @@ function AddDebtForm({ spaceId, onDone }: { spaceId: string; onDone: () => void 
       firstDate: optional(f.firstDate),
       schedule: generated ? [] : schedule,
       earlyRepaymentTerms: optional(f.terms),
+      prepaymentFeeBp: f.feeBp.trim() === "" ? null : Number(f.feeBp.trim()),
       isNew: f.isNew,
       borrowCheck: f.isNew ? check : null,
     };
@@ -406,10 +497,16 @@ function AddDebtForm({ spaceId, onDone }: { spaceId: string; onDone: () => void 
             <AmountInput value={f.paidBefore} onChange={(e) => set({ paidBefore: e.target.value })} />
           </label>
           {f.creditorType === "BANK" && (
-            <label className="md:col-span-2">
-              <span className="label">{t("debts.terms")}</span>
-              <input className="field" value={f.terms} onChange={(e) => set({ terms: e.target.value })} />
-            </label>
+            <>
+              <label>
+                <span className="label">{t("debts.terms")}</span>
+                <input className="field" value={f.terms} onChange={(e) => set({ terms: e.target.value })} />
+              </label>
+              <label>
+                <span className="label">{t("debts.feeBp")}</span>
+                <input className="field tabular-nums" inputMode="numeric" placeholder="0" value={f.feeBp} onChange={(e) => set({ feeBp: e.target.value })} />
+              </label>
+            </>
           )}
         </div>
       </details>

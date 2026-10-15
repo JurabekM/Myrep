@@ -218,7 +218,7 @@ impl BarakaCore {
         owner_type: String,
         id: String,
         input: RepaymentInput,
-    ) -> Result<RepaymentDto, AppError> {
+    ) -> Result<RepaymentResultDto, AppError> {
         self.session
             .app()?
             .record_repayment(&space_id, &owner_type, &id, input)
@@ -250,6 +250,67 @@ impl BarakaCore {
         self.session
             .app()?
             .loan_receipt_pdf(&space_id, &agreement_id)
+    }
+
+    // U9: «Qarzdan chiqish» rejimi, rejalovchi, tartib, to'lovchilar, buyumlar.
+    pub fn budget_mode(&self, space_id: String) -> Result<BudgetModeDto, AppError> {
+        self.session.app()?.budget_mode(&space_id)
+    }
+
+    pub fn set_budget_mode(
+        &self,
+        space_id: String,
+        input: BudgetModeInput,
+    ) -> Result<BudgetModeDto, AppError> {
+        self.session.app()?.set_budget_mode(&space_id, input)
+    }
+
+    pub fn payoff_planner(
+        &self,
+        space_id: String,
+        input: PlannerInput,
+    ) -> Result<PlannerDto, AppError> {
+        self.session.app()?.payoff_planner(&space_id, input)
+    }
+
+    pub fn set_debt_order(&self, space_id: String, debt_ids: Vec<String>) -> Result<(), AppError> {
+        self.session.app()?.set_debt_order(&space_id, debt_ids)
+    }
+
+    pub fn reset_debt_order(&self, space_id: String) -> Result<(), AppError> {
+        self.session.app()?.reset_debt_order(&space_id)
+    }
+
+    pub fn add_contributor(
+        &self,
+        space_id: String,
+        debt_id: String,
+        input: NewContributorInput,
+    ) -> Result<ContributorDto, AppError> {
+        self.session
+            .app()?
+            .add_contributor(&space_id, &debt_id, input)
+    }
+
+    pub fn sellable_items(&self, space_id: String) -> Result<Vec<SellableItemDto>, AppError> {
+        self.session.app()?.sellable_items(&space_id)
+    }
+
+    pub fn add_sellable_item(
+        &self,
+        space_id: String,
+        input: NewSellableItemInput,
+    ) -> Result<SellableItemDto, AppError> {
+        self.session.app()?.add_sellable_item(&space_id, input)
+    }
+
+    pub fn sell_item(
+        &self,
+        space_id: String,
+        item_id: String,
+        input: SellItemInput,
+    ) -> Result<SellResultDto, AppError> {
+        self.session.app()?.sell_item(&space_id, &item_id, input)
     }
 
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.

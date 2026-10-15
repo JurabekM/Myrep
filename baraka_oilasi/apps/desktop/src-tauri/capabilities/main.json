@@ -36,6 +36,15 @@
     "allow-add-goal",
     "allow-delete-goal",
     "allow-issue-loan-receipt",
-    "allow-export-agreement-receipt"
+    "allow-export-agreement-receipt",
+    "allow-budget-mode",
+    "allow-set-budget-mode",
+    "allow-payoff-planner",
+    "allow-set-debt-order",
+    "allow-reset-debt-order",
+    "allow-add-contributor",
+    "allow-sellable-items",
+    "allow-add-sellable-item",
+    "allow-sell-item"
   ]
 }

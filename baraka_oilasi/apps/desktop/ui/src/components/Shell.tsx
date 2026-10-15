@@ -4,16 +4,17 @@ import { useTranslation } from "react-i18next";
 
 import { commands } from "../bindings";
 import { AuditScreen } from "../features/audit/AuditScreen";
-import { LoanScreen } from "../features/debts/LoanScreen";
 import { ExpensesScreen } from "../features/expenses/ExpensesScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { DebtsScreen } from "../features/inventory/DebtsScreen";
+import { PayoffScreen } from "../features/payoff/PayoffScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { VaultScreen } from "../features/vault/VaultScreen";
 import { call } from "../lib/api";
 import { keys, resetAfterLock } from "../lib/queryClient";
 import { type Screen, useUi } from "../state/ui";
+import { CelebrationDialog } from "./CelebrationDialog";
 import { Mentor } from "./Mentor";
 
 const NAV: { screen: Screen; label: string }[] = [
@@ -40,7 +41,7 @@ const MENTOR: Record<Screen, string> = {
 export function Shell() {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const { screen, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome } = useUi();
+  const { screen, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, celebration, closeCelebration } = useUi();
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
 
@@ -93,11 +94,12 @@ export function Shell() {
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}
         {active && screen === "audit" && <AuditScreen spaceId={active} />}
         {active && screen === "inventory" && <DebtsScreen spaceId={active} />}
-        {screen === "debts" && <LoanScreen />}
+        {active && screen === "debts" && <PayoffScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />
       {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}
+      {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}
     </div>
   );
 }

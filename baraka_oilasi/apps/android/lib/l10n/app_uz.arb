@@ -335,5 +335,174 @@
   "error_PRINCIPAL_NOT_POSITIVE": "Summa noldan katta boʻlishi kerak",
   "error_NOT_JOURNAL_KEEPER": "Bu tilxat jurnali boshqa qurilmada yuritiladi",
   "error_PLAN_JOURNAL_MISMATCH": "Reja jurnaldagi yozuvga mos emas — maʼlumot oʻzgartirilgan boʻlishi mumkin",
-  "error_MARKUP_NEGATIVE": "Ustama manfiy boʻlmaydi"
+  "error_MARKUP_NEGATIVE": "Ustama manfiy boʻlmaydi",
+  "payoff_title": "Qarzdan chiqish rejasi",
+  "payoff_noDebts": "Faol qarz yoʻq. Alhamdulillah!",
+  "payoff_extra": "Har oy qoʻshimcha toʻlov",
+  "payoff_calculate": "Hisoblash",
+  "payoff_source_RECOVERY_SHARE": "«Qarzdan chiqish» rejimidagi qoʻshimcha toʻlov ulushi: {amount}. Boshqa summa yozib koʻrishingiz mumkin.",
+  "@payoff_source_RECOVERY_SHARE": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "payoff_source_MANUAL": "Siz yozgan summa: {amount}. Rejim ulushiga qaytish uchun maydonni boʻshating.",
+  "@payoff_source_MANUAL": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "payoff_source_NONE": "Qoʻshimcha toʻlov yoʻq. Summa yozing yoki «Qarzdan chiqish» rejimini yoqing.",
+  "payoff_debtFreeBase": "Qarzsiz kun — odatiy grafik",
+  "payoff_debtFreeFast": "Qarzsiz kun — qoʻshimcha toʻlov bilan",
+  "payoff_months": "{count} oydan keyin",
+  "@payoff_months": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payoff_earlier": "{count} oy erta",
+  "@payoff_earlier": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payoff_saved": "Tejaladi",
+  "payoff_savedDetail": "foiz: {interest}, jarima/komissiya: −{fees}",
+  "@payoff_savedDetail": {
+    "placeholders": {
+      "fees": {},
+      "interest": {}
+    }
+  },
+  "payoff_foreign": "Boshqa valyutadagi qarzlar ({count} ta) rejaga kirmagan.",
+  "@payoff_foreign": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "payoff_table": "Oyma-oy jadval (qoʻshimcha toʻlov bilan)",
+  "payoff_col_due": "Odatiy toʻlov",
+  "payoff_col_fee": "Jarima",
+  "payoff_order": "Yopish tartibi",
+  "payoff_orderReset": "Standart tartib",
+  "payoff_orderHint": "Qoʻshimcha toʻlov birinchi qarzga ketadi. Standart: avval foizli qarzlar (eng qimmati), keyin foizsizlar (muddati yaqini). Tartibni oʻzgartirishingiz mumkin.",
+  "payoff_feesShort": "jarima {amount}",
+  "@payoff_feesShort": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "payoff_up": "{name} — yuqoriga",
+  "@payoff_up": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "payoff_down": "{name} — pastga",
+  "@payoff_down": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "payoff_chart_title": "Umumiy qoldiq",
+  "payoff_chart_base": "Odatiy grafik",
+  "payoff_chart_accelerated": "Qoʻshimcha toʻlov bilan",
+  "payoff_chart_aria": "Umumiy qarz qoldigʻi oylar boʻyicha: odatiy va qoʻshimcha toʻlovli grafik",
+  "mode_STANDARD": "Oddiy rejim",
+  "mode_DEBT_RECOVERY": "«Qarzdan chiqish» rejimi",
+  "mode_since": "{date} dan",
+  "@mode_since": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mode_suggest": "Faol qarz bor. «Qarzdan chiqish» rejimini yoqing: daromadning bir qismi har oy qoʻshimcha toʻlovga ketadi.",
+  "mode_why": "Qarz — oʻtmishga toʻlov, jamgʻarma — kelajakka toʻlov. Jamgʻarmasiz qarzdan chiqqan odam birinchi tashvishda yana qarz oladi.",
+  "mode_household": "Roʻzgʻor",
+  "mode_extra": "Qoʻshimcha toʻlov",
+  "mode_savings": "Kelajagim",
+  "mode_mandatory": "shundan majburiy qarz toʻlovlari: {amount}",
+  "@mode_mandatory": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mode_short": "Majburiy toʻlovlar roʻzgʻor ulushidan oshib ketdi — ulushlarni qayta koʻrib chiqing.",
+  "mode_savingsMin": "Kamida 1% — 0 ga tushirilmaydi",
+  "mode_enable": "Yoqish",
+  "mode_disable": "Oddiy rejimga qaytish",
+  "items_title": "Sotiladigan buyumlar",
+  "items_intro": "Uyda 6 oydan beri ishlatilmayotgan qimmatbaho buyumlar. Sotilgan pul bir bosishda qarzga yoʻnaltiriladi.",
+  "items_name": "Buyum",
+  "items_estimated": "Taxminiy narx",
+  "items_sold": "sotildi: {amount}, {date}",
+  "@items_sold": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "items_listed": "taxminan {amount}",
+  "@items_listed": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "items_sell": "Sotildi",
+  "items_price": "Sotilgan narx",
+  "items_toDebt": "Pulni qaysi qarzga",
+  "items_noDebt": "Qarzga emas",
+  "celebrate_closed": "Qarz yopildi!",
+  "celebrate_debtFree": "Qarzsiz kun keldi!",
+  "celebrate_closedText": "Yana bir kishan yechildi. Reja bilan, oz-ozdan — mana natijasi.",
+  "celebrate_debtFreeText": "Barcha qarzlar yopildi. Bu kunni oila bilan nishonlang.",
+  "celebrate_modeReturned": "«Qarzdan chiqish» rejimi oddiy rejimga qaytdi.",
+  "celebrate_freed": "Har oy {amount} boʻshadi. Uni «Kelajagim»ga yoʻnaltiring — qorovul pul va oʻsadigan pul uchun.",
+  "@celebrate_freed": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "celebrate_toVault": "«Kelajagim»ga oʻtkazish",
+  "celebrate_later": "Keyinroq",
+  "celebrate_vaultNote": "Boʻshagan qarz toʻlovi",
+  "debts_payer": "Kim toʻladi",
+  "debts_payerSelf": "Oʻzimiz",
+  "debts_share": "oyiga {amount}",
+  "@debts_share": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "debts_contributorPaid": "toʻlagani: {amount}",
+  "@debts_contributorPaid": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "debts_addContributor": "+ Toʻlovchi qoʻshish (masalan, oʻgʻil)",
+  "debts_contributorName": "Ism",
+  "debts_contributorShare": "Oylik ulushi",
+  "debts_feeBp": "Muddatidan oldin toʻlash komissiyasi (bp, 100 = 1%)",
+  "home_debtFree": "Qarzsiz kun",
+  "error_NO_ACTIVE_DEBT": "Faol qarz yoʻq — rejim kerak emas",
+  "error_SAVINGS_SHARE_TOO_LOW": "Jamgʻarma ulushi kamida 1% boʻlsin",
+  "error_SPLIT_NOT_100": "Ulushlar yigʻindisi 100% boʻlishi kerak",
+  "error_ALREADY_SOLD": "Bu buyum allaqachon sotilgan",
+  "error_EXTRA_NEGATIVE": "Qoʻshimcha toʻlov manfiy boʻlmaydi",
+  "error_INVALID_BP": "Foizni toʻgʻri kiriting",
+  "error_NOT_CONVERGING": "Bu toʻlov bilan qarz hech qachon yopilmaydi — shartlarni tekshiring",
+  "payoff_savedInterest": "tejalgan foiz: {interest}",
+  "@payoff_savedInterest": {
+    "placeholders": {
+      "interest": {}
+    }
+  },
+  "home_withPlan": "«Qarzdan chiqish» rejimi bilan: {date}",
+  "@home_withPlan": {
+    "placeholders": {
+      "date": {}
+    }
+  }
 }
