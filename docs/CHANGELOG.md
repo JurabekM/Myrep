@@ -16,7 +16,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 **Build**
 
-- `pnpm build` (NSIS, x64): BUILD_RESULT
+- `pnpm build` (NSIS, x64): muvaffaqiyatli, 2026-10-15 23:53 — `C:/Users/comp_2.1/.cargo-targets/baraka-daftari/release/bundle/nsis/Baraka Daftari_0.1.0_x64-setup.exe` (16,93 MiB), D15 kodidan; imzolanmagan. Foydalanuvchi uni haqiqiy Windows'da o'rnatib, RELEASE_CHECKLIST 3 va 7-bo'limlarni o'tishi kerak.
 
 **To'xtab turgan (tashqi shart)**
 
