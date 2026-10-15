@@ -186,3 +186,147 @@ pub fn borrow_check(
         BorrowVerdict::Ok
     })
 }
+
+/// Sanaga `n` oy qo'shadi; kun oy uzunligidan oshsa, oyning oxirgi kuniga qisqaradi (31 yanvar + 1 oy = 28/29 fevral).
+pub fn add_months(date: Date, months: i64) -> Result<Date, DomainError> {
+    let total = i64::from(u8::from(date.month())) - 1 + months;
+    let year = i32::try_from(i64::from(date.year()) + total.div_euclid(12))
+        .map_err(|_| DomainError::InvalidDay)?;
+    let month = time::Month::try_from(
+        u8::try_from(total.rem_euclid(12) + 1).map_err(|_| DomainError::InvalidDay)?,
+    )
+    .map_err(|_| DomainError::InvalidDay)?;
+    let last_day = time::util::days_in_month(month, year);
+    Date::from_calendar_date(year, month, date.day().min(last_day))
+        .map_err(|_| DomainError::InvalidDay)
+}
+
+/// Teng bo'laklarga bo'lingan reja: `count` ta oylik to'lov, birinchisi `first_due` da.
+/// Bo'laklar [`money::allocate`] bilan — yig'indisi aynan asosiy summa.
+pub fn equal_plan(
+    principal: Money,
+    count: u32,
+    first_due: Date,
+) -> Result<RepaymentPlan, DomainError> {
+    if count == 0 || principal.minor() <= 0 {
+        return Err(DomainError::RepaymentPlanRequired);
+    }
+    let ratios = vec![1_u64; usize::try_from(count).map_err(|_| DomainError::InvalidRule)?];
+    let parts = money::allocate(principal, &ratios)?;
+    let mut installments = Vec::with_capacity(parts.len());
+    for (index, amount) in parts.into_iter().enumerate() {
+        installments.push(Installment {
+            due_on: add_months(
+                first_due,
+                i64::try_from(index).map_err(|_| DomainError::InvalidRule)?,
+            )?,
+            amount,
+        });
+    }
+    RepaymentPlan::new(installments)
+}
+
+/// «Qarzsiz kun»: barcha rejalarning eng oxirgi to'lov sanasi. Reja yo'q bo'lsa — `None`.
+pub fn debt_free_day(plans: &[&RepaymentPlan]) -> Option<Date> {
+    plans
+        .iter()
+        .filter_map(|plan| plan.installments().last().map(|i| i.due_on))
+        .max()
+}
+
+/// Rejaning keyingi to'lovi (bugundan boshlab birinchi to'lanmagan): to'langan summa reja bo'yicha ketma-ket yopiladi.
+pub fn next_installment(plan: &RepaymentPlan, paid: Money) -> Option<Installment> {
+    let mut covered = paid.minor();
+    for installment in plan.installments() {
+        if covered >= installment.amount.minor() {
+            covered -= installment.amount.minor();
+            continue;
+        }
+        return Some(Installment {
+            due_on: installment.due_on,
+            amount: Money::new(
+                installment.amount.minor() - covered.max(0),
+                installment.amount.currency(),
+            ),
+        });
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use money::Currency;
+    use time::macros::date;
+
+    fn uzs(minor: i64) -> Money {
+        Money::new(minor, Currency::Uzs)
+    }
+
+    #[test]
+    fn oy_qoshish_kunni_qisqartiradi() {
+        assert_eq!(
+            add_months(date!(2026 - 01 - 31), 1).expect("sana"),
+            date!(2026 - 02 - 28)
+        );
+        assert_eq!(
+            add_months(date!(2026 - 11 - 15), 2).expect("sana"),
+            date!(2027 - 01 - 15)
+        );
+    }
+
+    #[test]
+    fn teng_reja_yigindisi_asosiy_summaga_teng() {
+        let plan = equal_plan(uzs(100), 3, date!(2026 - 10 - 20)).expect("reja");
+        let amounts: Vec<i64> = plan
+            .installments()
+            .iter()
+            .map(|i| i.amount.minor())
+            .collect();
+        assert_eq!(amounts, vec![34, 33, 33]);
+        assert_eq!(plan.total().expect("jami"), uzs(100));
+        assert_eq!(plan.installments()[2].due_on, date!(2026 - 12 - 20));
+        assert_eq!(debt_free_day(&[&plan]), Some(date!(2026 - 12 - 20)));
+    }
+
+    #[test]
+    fn keyingi_tolov_tolangan_summadan_keyin() {
+        let plan = equal_plan(uzs(300), 3, date!(2026 - 10 - 20)).expect("reja");
+        let next = next_installment(&plan, uzs(150)).expect("keyingi");
+        assert_eq!(next.due_on, date!(2026 - 11 - 20));
+        assert_eq!(next.amount, uzs(50));
+        assert_eq!(next_installment(&plan, uzs(300)), None);
+    }
+
+    #[test]
+    fn rejasiz_qarz_saqlanmaydi() {
+        assert!(matches!(
+            equal_plan(uzs(100), 0, date!(2026 - 10 - 20)),
+            Err(DomainError::RepaymentPlanRequired)
+        ));
+        assert!(matches!(
+            RepaymentPlan::new(Vec::new()),
+            Err(DomainError::RepaymentPlanRequired)
+        ));
+    }
+
+    #[test]
+    fn yuk_chegaralari() {
+        assert_eq!(
+            borrow_check(uzs(29), uzs(100)).expect("ok"),
+            BorrowVerdict::Ok
+        );
+        assert_eq!(
+            borrow_check(uzs(30), uzs(100)).expect("ok"),
+            BorrowVerdict::Caution
+        );
+        assert_eq!(
+            borrow_check(uzs(50), uzs(100)).expect("ok"),
+            BorrowVerdict::Stop
+        );
+        assert_eq!(
+            borrow_check(uzs(1), uzs(0)).expect("ok"),
+            BorrowVerdict::Stop
+        );
+    }
+}

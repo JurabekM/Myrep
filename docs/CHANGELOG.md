@@ -4,6 +4,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D9 — Qarzlar: reja, «to'xta va o'yla», qarzsiz kun, tilxat (2026-10-15)
+
+**Qo'shildi**
+
+- Sxema v11: `loans` (olingan/bergan, `counterparty_type`, `has_markup`, friction javoblari, `borrow_verdict`, `agreement_id`), `loan_installments`, `loan_payments`. Foiz maydoni yo'q — bergan qarzda tuzilmaning o'zi foizni ifodalay olmaydi (SPEC 2D.5). «Nasiya daftari» (D4, SHOP) o'z joyida qoldi.
+- `domain::loans`: `add_months` (kun qisqaradi), `equal_plan` (teng bo'laklar, `allocate` — yig'indisi aynan asosiy summa), `debt_free_day`, `next_installment`; `borrow_check` chegaralari testlandi.
+- Xizmat (`src-tauri/src/loans.rs`): ko'rinish (qoldiq, to'langan, keyingi/oxirgi to'lov, oylik yuk, daromad, qarzsiz kun), `check_borrow` (mavjud yuk + yangi qarz / shu oy daromadi → `OK | CAUTION | STOP`, saqlanmaydi), `add_loan` (reja majburiy; olingan qarzda natija yozuvda qoladi), `pay` (qoldiqdan oshmaydi), **`create_iou`** — D8A `LOAN` kelishuvi qoralamasi: tomonlar, hissa, jadval, hisob yurituvchi, chiqish, muddat oldindan to'ldirilgan; faqat hakam (8-savol) qoladi — usta 8/9 bilan ochiladi; qarzga bog'lanadi.
+- UI «Qarzlar» (`DebtsPage.tsx`, nav ochildi): umumiy ko'rinish, olingan/bergan ro'yxatlar (to'lov formasi, «Tilxat yaratish / ochish» → D8A ustasi), yangi qarz formasi: friction bloki (zarurat, foizsiz muqobil, mavjud ustamali qarz belgisi), «Oylik yukni hisoblash» → natija va foiz; bergan qarzda «foiz maydoni yo'q» izohi.
+- Amortizatsiyaning qolgan turlari: `differentiated_schedule`, `fixed_markup_schedule` (`domain::amortization`), **taklif vektori** `spec/test-vectors/proposed/amortization_extended.json` (`status: PROPOSED`, runner `proposed_vectors.rs`, `load_proposed_suite`). Asosiy qoplanish testi `proposed/` ni ko'rmaydi (qaror: «Vektorsiz formulalar uchun tartib»). `MANUAL` — foydalanuvchi rejasining o'zi (`RepaymentPlan::new`).
+- Testlar: domen 7 (loans 5, amortizatsiya 2), Tauri xizmati 4, taklif vektorlari 1, UI 3 (`debts.test.tsx`).
+
+**Qarorlar va sabablar**
+
+- Oylik yuk = barcha ochiq olingan qarzlarning keyingi to'lovlari + yangi qarzning teng bo'lagi; daromad = shu oy daromadi. Daromad 0 bo'lsa — `STOP` (100 %).
+- `STOP` taqiq emas (SPEC 2D.6): tugma o'chmaydi, natija qarz yozuvida ko'rinadi.
+- Reja faqat teng bo'laklar (oylik): D10 payoff planner boshqa jadvallarni (annuitet, differensial, qat'iy ustama) simulyatsiya uchun ishlatadi; qarz yozuvining o'zi foizsiz.
+- Tilxat = `Agreement(LOAN)` (DESKTOP_PROMPT D9); alohida PDF shabloni yo'q — D8A kelishuv PDF'i (snapshot bor).
+
+**Ma'lum cheklovlar**
+
+- Tilxat PDF'ida «guvohlar» bo'limi yo'q (D8A: guvoh imzosi UI'da yo'q).
+- «Sotiladigan buyumlar» ro'yxati va `Goal` (maqsadli jamg'arma) — D10/D11.
+- Haqiqiy narx va imkoniyat narxi (opportunity cost) hisobi — D10 bilan.
+
 ### D8A ustasi — 9 savol, imzolar, og'zaki kelishuv, kelishuv PDF, jurnal UI (2026-10-15)
 
 **Qo'shildi**

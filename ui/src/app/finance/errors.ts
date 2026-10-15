@@ -40,6 +40,8 @@ export const RULE_ERROR_KEYS = {
   AGREEMENT_LOCKED: "errors.agreementLocked",
   NOT_KEEPER_DEVICE: "errors.notKeeperDevice",
   VERSION_CONFLICT: "errors.versionConflict",
+  REPAYMENT_PLAN_REQUIRED: "errors.repaymentPlanRequired",
+  PLAN_MISMATCH: "errors.planMismatch",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

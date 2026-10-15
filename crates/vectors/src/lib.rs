@@ -65,6 +65,17 @@ pub fn load_suite(name: &str) -> Result<Suite, VectorsError> {
     serde_json::from_str(&text).map_err(|source| VectorsError::Json { path, source })
 }
 
+/// Desktop taklif vektorlari (`spec/test-vectors/proposed/`): mobil hali tasdiqlamagan, `status: PROPOSED`.
+/// Asosiy qoplanish testi bu papkani hisobga olmaydi (OPEN_QUESTIONS «Vektorsiz formulalar uchun tartib»).
+pub fn load_proposed_suite(name: &str) -> Result<Suite, VectorsError> {
+    let path = vectors_dir().join("proposed").join(format!("{name}.json"));
+    let text = fs::read_to_string(&path).map_err(|source| VectorsError::Io {
+        path: path.clone(),
+        source,
+    })?;
+    serde_json::from_str(&text).map_err(|source| VectorsError::Json { path, source })
+}
+
 /// Papkadagi barcha vektor fayllarining nomlari (kengaytmasiz), alifbo tartibida.
 pub fn suite_names() -> Result<Vec<String>, VectorsError> {
     let dir = vectors_dir();

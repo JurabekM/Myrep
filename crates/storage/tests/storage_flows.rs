@@ -103,7 +103,7 @@ fn notogri_kalit_rad_etiladi() {
 #[test]
 fn migratsiya_sxema_v1_ni_qollaydi() {
     let db = Database::open_in_memory(&key(1)).expect("ochilsin");
-    assert_eq!(db.schema_version().expect("versiya"), 10);
+    assert_eq!(db.schema_version().expect("versiya"), 11);
 
     let mut statement = db
         .connection()

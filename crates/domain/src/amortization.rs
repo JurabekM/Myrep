@@ -145,3 +145,134 @@ pub fn annuity_schedule(
         rows,
     })
 }
+
+/// Differensial jadval: asosiy qarz teng bo'laklarga ([`money::allocate`]), foiz — qoldiqdan, har oy yaxlitlanadi.
+/// To'lov oydan oyga kamayadi. Qo'shimcha to'lov qoldiqni kamaytiradi (muddat qisqaradi).
+pub fn differentiated_schedule(
+    principal: Money,
+    annual_bp: i64,
+    term_months: i64,
+    extra_per_month: Money,
+) -> Result<Schedule, DomainError> {
+    let term = u32::try_from(term_months).map_err(|_| DomainError::InvalidRule)?;
+    if principal.minor() <= 0 || annual_bp < 0 || term == 0 || term > MAX_MONTHS {
+        return Err(DomainError::InvalidRule);
+    }
+    if extra_per_month.minor() < 0 || extra_per_month.currency() != principal.currency() {
+        return Err(DomainError::InvalidRule);
+    }
+    let currency = principal.currency();
+    let ratios = vec![1_u64; usize::try_from(term).map_err(|_| DomainError::InvalidRule)?];
+    let parts = money::allocate(principal, &ratios)?;
+    let mut balance = principal.minor();
+    let mut total_interest: i64 = 0;
+    let mut rows = Vec::new();
+    for (index, part) in parts.iter().enumerate() {
+        if balance <= 0 {
+            break;
+        }
+        let interest = i64::try_from(round_half_up_div(
+            i128::from(balance) * i128::from(annual_bp),
+            MONTHLY_DIVISOR,
+        )?)
+        .map_err(|_| DomainError::InvalidRule)?;
+        let principal_part = part.minor().min(balance);
+        balance -= principal_part;
+        let extra = extra_per_month.minor().min(balance);
+        balance -= extra;
+        total_interest = total_interest
+            .checked_add(interest)
+            .ok_or(DomainError::InvalidRule)?;
+        rows.push(AmortRow {
+            month: u32::try_from(index + 1).map_err(|_| DomainError::InvalidRule)?,
+            interest: Money::new(interest, currency),
+            principal: Money::new(principal_part, currency),
+            extra: Money::new(extra, currency),
+            balance: Money::new(balance, currency),
+        });
+    }
+    let first_payment = rows
+        .first()
+        .map_or(0, |row| row.interest.minor() + row.principal.minor());
+    Ok(Schedule {
+        payment: Money::new(first_payment, currency),
+        months: u32::try_from(rows.len()).map_err(|_| DomainError::InvalidRule)?,
+        total_interest: Money::new(total_interest, currency),
+        rows,
+    })
+}
+
+/// Qat'iy ustama (`FIXED_MARKUP`): `asosiy + ustama` teng bo'laklarga, ustama ham teng taqsimlanadi.
+/// Foiz stavkasi yo'q — bozor ustamasi oldindan kelishilgan summa.
+pub fn fixed_markup_schedule(
+    principal: Money,
+    markup: Money,
+    term_months: i64,
+) -> Result<Schedule, DomainError> {
+    let term = u32::try_from(term_months).map_err(|_| DomainError::InvalidRule)?;
+    if principal.minor() <= 0 || markup.minor() < 0 || term == 0 || term > MAX_MONTHS {
+        return Err(DomainError::InvalidRule);
+    }
+    if markup.currency() != principal.currency() {
+        return Err(DomainError::InvalidRule);
+    }
+    let currency = principal.currency();
+    let ratios = vec![1_u64; usize::try_from(term).map_err(|_| DomainError::InvalidRule)?];
+    let principal_parts = money::allocate(principal, &ratios)?;
+    let markup_parts = money::allocate(markup, &ratios)?;
+    let mut balance = principal.minor();
+    let mut rows = Vec::with_capacity(principal_parts.len());
+    for (index, (part, fee)) in principal_parts.iter().zip(markup_parts.iter()).enumerate() {
+        balance -= part.minor();
+        rows.push(AmortRow {
+            month: u32::try_from(index + 1).map_err(|_| DomainError::InvalidRule)?,
+            interest: *fee,
+            principal: *part,
+            extra: Money::zero(currency),
+            balance: Money::new(balance, currency),
+        });
+    }
+    let first_payment = rows
+        .first()
+        .map_or(0, |row| row.interest.minor() + row.principal.minor());
+    Ok(Schedule {
+        payment: Money::new(first_payment, currency),
+        months: term,
+        total_interest: markup,
+        rows,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use money::Currency;
+
+    fn uzs(minor: i64) -> Money {
+        Money::new(minor, Currency::Uzs)
+    }
+
+    #[test]
+    fn differensial_tolov_kamayadi_va_asosiy_teng() {
+        // 1 200 000 so'm, 24 %, 12 oy: asosiy 100 000 har oy, foiz 2 % qoldiqdan.
+        let schedule =
+            differentiated_schedule(uzs(120_000_000), 2_400, 12, uzs(0)).expect("jadval");
+        assert_eq!(schedule.months, 12);
+        assert_eq!(schedule.rows[0].principal, uzs(10_000_000));
+        assert_eq!(schedule.rows[0].interest, uzs(2_400_000));
+        assert_eq!(schedule.rows[11].interest, uzs(200_000));
+        assert_eq!(schedule.rows[11].balance, uzs(0));
+        assert_eq!(schedule.total_interest, uzs(15_600_000));
+    }
+
+    #[test]
+    fn qatiy_ustama_teng_taqsimlanadi() {
+        let schedule = fixed_markup_schedule(uzs(100), uzs(10), 3).expect("jadval");
+        let principal: Vec<i64> = schedule.rows.iter().map(|r| r.principal.minor()).collect();
+        let fee: Vec<i64> = schedule.rows.iter().map(|r| r.interest.minor()).collect();
+        assert_eq!(principal, vec![34, 33, 33]);
+        assert_eq!(fee, vec![4, 3, 3]);
+        assert_eq!(schedule.total_interest, uzs(10));
+        assert_eq!(schedule.rows[2].balance, uzs(0));
+    }
+}

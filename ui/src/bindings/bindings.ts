@@ -171,6 +171,16 @@ export const commands = {
 	getJournal: (agreementId: string) => typedError<JournalDto, ApiError>(__TAURI_INVOKE("get_journal", { agreementId })),
 	/**  Kelishuv PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
 	createAgreementPdf: (id: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_agreement_pdf", { id })),
+	/**  Qarzlar sahifasi. */
+	getLoans: () => typedError<LoansDto, ApiError>(__TAURI_INVOKE("get_loans")),
+	/**  Qarz oldidan tekshiruv (saqlanmaydi). */
+	checkBorrow: (input: BorrowCheckInputDto) => typedError<BorrowCheckDto, ApiError>(__TAURI_INVOKE("check_borrow", { input })),
+	/**  Qarz qo'shadi (reja bilan). */
+	addLoan: (input: LoanInputDto) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("add_loan", { input })),
+	/**  To'lov yozadi. */
+	payLoan: (input: LoanPaymentInputDto) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("pay_loan", { input })),
+	/**  Tilxat (LOAN kelishuvi) yaratadi yoki mavjudini qaytaradi. */
+	createIou: (loanId: string) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("create_iou", { loanId })),
 };
 
 /* Types */
@@ -374,6 +384,26 @@ export type AuditStatusDto = {
 export type BaselineInputDto = {
 	/**  Davr boshlanishi (`YYYY-MM-DD`). */
 	periodStart: string,
+};
+
+/**  Qarz oldidan tekshiruv («to'xta va o'yla»). */
+export type BorrowCheckDto = {
+	/**  `OK | CAUTION | STOP`. */
+	verdict: string,
+	/**  Yangi qarz bilan oylik yuk. */
+	monthlyBurden: MoneyDto,
+	/**  Shu oy daromadi. */
+	monthlyIncome: MoneyDto,
+	/**  Yuk daromadga nisbatan, bp. */
+	burdenBp: number,
+};
+
+/**  Qarz oldidan tekshiruv so'rovi. */
+export type BorrowCheckInputDto = {
+	/**  Summa matni. */
+	principal: string,
+	/**  To'lovlar soni. */
+	installments: number,
 };
 
 /**  Byudjet sahifasi: qutqarilgan pul, obunalar, konvertlar. */
@@ -786,6 +816,98 @@ export type LawDto = {
 	number: number,
 	/**  Qonun matni. */
 	text: LocalizedDto,
+};
+
+/**  Qarz (olingan yoki bergan) — ko'rsatish. */
+export type LoanDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  `TAKEN` yoki `GIVEN`. */
+	direction: string,
+	/**  Kimdan / kimga. */
+	counterparty: string,
+	/**  Turi: `BANK | SHOP | RELATIVE | FRIEND | OTHER`. */
+	counterpartyType: string,
+	/**  Sabab. */
+	reason: string | null,
+	/**  Asosiy summa. */
+	principal: MoneyDto,
+	/**  To'langan. */
+	paid: MoneyDto,
+	/**  Qoldiq. */
+	outstanding: MoneyDto,
+	/**  Foizli (mavjud) qarz belgisi. */
+	hasMarkup: boolean,
+	/**  Olingan sana. */
+	incurredOn: string,
+	/**  Keyingi to'lov sanasi, bo'lsa. */
+	nextDueOn: string | null,
+	/**  Keyingi to'lov summasi, bo'lsa. */
+	nextAmount: MoneyDto | null,
+	/**  Reja bo'yicha oxirgi to'lov sanasi. */
+	lastDueOn: string,
+	/**  Rejadagi to'lovlar soni. */
+	installments: number,
+	/**  Qarz oldidan tekshiruv natijasi (`OK | CAUTION | STOP`), bo'lsa. */
+	borrowVerdict: string | null,
+	/**  Tilxat (kelishuv), bo'lsa. */
+	agreementId: string | null,
+	/**  To'liq yopilgan. */
+	settled: boolean,
+};
+
+/**  Qarz qo'shish (olingan yoki bergan). */
+export type LoanInputDto = {
+	/**  `TAKEN` yoki `GIVEN`. */
+	direction: string,
+	/**  Kimdan / kimga. */
+	counterparty: string,
+	/**  Turi. */
+	counterpartyType: string,
+	/**  Sabab. */
+	reason: string | null,
+	/**  Summa matni. */
+	principal: string,
+	/**  Mavjud foizli qarz (faqat kuzatish uchun). */
+	hasMarkup: boolean,
+	/**  Olingan sana (`YYYY-MM-DD`); bo'sh — bugun. */
+	incurredOn: string | null,
+	/**  To'lovlar soni (teng bo'laklar). */
+	installments: number,
+	/**  Birinchi to'lov sanasi (`YYYY-MM-DD`). */
+	firstDueOn: string,
+	/**  Friction: zaruratmi (olingan qarz uchun). */
+	frictionNecessity: boolean | null,
+	/**  Friction: foizsiz muqobil tekshirilganmi. */
+	frictionAlternative: boolean | null,
+};
+
+/**  Qarz to'lovi. */
+export type LoanPaymentInputDto = {
+	/**  Qarz. */
+	loanId: string,
+	/**  Summa matni. */
+	amount: string,
+	/**  Sana; bo'sh — bugun. */
+	paidOn: string | null,
+};
+
+/**  Qarzlar sahifasi. */
+export type LoansDto = {
+	/**  Olingan qarzlar. */
+	taken: LoanDto[],
+	/**  Bergan qarzlar. */
+	given: LoanDto[],
+	/**  Olingan qarzlar qoldig'i jami. */
+	totalOutstanding: MoneyDto,
+	/**  Bergan qarzlardan qaytishi kutilayotgan jami. */
+	totalReceivable: MoneyDto,
+	/**  Oylik yuk (barcha ochiq qarzlarning keyingi to'lovlari yig'indisi). */
+	monthlyBurden: MoneyDto,
+	/**  Shu oy daromadi. */
+	monthlyIncome: MoneyDto,
+	/**  «Qarzsiz kun» (olingan qarzlar bo'yicha), bo'lsa. */
+	debtFreeDay: string | null,
 };
 
 /**  Ko'p tilli matn: ikkala til ham doim to'ldirilgan (ruscha yo'q bo'lsa o'zbekcha nusxa). */

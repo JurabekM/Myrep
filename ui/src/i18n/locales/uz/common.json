@@ -105,7 +105,9 @@
     "agreementNotSigned": "Kelishuv hali imzolanmagan",
     "agreementLocked": "Kelishuv nizoda yoki tugagan — o'zgartirib bo'lmaydi",
     "notKeeperDevice": "Bu qurilma hisob yurituvchi emas",
-    "versionConflict": "Kelishuv boshqa joyda o'zgargan — sahifani yangilang"
+    "versionConflict": "Kelishuv boshqa joyda o'zgargan — sahifani yangilang",
+    "repaymentPlanRequired": "To'lash rejasi majburiy: to'lovlar soni kamida 1",
+    "planMismatch": "Reja summasi qarzga teng emas"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -755,5 +757,62 @@
     "note": "Izoh",
     "journalAdd": "Jurnalga yozish",
     "journalReadOnly": "Bu qurilmada jurnal faqat o'qish uchun: hisobni kelishuvni yaratgan qurilma yuritadi."
+  },
+  "debts": {
+    "subtitle": "Olingan va bergan qarzlar — reja bilan, foizsiz. Yangi qarz oldidan «to'xta va o'yla».",
+    "summaryTitle": "Umumiy ko'rinish",
+    "totalOutstanding": "Qarz qoldig'i",
+    "totalReceivable": "Qaytishi kutilmoqda",
+    "monthlyBurden": "Oylik yuk",
+    "monthlyIncomeHint": "Shu oy daromadi: {{amount}}",
+    "debtFreeDay": "Qarzsiz kun",
+    "debtFreeHint": "Reja bo'yicha oxirgi to'lov sanasi",
+    "noDebt": "Qarz yo'q",
+    "takenTitle": "Olingan qarzlar",
+    "takenEmpty": "Olingan qarz yo'q.",
+    "givenTitle": "Bergan qarzlar",
+    "givenEmpty": "Bergan qarz yo'q.",
+    "type": {
+      "BANK": "Bank",
+      "SHOP": "Do'kon",
+      "RELATIVE": "Qarindosh",
+      "FRIEND": "Do'st",
+      "OTHER": "Boshqa"
+    },
+    "verdict": {
+      "OK": "Yuk me'yorida",
+      "CAUTION": "Ehtiyot bo'ling: yuk katta",
+      "STOP": "To'xtang: yuk daromadning yarmidan ko'p"
+    },
+    "hasMarkup": "ustamali (chiqish uchun kuzatiladi)",
+    "principalLine": "Asl summa {{amount}} · {{count}} ta to'lov",
+    "paidLine": "to'langan {{amount}}",
+    "nextLine": "keyingi: {{date}} — {{amount}} · oxirgi: {{last}}",
+    "settled": "To'liq yopilgan",
+    "payAmount": "Summa",
+    "pay": "To'ladim",
+    "receive": "Qaytardi",
+    "iouCreate": "Tilxat yaratish",
+    "iouOpen": "Tilxatni ochish",
+    "addTitle": "Yangi qarz",
+    "direction": "Yo'nalish",
+    "taken": "Men oldim",
+    "given": "Men berdim",
+    "creditor": "Kimdan",
+    "debtor": "Kimga",
+    "typeLabel": "Kim",
+    "principal": "Summa",
+    "reason": "Sabab (ixtiyoriy)",
+    "installments": "To'lovlar soni (oylik, teng)",
+    "firstDue": "Birinchi to'lov sanasi",
+    "frictionTitle": "To'xta va o'yla",
+    "frictionHint": "Qarz olishni taqiqlash emas — ongli qaror uchun. Javoblar qarz yozuvida qoladi.",
+    "frictionNecessity": "Bu zarurat (hashamat emas)",
+    "frictionAlternative": "Foizsiz muqobilni tekshirdim: qorovul pul, qarindosh, buyum sotish",
+    "hasMarkupLabel": "Bu mavjud ustamali (foizli) qarz — faqat chiqish uchun kuzataman",
+    "checkBurden": "Oylik yukni hisoblash",
+    "burdenLine": "oylik yuk {{burden}} — daromadning {{percent}}",
+    "givenNoInterest": "Bergan qarzda foiz maydoni yo'q: qarzi hasana.",
+    "add": "Qarzni yozish"
   }
 }

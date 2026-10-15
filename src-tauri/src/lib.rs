@@ -18,6 +18,8 @@ mod family;
 mod family_commands;
 mod finance;
 mod finance_commands;
+mod loan_commands;
+mod loans;
 mod notify;
 mod report;
 mod reserve;
@@ -123,6 +125,11 @@ fn specta_builder() -> Builder<tauri::Wry> {
         agreement_commands::append_journal_entry,
         agreement_commands::get_journal,
         agreement_commands::create_agreement_pdf,
+        loan_commands::get_loans,
+        loan_commands::check_borrow,
+        loan_commands::add_loan,
+        loan_commands::pay_loan,
+        loan_commands::create_iou,
     ])
 }
 

@@ -17,6 +17,7 @@ export const financeKeys = {
   debts: ["finance", "debts"] as const,
   reserve: ["finance", "reserve"] as const,
   prices: ["finance", "prices"] as const,
+  loans: ["finance", "loans"] as const,
 };
 
 /** Moliyaviy yozuv o'zgarganda barcha moliya keshlarini qayta yuklaydi. */

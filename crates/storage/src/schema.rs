@@ -524,6 +524,53 @@ CREATE TABLE signatures (
 ) STRICT;
 "#;
 
+/// Sxema v11 (D9): qarzlar (olingan) va bergan qarzlar — to'lash rejasi bilan. Foiz maydoni yo'q (SPEC 2D.5).
+/// `has_markup` — mavjud foizli qarzni kuzatish belgisi (faqat chiqish uchun); `loans.agreement_id` — tilxat.
+pub const SCHEMA_V11: &str = r#"
+CREATE TABLE loans (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    direction TEXT NOT NULL CHECK (direction IN ('TAKEN', 'GIVEN')),
+    counterparty TEXT NOT NULL CHECK (length(trim(counterparty)) > 0),
+    counterparty_type TEXT NOT NULL CHECK (counterparty_type IN ('BANK', 'SHOP', 'RELATIVE', 'FRIEND', 'OTHER')),
+    reason TEXT,
+    principal_minor INTEGER NOT NULL CHECK (principal_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    has_markup INTEGER NOT NULL DEFAULT 0 CHECK (has_markup IN (0, 1)),
+    incurred_on TEXT NOT NULL,
+    borrow_verdict TEXT CHECK (borrow_verdict IS NULL OR borrow_verdict IN ('OK', 'CAUTION', 'STOP')),
+    friction_necessity INTEGER CHECK (friction_necessity IS NULL OR friction_necessity IN (0, 1)),
+    friction_alternative INTEGER CHECK (friction_alternative IS NULL OR friction_alternative IN (0, 1)),
+    agreement_id TEXT REFERENCES agreements (id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX loans_by_household ON loans (household_id, direction);
+
+CREATE TABLE loan_installments (
+    loan_id TEXT NOT NULL REFERENCES loans (id),
+    seq INTEGER NOT NULL CHECK (seq >= 1),
+    due_on TEXT NOT NULL,
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    PRIMARY KEY (loan_id, seq)
+) STRICT;
+
+CREATE TABLE loan_payments (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    loan_id TEXT NOT NULL REFERENCES loans (id),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    paid_on TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX loan_payments_by_loan ON loan_payments (loan_id);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -537,6 +584,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V8),
         M::up(SCHEMA_V9),
         M::up(SCHEMA_V10),
+        M::up(SCHEMA_V11),
     ])
 }
 
@@ -570,4 +618,7 @@ pub const TABLES: &[&str] = &[
     "journal_entries",
     "price_items",
     "signatures",
+    "loans",
+    "loan_installments",
+    "loan_payments",
 ];

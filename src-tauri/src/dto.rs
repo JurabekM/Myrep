@@ -320,6 +320,130 @@ pub struct BaselineInputDto {
     pub period_start: String,
 }
 
+/// Qarz (olingan yoki bergan) — ko'rsatish.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LoanDto {
+    /// Identifikator.
+    pub id: String,
+    /// `TAKEN` yoki `GIVEN`.
+    pub direction: String,
+    /// Kimdan / kimga.
+    pub counterparty: String,
+    /// Turi: `BANK | SHOP | RELATIVE | FRIEND | OTHER`.
+    pub counterparty_type: String,
+    /// Sabab.
+    pub reason: Option<String>,
+    /// Asosiy summa.
+    pub principal: MoneyDto,
+    /// To'langan.
+    pub paid: MoneyDto,
+    /// Qoldiq.
+    pub outstanding: MoneyDto,
+    /// Foizli (mavjud) qarz belgisi.
+    pub has_markup: bool,
+    /// Olingan sana.
+    pub incurred_on: String,
+    /// Keyingi to'lov sanasi, bo'lsa.
+    pub next_due_on: Option<String>,
+    /// Keyingi to'lov summasi, bo'lsa.
+    pub next_amount: Option<MoneyDto>,
+    /// Reja bo'yicha oxirgi to'lov sanasi.
+    pub last_due_on: String,
+    /// Rejadagi to'lovlar soni.
+    pub installments: u32,
+    /// Qarz oldidan tekshiruv natijasi (`OK | CAUTION | STOP`), bo'lsa.
+    pub borrow_verdict: Option<String>,
+    /// Tilxat (kelishuv), bo'lsa.
+    pub agreement_id: Option<String>,
+    /// To'liq yopilgan.
+    pub settled: bool,
+}
+
+/// Qarzlar sahifasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LoansDto {
+    /// Olingan qarzlar.
+    pub taken: Vec<LoanDto>,
+    /// Bergan qarzlar.
+    pub given: Vec<LoanDto>,
+    /// Olingan qarzlar qoldig'i jami.
+    pub total_outstanding: MoneyDto,
+    /// Bergan qarzlardan qaytishi kutilayotgan jami.
+    pub total_receivable: MoneyDto,
+    /// Oylik yuk (barcha ochiq qarzlarning keyingi to'lovlari yig'indisi).
+    pub monthly_burden: MoneyDto,
+    /// Shu oy daromadi.
+    pub monthly_income: MoneyDto,
+    /// «Qarzsiz kun» (olingan qarzlar bo'yicha), bo'lsa.
+    pub debt_free_day: Option<String>,
+}
+
+/// Qarz oldidan tekshiruv («to'xta va o'yla»).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BorrowCheckDto {
+    /// `OK | CAUTION | STOP`.
+    pub verdict: String,
+    /// Yangi qarz bilan oylik yuk.
+    pub monthly_burden: MoneyDto,
+    /// Shu oy daromadi.
+    pub monthly_income: MoneyDto,
+    /// Yuk daromadga nisbatan, bp.
+    pub burden_bp: u32,
+}
+
+/// Qarz qo'shish (olingan yoki bergan).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LoanInputDto {
+    /// `TAKEN` yoki `GIVEN`.
+    pub direction: String,
+    /// Kimdan / kimga.
+    pub counterparty: String,
+    /// Turi.
+    pub counterparty_type: String,
+    /// Sabab.
+    pub reason: Option<String>,
+    /// Summa matni.
+    pub principal: String,
+    /// Mavjud foizli qarz (faqat kuzatish uchun).
+    pub has_markup: bool,
+    /// Olingan sana (`YYYY-MM-DD`); bo'sh — bugun.
+    pub incurred_on: Option<String>,
+    /// To'lovlar soni (teng bo'laklar).
+    pub installments: u32,
+    /// Birinchi to'lov sanasi (`YYYY-MM-DD`).
+    pub first_due_on: String,
+    /// Friction: zaruratmi (olingan qarz uchun).
+    pub friction_necessity: Option<bool>,
+    /// Friction: foizsiz muqobil tekshirilganmi.
+    pub friction_alternative: Option<bool>,
+}
+
+/// Qarz oldidan tekshiruv so'rovi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BorrowCheckInputDto {
+    /// Summa matni.
+    pub principal: String,
+    /// To'lovlar soni.
+    pub installments: u32,
+}
+
+/// Qarz to'lovi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LoanPaymentInputDto {
+    /// Qarz.
+    pub loan_id: String,
+    /// Summa matni.
+    pub amount: String,
+    /// Sana; bo'sh — bugun.
+    pub paid_on: Option<String>,
+}
+
 /// Kelishuv tomoni (1-savol).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
