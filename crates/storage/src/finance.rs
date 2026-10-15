@@ -91,8 +91,8 @@ impl<'a> CategoryRepo<'a> {
     pub fn insert(&self, category: &Category) -> Result<(), StorageError> {
         let meta = &category.meta;
         self.conn.execute(
-            "INSERT INTO categories (id, household_id, name, system_key, default_necessity, created_at, updated_at, deleted_at, version, origin_device_id) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            "INSERT INTO categories (id, household_id, name, system_key, default_necessity, created_at, updated_at, deleted_at, version, origin_device_id, is_habit) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             params![
                 category.id,
                 category.household_id,
@@ -104,6 +104,7 @@ impl<'a> CategoryRepo<'a> {
                 meta.deleted_at.map(format_ts).transpose()?,
                 meta.version,
                 meta.origin_device_id,
+                i64::from(category.is_habit),
             ],
         )?;
         Ok(())
@@ -112,7 +113,7 @@ impl<'a> CategoryRepo<'a> {
     /// Xonadonning faol kategoriyalari.
     pub fn list(&self, household_id: &str) -> Result<Vec<Category>, StorageError> {
         let mut statement = self.conn.prepare(
-            "SELECT id, household_id, name, system_key, COALESCE(default_necessity, 'KERAK'), created_at, updated_at, deleted_at, version, origin_device_id \
+            "SELECT id, household_id, name, system_key, COALESCE(default_necessity, 'KERAK'), created_at, updated_at, deleted_at, version, origin_device_id, is_habit \
              FROM categories WHERE household_id = ?1 AND deleted_at IS NULL ORDER BY created_at, id",
         )?;
         let rows = statement.query_map([household_id], |row| {
@@ -123,11 +124,12 @@ impl<'a> CategoryRepo<'a> {
                 row.get::<_, Option<String>>(3)?,
                 row.get::<_, String>(4)?,
                 RawMeta::read(row, 5)?,
+                row.get::<_, i64>(10)?,
             ))
         })?;
         let mut out = Vec::new();
         for row in rows {
-            let (id, household_id, name, key, necessity, meta) = row?;
+            let (id, household_id, name, key, necessity, meta, is_habit) = row?;
             out.push(Category {
                 id,
                 household_id,
@@ -141,6 +143,7 @@ impl<'a> CategoryRepo<'a> {
                     .transpose()?,
                 necessity: Necessity::from_code(&necessity)
                     .ok_or_else(|| StorageError::InvalidData("toifa".to_owned()))?,
+                is_habit: is_habit == 1,
                 meta: meta.into_meta()?,
             });
         }

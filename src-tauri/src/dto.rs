@@ -595,6 +595,8 @@ pub struct ExpenseDto {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ExpenseInputDto {
+    /// Sana (`YYYY-MM-DD`, shu hafta ichida). Yo'q bo'lsa — bugun.
+    pub occurred_on: Option<String>,
     /// Summa matni (masalan, `150 000`).
     pub amount: String,
     /// Kategoriya (bo'lsa). Toifa kategoriyadan olinadi.
@@ -613,6 +615,10 @@ pub struct ExpenseInputDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MonthSummaryDto {
+    /// Joriy hafta boshi (juma, `YYYY-MM-DD`) — hafta varag'i uchun.
+    pub week_start: String,
+    /// Bugun (Toshkent, `YYYY-MM-DD`).
+    pub today: String,
     /// Davr boshi (`YYYY-MM-DD`).
     pub period_start: String,
     /// Davr oxiri (kirmaydi, `YYYY-MM-DD`).
@@ -715,6 +721,22 @@ pub struct TreatInputDto {
     pub amount: String,
     /// Hafta kuni: 0 dushanba … 6 yakshanba.
     pub weekday: u8,
+}
+
+/// Odat statistikasi: oyiga va yiliga jami (ayblov yo'q — SPEC 2B.9).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OdatHabitDto {
+    /// Kategoriya identifikatori.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Joriy oy jami.
+    pub monthly: MoneyDto,
+    /// Joriy yil jami.
+    pub yearly: MoneyDto,
+    /// Yil ichidagi yozuvlar soni.
+    pub entries_this_year: u32,
 }
 
 /// Pul olish ma'lumoti (forma). PIN alohida argument sifatida keladi.

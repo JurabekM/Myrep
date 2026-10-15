@@ -12,6 +12,7 @@ export const familyKeys = {
   limit: ["family", "limit"] as const,
   members: ["family", "members"] as const,
   treats: ["family", "treats"] as const,
+  habits: ["family", "habits"] as const,
 };
 
 /** Xarajat, toifa, a'zo yoki rozilik o'zgarganda oila keshlari (va toifalar) yangilanadi. */
@@ -30,6 +31,7 @@ export const familyFetchers = {
   limit: () => commands.getHavasLimit().then(unwrap),
   members: () => commands.listMembers().then(unwrap),
   treats: () => commands.listTreats().then(unwrap),
+  habits: () => commands.listHabits().then(unwrap),
 };
 
 /** PIN maydoni: faqat raqamlar, 6 tagacha. */

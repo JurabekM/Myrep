@@ -105,12 +105,20 @@ export const commands = {
 	listMembers: () => typedError<MemberDto[], ApiError>(__TAURI_INVOKE("list_members")),
 	/**  Oila a'zosini qo'shadi. Kattaga PIN majburiy. */
 	addMember: (input: MemberInputDto) => typedError<MemberDto, ApiError>(__TAURI_INVOKE("add_member", { input })),
-	/**  Kattaning PIN'ini o'rnatadi yoki almashtiradi. */
-	setMemberPin: (memberId: string, pin: string) => typedError<MemberDto, ApiError>(__TAURI_INVOKE("set_member_pin", { memberId, pin })),
+	/**  Kattaning PIN'ini o'rnatadi yoki almashtiradi. PIN bor bo'lsa, joriy PIN majburiy (faqat PIN egasi). */
+	setMemberPin: (memberId: string, currentPin: string | null, newPin: string) => typedError<MemberDto, ApiError>(__TAURI_INVOKE("set_member_pin", { memberId, currentPin, newPin })),
 	/**  Juma shirinligi ro'yxati. */
 	listTreats: () => typedError<TreatDto[], ApiError>(__TAURI_INVOKE("list_treats")),
 	/**  Juma shirinligini qo'shadi. */
 	addTreat: (input: TreatInputDto) => typedError<TreatDto, ApiError>(__TAURI_INVOKE("add_treat", { input })),
+	/**  Hafta varag'i: bir nechta xarajatni birdan kiritadi (qisman yozilish yo'q). */
+	addExpenses: (rows: ExpenseInputDto[]) => typedError<ExpenseDto[], ApiError>(__TAURI_INVOKE("add_expenses", { rows })),
+	/**  Odatlar ro'yxati: oyiga va yiliga jami (statistika). */
+	listHabits: () => typedError<OdatHabitDto[], ApiError>(__TAURI_INVOKE("list_habits")),
+	/**  Yangi odat qo'shadi. */
+	addHabit: (name: string) => typedError<OdatHabitDto, ApiError>(__TAURI_INVOKE("add_habit", { name })),
+	/**  Oila kengashi bayonnomasi (PDF): ilova ma'lumot papkasiga yoziladi; yo'li qaytariladi. */
+	createCouncilReport: () => typedError<string, ApiError>(__TAURI_INVOKE("create_council_report")),
 };
 
 /* Types */
@@ -350,6 +358,8 @@ export type ExpenseDto = {
 
 /**  Xarajat qo'shish formasi. */
 export type ExpenseInputDto = {
+	/**  Sana (`YYYY-MM-DD`, shu hafta ichida). Yo'q bo'lsa — bugun. */
+	occurredOn: string | null,
 	/**  Summa matni (masalan, `150 000`). */
 	amount: string,
 	/**  Kategoriya (bo'lsa). Toifa kategoriyadan olinadi. */
@@ -490,6 +500,10 @@ export type MoneyDto = {
 
 /**  Oylik xulosa: uch toifa va belgilar bo'yicha jamlanma. */
 export type MonthSummaryDto = {
+	/**  Joriy hafta boshi (juma, `YYYY-MM-DD`) — hafta varag'i uchun. */
+	weekStart: string,
+	/**  Bugun (Toshkent, `YYYY-MM-DD`). */
+	today: string,
 	/**  Davr boshi (`YYYY-MM-DD`). */
 	periodStart: string,
 	/**  Davr oxiri (kirmaydi, `YYYY-MM-DD`). */
@@ -565,6 +579,20 @@ export type ObligationLineDto = {
 	recorded: MoneyDto,
 	/**  Yozilmagan qism. */
 	remainder: MoneyDto,
+};
+
+/**  Odat statistikasi: oyiga va yiliga jami (ayblov yo'q — SPEC 2B.9). */
+export type OdatHabitDto = {
+	/**  Kategoriya identifikatori. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Joriy oy jami. */
+	monthly: MoneyDto,
+	/**  Joriy yil jami. */
+	yearly: MoneyDto,
+	/**  Yil ichidagi yozuvlar soni. */
+	entriesThisYear: number,
 };
 
 /**  «Kimning puli?» bo'lagi. */

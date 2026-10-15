@@ -4,7 +4,7 @@
 use time::OffsetDateTime;
 
 use crate::necessity::{Necessity, NecessityChange};
-use crate::{DomainError, Meta, validate_uuid_v7};
+use crate::{DomainError, Meta, validate_name, validate_uuid_v7};
 
 /// Kategoriya yozuvi. Tizim kategoriyasida [`Category::system_key`] bor.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +19,8 @@ pub struct Category {
     pub system_key: Option<CategoryKey>,
     /// Joriy toifa (`ZARUR | KERAK | HAVAS`). Yangi kategoriyada — `KERAK`.
     pub necessity: Necessity,
+    /// Odat sifatida kuzatiladimi (SPEC 2B.9): faqat statistika, ayblov yo'q.
+    pub is_habit: bool,
     /// Metama'lumot.
     pub meta: Meta,
 }
@@ -40,6 +42,30 @@ impl Category {
             name: key.default_name().to_owned(),
             system_key: Some(key),
             necessity: key.default_necessity(),
+            is_habit: false,
+            meta: Meta::created(now, origin_device_id),
+        })
+    }
+
+    /// Foydalanuvchi kategoriyasi (tizim kaliti yo'q). Nomi qoidaga javob berishi kerak.
+    pub fn custom(
+        id: &str,
+        household_id: &str,
+        name: &str,
+        necessity: Necessity,
+        is_habit: bool,
+        now: OffsetDateTime,
+        origin_device_id: &str,
+    ) -> Result<Self, DomainError> {
+        validate_uuid_v7(id)?;
+        validate_uuid_v7(household_id)?;
+        Ok(Self {
+            id: id.to_owned(),
+            household_id: household_id.to_owned(),
+            name: validate_name(name)?,
+            system_key: None,
+            necessity,
+            is_habit,
             meta: Meta::created(now, origin_device_id),
         })
     }

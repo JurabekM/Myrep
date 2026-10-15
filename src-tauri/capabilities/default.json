@@ -5,6 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "notification:default",
     "allow-get-app-info",
     "allow-get-security-status",
     "allow-setup-pin",
@@ -48,6 +49,10 @@
     "allow-add-member",
     "allow-set-member-pin",
     "allow-list-treats",
-    "allow-add-treat"
+    "allow-add-treat",
+    "allow-add-expenses",
+    "allow-list-habits",
+    "allow-add-habit",
+    "allow-create-council-report"
   ]
 }

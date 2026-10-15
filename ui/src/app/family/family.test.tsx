@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -41,6 +41,10 @@ vi.mock("../../bindings/bindings", () => ({
     setMemberPin: vi.fn(),
     listTreats: vi.fn(),
     addTreat: vi.fn(),
+    addExpenses: vi.fn(),
+    listHabits: vi.fn(),
+    addHabit: vi.fn(),
+    createCouncilReport: vi.fn(),
   },
 }));
 
@@ -59,6 +63,8 @@ const SNACKS = "0192e000-0000-7000-8000-0000000000c3";
 const SUMMARY = {
   periodStart: "2026-10-01",
   periodEnd: "2026-11-01",
+  weekStart: "2026-10-09",
+  today: "2026-10-15",
   zarur: money(0, "0 soʻm"),
   kerak: money(0, "0 soʻm"),
   havas: money(0, "0 soʻm"),
@@ -124,6 +130,12 @@ function setUp(): void {
   });
   vi.mocked(commands.consentHavasLimit).mockResolvedValue({ status: "ok", data: LIMIT_INACTIVE });
   vi.mocked(commands.addTreat).mockResolvedValue({ status: "ok", data: TREAT });
+  vi.mocked(commands.listHabits).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.addExpenses).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.createCouncilReport).mockResolvedValue({
+    status: "ok",
+    data: "/data/reports/bayonnoma.pdf",
+  });
 }
 
 /** Birinchi kattaning «Rozilik berish» tugmasi. */
@@ -176,6 +188,7 @@ describe("oila va havas", () => {
       isGift: true,
       isOstentation: false,
       fundedByDebt: false,
+      occurredOn: null,
     });
   });
 
@@ -272,5 +285,70 @@ describe("oila va havas", () => {
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("dialog", { name: "Oila kengashi" })).not.toBeInTheDocument();
+  });
+  it("hafta varag'i: qator sana bilan saqlanadi", async () => {
+    const user = userEvent.setup();
+    await openExpenses();
+
+    const heading = await screen.findByRole("heading", { level: 2, name: "Hafta varag'i" });
+    const card = heading.parentElement;
+    if (card === null) {
+      throw new Error("Hafta varag'i kartasi topilmadi");
+    }
+    const [amount] = within(card).getAllByRole("textbox");
+    if (amount === undefined) {
+      throw new Error("Summa maydoni topilmadi");
+    }
+    await user.type(amount, "45000");
+    await user.click(within(card).getByRole("button", { name: "Hammasini saqlash" }));
+
+    expect(commands.addExpenses).toHaveBeenCalledWith([
+      {
+        amount: "45000",
+        categoryId: null,
+        note: null,
+        isGift: false,
+        isOstentation: false,
+        fundedByDebt: false,
+        occurredOn: "2026-10-15",
+      },
+    ]);
+  });
+
+  it("odatlar: yangi odat qo'shiladi (statistika)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(commands.addHabit).mockResolvedValue({
+      status: "ok",
+      data: {
+        id: "0192e000-0000-7000-8000-0000000000f1",
+        name: "Chekish",
+        monthly: money(0, "0 soʻm"),
+        yearly: money(0, "0 soʻm"),
+        entriesThisYear: 0,
+      },
+    });
+    await openExpenses();
+
+    await user.type(await screen.findByLabelText("Odat nomi (masalan, chekish)"), "Chekish");
+    await user.click(screen.getByRole("button", { name: "Odat qo'shish" }));
+
+    expect(commands.addHabit).toHaveBeenCalledWith("Chekish");
+  });
+
+  it("protokol: PDF yaratiladi va yo'li ko'rsatiladi", async () => {
+    const user = userEvent.setup();
+    await openExpenses();
+
+    await user.click(screen.getByRole("button", { name: "Oila kengashi" }));
+    await screen.findByRole("dialog", { name: "Oila kengashi" });
+    await user.click(screen.getByRole("button", { name: "Keyingi" }));
+    await user.click(screen.getByRole("button", { name: "Keyingi" }));
+    await user.click(screen.getByRole("button", { name: "Keyingi" }));
+    await user.click(screen.getByRole("button", { name: "Bayonnomani PDF qilish" }));
+
+    expect(
+      await screen.findByText(/Bayonnoma saqlandi: \/data\/reports\/bayonnoma\.pdf/),
+    ).toBeInTheDocument();
+    expect(commands.createCouncilReport).toHaveBeenCalled();
   });
 });

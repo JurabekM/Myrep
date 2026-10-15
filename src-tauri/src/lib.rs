@@ -11,6 +11,8 @@ mod family;
 mod family_commands;
 mod finance;
 mod finance_commands;
+mod notify;
+mod report;
 mod session;
 
 use std::sync::Arc;
@@ -82,6 +84,10 @@ fn specta_builder() -> Builder<tauri::Wry> {
         family_commands::set_member_pin,
         family_commands::list_treats,
         family_commands::add_treat,
+        family_commands::add_expenses,
+        family_commands::list_habits,
+        family_commands::add_habit,
+        family_commands::create_council_report,
     ])
 }
 
@@ -95,6 +101,7 @@ pub fn run() {
     export_bindings(&builder);
 
     let result = tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| setup_security(app))
         .run(tauri::generate_context!());
@@ -143,6 +150,18 @@ fn setup_security(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             loop {
                 std::thread::sleep(AUTO_LOCK_TICK);
                 tick_session.enforce_auto_lock();
+            }
+        })?;
+
+    let notify_session = Arc::clone(&session);
+    let notify_app = app.handle().clone();
+    std::thread::Builder::new()
+        .name("juma-eslatma".to_owned())
+        .spawn(move || {
+            let mut last_day = None;
+            loop {
+                notify::notify_due_treats(&notify_session, &notify_app, &mut last_day);
+                std::thread::sleep(notify::CHECK_INTERVAL);
             }
         })?;
 

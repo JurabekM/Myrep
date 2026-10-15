@@ -4,6 +4,37 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D6 — davomi: bayonnoma PDF, hafta varag'i, odatlar, Juma bildirishnomasi, PIN xavfsizligi (2026-10-15)
+
+**Qo'shildi**
+
+- **`crates/pdf` (`baraka-pdf`):** oila kengashi bayonnomasi typst bilan PDF qilinadi (DESKTOP_PROMPT 2: PDF = typst). Yangi tashqi bog'liqliklar: `typst`, `typst-pdf`, `typst-assets` (`fonts` xususiyati) — hammasi 0.13.1. Sabab: 0.13 API'si shu loyiha uchun tekshirilgan; 0.15 keyingi yangilash alohida vazifa. Shriftlar (Libertinus Serif) ilova ichida: tizim shriftiga bog'liq emas. Matnlar typst'ga faqat satr qiymati sifatida beriladi (markup inyeksiya yo'q). Testlar: PDF yaratiladi; `ʻ`/`ʼ` shriftda bor; snapshot mos (`UPDATE_SNAPSHOTS=1` bilan yangilanadi).
+- **`create_council_report`:** PDF ilova ma'lumot papkasining `reports` bo'limiga yoziladi; yo'li UI'da ko'rsatiladi. Fayl tanlash dialogi keyingi bosqichda (OPEN_QUESTIONS, 9-band).
+- **Hafta varag'i:** `add_expenses` — bir martada ko'p xarajat. Sana shu hafta ichida va bugungacha bo'lishi shart. Hammasi avval tekshiriladi, keyin yoziladi. Ma'lumotlar bazasi tranzaksiyasi ishlatilmagan: yozish xatosi tekshiruvdan keyin kutilmaydi (OPEN_QUESTIONS, 36-band).
+- **Odatlar (SPEC 2B.9):** kategoriyaga `is_habit` belgisi (sxema v5). `domain::odat` — oy va yil bo'yicha jami, yozuvlar soni. Ayblov matni yo'q. Yangi odat — `add_habit` (toifasi `HAVAS`).
+- **Juma shirinligi bildirishnomasi:** `tauri-plugin-notification` 2.7.0 (DESKTOP_PROMPT 7 da nomlangan). Sabab: ilova ochiq bo'lganda ritual kunini eslatish. Ilova qulflangan bo'lsa tekshiruv jim o'tkaziladi; bir kunda bir marta.
+- **Xarajat sanasi:** `add_expense` endi `occurredOn` qabul qiladi (yo'q bo'lsa — bugun).
+- **Oy xulosasi:** `weekStart` va `today` maydonlari (hafta varag'i uchun).
+- **Havas chegarasi uchun PIN:** a'zo PIN'ini almashtirish joriy PIN'ni talab qiladi; faqat PIN egasi almashtira oladi (OPEN_QUESTIONS, 39-band).
+
+**Qarorlar va sabablar**
+
+- **PIN almashtirish:** joriy PIN noto'g'ri bo'lsa — urinish hisobga olinadi va kutish qoidasi qo'llanadi (ilova PIN'idek).
+- **Chegarani o'zgartirish rozilikni bekor qiladi** — shunday qoldi (OPEN_QUESTIONS, 40-band).
+- **Bayonnoma:** hisob-kitob backend'da; PDF tarkibi tayyor matn sifatida beriladi. Snapshot o'zgarsa, testdan xabar chiqadi.
+
+**Tekshiruv**
+
+- `cargo test --workspace`: yashil. Yangi: `baraka-pdf` 3 test; `family` 12 test (hafta varag'i, odat, PIN almashtirish, bildirishnoma); `report` 2 test; domen `odat` 2 test.
+- `cargo clippy --workspace --all-targets -- -D warnings`: toza. `cargo fmt --all -- --check`: toza.
+- Frontend: `pnpm test` (yashil, oila testlari 44 ta), `pnpm lint`, `pnpm typecheck`, `pnpm format:check`: yashil.
+- GUI: React UI in-app brauzerda IPC soxtasi bilan tekshirildi: odat qo'shish (ro'yxatda «Oyiga: 0 soʻm»), hafta varag'i (saqlash holati, ro'yxatda yangi xarajat), kengash — PIN almashtirish tugmasi, PDF tugmasi va yo'l ko'rsatilishi. Native oyna va Windows toast bildirishnomasi bu muhitda tekshirilmagan.
+
+**Hali bajarilmagan**
+
+- Fayl tanlash dialogi (bayonnomani istalgan joyga saqlash) va chop etish dialogi — OPEN_QUESTIONS, 9-band.
+- Oila a'zolarini tahrirlash va o'chirish — OPEN_QUESTIONS, 39-band.
+
 ### D6 — Uch toifa, havas chegarasi, oila kengashi (2026-10-15)
 
 **Qo'shildi**
@@ -38,7 +69,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 **Hali bajarilmagan (keyingi bosqich)**
 
-- Bayonnoma PDF (`typst`) va uning snapshot testi: `typst` hali qo'shilmagan (OPEN_QUESTIONS, 35-band).
+- Bayonnoma PDF — bajarildi (yuqoridagi «davomi» bo'limiga qarang).
 - «Hafta varag'i» ommaviy kiritish (36-band).
 - Odat statistikasi, SPEC 2B.9 (37-band).
 - Juma shirinligi bildirishnomalari va a'zo tahriri/o'chirish (38–39-bandlar).

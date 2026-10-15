@@ -370,6 +370,11 @@ CREATE TABLE scheduled_treats (
 CREATE INDEX scheduled_treats_by_household ON scheduled_treats (household_id);
 "#;
 
+/// Sxema v5 (D6, odat statistikasi): kategoriya odat sifatida kuzatiladimi (SPEC 2B.9).
+pub const SCHEMA_V5: &str = r#"
+ALTER TABLE categories ADD COLUMN is_habit INTEGER NOT NULL DEFAULT 0 CHECK (is_habit IN (0, 1));
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -377,6 +382,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V2),
         M::up(SCHEMA_V3),
         M::up(SCHEMA_V4),
+        M::up(SCHEMA_V5),
     ])
 }
 

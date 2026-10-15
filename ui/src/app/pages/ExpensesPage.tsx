@@ -3,6 +3,8 @@ import { type SyntheticEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "../../bindings/bindings";
 import { CouncilPage } from "../family/CouncilPage";
+import { HabitsCard } from "../family/HabitsCard";
+import { WeekSheetCard } from "../family/WeekSheetCard";
 import { necessityKey } from "../family/necessity";
 import { TreatsCard } from "../family/TreatsCard";
 import { familyFetchers, familyKeys, useInvalidateFamily } from "../family/queries";
@@ -71,6 +73,16 @@ export function ExpensesPage() {
       {summary.isError ? <Alert>{t("errors.generic")}</Alert> : null}
 
       <AddExpenseCard categoryNames={categories.isSuccess ? categories.data : []} />
+
+      {summary.isSuccess ? (
+        <WeekSheetCard
+          weekStart={summary.data.weekStart}
+          today={summary.data.today}
+          categories={categories.isSuccess ? categories.data : []}
+        />
+      ) : null}
+
+      <HabitsCard />
 
       <Card title={t("family.expensesList")}>
         {expenses.isSuccess && expenses.data.length === 0 ? (
@@ -162,6 +174,7 @@ function AddExpenseCard({
           isGift,
           isOstentation,
           fundedByDebt,
+          occurredOn: null,
         })
         .then(unwrap);
       setAmount("");

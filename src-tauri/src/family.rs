@@ -4,8 +4,9 @@
 //! Qoidalar `domain`da, saqlash `storage`da; bu yerda ular ulanadi va DTO tayyorlanadi. Pul hisobi
 //! Rust'da: frontend faqat ko'rsatadi.
 
-use domain::calendar::{DateRange, month_of, tashkent_date};
+use domain::calendar::{DateRange, month_of, tashkent_date, week_of};
 use domain::limit::{self, LimitLevel, SpendLine};
+use domain::odat;
 use domain::{
     Category, CategoryKey, DomainError, Expense, ExpenseDraft, HavasLimit, LimitConsent, Member,
     MemberRole, Necessity, ScheduledTreat, TaskTrigger,
@@ -15,14 +16,16 @@ use security::{
     KdfParams, SecurityError, create_member_verifier, retry_after_secs, verify_member_pin,
 };
 use storage::{
-    CategoryRepo, Database, ExpenseRepo, LimitRepo, MemberRepo, PinRepo, StorageError, TreatRepo,
+    CategoryRepo, Database, ExpenseRepo, LimitRepo, MemberRepo, PinRepo, PinState, StorageError,
+    TreatRepo,
 };
-use time::OffsetDateTime;
+use time::format_description::well_known::Iso8601;
+use time::{Date, Month, OffsetDateTime};
 
 use crate::content;
 use crate::dto::{
     AdultConsentDto, CategoryDto, ExpenseDto, ExpenseInputDto, HavasLimitDto, MemberDto,
-    MemberInputDto, MoneyDto, MonthSummaryDto, TreatDto, TreatInputDto,
+    MemberInputDto, MoneyDto, MonthSummaryDto, OdatHabitDto, TreatDto, TreatInputDto,
 };
 use crate::finance::{self, CURRENCY, Context, DEVICE_ID, UuidV7, date_text, parse_money};
 use crate::session::SessionError;
@@ -122,6 +125,8 @@ pub fn month_summary(db: &Database, now: OffsetDateTime) -> Result<MonthSummaryD
     Ok(MonthSummaryDto {
         period_start: date_text(period.start),
         period_end: date_text(period.end),
+        week_start: date_text(week_of(ctx.today).ok_or(DomainError::InvalidDay)?.start),
+        today: date_text(ctx.today),
         zarur: MoneyDto::of(by(Necessity::Zarur)),
         kerak: MoneyDto::of(by(Necessity::Kerak)),
         havas: MoneyDto::of(limit::spent_on_havas(&lines, CURRENCY)),
@@ -158,43 +163,149 @@ pub fn month_expense_list(
         .collect())
 }
 
-/// Xarajat qo'shadi. Toifa kategoriyadan olinadi (kategoriyasiz — `KERAK`); `EXPENSE_RECORDED` hodisasi yoziladi.
+/// Bir martada kiritiladigan xarajatlar soni (hafta varag'i).
+const MAX_BATCH: usize = 100;
+
+/// Hafta varag'i: bir nechta xarajatni birdan kiritadi. Har qator: summa, kategoriya (ixtiyoriy),
+/// sana (shu hafta ichida, bugungacha). Avval hammasi tekshiriladi, keyin yoziladi — qisman yozilish yo'q.
+pub fn add_expenses(
+    db: &Database,
+    now: OffsetDateTime,
+    rows: Vec<ExpenseInputDto>,
+) -> Result<Vec<ExpenseDto>, SessionError> {
+    let ctx = finance::context(db, now)?;
+    if rows.is_empty() {
+        return Ok(Vec::new());
+    }
+    if rows.len() > MAX_BATCH {
+        return Err(DomainError::InvalidRule.into());
+    }
+    let week = week_of(ctx.today).ok_or(DomainError::InvalidDay)?;
+    let categories = CategoryRepo::new(db.connection()).list(&ctx.household.id)?;
+    let mut prepared = Vec::with_capacity(rows.len());
+    for row in rows {
+        let amount = parse_money(&row.amount)?;
+        let occurred_on = match row.occurred_on.as_deref() {
+            Some(text) => parse_date(text)?,
+            None => ctx.today,
+        };
+        if !week.contains(occurred_on) || occurred_on > ctx.today {
+            return Err(DomainError::InvalidDay.into());
+        }
+        let necessity = match row.category_id.as_deref() {
+            Some(id) => categories
+                .iter()
+                .find(|c| c.id == id)
+                .map(|c| c.necessity)
+                .ok_or(StorageError::NotFound)?,
+            None => Necessity::Kerak,
+        };
+        let expense = Expense::create(
+            &domain::IdGen::next_id(&UuidV7),
+            &ctx.household.id,
+            ExpenseDraft {
+                member_id: ctx.owner_id.clone(),
+                category_id: row.category_id,
+                amount,
+                occurred_on,
+                note: row.note,
+                necessity,
+                is_gift: row.is_gift,
+                is_ostentation: row.is_ostentation,
+                funded_by_debt: row.funded_by_debt,
+            },
+            now,
+            DEVICE_ID,
+        )?;
+        prepared.push(expense);
+    }
+    let repo = ExpenseRepo::new(db.connection());
+    for expense in &prepared {
+        repo.insert(expense)?;
+    }
+    content::record_event(db, now, TaskTrigger::ExpenseRecorded)?;
+    Ok(prepared
+        .iter()
+        .map(|e| expense_dto(e, &categories))
+        .collect())
+}
+
+/// Bitta xarajat qo'shadi (hafta varag'i bilan bir xil qoidalar).
 pub fn add_expense(
     db: &Database,
     now: OffsetDateTime,
     input: ExpenseInputDto,
 ) -> Result<ExpenseDto, SessionError> {
+    add_expenses(db, now, vec![input])?
+        .into_iter()
+        .next()
+        .ok_or_else(|| StorageError::NotFound.into())
+}
+
+/// Sana matnini (`YYYY-MM-DD`) tekshiradi.
+fn parse_date(text: &str) -> Result<Date, SessionError> {
+    Date::parse(text, &Iso8601::DATE).map_err(|_| DomainError::InvalidDay.into())
+}
+
+/// Joriy kalendar yili: 1-yanvar dan keyingi 1-yanvargacha.
+fn year_range(today: Date) -> Result<DateRange, SessionError> {
+    let start = Date::from_calendar_date(today.year(), Month::January, 1)
+        .map_err(|_| DomainError::InvalidDay)?;
+    let end = Date::from_calendar_date(today.year() + 1, Month::January, 1)
+        .map_err(|_| DomainError::InvalidDay)?;
+    Ok(DateRange { start, end })
+}
+
+/// Odatlar ro'yxati: oyiga va yiliga jami (faqat statistika, ayblov yo'q — SPEC 2B.9).
+pub fn habits(db: &Database, now: OffsetDateTime) -> Result<Vec<OdatHabitDto>, SessionError> {
     let ctx = finance::context(db, now)?;
-    let amount = parse_money(&input.amount)?;
+    let month = current_month(&ctx)?;
+    let year = year_range(ctx.today)?;
     let categories = CategoryRepo::new(db.connection()).list(&ctx.household.id)?;
-    let necessity = match input.category_id.as_deref() {
-        Some(id) => categories
+    let expenses = ExpenseRepo::new(db.connection()).list_in_range(&ctx.household.id, year)?;
+    let mut out = Vec::new();
+    for habit in categories.iter().filter(|c| c.is_habit) {
+        let entries: Vec<(Date, Money)> = expenses
             .iter()
-            .find(|c| c.id == id)
-            .map(|c| c.necessity)
-            .ok_or(StorageError::NotFound)?,
-        None => Necessity::Kerak,
-    };
-    let expense = Expense::create(
+            .filter(|e| e.category_id.as_deref() == Some(habit.id.as_str()))
+            .map(|e| (e.occurred_on, e.amount))
+            .collect();
+        let totals = odat::totals(&entries, month, year, CURRENCY);
+        out.push(OdatHabitDto {
+            id: habit.id.clone(),
+            name: habit.name.clone(),
+            monthly: MoneyDto::of(totals.month),
+            yearly: MoneyDto::of(totals.year),
+            entries_this_year: totals.entries_year,
+        });
+    }
+    Ok(out)
+}
+
+/// Yangi odat qo'shadi (foydalanuvchi kategoriyasi sifatida; toifasi `HAVAS`).
+pub fn add_habit(
+    db: &Database,
+    now: OffsetDateTime,
+    name: &str,
+) -> Result<OdatHabitDto, SessionError> {
+    let ctx = finance::context(db, now)?;
+    let habit = Category::custom(
         &domain::IdGen::next_id(&UuidV7),
         &ctx.household.id,
-        ExpenseDraft {
-            member_id: ctx.owner_id.clone(),
-            category_id: input.category_id,
-            amount,
-            occurred_on: ctx.today,
-            note: input.note,
-            necessity,
-            is_gift: input.is_gift,
-            is_ostentation: input.is_ostentation,
-            funded_by_debt: input.funded_by_debt,
-        },
+        name,
+        Necessity::Havas,
+        true,
         now,
         DEVICE_ID,
     )?;
-    ExpenseRepo::new(db.connection()).insert(&expense)?;
-    content::record_event(db, now, TaskTrigger::ExpenseRecorded)?;
-    Ok(expense_dto(&expense, &categories))
+    CategoryRepo::new(db.connection()).insert(&habit)?;
+    Ok(OdatHabitDto {
+        id: habit.id,
+        name: habit.name,
+        monthly: MoneyDto::of(Money::new(0, CURRENCY)),
+        yearly: MoneyDto::of(Money::new(0, CURRENCY)),
+        entries_this_year: 0,
+    })
 }
 
 fn category_dto_of(category: &Category) -> CategoryDto {
@@ -322,18 +433,7 @@ pub fn consent_havas_limit(
     let pins = PinRepo::new(db.connection());
     let state = pins.find(member_id)?.ok_or(StorageError::NotFound)?;
     let verifier = state.verifier.clone().ok_or(DomainError::PinNotSet)?;
-    if let Some(failed_at) = state.failed_at
-        && let Some(wait) = retry_after_secs(
-            state.failed_attempts,
-            failed_at.unix_timestamp(),
-            now.unix_timestamp(),
-        )
-    {
-        return Err(SecurityError::LockedOut {
-            retry_after_secs: wait,
-        }
-        .into());
-    }
+    ensure_not_locked(&state, now)?;
     if !verify_member_pin(pin, &verifier, kdf_params())? {
         pins.record_failure(member_id, now)?;
         return Err(SecurityError::WrongPin.into());
@@ -415,8 +515,10 @@ pub fn add_member(
 /// Kattaning PIN'ini o'rnatadi yoki almashtiradi (urinishlar hisobi nolga tushadi).
 pub fn set_member_pin(
     db: &Database,
+    now: OffsetDateTime,
     member_id: &str,
-    pin: &str,
+    current_pin: Option<&str>,
+    new_pin: &str,
 ) -> Result<MemberDto, SessionError> {
     let member = MemberRepo::new(db.connection())
         .find(member_id)?
@@ -424,14 +526,42 @@ pub fn set_member_pin(
     if member.role != MemberRole::Adult {
         return Err(DomainError::InvalidRole.into());
     }
-    let verifier = create_member_verifier(pin, kdf_params())?;
-    PinRepo::new(db.connection()).set_verifier(member_id, &verifier)?;
+    let pins = PinRepo::new(db.connection());
+    let state = pins.find(member_id)?.ok_or(StorageError::NotFound)?;
+    // PIN egasi o'z joriy PIN'ini kiritmaguncha almashtirib bo'lmaydi (OPEN_QUESTIONS, 39).
+    if let Some(verifier) = state.verifier.clone() {
+        let current = current_pin.ok_or(SecurityError::WrongPin)?;
+        ensure_not_locked(&state, now)?;
+        if !verify_member_pin(current, &verifier, kdf_params())? {
+            pins.record_failure(member_id, now)?;
+            return Err(SecurityError::WrongPin.into());
+        }
+    }
+    let verifier = create_member_verifier(new_pin, kdf_params())?;
+    pins.set_verifier(member_id, &verifier)?;
     Ok(MemberDto {
         id: member.id,
         name: member.name,
         role: member.role.code().to_owned(),
         has_pin: true,
     })
+}
+
+/// Urinishlar hisobi bo'yicha kutish: noto'g'ri urinishlardan keyin `LOCKED_OUT`.
+fn ensure_not_locked(state: &PinState, now: OffsetDateTime) -> Result<(), SessionError> {
+    if let Some(failed_at) = state.failed_at
+        && let Some(wait) = retry_after_secs(
+            state.failed_attempts,
+            failed_at.unix_timestamp(),
+            now.unix_timestamp(),
+        )
+    {
+        return Err(SecurityError::LockedOut {
+            retry_after_secs: wait,
+        }
+        .into());
+    }
+    Ok(())
 }
 
 fn treat_dto(treat: &ScheduledTreat, today: time::Date) -> TreatDto {
@@ -472,6 +602,22 @@ pub fn add_treat(
     )?;
     TreatRepo::new(db.connection()).insert_treat(&treat)?;
     Ok(treat_dto(&treat, tashkent_date(now)))
+}
+
+/// Bugun ritual kuni bo'lgan «Juma shirinligi» nomlari (bildirishnoma uchun).
+pub fn due_treat_names(db: &Database, now: OffsetDateTime) -> Result<Vec<String>, SessionError> {
+    let ctx = finance::context(db, now)?;
+    Ok(TreatRepo::new(db.connection())
+        .list_treats(&ctx.household.id)?
+        .into_iter()
+        .filter(|treat| treat.is_due_on(ctx.today))
+        .map(|treat| treat.name)
+        .collect())
+}
+
+/// Bugun bildirishnoma yuborilmaganmi: kuniga bir marta (oxirgi yuborilgan kun bugun bo'lmasa — yuboriladi).
+pub fn should_notify(last_notified: Option<Date>, today: Date) -> bool {
+    last_notified != Some(today)
 }
 
 #[cfg(test)]
@@ -546,6 +692,7 @@ mod tests {
                 is_gift,
                 is_ostentation: false,
                 funded_by_debt: false,
+                occurred_on: None,
             },
         )
         .expect("xarajat")
@@ -559,7 +706,7 @@ mod tests {
     fn bir_kattaning_roziligi_chegarani_faollashtirmaydi() {
         let db = database();
         let owner = owner_id(&db);
-        set_member_pin(&db, &owner, OWNER_PIN).expect("egasi PIN");
+        set_member_pin(&db, thursday(), &owner, None, OWNER_PIN).expect("egasi PIN");
         let spouse = add_spouse(&db);
         set_havas_limit(&db, thursday(), "1 000 000").expect("chegara");
 
@@ -580,7 +727,7 @@ mod tests {
     fn uch_marta_notogri_pin_qulflaydi() {
         let db = database();
         let owner = owner_id(&db);
-        set_member_pin(&db, &owner, OWNER_PIN).expect("egasi PIN");
+        set_member_pin(&db, thursday(), &owner, None, OWNER_PIN).expect("egasi PIN");
         set_havas_limit(&db, thursday(), "500 000").expect("chegara");
         for _ in 0..3 {
             assert!(consent_havas_limit(&db, thursday(), &owner, WRONG_PIN).is_err());
@@ -589,6 +736,31 @@ mod tests {
             consent_havas_limit(&db, thursday(), &owner, OWNER_PIN),
             Err(SessionError::Security(SecurityError::LockedOut { .. }))
         ));
+    }
+
+    #[test]
+    fn pin_faqat_joriy_pin_bilan_almashadi() {
+        let db = database();
+        let owner = owner_id(&db);
+        set_member_pin(&db, thursday(), &owner, None, OWNER_PIN).expect("egasi PIN");
+        // Joriy PIN'siz almashtirish rad etiladi.
+        assert!(matches!(
+            set_member_pin(&db, thursday(), &owner, None, SPOUSE_PIN),
+            Err(SessionError::Security(SecurityError::WrongPin))
+        ));
+        // Noto'g'ri joriy PIN — urinish hisobga olinadi.
+        assert!(matches!(
+            set_member_pin(&db, thursday(), &owner, Some(WRONG_PIN), SPOUSE_PIN),
+            Err(SessionError::Security(SecurityError::WrongPin))
+        ));
+        // To'g'ri joriy PIN bilan almashadi; eski PIN endi ishlamaydi.
+        set_member_pin(&db, thursday(), &owner, Some(OWNER_PIN), SPOUSE_PIN).expect("almashsin");
+        set_havas_limit(&db, thursday(), "500 000").expect("chegara");
+        assert!(matches!(
+            consent_havas_limit(&db, thursday(), &owner, OWNER_PIN),
+            Err(SessionError::Security(SecurityError::WrongPin))
+        ));
+        assert!(consent_havas_limit(&db, thursday(), &owner, SPOUSE_PIN).is_ok());
     }
 
     #[test]
@@ -667,5 +839,113 @@ mod tests {
         assert!(treat.due_today, "2026-10-16 — juma");
         let listed = treats(&db, datetime!(2026-10-17 06:00 UTC)).expect("ro'yxat");
         assert!(!listed[0].due_today, "shanba — ritual kuni emas");
+    }
+
+    fn row(amount: &str, category: Option<&str>, date: Option<&str>) -> ExpenseInputDto {
+        ExpenseInputDto {
+            amount: amount.to_owned(),
+            category_id: category.map(str::to_owned),
+            note: None,
+            is_gift: false,
+            is_ostentation: false,
+            funded_by_debt: false,
+            occurred_on: date.map(str::to_owned),
+        }
+    }
+
+    #[test]
+    fn hafta_varagi_bitta_notogri_qator_bilan_butunlay_rad_etiladi() {
+        let db = database();
+        let snacks = category_id(&db, CategoryKey::Snacks);
+        // 2026-10-08 (payshanba) — joriy haftadan oldin: butun to'plam rad etiladi.
+        let result = add_expenses(
+            &db,
+            thursday(),
+            vec![
+                row("10 000", Some(&snacks), Some("2026-10-10")),
+                row("20 000", Some(&snacks), Some("2026-10-08")),
+            ],
+        );
+        assert!(matches!(
+            result,
+            Err(SessionError::Domain(DomainError::InvalidDay))
+        ));
+        assert!(
+            month_expense_list(&db, thursday())
+                .expect("ro'yxat")
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn hafta_varagi_togri_qatorlar_yoziladi_va_xulosada_hafta_chegarasi_bor() {
+        let db = database();
+        let snacks = category_id(&db, CategoryKey::Snacks);
+        let saved = add_expenses(
+            &db,
+            thursday(),
+            vec![
+                row("10 000", Some(&snacks), Some("2026-10-10")),
+                row("20 000", None, Some("2026-10-15")),
+            ],
+        )
+        .expect("hafta varag'i");
+        assert_eq!(saved.len(), 2);
+        assert_eq!(
+            month_expense_list(&db, thursday()).expect("ro'yxat").len(),
+            2
+        );
+        let summary = month_summary(&db, thursday()).expect("xulosa");
+        assert_eq!(summary.week_start, "2026-10-09");
+        assert_eq!(summary.today, "2026-10-15");
+    }
+
+    #[test]
+    fn odat_statistikasi_oy_va_yil_boyicha_hisoblanadi() {
+        let db = database();
+        let habit = add_habit(&db, thursday(), "Chekish").expect("odat");
+        assert_eq!(habit.entries_this_year, 0);
+        add_expenses(
+            &db,
+            thursday(),
+            vec![row("20 000", Some(&habit.id), Some("2026-10-10"))],
+        )
+        .expect("odat xarajati");
+        let listed = habits(&db, thursday()).expect("ro'yxat");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].monthly.minor, minor_of("20 000"));
+        assert_eq!(listed[0].yearly.minor, minor_of("20 000"));
+        assert_eq!(listed[0].entries_this_year, 1);
+    }
+
+    #[test]
+    fn juma_kuni_bildirishnoma_nomi_chiqadi() {
+        let db = database();
+        add_treat(
+            &db,
+            datetime!(2026-10-16 06:00 UTC),
+            TreatInputDto {
+                name: "Juma shirinligi".to_owned(),
+                amount: "50 000".to_owned(),
+                weekday: 4,
+            },
+        )
+        .expect("ritual");
+        assert_eq!(
+            due_treat_names(&db, datetime!(2026-10-16 06:00 UTC)).expect("nomlar"),
+            vec!["Juma shirinligi".to_owned()]
+        );
+        assert!(due_treat_names(&db, thursday()).expect("nomlar").is_empty());
+    }
+
+    #[test]
+    fn bildirishnoma_kuniga_bir_marta() {
+        let today = time::macros::date!(2026 - 10 - 16);
+        assert!(should_notify(None, today));
+        assert!(!should_notify(Some(today), today));
+        assert!(should_notify(
+            Some(time::macros::date!(2026 - 10 - 09)),
+            today
+        ));
     }
 }

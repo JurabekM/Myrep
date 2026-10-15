@@ -289,12 +289,15 @@ function LimitStatusText({ data }: { data: HavasLimitDto }) {
   return <>{data.active ? t("family.limitActive") : t("family.limitInactive")}</>;
 }
 
-/** Bitta katta: roziligi yoki PIN o'rnatish. PIN faqat shu qatorda saqlanadi. */
+/** Bitta katta: roziligi, PIN o'rnatish yoki PIN almashtirish. PIN faqat shu qatorda saqlanadi. */
 function AdultRow({ adult }: { adult: AdultConsentDto }) {
   const { t } = useTranslation();
   const invalidate = useInvalidateFamily();
   const message = useErrorMessage();
   const [pin, setPin] = useState("");
+  const [currentPin, setCurrentPin] = useState("");
+  const [nextPin, setNextPin] = useState("");
+  const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function consent(event: SyntheticEvent<HTMLFormElement>) {
@@ -311,14 +314,21 @@ function AdultRow({ adult }: { adult: AdultConsentDto }) {
     }
   }
 
-  async function setPinFor(event: SyntheticEvent<HTMLFormElement>) {
+  /** PIN o'rnatish (joriy PIN yo'q) yoki almashtirish (joriy PIN bilan — faqat PIN egasi). */
+  async function savePin(event: SyntheticEvent<HTMLFormElement>, current: string, next: string) {
     event.preventDefault();
     setError(null);
     try {
-      await commands.setMemberPin(adult.memberId, pin).then(unwrap);
+      await commands
+        .setMemberPin(adult.memberId, current === "" ? null : current, next)
+        .then(unwrap);
       setPin("");
+      setCurrentPin("");
+      setNextPin("");
+      setChanging(false);
       await invalidate();
     } catch (caught) {
+      setCurrentPin("");
       setError(message(caught));
     }
   }
@@ -347,7 +357,7 @@ function AdultRow({ adult }: { adult: AdultConsentDto }) {
         <form
           className="flex flex-wrap items-end gap-3"
           onSubmit={(event) => {
-            void setPinFor(event);
+            void savePin(event, "", pin);
           }}
         >
           <span className="text-xs text-subtle">{t("family.noPin")}</span>
@@ -357,6 +367,45 @@ function AdultRow({ adult }: { adult: AdultConsentDto }) {
           </SecondaryButton>
         </form>
       )}
+      {adult.hasPin ? (
+        changing ? (
+          <form
+            className="flex flex-wrap items-end gap-3"
+            onSubmit={(event) => {
+              void savePin(event, currentPin, nextPin);
+            }}
+          >
+            <PinInput
+              id={`current-${adult.memberId}`}
+              label={t("family.currentPin")}
+              value={currentPin}
+              onChange={setCurrentPin}
+            />
+            <PinInput
+              id={`next-${adult.memberId}`}
+              label={t("family.newPin")}
+              value={nextPin}
+              onChange={setNextPin}
+            />
+            <SecondaryButton
+              type="submit"
+              disabled={currentPin.length !== 6 || nextPin.length !== 6}
+            >
+              {t("family.changePinSave")}
+            </SecondaryButton>
+          </form>
+        ) : (
+          <div>
+            <SecondaryButton
+              onClick={() => {
+                setChanging(true);
+              }}
+            >
+              {t("family.changePin")}
+            </SecondaryButton>
+          </div>
+        )
+      ) : null}
       {error !== null ? <Alert>{error}</Alert> : null}
     </li>
   );
@@ -364,10 +413,12 @@ function AdultRow({ adult }: { adult: AdultConsentDto }) {
 
 function PinInput({
   id,
+  label,
   value,
   onChange,
 }: {
   id: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -375,7 +426,7 @@ function PinInput({
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-sm text-muted">
-        {t("family.pinLabel")}
+        {label ?? t("family.pinLabel")}
       </label>
       <input
         id={id}
@@ -466,7 +517,20 @@ function AddMemberCard() {
 
 function SummaryStep({ onFinish }: { onFinish: () => void }) {
   const { t } = useTranslation();
+  const message = useErrorMessage();
   const limit = useQuery({ queryKey: familyKeys.limit, queryFn: familyFetchers.limit });
+  const [reportPath, setReportPath] = useState<string | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+
+  async function createReport() {
+    setReportError(null);
+    try {
+      setReportPath(await commands.createCouncilReport().then(unwrap));
+    } catch (caught) {
+      setReportError(message(caught));
+    }
+  }
+
   return (
     <Card title={t("family.steps.summary")}>
       {limit.isSuccess ? (
@@ -475,7 +539,22 @@ function SummaryStep({ onFinish }: { onFinish: () => void }) {
         </p>
       ) : null}
       <p className="text-sm text-muted">{t("family.summaryDone")}</p>
-      <p className="text-sm text-subtle">{t("family.summaryPdfLater")}</p>
+      <div className="flex flex-col gap-2">
+        <div>
+          <SecondaryButton
+            onClick={() => {
+              void createReport();
+            }}
+          >
+            {t("family.reportCreate")}
+          </SecondaryButton>
+        </div>
+        <p className="text-xs text-subtle">{t("family.reportHint")}</p>
+        {reportPath !== null ? (
+          <p className="text-sm text-text">{t("family.reportSaved", { path: reportPath })}</p>
+        ) : null}
+        {reportError !== null ? <Alert>{reportError}</Alert> : null}
+      </div>
       <div>
         <PrimaryButton onClick={onFinish}>{t("family.finish")}</PrimaryButton>
       </div>

@@ -47,6 +47,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "set_member_pin",
             "list_treats",
             "add_treat",
+            "add_expenses",
+            "list_habits",
+            "add_habit",
+            "create_council_report",
         ]),
     ))?;
     Ok(())

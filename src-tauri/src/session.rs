@@ -70,6 +70,9 @@ pub enum SessionError {
     /// Ma'lumotlar bazasi bor, lekin kalit fayli yo'q: sozlab bo'lmaydi (ma'lumot yo'qolmasligi uchun).
     #[error("ma'lumotlar bazasi bor, lekin kalit fayli topilmadi")]
     DatabaseWithoutKey,
+    /// Bayonnoma PDF'i yaratilmadi (ichki xato).
+    #[error(transparent)]
+    Pdf(#[from] pdf::PdfError),
 }
 
 /// Ilova seansi. Bitta nusxa butun ilova uchun (Tauri holatida saqlanadi).

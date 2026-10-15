@@ -41,13 +41,6 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 33. **Hodisasiz vazifalar (D5).** `ch02.t2`, `ch02.t3`, `ch03.*`, `ch04.*`, `ch05.t1` uchun modullar hali yo'q: bu vazifalar faqat qo'lda belgilanadi. Modul tayyor bo'lganda shu hodisa `record_event` orqali yoziladi. `ch05.t2` — hodisasi yo'q, qo'lda. _Kerak: D6–D9 har modulida._
 34. **«Daftar sahifasi» uzunligi (D5).** Standart qaror: 5000 belgi (backend va textarea). Mobilda chegara yo'q edi. Chegara to'g'rimi yoki boshqacha bo'lsinmi? _Kerak: tasdiq._
 
-35. **Bayonnoma PDF (typst) — D6 da bajarilmadi (D6).** Oila kengashining yakuniy PDF bayonnomasi (DESKTOP_PROMPT 7) va uning snapshot testi yo'q: `typst` hali repo'ga qo'shilmagan. Shrift tanlash kerak: `ʻ` (U+02BB) va `ʼ` (U+02BC) to'g'ri chiqishi shart. _Kerak: D6 davomi, typst ADR tasdig'i bilan._
-36. **«Hafta varag'i» ommaviy kiritish (D6).** Bir haftaning xarajatlarini jadvalda ketma-ket kiritish hali yo'q. _Kerak: D6 davomi._
-37. **Odat statistikasi (D6).** SPEC 2B.9: «oyiga X, yiliga Y» ko'rinishidagi odatlar hali yo'q. _Kerak: D6 davomi._
-38. **Juma shirinligi bildirishnomasi (D6).** Ritual faqat ma'lumot va «bugun» belgisi. Tizim bildirishnomasi (`tauri-plugin-notification`) yo'q. _Kerak: bildirishnomalar bosqichi (D8 yoki D15)._
-39. **A'zo PIN'ini o'zgartirish xavfsizligi (D6, qaror kerak).** `set_member_pin` joriy PIN so'ramaydi: ilova ochiq bo'lsa, istalgan kishi kattaning PIN'ini almashtira oladi va shu bilan uning roziligini soxtalashtira oladi. Variantlar: (a) joriy PIN so'rash; (b) faqat egasi o'zgartira oladi; (c) hozirgi holat. Hozircha a'zolarni tahrirlash/o'chirish ham yo'q. _Kerak: D6 xavfsizlik ko'rigi, tasdiq bilan._
-40. **Chegarani o'zgartirish rozilikni bekor qiladi (D6).** Yangi chegara — yangi rozilik (hammasi qayta PIN kiritadi). Bu to'g'rimi yoki oldingi rozilik saqlansinmi? _Kerak: tasdiq._
-
 ## Hal qilingan
 
 - **MoneyParser (D4, 2026-10-14).** `money::parse_amount` mobil qoidalari bo'yicha: bo'sh joy, `_`, apostroflar, valyuta belgisi va so'zi; `money_parse.json` (16 vektor, shu jumladan xato holatlari). _(6-band)_
@@ -62,3 +55,10 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 - **Release ogohlantirishlari.** `BINDINGS_PATH` va `BINDINGS_HEADER` konstantalari release'da «ishlatilmagan» deb ogohlantirardi — ular faqat debug va test rejimida kompilyatsiya qilinadi. _2026-10-14._
 - **Manfiy yaxlitlash.** Yarmi noldan uzoqqa (`−12 650,5 → −12 651`) — vektor `fx-004` bilan tasdiqlangan. _2026-10-14._
 - **Formatlash qoidalari (uz/ru).** Guruhlash — U+00A0, kasr — vergul (faqat tiyin bo'lsa), valyuta — bo'linmas bo'sh joy bilan; `soʻm` (U+02BB). Mobil implementatsiya va vektorlar bilan bir xil. _2026-10-14._
+
+- **Bayonnoma PDF (typst), D6 davomi.** Oila kengashi bayonnomasi `crates/pdf` da typst 0.13 bilan PDF qilinadi; shriftlar ilova ichida (Libertinus Serif). Testlar: PDF yaratiladi, `ʻ` (U+02BB) va `ʼ` (U+02BC) shriftda bor, snapshot bilan mos (`UPDATE_SNAPSHOTS=1` bilan yangilanadi). Chiqish fayli `reports` papkasiga yoziladi; fayl tanlash dialogi (9-band) hali yo'q. _(35-band)_
+- **«Hafta varag'i» (D6 davomi).** Bir haftaning xarajatlari bir jadvalda kiritiladi; sana shu hafta ichida bo'lishi shart, hammasi tekshirilgach yoziladi. _(36-band)_
+- **Odat statistikasi (D6 davomi).** Odat — `is_habit` belgisi bo'lgan kategoriya; «oyiga» va «yiliga» jami ko'rsatiladi, ayblov yo'q. _(37-band)_
+- **Juma shirinligi bildirishnomasi (D6 davomi).** `tauri-plugin-notification` orqali, ilova ochiq va qulfsiz bo'lganda, ritual kuni kuniga bir marta; ishga tushganda ham tekshiriladi. Windows'da toast ko'rinishi qo'lda tasdiqlanmagan. _(38-band)_
+- **A'zo PIN'ini almashtirish xavfsizligi (D6, qaror: 2026-10-15).** PIN o'zgartirish joriy PIN'ni talab qiladi; faqat PIN egasi (kattaning o'zi) almashtira oladi. Noto'g'ri joriy PIN urinishlari ham kutish qoidasiga kiradi. A'zolarni tahrirlash/o'chirish hali yo'q. _(39-band)_
+- **Chegarani o'zgartirish rozilikni bekor qiladi (D6, qaror: 2026-10-15).** Yangi chegara — yangi rozilik: hammasi qayta PIN kiritadi. Shunday qoldi. _(40-band)_
