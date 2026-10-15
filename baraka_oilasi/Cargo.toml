@@ -1,0 +1,73 @@
+[workspace]
+resolver = "2"
+members = [
+    "core/crates/money",
+    "core/crates/journal",
+    "core/crates/domain-common",
+    "core/crates/agreements",
+    "core/crates/domain-uy",
+    "core/crates/domain-kasbkor",
+    "core/crates/domain-musofir",
+    "core/crates/security",
+    "core/crates/storage",
+    "core/crates/pdf",
+    "core/crates/interchange",
+    "core/crates/app",
+    "core/crates/vectors",
+    "core/bindings/flutter",
+    "xtask",
+]
+exclude = ["apps/desktop/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.97"
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+baraka-money = { path = "core/crates/money" }
+baraka-journal = { path = "core/crates/journal" }
+baraka-domain-common = { path = "core/crates/domain-common" }
+baraka-agreements = { path = "core/crates/agreements" }
+baraka-domain-uy = { path = "core/crates/domain-uy" }
+baraka-security = { path = "core/crates/security" }
+baraka-storage = { path = "core/crates/storage" }
+baraka-app = { path = "core/crates/app" }
+
+sha2 = { version = "0.11", default-features = false }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+unicode-normalization = "0.1"
+argon2 = "0.6"
+chacha20poly1305 = "0.11"
+hkdf = "0.13"
+rand = "0.10"
+zeroize = { version = "1.9", features = ["derive"] }
+data-encoding = "2.11"
+uuid = { version = "1.28", features = ["v7"] }
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+chrono-tz = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+rusqlite_migration = "2.6"
+proptest = "1.12"
+num-bigint = "0.5"
+num-traits = "0.2"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+dbg_macro = "deny"
+todo = "deny"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

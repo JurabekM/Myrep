@@ -1,0 +1,104 @@
+{
+  "suite": "money_format",
+  "version": 1,
+  "description": "NBSP minglik ajratuvchi, vergul kasr, soʻm (U+02BB)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "fmt-001",
+      "input": {
+        "amount": "800000000",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "8 000 000 soʻm",
+        "utf8Hex": "38c2a0303030c2a0303030c2a0736fcabb6d"
+      }
+    },
+    {
+      "id": "fmt-002",
+      "input": {
+        "amount": "12345",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "123,45 soʻm",
+        "utf8Hex": "3132332c3435c2a0736fcabb6d"
+      }
+    },
+    {
+      "id": "fmt-003",
+      "input": {
+        "amount": "-800000000",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "-8 000 000 soʻm",
+        "utf8Hex": "2d38c2a0303030c2a0303030c2a0736fcabb6d"
+      }
+    },
+    {
+      "id": "fmt-004",
+      "input": {
+        "amount": "800000000",
+        "currency": "UZS",
+        "locale": "ru"
+      },
+      "expected": {
+        "text": "8 000 000 сум",
+        "utf8Hex": "38c2a0303030c2a0303030c2a0d181d183d0bc"
+      }
+    },
+    {
+      "id": "fmt-005",
+      "input": {
+        "amount": "800000000",
+        "currency": "UZS",
+        "locale": "uz-Cyrl"
+      },
+      "expected": {
+        "text": "8 000 000 сўм",
+        "utf8Hex": "38c2a0303030c2a0303030c2a0d181d19ed0bc"
+      }
+    },
+    {
+      "id": "fmt-006",
+      "input": {
+        "amount": "1000000",
+        "currency": "KRW",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "1 000 000 KRW",
+        "utf8Hex": "31c2a0303030c2a0303030c2a04b5257"
+      }
+    },
+    {
+      "id": "fmt-007",
+      "input": {
+        "amount": "5",
+        "currency": "UZS",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "0,05 soʻm",
+        "utf8Hex": "302c3035c2a0736fcabb6d"
+      }
+    },
+    {
+      "id": "fmt-008",
+      "input": {
+        "amount": "10000",
+        "currency": "USD",
+        "locale": "uz"
+      },
+      "expected": {
+        "text": "100 USD",
+        "utf8Hex": "313030c2a0555344"
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "suite": "round",
+  "version": 1,
+  "description": "round_half_up: yarimni noldan uzoqqa",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "round-001",
+      "input": {
+        "num": "5",
+        "den": "2"
+      },
+      "expected": {
+        "result": "3"
+      }
+    },
+    {
+      "id": "round-002",
+      "input": {
+        "num": "-5",
+        "den": "2"
+      },
+      "expected": {
+        "result": "-3"
+      }
+    },
+    {
+      "id": "round-003",
+      "input": {
+        "num": "-12",
+        "den": "5"
+      },
+      "expected": {
+        "result": "-2"
+      }
+    },
+    {
+      "id": "round-004",
+      "input": {
+        "num": "7",
+        "den": "2"
+      },
+      "expected": {
+        "result": "4"
+      }
+    }
+  ]
+}

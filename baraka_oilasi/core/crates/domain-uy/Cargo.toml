@@ -1,0 +1,20 @@
+[package]
+name = "baraka-domain-uy"
+description = "Uy makoni (Baraka daftari) domen qoidalari: 1–6-qonunlar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+baraka-money.workspace = true
+baraka-domain-common.workspace = true
+chrono.workspace = true
+serde.workspace = true
+# Amortizatsiyada (1 + r)^n ni aniq rational hisoblash uchun: 14 oyda ham i128 dan oshadi.
+num-bigint.workspace = true
+num-traits.workspace = true
+
+[lints]
+workspace = true

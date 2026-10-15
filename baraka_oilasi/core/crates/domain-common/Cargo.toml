@@ -1,0 +1,18 @@
+[package]
+name = "baraka-domain-common"
+description = "Umumiy domen tiplari: makon, a'zo, kategoriya toifalari, vaqt va ID abstraksiyalari"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+baraka-money.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+uuid.workspace = true
+serde.workspace = true
+
+[lints]
+workspace = true

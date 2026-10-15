@@ -1,0 +1,16 @@
+[package]
+name = "baraka-money"
+description = "Pul modeli: Money, Currency, allocate, percent_of, round_half_up, FX, formatlash (no_std)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true

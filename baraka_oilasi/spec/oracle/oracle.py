@@ -6,6 +6,8 @@ jurnal algoritmi 6-bo'limi bo'yicha. Rust yadrosi shu natijalar bilan solishtiri
 
 Ishlatish:
     python3 -I spec/oracle/oracle.py --selftest
+    python3 -I spec/oracle/oracle.py --check spec/test-vectors
+    python3 -I spec/oracle/oracle.py --generate spec/test-vectors   # faqat yangi case qo'shganda
 """
 from __future__ import annotations
 
@@ -172,6 +174,207 @@ def short_code(head: str) -> str:
     return "-".join(h[i:i + 4] for i in range(0, 16, 4))
 
 
+# --- 5-qonun: foyda/zarar taqsimoti -------------------------------------------------------
+def distribute(kind, result, partners, fixed_return=None, negligence=None):
+    if fixed_return is not None:
+        raise OracleError("GUARANTEED_RETURN_FORBIDDEN")
+    if len(partners) < 2:
+        raise OracleError("MIN_TWO_PARTNERS")
+    shares = [p["profitShareBp"] for p in partners]
+    if any(s < 0 for s in shares) or sum(shares) != 10000:
+        raise OracleError("PROFIT_SHARES_NOT_100")
+    if result >= 0:
+        return allocate(result, shares)
+    if kind == "MUSHARAKA":
+        return allocate(result, [max(0, p["capital"]) for p in partners])
+    if negligence is not None:
+        return allocate(result, [1 if p["id"] == negligence["partnerId"] else 0 for p in partners])
+    return allocate(result, [max(0, p["capital"]) if p["role"] in ("CAPITAL_PROVIDER", "BOTH") else 0 for p in partners])
+
+
+def recovery_split(income, household, extra, savings):
+    if min(household, extra, savings) < 0 or household + extra + savings != 10000:
+        raise OracleError("SPLIT_NOT_100")
+    if savings < 100:
+        raise OracleError("SAVINGS_SHARE_TOO_LOW")
+    return allocate(income, [household, extra, savings])
+
+
+# --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
+def _s(v):
+    return str(v)
+
+
+def _case(cid, inp, fn):
+    try:
+        return {"id": cid, "input": inp, "expected": fn()}
+    except OracleError as e:
+        return {"id": cid, "input": inp, "expected": {"error": e.code}}
+
+
+def _suite(name, desc, cases):
+    return {"suite": name, "version": 1, "description": desc, "generatedBy": "spec/oracle/oracle.py", "cases": cases}
+
+
+def _entry_json(e):
+    return {k: e[k] for k in e}
+
+
+UTF8_ENTRIES = [
+    {"id": "0192a000-0000-7000-8000-000000000011", "agreementId": "0192a000-0000-7000-8000-0000000000b1",
+     "kind": "OPENING_BALANCE", "partyId": "P1", "amount": {"minor": "50000000", "currency": "UZS"},
+     "date": "2026-09-01", "note": "Gʻayrat va Oʻgʻiloyning qarzi — boshlangʻich holat; маъно ʼ"},
+    {"id": "0192a000-0000-7000-8000-000000000012", "agreementId": "0192a000-0000-7000-8000-0000000000b1",
+     "kind": "DUTY_INCIDENT", "partyId": "P2", "date": "2026-09-15", "note": "Kasal boʻldi, \"bot\" toʻxtadi\n1 kun"},
+    {"id": "0192a000-0000-7000-8000-000000000013", "agreementId": "0192a000-0000-7000-8000-0000000000b1",
+     "kind": "CORRECTION", "partyId": "P1", "amount": {"minor": "-1000000", "currency": "UZS"},
+     "date": "2026-09-20", "correctsEntryId": "0192a000-0000-7000-8000-000000000011",
+     "refs": ["sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"]},
+]
+
+
+def build_suites():
+    U = "UZS"
+    suites = {}
+    alloc_cases = [
+        ("alloc-001", 100, [1, 1, 1]), ("alloc-002", 800000000, [70, 20, 10]), ("alloc-003", 12345, [1000, 9000]),
+        ("alloc-004", 100, [1] * 7), ("alloc-005", 0, [1, 2]), ("alloc-neg-001", -100, [1, 1, 1]),
+        ("alloc-neg-002", -200000000, [1, 0]), ("alloc-err-001", 100, [0, 0]),
+    ]
+    suites["allocate"] = _suite("allocate", "Largest remainder; teng kasrda kichik indeks; manfiy summa simmetrik", [
+        _case(cid, {"total": _s(t), "currency": U, "ratios": r}, lambda t=t, r=r: {"parts": [_s(x) for x in allocate(t, r)]})
+        for cid, t, r in alloc_cases])
+    suites["percent_of"] = _suite("percent_of", "percent_of = allocate([bp, 10000 - bp])[0]", [
+        _case(cid, {"amount": _s(a), "currency": U, "bp": bp}, lambda a=a, bp=bp: {"result": _s(percent_of(a, bp))})
+        for cid, a, bp in (("pct-001", 800000000, 1000), ("pct-002", 12345, 1000))])
+    suites["round"] = _suite("round", "round_half_up: yarimni noldan uzoqqa", [
+        _case(f"round-00{i}", {"num": _s(n), "den": _s(d)}, lambda n=n, d=d: {"result": _s(round_half_up(Fraction(n, d)))})
+        for i, (n, d) in enumerate(((5, 2), (-5, 2), (-12, 5), (7, 2)), 1)])
+
+    def fx(amount, cur, rf, rt, num, den):
+        if cur != rf:
+            raise OracleError("CURRENCY_MISMATCH")
+        return {"result": _s(convert(amount, rf, rt, num, den)), "currency": rt}
+    fx_cases = [("fx-001", 10000, "USD", "USD", "UZS", 12650, 1), ("fx-002", 1000000, "KRW", "KRW", "UZS", 91, 10),
+                ("fx-003", 910000, "UZS", "UZS", "KRW", 10, 91), ("fx-err-001", 10000, "USD", "EUR", "UZS", 14000, 1)]
+    suites["fx_convert"] = _suite("fx_convert", "1 major from = rateNum/rateDen major to; exponent hisobga olinadi", [
+        _case(cid, {"amount": _s(a), "currency": c, "rateFrom": rf, "rateTo": rt, "rateNum": _s(n), "rateDen": _s(d)},
+              lambda a=a, c=c, rf=rf, rt=rt, n=n, d=d: fx(a, c, rf, rt, n, d))
+        for cid, a, c, rf, rt, n, d in fx_cases])
+    fmt_cases = [("fmt-001", 800000000, U, "uz"), ("fmt-002", 12345, U, "uz"), ("fmt-003", -800000000, U, "uz"),
+                 ("fmt-004", 800000000, U, "ru"), ("fmt-005", 800000000, U, "uz-Cyrl"), ("fmt-006", 1000000, "KRW", "uz"),
+                 ("fmt-007", 5, U, "uz"), ("fmt-008", 10000, "USD", "uz")]
+    suites["money_format"] = _suite("money_format", "NBSP minglik ajratuvchi, vergul kasr, soʻm (U+02BB)", [
+        _case(cid, {"amount": _s(a), "currency": c, "locale": loc},
+              lambda a=a, c=c, loc=loc: {"text": money_format(a, c, loc), "utf8Hex": money_format(a, c, loc).encode().hex()})
+        for cid, a, c, loc in fmt_cases])
+
+    def amort(extra):
+        pay, months, ti, sched = amortize(3900000000, 2400, 14, extra)
+        return {"payment": _s(pay), "months": months, "totalInterest": _s(ti),
+                "schedule": [{"month": r["month"], "interest": _s(r["interest"]), "principal": _s(r["principal"]),
+                              "extra": _s(r["extra"]), "balance": _s(r["balance"])} for r in sched]}
+    suites["amortization"] = _suite("amortization", "Annuitet, muddatni qisqartirish rejimi (Anvar avtokrediti, 24% illyustrativ)", [
+        _case(cid, {"principal": "3900000000", "currency": U, "annualBp": 2400, "months": 14, "extraPerMonth": _s(ex)},
+              lambda ex=ex: amort(ex))
+        for cid, ex in (("amort-001", 0), ("amort-002", 160000000), ("amort-003", 240000000))])
+    suites["emergency_target"] = _suite("emergency_target", "round_half_up(Σ(ZARUR+KERAK, k oy) × N / k)", [
+        _case("emerg-001", {"currency": U, "monthlyEssentials": ["520000000", "500000000", "530000000"], "months": 6},
+              lambda: {"target": _s(emergency_target([520000000, 500000000, 530000000], 6))})])
+
+    def infl(items):
+        ch = [price_change_bp(o, n) for _, w, o, n in items]
+        idx = round_half_up(Fraction(sum(w * c for (_, w, _, _), c in zip(items, ch)), sum(w for _, w, _, _ in items)))
+        return {"changesBp": ch, "indexBp": idx}
+    basket = [("goʻsht", 5000, 8000000, 13000000), ("non", 5000, 200000, 300000)]
+    suites["personal_inflation"] = _suite("personal_inflation", "Mahsulot o'zgarishi va og'irlikli indeks, bp", [
+        _case("infl-001", {"currency": U, "items": [{"name": n, "weightBp": w, "oldPrice": _s(o), "newPrice": _s(nw)} for n, w, o, nw in basket]},
+              lambda: infl(basket))])
+    gap_cases = [("gap-001", 800000000, 535000000, 165000000, 0, 0), ("gap-002", 800000000, 535000000, 165000000, 0, 60000000)]
+    suites["unexplained_gap"] = _suite("unexplained_gap", "income − obligations − expenses − vaultNet − Δ(naqd + karta)", [
+        _case(cid, {"currency": U, "income": _s(i), "obligations": _s(o), "expenses": _s(e), "vaultNet": _s(v), "balanceDelta": _s(b)},
+              lambda i=i, o=o, e=e, v=v, b=b: {"gap": _s(unexplained_gap(i, o, e, v, b))})
+        for cid, i, o, e, v, b in gap_cases])
+    hist = [100000000, 120000000, 110000000]
+    spike_cases = [("ps-001", 100000000, None, 150000000), ("ps-002", 100000000, None, 149999999),
+                   ("ps-003", None, hist, 220000000), ("ps-004", None, hist, 219999999), ("ps-005", 100000000, None, -50000000)]
+    suites["profit_spike"] = _suite("profit_spike", "A: actual ≥ 150% reja; B: actual ≥ 200% oxirgi 3 davr o'rtachasi", [
+        _case(cid, {"currency": U, "plan": None if p is None else _s(p), "lastThree": None if h is None else [_s(x) for x in h], "actual": _s(a)},
+              lambda p=p, h=h, a=a: {"alert": profit_spike(p, h, a)})
+        for cid, p, h, a in spike_cases])
+    mud = [{"id": "P1", "role": "CAPITAL_PROVIDER", "profitShareBp": 5000, "capital": 800000000},
+           {"id": "P2", "role": "WORKER", "profitShareBp": 5000, "capital": 0}]
+    mush = [{"id": "P1", "role": "BOTH", "profitShareBp": 6000, "capital": 600000000},
+            {"id": "P2", "role": "BOTH", "profitShareBp": 4000, "capital": 200000000}]
+    dist_cases = [("dist-001", "MUDARABA", 300000000, mud, None, None), ("dist-002", "MUDARABA", -200000000, mud, None, None),
+                  ("dist-003", "MUSHARAKA", -300000000, mush, None, None), ("dist-004", "MUDARABA", 300000000, mud, 50000000, None),
+                  ("dist-005", "MUDARABA", -200000000, mud, None, {"partnerId": "P2", "note": "shart buzildi"})]
+
+    def pj(ps):
+        return [dict(p, capital=_s(p["capital"])) for p in ps]
+    suites["profit_distribution"] = _suite("profit_distribution", "Mudoraba/musharaka foyda va zarar taqsimoti", [
+        _case(cid, {"kind": k, "currency": U, "result": _s(r), "partners": pj(ps), "fixedReturn": None if f is None else _s(f), "negligence": ng},
+              lambda k=k, r=r, ps=ps, f=f, ng=ng: {"parts": [_s(x) for x in distribute(k, r, ps, f, ng)]})
+        for cid, k, r, ps, f, ng in dist_cases])
+    drs_cases = [("drs-001", 800000000, 7000, 2000, 1000), ("drs-002", 800000000, 8000, 2000, 0),
+                 ("drs-003", 800000000, 7900, 2000, 100), ("drs-004", 800000000, 7000, 2000, 900)]
+
+    def drs(i, h, e, s):
+        a, b, c = recovery_split(i, h, e, s)
+        return {"household": _s(a), "extraDebt": _s(b), "savings": _s(c)}
+    suites["debt_recovery_split"] = _suite("debt_recovery_split", "DEBT_RECOVERY 70/20/10; jamg'arma ulushi ≥ 1%", [
+        _case(cid, {"currency": U, "income": _s(i), "householdBp": h, "extraDebtBp": e, "savingsBp": s},
+              lambda i=i, h=h, e=e, s=s: drs(i, h, e, s))
+        for cid, i, h, e, s in drs_cases])
+    tampered = json.loads(json.dumps(CHAIN_ENTRIES))
+    tampered[1]["amount"]["minor"] = "300000001"
+    suites["journal_chain"] = _suite("journal_chain", "JCS + SHA-256 zanjiri; whitelist v1; genesis = 64 ta 0", [
+        {"id": "chain-001-003", "input": {"entries": CHAIN_ENTRIES}, "expected": {"hashes": chain(CHAIN_ENTRIES)}},
+        {"id": "chain-neg-001", "input": {"entries": tampered, "storedHashes": CHAIN_HASHES}, "expected": {"firstBroken": verify_chain(tampered, CHAIN_HASHES)}},
+        {"id": "chain-utf8-opt-corr-001", "input": {"entries": UTF8_ENTRIES, "withShortCodes": True}, "expected": {"hashes": chain(UTF8_ENTRIES), "shortCodes": [short_code(h) for h in chain(UTF8_ENTRIES)]}},
+    ])
+    return suites
+
+
+ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
+                 "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
+                 "journal_chain")
+
+
+def generate(directory: str) -> None:
+    import os
+    os.makedirs(directory, exist_ok=True)
+    for name, suite in build_suites().items():
+        with open(os.path.join(directory, f"{name}.json"), "w", encoding="utf-8") as f:
+            json.dump(suite, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+    print(f"oracle: {len(ORACLE_SUITES)} ta suite yozildi -> {directory}")
+
+
+def check(directory: str) -> int:
+    import os
+    bad = 0
+    for name, suite in build_suites().items():
+        path = os.path.join(directory, f"{name}.json")
+        if not os.path.exists(path):
+            print(f"YO'Q: {path}")
+            bad += 1
+            continue
+        with open(path, encoding="utf-8") as f:
+            on_disk = json.load(f)
+        disk_cases = {c["id"]: c for c in on_disk.get("cases", [])}
+        for case in suite["cases"]:
+            got = disk_cases.get(case["id"])
+            if got is None:
+                print(f"{name}/{case['id']}: faylda yo'q")
+                bad += 1
+            elif got.get("input") != case["input"] or got.get("expected") != case["expected"]:
+                print(f"{name}/{case['id']}: oracle bilan mos emas")
+                bad += 1
+    print("oracle check: OK" if bad == 0 else f"oracle check: {bad} ta muammo")
+    return 1 if bad else 0
+
+
 # --- selftest ---------------------------------------------------------------------------
 AGR = "0192a000-0000-7000-8000-0000000000a1"
 CHAIN_ENTRIES = [
@@ -260,11 +463,17 @@ def selftest() -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--selftest", action="store_true", help="hujjatdagi barcha qiymatlarni tekshirish")
-    # Y2 vazifasida: --check spec/test-vectors (JSON vektor fayllarini oracle bilan solishtirish)
+    ap.add_argument("--generate", metavar="DIR", help="oracle suite'larini DIR ga yozish")
+    ap.add_argument("--check", metavar="DIR", help="DIR dagi vektorlar oracle bilan mosligini tekshirish")
     args = ap.parse_args()
     if args.selftest:
         selftest()
         return 0
+    if args.generate:
+        generate(args.generate)
+        return 0
+    if args.check:
+        return check(args.check)
     ap.print_help()
     return 1
 

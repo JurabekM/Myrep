@@ -1,0 +1,90 @@
+{
+  "suite": "streak",
+  "version": 1,
+  "description": "Juma bilan boshlanadigan haftalar; joriy hafta tugamaguncha ketma-ketlik uzilmaydi",
+  "generatedBy": "qo'lda",
+  "cases": [
+    {
+      "id": "streak-001",
+      "input": {
+        "today": "2026-10-15",
+        "deposits": [
+          "2026-09-26",
+          "2026-10-03",
+          "2026-10-15"
+        ]
+      },
+      "expected": {
+        "currentWeeks": 3,
+        "longestWeeks": 3,
+        "totalWeeks": 3,
+        "currentWeekDone": true
+      }
+    },
+    {
+      "id": "streak-002",
+      "input": {
+        "today": "2026-10-16",
+        "deposits": [
+          "2026-09-26",
+          "2026-10-03",
+          "2026-10-15"
+        ]
+      },
+      "expected": {
+        "currentWeeks": 3,
+        "longestWeeks": 3,
+        "totalWeeks": 3,
+        "currentWeekDone": false
+      }
+    },
+    {
+      "id": "streak-003",
+      "input": {
+        "today": "2026-10-23",
+        "deposits": [
+          "2026-09-26",
+          "2026-10-03",
+          "2026-10-15"
+        ]
+      },
+      "expected": {
+        "currentWeeks": 0,
+        "longestWeeks": 3,
+        "totalWeeks": 3,
+        "currentWeekDone": false
+      }
+    },
+    {
+      "id": "streak-004",
+      "input": {
+        "today": "2026-10-03",
+        "deposits": [
+          "2026-09-04",
+          "2026-09-25",
+          "2026-10-02",
+          "2026-12-01"
+        ]
+      },
+      "expected": {
+        "currentWeeks": 2,
+        "longestWeeks": 2,
+        "totalWeeks": 3,
+        "currentWeekDone": true
+      }
+    },
+    {
+      "id": "streak-005",
+      "input": {
+        "today": "2026-10-16",
+        "deposits": []
+      },
+      "expected": {
+        "currentWeeks": 0,
+        "longestWeeks": 0,
+        "totalWeeks": 0,
+        "currentWeekDone": false
+      }
+    }
+  ]
+}

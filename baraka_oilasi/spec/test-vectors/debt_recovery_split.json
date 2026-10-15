@@ -1,0 +1,64 @@
+{
+  "suite": "debt_recovery_split",
+  "version": 1,
+  "description": "DEBT_RECOVERY 70/20/10; jamg'arma ulushi ≥ 1%",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "drs-001",
+      "input": {
+        "currency": "UZS",
+        "income": "800000000",
+        "householdBp": 7000,
+        "extraDebtBp": 2000,
+        "savingsBp": 1000
+      },
+      "expected": {
+        "household": "560000000",
+        "extraDebt": "160000000",
+        "savings": "80000000"
+      }
+    },
+    {
+      "id": "drs-002",
+      "input": {
+        "currency": "UZS",
+        "income": "800000000",
+        "householdBp": 8000,
+        "extraDebtBp": 2000,
+        "savingsBp": 0
+      },
+      "expected": {
+        "error": "SAVINGS_SHARE_TOO_LOW"
+      }
+    },
+    {
+      "id": "drs-003",
+      "input": {
+        "currency": "UZS",
+        "income": "800000000",
+        "householdBp": 7900,
+        "extraDebtBp": 2000,
+        "savingsBp": 100
+      },
+      "expected": {
+        "household": "632000000",
+        "extraDebt": "160000000",
+        "savings": "8000000"
+      }
+    },
+    {
+      "id": "drs-004",
+      "input": {
+        "currency": "UZS",
+        "income": "800000000",
+        "householdBp": 7000,
+        "extraDebtBp": 2000,
+        "savingsBp": 900
+      },
+      "expected": {
+        "error": "SPLIT_NOT_100"
+      }
+    }
+  ]
+}

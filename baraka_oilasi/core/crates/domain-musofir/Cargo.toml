@@ -1,0 +1,13 @@
+[package]
+name = "baraka-domain-musofir"
+description = "Musofir makoni domen qoidalari (M-vazifalarda to'ldiriladi)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

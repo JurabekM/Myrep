@@ -1,0 +1,158 @@
+{
+  "suite": "profit_distribution",
+  "version": 1,
+  "description": "Mudoraba/musharaka foyda va zarar taqsimoti",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "dist-001",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "result": "300000000",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "fixedReturn": null,
+        "negligence": null
+      },
+      "expected": {
+        "parts": [
+          "150000000",
+          "150000000"
+        ]
+      }
+    },
+    {
+      "id": "dist-002",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "result": "-200000000",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "fixedReturn": null,
+        "negligence": null
+      },
+      "expected": {
+        "parts": [
+          "-200000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "dist-003",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "result": "-300000000",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 6000,
+            "capital": "600000000"
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 4000,
+            "capital": "200000000"
+          }
+        ],
+        "fixedReturn": null,
+        "negligence": null
+      },
+      "expected": {
+        "parts": [
+          "-225000000",
+          "-75000000"
+        ]
+      }
+    },
+    {
+      "id": "dist-004",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "result": "300000000",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "fixedReturn": "50000000",
+        "negligence": null
+      },
+      "expected": {
+        "error": "GUARANTEED_RETURN_FORBIDDEN"
+      }
+    },
+    {
+      "id": "dist-005",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "result": "-200000000",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "fixedReturn": null,
+        "negligence": {
+          "partnerId": "P2",
+          "note": "shart buzildi"
+        }
+      },
+      "expected": {
+        "parts": [
+          "0",
+          "-200000000"
+        ]
+      }
+    }
+  ]
+}
