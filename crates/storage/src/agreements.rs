@@ -9,7 +9,7 @@ use domain::journal::{
 };
 use money::{Currency, Money};
 use rusqlite::{Connection, OptionalExtension, Row, params};
-use time::OffsetDateTime;
+use time::{Date, OffsetDateTime};
 
 use crate::StorageError;
 use crate::finance::{format_date, parse_date};
@@ -38,6 +38,8 @@ pub struct AgreementRow {
     pub version: i64,
     /// Javoblar (JSON).
     pub answers_json: String,
+    /// Amal qilish boshlanishi (og'zaki kelishuvda o'tmishda bo'lishi mumkin).
+    pub effective_from: Option<Date>,
     /// Yaratilgan vaqt.
     pub created_at: OffsetDateTime,
     /// Oxirgi o'zgarish vaqti.
@@ -60,8 +62,8 @@ impl<'a> AgreementRepo<'a> {
     /// Yangi kelishuv qo'shadi.
     pub fn insert(&self, row: &AgreementRow) -> Result<(), StorageError> {
         self.conn.execute(
-            "INSERT INTO agreements (id, household_id, type, title, status, version, answers_json, created_at, updated_at, origin_device_id) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            "INSERT INTO agreements (id, household_id, type, title, status, version, answers_json, created_at, updated_at, origin_device_id, effective_from) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             params![
                 row.id,
                 row.household_id,
@@ -73,6 +75,7 @@ impl<'a> AgreementRepo<'a> {
                 format_ts(row.created_at)?,
                 format_ts(row.updated_at)?,
                 row.origin_device_id,
+                row.effective_from.map(format_date).transpose()?,
             ],
         )?;
         Ok(())
@@ -82,7 +85,7 @@ impl<'a> AgreementRepo<'a> {
     pub fn find(&self, id: &str) -> Result<Option<AgreementRow>, StorageError> {
         self.conn
             .query_row(
-                "SELECT id, household_id, type, title, status, version, answers_json, created_at, updated_at, origin_device_id \
+                "SELECT id, household_id, type, title, status, version, answers_json, created_at, updated_at, origin_device_id, effective_from \
                  FROM agreements WHERE id = ?1 AND deleted_at IS NULL",
                 [id],
                 read_agreement,
@@ -95,7 +98,7 @@ impl<'a> AgreementRepo<'a> {
     /// Xonadonning kelishuvlari, yaratilish tartibida.
     pub fn list(&self, household_id: &str) -> Result<Vec<AgreementRow>, StorageError> {
         let mut statement = self.conn.prepare(
-            "SELECT id, household_id, type, title, status, version, answers_json, created_at, updated_at, origin_device_id \
+            "SELECT id, household_id, type, title, status, version, answers_json, created_at, updated_at, origin_device_id, effective_from \
              FROM agreements WHERE household_id = ?1 AND deleted_at IS NULL ORDER BY created_at, id",
         )?;
         let rows = statement.query_map([household_id], read_agreement)?;
@@ -134,6 +137,30 @@ impl<'a> AgreementRepo<'a> {
             None => StorageError::NotFound,
         })
     }
+
+    /// Holat va amal qilish sanasini yangilaydi (versiya o'zgarmaydi).
+    pub fn set_status(
+        &self,
+        id: &str,
+        status: AgreementStatus,
+        effective_from: Option<Date>,
+        now: OffsetDateTime,
+    ) -> Result<(), StorageError> {
+        let changed = self.conn.execute(
+            "UPDATE agreements SET status = ?2, effective_from = COALESCE(?3, effective_from), updated_at = ?4 \
+             WHERE id = ?1 AND deleted_at IS NULL",
+            params![
+                id,
+                status.code(),
+                effective_from.map(format_date).transpose()?,
+                format_ts(now)?,
+            ],
+        )?;
+        if changed == 0 {
+            return Err(StorageError::NotFound);
+        }
+        Ok(())
+    }
 }
 
 struct RawAgreement {
@@ -147,6 +174,7 @@ struct RawAgreement {
     created_at: String,
     updated_at: String,
     origin_device_id: String,
+    effective_from: Option<String>,
 }
 
 fn read_agreement(row: &Row<'_>) -> rusqlite::Result<RawAgreement> {
@@ -161,6 +189,7 @@ fn read_agreement(row: &Row<'_>) -> rusqlite::Result<RawAgreement> {
         created_at: row.get(7)?,
         updated_at: row.get(8)?,
         origin_device_id: row.get(9)?,
+        effective_from: row.get(10)?,
     })
 }
 
@@ -179,7 +208,96 @@ impl RawAgreement {
             created_at: parse_ts(&self.created_at)?,
             updated_at: parse_ts(&self.updated_at)?,
             origin_device_id: self.origin_device_id,
+            effective_from: self.effective_from.as_deref().map(parse_date).transpose()?,
         })
+    }
+}
+
+/// Imzo yozuvi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SignatureRow {
+    /// Tomon / guvoh / hakam identifikatori.
+    pub party_id: String,
+    /// Roli: `PARTY | WITNESS | ARBITER`.
+    pub role: String,
+    /// Kelishuv versiyasi.
+    pub version: i64,
+    /// Rasm (PNG data URL).
+    pub image: String,
+    /// Imzolangan vaqt.
+    pub created_at: OffsetDateTime,
+}
+
+/// Imzolar.
+pub struct SignatureRepo<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> SignatureRepo<'a> {
+    /// Ulanish ustida repo.
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    /// Imzo qo'shadi (shu versiya uchun bor bo'lsa — almashtiradi).
+    pub fn upsert(
+        &self,
+        id: &str,
+        household_id: &str,
+        agreement_id: &str,
+        row: &SignatureRow,
+        origin_device_id: &str,
+    ) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT INTO signatures (id, household_id, agreement_id, party_id, role, version, image, created_at, origin_device_id) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) \
+             ON CONFLICT (agreement_id, party_id, role, version) DO UPDATE SET image = excluded.image, created_at = excluded.created_at",
+            params![
+                id,
+                household_id,
+                agreement_id,
+                row.party_id,
+                row.role,
+                row.version,
+                row.image,
+                format_ts(row.created_at)?,
+                origin_device_id,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Berilgan versiya imzolari.
+    pub fn list_for_version(
+        &self,
+        agreement_id: &str,
+        version: i64,
+    ) -> Result<Vec<SignatureRow>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT party_id, role, version, image, created_at FROM signatures \
+             WHERE agreement_id = ?1 AND version = ?2 ORDER BY created_at, party_id",
+        )?;
+        let rows = statement.query_map(params![agreement_id, version], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, i64>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+            ))
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            let (party_id, role, version, image, created) = row?;
+            out.push(SignatureRow {
+                party_id,
+                role,
+                version,
+                image,
+                created_at: parse_ts(&created)?,
+            });
+        }
+        Ok(out)
     }
 }
 

@@ -14,6 +14,10 @@ use typst::utils::LazyHash;
 use typst::{Library, World};
 
 /// Bayonnoma shrifti. Libertinus Serif ʻ (U+02BB) va ʼ (U+02BC) belgilarini o'z ichiga oladi (testlangan).
+mod agreement;
+
+pub use agreement::AgreementDocument;
+
 pub const FONT_FAMILY: &str = "Libertinus Serif";
 
 /// Bayonnoma ma'lumotlari. Barcha matnlar tayyor (tarjima qilingan, formatlangan) holda beriladi.
@@ -56,13 +60,21 @@ pub fn render_council_report(report: &CouncilReport) -> Result<Vec<u8>, PdfError
     typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)
 }
 
+/// Kelishuv hujjatini PDF baytlariga aylantiradi.
+pub fn render_agreement(document: &AgreementDocument) -> Result<Vec<u8>, PdfError> {
+    let world = ReportWorld::new(agreement::template(document));
+    let warned = typst::compile::<PagedDocument>(&world);
+    let document = warned.output.map_err(|_| PdfError::Compile)?;
+    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)
+}
+
 /// Ilova bilan birga keladigan shrift baytlari (testlar uchun ham).
 pub fn font_data() -> impl Iterator<Item = &'static [u8]> {
     typst_assets::fonts()
 }
 
 /// Typst satr literali: qo'shtirnoq va backslash escape qilinadi. Natija — qiymat, markup emas.
-fn lit(text: &str) -> String {
+pub(crate) fn lit(text: &str) -> String {
     let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
     format!("\"{escaped}\"")
 }
@@ -106,7 +118,7 @@ fn template(report: &CouncilReport) -> String {
     out
 }
 
-fn section(title: &str) -> String {
+pub(crate) fn section(title: &str) -> String {
     format!(
         "#text(size: 13pt, weight: \"bold\")[#({})]\n#v(0.4em)\n",
         lit(title)
@@ -114,7 +126,7 @@ fn section(title: &str) -> String {
 }
 
 /// Ikki ustunli jadval: chapda — nomi, o'ngda — qiymat.
-fn pairs_table(rows: &[(String, String)]) -> String {
+pub(crate) fn pairs_table(rows: &[(String, String)]) -> String {
     let mut out =
         String::from("#table(columns: (1fr, auto), stroke: none, inset: (x: 4pt, y: 5pt),\n");
     for (left, right) in rows {

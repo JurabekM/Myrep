@@ -32,6 +32,7 @@ fn database() -> Database {
             status: AgreementStatus::Draft,
             version: 1,
             answers_json: "{}".to_owned(),
+            effective_from: None,
             created_at: NOW,
             updated_at: NOW,
             origin_device_id: DEVICE.to_owned(),

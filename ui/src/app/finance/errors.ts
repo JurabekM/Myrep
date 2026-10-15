@@ -34,6 +34,12 @@ export const RULE_ERROR_KEYS = {
   SUBSCRIPTION_CANCELLED: "errors.subscriptionCancelled",
   BASELINE_NOT_PAST: "errors.baselineNotPast",
   CSV_HAS_ERRORS: "errors.csvHasErrors",
+  AGREEMENT_INCOMPLETE: "errors.agreementIncomplete",
+  SIGNATURES_MISSING: "errors.signaturesMissing",
+  AGREEMENT_NOT_SIGNED: "errors.agreementNotSigned",
+  AGREEMENT_LOCKED: "errors.agreementLocked",
+  NOT_KEEPER_DEVICE: "errors.notKeeperDevice",
+  VERSION_CONFLICT: "errors.versionConflict",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

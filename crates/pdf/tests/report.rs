@@ -82,3 +82,68 @@ fn bayonnoma_snapshot_bilan_mos() {
         "bayonnoma snapshot'dan farq qiladi; o'zgarish kutilgan bo'lsa, UPDATE_SNAPSHOTS=1 bilan yangilang"
     );
 }
+
+/// Kelishuv hujjati namunasi: o'zbekcha belgilar, 9 bo'lim, imzolar.
+fn agreement_sample() -> pdf::AgreementDocument {
+    pdf::AgreementDocument {
+        title: "Sheriklik kelishuvi — «Non sexi»".to_owned(),
+        subtitle: "Sheriklik (musharaka) · 1-versiya".to_owned(),
+        status_line: "Imzolangan · amal qiladi 01.10.2026 dan · tuzilgan 15.10.2026".to_owned(),
+        parties: vec![
+            ("Anvar Karimov".to_owned(), "sherik (men)".to_owned()),
+            ("Dilshod Rahimov".to_owned(), "sherik".to_owned()),
+        ],
+        contributions: vec![
+            (
+                "Anvar Karimov".to_owned(),
+                "pul: 3 000 000 soʻm — naqd".to_owned(),
+            ),
+            (
+                "Dilshod Rahimov".to_owned(),
+                "mehnat: yetkazib berish".to_owned(),
+            ),
+        ],
+        duties: vec![(
+            "Buyurtmalarni yetkazish — Dilshod Rahimov".to_owned(),
+            "Bajarilmasa: 1 kun ichida xabar beradi va oʻrniga yechim topadi".to_owned(),
+        )],
+        profit: "Foyda ulush bo'yicha: Anvar Karimov 50 %, Dilshod Rahimov 50 %.".to_owned(),
+        loss: "Zarar kapitalga mutanosib (musharaka).".to_owned(),
+        custody:
+            "Pul: umumiy karta. Hisobni yuritadi: Anvar Karimov. Ko'rib chiqish: har 30 kunda."
+                .to_owned(),
+        exit: "Ogohlantirish: 30 kun. Baholash: oxirgi koʻrik boʻyicha. To'lash: 3 oy ichida."
+            .to_owned(),
+        arbiter: "Sobir hoji (mahalla oqsoqoli).".to_owned(),
+        term: "Muddat: 12 oy. Keyingi ko'rib chiqish: 01.10.2027.".to_owned(),
+        signatures: vec![
+            (
+                "Anvar Karimov (tomon)".to_owned(),
+                "imzolangan 15.10.2026".to_owned(),
+            ),
+            (
+                "Dilshod Rahimov (tomon)".to_owned(),
+                "imzolangan 15.10.2026".to_owned(),
+            ),
+            ("Sobir hoji (hakam)".to_owned(), "imzo yoʻq".to_owned()),
+        ],
+        disclaimer: "Shaxsiy hisob uchun yozuv. Yuridik maslahat emas.".to_owned(),
+    }
+}
+
+#[test]
+fn kelishuv_pdf_snapshot_bilan_mos() {
+    let bytes = pdf::render_agreement(&agreement_sample()).expect("kelishuv");
+    assert!(bytes.starts_with(b"%PDF-"));
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("snapshots")
+        .join("agreement.pdf");
+    if std::env::var_os("UPDATE_SNAPSHOTS").is_some() {
+        std::fs::write(&path, &bytes).expect("snapshot yozilsin");
+        return;
+    }
+    let expected =
+        std::fs::read(&path).expect("snapshot mavjud (UPDATE_SNAPSHOTS=1 bilan yarating)");
+    assert!(expected == bytes, "kelishuv PDF'i snapshot bilan mos emas");
+}

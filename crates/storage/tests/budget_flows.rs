@@ -33,9 +33,9 @@ fn uzs(major: i64) -> Money {
 }
 
 #[test]
-fn sxema_v9_qollanadi() {
+fn sxema_v10_qollanadi() {
     let db = database();
-    assert_eq!(db.schema_version().expect("versiya"), 9);
+    assert_eq!(db.schema_version().expect("versiya"), 10);
 }
 
 #[test]

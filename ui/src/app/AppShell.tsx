@@ -9,6 +9,7 @@ import { HomePage } from "./pages/HomePage";
 import { IncomePage } from "./pages/IncomePage";
 import { ObligationsPage } from "./pages/ObligationsPage";
 import { PricesPage } from "./pages/PricesPage";
+import { AgreementsPage } from "./agreements/AgreementsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { VaultPage } from "./pages/VaultPage";
 import { WhoseMoneyPage } from "./pages/WhoseMoneyPage";
@@ -97,6 +98,8 @@ function CurrentPage({ page }: { page: PageId }) {
       return <BudgetPage />;
     case "prices":
       return <PricesPage />;
+    case "partnerships":
+      return <AgreementsPage />;
     case "settings":
       return <SettingsPage />;
     default:

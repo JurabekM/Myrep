@@ -14,7 +14,9 @@ mod progress;
 mod repo;
 pub mod schema;
 
-pub use agreements::{AgreementRepo, AgreementRow, JournalRepo, StoredEntry};
+pub use agreements::{
+    AgreementRepo, AgreementRow, JournalRepo, SignatureRepo, SignatureRow, StoredEntry,
+};
 pub use budget::{EnvelopeRepo, RescueRepo, SubscriptionRepo, transfer_to_vault};
 pub use db::Database;
 pub use error::StorageError;

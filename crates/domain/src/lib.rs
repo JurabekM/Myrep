@@ -184,6 +184,18 @@ pub enum DomainError {
     /// CSV matnida xatoli satrlar bor: import qilinmaydi.
     #[error("CSV matnida xatoli satrlar bor")]
     CsvHasErrors,
+    /// Kelishuv 9/9 to'ldirilmagan: imzolab bo'lmaydi.
+    #[error("kelishuvning barcha 9 savoli to'ldirilmagan")]
+    AgreementIncomplete,
+    /// Hamma tomon (va hakam) imzolamagan: yakunlab bo'lmaydi.
+    #[error("barcha imzolar hali qo'yilmagan")]
+    SignaturesMissing,
+    /// Kelishuv imzolanmagan: jurnalga yozib bo'lmaydi.
+    #[error("kelishuv hali imzolanmagan")]
+    AgreementNotSigned,
+    /// Kelishuv nizoda yoki tugagan: o'zgartirib bo'lmaydi.
+    #[error("kelishuv nizoda yoki tugagan")]
+    AgreementLocked,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -232,6 +244,10 @@ impl DomainError {
             Self::NotKeeperDevice => "NOT_KEEPER_DEVICE",
             Self::BaselineNotPast => "BASELINE_NOT_PAST",
             Self::CsvHasErrors => "CSV_HAS_ERRORS",
+            Self::AgreementIncomplete => "AGREEMENT_INCOMPLETE",
+            Self::SignaturesMissing => "SIGNATURES_MISSING",
+            Self::AgreementNotSigned => "AGREEMENT_NOT_SIGNED",
+            Self::AgreementLocked => "AGREEMENT_LOCKED",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

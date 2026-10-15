@@ -320,6 +320,288 @@ pub struct BaselineInputDto {
     pub period_start: String,
 }
 
+/// Kelishuv tomoni (1-savol).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PartyDto {
+    /// Identifikator (`P1`, `P2`, ...).
+    pub id: String,
+    /// To'liq ism-sharif.
+    pub name: String,
+    /// Roli.
+    pub role: String,
+    /// Aloqasi.
+    pub relation: String,
+    /// Shu qurilma egasi.
+    pub is_me: bool,
+}
+
+/// Hissa (2-savol).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ContributionDto {
+    /// Tomon.
+    pub party_id: String,
+    /// Turi: `money | goods | labor | connections`.
+    pub kind: String,
+    /// Miqdori matni (pul bo'lsa), bo'sh bo'lishi mumkin.
+    pub amount: String,
+    /// Tavsifi.
+    pub description: String,
+}
+
+/// Vazifa (3-savol).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DutyDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub title: String,
+    /// Mas'ul tomon; bo'sh — egasiz (qabul qilinmaydi).
+    pub owner_party_id: Option<String>,
+    /// «Bajarilmasa» bandi.
+    pub breach_clause: String,
+}
+
+/// Foyda ulushi (4-savol).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfitShareDto {
+    /// Tomon.
+    pub party_id: String,
+    /// Ulush, bp.
+    pub share_bp: u32,
+}
+
+/// Kelishuv javoblari — 9 savol (SPEC 2F.2). «Tegishli emas» — sabab matni bilan.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AgreementAnswersDto {
+    /// 1. Tomonlar.
+    pub parties: Vec<PartyDto>,
+    /// 2. Hissalar.
+    pub contributions: Vec<ContributionDto>,
+    /// 3. Vazifalar.
+    pub duties: Vec<DutyDto>,
+    /// 3 (LOAN). Qaytarish jadvali bormi.
+    pub has_schedule: bool,
+    /// 4. Ulushlar (bp).
+    pub profit_shares: Vec<ProfitShareDto>,
+    /// 4. Qat'iy summa matni (taqiqlangan; bo'sh bo'lishi kerak).
+    pub profit_fixed_amount: String,
+    /// 4. «Tegishli emas» sababi.
+    pub profit_not_applicable: Option<String>,
+    /// 5. Zarar qoidasi.
+    pub loss_text: String,
+    /// 5. «Tegishli emas» sababi.
+    pub loss_not_applicable: Option<String>,
+    /// 6. Pul qayerda.
+    pub custody_location: String,
+    /// 6. Hisob yurituvchi tomon.
+    pub keeper_party_id: Option<String>,
+    /// 6. Ko'rib chiqish davriyligi, kunlarda.
+    pub review_every_days: u32,
+    /// 7. Ogohlantirish muddati, kunlarda.
+    pub exit_notice_days: u32,
+    /// 7. Ulushni baholash.
+    pub exit_valuation: String,
+    /// 7. To'lash tartibi.
+    pub exit_payout: String,
+    /// 7. Mol-mulk.
+    pub exit_assets: String,
+    /// 7. «Tegishli emas» sababi.
+    pub exit_not_applicable: Option<String>,
+    /// 8. Hakam ismi (bo'sh — yo'q).
+    pub arbiter_name: String,
+    /// 8. Hakam roli.
+    pub arbiter_role: String,
+    /// 9. Muddat, oylarda.
+    pub term_months: u32,
+    /// 9. Keyingi ko'rib chiqish sanasi (`YYYY-MM-DD`), bo'sh — yo'q.
+    pub review_date: String,
+}
+
+/// To'liqlik natijasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CompletenessDto {
+    /// 9/9 javoblangan.
+    pub complete: bool,
+    /// Javobsiz savollar (1–9).
+    pub missing: Vec<u32>,
+    /// Xato kodlari.
+    pub errors: Vec<String>,
+}
+
+/// Imzo yozuvi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SignatureDto {
+    /// Tomon (yoki guvoh/hakam) identifikatori.
+    pub party_id: String,
+    /// Roli: `PARTY | WITNESS | ARBITER`.
+    pub role: String,
+    /// Qaysi versiya uchun.
+    pub version: u32,
+    /// Imzolangan vaqt (RFC 3339).
+    pub signed_at: String,
+    /// Rasm (PNG, data URL).
+    pub image: String,
+}
+
+/// Kelishuv (to'liq).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AgreementDto {
+    /// Identifikator.
+    pub id: String,
+    /// Turi: `LOAN | PARTNERSHIP | FAMILY | OTHER`.
+    pub kind: String,
+    /// Sarlavha.
+    pub title: String,
+    /// Holati: `DRAFT | SIGNED | IN_DISPUTE | ENDED`.
+    pub status: String,
+    /// Versiya.
+    pub version: u32,
+    /// Amal qilish boshlanishi (`YYYY-MM-DD`), bo'lsa (og'zaki kelishuvda o'tmishda).
+    pub effective_from: Option<String>,
+    /// Javoblar.
+    pub answers: AgreementAnswersDto,
+    /// To'liqlik.
+    pub completeness: CompletenessDto,
+    /// Joriy versiya imzolari.
+    pub signatures: Vec<SignatureDto>,
+    /// Jurnal yozuvlari soni.
+    pub journal_count: u32,
+    /// Zanjir boshi (oxirgi xesh), bo'lsa.
+    pub chain_head: Option<String>,
+    /// Zanjir to'g'ri (qayta hisoblangan).
+    pub chain_ok: bool,
+    /// Shu qurilma hisob yurituvchimi (jurnalga yoza oladimi).
+    pub can_write_journal: bool,
+}
+
+/// Kelishuv ro'yxati satri.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AgreementSummaryDto {
+    /// Identifikator.
+    pub id: String,
+    /// Turi.
+    pub kind: String,
+    /// Sarlavha.
+    pub title: String,
+    /// Holati.
+    pub status: String,
+    /// Versiya.
+    pub version: u32,
+    /// Javoblangan savollar (0–9).
+    pub answered: u32,
+    /// Keyingi ko'rib chiqish sanasi, bo'lsa.
+    pub review_date: Option<String>,
+}
+
+/// Yangi kelishuv.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AgreementInputDto {
+    /// Turi.
+    pub kind: String,
+    /// Sarlavha.
+    pub title: String,
+}
+
+/// Javoblarni saqlash.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SaveAnswersInputDto {
+    /// Kelishuv.
+    pub id: String,
+    /// Kutilgan versiya (optimistik).
+    pub version: u32,
+    /// Javoblar.
+    pub answers: AgreementAnswersDto,
+}
+
+/// Imzo qo'shish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SignatureInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Tomon / guvoh / hakam identifikatori.
+    pub party_id: String,
+    /// Roli: `PARTY | WITNESS | ARBITER`.
+    pub role: String,
+    /// Rasm (PNG, data URL).
+    pub image: String,
+}
+
+/// Imzolashni yakunlash (og'zaki kelishuv uchun o'tmishdagi sana va boshlang'ich balans bilan).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SignInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Amal qilish boshlanishi (`YYYY-MM-DD`); bo'sh — bugun.
+    pub effective_from: Option<String>,
+    /// Boshlang'ich balans: tomon va summa matni (og'zaki kelishuvni yozib olishda).
+    pub opening_balance_party_id: Option<String>,
+    /// Boshlang'ich balans summasi.
+    pub opening_balance_amount: Option<String>,
+}
+
+/// Jurnal yozuvi kiritish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct JournalEntryInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Tur: `CONTRIBUTION | PROFIT_DISTRIBUTION | LOAN_PAYMENT | CORRECTION`.
+    pub kind: String,
+    /// Tomon.
+    pub party_id: String,
+    /// Summa matni.
+    pub amount: String,
+    /// Sana (`YYYY-MM-DD`); bo'sh — bugun.
+    pub date: Option<String>,
+    /// Izoh.
+    pub note: Option<String>,
+}
+
+/// Jurnal yozuvi (ko'rsatish).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct JournalEntryDto {
+    /// Tartib (1 dan).
+    pub seq: u32,
+    /// Tur.
+    pub kind: String,
+    /// Tomon.
+    pub party_id: String,
+    /// Summa.
+    pub amount: MoneyDto,
+    /// Sana.
+    pub date: String,
+    /// Izoh.
+    pub note: Option<String>,
+    /// Xesh.
+    pub hash: String,
+}
+
+/// Jurnal ko'rinishi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct JournalDto {
+    /// Yozuvlar.
+    pub entries: Vec<JournalEntryDto>,
+    /// Zanjir to'g'ri.
+    pub chain_ok: bool,
+    /// Buzilgan bo'lsa — birinchi buzilgan yozuv (1 dan).
+    pub first_broken: Option<u32>,
+}
+
 /// Qorovul zaxirasi holati (D8). Hisob domen'da; UI faqat ko'rsatadi.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]

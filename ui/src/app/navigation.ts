@@ -53,7 +53,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { id: "budget", icon: Wallet, enabled: true },
   { id: "debts", icon: ScrollText, enabled: false },
   { id: "ceremonies", icon: CalendarDays, enabled: false },
-  { id: "partnerships", icon: Briefcase, enabled: false },
+  { id: "partnerships", icon: Briefcase, enabled: true },
   { id: "prices", icon: Tags, enabled: true },
   { id: "chapters", icon: BookOpen, enabled: true },
   { id: "settings", icon: Settings, enabled: true },

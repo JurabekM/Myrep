@@ -3,6 +3,8 @@
 //! Oyna va commandlar shu yerda yig'iladi. Biznes mantiq bu yerda emas:
 //! commandlar yupqa bo'ladi (DESKTOP_PROMPT.md 3.2).
 
+mod agreement_commands;
+mod agreements;
 mod budget;
 mod budget_commands;
 mod commands;
@@ -112,6 +114,15 @@ fn specta_builder() -> Builder<tauri::Wry> {
         reserve_commands::add_price_item,
         reserve_commands::update_price,
         reserve_commands::remove_price_item,
+        agreement_commands::list_agreements,
+        agreement_commands::create_agreement,
+        agreement_commands::get_agreement,
+        agreement_commands::save_agreement_answers,
+        agreement_commands::add_signature,
+        agreement_commands::sign_agreement,
+        agreement_commands::append_journal_entry,
+        agreement_commands::get_journal,
+        agreement_commands::create_agreement_pdf,
     ])
 }
 

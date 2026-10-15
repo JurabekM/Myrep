@@ -505,6 +505,25 @@ CREATE TABLE price_items (
 CREATE INDEX price_items_by_household ON price_items (household_id);
 "#;
 
+/// Sxema v10 (D8A ustasi): kelishuvning amal qilish sanasi va imzolar (versiyaga bog'langan).
+/// Imzo rasmi PNG data URL (matn); baza shifrlangan, alohida shifrlash kerak emas.
+pub const SCHEMA_V10: &str = r#"
+ALTER TABLE agreements ADD COLUMN effective_from TEXT;
+
+CREATE TABLE signatures (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    party_id TEXT NOT NULL CHECK (length(trim(party_id)) > 0),
+    role TEXT NOT NULL CHECK (role IN ('PARTY', 'WITNESS', 'ARBITER')),
+    version INTEGER NOT NULL CHECK (version >= 1),
+    image TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (agreement_id, party_id, role, version)
+) STRICT;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -517,6 +536,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V7),
         M::up(SCHEMA_V8),
         M::up(SCHEMA_V9),
+        M::up(SCHEMA_V10),
     ])
 }
 
@@ -549,4 +569,5 @@ pub const TABLES: &[&str] = &[
     "agreements",
     "journal_entries",
     "price_items",
+    "signatures",
 ];

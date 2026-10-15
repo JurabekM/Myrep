@@ -23,7 +23,11 @@ export default tseslint.config(
       },
     },
     plugins: { "react-hooks": reactHooks },
-    rules: reactHooks.configs.recommended.rules,
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      // react-hook-form yo'llari (`parties.${index}.name`) raqamli indeks talab qiladi; satrga aylantirish tipni buzadi.
+      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+    },
   },
   {
     files: ["vite.config.ts"],

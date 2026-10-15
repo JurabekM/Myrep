@@ -4,6 +4,37 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D8A ustasi — 9 savol, imzolar, og'zaki kelishuv, kelishuv PDF, jurnal UI (2026-10-15)
+
+**Qo'shildi**
+
+- **Tauri qatlami** (`agreements.rs`, `agreement_commands.rs`): `list_agreements`, `create_agreement`, `get_agreement`, `save_agreement_answers` (versiya oshadi; `SIGNED` bo'lsa yana `DRAFT` — imzolar qayta so'raladi), `add_signature` (faqat 9/9 to'ldirilganda), `sign_agreement` (hamma tomon va hakam joriy versiyani imzolagan bo'lishi shart; `effective_from` o'tmishda bo'lishi mumkin; boshlang'ich balans — `OPENING_BALANCE` jurnal yozuvi), `append_journal_entry` (faqat `SIGNED`, faqat hisob yurituvchi qurilma), `get_journal` (zanjir tekshiruvi bilan), `create_agreement_pdf`.
+- Javoblar `AgreementAnswersDto` (serde + specta) sifatida bazada JSON; domen `AgreementAnswers` ga aylantirilib `completeness` hisoblanadi — qoidalar bitta joyda (Rust).
+- Sxema v10: `agreements.effective_from`, `signatures` (tomon/guvoh/hakam, versiya, PNG data URL; `UNIQUE(agreement, party, role, version)`).
+- **PDF**: `crates/pdf/src/agreement.rs` — 9 bo'lim, imzolar jadvali, disklеymer; snapshot test `tests/snapshots/agreement.pdf`.
+- **UI** (`ui/src/app/agreements/`): «Sheriklik» bo'limi ochildi — ro'yxat va qoralama yaratish; **9 qadamli usta** (`AgreementWizard.tsx`): chapda «N / 9» progress (✓ belgilar), o'rtada forma (`react-hook-form` + `zod`, `useFieldArray` — tomonlar, hissalar, vazifalar, ulushlar), o'ngda Sobir hoji maslahati va **jonli hujjat ko'rinishi**; «Imzolash» 9/9 bo'lmaguncha o'chiq; to'liqlik xatolari Rust kodlaridan tarjima qilinadi. **Imzo chizish** (`SignaturePad.tsx`, canvas, pointer events → PNG). Og'zaki kelishuv: amal qilish sanasi + boshlang'ich balans. **Jurnal kartasi**: yozuvlar, xesh, zanjir holati, yangi yozuv (faqat hisob yurituvchi qurilmada).
+- Testlar: Tauri xizmati 2 (to'liq oqim + qayta imzolash), PDF snapshot 1, UI 3 (`agreements.test.tsx`: ro'yxat/yaratish, saqlash va 9/9 qulfi, imzo chizish).
+
+**Qarorlar va sabablar**
+
+- `react-hook-form`, `zod`, `@hookform/resolvers` qo'shildi (ADR 2-bo'limda nomlangan). zod faqat maydon shaklini tekshiradi; biznes qoidalari (ulushlar 100 %, hakam tomon emas, ...) Rustda — frontend qoida hisoblamaydi.
+- `serde_json` `src-tauri` da endi oddiy bog'liqlik (ilgari faqat test): javoblar JSON sifatida saqlanadi.
+- ESLint: `restrict-template-expressions` uchun `allowNumber: true` — RHF yo'llari (`parties.${index}.name`) raqamli indeks talab qiladi, `String()` tipni buzadi.
+- Jonli ko'rinish — hujjat matnining HTML oynasi (PDF bilan bir xil ma'lumot), PDF'ning o'zi tugma bilan faylga yoziladi. WebView2 ichida PDF iframe'i CSP (`default-src 'self'`) ga zid; CSP bo'shashtirilmadi.
+- Hisob yurituvchi qurilma = kelishuvni yaratgan qurilma (`origin_device_id`). SPEC'dagi `custody.keeper_device_id` D14 almashishda ulanadi.
+- Vitest `testTimeout` 20 s: usta testlari parallel yuklanishda 5 s dan oshdi (yolg'iz o'tadi).
+
+**GUI sinovi (haqiqiy oyna)**
+
+- Qoralama → 9 savol to'ldirildi (tomonlar, hissalar, vazifa, ulushlar 5000+5000, zarar, hisob yuritish, chiqish, hakam, muddat) → «9 / 9» → uch imzo canvas'da chizildi → og'zaki kelishuv sanasi 2026-09-01 va boshlang'ich balans → `SIGNED`, jurnalda 1-yozuv va xesh, zanjir to'g'ri.
+- Sana maydoni: kun segmentiga aniq bosish kerak (WebView2 `<input type=date>`); birinchi urinishda qiymat tushmadi — testda emas, UI'da cheklov yo'q.
+
+**Ma'lum cheklovlar**
+
+- «Chop etib qo'lda imzolash → skan biriktirish» rejimi yo'q (faqat canvas). Guvoh imzosi UI'da yo'q (backend `WITNESS` rolini qabul qiladi).
+- Tray/mini oyna kabi, PDF faylga yoziladi; tizim chop etish dialogi (`Ctrl+P`) keyingi bosqich.
+- `DutyIncident`, nizo, oylik ko'rik — D13A.
+
 ### D8 UI — Qorovul zaxirasi kartasi va «Narx daftari» (2026-10-15)
 
 **Qo'shildi**

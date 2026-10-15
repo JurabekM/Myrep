@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-agreement-answers"
+description = "Enables the save_agreement_answers command without any pre-configured scope."
+commands.allow = ["save_agreement_answers"]
+
+[[permission]]
+identifier = "deny-save-agreement-answers"
+description = "Denies the save_agreement_answers command without any pre-configured scope."
+commands.deny = ["save_agreement_answers"]

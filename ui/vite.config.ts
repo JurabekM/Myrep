@@ -25,5 +25,7 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["./src/test/setup.ts"],
     css: false,
+    // Usta testlari (react-hook-form + userEvent) parallel yuklanishda 5 s dan oshadi.
+    testTimeout: 20_000,
   },
 });

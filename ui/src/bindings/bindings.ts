@@ -153,6 +153,24 @@ export const commands = {
 	updatePrice: (id: string, currentPrice: string) => typedError<PricesDto, ApiError>(__TAURI_INVOKE("update_price", { id, currentPrice })),
 	/**  Narx yozuvini o'chiradi. */
 	removePriceItem: (id: string) => typedError<PricesDto, ApiError>(__TAURI_INVOKE("remove_price_item", { id })),
+	/**  Kelishuvlar ro'yxati. */
+	listAgreements: () => typedError<AgreementSummaryDto[], ApiError>(__TAURI_INVOKE("list_agreements")),
+	/**  Yangi kelishuv (qoralama). */
+	createAgreement: (input: AgreementInputDto) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("create_agreement", { input })),
+	/**  Bitta kelishuv (javoblar, to'liqlik, imzolar, zanjir). */
+	getAgreement: (id: string) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("get_agreement", { id })),
+	/**  Javoblarni saqlaydi (versiya oshadi; imzolangan bo'lsa — qayta imzolash kerak). */
+	saveAgreementAnswers: (input: SaveAnswersInputDto) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("save_agreement_answers", { input })),
+	/**  Imzo qo'shadi (9/9 bo'lmasa — rad etiladi). */
+	addSignature: (input: SignatureInputDto) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("add_signature", { input })),
+	/**  Imzolashni yakunlaydi: hamma imzo bo'lsa SIGNED; og'zaki kelishuv — o'tmishdagi sana va boshlang'ich balans. */
+	signAgreement: (input: SignInputDto) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("sign_agreement", { input })),
+	/**  Jurnalga yozuv qo'shadi (faqat imzolangan kelishuv, faqat hisob yurituvchi qurilma). */
+	appendJournalEntry: (input: JournalEntryInputDto) => typedError<JournalDto, ApiError>(__TAURI_INVOKE("append_journal_entry", { input })),
+	/**  Jurnal va zanjir tekshiruvi. */
+	getJournal: (agreementId: string) => typedError<JournalDto, ApiError>(__TAURI_INVOKE("get_journal", { agreementId })),
+	/**  Kelishuv PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
+	createAgreementPdf: (id: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_agreement_pdf", { id })),
 };
 
 /* Types */
@@ -166,6 +184,108 @@ export type AdultConsentDto = {
 	consented: boolean,
 	/**  PIN o'rnatilganmi (rozilik uchun kerak). */
 	hasPin: boolean,
+};
+
+/**  Kelishuv javoblari — 9 savol (SPEC 2F.2). «Tegishli emas» — sabab matni bilan. */
+export type AgreementAnswersDto = {
+	/**  1. Tomonlar. */
+	parties: PartyDto[],
+	/**  2. Hissalar. */
+	contributions: ContributionDto[],
+	/**  3. Vazifalar. */
+	duties: DutyDto[],
+	/**  3 (LOAN). Qaytarish jadvali bormi. */
+	hasSchedule: boolean,
+	/**  4. Ulushlar (bp). */
+	profitShares: ProfitShareDto[],
+	/**  4. Qat'iy summa matni (taqiqlangan; bo'sh bo'lishi kerak). */
+	profitFixedAmount: string,
+	/**  4. «Tegishli emas» sababi. */
+	profitNotApplicable: string | null,
+	/**  5. Zarar qoidasi. */
+	lossText: string,
+	/**  5. «Tegishli emas» sababi. */
+	lossNotApplicable: string | null,
+	/**  6. Pul qayerda. */
+	custodyLocation: string,
+	/**  6. Hisob yurituvchi tomon. */
+	keeperPartyId: string | null,
+	/**  6. Ko'rib chiqish davriyligi, kunlarda. */
+	reviewEveryDays: number,
+	/**  7. Ogohlantirish muddati, kunlarda. */
+	exitNoticeDays: number,
+	/**  7. Ulushni baholash. */
+	exitValuation: string,
+	/**  7. To'lash tartibi. */
+	exitPayout: string,
+	/**  7. Mol-mulk. */
+	exitAssets: string,
+	/**  7. «Tegishli emas» sababi. */
+	exitNotApplicable: string | null,
+	/**  8. Hakam ismi (bo'sh — yo'q). */
+	arbiterName: string,
+	/**  8. Hakam roli. */
+	arbiterRole: string,
+	/**  9. Muddat, oylarda. */
+	termMonths: number,
+	/**  9. Keyingi ko'rib chiqish sanasi (`YYYY-MM-DD`), bo'sh — yo'q. */
+	reviewDate: string,
+};
+
+/**  Kelishuv (to'liq). */
+export type AgreementDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Turi: `LOAN | PARTNERSHIP | FAMILY | OTHER`. */
+	kind: string,
+	/**  Sarlavha. */
+	title: string,
+	/**  Holati: `DRAFT | SIGNED | IN_DISPUTE | ENDED`. */
+	status: string,
+	/**  Versiya. */
+	version: number,
+	/**  Amal qilish boshlanishi (`YYYY-MM-DD`), bo'lsa (og'zaki kelishuvda o'tmishda). */
+	effectiveFrom: string | null,
+	/**  Javoblar. */
+	answers: AgreementAnswersDto,
+	/**  To'liqlik. */
+	completeness: CompletenessDto,
+	/**  Joriy versiya imzolari. */
+	signatures: SignatureDto[],
+	/**  Jurnal yozuvlari soni. */
+	journalCount: number,
+	/**  Zanjir boshi (oxirgi xesh), bo'lsa. */
+	chainHead: string | null,
+	/**  Zanjir to'g'ri (qayta hisoblangan). */
+	chainOk: boolean,
+	/**  Shu qurilma hisob yurituvchimi (jurnalga yoza oladimi). */
+	canWriteJournal: boolean,
+};
+
+/**  Yangi kelishuv. */
+export type AgreementInputDto = {
+	/**  Turi. */
+	kind: string,
+	/**  Sarlavha. */
+	title: string,
+};
+
+/**  Kelishuv ro'yxati satri. */
+export type AgreementSummaryDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Turi. */
+	kind: string,
+	/**  Sarlavha. */
+	title: string,
+	/**  Holati. */
+	status: string,
+	/**  Versiya. */
+	version: number,
+	/**  Javoblangan savollar (0–9). */
+	answered: number,
+	/**  Keyingi ko'rib chiqish sanasi, bo'lsa. */
+	reviewDate: string | null,
 };
 
 /**  Commandlar xatosi. `code` frontendda tarjima kalitiga aylanadi; PIN yoki kalit qiymati yo'q. */
@@ -337,6 +457,16 @@ export type ChapterDto = {
 	daftarPage: DaftarPageDto | null,
 };
 
+/**  To'liqlik natijasi. */
+export type CompletenessDto = {
+	/**  9/9 javoblangan. */
+	complete: boolean,
+	/**  Javobsiz savollar (1–9). */
+	missing: number[],
+	/**  Xato kodlari. */
+	errors: string[],
+};
+
 /**  Bob bloki. Diniy blok release'da faqat tasdiqlangan holda keladi (`approved` har doim `true`). */
 export type ContentBlockDto = 
 /**  Oddiy abzats. */
@@ -355,6 +485,18 @@ text: LocalizedDto;
 source: LocalizedDto; 
 /**  Ulamo tasdiqlaganmi. */
 approved: boolean };
+
+/**  Hissa (2-savol). */
+export type ContributionDto = {
+	/**  Tomon. */
+	partyId: string,
+	/**  Turi: `money | goods | labor | connections`. */
+	kind: string,
+	/**  Miqdori matni (pul bo'lsa), bo'sh bo'lishi mumkin. */
+	amount: string,
+	/**  Tavsifi. */
+	description: string,
+};
 
 /**  CSV import so'rovi. */
 export type CsvImportInputDto = {
@@ -436,6 +578,18 @@ export type DebtDto = {
 	incurredOn: string,
 	/**  Izoh. */
 	note: string | null,
+};
+
+/**  Vazifa (3-savol). */
+export type DutyDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	title: string,
+	/**  Mas'ul tomon; bo'sh — egasiz (qabul qilinmaydi). */
+	ownerPartyId: string | null,
+	/**  «Bajarilmasa» bandi. */
+	breachClause: string,
 };
 
 /**  Konvert satri (joriy hafta). */
@@ -580,6 +734,50 @@ export type IncomeOutcomeDto = {
 	income: IncomeDto,
 	/**  «Shundan X so'm — kelajagingiz uchun». `null` — taklif yo'q. */
 	shareSuggestion: MoneyDto | null,
+};
+
+/**  Jurnal ko'rinishi. */
+export type JournalDto = {
+	/**  Yozuvlar. */
+	entries: JournalEntryDto[],
+	/**  Zanjir to'g'ri. */
+	chainOk: boolean,
+	/**  Buzilgan bo'lsa — birinchi buzilgan yozuv (1 dan). */
+	firstBroken: number | null,
+};
+
+/**  Jurnal yozuvi (ko'rsatish). */
+export type JournalEntryDto = {
+	/**  Tartib (1 dan). */
+	seq: number,
+	/**  Tur. */
+	kind: string,
+	/**  Tomon. */
+	partyId: string,
+	/**  Summa. */
+	amount: MoneyDto,
+	/**  Sana. */
+	date: string,
+	/**  Izoh. */
+	note: string | null,
+	/**  Xesh. */
+	hash: string,
+};
+
+/**  Jurnal yozuvi kiritish. */
+export type JournalEntryInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Tur: `CONTRIBUTION | PROFIT_DISTRIBUTION | LOAN_PAYMENT | CORRECTION`. */
+	kind: string,
+	/**  Tomon. */
+	partyId: string,
+	/**  Summa matni. */
+	amount: string,
+	/**  Sana (`YYYY-MM-DD`); bo'sh — bugun. */
+	date: string | null,
+	/**  Izoh. */
+	note: string | null,
 };
 
 /**  Bob qonuni (sarlavha va matn). */
@@ -737,6 +935,20 @@ export type OwnerPartDto = {
 	shareBp: number,
 };
 
+/**  Kelishuv tomoni (1-savol). */
+export type PartyDto = {
+	/**  Identifikator (`P1`, `P2`, ...). */
+	id: string,
+	/**  To'liq ism-sharif. */
+	name: string,
+	/**  Roli. */
+	role: string,
+	/**  Aloqasi. */
+	relation: string,
+	/**  Shu qurilma egasi. */
+	isMe: boolean,
+};
+
 /**  Narx daftari yozuvi. */
 export type PriceItemDto = {
 	/**  Identifikator. */
@@ -781,6 +993,14 @@ export type PricesDto = {
 	exampleUnitsBefore: number | null,
 	/**  Joriy narxda nechta birlik. */
 	exampleUnitsNow: number | null,
+};
+
+/**  Foyda ulushi (4-savol). */
+export type ProfitShareDto = {
+	/**  Tomon. */
+	partyId: string,
+	/**  Ulush, bp. */
+	shareBp: number,
 };
 
 /**  «Qutqarilgan pul» hisobi (joriy davr). Summalar domen'da hisoblangan; UI faqat ko'rsatadi. */
@@ -831,6 +1051,16 @@ export type ReserveDto = {
 	dataMonths: number,
 };
 
+/**  Javoblarni saqlash. */
+export type SaveAnswersInputDto = {
+	/**  Kelishuv. */
+	id: string,
+	/**  Kutilgan versiya (optimistik). */
+	version: number,
+	/**  Javoblar. */
+	answers: AgreementAnswersDto,
+};
+
 /**  Xavfsizlik holati DTO: PIN o'rnatilganmi va baza ochiqmi. */
 export type SecurityStatus = {
 	/**  PIN o'rnatilganmi. `false` bo'lsa, birinchi ishga tushirishda sozlash ekrani ko'rsatiladi. */
@@ -868,6 +1098,44 @@ export type ShareRuleInputDto = {
 	fixedAmount: string | null,
 	/**  Progressiv rejim. */
 	progressive: boolean,
+};
+
+/**  Imzolashni yakunlash (og'zaki kelishuv uchun o'tmishdagi sana va boshlang'ich balans bilan). */
+export type SignInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Amal qilish boshlanishi (`YYYY-MM-DD`); bo'sh — bugun. */
+	effectiveFrom: string | null,
+	/**  Boshlang'ich balans: tomon va summa matni (og'zaki kelishuvni yozib olishda). */
+	openingBalancePartyId: string | null,
+	/**  Boshlang'ich balans summasi. */
+	openingBalanceAmount: string | null,
+};
+
+/**  Imzo yozuvi. */
+export type SignatureDto = {
+	/**  Tomon (yoki guvoh/hakam) identifikatori. */
+	partyId: string,
+	/**  Roli: `PARTY | WITNESS | ARBITER`. */
+	role: string,
+	/**  Qaysi versiya uchun. */
+	version: number,
+	/**  Imzolangan vaqt (RFC 3339). */
+	signedAt: string,
+	/**  Rasm (PNG, data URL). */
+	image: string,
+};
+
+/**  Imzo qo'shish. */
+export type SignatureInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Tomon / guvoh / hakam identifikatori. */
+	partyId: string,
+	/**  Roli: `PARTY | WITNESS | ARBITER`. */
+	role: string,
+	/**  Rasm (PNG, data URL). */
+	image: string,
 };
 
 /**  Obuna satri. */
