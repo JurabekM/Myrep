@@ -202,6 +202,15 @@ pub enum DomainError {
     /// A'zoning PIN'i hali o'rnatilmagan: rozilik berib bo'lmaydi.
     #[error("a'zoning PIN'i o'rnatilmagan")]
     PinNotSet,
+    /// Kapital qabul qilishda oilaviy rozilik yo'q: imzolab bo'lmaydi (SPEC 2E.6).
+    #[error("oilaviy rozilik kerak")]
+    FamilyConsentRequired,
+    /// Tayyorgarlik darvozasi yopiq: kapital kiritib bo'lmaydi (SPEC 2C.4, 2E.6).
+    #[error("tayyorgarlik darvozasi yopiq")]
+    ReadinessGateLocked,
+    /// Sheriklik tuzilmasi turga mos emas (mudaraba: bitta kapital; musharaka: kamida ikkita).
+    #[error("sheriklik tuzilmasi turga mos emas")]
+    PartnershipStructureInvalid,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -250,6 +259,9 @@ impl DomainError {
             Self::AgreementLocked => "AGREEMENT_LOCKED",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
+            Self::FamilyConsentRequired => "FAMILY_CONSENT_REQUIRED",
+            Self::ReadinessGateLocked => "READINESS_GATE_LOCKED",
+            Self::PartnershipStructureInvalid => "PARTNERSHIP_STRUCTURE_INVALID",
             Self::Money(error) => error.code(),
         }
     }

@@ -45,6 +45,11 @@ export const RULE_ERROR_KEYS = {
   SPLIT_NOT_100_PERCENT: "errors.splitNot100",
   SAVINGS_BELOW_MINIMUM: "errors.savingsBelowMinimum",
   FAMILY_DISCUSSION_REQUIRED: "errors.familyDiscussionRequired",
+  FAMILY_CONSENT_REQUIRED: "errors.familyConsentRequired",
+  READINESS_GATE_LOCKED: "errors.readinessGateLocked",
+  PARTNERSHIP_STRUCTURE_INVALID: "errors.partnershipStructureInvalid",
+  PROFIT_SHARES_NOT_100: "errors.profitSharesNot100",
+  GUARANTEED_RETURN_FORBIDDEN: "errors.guaranteedReturnForbidden",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

@@ -110,7 +110,12 @@
     "planMismatch": "Reja summasi qarzga teng emas",
     "splitNot100": "Ulushlar yig'indisi 100 % bo'lishi kerak",
     "savingsBelowMinimum": "Jamg'arma ulushi kamida 1 % bo'lishi kerak",
-    "familyDiscussionRequired": "Qarzli reja uchun avval oilaviy muhokama o'tkaziladi"
+    "familyDiscussionRequired": "Qarzli reja uchun avval oilaviy muhokama o'tkaziladi",
+    "familyConsentRequired": "Oilaviy rozilik kerak",
+    "readinessGateLocked": "Tayyorgarlik darvozasi yopiq: avval 6 oylik zaxira va qarz rejasi",
+    "partnershipStructureInvalid": "Tuzilma turga mos emas: mudarabada kapital faqat bir tomondan, musharakada kamida ikki tomondan",
+    "profitSharesNot100": "Foyda ulushlari yig'indisi 100 % bo'lishi kerak",
+    "guaranteedReturnForbidden": "Kafolatlangan summa — bu sheriklik emas, ribo yoki qarz"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -932,5 +937,49 @@
     "titleLabel": "Nomi",
     "dateLabel": "Sana",
     "create": "Reja yaratish"
+  },
+  "partnerships": {
+    "title": "Sheriklik",
+    "intro": "Sheriklik — sadaqa ham, qarz ham emas: teng huquqli ish, tavakkal bo'lishiladi. «Ot bilan omoch — ikkalasi birga yer haydaydi». Shartnomasiz sheriklik yaratilmaydi.",
+    "gateOpen": "Tayyorgarlik darvozasi ochiq: kapital kiritish mumkin.",
+    "gateLocked": "Darvoza yopiq (6 oylik zaxira yoki qarz rejasi yetishmaydi): kapital kiritib bo'lmaydi; mehnat bilan kirish mumkin.",
+    "empty": "Hali sheriklik yo'q. Quyida yarating — shartnoma ustasi ochiladi.",
+    "kind": {
+      "MUDARABA": "Mudaraba (kapital + mehnat)",
+      "MUSHARAKA": "Musharaka (ikkala tomon kapital)"
+    },
+    "role": {
+      "WORKER": "Mehnat egasi (kapital qabul qilaman)",
+      "CAPITAL_PROVIDER": "Kapital egasi (pul kiritaman)"
+    },
+    "noParties": "Tomonlar hali kiritilmagan — shartnoma ustasida 1–2-savollarni to'ldiring.",
+    "consentHint": "Kapital qabul qilish darvozaga bo'ysunmaydi: mudarabada kapital qarz emas, qaytarish majburiyati yo'q (beparvolik bundan mustasno). Lekin imzolashdan oldin oilaviy rozilik (er va xotin) yoziladi.",
+    "consentLine": "Oilaviy rozilik: {{name}} ({{date}})",
+    "consentMember": "Rozilik bergan a'zo",
+    "consent": "Rozilikni yozish",
+    "buyoutTitle": "Bosqichma-bosqich sotib olish",
+    "buyoutHint": "Kamayib boruvchi sheriklik: mehnat egasi uskunalarni foyda ulushidan oz-ozdan to'lab, kapital egasining ulushini sotib oladi va oxirida mustaqil bo'ladi.",
+    "buyoutTotal": "Sotib olinadigan ulush qiymati",
+    "buyoutMonths": "Oylar",
+    "buyoutStart": "Birinchi to'lov sanasi",
+    "buyoutSave": "Jadvalni tuzish",
+    "buyoutPaid": "To'langan",
+    "remainingShare": "Kapital egasida qolgan ulush",
+    "remainingHint": "Qoldiq: {{amount}}",
+    "colDate": "Sana",
+    "colAmount": "Summa",
+    "colRemaining": "Qolgan ulush",
+    "colPaid": "To'langan",
+    "payAmount": "To'lov summasi",
+    "pay": "To'lovni yozish",
+    "buyoutDone": "Ulush to'liq sotib olindi — mustaqil.",
+    "openContract": "Shartnomani ochish",
+    "newTitle": "Yangi sheriklik",
+    "titleLabel": "Sheriklik nomi",
+    "kindLabel": "Turi",
+    "roleLabel": "Mening rolim",
+    "create": "Sheriklik yaratish",
+    "roleCapitalHint": "Kapital kiritish uchun tayyorgarlik darvozasi ochiq bo'lishi kerak: ≥ 6 oylik qorovul zaxirasi va faol qarz rejasi.",
+    "roleWorkerHint": "Mehnat bilan kirish darvozaga bo'ysunmaydi; imzolashdan oldin oilaviy rozilik so'raladi."
   }
 }

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-consent-partnership"
+description = "Enables the consent_partnership command without any pre-configured scope."
+commands.allow = ["consent_partnership"]
+
+[[permission]]
+identifier = "deny-consent-partnership"
+description = "Denies the consent_partnership command without any pre-configured scope."
+commands.deny = ["consent_partnership"]

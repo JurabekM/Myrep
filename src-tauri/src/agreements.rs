@@ -46,7 +46,7 @@ fn ts_text(value: OffsetDateTime) -> String {
 
 impl AgreementAnswersDto {
     /// Bo'sh javoblar (yangi qoralama).
-    fn empty() -> Self {
+    pub(crate) fn empty() -> Self {
         Self {
             parties: Vec::new(),
             contributions: Vec::new(),
@@ -370,6 +370,8 @@ pub fn sign(
     if !completeness_of(row.kind, &answers)?.complete {
         return Err(DomainError::AgreementIncomplete.into());
     }
+    // D12: sheriklik bo'lsa — tuzilma qoidasi va kapital qabul qiluvchida oilaviy rozilik.
+    crate::partnerships::check_before_sign(db, &row, &answers)?;
     let signatures = SignatureRepo::new(db.connection()).list_for_version(&row.id, row.version)?;
     let signed = |party: &str, role: &str| {
         signatures

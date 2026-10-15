@@ -1676,3 +1676,153 @@ pub struct CeremonyGoalInputDto {
     /// Summa matni.
     pub target: String,
 }
+
+/// Sherikliklar (D12).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PartnershipsDto {
+    /// Sherikliklar.
+    pub items: Vec<PartnershipDto>,
+    /// Tayyorgarlik darvozasi (`OPEN | LOCKED`) — kapital kiritish uchun.
+    pub gate: String,
+    /// Darvoza sabablari.
+    pub gate_reasons: Vec<String>,
+}
+
+/// Sheriklik (kelishuv + sheriklikka xos maydonlar).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PartnershipDto {
+    /// Identifikator.
+    pub id: String,
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Sarlavha.
+    pub title: String,
+    /// `MUDARABA | MUSHARAKA`.
+    pub kind: String,
+    /// Mening rolim: `CAPITAL_PROVIDER | WORKER`.
+    pub my_role: String,
+    /// Kelishuv holati.
+    pub status: String,
+    /// Kelishuv versiyasi.
+    pub version: u32,
+    /// Sheriklar (kapital va ulush bilan).
+    pub parties: Vec<PartnerSummaryDto>,
+    /// Umumiy kapital.
+    pub capital_total: MoneyDto,
+    /// Muammolar (xato kodlari): tuzilma, ulushlar, rozilik.
+    pub issues: Vec<String>,
+    /// Darvoza holati.
+    pub gate: String,
+    /// Darvoza sabablari.
+    pub gate_reasons: Vec<String>,
+    /// Oilaviy rozilik bergan a'zo.
+    pub consent_member: Option<String>,
+    /// Rozilik sanasi.
+    pub consent_at: Option<String>,
+    /// Buyout jadvali, bo'lsa.
+    pub buyout: Option<BuyoutDto>,
+}
+
+/// Sherik qisqacha.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PartnerSummaryDto {
+    /// Tomon.
+    pub party_id: String,
+    /// Ism.
+    pub name: String,
+    /// Rol matni.
+    pub role: String,
+    /// Kiritilgan kapital (pul hissalari).
+    pub capital: MoneyDto,
+    /// Foyda ulushi, bp.
+    pub share_bp: u32,
+    /// Shu qurilma egasi.
+    pub is_me: bool,
+}
+
+/// Buyout (kamayib boruvchi sheriklik).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutDto {
+    /// Sotib olinadigan ulush qiymati.
+    pub total: MoneyDto,
+    /// Oylar.
+    pub months: u32,
+    /// Boshlanish sanasi.
+    pub start_on: String,
+    /// To'langan.
+    pub paid: MoneyDto,
+    /// Qoldiq.
+    pub remaining: MoneyDto,
+    /// Kapital egasida qolgan ulush, bp.
+    pub remaining_share_bp: u32,
+    /// Jadval.
+    pub rows: Vec<BuyoutRowDto>,
+}
+
+/// Buyout jadvali qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutRowDto {
+    /// Tartib.
+    pub seq: u32,
+    /// Sana.
+    pub due_on: String,
+    /// Summa.
+    pub amount: MoneyDto,
+    /// Shu qadamdan keyin qolgan ulush, bp.
+    pub remaining_share_bp: u32,
+    /// To'langan (yig'ma to'lovlar bo'yicha).
+    pub paid: bool,
+}
+
+/// Yangi sheriklik.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PartnershipInputDto {
+    /// Sarlavha.
+    pub title: String,
+    /// `MUDARABA | MUSHARAKA`.
+    pub kind: String,
+    /// `CAPITAL_PROVIDER | WORKER`.
+    pub my_role: String,
+}
+
+/// Buyout shartlari.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutInputDto {
+    /// Sheriklik.
+    pub id: String,
+    /// Ulush qiymati matni.
+    pub total: String,
+    /// Oylar.
+    pub months: u32,
+    /// Boshlanish sanasi (`YYYY-MM-DD`).
+    pub start_on: String,
+}
+
+/// Buyout to'lovi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutPaymentInputDto {
+    /// Sheriklik.
+    pub id: String,
+    /// Summa matni.
+    pub amount: String,
+    /// Sana; bo'sh — bugun.
+    pub paid_on: Option<String>,
+}
+
+/// Oilaviy rozilik.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsentInputDto {
+    /// Sheriklik.
+    pub id: String,
+    /// Rozilik bergan a'zo.
+    pub member_name: String,
+}

@@ -11,6 +11,7 @@ mod family;
 mod finance;
 mod ceremonies;
 mod loans;
+mod partnerships;
 mod prices;
 mod progress;
 mod repo;
@@ -29,6 +30,7 @@ pub use finance::{
 };
 pub use ceremonies::{CeremonyRepo, CeremonyRow, LineRow, ScenarioRow};
 pub use loans::{LoanDirection, LoanRepo, LoanRow, PaymentRow};
+pub use partnerships::{BuyoutPaymentRow, PartnershipRepo, PartnershipRow};
 pub use prices::PriceRepo;
 pub use progress::{DaftarPageRepo, TaskCompletionRepo};
 pub use repo::{HouseholdRepo, MemberRepo};

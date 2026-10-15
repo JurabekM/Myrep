@@ -119,6 +119,131 @@ fn negate(money: Money, currency: money::Currency) -> Money {
     Money::new(-money.minor(), currency)
 }
 
+/// Tuzilma qoidasi (SPEC 2E.1, D12): `MUDARABA` — kapital faqat bir tomondan, kamida bitta mehnat tomoni;
+/// `MUSHARAKA` — kamida ikki tomon kapital kiritadi. Kafolatli summa har qanday turda taqiq.
+pub fn validate_structure(
+    kind: PartnershipKind,
+    parties: &[PartnerInput],
+) -> Result<(), DomainError> {
+    if parties.len() < 2 {
+        return Err(DomainError::PartnershipStructureInvalid);
+    }
+    if parties.iter().any(|party| party.fixed_return.is_some()) {
+        return Err(DomainError::GuaranteedReturnForbidden);
+    }
+    let with_capital = parties
+        .iter()
+        .filter(|party| party.capital.minor() > 0)
+        .count();
+    let ok = match kind {
+        PartnershipKind::Mudaraba => with_capital == 1 && with_capital < parties.len(),
+        PartnershipKind::Musharaka => with_capital >= 2,
+    };
+    if ok {
+        Ok(())
+    } else {
+        Err(DomainError::PartnershipStructureInvalid)
+    }
+}
+
+/// Kamayib boruvchi sheriklik (buyout) qadami: mehnat egasi kapital egasining ulushini bo'lib sotib oladi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BuyoutStep {
+    /// Tartib (1 dan).
+    pub seq: u32,
+    /// To'lov sanasi.
+    pub due_on: time::Date,
+    /// To'lov summasi.
+    pub amount: Money,
+    /// Shu to'lovdan keyin kapital egasida qolgan ulush (bp).
+    pub remaining_share_bp: u64,
+}
+
+/// Buyout jadvali: `total` teng bo'laklarga (`allocate`, yig'indi aniq), sanalar oyma-oy `start` dan.
+pub fn buyout_schedule(
+    total: Money,
+    months: u32,
+    start: time::Date,
+) -> Result<Vec<BuyoutStep>, DomainError> {
+    if total.minor() <= 0 {
+        return Err(DomainError::AmountNotPositive);
+    }
+    if months == 0 {
+        return Err(DomainError::InvalidRule);
+    }
+    let parts = allocate(total, &vec![1; months as usize])?;
+    let mut steps = Vec::with_capacity(parts.len());
+    let mut paid: i128 = 0;
+    for (index, amount) in parts.into_iter().enumerate() {
+        paid += i128::from(amount.minor());
+        let remaining = i128::from(total.minor()) - paid;
+        let remaining_share_bp = money::round_half_up_div(
+            remaining * i128::from(FULL_SHARE_BP),
+            i128::from(total.minor()),
+        )?;
+        steps.push(BuyoutStep {
+            seq: u32::try_from(index + 1).unwrap_or(u32::MAX),
+            due_on: crate::loans::add_months(start, i64::try_from(index).unwrap_or(0))?,
+            amount,
+            remaining_share_bp: u64::try_from(remaining_share_bp).unwrap_or(0),
+        });
+    }
+    Ok(steps)
+}
+
+#[cfg(test)]
+mod structure_tests {
+    use super::*;
+    use money::Currency;
+    use time::macros::date;
+
+    fn party(capital: i64) -> PartnerInput {
+        PartnerInput {
+            share_bp: 5_000,
+            capital: Money::new(capital, Currency::Uzs),
+            fixed_return: None,
+            is_capital_provider: capital > 0,
+        }
+    }
+
+    #[test]
+    fn mudaraba_bitta_kapital_musharaka_ikki_kapital() {
+        assert!(validate_structure(PartnershipKind::Mudaraba, &[party(100), party(0)]).is_ok());
+        assert_eq!(
+            validate_structure(PartnershipKind::Mudaraba, &[party(100), party(50)]),
+            Err(DomainError::PartnershipStructureInvalid)
+        );
+        assert!(validate_structure(PartnershipKind::Musharaka, &[party(100), party(50)]).is_ok());
+        assert_eq!(
+            validate_structure(PartnershipKind::Musharaka, &[party(100), party(0)]),
+            Err(DomainError::PartnershipStructureInvalid)
+        );
+        let mut fixed = party(100);
+        fixed.fixed_return = Some(Money::new(10, Currency::Uzs));
+        assert_eq!(
+            validate_structure(PartnershipKind::Mudaraba, &[fixed, party(0)]),
+            Err(DomainError::GuaranteedReturnForbidden)
+        );
+    }
+
+    #[test]
+    fn buyout_jadvali_yigindisi_aniq_va_ulush_kamayadi() {
+        let steps = buyout_schedule(
+            Money::new(1_000_000_000, Currency::Uzs),
+            3,
+            date!(2026 - 11 - 15),
+        )
+        .expect("jadval");
+        assert_eq!(steps.len(), 3);
+        let sum: i64 = steps.iter().map(|s| s.amount.minor()).sum();
+        assert_eq!(sum, 1_000_000_000);
+        assert_eq!(steps[0].remaining_share_bp, 6_667);
+        assert_eq!(steps[1].remaining_share_bp, 3_333);
+        assert_eq!(steps[2].remaining_share_bp, 0);
+        assert_eq!(steps[2].due_on, date!(2027 - 01 - 15));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -4,6 +4,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D12 — Sheriklik domeni, shartnoma, buyout (2026-10-15)
+
+**Qo'shildi**
+
+- Domen (`partnership.rs`): `validate_structure` — `MUDARABA`da kapital faqat bir tomondan (+ kamida bitta mehnat tomoni), `MUSHARAKA`da kamida ikki tomon kapital; kafolatli summa har turda taqiq. `buyout_schedule` — kamayib boruvchi sheriklik jadvali (`allocate` bilan teng bo'laklar, qolgan ulush bp). Yangi xato kodlari: `FAMILY_CONSENT_REQUIRED`, `READINESS_GATE_LOCKED`, `PARTNERSHIP_STRUCTURE_INVALID`.
+- Sxema v13: `partnerships` (kelishuvga 1:1 — tur, mening rolim, buyout shartlari, oilaviy rozilik), `partnership_buyout_payments`. Repo `crates/storage/src/partnerships.rs`.
+- Xizmat (`src-tauri/src/partnerships.rs`) va 5 command: `get_partnerships`, `create_partnership`, `set_buyout`, `pay_buyout`, `consent_partnership`. Sheriklik = `Agreement(PARTNERSHIP)` (D8A ustasi) + sheriklik yozuvi; kapital = 2-savoldagi pul hissalari, ulush = 4-savol.
+- **Darvoza (SPEC 2E.6):** kapital kirituvchi (`CAPITAL_PROVIDER`) faqat tayyorgarlik darvozasi `OPEN` bo'lsa yaratadi; mehnat egasi (`WORKER`) darvozaga bo'ysunmaydi, lekin imzolashdan oldin **oilaviy rozilik** (a'zo nomi) yoziladi. `agreements::sign` endi `partnerships::check_before_sign` ni chaqiradi: rozilik + tuzilma + kafolatli summa.
+- Versiyalash D8A'da: javob o'zgarsa versiya oshadi, holat `DRAFT`, imzolar qayta so'raladi (mavjud test).
+- UI: «Kelishuvlar» sahifasida **Sheriklik** kartasi — darvoza holati, sherikliklar (tomonlar, kapital, ulush), muammolar ro'yxati (kodlar matnga), rozilik formasi, buyout jadvali (progress + jadval + to'lov), «Shartnomani ochish» (D8A ustasi), yangi sheriklik formasi (rol izohi bilan).
+- Testlar: domen 2, Tauri 3 (darvoza, rozilik/tuzilma/kafolat, buyout), UI 3; storage sxema 13.
+
+**Qarorlar**
+
+- Uskuna ro'yxati alohida jadval emas — 2-savoldagi `goods` hissalari (narxi bilan); buyout qiymati foydalanuvchi tomonidan kiritiladi.
+- `dist-001…004` vektorlari D5 dan beri yashil (`crates/vectors`), D12 ularni qayta ishlatmaydi.
+- GUI sinovi — D10 dagi sabab (PIN) tufayli kutilmoqda.
+
 ### D11 — Marosim rejalovchisi (2026-10-15)
 
 **Qo'shildi**

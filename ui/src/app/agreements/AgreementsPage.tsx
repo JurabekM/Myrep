@@ -6,6 +6,7 @@ import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
 import { Alert, Card, Field, PageHeader, PrimaryButton, SecondaryButton } from "../finance/ui";
 import { AgreementWizard } from "./AgreementWizard";
+import { PartnershipsCard } from "./PartnershipsCard";
 import { kindKey, statusKey } from "./labels";
 import { agreementFetchers, agreementKeys, useApplyAgreement } from "./queries";
 
@@ -40,6 +41,12 @@ export function AgreementsPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title={t("agreements.title")} subtitle={t("agreements.subtitle")} />
+
+      <PartnershipsCard
+        onOpen={(agreementId) => {
+          setOpen(agreementId);
+        }}
+      />
 
       <Card title={t("agreements.listTitle")}>
         {list.isSuccess && list.data.length === 0 ? (

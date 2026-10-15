@@ -205,6 +205,16 @@ export const commands = {
 	setCeremonyGoal: (input: CeremonyGoalInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("set_ceremony_goal", { input })),
 	/**  Smeta PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
 	createCeremonyPdf: (id: string, scenarioId: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_ceremony_pdf", { id, scenarioId })),
+	/**  Sherikliklar ro'yxati. */
+	getPartnerships: () => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("get_partnerships")),
+	/**  Yangi sheriklik (kelishuv qoralamasi bilan). */
+	createPartnership: (input: PartnershipInputDto) => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("create_partnership", { input })),
+	/**  Buyout shartlari. */
+	setBuyout: (input: BuyoutInputDto) => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("set_buyout", { input })),
+	/**  Buyout to'lovi. */
+	payBuyout: (input: BuyoutPaymentInputDto) => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("pay_buyout", { input })),
+	/**  Oilaviy rozilik. */
+	consentPartnership: (input: ConsentInputDto) => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("consent_partnership", { input })),
 };
 
 /* Types */
@@ -440,6 +450,60 @@ export type BudgetDto = {
 	envelopes: EnvelopeDto[],
 };
 
+/**  Buyout (kamayib boruvchi sheriklik). */
+export type BuyoutDto = {
+	/**  Sotib olinadigan ulush qiymati. */
+	total: MoneyDto,
+	/**  Oylar. */
+	months: number,
+	/**  Boshlanish sanasi. */
+	startOn: string,
+	/**  To'langan. */
+	paid: MoneyDto,
+	/**  Qoldiq. */
+	remaining: MoneyDto,
+	/**  Kapital egasida qolgan ulush, bp. */
+	remainingShareBp: number,
+	/**  Jadval. */
+	rows: BuyoutRowDto[],
+};
+
+/**  Buyout shartlari. */
+export type BuyoutInputDto = {
+	/**  Sheriklik. */
+	id: string,
+	/**  Ulush qiymati matni. */
+	total: string,
+	/**  Oylar. */
+	months: number,
+	/**  Boshlanish sanasi (`YYYY-MM-DD`). */
+	startOn: string,
+};
+
+/**  Buyout to'lovi. */
+export type BuyoutPaymentInputDto = {
+	/**  Sheriklik. */
+	id: string,
+	/**  Summa matni. */
+	amount: string,
+	/**  Sana; bo'sh — bugun. */
+	paidOn: string | null,
+};
+
+/**  Buyout jadvali qatori. */
+export type BuyoutRowDto = {
+	/**  Tartib. */
+	seq: number,
+	/**  Sana. */
+	dueOn: string,
+	/**  Summa. */
+	amount: MoneyDto,
+	/**  Shu qadamdan keyin qolgan ulush, bp. */
+	remainingShareBp: number,
+	/**  To'langan (yig'ma to'lovlar bo'yicha). */
+	paid: boolean,
+};
+
 /**  Kategoriya. */
 export type CategoryDto = {
 	/**  Identifikator. */
@@ -609,6 +673,14 @@ export type ConfirmCeremonyInputDto = {
 	id: string,
 	/**  Tanlangan stsenariy. */
 	scenarioId: string,
+};
+
+/**  Oilaviy rozilik. */
+export type ConsentInputDto = {
+	/**  Sheriklik. */
+	id: string,
+	/**  Rozilik bergan a'zo. */
+	memberName: string,
 };
 
 /**  Bob bloki. Diniy blok release'da faqat tasdiqlangan holda keladi (`approved` har doim `true`). */
@@ -1169,6 +1241,76 @@ export type OwnerPartDto = {
 	amount: MoneyDto,
 	/**  Jamdagi ulushi, basis points (1 % = 100 bp). Frontend shu qiymat bo'yicha bo'lak kengligini chizadi. */
 	shareBp: number,
+};
+
+/**  Sherik qisqacha. */
+export type PartnerSummaryDto = {
+	/**  Tomon. */
+	partyId: string,
+	/**  Ism. */
+	name: string,
+	/**  Rol matni. */
+	role: string,
+	/**  Kiritilgan kapital (pul hissalari). */
+	capital: MoneyDto,
+	/**  Foyda ulushi, bp. */
+	shareBp: number,
+	/**  Shu qurilma egasi. */
+	isMe: boolean,
+};
+
+/**  Sheriklik (kelishuv + sheriklikka xos maydonlar). */
+export type PartnershipDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Sarlavha. */
+	title: string,
+	/**  `MUDARABA | MUSHARAKA`. */
+	kind: string,
+	/**  Mening rolim: `CAPITAL_PROVIDER | WORKER`. */
+	myRole: string,
+	/**  Kelishuv holati. */
+	status: string,
+	/**  Kelishuv versiyasi. */
+	version: number,
+	/**  Sheriklar (kapital va ulush bilan). */
+	parties: PartnerSummaryDto[],
+	/**  Umumiy kapital. */
+	capitalTotal: MoneyDto,
+	/**  Muammolar (xato kodlari): tuzilma, ulushlar, rozilik. */
+	issues: string[],
+	/**  Darvoza holati. */
+	gate: string,
+	/**  Darvoza sabablari. */
+	gateReasons: string[],
+	/**  Oilaviy rozilik bergan a'zo. */
+	consentMember: string | null,
+	/**  Rozilik sanasi. */
+	consentAt: string | null,
+	/**  Buyout jadvali, bo'lsa. */
+	buyout: BuyoutDto | null,
+};
+
+/**  Yangi sheriklik. */
+export type PartnershipInputDto = {
+	/**  Sarlavha. */
+	title: string,
+	/**  `MUDARABA | MUSHARAKA`. */
+	kind: string,
+	/**  `CAPITAL_PROVIDER | WORKER`. */
+	myRole: string,
+};
+
+/**  Sherikliklar (D12). */
+export type PartnershipsDto = {
+	/**  Sherikliklar. */
+	items: PartnershipDto[],
+	/**  Tayyorgarlik darvozasi (`OPEN | LOCKED`) — kapital kiritish uchun. */
+	gate: string,
+	/**  Darvoza sabablari. */
+	gateReasons: string[],
 };
 
 /**  Kelishuv tomoni (1-savol). */

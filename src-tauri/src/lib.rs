@@ -23,6 +23,8 @@ mod finance_commands;
 mod loan_commands;
 mod loans;
 mod notify;
+mod partnership_commands;
+mod partnerships;
 mod payoff;
 mod payoff_commands;
 mod report;
@@ -146,6 +148,11 @@ fn specta_builder() -> Builder<tauri::Wry> {
         ceremony_commands::confirm_ceremony,
         ceremony_commands::set_ceremony_goal,
         ceremony_commands::create_ceremony_pdf,
+        partnership_commands::get_partnerships,
+        partnership_commands::create_partnership,
+        partnership_commands::set_buyout,
+        partnership_commands::pay_buyout,
+        partnership_commands::consent_partnership,
     ])
 }
 

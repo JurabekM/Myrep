@@ -616,6 +616,39 @@ CREATE TABLE ceremony_lines (
 CREATE INDEX ceremony_lines_by_scenario ON ceremony_lines (scenario_id);
 "#;
 
+pub const SCHEMA_V13: &str = r#"
+CREATE TABLE partnerships (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL UNIQUE REFERENCES agreements (id),
+    kind TEXT NOT NULL CHECK (kind IN ('MUDARABA', 'MUSHARAKA')),
+    my_role TEXT NOT NULL CHECK (my_role IN ('CAPITAL_PROVIDER', 'WORKER')),
+    buyout_total_minor INTEGER CHECK (buyout_total_minor IS NULL OR buyout_total_minor > 0),
+    buyout_months INTEGER CHECK (buyout_months IS NULL OR buyout_months >= 1),
+    buyout_start TEXT,
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    consent_member TEXT,
+    consent_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX partnerships_by_household ON partnerships (household_id);
+
+CREATE TABLE partnership_buyout_payments (
+    id TEXT PRIMARY KEY NOT NULL,
+    partnership_id TEXT NOT NULL REFERENCES partnerships (id),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    paid_on TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX partnership_buyout_payments_by_partnership ON partnership_buyout_payments (partnership_id);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -631,6 +664,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V10),
         M::up(SCHEMA_V11),
         M::up(SCHEMA_V12),
+        M::up(SCHEMA_V13),
     ])
 }
 
@@ -670,4 +704,6 @@ pub const TABLES: &[&str] = &[
     "ceremonies",
     "ceremony_scenarios",
     "ceremony_lines",
+    "partnerships",
+    "partnership_buyout_payments",
 ];
