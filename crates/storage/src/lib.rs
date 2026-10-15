@@ -17,6 +17,7 @@ mod prices;
 mod ventures;
 mod progress;
 mod repo;
+pub mod interchange;
 pub mod schema;
 
 pub use agreements::{

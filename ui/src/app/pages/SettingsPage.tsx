@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { AppInfoCard } from "../components/AppInfoCard";
 import { LanguageToggle } from "../components/LanguageToggle";
+import { ExchangeCard } from "../settings/ExchangeCard";
 
 /** Sozlamalar: til, maxfiylik va ilova ma'lumoti. */
 export function SettingsPage() {
@@ -34,6 +35,8 @@ export function SettingsPage() {
         </h2>
         <p className="text-sm text-muted">{t("settings.privacy.text")}</p>
       </section>
+
+      <ExchangeCard />
 
       <AppInfoCard />
     </div>

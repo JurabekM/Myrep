@@ -41,6 +41,9 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 33. **Hodisasiz vazifalar (D5).** `ch02.t2`, `ch02.t3`, `ch03.*`, `ch04.*`, `ch05.t1` uchun modullar hali yo'q: bu vazifalar faqat qo'lda belgilanadi. Modul tayyor bo'lganda shu hodisa `record_event` orqali yoziladi. `ch05.t2` — hodisasi yo'q, qo'lda. _Kerak: D6–D9 har modulida._
 34. **«Daftar sahifasi» uzunligi (D5).** Standart qaror: 5000 belgi (backend va textarea). Mobilda chegara yo'q edi. Chegara to'g'rimi yoki boshqacha bo'lsinmi? _Kerak: tasdiq._
 
+35. **Almashishda xonadon identifikatori (D14).** `.baraka` importi yozuvlarni `id` bo'yicha moslaydi; xonadon (`households.id`) ikkala qurilmada bir xil deb olinadi — ya'ni ikkinchi qurilma birinchisining eksportidan boshlanadi. Har qurilma o'z xonadonini yaratgan bo'lsa, importdan keyin ikki xonadon paydo bo'ladi (ilova birinchisini ishlatadi). Xonadonlarni birlashtirish qoidasi kerakmi yoki «faqat eksportdan boshlash» talab qilinadimi? _Kerak: mobil D14 ekvivalenti oldidan._
+36. **Fayl tanlash dialogi (D14).** `.baraka` yo'li matn maydonida kiritiladi (dialog plugin yoqilmagan, 9-band). Foydalanuvchi uchun qulaymi yoki `tauri-plugin-dialog` + comctl32 manifest yechimi kerakmi? _Kerak: D15 dan keyingi birinchi reliz oldidan._
+
 ## Hal qilingan
 
 - **MoneyParser (D4, 2026-10-14).** `money::parse_amount` mobil qoidalari bo'yicha: bo'sh joy, `_`, apostroflar, valyuta belgisi va so'zi; `money_parse.json` (16 vektor, shu jumladan xato holatlari). _(6-band)_

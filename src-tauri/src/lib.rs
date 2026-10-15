@@ -33,6 +33,8 @@ mod report;
 mod reserve;
 mod reserve_commands;
 mod session;
+mod sync;
+mod sync_commands;
 mod venture_commands;
 mod ventures;
 
@@ -177,6 +179,9 @@ fn specta_builder() -> Builder<tauri::Wry> {
         center_commands::list_family_templates,
         center_commands::create_family_agreement,
         center_commands::confirm_family,
+        sync_commands::export_baraka,
+        sync_commands::preview_baraka_import,
+        sync_commands::apply_baraka_import,
     ])
 }
 

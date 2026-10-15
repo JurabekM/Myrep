@@ -42,6 +42,15 @@ pub enum SecurityError {
     /// Shifrlash yoki ochish xatosi.
     #[error("shifrlash xatosi")]
     Crypto,
+    /// Almashish fayli paroli noto'g'ri.
+    #[error("parol noto'g'ri")]
+    WrongPassword,
+    /// Almashish fayli buzilgan yoki `.baraka` emas.
+    #[error("almashish fayli buzilgan yoki noto'g'ri formatda")]
+    CorruptContainer,
+    /// Parol juda qisqa (kamida 8 belgi).
+    #[error("parol kamida 8 belgi bo'lishi kerak")]
+    WeakPassword,
     /// Kalit faylini o'qish yoki yozish xatosi.
     #[error("kalit faylini o'qish/yozish xatosi: {0}")]
     Io(#[from] std::io::Error),

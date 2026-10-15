@@ -141,7 +141,7 @@ fn header_bytes(params: KdfParams, salt: &[u8; SALT_LEN]) -> [u8; HEADER_LEN] {
     header
 }
 
-fn seal(
+pub(crate) fn seal(
     key: &SecretKey,
     nonce: &[u8; NONCE_LEN],
     plaintext: &[u8],
@@ -160,7 +160,7 @@ fn seal(
         .map_err(|_| SecurityError::Crypto)
 }
 
-fn open(
+pub(crate) fn open(
     key: &SecretKey,
     nonce: &[u8; NONCE_LEN],
     ciphertext: &[u8],
@@ -179,7 +179,7 @@ fn open(
         .map_err(|_| SecurityError::Crypto)
 }
 
-fn random_array<const N: usize>() -> Result<[u8; N], SecurityError> {
+pub(crate) fn random_array<const N: usize>() -> Result<[u8; N], SecurityError> {
     let mut bytes = [0_u8; N];
     SysRng
         .try_fill_bytes(&mut bytes)

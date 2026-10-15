@@ -4,6 +4,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D14 — `.baraka` eksport/import (telefon ↔ desktop) (2026-10-15)
+
+**Qo'shildi**
+
+- `spec/interchange/export-format.schema.json` (JSON Schema 2020-12) va `README.md` — konteyner tartibi, birlashtirish qoidalari; mobil bilan umumiy.
+- `security::container` — `seal_container` / `open_container`: Argon2id(parol, tuz) → XChaCha20-Poly1305, sarlavha AAD; `WRONG_PASSWORD`, `CORRUPT_CONTAINER`, `WEAK_PASSWORD` (≥ 8 belgi) xatolari.
+- `storage::interchange` — umumiy (jadvalga bog'lanmagan) JSON eksport (to'liq yoki `since` bo'yicha inkremental) va import: `id` bo'yicha moslash, `version` kattasi / `updated_at` kechrog'i yutadi, tombstone oddiy maydon; **jurnal**: kiruvchi zanjir qayta hisoblanadi (`verify_chain`) va mahalliy bilan solishtiriladi (`check_import`) — fork bo'lsa import butunlay to'xtaydi, faqat davomi qo'shiladi; yopilgan davrlar va imzolar faqat qo'shiladi; imzolangan kelishuvning shu versiyasi o'zgarmaydi. Dry-run (tranzaksiya + rollback) → ko'rik.
+- Xizmat `src-tauri/src/sync.rs` va 3 command: `export_baraka` (ilova papkasi `exports/` yoki berilgan yo'l), `preview_baraka_import`, `apply_baraka_import`. `ApiError` ga parol/konteyner kodlari.
+- UI: Sozlamalar → **Telefon bilan almashish** kartasi — eksport (yo'l, parol, «shu sanadan keyin»), import ko'rigi (qo'shiladi/yangilanadi, jurnal, ziddiyatlar, forklar) → tasdiqlab qo'llash; fork bo'lsa qo'llash tugmasi yo'q.
+- Testlar: security 2, storage 3 (round-trip 1:1 barcha jadvallar + xeshlar qayta hisoblanadi + idempotent; fork va buzilgan zanjir; versiya/ziddiyat/inkremental), Tauri 1 (fayl → yangi baza, noto'g'ri parol), UI 3.
+
+**Qarorlar**
+
+- Fayl tanlash dialogi yo'q (ADR: dialog plugin yoqilmagan) — yo'l matn maydonida; standart — ilova papkasi.
+- `schemars` qo'shilmadi: sxema qo'lda yozildi, kod formatni (`format`, `schemaVersion`) tekshiradi.
+- Xonadon identifikatori ikkala qurilmada bir xil deb olinadi (birinchi qurilma eksportidan ikkinchisi boshlanadi) — `OPEN_QUESTIONS` ga yozildi.
+- GUI sinovi — D10 dagi sabab (PIN) tufayli kutilmoqda.
+
 ### D13A — Kelishuvlar markazi: vazifalar, ko'rik, «katta foyda», nizo va hakam, oilaviy kelishuvlar (2026-10-15)
 
 **Qo'shildi**

@@ -255,6 +255,12 @@ export const commands = {
 	createFamilyAgreement: (templateId: string) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("create_family_agreement", { templateId })),
 	/**  ADULT a'zo PIN bilan tasdiqlaydi. */
 	confirmFamily: (input: FamilyConfirmInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("confirm_family", { input })),
+	/**  `.baraka` eksport (to'liq yoki `since` dan keyingi o'zgarishlar). */
+	exportBaraka: (input: ExportInputDto) => typedError<ExportResultDto, ApiError>(__TAURI_INVOKE("export_baraka", { input })),
+	/**  Import ko'rigi (hech narsa yozilmaydi). */
+	previewBarakaImport: (input: ImportInputDto) => typedError<ImportReportDto, ApiError>(__TAURI_INVOKE("preview_baraka_import", { input })),
+	/**  Importni qo'llaydi. */
+	applyBarakaImport: (input: ImportInputDto) => typedError<ImportReportDto, ApiError>(__TAURI_INVOKE("apply_baraka_import", { input })),
 };
 
 /* Types */
@@ -417,6 +423,12 @@ retryAfterSeconds: number } |
 { code: "KEY_UNAVAILABLE" } | 
 /**  Baza qulflangan: avval PIN bilan ochish kerak. */
 { code: "LOCKED" } | 
+/**  `.baraka` fayli paroli noto'g'ri. */
+{ code: "WRONG_PASSWORD" } | 
+/**  `.baraka` fayli buzilgan yoki noto'g'ri formatda. */
+{ code: "CORRUPT_CONTAINER" } | 
+/**  Parol juda qisqa. */
+{ code: "WEAK_PASSWORD" } | 
 /**  Ma'lumotlar bazasi bor, lekin kalit fayli yo'q (sozlab bo'lmaydi). */
 { code: "DATABASE_WITHOUT_KEY" } | 
 /**  Biznes qoidasi buzildi. `rule` — domen xato kodi (masalan, `INSUFFICIENT_BALANCE`). */
@@ -805,6 +817,16 @@ export type ConfirmCeremonyInputDto = {
 	scenarioId: string,
 };
 
+/**  Ziddiyat. */
+export type ConflictDto = {
+	/**  Jadval. */
+	table: string,
+	/**  Yozuv. */
+	id: string,
+	/**  Sabab kodi. */
+	reason: string,
+};
+
 /**  Oilaviy rozilik. */
 export type ConsentInputDto = {
 	/**  Sheriklik. */
@@ -1068,6 +1090,26 @@ export type ExpenseInputDto = {
 	fundedByDebt: boolean,
 };
 
+/**  `.baraka` eksport kirishi (D14). */
+export type ExportInputDto = {
+	/**  Fayl yo'li; bo'sh — ilova papkasi (`exports/`). */
+	path: string | null,
+	/**  Parol (kamida 8 belgi). Loglanmaydi. */
+	password: string,
+	/**  Inkremental: shu vaqtdan keyingi o'zgarishlar (ISO 8601); bo'sh — to'liq. */
+	since: string | null,
+};
+
+/**  Eksport natijasi. */
+export type ExportResultDto = {
+	/**  Yozilgan fayl. */
+	path: string,
+	/**  Jadvallar soni. */
+	tables: number,
+	/**  Qatorlar soni. */
+	rows: number,
+};
+
 /**  Katta a'zo holati. */
 export type FamilyAdultDto = {
 	/**  A'zo. */
@@ -1106,6 +1148,14 @@ export type FamilyTemplateDto = {
 	title: string,
 	/**  Tavsif. */
 	description: string,
+};
+
+/**  Fork. */
+export type ForkDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Birinchi farq (1 dan); 0 — kiruvchi zanjirning o'zi buzilgan. */
+	firstBroken: number,
 };
 
 /**  Odat (streak) ko'rsatkichlari. */
@@ -1180,6 +1230,34 @@ export type HustleScenarioDto = {
 	myNet: MoneyDto,
 	/**  Qoplanish muddati (oy), bo'lsa. */
 	paybackMonths: number | null,
+};
+
+/**  Import kirishi. */
+export type ImportInputDto = {
+	/**  `.baraka` fayl yo'li. */
+	path: string,
+	/**  Parol. */
+	password: string,
+};
+
+/**  Import hisoboti (ko'rik yoki natija). */
+export type ImportReportDto = {
+	/**  Fork topildi — hech narsa yozilmadi. */
+	blocked: boolean,
+	/**  Qo'shiladigan/qo'shilgan yozuvlar. */
+	inserted: TableCountDto[],
+	/**  Yangilanadigan/yangilangan yozuvlar. */
+	updated: TableCountDto[],
+	/**  Ziddiyatlar (mahalliy saqlandi). */
+	conflicts: ConflictDto[],
+	/**  Zanjir ayrilishlari. */
+	forks: ForkDto[],
+	/**  Jurnalga qo'shilgan yozuvlar. */
+	journalAppended: number,
+	/**  Eksport vaqti. */
+	exportedAt: string,
+	/**  Eksport qurilmasi. */
+	deviceId: string,
 };
 
 /**  Vazifa hodisasi. */
@@ -2088,6 +2166,14 @@ export type SummaryLineDto = {
 	label: string,
 	/**  Summa. */
 	amount: MoneyDto,
+};
+
+/**  Jadval bo'yicha son. */
+export type TableCountDto = {
+	/**  Jadval. */
+	table: string,
+	/**  Son. */
+	count: number,
 };
 
 /**  Haftalik vazifa. */

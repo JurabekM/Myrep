@@ -62,6 +62,12 @@ pub enum ApiError {
     KeyUnavailable,
     /// Baza qulflangan: avval PIN bilan ochish kerak.
     Locked,
+    /// `.baraka` fayli paroli noto'g'ri.
+    WrongPassword,
+    /// `.baraka` fayli buzilgan yoki noto'g'ri formatda.
+    CorruptContainer,
+    /// Parol juda qisqa.
+    WeakPassword,
     /// Ma'lumotlar bazasi bor, lekin kalit fayli yo'q (sozlab bo'lmaydi).
     DatabaseWithoutKey,
     /// Biznes qoidasi buzildi. `rule` — domen xato kodi (masalan, `INSUFFICIENT_BALANCE`).
@@ -89,6 +95,9 @@ impl From<SessionError> for ApiError {
                 SecurityError::KeyUnavailable | SecurityError::KeyringMismatch,
             ) => Self::KeyUnavailable,
             SessionError::Locked => Self::Locked,
+            SessionError::Security(SecurityError::WrongPassword) => Self::WrongPassword,
+            SessionError::Security(SecurityError::CorruptContainer) => Self::CorruptContainer,
+            SessionError::Security(SecurityError::WeakPassword) => Self::WeakPassword,
             SessionError::DatabaseWithoutKey => Self::DatabaseWithoutKey,
             SessionError::Domain(domain_error) => Self::Rule {
                 rule: domain_error.code().to_owned(),

@@ -116,7 +116,10 @@
     "partnershipStructureInvalid": "Tuzilma turga mos emas: mudarabada kapital faqat bir tomondan, musharakada kamida ikki tomondan",
     "profitSharesNot100": "Foyda ulushlari yig'indisi 100 % bo'lishi kerak",
     "guaranteedReturnForbidden": "Kafolatlangan summa — bu sheriklik emas, ribo yoki qarz",
-    "periodClosed": "Bu davr yopilgan: unga yozib bo'lmaydi"
+    "periodClosed": "Bu davr yopilgan: unga yozib bo'lmaydi",
+    "wrongPassword": "Almashish fayli paroli noto'g'ri",
+    "corruptContainer": "Fayl buzilgan yoki .baraka emas",
+    "weakPassword": "Parol kamida 8 belgi bo'lishi kerak"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -1144,5 +1147,28 @@
     "title": "Oilaviy kelishuvlar",
     "intro": "To'rt shablon: yengil format, guvoh va hakam ixtiyoriy, imzo o'rniga kattalar PIN bilan tasdiqlaydi. Odob va hurmat doirasida — buyruq yoki nazorat ohangisiz.",
     "create": "Shablondan yaratish"
+  },
+  "exchange": {
+    "title": "Telefon bilan almashish (.baraka)",
+    "hint": "Shifrlangan fayl: Argon2id(parol) + XChaCha20-Poly1305. Server yo'q — faylni o'zingiz ko'chirasiz. Import avval ko'rik sifatida hisoblanadi; zanjir ayrilgan bo'lsa (fork) hech narsa yozilmaydi.",
+    "exportTitle": "Eksport",
+    "exportPath": "Fayl yo'li (bo'sh — ilova papkasi)",
+    "password": "Eksport paroli (kamida 8 belgi)",
+    "since": "Faqat shu sanadan keyingi o'zgarishlar (ixtiyoriy)",
+    "exportButton": "Eksport qilish",
+    "exportDone": "Yozildi: {{path}} ({{tables}} jadval, {{rows}} qator)",
+    "importTitle": "Import",
+    "importPath": "Fayl yo'li (.baraka)",
+    "previewButton": "Ko'rib chiqish",
+    "previewTitle": "Import ko'rigi",
+    "appliedTitle": "Import natijasi",
+    "applyButton": "Importni qo'llash",
+    "appliedDone": "Import qo'llandi. Sahifalar yangilandi.",
+    "blocked": "Zanjir ayrilgan (fork): import to'xtatildi, hech narsa yozilmadi — avtomatik birlashtirilmaydi. Hisob yurituvchi qurilmadagi nusxani asos qilib oling.",
+    "source": "Manba: {{device}} · {{at}}",
+    "summary": "{{inserted}} qo'shiladi, {{updated}} yangilanadi, jurnalga {{journal}} yozuv",
+    "fork": "Kelishuv {{agreement}}: zanjir {{seq}}-yozuvdan ayrilgan",
+    "conflict": "{{table}} / {{id}}…: {{reason}} (mahalliy saqlandi)",
+    "importPassword": "Import paroli"
   }
 }

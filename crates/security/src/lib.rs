@@ -5,6 +5,7 @@
 //! kalit bilan. Shunda faqat PIN ham, faqat keyring ham yetarli emas.
 
 mod auto_lock;
+mod container;
 mod error;
 mod kdf;
 mod key;
@@ -16,6 +17,7 @@ mod vault;
 mod wrap;
 
 pub use auto_lock::{AUTO_LOCK_TIMEOUT, AutoLockPolicy};
+pub use container::{MIN_PASSWORD_CHARS, open_container, seal_container, validate_password};
 pub use error::SecurityError;
 pub use kdf::{KdfParams, SALT_LEN};
 pub use key::SecretKey;

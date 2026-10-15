@@ -51,6 +51,9 @@ export const RULE_ERROR_KEYS = {
   PROFIT_SHARES_NOT_100: "errors.profitSharesNot100",
   GUARANTEED_RETURN_FORBIDDEN: "errors.guaranteedReturnForbidden",
   PERIOD_CLOSED: "errors.periodClosed",
+  WRONG_PASSWORD: "errors.wrongPassword",
+  CORRUPT_CONTAINER: "errors.corruptContainer",
+  WEAK_PASSWORD: "errors.weakPassword",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

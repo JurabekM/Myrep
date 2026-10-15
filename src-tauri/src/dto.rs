@@ -2318,3 +2318,91 @@ pub struct FamilyTemplateDto {
     /// Tavsif.
     pub description: String,
 }
+
+/// `.baraka` eksport kirishi (D14).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportInputDto {
+    /// Fayl yo'li; bo'sh — ilova papkasi (`exports/`).
+    pub path: Option<String>,
+    /// Parol (kamida 8 belgi). Loglanmaydi.
+    pub password: String,
+    /// Inkremental: shu vaqtdan keyingi o'zgarishlar (ISO 8601); bo'sh — to'liq.
+    pub since: Option<String>,
+}
+
+/// Eksport natijasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportResultDto {
+    /// Yozilgan fayl.
+    pub path: String,
+    /// Jadvallar soni.
+    pub tables: u32,
+    /// Qatorlar soni.
+    pub rows: u32,
+}
+
+/// Import kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportInputDto {
+    /// `.baraka` fayl yo'li.
+    pub path: String,
+    /// Parol.
+    pub password: String,
+}
+
+/// Import hisoboti (ko'rik yoki natija).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportReportDto {
+    /// Fork topildi — hech narsa yozilmadi.
+    pub blocked: bool,
+    /// Qo'shiladigan/qo'shilgan yozuvlar.
+    pub inserted: Vec<TableCountDto>,
+    /// Yangilanadigan/yangilangan yozuvlar.
+    pub updated: Vec<TableCountDto>,
+    /// Ziddiyatlar (mahalliy saqlandi).
+    pub conflicts: Vec<ConflictDto>,
+    /// Zanjir ayrilishlari.
+    pub forks: Vec<ForkDto>,
+    /// Jurnalga qo'shilgan yozuvlar.
+    pub journal_appended: u32,
+    /// Eksport vaqti.
+    pub exported_at: String,
+    /// Eksport qurilmasi.
+    pub device_id: String,
+}
+
+/// Jadval bo'yicha son.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TableCountDto {
+    /// Jadval.
+    pub table: String,
+    /// Son.
+    pub count: u32,
+}
+
+/// Ziddiyat.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ConflictDto {
+    /// Jadval.
+    pub table: String,
+    /// Yozuv.
+    pub id: String,
+    /// Sabab kodi.
+    pub reason: String,
+}
+
+/// Fork.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ForkDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Birinchi farq (1 dan); 0 — kiruvchi zanjirning o'zi buzilgan.
+    pub first_broken: u32,
+}
