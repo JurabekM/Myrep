@@ -604,6 +604,29 @@ pub struct GoalDto {
     pub id: String,
     pub title: String,
     pub target: MoneyDto,
+    /// Mehmonlar va oila hissasi (to'yona o'rniga jamg'arma).
+    pub collected: MoneyDto,
+    pub collected_percent: String,
+    pub contributions: Vec<GoalContributionDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GoalContributionDto {
+    pub id: String,
+    pub contributor: String,
+    pub amount: MoneyDto,
+    pub given_on: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewGoalContributionInput {
+    pub contributor: String,
+    pub amount: String,
+    pub given_on: Option<String>,
 }
 
 /// Qarzlar ekrani: «yaraning hajmi» (uy/SPEC 2C.7).
@@ -809,4 +832,161 @@ pub struct SellItemInput {
 pub struct SellResultDto {
     pub item: SellableItemDto,
     pub repayment: Option<RepaymentResultDto>,
+}
+
+/// Marosim rejasi (uy/SPEC 2D.8). Turlari: `TOY`, `BESHIK_TOY`, `SUNNAT_TOY`, `MARAKA`, `OTHER`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewCeremonyInput {
+    pub kind: String,
+    pub title: String,
+    /// `15.06.2027` yoki `2027-06-15`.
+    pub planned_on: Option<String>,
+    /// Birinchi stsenariy.
+    pub scenario_name: String,
+    pub guests: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyUpdateInput {
+    pub title: String,
+    pub planned_on: Option<String>,
+    /// Qarzni uzish uchun oylik ajratma; bo'lmasa — daromadning qo'shimcha to'lov ulushi.
+    pub monthly_capacity: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ScenarioInput {
+    pub name: String,
+    pub guests: i32,
+    /// Yangi stsenariy shu stsenariy qatorlaridan nusxa olinadi.
+    pub copy_from: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NewCeremonyLineInput {
+    pub title: String,
+    /// `ONE_OFF` yoki `PER_GUEST`.
+    pub kind: String,
+    /// Bir martalik summa yoki kishi boshiga narx.
+    pub amount: String,
+    /// `SAVINGS`, `FAMILY`, `EXPECTED_GIFTS`, `DEBT`.
+    pub source: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DiscussionAnswerDto {
+    /// `guests`, `days`, `cut`, `sources`.
+    pub key: String,
+    pub note: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyLineDto {
+    pub id: String,
+    pub title: String,
+    pub kind: String,
+    /// Bir martalik summa yoki kishi boshiga narx.
+    pub amount: MoneyDto,
+    pub total: MoneyDto,
+    pub source: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SourceTotalsDto {
+    pub savings: MoneyDto,
+    pub family: MoneyDto,
+    pub expected_gifts: MoneyDto,
+    pub debt: MoneyDto,
+}
+
+/// Stsenariy: jami, manbalar, qarzni uzish muddati (U9 simulyatori), eng qimmatiga nisbatan tejam.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ScenarioDto {
+    pub id: String,
+    pub name: String,
+    pub guests: i32,
+    pub selected: bool,
+    pub lines: Vec<CeremonyLineDto>,
+    pub total: MoneyDto,
+    pub by_source: SourceTotalsDto,
+    pub has_debt: bool,
+    pub payoff_months: Option<u32>,
+    pub payoff_date: Option<String>,
+    /// Qarz bor, oylik ajratma 0 — qarz yopilmaydi.
+    pub not_repayable: bool,
+    pub saved_vs_max: MoneyDto,
+    pub goal_equivalents: Vec<GoalEquivalentDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SignoffDto {
+    pub member_id: String,
+    pub name: String,
+    pub agreed_on: Option<String>,
+}
+
+/// «Buni qarzsiz qanday o'tkazamiz?» oilaviy muhokamasi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DiscussionDto {
+    /// Tanlangan stsenariyda qarz bor — tasdiqlashdan oldin majburiy.
+    pub required: bool,
+    pub answers: Vec<DiscussionAnswerDto>,
+    pub adults: Vec<SignoffDto>,
+    pub complete: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonyDto {
+    pub id: String,
+    pub kind: String,
+    pub title: String,
+    pub planned_on: Option<String>,
+    /// `DRAFT`, `DISCUSSED`, `CONFIRMED`.
+    pub status: String,
+    pub monthly_capacity: MoneyDto,
+    /// `MANUAL`, `INCOME_SHARE` yoki `NONE`.
+    pub capacity_source: String,
+    pub scenarios: Vec<ScenarioDto>,
+    pub discussion: DiscussionDto,
+    pub can_confirm: bool,
+    /// `NO_SCENARIO_SELECTED`, `DISCUSSION_REQUIRED`, `CEREMONY_LOCKED`.
+    pub confirm_blocker: Option<String>,
+    /// Kutilayotgan to'yona manbasi bor — bu kelajakda qaytariladigan majburiyat (OQ-P1).
+    pub gifts_warning: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CeremonySummaryDto {
+    pub id: String,
+    pub kind: String,
+    pub title: String,
+    pub planned_on: Option<String>,
+    pub status: String,
+    /// Tanlangan (bo'lmasa — birinchi) stsenariy jami.
+    pub total: Option<MoneyDto>,
+    pub has_debt: bool,
 }

@@ -8,5 +8,8 @@
 mod documents;
 mod engine;
 
-pub use documents::{LoanReceipt, PdfLocale, ScheduleLine};
+pub use documents::{
+    CeremonyEstimate, EstimateAgreement, EstimateAnswer, EstimateLine, EstimateTotal, LoanReceipt,
+    PdfLocale, ScheduleLine,
+};
 pub use engine::{PdfEngine, PdfError, Rendered};

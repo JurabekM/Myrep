@@ -7,6 +7,7 @@ use serde_json::{json, Map, Value};
 use crate::{PdfEngine, PdfError, Rendered};
 
 const LOAN_RECEIPT: &str = include_str!("../../../../shared/pdf/loan_receipt.typ");
+const CEREMONY_ESTIMATE: &str = include_str!("../../../../shared/pdf/ceremony_estimate.typ");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PdfLocale {
@@ -116,5 +117,88 @@ impl LoanReceipt {
             files.push(("qr.svg", qr_svg(head)?));
         }
         engine.render(LOAN_RECEIPT, &data, &files, &self.ident, today)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct EstimateLine {
+    pub title: String,
+    /// `ONE_OFF` yoki `PER_GUEST`.
+    pub kind: String,
+    /// Kishi boshiga narx (formatlangan).
+    pub unit: String,
+    pub guests: String,
+    pub amount: String,
+    /// `SAVINGS`, `FAMILY`, `EXPECTED_GIFTS`, `DEBT`.
+    pub source: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct EstimateTotal {
+    pub source: String,
+    pub amount: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct EstimateAnswer {
+    pub key: String,
+    pub note: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct EstimateAgreement {
+    pub name: String,
+    pub date: String,
+}
+
+/// Marosim smetasi. Kodlar (tur, holat, manba) shablonda `pdf.*` matnlariga aylantiriladi.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CeremonyEstimate {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub kind: String,
+    pub title: String,
+    pub date: Option<String>,
+    pub status: String,
+    pub scenario: String,
+    pub guests: String,
+    pub lines: Vec<EstimateLine>,
+    pub totals: Vec<EstimateTotal>,
+    pub total: String,
+    pub payoff_months: Option<String>,
+    pub payoff_date: Option<String>,
+    pub answers: Vec<EstimateAnswer>,
+    pub agreed: Vec<EstimateAgreement>,
+    pub adults: Vec<String>,
+}
+
+impl CeremonyEstimate {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = labels
+            .get("estimate.title")
+            .and_then(Value::as_str)
+            .unwrap_or("Smeta")
+            .to_string();
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.title),
+            "name": self.title,
+            "labels": labels,
+            "kind": self.kind,
+            "date": self.date,
+            "status": self.status,
+            "scenario": self.scenario,
+            "guests": self.guests,
+            "lines": self.lines,
+            "totals": self.totals,
+            "total": self.total,
+            "payoff_months": self.payoff_months,
+            "payoff_date": self.payoff_date,
+            "answers": self.answers,
+            "agreed": self.agreed,
+            "adults": self.adults,
+        });
+        engine.render(CEREMONY_ESTIMATE, &data, &[], &self.ident, today)
     }
 }

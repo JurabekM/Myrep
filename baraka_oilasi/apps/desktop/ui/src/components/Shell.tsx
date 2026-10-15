@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { commands } from "../bindings";
 import { AuditScreen } from "../features/audit/AuditScreen";
+import { CeremoniesScreen } from "../features/ceremony/CeremoniesScreen";
 import { ExpensesScreen } from "../features/expenses/ExpensesScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { DebtsScreen } from "../features/inventory/DebtsScreen";
@@ -24,6 +25,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "audit", label: "nav.audit" },
   { screen: "inventory", label: "nav.inventory" },
   { screen: "debts", label: "nav.debts" },
+  { screen: "ceremonies", label: "nav.ceremonies" },
   { screen: "receipt", label: "nav.receipt" },
 ];
 
@@ -34,6 +36,7 @@ const MENTOR: Record<Screen, string> = {
   audit: "mentor.audit",
   inventory: "mentor.inventory",
   debts: "mentor.debts",
+  ceremonies: "mentor.ceremonies",
   receipt: "mentor.receipt",
 };
 
@@ -95,6 +98,7 @@ export function Shell() {
         {active && screen === "audit" && <AuditScreen spaceId={active} />}
         {active && screen === "inventory" && <DebtsScreen spaceId={active} />}
         {active && screen === "debts" && <PayoffScreen spaceId={active} />}
+        {active && screen === "ceremonies" && <CeremoniesScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />

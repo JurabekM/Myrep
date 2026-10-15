@@ -313,6 +313,168 @@ impl BarakaCore {
         self.session.app()?.sell_item(&space_id, &item_id, input)
     }
 
+    // U10: marosim rejalovchisi.
+    pub fn ceremonies(&self, space_id: String) -> Result<Vec<CeremonySummaryDto>, AppError> {
+        self.session.app()?.ceremonies(&space_id)
+    }
+
+    pub fn ceremony(&self, space_id: String, ceremony_id: String) -> Result<CeremonyDto, AppError> {
+        self.session.app()?.ceremony(&space_id, &ceremony_id)
+    }
+
+    pub fn create_ceremony(
+        &self,
+        space_id: String,
+        input: NewCeremonyInput,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session.app()?.create_ceremony(&space_id, input)
+    }
+
+    pub fn update_ceremony(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        input: CeremonyUpdateInput,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .update_ceremony(&space_id, &ceremony_id, input)
+    }
+
+    pub fn add_scenario(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        input: ScenarioInput,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .add_scenario(&space_id, &ceremony_id, input)
+    }
+
+    pub fn update_scenario(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        scenario_id: String,
+        input: ScenarioInput,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .update_scenario(&space_id, &ceremony_id, &scenario_id, input)
+    }
+
+    pub fn delete_scenario(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        scenario_id: String,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .delete_scenario(&space_id, &ceremony_id, &scenario_id)
+    }
+
+    pub fn select_scenario(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        scenario_id: String,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .select_scenario(&space_id, &ceremony_id, &scenario_id)
+    }
+
+    pub fn add_ceremony_line(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        scenario_id: String,
+        input: NewCeremonyLineInput,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .add_ceremony_line(&space_id, &ceremony_id, &scenario_id, input)
+    }
+
+    pub fn delete_ceremony_line(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        line_id: String,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .delete_ceremony_line(&space_id, &ceremony_id, &line_id)
+    }
+
+    pub fn save_discussion(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        answers: Vec<DiscussionAnswerDto>,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .save_discussion(&space_id, &ceremony_id, answers)
+    }
+
+    pub fn agree_discussion(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+        member_id: String,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .agree_discussion(&space_id, &ceremony_id, &member_id)
+    }
+
+    pub fn confirm_ceremony(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session
+            .app()?
+            .confirm_ceremony(&space_id, &ceremony_id)
+    }
+
+    pub fn reopen_ceremony(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+    ) -> Result<CeremonyDto, AppError> {
+        self.session.app()?.reopen_ceremony(&space_id, &ceremony_id)
+    }
+
+    pub fn delete_ceremony(&self, space_id: String, ceremony_id: String) -> Result<(), AppError> {
+        self.session.app()?.delete_ceremony(&space_id, &ceremony_id)
+    }
+
+    pub fn add_goal_contribution(
+        &self,
+        space_id: String,
+        goal_id: String,
+        input: NewGoalContributionInput,
+    ) -> Result<GoalDto, AppError> {
+        self.session
+            .app()?
+            .add_goal_contribution(&space_id, &goal_id, input)
+    }
+
+    /// Marosim smetasi PDF baytlari (Dart tomonida ulashiladi yoki chop etiladi).
+    pub fn ceremony_estimate_pdf(
+        &self,
+        space_id: String,
+        ceremony_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session
+            .app()?
+            .ceremony_estimate_pdf(&space_id, &ceremony_id)
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

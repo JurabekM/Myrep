@@ -45,6 +45,23 @@
     "allow-add-contributor",
     "allow-sellable-items",
     "allow-add-sellable-item",
-    "allow-sell-item"
+    "allow-sell-item",
+    "allow-ceremonies",
+    "allow-ceremony",
+    "allow-create-ceremony",
+    "allow-update-ceremony",
+    "allow-add-scenario",
+    "allow-update-scenario",
+    "allow-delete-scenario",
+    "allow-select-scenario",
+    "allow-add-ceremony-line",
+    "allow-delete-ceremony-line",
+    "allow-save-discussion",
+    "allow-agree-discussion",
+    "allow-confirm-ceremony",
+    "allow-reopen-ceremony",
+    "allow-delete-ceremony",
+    "allow-add-goal-contribution",
+    "allow-export-ceremony-estimate"
   ]
 }

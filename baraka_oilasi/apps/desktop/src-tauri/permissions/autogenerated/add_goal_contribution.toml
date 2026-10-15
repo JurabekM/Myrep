@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-goal-contribution"
+description = "Enables the add_goal_contribution command without any pre-configured scope."
+commands.allow = ["add_goal_contribution"]
+
+[[permission]]
+identifier = "deny-add-goal-contribution"
+description = "Denies the add_goal_contribution command without any pre-configured scope."
+commands.deny = ["add_goal_contribution"]

@@ -5,6 +5,7 @@
 pub mod allocation;
 pub mod amortization;
 pub mod audit;
+pub mod ceremony;
 pub mod debt;
 pub mod emergency;
 pub mod gate;

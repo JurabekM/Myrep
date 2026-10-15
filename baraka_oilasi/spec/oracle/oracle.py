@@ -407,6 +407,45 @@ def payoff_plan(debts, today, pool):
     return res, total
 
 
+# --- U10: marosim rejalovchisi (uy/SPEC 2D.8) -------------------------------------------
+SOURCES = ("SAVINGS", "FAMILY", "EXPECTED_GIFTS", "DEBT")
+
+
+def line_total(kind, amount, guests):
+    if amount <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if kind == "ONE_OFF":
+        return amount
+    if kind == "PER_GUEST":
+        return amount * guests
+    raise OracleError("INVALID_LINE_KIND")
+
+
+def scenario_totals(lines, guests):
+    """lines: [(kind, amount, source)]. Manba bo'yicha yig'indilar."""
+    if guests < 0:
+        raise OracleError("INVALID_GUESTS")
+    by = {k: 0 for k in SOURCES}
+    for kind, amount, source in lines:
+        if source not in SOURCES:
+            raise OracleError("INVALID_SOURCE")
+        by[source] += line_total(kind, amount, guests)
+    return sum(by.values()), by
+
+
+def informal_debt_payoff(debt, start, monthly):
+    """Marosim qarzini oyiga `monthly` bilan uzish — U9 simulyatori bilan (muddatsiz foizsiz qarz:
+    reja qatori juda uzoqda, faqat qo'shimcha to'lov yopadi). Qarz yo'q — (0, None);
+    to'lov 0 — None (yopilmaydi)."""
+    if debt == 0:
+        return 0, None
+    if monthly <= 0:
+        return None
+    st = Scheduled([(add_months(month_start(start), MAX_WINDOWS), debt)], [])
+    res, _ = payoff_plan([("c", st, 0)], start, monthly)
+    return res["c"]["months"], res["c"]["payoffDate"]
+
+
 def default_order(keys):
     """keys: [(id, ribo, cost_bp, payoff_date, priority)]. Qo'lda tartib bo'lsa — u birinchi; keyin
     foizli qarzlar (eng qimmati birinchi), keyin foizsizlar (muddati yaqini birinchi)."""
@@ -821,12 +860,46 @@ def build_suites():
         _case(cid, {"currency": U, "payments": _s(p), "income": _s(i)}, lambda p=p, i=i: {"loadBp": debt_load_bp(p, i)})
         for cid, p, i in (("load-001", 322147684, 1200000000), ("load-002", 0, 800000000),
                           ("load-003", 150000000, 0), ("load-004", 100000000, 300000000))])
+    def cer_case(cid, start, capacity, goals, scenarios):
+        inp = {"currency": U, "start": start, "monthlyCapacity": capacity, "goals": goals,
+               "scenarios": [{"name": n, "guests": g, "lines": [{"kind": k, "amount": a, "source": src} for k, a, src in ls]}
+                             for n, g, ls in scenarios]}
+
+        def run():
+            tots = [scenario_totals([(k, int(a), src) for k, a, src in ls], g) for _, g, ls in scenarios]
+            mx = max(t for t, _ in tots)
+            out = []
+            for (n, g, ls), (total, by) in zip(scenarios, tots):
+                pay = informal_debt_payoff(by["DEBT"], D(start), int(capacity))
+                saved = mx - total
+                out.append({"name": n, "total": _s(total), "bySource": {k: _s(v) for k, v in by.items()},
+                            "payoffMonths": None if pay is None else pay[0],
+                            "payoffDate": None if pay is None or pay[1] is None else pay[1].isoformat(),
+                            "savedVsMax": _s(saved),
+                            "goalsBp": [round_half_up(Fraction(saved * 10000, int(t))) for t in goals]})
+            return {"scenarios": out}
+        return _case(cid, inp, run)
+
+    toy3 = ("3 kunlik, 200 kishi", 200, [("PER_GUEST", "25000000", "SAVINGS"), ("ONE_OFF", "1500000000", "FAMILY"),
+                                         ("ONE_OFF", "800000000", "EXPECTED_GIFTS"), ("ONE_OFF", "2000000000", "DEBT")])
+    toy1 = ("1 kunlik, 100 kishi", 100, [("PER_GUEST", "25000000", "SAVINGS"), ("ONE_OFF", "600000000", "FAMILY"),
+                                         ("ONE_OFF", "400000000", "EXPECTED_GIFTS")])
+    toy2 = ("Oʻrtacha, 150 kishi", 150, [("PER_GUEST", "25000000", "SAVINGS"), ("ONE_OFF", "1000000000", "FAMILY"),
+                                         ("ONE_OFF", "500000000", "DEBT")])
+    suites["ceremony_scenarios"] = _suite("ceremony_scenarios", "Marosim stsenariylari: qator = summa yoki kishi boshiga × mehmonlar; manba bo'yicha yig'indi; qarzni oyiga X bilan uzish — U9 simulyatori; eng qimmatiga nisbatan tejam va maqsadlar", [
+        cer_case("cer-001-karim", "2027-05-20", "240000000", ["1200000000"], [toy3, toy1, toy2]),
+        cer_case("cer-002-no-capacity", "2027-05-20", "0", [], [toy3, toy1]),
+        cer_case("cer-003-big-capacity", "2027-05-31", "3000000000", [], [toy2]),
+        cer_case("cer-neg-001-guests", "2027-05-20", "240000000", [], [("x", -1, [("ONE_OFF", "100", "SAVINGS")])]),
+        cer_case("cer-neg-002-amount", "2027-05-20", "240000000", [], [("x", 10, [("PER_GUEST", "0", "SAVINGS")])]),
+        cer_case("cer-neg-003-source", "2027-05-20", "240000000", [], [("x", 10, [("ONE_OFF", "100", "BANK")])]),
+    ])
     return suites
 
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
-                 "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan")
+                 "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios")
 
 
 def generate(directory: str) -> None:
@@ -962,6 +1035,9 @@ def selftest() -> None:
         assert (res["a"]["months"], res["a"]["interest"]) == (months, interest), (extra, res["a"]["months"])
         assert res["a"]["rows"][-1]["balance"] == 0
     assert remaining_lines([(1, 300), (2, 300), (3, 300)], 300, 400) == [(2, 200)]
+    # U10: 20 mln qarz oyiga 2,4 mln bilan: 9 oy (8×2,4 = 19,2 mln), oxirgi oy 0,8 mln
+    assert informal_debt_payoff(2000000000, date(2027, 5, 20), 240000000) == (9, date(2028, 1, 1))
+    assert informal_debt_payoff(0, date(2027, 5, 20), 0) == (0, None)
     print("oracle selftest: OK")
 
 

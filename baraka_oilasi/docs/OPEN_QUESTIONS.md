@@ -9,7 +9,8 @@
 ### OQ-P1. «To'yona daftari»
 - **Masala:** to'yona sovg'a emas, qaytariladigan ijtimoiy majburiyat. `EXPECTED_GIFTS` manbasi aslida kelajakdagi yashirin majburiyat.
 - **Taklif:** marosim rejalovchisiga «To'yona daftari» (berilgan/olingan, kimga, qancha) qo'shish. Olingan to'yona kelajakdagi kutilayotgan majburiyat sifatida ko'rsatiladi (foizsiz, ayblovsiz).
-- **To'sadi:** U10. **Holat:** OCHIQ.
+- **To'sadi:** U10 (to'liq). **Holat:** OCHIQ.
+- **U10 da qilingan (vaqtinchalik):** daftar yo'q; `EXPECTED_GIFTS` manbali qator bo'lsa, marosim kartasida «kutilayotgan to'yona — kelajakda qaytariladigan majburiyat» ogohlantirishi chiqadi (`CeremonyDto.giftsWarning`), smetada manba alohida ko'rsatiladi. Qaror kerak: daftar marosimga bog'lanadimi yoki alohida bo'limmi; olingan to'yona qarzlar yukiga (`debt_load`) kiradimi.
 
 ### OQ-P2. Bitta ilova, uchta makon
 - **Masala:** uchta mahsulot alohida ilova bo'ladimi yoki bitta ilova ichidagi makonlarmi?

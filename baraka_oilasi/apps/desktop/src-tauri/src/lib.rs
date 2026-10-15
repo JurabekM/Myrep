@@ -68,6 +68,23 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::sellable_items,
             commands::add_sellable_item,
             commands::sell_item,
+            commands::ceremonies,
+            commands::ceremony,
+            commands::create_ceremony,
+            commands::update_ceremony,
+            commands::add_scenario,
+            commands::update_scenario,
+            commands::delete_scenario,
+            commands::select_scenario,
+            commands::add_ceremony_line,
+            commands::delete_ceremony_line,
+            commands::save_discussion,
+            commands::agree_discussion,
+            commands::confirm_ceremony,
+            commands::reopen_ceremony,
+            commands::delete_ceremony,
+            commands::add_goal_contribution,
+            commands::export_ceremony_estimate,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

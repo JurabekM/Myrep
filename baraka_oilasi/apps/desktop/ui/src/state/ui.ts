@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import type { RepaymentResultDto } from "../bindings";
 
-export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "receipt";
+export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "receipt";
 
 type UiState = {
   screen: Screen;

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-agree-discussion"
+description = "Enables the agree_discussion command without any pre-configured scope."
+commands.allow = ["agree_discussion"]
+
+[[permission]]
+identifier = "deny-agree-discussion"
+description = "Denies the agree_discussion command without any pre-configured scope."
+commands.deny = ["agree_discussion"]

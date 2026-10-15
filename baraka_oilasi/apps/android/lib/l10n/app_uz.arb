@@ -504,5 +504,178 @@
     "placeholders": {
       "date": {}
     }
-  }
+  },
+  "pdf_estimate_title": "Marosim smetasi",
+  "pdf_estimate_kind": "Marosim",
+  "pdf_estimate_date": "Sana",
+  "pdf_estimate_scenario": "Stsenariy",
+  "pdf_estimate_guests": "Mehmonlar",
+  "pdf_estimate_status": "Holat",
+  "pdf_estimate_lines": "Xarajatlar",
+  "pdf_estimate_item": "Xarajat",
+  "pdf_estimate_basis": "Hisob",
+  "pdf_estimate_source": "Manba",
+  "pdf_estimate_oneOff": "bir martalik",
+  "pdf_estimate_sources": "Moliyalash manbalari",
+  "pdf_estimate_total": "Jami",
+  "pdf_estimate_payoff": "Qarzni uzish muddati",
+  "pdf_estimate_months": "oy",
+  "pdf_estimate_discussion": "Oilaviy muhokama: buni qarzsiz qanday oʻtkazamiz?",
+  "pdf_estimate_agreed": "Muhokamaga rozilik",
+  "pdf_estimate_member": "Oila aʼzosi",
+  "pdf_kind_TOY": "Toʻy",
+  "pdf_kind_BESHIK_TOY": "Beshik toʻy",
+  "pdf_kind_SUNNAT_TOY": "Sunnat toʻy",
+  "pdf_kind_MARAKA": "Maʼraka",
+  "pdf_kind_OTHER": "Boshqa",
+  "pdf_status_DRAFT": "Qoralama",
+  "pdf_status_DISCUSSED": "Oilada muhokama qilingan",
+  "pdf_status_CONFIRMED": "Tasdiqlangan",
+  "pdf_source_SAVINGS": "Jamgʻarma",
+  "pdf_source_FAMILY": "Oila hissasi",
+  "pdf_source_EXPECTED_GIFTS": "Kutilayotgan toʻyona",
+  "pdf_source_DEBT": "Qarz",
+  "pdf_question_guests": "Mehmonlar sonini kamaytirsa boʻladimi?",
+  "pdf_question_days": "Bir kunda oʻtkazsa boʻladimi?",
+  "pdf_question_cut": "Qaysi xarajatdan voz kechsa boʻladi?",
+  "pdf_question_sources": "Qarzsiz manba bormi: jamgʻarma, oila hissasi, buyum sotish?",
+  "nav_ceremonies": "Marosimlar",
+  "mentor_ceremonies": "Toʻy — bir kun, qarz — yillar. Avval hisoblab koʻramiz, keyin oila bilan qaror qilamiz.",
+  "ceremony_title": "Marosimlar rejasi",
+  "ceremony_new": "Yangi marosim",
+  "ceremony_kindLabel": "Marosim turi",
+  "ceremony_kind_TOY": "Toʻy",
+  "ceremony_kind_BESHIK_TOY": "Beshik toʻy",
+  "ceremony_kind_SUNNAT_TOY": "Sunnat toʻy",
+  "ceremony_kind_MARAKA": "Maʼraka",
+  "ceremony_kind_OTHER": "Boshqa",
+  "ceremony_status_DRAFT": "Qoralama",
+  "ceremony_status_DISCUSSED": "Oilada muhokama qilingan",
+  "ceremony_status_CONFIRMED": "Tasdiqlangan",
+  "ceremony_source_SAVINGS": "Jamgʻarma",
+  "ceremony_source_FAMILY": "Oila hissasi",
+  "ceremony_source_EXPECTED_GIFTS": "Kutilayotgan toʻyona",
+  "ceremony_source_DEBT": "Qarz",
+  "ceremony_name": "Nomi",
+  "ceremony_date": "Sana",
+  "ceremony_firstScenario": "Birinchi stsenariy",
+  "ceremony_scenarioHint": "masalan: 3 kunlik, 200 kishi",
+  "ceremony_guests": "Mehmonlar soni",
+  "ceremony_create": "Yaratish",
+  "ceremony_withDebt": "Qarz bilan",
+  "ceremony_back": "Roʻyxat",
+  "ceremony_capacity": "Qarzni uzishga oyiga",
+  "ceremony_capacitySource_MANUAL": "Qarzni uzish muddati oyiga {amount} ajratma bilan hisoblanadi.",
+  "@ceremony_capacitySource_MANUAL": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "ceremony_capacitySource_INCOME_SHARE": "Oyiga {amount} — daromadning qoʻshimcha qarz toʻlovi ulushi. Oʻzingiz yozishingiz mumkin.",
+  "@ceremony_capacitySource_INCOME_SHARE": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "ceremony_capacitySource_NONE": "Daromad yozilmagan: qarzni uzish muddatini hisoblash uchun oylik ajratmani yozing.",
+  "ceremony_giftsWarning": "Kutilayotgan toʻyona — sovgʻa emas, kelajakda qaytariladigan ijtimoiy majburiyat. Uni qarz kabi hisobga oling.",
+  "ceremony_scenario": "Stsenariy",
+  "ceremony_oneOff": "bir martalik",
+  "ceremony_perGuest": "kishi boshiga",
+  "ceremony_deleteLine": "«{title}» qatorini oʻchirish",
+  "@ceremony_deleteLine": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "ceremony_addLine": "Xarajat qoʻshish",
+  "ceremony_lineTitle": "Xarajat (osh, xonanda, sarpo…)",
+  "ceremony_lineKind": "Hisob turi",
+  "ceremony_lineSource": "Manba",
+  "ceremony_lineAmount": "Summa yoki kishi boshiga narx",
+  "ceremony_debtHint": "Qarz bilan moliyalashtirilgan qator: reja tasdiqlanishidan oldin oilaviy muhokama boʻladi.",
+  "ceremony_total": "Jami",
+  "ceremony_noDebt": "Qarzsiz — ofarin.",
+  "ceremony_notRepayable": "Qarz bor, lekin uzish uchun oylik ajratma yoʻq — qarz yopilmaydi.",
+  "ceremony_payoff": "Qarzni uzish: {count} oy ({date} gacha)",
+  "@ceremony_payoff": {
+    "placeholders": {
+      "count": {},
+      "date": {}
+    }
+  },
+  "ceremony_saved": "Eng qimmat stsenariydan {amount} kam.",
+  "@ceremony_saved": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "ceremony_savedGoal": "Bu «{title}» maqsadingizning {percent}% i.",
+  "@ceremony_savedGoal": {
+    "placeholders": {
+      "percent": {},
+      "title": {}
+    }
+  },
+  "ceremony_selected": "Tanlangan",
+  "ceremony_select": "Shu stsenariyni tanlash",
+  "ceremony_deleteScenario": "Oʻchirish",
+  "ceremony_newScenario": "Yangi stsenariy",
+  "ceremony_addScenarioCopy": "+ Stsenariy (tanlanganidan nusxa)",
+  "ceremony_addScenarioEmpty": "+ Boʻsh stsenariy",
+  "ceremony_discussion": "Buni qarzsiz qanday oʻtkazamiz?",
+  "ceremony_discussionIntro": "Tanlangan stsenariyda qarz bor. Oila bilan savollarni muhokama qiling: javoblar yoziladi va barcha kattalar rozilik bildiradi. Shundan keyingina reja tasdiqlanadi.",
+  "ceremony_question_guests": "Mehmonlar sonini kamaytirsa boʻladimi?",
+  "ceremony_question_days": "Bir kunda oʻtkazsa boʻladimi?",
+  "ceremony_question_cut": "Qaysi xarajatdan voz kechsa boʻladi?",
+  "ceremony_question_sources": "Qarzsiz manba bormi: jamgʻarma, oila hissasi, buyum sotish?",
+  "ceremony_saveAnswers": "Javoblarni saqlash",
+  "ceremony_agreed": "rozi, {date}",
+  "@ceremony_agreed": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "ceremony_agree": "{name}: muhokamaga roziman",
+  "@ceremony_agree": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "ceremony_discussionDone": "Muhokama tugadi. Endi rejani tasdiqlash mumkin.",
+  "ceremony_blocker_NO_SCENARIO_SELECTED": "Stsenariy tanlang.",
+  "ceremony_blocker_DISCUSSION_REQUIRED": "Qarzli stsenariyni tasdiqlashdan oldin oilaviy muhokama kerak.",
+  "ceremony_blocker_CEREMONY_LOCKED": "Reja tasdiqlangan. Oʻzgartirish uchun qayta oching.",
+  "ceremony_confirm": "Rejani tasdiqlash",
+  "ceremony_reopen": "Qayta ochish",
+  "ceremony_pdf": "Smeta PDF",
+  "ceremony_pressure_0": "El uch kun gapiradi, toʻrtinchi kuni oʻz dardi bilan ovora boʻladi. Qarz esa yillar davomida qoladi.",
+  "ceremony_pressure_1": "Toʻyning barakasi dasturxonning uzunligida emas, oilaning xotirjamligida.",
+  "ceremony_pressure_2": "Karim aka 40 mln lik toʻy uchun 60 mln dan ortiq toʻladi va hali qarzi bor. Hisob-kitob oldindan qilinsa, bu takrorlanmaydi.",
+  "ceremony_pressure_3": "Ixcham toʻydan tejalgan pul yosh oilaga uy, oʻqish yoki ish boshlash uchun poydevor boʻladi.",
+  "ceremony_pressure_next": "Yana bir fikr",
+  "ceremony_giftGoal": "Toʻyona oʻrniga jamgʻarma",
+  "ceremony_giftGoalIntro": "Yosh oila uchun maqsad (uy, oʻqish, ish) — mehmonlar hissasi shu yerga yoziladi. Hozircha qoʻlda; pul oʻtkazmasi keyinroq hamkor bank orqali.",
+  "ceremony_noGoals": "Maqsad yoʻq. «Qarzlar» ekranidagi «Maqsadlarim» boʻlimida qoʻshing.",
+  "ceremony_guestName": "Kim (mehmon yoki qarindosh)",
+  "ceremony_giftAmount": "Hissa summasi",
+  "ceremony_shareText": "Assalomu alaykum! Toʻyona oʻrniga yosh oilaning «{title}» maqsadiga hissa qoʻshishingiz mumkin. Maqsad: {target}, yigʻildi: {collected}. Rahmat!",
+  "@ceremony_shareText": {
+    "placeholders": {
+      "collected": {},
+      "target": {},
+      "title": {}
+    }
+  },
+  "ceremony_copy": "Matnni nusxalash",
+  "ceremony_copied": "Nusxalandi",
+  "error_TOO_MANY_SCENARIOS": "Koʻpi bilan 3 ta stsenariy",
+  "error_LAST_SCENARIO": "Oxirgi stsenariyni oʻchirib boʻlmaydi",
+  "error_CEREMONY_LOCKED": "Reja tasdiqlangan — oʻzgartirish uchun qayta oching",
+  "error_DISCUSSION_REQUIRED": "Avval oilaviy muhokama kerak",
+  "error_DISCUSSION_EMPTY": "Kamida bitta savolga javob yozing",
+  "error_NOT_ADULT_MEMBER": "Faqat katta oila aʼzosi rozilik beradi",
+  "error_NO_SCENARIO_SELECTED": "Stsenariy tanlang",
+  "error_INVALID_GUESTS": "Mehmonlar sonini butun son bilan yozing",
+  "error_AMOUNT_NEGATIVE": "Summa manfiy boʻlmaydi"
 }

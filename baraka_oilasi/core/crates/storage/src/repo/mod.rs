@@ -2,6 +2,7 @@
 pub mod agreements;
 pub mod assets;
 pub mod categories;
+pub mod ceremonies;
 pub mod debts;
 pub mod expenses;
 pub mod household;

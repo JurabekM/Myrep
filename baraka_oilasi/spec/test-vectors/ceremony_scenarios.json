@@ -1,0 +1,356 @@
+{
+  "suite": "ceremony_scenarios",
+  "version": 1,
+  "description": "Marosim stsenariylari: qator = summa yoki kishi boshiga × mehmonlar; manba bo'yicha yig'indi; qarzni oyiga X bilan uzish — U9 simulyatori; eng qimmatiga nisbatan tejam va maqsadlar",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "cer-001-karim",
+      "input": {
+        "currency": "UZS",
+        "start": "2027-05-20",
+        "monthlyCapacity": "240000000",
+        "goals": [
+          "1200000000"
+        ],
+        "scenarios": [
+          {
+            "name": "3 kunlik, 200 kishi",
+            "guests": 200,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "25000000",
+                "source": "SAVINGS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "1500000000",
+                "source": "FAMILY"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "800000000",
+                "source": "EXPECTED_GIFTS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "2000000000",
+                "source": "DEBT"
+              }
+            ]
+          },
+          {
+            "name": "1 kunlik, 100 kishi",
+            "guests": 100,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "25000000",
+                "source": "SAVINGS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "600000000",
+                "source": "FAMILY"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "400000000",
+                "source": "EXPECTED_GIFTS"
+              }
+            ]
+          },
+          {
+            "name": "Oʻrtacha, 150 kishi",
+            "guests": 150,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "25000000",
+                "source": "SAVINGS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "1000000000",
+                "source": "FAMILY"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "500000000",
+                "source": "DEBT"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "name": "3 kunlik, 200 kishi",
+            "total": "9300000000",
+            "bySource": {
+              "SAVINGS": "5000000000",
+              "FAMILY": "1500000000",
+              "EXPECTED_GIFTS": "800000000",
+              "DEBT": "2000000000"
+            },
+            "payoffMonths": 9,
+            "payoffDate": "2028-01-01",
+            "savedVsMax": "0",
+            "goalsBp": [
+              0
+            ]
+          },
+          {
+            "name": "1 kunlik, 100 kishi",
+            "total": "3500000000",
+            "bySource": {
+              "SAVINGS": "2500000000",
+              "FAMILY": "600000000",
+              "EXPECTED_GIFTS": "400000000",
+              "DEBT": "0"
+            },
+            "payoffMonths": 0,
+            "payoffDate": null,
+            "savedVsMax": "5800000000",
+            "goalsBp": [
+              48333
+            ]
+          },
+          {
+            "name": "Oʻrtacha, 150 kishi",
+            "total": "5250000000",
+            "bySource": {
+              "SAVINGS": "3750000000",
+              "FAMILY": "1000000000",
+              "EXPECTED_GIFTS": "0",
+              "DEBT": "500000000"
+            },
+            "payoffMonths": 3,
+            "payoffDate": "2027-07-01",
+            "savedVsMax": "4050000000",
+            "goalsBp": [
+              33750
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cer-002-no-capacity",
+      "input": {
+        "currency": "UZS",
+        "start": "2027-05-20",
+        "monthlyCapacity": "0",
+        "goals": [],
+        "scenarios": [
+          {
+            "name": "3 kunlik, 200 kishi",
+            "guests": 200,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "25000000",
+                "source": "SAVINGS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "1500000000",
+                "source": "FAMILY"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "800000000",
+                "source": "EXPECTED_GIFTS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "2000000000",
+                "source": "DEBT"
+              }
+            ]
+          },
+          {
+            "name": "1 kunlik, 100 kishi",
+            "guests": 100,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "25000000",
+                "source": "SAVINGS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "600000000",
+                "source": "FAMILY"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "400000000",
+                "source": "EXPECTED_GIFTS"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "name": "3 kunlik, 200 kishi",
+            "total": "9300000000",
+            "bySource": {
+              "SAVINGS": "5000000000",
+              "FAMILY": "1500000000",
+              "EXPECTED_GIFTS": "800000000",
+              "DEBT": "2000000000"
+            },
+            "payoffMonths": null,
+            "payoffDate": null,
+            "savedVsMax": "0",
+            "goalsBp": []
+          },
+          {
+            "name": "1 kunlik, 100 kishi",
+            "total": "3500000000",
+            "bySource": {
+              "SAVINGS": "2500000000",
+              "FAMILY": "600000000",
+              "EXPECTED_GIFTS": "400000000",
+              "DEBT": "0"
+            },
+            "payoffMonths": 0,
+            "payoffDate": null,
+            "savedVsMax": "5800000000",
+            "goalsBp": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "cer-003-big-capacity",
+      "input": {
+        "currency": "UZS",
+        "start": "2027-05-31",
+        "monthlyCapacity": "3000000000",
+        "goals": [],
+        "scenarios": [
+          {
+            "name": "Oʻrtacha, 150 kishi",
+            "guests": 150,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "25000000",
+                "source": "SAVINGS"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "1000000000",
+                "source": "FAMILY"
+              },
+              {
+                "kind": "ONE_OFF",
+                "amount": "500000000",
+                "source": "DEBT"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "scenarios": [
+          {
+            "name": "Oʻrtacha, 150 kishi",
+            "total": "5250000000",
+            "bySource": {
+              "SAVINGS": "3750000000",
+              "FAMILY": "1000000000",
+              "EXPECTED_GIFTS": "0",
+              "DEBT": "500000000"
+            },
+            "payoffMonths": 1,
+            "payoffDate": "2027-05-31",
+            "savedVsMax": "0",
+            "goalsBp": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "cer-neg-001-guests",
+      "input": {
+        "currency": "UZS",
+        "start": "2027-05-20",
+        "monthlyCapacity": "240000000",
+        "goals": [],
+        "scenarios": [
+          {
+            "name": "x",
+            "guests": -1,
+            "lines": [
+              {
+                "kind": "ONE_OFF",
+                "amount": "100",
+                "source": "SAVINGS"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_GUESTS"
+      }
+    },
+    {
+      "id": "cer-neg-002-amount",
+      "input": {
+        "currency": "UZS",
+        "start": "2027-05-20",
+        "monthlyCapacity": "240000000",
+        "goals": [],
+        "scenarios": [
+          {
+            "name": "x",
+            "guests": 10,
+            "lines": [
+              {
+                "kind": "PER_GUEST",
+                "amount": "0",
+                "source": "SAVINGS"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "cer-neg-003-source",
+      "input": {
+        "currency": "UZS",
+        "start": "2027-05-20",
+        "monthlyCapacity": "240000000",
+        "goals": [],
+        "scenarios": [
+          {
+            "name": "x",
+            "guests": 10,
+            "lines": [
+              {
+                "kind": "ONE_OFF",
+                "amount": "100",
+                "source": "BANK"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_SOURCE"
+      }
+    }
+  ]
+}

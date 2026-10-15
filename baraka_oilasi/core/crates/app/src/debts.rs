@@ -1021,7 +1021,7 @@ impl App {
             .db
             .read(|c| debts::list_goals(c, &scope))?
             .into_iter()
-            .map(|g| self.goal_dto(&ctx, g))
+            .map(|g| self.goal_dto(&ctx, &scope, g))
             .collect::<Result<_, _>>()?;
         let (plan, _) = self.plan_debts(&ctx, &scope)?;
         let today = self.today(&ctx);
@@ -1054,12 +1054,38 @@ impl App {
         })
     }
 
-    fn goal_dto(&self, ctx: &Ctx, g: GoalRow) -> Result<GoalDto, AppError> {
+    pub(crate) fn goal_dto(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        g: GoalRow,
+    ) -> Result<GoalDto, AppError> {
         let cur = Currency::from_code(&g.currency)?;
+        let rows = self
+            .db
+            .read(|c| baraka_storage::repo::ceremonies::contributions(c, scope, &g.id))?;
+        let collected = Money::sum(
+            rows.iter()
+                .filter(|r| r.currency == cur.code())
+                .map(|r| Money::new(r.amount_minor, cur)),
+            cur,
+        )?;
+        let target = Money::new(g.target_minor, cur);
         Ok(GoalDto {
+            collected_percent: percent(goal_coverage_bp(collected, target)?),
+            collected: self.money_dto(ctx, collected),
+            contributions: rows
+                .into_iter()
+                .map(|r| GoalContributionDto {
+                    id: r.id,
+                    contributor: r.contributor,
+                    amount: self.money_dto(ctx, Money::new(r.amount_minor, cur)),
+                    given_on: r.given_on,
+                })
+                .collect(),
             id: g.id,
             title: g.title,
-            target: self.money_dto(ctx, Money::new(g.target_minor, cur)),
+            target: self.money_dto(ctx, target),
         })
     }
 
@@ -1078,7 +1104,7 @@ impl App {
         self.db
             .write(|tx| debts::insert_goal(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Debts]);
-        self.goal_dto(&ctx, row)
+        self.goal_dto(&ctx, &scope, row)
     }
 
     pub fn delete_goal(&self, space_id: &str, goal_id: &str) -> Result<(), AppError> {

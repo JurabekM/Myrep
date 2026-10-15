@@ -3,6 +3,7 @@ use baraka_domain_common::WEEK_ANCHOR;
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
+    ceremony::{informal_debt_payoff, scenario_totals, BudgetLine, FundingSource, LineKind},
     debt::{
         build_plan, debt_load_bp, goal_coverage_bp, plan_status, plan_total, true_cost, PlanKind,
         PlanLine, PlanSpec, TrueCostInput,
@@ -111,6 +112,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "debt_load" => debt_load(input),
         "payoff_projection" => projection(input),
         "payoff_plan" => plan_all(input),
+        "ceremony_scenarios" => ceremony(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -638,4 +640,66 @@ fn plan_all(v: &Value) -> R {
         "interestSaved": m(saved),
         "netSaved": m(saved.checked_sub(acc.fees)?),
     }))
+}
+
+fn ceremony(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let start = date(&v["start"])?;
+    let capacity = money(v, "monthlyCapacity", c)?;
+    let scenarios = v["scenarios"].as_array().ok_or_else(|| bad("scenarios"))?;
+    let mut totals = Vec::new();
+    for sc in scenarios {
+        let lines = sc["lines"]
+            .as_array()
+            .ok_or_else(|| bad("lines"))?
+            .iter()
+            .map(|l| {
+                Ok(BudgetLine {
+                    kind: LineKind::parse(s(l, "kind")?)
+                        .ok_or_else(|| E("INVALID_LINE_KIND".into()))?,
+                    amount: money(l, "amount", c)?,
+                    source: FundingSource::parse(s(l, "source")?)
+                        .ok_or_else(|| E("INVALID_SOURCE".into()))?,
+                })
+            })
+            .collect::<Result<Vec<_>, E>>()?;
+        totals.push(scenario_totals(&lines, i(sc, "guests")?, c)?);
+    }
+    let max = totals.iter().map(|t| t.total.minor()).max().unwrap_or(0);
+    let goals: Vec<i64> = v["goals"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default()
+        .iter()
+        .map(int_str)
+        .collect::<Result<_, _>>()?;
+    let mut out = Vec::new();
+    for (sc, t) in scenarios.iter().zip(&totals) {
+        let pay = informal_debt_payoff(t.debt, start, capacity)?;
+        let saved = Money::new(max, c).checked_sub(t.total)?;
+        let gbp = goals
+            .iter()
+            .map(|g| {
+                i64::try_from(round_half_up(
+                    i128::from(saved.minor()) * 10_000,
+                    i128::from(*g),
+                )?)
+                .map_err(|_| bad("overflow"))
+            })
+            .collect::<Result<Vec<_>, E>>()?;
+        let m = |x: Money| x.minor().to_string();
+        out.push(json!({
+            "name": s(sc, "name")?,
+            "total": m(t.total),
+            "bySource": {
+                "SAVINGS": m(t.savings), "FAMILY": m(t.family),
+                "EXPECTED_GIFTS": m(t.expected_gifts), "DEBT": m(t.debt),
+            },
+            "payoffMonths": pay.map(|p| p.0),
+            "payoffDate": pay.and_then(|p| p.1).map(|d| d.to_string()),
+            "savedVsMax": m(saved),
+            "goalsBp": gbp,
+        }));
+    }
+    Ok(json!({ "scenarios": out }))
 }

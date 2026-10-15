@@ -39,6 +39,23 @@ const COMMANDS: &[&str] = &[
     "sellable_items",
     "add_sellable_item",
     "sell_item",
+    "ceremonies",
+    "ceremony",
+    "create_ceremony",
+    "update_ceremony",
+    "add_scenario",
+    "update_scenario",
+    "delete_scenario",
+    "select_scenario",
+    "add_ceremony_line",
+    "delete_ceremony_line",
+    "save_discussion",
+    "agree_discussion",
+    "confirm_ceremony",
+    "reopen_ceremony",
+    "delete_ceremony",
+    "add_goal_contribution",
+    "export_ceremony_estimate",
 ];
 
 fn main() {

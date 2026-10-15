@@ -18,6 +18,7 @@ pub enum Topic {
     Journal,
     Debts,
     Budget,
+    Ceremonies,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

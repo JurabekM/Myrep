@@ -52,6 +52,24 @@ export const commands = {
 	sellableItems: (spaceId: string) => typedError<SellableItemDto[], AppError>(__TAURI_INVOKE("sellable_items", { spaceId })),
 	addSellableItem: (spaceId: string, input: NewSellableItemInput) => typedError<SellableItemDto, AppError>(__TAURI_INVOKE("add_sellable_item", { spaceId, input })),
 	sellItem: (spaceId: string, itemId: string, input: SellItemInput) => typedError<SellResultDto, AppError>(__TAURI_INVOKE("sell_item", { spaceId, itemId, input })),
+	ceremonies: (spaceId: string) => typedError<CeremonySummaryDto[], AppError>(__TAURI_INVOKE("ceremonies", { spaceId })),
+	ceremony: (spaceId: string, ceremonyId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("ceremony", { spaceId, ceremonyId })),
+	createCeremony: (spaceId: string, input: NewCeremonyInput) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("create_ceremony", { spaceId, input })),
+	updateCeremony: (spaceId: string, ceremonyId: string, input: CeremonyUpdateInput) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("update_ceremony", { spaceId, ceremonyId, input })),
+	addScenario: (spaceId: string, ceremonyId: string, input: ScenarioInput) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("add_scenario", { spaceId, ceremonyId, input })),
+	updateScenario: (spaceId: string, ceremonyId: string, scenarioId: string, input: ScenarioInput) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("update_scenario", { spaceId, ceremonyId, scenarioId, input })),
+	deleteScenario: (spaceId: string, ceremonyId: string, scenarioId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("delete_scenario", { spaceId, ceremonyId, scenarioId })),
+	selectScenario: (spaceId: string, ceremonyId: string, scenarioId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("select_scenario", { spaceId, ceremonyId, scenarioId })),
+	addCeremonyLine: (spaceId: string, ceremonyId: string, scenarioId: string, input: NewCeremonyLineInput) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("add_ceremony_line", { spaceId, ceremonyId, scenarioId, input })),
+	deleteCeremonyLine: (spaceId: string, ceremonyId: string, lineId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("delete_ceremony_line", { spaceId, ceremonyId, lineId })),
+	saveDiscussion: (spaceId: string, ceremonyId: string, answers: DiscussionAnswerDto[]) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("save_discussion", { spaceId, ceremonyId, answers })),
+	agreeDiscussion: (spaceId: string, ceremonyId: string, memberId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("agree_discussion", { spaceId, ceremonyId, memberId })),
+	confirmCeremony: (spaceId: string, ceremonyId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("confirm_ceremony", { spaceId, ceremonyId })),
+	reopenCeremony: (spaceId: string, ceremonyId: string) => typedError<CeremonyDto, AppError>(__TAURI_INVOKE("reopen_ceremony", { spaceId, ceremonyId })),
+	deleteCeremony: (spaceId: string, ceremonyId: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_ceremony", { spaceId, ceremonyId })),
+	addGoalContribution: (spaceId: string, goalId: string, input: NewGoalContributionInput) => typedError<GoalDto, AppError>(__TAURI_INVOKE("add_goal_contribution", { spaceId, goalId, input })),
+	/**  Marosim smetasini PDF qilib «Saqlash» oynasi orqali yozadi. */
+	exportCeremonyEstimate: (spaceId: string, ceremonyId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_ceremony_estimate", { spaceId, ceremonyId })),
 };
 
 /** Events */
@@ -181,6 +199,53 @@ export type CategoryDto = {
 	isSystem: boolean,
 };
 
+export type CeremonyDto = {
+	id: string,
+	kind: string,
+	title: string,
+	plannedOn: string | null,
+	/**  `DRAFT`, `DISCUSSED`, `CONFIRMED`. */
+	status: string,
+	monthlyCapacity: MoneyDto,
+	/**  `MANUAL`, `INCOME_SHARE` yoki `NONE`. */
+	capacitySource: string,
+	scenarios: ScenarioDto[],
+	discussion: DiscussionDto,
+	canConfirm: boolean,
+	/**  `NO_SCENARIO_SELECTED`, `DISCUSSION_REQUIRED`, `CEREMONY_LOCKED`. */
+	confirmBlocker: string | null,
+	/**  Kutilayotgan to'yona manbasi bor — bu kelajakda qaytariladigan majburiyat (OQ-P1). */
+	giftsWarning: boolean,
+};
+
+export type CeremonyLineDto = {
+	id: string,
+	title: string,
+	kind: string,
+	/**  Bir martalik summa yoki kishi boshiga narx. */
+	amount: MoneyDto,
+	total: MoneyDto,
+	source: string,
+};
+
+export type CeremonySummaryDto = {
+	id: string,
+	kind: string,
+	title: string,
+	plannedOn: string | null,
+	status: string,
+	/**  Tanlangan (bo'lmasa — birinchi) stsenariy jami. */
+	total: MoneyDto | null,
+	hasDebt: boolean,
+};
+
+export type CeremonyUpdateInput = {
+	title: string,
+	plannedOn: string | null,
+	/**  Qarzni uzish uchun oylik ajratma; bo'lmasa — daromadning qo'shimcha to'lov ulushi. */
+	monthlyCapacity: string | null,
+};
+
 export type ChangeEvent = {
 	spaceId: string | null,
 	topics: Topic[],
@@ -280,6 +345,21 @@ export type DebtsOverviewDto = {
 	budgetMode: string,
 };
 
+export type DiscussionAnswerDto = {
+	/**  `guests`, `days`, `cut`, `sources`. */
+	key: string,
+	note: string,
+};
+
+/**  «Buni qarzsiz qanday o'tkazamiz?» oilaviy muhokamasi. */
+export type DiscussionDto = {
+	/**  Tanlangan stsenariyda qarz bor — tasdiqlashdan oldin majburiy. */
+	required: boolean,
+	answers: DiscussionAnswerDto[],
+	adults: SignoffDto[],
+	complete: boolean,
+};
+
 export type Duty = {
 	id: string,
 	title: string,
@@ -305,10 +385,21 @@ export type ExpenseDto = {
 	fundedByDebt: boolean,
 };
 
+export type GoalContributionDto = {
+	id: string,
+	contributor: string,
+	amount: MoneyDto,
+	givenOn: string,
+};
+
 export type GoalDto = {
 	id: string,
 	title: string,
 	target: MoneyDto,
+	/**  Mehmonlar va oila hissasi (to'yona o'rniga jamg'arma). */
+	collected: MoneyDto,
+	collectedPercent: string,
+	contributions: GoalContributionDto[],
 };
 
 export type GoalEquivalentDto = {
@@ -456,6 +547,27 @@ export type NecessityTotalsDto = {
 	unclassified: MoneyDto,
 };
 
+/**  Marosim rejasi (uy/SPEC 2D.8). Turlari: `TOY`, `BESHIK_TOY`, `SUNNAT_TOY`, `MARAKA`, `OTHER`. */
+export type NewCeremonyInput = {
+	kind: string,
+	title: string,
+	/**  `15.06.2027` yoki `2027-06-15`. */
+	plannedOn: string | null,
+	/**  Birinchi stsenariy. */
+	scenarioName: string,
+	guests: number,
+};
+
+export type NewCeremonyLineInput = {
+	title: string,
+	/**  `ONE_OFF` yoki `PER_GUEST`. */
+	kind: string,
+	/**  Bir martalik summa yoki kishi boshiga narx. */
+	amount: string,
+	/**  `SAVINGS`, `FAMILY`, `EXPECTED_GIFTS`, `DEBT`. */
+	source: string,
+};
+
 export type NewContributorInput = {
 	name: string,
 	monthlyShare: string | null,
@@ -505,6 +617,12 @@ export type NewExpenseInput = {
 	isOstentation: boolean,
 	fundedByDebt: boolean,
 	note: string | null,
+};
+
+export type NewGoalContributionInput = {
+	contributor: string,
+	amount: string,
+	givenOn: string | null,
 };
 
 export type NewGoalInput = {
@@ -676,6 +794,31 @@ export type RepaymentResultDto = {
 	freedMonthly: MoneyDto | null,
 };
 
+/**  Stsenariy: jami, manbalar, qarzni uzish muddati (U9 simulyatori), eng qimmatiga nisbatan tejam. */
+export type ScenarioDto = {
+	id: string,
+	name: string,
+	guests: number,
+	selected: boolean,
+	lines: CeremonyLineDto[],
+	total: MoneyDto,
+	bySource: SourceTotalsDto,
+	hasDebt: boolean,
+	payoffMonths: number | null,
+	payoffDate: string | null,
+	/**  Qarz bor, oylik ajratma 0 — qarz yopilmaydi. */
+	notRepayable: boolean,
+	savedVsMax: MoneyDto,
+	goalEquivalents: GoalEquivalentDto[],
+};
+
+export type ScenarioInput = {
+	name: string,
+	guests: number,
+	/**  Yangi stsenariy shu stsenariy qatorlaridan nusxa olinadi. */
+	copyFrom: string | null,
+};
+
 export type ScheduleLineInput = {
 	/**  `15.11.2026` yoki `2026-11-15` (yadroda o'qiladi). */
 	date: string,
@@ -730,6 +873,19 @@ export type SetupResult = {
 	recoveryCode: string,
 };
 
+export type SignoffDto = {
+	memberId: string,
+	name: string,
+	agreedOn: string | null,
+};
+
+export type SourceTotalsDto = {
+	savings: MoneyDto,
+	family: MoneyDto,
+	expectedGifts: MoneyDto,
+	debt: MoneyDto,
+};
+
 export type SpaceDto = {
 	id: string,
 	kind: string,
@@ -770,7 +926,7 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {

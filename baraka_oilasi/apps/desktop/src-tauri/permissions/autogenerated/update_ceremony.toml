@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-ceremony"
+description = "Enables the update_ceremony command without any pre-configured scope."
+commands.allow = ["update_ceremony"]
+
+[[permission]]
+identifier = "deny-update-ceremony"
+description = "Denies the update_ceremony command without any pre-configured scope."
+commands.deny = ["update_ceremony"]

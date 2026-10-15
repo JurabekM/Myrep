@@ -377,13 +377,236 @@ pub async fn sell_item(
     state.session.app()?.sell_item(&space_id, &item_id, input)
 }
 
+#[tauri::command]
+#[specta::specta]
+pub async fn ceremonies(state: State<'_, Desktop>, space_id: String) -> R<Vec<CeremonySummaryDto>> {
+    state.session.app()?.ceremonies(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn ceremony(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+) -> R<CeremonyDto> {
+    state.session.app()?.ceremony(&space_id, &ceremony_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn create_ceremony(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: NewCeremonyInput,
+) -> R<CeremonyDto> {
+    state.session.app()?.create_ceremony(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_ceremony(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    input: CeremonyUpdateInput,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .update_ceremony(&space_id, &ceremony_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_scenario(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    input: ScenarioInput,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .add_scenario(&space_id, &ceremony_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_scenario(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    scenario_id: String,
+    input: ScenarioInput,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .update_scenario(&space_id, &ceremony_id, &scenario_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_scenario(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    scenario_id: String,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .delete_scenario(&space_id, &ceremony_id, &scenario_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn select_scenario(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    scenario_id: String,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .select_scenario(&space_id, &ceremony_id, &scenario_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_ceremony_line(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    scenario_id: String,
+    input: NewCeremonyLineInput,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .add_ceremony_line(&space_id, &ceremony_id, &scenario_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_ceremony_line(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    line_id: String,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .delete_ceremony_line(&space_id, &ceremony_id, &line_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn save_discussion(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    answers: Vec<DiscussionAnswerDto>,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .save_discussion(&space_id, &ceremony_id, answers)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn agree_discussion(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+    member_id: String,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .agree_discussion(&space_id, &ceremony_id, &member_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn confirm_ceremony(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .confirm_ceremony(&space_id, &ceremony_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn reopen_ceremony(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+) -> R<CeremonyDto> {
+    state
+        .session
+        .app()?
+        .reopen_ceremony(&space_id, &ceremony_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_ceremony(
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+) -> R<()> {
+    state
+        .session
+        .app()?
+        .delete_ceremony(&space_id, &ceremony_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_goal_contribution(
+    state: State<'_, Desktop>,
+    space_id: String,
+    goal_id: String,
+    input: NewGoalContributionInput,
+) -> R<GoalDto> {
+    state
+        .session
+        .app()?
+        .add_goal_contribution(&space_id, &goal_id, input)
+}
+
+/// Marosim smetasini PDF qilib «Saqlash» oynasi orqali yozadi.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_ceremony_estimate(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    ceremony_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .ceremony_estimate_pdf(&space_id, &ceremony_id)?;
+    save_pdf(&handle, pdf, "smeta.pdf")
+}
+
 /// PDF'ni tizimning «Saqlash» oynasi orqali yozadi. `false` — foydalanuvchi bekor qildi.
-fn save_pdf(handle: &AppHandle, pdf: Vec<u8>) -> R<bool> {
+fn save_pdf(handle: &AppHandle, pdf: Vec<u8>, file_name: &str) -> R<bool> {
     let picked = handle
         .dialog()
         .file()
         .add_filter("PDF", &["pdf"])
-        .set_file_name("tilxat.pdf")
+        .set_file_name(file_name)
         .blocking_save_file();
     let Some(file) = picked else {
         return Ok(false);
@@ -408,7 +631,7 @@ pub async fn export_agreement_receipt(
         .session
         .app()?
         .loan_receipt_pdf(&space_id, &agreement_id)?;
-    save_pdf(&handle, pdf)
+    save_pdf(&handle, pdf, "tilxat.pdf")
 }
 
 /// Tilxat PDF'ini yaratib, tizimning «Saqlash» oynasi orqali saqlaydi. Fayl yo'li frontendga
@@ -421,5 +644,5 @@ pub async fn export_loan_receipt(
     input: LoanReceiptInput,
 ) -> R<bool> {
     let pdf = state.session.app()?.render_loan_receipt(input)?;
-    save_pdf(&handle, pdf)
+    save_pdf(&handle, pdf, "tilxat.pdf")
 }

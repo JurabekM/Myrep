@@ -49,9 +49,10 @@
   v(2pt)
 }
 
-#let signatures(title, signers) = {
-  section(title)
-  grid(
+// Imzolar sahifalar orasida bo'linmaydi: sarlavha imzo chiziqlaridan ajralib qolmasin.
+#let signatures(title, signers) = block(breakable: false, width: 100%)[
+  #section(title)
+  #grid(
     columns: (1fr, 1fr),
     column-gutter: 24pt,
     row-gutter: 22pt,
@@ -62,7 +63,7 @@
       #text(size: 10pt)[#s.name]
     ]),
   )
-}
+]
 
 // Zanjir boshi: QR (to'liq xesh) va qisqa kod (6.5). Kod bo'lmasa — blok chiqmaydi.
 #let chain-block(labels, code) = if code != none {
