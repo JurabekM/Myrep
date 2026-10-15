@@ -1,4 +1,5 @@
 //! Adapterlar (FRB, tauri-specta) uchun DTO'lar. Pul har doim `MoneyDto`, sonli summalar string.
+use baraka_agreements::{Answer, Arbiter, Custody, Duty, ExitClause, Stroke, Term};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -989,4 +990,259 @@ pub struct CeremonySummaryDto {
     /// Tanlangan (bo'lmasa — birinchi) stsenariy jami.
     pub total: Option<MoneyDto>,
     pub has_debt: bool,
+}
+
+// ---- U11: sheriklik (mudoraba / musharaka), shartnoma, imzolar, darvoza ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CapitalItemInput {
+    /// `MONEY` yoki `EQUIPMENT` (narxlangan uskuna).
+    pub kind: String,
+    pub description: String,
+    pub amount: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartnerInput {
+    /// Shartnoma ichidagi barqaror belgi (`P1`, `P2`) — vazifa, hisob va buyout shunga bog'lanadi.
+    pub id: String,
+    pub full_name: String,
+    /// `CAPITAL_PROVIDER`, `WORKER`, `BOTH`.
+    pub role: String,
+    pub profit_share_bp: i32,
+    /// Bu tomon — shu oila (darvoza va oilaviy rozilik shunga qarab).
+    pub is_me: bool,
+    pub capital: Vec<CapitalItemInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutTermsInput {
+    pub seller_party_id: String,
+    pub buyer_party_id: String,
+    pub units: u32,
+    pub units_per_period: u32,
+    pub period_months: u32,
+    pub start: String,
+    /// Davr uchun taxminiy sof foyda (to'lov ulushdan oshadimi — ko'rsatish uchun).
+    pub expected_profit: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartnershipInput {
+    /// `MUDARABA` yoki `MUSHARAKA`.
+    pub kind: String,
+    pub title: String,
+    pub parties: Vec<PartnerInput>,
+    /// Kapital egasiga qat'iy summa urinishi — domen har doim rad etadi
+    /// (`GUARANTEED_RETURN_FORBIDDEN`: «Bu sheriklik emas — ribo yoki qarz»).
+    pub fixed_return: Option<String>,
+    pub duties: Answer<Vec<Duty>>,
+    /// Mudoraba: beparvolik yoki shart buzilishi deb nima hisoblanadi.
+    pub negligence_clause: Option<String>,
+    pub custody: Answer<Custody>,
+    pub exit_clause: Answer<ExitClause>,
+    pub arbiter: Answer<Arbiter>,
+    pub term: Answer<Term>,
+    pub witnesses: Vec<String>,
+    pub buyout: Option<BuyoutTermsInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CapitalItemDto {
+    pub kind: String,
+    pub description: String,
+    pub amount: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartnerDto {
+    pub id: String,
+    pub full_name: String,
+    pub role: String,
+    pub profit_share_bp: i32,
+    /// `50%`.
+    pub profit_share: String,
+    pub is_me: bool,
+    pub capital_items: Vec<CapitalItemDto>,
+    pub capital: MoneyDto,
+    /// Zarar ulushi (`75%`); shartlarda xato bo'lsa — `None`.
+    pub loss_share: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutRowDto {
+    pub period: u32,
+    pub date: String,
+    pub units: u32,
+    pub payment: MoneyDto,
+    pub remaining: MoneyDto,
+    pub seller_bp: i32,
+    pub seller_percent: String,
+    pub buyer_bp: i32,
+    pub buyer_percent: String,
+    pub exceeds_share: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutDto {
+    pub seller_party_id: String,
+    pub buyer_party_id: String,
+    pub units: u32,
+    pub units_per_period: u32,
+    pub period_months: u32,
+    pub start: String,
+    pub expected_profit: Option<MoneyDto>,
+    pub rows: Vec<BuyoutRowDto>,
+    pub end_date: Option<String>,
+    pub buyer_profit: Option<MoneyDto>,
+    /// Jadval tuzilmadi: `STAKE_EXCEEDS_CAPITAL`, `INVALID_UNITS` ...
+    pub error: Option<String>,
+}
+
+/// 9 savol to'liqligi + sheriklik qoidalari (birlashtirilgan).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ContractCheckDto {
+    pub answered: u8,
+    pub complete: bool,
+    pub can_sign: bool,
+    pub missing: Vec<u8>,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SignerDto {
+    /// `party:P1`, `witness:0`, `arbiter`.
+    pub key: String,
+    /// `PARTY`, `WITNESS`, `ARBITER`.
+    pub role: String,
+    pub name: String,
+    pub signed_at: Option<String>,
+    /// Chizilgan imzo (SVG, faqat raqamlardan).
+    pub svg: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VersionInfoDto {
+    pub no: u32,
+    pub created_on: String,
+    pub signed: u32,
+    pub required: u32,
+    pub in_force: bool,
+}
+
+/// Tayyorgarlik darvozasi (uy/SPEC 2C.4) — faqat kapital kirituvchiga qo'llanadi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GateDto {
+    pub open: bool,
+    /// `EMERGENCY_FUND_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`, `INTEREST_DEBT_ACTIVE`.
+    pub reasons: Vec<String>,
+    /// Necha oylik qorovul pul: `1,4`; xarajat tarixi bo'lmasa — `None`.
+    pub coverage_months: Option<String>,
+    pub required_months: u32,
+    pub balance: MoneyDto,
+    pub monthly_essentials: Option<MoneyDto>,
+    pub has_interest_debt: bool,
+    pub has_payoff_plan: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyConsentDto {
+    pub adults: Vec<SignoffDto>,
+    /// «Bu qarz emas» tushuntirishi o'qilgan sana.
+    pub not_debt_ack_on: Option<String>,
+    pub complete: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartnershipDto {
+    pub id: String,
+    pub agreement_id: String,
+    pub kind: String,
+    pub title: String,
+    /// `DRAFT`, `SIGNED`, `ACTIVE`, `CLOSED`.
+    pub status: String,
+    pub currency: String,
+    pub parties: Vec<PartnerDto>,
+    pub capital_total: MoneyDto,
+    pub duties: Answer<Vec<Duty>>,
+    pub negligence_clause: Option<String>,
+    pub custody: Answer<Custody>,
+    pub exit_clause: Answer<ExitClause>,
+    pub arbiter: Answer<Arbiter>,
+    pub term: Answer<Term>,
+    pub witnesses: Vec<String>,
+    pub buyout: Option<BuyoutDto>,
+    pub check: ContractCheckDto,
+    /// Joriy matnga mos versiya (`None` — matn hali imzolashga berilmagan yoki o'zgargan).
+    pub version: Option<u32>,
+    /// Kuchdagi (to'liq imzolangan) versiya.
+    pub signed_version: Option<u32>,
+    /// Faol sheriklik matni o'zgargan — yangi versiya imzolanmaguncha eski versiya kuchda.
+    pub amendment_pending: bool,
+    pub signers: Vec<SignerDto>,
+    pub all_signed: bool,
+    pub me_provides_capital: bool,
+    pub me_receives_capital: bool,
+    pub gate: Option<GateDto>,
+    pub consent: Option<FamilyConsentDto>,
+    pub can_activate: bool,
+    /// `NOT_SIGNED`, `ME_PARTY_REQUIRED`, `GATE_CLOSED`, `NOT_DEBT_ACK_REQUIRED`,
+    /// `FAMILY_CONSENT_REQUIRED`, `ALREADY_ACTIVE`, `PARTNERSHIP_CLOSED`.
+    pub activate_blocker: Option<String>,
+    pub history: Vec<VersionInfoDto>,
+    /// Shablon tekshiruvi: `PENDING` — yurist va ulamo hali ko'rmagan.
+    pub template_review: String,
+    /// Joriy matn xeshining qisqa kodi.
+    pub hash_code: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartnershipSummaryDto {
+    pub id: String,
+    pub kind: String,
+    pub title: String,
+    pub status: String,
+    pub capital_total: MoneyDto,
+    pub my_role: Option<String>,
+    pub signed_version: Option<u32>,
+    pub answered: u8,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SignInput {
+    pub signer_key: String,
+    pub strokes: Vec<Stroke>,
 }

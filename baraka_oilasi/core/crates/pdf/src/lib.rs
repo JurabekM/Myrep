@@ -9,7 +9,8 @@ mod documents;
 mod engine;
 
 pub use documents::{
-    CeremonyEstimate, EstimateAgreement, EstimateAnswer, EstimateLine, EstimateTotal, LoanReceipt,
-    PdfLocale, ScheduleLine,
+    CeremonyEstimate, ContractBuyout, ContractBuyoutRow, ContractCapital, ContractClause,
+    ContractDuty, ContractParty, ContractSigner, EstimateAgreement, EstimateAnswer, EstimateLine,
+    EstimateTotal, LoanReceipt, PartnershipContract, PdfLocale, ScheduleLine,
 };
 pub use engine::{PdfEngine, PdfError, Rendered};

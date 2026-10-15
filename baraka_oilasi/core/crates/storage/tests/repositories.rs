@@ -3,7 +3,7 @@
 
 use baraka_journal::{verify_chain, EntryKind, JournalAmount, JournalEntry};
 use baraka_security::DbKey;
-use baraka_storage::repo::{agreements, categories, household, journal};
+use baraka_storage::repo::{agreements, categories, household, journal, partnerships};
 use baraka_storage::{Database, Meta, SpaceScope, StorageError};
 
 fn meta() -> Meta {
@@ -179,6 +179,82 @@ fn journal_is_append_only_and_verifiable() {
     ] {
         let r = db.write(|tx| Ok(tx.execute(sql, [])?));
         assert!(matches!(r, Err(StorageError::JournalImmutable)), "{sql}");
+    }
+}
+
+#[test]
+fn agreement_versions_and_signatures_are_immutable() {
+    let (db, uy, _) = setup();
+    let m = meta();
+    db.write(|tx| {
+        agreements::insert(
+            tx,
+            &uy,
+            &agreements::AgreementRow {
+                id: "agr-1".into(),
+                agreement_type: "PARTNERSHIP".into(),
+                status: "DRAFT".into(),
+                title: "Tikuv".into(),
+                keeper_device_id: "dev-1".into(),
+            },
+            &m,
+        )?;
+        partnerships::insert_version(
+            tx,
+            &uy,
+            "agr-1",
+            &partnerships::VersionRow {
+                id: "v1".into(),
+                version_no: 1,
+                payload_json: "{}".into(),
+                payload_hash: "ab".into(),
+                change_note: None,
+                created_at: m.now.clone(),
+            },
+            &m,
+        )?;
+        partnerships::insert_signature(
+            tx,
+            &uy,
+            &partnerships::SignatureRow {
+                id: "g1".into(),
+                version_id: "v1".into(),
+                signer_key: "arbiter".into(),
+                signer_role: "ARBITER".into(),
+                signer_name: "Sobir hoji".into(),
+                strokes_json: "[]".into(),
+                signed_at: m.now.clone(),
+            },
+            &m,
+        )
+    })
+    .unwrap();
+    // Bir imzochi bir versiyani ikki marta imzolay olmaydi.
+    let dup = db.write(|tx| {
+        partnerships::insert_signature(
+            tx,
+            &uy,
+            &partnerships::SignatureRow {
+                id: "g2".into(),
+                version_id: "v1".into(),
+                signer_key: "arbiter".into(),
+                signer_role: "ARBITER".into(),
+                signer_name: "x".into(),
+                strokes_json: "[]".into(),
+                signed_at: m.now.clone(),
+            },
+            &m,
+        )
+    });
+    assert!(dup.is_err());
+    for sql in [
+        "UPDATE agreement_versions SET payload_json = 'x' WHERE id = 'v1'",
+        "DELETE FROM agreement_versions WHERE id = 'v1'",
+        "UPDATE agreement_signatures SET signer_name = 'x' WHERE id = 'g1'",
+        "DELETE FROM agreement_signatures WHERE id = 'g1'",
+    ] {
+        let r = db.write(|tx| Ok(tx.execute(sql, [])?));
+        assert!(matches!(r, Err(StorageError::EvidenceImmutable)), "{sql}");
     }
 }
 

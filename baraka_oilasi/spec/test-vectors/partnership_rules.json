@@ -1,0 +1,707 @@
+{
+  "suite": "partnership_rules",
+  "version": 1,
+  "description": "Sheriklik shartlari: mudoraba/musharaka rollari, kapital, ulushlar 100%, kafolatli daromad taqiqi, zarar qoidasi, muddat; zarar ulushlari (bp)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "rules-001-mudaraba-ok",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "EQUIPMENT",
+                "description": "Tikuv mashinasi (2 ta)",
+                "amount": "2400000000"
+              },
+              {
+                "kind": "MONEY",
+                "description": "Mato uchun",
+                "amount": "600000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capitalItems": []
+          }
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "0"
+        ],
+        "lossShareBp": [
+          10000,
+          0
+        ]
+      }
+    },
+    {
+      "id": "rules-002-musharaka-ok",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "3000000000"
+        ],
+        "lossShareBp": [
+          5000,
+          5000
+        ]
+      }
+    },
+    {
+      "id": "rules-003-guaranteed-return",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "fixedReturn": "50000000",
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "EQUIPMENT",
+                "description": "Tikuv mashinasi (2 ta)",
+                "amount": "2400000000"
+              },
+              {
+                "kind": "MONEY",
+                "description": "Mato uchun",
+                "amount": "600000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capitalItems": []
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "GUARANTEED_RETURN_FORBIDDEN"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "0"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-004-shares-not-100",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 6000,
+            "capitalItems": [
+              {
+                "kind": "EQUIPMENT",
+                "description": "Tikuv mashinasi (2 ta)",
+                "amount": "2400000000"
+              },
+              {
+                "kind": "MONEY",
+                "description": "Mato uchun",
+                "amount": "600000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capitalItems": []
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "PROFIT_SHARES_NOT_100"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "0"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-005-one-partner",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 10000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "MIN_TWO_PARTNERS",
+          "MUSHARAKA_TWO_CAPITALS_REQUIRED"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-006-mudaraba-no-worker",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "EQUIPMENT",
+                "description": "Tikuv mashinasi (2 ta)",
+                "amount": "2400000000"
+              },
+              {
+                "kind": "MONEY",
+                "description": "Mato uchun",
+                "amount": "600000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "100"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "MUDARABA_WORKER_REQUIRED"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "100"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-007-mudaraba-both-and-worker-capital",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "EQUIPMENT",
+                "description": "Tikuv mashinasi (2 ta)",
+                "amount": "2400000000"
+              },
+              {
+                "kind": "MONEY",
+                "description": "Mato uchun",
+                "amount": "600000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "100"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "MUDARABA_BOTH_ROLE",
+          "MUDARABA_CAPITAL_PROVIDER_REQUIRED",
+          "MUDARABA_WORKER_CAPITAL"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "100"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-008-provider-without-capital",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capitalItems": []
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capitalItems": []
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "CAPITAL_PROVIDER_WITHOUT_CAPITAL",
+          "MUDARABA_CAPITAL_PROVIDER_REQUIRED"
+        ],
+        "warnings": [],
+        "capital": [
+          "0",
+          "0"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-009-musharaka-one-capital",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capitalItems": []
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "MUSHARAKA_TWO_CAPITALS_REQUIRED"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "0"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-010-loss-mismatch",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "CAPITAL_PROVIDER_BEARS",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "LOSS_RULE_MISMATCH"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "3000000000"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-011-no-term",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 0,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "TERM_REQUIRED"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "3000000000"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-012-item-not-positive",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "0"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [
+          "CAPITAL_ITEM_NOT_POSITIVE",
+          "CAPITAL_PROVIDER_WITHOUT_CAPITAL",
+          "MUSHARAKA_TWO_CAPITALS_REQUIRED"
+        ],
+        "warnings": [],
+        "capital": [
+          "3000000000",
+          "0"
+        ],
+        "lossShareBp": null
+      }
+    },
+    {
+      "id": "rules-013-silent-partner-warning",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 7000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "4000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 3000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "6000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "warnings": [
+          "SILENT_PARTNER_SHARE_ABOVE_CAPITAL"
+        ],
+        "capital": [
+          "4000000000",
+          "6000000000"
+        ],
+        "lossShareBp": [
+          4000,
+          6000
+        ]
+      }
+    },
+    {
+      "id": "rules-014-uneven-loss-bp",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "PROPORTIONAL_TO_CAPITAL",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "a",
+                "amount": "100000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 2500,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "b",
+                "amount": "100000000"
+              }
+            ]
+          },
+          {
+            "id": "P3",
+            "role": "BOTH",
+            "profitShareBp": 2500,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "c",
+                "amount": "100000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "errors": [],
+        "warnings": [],
+        "capital": [
+          "100000000",
+          "100000000",
+          "100000000"
+        ],
+        "lossShareBp": [
+          3334,
+          3333,
+          3333
+        ]
+      }
+    },
+    {
+      "id": "rules-neg-001-kind",
+      "input": {
+        "kind": "IJARA",
+        "currency": "UZS",
+        "fixedReturn": null,
+        "lossRule": "OTHER",
+        "durationMonths": 12,
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 5000,
+            "capitalItems": [
+              {
+                "kind": "MONEY",
+                "description": "naqd",
+                "amount": "3000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_KIND"
+      }
+    }
+  ]
+}

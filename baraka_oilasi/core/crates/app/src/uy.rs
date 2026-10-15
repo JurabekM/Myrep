@@ -52,7 +52,7 @@ fn sum(rows: impl Iterator<Item = i64>, c: Currency) -> Result<Money, AppError> 
 }
 
 impl App {
-    fn vault_asset(&self, scope: &SpaceScope) -> Result<assets::AssetRow, AppError> {
+    pub(crate) fn vault_asset(&self, scope: &SpaceScope) -> Result<assets::AssetRow, AppError> {
         self.db
             .read(|c| assets::shared_vault(c, scope, VaultType::Qorovul.as_str()))?
             .ok_or(AppError::new("VAULT_NOT_FOUND"))

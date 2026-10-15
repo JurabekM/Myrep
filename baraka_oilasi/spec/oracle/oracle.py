@@ -536,6 +536,96 @@ def distribute(kind, result, partners, fixed_return=None, negligence=None):
     return allocate(result, [max(0, p["capital"]) if p["role"] in ("CAPITAL_PROVIDER", "BOTH") else 0 for p in partners])
 
 
+ROLES = ("CAPITAL_PROVIDER", "WORKER", "BOTH")
+LOSS_FOR = {"MUDARABA": "CAPITAL_PROVIDER_BEARS", "MUSHARAKA": "PROPORTIONAL_TO_CAPITAL"}
+
+
+def partnership_rules(kind, partners, fixed_return, loss_rule, duration_months):
+    """U11: sheriklik shartlari (uy/SPEC 2E.1). Barcha xatolar birdan qaytadi (usta uchun)."""
+    if kind not in LOSS_FOR:
+        raise OracleError("INVALID_KIND")
+    errors, warnings, caps = set(), set(), []
+    for p in partners:
+        if p["role"] not in ROLES:
+            raise OracleError("INVALID_ROLE")
+        items = p["capitalItems"]
+        if any(i["amount"] <= 0 for i in items):
+            errors.add("CAPITAL_ITEM_NOT_POSITIVE")
+        caps.append(sum(i["amount"] for i in items if i["amount"] > 0))
+    if len(partners) < 2:
+        errors.add("MIN_TWO_PARTNERS")
+    shares = [p["profitShareBp"] for p in partners]
+    if any(x < 0 for x in shares) or sum(shares) != 10000:
+        errors.add("PROFIT_SHARES_NOT_100")
+    if fixed_return is not None:
+        errors.add("GUARANTEED_RETURN_FORBIDDEN")
+    roles = [p["role"] for p in partners]
+    if any(r != "WORKER" and c == 0 for r, c in zip(roles, caps)):
+        errors.add("CAPITAL_PROVIDER_WITHOUT_CAPITAL")
+    if kind == "MUDARABA":
+        if not any(r == "CAPITAL_PROVIDER" and c > 0 for r, c in zip(roles, caps)):
+            errors.add("MUDARABA_CAPITAL_PROVIDER_REQUIRED")
+        if "WORKER" not in roles:
+            errors.add("MUDARABA_WORKER_REQUIRED")
+        if "BOTH" in roles:
+            errors.add("MUDARABA_BOTH_ROLE")
+        if any(r == "WORKER" and c > 0 for r, c in zip(roles, caps)):
+            errors.add("MUDARABA_WORKER_CAPITAL")
+    else:
+        if sum(1 for c in caps if c > 0) < 2:
+            errors.add("MUSHARAKA_TWO_CAPITALS_REQUIRED")
+        total = sum(caps)
+        # OQ-D2 (Hanafiy): ishlamaydigan sherik ulushi kapital ulushidan oshmasin — hozircha ogohlantirish.
+        if total > 0 and any(r == "CAPITAL_PROVIDER" and x * total > c * 10000 for r, x, c in zip(roles, shares, caps)):
+            warnings.add("SILENT_PARTNER_SHARE_ABOVE_CAPITAL")
+    if loss_rule != LOSS_FOR[kind]:
+        errors.add("LOSS_RULE_MISMATCH")
+    if duration_months is None or not 1 <= duration_months <= 600:
+        errors.add("TERM_REQUIRED")
+    loss = None
+    if not errors:
+        loss = allocate(10000, [c if kind == "MUSHARAKA" or r == "CAPITAL_PROVIDER" else 0 for r, c in zip(roles, caps)])
+    return {"errors": sorted(errors), "warnings": sorted(warnings), "capital": [_s(c) for c in caps], "lossShareBp": loss}
+
+
+def buyout_schedule(stake, total_capital, buyer_capital, units, per_period, start, period_months,
+                    expected_profit, buyer_share_bp):
+    """Kamayib boruvchi musharaka: sotuvchining butun ulushi teng birliklarga bo'linadi, xaridor har davrda
+    `per_period` birlik oladi. Narx — taxminiy (har birlik sotilgan kuni baholanadi, OQ-D6)."""
+    if stake <= 0:
+        raise OracleError("STAKE_NOT_POSITIVE")
+    if buyer_capital < 0 or stake + buyer_capital > total_capital:
+        raise OracleError("STAKE_EXCEEDS_CAPITAL")
+    if not 1 <= units <= 600:
+        raise OracleError("INVALID_UNITS")
+    if not 1 <= per_period <= units:
+        raise OracleError("INVALID_UNITS_PER_PERIOD")
+    if not 1 <= period_months <= 12:
+        raise OracleError("INVALID_PERIOD")
+    if expected_profit is not None and expected_profit < 0:
+        raise OracleError("INVALID_PROFIT")
+    buyer_profit = None if expected_profit is None else percent_of(expected_profit, buyer_share_bp)
+    prices = allocate(stake, [1] * units)
+    rows, i, bought = [], 0, 0
+    while i < units:
+        n = min(per_period, units - i)
+        pay = sum(prices[i:i + n])
+        i += n
+        bought += pay
+        rows.append({
+            "period": len(rows) + 1,
+            "date": add_months(start, len(rows) * period_months).isoformat(),
+            "units": n,
+            "payment": _s(pay),
+            "remainingStake": _s(stake - bought),
+            "sellerBp": round_half_up(Fraction((stake - bought) * 10000, total_capital)),
+            "buyerBp": round_half_up(Fraction((buyer_capital + bought) * 10000, total_capital)),
+            "exceedsShare": buyer_profit is not None and pay > buyer_profit,
+        })
+    return {"periods": len(rows), "endDate": rows[-1]["date"],
+            "buyerProfit": None if buyer_profit is None else _s(buyer_profit), "rows": rows}
+
+
 def recovery_split(income, household, extra, savings):
     if min(household, extra, savings) < 0 or household + extra + savings != 10000:
         raise OracleError("SPLIT_NOT_100")
@@ -894,12 +984,71 @@ def build_suites():
         cer_case("cer-neg-002-amount", "2027-05-20", "240000000", [], [("x", 10, [("PER_GUEST", "0", "SAVINGS")])]),
         cer_case("cer-neg-003-source", "2027-05-20", "240000000", [], [("x", 10, [("ONE_OFF", "100", "BANK")])]),
     ])
+
+    # U11: sheriklik shartlari va buyout jadvali.
+    def partner(pid, role, bp, *items):
+        return {"id": pid, "role": role, "profitShareBp": bp,
+                "capitalItems": [{"kind": k, "description": d, "amount": a} for k, d, a in items]}
+
+    def rules_case(cid, kind, partners, fixed=None, loss=None, months=12):
+        loss = loss or LOSS_FOR.get(kind, "OTHER")
+        inp = {"kind": kind, "currency": "UZS", "fixedReturn": None if fixed is None else _s(fixed), "lossRule": loss,
+               "durationMonths": months,
+               "partners": [dict(p, capitalItems=[dict(i, amount=_s(i["amount"])) for i in p["capitalItems"]])
+                            for p in partners]}
+        return _case(cid, inp, lambda: partnership_rules(kind, partners, fixed, loss, months))
+
+    sobir = partner("P1", "CAPITAL_PROVIDER", 5000, ("EQUIPMENT", "Tikuv mashinasi (2 ta)", 2400000000),
+                    ("MONEY", "Mato uchun", 600000000))
+    nilufar = partner("P2", "WORKER", 5000)
+    anvar = partner("P1", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
+    dilshod = partner("P2", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
+    silent = partner("P1", "CAPITAL_PROVIDER", 7000, ("MONEY", "naqd", 4000000000))
+    working = partner("P2", "BOTH", 3000, ("MONEY", "naqd", 6000000000))
+    suites["partnership_rules"] = _suite("partnership_rules", "Sheriklik shartlari: mudoraba/musharaka rollari, kapital, ulushlar 100%, kafolatli daromad taqiqi, zarar qoidasi, muddat; zarar ulushlari (bp)", [
+        rules_case("rules-001-mudaraba-ok", "MUDARABA", [sobir, nilufar]),
+        rules_case("rules-002-musharaka-ok", "MUSHARAKA", [anvar, dilshod]),
+        rules_case("rules-003-guaranteed-return", "MUDARABA", [sobir, nilufar], fixed=50000000),
+        rules_case("rules-004-shares-not-100", "MUDARABA", [dict(sobir, profitShareBp=6000), nilufar]),
+        rules_case("rules-005-one-partner", "MUSHARAKA", [dict(anvar, profitShareBp=10000)]),
+        rules_case("rules-006-mudaraba-no-worker", "MUDARABA", [sobir, dict(sobir, id="P2", capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
+        rules_case("rules-007-mudaraba-both-and-worker-capital", "MUDARABA", [dict(sobir, role="BOTH"), dict(nilufar, capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
+        rules_case("rules-008-provider-without-capital", "MUDARABA", [partner("P1", "CAPITAL_PROVIDER", 5000), nilufar]),
+        rules_case("rules-009-musharaka-one-capital", "MUSHARAKA", [anvar, partner("P2", "WORKER", 5000)]),
+        rules_case("rules-010-loss-mismatch", "MUSHARAKA", [anvar, dilshod], loss="CAPITAL_PROVIDER_BEARS"),
+        rules_case("rules-011-no-term", "MUSHARAKA", [anvar, dilshod], months=0),
+        rules_case("rules-012-item-not-positive", "MUSHARAKA", [anvar, partner("P2", "BOTH", 5000, ("MONEY", "naqd", 0))]),
+        rules_case("rules-013-silent-partner-warning", "MUSHARAKA", [silent, working]),
+        rules_case("rules-014-uneven-loss-bp", "MUSHARAKA", [partner("P1", "BOTH", 5000, ("MONEY", "a", 100000000)),
+                                                            partner("P2", "BOTH", 2500, ("MONEY", "b", 100000000)),
+                                                            partner("P3", "BOTH", 2500, ("MONEY", "c", 100000000))]),
+        rules_case("rules-neg-001-kind", "IJARA", [anvar, dilshod]),
+    ])
+
+    def buy_case(cid, stake, total, buyer, units, per, start, months, profit, share):
+        inp = {"currency": "UZS", "stake": _s(stake), "totalCapital": _s(total), "buyerCapital": _s(buyer), "units": units,
+               "unitsPerPeriod": per, "start": start, "periodMonths": months,
+               "expectedProfit": None if profit is None else _s(profit), "buyerShareBp": share}
+        return _case(cid, inp, lambda: buyout_schedule(stake, total, buyer, units, per, date.fromisoformat(start), months,
+                                                       profit, share))
+
+    suites["buyout_schedule"] = _suite("buyout_schedule", "Kamayib boruvchi musharaka: ulush teng birliklarga bo'linadi (largest remainder), har davrda N birlik; sotuvchi va xaridor ulushi (bp, half-up); to'lov xaridor foyda ulushidan oshsa — belgi", [
+        buy_case("buy-001-nilufar", 3000000000, 3000000000, 0, 10, 1, "2026-11-30", 1, 800000000, 5000),
+        buy_case("buy-002-uneven-quarterly", 100000001, 300000001, 200000000, 3, 2, "2027-01-31", 3, 50000000, 6000),
+        buy_case("buy-003-no-profit-estimate", 1200000000, 2000000000, 800000000, 4, 4, "2027-03-15", 1, None, 5000),
+        buy_case("buy-neg-001-stake", 0, 100, 0, 1, 1, "2027-01-01", 1, None, 5000),
+        buy_case("buy-neg-002-exceeds", 200, 300, 200, 2, 1, "2027-01-01", 1, None, 5000),
+        buy_case("buy-neg-003-per-period", 100, 100, 0, 2, 3, "2027-01-01", 1, None, 5000),
+        buy_case("buy-neg-004-period", 100, 100, 0, 2, 1, "2027-01-01", 13, None, 5000),
+        buy_case("buy-neg-005-units", 100, 100, 0, 0, 1, "2027-01-01", 1, None, 5000),
+    ])
     return suites
 
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
-                 "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios")
+                 "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
+                 "partnership_rules", "buyout_schedule")
 
 
 def generate(directory: str) -> None:
@@ -1038,6 +1187,14 @@ def selftest() -> None:
     # U10: 20 mln qarz oyiga 2,4 mln bilan: 9 oy (8×2,4 = 19,2 mln), oxirgi oy 0,8 mln
     assert informal_debt_payoff(2000000000, date(2027, 5, 20), 240000000) == (9, date(2028, 1, 1))
     assert informal_debt_payoff(0, date(2027, 5, 20), 0) == (0, None)
+    # U11: Nilufar Sobir hojining 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
+    b = buyout_schedule(3000000000, 3000000000, 0, 10, 1, date(2026, 11, 30), 1, 800000000, 5000)
+    assert (b["periods"], b["endDate"], b["rows"][1]["date"], b["rows"][-1]["buyerBp"]) == (10, "2027-08-30", "2026-12-30", 10000)
+    assert [r["payment"] for r in buyout_schedule(100000001, 300000001, 200000000, 3, 2, date(2027, 1, 31), 3, None, 0)["rows"]] == ["66666668", "33333333"]
+    r = partnership_rules("MUSHARAKA", [{"role": "CAPITAL_PROVIDER", "profitShareBp": 7000, "capitalItems": [{"amount": 40}]},
+                                        {"role": "BOTH", "profitShareBp": 3000, "capitalItems": [{"amount": 60}]}],
+                          None, "PROPORTIONAL_TO_CAPITAL", 12)
+    assert (r["errors"], r["warnings"], r["lossShareBp"]) == ([], ["SILENT_PARTNER_SHARE_ABOVE_CAPITAL"], [4000, 6000])
     print("oracle selftest: OK")
 
 

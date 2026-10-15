@@ -12,7 +12,9 @@ use baraka_domain_uy::{
     gate::{evaluate_gate, GateInput, GatePolicy, InterestDebtPolicy},
     inflation::{personal_index, BasketPoint},
     partnership::{
-        distribute, DistributionInput, Negligence, Partner, PartnerRole, PartnershipKind,
+        buyout_schedule, check_rules, distribute, BuyoutInput, CapitalItem, CapitalKind,
+        DistributionInput, LossRule, Negligence, Partner, PartnerRole, PartnerTerms,
+        PartnershipKind, RulesInput,
     },
     payoff::{
         default_order, payoff_plan, Amortizing, BankTerms, DebtState, OrderKey, Payment, PlanDebt,
@@ -113,6 +115,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "payoff_projection" => projection(input),
         "payoff_plan" => plan_all(input),
         "ceremony_scenarios" => ceremony(input),
+        "partnership_rules" => partnership_rules(input),
+        "buyout_schedule" => buyout(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -702,4 +706,95 @@ fn ceremony(v: &Value) -> R {
         }));
     }
     Ok(json!({ "scenarios": out }))
+}
+
+fn u(v: &Value, k: &str) -> Result<u32, E> {
+    u32::try_from(i(v, k)?).map_err(|_| bad(k))
+}
+
+fn partnership_rules(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let kind = PartnershipKind::parse(s(v, "kind")?).ok_or_else(|| E("INVALID_KIND".into()))?;
+    let partners = v["partners"]
+        .as_array()
+        .ok_or_else(|| bad("partners"))?
+        .iter()
+        .map(|p| {
+            Ok(PartnerTerms {
+                role: PartnerRole::parse(s(p, "role")?).ok_or_else(|| E("INVALID_ROLE".into()))?,
+                profit_share_bp: i(p, "profitShareBp")?,
+                capital_items: p["capitalItems"]
+                    .as_array()
+                    .ok_or_else(|| bad("capitalItems"))?
+                    .iter()
+                    .map(|x| {
+                        Ok(CapitalItem {
+                            kind: CapitalKind::parse(s(x, "kind")?).ok_or_else(|| bad("kind"))?,
+                            description: s(x, "description")?.to_string(),
+                            amount: money(x, "amount", c)?,
+                        })
+                    })
+                    .collect::<Result<_, E>>()?,
+            })
+        })
+        .collect::<Result<Vec<_>, E>>()?;
+    let r = check_rules(&RulesInput {
+        kind,
+        currency: c,
+        partners,
+        fixed_return: if v["fixedReturn"].is_null() {
+            None
+        } else {
+            Some(money(v, "fixedReturn", c)?)
+        },
+        loss_rule: LossRule::parse(s(v, "lossRule")?).ok_or_else(|| bad("lossRule"))?,
+        duration_months: Some(u(v, "durationMonths")?),
+    })?;
+    Ok(json!({
+        "errors": r.errors,
+        "warnings": r.warnings,
+        "capital": strs(&r.capital),
+        "lossShareBp": r.loss_share_bp,
+    }))
+}
+
+fn buyout(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let sch = buyout_schedule(&BuyoutInput {
+        stake: money(v, "stake", c)?,
+        total_capital: money(v, "totalCapital", c)?,
+        buyer_capital: money(v, "buyerCapital", c)?,
+        units: u(v, "units")?,
+        units_per_period: u(v, "unitsPerPeriod")?,
+        start: date(&v["start"])?,
+        period_months: u(v, "periodMonths")?,
+        expected_profit: if v["expectedProfit"].is_null() {
+            None
+        } else {
+            Some(money(v, "expectedProfit", c)?)
+        },
+        buyer_share_bp: i(v, "buyerShareBp")?,
+    })?;
+    let rows: Vec<Value> = sch
+        .rows
+        .iter()
+        .map(|r| {
+            json!({
+                "period": r.period,
+                "date": r.date.to_string(),
+                "units": r.units,
+                "payment": r.payment.minor().to_string(),
+                "remainingStake": r.remaining_stake.minor().to_string(),
+                "sellerBp": r.seller_bp,
+                "buyerBp": r.buyer_bp,
+                "exceedsShare": r.exceeds_share,
+            })
+        })
+        .collect();
+    Ok(json!({
+        "periods": rows.len(),
+        "endDate": sch.end_date().map(|d| d.to_string()),
+        "buyerProfit": sch.buyer_profit.map(|m| m.minor().to_string()),
+        "rows": rows,
+    }))
 }

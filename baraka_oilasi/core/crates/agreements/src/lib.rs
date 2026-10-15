@@ -5,7 +5,9 @@
 #![deny(clippy::float_arithmetic)]
 
 mod model;
+mod signature;
 mod validate;
 
 pub use model::*;
+pub use signature::{signature_svg, validate_signature, Stroke, MAX_POINTS, PAD_HEIGHT, PAD_WIDTH};
 pub use validate::{check_completeness, Completeness, QUESTION_COUNT, REVIEW_WARN_AFTER_DAYS};

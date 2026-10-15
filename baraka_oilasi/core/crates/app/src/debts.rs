@@ -44,7 +44,7 @@ fn parse_date(s: &str) -> Result<NaiveDate, AppError> {
 }
 
 /// Saqlangan qarz yozuvining ribo belgisi (reja turi bo'yicha).
-fn row_is_ribo(d: &debts::DebtRow) -> bool {
+pub(crate) fn row_is_ribo(d: &debts::DebtRow) -> bool {
     match PlanKind::parse(&d.plan_kind) {
         Some(PlanKind::Annuity | PlanKind::Differentiated) => d.annual_bp > 0,
         _ => d.markup_minor > 0,

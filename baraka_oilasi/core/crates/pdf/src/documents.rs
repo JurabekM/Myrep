@@ -8,6 +8,7 @@ use crate::{PdfEngine, PdfError, Rendered};
 
 const LOAN_RECEIPT: &str = include_str!("../../../../shared/pdf/loan_receipt.typ");
 const CEREMONY_ESTIMATE: &str = include_str!("../../../../shared/pdf/ceremony_estimate.typ");
+const PARTNERSHIP_CONTRACT: &str = include_str!("../../../../shared/pdf/partnership_contract.typ");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PdfLocale {
@@ -200,5 +201,145 @@ impl CeremonyEstimate {
             "adults": self.adults,
         });
         engine.render(CEREMONY_ESTIMATE, &data, &[], &self.ident, today)
+    }
+}
+
+/// Sheriklik shartnomasi bandi: javob, «tegishli emas» (izoh bilan) yoki javobsiz.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ContractClause {
+    /// `ANSWERED`, `NOT_APPLICABLE`, `UNANSWERED`.
+    pub status: String,
+    /// `NOT_APPLICABLE` izohi.
+    pub reason: Option<String>,
+    /// Kalit — qiymat juftliklari (formatlangan).
+    pub rows: Vec<(String, String)>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ContractParty {
+    pub name: String,
+    /// `CAPITAL_PROVIDER`, `WORKER`, `BOTH`.
+    pub role: String,
+    pub capital: String,
+    pub profit_share: String,
+    pub loss_share: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ContractCapital {
+    pub party: String,
+    /// `MONEY` yoki `EQUIPMENT`.
+    pub kind: String,
+    pub description: String,
+    pub amount: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ContractDuty {
+    pub title: String,
+    pub owner: String,
+    pub breach: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ContractBuyoutRow {
+    pub period: String,
+    pub date: String,
+    pub payment: String,
+    pub remaining: String,
+    pub seller: String,
+    pub buyer: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ContractBuyout {
+    pub seller: String,
+    pub buyer: String,
+    pub rows: Vec<ContractBuyoutRow>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ContractSigner {
+    /// `PARTY`, `WITNESS`, `ARBITER`.
+    pub role: String,
+    pub name: String,
+    pub signed_at: Option<String>,
+    /// Chizilgan imzo (faqat raqamlardan yig'ilgan SVG, `baraka_agreements::signature_svg`).
+    pub svg: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PartnershipContract {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub title: String,
+    /// `MUDARABA` yoki `MUSHARAKA`.
+    pub kind: String,
+    /// `v2` yoki `None` — imzolanmagan qoralama.
+    pub version: Option<String>,
+    /// Shartnoma matni xeshining qisqa kodi.
+    pub hash_code: String,
+    /// Shablon yurist va ulamo tomonidan tekshirilmagan (`reviewStatus = PENDING`).
+    pub review_pending: bool,
+    pub parties: Vec<ContractParty>,
+    pub capital: Vec<ContractCapital>,
+    pub duties: ContractClause,
+    pub duty_rows: Vec<ContractDuty>,
+    pub negligence: Option<String>,
+    pub custody: ContractClause,
+    pub exit: ContractClause,
+    pub buyout: Option<ContractBuyout>,
+    pub arbiter: ContractClause,
+    pub term: ContractClause,
+    pub witnesses: Vec<String>,
+    pub signers: Vec<ContractSigner>,
+}
+
+impl PartnershipContract {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = labels
+            .get("contract.title")
+            .and_then(Value::as_str)
+            .unwrap_or("Shartnoma")
+            .to_string();
+        let mut files: Vec<(String, Vec<u8>)> = Vec::new();
+        let signers: Vec<Value> = self
+            .signers
+            .iter()
+            .map(|s| {
+                let file = s.svg.as_ref().map(|svg| {
+                    let name = format!("sig-{}.svg", files.len());
+                    files.push((name.clone(), svg.clone().into_bytes()));
+                    name
+                });
+                json!({ "role": s.role, "name": s.name, "signedAt": s.signed_at, "file": file })
+            })
+            .collect();
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.title),
+            "name": self.title,
+            "labels": labels,
+            "kind": self.kind,
+            "version": self.version,
+            "hashCode": self.hash_code,
+            "reviewPending": self.review_pending,
+            "parties": self.parties,
+            "capital": self.capital,
+            "duties": self.duties,
+            "dutyRows": self.duty_rows,
+            "negligence": self.negligence,
+            "custody": self.custody,
+            "exit": self.exit,
+            "buyout": self.buyout,
+            "arbiter": self.arbiter,
+            "term": self.term,
+            "witnesses": self.witnesses,
+            "signers": signers,
+        });
+        let extra: Vec<(&str, Vec<u8>)> =
+            files.iter().map(|(n, b)| (n.as_str(), b.clone())).collect();
+        engine.render(PARTNERSHIP_CONTRACT, &data, &extra, &self.ident, today)
     }
 }
