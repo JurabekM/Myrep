@@ -9,16 +9,20 @@ pub mod category;
 pub mod content;
 pub mod content_parser;
 pub mod debt;
+pub mod emergency;
 pub mod envelope;
 pub mod expense;
 pub mod habit;
 pub mod income;
+pub mod income_source;
+pub mod inflation;
 pub mod ledger;
 pub mod limit;
 pub mod necessity;
 pub mod obligation;
 pub mod odat;
 pub mod progress;
+pub mod readiness;
 pub mod report;
 pub mod rescue;
 pub mod share;
@@ -133,6 +137,9 @@ pub enum DomainError {
     /// Konvert shu hafta uchun allaqachon yopilgan (qoldiq ikki marta qutqarilmaydi).
     #[error("konvert bu hafta allaqachon yopilgan")]
     EnvelopeWeekClosed,
+    /// Narx yoki og'irlik noto'g'ri (nol/manfiy bazaviy narx, valyuta mos emas, og'irliklar yig'indisi 0).
+    #[error("narx yoki og'irlik noto'g'ri")]
+    InvalidPrice,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -169,6 +176,7 @@ impl DomainError {
             Self::SubscriptionCancelled => "SUBSCRIPTION_CANCELLED",
             Self::RescueExceedsAvailable => "RESCUE_EXCEEDS_AVAILABLE",
             Self::EnvelopeWeekClosed => "ENVELOPE_WEEK_CLOSED",
+            Self::InvalidPrice => "INVALID_PRICE",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

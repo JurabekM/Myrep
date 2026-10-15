@@ -15,11 +15,14 @@ use vectors::{
 /// `har_bir_vektor_fayli_runner_bilan_qoplangan` testi buni talab qiladi.
 const COVERED_SUITES: &[&str] = &[
     "allocate",
+    "emergency_target",
     "fx_convert",
     "income_share",
     "money_format",
     "money_parse",
     "percent_of",
+    "personal_inflation",
+    "readiness_gate",
     "savings_rescue",
     "streak",
     "unexplained_gap",

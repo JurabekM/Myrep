@@ -40,7 +40,12 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 32. **Ochilish parametrlari (D5).** Standart — 2 vazifa va 7 kun (mobil bilan bir xil). Foydalanuvchi sozlashi kerakmi, yoki qat'iy qoladimi? _Kerak: D6 (sozlamalar) oldidan._
 33. **Hodisasiz vazifalar (D5).** `ch02.t2`, `ch02.t3`, `ch03.*`, `ch04.*`, `ch05.t1` uchun modullar hali yo'q: bu vazifalar faqat qo'lda belgilanadi. Modul tayyor bo'lganda shu hodisa `record_event` orqali yoziladi. `ch05.t2` — hodisasi yo'q, qo'lda. _Kerak: D6–D9 har modulida._
 34. **«Daftar sahifasi» uzunligi (D5).** Standart qaror: 5000 belgi (backend va textarea). Mobilda chegara yo'q edi. Chegara to'g'rimi yoki boshqacha bo'lsinmi? _Kerak: tasdiq._
-35. **Tray, global shortcut va CSV import (D7).** Tray ikonkasi, Ctrl+Alt+B mini oynasi (qulflanganda summalar yashirin) va CSV import ustasi (matn joylash, ustunlarni moslash) hali qo'shilmagan. Ular D7 ning qolgan qismi sifatida alohida vazifada bajariladi. _Kerak: D7 qoldiq ishi._
+
+**41. Tray, global shortcut va CSV import (D7).** Tray ikonkasi, Ctrl+Alt+B mini oynasi (qulflanganda summalar yashirin) va CSV import ustasi (matn joylash, ustunlarni moslash) hali qo'shilmagan. Ular D7 ning qolgan qismi sifatida alohida vazifada bajariladi. _Kerak: D7 qoldiq ishi._
+
+**42. `IncomeSourceType` ma'nolari (D8).** SPEC faqat kodlarni sanaydi: `TER | MOL | TAVAKKAL | RIBO`. Ko'rsatiladigan nomlari va ilovadagi o'rni noma'lum; kodlar `domain::income_source` da, nomsiz. _Kerak: SPEC'ni izohlash._
+
+**43. «Ongli chetlab o'tish» (D8).** Darvozani qasddan ochish (sabab yozib) vektorlarda yo'q; semantika belgilanmagan. _Kerak: mahsulot qarori._
 
 ## Hal qilingan
 

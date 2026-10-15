@@ -431,6 +431,13 @@ CREATE TABLE household_settings (
 ) STRICT;
 "#;
 
+/// Sxema v7 (D8, «Qorovul»): eski «Kelajagim» yozuvlarida pul turi bo'lmasa, u `QOROVUL` deb belgilanadi.
+/// Balans o'zgarmaydi: faqat `vault_type` to'ldiriladi. Aktiv turi (`assets.type = 'VAULT'`) saqlanadi —
+/// uni o'zgartirish jadval qayta yaratishni talab qiladi, pul esa bunga muhtoj emas.
+pub const SCHEMA_V7: &str = r#"
+UPDATE vault_transactions SET vault_type = 'QOROVUL' WHERE vault_type IS NULL;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -440,6 +447,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V4),
         M::up(SCHEMA_V5),
         M::up(SCHEMA_V6),
+        M::up(SCHEMA_V7),
     ])
 }
 

@@ -4,6 +4,34 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D8 — Qorovul, zaxira maqsadi, shaxsiy inflyatsiya, tayyorgarlik darvozasi (2026-10-15)
+
+**Qo'shildi**
+
+- `domain::emergency` — zaxira maqsadi: so'nggi 3 ma'lumotli oy o'rtachasi × N, yarim tiyin yuqoriga (`emergency_target.json`, 3 vektor).
+- `domain::inflation` — shaxsiy indeks: bazis punktlarda mahsulot o'zgarishi, og'irlikli o'rtacha (`personal_inflation.json`, 1 vektor).
+- `domain::readiness` — tayyorgarlik darvozasi: zaxira ≥ 6,0 oy VA (foizli qarz yo'q YOKI chiqish rejasi bor); sabablar tartibi doim bir xil (`readiness_gate.json`, 16 vektor).
+- `domain::income_source` — `IncomeSourceType` (`TER | MOL | TAVAKKAL | RIBO`), faqat kodlar (ma'nolari OPEN_QUESTIONS, 42).
+- Sxema v7: eski «Kelajagim» yozuvlarida `vault_type` bo'lmasa, `QOROVUL` deb to'ldiriladi. Balans o'zgarmaydi (`reserve_flows.rs`).
+- `spec/test-vectors/`: uchta vektor fayli mobil ilova bilan umumiy — baytma-bayt nusxa; `SHA256SUMS` manifesti bilan tekshiriladi (`mobil_bilan_umumiy_vektorlar_manifestga_mos`).
+
+**Qarorlar va sabablar**
+
+- **`sha2` 0.10** (`crates/vectors`, faqat dev-dependency): vektor fayllarining xeshini tekshirish uchun. D8A jurnal zanjiri (SHA-256) ham shu crate'dan foydalanadi. Boshqa yangi crate yo'q.
+- Zaxira o'rtachasi: xarajati nolga teng oylar hisobga olinmaydi; uchtadan kam ma'lumotli oy bo'lsa maqsad `None` (hisoblanmaydi).
+- Shaxsiy indeks: noldan katta bazaviy narx va bir valyuta talab qilinadi (`INVALID_PRICE`). Og'irliklar 100% bo'lishi shart emas, faqat yig'indisi nolga teng bo'lmasligi.
+- Aktiv turi `assets.type = 'VAULT'` saqlanadi: uni `QOROVUL` ga o'zgartirish jadval qayta yaratishni talab qiladi, pul esa bunga muhtoj emas.
+
+**Tuzatildi**
+
+- **SQLCipher poygasi.** Parallel testlarda birinchi ochish kalitni bo'sh deb o'qirdi (`sqlcipher not initialized`) — `storage_flows` 3 yugurishdan 1 tasida yiqilardi. `Database::open*` endi ochishni jarayon bo'yicha qulf bilan ketma-ket bajaradi; 6 yugurishda 6/6 yashil.
+
+**Ma'lum cheklovlar (keyingi ishga qoldirildi)**
+
+- «Narx daftari» (narx nuqtalari, savat) va «Sichqon kemirgani» UI'si qo'shilmadi: domen darajasidagi indeks tayyor, saqlash va ekran keyingi bosqichda.
+- «Ongli chetlab o'tish» (darvozani qasddan ochish) qo'shilmadi: vektorlarda semantika yo'q; OPEN_QUESTIONS, 43-band.
+- `ReadinessGate` zaxira oylarini hisoblamaydi (kirish — o'ndan bir oy birligida); qorovul balansidan hisoblash keyingi bosqichda.
+
 ### D7 — Byudjet: obunalar, konvertlar, «Qutqarilgan pul», «Kelajagim»ga o'tkazish (2026-10-15)
 
 **Qo'shildi**

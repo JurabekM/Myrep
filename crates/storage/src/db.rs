@@ -1,10 +1,19 @@
 use std::path::Path;
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use rusqlite::Connection;
 use security::SecretKey;
 use zeroize::Zeroizing;
 
 use crate::{StorageError, schema};
+
+/// Ochish navbatga qo'yiladi: SQLCipher jarayon bo'yicha birinchi marta ishga tushganda parallel ochish
+/// kalitni bo'sh deb o'qiydi («sqlcipher not initialized»). Qulf faqat ochish paytida ushlanadi.
+static OPEN_LOCK: Mutex<()> = Mutex::new(());
+
+fn open_guard() -> MutexGuard<'static, ()> {
+    OPEN_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
+}
 
 /// Ochilgan shifrlangan ma'lumotlar bazasi. Kalit bazani ochish paytida ishlatiladi va bu yerda saqlanmaydi.
 pub struct Database {
@@ -15,11 +24,13 @@ impl Database {
     /// Fayldan ochadi (yo'q bo'lsa yaratadi). Kalit noto'g'ri bo'lsa — [`StorageError::WrongKeyOrNotDatabase`].
     /// Ochilgach migratsiyalar avtomatik qo'llanadi.
     pub fn open(path: &Path, key: &SecretKey) -> Result<Self, StorageError> {
+        let _guard = open_guard();
         Self::initialize(Connection::open(path)?, key)
     }
 
     /// Xotirada ochadi (testlar uchun). Yozuvlar jarayon tugagach yo'qoladi.
     pub fn open_in_memory(key: &SecretKey) -> Result<Self, StorageError> {
+        let _guard = open_guard();
         Self::initialize(Connection::open_in_memory()?, key)
     }
 
