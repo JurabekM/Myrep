@@ -2,14 +2,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct MoneyDto {
     pub minor: String,
     pub currency: String,
+    /// Ko'rsatish uchun: `8 000 000 soʻm`.
     pub formatted: String,
+    /// Kirish maydoniga qaytarish uchun: `8000000`, `123,45` (UI hisoblamaydi).
+    pub plain: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct BootstrapInput {
     pub household_name: String,
@@ -25,6 +30,7 @@ pub struct BootstrapInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct NewMemberInput {
     pub display_name: String,
@@ -33,6 +39,7 @@ pub struct NewMemberInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceDto {
     pub id: String,
@@ -41,6 +48,7 @@ pub struct SpaceDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct MemberDto {
     pub id: String,
@@ -49,6 +57,7 @@ pub struct MemberDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct HouseholdDto {
     pub id: String,
@@ -61,6 +70,7 @@ pub struct HouseholdDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct CategoryDto {
     pub id: String,
@@ -72,6 +82,7 @@ pub struct CategoryDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct NewIncomeInput {
     pub amount: String,
@@ -86,6 +97,7 @@ pub struct NewIncomeInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct IncomeDto {
     pub id: String,
@@ -97,34 +109,40 @@ pub struct IncomeDto {
 
 /// Daromad saqlangandan keyingi taklif: «Shundan X so'm — kelajagingiz uchun».
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct IncomeRecordedDto {
     pub income: IncomeDto,
     pub suggested_share: MoneyDto,
     /// Progressiv rejim taklifi (bp) — 4 hafta ketma-ket ajratilgan bo'lsa.
-    pub progressive_suggestion_bp: Option<i64>,
+    pub progressive_suggestion_bp: Option<i32>,
+    /// Shu taklif foizda, ko'rsatish uchun: `6`, `6,5`.
+    pub progressive_suggestion_percent: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct AllocationRuleInput {
     /// `PERCENT` yoki `FIXED`.
     pub kind: String,
-    pub bp: Option<i64>,
+    pub bp: Option<i32>,
     pub amount: Option<String>,
     pub progressive: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct AllocationRuleDto {
     pub kind: String,
-    pub bp: Option<i64>,
+    pub bp: Option<i32>,
     pub amount: Option<MoneyDto>,
     pub progressive: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct VaultTxDto {
     pub id: String,
@@ -135,6 +153,7 @@ pub struct VaultTxDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct StreakDto {
     pub current_weeks: u32,
@@ -145,6 +164,7 @@ pub struct StreakDto {
 
 /// «Kelajagim» ekrani: odat ko'rsatkichi summadan oldin (uy/SPEC 2.2).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct VaultDto {
     pub streak: StreakDto,
@@ -154,6 +174,7 @@ pub struct VaultDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct NewExpenseInput {
     pub amount: String,
@@ -171,6 +192,7 @@ pub struct NewExpenseInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ExpenseDto {
     pub id: String,
@@ -182,6 +204,7 @@ pub struct ExpenseDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct NecessityTotalsDto {
     pub zarur: MoneyDto,
@@ -194,6 +217,7 @@ pub struct NecessityTotalsDto {
 
 /// Oylik audit va bosh ekran KPI'lari (uy/SPEC 2.3–2.4).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct MonthlySummaryDto {
     pub period_start: String,
@@ -213,6 +237,7 @@ pub struct MonthlySummaryDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct AgreementDto {
     pub id: String,
@@ -223,6 +248,7 @@ pub struct AgreementDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct NewJournalEntryInput {
     pub kind: String,
@@ -236,10 +262,11 @@ pub struct NewJournalEntryInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct JournalEntryDto {
     pub id: String,
-    pub seq: i64,
+    pub seq: u32,
     pub kind: String,
     pub party_id: Option<String>,
     pub amount: Option<MoneyDto>,
@@ -251,21 +278,23 @@ pub struct JournalEntryDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ChainStatusDto {
     pub ok: bool,
-    pub entries: usize,
+    pub entries: u32,
     pub head: Option<String>,
     pub short_code: Option<String>,
-    pub first_broken_seq: Option<usize>,
+    pub first_broken_seq: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LoanSimulationInput {
     pub principal: String,
     pub currency: String,
-    pub annual_bp: i64,
+    pub annual_bp: i32,
     pub months: u32,
     /// `ANNUITY` yoki `DIFFERENTIATED`.
     pub kind: String,
@@ -273,6 +302,7 @@ pub struct LoanSimulationInput {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ScheduleRowDto {
     pub month: u32,
@@ -284,6 +314,7 @@ pub struct ScheduleRowDto {
 
 /// Odatiy va tezlashtirilgan grafik yonma-yon: «N oy erta», «X so'm tejaldi».
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LoanSimulationDto {
     pub payment: MoneyDto,

@@ -10,6 +10,7 @@ mod catalog;
 mod dto;
 mod error;
 mod events;
+pub mod session;
 mod text;
 mod uy;
 
@@ -17,9 +18,10 @@ pub use app::App;
 pub use dto::*;
 pub use error::AppError;
 pub use events::{ChangeEvent, Topic};
+pub use session::{Session, SessionStatus, SetupResult};
 
 pub use baraka_domain_common::{Clock, FixedClock, IdGen, SequentialIdGen, SystemClock, UuidV7Gen};
-pub use baraka_security::DbKey;
+pub use baraka_security::{DbKey, KdfParams, PlatformSecret};
 
 /// Yadro versiyasi (Y1: ikkala adapter shu funksiyadan bir xil javob oladi).
 pub fn core_version() -> &'static str {

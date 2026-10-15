@@ -17,3 +17,29 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 | [CLAUDE.md](CLAUDE.md) | AI-dasturchi uchun sessiya qoidalari |
 
 Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`
+
+## Holat (1-sessiya)
+| Qism | Holat |
+|---|---|
+| Rust yadro: `money`, `journal`, `security`, `storage`, `domain-uy`, `agreements`, `app` (sessiya va use-case'lar) | ✅ testlar bilan |
+| Oltin vektorlar (16 suite, 81 case) + mustaqil Python oracle | ✅ |
+| `cargo xtask`: i18n (uz, uz-Cyrl, ru), taqiqlangan iboralar, dizayn tokenlari | ✅ |
+| Desktop: Tauri 2 + React (sozlash, qulf, bosh sahifa, daromad, Kelajagim, xarajat, audit, qarz) | ✅ Linux'da yig'ildi va tekshirildi; Windows NSIS — CI'da |
+| Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
+
+## Ishga tushirish
+```bash
+# Yadro
+cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+python3 -I spec/oracle/oracle.py --check spec/test-vectors
+cargo xtask all                      # i18n, tokenlar, lint
+
+# Desktop (Windows'da: Visual Studio Build Tools + WebView2; Linux'da: libwebkit2gtk-4.1-dev)
+cd apps/desktop
+pnpm --dir ui install
+(cd src-tauri && cargo test)         # ui/src/bindings.ts ni yangilaydi
+ui/node_modules/.bin/tauri dev       # ishlab chiqish
+ui/node_modules/.bin/tauri build --bundles nsis   # Windows o'rnatuvchi
+```
+Headless Linux'da OS keyring bo'lmasa, faqat debug build uchun: `BARAKA_INSECURE_DEV_SECRET=1`.

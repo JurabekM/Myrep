@@ -54,6 +54,7 @@ thiserror = "2"
 rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
 rusqlite_migration = "2.6"
 proptest = "1.12"
+specta = { version = "=2.0.0-rc.25", features = ["derive"] }
 num-bigint = "0.5"
 num-traits = "0.2"
 
@@ -71,3 +72,10 @@ todo = "deny"
 lto = true
 codegen-units = 1
 strip = true
+
+# Debug build'da ham Argon2id (64 MiB) tez ishlashi uchun: aks holda PIN bilan ochish o'nlab soniya.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3

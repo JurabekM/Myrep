@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-record-initial-balance"
+description = "Enables the record_initial_balance command without any pre-configured scope."
+commands.allow = ["record_initial_balance"]
+
+[[permission]]
+identifier = "deny-record-initial-balance"
+description = "Denies the record_initial_balance command without any pre-configured scope."
+commands.deny = ["record_initial_balance"]

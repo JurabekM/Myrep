@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-allocation-rule"
+description = "Enables the set_allocation_rule command without any pre-configured scope."
+commands.allow = ["set_allocation_rule"]
+
+[[permission]]
+identifier = "deny-set-allocation-rule"
+description = "Denies the set_allocation_rule command without any pre-configured scope."
+commands.deny = ["set_allocation_rule"]

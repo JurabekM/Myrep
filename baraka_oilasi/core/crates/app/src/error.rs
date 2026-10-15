@@ -5,6 +5,7 @@ use serde::Serialize;
 /// Adapterlarga uzatiladigan yagona xato: barqaror `code` va ixtiyoriy `field`.
 /// Matnda summa, ism yoki boshqa shaxsiy ma'lumot bo'lmaydi.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct AppError {
     pub code: String,

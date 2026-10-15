@@ -81,6 +81,43 @@ pub fn format_minor(minor: i64, currency: Currency, locale: Locale) -> String {
     out
 }
 
+/// Tahrirlash uchun oddiy ko'rinish: guruhlashsiz, vergul kasr bilan (`40000`, `123,45`, `-5`).
+/// `parse_amount` uni aynan shu qiymatga qaytaradi — UI summani o'zi hisoblamasdan qayta yuboradi.
+pub fn format_plain(minor: i64, currency: Currency) -> String {
+    let mut out = String::new();
+    if minor < 0 {
+        out.push('-');
+    }
+    let abs = minor.unsigned_abs();
+    let exp = currency.exponent();
+    let scale = 10_u64.pow(exp);
+    let mut major = alloc::format!("{}", abs / scale);
+    let frac = abs % scale;
+    if exp > 0 && frac > 0 {
+        major.push(',');
+        let digits = alloc::format!("{frac:0width$}", width = exp as usize);
+        major.push_str(digits.trim_end_matches('0'));
+    }
+    out.push_str(&major);
+    out
+}
+
+/// Basis points'ni foiz matniga aylantiradi: `600` → `6`, `650` → `6,5`, `1225` → `12,25`.
+pub fn format_percent_bp(bp: i64) -> String {
+    let mut out = String::new();
+    if bp < 0 {
+        out.push('-');
+    }
+    let abs = bp.unsigned_abs();
+    out.push_str(&alloc::format!("{}", abs / 100));
+    let frac = abs % 100;
+    if frac > 0 {
+        out.push(',');
+        out.push_str(alloc::format!("{frac:02}").trim_end_matches('0'));
+    }
+    out
+}
+
 pub fn format(amount: Money, locale: Locale) -> String {
     format_minor(amount.minor(), amount.currency(), locale)
 }
@@ -113,6 +150,30 @@ mod tests {
             format_minor(10_000, Currency::Usd, Locale::Uz),
             "100\u{a0}USD"
         );
+    }
+
+    #[test]
+    fn plain_roundtrips_through_parse() {
+        for (m, c, text) in [
+            (4_000_000, Currency::Uzs, "40000"),
+            (12_345, Currency::Uzs, "123,45"),
+            (12_340, Currency::Uzs, "123,4"),
+            (-500, Currency::Uzs, "-5"),
+            (1_000_000, Currency::Krw, "1000000"),
+            (0, Currency::Usd, "0"),
+        ] {
+            assert_eq!(format_plain(m, c), text);
+            assert_eq!(crate::parse_amount(text, c).map(|x| x.minor()), Ok(m));
+        }
+    }
+
+    #[test]
+    fn percent_from_bp() {
+        assert_eq!(format_percent_bp(600), "6");
+        assert_eq!(format_percent_bp(650), "6,5");
+        assert_eq!(format_percent_bp(1225), "12,25");
+        assert_eq!(format_percent_bp(5), "0,05");
+        assert_eq!(format_percent_bp(-250), "-2,5");
     }
 
     #[test]

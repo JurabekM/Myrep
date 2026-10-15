@@ -116,6 +116,7 @@ fn income_share_vault_and_friction() {
     let rec = app.record_income(&uy, income("800 000")).unwrap();
     assert_eq!(rec.income.amount.formatted, "800\u{a0}000\u{a0}so\u{2bb}m");
     assert_eq!(rec.suggested_share.minor, "4000000"); // 5% = 40 000 so'm
+    assert_eq!(rec.suggested_share.plain, "40000");
     assert!(events.try_recv().unwrap().topics.contains(&Topic::Incomes));
 
     assert_eq!(
@@ -173,6 +174,7 @@ fn progressive_suggestion_after_four_weeks() {
     }
     let rec = app.record_income(&uy, income("1 000 000")).unwrap();
     assert_eq!(rec.progressive_suggestion_bp, Some(600));
+    assert_eq!(rec.progressive_suggestion_percent.as_deref(), Some("6"));
 }
 
 #[test]

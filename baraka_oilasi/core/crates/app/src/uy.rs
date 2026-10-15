@@ -74,11 +74,14 @@ impl App {
             }
             _ => return Err(AppError::new("CORRUPT_RULE")),
         };
+        let bp =
+            r.bp.map(|b| i32::try_from(b).map_err(|_| AppError::new("CORRUPT_RULE")))
+                .transpose()?;
         Ok(Some((
             rule,
             AllocationRuleDto {
                 kind: r.kind,
-                bp: r.bp,
+                bp,
                 amount,
                 progressive: r.progressive,
             },
@@ -168,7 +171,8 @@ impl App {
                 occurred_on: row.occurred_on,
             },
             suggested_share: self.money_dto(&ctx, suggested),
-            progressive_suggestion_bp: progressive,
+            progressive_suggestion_bp: progressive.and_then(|v| i32::try_from(v).ok()),
+            progressive_suggestion_percent: progressive.map(baraka_money::format_percent_bp),
         })
     }
 
@@ -298,7 +302,7 @@ impl App {
         let scope = self.scope(&ctx, space_id)?;
         let row = match input.kind.as_str() {
             "PERCENT" => {
-                let bp = input.bp.ok_or(AppError::on("REQUIRED", "bp"))?;
+                let bp = i64::from(input.bp.ok_or(AppError::on("REQUIRED", "bp"))?);
                 if !(0..=10_000).contains(&bp) {
                     return Err(AppError::on("INVALID_BP", "bp"));
                 }
@@ -582,7 +586,7 @@ impl App {
         };
         Ok(JournalEntryDto {
             id: s.entry.id.clone(),
-            seq: s.seq,
+            seq: u32::try_from(s.seq).map_err(|_| AppError::new("CORRUPT_ROW"))?,
             kind: s.entry.kind.as_str().to_string(),
             party_id: s.entry.party_id.clone(),
             amount,
@@ -673,10 +677,11 @@ impl App {
         let stored = self.db.read(|c| journal::list(c, &scope, agreement_id))?;
         let entries: Vec<JournalEntry> = stored.iter().map(|s| s.entry.clone()).collect();
         let hashes: Vec<String> = stored.iter().map(|s| s.hash.clone()).collect();
+        let count = u32::try_from(entries.len()).map_err(|_| AppError::new("OVERFLOW"))?;
         Ok(match verify_chain(&entries, &hashes) {
             Ok(head) => ChainStatusDto {
                 ok: true,
-                entries: entries.len(),
+                entries: count,
                 short_code: Some(short_code(&head)),
                 head: Some(head),
                 first_broken_seq: None,
@@ -684,10 +689,10 @@ impl App {
             Err(ChainError::FirstBroken { seq }) | Err(ChainError::InvalidEntry { seq, .. }) => {
                 ChainStatusDto {
                     ok: false,
-                    entries: entries.len(),
+                    entries: count,
                     head: None,
                     short_code: None,
-                    first_broken_seq: Some(seq),
+                    first_broken_seq: u32::try_from(seq).ok(),
                 }
             }
             Err(e) => return Err(e.into()),
@@ -709,7 +714,7 @@ impl App {
         };
         let terms = LoanTerms {
             principal,
-            annual_bp: input.annual_bp,
+            annual_bp: i64::from(input.annual_bp),
             months: input.months,
             kind,
         };

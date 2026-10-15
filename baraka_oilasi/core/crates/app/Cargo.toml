@@ -18,12 +18,16 @@ baraka-storage.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true
 serde.workspace = true
+specta = { workspace = true, optional = true }
 serde_json.workspace = true
 unicode-normalization.workspace = true
+
+[features]
+# TypeScript tiplarini generatsiya qilish uchun (faqat desktop adapteri yoqadi).
+specta = ["dep:specta", "baraka-agreements/specta"]
 
 [lints]
 workspace = true
 
 [dev-dependencies]
-baraka-agreements.workspace = true
 tempfile = "3"

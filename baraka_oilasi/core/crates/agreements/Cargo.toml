@@ -9,9 +9,14 @@ publish.workspace = true
 
 [dependencies]
 serde.workspace = true
+specta = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_json.workspace = true
+
+[features]
+# TypeScript tiplarini generatsiya qilish uchun (faqat desktop adapteri yoqadi).
+specta = ["dep:specta"]
 
 [lints]
 workspace = true

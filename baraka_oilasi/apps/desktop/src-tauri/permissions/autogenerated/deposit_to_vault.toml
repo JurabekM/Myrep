@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-deposit-to-vault"
+description = "Enables the deposit_to_vault command without any pre-configured scope."
+commands.allow = ["deposit_to_vault"]
+
+[[permission]]
+identifier = "deny-deposit-to-vault"
+description = "Denies the deposit_to_vault command without any pre-configured scope."
+commands.deny = ["deposit_to_vault"]

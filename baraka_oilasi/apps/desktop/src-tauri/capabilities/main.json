@@ -1,0 +1,31 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Asosiy oyna: faqat ilova commandlari va hodisalarni tinglash. shell, http va fs pluginlari yoqilmagan.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-core-version",
+    "allow-session-status",
+    "allow-setup",
+    "allow-unlock",
+    "allow-unlock-with-recovery",
+    "allow-lock",
+    "allow-household",
+    "allow-categories",
+    "allow-record-income",
+    "allow-allocate-to-vault",
+    "allow-record-initial-balance",
+    "allow-deposit-to-vault",
+    "allow-withdraw-from-vault",
+    "allow-vault",
+    "allow-set-allocation-rule",
+    "allow-record-expense",
+    "allow-monthly-summary",
+    "allow-simulate-loan",
+    "allow-check-agreement"
+  ]
+}

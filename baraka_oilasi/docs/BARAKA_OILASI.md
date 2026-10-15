@@ -205,7 +205,7 @@ bindings/flutter, src-tauri ← FAQAT app
 
 ### 4.3. Frontend qoidalari (Flutter va React uchun bir xil)
 - **UI pul hisoblamaydi.** Foiz, ulush, jami, qoldiq — hammasi yadroda. Formadagi summa **string** sifatida yuboriladi va yadroda parse qilinadi.
-- DTO'da pul: `{ minor: string, currency: string, formatted: string }`. `minor` — JS `number` va Dart `int`ning platformaga bog'liq chegaralaridan himoya uchun string.
+- DTO'da pul: `{ minor: string, currency: string, formatted: string, plain: string }`. `minor` — JS `number` va Dart `int`ning platformaga bog'liq chegaralaridan himoya uchun string; `plain` — kirish maydoniga o'zgarishsiz qaytariladigan ko'rinish (`40000`, `123,45`): UI taklif qilingan summani hisoblamasdan qayta yuboradi. Foizlar ham yadroda formatlanadi (`format_percent_bp`).
 - UI biznes validatsiyani takrorlamaydi: yadro `ValidationError { code, field?, params }` qaytaradi, UI uni i18n kaliti orqali ko'rsatadi.
 - Vaqt, sana va hafta chegaralari yadroda hisoblanadi; UI faqat tayyor `LocalDate`/formatlangan qatorni ko'rsatadi.
 
@@ -222,6 +222,10 @@ bindings/flutter, src-tauri ← FAQAT app
 - **Har bir domen jadvalida `space_id`** bor. Repository'lar makon bo'yicha filtrlamasdan so'rov qila olmaydi (API darajasida majburiy parametr).
 - Bitta `household_id` ostida bir nechta makon bo'lishi mumkin. Oila a'zolari (`members`) xonadon darajasida, ularning makondagi rollari `space_members` da.
 - Shaxsiy (boshqa a'zolarga ko'rinmaydigan) jamg'arma imkoniyati — `docs/OPEN_QUESTIONS.md` (OQ-M2). Qaror chiqmaguncha sxemada `visibility` maydoni (`SHARED | PRIVATE`, standart `SHARED`) **hozirdan** bo'ladi.
+
+### 4.5a. Sessiya yadroda
+- O'rnatish, PIN bilan ochish, tiklash kodi, PIN'ni qayta tasdiqlash, qulflash va harakatsizlikda avto-qulf — `baraka_app::Session` (Android va desktop uchun **bitta** implementatsiya).
+- Adapter faqat platforma sirini beradi: desktop — `keyring`, Android — Kotlin `PlatformSecretApi` (Keystore). Debug build'da `BARAKA_INSECURE_DEV_SECRET=1` bo'lsa desktop faylga yozadi (headless Linux uchun); release'da bu yo'l yo'q.
 
 ### 4.6. Makonlararo o'tkazma
 - Masalan, Kasb-kor → Uy: «egasi maoshi» Uy makonida `Income(sourceType = MOL | TAVAKKAL)` bo'lib tushadi.
@@ -528,7 +532,7 @@ PLATFORM_SECRET (32 bayt):
 | `round` | round-001…004 | 5/2, −5/2, −12/5, 7/2 | 3, −3, −2, 4 |
 | `fx_convert` | fx-001 | 10000 USD, 12650/1 → UZS | 126500000 |
 | `fx_convert` | fx-002 | 1000000 KRW, 91/10 → UZS | 910000000 |
-| `fx_convert` | fx-err-001 | USD + UZS qo'shish | `error: CURRENCY_MISMATCH` |
+| `fx_convert` | fx-err-001 | 10000 USD, kurs EUR→UZS (valyuta mos emas) | `error: CURRENCY_MISMATCH` |
 | `money_format` | fmt-001 | 800000000 UZS, `uz` | `8 000 000 soʻm` (NBSP, U+02BB) |
 | `money_format` | fmt-002 | 12345 UZS, `uz` | `123,45 soʻm` |
 | `money_format` | fmt-003 | −800000000 UZS, `uz` | `-8 000 000 soʻm` |

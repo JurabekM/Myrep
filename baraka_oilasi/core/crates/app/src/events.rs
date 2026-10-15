@@ -5,6 +5,7 @@ use serde::Serialize;
 
 /// UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum Topic {
     Household,
@@ -18,6 +19,7 @@ pub enum Topic {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeEvent {
     pub space_id: Option<String>,

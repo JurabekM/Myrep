@@ -3,7 +3,7 @@ use std::sync::mpsc::Receiver;
 use std::sync::Arc;
 
 use baraka_domain_common::{local_date, Clock, IdGen, MemberRole, Necessity, SpaceKind, VaultType};
-use baraka_money::{format, Currency, Locale, Money};
+use baraka_money::{format, format_plain, Currency, Locale, Money};
 use baraka_security::DbKey;
 use baraka_storage::repo::{assets, categories, household, rules};
 use baraka_storage::{Database, Meta, SpaceScope};
@@ -153,6 +153,7 @@ impl App {
             minor: m.minor().to_string(),
             currency: m.currency().code().to_string(),
             formatted: format(m, ctx.locale),
+            plain: format_plain(m.minor(), m.currency()),
         }
     }
 

@@ -10,6 +10,7 @@ pub const REVIEW_WARN_AFTER_DAYS: u32 = 31;
 
 /// To'liqlik natijasi: «N / 9», javobsiz savollar raqamlari, xatolar va ogohlantirishlar.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Completeness {
     pub answered: u8,

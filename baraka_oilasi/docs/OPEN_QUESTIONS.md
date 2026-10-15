@@ -104,8 +104,16 @@
 
 ### OQ-T2. `tauri-specta` barqaror versiyasi
 - **Masala:** barqaror versiya bo'lmasa, RC'ni qotirib ishlatish ADR bilan qilinadi.
-- **Qaror qachon:** Y1. **Holat:** OCHIQ.
+- **Qaror:** `=2.0.0-rc.25` qotirildi (ADR-0002). Barqaror versiya chiqqanda yangilanadi. **Holat:** HAL QILINDI.
 
 ### OQ-T3. Sana-vaqt crate'i
 - **Masala:** `time` + `time-tz` yoki `chrono` + `chrono-tz`.
-- **Qaror qachon:** Y1 (ADR-0002). **Holat:** OCHIQ.
+- **Qaror:** `chrono` + `chrono-tz` (ADR-0002). **Holat:** HAL QILINDI.
+
+### OQ-T4. Android platforma siri va avto-qulf
+- **Masala:** `BarakaCore` (FRB) platforma sirini Dart orqali bayt sifatida oladi. Kotlin `PlatformSecretApi` uni Keystore bilan wrap qilib saqlashi va har chaqiruvdan keyin xotiradan tozalashi kerak; Rust tomoni baytlarni `zeroize` qiladi.
+- **Qaror qachon:** Android Y4(b). **Holat:** OCHIQ.
+
+### OQ-T5. Desktop E2E (tauri-driver)
+- **Masala:** hozircha haqiqiy ilova Xvfb + xdotool bilan qo'lda tekshirildi (sozlash → daromad → ulush → qulf). Windows'da `tauri-driver` + WebdriverIO bilan avtomatlashtirish kerak.
+- **Qaror qachon:** U15. **Holat:** OCHIQ.

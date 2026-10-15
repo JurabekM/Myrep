@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-monthly-summary"
+description = "Enables the monthly_summary command without any pre-configured scope."
+commands.allow = ["monthly_summary"]
+
+[[permission]]
+identifier = "deny-monthly-summary"
+description = "Denies the monthly_summary command without any pre-configured scope."
+commands.deny = ["monthly_summary"]

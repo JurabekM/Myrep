@@ -19,7 +19,7 @@ mod rounding;
 pub use allocate::{allocate, allocate_minor, percent_of, BP_ONE};
 pub use currency::Currency;
 pub use error::{MoneyError, ParseError};
-pub use format::{format, format_minor, Locale};
+pub use format::{format, format_minor, format_percent_bp, format_plain, Locale};
 pub use fx::{convert, FxRate};
 pub use money::Money;
 pub use parse::parse_amount;

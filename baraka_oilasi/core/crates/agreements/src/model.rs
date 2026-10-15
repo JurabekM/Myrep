@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AgreementType {
     Partnership,
@@ -12,6 +13,7 @@ pub enum AgreementType {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AgreementStatus {
     Draft,
@@ -23,6 +25,7 @@ pub enum AgreementStatus {
 
 /// Savolga javob holati: javob berilgan, asosli ravishda «tegishli emas» yoki hali javobsiz.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(tag = "status", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Answer<T> {
     #[default]
@@ -45,6 +48,7 @@ impl<T> Answer<T> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Party {
     pub id: String,
@@ -54,6 +58,7 @@ pub struct Party {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ContributionKind {
     Money,
@@ -63,6 +68,7 @@ pub enum ContributionKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Contribution {
     pub party_id: String,
@@ -76,6 +82,7 @@ pub struct Contribution {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Duty {
     pub id: String,
@@ -89,13 +96,16 @@ pub struct Duty {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ProfitShare {
     pub party_id: String,
+    #[cfg_attr(feature = "specta", specta(type = i32))]
     pub share_bp: i64,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ProfitRule {
     pub shares: Vec<ProfitShare>,
@@ -105,6 +115,7 @@ pub struct ProfitRule {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LossRuleKind {
     /// Mudoraba: moliyaviy zarar kapital egasida (beparvolikdan tashqari).
@@ -115,6 +126,7 @@ pub enum LossRuleKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct LossRule {
     pub kind: LossRuleKind,
@@ -123,6 +135,7 @@ pub struct LossRule {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Custody {
     /// Pul qayerda turadi.
@@ -137,6 +150,7 @@ pub struct Custody {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ExitClause {
     pub notice_days: u32,
@@ -147,6 +161,7 @@ pub struct ExitClause {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Arbiter {
     pub full_name: String,
@@ -158,6 +173,7 @@ pub struct Arbiter {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Term {
     /// `YYYY-MM-DD`; o'tmishda bo'lishi mumkin (og'zaki kelishuvni yozish).
@@ -170,6 +186,7 @@ pub struct Term {
 
 /// 9 savol bo'yicha kelishuv qoralamasi.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct AgreementDraft {
     pub parties: Answer<Vec<Party>>,
