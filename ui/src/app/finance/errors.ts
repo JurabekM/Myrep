@@ -33,6 +33,7 @@ export const RULE_ERROR_KEYS = {
   ENVELOPE_WEEK_CLOSED: "errors.envelopeWeekClosed",
   SUBSCRIPTION_CANCELLED: "errors.subscriptionCancelled",
   BASELINE_NOT_PAST: "errors.baselineNotPast",
+  CSV_HAS_ERRORS: "errors.csvHasErrors",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

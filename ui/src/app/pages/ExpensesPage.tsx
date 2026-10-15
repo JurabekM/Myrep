@@ -3,6 +3,7 @@ import { type SyntheticEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "../../bindings/bindings";
 import { CouncilPage } from "../family/CouncilPage";
+import { CsvImportWizard } from "../family/CsvImportWizard";
 import { HabitsCard } from "../family/HabitsCard";
 import { WeekSheetCard } from "../family/WeekSheetCard";
 import { necessityKey } from "../family/necessity";
@@ -28,6 +29,7 @@ import {
 export function ExpensesPage() {
   const { t } = useTranslation();
   const [councilOpen, setCouncilOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
   const summary = useQuery({ queryKey: familyKeys.summary, queryFn: familyFetchers.summary });
   const expenses = useQuery({ queryKey: familyKeys.expenses, queryFn: familyFetchers.expenses });
   const categories = useQuery({ queryKey: financeKeys.categories, queryFn: fetchers.categories });
@@ -44,6 +46,13 @@ export function ExpensesPage() {
         >
           {t("family.council")}
         </PrimaryButton>
+        <SecondaryButton
+          onClick={() => {
+            setCsvOpen(true);
+          }}
+        >
+          {t("csv.open")}
+        </SecondaryButton>
       </div>
 
       {summary.isSuccess ? (
@@ -133,6 +142,14 @@ export function ExpensesPage() {
       </Card>
 
       <TreatsCard />
+
+      {csvOpen ? (
+        <CsvImportWizard
+          onClose={() => {
+            setCsvOpen(false);
+          }}
+        />
+      ) : null}
 
       {councilOpen ? (
         <CouncilPage

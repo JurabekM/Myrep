@@ -181,6 +181,9 @@ pub enum DomainError {
     /// Bazaviy davr joriy davrdan oldin bo'lishi kerak.
     #[error("bazaviy davr joriy davrdan oldin bo'lishi kerak")]
     BaselineNotPast,
+    /// CSV matnida xatoli satrlar bor: import qilinmaydi.
+    #[error("CSV matnida xatoli satrlar bor")]
+    CsvHasErrors,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -228,6 +231,7 @@ impl DomainError {
             Self::DistributionBlocked => "IN_DISPUTE",
             Self::NotKeeperDevice => "NOT_KEEPER_DEVICE",
             Self::BaselineNotPast => "BASELINE_NOT_PAST",
+            Self::CsvHasErrors => "CSV_HAS_ERRORS",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

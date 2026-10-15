@@ -135,6 +135,14 @@ export const commands = {
 	transferToVaultFromRescue: (input: TransferInputDto) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("transfer_to_vault_from_rescue", { input })),
 	/**  Bazaviy davrni tanlaydi (joriy davrdan oldingi davr). */
 	setBaselinePeriod: (input: BaselineInputDto) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("set_baseline_period", { input })),
+	/**  Joylangan matnni ko'rib chiqadi: satrlar, xatolar, nechta import bo'ladi. */
+	previewCsvImport: (input: CsvImportInputDto) => typedError<CsvPreviewDto, ApiError>(__TAURI_INVOKE("preview_csv_import", { input })),
+	/**  Import qiladi (xatoli satr bo'lsa — rad etiladi). Qaytaradi: yozilgan xarajatlar soni. */
+	importCsvExpenses: (input: CsvImportInputDto) => typedError<number, ApiError>(__TAURI_INVOKE("import_csv_expenses", { input })),
+	/**  Asosiy oynani ko'rsatadi (mini oynadagi «Asosiy oynani ochish» tugmasi). */
+	showMainWindow: () => typedError<null, ApiError>(__TAURI_INVOKE("show_main_window")),
+	/**  Mini oynani yashiradi (Escape yoki saqlashdan keyin). */
+	hideQuickWindow: () => typedError<null, ApiError>(__TAURI_INVOKE("hide_quick_window")),
 };
 
 /* Types */
@@ -337,6 +345,60 @@ text: LocalizedDto;
 source: LocalizedDto; 
 /**  Ulamo tasdiqlaganmi. */
 approved: boolean };
+
+/**  CSV import so'rovi. */
+export type CsvImportInputDto = {
+	/**  Joylangan matn. */
+	text: string,
+	/**  Ustunlar moslashuvi. */
+	mapping: CsvMappingDto,
+};
+
+/**  CSV import: ustunlarni moslash. */
+export type CsvMappingDto = {
+	/**  Ajratuvchi (`;`, `,` yoki tab). `None` — avtomatik. */
+	delimiter: string | null,
+	/**  Birinchi satr — sarlavha. */
+	hasHeader: boolean,
+	/**  Sana ustuni (0 dan). */
+	dateColumn: number,
+	/**  Summa ustuni (0 dan). */
+	amountColumn: number,
+	/**  Izoh ustuni, bo'lsa. */
+	noteColumn: number | null,
+	/**  Barcha satrlar uchun kategoriya, bo'lsa. */
+	categoryId: string | null,
+	/**  Musbat summalar (kirim) tashlanadi. */
+	skipPositive: boolean,
+};
+
+/**  CSV import: ko'rib chiqish natijasi. */
+export type CsvPreviewDto = {
+	/**  Satrlar. */
+	rows: CsvRowDto[],
+	/**  Import bo'ladigan satrlar. */
+	importable: number,
+	/**  Tashlanadigan (musbat) satrlar. */
+	skipped: number,
+	/**  Xatoli satrlar. */
+	failed: number,
+};
+
+/**  CSV import: bitta satr ko'rinishi. */
+export type CsvRowDto = {
+	/**  Matndagi satr raqami (1 dan). */
+	line: number,
+	/**  Sana (tahlil qilingan bo'lsa `YYYY-MM-DD`, aks holda asl matn). */
+	date: string,
+	/**  Summa (musbat, chiqim), tahlil qilingan bo'lsa. */
+	amount: MoneyDto | null,
+	/**  Izoh. */
+	note: string | null,
+	/**  Xato kodi: `CSV_BAD_DATE`, `CSV_DATE_OUT_OF_RANGE`, `CSV_BAD_AMOUNT`. */
+	error: string | null,
+	/**  Tashlangan (musbat summa). */
+	skipped: boolean,
+};
 
 /**  «Daftar sahifasi»: foydalanuvchining o'z so'zlari. */
 export type DaftarPageDto = {

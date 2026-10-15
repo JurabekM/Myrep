@@ -320,6 +320,68 @@ pub struct BaselineInputDto {
     pub period_start: String,
 }
 
+/// CSV import: ustunlarni moslash.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvMappingDto {
+    /// Ajratuvchi (`;`, `,` yoki tab). `None` — avtomatik.
+    pub delimiter: Option<String>,
+    /// Birinchi satr — sarlavha.
+    pub has_header: bool,
+    /// Sana ustuni (0 dan).
+    pub date_column: u32,
+    /// Summa ustuni (0 dan).
+    pub amount_column: u32,
+    /// Izoh ustuni, bo'lsa.
+    pub note_column: Option<u32>,
+    /// Barcha satrlar uchun kategoriya, bo'lsa.
+    pub category_id: Option<String>,
+    /// Musbat summalar (kirim) tashlanadi.
+    pub skip_positive: bool,
+}
+
+/// CSV import: bitta satr ko'rinishi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvRowDto {
+    /// Matndagi satr raqami (1 dan).
+    pub line: u32,
+    /// Sana (tahlil qilingan bo'lsa `YYYY-MM-DD`, aks holda asl matn).
+    pub date: String,
+    /// Summa (musbat, chiqim), tahlil qilingan bo'lsa.
+    pub amount: Option<MoneyDto>,
+    /// Izoh.
+    pub note: Option<String>,
+    /// Xato kodi: `CSV_BAD_DATE`, `CSV_DATE_OUT_OF_RANGE`, `CSV_BAD_AMOUNT`.
+    pub error: Option<String>,
+    /// Tashlangan (musbat summa).
+    pub skipped: bool,
+}
+
+/// CSV import: ko'rib chiqish natijasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvPreviewDto {
+    /// Satrlar.
+    pub rows: Vec<CsvRowDto>,
+    /// Import bo'ladigan satrlar.
+    pub importable: u32,
+    /// Tashlanadigan (musbat) satrlar.
+    pub skipped: u32,
+    /// Xatoli satrlar.
+    pub failed: u32,
+}
+
+/// CSV import so'rovi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvImportInputDto {
+    /// Joylangan matn.
+    pub text: String,
+    /// Ustunlar moslashuvi.
+    pub mapping: CsvMappingDto,
+}
+
 /// «Kelajagim» yozuvi (tarix).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]

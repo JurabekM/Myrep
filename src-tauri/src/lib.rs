@@ -8,6 +8,9 @@ mod budget_commands;
 mod commands;
 mod content;
 mod content_commands;
+mod csv_commands;
+mod csv_import;
+mod desktop;
 mod dto;
 mod family;
 mod family_commands;
@@ -98,6 +101,10 @@ fn specta_builder() -> Builder<tauri::Wry> {
         budget_commands::close_envelope_week,
         budget_commands::transfer_to_vault_from_rescue,
         budget_commands::set_baseline_period,
+        csv_commands::preview_csv_import,
+        csv_commands::import_csv_expenses,
+        desktop::show_main_window,
+        desktop::hide_quick_window,
     ])
 }
 
@@ -112,6 +119,7 @@ pub fn run() {
 
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| setup_security(app))
         .run(tauri::generate_context!());
@@ -144,6 +152,14 @@ fn setup_security(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
     if !cfg!(debug_assertions) {
         window.set_content_protected(true)?;
+    }
+
+    // Tray va Ctrl+Alt+B: ishlamasa ilova baribir ishga tushadi (faqat ogohlantirish).
+    if let Err(err) = desktop::setup_tray(app.handle()) {
+        tracing::warn!(error = %err, "tray ikonkasi yaratilmadi");
+    }
+    if let Err(err) = desktop::setup_shortcut(app.handle()) {
+        tracing::warn!(error = %err, "global tugma ro'yxatdan o'tmadi");
     }
 
     let focus_session = Arc::clone(&session);

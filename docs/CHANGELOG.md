@@ -4,6 +4,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D7 qoldig'i — Tray, Ctrl+Alt+B mini oyna, CSV import ustasi (2026-10-15)
+
+**Qo'shildi**
+
+- **Tray ikonkasi** (`src-tauri/src/desktop.rs`): menyu — «Ochish», «Tez xarajat (Ctrl+Alt+B)», «Qulflash», «Chiqish»; ikki marta bosish asosiy oynani ochadi. Matnlar o'zbekcha (ilovaning asosiy tili); tray tilini almashtirish keyingi bosqichda.
+- **`Ctrl+Alt+B`** (`tauri-plugin-global-shortcut`): «Tez xarajat» mini oynasi (`quick` yorlig'i, 440×420, doim ustida, taskbar'da yo'q). Yopish — yashirish; keyingi ochilish darhol. Qulf holatida oyna **summa va ro'yxat ko'rsatmaydi** — faqat «Daftar qulflangan» va «Asosiy oynani ochish» (`QuickWindow.tsx`, test bilan). Ochiq holatda: summa, kategoriya, izoh → `add_expense`; Escape — yashirish.
+- Mini oynaning o'z capability fayli (`capabilities/quick-window.json`): faqat holat, kategoriyalar, xarajat qo'shish va ikki oyna buyrug'i (`show_main_window`, `hide_quick_window`).
+- **CSV import ustasi** (`CsvImportWizard.tsx`, `src-tauri/src/csv_import.rs`): matn joylash → ustunlarni moslash (sana, summa, izoh; kategoriya; kirimlarni tashlash) → ko'rib chiqish (satr, sana, summa, holat) → import. Tahlil Rustda: ajratuvchi avtomatik (`;`, `,`, tab), qo'shtirnoqli maydonlar, sana `YYYY-MM-DD` / `DD.MM.YYYY` / `DD/MM/YYYY`, summa `money::parse_amount` (manfiy — chiqim), bugundan kech yoki 24 oydan eski sana — xato, 500 satrgacha. Xatoli satr bo'lsa **hech narsa yozilmaydi** (`CSV_HAS_ERRORS`); import bitta tranzaksiyada. Testlar: Rust 5 ta, UI 2 ta.
+- Oyna yorlig'i (`window-label.ts`): `@tauri-apps/api/webviewWindow` orqali; Tauri tashqarisida «main».
+
+**Qarorlar va sabablar**
+
+- `tauri` `tray-icon` feature'i yoqildi; `tauri-plugin-global-shortcut = "2"` qo'shildi (ADR 7-bo'limda nomlangan). `cargo search` 3.0 alpha'ni ko'rsatadi — Tauri 2 uchun 2.x qatori.
+- CSV import «Hafta varag'i»dan farqli: istalgan o'tgan sana (24 oygacha) — bank ko'chirmasi uchun. Shuning uchun alohida xizmat (`csv_import`), `add_expenses` qoidasi o'zgarmadi.
+- Mini oyna alohida webview, o'sha frontend: yorliq bo'yicha `App` boshqa ekran ko'rsatadi. Qulf holati `get_security_status` bilan 5 soniyada tekshiriladi.
+- Asosiy oynani yopish ilovani tugatadi (tray'ga yig'ilmaydi) — reliz checklist'idagi «fon jarayon qolmaydi» talabi.
+
+**Ma'lum cheklovlar**
+
+- Tray menyusi faqat o'zbekcha. Global tugma band bo'lsa (boshqa dastur egallagan) faqat log ogohlantirishi, foydalanuvchiga xabar yo'q.
+- CSV: kategoriya barcha satrlar uchun bitta; satrma-satr kategoriya tanlash yo'q.
+
 ### Barqarorlashtirish — GUI sinovi, ribo filtri, error boundary, qarorlar (2026-10-15)
 
 Yangi funksiya yo'q. Byudjet sahifasi (D7) haqiqiy Tauri oynasida boshidan oxirigacha bosib sinaldi: PIN o'rnatish, obuna qo'shish/«ishlatdim»/bekor qilish, konvert qo'shish va hafta yakuni, «Kelajagim»ga o'tkazish (to'g'ri va ortiqcha summa), bazaviy davr (o'tgan va joriy davr), Kelajagim balansi va tarixi. Hisoblar domen bilan mos (1 000 + 500 000 = 501 000; o'tkazishdan keyin 497 000).

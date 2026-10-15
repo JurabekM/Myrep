@@ -19,7 +19,7 @@ tauri-build = { version = "2", features = [] }
 # STATUS_ENTRYPOINT_NOT_FOUND (0xc0000139) bilan yiqiladi (test binary'da v6 manifest yo'q).
 # Biz native dialog/menyu ishlatmaymiz; oyna WebView2 da chiziladi. Qachon dialog plugin kerak bo'lsa, qaror
 # docs/OPEN_QUESTIONS.md da qayd etiladi.
-tauri = { version = "2.12", default-features = false, features = ["wry", "compression", "dynamic-acl", "x11", "dbus"] }
+tauri = { version = "2.12", default-features = false, features = ["wry", "compression", "dynamic-acl", "x11", "dbus", "tray-icon"] }
 # TS bindinglari: Rust commandlaridan TypeScript tiplarini avtomatik yaratadi (ADR: qo'lda invoke taqiq).
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 specta = { version = "=2.0.0-rc.25", features = ["derive"] }
@@ -37,6 +37,8 @@ thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tauri-plugin-notification = "2"
+# D7: Ctrl+Alt+B global tugmasi — ADR 7-bo'limda nomlangan plugin.
+tauri-plugin-global-shortcut = "2"
 # Oila kengashi bayonnomasi PDF (typst; DESKTOP_PROMPT.md 2 va 7-bo'lim).
 baraka-pdf = { path = "../crates/pdf" }
 
