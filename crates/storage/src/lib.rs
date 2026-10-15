@@ -9,6 +9,7 @@ mod db;
 mod error;
 mod family;
 mod finance;
+mod center;
 mod ceremonies;
 mod loans;
 mod partnerships;
@@ -29,6 +30,7 @@ pub use finance::{
     CategoryRepo, DebtRepo, ExpenseRepo, IncomeRepo, ObligationRepo, ReportRepo, RuleRepo,
     StoredRule, VaultRepo,
 };
+pub use center::{CenterRepo, DisputeRow, IncidentRow, MarkRow, ReviewRow};
 pub use ceremonies::{CeremonyRepo, CeremonyRow, LineRow, ScenarioRow};
 pub use loans::{LoanDirection, LoanRepo, LoanRow, PaymentRow};
 pub use partnerships::{BuyoutPaymentRow, PartnershipRepo, PartnershipRow};

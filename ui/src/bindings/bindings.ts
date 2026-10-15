@@ -227,6 +227,34 @@ export const commands = {
 	checkOffer: (input: OfferInputDto) => typedError<OfferCheckDto, ApiError>(__TAURI_INVOKE("check_offer", { input })),
 	/**  «Hunardan ishga»: uch stsenariy (saqlanmaydi). */
 	hustlePlan: (input: HustleInputDto) => typedError<HustlePlanDto, ApiError>(__TAURI_INVOKE("hustle_plan", { input })),
+	/**  Markaz jadvali. */
+	getAgreementsCenter: () => typedError<CenterDto, ApiError>(__TAURI_INVOKE("get_agreements_center")),
+	/**  Kelishuv amaliyotlari. */
+	getAgreementOps: (agreementId: string) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("get_agreement_ops", { agreementId })),
+	/**  Vazifa hodisasi. */
+	reportDutyIncident: (input: IncidentInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("report_duty_incident", { input })),
+	/**  Hodisani yopadi. */
+	resolveDutyIncident: (id: string) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("resolve_duty_incident", { id })),
+	/**  Ko'rik ochadi. */
+	openReview: (input: OpenReviewInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("open_review", { input })),
+	/**  Tomon belgisi. */
+	markReview: (input: MarkReviewInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("mark_review", { input })),
+	/**  Ko'rik bayonnomasi PDF. */
+	createReviewPdf: (reviewId: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_review_pdf", { reviewId })),
+	/**  Nizo ochadi. */
+	openDispute: (input: DisputeInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("open_dispute", { input })),
+	/**  Hakam qarori. */
+	decideDispute: (input: DecideDisputeInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("decide_dispute", { input })),
+	/**  Hakam uchun ish papkasi PDF. */
+	createArbiterPdf: (agreementId: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_arbiter_pdf", { agreementId })),
+	/**  Yillik yangilash: o'zgarishsiz tasdiqlash (yangi versiya). */
+	confirmUnchanged: (agreementId: string) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("confirm_unchanged", { agreementId })),
+	/**  Oilaviy shablonlar. */
+	listFamilyTemplates: () => typedError<FamilyTemplateDto[], ApiError>(__TAURI_INVOKE("list_family_templates")),
+	/**  Shablondan oilaviy kelishuv. */
+	createFamilyAgreement: (templateId: string) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("create_family_agreement", { templateId })),
+	/**  ADULT a'zo PIN bilan tasdiqlaydi. */
+	confirmFamily: (input: FamilyConfirmInputDto) => typedError<AgreementOpsDto, ApiError>(__TAURI_INVOKE("confirm_family", { input })),
 };
 
 /* Types */
@@ -324,6 +352,30 @@ export type AgreementInputDto = {
 	kind: string,
 	/**  Sarlavha. */
 	title: string,
+};
+
+/**  Kelishuv amaliyotlari. */
+export type AgreementOpsDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Holati. */
+	status: string,
+	/**  Versiya. */
+	version: number,
+	/**  Keyingi ko'rik sanasi. */
+	reviewDate: string | null,
+	/**  Yangilash eslatmasi. */
+	reviewDue: boolean,
+	/**  Hodisalar (yangidan eskiga). */
+	incidents: IncidentDto[],
+	/**  Ko'riklar (eskidan yangiga). */
+	reviews: ReviewDto[],
+	/**  Nizolar. */
+	disputes: DisputeDto[],
+	/**  Versiya izohlari. */
+	versionNotes: VersionNoteDto[],
+	/**  Oilaviy tasdiqlar (faqat `FAMILY`). */
+	family: FamilyConsentsDto | null,
 };
 
 /**  Kelishuv ro'yxati satri. */
@@ -538,6 +590,38 @@ export type CategorySpentDto = {
 	systemKey: string | null,
 	/**  Summa. */
 	amount: MoneyDto,
+};
+
+/**  Kelishuvlar markazi jadvali (D13A). */
+export type CenterDto = {
+	/**  Qatorlar. */
+	rows: CenterRowDto[],
+};
+
+/**  Jadval qatori. */
+export type CenterRowDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Turi. */
+	kind: string,
+	/**  Sarlavha. */
+	title: string,
+	/**  Holati. */
+	status: string,
+	/**  Versiya. */
+	version: number,
+	/**  Keyingi ko'rik sanasi. */
+	reviewDate: string | null,
+	/**  Yangilash eslatmasi (30 kun qolgan yoki o'tgan). */
+	reviewDue: boolean,
+	/**  Ochiq hodisalar. */
+	openIncidents: number,
+	/**  Ochiq nizolar. */
+	openDisputes: number,
+	/**  Zanjir to'g'ri. */
+	chainOk: boolean,
+	/**  Oilaviy kelishuvda tasdiqlamagan kattalar soni. */
+	familyPending: number,
 };
 
 /**  Marosimlar sahifasi (D11). */
@@ -842,6 +926,54 @@ export type DebtDto = {
 	note: string | null,
 };
 
+/**  Hakam qarori. */
+export type DecideDisputeInputDto = {
+	/**  Nizo. */
+	disputeId: string,
+	/**  Qaror matni. */
+	decision: string,
+	/**  Yangi versiya yaratilsinmi (qayta imzolash). */
+	newVersion: boolean,
+};
+
+/**  Nizo. */
+export type DisputeDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Ochgan tomon. */
+	openedByPartyId: string,
+	/**  Ismi. */
+	openedByName: string,
+	/**  Mavzu. */
+	subject: string,
+	/**  Bandlar. */
+	clauses: string,
+	/**  Talab. */
+	claim: string,
+	/**  Ochilgan sana. */
+	openedOn: string,
+	/**  Hakam qarori. */
+	decision: string | null,
+	/**  Qaror sanasi. */
+	decidedOn: string | null,
+};
+
+/**  Nizo ochish. */
+export type DisputeInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Ochayotgan tomon. */
+	partyId: string,
+	/**  Mavzu. */
+	subject: string,
+	/**  Bandlar. */
+	clauses: string,
+	/**  Talab. */
+	claim: string,
+};
+
 /**  Taqsimot qatori. */
 export type DistributionRowDto = {
 	/**  Tomon. */
@@ -936,6 +1068,46 @@ export type ExpenseInputDto = {
 	fundedByDebt: boolean,
 };
 
+/**  Katta a'zo holati. */
+export type FamilyAdultDto = {
+	/**  A'zo. */
+	memberId: string,
+	/**  Ismi. */
+	name: string,
+	/**  PIN o'rnatilgan. */
+	hasPin: boolean,
+	/**  Joriy versiyani tasdiqlagan. */
+	confirmed: boolean,
+};
+
+/**  Oilaviy tasdiq kirishi. */
+export type FamilyConfirmInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  A'zo. */
+	memberId: string,
+	/**  PIN (6 raqam). */
+	pin: string,
+};
+
+/**  Oilaviy tasdiqlar. */
+export type FamilyConsentsDto = {
+	/**  Kattalar. */
+	adults: FamilyAdultDto[],
+	/**  Hammasi tasdiqlagan. */
+	complete: boolean,
+};
+
+/**  Oilaviy shablon. */
+export type FamilyTemplateDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Sarlavha. */
+	title: string,
+	/**  Tavsif. */
+	description: string,
+};
+
 /**  Odat (streak) ko'rsatkichlari. */
 export type HabitDto = {
 	/**  Ketma-ket ajratilgan haftalar. */
@@ -1008,6 +1180,46 @@ export type HustleScenarioDto = {
 	myNet: MoneyDto,
 	/**  Qoplanish muddati (oy), bo'lsa. */
 	paybackMonths: number | null,
+};
+
+/**  Vazifa hodisasi. */
+export type IncidentDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Vazifa. */
+	dutyId: string,
+	/**  Vazifa nomi. */
+	dutyTitle: string,
+	/**  «Bajarilmasa» bandi — darhol ko'rsatiladi. */
+	breachClause: string,
+	/**  Xabar bergan tomon. */
+	partyId: string,
+	/**  Tomon ismi. */
+	partyName: string,
+	/**  Sabab. */
+	reason: string,
+	/**  Taklif qilingan yechim. */
+	proposedFix: string | null,
+	/**  Sana. */
+	occurredOn: string,
+	/**  Yopilganmi. */
+	resolved: boolean,
+};
+
+/**  Hodisa kirishi. */
+export type IncidentInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Vazifa. */
+	dutyId: string,
+	/**  Tomon. */
+	partyId: string,
+	/**  Sabab. */
+	reason: string,
+	/**  Taklif. */
+	proposedFix: string | null,
+	/**  Sana; bo'sh — bugun. */
+	occurredOn: string | null,
 };
 
 /**  Daromad yozuvi. */
@@ -1198,6 +1410,18 @@ export type LocalizedDto = {
 	ru: string,
 };
 
+/**  Belgi kirishi. */
+export type MarkReviewInputDto = {
+	/**  Ko'rik. */
+	reviewId: string,
+	/**  Tomon. */
+	partyId: string,
+	/**  `AGREE | OBJECT`. */
+	decision: string,
+	/**  Izoh (e'tirozda majburiy). */
+	comment: string | null,
+};
+
 /**  Oila a'zosi. */
 export type MemberDto = {
 	/**  Identifikator. */
@@ -1373,6 +1597,16 @@ export type OpenPeriodDto = {
 	net: MoneyDto,
 	/**  Yozuvlar. */
 	entries: JournalEntryDto[],
+};
+
+/**  Ko'rik ochish. */
+export type OpenReviewInputDto = {
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Davr boshi; bo'sh — oxirgi ko'rikdan keyin. */
+	periodStart: string | null,
+	/**  Davr oxiri; bo'sh — bugun. */
+	periodEnd: string | null,
 };
 
 /**  «Kimning puli?» bo'lagi. */
@@ -1621,6 +1855,46 @@ export type ReserveDto = {
 	dataMonths: number,
 };
 
+/**  Ochiq hisob ko'rigi. */
+export type ReviewDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Davr boshi. */
+	periodStart: string,
+	/**  Davr oxiri. */
+	periodEnd: string,
+	/**  Davr yozuvlari. */
+	entries: JournalEntryDto[],
+	/**  Yakun (turlar bo'yicha). */
+	summary: SummaryLineDto[],
+	/**  Ochiq hodisalar. */
+	incidents: IncidentDto[],
+	/**  Zanjir to'g'ri (ko'rik paytida). */
+	chainOk: boolean,
+	/**  Zanjir boshi. */
+	chainHead: string,
+	/**  Tomonlar belgilari. */
+	marks: ReviewMarkDto[],
+	/**  Hamma tomon belgi qo'ygan. */
+	complete: boolean,
+	/**  Ochilgan sana. */
+	createdOn: string,
+};
+
+/**  Tomon belgisi. */
+export type ReviewMarkDto = {
+	/**  Tomon. */
+	partyId: string,
+	/**  Ism. */
+	name: string,
+	/**  `AGREE | OBJECT`, bo'lsa. */
+	decision: string | null,
+	/**  Izoh. */
+	comment: string | null,
+};
+
 /**  Javoblarni saqlash. */
 export type SaveAnswersInputDto = {
 	/**  Kelishuv. */
@@ -1808,6 +2082,14 @@ export type SubscriptionInputDto = {
 	yearly: string | null,
 };
 
+/**  Yakun qatori. */
+export type SummaryLineDto = {
+	/**  Nomi. */
+	label: string,
+	/**  Summa. */
+	amount: MoneyDto,
+};
+
 /**  Haftalik vazifa. */
 export type TaskDto = {
 	/**  Vazifa ID (`ch01.t1`). */
@@ -1920,6 +2202,16 @@ export type VentureEntryInputDto = {
 	date: string | null,
 	/**  Izoh (fors-majorda majburiy). */
 	note: string | null,
+};
+
+/**  Versiya izohi. */
+export type VersionNoteDto = {
+	/**  Versiya. */
+	version: number,
+	/**  Izoh. */
+	note: string,
+	/**  Sana. */
+	date: string,
 };
 
 /**  Joriy bobning shu haftalik vazifalari (bosh sahifa va bob sahifasi uchun). */

@@ -7,6 +7,8 @@ mod agreement_commands;
 mod agreements;
 mod budget;
 mod budget_commands;
+mod center;
+mod center_commands;
 mod ceremonies;
 mod ceremony_commands;
 mod commands;
@@ -161,6 +163,20 @@ fn specta_builder() -> Builder<tauri::Wry> {
         venture_commands::create_period_report_pdf,
         venture_commands::check_offer,
         venture_commands::hustle_plan,
+        center_commands::get_agreements_center,
+        center_commands::get_agreement_ops,
+        center_commands::report_duty_incident,
+        center_commands::resolve_duty_incident,
+        center_commands::open_review,
+        center_commands::mark_review,
+        center_commands::create_review_pdf,
+        center_commands::open_dispute,
+        center_commands::decide_dispute,
+        center_commands::create_arbiter_pdf,
+        center_commands::confirm_unchanged,
+        center_commands::list_family_templates,
+        center_commands::create_family_agreement,
+        center_commands::confirm_family,
     ])
 }
 

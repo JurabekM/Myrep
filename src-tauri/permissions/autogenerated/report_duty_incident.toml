@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-report-duty-incident"
+description = "Enables the report_duty_incident command without any pre-configured scope."
+commands.allow = ["report_duty_incident"]
+
+[[permission]]
+identifier = "deny-report-duty-incident"
+description = "Denies the report_duty_incident command without any pre-configured scope."
+commands.deny = ["report_duty_incident"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-confirm-family"
+description = "Enables the confirm_family command without any pre-configured scope."
+commands.allow = ["confirm_family"]
+
+[[permission]]
+identifier = "deny-confirm-family"
+description = "Denies the confirm_family command without any pre-configured scope."
+commands.deny = ["confirm_family"]

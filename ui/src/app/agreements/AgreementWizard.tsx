@@ -7,6 +7,7 @@ import { type AgreementDto, commands } from "../../bindings/bindings";
 import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
 import { Alert, Card, Field, PrimaryButton, SecondaryButton } from "../finance/ui";
+import { AgreementOpsCard } from "./AgreementOpsCard";
 import { JournalCard } from "./JournalCard";
 import { QUESTION_KEYS, kindKey, statusKey } from "./labels";
 import { SignaturePad } from "./SignaturePad";
@@ -251,6 +252,9 @@ function WizardBody({ agreement, onClose }: { agreement: AgreementDto; onClose: 
             ) : null}
             {error !== null ? <Alert>{error}</Alert> : null}
             {agreement.status === "SIGNED" ? <JournalCard agreement={agreement} /> : null}
+            {agreement.status !== "DRAFT" || agreement.kind === "FAMILY" ? (
+              <AgreementOpsCard agreement={agreement} />
+            ) : null}
           </section>
 
           <aside className="flex flex-col gap-4">

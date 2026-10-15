@@ -84,5 +84,5 @@ fn v6_dan_joriy_versiyaga_otganda_qorovul_turi_tiklanadi_va_balans_saqlanadi() {
     let version: i64 = conn
         .query_row("PRAGMA user_version", [], |row| row.get(0))
         .expect("versiya");
-    assert_eq!(version, 14);
+    assert_eq!(version, 15);
 }

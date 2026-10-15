@@ -26,6 +26,9 @@ vi.mock("../../bindings/bindings", () => ({
     listChapters: vi.fn(),
     getWeeklyTasks: vi.fn(),
     listAgreements: vi.fn(),
+    getAgreementsCenter: vi.fn(),
+    listFamilyTemplates: vi.fn(),
+    getAgreementOps: vi.fn(),
     createAgreement: vi.fn(),
     getAgreement: vi.fn(),
     getPartnerships: vi.fn(),
@@ -121,6 +124,8 @@ function setUp(): void {
   });
   resetFinanceMocks();
   vi.mocked(commands.listAgreements).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.getAgreementsCenter).mockResolvedValue({ status: "ok", data: { rows: [] } });
+  vi.mocked(commands.listFamilyTemplates).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getPartnerships).mockResolvedValue({ status: "ok", data: DATA });
 }
 

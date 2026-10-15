@@ -4,6 +4,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D13A — Kelishuvlar markazi: vazifalar, ko'rik, «katta foyda», nizo va hakam, oilaviy kelishuvlar (2026-10-15)
+
+**Qo'shildi**
+
+- Sxema v15: `duty_incidents`, `reviews` + `review_marks`, `disputes`, `family_consents`, `version_notes`. Repo `crates/storage/src/center.rs`.
+- Xizmat (`src-tauri/src/center.rs`) va 14 command: `get_agreements_center`, `get_agreement_ops`, `report_duty_incident`, `resolve_duty_incident`, `open_review`, `mark_review`, `create_review_pdf`, `open_dispute`, `decide_dispute`, `create_arbiter_pdf`, `confirm_unchanged`, `list_family_templates`, `create_family_agreement`, `confirm_family`.
+- **Markaz jadvali** (TanStack Table): turi, holati, keyingi ko'rik (30 kun eslatma — `review_reminder_due`), ochiq hodisalar, nizolar, zanjir / oilaviy tasdiq; qidiruv va tur/holat filtri. Eski oddiy ro'yxat o'rniga.
+- **`DutyIncident`**: «bajara olmayapman» — vazifa, sabab, taklif; tegishli «bajarilmasa» bandi darhol ko'rsatiladi; yopish («qoidaga qaytildi»).
+- **Oylik ochiq hisob ko'rigi**: to'liq ekran sessiya (`role="dialog"`) — davr yozuvlari, yakun (turlar bo'yicha), ochiq hodisalar, `verify_chain` natijasi va zanjir boshi; har tomon `AGREE` / `OBJECT + izoh` (e'tirozda izoh majburiy); **bayonnoma PDF** (`ReviewMinutes`, `chain_head` bilan) + snapshot.
+- **Nizo**: `IN_DISPUTE` (taqsimot bloklanadi — `ensure_distribution_allowed`, D13 `close_period`), **hakam uchun ish papkasi PDF** (`ArbiterFolder`: mundarija `#outline`, sahifa raqamlari, bo'limlar — versiya, versiyalar tarixi, yozuvlar + zanjir, bayonnomalar, hodisalar, talablar) + snapshot; hakam qarori → `SIGNED`, ixtiyoriy yangi versiya (qayta imzolash).
+- **Yillik yangilash**: «o'zgarishsiz tasdiqlash» — yangi versiya + `version_notes` yozuvi; markazda va ustada eslatma.
+- **Oilaviy kelishuvlar**: 4 shablon (uy ishlari, pul va hisob, havas chegarasi, oila kengashi) → `FAMILY` kelishuvi (tomonlar — ADULT a'zolar, vazifalar shablondan, 4/5/7 «tegishli emas»); imzo o'rniga **ADULT PIN tasdig'i** (lockout bilan, `family.rs` mantig'i); hamma kattalar tasdiqlagach — `SIGNED`.
+- `ProfitSpikeAlert` — D13 da (`venture.spike`, `profit_spike.json` yashil).
+- Testlar: Tauri 3 (hodisa+ko'rik+bayonnoma; nizo+blok+papka+qaror+yangilash; oilaviy shablon+PIN), PDF 2 (snapshot), UI 3; mavjud testlar markaz jadvaliga moslandi.
+
+**Qarorlar**
+
+- Ko'rik sessiyasi — ustaning ichida (to'liq ekran dialog), alohida sahifa emas.
+- «O'zgartirilgan yozuv `chain_head` bilan aniqlanadi» — bayonnomada `chain_head` saqlanadi; DB triggerlari yozuvni o'zgartirishga yo'l qo'ymaydi, import (D14) da `verify_chain` solishtiradi.
+- GUI sinovi — D10 dagi sabab (PIN) tufayli kutilmoqda.
+
 ### D13 — Venture ledger, taqsimot, «Hunardan ishga», taklif detektori (2026-10-15)
 
 **Qo'shildi**

@@ -31,7 +31,7 @@ use crate::finance::{self, CURRENCY, Context, DEVICE_ID, UuidV7, date_text, pars
 use crate::session::SessionError;
 
 /// PIN hosil qilish parametri: ishlab chiqarishda `RECOMMENDED` (sekin, xavfsiz), testlarda tez.
-fn kdf_params() -> KdfParams {
+pub(crate) fn kdf_params() -> KdfParams {
     if cfg!(test) {
         KdfParams::FAST_FOR_TESTS
     } else {
@@ -548,7 +548,7 @@ pub fn set_member_pin(
 }
 
 /// Urinishlar hisobi bo'yicha kutish: noto'g'ri urinishlardan keyin `LOCKED_OUT`.
-fn ensure_not_locked(state: &PinState, now: OffsetDateTime) -> Result<(), SessionError> {
+pub(crate) fn ensure_not_locked(state: &PinState, now: OffsetDateTime) -> Result<(), SessionError> {
     if let Some(failed_at) = state.failed_at
         && let Some(wait) = retry_after_secs(
             state.failed_attempts,

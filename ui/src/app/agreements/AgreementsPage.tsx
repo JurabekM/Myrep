@@ -1,16 +1,18 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { type SyntheticEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "../../bindings/bindings";
 import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
-import { Alert, Card, Field, PageHeader, PrimaryButton, SecondaryButton } from "../finance/ui";
+import { Alert, Card, Field, PageHeader, PrimaryButton } from "../finance/ui";
 import { AgreementWizard } from "./AgreementWizard";
+import { CenterTable } from "./CenterTable";
+import { FamilyTemplatesCard } from "./FamilyTemplatesCard";
 import { HustleCard } from "./HustleCard";
 import { OfferCheckCard } from "./OfferCheckCard";
 import { PartnershipsCard } from "./PartnershipsCard";
-import { kindKey, statusKey } from "./labels";
-import { agreementFetchers, agreementKeys, useApplyAgreement } from "./queries";
+import { kindKey } from "./labels";
+import { agreementKeys, useApplyAgreement } from "./queries";
 
 const KINDS = ["PARTNERSHIP", "LOAN", "FAMILY", "OTHER"] as const;
 const SELECT_CLASS =
@@ -22,7 +24,6 @@ export function AgreementsPage() {
   const apply = useApplyAgreement();
   const queryClient = useQueryClient();
   const message = useErrorMessage();
-  const list = useQuery({ queryKey: agreementKeys.list, queryFn: agreementFetchers.list });
   const [open, setOpen] = useState<string | null>(null);
   const [kind, setKind] = useState<(typeof KINDS)[number]>("PARTNERSHIP");
   const [title, setTitle] = useState("");
@@ -76,40 +77,17 @@ export function AgreementsPage() {
 
       <OfferCheckCard />
 
-      <Card title={t("agreements.listTitle")}>
-        {list.isSuccess && list.data.length === 0 ? (
-          <p className="text-sm text-muted">{t("agreements.empty")}</p>
-        ) : null}
-        {list.isSuccess && list.data.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {list.data.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-app px-4 py-3"
-              >
-                <span className="flex flex-col gap-1">
-                  <span className="text-sm text-text">{item.title}</span>
-                  <span className="text-xs text-subtle">
-                    {t(kindKey(item.kind))} · {t(statusKey(item.status))} ·{" "}
-                    {t("agreements.answeredShort", { done: item.answered })}
-                    {item.reviewDate !== null
-                      ? ` · ${t("agreements.reviewOn", { date: item.reviewDate })}`
-                      : ""}
-                  </span>
-                </span>
-                <SecondaryButton
-                  onClick={() => {
-                    setOpen(item.id);
-                  }}
-                >
-                  {t("agreements.open")}
-                </SecondaryButton>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {list.isError ? <Alert>{t("errors.generic")}</Alert> : null}
-      </Card>
+      <CenterTable
+        onOpen={(id) => {
+          setOpen(id);
+        }}
+      />
+
+      <FamilyTemplatesCard
+        onCreated={(id) => {
+          setOpen(id);
+        }}
+      />
 
       <Card title={t("agreements.newTitle")}>
         <form className="flex flex-col gap-4" onSubmit={(event) => void create(event)}>

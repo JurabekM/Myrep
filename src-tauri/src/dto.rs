@@ -2018,3 +2018,303 @@ pub struct HustleScenarioDto {
     /// Qoplanish muddati (oy), bo'lsa.
     pub payback_months: Option<u32>,
 }
+
+/// Kelishuvlar markazi jadvali (D13A).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CenterDto {
+    /// Qatorlar.
+    pub rows: Vec<CenterRowDto>,
+}
+
+/// Jadval qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CenterRowDto {
+    /// Identifikator.
+    pub id: String,
+    /// Turi.
+    pub kind: String,
+    /// Sarlavha.
+    pub title: String,
+    /// Holati.
+    pub status: String,
+    /// Versiya.
+    pub version: u32,
+    /// Keyingi ko'rik sanasi.
+    pub review_date: Option<String>,
+    /// Yangilash eslatmasi (30 kun qolgan yoki o'tgan).
+    pub review_due: bool,
+    /// Ochiq hodisalar.
+    pub open_incidents: u32,
+    /// Ochiq nizolar.
+    pub open_disputes: u32,
+    /// Zanjir to'g'ri.
+    pub chain_ok: bool,
+    /// Oilaviy kelishuvda tasdiqlamagan kattalar soni.
+    pub family_pending: u32,
+}
+
+/// Kelishuv amaliyotlari.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AgreementOpsDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Holati.
+    pub status: String,
+    /// Versiya.
+    pub version: u32,
+    /// Keyingi ko'rik sanasi.
+    pub review_date: Option<String>,
+    /// Yangilash eslatmasi.
+    pub review_due: bool,
+    /// Hodisalar (yangidan eskiga).
+    pub incidents: Vec<IncidentDto>,
+    /// Ko'riklar (eskidan yangiga).
+    pub reviews: Vec<ReviewDto>,
+    /// Nizolar.
+    pub disputes: Vec<DisputeDto>,
+    /// Versiya izohlari.
+    pub version_notes: Vec<VersionNoteDto>,
+    /// Oilaviy tasdiqlar (faqat `FAMILY`).
+    pub family: Option<FamilyConsentsDto>,
+}
+
+/// Vazifa hodisasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct IncidentDto {
+    /// Identifikator.
+    pub id: String,
+    /// Vazifa.
+    pub duty_id: String,
+    /// Vazifa nomi.
+    pub duty_title: String,
+    /// «Bajarilmasa» bandi — darhol ko'rsatiladi.
+    pub breach_clause: String,
+    /// Xabar bergan tomon.
+    pub party_id: String,
+    /// Tomon ismi.
+    pub party_name: String,
+    /// Sabab.
+    pub reason: String,
+    /// Taklif qilingan yechim.
+    pub proposed_fix: Option<String>,
+    /// Sana.
+    pub occurred_on: String,
+    /// Yopilganmi.
+    pub resolved: bool,
+}
+
+/// Hodisa kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct IncidentInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Vazifa.
+    pub duty_id: String,
+    /// Tomon.
+    pub party_id: String,
+    /// Sabab.
+    pub reason: String,
+    /// Taklif.
+    pub proposed_fix: Option<String>,
+    /// Sana; bo'sh — bugun.
+    pub occurred_on: Option<String>,
+}
+
+/// Ochiq hisob ko'rigi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewDto {
+    /// Identifikator.
+    pub id: String,
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Davr boshi.
+    pub period_start: String,
+    /// Davr oxiri.
+    pub period_end: String,
+    /// Davr yozuvlari.
+    pub entries: Vec<JournalEntryDto>,
+    /// Yakun (turlar bo'yicha).
+    pub summary: Vec<SummaryLineDto>,
+    /// Ochiq hodisalar.
+    pub incidents: Vec<IncidentDto>,
+    /// Zanjir to'g'ri (ko'rik paytida).
+    pub chain_ok: bool,
+    /// Zanjir boshi.
+    pub chain_head: String,
+    /// Tomonlar belgilari.
+    pub marks: Vec<ReviewMarkDto>,
+    /// Hamma tomon belgi qo'ygan.
+    pub complete: bool,
+    /// Ochilgan sana.
+    pub created_on: String,
+}
+
+/// Yakun qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SummaryLineDto {
+    /// Nomi.
+    pub label: String,
+    /// Summa.
+    pub amount: MoneyDto,
+}
+
+/// Tomon belgisi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewMarkDto {
+    /// Tomon.
+    pub party_id: String,
+    /// Ism.
+    pub name: String,
+    /// `AGREE | OBJECT`, bo'lsa.
+    pub decision: Option<String>,
+    /// Izoh.
+    pub comment: Option<String>,
+}
+
+/// Ko'rik ochish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenReviewInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Davr boshi; bo'sh — oxirgi ko'rikdan keyin.
+    pub period_start: Option<String>,
+    /// Davr oxiri; bo'sh — bugun.
+    pub period_end: Option<String>,
+}
+
+/// Belgi kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MarkReviewInputDto {
+    /// Ko'rik.
+    pub review_id: String,
+    /// Tomon.
+    pub party_id: String,
+    /// `AGREE | OBJECT`.
+    pub decision: String,
+    /// Izoh (e'tirozda majburiy).
+    pub comment: Option<String>,
+}
+
+/// Nizo.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DisputeDto {
+    /// Identifikator.
+    pub id: String,
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Ochgan tomon.
+    pub opened_by_party_id: String,
+    /// Ismi.
+    pub opened_by_name: String,
+    /// Mavzu.
+    pub subject: String,
+    /// Bandlar.
+    pub clauses: String,
+    /// Talab.
+    pub claim: String,
+    /// Ochilgan sana.
+    pub opened_on: String,
+    /// Hakam qarori.
+    pub decision: Option<String>,
+    /// Qaror sanasi.
+    pub decided_on: Option<String>,
+}
+
+/// Nizo ochish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DisputeInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Ochayotgan tomon.
+    pub party_id: String,
+    /// Mavzu.
+    pub subject: String,
+    /// Bandlar.
+    pub clauses: String,
+    /// Talab.
+    pub claim: String,
+}
+
+/// Hakam qarori.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DecideDisputeInputDto {
+    /// Nizo.
+    pub dispute_id: String,
+    /// Qaror matni.
+    pub decision: String,
+    /// Yangi versiya yaratilsinmi (qayta imzolash).
+    pub new_version: bool,
+}
+
+/// Versiya izohi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct VersionNoteDto {
+    /// Versiya.
+    pub version: u32,
+    /// Izoh.
+    pub note: String,
+    /// Sana.
+    pub date: String,
+}
+
+/// Oilaviy tasdiqlar.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyConsentsDto {
+    /// Kattalar.
+    pub adults: Vec<FamilyAdultDto>,
+    /// Hammasi tasdiqlagan.
+    pub complete: bool,
+}
+
+/// Katta a'zo holati.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyAdultDto {
+    /// A'zo.
+    pub member_id: String,
+    /// Ismi.
+    pub name: String,
+    /// PIN o'rnatilgan.
+    pub has_pin: bool,
+    /// Joriy versiyani tasdiqlagan.
+    pub confirmed: bool,
+}
+
+/// Oilaviy tasdiq kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyConfirmInputDto {
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// A'zo.
+    pub member_id: String,
+    /// PIN (6 raqam).
+    pub pin: String,
+}
+
+/// Oilaviy shablon.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyTemplateDto {
+    /// Identifikator.
+    pub id: String,
+    /// Sarlavha.
+    pub title: String,
+    /// Tavsif.
+    pub description: String,
+}

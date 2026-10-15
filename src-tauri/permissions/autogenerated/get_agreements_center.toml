@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-agreements-center"
+description = "Enables the get_agreements_center command without any pre-configured scope."
+commands.allow = ["get_agreements_center"]
+
+[[permission]]
+identifier = "deny-get-agreements-center"
+description = "Denies the get_agreements_center command without any pre-configured scope."
+commands.deny = ["get_agreements_center"]

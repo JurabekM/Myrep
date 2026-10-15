@@ -16,10 +16,12 @@ use typst::{Library, World};
 /// Bayonnoma shrifti. Libertinus Serif ʻ (U+02BB) va ʼ (U+02BC) belgilarini o'z ichiga oladi (testlangan).
 mod agreement;
 mod estimate;
+mod minutes;
 mod period;
 
 pub use agreement::AgreementDocument;
 pub use estimate::CeremonyEstimate;
+pub use minutes::{ArbiterFolder, ReviewMinutes};
 pub use period::PeriodReport;
 
 pub const FONT_FAMILY: &str = "Libertinus Serif";
@@ -83,6 +85,22 @@ pub fn render_estimate(estimate: &CeremonyEstimate) -> Result<Vec<u8>, PdfError>
 /// Sherik uchun davr hisobotini PDF baytlariga aylantiradi.
 pub fn render_period_report(report: &PeriodReport) -> Result<Vec<u8>, PdfError> {
     let world = ReportWorld::new(period::template(report));
+    let warned = typst::compile::<PagedDocument>(&world);
+    let document = warned.output.map_err(|_| PdfError::Compile)?;
+    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)
+}
+
+/// Ko'rik bayonnomasini PDF baytlariga aylantiradi.
+pub fn render_review_minutes(minutes: &ReviewMinutes) -> Result<Vec<u8>, PdfError> {
+    let world = ReportWorld::new(minutes::minutes_template(minutes));
+    let warned = typst::compile::<PagedDocument>(&world);
+    let document = warned.output.map_err(|_| PdfError::Compile)?;
+    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)
+}
+
+/// Hakam uchun ish papkasini (mundarija va sahifa raqamlari bilan) PDF baytlariga aylantiradi.
+pub fn render_arbiter_folder(folder: &ArbiterFolder) -> Result<Vec<u8>, PdfError> {
+    let world = ReportWorld::new(minutes::folder_template(folder));
     let warned = typst::compile::<PagedDocument>(&world);
     let document = warned.output.map_err(|_| PdfError::Compile)?;
     typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)

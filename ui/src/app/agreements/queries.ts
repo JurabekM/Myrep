@@ -11,6 +11,9 @@ export const agreementKeys = {
   journal: (id: string) => ["agreements", "journal", id] as const,
   partnerships: ["agreements", "partnerships"] as const,
   venture: (partnershipId: string) => ["agreements", "venture", partnershipId] as const,
+  center: ["agreements", "center"] as const,
+  ops: (id: string) => ["agreements", "ops", id] as const,
+  familyTemplates: ["agreements", "family-templates"] as const,
 };
 
 export const agreementFetchers = {
@@ -26,6 +29,8 @@ export function useApplyAgreement(): (next: AgreementDto) => Promise<void> {
     async (next: AgreementDto) => {
       queryClient.setQueryData(agreementKeys.one(next.id), next);
       await queryClient.invalidateQueries({ queryKey: agreementKeys.list });
+      await queryClient.invalidateQueries({ queryKey: agreementKeys.center });
+      await queryClient.invalidateQueries({ queryKey: agreementKeys.ops(next.id) });
       await queryClient.invalidateQueries({ queryKey: agreementKeys.journal(next.id) });
     },
     [queryClient],

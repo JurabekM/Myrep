@@ -30,6 +30,9 @@ vi.mock("../../bindings/bindings", () => ({
     listChapters: vi.fn(),
     getWeeklyTasks: vi.fn(),
     listAgreements: vi.fn(),
+    getAgreementsCenter: vi.fn(),
+    listFamilyTemplates: vi.fn(),
+    getAgreementOps: vi.fn(),
     getPartnerships: vi.fn(),
     createPartnership: vi.fn(),
     getVenture: vi.fn(),
@@ -154,6 +157,8 @@ function setUp(): void {
   });
   resetFinanceMocks();
   vi.mocked(commands.listAgreements).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.getAgreementsCenter).mockResolvedValue({ status: "ok", data: { rows: [] } });
+  vi.mocked(commands.listFamilyTemplates).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getPartnerships).mockResolvedValue({ status: "ok", data: PARTNERSHIPS });
   vi.mocked(commands.getVenture).mockResolvedValue({ status: "ok", data: VENTURE });
 }
@@ -177,7 +182,7 @@ describe("kassa daftari, detektor va hunardan ishga", () => {
       data: "C:\\reports\\davr-1.pdf",
     });
     render(<App />);
-    const card = await screen.findByRole("region", { name: "Kassa daftari" });
+    const card = await screen.findByRole("region", { name: "Kassa daftari" }, { timeout: 5000 });
     expect(within(card).getByText("3 500 000 soʻm")).toBeInTheDocument();
 
     const user = userEvent.setup();

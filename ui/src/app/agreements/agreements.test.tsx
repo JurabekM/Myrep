@@ -25,6 +25,9 @@ vi.mock("../../bindings/bindings", () => ({
     listChapters: vi.fn(),
     getWeeklyTasks: vi.fn(),
     listAgreements: vi.fn(),
+    getAgreementsCenter: vi.fn(),
+    listFamilyTemplates: vi.fn(),
+    getAgreementOps: vi.fn(),
     createAgreement: vi.fn(),
     getAgreement: vi.fn(),
     saveAgreementAnswers: vi.fn(),
@@ -102,6 +105,27 @@ function setUp(): void {
   });
   resetFinanceMocks();
   vi.mocked(commands.listAgreements).mockResolvedValue({ status: "ok", data: [SUMMARY] });
+  vi.mocked(commands.getAgreementsCenter).mockResolvedValue({
+    status: "ok",
+    data: {
+      rows: [
+        {
+          id: ID,
+          kind: "PARTNERSHIP",
+          title: "Non sexi",
+          status: "DRAFT",
+          version: 1,
+          reviewDate: null,
+          reviewDue: false,
+          openIncidents: 0,
+          openDisputes: 0,
+          chainOk: true,
+          familyPending: 0,
+        },
+      ],
+    },
+  });
+  vi.mocked(commands.listFamilyTemplates).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getAgreement).mockResolvedValue({ status: "ok", data: DRAFT });
   vi.mocked(commands.getJournal).mockResolvedValue({
     status: "ok",
@@ -136,7 +160,7 @@ describe("kelishuv ustasi", () => {
     useUiStore.setState({ page: "partnerships" });
     render(<App />);
     expect(await screen.findByText("Non sexi")).toBeInTheDocument();
-    expect(screen.getByText(/0 \/ 9 javob/)).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Kelishuvlar markazi" })).toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.selectOptions(screen.getByLabelText("Turi"), "FAMILY");

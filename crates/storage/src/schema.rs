@@ -717,6 +717,79 @@ BEGIN
 END;
 "#;
 
+/// Sxema v15 (D13A): vazifa hodisalari, ochiq hisob ko'riklari va belgilar, nizolar, oilaviy tasdiqlar,
+/// versiya izohlari.
+pub const SCHEMA_V15: &str = r#"
+CREATE TABLE duty_incidents (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    duty_id TEXT NOT NULL,
+    party_id TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+    proposed_fix TEXT,
+    occurred_on TEXT NOT NULL,
+    resolved_at TEXT,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX duty_incidents_by_agreement ON duty_incidents (agreement_id);
+
+CREATE TABLE reviews (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL,
+    chain_head TEXT NOT NULL CHECK (length(chain_head) = 64),
+    chain_ok INTEGER NOT NULL CHECK (chain_ok IN (0, 1)),
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX reviews_by_agreement ON reviews (agreement_id, created_at);
+
+CREATE TABLE review_marks (
+    review_id TEXT NOT NULL REFERENCES reviews (id),
+    party_id TEXT NOT NULL,
+    decision TEXT NOT NULL CHECK (decision IN ('AGREE', 'OBJECT')),
+    comment TEXT,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (review_id, party_id)
+) STRICT;
+
+CREATE TABLE disputes (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    opened_by_party_id TEXT NOT NULL,
+    subject TEXT NOT NULL CHECK (length(trim(subject)) > 0),
+    clauses TEXT NOT NULL,
+    claim TEXT NOT NULL,
+    opened_on TEXT NOT NULL,
+    decision TEXT,
+    decided_on TEXT,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX disputes_by_agreement ON disputes (agreement_id);
+
+CREATE TABLE family_consents (
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    member_id TEXT NOT NULL REFERENCES members (id),
+    version INTEGER NOT NULL CHECK (version >= 1),
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (agreement_id, member_id, version)
+) STRICT;
+
+CREATE TABLE version_notes (
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    version INTEGER NOT NULL CHECK (version >= 1),
+    note TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (agreement_id, version)
+) STRICT;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -734,6 +807,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V12),
         M::up(SCHEMA_V13),
         M::up(SCHEMA_V14),
+        M::up(SCHEMA_V15),
     ])
 }
 
@@ -776,4 +850,10 @@ pub const TABLES: &[&str] = &[
     "partnerships",
     "partnership_buyout_payments",
     "venture_periods",
+    "duty_incidents",
+    "reviews",
+    "review_marks",
+    "disputes",
+    "family_consents",
+    "version_notes",
 ];
