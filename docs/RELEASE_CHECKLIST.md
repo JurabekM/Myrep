@@ -42,5 +42,5 @@ o'rnatuvchini haqiqiy Windows mashinasida sinashni talab qiladi.
 ## 6. Hujjat
 
 - [ ] `docs/CHANGELOG.md` shu reliz uchun yangilangan.
-- [ ] `docs/OPEN_QUESTIONS.md` — ochiq bandlar ko'rib chiqilgan (mahsulot qarorlari: 45, 46 va boshqalar).
+- [ ] `docs/OPEN_QUESTIONS.md` — ochiq bandlar ko'rib chiqilgan (mahsulot qarorlari «Hal qilingan» bo'limida).
 - [ ] Ma'lum cheklovlar foydalanuvchiga aytilgan (CHANGELOG'dagi «Ma'lum cheklovlar» bo'limlari).

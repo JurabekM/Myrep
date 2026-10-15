@@ -178,6 +178,9 @@ pub enum DomainError {
     /// Yozuvni faqat hisob yurituvchi qurilma qo'shishi mumkin.
     #[error("bu qurilma hisob yurituvchi emas")]
     NotKeeperDevice,
+    /// Bazaviy davr joriy davrdan oldin bo'lishi kerak.
+    #[error("bazaviy davr joriy davrdan oldin bo'lishi kerak")]
+    BaselineNotPast,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -224,6 +227,7 @@ impl DomainError {
             Self::FamilyDiscussionRequired => "FAMILY_DISCUSSION_REQUIRED",
             Self::DistributionBlocked => "IN_DISPUTE",
             Self::NotKeeperDevice => "NOT_KEEPER_DEVICE",
+            Self::BaselineNotPast => "BASELINE_NOT_PAST",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

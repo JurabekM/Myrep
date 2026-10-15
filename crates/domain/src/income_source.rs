@@ -1,6 +1,6 @@
 //! Daromad manbasi turi (SPEC, `IncomeSourceType`): ixtiyoriy belgi. Kodlar: `TER | MOL | TAVAKKAL | RIBO`.
 //!
-//! Ma'nolari (ko'rsatiladigan nomlari) SPEC'da hali izohlanmagan — OPEN_QUESTIONS, 42-band.
+//! Ma'nolari (ko'rsatiladigan nomlari) SPEC'da hali izohlanmagan — OPEN_QUESTIONS («Hal qilingan», IncomeSourceType).
 //! Ilovada foiz stavkasi «muqobil daromad» sifatida ko'rsatilmaydi; `RIBO` faqat belgi.
 
 /// Daromad manbasi turi.

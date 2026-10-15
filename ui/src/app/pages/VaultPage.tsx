@@ -37,6 +37,8 @@ export function VaultPage() {
         return t("vault.history.initial");
       case "INCOME_SHARE":
         return t("vault.history.share");
+      case "RESCUE_DEPOSIT":
+        return t("vault.history.rescue");
       default:
         return t("vault.history.withdrawal");
     }

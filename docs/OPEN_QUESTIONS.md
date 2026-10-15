@@ -40,12 +40,8 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 32. **Ochilish parametrlari (D5).** Standart — 2 vazifa va 7 kun (mobil bilan bir xil). Foydalanuvchi sozlashi kerakmi, yoki qat'iy qoladimi? _Kerak: D6 (sozlamalar) oldidan._
 33. **Hodisasiz vazifalar (D5).** `ch02.t2`, `ch02.t3`, `ch03.*`, `ch04.*`, `ch05.t1` uchun modullar hali yo'q: bu vazifalar faqat qo'lda belgilanadi. Modul tayyor bo'lganda shu hodisa `record_event` orqali yoziladi. `ch05.t2` — hodisasi yo'q, qo'lda. _Kerak: D6–D9 har modulida._
 34. **«Daftar sahifasi» uzunligi (D5).** Standart qaror: 5000 belgi (backend va textarea). Mobilda chegara yo'q edi. Chegara to'g'rimi yoki boshqacha bo'lsinmi? _Kerak: tasdiq._
-
-**41. Tray, global shortcut va CSV import (D7).** Tray ikonkasi, Ctrl+Alt+B mini oynasi (qulflanganda summalar yashirin) va CSV import ustasi (matn joylash, ustunlarni moslash) hali qo'shilmagan. Ular D7 ning qolgan qismi sifatida alohida vazifada bajariladi. _Kerak: D7 qoldiq ishi._
-
-**42. `IncomeSourceType` ma'nolari (D8).** SPEC faqat kodlarni sanaydi: `TER | MOL | TAVAKKAL | RIBO`. Ko'rsatiladigan nomlari va ilovadagi o'rni noma'lum; kodlar `domain::income_source` da, nomsiz. _Kerak: SPEC'ni izohlash._
-
-**43. «Ongli chetlab o'tish» (D8).** Darvozani qasddan ochish (sabab yozib) vektorlarda yo'q; semantika belgilanmagan. _Kerak: mahsulot qarori._
+35. **Tray, global shortcut va CSV import (D7).** Tray ikonkasi, Ctrl+Alt+B mini oynasi (qulflanganda summalar yashirin) va CSV import ustasi (matn joylash, ustunlarni moslash) hali qo'shilmagan. Ular D7 ning qolgan qismi sifatida alohida vazifada bajariladi. _Kerak: D7 qoldiq ishi._
+36. **Kelishuv ustasi va imzolar (D8A).** 9 savol ustasi (UI), jonli PDF preview, imzolash (sichqoncha/pero/skan), oral kelishuv yozuvi va kelishuv PDF snapshot testi hali yo'q. Domen (`domain::agreement`, `domain::journal`) va saqlash (sxema v8) tayyor. Tauri command qatlami ham keyingi bosqichda. _Kerak: D8A ustasi (UI) — alohida vazifa._
 
 ## Hal qilingan
 
@@ -69,8 +65,8 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 - **A'zo PIN'ini almashtirish xavfsizligi (D6, qaror: 2026-10-15).** PIN o'zgartirish joriy PIN'ni talab qiladi; faqat PIN egasi (kattaning o'zi) almashtira oladi. Noto'g'ri joriy PIN urinishlari ham kutish qoidasiga kiradi. A'zolarni tahrirlash/o'chirish hali yo'q. _(39-band)_
 - **Chegarani o'zgartirish rozilikni bekor qiladi (D6, qaror: 2026-10-15).** Yangi chegara — yangi rozilik: hammasi qayta PIN kiritadi. Shunday qoldi. _(40-band)_
 
-**44. Kelishuv ustasi va imzolar (D8A).** 9 savol ustasi (UI), jonli PDF preview, imzolash (sichqoncha/pero/skan), oral kelishuv yozuvi va kelishuv PDF snapshot testi hali yo'q. Domen (`domain::agreement`, `domain::journal`) va saqlash (sxema v8) tayyor. Tauri command qatlami ham keyingi bosqichda. _Kerak: D8A ustasi (UI) — alohida vazifa._
-
-**45. Qarz oldidan yuk chegaralari (D9).** `borrow_check`: oylik yuk daromadning 30% dan — ogohlantirish, 50% dan — to'xtash. SPEC raqam bermaydi. _Kerak: mahsulot qarori._
-
-**46. «Kafolatlangan foyda» qoidasi (D13).** OfferCheck: QIZIL — kafolat yoki piramida; SARIQ — shoshiltirish, yozma shartnoma yo'qligi, real mol/ish yo'qligi, «zarar yo'q» deyilishi. Tekshiruv savollari SPEC 2E.5 dan. _Kerak: mahsulot va huquqiy ko'rib chiqish._
+- **`IncomeSourceType` ma'nolari (D8, qaror: 2026-10-15).** `TER` — mehnat daromadi (ish haqi, hunar, xizmat); `MOL` — mol-mulk daromadi (ijara, savdo foydasi, mahsulot sotish); `TAVAKKAL` — tavakkalli daromad (sheriklik, foyda-zarar bo'linadigan ulush); `RIBO` — foizdan kelgan daromad (depozit foizi va sh.k.). Belgi ixtiyoriy, Daromad formasida tanlanadi. `RIBO` daromad yashirilmaydi va hisobga kiradi, lekin yonida neytral eslatma chiqadi («Bu daromad ribo deb belgilangan — 3-bobga qarang»), ayblov yo'q. UI — D8 UI bosqichida.
+- **«Ongli chetlab o'tish» (D8, qaror: 2026-10-15).** Darvoza yopiq bo'lsa ham **bitta amal uchun** (bitta qarz yoki bitta kelishuv) chetlab o'tish mumkin: sabab matni majburiy (kamida 20 belgi), `ADULT` a'zo PIN'i bilan tasdiqlanadi, yozuv saqlanadi (`gate_overrides`) va o'sha qarz/kelishuvda «darvoza ongli chetlab o'tilgan» belgisi va sabab ko'rinadi. Chetlab o'tish darvozaning o'zini ochmaydi. Vektor yo'q — desktop taklifi, mobil bilan kelishiladi.
+- **Qarz oldidan yuk chegaralari (D9, qaror: 2026-10-15).** 30% — ogohlantirish (`CAUTION`), 50% — to'xtash (`STOP`). Hisob: barcha faol qarzlarning oylik yuki yig'indisi (yangi qarz bilan birga) / oylik daromad. `STOP` taqiq emas — friction (SPEC 2D.6): foydalanuvchi davom etsa, qarz saqlanadi va natija qarz yozuvida qoladi.
+- **«Kafolatlangan foyda» qoidasi (D13, qaror: 2026-10-15).** `domain::offer_check` dagi qoida qoldi: QIZIL — kafolatlangan foyda yoki yangi a'zo talabi; SARIQ — shoshiltirish, yozma shartnoma yo'qligi, real mol/ish yo'qligi, «zarar yo'q» deyilishi; **uch va undan ko'p sariq bayroq — QIZIL**. Huquqiy ko'rib chiqish — reliz checklist'ida (koddan tashqari), kodni bloklamaydi.
+- **Vektorsiz formulalar uchun tartib (qaror: 2026-10-15).** Mobilda vektori yo'q formula (3 amortizatsiya turi, borrow check, chetlab o'tish, `.baraka` sxemasi) uchun desktop **taklif vektori** yozadi: `spec/test-vectors/proposed/<suite>.json`, `"status": "PROPOSED"`. Qoplanish testi `proposed/` ni hisobga olmaydi. Mobil tasdiqlagach fayl asosiy papkaga ko'chadi va `SHA256SUMS` ga qo'shiladi. Tasdiqlanmaguncha shu formulaga tayanadigan funksiya UI'da «desktop taklifi» belgisi bilan chiqadi.

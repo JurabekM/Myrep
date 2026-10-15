@@ -4,6 +4,33 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### Barqarorlashtirish — GUI sinovi, ribo filtri, error boundary, qarorlar (2026-10-15)
+
+Yangi funksiya yo'q. Byudjet sahifasi (D7) haqiqiy Tauri oynasida boshidan oxirigacha bosib sinaldi: PIN o'rnatish, obuna qo'shish/«ishlatdim»/bekor qilish, konvert qo'shish va hafta yakuni, «Kelajagim»ga o'tkazish (to'g'ri va ortiqcha summa), bazaviy davr (o'tgan va joriy davr), Kelajagim balansi va tarixi. Hisoblar domen bilan mos (1 000 + 500 000 = 501 000; o'tkazishdan keyin 497 000).
+
+**GUI sinovi topgan va tuzatilgan nuqsonlar**
+
+- «Kelajagim» tarixida qutqarilgan puldan kirim «Pul olish» deb ko'rsatilardi (`kindLabel` ning `default` tarmog'i). Endi `RESCUE_DEPOSIT` → «Qutqarilgan puldan».
+- O'tkazish va bazaviy davr xatolari karta oxirida, tugmadan uzoqda chiqardi (ekrandan tashqarida qolardi). Endi har forma o'z xatosini tugmasi ostida ko'rsatadi.
+- Joriy davrni bazaviy qilishga urinishda «Kun 1 dan 31 gacha bo'lishi kerak» chiqardi (`INVALID_DAY` qayta ishlatilgan). Yangi `BASELINE_NOT_PAST` kodi va matni.
+- WebView2 avtoto'ldirish popup'i («Сохраненные сведения») summa maydonida tugmani yopib qo'yardi. `Field` da `autoComplete="off"` standart.
+- Bitta sahifaning render xatosi butun ilovani bo'sh qoldirardi (error boundary yo'q; HMR oraliq holatida kuzatildi). `PageErrorBoundary` — sahifa darajasida umumiy xabar va «Qayta urinish», boshqa bo'limga o'tganda tiklanadi. Xato matni foydalanuvchiga ko'rsatilmaydi va loglanmaydi (ma'lumot bo'lishi mumkin).
+
+**Qo'shildi**
+
+- Ribo filtri testi `ui/src/i18n/ribo-terms.test.ts`: uz/ru tarjimalari va `spec/content/chapters.json` da foizni daromad yoki yechim sifatida targ'ib qiluvchi iboralar yo'qligi (DESKTOP_PROMPT 8-bo'lim). Qarz kategoriyasi «Kredit» va ta'limiy taqiq matnlari ruxsat etilgan.
+- `offer_check`: uch va undan ko'p sariq bayroq — qizil (qaror, OPEN_QUESTIONS «Hal qilingan»).
+- Qarorlar yozildi (OPEN_QUESTIONS «Hal qilingan»): `IncomeSourceType` ma'nolari, «ongli chetlab o'tish» (bitta amal, 20+ belgi sabab, ADULT PIN), qarz yuk chegaralari 30%/50% (friction, taqiq emas), OfferCheck qoidasi, vektorsiz formulalar uchun `spec/test-vectors/proposed/` tartibi.
+
+**Tekshirildi, o'zgartirilmadi**
+
+- `set_content_protected(true)` relizda allaqachon bor (`lib.rs`); debug'da skrinshot uchun o'chiq.
+- `Ctrl+L` (qulflash) va `Ctrl+N` (tez kiritish) bor; `Ctrl+K`, `Ctrl+P` yo'q (keyingi bosqich).
+
+**Qolgan kichik kamchilik**
+
+- Bazaviy davr saqlangach, o'sha davrda xarajat bo'lmasa, ekranda «Bazaviy davr yo'q» qolaveradi — tanlov saqlangani ko'rinmaydi. DTO'ga tanlangan sanani alohida chiqarish kerak (D8 UI bilan).
+
 ### D9, D11, D13, D13A, D14 (domen qismi) — Qarzlar, marosim, taklif tekshiruvi, nizo, almashish (2026-10-15)
 
 **Qo'shildi**
@@ -15,7 +42,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 - `domain::interchange`: kalit qurilma (`NOT_KEEPER_DEVICE`) va import oldidan fork aniqlash (birinchi farq, 1 dan).
 - Yangi `DomainError` kodlari: `REPAYMENT_PLAN_REQUIRED`, `PLAN_MISMATCH`, `FAMILY_DISCUSSION_REQUIRED`, `IN_DISPUTE`, `NOT_KEEPER_DEVICE`.
 
-**Qarorlar (mahsulot qarori — tasdiqlash kerak, OPEN_QUESTIONS 45–46)**
+**Qarorlar (mahsulot qarori — tasdiqlash kerak, OPEN_QUESTIONS «Hal qilingan»)**
 
 - Qarz oldidan yuk chegaralari: daromadning 30% — ogohlantirish, 50% — to'xtash. SPEC aniq raqam bermaydi.
 - OfferCheck qoidasi: QIZIL — kafolatlangan foyda yoki yangi a'zo talab qilinishi; SARIQ — shoshiltirish, yozma shartnoma yo'qligi, real mol/ish yo'qligi yoki «zarar yo'q» deyilishi; YASHIL — qolgani.
@@ -70,7 +97,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 **Ma'lum cheklovlar (keyingi ishga qoldirildi)**
 
 - 9 savol ustasi (UI), jonli PDF preview, imzolar (sichqoncha/pero/skan), oral kelishuv yozuvi, kelishuv PDF snapshot testi — qo'shilmadi. Domen va saqlash tayyor.
-- Tauri command va DTO qatlami kelishuvlar uchun hali yo'q (OPEN_QUESTIONS, 44).
+- Tauri command va DTO qatlami kelishuvlar uchun hali yo'q (OPEN_QUESTIONS, 36).
 - `DutyIncident` (bajara olmayman xabari) — D13A bilan birga.
 
 ### D8 — Qorovul, zaxira maqsadi, shaxsiy inflyatsiya, tayyorgarlik darvozasi (2026-10-15)
@@ -80,7 +107,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 - `domain::emergency` — zaxira maqsadi: so'nggi 3 ma'lumotli oy o'rtachasi × N, yarim tiyin yuqoriga (`emergency_target.json`, 3 vektor).
 - `domain::inflation` — shaxsiy indeks: bazis punktlarda mahsulot o'zgarishi, og'irlikli o'rtacha (`personal_inflation.json`, 1 vektor).
 - `domain::readiness` — tayyorgarlik darvozasi: zaxira ≥ 6,0 oy VA (foizli qarz yo'q YOKI chiqish rejasi bor); sabablar tartibi doim bir xil (`readiness_gate.json`, 16 vektor).
-- `domain::income_source` — `IncomeSourceType` (`TER | MOL | TAVAKKAL | RIBO`), faqat kodlar (ma'nolari OPEN_QUESTIONS, 42).
+- `domain::income_source` — `IncomeSourceType` (`TER | MOL | TAVAKKAL | RIBO`), faqat kodlar (ma'nolari OPEN_QUESTIONS «Hal qilingan»).
 - Sxema v7: eski «Kelajagim» yozuvlarida `vault_type` bo'lmasa, `QOROVUL` deb to'ldiriladi. Balans o'zgarmaydi (`reserve_flows.rs`).
 - `spec/test-vectors/`: uchta vektor fayli mobil ilova bilan umumiy — baytma-bayt nusxa; `SHA256SUMS` manifesti bilan tekshiriladi (`mobil_bilan_umumiy_vektorlar_manifestga_mos`).
 
@@ -98,7 +125,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 **Ma'lum cheklovlar (keyingi ishga qoldirildi)**
 
 - «Narx daftari» (narx nuqtalari, savat) va «Sichqon kemirgani» UI'si qo'shilmadi: domen darajasidagi indeks tayyor, saqlash va ekran keyingi bosqichda.
-- «Ongli chetlab o'tish» (darvozani qasddan ochish) qo'shilmadi: vektorlarda semantika yo'q; OPEN_QUESTIONS, 43-band.
+- «Ongli chetlab o'tish» (darvozani qasddan ochish) qo'shilmadi: vektorlarda semantika yo'q; OPEN_QUESTIONS «Hal qilingan».
 - `ReadinessGate` zaxira oylarini hisoblamaydi (kirish — o'ndan bir oy birligida); qorovul balansidan hisoblash keyingi bosqichda.
 
 ### D7 — Byudjet: obunalar, konvertlar, «Qutqarilgan pul», «Kelajagim»ga o'tkazish (2026-10-15)

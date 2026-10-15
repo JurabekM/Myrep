@@ -47,10 +47,16 @@ function RescueCard({ rescue }: { rescue: RescueDto }) {
   const message = useErrorMessage();
   const [amount, setAmount] = useState("");
   const [baseline, setBaseline] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // Har forma o'z xatosini tugmasi ostida ko'rsatadi: xabar bosilgan joydan uzoqda qolmasin.
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [baselineError, setBaselineError] = useState<string | null>(null);
   const nothingToTransfer = rescue.available.minor === "0";
 
-  async function run(action: () => Promise<BudgetDto>, onDone: () => void) {
+  async function run(
+    action: () => Promise<BudgetDto>,
+    onDone: () => void,
+    setError: (value: string | null) => void,
+  ) {
     setError(null);
     try {
       await apply(await action());
@@ -67,6 +73,7 @@ function RescueCard({ rescue }: { rescue: RescueDto }) {
       () => {
         setAmount("");
       },
+      setTransferError,
     );
   }
 
@@ -77,6 +84,7 @@ function RescueCard({ rescue }: { rescue: RescueDto }) {
       () => {
         setBaseline("");
       },
+      setBaselineError,
     );
   }
 
@@ -122,6 +130,7 @@ function RescueCard({ rescue }: { rescue: RescueDto }) {
             {t("budget.transferAction")}
           </PrimaryButton>
         </div>
+        {transferError !== null ? <Alert>{transferError}</Alert> : null}
       </form>
 
       <form className="flex flex-col gap-4" onSubmit={saveBaseline}>
@@ -140,9 +149,8 @@ function RescueCard({ rescue }: { rescue: RescueDto }) {
             {t("budget.baselineAction")}
           </SecondaryButton>
         </div>
+        {baselineError !== null ? <Alert>{baselineError}</Alert> : null}
       </form>
-
-      {error !== null ? <Alert>{error}</Alert> : null}
     </Card>
   );
 }

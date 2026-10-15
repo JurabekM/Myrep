@@ -406,7 +406,7 @@ pub fn set_baseline_period(
     let period = period_of(&ctx, ctx.today)?;
     let chosen = period_of(&ctx, parse_date(period_start)?)?;
     if chosen.start >= period.start {
-        return Err(DomainError::InvalidDay.into());
+        return Err(DomainError::BaselineNotPast.into());
     }
     RescueRepo::new(db.connection()).set_setting(
         &ctx.household.id,
@@ -485,7 +485,7 @@ mod tests {
         let db = database_with_pin();
         assert!(matches!(
             set_baseline_period(&db, NOW, "2026-10-01"),
-            Err(SessionError::Domain(DomainError::InvalidDay))
+            Err(SessionError::Domain(DomainError::BaselineNotPast))
         ));
         let view = set_baseline_period(&db, NOW, "2026-09-01").expect("tanlandi");
         assert_eq!(view.rescue.baseline_start, None);

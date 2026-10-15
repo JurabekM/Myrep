@@ -73,7 +73,11 @@
     "rescueExceedsAvailable": "O'tkazish qutqarilgan summadan katta",
     "envelopeWeekClosed": "Konvert bu hafta allaqachon yopilgan",
     "subscriptionCancelled": "Obuna allaqachon bekor qilingan",
+    "baselineNotPast": "Bazaviy davr joriy davrdan oldingi davr boʻlishi kerak",
     "generic": "Xatolik yuz berdi. Qayta urinib koʻring yoki ilovani qayta ishga tushiring.",
+    "pageCrashTitle": "Bu sahifa ochilmadi",
+    "pageCrashBody": "Sahifani koʻrsatishda xatolik yuz berdi. Maʼlumotlaringiz saqlangan. Qayta urinib koʻring yoki boshqa boʻlimga oʻting.",
+    "pageCrashRetry": "Qayta urinish",
     "reasonRequired": "Sabab kiritilishi shart.",
     "amountNotPositive": "Summa noldan katta boʻlishi kerak.",
     "insufficientBalance": "«Kelajagim»da mablagʻ yetarli emas.",
@@ -204,6 +208,7 @@
       "empty": "Hali yozuv yoʻq.",
       "initial": "Boshlangʻich balans",
       "share": "Daromaddan ulush",
+      "rescue": "Qutqarilgan puldan",
       "withdrawal": "Pul olish"
     }
   },

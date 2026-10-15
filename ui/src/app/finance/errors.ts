@@ -32,6 +32,7 @@ export const RULE_ERROR_KEYS = {
   RESCUE_EXCEEDS_AVAILABLE: "errors.rescueExceedsAvailable",
   ENVELOPE_WEEK_CLOSED: "errors.envelopeWeekClosed",
   SUBSCRIPTION_CANCELLED: "errors.subscriptionCancelled",
+  BASELINE_NOT_PAST: "errors.baselineNotPast",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

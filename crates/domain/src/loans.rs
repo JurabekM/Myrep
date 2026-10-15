@@ -4,7 +4,7 @@
 //! * Reja summasi qarzga teng bo'lishi shart (foizsiz qarz — «qarzi hasana» standart).
 //! * Bergan qarz ([`Receivable`]) da foiz maydoni yo'q — tuzilmaning o'zi foizni taqiqlaydi.
 //! * [`borrow_check`] — qarz oldidan oylik yukni daromadga nisbatan baholaydi. Chegaralar — mahsulot qarori
-//!   (OPEN_QUESTIONS, 45-band).
+//!   (OPEN_QUESTIONS, «Hal qilingan»).
 
 use money::{Money, round_half_up_div};
 use time::Date;

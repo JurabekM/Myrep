@@ -74,6 +74,8 @@ export function Field({
       </label>
       <input
         id={id}
+        // Moliyaviy maydonlarda brauzer avtoto'ldirishi yo'q: eski summa taklifi tugmalarni yopib qo'yadi.
+        autoComplete="off"
         {...input}
         className={`h-10 rounded-lg border border-border bg-app px-3 text-text outline-none transition-colors focus:border-accent disabled:opacity-50 ${className}`}
       />

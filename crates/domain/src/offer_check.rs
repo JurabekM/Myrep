@@ -1,10 +1,13 @@
 //! «Kafolatlangan foyda» detektori (SPEC 2E.5, DESKTOP_PROMPT D13): taklifni tekshiruv ro'yxati bo'yicha baholash.
 //!
 //! Natija — yashil / sariq / qizil; har bir bayroq izohlanadi.
-//! Qoida (mahsulot qarori, OPEN_QUESTIONS 46-band):
+//! Qoida (mahsulot qarori, OPEN_QUESTIONS, «Hal qilingan»):
 //! * QIZIL — foyda kafolatlangan YOKI yangi a'zo jalb qilish talab qilinadi (piramida belgisi);
 //! * SARIQ — shoshiltirish bor, yozma shartnoma yo'q, real mol yoki ish yo'q, yoki zarar mumkin emas deyilmoqda;
 //! * YASHIL — yuqoridagilarning hech biri yo'q.
+
+/// Shuncha (yoki ko'proq) sariq bayroq yig'ilsa — natija qizil (OPEN_QUESTIONS, «Hal qilingan»).
+pub const YELLOW_FLAGS_FOR_RED: usize = 3;
 
 /// Tekshiruv ro'yxati javoblari (`true` — shu belgi bor).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,7 +93,8 @@ pub fn offer_check(answers: &OfferAnswers) -> (OfferVerdict, Vec<Flag>) {
             red: false,
         });
     }
-    let verdict = if flags.iter().any(|flag| flag.red) {
+    // Uch va undan ko'p sariq bayroq ham qizil: ehtiyotkorlik belgilari yig'ilsa, bu endi tasodif emas.
+    let verdict = if flags.iter().any(|flag| flag.red) || flags.len() >= YELLOW_FLAGS_FOR_RED {
         OfferVerdict::Red
     } else if flags.is_empty() {
         OfferVerdict::Green
@@ -132,6 +136,20 @@ mod tests {
             ..clean()
         };
         assert_eq!(offer_check(&pyramid).0, OfferVerdict::Red);
+    }
+
+    #[test]
+    fn uch_sariq_bayroq_qizil_boladi() {
+        let piled = OfferAnswers {
+            rush_pressure: true,
+            written_contract: false,
+            real_goods_or_work: false,
+            ..clean()
+        };
+        let (verdict, flags) = offer_check(&piled);
+        assert_eq!(flags.len(), 3);
+        assert!(flags.iter().all(|flag| !flag.red));
+        assert_eq!(verdict, OfferVerdict::Red);
     }
 
     #[test]

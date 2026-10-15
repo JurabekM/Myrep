@@ -11,6 +11,7 @@ import { ObligationsPage } from "./pages/ObligationsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { VaultPage } from "./pages/VaultPage";
 import { WhoseMoneyPage } from "./pages/WhoseMoneyPage";
+import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import { QuickEntry } from "./finance/QuickEntry";
 import { Sidebar } from "./Sidebar";
 import type { PageId } from "./navigation";
@@ -53,7 +54,9 @@ export function AppShell() {
         <div className="flex min-w-0 flex-1 flex-col">
           <main id="main" className="min-h-0 flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-3xl px-8 py-10">
-              <CurrentPage page={page} />
+              <PageErrorBoundary resetKey={page}>
+                <CurrentPage page={page} />
+              </PageErrorBoundary>
             </div>
           </main>
           <footer className="border-t border-border px-8 py-2.5 text-xs text-subtle">
