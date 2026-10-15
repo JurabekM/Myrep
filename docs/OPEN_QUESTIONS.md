@@ -68,3 +68,5 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 - **Juma shirinligi bildirishnomasi (D6 davomi).** `tauri-plugin-notification` orqali, ilova ochiq va qulfsiz bo'lganda, ritual kuni kuniga bir marta; ishga tushganda ham tekshiriladi. Windows'da toast ko'rinishi qo'lda tasdiqlanmagan. _(38-band)_
 - **A'zo PIN'ini almashtirish xavfsizligi (D6, qaror: 2026-10-15).** PIN o'zgartirish joriy PIN'ni talab qiladi; faqat PIN egasi (kattaning o'zi) almashtira oladi. Noto'g'ri joriy PIN urinishlari ham kutish qoidasiga kiradi. A'zolarni tahrirlash/o'chirish hali yo'q. _(39-band)_
 - **Chegarani o'zgartirish rozilikni bekor qiladi (D6, qaror: 2026-10-15).** Yangi chegara — yangi rozilik: hammasi qayta PIN kiritadi. Shunday qoldi. _(40-band)_
+
+**44. Kelishuv ustasi va imzolar (D8A).** 9 savol ustasi (UI), jonli PDF preview, imzolash (sichqoncha/pero/skan), oral kelishuv yozuvi va kelishuv PDF snapshot testi hali yo'q. Domen (`domain::agreement`, `domain::journal`) va saqlash (sxema v8) tayyor. Tauri command qatlami ham keyingi bosqichda. _Kerak: D8A ustasi (UI) — alohida vazifa._

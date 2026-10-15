@@ -1,0 +1,1346 @@
+{
+ "suite": "agreement_completeness",
+ "version": 1,
+ "description": "9 savol (SPEC 2F.2) → {complete, missing: savol raqamlari, errors: kodlar}. answers — AgreementAnswers JSON; status: savol → {state, reason}",
+ "cases": [
+  {
+   "id": "ac-001",
+   "description": "Toʻliq musharaka — 9/9",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": true,
+    "missing": [],
+    "errors": []
+   }
+  },
+  {
+   "id": "ac-002",
+   "description": "Egasiz («hamma») vazifa",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": null,
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     3
+    ],
+    "errors": [
+     "DUTY_WITHOUT_OWNER"
+    ]
+   }
+  },
+  {
+   "id": "ac-003",
+   "description": "«Bajarilmasa» bandisiz vazifa",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": " "
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     3
+    ],
+    "errors": [
+     "DUTY_WITHOUT_BREACH_CLAUSE"
+    ]
+   }
+  },
+  {
+   "id": "ac-004",
+   "description": "Hakam — tomonlardan biri",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "dilshod rahimov",
+      "role": ""
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     8
+    ],
+    "errors": [
+     "ARBITER_IS_PARTY"
+    ]
+   }
+  },
+  {
+   "id": "ac-005",
+   "description": "«Tegishli emas» izohsiz",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {
+      "exitClause": {
+       "state": "notApplicable",
+       "reason": ""
+      }
+     },
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     7
+    ],
+    "errors": [
+     "NA_REASON_REQUIRED"
+    ]
+   }
+  },
+  {
+   "id": "ac-006",
+   "description": "Sheriklikda qatʼiy summa",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {},
+      "fixedAmount": {
+       "minor": "50000000",
+       "currency": "UZS"
+      },
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     4
+    ],
+    "errors": [
+     "GUARANTEED_RETURN_FORBIDDEN"
+    ]
+   }
+  },
+  {
+   "id": "ac-007",
+   "description": "Ulushlar yigʻindisi 90 %",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 6000,
+       "P2": 3000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     4
+    ],
+    "errors": [
+     "PROFIT_SHARES_NOT_100"
+    ]
+   }
+  },
+  {
+   "id": "ac-008",
+   "description": "Bitta tomon",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 10000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     1
+    ],
+    "errors": [
+     "PARTIES_MIN_2"
+    ]
+   }
+  },
+  {
+   "id": "ac-009",
+   "description": "Ikkinchi tomon hissasiz",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     2
+    ],
+    "errors": [
+     "CONTRIBUTION_MISSING"
+    ]
+   }
+  },
+  {
+   "id": "ac-010",
+   "description": "Boʻsh kelishuv",
+   "input": {
+    "type": "OTHER",
+    "answers": {}
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "errors": []
+   }
+  },
+  {
+   "id": "ac-011",
+   "description": "LOAN: 3-savol — jadval, 4–5 — «foiz yoʻq» (avtomatik)",
+   "input": {
+    "type": "LOAN",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [],
+     "profit": {
+      "shares": {},
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    },
+    "hasSchedule": true
+   },
+   "expected": {
+    "complete": true,
+    "missing": [],
+    "errors": []
+   }
+  },
+  {
+   "id": "ac-012",
+   "description": "LOAN jadvalsiz — 3-savol ochiq",
+   "input": {
+    "type": "LOAN",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [],
+     "profit": {
+      "shares": {},
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     3
+    ],
+    "errors": []
+   }
+  },
+  {
+   "id": "ac-013",
+   "description": "FAMILY: hakam ixtiyoriy, 4–5 izohli «tegishli emas»",
+   "input": {
+    "type": "FAMILY",
+    "answers": {
+     "status": {
+      "profitRule": {
+       "state": "notApplicable",
+       "reason": "Oilaviy kelishuv — foyda yoʻq"
+      },
+      "lossRule": {
+       "state": "notApplicable",
+       "reason": "Oilaviy kelishuv — zarar yoʻq"
+      }
+     },
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {},
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": null,
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": true,
+    "missing": [],
+    "errors": []
+   }
+  },
+  {
+   "id": "ac-014",
+   "description": "Sheriklikda foyda qoidasini «tegishli emas» deb boʻlmaydi",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {
+      "profitRule": {
+       "state": "notApplicable",
+       "reason": "kerak emas"
+      }
+     },
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 30
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": false,
+    "missing": [
+     4
+    ],
+    "errors": []
+   }
+  },
+  {
+   "id": "ac-015",
+   "description": "Koʻrik 3 oyda bir — faqat ogohlantirish",
+   "input": {
+    "type": "PARTNERSHIP",
+    "answers": {
+     "status": {},
+     "parties": [
+      {
+       "id": "P1",
+       "name": "Anvar Karimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": true
+      },
+      {
+       "id": "P2",
+       "name": "Dilshod Rahimov",
+       "role": "sherik",
+       "relation": "",
+       "isMe": false
+      }
+     ],
+     "contributions": [
+      {
+       "partyId": "P1",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      },
+      {
+       "partyId": "P2",
+       "kind": "money",
+       "amount": {
+        "minor": "300000000",
+        "currency": "UZS"
+       },
+       "description": "naqd"
+      }
+     ],
+     "duties": [
+      {
+       "id": "d1",
+       "title": "Buyurtmalarni yetkazish",
+       "ownerPartyId": "P1",
+       "breachClause": "1 kun ichida xabar beradi va oʻrniga yechim topadi"
+      },
+      {
+       "id": "d2",
+       "title": "Telegram botni yuritish",
+       "ownerPartyId": "P2",
+       "breachClause": "1 kun ichida xabar beradi va oʻrnini toʻldiradi"
+      }
+     ],
+     "profit": {
+      "shares": {
+       "P1": 5000,
+       "P2": 5000
+      },
+      "fixedAmount": null,
+      "text": ""
+     },
+     "lossText": "Zarar kapitalga mutanosib (musharaka)",
+     "custody": {
+      "where": "Umumiy karta",
+      "keeperPartyId": "P1",
+      "keeperDeviceId": null,
+      "reviewEveryDays": 90
+     },
+     "exit": {
+      "noticeDays": 30,
+      "valuation": "Oxirgi koʻrik boʻyicha",
+      "payout": "3 oy ichida",
+      "assets": ""
+     },
+     "arbiter": {
+      "name": "Sobir hoji",
+      "role": "mahalla oqsoqoli"
+     },
+     "term": {
+      "termMonths": 12,
+      "reviewDate": "2027-10-01"
+     },
+     "witnesses": []
+    }
+   },
+   "expected": {
+    "complete": true,
+    "missing": [],
+    "errors": []
+   }
+  }
+ ]
+}

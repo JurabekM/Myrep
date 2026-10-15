@@ -3,6 +3,7 @@
 //! Baza fayli kalitsiz ochilmaydi (SQLCipher). Kalit `security` crate'idan keladi; bu crate uni
 //! faqat ochish paytida ishlatadi va saqlamaydi (DESKTOP_PROMPT.md 6.2).
 
+mod agreements;
 mod budget;
 mod db;
 mod error;
@@ -12,6 +13,7 @@ mod progress;
 mod repo;
 pub mod schema;
 
+pub use agreements::{AgreementRepo, AgreementRow, JournalRepo, StoredEntry};
 pub use budget::{EnvelopeRepo, RescueRepo, SubscriptionRepo, transfer_to_vault};
 pub use db::Database;
 pub use error::StorageError;

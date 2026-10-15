@@ -438,6 +438,54 @@ pub const SCHEMA_V7: &str = r#"
 UPDATE vault_transactions SET vault_type = 'QOROVUL' WHERE vault_type IS NULL;
 "#;
 
+/// Sxema v8 (D8A, kelishuv dvigateli): kelishuvlar va append-only jurnal (SPEC 2F.6).
+/// Jurnal yozuvlari faqat qo'shiladi: `UPDATE` va `DELETE` triggerlar bilan rad etiladi.
+/// Tuzatish — yangi `CORRECTION` yozuvi. Xesh zanjiri domen tomonida (`domain::journal`) hisoblanadi.
+pub const SCHEMA_V8: &str = r#"
+CREATE TABLE agreements (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    type TEXT NOT NULL CHECK (type IN ('LOAN', 'PARTNERSHIP', 'FAMILY', 'OTHER')),
+    title TEXT NOT NULL CHECK (length(trim(title)) > 0),
+    status TEXT NOT NULL CHECK (status IN ('DRAFT', 'SIGNED', 'IN_DISPUTE', 'ENDED')),
+    version INTEGER NOT NULL CHECK (version >= 1),
+    answers_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX agreements_by_household ON agreements (household_id);
+
+CREATE TABLE journal_entries (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    seq INTEGER NOT NULL CHECK (seq >= 1),
+    kind TEXT NOT NULL CHECK (kind IN ('OPENING_BALANCE', 'CONTRIBUTION', 'PROFIT_DISTRIBUTION', 'LOAN_PAYMENT', 'CORRECTION')),
+    party_id TEXT NOT NULL CHECK (length(trim(party_id)) > 0),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    entry_date TEXT NOT NULL,
+    note TEXT,
+    prev_hash TEXT NOT NULL CHECK (length(prev_hash) = 64),
+    hash TEXT NOT NULL CHECK (length(hash) = 64),
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (agreement_id, seq)
+) STRICT;
+
+CREATE TRIGGER journal_entries_no_update BEFORE UPDATE ON journal_entries
+BEGIN
+    SELECT RAISE(ABORT, 'journal is append-only');
+END;
+
+CREATE TRIGGER journal_entries_no_delete BEFORE DELETE ON journal_entries
+BEGIN
+    SELECT RAISE(ABORT, 'journal is append-only');
+END;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -448,6 +496,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V5),
         M::up(SCHEMA_V6),
         M::up(SCHEMA_V7),
+        M::up(SCHEMA_V8),
     ])
 }
 
@@ -477,4 +526,6 @@ pub const TABLES: &[&str] = &[
     "envelopes",
     "savings_rescues",
     "household_settings",
+    "agreements",
+    "journal_entries",
 ];

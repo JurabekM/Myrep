@@ -4,6 +4,7 @@
 //! Barcha entitylar umumiy konvensiyalarga ega: UUIDv7 identifikator, UTC vaqt, mantiqiy o'chirish
 //! va versiya raqami (DESKTOP_PROMPT.md 6.1).
 
+pub mod agreement;
 pub mod calendar;
 pub mod category;
 pub mod content;
@@ -16,6 +17,7 @@ pub mod habit;
 pub mod income;
 pub mod income_source;
 pub mod inflation;
+pub mod journal;
 pub mod ledger;
 pub mod limit;
 pub mod necessity;

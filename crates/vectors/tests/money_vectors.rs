@@ -14,10 +14,12 @@ use vectors::{
 /// Runner yozilgan suite'lar. Yangi vektor fayli qo'shilsa, shu ro'yxatga ham qo'shilishi shart:
 /// `har_bir_vektor_fayli_runner_bilan_qoplangan` testi buni talab qiladi.
 const COVERED_SUITES: &[&str] = &[
+    "agreement_completeness",
     "allocate",
     "emergency_target",
     "fx_convert",
     "income_share",
+    "journal_chain",
     "money_format",
     "money_parse",
     "percent_of",

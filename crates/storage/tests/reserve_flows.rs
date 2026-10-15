@@ -11,7 +11,7 @@ const ENTRY_1: &str = "0192f100-0000-7000-8000-0000000000c1";
 const ENTRY_2: &str = "0192f100-0000-7000-8000-0000000000c2";
 
 #[test]
-fn v6_dan_v7_ga_otganda_qorovul_turi_tiklanadi_va_balans_saqlanadi() {
+fn v6_dan_joriy_versiyaga_otganda_qorovul_turi_tiklanadi_va_balans_saqlanadi() {
     let mut conn = Connection::open_in_memory().expect("xotira");
     Migrations::new(vec![
         M::up(SCHEMA_V1),
@@ -56,7 +56,9 @@ fn v6_dan_v7_ga_otganda_qorovul_turi_tiklanadi_va_balans_saqlanadi() {
         )
         .expect("balans");
 
-    schema::migrations().to_latest(&mut conn).expect("v7 gacha");
+    schema::migrations()
+        .to_latest(&mut conn)
+        .expect("joriy versiya gacha");
 
     let types: Vec<Option<String>> = conn
         .prepare("SELECT vault_type FROM vault_transactions ORDER BY id")
@@ -82,5 +84,5 @@ fn v6_dan_v7_ga_otganda_qorovul_turi_tiklanadi_va_balans_saqlanadi() {
     let version: i64 = conn
         .query_row("PRAGMA user_version", [], |row| row.get(0))
         .expect("versiya");
-    assert_eq!(version, 7);
+    assert_eq!(version, 8);
 }

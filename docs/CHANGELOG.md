@@ -4,6 +4,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D8A — Kelishuv dvigateli va append-only jurnal (2026-10-15)
+
+**Qo'shildi**
+
+- `domain::journal`: `JournalEntry`, JCS (RFC 8785) kanonizatsiya — qo'lda, kalitlar tartibi qat'iy, pul — satr; `hash_n = SHA256(hash_{n-1} + "\n" + JCS)`, genesis — 64 nol; `verify_chain` birinchi buzilgan yozuvni 1 dan boshlab qaytaradi (`journal_chain.json`: 3 xesh + buzilish).
+- `domain::agreement`: `AgreementType`, `AgreementStatus`, 9 savol bo'yicha `completeness` (`agreement_completeness.json`, 15 vektor). Tur farqi: LOAN — 3-savol jadval (`hasSchedule`), 4–5 avtomatik; FAMILY — hakam ixtiyoriy, 4–5 izohli «tegishli emas».
+- Sxema v8: `agreements` (versiyali), `journal_entries` (`seq`, `prev_hash`, `hash`), `BEFORE UPDATE` va `BEFORE DELETE` triggerlari — `RAISE(ABORT, 'journal is append-only')`. Tuzatish — `CORRECTION` yozuvi.
+- Storage: `AgreementRepo` (versiya bo'yicha optimistik yangilash, `VersionConflict`), `JournalRepo` (`append` — bitta tranzaksiyada, `list`, `verify`).
+- Vektor fayllari mobil bilan baytma-bayt (`SHA256SUMS` ga qo'shildi).
+
+**Qarorlar va sabablar**
+
+- JCS domen darajasida qo'lda: `serde_json` ni domenga tortmaslik uchun. Qochlar RFC 8785 bo'yicha (`"`, `\`, boshqaruv belgilari; qolgani UTF-8). Izoh yo'q bo'lsa `note` kaliti yozilmaydi.
+- `verify` ikki darajali natija: ichki — zanjir buzilishi, tashqi — baza xatosi. Baza xatosi «zanjir to'g'ri» deb o'qilmaydi.
+- `prev_hash` jadvalda ham saqlanadi: tekshiruv qayta hisoblash bilan birga, DB'dagi zanjirni ko'rish uchun.
+
+**Ma'lum cheklovlar (keyingi ishga qoldirildi)**
+
+- 9 savol ustasi (UI), jonli PDF preview, imzolar (sichqoncha/pero/skan), oral kelishuv yozuvi, kelishuv PDF snapshot testi — qo'shilmadi. Domen va saqlash tayyor.
+- Tauri command va DTO qatlami kelishuvlar uchun hali yo'q (OPEN_QUESTIONS, 44).
+- `DutyIncident` (bajara olmayman xabari) — D13A bilan birga.
+
 ### D8 — Qorovul, zaxira maqsadi, shaxsiy inflyatsiya, tayyorgarlik darvozasi (2026-10-15)
 
 **Qo'shildi**
