@@ -475,6 +475,116 @@ impl BarakaCore {
             .ceremony_estimate_pdf(&space_id, &ceremony_id)
     }
 
+    // U11: sheriklik (mudoraba / musharaka), shartnoma, imzolar, darvoza.
+    pub fn partnerships(&self, space_id: String) -> Result<Vec<PartnershipSummaryDto>, AppError> {
+        self.session.app()?.partnerships(&space_id)
+    }
+
+    pub fn partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session.app()?.partnership(&space_id, &partnership_id)
+    }
+
+    pub fn readiness_gate(&self, space_id: String) -> Result<GateDto, AppError> {
+        self.session.app()?.readiness_gate(&space_id)
+    }
+
+    pub fn create_partnership(
+        &self,
+        space_id: String,
+        input: PartnershipInput,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session.app()?.create_partnership(&space_id, input)
+    }
+
+    pub fn update_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: PartnershipInput,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .update_partnership(&space_id, &partnership_id, input)
+    }
+
+    /// Imzo shu qurilmada chiziladi: nuqtalar 0..=1000 × 0..=400 maydonda.
+    pub fn sign_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: SignInput,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .sign_partnership(&space_id, &partnership_id, input)
+    }
+
+    pub fn acknowledge_not_debt(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .acknowledge_not_debt(&space_id, &partnership_id)
+    }
+
+    pub fn consent_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        member_id: String,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .consent_partnership(&space_id, &partnership_id, &member_id)
+    }
+
+    pub fn activate_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .activate_partnership(&space_id, &partnership_id)
+    }
+
+    pub fn close_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .close_partnership(&space_id, &partnership_id)
+    }
+
+    pub fn delete_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<(), AppError> {
+        self.session
+            .app()?
+            .delete_partnership(&space_id, &partnership_id)
+    }
+
+    /// Sheriklik shartnomasi PDF baytlari.
+    pub fn partnership_pdf(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session
+            .app()?
+            .partnership_pdf(&space_id, &partnership_id)
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

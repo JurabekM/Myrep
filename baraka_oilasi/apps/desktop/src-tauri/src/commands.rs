@@ -646,3 +646,150 @@ pub async fn export_loan_receipt(
     let pdf = state.session.app()?.render_loan_receipt(input)?;
     save_pdf(&handle, pdf, "tilxat.pdf")
 }
+
+// ---- U11: sheriklik ----
+
+#[tauri::command]
+#[specta::specta]
+pub async fn partnerships(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<PartnershipSummaryDto>> {
+    state.session.app()?.partnerships(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<PartnershipDto> {
+    state.session.app()?.partnership(&space_id, &partnership_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn readiness_gate(state: State<'_, Desktop>, space_id: String) -> R<GateDto> {
+    state.session.app()?.readiness_gate(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn create_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: PartnershipInput,
+) -> R<PartnershipDto> {
+    state.session.app()?.create_partnership(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: PartnershipInput,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .update_partnership(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn sign_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: SignInput,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .sign_partnership(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn acknowledge_not_debt(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .acknowledge_not_debt(&space_id, &partnership_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn consent_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    member_id: String,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .consent_partnership(&space_id, &partnership_id, &member_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn activate_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .activate_partnership(&space_id, &partnership_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn close_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .close_partnership(&space_id, &partnership_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<()> {
+    state
+        .session
+        .app()?
+        .delete_partnership(&space_id, &partnership_id)
+}
+
+/// Sheriklik shartnomasi PDF'i (joriy versiya va uning imzolari) — «Saqlash» oynasi orqali.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_partnership_contract(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .partnership_pdf(&space_id, &partnership_id)?;
+    save_pdf(&handle, pdf, "shartnoma.pdf")
+}

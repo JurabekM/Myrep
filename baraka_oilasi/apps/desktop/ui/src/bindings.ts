@@ -70,6 +70,19 @@ export const commands = {
 	addGoalContribution: (spaceId: string, goalId: string, input: NewGoalContributionInput) => typedError<GoalDto, AppError>(__TAURI_INVOKE("add_goal_contribution", { spaceId, goalId, input })),
 	/**  Marosim smetasini PDF qilib «Saqlash» oynasi orqali yozadi. */
 	exportCeremonyEstimate: (spaceId: string, ceremonyId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_ceremony_estimate", { spaceId, ceremonyId })),
+	partnerships: (spaceId: string) => typedError<PartnershipSummaryDto[], AppError>(__TAURI_INVOKE("partnerships", { spaceId })),
+	partnership: (spaceId: string, partnershipId: string) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("partnership", { spaceId, partnershipId })),
+	readinessGate: (spaceId: string) => typedError<GateDto, AppError>(__TAURI_INVOKE("readiness_gate", { spaceId })),
+	createPartnership: (spaceId: string, input: PartnershipInput) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("create_partnership", { spaceId, input })),
+	updatePartnership: (spaceId: string, partnershipId: string, input: PartnershipInput) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("update_partnership", { spaceId, partnershipId, input })),
+	signPartnership: (spaceId: string, partnershipId: string, input: SignInput) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("sign_partnership", { spaceId, partnershipId, input })),
+	acknowledgeNotDebt: (spaceId: string, partnershipId: string) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("acknowledge_not_debt", { spaceId, partnershipId })),
+	consentPartnership: (spaceId: string, partnershipId: string, memberId: string) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("consent_partnership", { spaceId, partnershipId, memberId })),
+	activatePartnership: (spaceId: string, partnershipId: string) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("activate_partnership", { spaceId, partnershipId })),
+	closePartnership: (spaceId: string, partnershipId: string) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("close_partnership", { spaceId, partnershipId })),
+	deletePartnership: (spaceId: string, partnershipId: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_partnership", { spaceId, partnershipId })),
+	/**  Sheriklik shartnomasi PDF'i (joriy versiya va uning imzolari) — «Saqlash» oynasi orqali. */
+	exportPartnershipContract: (spaceId: string, partnershipId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_partnership_contract", { spaceId, partnershipId })),
 };
 
 /** Events */
@@ -190,6 +203,58 @@ export type BudgetModeInput = {
 	savingsBp: number,
 };
 
+export type BuyoutDto = {
+	sellerPartyId: string,
+	buyerPartyId: string,
+	units: number,
+	unitsPerPeriod: number,
+	periodMonths: number,
+	start: string,
+	expectedProfit: MoneyDto | null,
+	rows: BuyoutRowDto[],
+	endDate: string | null,
+	buyerProfit: MoneyDto | null,
+	/**  Jadval tuzilmadi: `STAKE_EXCEEDS_CAPITAL`, `INVALID_UNITS` ... */
+	error: string | null,
+};
+
+export type BuyoutRowDto = {
+	period: number,
+	date: string,
+	units: number,
+	payment: MoneyDto,
+	remaining: MoneyDto,
+	sellerBp: number,
+	sellerPercent: string,
+	buyerBp: number,
+	buyerPercent: string,
+	exceedsShare: boolean,
+};
+
+export type BuyoutTermsInput = {
+	sellerPartyId: string,
+	buyerPartyId: string,
+	units: number,
+	unitsPerPeriod: number,
+	periodMonths: number,
+	start: string,
+	/**  Davr uchun taxminiy sof foyda (to'lov ulushdan oshadimi — ko'rsatish uchun). */
+	expectedProfit: string | null,
+};
+
+export type CapitalItemDto = {
+	kind: string,
+	description: string,
+	amount: MoneyDto,
+};
+
+export type CapitalItemInput = {
+	/**  `MONEY` yoki `EQUIPMENT` (narxlangan uskuna). */
+	kind: string,
+	description: string,
+	amount: string,
+};
+
 export type CategoryDto = {
 	id: string,
 	/**  i18n kaliti; `customName` bo'lsa, UI shuni ko'rsatadi. */
@@ -253,6 +318,16 @@ export type ChangeEvent = {
 
 /**  To'liqlik natijasi: «N / 9», javobsiz savollar raqamlari, xatolar va ogohlantirishlar. */
 export type Completeness = {
+	answered: number,
+	complete: boolean,
+	canSign: boolean,
+	missing: number[],
+	errors: string[],
+	warnings: string[],
+};
+
+/**  9 savol to'liqligi + sheriklik qoidalari (birlashtirilgan). */
+export type ContractCheckDto = {
 	answered: number,
 	complete: boolean,
 	canSign: boolean,
@@ -383,6 +458,27 @@ export type ExpenseDto = {
 	necessity: string | null,
 	occurredOn: string,
 	fundedByDebt: boolean,
+};
+
+export type FamilyConsentDto = {
+	adults: SignoffDto[],
+	/**  «Bu qarz emas» tushuntirishi o'qilgan sana. */
+	notDebtAckOn: string | null,
+	complete: boolean,
+};
+
+/**  Tayyorgarlik darvozasi (uy/SPEC 2C.4) — faqat kapital kirituvchiga qo'llanadi. */
+export type GateDto = {
+	open: boolean,
+	/**  `EMERGENCY_FUND_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`, `INTEREST_DEBT_ACTIVE`. */
+	reasons: string[],
+	/**  Necha oylik qorovul pul: `1,4`; xarajat tarixi bo'lmasa — `None`. */
+	coverageMonths: string | null,
+	requiredMonths: number,
+	balance: MoneyDto,
+	monthlyEssentials: MoneyDto | null,
+	hasInterestDebt: boolean,
+	hasPayoffPlan: boolean,
 };
 
 export type GoalContributionDto = {
@@ -666,6 +762,108 @@ export type NewSellableItemInput = {
 	currency: string,
 };
 
+export type PartnerDto = {
+	id: string,
+	fullName: string,
+	role: string,
+	profitShareBp: number,
+	/**  `50%`. */
+	profitShare: string,
+	isMe: boolean,
+	capitalItems: CapitalItemDto[],
+	capital: MoneyDto,
+	/**  Zarar ulushi (`75%`); shartlarda xato bo'lsa — `None`. */
+	lossShare: string | null,
+};
+
+export type PartnerInput = {
+	/**  Shartnoma ichidagi barqaror belgi (`P1`, `P2`) — vazifa, hisob va buyout shunga bog'lanadi. */
+	id: string,
+	fullName: string,
+	/**  `CAPITAL_PROVIDER`, `WORKER`, `BOTH`. */
+	role: string,
+	profitShareBp: number,
+	/**  Bu tomon — shu oila (darvoza va oilaviy rozilik shunga qarab). */
+	isMe: boolean,
+	capital: CapitalItemInput[],
+};
+
+export type PartnershipDto = {
+	id: string,
+	agreementId: string,
+	kind: string,
+	title: string,
+	/**  `DRAFT`, `SIGNED`, `ACTIVE`, `CLOSED`. */
+	status: string,
+	currency: string,
+	parties: PartnerDto[],
+	capitalTotal: MoneyDto,
+	duties: Answer<Duty[]>,
+	negligenceClause: string | null,
+	custody: Answer<Custody>,
+	exitClause: Answer<ExitClause>,
+	arbiter: Answer<Arbiter>,
+	term: Answer<Term>,
+	witnesses: string[],
+	buyout: BuyoutDto | null,
+	check: ContractCheckDto,
+	/**  Joriy matnga mos versiya (`None` — matn hali imzolashga berilmagan yoki o'zgargan). */
+	version: number | null,
+	/**  Kuchdagi (to'liq imzolangan) versiya. */
+	signedVersion: number | null,
+	/**  Faol sheriklik matni o'zgargan — yangi versiya imzolanmaguncha eski versiya kuchda. */
+	amendmentPending: boolean,
+	signers: SignerDto[],
+	allSigned: boolean,
+	meProvidesCapital: boolean,
+	meReceivesCapital: boolean,
+	gate: GateDto | null,
+	consent: FamilyConsentDto | null,
+	canActivate: boolean,
+	/**
+	 *  `NOT_SIGNED`, `ME_PARTY_REQUIRED`, `GATE_CLOSED`, `NOT_DEBT_ACK_REQUIRED`,
+	 *  `FAMILY_CONSENT_REQUIRED`, `ALREADY_ACTIVE`, `PARTNERSHIP_CLOSED`.
+	 */
+	activateBlocker: string | null,
+	history: VersionInfoDto[],
+	/**  Shablon tekshiruvi: `PENDING` — yurist va ulamo hali ko'rmagan. */
+	templateReview: string,
+	/**  Joriy matn xeshining qisqa kodi. */
+	hashCode: string,
+};
+
+export type PartnershipInput = {
+	/**  `MUDARABA` yoki `MUSHARAKA`. */
+	kind: string,
+	title: string,
+	parties: PartnerInput[],
+	/**
+	 *  Kapital egasiga qat'iy summa urinishi — domen har doim rad etadi
+	 *  (`GUARANTEED_RETURN_FORBIDDEN`: «Bu sheriklik emas — ribo yoki qarz»).
+	 */
+	fixedReturn: string | null,
+	duties: Answer<Duty[]>,
+	/**  Mudoraba: beparvolik yoki shart buzilishi deb nima hisoblanadi. */
+	negligenceClause: string | null,
+	custody: Answer<Custody>,
+	exitClause: Answer<ExitClause>,
+	arbiter: Answer<Arbiter>,
+	term: Answer<Term>,
+	witnesses: string[],
+	buyout: BuyoutTermsInput | null,
+};
+
+export type PartnershipSummaryDto = {
+	id: string,
+	kind: string,
+	title: string,
+	status: string,
+	capitalTotal: MoneyDto,
+	myRole: string | null,
+	signedVersion: number | null,
+	answered: number,
+};
+
 export type Party = {
 	id: string,
 	fullName: string,
@@ -873,6 +1071,22 @@ export type SetupResult = {
 	recoveryCode: string,
 };
 
+export type SignInput = {
+	signerKey: string,
+	strokes: Stroke[],
+};
+
+export type SignerDto = {
+	/**  `party:P1`, `witness:0`, `arbiter`. */
+	key: string,
+	/**  `PARTY`, `WITNESS`, `ARBITER`. */
+	role: string,
+	name: string,
+	signedAt: string | null,
+	/**  Chizilgan imzo (SVG, faqat raqamlardan). */
+	svg: string | null,
+};
+
 export type SignoffDto = {
 	memberId: string,
 	name: string,
@@ -898,6 +1112,9 @@ export type StreakDto = {
 	totalWeeks: number,
 	currentWeekDone: boolean,
 };
+
+/**  Bitta uzluksiz chiziq: `[x, y]` nuqtalar. */
+export type Stroke = ([number, number])[];
 
 export type Term = {
 	/**  `YYYY-MM-DD`; o'tmishda bo'lishi mumkin (og'zaki kelishuvni yozish). */
@@ -926,7 +1143,7 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {
@@ -951,6 +1168,14 @@ export type VaultTxDto = {
 	reason: string,
 	note: string | null,
 	occurredOn: string,
+};
+
+export type VersionInfoDto = {
+	no: number,
+	createdOn: string,
+	signed: number,
+	required: number,
+	inForce: boolean,
 };
 
 /* Tauri Specta runtime */

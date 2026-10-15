@@ -56,6 +56,18 @@ const COMMANDS: &[&str] = &[
     "delete_ceremony",
     "add_goal_contribution",
     "export_ceremony_estimate",
+    "partnerships",
+    "partnership",
+    "readiness_gate",
+    "create_partnership",
+    "update_partnership",
+    "sign_partnership",
+    "acknowledge_not_debt",
+    "consent_partnership",
+    "activate_partnership",
+    "close_partnership",
+    "delete_partnership",
+    "export_partnership_contract",
 ];
 
 fn main() {

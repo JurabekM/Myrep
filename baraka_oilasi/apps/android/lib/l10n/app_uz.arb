@@ -735,5 +735,342 @@
   "error_NOT_ADULT_MEMBER": "Faqat katta oila aʼzosi rozilik beradi",
   "error_NO_SCENARIO_SELECTED": "Stsenariy tanlang",
   "error_INVALID_GUESTS": "Mehmonlar sonini butun son bilan yozing",
-  "error_AMOUNT_NEGATIVE": "Summa manfiy boʻlmaydi"
+  "error_AMOUNT_NEGATIVE": "Summa manfiy boʻlmaydi",
+  "nav_partnerships": "Sheriklik",
+  "mentor_partnerships": "Ot bilan omoch — ikkalasi birga yer haydaydi. Sheriklik qarz ham, sadaqa ham emas: teng huquqli ish. Avval yozamiz, keyin boshlaymiz.",
+  "partnership_title": "Sheriklik",
+  "partnership_new": "Yangi sheriklik",
+  "partnership_intro": "Bir odamning puli bekor yotadi, boshqasining hunari pulsizlikdan bekor turadi. Mudoraba yoki musharaka bilan ular birga ishlaydi: foyda ulush boʻyicha, tavakkal birga. Shartnomani 9 savol boʻyicha yozamiz va shu yerda imzolaymiz.",
+  "partnership_regulatory": "Ilova pul oʻtkazmaydi va sheriklarni bir-biriga tanishtirmaydi. U faqat oʻzaro tanish tomonlar oʻrtasidagi kelishuvni yozish va hisoblash vositasi.",
+  "partnership_empty": "Hali sheriklik yoʻq.",
+  "partnership_back": "Roʻyxat",
+  "partnership_progress": "{n} / 9 savolga javob berildi",
+  "@partnership_progress": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "partnership_steps": "Shartnoma qadamlari",
+  "partnership_versionNo": "Versiya {n}",
+  "@partnership_versionNo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "partnership_newVersion": "Yangi versiya (birinchi imzoda yaratiladi)",
+  "partnership_hashCode": "matn kodi {code}",
+  "@partnership_hashCode": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "partnership_reviewPending": "Bu shablon hali yurist va ulamo tomonidan tekshirilmagan. Muhim kelishuvdan oldin mutaxassisga koʻrsating.",
+  "partnership_amendmentPending": "Matn oʻzgardi. Yangi versiya hamma tomonidan imzolanmaguncha {n}-versiya kuchda qoladi.",
+  "@partnership_amendmentPending": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "partnership_saveNext": "Saqlash va keyingisi",
+  "partnership_saveFirst": "Avval shartnomani saqlang.",
+  "partnership_status_DRAFT": "Qoralama",
+  "partnership_status_SIGNED": "Imzolangan",
+  "partnership_status_ACTIVE": "Faol",
+  "partnership_status_CLOSED": "Yopilgan",
+  "partnership_kind_MUDARABA": "Mudoraba",
+  "partnership_kind_MUSHARAKA": "Musharaka",
+  "partnership_kindHint_MUDARABA": "Kapital bir tomondan, mehnat ikkinchi tomondan. Moliyaviy zarar kapital egasida, mehnat egasi mehnatidan ayriladi.",
+  "partnership_kindHint_MUSHARAKA": "Har ikki tomon kapital (va mehnat) qoʻshadi. Zarar kapitalga mutanosib boʻlinadi.",
+  "partnership_myRole_CAPITAL_PROVIDER": "biz kapital beramiz",
+  "partnership_myRole_WORKER": "biz mehnat qilamiz",
+  "partnership_myRole_BOTH": "biz kapital va mehnat qoʻshamiz",
+  "partnership_step_1": "Kim bilan kim?",
+  "partnership_step_2": "Kim nima qoʻshadi?",
+  "partnership_step_3": "Kim nima qiladi?",
+  "partnership_step_4": "Foyda",
+  "partnership_step_5": "Zarar",
+  "partnership_step_6": "Pul va hisob",
+  "partnership_step_7": "Ajralish va buyout",
+  "partnership_step_8": "Hakam va guvohlar",
+  "partnership_step_9": "Muddat",
+  "partnership_step_10": "Imzolar",
+  "partnership_step_11": "Boshlash",
+  "partnership_q_1": "Kim bilan kim? Tur va tomonlar",
+  "partnership_q_2": "Kim nima qoʻshyapti?",
+  "partnership_q_3": "Kim nima qiladi?",
+  "partnership_q_4": "Foyda qanday boʻlinadi?",
+  "partnership_q_5": "Zarar koʻrilsa nima boʻladi?",
+  "partnership_q_6": "Pul qayerda, hisobni kim yuritadi, ikkinchi tomon qachon koʻradi?",
+  "partnership_q_7": "Qanday ajralib chiqiladi?",
+  "partnership_q_8": "Kelisha olmasak, kim hakam?",
+  "partnership_q_9": "Qachon yangilanadi?",
+  "partnership_mode_ANSWERED": "Javob",
+  "partnership_mode_NOT_APPLICABLE": "Tegishli emas",
+  "partnership_naReason": "Nega tegishli emas? (izoh majburiy)",
+  "partnership_choose": "Tanlang",
+  "partnership_name": "Sheriklik nomi",
+  "partnership_partyName": "{id}: toʻliq ism-sharif",
+  "@partnership_partyName": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "partnership_role": "Roli",
+  "partnership_role_CAPITAL_PROVIDER": "Kapital egasi",
+  "partnership_role_WORKER": "Mehnat egasi",
+  "partnership_role_BOTH": "Kapital va mehnat",
+  "partnership_isMe": "Bu — biz",
+  "partnership_remove": "Olib tashlash",
+  "partnership_addParty": "Tomon qoʻshish",
+  "partnership_laborOnly": "{name} — mehnat va mahorat bilan qatnashadi.",
+  "@partnership_laborOnly": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "partnership_capitalKind": "Turi",
+  "partnership_capital_MONEY": "Pul",
+  "partnership_capital_EQUIPMENT": "Uskuna",
+  "partnership_capitalWhat": "Nima",
+  "partnership_agreedPrice": "Kelishilgan narxi",
+  "partnership_addCapital": "Hissa qoʻshish",
+  "partnership_capitalTotal": "Jami kapital: {amount}",
+  "@partnership_capitalTotal": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "partnership_dutiesHint": "Har bir vazifaga bitta masʼul. «Hamma» deb yozilgan vazifa qabul qilinmaydi: hamma hamma narsani qilsa, hech kim hech narsa qilmaydi.",
+  "partnership_dutyTitle": "Vazifa",
+  "partnership_dutyOwner": "Masʼul",
+  "partnership_breach": "Bajarilmasa nima boʻladi",
+  "partnership_breachPlaceholder": "masalan: 1 kun ichida xabar beradi va oʻrniga yechim topadi",
+  "partnership_addDuty": "Vazifa qoʻshish",
+  "partnership_profitMode_SHARE": "Sof foydadan ulush (foizda)",
+  "partnership_profitMode_FIXED": "Kapital egasiga har oy qatʼiy summa",
+  "partnership_fixedExplain": "Qatʼiy summa yoki oldindan belgilangan daromad tavakkalni bir tomonga yuklaydi. Bunday kelishuv qarz sifatida yoziladi (foizsiz qarz tilxati), sheriklik sifatida emas. Foyda faqat sof foydaning ulushi boʻlishi mumkin.",
+  "partnership_fixedBlocked": "Qatʼiy summa bilan saqlab boʻlmaydi — foyda ulushini tanlang.",
+  "partnership_shareOf": "{name}: foyda ulushi, %",
+  "@partnership_shareOf": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "partnership_shareHint": "Ulushlar yigʻindisi 100% boʻlishi kerak.",
+  "partnership_loss_MUDARABA": "Mudorabada moliyaviy zarar kapital egasining zimmasida; mehnat egasi mehnatidan ayriladi. Zarar mehnat egasiga faqat beparvolik yoki shart buzilishi isbotlansa yuklanadi.",
+  "partnership_loss_MUSHARAKA": "Musharakada zarar har bir tomonning kiritgan kapitaliga mutanosib boʻlinadi.",
+  "partnership_negligence": "Beparvolik yoki shart buzilishi deb nima hisoblanadi",
+  "partnership_custodyWhere": "Pul qayerda turadi",
+  "partnership_keeper": "Hisobni kim yuritadi",
+  "partnership_reviewDays": "Necha kunda bir koʻrib chiqiladi",
+  "partnership_notice": "Oldindan ogohlantirish (kun)",
+  "partnership_valuation": "Ulush qanday baholanadi",
+  "partnership_payout": "Qachon va qanday toʻlanadi",
+  "partnership_assets": "Mol-mulk qanday boʻlinadi",
+  "partnership_buyout": "Bosqichma-bosqich sotib olish (kamayib boruvchi sheriklik)",
+  "partnership_buyoutHint": "Mehnat egasi kapital egasining ulushini foyda ulushidan oz-ozdan sotib oladi va oxirida mustaqil boʻladi.",
+  "partnership_seller": "Ulushini sotuvchi",
+  "partnership_buyer": "Sotib oluvchi",
+  "partnership_units": "Ulush necha qismga boʻlinadi",
+  "partnership_unitsPer": "Har safar necha qism",
+  "partnership_periodMonths": "Necha oyda bir",
+  "partnership_buyoutStart": "Birinchi toʻlov sanasi",
+  "partnership_expectedProfit": "Davr uchun taxminiy sof foyda (ixtiyoriy)",
+  "partnership_buyoutSummary": "{buyer} {seller}ning ulushini {n} bosqichda sotib oladi, oxirgisi — {end}.",
+  "@partnership_buyoutSummary": {
+    "placeholders": {
+      "buyer": {},
+      "end": {},
+      "n": {},
+      "seller": {}
+    }
+  },
+  "partnership_buyerProfit": "Taxminiy foydadan sotib oluvchining ulushi: {amount}",
+  "@partnership_buyerProfit": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "partnership_date": "Sana",
+  "partnership_payment": "Toʻlov",
+  "partnership_exceedsShare": "Belgilangan bosqichlarda toʻlov taxminiy foyda ulushidan katta — qismlarni koʻpaytiring yoki muddatni uzaytiring.",
+  "partnership_buyoutPricing": "Jadval taxminiy: har bir qism sotilgan kuni kelishilgan qiymatda baholanadi, kapitalni toʻliq qaytarish oldindan vaʼda qilinmaydi.",
+  "partnership_arbiter": "Hakam (toʻliq ism)",
+  "partnership_arbiterRole": "Tomonlarga aloqasi",
+  "partnership_arbiterHint": "Hakam tomonlardan biri boʻlmasligi kerak. U ham shartnomani imzolaydi.",
+  "partnership_witnesses": "Guvohlar",
+  "partnership_witnessN": "{n}-guvoh",
+  "@partnership_witnessN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "partnership_addWitness": "Guvoh qoʻshish",
+  "partnership_from": "Boshlanish sanasi",
+  "partnership_months": "Muddat (oy)",
+  "partnership_reviewOn": "Qayta koʻrib chiqish sanasi",
+  "partnership_readyToSign": "9 / 9 — shartnomani imzolash mumkin.",
+  "partnership_signHint": "Har bir tomon, guvoh va hakam shu qurilmada imzo chizadi. Matn oʻzgarsa, yangi versiya yaratiladi va imzolar qayta soʻraladi.",
+  "partnership_signBlocked": "Barcha savollarga javob berilmaguncha va xatolar tuzatilmaguncha imzolash yopiq.",
+  "partnership_signer_PARTY": "Tomon",
+  "partnership_signer_WITNESS": "Guvoh",
+  "partnership_signer_ARBITER": "Hakam",
+  "partnership_signAs": "{name} imzolaydi",
+  "@partnership_signAs": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "partnership_signatureOf": "{name} imzosi",
+  "@partnership_signatureOf": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "partnership_allSigned": "{n}-versiyani hamma imzoladi.",
+  "@partnership_allSigned": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "partnership_pdf": "Shartnoma PDF",
+  "partnership_history": "Versiyalar",
+  "partnership_historyRow": "{n}-versiya, {date}: {signed} / {required} imzo",
+  "@partnership_historyRow": {
+    "placeholders": {
+      "date": {},
+      "n": {},
+      "required": {},
+      "signed": {}
+    }
+  },
+  "partnership_inForce": "kuchda",
+  "partnership_sign_title": "{name}: imzo",
+  "@partnership_sign_title": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "partnership_sign_hint": "Sichqoncha, pero yoki barmoq bilan imzo chizing.",
+  "partnership_sign_pad": "Imzo maydoni",
+  "partnership_sign_save": "Imzolash",
+  "partnership_sign_clear": "Tozalash",
+  "partnership_gateHint": "Siz kapital kiritasiz. Avval oilaning oʻzi mustahkam boʻlsin: jangga yarador askar yuborilmaydi.",
+  "partnership_gate_open": "Tayyorgarlik darvozasi ochiq",
+  "partnership_gate_closed": "Tayyorgarlik darvozasi hali yopiq",
+  "partnership_gate_coverage": "Qorovul pul {months} oylik (kerak — {required} oy): {balance}, oylik zarur xarajat {essentials}.",
+  "@partnership_gate_coverage": {
+    "placeholders": {
+      "balance": {},
+      "essentials": {},
+      "months": {},
+      "required": {}
+    }
+  },
+  "partnership_gate_noHistory": "Qorovul pul: {balance}. Oylik zarur xarajatni bilish uchun xarajatlar tarixi kerak.",
+  "@partnership_gate_noHistory": {
+    "placeholders": {
+      "balance": {}
+    }
+  },
+  "partnership_gate_reason_EMERGENCY_FUND_BELOW_TARGET": "Qorovul pul 6 oylik zarur xarajatga yetmagan.",
+  "partnership_gate_reason_INTEREST_DEBT_WITHOUT_PLAN": "Foizli qarz bor, lekin «Qarzdan chiqish» rejasi yoqilmagan.",
+  "partnership_gate_reason_INTEREST_DEBT_ACTIVE": "Foizli qarz toʻliq yopilmagan.",
+  "partnership_notDebt_title": "Bu qarz emas",
+  "partnership_notDebt_MUDARABA": "Mudorabada olingan kapital qarz emas: uni qaytarish majburiyati yoʻq, zarar kapital egasining zimmasida (beparvolik bundan mustasno). Siz mehnatingiz bilan teng huquqli sheriksiz.",
+  "partnership_notDebt_MUSHARAKA": "Musharakada sherikning kapitali qarz emas: foyda ulush boʻyicha, zarar kapitalga mutanosib boʻlinadi. Siz teng huquqli sheriksiz.",
+  "partnership_notDebt_ack": "Tushundim, bu qarz emas",
+  "partnership_notDebt_acked": "tushuntirish oʻqildi, {date}",
+  "@partnership_notDebt_acked": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "partnership_consentHint": "Kapital qabul qilishdan oldin oiladagi barcha kattalar rozilik beradi.",
+  "partnership_consentAs": "{name} rozi",
+  "@partnership_consentAs": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "partnership_agreedOn": "rozi, {date}",
+  "@partnership_agreedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "partnership_blocker_NOT_SIGNED": "Shartnomani avval hamma imzolashi kerak.",
+  "partnership_blocker_ME_PARTY_REQUIRED": "Tomonlardan qaysi biri «biz» ekanini belgilang.",
+  "partnership_blocker_GATE_CLOSED": "Kapital kiritish uchun tayyorgarlik darvozasi yopiq.",
+  "partnership_blocker_NOT_DEBT_ACK_REQUIRED": "«Bu qarz emas» tushuntirishini oʻqib tasdiqlang.",
+  "partnership_blocker_FAMILY_CONSENT_REQUIRED": "Oiladagi barcha kattalar rozilik bermagan.",
+  "partnership_blocker_ALREADY_ACTIVE": "Sheriklik allaqachon faol.",
+  "partnership_blocker_PARTNERSHIP_CLOSED": "Sheriklik yopilgan.",
+  "partnership_activate": "Sheriklikni boshlash",
+  "partnership_activeNote": "Sheriklik faol: {n}-versiya kuchda. Kapital hissalari kelishuv jurnaliga yozildi.",
+  "@partnership_activeNote": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "partnership_close": "Sheriklikni yopish",
+  "partnership_check_MIN_TWO_PARTIES": "Kamida ikki tomon boʻlishi kerak.",
+  "partnership_check_PARTY_NAME_REQUIRED": "Har bir tomonning toʻliq ism-sharifini yozing.",
+  "partnership_check_CONTRIBUTION_MISSING": "Har bir tomonning hissasi boʻlishi kerak.",
+  "partnership_check_UNKNOWN_PARTY": "Nomaʼlum tomon tanlangan.",
+  "partnership_check_DUTY_WITHOUT_OWNER": "Har bir vazifaga bitta masʼul tanlang («hamma» boʻlmaydi).",
+  "partnership_check_BREACH_CLAUSE_REQUIRED": "Har bir vazifa uchun «bajarilmasa» bandini yozing.",
+  "partnership_check_GUARANTEED_RETURN_FORBIDDEN": "Qatʼiy summa yoki kafolatli daromad sheriklikda boʻlmaydi.",
+  "partnership_check_PROFIT_SHARES_NOT_100": "Foyda ulushlari yigʻindisi 100% boʻlishi kerak.",
+  "partnership_check_REVIEW_PERIOD_REQUIRED": "Hisobni koʻrib chiqish davriyligini yozing.",
+  "partnership_check_REVIEW_TOO_RARE": "Hisob oyiga bir martadan siyrak koʻriladi — tez-tez koʻrish nizoni oldini oladi.",
+  "partnership_check_ARBITER_IS_PARTY": "Hakam tomonlardan biri boʻlmasligi kerak.",
+  "partnership_check_NA_REASON_REQUIRED": "«Tegishli emas» uchun izoh yozing.",
+  "partnership_check_CAPITAL_ITEM_NOT_POSITIVE": "Hissa summasi musbat boʻlishi kerak.",
+  "partnership_check_CAPITAL_PROVIDER_WITHOUT_CAPITAL": "Kapital egasining kapitali yozilmagan.",
+  "partnership_check_MUDARABA_CAPITAL_PROVIDER_REQUIRED": "Mudorabada kapital egasi boʻlishi kerak.",
+  "partnership_check_MUDARABA_WORKER_REQUIRED": "Mudorabada mehnat egasi boʻlishi kerak.",
+  "partnership_check_MUDARABA_BOTH_ROLE": "Mudorabada «kapital va mehnat» roli boʻlmaydi — musharakani tanlang.",
+  "partnership_check_MUDARABA_WORKER_CAPITAL": "Mehnat egasi ham kapital qoʻshsa, bu musharaka boʻladi.",
+  "partnership_check_MUSHARAKA_TWO_CAPITALS_REQUIRED": "Musharakada kamida ikki tomon kapital qoʻshadi.",
+  "partnership_check_LOSS_RULE_MISMATCH": "Zarar qoidasi sheriklik turiga mos emas.",
+  "partnership_check_TERM_REQUIRED": "Sheriklik muddatini oylarda yozing.",
+  "partnership_check_SILENT_PARTNER_SHARE_ABOVE_CAPITAL": "Ishlamaydigan sherikning foyda ulushi kapital ulushidan katta. Hanafiy mazhabidagi cheklov ulamo bilan aniqlanmoqda (OQ-D2).",
+  "partnership_check_ME_PARTY_REQUIRED": "Tomonlardan qaysi biri «biz» ekanini belgilang.",
+  "partnership_check_BUYOUT_INVALID": "Buyout jadvalini tuzib boʻlmadi — shartlarini tekshiring.",
+  "partnership_check_NO_WITNESSES": "Guvoh yozilmagan. Qarz va sheriklikni guvohlar bilan yozish tavsiya etiladi (Baqara, 282).",
+  "error_GUARANTEED_RETURN_FORBIDDEN": "Bu sheriklik emas — ribo yoki qarz",
+  "error_INVALID_PERCENT": "Foizni toʻgʻri yozing, masalan 50 yoki 33,5",
+  "error_INVALID_PARTY_ID": "Tomon belgisi notoʻgʻri",
+  "error_INVALID_ROLE": "Rol notoʻgʻri",
+  "error_MULTIPLE_ME": "Faqat bitta tomon «biz» boʻladi",
+  "error_TOO_MANY_PARTIES": "Tomonlar juda koʻp",
+  "error_TOO_MANY_WITNESSES": "Guvohlar juda koʻp",
+  "error_UNKNOWN_PARTY": "Nomaʼlum tomon tanlangan",
+  "error_BUYOUT_SAME_PARTY": "Sotuvchi va sotib oluvchi boshqa-boshqa tomon boʻlishi kerak",
+  "error_INVALID_PROFIT": "Taxminiy foyda manfiy boʻlmaydi",
+  "error_KIND_LOCKED": "Faol sheriklikning turini oʻzgartirib boʻlmaydi",
+  "error_PARTNERSHIP_CLOSED": "Sheriklik yopilgan",
+  "error_SIGN_BLOCKED": "Imzolashdan oldin barcha savollarga javob bering va xatolarni tuzating",
+  "error_UNKNOWN_SIGNER": "Bu imzochi shartnomada yoʻq",
+  "error_ALREADY_SIGNED": "Bu versiyani u allaqachon imzolagan",
+  "error_SIGNATURE_EMPTY": "Imzo chizilmagan",
+  "error_SIGNATURE_OUT_OF_BOUNDS": "Imzo maydondan chiqib ketgan",
+  "error_SIGNATURE_TOO_LARGE": "Imzo juda murakkab — qayta chizing",
+  "error_NOT_SIGNED": "Shartnomani avval hamma imzolashi kerak",
+  "error_GATE_CLOSED": "Kapital kiritish uchun tayyorgarlik darvozasi yopiq",
+  "error_NOT_DEBT_ACK_REQUIRED": "«Bu qarz emas» tushuntirishini tasdiqlang",
+  "error_FAMILY_CONSENT_REQUIRED": "Oiladagi barcha kattalar rozilik bermagan",
+  "error_ALREADY_ACTIVE": "Sheriklik allaqachon faol",
+  "error_NOT_ACTIVE": "Sheriklik faol emas",
+  "error_PARTNERSHIP_HAS_SIGNATURES": "Imzolangan shartnomani oʻchirib boʻlmaydi",
+  "error_ME_PARTY_REQUIRED": "Tomonlardan qaysi biri «biz» ekanini belgilang",
+  "error_EVIDENCE_IMMUTABLE": "Imzolangan versiya oʻzgarmaydi",
+  "error_STAKE_NOT_POSITIVE": "Sotuvchining kapitali yoʻq",
+  "error_STAKE_EXCEEDS_CAPITAL": "Ulush kapitaldan katta",
+  "error_INVALID_UNITS": "Qismlar soni 1 dan 600 gacha",
+  "error_INVALID_UNITS_PER_PERIOD": "Har safar olinadigan qismlar soni notoʻgʻri",
+  "error_INVALID_PERIOD": "Davr 1 oydan 12 oygacha",
+  "error_INVALID_KIND": "Tur notoʻgʻri",
+  "error_NOT_FOUND": "Topilmadi"
 }

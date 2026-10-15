@@ -286,7 +286,13 @@ impl Payload {
                 })
             })
             .collect::<Result<Vec<_>, AppError>>()?;
-        let duration = self.term.value().and_then(|t| t.duration_months);
+        // 9-savol javobsiz bo'lsa, bu `missing` da ko'rinadi; muddat qoidasi (`TERM_REQUIRED`)
+        // faqat javob yoki «tegishli emas» bo'lganda tekshiriladi — zarar ulushlari esa usta
+        // davomida ham ko'rinib turadi.
+        let duration = match &self.term {
+            Answer::Unanswered => Some(1),
+            a => a.value().and_then(|t| t.duration_months),
+        };
         Ok(check_rules(&RulesInput {
             kind,
             currency: cur,

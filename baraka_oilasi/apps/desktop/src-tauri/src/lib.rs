@@ -85,6 +85,18 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::delete_ceremony,
             commands::add_goal_contribution,
             commands::export_ceremony_estimate,
+            commands::partnerships,
+            commands::partnership,
+            commands::readiness_gate,
+            commands::create_partnership,
+            commands::update_partnership,
+            commands::sign_partnership,
+            commands::acknowledge_not_debt,
+            commands::consent_partnership,
+            commands::activate_partnership,
+            commands::close_partnership,
+            commands::delete_partnership,
+            commands::export_partnership_contract,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

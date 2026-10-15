@@ -62,6 +62,18 @@
     "allow-reopen-ceremony",
     "allow-delete-ceremony",
     "allow-add-goal-contribution",
-    "allow-export-ceremony-estimate"
+    "allow-export-ceremony-estimate",
+    "allow-partnerships",
+    "allow-partnership",
+    "allow-readiness-gate",
+    "allow-create-partnership",
+    "allow-update-partnership",
+    "allow-sign-partnership",
+    "allow-acknowledge-not-debt",
+    "allow-consent-partnership",
+    "allow-activate-partnership",
+    "allow-close-partnership",
+    "allow-delete-partnership",
+    "allow-export-partnership-contract"
   ]
 }

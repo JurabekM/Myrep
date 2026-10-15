@@ -168,6 +168,21 @@ fn contract_rules_buyout_and_guaranteed_return() {
     assert!(b.rows.iter().all(|r| !r.exceeds_share));
     assert_eq!(p.template_review, "PENDING");
 
+    // 9-savol javobsiz: bu `missing` da, muddat qoidasi takrorlanmaydi va zarar ulushlari ko'rinadi.
+    let mut no_term = mudaraba(true);
+    no_term.term = Answer::Unanswered;
+    let d = app.create_partnership(&uy, no_term.clone()).unwrap();
+    assert_eq!(d.check.missing, [9]);
+    assert!(!d.check.errors.iter().any(|e| e == "TERM_REQUIRED"));
+    assert_eq!(d.parties[0].loss_share.as_deref(), Some("100%"));
+    // «Tegishli emas» deyilsa — muddat qoidasi ishlaydi (sheriklikda muddat majburiy).
+    no_term.term = Answer::NotApplicable {
+        reason: "muddatsiz".into(),
+    };
+    let d = app.update_partnership(&uy, &d.id, no_term).unwrap();
+    assert!(d.check.errors.iter().any(|e| e == "TERM_REQUIRED"));
+    app.delete_partnership(&uy, &d.id).unwrap();
+
     // Kafolatli daromad — domen darajasida rad etiladi, saqlashga ham yo'l yo'q.
     let mut fixed = mudaraba(true);
     fixed.fixed_return = Some("2 000 000".into());

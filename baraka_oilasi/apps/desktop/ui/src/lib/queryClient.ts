@@ -19,6 +19,8 @@ export const keys = {
   items: (spaceId: string) => ["items", spaceId] as const,
   ceremonies: (spaceId: string) => ["ceremonies", spaceId] as const,
   ceremony: (spaceId: string, id: string) => ["ceremony", spaceId, id] as const,
+  partnerships: (spaceId: string) => ["partnerships", spaceId] as const,
+  partnership: (spaceId: string, id: string) => ["partnership", spaceId, id] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

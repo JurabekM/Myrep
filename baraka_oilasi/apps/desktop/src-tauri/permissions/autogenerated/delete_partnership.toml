@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-delete-partnership"
+description = "Enables the delete_partnership command without any pre-configured scope."
+commands.allow = ["delete_partnership"]
+
+[[permission]]
+identifier = "deny-delete-partnership"
+description = "Denies the delete_partnership command without any pre-configured scope."
+commands.deny = ["delete_partnership"]

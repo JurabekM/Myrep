@@ -323,6 +323,7 @@ dependencies = [
  "chrono-tz",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "specta",
  "unicode-normalization",
 ]

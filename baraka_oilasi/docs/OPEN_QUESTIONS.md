@@ -71,10 +71,12 @@
 - **Savol:** davr zarari kapital egasiga yozilgandan keyin, keyingi davr foydasi avval kapitalni tiklashga ketadimi?
 - **Misol:** 1-oy zarar 2 mln, 2-oy foyda 3 mln, ulush 50/50. Spec bo'yicha: ishchi 1,5 mln. Klassik qoida bo'yicha: 2 mln kapitalga, qolgan 1 mln → har biriga 0,5 mln.
 - **To'sadi:** U11, U12. **Holat:** OCHIQ.
+- **U11 da:** davr natijasini taqsimlash U12 (venture ledger) da; U11 da faqat shartnoma, zarar qoidasi va zarar ulushlari. Qaror U12 dan oldin kerak.
 
 ### OQ-D2. Musharakada ishlamaydigan sherik
 - **Savol:** Hanafiy mazhabida ishlamaydigan sherikning foyda ulushi kapital ulushidan oshmasligi kerakmi? Validator sifatida qo'shiladimi?
 - **To'sadi:** U11. **Holat:** OCHIQ.
+- **U11 da qilingan (vaqtinchalik):** validator emas, **ogohlantirish** — musharakada ishlamaydigan sherik (`CAPITAL_PROVIDER`) ulushi kapital ulushidan katta bo'lsa, `SILENT_PARTNER_SHARE_ABOVE_CAPITAL` chiqadi, imzolashni to'smaydi. Ulamo qaroridan keyin xatoga aylantirish bir qatorlik o'zgarish (`domain-uy::partnership::check_rules`).
 
 ### OQ-D3. Qarz bo'yicha jarima va valyuta
 - **Savol:** (1) tilxatdagi «bajarilmasa» bandida kreditor foydasiga pul jarimasi taqiqlanadimi (validator)? (2) dollarda olingan qarz so'mda qaytarilsa, qaysi kurs bo'yicha joiz? Standart: qaytarish valyutasi = qarz valyutasi.
@@ -84,10 +86,16 @@
 - **Savol:** foizli qarzi bor, lekin chiqish rejasi bor foydalanuvchi sheriklikka kapital bera oladimi? (`DEBT_RECOVERY` dagi 20% qarzga ketishi kerak.)
 - **Taklif:** foizli qarz bor ekan, kapital kiritish yopiq; foizsiz qarz va reja bo'lsa — ochiq.
 - **To'sadi:** U6. **Holat:** OCHIQ.
+- **U11 da:** darvoza SPEC dagi standart siyosat bilan ishlaydi (`AllowWithPlan`: foizli qarz bo'lsa ham, «Qarzdan chiqish» rejimi yoqilgan bo'lsa ochiq). Qorovul pul hozircha «Kelajagim» balansi (U6 da QOROVUL alohida bo'ladi), o'rtacha zarur xarajat — oxirgi 3 to'liq davrdagi ZARUR + KERAK (xarajat yozilmagan davrlar hisobga olinmaydi).
 
 ### OQ-D5. Muzoraa, nasiya narxi, savdo mollari zakoti
 - **Savollar:** (1) nasiyada narxni oldindan qotirib sotish (bay' muajjal) va kechikish uchun ustama taqiqi; (2) savdo mollari zakotini bozor narxida baholash; (3) xodim bilan foyda ulushi asosidagi kelishuv; (4) konsignatsiya.
 - **To'sadi:** K0. **Holat:** OCHIQ.
+
+### OQ-D6. Kamayib boruvchi musharakada ulush narxi
+- **Savol:** mehnat egasi kapital egasining ulushini bosqichma-bosqich sotib olganda, har bir qism narxini **oldindan qotirib** (masalan, 30 mln / 20 = 1,5 mln) va'da qilish joizmi? Bizning tushunishimizcha, AAOIFI shariat standartida (12, sheriklik) ulushni asl (nominal) qiymatda sotib olish majburiyati kapitalni kafolatlaydi va qarzga o'xshab qoladi, shuning uchun sotilgan kundagi bozor yoki o'sha kuni kelishilgan qiymat ko'rsatiladi — ulamo tasdiqlashi kerak.
+- **U11 da qilingan:** jadval «taxminiy» deb belgilanadi, shartnoma va PDF da «har bir qism sotilgan kuni kelishilgan qiymatda baholanadi, kapitalni to'liq qaytarish oldindan va'da qilinmaydi» bandi bor. Foyda ulushlari ulush o'zgarishi bilan avtomatik o'zgarmaydi (yangi versiyada kelishiladi).
+- **To'sadi:** U12 (buyout to'lovini taqsimotdan ayirish). **Holat:** OCHIQ.
 
 ## Yurist uchun
 
@@ -98,6 +106,7 @@
 ### OQ-Y2. Ekranda chizilgan imzo
 - **Savol:** ekranda chizilgan imzoli PDF qanday dalil kuchiga ega (ERI emas)? Qaysi summadan «chop etib qo'lda imzolash» standart bo'lishi kerak?
 - **To'sadi:** U7, U8. **Holat:** OCHIQ.
+- **U11 da:** sheriklik shartnomasi tomonlar, guvohlar va hakam tomonidan shu qurilmada chiziladi (raqamli chiziqlar, SVG); har bir versiya va imzo DB darajasida o'zgarmas. PDF da imzolanmaganlar uchun chiziq qoladi — «chop etib qo'lda imzolash» ham mumkin.
 
 ### OQ-Y3. Kasb-kor: mijozlarning shaxsiy ma'lumotlari
 - **Savol:** nasiya olgan mijozlarning ism va telefonlarini saqlaganda do'kondor operator hisoblanadimi? Qanday rozilik shakli kerak?
@@ -106,6 +115,7 @@
 ### OQ-Y4. Sheriklik shartnomasi shakli
 - **Savol:** mudoraba/musharaka kelishuvi Fuqarolik kodeksidagi oddiy shirkat (birgalikdagi faoliyat) shartnomasiga qanday mos keladi?
 - **To'sadi:** U11. **Holat:** OCHIQ.
+- **U11 da:** shablon `reviewStatus = PENDING` — ilovada va PDF da «yurist va ulamo tekshirmagan» ogohlantirishi chiqadi.
 
 ## Texnik
 
