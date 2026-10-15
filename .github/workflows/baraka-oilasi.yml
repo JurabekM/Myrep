@@ -29,6 +29,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: "Windows — OpenSSL uchun Strawberry Perl (Git Bash perl'ida modullar yo'q)"
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl.exe" >> "$GITHUB_ENV"
       - name: Rust toolchain (rust-toolchain.toml)
         run: rustup show active-toolchain || rustup toolchain install
       - uses: Swatinem/rust-cache@v2
@@ -89,6 +92,9 @@ jobs:
         working-directory: baraka_oilasi/apps/desktop
     steps:
       - uses: actions/checkout@v4
+      - name: "Windows — OpenSSL uchun Strawberry Perl (Git Bash perl'ida modullar yo'q)"
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl.exe" >> "$GITHUB_ENV"
       - name: Linux tizim kutubxonalari
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev

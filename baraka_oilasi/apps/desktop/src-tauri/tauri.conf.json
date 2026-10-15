@@ -20,7 +20,9 @@
         "minWidth": 960,
         "minHeight": 640,
         "contentProtected": true,
-        "devtools": false
+        "devtools": false,
+        "theme": "Dark",
+        "backgroundColor": "#262624"
       }
     ],
     "security": {

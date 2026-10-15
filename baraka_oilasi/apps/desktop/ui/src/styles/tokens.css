@@ -1,18 +1,21 @@
 /* @generated cargo xtask tokens — qo'lda tahrirlamang. Manba: shared/design-tokens/tokens.json */
 :root {
-  --bk-paper: #F7F1E3;
-  --bk-surface: #FFFDF7;
-  --bk-ink: #2E3D52;
-  --bk-ink-muted: #5F6B7A;
-  --bk-line: #AAB6C7;
-  --bk-accent: #1F7A5C;
-  --bk-accent-ink: #FFFFFF;
-  --bk-zarur: #2E5E8C;
-  --bk-kerak: #7A6A1F;
-  --bk-havas: #6B6B78;
-  --bk-warn: #9A5B13;
-  --bk-danger: #A23B3B;
-  --bk-focus: #1F7A5C;
+  color-scheme: dark;
+  --bk-paper: #262624;
+  --bk-sidebar: #1F1E1D;
+  --bk-surface: #30302E;
+  --bk-ink: #FAF9F5;
+  --bk-ink-muted: #A6A39A;
+  --bk-line: #4A4945;
+  --bk-accent: #D97757;
+  --bk-accent-ink: #1F1E1D;
+  --bk-accent-text: #E8957A;
+  --bk-zarur: #7FA9D6;
+  --bk-kerak: #D4B86A;
+  --bk-havas: #A6A39A;
+  --bk-warn: #E0A458;
+  --bk-danger: #E5786D;
+  --bk-focus: #D97757;
   --bk-radius-sm: 6px;
   --bk-radius-md: 10px;
   --bk-radius-lg: 16px;
@@ -31,48 +34,35 @@
   --bk-font-size-kpi: 32px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bk-paper: #1C2129;
-    --bk-surface: #252B35;
-    --bk-ink: #E9E4D8;
-    --bk-ink-muted: #A9B1BD;
-    --bk-line: #3D4757;
-    --bk-accent: #4FB28D;
-    --bk-accent-ink: #0F1A15;
-    --bk-zarur: #7FA9D6;
-    --bk-kerak: #C9B66A;
-    --bk-havas: #A3A3B2;
-    --bk-warn: #E0A458;
-    --bk-danger: #E08080;
-    --bk-focus: #4FB28D;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bk-paper: #1C2129;
-  --bk-surface: #252B35;
-  --bk-ink: #E9E4D8;
-  --bk-ink-muted: #A9B1BD;
-  --bk-line: #3D4757;
-  --bk-accent: #4FB28D;
-  --bk-accent-ink: #0F1A15;
-  --bk-zarur: #7FA9D6;
-  --bk-kerak: #C9B66A;
-  --bk-havas: #A3A3B2;
-  --bk-warn: #E0A458;
-  --bk-danger: #E08080;
-  --bk-focus: #4FB28D;
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bk-paper: #FAF9F5;
+  --bk-sidebar: #F0EEE6;
+  --bk-surface: #FFFFFF;
+  --bk-ink: #141413;
+  --bk-ink-muted: #5E5D59;
+  --bk-line: #DAD8CE;
+  --bk-accent: #A9502F;
+  --bk-accent-ink: #FFFFFF;
+  --bk-accent-text: #953F21;
+  --bk-zarur: #2E5E8C;
+  --bk-kerak: #7A6A1F;
+  --bk-havas: #5E5D59;
+  --bk-warn: #9A5B13;
+  --bk-danger: #A23B3B;
+  --bk-focus: #A9502F;
 }
 
 @theme inline {
   --color-paper: var(--bk-paper);
+  --color-sidebar: var(--bk-sidebar);
   --color-surface: var(--bk-surface);
   --color-ink: var(--bk-ink);
   --color-ink-muted: var(--bk-ink-muted);
   --color-line: var(--bk-line);
   --color-accent: var(--bk-accent);
   --color-accent-ink: var(--bk-accent-ink);
+  --color-accent-text: var(--bk-accent-text);
   --color-zarur: var(--bk-zarur);
   --color-kerak: var(--bk-kerak);
   --color-havas: var(--bk-havas);

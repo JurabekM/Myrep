@@ -94,7 +94,7 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
           <Total label={t("necessity.ZARUR")} value={by.zarur.formatted} tone="text-zarur" />
           <Total label={t("necessity.KERAK")} value={by.kerak.formatted} tone="text-kerak" />
           <Total label={t("necessity.HAVAS")} value={by.havas.formatted} tone="text-havas" />
-          <Total label={t("audit.sadaqa")} value={by.sadaqa.formatted} tone="text-accent" />
+          <Total label={t("audit.sadaqa")} value={by.sadaqa.formatted} tone="text-accent-text" />
         </div>
       )}
     </section>

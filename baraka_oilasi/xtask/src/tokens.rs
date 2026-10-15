@@ -33,25 +33,20 @@ pub fn generate(root: &Path) -> Result<(), String> {
             .ok_or(format!("tokens: '{k}' yo'q"))
     };
     let colors = obj(&t, "color")?;
-    let light = colors
-        .get("light")
-        .and_then(Value::as_object)
-        .ok_or("tokens: color.light yo'q")?;
-    let dark = colors
-        .get("dark")
-        .and_then(Value::as_object)
-        .ok_or("tokens: color.dark yo'q")?;
+    // Standart mavzu (foydalanuvchi qarori: Claude Code dark theme uslubi). Ikkinchisi — `data-theme` bilan.
+    let default_theme = t.get("defaultTheme").and_then(Value::as_str).unwrap_or("dark");
+    let other_theme = if default_theme == "dark" { "light" } else { "dark" };
+    let palette = |name: &str| {
+        colors.get(name).and_then(Value::as_object).cloned().ok_or(format!("tokens: color.{name} yo'q"))
+    };
+    let main = palette(default_theme)?;
+    let alt = palette(other_theme)?;
 
-    // CSS (desktop).
-    // `--bk-*` — qiymatlar (light/dark), `@theme inline` — Tailwind v4 utilitalari (`bg-paper`, `text-ink`).
+    // `--bk-*` — qiymatlar, `@theme inline` — Tailwind v4 utilitalari (`bg-paper`, `text-ink`).
     let mut css = String::from("/* @generated cargo xtask tokens — qo'lda tahrirlamang. Manba: shared/design-tokens/tokens.json */\n:root {\n");
-    for (k, v) in light {
-        let _ = writeln!(
-            css,
-            "  --bk-{}: {};",
-            kebab(k),
-            v.as_str().unwrap_or_default()
-        );
+    let _ = writeln!(css, "  color-scheme: {default_theme};");
+    for (k, v) in &main {
+        let _ = writeln!(css, "  --bk-{}: {};", kebab(k), v.as_str().unwrap_or_default());
     }
     for group in ["radius", "space"] {
         for (k, v) in obj(&t, group)? {
@@ -60,36 +55,16 @@ pub fn generate(root: &Path) -> Result<(), String> {
     }
     for (k, v) in obj(&t, "font")? {
         match v {
-            Value::String(s) => {
-                let _ = writeln!(css, "  --bk-font-{}: \"{s}\";", kebab(&k));
-            }
-            other => {
-                let _ = writeln!(css, "  --bk-font-{}: {other}px;", kebab(&k));
-            }
+            Value::String(s) => { let _ = writeln!(css, "  --bk-font-{}: \"{s}\";", kebab(&k)); }
+            other => { let _ = writeln!(css, "  --bk-font-{}: {other}px;", kebab(&k)); }
         }
     }
-    css.push_str(
-        "}\n\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme=\"light\"]) {\n",
-    );
-    for (k, v) in dark {
-        let _ = writeln!(
-            css,
-            "    --bk-{}: {};",
-            kebab(k),
-            v.as_str().unwrap_or_default()
-        );
-    }
-    css.push_str("  }\n}\n\n:root[data-theme=\"dark\"] {\n");
-    for (k, v) in dark {
-        let _ = writeln!(
-            css,
-            "  --bk-{}: {};",
-            kebab(k),
-            v.as_str().unwrap_or_default()
-        );
+    let _ = writeln!(css, "}}\n\n:root[data-theme=\"{other_theme}\"] {{\n  color-scheme: {other_theme};");
+    for (k, v) in &alt {
+        let _ = writeln!(css, "  --bk-{}: {};", kebab(k), v.as_str().unwrap_or_default());
     }
     css.push_str("}\n\n@theme inline {\n");
-    for k in light.keys() {
+    for k in main.keys() {
         let _ = writeln!(css, "  --color-{0}: var(--bk-{0});", kebab(k));
     }
     for k in obj(&t, "radius")?.keys() {
@@ -100,7 +75,10 @@ pub fn generate(root: &Path) -> Result<(), String> {
 
     // Dart (Android).
     let mut dart = String::from("// @generated cargo xtask tokens — qo'lda tahrirlamang. Manba: shared/design-tokens/tokens.json\n// ignore_for_file: public_member_api_docs\nimport 'dart:ui';\n\n");
-    for (name, palette) in [("BarakaLightColors", light), ("BarakaDarkColors", dark)] {
+    let light = palette("light")?;
+    let dark = palette("dark")?;
+    let _ = writeln!(dart, "/// Standart mavzu: `{default_theme}` (Claude Code dark theme uslubi).\nconst bool barakaDefaultDark = {};\n", default_theme == "dark");
+    for (name, palette) in [("BarakaLightColors", &light), ("BarakaDarkColors", &dark)] {
         let _ = writeln!(dart, "abstract final class {name} {{");
         for (k, v) in palette {
             let _ = writeln!(

@@ -115,7 +115,7 @@ Android va desktopda **bitta «Baraka» ilovasi** bo'ladi. Ilova ichida uchta **
 |---|---|
 | Shell | **Tauri 2** stable. Windows 10/11 x64 — 1-navbat, macOS — 2-navbat, Linux — 3-navbat |
 | Frontend | **React 18+**, **TypeScript (strict)**, **Vite**, pnpm |
-| UI | Tailwind CSS + Radix UI (yoki shadcn/ui). «Daftar» mavzusi (light/dark) |
+| UI | Tailwind CSS + Radix UI (yoki shadcn/ui). Standart — dark (Claude Code uslubi), light ixtiyoriy (10.4) |
 | State | **TanStack Query** (yadro ma'lumoti), **Zustand** (faqat UI holati) |
 | Jadval/grafik | **TanStack Table** (virtualizatsiya), **ECharts** |
 | Formalar | `react-hook-form` + `zod` (faqat shakl validatsiyasi; biznes validatsiya — yadroda) |
@@ -473,8 +473,9 @@ PLATFORM_SECRET (32 bayt):
 - Linter CI'da majburiy.
 
 ### 10.4. Dizayn tokenlari
-- `shared/design-tokens/tokens.json` — ranglar, shriftlar, oraliqlar, radiuslar, light/dark. `cargo xtask tokens` → Dart `ThemeData` kodi va Tailwind config.
-- `HAVAS` rangi neytral (qizil emas). Kontrast WCAG AA.
+- `shared/design-tokens/tokens.json` — ranglar, shriftlar, oraliqlar, radiuslar, light/dark. `cargo xtask tokens` → CSS (Tailwind v4 `@theme`) va Dart.
+- **Standart mavzu — dark, Claude Code dark theme uslubida** (foydalanuvchi qarori, 2026-10-15; `defaultTheme: "dark"`): fon `#262624`, sidebar `#1F1E1D`, surface `#30302E`, matn `#FAF9F5`, aksent `#D97757` (ustida `#1F1E1D`). Light — ixtiyoriy (`data-theme="light"`). Oldingi «qog'oz daftar» palitrasi bekor; «daftar» metaforasi matn va tuzilmada qoladi.
+- `HAVAS` rangi neytral (qizil emas). Kontrast WCAG AA (generatsiyadan oldin hisoblanadi).
 
 ### 10.5. Kontent
 - Boblar JSON shaklida `shared/content/<makon>/` da: `Chapter`, `Law`, `WeeklyTask[3]`, `religiousReviewStatus`.

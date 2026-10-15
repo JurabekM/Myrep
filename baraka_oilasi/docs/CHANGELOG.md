@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## [Unreleased] — 1-sessiya: poydevor va Uy makoni yadrosi
+## [Unreleased] — 2-sessiya
+
+### O'zgardi
+- **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
+- Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
+
+### Tuzatildi
+- CI (Windows core): `openssl-src` Git Bash perl'i bilan yig'ilmas edi → `OPENSSL_SRC_PERL` Strawberry Perl'ga yo'naltirildi.
+
+## 1-sessiya: poydevor va Uy makoni yadrosi
 
 ### Qo'shildi — hujjatlar
 - `docs/BARAKA_OILASI.md` v1.0 — bosh loyiha prompti; `docs/adr/0001` (umumiy Rust yadro), `docs/adr/0002` (versiyalar).

@@ -35,7 +35,7 @@ export function IncomeDialog({ spaceId, onClose }: { spaceId: string; onClose: (
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="income-title" className="fixed inset-0 z-10 flex items-center justify-center bg-ink/30 p-4">
+    <div role="dialog" aria-modal="true" aria-labelledby="income-title" className="fixed inset-0 z-10 flex items-center justify-center bg-black/60 p-4">
       <div className="card w-full max-w-md">
         <h2 id="income-title" className="mb-4 text-xl font-semibold">{t("income.title")}</h2>
         {!recorded ? (
@@ -65,7 +65,7 @@ export function IncomeDialog({ spaceId, onClose }: { spaceId: string; onClose: (
           <div className="flex flex-col gap-4">
             <p className="text-lg">{t("income.shareOffer", { amount: recorded.suggestedShare.formatted })}</p>
             {recorded.progressiveSuggestionPercent !== null && (
-              <p className="text-sm text-accent">{t("income.progressive", { percent: recorded.progressiveSuggestionPercent })}</p>
+              <p className="text-sm text-accent-text">{t("income.progressive", { percent: recorded.progressiveSuggestionPercent })}</p>
             )}
             {custom !== null && (
               <label>

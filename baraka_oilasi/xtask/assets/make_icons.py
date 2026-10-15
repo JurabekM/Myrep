@@ -1,11 +1,11 @@
-"""Baraka ilova ikonkasi: qog'oz rangidagi daftar, chiziqlar va yashil xatcho'p.
+"""Baraka ilova ikonkasi (Claude Code dark theme uslubi): to'q fon, daftar chiziqlari va sarg'ish xatcho'p.
 Faqat standart kutubxona (zlib, struct). Ishlatish: python3 -I make_icons.py <chiqish_papkasi>"""
 import os, struct, sys, zlib
 
-PAPER = (247, 241, 227, 255)
-INK = (46, 61, 82, 255)
-LINE = (170, 182, 199, 255)
-GREEN = (31, 122, 92, 255)
+PAPER = (48, 48, 46, 255)      # #30302E
+INK = (31, 30, 29, 255)        # #1F1E1D — muqova
+LINE = (166, 163, 154, 255)    # #A6A39A
+GREEN = (217, 119, 87, 255)    # #D97757 — xatcho'p (nomi tarixiy)
 CLEAR = (0, 0, 0, 0)
 
 def pixel(x, y, n):

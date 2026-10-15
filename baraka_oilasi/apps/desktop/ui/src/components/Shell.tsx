@@ -58,7 +58,7 @@ export function Shell() {
 
   return (
     <div className="flex h-full">
-      <nav aria-label="Asosiy" className="flex w-60 shrink-0 flex-col gap-1 border-r border-line p-4">
+      <nav aria-label="Asosiy" className="flex w-60 shrink-0 flex-col gap-1 border-r border-line bg-sidebar p-4">
         <p className="mb-4 font-serif text-xl font-semibold">{t("app.name")}</p>
         <div className="mb-4 flex flex-wrap gap-1">
           {spaces.map((s) => (
@@ -71,7 +71,7 @@ export function Shell() {
           <button
             key={n.screen}
             aria-current={screen === n.screen ? "page" : undefined}
-            className={`rounded-md px-3 py-2 text-left ${screen === n.screen ? "bg-surface font-medium" : "hover:bg-surface"}`}
+            className={`rounded-md px-3 py-2 text-left ${screen === n.screen ? "bg-surface font-medium text-ink" : "text-ink-muted hover:bg-surface hover:text-ink"}`}
             onClick={() => setScreen(n.screen)}
           >
             {t(n.label)}
