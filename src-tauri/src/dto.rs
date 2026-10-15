@@ -1826,3 +1826,195 @@ pub struct ConsentInputDto {
     /// Rozilik bergan a'zo.
     pub member_name: String,
 }
+
+/// Kassa daftari (D13).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct VentureDto {
+    /// Sheriklik.
+    pub partnership_id: String,
+    /// Kelishuv.
+    pub agreement_id: String,
+    /// Sarlavha.
+    pub title: String,
+    /// Kelishuv holati.
+    pub status: String,
+    /// Shu qurilma yoza oladimi (imzolangan va hisob yurituvchi).
+    pub can_write: bool,
+    /// Ochiq davr.
+    pub open: OpenPeriodDto,
+    /// Yopilgan davrlar.
+    pub periods: Vec<ClosedPeriodDto>,
+    /// «Katta foyda» ogohlantirishi (ochiq davr oxirgi 3 davrga nisbatan).
+    pub spike: bool,
+    /// Buyout qoldig'i, bo'lsa.
+    pub buyout_remaining: Option<MoneyDto>,
+}
+
+/// Ochiq davr.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenPeriodDto {
+    /// Boshlanish (oxirgi yopilgan davrdan keyingi kun), bo'lsa.
+    pub start_on: Option<String>,
+    /// Kirim.
+    pub income: MoneyDto,
+    /// Xarajat.
+    pub expense: MoneyDto,
+    /// Sof natija.
+    pub net: MoneyDto,
+    /// Yozuvlar.
+    pub entries: Vec<JournalEntryDto>,
+}
+
+/// Yopilgan davr.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ClosedPeriodDto {
+    /// Identifikator.
+    pub id: String,
+    /// Boshi.
+    pub start_on: String,
+    /// Oxiri.
+    pub end_on: String,
+    /// Kirim.
+    pub income: MoneyDto,
+    /// Xarajat.
+    pub expense: MoneyDto,
+    /// Sof natija.
+    pub net: MoneyDto,
+    /// Zanjir boshi.
+    pub chain_head: String,
+    /// Yopilgan sana.
+    pub closed_at: String,
+    /// Fors-major izohi.
+    pub force_majeure_note: Option<String>,
+    /// Taqsimot.
+    pub distribution: Vec<DistributionRowDto>,
+}
+
+/// Taqsimot qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DistributionRowDto {
+    /// Tomon.
+    pub party_id: String,
+    /// Ism.
+    pub name: String,
+    /// Ulush, bp.
+    pub share_bp: u32,
+    /// Qism (zararda manfiy).
+    pub amount: MoneyDto,
+    /// Buyout ayirmasi, bo'lsa.
+    pub buyout_deduction: Option<MoneyDto>,
+}
+
+/// Ledger yozuvi kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct VentureEntryInputDto {
+    /// Sheriklik.
+    pub partnership_id: String,
+    /// `VENTURE_INCOME | VENTURE_EXPENSE | FORCE_MAJEURE`.
+    pub kind: String,
+    /// Tomon.
+    pub party_id: String,
+    /// Summa matni.
+    pub amount: String,
+    /// Sana; bo'sh — bugun.
+    pub date: Option<String>,
+    /// Izoh (fors-majorda majburiy).
+    pub note: Option<String>,
+}
+
+/// Davrni yopish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ClosePeriodInputDto {
+    /// Sheriklik.
+    pub partnership_id: String,
+    /// Davr oxiri (`YYYY-MM-DD`).
+    pub end_on: String,
+    /// Fors-major izohi, bo'lsa.
+    pub force_majeure_note: Option<String>,
+}
+
+/// Taklif tekshiruvi javoblari.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OfferInputDto {
+    /// Foyda kafolatlanganmi.
+    pub guaranteed_profit: bool,
+    /// Zarar bo'lishi mumkinmi.
+    pub loss_possible: bool,
+    /// Real mol yoki ish bormi.
+    pub real_goods_or_work: bool,
+    /// Yangi a'zo jalb qilish talab qilinadimi.
+    pub needs_new_members: bool,
+    /// Shoshiltirish bormi.
+    pub rush_pressure: bool,
+    /// Yozma shartnoma bormi.
+    pub written_contract: bool,
+}
+
+/// Taklif natijasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OfferCheckDto {
+    /// `GREEN | YELLOW | RED`.
+    pub verdict: String,
+    /// Bayroqlar.
+    pub flags: Vec<OfferFlagDto>,
+}
+
+/// Bayroq.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OfferFlagDto {
+    /// Kod.
+    pub code: String,
+    /// Izoh (o'zbekcha).
+    pub explanation: String,
+    /// Qizilmi.
+    pub red: bool,
+}
+
+/// «Hunardan ishga» kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HustleInputDto {
+    /// CAPEX matni.
+    pub capex: String,
+    /// Oylik kirim matni.
+    pub monthly_income: String,
+    /// Oylik xarajat matni.
+    pub monthly_expense: String,
+    /// Mening ulushim, bp (sheriksiz — 10 000).
+    pub my_share_bp: u32,
+}
+
+/// «Hunardan ishga» natijasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HustlePlanDto {
+    /// Uch stsenariy.
+    pub scenarios: Vec<HustleScenarioDto>,
+}
+
+/// Stsenariy.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HustleScenarioDto {
+    /// `PESSIMISTIC | AVERAGE | OPTIMISTIC`.
+    pub name: String,
+    /// Oylik kirim.
+    pub income: MoneyDto,
+    /// Oylik xarajat.
+    pub expense: MoneyDto,
+    /// Sof natija.
+    pub net: MoneyDto,
+    /// Mening ulushim.
+    pub my_net: MoneyDto,
+    /// Qoplanish muddati (oy), bo'lsa.
+    pub payback_months: Option<u32>,
+}

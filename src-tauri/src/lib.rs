@@ -31,6 +31,8 @@ mod report;
 mod reserve;
 mod reserve_commands;
 mod session;
+mod venture_commands;
+mod ventures;
 
 use std::sync::Arc;
 
@@ -153,6 +155,12 @@ fn specta_builder() -> Builder<tauri::Wry> {
         partnership_commands::set_buyout,
         partnership_commands::pay_buyout,
         partnership_commands::consent_partnership,
+        venture_commands::get_venture,
+        venture_commands::add_venture_entry,
+        venture_commands::close_venture_period,
+        venture_commands::create_period_report_pdf,
+        venture_commands::check_offer,
+        venture_commands::hustle_plan,
     ])
 }
 

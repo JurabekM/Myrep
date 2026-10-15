@@ -49,7 +49,7 @@ fn add(left: Money, right: Money) -> Result<Money, SessionError> {
 }
 
 /// Kelishuv javoblaridan sheriklar: kapital = pul hissalari yig'indisi, ulush — 4-savoldan.
-fn partner_inputs(
+pub(crate) fn partner_inputs(
     answers: &AgreementAnswersDto,
 ) -> Result<Vec<(PartnerInput, PartnerSummaryDto)>, SessionError> {
     let mut out = Vec::with_capacity(answers.parties.len());
@@ -144,7 +144,7 @@ pub fn check_before_sign(
     Ok(())
 }
 
-fn buyout_dto(db: &Database, row: &PartnershipRow) -> Result<Option<BuyoutDto>, SessionError> {
+pub(crate) fn buyout_dto(db: &Database, row: &PartnershipRow) -> Result<Option<BuyoutDto>, SessionError> {
     let (Some(total), Some(months), Some(start)) =
         (row.buyout_total, row.buyout_months, row.buyout_start)
     else {

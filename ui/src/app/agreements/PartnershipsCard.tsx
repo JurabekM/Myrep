@@ -6,6 +6,7 @@ import { unwrap } from "../finance/command-error";
 import { errorKey, useErrorMessage } from "../finance/errors";
 import { Alert, Card, Field, PrimaryButton, SecondaryButton, Stat } from "../finance/ui";
 import { agreementKeys } from "./queries";
+import { VentureCard } from "./VentureCard";
 
 const SELECT_CLASS =
   "h-10 rounded-lg border border-border bg-app px-3 text-text outline-none focus:border-accent";
@@ -307,6 +308,8 @@ function PartnershipBlock({
           </>
         )}
       </div>
+
+      {item.status === "SIGNED" ? <VentureCard partnership={item} /> : null}
 
       <div>
         <SecondaryButton

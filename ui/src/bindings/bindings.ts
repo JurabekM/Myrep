@@ -215,6 +215,18 @@ export const commands = {
 	payBuyout: (input: BuyoutPaymentInputDto) => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("pay_buyout", { input })),
 	/**  Oilaviy rozilik. */
 	consentPartnership: (input: ConsentInputDto) => typedError<PartnershipsDto, ApiError>(__TAURI_INVOKE("consent_partnership", { input })),
+	/**  Kassa daftari. */
+	getVenture: (partnershipId: string) => typedError<VentureDto, ApiError>(__TAURI_INVOKE("get_venture", { partnershipId })),
+	/**  Ledger yozuvi. */
+	addVentureEntry: (input: VentureEntryInputDto) => typedError<VentureDto, ApiError>(__TAURI_INVOKE("add_venture_entry", { input })),
+	/**  Davrni yopadi va taqsimlaydi. */
+	closeVenturePeriod: (input: ClosePeriodInputDto) => typedError<VentureDto, ApiError>(__TAURI_INVOKE("close_venture_period", { input })),
+	/**  Davr hisoboti PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
+	createPeriodReportPdf: (periodId: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_period_report_pdf", { periodId })),
+	/**  «Kafolatlangan foyda» detektori (saqlanmaydi). */
+	checkOffer: (input: OfferInputDto) => typedError<OfferCheckDto, ApiError>(__TAURI_INVOKE("check_offer", { input })),
+	/**  «Hunardan ishga»: uch stsenariy (saqlanmaydi). */
+	hustlePlan: (input: HustleInputDto) => typedError<HustlePlanDto, ApiError>(__TAURI_INVOKE("hustle_plan", { input })),
 };
 
 /* Types */
@@ -657,6 +669,40 @@ export type ChapterDto = {
 	daftarPage: DaftarPageDto | null,
 };
 
+/**  Davrni yopish. */
+export type ClosePeriodInputDto = {
+	/**  Sheriklik. */
+	partnershipId: string,
+	/**  Davr oxiri (`YYYY-MM-DD`). */
+	endOn: string,
+	/**  Fors-major izohi, bo'lsa. */
+	forceMajeureNote: string | null,
+};
+
+/**  Yopilgan davr. */
+export type ClosedPeriodDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Boshi. */
+	startOn: string,
+	/**  Oxiri. */
+	endOn: string,
+	/**  Kirim. */
+	income: MoneyDto,
+	/**  Xarajat. */
+	expense: MoneyDto,
+	/**  Sof natija. */
+	net: MoneyDto,
+	/**  Zanjir boshi. */
+	chainHead: string,
+	/**  Yopilgan sana. */
+	closedAt: string,
+	/**  Fors-major izohi. */
+	forceMajeureNote: string | null,
+	/**  Taqsimot. */
+	distribution: DistributionRowDto[],
+};
+
 /**  To'liqlik natijasi. */
 export type CompletenessDto = {
 	/**  9/9 javoblangan. */
@@ -796,6 +842,20 @@ export type DebtDto = {
 	note: string | null,
 };
 
+/**  Taqsimot qatori. */
+export type DistributionRowDto = {
+	/**  Tomon. */
+	partyId: string,
+	/**  Ism. */
+	name: string,
+	/**  Ulush, bp. */
+	shareBp: number,
+	/**  Qism (zararda manfiy). */
+	amount: MoneyDto,
+	/**  Buyout ayirmasi, bo'lsa. */
+	buyoutDeduction: MoneyDto | null,
+};
+
 /**  Vazifa (3-savol). */
 export type DutyDto = {
 	/**  Identifikator. */
@@ -914,6 +974,40 @@ export type HomeDto = {
 	habit: HabitDto,
 	/**  O'tgan oy auditi holati. */
 	audit: AuditStatusDto,
+};
+
+/**  «Hunardan ishga» kirishi. */
+export type HustleInputDto = {
+	/**  CAPEX matni. */
+	capex: string,
+	/**  Oylik kirim matni. */
+	monthlyIncome: string,
+	/**  Oylik xarajat matni. */
+	monthlyExpense: string,
+	/**  Mening ulushim, bp (sheriksiz — 10 000). */
+	myShareBp: number,
+};
+
+/**  «Hunardan ishga» natijasi. */
+export type HustlePlanDto = {
+	/**  Uch stsenariy. */
+	scenarios: HustleScenarioDto[],
+};
+
+/**  Stsenariy. */
+export type HustleScenarioDto = {
+	/**  `PESSIMISTIC | AVERAGE | OPTIMISTIC`. */
+	name: string,
+	/**  Oylik kirim. */
+	income: MoneyDto,
+	/**  Oylik xarajat. */
+	expense: MoneyDto,
+	/**  Sof natija. */
+	net: MoneyDto,
+	/**  Mening ulushim. */
+	myNet: MoneyDto,
+	/**  Qoplanish muddati (oy), bo'lsa. */
+	paybackMonths: number | null,
 };
 
 /**  Daromad yozuvi. */
@@ -1231,6 +1325,54 @@ export type OdatHabitDto = {
 	yearly: MoneyDto,
 	/**  Yil ichidagi yozuvlar soni. */
 	entriesThisYear: number,
+};
+
+/**  Taklif natijasi. */
+export type OfferCheckDto = {
+	/**  `GREEN | YELLOW | RED`. */
+	verdict: string,
+	/**  Bayroqlar. */
+	flags: OfferFlagDto[],
+};
+
+/**  Bayroq. */
+export type OfferFlagDto = {
+	/**  Kod. */
+	code: string,
+	/**  Izoh (o'zbekcha). */
+	explanation: string,
+	/**  Qizilmi. */
+	red: boolean,
+};
+
+/**  Taklif tekshiruvi javoblari. */
+export type OfferInputDto = {
+	/**  Foyda kafolatlanganmi. */
+	guaranteedProfit: boolean,
+	/**  Zarar bo'lishi mumkinmi. */
+	lossPossible: boolean,
+	/**  Real mol yoki ish bormi. */
+	realGoodsOrWork: boolean,
+	/**  Yangi a'zo jalb qilish talab qilinadimi. */
+	needsNewMembers: boolean,
+	/**  Shoshiltirish bormi. */
+	rushPressure: boolean,
+	/**  Yozma shartnoma bormi. */
+	writtenContract: boolean,
+};
+
+/**  Ochiq davr. */
+export type OpenPeriodDto = {
+	/**  Boshlanish (oxirgi yopilgan davrdan keyingi kun), bo'lsa. */
+	startOn: string | null,
+	/**  Kirim. */
+	income: MoneyDto,
+	/**  Xarajat. */
+	expense: MoneyDto,
+	/**  Sof natija. */
+	net: MoneyDto,
+	/**  Yozuvlar. */
+	entries: JournalEntryDto[],
 };
 
 /**  «Kimning puli?» bo'lagi. */
@@ -1740,6 +1882,44 @@ export type VaultEntryDto = {
 	reason: string | null,
 	/**  Manba daromad (faqat `INCOME_SHARE`). */
 	incomeId: string | null,
+};
+
+/**  Kassa daftari (D13). */
+export type VentureDto = {
+	/**  Sheriklik. */
+	partnershipId: string,
+	/**  Kelishuv. */
+	agreementId: string,
+	/**  Sarlavha. */
+	title: string,
+	/**  Kelishuv holati. */
+	status: string,
+	/**  Shu qurilma yoza oladimi (imzolangan va hisob yurituvchi). */
+	canWrite: boolean,
+	/**  Ochiq davr. */
+	open: OpenPeriodDto,
+	/**  Yopilgan davrlar. */
+	periods: ClosedPeriodDto[],
+	/**  «Katta foyda» ogohlantirishi (ochiq davr oxirgi 3 davrga nisbatan). */
+	spike: boolean,
+	/**  Buyout qoldig'i, bo'lsa. */
+	buyoutRemaining: MoneyDto | null,
+};
+
+/**  Ledger yozuvi kirishi. */
+export type VentureEntryInputDto = {
+	/**  Sheriklik. */
+	partnershipId: string,
+	/**  `VENTURE_INCOME | VENTURE_EXPENSE | FORCE_MAJEURE`. */
+	kind: string,
+	/**  Tomon. */
+	partyId: string,
+	/**  Summa matni. */
+	amount: string,
+	/**  Sana; bo'sh — bugun. */
+	date: string | null,
+	/**  Izoh (fors-majorda majburiy). */
+	note: string | null,
 };
 
 /**  Joriy bobning shu haftalik vazifalari (bosh sahifa va bob sahifasi uchun). */

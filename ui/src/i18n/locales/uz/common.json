@@ -115,7 +115,8 @@
     "readinessGateLocked": "Tayyorgarlik darvozasi yopiq: avval 6 oylik zaxira va qarz rejasi",
     "partnershipStructureInvalid": "Tuzilma turga mos emas: mudarabada kapital faqat bir tomondan, musharakada kamida ikki tomondan",
     "profitSharesNot100": "Foyda ulushlari yig'indisi 100 % bo'lishi kerak",
-    "guaranteedReturnForbidden": "Kafolatlangan summa — bu sheriklik emas, ribo yoki qarz"
+    "guaranteedReturnForbidden": "Kafolatlangan summa — bu sheriklik emas, ribo yoki qarz",
+    "periodClosed": "Bu davr yopilgan: unga yozib bo'lmaydi"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -758,7 +759,12 @@
       "CONTRIBUTION": "Hissa",
       "PROFIT_DISTRIBUTION": "Foyda taqsimoti",
       "LOAN_PAYMENT": "Qarz to'lovi",
-      "CORRECTION": "Tuzatish"
+      "CORRECTION": "Tuzatish",
+      "VENTURE_INCOME": "Kirim",
+      "VENTURE_EXPENSE": "Xarajat",
+      "FORCE_MAJEURE": "Fors-major",
+      "LOSS_DISTRIBUTION": "Zarar taqsimoti",
+      "BUYOUT_PAYMENT": "Buyout to'lovi"
     },
     "journalKindLabel": "Yozuv turi",
     "amount": "Summa",
@@ -981,5 +987,76 @@
     "create": "Sheriklik yaratish",
     "roleCapitalHint": "Kapital kiritish uchun tayyorgarlik darvozasi ochiq bo'lishi kerak: ≥ 6 oylik qorovul zaxirasi va faol qarz rejasi.",
     "roleWorkerHint": "Mehnat bilan kirish darvozaga bo'ysunmaydi; imzolashdan oldin oilaviy rozilik so'raladi."
+  },
+  "venture": {
+    "title": "Kassa daftari",
+    "hint": "Biznes puli uy pulidan alohida: kirim, xarajat, fors-major shu yerda; uy byudjetiga faqat taqsimlangan ulush o'tadi. Yozuvlar o'zgarmas jurnalga (xesh-zanjir) yoziladi.",
+    "income": "Kirim",
+    "expense": "Xarajat",
+    "net": "Sof natija",
+    "openSince": "Ochiq davr {{date}} dan",
+    "firstPeriod": "Birinchi davr",
+    "spike": "Barakali foyda — tabriklaymiz! Taqsimotdan oldin shartnomaning 4–5-bandlarini birga qayta o'qib chiqing va navbatdan tashqari ochiq hisob ko'rigini o'tkazing.",
+    "noEntries": "Ochiq davrda yozuv yo'q.",
+    "kindLabel": "Yozuv turi",
+    "partyLabel": "Tomon",
+    "amount": "Summa",
+    "note": "Izoh (fors-majorda majburiy)",
+    "add": "Yozish",
+    "endOn": "Davr oxiri",
+    "forceNote": "Fors-major izohi (bo'lsa)",
+    "close": "Davrni yopish va taqsimlash",
+    "readOnly": "Bu qurilmada daftar faqat o'qish uchun (kapital egasi shaffof ko'radi, hisobni mehnat egasi yuritadi).",
+    "periodsTitle": "Yopilgan davrlar (o'zgarmas)",
+    "buyoutDeduction": "buyout ayirmasi {{amount}}",
+    "forceMajeure": "Fors-major: {{note}}",
+    "chainHead": "zanjir boshi {{head}}…",
+    "pdf": "Davr hisoboti PDF",
+    "pdfSaved": "PDF saqlandi: {{path}}"
+  },
+  "offer": {
+    "title": "«Kafolatlangan foyda» detektori",
+    "intro": "Tavakkalsiz, kafolatlangan foyda va'da qilinsa — u yerda yo ribo, yo firibgarlik bor. Taklifni 6 savol bilan tekshiring.",
+    "q": {
+      "guaranteedProfit": "Foyda kafolatlangan deyishadi",
+      "lossPossible": "Zarar bo'lishi mumkinligi tan olinadi",
+      "realGoodsOrWork": "Real mol yoki ish bor",
+      "needsNewMembers": "Yangi a'zo jalb qilish talab qilinadi",
+      "rushPressure": "Shoshiltirishadi («bugun qaror qiling»)",
+      "writtenContract": "Yozma shartnoma bor"
+    },
+    "check": "Tekshirish",
+    "verdict": {
+      "GREEN": "Yashil: xavf belgilari topilmadi — baribir shartnomani o'qing",
+      "YELLOW": "Sariq: ehtiyot bo'ling, savollar bor",
+      "RED": "Qizil: kafolatlangan foyda yoki piramida belgisi — chetlaning"
+    },
+    "noFlags": "Bayroq yo'q."
+  },
+  "hustle": {
+    "title": "«Hunardan ishga»",
+    "intro": "Bekor yotgan hunar — bekor yotgan pul kabi. Boshlang'ich xarajat, oylik kirim va xarajatni kiriting: uch stsenariy va qoplanish muddati chiqadi («hisob-kitobni uch marta qildim»).",
+    "skill": "Hunar / g'oya",
+    "capex": "Boshlang'ich xarajat (CAPEX)",
+    "income": "Oylik kirim",
+    "expense": "Oylik xarajat",
+    "share": "Mening ulushim, %",
+    "calculate": "Hisoblash",
+    "tableLabel": "Uch stsenariy",
+    "scenario": {
+      "PESSIMISTIC": "Pessimistik (kirim 70 %, xarajat 120 %)",
+      "AVERAGE": "O'rtacha",
+      "OPTIMISTIC": "Optimistik (kirim 130 %, xarajat 90 %)"
+    },
+    "colScenario": "Stsenariy",
+    "colIncome": "Kirim",
+    "colExpense": "Xarajat",
+    "colNet": "Sof",
+    "colMine": "Mening ulushim",
+    "colPayback": "Qoplanish",
+    "months": "{{months}} oy",
+    "noPayback": "qoplanmaydi",
+    "toPartnership": "Sheriklik qoralamasini yaratish",
+    "defaultTitle": "Hunardan ishga"
   }
 }

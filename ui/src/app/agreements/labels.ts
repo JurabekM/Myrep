@@ -36,6 +36,16 @@ export function journalKindKey(kind: string) {
       return "agreements.journalKind.LOAN_PAYMENT" as const;
     case "CORRECTION":
       return "agreements.journalKind.CORRECTION" as const;
+    case "VENTURE_INCOME":
+      return "agreements.journalKind.VENTURE_INCOME" as const;
+    case "VENTURE_EXPENSE":
+      return "agreements.journalKind.VENTURE_EXPENSE" as const;
+    case "FORCE_MAJEURE":
+      return "agreements.journalKind.FORCE_MAJEURE" as const;
+    case "LOSS_DISTRIBUTION":
+      return "agreements.journalKind.LOSS_DISTRIBUTION" as const;
+    case "BUYOUT_PAYMENT":
+      return "agreements.journalKind.BUYOUT_PAYMENT" as const;
     default:
       return "agreements.journalKind.CONTRIBUTION" as const;
   }

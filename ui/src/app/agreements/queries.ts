@@ -10,6 +10,7 @@ export const agreementKeys = {
   one: (id: string) => ["agreements", "one", id] as const,
   journal: (id: string) => ["agreements", "journal", id] as const,
   partnerships: ["agreements", "partnerships"] as const,
+  venture: (partnershipId: string) => ["agreements", "venture", partnershipId] as const,
 };
 
 export const agreementFetchers = {

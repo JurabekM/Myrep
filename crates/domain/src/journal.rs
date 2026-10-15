@@ -27,6 +27,16 @@ pub enum JournalKind {
     LoanPayment,
     /// Oldingi yozuvni tuzatish (yangi yozuv; eskisi o'zgarmaydi).
     Correction,
+    /// Sheriklik kassa daftari: kirim (buyurtma).
+    VentureIncome,
+    /// Sheriklik kassa daftari: xarajat (mato, ip, ish haqi).
+    VentureExpense,
+    /// Fors-major zarari (izoh va dalil bilan).
+    ForceMajeure,
+    /// Zarar taqsimoti (musbat kattalik; yo'nalish turdan).
+    LossDistribution,
+    /// Buyout to'lovi (foyda ulushidan ayirma).
+    BuyoutPayment,
 }
 
 impl JournalKind {
@@ -38,6 +48,11 @@ impl JournalKind {
             Self::ProfitDistribution => "PROFIT_DISTRIBUTION",
             Self::LoanPayment => "LOAN_PAYMENT",
             Self::Correction => "CORRECTION",
+            Self::VentureIncome => "VENTURE_INCOME",
+            Self::VentureExpense => "VENTURE_EXPENSE",
+            Self::ForceMajeure => "FORCE_MAJEURE",
+            Self::LossDistribution => "LOSS_DISTRIBUTION",
+            Self::BuyoutPayment => "BUYOUT_PAYMENT",
         }
     }
 
@@ -49,6 +64,11 @@ impl JournalKind {
             "PROFIT_DISTRIBUTION" => Some(Self::ProfitDistribution),
             "LOAN_PAYMENT" => Some(Self::LoanPayment),
             "CORRECTION" => Some(Self::Correction),
+            "VENTURE_INCOME" => Some(Self::VentureIncome),
+            "VENTURE_EXPENSE" => Some(Self::VentureExpense),
+            "FORCE_MAJEURE" => Some(Self::ForceMajeure),
+            "LOSS_DISTRIBUTION" => Some(Self::LossDistribution),
+            "BUYOUT_PAYMENT" => Some(Self::BuyoutPayment),
             _ => None,
         }
     }

@@ -41,6 +41,7 @@ pub mod subscription;
 pub mod treat;
 pub mod unlock;
 pub mod vault;
+pub mod venture;
 
 pub use category::{Category, CategoryKey};
 pub use content::{Chapter, ContentBlock, ContentLoadResult, TaskTrigger};
@@ -211,6 +212,9 @@ pub enum DomainError {
     /// Sheriklik tuzilmasi turga mos emas (mudaraba: bitta kapital; musharaka: kamida ikkita).
     #[error("sheriklik tuzilmasi turga mos emas")]
     PartnershipStructureInvalid,
+    /// Davr yopilgan: unga yozuv qo'shib yoki uni o'zgartirib bo'lmaydi.
+    #[error("davr yopilgan")]
+    PeriodClosed,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -262,6 +266,7 @@ impl DomainError {
             Self::FamilyConsentRequired => "FAMILY_CONSENT_REQUIRED",
             Self::ReadinessGateLocked => "READINESS_GATE_LOCKED",
             Self::PartnershipStructureInvalid => "PARTNERSHIP_STRUCTURE_INVALID",
+            Self::PeriodClosed => "PERIOD_CLOSED",
             Self::Money(error) => error.code(),
         }
     }

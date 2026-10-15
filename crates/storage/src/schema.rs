@@ -649,6 +649,74 @@ CREATE TABLE partnership_buyout_payments (
 CREATE INDEX partnership_buyout_payments_by_partnership ON partnership_buyout_payments (partnership_id);
 "#;
 
+/// Sxema v14 (D13): jurnal turlari kengaytirildi (ledger, zarar taqsimoti, buyout) — jadval qayta quriladi
+/// (SQLite CHECK o'zgarmaydi); yopilgan sheriklik davrlari (`venture_periods`), o'zgarmas.
+pub const SCHEMA_V14: &str = r#"
+CREATE TABLE journal_entries_v14 (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    seq INTEGER NOT NULL CHECK (seq >= 1),
+    kind TEXT NOT NULL CHECK (kind IN ('OPENING_BALANCE', 'CONTRIBUTION', 'PROFIT_DISTRIBUTION', 'LOAN_PAYMENT', 'CORRECTION',
+        'VENTURE_INCOME', 'VENTURE_EXPENSE', 'FORCE_MAJEURE', 'LOSS_DISTRIBUTION', 'BUYOUT_PAYMENT')),
+    party_id TEXT NOT NULL CHECK (length(trim(party_id)) > 0),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    entry_date TEXT NOT NULL,
+    note TEXT,
+    prev_hash TEXT NOT NULL CHECK (length(prev_hash) = 64),
+    hash TEXT NOT NULL CHECK (length(hash) = 64),
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (agreement_id, seq)
+) STRICT;
+INSERT INTO journal_entries_v14 SELECT id, household_id, agreement_id, seq, kind, party_id, amount_minor, currency,
+    entry_date, note, prev_hash, hash, created_at, origin_device_id FROM journal_entries;
+DROP TRIGGER journal_entries_no_update;
+DROP TRIGGER journal_entries_no_delete;
+DROP TABLE journal_entries;
+ALTER TABLE journal_entries_v14 RENAME TO journal_entries;
+
+CREATE TRIGGER journal_entries_no_update BEFORE UPDATE ON journal_entries
+BEGIN
+    SELECT RAISE(ABORT, 'journal is append-only');
+END;
+
+CREATE TRIGGER journal_entries_no_delete BEFORE DELETE ON journal_entries
+BEGIN
+    SELECT RAISE(ABORT, 'journal is append-only');
+END;
+
+CREATE TABLE venture_periods (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    partnership_id TEXT NOT NULL REFERENCES partnerships (id),
+    start_on TEXT NOT NULL,
+    end_on TEXT NOT NULL,
+    income_minor INTEGER NOT NULL CHECK (income_minor >= 0),
+    expense_minor INTEGER NOT NULL CHECK (expense_minor >= 0),
+    net_minor INTEGER NOT NULL,
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    chain_head TEXT NOT NULL CHECK (length(chain_head) = 64),
+    force_majeure_note TEXT,
+    distribution_json TEXT NOT NULL,
+    closed_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL,
+    UNIQUE (partnership_id, end_on)
+) STRICT;
+CREATE INDEX venture_periods_by_partnership ON venture_periods (partnership_id, end_on);
+
+CREATE TRIGGER venture_periods_no_update BEFORE UPDATE ON venture_periods
+BEGIN
+    SELECT RAISE(ABORT, 'closed period is immutable');
+END;
+
+CREATE TRIGGER venture_periods_no_delete BEFORE DELETE ON venture_periods
+BEGIN
+    SELECT RAISE(ABORT, 'closed period is immutable');
+END;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -665,6 +733,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V11),
         M::up(SCHEMA_V12),
         M::up(SCHEMA_V13),
+        M::up(SCHEMA_V14),
     ])
 }
 
@@ -706,4 +775,5 @@ pub const TABLES: &[&str] = &[
     "ceremony_lines",
     "partnerships",
     "partnership_buyout_payments",
+    "venture_periods",
 ];

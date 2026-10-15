@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SyntheticEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { commands } from "../../bindings/bindings";
@@ -6,6 +6,8 @@ import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
 import { Alert, Card, Field, PageHeader, PrimaryButton, SecondaryButton } from "../finance/ui";
 import { AgreementWizard } from "./AgreementWizard";
+import { HustleCard } from "./HustleCard";
+import { OfferCheckCard } from "./OfferCheckCard";
 import { PartnershipsCard } from "./PartnershipsCard";
 import { kindKey, statusKey } from "./labels";
 import { agreementFetchers, agreementKeys, useApplyAgreement } from "./queries";
@@ -18,12 +20,30 @@ const SELECT_CLASS =
 export function AgreementsPage() {
   const { t } = useTranslation();
   const apply = useApplyAgreement();
+  const queryClient = useQueryClient();
   const message = useErrorMessage();
   const list = useQuery({ queryKey: agreementKeys.list, queryFn: agreementFetchers.list });
   const [open, setOpen] = useState<string | null>(null);
   const [kind, setKind] = useState<(typeof KINDS)[number]>("PARTNERSHIP");
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  /** «Hunardan ishga» natijasidan sheriklik qoralamasi (mehnat egasi sifatida). */
+  async function createPartnershipDraft(draftTitle: string) {
+    setError(null);
+    try {
+      const next = unwrap(
+        await commands.createPartnership({ title: draftTitle, kind: "MUDARABA", myRole: "WORKER" }),
+      );
+      await queryClient.invalidateQueries({ queryKey: agreementKeys.partnerships });
+      const created = next.items[next.items.length - 1];
+      if (created !== undefined) {
+        setOpen(created.agreementId);
+      }
+    } catch (caught) {
+      setError(message(caught));
+    }
+  }
 
   async function create(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +67,14 @@ export function AgreementsPage() {
           setOpen(agreementId);
         }}
       />
+
+      <HustleCard
+        onDraft={(draftTitle) => {
+          void createPartnershipDraft(draftTitle);
+        }}
+      />
+
+      <OfferCheckCard />
 
       <Card title={t("agreements.listTitle")}>
         {list.isSuccess && list.data.length === 0 ? (

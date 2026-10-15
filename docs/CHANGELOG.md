@@ -4,6 +4,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D13 — Venture ledger, taqsimot, «Hunardan ishga», taklif detektori (2026-10-15)
+
+**Qo'shildi**
+
+- Domen: `JournalKind` kengaytirildi — `VENTURE_INCOME`, `VENTURE_EXPENSE`, `FORCE_MAJEURE`, `LOSS_DISTRIBUTION`, `BUYOUT_PAYMENT` (zanjir algoritmi o'zgarmadi; `journal_chain.json` yashil). `venture.rs`: `net_of`, `payback_months`, `hustle_scenarios` (pessimistik 70/120 %, o'rtacha, optimistik 130/90 % — bp'da). Xato `PERIOD_CLOSED`.
+- Sxema v14: `journal_entries` qayta qurildi (CHECK kengaytirish uchun; triggerlar qayta yaratildi), `venture_periods` (yopilgan davr: yakun, zanjir boshi, taqsimot JSON, fors-major izohi) — UPDATE/DELETE triggerlar bilan o'zgarmas.
+- Xizmat (`src-tauri/src/ventures.rs`) va 6 command: `get_venture`, `add_venture_entry`, `close_venture_period`, `create_period_report_pdf`, `check_offer`, `hustle_plan`. Ledger yozuvlari D8A jurnali orqali (imzolangan kelishuv, hisob yurituvchi qurilma); yopilgan davrga yozib bo'lmaydi; davr yopilganda `partnership::distribute` (foyda ulush bo'yicha, zarar — mudarabada kapital egasida, musharakada kapitalga mutanosib), **buyout ayirmasi** (mehnat egasining ulushidan navbatdagi bo'lak, qoldiq bilan cheklangan) to'lov sifatida yoziladi, `IN_DISPUTE` da bloklanadi (`ensure_distribution_allowed`). «Katta foyda» belgisi ochiq davr uchun (`profit_spike_alert`, oxirgi 3 davr).
+- Sherik uchun davr hisoboti PDF: `crates/pdf/src/period.rs` (`PeriodReport`, `render_period_report`, zanjir boshi bilan) + snapshot `period-report.pdf`.
+- UI: Sheriklik kartasida **Kassa daftari** (imzolangan sheriklikda): yakun, yozuv formasi, davr yopish, yopilgan davrlar + taqsimot + PDF, «katta foyda» ogohlantirishi; **«Hunardan ishga»** kartasi (3 stsenariy jadvali, bir bosishda sheriklik qoralamasi); **«Kafolatlangan foyda» detektori** kartasi (6 savol → yashil/sariq/qizil, bayroq izohlari).
+- Testlar: domen 2, Tauri 3 (yopish/taqsimot/o'zgarmaslik/PDF; zarar+fors-major+buyout ayirmasi; detektor+hunar), PDF 2, UI 3.
+
+**Qarorlar**
+
+- Chek rasmlari biriktirish — qo'shilmadi (baza SQLCipher bilan shifrlangan; fayl biriktirish D14 dan keyin). Fors-major — izoh majburiy.
+- `LOSS_DISTRIBUTION` alohida tur (jurnal summasi doim musbat; yo'nalish turdan).
+- GUI sinovi — D10 dagi sabab (PIN) tufayli kutilmoqda.
+
 ### D12 — Sheriklik domeni, shartnoma, buyout (2026-10-15)
 
 **Qo'shildi**

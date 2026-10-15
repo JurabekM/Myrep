@@ -50,6 +50,7 @@ export const RULE_ERROR_KEYS = {
   PARTNERSHIP_STRUCTURE_INVALID: "errors.partnershipStructureInvalid",
   PROFIT_SHARES_NOT_100: "errors.profitSharesNot100",
   GUARANTEED_RETURN_FORBIDDEN: "errors.guaranteedReturnForbidden",
+  PERIOD_CLOSED: "errors.periodClosed",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */
