@@ -4,6 +4,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D10–D13A (domen qismi) — Amortizatsiya, 70/20/10, sheriklik taqsimoti, katta foyda (2026-10-15)
+
+**Qo'shildi**
+
+- `domain::amortization`: annuitet to'lovi (i128 qo'zg'aladigan-nuqta, `f64` yo'q), oylik jadval, qo'shimcha to'lov bilan muddatni qisqartirish. Vektor `amortization.json` (3 case, to'liq jadval bilan).
+- `domain::recovery`: 70/20/10 taqsimoti (`allocate`), jamg'arma ≥ 100 bp, yig'indisi 10 000. Vektor `debt_recovery_split.json` (6 case).
+- `domain::partnership`: `MUDARABA` (foyda ulush bo'yicha, zarar kapital egasiga) va `MUSHARAKA` (zarar kapitalga mutanosib); kafolatli summa taqiqlangan. Vektor `profit_distribution.json` (4 case).
+- `domain::profit_spike`: «katta foyda» — reja ≥ 150% yoki uch davr o'rtachasi ≥ 200%. Vektor `profit_spike.json` (5 case).
+- Vektor runnerlari: `crates/vectors/tests/debt_vectors.rs`, `profit_vectors.rs`. Fayllar mobil bilan baytma-bayt, `SHA256SUMS` da.
+
+**Qarorlar va sabablar**
+
+- Annuitet: `P·r·g/(g−1)`, `g = (1+r)^N` — i128 qo'zg'aladigan-nuqta (10^18), ko'paytmalar bo'linadi (`mul_fixed`), shuning uchun realistik muddatlarda ham i128 chegarasidan oshmaydi. Oxirgi to'lov qoldiqdan oshmaydi.
+- Taqsimot qismlari `allocate` bilan: yig'indisi har doim daromadga teng (tiyin yo'qolmaydi). Zarar — manfiy qismlar, `allocate` mutlaq qiymatda hisoblanadi.
+- `DomainError` ga yangi kodlar: `SPLIT_NOT_100_PERCENT`, `SAVINGS_BELOW_MINIMUM`, `PROFIT_SHARES_NOT_100`, `GUARANTEED_RETURN_FORBIDDEN`.
+
+**Ma'lum cheklovlar (keyingi ishga qoldirildi)**
+
+- D10: amortizatsiyaning qolgan uch turi (`DIFFERENTIATED`, `FIXED_MARKUP`, `MANUAL`), payoff rejalashtiruvchisi, UI (jadval va grafik) — qo'shilmadi. Faqat annuitet (vektor bilan qoplangan).
+- D10: `DebtContributor`, «Qarzsiz kun», rejimning avtomatik qaytishi — qo'shilmadi.
+- D12: sheriklik shartnomasi ustasi, versiyalash, PDF, buyout jadvali, kapital qabul qilishda oilaviy rozilik — qo'shilmadi (domen hisoblash bor).
+- D13A: `ProfitSpikeAlert` taqsimotga ulanmagan (UI va Tauri qatlami keyin).
+
 ### D8A — Kelishuv dvigateli va append-only jurnal (2026-10-15)
 
 **Qo'shildi**

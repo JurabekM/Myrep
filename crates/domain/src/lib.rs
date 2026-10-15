@@ -5,6 +5,7 @@
 //! va versiya raqami (DESKTOP_PROMPT.md 6.1).
 
 pub mod agreement;
+pub mod amortization;
 pub mod calendar;
 pub mod category;
 pub mod content;
@@ -23,8 +24,11 @@ pub mod limit;
 pub mod necessity;
 pub mod obligation;
 pub mod odat;
+pub mod partnership;
+pub mod profit_spike;
 pub mod progress;
 pub mod readiness;
+pub mod recovery;
 pub mod report;
 pub mod rescue;
 pub mod share;
@@ -142,6 +146,18 @@ pub enum DomainError {
     /// Narx yoki og'irlik noto'g'ri (nol/manfiy bazaviy narx, valyuta mos emas, og'irliklar yig'indisi 0).
     #[error("narx yoki og'irlik noto'g'ri")]
     InvalidPrice,
+    /// Taqsimot ulushlari yig'indisi 100% (10 000 bp) emas.
+    #[error("taqsimot 100% bo'lishi kerak")]
+    SplitNotHundred,
+    /// Jamg'arma ulushi minimumdan (1%) kam.
+    #[error("jamg'arma ulushi kamida 1% bo'lishi kerak")]
+    SavingsBelowMinimum,
+    /// Sherik ulushlari yig'indisi 100% (10 000 bp) emas.
+    #[error("foyda ulushlari yig'indisi 100% bo'lishi kerak")]
+    ProfitSharesNotHundred,
+    /// Kafolatli (qat'iy) summa sheriklikda taqiqlangan.
+    #[error("kafolatli daromad taqiqlangan")]
+    GuaranteedReturnForbidden,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -179,6 +195,10 @@ impl DomainError {
             Self::RescueExceedsAvailable => "RESCUE_EXCEEDS_AVAILABLE",
             Self::EnvelopeWeekClosed => "ENVELOPE_WEEK_CLOSED",
             Self::InvalidPrice => "INVALID_PRICE",
+            Self::SplitNotHundred => "SPLIT_NOT_100_PERCENT",
+            Self::SavingsBelowMinimum => "SAVINGS_BELOW_MINIMUM",
+            Self::ProfitSharesNotHundred => "PROFIT_SHARES_NOT_100",
+            Self::GuaranteedReturnForbidden => "GUARANTEED_RETURN_FORBIDDEN",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

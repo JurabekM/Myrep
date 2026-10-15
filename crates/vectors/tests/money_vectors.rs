@@ -15,7 +15,9 @@ use vectors::{
 /// `har_bir_vektor_fayli_runner_bilan_qoplangan` testi buni talab qiladi.
 const COVERED_SUITES: &[&str] = &[
     "agreement_completeness",
+    "amortization",
     "allocate",
+    "debt_recovery_split",
     "emergency_target",
     "fx_convert",
     "income_share",
@@ -24,6 +26,8 @@ const COVERED_SUITES: &[&str] = &[
     "money_parse",
     "percent_of",
     "personal_inflation",
+    "profit_distribution",
+    "profit_spike",
     "readiness_gate",
     "savings_rescue",
     "streak",
