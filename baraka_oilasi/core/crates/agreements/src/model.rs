@@ -27,8 +27,12 @@ pub enum AgreementStatus {
 pub enum Answer<T> {
     #[default]
     Unanswered,
-    Answered { value: T },
-    NotApplicable { reason: String },
+    Answered {
+        value: T,
+    },
+    NotApplicable {
+        reason: String,
+    },
 }
 
 impl<T> Answer<T> {

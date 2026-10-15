@@ -1,6 +1,6 @@
 [package]
 name = "baraka-app"
-description = "Use-case qatlami: domen va saqlashni boshqaradi, DTO qaytaradi"
+description = "Use-case qatlami: domen va saqlashni boshqaradi, adapterlar uchun DTO qaytaradi"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,22 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+baraka-money.workspace = true
+baraka-journal.workspace = true
+baraka-domain-common.workspace = true
+baraka-domain-uy.workspace = true
+baraka-agreements.workspace = true
+baraka-security.workspace = true
+baraka-storage.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+unicode-normalization.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+baraka-agreements.workspace = true
+tempfile = "3"
