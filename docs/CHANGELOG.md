@@ -23,6 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 **Ma'lum cheklovlar**
 
+- **Tray menyusi qo'lda sinalmagan:** ikonka ko'rindi, lekin menyu bandlari (Ochish / Tez xarajat / Qulflash / Chiqish) avtomatlashtirilgan sinovda bosilmadi (taskbar ruxsati yo'q). Foydalanuvchi tekshirishi kerak.
 - Tray menyusi faqat o'zbekcha. Global tugma band bo'lsa (boshqa dastur egallagan) faqat log ogohlantirishi, foydalanuvchiga xabar yo'q.
 - CSV: kategoriya barcha satrlar uchun bitta; satrma-satr kategoriya tanlash yo'q.
 
