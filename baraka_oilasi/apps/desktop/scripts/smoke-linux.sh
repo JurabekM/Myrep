@@ -1,7 +1,7 @@
 #!/bin/bash
 # Haqiqiy ilovani Xvfb + xdotool bilan tekshirish (Linux): sozlash → tiklash kodi → daromad → ulush → bosh sahifa → Ctrl+L.
 # Talab: xvfb, imagemagick, xdotool; debug build. Ishlatish: scripts/smoke-linux.sh [chiqish_papkasi] [ilova]
-SP=${1:-/tmp/baraka-smoke}; APP=${2:-$(dirname "$0")/../src-tauri/target/debug/baraka-desktop}
+SP=${1:-/tmp/baraka-smoke}; APP=${2:-$(dirname "$0")/../../../target/debug/baraka-desktop}
 mkdir -p "$SP/e2e"
 export DISPLAY=:99 BARAKA_INSECURE_DEV_SECRET=1 XDG_DATA_HOME=$SP/e2e/data WEBKIT_DISABLE_COMPOSITING_MODE=1
 rm -rf $SP/e2e/data; Xvfb :99 -screen 0 1360x860x24 >/dev/null 2>&1 & XVFB=$!

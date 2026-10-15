@@ -49,6 +49,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::monthly_summary,
             commands::simulate_loan,
             commands::check_agreement,
+            commands::export_loan_receipt,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }
@@ -68,6 +69,7 @@ pub fn export_bindings(path: &std::path::Path) -> Result<(), String> {
 pub fn run() {
     let builder = specta_builder();
     let result = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);

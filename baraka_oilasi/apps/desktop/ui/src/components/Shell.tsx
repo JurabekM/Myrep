@@ -8,6 +8,7 @@ import { LoanScreen } from "../features/debts/LoanScreen";
 import { ExpensesScreen } from "../features/expenses/ExpensesScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
+import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { VaultScreen } from "../features/vault/VaultScreen";
 import { call } from "../lib/api";
 import { keys, resetAfterLock } from "../lib/queryClient";
@@ -20,6 +21,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "expenses", label: "nav.expenses" },
   { screen: "audit", label: "nav.audit" },
   { screen: "debts", label: "nav.debts" },
+  { screen: "receipt", label: "nav.receipt" },
 ];
 
 const MENTOR: Record<Screen, string> = {
@@ -28,6 +30,7 @@ const MENTOR: Record<Screen, string> = {
   expenses: "mentor.expenses",
   audit: "mentor.audit",
   debts: "mentor.debts",
+  receipt: "mentor.receipt",
 };
 
 /** Asosiy oyna: chapda navigatsiya va makonlar, markazda ish maydoni, oʻngda Sobir hoji. */
@@ -87,6 +90,7 @@ export function Shell() {
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}
         {active && screen === "audit" && <AuditScreen spaceId={active} />}
         {screen === "debts" && <LoanScreen />}
+        {screen === "receipt" && <ReceiptScreen />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />
       {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}

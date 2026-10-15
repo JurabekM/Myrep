@@ -34,10 +34,21 @@ pub fn generate(root: &Path) -> Result<(), String> {
     };
     let colors = obj(&t, "color")?;
     // Standart mavzu (foydalanuvchi qarori: Claude Code dark theme uslubi). Ikkinchisi — `data-theme` bilan.
-    let default_theme = t.get("defaultTheme").and_then(Value::as_str).unwrap_or("dark");
-    let other_theme = if default_theme == "dark" { "light" } else { "dark" };
+    let default_theme = t
+        .get("defaultTheme")
+        .and_then(Value::as_str)
+        .unwrap_or("dark");
+    let other_theme = if default_theme == "dark" {
+        "light"
+    } else {
+        "dark"
+    };
     let palette = |name: &str| {
-        colors.get(name).and_then(Value::as_object).cloned().ok_or(format!("tokens: color.{name} yo'q"))
+        colors
+            .get(name)
+            .and_then(Value::as_object)
+            .cloned()
+            .ok_or(format!("tokens: color.{name} yo'q"))
     };
     let main = palette(default_theme)?;
     let alt = palette(other_theme)?;
@@ -46,7 +57,12 @@ pub fn generate(root: &Path) -> Result<(), String> {
     let mut css = String::from("/* @generated cargo xtask tokens — qo'lda tahrirlamang. Manba: shared/design-tokens/tokens.json */\n:root {\n");
     let _ = writeln!(css, "  color-scheme: {default_theme};");
     for (k, v) in &main {
-        let _ = writeln!(css, "  --bk-{}: {};", kebab(k), v.as_str().unwrap_or_default());
+        let _ = writeln!(
+            css,
+            "  --bk-{}: {};",
+            kebab(k),
+            v.as_str().unwrap_or_default()
+        );
     }
     for group in ["radius", "space"] {
         for (k, v) in obj(&t, group)? {
@@ -55,13 +71,25 @@ pub fn generate(root: &Path) -> Result<(), String> {
     }
     for (k, v) in obj(&t, "font")? {
         match v {
-            Value::String(s) => { let _ = writeln!(css, "  --bk-font-{}: \"{s}\";", kebab(&k)); }
-            other => { let _ = writeln!(css, "  --bk-font-{}: {other}px;", kebab(&k)); }
+            Value::String(s) => {
+                let _ = writeln!(css, "  --bk-font-{}: \"{s}\";", kebab(&k));
+            }
+            other => {
+                let _ = writeln!(css, "  --bk-font-{}: {other}px;", kebab(&k));
+            }
         }
     }
-    let _ = writeln!(css, "}}\n\n:root[data-theme=\"{other_theme}\"] {{\n  color-scheme: {other_theme};");
+    let _ = writeln!(
+        css,
+        "}}\n\n:root[data-theme=\"{other_theme}\"] {{\n  color-scheme: {other_theme};"
+    );
     for (k, v) in &alt {
-        let _ = writeln!(css, "  --bk-{}: {};", kebab(k), v.as_str().unwrap_or_default());
+        let _ = writeln!(
+            css,
+            "  --bk-{}: {};",
+            kebab(k),
+            v.as_str().unwrap_or_default()
+        );
     }
     css.push_str("}\n\n@theme inline {\n");
     for k in main.keys() {

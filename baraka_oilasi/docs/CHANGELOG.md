@@ -6,7 +6,13 @@
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
 - Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
 
+### Qo'shildi
+- **Y6 `baraka-pdf`:** typst 0.15 kutubxona sifatida, o'rnatilgan Noto Sans/Serif (OFL), ma'lumot faqat `data.json` orqali (typst kod in'eksiyasi yo'q — test bilan), deterministik chiqish (sana, ident, yaratuvchi qotirilgan), chainHead QR (SVG) va qisqa kod bloki, uz/uz-Cyrl/ru matnlari `cargo xtask i18n` dan; PNG snapshot'lar `target/pdf-snapshots/`.
+- **Qarz tilxati** (U8 ning birinchi qismi): `App::render_loan_receipt` — foizsiz, to'lov rejasi majburiy, jadval yig'indisi = summa, sanalar tartibi, bir tomon ikki marta bo'lmaydi; sana `15.11.2026` yoki `2026-11-15` (yadroda o'qiladi). Desktop: «Qarz tilxati» ekrani, `export_loan_receipt` — PDF tizimning «Saqlash» oynasi orqali (fayl yo'li frontendga berilmaydi). Android: `BarakaCore::render_loan_receipt`.
+- Desktop workspace build artefaktlari umumiy `target/` da (yadro ikki marta qurilmaydi).
+
 ### Tuzatildi
+- WebKitGTK'da `type="date"` maydoni kalendar ochib, klaviatura kiritishini to'sar edi → sana matn maydoni, o'qish yadroda.
 - CI (Windows core): `openssl-src` Git Bash perl'i bilan yig'ilmas edi → `OPENSSL_SRC_PERL` Strawberry Perl'ga yo'naltirildi.
 
 ## 1-sessiya: poydevor va Uy makoni yadrosi

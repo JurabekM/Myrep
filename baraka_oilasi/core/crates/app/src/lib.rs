@@ -10,6 +10,7 @@ mod catalog;
 mod dto;
 mod error;
 mod events;
+mod receipt;
 pub mod session;
 mod text;
 mod uy;

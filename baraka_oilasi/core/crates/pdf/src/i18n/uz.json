@@ -1,0 +1,22 @@
+{
+  "disclaimer": "Shaxsiy hisob uchun yozuv. Yuridik kafolat emas. Taʼlimiy material, fatvo emas.",
+  "receipt.title": "Qarz tilxati",
+  "receipt.lender": "Qarz beruvchi",
+  "receipt.borrower": "Qarz oluvchi",
+  "receipt.amount": "Qarz summasi",
+  "receipt.due": "Toʻliq qaytarish muddati",
+  "receipt.place": "Joy va sana",
+  "receipt.interestFree": "Bu qarz foizsiz (qarzi hasana). Qaytariladigan summa olingan summaga teng va shu valyutada qaytariladi; kechikish uchun ustama yoki jarima belgilanmaydi.",
+  "receipt.schedule": "Qaytarish jadvali",
+  "receipt.witnesses": "Guvohlar",
+  "receipt.note": "Izoh",
+  "col.n": "№",
+  "col.date": "Sana",
+  "col.amount": "Summa",
+  "signatures": "Imzolar",
+  "role.lender": "Qarz beruvchi",
+  "role.borrower": "Qarz oluvchi",
+  "role.witness": "Guvoh",
+  "chain.title": "Tekshirish kodi",
+  "chain.hint": "Bu kodni oʻzingizda saqlang. Keyinchalik yozuvlar oʻzgartirilmaganini shu kod bilan tekshirish mumkin."
+}

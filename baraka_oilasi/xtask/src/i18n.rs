@@ -90,6 +90,18 @@ pub fn generate(root: &Path) -> Result<(), String> {
             &root.join(format!("apps/android/lib/l10n/app_{arb_locale}.arb")),
             &pretty(&Value::Object(arb))?,
         )?;
+        // PDF shablonlari uchun (yadro): faqat `pdf.*` kalitlari, prefikssiz.
+        let pdf: Dict = dict
+            .iter()
+            .filter_map(|(k, v)| {
+                k.strip_prefix("pdf.")
+                    .map(|rest| (rest.to_string(), v.clone()))
+            })
+            .collect();
+        write_if_changed(
+            &root.join(format!("core/crates/pdf/src/i18n/{tag}.json")),
+            &pretty(&Value::Object(pdf))?,
+        )?;
     }
     Ok(())
 }

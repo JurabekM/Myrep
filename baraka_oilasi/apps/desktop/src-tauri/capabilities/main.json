@@ -26,6 +26,7 @@
     "allow-record-expense",
     "allow-monthly-summary",
     "allow-simulate-loan",
-    "allow-check-agreement"
+    "allow-check-agreement",
+    "allow-export-loan-receipt"
   ]
 }

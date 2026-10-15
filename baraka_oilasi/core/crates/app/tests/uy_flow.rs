@@ -364,3 +364,53 @@ fn agreement_check_and_loan_simulation_passthrough() {
     assert_eq!(sim.payment.minor, "322147684");
     assert_eq!(sim.interest_saved.minor, "213048906");
 }
+
+#[test]
+fn loan_receipt_rules_and_pdf() {
+    let app = app_at(clock("2026-10-15T09:00:00Z"));
+    bootstrap(&app);
+    let line = |date: &str, amount: &str| ScheduleLineInput {
+        date: date.into(),
+        amount: amount.into(),
+    };
+    let mut input = LoanReceiptInput {
+        lender: "Gʻayrat".into(),
+        borrower: "Karim".into(),
+        amount: "2 000 000".into(),
+        currency: "UZS".into(),
+        issued_on: None,
+        place: "Toshkent".into(),
+        schedule: vec![],
+        witnesses: vec!["Sobir hoji".into(), " ".into()],
+        note: None,
+    };
+    assert_eq!(
+        app.render_loan_receipt(input.clone()).unwrap_err().code,
+        "SCHEDULE_REQUIRED"
+    );
+    input.schedule = vec![
+        line("2026-11-15", "700 000"),
+        line("2026-12-15", "700 000"),
+        line("2027-01-15", "500 000"),
+    ];
+    assert_eq!(
+        app.render_loan_receipt(input.clone()).unwrap_err().code,
+        "SCHEDULE_SUM_MISMATCH"
+    );
+    input.schedule[2].amount = "600 000".into();
+    input.schedule.swap(0, 1);
+    input.schedule[0].date = "2026-12-15".into();
+    input.schedule[1].date = "2026-11-15".into();
+    assert_eq!(
+        app.render_loan_receipt(input.clone()).unwrap_err().code,
+        "SCHEDULE_DATES_ORDER"
+    );
+    input.schedule.swap(0, 1);
+    let pdf = app.render_loan_receipt(input.clone()).unwrap();
+    assert!(pdf.starts_with(b"%PDF-"));
+    input.borrower = "Gʻayrat".into();
+    assert_eq!(
+        app.render_loan_receipt(input).unwrap_err().code,
+        "SAME_PARTY"
+    );
+}

@@ -28,6 +28,11 @@ export const commands = {
 	monthlySummary: (spaceId: string, date: string | null, balanceDelta: string | null) => typedError<MonthlySummaryDto, AppError>(__TAURI_INVOKE("monthly_summary", { spaceId, date, balanceDelta })),
 	simulateLoan: (input: LoanSimulationInput) => typedError<LoanSimulationDto, AppError>(__TAURI_INVOKE("simulate_loan", { input })),
 	checkAgreement: (agreementType: string, draft: AgreementDraft) => typedError<Completeness, AppError>(__TAURI_INVOKE("check_agreement", { agreementType, draft })),
+	/**
+	 *  Tilxat PDF'ini yaratib, tizimning «Saqlash» oynasi orqali saqlaydi. Fayl yo'li frontendga
+	 *  berilmaydi va frontenddan olinmaydi (keng `fs` ruxsati kerak emas). `false` — bekor qilindi.
+	 */
+	exportLoanReceipt: (input: LoanReceiptInput) => typedError<boolean, AppError>(__TAURI_INVOKE("export_loan_receipt", { input })),
 };
 
 /** Events */
@@ -199,6 +204,21 @@ export type IncomeRecordedDto = {
 	progressiveSuggestionPercent: string | null,
 };
 
+/**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */
+export type LoanReceiptInput = {
+	lender: string,
+	borrower: string,
+	amount: string,
+	currency: string,
+	/**  Bo'lmasa — bugun. */
+	issuedOn: string | null,
+	place: string,
+	/**  To'lov rejasi majburiy; yig'indisi qarz summasiga teng bo'lishi kerak. */
+	schedule: ScheduleLineInput[],
+	witnesses: string[],
+	note: string | null,
+};
+
 /**  Odatiy va tezlashtirilgan grafik yonma-yon: «N oy erta», «X so'm tejaldi». */
 export type LoanSimulationDto = {
 	payment: MoneyDto,
@@ -322,6 +342,12 @@ export type ProfitRule = {
 export type ProfitShare = {
 	partyId: string,
 	shareBp: number,
+};
+
+export type ScheduleLineInput = {
+	/**  `15.11.2026` yoki `2026-11-15` (yadroda o'qiladi). */
+	date: string,
+	amount: string,
 };
 
 export type ScheduleRowDto = {

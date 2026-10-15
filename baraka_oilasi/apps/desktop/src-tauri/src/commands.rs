@@ -2,6 +2,7 @@
 use baraka_agreements::{AgreementDraft, Completeness};
 use baraka_app::*;
 use tauri::{AppHandle, State};
+use tauri_plugin_dialog::DialogExt;
 use tauri_specta::Event;
 
 use crate::{CoreChanged, Desktop};
@@ -211,4 +212,30 @@ pub async fn check_agreement(
     draft: AgreementDraft,
 ) -> R<Completeness> {
     state.session.app()?.check_agreement(&agreement_type, draft)
+}
+
+/// Tilxat PDF'ini yaratib, tizimning «Saqlash» oynasi orqali saqlaydi. Fayl yo'li frontendga
+/// berilmaydi va frontenddan olinmaydi (keng `fs` ruxsati kerak emas). `false` — bekor qilindi.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_loan_receipt(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    input: LoanReceiptInput,
+) -> R<bool> {
+    let pdf = state.session.app()?.render_loan_receipt(input)?;
+    let picked = handle
+        .dialog()
+        .file()
+        .add_filter("PDF", &["pdf"])
+        .set_file_name("tilxat.pdf")
+        .blocking_save_file();
+    let Some(file) = picked else {
+        return Ok(false);
+    };
+    let path = file
+        .into_path()
+        .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
+    std::fs::write(path, pdf).map_err(|_| AppError::new("IO_ERROR"))?;
+    Ok(true)
 }

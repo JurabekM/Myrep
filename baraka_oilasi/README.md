@@ -24,7 +24,8 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`
 | Rust yadro: `money`, `journal`, `security`, `storage`, `domain-uy`, `agreements`, `app` (sessiya va use-case'lar) | ✅ testlar bilan |
 | Oltin vektorlar (16 suite, 81 case) + mustaqil Python oracle | ✅ |
 | `cargo xtask`: i18n (uz, uz-Cyrl, ru), taqiqlangan iboralar, dizayn tokenlari | ✅ |
-| Desktop: Tauri 2 + React (sozlash, qulf, bosh sahifa, daromad, Kelajagim, xarajat, audit, qarz) | ✅ Linux'da yig'ildi va tekshirildi; Windows NSIS — CI'da |
+| Desktop: Tauri 2 + React, Claude Code dark theme (sozlash, qulf, bosh sahifa, daromad, Kelajagim, xarajat, audit, qarz, qarz tilxati PDF) | ✅ Linux'da yig'ildi va tekshirildi; Windows NSIS — CI'da yashil |
+| PDF (typst): qarz tilxati, uz / uz-Cyrl / ru | ✅ |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish
@@ -40,6 +41,6 @@ cd apps/desktop
 pnpm --dir ui install
 (cd src-tauri && cargo test)         # ui/src/bindings.ts ni yangilaydi
 ui/node_modules/.bin/tauri dev       # ishlab chiqish
-ui/node_modules/.bin/tauri build --bundles nsis   # Windows o'rnatuvchi
+ui/node_modules/.bin/tauri build --bundles nsis   # Windows o'rnatuvchi → ../../target/release/bundle/nsis/
 ```
 Headless Linux'da OS keyring bo'lmasa, faqat debug build uchun: `BARAKA_INSECURE_DEV_SECRET=1`.

@@ -182,6 +182,11 @@ impl BarakaCore {
         self.session.app()?.check_agreement(&agreement_type, draft)
     }
 
+    /// Qarz tilxati PDF baytlari (Dart tomonida `share_plus` / `printing` bilan ulashiladi).
+    pub fn render_loan_receipt(&self, input: LoanReceiptInput) -> Result<Vec<u8>, AppError> {
+        self.session.app()?.render_loan_receipt(input)
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

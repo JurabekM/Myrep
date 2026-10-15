@@ -326,3 +326,30 @@ pub struct LoanSimulationDto {
     pub interest_saved: MoneyDto,
     pub accelerated_schedule: Vec<ScheduleRowDto>,
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ScheduleLineInput {
+    /// `15.11.2026` yoki `2026-11-15` (yadroda o'qiladi).
+    pub date: String,
+    pub amount: String,
+}
+
+/// Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct LoanReceiptInput {
+    pub lender: String,
+    pub borrower: String,
+    pub amount: String,
+    pub currency: String,
+    /// Bo'lmasa — bugun.
+    pub issued_on: Option<String>,
+    pub place: String,
+    /// To'lov rejasi majburiy; yig'indisi qarz summasiga teng bo'lishi kerak.
+    pub schedule: Vec<ScheduleLineInput>,
+    pub witnesses: Vec<String>,
+    pub note: Option<String>,
+}

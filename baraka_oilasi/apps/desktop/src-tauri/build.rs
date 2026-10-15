@@ -20,6 +20,7 @@ const COMMANDS: &[&str] = &[
     "monthly_summary",
     "simulate_loan",
     "check_agreement",
+    "export_loan_receipt",
 ];
 
 fn main() {
