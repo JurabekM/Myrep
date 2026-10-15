@@ -29,6 +29,9 @@ export const RULE_ERROR_KEYS = {
   INVALID_ROLE: "errors.invalidRole",
   PARSE_ERROR: "errors.parseError",
   CURRENCY_MISMATCH: "errors.currencyMismatch",
+  RESCUE_EXCEEDS_AVAILABLE: "errors.rescueExceedsAvailable",
+  ENVELOPE_WEEK_CLOSED: "errors.envelopeWeekClosed",
+  SUBSCRIPTION_CANCELLED: "errors.subscriptionCancelled",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

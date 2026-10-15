@@ -375,6 +375,62 @@ pub const SCHEMA_V5: &str = r#"
 ALTER TABLE categories ADD COLUMN is_habit INTEGER NOT NULL DEFAULT 0 CHECK (is_habit IN (0, 1));
 "#;
 
+/// Sxema v6 (D7, byudjet): obunalar, konvertlar, «Qutqarilgan pul» yozuvlari va xonadon sozlamalari (SPEC 2B.5–2B.7).
+/// «Qutqarilgan pul»dan «Kelajagim»ga o'tkazish — `vault_transactions` da DEPOSIT, sababida manba yozuvi.
+pub const SCHEMA_V6: &str = r#"
+CREATE TABLE subscriptions (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    monthly_minor INTEGER NOT NULL CHECK (monthly_minor > 0),
+    yearly_minor INTEGER CHECK (yearly_minor IS NULL OR yearly_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    last_used_on TEXT,
+    cancelled_on TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX subscriptions_by_household ON subscriptions (household_id);
+
+CREATE TABLE envelopes (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    weekly_limit_minor INTEGER NOT NULL CHECK (weekly_limit_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    category_id TEXT REFERENCES categories (id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX envelopes_by_household ON envelopes (household_id);
+
+CREATE TABLE savings_rescues (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    kind TEXT NOT NULL CHECK (kind IN ('SUBSCRIPTION', 'ENVELOPE_LEFTOVER', 'TRANSFER')),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    occurred_on TEXT NOT NULL,
+    source_id TEXT,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX savings_rescues_by_household ON savings_rescues (household_id, occurred_on);
+
+CREATE TABLE household_settings (
+    household_id TEXT NOT NULL REFERENCES households (id),
+    key TEXT NOT NULL CHECK (length(trim(key)) > 0),
+    value TEXT NOT NULL,
+    PRIMARY KEY (household_id, key)
+) STRICT;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -383,6 +439,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V3),
         M::up(SCHEMA_V4),
         M::up(SCHEMA_V5),
+        M::up(SCHEMA_V6),
     ])
 }
 
@@ -408,4 +465,8 @@ pub const TABLES: &[&str] = &[
     "havas_limits",
     "limit_consents",
     "scheduled_treats",
+    "subscriptions",
+    "envelopes",
+    "savings_rescues",
+    "household_settings",
 ];

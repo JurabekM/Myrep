@@ -647,6 +647,9 @@ impl<'a> VaultRepo<'a> {
             VaultMovement::Initial => ("INITIAL", None, None),
             VaultMovement::IncomeShare { income_id } => ("DEPOSIT", None, Some(income_id.as_str())),
             VaultMovement::Withdrawal { reason } => ("WITHDRAWAL", Some(reason.as_str()), None),
+            VaultMovement::RescueDeposit { rescue_id } => {
+                ("DEPOSIT", Some(rescue_id.as_str()), None)
+            }
         };
         let meta = &entry.meta;
         self.conn.execute(
@@ -699,9 +702,10 @@ impl<'a> VaultRepo<'a> {
             let (id, kind, minor, currency, occurred, reason, income_id, meta) = row?;
             let movement = match kind.as_str() {
                 "INITIAL" => VaultMovement::Initial,
-                "DEPOSIT" => VaultMovement::IncomeShare {
-                    income_id: income_id
-                        .ok_or_else(|| StorageError::InvalidData("ulush daromadi".to_owned()))?,
+                "DEPOSIT" => match (income_id, reason) {
+                    (Some(income_id), None) => VaultMovement::IncomeShare { income_id },
+                    (None, Some(rescue_id)) => VaultMovement::RescueDeposit { rescue_id },
+                    _ => return Err(StorageError::InvalidData("ulush manbai".to_owned())),
                 },
                 "WITHDRAWAL" => VaultMovement::Withdrawal {
                     reason: reason

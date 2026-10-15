@@ -4,6 +4,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D7 — Byudjet: obunalar, konvertlar, «Qutqarilgan pul», «Kelajagim»ga o'tkazish (2026-10-15)
+
+**Qo'shildi**
+
+- Sxema v6: `subscriptions`, `envelopes`, `savings_rescues`, `household_settings` (xonadon sozlamalari, kalit–qiymat).
+- Domen: `rescue.rs` (havas kamayishi, jami, qoldiq; yaxlitlash yarmidan yuqoriga), `subscription.rs` (bekor qilish, «ishlatdim», 30 kunlik «unutilgan» chegarasi), `envelope.rs` (haftalik limit, qoldiq manfiy emas).
+- `VaultMovement::RescueDeposit`: «Kelajagim»ga o'tkazish `vault_transactions` da `DEPOSIT` bo'lib yoziladi, `reason` ustunida qutqarish yozuvi identifikatori.
+- Vektorlar: `spec/test-vectors/savings_rescue.json` (hisob 7 ta, obuna tejami 6 ta) — `crates/vectors` runner'i bilan.
+- Tauri: `budget.rs` (xizmat), `budget_commands.rs` (8 ta command: `get_budget`, `add_subscription`, `mark_subscription_used`, `cancel_subscription`, `add_envelope`, `close_envelope_week`, `transfer_to_vault_from_rescue`, `set_baseline_period`). `build.rs` va `capabilities/default.json` da ruxsat.
+- UI: «Byudjet» sahifasi (`ui/src/app/budget/`): qutqarilgan pul kartasi, «Kelajagim»ga o'tkazish, bazaviy davr, obunalar, haftalik konvertlar.
+- Testlar: domen (rescue, subscription, envelope), storage (`budget_flows.rs`, 6 ta; sxema v6), Tauri xizmati (3 ta), frontend (`budget.test.tsx`, 5 ta).
+
+**Qarorlar va sabablar**
+
+- Formula mobil `rescue.dart` bilan bir xil (`spec/test-vectors/savings_rescue.json`). Obuna tejami: oylik × kunlar / 30, bekor qilingan kunning o'zi ham kiradi; davr boshidan oldin bekor qilingan bo'lsa — davr boshidan. Yakunda butun so'mgacha yaxlitlanadi.
+- Havas — shu davrdagi `HAVAS` toifali xarajatlar. Bazaviy davr: sozlamada tanlangan, bo'lmasa o'tgan davr; uning xarajatlari bo'lmasa, bazaviy taqqoslash o'tkazilmaydi (`has_baseline = false`). Ko'proq sarflash — ayblov emas, faqat holat (`spent_more`).
+- «Kelajagim»ga o'tkazish bitta tranzaksiyada yoziladi: `TRANSFER` qutqarish yozuvi + `DEPOSIT` kirimi. Summa hali o'tkazilmagan qismidan oshsa — `RESCUE_EXCEEDS_AVAILABLE`.
+- Konvert qoldig'i hafta uchun bir marta yoziladi (`ENVELOPE_WEEK_CLOSED`). Qoldiq = limit − bog'langan kategoriyaning shu haftadagi sarfi (manfiy emas).
+- Obuna tejami jonli hisoblanadi, saqlanmaydi: `SUBSCRIPTION` turi sxemada bor, lekin hozircha yozuv yaratilmaydi.
+
+**Ma'lum cheklovlar (keyingi ishga qoldirildi)**
+
+- Tray ikonkasi va Ctrl+Alt+B mini oynasi (global shortcut, qulflanganda summalar yashiriladi) — qo'shilmadi.
+- CSV import ustasi (matn joylash, ustunlarni moslash) — qo'shilmadi.
+- Haqiqiy oynada (Tauri) qo'lda sinov qilinmagan: testlar jsdom va xizmat darajasida.
+
 ### D6 — davomi: bayonnoma PDF, hafta varag'i, odatlar, Juma bildirishnomasi, PIN xavfsizligi (2026-10-15)
 
 **Qo'shildi**

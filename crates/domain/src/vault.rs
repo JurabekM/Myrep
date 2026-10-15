@@ -24,6 +24,11 @@ pub enum VaultMovement {
         /// Nima uchun olinmoqda.
         reason: String,
     },
+    /// «Qutqarilgan pul»dan o'tkazilgan (D7). `rescue_id` — `TRANSFER` turidagi qutqarish yozuvi (UUIDv7).
+    RescueDeposit {
+        /// Qutqarilgan pul yozuvi.
+        rescue_id: String,
+    },
 }
 
 /// «Kelajagim» yozuvi.

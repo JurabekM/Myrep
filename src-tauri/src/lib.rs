@@ -3,6 +3,8 @@
 //! Oyna va commandlar shu yerda yig'iladi. Biznes mantiq bu yerda emas:
 //! commandlar yupqa bo'ladi (DESKTOP_PROMPT.md 3.2).
 
+mod budget;
+mod budget_commands;
 mod commands;
 mod content;
 mod content_commands;
@@ -88,6 +90,14 @@ fn specta_builder() -> Builder<tauri::Wry> {
         family_commands::list_habits,
         family_commands::add_habit,
         family_commands::create_council_report,
+        budget_commands::get_budget,
+        budget_commands::add_subscription,
+        budget_commands::mark_subscription_used,
+        budget_commands::cancel_subscription,
+        budget_commands::add_envelope,
+        budget_commands::close_envelope_week,
+        budget_commands::transfer_to_vault_from_rescue,
+        budget_commands::set_baseline_period,
     ])
 }
 

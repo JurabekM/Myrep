@@ -20,6 +20,7 @@ const COVERED_SUITES: &[&str] = &[
     "money_format",
     "money_parse",
     "percent_of",
+    "savings_rescue",
     "streak",
     "unexplained_gap",
 ];
@@ -282,4 +283,108 @@ fn unexplained_gap_vektorlari() {
         check(case, actual, &mut failures);
     }
     finish(&suite, &failures);
+}
+
+#[test]
+fn savings_rescue_vektorlari() {
+    use domain::calendar::DateRange;
+    use domain::rescue::{RescueKind, compute_rescue, subscription_savings};
+    use money::{Currency, Money};
+
+    let suite = load_suite("savings_rescue").expect("savings_rescue.json");
+    let mut failures = Vec::new();
+    for case in &suite.cases {
+        let input = &case.input;
+        let currency =
+            Currency::from_iso(str_field(input, "currency").expect("currency")).expect("valyuta");
+        let actual = match str_field(input, "op").expect("op") {
+            "compute" => {
+                let baseline = input["baselineHavasMinor"].as_i64().map(|minor| {
+                    (
+                        Money::new(minor, currency),
+                        input["baselineDays"].as_i64().expect("baselineDays"),
+                    )
+                });
+                let result = compute_rescue(
+                    currency,
+                    input["elapsedDays"].as_i64().expect("elapsedDays"),
+                    Money::new(
+                        input["currentHavasMinor"]
+                            .as_i64()
+                            .expect("currentHavasMinor"),
+                        currency,
+                    ),
+                    baseline,
+                    Money::new(
+                        input["subscriptionsMinor"]
+                            .as_i64()
+                            .expect("subscriptionsMinor"),
+                        currency,
+                    ),
+                    Money::new(
+                        input["envelopesMinor"].as_i64().expect("envelopesMinor"),
+                        currency,
+                    ),
+                    Money::new(
+                        input["transferredMinor"]
+                            .as_i64()
+                            .expect("transferredMinor"),
+                        currency,
+                    ),
+                );
+                match result {
+                    Ok(breakdown) => {
+                        let available = breakdown.available().expect("qoldiq");
+                        let total = breakdown.total().expect("jami");
+                        json!({
+                            "havas_delta_minor": breakdown.havas_delta.minor(),
+                            "havas_shown_minor": breakdown.havas_shown().minor(),
+                            "total_minor": total.minor(),
+                            "available_minor": available.minor(),
+                            "spent_more": breakdown.spent_more(),
+                            "has_baseline": breakdown.has_baseline,
+                        })
+                    }
+                    Err(error) => json!({ "error": error.code() }),
+                }
+            }
+            "subscription" => {
+                let cancelled: Vec<(Money, Date)> = input["cancelled"]
+                    .as_array()
+                    .expect("cancelled massiv")
+                    .iter()
+                    .map(|item| {
+                        (
+                            Money::new(
+                                item["monthlyMinor"].as_i64().expect("monthlyMinor"),
+                                currency,
+                            ),
+                            parse_date(str_field(item, "on").expect("on")),
+                        )
+                    })
+                    .collect();
+                let period = DateRange {
+                    start: parse_date(str_field(input, "periodStart").expect("periodStart")),
+                    end: parse_date(str_field(input, "periodEnd").expect("periodEnd")),
+                };
+                let today = parse_date(str_field(input, "today").expect("today"));
+                match subscription_savings(currency, &cancelled, period, today) {
+                    Ok(savings) => json!({ "savings_minor": savings.minor() }),
+                    Err(error) => json!({ "error": error.code() }),
+                }
+            }
+            other => panic!("noma'lum operatsiya: {other}"),
+        };
+        let _ = RescueKind::Transfer;
+        check(case, actual, &mut failures);
+    }
+    assert!(
+        failures.is_empty(),
+        "xatolar:
+{}",
+        failures.join(
+            "
+"
+        )
+    );
 }

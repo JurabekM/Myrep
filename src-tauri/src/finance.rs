@@ -148,7 +148,7 @@ pub(crate) fn parse_money(text: &str) -> Result<Money, SessionError> {
 }
 
 /// «Kelajagim» aktivining identifikatori (yo'q bo'lsa yaratiladi).
-fn vault_asset(db: &Database, now: OffsetDateTime) -> Result<String, SessionError> {
+pub(crate) fn vault_asset(db: &Database, now: OffsetDateTime) -> Result<String, SessionError> {
     Ok(VaultRepo::new(db.connection()).ensure_asset(
         &domain::IdGen::next_id(&UuidV7),
         &context_household_id(db, now)?,
@@ -271,6 +271,7 @@ fn vault_entry_dto(entry: &VaultEntry) -> VaultEntryDto {
         VaultMovement::Initial => ("INITIAL", None, None),
         VaultMovement::IncomeShare { income_id } => ("INCOME_SHARE", None, Some(income_id.clone())),
         VaultMovement::Withdrawal { reason } => ("WITHDRAWAL", Some(reason.clone()), None),
+        VaultMovement::RescueDeposit { .. } => ("RESCUE_DEPOSIT", None, None),
     };
     VaultEntryDto {
         id: entry.id.clone(),

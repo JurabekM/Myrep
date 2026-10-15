@@ -200,6 +200,126 @@ pub struct IncomeInputDto {
     pub note: Option<String>,
 }
 
+/// «Qutqarilgan pul» hisobi (joriy davr). Summalar domen'da hisoblangan; UI faqat ko'rsatadi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RescueDto {
+    /// Havas kamayishi (ko'rsatishda manfiy bo'lsa 0).
+    pub havas: MoneyDto,
+    /// Bekor qilingan obunalar tejami.
+    pub subscriptions: MoneyDto,
+    /// Konvertlardan qolgan qoldiqlar (davr ichida yopilgan).
+    pub envelopes: MoneyDto,
+    /// Jami qutqarilgan.
+    pub total: MoneyDto,
+    /// «Kelajagim»ga o'tkazilgan.
+    pub transferred: MoneyDto,
+    /// Hali o'tkazilmagan qismi.
+    pub available: MoneyDto,
+    /// Ko'proq sarflangan (ayblovsiz holat).
+    pub spent_more: bool,
+    /// Bazaviy davr bormi.
+    pub has_baseline: bool,
+    /// Bazaviy davr boshlanishi (`YYYY-MM-DD`), bo'lsa.
+    pub baseline_start: Option<String>,
+    /// Joriy davr boshlanishi (`YYYY-MM-DD`).
+    pub period_start: String,
+    /// Joriy davr tugashi, kirmaydi (`YYYY-MM-DD`).
+    pub period_end: String,
+}
+
+/// Obuna satri.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SubscriptionDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Oylik narx.
+    pub monthly: MoneyDto,
+    /// Yillik narx, bo'lsa.
+    pub yearly: Option<MoneyDto>,
+    /// Oxirgi «ishlatdim» sanasi.
+    pub last_used_on: Option<String>,
+    /// Bekor qilingan sana; `None` — faol.
+    pub cancelled_on: Option<String>,
+    /// «Unutilgan» obuna (faol va uzoq ishlatilmagan).
+    pub forgotten: bool,
+}
+
+/// Konvert satri (joriy hafta).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvelopeDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Haftalik limit.
+    pub weekly_limit: MoneyDto,
+    /// Shu hafta sarflangan (bog'langan kategoriya bo'yicha).
+    pub spent_this_week: MoneyDto,
+    /// Shu hafta qoldiq (limit − sarflangan, manfiy emas).
+    pub leftover_this_week: MoneyDto,
+    /// Shu hafta yopilganmi (qoldiq «Qutqarilgan pul» ga yozilgan).
+    pub closed_this_week: bool,
+    /// Bog'langan kategoriya, bo'lsa.
+    pub category_id: Option<String>,
+}
+
+/// Byudjet sahifasi: qutqarilgan pul, obunalar, konvertlar.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BudgetDto {
+    /// «Qutqarilgan pul» hisobi.
+    pub rescue: RescueDto,
+    /// Obunalar.
+    pub subscriptions: Vec<SubscriptionDto>,
+    /// Konvertlar.
+    pub envelopes: Vec<EnvelopeDto>,
+}
+
+/// Obuna qo'shish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SubscriptionInputDto {
+    /// Nomi.
+    pub name: String,
+    /// Oylik narx matni.
+    pub monthly: String,
+    /// Yillik narx matni, ixtiyoriy.
+    pub yearly: Option<String>,
+}
+
+/// Konvert qo'shish.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvelopeInputDto {
+    /// Nomi.
+    pub name: String,
+    /// Haftalik limit matni.
+    pub weekly_limit: String,
+    /// Bog'lanadigan kategoriya, ixtiyoriy.
+    pub category_id: Option<String>,
+}
+
+/// «Kelajagim»ga o'tkazish summasi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TransferInputDto {
+    /// Summa matni.
+    pub amount: String,
+}
+
+/// Bazaviy davrni tanlash (shu davrning boshlanish sanasi).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BaselineInputDto {
+    /// Davr boshlanishi (`YYYY-MM-DD`).
+    pub period_start: String,
+}
+
 /// «Kelajagim» yozuvi (tarix).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]

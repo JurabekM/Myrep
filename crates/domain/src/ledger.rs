@@ -195,7 +195,7 @@ pub fn build_month_ledger(input: &LedgerInput<'_>) -> Result<MonthLedger, Domain
             VaultMovement::Withdrawal { .. } => {
                 saved_withdrawn = saved_withdrawn.checked_add(entry.amount)?;
             }
-            VaultMovement::IncomeShare { .. } => {
+            VaultMovement::IncomeShare { .. } | VaultMovement::RescueDeposit { .. } => {
                 saved_deposited = saved_deposited.checked_add(entry.amount)?;
             }
             VaultMovement::Initial => {}

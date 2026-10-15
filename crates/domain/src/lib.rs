@@ -9,6 +9,7 @@ pub mod category;
 pub mod content;
 pub mod content_parser;
 pub mod debt;
+pub mod envelope;
 pub mod expense;
 pub mod habit;
 pub mod income;
@@ -19,7 +20,9 @@ pub mod obligation;
 pub mod odat;
 pub mod progress;
 pub mod report;
+pub mod rescue;
 pub mod share;
+pub mod subscription;
 pub mod treat;
 pub mod unlock;
 pub mod vault;
@@ -27,6 +30,7 @@ pub mod vault;
 pub use category::{Category, CategoryKey};
 pub use content::{Chapter, ContentBlock, ContentLoadResult, TaskTrigger};
 pub use debt::{DebtPayment, ShopDebt};
+pub use envelope::Envelope;
 pub use expense::{Expense, ExpenseDraft};
 pub use habit::{HabitStats, habit_stats, streak_since};
 pub use income::{Channel, Income, IncomeDraft};
@@ -38,7 +42,9 @@ pub use necessity::{Necessity, NecessityChange};
 pub use obligation::{Obligation, ObligationDraft, ObligationKind};
 pub use progress::{DaftarPage, TaskCompletion};
 pub use report::MonthlyReport;
+pub use rescue::{RescueBreakdown, RescueKind, SavingsRescue};
 pub use share::{ShareRule, ShareTarget, progression_offer, suggest_share};
+pub use subscription::Subscription;
 pub use treat::ScheduledTreat;
 pub use unlock::{ChapterUnlock, ChapterUnlockPolicy, HabitUnlockPolicy, UnlockContext};
 pub use vault::{VaultEntry, VaultMovement};
@@ -118,6 +124,15 @@ pub enum DomainError {
     /// «Daftar sahifasi» matni chegaradan uzun.
     #[error("sahifa matni 5000 belgidan oshmasligi kerak")]
     BodyTooLong,
+    /// Obuna allaqachon bekor qilingan.
+    #[error("obuna allaqachon bekor qilingan")]
+    SubscriptionCancelled,
+    /// «Kelajagim»ga o'tkazish qutqarilgan summadan katta.
+    #[error("o'tkazish qutqarilgan summadan katta")]
+    RescueExceedsAvailable,
+    /// Konvert shu hafta uchun allaqachon yopilgan (qoldiq ikki marta qutqarilmaydi).
+    #[error("konvert bu hafta allaqachon yopilgan")]
+    EnvelopeWeekClosed,
     /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
     #[error("toifa o'zgarmagan")]
     NecessityUnchanged,
@@ -151,6 +166,9 @@ impl DomainError {
             Self::TaskNotCurrent => "TASK_NOT_CURRENT",
             Self::BodyRequired => "BODY_REQUIRED",
             Self::BodyTooLong => "BODY_TOO_LONG",
+            Self::SubscriptionCancelled => "SUBSCRIPTION_CANCELLED",
+            Self::RescueExceedsAvailable => "RESCUE_EXCEEDS_AVAILABLE",
+            Self::EnvelopeWeekClosed => "ENVELOPE_WEEK_CLOSED",
             Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
             Self::PinNotSet => "PIN_NOT_SET",
             Self::Money(error) => error.code(),

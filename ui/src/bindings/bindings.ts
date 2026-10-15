@@ -119,6 +119,22 @@ export const commands = {
 	addHabit: (name: string) => typedError<OdatHabitDto, ApiError>(__TAURI_INVOKE("add_habit", { name })),
 	/**  Oila kengashi bayonnomasi (PDF): ilova ma'lumot papkasiga yoziladi; yo'li qaytariladi. */
 	createCouncilReport: () => typedError<string, ApiError>(__TAURI_INVOKE("create_council_report")),
+	/**  Byudjet sahifasi: qutqarilgan pul, obunalar, konvertlar. */
+	getBudget: () => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("get_budget")),
+	/**  Obuna qo'shadi. */
+	addSubscription: (input: SubscriptionInputDto) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("add_subscription", { input })),
+	/**  Obunani «ishlatdim» deb belgilaydi. */
+	markSubscriptionUsed: (id: string) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("mark_subscription_used", { id })),
+	/**  Obunani bekor qiladi (tejam bekor qilingan kundan boshlanadi). */
+	cancelSubscription: (id: string) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("cancel_subscription", { id })),
+	/**  Konvert qo'shadi. */
+	addEnvelope: (input: EnvelopeInputDto) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("add_envelope", { input })),
+	/**  Konvert qoldig'ini shu hafta uchun «Qutqarilgan pul» ga yozadi. */
+	closeEnvelopeWeek: (envelopeId: string) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("close_envelope_week", { envelopeId })),
+	/**  «Qutqarilgan pul»dan «Kelajagim»ga o'tkazadi. */
+	transferToVaultFromRescue: (input: TransferInputDto) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("transfer_to_vault_from_rescue", { input })),
+	/**  Bazaviy davrni tanlaydi (joriy davrdan oldingi davr). */
+	setBaselinePeriod: (input: BaselineInputDto) => typedError<BudgetDto, ApiError>(__TAURI_INVOKE("set_baseline_period", { input })),
 };
 
 /* Types */
@@ -214,6 +230,22 @@ export type AuditStatusDto = {
 	periodStart: string,
 	/**  Davr oxiri (kirmaydi). */
 	periodEnd: string,
+};
+
+/**  Bazaviy davrni tanlash (shu davrning boshlanish sanasi). */
+export type BaselineInputDto = {
+	/**  Davr boshlanishi (`YYYY-MM-DD`). */
+	periodStart: string,
+};
+
+/**  Byudjet sahifasi: qutqarilgan pul, obunalar, konvertlar. */
+export type BudgetDto = {
+	/**  «Qutqarilgan pul» hisobi. */
+	rescue: RescueDto,
+	/**  Obunalar. */
+	subscriptions: SubscriptionDto[],
+	/**  Konvertlar. */
+	envelopes: EnvelopeDto[],
 };
 
 /**  Kategoriya. */
@@ -332,6 +364,34 @@ export type DebtDto = {
 	incurredOn: string,
 	/**  Izoh. */
 	note: string | null,
+};
+
+/**  Konvert satri (joriy hafta). */
+export type EnvelopeDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Haftalik limit. */
+	weeklyLimit: MoneyDto,
+	/**  Shu hafta sarflangan (bog'langan kategoriya bo'yicha). */
+	spentThisWeek: MoneyDto,
+	/**  Shu hafta qoldiq (limit − sarflangan, manfiy emas). */
+	leftoverThisWeek: MoneyDto,
+	/**  Shu hafta yopilganmi (qoldiq «Qutqarilgan pul» ga yozilgan). */
+	closedThisWeek: boolean,
+	/**  Bog'langan kategoriya, bo'lsa. */
+	categoryId: string | null,
+};
+
+/**  Konvert qo'shish. */
+export type EnvelopeInputDto = {
+	/**  Nomi. */
+	name: string,
+	/**  Haftalik limit matni. */
+	weeklyLimit: string,
+	/**  Bog'lanadigan kategoriya, ixtiyoriy. */
+	categoryId: string | null,
 };
 
 /**  Xarajat yozuvi (ro'yxat va qo'shish natijasi). */
@@ -605,6 +665,32 @@ export type OwnerPartDto = {
 	shareBp: number,
 };
 
+/**  «Qutqarilgan pul» hisobi (joriy davr). Summalar domen'da hisoblangan; UI faqat ko'rsatadi. */
+export type RescueDto = {
+	/**  Havas kamayishi (ko'rsatishda manfiy bo'lsa 0). */
+	havas: MoneyDto,
+	/**  Bekor qilingan obunalar tejami. */
+	subscriptions: MoneyDto,
+	/**  Konvertlardan qolgan qoldiqlar (davr ichida yopilgan). */
+	envelopes: MoneyDto,
+	/**  Jami qutqarilgan. */
+	total: MoneyDto,
+	/**  «Kelajagim»ga o'tkazilgan. */
+	transferred: MoneyDto,
+	/**  Hali o'tkazilmagan qismi. */
+	available: MoneyDto,
+	/**  Ko'proq sarflangan (ayblovsiz holat). */
+	spentMore: boolean,
+	/**  Bazaviy davr bormi. */
+	hasBaseline: boolean,
+	/**  Bazaviy davr boshlanishi (`YYYY-MM-DD`), bo'lsa. */
+	baselineStart: string | null,
+	/**  Joriy davr boshlanishi (`YYYY-MM-DD`). */
+	periodStart: string,
+	/**  Joriy davr tugashi, kirmaydi (`YYYY-MM-DD`). */
+	periodEnd: string,
+};
+
 /**  Xavfsizlik holati DTO: PIN o'rnatilganmi va baza ochiqmi. */
 export type SecurityStatus = {
 	/**  PIN o'rnatilganmi. `false` bo'lsa, birinchi ishga tushirishda sozlash ekrani ko'rsatiladi. */
@@ -644,6 +730,34 @@ export type ShareRuleInputDto = {
 	progressive: boolean,
 };
 
+/**  Obuna satri. */
+export type SubscriptionDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Oylik narx. */
+	monthly: MoneyDto,
+	/**  Yillik narx, bo'lsa. */
+	yearly: MoneyDto | null,
+	/**  Oxirgi «ishlatdim» sanasi. */
+	lastUsedOn: string | null,
+	/**  Bekor qilingan sana; `None` — faol. */
+	cancelledOn: string | null,
+	/**  «Unutilgan» obuna (faol va uzoq ishlatilmagan). */
+	forgotten: boolean,
+};
+
+/**  Obuna qo'shish. */
+export type SubscriptionInputDto = {
+	/**  Nomi. */
+	name: string,
+	/**  Oylik narx matni. */
+	monthly: string,
+	/**  Yillik narx matni, ixtiyoriy. */
+	yearly: string | null,
+};
+
 /**  Haftalik vazifa. */
 export type TaskDto = {
 	/**  Vazifa ID (`ch01.t1`). */
@@ -654,6 +768,12 @@ export type TaskDto = {
 	autoCompleted: boolean,
 	/**  Bajarilganmi. */
 	done: boolean,
+};
+
+/**  «Kelajagim»ga o'tkazish summasi. */
+export type TransferInputDto = {
+	/**  Summa matni. */
+	amount: string,
 };
 
 /**  Juma shirinligi (rejalashtirilgan ritual). */

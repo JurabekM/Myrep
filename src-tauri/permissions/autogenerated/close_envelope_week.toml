@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-close-envelope-week"
+description = "Enables the close_envelope_week command without any pre-configured scope."
+commands.allow = ["close_envelope_week"]
+
+[[permission]]
+identifier = "deny-close-envelope-week"
+description = "Denies the close_envelope_week command without any pre-configured scope."
+commands.deny = ["close_envelope_week"]
