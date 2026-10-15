@@ -320,6 +320,98 @@ pub struct BaselineInputDto {
     pub period_start: String,
 }
 
+/// Amortizatsiya jadvalining bir qatori.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ScheduleRowDto {
+    /// Oy (1 dan).
+    pub month: u32,
+    /// Sana (`YYYY-MM-DD`).
+    pub date: String,
+    /// Foiz / ustama qismi.
+    pub interest: MoneyDto,
+    /// Asosiy qarz qismi.
+    pub principal: MoneyDto,
+    /// Qo'shimcha to'lov.
+    pub extra: MoneyDto,
+    /// Oydan keyingi qoldiq.
+    pub balance: MoneyDto,
+}
+
+/// Jadval (odatiy yoki tezlashtirilgan).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ScheduleDto {
+    /// Oylik to'lov (annuitetda doimiy; differensialda — birinchi oy).
+    pub payment: MoneyDto,
+    /// Oylar soni.
+    pub months: u32,
+    /// Jami foiz / ustama.
+    pub total_interest: MoneyDto,
+    /// Qarzsiz kun (oxirgi to'lov sanasi).
+    pub debt_free_day: String,
+    /// Qatorlar.
+    pub rows: Vec<ScheduleRowDto>,
+}
+
+/// Payoff simulyatsiyasi natijasi: odatiy va tezlashtirilgan grafik.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PayoffDto {
+    /// Qo'shimcha to'lovsiz.
+    pub standard: ScheduleDto,
+    /// Qo'shimcha to'lov bilan.
+    pub accelerated: ScheduleDto,
+    /// Tejalgan foiz.
+    pub interest_saved: MoneyDto,
+    /// Qisqargan oylar.
+    pub months_saved: u32,
+}
+
+/// Payoff simulyatsiyasi kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PayoffInputDto {
+    /// `ANNUITY | DIFFERENTIATED | FIXED_MARKUP`.
+    pub schedule_type: String,
+    /// Asosiy summa matni.
+    pub principal: String,
+    /// Yillik stavka, bp (annuitet va differensial uchun).
+    pub annual_bp: u32,
+    /// Qat'iy ustama matni (`FIXED_MARKUP` uchun).
+    pub markup: String,
+    /// Muddat, oy.
+    pub term_months: u32,
+    /// Qo'shimcha oylik to'lov matni (bo'sh — 0).
+    pub extra_per_month: String,
+    /// Birinchi to'lov sanasi (`YYYY-MM-DD`); bo'sh — keyingi oy bugungi kun.
+    pub start_date: Option<String>,
+}
+
+/// Byudjet rejimi va 70/20/10 taqsimoti.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RecoveryDto {
+    /// `STANDARD` yoki `DEBT_RECOVERY`.
+    pub mode: String,
+    /// Ulushlar, bp: ehtiyoj, qarz, jamg'arma.
+    pub split_bp: Vec<u32>,
+    /// Shu oy daromadi.
+    pub income: MoneyDto,
+    /// Qismlar (ehtiyoj, qarz, jamg'arma) shu oy daromadi bo'yicha.
+    pub parts: Vec<MoneyDto>,
+}
+
+/// Byudjet rejimini va ulushlarni saqlash.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RecoveryInputDto {
+    /// `STANDARD` yoki `DEBT_RECOVERY`.
+    pub mode: String,
+    /// Ulushlar, bp (yig'indisi 10 000; jamg'arma ≥ 100).
+    pub split_bp: Vec<u32>,
+}
+
 /// Qarz (olingan yoki bergan) — ko'rsatish.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]

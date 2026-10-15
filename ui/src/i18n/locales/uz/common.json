@@ -107,7 +107,9 @@
     "notKeeperDevice": "Bu qurilma hisob yurituvchi emas",
     "versionConflict": "Kelishuv boshqa joyda o'zgargan — sahifani yangilang",
     "repaymentPlanRequired": "To'lash rejasi majburiy: to'lovlar soni kamida 1",
-    "planMismatch": "Reja summasi qarzga teng emas"
+    "planMismatch": "Reja summasi qarzga teng emas",
+    "splitNot100": "Ulushlar yig'indisi 100 % bo'lishi kerak",
+    "savingsBelowMinimum": "Jamg'arma ulushi kamida 1 % bo'lishi kerak"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -814,5 +816,50 @@
     "burdenLine": "oylik yuk {{burden}} — daromadning {{percent}}",
     "givenNoInterest": "Bergan qarzda foiz maydoni yo'q: qarzi hasana.",
     "add": "Qarzni yozish"
+  },
+  "payoff": {
+    "title": "Payoff rejalashtiruvchisi",
+    "intro": "Mavjud ustamali qarzni qanday tezroq yopish mumkin: qo'shimcha oylik to'lov muddatni va ustamani qisqartiradi. Bu kalkulyator — chiqish uchun, yangi qarz uchun emas.",
+    "typeLabel": "Jadval turi",
+    "type": {
+      "ANNUITY": "Annuitet (teng to'lov)",
+      "DIFFERENTIATED": "Differensial (kamayuvchi)",
+      "FIXED_MARKUP": "Qat'iy ustama"
+    },
+    "principal": "Qoldiq summa",
+    "term": "Muddat, oy",
+    "rate": "Yillik stavka, % (mavjud qarz shartidan)",
+    "markup": "Ustama summasi",
+    "extra": "Qo'shimcha oylik to'lov",
+    "simulate": "Hisoblash",
+    "payment": "Oylik to'lov",
+    "debtFreeStandard": "Qarzsiz kun (odatiy)",
+    "debtFreeAccelerated": "Qarzsiz kun (tezlashtirilgan)",
+    "monthsHint": "{{months}} oy",
+    "monthsSaved": "{{months}} oy erta",
+    "interestSaved": "Tejalgan ustama",
+    "standard": "Odatiy",
+    "accelerated": "Tezlashtirilgan",
+    "chartLabel": "Qoldiq grafigi: odatiy va tezlashtirilgan",
+    "colMonth": "Oy",
+    "colDate": "Sana",
+    "colInterest": "Ustama",
+    "colPrincipal": "Asosiy",
+    "colExtra": "Qo'shimcha",
+    "colBalance": "Qoldiq"
+  },
+  "recovery": {
+    "title": "Qarz tiklash rejimi — 70 / 20 / 10",
+    "intro": "Daromad uch qismga: ehtiyoj, qarz, jamg'arma. Jamg'arma ulushi hech qachon 0 bo'lmaydi — qarzdan chiqayotganda ham kelajak uchun bir ulush qoladi.",
+    "needs": "Ehtiyoj",
+    "debt": "Qarzga",
+    "savings": "Jamg'arma",
+    "incomeHint": "Shu oy daromadi: {{amount}}",
+    "modeToggle": "Qarz tiklash rejimi yoqilgan (DEBT_RECOVERY)",
+    "needsPercent": "Ehtiyoj, %",
+    "debtPercent": "Qarz, %",
+    "savingsPercent": "Jamg'arma, %",
+    "savingsRule": "Yig'indi 100 % bo'lishi va jamg'arma kamida 1 % bo'lishi shart — aks holda saqlanmaydi.",
+    "save": "Saqlash"
   }
 }

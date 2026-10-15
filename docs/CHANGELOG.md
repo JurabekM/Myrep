@@ -4,6 +4,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D10 — Payoff rejalashtiruvchisi, 70/20/10, «Qarzsiz kun» (2026-10-15)
+
+**Qo'shildi**
+
+- Xizmat (`src-tauri/src/payoff.rs`): `simulate_payoff` — annuitet / differensial / qat'iy ustama, odatiy va tezlashtirilgan (qo'shimcha oylik to'lov) grafik, tejalgan ustama, qisqargan oylar, har ikkisi uchun «qarzsiz kun» (sanalar `add_months` bilan); `get_recovery` / `set_recovery` — `STANDARD | DEBT_RECOVERY` rejimi va ulushlar (`household_settings`), shu oy daromadi bo'yicha qismlar (`domain::recovery::recovery_split`).
+- UI (Qarzlar sahifasi): **Payoff rejalashtiruvchisi** — forma, 4 ko'rsatkich, **ECharts** qoldiq grafigi (odatiy va tezlashtirilgan), **TanStack Table** jadvali; **Qarz tiklash rejimi** kartasi — qismlar, rejim tugmasi, ulushlar (%), saqlash.
+- Testlar: Tauri 2 (amort-002 bilan bir xil raqamlar; jamg'arma 0 rad etiladi), UI 2.
+
+**Qarorlar va sabablar**
+
+- `echarts` 6 va `@tanstack/react-table` **8.x** qo'shildi (ADR 2-bo'limda nomlangan). TanStack Table 9 (hozirgi `latest`) boshqa API (`createCoreRowModel`); barqaror 8.21 tanlandi — CHANGELOG'da sabab, keyin ko'chirish mumkin.
+- **ECharts 6 + `freezePrototype`**: `Scheduler.mockMethods` muzlatilgan `Object.prototype` tufayli `constructor`ga yoza olmay modul yuklanishda yiqildi (ilova bo'sh qora oyna). Xavfsizlik sozlamasi o'zgartirilmadi; `pnpm patch` bilan bir qatorli tuzatish (`patches/echarts@6.1.0.patch`, `pnpm-workspace.yaml` → `patchedDependencies`) — `constructor` o'tkazib yuboriladi. Faqat `lib/` va `dist/echarts.esm.js` patchlangan (biz `echarts/core` ishlatamiz).
+- Qat'iy ustamada qo'shimcha to'lov muddatni qisqartirmaydi (ustama kelishilgan summa) — faqat odatiy jadval ko'rsatiladi.
+- Jamg'arma ulushini 0 qilib bo'lmaydi — qoida Rustda (`SAVINGS_BELOW_MINIMUM`), UI faqat xabar ko'rsatadi.
+- Stavka maydoni — foydalanuvchining mavjud qarzi tavsifi (chiqish uchun); «muqobil daromad» matni yo'q (ribo filtri testi o'tadi).
+
+**Ma'lum cheklovlar**
+
+- `DebtContributor` (oila a'zolarining qarzga hissasi), «sotiladigan buyumlar» ro'yxati, yopish tartibi strategiyasi (qor to'pi / ko'chki) va rejimning avtomatik qaytishi — qo'shilmadi.
+- Simulyatsiya mavjud qarz yozuviga bog'lanmagan (qo'lda kiritiladi).
+- **GUI sinovi o'tkazilmadi**: dev bazaning test PIN'i sessiyada tiklanmadi (baza papkasini zaxiralab qayta boshlashga ham ruxsat berilmadi). Avtomatik testlar (Rust + UI) yashil; haqiqiy oynada Qarzlar sahifasi (rejalashtiruvchi, grafik, 70/20/10) foydalanuvchi PIN'ni bergach yoki bazani zaxiralagach tekshiriladi.
+
 ### D9 — Qarzlar: reja, «to'xta va o'yla», qarzsiz kun, tilxat (2026-10-15)
 
 **Qo'shildi**

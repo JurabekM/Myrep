@@ -181,6 +181,12 @@ export const commands = {
 	payLoan: (input: LoanPaymentInputDto) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("pay_loan", { input })),
 	/**  Tilxat (LOAN kelishuvi) yaratadi yoki mavjudini qaytaradi. */
 	createIou: (loanId: string) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("create_iou", { loanId })),
+	/**  Amortizatsiya simulyatsiyasi: odatiy va tezlashtirilgan grafik. */
+	simulatePayoff: (input: PayoffInputDto) => typedError<PayoffDto, ApiError>(__TAURI_INVOKE("simulate_payoff", { input })),
+	/**  Byudjet rejimi va 70/20/10 taqsimoti. */
+	getRecovery: () => typedError<RecoveryDto, ApiError>(__TAURI_INVOKE("get_recovery")),
+	/**  Rejim va ulushlarni saqlaydi. */
+	setRecovery: (input: RecoveryInputDto) => typedError<RecoveryDto, ApiError>(__TAURI_INVOKE("set_recovery", { input })),
 };
 
 /* Types */
@@ -1071,6 +1077,36 @@ export type PartyDto = {
 	isMe: boolean,
 };
 
+/**  Payoff simulyatsiyasi natijasi: odatiy va tezlashtirilgan grafik. */
+export type PayoffDto = {
+	/**  Qo'shimcha to'lovsiz. */
+	standard: ScheduleDto,
+	/**  Qo'shimcha to'lov bilan. */
+	accelerated: ScheduleDto,
+	/**  Tejalgan foiz. */
+	interestSaved: MoneyDto,
+	/**  Qisqargan oylar. */
+	monthsSaved: number,
+};
+
+/**  Payoff simulyatsiyasi kirishi. */
+export type PayoffInputDto = {
+	/**  `ANNUITY | DIFFERENTIATED | FIXED_MARKUP`. */
+	scheduleType: string,
+	/**  Asosiy summa matni. */
+	principal: string,
+	/**  Yillik stavka, bp (annuitet va differensial uchun). */
+	annualBp: number,
+	/**  Qat'iy ustama matni (`FIXED_MARKUP` uchun). */
+	markup: string,
+	/**  Muddat, oy. */
+	termMonths: number,
+	/**  Qo'shimcha oylik to'lov matni (bo'sh — 0). */
+	extraPerMonth: string,
+	/**  Birinchi to'lov sanasi (`YYYY-MM-DD`); bo'sh — keyingi oy bugungi kun. */
+	startDate: string | null,
+};
+
 /**  Narx daftari yozuvi. */
 export type PriceItemDto = {
 	/**  Identifikator. */
@@ -1123,6 +1159,26 @@ export type ProfitShareDto = {
 	partyId: string,
 	/**  Ulush, bp. */
 	shareBp: number,
+};
+
+/**  Byudjet rejimi va 70/20/10 taqsimoti. */
+export type RecoveryDto = {
+	/**  `STANDARD` yoki `DEBT_RECOVERY`. */
+	mode: string,
+	/**  Ulushlar, bp: ehtiyoj, qarz, jamg'arma. */
+	splitBp: number[],
+	/**  Shu oy daromadi. */
+	income: MoneyDto,
+	/**  Qismlar (ehtiyoj, qarz, jamg'arma) shu oy daromadi bo'yicha. */
+	parts: MoneyDto[],
+};
+
+/**  Byudjet rejimini va ulushlarni saqlash. */
+export type RecoveryInputDto = {
+	/**  `STANDARD` yoki `DEBT_RECOVERY`. */
+	mode: string,
+	/**  Ulushlar, bp (yig'indisi 10 000; jamg'arma ≥ 100). */
+	splitBp: number[],
 };
 
 /**  «Qutqarilgan pul» hisobi (joriy davr). Summalar domen'da hisoblangan; UI faqat ko'rsatadi. */
@@ -1181,6 +1237,36 @@ export type SaveAnswersInputDto = {
 	version: number,
 	/**  Javoblar. */
 	answers: AgreementAnswersDto,
+};
+
+/**  Jadval (odatiy yoki tezlashtirilgan). */
+export type ScheduleDto = {
+	/**  Oylik to'lov (annuitetda doimiy; differensialda — birinchi oy). */
+	payment: MoneyDto,
+	/**  Oylar soni. */
+	months: number,
+	/**  Jami foiz / ustama. */
+	totalInterest: MoneyDto,
+	/**  Qarzsiz kun (oxirgi to'lov sanasi). */
+	debtFreeDay: string,
+	/**  Qatorlar. */
+	rows: ScheduleRowDto[],
+};
+
+/**  Amortizatsiya jadvalining bir qatori. */
+export type ScheduleRowDto = {
+	/**  Oy (1 dan). */
+	month: number,
+	/**  Sana (`YYYY-MM-DD`). */
+	date: string,
+	/**  Foiz / ustama qismi. */
+	interest: MoneyDto,
+	/**  Asosiy qarz qismi. */
+	principal: MoneyDto,
+	/**  Qo'shimcha to'lov. */
+	extra: MoneyDto,
+	/**  Oydan keyingi qoldiq. */
+	balance: MoneyDto,
 };
 
 /**  Xavfsizlik holati DTO: PIN o'rnatilganmi va baza ochiqmi. */

@@ -8,6 +8,8 @@ import {
   commands,
 } from "../../bindings/bindings";
 import { AgreementWizard } from "../agreements/AgreementWizard";
+import { PayoffPlannerCard } from "../debts/PayoffPlannerCard";
+import { RecoveryCard } from "../debts/RecoveryCard";
 import { useApplyAgreement } from "../agreements/queries";
 import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
@@ -112,6 +114,8 @@ export function DebtsPage() {
             loans={loans.data.given}
           />
           <AddLoanCard />
+          <RecoveryCard />
+          <PayoffPlannerCard />
         </>
       ) : null}
       {iou !== null ? (

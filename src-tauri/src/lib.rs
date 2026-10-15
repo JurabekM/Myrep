@@ -21,6 +21,8 @@ mod finance_commands;
 mod loan_commands;
 mod loans;
 mod notify;
+mod payoff;
+mod payoff_commands;
 mod report;
 mod reserve;
 mod reserve_commands;
@@ -130,6 +132,9 @@ fn specta_builder() -> Builder<tauri::Wry> {
         loan_commands::add_loan,
         loan_commands::pay_loan,
         loan_commands::create_iou,
+        payoff_commands::simulate_payoff,
+        payoff_commands::get_recovery,
+        payoff_commands::set_recovery,
     ])
 }
 
