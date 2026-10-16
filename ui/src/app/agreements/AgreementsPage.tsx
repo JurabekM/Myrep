@@ -34,7 +34,12 @@ export function AgreementsPage() {
     setError(null);
     try {
       const next = unwrap(
-        await commands.createPartnership({ title: draftTitle, kind: "MUDARABA", myRole: "WORKER" }),
+        await commands.createPartnership({
+          title: draftTitle,
+          kind: "MUDARABA",
+          myRole: "WORKER",
+          gateOverride: null,
+        }),
       );
       await queryClient.invalidateQueries({ queryKey: agreementKeys.partnerships });
       const created = next.items[next.items.length - 1];

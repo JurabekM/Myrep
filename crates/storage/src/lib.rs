@@ -33,9 +33,9 @@ pub use finance::{
     CategoryRepo, DebtRepo, ExpenseRepo, IncomeRepo, ObligationRepo, ReportRepo, RuleRepo,
     StoredRule, VaultRepo,
 };
-pub use loans::{LoanDirection, LoanRepo, LoanRow, PaymentRow};
-pub use partnerships::{BuyoutPaymentRow, PartnershipRepo, PartnershipRow};
+pub use loans::{LoanDirection, LoanRepo, LoanRow, PaymentRow, SellableRepo, SellableRow};
+pub use partnerships::{BuyoutPaymentRow, GateOverrideRepo, PartnershipRepo, PartnershipRow};
 pub use prices::PriceRepo;
 pub use progress::{DaftarPageRepo, TaskCompletionRepo};
 pub use repo::{HouseholdRepo, MemberRepo};
-pub use ventures::{VenturePeriodRow, VentureRepo};
+pub use ventures::{AttachmentRepo, AttachmentRow, VenturePeriodRow, VentureRepo};

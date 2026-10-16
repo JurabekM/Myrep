@@ -37,6 +37,7 @@ vi.mock("../../bindings/bindings", () => ({
     listChapters: vi.fn(),
     getWeeklyTasks: vi.fn(),
     getLoans: vi.fn(),
+    listMembers: vi.fn(),
     getRecovery: vi.fn(),
     setRecovery: vi.fn(),
     simulatePayoff: vi.fn(),
@@ -93,6 +94,7 @@ function setUp(): void {
     data: { setUp: true, unlocked: true },
   });
   resetFinanceMocks();
+  vi.mocked(commands.listMembers).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getLoans).mockResolvedValue({
     status: "ok",
     data: {
@@ -103,6 +105,16 @@ function setUp(): void {
       monthlyBurden: money(0, "0 soʻm"),
       monthlyIncome: money(300_000_000, "3 000 000 soʻm"),
       debtFreeDay: null,
+      payoff: {
+        strategy: "SNOWBALL",
+        extra: money(0, "0 soʻm"),
+        steps: [],
+        totalMonths: 0,
+        debtFreeDay: null,
+        alternativeTotalMonths: 0,
+      },
+      sellable: { items: [], totalEstimate: money(0, "0 soʻm") },
+      recoveryModeReset: false,
     },
   });
   vi.mocked(commands.getRecovery).mockResolvedValue({

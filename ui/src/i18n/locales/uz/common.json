@@ -119,7 +119,9 @@
     "periodClosed": "Bu davr yopilgan: unga yozib bo'lmaydi",
     "wrongPassword": "Almashish fayli paroli noto'g'ri",
     "corruptContainer": "Fayl buzilgan yoki .baraka emas",
-    "weakPassword": "Parol kamida 8 belgi bo'lishi kerak"
+    "weakPassword": "Parol kamida 8 belgi bo'lishi kerak",
+    "overrideReasonRequired": "Chetlab o'tish sababi kamida 20 belgi bo'lishi kerak",
+    "attachmentInvalid": "Biriktirma rasm emas yoki juda katta (2 MB gacha)"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -830,7 +832,11 @@
     "checkBurden": "Oylik yukni hisoblash",
     "burdenLine": "oylik yuk {{burden}} — daromadning {{percent}}",
     "givenNoInterest": "Bergan qarzda foiz maydoni yo'q: qarzi hasana.",
-    "add": "Qarzni yozish"
+    "add": "Qarzni yozish",
+    "contributor": "Kim to'ladi (oila a'zosi)",
+    "contributorNone": "— umumiy",
+    "contributions": "Hissalar",
+    "recoveryReset": "Oxirgi qarz yopildi — tabriklaymiz! Qarz tiklash rejimi STANDARD ga qaytdi; bo'shagan to'lov summasini «Kelajagim»ga yo'naltiring."
   },
   "payoff": {
     "title": "Payoff rejalashtiruvchisi",
@@ -861,7 +867,9 @@
     "colInterest": "Ustama",
     "colPrincipal": "Asosiy",
     "colExtra": "Qo'shimcha",
-    "colBalance": "Qoldiq"
+    "colBalance": "Qoldiq",
+    "fromLoan": "Mavjud qarzdan to'ldirish",
+    "fromLoanNone": "— qo'lda kiritish"
   },
   "recovery": {
     "title": "Qarz tiklash rejimi — 70 / 20 / 10",
@@ -989,7 +997,13 @@
     "roleLabel": "Mening rolim",
     "create": "Sheriklik yaratish",
     "roleCapitalHint": "Kapital kiritish uchun tayyorgarlik darvozasi ochiq bo'lishi kerak: ≥ 6 oylik qorovul zaxirasi va faol qarz rejasi.",
-    "roleWorkerHint": "Mehnat bilan kirish darvozaga bo'ysunmaydi; imzolashdan oldin oilaviy rozilik so'raladi."
+    "roleWorkerHint": "Mehnat bilan kirish darvozaga bo'ysunmaydi; imzolashdan oldin oilaviy rozilik so'raladi.",
+    "overrideTitle": "Darvoza yopiq — ongli chetlab o'tish",
+    "overrideHint": "Qoida: bitta amal uchun, sabab kamida 20 belgi, katta a'zo PIN'i bilan. Yozuv saqlanadi va sheriklik kartasida ko'rinadi.",
+    "overrideReason": "Sabab (kamida 20 belgi)",
+    "overrideMember": "Tasdiqlovchi a'zo",
+    "overridePin": "A'zo PIN'i",
+    "overrideLine": "Darvoza ongli chetlab o'tilgan: {{reason}}"
   },
   "venture": {
     "title": "Kassa daftari",
@@ -1015,7 +1029,10 @@
     "forceMajeure": "Fors-major: {{note}}",
     "chainHead": "zanjir boshi {{head}}…",
     "pdf": "Davr hisoboti PDF",
-    "pdfSaved": "PDF saqlandi: {{path}}"
+    "pdfSaved": "PDF saqlandi: {{path}}",
+    "attachReceipt": "chek rasmi",
+    "attachReceiptFor": "{{seq}}-yozuvga chek rasmi biriktirish",
+    "receiptAlt": "{{seq}}-yozuv cheki"
   },
   "offer": {
     "title": "«Kafolatlangan foyda» detektori",
@@ -1202,5 +1219,35 @@
   },
   "a11y": {
     "skipToContent": "Asosiy mazmunga o'tish"
+  },
+  "payoffOrder": {
+    "title": "Yopish tartibi",
+    "intro": "Qo'shimcha summa bitta qarzga yo'naltiriladi; u yopilgach uning to'lovi keyingisiga qo'shiladi. Qor to'pi — eng kichik qoldiq avval (tez g'alaba); ko'chki — ustamali qarz avval (kam ustama).",
+    "strategy": {
+      "SNOWBALL": "Qor to'pi",
+      "AVALANCHE": "Ko'chki"
+    },
+    "extra": "Qo'shimcha oylik (qarz ulushi − yuk)",
+    "debtFree": "Prognoz qarzsiz kun",
+    "monthsHint": "{{months}} oy",
+    "alternative": "Boshqa strategiyada",
+    "monthsValue": "{{months}} oy",
+    "empty": "Ochiq olingan qarz yo'q.",
+    "orderLabel": "Yopish tartibi",
+    "focus": "fokus",
+    "clearsOn": "{{months}} oyda ({{date}})"
+  },
+  "sellable": {
+    "title": "Sotiladigan buyumlar",
+    "intro": "Qarzdan tezroq chiqish uchun zaxira manba: ishlatilmayotgan buyumlar ro'yxati va taxminiy qiymati.",
+    "total": "Taxminiy jami (sotilmagan)",
+    "soldOn": "sotildi {{date}}",
+    "markSold": "Sotildi",
+    "removeLabel": "{{name}} ni olib tashlash",
+    "empty": "Ro'yxat bo'sh.",
+    "name": "Buyum",
+    "estimate": "Taxminiy qiymat",
+    "note": "Izoh",
+    "add": "Qo'shish"
   }
 }

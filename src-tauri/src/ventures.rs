@@ -16,16 +16,16 @@ use domain::venture::{HustleInput, hustle_scenarios, net_of};
 use money::Money;
 use serde::{Deserialize, Serialize};
 use storage::{
-    AgreementRepo, AgreementRow, BuyoutPaymentRow, Database, JournalRepo, PartnershipRepo,
-    PartnershipRow, StorageError, StoredEntry, VenturePeriodRow, VentureRepo,
+    AgreementRepo, AgreementRow, AttachmentRepo, BuyoutPaymentRow, Database, JournalRepo,
+    PartnershipRepo, PartnershipRow, StorageError, StoredEntry, VenturePeriodRow, VentureRepo,
 };
 use time::format_description::well_known::Iso8601;
 use time::{Date, Duration, OffsetDateTime};
 
 use crate::dto::{
-    ClosePeriodInputDto, ClosedPeriodDto, DistributionRowDto, HustleInputDto, HustlePlanDto,
-    HustleScenarioDto, JournalEntryDto, MoneyDto, OfferCheckDto, OfferFlagDto, OfferInputDto,
-    OpenPeriodDto, VentureDto, VentureEntryInputDto,
+    AttachReceiptInputDto, AttachmentDto, ClosePeriodInputDto, ClosedPeriodDto, DistributionRowDto,
+    HustleInputDto, HustlePlanDto, HustleScenarioDto, JournalEntryDto, MoneyDto, OfferCheckDto,
+    OfferFlagDto, OfferInputDto, OpenPeriodDto, VentureDto, VentureEntryInputDto,
 };
 use crate::finance::{self, CURRENCY, DEVICE_ID, UuidV7, date_text, parse_money};
 use crate::partnerships;
@@ -209,6 +209,15 @@ pub fn venture(
         periods: closed,
         spike,
         buyout_remaining: buyout_remaining.filter(|m| m.minor != "0"),
+        attachments: AttachmentRepo::new(db.connection())
+            .list(&agreement.id)?
+            .into_iter()
+            .map(|a| AttachmentDto {
+                id: a.id,
+                seq: u32::try_from(a.seq).unwrap_or(u32::MAX),
+                image: a.image,
+            })
+            .collect(),
     })
 }
 
@@ -566,6 +575,36 @@ pub fn hustle(input: HustleInputDto) -> Result<HustlePlanDto, SessionError> {
     })
 }
 
+/// Chek rasmi hajmi chegarasi (data URL belgilar): ~2 MB rasm.
+const MAX_ATTACHMENT_CHARS: usize = 2_800_000;
+
+/// Ledger yozuviga chek rasmini biriktiradi (yozuvning o'zi o'zgarmaydi — alohida jadval).
+pub fn attach_receipt(
+    db: &Database,
+    now: OffsetDateTime,
+    input: AttachReceiptInputDto,
+) -> Result<VentureDto, SessionError> {
+    let (partnership, agreement) = load_pair(db, &input.partnership_id)?;
+    if !input.image.starts_with("data:image/") || input.image.len() > MAX_ATTACHMENT_CHARS {
+        return Err(DomainError::AttachmentInvalid.into());
+    }
+    let entries = JournalRepo::new(db.connection()).list(&agreement.id)?;
+    let seq = i64::from(input.seq);
+    if !entries.iter().any(|e| e.seq == seq) {
+        return Err(StorageError::NotFound.into());
+    }
+    AttachmentRepo::new(db.connection()).insert(
+        &domain::IdGen::next_id(&UuidV7),
+        &agreement.household_id,
+        &agreement.id,
+        seq,
+        &input.image,
+        now,
+        DEVICE_ID,
+    )?;
+    venture(db, now, &partnership.id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -652,6 +691,7 @@ mod tests {
                 title: "Tikuv sexi".into(),
                 kind: "MUDARABA".into(),
                 my_role: "WORKER".into(),
+                gate_override: None,
             },
         )
         .expect("sheriklik");

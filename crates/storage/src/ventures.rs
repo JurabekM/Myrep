@@ -174,3 +174,65 @@ impl Raw {
         })
     }
 }
+
+/// Ledger yozuviga biriktirilgan chek rasmi (data URL matni; baza SQLCipher bilan shifrlangan).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AttachmentRow {
+    /// UUIDv7.
+    pub id: String,
+    /// Jurnal yozuvi tartib raqami.
+    pub seq: i64,
+    /// Rasm (data URL).
+    pub image: String,
+}
+
+/// Biriktirmalar.
+pub struct AttachmentRepo<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> AttachmentRepo<'a> {
+    /// Ulanish ustida repo.
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    /// Biriktirma qo'shadi.
+    #[allow(clippy::too_many_arguments)]
+    pub fn insert(
+        &self,
+        id: &str,
+        household_id: &str,
+        agreement_id: &str,
+        seq: i64,
+        image: &str,
+        now: OffsetDateTime,
+        origin_device_id: &str,
+    ) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT INTO venture_attachments (id, household_id, agreement_id, seq, image, created_at, origin_device_id) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![id, household_id, agreement_id, seq, image, format_ts(now)?, origin_device_id],
+        )?;
+        Ok(())
+    }
+
+    /// Kelishuv biriktirmalari (seq bo'yicha).
+    pub fn list(&self, agreement_id: &str) -> Result<Vec<AttachmentRow>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT id, seq, image FROM venture_attachments WHERE agreement_id = ?1 ORDER BY seq, created_at",
+        )?;
+        let rows = statement.query_map([agreement_id], |row| {
+            Ok(AttachmentRow {
+                id: row.get(0)?,
+                seq: row.get(1)?,
+                image: row.get(2)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row?);
+        }
+        Ok(out)
+    }
+}

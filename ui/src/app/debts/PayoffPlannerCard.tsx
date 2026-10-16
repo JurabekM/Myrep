@@ -5,7 +5,12 @@ import { GridComponent, LegendComponent, TooltipComponent } from "echarts/compon
 import { CanvasRenderer } from "echarts/renderers";
 import { type SyntheticEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { type PayoffDto, type ScheduleRowDto, commands } from "../../bindings/bindings";
+import {
+  type LoanDto,
+  type PayoffDto,
+  type ScheduleRowDto,
+  commands,
+} from "../../bindings/bindings";
 import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
 import { Alert, Card, Field, PrimaryButton, Stat } from "../finance/ui";
@@ -33,8 +38,9 @@ function typeKey(value: ScheduleType) {
  * «qarzsiz kun», jadval (TanStack Table) va qoldiq grafigi (ECharts). Hisob Rustda; bu yerda faqat ko'rsatish.
  * Stavka — foydalanuvchining mavjud qarzi tavsifi, «muqobil daromad» emas.
  */
-export function PayoffPlannerCard() {
+export function PayoffPlannerCard({ loans = [] }: { loans?: LoanDto[] }) {
   const { t } = useTranslation();
+  const openLoans = loans.filter((loan) => !loan.settled);
   const message = useErrorMessage();
   const [type, setType] = useState<ScheduleType>("ANNUITY");
   const [principal, setPrincipal] = useState("");
@@ -72,6 +78,33 @@ export function PayoffPlannerCard() {
     <Card title={t("payoff.title")}>
       <p className="text-sm text-muted">{t("payoff.intro")}</p>
       <form className="flex flex-col gap-4" onSubmit={(event) => void run(event)}>
+        {openLoans.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            <label htmlFor="payoff-from-loan" className="text-sm text-muted">
+              {t("payoff.fromLoan")}
+            </label>
+            <select
+              id="payoff-from-loan"
+              className={SELECT_CLASS}
+              defaultValue=""
+              onChange={(event) => {
+                const loan = openLoans.find((l) => l.id === event.currentTarget.value);
+                if (loan !== undefined) {
+                  setPrincipal(loan.outstanding.formatted);
+                  setTerm(String(Math.max(1, loan.installments)));
+                  setResult(null);
+                }
+              }}
+            >
+              <option value="">{t("payoff.fromLoanNone")}</option>
+              {openLoans.map((loan) => (
+                <option key={loan.id} value={loan.id}>
+                  {loan.counterparty} · {loan.outstanding.formatted}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-2">
             <label htmlFor="payoff-type" className="text-sm text-muted">

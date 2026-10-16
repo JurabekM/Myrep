@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { familyFetchers, familyKeys } from "../family/queries";
 import { type SyntheticEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type PartnershipDto, type PartnershipsDto, commands } from "../../bindings/bindings";
@@ -81,7 +82,7 @@ export function PartnershipsCard({ onOpen }: { onOpen: (agreementId: string) => 
           {partnerships.data.items.map((item) => (
             <PartnershipBlock key={item.id} item={item} onOpen={onOpen} />
           ))}
-          <CreateForm onCreated={onOpen} />
+          <CreateForm onCreated={onOpen} gateLocked={partnerships.data.gate !== "OPEN"} />
         </>
       ) : null}
     </Card>
@@ -115,6 +116,11 @@ function PartnershipBlock({
           {t("agreements.version", { version: item.version })}
         </span>
       </div>
+      {item.gateOverrideReason !== null ? (
+        <p className="text-xs text-warning">
+          {t("partnerships.overrideLine", { reason: item.gateOverrideReason })}
+        </p>
+      ) : null}
       {item.parties.length > 0 ? (
         <ul className="flex flex-col gap-1 text-sm text-text">
           {item.parties.map((party) => (
@@ -325,20 +331,46 @@ function PartnershipBlock({
   );
 }
 
-function CreateForm({ onCreated }: { onCreated: (agreementId: string) => void }) {
+function CreateForm({
+  onCreated,
+  gateLocked,
+}: {
+  onCreated: (agreementId: string) => void;
+  gateLocked: boolean;
+}) {
   const { t } = useTranslation();
   const { run, error } = usePartnershipAction();
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<(typeof KINDS)[number]>("MUDARABA");
   const [role, setRole] = useState<(typeof ROLES)[number]>("WORKER");
+  const needsOverride = gateLocked && role === "CAPITAL_PROVIDER";
+  const members = useQuery({
+    queryKey: familyKeys.members,
+    queryFn: familyFetchers.members,
+    enabled: needsOverride,
+  });
+  const [reason, setReason] = useState("");
+  const [member, setMember] = useState("");
+  const [pin, setPin] = useState("");
+  const adults = members.data?.filter((m) => m.role === "ADULT") ?? [];
+  const memberId = member !== "" ? member : (adults[0]?.id ?? "");
 
   async function create(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = await run(() =>
-      commands.createPartnership({ title, kind, myRole: role }).then(unwrap),
+      commands
+        .createPartnership({
+          title,
+          kind,
+          myRole: role,
+          gateOverride: needsOverride ? { memberId, pin, reason } : null,
+        })
+        .then(unwrap),
     );
     if (next !== null) {
       setTitle("");
+      setReason("");
+      setPin("");
       const created = next.items[next.items.length - 1];
       if (created !== undefined) {
         onCreated(created.agreementId);
@@ -402,7 +434,13 @@ function CreateForm({ onCreated }: { onCreated: (agreementId: string) => void })
           </select>
         </div>
         <div className="flex items-end">
-          <PrimaryButton type="submit" disabled={title.trim() === ""}>
+          <PrimaryButton
+            type="submit"
+            disabled={
+              title.trim() === "" ||
+              (needsOverride && (reason.trim().length < 20 || pin.length !== 6 || memberId === ""))
+            }
+          >
             {t("partnerships.create")}
           </PrimaryButton>
         </div>
@@ -412,6 +450,53 @@ function CreateForm({ onCreated }: { onCreated: (agreementId: string) => void })
           ? t("partnerships.roleCapitalHint")
           : t("partnerships.roleWorkerHint")}
       </p>
+      {needsOverride ? (
+        <div className="flex flex-col gap-3 rounded-lg border border-warning/40 px-3 py-3">
+          <p className="text-sm text-warning">{t("partnerships.overrideTitle")}</p>
+          <p className="text-xs text-subtle">{t("partnerships.overrideHint")}</p>
+          <Field
+            id="override-reason"
+            label={t("partnerships.overrideReason")}
+            value={reason}
+            onChange={(event) => {
+              setReason(event.currentTarget.value);
+            }}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="override-member" className="text-sm text-muted">
+                {t("partnerships.overrideMember")}
+              </label>
+              <select
+                id="override-member"
+                className={SELECT_CLASS}
+                value={memberId}
+                onChange={(event) => {
+                  setMember(event.currentTarget.value);
+                }}
+              >
+                {adults.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Field
+              id="override-pin"
+              label={t("partnerships.overridePin")}
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              autoComplete="off"
+              value={pin}
+              onChange={(event) => {
+                setPin(event.currentTarget.value.replace(/\D/g, "").slice(0, 6));
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
       {error !== null ? <Alert>{error}</Alert> : null}
     </form>
   );

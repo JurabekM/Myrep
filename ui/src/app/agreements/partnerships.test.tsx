@@ -36,6 +36,7 @@ vi.mock("../../bindings/bindings", () => ({
     setBuyout: vi.fn(),
     payBuyout: vi.fn(),
     consentPartnership: vi.fn(),
+    listMembers: vi.fn(),
   },
 }));
 
@@ -71,6 +72,7 @@ const ITEM: PartnershipDto = {
   gateReasons: ["RESERVE_BELOW_TARGET"],
   consentMember: null,
   consentAt: null,
+  gateOverrideReason: null,
   buyout: {
     total: money(900_000_000, "9 000 000 soʻm"),
     months: 3,
@@ -127,6 +129,13 @@ function setUp(): void {
   vi.mocked(commands.getAgreementsCenter).mockResolvedValue({ status: "ok", data: { rows: [] } });
   vi.mocked(commands.listFamilyTemplates).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getPartnerships).mockResolvedValue({ status: "ok", data: DATA });
+  vi.mocked(commands.listMembers).mockResolvedValue({
+    status: "ok",
+    data: [
+      { id: "m-1", name: "Anvar", role: "ADULT", hasPin: true },
+      { id: "m-2", name: "Bola", role: "CHILD", hasPin: false },
+    ],
+  });
 }
 
 describe("sheriklik", () => {
@@ -168,7 +177,7 @@ describe("sheriklik", () => {
     expect(commands.consentPartnership).toHaveBeenCalledWith({ id: "p-1", memberName: "Nodira" });
   });
 
-  it("kapital kirituvchi darvoza yopiq bo'lsa xato ko'radi", async () => {
+  it("darvoza yopiq bo'lsa kapital kirituvchi ongli chetlab o'tish bilan yaratadi", async () => {
     vi.mocked(commands.createPartnership).mockResolvedValue({
       status: "error",
       error: { code: "RULE", rule: "READINESS_GATE_LOCKED" },
@@ -177,7 +186,23 @@ describe("sheriklik", () => {
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText("Sheriklik nomi"), "Non sexi");
     await user.selectOptions(screen.getByLabelText("Mening rolim"), "CAPITAL_PROVIDER");
-    await user.click(screen.getByRole("button", { name: "Sheriklik yaratish" }));
+    // Darvoza yopiq: sabab + a'zo + PIN maydonlari chiqadi, tugma sababsiz o'chiq.
+    expect(await screen.findByText("Darvoza yopiq — ongli chetlab o'tish")).toBeInTheDocument();
+    const create = screen.getByRole("button", { name: "Sheriklik yaratish" });
+    expect(create).toBeDisabled();
+    await user.type(screen.getByLabelText("Sabab (kamida 20 belgi)"), "Qisqa");
+    expect(create).toBeDisabled();
+    await user.clear(screen.getByLabelText("Sabab (kamida 20 belgi)"));
+    await user.type(
+      screen.getByLabelText("Sabab (kamida 20 belgi)"),
+      "Ota-onamning do'konini qo'llab-quvvatlash uchun",
+    );
+    await user.type(screen.getByLabelText("A'zo PIN'i"), "123456");
+    expect(create).toBeEnabled();
+    // Faqat katta a'zolar ro'yxatda.
+    expect(screen.getByRole("option", { name: "Anvar" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Bola" })).not.toBeInTheDocument();
+    await user.click(create);
     expect(
       await screen.findByText("Tayyorgarlik darvozasi yopiq: avval 6 oylik zaxira va qarz rejasi"),
     ).toBeInTheDocument();
@@ -185,6 +210,25 @@ describe("sheriklik", () => {
       title: "Non sexi",
       kind: "MUDARABA",
       myRole: "CAPITAL_PROVIDER",
+      gateOverride: {
+        memberId: "m-1",
+        pin: "123456",
+        reason: "Ota-onamning do'konini qo'llab-quvvatlash uchun",
+      },
     });
+  });
+
+  it("ongli chetlab o'tilgan sheriklik kartasida sabab ko'rinadi", async () => {
+    vi.mocked(commands.getPartnerships).mockResolvedValue({
+      status: "ok",
+      data: {
+        ...DATA,
+        items: [{ ...ITEM, gateOverrideReason: "Oilaviy do'kon uchun zarur kapital" }],
+      },
+    });
+    render(<App />);
+    expect(
+      await screen.findByText("Darvoza ongli chetlab o'tilgan: Oilaviy do'kon uchun zarur kapital"),
+    ).toBeInTheDocument();
   });
 });

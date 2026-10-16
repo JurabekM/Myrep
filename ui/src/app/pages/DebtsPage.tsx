@@ -8,7 +8,10 @@ import {
   commands,
 } from "../../bindings/bindings";
 import { AgreementWizard } from "../agreements/AgreementWizard";
+import { PayoffOrderCard } from "../debts/PayoffOrderCard";
 import { PayoffPlannerCard } from "../debts/PayoffPlannerCard";
+import { SellableCard } from "../debts/SellableCard";
+import { familyFetchers, familyKeys } from "../family/queries";
 import { RecoveryCard } from "../debts/RecoveryCard";
 import { useApplyAgreement } from "../agreements/queries";
 import { unwrap } from "../finance/command-error";
@@ -71,6 +74,8 @@ export function DebtsPage() {
     queryFn: () => commands.getLoans().then(unwrap),
   });
   const [iou, setIou] = useState<string | null>(null);
+  const [resetNotice, setResetNotice] = useState(false);
+  const queryClient = useQueryClient();
 
   return (
     <div className="flex flex-col gap-8">
@@ -100,12 +105,25 @@ export function DebtsPage() {
               />
             </div>
           </Card>
+          {resetNotice ? (
+            <p
+              className="rounded-lg border border-success/40 px-4 py-3 text-sm text-success"
+              role="status"
+            >
+              {t("debts.recoveryReset")}
+            </p>
+          ) : null}
           <LoanList
             title={t("debts.takenTitle")}
             empty={t("debts.takenEmpty")}
             loans={loans.data.taken}
             onIou={(id) => {
               setIou(id);
+            }}
+            onReset={() => {
+              setResetNotice(true);
+              // Rejim Rustda STANDARD ga qaytdi — tiklash kartasi va byudjet keshini yangilaymiz.
+              void queryClient.invalidateQueries({ queryKey: financeKeys.recovery });
             }}
           />
           <LoanList
@@ -114,8 +132,13 @@ export function DebtsPage() {
             loans={loans.data.given}
           />
           <AddLoanCard />
+          <PayoffOrderCard payoff={loans.data.payoff} />
+          <SellableCard
+            sellable={loans.data.sellable}
+            outstanding={loans.data.totalOutstanding.formatted}
+          />
           <RecoveryCard />
-          <PayoffPlannerCard />
+          <PayoffPlannerCard loans={loans.data.taken} />
         </>
       ) : null}
       {iou !== null ? (
@@ -135,25 +158,38 @@ function LoanList({
   empty,
   loans,
   onIou,
+  onReset,
 }: {
   title: string;
   empty: string;
   loans: LoanDto[];
   onIou?: (id: string) => void;
+  onReset?: () => void;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const message = useErrorMessage();
+  const members = useQuery({ queryKey: familyKeys.members, queryFn: familyFetchers.members });
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [contributors, setContributors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   async function pay(loan: LoanDto) {
     setError(null);
     try {
       const next: LoansDto = unwrap(
-        await commands.payLoan({ loanId: loan.id, amount: amounts[loan.id] ?? "", paidOn: null }),
+        await commands.payLoan({
+          loanId: loan.id,
+          amount: amounts[loan.id] ?? "",
+          paidOn: null,
+          contributorId:
+            (contributors[loan.id] ?? "") === "" ? null : (contributors[loan.id] ?? null),
+        }),
       );
       queryClient.setQueryData(financeKeys.loans, next);
+      if (next.recoveryModeReset) {
+        onReset?.();
+      }
       setAmounts((current) => ({ ...current, [loan.id]: "" }));
     } catch (caught) {
       setError(message(caught));
@@ -194,6 +230,12 @@ function LoanList({
                         })}
                     {loan.borrowVerdict !== null ? ` · ${t(verdictKey(loan.borrowVerdict))}` : ""}
                   </span>
+                  {loan.contributions.length > 0 ? (
+                    <span className="text-xs text-subtle">
+                      {t("debts.contributions")}:{" "}
+                      {loan.contributions.map((c) => `${c.name} ${c.total.formatted}`).join(", ")}
+                    </span>
+                  ) : null}
                 </span>
                 <span className="text-base font-semibold text-text">
                   {loan.outstanding.formatted}
@@ -219,6 +261,29 @@ function LoanList({
                       }}
                     />
                   </div>
+                  {loan.direction === "TAKEN" && members.isSuccess && members.data.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor={`contrib-${loan.id}`} className="text-sm text-muted">
+                        {t("debts.contributor")}
+                      </label>
+                      <select
+                        id={`contrib-${loan.id}`}
+                        className={SELECT_CLASS}
+                        value={contributors[loan.id] ?? ""}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setContributors((current) => ({ ...current, [loan.id]: value }));
+                        }}
+                      >
+                        <option value="">{t("debts.contributorNone")}</option>
+                        {members.data.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                   <PrimaryButton type="submit" disabled={(amounts[loan.id] ?? "").trim() === ""}>
                     {loan.direction === "TAKEN" ? t("debts.pay") : t("debts.receive")}
                   </PrimaryButton>

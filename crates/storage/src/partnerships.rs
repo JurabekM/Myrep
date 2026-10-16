@@ -293,3 +293,48 @@ impl Raw {
         })
     }
 }
+
+/// Ongli chetlab o'tish yozuvi (darvoza qasddan ochildi): bitta amal, sabab, ADULT a'zo (PIN bilan tasdiqlangan).
+pub struct GateOverrideRepo<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> GateOverrideRepo<'a> {
+    /// Ulanish ustida repo.
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    /// Yozuv qo'shadi.
+    #[allow(clippy::too_many_arguments)]
+    pub fn insert(
+        &self,
+        id: &str,
+        household_id: &str,
+        action: &str,
+        target_id: &str,
+        reason: &str,
+        member_id: &str,
+        now: OffsetDateTime,
+        origin_device_id: &str,
+    ) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT INTO gate_overrides (id, household_id, action, target_id, reason, member_id, created_at, origin_device_id) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![id, household_id, action, target_id, reason, member_id, format_ts(now)?, origin_device_id],
+        )?;
+        Ok(())
+    }
+
+    /// Nishon uchun sabab (bo'lsa).
+    pub fn reason_for(&self, target_id: &str) -> Result<Option<String>, StorageError> {
+        Ok(self
+            .conn
+            .query_row(
+                "SELECT reason FROM gate_overrides WHERE target_id = ?1 ORDER BY created_at DESC LIMIT 1",
+                [target_id],
+                |row| row.get(0),
+            )
+            .optional()?)
+    }
+}

@@ -34,6 +34,20 @@ export function VentureCard({ partnership }: { partnership: PartnershipDto }) {
   const [error, setError] = useState<string | null>(null);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
 
+  function attach(seq: number, file: File | undefined) {
+    if (file === undefined) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = typeof reader.result === "string" ? reader.result : "";
+      void apply(() =>
+        commands.attachReceipt({ partnershipId: partnership.id, seq, image }).then(unwrap),
+      );
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function apply(action: () => Promise<VentureDto>): Promise<boolean> {
     setError(null);
     try {
@@ -137,8 +151,36 @@ export function VentureCard({ partnership }: { partnership: PartnershipDto }) {
                 {entry.date} · {t(journalKindKey(entry.kind))} · {nameOf(entry.partyId)}
                 {entry.note !== null ? ` · ${entry.note}` : ""}
               </span>
-              <span className={entry.kind === "VENTURE_INCOME" ? "text-success" : "text-muted"}>
-                {entry.amount.formatted}
+              <span className="flex items-center gap-2">
+                {data.attachments
+                  .filter((a) => a.seq === entry.seq)
+                  .map((a) => (
+                    <img
+                      key={a.id}
+                      src={a.image}
+                      alt={t("venture.receiptAlt", { seq: entry.seq })}
+                      className="h-8 w-8 rounded object-cover"
+                    />
+                  ))}
+                {data.canWrite ? (
+                  <label className="relative cursor-pointer text-xs text-subtle underline">
+                    {t("venture.attachReceipt")}
+                    {/* Fayl maydoni yorliq ustida ko'rinmas qatlam: `sr-only` (ekrandan tashqari) fokusda
+                        butun oynani surib yuborardi (WebView2). */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      aria-label={t("venture.attachReceiptFor", { seq: entry.seq })}
+                      onChange={(event) => {
+                        attach(entry.seq, event.currentTarget.files?.[0]);
+                      }}
+                    />
+                  </label>
+                ) : null}
+                <span className={entry.kind === "VENTURE_INCOME" ? "text-success" : "text-muted"}>
+                  {entry.amount.formatted}
+                </span>
               </span>
             </li>
           ))}

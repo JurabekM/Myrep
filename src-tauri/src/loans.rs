@@ -6,17 +6,24 @@
 
 use domain::DomainError;
 use domain::debt::{outstanding, validate_payment};
-use domain::loans::{BorrowVerdict, borrow_check, debt_free_day, equal_plan, next_installment};
+use domain::loans::{
+    BorrowVerdict, OpenLoan, PayoffStrategy, add_months, borrow_check, debt_free_day, equal_plan,
+    next_installment, payoff_order,
+};
 use money::{Money, round_half_up_div};
-use storage::{Database, IncomeRepo, LoanDirection, LoanRepo, LoanRow, PaymentRow, StorageError};
+use storage::{
+    Database, IncomeRepo, LoanDirection, LoanRepo, LoanRow, MemberRepo, PaymentRow, RescueRepo,
+    SellableRepo, SellableRow, StorageError,
+};
 use time::format_description::well_known::Iso8601;
 use time::{Date, OffsetDateTime};
 
 use crate::agreements;
 use crate::dto::{
     AgreementAnswersDto, AgreementDto, AgreementInputDto, BorrowCheckDto, BorrowCheckInputDto,
-    ContributionDto, LoanDto, LoanInputDto, LoanPaymentInputDto, LoansDto, MoneyDto, PartyDto,
-    SaveAnswersInputDto,
+    ContributionDto, ContributorDto, LoanDto, LoanInputDto, LoanPaymentInputDto, LoansDto,
+    MoneyDto, PartyDto, PayoffOrderDto, PayoffStepDto, SaveAnswersInputDto, SellableDto,
+    SellableInputDto, SellableItemDto,
 };
 use crate::finance::{self, CURRENCY, Context, DEVICE_ID, UuidV7, date_text, parse_money};
 use crate::session::SessionError;
@@ -105,6 +112,7 @@ fn loan_dto(db: &Database, loan: &LoanRow) -> Result<LoanDto, SessionError> {
         borrow_verdict: loan.borrow_verdict.clone(),
         agreement_id: loan.agreement_id.clone(),
         settled: remaining.minor() == 0,
+        contributions: contributions_of(db, loan)?,
     })
 }
 
@@ -152,6 +160,8 @@ pub fn overview(db: &Database, now: OffsetDateTime) -> Result<LoansDto, SessionE
         .filter(|(_, dto)| !dto.settled)
         .map(|(loan, _)| &loan.plan)
         .collect();
+    let payoff = payoff_dto(db, &ctx, &taken, &taken_dtos)?;
+    let sellable = sellable_dto(db, &ctx)?;
     Ok(LoansDto {
         taken: taken_dtos,
         given: given_dtos,
@@ -160,6 +170,9 @@ pub fn overview(db: &Database, now: OffsetDateTime) -> Result<LoansDto, SessionE
         monthly_burden: MoneyDto::of(burden_of(db, &taken)?),
         monthly_income: MoneyDto::of(monthly_income(db, &ctx)?),
         debt_free_day: debt_free_day(&open_plans).map(date_text),
+        recovery_mode_reset: false,
+        payoff,
+        sellable,
     })
 }
 
@@ -284,6 +297,22 @@ pub fn pay(
     if paid_on > ctx.today {
         return Err(DomainError::InvalidDay.into());
     }
+    let contributor = match input
+        .contributor_id
+        .as_deref()
+        .filter(|c| !c.trim().is_empty())
+    {
+        Some(id) => {
+            let member = MemberRepo::new(db.connection())
+                .find(id)?
+                .ok_or(StorageError::NotFound)?;
+            if member.household_id != ctx.household.id {
+                return Err(StorageError::NotFound.into());
+            }
+            Some(member.id)
+        }
+        None => None,
+    };
     repo.insert_payment(&PaymentRow {
         id: domain::IdGen::next_id(&UuidV7),
         household_id: ctx.household.id.clone(),
@@ -292,8 +321,12 @@ pub fn pay(
         paid_on,
         created_at: now,
         origin_device_id: DEVICE_ID.to_owned(),
+        contributor_member_id: contributor,
     })?;
-    overview(db, now)
+    let reset = maybe_reset_recovery_mode(db, &ctx)?;
+    let mut view = overview(db, now)?;
+    view.recovery_mode_reset = reset;
+    Ok(view)
 }
 
 /// Tilxat: qarz uchun `LOAN` kelishuvi qoralamasi (tomonlar, hissa, jadval, muddat oldindan to'ldirilgan).
@@ -389,6 +422,191 @@ pub fn create_iou(
     Ok(saved)
 }
 
+const STRATEGY_KEY: &str = "payoff_strategy";
+const MODE_KEY: &str = "budget_mode";
+
+/// Qarz bo'yicha oila a'zolarining hissalari (ism bilan).
+fn contributions_of(db: &Database, loan: &LoanRow) -> Result<Vec<ContributorDto>, SessionError> {
+    let members = MemberRepo::new(db.connection());
+    let mut out = Vec::new();
+    for (member_id, minor) in LoanRepo::new(db.connection()).contributions(&loan.id)? {
+        let name = members
+            .find(&member_id)?
+            .map_or_else(|| member_id.clone(), |m| m.name);
+        out.push(ContributorDto {
+            member_id,
+            name,
+            total: MoneyDto::of(Money::new(minor, loan.principal.currency())),
+        });
+    }
+    Ok(out)
+}
+
+/// Saqlangan strategiya (standart — qor to'pi).
+fn stored_strategy(db: &Database, ctx: &Context) -> Result<PayoffStrategy, SessionError> {
+    Ok(RescueRepo::new(db.connection())
+        .setting(&ctx.household.id, STRATEGY_KEY)?
+        .and_then(|code| PayoffStrategy::from_code(&code))
+        .unwrap_or(PayoffStrategy::Snowball))
+}
+
+/// Yopish tartibi: ochiq olingan qarzlar, qo'shimcha = 70/20/10 «qarz» ulushi − oylik yuk (manfiy → 0).
+fn payoff_dto(
+    db: &Database,
+    ctx: &Context,
+    taken: &[LoanRow],
+    dtos: &[LoanDto],
+) -> Result<PayoffOrderDto, SessionError> {
+    let strategy = stored_strategy(db, ctx)?;
+    let mut open: Vec<(&LoanRow, &LoanDto, OpenLoan)> = Vec::new();
+    for (loan, dto) in taken.iter().zip(dtos.iter()).filter(|(_, d)| !d.settled) {
+        let paid = paid_total(db, loan)?;
+        let remaining = outstanding(loan.principal, &[paid])?;
+        let installment =
+            next_installment(&loan.plan, paid).map_or_else(|| Money::zero(CURRENCY), |i| i.amount);
+        open.push((
+            loan,
+            dto,
+            OpenLoan {
+                outstanding: remaining,
+                installment,
+                has_markup: loan.has_markup,
+            },
+        ));
+    }
+    let burden = burden_of(db, taken)?;
+    let debt_share = crate::payoff::split_parts(db, ctx)?[1];
+    let extra = Money::new((debt_share.minor() - burden.minor()).max(0), CURRENCY);
+    let loans: Vec<OpenLoan> = open.iter().map(|(_, _, l)| l.clone()).collect();
+    let order = payoff_order(strategy, &loans, extra)?;
+    let other = match strategy {
+        PayoffStrategy::Snowball => PayoffStrategy::Avalanche,
+        PayoffStrategy::Avalanche => PayoffStrategy::Snowball,
+    };
+    let alternative = payoff_order(other, &loans, extra)?;
+    let mut steps = Vec::with_capacity(order.order.len());
+    for step in &order.order {
+        let (_, dto, loan) = &open[step.index];
+        steps.push(PayoffStepDto {
+            loan_id: dto.id.clone(),
+            counterparty: dto.counterparty.clone(),
+            outstanding: MoneyDto::of(loan.outstanding),
+            has_markup: loan.has_markup,
+            months_to_clear: step.months_to_clear,
+            clear_on: date_text(add_months(ctx.today, i64::from(step.months_to_clear))?),
+        });
+    }
+    Ok(PayoffOrderDto {
+        strategy: strategy.code().to_owned(),
+        extra: MoneyDto::of(extra),
+        steps,
+        total_months: order.total_months,
+        debt_free_day: if order.total_months > 0 {
+            Some(date_text(add_months(
+                ctx.today,
+                i64::from(order.total_months),
+            )?))
+        } else {
+            None
+        },
+        alternative_total_months: alternative.total_months,
+    })
+}
+
+/// Strategiyani saqlaydi.
+pub fn set_payoff_strategy(
+    db: &Database,
+    now: OffsetDateTime,
+    strategy: &str,
+) -> Result<LoansDto, SessionError> {
+    let ctx = finance::context(db, now)?;
+    let parsed = PayoffStrategy::from_code(strategy).ok_or(DomainError::InvalidRule)?;
+    RescueRepo::new(db.connection()).set_setting(&ctx.household.id, STRATEGY_KEY, parsed.code())?;
+    overview(db, now)
+}
+
+/// Oxirgi olingan qarz yopilganda `DEBT_RECOVERY` rejimi `STANDARD` ga qaytadi (SPEC 2D.9 milestone).
+fn maybe_reset_recovery_mode(db: &Database, ctx: &Context) -> Result<bool, SessionError> {
+    let taken = LoanRepo::new(db.connection()).list(&ctx.household.id, LoanDirection::Taken)?;
+    for loan in &taken {
+        if outstanding(loan.principal, &[paid_total(db, loan)?])?.minor() > 0 {
+            return Ok(false);
+        }
+    }
+    let repo = RescueRepo::new(db.connection());
+    if repo.setting(&ctx.household.id, MODE_KEY)?.as_deref() == Some("DEBT_RECOVERY") {
+        repo.set_setting(&ctx.household.id, MODE_KEY, "STANDARD")?;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+fn sellable_dto(db: &Database, ctx: &Context) -> Result<SellableDto, SessionError> {
+    let rows = SellableRepo::new(db.connection()).list(&ctx.household.id)?;
+    let mut total = Money::zero(CURRENCY);
+    let mut items = Vec::with_capacity(rows.len());
+    for row in &rows {
+        if row.sold_at.is_none() {
+            total = add(total, row.estimate)?;
+        }
+        items.push(SellableItemDto {
+            id: row.id.clone(),
+            name: row.name.clone(),
+            estimate: MoneyDto::of(row.estimate),
+            note: row.note.clone(),
+            sold_on: row.sold_at.map(|t| date_text(t.date())),
+        });
+    }
+    Ok(SellableDto {
+        items,
+        total_estimate: MoneyDto::of(total),
+    })
+}
+
+/// Sotiladigan buyum qo'shadi.
+pub fn add_sellable(
+    db: &Database,
+    now: OffsetDateTime,
+    input: SellableInputDto,
+) -> Result<LoansDto, SessionError> {
+    let ctx = finance::context(db, now)?;
+    let estimate = parse_money(&input.estimate)?;
+    if estimate.minor() <= 0 {
+        return Err(DomainError::AmountNotPositive.into());
+    }
+    SellableRepo::new(db.connection()).insert(&SellableRow {
+        id: domain::IdGen::next_id(&UuidV7),
+        household_id: ctx.household.id.clone(),
+        name: domain::validate_name(&input.name)?,
+        estimate,
+        note: input.note.filter(|n| !n.trim().is_empty()),
+        sold_at: None,
+        created_at: now,
+        origin_device_id: DEVICE_ID.to_owned(),
+    })?;
+    overview(db, now)
+}
+
+/// Buyum sotildi.
+pub fn mark_sellable_sold(
+    db: &Database,
+    now: OffsetDateTime,
+    id: &str,
+) -> Result<LoansDto, SessionError> {
+    SellableRepo::new(db.connection()).mark_sold(id, now)?;
+    overview(db, now)
+}
+
+/// Buyumni ro'yxatdan olib tashlaydi.
+pub fn remove_sellable(
+    db: &Database,
+    now: OffsetDateTime,
+    id: &str,
+) -> Result<LoansDto, SessionError> {
+    SellableRepo::new(db.connection()).delete(id, now)?;
+    overview(db, now)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -454,6 +672,7 @@ mod tests {
                 loan_id: id.clone(),
                 amount: "150 000".into(),
                 paid_on: None,
+                contributor_id: None,
             },
         )
         .expect("to'landi");
@@ -466,7 +685,8 @@ mod tests {
                 LoanPaymentInputDto {
                     loan_id: id,
                     amount: "2 000 000".into(),
-                    paid_on: None
+                    paid_on: None,
+                    contributor_id: None,
                 }
             ),
             Err(SessionError::Domain(DomainError::DebtOverpaid))

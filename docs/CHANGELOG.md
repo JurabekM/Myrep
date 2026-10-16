@@ -4,6 +4,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D10+ qoldiqlari — DebtContributor, yopish strategiyasi, sotiladigan buyumlar, ongli chetlab o'tish, chek rasmlari (2026-10-16)
+
+Bitta sessiyada D10–D13 dan qolgan 1-toifa (koddan hal bo'ladigan) bandlar yopildi. Sxema **v16**.
+
+**Qarzlar (D10)**
+
+- **`DebtContributor`** (SPEC 2D.6): to'lovda «Kim to'ladi (oila a'zosi)» tanlanadi (`loan_payments.contributor_member_id`), qarz kartasida «Hissalar: a'zo — summa» yig'indisi ko'rinadi. A'zo xonadoni tekshiriladi; bo'sh — umumiy.
+- **Yopish tartibi** (`PayoffStrategy`: `SNOWBALL` — eng kichik qoldiq avval, `AVALANCHE` — ustamali qarz avval). Hisob Rustda: `domain::loans::payoff_order` — oylik simulyatsiya, qo'shimcha summa fokus qarzga, yopilgan qarzning to'lovi keyingisiga qo'shiladi (rollover). Qo'shimcha summa = 70/20/10 «qarz» ulushi − joriy oylik yuk (≥ 0). Karta: strategiya tanlovi (saqlanadi, `settings.payoff_strategy`), har qarz uchun yopilish oyi va sanasi, prognoz qarzsiz kun, boshqa strategiyadagi muddat. **Taklif vektori** `spec/test-vectors/proposed/payoff_strategy.json` (3 holat, `PROPOSED`).
+- **Tiklash rejimining avtomatik qaytishi:** oxirgi olingan qarz to'liq yopilganda `DEBT_RECOVERY` → `STANDARD` (Rustda, `pay` ichida), sahifada tabrik xabari («bo'shagan to'lovni Kelajagimga yo'naltiring»).
+- **Sotiladigan buyumlar** (SPEC 2D.7): ro'yxat, taxminiy qiymat, izoh, «Sotildi» belgisi, o'chirish; taxminiy jami qarz qoldig'i yonida.
+- Payoff rejalashtiruvchisi **mavjud qarzdan to'ldiriladi** (qoldiq va to'lovlar soni).
+
+**Sheriklik (D12/D8)**
+
+- **«Ongli chetlab o'tish»** (OPEN_QUESTIONS 8-bo'lim qarori): darvoza yopiq bo'lsa kapital egasi sifatida sheriklik yaratish uchun sabab (kamida 20 belgi) + katta a'zo PIN'i talab qilinadi; yozuv `gate_overrides` da, kartada «Darvoza ongli chetlab o'tilgan: sabab» ko'rinadi. Noto'g'ri PIN — kutish qoidasi bilan. Darvozaning o'zi ochilmaydi. Xato kodlari: `OVERRIDE_REASON_REQUIRED`.
+
+**Kassa daftari (D13)**
+
+- **Chek rasmlari:** har jurnal yozuviga rasm biriktiriladi (`venture_attachments`, data-URL, ≤ ~2 MB), yozuv qatorida miniatyura. Faqat `data:image/` qabul qilinadi (`ATTACHMENT_INVALID`).
+
+**Yangi buyruqlar:** `set_payoff_strategy`, `add_sellable_item`, `mark_sellable_sold`, `remove_sellable_item`, `attach_receipt` (build.rs + capabilities). DTO: `LoanDto.contributions`, `LoansDto.payoff/sellable/recoveryModeReset`, `LoanPaymentInputDto.contributorId`, `PartnershipInputDto.gateOverride`, `PartnershipDto.gateOverrideReason`, `VentureDto.attachments`.
+
+**GUI sinovi (toza dev profil, haqiqiy oyna, 2026-10-16):** ikki qarz (1 200 000 / 5 000 000 ustamali) → qor to'pi: Dilshod fokus, 11 oy; ko'chki: Bank fokus; sotiladigan buyum qo'shildi → «Sotildi»; a'zo «O'zim» bilan to'lov → «Hissalar: O'zim 100 000»; hamma qarz yopildi → tabrik xabari, rejim STANDARD; rejalashtiruvchi Bank qarzidan to'ldirildi; darvoza yopiq — kapital egasi: noto'g'ri PIN rad, to'g'ri PIN bilan yaratildi, kartada sabab; «Non sexi» 9/9 + 3 imzo → SIGNED; kassa daftarida kirim/xarajat, ikkala yozuvga chek PNG biriktirildi (fayl dialogi), miniatyura.
+
+**Sinovda topilgan va tuzatilgan**
+
+- Faol strategiya tugmasi ajralib ko'rinmasdi (`border-border` va `border-accent` sinflari to'qnashuvi) — `aria-checked:` variantlari bilan.
+- Oxirgi qarz yopilganda «Qarz tiklash rejimi» kartasi eski holatni (yoqilgan) ko'rsatardi — `recovery` keshi bekor qilinadi.
+- `sr-only` fayl maydoni fokusda butun oynani surib yuborardi (WebView2) — maydon yorliq ustida ko'rinmas qatlam qilindi.
+
+**Qoldi (2-toifa, keyingi sessiyalar):** D11 kengash muhokamasi rejimi (mahsulot qarori kerak), E2E muhit, fayl dialogi (9-band), sertifikat, mobil bilan vektor kelishuvi (`proposed/`).
+
+Testlar: Rust 351 (shundan `payoff_strategy_taklif_vektorlari`), vitest 90 (yangi: strategiya almashtirish, sotiladigan buyum, hissador + tiklash xabari, chetlab o'tish formasi va karta satri, chek biriktirish).
+
 ### GUI sinovi D10–D15 va tuzatishlar (2026-10-16)
 
 **Sinov tartibi.** `BARAKA_DATA_DIR` (yangi, faqat dev/sinov) bilan toza profil: `C:/Temp/claude/baraka-dev-profile`; test PIN `src-tauri/dev-test-pin.example` da. Haqiqiy Tauri oynasida (computer-use) quyidagilar bosib tekshirildi:

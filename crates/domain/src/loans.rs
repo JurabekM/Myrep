@@ -253,6 +253,145 @@ pub fn next_installment(plan: &RepaymentPlan, paid: Money) -> Option<Installment
     None
 }
 
+/// Yopish tartibi strategiyasi (SPEC 2D.6, D10 qoldig'i): qaysi qarzga qo'shimcha to'lov yo'naltiriladi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PayoffStrategy {
+    /// «Qor to'pi»: eng kichik qoldiq avval — tez g'alaba, motivatsiya.
+    Snowball,
+    /// «Ko'chki»: ustamali qarz avval (eng qimmati), so'ng katta qoldiq — kam ustama.
+    Avalanche,
+}
+
+impl PayoffStrategy {
+    /// Bazadagi kod.
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Snowball => "SNOWBALL",
+            Self::Avalanche => "AVALANCHE",
+        }
+    }
+
+    /// Koddan.
+    pub fn from_code(code: &str) -> Option<Self> {
+        match code {
+            "SNOWBALL" => Some(Self::Snowball),
+            "AVALANCHE" => Some(Self::Avalanche),
+            _ => None,
+        }
+    }
+}
+
+/// Ochiq qarz (simulyatsiya kirishi).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpenLoan {
+    /// Qoldiq.
+    pub outstanding: Money,
+    /// Oylik to'lov (reja bo'yicha).
+    pub installment: Money,
+    /// Ustamali (foizli) qarz.
+    pub has_markup: bool,
+}
+
+/// Bitta qarz uchun natija.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PayoffStep {
+    /// Kirishdagi indeks.
+    pub index: usize,
+    /// Necha oyda yopiladi (1 dan).
+    pub months_to_clear: u32,
+}
+
+/// Yopish tartibi natijasi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PayoffOrder {
+    /// Strategiya bo'yicha tartib (fokus avval).
+    pub order: Vec<PayoffStep>,
+    /// Hammasi yopiladigan oy.
+    pub total_months: u32,
+}
+
+/// Eng ko'p simulyatsiya oylari (100 yil): undan oshsa — to'lovlar qoldiqni kamaytirmayapti.
+const MAX_PAYOFF_MONTHS: u32 = 1_200;
+
+/// Oyma-oy simulyatsiya: har qarz o'z to'lovini oladi, qo'shimcha summa fokus qarzga; yopilgan qarzning
+/// to'lovi keyingi fokusga qo'shiladi («rollover»). Fokus oy o'rtasida yopilsa, ortgan summa keyingisiga o'tadi.
+/// Hamma hisob butun sonlarda (minor).
+pub fn payoff_order(
+    strategy: PayoffStrategy,
+    loans: &[OpenLoan],
+    extra: Money,
+) -> Result<PayoffOrder, DomainError> {
+    if loans.is_empty() {
+        return Ok(PayoffOrder {
+            order: Vec::new(),
+            total_months: 0,
+        });
+    }
+    let mut order: Vec<usize> = (0..loans.len()).collect();
+    match strategy {
+        PayoffStrategy::Snowball => {
+            order.sort_by_key(|&i| (loans[i].outstanding.minor(), i));
+        }
+        PayoffStrategy::Avalanche => {
+            order.sort_by_key(|&i| (!loans[i].has_markup, -loans[i].outstanding.minor(), i));
+        }
+    }
+    let mut remaining: Vec<i64> = loans.iter().map(|l| l.outstanding.minor().max(0)).collect();
+    let mut cleared_month: Vec<u32> = vec![0; loans.len()];
+    let extra_minor = extra.minor().max(0);
+    let mut month: u32 = 0;
+    while remaining.iter().any(|r| *r > 0) {
+        month += 1;
+        if month > MAX_PAYOFF_MONTHS {
+            return Err(DomainError::InvalidRule);
+        }
+        // Yopilgan qarzlarning to'lovlari + qo'shimcha — fokusga.
+        let mut pool: i64 = extra_minor;
+        for (i, loan) in loans.iter().enumerate() {
+            if remaining[i] == 0 {
+                pool = pool.saturating_add(loan.installment.minor().max(0));
+            }
+        }
+        // Avval har qarz o'z to'lovini oladi.
+        let before: i64 = remaining.iter().sum();
+        for (i, loan) in loans.iter().enumerate() {
+            if remaining[i] > 0 {
+                let pay = loan.installment.minor().max(0).min(remaining[i]);
+                remaining[i] -= pay;
+            }
+        }
+        // So'ng qo'shimcha summa tartib bo'yicha fokusga, ortgani keyingisiga.
+        for &i in &order {
+            if pool == 0 {
+                break;
+            }
+            if remaining[i] > 0 {
+                let pay = pool.min(remaining[i]);
+                remaining[i] -= pay;
+                pool -= pay;
+            }
+        }
+        for i in 0..loans.len() {
+            if remaining[i] == 0 && cleared_month[i] == 0 {
+                cleared_month[i] = month;
+            }
+        }
+        if remaining.iter().sum::<i64>() == before {
+            return Err(DomainError::InvalidRule);
+        }
+    }
+    Ok(PayoffOrder {
+        order: order
+            .into_iter()
+            .map(|index| PayoffStep {
+                index,
+                months_to_clear: cleared_month[index],
+            })
+            .collect(),
+        total_months: month,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

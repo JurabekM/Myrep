@@ -7,8 +7,8 @@ use time::OffsetDateTime;
 
 use crate::commands::{ApiError, run_blocking};
 use crate::dto::{
-    ClosePeriodInputDto, HustleInputDto, HustlePlanDto, OfferCheckDto, OfferInputDto, VentureDto,
-    VentureEntryInputDto,
+    AttachReceiptInputDto, ClosePeriodInputDto, HustleInputDto, HustlePlanDto, OfferCheckDto,
+    OfferInputDto, VentureDto, VentureEntryInputDto,
 };
 use crate::session::Session;
 use crate::ventures;
@@ -95,4 +95,18 @@ pub async fn check_offer(input: OfferInputDto) -> Result<OfferCheckDto, ApiError
 #[specta::specta]
 pub async fn hustle_plan(input: HustleInputDto) -> Result<HustlePlanDto, ApiError> {
     ventures::hustle(input).map_err(ApiError::from)
+}
+
+/// Ledger yozuviga chek rasmi.
+#[tauri::command]
+#[specta::specta]
+pub async fn attach_receipt(
+    session: State<'_, Arc<Session>>,
+    input: AttachReceiptInputDto,
+) -> Result<VentureDto, ApiError> {
+    let session = session.inner().clone();
+    run_blocking(move || {
+        session.with_database(|db| ventures::attach_receipt(db, OffsetDateTime::now_utc(), input))
+    })
+    .await
 }

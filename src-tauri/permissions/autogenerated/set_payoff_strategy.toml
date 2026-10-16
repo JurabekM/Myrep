@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-payoff-strategy"
+description = "Enables the set_payoff_strategy command without any pre-configured scope."
+commands.allow = ["set_payoff_strategy"]
+
+[[permission]]
+identifier = "deny-set-payoff-strategy"
+description = "Denies the set_payoff_strategy command without any pre-configured scope."
+commands.deny = ["set_payoff_strategy"]

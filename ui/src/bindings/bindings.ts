@@ -181,6 +181,16 @@ export const commands = {
 	payLoan: (input: LoanPaymentInputDto) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("pay_loan", { input })),
 	/**  Tilxat (LOAN kelishuvi) yaratadi yoki mavjudini qaytaradi. */
 	createIou: (loanId: string) => typedError<AgreementDto, ApiError>(__TAURI_INVOKE("create_iou", { loanId })),
+	/**  Yopish tartibi strategiyasi (`SNOWBALL | AVALANCHE`). */
+	setPayoffStrategy: (strategy: string) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("set_payoff_strategy", { strategy })),
+	/**  Sotiladigan buyum qo'shadi. */
+	addSellableItem: (input: SellableInputDto) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("add_sellable_item", { input })),
+	/**  Buyum sotildi. */
+	markSellableSold: (id: string) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("mark_sellable_sold", { id })),
+	/**  Buyumni olib tashlaydi. */
+	removeSellableItem: (id: string) => typedError<LoansDto, ApiError>(__TAURI_INVOKE("remove_sellable_item", { id })),
+	/**  Ledger yozuviga chek rasmi. */
+	attachReceipt: (input: AttachReceiptInputDto) => typedError<VentureDto, ApiError>(__TAURI_INVOKE("attach_receipt", { input })),
 	/**  Amortizatsiya simulyatsiyasi: odatiy va tezlashtirilgan grafik. */
 	simulatePayoff: (input: PayoffInputDto) => typedError<PayoffDto, ApiError>(__TAURI_INVOKE("simulate_payoff", { input })),
 	/**  Byudjet rejimi va 70/20/10 taqsimoti. */
@@ -450,6 +460,26 @@ export type AppInfo = {
 	arch: string,
 	/**  Yig'ish turi: "debug" yoki "release". */
 	buildProfile: string,
+};
+
+/**  Chek biriktirish kirishi. */
+export type AttachReceiptInputDto = {
+	/**  Sheriklik. */
+	partnershipId: string,
+	/**  Jurnal yozuvi tartibi. */
+	seq: number,
+	/**  Rasm (data URL, `data:image/...`). */
+	image: string,
+};
+
+/**  Chek rasmi. */
+export type AttachmentDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Jurnal yozuvi tartibi. */
+	seq: number,
+	/**  Rasm (data URL). */
+	image: string,
 };
 
 /**  Oylik audit ekrani. */
@@ -866,6 +896,16 @@ export type ContributionDto = {
 	description: string,
 };
 
+/**  Oila a'zosining qarzga hissasi. */
+export type ContributorDto = {
+	/**  A'zo. */
+	memberId: string,
+	/**  Ismi. */
+	name: string,
+	/**  Jami hissa. */
+	total: MoneyDto,
+};
+
 /**  CSV import so'rovi. */
 export type CsvImportInputDto = {
 	/**  Joylangan matn. */
@@ -1158,6 +1198,16 @@ export type ForkDto = {
 	firstBroken: number,
 };
 
+/**  Ongli chetlab o'tish kirishi. */
+export type GateOverrideInputDto = {
+	/**  ADULT a'zo. */
+	memberId: string,
+	/**  A'zo PIN'i. */
+	pin: string,
+	/**  Sabab (kamida 20 belgi). */
+	reason: string,
+};
+
 /**  Odat (streak) ko'rsatkichlari. */
 export type HabitDto = {
 	/**  Ketma-ket ajratilgan haftalar. */
@@ -1426,6 +1476,8 @@ export type LoanDto = {
 	agreementId: string | null,
 	/**  To'liq yopilgan. */
 	settled: boolean,
+	/**  Oila a'zolarining hissalari (`DebtContributor`). */
+	contributions: ContributorDto[],
 };
 
 /**  Qarz qo'shish (olingan yoki bergan). */
@@ -1462,6 +1514,8 @@ export type LoanPaymentInputDto = {
 	amount: string,
 	/**  Sana; bo'sh — bugun. */
 	paidOn: string | null,
+	/**  Hissa qo'shgan oila a'zosi, bo'lsa. */
+	contributorId: string | null,
 };
 
 /**  Qarzlar sahifasi. */
@@ -1480,6 +1534,12 @@ export type LoansDto = {
 	monthlyIncome: MoneyDto,
 	/**  «Qarzsiz kun» (olingan qarzlar bo'yicha), bo'lsa. */
 	debtFreeDay: string | null,
+	/**  Shu to'lovda oxirgi qarz yopildi va `DEBT_RECOVERY` rejimi `STANDARD` ga qaytdi. */
+	recoveryModeReset: boolean,
+	/**  Yopish tartibi (strategiya bo'yicha). */
+	payoff: PayoffOrderDto,
+	/**  Sotiladigan buyumlar. */
+	sellable: SellableDto,
 };
 
 /**  Ko'p tilli matn: ikkala til ham doim to'ldirilgan (ruscha yo'q bo'lsa o'zbekcha nusxa). */
@@ -1747,6 +1807,8 @@ export type PartnershipDto = {
 	consentAt: string | null,
 	/**  Buyout jadvali, bo'lsa. */
 	buyout: BuyoutDto | null,
+	/**  Darvoza ongli chetlab o'tilgan bo'lsa — sababi. */
+	gateOverrideReason: string | null,
 };
 
 /**  Yangi sheriklik. */
@@ -1757,6 +1819,8 @@ export type PartnershipInputDto = {
 	kind: string,
 	/**  `CAPITAL_PROVIDER | WORKER`. */
 	myRole: string,
+	/**  Ongli chetlab o'tish (darvoza yopiq bo'lsa, kapital kirituvchi uchun). */
+	gateOverride: GateOverrideInputDto | null,
 };
 
 /**  Sherikliklar (D12). */
@@ -1811,6 +1875,38 @@ export type PayoffInputDto = {
 	extraPerMonth: string,
 	/**  Birinchi to'lov sanasi (`YYYY-MM-DD`); bo'sh — keyingi oy bugungi kun. */
 	startDate: string | null,
+};
+
+/**  Yopish tartibi. */
+export type PayoffOrderDto = {
+	/**  `SNOWBALL | AVALANCHE`. */
+	strategy: string,
+	/**  Qo'shimcha oylik summa (70/20/10 «qarz» ulushi − oylik yuk; manfiy bo'lsa 0). */
+	extra: MoneyDto,
+	/**  Tartib (fokus avval). */
+	steps: PayoffStepDto[],
+	/**  Hammasi yopiladigan oy soni. */
+	totalMonths: number,
+	/**  Prognoz qarzsiz kun (bugundan `total_months` oy). */
+	debtFreeDay: string | null,
+	/**  Boshqa strategiyada oylar soni (taqqoslash). */
+	alternativeTotalMonths: number,
+};
+
+/**  Tartib qadami. */
+export type PayoffStepDto = {
+	/**  Qarz. */
+	loanId: string,
+	/**  Kimdan. */
+	counterparty: string,
+	/**  Qoldiq. */
+	outstanding: MoneyDto,
+	/**  Ustamali. */
+	hasMarkup: boolean,
+	/**  Necha oyda yopiladi. */
+	monthsToClear: number,
+	/**  Yopiladigan sana. */
+	clearOn: string,
 };
 
 /**  Narx daftari yozuvi. */
@@ -2065,6 +2161,38 @@ export type SecurityStatus = {
 	unlocked: boolean,
 };
 
+/**  Sotiladigan buyumlar. */
+export type SellableDto = {
+	/**  Buyumlar. */
+	items: SellableItemDto[],
+	/**  Sotilmaganlarning taxminiy jami. */
+	totalEstimate: MoneyDto,
+};
+
+/**  Buyum kirishi. */
+export type SellableInputDto = {
+	/**  Nomi. */
+	name: string,
+	/**  Taxminiy qiymat matni. */
+	estimate: string,
+	/**  Izoh. */
+	note: string | null,
+};
+
+/**  Buyum. */
+export type SellableItemDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Taxminiy qiymati. */
+	estimate: MoneyDto,
+	/**  Izoh. */
+	note: string | null,
+	/**  Sotilgan sana. */
+	soldOn: string | null,
+};
+
 /**  Ulush rejimi (DTO). */
 export type ShareModeDto = 
 /**  Daromadning foizi. */
@@ -2274,6 +2402,8 @@ export type VentureDto = {
 	spike: boolean,
 	/**  Buyout qoldig'i, bo'lsa. */
 	buyoutRemaining: MoneyDto | null,
+	/**  Chek rasmlari (ochiq va yopilgan davr yozuvlariga). */
+	attachments: AttachmentDto[],
 };
 
 /**  Ledger yozuvi kirishi. */

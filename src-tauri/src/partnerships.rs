@@ -11,8 +11,10 @@ use domain::partnership::{
     FULL_SHARE_BP, PartnerInput, PartnershipKind, buyout_schedule, validate_structure,
 };
 use money::{Money, round_half_up_div};
+use security::{SecurityError, verify_member_pin};
 use storage::{
-    AgreementRow, BuyoutPaymentRow, Database, PartnershipRepo, PartnershipRow, StorageError,
+    AgreementRow, BuyoutPaymentRow, Database, GateOverrideRepo, MemberRepo, PartnershipRepo,
+    PartnershipRow, PinRepo, StorageError,
 };
 use time::format_description::well_known::Iso8601;
 use time::{Date, OffsetDateTime};
@@ -224,6 +226,7 @@ fn dto(
         consent_member: row.consent_member.clone(),
         consent_at: row.consent_at.map(|t| date_text(t.date())),
         buyout: buyout_dto(db, row)?,
+        gate_override_reason: GateOverrideRepo::new(db.connection()).reason_for(&row.id)?,
     })
 }
 
@@ -262,8 +265,32 @@ pub fn create(
     if input.my_role != ROLE_CAPITAL && input.my_role != ROLE_WORKER {
         return Err(DomainError::InvalidRule.into());
     }
+    // Darvoza yopiq + kapital kirituvchi: faqat ongli chetlab o'tish bilan (sabab ≥ 20 belgi, ADULT PIN).
+    let mut override_record: Option<(String, String)> = None;
     if input.my_role == ROLE_CAPITAL && reserve::reserve(db, now)?.gate != "OPEN" {
-        return Err(DomainError::ReadinessGateLocked.into());
+        let Some(gate_override) = input.gate_override.as_ref() else {
+            return Err(DomainError::ReadinessGateLocked.into());
+        };
+        let reason = gate_override.reason.trim();
+        if reason.chars().count() < 20 {
+            return Err(DomainError::OverrideReasonRequired.into());
+        }
+        let member = MemberRepo::new(db.connection())
+            .find(&gate_override.member_id)?
+            .ok_or(StorageError::NotFound)?;
+        if member.role != domain::MemberRole::Adult || member.household_id != ctx.household.id {
+            return Err(DomainError::InvalidRole.into());
+        }
+        let pins = PinRepo::new(db.connection());
+        let state = pins.find(&member.id)?.ok_or(StorageError::NotFound)?;
+        let verifier = state.verifier.clone().ok_or(DomainError::PinNotSet)?;
+        crate::family::ensure_not_locked(&state, now)?;
+        if !verify_member_pin(&gate_override.pin, &verifier, crate::family::kdf_params())? {
+            pins.record_failure(&member.id, now)?;
+            return Err(SecurityError::WrongPin.into());
+        }
+        pins.reset_failures(&member.id)?;
+        override_record = Some((member.id, reason.to_owned()));
     }
     let agreement = agreements::create(
         db,
@@ -273,8 +300,9 @@ pub fn create(
             title: input.title,
         },
     )?;
+    let partnership_id = domain::IdGen::next_id(&UuidV7);
     PartnershipRepo::new(db.connection()).insert(&PartnershipRow {
-        id: domain::IdGen::next_id(&UuidV7),
+        id: partnership_id.clone(),
         household_id: ctx.household.id.clone(),
         agreement_id: agreement.id,
         kind: input.kind,
@@ -287,6 +315,18 @@ pub fn create(
         created_at: now,
         origin_device_id: DEVICE_ID.to_owned(),
     })?;
+    if let Some((member_id, reason)) = override_record {
+        GateOverrideRepo::new(db.connection()).insert(
+            &domain::IdGen::next_id(&UuidV7),
+            &ctx.household.id,
+            "PARTNERSHIP_CAPITAL",
+            &partnership_id,
+            &reason,
+            &member_id,
+            now,
+            DEVICE_ID,
+        )?;
+    }
     list(db, now)
 }
 
@@ -372,6 +412,7 @@ mod tests {
             title: "Non sexi".into(),
             kind: kind.into(),
             my_role: role.into(),
+            gate_override: None,
         }
     }
 

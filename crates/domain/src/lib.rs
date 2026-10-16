@@ -215,6 +215,12 @@ pub enum DomainError {
     /// Davr yopilgan: unga yozuv qo'shib yoki uni o'zgartirib bo'lmaydi.
     #[error("davr yopilgan")]
     PeriodClosed,
+    /// Ongli chetlab o'tish uchun sabab kamida 20 belgi bo'lishi kerak.
+    #[error("chetlab o'tish sababi juda qisqa")]
+    OverrideReasonRequired,
+    /// Biriktirma yaroqsiz (rasm emas yoki juda katta).
+    #[error("biriktirma yaroqsiz")]
+    AttachmentInvalid,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -267,6 +273,8 @@ impl DomainError {
             Self::ReadinessGateLocked => "READINESS_GATE_LOCKED",
             Self::PartnershipStructureInvalid => "PARTNERSHIP_STRUCTURE_INVALID",
             Self::PeriodClosed => "PERIOD_CLOSED",
+            Self::OverrideReasonRequired => "OVERRIDE_REASON_REQUIRED",
+            Self::AttachmentInvalid => "ATTACHMENT_INVALID",
             Self::Money(error) => error.code(),
         }
     }

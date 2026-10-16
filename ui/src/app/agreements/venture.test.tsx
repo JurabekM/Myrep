@@ -37,6 +37,7 @@ vi.mock("../../bindings/bindings", () => ({
     createPartnership: vi.fn(),
     getVenture: vi.fn(),
     addVentureEntry: vi.fn(),
+    attachReceipt: vi.fn(),
     closeVenturePeriod: vi.fn(),
     createPeriodReportPdf: vi.fn(),
     checkOffer: vi.fn(),
@@ -77,6 +78,7 @@ const ITEM: PartnershipDto = {
   consentMember: "Nodira",
   consentAt: "2026-10-15",
   buyout: null,
+  gateOverrideReason: null,
 };
 
 const PARTNERSHIPS: PartnershipsDto = { items: [ITEM], gate: "LOCKED", gateReasons: [] };
@@ -107,6 +109,7 @@ const VENTURE: VentureDto = {
   periods: [],
   spike: false,
   buyoutRemaining: null,
+  attachments: [],
 };
 
 const CLOSED: VentureDto = {
@@ -303,6 +306,29 @@ describe("kassa daftari, detektor va hunardan ishga", () => {
       title: "Tikuvchilik",
       kind: "MUDARABA",
       myRole: "WORKER",
+      gateOverride: null,
     });
+  });
+  it("yozuvga chek rasmi biriktiriladi va miniatyura chiqadi", async () => {
+    const image = "data:image/png;base64,iVBORw0KGgo=";
+    vi.mocked(commands.attachReceipt).mockResolvedValue({
+      status: "ok",
+      data: { ...VENTURE, attachments: [{ id: "att-1", seq: 1, image }] },
+    });
+    render(<App />);
+    const card = await screen.findByRole("region", { name: "Kassa daftari" }, { timeout: 5000 });
+    expect(within(card).queryByRole("img", { name: "1-yozuv cheki" })).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    const file = new File([Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10])], "chek.png", {
+      type: "image/png",
+    });
+    await user.upload(within(card).getByLabelText("1-yozuvga chek rasmi biriktirish"), file);
+    const thumb = await within(card).findByRole("img", { name: "1-yozuv cheki" });
+    expect(thumb).toHaveAttribute("src", image);
+    expect(commands.attachReceipt).toHaveBeenCalledTimes(1);
+    const call = vi.mocked(commands.attachReceipt).mock.calls[0]?.[0];
+    expect(call?.partnershipId).toBe("p-1");
+    expect(call?.seq).toBe(1);
+    expect(call?.image.startsWith("data:image/png;base64,")).toBe(true);
   });
 });

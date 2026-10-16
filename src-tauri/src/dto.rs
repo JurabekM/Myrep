@@ -450,6 +450,8 @@ pub struct LoanDto {
     pub agreement_id: Option<String>,
     /// To'liq yopilgan.
     pub settled: bool,
+    /// Oila a'zolarining hissalari (`DebtContributor`).
+    pub contributions: Vec<ContributorDto>,
 }
 
 /// Qarzlar sahifasi.
@@ -470,6 +472,12 @@ pub struct LoansDto {
     pub monthly_income: MoneyDto,
     /// «Qarzsiz kun» (olingan qarzlar bo'yicha), bo'lsa.
     pub debt_free_day: Option<String>,
+    /// Shu to'lovda oxirgi qarz yopildi va `DEBT_RECOVERY` rejimi `STANDARD` ga qaytdi.
+    pub recovery_mode_reset: bool,
+    /// Yopish tartibi (strategiya bo'yicha).
+    pub payoff: PayoffOrderDto,
+    /// Sotiladigan buyumlar.
+    pub sellable: SellableDto,
 }
 
 /// Qarz oldidan tekshiruv («to'xta va o'yla»).
@@ -534,6 +542,8 @@ pub struct LoanPaymentInputDto {
     pub amount: String,
     /// Sana; bo'sh — bugun.
     pub paid_on: Option<String>,
+    /// Hissa qo'shgan oila a'zosi, bo'lsa.
+    pub contributor_id: Option<String>,
 }
 
 /// Kelishuv tomoni (1-savol).
@@ -1723,6 +1733,8 @@ pub struct PartnershipDto {
     pub consent_at: Option<String>,
     /// Buyout jadvali, bo'lsa.
     pub buyout: Option<BuyoutDto>,
+    /// Darvoza ongli chetlab o'tilgan bo'lsa — sababi.
+    pub gate_override_reason: Option<String>,
 }
 
 /// Sherik qisqacha.
@@ -1789,6 +1801,8 @@ pub struct PartnershipInputDto {
     pub kind: String,
     /// `CAPITAL_PROVIDER | WORKER`.
     pub my_role: String,
+    /// Ongli chetlab o'tish (darvoza yopiq bo'lsa, kapital kirituvchi uchun).
+    pub gate_override: Option<GateOverrideInputDto>,
 }
 
 /// Buyout shartlari.
@@ -1849,6 +1863,8 @@ pub struct VentureDto {
     pub spike: bool,
     /// Buyout qoldig'i, bo'lsa.
     pub buyout_remaining: Option<MoneyDto>,
+    /// Chek rasmlari (ochiq va yopilgan davr yozuvlariga).
+    pub attachments: Vec<AttachmentDto>,
 }
 
 /// Ochiq davr.
@@ -2407,4 +2423,126 @@ pub struct ForkDto {
     pub agreement_id: String,
     /// Birinchi farq (1 dan); 0 — kiruvchi zanjirning o'zi buzilgan.
     pub first_broken: u32,
+}
+
+/// Oila a'zosining qarzga hissasi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ContributorDto {
+    /// A'zo.
+    pub member_id: String,
+    /// Ismi.
+    pub name: String,
+    /// Jami hissa.
+    pub total: MoneyDto,
+}
+
+/// Yopish tartibi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PayoffOrderDto {
+    /// `SNOWBALL | AVALANCHE`.
+    pub strategy: String,
+    /// Qo'shimcha oylik summa (70/20/10 «qarz» ulushi − oylik yuk; manfiy bo'lsa 0).
+    pub extra: MoneyDto,
+    /// Tartib (fokus avval).
+    pub steps: Vec<PayoffStepDto>,
+    /// Hammasi yopiladigan oy soni.
+    pub total_months: u32,
+    /// Prognoz qarzsiz kun (bugundan `total_months` oy).
+    pub debt_free_day: Option<String>,
+    /// Boshqa strategiyada oylar soni (taqqoslash).
+    pub alternative_total_months: u32,
+}
+
+/// Tartib qadami.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PayoffStepDto {
+    /// Qarz.
+    pub loan_id: String,
+    /// Kimdan.
+    pub counterparty: String,
+    /// Qoldiq.
+    pub outstanding: MoneyDto,
+    /// Ustamali.
+    pub has_markup: bool,
+    /// Necha oyda yopiladi.
+    pub months_to_clear: u32,
+    /// Yopiladigan sana.
+    pub clear_on: String,
+}
+
+/// Sotiladigan buyumlar.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SellableDto {
+    /// Buyumlar.
+    pub items: Vec<SellableItemDto>,
+    /// Sotilmaganlarning taxminiy jami.
+    pub total_estimate: MoneyDto,
+}
+
+/// Buyum.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SellableItemDto {
+    /// Identifikator.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Taxminiy qiymati.
+    pub estimate: MoneyDto,
+    /// Izoh.
+    pub note: Option<String>,
+    /// Sotilgan sana.
+    pub sold_on: Option<String>,
+}
+
+/// Buyum kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SellableInputDto {
+    /// Nomi.
+    pub name: String,
+    /// Taxminiy qiymat matni.
+    pub estimate: String,
+    /// Izoh.
+    pub note: Option<String>,
+}
+
+/// Ongli chetlab o'tish kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GateOverrideInputDto {
+    /// ADULT a'zo.
+    pub member_id: String,
+    /// A'zo PIN'i.
+    pub pin: String,
+    /// Sabab (kamida 20 belgi).
+    pub reason: String,
+}
+
+/// Chek rasmi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AttachmentDto {
+    /// Identifikator.
+    pub id: String,
+    /// Jurnal yozuvi tartibi.
+    pub seq: u32,
+    /// Rasm (data URL).
+    pub image: String,
+}
+
+/// Chek biriktirish kirishi.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct AttachReceiptInputDto {
+    /// Sheriklik.
+    pub partnership_id: String,
+    /// Jurnal yozuvi tartibi.
+    pub seq: u32,
+    /// Rasm (data URL, `data:image/...`).
+    pub image: String,
 }

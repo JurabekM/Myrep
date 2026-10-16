@@ -99,6 +99,8 @@ pub struct PaymentRow {
     pub created_at: OffsetDateTime,
     /// Qurilma.
     pub origin_device_id: String,
+    /// Hissa qo'shgan oila a'zosi (`DebtContributor`), bo'lsa.
+    pub contributor_member_id: Option<String>,
 }
 
 /// Qarzlar.
@@ -174,8 +176,8 @@ impl<'a> LoanRepo<'a> {
     /// To'lov qo'shadi.
     pub fn insert_payment(&self, payment: &PaymentRow) -> Result<(), StorageError> {
         self.conn.execute(
-            "INSERT INTO loan_payments (id, household_id, loan_id, amount_minor, currency, paid_on, created_at, origin_device_id) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            "INSERT INTO loan_payments (id, household_id, loan_id, amount_minor, currency, paid_on, created_at, origin_device_id, \
+             contributor_member_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 payment.id,
                 payment.household_id,
@@ -185,9 +187,26 @@ impl<'a> LoanRepo<'a> {
                 format_date(payment.paid_on)?,
                 format_ts(payment.created_at)?,
                 payment.origin_device_id,
+                payment.contributor_member_id,
             ],
         )?;
         Ok(())
+    }
+
+    /// A'zolar bo'yicha hissalar: (a'zo, jami minor). Hissa qo'shuvchisiz to'lovlar kirmaydi.
+    pub fn contributions(&self, loan_id: &str) -> Result<Vec<(String, i64)>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT contributor_member_id, SUM(amount_minor) FROM loan_payments \
+             WHERE loan_id = ?1 AND contributor_member_id IS NOT NULL GROUP BY contributor_member_id ORDER BY 2 DESC",
+        )?;
+        let rows = statement.query_map([loan_id], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row?);
+        }
+        Ok(out)
     }
 
     /// Qarzning to'lovlari (sana bo'yicha).
@@ -323,4 +342,119 @@ fn read_row(row: &Row<'_>) -> rusqlite::Result<Raw> {
         agreement_id: row.get(13)?,
         meta: RawMeta::read(row, 14)?,
     })
+}
+
+/// Sotiladigan buyum (SPEC 2D.6: qarzdan chiqish uchun zaxira manba).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SellableRow {
+    /// UUIDv7.
+    pub id: String,
+    /// Xonadon.
+    pub household_id: String,
+    /// Nomi.
+    pub name: String,
+    /// Taxminiy qiymati.
+    pub estimate: Money,
+    /// Izoh.
+    pub note: Option<String>,
+    /// Sotilgan vaqt.
+    pub sold_at: Option<OffsetDateTime>,
+    /// Yaratilgan vaqt.
+    pub created_at: OffsetDateTime,
+    /// Qurilma.
+    pub origin_device_id: String,
+}
+
+/// Sotiladigan buyumlar.
+pub struct SellableRepo<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> SellableRepo<'a> {
+    /// Ulanish ustida repo.
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    /// Yangi buyum.
+    pub fn insert(&self, row: &SellableRow) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT INTO sellable_items (id, household_id, name, estimate_minor, currency, note, sold_at, created_at, \
+             updated_at, deleted_at, version, origin_device_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, NULL, ?7, ?7, NULL, 1, ?8)",
+            params![
+                row.id,
+                row.household_id,
+                row.name,
+                row.estimate.minor(),
+                row.estimate.currency().iso_code(),
+                row.note,
+                format_ts(row.created_at)?,
+                row.origin_device_id,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Sotildi deb belgilaydi.
+    pub fn mark_sold(&self, id: &str, now: OffsetDateTime) -> Result<(), StorageError> {
+        let changed = self.conn.execute(
+            "UPDATE sellable_items SET sold_at = ?2, updated_at = ?2, version = version + 1 \
+             WHERE id = ?1 AND deleted_at IS NULL AND sold_at IS NULL",
+            params![id, format_ts(now)?],
+        )?;
+        if changed == 0 {
+            return Err(StorageError::NotFound);
+        }
+        Ok(())
+    }
+
+    /// Mantiqiy o'chirish.
+    pub fn delete(&self, id: &str, now: OffsetDateTime) -> Result<(), StorageError> {
+        let changed = self.conn.execute(
+            "UPDATE sellable_items SET deleted_at = ?2, updated_at = ?2, version = version + 1 \
+             WHERE id = ?1 AND deleted_at IS NULL",
+            params![id, format_ts(now)?],
+        )?;
+        if changed == 0 {
+            return Err(StorageError::NotFound);
+        }
+        Ok(())
+    }
+
+    /// Xonadon buyumlari (sotilmaganlar avval).
+    pub fn list(&self, household_id: &str) -> Result<Vec<SellableRow>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT id, household_id, name, estimate_minor, currency, note, sold_at, created_at, origin_device_id \
+             FROM sellable_items WHERE household_id = ?1 AND deleted_at IS NULL \
+             ORDER BY sold_at IS NOT NULL, created_at, id",
+        )?;
+        let rows = statement.query_map([household_id], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, i64>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, Option<String>>(6)?,
+                row.get::<_, String>(7)?,
+                row.get::<_, String>(8)?,
+            ))
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            let (id, household_id, name, minor, currency, note, sold_at, created_at, origin) = row?;
+            out.push(SellableRow {
+                id,
+                household_id,
+                name,
+                estimate: money_of(minor, &currency)?,
+                note,
+                sold_at: sold_at.as_deref().map(crate::repo::parse_ts).transpose()?,
+                created_at: crate::repo::parse_ts(&created_at)?,
+                origin_device_id: origin,
+            });
+        }
+        Ok(out)
+    }
 }

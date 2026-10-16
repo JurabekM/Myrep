@@ -790,6 +790,51 @@ CREATE TABLE version_notes (
 ) STRICT;
 "#;
 
+/// Sxema v16 (D10+ qoldiqlari): to'lovda oila a'zosining hissasi, sotiladigan buyumlar, ongli chetlab o'tish
+/// yozuvlari, ledger yozuviga chek rasmi.
+pub const SCHEMA_V16: &str = r#"
+ALTER TABLE loan_payments ADD COLUMN contributor_member_id TEXT REFERENCES members (id);
+
+CREATE TABLE sellable_items (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    estimate_minor INTEGER NOT NULL CHECK (estimate_minor > 0),
+    currency TEXT NOT NULL CHECK (currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    note TEXT,
+    sold_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL CHECK (version >= 1),
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX sellable_items_by_household ON sellable_items (household_id);
+
+CREATE TABLE gate_overrides (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    action TEXT NOT NULL,
+    target_id TEXT,
+    reason TEXT NOT NULL CHECK (length(trim(reason)) >= 20),
+    member_id TEXT NOT NULL REFERENCES members (id),
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX gate_overrides_by_target ON gate_overrides (target_id);
+
+CREATE TABLE venture_attachments (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    agreement_id TEXT NOT NULL REFERENCES agreements (id),
+    seq INTEGER NOT NULL CHECK (seq >= 1),
+    image TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX venture_attachments_by_agreement ON venture_attachments (agreement_id, seq);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -808,6 +853,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V13),
         M::up(SCHEMA_V14),
         M::up(SCHEMA_V15),
+        M::up(SCHEMA_V16),
     ])
 }
 
@@ -856,4 +902,7 @@ pub const TABLES: &[&str] = &[
     "disputes",
     "family_consents",
     "version_notes",
+    "sellable_items",
+    "gate_overrides",
+    "venture_attachments",
 ];
