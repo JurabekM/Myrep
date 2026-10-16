@@ -262,7 +262,7 @@ impl Payload {
         }
     }
 
-    fn rules(&self, cur: Currency) -> Result<RulesResult, AppError> {
+    pub(crate) fn rules(&self, cur: Currency) -> Result<RulesResult, AppError> {
         let kind = self.kind()?;
         let partners = self
             .parties

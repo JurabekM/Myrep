@@ -1478,5 +1478,302 @@
   "pdf_outcome_AMEND": "Shartnomaga oʻzgartirish kiritiladi (yangi versiya)",
   "pdf_vnote_RENEWED_UNCHANGED": "Oʻzgarishsiz yangilandi (yillik tasdiq)",
   "pdf_vnote_ARBITER_AMEND": "Hakam qarori boʻyicha oʻzgartirildi",
-  "pdf_folder_inForce": "kuchda"
+  "pdf_folder_inForce": "kuchda",
+  "nav_agreements": "Kelishuvlar",
+  "mentor_agreements": "Kelishuv yozilgani bilan tugamaydi: oyiga bir marta birga hisobni koʻrish va yiliga bir marta shartlarni yangilash — doʻstlikni ham, pulni ham asraydi.",
+  "partnership_tab_governance": "Koʻrik va nizo",
+  "partnership_inDispute": "Nizo ochiq",
+  "partnership_changeNote_RENEWED_UNCHANGED": "oʻzgarishsiz yangilandi",
+  "partnership_changeNote_ARBITER_AMEND": "hakam qarori boʻyicha oʻzgartirildi",
+  "venture_disputeBlocks": "Nizo ochiq: yozuvlar davom etadi, lekin davrni yopish va taqsimot hakam qarorigacha toʻxtatilgan.",
+  "venture_spike_title": "Katta foyda: {result}",
+  "@venture_spike_title": {
+    "placeholders": {
+      "result": {}
+    }
+  },
+  "venture_spike_body": "Natija rejadan yoki oxirgi davrlar oʻrtachasidan ancha yuqori. Barakali davr! Taqsimotdan oldin har bir tomon 4–5-bandlarni yana bir bor oʻqib chiqsa, keyin «bunday kelishmagan edik» degan gap chiqmaydi.",
+  "venture_spike_ack": "{name} 4–5-bandlarni qayta oʻqidi",
+  "@venture_spike_ack": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "venture_spike_done": "{name} qayta oʻqidi",
+  "@venture_spike_done": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "venture_spike_extraReview": "Navbatdan tashqari ochiq hisob koʻrigini oʻtkazish ham tavsiya etiladi («Koʻrik va nizo» boʻlimi).",
+  "gov_inDispute": "Nizo ochiq. Hakam qarori yozilgunicha taqsimot toʻxtatilgan — yozuvlar esa davom etadi.",
+  "gov_reminder_UPCOMING": "{count} kun qoldi ({date})",
+  "@gov_reminder_UPCOMING": {
+    "placeholders": {
+      "count": {},
+      "date": {}
+    }
+  },
+  "gov_reminder_DUE": "Bugun ({date})",
+  "@gov_reminder_DUE": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "gov_reminder_OVERDUE": "{count} kun oʻtdi ({date})",
+  "@gov_reminder_OVERDUE": {
+    "placeholders": {
+      "count": {},
+      "date": {}
+    }
+  },
+  "gov_reviews": "Ochiq hisob koʻrigi",
+  "gov_startReview": "Koʻrikni boshlash",
+  "gov_reviewHint": "Har bir tomon davr yozuvlari va yakunini koʻradi va «roziman» yoki «eʼtirozim bor» deb belgi qoʻyadi. Bayonnomada shu paytdagi tekshirish kodi saqlanadi — keyin oʻtmishdagi yozuv oʻzgartirilsa, bu aniqlanadi.",
+  "gov_noReviews": "Hali koʻrik oʻtkazilmagan.",
+  "gov_nextReview": "Keyingi koʻrik",
+  "gov_every": "har {count} kunda (6-band)",
+  "@gov_every": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "gov_renewal": "Yillik yangilash (9-band)",
+  "gov_renewalHint": "Shartlar oʻzgarmasa ham, yiliga bir marta hamma qayta tasdiqlaydi — bu yangi versiya boʻladi.",
+  "gov_renewed": "Yangi koʻrib chiqish sanasi yozildi. Endi «Shartnoma» boʻlimida hamma qayta imzolasin — shundan keyin yangi versiya kuchga kiradi.",
+  "gov_openContract": "Shartnomani ochish",
+  "gov_renew": "Oʻzgarishsiz yangilash",
+  "gov_duties": "Vazifalar (3-band)",
+  "gov_noDuties": "Shartnomada vazifalar yozilmagan.",
+  "gov_owner": "Masʼul",
+  "gov_breachClause": "Bajarilmasa",
+  "gov_cannotDo": "Bajara olmayapman",
+  "gov_party": "Tomon",
+  "gov_date": "Sana",
+  "gov_reason": "Sabab",
+  "gov_solution": "Taklif qilingan yechim",
+  "gov_report": "Xabar berish",
+  "gov_reported": "Xabar jurnalga yozildi (kod {code}).",
+  "@gov_reported": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "gov_nowClause": "Kelishuvga koʻra endi:",
+  "gov_noClause": "Bu vazifa uchun «bajarilmasa» qoidasi yozilmagan — tomonlar birga yechim topadi.",
+  "gov_incidents": "Hodisalar",
+  "gov_resolved": "hal qilingan",
+  "gov_open": "ochiq",
+  "gov_resolve": "Hal qilindi deb belgilash",
+  "gov_resolutionNote": "Qanday hal qilindi",
+  "gov_integrity_INTACT": "Butun",
+  "gov_integrity_CHAIN_BROKEN": "Zanjir buzilgan",
+  "gov_integrity_HEAD_MISMATCH": "Bayonnomadagi kod mos emas",
+  "gov_integrity_TRUNCATED": "Yozuvlar kamaygan",
+  "gov_entriesAfter": "keyin {count} ta yozuv qoʻshilgan",
+  "@gov_entriesAfter": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "gov_heldOn": "Oʻtkazilgan",
+  "gov_reason_SCHEDULED": "Rejali koʻrik",
+  "gov_reason_PROFIT_SPIKE": "Navbatdan tashqari: katta foyda",
+  "gov_reason_EXTRA": "Navbatdan tashqari",
+  "gov_verdict_AGREE": "Koʻrdim, roziman",
+  "gov_verdict_OBJECT": "Eʼtirozim bor",
+  "gov_protocolPdf": "Bayonnoma PDF",
+  "gov_session": "Ochiq hisob koʻrigi",
+  "gov_toOn": "Qaysi sanagacha",
+  "gov_showRange": "Koʻrsatish",
+  "gov_reasonTitle": "Sabab",
+  "gov_chainOk": "Zanjir tekshiruvi: barcha yozuvlar butun.",
+  "gov_chainBroken": "Diqqat: zanjir tekshiruvi buzilgan yozuvni topdi. Bayonnoma shu holat bilan yoziladi.",
+  "gov_chainEntries": "Jurnalda {count} ta yozuv",
+  "@gov_chainEntries": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "gov_entries": "Yozuvlar",
+  "gov_periodsClosed": "Yopilgan davrlar",
+  "gov_openIncidents": "Ochiq vazifa hodisalari",
+  "gov_noOpenIncidents": "Ochiq hodisa yoʻq.",
+  "gov_entriesTitle": "Davr yozuvlari",
+  "gov_acksTitle": "Tomonlar belgisi",
+  "gov_objectionNote": "{name}: eʼtiroz mazmuni",
+  "@gov_objectionNote": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "gov_holdReview": "Bayonnomani yozish",
+  "gov_holdHint": "Bayonnoma va har bir belgi oʻzgarmas boʻlib saqlanadi.",
+  "gov_disputes": "Nizo va hakam (8-band)",
+  "gov_openDispute": "Nizo ochish",
+  "gov_disputeHint": "Kelishmovchilik boʻlsa, avval birga gaplashing. Hal boʻlmasa — shartnomadagi hakam ({arbiter}) qaror qiladi. Hakam uchun barcha hujjatlar bitta papkada tayyorlanadi.",
+  "@gov_disputeHint": {
+    "placeholders": {
+      "arbiter": {}
+    }
+  },
+  "gov_subject": "Mavzu",
+  "gov_clauses": "Tegishli bandlar",
+  "gov_openedBy": "Nizoni ochgan tomon",
+  "gov_claim": "Talab",
+  "gov_disputeEffect": "Nizo ochilgach, hakam qarorigacha davrni yopish va taqsimot toʻxtatiladi.",
+  "gov_noDisputes": "Nizo yoʻq.",
+  "gov_disputeOpen": "ochiq",
+  "gov_disputeClosed": "hal qilingan",
+  "gov_openedOn": "{date} da {name} ochgan",
+  "@gov_openedOn": {
+    "placeholders": {
+      "date": {},
+      "name": {}
+    }
+  },
+  "gov_clausesList": "bandlar: {list}",
+  "@gov_clausesList": {
+    "placeholders": {
+      "list": {}
+    }
+  },
+  "gov_addClaim": "Talab qoʻshish",
+  "gov_decisionOf": "Hakam qarori — {name}, {date}",
+  "@gov_decisionOf": {
+    "placeholders": {
+      "date": {},
+      "name": {}
+    }
+  },
+  "gov_outcome_RESUME": "Kelishuv avvalgidek davom etadi",
+  "gov_outcome_AMEND": "Shartnomaga oʻzgartirish kiritiladi (yangi versiya)",
+  "gov_recordDecision": "Hakam ({name}) qarorini yozish",
+  "@gov_recordDecision": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "gov_decision": "Qaror mazmuni",
+  "gov_outcomeTitle": "Natija",
+  "gov_saveDecision": "Qarorni yozish",
+  "gov_folderPdf": "Hakam uchun ish papkasi (PDF)",
+  "agreements_title": "Kelishuvlar markazi",
+  "agreements_tab_center": "Barcha kelishuvlar",
+  "agreements_tab_family": "Oilaviy kelishuvlar",
+  "agreements_col_title": "Nomi",
+  "agreements_col_type": "Turi",
+  "agreements_col_status": "Holati",
+  "agreements_col_nextReview": "Keyingi koʻrik",
+  "agreements_col_incidents": "Ochiq hodisalar",
+  "agreements_col_disputes": "Nizolar",
+  "agreements_type_ALL": "Hammasi",
+  "agreements_type_PARTNERSHIP": "Sheriklik",
+  "agreements_type_FAMILY": "Oilaviy",
+  "agreements_type_LOAN": "Qarz",
+  "agreements_type_RENT": "Ijara",
+  "agreements_type_SERVICE": "Xizmat",
+  "agreements_type_OTHER": "Boshqa",
+  "agreements_status_DRAFT": "Qoralama",
+  "agreements_status_SIGNED": "Imzolangan",
+  "agreements_status_ACTIVE": "Faol",
+  "agreements_status_IN_DISPUTE": "Nizoda",
+  "agreements_status_CLOSED": "Yopilgan",
+  "agreements_filter": "Turi boʻyicha",
+  "agreements_search": "Qidirish",
+  "agreements_empty": "Kelishuv topilmadi.",
+  "family_intro": "Oilaviy kelishuv — buyruq emas, birga qabul qilingan odob. Uni oiladagi barcha kattalar tasdiqlaydi; matn oʻzgarsa, hamma qayta tasdiqlaydi.",
+  "family_tpl_CHORES_title": "Uyda kim nima qiladi",
+  "family_tpl_CHORES_item1": "Idish yuvish — navbat bilan, hafta boʻyicha",
+  "family_tpl_CHORES_item2": "Bozor-oʻchar — shanba kuni, kim boʻsh boʻlsa",
+  "family_tpl_CHORES_item3": "Charchagan kuni oʻrnini almashtirishni soʻrash mumkin",
+  "family_tpl_MONEY_PLACE_title": "Pul qayerda turadi va kim yuritadi",
+  "family_tpl_MONEY_PLACE_item1": "Oylik xarajat puli — umumiy kartada",
+  "family_tpl_MONEY_PLACE_item2": "Hisobni bir kishi yuritadi, oyda bir marta hammaga koʻrsatadi",
+  "family_tpl_MONEY_PLACE_item3": "«Kelajagim» puli alohida turadi va maslahatsiz olinmaydi",
+  "family_tpl_WANT_LIMIT_title": "Havas chegarasi",
+  "family_tpl_WANT_LIMIT_item1": "Oylik havas xarajatlari kelishilgan chegaradan oshmaydi",
+  "family_tpl_WANT_LIMIT_item2": "Katta xariddan oldin bir kecha oʻylab koʻramiz",
+  "family_tpl_WANT_LIMIT_item3": "Chegara oshsa, keyingi oy birga koʻrib chiqamiz — ayblashsiz",
+  "family_tpl_COUNCIL_title": "Oylik oila kengashi qachon oʻtadi",
+  "family_tpl_COUNCIL_item1": "Har oyning birinchi yakshanbasi, kechki ovqatdan keyin",
+  "family_tpl_COUNCIL_item2": "Oy yakuni va keyingi oy rejasi birga koʻriladi",
+  "family_tpl_COUNCIL_item3": "Har kim fikrini aytadi, gap boʻlinmaydi",
+  "family_tpl_OTHER_title": "Boshqa kelishuv",
+  "family_edit": "Oilaviy kelishuv",
+  "family_titleField": "Nomi",
+  "family_items": "Bandlar",
+  "family_itemN": "{n}-band",
+  "@family_itemN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "family_removeItem": "{n}-bandni olib tashlash",
+  "@family_removeItem": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "family_addItem": "Band qoʻshish",
+  "family_reviewDate": "Qayta koʻrib chiqish sanasi (ixtiyoriy)",
+  "family_editResets": "Matn oʻzgarsa, avvalgi tasdiqlar yangi matnga oʻtmaydi — hamma qayta tasdiqlaydi.",
+  "family_empty": "Hali oilaviy kelishuv yoʻq. Yuqoridagi namunalardan birini tanlang.",
+  "family_status_DRAFT": "Tasdiq kutilmoqda",
+  "family_status_ACTIVE": "Hamma tasdiqlagan",
+  "family_reviewOn": "Qayta koʻrish: {date}",
+  "@family_reviewOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "family_noReview": "Qayta koʻrish sanasi belgilanmagan",
+  "family_confirmAs": "{name} tasdiqlaydi",
+  "@family_confirmAs": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "family_pinFor": "{name}: PIN bilan tasdiqlang",
+  "@family_pinFor": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "family_confirm": "Tasdiqlash",
+  "family_editButton": "Tahrirlash",
+  "family_delete": "Oʻchirish",
+  "home_reminders": "Kelishuv eslatmalari",
+  "home_reminder_PARTNERSHIP_REVIEW": "Ochiq hisob koʻrigi",
+  "home_reminder_PARTNERSHIP_RENEWAL": "Yillik yangilash",
+  "home_reminder_FAMILY_REVIEW": "Oilaviy kelishuvni qayta koʻrish",
+  "error_IN_DISPUTE": "Nizo ochiq — hakam qarorigacha taqsimot toʻxtatilgan",
+  "error_PROFIT_SPIKE_ACK_REQUIRED": "Katta foyda: taqsimotdan oldin har bir tomon 4–5-bandlarni qayta oʻqisin",
+  "error_PERIOD_REVIEWED": "Bu sana koʻrik bayonnomasiga kirgan — faqat tuzatuvchi yozuv qoʻshish mumkin",
+  "error_UNKNOWN_DUTY": "Bunday vazifa shartnomada yoʻq",
+  "error_ACKS_INCOMPLETE": "Har bir tomon belgi qoʻyishi kerak",
+  "error_OBJECTION_NOTE_REQUIRED": "Eʼtiroz mazmunini yozing",
+  "error_DUPLICATE_ACK": "Bir tomon ikki marta belgi qoʻya olmaydi",
+  "error_INVALID_REVIEW_RANGE": "Koʻrik sanasi oxirgi bayonnomadan keyin boʻlishi kerak",
+  "error_DISPUTE_ALREADY_OPEN": "Ochiq nizo bor — avval uni hal qiling",
+  "error_DUPLICATE_CLAIM": "Bu tomonning talabi allaqachon yozilgan",
+  "error_DISPUTE_DECIDED": "Bu nizo boʻyicha hakam qarori yozilgan",
+  "error_ARBITER_REQUIRED": "Shartnomada hakam koʻrsatilmagan",
+  "error_INVALID_CLAUSE": "Kamida bitta bandni (1–9) tanlang",
+  "error_INVALID_OUTCOME": "Qaror natijasini tanlang",
+  "error_BEFORE_DISPUTE": "Qaror sanasi nizo ochilgan sanadan oldin boʻlolmaydi",
+  "error_ALREADY_RESOLVED": "Hodisa allaqachon hal qilingan",
+  "error_TERM_REQUIRED": "Shartnomada muddat (9-band) yozilmagan",
+  "error_INVALID_TEMPLATE": "Notoʻgʻri shablon",
+  "error_TOO_MANY_ITEMS": "Bandlar juda koʻp",
+  "error_TOO_LONG": "Matn juda uzun",
+  "error_INVALID_REASON": "Koʻrik sababini tanlang",
+  "error_INVALID_VERDICT": "Belgini tanlang",
+  "gov_today": "bugun",
+  "gov_reviewNo": "{n}-koʻrik",
+  "@gov_reviewNo": {
+    "placeholders": {
+      "n": {}
+    }
+  }
 }

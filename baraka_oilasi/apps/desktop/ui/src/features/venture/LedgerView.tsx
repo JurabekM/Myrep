@@ -13,7 +13,7 @@ import {
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { call, CoreError } from "../../lib/api";
-import { showDate } from "../../lib/date";
+import { showDate, todayText } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
 
 const KINDS = ["INCOME", "EXPENSE", "FORCE_MAJEURE"] as const;
@@ -25,12 +25,6 @@ const CATEGORIES: Record<string, string[]> = {
 const MAX_FILES = 5;
 const MAX_BYTES = 5 * 1024 * 1024;
 
-const pad = (n: number) => String(n).padStart(2, "0");
-/** Sana maydoni uchun boshlang'ich qiymat (faqat ko'rsatish, hisob emas). */
-const todayText = () => {
-  const d = new Date();
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
-};
 const optional = (v: string) => (v.trim() === "" ? null : v);
 
 async function readFiles(list: FileList | null): Promise<AttachmentInput[]> {
@@ -249,9 +243,17 @@ function OpenPeriod({ spaceId, l }: { spaceId: string; l: VentureLedgerDto }) {
       setPrices({});
     },
   });
+  const reread = useMutation({
+    mutationFn: (partyId: string) => call(commands.acknowledgeSpikeReread(spaceId, l.partnershipId, partyId)),
+    onSuccess: (dto) => {
+      qc.setQueryData(keys.ledger(spaceId, l.partnershipId), dto);
+      preview.mutate();
+    },
+  });
   const o = l.open;
   const workers = l.balances.filter((b) => b.role === "WORKER");
   const pv = preview.data;
+  const spikePending = pv?.profitSpike === true && l.balances.some((b) => !pv.spikeRereads.includes(b.partyId));
   return (
     <div className="card flex flex-col gap-3">
       <h2 className="text-lg font-semibold">{t("venture.openPeriod", { n: o.no, from: showDate(o.from) })}</h2>
@@ -301,13 +303,19 @@ function OpenPeriod({ spaceId, l }: { spaceId: string; l: VentureLedgerDto }) {
               </div>
             </div>
           )}
-          <ErrorText error={preview.error ?? close.error} />
+          {l.inDispute && (
+            <p role="status" className="rounded border border-danger px-3 py-2 text-sm">
+              {t("venture.disputeBlocks")}
+            </p>
+          )}
+          {pv?.profitSpike && <SpikeAlert spaceId={spaceId} l={l} p={pv} busy={reread.isPending} onReread={(id) => reread.mutate(id)} />}
+          <ErrorText error={preview.error ?? close.error ?? reread.error} />
           <div className="flex flex-wrap gap-2">
             <button className="btn-ghost" disabled={preview.isPending} onClick={() => preview.mutate()}>
               {t("venture.preview")}
             </button>
             {pv && (
-              <button className="btn-primary" disabled={close.isPending} onClick={() => close.mutate()}>
+              <button className="btn-primary" disabled={close.isPending || l.inDispute || spikePending} onClick={() => close.mutate()}>
                 {t("venture.closePeriod")}
               </button>
             )}
@@ -316,6 +324,50 @@ function OpenPeriod({ spaceId, l }: { spaceId: string; l: VentureLedgerDto }) {
           {pv && <p className="text-sm text-ink-muted">{t("venture.closeWarning")}</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * «Katta foyda» (uy/SPEC 2F.7): taqsimotdan oldin har bir tomon 4–5-bandlarni (foyda va zarar
+ * qoidasi) qayta o'qiydi; navbatdan tashqari ko'rik tavsiya etiladi. Chegara qoidasi yadroda.
+ */
+function SpikeAlert({ spaceId, l, p, busy, onReread }: { spaceId: string; l: VentureLedgerDto; p: VenturePeriodDto; busy: boolean; onReread: (partyId: string) => void }) {
+  const { t } = useTranslation();
+  const c = useQuery({ queryKey: keys.partnership(spaceId, l.partnershipId), queryFn: () => call(commands.partnership(spaceId, l.partnershipId)) });
+  return (
+    <div role="alert" className="flex flex-col gap-2 rounded border border-warn p-3">
+      <p className="font-semibold text-warn">{t("venture.spike.title", { result: p.result.formatted })}</p>
+      <p className="text-sm">{t("venture.spike.body")}</p>
+      {c.data && (
+        <div className="rounded bg-surface p-2 text-sm">
+          <p className="font-medium">4. {t("partnership.q.4")}</p>
+          {c.data.parties.map((x) => (
+            <p key={x.id}>
+              {x.fullName}: <span className="tabular-nums">{x.profitShare}</span>
+            </p>
+          ))}
+          <p className="mt-1 font-medium">5. {t("partnership.q.5")}</p>
+          {c.data.parties.map((x) => (
+            <p key={x.id}>
+              {x.fullName}: <span className="tabular-nums">{x.lossShare ?? "—"}</span>
+            </p>
+          ))}
+          {c.data.negligenceClause && <p className="text-ink-muted">{c.data.negligenceClause}</p>}
+        </div>
+      )}
+      {l.balances.map((b) =>
+        p.spikeRereads.includes(b.partyId) ? (
+          <p key={b.partyId} className="text-sm text-accent-text">
+            ✓ {t("venture.spike.done", { name: b.name })}
+          </p>
+        ) : (
+          <button key={b.partyId} className="btn-ghost self-start px-3 py-1 text-sm" disabled={busy || !l.writable} onClick={() => onReread(b.partyId)}>
+            {t("venture.spike.ack", { name: b.name })}
+          </button>
+        ),
+      )}
+      <p className="text-sm text-ink-muted">{t("venture.spike.extraReview")}</p>
     </div>
   );
 }

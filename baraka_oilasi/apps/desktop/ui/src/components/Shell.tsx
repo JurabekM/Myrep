@@ -6,6 +6,7 @@ import { commands } from "../bindings";
 import { AuditScreen } from "../features/audit/AuditScreen";
 import { CeremoniesScreen } from "../features/ceremony/CeremoniesScreen";
 import { ExpensesScreen } from "../features/expenses/ExpensesScreen";
+import { AgreementsScreen } from "../features/governance/AgreementsScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
 import { DebtsScreen } from "../features/inventory/DebtsScreen";
 import { PartnershipsScreen } from "../features/partnership/PartnershipsScreen";
@@ -31,6 +32,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "ceremonies", label: "nav.ceremonies" },
   { screen: "partnerships", label: "nav.partnerships" },
   { screen: "ideas", label: "nav.ideas" },
+  { screen: "agreements", label: "nav.agreements" },
   { screen: "receipt", label: "nav.receipt" },
 ];
 
@@ -44,6 +46,7 @@ const MENTOR: Record<Screen, string> = {
   ceremonies: "mentor.ceremonies",
   partnerships: "mentor.partnerships",
   ideas: "mentor.ideas",
+  agreements: "mentor.agreements",
   receipt: "mentor.receipt",
 };
 
@@ -111,6 +114,7 @@ export function Shell() {
         {active && screen === "ceremonies" && <CeremoniesScreen spaceId={active} />}
         {active && screen === "partnerships" && <PartnershipsScreen spaceId={active} />}
         {active && screen === "ideas" && <IdeasScreen spaceId={active} />}
+        {active && screen === "agreements" && <AgreementsScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />

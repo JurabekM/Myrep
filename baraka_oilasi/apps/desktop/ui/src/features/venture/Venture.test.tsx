@@ -63,6 +63,7 @@ const ledger = (writable: boolean) => ({
   chainCode: "AB12-CD34-EF56-7890",
   chainOk: true,
   lossPolicy: "CAPITAL_FIRST",
+  inDispute: false,
 });
 
 function wrap(ui: ReactNode) {
@@ -103,6 +104,8 @@ describe("LedgerView", () => {
         negligenceNote: null,
         myIncome: money("1 000 000 soʻm", "100000000"),
         chainCode: null,
+        profitSpike: false,
+        spikeRereads: [],
       },
     });
     const user = userEvent.setup();

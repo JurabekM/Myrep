@@ -9,3 +9,11 @@ export function showMonth(iso: string): string {
   const [y, m] = iso.split("-");
   return y && m ? `${m}.${y}` : iso;
 }
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Sana maydoni uchun boshlang'ich qiymat (faqat ko'rsatish, hisob emas). */
+export function todayText(): string {
+  const d = new Date();
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}

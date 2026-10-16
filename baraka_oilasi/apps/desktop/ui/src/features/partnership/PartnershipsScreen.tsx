@@ -13,10 +13,12 @@ import {
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { SignaturePad } from "../../components/SignaturePad";
+import { GovernanceView } from "../governance/GovernanceView";
 import { LedgerView } from "../venture/LedgerView";
 import { call, CoreError } from "../../lib/api";
 import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
+import { useUi } from "../../state/ui";
 
 const KINDS = ["MUDARABA", "MUSHARAKA"] as const;
 const ROLES = ["CAPITAL_PROVIDER", "WORKER", "BOTH"] as const;
@@ -184,9 +186,25 @@ function fromDto(p: PartnershipDto): Form {
  */
 export function PartnershipsScreen({ spaceId }: { spaceId: string }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState<string | "new" | null>(null);
+  const focus = useUi((s) => s.partnershipFocus);
+  const clearFocus = useUi((s) => s.clearPartnershipFocus);
+  const [open, setOpen] = useState<string | "new" | null>(focus?.id ?? null);
   const list = useQuery({ queryKey: keys.partnerships(spaceId), queryFn: () => call(commands.partnerships(spaceId)) });
-  if (open) return <PartnershipView spaceId={spaceId} id={open === "new" ? null : open} onOpen={setOpen} onBack={() => setOpen(null)} />;
+  if (focus && focus.id !== open) setOpen(focus.id);
+  if (open)
+    return (
+      <PartnershipView
+        key={open}
+        spaceId={spaceId}
+        id={open === "new" ? null : open}
+        initialTab={focus?.id === open ? focus.tab : "contract"}
+        onOpen={setOpen}
+        onBack={() => {
+          clearFocus();
+          setOpen(null);
+        }}
+      />
+    );
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -214,6 +232,7 @@ export function PartnershipsScreen({ spaceId }: { spaceId: string }) {
           <span className="flex items-center gap-2 text-sm">
             <span className="text-ink-muted">{t("partnership.progress", { n: p.answered })}</span>
             <StatusBadge status={p.status} />
+            {p.inDispute && <span className="rounded border border-danger px-2 py-0.5 text-xs">{t("partnership.inDispute")}</span>}
             <span className="font-semibold tabular-nums text-accent">{p.capitalTotal.formatted}</span>
           </span>
         </button>
@@ -228,7 +247,9 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`rounded border px-2 py-0.5 text-xs ${tone}`}>{t(`partnership.status.${status}`)}</span>;
 }
 
-function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id: string | null; onOpen: (id: string) => void; onBack: () => void }) {
+type Tab = "contract" | "ledger" | "governance";
+
+function PartnershipView({ spaceId, id, initialTab, onOpen, onBack }: { spaceId: string; id: string | null; initialTab: Tab; onOpen: (id: string) => void; onBack: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const q = useQuery({
@@ -238,7 +259,7 @@ function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id:
   });
   const [form, setForm] = useState<Form | null>(id === null ? blank() : null);
   const [step, setStep] = useState<Step>(1);
-  const [tab, setTab] = useState<"contract" | "ledger">("contract");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const p = q.data ?? null;
   if (form === null && p) setForm(fromDto(p));
 
@@ -270,7 +291,7 @@ function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id:
       </div>
       {p && id && (p.status === "ACTIVE" || p.status === "CLOSED") && (
         <div role="tablist" className="flex gap-1 border-b border-line">
-          {(["contract", "ledger"] as const).map((x) => (
+          {(["contract", "ledger", "governance"] as const).map((x) => (
             <button
               key={x}
               role="tab"
@@ -283,8 +304,18 @@ function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id:
           ))}
         </div>
       )}
+      {p?.inDispute && tab === "contract" && <p className="rounded border border-danger px-3 py-2 text-sm">{t("gov.inDispute")}</p>}
       {tab === "ledger" && id ? (
         <LedgerView spaceId={spaceId} partnershipId={id} />
+      ) : tab === "governance" && id ? (
+        <GovernanceView
+          spaceId={spaceId}
+          partnershipId={id}
+          onOpenContract={() => {
+            setTab("contract");
+            setStep(10);
+          }}
+        />
       ) : (
         <>
       {p?.templateReview === "PENDING" && <p className="rounded border border-warn px-3 py-2 text-sm">{t("partnership.reviewPending")}</p>}
@@ -846,6 +877,7 @@ function SignStep({ spaceId, p }: { spaceId: string; p: PartnershipDto }) {
             <p key={h.no} className="text-ink-muted">
               {t("partnership.historyRow", { n: h.no, date: h.createdOn, signed: h.signed, required: h.required })}
               {h.inForce ? ` · ${t("partnership.inForce")}` : ""}
+              {h.changeNote ? ` · ${t(`partnership.changeNote.${h.changeNote}`)}` : ""}
             </p>
           ))}
         </div>

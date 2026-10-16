@@ -24,6 +24,10 @@ export const keys = {
   ledger: (spaceId: string, id: string) => ["ledger", spaceId, id] as const,
   ideas: (spaceId: string) => ["ideas", spaceId] as const,
   skills: (spaceId: string) => ["skills", spaceId] as const,
+  governance: (spaceId: string, id: string) => ["governance", spaceId, id] as const,
+  reminders: (spaceId: string) => ["reminders", spaceId] as const,
+  agreements: (spaceId: string) => ["agreements", spaceId] as const,
+  family: (spaceId: string) => ["family", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

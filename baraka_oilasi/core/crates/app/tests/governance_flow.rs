@@ -343,6 +343,8 @@ fn incidents_review_protocol_and_tamper_detection() {
         app.review_draft(uy, &p.id, "03.12.2026").unwrap_err().code,
         "FUTURE_DATE"
     );
+    // Bo'sh sana — yadro soati bo'yicha bugun.
+    assert_eq!(app.review_draft(uy, &p.id, "").unwrap().to_on, "2026-12-02");
 
     let hold = |acks: Vec<ReviewAckInput>| HoldReviewInput {
         to_on: "01.12.2026".into(),

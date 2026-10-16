@@ -43,11 +43,10 @@
   ..rows.map(r => (text(fill: muted)[#r.at(0)], text(weight: "bold")[#r.at(1)])).flatten(),
 )
 
-#let section(title) = {
-  v(10pt)
-  text(size: 12pt, weight: "bold")[#title]
-  v(2pt)
-}
+// Bo'lim sarlavhasi sahifa oxirida yolg'iz qolmaydi (`sticky` — keyingi blok bilan birga ko'chadi).
+#let section(title) = block(sticky: true, above: 14pt, below: 6pt)[
+  #text(size: 12pt, weight: "bold")[#title]
+]
 
 // Imzolar sahifalar orasida bo'linmaydi: sarlavha imzo chiziqlaridan ajralib qolmasin.
 #let signatures(title, signers) = block(breakable: false, width: 100%)[

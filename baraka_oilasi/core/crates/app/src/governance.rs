@@ -680,7 +680,12 @@ impl App {
                 .ok_or(AppError::new("INVALID_DATE"))?,
             None => l.start,
         };
-        let to = date(to_on, "toOn")?;
+        // Bo'sh sana — bugun (yadro soati bo'yicha; UI o'z soatiga tayanmaydi).
+        let to = if to_on.trim().is_empty() {
+            self.today(ctx)
+        } else {
+            date(to_on, "toOn")?
+        };
         if to > self.today(ctx) {
             return Err(AppError::on("FUTURE_DATE", "toOn"));
         }
@@ -1192,8 +1197,19 @@ impl App {
         if !capital.is_empty() {
             out.push(("folder.term.capital".into(), capital.join("; ")));
         }
-        if let Some(n) = &t.negligence_clause {
-            out.push(("folder.term.loss".into(), n.clone()));
+        // 5-band: zarar ulushlari (domen qoidasi bo'yicha) va beparvolik bandi.
+        let mut loss: Vec<String> = match t.rules(l.cur).ok().and_then(|r| r.loss_share_bp) {
+            Some(bp) => t
+                .parties
+                .iter()
+                .zip(bp)
+                .map(|(p, b)| format!("{} — {}%", p.full_name, format_percent_bp(b)))
+                .collect(),
+            None => Vec::new(),
+        };
+        loss.extend(t.negligence_clause.clone());
+        if !loss.is_empty() {
+            out.push(("folder.term.loss".into(), loss.join("; ")));
         }
         if let Some(c) = t.custody.value() {
             out.push((

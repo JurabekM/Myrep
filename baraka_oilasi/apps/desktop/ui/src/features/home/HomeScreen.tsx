@@ -6,6 +6,7 @@ import { call } from "../../lib/api";
 import { keys } from "../../lib/queryClient";
 import { showDate } from "../../lib/date";
 import { useUi } from "../../state/ui";
+import { ReminderText } from "../governance/GovernanceView";
 
 /** Bosh sahifa: 1-raqam — «Oʻzingizga toʻlangan (shu oy)», keyin odat va oy yakuni. */
 export function HomeScreen({ spaceId }: { spaceId: string }) {
@@ -15,7 +16,9 @@ export function HomeScreen({ spaceId }: { spaceId: string }) {
   const summary = useQuery({ queryKey: keys.summary(spaceId, null), queryFn: () => call(commands.monthlySummary(spaceId, null, null)) });
   const vault = useQuery({ queryKey: keys.vault(spaceId), queryFn: () => call(commands.vault(spaceId)) });
   const debts = useQuery({ queryKey: keys.debts(spaceId), queryFn: () => call(commands.debtsOverview(spaceId)) });
+  const reminders = useQuery({ queryKey: keys.reminders(spaceId), queryFn: () => call(commands.agreementReminders(spaceId)) });
   const setScreen = useUi((s) => s.setScreen);
+  const openPartnership = useUi((s) => s.openPartnership);
   const free = debts.data?.debtFreeDate;
 
   return (
@@ -44,6 +47,25 @@ export function HomeScreen({ spaceId }: { spaceId: string }) {
             {debts.data?.debtFreeDateWithPlan ? ` · ${t("home.withPlan", { date: showDate(debts.data.debtFreeDateWithPlan) })}` : ""}
           </p>
         </button>
+      )}
+      {(reminders.data ?? []).length > 0 && (
+        <section aria-label={t("home.reminders")} className="card flex flex-col gap-2 border-warn">
+          <p className="text-sm text-ink-muted">{t("home.reminders")}</p>
+          {(reminders.data ?? []).map((r) => (
+            <button
+              key={`${r.refId}-${r.kind}`}
+              className="flex flex-wrap items-center justify-between gap-2 rounded px-2 py-1 text-left hover:bg-paper"
+              onClick={() => (r.agreementType === "PARTNERSHIP" ? openPartnership(r.refId, "governance") : setScreen("agreements"))}
+            >
+              <span>
+                <span className="font-medium">{t(`home.reminder.${r.agreementType}.${r.kind}`)}</span> · {r.title}
+              </span>
+              <span className="text-sm">
+                <ReminderText r={r} />
+              </span>
+            </button>
+          ))}
+        </section>
       )}
       <div>
         <button className="btn-primary" onClick={openIncome}>

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-review-protocol"
+description = "Enables the export_review_protocol command without any pre-configured scope."
+commands.allow = ["export_review_protocol"]
+
+[[permission]]
+identifier = "deny-export-review-protocol"
+description = "Denies the export_review_protocol command without any pre-configured scope."
+commands.deny = ["export_review_protocol"]

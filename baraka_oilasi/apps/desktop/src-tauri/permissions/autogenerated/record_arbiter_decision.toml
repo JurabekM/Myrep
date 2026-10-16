@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-record-arbiter-decision"
+description = "Enables the record_arbiter_decision command without any pre-configured scope."
+commands.allow = ["record_arbiter_decision"]
+
+[[permission]]
+identifier = "deny-record-arbiter-decision"
+description = "Denies the record_arbiter_decision command without any pre-configured scope."
+commands.deny = ["record_arbiter_decision"]

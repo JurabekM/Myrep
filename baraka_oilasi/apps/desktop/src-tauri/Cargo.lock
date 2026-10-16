@@ -363,6 +363,7 @@ name = "baraka-domain-uy"
 version = "0.1.0"
 dependencies = [
  "baraka-domain-common",
+ "baraka-journal",
  "baraka-money",
  "chrono",
  "num-bigint 0.5.1",

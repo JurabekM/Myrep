@@ -53,6 +53,16 @@
 - **Savol:** O'zbekiston banklarida ko'pincha mijoz tanlaydi. Har bir qarzga «to'lovni kamaytirish» variantini qo'shamizmi? Komissiya qat'iy summa bo'lgan holatlar uchrayaptimi?
 - **To'sadi:** keyingi bank integratsiyasi. **Holat:** OCHIQ.
 
+### OQ-P10. Ko'rik va hodisalar boshqa tomonning qurilmasida
+- **Masala:** U13 da ko'rik belgilari (`AGREE` / `OBJECT`) va «bajara olmayapman» xabari hisob yurituvchining qurilmasida yoziladi (jurnalni faqat shu qurilma yuritadi, 6.6). Ikkinchi tomon belgini o'zi, o'z qurilmasida qo'yishi kerakmi?
+- **Taklif:** U14 sinxronizatsiyasida ikkinchi tomon imzolangan «belgi paketi»ni yuboradi, hisob yurituvchi uni jurnalga qo'shadi.
+- **To'sadi:** U14. **Holat:** OCHIQ.
+
+### OQ-P11. «Katta foyda»: reja manbai
+- **Hozirgi standart (U13):** reja — shartnomadagi buyout'dagi «kutilgan davr foydasi»; buyout bo'lmasa, faqat tarix (oxirgi 3 davr o'rtachasidan 200%). Chegaralar: rejadan 150%, tarixdan 200% (`SpikePolicy`).
+- **Savol:** shartnomaga alohida «kutilgan oylik foyda» maydoni qo'shamizmi (buyout'siz sheriklik uchun ham)? «Hunardan ishga» stsenariysidagi «o'rtacha» foyda reja bo'la oladimi?
+- **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik
@@ -118,6 +128,11 @@
 - **Savol:** mudoraba/musharaka kelishuvi Fuqarolik kodeksidagi oddiy shirkat (birgalikdagi faoliyat) shartnomasiga qanday mos keladi?
 - **To'sadi:** U11. **Holat:** OCHIQ.
 - **U11 da:** shablon `reviewStatus = PENDING` — ilovada va PDF da «yurist va ulamo tekshirmagan» ogohlantirishi chiqadi.
+
+### OQ-Y5. Hakam qarori va ish papkasi
+- **Savol:** tomonlar tanlagan hakam (mahalla oqsoqoli va h.k.) qarori qanday huquqiy kuchga ega? Hakam qarorni ilovada chizilgan imzo bilan tasdiqlashi kerakmi yoki qog'ozdagi qarorning nusxasi (rasm) ilova qilinadimi?
+- **U13 da:** qaror sanasi, mazmuni va natijasi (`RESUME` / `AMEND`) o'zgarmas yozuv sifatida saqlanadi; ish papkasi PDF «ilova yuridik maslahat bermaydi» bandi bilan.
+- **To'sadi:** — . **Holat:** OCHIQ.
 
 ## Texnik
 

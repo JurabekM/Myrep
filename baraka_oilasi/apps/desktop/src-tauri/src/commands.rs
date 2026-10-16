@@ -803,7 +803,10 @@ pub async fn venture_ledger(
     space_id: String,
     partnership_id: String,
 ) -> R<VentureLedgerDto> {
-    state.session.app()?.venture_ledger(&space_id, &partnership_id)
+    state
+        .session
+        .app()?
+        .venture_ledger(&space_id, &partnership_id)
 }
 
 #[tauri::command]
@@ -814,7 +817,10 @@ pub async fn add_venture_entry(
     partnership_id: String,
     input: VentureEntryInput,
 ) -> R<VentureLedgerDto> {
-    state.session.app()?.add_venture_entry(&space_id, &partnership_id, input)
+    state
+        .session
+        .app()?
+        .add_venture_entry(&space_id, &partnership_id, input)
 }
 
 #[tauri::command]
@@ -825,7 +831,10 @@ pub async fn venture_attachment(
     partnership_id: String,
     attachment_id: String,
 ) -> R<AttachmentDto> {
-    state.session.app()?.venture_attachment(&space_id, &partnership_id, &attachment_id)
+    state
+        .session
+        .app()?
+        .venture_attachment(&space_id, &partnership_id, &attachment_id)
 }
 
 #[tauri::command]
@@ -836,7 +845,10 @@ pub async fn venture_period_preview(
     partnership_id: String,
     input: ClosePeriodInput,
 ) -> R<VenturePeriodDto> {
-    state.session.app()?.venture_period_preview(&space_id, &partnership_id, input)
+    state
+        .session
+        .app()?
+        .venture_period_preview(&space_id, &partnership_id, input)
 }
 
 #[tauri::command]
@@ -847,15 +859,15 @@ pub async fn close_venture_period(
     partnership_id: String,
     input: ClosePeriodInput,
 ) -> R<VentureLedgerDto> {
-    state.session.app()?.close_venture_period(&space_id, &partnership_id, input)
+    state
+        .session
+        .app()?
+        .close_venture_period(&space_id, &partnership_id, input)
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn skills(
-    state: State<'_, Desktop>,
-    space_id: String,
-) -> R<Vec<SkillDto>> {
+pub async fn skills(state: State<'_, Desktop>, space_id: String) -> R<Vec<SkillDto>> {
     state.session.app()?.skills(&space_id)
 }
 
@@ -881,10 +893,7 @@ pub async fn delete_skill(
 
 #[tauri::command]
 #[specta::specta]
-pub async fn venture_ideas(
-    state: State<'_, Desktop>,
-    space_id: String,
-) -> R<Vec<VentureIdeaDto>> {
+pub async fn venture_ideas(state: State<'_, Desktop>, space_id: String) -> R<Vec<VentureIdeaDto>> {
     state.session.app()?.venture_ideas(&space_id)
 }
 
@@ -906,7 +915,10 @@ pub async fn update_venture_idea(
     idea_id: String,
     input: VentureIdeaInput,
 ) -> R<VentureIdeaDto> {
-    state.session.app()?.update_venture_idea(&space_id, &idea_id, input)
+    state
+        .session
+        .app()?
+        .update_venture_idea(&space_id, &idea_id, input)
 }
 
 #[tauri::command]
@@ -916,7 +928,10 @@ pub async fn delete_venture_idea(
     space_id: String,
     idea_id: String,
 ) -> R<()> {
-    state.session.app()?.delete_venture_idea(&space_id, &idea_id)
+    state
+        .session
+        .app()?
+        .delete_venture_idea(&space_id, &idea_id)
 }
 
 #[tauri::command]
@@ -927,15 +942,15 @@ pub async fn draft_partnership_from_idea(
     idea_id: String,
     input: IdeaDraftInput,
 ) -> R<PartnershipDto> {
-    state.session.app()?.draft_partnership_from_idea(&space_id, &idea_id, input)
+    state
+        .session
+        .app()?
+        .draft_partnership_from_idea(&space_id, &idea_id, input)
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn check_offer(
-    state: State<'_, Desktop>,
-    input: OfferAnswersInput,
-) -> R<OfferCheckDto> {
+pub async fn check_offer(state: State<'_, Desktop>, input: OfferAnswersInput) -> R<OfferCheckDto> {
     state.session.app()?.check_offer(input)
 }
 
@@ -954,4 +969,262 @@ pub async fn export_venture_report(
         .app()?
         .venture_period_pdf(&space_id, &partnership_id, &period_id)?;
     save_pdf(&handle, pdf, "davr-hisoboti.pdf")
+}
+
+// ---- U13: vazifalar, ochiq hisob ko'rigi, «katta foyda», nizo va hakam, oilaviy kelishuvlar ----
+
+#[tauri::command]
+#[specta::specta]
+pub async fn governance(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<GovernanceDto> {
+    state.session.app()?.governance(&space_id, &partnership_id)
+}
+
+/// «Bajara olmayapman»: hodisa jurnalga yoziladi, «bajarilmasa» bandi darhol ko'rinadi.
+#[tauri::command]
+#[specta::specta]
+pub async fn report_duty_incident(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: IncidentInput,
+) -> R<GovernanceDto> {
+    state
+        .session
+        .app()?
+        .report_duty_incident(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn resolve_duty_incident(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    incident_id: String,
+    note: String,
+) -> R<GovernanceDto> {
+    state
+        .session
+        .app()?
+        .resolve_duty_incident(&space_id, &partnership_id, &incident_id, &note)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn review_draft(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    to_on: String,
+) -> R<ReviewDraftDto> {
+    state
+        .session
+        .app()?
+        .review_draft(&space_id, &partnership_id, &to_on)
+}
+
+/// Ochiq hisob ko'rigi: tomonlar belgisi jurnalga, bayonnomada zanjir boshi.
+#[tauri::command]
+#[specta::specta]
+pub async fn hold_review(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: HoldReviewInput,
+) -> R<GovernanceDto> {
+    state
+        .session
+        .app()?
+        .hold_review(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn acknowledge_spike_reread(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    party_id: String,
+) -> R<VentureLedgerDto> {
+    state
+        .session
+        .app()?
+        .acknowledge_spike_reread(&space_id, &partnership_id, &party_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn open_partnership_dispute(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: OpenDisputeInput,
+) -> R<GovernanceDto> {
+    state
+        .session
+        .app()?
+        .open_partnership_dispute(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_dispute_claim(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    dispute_id: String,
+    input: DisputeClaimInput,
+) -> R<GovernanceDto> {
+    state
+        .session
+        .app()?
+        .add_dispute_claim(&space_id, &partnership_id, &dispute_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn record_arbiter_decision(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    dispute_id: String,
+    input: DecisionInput,
+) -> R<GovernanceDto> {
+    state
+        .session
+        .app()?
+        .record_arbiter_decision(&space_id, &partnership_id, &dispute_id, input)
+}
+
+/// Yillik yangilash: reviewDate +1 yil, hamma qayta imzolaydi.
+#[tauri::command]
+#[specta::specta]
+pub async fn renew_partnership(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<PartnershipDto> {
+    state
+        .session
+        .app()?
+        .renew_partnership(&space_id, &partnership_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn family_agreements(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<FamilyAgreementDto>> {
+    state.session.app()?.family_agreements(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn create_family_agreement(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: FamilyAgreementInput,
+) -> R<FamilyAgreementDto> {
+    state
+        .session
+        .app()?
+        .create_family_agreement(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_family_agreement(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: FamilyAgreementInput,
+) -> R<FamilyAgreementDto> {
+    state
+        .session
+        .app()?
+        .update_family_agreement(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_family_agreement(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+) -> R<()> {
+    state.session.app()?.delete_family_agreement(&space_id, &id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn agreement_reminders(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<ReminderDto>> {
+    state.session.app()?.agreement_reminders(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn agreements_center(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<AgreementSummaryDto>> {
+    state.session.app()?.agreements_center(&space_id)
+}
+
+/// Katta a'zoning tasdig'i: PIN qayta so'raladi (oilaviy kelishuv 2F.10).
+#[tauri::command]
+#[specta::specta]
+pub async fn confirm_family_agreement(
+    state: State<'_, Desktop>,
+    space_id: String,
+    pin: String,
+    id: String,
+    member_id: String,
+) -> R<FamilyAgreementDto> {
+    state.session.confirm_pin(&state.secrets.load()?, &pin)?;
+    state
+        .session
+        .app()?
+        .confirm_family_agreement(&space_id, &id, &member_id)
+}
+
+/// Ko'rik bayonnomasi PDF'i (zanjir boshi QR bilan).
+#[tauri::command]
+#[specta::specta]
+pub async fn export_review_protocol(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    review_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .review_pdf(&space_id, &partnership_id, &review_id)?;
+    save_pdf(&handle, pdf, "bayonnoma.pdf")
+}
+
+/// «Hakam uchun ish papkasi» — bitta PDF, mundarija va sahifa raqamlari bilan.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_dispute_folder(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    dispute_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .dispute_folder_pdf(&space_id, &partnership_id, &dispute_id)?;
+    save_pdf(&handle, pdf, "hakam-papkasi.pdf")
 }

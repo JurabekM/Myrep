@@ -89,6 +89,25 @@
     "allow-delete-venture-idea",
     "allow-draft-partnership-from-idea",
     "allow-check-offer",
-    "allow-export-venture-report"
+    "allow-export-venture-report",
+    "allow-governance",
+    "allow-report-duty-incident",
+    "allow-resolve-duty-incident",
+    "allow-review-draft",
+    "allow-hold-review",
+    "allow-acknowledge-spike-reread",
+    "allow-open-partnership-dispute",
+    "allow-add-dispute-claim",
+    "allow-record-arbiter-decision",
+    "allow-renew-partnership",
+    "allow-family-agreements",
+    "allow-create-family-agreement",
+    "allow-update-family-agreement",
+    "allow-delete-family-agreement",
+    "allow-agreement-reminders",
+    "allow-agreements-center",
+    "allow-confirm-family-agreement",
+    "allow-export-review-protocol",
+    "allow-export-dispute-folder"
   ]
 }
