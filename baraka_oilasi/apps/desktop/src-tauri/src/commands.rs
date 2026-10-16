@@ -1299,6 +1299,24 @@ fn read_baraka(path: &str) -> R<Vec<u8>> {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
+    state.session.app()?.settings()
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_settings(state: State<'_, Desktop>, input: SettingsInput) -> R<SettingsDto> {
+    state.session.app()?.update_settings(input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn home_nudges(state: State<'_, Desktop>, space_id: String) -> R<Vec<NudgeDto>> {
+    state.session.app()?.home_nudges(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn devices(state: State<'_, Desktop>) -> R<Vec<DeviceDto>> {
     state.session.app()?.devices()
 }

@@ -13,6 +13,7 @@ import { PartnershipsScreen } from "../features/partnership/PartnershipsScreen";
 import { PayoffScreen } from "../features/payoff/PayoffScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
+import { SettingsScreen } from "../features/settings/SettingsScreen";
 import { SyncScreen } from "../features/sync/SyncScreen";
 import { VaultScreen } from "../features/vault/VaultScreen";
 import { IdeasScreen } from "../features/venture/IdeasScreen";
@@ -36,6 +37,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "agreements", label: "nav.agreements" },
   { screen: "receipt", label: "nav.receipt" },
   { screen: "sync", label: "nav.sync" },
+  { screen: "settings", label: "nav.settings" },
 ];
 
 const MENTOR: Record<Screen, string> = {
@@ -51,18 +53,26 @@ const MENTOR: Record<Screen, string> = {
   agreements: "mentor.agreements",
   receipt: "mentor.receipt",
   sync: "mentor.sync",
+  settings: "mentor.settings",
 };
 
 /** Asosiy oyna: chapda navigatsiya va makonlar, markazda ish maydoni, oʻngda Sobir hoji. */
 export function Shell() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { screen, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
+  const settings = useQuery({ queryKey: keys.settings, queryFn: () => call(commands.settings()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
 
   const spaces = household.data?.spaces ?? [];
   const active = spaceId ?? spaces[0]?.id ?? null;
+
+  // Bazadagi til (shu qurilma yoki xonadon) — UI shu tilda; qulf ekrani uchun ham eslab qolinadi.
+  const locale = settings.data?.locale;
+  useEffect(() => {
+    if (locale && locale !== i18n.language) void i18n.changeLanguage(locale);
+  }, [locale, i18n]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,9 +91,12 @@ export function Shell() {
 
   return (
     <div className="flex h-full">
-      <nav aria-label="Asosiy" className="flex w-60 shrink-0 flex-col gap-1 border-r border-line bg-sidebar p-4">
+      <a href="#main" className="skip-link">
+        {t("a11y.skipToMain")}
+      </a>
+      <nav aria-label={t("a11y.mainNav")} className="flex w-60 shrink-0 flex-col gap-1 border-r border-line bg-sidebar p-4">
         <p className="mb-4 font-serif text-xl font-semibold">{t("app.name")}</p>
-        <div className="mb-4 flex flex-wrap gap-1">
+        <div role="group" aria-label={t("a11y.spaces")} className="mb-4 flex flex-wrap gap-1">
           {spaces.map((s) => (
             <button key={s.id} aria-pressed={s.id === active} className={s.id === active ? "btn-primary px-3 py-1 text-sm" : "btn-ghost px-3 py-1 text-sm"} onClick={() => setSpace(s.id)}>
               {t(`space.${s.kind}`)}
@@ -107,7 +120,7 @@ export function Shell() {
           {t("nav.lock")} <kbd className="text-xs opacity-70">Ctrl+L</kbd>
         </button>
       </nav>
-      <main className="min-w-0 flex-1 overflow-y-auto p-8">
+      <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-8 outline-none">
         {active && screen === "home" && <HomeScreen spaceId={active} />}
         {active && screen === "vault" && <VaultScreen spaceId={active} />}
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}
@@ -120,6 +133,7 @@ export function Shell() {
         {active && screen === "agreements" && <AgreementsScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
+        {screen === "settings" && <SettingsScreen />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />
       {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}

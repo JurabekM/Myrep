@@ -25,8 +25,9 @@
 @utility card {
   @apply rounded-lg border border-line bg-surface p-5 shadow-sm shadow-black/20;
 }
+/* Forma maydonlari chegarasi `field-line` — WCAG 1.4.11 (≥ 3:1), `line` faqat bezak uchun. */
 @utility field {
-  @apply w-full rounded-md border border-line bg-surface px-3 py-2 text-ink placeholder:text-ink-muted;
+  @apply w-full rounded-md border border-field-line bg-surface px-3 py-2 text-ink placeholder:text-ink-muted;
 }
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-medium transition-colors disabled:opacity-50;
@@ -35,11 +36,50 @@
   @apply btn bg-accent text-accent-ink hover:opacity-90;
 }
 @utility btn-ghost {
-  @apply btn border border-line text-ink hover:bg-paper hover:border-ink-muted;
+  @apply btn border border-field-line text-ink hover:bg-paper hover:border-ink-muted;
 }
 @utility label {
   @apply mb-1 block text-sm text-ink-muted;
 }
 @utility kpi {
   @apply text-3xl font-semibold tabular-nums;
+}
+
+/* «Asosiy qismga o'tish» — faqat klaviatura fokusida ko'rinadi. */
+@utility skip-link {
+  @apply absolute left-2 top-2 z-50 -translate-y-20 rounded-md bg-accent px-4 py-2 text-accent-ink focus:translate-y-0;
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Windows High Contrast (forced-colors): fonlar tizim ranglariga almashadi — chegaralar va
+   fokus aniq ko'rinsin, tugmalar fondan ajralib tursin. */
+@media (forced-colors: active) {
+  .card,
+  .field,
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    border: 1px solid CanvasText;
+  }
+  .btn-primary {
+    border-color: ButtonText;
+  }
+  :focus-visible {
+    outline: 3px solid Highlight;
+  }
+  [aria-current="page"],
+  [aria-pressed="true"] {
+    outline: 2px solid Highlight;
+  }
 }

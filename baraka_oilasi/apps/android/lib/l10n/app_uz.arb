@@ -1949,5 +1949,113 @@
   "error_ALREADY_INITIALIZED": "Ilova allaqachon oʻrnatilgan",
   "error_IO_ERROR": "Faylni oʻqish yoki yozishda xato",
   "error_RANDOM_UNAVAILABLE": "Tasodifiy son manbai ishlamadi",
-  "error_CRYPTO_FAILURE": "Shifrlashda xato"
+  "error_CRYPTO_FAILURE": "Shifrlashda xato",
+  "setup_stepOf": "Qadam {n} / {total}",
+  "@setup_stepOf": {
+    "placeholders": {
+      "n": {},
+      "total": {}
+    }
+  },
+  "setup_step_language": "Til va boshlash",
+  "setup_step_family": "Oilangiz",
+  "setup_step_income": "Daromad qanday keladi?",
+  "setup_step_debts": "Qarzlar",
+  "setup_step_pin": "PIN",
+  "setup_language": "Til",
+  "setup_path": "Qanday boshlaymiz?",
+  "setup_createHint": "Birinchi qurilma: yangi daftar ochiladi.",
+  "setup_members": "Boshqa oila aʼzolari",
+  "setup_membersHint": "Kelishuvlar va roziliklar uchun kerak. Ismini yozing va katta yoki bola ekanini belgilang.",
+  "setup_memberName": "{n}-aʼzo ismi",
+  "@setup_memberName": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "setup_memberRole": "{n}-aʼzo: katta yoki bola",
+  "@setup_memberRole": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "setup_memberRemove": "Olib tashlash: {name}",
+  "@setup_memberRemove": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "setup_memberAdd": "Aʼzo qoʻshish",
+  "setup_rhythm": "Asosiy daromad qanday keladi?",
+  "setup_payday": "Maosh qaysi kuni keladi? Oy shu kundan boshlanadi",
+  "setup_debtsQuestion": "Hozir toʻlayotgan qarz, kredit yoki nasiya bormi?",
+  "setup_debtsYes": "Ha, bor",
+  "setup_debtsYesHint": "Daftar ochilgach, avval qarzlarni yozib chiqamiz. Keyin «Qarzdan chiqish» (70/20/10) rejimini taklif qilamiz.",
+  "setup_debtsNo": "Yoʻq",
+  "setup_debtsPrivacy": "Javob faqat shu daftarda qoladi va sozlamalarda istalgan payt oʻzgaradi.",
+  "setup_pinHint": "PIN daftarni shu qurilmada ochadi. Keyingi ekranda tiklash kodi beriladi — PIN unutilsa, faqat u yordam beradi.",
+  "setup_back": "Orqaga",
+  "setup_next": "Davom etish",
+  "setup_backupHint": "Qurilma yoʻqolsa yoki buzilsa, faqat .baraka zaxira nusxa yordam beradi. Uni «Sinxronlash» boʻlimida olasiz — har oy eslatamiz.",
+  "role_ADULT": "Katta",
+  "role_CHILD": "Bola",
+  "locale_uz": "Oʻzbekcha (lotin)",
+  "locale_uz_Cyrl": "Ўзбекча (кирилл)",
+  "locale_ru": "Русский",
+  "rhythm_DAILY": "Har kuni naqd",
+  "rhythm_ORDERS": "Buyurtma boʻyicha",
+  "rhythm_MONTHLY": "Oylik maosh",
+  "rhythm_NONE": "Eslatmasiz",
+  "rhythmHint_DAILY": "Taksi, bozor, kunbay ish — har kuni yozib qoʻyishni eslatamiz.",
+  "rhythmHint_ORDERS": "Usta, tikuvchi, oshpaz — pul kelganda yozasiz; ikki hafta jimlik boʻlsa, soʻraymiz.",
+  "rhythmHint_MONTHLY": "Maosh kuni avval oʻzingizga toʻlashni eslatamiz.",
+  "nav_settings": "Sozlamalar",
+  "mentor_settings": "Koʻzingizga qulay boʻlsin: shriftni kattalashtiring, tilni oʻzingizga moslang. Til va koʻrinish faqat shu qurilmaga tegishli.",
+  "settings_title": "Sozlamalar",
+  "settings_language": "Til (shu qurilma)",
+  "settings_languageHint": "Boshqa qurilmalar oʻz tilida qoladi. Summalar va PDF hujjatlar ham shu tilda chiqadi.",
+  "settings_display": "Koʻrinish",
+  "settings_displayHint": "Faqat shu qurilmada.",
+  "settings_fontSize": "Shrift oʻlchami",
+  "settings_theme": "Mavzu",
+  "settings_theme_dark": "Qorongʻi",
+  "settings_theme_light": "Yorugʻ",
+  "settings_highContrast": "Windows'da «Yuqori kontrast» yoqilgan boʻlsa, ilova tizim ranglariga oʻtadi.",
+  "settings_rhythm": "Daromad ritmi",
+  "settings_rhythmHint": "Bosh sahifadagi eslatmalar shunga moslanadi. Butun xonadon uchun.",
+  "settings_debts": "Qarzlar",
+  "settings_debtsReminder": "Qarzlarim bor — ularni «Qarzlar» boʻlimiga yozishni eslatib tur",
+  "settings_keyboard": "Klaviatura",
+  "settings_key_Ctrl+N": "Daromad kiritish",
+  "settings_key_Ctrl+L": "Qulflash",
+  "settings_key_Tab": "Keyingi elementga oʻtish (Shift+Tab — orqaga)",
+  "settings_key_Esc": "Oynani yopish",
+  "a11y_skipToMain": "Asosiy qismga oʻtish",
+  "a11y_mainNav": "Asosiy navigatsiya",
+  "a11y_spaces": "Makonlar",
+  "nudge_title": "Eslatmalar",
+  "nudge_INCOME_TODAY": "Bugungi tushum hali yozilmagan. Kichik boʻlsa ham — yozib qoʻying.",
+  "nudge_INCOME_QUIET": "Oxirgi daromad {count} kun oldin yozilgan. Buyurtma pulini olgan boʻlsangiz, yozib qoʻying.",
+  "@nudge_INCOME_QUIET": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "nudge_INCOME_NONE": "Hali daromad yozilmagan. Birinchi buyurtma pulidan boshlaymizmi?",
+  "nudge_PAYDAY": "Maosh kuni: avval oʻzingizga toʻlang — ulushni «Kelajagim»ga ajrating.",
+  "nudge_DEBT_INVENTORY": "Qarzlaringizni yozib chiqing — keyin «Qarzdan chiqish» rejasini tuzamiz.",
+  "nudge_BACKUP": "Zaxira nusxa olinmaganiga {count} kun boʻldi. Qurilma yoʻqolsa, faqat u yordam beradi.",
+  "@nudge_BACKUP": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "nudge_action_INCOME_TODAY": "Daromad kiritish",
+  "nudge_action_INCOME_QUIET": "Daromad kiritish",
+  "nudge_action_PAYDAY": "Daromad kiritish",
+  "nudge_action_DEBT_INVENTORY": "Qarzlarni yozish",
+  "nudge_action_BACKUP": "Zaxira olish",
+  "nudge_dismiss": "Eslatmasin",
+  "error_INVALID_INCOME_RHYTHM": "Daromad ritmini tanlang",
+  "error_INVALID_LOCALE": "Bunday til yoʻq"
 }

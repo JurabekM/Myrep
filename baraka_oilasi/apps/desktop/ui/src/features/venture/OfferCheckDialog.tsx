@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { commands, type OfferAnswersInput } from "../../bindings";
 import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
+import { useDialog } from "../../lib/useDialog";
 
 const QUESTIONS = ["guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written"] as const;
 const REPLIES = ["YES", "NO", "UNKNOWN"] as const;
@@ -17,6 +18,7 @@ const TEXT: Record<string, string> = { GREEN: "text-accent-text", YELLOW: "text-
  */
 export function OfferCheckDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
+  const dialog = useDialog<HTMLDivElement>(onClose);
   const [a, setA] = useState<Record<string, string>>({});
   const check = useMutation({ mutationFn: (input: OfferAnswersInput) => call(commands.checkOffer(input)) });
   const complete = QUESTIONS.every((q) => a[q]);
@@ -33,7 +35,7 @@ export function OfferCheckDialog({ onClose }: { onClose: () => void }) {
   };
   const r = check.data;
   return (
-    <div role="dialog" aria-modal="true" aria-label={t("offer.title")} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4">
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t("offer.title")} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4">
       <form className="card flex max-h-full w-full max-w-2xl flex-col gap-4 overflow-y-auto" onSubmit={submit}>
         <h2 className="text-xl font-semibold">{t("offer.title")}</h2>
         <p className="text-sm text-ink-muted">{t("offer.intro")}</p>

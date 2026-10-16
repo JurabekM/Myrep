@@ -6,6 +6,7 @@ import { commands, type IncomeRecordedDto } from "../../bindings";
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
+import { useDialog } from "../../lib/useDialog";
 
 /**
  * Tez daromad kiritish (Ctrl+N) va ulush taklifi: [Ajratish] [Boshqa summa] [Bu safar emas].
@@ -13,6 +14,7 @@ import { call } from "../../lib/api";
  */
 export function IncomeDialog({ spaceId, onClose }: { spaceId: string; onClose: () => void }) {
   const { t } = useTranslation();
+  const dialog = useDialog<HTMLDivElement>(onClose);
   const [amount, setAmount] = useState("");
   const [source, setSource] = useState("");
   const [channel, setChannel] = useState<"CASH" | "CARD">("CASH");
@@ -35,7 +37,7 @@ export function IncomeDialog({ spaceId, onClose }: { spaceId: string; onClose: (
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="income-title" className="fixed inset-0 z-10 flex items-center justify-center bg-black/60 p-4">
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="income-title" className="fixed inset-0 z-10 flex items-center justify-center bg-black/60 p-4">
       <div className="card w-full max-w-md">
         <h2 id="income-title" className="mb-4 text-xl font-semibold">{t("income.title")}</h2>
         {!recorded ? (

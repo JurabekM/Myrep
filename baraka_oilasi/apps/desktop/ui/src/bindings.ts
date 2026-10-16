@@ -142,6 +142,9 @@ export const commands = {
 } | null, AppError>(__TAURI_INVOKE("pairing_offer")),
 	/**  O'rnatishda: mavjud xonadonga qo'shilish (ulash kodi) yoki zaxira nusxadan tiklash (parol). */
 	joinHousehold: (path: string, pin: string, input: JoinInput) => typedError<SetupResult, AppError>(__TAURI_INVOKE("join_household", { path, pin, input })),
+	settings: () => typedError<SettingsDto, AppError>(__TAURI_INVOKE("settings")),
+	updateSettings: (input: SettingsInput) => typedError<SettingsDto, AppError>(__TAURI_INVOKE("update_settings", { input })),
+	homeNudges: (spaceId: string) => typedError<NudgeDto[], AppError>(__TAURI_INVOKE("home_nudges", { spaceId })),
 };
 
 /** Events */
@@ -241,6 +244,10 @@ export type BootstrapInput = {
 	/**  Yoqiladigan makonlar: `UY`, `KASBKOR`, `MUSOFIR`. */
 	spaces: string[],
 	members: NewMemberInput[],
+	/**  Onboarding: `DAILY` (kunlik naqd), `ORDERS` (buyurtma bo'yicha), `MONTHLY` (oylik maosh). */
+	incomeRhythm?: string | null,
+	/**  Onboarding: «faol qarzim bor» — qarzlar inventarga kiritilguncha taklif ko'rsatiladi. */
+	debtsDeclared?: boolean,
 };
 
 /**  «To'xta va o'yla» natijasi: taqiqlamaydi, ko'rsatadi. */
@@ -1133,6 +1140,15 @@ export type NewSellableItemInput = {
 	currency: string,
 };
 
+/**
+ *  Bosh sahifa eslatmasi: `INCOME_TODAY`, `INCOME_QUIET` (`days` — oxirgi daromaddan beri,
+ *  `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri).
+ */
+export type NudgeDto = {
+	kind: string,
+	days: number | null,
+};
+
 /**  Har bir javob: `YES`, `NO` yoki `UNKNOWN`. */
 export type OfferAnswersInput = {
 	guaranteed: string,
@@ -1597,6 +1613,23 @@ export type SessionStatus = {
 	unlocked: boolean,
 	/**  Qulflash tugaydigan vaqt (RFC 3339), agar ko'p xato urinish bo'lgan bo'lsa. */
 	lockedUntil: string | null,
+};
+
+/**  U15: sozlamalar. `locale` — amaldagi til (qurilmaniki bo'lsa — u, aks holda xonadonniki). */
+export type SettingsDto = {
+	locale: string,
+	householdLocale: string,
+	/**  Faqat shu qurilmaga tegishli til (sinxronlanmaydi). */
+	deviceLocale: string | null,
+	incomeRhythm: string | null,
+	debtsDeclared: boolean,
+};
+
+export type SettingsInput = {
+	/**  `uz`, `uz-Cyrl`, `ru` yoki `null` (xonadon tili). */
+	locale: string | null,
+	incomeRhythm: string | null,
+	debtsDeclared: boolean,
 };
 
 /**  O'rnatish natijasi. Tiklash kodi **faqat shu yerda bir marta** ko'rsatiladi. */

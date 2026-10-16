@@ -15,6 +15,7 @@ import { ErrorText } from "../../components/ErrorText";
 import { call, CoreError } from "../../lib/api";
 import { showDate, todayText } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
+import { useDialog } from "../../lib/useDialog";
 
 const KINDS = ["INCOME", "EXPENSE", "FORCE_MAJEURE"] as const;
 const CATEGORIES: Record<string, string[]> = {
@@ -65,17 +66,7 @@ export function LedgerView({ spaceId, partnershipId }: { spaceId: string; partne
       {l.periods.map((p) => (
         <ClosedPeriod key={p.id} spaceId={spaceId} l={l} p={p} />
       ))}
-      {viewing && (
-        <div role="dialog" aria-modal="true" aria-label={viewing.name} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4" onClick={() => setViewing(null)}>
-          <div className="card flex max-h-full max-w-3xl flex-col gap-2">
-            <p className="text-sm">{viewing.name}</p>
-            <img src={viewing.url} alt={viewing.name} className="max-h-[70vh] object-contain" />
-            <button className="btn-ghost self-start" onClick={() => setViewing(null)}>
-              {t("common.close")}
-            </button>
-          </div>
-        </div>
-      )}
+      {viewing && <AttachmentViewer file={viewing} onClose={() => setViewing(null)} />}
     </div>
   );
 }
@@ -505,6 +496,22 @@ function ClosedPeriod({ spaceId, l, p }: { spaceId: string; l: VentureLedgerDto;
         {p.chainCode && <span className="text-xs text-ink-muted">{t("venture.chainAt", { code: p.chainCode })}</span>}
       </div>
       <ErrorText error={pdf.error} />
+    </div>
+  );
+}
+
+function AttachmentViewer({ file, onClose }: { file: { url: string; name: string }; onClose: () => void }) {
+  const { t } = useTranslation();
+  const dialog = useDialog<HTMLDivElement>(onClose);
+  return (
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={file.name} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="card flex max-h-full max-w-3xl flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+        <p className="text-sm">{file.name}</p>
+        <img src={file.url} alt={file.name} className="max-h-[70vh] object-contain" />
+        <button className="btn-ghost self-start" onClick={onClose}>
+          {t("common.close")}
+        </button>
+      </div>
     </div>
   );
 }

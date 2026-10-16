@@ -109,6 +109,9 @@ const COMMANDS: &[&str] = &[
     "apply_baraka",
     "pairing_offer",
     "join_household",
+    "settings",
+    "update_settings",
+    "home_nudges",
 ];
 
 fn main() {

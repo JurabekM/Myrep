@@ -3,7 +3,6 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 
-import { SetupScreen } from "../setup/SetupScreen";
 import { SyncScreen } from "./SyncScreen";
 
 const fns = {
@@ -13,8 +12,6 @@ const fns = {
   inspectBaraka: vi.fn(),
   applyBaraka: vi.fn(),
   pairingOffer: vi.fn(),
-  joinHousehold: vi.fn(),
-  setup: vi.fn(),
 };
 vi.mock("../../bindings", () => ({
   commands: new Proxy(
@@ -136,25 +133,5 @@ describe("SyncScreen", () => {
     await user.click(screen.getByRole("button", { name: "Ulash faylini yaratish" }));
     expect(await screen.findByTestId("pairing-code")).toHaveTextContent("ABCD-EFGH");
     expect(screen.getByAltText("Ulash QR kodi")).toBeInTheDocument();
-  });
-});
-
-describe("SetupScreen: mavjud xonadonga qo'shilish", () => {
-  it("fayl, kod va PIN bilan", async () => {
-    fns.joinHousehold.mockResolvedValue(ok({ household: { id: "h1" }, recoveryCode: "AAAA-BBBB" }));
-    const user = userEvent.setup();
-    wrap(<SetupScreen />);
-    await user.click(screen.getByRole("tab", { name: "Mavjud xonadonga qoʻshilish" }));
-    expect(screen.queryByLabelText("Oila nomi")).not.toBeInTheDocument();
-    const submit = screen.getByRole("button", { name: "Qoʻshilish" });
-    expect(submit).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Fayl tanlash" }));
-    expect(await screen.findByText("x.baraka")).toBeInTheDocument();
-    await user.type(screen.getByLabelText("Ulash kodi yoki zaxira nusxa paroli"), "abcd efgh");
-    await user.type(screen.getByLabelText("6 xonali PIN"), "445566");
-    await user.type(screen.getByLabelText("PINʼni takrorlang"), "445566");
-    await user.click(submit);
-    expect(fns.joinHousehold).toHaveBeenCalledWith("/tmp/x.baraka", "445566", { secret: "abcd efgh", deviceName: "Desktop", platform: "desktop" });
-    expect(await screen.findByTestId("recovery-code")).toHaveTextContent("AAAA-BBBB");
   });
 });

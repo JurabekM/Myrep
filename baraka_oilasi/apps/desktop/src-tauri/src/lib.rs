@@ -138,6 +138,9 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::apply_baraka,
             commands::pairing_offer,
             commands::join_household,
+            commands::settings,
+            commands::update_settings,
+            commands::home_nudges,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

@@ -2,6 +2,7 @@ import { type PointerEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Stroke } from "../bindings";
+import { useDialog } from "../lib/useDialog";
 
 /** Yadrodagi imzo maydoni (`baraka_agreements::PAD_WIDTH × PAD_HEIGHT`). */
 const PAD_W = 1000;
@@ -13,6 +14,7 @@ const PAD_H = 400;
  */
 export function SignaturePad({ name, onSave, onCancel, busy }: { name: string; onSave: (s: Stroke[]) => void; onCancel: () => void; busy: boolean }) {
   const { t } = useTranslation();
+  const dialog = useDialog<HTMLDivElement>(onCancel);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const drawing = useRef(false);
@@ -56,7 +58,7 @@ export function SignaturePad({ name, onSave, onCancel, busy }: { name: string; o
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={t("partnership.sign.title", { name })} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4">
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t("partnership.sign.title", { name })} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4">
       <div className="card flex w-full max-w-2xl flex-col gap-3">
         <h2 className="text-lg font-semibold">{t("partnership.sign.title", { name })}</h2>
         <p className="text-sm text-ink-muted">{t("partnership.sign.hint")}</p>

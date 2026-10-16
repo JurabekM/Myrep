@@ -115,6 +115,9 @@
     "allow-inspect-baraka",
     "allow-apply-baraka",
     "allow-pairing-offer",
-    "allow-join-household"
+    "allow-join-household",
+    "allow-settings",
+    "allow-update-settings",
+    "allow-home-nudges"
   ]
 }

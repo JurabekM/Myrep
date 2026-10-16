@@ -29,6 +29,8 @@ export const keys = {
   agreements: (spaceId: string) => ["agreements", spaceId] as const,
   family: (spaceId: string) => ["family", spaceId] as const,
   devices: ["devices"] as const,
+  settings: ["settings"] as const,
+  nudges: (spaceId: string) => ["nudges", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

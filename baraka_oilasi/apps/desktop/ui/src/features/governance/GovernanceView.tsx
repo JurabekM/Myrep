@@ -15,6 +15,7 @@ import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
 import { showDate, todayText } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
+import { useDialog } from "../../lib/useDialog";
 
 const REASONS = ["SCHEDULED", "PROFIT_SPIKE", "EXTRA"] as const;
 const CLAUSES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
@@ -351,6 +352,7 @@ function Reviews({ spaceId, g }: { spaceId: string; g: GovernanceDto }) {
 /** Oila kengashi uslubidagi to'liq ekran ko'rik sessiyasi (uy/SPEC 2F.5). */
 function ReviewSession({ spaceId, g, onClose }: { spaceId: string; g: GovernanceDto; onClose: () => void }) {
   const { t } = useTranslation();
+  const dialog = useDialog<HTMLDivElement>(onClose);
   const qc = useQueryClient();
   // Bo'sh sana — yadro «bugun» deb oladi (UI o'z soatiga tayanmaydi).
   const [toText, setToText] = useState("");
@@ -378,7 +380,7 @@ function ReviewSession({ spaceId, g, onClose }: { spaceId: string; g: Governance
     return a?.verdict === "AGREE" || (a?.verdict === "OBJECT" && a.note.trim() !== "");
   });
   return (
-    <div role="dialog" aria-modal="true" aria-label={t("gov.session")} className="fixed inset-0 z-20 overflow-y-auto bg-paper p-8">
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t("gov.session")} className="fixed inset-0 z-20 overflow-y-auto bg-paper p-8">
       <div className="mx-auto flex max-w-4xl flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-serif text-2xl font-semibold">
