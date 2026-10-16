@@ -1,6 +1,6 @@
 [package]
 name = "baraka-interchange"
-description = ".baraka almashish formati (U14 vazifasida to'ldiriladi)"
+description = ".baraka almashish formati: shifrlangan konteyner, JSON Lines, birlashtirish qoidalari"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,21 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+baraka-journal.workspace = true
+argon2.workspace = true
+chacha20poly1305.workspace = true
+getrandom.workspace = true
+sha2.workspace = true
+hex = { workspace = true, features = ["std"] }
+zeroize.workspace = true
+data-encoding.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+unicode-normalization.workspace = true
+
+[dev-dependencies]
+sha2.workspace = true
+hex = { workspace = true, features = ["std"] }
 
 [lints]
 workspace = true

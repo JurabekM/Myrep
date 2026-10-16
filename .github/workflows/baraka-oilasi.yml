@@ -54,6 +54,14 @@ jobs:
         run: |
           python3 -I spec/oracle/oracle.py --selftest
           python3 -I spec/oracle/oracle.py --check spec/test-vectors
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: .baraka formati oracle'i (Argon2id, XChaCha20-Poly1305)
+        run: |
+          python3 -m pip install "cryptography>=44,<51"
+          python3 -I spec/interchange/oracle.py --selftest
+          python3 -I spec/interchange/oracle.py --check spec/interchange/vectors.json
       - name: i18n, tokens, taqiqlangan iboralar
         run: cargo xtask all
       - name: Generatsiya qilingan fayllar commit qilingan
