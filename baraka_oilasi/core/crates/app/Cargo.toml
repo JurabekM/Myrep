@@ -17,6 +17,8 @@ baraka-agreements.workspace = true
 baraka-security.workspace = true
 baraka-storage.workspace = true
 baraka-pdf = { path = "../pdf" }
+baraka-interchange = { path = "../interchange" }
+zeroize.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true
 serde.workspace = true

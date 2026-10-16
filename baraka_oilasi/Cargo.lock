@@ -112,6 +112,7 @@ dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
  "baraka-domain-uy",
+ "baraka-interchange",
  "baraka-journal",
  "baraka-money",
  "baraka-pdf",
@@ -125,6 +126,7 @@ dependencies = [
  "specta",
  "tempfile",
  "unicode-normalization",
+ "zeroize",
 ]
 
 [[package]]
@@ -239,6 +241,7 @@ name = "baraka-storage"
 version = "0.1.0"
 dependencies = [
  "baraka-domain-common",
+ "baraka-interchange",
  "baraka-journal",
  "baraka-money",
  "baraka-security",

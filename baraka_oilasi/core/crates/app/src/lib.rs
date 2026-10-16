@@ -17,6 +17,7 @@ mod partnership;
 mod receipt;
 mod recovery;
 pub mod session;
+mod sync;
 mod text;
 mod uy;
 mod venture;

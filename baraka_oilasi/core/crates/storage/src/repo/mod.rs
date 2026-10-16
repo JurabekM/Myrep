@@ -12,6 +12,7 @@ pub mod journal;
 pub mod partnerships;
 pub mod recovery;
 pub mod rules;
+pub mod sync;
 pub mod vault;
 pub mod ventures;
 

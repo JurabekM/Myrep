@@ -907,6 +907,50 @@ impl BarakaCore {
         self.session.app()?.agreements_center(&space_id)
     }
 
+    // U14: `.baraka` eksport/import va qurilmalarni ulash.
+    /// Mavjud xonadonga qo'shilish (ulash kodi) yoki zaxira nusxadan tiklash (parol).
+    pub fn join_household(
+        &self,
+        platform_secret: Vec<u8>,
+        pin: String,
+        file: Vec<u8>,
+        input: JoinInput,
+    ) -> Result<SetupResult, AppError> {
+        self.session
+            .join_household(&take_secret(platform_secret)?, &pin, &file, input)
+    }
+
+    pub fn devices(&self) -> Result<Vec<DeviceDto>, AppError> {
+        self.session.app()?.devices()
+    }
+
+    /// Shifrlangan `.baraka` fayl baytlari (Dart tomonida ulashish oynasi bilan saqlanadi).
+    pub fn export_baraka(&self, input: ExportInput) -> Result<ExportFileDto, AppError> {
+        self.session.app()?.export_baraka(input)
+    }
+
+    pub fn inspect_baraka(
+        &self,
+        file: Vec<u8>,
+        password: String,
+    ) -> Result<ImportPreviewDto, AppError> {
+        self.session.app()?.inspect_baraka(&file, &password)
+    }
+
+    pub fn apply_baraka(
+        &self,
+        file: Vec<u8>,
+        password: String,
+        choices: Vec<ConflictChoiceInput>,
+    ) -> Result<ImportResultDto, AppError> {
+        self.session.app()?.apply_baraka(&file, &password, choices)
+    }
+
+    /// Yangi qurilmani ulash: kod, QR (SVG) va shu kod bilan shifrlangan fayl.
+    pub fn pairing_offer(&self) -> Result<PairingOfferDto, AppError> {
+        self.session.app()?.pairing_offer()
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

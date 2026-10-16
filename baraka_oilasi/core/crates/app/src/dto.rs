@@ -1885,3 +1885,153 @@ pub struct AgreementSummaryDto {
     pub open_incidents: u32,
     pub open_disputes: u32,
 }
+
+// ---- U14: `.baraka` eksport/import va qurilmalarni ulash ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceDto {
+    pub id: String,
+    pub name: String,
+    pub platform: String,
+    pub paired_at: String,
+    /// Shu qurilma.
+    pub is_this: bool,
+    pub last_import_at: Option<String>,
+    pub last_export_at: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ExportInput {
+    pub password: String,
+    /// `FULL` (zaxira yoki birinchi sinxronlash) yoki `INCREMENTAL`.
+    pub mode: String,
+    /// Qaysi qurilma uchun (inkremental eksportda majburiy).
+    pub peer_device_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ExportFileDto {
+    pub export_id: String,
+    pub file_name: String,
+    pub mode: String,
+    pub rows: u32,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ImportItemDto {
+    /// `<jadval>:<kalit>` — ziddiyatni tanlashda shu kalit qaytariladi.
+    pub key: String,
+    pub table: String,
+    pub row_id: String,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct FieldDiffDto {
+    pub field: String,
+    /// Ko'rsatish uchun tayyor qiymat (summa — formatlangan).
+    pub local: String,
+    pub remote: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ConflictDto {
+    pub key: String,
+    pub table: String,
+    pub row_id: String,
+    pub label: String,
+    pub fields: Vec<FieldDiffDto>,
+    pub local_deleted: bool,
+    pub remote_deleted: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ForkDto {
+    pub agreement_id: String,
+    pub title: String,
+    pub seq: u32,
+    /// `FORK` (ayrilish), `TAMPERED` (fayldagi yozuv o'zgartirilgan), `NOT_KEEPER_WRITE`
+    /// (jurnalga hisob yurituvchi bo'lmagan qurilma yozgan).
+    pub reason: String,
+}
+
+/// Import oldidan: nima qo'shiladi, nima o'zgaradi, ziddiyatlar va to'xtatuvchi muammolar.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ImportPreviewDto {
+    pub source_device_id: String,
+    pub source_device_name: String,
+    pub mode: String,
+    pub exported_at: String,
+    pub rows: u32,
+    pub inserts: u32,
+    pub updates: u32,
+    pub same: u32,
+    pub kept_local: u32,
+    pub journal_appended: u32,
+    pub protected: Vec<ImportItemDto>,
+    pub conflicts: Vec<ConflictDto>,
+    pub forks: Vec<ForkDto>,
+    /// Ayrilish yo'q — import qilish mumkin (ziddiyatlar tanlangandan keyin).
+    pub can_apply: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ConflictChoiceInput {
+    pub key: String,
+    /// `LOCAL` yoki `REMOTE`.
+    pub choice: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ImportResultDto {
+    pub inserted: u32,
+    pub updated: u32,
+    pub conflicts_local: u32,
+    pub conflicts_remote: u32,
+    pub protected: u32,
+    pub journal_appended: u32,
+}
+
+/// Yangi qurilmani ulash (8.5): QR va qo'lda kiritiladigan kod, shu kod bilan shifrlangan fayl.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PairingOfferDto {
+    pub code: String,
+    pub qr_svg: String,
+    pub file_name: String,
+    pub household_name: String,
+    pub bytes: Vec<u8>,
+}
+
+/// Mavjud xonadonga qo'shilish yoki zaxira nusxadan tiklash.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct JoinInput {
+    /// Ulash kodi (QR'dan yoki qo'lda) yoki zaxira nusxa paroli.
+    pub secret: String,
+    pub device_name: String,
+    pub platform: String,
+}

@@ -24,6 +24,9 @@ pub enum StorageError {
     CorruptRow,
     #[error("LOCK_POISONED")]
     LockPoisoned,
+    /// Import: noma'lum jadval yoki ustun (boshqa sxema versiyasi).
+    #[error("INTERCHANGE_SCHEMA_MISMATCH")]
+    SchemaMismatch,
 }
 
 impl StorageError {
@@ -39,6 +42,7 @@ impl StorageError {
             Self::Sqlite(_) => "DB_ERROR",
             Self::CorruptRow => "CORRUPT_ROW",
             Self::LockPoisoned => "LOCK_POISONED",
+            Self::SchemaMismatch => "INTERCHANGE_SCHEMA_MISMATCH",
         }
     }
 }

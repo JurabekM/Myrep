@@ -8,6 +8,7 @@
 mod documents;
 mod engine;
 
+pub use documents::qr_svg;
 pub use documents::{
     AckLine, ArbiterFolder, CeremonyEstimate, ContractBuyout, ContractBuyoutRow, ContractCapital,
     ContractClause, ContractDuty, ContractParty, ContractSigner, EstimateAgreement, EstimateAnswer,

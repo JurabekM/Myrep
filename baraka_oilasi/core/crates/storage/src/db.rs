@@ -15,6 +15,7 @@ const MIGRATIONS_SLICE: &[M<'_>] = &[
     M::up(include_str!("../migrations/005_partnerships.sql")),
     M::up(include_str!("../migrations/006_ventures.sql")),
     M::up(include_str!("../migrations/007_governance.sql")),
+    M::up(include_str!("../migrations/008_sync.sql")),
 ];
 const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
@@ -103,7 +104,7 @@ mod tests {
         let key = DbKey::from_bytes([1; 32]);
         {
             let db = Database::open(&path, &key).unwrap();
-            assert_eq!(db.schema_version().unwrap(), 7);
+            assert_eq!(db.schema_version().unwrap(), 8);
         }
         let wrong = DbKey::from_bytes([2; 32]);
         assert!(matches!(

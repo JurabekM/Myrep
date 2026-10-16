@@ -24,6 +24,8 @@ pub struct App {
     pub(crate) ids: Arc<dyn IdGen>,
     pub(crate) device_id: String,
     events: EventBus,
+    /// `.baraka` eksportidagi Argon2id parametrlari (sessiya qurilmaga moslab beradi).
+    pub(crate) export_kdf: std::sync::Mutex<baraka_interchange::container::Kdf>,
 }
 
 /// Joriy xonadon sozlamalari (har bir use-case uchun o'qiladi).
@@ -72,6 +74,14 @@ impl App {
             ids,
             device_id: device_id.to_string(),
             events: EventBus::default(),
+            export_kdf: std::sync::Mutex::new(baraka_interchange::container::Kdf::STANDARD),
+        }
+    }
+
+    /// `.baraka` eksport kaliti uchun Argon2id parametrlari (`keys.bin` dagi bilan bir xil).
+    pub fn set_interchange_kdf(&self, m_kib: u32, t_cost: u32, p_cost: u32) {
+        if let Ok(mut k) = self.export_kdf.lock() {
+            *k = baraka_interchange::container::Kdf::argon2id(m_kib, t_cost, p_cost);
         }
     }
 

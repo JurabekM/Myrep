@@ -23,6 +23,8 @@ pub enum Topic {
     Ventures,
     Ideas,
     Governance,
+    Devices,
+    Sync,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

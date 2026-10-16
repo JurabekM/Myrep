@@ -77,3 +77,9 @@ impl From<baraka_journal::ChainError> for AppError {
         Self::new(e.code())
     }
 }
+
+impl From<baraka_interchange::InterchangeError> for AppError {
+    fn from(e: baraka_interchange::InterchangeError) -> Self {
+        Self::new(e.code())
+    }
+}

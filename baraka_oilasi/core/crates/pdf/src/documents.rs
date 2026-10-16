@@ -75,7 +75,8 @@ pub struct LoanReceipt {
     pub chain_short_code: Option<String>,
 }
 
-fn qr_svg(payload: &str) -> Result<Vec<u8>, PdfError> {
+/// QR kod SVG ko'rinishida (PDF ichida va qurilmani ulash ekranida).
+pub fn qr_svg(payload: &str) -> Result<Vec<u8>, PdfError> {
     let code =
         QrCode::with_error_correction_level(payload.as_bytes(), EcLevel::M).map_err(|e| {
             PdfError {

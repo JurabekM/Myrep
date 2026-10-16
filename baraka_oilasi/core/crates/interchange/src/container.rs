@@ -114,6 +114,32 @@ fn random<const N: usize>() -> Result<[u8; N], InterchangeError> {
     Ok(b)
 }
 
+/// Bir martalik ulash kodi (8.5): 20 tasodifiy bayt, base32, 4 belgidan guruhlangan
+/// (`ABCD-EFGH-…`, 32 belgi). QR orqali yoki qo'lda kiritiladi.
+pub fn pairing_code() -> Result<String, InterchangeError> {
+    let raw = data_encoding::BASE32_NOPAD.encode(&random::<20>()?);
+    let groups: Vec<String> = raw
+        .as_bytes()
+        .chunks(4)
+        .map(|c| String::from_utf8_lossy(c).into_owned())
+        .collect();
+    Ok(groups.join("-"))
+}
+
+/// Ulash kodini kalit uchun bir ko'rinishga keltiradi: katta harf, `-` va bo'shliqsiz.
+/// Kod emas (parol) bo'lsa — `None`.
+pub fn normalize_pairing_code(input: &str) -> Option<String> {
+    let s: String = input
+        .chars()
+        .filter(|c| !c.is_whitespace() && *c != '-')
+        .map(|c| c.to_ascii_uppercase())
+        .collect();
+    let ok = s.len() == 32
+        && s.bytes()
+            .all(|b| b.is_ascii_uppercase() || (b'2'..=b'7').contains(&b));
+    ok.then_some(s)
+}
+
 /// Tasodifiy salt va nonce bilan shifrlash.
 pub fn seal(plaintext: &[u8], password: &str, kdf: Kdf) -> Result<Vec<u8>, InterchangeError> {
     check_password(password)?;
@@ -277,6 +303,15 @@ mod tests {
             [0; 24],
         );
         assert_eq!(huge.err(), Some(InterchangeError::KdfParams));
+    }
+
+    #[test]
+    fn pairing_code_shape() {
+        let code = pairing_code().unwrap();
+        assert_eq!(code.len(), 39);
+        let norm = normalize_pairing_code(&code.to_lowercase().replace('-', " ")).unwrap();
+        assert_eq!(norm, code.replace('-', ""));
+        assert_eq!(normalize_pairing_code("maxfiy-parol"), None);
     }
 
     #[test]

@@ -129,6 +129,7 @@ impl Session {
             self.clock.clone(),
             self.ids.clone(),
         )?;
+        app.set_interchange_kdf(self.kdf.m_kib, self.kdf.t_cost, self.kdf.p_cost);
         Ok(Arc::new(app))
     }
 
@@ -182,6 +183,41 @@ impl Session {
         self.remove_db_files();
         let created = self.open_app(&db_key).and_then(|app| {
             let household = app.bootstrap(input)?;
+            self.save_keyfile(&kf)?;
+            Ok((app, household))
+        });
+        let (app, household) = match created {
+            Ok(v) => v,
+            Err(e) => {
+                self.remove_db_files();
+                return Err(e);
+            }
+        };
+        self.set_unlocked(app)?;
+        Ok(SetupResult {
+            household,
+            recovery_code: recovery.display_grouped().to_string(),
+        })
+    }
+
+    /// Yangi o'rnatish, lekin xonadon yaratilmaydi: mavjud xonadonga qo'shilish (ulash kodi
+    /// bilan) yoki zaxira nusxadan tiklash (parol bilan). Fayl avval tekshiriladi, keyin kalitlar.
+    pub fn join_household(
+        &self,
+        platform: &PlatformSecret,
+        pin: &str,
+        bytes: &[u8],
+        input: crate::JoinInput,
+    ) -> Result<SetupResult, AppError> {
+        if self.key_path().exists() {
+            return Err(AppError::new("ALREADY_INITIALIZED"));
+        }
+        fs::create_dir_all(&self.dir).map_err(io_err)?;
+        let pin = parse_pin(pin)?;
+        let (kf, db_key, recovery) = KeyFile::create(platform, &pin, self.kdf)?;
+        self.remove_db_files();
+        let created = self.open_app(&db_key).and_then(|app| {
+            let household = app.join_household(bytes, input)?;
             self.save_keyfile(&kf)?;
             Ok((app, household))
         });
@@ -335,6 +371,48 @@ mod tests {
         assert!(s.unlock(&platform, "112233").is_err());
         assert!(s.unlock(&platform, "445566").is_ok());
         assert!(s.confirm_pin(&platform, "445566").is_ok());
+    }
+
+    #[test]
+    fn join_existing_household_then_unlock_with_own_pin() {
+        let dir = tempfile::tempdir().unwrap();
+        let clock = Arc::new(FixedClock::new(Utc::now()));
+        let first = session(&dir.path().join("desktop"), clock.clone());
+        let p1 = PlatformSecret::generate().unwrap();
+        let h = first.setup(&p1, "112233", input()).unwrap().household;
+        let offer = first.app().unwrap().pairing_offer().unwrap();
+
+        let second_dir = dir.path().join("phone");
+        let second = session(&second_dir, clock.clone());
+        let p2 = PlatformSecret::generate().unwrap();
+        let join = |secret: &str| crate::JoinInput {
+            secret: secret.into(),
+            device_name: "Telefon".into(),
+            platform: "android".into(),
+        };
+        // Noto'g'ri kod: kalitlar ham, baza ham yaratilmaydi.
+        let err = second
+            .join_household(
+                &p2,
+                "445566",
+                &offer.bytes,
+                join("AAAA-BBBB-CCCC-DDDD-EEEE-FFFF-GGGG-HHHH"),
+            )
+            .unwrap_err();
+        assert_eq!(err.code, "INTERCHANGE_BAD_PASSWORD");
+        assert!(!second.status().unwrap().initialized);
+        assert!(!second_dir.join(DB_FILE).exists());
+
+        let joined = second
+            .join_household(&p2, "445566", &offer.bytes, join(&offer.code))
+            .unwrap();
+        assert_eq!(joined.household.id, h.id);
+        assert_eq!(joined.recovery_code.len(), 29);
+        second.lock().unwrap();
+        drop(second);
+        let second = session(&second_dir, clock);
+        assert_eq!(second.unlock(&p2, "445566").unwrap().id, h.id);
+        assert_eq!(second.app().unwrap().devices().unwrap().len(), 2);
     }
 
     #[test]
