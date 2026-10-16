@@ -30,6 +30,7 @@ export function useApplyAgreement(): (next: AgreementDto) => Promise<void> {
       queryClient.setQueryData(agreementKeys.one(next.id), next);
       await queryClient.invalidateQueries({ queryKey: agreementKeys.list });
       await queryClient.invalidateQueries({ queryKey: agreementKeys.center });
+      await queryClient.invalidateQueries({ queryKey: agreementKeys.partnerships });
       await queryClient.invalidateQueries({ queryKey: agreementKeys.ops(next.id) });
       await queryClient.invalidateQueries({ queryKey: agreementKeys.journal(next.id) });
     },

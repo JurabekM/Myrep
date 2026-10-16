@@ -55,7 +55,11 @@ export function AgreementOpsCard({ agreement }: { agreement: AgreementDto }) {
     return ops.isError ? <Alert>{t("errors.generic")}</Alert> : null;
   }
   const data = ops.data;
-  const openReview = data.reviews.find((r) => r.id === session);
+  // «latest» — endigina ochilgan ko'rik (ro'yxatdagi oxirgisi).
+  const openReview =
+    session === "latest"
+      ? data.reviews[data.reviews.length - 1]
+      : data.reviews.find((r) => r.id === session);
 
   return (
     <>
