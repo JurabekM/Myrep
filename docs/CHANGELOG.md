@@ -4,6 +4,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### GUI sinovi D10–D15 va tuzatishlar (2026-10-16)
+
+**Sinov tartibi.** `BARAKA_DATA_DIR` (yangi, faqat dev/sinov) bilan toza profil: `C:/Temp/claude/baraka-dev-profile`; test PIN `src-tauri/dev-test-pin.example` da. Haqiqiy Tauri oynasida (computer-use) quyidagilar bosib tekshirildi:
+
+- Onboarding 5 qadam → «Boshlash»; daromad 3 000 000 + «Kelajagim» ulushi.
+- **D10** Qarzlar: 70/20/10 (2,1 / 0,6 / 0,3 mln), jamg'arma 0 → «kamida 1 %» rad, rejim saqlandi; payoff 3 900 000 / 24 % / 14 oy / +160 000 → qarzsiz kun 2027-07-16, 6 oy erta, tejalgan 213 048,92, **ECharts grafigi chizildi** (patch ishlaydi), jadval.
+- **D11** Marosimlar: marosim, 2 stsenariy, qatorlar (jamg'arma/qarz), taqqoslash («qarzni to'lash muddati 14 oy»), muhokamasiz tasdiq o'tmadi → muhokama → tasdiqlandi, smeta PDF, maqsad.
+- **D12** Sheriklik: darvoza yopiq — kapital egasi rad; mehnat egasi → usta 9/9 (hamma savol), 3 imzo (canvas); «Imzolashni yakunlash» → «Oilaviy rozilik kerak» rad; rozilik «Nodira» → SIGNED; buyout jadvali 3 × 1 000 000.
+- **D13** Kassa daftari: kirim 6 000 000, xarajat 2 500 000, davr yopildi → Anvar 2 100 000 (buyout ayirmasi 1 000 000), Dilshod 1 400 000; jurnal 5 yozuv zanjir to'g'ri; buyout 1-bo'lak ✓ (66,6 %); davr hisoboti PDF; «Hunardan ishga» hisob; detektor → qizil.
+- **D13A** Hodisa (band bilan) → yopildi; ko'rik sessiyasi (to'liq ekran): rozi / e'tiroz izoh bilan, bayonnoma PDF; nizo → «taqsimot bloklangan», hakam papkasi PDF (30 KB), qaror + yangi versiya (11); markaz jadvali; oilaviy shablon → a'zo PIN (Oila kengashi) → tasdiq → SIGNED; «o'zgarishsiz tasdiqlash» → 3-versiya.
+- **D14** Sozlamalar: eksport (43 jadval, 46 qator), import — noto'g'ri parol aniq xabar, ko'rik 0/0/0, qo'llandi.
+
+**Topilgan va tuzatilgan**
+
+- Sheriklik kartasi kelishuv ustasidagi o'zgarishdan keyin yangilanmasdi («Tomonlar hali kiritilmagan», 1-versiya) — `useApplyAgreement` endi `partnerships` keshini ham bekor qiladi.
+- Yangi ko'rik ochilganda sessiya avtomatik ochilmasdi («latest» identifikatori) — tuzatildi.
+- Kosmetika: payoff ko'rsatkichlari va hodisa/ledger formalari tor oynada 4–5 ustun o'rniga 2 ustun (`xl` da avvalgidek).
+- NSIS: `displayLanguageSelector: true` bo'lsa `/S` (silent) o'rnatish ham «Installer Language» dialogini ko'rsatadi va to'xtab qoladi — selektor o'chirildi (NSIS tizim tilini o'zi tanlaydi: uz/ru/en).
+- Xonadon qoidasi (D14) ilova ichida: bo'sh «urug'» daftar kiruvchi xonadonga bo'shatiladi, yozuvli daftar — `household_mismatch` bilan to'xtaydi (OPEN_QUESTIONS 15 hal qilindi).
+
+**O'rnatuvchi sinovi:** 2026-10-16 — `/S` jim o'rnatish exit 0 → `%LOCALAPPDATA%/Baraka Daftari` (reestr Uninstall 0.1.0), `uninstall.exe /S` exit 0, qayta o'rnatish exit 0. O'rnatilgan exe toza profil (`BARAKA_DATA_DIR`) bilan ishga tushdi: **sovuq start 216 ms** (jarayon → asosiy oyna dastagi). O'rnatilgan ilova oynasiga computer-use ruxsati foydalanuvchi tomonidan rad etilgani uchun release oynasida tugmalar bosilmadi (dev build'da bosilgan); bu qadam foydalanuvchi uchun RELEASE_CHECKLIST 3-bo'limda qoldi. Eslatma: `%LOCALAPPDATA%/Baraka Daftari/export-bindings.exe` — 2026-10-12 dagi eski o'rnatishdan qolgan fayl (yangi o'rnatuvchida yo'q; uninstaller faqat o'zi o'rnatgan fayllarni o'chiradi) — qo'lda o'chirish mumkin.
+
 ### D15 — Reliz tayyorgarligi (2026-10-15)
 
 **Qo'shildi**

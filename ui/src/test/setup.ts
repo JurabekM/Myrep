@@ -6,7 +6,7 @@ try {
 } catch {
   // jsdom'da localStorage bor; yo'q bo'lsa — dialog ko'rinadi, testlar buni hisobga oladi.
 }
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
 
 // jsdom'da ResizeObserver yo'q, Radix (tooltip, popper) esa unga tayanadi. Test uchun bo'sh stub.
@@ -22,6 +22,9 @@ class ResizeObserverStub {
   }
 }
 globalThis.ResizeObserver = ResizeObserverStub;
+
+// findBy*/waitFor: parallel yuklama (masalan, cargo build) ostida 1 s yetmaydi — 5 s.
+configure({ asyncUtilTimeout: 5000 });
 
 // Vitest globals yoqilmagan: har testdan keyin DOM ni qo'lda tozalaymiz.
 afterEach(() => {

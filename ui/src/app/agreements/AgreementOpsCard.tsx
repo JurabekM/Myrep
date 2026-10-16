@@ -193,7 +193,7 @@ function IncidentsSection({ agreement, ops }: { agreement: AgreementDto; ops: Ag
         </p>
       ) : null}
       <form
-        className="grid gap-3 sm:grid-cols-5"
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
         onSubmit={(event: SyntheticEvent<HTMLFormElement>) => {
           event.preventDefault();
           void run(() =>
@@ -577,7 +577,7 @@ function DisputesSection({ agreement, ops }: { agreement: AgreementDto; ops: Agr
       ) : null}
       {ops.status === "SIGNED" ? (
         <form
-          className="grid gap-3 sm:grid-cols-5"
+          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
           onSubmit={(event: SyntheticEvent<HTMLFormElement>) => {
             event.preventDefault();
             void run(() =>

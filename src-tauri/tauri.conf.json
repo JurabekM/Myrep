@@ -47,7 +47,7 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser",
-        "displayLanguageSelector": true,
+        "displayLanguageSelector": false,
         "languages": ["Uzbek", "Russian", "English"]
       }
     }

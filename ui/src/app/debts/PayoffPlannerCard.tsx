@@ -212,7 +212,7 @@ function PayoffResult({ result }: { result: PayoffDto }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label={t("payoff.payment")} value={result.standard.payment.formatted} />
         <Stat
           label={t("payoff.debtFreeStandard")}

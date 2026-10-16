@@ -146,7 +146,10 @@ export function VentureCard({ partnership }: { partnership: PartnershipDto }) {
       )}
       {data.canWrite ? (
         <>
-          <form className="grid gap-3 sm:grid-cols-5" onSubmit={(event) => void addEntry(event)}>
+          <form
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
+            onSubmit={(event) => void addEntry(event)}
+          >
             <div className="flex flex-col gap-2">
               <label htmlFor={`venture-kind-${partnership.id}`} className="text-sm text-muted">
                 {t("venture.kindLabel")}
