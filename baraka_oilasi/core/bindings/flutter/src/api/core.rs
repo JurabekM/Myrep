@@ -716,6 +716,197 @@ impl BarakaCore {
         self.session.app()?.check_offer(input)
     }
 
+    // U13: vazifa hodisalari, ochiq hisob ko'rigi, «katta foyda», nizo va hakam, yillik
+    // yangilash, oilaviy kelishuvlar va kelishuvlar markazi.
+    pub fn governance(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session.app()?.governance(&space_id, &partnership_id)
+    }
+
+    pub fn report_duty_incident(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: IncidentInput,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session
+            .app()?
+            .report_duty_incident(&space_id, &partnership_id, input)
+    }
+
+    pub fn resolve_duty_incident(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        incident_id: String,
+        note: String,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session
+            .app()?
+            .resolve_duty_incident(&space_id, &partnership_id, &incident_id, &note)
+    }
+
+    pub fn review_draft(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        to_on: String,
+    ) -> Result<ReviewDraftDto, AppError> {
+        self.session
+            .app()?
+            .review_draft(&space_id, &partnership_id, &to_on)
+    }
+
+    pub fn hold_review(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: HoldReviewInput,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session
+            .app()?
+            .hold_review(&space_id, &partnership_id, input)
+    }
+
+    /// Ko'rik bayonnomasi PDF baytlari (zanjir boshi QR bilan).
+    pub fn review_pdf(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        review_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session
+            .app()?
+            .review_pdf(&space_id, &partnership_id, &review_id)
+    }
+
+    pub fn acknowledge_spike_reread(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        party_id: String,
+    ) -> Result<VentureLedgerDto, AppError> {
+        self.session
+            .app()?
+            .acknowledge_spike_reread(&space_id, &partnership_id, &party_id)
+    }
+
+    pub fn open_partnership_dispute(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: OpenDisputeInput,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session
+            .app()?
+            .open_partnership_dispute(&space_id, &partnership_id, input)
+    }
+
+    pub fn add_dispute_claim(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        dispute_id: String,
+        input: DisputeClaimInput,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session
+            .app()?
+            .add_dispute_claim(&space_id, &partnership_id, &dispute_id, input)
+    }
+
+    pub fn record_arbiter_decision(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        dispute_id: String,
+        input: DecisionInput,
+    ) -> Result<GovernanceDto, AppError> {
+        self.session
+            .app()?
+            .record_arbiter_decision(&space_id, &partnership_id, &dispute_id, input)
+    }
+
+    /// «Hakam uchun ish papkasi» PDF baytlari.
+    pub fn dispute_folder_pdf(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        dispute_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session
+            .app()?
+            .dispute_folder_pdf(&space_id, &partnership_id, &dispute_id)
+    }
+
+    pub fn renew_partnership(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .renew_partnership(&space_id, &partnership_id)
+    }
+
+    pub fn family_agreements(&self, space_id: String) -> Result<Vec<FamilyAgreementDto>, AppError> {
+        self.session.app()?.family_agreements(&space_id)
+    }
+
+    pub fn create_family_agreement(
+        &self,
+        space_id: String,
+        input: FamilyAgreementInput,
+    ) -> Result<FamilyAgreementDto, AppError> {
+        self.session
+            .app()?
+            .create_family_agreement(&space_id, input)
+    }
+
+    pub fn update_family_agreement(
+        &self,
+        space_id: String,
+        id: String,
+        input: FamilyAgreementInput,
+    ) -> Result<FamilyAgreementDto, AppError> {
+        self.session
+            .app()?
+            .update_family_agreement(&space_id, &id, input)
+    }
+
+    /// Katta a'zoning tasdig'i: PIN qayta so'raladi.
+    pub fn confirm_family_agreement(
+        &self,
+        platform_secret: Vec<u8>,
+        space_id: String,
+        pin: String,
+        id: String,
+        member_id: String,
+    ) -> Result<FamilyAgreementDto, AppError> {
+        self.session
+            .confirm_pin(&take_secret(platform_secret)?, &pin)?;
+        self.session
+            .app()?
+            .confirm_family_agreement(&space_id, &id, &member_id)
+    }
+
+    pub fn delete_family_agreement(&self, space_id: String, id: String) -> Result<(), AppError> {
+        self.session.app()?.delete_family_agreement(&space_id, &id)
+    }
+
+    pub fn agreement_reminders(&self, space_id: String) -> Result<Vec<ReminderDto>, AppError> {
+        self.session.app()?.agreement_reminders(&space_id)
+    }
+
+    pub fn agreements_center(
+        &self,
+        space_id: String,
+    ) -> Result<Vec<AgreementSummaryDto>, AppError> {
+        self.session.app()?.agreements_center(&space_id)
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

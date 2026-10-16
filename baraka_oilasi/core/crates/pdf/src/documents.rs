@@ -10,6 +10,8 @@ const LOAN_RECEIPT: &str = include_str!("../../../../shared/pdf/loan_receipt.typ
 const CEREMONY_ESTIMATE: &str = include_str!("../../../../shared/pdf/ceremony_estimate.typ");
 const PARTNERSHIP_CONTRACT: &str = include_str!("../../../../shared/pdf/partnership_contract.typ");
 const VENTURE_REPORT: &str = include_str!("../../../../shared/pdf/venture_report.typ");
+const REVIEW_PROTOCOL: &str = include_str!("../../../../shared/pdf/review_protocol.typ");
+const ARBITER_FOLDER: &str = include_str!("../../../../shared/pdf/arbiter_folder.typ");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PdfLocale {
@@ -430,5 +432,179 @@ impl VentureReport {
         });
         let files = vec![("qr.svg", qr_svg(&self.chain_head)?)];
         engine.render(VENTURE_REPORT, &data, &files, &self.ident, today)
+    }
+}
+
+/// Vazifa hodisasi (tayyor matnlar).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct IncidentLine {
+    pub date: String,
+    pub duty: String,
+    pub party: String,
+    pub reason: String,
+    pub solution: String,
+    /// `OPEN` yoki `RESOLVED`.
+    pub status: String,
+}
+
+/// Bayonnomadagi tomon belgisi: `AGREE` yoki `OBJECT` + izoh.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct AckLine {
+    pub party: String,
+    pub verdict: String,
+    pub note: String,
+}
+
+/// Ochiq hisob ko'rigi bayonnomasi (uy/SPEC 2F.5): davr yozuvlari, yakun, ochiq hodisalar,
+/// tomonlar belgisi va o'sha paytdagi zanjir boshi (6.5 bloki).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReviewProtocol {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub title: String,
+    pub review_no: u32,
+    pub range: String,
+    pub held_on: String,
+    /// `SCHEDULED`, `PROFIT_SPIKE`, `EXTRA`.
+    pub reason: String,
+    pub version: String,
+    pub totals: Vec<(String, String)>,
+    pub entries: Vec<ReportEntry>,
+    pub incidents: Vec<IncidentLine>,
+    pub acks: Vec<AckLine>,
+    pub chain_ok: bool,
+    pub chain_head: String,
+    pub chain_short_code: String,
+}
+
+impl ReviewProtocol {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = labels
+            .get("protocol.title")
+            .and_then(Value::as_str)
+            .unwrap_or("Bayonnoma")
+            .to_string();
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.title),
+            "name": self.title,
+            "labels": labels,
+            "reviewNo": self.review_no,
+            "range": self.range,
+            "heldOn": self.held_on,
+            "reason": self.reason,
+            "version": self.version,
+            "totals": self.totals,
+            "entries": self.entries,
+            "incidents": self.incidents,
+            "acks": self.acks,
+            "chainOk": self.chain_ok,
+            "chain_short_code": self.chain_short_code,
+        });
+        let files = vec![("qr.svg", qr_svg(&self.chain_head)?)];
+        engine.render(REVIEW_PROTOCOL, &data, &files, &self.ident, today)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct FolderVersion {
+    pub no: String,
+    pub date: String,
+    pub hash_code: String,
+    pub signatures: String,
+    pub note: String,
+    pub in_force: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct FolderPeriod {
+    pub title: String,
+    pub totals: Vec<(String, String)>,
+    pub entries: Vec<ReportEntry>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct FolderReview {
+    pub no: String,
+    pub range: String,
+    pub held_on: String,
+    pub acks: Vec<AckLine>,
+    pub chain_code: String,
+    /// `INTACT`, `CHAIN_BROKEN`, `HEAD_MISMATCH`, `TRUNCATED`.
+    pub integrity: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct FolderClaim {
+    pub party: String,
+    pub claim: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct FolderDecision {
+    pub decided_on: String,
+    pub arbiter: String,
+    pub decision: String,
+    /// `RESUME` yoki `AMEND`.
+    pub outcome: String,
+}
+
+/// «Hakam uchun ish papkasi» (uy/SPEC 2F.8): bitta PDF, mundarija va sahifa raqamlari bilan.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArbiterFolder {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub title: String,
+    pub kind: String,
+    pub arbiter: String,
+    pub opened_on: String,
+    pub opened_by: String,
+    pub subject: String,
+    pub clauses: String,
+    pub claims: Vec<FolderClaim>,
+    /// Amaldagi shartnomaning asosiy shartlari (i18n kaliti, qiymat).
+    pub terms: Vec<(String, String)>,
+    pub versions: Vec<FolderVersion>,
+    pub periods: Vec<FolderPeriod>,
+    pub chain_ok: bool,
+    pub chain_entries: u32,
+    pub chain_short_code: String,
+    pub reviews: Vec<FolderReview>,
+    pub incidents: Vec<IncidentLine>,
+    pub decision: Option<FolderDecision>,
+}
+
+impl ArbiterFolder {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = labels
+            .get("folder.title")
+            .and_then(Value::as_str)
+            .unwrap_or("Hakam uchun ish papkasi")
+            .to_string();
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.title),
+            "name": self.title,
+            "labels": labels,
+            "kind": self.kind,
+            "arbiter": self.arbiter,
+            "openedOn": self.opened_on,
+            "openedBy": self.opened_by,
+            "subject": self.subject,
+            "clauses": self.clauses,
+            "claims": self.claims,
+            "terms": self.terms,
+            "versions": self.versions,
+            "periods": self.periods,
+            "chainOk": self.chain_ok,
+            "chainEntries": self.chain_entries,
+            "chainCode": self.chain_short_code,
+            "reviews": self.reviews,
+            "incidents": self.incidents,
+            "decision": self.decision,
+        });
+        engine.render(ARBITER_FOLDER, &data, &[], &self.ident, today)
     }
 }

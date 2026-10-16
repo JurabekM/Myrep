@@ -3,7 +3,9 @@
 
 use baraka_journal::{verify_chain, EntryKind, JournalAmount, JournalEntry};
 use baraka_security::DbKey;
-use baraka_storage::repo::{agreements, categories, household, journal, partnerships, ventures};
+use baraka_storage::repo::{
+    agreements, categories, governance, household, journal, partnerships, ventures,
+};
 use baraka_storage::{Database, Meta, SpaceScope, StorageError};
 
 fn meta() -> Meta {
@@ -408,6 +410,102 @@ fn venture_ledger_and_closed_periods_are_immutable() {
         "DELETE FROM venture_attachments WHERE id = 'a1'",
         "UPDATE venture_periods SET result_minor = 1 WHERE id = 'per-1'",
         "DELETE FROM venture_periods WHERE id = 'per-1'",
+    ] {
+        let r = db.write(|tx| Ok(tx.execute(sql, [])?));
+        assert!(matches!(r, Err(StorageError::EvidenceImmutable)), "{sql}");
+    }
+}
+
+#[test]
+fn governance_records_are_immutable() {
+    let (db, uy, _) = setup();
+    let m = meta();
+    db.write(|tx| {
+        agreements::insert(
+            tx,
+            &uy,
+            &agreements::AgreementRow {
+                id: "agr-g".into(),
+                agreement_type: "PARTNERSHIP".into(),
+                status: "ACTIVE".into(),
+                title: "Tikuv".into(),
+                keeper_device_id: "dev-1".into(),
+            },
+            &m,
+        )?;
+        partnerships::insert(
+            tx,
+            &uy,
+            &partnerships::PartnershipRow {
+                id: "p-g".into(),
+                agreement_id: "agr-g".into(),
+                kind: "MUDARABA".into(),
+                title: "Tikuv".into(),
+                status: "ACTIVE".into(),
+                currency: "UZS".into(),
+                signed_version: Some(1),
+                not_debt_ack_on: None,
+                gate_json: None,
+                activated_on: Some("2026-11-01".into()),
+                closed_on: None,
+            },
+            &m,
+        )?;
+        governance::insert_dispute(
+            tx,
+            &uy,
+            &governance::DisputeRow {
+                id: "d1".into(),
+                partnership_id: "p-g".into(),
+                opened_on: "2026-12-01".into(),
+                opened_by_party: "P1".into(),
+                subject: "Foyda".into(),
+                clauses_json: "[4]".into(),
+            },
+            &m,
+        )?;
+        governance::insert_decision(
+            tx,
+            &uy,
+            &governance::DecisionRow {
+                dispute_id: "d1".into(),
+                decided_on: "2026-12-05".into(),
+                arbiter_name: "Hamid aka".into(),
+                decision: "Davom etadi".into(),
+                outcome: "RESUME".into(),
+            },
+            &m,
+        )
+    })
+    .unwrap();
+    assert_eq!(
+        db.read(|c| governance::decision(c, &uy, "d1"))
+            .unwrap()
+            .unwrap()
+            .outcome,
+        "RESUME"
+    );
+    // Ikkinchi qaror — yo'q (bitta nizoga bitta qaror).
+    let again = db.write(|tx| {
+        governance::insert_decision(
+            tx,
+            &uy,
+            &governance::DecisionRow {
+                dispute_id: "d1".into(),
+                decided_on: "2026-12-06".into(),
+                arbiter_name: "x".into(),
+                decision: "x".into(),
+                outcome: "AMEND".into(),
+            },
+            &m,
+        )
+    });
+    assert!(again.is_err());
+    for sql in [
+        "UPDATE disputes SET subject = 'x' WHERE id = 'd1'",
+        "DELETE FROM disputes WHERE id = 'd1'",
+        "UPDATE arbiter_decisions SET outcome = 'AMEND' WHERE dispute_id = 'd1'",
+        "DELETE FROM arbiter_decisions WHERE dispute_id = 'd1'",
     ] {
         let r = db.write(|tx| Ok(tx.execute(sql, [])?));
         assert!(matches!(r, Err(StorageError::EvidenceImmutable)), "{sql}");

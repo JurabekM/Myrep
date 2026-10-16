@@ -10,6 +10,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use baraka_domain_uy::partnership::{Negligence, Partner, PartnerRole, PartnershipKind};
+use baraka_domain_uy::spike::{profit_spike, SpikePolicy};
 use baraka_domain_uy::venture::{
     close_period, offer_check, venture_idea, BuyoutDue, EntryKind as VKind, IdeaInput,
     IdeaScenario, Installment, LossPolicy, OfferAnswers, PeriodEntry, PeriodInput, PeriodResult,
@@ -20,6 +21,7 @@ use baraka_journal::{
 };
 use baraka_money::{format, format_plain, Currency, Money};
 use baraka_pdf::{ReportBuyout, ReportEntry, ReportParty, VentureReport};
+use baraka_storage::repo::governance as grepo;
 use baraka_storage::repo::partnerships::{self as prepo, PartnershipRow};
 use baraka_storage::repo::ventures::{
     self as repo, AttachmentMeta, AttachmentRow, EntryRow, IdeaRow, PeriodRow, SkillRow,
@@ -70,7 +72,7 @@ fn ymd_parse(s: &str) -> Result<NaiveDate, AppError> {
     NaiveDate::parse_from_str(s, "%Y-%m-%d").map_err(|_| corrupt())
 }
 
-fn show(d: &str) -> String {
+pub(crate) fn show(d: &str) -> String {
     NaiveDate::parse_from_str(d, "%Y-%m-%d")
         .map_or_else(|_| d.to_string(), |x| x.format("%d.%m.%Y").to_string())
 }
@@ -83,7 +85,7 @@ fn sign(kind: &str) -> i64 {
     }
 }
 
-fn effect(e: &EntryRow) -> Result<i64, AppError> {
+pub(crate) fn effect(e: &EntryRow) -> Result<i64, AppError> {
     e.amount_minor
         .checked_mul(sign(&e.kind))
         .ok_or_else(overflow)
@@ -108,7 +110,7 @@ fn sniff(b: &[u8]) -> Option<&'static str> {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct StoredParty {
+pub(crate) struct StoredParty {
     id: String,
     name: String,
     role: String,
@@ -122,7 +124,7 @@ struct StoredParty {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct StoredBuyout {
+pub(crate) struct StoredBuyout {
     paid: Vec<u32>,
     unpaid: Vec<u32>,
     amount: i64,
@@ -131,26 +133,31 @@ struct StoredBuyout {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct StoredNegligence {
+pub(crate) struct StoredNegligence {
     party_id: String,
     note: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct StoredPeriod {
-    entries: u32,
-    income: i64,
-    expense: i64,
-    force_majeure: i64,
-    corrections: i64,
-    result: i64,
-    distributable: i64,
-    parties: Vec<StoredParty>,
-    buyout: Option<StoredBuyout>,
-    negligence: Option<StoredNegligence>,
-    my_income: i64,
-    income_ids: Vec<String>,
+pub(crate) struct StoredPeriod {
+    pub(crate) entries: u32,
+    pub(crate) income: i64,
+    pub(crate) expense: i64,
+    pub(crate) force_majeure: i64,
+    pub(crate) corrections: i64,
+    pub(crate) result: i64,
+    pub(crate) distributable: i64,
+    pub(crate) parties: Vec<StoredParty>,
+    pub(crate) buyout: Option<StoredBuyout>,
+    pub(crate) negligence: Option<StoredNegligence>,
+    pub(crate) my_income: i64,
+    pub(crate) income_ids: Vec<String>,
+    /// «Katta foyda» aniqlangan va shu davr uchun qayta o'qigan tomonlar (U13).
+    #[serde(default)]
+    pub(crate) spike: bool,
+    #[serde(default)]
+    pub(crate) spike_rereads: Vec<String>,
 }
 
 // ---- «Hunardan ishga» saqlanadigan JSON ----
@@ -171,20 +178,26 @@ struct ScenarioJ {
 }
 
 /// Daftar holati: kuchdagi shartnoma shartlari, yozuvlar, yopilgan davrlar va zanjir.
-struct Ledger {
-    row: PartnershipRow,
-    terms: Payload,
-    version: i64,
-    cur: Currency,
-    entries: Vec<EntryRow>,
-    attachments: Vec<AttachmentMeta>,
-    periods: Vec<(PeriodRow, StoredPeriod)>,
-    start: NaiveDate,
-    keeper: Option<String>,
-    read_only: Option<&'static str>,
-    hashes: BTreeMap<String, String>,
-    head: String,
-    chain_ok: bool,
+pub(crate) struct Ledger {
+    pub(crate) row: PartnershipRow,
+    pub(crate) terms: Payload,
+    pub(crate) version: i64,
+    pub(crate) cur: Currency,
+    pub(crate) entries: Vec<EntryRow>,
+    pub(crate) attachments: Vec<AttachmentMeta>,
+    pub(crate) periods: Vec<(PeriodRow, StoredPeriod)>,
+    pub(crate) start: NaiveDate,
+    pub(crate) keeper: Option<String>,
+    pub(crate) read_only: Option<&'static str>,
+    pub(crate) hashes: BTreeMap<String, String>,
+    pub(crate) head: String,
+    pub(crate) chain_ok: bool,
+    /// Ochiq nizo (hakam qarori hali yo'q) — taqsimot bloklanadi.
+    pub(crate) in_dispute: bool,
+    /// Oxirgi ko'rik bayonnomasi qamragan sana: undan oldingi sanaga faqat tuzatish yoziladi.
+    pub(crate) reviewed_to: Option<String>,
+    /// Keyingi davr uchun 4–5-bandlarni qayta o'qigan tomonlar.
+    pub(crate) next_rereads: Vec<String>,
 }
 
 /// Davr boshidagi holat: kapital qoldiqlari, tiklanmagan zararlar, to'langan buyout bosqichlari.
@@ -195,11 +208,11 @@ struct State {
 }
 
 impl Ledger {
-    fn last_end(&self) -> Option<&str> {
+    pub(crate) fn last_end(&self) -> Option<&str> {
         self.periods.last().map(|(p, _)| p.end_on.as_str())
     }
 
-    fn open_from(&self) -> Result<NaiveDate, AppError> {
+    pub(crate) fn open_from(&self) -> Result<NaiveDate, AppError> {
         match self.last_end() {
             None => Ok(self.start),
             Some(e) => ymd_parse(e)?
@@ -241,6 +254,33 @@ impl Ledger {
         }
     }
 
+    /// «Katta foyda» (2F.7): reja — buyout'dagi kutilgan davr foydasi, tarix — oxirgi 3 davr.
+    fn spike(&self, result: i64) -> Result<bool, AppError> {
+        let plan = self
+            .terms
+            .buyout
+            .as_ref()
+            .and_then(|b| b.expected_profit_minor)
+            .map(|m| Money::new(m, self.cur));
+        let n = self.periods.len();
+        let last = (n >= 3)
+            .then(|| [0, 1, 2].map(|k| Money::new(self.periods[n - 3 + k].1.result, self.cur)));
+        Ok(profit_spike(
+            plan,
+            last,
+            Money::new(result, self.cur),
+            SpikePolicy::default(),
+        )?)
+    }
+
+    /// Barcha tomonlar 4–5-bandlarni qayta o'qiganmi.
+    pub(crate) fn rereads_complete(&self) -> bool {
+        self.terms
+            .parties
+            .iter()
+            .all(|p| self.next_rereads.contains(&p.id))
+    }
+
     fn period_of(&self, d: &str) -> Option<u32> {
         self.periods
             .iter()
@@ -250,7 +290,7 @@ impl Ledger {
 }
 
 impl App {
-    fn venture_book(&self, scope: &SpaceScope, id: &str) -> Result<Ledger, AppError> {
+    pub(crate) fn venture_book(&self, scope: &SpaceScope, id: &str) -> Result<Ledger, AppError> {
         let row = self.partnership_row(scope, id)?;
         let version = row.signed_version.ok_or(AppError::new("NOT_ACTIVE"))?;
         if row.activated_on.is_none() {
@@ -309,6 +349,14 @@ impl App {
             .cloned()
             .unwrap_or_else(|| GENESIS_HASH.to_string());
         let hashes = stored.into_iter().map(|s| (s.entry.id, s.hash)).collect();
+        let in_dispute = self.open_dispute(scope, id)?.is_some();
+        let reviewed_to = self
+            .db
+            .read(|c| grepo::reviews(c, scope, id))?
+            .last()
+            .map(|r| r.to_on.clone());
+        let next_no = i64::try_from(periods.len() + 1).map_err(|_| overflow())?;
+        let next_rereads = self.db.read(|c| grepo::rereads(c, scope, id, next_no))?;
         Ok(Ledger {
             row,
             terms,
@@ -323,6 +371,9 @@ impl App {
             hashes,
             head,
             chain_ok,
+            in_dispute,
+            reviewed_to,
+            next_rereads,
         })
     }
 
@@ -481,6 +532,8 @@ impl App {
             }),
             my_income: l.me_index().map_or(0, |i| r.payouts[i].minor()),
             income_ids: Vec::new(),
+            spike: false,
+            spike_rereads: Vec::new(),
         }
     }
 
@@ -543,10 +596,17 @@ impl App {
             negligence_note: s.negligence.as_ref().map(|n| n.note.clone()),
             my_income: m(s.my_income),
             chain_code: chain.map(short_code),
+            profit_spike: s.spike,
+            spike_rereads: s.spike_rereads.clone(),
         }
     }
 
-    fn entry_dto(&self, ctx: &Ctx, l: &Ledger, e: &EntryRow) -> Result<VentureEntryDto, AppError> {
+    pub(crate) fn entry_dto(
+        &self,
+        ctx: &Ctx,
+        l: &Ledger,
+        e: &EntryRow,
+    ) -> Result<VentureEntryDto, AppError> {
         let m = |v: i64| self.money_dto(ctx, Money::new(v, l.cur));
         Ok(VentureEntryDto {
             id: e.id.clone(),
@@ -688,6 +748,7 @@ impl App {
             chain_code: short_code(&l.head),
             chain_ok: l.chain_ok,
             loss_policy: LossPolicy::default().as_str().into(),
+            in_dispute: l.in_dispute,
         })
     }
 
@@ -726,6 +787,14 @@ impl App {
         }
         if on < l.open_from()? {
             return Err(AppError::on("PERIOD_CLOSED", "occurredOn"));
+        }
+        // Ko'rik bayonnomasi qamragan sanalarga yangi yozuv emas, faqat tuzatish (2F.5).
+        if kind != VKind::Correction
+            && l.reviewed_to
+                .as_deref()
+                .is_some_and(|t| ymd(on).as_str() <= t)
+        {
+            return Err(AppError::on("PERIOD_REVIEWED", "occurredOn"));
         }
         let note = clean_opt(input.note.as_deref());
         let category = match kind {
@@ -919,7 +988,9 @@ impl App {
             return Err(AppError::on("PERIOD_EMPTY", "endOn"));
         }
         let r = close_period(&pi)?;
-        let s = Self::stored(&l, &pi, &r, count);
+        let mut s = Self::stored(&l, &pi, &r, count);
+        s.spike = l.spike(s.result)?;
+        s.spike_rereads = l.next_rereads.clone();
         Ok(self.period_dto(
             &ctx,
             &l,
@@ -945,6 +1016,9 @@ impl App {
         let scope = self.scope(&ctx, space_id)?;
         let l = self.venture_book(&scope, partnership_id)?;
         Self::writable(&l)?;
+        if l.in_dispute {
+            return Err(AppError::new("IN_DISPUTE"));
+        }
         if !matches!(input.channel.as_str(), "CASH" | "CARD") {
             return Err(AppError::on("INVALID_CHANNEL", "channel"));
         }
@@ -956,6 +1030,11 @@ impl App {
         }
         let r = close_period(&pi)?;
         let mut s = Self::stored(&l, &pi, &r, count);
+        s.spike = l.spike(s.result)?;
+        if s.spike && !l.rereads_complete() {
+            return Err(AppError::new("PROFIT_SPIKE_ACK_REQUIRED"));
+        }
+        s.spike_rereads = l.next_rereads.clone();
         let no = i64::try_from(l.periods.len() + 1).map_err(|_| overflow())?;
         let end_s = ymd(end);
         let cur = l.cur.code().to_string();

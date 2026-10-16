@@ -12,6 +12,7 @@ mod debts;
 mod dto;
 mod error;
 mod events;
+mod governance;
 mod partnership;
 mod receipt;
 mod recovery;

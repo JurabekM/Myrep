@@ -108,3 +108,41 @@ pub fn get(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<AgreementR
     )
     .optional()?)
 }
+
+/// Makondagi barcha kelishuvlar (kelishuvlar markazi uchun), yaratilish tartibida.
+pub fn list(c: &Connection, s: &SpaceScope) -> Result<Vec<AgreementRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, type, status, title, keeper_device_id FROM agreements
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL ORDER BY created_at, rowid",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(AgreementRow {
+            id: r.get(0)?,
+            agreement_type: r.get(1)?,
+            status: r.get(2)?,
+            title: r.get(3)?,
+            keeper_device_id: r.get(4)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+pub fn set_title(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    title: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "title", title, m)
+}
+
+/// Yumshoq o'chirish (faqat jurnali yo'q kelishuvlar uchun — chaqiruvchi tekshiradi).
+pub fn delete(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "deleted_at", &m.now, m)
+}

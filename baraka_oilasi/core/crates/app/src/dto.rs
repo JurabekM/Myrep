@@ -1148,6 +1148,8 @@ pub struct SignerDto {
 pub struct VersionInfoDto {
     pub no: u32,
     pub created_on: String,
+    /// `RENEWED_UNCHANGED` — yillik yangilash, matn o'zgarmagan (2F.3).
+    pub change_note: Option<String>,
     pub signed: u32,
     pub required: u32,
     pub in_force: bool,
@@ -1223,6 +1225,7 @@ pub struct PartnershipDto {
     pub template_review: String,
     /// Joriy matn xeshining qisqa kodi.
     pub hash_code: String,
+    pub in_dispute: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1233,6 +1236,8 @@ pub struct PartnershipSummaryDto {
     pub kind: String,
     pub title: String,
     pub status: String,
+    /// Ochiq nizo bor — taqsimot to'xtatilgan (2F.8).
+    pub in_dispute: bool,
     pub capital_total: MoneyDto,
     pub my_role: Option<String>,
     pub signed_version: Option<u32>,
@@ -1413,6 +1418,10 @@ pub struct VenturePeriodDto {
     /// Xonadon byudjetiga `Income` sifatida tushgan (yoki tushadigan) summa.
     pub my_income: MoneyDto,
     pub chain_code: Option<String>,
+    /// «Katta foyda» (2F.7): taqsimotdan oldin 4–5-bandlarni hamma qayta o'qishi kerak.
+    pub profit_spike: bool,
+    /// Shu davr uchun qayta o'qigan tomonlar.
+    pub spike_rereads: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1439,6 +1448,8 @@ pub struct VentureLedgerDto {
     pub chain_code: String,
     pub chain_ok: bool,
     pub loss_policy: String,
+    /// Ochiq nizo bor (2F.8): yozuvlar davom etadi, lekin davrni yopish va taqsimot bloklangan.
+    pub in_dispute: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1596,4 +1607,281 @@ pub struct OfferCheckDto {
     /// `GREEN`, `YELLOW`, `RED`.
     pub verdict: String,
     pub flags: Vec<OfferFlagDto>,
+}
+
+// ---- U13: vazifa hodisalari, ochiq hisob ko'rigi, nizo va hakam, yangilash, oilaviy kelishuvlar ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DutyDto {
+    pub id: String,
+    pub title: String,
+    pub owner_party_id: Option<String>,
+    pub owner_name: Option<String>,
+    /// 3-banddagi «bajarilmasa» qoidasi — hodisa paytida darhol ko'rsatiladi.
+    pub breach_clause: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IncidentInput {
+    pub duty_id: String,
+    pub party_id: String,
+    pub reason: String,
+    pub occurred_on: String,
+    pub proposed_solution: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IncidentDto {
+    pub id: String,
+    pub duty_id: String,
+    pub duty_title: String,
+    pub breach_clause: Option<String>,
+    pub party_id: String,
+    pub party_name: String,
+    pub reason: String,
+    pub occurred_on: String,
+    pub proposed_solution: Option<String>,
+    pub resolved_on: Option<String>,
+    pub resolution_note: Option<String>,
+    pub hash_code: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewTotalsDto {
+    pub entries: u32,
+    pub periods_closed: u32,
+    pub income: MoneyDto,
+    pub expense: MoneyDto,
+    pub force_majeure: MoneyDto,
+    pub corrections: MoneyDto,
+    pub result: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartyRefDto {
+    pub party_id: String,
+    pub name: String,
+}
+
+/// Ko'rik sessiyasi ekrani: davr yozuvlari, yakun, ochiq hodisalar, zanjir tekshiruvi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewDraftDto {
+    pub no: u32,
+    pub from_on: String,
+    pub to_on: String,
+    pub entries: Vec<VentureEntryDto>,
+    pub totals: ReviewTotalsDto,
+    pub open_incidents: Vec<IncidentDto>,
+    pub chain_ok: bool,
+    pub chain_code: String,
+    pub chain_entries: u32,
+    pub parties: Vec<PartyRefDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewAckInput {
+    pub party_id: String,
+    /// `AGREE` yoki `OBJECT` (izoh bilan).
+    pub verdict: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct HoldReviewInput {
+    pub to_on: String,
+    /// `SCHEDULED`, `PROFIT_SPIKE`, `EXTRA`.
+    pub reason: String,
+    pub acks: Vec<ReviewAckInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewAckDto {
+    pub party_id: String,
+    pub party_name: String,
+    pub verdict: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewDto {
+    pub id: String,
+    pub no: u32,
+    pub from_on: String,
+    pub to_on: String,
+    pub reason: String,
+    pub held_on: String,
+    pub totals: ReviewTotalsDto,
+    pub open_incidents: u32,
+    pub acks: Vec<ReviewAckDto>,
+    /// Bayonnomadagi zanjir boshi (qisqa kod).
+    pub chain_code: String,
+    /// Bayonnoma joriy jurnal bilan: `INTACT`, `CHAIN_BROKEN`, `HEAD_MISMATCH`, `TRUNCATED`.
+    pub integrity: String,
+    pub entries_after: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DisputeClaimInput {
+    pub party_id: String,
+    pub claim: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct OpenDisputeInput {
+    pub subject: String,
+    /// Tegishli bandlar (1..9).
+    pub clauses: Vec<u8>,
+    pub opened_by: String,
+    pub claims: Vec<DisputeClaimInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DecisionInput {
+    pub decided_on: String,
+    pub decision: String,
+    /// `RESUME` yoki `AMEND` (shartnomaning yangi versiyasi kerak).
+    pub outcome: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ClaimDto {
+    pub party_id: String,
+    pub party_name: String,
+    pub claim: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DecisionDto {
+    pub decided_on: String,
+    pub arbiter_name: String,
+    pub decision: String,
+    pub outcome: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DisputeDto {
+    pub id: String,
+    pub opened_on: String,
+    pub opened_by: String,
+    pub opened_by_name: String,
+    pub subject: String,
+    pub clauses: Vec<u8>,
+    pub claims: Vec<ClaimDto>,
+    pub decision: Option<DecisionDto>,
+    pub open: bool,
+}
+
+/// Eslatma: `REVIEW` (ochiq hisob ko'rigi) yoki `RENEWAL` (yillik yangilash).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ReminderDto {
+    pub agreement_id: String,
+    /// Sheriklik yoki oilaviy kelishuv identifikatori (ekranni ochish uchun).
+    pub ref_id: String,
+    pub agreement_type: String,
+    pub kind: String,
+    pub title: String,
+    pub due_on: String,
+    /// `UPCOMING`, `DUE`, `OVERDUE`.
+    pub state: String,
+    pub days: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct GovernanceDto {
+    pub partnership_id: String,
+    pub title: String,
+    pub status: String,
+    pub in_dispute: bool,
+    pub writable: bool,
+    pub read_only_reason: Option<String>,
+    pub parties: Vec<PartyRefDto>,
+    pub duties: Vec<DutyDto>,
+    pub incidents: Vec<IncidentDto>,
+    pub reviews: Vec<ReviewDto>,
+    pub disputes: Vec<DisputeDto>,
+    pub arbiter_name: Option<String>,
+    pub review_every_days: u32,
+    pub next_review_due: Option<String>,
+    pub review_reminder: Option<ReminderDto>,
+    /// Kuchdagi versiyadagi `reviewDate` (9-savol).
+    pub review_date: Option<String>,
+    pub renewal_reminder: Option<ReminderDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyAgreementInput {
+    /// `CHORES`, `MONEY_PLACE`, `WANT_LIMIT`, `COUNCIL`, `OTHER`.
+    pub template_key: String,
+    pub title: String,
+    pub items: Vec<String>,
+    pub review_date: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyAgreementDto {
+    pub id: String,
+    pub template_key: String,
+    pub title: String,
+    pub items: Vec<String>,
+    pub review_date: Option<String>,
+    /// `DRAFT` — kattalar hali tasdiqlamagan, `ACTIVE` — hamma tasdiqlagan.
+    pub status: String,
+    pub adults: Vec<SignoffDto>,
+    pub hash_code: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AgreementSummaryDto {
+    pub agreement_id: String,
+    pub agreement_type: String,
+    /// Sheriklik id (PARTNERSHIP), aks holda kelishuv id.
+    pub ref_id: String,
+    pub title: String,
+    pub status: String,
+    pub next_review: Option<String>,
+    pub reminder: Option<ReminderDto>,
+    pub open_incidents: u32,
+    pub open_disputes: u32,
 }

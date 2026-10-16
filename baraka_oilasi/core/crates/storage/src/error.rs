@@ -53,6 +53,7 @@ impl From<rusqlite::Error> for StorageError {
         } else if msg.contains("AGREEMENT_VERSION_IMMUTABLE")
             || msg.contains("SIGNATURE_IMMUTABLE")
             || msg.contains("VENTURE_IMMUTABLE")
+            || msg.contains("GOVERNANCE_IMMUTABLE")
         {
             Self::EvidenceImmutable
         } else if msg.contains("file is not a database") {

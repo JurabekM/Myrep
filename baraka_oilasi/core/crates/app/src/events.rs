@@ -22,6 +22,7 @@ pub enum Topic {
     Partnerships,
     Ventures,
     Ideas,
+    Governance,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

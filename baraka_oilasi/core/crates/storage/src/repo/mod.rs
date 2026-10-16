@@ -5,6 +5,7 @@ pub mod categories;
 pub mod ceremonies;
 pub mod debts;
 pub mod expenses;
+pub mod governance;
 pub mod household;
 pub mod incomes;
 pub mod journal;

@@ -133,7 +133,7 @@ pub(crate) struct Payload {
 }
 
 impl Payload {
-    fn hash(&self) -> Result<String, AppError> {
+    pub(crate) fn hash(&self) -> Result<String, AppError> {
         let bytes = serde_json::to_vec(self).map_err(|_| AppError::new("CORRUPT_ROW"))?;
         Ok(hex(&Sha256::digest(&bytes)))
     }
@@ -158,7 +158,7 @@ impl Payload {
     }
 
     /// Kim imzolashi kerak: barcha tomonlar, guvohlar va hakam (2F.3).
-    fn required_signers(&self) -> Vec<(String, &'static str, String)> {
+    pub(crate) fn required_signers(&self) -> Vec<(String, &'static str, String)> {
         let mut out: Vec<(String, &'static str, String)> = self
             .parties
             .iter()
@@ -548,7 +548,7 @@ impl App {
         })
     }
 
-    fn adult_members(&self, ctx: &Ctx) -> Result<Vec<household::MemberRow>, AppError> {
+    pub(crate) fn adult_members(&self, ctx: &Ctx) -> Result<Vec<household::MemberRow>, AppError> {
         Ok(self
             .db
             .read(|db| household::list_members(db, &ctx.household_id))?
@@ -721,6 +721,7 @@ impl App {
                 signed: u32::try_from(sigs.len()).unwrap_or(u32::MAX),
                 required: u32::try_from(p.required_signers().len()).unwrap_or(u32::MAX),
                 in_force: v.row.signed_version == Some(ver.version_no),
+                change_note: ver.change_note.clone(),
             });
         }
         let blocker = self.activate_blocker(ctx, scope, v)?;
@@ -769,6 +770,7 @@ impl App {
             history,
             template_review: TEMPLATE_REVIEW.into(),
             hash_code: short_code(&v.hash),
+            in_dispute: self.open_dispute(scope, &v.row.id)?.is_some(),
         })
     }
 
@@ -946,7 +948,12 @@ impl App {
         })
     }
 
-    fn reload(&self, ctx: &Ctx, scope: &SpaceScope, id: &str) -> Result<PartnershipDto, AppError> {
+    pub(crate) fn reload(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        id: &str,
+    ) -> Result<PartnershipDto, AppError> {
         let v = self.partnership_view(scope, self.partnership_row(scope, id)?)?;
         self.partnership_dto(ctx, scope, &v)
     }
@@ -971,6 +978,7 @@ impl App {
                     my_role: v.payload.me().map(|m| m.role.clone()),
                     signed_version: v.row.signed_version.map(no32).transpose()?,
                     answered: v.check.answered,
+                    in_dispute: self.open_dispute(&scope, &v.row.id)?.is_some(),
                 })
             })
             .collect()
@@ -1109,7 +1117,7 @@ impl App {
                 payload_json: serde_json::to_string(&v.payload)
                     .map_err(|_| AppError::new("CORRUPT_ROW"))?,
                 payload_hash: v.hash.clone(),
-                change_note: None,
+                change_note: self.version_note(&scope, &v)?,
                 created_at: meta.now.clone(),
             },
         };
