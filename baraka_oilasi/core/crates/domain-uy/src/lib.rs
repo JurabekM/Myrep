@@ -14,6 +14,7 @@ pub mod partnership;
 pub mod payoff;
 pub mod recovery;
 pub mod rescue;
+pub mod review;
 pub mod spike;
 pub mod streak;
 pub mod venture;

@@ -1,0 +1,312 @@
+{
+  "suite": "review_protocol",
+  "version": 1,
+  "description": "Bayonnomadagi zanjir boshi: INTACT / CHAIN_BROKEN / HEAD_MISMATCH / TRUNCATED, bayonnomadan keyingi yozuvlar soni",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "rp-001-intact",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ],
+        "storedHashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
+          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
+          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+        ],
+        "protocolSeq": 2,
+        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+      },
+      "expected": {
+        "status": "INTACT",
+        "firstBroken": null,
+        "entriesAfter": 1
+      }
+    },
+    {
+      "id": "rp-002-tampered-rehashed",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000001",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ],
+        "storedHashes": [
+          "ead164e84ae0e8b4a6653bd3b00c6063cd2fe2c529fb557efb5db7ab68456e27",
+          "9410e95bfe8b430dff409452bc6f4a602ee3214a7754a59fa20b5affac278ea3",
+          "f05c139f2584df53d3c590bfa74841610bb9afba5889d683f280216e1d6f6f29"
+        ],
+        "protocolSeq": 2,
+        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+      },
+      "expected": {
+        "status": "HEAD_MISMATCH",
+        "firstBroken": null,
+        "entriesAfter": 1
+      }
+    },
+    {
+      "id": "rp-003-tampered-not-rehashed",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "1",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ],
+        "storedHashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
+          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
+          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+        ],
+        "protocolSeq": 2,
+        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+      },
+      "expected": {
+        "status": "CHAIN_BROKEN",
+        "firstBroken": 2,
+        "entriesAfter": 1
+      }
+    },
+    {
+      "id": "rp-004-truncated",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          }
+        ],
+        "storedHashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e"
+        ],
+        "protocolSeq": 2,
+        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+      },
+      "expected": {
+        "status": "TRUNCATED",
+        "firstBroken": null,
+        "entriesAfter": 0
+      }
+    },
+    {
+      "id": "rp-005-genesis",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ],
+        "storedHashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
+          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
+          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+        ],
+        "protocolSeq": 0,
+        "protocolHead": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "status": "INTACT",
+        "firstBroken": null,
+        "entriesAfter": 3
+      }
+    },
+    {
+      "id": "rp-006-after-protocol",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "1",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ],
+        "storedHashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
+          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
+          "49d5549b0a37807837c66ca17db58b2802bd8522a239d70ab449bf5ed39b5c14"
+        ],
+        "protocolSeq": 2,
+        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+      },
+      "expected": {
+        "status": "INTACT",
+        "firstBroken": null,
+        "entriesAfter": 1
+      }
+    }
+  ]
+}

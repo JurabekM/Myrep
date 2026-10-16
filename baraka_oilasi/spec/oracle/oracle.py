@@ -513,6 +513,23 @@ def verify_chain(entries: list[dict], hashes: list[str]):
     return None
 
 
+def review_protocol(entries, stored, seq, head):
+    """Ko'rik bayonnomasi yaxlitligi (uy/SPEC 2F.5–2F.6): bayonnomada `seq` va o'sha paytdagi zanjir boshi
+    qayd etilgan. TRUNCATED — yozuvlar kamaygan; CHAIN_BROKEN — saqlangan xesh qayta hisoblanganga mos
+    emas (yozuv xeshsiz o'zgartirilgan); HEAD_MISMATCH — zanjir o'zicha butun, lekin bayonnomadagi boshga
+    mos emas (yozuv o'zgartirilib, xeshlar qayta hisoblangan). Bayonnomadan keyingi yozuvlar sanaladi."""
+    if seq < 0 or len(stored) != len(entries):
+        raise OracleError("INVALID_PROTOCOL")
+    if len(entries) < seq:
+        return {"status": "TRUNCATED", "firstBroken": None, "entriesAfter": 0}
+    broken = verify_chain(entries, stored)
+    if broken is not None:
+        return {"status": "CHAIN_BROKEN", "firstBroken": broken, "entriesAfter": len(entries) - seq}
+    at = GENESIS if seq == 0 else chain(entries[:seq])[-1]
+    status = "INTACT" if at == head else "HEAD_MISMATCH"
+    return {"status": status, "firstBroken": None, "entriesAfter": len(entries) - seq}
+
+
 def short_code(head: str) -> str:
     h = head[:16].upper()
     return "-".join(h[i:i + 4] for i in range(0, 16, 4))
@@ -1293,13 +1310,29 @@ def build_suites():
           ("offer-neg-002-invalid", A("MAYBE", "YES", "YES", "NO", "NO", "YES"))]
     suites["offer_check"] = _suite("offer_check", "«Kafolatlangan foyda» detektori: 6 savol → bayroqlar; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL", [
         _case(cid, {"answers": a}, lambda a=a: offer_check(a)) for cid, a in oc])
+    # U13 — ko'rik bayonnomasi yaxlitligi
+    def tamper(i, minor):
+        t = json.loads(json.dumps(CHAIN_ENTRIES))
+        t[i]["amount"]["minor"] = minor
+        return t
+    h = chain(CHAIN_ENTRIES)
+    rp = [("rp-001-intact", CHAIN_ENTRIES, h, 2, h[1]),
+          ("rp-002-tampered-rehashed", tamper(0, "300000001"), chain(tamper(0, "300000001")), 2, h[1]),
+          ("rp-003-tampered-not-rehashed", tamper(1, "1"), h, 2, h[1]),
+          ("rp-004-truncated", CHAIN_ENTRIES[:1], h[:1], 2, h[1]),
+          ("rp-005-genesis", CHAIN_ENTRIES, h, 0, GENESIS),
+          ("rp-006-after-protocol", tamper(2, "1"), chain(tamper(2, "1")), 2, h[1])]
+    suites["review_protocol"] = _suite("review_protocol", "Bayonnomadagi zanjir boshi: INTACT / CHAIN_BROKEN / HEAD_MISMATCH / TRUNCATED, bayonnomadan keyingi yozuvlar soni", [
+        _case(cid, {"entries": es, "storedHashes": hs, "protocolSeq": n, "protocolHead": hd},
+              lambda es=es, hs=hs, n=n, hd=hd: review_protocol(es, hs, n, hd))
+        for cid, es, hs, n, hd in rp])
     return suites
 
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
-                 "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check")
+                 "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol")
 
 
 def generate(directory: str) -> None:
@@ -1462,6 +1495,12 @@ def selftest() -> None:
     assert [r["paybackMonths"] for r in i8["scenarios"]] == [8, 4, 2] and i8["capex"] == "800000000"
     assert offer_check({"guaranteed": "YES", "lossShared": "YES", "realActivity": "YES", "recruitment": "NO",
                         "urgency": "NO", "written": "YES"})["verdict"] == "RED"
+    # U13: xeshlari qayta hisoblangan soxta yozuv faqat bayonnomadagi zanjir boshi bilan aniqlanadi.
+    t1 = json.loads(json.dumps(CHAIN_ENTRIES))
+    t1[0]["amount"]["minor"] = "1"
+    assert verify_chain(t1, chain(t1)) is None
+    assert review_protocol(t1, chain(t1), 2, CHAIN_HASHES[1])["status"] == "HEAD_MISMATCH"
+    assert review_protocol(CHAIN_ENTRIES, CHAIN_HASHES, 3, CHAIN_HASHES[2]) == {"status": "INTACT", "firstBroken": None, "entriesAfter": 0}
     print("oracle selftest: OK")
 
 

@@ -21,6 +21,7 @@ use baraka_domain_uy::{
         Scheduled,
     },
     recovery::RecoverySplit,
+    review::check_protocol,
     spike::{profit_spike, SpikePolicy},
     streak::compute_streak,
     venture::{
@@ -125,6 +126,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "venture_period" => venture_period(input),
         "venture_idea" => idea(input),
         "offer_check" => offer(input),
+        "review_protocol" => protocol(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -971,4 +973,30 @@ fn offer(v: &Value) -> R {
         .map(|f| json!({ "code": f.code, "level": f.level.as_str() }))
         .collect();
     Ok(json!({ "verdict": r.verdict.as_str(), "flags": flags }))
+}
+
+fn protocol(v: &Value) -> R {
+    let entries = arr(v, "entries")?
+        .iter()
+        .map(entry)
+        .collect::<Result<Vec<_>, E>>()?;
+    let stored = arr(v, "storedHashes")?
+        .iter()
+        .map(|h| {
+            h.as_str()
+                .map(str::to_string)
+                .ok_or_else(|| bad("storedHashes"))
+        })
+        .collect::<Result<Vec<_>, E>>()?;
+    let seq = usize::try_from(i(v, "protocolSeq")?).map_err(|_| E("INVALID_PROTOCOL".into()))?;
+    let r = check_protocol(&entries, &stored, seq, s(v, "protocolHead")?)?;
+    let first = match r.status {
+        baraka_domain_uy::review::ProtocolStatus::ChainBroken { seq } => json!(seq),
+        _ => Value::Null,
+    };
+    Ok(json!({
+        "status": r.status.as_str(),
+        "firstBroken": first,
+        "entriesAfter": r.entries_after,
+    }))
 }
