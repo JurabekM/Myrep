@@ -13,6 +13,7 @@ import { PartnershipsScreen } from "../features/partnership/PartnershipsScreen";
 import { PayoffScreen } from "../features/payoff/PayoffScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
+import { SyncScreen } from "../features/sync/SyncScreen";
 import { VaultScreen } from "../features/vault/VaultScreen";
 import { IdeasScreen } from "../features/venture/IdeasScreen";
 import { OfferCheckDialog } from "../features/venture/OfferCheckDialog";
@@ -34,6 +35,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "ideas", label: "nav.ideas" },
   { screen: "agreements", label: "nav.agreements" },
   { screen: "receipt", label: "nav.receipt" },
+  { screen: "sync", label: "nav.sync" },
 ];
 
 const MENTOR: Record<Screen, string> = {
@@ -48,6 +50,7 @@ const MENTOR: Record<Screen, string> = {
   ideas: "mentor.ideas",
   agreements: "mentor.agreements",
   receipt: "mentor.receipt",
+  sync: "mentor.sync",
 };
 
 /** Asosiy oyna: chapda navigatsiya va makonlar, markazda ish maydoni, oʻngda Sobir hoji. */
@@ -116,6 +119,7 @@ export function Shell() {
         {active && screen === "ideas" && <IdeasScreen spaceId={active} />}
         {active && screen === "agreements" && <AgreementsScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
+        {screen === "sync" && <SyncScreen />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />
       {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}

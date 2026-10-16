@@ -1775,5 +1775,179 @@
     "placeholders": {
       "n": {}
     }
-  }
+  },
+  "nav_sync": "Sinxronlash",
+  "mentor_sync": "Telefon va kompyuterdagi daftar bitta boʻlsin. Fayl parol bilan shifrlanadi — parolni faylning oʻzi bilan bir joyda saqlamang.",
+  "sync_title": "Qurilmalar va sinxronlash",
+  "sync_intro": "Maʼlumotlar bulutga chiqmaydi: qurilmalar orasida shifrlangan .baraka fayli bilan almashiladi. Ikkala qurilmada bir yozuv oʻzgargan boʻlsa, ilova oʻzi tanlamaydi — sizga koʻrsatadi.",
+  "sync_devices": "Xonadon qurilmalari",
+  "sync_thisDevice": "shu qurilma",
+  "sync_lastImport": "oxirgi qabul",
+  "sync_lastExport": "oxirgi yuborish",
+  "sync_noPeers": "Boshqa qurilma hali ulanmagan. Telefon ulangandan keyin uning birinchi fayli bu yerga qabul qilinadi.",
+  "sync_password": "Fayl paroli",
+  "sync_passwordRepeat": "Parolni takrorlang",
+  "sync_passwordHint": "Kamida 8 belgi. Parolni ikkinchi qurilmaga ogʻzaki ayting — fayl bilan birga yubormang.",
+  "sync_export": "Eksport",
+  "sync_mode": "Nima yuboriladi",
+  "sync_mode_FULL": "Zaxira nusxa (hammasi)",
+  "sync_mode_INCREMENTAL": "Qurilma uchun (faqat yangilari)",
+  "sync_mode_PAIRING": "Yangi qurilmani ulash",
+  "sync_modeHint_FULL": "Butun daftar. Yangi kompyuterda tiklash yoki ehtiyot uchun.",
+  "sync_modeHint_INCREMENTAL": "Tanlangan qurilma oxirgi marta koʻrgandan beri oʻzgargan yozuvlar.",
+  "sync_forDevice": "Qaysi qurilma uchun",
+  "sync_exported": "Fayl saqlandi: {count} ta yozuv.",
+  "@sync_exported": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_saveFile": "Faylni saqlash",
+  "sync_import": "Import",
+  "sync_pickFile": "Fayl tanlash",
+  "sync_noFile": "fayl tanlanmagan",
+  "sync_inspect": "Koʻrib chiqish",
+  "sync_apply": "Qabul qilish",
+  "sync_unresolved": "Yana {count} ta ziddiyat uchun tanlov kerak",
+  "@sync_unresolved": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_applied": "Qabul qilindi: {inserted} ta yangi, {updated} ta yangilangan, jurnalga {journal} ta yozuv, {conflicts} ta ziddiyat hal qilindi.",
+  "@sync_applied": {
+    "placeholders": {
+      "conflicts": {},
+      "inserted": {},
+      "journal": {},
+      "updated": {}
+    }
+  },
+  "sync_from": "Manba: {name}, {date}",
+  "@sync_from": {
+    "placeholders": {
+      "date": {},
+      "name": {}
+    }
+  },
+  "sync_count_inserts": "Yangi",
+  "sync_count_updates": "Yangilanadi",
+  "sync_count_journal": "Jurnal davomi",
+  "sync_count_same": "Oʻzgarishsiz",
+  "sync_forkTitle": "Import toʻxtatildi — hech narsa yozilmaydi",
+  "sync_fork_FORK": "«{title}» jurnali {seq}-yozuvdan boshlab ikki qurilmada farq qiladi (ayrilish).",
+  "@sync_fork_FORK": {
+    "placeholders": {
+      "seq": {},
+      "title": {}
+    }
+  },
+  "sync_fork_TAMPERED": "«{title}» jurnalining {seq}-yozuvi fayl ichida oʻzgartirilgan — tekshirish kodi mos emas.",
+  "@sync_fork_TAMPERED": {
+    "placeholders": {
+      "seq": {},
+      "title": {}
+    }
+  },
+  "sync_fork_NOT_KEEPER_WRITE": "«{title}» jurnaliga {seq}-yozuvdan boshlab hisob yurituvchi boʻlmagan qurilma yozgan.",
+  "@sync_fork_NOT_KEEPER_WRITE": {
+    "placeholders": {
+      "seq": {},
+      "title": {}
+    }
+  },
+  "sync_forkHint": "Jurnal hech qachon avtomatik birlashtirilmaydi. Hisob yurituvchi qurilmadagi nusxani asos qilib, tomonlar bilan gaplashing.",
+  "sync_protectedTitle": "{count} ta yopilgan yozuvni import orqali oʻzgartirishga urinish — rad etildi",
+  "@sync_protectedTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_conflictsTitle": "Ziddiyatlar: {count}",
+  "@sync_conflictsTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_conflictsHint": "Bu yozuvlar ikkala qurilmada oʻzgargan. Qaysi nusxa qolishini tanlang — summa va sanalarda ilova oʻzi tanlamaydi.",
+  "sync_noConflicts": "Ziddiyat yoʻq.",
+  "sync_field": "Maydon",
+  "sync_local": "Shu qurilmada",
+  "sync_remote": "Kelgan faylda",
+  "sync_state": "Holati",
+  "sync_deleted": "oʻchirilgan",
+  "sync_kept": "bor",
+  "sync_choose": "Qaysi nusxa qoladi",
+  "sync_keep_LOCAL": "Shu qurilmadagisi qolsin",
+  "sync_keep_REMOTE": "Kelgan fayldagisi olinsin",
+  "sync_pairing": "Yangi qurilmani ulash",
+  "sync_pairingHint": "Bir martalik kod yaratiladi va butun daftar shu kod bilan shifrlangan faylga saqlanadi. Telefon QR'ni skanerlaydi (yoki kodni qoʻlda kiritadi) va faylni ochadi.",
+  "sync_pairingStart": "Ulash faylini yaratish",
+  "sync_qrAlt": "Ulash QR kodi",
+  "sync_pairingSaved": "Fayl saqlandi: {file}",
+  "@sync_pairingSaved": {
+    "placeholders": {
+      "file": {}
+    }
+  },
+  "sync_pairingCode": "Kod (QR'siz kiritish uchun):",
+  "sync_pairingSteps": "Yangi qurilmada: «Mavjud xonadonga qoʻshilish» → faylni tanlang → kodni kiriting. Keyin u oʻz faylini shu yerga yuboradi va ikki qurilma bir-birini taniydi.",
+  "setup_create": "Yangi xonadon",
+  "setup_join": "Mavjud xonadonga qoʻshilish",
+  "setup_joinHint": "Boshqa qurilmada «Yangi qurilmani ulash» bosilgan boʻlsa — oʻsha faylni va kodni kiriting. Zaxira nusxadan tiklash uchun — faylni va uning parolini.",
+  "setup_joinSecret": "Ulash kodi yoki zaxira nusxa paroli",
+  "setup_deviceName": "Bu qurilma nomi",
+  "setup_joinSubmit": "Qoʻshilish",
+  "sync_table_incomes": "Daromad",
+  "sync_table_expenses": "Xarajat",
+  "sync_table_categories": "Kategoriya",
+  "sync_table_members": "Aʼzo",
+  "sync_table_households": "Xonadon",
+  "sync_table_devices": "Qurilma",
+  "sync_table_debts": "Qarz",
+  "sync_table_receivables": "Berilgan qarz",
+  "sync_table_repayments": "Qarz toʻlovi",
+  "sync_table_goals": "Maqsad",
+  "sync_table_agreements": "Kelishuv",
+  "sync_table_partnerships": "Sheriklik",
+  "sync_table_venture_ideas": "Gʻoya",
+  "sync_table_skills": "Hunar",
+  "sync_table_ceremonies": "Marosim",
+  "sync_table_venture_periods": "Yopilgan davr",
+  "sync_table_venture_entries": "Kassa daftari yozuvi",
+  "sync_table_journal_entries": "Jurnal yozuvi",
+  "sync_table_account_reviews": "Koʻrik bayonnomasi",
+  "sync_table_agreement_versions": "Shartnoma versiyasi",
+  "sync_col_custom_name": "Nomi",
+  "sync_col_title": "Nomi",
+  "sync_col_name": "Nomi",
+  "sync_col_amount_minor": "Summa",
+  "sync_col_occurred_on": "Sana",
+  "sync_col_note": "Izoh",
+  "sync_col_source": "Manba",
+  "sync_col_capex_json": "Boshlangʻich xarajatlar",
+  "sync_col_scenarios_json": "Stsenariylar",
+  "sync_col_status": "Holati",
+  "error_INTERCHANGE_NOT_BARAKA": "Bu .baraka fayli emas",
+  "error_INTERCHANGE_VERSION_UNSUPPORTED": "Fayl ilovaning boshqa versiyasida yaratilgan — ilovani yangilang",
+  "error_INTERCHANGE_CORRUPT": "Fayl buzilgan",
+  "error_INTERCHANGE_BAD_PASSWORD": "Parol yoki kod notoʻgʻri (yoki fayl oʻzgartirilgan)",
+  "error_INTERCHANGE_WEAK_PASSWORD": "Parol kamida 8 belgi boʻlsin",
+  "error_INTERCHANGE_KDF_PARAMS": "Fayl sarlavhasi gʻayritabiiy — ochilmadi",
+  "error_INTERCHANGE_SCHEMA_MISMATCH": "Qurilmalardagi ilova versiyalari farq qiladi — ikkalasini yangilang",
+  "error_INTERCHANGE_WRONG_HOUSEHOLD": "Fayl boshqa xonadonga tegishli. Ikki xonadonni birlashtirish hozircha yoʻq",
+  "error_INTERCHANGE_OWN_FILE": "Bu fayl shu qurilmaning oʻzida yaratilgan",
+  "error_INTERCHANGE_FORK": "Jurnal ayrilgan — import toʻxtatildi",
+  "error_INTERCHANGE_NOT_FULL": "Qoʻshilish uchun toʻliq fayl kerak (ulash fayli yoki zaxira nusxa)",
+  "error_INTERCHANGE_JOURNAL_TAMPERED": "Fayldagi jurnal tekshiruvdan oʻtmadi",
+  "error_CONFLICTS_UNRESOLVED": "Har bir ziddiyat uchun tanlov qiling",
+  "error_UNKNOWN_DEVICE": "Bu qurilma hali tanish emas — avval undan fayl qabul qiling",
+  "error_PASSWORD_MISMATCH": "Parollar mos kelmadi",
+  "error_FILE_TOO_LARGE": "Fayl juda katta",
+  "error_INVALID_MODE": "Eksport turini tanlang",
+  "error_SAVE_PATH_INVALID": "Saqlash joyi notoʻgʻri",
+  "error_ALREADY_INITIALIZED": "Ilova allaqachon oʻrnatilgan",
+  "error_IO_ERROR": "Faylni oʻqish yoki yozishda xato",
+  "error_RANDOM_UNAVAILABLE": "Tasodifiy son manbai ishlamadi",
+  "error_CRYPTO_FAILURE": "Shifrlashda xato"
 }

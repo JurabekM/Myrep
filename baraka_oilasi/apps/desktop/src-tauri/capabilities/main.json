@@ -108,6 +108,13 @@
     "allow-agreements-center",
     "allow-confirm-family-agreement",
     "allow-export-review-protocol",
-    "allow-export-dispute-folder"
+    "allow-export-dispute-folder",
+    "allow-devices",
+    "allow-export-baraka",
+    "allow-pick-baraka-file",
+    "allow-inspect-baraka",
+    "allow-apply-baraka",
+    "allow-pairing-offer",
+    "allow-join-household"
   ]
 }

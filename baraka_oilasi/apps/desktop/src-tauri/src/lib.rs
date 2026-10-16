@@ -131,6 +131,13 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::confirm_family_agreement,
             commands::export_review_protocol,
             commands::export_dispute_folder,
+            commands::devices,
+            commands::export_baraka,
+            commands::pick_baraka_file,
+            commands::inspect_baraka,
+            commands::apply_baraka,
+            commands::pairing_offer,
+            commands::join_household,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

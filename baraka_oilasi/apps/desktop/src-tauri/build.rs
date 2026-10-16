@@ -102,6 +102,13 @@ const COMMANDS: &[&str] = &[
     "confirm_family_agreement",
     "export_review_protocol",
     "export_dispute_folder",
+    "devices",
+    "export_baraka",
+    "pick_baraka_file",
+    "inspect_baraka",
+    "apply_baraka",
+    "pairing_offer",
+    "join_household",
 ];
 
 fn main() {

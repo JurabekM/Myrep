@@ -56,7 +56,8 @@
 ### OQ-P10. Ko'rik va hodisalar boshqa tomonning qurilmasida
 - **Masala:** U13 da ko'rik belgilari (`AGREE` / `OBJECT`) va «bajara olmayapman» xabari hisob yurituvchining qurilmasida yoziladi (jurnalni faqat shu qurilma yuritadi, 6.6). Ikkinchi tomon belgini o'zi, o'z qurilmasida qo'yishi kerakmi?
 - **Taklif:** U14 sinxronizatsiyasida ikkinchi tomon imzolangan «belgi paketi»ni yuboradi, hisob yurituvchi uni jurnalga qo'shadi.
-- **To'sadi:** U14. **Holat:** OCHIQ.
+- **U14 dan keyin:** `.baraka` transporti tayyor, lekin jurnalga faqat hisob yurituvchi qurilma yozadi — boshqa qurilma jurnalga yozgan fayl `NOT_KEEPER_WRITE` bilan to'xtatiladi. «Belgi paketi» alohida yozuv turi sifatida qo'shilishi kerak (jurnalga emas, keyin yurituvchi tasdiqlaydi).
+- **To'sadi:** ikkinchi tomonning o'z qurilmasida belgi qo'yishi. **Holat:** OCHIQ.
 
 ### OQ-P11. «Katta foyda»: reja manbai
 - **Hozirgi standart (U13):** reja — shartnomadagi buyout'dagi «kutilgan davr foydasi»; buyout bo'lmasa, faqat tarix (oxirgi 3 davr o'rtachasidan 200%). Chegaralar: rejadan 150%, tarixdan 200% (`SpikePolicy`).
@@ -74,6 +75,11 @@
 - **Masala:** Nilufarning «qora kun» uchun yashirin zaxirasi. Oilaviy shaffoflik moliyaviy zo'ravonlik sharoitida ayolning xavfsizlik zaxirasini yo'q qilishi mumkin.
 - **Taklif:** a'zoning shaxsiy PIN bilan himoyalangan, boshqalarga ko'rinmaydigan jamg'armasi (`visibility = PRIVATE`). Sxemada maydon hozirdan bor.
 - **To'sadi:** U1 (UI), U4. **Holat:** OCHIQ.
+
+### OQ-M3. Ikki xonadonni birlashtirish
+- **Masala:** U14 boshqa xonadonning faylini rad etadi (`INTERCHANGE_WRONG_HOUSEHOLD`). Ikki kishi alohida daftar boshlab, keyin bitta oilaga qo'shilmoqchi bo'lsa (yangi kelin, ajralib chiqqan o'g'il) nima qilinadi?
+- **Taklif:** MVP'da yo'q (D14). Keyin — «import qilib yangi xonadonga ko'chirish» ustasi: kategoriyalarni moslashtirish, a'zolarni birlashtirish, kelishuv jurnallari alohida qoladi.
+- **To'sadi:** — . **Holat:** OCHIQ (mahsulot egasi).
 
 ## Ulamo uchun
 
@@ -156,3 +162,13 @@
 ### OQ-T5. Desktop E2E (tauri-driver)
 - **Masala:** hozircha haqiqiy ilova Xvfb + xdotool bilan qo'lda tekshirildi (sozlash → daromad → ulush → qulf). Windows'da `tauri-driver` + WebdriverIO bilan avtomatlashtirish kerak.
 - **Qaror qachon:** U15. **Holat:** OCHIQ.
+
+### OQ-T6. `.baraka` formati Android'da (Dart) va QR skanerlash
+- **Masala:** Android ilovasi formatni FRB orqali Rust yadrosidan oladi — sxema va xeshlar bitta. Test strategiyasida «barcha vektorlar Dart'dan ham ishga tushiriladi» — `spec/interchange/vectors.json` ni FRB orqali Dart testidan o'tkazish yetarlimi yoki Dart'da sarlavha va QR payload uchun alohida parser ham kerakmi? QR skaneri uchun kamera ruxsati va qaysi kutubxona (ML Kit — Google Play xizmatlarisiz qurilmalarda ishlamaydi)?
+- **Taklif:** vektorlar FRB orqali Dart testida; Dart'da faqat QR payload (`BARAKA-PAIR:{…}`) parseri; shifrlash va birlashtirish — faqat yadroda. Skaner: `zxing` asosidagi offline kutubxona.
+- **To'sadi:** Android UI. **Holat:** OCHIQ.
+
+### OQ-T7. Eksport KDF parametrlari va ishlatilmagan ulash fayllari
+- **Masala:** fayl kaliti Argon2id 64 MiB, t = 3 — arzon Android telefonda ~1–2 s bo'lishi mumkin. Ishlatilmagan «Yangi qurilmani ulash» fayllarining «kutilmoqda» yozuvlari (`sync_pending`) hech qachon tasdiqlanmaydi va bazada qoladi (har biri daftar hajmiga mutanosib, kichik).
+- **Taklif:** KDF'ni haqiqiy qurilmada o'lchab, kerak bo'lsa `mKib` ni 32 MiB ga tushirish (sarlavhada saqlanadi — eski fayllar ochilaveradi); 30 kundan eski tasdiqlanmagan ulash eksportlarini tozalash.
+- **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.

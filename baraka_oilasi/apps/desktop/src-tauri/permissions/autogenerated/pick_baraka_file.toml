@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pick-baraka-file"
+description = "Enables the pick_baraka_file command without any pre-configured scope."
+commands.allow = ["pick_baraka_file"]
+
+[[permission]]
+identifier = "deny-pick-baraka-file"
+description = "Denies the pick_baraka_file command without any pre-configured scope."
+commands.deny = ["pick_baraka_file"]

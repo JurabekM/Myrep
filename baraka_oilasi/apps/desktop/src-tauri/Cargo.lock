@@ -314,6 +314,7 @@ dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
  "baraka-domain-uy",
+ "baraka-interchange",
  "baraka-journal",
  "baraka-money",
  "baraka-pdf",
@@ -326,6 +327,7 @@ dependencies = [
  "sha2 0.11.1",
  "specta",
  "unicode-normalization",
+ "zeroize",
 ]
 
 [[package]]
@@ -369,6 +371,23 @@ dependencies = [
  "num-bigint 0.5.1",
  "num-traits",
  "serde",
+]
+
+[[package]]
+name = "baraka-interchange"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "baraka-journal",
+ "chacha20poly1305",
+ "data-encoding",
+ "getrandom 0.4.3",
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "unicode-normalization",
+ "zeroize",
 ]
 
 [[package]]
@@ -416,6 +435,7 @@ name = "baraka-storage"
 version = "0.1.0"
 dependencies = [
  "baraka-domain-common",
+ "baraka-interchange",
  "baraka-journal",
  "baraka-money",
  "baraka-security",

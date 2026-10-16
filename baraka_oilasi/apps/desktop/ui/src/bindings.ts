@@ -124,6 +124,24 @@ export const commands = {
 	exportReviewProtocol: (spaceId: string, partnershipId: string, reviewId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_review_protocol", { spaceId, partnershipId, reviewId })),
 	/**  «Hakam uchun ish papkasi» — bitta PDF, mundarija va sahifa raqamlari bilan. */
 	exportDisputeFolder: (spaceId: string, partnershipId: string, disputeId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_dispute_folder", { spaceId, partnershipId, disputeId })),
+	devices: () => typedError<DeviceDto[], AppError>(__TAURI_INVOKE("devices")),
+	/**  Eksport va «Saqlash» oynasi. Bekor qilinsa — `None`; aks holda yozuvlar soni. */
+	exportBaraka: (input: ExportInput) => typedError<number | null, AppError>(__TAURI_INVOKE("export_baraka", { input })),
+	pickBarakaFile: () => typedError<{
+	path: string,
+	name: string,
+} | null, AppError>(__TAURI_INVOKE("pick_baraka_file")),
+	inspectBaraka: (path: string, password: string) => typedError<ImportPreviewDto, AppError>(__TAURI_INVOKE("inspect_baraka", { path, password })),
+	applyBaraka: (path: string, password: string, choices: ConflictChoiceInput[]) => typedError<ImportResultDto, AppError>(__TAURI_INVOKE("apply_baraka", { path, password, choices })),
+	/**  Yangi qurilmani ulash: kod bilan shifrlangan fayl saqlanadi, QR va kod ko'rsatiladi. */
+	pairingOffer: () => typedError<{
+	code: string,
+	qrSvg: string,
+	householdName: string,
+	fileName: string,
+} | null, AppError>(__TAURI_INVOKE("pairing_offer")),
+	/**  O'rnatishda: mavjud xonadonga qo'shilish (ulash kodi) yoki zaxira nusxadan tiklash (parol). */
+	joinHousehold: (path: string, pin: string, input: JoinInput) => typedError<SetupResult, AppError>(__TAURI_INVOKE("join_household", { path, pin, input })),
 };
 
 /** Events */
@@ -435,6 +453,22 @@ export type Completeness = {
 	warnings: string[],
 };
 
+export type ConflictChoiceInput = {
+	key: string,
+	/**  `LOCAL` yoki `REMOTE`. */
+	choice: string,
+};
+
+export type ConflictDto = {
+	key: string,
+	table: string,
+	rowId: string,
+	label: string,
+	fields: FieldDiffDto[],
+	localDeleted: boolean,
+	remoteDeleted: boolean,
+};
+
 /**  9 savol to'liqligi + sheriklik qoidalari (birlashtirilgan). */
 export type ContractCheckDto = {
 	answered: number,
@@ -543,6 +577,17 @@ export type DecisionInput = {
 	outcome: string,
 };
 
+export type DeviceDto = {
+	id: string,
+	name: string,
+	platform: string,
+	pairedAt: string,
+	/**  Shu qurilma. */
+	isThis: boolean,
+	lastImportAt: string | null,
+	lastExportAt: string | null,
+};
+
 export type DiscussionAnswerDto = {
 	/**  `guests`, `days`, `cut`, `sources`. */
 	key: string,
@@ -609,6 +654,14 @@ export type ExpenseDto = {
 	fundedByDebt: boolean,
 };
 
+export type ExportInput = {
+	password: string,
+	/**  `FULL` (zaxira yoki birinchi sinxronlash) yoki `INCREMENTAL`. */
+	mode: string,
+	/**  Qaysi qurilma uchun (inkremental eksportda majburiy). */
+	peerDeviceId: string | null,
+};
+
 export type FamilyAgreementDto = {
 	id: string,
 	templateKey: string,
@@ -634,6 +687,24 @@ export type FamilyConsentDto = {
 	/**  «Bu qarz emas» tushuntirishi o'qilgan sana. */
 	notDebtAckOn: string | null,
 	complete: boolean,
+};
+
+export type FieldDiffDto = {
+	field: string,
+	/**  Ko'rsatish uchun tayyor qiymat (summa — formatlangan). */
+	local: string,
+	remote: string,
+};
+
+export type ForkDto = {
+	agreementId: string,
+	title: string,
+	seq: number,
+	/**
+	 *  `FORK` (ayrilish), `TAMPERED` (fayldagi yozuv o'zgartirilgan), `NOT_KEEPER_WRITE`
+	 *  (jurnalga hisob yurituvchi bo'lmagan qurilma yozgan).
+	 */
+	reason: string,
 };
 
 /**  Tayyorgarlik darvozasi (uy/SPEC 2C.4) — faqat kapital kirituvchiga qo'llanadi. */
@@ -737,6 +808,42 @@ export type IdeaScenarioInput = {
 	expense: string,
 };
 
+export type ImportItemDto = {
+	/**  `<jadval>:<kalit>` — ziddiyatni tanlashda shu kalit qaytariladi. */
+	key: string,
+	table: string,
+	rowId: string,
+	label: string,
+};
+
+/**  Import oldidan: nima qo'shiladi, nima o'zgaradi, ziddiyatlar va to'xtatuvchi muammolar. */
+export type ImportPreviewDto = {
+	sourceDeviceId: string,
+	sourceDeviceName: string,
+	mode: string,
+	exportedAt: string,
+	rows: number,
+	inserts: number,
+	updates: number,
+	same: number,
+	keptLocal: number,
+	journalAppended: number,
+	protected: ImportItemDto[],
+	conflicts: ConflictDto[],
+	forks: ForkDto[],
+	/**  Ayrilish yo'q — import qilish mumkin (ziddiyatlar tanlangandan keyin). */
+	canApply: boolean,
+};
+
+export type ImportResultDto = {
+	inserted: number,
+	updated: number,
+	conflictsLocal: number,
+	conflictsRemote: number,
+	protected: number,
+	journalAppended: number,
+};
+
 export type IncidentDto = {
 	id: string,
 	dutyId: string,
@@ -802,6 +909,14 @@ export type IssuedReceiptDto = {
 	recordType: string,
 	recordId: string,
 	shortCode: string,
+};
+
+/**  Mavjud xonadonga qo'shilish yoki zaxira nusxadan tiklash. */
+export type JoinInput = {
+	/**  Ulash kodi (QR'dan yoki qo'lda) yoki zaxira nusxa paroli. */
+	secret: string,
+	deviceName: string,
+	platform: string,
 };
 
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */
@@ -1059,6 +1174,14 @@ export type OpenPeriodDto = {
 	result: MoneyDto,
 };
 
+/**  Ulash oynasi uchun: QR, qo'lda kiritiladigan kod va saqlangan fayl nomi. */
+export type PairingView = {
+	code: string,
+	qrSvg: string,
+	householdName: string,
+	fileName: string,
+};
+
 export type PartnerDto = {
 	id: string,
 	fullName: string,
@@ -1204,6 +1327,12 @@ export type PeriodPartyDto = {
 	payout: MoneyDto,
 	carriedAfter: MoneyDto,
 	capitalAfter: MoneyDto,
+};
+
+/**  Tanlangan fayl: to'liq yo'l (keyingi buyruqlar uchun) va ko'rsatiladigan nomi. */
+export type PickedFile = {
+	path: string,
+	name: string,
 };
 
 export type PlanLineDto = {
@@ -1562,7 +1691,7 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {

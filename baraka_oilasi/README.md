@@ -16,7 +16,7 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 | [docs/uy/](docs/uy/) | «Baraka daftari» spetsifikatsiyasi va dastlabki rejalar |
 | [CLAUDE.md](CLAUDE.md) | AI-dasturchi uchun sessiya qoidalari |
 
-Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`
+Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.baraka` formati — `python3 -I spec/interchange/oracle.py --check spec/interchange/vectors.json` (`cryptography` kerak).
 
 ## Holat (1-sessiya)
 | Qism | Holat |
@@ -24,7 +24,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`
 | Rust yadro: `money`, `journal`, `security`, `storage`, `domain-uy`, `agreements`, `app` (sessiya va use-case'lar) | ✅ testlar bilan |
 | Oltin vektorlar (28 suite, 191 case) + mustaqil Python oracle | ✅ |
 | `cargo xtask`: i18n (uz, uz-Cyrl, ru), taqiqlangan iboralar, dizayn tokenlari | ✅ |
-| Desktop: Tauri 2 + React, Claude Code dark theme (sozlash, qulf, bosh sahifa, daromad, Kelajagim, xarajat, audit, qarzlar inventari, «to'xta va o'yla», qarz tilxati → jurnal → PDF, «Qarzdan chiqish», marosimlar, sheriklik, kelishuvlar markazi) | ✅ Linux'da yig'ildi va tekshirildi; Windows NSIS — CI'da yashil |
+| Desktop: Tauri 2 + React, Claude Code dark theme (sozlash, qulf, bosh sahifa, daromad, Kelajagim, xarajat, audit, qarzlar inventari, «to'xta va o'yla», qarz tilxati → jurnal → PDF, «Qarzdan chiqish», marosimlar, sheriklik, kelishuvlar markazi, sinxronlash) | ✅ Linux'da yig'ildi va tekshirildi; Windows NSIS — CI'da yashil |
 | PDF (typst): qarz tilxati, marosim smetasi, sheriklik shartnomasi (chizilgan imzolar bilan), sheriklik davri hisoboti, ko'rik bayonnomasi, hakam uchun ish papkasi, uz / uz-Cyrl / ru | ✅ |
 | U8: qarz inventari, haqiqiy narx, friction, tilxat (jurnal bilan) | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U9: «Qarzdan chiqish» 70/20/10, rejalovchi (grafik), «Qarzsiz kun», buyumlar, to'lovchilar | ✅ yadro + desktop; Android UI — keyingi sessiya |
@@ -32,6 +32,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`
 | U11: sheriklik (mudoraba / musharaka), 9 savolli shartnoma ustasi, versiyalar va chizilgan imzolar, buyout, darvoza va oilaviy rozilik | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U12: kassa daftari (cheklar bilan, o'zgarmas), davrni yopish va avtomatik taqsimot (zararni tiklash, buyout ayirmasi), sherik uchun hisobot PDF, «Hunardan ishga», «Taklifni tekshirish» | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U13: vazifa hodisalari, oylik ochiq hisob ko'rigi (bayonnoma + zanjir boshi), «katta foyda»da qayta o'qish, nizo va hakam (taqsimot bloki, ish papkasi PDF), yillik yangilash, oilaviy kelishuvlar, kelishuvlar markazi va eslatmalar | ✅ yadro + desktop; Android UI — keyingi sessiya |
+| U14: `.baraka` eksport/import (shifrlangan, yagona sxema), uch tomonlama birlashtirish va ziddiyat tanlovi, jurnal ayrilishini aniqlash, zaxira nusxa, QR/kod bilan yangi qurilmani ulash | ✅ yadro + desktop + Python oracle; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

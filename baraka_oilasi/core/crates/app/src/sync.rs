@@ -27,6 +27,8 @@ use crate::*;
 
 const JOURNAL: &str = "journal_entries";
 const MAX_LABEL: usize = 80;
+/// `*_json` ustunlari (xarajatlar ro'yxati, stsenariylar) ziddiyat jadvalida shu uzunlikkacha.
+const MAX_JSON_VALUE: usize = 400;
 
 const ALL_TOPICS: [Topic; 17] = [
     Topic::Household,
@@ -538,6 +540,16 @@ impl App {
                     _ => n.to_string(),
                 }
             }
+            Value::String(s) if field.ends_with("_json") => {
+                let currency = text(row, "currency").and_then(|c| Currency::from_code(&c).ok());
+                match serde_json::from_str::<Value>(s) {
+                    Ok(parsed) => show_json(locale, currency, &parsed),
+                    Err(_) => s.clone(),
+                }
+                .chars()
+                .take(MAX_JSON_VALUE)
+                .collect()
+            }
             Value::String(s) => s.chars().take(MAX_LABEL).collect(),
             Value::Object(_) => baraka_interchange::canon::blob_bytes(v)
                 .map_or_else(String::new, |b| format!("[{} B]", b.len())),
@@ -861,5 +873,74 @@ impl App {
         })?;
         self.publish(None, &ALL_TOPICS);
         self.household()
+    }
+}
+
+/// `*_json` ustunidagi qiymatni odam o'qiydigan qilib chiqaradi: ro'yxat elementlari «; » bilan,
+/// obyektda matnlar va summalar (`…Minor` — pul) — `Overlok: 4 500 000 so'm`.
+fn show_json(locale: baraka_money::Locale, currency: Option<Currency>, v: &Value) -> String {
+    match v {
+        Value::Array(items) => items
+            .iter()
+            .map(|i| show_json(locale, currency, i))
+            .collect::<Vec<_>>()
+            .join("; "),
+        Value::Object(map) => {
+            let mut texts = Vec::new();
+            let mut values = Vec::new();
+            for (k, x) in map {
+                match x {
+                    Value::String(t) => texts.push(t.clone()),
+                    Value::Number(n) => values.push(match (n.as_i64(), currency) {
+                        (Some(minor), Some(cur))
+                            if k.ends_with("Minor") || k.ends_with("_minor") =>
+                        {
+                            format(Money::new(minor, cur), locale)
+                        }
+                        _ => n.to_string(),
+                    }),
+                    Value::Bool(b) => values.push(if *b { "✓" } else { "✗" }.into()),
+                    Value::Null => {}
+                    nested => values.push(format!("({})", show_json(locale, currency, nested))),
+                }
+            }
+            match (texts.is_empty(), values.is_empty()) {
+                (false, false) => format!("{}: {}", texts.join(", "), values.join(" / ")),
+                (false, true) => texts.join(", "),
+                _ => values.join(" / "),
+            }
+        }
+        Value::String(t) => t.clone(),
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => if *b { "✓" } else { "✗" }.into(),
+        Value::Null => "—".into(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::show_json;
+    use baraka_money::{Currency, Locale};
+
+    #[test]
+    fn json_columns_are_readable_in_conflicts() {
+        let uzs = Currency::from_code("UZS").ok();
+        let capex = serde_json::json!([
+            {"title": "Overlok", "amountMinor": 450_000_000},
+            {"title": "Stol", "amountMinor": 150_000_000}
+        ]);
+        let s = show_json(Locale::Uz, uzs, &capex);
+        assert!(s.starts_with("Overlok: 4"), "{s}");
+        assert!(s.contains("; Stol: 1"), "{s}");
+        assert!(!s.contains("amountMinor"), "{s}");
+        // Valyuta noma'lum bo'lsa — butun son o'zgarishsiz.
+        assert_eq!(
+            show_json(
+                Locale::Uz,
+                None,
+                &serde_json::json!({"n": "A", "xMinor": 5})
+            ),
+            "A: 5"
+        );
     }
 }

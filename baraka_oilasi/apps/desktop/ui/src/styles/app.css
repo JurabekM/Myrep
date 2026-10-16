@@ -12,6 +12,8 @@
   }
   body {
     @apply bg-paper font-sans text-ink antialiased;
+    /* Radio, checkbox, progress — brauzerning ko'k rangi emas, aksent. */
+    accent-color: var(--bk-accent);
   }
   :focus-visible {
     outline: 2px solid var(--bk-focus);

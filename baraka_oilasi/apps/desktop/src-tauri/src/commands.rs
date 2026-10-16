@@ -614,8 +614,23 @@ fn save_pdf(handle: &AppHandle, pdf: Vec<u8>, file_name: &str) -> R<bool> {
     let path = file
         .into_path()
         .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
-    std::fs::write(path, pdf).map_err(|_| AppError::new("IO_ERROR"))?;
+    std::fs::write(with_extension(path, "pdf"), pdf).map_err(|_| AppError::new("IO_ERROR"))?;
     Ok(true)
+}
+
+/// Foydalanuvchi nomni butunlay almashtirsa, GTK kengaytma qo'shmaydi — fayl keyin filtrda
+/// ko'rinmay qoladi. Kengaytma boshqacha yoki yo'q bo'lsa, oxiriga qo'shiladi.
+fn with_extension(path: std::path::PathBuf, ext: &str) -> std::path::PathBuf {
+    let ok = path
+        .extension()
+        .is_some_and(|e| e.to_string_lossy().eq_ignore_ascii_case(ext));
+    if ok {
+        return path;
+    }
+    let mut name = path.into_os_string();
+    name.push(".");
+    name.push(ext);
+    name.into()
 }
 
 /// Saqlangan tilxatni joriy tekshirish kodi bilan PDF qilib saqlaydi.
@@ -1227,4 +1242,177 @@ pub async fn export_dispute_folder(
         .app()?
         .dispute_folder_pdf(&space_id, &partnership_id, &dispute_id)?;
     save_pdf(&handle, pdf, "hakam-papkasi.pdf")
+}
+
+// ---- U14: `.baraka` eksport/import va qurilmalarni ulash ----
+
+/// `.baraka` fayl hajmi chegarasi (cheklar rasmlari bilan ham yetarli).
+const MAX_BARAKA_BYTES: u64 = 512 * 1024 * 1024;
+
+/// Tanlangan fayl: to'liq yo'l (keyingi buyruqlar uchun) va ko'rsatiladigan nomi.
+#[derive(Clone, Debug, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PickedFile {
+    pub path: String,
+    pub name: String,
+}
+
+/// Ulash oynasi uchun: QR, qo'lda kiritiladigan kod va saqlangan fayl nomi.
+#[derive(Clone, Debug, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PairingView {
+    pub code: String,
+    pub qr_svg: String,
+    pub household_name: String,
+    pub file_name: String,
+}
+
+fn save_baraka(handle: &AppHandle, bytes: &[u8], file_name: &str) -> R<Option<String>> {
+    let picked = handle
+        .dialog()
+        .file()
+        .add_filter("Baraka", &["baraka"])
+        .set_file_name(file_name)
+        .blocking_save_file();
+    let Some(file) = picked else {
+        return Ok(None);
+    };
+    let path = file
+        .into_path()
+        .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
+    let path = with_extension(path, "baraka");
+    std::fs::write(&path, bytes).map_err(|_| AppError::new("IO_ERROR"))?;
+    Ok(Some(
+        path.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+    ))
+}
+
+fn read_baraka(path: &str) -> R<Vec<u8>> {
+    let meta = std::fs::metadata(path).map_err(|_| AppError::new("IO_ERROR"))?;
+    if meta.len() > MAX_BARAKA_BYTES {
+        return Err(AppError::new("FILE_TOO_LARGE"));
+    }
+    std::fs::read(path).map_err(|_| AppError::new("IO_ERROR"))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn devices(state: State<'_, Desktop>) -> R<Vec<DeviceDto>> {
+    state.session.app()?.devices()
+}
+
+/// Eksport va «Saqlash» oynasi. Bekor qilinsa — `None`; aks holda yozuvlar soni.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_baraka(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    input: ExportInput,
+) -> R<Option<u32>> {
+    let file = state.session.app()?.export_baraka(input)?;
+    Ok(save_baraka(&handle, &file.bytes, &file.file_name)?.map(|_| file.rows))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn pick_baraka_file(handle: AppHandle) -> R<Option<PickedFile>> {
+    let picked = handle
+        .dialog()
+        .file()
+        .add_filter("Baraka", &["baraka"])
+        .blocking_pick_file();
+    let Some(file) = picked else {
+        return Ok(None);
+    };
+    let path = file
+        .into_path()
+        .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
+    Ok(Some(PickedFile {
+        name: path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        path: path.to_string_lossy().into_owned(),
+    }))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn inspect_baraka(
+    state: State<'_, Desktop>,
+    path: String,
+    password: String,
+) -> R<ImportPreviewDto> {
+    let bytes = read_baraka(&path)?;
+    state.session.app()?.inspect_baraka(&bytes, &password)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn apply_baraka(
+    state: State<'_, Desktop>,
+    path: String,
+    password: String,
+    choices: Vec<ConflictChoiceInput>,
+) -> R<ImportResultDto> {
+    let bytes = read_baraka(&path)?;
+    state
+        .session
+        .app()?
+        .apply_baraka(&bytes, &password, choices)
+}
+
+/// Yangi qurilmani ulash: kod bilan shifrlangan fayl saqlanadi, QR va kod ko'rsatiladi.
+#[tauri::command]
+#[specta::specta]
+pub async fn pairing_offer(handle: AppHandle, state: State<'_, Desktop>) -> R<Option<PairingView>> {
+    let offer = state.session.app()?.pairing_offer()?;
+    Ok(
+        save_baraka(&handle, &offer.bytes, &offer.file_name)?.map(|file_name| PairingView {
+            code: offer.code,
+            qr_svg: offer.qr_svg,
+            household_name: offer.household_name,
+            file_name,
+        }),
+    )
+}
+
+/// O'rnatishda: mavjud xonadonga qo'shilish (ulash kodi) yoki zaxira nusxadan tiklash (parol).
+#[tauri::command]
+#[specta::specta]
+pub async fn join_household(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    path: String,
+    pin: String,
+    input: JoinInput,
+) -> R<SetupResult> {
+    let bytes = read_baraka(&path)?;
+    let secret = state.secrets.create()?;
+    let result = state.session.join_household(&secret, &pin, &bytes, input)?;
+    forward_events(&handle, &*state.session.app()?);
+    Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::with_extension;
+    use std::path::PathBuf;
+
+    #[test]
+    fn save_dialog_name_gets_extension() {
+        let p = |s: &str| PathBuf::from(s);
+        assert_eq!(
+            with_extension(p("/d/noutbuk"), "baraka"),
+            p("/d/noutbuk.baraka")
+        );
+        assert_eq!(with_extension(p("/d/x.BARAKA"), "baraka"), p("/d/x.BARAKA"));
+        assert_eq!(
+            with_extension(p("/d/x.txt"), "baraka"),
+            p("/d/x.txt.baraka")
+        );
+        assert_eq!(with_extension(p("/d/smeta.pdf"), "pdf"), p("/d/smeta.pdf"));
+    }
 }
