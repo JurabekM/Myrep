@@ -79,6 +79,37 @@
 - **Taklif:** «Sozlamalar → Oila» bo'limi; rol o'zgarishi kelishuv roziliklariga ta'sir qiladi (OQ-M1 bilan birga).
 - **To'sadi:** — . **Holat:** OCHIQ.
 
+## Kasb-kor (mahsulot egasi uchun; `docs/kasbkor/SPEC.md`)
+
+### OQ-K1. Tannarx usuli
+- **Taklif:** standart — o'rtacha tortilgan; FIFO — tovar bo'yicha ixtiyoriy (muddati bor tovarlar). Ikkalasi ham vektor bilan (`kk_cogs`).
+- **Savol:** kichik do'kon uchun bitta usul yetarlimi yoki tanlov kerakmi? «Asosiy tovarlar» rejimi (20–30 pozitsiya) standart bo'lsinmi?
+- **To'sadi:** K5. **Holat:** OCHIQ.
+
+### OQ-K2. Egasi maoshi Uy makonida qanday daromad?
+- **Masala:** `BARAKA_OILASI.md` 4.6 da «egasi maoshi Uy'da `MOL | TAVAKKAL`» deyilgan. Lekin maosh — egasining mehnati uchun (`TER`), foyda ulushi esa kapital va tavakkal uchun (`MOL` / `TAVAKKAL`).
+- **Taklif:** maosh → `TER`; «Hisob kuni»da egasiga foyda ulushi o'tkazilsa → `MOL`. 4.6 matni shunga moslanadi.
+- **To'sadi:** K1. **Holat:** OCHIQ.
+
+### OQ-K3. Soliq zaxirasi qoidasi
+- **Taklif:** egasi o'zi kiritadi: baza (tushum yoki foyda) va foiz yoki qat'iy summa. Ilova rejim va stavka tavsiya qilmaydi («soliq maslahati emas»).
+- **Savol:** onboarding'da shu qadam bo'lsinmi yoki birinchi «Hisob kuni»da?
+- **To'sadi:** K3. **Holat:** OCHIQ.
+
+### OQ-K4. «Muzlagan tovar» chegarasi
+- **Taklif:** oxirgi sotuvdan 90 kun, tovar bo'yicha o'zgartiriladi. Muzlagan tovar qayta tiklash narxida ko'rsatiladi.
+- **To'sadi:** K5. **Holat:** OCHIQ.
+
+### OQ-K5. «O'z mehnati bahosi»
+- **Masala:** haqiqiy foyda egasi kiritgan bahoga bog'liq. Juda past yozilsa — tashxis yo'qoladi, juda baland — doim «zarar».
+- **Taklif:** egasi kiritadi; ilova savol bilan yordam beradi («shu ishni yollanma usta qancha oladi?»), mintaqaviy narx bazasi yo'q.
+- **To'sadi:** K2. **Holat:** OCHIQ.
+
+### OQ-K6. Kengayish darvozasi chegaralari
+- **Taklif:** zaxira ≥ 3 oylik operatsion xarajat; oxirgi 3 «Hisob kuni»da haqiqiy foyda > 0; 90+ kunlik nasiya ≤ 10%; foizli qarz yo'q yoki reja bilan; yozilgan kengayish rejasi.
+- **Savol:** chegaralar to'g'rimi? Mavsumiy biznes (masalan, to'y libosi) uchun «3 oy» qanday hisoblanadi?
+- **To'sadi:** K7. **Holat:** OCHIQ.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik
@@ -122,7 +153,13 @@
 
 ### OQ-D5. Muzoraa, nasiya narxi, savdo mollari zakoti
 - **Savollar:** (1) nasiyada narxni oldindan qotirib sotish (bay' muajjal) va kechikish uchun ustama taqiqi; (2) savdo mollari zakotini bozor narxida baholash; (3) xodim bilan foyda ulushi asosidagi kelishuv; (4) konsignatsiya.
-- **To'sadi:** K0. **Holat:** OCHIQ.
+- **K0 da (SPEC 5.2, 7.1, 8.3):** nasiya narxi kelishuvda qotiriladi va keyin oshirilmaydi, ustama/jarima maydoni yo'q; zakot bazasidagi tovar baholash usuli (xarid, qayta tiklash yoki sotuv narxi) ochiq — SPEC'dagi misol shartli.
+- **To'sadi:** K4, K6, K7. **Holat:** OCHIQ.
+
+### OQ-D7. Savdo mollari zakoti: nisob, nasiya, oilaviy mehnat, oldindan to'lov
+- **Savollar:** (1) nisob oltin (85 g) yoki kumush bo'yicha hisoblanadimi, kim tanlaydi? (2) umidli nasiya bazaga kiradi, umidsiz (90+ va egasi belgilagan) kirmaydi — to'g'rimi; umidsiz nasiya keyin qaytsa? (3) yaqin muddatli qarzlar (ta'minotchiga) bazadan ayiriladimi? (4) nasiyani muddatidan oldin to'lagan mijozga chegirma berish (da' va ta'ajjal) joizmi — ilovada bunday tugma bo'lsinmi? (5) oilaviy mehnatni tannarxga «bahosi» bilan kiritish — bu faqat hisob usuli, fiqhiy masala emas deb tushunamiz; to'g'rimi?
+- **K0 da:** formula `docs/kasbkor/SPEC.md` 8.3 (2,5% = 250 bp, hawl va nisob sharti); natija «hisob, fatvo emas».
+- **To'sadi:** K7. **Holat:** OCHIQ.
 
 ### OQ-D6. Kamayib boruvchi musharakada ulush narxi
 - **Savol:** mehnat egasi kapital egasining ulushini bosqichma-bosqich sotib olganda, har bir qism narxini **oldindan qotirib** (masalan, 30 mln / 20 = 1,5 mln) va'da qilish joizmi? Bizning tushunishimizcha, AAOIFI shariat standartida (12, sheriklik) ulushni asl (nominal) qiymatda sotib olish majburiyati kapitalni kafolatlaydi va qarzga o'xshab qoladi, shuning uchun sotilgan kundagi bozor yoki o'sha kuni kelishilgan qiymat ko'rsatiladi — ulamo tasdiqlashi kerak.
@@ -143,7 +180,8 @@
 
 ### OQ-Y3. Kasb-kor: mijozlarning shaxsiy ma'lumotlari
 - **Savol:** nasiya olgan mijozlarning ism va telefonlarini saqlaganda do'kondor operator hisoblanadimi? Qanday rozilik shakli kerak?
-- **To'sadi:** K0, K4. **Holat:** OCHIQ.
+- **K0 da (SPEC 5.2, 11):** telefon ixtiyoriy, saqlanganda rozilik belgisi; ma'lumot faqat qurilmada shifrlangan; eslatmani ilova o'zi yubormaydi (matn nusxalanadi). Xodim ma'lumotlari ham minimal (7.2).
+- **To'sadi:** K4, K6. **Holat:** OCHIQ.
 
 ### OQ-Y4. Sheriklik shartnomasi shakli
 - **Savol:** mudoraba/musharaka kelishuvi Fuqarolik kodeksidagi oddiy shirkat (birgalikdagi faoliyat) shartnomasiga qanday mos keladi?
@@ -154,6 +192,14 @@
 - **Savol:** tomonlar tanlagan hakam (mahalla oqsoqoli va h.k.) qarori qanday huquqiy kuchga ega? Hakam qarorni ilovada chizilgan imzo bilan tasdiqlashi kerakmi yoki qog'ozdagi qarorning nusxasi (rasm) ilova qilinadimi?
 - **U13 da:** qaror sanasi, mazmuni va natijasi (`RESUME` / `AMEND`) o'zgarmas yozuv sifatida saqlanadi; ish papkasi PDF «ilova yuridik maslahat bermaydi» bandi bilan.
 - **To'sadi:** — . **Holat:** OCHIQ.
+
+### OQ-Y6. Xodim, ta'minotchi va nasiya kelishuvlari
+- **Savol:** `EMPLOYMENT`, `SUPPLY`, `CREDIT_SALE` shablonlari (9 savol asosida) qanday ko'rinishda bo'lishi kerak, rasmiy mehnat shartnomasi va oldi-sotdi shartnomasidan qanday ajratiladi? Ilova bu hujjatlarni «ichki kelishuv» deb ataydimi?
+- **To'sadi:** K4, K6. **Holat:** OCHIQ.
+
+### OQ-Y7. Fiskal talablar va «boshqaruv hisobi» chegarasi
+- **Savol:** ilova onlayn-kassa (fiskal) va soliq hisobotlari o'rnini bosmaydi, egasi o'zi uchun hisob yuritadi. Kunlik kassa yopish va nasiya daftari qanday ifodalanishi kerakki, foydalanuvchi uni rasmiy hujjat deb o'ylamasin? Qanday disklеymer kerak?
+- **To'sadi:** K1, K4. **Holat:** OCHIQ.
 
 ## Texnik
 

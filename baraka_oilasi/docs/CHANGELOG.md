@@ -6,6 +6,11 @@
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
 - Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
 
+### Qo'shildi — K0: Kasb-kor makoni spetsifikatsiyasi (hujjat, kod yo'q)
+- `docs/kasbkor/SPEC.md` v0.1 — **qoralama, mahsulot egasi tasdig'i kutilmoqda**. `docs/uy/SPEC.md` formatida: tashxis va odat ritmi, bosh ekran (1-raqam «Haqiqiy foyda», 2-raqam «Egasiga to'langan maosh»), 6 personaj, 7 qonunning funksional talablari, domen modeli (mavjud jadvallarga bog'langan), 9 ta vektor suite'i, UI/UX, cheklovlar, ko'p qurilma va rollar (K8 — avval ADR), K1–K8 ish rejasi va qabul mezonlari.
+- Ishlangan misollar (hammasi qayta hisoblab tekshirildi): Nilufar — ko'rinadigan foyda 9 500 000, haqiqiy foyda 3 100 000; eskirish 7 mln / 36 oy (qoldiq tiyinlar); shakar — o'rtacha tannarx 960 000 / FIFO 925 000, qayta tiklash farqi 105 000; kassa farqi −50 000; «Hisob kuni» taqsimoti 2 580 000 → 774 000 / 1 290 000 / 516 000; nasiya 3 × 220 000; zakot bazasi 100 000 000 → 2 500 000 (ulamo tasdig'igacha shartli).
+- Ochiq savollar: OQ-K1…OQ-K6 (mahsulot egasi), OQ-D5 yangilandi va OQ-D7 (ulamo), OQ-Y3 yangilandi, OQ-Y6, OQ-Y7 (yurist).
+
 ### Qo'shildi — U15: onboarding, accessibility, yakuniy E2E va reliz tayyorgarligi (V15 / D15)
 - **Doira (mahsulot egasi qarori, 2026-10-16):** U15 mavjud funksiyalar bilan; U3–U7 hali yo'q, shuning uchun Anvar ssenariysidagi havas chegarasi, obuna, «qutqarilgan pul» va darvozaning U6 qismi E2E'da yo'q (OQ-P12).
 - **Onboarding (5 qadam):** til va yo'l (yangi xonadon / mavjud xonadonga qo'shilish) → oila (a'zolar: katta/bola, makonlar) → daromad ritmi (kunlik naqd / buyurtma bo'yicha / oylik maosh + maosh kuni = oy boshi) → «hozir qarz bormi?» → PIN → tiklash kodi va zaxira nusxa eslatmasi. «Qarzim bor» — birinchi ekran qarzlar inventari, keyin 70/20/10 taklifi. Har qadamda fokus sarlavhaga o'tadi.

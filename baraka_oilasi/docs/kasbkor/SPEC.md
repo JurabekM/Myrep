@@ -1,0 +1,268 @@
+# «KASB-KOR» MAKONI — SPETSIFIKATSIYA
+### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
+
+> Versiya: **v0.1 — QORALAMA (K0)**. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
+> Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
+
+---
+
+## 0. HUJJAT HAQIDA
+- Kasb-kor — bitta «Baraka» ilovasidagi ikkinchi makon (`SpaceKind::KASBKOR`). Uy makoni (`docs/uy/SPEC.md`) bilan bir xonadon, bir baza, bir PIN, bir jurnal dvigateli; chegarasi — 1-qonunning o'zi («ikki cho'ntak»).
+- Hamma pul hisoblari faqat yadroda (`core/`), `Money` va `round_half_up` bilan (`BARAKA_OILASI.md` 5). Har bir yangi pul funksiyasi uchun avval `spec/test-vectors/` ga oracle bilan hisoblangan vektor yoziladi (9-bo'limdagi suite'lar).
+- Miqdorlar (kg, litr, dona, metr) **butun sonda, eng kichik birlikda** saqlanadi (gramm, millilitr, dona, millimetr) — `f64` yo'q.
+- Uy makonida tayyor bo'lgan mexanizmlar qayta ishlatiladi: kelishuv dvigateli va 9 savol (U7/U11), o'zgarmas jurnal va bayonnoma (U12/U13), qarz inventari va «to'xta va o'yla» (U8), `allocate` (largest remainder), tayyorgarlik darvozasi (U6/U11), «Hunardan ishga» stsenariylari (U12), `.baraka` almashish (U14), PDF (Y6).
+
+## 1. MAHSULOT MOHIYATI
+**Asosiy tashxis:** «Aylanma bor, egasi boyimaydi». Pul ko'p aylanadi, lekin:
+- **cho'ntak bitta** — do'kon kassasi oilaning hamyoni ham, egasi kerak bo'lganda oladi va yozmaydi;
+- **foyda aslida maosh** — egasining o'z mehnati, oila a'zolarining yordami va uskunaning eskirishi hisobga olinmaydi, «foyda» degan narsa egasining ish haqidan kam bo'lib chiqadi;
+- **kapitalni inflyatsiya yeydi** — tovar eski narxda hisoblanib sotiladi, qayta olishga pul yetmaydi;
+- **nasiya yig'ilmaydi** — kim, qancha, qachongacha — yozilmagan; yozilgan bo'lsa ham ko'rib chiqilmaydi.
+
+**Falsafa:** ribo yo'q; kengayish — jamg'arma, sheriklik va reja bilan. Soliq to'lash — halollikning bir qismi, yashirish vositasi emas.
+
+**Odat ritmi:** har kuni kassa yopish (5 daqiqa) → har hafta nasiya ko'rigi → har oy «Hisob kuni» → har yil inventarizatsiya va zakot.
+
+**Bosh ekran:** 1-raqam — **«Haqiqiy foyda (shu oy)»**; 2-raqam — **«Egasiga to'langan maosh (shu oy)»**. Keyin: kassa holati (bugun yopilganmi), mijozlardagi pul (nasiya), muzlagan tovar, keyingi «Hisob kuni».
+
+**Bu makon nima EMAS:** ERP, buxgalteriya yoki 1C o'rnini bosuvchi tizim; onlayn (fiskal) kassa; soliq hisobotini tayyorlovchi yoki topshiruvchi; «ikkinchi daftar» — daromadni yashirish vositasi; kredit, investor yoki sheriklar bozori; bank yoki to'lov integratsiyasi (CSV importdan tashqari). Ilova **boshqaruv hisobi** (egasi o'zi uchun) yuritadi; qonun talab qiladigan fiskal qurilmalar va hisobotlar o'rnini bosmaydi.
+
+### 1.1. Kontent tuzilmasi
+- Kasb-kor qissalari 7 qonunni ochadi (har qonun — 1–2 bob). Bob tuzilmasi Uy makonidagidek: hikoya, «Daftar sahifasi», 3 ta haftalik amaliy vazifa (`docs/uy/SPEC.md` 1.1). Kontent dvigateli — U3.
+- Kontent manbasi va litsenziyasi: «Asaxiy Invest» × Abdukarim Mirzayev. Litsenziya hal bo'lguncha qissa matnlari — **placeholder** (`BARAKA_OILASI.md` 18).
+- Har bir ta'limiy ekranda: «Ta'limiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas».
+
+### 1.2. Personajlar
+| Personaj | Segment | Moliyaviy xulq | Ilova nimani yechishi kerak |
+|---|---|---|---|
+| **Nilufar** — atelye (3 tikuvchi) | Buyurtma bo'yicha xizmat, mato va furnitura xaridi | Uy daftarini yuritadi, lekin atelye puli bilan aralashib ketadi; qizi bepul yordam beradi | Ikki cho'ntak, egasi maoshi, o'z mehnati va oilaviy mehnat tannarxda, buyurtma bo'yicha haqiqiy foyda |
+| **Bahodir aka** — mahalla do'koni | Kundalik savdo, ko'p tovar, naqd va karta | Kassadan kerak bo'lganda oladi, nasiya daftari qog'ozda, tovar «turibdi» | Kunlik kassa yopish, «egasi oldi», nasiya daftari va haftalik ko'rik, tovar qoldig'i va qayta tiklash narxi |
+| **Jasur** — usta (santexnik) | Xizmat + material, buyurtmalar notekis | Avansni olib, materialga yetmay qoladi; asboblari eskiradi | Buyurtma kalkulyatori (mehnat, material, yo'l, eskirish), avans va material puli ajratilishi |
+| **Malika** — Instagram do'kon | Onlayn savdo, yetkazib berish, qaytarishlar | Reklama va yetkazishni hisoblamaydi, nasiyaga (bo'lib to'lash) sotadi | Kanal xarajatlari, qaytarishlar, nasiya narxini qotirish va jadval |
+| **Olim va Odil** — aka-uka choyxonasi | Oilaviy sheriklik | Kim qancha qo'ygani va olgani yozilmagan, xodim avanslari og'zaki | Sheriklik shartnomasi (U11), kassa daftari (U12), xodim va avans kelishuvi |
+| **Sobir hoji** — mentor | — | 30 yil foizsiz savdo qilgan | Savol beradi, hisoblatadi, ayblamaydi |
+
+## 2. 1-QONUN: «IKKI CHO'NTAK» — FUNKSIONAL TALABLAR (K1)
+Qonunning mazmuni: biznes puli — **omonat**. Egasi undan o'zboshimchalik bilan olmaydi; o'ziga **qat'iy maosh** belgilaydi va uni Uy cho'ntagiga o'tkazadi.
+
+### 2.1. Tushum va chiqim
+- Tushum: summa, kanal (naqd, karta, o'tkazma), sana, ixtiyoriy buyurtma/mijoz, ixtiyoriy tovarlar (2.3 va 4-bo'lim bilan bog'lanadi). Kiritish — 2–3 bosishda; desktopda `Ctrl+N`, kunlik jadvalda Excel uslubida (`DESKTOP_PROMPT.md` 7).
+- Chiqim turlari: **tovar xaridi** (zaxiraga kiradi, xarajat emas — 4-bo'lim), **operatsion xarajat** (ijara, kommunal, ish haqi, yo'l, reklama, soliq, uskuna ta'miri), **uskuna sotib olish** (aktiv — 3.3).
+- Standart kategoriyalar allaqachon bor (`category.kk.*`: material, ijara, ish haqi, transport, marketing, soliq, uskuna, boshqa).
+
+### 2.2. «Egasi oldi» va egasi maoshi
+- **«Egasi oldi»** (`OWNER_DRAW`) — biznes kassasidan egasining shaxsiy ehtiyoji uchun olingan har bir pul. Xarajat emas, foydani kamaytirmaydi, lekin **shu oy maoshidan avans** sifatida hisoblanadi.
+- **Egasi maoshi** — oylik qat'iy summa (onboarding'da va sozlamalarda). «Hisob kuni»da yoki qo'lda: maosh − shu oy «egasi oldi» = Uy'ga o'tkaziladigan qoldiq.
+- O'tkazma — makonlararo (`BARAKA_OILASI.md` 4.6): bitta tranzaksiyada Kasb-kor'da chiqim (`OWNER_SALARY`) va Uy'da daromad; Uy tomonida 1-qonun ulushi taklif qilinadi. Uy'dagi `sourceType` — OQ-K2.
+- «Egasi oldi» maoshdan oshsa — ayblamasdan, savol bilan: «Bu oy maoshdan X so'm ko'p olindi. Keyingi oy maoshidan ushlab qolamizmi yoki maoshni qayta ko'rib chiqamizmi?».
+- Bosh ekran 2-raqami: «Egasiga to'langan maosh (shu oy)» = Uy'ga o'tkazilgan maosh + shu oy «egasi oldi».
+
+### 2.3. Biznes qoldiqlari
+- Naqd kassa, karta/hisob raqami — alohida «hamyonlar» (`Asset`, `asset_type = CASH | BANK`), Uy makonidagi pul bilan aralashmaydi.
+- Biznesga egasining shaxsiy pulidan qo'shilgan mablag' — **kapital kiritish** (`OWNER_CONTRIBUTION`), qarz emas va tushum emas.
+
+## 3. 2-QONUN: «HAQIQIY FOYDANI BIL» — FUNKSIONAL TALABLAR (K2)
+Qonunning mazmuni: egasining mehnati, oila a'zolarining yordami va uskunaning eskirishi tannarxga kirmaguncha «foyda» — aslida maosh.
+
+### 3.1. Haqiqiy foyda formulasi
+```
+Ko'rinadigan foyda = Tushum − Sotilgan tovar tannarxi − Operatsion xarajatlar
+Haqiqiy foyda      = Ko'rinadigan foyda − O'z mehnati bahosi − Oilaviy mehnat bahosi − Eskirish
+```
+- **O'z mehnati bahosi** — egasi o'z ishini yollanma odamga topshirsa, unga oyiga qancha to'lardi (foydalanuvchi kiritadi; OQ-K5). Egasi maoshi (2.2) undan farq qilishi mumkin — ekran ikkalasini yonma-yon ko'rsatadi.
+- **Oilaviy mehnat** — a'zo, soat, soat bahosi; pul to'lanmasa ham tannarxga kiradi («qizingizning 80 soati ham xarajat»). To'langan bo'lsa — operatsion xarajat (ikki marta hisoblanmaydi).
+- **Eskirish** — uskuna narxi (minus qoldiq qiymati) foydali muddat oylariga `allocate` bilan teng bo'linadi (qoldiq tiyinlar birinchi oylarga); yig'indi aniq narxga teng.
+
+**Misol (Nilufar, oy):** tushum 18 000 000; mato va furnitura 6 000 000; ijara 2 000 000; kommunal 500 000 → ko'rinadigan foyda **9 500 000**. O'z mehnati 5 000 000; qizining yordami 80 soat × 15 000 = 1 200 000; 2 ta tikuv mashinasi 12 000 000, 60 oy → eskirish 200 000. **Haqiqiy foyda = 3 100 000 so'm.**
+
+**Eskirish yaxlitlash misoli:** 7 000 000 so'm, 36 oy → 700 000 000 tiyin / 36 = 19 444 444, qoldiq 16 → 16 oy 194 444,45 so'm, 20 oy 194 444,44 so'm; jami 7 000 000,00.
+
+### 3.2. Buyurtma kalkulyatori (xizmat ko'rsatuvchilar uchun)
+- Material + mehnat soati × soat bahosi + yo'l + eskirish ulushi + (ixtiyoriy) zaxira foizi = **tannarx**; narx taklifi tannarxdan past bo'lsa — ogohlantirish («bu buyurtmada siz o'z mehnatingizga X so'm to'lab ishlaysiz»).
+- Jasur ssenariysi: avans olinganda material puli **alohida belgilanadi** (avansdan materialga yetadimi — ko'rsatiladi).
+
+### 3.3. Uskunalar
+- Uskuna — `Asset(asset_type = EQUIPMENT)`: narx, sana, foydali muddat (oy), qoldiq qiymati. Eskirish oyma-oy avtomatik (pul harakati emas).
+- Uskuna sotilsa yoki yaroqsiz bo'lsa — qolgan qiymat bir martalik xarajat.
+
+## 4. 3-QONUN: «TOVAR HAM PUL — U HAM YOTADI» — FUNKSIONAL TALABLAR (K3, K5)
+Qonunning mazmuni: javondagi tovar — muzlagan pul. Uni eski narxda hisoblash kapitalni sezdirmay yeydi; foydani esa qoida bo'yicha taqsimlash kerak.
+
+### 4.1. Tovar kartochkasi va harakatlar (K5)
+- Tovar: nom, birlik (g, ml, dona, mm), xarid narxi, sotuv narxi, ixtiyoriy minimal qoldiq.
+- Harakatlar: **xarid** (+), **sotuv** (−), **hisobdan chiqarish** (buzilgan, muddati o'tgan — izoh majburiy), **inventarizatsiya tuzatishi** (sanalgan − hisobdagi; izoh bilan).
+- Kichik do'kon hamma tovarni yozishga majbur emas: «asosiy tovarlar» rejimi (20–30 ta eng ko'p pul bog'laydigan pozitsiya) standart.
+
+### 4.2. Tannarx usuli
+- Standart — **o'rtacha tortilgan** (har xariddan keyin qayta hisoblanadi); ixtiyoriy — **FIFO** (muddati bor tovarlar uchun). Tanlov tovar bo'yicha (OQ-K1).
+- Driftsiz hisob: tannarx = `round_half_up(qoldiq qiymati × sotilgan miqdor / qoldiq miqdor)`, yangi qoldiq qiymati = eski − tannarx (oxirgi birlik sotilganda qiymat aniq 0).
+
+**Misol (Bahodir aka, shakar):** qoldiq 50 kg × 11 000 = 550 000; xarid 100 kg × 12 500 = 1 250 000 → 150 kg, 1 800 000. 80 kg × 14 000 = 1 120 000 ga sotildi.
+| Usul | Tannarx | Yalpi foyda | Qolgan 70 kg qiymati |
+|---|---|---|---|
+| O'rtacha (12 000/kg) | 960 000 | 160 000 | 840 000 |
+| FIFO | 925 000 | 195 000 | 875 000 |
+
+### 4.3. Qayta tiklash narxi (K5)
+- Har bir tovar uchun oxirgi (yoki qo'lda kiritilgan joriy) xarid narxi — **qayta tiklash narxi**. Qoldiqning ikki qiymati yonma-yon: hisobdagi va qayta tiklash bo'yicha; farq — «inflyatsiya yegan kapital».
+- Sotuv narxi qayta tiklash narxidan past bo'lsa — ogohlantirish: «Shu narxda sotsangiz, bu tovarni qayta ololmaysiz».
+- Misol: 70 kg shakar hisobda 840 000, joriy xarid narxi 13 500 → 945 000; farq **105 000**. 13 000 ga sotish — ogohlantirish.
+
+### 4.4. Muzlagan tovar (K5)
+- Oxirgi sotuvdan beri N kun (standart 90; OQ-K4) sotilmagan tovar — «muzlagan». Bosh ekranda: muzlagan tovarlar jami qiymati (qayta tiklash narxida).
+- Taklif (ayblamasdan): chegirma bilan sotish, almashtirish, sadaqa — har biri yozuv bilan.
+
+### 4.5. Taqsimot qoidasi va «Hisob kuni» (K3)
+- Oyda bir marta (egasi tanlagan kun) **«Hisob kuni»** ustasi: oy yakunlari → haqiqiy foyda → egasi maoshi → taqsimot → bayonnoma (o'zgarmas, `MonthClose`).
+- Tartib: (1) **soliq zaxirasi** — egasi kiritgan qoida bo'yicha (tushumdan yoki foydadan, foiz yoki summa; OQ-K3); (2) **egasi maoshi** (2.2); (3) qolgan pul **taqsimot qoidasi** bo'yicha: zaxira, aylanma (tovar), kengayish, (ixtiyoriy) sadaqa — bp bilan, `allocate` (largest remainder). Eskirish summasidan kam bo'lmagan qismi zaxiraga tavsiya qilinadi («uskunani almashtirish puli»).
+- Qolgan pul manfiy bo'lsa — taqsimot yo'q; «nima bo'ldi?» audit qadami (Uy'dagi «izohsiz summa» analogi).
+
+**Misol (Nilufar, oy):** tushum 18 000 000; soliq zaxirasi (foydalanuvchi kiritgan 4% tushumdan — misol, soliq maslahati emas) 720 000; to'langan xarajatlar 8 500 000; qizining yordami uchun to'langan 1 200 000; egasi maoshi 5 000 000 → qolgan **2 580 000**. Qoida 30/50/20 → zaxira 774 000, aylanma 1 290 000, kengayish 516 000.
+
+## 5. 4-QONUN: «NASIYANI ADOLAT BILAN YURIT» — FUNKSIONAL TALABLAR (K4)
+Qonunning mazmuni: nasiya — kelishuv. Narx savdo paytida qotiriladi; kechikkan uchun ustama yo'q; yozilmagan nasiya — yo'qolgan nasiya.
+
+### 5.1. Kunlik kassa yopish
+```
+Kutilgan qoldiq = Ochilish qoldig'i + Naqd tushum − Naqd chiqim − «Egasi oldi» (naqd) − Bankka/kartaga topshirildi
+Kassa farqi     = Sanalgan − Kutilgan
+```
+- 5 daqiqalik ustadan: tushumlar ro'yxati → chiqimlar → «egasi oldi» → topshirilgan → sanalgan summa → farq.
+- Farq nol bo'lmasa — izoh tanlanadi (yozilmagan xarajat, qaytim xatosi, nasiyaga berilgan, egasi oldi, noma'lum); yopilgan kun o'zgarmaydi, tuzatish — keyingi kunga yozuv.
+- Takrorlanuvchi kamomad (masalan, 4 haftada 3+ marta) — «xato qidirish» taklifi; hech qachon ayblov emas.
+
+**Misol (Bahodir aka):** ochilish 500 000; naqd sotuv 3 200 000; naqd chiqim (non) 400 000; egasi oldi 300 000; kartaga topshirildi 1 500 000 → kutilgan **1 500 000**; sanalgan 1 450 000 → farq **−50 000**.
+
+### 5.2. Nasiya daftari
+- Nasiya — **mijoz bilan savdo kelishuvi** (`Agreement(type = CREDIT_SALE)`): tovar/xizmat, naqd narxi (ma'lumot uchun), **nasiya narxi (qotirilgan)**, to'lov jadvali, ixtiyoriy guvoh. Yaratilgandan keyin narx oshirilmaydi; faqat to'lov, muddatni uzaytirish (narx o'zgarmasdan) yoki kechirish (to'liq/qisman) yozuvlari.
+- **Kechikish uchun ustama, jarima yoki «foiz» maydoni yo'q** (domen darajasida — `Receivable` kabi). Nasiya narxi va naqd narx farqi — OQ-D5 (bay' muajjal).
+- Mijoz: ism, ixtiyoriy telefon; telefon saqlanganda — rozilik belgisi (OQ-Y3). Mijozlar ro'yxati xonadon bazasida shifrlangan, sinxronlash va eksport — `.baraka` qoidalari bo'yicha.
+- **Haftalik nasiya ko'rigi** (juma): muddati o'tganlar, eslatma matni (iliq, nusxalanadi — ilova o'zi xabar yubormaydi), «bu hafta kim bilan gaplashaman» belgisi.
+- Yoshi bo'yicha guruhlar: 0–30, 31–60, 61–90, 90+ kun (oxirgi kelishilgan to'lov sanasidan). 90+ — «umidsiz bo'lishi mumkin» (zakot va kengayish darvozasida hisobga olinadi).
+- Malika misoli: ko'ylak, naqd narx 600 000, nasiya narxi 660 000 — 3 × 220 000, oylik. Ikkinchi to'lov 20 kun kechikdi → status «kechikkan», summa o'zgarmaydi.
+
+### 5.3. Ta'minotchiga qarz
+- Tovarni nasiyaga olish — Uy makonidagi qarz inventari mexanizmi bilan (`docs/uy/SPEC.md` 2C.7, U8), lekin Kasb-kor makonida va `SUPPLY` kelishuviga bog'lanadi (6-bo'lim).
+
+## 6. 5-QONUN: «KENGAYISHGA REJA BILAN CHIQ» — FUNKSIONAL TALABLAR (K7)
+Qonunning mazmuni: kengayish — tayyorgarlik bilan; foizli kredit o'rniga halol yo'llar.
+
+### 6.1. Kengayish darvozasi
+Darvoza ochiq bo'ladi, agar **hammasi** bajarilsa (chegaralar sozlanadi, standart qiymatlar — OQ-K6):
+1. biznes zaxirasi ≥ 3 oylik operatsion xarajat (oxirgi 3 to'liq oy o'rtachasi);
+2. oxirgi 3 «Hisob kuni»da haqiqiy foyda > 0;
+3. 90+ kunlik nasiya ≤ jami nasiyaning 10%;
+4. foizli qarz yo'q yoki «Qarzdan chiqish» rejasi bor (Uy darvozasi bilan bir xil qoida);
+5. kengayish rejasi yozilgan: CAPEX, uch stsenariy, payback («Hunardan ishga» kalkulyatori, U12).
+
+Yopiq bo'lsa — sabablar ro'yxati va har biri uchun keyingi qadam.
+
+### 6.2. Foizli kreditga halol muqobillar
+- Jamg'arma bilan bosqichma-bosqich; **sheriklik** (mudoraba/musharaka, U11–U13); ta'minotchidan qotirilgan narxda bo'lib to'lash; foizsiz qarz (U8 tilxati bilan).
+- Ilova moliyaviy tashkilotlarni tavsiya qilmaydi va reklama qilmaydi; «islomiy mahsulot» deb atalgan takliflar uchun — «Taklifni tekshirish» (U12) savollari.
+
+## 7. 6-QONUN: «KELISHUVNI YOZING» — FUNKSIONAL TALABLAR (K6)
+Qonunning mazmuni: sherik, xodim, ta'minotchi, mijoz — hamma kelishuv yoziladi (9 savol, `docs/uy/SPEC.md` 2F).
+
+### 7.1. Kelishuv turlari
+| Tur | Kim bilan | Asosiy bandlar |
+|---|---|---|
+| `PARTNERSHIP` | sherik | U11–U13 (tayyor) |
+| `EMPLOYMENT` | xodim | vazifa, ish vaqti, haq (qat'iy yoki foyda ulushi — OQ-D5), to'lov kuni, avans qoidasi, ajralish |
+| `SUPPLY` | ta'minotchi | tovar, narx (qotirilgan), yetkazish, to'lov muddati, qaytarish, konsignatsiya (OQ-D5) |
+| `CREDIT_SALE` | mijoz | 5.2 |
+
+- Kelishuv dvigateli, versiyalar, imzolar, jurnal, PDF — mavjud (U7, U11). Yangi turlar uchun 9 savolning majburiy bandlari va shablon matnlari yurist ko'rigidan o'tadi (`reviewStatus`; OQ-Y6). Ilova mehnat shartnomasi yoki boshqa rasmiy hujjat o'rnini bosmaydi.
+
+### 7.2. Xodimlar va avans
+- Xodim: ism, lavozim, haq turi, to'lov kuni; shaxsiy ma'lumotlar — minimal (OQ-Y3 bilan birga).
+- **Avans** — foizsiz; keyingi to'lovlardan kelishilgan jadval bo'yicha ushlanadi; jarima yo'q. Avans yozuvi xodim kelishuvi jurnaliga tushadi.
+- Oylik «xodimlar bilan hisob» — to'langan, ushlangan, qoldiq; PDF varaqcha (imzo joyi bilan).
+
+## 8. 7-QONUN: «TAROZINGNI TO'G'RI TUT» — FUNKSIONAL TALABLAR (K7)
+Qonunning mazmuni: halol o'lchov, halol hisob, soliq va zakot — barakaning sharti.
+
+### 8.1. Halol o'lchov
+- Oylik «tarozi tekshiruvi» eslatmasi: etalon og'irlik bilan tekshirildi — natija va sana jurnalga yoziladi (ilova tarozini o'lchamaydi; faqat odatni eslatadi va qayd etadi).
+
+### 8.2. Soliq zaxirasi
+- 4.5 dagi qoida; zaxira alohida ko'rsatiladi va «Hisob kuni»da to'ldiriladi. To'langan soliq — operatsion xarajat (`category.kk.tax`) zaxiradan.
+- Ilova soliq rejimini aniqlamaydi, stavka tavsiya qilmaydi: «Soliq maslahati emas. Rejim va stavkani soliq maslahatchisi bilan aniqlang».
+
+### 8.3. Savdo mollari zakoti
+- Yillik «Zakot kuni» ustasi (egasi tanlagan qamariy sana; eslatma 30 kun oldin):
+```
+Baza  = Tovar qoldig'i (baholash — OQ-D5) + Naqd va hisobdagi pul + Umidli nasiya − Yaqin muddatli qarzlar
+Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'lsa
+```
+- Nisob — foydalanuvchi kiritgan oltin narxi × 85 g (yoki kumush — ulamo qaroriga ko'ra). Umidsiz nasiya (90+ va egasi «umidsiz» deb belgilagan) bazaga kirmaydi.
+- **Misol (Bahodir aka; barcha raqamlar va qoidalar ulamo tasdig'igacha shartli):** tovar 90 000 000, naqd 12 000 000, umidli nasiya 8 000 000, ta'minotchiga qarz 10 000 000 → baza **100 000 000**; oltin 1 100 000/g × 85 = nisob 93 500 000 → zakot **2 500 000 so'm**.
+- Natija — hisob, fatvo emas; diniy matnlar `religiousReviewStatus = APPROVED` bo'lmaguncha release'da ko'rsatilmaydi. Hisob snapshot sifatida saqlanadi (`asset_snapshots`).
+
+### 8.4. Yillik inventarizatsiya
+- Ustasi: tovarlar ro'yxati → sanalgan miqdor → farqlar (izoh bilan) → yangilangan qoldiq → zakot kuniga tayyor baza.
+
+## 9. DOMEN MODELI VA VEKTOR SUITE'LARI
+### 9.1. Yangi tushunchalar (taxminiy; aniq sxema — K1+ sessiyalarida, `BARAKA_OILASI.md` 8)
+| Tushuncha | Mazmun | Mavjud asos |
+|---|---|---|
+| `KkSettings` | egasi maoshi, o'z mehnati bahosi, soliq zaxirasi qoidasi, taqsimot qoidasi (bp), muzlash chegarasi | `allocation_rules` |
+| `Sale` / `Expense` | tushum va chiqim, kanal, ixtiyoriy tovar qatorlari | `incomes`, `expenses` (`space_id = KASBKOR`) |
+| `OwnerDraw`, `OwnerContribution`, `OwnerSalary` | egasi oldi, kiritdi, maosh o'tkazmasi | makonlararo o'tkazma (4.6) |
+| `Item`, `StockMove` | tovar va harakatlar (xarid, sotuv, hisobdan chiqarish, tuzatish) | — (yangi) |
+| `Equipment` | narx, muddat, qoldiq qiymati, eskirish | `assets` |
+| `FamilyLabor` | a'zo, soat, soat bahosi, oy | `members` |
+| `CashDay` | ochilish, sanalgan, kutilgan, farq, izoh; yopilgach o'zgarmas | jurnal triggerlari (U12) |
+| `Customer`, `CreditSale` | mijoz (rozilik bilan), nasiya kelishuvi va jadvali | `agreements`, `receivables` |
+| `Employee`, `Advance` | xodim va avans jadvali | `agreements` |
+| `MonthClose` | «Hisob kuni» bayonnomasi: foyda, maosh, taqsimot, zanjir boshi | `venture_periods` naqshi |
+| `StockCount`, `ZakatCalc` | inventarizatsiya va zakot snapshot | `asset_snapshots` |
+
+### 9.2. Vektor suite'lari (avval oracle, keyin Rust)
+| Suite | Case'lar (kamida) |
+|---|---|
+| `kk_true_profit` | 3.1 misoli; oilaviy mehnat to'langan (ikki marta hisoblanmaydi); manfiy haqiqiy foyda; tovar xaridi xarajat emas |
+| `kk_depreciation` | 12 mln / 60; 7 mln / 36 (qoldiq tiyinlar); qoldiq qiymati bilan; muddatdan oldin sotish |
+| `kk_cogs` | o'rtacha (4.2 misoli), FIFO, oxirgi birlik (qiymat aniq 0), qoldiqdan ko'p sotish — xato, hisobdan chiqarish |
+| `kk_replacement` | 4.3 misoli; narx tushgan holat; sotuv narxi < qayta tiklash — ogohlantirish |
+| `kk_cash_close` | 5.1 misoli; «egasi oldi»siz farq; ortiqcha (+) farq; karta tushumi kassaga ta'sir qilmaydi |
+| `kk_month_close` | 4.5 misoli; qolgan pul manfiy; soliq foydadan; largest remainder qoldiq tiyinlari |
+| `kk_credit_sale` | jadval yig'indisi = nasiya narxi; kechikish (summa o'zgarmaydi); qisman kechirish; yosh guruhlari |
+| `kk_expansion_gate` | 6.1 ning har bir sharti alohida va birga |
+| `kk_zakat` | 8.3 misoli; nisobdan past; umidsiz nasiya chiqarilgan; qarzlar bazadan katta (baza ≤ 0) |
+
+## 10. UI/UX
+- **Desktop — asosiy ish stoli** (`BARAKA_OILASI.md` 11.2): kunlik kassa jadvali, nasiya jadvali (filtr, yosh guruhlari), tovar qoldig'i, «Hisob kuni» ustasi, inventarizatsiya. Klaviatura bilan to'liq ishlash.
+- **Android — tez kiritish:** tushum, «egasi oldi», kassa yopish, nasiya to'lovi; vidjet — «yoza oladi, o'qiy olmaydi» (`BARAKA_OILASI.md` 7.5).
+- Makon tanlovchi navigatsiyada (Uy / Kasb-kor); har makonning o'z bosh ekrani.
+- Ohang — Sobir hoji: «Hisob qilgan — yutqazmaydi». Kamomad, kechikkan nasiya, muzlagan tovar — ayblovsiz, keyingi qadam bilan.
+
+## 11. MAHSULOT CHEKLOVLARI (qat'iy)
+- `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.
+- Nasiya va xodim avansida foiz, ustama, jarima maydoni **yo'q** (domen darajasida rad etiladi).
+- «Ikkinchi daftar» yo'q: tushumni yashirish, ikki xil hisobot, «soliq uchun» alohida raqamlar funksiyasi qilinmaydi va taklif qilinmaydi.
+- Soliq — halollik qismi; ilova soliqdan qochishga undaydigan matn ko'rsatmaydi (taqiqlangan iboralar linteriga qo'shiladi).
+- Mijoz va xodim ma'lumotlari — minimal, rozilik bilan, faqat qurilmada (shifrlangan); eksportda ham shifrlangan `.baraka`.
+
+## 12. KO'P QURILMA VA ROLLAR (K8 — avval ADR)
+- Rollar: **EGASI** (hammasi), **SOTUVCHI** (tushum, kassa yopish, nasiya to'lovi; foyda, maosh, «egasi oldi», taqsimot va xodimlar haqini ko'rmaydi), ixtiyoriy **HISOBCHI** (o'qish).
+- Sotuvchi qurilmasiga faqat kerakli ma'lumot ketadi (tovar katalogi, o'z yozuvlari) — `.baraka` eksportida rol bo'yicha filtr; qabul qilishda sotuvchi faqat ruxsat etilgan jadvallarga yozadi.
+- Transport: avval U14 dagi fayl almashish (LAN/fayl); relay server — R1 (ADR tasdiqlangandan keyin). Hisob yurituvchi qurilma qoidasi (6.6) saqlanadi.
+
+## 13. ISH REJASI (K1–K8)
+| # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |
+|---|---|---|---|
+| K1 | Ikki cho'ntak, tushum/chiqim, egasi oldi, maosh, makonlararo o'tkazma | 2 | o'tkazma atomik (test); «egasi oldi» foydani kamaytirmaydi; bosh ekran 2-raqami |
+| K2 | Haqiqiy foyda, buyurtma kalkulyatori, uskunalar | 3 | `kk_true_profit`, `kk_depreciation` yashil; bosh ekran 1-raqami |
+| K3 | Taqsimot qoidasi va «Hisob kuni» | 4.5 | `kk_month_close`; bayonnoma o'zgarmas, PDF |
+| K4 | Kunlik kassa yopish, nasiya daftari, haftalik ko'rik | 5 | `kk_cash_close`, `kk_credit_sale`; nasiyada ustama maydoni yo'q (test) |
+| K5 | Tovar qoldig'i, tannarx, qayta tiklash narxi, muzlagan tovar | 4.1–4.4 | `kk_cogs`, `kk_replacement`; miqdorlar butun sonda |
+| K6 | Xodimlar va avans, `EMPLOYMENT`, `SUPPLY` | 7 | shablonlar `reviewStatus` bilan; avansda jarima yo'q |
+| K7 | Kengayish darvozasi, soliq zaxirasi, zakot, inventarizatsiya, tarozi | 6, 8 | `kk_expansion_gate`, `kk_zakat`; diniy matnlar `APPROVED` siz ko'rinmaydi |
+| K8 | Ko'p qurilma va rollar | 12 | avval ADR; sotuvchi qurilmasida foyda ma'lumoti yo'q (test) |
+
+Har bir K-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar), Uy vazifalari kabi.
+
+## 14. OCHIQ SAVOLLAR
+`docs/OPEN_QUESTIONS.md`: mahsulot egasi — OQ-K1…OQ-K6; ulamo — OQ-D5 (nasiya narxi, zakot baholash, xodim foyda ulushi, konsignatsiya), OQ-D7 (nisob, umidli nasiya, oilaviy mehnat, oldindan to'lov chegirmasi); yurist — OQ-Y3 (mijoz ma'lumotlari), OQ-Y6 (xodim va ta'minotchi kelishuvlari), OQ-Y7 (fiskal talablar va «boshqaruv hisobi» chegarasi).

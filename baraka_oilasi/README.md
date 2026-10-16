@@ -14,6 +14,7 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 | [docs/adr/0001-umumiy-rust-yadro.md](docs/adr/0001-umumiy-rust-yadro.md) | Asosiy arxitektura qarori |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Mahsulot egasi, ulamo va yurist uchun ochiq savollar |
 | [docs/uy/](docs/uy/) | «Baraka daftari» spetsifikatsiyasi va dastlabki rejalar |
+| [docs/kasbkor/SPEC.md](docs/kasbkor/SPEC.md) | Kasb-kor makoni spetsifikatsiyasi (K0, qoralama) |
 | [CLAUDE.md](CLAUDE.md) | AI-dasturchi uchun sessiya qoidalari |
 
 Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.baraka` formati — `python3 -I spec/interchange/oracle.py --check spec/interchange/vectors.json` (`cryptography` kerak).
@@ -34,6 +35,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | U13: vazifa hodisalari, oylik ochiq hisob ko'rigi (bayonnoma + zanjir boshi), «katta foyda»da qayta o'qish, nizo va hakam (taqsimot bloki, ish papkasi PDF), yillik yangilash, oilaviy kelishuvlar, kelishuvlar markazi va eslatmalar | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U14: `.baraka` eksport/import (shifrlangan, yagona sxema), uch tomonlama birlashtirish va ziddiyat tanlovi, jurnal ayrilishini aniqlash, zaxira nusxa, QR/kod bilan yangi qurilmani ulash | ✅ yadro + desktop + Python oracle; Android UI — keyingi sessiya |
 | U15: 5 qadamli onboarding (daromad ritmi, qarz savoli), sozlamalar (qurilma tili, shrift, mavzu), bosh sahifa eslatmalari, accessibility (WCAG kontrast tekshiruvi, axe, klaviatura, High Contrast), yakuniy E2E (`tauri-driver`), reliz cheklisti | ✅ yadro + desktop + Linux E2E; Windows imzo/E2E va Android UI — keyingi sessiya |
+| K0: Kasb-kor makoni spetsifikatsiyasi (`docs/kasbkor/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda; kod K1 dan |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish
