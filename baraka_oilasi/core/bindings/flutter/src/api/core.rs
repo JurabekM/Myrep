@@ -585,6 +585,137 @@ impl BarakaCore {
             .partnership_pdf(&space_id, &partnership_id)
     }
 
+    // U12: kassa daftari, davr taqsimoti, «Hunardan ishga», taklif tekshiruvi.
+    pub fn venture_ledger(
+        &self,
+        space_id: String,
+        partnership_id: String,
+    ) -> Result<VentureLedgerDto, AppError> {
+        self.session
+            .app()?
+            .venture_ledger(&space_id, &partnership_id)
+    }
+
+    /// Chek yoki dalil baytlari Dart tomonida tanlangan fayldan o'qiladi.
+    pub fn add_venture_entry(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: VentureEntryInput,
+    ) -> Result<VentureLedgerDto, AppError> {
+        self.session
+            .app()?
+            .add_venture_entry(&space_id, &partnership_id, input)
+    }
+
+    pub fn venture_attachment(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        attachment_id: String,
+    ) -> Result<AttachmentDto, AppError> {
+        self.session
+            .app()?
+            .venture_attachment(&space_id, &partnership_id, &attachment_id)
+    }
+
+    pub fn venture_period_preview(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: ClosePeriodInput,
+    ) -> Result<VenturePeriodDto, AppError> {
+        self.session
+            .app()?
+            .venture_period_preview(&space_id, &partnership_id, input)
+    }
+
+    pub fn close_venture_period(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        input: ClosePeriodInput,
+    ) -> Result<VentureLedgerDto, AppError> {
+        self.session
+            .app()?
+            .close_venture_period(&space_id, &partnership_id, input)
+    }
+
+    /// Sherik uchun davr hisoboti PDF baytlari.
+    pub fn venture_period_pdf(
+        &self,
+        space_id: String,
+        partnership_id: String,
+        period_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session
+            .app()?
+            .venture_period_pdf(&space_id, &partnership_id, &period_id)
+    }
+
+    pub fn skills(&self, space_id: String) -> Result<Vec<SkillDto>, AppError> {
+        self.session.app()?.skills(&space_id)
+    }
+
+    pub fn add_skill(
+        &self,
+        space_id: String,
+        input: SkillInput,
+    ) -> Result<Vec<SkillDto>, AppError> {
+        self.session.app()?.add_skill(&space_id, input)
+    }
+
+    pub fn delete_skill(
+        &self,
+        space_id: String,
+        skill_id: String,
+    ) -> Result<Vec<SkillDto>, AppError> {
+        self.session.app()?.delete_skill(&space_id, &skill_id)
+    }
+
+    pub fn venture_ideas(&self, space_id: String) -> Result<Vec<VentureIdeaDto>, AppError> {
+        self.session.app()?.venture_ideas(&space_id)
+    }
+
+    pub fn create_venture_idea(
+        &self,
+        space_id: String,
+        input: VentureIdeaInput,
+    ) -> Result<VentureIdeaDto, AppError> {
+        self.session.app()?.create_venture_idea(&space_id, input)
+    }
+
+    pub fn update_venture_idea(
+        &self,
+        space_id: String,
+        idea_id: String,
+        input: VentureIdeaInput,
+    ) -> Result<VentureIdeaDto, AppError> {
+        self.session
+            .app()?
+            .update_venture_idea(&space_id, &idea_id, input)
+    }
+
+    pub fn delete_venture_idea(&self, space_id: String, idea_id: String) -> Result<(), AppError> {
+        self.session.app()?.delete_venture_idea(&space_id, &idea_id)
+    }
+
+    pub fn draft_partnership_from_idea(
+        &self,
+        space_id: String,
+        idea_id: String,
+        input: IdeaDraftInput,
+    ) -> Result<PartnershipDto, AppError> {
+        self.session
+            .app()?
+            .draft_partnership_from_idea(&space_id, &idea_id, input)
+    }
+
+    /// «Kafolatlangan foyda» detektori — ilovaning istalgan joyidan.
+    pub fn check_offer(&self, input: OfferAnswersInput) -> Result<OfferCheckDto, AppError> {
+        self.session.app()?.check_offer(input)
+    }
+
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
     /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
     pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {

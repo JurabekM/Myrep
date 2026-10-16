@@ -9,6 +9,9 @@ pub enum StorageError {
     /// Shartnoma versiyasi yoki imzo — dalil, o'zgarmaydi.
     #[error("EVIDENCE_IMMUTABLE")]
     EvidenceImmutable,
+    /// Yopilgan davr ichidagi sanaga daftar yozuvi qo'shishga urinish.
+    #[error("PERIOD_CLOSED")]
+    PeriodClosed,
     #[error("NOT_FOUND")]
     NotFound,
     #[error("SCOPE_MISMATCH")]
@@ -29,6 +32,7 @@ impl StorageError {
             Self::WrongKey => "WRONG_KEY_OR_CORRUPT",
             Self::JournalImmutable => "JOURNAL_IMMUTABLE",
             Self::EvidenceImmutable => "EVIDENCE_IMMUTABLE",
+            Self::PeriodClosed => "PERIOD_CLOSED",
             Self::NotFound => "NOT_FOUND",
             Self::ScopeMismatch => "SCOPE_MISMATCH",
             Self::Migration(_) => "MIGRATION_FAILED",
@@ -44,7 +48,11 @@ impl From<rusqlite::Error> for StorageError {
         let msg = e.to_string();
         if msg.contains("JOURNAL_IMMUTABLE") {
             Self::JournalImmutable
-        } else if msg.contains("AGREEMENT_VERSION_IMMUTABLE") || msg.contains("SIGNATURE_IMMUTABLE")
+        } else if msg.contains("VENTURE_PERIOD_CLOSED") {
+            Self::PeriodClosed
+        } else if msg.contains("AGREEMENT_VERSION_IMMUTABLE")
+            || msg.contains("SIGNATURE_IMMUTABLE")
+            || msg.contains("VENTURE_IMMUTABLE")
         {
             Self::EvidenceImmutable
         } else if msg.contains("file is not a database") {

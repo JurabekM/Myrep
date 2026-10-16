@@ -56,7 +56,7 @@ const CLOSED: &str = "CLOSED";
 /// Darvoza uchun o'rtacha zarur xarajat shuncha oxirgi to'liq davrdan olinadi.
 const ESSENTIAL_MONTHS: u32 = 3;
 
-fn engine() -> &'static PdfEngine {
+pub(crate) fn engine() -> &'static PdfEngine {
     static ENGINE: OnceLock<PdfEngine> = OnceLock::new();
     ENGINE.get_or_init(PdfEngine::new)
 }
@@ -86,50 +86,50 @@ fn hex(bytes: &[u8]) -> String {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct CapitalP {
-    kind: String,
-    description: String,
-    amount_minor: i64,
+pub(crate) struct CapitalP {
+    pub(crate) kind: String,
+    pub(crate) description: String,
+    pub(crate) amount_minor: i64,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct PartyP {
-    id: String,
-    full_name: String,
-    role: String,
-    profit_share_bp: i64,
-    is_me: bool,
-    capital: Vec<CapitalP>,
+pub(crate) struct PartyP {
+    pub(crate) id: String,
+    pub(crate) full_name: String,
+    pub(crate) role: String,
+    pub(crate) profit_share_bp: i64,
+    pub(crate) is_me: bool,
+    pub(crate) capital: Vec<CapitalP>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct BuyoutP {
-    seller_party_id: String,
-    buyer_party_id: String,
-    units: u32,
-    units_per_period: u32,
-    period_months: u32,
-    start: String,
-    expected_profit_minor: Option<i64>,
+pub(crate) struct BuyoutP {
+    pub(crate) seller_party_id: String,
+    pub(crate) buyer_party_id: String,
+    pub(crate) units: u32,
+    pub(crate) units_per_period: u32,
+    pub(crate) period_months: u32,
+    pub(crate) start: String,
+    pub(crate) expected_profit_minor: Option<i64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Payload {
-    kind: String,
-    title: String,
-    currency: String,
-    parties: Vec<PartyP>,
-    duties: Answer<Vec<Duty>>,
-    negligence_clause: Option<String>,
-    custody: Answer<Custody>,
-    exit_clause: Answer<ExitClause>,
-    arbiter: Answer<Arbiter>,
-    term: Answer<Term>,
-    witnesses: Vec<String>,
-    buyout: Option<BuyoutP>,
+pub(crate) struct Payload {
+    pub(crate) kind: String,
+    pub(crate) title: String,
+    pub(crate) currency: String,
+    pub(crate) parties: Vec<PartyP>,
+    pub(crate) duties: Answer<Vec<Duty>>,
+    pub(crate) negligence_clause: Option<String>,
+    pub(crate) custody: Answer<Custody>,
+    pub(crate) exit_clause: Answer<ExitClause>,
+    pub(crate) arbiter: Answer<Arbiter>,
+    pub(crate) term: Answer<Term>,
+    pub(crate) witnesses: Vec<String>,
+    pub(crate) buyout: Option<BuyoutP>,
 }
 
 impl Payload {
@@ -138,22 +138,22 @@ impl Payload {
         Ok(hex(&Sha256::digest(&bytes)))
     }
 
-    fn kind(&self) -> Result<PartnershipKind, AppError> {
+    pub(crate) fn kind(&self) -> Result<PartnershipKind, AppError> {
         PartnershipKind::parse(&self.kind).ok_or(AppError::new("CORRUPT_ROW"))
     }
 
-    fn me(&self) -> Option<&PartyP> {
+    pub(crate) fn me(&self) -> Option<&PartyP> {
         self.parties.iter().find(|p| p.is_me)
     }
 
-    fn party_name(&self, id: &str) -> String {
+    pub(crate) fn party_name(&self, id: &str) -> String {
         self.parties
             .iter()
             .find(|p| p.id == id)
             .map_or_else(|| id.to_string(), |p| p.full_name.clone())
     }
 
-    fn capital_of(p: &PartyP) -> i64 {
+    pub(crate) fn capital_of(p: &PartyP) -> i64 {
         p.capital.iter().map(|c| c.amount_minor).sum()
     }
 
@@ -303,7 +303,10 @@ impl Payload {
         })?)
     }
 
-    fn buyout(&self, cur: Currency) -> Result<Option<Result<BuyoutSchedule, String>>, AppError> {
+    pub(crate) fn buyout(
+        &self,
+        cur: Currency,
+    ) -> Result<Option<Result<BuyoutSchedule, String>>, AppError> {
         let Some(b) = &self.buyout else {
             return Ok(None);
         };
@@ -333,22 +336,22 @@ impl Payload {
 }
 
 /// Hisoblangan ko'rinish: tekshiruv, versiya va imzolar.
-struct View {
-    row: PartnershipRow,
-    payload: Payload,
-    cur: Currency,
-    hash: String,
-    rules: RulesResult,
-    check: ContractCheckDto,
-    buyout: Option<Result<BuyoutSchedule, String>>,
-    versions: Vec<VersionRow>,
+pub(crate) struct View {
+    pub(crate) row: PartnershipRow,
+    pub(crate) payload: Payload,
+    pub(crate) cur: Currency,
+    pub(crate) hash: String,
+    pub(crate) rules: RulesResult,
+    pub(crate) check: ContractCheckDto,
+    pub(crate) buyout: Option<Result<BuyoutSchedule, String>>,
+    pub(crate) versions: Vec<VersionRow>,
     /// Joriy matnga mos versiya.
-    current: Option<VersionRow>,
-    signatures: Vec<SignatureRow>,
+    pub(crate) current: Option<VersionRow>,
+    pub(crate) signatures: Vec<SignatureRow>,
 }
 
 impl View {
-    fn all_signed(&self) -> bool {
+    pub(crate) fn all_signed(&self) -> bool {
         self.current.is_some()
             && self
                 .payload
@@ -377,13 +380,21 @@ impl View {
 }
 
 impl App {
-    fn partnership_row(&self, scope: &SpaceScope, id: &str) -> Result<PartnershipRow, AppError> {
+    pub(crate) fn partnership_row(
+        &self,
+        scope: &SpaceScope,
+        id: &str,
+    ) -> Result<PartnershipRow, AppError> {
         self.db
             .read(|c| repo::get(c, scope, id))?
             .ok_or(AppError::on("NOT_FOUND", "partnershipId"))
     }
 
-    fn load_payload(&self, scope: &SpaceScope, row: &PartnershipRow) -> Result<Payload, AppError> {
+    pub(crate) fn load_payload(
+        &self,
+        scope: &SpaceScope,
+        row: &PartnershipRow,
+    ) -> Result<Payload, AppError> {
         let json = self
             .db
             .read(|c| agreements::payload(c, scope, &row.agreement_id))?
@@ -391,7 +402,11 @@ impl App {
         serde_json::from_str(&json).map_err(|_| AppError::new("CORRUPT_ROW"))
     }
 
-    fn partnership_view(&self, scope: &SpaceScope, row: PartnershipRow) -> Result<View, AppError> {
+    pub(crate) fn partnership_view(
+        &self,
+        scope: &SpaceScope,
+        row: PartnershipRow,
+    ) -> Result<View, AppError> {
         let payload = self.load_payload(scope, &row)?;
         let cur = Currency::from_code(&payload.currency)?;
         let hash = payload.hash()?;
@@ -1273,6 +1288,10 @@ impl App {
         let mut row = self.partnership_row(&scope, id)?;
         if row.status != ACTIVE {
             return Err(AppError::new("NOT_ACTIVE"));
+        }
+        // Kassa daftaridagi ochiq davr avval yopilib, taqsimlanishi kerak (U12).
+        if self.venture_open_entries(&scope, &row)? > 0 {
+            return Err(AppError::new("OPEN_PERIOD_NOT_CLOSED"));
         }
         row.status = CLOSED.into();
         row.closed_on = Some(ymd(self.today(&ctx)));

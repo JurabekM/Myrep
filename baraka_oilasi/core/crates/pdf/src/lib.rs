@@ -11,6 +11,7 @@ mod engine;
 pub use documents::{
     CeremonyEstimate, ContractBuyout, ContractBuyoutRow, ContractCapital, ContractClause,
     ContractDuty, ContractParty, ContractSigner, EstimateAgreement, EstimateAnswer, EstimateLine,
-    EstimateTotal, LoanReceipt, PartnershipContract, PdfLocale, ScheduleLine,
+    EstimateTotal, LoanReceipt, PartnershipContract, PdfLocale, ReportBuyout, ReportEntry,
+    ReportParty, ScheduleLine, VentureReport,
 };
 pub use engine::{PdfEngine, PdfError, Rendered};

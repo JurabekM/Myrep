@@ -3,7 +3,7 @@
 
 use baraka_journal::{verify_chain, EntryKind, JournalAmount, JournalEntry};
 use baraka_security::DbKey;
-use baraka_storage::repo::{agreements, categories, household, journal, partnerships};
+use baraka_storage::repo::{agreements, categories, household, journal, partnerships, ventures};
 use baraka_storage::{Database, Meta, SpaceScope, StorageError};
 
 fn meta() -> Meta {
@@ -278,4 +278,138 @@ fn schema_constraints_guard_money_rules() {
     });
     assert!(r.is_err());
     let _ = uy;
+}
+
+#[test]
+fn venture_ledger_and_closed_periods_are_immutable() {
+    let (db, uy, _) = setup();
+    let m = meta();
+    let je = |id: &str, kind: EntryKind, date: &str| JournalEntry {
+        id: id.into(),
+        agreement_id: "agr-v".into(),
+        kind,
+        party_id: None,
+        amount: Some(JournalAmount {
+            minor: 100,
+            currency: "UZS".into(),
+        }),
+        date: date.into(),
+        note: None,
+        corrects_entry_id: None,
+        refs: Vec::new(),
+    };
+    let entry = |id: &str, jid: &str, date: &str| ventures::EntryRow {
+        id: id.into(),
+        partnership_id: "p-v".into(),
+        journal_entry_id: jid.into(),
+        kind: "INCOME".into(),
+        category: None,
+        amount_minor: 100,
+        currency: "UZS".into(),
+        occurred_on: date.into(),
+        note: None,
+        corrects_entry_id: None,
+        created_at: m.now.clone(),
+    };
+    db.write(|tx| {
+        agreements::insert(
+            tx,
+            &uy,
+            &agreements::AgreementRow {
+                id: "agr-v".into(),
+                agreement_type: "PARTNERSHIP".into(),
+                status: "ACTIVE".into(),
+                title: "Tikuv".into(),
+                keeper_device_id: "dev-1".into(),
+            },
+            &m,
+        )?;
+        partnerships::insert(
+            tx,
+            &uy,
+            &partnerships::PartnershipRow {
+                id: "p-v".into(),
+                agreement_id: "agr-v".into(),
+                kind: "MUDARABA".into(),
+                title: "Tikuv".into(),
+                status: "ACTIVE".into(),
+                currency: "UZS".into(),
+                signed_version: Some(1),
+                not_debt_ack_on: None,
+                gate_json: None,
+                activated_on: Some("2026-11-01".into()),
+                closed_on: None,
+            },
+            &m,
+        )?;
+        journal::append(tx, &uy, &je("j1", EntryKind::Revenue, "2026-11-05"), &m)?;
+        ventures::insert_entry(tx, &uy, &entry("e1", "j1", "2026-11-05"), &m)?;
+        ventures::insert_attachment(
+            tx,
+            &uy,
+            &ventures::AttachmentRow {
+                meta: ventures::AttachmentMeta {
+                    id: "a1".into(),
+                    entry_id: "e1".into(),
+                    file_name: "chek.png".into(),
+                    mime: "image/png".into(),
+                    size_bytes: 3,
+                    sha256: "ab".into(),
+                },
+                bytes: vec![1, 2, 3],
+            },
+            &m,
+        )?;
+        ventures::insert_period(
+            tx,
+            &uy,
+            &ventures::PeriodRow {
+                id: "per-1".into(),
+                partnership_id: "p-v".into(),
+                period_no: 1,
+                start_on: "2026-11-01".into(),
+                end_on: "2026-11-30".into(),
+                currency: "UZS".into(),
+                result_minor: 100,
+                loss_policy: "CAPITAL_FIRST".into(),
+                signed_version: 1,
+                result_json: "{}".into(),
+                chain_head: "ab".into(),
+                closed_at: m.now.clone(),
+            },
+            &m,
+        )
+    })
+    .unwrap();
+    assert_eq!(
+        db.read(|c| ventures::entries(c, &uy, "p-v")).unwrap().len(),
+        1
+    );
+    let att = db
+        .read(|c| ventures::attachment(c, &uy, "p-v", "a1"))
+        .unwrap()
+        .unwrap();
+    assert_eq!(att.bytes, vec![1, 2, 3]);
+    // Yopilgan davr ichidagi sanaga yozuv qo'shilmaydi; keyingi kunga — mumkin.
+    let late = db.write(|tx| {
+        journal::append(tx, &uy, &je("j2", EntryKind::Revenue, "2026-11-30"), &m)?;
+        ventures::insert_entry(tx, &uy, &entry("e2", "j2", "2026-11-30"), &m)
+    });
+    assert!(matches!(late, Err(StorageError::PeriodClosed)));
+    db.write(|tx| {
+        journal::append(tx, &uy, &je("j3", EntryKind::Revenue, "2026-12-01"), &m)?;
+        ventures::insert_entry(tx, &uy, &entry("e3", "j3", "2026-12-01"), &m)
+    })
+    .unwrap();
+    for sql in [
+        "UPDATE venture_entries SET amount_minor = 1 WHERE id = 'e1'",
+        "DELETE FROM venture_entries WHERE id = 'e1'",
+        "UPDATE venture_attachments SET bytes = x'00' WHERE id = 'a1'",
+        "DELETE FROM venture_attachments WHERE id = 'a1'",
+        "UPDATE venture_periods SET result_minor = 1 WHERE id = 'per-1'",
+        "DELETE FROM venture_periods WHERE id = 'per-1'",
+    ] {
+        let r = db.write(|tx| Ok(tx.execute(sql, [])?));
+        assert!(matches!(r, Err(StorageError::EvidenceImmutable)), "{sql}");
+    }
 }

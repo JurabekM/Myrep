@@ -12,6 +12,7 @@ pub mod partnerships;
 pub mod recovery;
 pub mod rules;
 pub mod vault;
+pub mod ventures;
 
 /// Makon chegarasi: barcha so'rovlar `household_id` va `space_id` bo'yicha filtrlanadi.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

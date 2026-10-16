@@ -9,6 +9,7 @@ use crate::{PdfEngine, PdfError, Rendered};
 const LOAN_RECEIPT: &str = include_str!("../../../../shared/pdf/loan_receipt.typ");
 const CEREMONY_ESTIMATE: &str = include_str!("../../../../shared/pdf/ceremony_estimate.typ");
 const PARTNERSHIP_CONTRACT: &str = include_str!("../../../../shared/pdf/partnership_contract.typ");
+const VENTURE_REPORT: &str = include_str!("../../../../shared/pdf/venture_report.typ");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PdfLocale {
@@ -341,5 +342,93 @@ impl PartnershipContract {
         let extra: Vec<(&str, Vec<u8>)> =
             files.iter().map(|(n, b)| (n.as_str(), b.clone())).collect();
         engine.render(PARTNERSHIP_CONTRACT, &data, &extra, &self.ident, today)
+    }
+}
+
+/// Davr hisobotidagi daftar yozuvi (tayyor matnlar).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ReportEntry {
+    pub date: String,
+    /// `INCOME`, `EXPENSE`, `FORCE_MAJEURE`, `CORRECTION`.
+    pub kind: String,
+    pub category: Option<String>,
+    pub note: String,
+    /// Natijaga ta'siri, ishorasi bilan.
+    pub amount: String,
+    pub attachments: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ReportParty {
+    pub name: String,
+    pub role: String,
+    pub share: String,
+    pub recovered: String,
+    pub liability: String,
+    pub payout: String,
+    pub capital_after: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct ReportBuyout {
+    pub seller: String,
+    pub buyer: String,
+    pub paid: String,
+    pub unpaid: String,
+    pub amount: String,
+    pub progress: String,
+}
+
+/// Sherik uchun davr hisoboti (uy/SPEC 2E.3, MVP_PLAN 14): kirim, xarajat, natija, taqsimot,
+/// buyout holati va zanjir boshi.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VentureReport {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub title: String,
+    pub kind: String,
+    pub period_no: u32,
+    pub start: String,
+    pub end: String,
+    pub version: String,
+    /// `CAPITAL_FIRST` yoki `PER_PERIOD`.
+    pub loss_policy: String,
+    pub totals: Vec<(String, String)>,
+    pub entries: Vec<ReportEntry>,
+    pub parties: Vec<ReportParty>,
+    pub buyout: Option<ReportBuyout>,
+    pub negligence: Option<String>,
+    pub chain_head: String,
+    pub chain_short_code: String,
+}
+
+impl VentureReport {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = labels
+            .get("venture.title")
+            .and_then(Value::as_str)
+            .unwrap_or("Davr hisoboti")
+            .to_string();
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.title),
+            "name": self.title,
+            "labels": labels,
+            "kind": self.kind,
+            "periodNo": self.period_no,
+            "start": self.start,
+            "end": self.end,
+            "version": self.version,
+            "lossPolicy": self.loss_policy,
+            "totals": self.totals,
+            "entries": self.entries,
+            "parties": self.parties,
+            "buyout": self.buyout,
+            "negligence": self.negligence,
+            "chain_short_code": self.chain_short_code,
+        });
+        let files = vec![("qr.svg", qr_svg(&self.chain_head)?)];
+        engine.render(VENTURE_REPORT, &data, &files, &self.ident, today)
     }
 }

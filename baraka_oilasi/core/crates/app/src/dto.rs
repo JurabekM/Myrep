@@ -1246,3 +1246,354 @@ pub struct SignInput {
     pub signer_key: String,
     pub strokes: Vec<Stroke>,
 }
+
+// ---- U12: sheriklik kassa daftari, davr taqsimoti, «Hunardan ishga», taklif tekshiruvi ----
+
+/// Chek, rasm yoki dalil fayli. Turi baytlardan aniqlanadi (JPEG, PNG, WebP, PDF).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AttachmentInput {
+    pub file_name: String,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VentureEntryInput {
+    /// `INCOME`, `EXPENSE`, `FORCE_MAJEURE`, `CORRECTION`.
+    pub kind: String,
+    /// Kirim: `ORDER`, `OTHER`; xarajat: `MATERIAL`, `WAGE`, `RENT`, `EQUIPMENT`, `TRANSPORT`, `OTHER`.
+    pub category: Option<String>,
+    /// Tuzatishda — yozuvning **to'g'ri** summasi (`0` — yozuv bekor); yadro farqni hisoblaydi.
+    pub amount: String,
+    pub occurred_on: String,
+    /// Fors-major va tuzatishda majburiy.
+    pub note: Option<String>,
+    pub corrects_entry_id: Option<String>,
+    pub attachments: Vec<AttachmentInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AttachmentMetaDto {
+    pub id: String,
+    pub file_name: String,
+    pub mime: String,
+    pub size_bytes: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AttachmentDto {
+    pub file_name: String,
+    pub mime: String,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VentureEntryDto {
+    pub id: String,
+    pub kind: String,
+    pub category: Option<String>,
+    /// Yozuv summasi (tuzatishda — natijaga ta'sir, ishorasi bilan).
+    pub amount: MoneyDto,
+    /// Davr natijasiga ta'siri: kirim `+`, xarajat va fors-major `−`.
+    pub effect: MoneyDto,
+    pub occurred_on: String,
+    pub note: Option<String>,
+    pub corrects_entry_id: Option<String>,
+    /// Bu yozuvga keyinroq tuzatish kiritilgan.
+    pub corrected: bool,
+    /// Yopilgan davr raqami (`None` — ochiq davr).
+    pub period_no: Option<u32>,
+    pub attachments: Vec<AttachmentMetaDto>,
+    /// Jurnal yozuvi xeshining qisqa kodi.
+    pub hash_code: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PartyBalanceDto {
+    pub party_id: String,
+    pub name: String,
+    pub role: String,
+    pub is_me: bool,
+    pub capital: MoneyDto,
+    /// Hali tiklanmagan zarar (OQ-D1: keyingi foydadan avval qoplanadi).
+    pub carried_loss: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct BuyoutProgressDto {
+    pub seller_name: String,
+    pub buyer_name: String,
+    pub paid: u32,
+    pub total: u32,
+    pub next_no: Option<u32>,
+    pub next_date: Option<String>,
+    pub next_payment: Option<MoneyDto>,
+    /// Muddati o'tgan, lekin hali to'lanmagan bosqichlar.
+    pub overdue: Vec<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct OpenPeriodDto {
+    pub no: u32,
+    pub from: String,
+    pub entries: u32,
+    pub income: MoneyDto,
+    pub expense: MoneyDto,
+    pub force_majeure: MoneyDto,
+    pub corrections: MoneyDto,
+    pub result: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PeriodPartyDto {
+    pub party_id: String,
+    pub name: String,
+    pub role: String,
+    pub is_me: bool,
+    /// Foyda ulushi (musbat) yoki zarar ulushi (manfiy).
+    pub share: MoneyDto,
+    pub recovered: MoneyDto,
+    pub liability: MoneyDto,
+    pub payout: MoneyDto,
+    pub carried_after: MoneyDto,
+    pub capital_after: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PeriodBuyoutDto {
+    pub paid: Vec<u32>,
+    pub unpaid: Vec<u32>,
+    pub amount: MoneyDto,
+    pub capital: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VenturePeriodDto {
+    /// `None` — oldindan ko'rish (hali yopilmagan).
+    pub id: Option<String>,
+    pub no: u32,
+    pub start_on: String,
+    pub end_on: String,
+    pub closed_at: Option<String>,
+    pub entries: u32,
+    pub income: MoneyDto,
+    pub expense: MoneyDto,
+    pub force_majeure: MoneyDto,
+    pub corrections: MoneyDto,
+    pub result: MoneyDto,
+    pub recovered: MoneyDto,
+    pub distributable: MoneyDto,
+    pub parties: Vec<PeriodPartyDto>,
+    pub buyout: Option<PeriodBuyoutDto>,
+    /// `CAPITAL_FIRST` (OQ-D1 bo'yicha vaqtinchalik standart) yoki `PER_PERIOD`.
+    pub loss_policy: String,
+    pub negligent_party: Option<String>,
+    pub negligence_note: Option<String>,
+    /// Xonadon byudjetiga `Income` sifatida tushgan (yoki tushadigan) summa.
+    pub my_income: MoneyDto,
+    pub chain_code: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VentureLedgerDto {
+    pub partnership_id: String,
+    pub title: String,
+    pub kind: String,
+    pub status: String,
+    pub currency: String,
+    /// Yozuv qo'shish va davr yopish mumkin (faqat hisob yurituvchi, faol sheriklikda).
+    pub writable: bool,
+    /// `NOT_ACTIVE`, `NOT_KEEPER` — faqat o'qish rejimi sababi.
+    pub read_only_reason: Option<String>,
+    pub keeper_name: Option<String>,
+    pub start_on: String,
+    pub open: OpenPeriodDto,
+    pub entries: Vec<VentureEntryDto>,
+    pub periods: Vec<VenturePeriodDto>,
+    pub balances: Vec<PartyBalanceDto>,
+    pub buyout: Option<BuyoutProgressDto>,
+    /// Kelishuv jurnali zanjiri boshi (qisqa kod) va tekshiruv natijasi.
+    pub chain_code: String,
+    pub chain_ok: bool,
+    pub loss_policy: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NegligenceInput {
+    pub party_id: String,
+    pub note: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct InstallmentPriceInput {
+    pub no: u32,
+    /// Shu kuni kelishilgan narx (OQ-D6); berilmasa — jadvaldagi qiymat.
+    pub price: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct ClosePeriodInput {
+    pub end_on: String,
+    pub negligence: Option<NegligenceInput>,
+    pub buyout_prices: Vec<InstallmentPriceInput>,
+    /// Xonadonga tushadigan ulush: `CASH` yoki `CARD`.
+    pub channel: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SkillInput {
+    pub member_id: Option<String>,
+    pub title: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SkillDto {
+    pub id: String,
+    pub member_id: Option<String>,
+    pub member_name: Option<String>,
+    pub title: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CapexLineInput {
+    pub title: String,
+    pub amount: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IdeaScenarioInput {
+    /// `PESSIMISTIC`, `BASE`, `OPTIMISTIC`.
+    pub name: String,
+    pub income: String,
+    pub expense: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VentureIdeaInput {
+    pub title: String,
+    pub skill_id: Option<String>,
+    pub capex: Vec<CapexLineInput>,
+    pub scenarios: Vec<IdeaScenarioInput>,
+    /// Sheriklikda mehnat egasining foyda ulushi; `None` — o'z puli bilan.
+    pub worker_share_bp: Option<i32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CapexLineDto {
+    pub title: String,
+    pub amount: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IdeaScenarioDto {
+    pub name: String,
+    pub income: MoneyDto,
+    pub expense: MoneyDto,
+    pub net: MoneyDto,
+    pub annual_net: MoneyDto,
+    /// `None` — sof foyda yo'q, qoplanmaydi.
+    pub payback_months: Option<u32>,
+    pub worker_monthly: Option<MoneyDto>,
+    pub investor_monthly: Option<MoneyDto>,
+    pub investor_payback_months: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct VentureIdeaDto {
+    pub id: String,
+    pub title: String,
+    pub skill_id: Option<String>,
+    pub skill_title: Option<String>,
+    pub capex_lines: Vec<CapexLineDto>,
+    pub capex: MoneyDto,
+    pub scenarios: Vec<IdeaScenarioDto>,
+    pub worker_share_bp: Option<i32>,
+    pub warnings: Vec<String>,
+    pub partnership_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct IdeaDraftInput {
+    pub capital_provider_name: String,
+    pub my_name: String,
+}
+
+/// Har bir javob: `YES`, `NO` yoki `UNKNOWN`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct OfferAnswersInput {
+    pub guaranteed: String,
+    pub loss_shared: String,
+    pub real_activity: String,
+    pub recruitment: String,
+    pub urgency: String,
+    pub written: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct OfferFlagDto {
+    pub code: String,
+    /// `RED` yoki `YELLOW`.
+    pub level: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct OfferCheckDto {
+    /// `GREEN`, `YELLOW`, `RED`.
+    pub verdict: String,
+    pub flags: Vec<OfferFlagDto>,
+}

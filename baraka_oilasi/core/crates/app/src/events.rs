@@ -20,6 +20,8 @@ pub enum Topic {
     Budget,
     Ceremonies,
     Partnerships,
+    Ventures,
+    Ideas,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
