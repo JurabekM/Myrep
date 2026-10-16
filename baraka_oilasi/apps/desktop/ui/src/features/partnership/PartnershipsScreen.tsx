@@ -233,7 +233,7 @@ export function PartnershipsScreen({ spaceId }: { spaceId: string }) {
             <span className="text-ink-muted">{t("partnership.progress", { n: p.answered })}</span>
             <StatusBadge status={p.status} />
             {p.inDispute && <span className="rounded border border-danger px-2 py-0.5 text-xs">{t("partnership.inDispute")}</span>}
-            <span className="font-semibold tabular-nums text-accent">{p.capitalTotal.formatted}</span>
+            <span className="font-semibold tabular-nums text-accent-text">{p.capitalTotal.formatted}</span>
           </span>
         </button>
       ))}

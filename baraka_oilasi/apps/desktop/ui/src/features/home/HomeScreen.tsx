@@ -71,7 +71,7 @@ export function HomeScreen({ spaceId }: { spaceId: string }) {
       )}
       <div>
         <button className="btn-primary" onClick={openIncome}>
-          {t("home.quickIncome")} <kbd className="text-xs opacity-80">Ctrl+N</kbd>
+          {t("home.quickIncome")} <kbd className="text-xs">Ctrl+N</kbd>
         </button>
         <button className="btn-ghost ml-2" onClick={openOffer}>
           {t("offer.open")}
@@ -108,7 +108,7 @@ function Nudges({ items }: { items: NudgeDto[] }) {
     <section aria-label={t("nudge.title")} className="flex flex-col gap-2">
       {items.map((n) => (
         <div key={n.kind} data-testid={`nudge-${n.kind}`} className="card flex flex-wrap items-center justify-between gap-3 border-accent/60 py-3">
-          <p className="min-w-0 flex-1">{t(n.kind === "INCOME_QUIET" && n.days === null ? "nudge.INCOME_NONE" : `nudge.${n.kind}`, { count: n.days ?? 0 })}</p>
+          <p className="min-w-0 flex-1 basis-72">{t(n.kind === "INCOME_QUIET" && n.days === null ? "nudge.INCOME_NONE" : `nudge.${n.kind}`, { count: n.days ?? 0 })}</p>
           <div className="flex gap-2">
             <button className="btn-primary px-3 py-1.5 text-sm" onClick={action[n.kind]}>
               {t(`nudge.action.${n.kind}`)}

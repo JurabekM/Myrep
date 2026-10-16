@@ -273,7 +273,7 @@ function IdeaCard({ spaceId, idea, onEdit }: { spaceId: string; idea: VentureIde
           {idea.skillTitle && <span className="ml-2 text-sm font-normal text-ink-muted">{idea.skillTitle}</span>}
         </h2>
         <span className="text-sm">
-          {t("ideas.capexTotal")}: <span className="font-semibold tabular-nums text-accent">{idea.capex.formatted}</span>
+          {t("ideas.capexTotal")}: <span className="font-semibold tabular-nums text-accent-text">{idea.capex.formatted}</span>
         </span>
       </div>
       <table className="w-full text-sm tabular-nums">

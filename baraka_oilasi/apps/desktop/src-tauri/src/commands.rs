@@ -29,7 +29,21 @@ pub fn core_version() -> String {
 #[tauri::command]
 #[specta::specta]
 pub async fn session_status(state: State<'_, Desktop>) -> R<SessionStatus> {
+    trace_startup();
     state.session.status()
+}
+
+/// `BARAKA_STARTUP_TRACE=1`: jarayon boshidan UI'ning birinchi chaqiruvigacha (sahifa yuklangan,
+/// React ishga tushgan) vaqt stderr'ga bir marta yoziladi. Faqat raqam — shaxsiy ma'lumot yo'q.
+fn trace_startup() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    if std::env::var_os("BARAKA_STARTUP_TRACE").is_some() {
+        ONCE.call_once(|| {
+            if let Some(t) = crate::STARTED.get() {
+                eprintln!("startup_ms={}", t.elapsed().as_millis());
+            }
+        });
+    }
 }
 
 #[tauri::command]
@@ -600,20 +614,48 @@ pub async fn export_ceremony_estimate(
     save_pdf(&handle, pdf, "smeta.pdf")
 }
 
-/// PDF'ni tizimning «Saqlash» oynasi orqali yozadi. `false` — foydalanuvchi bekor qildi.
-fn save_pdf(handle: &AppHandle, pdf: Vec<u8>, file_name: &str) -> R<bool> {
+/// Faqat debug build'da: `BARAKA_E2E_FILES=<papka>` bo'lsa, «Saqlash» va «Ochish» oynalari
+/// ochilmaydi — fayl shu papkaga yoziladi yoki undagi eng yangi `.baraka` tanlanadi. WebDriver
+/// tizim oynalarini boshqara olmaydi; release'da bu kod kompilyatsiyaga kirmaydi.
+fn e2e_files() -> Option<std::path::PathBuf> {
+    #[cfg(debug_assertions)]
+    {
+        std::env::var_os("BARAKA_E2E_FILES").map(std::path::PathBuf::from)
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        None
+    }
+}
+
+/// Tizimning «Saqlash» oynasi (yoki E2E papkasi). `None` — foydalanuvchi bekor qildi.
+fn save_path(
+    handle: &AppHandle,
+    filter: (&str, &str),
+    file_name: &str,
+) -> R<Option<std::path::PathBuf>> {
+    if let Some(dir) = e2e_files() {
+        return Ok(Some(dir.join(file_name)));
+    }
     let picked = handle
         .dialog()
         .file()
-        .add_filter("PDF", &["pdf"])
+        .add_filter(filter.0, &[filter.1])
         .set_file_name(file_name)
         .blocking_save_file();
-    let Some(file) = picked else {
+    picked
+        .map(|f| {
+            f.into_path()
+                .map_err(|_| AppError::new("SAVE_PATH_INVALID"))
+        })
+        .transpose()
+}
+
+/// PDF'ni tizimning «Saqlash» oynasi orqali yozadi. `false` — foydalanuvchi bekor qildi.
+fn save_pdf(handle: &AppHandle, pdf: Vec<u8>, file_name: &str) -> R<bool> {
+    let Some(path) = save_path(handle, ("PDF", "pdf"), file_name)? else {
         return Ok(false);
     };
-    let path = file
-        .into_path()
-        .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
     std::fs::write(with_extension(path, "pdf"), pdf).map_err(|_| AppError::new("IO_ERROR"))?;
     Ok(true)
 }
@@ -1268,18 +1310,9 @@ pub struct PairingView {
 }
 
 fn save_baraka(handle: &AppHandle, bytes: &[u8], file_name: &str) -> R<Option<String>> {
-    let picked = handle
-        .dialog()
-        .file()
-        .add_filter("Baraka", &["baraka"])
-        .set_file_name(file_name)
-        .blocking_save_file();
-    let Some(file) = picked else {
+    let Some(path) = save_path(handle, ("Baraka", "baraka"), file_name)? else {
         return Ok(None);
     };
-    let path = file
-        .into_path()
-        .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
     let path = with_extension(path, "baraka");
     std::fs::write(&path, bytes).map_err(|_| AppError::new("IO_ERROR"))?;
     Ok(Some(
@@ -1287,6 +1320,16 @@ fn save_baraka(handle: &AppHandle, bytes: &[u8], file_name: &str) -> R<Option<St
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default(),
     ))
+}
+
+/// E2E papkasidagi eng yangi `.baraka` fayl.
+fn newest_baraka(dir: &std::path::Path) -> Option<std::path::PathBuf> {
+    std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(Result::ok)
+        .filter(|e| e.path().extension().is_some_and(|x| x == "baraka"))
+        .max_by_key(|e| e.metadata().and_then(|m| m.modified()).ok())
+        .map(|e| e.path())
 }
 
 fn read_baraka(path: &str) -> R<Vec<u8>> {
@@ -1336,17 +1379,23 @@ pub async fn export_baraka(
 #[tauri::command]
 #[specta::specta]
 pub async fn pick_baraka_file(handle: AppHandle) -> R<Option<PickedFile>> {
-    let picked = handle
-        .dialog()
-        .file()
-        .add_filter("Baraka", &["baraka"])
-        .blocking_pick_file();
-    let Some(file) = picked else {
+    let path = if let Some(dir) = e2e_files() {
+        newest_baraka(&dir)
+    } else {
+        handle
+            .dialog()
+            .file()
+            .add_filter("Baraka", &["baraka"])
+            .blocking_pick_file()
+            .map(|f| {
+                f.into_path()
+                    .map_err(|_| AppError::new("SAVE_PATH_INVALID"))
+            })
+            .transpose()?
+    };
+    let Some(path) = path else {
         return Ok(None);
     };
-    let path = file
-        .into_path()
-        .map_err(|_| AppError::new("SAVE_PATH_INVALID"))?;
     Ok(Some(PickedFile {
         name: path
             .file_name()

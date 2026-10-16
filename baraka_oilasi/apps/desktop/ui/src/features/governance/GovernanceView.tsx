@@ -504,7 +504,7 @@ function Total({ label, value, strong }: { label: string; value: string; strong?
   return (
     <div>
       <dt className="text-ink-muted">{label}</dt>
-      <dd className={`tabular-nums ${strong ? "text-lg font-semibold text-accent" : ""}`}>{value}</dd>
+      <dd className={`tabular-nums ${strong ? "text-lg font-semibold text-accent-text" : ""}`}>{value}</dd>
     </div>
   );
 }

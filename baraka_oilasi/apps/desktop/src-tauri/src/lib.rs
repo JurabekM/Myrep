@@ -178,7 +178,11 @@ fn core_clock() -> Arc<dyn Clock> {
     }
 }
 
+/// Jarayon boshlangan vaqt: sovuq start o'lchovi uchun (`BARAKA_STARTUP_TRACE=1`).
+pub(crate) static STARTED: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
 pub fn run() {
+    STARTED.get_or_init(std::time::Instant::now);
     let builder = specta_builder();
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())

@@ -64,6 +64,21 @@
 - **Savol:** shartnomaga alohida «kutilgan oylik foyda» maydoni qo'shamizmi (buyout'siz sheriklik uchun ham)? «Hunardan ishga» stsenariysidagi «o'rtacha» foyda reja bo'la oladimi?
 - **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.
 
+### OQ-P12. U3–U7 bajarilmagan; yakuniy E2E qisqartirilgan
+- **Masala:** ish rejasida U3 (kontent dvigateli), U4 (havas chegarasi, vidjet, oila kengashi), U5 (obunalar, konvertlar, «Qutqarilgan pul», CSV), U6 (qorovul pul, narx daftari, darvoza, ribo filtri) va U7 ning UI qismi hali qilinmagan — ishlar U8 dan boshlangan. Shuning uchun D15 / V15 dagi Anvar ssenariysining «havas chegarasi → obuna bekor qilish → qutqarilgan pul → darvoza ochilishi» qismlari E2E'da yo'q (mahsulot egasi qarori, 2026-10-16: U15 mavjud funksiyalar bilan).
+- **Taklif:** keyingi sessiyalarda U3–U7 (har biri a/b/c), keyin `02-anvar` E2E to'liq ssenariyga kengaytiriladi.
+- **To'sadi:** 1-reliz. **Holat:** OCHIQ.
+
+### OQ-P13. Bosh sahifa eslatmalari: chegaralar
+- **Hozirgi standart (U15):** kunlik naqd — bugun daromad yozilmagan bo'lsa; buyurtma bo'yicha — 14 kun jimlik; oylik maosh — oy boshlanish kunidan 3 kun ichida, shu davrda daromad yo'q bo'lsa; zaxira nusxa — oxirgi to'liq eksport (yoki xonadon yaratilganidan) 30 kun. Eslatmalar faqat bosh sahifada (tizim bildirishnomasi — `tauri-plugin-notification` — hali yo'q).
+- **Savol:** chegaralar to'g'rimi? Kunlik eslatma kechqurun (masalan, 18:00 dan) chiqsinmi? Tizim bildirishnomasi kerakmi?
+- **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.
+
+### OQ-P14. Onboarding'dan keyin oila a'zolarini o'zgartirish
+- **Masala:** a'zolar faqat onboarding'da qo'shiladi; keyin qo'shish, nomini o'zgartirish yoki «katta/bola» rolini almashtirish (bola katta bo'ldi) uchun ekran yo'q.
+- **Taklif:** «Sozlamalar → Oila» bo'limi; rol o'zgarishi kelishuv roziliklariga ta'sir qiladi (OQ-M1 bilan birga).
+- **To'sadi:** — . **Holat:** OCHIQ.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik
@@ -161,7 +176,8 @@
 
 ### OQ-T5. Desktop E2E (tauri-driver)
 - **Masala:** hozircha haqiqiy ilova Xvfb + xdotool bilan qo'lda tekshirildi (sozlash → daromad → ulush → qulf). Windows'da `tauri-driver` + WebdriverIO bilan avtomatlashtirish kerak.
-- **Qaror qachon:** U15. **Holat:** OCHIQ.
+- **U15 da:** `apps/desktop/e2e` — `tauri-driver` + WebdriverIO (klassik rejim), Linux'da (WebKitWebDriver, Xvfb) avtomatik va CI'da tungi job. Har bir ekran haqiqiy webview'da axe-core bilan. Windows'da `msedgedriver` WebView2 versiyasiga mos tanlanishi kerak — CI job hali yo'q.
+- **Qaror qachon:** Windows job — reliz oldidan. **Holat:** QISMAN.
 
 ### OQ-T6. `.baraka` formati Android'da (Dart) va QR skanerlash
 - **Masala:** Android ilovasi formatni FRB orqali Rust yadrosidan oladi — sxema va xeshlar bitta. Test strategiyasida «barcha vektorlar Dart'dan ham ishga tushiriladi» — `spec/interchange/vectors.json` ni FRB orqali Dart testidan o'tkazish yetarlimi yoki Dart'da sarlavha va QR payload uchun alohida parser ham kerakmi? QR skaneri uchun kamera ruxsati va qaysi kutubxona (ML Kit — Google Play xizmatlarisiz qurilmalarda ishlamaydi)?
@@ -172,3 +188,9 @@
 - **Masala:** fayl kaliti Argon2id 64 MiB, t = 3 — arzon Android telefonda ~1–2 s bo'lishi mumkin. Ishlatilmagan «Yangi qurilmani ulash» fayllarining «kutilmoqda» yozuvlari (`sync_pending`) hech qachon tasdiqlanmaydi va bazada qoladi (har biri daftar hajmiga mutanosib, kichik).
 - **Taklif:** KDF'ni haqiqiy qurilmada o'lchab, kerak bo'lsa `mKib` ni 32 MiB ga tushirish (sarlavhada saqlanadi — eski fayllar ochilaveradi); 30 kundan eski tasdiqlanmagan ulash eksportlarini tozalash.
 - **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.
+
+### OQ-T8. Avtomatik yangilash (updater)
+- **Masala:** D15 «imzolangan updater manifesti»ni talab qiladi. `tauri-plugin-updater` internetdan manifest so'raydi — bu «ma'lumot bulutga chiqmaydi» va'dasiga zid emas (faqat versiya so'raladi), lekin ilova birinchi marta tarmoqqa chiqadi (CSP `connect-src` kengayadi), manifest uchun hosting va minisign kaliti kerak.
+- **Variantlar:** (a) updater yo'q — yangi o'rnatuvchi qo'lda yuklanadi (hozir shunday); (b) GitHub Releases'dagi statik `latest.json` + minisign, tekshirish faqat foydalanuvchi «Yangilanishni tekshirish» bosganda; (c) avtomatik fon tekshiruvi.
+- **Taklif:** (b). Qaror chiqmaguncha updater qo'shilmadi (`RELEASE_CHECKLIST.md` 3).
+- **Kimga:** mahsulot egasi. **Holat:** OCHIQ.

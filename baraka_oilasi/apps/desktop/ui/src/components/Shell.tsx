@@ -117,7 +117,7 @@ export function Shell() {
           {t("offer.open")}
         </button>
         <button className="btn-ghost" onClick={() => lock.mutate()}>
-          {t("nav.lock")} <kbd className="text-xs opacity-70">Ctrl+L</kbd>
+          {t("nav.lock")} <kbd className="text-xs">Ctrl+L</kbd>
         </button>
       </nav>
       <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-8 outline-none">

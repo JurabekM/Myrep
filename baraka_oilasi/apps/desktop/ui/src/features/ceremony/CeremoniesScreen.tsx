@@ -47,7 +47,7 @@ export function CeremoniesScreen({ spaceId }: { spaceId: string }) {
           <span className="flex items-center gap-2 text-sm">
             {c.hasDebt && <span className="rounded border border-danger px-2 py-0.5 text-xs text-danger">{t("ceremony.withDebt")}</span>}
             <span className="rounded border border-line px-2 py-0.5 text-xs text-ink-muted">{t(`ceremony.status.${c.status}`)}</span>
-            <span className="font-semibold tabular-nums text-accent">{c.total?.formatted ?? ""}</span>
+            <span className="font-semibold tabular-nums text-accent-text">{c.total?.formatted ?? ""}</span>
           </span>
         </button>
       ))}
@@ -286,7 +286,7 @@ function Scenario({ spaceId, ceremonyId, s, locked, canDelete }: { spaceId: stri
           );
         })}
         <dt className="font-semibold">{t("ceremony.total")}</dt>
-        <dd className="text-right text-lg font-semibold text-accent">{s.total.formatted}</dd>
+        <dd className="text-right text-lg font-semibold text-accent-text">{s.total.formatted}</dd>
       </dl>
       <p className="text-sm">
         {!s.hasDebt

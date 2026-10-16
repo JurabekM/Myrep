@@ -111,7 +111,7 @@ function Kpi({ label, accent, children }: { label: string; accent?: boolean; chi
   return (
     <div className="card min-w-0">
       <p className="label">{label}</p>
-      <div className={`text-xl font-semibold tabular-nums [overflow-wrap:anywhere] ${accent ? "text-accent" : ""}`}>{children}</div>
+      <div className={`text-xl font-semibold tabular-nums [overflow-wrap:anywhere] ${accent ? "text-accent-text" : ""}`}>{children}</div>
     </div>
   );
 }

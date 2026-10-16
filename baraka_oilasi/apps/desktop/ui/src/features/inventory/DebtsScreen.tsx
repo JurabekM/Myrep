@@ -94,7 +94,7 @@ function Kpi({ label, danger, children }: { label: string; danger?: boolean; chi
   return (
     <div className="card min-w-0">
       <p className="label">{label}</p>
-      <div className={`text-xl font-semibold tabular-nums [overflow-wrap:anywhere] ${danger ? "text-danger" : "text-accent"}`}>{children}</div>
+      <div className={`text-xl font-semibold tabular-nums [overflow-wrap:anywhere] ${danger ? "text-danger" : "text-accent-text"}`}>{children}</div>
     </div>
   );
 }
@@ -110,7 +110,7 @@ function StatusLine({ s, gentle }: { s: PlanStatusDto; gentle?: boolean }) {
     <div className="grid gap-3 text-sm sm:grid-cols-3">
       <div>
         <p className="label">{t("debts.remaining")}</p>
-        <p className="text-xl font-semibold tabular-nums text-accent">{s.remaining.formatted}</p>
+        <p className="text-xl font-semibold tabular-nums text-accent-text">{s.remaining.formatted}</p>
       </div>
       {s.nextDue && (
         <div>

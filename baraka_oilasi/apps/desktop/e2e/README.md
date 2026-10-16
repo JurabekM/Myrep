@@ -1,0 +1,42 @@
+# Desktop E2E (haqiqiy ilova)
+
+`tauri-driver` → platforma WebDriver'i (Linux: `WebKitWebDriver`, Windows: `msedgedriver`) →
+`baraka-desktop`. Testlar ekranni foydalanuvchi kabi boshqaradi: ko'rinadigan o'zbekcha matnlar
+va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** bilan tekshiriladi
+(WCAG 2.2 A/AA, rang kontrasti ham).
+
+| Spec | Nima |
+|---|---|
+| `01-onboarding` | 5 qadamli onboarding, tiklash kodi, «qarzim bor» → qarzlar ekrani, eslatmalar, til va shrift qayta ochilganda saqlanishi |
+| `02-anvar` | Anvar ssenariysi (mavjud funksiyalar bilan): daromad → ulush → xarajat → audit → qarz → 70/20/10 → «Qarzsiz kun» → qarz yopilishi → Dilshod bilan musharaka → kassa daftari → davr taqsimoti → vazifa hodisasi → oylik ko'rik → zaxira nusxa |
+| `03-restore` | Zaxira nusxa → yangi profil → «Mavjud xonadonga qo'shilish» → ma'lumotlar 1:1 |
+
+## Ishga tushirish (Linux)
+```bash
+sudo apt-get install webkit2gtk-driver xvfb
+cargo install tauri-driver --locked
+pnpm --dir ../ui build
+(cd ../src-tauri && cargo build --features tauri/custom-protocol)   # debug build
+pnpm install
+xvfb-run -a -s "-screen 0 1440x900x24" pnpm e2e
+```
+Skrinshotlar — `.out/`. Har bir ishga tushirish vaqtinchalik toza profil bilan.
+
+Faqat **debug** build'da ishlaydigan yordamchilar (release'da kompilyatsiyaga kirmaydi):
+- `BARAKA_DEV_SHIFT_DAYS=N` — yadro soatini N kunga siljitadi (davrlar, eslatmalar);
+- `BARAKA_E2E_FILES=<papka>` — «Saqlash» / «Ochish» tizim oynalari o'rniga shu papka
+  (WebDriver tizim oynalarini boshqara olmaydi);
+- `BARAKA_INSECURE_DEV_SECRET=1` — keyring'siz platforma siri.
+
+## Windows
+`msedgedriver` (WebView2 versiyasiga mos) `PATH` da bo'lishi kerak; `tauri-driver
+--native-driver <msedgedriver.exe>`. `BARAKA_APP` — boshqa binar yo'li.
+
+## Sovuq start
+Release build bilan (`cargo build --release --features tauri/custom-protocol`): jarayon
+ishga tushirilgandan UI'ning birinchi yadro chaqiruvigacha (sahifa yuklangan, React ishga tushgan;
+qulf yoki sozlash ekrani shu javobdan keyin chiziladi). Ilova `BARAKA_STARTUP_TRACE=1` bo'lsa
+`startup_ms=N` ni stderr'ga yozadi (faqat raqam). `node scripts/cold-start.mjs [binar] [marta]` —
+har safar o'lchab, birinchisi va medianani chiqaradi.
+
+U15 natijasi (Linux, Xvfb, dasturiy render): mediana 934 ms, oraliq 897–1007 ms.
