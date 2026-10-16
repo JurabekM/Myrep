@@ -28,6 +28,8 @@ fn app_at(c: Arc<FixedClock>) -> App {
 fn bootstrap(app: &App) -> (String, String) {
     let h = app
         .bootstrap(BootstrapInput {
+            income_rhythm: None,
+            debts_declared: false,
             household_name: "Anvarlar oilasi".into(),
             device_name: "Anvarning telefoni".into(),
             platform: "android".into(),
@@ -77,6 +79,8 @@ fn bootstrap_creates_spaces_categories_and_rule() {
     let (uy, kk) = bootstrap(&app);
     assert!(app
         .bootstrap(BootstrapInput {
+            income_rhythm: None,
+            debts_declared: false,
             household_name: "x".into(),
             device_name: "x".into(),
             platform: "x".into(),

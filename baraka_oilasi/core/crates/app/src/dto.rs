@@ -28,6 +28,12 @@ pub struct BootstrapInput {
     /// Yoqiladigan makonlar: `UY`, `KASBKOR`, `MUSOFIR`.
     pub spaces: Vec<String>,
     pub members: Vec<NewMemberInput>,
+    /// Onboarding: `DAILY` (kunlik naqd), `ORDERS` (buyurtma bo'yicha), `MONTHLY` (oylik maosh).
+    #[serde(default)]
+    pub income_rhythm: Option<String>,
+    /// Onboarding: «faol qarzim bor» — qarzlar inventarga kiritilguncha taklif ko'rsatiladi.
+    #[serde(default)]
+    pub debts_declared: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2034,4 +2040,37 @@ pub struct JoinInput {
     pub secret: String,
     pub device_name: String,
     pub platform: String,
+}
+
+/// U15: sozlamalar. `locale` — amaldagi til (qurilmaniki bo'lsa — u, aks holda xonadonniki).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SettingsDto {
+    pub locale: String,
+    pub household_locale: String,
+    /// Faqat shu qurilmaga tegishli til (sinxronlanmaydi).
+    pub device_locale: Option<String>,
+    pub income_rhythm: Option<String>,
+    pub debts_declared: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SettingsInput {
+    /// `uz`, `uz-Cyrl`, `ru` yoki `null` (xonadon tili).
+    pub locale: Option<String>,
+    pub income_rhythm: Option<String>,
+    pub debts_declared: bool,
+}
+
+/// Bosh sahifa eslatmasi: `INCOME_TODAY`, `INCOME_QUIET` (`days` — oxirgi daromaddan beri,
+/// `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct NudgeDto {
+    pub kind: String,
+    pub days: Option<u32>,
 }

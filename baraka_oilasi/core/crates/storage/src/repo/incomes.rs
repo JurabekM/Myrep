@@ -83,3 +83,13 @@ pub fn last(c: &Connection, s: &SpaceScope) -> Result<Option<IncomeRow>, Storage
     )
     .optional()?)
 }
+
+/// Eng so'nggi daromad sanasi (kiritilgan vaqti emas, `occurred_on`).
+pub fn last_occurred_on(c: &Connection, s: &SpaceScope) -> Result<Option<String>, StorageError> {
+    Ok(c.query_row(
+        "SELECT MAX(occurred_on) FROM incomes WHERE household_id = ?1 AND space_id = ?2
+            AND deleted_at IS NULL",
+        params![s.household_id, s.space_id],
+        |r| r.get::<_, Option<String>>(0),
+    )?)
+}

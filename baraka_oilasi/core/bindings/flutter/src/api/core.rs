@@ -920,6 +920,21 @@ impl BarakaCore {
             .join_household(&take_secret(platform_secret)?, &pin, &file, input)
     }
 
+    // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
+
+    pub fn settings(&self) -> Result<SettingsDto, AppError> {
+        self.session.app()?.settings()
+    }
+
+    /// Til faqat shu qurilmaga yoziladi; daromad ritmi va «qarzim bor» — xonadonniki.
+    pub fn update_settings(&self, input: SettingsInput) -> Result<SettingsDto, AppError> {
+        self.session.app()?.update_settings(input)
+    }
+
+    pub fn home_nudges(&self, space_id: String) -> Result<Vec<NudgeDto>, AppError> {
+        self.session.app()?.home_nudges(&space_id)
+    }
+
     pub fn devices(&self) -> Result<Vec<DeviceDto>, AppError> {
         self.session.app()?.devices()
     }
@@ -974,6 +989,8 @@ mod tests {
                 secret.clone(),
                 "135790".into(),
                 BootstrapInput {
+                    income_rhythm: None,
+                    debts_declared: false,
                     household_name: "Karim akaning oilasi".into(),
                     device_name: "Telefon".into(),
                     platform: "android".into(),

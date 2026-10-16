@@ -12,6 +12,7 @@ abstract final class BarakaLightColors {
   static const Color ink = Color(0xFF141413);
   static const Color inkMuted = Color(0xFF5E5D59);
   static const Color line = Color(0xFFDAD8CE);
+  static const Color fieldLine = Color(0xFF86847C);
   static const Color accent = Color(0xFFA9502F);
   static const Color accentInk = Color(0xFFFFFFFF);
   static const Color accentText = Color(0xFF953F21);
@@ -32,6 +33,7 @@ abstract final class BarakaDarkColors {
   static const Color ink = Color(0xFFFAF9F5);
   static const Color inkMuted = Color(0xFFA6A39A);
   static const Color line = Color(0xFF4A4945);
+  static const Color fieldLine = Color(0xFF7D7B74);
   static const Color accent = Color(0xFFD97757);
   static const Color accentInk = Color(0xFF1F1E1D);
   static const Color accentText = Color(0xFFE8957A);

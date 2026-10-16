@@ -117,9 +117,14 @@ impl App {
             .db
             .read(household::get_household)?
             .ok_or(AppError::new("NOT_INITIALIZED"))?;
+        // Qurilmaning o'z tili bo'lsa — summa va PDF'lar shu tilda.
+        let device_locale = self
+            .db
+            .read(|c| household::device_locale(c, &self.device_id))?;
+        let tag = device_locale.as_deref().unwrap_or(&h.locale);
         Ok(Ctx {
             household_id: h.id,
-            locale: Locale::from_tag(&h.locale).unwrap_or(Locale::Uz),
+            locale: Locale::from_tag(tag).unwrap_or(Locale::Uz),
             currency: Currency::from_code(&h.base_currency)?,
             tz: h.tz.parse().unwrap_or(baraka_domain_common::DEFAULT_TZ),
             month_start_day: h.month_start_day,
@@ -200,6 +205,7 @@ impl App {
         if !members.iter().any(|(_, _, r)| *r == MemberRole::Adult) {
             return Err(AppError::on("ADULT_REQUIRED", "members"));
         }
+        let rhythm = crate::settings::parse_rhythm(input.income_rhythm.as_deref())?;
 
         let hid = self.new_id();
         let meta = self.meta();
@@ -240,6 +246,7 @@ impl App {
                 },
                 &meta,
             )?;
+            household::set_prefs(tx, &hid, rhythm, input.debts_declared, &meta)?;
             household::insert_device(tx, &hid, &device_name, &platform, &meta)?;
             for (id, display_name, role) in &members {
                 household::insert_member(

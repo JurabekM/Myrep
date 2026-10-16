@@ -30,7 +30,7 @@ const MAX_LABEL: usize = 80;
 /// `*_json` ustunlari (xarajatlar ro'yxati, stsenariylar) ziddiyat jadvalida shu uzunlikkacha.
 const MAX_JSON_VALUE: usize = 400;
 
-const ALL_TOPICS: [Topic; 17] = [
+pub(crate) const ALL_TOPICS: [Topic; 17] = [
     Topic::Household,
     Topic::Categories,
     Topic::Incomes,

@@ -305,6 +305,8 @@ mod tests {
 
     fn input() -> BootstrapInput {
         BootstrapInput {
+            income_rhythm: None,
+            debts_declared: false,
             household_name: "Nilufarlar".into(),
             device_name: "Noutbuk".into(),
             platform: "windows".into(),

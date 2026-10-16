@@ -7,6 +7,7 @@
   --bk-ink: #FAF9F5;
   --bk-ink-muted: #A6A39A;
   --bk-line: #4A4945;
+  --bk-field-line: #7D7B74;
   --bk-accent: #D97757;
   --bk-accent-ink: #1F1E1D;
   --bk-accent-text: #E8957A;
@@ -44,6 +45,7 @@
   --bk-ink: #141413;
   --bk-ink-muted: #5E5D59;
   --bk-line: #DAD8CE;
+  --bk-field-line: #86847C;
   --bk-accent: #A9502F;
   --bk-accent-ink: #FFFFFF;
   --bk-accent-text: #953F21;
@@ -64,6 +66,7 @@
   --color-ink: var(--bk-ink);
   --color-ink-muted: var(--bk-ink-muted);
   --color-line: var(--bk-line);
+  --color-field-line: var(--bk-field-line);
   --color-accent: var(--bk-accent);
   --color-accent-ink: var(--bk-accent-ink);
   --color-accent-text: var(--bk-accent-text);

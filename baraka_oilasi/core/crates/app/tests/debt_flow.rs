@@ -21,6 +21,8 @@ fn app_at(at: &str) -> (App, String) {
     .unwrap();
     let h = app
         .bootstrap(BootstrapInput {
+            income_rhythm: None,
+            debts_declared: false,
             household_name: "Karim akaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),

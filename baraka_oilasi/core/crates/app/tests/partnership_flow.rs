@@ -27,6 +27,8 @@ fn app() -> (App, String, Vec<MemberDto>) {
     };
     let h = app
         .bootstrap(BootstrapInput {
+            income_rhythm: None,
+            debts_declared: false,
             household_name: "Nilufarning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),

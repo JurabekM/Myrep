@@ -222,6 +222,19 @@ pub fn record_import_from(
     Ok(())
 }
 
+/// Shu rejimdagi oxirgi eksport vaqti (masalan, zaxira nusxa eslatmasi uchun `FULL`).
+pub fn last_export_at(
+    c: &Connection,
+    household_id: &str,
+    mode: &str,
+) -> Result<Option<String>, StorageError> {
+    Ok(c.query_row(
+        "SELECT MAX(created_at) FROM sync_exports WHERE household_id = ?1 AND mode = ?2",
+        params![household_id, mode],
+        |r| r.get::<_, Option<String>>(0),
+    )?)
+}
+
 /// Eksport: `sync_exports` va (qabul qiluvchi ma'lum yoki ulash fayli bo'lsa) kutilayotgan
 /// yozuvlar. `pending` — (jadval, kalit, xesh).
 #[allow(clippy::too_many_arguments)]

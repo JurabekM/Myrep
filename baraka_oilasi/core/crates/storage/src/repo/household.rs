@@ -61,6 +61,75 @@ pub fn get_household(c: &Connection) -> Result<Option<HouseholdRow>, StorageErro
     .optional()?)
 }
 
+/// Onboarding javoblari (U15).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HouseholdPrefs {
+    pub income_rhythm: Option<String>,
+    pub debts_declared: bool,
+    pub created_at: String,
+}
+
+pub fn prefs(c: &Connection, household_id: &str) -> Result<HouseholdPrefs, StorageError> {
+    Ok(c.query_row(
+        "SELECT income_rhythm, debts_declared, created_at FROM households WHERE id = ?1",
+        params![household_id],
+        |r| {
+            Ok(HouseholdPrefs {
+                income_rhythm: r.get(0)?,
+                debts_declared: r.get::<_, i64>(1)? != 0,
+                created_at: r.get(2)?,
+            })
+        },
+    )?)
+}
+
+pub fn set_prefs(
+    tx: &Transaction<'_>,
+    household_id: &str,
+    income_rhythm: Option<&str>,
+    debts_declared: bool,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "UPDATE households SET income_rhythm = ?2, debts_declared = ?3, updated_at = ?4,
+            updated_by_device_id = ?5, version = version + 1
+         WHERE id = ?1",
+        params![
+            household_id,
+            income_rhythm,
+            i64::from(debts_declared),
+            m.now,
+            m.device_id
+        ],
+    )?;
+    Ok(())
+}
+
+/// Shu qurilmaning tili (sinxronlanmaydi). `None` — xonadon tili.
+pub fn device_locale(c: &Connection, device_id: &str) -> Result<Option<String>, StorageError> {
+    Ok(c.query_row(
+        "SELECT locale FROM device_settings WHERE device_id = ?1",
+        params![device_id],
+        |r| r.get::<_, Option<String>>(0),
+    )
+    .optional()?
+    .flatten())
+}
+
+pub fn set_device_locale(
+    tx: &Transaction<'_>,
+    locale: Option<&str>,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO device_settings (device_id, locale, updated_at) VALUES (?1, ?2, ?3)
+         ON CONFLICT (device_id) DO UPDATE SET locale = excluded.locale,
+            updated_at = excluded.updated_at",
+        params![m.device_id, locale, m.now],
+    )?;
+    Ok(())
+}
+
 pub fn insert_device(
     tx: &Transaction<'_>,
     household_id: &str,
