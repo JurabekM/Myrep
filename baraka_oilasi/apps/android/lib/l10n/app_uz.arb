@@ -1108,5 +1108,312 @@
   "pdf_vcat_RENT": "ijara",
   "pdf_vcat_EQUIPMENT": "uskuna",
   "pdf_vcat_TRANSPORT": "yoʻl",
-  "pdf_vcat_OTHER": "boshqa"
+  "pdf_vcat_OTHER": "boshqa",
+  "common_close": "Yopish",
+  "nav_ideas": "Hunardan ishga",
+  "mentor_ideas": "Hisob-kitobni uch marta qiling: yomon, oʻrtacha va yaxshi holat uchun. Yomon holatda ham oila och qolmasa — boshlasa boʻladi.",
+  "partnership_tab_contract": "Shartnoma",
+  "partnership_tab_ledger": "Kassa daftari",
+  "venture_we": "biz",
+  "venture_capital": "kapital qoldigʻi",
+  "venture_carriedLoss": "Hali tiklanmagan zarar: {amount} — keyingi foydadan avval shu qoplanadi.",
+  "@venture_carriedLoss": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "venture_buyoutProgress": "{buyer} {seller}ning ulushini sotib olmoqda: {paid} / {total} bosqich.",
+  "@venture_buyoutProgress": {
+    "placeholders": {
+      "buyer": {},
+      "paid": {},
+      "seller": {},
+      "total": {}
+    }
+  },
+  "venture_buyoutNext": "Keyingi — {n}-bosqich, {date}: {amount} (jadval boʻyicha, taxminiy).",
+  "@venture_buyoutNext": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "n": {}
+    }
+  },
+  "venture_buyoutOverdue": "Muddati kelgan, lekin hali toʻlanmagan bosqichlar: {list}. Ular davr yopilganda foyda ulushidan toʻlanadi.",
+  "@venture_buyoutOverdue": {
+    "placeholders": {
+      "list": {}
+    }
+  },
+  "venture_chainOk": "Jurnal zanjiri butun · {code}",
+  "@venture_chainOk": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "venture_chainBroken": "Diqqat: jurnal zanjiri buzilgan! · {code}",
+  "@venture_chainBroken": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "venture_readOnly_NOT_KEEPER": "Hisobni {name} yuritadi. Bu qurilmada daftar faqat oʻqish uchun — yozuvlar hisob yurituvchining qurilmasidan keladi.",
+  "@venture_readOnly_NOT_KEEPER": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "venture_readOnly_NOT_ACTIVE": "Sheriklik faol emas — daftar faqat oʻqish uchun.",
+  "venture_addEntry": "Daftarga yozish",
+  "venture_correctTitle": "Tuzatuvchi yozuv",
+  "venture_correctHint": "Asl yozuv ({date}, {kind}, {amount}) oʻchirilmaydi va oʻzgarmaydi. Toʻgʻri summani yozing — farq joriy davrga yangi yozuv boʻlib tushadi.",
+  "@venture_correctHint": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "kind": {}
+    }
+  },
+  "venture_correctAmount": "Toʻgʻri summa",
+  "venture_kind_INCOME": "Kirim",
+  "venture_kind_EXPENSE": "Xarajat",
+  "venture_kind_FORCE_MAJEURE": "Fors-major",
+  "venture_kind_CORRECTION": "Tuzatish",
+  "venture_category": "Turi",
+  "venture_cat_ORDER": "buyurtma",
+  "venture_cat_MATERIAL": "material",
+  "venture_cat_WAGE": "ish haqi",
+  "venture_cat_RENT": "ijara",
+  "venture_cat_EQUIPMENT": "uskuna",
+  "venture_cat_TRANSPORT": "yoʻl",
+  "venture_cat_OTHER": "boshqa",
+  "venture_date": "Sana",
+  "venture_noteRequired": "Izoh (majburiy)",
+  "venture_receipt": "Chek yoki rasm (ixtiyoriy)",
+  "venture_evidence": "Dalillar: rasm yoki hujjat",
+  "venture_forceMajeureHint": "Fors-major — hech kimning aybisiz koʻrilgan zarar (masalan, omborni suv bosdi). Zarar shartnomadagi qoida boʻyicha taqsimlanadi.",
+  "venture_save": "Yozish",
+  "venture_openPeriod": "{n}-davr (ochiq), {from} dan",
+  "@venture_openPeriod": {
+    "placeholders": {
+      "from": {},
+      "n": {}
+    }
+  },
+  "venture_total_income": "Kirim",
+  "venture_total_expense": "Xarajat",
+  "venture_total_forceMajeure": "Fors-major",
+  "venture_total_corrections": "Tuzatishlar",
+  "venture_total_result": "Sof natija",
+  "venture_endOn": "Davr oxiri",
+  "venture_channel": "Ulushimiz qayerga tushadi",
+  "venture_channelCash": "Naqd",
+  "venture_channelCard": "Karta",
+  "venture_negligence": "Zarar mehnat egasining beparvoligi yoki shart buzilishidan",
+  "venture_negligenceNote": "Nima boʻldi (izoh majburiy)",
+  "venture_priceHint": "Buyout bosqichi narxi sotilgan kuni kelishiladi. Boʻsh qolsa — jadvaldagi qiymat.",
+  "venture_priceOf": "{n}-bosqich narxi",
+  "@venture_priceOf": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "venture_pricePlaceholder": "jadval boʻyicha",
+  "venture_preview": "Taqsimotni koʻrish",
+  "venture_closePeriod": "Davrni yopish",
+  "venture_closeWarning": "Yopilgan davr oʻzgarmaydi: keyin xato topilsa, faqat tuzatuvchi yozuv bilan toʻgʻrilanadi.",
+  "venture_recoveredNote": "Avval oʻtgan davrlardagi zarar bilan kamaygan kapital tiklandi: {amount}.",
+  "@venture_recoveredNote": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "venture_col_party": "Tomon",
+  "venture_col_share": "Ulush",
+  "venture_col_recovered": "Kapital tiklandi",
+  "venture_col_payout": "Toʻlanadi",
+  "venture_col_capital": "Kapital qoldigʻi",
+  "venture_col_kind": "Turi",
+  "venture_col_period": "Davr",
+  "venture_liability": "Beparvolik: {name} zararni qoplaydi — {amount}.",
+  "@venture_liability": {
+    "placeholders": {
+      "amount": {},
+      "name": {}
+    }
+  },
+  "venture_buyoutPaid": "Buyout: {list}-bosqich toʻlandi, {amount} xaridor ulushidan sotuvchiga oʻtdi.",
+  "@venture_buyoutPaid": {
+    "placeholders": {
+      "amount": {},
+      "list": {}
+    }
+  },
+  "venture_buyoutNone": "Buyout: bu davrda bosqich toʻlanmadi.",
+  "venture_buyoutUnpaid": "Keyingi davrga qoldi: {list}.",
+  "@venture_buyoutUnpaid": {
+    "placeholders": {
+      "list": {}
+    }
+  },
+  "venture_myIncome": "Oila byudjetiga daromad boʻlib tushadi: {amount}",
+  "@venture_myIncome": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "venture_policy_CAPITAL_FIRST": "Qoida: foyda avval oʻtgan zarar bilan kamaygan kapitalni tiklaydi, qolgani ulush boʻyicha boʻlinadi (OQ-D1 — ulamo bilan aniqlanmoqda).",
+  "venture_policy_PER_PERIOD": "Qoida: har davr natijasi alohida taqsimlanadi.",
+  "venture_empty": "Daftarda hali yozuv yoʻq.",
+  "venture_entries": "Yozuvlar",
+  "venture_corrected": "tuzatilgan",
+  "venture_closedIn": "{n}-davr 🔒",
+  "@venture_closedIn": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "venture_open": "ochiq",
+  "venture_hashTitle": "Jurnal yozuvi xeshining qisqa kodi",
+  "venture_correct": "Tuzatish",
+  "venture_closedPeriod": "{n}-davr: {from} — {to}",
+  "@venture_closedPeriod": {
+    "placeholders": {
+      "from": {},
+      "n": {},
+      "to": {}
+    }
+  },
+  "venture_locked": "yopilgan",
+  "venture_reportPdf": "Sherik uchun hisobot (PDF)",
+  "venture_chainAt": "Zanjir boshi: {code}",
+  "@venture_chainAt": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "ideas_title": "Hunardan ishga",
+  "ideas_new": "Yangi gʻoya",
+  "ideas_intro": "Oilada bekor yotgan hunar — tikuvchilik, pazandachilik, taʼmir, til — kichik ishning boshi boʻlishi mumkin. Avval qogʻozda hisoblaymiz, keyin ishga solamiz.",
+  "ideas_skills": "Oiladagi hunarlar",
+  "ideas_skillsHint": "Kim nimani qoʻlidan keladi? Kichik boʻlsa ham yozing.",
+  "ideas_skill": "Hunar",
+  "ideas_skillPlaceholder": "masalan: tikuvchilik",
+  "ideas_who": "Kimda",
+  "ideas_addSkill": "Qoʻshish",
+  "ideas_removeSkill": "{name} — olib tashlash",
+  "@ideas_removeSkill": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "ideas_editor": "Gʻoya hisobi",
+  "ideas_ideaTitle": "Gʻoya nomi",
+  "ideas_capex": "Boshlangʻich xarajat",
+  "ideas_capexHint": "Bir marta sotib olinadigan narsalar: uskuna, stol, birinchi mato.",
+  "ideas_capexItem": "{n}-narsa",
+  "@ideas_capexItem": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "ideas_capexAmount": "{n}-narsa narxi",
+  "@ideas_capexAmount": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "ideas_addCapex": "Qator qoʻshish",
+  "ideas_scenarios": "Uch stsenariy (oyiga)",
+  "ideas_scenariosHint": "Yomon oyda, oʻrtacha oyda va yaxshi oyda qancha tushadi va qancha ketadi?",
+  "ideas_scenario_PESSIMISTIC": "Yomon holat",
+  "ideas_scenario_BASE": "Oʻrtacha",
+  "ideas_scenario_OPTIMISTIC": "Yaxshi holat",
+  "ideas_monthlyIncome": "Oylik kirim",
+  "ideas_monthlyExpense": "Oylik xarajat",
+  "ideas_partnered": "Kapitalni sherik beradi (mudoraba)",
+  "ideas_workerShare": "Bizning foyda ulushimiz, %",
+  "ideas_calculate": "Hisoblash va saqlash",
+  "ideas_capexTotal": "Boshlangʻich xarajat",
+  "ideas_net": "Sof foyda / oy",
+  "ideas_payback": "Qoplanadi",
+  "ideas_worker": "Bizga / oy",
+  "ideas_investor": "Sherikka / oy",
+  "ideas_investorPayback": "Sherik uchun qoplanadi",
+  "ideas_months": "{n} oyda",
+  "@ideas_months": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "ideas_never": "qoplanmaydi",
+  "ideas_warning_SCENARIOS_NOT_ORDERED": "Yomon holat oʻrtachadan yaxshi chiqdi — raqamlarni qayta tekshiring.",
+  "ideas_disclaimer": "Bu taxminiy hisob, vaʼda emas. Foyda kafolatlanmaydi: ish yurmasa, zarar ham boʻlishi mumkin.",
+  "ideas_toContract": "Sheriklik shartnomasiga oʻtish",
+  "ideas_providerName": "Kapital beruvchining toʻliq ismi",
+  "ideas_myName": "Bizning toʻliq ismimiz",
+  "ideas_createDraft": "Qoralama yaratish",
+  "ideas_openDraft": "Shartnoma qoralamasini ochish",
+  "ideas_edit": "Tahrirlash",
+  "ideas_delete": "Oʻchirish",
+  "offer_open": "Taklifni tekshirish",
+  "offer_title": "Taklifni tekshirish",
+  "offer_intro": "Qoida: tavakkalsiz, kafolatlangan foyda vaʼda qilinsa — u yerda yo ribo, yo firibgarlik bor. Har bir savolga halol javob bering; bilmasangiz — «Bilmayman».",
+  "offer_q_guaranteed": "Foyda oldindan kafolatlanyaptimi (masalan, «oyiga 10% aniq»)?",
+  "offer_q_lossShared": "Zarar boʻlsa, u ham boʻlishiladimi?",
+  "offer_q_realActivity": "Ortida real mol yoki ish bormi (doʻkon, ustaxona, tovar)?",
+  "offer_q_recruitment": "Daromad uchun yangi odam jalb qilish talab qilinadimi?",
+  "offer_q_urgency": "Shoshiltirishyaptimi («bugun ulgurmasangiz, kech boʻladi»)?",
+  "offer_q_written": "Yozma shartnoma bormi?",
+  "offer_reply_YES": "Ha",
+  "offer_reply_NO": "Yoʻq",
+  "offer_reply_UNKNOWN": "Bilmayman",
+  "offer_check": "Tekshirish",
+  "offer_verdict_GREEN": "Yashil: jiddiy xavf belgisi topilmadi",
+  "offer_verdict_YELLOW": "Sariq: ehtiyot boʻling",
+  "offer_verdict_RED": "Qizil: pul bermang",
+  "offer_flag_GUARANTEED_PROFIT": "Kafolatlangan foyda vaʼda qilinmoqda. Halol savdo va sheriklikda foyda oldindan kafolatlanmaydi — bu ribo yoki firibgarlik belgisi.",
+  "offer_flag_GUARANTEED_UNKNOWN": "Foyda kafolatlanganmi — aniq emas. Yozma ravishda soʻrang.",
+  "offer_flag_LOSS_NOT_SHARED": "Zarar boʻlishilmaydi — demak, siz bilan tavakkal boʻlishilmayapti. Bu sheriklik emas.",
+  "offer_flag_LOSS_SHARING_UNKNOWN": "Zarar boʻlsa nima boʻlishi aniq emas.",
+  "offer_flag_NO_REAL_ACTIVITY": "Ortida real mol yoki ish yoʻq — pul faqat yangi pul bilan aylanadi.",
+  "offer_flag_REAL_ACTIVITY_UNKNOWN": "Ortida real ish bormi — oʻz koʻzingiz bilan koʻrmagansiz.",
+  "offer_flag_RECRUITMENT_REQUIRED": "Daromad yangi odam olib kelishga bogʻliq — bu piramida belgisi.",
+  "offer_flag_RECRUITMENT_UNKNOWN": "Yangi odam jalb qilish shartmi — aniq emas.",
+  "offer_flag_URGENCY": "Shoshiltirish — oʻylashga vaqt bermaslik usuli.",
+  "offer_flag_URGENCY_UNKNOWN": "Muddat boʻyicha bosim bormi — aniqlang.",
+  "offer_flag_NO_WRITTEN_CONTRACT": "Yozma shartnoma yoʻq. «Kelishuvni yozinglar» — Baqara, 282.",
+  "offer_flag_WRITTEN_UNKNOWN": "Yozma shartnoma boʻladimi — aniq emas.",
+  "offer_advice_GREEN": "Baribir avval kichik summadan boshlang, shartnomani yozing va guvoh qoʻying.",
+  "offer_advice_YELLOW": "Javobsiz savollarga aniq javob olmaguncha pul bermang. Ishonchli odam bilan maslahatlashing.",
+  "offer_advice_RED": "Bu taklifdan uzoq turing. Pul bergan boʻlsangiz — yozma dalillarni saqlang va yaqinlaringiz bilan maslahatlashing.",
+  "error_NOT_KEEPER": "Bu daftarga faqat hisob yurituvchi yozadi",
+  "error_PERIOD_CLOSED": "Bu sana yopilgan davrga tushadi — tuzatuvchi yozuvdan foydalaning",
+  "error_FUTURE_DATE": "Kelajakdagi sana boʻlmaydi",
+  "error_BEFORE_START": "Sana sheriklik boshlanishidan oldin",
+  "error_INVALID_CATEGORY": "Turi notoʻgʻri",
+  "error_INVALID_ENTRY_KIND": "Yozuv turi notoʻgʻri",
+  "error_CORRECTION_OF_CORRECTION": "Tuzatishni emas, asl yozuvni tuzating",
+  "error_NOTHING_TO_CORRECT": "Summa oʻzgarmadi — tuzatish kerak emas",
+  "error_CORRECTION_TARGET_NOT_ALLOWED": "Bu yozuv tuzatish emas",
+  "error_TOO_MANY_ATTACHMENTS": "Bitta yozuvga koʻpi bilan 5 ta fayl",
+  "error_ATTACHMENT_TOO_LARGE": "Fayl 5 MB dan katta",
+  "error_ATTACHMENT_TYPE_NOT_ALLOWED": "Faqat JPEG, PNG, WebP rasm yoki PDF",
+  "error_INVALID_PERIOD_END": "Davr oxiri ochiq davr boshidan oldin boʻlmaydi",
+  "error_PERIOD_EMPTY": "Bu davrda yozuv yoʻq",
+  "error_INVALID_CHANNEL": "Naqd yoki kartani tanlang",
+  "error_OPEN_PERIOD_NOT_CLOSED": "Avval kassa daftaridagi ochiq davrni yoping",
+  "error_NEGLIGENCE_NOT_APPLICABLE": "Beparvolik bandi faqat mudorabada",
+  "error_NEGLIGENCE_NOTE_REQUIRED": "Beparvolik izohini yozing",
+  "error_NEGLIGENCE_PARTY_NOT_WORKER": "Beparvolik faqat mehnat egasiga yuklanadi",
+  "error_NEGLIGENCE_WITHOUT_LOSS": "Davr zararsiz — beparvolik bandi qoʻllanmaydi",
+  "error_NO_CAPITAL": "Kapital yoʻq — zararni taqsimlab boʻlmaydi",
+  "error_INVALID_INSTALLMENT": "Buyout bosqichi notoʻgʻri",
+  "error_CAPEX_ITEM_NOT_POSITIVE": "Narx musbat boʻlishi kerak",
+  "error_INVALID_SCENARIOS": "Uchala stsenariyni toʻldiring",
+  "error_ALREADY_DRAFTED": "Bu gʻoyadan qoralama allaqachon yaratilgan",
+  "error_INVALID_ANSWER": "Har bir savolga javob bering",
+  "venture_pickFiles": "Fayl tanlash",
+  "venture_noFiles": "fayl tanlanmagan",
+  "venture_myIncomeNone": "Bu davrda oila byudjetiga ulush tushmaydi."
 }

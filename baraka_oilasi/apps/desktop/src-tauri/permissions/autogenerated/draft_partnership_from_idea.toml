@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-draft-partnership-from-idea"
+description = "Enables the draft_partnership_from_idea command without any pre-configured scope."
+commands.allow = ["draft_partnership_from_idea"]
+
+[[permission]]
+identifier = "deny-draft-partnership-from-idea"
+description = "Denies the draft_partnership_from_idea command without any pre-configured scope."
+commands.deny = ["draft_partnership_from_idea"]

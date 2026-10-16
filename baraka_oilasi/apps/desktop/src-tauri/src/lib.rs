@@ -2,7 +2,7 @@
 use std::sync::Arc;
 use std::time::Duration as StdDuration;
 
-use baraka_app::{ChangeEvent, KdfParams, Session, SystemClock, UuidV7Gen};
+use baraka_app::{ChangeEvent, Clock, KdfParams, Session, SystemClock, UuidV7Gen};
 use serde::Serialize;
 use specta_typescript::Typescript;
 use tauri::Manager;
@@ -97,6 +97,21 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::close_partnership,
             commands::delete_partnership,
             commands::export_partnership_contract,
+            commands::venture_ledger,
+            commands::add_venture_entry,
+            commands::venture_attachment,
+            commands::venture_period_preview,
+            commands::close_venture_period,
+            commands::skills,
+            commands::add_skill,
+            commands::delete_skill,
+            commands::venture_ideas,
+            commands::create_venture_idea,
+            commands::update_venture_idea,
+            commands::delete_venture_idea,
+            commands::draft_partnership_from_idea,
+            commands::check_offer,
+            commands::export_venture_report,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }
@@ -113,6 +128,27 @@ pub fn export_bindings(path: &std::path::Path) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Faqat debug build'da: `BARAKA_DEV_SHIFT_DAYS=N` yadro soatini N kunga siljitadi — E2E da davr
+/// yopish va muddatlarni real vaqtni kutmasdan sinash uchun. Release'da e'tiborga olinmaydi.
+struct ShiftedClock(chrono::Duration);
+
+impl Clock for ShiftedClock {
+    fn now(&self) -> chrono::DateTime<chrono::Utc> {
+        SystemClock.now() + self.0
+    }
+}
+
+fn core_clock() -> Arc<dyn Clock> {
+    let days = cfg!(debug_assertions)
+        .then(|| std::env::var("BARAKA_DEV_SHIFT_DAYS").ok())
+        .flatten()
+        .and_then(|v| v.parse::<i64>().ok());
+    match days {
+        Some(d) => Arc::new(ShiftedClock(chrono::Duration::days(d))),
+        None => Arc::new(SystemClock),
+    }
+}
+
 pub fn run() {
     let builder = specta_builder();
     let result = tauri::Builder::default()
@@ -126,7 +162,7 @@ pub fn run() {
                 &dir,
                 KdfParams::DESKTOP,
                 chrono::Duration::minutes(IDLE_LOCK_MINUTES),
-                Arc::new(SystemClock),
+                core_clock(),
                 Arc::new(UuidV7Gen),
             );
             app.manage(Desktop {

@@ -68,6 +68,21 @@ const COMMANDS: &[&str] = &[
     "close_partnership",
     "delete_partnership",
     "export_partnership_contract",
+    "venture_ledger",
+    "add_venture_entry",
+    "venture_attachment",
+    "venture_period_preview",
+    "close_venture_period",
+    "skills",
+    "add_skill",
+    "delete_skill",
+    "venture_ideas",
+    "create_venture_idea",
+    "update_venture_idea",
+    "delete_venture_idea",
+    "draft_partnership_from_idea",
+    "check_offer",
+    "export_venture_report",
 ];
 
 fn main() {

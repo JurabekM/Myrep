@@ -13,6 +13,7 @@ import {
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { SignaturePad } from "../../components/SignaturePad";
+import { LedgerView } from "../venture/LedgerView";
 import { call, CoreError } from "../../lib/api";
 import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
@@ -237,6 +238,7 @@ function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id:
   });
   const [form, setForm] = useState<Form | null>(id === null ? blank() : null);
   const [step, setStep] = useState<Step>(1);
+  const [tab, setTab] = useState<"contract" | "ledger">("contract");
   const p = q.data ?? null;
   if (form === null && p) setForm(fromDto(p));
 
@@ -266,6 +268,25 @@ function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id:
         {p && <StatusBadge status={p.status} />}
         {p?.version != null && <span className="text-sm text-ink-muted">{t("partnership.versionNo", { n: p.version })}</span>}
       </div>
+      {p && id && (p.status === "ACTIVE" || p.status === "CLOSED") && (
+        <div role="tablist" className="flex gap-1 border-b border-line">
+          {(["contract", "ledger"] as const).map((x) => (
+            <button
+              key={x}
+              role="tab"
+              aria-selected={tab === x}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm ${tab === x ? "border-accent text-ink" : "border-transparent text-ink-muted hover:text-ink"}`}
+              onClick={() => setTab(x)}
+            >
+              {t(`partnership.tab.${x}`)}
+            </button>
+          ))}
+        </div>
+      )}
+      {tab === "ledger" && id ? (
+        <LedgerView spaceId={spaceId} partnershipId={id} />
+      ) : (
+        <>
       {p?.templateReview === "PENDING" && <p className="rounded border border-warn px-3 py-2 text-sm">{t("partnership.reviewPending")}</p>}
       {p?.amendmentPending && <p className="rounded border border-warn px-3 py-2 text-sm">{t("partnership.amendmentPending", { n: p.signedVersion ?? 0 })}</p>}
       <div className="grid gap-5 lg:grid-cols-[11rem_1fr]">
@@ -320,6 +341,8 @@ function PartnershipView({ spaceId, id, onOpen, onBack }: { spaceId: string; id:
           {p && step <= 9 && <CheckPanel p={p} />}
         </div>
       </div>
+        </>
+      )}
     </section>
   );
 }

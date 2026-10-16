@@ -13,6 +13,8 @@ import { PayoffScreen } from "../features/payoff/PayoffScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { VaultScreen } from "../features/vault/VaultScreen";
+import { IdeasScreen } from "../features/venture/IdeasScreen";
+import { OfferCheckDialog } from "../features/venture/OfferCheckDialog";
 import { call } from "../lib/api";
 import { keys, resetAfterLock } from "../lib/queryClient";
 import { type Screen, useUi } from "../state/ui";
@@ -28,6 +30,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "debts", label: "nav.debts" },
   { screen: "ceremonies", label: "nav.ceremonies" },
   { screen: "partnerships", label: "nav.partnerships" },
+  { screen: "ideas", label: "nav.ideas" },
   { screen: "receipt", label: "nav.receipt" },
 ];
 
@@ -40,6 +43,7 @@ const MENTOR: Record<Screen, string> = {
   debts: "mentor.debts",
   ceremonies: "mentor.ceremonies",
   partnerships: "mentor.partnerships",
+  ideas: "mentor.ideas",
   receipt: "mentor.receipt",
 };
 
@@ -47,7 +51,7 @@ const MENTOR: Record<Screen, string> = {
 export function Shell() {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const { screen, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, celebration, closeCelebration } = useUi();
+  const { screen, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
 
@@ -90,7 +94,10 @@ export function Shell() {
             {t(n.label)}
           </button>
         ))}
-        <button className="btn-ghost mt-auto" onClick={() => lock.mutate()}>
+        <button className="btn-ghost mt-auto text-sm" onClick={openOffer}>
+          {t("offer.open")}
+        </button>
+        <button className="btn-ghost" onClick={() => lock.mutate()}>
           {t("nav.lock")} <kbd className="text-xs opacity-70">Ctrl+L</kbd>
         </button>
       </nav>
@@ -103,10 +110,12 @@ export function Shell() {
         {active && screen === "debts" && <PayoffScreen spaceId={active} />}
         {active && screen === "ceremonies" && <CeremoniesScreen spaceId={active} />}
         {active && screen === "partnerships" && <PartnershipsScreen spaceId={active} />}
+        {active && screen === "ideas" && <IdeasScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
       </main>
       <Mentor tipKey={MENTOR[screen]} />
       {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}
+      {offerOpen && <OfferCheckDialog onClose={closeOffer} />}
       {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}
     </div>
   );

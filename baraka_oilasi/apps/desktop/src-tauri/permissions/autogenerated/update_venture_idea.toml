@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-venture-idea"
+description = "Enables the update_venture_idea command without any pre-configured scope."
+commands.allow = ["update_venture_idea"]
+
+[[permission]]
+identifier = "deny-update-venture-idea"
+description = "Denies the update_venture_idea command without any pre-configured scope."
+commands.deny = ["update_venture_idea"]

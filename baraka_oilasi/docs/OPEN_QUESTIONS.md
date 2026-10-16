@@ -72,6 +72,7 @@
 - **Misol:** 1-oy zarar 2 mln, 2-oy foyda 3 mln, ulush 50/50. Spec bo'yicha: ishchi 1,5 mln. Klassik qoida bo'yicha: 2 mln kapitalga, qolgan 1 mln → har biriga 0,5 mln.
 - **To'sadi:** U11, U12. **Holat:** OCHIQ.
 - **U11 da:** davr natijasini taqsimlash U12 (venture ledger) da; U11 da faqat shartnoma, zarar qoidasi va zarar ulushlari. Qaror U12 dan oldin kerak.
+- **U12 da qilingan (vaqtinchalik):** standart — klassik qoida (`CAPITAL_FIRST`): keyingi foyda avval o'tgan zarar bilan kamaygan kapitalni tiklaydi (zararni ko'targanlarga, ularning ulushiga mutanosib), qolgani foyda ulushlari bo'yicha. Siyosat har bir yopilgan davrda saqlanadi; «har davr alohida» (`PER_PERIOD`) ham tayyor — ulamo qaroridan keyin standartni almashtirish bir qator (`LossPolicy::default`). Beparvolik zarari tiklanmaydi (ishchi qoplaydi). Vektorlar: `vp-003`, `vp-004`, `vp-011`, `vp-012`.
 
 ### OQ-D2. Musharakada ishlamaydigan sherik
 - **Savol:** Hanafiy mazhabida ishlamaydigan sherikning foyda ulushi kapital ulushidan oshmasligi kerakmi? Validator sifatida qo'shiladimi?
@@ -96,6 +97,7 @@
 - **Savol:** mehnat egasi kapital egasining ulushini bosqichma-bosqich sotib olganda, har bir qism narxini **oldindan qotirib** (masalan, 30 mln / 20 = 1,5 mln) va'da qilish joizmi? Bizning tushunishimizcha, AAOIFI shariat standartida (12, sheriklik) ulushni asl (nominal) qiymatda sotib olish majburiyati kapitalni kafolatlaydi va qarzga o'xshab qoladi, shuning uchun sotilgan kundagi bozor yoki o'sha kuni kelishilgan qiymat ko'rsatiladi — ulamo tasdiqlashi kerak.
 - **U11 da qilingan:** jadval «taxminiy» deb belgilanadi, shartnoma va PDF da «har bir qism sotilgan kuni kelishilgan qiymatda baholanadi, kapitalni to'liq qaytarish oldindan va'da qilinmaydi» bandi bor. Foyda ulushlari ulush o'zgarishi bilan avtomatik o'zgarmaydi (yangi versiyada kelishiladi).
 - **To'sadi:** U12 (buyout to'lovini taqsimotdan ayirish). **Holat:** OCHIQ.
+- **U12 da:** davr yopilganda har bir muddati kelgan bosqich narxi shu kuni kiritiladi (standart — jadvaldagi qiymat); o'tadigan kapital — jadval bo'yicha. To'lov xaridorning shu davrdagi foyda ulushidan, bosqichlar tartib bilan va faqat to'liq to'lanadi; yetmasa yoki zarar bo'lsa — keyingi davrga qoladi (majburiy to'lov emas). Buyout bilan kapital olgan xaridor keyingi zararlarni ham kapitaliga mutanosib ko'taradi.
 
 ## Yurist uchun
 

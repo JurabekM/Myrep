@@ -22,14 +22,15 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`
 | Qism | Holat |
 |---|---|
 | Rust yadro: `money`, `journal`, `security`, `storage`, `domain-uy`, `agreements`, `app` (sessiya va use-case'lar) | ✅ testlar bilan |
-| Oltin vektorlar (24 suite, 150 case) + mustaqil Python oracle | ✅ |
+| Oltin vektorlar (27 suite, 185 case) + mustaqil Python oracle | ✅ |
 | `cargo xtask`: i18n (uz, uz-Cyrl, ru), taqiqlangan iboralar, dizayn tokenlari | ✅ |
 | Desktop: Tauri 2 + React, Claude Code dark theme (sozlash, qulf, bosh sahifa, daromad, Kelajagim, xarajat, audit, qarzlar inventari, «to'xta va o'yla», qarz tilxati → jurnal → PDF, «Qarzdan chiqish», marosimlar, sheriklik) | ✅ Linux'da yig'ildi va tekshirildi; Windows NSIS — CI'da yashil |
-| PDF (typst): qarz tilxati, marosim smetasi, sheriklik shartnomasi (chizilgan imzolar bilan), uz / uz-Cyrl / ru | ✅ |
+| PDF (typst): qarz tilxati, marosim smetasi, sheriklik shartnomasi (chizilgan imzolar bilan), sheriklik davri hisoboti, uz / uz-Cyrl / ru | ✅ |
 | U8: qarz inventari, haqiqiy narx, friction, tilxat (jurnal bilan) | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U9: «Qarzdan chiqish» 70/20/10, rejalovchi (grafik), «Qarzsiz kun», buyumlar, to'lovchilar | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U10: marosim rejalovchisi — 2–3 stsenariy, «qarzsiz qanday o'tkazamiz?» muhokamasi, tasdiqlash qulfi, smeta PDF, «To'yona o'rniga» maqsad | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U11: sheriklik (mudoraba / musharaka), 9 savolli shartnoma ustasi, versiyalar va chizilgan imzolar, buyout, darvoza va oilaviy rozilik | ✅ yadro + desktop; Android UI — keyingi sessiya |
+| U12: kassa daftari (cheklar bilan, o'zgarmas), davrni yopish va avtomatik taqsimot (zararni tiklash, buyout ayirmasi), sherik uchun hisobot PDF, «Hunardan ishga», «Taklifni tekshirish» | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

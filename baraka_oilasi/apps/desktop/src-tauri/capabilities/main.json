@@ -74,6 +74,21 @@
     "allow-activate-partnership",
     "allow-close-partnership",
     "allow-delete-partnership",
-    "allow-export-partnership-contract"
+    "allow-export-partnership-contract",
+    "allow-venture-ledger",
+    "allow-add-venture-entry",
+    "allow-venture-attachment",
+    "allow-venture-period-preview",
+    "allow-close-venture-period",
+    "allow-skills",
+    "allow-add-skill",
+    "allow-delete-skill",
+    "allow-venture-ideas",
+    "allow-create-venture-idea",
+    "allow-update-venture-idea",
+    "allow-delete-venture-idea",
+    "allow-draft-partnership-from-idea",
+    "allow-check-offer",
+    "allow-export-venture-report"
   ]
 }

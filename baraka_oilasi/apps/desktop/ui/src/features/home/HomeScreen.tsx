@@ -11,6 +11,7 @@ import { useUi } from "../../state/ui";
 export function HomeScreen({ spaceId }: { spaceId: string }) {
   const { t } = useTranslation();
   const openIncome = useUi((s) => s.openIncome);
+  const openOffer = useUi((s) => s.openOffer);
   const summary = useQuery({ queryKey: keys.summary(spaceId, null), queryFn: () => call(commands.monthlySummary(spaceId, null, null)) });
   const vault = useQuery({ queryKey: keys.vault(spaceId), queryFn: () => call(commands.vault(spaceId)) });
   const debts = useQuery({ queryKey: keys.debts(spaceId), queryFn: () => call(commands.debtsOverview(spaceId)) });
@@ -47,6 +48,9 @@ export function HomeScreen({ spaceId }: { spaceId: string }) {
       <div>
         <button className="btn-primary" onClick={openIncome}>
           {t("home.quickIncome")} <kbd className="text-xs opacity-80">Ctrl+N</kbd>
+        </button>
+        <button className="btn-ghost ml-2" onClick={openOffer}>
+          {t("offer.open")}
         </button>
       </div>
     </section>

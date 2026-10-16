@@ -83,6 +83,22 @@ export const commands = {
 	deletePartnership: (spaceId: string, partnershipId: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_partnership", { spaceId, partnershipId })),
 	/**  Sheriklik shartnomasi PDF'i (joriy versiya va uning imzolari) — «Saqlash» oynasi orqali. */
 	exportPartnershipContract: (spaceId: string, partnershipId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_partnership_contract", { spaceId, partnershipId })),
+	ventureLedger: (spaceId: string, partnershipId: string) => typedError<VentureLedgerDto, AppError>(__TAURI_INVOKE("venture_ledger", { spaceId, partnershipId })),
+	addVentureEntry: (spaceId: string, partnershipId: string, input: VentureEntryInput) => typedError<VentureLedgerDto, AppError>(__TAURI_INVOKE("add_venture_entry", { spaceId, partnershipId, input })),
+	ventureAttachment: (spaceId: string, partnershipId: string, attachmentId: string) => typedError<AttachmentDto, AppError>(__TAURI_INVOKE("venture_attachment", { spaceId, partnershipId, attachmentId })),
+	venturePeriodPreview: (spaceId: string, partnershipId: string, input: ClosePeriodInput) => typedError<VenturePeriodDto, AppError>(__TAURI_INVOKE("venture_period_preview", { spaceId, partnershipId, input })),
+	closeVenturePeriod: (spaceId: string, partnershipId: string, input: ClosePeriodInput) => typedError<VentureLedgerDto, AppError>(__TAURI_INVOKE("close_venture_period", { spaceId, partnershipId, input })),
+	skills: (spaceId: string) => typedError<SkillDto[], AppError>(__TAURI_INVOKE("skills", { spaceId })),
+	addSkill: (spaceId: string, input: SkillInput) => typedError<SkillDto[], AppError>(__TAURI_INVOKE("add_skill", { spaceId, input })),
+	deleteSkill: (spaceId: string, skillId: string) => typedError<SkillDto[], AppError>(__TAURI_INVOKE("delete_skill", { spaceId, skillId })),
+	ventureIdeas: (spaceId: string) => typedError<VentureIdeaDto[], AppError>(__TAURI_INVOKE("venture_ideas", { spaceId })),
+	createVentureIdea: (spaceId: string, input: VentureIdeaInput) => typedError<VentureIdeaDto, AppError>(__TAURI_INVOKE("create_venture_idea", { spaceId, input })),
+	updateVentureIdea: (spaceId: string, ideaId: string, input: VentureIdeaInput) => typedError<VentureIdeaDto, AppError>(__TAURI_INVOKE("update_venture_idea", { spaceId, ideaId, input })),
+	deleteVentureIdea: (spaceId: string, ideaId: string) => typedError<null, AppError>(__TAURI_INVOKE("delete_venture_idea", { spaceId, ideaId })),
+	draftPartnershipFromIdea: (spaceId: string, ideaId: string, input: IdeaDraftInput) => typedError<PartnershipDto, AppError>(__TAURI_INVOKE("draft_partnership_from_idea", { spaceId, ideaId, input })),
+	checkOffer: (input: OfferAnswersInput) => typedError<OfferCheckDto, AppError>(__TAURI_INVOKE("check_offer", { input })),
+	/**  Sherik uchun davr hisoboti PDF'i — «Saqlash» oynasi orqali. */
+	exportVentureReport: (spaceId: string, partnershipId: string, periodId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_venture_report", { spaceId, partnershipId, periodId })),
 };
 
 /** Events */
@@ -137,6 +153,25 @@ export type Arbiter = {
 	role?: string | null,
 	/**  Agar hakam tomonlardan birining yozuvi bilan bog'langan bo'lsa — xato. */
 	partyId?: string | null,
+};
+
+export type AttachmentDto = {
+	fileName: string,
+	mime: string,
+	bytes: number[],
+};
+
+/**  Chek, rasm yoki dalil fayli. Turi baytlardan aniqlanadi (JPEG, PNG, WebP, PDF). */
+export type AttachmentInput = {
+	fileName: string,
+	bytes: number[],
+};
+
+export type AttachmentMetaDto = {
+	id: string,
+	fileName: string,
+	mime: string,
+	sizeBytes: number,
 };
 
 export type BootstrapInput = {
@@ -218,6 +253,18 @@ export type BuyoutDto = {
 	error: string | null,
 };
 
+export type BuyoutProgressDto = {
+	sellerName: string,
+	buyerName: string,
+	paid: number,
+	total: number,
+	nextNo: number | null,
+	nextDate: string | null,
+	nextPayment: MoneyDto | null,
+	/**  Muddati o'tgan, lekin hali to'lanmagan bosqichlar. */
+	overdue: number[],
+};
+
 export type BuyoutRowDto = {
 	period: number,
 	date: string,
@@ -240,6 +287,16 @@ export type BuyoutTermsInput = {
 	start: string,
 	/**  Davr uchun taxminiy sof foyda (to'lov ulushdan oshadimi — ko'rsatish uchun). */
 	expectedProfit: string | null,
+};
+
+export type CapexLineDto = {
+	title: string,
+	amount: MoneyDto,
+};
+
+export type CapexLineInput = {
+	title: string,
+	amount: string,
 };
 
 export type CapitalItemDto = {
@@ -314,6 +371,14 @@ export type CeremonyUpdateInput = {
 export type ChangeEvent = {
 	spaceId: string | null,
 	topics: Topic[],
+};
+
+export type ClosePeriodInput = {
+	endOn: string,
+	negligence: NegligenceInput | null,
+	buyoutPrices: InstallmentPriceInput[],
+	/**  Xonadonga tushadigan ulush: `CASH` yoki `CARD`. */
+	channel: string,
 };
 
 /**  To'liqlik natijasi: «N / 9», javobsiz savollar raqamlari, xatolar va ogohlantirishlar. */
@@ -515,6 +580,31 @@ export type HouseholdDto = {
 	members: MemberDto[],
 };
 
+export type IdeaDraftInput = {
+	capitalProviderName: string,
+	myName: string,
+};
+
+export type IdeaScenarioDto = {
+	name: string,
+	income: MoneyDto,
+	expense: MoneyDto,
+	net: MoneyDto,
+	annualNet: MoneyDto,
+	/**  `None` — sof foyda yo'q, qoplanmaydi. */
+	paybackMonths: number | null,
+	workerMonthly: MoneyDto | null,
+	investorMonthly: MoneyDto | null,
+	investorPaybackMonths: number | null,
+};
+
+export type IdeaScenarioInput = {
+	/**  `PESSIMISTIC`, `BASE`, `OPTIMISTIC`. */
+	name: string,
+	income: string,
+	expense: string,
+};
+
 export type IncomeDto = {
 	id: string,
 	amount: MoneyDto,
@@ -531,6 +621,12 @@ export type IncomeRecordedDto = {
 	progressiveSuggestionBp: number | null,
 	/**  Shu taklif foizda, ko'rsatish uchun: `6`, `6,5`. */
 	progressiveSuggestionPercent: string | null,
+};
+
+export type InstallmentPriceInput = {
+	no: number,
+	/**  Shu kuni kelishilgan narx (OQ-D6); berilmasa — jadvaldagi qiymat. */
+	price: string,
 };
 
 /**  Tilxat yozish va saqlash: `Agreement(type = LOAN)` + jurnal + qarz yoki bergan qarz yozuvi. */
@@ -641,6 +737,11 @@ export type NecessityTotalsDto = {
 	/**  Sadaqa havas ham, «oqib ketish» ham emas — alohida ko'rsatiladi. */
 	sadaqa: MoneyDto,
 	unclassified: MoneyDto,
+};
+
+export type NegligenceInput = {
+	partyId: string,
+	note: string,
 };
 
 /**  Marosim rejasi (uy/SPEC 2D.8). Turlari: `TOY`, `BESHIK_TOY`, `SUNNAT_TOY`, `MARAKA`, `OTHER`. */
@@ -762,6 +863,39 @@ export type NewSellableItemInput = {
 	currency: string,
 };
 
+/**  Har bir javob: `YES`, `NO` yoki `UNKNOWN`. */
+export type OfferAnswersInput = {
+	guaranteed: string,
+	lossShared: string,
+	realActivity: string,
+	recruitment: string,
+	urgency: string,
+	written: string,
+};
+
+export type OfferCheckDto = {
+	/**  `GREEN`, `YELLOW`, `RED`. */
+	verdict: string,
+	flags: OfferFlagDto[],
+};
+
+export type OfferFlagDto = {
+	code: string,
+	/**  `RED` yoki `YELLOW`. */
+	level: string,
+};
+
+export type OpenPeriodDto = {
+	no: number,
+	from: string,
+	entries: number,
+	income: MoneyDto,
+	expense: MoneyDto,
+	forceMajeure: MoneyDto,
+	corrections: MoneyDto,
+	result: MoneyDto,
+};
+
 export type PartnerDto = {
 	id: string,
 	fullName: string,
@@ -868,6 +1002,37 @@ export type Party = {
 	id: string,
 	fullName: string,
 	role?: string | null,
+};
+
+export type PartyBalanceDto = {
+	partyId: string,
+	name: string,
+	role: string,
+	isMe: boolean,
+	capital: MoneyDto,
+	/**  Hali tiklanmagan zarar (OQ-D1: keyingi foydadan avval qoplanadi). */
+	carriedLoss: MoneyDto,
+};
+
+export type PeriodBuyoutDto = {
+	paid: number[],
+	unpaid: number[],
+	amount: MoneyDto,
+	capital: MoneyDto,
+};
+
+export type PeriodPartyDto = {
+	partyId: string,
+	name: string,
+	role: string,
+	isMe: boolean,
+	/**  Foyda ulushi (musbat) yoki zarar ulushi (manfiy). */
+	share: MoneyDto,
+	recovered: MoneyDto,
+	liability: MoneyDto,
+	payout: MoneyDto,
+	carriedAfter: MoneyDto,
+	capitalAfter: MoneyDto,
 };
 
 export type PlanLineDto = {
@@ -1093,6 +1258,20 @@ export type SignoffDto = {
 	agreedOn: string | null,
 };
 
+export type SkillDto = {
+	id: string,
+	memberId: string | null,
+	memberName: string | null,
+	title: string,
+	note: string | null,
+};
+
+export type SkillInput = {
+	memberId: string | null,
+	title: string,
+	note: string | null,
+};
+
 export type SourceTotalsDto = {
 	savings: MoneyDto,
 	family: MoneyDto,
@@ -1143,7 +1322,7 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {
@@ -1168,6 +1347,111 @@ export type VaultTxDto = {
 	reason: string,
 	note: string | null,
 	occurredOn: string,
+};
+
+export type VentureEntryDto = {
+	id: string,
+	kind: string,
+	category: string | null,
+	/**  Yozuv summasi (tuzatishda — natijaga ta'sir, ishorasi bilan). */
+	amount: MoneyDto,
+	/**  Davr natijasiga ta'siri: kirim `+`, xarajat va fors-major `−`. */
+	effect: MoneyDto,
+	occurredOn: string,
+	note: string | null,
+	correctsEntryId: string | null,
+	/**  Bu yozuvga keyinroq tuzatish kiritilgan. */
+	corrected: boolean,
+	/**  Yopilgan davr raqami (`None` — ochiq davr). */
+	periodNo: number | null,
+	attachments: AttachmentMetaDto[],
+	/**  Jurnal yozuvi xeshining qisqa kodi. */
+	hashCode: string,
+};
+
+export type VentureEntryInput = {
+	/**  `INCOME`, `EXPENSE`, `FORCE_MAJEURE`, `CORRECTION`. */
+	kind: string,
+	/**  Kirim: `ORDER`, `OTHER`; xarajat: `MATERIAL`, `WAGE`, `RENT`, `EQUIPMENT`, `TRANSPORT`, `OTHER`. */
+	category: string | null,
+	/**  Tuzatishda — yozuvning **to'g'ri** summasi (`0` — yozuv bekor); yadro farqni hisoblaydi. */
+	amount: string,
+	occurredOn: string,
+	/**  Fors-major va tuzatishda majburiy. */
+	note: string | null,
+	correctsEntryId: string | null,
+	attachments: AttachmentInput[],
+};
+
+export type VentureIdeaDto = {
+	id: string,
+	title: string,
+	skillId: string | null,
+	skillTitle: string | null,
+	capexLines: CapexLineDto[],
+	capex: MoneyDto,
+	scenarios: IdeaScenarioDto[],
+	workerShareBp: number | null,
+	warnings: string[],
+	partnershipId: string | null,
+};
+
+export type VentureIdeaInput = {
+	title: string,
+	skillId: string | null,
+	capex: CapexLineInput[],
+	scenarios: IdeaScenarioInput[],
+	/**  Sheriklikda mehnat egasining foyda ulushi; `None` — o'z puli bilan. */
+	workerShareBp: number | null,
+};
+
+export type VentureLedgerDto = {
+	partnershipId: string,
+	title: string,
+	kind: string,
+	status: string,
+	currency: string,
+	/**  Yozuv qo'shish va davr yopish mumkin (faqat hisob yurituvchi, faol sheriklikda). */
+	writable: boolean,
+	/**  `NOT_ACTIVE`, `NOT_KEEPER` — faqat o'qish rejimi sababi. */
+	readOnlyReason: string | null,
+	keeperName: string | null,
+	startOn: string,
+	open: OpenPeriodDto,
+	entries: VentureEntryDto[],
+	periods: VenturePeriodDto[],
+	balances: PartyBalanceDto[],
+	buyout: BuyoutProgressDto | null,
+	/**  Kelishuv jurnali zanjiri boshi (qisqa kod) va tekshiruv natijasi. */
+	chainCode: string,
+	chainOk: boolean,
+	lossPolicy: string,
+};
+
+export type VenturePeriodDto = {
+	/**  `None` — oldindan ko'rish (hali yopilmagan). */
+	id: string | null,
+	no: number,
+	startOn: string,
+	endOn: string,
+	closedAt: string | null,
+	entries: number,
+	income: MoneyDto,
+	expense: MoneyDto,
+	forceMajeure: MoneyDto,
+	corrections: MoneyDto,
+	result: MoneyDto,
+	recovered: MoneyDto,
+	distributable: MoneyDto,
+	parties: PeriodPartyDto[],
+	buyout: PeriodBuyoutDto | null,
+	/**  `CAPITAL_FIRST` (OQ-D1 bo'yicha vaqtinchalik standart) yoki `PER_PERIOD`. */
+	lossPolicy: string,
+	negligentParty: string | null,
+	negligenceNote: string | null,
+	/**  Xonadon byudjetiga `Income` sifatida tushgan (yoki tushadigan) summa. */
+	myIncome: MoneyDto,
+	chainCode: string | null,
 };
 
 export type VersionInfoDto = {

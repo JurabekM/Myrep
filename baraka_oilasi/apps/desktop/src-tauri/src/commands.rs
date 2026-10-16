@@ -793,3 +793,165 @@ pub async fn export_partnership_contract(
         .partnership_pdf(&space_id, &partnership_id)?;
     save_pdf(&handle, pdf, "shartnoma.pdf")
 }
+
+// ---- U12: kassa daftari, davr taqsimoti, «Hunardan ishga», taklif tekshiruvi ----
+
+#[tauri::command]
+#[specta::specta]
+pub async fn venture_ledger(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+) -> R<VentureLedgerDto> {
+    state.session.app()?.venture_ledger(&space_id, &partnership_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_venture_entry(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: VentureEntryInput,
+) -> R<VentureLedgerDto> {
+    state.session.app()?.add_venture_entry(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn venture_attachment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    attachment_id: String,
+) -> R<AttachmentDto> {
+    state.session.app()?.venture_attachment(&space_id, &partnership_id, &attachment_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn venture_period_preview(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: ClosePeriodInput,
+) -> R<VenturePeriodDto> {
+    state.session.app()?.venture_period_preview(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn close_venture_period(
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    input: ClosePeriodInput,
+) -> R<VentureLedgerDto> {
+    state.session.app()?.close_venture_period(&space_id, &partnership_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn skills(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<SkillDto>> {
+    state.session.app()?.skills(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn add_skill(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: SkillInput,
+) -> R<Vec<SkillDto>> {
+    state.session.app()?.add_skill(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_skill(
+    state: State<'_, Desktop>,
+    space_id: String,
+    skill_id: String,
+) -> R<Vec<SkillDto>> {
+    state.session.app()?.delete_skill(&space_id, &skill_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn venture_ideas(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<VentureIdeaDto>> {
+    state.session.app()?.venture_ideas(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn create_venture_idea(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: VentureIdeaInput,
+) -> R<VentureIdeaDto> {
+    state.session.app()?.create_venture_idea(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_venture_idea(
+    state: State<'_, Desktop>,
+    space_id: String,
+    idea_id: String,
+    input: VentureIdeaInput,
+) -> R<VentureIdeaDto> {
+    state.session.app()?.update_venture_idea(&space_id, &idea_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_venture_idea(
+    state: State<'_, Desktop>,
+    space_id: String,
+    idea_id: String,
+) -> R<()> {
+    state.session.app()?.delete_venture_idea(&space_id, &idea_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn draft_partnership_from_idea(
+    state: State<'_, Desktop>,
+    space_id: String,
+    idea_id: String,
+    input: IdeaDraftInput,
+) -> R<PartnershipDto> {
+    state.session.app()?.draft_partnership_from_idea(&space_id, &idea_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn check_offer(
+    state: State<'_, Desktop>,
+    input: OfferAnswersInput,
+) -> R<OfferCheckDto> {
+    state.session.app()?.check_offer(input)
+}
+
+/// Sherik uchun davr hisoboti PDF'i — «Saqlash» oynasi orqali.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_venture_report(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    partnership_id: String,
+    period_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .venture_period_pdf(&space_id, &partnership_id, &period_id)?;
+    save_pdf(&handle, pdf, "davr-hisoboti.pdf")
+}

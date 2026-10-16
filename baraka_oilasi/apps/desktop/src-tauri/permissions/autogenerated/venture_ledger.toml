@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-venture-ledger"
+description = "Enables the venture_ledger command without any pre-configured scope."
+commands.allow = ["venture_ledger"]
+
+[[permission]]
+identifier = "deny-venture-ledger"
+description = "Denies the venture_ledger command without any pre-configured scope."
+commands.deny = ["venture_ledger"]
