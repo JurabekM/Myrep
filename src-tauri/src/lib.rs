@@ -207,13 +207,23 @@ pub fn run() {
     }
 }
 
+/// Ma'lumotlar papkasi: odatda `app_data_dir` (`%APPDATA%\\uz.barakadaftari.desktop`). `BARAKA_DATA_DIR` muhit
+/// o'zgaruvchisi berilsa — o'sha papka (faqat ishlab chiqish va sinov: toza profil bilan ishga tushirish uchun;
+/// relizda foydalanuvchi uni o'rnatmaydi).
+pub(crate) fn data_dir(app: &tauri::AppHandle) -> tauri::Result<std::path::PathBuf> {
+    if let Some(dir) = std::env::var_os("BARAKA_DATA_DIR").filter(|d| !d.is_empty()) {
+        return Ok(std::path::PathBuf::from(dir));
+    }
+    app.path().app_data_dir()
+}
+
 /// Seansni yaratadi, oynani himoyalaydi va avto-qulflashni ulaydi.
 ///
 /// - Relizda oyna ekran suratiga va ekran yozuvga tushmaydi (`set_content_protected`).
 ///   Ishlab chiqishda bu o'chiq: skrinshot bilan tekshirish uchun.
 /// - Oyna fokusdan tushsa, `AutoLockPolicy` taymeri boshlanadi; vaqt o'tsa baza qulflanadi.
 fn setup_security(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
-    let data_dir = app.path().app_data_dir()?;
+    let data_dir = data_dir(app.handle())?;
     std::fs::create_dir_all(&data_dir)?;
 
     let session = Arc::new(Session::new(

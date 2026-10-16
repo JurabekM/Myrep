@@ -6,9 +6,9 @@
 
 use zeroize::Zeroizing;
 
+use crate::SecurityError;
 use crate::kdf::{KdfParams, SALT_LEN, derive_pin_key};
 use crate::wrap::{open, random_array, seal};
-use crate::SecurityError;
 
 const MAGIC: &[u8; 8] = b"BARAKA01";
 const NONCE_LEN: usize = 24;

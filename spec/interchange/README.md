@@ -37,7 +37,11 @@ birlikda butun son; sanalar `YYYY-MM-DD`; vaqtlar ISO 8601 (UTC).
    `SIGNED_VERSION_DIFFERS`. O'zgarish faqat yangi versiya orqali.
 6. Inkremental eksport: `since` berilsa faqat `updated_at > since` (yo'q bo'lsa `created_at > since`) qatorlar;
    ikkalasi ham bo'lmagan jadvallar to'liq chiqadi.
-7. Import avval **dry-run** (ko'rik) sifatida hisoblanadi; foydalanuvchi tasdiqlagach qo'llanadi. Hamma yozuv
+7. **Xonadon qoidasi:** fayldagi `householdId` mahalliy xonadondan farq qilsa — mahalliy daftar faqat avto-yaratilgan
+   urug'dan (xonadon, a'zo, standart kategoriyalar, sozlamalar; boshqa jadvallarda yozuv yo'q) iborat bo'lsa u
+   bo'shatiladi va kiruvchi xonadon qabul qilinadi; aks holda import to'xtaydi (`household_mismatch`). Ya'ni ikkinchi
+   qurilma birinchisining eksportidan boshlanadi.
+8. Import avval **dry-run** (ko'rik) sifatida hisoblanadi; foydalanuvchi tasdiqlagach qo'llanadi. Hamma yozuv
    bitta tranzaksiyada.
 
 Mos test: `crates/storage/tests/interchange_flows.rs` (round-trip 1:1, fork, ziddiyat, inkremental),

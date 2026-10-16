@@ -67,7 +67,10 @@ pub fn minutes_template(minutes: &ReviewMinutes) -> String {
         &format!("Tuzilgan sana: {}", minutes.generated_on),
     );
     out.push_str(&section("Davr yozuvlari"));
-    out.push_str(&four_col(["Sana", "Tur", "Tomon", "Summa"], &minutes.entries));
+    out.push_str(&four_col(
+        ["Sana", "Tur", "Tomon", "Summa"],
+        &minutes.entries,
+    ));
     out.push_str("#v(0.8em)\n");
     out.push_str(&section("Davr yakuni"));
     out.push_str(&pairs_table(&minutes.summary));
@@ -139,7 +142,10 @@ pub fn folder_template(folder: &ArbiterFolder) -> String {
     let mut out = head(
         &folder.title,
         "Hakam uchun ish papkasi",
-        &format!("Tuzilgan sana: {} · {}", folder.generated_on, folder.version_line),
+        &format!(
+            "Tuzilgan sana: {} · {}",
+            folder.generated_on, folder.version_line
+        ),
     );
     out.push_str("#set heading(numbering: \"1.\")\n");
     out.push_str("#outline(title: \"Mundarija\", indent: auto)\n");
@@ -151,7 +157,10 @@ pub fn folder_template(folder: &ArbiterFolder) -> String {
     if folder.entries.is_empty() {
         out.push_str("#par[Hisob yozuvi yo'q.]\n");
     } else {
-        out.push_str(&four_col(["Sana", "Tur", "Tomon", "Summa"], &folder.entries));
+        out.push_str(&four_col(
+            ["Sana", "Tur", "Tomon", "Summa"],
+            &folder.entries,
+        ));
     }
     out.push_str(&format!("#par[#({})]\n", lit(&folder.chain_line)));
     out.push_str(&chapter("Ko'rik bayonnomalari"));

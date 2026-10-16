@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use tauri::{Manager, State};
+use tauri::State;
 use time::OffsetDateTime;
 
 use crate::commands::{ApiError, run_blocking};
@@ -22,7 +22,8 @@ pub async fn get_venture(
 ) -> Result<VentureDto, ApiError> {
     let session = session.inner().clone();
     run_blocking(move || {
-        session.with_database(|db| ventures::venture(db, OffsetDateTime::now_utc(), &partnership_id))
+        session
+            .with_database(|db| ventures::venture(db, OffsetDateTime::now_utc(), &partnership_id))
     })
     .await
 }
@@ -63,9 +64,7 @@ pub async fn create_period_report_pdf(
     session: State<'_, Arc<Session>>,
     period_id: String,
 ) -> Result<String, ApiError> {
-    let dir = app
-        .path()
-        .app_data_dir()
+    let dir = crate::data_dir(&app)
         .map_err(|_| ApiError::Internal)?
         .join("reports");
     let session = session.inner().clone();

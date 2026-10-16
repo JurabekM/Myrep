@@ -59,10 +59,8 @@ fn add(left: Money, right: Money) -> Result<Money, SessionError> {
 }
 
 fn pretty(date: Date) -> String {
-    date.format(&time::macros::format_description!(
-        "[day].[month].[year]"
-    ))
-    .unwrap_or_default()
+    date.format(&time::macros::format_description!("[day].[month].[year]"))
+        .unwrap_or_default()
 }
 
 fn kind_label(kind: JournalKind) -> &'static str {
@@ -80,7 +78,10 @@ fn kind_label(kind: JournalKind) -> &'static str {
     }
 }
 
-fn load_pair(db: &Database, partnership_id: &str) -> Result<(PartnershipRow, AgreementRow), SessionError> {
+fn load_pair(
+    db: &Database,
+    partnership_id: &str,
+) -> Result<(PartnershipRow, AgreementRow), SessionError> {
     let partnership = PartnershipRepo::new(db.connection())
         .find(partnership_id)?
         .ok_or_else(|| SessionError::from(StorageError::NotFound))?;
@@ -103,11 +104,7 @@ fn entry_dto(stored: &StoredEntry) -> JournalEntryDto {
 }
 
 /// Davr oralig'idagi ledger yozuvlari: `after < date ≤ until`.
-fn entries_between(
-    entries: &[StoredEntry],
-    after: Option<Date>,
-    until: Date,
-) -> Vec<&StoredEntry> {
+fn entries_between(entries: &[StoredEntry], after: Option<Date>, until: Date) -> Vec<&StoredEntry> {
     entries
         .iter()
         .filter(|stored| VENTURE_KINDS.contains(&stored.entry.kind))
@@ -130,8 +127,8 @@ fn totals(entries: &[&StoredEntry]) -> Result<(Money, Money), SessionError> {
 }
 
 fn distribution_dto(json: &str) -> Result<Vec<DistributionRowDto>, SessionError> {
-    let stored: Vec<StoredDistribution> = serde_json::from_str(json)
-        .map_err(|_| StorageError::InvalidData("taqsimot".to_owned()))?;
+    let stored: Vec<StoredDistribution> =
+        serde_json::from_str(json).map_err(|_| StorageError::InvalidData("taqsimot".to_owned()))?;
     Ok(stored
         .into_iter()
         .map(|row| DistributionRowDto {
@@ -139,7 +136,9 @@ fn distribution_dto(json: &str) -> Result<Vec<DistributionRowDto>, SessionError>
             name: row.name,
             share_bp: u32::try_from(row.share_bp).unwrap_or(u32::MAX),
             amount: MoneyDto::of(Money::new(row.minor, CURRENCY)),
-            buyout_deduction: row.buyout_minor.map(|m| MoneyDto::of(Money::new(m, CURRENCY))),
+            buyout_deduction: row
+                .buyout_minor
+                .map(|m| MoneyDto::of(Money::new(m, CURRENCY))),
         })
         .collect())
 }
@@ -160,7 +159,11 @@ fn period_dto(row: &VenturePeriodRow) -> Result<ClosedPeriodDto, SessionError> {
 }
 
 /// Kassa daftari ko'rinishi: ochiq davr, yopilgan davrlar, «katta foyda» belgisi.
-pub fn venture(db: &Database, now: OffsetDateTime, partnership_id: &str) -> Result<VentureDto, SessionError> {
+pub fn venture(
+    db: &Database,
+    now: OffsetDateTime,
+    partnership_id: &str,
+) -> Result<VentureDto, SessionError> {
     let ctx = finance::context(db, now)?;
     let (partnership, agreement) = load_pair(db, partnership_id)?;
     let periods = VentureRepo::new(db.connection()).list(&partnership.id)?;
@@ -171,7 +174,11 @@ pub fn venture(db: &Database, now: OffsetDateTime, partnership_id: &str) -> Resu
     let net = net_of(income, expense)?;
     let last_three = if periods.len() >= 3 {
         let tail = &periods[periods.len() - 3..];
-        Some([tail[0].net.minor(), tail[1].net.minor(), tail[2].net.minor()])
+        Some([
+            tail[0].net.minor(),
+            tail[1].net.minor(),
+            tail[2].net.minor(),
+        ])
     } else {
         None
     };
@@ -205,7 +212,11 @@ pub fn venture(db: &Database, now: OffsetDateTime, partnership_id: &str) -> Resu
     })
 }
 
-fn ensure_writable(db: &Database, partnership_id: &str, date: Date) -> Result<(PartnershipRow, AgreementRow), SessionError> {
+fn ensure_writable(
+    db: &Database,
+    partnership_id: &str,
+    date: Date,
+) -> Result<(PartnershipRow, AgreementRow), SessionError> {
     let (partnership, agreement) = load_pair(db, partnership_id)?;
     if agreement.status != AgreementStatus::Signed {
         return Err(DomainError::AgreementNotSigned.into());
@@ -267,7 +278,9 @@ pub fn add_entry(
     venture(db, now, &partnership.id)
 }
 
-fn agreements_answers(agreement: &AgreementRow) -> Result<crate::dto::AgreementAnswersDto, SessionError> {
+fn agreements_answers(
+    agreement: &AgreementRow,
+) -> Result<crate::dto::AgreementAnswersDto, SessionError> {
     serde_json::from_str(&agreement.answers_json)
         .map_err(|_| StorageError::InvalidData("kelishuv javoblari".to_owned()).into())
 }
@@ -341,7 +354,9 @@ pub fn close_period(
     }
 
     let mut stored = Vec::with_capacity(partners.len());
-    let mut chain_head = all.last().map_or_else(|| "0".repeat(64), |s| s.hash.clone());
+    let mut chain_head = all
+        .last()
+        .map_or_else(|| "0".repeat(64), |s| s.hash.clone());
     for (index, ((_, summary), share)) in partners.iter().zip(shares.iter()).enumerate() {
         let magnitude = share.minor().abs();
         if magnitude > 0 {
@@ -422,7 +437,11 @@ pub fn close_period(
 }
 
 /// Sherik uchun davr hisoboti PDF baytlari.
-pub fn period_pdf(db: &Database, now: OffsetDateTime, period_id: &str) -> Result<Vec<u8>, SessionError> {
+pub fn period_pdf(
+    db: &Database,
+    now: OffsetDateTime,
+    period_id: &str,
+) -> Result<Vec<u8>, SessionError> {
     let ctx = finance::context(db, now)?;
     let period = VentureRepo::new(db.connection())
         .find(period_id)?
@@ -461,15 +480,14 @@ pub fn period_pdf(db: &Database, now: OffsetDateTime, period_id: &str) -> Result
             if let Some(deduction) = row.buyout_deduction {
                 text.push_str(&format!(" · buyout ayirmasi {}", deduction.formatted));
             }
-            (
-                format!("{} ({} %)", row.name, row.share_bp / 100),
-                text,
-            )
+            (format!("{} ({} %)", row.name, row.share_bp / 100), text)
         })
         .collect();
     let note = match &period.force_majeure_note {
         Some(text) => format!("Fors-major: {text}. Taqsimot shartnomaning 4–5-bandlari bo'yicha."),
-        None => "Fors-major hodisasi yo'q. Taqsimot shartnomaning 4–5-bandlari bo'yicha.".to_owned(),
+        None => {
+            "Fors-major hodisasi yo'q. Taqsimot shartnomaning 4–5-bandlari bo'yicha.".to_owned()
+        }
     };
     let report = pdf::PeriodReport {
         title: agreement.title.clone(),
@@ -480,7 +498,12 @@ pub fn period_pdf(db: &Database, now: OffsetDateTime, period_id: &str) -> Result
             ("Kirim".to_owned(), MoneyDto::of(period.income).formatted),
             ("Xarajat".to_owned(), MoneyDto::of(period.expense).formatted),
             (
-                if period.net.minor() < 0 { "Zarar" } else { "Sof foyda" }.to_owned(),
+                if period.net.minor() < 0 {
+                    "Zarar"
+                } else {
+                    "Sof foyda"
+                }
+                .to_owned(),
                 MoneyDto::of(period.net).formatted,
             ),
         ],
@@ -698,9 +721,18 @@ mod tests {
     fn davr_yopiladi_taqsimlanadi_va_yopilgan_davrga_yozib_bolmaydi() {
         let db = database();
         let id = signed_partnership(&db);
-        add_entry(&db, NOW, entry(&id, "VENTURE_INCOME", "6 000 000", "2026-11-05")).expect("kirim");
-        let view = add_entry(&db, NOW, entry(&id, "VENTURE_EXPENSE", "2 500 000", "2026-11-12"))
-            .expect("xarajat");
+        add_entry(
+            &db,
+            NOW,
+            entry(&id, "VENTURE_INCOME", "6 000 000", "2026-11-05"),
+        )
+        .expect("kirim");
+        let view = add_entry(
+            &db,
+            NOW,
+            entry(&id, "VENTURE_EXPENSE", "2 500 000", "2026-11-12"),
+        )
+        .expect("xarajat");
         assert_eq!(view.open.net.minor, "350000000");
         assert!(view.can_write);
 
@@ -725,7 +757,11 @@ mod tests {
 
         // Yopilgan davrga yozuv — rad.
         assert!(matches!(
-            add_entry(&db, NOW, entry(&id, "VENTURE_INCOME", "1 000", "2026-11-20")),
+            add_entry(
+                &db,
+                NOW,
+                entry(&id, "VENTURE_INCOME", "1 000", "2026-11-20")
+            ),
             Err(SessionError::Domain(DomainError::PeriodClosed))
         ));
         // PDF chiqadi.
@@ -749,8 +785,18 @@ mod tests {
         )
         .expect("buyout");
         // 1-davr: zarar (fors-major) — mudarabada kapital egasi ko'taradi.
-        add_entry(&db, NOW, entry(&id, "VENTURE_INCOME", "1 000 000", "2026-11-05")).expect("kirim");
-        add_entry(&db, NOW, entry(&id, "FORCE_MAJEURE", "3 000 000", "2026-11-06")).expect("fors-major");
+        add_entry(
+            &db,
+            NOW,
+            entry(&id, "VENTURE_INCOME", "1 000 000", "2026-11-05"),
+        )
+        .expect("kirim");
+        add_entry(
+            &db,
+            NOW,
+            entry(&id, "FORCE_MAJEURE", "3 000 000", "2026-11-06"),
+        )
+        .expect("fors-major");
         let view = close_period(
             &db,
             NOW,
@@ -763,11 +809,19 @@ mod tests {
         .expect("yopildi");
         let period = &view.periods[0];
         assert_eq!(period.net.minor, "-200000000");
-        assert_eq!(period.distribution[0].amount.minor, "0", "mehnat egasi zarar ko'tarmaydi");
+        assert_eq!(
+            period.distribution[0].amount.minor, "0",
+            "mehnat egasi zarar ko'tarmaydi"
+        );
         assert_eq!(period.distribution[1].amount.minor, "-200000000");
         assert!(period.distribution[0].buyout_deduction.is_none());
         // 2-davr: foyda 5 000 000 → P1 3 000 000, buyout bo'lagi 1 000 000 ayriladi.
-        add_entry(&db, NOW, entry(&id, "VENTURE_INCOME", "5 000 000", "2026-11-20")).expect("kirim");
+        add_entry(
+            &db,
+            NOW,
+            entry(&id, "VENTURE_INCOME", "5 000 000", "2026-11-20"),
+        )
+        .expect("kirim");
         let view = close_period(
             &db,
             NOW,
@@ -781,10 +835,16 @@ mod tests {
         let period = &view.periods[1];
         assert_eq!(period.distribution[0].amount.minor, "300000000");
         assert_eq!(
-            period.distribution[0].buyout_deduction.as_ref().map(|m| m.minor.as_str()),
+            period.distribution[0]
+                .buyout_deduction
+                .as_ref()
+                .map(|m| m.minor.as_str()),
             Some("100000000")
         );
-        assert_eq!(view.buyout_remaining.as_ref().map(|m| m.minor.as_str()), Some("200000000"));
+        assert_eq!(
+            view.buyout_remaining.as_ref().map(|m| m.minor.as_str()),
+            Some("200000000")
+        );
     }
 
     #[test]
@@ -798,7 +858,11 @@ mod tests {
             written_contract: true,
         });
         assert_eq!(red.verdict, "RED");
-        assert!(red.flags.iter().any(|f| f.code == "GUARANTEED_PROFIT" && f.red));
+        assert!(
+            red.flags
+                .iter()
+                .any(|f| f.code == "GUARANTEED_PROFIT" && f.red)
+        );
         let green = check_offer(OfferInputDto {
             guaranteed_profit: false,
             loss_possible: true,

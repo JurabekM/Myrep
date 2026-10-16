@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use tauri::{Manager, State};
+use tauri::State;
 use time::OffsetDateTime;
 
 use crate::center;
@@ -15,9 +15,7 @@ use crate::dto::{
 use crate::session::Session;
 
 fn write_pdf(app: &tauri::AppHandle, prefix: &str, bytes: Vec<u8>) -> Result<String, ApiError> {
-    let dir = app
-        .path()
-        .app_data_dir()
+    let dir = crate::data_dir(app)
         .map_err(|_| ApiError::Internal)?
         .join("reports");
     std::fs::create_dir_all(&dir).map_err(|_| ApiError::Internal)?;
@@ -34,9 +32,12 @@ fn write_pdf(app: &tauri::AppHandle, prefix: &str, bytes: Vec<u8>) -> Result<Str
 /// Markaz jadvali.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_agreements_center(session: State<'_, Arc<Session>>) -> Result<CenterDto, ApiError> {
+pub async fn get_agreements_center(
+    session: State<'_, Arc<Session>>,
+) -> Result<CenterDto, ApiError> {
     let session = session.inner().clone();
-    run_blocking(move || session.with_database(|db| center::center(db, OffsetDateTime::now_utc()))).await
+    run_blocking(move || session.with_database(|db| center::center(db, OffsetDateTime::now_utc())))
+        .await
 }
 
 /// Kelishuv amaliyotlari.
@@ -163,7 +164,8 @@ pub async fn create_arbiter_pdf(
 ) -> Result<String, ApiError> {
     let session = session.inner().clone();
     let bytes = run_blocking(move || {
-        session.with_database(|db| center::arbiter_pdf(db, OffsetDateTime::now_utc(), &agreement_id))
+        session
+            .with_database(|db| center::arbiter_pdf(db, OffsetDateTime::now_utc(), &agreement_id))
     })
     .await?;
     write_pdf(&app, "hakam-papkasi", bytes)
@@ -178,7 +180,9 @@ pub async fn confirm_unchanged(
 ) -> Result<AgreementOpsDto, ApiError> {
     let session = session.inner().clone();
     run_blocking(move || {
-        session.with_database(|db| center::confirm_unchanged(db, OffsetDateTime::now_utc(), &agreement_id))
+        session.with_database(|db| {
+            center::confirm_unchanged(db, OffsetDateTime::now_utc(), &agreement_id)
+        })
     })
     .await
 }

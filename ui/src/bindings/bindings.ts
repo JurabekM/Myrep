@@ -1258,6 +1258,8 @@ export type ImportReportDto = {
 	exportedAt: string,
 	/**  Eksport qurilmasi. */
 	deviceId: string,
+	/**  Xonadon mos kelmadi (mahalliy daftar bo'sh emas, boshqa xonadon). */
+	householdMismatch: boolean,
 };
 
 /**  Vazifa hodisasi. */

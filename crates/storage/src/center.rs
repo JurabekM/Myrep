@@ -295,7 +295,11 @@ impl<'a> CenterRepo<'a> {
     /// Bitta nizo.
     pub fn find_dispute(&self, id: &str) -> Result<Option<DisputeRow>, StorageError> {
         self.conn
-            .query_row(&format!("{DISPUTE_SELECT} WHERE id = ?1"), [id], read_dispute)
+            .query_row(
+                &format!("{DISPUTE_SELECT} WHERE id = ?1"),
+                [id],
+                read_dispute,
+            )
             .optional()?
             .transpose()
     }
@@ -339,11 +343,17 @@ impl<'a> CenterRepo<'a> {
     }
 
     /// Versiya uchun tasdiqlagan a'zolar.
-    pub fn family_consents(&self, agreement_id: &str, version: i64) -> Result<Vec<String>, StorageError> {
+    pub fn family_consents(
+        &self,
+        agreement_id: &str,
+        version: i64,
+    ) -> Result<Vec<String>, StorageError> {
         let mut statement = self.conn.prepare(
             "SELECT member_id FROM family_consents WHERE agreement_id = ?1 AND version = ?2 ORDER BY created_at",
         )?;
-        let rows = statement.query_map(params![agreement_id, version], |row| row.get::<_, String>(0))?;
+        let rows = statement.query_map(params![agreement_id, version], |row| {
+            row.get::<_, String>(0)
+        })?;
         let mut out = Vec::new();
         for row in rows {
             out.push(row?);

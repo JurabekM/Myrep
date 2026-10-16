@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use tauri::{Manager, State};
+use tauri::State;
 use time::OffsetDateTime;
 
 use crate::ceremonies;
@@ -103,9 +103,8 @@ pub async fn confirm_ceremony(
 ) -> Result<CeremoniesDto, ApiError> {
     let session = session.inner().clone();
     run_blocking(move || {
-        session.with_database(|db| {
-            ceremonies::confirm_ceremony(db, OffsetDateTime::now_utc(), input)
-        })
+        session
+            .with_database(|db| ceremonies::confirm_ceremony(db, OffsetDateTime::now_utc(), input))
     })
     .await
 }
@@ -133,16 +132,13 @@ pub async fn create_ceremony_pdf(
     id: String,
     scenario_id: String,
 ) -> Result<String, ApiError> {
-    let dir = app
-        .path()
-        .app_data_dir()
+    let dir = crate::data_dir(&app)
         .map_err(|_| ApiError::Internal)?
         .join("reports");
     let session = session.inner().clone();
     let bytes = run_blocking(move || {
-        session.with_database(|db| {
-            ceremonies::pdf(db, OffsetDateTime::now_utc(), &id, &scenario_id)
-        })
+        session
+            .with_database(|db| ceremonies::pdf(db, OffsetDateTime::now_utc(), &id, &scenario_id))
     })
     .await?;
     std::fs::create_dir_all(&dir).map_err(|_| ApiError::Internal)?;

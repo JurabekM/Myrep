@@ -73,6 +73,8 @@ pub struct ImportReport {
     pub exported_at: String,
     /// Eksport qurilmasi (fayldan).
     pub device_id: String,
+    /// Xonadon mos kelmadi: mahalliy daftar bo'sh emas va boshqa xonadonga tegishli — import to'xtatildi.
+    pub household_mismatch: bool,
 }
 
 fn columns(conn: &Connection, table: &str) -> Result<Vec<String>, StorageError> {
@@ -93,7 +95,9 @@ fn to_json(value: ValueRef<'_>) -> Value {
         ValueRef::Text(t) => Value::String(String::from_utf8_lossy(t).into_owned()),
         ValueRef::Blob(b) => Value::String(format!(
             "$hex:{}",
-            b.iter().map(|byte| format!("{byte:02x}")).collect::<String>()
+            b.iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>()
         )),
     }
 }
@@ -223,8 +227,11 @@ fn journal_entry(row: &Map<String, Value>) -> Result<JournalEntry, StorageError>
         .get("amount_minor")
         .and_then(Value::as_i64)
         .ok_or_else(|| StorageError::InvalidData("summa".to_owned()))?;
-    let date = Date::parse(str_of(row, "entry_date").unwrap_or_default(), &Iso8601::DATE)
-        .map_err(|_| StorageError::InvalidData("sana".to_owned()))?;
+    let date = Date::parse(
+        str_of(row, "entry_date").unwrap_or_default(),
+        &Iso8601::DATE,
+    )
+    .map_err(|_| StorageError::InvalidData("sana".to_owned()))?;
     Ok(JournalEntry {
         id: str_of(row, "id").unwrap_or_default().to_owned(),
         agreement_id: str_of(row, "agreement_id").unwrap_or_default().to_owned(),
@@ -238,7 +245,11 @@ fn journal_entry(row: &Map<String, Value>) -> Result<JournalEntry, StorageError>
 
 /// Importni bajaradi. `dry_run` — hamma narsa tranzaksiyada hisoblanadi, so'ng bekor qilinadi.
 /// Fork topilsa — hech narsa yozilmaydi (`blocked`).
-pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<ImportReport, StorageError> {
+pub fn import_json(
+    db: &Database,
+    payload: &Value,
+    dry_run: bool,
+) -> Result<ImportReport, StorageError> {
     let (tables, exported_at, device_id) = envelope(payload)?;
     let conn = db.connection();
     let mut report = ImportReport {
@@ -246,6 +257,31 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
         device_id,
         ..ImportReport::default()
     };
+    // 0. Xonadon qoidasi: mahalliy xonadon boshqa bo'lsa — faqat «urug'» (avto-yaratilgan, yozuvsiz) daftar
+    //    kiruvchi xonadonga bo'shatiladi; aks holda import to'xtaydi (`household_mismatch`).
+    let incoming_household = payload
+        .get("householdId")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned();
+    let mut seed_to_clear: Vec<String> = Vec::new();
+    if !incoming_household.is_empty() {
+        let mut statement = conn.prepare("SELECT id FROM households")?;
+        let local: Vec<String> = statement
+            .query_map([], |row| row.get(0))?
+            .collect::<Result<_, _>>()?;
+        for id in local.iter().filter(|id| **id != incoming_household) {
+            if seed_only(conn, id)? {
+                seed_to_clear.push(id.clone());
+            } else {
+                report.household_mismatch = true;
+            }
+        }
+        if report.household_mismatch {
+            report.blocked = true;
+            return Ok(report);
+        }
+    }
 
     // 1. Jurnal: zanjirlar tekshiruvi (fork → to'xtash).
     let mut journal_rows: BTreeMap<String, Vec<&Map<String, Value>>> = BTreeMap::new();
@@ -273,9 +309,8 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
             });
             continue;
         }
-        let mut statement = conn.prepare(
-            "SELECT hash FROM journal_entries WHERE agreement_id = ?1 ORDER BY seq",
-        )?;
+        let mut statement =
+            conn.prepare("SELECT hash FROM journal_entries WHERE agreement_id = ?1 ORDER BY seq")?;
         let local: Vec<String> = statement
             .query_map([agreement_id.as_str()], |row| row.get(0))?
             .collect::<Result<_, _>>()?;
@@ -297,6 +332,22 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
     }
 
     let tx = conn.unchecked_transaction()?;
+    for id in &seed_to_clear {
+        for table in ["household_settings", "categories", "members", "households"] {
+            let column = if table == "households" {
+                "id"
+            } else {
+                "household_id"
+            };
+            tx.execute(
+                &format!("DELETE FROM {table} WHERE {column} = ?1"),
+                [id.as_str()],
+            )?;
+        }
+    }
+    if dry_run && !seed_to_clear.is_empty() {
+        // Dry-run'da ham bo'shatish tranzaksiya ichida — oxirida bekor qilinadi.
+    }
     for table in TABLES {
         if *table == "journal_entries" {
             continue;
@@ -320,7 +371,11 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
                     .map(|i| format!("?{i}"))
                     .collect::<Vec<_>>()
                     .join(", ");
-                let names = present.iter().map(|c| c.as_str()).collect::<Vec<_>>().join(", ");
+                let names = present
+                    .iter()
+                    .map(|c| c.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 let changed = tx.execute(
                     &format!("INSERT OR IGNORE INTO {table} ({names}) VALUES ({placeholders})"),
                     params_from_iter(values.iter()),
@@ -338,7 +393,11 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
                         .map(|i| format!("?{i}"))
                         .collect::<Vec<_>>()
                         .join(", ");
-                    let names = present.iter().map(|c| c.as_str()).collect::<Vec<_>>().join(", ");
+                    let names = present
+                        .iter()
+                        .map(|c| c.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ");
                     tx.execute(
                         &format!("INSERT INTO {table} ({names}) VALUES ({placeholders})"),
                         params_from_iter(values.iter()),
@@ -346,9 +405,7 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
                     *report.inserted.entry((*table).to_owned()).or_default() += 1;
                 }
                 Some(existing) => {
-                    let differs = present
-                        .iter()
-                        .any(|c| existing.get(*c) != row.get(*c));
+                    let differs = present.iter().any(|c| existing.get(*c) != row.get(*c));
                     if !differs {
                         continue;
                     }
@@ -421,7 +478,11 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
                 .map(|i| format!("?{i}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            let names = present.iter().map(|c| c.as_str()).collect::<Vec<_>>().join(", ");
+            let names = present
+                .iter()
+                .map(|c| c.as_str())
+                .collect::<Vec<_>>()
+                .join(", ");
             tx.execute(
                 &format!("INSERT INTO journal_entries ({names}) VALUES ({placeholders})"),
                 params_from_iter(values.iter()),
@@ -435,6 +496,28 @@ pub fn import_json(db: &Database, payload: &Value, dry_run: bool) -> Result<Impo
         tx.commit()?;
     }
     Ok(report)
+}
+
+/// Mahalliy xonadon faqat avto-yaratilgan urug'dan iboratmi: boshqa jadvallarda unga tegishli yozuv yo'q.
+fn seed_only(conn: &Connection, household_id: &str) -> Result<bool, StorageError> {
+    for table in TABLES {
+        if ["households", "members", "categories", "household_settings"].contains(table) {
+            continue;
+        }
+        let cols = columns(conn, table)?;
+        if !cols.iter().any(|c| c == "household_id") {
+            continue;
+        }
+        let count: i64 = conn.query_row(
+            &format!("SELECT COUNT(*) FROM {table} WHERE household_id = ?1"),
+            [household_id],
+            |row| row.get(0),
+        )?;
+        if count > 0 {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 fn local_row(

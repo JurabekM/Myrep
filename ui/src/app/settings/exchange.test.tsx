@@ -42,6 +42,7 @@ const REPORT: ImportReportDto = {
   journalAppended: 2,
   exportedAt: "2026-12-01T06:00:00Z",
   deviceId: "phone",
+  householdMismatch: false,
 };
 
 function setUp(): void {

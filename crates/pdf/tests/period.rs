@@ -34,7 +34,10 @@ fn sample() -> PeriodReport {
                 "Anvar Karimov (60 %)".to_owned(),
                 "2 100 000 soʻm · buyout ayirmasi 1 000 000 soʻm".to_owned(),
             ),
-            ("Dilshod Rahimov (40 %)".to_owned(), "1 400 000 soʻm".to_owned()),
+            (
+                "Dilshod Rahimov (40 %)".to_owned(),
+                "1 400 000 soʻm".to_owned(),
+            ),
         ],
         chain_head: "0".repeat(64),
         note: "Fors-major hodisasi yo'q. Taqsimot shartnomaning 4–5-bandlari bo'yicha.".to_owned(),

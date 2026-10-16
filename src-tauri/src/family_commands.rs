@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use tauri::{Manager, State};
+use tauri::State;
 use time::OffsetDateTime;
 
 use crate::commands::{ApiError, run_blocking};
@@ -227,9 +227,7 @@ pub async fn create_council_report(
     app: tauri::AppHandle,
     session: State<'_, Arc<Session>>,
 ) -> Result<String, ApiError> {
-    let dir = app
-        .path()
-        .app_data_dir()
+    let dir = crate::data_dir(&app)
         .map_err(|_| ApiError::Internal)?
         .join("reports");
     let session = session.inner().clone();

@@ -53,6 +53,7 @@ fn report_dto(report: ImportReport) -> ImportReportDto {
         journal_appended: report.journal_appended,
         exported_at: report.exported_at,
         device_id: report.device_id,
+        household_mismatch: report.household_mismatch,
     }
 }
 
@@ -67,9 +68,9 @@ pub fn export(
     let ctx = finance::context(db, now)?;
     let since = input.since.as_deref().filter(|s| !s.trim().is_empty());
     let payload = export_json(db, &ctx.household.id, DEVICE_ID, &ts(now), since)?;
-    let rows = payload["tables"]
-        .as_object()
-        .map_or(0, |t| t.values().filter_map(|v| v.as_array()).map(Vec::len).sum());
+    let rows = payload["tables"].as_object().map_or(0, |t| {
+        t.values().filter_map(|v| v.as_array()).map(Vec::len).sum()
+    });
     let tables = payload["tables"].as_object().map_or(0, |t| t.len());
     let json = serde_json::to_vec(&payload)
         .map_err(|_| StorageError::InvalidData("eksport JSON".to_owned()))?;
@@ -158,6 +159,8 @@ mod tests {
         assert!(result.rows >= 3, "xonadon, a'zo, marosim: {}", result.rows);
 
         let target = database(112);
+        // Nishon daftar avto-yaratilgan (bo'sh) xonadonga ega — qoida: u kiruvchi xonadonga bo'shatiladi.
+        let seed = finance::context(&target, NOW).expect("urug'");
         assert!(matches!(
             preview(
                 &target,
@@ -177,10 +180,46 @@ mod tests {
         )
         .expect("import");
         assert!(!report.blocked);
-        assert!(report.inserted.iter().any(|t| t.table == "ceremonies" && t.count == 1));
+        assert!(
+            report
+                .inserted
+                .iter()
+                .any(|t| t.table == "ceremonies" && t.count == 1)
+        );
         let view = crate::ceremonies::overview(&target, NOW).expect("ro'yxat");
         assert_eq!(view.items.len(), 1);
         assert_eq!(view.items[0].title, "To'y");
+        let after = finance::context(&target, NOW).expect("kontekst");
+        assert_ne!(
+            after.household.id, seed.household.id,
+            "urug' xonadon kiruvchi bilan almashdi"
+        );
+        let households: i64 = target
+            .connection()
+            .query_row("SELECT COUNT(*) FROM households", [], |r| r.get(0))
+            .expect("son");
+        assert_eq!(households, 1);
+        // Yozuvli boshqa xonadon — import to'xtaydi.
+        let busy = database(113);
+        crate::ceremonies::create(
+            &busy,
+            NOW,
+            CeremonyInputDto {
+                kind: "OTHER".into(),
+                title: "Boshqa".into(),
+                event_on: None,
+            },
+        )
+        .expect("marosim");
+        let report = preview(
+            &busy,
+            ImportInputDto {
+                path: result.path.clone(),
+                password: "juda-sirli-parol".into(),
+            },
+        )
+        .expect("ko'rik");
+        assert!(report.blocked && report.household_mismatch);
         let _ = std::fs::remove_dir_all(dir);
     }
 }

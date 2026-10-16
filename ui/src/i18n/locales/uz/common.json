@@ -1169,7 +1169,8 @@
     "summary": "{{inserted}} qo'shiladi, {{updated}} yangilanadi, jurnalga {{journal}} yozuv",
     "fork": "Kelishuv {{agreement}}: zanjir {{seq}}-yozuvdan ayrilgan",
     "conflict": "{{table}} / {{id}}…: {{reason}} (mahalliy saqlandi)",
-    "importPassword": "Import paroli"
+    "importPassword": "Import paroli",
+    "householdMismatch": "Bu daftar boshqa xonadonga tegishli va bo'sh emas: import to'xtatildi. Qoida: ikkinchi qurilma birinchisining eksportidan boshlanadi — yangi (bo'sh) daftarga import qiling."
   },
   "onboarding": {
     "progress": "{{step}} / {{total}}",

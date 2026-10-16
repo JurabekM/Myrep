@@ -168,7 +168,11 @@ export function ExchangeCard() {
         {preview !== null ? (
           <ReportView report={preview} title={t("exchange.previewTitle")}>
             {preview.blocked ? (
-              <p className="text-sm text-danger">{t("exchange.blocked")}</p>
+              <p className="text-sm text-danger">
+                {preview.householdMismatch
+                  ? t("exchange.householdMismatch")
+                  : t("exchange.blocked")}
+              </p>
             ) : (
               <div>
                 <PrimaryButton

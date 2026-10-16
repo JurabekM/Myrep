@@ -1,16 +1,16 @@
 //! D14 testlari: eksport → yangi baza → import 1:1 (round-trip), fork, ziddiyat, inkremental.
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
+use domain::agreement::{AgreementStatus, AgreementType};
 use domain::journal::{JournalEntry, JournalKind};
 use domain::{Household, IdGen, Member, MemberRole};
-use domain::agreement::{AgreementStatus, AgreementType};
 use money::{Currency, Money};
 use security::SecretKey;
 use storage::interchange::{export_json, import_json};
 use storage::schema::TABLES;
 use storage::{AgreementRepo, AgreementRow, Database, HouseholdRepo, JournalRepo, MemberRepo};
-use time::macros::{date, datetime};
 use time::OffsetDateTime;
+use time::macros::{date, datetime};
 
 const NOW: OffsetDateTime = datetime!(2026-12-01 06:00 UTC);
 const HOUSEHOLD: &str = "0192e000-0000-7000-8000-00000000aa01";
@@ -33,8 +33,11 @@ fn database(seed: u8) -> Database {
 fn seed(db: &Database) {
     let conn = db.connection();
     let household = Household::create(HOUSEHOLD, "Asosiy daftar", NOW, "desktop").expect("xonadon");
-    HouseholdRepo::new(conn).insert(&household).expect("xonadon");
-    let owner = Member::create(OWNER, HOUSEHOLD, "O'zim", MemberRole::Adult, NOW, "desktop").expect("a'zo");
+    HouseholdRepo::new(conn)
+        .insert(&household)
+        .expect("xonadon");
+    let owner =
+        Member::create(OWNER, HOUSEHOLD, "O'zim", MemberRole::Adult, NOW, "desktop").expect("a'zo");
     MemberRepo::new(conn).insert(&owner).expect("a'zo");
     AgreementRepo::new(conn)
         .insert(&AgreementRow {
@@ -67,7 +70,9 @@ fn entry(id: &str, minor: i64) -> JournalEntry {
 
 fn count(db: &Database, table: &str) -> i64 {
     db.connection()
-        .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| row.get(0))
+        .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+            row.get(0)
+        })
         .expect("count")
 }
 
@@ -77,18 +82,33 @@ fn round_trip_eksport_import_1_ga_1() {
     seed(&source);
     let journal = JournalRepo::new(source.connection());
     let ids = Seq(std::sync::atomic::AtomicU32::new(0));
-    journal.append(HOUSEHOLD, &entry(&ids.next_id(), 300), NOW, "desktop").expect("yozuv");
-    journal.append(HOUSEHOLD, &entry(&ids.next_id(), 200), NOW, "desktop").expect("yozuv");
+    journal
+        .append(HOUSEHOLD, &entry(&ids.next_id(), 300), NOW, "desktop")
+        .expect("yozuv");
+    journal
+        .append(HOUSEHOLD, &entry(&ids.next_id(), 200), NOW, "desktop")
+        .expect("yozuv");
 
-    let payload = export_json(&source, HOUSEHOLD, "desktop", "2026-12-01T06:00:00Z", None).expect("eksport");
+    let payload =
+        export_json(&source, HOUSEHOLD, "desktop", "2026-12-01T06:00:00Z", None).expect("eksport");
     assert_eq!(payload["format"], "baraka-interchange");
-    assert_eq!(payload["tables"]["journal_entries"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        payload["tables"]["journal_entries"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
 
     let target = database(2);
     let preview = import_json(&target, &payload, true).expect("dry-run");
     assert!(!preview.blocked);
     assert_eq!(preview.journal_appended, 2);
-    assert_eq!(count(&target, "households"), 0, "dry-run hech narsa yozmaydi");
+    assert_eq!(
+        count(&target, "households"),
+        0,
+        "dry-run hech narsa yozmaydi"
+    );
 
     let report = import_json(&target, &payload, false).expect("import");
     assert_eq!(report.inserted.get("households"), Some(&1));
@@ -96,10 +116,19 @@ fn round_trip_eksport_import_1_ga_1() {
     assert_eq!(report.journal_appended, 2);
     assert!(report.conflicts.is_empty());
     for table in TABLES {
-        assert_eq!(count(&source, table), count(&target, table), "{table} 1:1 emas");
+        assert_eq!(
+            count(&source, table),
+            count(&target, table),
+            "{table} 1:1 emas"
+        );
     }
     // Telefondan kelgan xeshlar desktopda qayta hisoblanganda mos keladi.
-    assert!(JournalRepo::new(target.connection()).verify(AGREEMENT).expect("tekshiruv").is_ok());
+    assert!(
+        JournalRepo::new(target.connection())
+            .verify(AGREEMENT)
+            .expect("tekshiruv")
+            .is_ok()
+    );
     // Qayta import — idempotent.
     let again = import_json(&target, &payload, false).expect("qayta");
     assert_eq!(again.journal_appended, 0);
@@ -127,7 +156,8 @@ fn fork_importni_toxtatadi() {
     JournalRepo::new(other.connection())
         .append(HOUSEHOLD, &entry(&ids.next_id(), 999), NOW, "phone")
         .expect("boshqa yozuv");
-    let payload = export_json(&other, HOUSEHOLD, "phone", "2026-12-01T07:00:00Z", None).expect("eksport");
+    let payload =
+        export_json(&other, HOUSEHOLD, "phone", "2026-12-01T07:00:00Z", None).expect("eksport");
 
     let report = import_json(&local, &payload, false).expect("hisobot");
     assert!(report.blocked);
@@ -153,10 +183,14 @@ fn versiya_katta_yutadi_eski_ziddiyatga_tushadi_inkremental_filtr() {
     AgreementRepo::new(other.connection())
         .update_answers(AGREEMENT, 1, AgreementStatus::Draft, "{\"v\":2}", NOW)
         .expect("yangilandi");
-    let payload = export_json(&other, HOUSEHOLD, "phone", "2026-12-01T07:00:00Z", None).expect("eksport");
+    let payload =
+        export_json(&other, HOUSEHOLD, "phone", "2026-12-01T07:00:00Z", None).expect("eksport");
     let report = import_json(&local, &payload, false).expect("import");
     assert_eq!(report.updated.get("agreements"), Some(&1));
-    let row = AgreementRepo::new(local.connection()).find(AGREEMENT).expect("so'rov").expect("bor");
+    let row = AgreementRepo::new(local.connection())
+        .find(AGREEMENT)
+        .expect("so'rov")
+        .expect("bor");
     assert_eq!(row.version, 2);
     assert_eq!(row.answers_json, "{\"v\":2}");
 
@@ -170,7 +204,14 @@ fn versiya_katta_yutadi_eski_ziddiyatga_tushadi_inkremental_filtr() {
     assert_eq!(report.conflicts[0].reason, "LOCAL_NEWER");
 
     // Inkremental: `since` kelajakda — hech narsa chiqmaydi (updated_at/created_at bo'lgan jadvallarda).
-    let empty = export_json(&local, HOUSEHOLD, "desktop", "x", Some("2099-01-01T00:00:00Z")).expect("eksport");
+    let empty = export_json(
+        &local,
+        HOUSEHOLD,
+        "desktop",
+        "x",
+        Some("2099-01-01T00:00:00Z"),
+    )
+    .expect("eksport");
     assert_eq!(empty["tables"]["agreements"].as_array().unwrap().len(), 0);
     assert_eq!(empty["tables"]["households"].as_array().unwrap().len(), 0);
 }

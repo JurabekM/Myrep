@@ -277,7 +277,9 @@ impl Raw {
                 .transpose()?,
             buyout_months: self
                 .buyout_months
-                .map(|m| u32::try_from(m).map_err(|_| StorageError::InvalidData("oylar".to_owned())))
+                .map(|m| {
+                    u32::try_from(m).map_err(|_| StorageError::InvalidData("oylar".to_owned()))
+                })
                 .transpose()?,
             buyout_start: self.buyout_start.as_deref().map(parse_date).transpose()?,
             consent_member: self.consent_member,

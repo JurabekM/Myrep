@@ -390,10 +390,8 @@ pub fn set_goal(
 }
 
 fn pretty_date(date: Date) -> String {
-    date.format(&time::macros::format_description!(
-        "[day].[month].[year]"
-    ))
-    .unwrap_or_default()
+    date.format(&time::macros::format_description!("[day].[month].[year]"))
+        .unwrap_or_default()
 }
 
 /// Smeta PDF baytlari (tanlangan stsenariy bo'yicha).
@@ -482,7 +480,13 @@ mod tests {
         Database::open_in_memory(&SecretKey::from_array([71; 32])).expect("xotirada baza")
     }
 
-    fn line(scenario_id: &str, name: &str, quantity: u32, price: &str, funding: &str) -> CeremonyLineInputDto {
+    fn line(
+        scenario_id: &str,
+        name: &str,
+        quantity: u32,
+        price: &str,
+        funding: &str,
+    ) -> CeremonyLineInputDto {
         CeremonyLineInputDto {
             scenario_id: scenario_id.into(),
             name: name.into(),
@@ -546,7 +550,10 @@ mod tests {
         assert_eq!(big.total.minor, "1700000000");
         assert_eq!(big.debt_part.minor, "800000000");
         assert!(big.has_debt);
-        assert_eq!(big.payoff_months, None, "daromad yo'q — qarz ulushi 0, muddat yo'q");
+        assert_eq!(
+            big.payoff_months, None,
+            "daromad yo'q — qarz ulushi 0, muddat yo'q"
+        );
         let small = &ceremony.scenarios[1];
         assert_eq!(small.total.minor, "450000000");
         assert!(!small.has_debt);
@@ -581,7 +588,10 @@ mod tests {
         )
         .expect("tasdiqlandi");
         assert_eq!(view.items[0].status, "CONFIRMED");
-        assert_eq!(view.items[0].chosen_scenario_id.as_deref(), Some(big.as_str()));
+        assert_eq!(
+            view.items[0].chosen_scenario_id.as_deref(),
+            Some(big.as_str())
+        );
         // Tasdiqlangan reja o'zgarmaydi.
         assert!(matches!(
             add_line(&db, NOW, line(&small, "Xonanda", 1, "1 000 000", "FAMILY")),
@@ -621,7 +631,10 @@ mod tests {
             },
         )
         .expect("maqsad");
-        assert_eq!(view.items[0].goal_name.as_deref(), Some("Yosh oila uchun boshpana"));
+        assert_eq!(
+            view.items[0].goal_name.as_deref(),
+            Some("Yosh oila uchun boshpana")
+        );
         assert_eq!(
             view.items[0].goal_target.as_ref().map(|m| m.minor.as_str()),
             Some("2000000000")

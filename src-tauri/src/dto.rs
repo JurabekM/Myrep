@@ -2373,6 +2373,8 @@ pub struct ImportReportDto {
     pub exported_at: String,
     /// Eksport qurilmasi.
     pub device_id: String,
+    /// Xonadon mos kelmadi (mahalliy daftar bo'sh emas, boshqa xonadon).
+    pub household_mismatch: bool,
 }
 
 /// Jadval bo'yicha son.

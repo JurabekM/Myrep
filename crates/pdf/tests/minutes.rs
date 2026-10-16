@@ -39,10 +39,16 @@ fn folder() -> ArbiterFolder {
         generated_on: "01.12.2026".to_owned(),
         version_line: "2-versiya · imzolangan".to_owned(),
         contract: vec![
-            ("1. Tomonlar".to_owned(), "Anvar Karimov (mehnat); Dilshod Rahimov (kapital)".to_owned()),
+            (
+                "1. Tomonlar".to_owned(),
+                "Anvar Karimov (mehnat); Dilshod Rahimov (kapital)".to_owned(),
+            ),
             ("4. Foyda".to_owned(), "60 % / 40 %".to_owned()),
         ],
-        versions: vec![("2-versiya".to_owned(), "o'zgarishsiz tasdiqlandi".to_owned())],
+        versions: vec![(
+            "2-versiya".to_owned(),
+            "o'zgarishsiz tasdiqlandi".to_owned(),
+        )],
         entries: vec![[
             "05.11.2026".to_owned(),
             "Kirim".to_owned(),
@@ -50,8 +56,14 @@ fn folder() -> ArbiterFolder {
             "6 000 000 soʻm".to_owned(),
         ]],
         chain_line: "Zanjir to'g'ri (1 yozuv).".to_owned(),
-        reviews: vec![("01.11.2026 — 30.11.2026".to_owned(), "2 belgi: 1 rozi, 1 e'tiroz".to_owned())],
-        incidents: vec![("Yetkazish · 10.11.2026".to_owned(), "mashina buzildi · ochiq".to_owned())],
+        reviews: vec![(
+            "01.11.2026 — 30.11.2026".to_owned(),
+            "2 belgi: 1 rozi, 1 e'tiroz".to_owned(),
+        )],
+        incidents: vec![(
+            "Yetkazish · 10.11.2026".to_owned(),
+            "mashina buzildi · ochiq".to_owned(),
+        )],
         disputes: vec![(
             "Xarajat cheki · Dilshod Rahimov".to_owned(),
             "Talab: cheklar taqdim etilsin · qaror: yo'q".to_owned(),
@@ -75,22 +87,35 @@ fn check(bytes: &[u8], name: &str) {
         std::fs::write(&path, bytes).expect("snapshot yozilsin");
         return;
     }
-    let expected = std::fs::read(&path).expect("snapshot mavjud (UPDATE_SNAPSHOTS=1 bilan yarating)");
+    let expected =
+        std::fs::read(&path).expect("snapshot mavjud (UPDATE_SNAPSHOTS=1 bilan yarating)");
     assert!(bytes == expected, "{name} snapshot'dan farq qiladi");
 }
 
 #[test]
 fn bayonnoma_snapshot() {
-    check(&render_review_minutes(&minutes()).expect("bayonnoma"), "review-minutes.pdf");
+    check(
+        &render_review_minutes(&minutes()).expect("bayonnoma"),
+        "review-minutes.pdf",
+    );
 }
 
 #[test]
 fn hakam_papkasi_snapshot_va_kop_sahifali() {
     let bytes = render_arbiter_folder(&folder()).expect("papka");
     // Mundarija alohida sahifada, har bo'lim yangi sahifada: kamida 3 sahifa.
-    let pages = String::from_utf8_lossy(&bytes).matches("/Type /Page\n").count()
-        + String::from_utf8_lossy(&bytes).matches("/Type /Page/").count()
-        + String::from_utf8_lossy(&bytes).matches("/Type/Page/").count();
-    assert!(pages >= 3 || bytes.len() > 5_000, "ko'p sahifali papka kutilgan");
+    let pages = String::from_utf8_lossy(&bytes)
+        .matches("/Type /Page\n")
+        .count()
+        + String::from_utf8_lossy(&bytes)
+            .matches("/Type /Page/")
+            .count()
+        + String::from_utf8_lossy(&bytes)
+            .matches("/Type/Page/")
+            .count();
+    assert!(
+        pages >= 3 || bytes.len() > 5_000,
+        "ko'p sahifali papka kutilgan"
+    );
     check(&bytes, "arbiter-folder.pdf");
 }

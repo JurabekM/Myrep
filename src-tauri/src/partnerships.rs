@@ -144,7 +144,10 @@ pub fn check_before_sign(
     Ok(())
 }
 
-pub(crate) fn buyout_dto(db: &Database, row: &PartnershipRow) -> Result<Option<BuyoutDto>, SessionError> {
+pub(crate) fn buyout_dto(
+    db: &Database,
+    row: &PartnershipRow,
+) -> Result<Option<BuyoutDto>, SessionError> {
     let (Some(total), Some(months), Some(start)) =
         (row.buyout_total, row.buyout_months, row.buyout_start)
     else {
@@ -469,7 +472,9 @@ mod tests {
         };
         assert!(matches!(
             check_before_sign(&db, &agreement, &both),
-            Err(SessionError::Domain(DomainError::PartnershipStructureInvalid))
+            Err(SessionError::Domain(
+                DomainError::PartnershipStructureInvalid
+            ))
         ));
         // Kafolatli summa — domen taqiqi.
         let mut fixed = answers("5 000 000");

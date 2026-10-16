@@ -19,14 +19,14 @@ use time::{Date, Duration, OffsetDateTime};
 
 use crate::agreements;
 use crate::dto::{
-    AgreementAnswersDto, AgreementDto, AgreementInputDto, AgreementOpsDto, CenterDto,
-    CenterRowDto, DecideDisputeInputDto, DisputeDto, DisputeInputDto, DutyDto, FamilyAdultDto,
+    AgreementAnswersDto, AgreementDto, AgreementInputDto, AgreementOpsDto, CenterDto, CenterRowDto,
+    DecideDisputeInputDto, DisputeDto, DisputeInputDto, DutyDto, FamilyAdultDto,
     FamilyConfirmInputDto, FamilyConsentsDto, FamilyTemplateDto, IncidentDto, IncidentInputDto,
     JournalEntryDto, MarkReviewInputDto, MoneyDto, OpenReviewInputDto, PartyDto, ReviewDto,
     ReviewMarkDto, SaveAnswersInputDto, SummaryLineDto, VersionNoteDto,
 };
 use crate::family::{ensure_not_locked, kdf_params};
-use crate::finance::{self, CURRENCY, DEVICE_ID, UuidV7, date_text, Context};
+use crate::finance::{self, CURRENCY, Context, DEVICE_ID, UuidV7, date_text};
 use crate::session::SessionError;
 
 const DISCLAIMER: &str = "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas.";
@@ -47,9 +47,18 @@ const FAMILY_TEMPLATES: [FamilyTemplate; 4] = [
         title: "Uyda kim nima qiladi",
         description: "Uy ishlari taqsimoti: har ishga bitta mas'ul va «bajarilmasa» bandi.",
         duties: &[
-            ("Oshxona va dasturxon", "o'sha kuni boshqa a'zo yordam beradi, ertasiga qaytariladi"),
-            ("Bozor va xaridlar", "ro'yxat oldindan yoziladi; unutilgan narsa ertasiga olinadi"),
-            ("Bolalar darslari", "haftasiga 3 kun; bajarilmasa dam olish kuni qoplanadi"),
+            (
+                "Oshxona va dasturxon",
+                "o'sha kuni boshqa a'zo yordam beradi, ertasiga qaytariladi",
+            ),
+            (
+                "Bozor va xaridlar",
+                "ro'yxat oldindan yoziladi; unutilgan narsa ertasiga olinadi",
+            ),
+            (
+                "Bolalar darslari",
+                "haftasiga 3 kun; bajarilmasa dam olish kuni qoplanadi",
+            ),
         ],
         custody: "Uy ishlari jadvali oshxona devorida; oyiga bir marta oila kengashida ko'riladi.",
     },
@@ -58,8 +67,14 @@ const FAMILY_TEMPLATES: [FamilyTemplate; 4] = [
         title: "Pul qayerda turadi va kim yuritadi",
         description: "Oila pulining joyi, hisob yurituvchi va ko'rib chiqish davriyligi.",
         duties: &[
-            ("Daftarni yuritish", "haftada bir marta; qoldirilsa, keyingi kuni to'ldiriladi"),
-            ("Qorovul zaxirasini to'ldirish", "har daromaddan ulush; qoldirilsa oila kengashida tushuntiriladi"),
+            (
+                "Daftarni yuritish",
+                "haftada bir marta; qoldirilsa, keyingi kuni to'ldiriladi",
+            ),
+            (
+                "Qorovul zaxirasini to'ldirish",
+                "har daromaddan ulush; qoldirilsa oila kengashida tushuntiriladi",
+            ),
         ],
         custody: "Naqd pul uy seyfida, karta egasining nomida; daftarni «O'zim» yuritadi, oyiga bir ko'rik.",
     },
@@ -68,8 +83,14 @@ const FAMILY_TEMPLATES: [FamilyTemplate; 4] = [
         title: "Havas chegarasi",
         description: "Oylik havas xarajati chegarasi va uni kattalar roziligi bilan o'zgartirish tartibi (2B.3).",
         duties: &[
-            ("Chegarani kuzatish", "oshsa — keyingi oy shuncha kam; ikki marta oshsa oila kengashi"),
-            ("Katta xaridni oldindan aytish", "aytilmagan katta xarid oila kengashida ko'riladi"),
+            (
+                "Chegarani kuzatish",
+                "oshsa — keyingi oy shuncha kam; ikki marta oshsa oila kengashi",
+            ),
+            (
+                "Katta xaridni oldindan aytish",
+                "aytilmagan katta xarid oila kengashida ko'riladi",
+            ),
         ],
         custody: "Havas chegarasi ilovada; o'zgartirish faqat barcha kattalar roziligi bilan.",
     },
@@ -78,8 +99,14 @@ const FAMILY_TEMPLATES: [FamilyTemplate; 4] = [
         title: "Oylik oila kengashi qachon o'tadi",
         description: "Oila kengashi kuni, davomiyligi va kun tartibi.",
         duties: &[
-            ("Kengashni chaqirish", "oyning birinchi juma kechqurun; o'tkazilmasa keyingi hafta"),
-            ("Bayonnomani saqlash", "PDF ilova papkasida; yo'qolsa qayta yaratiladi"),
+            (
+                "Kengashni chaqirish",
+                "oyning birinchi juma kechqurun; o'tkazilmasa keyingi hafta",
+            ),
+            (
+                "Bayonnomani saqlash",
+                "PDF ilova papkasida; yo'qolsa qayta yaratiladi",
+            ),
         ],
         custody: "Kengash bayonnomalari ilovada; har kengashda oldingisi o'qiladi.",
     },
@@ -103,10 +130,8 @@ fn add(left: Money, right: Money) -> Result<Money, SessionError> {
 }
 
 fn pretty(date: Date) -> String {
-    date.format(&time::macros::format_description!(
-        "[day].[month].[year]"
-    ))
-    .unwrap_or_default()
+    date.format(&time::macros::format_description!("[day].[month].[year]"))
+        .unwrap_or_default()
 }
 
 fn kind_label(kind: JournalKind) -> &'static str {
@@ -171,12 +196,21 @@ fn entry_dto(stored: &StoredEntry) -> JournalEntryDto {
 fn summary_of(entries: &[&StoredEntry]) -> Result<Vec<SummaryLineDto>, SessionError> {
     let groups: [(&str, &[JournalKind]); 6] = [
         ("Kirim", &[JournalKind::VentureIncome]),
-        ("Xarajat", &[JournalKind::VentureExpense, JournalKind::ForceMajeure]),
-        ("Hissalar", &[JournalKind::Contribution, JournalKind::OpeningBalance]),
+        (
+            "Xarajat",
+            &[JournalKind::VentureExpense, JournalKind::ForceMajeure],
+        ),
+        (
+            "Hissalar",
+            &[JournalKind::Contribution, JournalKind::OpeningBalance],
+        ),
         ("Qarz to'lovlari", &[JournalKind::LoanPayment]),
         (
             "Taqsimot",
-            &[JournalKind::ProfitDistribution, JournalKind::LossDistribution],
+            &[
+                JournalKind::ProfitDistribution,
+                JournalKind::LossDistribution,
+            ],
         ),
         ("Buyout", &[JournalKind::BuyoutPayment]),
     ];
@@ -302,7 +336,11 @@ fn family_dto(
 }
 
 /// Kelishuv amaliyotlari: hodisalar, ko'riklar, nizolar, versiya izohlari, oilaviy tasdiqlar.
-pub fn ops(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Result<AgreementOpsDto, SessionError> {
+pub fn ops(
+    db: &Database,
+    now: OffsetDateTime,
+    agreement_id: &str,
+) -> Result<AgreementOpsDto, SessionError> {
     let ctx = finance::context(db, now)?;
     let row = load(db, agreement_id)?;
     let answers = answers_of(&row)?;
@@ -389,13 +427,19 @@ pub fn report_incident(
     let row = load(db, &input.agreement_id)?;
     ensure_active(&row)?;
     let answers = answers_of(&row)?;
-    if duty_of(&answers, &input.duty_id).is_none() || !answers.parties.iter().any(|p| p.id == input.party_id) {
+    if duty_of(&answers, &input.duty_id).is_none()
+        || !answers.parties.iter().any(|p| p.id == input.party_id)
+    {
         return Err(StorageError::NotFound.into());
     }
     if input.reason.trim().is_empty() {
         return Err(domain::DomainError::ReasonRequired.into());
     }
-    let occurred_on = match input.occurred_on.as_deref().filter(|t| !t.trim().is_empty()) {
+    let occurred_on = match input
+        .occurred_on
+        .as_deref()
+        .filter(|t| !t.trim().is_empty())
+    {
         Some(text) => parse_date(text)?,
         None => ctx.today,
     };
@@ -416,7 +460,11 @@ pub fn report_incident(
 }
 
 /// Hodisani yopadi (kelishilgan qoidaga qaytildi).
-pub fn resolve_incident(db: &Database, now: OffsetDateTime, id: &str) -> Result<AgreementOpsDto, SessionError> {
+pub fn resolve_incident(
+    db: &Database,
+    now: OffsetDateTime,
+    id: &str,
+) -> Result<AgreementOpsDto, SessionError> {
     let agreement_id = CenterRepo::new(db.connection()).resolve_incident(id, now)?;
     ops(db, now, &agreement_id)
 }
@@ -438,7 +486,11 @@ pub fn open_review(
         Some(text) => parse_date(text)?,
         None => ctx.today,
     };
-    let period_start = match input.period_start.as_deref().filter(|t| !t.trim().is_empty()) {
+    let period_start = match input
+        .period_start
+        .as_deref()
+        .filter(|t| !t.trim().is_empty())
+    {
         Some(text) => parse_date(text)?,
         None => last.map_or_else(
             || {
@@ -507,7 +559,11 @@ pub fn mark_review(
 }
 
 /// Ko'rik bayonnomasi PDF baytlari (`chain_head` bilan).
-pub fn review_pdf(db: &Database, now: OffsetDateTime, review_id: &str) -> Result<Vec<u8>, SessionError> {
+pub fn review_pdf(
+    db: &Database,
+    now: OffsetDateTime,
+    review_id: &str,
+) -> Result<Vec<u8>, SessionError> {
     let ctx = finance::context(db, now)?;
     let review = CenterRepo::new(db.connection())
         .find_review(review_id)?
@@ -517,7 +573,11 @@ pub fn review_pdf(db: &Database, now: OffsetDateTime, review_id: &str) -> Result
     let dto = review_dto(db, &answers, &review)?;
     let minutes = pdf::ReviewMinutes {
         title: row.title.clone(),
-        period: format!("{} — {}", pretty(review.period_start), pretty(review.period_end)),
+        period: format!(
+            "{} — {}",
+            pretty(review.period_start),
+            pretty(review.period_end)
+        ),
         generated_on: pretty(ctx.today),
         entries: dto
             .entries
@@ -525,7 +585,9 @@ pub fn review_pdf(db: &Database, now: OffsetDateTime, review_id: &str) -> Result
             .map(|e| {
                 [
                     e.date.clone(),
-                    JournalKind::from_code(&e.kind).map_or("Yozuv", kind_label).to_owned(),
+                    JournalKind::from_code(&e.kind)
+                        .map_or("Yozuv", kind_label)
+                        .to_owned(),
                     party_name(&answers, &e.party_id),
                     e.amount.formatted.clone(),
                 ]
@@ -566,7 +628,11 @@ pub fn review_pdf(db: &Database, now: OffsetDateTime, review_id: &str) -> Result
             .collect(),
         chain_line: format!(
             "Zanjir {} · boshi: {}",
-            if review.chain_ok { "to'g'ri" } else { "BUZILGAN" },
+            if review.chain_ok {
+                "to'g'ri"
+            } else {
+                "BUZILGAN"
+            },
             review.chain_head
         ),
         disclaimer: DISCLAIMER.to_owned(),
@@ -606,7 +672,12 @@ pub fn open_dispute(
         created_at: now,
         origin_device_id: DEVICE_ID.to_owned(),
     })?;
-    AgreementRepo::new(db.connection()).set_status(&row.id, AgreementStatus::InDispute, None, now)?;
+    AgreementRepo::new(db.connection()).set_status(
+        &row.id,
+        AgreementStatus::InDispute,
+        None,
+        now,
+    )?;
     ops(db, now, &row.id)
 }
 
@@ -627,7 +698,12 @@ pub fn decide_dispute(
     let row = load(db, &dispute.agreement_id)?;
     repo.decide_dispute(&dispute.id, input.decision.trim(), ctx.today)?;
     if repo.open_dispute_count(&row.id)? == 0 {
-        AgreementRepo::new(db.connection()).set_status(&row.id, AgreementStatus::Signed, None, now)?;
+        AgreementRepo::new(db.connection()).set_status(
+            &row.id,
+            AgreementStatus::Signed,
+            None,
+            now,
+        )?;
     }
     if input.new_version {
         let next = AgreementRepo::new(db.connection()).update_answers(
@@ -637,13 +713,22 @@ pub fn decide_dispute(
             &row.answers_json,
             now,
         )?;
-        repo.insert_version_note(&row.id, next, &format!("Hakam qarori: {}", input.decision.trim()), now)?;
+        repo.insert_version_note(
+            &row.id,
+            next,
+            &format!("Hakam qarori: {}", input.decision.trim()),
+            now,
+        )?;
     }
     ops(db, now, &row.id)
 }
 
 /// Hakam uchun ish papkasi PDF baytlari.
-pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Result<Vec<u8>, SessionError> {
+pub fn arbiter_pdf(
+    db: &Database,
+    now: OffsetDateTime,
+    agreement_id: &str,
+) -> Result<Vec<u8>, SessionError> {
     let ctx = finance::context(db, now)?;
     let row = load(db, agreement_id)?;
     let answers = answers_of(&row)?;
@@ -677,7 +762,9 @@ pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Re
             format!(
                 "{} — {}; bajarilmasa: {}",
                 d.title,
-                d.owner_party_id.as_deref().map_or_else(|| "egasiz".to_owned(), |id| party_name(&answers, id)),
+                d.owner_party_id
+                    .as_deref()
+                    .map_or_else(|| "egasiz".to_owned(), |id| party_name(&answers, id)),
                 d.breach_clause
             )
         })
@@ -686,7 +773,13 @@ pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Re
     let shares = answers
         .profit_shares
         .iter()
-        .map(|s| format!("{} {} %", party_name(&answers, &s.party_id), s.share_bp / 100))
+        .map(|s| {
+            format!(
+                "{} {} %",
+                party_name(&answers, &s.party_id),
+                s.share_bp / 100
+            )
+        })
         .collect::<Vec<_>>()
         .join(", ");
     let contract = vec![
@@ -706,7 +799,10 @@ pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Re
         ),
         (
             "9. Muddat".to_owned(),
-            format!("{} oy · ko'rik {}", answers.term_months, answers.review_date),
+            format!(
+                "{} oy · ko'rik {}",
+                answers.term_months, answers.review_date
+            ),
         ),
     ];
     let versions = repo
@@ -746,7 +842,11 @@ pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Re
                 format!(
                     "{} · {}",
                     i.reason,
-                    if i.resolved_at.is_some() { "yopilgan" } else { "ochiq" }
+                    if i.resolved_at.is_some() {
+                        "yopilgan"
+                    } else {
+                        "ochiq"
+                    }
                 ),
             )
         })
@@ -756,7 +856,11 @@ pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Re
         .iter()
         .map(|d| {
             (
-                format!("{} · {}", d.subject, party_name(&answers, &d.opened_by_party_id)),
+                format!(
+                    "{} · {}",
+                    d.subject,
+                    party_name(&answers, &d.opened_by_party_id)
+                ),
                 format!(
                     "Bandlar: {} · Talab: {} · qaror: {}",
                     d.clauses,
@@ -797,9 +901,16 @@ pub fn arbiter_pdf(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Re
 }
 
 /// Yillik yangilash: «o'zgarishsiz tasdiqlandi» — yangi versiya (imzolar qayta so'raladi).
-pub fn confirm_unchanged(db: &Database, now: OffsetDateTime, agreement_id: &str) -> Result<AgreementOpsDto, SessionError> {
+pub fn confirm_unchanged(
+    db: &Database,
+    now: OffsetDateTime,
+    agreement_id: &str,
+) -> Result<AgreementOpsDto, SessionError> {
     let row = load(db, agreement_id)?;
-    if matches!(row.status, AgreementStatus::InDispute | AgreementStatus::Ended) {
+    if matches!(
+        row.status,
+        AgreementStatus::InDispute | AgreementStatus::Ended
+    ) {
         return Err(domain::DomainError::AgreementLocked.into());
     }
     let next = AgreementRepo::new(db.connection()).update_answers(
@@ -809,7 +920,12 @@ pub fn confirm_unchanged(db: &Database, now: OffsetDateTime, agreement_id: &str)
         &row.answers_json,
         now,
     )?;
-    CenterRepo::new(db.connection()).insert_version_note(&row.id, next, "o'zgarishsiz tasdiqlandi", now)?;
+    CenterRepo::new(db.connection()).insert_version_note(
+        &row.id,
+        next,
+        "o'zgarishsiz tasdiqlandi",
+        now,
+    )?;
     ops(db, now, &row.id)
 }
 
@@ -878,7 +994,10 @@ pub fn create_family_agreement(
         .map(|(index, (title, breach))| DutyDto {
             id: format!("d{}", index + 1),
             title: (*title).to_owned(),
-            owner_party_id: answers.parties.get(index % answers.parties.len().max(1)).map(|p| p.id.clone()),
+            owner_party_id: answers
+                .parties
+                .get(index % answers.parties.len().max(1))
+                .map(|p| p.id.clone()),
             breach_clause: (*breach).to_owned(),
         })
         .collect();
@@ -910,7 +1029,10 @@ pub fn confirm_family(
     if row.kind != AgreementType::Family {
         return Err(domain::DomainError::InvalidRule.into());
     }
-    if matches!(row.status, AgreementStatus::InDispute | AgreementStatus::Ended) {
+    if matches!(
+        row.status,
+        AgreementStatus::InDispute | AgreementStatus::Ended
+    ) {
         return Err(domain::DomainError::AgreementLocked.into());
     }
     let member = MemberRepo::new(db.connection())
@@ -921,7 +1043,10 @@ pub fn confirm_family(
     }
     let pins = PinRepo::new(db.connection());
     let state = pins.find(&member.id)?.ok_or(StorageError::NotFound)?;
-    let verifier = state.verifier.clone().ok_or(domain::DomainError::PinNotSet)?;
+    let verifier = state
+        .verifier
+        .clone()
+        .ok_or(domain::DomainError::PinNotSet)?;
     ensure_not_locked(&state, now)?;
     if !verify_member_pin(&input.pin, &verifier, kdf_params())? {
         pins.record_failure(&member.id, now)?;
@@ -931,8 +1056,15 @@ pub fn confirm_family(
     let repo = CenterRepo::new(db.connection());
     repo.insert_family_consent(&row.id, &member.id, row.version, now)?;
     let ctx = finance::context(db, now)?;
-    if family_dto(db, &ctx, &row)?.is_some_and(|f| f.complete) && row.status == AgreementStatus::Draft {
-        AgreementRepo::new(db.connection()).set_status(&row.id, AgreementStatus::Signed, Some(ctx.today), now)?;
+    if family_dto(db, &ctx, &row)?.is_some_and(|f| f.complete)
+        && row.status == AgreementStatus::Draft
+    {
+        AgreementRepo::new(db.connection()).set_status(
+            &row.id,
+            AgreementStatus::Signed,
+            Some(ctx.today),
+            now,
+        )?;
     }
     ops(db, now, &row.id)
 }
@@ -955,17 +1087,50 @@ mod tests {
     fn full_answers() -> AgreementAnswersDto {
         let mut a = AgreementAnswersDto::empty();
         a.parties = vec![
-            PartyDto { id: "P1".into(), name: "Anvar Karimov".into(), role: "sherik".into(), relation: String::new(), is_me: true },
-            PartyDto { id: "P2".into(), name: "Dilshod Rahimov".into(), role: "sherik".into(), relation: String::new(), is_me: false },
+            PartyDto {
+                id: "P1".into(),
+                name: "Anvar Karimov".into(),
+                role: "sherik".into(),
+                relation: String::new(),
+                is_me: true,
+            },
+            PartyDto {
+                id: "P2".into(),
+                name: "Dilshod Rahimov".into(),
+                role: "sherik".into(),
+                relation: String::new(),
+                is_me: false,
+            },
         ];
         a.contributions = vec![
-            ContributionDto { party_id: "P1".into(), kind: "money".into(), amount: "3 000 000".into(), description: "naqd".into() },
-            ContributionDto { party_id: "P2".into(), kind: "labor".into(), amount: String::new(), description: "yetkazish".into() },
+            ContributionDto {
+                party_id: "P1".into(),
+                kind: "money".into(),
+                amount: "3 000 000".into(),
+                description: "naqd".into(),
+            },
+            ContributionDto {
+                party_id: "P2".into(),
+                kind: "labor".into(),
+                amount: String::new(),
+                description: "yetkazish".into(),
+            },
         ];
-        a.duties = vec![DutyDto { id: "d1".into(), title: "Yetkazish".into(), owner_party_id: Some("P2".into()), breach_clause: "1 kun ichida xabar beradi".into() }];
+        a.duties = vec![DutyDto {
+            id: "d1".into(),
+            title: "Yetkazish".into(),
+            owner_party_id: Some("P2".into()),
+            breach_clause: "1 kun ichida xabar beradi".into(),
+        }];
         a.profit_shares = vec![
-            ProfitShareDto { party_id: "P1".into(), share_bp: 5_000 },
-            ProfitShareDto { party_id: "P2".into(), share_bp: 5_000 },
+            ProfitShareDto {
+                party_id: "P1".into(),
+                share_bp: 5_000,
+            },
+            ProfitShareDto {
+                party_id: "P2".into(),
+                share_bp: 5_000,
+            },
         ];
         a.loss_text = "Zarar kapitalga mutanosib".into();
         a.custody_location = "Umumiy karta".into();
@@ -979,12 +1144,49 @@ mod tests {
     }
 
     fn signed(db: &Database) -> String {
-        let created = agreements::create(db, NOW, AgreementInputDto { kind: "OTHER".into(), title: "Non sexi".into() }).expect("yaratildi");
-        agreements::save_answers(db, NOW, SaveAnswersInputDto { id: created.id.clone(), version: 1, answers: full_answers() }).expect("saqlandi");
+        let created = agreements::create(
+            db,
+            NOW,
+            AgreementInputDto {
+                kind: "OTHER".into(),
+                title: "Non sexi".into(),
+            },
+        )
+        .expect("yaratildi");
+        agreements::save_answers(
+            db,
+            NOW,
+            SaveAnswersInputDto {
+                id: created.id.clone(),
+                version: 1,
+                answers: full_answers(),
+            },
+        )
+        .expect("saqlandi");
         for (party, role) in [("P1", "PARTY"), ("P2", "PARTY"), ("ARBITER", "ARBITER")] {
-            agreements::add_signature(db, NOW, SignatureInputDto { agreement_id: created.id.clone(), party_id: party.into(), role: role.into(), image: PNG.into() }).expect("imzo");
+            agreements::add_signature(
+                db,
+                NOW,
+                SignatureInputDto {
+                    agreement_id: created.id.clone(),
+                    party_id: party.into(),
+                    role: role.into(),
+                    image: PNG.into(),
+                },
+            )
+            .expect("imzo");
         }
-        agreements::sign(db, NOW, SignInputDto { agreement_id: created.id.clone(), effective_from: Some("2026-11-01".into()), opening_balance_party_id: Some("P1".into()), opening_balance_amount: Some("3 000 000".into()) }).expect("imzolandi");
+        agreements::sign(
+            db,
+            NOW,
+            SignInputDto {
+                agreement_id: created.id.clone(),
+                effective_from: Some("2026-11-01".into()),
+                opening_balance_party_id: Some("P1".into()),
+                opening_balance_amount: Some("3 000 000".into()),
+            },
+        )
+        .expect("imzolandi");
         created.id
     }
 
@@ -992,14 +1194,38 @@ mod tests {
     fn hodisa_band_bilan_korsatiladi_korik_belgilanadi_va_bayonnoma_chiqadi() {
         let db = database();
         let id = signed(&db);
-        let ops = report_incident(&db, NOW, IncidentInputDto { agreement_id: id.clone(), duty_id: "d1".into(), party_id: "P2".into(), reason: "mashina buzildi".into(), proposed_fix: Some("kuryer".into()), occurred_on: None }).expect("hodisa");
+        let ops = report_incident(
+            &db,
+            NOW,
+            IncidentInputDto {
+                agreement_id: id.clone(),
+                duty_id: "d1".into(),
+                party_id: "P2".into(),
+                reason: "mashina buzildi".into(),
+                proposed_fix: Some("kuryer".into()),
+                occurred_on: None,
+            },
+        )
+        .expect("hodisa");
         assert_eq!(ops.incidents[0].breach_clause, "1 kun ichida xabar beradi");
         assert!(!ops.incidents[0].resolved);
         let center = center(&db, NOW).expect("markaz");
         assert_eq!(center.rows[0].open_incidents, 1);
-        assert!(center.rows[0].review_due, "ko'rik 2026-12-20, bugun 12-01 — 30 kun ichida");
+        assert!(
+            center.rows[0].review_due,
+            "ko'rik 2026-12-20, bugun 12-01 — 30 kun ichida"
+        );
 
-        let ops = open_review(&db, NOW, OpenReviewInputDto { agreement_id: id.clone(), period_start: None, period_end: None }).expect("ko'rik");
+        let ops = open_review(
+            &db,
+            NOW,
+            OpenReviewInputDto {
+                agreement_id: id.clone(),
+                period_start: None,
+                period_end: None,
+            },
+        )
+        .expect("ko'rik");
         let review = &ops.reviews[0];
         assert_eq!(review.period_start, "2026-11-01");
         assert_eq!(review.entries.len(), 1, "boshlang'ich balans yozuvi");
@@ -1007,11 +1233,40 @@ mod tests {
         assert!(review.chain_ok);
         assert!(!review.complete);
         assert!(matches!(
-            mark_review(&db, NOW, MarkReviewInputDto { review_id: review.id.clone(), party_id: "P2".into(), decision: "OBJECT".into(), comment: None }),
+            mark_review(
+                &db,
+                NOW,
+                MarkReviewInputDto {
+                    review_id: review.id.clone(),
+                    party_id: "P2".into(),
+                    decision: "OBJECT".into(),
+                    comment: None
+                }
+            ),
             Err(SessionError::Domain(domain::DomainError::ReasonRequired))
         ));
-        mark_review(&db, NOW, MarkReviewInputDto { review_id: review.id.clone(), party_id: "P1".into(), decision: "AGREE".into(), comment: None }).expect("belgi");
-        let ops = mark_review(&db, NOW, MarkReviewInputDto { review_id: review.id.clone(), party_id: "P2".into(), decision: "OBJECT".into(), comment: Some("chek yo'q".into()) }).expect("belgi");
+        mark_review(
+            &db,
+            NOW,
+            MarkReviewInputDto {
+                review_id: review.id.clone(),
+                party_id: "P1".into(),
+                decision: "AGREE".into(),
+                comment: None,
+            },
+        )
+        .expect("belgi");
+        let ops = mark_review(
+            &db,
+            NOW,
+            MarkReviewInputDto {
+                review_id: review.id.clone(),
+                party_id: "P2".into(),
+                decision: "OBJECT".into(),
+                comment: Some("chek yo'q".into()),
+            },
+        )
+        .expect("belgi");
         assert!(ops.reviews[0].complete);
         let bytes = review_pdf(&db, NOW, &review.id).expect("bayonnoma");
         assert!(bytes.starts_with(b"%PDF-"));
@@ -1023,7 +1278,18 @@ mod tests {
     fn nizo_taqsimotni_bloklaydi_qaror_yangi_versiya_va_hakam_papkasi() {
         let db = database();
         let id = signed(&db);
-        let ops = open_dispute(&db, NOW, DisputeInputDto { agreement_id: id.clone(), party_id: "P2".into(), subject: "Xarajat cheki".into(), clauses: "6-band".into(), claim: "cheklar taqdim etilsin".into() }).expect("nizo");
+        let ops = open_dispute(
+            &db,
+            NOW,
+            DisputeInputDto {
+                agreement_id: id.clone(),
+                party_id: "P2".into(),
+                subject: "Xarajat cheki".into(),
+                clauses: "6-band".into(),
+                claim: "cheklar taqdim etilsin".into(),
+            },
+        )
+        .expect("nizo");
         assert_eq!(ops.status, "IN_DISPUTE");
         assert!(matches!(
             domain::review::ensure_distribution_allowed(AgreementStatus::InDispute),
@@ -1031,7 +1297,16 @@ mod tests {
         ));
         let bytes = arbiter_pdf(&db, NOW, &id).expect("papka");
         assert!(bytes.starts_with(b"%PDF-"));
-        let ops = decide_dispute(&db, NOW, DecideDisputeInputDto { dispute_id: ops.disputes[0].id.clone(), decision: "Cheklar 7 kun ichida taqdim etiladi".into(), new_version: true }).expect("qaror");
+        let ops = decide_dispute(
+            &db,
+            NOW,
+            DecideDisputeInputDto {
+                dispute_id: ops.disputes[0].id.clone(),
+                decision: "Cheklar 7 kun ichida taqdim etiladi".into(),
+                new_version: true,
+            },
+        )
+        .expect("qaror");
         assert_eq!(ops.status, "DRAFT", "yangi versiya qayta imzolanadi");
         assert_eq!(ops.version, 3);
         assert_eq!(ops.version_notes[0].version, 3);
@@ -1051,10 +1326,27 @@ mod tests {
         assert_eq!(created.kind, "FAMILY");
         assert_eq!(created.answers.duties.len(), 2);
         assert!(matches!(
-            confirm_family(&db, NOW, FamilyConfirmInputDto { agreement_id: created.id.clone(), member_id: ctx.owner_id.clone(), pin: "000000".into() }),
+            confirm_family(
+                &db,
+                NOW,
+                FamilyConfirmInputDto {
+                    agreement_id: created.id.clone(),
+                    member_id: ctx.owner_id.clone(),
+                    pin: "000000".into()
+                }
+            ),
             Err(SessionError::Security(SecurityError::WrongPin))
         ));
-        let ops = confirm_family(&db, NOW, FamilyConfirmInputDto { agreement_id: created.id.clone(), member_id: ctx.owner_id.clone(), pin: "246813".into() }).expect("tasdiq");
+        let ops = confirm_family(
+            &db,
+            NOW,
+            FamilyConfirmInputDto {
+                agreement_id: created.id.clone(),
+                member_id: ctx.owner_id.clone(),
+                pin: "246813".into(),
+            },
+        )
+        .expect("tasdiq");
         let family = ops.family.expect("oilaviy");
         assert!(family.complete);
         assert_eq!(ops.status, "SIGNED");

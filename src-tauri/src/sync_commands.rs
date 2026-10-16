@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use security::KdfParams;
-use tauri::{Manager, State};
+use tauri::State;
 use time::OffsetDateTime;
 
 use crate::commands::{ApiError, run_blocking};
@@ -19,15 +19,19 @@ pub async fn export_baraka(
     session: State<'_, Arc<Session>>,
     input: ExportInputDto,
 ) -> Result<ExportResultDto, ApiError> {
-    let dir = app
-        .path()
-        .app_data_dir()
+    let dir = crate::data_dir(&app)
         .map_err(|_| ApiError::Internal)?
         .join("exports");
     let session = session.inner().clone();
     run_blocking(move || {
         session.with_database(|db| {
-            sync::export(db, OffsetDateTime::now_utc(), &dir, KdfParams::RECOMMENDED, input)
+            sync::export(
+                db,
+                OffsetDateTime::now_utc(),
+                &dir,
+                KdfParams::RECOMMENDED,
+                input,
+            )
         })
     })
     .await
