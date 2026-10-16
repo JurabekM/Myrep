@@ -16,5 +16,6 @@ pub mod recovery;
 pub mod rescue;
 pub mod spike;
 pub mod streak;
+pub mod venture;
 
 pub use baraka_domain_common::DomainError;

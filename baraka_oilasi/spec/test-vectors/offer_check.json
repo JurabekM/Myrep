@@ -1,0 +1,228 @@
+{
+  "suite": "offer_check",
+  "version": 1,
+  "description": "«Kafolatlangan foyda» detektori: 6 savol → bayroqlar; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "offer-001-green",
+      "input": {
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "GREEN",
+        "flags": []
+      }
+    },
+    {
+      "id": "offer-002-guaranteed",
+      "input": {
+        "answers": {
+          "guaranteed": "YES",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "GUARANTEED_PROFIT",
+            "level": "RED"
+          }
+        ]
+      }
+    },
+    {
+      "id": "offer-003-pyramid",
+      "input": {
+        "answers": {
+          "guaranteed": "YES",
+          "lossShared": "NO",
+          "realActivity": "NO",
+          "recruitment": "YES",
+          "urgency": "YES",
+          "written": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "GUARANTEED_PROFIT",
+            "level": "RED"
+          },
+          {
+            "code": "LOSS_NOT_SHARED",
+            "level": "RED"
+          },
+          {
+            "code": "NO_REAL_ACTIVITY",
+            "level": "RED"
+          },
+          {
+            "code": "RECRUITMENT_REQUIRED",
+            "level": "RED"
+          },
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NO_WRITTEN_CONTRACT",
+            "level": "YELLOW"
+          }
+        ]
+      }
+    },
+    {
+      "id": "offer-004-urgency",
+      "input": {
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "YES",
+          "written": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          }
+        ]
+      }
+    },
+    {
+      "id": "offer-005-unknowns",
+      "input": {
+        "answers": {
+          "guaranteed": "UNKNOWN",
+          "lossShared": "UNKNOWN",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "UNKNOWN"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "GUARANTEED_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "LOSS_SHARING_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "WRITTEN_UNKNOWN",
+            "level": "YELLOW"
+          }
+        ]
+      }
+    },
+    {
+      "id": "offer-006-no-contract",
+      "input": {
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "NO_WRITTEN_CONTRACT",
+            "level": "YELLOW"
+          }
+        ]
+      }
+    },
+    {
+      "id": "offer-007-crypto-signals",
+      "input": {
+        "answers": {
+          "guaranteed": "YES",
+          "lossShared": "NO",
+          "realActivity": "UNKNOWN",
+          "recruitment": "NO",
+          "urgency": "YES",
+          "written": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "GUARANTEED_PROFIT",
+            "level": "RED"
+          },
+          {
+            "code": "LOSS_NOT_SHARED",
+            "level": "RED"
+          },
+          {
+            "code": "REAL_ACTIVITY_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NO_WRITTEN_CONTRACT",
+            "level": "YELLOW"
+          }
+        ]
+      }
+    },
+    {
+      "id": "offer-neg-001-missing",
+      "input": {
+        "answers": {
+          "guaranteed": "NO"
+        }
+      },
+      "expected": {
+        "error": "MISSING_ANSWER"
+      }
+    },
+    {
+      "id": "offer-neg-002-invalid",
+      "input": {
+        "answers": {
+          "guaranteed": "MAYBE",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES"
+        }
+      },
+      "expected": {
+        "error": "INVALID_ANSWER"
+      }
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+{
+  "suite": "venture_idea",
+  "version": 1,
+  "description": "«Hunardan ishga»: CAPEX, 3 stsenariy, payback = ⌈CAPEX / sof foyda⌉, sheriklikda ishchi va kapital egasi ulushi",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "idea-001-tikuv-8mln",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "500000000",
+          "150000000",
+          "150000000"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "400000000",
+            "expense": "300000000"
+          },
+          {
+            "name": "BASE",
+            "income": "600000000",
+            "expense": "350000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "800000000",
+            "expense": "400000000"
+          }
+        ],
+        "workerShareBp": null
+      },
+      "expected": {
+        "capex": "800000000",
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "net": "100000000",
+            "annualNet": "1200000000",
+            "paybackMonths": 8
+          },
+          {
+            "name": "BASE",
+            "net": "250000000",
+            "annualNet": "3000000000",
+            "paybackMonths": 4
+          },
+          {
+            "name": "OPTIMISTIC",
+            "net": "400000000",
+            "annualNet": "4800000000",
+            "paybackMonths": 2
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "idea-002-partnership-50",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "500000000",
+          "150000000",
+          "150000000"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "400000000",
+            "expense": "300000000"
+          },
+          {
+            "name": "BASE",
+            "income": "600000000",
+            "expense": "350000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "800000000",
+            "expense": "400000000"
+          }
+        ],
+        "workerShareBp": 5000
+      },
+      "expected": {
+        "capex": "800000000",
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "net": "100000000",
+            "annualNet": "1200000000",
+            "paybackMonths": 8,
+            "workerMonthly": "50000000",
+            "investorMonthly": "50000000",
+            "investorPaybackMonths": 16
+          },
+          {
+            "name": "BASE",
+            "net": "250000000",
+            "annualNet": "3000000000",
+            "paybackMonths": 4,
+            "workerMonthly": "125000000",
+            "investorMonthly": "125000000",
+            "investorPaybackMonths": 7
+          },
+          {
+            "name": "OPTIMISTIC",
+            "net": "400000000",
+            "annualNet": "4800000000",
+            "paybackMonths": 2,
+            "workerMonthly": "200000000",
+            "investorMonthly": "200000000",
+            "investorPaybackMonths": 4
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "idea-003-loss-scenario",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "300000000"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "100000000",
+            "expense": "150000000"
+          },
+          {
+            "name": "BASE",
+            "income": "200000000",
+            "expense": "150000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "300000000",
+            "expense": "150000000"
+          }
+        ],
+        "workerShareBp": 6000
+      },
+      "expected": {
+        "capex": "300000000",
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "net": "-50000000",
+            "annualNet": "-600000000",
+            "paybackMonths": null,
+            "workerMonthly": "0",
+            "investorMonthly": "-50000000",
+            "investorPaybackMonths": null
+          },
+          {
+            "name": "BASE",
+            "net": "50000000",
+            "annualNet": "600000000",
+            "paybackMonths": 6,
+            "workerMonthly": "30000000",
+            "investorMonthly": "20000000",
+            "investorPaybackMonths": 15
+          },
+          {
+            "name": "OPTIMISTIC",
+            "net": "150000000",
+            "annualNet": "1800000000",
+            "paybackMonths": 2,
+            "workerMonthly": "90000000",
+            "investorMonthly": "60000000",
+            "investorPaybackMonths": 5
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "idea-004-not-ordered",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "100000000"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "300000000",
+            "expense": "100000000"
+          },
+          {
+            "name": "BASE",
+            "income": "200000000",
+            "expense": "100000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "400000000",
+            "expense": "100000000"
+          }
+        ],
+        "workerShareBp": null
+      },
+      "expected": {
+        "capex": "100000000",
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "net": "200000000",
+            "annualNet": "2400000000",
+            "paybackMonths": 1
+          },
+          {
+            "name": "BASE",
+            "net": "100000000",
+            "annualNet": "1200000000",
+            "paybackMonths": 1
+          },
+          {
+            "name": "OPTIMISTIC",
+            "net": "300000000",
+            "annualNet": "3600000000",
+            "paybackMonths": 1
+          }
+        ],
+        "warnings": [
+          "SCENARIOS_NOT_ORDERED"
+        ]
+      }
+    },
+    {
+      "id": "idea-005-no-capex",
+      "input": {
+        "currency": "UZS",
+        "capex": [],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "400000000",
+            "expense": "300000000"
+          },
+          {
+            "name": "BASE",
+            "income": "600000000",
+            "expense": "350000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "800000000",
+            "expense": "400000000"
+          }
+        ],
+        "workerShareBp": null
+      },
+      "expected": {
+        "capex": "0",
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "net": "100000000",
+            "annualNet": "1200000000",
+            "paybackMonths": 0
+          },
+          {
+            "name": "BASE",
+            "net": "250000000",
+            "annualNet": "3000000000",
+            "paybackMonths": 0
+          },
+          {
+            "name": "OPTIMISTIC",
+            "net": "400000000",
+            "annualNet": "4800000000",
+            "paybackMonths": 0
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "idea-neg-001-capex",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "0"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "400000000",
+            "expense": "300000000"
+          },
+          {
+            "name": "BASE",
+            "income": "600000000",
+            "expense": "350000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "800000000",
+            "expense": "400000000"
+          }
+        ],
+        "workerShareBp": null
+      },
+      "expected": {
+        "error": "CAPEX_ITEM_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "idea-neg-002-scenarios",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "500000000",
+          "150000000",
+          "150000000"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "400000000",
+            "expense": "300000000"
+          },
+          {
+            "name": "BASE",
+            "income": "600000000",
+            "expense": "350000000"
+          }
+        ],
+        "workerShareBp": null
+      },
+      "expected": {
+        "error": "INVALID_SCENARIOS"
+      }
+    },
+    {
+      "id": "idea-neg-003-bp",
+      "input": {
+        "currency": "UZS",
+        "capex": [
+          "500000000",
+          "150000000",
+          "150000000"
+        ],
+        "scenarios": [
+          {
+            "name": "PESSIMISTIC",
+            "income": "400000000",
+            "expense": "300000000"
+          },
+          {
+            "name": "BASE",
+            "income": "600000000",
+            "expense": "350000000"
+          },
+          {
+            "name": "OPTIMISTIC",
+            "income": "800000000",
+            "expense": "400000000"
+          }
+        ],
+        "workerShareBp": 10001
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    }
+  ]
+}

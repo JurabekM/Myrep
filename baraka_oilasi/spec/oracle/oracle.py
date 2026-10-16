@@ -634,6 +634,174 @@ def recovery_split(income, household, extra, savings):
     return allocate(income, [household, extra, savings])
 
 
+# --- U12: venture ledger, davr taqsimoti, «Hunardan ishga», taklif tekshiruvi -----------
+ENTRY_SIGN = {"INCOME": 1, "EXPENSE": -1, "FORCE_MAJEURE": -1}
+LOSS_POLICIES = ("CAPITAL_FIRST", "PER_PERIOD")
+
+
+def venture_period(kind, partners, entries, policy, carried, negligence=None, buyout=None):
+    """Davrni yopish (uy/SPEC 2E.3): natija = kirim − xarajat − fors-major ± tuzatishlar.
+    Foyda: CAPITAL_FIRST siyosatida avval o'tgan zararlar (kapital) tiklanadi (OQ-D1, klassik qoida),
+    qolgani foyda ulushlari bo'yicha. Zarar: kapitalga mutanosib (mudorabada kapital — faqat kapital
+    egalarida; buyout bilan xaridor ham kapital egasi bo'ladi), beparvolikda — ishchining zimmasida
+    (kapital kamaymaydi, ishchi qoplaydi). Buyout: xaridor foyda ulushidan muddati kelgan to'lovlar
+    tartib bilan, faqat to'liq to'lanadi; to'lanmagani keyingi davrga qoladi."""
+    if kind not in LOSS_FOR:
+        raise OracleError("INVALID_KIND")
+    if policy not in LOSS_POLICIES:
+        raise OracleError("INVALID_POLICY")
+    if len(partners) < 2:
+        raise OracleError("MIN_TWO_PARTNERS")
+    shares = [p["profitShareBp"] for p in partners]
+    if any(x < 0 for x in shares) or sum(shares) != 10000:
+        raise OracleError("PROFIT_SHARES_NOT_100")
+    caps = [p["capital"] for p in partners]
+    if any(c < 0 for c in caps):
+        raise OracleError("CAPITAL_NEGATIVE")
+    if len(carried) != len(partners) or any(c < 0 for c in carried) or (policy == "PER_PERIOD" and any(carried)):
+        raise OracleError("INVALID_CARRIED")
+    totals = {"INCOME": 0, "EXPENSE": 0, "FORCE_MAJEURE": 0, "CORRECTION": 0}
+    for e in entries:
+        k, a = e["kind"], e["amount"]
+        if k not in totals:
+            raise OracleError("INVALID_ENTRY_KIND")
+        if (k == "CORRECTION" and a == 0) or (k != "CORRECTION" and a <= 0):
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        totals[k] += a
+    result = totals["INCOME"] - totals["EXPENSE"] - totals["FORCE_MAJEURE"] + totals["CORRECTION"]
+    ids = [p["id"] for p in partners]
+    if negligence is not None:
+        if kind != "MUDARABA":
+            raise OracleError("NEGLIGENCE_NOT_APPLICABLE")
+        if not negligence["note"].strip():
+            raise OracleError("NEGLIGENCE_NOTE_REQUIRED")
+        if not any(p["id"] == negligence["partnerId"] and p["role"] == "WORKER" for p in partners):
+            raise OracleError("NEGLIGENCE_PARTY_NOT_WORKER")
+        if result >= 0:
+            raise OracleError("NEGLIGENCE_WITHOUT_LOSS")
+    if buyout is not None:
+        if buyout["sellerId"] == buyout["buyerId"]:
+            raise OracleError("BUYOUT_SAME_PARTY")
+        if buyout["sellerId"] not in ids or buyout["buyerId"] not in ids:
+            raise OracleError("UNKNOWN_PARTY")
+        if any(d["units"] <= 0 or d["capital"] < 0 or d["price"] < 0 for d in buyout["due"]):
+            raise OracleError("INVALID_INSTALLMENT")
+    n = len(partners)
+    recovered, liability, after = [0] * n, [0] * n, list(carried)
+    cap_after = list(caps)
+    if result >= 0:
+        rec_total = min(result, sum(carried)) if policy == "CAPITAL_FIRST" else 0
+        if rec_total > 0:
+            recovered = allocate(rec_total, carried)
+        distributable = result - rec_total
+        parts = allocate(distributable, shares)
+        after = [c - r for c, r in zip(carried, recovered)]
+        cap_after = [c + r for c, r in zip(caps, recovered)]
+    else:
+        distributable = 0
+        if negligence is not None:
+            parts = allocate(result, [1 if i == negligence["partnerId"] else 0 for i in ids])
+            liability = [-x for x in parts]
+        else:
+            weights = [max(0, c) for c in caps]
+            if sum(weights) == 0:
+                raise OracleError("NO_CAPITAL")
+            parts = allocate(result, weights)
+            cap_after = [c + x for c, x in zip(caps, parts)]
+            if policy == "CAPITAL_FIRST":
+                after = [c - x for c, x in zip(carried, parts)]
+    payouts = [max(0, x) for x in parts]
+    bo = None
+    if buyout is not None:
+        si, bi = ids.index(buyout["sellerId"]), ids.index(buyout["buyerId"])
+        available, amount, capital, paid = payouts[bi], 0, 0, []
+        for d in buyout["due"]:
+            if amount + d["price"] > available:
+                break
+            amount += d["price"]
+            capital += d["capital"]
+            paid.append(d["no"])
+        capital = min(capital, max(0, cap_after[si]))
+        payouts[bi] -= amount
+        payouts[si] += amount
+        cap_after[si] -= capital
+        cap_after[bi] += capital
+        bo = {"paid": paid, "amount": _s(amount), "capital": _s(capital),
+              "unpaid": [d["no"] for d in buyout["due"] if d["no"] not in paid]}
+    S = lambda xs: [_s(x) for x in xs]  # noqa: E731
+    return {"income": _s(totals["INCOME"]), "expense": _s(totals["EXPENSE"]),
+            "forceMajeure": _s(totals["FORCE_MAJEURE"]), "corrections": _s(totals["CORRECTION"]),
+            "result": _s(result), "recovered": S(recovered), "distributable": _s(distributable),
+            "shares": S(parts), "liability": S(liability), "carriedAfter": S(after),
+            "buyout": bo, "payouts": S(payouts), "capitalAfter": S(cap_after)}
+
+
+SCENARIOS = ("PESSIMISTIC", "BASE", "OPTIMISTIC")
+
+
+def ceil_div(a: int, b: int) -> int:
+    return -((-a) // b)
+
+
+def venture_idea(capex_items, scenarios, worker_share_bp=None):
+    """«Hunardan ishga» (2E.4): CAPEX, 3 stsenariy; payback = ⌈CAPEX / oylik sof foyda⌉ oy.
+    Sheriklikda: ishchi ulushi foydadan (zararda 0), qolgani kapital egasiga va uning payback'i."""
+    if any(a <= 0 for a in capex_items):
+        raise OracleError("CAPEX_ITEM_NOT_POSITIVE")
+    if sorted(s["name"] for s in scenarios) != sorted(SCENARIOS):
+        raise OracleError("INVALID_SCENARIOS")
+    if worker_share_bp is not None and not 0 <= worker_share_bp <= 10000:
+        raise OracleError("INVALID_BP")
+    capex = sum(capex_items)
+    by = {s["name"]: s for s in scenarios}
+    out, nets = [], []
+    for name in SCENARIOS:
+        s = by[name]
+        if s["income"] < 0 or s["expense"] < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+        net = s["income"] - s["expense"]
+        nets.append(net)
+        pay = (0 if capex == 0 else ceil_div(capex, net)) if net > 0 else None
+        row = {"name": name, "net": _s(net), "annualNet": _s(net * 12), "paybackMonths": pay}
+        if worker_share_bp is not None:
+            w = percent_of(net, worker_share_bp) if net > 0 else 0
+            inv = net - w
+            row.update({"workerMonthly": _s(w), "investorMonthly": _s(inv),
+                        "investorPaybackMonths": (0 if capex == 0 else ceil_div(capex, inv)) if inv > 0 else None})
+        out.append(row)
+    warnings = [] if nets[0] <= nets[1] <= nets[2] else ["SCENARIOS_NOT_ORDERED"]
+    return {"capex": _s(capex), "scenarios": out, "warnings": warnings}
+
+
+# (savol, javob) → (bayroq, daraja); javobning qolgan qiymati xavfsiz.
+OFFER_QUESTIONS = ("guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written")
+OFFER_TABLE = {
+    "guaranteed": {"YES": ("GUARANTEED_PROFIT", "RED"), "UNKNOWN": ("GUARANTEED_UNKNOWN", "YELLOW")},
+    "lossShared": {"NO": ("LOSS_NOT_SHARED", "RED"), "UNKNOWN": ("LOSS_SHARING_UNKNOWN", "YELLOW")},
+    "realActivity": {"NO": ("NO_REAL_ACTIVITY", "RED"), "UNKNOWN": ("REAL_ACTIVITY_UNKNOWN", "YELLOW")},
+    "recruitment": {"YES": ("RECRUITMENT_REQUIRED", "RED"), "UNKNOWN": ("RECRUITMENT_UNKNOWN", "YELLOW")},
+    "urgency": {"YES": ("URGENCY", "YELLOW"), "UNKNOWN": ("URGENCY_UNKNOWN", "YELLOW")},
+    "written": {"NO": ("NO_WRITTEN_CONTRACT", "YELLOW"), "UNKNOWN": ("WRITTEN_UNKNOWN", "YELLOW")},
+}
+
+
+def offer_check(answers):
+    """«Kafolatlangan foyda» detektori (2E.5): biror qizil bayroq — QIZIL, aks holda sariq — SARIQ."""
+    flags = []
+    for q in OFFER_QUESTIONS:
+        a = answers.get(q)
+        if a is None:
+            raise OracleError("MISSING_ANSWER")
+        if a not in ("YES", "NO", "UNKNOWN"):
+            raise OracleError("INVALID_ANSWER")
+        hit = OFFER_TABLE[q].get(a)
+        if hit:
+            flags.append({"code": hit[0], "level": hit[1]})
+    levels = {f["level"] for f in flags}
+    verdict = "RED" if "RED" in levels else "YELLOW" if levels else "GREEN"
+    return {"verdict": verdict, "flags": flags}
+
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -1042,13 +1210,96 @@ def build_suites():
         buy_case("buy-neg-004-period", 100, 100, 0, 2, 1, "2027-01-01", 13, None, 5000),
         buy_case("buy-neg-005-units", 100, 100, 0, 0, 1, "2027-01-01", 1, None, 5000),
     ])
+    # U12 — davr taqsimoti
+    mud3 = [{"id": "P1", "role": "CAPITAL_PROVIDER", "profitShareBp": 5000, "capital": 3000000000},
+            {"id": "P2", "role": "WORKER", "profitShareBp": 5000, "capital": 0}]
+    mud46 = [dict(mud3[0], profitShareBp=4000), dict(mud3[1], profitShareBp=6000)]
+    mush2 = [{"id": "P1", "role": "BOTH", "profitShareBp": 6000, "capital": 600000000},
+             {"id": "P2", "role": "BOTH", "profitShareBp": 4000, "capital": 200000000}]
+    E = lambda k, a: {"kind": k, "amount": a}  # noqa: E731
+    shop = [E("INCOME", 1200000000), E("INCOME", 300000000), E("EXPENSE", 500000000), E("EXPENSE", 200000000)]
+    inst = lambda no, cap, price: {"no": no, "units": 1, "capital": cap, "price": price}  # noqa: E731
+    bo = lambda due: {"sellerId": "P1", "buyerId": "P2", "due": due}  # noqa: E731
+    neg = {"partnerId": "P2", "note": "mato boshqa ishga ishlatildi"}
+
+    def withcap(ps, *cs):
+        return [dict(p, capital=c) for p, c in zip(ps, cs)]
+    vp_cases = [
+        ("vp-001-mudaraba-profit", "MUDARABA", mud3, shop, "CAPITAL_FIRST", [0, 0], None, None),
+        ("vp-002-mudaraba-loss", "MUDARABA", mud3, [E("INCOME", 300000000), E("EXPENSE", 400000000), E("FORCE_MAJEURE", 100000000)],
+         "CAPITAL_FIRST", [0, 0], None, None),
+        ("vp-003-loss-recovered-first", "MUDARABA", withcap(mud3, 2800000000, 0), [E("INCOME", 500000000), E("EXPENSE", 200000000)],
+         "CAPITAL_FIRST", [200000000, 0], None, None),
+        ("vp-004-per-period", "MUDARABA", withcap(mud3, 2800000000, 0), [E("INCOME", 500000000), E("EXPENSE", 200000000)],
+         "PER_PERIOD", [0, 0], None, None),
+        ("vp-005-musharaka-loss", "MUSHARAKA", mush2, [E("EXPENSE", 300000000)], "CAPITAL_FIRST", [0, 0], None, None),
+        ("vp-006-buyout-from-profit", "MUDARABA", mud46, shop, "CAPITAL_FIRST", [0, 0], None,
+         bo([inst(1, 150000000, 150000000), inst(2, 150000000, 150000000)])),
+        ("vp-007-buyout-shortfall", "MUDARABA", mud3, [E("INCOME", 300000000)], "CAPITAL_FIRST", [0, 0], None,
+         bo([inst(1, 150000000, 100000000), inst(2, 150000000, 100000000)])),
+        ("vp-008-buyout-loss", "MUDARABA", withcap(mud3, 2850000000, 150000000), [E("EXPENSE", 100000000)], "CAPITAL_FIRST", [0, 0], None,
+         bo([inst(2, 150000000, 150000000)])),
+        ("vp-009-negligence", "MUDARABA", mud3, [E("INCOME", 100000000), E("EXPENSE", 300000000)], "CAPITAL_FIRST", [0, 0], neg, None),
+        ("vp-010-correction", "MUDARABA", mud3, [E("INCOME", 500000000), E("EXPENSE", 100000000), E("CORRECTION", -50000000)],
+         "CAPITAL_FIRST", [0, 0], None, None),
+        ("vp-011-musharaka-recovery", "MUSHARAKA", withcap(mush2, 375000000, 125000000), [E("INCOME", 400000000)],
+         "CAPITAL_FIRST", [225000000, 75000000], None, None),
+        ("vp-012-partial-recovery", "MUDARABA", withcap(mud3, 2800000000, 0), [E("INCOME", 150000000)],
+         "CAPITAL_FIRST", [200000000, 0], None, None),
+        ("vp-neg-001-shares", "MUDARABA", [dict(mud3[0], profitShareBp=6000), mud3[1]], shop, "CAPITAL_FIRST", [0, 0], None, None),
+        ("vp-neg-002-amount", "MUDARABA", mud3, [E("EXPENSE", 0)], "CAPITAL_FIRST", [0, 0], None, None),
+        ("vp-neg-003-negligence-profit", "MUDARABA", mud3, shop, "CAPITAL_FIRST", [0, 0], neg, None),
+        ("vp-neg-004-buyout-same", "MUDARABA", mud3, shop, "CAPITAL_FIRST", [0, 0], None,
+         {"sellerId": "P1", "buyerId": "P1", "due": []}),
+        ("vp-neg-005-carried-per-period", "MUDARABA", mud3, shop, "PER_PERIOD", [100, 0], None, None),
+        ("vp-neg-006-negligence-musharaka", "MUSHARAKA", mush2, [E("EXPENSE", 100)], "CAPITAL_FIRST", [0, 0], neg, None),
+    ]
+
+    def vp_case(cid, kind, ps, es, pol, car, ng, b):
+        inp = {"kind": kind, "currency": U, "partners": pj(ps), "entries": [dict(e, amount=_s(e["amount"])) for e in es],
+               "lossPolicy": pol, "carriedLoss": [_s(c) for c in car], "negligence": ng,
+               "buyout": None if b is None else dict(b, due=[dict(d, capital=_s(d["capital"]), price=_s(d["price"])) for d in b["due"]])}
+        return _case(cid, inp, lambda: venture_period(kind, ps, es, pol, car, ng, b))
+    suites["venture_period"] = _suite("venture_period", "Davrni yopish: natija, o'tgan zararni avval tiklash (OQ-D1), foyda/zarar taqsimoti, beparvolik, buyout to'lovini xaridor ulushidan ayirish, kapital qoldiqlari", [
+        vp_case(*c) for c in vp_cases])
+
+    def idea_case(cid, capex, sc, share):
+        inp = {"currency": U, "capex": [_s(a) for a in capex],
+               "scenarios": [{"name": n, "income": _s(i), "expense": _s(e)} for n, i, e in sc], "workerShareBp": share}
+        return _case(cid, inp, lambda: venture_idea(capex, [{"name": n, "income": i, "expense": e} for n, i, e in sc], share))
+    tikuv = [500000000, 150000000, 150000000]
+    sc3 = [("PESSIMISTIC", 400000000, 300000000), ("BASE", 600000000, 350000000), ("OPTIMISTIC", 800000000, 400000000)]
+    suites["venture_idea"] = _suite("venture_idea", "«Hunardan ishga»: CAPEX, 3 stsenariy, payback = ⌈CAPEX / sof foyda⌉, sheriklikda ishchi va kapital egasi ulushi", [
+        idea_case("idea-001-tikuv-8mln", tikuv, sc3, None),
+        idea_case("idea-002-partnership-50", tikuv, sc3, 5000),
+        idea_case("idea-003-loss-scenario", [300000000], [("PESSIMISTIC", 100000000, 150000000), ("BASE", 200000000, 150000000),
+                                                          ("OPTIMISTIC", 300000000, 150000000)], 6000),
+        idea_case("idea-004-not-ordered", [100000000], [("PESSIMISTIC", 300000000, 100000000), ("BASE", 200000000, 100000000),
+                                                         ("OPTIMISTIC", 400000000, 100000000)], None),
+        idea_case("idea-005-no-capex", [], sc3, None),
+        idea_case("idea-neg-001-capex", [0], sc3, None),
+        idea_case("idea-neg-002-scenarios", tikuv, sc3[:2], None),
+        idea_case("idea-neg-003-bp", tikuv, sc3, 10001),
+    ])
+    A = lambda g, l, r, rc, u, w: {"guaranteed": g, "lossShared": l, "realActivity": r, "recruitment": rc, "urgency": u, "written": w}  # noqa: E731
+    oc = [("offer-001-green", A("NO", "YES", "YES", "NO", "NO", "YES")),
+          ("offer-002-guaranteed", A("YES", "YES", "YES", "NO", "NO", "YES")),
+          ("offer-003-pyramid", A("YES", "NO", "NO", "YES", "YES", "NO")),
+          ("offer-004-urgency", A("NO", "YES", "YES", "NO", "YES", "YES")),
+          ("offer-005-unknowns", A("UNKNOWN", "UNKNOWN", "YES", "NO", "NO", "UNKNOWN")),
+          ("offer-006-no-contract", A("NO", "YES", "YES", "NO", "NO", "NO")),
+          ("offer-007-crypto-signals", A("YES", "NO", "UNKNOWN", "NO", "YES", "NO")),
+          ("offer-neg-001-missing", {"guaranteed": "NO"}),
+          ("offer-neg-002-invalid", A("MAYBE", "YES", "YES", "NO", "NO", "YES"))]
+    suites["offer_check"] = _suite("offer_check", "«Kafolatlangan foyda» detektori: 6 savol → bayroqlar; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL", [
+        _case(cid, {"answers": a}, lambda a=a: offer_check(a)) for cid, a in oc])
     return suites
 
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
-                 "partnership_rules", "buyout_schedule")
+                 "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check")
 
 
 def generate(directory: str) -> None:
@@ -1195,6 +1446,22 @@ def selftest() -> None:
                                         {"role": "BOTH", "profitShareBp": 3000, "capitalItems": [{"amount": 60}]}],
                           None, "PROPORTIONAL_TO_CAPITAL", 12)
     assert (r["errors"], r["warnings"], r["lossShareBp"]) == ([], ["SILENT_PARTNER_SHARE_ABOVE_CAPITAL"], [4000, 6000])
+    # U12: OQ-D1 misoli — 1-oy zarar 2 mln, 2-oy foyda 3 mln, 50/50: avval 2 mln kapitalga, 0,5 + 0,5.
+    p2 = [{"id": "A", "role": "CAPITAL_PROVIDER", "profitShareBp": 5000, "capital": 800},
+          {"id": "B", "role": "WORKER", "profitShareBp": 5000, "capital": 0}]
+    l1 = venture_period("MUDARABA", p2, [{"kind": "EXPENSE", "amount": 200}], "CAPITAL_FIRST", [0, 0])
+    assert (l1["shares"], l1["carriedAfter"], l1["capitalAfter"]) == (["-200", "0"], ["200", "0"], ["600", "0"])
+    p2b = [dict(p2[0], capital=600), p2[1]]
+    g2 = venture_period("MUDARABA", p2b, [{"kind": "INCOME", "amount": 300}], "CAPITAL_FIRST", [200, 0])
+    assert (g2["recovered"], g2["shares"], g2["capitalAfter"]) == (["200", "0"], ["50", "50"], ["800", "0"])
+    assert venture_period("MUDARABA", p2b, [{"kind": "INCOME", "amount": 300}], "PER_PERIOD", [0, 0])["shares"] == ["150", "150"]
+    # CAPEX 8 mln: o'rtacha stsenariyda oyiga 2,5 mln → 4 oy; pessimistik 1 mln → 8 oy.
+    i8 = venture_idea([500000000, 150000000, 150000000], [{"name": "PESSIMISTIC", "income": 400000000, "expense": 300000000},
+                                                         {"name": "BASE", "income": 600000000, "expense": 350000000},
+                                                         {"name": "OPTIMISTIC", "income": 800000000, "expense": 400000000}])
+    assert [r["paybackMonths"] for r in i8["scenarios"]] == [8, 4, 2] and i8["capex"] == "800000000"
+    assert offer_check({"guaranteed": "YES", "lossShared": "YES", "realActivity": "YES", "recruitment": "NO",
+                        "urgency": "NO", "written": "YES"})["verdict"] == "RED"
     print("oracle selftest: OK")
 
 

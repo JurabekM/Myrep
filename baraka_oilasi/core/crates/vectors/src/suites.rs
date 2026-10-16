@@ -23,6 +23,11 @@ use baraka_domain_uy::{
     recovery::RecoverySplit,
     spike::{profit_spike, SpikePolicy},
     streak::compute_streak,
+    venture::{
+        close_period, offer_check, venture_idea, BuyoutDue, EntryKind as VentureEntryKind,
+        IdeaInput, IdeaScenario, Installment, LossPolicy, OfferAnswers, PeriodEntry, PeriodInput,
+        Reply, ScenarioName,
+    },
 };
 use baraka_journal::{
     compute_chain, short_code, verify_chain, ChainError, EntryKind, JournalAmount, JournalEntry,
@@ -117,6 +122,9 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "ceremony_scenarios" => ceremony(input),
         "partnership_rules" => partnership_rules(input),
         "buyout_schedule" => buyout(input),
+        "venture_period" => venture_period(input),
+        "venture_idea" => idea(input),
+        "offer_check" => offer(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -797,4 +805,170 @@ fn buyout(v: &Value) -> R {
         "buyerProfit": sch.buyer_profit.map(|m| m.minor().to_string()),
         "rows": rows,
     }))
+}
+
+fn arr<'a>(v: &'a Value, k: &str) -> Result<&'a Vec<Value>, E> {
+    v[k].as_array().ok_or_else(|| bad(k))
+}
+
+fn venture_period(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let kind = PartnershipKind::parse(s(v, "kind")?).ok_or_else(|| E("INVALID_KIND".into()))?;
+    let policy =
+        LossPolicy::parse(s(v, "lossPolicy")?).ok_or_else(|| E("INVALID_POLICY".into()))?;
+    let partners = arr(v, "partners")?
+        .iter()
+        .map(|p| {
+            Ok(Partner {
+                id: s(p, "id")?.to_string(),
+                role: PartnerRole::parse(s(p, "role")?).ok_or_else(|| E("INVALID_ROLE".into()))?,
+                profit_share_bp: i(p, "profitShareBp")?,
+                capital: money(p, "capital", c)?,
+            })
+        })
+        .collect::<Result<Vec<_>, E>>()?;
+    let entries = arr(v, "entries")?
+        .iter()
+        .map(|e| {
+            Ok(PeriodEntry {
+                kind: VentureEntryKind::parse(s(e, "kind")?)
+                    .ok_or_else(|| E("INVALID_ENTRY_KIND".into()))?,
+                amount: money(e, "amount", c)?,
+            })
+        })
+        .collect::<Result<Vec<_>, E>>()?;
+    let carried = arr(v, "carriedLoss")?
+        .iter()
+        .map(|x| Ok(Money::new(int_str(x)?, c)))
+        .collect::<Result<Vec<_>, E>>()?;
+    let negligence = if v["negligence"].is_null() {
+        None
+    } else {
+        Some(Negligence {
+            partner_id: s(&v["negligence"], "partnerId")?.to_string(),
+            note: s(&v["negligence"], "note")?.to_string(),
+        })
+    };
+    let buyout = if v["buyout"].is_null() {
+        None
+    } else {
+        let b = &v["buyout"];
+        Some(BuyoutDue {
+            seller_id: s(b, "sellerId")?.to_string(),
+            buyer_id: s(b, "buyerId")?.to_string(),
+            due: arr(b, "due")?
+                .iter()
+                .map(|d| {
+                    Ok(Installment {
+                        no: u(d, "no")?,
+                        units: u(d, "units")?,
+                        capital: money(d, "capital", c)?,
+                        price: money(d, "price", c)?,
+                    })
+                })
+                .collect::<Result<_, E>>()?,
+        })
+    };
+    let r = close_period(&PeriodInput {
+        kind,
+        currency: c,
+        partners,
+        entries,
+        policy,
+        carried,
+        negligence,
+        buyout,
+    })?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "income": m(r.income),
+        "expense": m(r.expense),
+        "forceMajeure": m(r.force_majeure),
+        "corrections": m(r.corrections),
+        "result": m(r.result),
+        "recovered": strs(&r.recovered),
+        "distributable": m(r.distributable),
+        "shares": strs(&r.shares),
+        "liability": strs(&r.liability),
+        "carriedAfter": strs(&r.carried_after),
+        "buyout": r.buyout.map(|b| json!({
+            "paid": b.paid,
+            "amount": m(b.amount),
+            "capital": m(b.capital),
+            "unpaid": b.unpaid,
+        })),
+        "payouts": strs(&r.payouts),
+        "capitalAfter": strs(&r.capital_after),
+    }))
+}
+
+fn idea(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let capex = arr(v, "capex")?
+        .iter()
+        .map(|x| Ok(Money::new(int_str(x)?, c)))
+        .collect::<Result<Vec<_>, E>>()?;
+    let scenarios = arr(v, "scenarios")?
+        .iter()
+        .map(|x| {
+            Ok(IdeaScenario {
+                name: ScenarioName::parse(s(x, "name")?)
+                    .ok_or_else(|| E("INVALID_SCENARIOS".into()))?,
+                income: money(x, "income", c)?,
+                expense: money(x, "expense", c)?,
+            })
+        })
+        .collect::<Result<Vec<_>, E>>()?;
+    let r = venture_idea(&IdeaInput {
+        currency: c,
+        capex,
+        scenarios,
+        worker_share_bp: v["workerShareBp"].as_i64(),
+    })?;
+    let partnered = !v["workerShareBp"].is_null();
+    let rows: Vec<Value> = r
+        .scenarios
+        .iter()
+        .map(|x| {
+            let mut o = json!({
+                "name": x.name.as_str(),
+                "net": x.net.minor().to_string(),
+                "annualNet": x.annual_net.minor().to_string(),
+                "paybackMonths": x.payback_months,
+            });
+            if partnered {
+                o["workerMonthly"] = json!(x.worker_monthly.map(|m| m.minor().to_string()));
+                o["investorMonthly"] = json!(x.investor_monthly.map(|m| m.minor().to_string()));
+                o["investorPaybackMonths"] = json!(x.investor_payback_months);
+            }
+            o
+        })
+        .collect();
+    Ok(json!({
+        "capex": r.capex.minor().to_string(),
+        "scenarios": rows,
+        "warnings": r.warnings,
+    }))
+}
+
+fn offer(v: &Value) -> R {
+    let a = &v["answers"];
+    let q = |k: &str| -> Result<Reply, E> {
+        let t = a[k].as_str().ok_or_else(|| E("MISSING_ANSWER".into()))?;
+        Reply::parse(t).ok_or_else(|| E("INVALID_ANSWER".into()))
+    };
+    let r = offer_check(&OfferAnswers {
+        guaranteed: q("guaranteed")?,
+        loss_shared: q("lossShared")?,
+        real_activity: q("realActivity")?,
+        recruitment: q("recruitment")?,
+        urgency: q("urgency")?,
+        written: q("written")?,
+    });
+    let flags: Vec<Value> = r
+        .flags
+        .iter()
+        .map(|f| json!({ "code": f.code, "level": f.level.as_str() }))
+        .collect();
+    Ok(json!({ "verdict": r.verdict.as_str(), "flags": flags }))
 }
