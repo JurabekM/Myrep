@@ -10,8 +10,45 @@ Tarkib:
 - **Qo'shimcha rejim:** standart PQ-TLS (Go `aqctl gateway`): TLS 1.3 + X25519MLKEM768 + ML-DSA-65 sertifikat, pinning.
 - **Control plane:** Go `aqctl` — identity, muddat va rotatsiya jadvali, allowlist, holat, Prometheus metrikasi.
 - **Monolit:** `aether_new/` — sidecar orqasida ishlaydigan REST API (yozuvlar, JSON ombor).
+- **Grafik dastur:** AETHER-Q Sidecar Studio (Rust/egui `aq-studio`) — buyruqlarsiz sozlash va boshqarish.
 
 Reja: [PLAN.md](PLAN.md). Bu hujjat — amaldagi holat va ishlatish.
+
+## AETHER-Q Sidecar Studio (grafik dastur)
+
+Buyruq qatorisiz ishlatish uchun. O'rnatish: `dist\AETHER-Q-Studio-Setup-0.1.0.exe` (administrator huquqi
+so'ralmaydi, `%LOCALAPPDATA%\Programs` ga o'rnatiladi). Ochilgach — **«Tez sozlash ustasi»**:
+
+| Stsenariy | Nima qiladi |
+|---|---|
+| Bitta kompyuterda sinash | Kalitlar, ichki sinov serveri, server va klient tunellari — bir bosishda; natija brauzerda |
+| Server: ilovamni himoyalash | Kalit + server profili; **taklif fayli** (`.aqinvite`) saqlanadi va klientga yuboriladi |
+| Klient: serverga ulanish | Taklifni import qiladi; **ruxsat so'rovi** (`.aqrequest`) serverga qaytariladi |
+
+Kalit almashinuvi fayl bilan: hex, buyruq yoki allowlist fayllarini qo'lda tahrirlash shart emas; barmoq izi
+(fingerprint) har ikki tomonda ko'rsatiladi (telefonda solishtirish uchun).
+
+Sahifalar: **Boshqaruv paneli** (jonli KPI, ulanishlar grafigi, hodisalar), **Tunellar** (profillar, ishga
+tushirish/to'xtatish, tahrirlash, allowlist, taklif/so'rov, tunel sinovi, CLI ekvivalenti), **Kalitlar** (yaratish,
+`.pub` eksport, muddat ogohlantirishi, rotatsiya), **Jurnal** (filtr, qidiruv, eksport, kunlik fayl),
+**Diagnostika** (port, manzil, tunel orqali HTTP, ichki sinov serveri, kripto o'z-o'zini tekshirish),
+**Sozlamalar**, **Qo'llanma** (xatolar va yechimlar).
+
+Ichki tuzilma:
+
+- AETHER-Q tunellari Studio jarayoni ichida ishlaydi (`aq_sidecar::runtime` — CLI bilan **bitta kod**); har xato
+  hodisasida o'zbekcha izoh (masalan, alert 0x2f → «server kaliti pinned kalitga mos emas»).
+- Standart rejim — `aqctl gateway` bola jarayoni (Windows Job Object: Studio yopilsa ham o'chadi); server
+  statistikasi `/metrics` dan.
+- Ma'lumotlar: `%APPDATA%\AETHER-Q\Studio` (`config.json`, `keys\` — `aqctl` bilan bir xil format, `logs\`).
+- To'xtatish ochiq tunellarni ham yopadi (Windows'da `shutdown()` bloklangan `recv`'ni uyg'otmagani uchun o'qishlar
+  0,5 s timeout bilan to'xtatish bayrog'ini tekshiradi).
+
+Yig'ish (testlar o'tmasa o'rnatuvchi yig'ilmaydi):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\package-studio.ps1   # → dist\AETHER-Q-Studio-Setup-0.1.0.exe, dist\studio\
+```
 
 ## Tez ishga tushirish (Windows)
 
@@ -21,6 +58,11 @@ python run.py        # to'liq demo: monolit + tunel + standart gateway + HTTP te
 
 `run.py` `dist\` papkasidagi `aq-sidecar.exe`, `aqctl.exe`, `aether_new.exe` ni ishlatadi (Python 3.8+, faqat stdlib).
 Natijada `run-demo\` papkasi yaratiladi: kalitlar, ma'lumot fayli, har bir jarayonning logi.
+
+```powershell
+python loadtest.py           # yuk sinovi (≈2,5 daqiqa): avval hammasini qayta yig'adi, natija loadtest-out\report.md
+python loadtest.py --quick   # tez tekshiruv (≈20 s)
+```
 
 ## Tuzilma
 
@@ -33,7 +75,10 @@ Natijada `run-demo\` papkasi yaratiladi: kalitlar, ma'lumot fayli, har bir jaray
 | `control/internal/gateway` | Go | Standart PQ-TLS gateway va `/metrics` hisoblagichlari |
 | `aether_new/` | Go | Monolit: REST API (`/api/v1/records`), JSON fayl ombori |
 | `dist/` | — | Tayyor ikkilik fayllar: `aq-sidecar.exe`, `aqctl.exe`, `aether_new.exe` |
+| `crates/aq-studio` | Rust (egui) | AETHER-Q Sidecar Studio — grafik dastur |
+| `installer/`, `scripts/package-studio.ps1`, `scripts/make_icon.py` | Inno Setup, PowerShell, Python | Studio o'rnatuvchisi (o'zbekcha), paketlash, ikonka |
 | `run.py` | Python | Yagona ishga tushirish demosi (34 tekshiruv) |
+| `loadtest/` + `loadtest.py` | Go + Python | Yuk sinovi (`aqload`): bayt yaxlitligi, 10 000 so'rov, 1000 ulanish, parallellik, oqish tekshiruvi |
 | `kat/gen_wire_kat.py` | Python | Python referensidan KAT vektorlari (ticket, PoW, early data, frame'lar ham) |
 | `scripts/interop_py.py` | Python | Python referens ↔ Rust sidecar (4 stsenariy) |
 | `scripts/interop_resume.py` | Python | Resumption va PoW cross-check (8 tekshiruv) |
@@ -162,7 +207,11 @@ ticket authority bilan ishga tushirilganda resumption'ni qo'llaydi.
 - **KMAC256 nostandart** (Python referensidagi kabi, `KNOWN_LIMITATIONS` C1). Foydalanuvchi qarori: o'zgartirilmaydi.
 - **Standart rejim CA'siz.** Har bir tomon o'z-o'zidan imzolangan ML-DSA sertifikat ishlatadi, ishonch pinning orqali.
 - **Avtomatik rejim tanlash yo'q** (foydalanuvchi qarori bilan shart emas): AETHER-Q va standart rejim alohida portlarda.
-- **Thread/goroutine per connection.** Yuk sinovi (ko'p parallel ulanish) hali qilinmagan.
+- **Thread per connection (Rust) / goroutine (Go).** Yuk sinovida 128 parallel ulanishgacha xatosiz; sig'im bu
+  mashinada ≈700–880 yangi ulanish/s da to'yinadi (pastda). Juda ko'p parallel ulanish uchun async (tokio) kerak bo'ladi.
+- **Monolit ombori — ehtimoliy tor joy.** `Aether_new` har POST/DELETE'da butun JSON faylni mutex ostida qayta yozadi.
+  Yuk sinovida to'g'ridan-to'g'ri yo'l ≈2400 so'rov/s (16 parallel, keep-alive p50 7.8 ms, holbuki bitta `/healthz`
+  0.5 ms). Sabab alohida o'lchanmagan, lekin yozuvlar soni oshgani sari fayl o'sadi va har yozish sekinlashadi.
 - **Mustaqil audit yo'q.** Kriptografik komponentlar KAT va interop bilan tekshirildi, lekin ishlab chiqarishdan oldin tashqi audit shart.
 
 ## O'lchovlar (MEASURED, bu mashina)
@@ -189,6 +238,55 @@ standart PQ-TLS gateway        p50 = 2.64 ms   p95 =  6.11 ms
 Fuzz (MEASURED, bu sessiya): Rust parser 1 000 000 holat (panic 0, 12 s release); handshake state 30 000 holat
 (panic 0); Go native fuzz, identity parserlari (3 funksiya × 30 s) ≈ 92 000 ijro, xato yo'q.
 
+### Yuk sinovi (MEASURED, 2026-10-17, `python loadtest.py`)
+
+i5-10300H, 8 mantiqiy CPU, Windows 10, loopback. Generator, sidecar'lar, gateway va monolit bitta mashinada — bu
+tarmoq kechikishi emas, CPU va dasturiy yo'l narxi. Hamma zanjirda mutual auth + allowlist yoqilgan. To'liq hisobot:
+`loadtest-out\report.md` (har yugurishda qayta yoziladi; sinalgan binarlarning SHA-256 si bilan).
+
+**Natija: 8/8 mezon o'tdi**, 2 daq 24 s. Jami ≈ 13 800 yangi ulanish (B 4 000 + C 4 500 + D 5 136 + A 150) va
+≈ 49 600 HTTP so'rov — xato 0, bayt farqi 0.
+
+| Bosqich | Natija |
+|---|---|
+| A. Bayt yaxlitligi | 3 zanjir × 50 oqim (0 B, 16 KiB chegaralari, 1 MiB, 8 MiB, tasodifiy), half-close bilan — hammasi aynan bir xil |
+| B. 10 000 so'rov / zanjir | direct, AETHER-Q, AETHER-Q resumption, gateway: har biri 10 000/10 000, mazmun mos (o'zbek lotin/kirill, emoji, JSON maxsus belgilari, 0…10 000 B) |
+| C. 1000 ketma-ket ulanish | hammasi xatosiz (pastdagi jadval) |
+| D. Parallellik 1/8/32/128 | 5 136 ulanish, 0 xato |
+| E. Oqish | sidecar thread'lari oxirida 1 ta (bo'sh holat); ≈ 13 800 ulanishdan keyin bitta ham thread qolmadi |
+| F–H. Loglar, resumption, gateway | xato qatori 0; resumption zanjirida 3712/3712 tunel resumption bilan; gateway faol tunel 0 |
+
+Ketma-ket yangi ulanish (tunel + `GET /healthz`, n=1000; PoW n=500):
+
+| Zanjir | p50 | p99 | qo'shimcha p50 | CPU ms/ulanish (connect; serve) |
+|---|---|---|---|---|
+| to'g'ridan-to'g'ri | 0.51 ms | 0.59 ms | — | — |
+| AETHER-Q, to'liq handshake | 4.34 ms | 7.16 ms | +3.83 ms | 2.58; 2.44 |
+| AETHER-Q, resumption | 3.17 ms | 5.46 ms | +2.66 ms | 2.14; 1.31 |
+| AETHER-Q, PoW D=8 | 4.56 ms | 8.06 ms | +4.05 ms | 2.81; 2.34 |
+| standart PQ-TLS (gateway) | 3.64 ms | 7.24 ms | +3.12 ms | 1.98; 1.98 |
+
+Parallellik (har ulanish yangi tunel — eng og'ir holat), ulanish/s va p99:
+
+| Zanjir | ×1 | ×8 | ×32 | ×128 |
+|---|---|---|---|---|
+| AETHER-Q, to'liq | 218 (7 ms) | 694 (19 ms) | 685 (74 ms) | 702 (293 ms) |
+| AETHER-Q, resumption | 309 (6 ms) | 883 (14 ms) | 881 (60 ms) | 746 (326 ms) |
+| standart PQ-TLS | 232 (10 ms) | 725 (22 ms) | 860 (64 ms) | 844 (325 ms) |
+
+Kuzatuvlar:
+
+- **Sig'im ≈ 700–880 yangi ulanish/s** da to'yinadi (8 CPU'ni generator va monolit bilan bo'lishgan holda); undan keyin
+  parallellik faqat kutishni oshiradi. Keep-alive ulanishda so'rovlar handshake'siz o'tadi (B bosqichi).
+- **Resumption server CPU'sini ≈ 2 marta kamaytiradi** (2.44 → 1.31 ms), klientniki kam o'zgaradi: resumption'da server
+  ML-DSA imzosini o'tkazib yuboradi, lekin mutual auth yoqilgan bo'lsa klient o'z imzosini har safar qo'yadi.
+- **Windows porti cheklovi:** o'lchangan — har yopilgan ulanish ≈ 1 vaqtinchalik portni TIME_WAIT'da qoldiradi
+  (diapazon 16 384 port, Windows standart TIME_WAIT ≈ 2 daqiqa). Hisoblangan (MODELED): har so'rovga yangi ulanish
+  ochiladigan uzoq yuklamada barqaror chegara ≈ 16 384 / 120 s ≈ 135 ulanish/s — shuning uchun keep-alive yoki ulanishlar
+  hovuzi kerak. Generator portlarni o'lchab, kerak bo'lganda kutadi (bu yugurishda jami 65 s).
+- Boshlang'ich holatda Rust sidecar 4 thread ko'rsatadi: bular Windows yuklovchisining vaqtinchalik ishchi thread'lari,
+  ≈30 s da chiqib ketadi (bo'sh sidecar'da tekshirildi: 1 s da 4, 35 s da 1).
+
 ## Testlar (yakuniy)
 
 | To'plam | Soni | Holat |
@@ -203,3 +301,7 @@ Fuzz (MEASURED, bu sessiya): Rust parser 1 000 000 holat (panic 0, 12 s release)
 | Python referens (`aether_q_v3`) | 65 | ✅ |
 | Interop: Python↔Rust / resumption+PoW / Python ssl↔Go | 4 + 8 + 5 | ✅ |
 | `run.py` end-to-end | 34 | ✅ |
+| Go `loadtest` (yuk generatori birlik testlari) | 6 | ✅ |
+| Rust `aq-sidecar` runtime (to'xtatish, xato hodisalari, port band) | 6 | ✅ |
+| Rust `aq-studio` (model, kalitlar, dvigatel, standart rejim `aqctl` bilan, oynasiz UI, glif qamrovi) | 27 | ✅ |
+| `loadtest.py` yuk sinovi (mezonlar) | 8 | ✅ |

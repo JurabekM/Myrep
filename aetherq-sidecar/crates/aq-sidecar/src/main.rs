@@ -4,23 +4,20 @@
 //!   aq-sidecar keygen   --out FILE                       identity yaratadi (FILE + FILE.pub)
 //!   aq-sidecar pubkey   --identity FILE                  ochiq kalit (hex)
 //!   aq-sidecar serve    --listen ADDR --upstream ADDR --identity FILE
-//!                       [--allow FILE] [--require-client-auth]
+//!                       [--allow FILE] [--require-client-auth] [--no-resume] [--ticket-ttl N] [--pow D]
 //!   aq-sidecar connect  --listen ADDR --peer ADDR --server-pub FILE|HEX
-//!                       [--identity FILE]
+//!                       [--identity FILE] [--resume]
+//!
+//! Tunel mantig'i `aq_sidecar::runtime` da (GUI `aq-studio` ham shuni ishlatadi); bu fayl faqat CLI
+//! argumentlari va log qatorlari.
 
-mod proxy;
-
-use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::Arc;
-use std::thread;
 
-use aq_core::dos::PuzzleAuthority;
 use aq_core::identity::{load_allowlist, load_public_key, to_hex};
-use aq_core::net::SessionCache;
-use aq_core::ticket::TicketAuthority;
 use aq_core::{Identity, PROTOCOL_VERSION};
+use aq_sidecar::runtime::{short_fp, ConnectOptions, Event, ServeOptions, Sink, Tunnel};
 
 fn usage() -> ExitCode {
     eprintln!(
@@ -29,7 +26,8 @@ fn usage() -> ExitCode {
          \x20 keygen   --out FILE\n\
          \x20 pubkey   --identity FILE\n\
          \x20 serve    --listen ADDR --upstream ADDR --identity FILE [--allow FILE] [--require-client-auth]\n\
-         \x20 connect  --listen ADDR --peer ADDR --server-pub FILE|HEX [--identity FILE]",
+         \x20          [--no-resume] [--ticket-ttl N] [--pow D]\n\
+         \x20 connect  --listen ADDR --peer ADDR --server-pub FILE|HEX [--identity FILE] [--resume]",
         env!("CARGO_PKG_VERSION"),
         PROTOCOL_VERSION
     );
@@ -140,6 +138,40 @@ fn cmd_pubkey(a: &Args) -> ExitCode {
     }
 }
 
+/// Umumiy log qatorlari (ikkala rejim).
+fn log_common(e: &Event) {
+    match e {
+        Event::RecordError { error } => eprintln!("aq-sidecar: record xatosi: {error}"),
+        Event::AcceptError { error } => eprintln!("aq-sidecar: accept: {error}"),
+        _ => {}
+    }
+}
+
+/// Server log'i (oldingi CLI bilan bir xil qatorlar — interop va yuk sinovi skriptlari ularni o'qiydi).
+fn serve_sink() -> Sink {
+    Arc::new(|e: Event| match &e {
+        Event::Accepted { peer, client_pk: Some(pk), .. } => eprintln!("aq-sidecar: ulandi {peer} klient={}", short_fp(pk)),
+        Event::Accepted { peer, client_pk: None, .. } => {
+            eprintln!("aq-sidecar: ulandi {peer} (klient autentifikatsiyasiz)")
+        }
+        Event::HandshakeFailed { peer, error, .. } => eprintln!("aq-sidecar: handshake rad etildi ({peer}): {error}"),
+        Event::DialFailed { target, error, .. } => eprintln!("aq-sidecar: upstream {target} ga ulanmadi: {error}"),
+        other => log_common(other),
+    })
+}
+
+/// Klient log'i.
+fn connect_sink() -> Sink {
+    Arc::new(|e: Event| match &e {
+        Event::Opened { peer, resumed, .. } => {
+            eprintln!("aq-sidecar: tunel ochildi → {peer}{}", if *resumed { " (resumption)" } else { "" })
+        }
+        Event::HandshakeFailed { peer, error, .. } => eprintln!("aq-sidecar: handshake muvaffaqiyatsiz ({peer}): {error}"),
+        Event::DialFailed { target, error, .. } => eprintln!("aq-sidecar: peer {target} ga ulanmadi: {error}"),
+        other => log_common(other),
+    })
+}
+
 fn cmd_serve(a: &Args) -> ExitCode {
     let (Some(listen), Some(upstream), Some(idp)) = (a.get("listen"), a.get("upstream"), a.get("identity")) else {
         return usage();
@@ -159,45 +191,28 @@ fn cmd_serve(a: &Args) -> ExitCode {
     if require && allowed.is_none() {
         eprintln!("aq-sidecar: ogohlantirish: --require-client-auth allowlist'siz (har qanday to'g'ri imzo qabul)");
     }
-    let listener = match TcpListener::bind(listen) {
-        Ok(l) => l,
-        Err(e) => return err(format!("{listen}: {e}")),
-    };
-    // Resumption ticket kaliti va PoW puzzle — jarayon bo'yicha BIR MARTA (barcha ulanishlar uchun).
-    let ticket_ttl: u64 = a.get("ticket-ttl").and_then(|v| v.parse().ok()).unwrap_or(3600);
-    let tickets = if a.has("no-resume") {
-        None
-    } else {
-        match TicketAuthority::random(ticket_ttl) {
-            Ok(t) => Some(Arc::new(t)),
-            Err(e) => return err(format!("ticket kaliti: {e}")),
-        }
-    };
     let pow: u8 = a.get("pow").and_then(|v| v.parse().ok()).unwrap_or(0);
-    let puzzle = if pow == 0 {
-        None
-    } else {
-        match PuzzleAuthority::random(pow, 30) {
-            Ok(p) => Some(Arc::new(p)),
-            Err(e) => return err(format!("puzzle: {e}")),
-        }
+    let opts = ServeOptions {
+        listen: listen.to_string(),
+        upstream: upstream.to_string(),
+        identity: id.clone(),
+        require_client_auth: require,
+        allowed,
+        resumption: !a.has("no-resume"),
+        ticket_ttl: a.get("ticket-ttl").and_then(|v| v.parse().ok()).unwrap_or(3600),
+        pow,
+    };
+    let resumption = opts.resumption;
+    let tunnel = match Tunnel::serve(opts, serve_sink()) {
+        Ok(t) => t,
+        Err(e) => return err(e),
     };
     eprintln!(
-        "aq-sidecar: serve {listen} → upstream {upstream} (server={}, resumption={}, pow={})",
-        proxy::fingerprint(&id.pk),
-        tickets.is_some(),
+        "aq-sidecar: serve {listen} → upstream {upstream} (server={}, resumption={resumption}, pow={})",
+        short_fp(&id.pk),
         if pow == 0 { "o'chiq".to_string() } else { pow.to_string() }
     );
-    for conn in listener.incoming() {
-        match conn {
-            Ok(stream) => {
-                let cfg = proxy::server_cfg(id.clone(), require, allowed.clone(), tickets.clone(), puzzle.clone());
-                let up = upstream.to_string();
-                thread::spawn(move || proxy::serve_connection(stream, cfg, &up));
-            }
-            Err(e) => eprintln!("aq-sidecar: accept: {e}"),
-        }
-    }
+    tunnel.wait();
     ExitCode::SUCCESS
 }
 
@@ -223,34 +238,17 @@ fn cmd_connect(a: &Args) -> ExitCode {
         },
         None => None,
     };
-    let listener = match TcpListener::bind(listen) {
-        Ok(l) => l,
-        Err(e) => return err(format!("{listen}: {e}")),
-    };
-    // Ticket keshi jarayon bo'yicha umumiy: ikkinchi ulanish resumption bilan ketadi.
-    // Default: O'CHIQ — NST kutish serverda ticket bo'lishini talab qiladi (Python referens server
+    // Default: resumption O'CHIQ — NST kutish serverda ticket bo'lishini talab qiladi (Python referens server
     // ticket'siz NST yubormaydi). Yoqish: --resume (server tomonida resumption yoqilgan bo'lishi kerak).
-    let resume_enabled = a.has("resume");
-    let cache = Arc::new(SessionCache::new());
-    eprintln!(
-        "aq-sidecar: connect {listen} → peer {peer} (server={}, resumption={})",
-        proxy::fingerprint(&server_pub),
-        resume_enabled
-    );
-    for conn in listener.incoming() {
-        match conn {
-            Ok(stream) => {
-                let cfg = proxy::client_cfg(server_pub.clone(), identity.clone());
-                let p = peer.to_string();
-                let cache_arg = if resume_enabled {
-                    Some((cache.clone(), proxy::cache_key(&p, &server_pub)))
-                } else {
-                    None
-                };
-                thread::spawn(move || proxy::connect_connection(stream, cfg, &p, cache_arg));
-            }
-            Err(e) => eprintln!("aq-sidecar: accept: {e}"),
-        }
-    }
+    let resume = a.has("resume");
+    let fp = short_fp(&server_pub);
+    let opts =
+        ConnectOptions { listen: listen.to_string(), peer: peer.to_string(), server_pub, identity, resume };
+    let tunnel = match Tunnel::connect(opts, connect_sink()) {
+        Ok(t) => t,
+        Err(e) => return err(e),
+    };
+    eprintln!("aq-sidecar: connect {listen} → peer {peer} (server={fp}, resumption={resume})");
+    tunnel.wait();
     ExitCode::SUCCESS
 }

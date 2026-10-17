@@ -68,10 +68,10 @@ ilova kodiga tegilmaydi. Konfiguratsiya: `--upstream 127.0.0.1:<port>`, `--liste
 
 O'lchov belgilari: **MEASURED** (o'lchangan), **MODELED** (hisoblangan), **ASSUMED** (taxmin).
 
-| Mezon | Reja | Natija (2026-10-12) |
+| Mezon | Reja | Natija (2026-10-17) |
 |---|---|---|
-| Bayt-to'g'rilik | 10 000 so'rov echo orqali monolitga: 0 xato | ⚠️ Qisman: `run.py` da 8 CRUD tekshiruvi × 3 yo'l (to'g'ridan-to'g'ri, AETHER-Q, standart) — 0 xato. 10 000 so'rov yuklama sinovi **bajarilmadi** |
-| Handshake vaqti | 1000 ulanish: p50/p99, klassik TCP bilan solishtirish | ⚠️ Qisman: TCP loopback n=200 (p50 2.20 ms, p99 4.24 ms); plain TCP connect p50 0.17 ms. 1000 ulanish o'lchanmadi |
+| Bayt-to'g'rilik | 10 000 so'rov echo orqali monolitga: 0 xato | ✅ MEASURED (`loadtest.py`): 10 000/10 000 so'rov har zanjirda (direct, AETHER-Q, AETHER-Q resumption, gateway), javob mazmuni aynan mos; echo oqimlari 0 B … 8 MiB, 150/150 aynan bir xil |
+| Handshake vaqti | 1000 ulanish: p50/p99, klassik TCP bilan solishtirish | ✅ MEASURED: 1000 ketma-ket ulanish — AETHER-Q p50 4.34 / p99 7.16 ms, resumption 3.17 / 5.46 ms, gateway 3.64 / 7.24 ms, to'g'ridan-to'g'ri TCP 0.51 / 0.59 ms |
 | Overhead | Kichik va katta xabarlar uchun latency va throughput | ✅ MEASURED: throughput plain 693.7 vs tunel 286.8 MiB/s; AEAD 478 MiB/s |
 | Salbiy testlar | Downgrade, replay, noto'g'ri identity, oversize, kesilgan xabar: 100% rad | ⚠️ Qisman: replay (0-RTT), noto'g'ri pin, ruxsatsiz klient, buzilgan record, kesilgan/ortiqcha bayt — testlar bor. Downgrade uchun alohida test yo'q |
 | Cross-impl | Python↔Rust handshake 100%; KAT bayt-mos | ✅ interop_py 4/4, interop_resume 8/8; KAT 15/15 |
@@ -103,10 +103,11 @@ O'lchov belgilari: **MEASURED** (o'lchangan), **MODELED** (hisoblangan), **ASSUM
 - Commit faqat so'ralganda. Loyiha shu worktree ichida.
 - Referens (`aether_q_v3`) git emas — o'zgartirishdan oldin nusxa olinadi (`backup/`).
 
-## 9. Yakuniy holat (2026-10-12)
+## 9. Yakuniy holat (2026-10-17)
 
-**Reja paketlari: P0–P7 va monolit bajarildi.** Qabul mezonlarining bir qismi qisman (§5: 10 000 so'rov va 1000
-ulanish yuk sinovi bajarilmadi). Ishlab chiqarishga tayyor emas: audit yo'q. Batafsil va o'lchovlar: [README.md](README.md).
+**Reja paketlari: P0–P7, monolit va yuk sinovi bajarildi.** Yuk sinovi (2026-10-17): 8/8 mezon, ≈ 13 800 yangi ulanish,
+≈ 49 600 HTTP so'rov — xato 0, bayt farqi 0, thread oqishi yo'q. §5 da qisman qolganlari: salbiy testlarda downgrade.
+Ishlab chiqarishga tayyor emas: audit yo'q. Batafsil va o'lchovlar: [README.md](README.md).
 
 | Paket | Holat |
 |---|---|
@@ -120,6 +121,8 @@ ulanish yuk sinovi bajarilmadi). Ishlab chiqarishga tayyor emas: audit yo'q. Bat
 | P7 Hisobot | ✅ README.md (holat, o'lchovlar, testlar, ishlatish), shu hujjat |
 | Monolit `Aether_new` | ✅ REST: `GET /healthz`, `GET/POST /api/v1/records`, `GET/DELETE /api/v1/records/{id}`; JSON ombor (atomik yozish); 4 test |
 | Demo | ✅ `run.py`: monolit + AETHER-Q tunel + standart gateway + CRUD + resumption + latency + metrika + control plane — 34/34 |
+| Yuk sinovi | ✅ `loadtest.py` → `aqload` (Go): bayt yaxlitligi, 10 000 so'rov × 4 zanjir, 1000 ulanish × 5 zanjir, parallellik 1…128, oqish, loglar, resumption, gateway metrikasi — 8/8 |
+| Grafik dastur (2026-10-17) | ✅ AETHER-Q Sidecar Studio (`crates/aq-studio`, egui): tez sozlash ustasi (demo / server / klient), taklif va ruxsat so'rovi fayllari bilan kalit almashinuvi, jonli panel, allowlist, kalitlar va rotatsiya, jurnal, diagnostika; standart rejim `aqctl` orqali. `aq-sidecar` runtime kutubxonaga ajratildi (CLI bilan bitta kod; to'xtatish ochiq tunellarni ham yopadi). Testlar: runtime 6, studio 27; o'rnatuvchi (Inno, o'zbekcha) yig'ilib, o'rnatilgan nusxa ekranda sahifama-sahifa sinaldi |
 
 ## 10. Ochiq masalalar va cheklovlar (yakuniy)
 
@@ -132,7 +135,10 @@ ulanish yuk sinovi bajarilmadi). Ishlab chiqarishga tayyor emas: audit yo'q. Bat
 6. **Metrika faqat Go gateway'da** (`aqgw_*`). Rust sidecar'da hisoblagich yo'q.
 7. **KMAC256 nostandart** (C1) — foydalanuvchi qarori.
 8. **Python referens:** F3 (0x07 K_reject) va F6–F8 hali ochiq.
-9. **Yuk sinovi yo'q** (10 000 so'rov, 1000 ulanish). Har bir ulanish uchun thread/goroutine.
+9. **Sig'im ≈ 700–880 yangi ulanish/s** (8 CPU, generator bilan bo'lishilgan); Rust sidecar thread-per-connection.
+   Juda ko'p parallel ulanish (minglab) uchun async (tokio) kerak. Monolit ombori (har yozuvda butun JSON fayl) —
+   to'g'ridan-to'g'ri yo'l ≈ 2400 so'rov/s; ehtimoliy tor joy, alohida o'lchanmagan. Windows'da har so'rovga yangi ulanish ≈ 135 ulanish/s dan
+   oshsa vaqtinchalik portlar tugaydi (hisoblangan) — keep-alive kerak.
 10. **Mustaqil audit yo'q.** Ishlab chiqarishdan oldin shart.
 11. **Sinovlar faqat Windows'da** (Rust MSVC, Go 1.27.2, Python 3.14). Boshqa OS'da tekshirilmagan.
 12. **Standart rejim:** ML-DSA-65 o'z-o'zidan imzolangan sertifikat, CA yo'q (pinning).

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/aq-core", "crates/aq-sidecar"]
+members = ["crates/aq-core", "crates/aq-sidecar", "crates/aq-studio"]
 
 [workspace.package]
 version = "0.1.0"
