@@ -104,7 +104,8 @@
 ### OQ-K5. «O'z mehnati bahosi»
 - **Masala:** haqiqiy foyda egasi kiritgan bahoga bog'liq. Juda past yozilsa — tashxis yo'qoladi, juda baland — doim «zarar».
 - **Taklif:** egasi kiritadi; ilova savol bilan yordam beradi («shu ishni yollanma usta qancha oladi?»), mintaqaviy narx bazasi yo'q.
-- **To'sadi:** K2. **Holat:** OCHIQ.
+- **Vaqtinchalik qaror (K2):** taklif bo'yicha qilindi — egasi oyiga summa kiritadi; kiritilmagan bo'lsa hisobda 0 va bosh sahifada ogohlantirish («foyda» aslida maoshingiz bo'lishi mumkin). Pastki chegara yoki tavsiya yo'q.
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ### OQ-K6. Kengayish darvozasi chegaralari
 - **Taklif:** zaxira ≥ 3 oylik operatsion xarajat; oxirgi 3 «Hisob kuni»da haqiqiy foyda > 0; 90+ kunlik nasiya ≤ 10%; foizli qarz yo'q yoki reja bilan; yozilgan kengayish rejasi.

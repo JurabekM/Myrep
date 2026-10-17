@@ -12,7 +12,10 @@ import { DebtsScreen } from "../features/inventory/DebtsScreen";
 import { PartnershipsScreen } from "../features/partnership/PartnershipsScreen";
 import { PayoffScreen } from "../features/payoff/PayoffScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
+import { KkEquipmentScreen } from "../features/kasbkor/KkEquipmentScreen";
 import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
+import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
+import { KkQuoteScreen } from "../features/kasbkor/KkQuoteScreen";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import { SyncScreen } from "../features/sync/SyncScreen";
@@ -41,8 +44,15 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "settings", label: "nav.settings" },
 ];
 
-/** Kasb-kor makonida (K1): bosh sahifa, sinxronlash va sozlamalar; qolgan bo'limlar keyingi vazifalarda. */
-const KK_SCREENS: Screen[] = ["home", "sync", "settings"];
+/** Kasb-kor makoni bo'limlari (K1–K2); qolganlari keyingi K-vazifalarda. */
+const KK_NAV: { screen: Screen; label: string }[] = [
+  { screen: "home", label: "nav.home" },
+  { screen: "kkEquipment", label: "nav.kkEquipment" },
+  { screen: "kkLabor", label: "nav.kkLabor" },
+  { screen: "kkQuote", label: "nav.kkQuote" },
+  { screen: "sync", label: "nav.sync" },
+  { screen: "settings", label: "nav.settings" },
+];
 
 const MENTOR: Record<Screen, string> = {
   home: "mentor.home",
@@ -56,6 +66,9 @@ const MENTOR: Record<Screen, string> = {
   ideas: "mentor.ideas",
   agreements: "mentor.agreements",
   receipt: "mentor.receipt",
+  kkEquipment: "mentor.kkEquipment",
+  kkLabor: "mentor.kkLabor",
+  kkQuote: "mentor.kkQuote",
   sync: "mentor.sync",
   settings: "mentor.settings",
 };
@@ -72,8 +85,9 @@ export function Shell() {
   const spaces = household.data?.spaces ?? [];
   const active = spaceId ?? spaces[0]?.id ?? null;
   const kasbkor = spaces.find((s) => s.id === active)?.kind === "KASBKOR";
-  const screen: Screen = kasbkor && !KK_SCREENS.includes(picked) ? "home" : picked;
-  const nav = kasbkor ? NAV.filter((n) => KK_SCREENS.includes(n.screen)) : NAV;
+  const nav = kasbkor ? KK_NAV : NAV;
+  // Boshqa makonga o'tilganda shu makonda yo'q bo'lim tanlangan bo'lsa — bosh sahifa.
+  const screen: Screen = nav.some((n) => n.screen === picked) ? picked : "home";
 
   // Bazadagi til (shu qurilma yoki xonadon) — UI shu tilda; qulf ekrani uchun ham eslab qolinadi.
   const locale = settings.data?.locale;
@@ -140,6 +154,9 @@ export function Shell() {
         {active && screen === "ideas" && <IdeasScreen spaceId={active} />}
         {active && screen === "agreements" && <AgreementsScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkEquipment" && <KkEquipmentScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkLabor" && <KkLaborScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkQuote" && <KkQuoteScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>

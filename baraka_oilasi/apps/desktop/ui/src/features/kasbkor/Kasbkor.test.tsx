@@ -49,6 +49,20 @@ const overview = {
   overdrawn: null,
   cash: money("-200 000 soʻm", "-200 000"),
   card: money("12 300 000 soʻm", "12 300 000"),
+  equipmentPurchases: money("0 soʻm", "0"),
+  equipmentSales: money("0 soʻm", "0"),
+  profit: {
+    revenue: money("20 000 000 soʻm", "20 000 000"),
+    cogs: money("0 soʻm", "0"),
+    operatingExpenses: money("8 500 000 soʻm", "8 500 000"),
+    visibleProfit: money("11 500 000 soʻm", "11 500 000"),
+    ownerLabor: null,
+    familyLabor: money("0 soʻm", "0"),
+    familyLaborPaid: money("0 soʻm", "0"),
+    depreciation: money("0 soʻm", "0"),
+    disposal: money("0 soʻm", "0"),
+    trueProfit: money("11 500 000 soʻm", "11 500 000"),
+  },
   negativeWallets: ["CASH"],
   entries: [
     { id: "e1", kind: "SALE", wallet: "CARD", toWallet: null, amount: money("20 000 000 soʻm", "20 000 000"), occurredOn: "2026-10-05", note: "Toʻy libosi", categoryId: null },
@@ -82,8 +96,8 @@ describe("Kasb-kor", () => {
     expect(screen.getByTestId("kk-cash-flow")).toHaveTextContent("11 500 000 soʻm");
     expect(screen.getByTestId("kk-salary-remaining")).toHaveTextContent("Shu oy qoldi: 5 000 000 soʻm");
     expect(screen.getByTestId("kk-wallet-CASH")).toHaveTextContent("-200 000 soʻm");
-    expect(screen.getByRole("note")).toHaveTextContent("Qoldiq manfiy");
-    const table = screen.getByRole("table");
+    expect(screen.getAllByRole("note").map((n) => n.textContent)).toContainEqual(expect.stringContaining("Qoldiq manfiy"));
+    const table = within(screen.getByRole("region", { name: "Shu oy yozuvlari" })).getByRole("table");
     expect(await within(table).findByText("Material va xomashyo")).toBeInTheDocument();
     expect(within(table).getByText("Karta → Naqd kassa")).toBeInTheDocument();
     expect(await axeViolations(container)).toEqual([]);

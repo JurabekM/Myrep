@@ -123,6 +123,15 @@
     "allow-kk-set-owner-salary",
     "allow-kk-record-sale",
     "allow-kk-record-move",
-    "allow-kk-pay-owner-salary"
+    "allow-kk-pay-owner-salary",
+    "allow-kk-set-owner-labor",
+    "allow-kk-equipment",
+    "allow-kk-add-equipment",
+    "allow-kk-dispose-equipment",
+    "allow-kk-delete-equipment",
+    "allow-kk-family-labor",
+    "allow-kk-add-family-labor",
+    "allow-kk-delete-family-labor",
+    "allow-kk-order-quote"
   ]
 }

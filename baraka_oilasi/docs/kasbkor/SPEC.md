@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim) amalga oshirildi — farqlari 2.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim) va K2 (3-bo'lim) amalga oshirildi — farqlari 2.4 va 3.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -92,6 +92,14 @@ Haqiqiy foyda      = Ko'rinadigan foyda − O'z mehnati bahosi − Oilaviy mehna
 ### 3.3. Uskunalar
 - Uskuna — `Asset(asset_type = EQUIPMENT)`: narx, sana, foydali muddat (oy), qoldiq qiymati. Eskirish oyma-oy avtomatik (pul harakati emas).
 - Uskuna sotilsa yoki yaroqsiz bo'lsa — qolgan qiymat bir martalik xarajat.
+
+### 3.4. K2 da qanday qilindi (farqlar)
+- Uskuna — `assets` emas, alohida `kk_equipment` jadvali (`assets.type` ro'yxatida `EQUIPMENT` yo'q, SQLite CHECK'ni o'zgartirmaydi). Uskuna xaridi va sotuvi hamyonga ta'sir qiladi, pul oqimiga (tushum − chiqim) kirmaydi.
+- Eskirish xarid oyidan boshlanadi (0-oy). Chiqib ketish oyida oddiy eskirish yo'q; balans − sotilgan narx shu oy bir martalik (manfiy bo'lsa — foyda).
+- Sotilgan tovar tannarxi K5 gacha 0; barcha chiqimlar operatsion.
+- Oilaviy mehnat — ism bilan (xonadon a'zosiga bog'lash keyin), soat ko'pi bilan 2 kasr raqam.
+- Buyurtma kalkulyatori saqlanmaydi; eskirish ulushini egasi o'zi kiritadi. Zaxira foizi — mehnat, material, yo'l va eskirish yig'indisidan.
+- O'z mehnati bahosi — OQ-K5 taklifi bo'yicha (egasi kiritadi; kiritilmasa ogohlantirish).
 
 ## 4. 3-QONUN: «TOVAR HAM PUL — U HAM YOTADI» — FUNKSIONAL TALABLAR (K3, K5)
 Qonunning mazmuni: javondagi tovar — muzlagan pul. Uni eski narxda hisoblash kapitalni sezdirmay yeydi; foydani esa qoida bo'yicha taqsimlash kerak.
@@ -231,6 +239,7 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 |---|---|
 | `kk_true_profit` | 3.1 misoli; oilaviy mehnat to'langan (ikki marta hisoblanmaydi); manfiy haqiqiy foyda; tovar xaridi xarajat emas |
 | `kk_depreciation` | 12 mln / 60; 7 mln / 36 (qoldiq tiyinlar); qoldiq qiymati bilan; muddatdan oldin sotish |
+| `kk_order_quote` | 3.2 Jasur misoli; narx tannarxdan yuqori; soatsiz; zaxira yaxlitlash; avans materialga yetmaydi / yopadi |
 | `kk_cogs` | o'rtacha (4.2 misoli), FIFO, oxirgi birlik (qiymat aniq 0), qoldiqdan ko'p sotish — xato, hisobdan chiqarish |
 | `kk_replacement` | 4.3 misoli; narx tushgan holat; sotuv narxi < qayta tiklash — ogohlantirish |
 | `kk_cash_close` | 5.1 misoli; «egasi oldi»siz farq; ortiqcha (+) farq; karta tushumi kassaga ta'sir qilmaydi |

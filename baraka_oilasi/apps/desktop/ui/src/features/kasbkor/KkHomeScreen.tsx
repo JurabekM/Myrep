@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { commands } from "../../bindings";
+import { commands, type KkOverviewDto } from "../../bindings";
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
@@ -37,6 +37,17 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
       <h1 className="text-2xl font-semibold">{t("space.KASBKOR")}</h1>
       <div className="grid gap-5 md:grid-cols-2">
         <div className="card">
+          <p className="text-sm text-ink-muted">{t("kk.trueProfit")}</p>
+          <p data-testid="kk-true-profit" className="kpi text-accent">
+            {d?.profit.trueProfit.formatted ?? "…"}
+          </p>
+          {d && (
+            <p className="text-sm text-ink-muted">
+              {t("kk.visibleProfitLine", { amount: d.profit.visibleProfit.formatted })}
+            </p>
+          )}
+        </div>
+        <div className="card">
           <p className="text-sm text-ink-muted">{t("kk.ownerPaid")}</p>
           <p data-testid="kk-owner-paid" className="kpi text-accent">
             {d?.ownerPaid.formatted ?? "…"}
@@ -47,9 +58,16 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
             </p>
           )}
         </div>
+      </div>
+
+      {d && <ProfitCard spaceId={spaceId} overview={d} />}
+
+      <SalaryCard spaceId={spaceId} onPay={() => setSalaryOpen(true)} />
+
+      <section aria-label={t("kk.wallets")} className="grid gap-5 md:grid-cols-3">
         <div className="card">
           <p className="text-sm text-ink-muted">{t("kk.cashFlow")}</p>
-          <p data-testid="kk-cash-flow" className="kpi">
+          <p data-testid="kk-cash-flow" className="text-2xl font-semibold tabular-nums">
             {d?.cashFlow.formatted ?? "…"}
           </p>
           {d && (
@@ -59,11 +77,6 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
           )}
           <p className="mt-1 text-xs text-ink-muted">{t("kk.cashFlowHint")}</p>
         </div>
-      </div>
-
-      <SalaryCard spaceId={spaceId} onPay={() => setSalaryOpen(true)} />
-
-      <section aria-label={t("kk.wallets")} className="grid gap-5 md:grid-cols-2">
         {(["CASH", "CARD"] as const).map((w) => {
           const bal = w === "CASH" ? d?.cash : d?.card;
           const negative = d?.negativeWallets.includes(w);
@@ -130,6 +143,94 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
       {kkEntry && <KkEntryDialog spaceId={spaceId} mode={kkEntry} onClose={closeKkEntry} />}
       {salaryOpen && d && <KkSalaryDialog spaceId={spaceId} overview={d} onClose={() => setSalaryOpen(false)} />}
     </section>
+  );
+}
+
+/**
+ * Haqiqiy foyda tarkibi (kasbkor/SPEC 3.1). Summalar yadrodan tayyor; UI faqat ko'rsatadi.
+ * O'z mehnati bahosi egasi maoshi bilan yonma-yon.
+ */
+function ProfitCard({ spaceId, overview: d }: { spaceId: string; overview: KkOverviewDto }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const p = d.profit;
+  const rows: [string, string, string?][] = [
+    [t("kk.profit.revenue"), p.revenue.formatted],
+    [t("kk.profit.cogs"), `− ${p.cogs.formatted}`, t("kk.profit.cogsHint")],
+    [t("kk.profit.operating"), `− ${p.operatingExpenses.formatted}`],
+    [t("kk.profit.visible"), p.visibleProfit.formatted],
+    [t("kk.profit.ownerLabor"), p.ownerLabor ? `− ${p.ownerLabor.formatted}` : t("kk.profit.notSet")],
+    [t("kk.profit.familyLabor"), `− ${p.familyLabor.formatted}`, p.familyLaborPaid.minor !== "0" ? t("kk.profit.familyPaid", { amount: p.familyLaborPaid.formatted }) : undefined],
+    [t("kk.profit.depreciation"), `− ${p.depreciation.formatted}`],
+  ];
+  // Manfiy chiqib ketish — uskuna balansdan qimmatga sotilgan (foydaga qo'shiladi); faqat belgi almashadi.
+  if (p.disposal.minor !== "0") rows.push([t("kk.profit.disposal"), p.disposal.minor.startsWith("-") ? `+ ${p.disposal.formatted.slice(1)}` : `− ${p.disposal.formatted}`]);
+  return (
+    <section className="card flex flex-col gap-3" aria-label={t("kk.profit.title")}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold">{t("kk.profit.title")}</h2>
+        <button className="btn-ghost px-3 py-1 text-sm" onClick={() => setEditing((v) => !v)}>
+          {p.ownerLabor ? t("kk.ownerLaborChange") : t("kk.ownerLaborSet")}
+        </button>
+      </div>
+      {editing && <OwnerLaborForm spaceId={spaceId} current={p.ownerLabor?.plain ?? ""} onDone={() => setEditing(false)} />}
+      {!p.ownerLabor && (
+        <p role="note" className="text-sm text-warn">
+          {t("kk.ownerLaborMissing")}
+        </p>
+      )}
+      <table className="w-full text-sm">
+        <tbody>
+          {rows.map(([label, value, hint]) => (
+            <tr key={label} className="border-t border-line">
+              <th scope="row" className="py-1 pr-3 text-left font-normal">
+                {label}
+                {hint && <span className="block text-xs text-ink-muted">{hint}</span>}
+              </th>
+              <td className="py-1 text-right tabular-nums">{value}</td>
+            </tr>
+          ))}
+          <tr className="border-t border-line font-semibold">
+            <th scope="row" className="py-1 pr-3 text-left">
+              {t("kk.trueProfitShort")}
+            </th>
+            <td className="py-1 text-right tabular-nums">{p.trueProfit.formatted}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p className="text-sm text-ink-muted">
+        {t("kk.laborVsSalary", { labor: p.ownerLabor?.formatted ?? "—", salary: d.ownerSalary?.formatted ?? "—" })}
+      </p>
+    </section>
+  );
+}
+
+function OwnerLaborForm({ spaceId, current, onDone }: { spaceId: string; current: string; onDone: () => void }) {
+  const { t } = useTranslation();
+  const [amount, setAmount] = useState(current);
+  const [error, setError] = useState<unknown>(null);
+  return (
+    <form
+      className="flex flex-wrap items-end gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        call(commands.kkSetOwnerLabor(spaceId, amount)).then(onDone, setError);
+      }}
+    >
+      <div className="flex-1">
+        <label>
+          <span className="label">{t("kk.ownerLaborAmount")}</span>
+          <AmountInput value={amount} onChange={(e) => setAmount(e.target.value)} aria-describedby="kk-owner-labor-hint" />
+        </label>
+        <p id="kk-owner-labor-hint" className="mt-1 text-xs text-ink-muted">
+          {t("kk.ownerLaborHint")}
+        </p>
+      </div>
+      <button className="btn-primary">{t("common.save")}</button>
+      <div className="w-full">
+        <ErrorText error={error} />
+      </div>
+    </form>
   );
 }
 

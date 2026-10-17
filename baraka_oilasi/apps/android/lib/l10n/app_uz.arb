@@ -1040,7 +1040,7 @@
   "partnership_check_BUYOUT_INVALID": "Buyout jadvalini tuzib boʻlmadi — shartlarini tekshiring.",
   "partnership_check_NO_WITNESSES": "Guvoh yozilmagan. Qarz va sheriklikni guvohlar bilan yozish tavsiya etiladi (Baqara, 282).",
   "error_GUARANTEED_RETURN_FORBIDDEN": "Bu sheriklik emas — ribo yoki qarz",
-  "error_INVALID_PERCENT": "Foizni toʻgʻri yozing, masalan 50 yoki 33,5",
+  "error_INVALID_PERCENT": "Foiz 0 dan 100 gacha (masalan, 5 yoki 2,5)",
   "error_INVALID_PARTY_ID": "Tomon belgisi notoʻgʻri",
   "error_INVALID_ROLE": "Rol notoʻgʻri",
   "error_MULTIPLE_ME": "Faqat bitta tomon «biz» boʻladi",
@@ -2172,5 +2172,194 @@
   "error_SAME_WALLET": "Ikki xil hamyonni tanlang",
   "error_OWNER_SALARY_NOT_SET": "Avval oylik maoshni belgilang",
   "error_SALARY_ALREADY_PAID": "Shu oy maoshi toʻliq oʻtkazilgan. Kerak boʻlsa, summani oʻzingiz kiriting.",
-  "error_UY_SPACE_REQUIRED": "Maoshni oʻtkazish uchun xonadonda Uy makoni kerak"
+  "error_UY_SPACE_REQUIRED": "Maoshni oʻtkazish uchun xonadonda Uy makoni kerak",
+  "nav_kkEquipment": "Uskunalar",
+  "nav_kkLabor": "Oilaviy mehnat",
+  "nav_kkQuote": "Buyurtma narxi",
+  "mentor_kkEquipment": "Mashina ham charchaydi. Uning narxini oylarga boʻlib qoʻymasangiz, bir kun yangisiga pul topolmay qolasiz.",
+  "mentor_kkLabor": "Qizingizning 80 soati ham xarajat. Pul bermagan boʻlsangiz ham, uni yozing — aks holda foyda aslida uning mehnati.",
+  "mentor_kkQuote": "Narxni aytishdan oldin tannarxni hisoblang: material, mehnat, yoʻl va asbobning eskirishi.",
+  "kk_trueProfit": "Haqiqiy foyda (shu oy)",
+  "kk_trueProfitShort": "Haqiqiy foyda",
+  "kk_visibleProfitLine": "Koʻrinadigan foyda: {amount}",
+  "@kk_visibleProfitLine": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_profit_title": "Foyda qanday hosil boʻldi",
+  "kk_profit_revenue": "Tushum",
+  "kk_profit_cogs": "Sotilgan tovar tannarxi",
+  "kk_profit_cogsHint": "Tovar qoldigʻi hisobi keyingi bosqichda (K5)",
+  "kk_profit_operating": "Operatsion chiqimlar",
+  "kk_profit_visible": "Koʻrinadigan foyda",
+  "kk_profit_ownerLabor": "Oʻz mehnatingiz bahosi",
+  "kk_profit_notSet": "kiritilmagan",
+  "kk_profit_familyLabor": "Oilaviy mehnat (toʻlanmagan)",
+  "kk_profit_familyPaid": "Toʻlangan {amount} chiqimda bor — qayta ayirilmaydi",
+  "@kk_profit_familyPaid": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_profit_depreciation": "Uskunalar eskirishi",
+  "kk_profit_disposal": "Uskuna chiqib ketishi",
+  "kk_ownerLaborSet": "Bahoni kiritish",
+  "kk_ownerLaborChange": "Bahoni oʻzgartirish",
+  "kk_ownerLaborAmount": "Oʻz mehnatingiz bahosi (oyiga)",
+  "kk_ownerLaborHint": "Shu ishni yollanma usta qilsa, unga oyiga qancha toʻlardingiz?",
+  "kk_ownerLaborMissing": "Oʻz mehnatingiz bahosi kiritilmagan: «foyda» aslida maoshingiz boʻlishi mumkin.",
+  "kk_laborVsSalary": "Oʻz mehnatingiz bahosi: {labor} · Oʻzingizga belgilagan maosh: {salary}",
+  "@kk_laborVsSalary": {
+    "placeholders": {
+      "labor": {},
+      "salary": {}
+    }
+  },
+  "kk_kind_EQUIPMENT_PURCHASE": "Uskuna xaridi",
+  "kk_kind_EQUIPMENT_SALE": "Uskuna sotildi",
+  "kk_eq_title": "Uskunalar",
+  "kk_eq_intro": "Uskuna xarajat emas, aktiv: narxi foydali muddat oylariga teng boʻlinib, har oy foydadan ayiriladi. Hamyondan pul chiqsa ham, pul oqimiga kirmaydi.",
+  "kk_eq_add": "Uskuna qoʻshish",
+  "kk_eq_addButton": "Qoʻshish",
+  "kk_eq_name": "Nomi",
+  "kk_eq_cost": "Narxi",
+  "kk_eq_months": "Foydali muddat (oy)",
+  "kk_eq_salvage": "Muddat oxirida qoladigan qiymat",
+  "kk_eq_acquiredOn": "Olingan sana (boʻsh — bugun)",
+  "kk_eq_paidFrom": "Qaysi puldan olindi",
+  "kk_eq_paidBefore": "Ilovagacha bor edi",
+  "kk_eq_list": "Roʻyxat",
+  "kk_eq_empty": "Hali uskuna yoʻq.",
+  "kk_eq_monthDep": "Shu oy eskirishi",
+  "kk_eq_bookValue": "Balans qiymati",
+  "kk_eq_state": "Holati",
+  "kk_eq_actions": "Amallar",
+  "kk_eq_since": "{date} dan, {months} oy",
+  "@kk_eq_since": {
+    "placeholders": {
+      "date": {},
+      "months": {}
+    }
+  },
+  "kk_eq_monthsLeft": "Yana {n} oy",
+  "@kk_eq_monthsLeft": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_eq_depreciated": "Muddati tugagan, ishlayapti",
+  "kk_eq_disposed": "{date}: chiqib ketdi ({amount})",
+  "@kk_eq_disposed": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "kk_eq_dispose": "Sotildi / yaroqsiz",
+  "kk_eq_disposeTitle": "{name}: sotildi yoki yaroqsiz",
+  "@kk_eq_disposeTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_eq_disposeHint": "Hozirgi balans qiymati {amount}. Sotilgan narxdan farqi shu oy bir martalik xarajat (yoki foyda) boʻladi. Yaroqsiz boʻlsa — narxni boʻsh qoldiring.",
+  "@kk_eq_disposeHint": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_eq_proceeds": "Sotilgan narx",
+  "kk_eq_proceedsWallet": "Pul qayerga tushdi",
+  "kk_eq_disposeSave": "Tasdiqlash",
+  "kk_eq_delete": "Oʻchirish",
+  "kk_eq_deleteNamed": "Oʻchirish: {name}",
+  "@kk_eq_deleteNamed": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_fl_title": "Oilaviy mehnat",
+  "kk_fl_intro": "Oila aʼzolarining yordami pul toʻlanmasa ham tannarxga kiradi. Pul toʻlangan boʻlsa, uni chiqim sifatida yozing va bu yerda «toʻlangan» deb belgilang — ikki marta hisoblanmaydi.",
+  "kk_fl_total": "Shu oy toʻlanmagan oilaviy mehnat",
+  "kk_fl_add": "Mehnat yozish",
+  "kk_fl_addButton": "Yozish",
+  "kk_fl_person": "Kim",
+  "kk_fl_hours": "Soat",
+  "kk_fl_rate": "Soat bahosi",
+  "kk_fl_rateHint": "Shu ish uchun begona odamga soatiga qancha toʻlardingiz?",
+  "kk_fl_value": "Qiymati",
+  "kk_fl_paid": "Pul toʻlangan (chiqim sifatida yozilgan)",
+  "kk_fl_paidTag": "toʻlangan",
+  "kk_fl_list": "Shu oy",
+  "kk_fl_empty": "Bu oy hali yozuv yoʻq.",
+  "kk_fl_deleteNamed": "Oʻchirish: {name}, {date}",
+  "@kk_fl_deleteNamed": {
+    "placeholders": {
+      "date": {},
+      "name": {}
+    }
+  },
+  "kk_q_title": "Buyurtma narxi",
+  "kk_q_intro": "Narxni aytishdan oldin: material, mehnat, yoʻl, asbob eskirishi va zaxira. Hech narsa saqlanmaydi.",
+  "kk_q_material": "Material",
+  "kk_q_hours": "Mehnat (soat)",
+  "kk_q_hourlyRate": "Soat bahosi",
+  "kk_q_travel": "Yoʻl",
+  "kk_q_depreciation": "Asbob eskirishi ulushi",
+  "kk_q_reservePercent": "Zaxira (%)",
+  "kk_q_price": "Mijozga aytiladigan narx",
+  "kk_q_advance": "Avans",
+  "kk_q_calculate": "Hisoblash",
+  "kk_q_result": "Natija",
+  "kk_q_labor": "Mehnat",
+  "kk_q_subtotal": "Material + mehnat + yoʻl + eskirish",
+  "kk_q_reserve": "Zaxira",
+  "kk_q_cost": "Tannarx",
+  "kk_q_belowCost": "Narx tannarxdan past (marja {margin}). Bu buyurtmada oʻz mehnatingizga {labor} toʻlab ishlaysiz — soatiga {hourly}.",
+  "@kk_q_belowCost": {
+    "placeholders": {
+      "hourly": {},
+      "labor": {},
+      "margin": {}
+    }
+  },
+  "kk_q_belowCostNoHours": "Narx tannarxdan past (marja {margin}).",
+  "@kk_q_belowCostNoHours": {
+    "placeholders": {
+      "margin": {}
+    }
+  },
+  "kk_q_aboveCost": "Marja {margin}. Oʻz mehnatingizga {labor} qoladi — soatiga {hourly}.",
+  "@kk_q_aboveCost": {
+    "placeholders": {
+      "hourly": {},
+      "labor": {},
+      "margin": {}
+    }
+  },
+  "kk_q_aboveCostNoHours": "Marja {margin}.",
+  "@kk_q_aboveCostNoHours": {
+    "placeholders": {
+      "margin": {}
+    }
+  },
+  "kk_q_advanceShort": "Avans materialga yetmaydi: yana {amount} kerak.",
+  "@kk_q_advanceShort": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_q_advanceCovers": "Avans materialni yopadi, {amount} ortadi.",
+  "@kk_q_advanceCovers": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "error_INVALID_SALVAGE": "Qoldiq qiymati narxdan oshmasin",
+  "error_INVALID_USEFUL_LIFE": "Foydali muddat 1 dan 600 oygacha",
+  "error_INVALID_HOURS": "Soatni toʻgʻri kiriting (masalan, 2,5)",
+  "error_ALREADY_DISPOSED": "Bu uskuna allaqachon chiqib ketgan",
+  "error_BEFORE_ACQUIRED": "Sana olingan kundan oldin boʻlmasin",
+  "error_INVALID_MONTH": "Oy notoʻgʻri"
 }

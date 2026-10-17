@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-equipment"
+description = "Enables the kk_equipment command without any pre-configured scope."
+commands.allow = ["kk_equipment"]
+
+[[permission]]
+identifier = "deny-kk-equipment"
+description = "Denies the kk_equipment command without any pre-configured scope."
+commands.deny = ["kk_equipment"]

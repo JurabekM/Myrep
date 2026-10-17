@@ -150,6 +150,15 @@ export const commands = {
 	kkRecordSale: (spaceId: string, input: KkSaleInput) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_record_sale", { spaceId, input })),
 	kkRecordMove: (spaceId: string, input: KkMoveInput) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_record_move", { spaceId, input })),
 	kkPayOwnerSalary: (spaceId: string, input: KkSalaryInput) => typedError<KkSalaryPaidDto, AppError>(__TAURI_INVOKE("kk_pay_owner_salary", { spaceId, input })),
+	kkSetOwnerLabor: (spaceId: string, amount: string) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_set_owner_labor", { spaceId, amount })),
+	kkEquipment: (spaceId: string) => typedError<KkEquipmentDto[], AppError>(__TAURI_INVOKE("kk_equipment", { spaceId })),
+	kkAddEquipment: (spaceId: string, input: KkEquipmentInput) => typedError<KkEquipmentDto[], AppError>(__TAURI_INVOKE("kk_add_equipment", { spaceId, input })),
+	kkDisposeEquipment: (spaceId: string, id: string, input: KkDisposeInput) => typedError<KkEquipmentDto[], AppError>(__TAURI_INVOKE("kk_dispose_equipment", { spaceId, id, input })),
+	kkDeleteEquipment: (spaceId: string, id: string) => typedError<KkEquipmentDto[], AppError>(__TAURI_INVOKE("kk_delete_equipment", { spaceId, id })),
+	kkFamilyLabor: (spaceId: string, date: string | null) => typedError<KkFamilyLaborDto[], AppError>(__TAURI_INVOKE("kk_family_labor", { spaceId, date })),
+	kkAddFamilyLabor: (spaceId: string, input: KkFamilyLaborInput) => typedError<KkFamilyLaborDto[], AppError>(__TAURI_INVOKE("kk_add_family_labor", { spaceId, input })),
+	kkDeleteFamilyLabor: (spaceId: string, id: string) => typedError<KkFamilyLaborDto[], AppError>(__TAURI_INVOKE("kk_delete_family_labor", { spaceId, id })),
+	kkOrderQuote: (spaceId: string, input: KkQuoteInput) => typedError<KkQuoteDto, AppError>(__TAURI_INVOKE("kk_order_quote", { spaceId, input })),
 };
 
 /** Events */
@@ -931,6 +940,14 @@ export type JoinInput = {
 	platform: string,
 };
 
+export type KkDisposeInput = {
+	/**  Sotilgan narx; bo'lmasa yoki 0 — yaroqsiz bo'ldi. */
+	proceeds: string | null,
+	/**  Pul tushgan hamyon (sotilgan bo'lsa majburiy). */
+	wallet: string | null,
+	disposedOn: string | null,
+};
+
 /**  `kind`: `SALE`, `EXPENSE`, `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `OWNER_SALARY`, `TRANSFER`. */
 export type KkEntryDto = {
 	id: string,
@@ -941,6 +958,61 @@ export type KkEntryDto = {
 	occurredOn: string,
 	note: string | null,
 	categoryId: string | null,
+};
+
+/**  `status`: `ACTIVE`, `DEPRECIATED` (muddat tugagan, ishlatilyapti), `DISPOSED`. */
+export type KkEquipmentDto = {
+	id: string,
+	name: string,
+	cost: MoneyDto,
+	salvage: MoneyDto,
+	usefulMonths: number,
+	acquiredOn: string,
+	/**  Qaysi hamyondan to'langan; `null` — ilovagacha bor edi. */
+	wallet: string | null,
+	/**  Shu oy eskirishi. */
+	monthDepreciation: MoneyDto,
+	/**  Shu oy oxiridagi balans qiymati. */
+	bookValue: MoneyDto,
+	/**  Shu oydan keyin qolgan eskirish oylari. */
+	monthsLeft: number,
+	status: string,
+	disposedOn: string | null,
+	disposalProceeds: MoneyDto | null,
+};
+
+export type KkEquipmentInput = {
+	name: string,
+	cost: string,
+	/**  Muddat oxirida qoladigan qiymat; bo'lmasa — 0. */
+	salvage: string | null,
+	usefulMonths: number,
+	acquiredOn: string | null,
+	/**  `CASH` / `CARD`; `null` — ilovagacha bor edi (hamyondan pul chiqmaydi). */
+	wallet: string | null,
+};
+
+export type KkFamilyLaborDto = {
+	id: string,
+	person: string,
+	workedOn: string,
+	/**  Ko'rsatish uchun: `80`, `2,5`. */
+	hours: string,
+	hourlyRate: MoneyDto,
+	value: MoneyDto,
+	paid: boolean,
+	note: string | null,
+};
+
+export type KkFamilyLaborInput = {
+	person: string,
+	/**  Soat: `80`, `2,5` (ko'pi bilan 2 kasr raqam). */
+	hours: string,
+	hourlyRate: string,
+	/**  Pul to'langan va chiqim sifatida yozilgan. */
+	paid: boolean,
+	workedOn: string | null,
+	note: string | null,
 };
 
 export type KkMoveInput = {
@@ -973,10 +1045,63 @@ export type KkOverviewDto = {
 	overdrawn: MoneyDto | null,
 	cash: MoneyDto,
 	card: MoneyDto,
+	/**  Uskuna xaridi va sotuvi (hamyonga ta'sir qiladi, pul oqimiga kirmaydi). */
+	equipmentPurchases: MoneyDto,
+	equipmentSales: MoneyDto,
+	/**  Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2). */
+	profit: KkProfitDto,
 	/**  Manfiy qoldiqli hamyonlar: `CASH`, `CARD`. */
 	negativeWallets: string[],
 	/**  Shu oy yozuvlari (yangisi birinchi). */
 	entries: KkEntryDto[],
+};
+
+/**
+ *  Haqiqiy foyda (kasbkor/SPEC 3.1): ko'rinadigan − o'z mehnati − to'lanmagan oilaviy mehnat − eskirish
+ *  − uskuna chiqib ketishi. Sotilgan tovar tannarxi — K5 gacha 0.
+ */
+export type KkProfitDto = {
+	revenue: MoneyDto,
+	cogs: MoneyDto,
+	operatingExpenses: MoneyDto,
+	visibleProfit: MoneyDto,
+	/**  O'z mehnati bahosi; kiritilmagan bo'lsa `null` (hisobda 0). */
+	ownerLabor: MoneyDto | null,
+	familyLabor: MoneyDto,
+	/**  To'langan oilaviy mehnat (chiqimda bor; qayta ayirilmaydi). */
+	familyLaborPaid: MoneyDto,
+	depreciation: MoneyDto,
+	/**  Uskuna chiqib ketishi; manfiy — balansdan qimmatga sotilgan. */
+	disposal: MoneyDto,
+	trueProfit: MoneyDto,
+};
+
+export type KkQuoteDto = {
+	labor: MoneyDto,
+	subtotal: MoneyDto,
+	reserve: MoneyDto,
+	cost: MoneyDto,
+	margin: MoneyDto | null,
+	/**  Narx berilsa: o'z mehnatingizga qoladigan pul. */
+	laborPaid: MoneyDto | null,
+	belowCost: boolean | null,
+	effectiveHourlyRate: MoneyDto | null,
+	materialShortfall: MoneyDto | null,
+	advanceAfterMaterial: MoneyDto | null,
+};
+
+/**  Buyurtma kalkulyatori (kasbkor/SPEC 3.2). Summalar matn, yadroda parse qilinadi. */
+export type KkQuoteInput = {
+	material: string | null,
+	hours: string | null,
+	hourlyRate: string | null,
+	travel: string | null,
+	/**  Uskuna eskirishidan shu buyurtmaga ulush. */
+	depreciation: string | null,
+	/**  Zaxira foizi: `5`, `2,5`. */
+	reservePercent: string | null,
+	price: string | null,
+	advance: string | null,
 };
 
 export type KkSalaryInput = {

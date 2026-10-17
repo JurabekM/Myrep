@@ -11,6 +11,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `02-anvar` | Anvar ssenariysi (mavjud funksiyalar bilan): daromad → ulush → xarajat → audit → qarz → 70/20/10 → «Qarzsiz kun» → qarz yopilishi → Dilshod bilan musharaka → kassa daftari → davr taqsimoti → vazifa hodisasi → oylik ko'rik → zaxira nusxa |
 | `03-restore` | Zaxira nusxa → yangi profil → «Mavjud xonadonga qo'shilish» → ma'lumotlar 1:1 |
 | `04-kasbkor` | Kasb-kor «ikki cho'ntak»: boshlang'ich qoldiq → maosh → tushum (`Ctrl+N`) → chiqim → «egasi oldi» (pul oqimi kamaymaydi) → maosh Uy'ga → ulush → Uy'da daromad |
+| `05-kasbkor-profit` | Kasb-kor haqiqiy foyda (SPEC 3.1 Nilufar): tushum va chiqimlar → o'z mehnati → qizining 80 soati → tikuv mashinalari 12 mln / 60 oy → **3 100 000**; Jasur buyurtmasi tannarxdan past; uskuna sotildi → bir martalik xarajat |
 
 ## Ishga tushirish (Linux)
 ```bash

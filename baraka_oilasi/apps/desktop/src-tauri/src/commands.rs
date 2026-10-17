@@ -1392,6 +1392,96 @@ pub async fn kk_pay_owner_salary(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_set_owner_labor(
+    state: State<'_, Desktop>,
+    space_id: String,
+    amount: String,
+) -> R<KkOverviewDto> {
+    state.session.app()?.kk_set_owner_labor(&space_id, amount)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_equipment(state: State<'_, Desktop>, space_id: String) -> R<Vec<KkEquipmentDto>> {
+    state.session.app()?.kk_equipment(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_equipment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkEquipmentInput,
+) -> R<Vec<KkEquipmentDto>> {
+    state.session.app()?.kk_add_equipment(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_dispose_equipment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkDisposeInput,
+) -> R<Vec<KkEquipmentDto>> {
+    state
+        .session
+        .app()?
+        .kk_dispose_equipment(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delete_equipment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+) -> R<Vec<KkEquipmentDto>> {
+    state.session.app()?.kk_delete_equipment(&space_id, &id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_family_labor(
+    state: State<'_, Desktop>,
+    space_id: String,
+    date: Option<String>,
+) -> R<Vec<KkFamilyLaborDto>> {
+    state.session.app()?.kk_family_labor(&space_id, date)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_family_labor(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkFamilyLaborInput,
+) -> R<Vec<KkFamilyLaborDto>> {
+    state.session.app()?.kk_add_family_labor(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delete_family_labor(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+) -> R<Vec<KkFamilyLaborDto>> {
+    state.session.app()?.kk_delete_family_labor(&space_id, &id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_order_quote(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkQuoteInput,
+) -> R<KkQuoteDto> {
+    state.session.app()?.kk_order_quote(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

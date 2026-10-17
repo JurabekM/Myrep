@@ -117,6 +117,15 @@ const COMMANDS: &[&str] = &[
     "kk_record_sale",
     "kk_record_move",
     "kk_pay_owner_salary",
+    "kk_set_owner_labor",
+    "kk_equipment",
+    "kk_add_equipment",
+    "kk_dispose_equipment",
+    "kk_delete_equipment",
+    "kk_family_labor",
+    "kk_add_family_labor",
+    "kk_delete_family_labor",
+    "kk_order_quote",
 ];
 
 fn main() {
