@@ -15,6 +15,7 @@
 pub mod client;
 pub mod export;
 pub mod home;
+pub mod integrate;
 pub mod keystore;
 pub mod logfile;
 pub mod secrets;

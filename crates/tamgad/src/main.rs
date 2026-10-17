@@ -89,6 +89,8 @@ struct State {
     corr: observe::Correlator,
     /// Fayl hodisalarini 2 s ichida takrorlamaslik: (yo'l, amal) -> oxirgi vaqt.
     file_dedupe: HashMap<(String, &'static str), Instant>,
+    /// `shutdown` bajarilgan: yakuniy checkpoint ikki marta yozilmaydi.
+    stopped: bool,
 }
 
 fn preview(tool_input: &Value) -> String {
@@ -733,6 +735,7 @@ fn open_state(
         sensor,
         corr: observe::Correlator::new(profile),
         file_dedupe: HashMap::new(),
+        stopped: false,
     };
     state.restore();
     Ok((state, observations))
@@ -743,11 +746,18 @@ async fn writer(
     mut state: State,
     mut rx: mpsc::Receiver<Job>,
     mut obs: mpsc::UnboundedReceiver<Observation>,
+    stopped: oneshot::Sender<()>,
 ) {
     let mut ticker = tokio::time::interval(Duration::from_secs(1));
     loop {
         tokio::select! {
             job = rx.recv() => match job {
+                // `tamga stop` (o'rnatuvchi/o'chiruvchi ham chaqiradi): javob yakuniy holat yozilgandan keyin.
+                Some((req, reply)) if req.get("op").and_then(Value::as_str) == Some("shutdown") => {
+                    let size = state.shutdown("tamga stop");
+                    let _ = reply.send(json!({"ok": true, "pid": std::process::id(), "checkpoint": size}));
+                    break;
+                }
                 Some((req, reply)) => state.handle(&req, reply),
                 None => break,
             },
@@ -755,15 +765,28 @@ async fn writer(
             _ = ticker.tick() => state.tick(),
         }
     }
-    // To'xtashda kutilayotgan so'rovlar rad etiladi (fail-closed) va oxirgi checkpoint yoziladi.
-    let waiting: Vec<u64> = state.pending.keys().copied().collect();
-    for seq in waiting {
-        if let Some(p) = state.pending.remove(&seq) {
-            state.resolve(seq, p, Verdict::Deny, "default", "daemon to'xtadi");
+    state.shutdown("kanal yopildi");
+    let _ = stopped.send(());
+}
+
+impl State {
+    /// To'xtashda kutilayotgan so'rovlar rad etiladi (fail-closed) va oxirgi checkpoint yoziladi.
+    /// Ikkinchi chaqiruv zararsiz: navbat bo'sh, yangi yozuv yo'q.
+    fn shutdown(&mut self, why: &str) -> Option<u64> {
+        if self.stopped {
+            return None;
         }
+        self.stopped = true;
+        let waiting: Vec<u64> = self.pending.keys().copied().collect();
+        for seq in waiting {
+            if let Some(p) = self.pending.remove(&seq) {
+                self.resolve(seq, p, Verdict::Deny, "default", "daemon to'xtadi");
+            }
+        }
+        let size = self.checkpoint().ok().flatten();
+        log_line(&self.home, &format!("to'xtadi ({why})"));
+        size
     }
-    let _ = state.checkpoint();
-    log_line(&state.home, "to'xtadi");
 }
 
 #[cfg(windows)]
@@ -843,11 +866,17 @@ fn main() -> std::process::ExitCode {
                 }
             });
         }
-        let writer = tokio::spawn(writer(state, rx, obs_rx));
+        let (stopped_tx, stopped_rx) = oneshot::channel();
+        let writer = tokio::spawn(writer(state, rx, obs_rx, stopped_tx));
         let pipe = pipe_name();
         let result = tokio::select! {
             r = serve(pipe.clone(), tx) => r,
             _ = tokio::signal::ctrl_c() => Ok(()),
+            _ = stopped_rx => {
+                // `shutdown` javobi ulanish vazifasi orqali pipe'ga yozib ulgursin.
+                tokio::time::sleep(Duration::from_millis(200)).await;
+                Ok(())
+            }
         };
         // `tx` tushirildi — yozuvchi kutilayotganlarni rad etib, oxirgi checkpoint'ni yozib to'xtaydi.
         let _ = writer.await;

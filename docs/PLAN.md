@@ -239,6 +239,33 @@ ulanish o'tkazib yuborilishi mumkin; UDP/DNS kuzatilmaydi; fayl o'zgarishini qay
 noma'lum, u vaqt bo'yicha bog'lanadi. Nomuvofiqlik bloklamaydi (harakat allaqachon bo'lgan), u dalil va
 ogohlantirish sifatida yoziladi.
 
+**F8 — reliz (2026-10-17):** `TAMGA Studio_0.1.0_x64-setup.exe` (NSIS, 5,1 MB, `currentUser` —
+administrator kerak emas, `%LOCALAPPDATA%\TAMGA Studio`). Studio bilan birga 5 ta sidecar
+(`externalBin`): `tamgad`, `tamga-hook`, `tamga-mcp-proxy`, `tamga`, `tamga-verify`. Yig'ish:
+`scripts/build-installer.ps1`. Claude Code integratsiyasi `tamga-store::integrate` ga ko'chdi: CLI va
+Studio'dagi «Claude Code'ga ulash / Ajratish» bitta koddan foydalanadi.
+O'rnatuvchi hook'lari (`installer-hooks.nsh`): yangilash va o'chirishdan oldin `tamga stop` (yangi
+buyruq: daemon kutilayotgan `ask` larni rad etadi, oxirgi checkpoint'ni yozadi, CLI jarayon haqiqatan
+chiqquncha kutadi — aks holda `tamgad.exe` band bo'lib qoladi); to'liq o'chirishda (yangilashda emas)
+`tamga uninstall claude-code --user`. Jurnal va kalitlar o'chirilmaydi — bu dalil. Tauri'ning o'zbekcha
+xabarlari yo'q edi (bo'sh qolardi): `nsis/Uzbek.nsh` (27 kalit; Tauri BOM'ni o'zi qo'shadi, manbada BOM
+bo'lsa makensis yiqiladi).
+**Qabul sinovi:** (1) jim toza o'rnatish — 1 s, 7 fayl, HKCU yozuvi; (2) daemon ishlab turganda ustidan
+o'rnatish — hook daemon'ni to'xtatdi, fayllar almashtirildi; (3) o'rnatilgan Studio'da «ulash» → 5 hook
+qo'shildi, foydalanuvchining hook'i va `model` saqlandi, «Ajratish» → asl holat (soxta `USERPROFILE` da);
+(4) o'chirish: ishlab turgan daemon to'xtatildi, hook'lar olib tashlandi, yorliq/papka/registr qolmadi,
+jurnal qoldi. Haqiqiy `~/.claude/settings.json` xeshi butun sinov davomida o'zgarmadi.
+**Demo:** `demo/run-demo.ps1` (7 parda, [DEMO.md](DEMO.md)) o'rnatilgan build'da haqiqiy Claude Code
+(haiku) bilan **9/9 PASS**: bir bosqichli va taint'li ikki bosqichli sizdirish bloklandi, `check.py` ning
+aytilmagan ulanishi `ref` bilan ushlandi, tashqariga yozish `ask` → inson qarori → bajarildi, Rust va
+Python verifikatorlari tahrir/o'chirish/kesishni aynan bir xil kod va indeks bilan topdi.
+**Sinovda topilgan va tuzatilgan xatolar:** (a) `spawn_detached` faqat std handle'larni xususiy qilardi:
+PowerShell orqali chaqirilganda boshqa meros handle'lar daemon'ga o'tib, chaqiruvchi pipe EOF'ini
+cheksiz kutardi — endi `CreateProcessW(bInheritHandles = FALSE)`; (b) `uninstall claude-code` hook
+bo'lmasa ham faylni qayta yozardi va `settings.json` yo'q bo'lsa uni yaratardi — endi tegmaydi (test);
+(c) soxta `USERPROFILE` bilan o'chirishda yorliq qoldi — Windows `User Shell Folders` ni jarayon
+muhitidan kengaytiradi; bu sinov artefakti, oddiy muhitda yorliq o'chadi (tekshirildi).
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

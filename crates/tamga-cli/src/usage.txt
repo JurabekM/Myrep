@@ -1,6 +1,7 @@
 foydalanish:
   tamga init                                  kalitlar va papkalarni tayyorlash
   tamga status                                daemon holati
+  tamga stop                                  daemon'ni to'xtatish (oxirgi checkpoint bilan)
   tamga verify                                o'z jurnalini to'liq tekshirish
   tamga checkpoint                            darhol checkpoint yozish
   tamga pending                               Studio navbatida kutilayotgan 'ask' so'rovlari

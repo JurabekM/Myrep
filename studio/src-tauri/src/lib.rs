@@ -255,6 +255,58 @@ fn reveal(state: tauri::State<'_, AppState>, path: String) -> Value {
     }
 }
 
+fn sibling(name: &str) -> Option<std::path::PathBuf> {
+    let exe = if cfg!(windows) {
+        format!("{name}.exe")
+    } else {
+        name.to_owned()
+    };
+    std::env::current_exe()
+        .ok()?
+        .parent()
+        .map(|d| d.join(exe))
+        .filter(|p| p.exists())
+}
+
+/// Claude Code (foydalanuvchi darajasi) integratsiyasi holati.
+#[tauri::command]
+fn integration_status() -> Value {
+    let settings = match tamga_store::integrate::target(&["--user"]) {
+        Ok(p) => p,
+        Err(e) => return json!({"ok": false, "error": e}),
+    };
+    let installed = tamga_store::integrate::installed(&settings);
+    json!({
+        "ok": installed.is_ok(),
+        "settings": settings.display().to_string(),
+        "installed": installed.as_ref().ok(),
+        "error": installed.err(),
+        "hook": sibling("tamga-hook").map(|p| p.display().to_string()),
+    })
+}
+
+/// Foydalanuvchi Studio'da bosganda: `~/.claude/settings.json` ga hook'larni qo'shish yoki olib tashlash
+/// (zaxira nusxa bilan; boshqa sozlamalar saqlanadi).
+#[tauri::command]
+fn integrate(action: String) -> Value {
+    let settings = match tamga_store::integrate::target(&["--user"]) {
+        Ok(p) => p,
+        Err(e) => return json!({"ok": false, "error": e}),
+    };
+    let r = match action.as_str() {
+        "install" => match sibling("tamga-hook") {
+            Some(hook) => tamga_store::integrate::install(&settings, &hook).map(|()| 5),
+            None => Err("tamga-hook.exe Studio bilan bir papkada topilmadi".into()),
+        },
+        "uninstall" => tamga_store::integrate::uninstall(&settings),
+        _ => Err("noma'lum amal".into()),
+    };
+    match r {
+        Ok(n) => json!({"ok": true, "changed": n, "settings": settings.display().to_string()}),
+        Err(e) => json!({"ok": false, "error": e}),
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(AppState {
@@ -277,7 +329,9 @@ pub fn run() {
             config_set,
             export_bundle,
             list_exports,
-            reveal
+            reveal,
+            integration_status,
+            integrate
         ])
         .run(tauri::generate_context!())
         .expect("TAMGA Studio ishga tushmadi");

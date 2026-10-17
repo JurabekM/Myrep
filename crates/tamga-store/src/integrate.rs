@@ -80,6 +80,17 @@ fn command(hook: &Path) -> String {
     format!("\"{}\"", hook.display().to_string().replace('\\', "/"))
 }
 
+/// TAMGA hook'lari o'rnatilganmi (kamida bitta hodisada).
+pub fn installed(settings: &Path) -> Result<bool, String> {
+    let m = read(settings)?;
+    Ok(m.get("hooks").and_then(Value::as_object).is_some_and(|h| {
+        h.values()
+            .filter_map(Value::as_array)
+            .flatten()
+            .any(is_tamga)
+    }))
+}
+
 pub fn install(settings: &Path, hook: &Path) -> Result<(), String> {
     let mut m = read(settings)?;
     let hooks = m.entry("hooks").or_insert_with(|| json!({}));
@@ -114,6 +125,10 @@ pub fn uninstall(settings: &Path) -> Result<usize, String> {
             }
         }
         hooks.retain(|_, v| v.as_array().is_none_or(|a| !a.is_empty()));
+    }
+    // O'chiruvchi buni har safar chaqiradi: TAMGA yozuvi bo'lmasa fayl (yoki uning yo'qligi) tegilmaydi.
+    if removed == 0 {
+        return Ok(0);
     }
     if m.get("hooks")
         .and_then(Value::as_object)
@@ -156,9 +171,25 @@ mod tests {
         assert!(v["hooks"]["SessionStart"][0].get("matcher").is_none());
         assert!(backup_path(&s).exists());
 
+        assert!(installed(&s).unwrap());
         assert_eq!(uninstall(&s).unwrap(), 5);
+        assert!(!installed(&s).unwrap());
         let v: Value = serde_json::from_str(&std::fs::read_to_string(&s).unwrap()).unwrap();
         assert_eq!(v, user, "uninstall asl holatni tiklaydi");
+
+        // Ikkinchi marta (o'chiruvchi): hech narsa olib tashlanmaydi, fayl baytma-bayt o'zgarmaydi.
+        let before = std::fs::read(&s).unwrap();
+        assert_eq!(uninstall(&s).unwrap(), 0);
+        assert_eq!(std::fs::read(&s).unwrap(), before);
         std::fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn uninstall_without_settings_creates_nothing() {
+        let dir = std::env::temp_dir().join(format!("tamga-uninstall-{}", std::process::id()));
+        std::fs::remove_dir_all(&dir).ok();
+        let s = dir.join(".claude/settings.json");
+        assert_eq!(uninstall(&s).unwrap(), 0);
+        assert!(!dir.exists(), "yo'q sozlamalar fayli yaratilmasligi kerak");
     }
 }

@@ -3,6 +3,7 @@
 //! ```text
 //! tamga init                                  kalitlar va papkalarni tayyorlash
 //! tamga status                                daemon holati
+//! tamga stop                                  daemon'ni to'xtatish (oxirgi checkpoint bilan)
 //! tamga verify                                o'z jurnalini to'liq tekshirish (zanjir + checkpoint + imzo)
 //! tamga checkpoint                            darhol checkpoint
 //! tamga install claude-code --project <dir>   loyiha .claude/settings.json ga hook qo'shish
@@ -10,8 +11,6 @@
 //! tamga uninstall claude-code (--project <dir> | --user)
 //! tamga shred <session>                       sessiya payload'larini unutish (jurnal tekshirilaveradi)
 //! ```
-
-mod install;
 
 use std::process::ExitCode;
 use std::time::Duration;
@@ -48,6 +47,53 @@ fn daemon_req(req: &Value) -> Result<Value, String> {
     )
     .map_err(|e| e.to_string())?;
     client::request(&mut pipe, req).map_err(|e| e.to_string())
+}
+
+/// Daemon'ni to'xtatadi (yangisini ishga tushirmaydi): kutilayotgan so'rovlar rad etiladi, oxirgi
+/// checkpoint yoziladi. Jarayon haqiqatan chiqquncha kutadi — o'rnatuvchi fayllarni almashtira olsin.
+fn stop() -> Result<ExitCode, String> {
+    let Ok(mut pipe) = client::connect(&pipe_name(), None, Duration::from_millis(500)) else {
+        println!("daemon ishlamayapti");
+        return Ok(ExitCode::SUCCESS);
+    };
+    let v = client::request(&mut pipe, &json!({"op": "shutdown"})).map_err(|e| e.to_string())?;
+    drop(pipe);
+    let pid = v["pid"].as_u64();
+    let deadline = std::time::Instant::now() + Duration::from_secs(10);
+    while let Some(pid) = pid {
+        if !process_alive(pid) {
+            break;
+        }
+        if std::time::Instant::now() > deadline {
+            return Err(format!("daemon (PID {pid}) 10 s ichida to'xtamadi"));
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    }
+    match v["checkpoint"].as_u64() {
+        Some(n) => println!(
+            "daemon to'xtadi (PID {}), yakuniy checkpoint: {n} yozuv",
+            pid.unwrap_or(0)
+        ),
+        None => println!("daemon to'xtadi (PID {})", pid.unwrap_or(0)),
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+#[cfg(windows)]
+fn process_alive(pid: u64) -> bool {
+    use std::os::windows::process::CommandExt as _;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    std::process::Command::new("tasklist")
+        .args(["/FI", &format!("PID eq {pid}"), "/FO", "CSV", "/NH"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).contains(&format!("\"{pid}\"")))
+        .unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+fn process_alive(pid: u64) -> bool {
+    std::path::Path::new(&format!("/proc/{pid}")).exists()
 }
 
 fn init(home: &Home) -> Result<(), String> {
@@ -126,6 +172,7 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             println!("{}", serde_json::to_string_pretty(&v).expect("json"));
             Ok(ExitCode::SUCCESS)
         }
+        ["stop"] => stop(),
         ["pending"] => {
             let v = daemon("pending")?;
             let items = v["items"].as_array().cloned().unwrap_or_default();
@@ -178,18 +225,21 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             }
         }),
         ["install", "claude-code", rest @ ..] | ["uninstall", "claude-code", rest @ ..] => {
-            let target = install::target(rest)?;
+            let target = tamga_store::integrate::target(rest)?;
             let hook = sibling("tamga-hook")
                 .ok_or("tamga-hook topilmadi (tamga bilan bir papkada bo'lishi kerak)")?;
             if a[0] == "install" {
                 let had_file = target.exists();
-                install::install(&target, &hook)?;
+                tamga_store::integrate::install(&target, &hook)?;
                 println!("Claude Code hook'lari o'rnatildi: {}", target.display());
                 if had_file {
-                    println!("Zaxira nusxa: {}", install::backup_path(&target).display());
+                    println!(
+                        "Zaxira nusxa: {}",
+                        tamga_store::integrate::backup_path(&target).display()
+                    );
                 }
             } else {
-                let n = install::uninstall(&target)?;
+                let n = tamga_store::integrate::uninstall(&target)?;
                 println!("{n} ta TAMGA hook'i olib tashlandi: {}", target.display());
             }
             Ok(ExitCode::SUCCESS)

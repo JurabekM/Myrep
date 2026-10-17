@@ -1,42 +1,93 @@
-# TAMGA — AI agentlar uchun "qora quti"
+# TAMGA — AI agentlar uchun «qora quti»
 
-TAMGA AI agentning har bir harakatini **bajarilishidan oldin** siyosat bo'yicha tekshiradi va
-**keyin** xesh-zanjirli, post-kvant imzoli, o'zgartirib bo'lmaydigan jurnalga yozadi.
-Jurnalni uchinchi tomon mustaqil verifikator bilan tekshira oladi.
+**TAMGA** AI agent (Claude Code, MCP mijozlari) qiladigan har bir amalni **bajarilishidan oldin**
+siyosat bilan tekshiradi, uni xesh-zanjirli va **post-kvant imzoli** jurnalga yozadi, agent
+*aytgani*ni OS *ko'rgani* bilan solishtiradi. Jurnalni uchinchi tomon TAMGA'siz, faqat Python
+standart kutubxonasi bilan tekshira oladi.
 
-- Reja va arxitektura: [docs/PLAN.md](docs/PLAN.md)
-- Ochiq format: [spec/TAMGA-RECORD-0.1.md](spec/TAMGA-RECORD-0.1.md) va [spec/test-vectors/](spec/test-vectors/)
+> *Tamg'a* — qadimgi turkiy muhr: kim, qachon va nima qilganini tasdiqlaydigan belgi.
 
-## Holat
+![TAMGA Studio — sessiya transkripti](docs/screenshots/f4-sessions.png)
 
-**F0 — poydevor** tayyor: Rust workspace (9 crate skeleti), Tauri 2 + React "TAMGA Studio" qobig'i,
-Claude Code dark theme tokenlari ([studio/src/theme/tokens.css](studio/src/theme/tokens.css)).
+## Nima uchun
 
-**F1 — TAMGA Record yadrosi** tayyor: `tamga-core` (JCS, xesh-zanjir, RFC 9162 Merkle, Ed25519 + ML-DSA-65
-gibrid checkpoint'lar, payload majburiyati) va `tamga-verify` CLI. ML-DSA-65 mustaqil C implementatsiyasi
-(liboqs 0.16) bilan ikki tomonlama tekshirilgan: bir xil urug'dan bayt-bir-xil kalit, imzolar ikki yo'nalishda
-tasdiqlanadi (`py scripts/interop_liboqs.py`).
+AI agentlar endi buyruq ishga tushiradi, fayl yozadi, tarmoqqa chiqadi. Hodisadan keyin «agent
+aslida nima qildi?» degan savolga javob odatda yo'q: transkript agentning *o'z* hikoyasi, uni
+tahrirlash mumkin, OS darajasida nima bo'lgani esa umuman yozilmaydi. TAMGA uchta narsani birlashtiradi:
 
-```bash
-tamga-verify log.jsonl --checkpoints checkpoints.jsonl --key key.json
+| | |
+|---|---|
+| **To'xtatadi** | Cedar siyosatlari: `.env` ni tashqariga yuborish, internetdan skriptni shell'ga uzatish, ishchi papkadan tashqarida o'chirish — bajarilishidan **oldin** bloklanadi. Sessiya «taint»i ikki bosqichli sizdirishni ham ushlaydi. |
+| **Isbotlaydi** | Har yozuv RFC 8785 JCS + SHA-256 zanjiri, RFC 9162 Merkle daraxti; checkpoint'larda **Ed25519 va ML-DSA-65** (FIPS 204) gibrid imzosi. Bitta bayt o'zgarsa — aniq indeks bilan topiladi. |
+| **Solishtiradi** | Admin huquqisiz OS sensori agent jarayon daraxtini, TCP ulanishlarini va fayl o'zgarishlarini kuzatadi: «aytdi va qildi» farqi (masalan, e'lon qilinmagan tarmoq ulanishi) alohida belgilanadi. |
+
+## O'rnatish (Windows 10/11)
+
+1. `TAMGA Studio_0.1.0_x64-setup.exe` ni ishga tushiring (5 MB, administrator huquqi **kerak emas** —
+   `%LOCALAPPDATA%\TAMGA Studio` ga o'rnatiladi). Jim o'rnatish: `setup.exe /S`.
+2. TAMGA Studio → **Sozlamalar → Claude Code integratsiyasi → «Claude Code'ga ulash»**.
+   Hook'lar `~/.claude/settings.json` ga qo'shiladi; boshqa sozlamalaringiz saqlanadi, avval
+   `settings.json.tamga-backup` zaxirasi yoziladi. Yangi ochilgan Claude Code sessiyalari yozila boshlaydi.
+
+O'rnatuvchi Studio bilan birga 5 ta yordamchi dasturni qo'yadi:
+
+| Fayl | Vazifa |
+|---|---|
+| `tamgad.exe` | daemon: yagona yozuvchi, siyosat, vault, checkpoint, OS sensori (named pipe, faqat joriy foydalanuvchi) |
+| `tamga-hook.exe` | Claude Code hook'i (p99 ≈ 11–13 ms); daemon ishlamasa uni o'zi ishga tushiradi |
+| `tamga-mcp-proxy.exe` | istalgan stdio MCP serverni siyosat bilan o'raydi |
+| `tamga.exe` | CLI: `init`, `status`, `stop`, `verify`, `pending`, `decide`, `export`, `shred` … |
+| `tamga-verify.exe` | mustaqil verifikator (faqat ochiq kalit kerak) |
+
+**Ma'lumotlar qayerda:** jurnal, shifrlangan payload vault va sozlamalar — `%LOCALAPPDATA%\tamga`;
+imzo va vault kalitlari — Windows Credential Manager. **O'chirish** (Sozlamalar → Ilovalar yoki
+`uninstall.exe /S`) daemon'ni oxirgi checkpoint bilan to'xtatadi va Claude Code hook'larini olib
+tashlaydi. Jurnal va kalitlar **qoladi**: bu dalil, uni o'zingiz saqlaysiz yoki o'chirasiz.
+
+## 10 daqiqalik demo
+
+```powershell
+powershell -ExecutionPolicy Bypass -File demo\run-demo.ps1 -Studio
 ```
 
-**F2 — daemon va Claude Code integratsiyasi** tayyor: `tamgad` (named pipe, yagona yozuvchi, `fsync`,
-avtomatik checkpoint), `tamga-hook`, `tamga` CLI, shifrlangan payload vault (crypto-shredding), spool
-(daemon ishlamaganda `dev`/`strict` rejimlar). Kalitlar Windows Credential Manager'da saqlanadi.
+Haqiqiy Claude Code sessiyalarida: sir sizdirish bloklanadi (bir va ikki bosqichli), skriptning
+aytilmagan ulanishi ushlanadi, xavfli amal inson tasdig'ini kutadi, so'ng dalil to'plami eksport
+qilinadi va jurnalni buzishning uch usuli ham aniq joyi bilan topiladi. Hammasi alohida qum
+qutisida — sizning sozlamalaringizga tegilmaydi. Batafsil: [docs/DEMO.md](docs/DEMO.md).
 
-```bash
-tamga init
-tamga install claude-code --project C:/path/to/project
-tamga status
-tamga verify
+| Tasdiqlash navbati (haqiqiy `claude -p` kutmoqda) | Aytdi va qildi: e'lon qilinmagan ulanish |
+|---|---|
+| ![](docs/screenshots/f4-approval.png) | ![](docs/screenshots/f7-said-did.png) |
+| **Buzilish aniqlandi (bitta yozuv o'zgartirilgan)** | **Hisobotlar: auditor uchun dalil to'plami** |
+| ![](docs/screenshots/f4-tamper.png) | ![](docs/screenshots/f6-reports.png) |
+
+## Qanday ishlaydi
+
+```text
+ Claude Code ── hook ──▶ tamga-hook ─────┐                        ┌──▶ jurnal (JSONL, xesh-zanjir)
+ MCP mijoz ─── stdio ─▶ tamga-mcp-proxy ─┼─ named pipe ─▶ tamgad ─┼──▶ vault (payload'lar, XChaCha20-Poly1305)
+ TAMGA Studio / tamga CLI ───────────────┘   faktlar → Cedar      ├──▶ checkpoint (Merkle + Ed25519 + ML-DSA-65)
+                                             deny · ask · allow   └──▶ OS sensori (jarayon, TCP, fayl) → os.observed
 ```
 
-**F3 — Cedar siyosatlari** tayyor: standart to'plam (`no-secret-exfil`, `no-pipe-to-shell`,
-`no-destructive-outside-workspace`, `ask-*`), sessiya taint'i va foydalanuvchi siyosatlari.
-Haqiqiy Claude Code sessiyasida `.env`ni tashqariga yuborish bajarilishidan oldin bloklandi.
+1. **Hook** Claude Code'dan `PreToolUse`/`PostToolUse`/sessiya hodisalarini oladi va daemon'ga yuboradi.
+   TAMGA hech qachon `allow` qaytarmaydi — faqat `deny` yoki `ask`; Claude Code'ning o'z ruxsat tizimi ishlayveradi.
+2. **Faktlar tahlilchisi** buyruqni tushunadi: `reads_secret_file`, `network_egress`, `pipes_to_shell`,
+   `writes_outside_workspace`, `sends_tainted_secret` … Cedar siyosati shu faktlar bo'yicha qaror chiqaradi
+   (`deny` > `ask` > `allow`).
+3. **ask** — agent oynasida yoki Studio'ning tasdiqlash navbatida (headless agent ham kutadi);
+   inson qarori `decision.human` yozuvi bo'lib zanjirga muhrlanadi.
+4. **Jurnal**: yozuvda payload'ning o'zi emas, faqat xeshi; matn sessiya kaliti bilan shifrlangan vault'da.
+   `tamga shred <sessiya>` kalitni o'chiradi — matn unutiladi, jurnal esa tekshirilaveradi (GDPR uchun).
+5. **OS sensori** hook bergan PID'dan agent ildizini topadi, 200 ms da jarayonlar va TCP jadvalini,
+   maxfiy papkalardagi fayl o'zgarishlarini kuzatadi va har kuzatuvni tool chaqiruviga (`ref`) bog'laydi.
 
-O'z siyosatingiz — `<TAMGA_HOME>/policies/<nom>.cedar` (sxema: `crates/tamga-policy/policies/schema.cedarschema`):
+### Siyosatlar
+
+Standart to'plam: `no-secret-exfil`, `no-pipe-to-shell`, `no-destructive-outside-workspace` (deny),
+`ask-egress-after-secret-read`, `ask-force-push`, `ask-write-outside-workspace`, `ask-system-change` (ask).
+O'zingiznikini `%LOCALAPPDATA%\tamga\policies\<nom>.cedar` ga qo'ying (sxema:
+[schema.cedarschema](crates/tamga-policy/policies/schema.cedarschema)), daemon jonli qabul qiladi:
 
 ```cedar
 @id("no-webfetch-to-pastebins") @verdict("deny") @reason("pastebin taqiqlangan")
@@ -44,64 +95,85 @@ forbid (principal, action == Tamga::Action::"use_tool", resource == Tamga::Tool:
 when { context.url like "*pastebin*" };
 ```
 
-**F4 — TAMGA Studio jonli ma'lumot bilan:** jonli oqim (faktlar, qarorlar, vault'dagi payload, sirlar yashirilgan),
-**tasdiqlash navbati** (`ask_route: "studio"` — headless agent ham inson qarorini kutadi, qaror `decision.human`
-bo'lib zanjirga muhrlanadi), sessiyalar (Claude Code transkripti uslubida), yaxlitlik (buzilishni aniq indeks bilan
-ko'rsatadi), siyosatlar va sozlamalar (daemon jonli qabul qiladi). CLI: `tamga pending`, `tamga decide <seq> allow|deny`.
+### MCP serverlar
 
-**F5 — MCP proxy:** `tamga-mcp-proxy` istalgan stdio MCP serverni o'raydi (Claude Code, Claude Desktop,
-Cursor — hook tizimi bo'lmagan mijozlar ham). `tools/call` bajarilishidan oldin siyosat bilan tekshiriladi,
-rad etilsa serverga yetmaydi va model MCP `isError` javobida sababni ko'radi. Bir nechta server bir `--session`
-ni bo'lishsa, biri o'qigan sirni boshqasi orqali yuborib bo'lmaydi.
+Hook tizimi bo'lmagan mijozlar (Claude Desktop, Cursor) uchun: serverni `tamga-mcp-proxy` bilan o'rang.
+Bloklangan `tools/call` serverga yetmaydi, model `isError` javobida sababni ko'radi. Bir nechta server
+bitta `--session` ni bo'lishsa, biri o'qigan sirni boshqasi orqali yuborib bo'lmaydi.
 
 ```json
-{"mcpServers": {"files": {"command": "tamga-mcp-proxy", "args": ["--name", "files", "--session", "proj", "--",
-  "node", "server-filesystem/dist/index.js", "C:/proj"]}}}
+{"mcpServers": {"files": {"command": "tamga-mcp-proxy",
+  "args": ["--name", "files", "--session", "proj", "--", "node", "server-filesystem/dist/index.js", "C:/proj"]}}}
 ```
 
-**F6 — mustaqil verifikator va dalil to'plami:** `verify-py/` faqat Python standart kutubxonasidan
-foydalanadi: Ed25519 (RFC 8032, qat'iy) va ML-DSA-65 (FIPS 204) noldan yozilgan, Rust yoki liboqs bilan
-umumiy kodi yo'q. U Rust, RustCrypto va liboqs imzolarini, 16 buzilish vektorini va haqiqiy jurnallarni
-tekshiradi: 45/45 holatda Rust bilan aynan bir xil kod va indeks chiqdi
-(`py scripts/crosscheck_verifiers.py`). `tamga export` yoki Studio'dagi Hisobotlar ekrani auditor uchun
-ZIP yaratadi: jurnal, checkpoint'lar, kalit, HTML xulosa, ixtiyoriy payload'lar (tuz bilan) va to'plam
-ichida verifikatorning o'zi.
+## Mustaqil tekshirish
 
-```bash
-cd verify && python -m tamga_verify ../evidence/log.jsonl --checkpoints ../evidence/checkpoints.jsonl --key ../evidence/public-key.json --payloads ../payloads
+Jurnal formati ochiq: [spec/TAMGA-RECORD-0.1.md](spec/TAMGA-RECORD-0.1.md) va
+[spec/test-vectors/](spec/test-vectors/) (JCS, zanjir, Merkle, checkpoint, 16 buzilish vektori, liboqs interop).
+
+```powershell
+tamga export --out dalil.zip            # yoki Studio → Hisobotlar
+cd dalil\verify
+python -m tamga_verify ..\evidence\log.jsonl --checkpoints ..\evidence\checkpoints.jsonl --key ..\evidence\public-key.json
 ```
 
-**F7 — "aytdi va qildi" (OS sensori, admin huquqisiz):** `tamga-sensor` agent jarayon daraxtini,
-TCP ulanishlarini (PID bilan) va fayl o'zgarishlarini kuzatadi. Kuzatuvlar `os.observed` yozuvi sifatida
-agent e'lon qilgan tool chaqiruviga (`ref`) bog'lanadi. Nomuvofiqlik ham belgilanadi: masalan, agent
-`py check.py` ni e'lon qildi (buyruq tahlili tarmoq ko'rmadi), skript esa tashqi manzilga ulandi. Bu
-haqiqiy Claude Code sessiyasida ushlandi. Ko'r nuqtalar Studio'da doim ko'rsatiladi: fayl o'qishlari
-ko'rinmaydi, juda qisqa jarayon yoki ulanish o'tkazib yuborilishi mumkin, UDP/DNS kuzatilmaydi.
+[`verify-py/`](verify-py/) — faqat Python standart kutubxonasi: Ed25519 (RFC 8032, qat'iy) va ML-DSA-65
+(FIPS 204) noldan yozilgan, Rust yoki liboqs bilan umumiy kodi yo'q. 45 ta holatda (Rust, RustCrypto,
+liboqs imzolari, buzilish vektorlari, haqiqiy jurnallar) Rust verifikatori bilan aynan bir xil kod va
+indeks beradi (`py scripts/crosscheck_verifiers.py`). Kalit ishonchi auditorga operatordan alohida
+kanal orqali beriladi (spec §10).
 
-| Jonli oqim va tafsilot | Tasdiqlash navbati (haqiqiy `claude -p` kutmoqda) |
+## Xavfsizlik modeli va halol chegaralar
+
+TAMGA **nimani kafolatlaydi:** yozilgan har yozuvni keyin o'zgartirish, o'chirish, qayta tartiblash yoki
+oxirgi checkpoint'gacha kesish sezilmasdan qolmaydi; maxfiy payload matni diskda ochiq yotmaydi;
+siyosat bloklagan buyruq bajarilmaydi.
+
+**Nimani kafolatlamaydi** (ataylab yozib qo'yilgan):
+
+- Kompyuterda administrator bo'lgan tajovuzkor daemon'ni to'xtatib, **keyingi** yozuvlarni yozdirmasligi
+  mumkin; oxirgi checkpoint'dan keyingi yozuvlarni kesish faqat tashqi guvoh (`witness_dir`) bilan ko'rinadi.
+- Faktlar tahlilchisi buyruq matnini tahlil qiladi: ataylab yashirilgan (obfuskatsiya qilingan) buyruqni
+  o'tkazib yuborishi mumkin — shuning uchun OS sensori ham bor.
+- OS sensori admin huquqisiz ishlaydi: fayl **o'qishlarini** ko'rmaydi, 200 ms dan qisqa jarayon/ulanishni
+  o'tkazib yuborishi mumkin, UDP/DNS kuzatilmaydi, fayl o'zgarishi jarayonga vaqt bo'yicha bog'lanadi.
+- `dev` rejimida daemon ishlamasa hodisa spool'ga yoziladi va amal ruxsat etiladi; `strict` — bloklanadi.
+- Hozircha faqat Windows (named pipe, Credential Manager, sensor). Format va verifikator — platformaga bog'liq emas.
+
+## Dasturchilar uchun
+
+Talablar: Rust 1.90+ (MSVC), Node 24, pnpm, Python 3.11+ (verify-py testlari uchun).
+
+```powershell
+cargo fmt --all --check; cargo clippy --workspace --all-targets -- -D warnings; cargo test --workspace
+cd verify-py; py -m unittest discover -s tests; cd ..
+cd studio; pnpm install; pnpm tauri dev           # Studio (Vite 1430)
+powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1   # Setup.exe
+```
+
+| Crate | |
 |---|---|
-| ![](docs/screenshots/f4-detail.png) | ![](docs/screenshots/f4-approval.png) |
-| **Sessiya transkripti** | **Buzilish aniqlandi (bitta yozuv qo'lda o'zgartirilgan)** |
-| ![](docs/screenshots/f4-sessions.png) | ![](docs/screenshots/f4-tamper.png) |
-| **Hisobotlar: dalil to'plami** | **Aytdi va qildi: e'lon qilinmagan ulanish** |
-| ![](docs/screenshots/f6-reports.png) | ![](docs/screenshots/f7-said-did.png) |
+| `tamga-core` | format: JCS, zanjir, Merkle, gibrid checkpoint, payload majburiyati |
+| `tamga-store` | jurnal fayli, vault, kalitlar, spool, eksport, Claude Code integratsiyasi |
+| `tamga-policy` | faktlar tahlilchisi + Cedar 4 dvigateli + taint |
+| `tamga-redact` | sirlarni yashirish (Studio va xatolar uchun) |
+| `tamga-sensor` | admin'siz OS sensori (sysinfo, netstat2, notify) |
+| `tamga-win` | workspace'dagi yagona `unsafe`: daemon'ni handle merosisiz ishga tushirish |
+| `tamgad`, `tamga-hook`, `tamga-mcp-proxy`, `tamga-cli`, `tamga-verify` | dasturlar |
 
-## Ishga tushirish (Windows)
+Reja va har bosqich natijalari: [docs/PLAN.md](docs/PLAN.md). Raqobatchilar tahlili: [docs/COMPETITORS.md](docs/COMPETITORS.md).
+Interfeys Claude Code desktop'ining dark mavzusi tokenlari bilan: [tokens.css](studio/src/theme/tokens.css).
 
-Talablar: Rust 1.90+, Node 24, pnpm 12.
+## English summary
 
-```bash
-cd studio && pnpm install && pnpm tauri dev
-```
-
-Tekshiruvlar:
-
-```bash
-cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace
-```
-
-Ikonkani qayta chizish: `py scripts/make_icon.py` (Pillow kerak).
+TAMGA is a flight recorder for AI agents. A Claude Code hook (or an MCP proxy) sends every tool call to a
+local daemon *before* it runs; a fact analyzer plus Cedar policies decide deny / ask / allow (secret
+exfiltration, including two-step via session taint, is blocked). Every event is appended to a hash-chained
+JSONL log with RFC 9162 Merkle checkpoints signed by **both Ed25519 and ML-DSA-65**; payloads live in an
+encrypted vault and can be crypto-shredded. An admin-free OS sensor correlates processes, TCP connections and
+file changes with the declared tool call ("said vs did"). Evidence bundles verify with a stdlib-only Python
+verifier. Windows installer: `TAMGA Studio_0.1.0_x64-setup.exe`; demo: `demo\run-demo.ps1`.
 
 ## Litsenziya
 
-Kod — Apache-2.0, spec — CC-BY-4.0 (taklif, [docs/PLAN.md](docs/PLAN.md) §9).
+Kod — Apache-2.0, spec — CC-BY-4.0.
