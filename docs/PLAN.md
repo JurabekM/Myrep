@@ -146,6 +146,15 @@ tamga/
 - **O'lchangan kechikish (release, 200 ta `PreToolUse`):** p50 9.1 ms, p99 10.8 ms. Bu Windows
   jarayon yaratish (~4 ms) va diskka `fsync`ni o'z ichiga oladi. Maqsad < 20 ms bajarildi.
 
+**F2 qabul sinovi (2026-10-17, haqiqiy Claude Code 2.1.233, `claude -p`, haiku):** alohida sinov
+loyihasida sessiya Read va `Bash(ls -la)` ishlatdi. Jurnalga 7 hodisa yozildi: `session.start`, `prompt`,
+2 × (`tool.pre` → `tool.post`, `ref` `tool_use_id` orqali to'g'ri bog'langan) va `session.end`. Sessiya
+oxirida checkpoint imzolandi. `tamga verify` va mustaqil `tamga-verify` OK chiqdi. Jurnalda ochiq matn yo'q;
+`tamga show` payload'ni vault'dan ochib digest bilan solishtirdi. `tamga shred`'dan keyin payload ochilmaydi,
+jurnal esa baribir tasdiqlanadi.
+Eslatma: Claude desktop ichidan ichki `claude` ishga tushirilsa, `CLAUDE_*` va `ANTHROPIC_*` muhit
+o'zgaruvchilari olib tashlanishi kerak, aks holda CLI o'z login'ini ishlatmaydi.
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

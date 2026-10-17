@@ -151,11 +151,10 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             }
             Ok(ExitCode::SUCCESS)
         }
+        ["show", seq] => show(&home, seq),
         ["shred", session] => {
-            let store = secrets::default_store(&home).map_err(|e| e.to_string())?;
-            let master = keystore::vault_master(store.as_ref()).map_err(|e| e.to_string())?;
-            Vault::new(home.vault(), master)
-                .and_then(|v| v.shred(session))
+            open_vault(&home)?
+                .shred(session)
                 .map_err(|e| e.to_string())?;
             println!(
                 "`{session}` sessiyasi payload'lari unutildi. Jurnal va checkpoint'lar tekshirilaveradi."
@@ -167,6 +166,44 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             Ok(ExitCode::from(2))
         }
     }
+}
+
+fn open_vault(home: &Home) -> Result<Vault, String> {
+    let store = secrets::default_store(home).map_err(|e| e.to_string())?;
+    let master = keystore::vault_master(store.as_ref()).map_err(|e| e.to_string())?;
+    Vault::new(home.vault(), master).map_err(|e| e.to_string())
+}
+
+/// Yozuvni va uning payload'larini vault'dan ochib ko'rsatadi. Har bir payload jurnaldagi
+/// tuzlangan digest bilan solishtiriladi (`Vault::get`).
+fn show(home: &Home, seq: &str) -> Result<ExitCode, String> {
+    let seq: u64 = seq.parse().map_err(|_| "seq butun son bo'lishi kerak")?;
+    let path = home.log_path(&default_log_id());
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let line = text
+        .lines()
+        .nth(seq as usize)
+        .ok_or(format!("#{seq} yozuv yo'q"))?;
+    let record: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
+    println!("{}", serde_json::to_string_pretty(&record).expect("json"));
+    let session = record["session"].as_str().unwrap_or_default();
+    let vault = open_vault(home)?;
+    for (name, reference) in [
+        ("tool.input", &record["tool"]["input"]),
+        ("result", &record["result"]),
+    ] {
+        if reference.is_null() {
+            continue;
+        }
+        match vault.get(session, reference).map_err(|e| e.to_string())? {
+            Some(data) => println!(
+                "--- {name} (vault, digest mos) ---\n{}",
+                String::from_utf8_lossy(&data)
+            ),
+            None => println!("--- {name}: vault'da yo'q yoki sessiya unutilgan (shred) ---"),
+        }
+    }
+    Ok(ExitCode::SUCCESS)
 }
 
 fn main() -> ExitCode {
