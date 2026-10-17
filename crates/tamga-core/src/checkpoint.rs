@@ -7,7 +7,7 @@ use crate::digest::Digest;
 use crate::error::{ErrorCode, VerifyError};
 use crate::jcs::{self, JcsError};
 use crate::keys::{PublicKeys, SigningKeys};
-use crate::{AAR_VERSION, b64, merkle, record};
+use crate::{FORMAT_VERSION, b64, merkle, record};
 
 pub const SIGN_DOMAIN: &[u8] = b"TAMGA-CHECKPOINT-v1\0";
 
@@ -43,7 +43,7 @@ pub fn create(
     }
     let covered = &hashes[..size as usize];
     let mut cp = json!({
-        "aar": AAR_VERSION,
+        "tamga": FORMAT_VERSION,
         "type": "checkpoint",
         "log": log,
         "size": size,
@@ -88,8 +88,8 @@ pub fn verify_one(
         s(k).and_then(|v| Digest::parse(v).ok_or_else(|| fmt(&format!("`{k}` digest emas"))))
     };
 
-    if s("aar")? != AAR_VERSION || s("type")? != "checkpoint" {
-        return Err(fmt("aar/type noto'g'ri"));
+    if s("tamga")? != FORMAT_VERSION || s("type")? != "checkpoint" {
+        return Err(fmt("tamga/type noto'g'ri"));
     }
     let log = s("log")?;
     let size = map

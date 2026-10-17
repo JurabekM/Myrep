@@ -74,7 +74,7 @@ const SETTINGS: ScreenDef = {
 
 interface AppInfo {
   version: string;
-  aar_version: string;
+  format_version: string;
 }
 
 export function App() {
@@ -130,7 +130,7 @@ export function App() {
         <div className="sidebar-foot">
           {navButton(SETTINGS)}
           <div className="mono" style={{ color: "var(--text-faint)", padding: "8px 12px 0" }}>
-            v{info?.version ?? "—"} · AAR {info?.aar_version ?? "0.1"}
+            v{info?.version ?? "—"} · TR {info?.format_version ?? "0.1"}
           </div>
         </div>
       </nav>

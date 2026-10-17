@@ -1,4 +1,4 @@
-//! tamga-verify — AAR 0.1 jurnalini mustaqil tekshiradi (spec §8).
+//! tamga-verify — TAMGA Record 0.1 jurnalini mustaqil tekshiradi (spec §8).
 //!
 //! Foydalanish:
 //!   tamga-verify <jurnal.jsonl> [--checkpoints <fayl>] [--key <ochiq-kalit.json>]

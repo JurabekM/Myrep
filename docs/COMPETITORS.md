@@ -1,5 +1,9 @@
 # TAMGA — raqobatchilar tahlili
 
+> **Yangilanish (2026-10-17):** bu tahlil asosida format nomi "AAR" dan **TAMGA Record** ga
+> o'zgartirildi (§12.4-2). draft-sharif-08 bilan munosabat `spec/TAMGA-RECORD-0.1.md` §11 da:
+> xesh qoidalari bayt darajasida farq qiladi, shuning uchun moslik proyeksiya (eksport) orqali.
+
 **Sana:** 2026-10-17. **Usul:** internet qidiruvi (~45 so'rov) va loyiha README, rasmiy hujjat,
 arXiv va IETF Datatracker sahifalarini o'qish. Bu hujjat `docs/PLAN.md` §1 dagi yangilik
 da'vosini tekshiradi.

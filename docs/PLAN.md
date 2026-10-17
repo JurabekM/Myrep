@@ -29,8 +29,9 @@ Bu **kombinatsiya** hech qayerda topilmadi. **Alohida elementlarning har biri es
 shuning uchun ularning birortasi uchun "birinchi" deb aytilmaydi.
 Eng yaqin raqobatchilar: AgentProvenance (5 mezonning hammasi qisman, faqat Linux), Pipelock va
 Microsoft AGT. Haqiqiy farqlar: Windows-native "aytdi va qildi", Ed25519+ML-DSA-65 gibrid imzo,
-test vektorli shredding. AAR formati draft-sharif-agent-audit-trail bilan mos qilib loyihalanadi
-(COMPETITORS.md §12.4).
+test vektorli shredding. Format nomi Pipelock'ning "Agent Action Receipt" (AARP) bilan to'qnashmasligi uchun
+"AAR" dan **TAMGA Record** ga o'zgartirildi. draft-sharif-agent-audit-trail-08 bilan bayt-darajada mos emas
+(sabablari asosli), lekin unga yo'qotishsiz proyeksiya qilinadi — spec §11.
 
 ## 2. Tahdid modeli (halol chegaralar)
 
@@ -49,7 +50,7 @@ test vektorli shredding. AAR formati draft-sharif-agent-audit-trail bilan mos qi
  MCP mijoz ──proxy───┤                    ┌─────────── tamgad (daemon, Rust) ───────────┐
  SDK (keyin) ────────┼── named pipe/UDS ─▶│ normalize → redact → POLICY → decision     │
  OS sensor ──────────┘                    │        ↓                                    │
-                                          │ AAR record → hash chain → Merkle → sign     │
+                                          │ TR record → hash chain   → Merkle → sign     │
                                           │        ↓                         ↓          │
                                           │ segment files (JSONL)   checkpoint → witness│
                                           │ SQLite index            payload vault (enc) │
@@ -77,9 +78,9 @@ test vektorli shredding. AAR formati draft-sharif-agent-audit-trail bilan mos qi
 
 ```
 tamga/
-  spec/                 AAR-0.1.md (ochiq standart) + test-vectors/
+  spec/                 TAMGA-RECORD-0.1.md (ochiq standart) + test-vectors/
   crates/
-    tamga-core/         AAR turlari, JCS, hash chain, Merkle, gibrid imzo
+    tamga-core/         TAMGA Record turlari, JCS, hash chain, Merkle, gibrid imzo
     tamga-store/        segmentlar, SQLite indeks, payload vault
     tamga-policy/       Cedar bilan baholash, standart siyosatlar to'plami
     tamga-redact/       sirlarni topish (API kalit, token, .env)
@@ -93,11 +94,11 @@ tamga/
   docs/
 ```
 
-## 4. AAR — Agent Action Record (ochiq format, v0.1)
+## 4. TAMGA Record (ochiq format, v0.1)
 
 ```json
 {
-  "aar": "0.1",
+  "tamga": "0.1",
   "seq": 1842,
   "ts": "2026-10-17T10:41:07.118Z",
   "session": "cc_7f3a…",
@@ -190,7 +191,7 @@ natija haqiqiy ishga tushirib ko'rsatiladi.
 | # | Bosqich | Natija | Qabul mezoni |
 |---|---|---|---|
 | **F0** | Poydevor (1–2 kun) | workspace, Tauri skeleti, `tokens.css`, CI, raqobatchilar tahlili | bo'sh Studio ochiladi; foni skrinshotda Claude Code bilan yonma-yon solishtiriladi |
-| **F1** | AAR yadrosi | `spec/AAR-0.1.md`, `tamga-core`, test vektorlari | JCS va xesh vektorlari o'tadi; ML-DSA-65 NIST vektorlari bilan mos; 1 baytni o'zgartirish aniq seq'da aniqlanadi |
+| **F1** | TAMGA Record yadrosi | `spec/TAMGA-RECORD-0.1.md`, `tamga-core`, test vektorlari | JCS va xesh vektorlari o'tadi; ML-DSA-65 NIST vektorlari bilan mos; 1 baytni o'zgartirish aniq seq'da aniqlanadi |
 | **F2** | Daemon + Claude Code hook | `tamgad`, `tamga-store`, `tamga-hook`, `tamga install claude-code` | **haqiqiy** Claude Code sessiyasi to'liq yoziladi; daemon o'chiq bo'lsa spool ishlaydi |
 | **F3** | Siyosat va bloklash | `tamga-policy`, standart to'plam, "ask" oqimi | agent `.env`ni o'qib `curl` qilmoqchi bo'lsa bloklanadi, sababi agentga ko'rinadi |
 | **F4** | Studio GUI | 8 ekran, jonli oqim, qayta o'ynatish | har bir tugma bosib sinaladi; skrinshotlar ko'z bilan tekshiriladi |

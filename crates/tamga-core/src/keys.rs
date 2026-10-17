@@ -4,7 +4,7 @@ use ml_dsa::{EncodedSignature, EncodedVerifyingKey, MlDsa65, Seed};
 use serde_json::{Value, json};
 
 use crate::digest::{Digest, to_hex};
-use crate::{AAR_VERSION, b64};
+use crate::{FORMAT_VERSION, b64};
 
 pub const KEY_DOMAIN: &[u8] = b"TAMGA-KEY-v1\0";
 /// FIPS 204 kontekst satri: imzo boshqa maqsadda qayta ishlatilmasligi uchun.
@@ -108,7 +108,7 @@ impl PublicKeys {
 
     pub fn to_json(&self) -> Value {
         json!({
-            "aar": AAR_VERSION,
+            "tamga": FORMAT_VERSION,
             "type": "public-key",
             "key": self.key_id(),
             "ed25519": b64::encode(&self.ed_bytes()),
@@ -123,8 +123,8 @@ impl PublicKeys {
                 .and_then(Value::as_str)
                 .ok_or_else(|| KeyError::Format(format!("`{k}` yo'q")))
         };
-        if field("aar")? != AAR_VERSION || field("type")? != "public-key" {
-            return Err(KeyError::Format("aar/type noto'g'ri".into()));
+        if field("tamga")? != FORMAT_VERSION || field("type")? != "public-key" {
+            return Err(KeyError::Format("tamga/type noto'g'ri".into()));
         }
         let ed = b64::decode(field("ed25519")?)
             .ok_or_else(|| KeyError::Format("ed25519 base64url emas".into()))?;

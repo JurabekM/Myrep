@@ -9,7 +9,7 @@ use crate::jcs::{self, JcsError};
 pub const LEAF_PREFIX: u8 = 0x00;
 
 /// Yozuvchi o'zi qo'yadigan maydonlar — chaqiruvchi ularni bera olmaydi.
-pub const RESERVED: [&str; 7] = ["aar", "log", "seq", "ts", "session", "event", "prev"];
+pub const RESERVED: [&str; 7] = ["tamga", "log", "seq", "ts", "session", "event", "prev"];
 
 /// Spec §3.3 dagi ma'lum hodisalar. Noma'lumlari qabul qilinadi, lekin ogohlantirish beriladi.
 pub const KNOWN_EVENTS: [&str; 7] = [
@@ -40,7 +40,7 @@ pub struct Header {
 }
 
 /// Majburiy maydonlarni va ma'lum ixtiyoriy maydonlar shaklini tekshiradi (`E_FIELD` holatlari).
-/// `aar` versiyasi alohida (`E_VERSION`) tekshiriladi.
+/// `tamga` versiyasi alohida (`E_VERSION`) tekshiriladi.
 pub fn parse_header(map: &Map<String, Value>) -> Result<Header, String> {
     let s = |k: &str| -> Result<&str, String> {
         map.get(k)

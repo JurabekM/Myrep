@@ -5,14 +5,14 @@ TAMGA AI agentning har bir harakatini **bajarilishidan oldin** siyosat bo'yicha 
 Jurnalni uchinchi tomon mustaqil verifikator bilan tekshira oladi.
 
 - Reja va arxitektura: [docs/PLAN.md](docs/PLAN.md)
-- Ochiq format: [spec/AAR-0.1.md](spec/AAR-0.1.md) va [spec/test-vectors/](spec/test-vectors/)
+- Ochiq format: [spec/TAMGA-RECORD-0.1.md](spec/TAMGA-RECORD-0.1.md) va [spec/test-vectors/](spec/test-vectors/)
 
 ## Holat
 
 **F0 — poydevor** tayyor: Rust workspace (9 crate skeleti), Tauri 2 + React "TAMGA Studio" qobig'i,
 Claude Code dark theme tokenlari ([studio/src/theme/tokens.css](studio/src/theme/tokens.css)).
 
-**F1 — AAR yadrosi** tayyor: `tamga-core` (JCS, xesh-zanjir, RFC 9162 Merkle, Ed25519 + ML-DSA-65
+**F1 — TAMGA Record yadrosi** tayyor: `tamga-core` (JCS, xesh-zanjir, RFC 9162 Merkle, Ed25519 + ML-DSA-65
 gibrid checkpoint'lar, payload majburiyati) va `tamga-verify` CLI. ML-DSA-65 mustaqil C implementatsiyasi
 (liboqs 0.16) bilan ikki tomonlama tekshirilgan: bir xil urug'dan bayt-bir-xil kalit, imzolar ikki yo'nalishda
 tasdiqlanadi (`py scripts/interop_liboqs.py`).

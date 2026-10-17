@@ -1,4 +1,4 @@
-//! AAR-JSON: RFC 8785 (JCS) ning faqat butun sonli qismi (spec §2.1).
+//! TR-JSON: RFC 8785 (JCS) ning faqat butun sonli qismi (spec §2.1).
 //!
 //! Butun sonlar bilan cheklanish RFC 8785 dagi ECMAScript son formatlash bosqichini olib tashlaydi —
 //! mustaqil implementatsiyalar (masalan Python verifikatori) uchun eng xatoga moyil joy shu edi.
@@ -10,13 +10,13 @@ pub const MAX_SAFE_INTEGER: i64 = (1 << 53) - 1;
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum JcsError {
-    #[error("butun bo'lmagan son AAR-JSON'da ruxsat etilmaydi: {0}")]
+    #[error("butun bo'lmagan son TR-JSON'da ruxsat etilmaydi: {0}")]
     NonInteger(String),
     #[error("butun son ±(2^53-1) oralig'idan tashqarida: {0}")]
     OutOfRange(String),
 }
 
-/// Qiymatning kanonik AAR-JSON satri.
+/// Qiymatning kanonik TR-JSON satri.
 pub fn canonicalize(v: &Value) -> Result<String, JcsError> {
     let mut out = String::new();
     write_value(v, &mut out)?;

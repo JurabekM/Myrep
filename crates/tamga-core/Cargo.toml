@@ -1,6 +1,6 @@
 [package]
 name = "tamga-core"
-description = "AAR yozuv turlari, JCS kanonikalashtirish, xesh-zanjir, Merkle va gibrid imzo"
+description = "TAMGA Record turlari, JCS kanonikalashtirish, xesh-zanjir, Merkle va gibrid imzo"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -2,7 +2,7 @@
 
 use serde_json::{Map, Value};
 
-use crate::AAR_VERSION;
+use crate::FORMAT_VERSION;
 use crate::digest::Digest;
 use crate::error::{ErrorCode, VerifyError};
 use crate::jcs::{self, JcsError};
@@ -73,7 +73,7 @@ impl LogWriter {
         }
         let mut map = body;
         let prev = self.hashes.last().copied().unwrap_or(Digest::GENESIS);
-        map.insert("aar".into(), AAR_VERSION.into());
+        map.insert("tamga".into(), FORMAT_VERSION.into());
         map.insert("log".into(), self.log.clone().into());
         map.insert("seq".into(), (self.hashes.len() as u64).into());
         map.insert("ts".into(), ts.into());
@@ -176,11 +176,11 @@ pub fn verify_log(text: &str) -> Result<LogSummary, VerifyError> {
         let index = i as u64;
         let map = parse_canonical(line, index)?;
 
-        if map.get("aar").and_then(Value::as_str) != Some(AAR_VERSION) {
+        if map.get("tamga").and_then(Value::as_str) != Some(FORMAT_VERSION) {
             return Err(VerifyError::new(
                 ErrorCode::Version,
                 index,
-                "`aar` \"0.1\" emas",
+                "`tamga` \"0.1\" emas",
             ));
         }
         let header =
@@ -276,7 +276,7 @@ mod tests {
     #[test]
     fn reserved_fields_are_rejected() {
         let mut w = LogWriter::new("t").unwrap();
-        for k in ["seq", "prev", "hash", "aar"] {
+        for k in ["seq", "prev", "hash", "tamga"] {
             let err = w.append(
                 "2026-10-17T10:00:00.000Z",
                 "s",

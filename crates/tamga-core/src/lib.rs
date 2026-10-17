@@ -1,6 +1,6 @@
-//! TAMGA yadrosi: AAR 0.1 formatining ma'lumotnoma implementatsiyasi (`spec/AAR-0.1.md`).
+//! TAMGA yadrosi: TAMGA Record 0.1 formatining ma'lumotnoma implementatsiyasi (`spec/TAMGA-RECORD-0.1.md`).
 //!
-//! - [`jcs`] — AAR-JSON kanonikalashtirish (RFC 8785, faqat butun sonlar).
+//! - [`jcs`] — TR-JSON kanonikalashtirish (RFC 8785, faqat butun sonlar).
 //! - [`digest`] — `sha256:<hex>` digest turi va domen-ajratilgan xeshlar.
 //! - [`record`] — yozuv maydonlarini tekshirish va yozuv xeshi.
 //! - [`chain`] — jurnal yozuvchi ([`chain::LogWriter`]) va zanjir verifikatori.
@@ -22,13 +22,13 @@ pub mod record;
 pub use digest::Digest;
 pub use error::{ErrorCode, VerifyError};
 
-/// AAR format versiyasi, crate qaysi spec bilan mos ekani.
-pub const AAR_VERSION: &str = "0.1";
+/// TAMGA Record format versiyasi, crate qaysi spec bilan mos ekani.
+pub const FORMAT_VERSION: &str = "0.1";
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn version_is_set() {
-        assert_eq!(super::AAR_VERSION, "0.1");
+        assert_eq!(super::FORMAT_VERSION, "0.1");
     }
 }

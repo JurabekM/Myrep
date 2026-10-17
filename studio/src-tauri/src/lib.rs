@@ -5,14 +5,14 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct AppInfo {
     pub version: &'static str,
-    pub aar_version: &'static str,
+    pub format_version: &'static str,
 }
 
 #[tauri::command]
 fn app_info() -> AppInfo {
     AppInfo {
         version: env!("CARGO_PKG_VERSION"),
-        aar_version: tamga_core::AAR_VERSION,
+        format_version: tamga_core::FORMAT_VERSION,
     }
 }
 

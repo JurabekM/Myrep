@@ -117,7 +117,7 @@ def main() -> int:
 
 
 def canonical(v) -> str:
-    """AAR-JSON (spec §2.1) — Rust'dan mustaqil Python implementatsiyasi."""
+    """TR-JSON (spec §2.1) — Rust'dan mustaqil Python implementatsiyasi."""
     if v is None:
         return "null"
     if v is True:

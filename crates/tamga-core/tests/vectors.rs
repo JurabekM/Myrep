@@ -114,7 +114,7 @@ fn jcs_vectors() -> Value {
         ("[-9007199254740992]", "out of range"),
     ];
     json!({
-        "description": "AAR-JSON (spec §2.1): input → canonical; invalid inputs MUST be rejected",
+        "description": "TR-JSON (spec §2.1): input → canonical; invalid inputs MUST be rejected",
         "valid": valid.iter().map(|i| {
             let v: Value = serde_json::from_str(i).unwrap();
             json!({"input": i, "canonical": jcs::canonicalize(&v).unwrap()})
@@ -276,10 +276,10 @@ fn tamper_cases(
 
     // 8. Maydon xatolari.
     let mut v = parse(l[0]);
-    v["aar"] = "0.2".into();
+    v["tamga"] = "0.2".into();
     let mut m = owned.clone();
     m[0] = line(&rehash(v));
-    add("version", "aar 0.2", join(&m), "", ErrorCode::Version, 0);
+    add("version", "tamga 0.2", join(&m), "", ErrorCode::Version, 0);
     let mut v = parse(l[2]);
     v.as_object_mut().unwrap().remove("session");
     let mut m = owned.clone();
@@ -372,7 +372,7 @@ fn build() -> BTreeMap<&'static str, Value> {
     files.insert(
         "chain.json",
         json!({
-            "description": "A complete AAR 0.1 log (spec §3). Each line is followed by \\n; `hashes[i]` is the hash of line i.",
+            "description": "A complete TAMGA Record 0.1 log (spec §3). Each line is followed by \\n; `hashes[i]` is the hash of line i.",
             "log": LOG,
             "lines": lines(&text).iter().map(|l| l.trim_end_matches('\n')).collect::<Vec<_>>(),
             "hashes": hashes.iter().map(|h| h.to_string()).collect::<Vec<_>>(),

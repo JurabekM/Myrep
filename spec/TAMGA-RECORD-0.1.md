@@ -1,8 +1,8 @@
-# AAR 0.1 — Agent Action Record
+# TAMGA Record 0.1
 
 **Status:** draft · **Editors:** TAMGA project · **Date:** 2026-10-17
 
-> **Qisqacha (o'zbekcha):** AAR — AI agent harakatlarini o'zgartirib bo'lmaydigan jurnalga yozish
+> **Qisqacha (o'zbekcha):** TAMGA Record — AI agent harakatlarini o'zgartirib bo'lmaydigan jurnalga yozish
 > uchun ochiq format. Har bir yozuv kanonik JSON (RFC 8785) qatori. Yozuvlar SHA-256 xesh-zanjir
 > bilan bog'lanadi va RFC 9162 uslubidagi Merkle daraxtiga tushadi. Davriy checkpoint'lar
 > Ed25519 va ML-DSA-65 bilan **ikkalasi birga** imzolanadi. Har qanday uchinchi tomon shu hujjat
@@ -10,9 +10,13 @@
 
 The key words MUST, MUST NOT, SHOULD and MAY are to be interpreted as described in RFC 2119.
 
+> **Naming.** Earlier drafts called this format "AAR (Agent Action Record)". It was renamed before
+> publication because "Agent Action Receipt" and its "AARP" profile are already used by Pipelock.
+> The version member is `tamga`, the JSON profile is *TR-JSON*.
+
 ## 1. Goals
 
-An AAR log is an append-only record of what an AI agent did, what it was allowed to do, and who
+A TAMGA log is an append-only record of what an AI agent did, what it was allowed to do, and who
 decided. It is designed so that a third party holding only this document, the log files and a
 public key can determine — without trusting the software that wrote them — whether any record
 was altered, removed, reordered or inserted.
@@ -26,7 +30,7 @@ checkpoint witnesses, §7.4).
 ### 2.1 Canonical JSON
 
 Every record and checkpoint is serialized as **JCS** (RFC 8785) restricted to the following
-subset, called *AAR-JSON*:
+subset, called *TR-JSON*:
 
 - Values are objects, arrays, strings, `true`, `false`, `null` and **integers**.
 - Integers MUST lie in `[-(2^53 - 1), 2^53 - 1]` and are written in shortest decimal form with no
@@ -44,7 +48,7 @@ subset, called *AAR-JSON*:
 
 ### 2.2 Log files
 
-A log is a UTF-8 text file. Each line is one record in AAR-JSON followed by a single `\n`
+A log is a UTF-8 text file. Each line is one record in TR-JSON followed by a single `\n`
 (0x0A). A line MUST be byte-identical to the canonical serialization of the value it parses to.
 A verifier detects non-canonical lines by re-serializing and comparing bytes; this also rejects
 duplicate keys, whitespace and floats.
@@ -57,7 +61,7 @@ duplicate keys, whitespace and floats.
 | bytes (keys, signatures) | base64url without padding (RFC 4648 §5) |
 | timestamp | `YYYY-MM-DDTHH:MM:SS.sssZ` — UTC, exactly 3 fractional digits, 24 characters |
 
-`H(x)` denotes SHA-256. `||` denotes byte concatenation. `JCS(v)` denotes the AAR-JSON bytes of `v`.
+`H(x)` denotes SHA-256. `||` denotes byte concatenation. `JCS(v)` denotes the TR-JSON bytes of `v`.
 `v \ k` denotes object `v` with member `k` removed.
 
 ## 3. Records
@@ -66,7 +70,7 @@ duplicate keys, whitespace and floats.
 
 | Member | Type | Meaning |
 |---|---|---|
-| `aar` | string | format version, `"0.1"` |
+| `tamga` | string | format version, `"0.1"` |
 | `log` | string | log identifier, 1–128 characters from `[A-Za-z0-9._:-]` |
 | `seq` | integer | position in the log, starting at `0`, incremented by exactly 1 |
 | `ts` | timestamp | time the record was written |
@@ -115,7 +119,7 @@ Unknown top-level members MUST be accepted; they are covered by `hash` like any 
 ## 4. Example
 
 ```json
-{"aar":"0.1","decision":{"by":"policy","policy":"no-secret-exfil","verdict":"deny"},"event":"tool.pre","hash":"sha256:…","log":"demo","prev":"sha256:…","seq":1,"session":"s1","tool":{"input":{"digest":"sha256:…","size":42},"name":"Bash"},"ts":"2026-10-17T10:41:07.118Z"}
+{"tamga":"0.1","decision":{"by":"policy","policy":"no-secret-exfil","verdict":"deny"},"event":"tool.pre","hash":"sha256:…","log":"demo","prev":"sha256:…","seq":1,"session":"s1","tool":{"input":{"digest":"sha256:…","size":42},"name":"Bash"},"ts":"2026-10-17T10:41:07.118Z"}
 ```
 
 Exact bytes and hashes for a complete chain are in `test-vectors/chain.json`.
@@ -157,12 +161,12 @@ verified checkpoint (§7) that signs `size` and `root` together.
 
 ### 7.1 Format
 
-A checkpoint (a signed tree head) is an AAR-JSON object, stored one per line in a separate
+A checkpoint (a signed tree head) is an TR-JSON object, stored one per line in a separate
 checkpoint file:
 
 | Member | Type | Meaning |
 |---|---|---|
-| `aar` | string | `"0.1"` |
+| `tamga` | string | `"0.1"` |
 | `type` | string | `"checkpoint"` |
 | `log` | string | the log identifier |
 | `size` | integer | number of records covered (`seq` 0 … `size-1`), ≥ 1 |
@@ -187,10 +191,10 @@ a classical and a post-quantum scheme to forge one.
 
 ### 7.3 Keys
 
-A public key file is an AAR-JSON object:
+A public key file is an TR-JSON object:
 
 ```json
-{"aar":"0.1","ed25519":"<32 bytes>","key":"k:<32 hex>","ml-dsa-65":"<1952 bytes>","type":"public-key"}
+{"tamga":"0.1","ed25519":"<32 bytes>","key":"k:<32 hex>","ml-dsa-65":"<1952 bytes>","type":"public-key"}
 ```
 
 ```
@@ -216,7 +220,7 @@ order and stops at the **first** error, reporting its code and the zero-based li
 |---|---|
 | `E_PARSE` | line is not valid JSON, or not an object |
 | `E_NONCANONICAL` | line bytes differ from the canonical serialization (§2.2) |
-| `E_VERSION` | `aar` is not `"0.1"` |
+| `E_VERSION` | `tamga` is not `"0.1"` |
 | `E_FIELD` | a required member is missing or has the wrong type or format |
 | `E_LOG` | `log` differs from the first record's `log` |
 | `E_SEQ` | `seq` is not equal to the line index |
@@ -237,7 +241,7 @@ Notes:
 
 ## 9. Test vectors
 
-`test-vectors/` contains, in AAR-JSON:
+`test-vectors/` contains, in TR-JSON:
 
 | File | Content |
 |---|---|
@@ -260,3 +264,53 @@ identical for both.
 - A verifier MUST NOT trust any field of the log for verification parameters (e.g. it MUST take
   the public key from the operator, not from the log directory).
 - Implementations SHOULD bound line length (TAMGA: 1 MiB) to avoid resource exhaustion.
+
+## 11. Relationship to draft-sharif-agent-audit-trail-08
+
+`draft-sharif-agent-audit-trail-08` (IETF individual draft, 2026-10-13; "the draft") specifies a
+JSONL audit trail for AI agents with the same building blocks: SHA-256 over RFC 8785 JCS, a hash
+chain, RFC 6962 Merkle batches, ML-DSA-65 with an optional hybrid classical signature, signed
+tombstones and pre-execution recording of denied actions. TAMGA Record is **not byte-compatible**
+with the draft; it is designed so that a TAMGA log can be **projected** into a draft-conformant
+trail without loss of the security-relevant facts.
+
+### 11.1 Deliberate differences
+
+| Aspect | The draft | TAMGA Record | Reason |
+|---|---|---|---|
+| Chain input | `prev_hash = hex(SHA-256(JCS(previous record)))`, genesis `null` | `prev` = previous `hash` = `SHA-256(0x00 ‖ JCS(record \ "hash"))`, genesis all-zero digest | one value serves as chain link **and** Merkle leaf; no separate leaf computation |
+| Digest encoding | 64 lowercase hex | `sha256:` + 64 lowercase hex | algorithm agility visible in the value |
+| Numbers | JSON numbers incl. fractions (`risk_score`) | integers only (§2.1) | removes ECMAScript number formatting from every implementation |
+| What is signed | each record (optional `signature`) | periodic checkpoints over a Merkle root (§7) | one hybrid signature (≈3.4 KB) per checkpoint instead of per record keeps hook latency and log size low |
+| Hybrid mode | ML-DSA-65 + **ES256**, separate key ids (RFC 7638 thumbprints) | ML-DSA-65 + **Ed25519**, one combined key id (§7.3); both MUST verify | deterministic classical signatures, no nonce-reuse failure mode |
+| Merkle | RFC 6962, batch object detached from the record | RFC 9162 over the whole log, inclusion and consistency proofs | consistency proofs let witnesses check that later checkpoints extend earlier ones |
+| Pre-execution | `record_phase: "pre_execution"` REQUIRED for denied/escalated decisions | `event: "tool.pre"` with `decision` is written **before** the tool runs, for every verdict | same guarantee, applied to all decisions |
+| Erasure | signed tombstone replaces the record; `content_fingerprint` retained | the record never contains the payload; the vault entry is destroyed (§5) | the chain and every checkpoint stay verifiable without rewriting any record |
+| Completeness | inconclusive unless the trail ends with a session close record | signed checkpoints and witnesses detect truncation (§7.4, `E_CKPT_SIZE`) | — |
+
+### 11.2 Projection to the draft
+
+A TAMGA implementation MAY export a log as a draft-conformant trail (`tamga export --format
+draft-sharif-08`, planned). The export is a **new, separately chained** trail: it recomputes
+`prev_hash` with the draft's rule and signs records with an export key. It never replaces the
+TAMGA log, which remains the evidence of record. Field mapping:
+
+| Draft field | Source in TAMGA Record |
+|---|---|
+| `record_id` | UUIDv8 derived from `hash` (first 16 bytes, version/variant bits set) |
+| `timestamp` | `ts` |
+| `session_id` | `session` (or a UUIDv8 derived from it when not a UUID) |
+| `agent_id`, `agent_version`, `model_id` | `agent.kind`, `agent.version`, `agent.model` |
+| `principal` | `actor` → `{"principal_type": "human", "principal_id": "urn:tamga:user:<user>@<host>", "authority_ref": null}` |
+| `action_type` | `tool.pre` → `"decision"`, `tool.post` → `"tool_response"`, `prompt`/`session.*` → `"lifecycle"`, `os.observed` → `"lifecycle"` with `ext` detail |
+| `record_phase` | `tool.pre` → `"pre_execution"`, `tool.post` → `"post_execution"`, others → `"concurrent"` |
+| `outcome` | `decision.verdict`: `allow` → `"success"`, `deny` → `"denied"`, `ask` → `"escalated"` |
+| `action_detail` | `tool.name`, `decision.policy` → `policy_ref`; payloads only as their salted digests |
+| `input_hash`, `output_hash` | `tool.input.digest`, `result.digest` (without the `sha256:` prefix) |
+| `parent_record_id` | `record_id` of the previous exported record |
+| `sequence_number` | `seq` |
+| `trust_level` | configured per deployment (default `"L1"`) |
+| `content_fingerprint` | not exported: TAMGA payload digests are salted and therefore not draft fingerprints |
+
+Every exported record SHOULD carry the TAMGA `hash` it was derived from in an extension member so
+that an auditor can cross-check the export against the signed TAMGA checkpoints.

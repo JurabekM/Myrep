@@ -1,5 +1,5 @@
 {
-  "description": "AAR-JSON (spec §2.1): input → canonical; invalid inputs MUST be rejected",
+  "description": "TR-JSON (spec §2.1): input → canonical; invalid inputs MUST be rejected",
   "invalid": [
     {
       "input": "[1.5]",
