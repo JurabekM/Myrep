@@ -2,6 +2,9 @@
 //! tasodifiylik yo'q.
 #![deny(clippy::float_arithmetic)]
 
+pub mod equipment;
 pub mod owner;
+pub mod profit;
+pub mod quote;
 
 pub use baraka_domain_common::DomainError;

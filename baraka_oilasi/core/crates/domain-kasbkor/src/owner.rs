@@ -6,6 +6,8 @@
 //! - Maosh belgilangan bo'lsa: qoldiq = max(0, maosh − to'langan), ortiqcha = max(0, to'langan − maosh).
 //! - Hamyonlar: naqd kassa (`CASH`) va karta/hisob raqami (`CARD`); oy boshidagi qoldiq + harakatlar.
 //!   Manfiy qoldiq — xato emas, lekin belgi (yozilmagan tushum yoki xato yozuv).
+//! - Uskuna xaridi va sotuvi (K2) hamyonga ta'sir qiladi, pul oqimiga kirmaydi: uskuna — aktiv,
+//!   xarajatga eskirish orqali o'tadi (`equipment`).
 //!
 //! Vektorlar: `spec/test-vectors/kk_owner_pay.json`.
 use baraka_money::{Currency, Money};
@@ -49,6 +51,10 @@ pub enum MoveKind {
     OwnerSalary,
     /// Hamyonlar orasida (masalan, kassadan kartaga topshirish).
     Transfer { to: Wallet },
+    /// Uskuna sotib olindi (aktiv; xarajat emas).
+    EquipmentPurchase,
+    /// Uskuna sotildi (tushum emas).
+    EquipmentSale,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -70,6 +76,8 @@ pub struct MonthReport {
     /// Maosh belgilanmagan bo'lsa — `None`.
     pub salary_remaining: Option<Money>,
     pub overdrawn: Option<Money>,
+    pub equipment_purchases: Money,
+    pub equipment_sales: Money,
     pub cash: Money,
     pub card: Money,
     pub negative_wallets: Vec<Wallet>,
@@ -90,6 +98,7 @@ pub fn month_report(
     let (mut cash, mut card) = (opening_cash, opening_card);
     let (mut revenue, mut expenses, mut draws, mut contributions, mut salary_paid) =
         (zero, zero, zero, zero, zero);
+    let (mut bought, mut sold) = (zero, zero);
     for m in moves {
         if !m.amount.is_positive() {
             return Err(DomainError::on("AMOUNT_NOT_POSITIVE", "amount"));
@@ -118,6 +127,14 @@ pub fn month_report(
             MoveKind::OwnerSalary => {
                 salary_paid = salary_paid.checked_add(m.amount)?;
                 (None, Some(m.wallet))
+            }
+            MoveKind::EquipmentPurchase => {
+                bought = bought.checked_add(m.amount)?;
+                (None, Some(m.wallet))
+            }
+            MoveKind::EquipmentSale => {
+                sold = sold.checked_add(m.amount)?;
+                (Some(m.wallet), None)
             }
         };
         for (w, sign) in [(plus, true), (minus, false)] {
@@ -157,6 +174,8 @@ pub fn month_report(
         owner_paid: paid,
         salary_remaining,
         overdrawn,
+        equipment_purchases: bought,
+        equipment_sales: sold,
         cash,
         card,
         negative_wallets,

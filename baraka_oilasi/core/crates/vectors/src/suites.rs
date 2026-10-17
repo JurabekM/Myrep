@@ -1,6 +1,9 @@
 use baraka_agreements::{check_completeness, AgreementDraft, AgreementType};
 use baraka_domain_common::WEEK_ANCHOR;
+use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
+use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
+use baraka_domain_kasbkor::quote::{order_quote, QuoteInput};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -129,6 +132,9 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "offer_check" => offer(input),
         "review_protocol" => protocol(input),
         "kk_owner_pay" => kk_owner_pay(input),
+        "kk_depreciation" => kk_depreciation(input),
+        "kk_true_profit" => kk_true_profit(input),
+        "kk_order_quote" => kk_order_quote(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1016,6 +1022,8 @@ fn kk_owner_pay(v: &Value) -> R {
             "OWNER_DRAW" => MoveKind::OwnerDraw,
             "OWNER_CONTRIBUTION" => MoveKind::OwnerContribution,
             "OWNER_SALARY" => MoveKind::OwnerSalary,
+            "EQUIPMENT_PURCHASE" => MoveKind::EquipmentPurchase,
+            "EQUIPMENT_SALE" => MoveKind::EquipmentSale,
             "TRANSFER" => MoveKind::Transfer {
                 to: wallet(m, "toWallet")?,
             },
@@ -1045,8 +1053,126 @@ fn kk_owner_pay(v: &Value) -> R {
         "ownerPaid": r.owner_paid.minor().to_string(),
         "salaryRemaining": opt(r.salary_remaining),
         "overdrawn": opt(r.overdrawn),
+        "equipmentPurchases": r.equipment_purchases.minor().to_string(),
+        "equipmentSales": r.equipment_sales.minor().to_string(),
         "cash": r.cash.minor().to_string(),
         "card": r.card.minor().to_string(),
         "negativeWallets": r.negative_wallets.iter().map(|w| w.as_str()).collect::<Vec<_>>(),
+    }))
+}
+
+fn month_index(v: &Value) -> Result<u32, E> {
+    let m = v.as_i64().ok_or_else(|| bad("month"))?;
+    u32::try_from(m).map_err(|_| E("INVALID_MONTH".into()))
+}
+
+fn kk_depreciation(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let disposal = if v["disposal"].is_null() {
+        None
+    } else {
+        Some(Disposal {
+            month: month_index(&v["disposal"]["month"])?,
+            proceeds: money(&v["disposal"], "proceeds", c)?,
+        })
+    };
+    let e = Equipment {
+        cost: money(v, "cost", c)?,
+        salvage: money(v, "salvage", c)?,
+        useful_months: u32::try_from(i(v, "usefulMonths")?)
+            .map_err(|_| E("INVALID_USEFUL_LIFE".into()))?,
+        disposal,
+    };
+    let schedule = e.schedule()?;
+    let mut months = Vec::new();
+    for q in v["queryMonths"]
+        .as_array()
+        .ok_or_else(|| bad("queryMonths"))?
+    {
+        let m = month_index(q)?;
+        let r = e.month(m)?;
+        months.push(json!({
+            "month": m,
+            "depreciation": r.depreciation.minor().to_string(),
+            "disposal": r.disposal.minor().to_string(),
+            "bookValue": r.book_value.minor().to_string(),
+        }));
+    }
+    Ok(json!({
+        "schedule": strs(&schedule),
+        "total": Money::sum(schedule, c)?.minor().to_string(),
+        "months": months,
+    }))
+}
+
+fn kk_true_profit(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let mut family = Vec::new();
+    for f in v["familyLabor"]
+        .as_array()
+        .ok_or_else(|| bad("familyLabor"))?
+    {
+        family.push(FamilyLabor {
+            hours100: i(f, "hours100")?,
+            hourly_rate: money(f, "hourlyRate", c)?,
+            paid: b(f, "paid")?,
+        });
+    }
+    let r = true_profit(
+        c,
+        ProfitInput {
+            revenue: money(v, "revenue", c)?,
+            cogs: money(v, "cogs", c)?,
+            operating_expenses: money(v, "operatingExpenses", c)?,
+            owner_labor: money(v, "ownerLabor", c)?,
+            depreciation: money(v, "depreciation", c)?,
+            disposal: money(v, "disposal", c)?,
+        },
+        &family,
+    )?;
+    Ok(json!({
+        "visibleProfit": r.visible_profit.minor().to_string(),
+        "ownerLabor": r.owner_labor.minor().to_string(),
+        "familyLabor": r.family_labor.minor().to_string(),
+        "familyLaborPaid": r.family_labor_paid.minor().to_string(),
+        "depreciation": r.depreciation.minor().to_string(),
+        "disposal": r.disposal.minor().to_string(),
+        "trueProfit": r.true_profit.minor().to_string(),
+    }))
+}
+
+fn kk_order_quote(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let opt = |k: &str| -> Result<Option<Money>, E> {
+        if v[k].is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(money(v, k, c)?))
+        }
+    };
+    let q = order_quote(QuoteInput {
+        material: money(v, "material", c)?,
+        hours100: i(v, "hours100")?,
+        hourly_rate: money(v, "hourlyRate", c)?,
+        travel: money(v, "travel", c)?,
+        depreciation: money(v, "depreciation", c)?,
+        reserve_bp: i(v, "reserveBp")?,
+        price: opt("price")?,
+        advance: opt("advance")?,
+    })?;
+    let m = |x: Money| x.minor().to_string();
+    let p = q.price;
+    let a = q.advance;
+    Ok(json!({
+        "labor": m(q.labor),
+        "subtotal": m(q.subtotal),
+        "reserve": m(q.reserve),
+        "cost": m(q.cost),
+        "margin": p.map(|p| m(p.margin)),
+        "laborPaid": p.map(|p| m(p.labor_paid)),
+        "belowCost": p.map(|p| p.below_cost),
+        "effectiveHourlyRate": p.and_then(|p| p.effective_hourly_rate).map(m),
+        "materialShortfall": a.map(|a| m(a.material_shortfall)),
+        "advanceAfterMaterial": a.map(|a| m(a.advance_after_material)),
     }))
 }

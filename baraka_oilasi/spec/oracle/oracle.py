@@ -821,17 +821,19 @@ def offer_check(answers):
 
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
 KK_WALLETS = ("CASH", "CARD")
-KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1}
+KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1,
+             "EQUIPMENT_PURCHASE": -1, "EQUIPMENT_SALE": 1}
 
 
 def kk_month_report(opening_cash, opening_card, salary, moves):
     """Oy hisoboti: tushum, chiqim, pul oqimi (tushum − chiqim; egasi oldi, kapital va maosh bu yerga
     kirmaydi), egasiga to'langan (maosh o'tkazmasi + «egasi oldi»), maosh qoldig'i yoki ortiqcha olingan
-    (maosh belgilangan bo'lsa), hamyon qoldiqlari (oy boshidagi qoldiq + harakatlar)."""
+    (maosh belgilangan bo'lsa), hamyon qoldiqlari (oy boshidagi qoldiq + harakatlar). K2: uskuna xaridi va
+    sotuvi hamyonga ta'sir qiladi, lekin pul oqimiga kirmaydi (aktiv; xarajat — eskirish orqali)."""
     if salary < 0:
         raise OracleError("AMOUNT_NOT_POSITIVE")
     bal = {"CASH": opening_cash, "CARD": opening_card}
-    tot = {k: 0 for k in ("SALE", "EXPENSE", "OWNER_DRAW", "OWNER_CONTRIBUTION", "OWNER_SALARY")}
+    tot = {k: 0 for k in KK_EFFECT}
     for m in moves:
         amount = int(m["amount"])
         if amount <= 0:
@@ -858,9 +860,102 @@ def kk_month_report(opening_cash, opening_card, salary, moves):
         "contributions": _s(tot["OWNER_CONTRIBUTION"]), "ownerPaid": _s(paid),
         "salaryRemaining": None if salary == 0 else _s(max(0, salary - paid)),
         "overdrawn": None if salary == 0 else _s(max(0, paid - salary)),
+        "equipmentPurchases": _s(tot["EQUIPMENT_PURCHASE"]), "equipmentSales": _s(tot["EQUIPMENT_SALE"]),
         "cash": _s(bal["CASH"]), "card": _s(bal["CARD"]),
         "negativeWallets": [w for w in KK_WALLETS if bal[w] < 0],
     }
+
+
+KK_MAX_LIFE = 600
+
+
+def kk_depreciation(cost, salvage, months, query, disposal=None):
+    """Uskuna eskirishi (SPEC 3.1, 3.3). (narx − qoldiq qiymati) foydali muddat oylariga largest remainder
+    bilan teng bo'linadi — qoldiq tiyinlar birinchi oylarga, yig'indi aniq. 0-oy — xarid oyi. `d`-oyda
+    sotilsa yoki yaroqsiz bo'lsa: shu oydan oddiy eskirish yo'q, `d`-oyda bir martalik «chiqib ketish» =
+    balans qiymati (narx − d gacha eskirish) − tushgan pul (manfiy — foyda); keyin balans 0."""
+    if cost <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if salvage < 0 or salvage > cost:
+        raise OracleError("INVALID_SALVAGE")
+    if not 1 <= months <= KK_MAX_LIFE:
+        raise OracleError("INVALID_USEFUL_LIFE")
+    schedule = allocate(cost - salvage, [1] * months)
+    d = None
+    if disposal is not None:
+        d, proceeds = disposal["month"], int(disposal["proceeds"])
+        if d < 0:
+            raise OracleError("INVALID_MONTH")
+        if proceeds < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+
+    def book_before(m):
+        return cost - sum(schedule[:min(m, months)])
+
+    def at(m):
+        if m < 0:
+            raise OracleError("INVALID_MONTH")
+        if d is not None and m >= d:
+            return {"month": m, "depreciation": _s(0), "disposal": _s(book_before(d) - proceeds if m == d else 0), "bookValue": _s(0)}
+        return {"month": m, "depreciation": _s(schedule[m] if m < months else 0), "disposal": _s(0), "bookValue": _s(book_before(m + 1))}
+
+    return {"schedule": [_s(x) for x in schedule], "total": _s(sum(schedule)), "months": [at(m) for m in query]}
+
+
+def kk_hours_value(hours100, rate):
+    """Soat (yuzdan birlarda: 250 = 2,5 soat) × soat bahosi, yarimni noldan uzoqqa yaxlitlab."""
+    if hours100 < 0:
+        raise OracleError("INVALID_HOURS")
+    if rate < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    return round_half_up(Fraction(hours100 * rate, 100))
+
+
+def kk_true_profit(revenue, cogs, opex, owner_labor, family, depreciation, disposal):
+    """Haqiqiy foyda (SPEC 3.1): ko'rinadigan = tushum − sotilgan tovar tannarxi − operatsion xarajat;
+    haqiqiy = ko'rinadigan − o'z mehnati − to'lanmagan oilaviy mehnat − eskirish − uskuna chiqib ketishi.
+    To'langan oilaviy mehnat operatsion xarajatda bor — ikki marta hisoblanmaydi."""
+    for v in (revenue, cogs, opex, owner_labor, depreciation):
+        if v < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+    unpaid = paid = 0
+    for f in family:
+        v = kk_hours_value(int(f["hours100"]), int(f["hourlyRate"]))
+        if f["paid"]:
+            paid += v
+        else:
+            unpaid += v
+    visible = revenue - cogs - opex
+    return {"visibleProfit": _s(visible), "ownerLabor": _s(owner_labor), "familyLabor": _s(unpaid), "familyLaborPaid": _s(paid),
+            "depreciation": _s(depreciation), "disposal": _s(disposal),
+            "trueProfit": _s(visible - owner_labor - unpaid - depreciation - disposal)}
+
+
+def kk_order_quote(material, hours100, rate, travel, depreciation, reserve_bp, price=None, advance=None):
+    """Buyurtma kalkulyatori (SPEC 3.2): tannarx = material + mehnat + yo'l + eskirish ulushi + zaxira
+    (shu yig'indidan foiz). Narx berilsa: marja, o'z mehnatingizga qoladigan pul (narx − mehnatsiz
+    tannarx) va uning soatbayi. Avans berilsa: materialga yetmagan va materialdan ortgan qism."""
+    for v in (material, travel, depreciation):
+        if v < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+    labor = kk_hours_value(hours100, rate)
+    base = material + labor + travel + depreciation
+    reserve = percent_of(base, reserve_bp)
+    cost = base + reserve
+    out = {"labor": _s(labor), "subtotal": _s(base), "reserve": _s(reserve), "cost": _s(cost),
+           "margin": None, "laborPaid": None, "belowCost": None, "effectiveHourlyRate": None,
+           "materialShortfall": None, "advanceAfterMaterial": None}
+    if price is not None:
+        if price < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+        left = price - (cost - labor)
+        out.update(margin=_s(price - cost), laborPaid=_s(left), belowCost=price < cost,
+                   effectiveHourlyRate=None if hours100 == 0 else _s(round_half_up(Fraction(left * 100, hours100))))
+    if advance is not None:
+        if advance < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+        out.update(materialShortfall=_s(max(0, material - advance)), advanceAfterMaterial=_s(max(0, advance - material)))
+    return out
 
 
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
@@ -1394,6 +1489,9 @@ def build_suites():
         ("kk-006", 0, 10000000, 2000000, [mv("SALE", "CARD", 3000000), mv("EXPENSE", "CARD", 4500000)]),
         # Bo'sh oy.
         ("kk-007", 750000, 0, 2500000, []),
+        # K2: uskuna kartadan olindi, eskisi naqdga sotildi — hamyonlar o'zgaradi, pul oqimi o'zgarmaydi.
+        ("kk-008", 1000000, 15000000, 0, [mv("SALE", "CARD", 4000000), mv("EXPENSE", "CARD", 1000000),
+                                          mv("EQUIPMENT_PURCHASE", "CARD", 12000000), mv("EQUIPMENT_SALE", "CASH", 800000)]),
         ("kk-neg-001", 0, 0, 1000000, [mv("SALE", "CASH", 0)]),
         ("kk-neg-002", 0, 0, 1000000, [{"kind": "TRANSFER", "wallet": "CASH", "toWallet": "CASH", "amount": "100"}]),
         ("kk-neg-003", 0, 0, 1000000, [{"kind": "SALE", "wallet": "SAFE", "amount": "100"}]),
@@ -1403,6 +1501,88 @@ def build_suites():
         _case(cid, {"currency": U, "openingCash": _s(oc * 100), "openingCard": _s(ob * 100), "ownerSalary": _s(sal * 100 if sal > 0 else sal), "moves": ms},
               lambda oc=oc, ob=ob, sal=sal, ms=ms: kk_month_report(oc * 100, ob * 100, sal * 100 if sal > 0 else sal, ms))
         for cid, oc, ob, sal, ms in kk])
+
+    # K2: eskirish. Summalar so'mda yoziladi, vektorda tiyin.
+    dep = [
+        # SPEC 3.1: 2 ta tikuv mashinasi 12 mln, 60 oy → oyiga 200 000.
+        ("dep-001", 12000000, 0, 60, [0, 59, 60], None),
+        # SPEC 3.1 yaxlitlash misoli: 7 mln / 36 → 16 oy 194 444,45, 20 oy 194 444,44.
+        ("dep-002", 7000000, 0, 36, [0, 15, 16, 35, 36], None),
+        # Qoldiq qiymati bilan: 10 mln, 1 mln qoladi, 24 oy.
+        ("dep-003", 10000000, 1000000, 24, [0, 23, 30], None),
+        # Muddatdan oldin sotildi (10-oy, 4 mln): balans 10 mln → 6 mln bir martalik.
+        ("dep-004", 12000000, 0, 60, [9, 10, 11], {"month": 10, "proceeds": 4000000}),
+        # Balansdan qimmatga sotildi — foyda (manfiy chiqib ketish).
+        ("dep-005", 3000000, 0, 12, [10, 11], {"month": 11, "proceeds": 500000}),
+        # Muddat tugagandan keyin yaroqsiz bo'ldi: qoldiq qiymati hisobdan chiqadi.
+        ("dep-006", 2400000, 400000, 10, [9, 14], {"month": 14, "proceeds": 0}),
+        # Narx = qoldiq qiymati — eskirish yo'q.
+        ("dep-007", 500000, 500000, 6, [0], None),
+        ("dep-neg-001", 0, 0, 12, [0], None),
+        ("dep-neg-002", 1000000, 1000001, 12, [0], None),
+        ("dep-neg-003", 1000000, 0, 0, [0], None),
+        ("dep-neg-004", 1000000, 0, 601, [0], None),
+        ("dep-neg-005", 1000000, 0, 12, [-1], None),
+        ("dep-neg-006", 1000000, 0, 12, [0], {"month": 3, "proceeds": -1}),
+    ]
+    def dep_input(c, sv, n, q, dsp):
+        inp = {"currency": U, "cost": _s(c * 100), "salvage": _s(sv * 100), "usefulMonths": n, "queryMonths": q}
+        if dsp is not None:
+            inp["disposal"] = {"month": dsp["month"], "proceeds": _s(dsp["proceeds"] * 100)}
+        return inp
+    suites["kk_depreciation"] = _suite("kk_depreciation", "Kasb-kor: uskuna eskirishi — teng oylik ulush (largest remainder), qoldiq qiymati, muddatdan oldin chiqib ketish (kasbkor/SPEC 3.1, 3.3)", [
+        _case(cid, dep_input(c, sv, n, q, dsp),
+              lambda c=c, sv=sv, n=n, q=q, dsp=dsp: kk_depreciation(c * 100, sv * 100, n, q,
+                                                                     None if dsp is None else {"month": dsp["month"], "proceeds": dsp["proceeds"] * 100}))
+        for cid, c, sv, n, q, dsp in dep])
+
+    # K2: haqiqiy foyda. `hours100` — soat × 100.
+    def fl(hours100, rate, paid=False):
+        return {"hours100": hours100, "hourlyRate": _s(rate * 100), "paid": paid}
+    tp = [
+        # SPEC 3.1 Nilufar: ko'rinadigan 9 500 000, haqiqiy 3 100 000.
+        ("tp-001", 18000000, 6000000, 2500000, 5000000, [fl(8000, 15000)], 200000, 0),
+        # Qizining yordami to'langan (500 000 operatsion xarajatda) — ikki marta hisoblanmaydi.
+        ("tp-002", 18000000, 6000000, 3000000, 5000000, [fl(4000, 12500, True), fl(2000, 15000)], 200000, 0),
+        # O'z mehnati va oilaviy mehnat hisobga olinsa — zarar.
+        ("tp-003", 6000000, 2000000, 1500000, 4000000, [fl(6000, 10000)], 150000, 0),
+        # Tovar xaridi xarajat emas: 5 mln tovar olindi, 2 mln lik qismi sotildi — tannarx faqat 2 mln.
+        ("tp-004", 3500000, 2000000, 300000, 0, [], 0, 0),
+        # Kasr soat (2,5 × 13 333,33) va uskunani balansdan qimmatga sotish (foyda).
+        ("tp-005", 1000000, 0, 0, 0, [fl(250, Fraction(1333333, 100))], 0, -250000),
+        ("tp-neg-001", -1, 0, 0, 0, [], 0, 0),
+        ("tp-neg-002", 1000000, 0, 0, 0, [fl(-100, 10000)], 0, 0),
+    ]
+    suites["kk_true_profit"] = _suite("kk_true_profit", "Kasb-kor: ko'rinadigan va haqiqiy foyda — o'z mehnati, to'lanmagan oilaviy mehnat, eskirish (kasbkor/SPEC 3.1)", [
+        _case(cid, {"currency": U, "revenue": _s(r * 100), "cogs": _s(cg * 100), "operatingExpenses": _s(op * 100), "ownerLabor": _s(ol * 100),
+                    "familyLabor": fs, "depreciation": _s(dp * 100), "disposal": _s(ds * 100)},
+              lambda r=r, cg=cg, op=op, ol=ol, fs=fs, dp=dp, ds=ds: kk_true_profit(r * 100, cg * 100, op * 100, ol * 100, fs, dp * 100, ds * 100))
+        for cid, r, cg, op, ol, fs, dp, ds in tp])
+
+    # K2: buyurtma kalkulyatori.
+    oq = [
+        # Jasur (SPEC 3.2): material 450 000, 6 soat × 40 000, yo'l 50 000, eskirish 20 000, zaxira 5 %;
+        # narx 700 000 — tannarxdan past; avans 300 000 materialga yetmaydi.
+        ("oq-001", 450000, 600, 40000, 50000, 20000, 500, 700000, 300000),
+        # Narx tannarxdan yuqori, avans materialni yopadi.
+        ("oq-002", 1200000, 1000, 50000, 100000, 30000, 300, 2500000, 1500000),
+        # Narxsiz va avanssiz, 3,5 soat — faqat tannarx.
+        ("oq-003", 80000, 350, 35000, 0, 0, 0, None, None),
+        # Zaxira foizi yaxlitlanadi (tiyinlar bilan).
+        ("oq-004", Fraction(12345, 100), 100, Fraction(6789, 100), 0, 0, 333, None, None),
+        # Mehnat soati yo'q — soatbay hisoblanmaydi.
+        ("oq-005", 300000, 0, 0, 0, 0, 1000, 330000, None),
+        ("oq-neg-001", -1, 0, 0, 0, 0, 0, None, None),
+        ("oq-neg-002", 100, 100, 100, 0, 0, 10001, None, None),
+        ("oq-neg-003", 100, -50, 100, 0, 0, 0, None, None),
+    ]
+    def t(v):
+        return None if v is None else int(Fraction(v) * 100)
+    suites["kk_order_quote"] = _suite("kk_order_quote", "Kasb-kor: buyurtma kalkulyatori — tannarx, zaxira, narx tannarxdan pastligi, o'z mehnatiga qoladigan pul, avans va material (kasbkor/SPEC 3.2)", [
+        _case(cid, {"currency": U, "material": _s(t(m)), "hours100": h, "hourlyRate": _s(t(r)), "travel": _s(t(tr)), "depreciation": _s(t(d)),
+                    "reserveBp": bp, "price": None if pr is None else _s(t(pr)), "advance": None if av is None else _s(t(av))},
+              lambda m=m, h=h, r=r, tr=tr, d=d, bp=bp, pr=pr, av=av: kk_order_quote(t(m), h, t(r), t(tr), t(d), bp, t(pr), t(av)))
+        for cid, m, h, r, tr, d, bp, pr, av in oq])
     return suites
 
 
@@ -1410,7 +1590,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
-                 "kk_owner_pay")
+                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote")
 
 
 def generate(directory: str) -> None:
@@ -1474,6 +1654,12 @@ def _expect_error(code, fn, *args):
 
 
 def selftest() -> None:
+    # K2 (kasbkor/SPEC 3.1): Nilufar — haqiqiy foyda 3 100 000; 7 mln / 36 oy → 16 × 194 444,45 + 20 × 194 444,44.
+    assert kk_true_profit(1800000000, 600000000, 250000000, 500000000, [{"hours100": 8000, "hourlyRate": "1500000", "paid": False}],
+                          20000000, 0)["trueProfit"] == "310000000"
+    sched = kk_depreciation(700000000, 0, 36, [])["schedule"]
+    assert sched.count("19444445") == 16 and sched.count("19444444") == 20 and sum(map(int, sched)) == 700000000
+    assert kk_order_quote(45000000, 600, 4000000, 5000000, 2000000, 500, 70000000)["cost"] == "79800000"
     # allocate / percent_of (DESKTOP_PROMPT 5.3 + BARAKA_OILASI 12.3)
     assert allocate(100, [1, 1, 1]) == [34, 33, 33]
     assert allocate(800000000, [70, 20, 10]) == [560000000, 160000000, 80000000]
