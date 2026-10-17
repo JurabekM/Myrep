@@ -132,6 +132,20 @@ tamga/
    Rejim `strict` bo'lsa, harakat bloklanadi (fail-closed). Rejim `dev` bo'lsa, ruxsat beriladi
    va bu holat belgilanadi.
 
+**F2 da aniqlangan qoidalar (2026-10-17):**
+
+- **`allow` agentga qaytarilmaydi.** Claude Code hook'i `permissionDecision: "allow"` qaytarsa,
+  Claude Code'ning o'z ruxsat so'rovlari chetlab o'tiladi. Shuning uchun TAMGA faqat `deny` yoki
+  `ask` qaytaradi. `allow` holatida hook hech narsa chiqarmaydi va agentning ruxsat tizimi o'z
+  holicha ishlaydi. TAMGA o'z ruxsat qatlamini qo'shadi, mavjudini almashtirmaydi.
+- **Hook daemon'ni merossiz ishga tushiradi.** Rust std bola jarayonga barcha meros qilinadigan
+  handle'larni beradi (`inherit_handles(false)` hali barqaror emas). Shu sabab daemon hook'ning
+  stdout pipe'ini ushlab qolib, Claude Code'ni 10 soniyalik timeout'gacha kutdirardi. Yechim:
+  `tamga-win` crate'i spawn'dan oldin std handle'lardan `HANDLE_FLAG_INHERIT` bayrog'ini oladi.
+  Bu workspace'dagi yagona `unsafe` joy.
+- **O'lchangan kechikish (release, 200 ta `PreToolUse`):** p50 9.1 ms, p99 10.8 ms. Bu Windows
+  jarayon yaratish (~4 ms) va diskka `fsync`ni o'z ichiga oladi. Maqsad < 20 ms bajarildi.
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

@@ -21,6 +21,17 @@ tasdiqlanadi (`py scripts/interop_liboqs.py`).
 tamga-verify log.jsonl --checkpoints checkpoints.jsonl --key key.json
 ```
 
+**F2 — daemon va Claude Code integratsiyasi** tayyor: `tamgad` (named pipe, yagona yozuvchi, `fsync`,
+avtomatik checkpoint), `tamga-hook`, `tamga` CLI, shifrlangan payload vault (crypto-shredding), spool
+(daemon ishlamaganda `dev`/`strict` rejimlar). Kalitlar Windows Credential Manager'da saqlanadi.
+
+```bash
+tamga init
+tamga install claude-code --project C:/path/to/project
+tamga status
+tamga verify
+```
+
 ![TAMGA Studio — Jonli ekran (F0, namuna ma'lumot)](docs/screenshots/f0-studio-live.png)
 
 ## Ishga tushirish (Windows)

@@ -1,6 +1,6 @@
 [package]
 name = "tamga-store"
-description = "Append-only segment fayllar, SQLite indeks va shifrlangan payload vault"
+description = "Append-only jurnal fayllari, checkpoint'lar, kalitlar va shifrlangan payload vault"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,16 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+tamga-core = { workspace = true }
+tamga-win = { workspace = true }
+serde_json = { workspace = true }
+thiserror = "2"
+getrandom = "0.4"
+chacha20poly1305 = { version = "0.11", default-features = false, features = ["alloc", "zeroize"] }
+keyring-core = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows-native-keyring-store = "1.1"
 
 [lints]
 workspace = true

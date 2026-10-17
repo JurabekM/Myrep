@@ -28,12 +28,36 @@ pub enum CheckpointError {
 }
 
 /// Birinchi `size` yozuv uchun checkpoint yaratadi va imzolaydi. Qaytgan qiymat — `\n` li qator.
+/// ML-DSA deterministik imzolanadi (test vektorlari uchun); ishlab chiqarishda [`create_hedged`].
 pub fn create(
     log: &str,
     hashes: &[Digest],
     size: u64,
     ts: &str,
     keys: &SigningKeys,
+) -> Result<String, CheckpointError> {
+    create_with(log, hashes, size, ts, keys, None)
+}
+
+/// [`create`] ning ishlab chiqarish varianti: ML-DSA hedged imzo, `rnd` — 32 tasodifiy bayt.
+pub fn create_hedged(
+    log: &str,
+    hashes: &[Digest],
+    size: u64,
+    ts: &str,
+    keys: &SigningKeys,
+    rnd: &[u8; 32],
+) -> Result<String, CheckpointError> {
+    create_with(log, hashes, size, ts, keys, Some(rnd))
+}
+
+fn create_with(
+    log: &str,
+    hashes: &[Digest],
+    size: u64,
+    ts: &str,
+    keys: &SigningKeys,
+    rnd: Option<&[u8; 32]>,
 ) -> Result<String, CheckpointError> {
     if size == 0 || size > hashes.len() as u64 {
         return Err(CheckpointError::Size(hashes.len() as u64));
@@ -52,7 +76,11 @@ pub fn create(
         "ts": ts,
         "key": keys.public().key_id(),
     });
-    let sig = keys.sign(&signing_message(&cp)?);
+    let msg = signing_message(&cp)?;
+    let sig = match rnd {
+        Some(rnd) => keys.sign_hedged(&msg, rnd),
+        None => keys.sign(&msg),
+    };
     cp["sig"] = json!({
         "ed25519": b64::encode(&sig.ed),
         "ml-dsa-65": b64::encode(&sig.ml),

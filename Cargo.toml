@@ -10,6 +10,7 @@ members = [
     "crates/tamga-mcp-proxy",
     "crates/tamga-verify",
     "crates/tamga-cli",
+    "crates/tamga-win",
     "studio/src-tauri",
 ]
 
@@ -26,6 +27,7 @@ tamga-core = { path = "crates/tamga-core" }
 tamga-store = { path = "crates/tamga-store" }
 tamga-policy = { path = "crates/tamga-policy" }
 tamga-redact = { path = "crates/tamga-redact" }
+tamga-win = { path = "crates/tamga-win" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

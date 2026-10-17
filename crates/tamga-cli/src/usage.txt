@@ -1,0 +1,9 @@
+foydalanish:
+  tamga init                                  kalitlar va papkalarni tayyorlash
+  tamga status                                daemon holati
+  tamga verify                                o'z jurnalini to'liq tekshirish
+  tamga checkpoint                            darhol checkpoint yozish
+  tamga install claude-code --project <dir>   loyiha .claude/settings.json ga hook qo'shish
+  tamga install claude-code --user            ~/.claude/settings.json ga hook qo'shish
+  tamga uninstall claude-code (--project <dir> | --user)
+  tamga shred <session>                       sessiya payload'larini unutish

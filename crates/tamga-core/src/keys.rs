@@ -38,8 +38,29 @@ impl SigningKeys {
         }
     }
 
+    /// Ikkala imzo, ML-DSA hedged variantda (FIPS 204 Algorithm 2): `rnd` — 32 tasodifiy bayt.
+    /// Hedged imzo yon kanal hujumlariga chidamliroq; tekshirish deterministik bilan bir xil.
+    pub fn sign_hedged(&self, message: &[u8], rnd: &[u8; 32]) -> HybridSignature {
+        use ed25519_dalek::Signer as _;
+        let ed = self.ed.sign(message).to_bytes();
+        // M' = 0 || |ctx| || ctx || M (FIPS 204 Algorithm 2, 23-qator).
+        let prefix = [0u8, ML_DSA_CONTEXT.len() as u8];
+        let ml = self
+            .ml
+            .expanded_key()
+            .sign_internal(
+                &[&prefix, ML_DSA_CONTEXT, message],
+                &ml_dsa::B32::from(*rnd),
+            )
+            .encode();
+        HybridSignature {
+            ed,
+            ml: ml.to_vec(),
+        }
+    }
+
     /// Ikkala imzo. ML-DSA deterministik variantda (`rnd` = 0) — test vektorlari takrorlanadigan
-    /// bo'lishi uchun. Daemon (F2) hedged variantga o'tadi; tekshirish ikkalasi uchun bir xil.
+    /// bo'lishi uchun. Ishlab chiqarishda [`Self::sign_hedged`] ishlatiladi.
     pub fn sign(&self, message: &[u8]) -> HybridSignature {
         use ed25519_dalek::Signer as _;
         let ed = self.ed.sign(message).to_bytes();
@@ -199,6 +220,21 @@ mod tests {
                 "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"
             )
         );
+    }
+
+    #[test]
+    fn hedged_matches_deterministic_at_zero_and_verifies() {
+        let k = keys();
+        assert_eq!(
+            k.sign_hedged(b"m", &[0; 32]),
+            k.sign(b"m"),
+            "rnd=0 deterministik variantga teng"
+        );
+        let a = k.sign_hedged(b"m", &[5; 32]);
+        let b = k.sign_hedged(b"m", &[6; 32]);
+        assert_ne!(a.ml, b.ml, "rnd imzoni o'zgartiradi");
+        assert!(k.public().verify(b"m", &a.ed, &a.ml));
+        assert!(k.public().verify(b"m", &b.ed, &b.ml));
     }
 
     #[test]
