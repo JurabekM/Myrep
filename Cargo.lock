@@ -3670,6 +3670,10 @@ dependencies = [
 [[package]]
 name = "tamga-mcp-proxy"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "tamga-store",
+]
 
 [[package]]
 name = "tamga-policy"

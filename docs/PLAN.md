@@ -183,6 +183,22 @@ so'rov paydo bo'ldi, "Ruxsat" bosildi va Claude faylni yaratdi. Jurnalda `tool.p
 (24 s) → tool.post` ketma-ketligi bor, verify OK. Jurnaldagi bitta yozuv diskda o'zgartirilganda Studio
 `E_HASH, indeks 14` ni ko'rsatdi. Barcha ekran va tugmalar UI Automation orqali bosib sinaldi.
 
+**F5 — MCP proxy (2026-10-17):** `tamga-mcp-proxy [--name] [--session] -- <server buyrug'i>`. Proxy
+JSON-RPC qatorlarini o'zgarishsiz uzatadi va faqat `tools/call`ni ushlaydi. MCP tool nomi `mcp:<server>/<tool>`
+ko'rinishida yoziladi. Faktlar argument kalitlari (`path`, `url`, `command`...) va tool nomidagi so'zlardan
+chiqariladi (`facts::generic`). `ask` qarori: MCP'da agent ruxsat oynasi yo'q, shuning uchun `ask_route: studio`
+bo'lmasa chaqiruv tushuntirish bilan bloklanadi.
+**Xavfsizlik tartibi:** `tool.post` (taint) daemon'ga javob mijozga uzatilishidan oldin yetkaziladi, shuning
+uchun agent sirni keyingi so'rovga qo'ygan paytda taint allaqachon daemon'da bo'ladi. Sinovda pipelined
+mijoz sirni oldindan bilganda bu kafolat qo'llanilmasligi ko'rindi; haqiqiy agentda sirni oldindan bilish
+imkoni yo'q.
+**Sessiya sanog'i:** Claude Code MCP serverlarni ikki marta ishga tushiradi. Bitta proxy yopilganda
+umumiy sessiya taint'i o'chib ketmasligi uchun daemon ishtirokchilarni sanaydi.
+**Qabul sinovi (haqiqiy Claude Code 2.1.233, haiku, hook'larsiz):** rasmiy `server-filesystem` va
+`mcp-server-fetch` proxy orqali bitta sessiyada ishladi. Sir filesystem'dan o'qildi, fetch orqali yuborish
+`deny / no-secret-exfil (sends_tainted_secret)` bilan to'xtatildi. Sir token shakliga o'xshamaydi,
+ya'ni blok faqat taint orqali bo'ldi.
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

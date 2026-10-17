@@ -49,6 +49,16 @@ when { context.url like "*pastebin*" };
 bo'lib zanjirga muhrlanadi), sessiyalar (Claude Code transkripti uslubida), yaxlitlik (buzilishni aniq indeks bilan
 ko'rsatadi), siyosatlar va sozlamalar (daemon jonli qabul qiladi). CLI: `tamga pending`, `tamga decide <seq> allow|deny`.
 
+**F5 — MCP proxy:** `tamga-mcp-proxy` istalgan stdio MCP serverni o'raydi (Claude Code, Claude Desktop,
+Cursor — hook tizimi bo'lmagan mijozlar ham). `tools/call` bajarilishidan oldin siyosat bilan tekshiriladi,
+rad etilsa serverga yetmaydi va model MCP `isError` javobida sababni ko'radi. Bir nechta server bir `--session`
+ni bo'lishsa, biri o'qigan sirni boshqasi orqali yuborib bo'lmaydi.
+
+```json
+{"mcpServers": {"files": {"command": "tamga-mcp-proxy", "args": ["--name", "files", "--session", "proj", "--",
+  "node", "server-filesystem/dist/index.js", "C:/proj"]}}}
+```
+
 | Jonli oqim va tafsilot | Tasdiqlash navbati (haqiqiy `claude -p` kutmoqda) |
 |---|---|
 | ![](docs/screenshots/f4-detail.png) | ![](docs/screenshots/f4-approval.png) |

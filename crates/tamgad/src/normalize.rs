@@ -36,10 +36,12 @@ fn stash(vault: &Vault, session: &str, v: &Value) -> Result<Value, String> {
     vault.put(session, &bytes).map_err(|e| e.to_string())
 }
 
-/// Claude Code hook kirishi (https://docs.claude.com/en/docs/claude-code/hooks).
+/// Hook shaklidagi kirish: Claude Code hook'i (https://docs.claude.com/en/docs/claude-code/hooks) yoki
+/// `tamga-mcp-proxy` (u MCP `tools/call` ni xuddi shu shaklga keltiradi). `agent` — `agent.kind`.
 /// `pre_seqs` — `tool_use_id` → `tool.pre` yozuvining `seq` (`tool.post.ref` uchun).
-pub fn claude_code(
+pub fn hook_shaped(
     input: &Value,
+    agent: &str,
     vault: &Vault,
     pre_seqs: &HashMap<String, u64>,
 ) -> Result<Event, String> {
@@ -54,17 +56,14 @@ pub fn claude_code(
 
     let event = match hook {
         "SessionStart" => {
-            let mut agent = json!({"kind": "claude-code"});
+            let mut agent = json!({"kind": agent});
             if let Some(m) = s(input, "model") {
                 agent["model"] = m.into();
             }
             body.insert("agent".into(), agent);
             body.insert("actor".into(), actor());
             if let Some(src) = s(input, "source") {
-                body.insert(
-                    "ext".into(),
-                    json!({"dev.tamga.claude-code": {"source": src}}),
-                );
+                body.insert("ext".into(), json!({"dev.tamga.session": {"source": src}}));
             }
             "session.start"
         }
@@ -98,10 +97,7 @@ pub fn claude_code(
         }
         "SessionEnd" => {
             if let Some(r) = s(input, "reason") {
-                body.insert(
-                    "ext".into(),
-                    json!({"dev.tamga.claude-code": {"reason": r}}),
-                );
+                body.insert("ext".into(), json!({"dev.tamga.session": {"reason": r}}));
             }
             "session.end"
         }

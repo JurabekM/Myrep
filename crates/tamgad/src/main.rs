@@ -76,6 +76,9 @@ struct State {
     pending: BTreeMap<u64, Pending>,
     /// (sessiya, siyosat) — inson "shu sessiyada doim ruxsat" degan juftliklar.
     session_allow: HashSet<(String, String)>,
+    /// Sessiyadagi faol ishtirokchilar soni: bir nechta MCP proxy bitta `--session` ni bo'lishadi.
+    /// Taint faqat oxirgi ishtirokchi chiqqanda o'chiriladi.
+    session_refs: HashMap<String, u32>,
 }
 
 fn preview(tool_input: &Value) -> String {
@@ -216,13 +219,17 @@ impl State {
 
     /// Agent hodisasini yozadi. `spooled` — spool'dan kelgan hodisa: (asl vaqt, hook qarori).
     fn hook(&mut self, req: &Value, spooled: Option<(&str, &Value)>) -> Outcome {
-        if req.get("agent").and_then(Value::as_str) != Some("claude-code") {
-            return Outcome::Now(
-                json!({"ok": false, "error": "faqat claude-code agenti qo'llab-quvvatlanadi"}),
-            );
+        // Agentlar: Claude Code hook'i va `tamga-mcp-proxy` (agent nomi `mcp-proxy:<server>`).
+        let agent = req
+            .get("agent")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_owned();
+        if agent != "claude-code" && !agent.starts_with("mcp-proxy") {
+            return Outcome::Now(json!({"ok": false, "error": format!("noma'lum agent: {agent}")}));
         }
         let input = req.get("input").cloned().unwrap_or(Value::Null);
-        let ev = match normalize::claude_code(&input, &self.vault, &self.pre_seqs) {
+        let ev = match normalize::hook_shaped(&input, &agent, &self.vault, &self.pre_seqs) {
             Ok(ev) => ev,
             Err(e) => return Outcome::Now(json!({"ok": false, "error": e})),
         };
@@ -243,7 +250,7 @@ impl State {
                 _ => {
                     let facts =
                         Facts::from_tool(&tool, &tool_input, cwd, self.taints.get(&ev.session));
-                    let d = self.policy.evaluate("claude-code", &facts);
+                    let d = self.policy.evaluate(&agent, &facts);
                     (verdict, reason, policy) = (d.verdict, d.reason.clone(), d.policy.clone());
                     flags = facts.true_flags();
                     if !flags.is_empty() {
@@ -307,9 +314,24 @@ impl State {
                 {
                     self.pre_seqs.insert(id, seq);
                 }
+                if ev.event == "session.start" {
+                    *self.session_refs.entry(session.clone()).or_default() += 1;
+                }
                 if is_end {
-                    self.taints.remove(&session);
-                    self.session_allow.retain(|(s, _)| *s != session);
+                    let left = match self.session_refs.get_mut(&session) {
+                        Some(n) if *n > 1 => {
+                            *n -= 1;
+                            *n
+                        }
+                        _ => {
+                            self.session_refs.remove(&session);
+                            0
+                        }
+                    };
+                    if left == 0 {
+                        self.taints.remove(&session);
+                        self.session_allow.retain(|(s, _)| *s != session);
+                    }
                     let _ = self.checkpoint();
                 }
                 if defer {
@@ -483,6 +505,7 @@ fn open_state(home: Home) -> Result<State, String> {
         taints: HashMap::new(),
         pending: BTreeMap::new(),
         session_allow: HashSet::new(),
+        session_refs: HashMap::new(),
     })
 }
 
