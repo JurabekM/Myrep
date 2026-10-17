@@ -1,0 +1,27 @@
+[package]
+name = "tamga-studio"
+description = "TAMGA Studio — AI agent qora qutisining desktop GUI'si"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "tamga_studio_lib"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# default-features = false: "common-controls-v6" o'chiq — u `cargo test` binary'larini
+# STATUS_ENTRYPOINT_NOT_FOUND bilan yiqitadi (Baraka Daftari tajribasi). Native dialog ishlatmaymiz.
+tauri = { version = "2.12", default-features = false, features = ["wry", "compression"] }
+serde = { workspace = true }
+tamga-core = { workspace = true }
+tamga-store = { workspace = true }
+tamga-redact = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

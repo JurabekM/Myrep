@@ -1,0 +1,20 @@
+[package]
+name = "tamga-win"
+description = "Windows'ga xos kichik FFI: daemon'ni handle merosisiz ishga tushirish (workspace'dagi yagona unsafe joy)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Threading"] }
+
+# Workspace `unsafe_code = "forbid"` ni meros qilmaydi: bu crate'da bitta FFI funksiyasi bor.
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "deny"
