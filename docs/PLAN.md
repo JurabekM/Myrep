@@ -22,9 +22,15 @@ ko'rinishida bo'ladi (6-bo'lim).
 | — | **"Aytdi va qildi" solishtiruvi**: agent xabar bergan harakat bilan OS haqiqatda ko'rgan harakat farqi |
 | — | GDPR bilan mos: yuklama (payload) o'chirilsa ham zanjir tekshiriladi (crypto-shredding) |
 
-**Yangilik da'vosi** (F0 da raqobatchilar tahlili bilan tasdiqlanadi):
-ochiq format, bajarilishdan oldin to'xtatish, post-kvant imzo, mustaqil
-verifikator va OS bilan solishtirish bitta lokal, serversiz vositada birlashgan.
+**Yangilik da'vosi** (F0 raqobatchilar tahlili, 2026-10-17: [COMPETITORS.md](COMPETITORS.md)):
+ochiq format, bajarilishdan oldin to'xtatish, gibrid post-kvant imzo, mustaqil
+verifikator, OS bilan solishtirish va crypto-shredding bitta lokal, serversiz vositada birlashgan.
+Bu **kombinatsiya** hech qayerda topilmadi. **Alohida elementlarning har biri esa allaqachon bor**,
+shuning uchun ularning birortasi uchun "birinchi" deb aytilmaydi.
+Eng yaqin raqobatchilar: AgentProvenance (5 mezonning hammasi qisman, faqat Linux), Pipelock va
+Microsoft AGT. Haqiqiy farqlar: Windows-native "aytdi va qildi", Ed25519+ML-DSA-65 gibrid imzo,
+test vektorli shredding. AAR formati draft-sharif-agent-audit-trail bilan mos qilib loyihalanadi
+(COMPETITORS.md §12.4).
 
 ## 2. Tahdid modeli (halol chegaralar)
 
