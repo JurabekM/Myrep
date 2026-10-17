@@ -27,6 +27,9 @@ use tamga_store::{Home, keystore, now_ts, secrets, spool};
 use tokio::sync::{mpsc, oneshot};
 
 type Reply = oneshot::Sender<Value>;
+
+/// Yopilmay qolgan (masalan, agent yiqilgan) sessiya taint'i shuncha vaqt saqlanadi.
+const TAINT_TTL: Duration = Duration::from_secs(7 * 24 * 3600);
 type Job = (Value, Reply);
 
 fn log_line(home: &Home, msg: &str) {
@@ -307,6 +310,7 @@ impl State {
                                 t.len()
                             ),
                         );
+                        self.persist(&session);
                     }
                 }
                 if ev.event == "tool.pre"
@@ -316,6 +320,7 @@ impl State {
                 }
                 if ev.event == "session.start" {
                     *self.session_refs.entry(session.clone()).or_default() += 1;
+                    self.persist(&session);
                 }
                 if is_end {
                     let left = match self.session_refs.get_mut(&session) {
@@ -331,6 +336,11 @@ impl State {
                     if left == 0 {
                         self.taints.remove(&session);
                         self.session_allow.retain(|(s, _)| *s != session);
+                        if let Err(e) = self.vault.remove_state(&session) {
+                            log_line(&self.home, &format!("holat o'chirilmadi: {e}"));
+                        }
+                    } else {
+                        self.persist(&session);
                     }
                     let _ = self.checkpoint();
                 }
@@ -369,6 +379,46 @@ impl State {
             log_line(&self.home, &format!("checkpoint: {size} yozuv"));
         }
         r
+    }
+
+    /// Sessiya holatini (taint + ishtirokchilar soni) diskka, sessiya vault kaliti bilan shifrlab yozadi.
+    /// Faqat taint'li sessiyalar saqlanadi — qolganlari qayta ishga tushganda tiklanishi shart emas.
+    fn persist(&mut self, session: &str) {
+        let Some(t) = self.taints.get(session).filter(|t| t.secret_read) else {
+            return;
+        };
+        let state = json!({"v": 1, "taint": t.to_json(), "refs": self.session_refs.get(session).copied().unwrap_or(1)});
+        if let Err(e) = self.vault.put_state(session, state.to_string().as_bytes()) {
+            log_line(
+                &self.home,
+                &format!("taint holati saqlanmadi ({session}): {e}"),
+            );
+        }
+    }
+
+    /// Daemon ishga tushganda saqlangan holatlarni tiklaydi; muddati o'tganlari o'chiriladi.
+    fn restore(&mut self) {
+        match self.vault.load_states(TAINT_TTL) {
+            Ok(states) => {
+                let n = states.len();
+                for (session, bytes) in states {
+                    let Ok(v) = serde_json::from_slice::<Value>(&bytes) else {
+                        continue;
+                    };
+                    self.taints
+                        .insert(session.clone(), Taint::from_json(&v["taint"]));
+                    let refs = v["refs"]
+                        .as_u64()
+                        .unwrap_or(1)
+                        .clamp(1, u64::from(u32::MAX)) as u32;
+                    self.session_refs.insert(session, refs);
+                }
+                if n > 0 {
+                    log_line(&self.home, &format!("taint holati tiklandi: {n} sessiya"));
+                }
+            }
+            Err(e) => log_line(&self.home, &format!("taint holatlari o'qilmadi: {e}")),
+        }
     }
 
     fn tick(&mut self) {
@@ -491,7 +541,7 @@ fn open_state(home: Home) -> Result<State, String> {
             },
         ),
     );
-    Ok(State {
+    let mut state = State {
         vault: Vault::new(home.vault(), master).map_err(|e| e.to_string())?,
         home,
         config,
@@ -506,7 +556,9 @@ fn open_state(home: Home) -> Result<State, String> {
         pending: BTreeMap::new(),
         session_allow: HashSet::new(),
         session_refs: HashMap::new(),
-    })
+    };
+    state.restore();
+    Ok(state)
 }
 
 /// Yagona yozuvchi: barcha so'rovlar ketma-ket bajariladi, zanjir tartibi kafolatlanadi.

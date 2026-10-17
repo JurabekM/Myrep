@@ -207,8 +207,15 @@ Hisobotlar ekrani) buzilgan jurnal bo'lsa ham yaratiladi, natija `MANIFEST.json`
 ochiq matnda (tuz bilan) qo'shiladi, chunki aks holda auditor majburiyatni tekshira olmaydi; Studio buni
 ogohlantirish bilan ko'rsatadi. Auditor sifatida sinaldi: to'plam ichidagi verifikator OK berdi;
 o'zgartirilgan payload `PAYLOAD ... mos emas`, o'zgartirilgan inson qarori `E_HASH indeks 25` bilan ushlandi.
-**Ochiq chegara:** sessiya taint'i daemon xotirasida turadi va daemon qayta ishga tushganda yo'qoladi
-(diskda shifrlab saqlash keyingi bosqichga qoldirildi).
+**Taint'ni saqlash (2026-10-17, tuzatildi):** taint holati (qiymatlar, `secret_read`, ishtirokchilar soni)
+sessiyaning vault kaliti bilan XChaCha20-Poly1305 da shifrlanib `vault/<sessiya>.state` ga atomar yoziladi
+va daemon ishga tushganda tiklanadi. Yopilmay qolgan sessiyalar holati 7 kundan keyin o'chiriladi.
+Sinov: `.env` o'qilgach daemon majburan o'ldirildi, qayta ishga tushgach sirni fayl nomisiz yuborish
+baribir `sends_tainted_secret` bilan bloklandi; holat faylida sir ochiq ko'rinmaydi.
+"Shu sessiyada doim" ruxsatlari ataylab saqlanmaydi: qayta ishga tushgandan keyin qayta so'rash xavfsizroq.
+**Shred va avlodlar:** shred joriy sessiya kaliti avlodini yo'q qiladi. Eski payload'lar va taint ochilmaydi,
+lekin sessiyaning keyingi hodisalari yangi avlod kaliti bilan yozilishda davom etadi. Avval shred qilingan
+faol sessiyaning yangi hodisalari yozilmay, spool'da yiqilib qolardi; bu xato shu yerda tuzatildi.
 
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga

@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use serde_json::Value;
+use serde_json::{Value, json};
 
 #[derive(Debug, Default, Clone)]
 pub struct Taint {
@@ -57,6 +57,30 @@ impl Taint {
         }
     }
 
+    /// Diskda (shifrlangan) saqlash uchun.
+    pub fn to_json(&self) -> Value {
+        json!({"secret_read": self.secret_read, "values": self.values})
+    }
+
+    pub fn from_json(v: &Value) -> Self {
+        Self {
+            secret_read: v
+                .get("secret_read")
+                .and_then(Value::as_bool)
+                .unwrap_or(false),
+            values: v
+                .get("values")
+                .and_then(Value::as_array)
+                .map(|a| {
+                    a.iter()
+                        .filter_map(Value::as_str)
+                        .map(str::to_owned)
+                        .collect()
+                })
+                .unwrap_or_default(),
+        }
+    }
+
     /// Ma'lum maxfiy qiymatlardan birortasi matnda bormi.
     pub fn appears_in(&self, text: &str) -> bool {
         self.values.iter().any(|v| text.contains(v.as_str()))
@@ -67,6 +91,15 @@ impl Taint {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn json_round_trip() {
+        let mut t = Taint::default();
+        t.learn_from_secret_file("API_KEY=qizil-olma-9988\n");
+        let back = Taint::from_json(&t.to_json());
+        assert!(back.secret_read && back.appears_in("x qizil-olma-9988 y"));
+        assert!(!Taint::from_json(&serde_json::Value::Null).secret_read);
+    }
 
     #[test]
     fn learns_from_json_escaped_response() {
