@@ -20,6 +20,20 @@ export interface Rec {
   spooled: boolean | null;
   model: string | null;
   agent: string | null;
+  /** OS sensori kuzatuvi (`os.observed`): "qildi". */
+  os: OsObs | null;
+}
+
+export interface OsObs {
+  kind: "process" | "network" | "file";
+  image?: string;
+  pid?: number;
+  remote?: string;
+  path?: string;
+  op?: string;
+  declared: boolean;
+  mismatch?: string;
+  severity: "info" | "warn";
 }
 
 export interface PendingItem {
@@ -89,6 +103,7 @@ export interface Status {
   policy_error?: string | null;
   tainted_sessions?: number;
   config?: { ask_route: string; ask_timeout_secs: number; mode: string };
+  sensor?: { roots: number[]; watched_dirs: string[]; poll_ms: number; blind_spots: string[] } | null;
 }
 
 /** Tauri tashqarisida (oddiy brauzer) — buyruqlar ishlamaydi, UI xato holatini ko'rsatadi. */

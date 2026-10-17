@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, History } from "lucide-react";
 import { call, dateTime, EVENT_LABEL, time, usePoll, type Rec, type SessionSummary } from "../api";
-import { ErrorBanner, Facts, RecordDetail, VerdictPill } from "../components";
+import { ErrorBanner, Facts, RecordDetail, SaidDid, VerdictPill } from "../components";
 
 /** Sessiyalar ro'yxati va Claude Code transkriptiga o'xshash qayta o'ynatish. */
 export function SessionsScreen() {
@@ -70,6 +70,8 @@ function Timeline({ session }: { session: string }) {
           const kids = children(r.seq);
           const isOpen = open === r.seq;
           const final = kids.find((k) => k.event === "decision.human");
+          const did = kids.filter((k) => k.os);
+          const bad = did.filter((k) => k.os!.severity === "warn").length;
           return (
             <div key={r.seq} className={`t-tool ${r.verdict ?? ""}`}>
               <button className="t-head" onClick={() => setOpen(isOpen ? null : r.seq)} aria-expanded={isOpen}>
@@ -79,13 +81,21 @@ function Timeline({ session }: { session: string }) {
                 <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                   <VerdictPill verdict={r.verdict} by={r.by} />
                   {final && <VerdictPill verdict={final.verdict} by={final.by} />}
+                  {did.length > 0 && (
+                    <span className={`pill ${bad ? "deny" : "muted"}`} title="OS sensori shu chaqiruv paytida ko'rgan harakatlar">
+                      qildi: {did.length}
+                      {bad ? ` · ${bad} nomuvofiq` : ""}
+                    </span>
+                  )}
                 </span>
                 <span className="dim mono">#{r.seq}</span>
               </button>
               {isOpen && (
                 <div className="t-body detail-inline">
                   <RecordDetail rec={r} />
-                  {kids.map((k) => (
+                  <span className="label">Aytdi ↔ qildi</span>
+                  <SaidDid kids={kids} />
+                  {kids.filter((k) => !k.os).map((k) => (
                     <div key={k.seq} className="t-child">
                       <RecordDetail rec={k} />
                     </div>

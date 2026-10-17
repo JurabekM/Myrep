@@ -217,6 +217,28 @@ baribir `sends_tainted_secret` bilan bloklandi; holat faylida sir ochiq ko'rinma
 lekin sessiyaning keyingi hodisalari yangi avlod kaliti bilan yozilishda davom etadi. Avval shred qilingan
 faol sessiyaning yangi hodisalari yozilmay, spool'da yiqilib qolardi; bu xato shu yerda tuzatildi.
 
+**F7 — "aytdi va qildi" (2026-10-17):** `tamga-sensor` (admin'siz, yangi `unsafe` yo'q) har 200 ms da
+jarayonlar snapshot'ini (`sysinfo`) va TCP jadvalini PID bilan (`netstat2`) oladi, fayl o'zgarishlarini
+`ReadDirectoryChangesW` (`notify`) orqali kuzatadi: sessiyaning ishchi papkasi va `~/.ssh`, `.aws`,
+`.azure`, `.kube`, `.gnupg`, `.docker`. Hook va proxy o'z PID'ini yuboradi, sensor undan yuqoriga
+`claude*` agent ildizini topadi va faqat uning avlodlarini kuzatadi. Ildizning o'zi (API trafigi),
+TAMGA vositalari va MCP proxy ostidagi serverlar kuzatilmaydi.
+Korrelyatsiya (`tamgad/src/observe.rs`, vaqtga bog'liq bo'lmagan testlar bilan): kuzatuv faol chaqiruv
+oynasiga (pre − 0,3 s … post + 1,5 s) tushsa, unga bog'lanadi (`ref`). Nomuvofiqlik uch xil:
+`network_egress` e'lon qilinmagan chaqiruv paytidagi tashqi ulanish (warn); maxfiy papkadagi o'zgarish
+(warn); chaqiruvdan tashqaridagi jarayon, ulanish yoki fayl o'zgarishi. Shell va konsol jarayonlari
+chaqiruv ichida bo'lsa yozilmaydi; buyruq satri esa vault'ga, jurnalga faqat digest tushadi.
+**Qabul sinovi (haqiqiy Claude Code, haiku):** agent `py -3.14 check.py` ni e'lon qildi va faktlarda
+tarmoq yo'q edi. Sensor `python.exe → example.com:80` ni "e'lon qilinmagan tarmoq ulanishi" deb `ref=2`
+bilan ushladi. Skript yozgan `hisobot.txt` shell chaqiruvi doirasida "aytilgan" deb to'g'ri bog'landi.
+Ikkita xato topilib tuzatildi: qisqa yashovchi hook PID'i snapshot'da bo'lmagani uchun ildiz
+topilmagan edi (endi shu zahoti yangi snapshot olinadi); dastlab bitta buyruqqa 15 ta shell/conhost
+yozuvi tushgan edi (filtrdan keyin 4 ta).
+**Ko'r nuqtalar (halol):** admin'siz fayl *o'qishlari* ko'rinmaydi; 200 ms dan qisqa jarayon yoki
+ulanish o'tkazib yuborilishi mumkin; UDP/DNS kuzatilmaydi; fayl o'zgarishini qaysi jarayon qilgani
+noma'lum, u vaqt bo'yicha bog'lanadi. Nomuvofiqlik bloklamaydi (harakat allaqachon bo'lgan), u dalil va
+ogohlantirish sifatida yoziladi.
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

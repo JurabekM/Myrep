@@ -110,7 +110,7 @@ impl Ctx {
         if let (Some(o), Value::Object(e)) = (input.as_object_mut(), extra) {
             o.extend(e);
         }
-        let req = json!({"op": "hook", "agent": self.cfg.agent, "input": input});
+        let req = json!({"op": "hook", "agent": self.cfg.agent, "input": input, "pid": std::process::id()});
         client::connect(
             &pipe_name(),
             self.daemon_exe.as_deref(),

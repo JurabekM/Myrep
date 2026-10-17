@@ -905,3 +905,42 @@ button {
   color: var(--text-primary);
   cursor: pointer;
 }
+
+/* ---------- F7: aytdi va qildi ---------- */
+.said-did {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 6px;
+  background: var(--bg-code);
+}
+
+.did-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.did-row.warn {
+  background: var(--danger-bg);
+}
+
+.did-why {
+  color: var(--danger);
+  font-size: 12.5px;
+}
+
+.warn-text {
+  color: var(--danger);
+}
+
+.blind {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+}

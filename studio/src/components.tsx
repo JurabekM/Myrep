@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, CircleCheck, Lock, Trash2 } from "lucide-react";
-import { call, dateTime, EVENT_LABEL, FACT_LABEL, type Payload, type Rec } from "./api";
+import { call, dateTime, EVENT_LABEL, FACT_LABEL, type OsObs, type Payload, type Rec } from "./api";
 
 export function VerdictPill({ verdict, by }: { verdict: string | null; by?: string | null }) {
   if (!verdict) return <span className="pill muted">—</span>;
@@ -32,7 +32,48 @@ export function Facts({ facts, max }: { facts: string[] | null; max?: number }) 
 /** Yozuv nomi: tool nomi yoki hodisa turi. */
 export function recTitle(r: Rec): string {
   if (r.tool) return r.tool;
+  if (r.os) return r.os.image ?? (r.os.kind === "file" ? "fayl" : "OS");
   return EVENT_LABEL[r.event] ?? r.event;
+}
+
+const OS_KIND: Record<string, string> = { process: "jarayon", network: "tarmoq", file: "fayl" };
+
+/** OS kuzatuvining qisqa tavsifi: nima qilingan. */
+export function osWhat(o: OsObs): string {
+  if (o.kind === "network") return `${o.image ?? ""} → ${o.remote ?? ""}`;
+  if (o.kind === "file") return `${o.op ?? ""} ${o.path ?? ""}`;
+  return `${o.image ?? ""}${o.pid ? ` (PID ${o.pid})` : ""}`;
+}
+
+/** "Aytdi va qildi" belgisi: aytilgan / aytilmagan / nomuvofiq. */
+export function OsPill({ o }: { o: OsObs }) {
+  const cls = o.severity === "warn" ? "deny" : o.declared ? "allow" : "muted";
+  const label = o.severity === "warn" ? "nomuvofiq" : o.declared ? "aytilgan" : "aytilmagan";
+  return (
+    <span className={`pill ${cls}`} title={o.mismatch ?? undefined}>
+      {OS_KIND[o.kind]} · {label}
+    </span>
+  );
+}
+
+/** Tool chaqiruvi ostida: agent aytgani va OS ko'rgani. */
+export function SaidDid({ kids }: { kids: Rec[] }) {
+  const obs = kids.filter((k) => k.os);
+  if (!obs.length) return <p className="verdict-note">OS sensori bu chaqiruv paytida qo'shimcha jarayon, ulanish yoki fayl o'zgarishini ko'rmadi.</p>;
+  return (
+    <div className="said-did">
+      {obs.map((k) => (
+        <div key={k.seq} className={`did-row ${k.os!.severity === "warn" ? "warn" : ""}`}>
+          <OsPill o={k.os!} />
+          <span className="mono wrap">{osWhat(k.os!)}</span>
+          {k.os!.mismatch && <span className="did-why">{k.os!.mismatch}</span>}
+          <span className="dim mono" style={{ marginLeft: "auto" }}>
+            #{k.seq}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 interface Detail {
@@ -76,6 +117,16 @@ export function RecordDetail({ rec }: { rec: Rec | null }) {
             </span>
           )}
           {rec.reason && <span className="verdict-note">{rec.reason}</span>}
+        </>
+      )}
+      {rec.os && (
+        <>
+          <span className="label">OS kuzatuvi (qildi)</span>
+          <span>
+            <OsPill o={rec.os} />
+          </span>
+          <span className="mono wrap">{osWhat(rec.os)}</span>
+          {rec.os.mismatch && <span className="verdict-note" style={{ color: rec.os.severity === "warn" ? "var(--danger)" : undefined }}>{rec.os.mismatch}</span>}
         </>
       )}
       {rec.facts?.length ? (

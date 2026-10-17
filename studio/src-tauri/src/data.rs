@@ -67,7 +67,7 @@ pub fn compact(r: &Value) -> Value {
         "tool": r["tool"]["name"], "verdict": d["verdict"], "by": d["by"], "policy": d["policy"],
         "reason": d["reason"], "ref": r["ref"], "hash": r["hash"],
         "facts": r["ext"]["dev.tamga.facts"], "spooled": r["ext"]["dev.tamga.spooled"],
-        "model": r["agent"]["model"], "agent": r["agent"]["kind"],
+        "model": r["agent"]["model"], "agent": r["agent"]["kind"], "os": r["ext"]["dev.tamga.os"],
     })
 }
 

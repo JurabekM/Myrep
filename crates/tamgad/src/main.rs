@@ -12,6 +12,7 @@
 //! qarori `decision.human` yozuvi bo'lib zanjirga tushadi. Javob kelmasa — timeout'da rad etiladi.
 
 mod normalize;
+mod observe;
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write as _;
@@ -20,6 +21,7 @@ use std::time::{Duration, Instant};
 use serde_json::{Map, Value, json};
 use tamga_core::keys::SigningKeys;
 use tamga_policy::{Engine, Facts, Taint, Verdict};
+use tamga_sensor::{Observation, Sensor};
 use tamga_store::home::{AskRoute, Config, Mode, default_log_id, pipe_name};
 use tamga_store::logfile::LogFile;
 use tamga_store::vault::Vault;
@@ -82,6 +84,11 @@ struct State {
     /// Sessiyadagi faol ishtirokchilar soni: bir nechta MCP proxy bitta `--session` ni bo'lishadi.
     /// Taint faqat oxirgi ishtirokchi chiqqanda o'chiriladi.
     session_refs: HashMap<String, u32>,
+    /// OS sensori ("qildi") va "aytdi va qildi" korrelyatori.
+    sensor: Option<std::sync::Arc<Sensor>>,
+    corr: observe::Correlator,
+    /// Fayl hodisalarini 2 s ichida takrorlamaslik: (yo'l, amal) -> oxirgi vaqt.
+    file_dedupe: HashMap<(String, &'static str), Instant>,
 }
 
 fn preview(tool_input: &Value) -> String {
@@ -149,6 +156,12 @@ impl State {
             "policy_error": self.policy_error,
             "tainted_sessions": self.taints.values().filter(|t| t.secret_read).count(),
             "pending": self.pending.len(),
+            "sensor": self.sensor.as_ref().map(|s| json!({
+                "roots": s.roots(),
+                "watched_dirs": s.watched_dirs().iter().map(|d| d.display().to_string()).collect::<Vec<_>>(),
+                "poll_ms": tamga_sensor::POLL.as_millis() as u64,
+                "blind_spots": tamga_sensor::BLIND_SPOTS,
+            })),
         })
     }
 
@@ -246,6 +259,7 @@ impl State {
         let cwd = input.get("cwd").and_then(Value::as_str).unwrap_or_default();
         let (mut verdict, mut reason, mut policy) = (Verdict::Allow, String::new(), String::new());
         let mut flags = Vec::new();
+        let mut call_path = String::new();
         let mut defer = false;
         if ev.needs_decision {
             let decision = match spooled {
@@ -256,6 +270,7 @@ impl State {
                     let d = self.policy.evaluate(&agent, &facts);
                     (verdict, reason, policy) = (d.verdict, d.reason.clone(), d.policy.clone());
                     flags = facts.true_flags();
+                    call_path = facts.path.clone();
                     if !flags.is_empty() {
                         let ext = body.entry("ext").or_insert_with(|| json!({}));
                         ext["dev.tamga.facts"] = json!(flags);
@@ -292,8 +307,35 @@ impl State {
         };
         let is_end = ev.event == "session.end";
         let session = ev.session.clone();
+        // "Qildi" uchun: agent ildizini (hook/proxy PID'idan) va ishchi papkani kuzatuvga olish.
+        if spooled.is_none() {
+            self.track_session(&session, req.get("pid").and_then(Value::as_u64), cwd);
+        }
+        let post_ref = (ev.event == "tool.post")
+            .then(|| {
+                ev.tool_use_id
+                    .as_ref()
+                    .and_then(|id| self.pre_seqs.get(id).copied())
+            })
+            .flatten();
         match self.log.append(&ts, &ev.session, ev.event, body) {
             Ok(seq) => {
+                if ev.event == "tool.pre" && verdict != Verdict::Deny && spooled.is_none() {
+                    self.corr.begin(
+                        &session,
+                        observe::Call {
+                            seq,
+                            tool: tool.clone(),
+                            flags: flags.iter().map(|f| (*f).to_owned()).collect(),
+                            path: call_path.clone(),
+                            started: Instant::now(),
+                            ended: None,
+                        },
+                    );
+                }
+                if let Some(pre) = post_ref {
+                    self.corr.end(&session, pre, Instant::now());
+                }
                 if ev.event == "tool.post" {
                     // Maxfiy faylni o'qigan tool natijasidagi qiymatlar sessiya taint'iga qo'shiladi.
                     let from_secret =
@@ -334,6 +376,7 @@ impl State {
                         }
                     };
                     if left == 0 {
+                        self.untrack_session(&session);
                         self.taints.remove(&session);
                         self.session_allow.retain(|(s, _)| *s != session);
                         if let Err(e) = self.vault.remove_state(&session) {
@@ -421,7 +464,120 @@ impl State {
         }
     }
 
+    /// Sessiyani OS kuzatuviga oladi: agent ildizi (bir marta) va ishchi papka.
+    fn track_session(&mut self, session: &str, client_pid: Option<u64>, cwd: &str) {
+        let Some(sensor) = self.sensor.clone() else {
+            return;
+        };
+        let ctx = self.corr.ctx(session);
+        ctx.last_seen = Some(Instant::now());
+        if ctx.root.is_none()
+            && let Some(pid) = client_pid.and_then(|p| u32::try_from(p).ok())
+            && let Some(root) = sensor.watch_client(pid)
+        {
+            ctx.root = Some(root);
+            log_line(
+                &self.home,
+                &format!("sensor: sessiya {session} - agent ildizi PID {root}"),
+            );
+        }
+        if !cwd.is_empty() && ctx.cwd.is_empty() {
+            ctx.cwd = cwd.to_owned();
+            sensor.watch_dir(std::path::Path::new(cwd), true);
+        }
+    }
+
+    fn untrack_session(&mut self, session: &str) {
+        if let Some(ctx) = self.corr.sessions.remove(session)
+            && let (Some(root), Some(sensor)) = (ctx.root, &self.sensor)
+            && !self.corr.sessions.values().any(|c| c.root == Some(root))
+        {
+            sensor.unwatch_root(root);
+        }
+    }
+
+    /// Sensor kuzatuvini sessiyaga bog'lab `os.observed` sifatida yozadi.
+    fn observe(&mut self, obs: Observation) {
+        let now = Instant::now();
+        if let Observation::File { path, .. } = &obs {
+            // Bitta yozish odatda create + modify beradi: yo'l bo'yicha 2 s ichida bitta yozuv.
+            let key = (path.display().to_string(), "any");
+            if self
+                .file_dedupe
+                .get(&key)
+                .is_some_and(|t| now.duration_since(*t) < Duration::from_secs(2))
+            {
+                return;
+            }
+            self.file_dedupe.insert(key, now);
+        }
+        let Some(f) = self.corr.classify(&obs, now, self.home.root()) else {
+            return;
+        };
+        if let Observation::Process { image, .. } = &obs
+            && observe::is_plumbing(image, f.declared)
+        {
+            return;
+        }
+        let mut os = json!({"declared": f.declared, "severity": f.severity});
+        let mut body = Map::new();
+        match &obs {
+            Observation::Process {
+                pid,
+                ppid,
+                image,
+                cmd,
+                ..
+            } => {
+                os["kind"] = "process".into();
+                os["pid"] = (*pid).into();
+                os["ppid"] = (*ppid).into();
+                os["image"] = image.clone().into();
+                // Buyruq satrida sir bo'lishi mumkin - jurnalga faqat tuzlangan digest.
+                if !cmd.is_empty()
+                    && let Ok(r) = self.vault.put(&f.session, cmd.as_bytes())
+                {
+                    body.insert("result".into(), r);
+                }
+            }
+            Observation::Connection {
+                pid, image, remote, ..
+            } => {
+                os["kind"] = "network".into();
+                os["pid"] = (*pid).into();
+                os["image"] = image.clone().into();
+                os["remote"] = remote.clone().into();
+            }
+            Observation::File { path, op } => {
+                os["kind"] = "file".into();
+                os["path"] = path.display().to_string().into();
+                os["op"] = (*op).into();
+            }
+        }
+        if let Some(m) = f.mismatch {
+            os["mismatch"] = m.into();
+        }
+        if let Some(r) = f.ref_seq {
+            body.insert("ref".into(), r.into());
+        }
+        body.insert("ext".into(), json!({"dev.tamga.os": os}));
+        match self.log.append(&now_ts(), &f.session, "os.observed", body) {
+            Ok(seq) if f.severity == "warn" => {
+                log_line(
+                    &self.home,
+                    &format!("os.observed #{seq}: {}", f.mismatch.unwrap_or("")),
+                );
+            }
+            Ok(_) => {}
+            Err(e) => log_line(&self.home, &format!("os.observed yozilmadi: {e}")),
+        }
+    }
+
     fn tick(&mut self) {
+        let now = Instant::now();
+        self.corr.gc(now);
+        self.file_dedupe
+            .retain(|_, t| now.duration_since(*t) < Duration::from_secs(10));
         // Config jonli: Studio yoki foydalanuvchi o'zgartirsa, qayta ishga tushirish shart emas.
         self.config = self.home.config();
         let timeout = Duration::from_secs(self.config.ask_timeout_secs);
@@ -489,7 +645,9 @@ impl State {
     }
 }
 
-fn open_state(home: Home) -> Result<State, String> {
+fn open_state(
+    home: Home,
+) -> Result<(State, Option<std::sync::mpsc::Receiver<Observation>>), String> {
     home.ensure().map_err(|e| e.to_string())?;
     let config = home.config();
     let store = secrets::default_store(&home).map_err(|e| e.to_string())?;
@@ -541,6 +699,22 @@ fn open_state(home: Home) -> Result<State, String> {
             },
         ),
     );
+    // OS sensori (admin'siz). `TAMGA_SENSOR=0` - o'chirish.
+    let (sensor, observations) = if std::env::var("TAMGA_SENSOR").as_deref() == Ok("0") {
+        (None, None)
+    } else {
+        let (s, rx) = Sensor::start();
+        (Some(s), Some(rx))
+    };
+    let profile = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_default()
+        .replace('\\', "/");
+    if let Some(s) = &sensor {
+        for d in observe::SENSITIVE {
+            s.watch_dir(&std::path::Path::new(&profile).join(d), true);
+        }
+    }
     let mut state = State {
         vault: Vault::new(home.vault(), master).map_err(|e| e.to_string())?,
         home,
@@ -556,13 +730,20 @@ fn open_state(home: Home) -> Result<State, String> {
         pending: BTreeMap::new(),
         session_allow: HashSet::new(),
         session_refs: HashMap::new(),
+        sensor,
+        corr: observe::Correlator::new(profile),
+        file_dedupe: HashMap::new(),
     };
     state.restore();
-    Ok(state)
+    Ok((state, observations))
 }
 
 /// Yagona yozuvchi: barcha so'rovlar ketma-ket bajariladi, zanjir tartibi kafolatlanadi.
-async fn writer(mut state: State, mut rx: mpsc::Receiver<Job>) {
+async fn writer(
+    mut state: State,
+    mut rx: mpsc::Receiver<Job>,
+    mut obs: mpsc::UnboundedReceiver<Observation>,
+) {
     let mut ticker = tokio::time::interval(Duration::from_secs(1));
     loop {
         tokio::select! {
@@ -570,6 +751,7 @@ async fn writer(mut state: State, mut rx: mpsc::Receiver<Job>) {
                 Some((req, reply)) => state.handle(&req, reply),
                 None => break,
             },
+            Some(o) = obs.recv() => state.observe(o),
             _ = ticker.tick() => state.tick(),
         }
     }
@@ -636,7 +818,7 @@ async fn serve(_pipe: String, _tx: mpsc::Sender<Job>) -> std::io::Result<()> {
 
 fn main() -> std::process::ExitCode {
     let home = Home::from_env();
-    let state = match open_state(home.clone()) {
+    let (state, observations) = match open_state(home.clone()) {
         Ok(s) => s,
         Err(e) => {
             log_line(&home, &format!("ishga tushmadi: {e}"));
@@ -650,7 +832,18 @@ fn main() -> std::process::ExitCode {
         .expect("tokio");
     rt.block_on(async move {
         let (tx, rx) = mpsc::channel::<Job>(256);
-        let writer = tokio::spawn(writer(state, rx));
+        // Sensor oqimi (std) -> yozuvchi (tokio): oddiy ko'prik oqimi.
+        let (obs_tx, obs_rx) = mpsc::unbounded_channel();
+        if let Some(observations) = observations {
+            std::thread::spawn(move || {
+                while let Ok(o) = observations.recv() {
+                    if obs_tx.send(o).is_err() {
+                        break;
+                    }
+                }
+            });
+        }
+        let writer = tokio::spawn(writer(state, rx, obs_rx));
         let pipe = pipe_name();
         let result = tokio::select! {
             r = serve(pipe.clone(), tx) => r,

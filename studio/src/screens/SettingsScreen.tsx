@@ -53,6 +53,25 @@ export function SettingsScreen({ status }: { status: Status | null }) {
           onChange={(v) => void set({ askRoute: v })}
         />
       </section>
+      <section>
+        <h3>OS sensori ("aytdi va qildi")</h3>
+        {status?.sensor ? (
+          <>
+            <p className="dim">
+              Admin huquqisiz: jarayonlar va TCP ulanishlari har {status.sensor.poll_ms} ms da, fayl o'zgarishlari {status.sensor.watched_dirs.length} ta
+              papkada. Kuzatilayotgan agentlar: {status.sensor.roots.length}.
+            </p>
+            <span className="label">Ko'r nuqtalar (halol chegaralar)</span>
+            <ul className="blind">
+              {status.sensor.blind_spots.map((b) => (
+                <li key={b}>{b}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="dim">Sensor o'chiq yoki daemon ulanmagan.</p>
+        )}
+      </section>
       <section className="kv">
         <span className="label">TAMGA papkasi</span>
         <span className="mono wrap">{data?.home}</span>

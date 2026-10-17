@@ -71,13 +71,20 @@ ichida verifikatorning o'zi.
 cd verify && python -m tamga_verify ../evidence/log.jsonl --checkpoints ../evidence/checkpoints.jsonl --key ../evidence/public-key.json --payloads ../payloads
 ```
 
+**F7 — "aytdi va qildi" (OS sensori, admin huquqisiz):** `tamga-sensor` agent jarayon daraxtini,
+TCP ulanishlarini (PID bilan) va fayl o'zgarishlarini kuzatadi. Kuzatuvlar `os.observed` yozuvi sifatida
+agent e'lon qilgan tool chaqiruviga (`ref`) bog'lanadi. Nomuvofiqlik ham belgilanadi: masalan, agent
+`py check.py` ni e'lon qildi (buyruq tahlili tarmoq ko'rmadi), skript esa tashqi manzilga ulandi. Bu
+haqiqiy Claude Code sessiyasida ushlandi. Ko'r nuqtalar Studio'da doim ko'rsatiladi: fayl o'qishlari
+ko'rinmaydi, juda qisqa jarayon yoki ulanish o'tkazib yuborilishi mumkin, UDP/DNS kuzatilmaydi.
+
 | Jonli oqim va tafsilot | Tasdiqlash navbati (haqiqiy `claude -p` kutmoqda) |
 |---|---|
 | ![](docs/screenshots/f4-detail.png) | ![](docs/screenshots/f4-approval.png) |
 | **Sessiya transkripti** | **Buzilish aniqlandi (bitta yozuv qo'lda o'zgartirilgan)** |
 | ![](docs/screenshots/f4-sessions.png) | ![](docs/screenshots/f4-tamper.png) |
-| **Hisobotlar: dalil to'plami** | |
-| ![](docs/screenshots/f6-reports.png) | |
+| **Hisobotlar: dalil to'plami** | **Aytdi va qildi: e'lon qilinmagan ulanish** |
+| ![](docs/screenshots/f6-reports.png) | ![](docs/screenshots/f7-said-did.png) |
 
 ## Ishga tushirish (Windows)
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Eye, Lock, Search } from "lucide-react";
 import { call, time, type Rec } from "../api";
-import { ErrorBanner, Facts, RecordDetail, recTitle, VerdictPill } from "../components";
+import { ErrorBanner, Facts, OsPill, osWhat, RecordDetail, recTitle, VerdictPill } from "../components";
 
 interface RecordsResp {
   ok: boolean;
@@ -15,6 +15,7 @@ const FILTERS = [
   { id: "tools", label: "Tool'lar" },
   { id: "blocked", label: "Bloklangan" },
   { id: "ask", label: "Ask" },
+  { id: "os", label: "Nomuvofiq" },
 ] as const;
 
 /** Jonli oqim: har soniyada faqat yangi yozuvlar so'raladi. */
@@ -55,6 +56,7 @@ export function LiveScreen() {
         if (filter === "tools" && r.event !== "tool.pre") return false;
         if (filter === "blocked" && r.verdict !== "deny") return false;
         if (filter === "ask" && r.verdict !== "ask" && r.event !== "decision.human") return false;
+        if (filter === "os" && r.os?.severity !== "warn") return false;
         if (!q) return true;
         return `${r.tool ?? ""} ${r.event} ${r.policy ?? ""} ${r.session} ${(r.facts ?? []).join(" ")}`.toLowerCase().includes(q);
       })
@@ -85,9 +87,10 @@ export function LiveScreen() {
               <span className={r.event === "tool.pre" ? "" : "dim"}>{recTitle(r)}</span>
               <span className="cmd">
                 <Facts facts={r.facts} max={2} />
-                {!r.facts?.length && <span className="dim mono">{r.policy ?? (r.event === "tool.post" ? `#${r.ref ?? "?"} natijasi` : r.session.slice(0, 8))}</span>}
+                {r.os && <span className={`mono ${r.os.severity === "warn" ? "warn-text" : "dim"}`}>{osWhat(r.os)}</span>}
+                {!r.facts?.length && !r.os && <span className="dim mono">{r.policy ?? (r.event === "tool.post" ? `#${r.ref ?? "?"} natijasi` : r.session.slice(0, 8))}</span>}
               </span>
-              <VerdictPill verdict={r.verdict} by={r.by} />
+              {r.os ? <OsPill o={r.os} /> : <VerdictPill verdict={r.verdict} by={r.by} />}
               {r.event === "os.observed" ? <Eye size={15} color="var(--warning)" /> : <Lock size={15} color="var(--success)" aria-label="Muhrlangan" />}
             </button>
           ))}

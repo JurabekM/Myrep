@@ -63,7 +63,9 @@ fn main() {
         .and_then(Value::as_str)
         .unwrap_or_default()
         .to_owned();
-    let req = json!({"op": "hook", "agent": "claude-code", "input": input});
+    // `pid`: daemon OS sensori shu jarayondan yuqoriga agent ildizini topadi.
+    let req =
+        json!({"op": "hook", "agent": "claude-code", "input": input, "pid": std::process::id()});
 
     let daemon = std::env::current_exe()
         .ok()
