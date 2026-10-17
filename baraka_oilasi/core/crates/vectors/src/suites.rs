@@ -1,5 +1,6 @@
 use baraka_agreements::{check_completeness, AgreementDraft, AgreementType};
 use baraka_domain_common::WEEK_ANCHOR;
+use baraka_domain_kasbkor::close::{month_close, CloseInput, SplitRule, TaxRule};
 use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
@@ -135,6 +136,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_depreciation" => kk_depreciation(input),
         "kk_true_profit" => kk_true_profit(input),
         "kk_order_quote" => kk_order_quote(input),
+        "kk_month_close" => kk_month_close(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1174,5 +1176,51 @@ fn kk_order_quote(v: &Value) -> R {
         "effectiveHourlyRate": p.and_then(|p| p.effective_hourly_rate).map(m),
         "materialShortfall": a.map(|a| m(a.material_shortfall)),
         "advanceAfterMaterial": a.map(|a| m(a.advance_after_material)),
+    }))
+}
+
+fn kk_month_close(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let t = &v["tax"];
+    let tax = match s(t, "base")? {
+        "NONE" => TaxRule::None,
+        "REVENUE" => TaxRule::Revenue { bp: i(t, "bp")? },
+        "PROFIT" => TaxRule::Profit { bp: i(t, "bp")? },
+        "FIXED" => TaxRule::Fixed {
+            amount: money(t, "amount", c)?,
+        },
+        _ => return Err(E("INVALID_TAX_BASE".into())),
+    };
+    let r = &v["rule"];
+    let out = month_close(CloseInput {
+        revenue: money(v, "revenue", c)?,
+        expenses: money(v, "expenses", c)?,
+        depreciation: money(v, "depreciation", c)?,
+        owner_salary: money(v, "ownerSalary", c)?,
+        owner_paid: money(v, "ownerPaid", c)?,
+        tax,
+        rule: SplitRule {
+            reserve_bp: i(r, "reserveBp")?,
+            working_bp: i(r, "workingBp")?,
+            expansion_bp: i(r, "expansionBp")?,
+            sadaqa_bp: i(r, "sadaqaBp")?,
+        },
+        carry_overdraw: b(v, "carryOverdraw")?,
+    })?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "tax": m(out.tax),
+        "ownerPay": m(out.owner_pay),
+        "overdrawn": m(out.overdrawn),
+        "carryForward": m(out.carry_forward),
+        "remaining": m(out.remaining),
+        "needsExplanation": out.needs_explanation,
+        "allocation": out.allocation.map(|a| json!({
+            "reserve": m(a.reserve),
+            "working": m(a.working),
+            "expansion": m(a.expansion),
+            "sadaqa": m(a.sadaqa),
+        })),
+        "reserveBelowDepreciation": out.reserve_below_depreciation,
     }))
 }

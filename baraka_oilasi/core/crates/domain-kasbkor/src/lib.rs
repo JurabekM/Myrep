@@ -2,6 +2,7 @@
 //! tasodifiylik yo'q.
 #![deny(clippy::float_arithmetic)]
 
+pub mod close;
 pub mod equipment;
 pub mod owner;
 pub mod profit;

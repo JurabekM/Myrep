@@ -1,0 +1,470 @@
+{
+  "suite": "kk_month_close",
+  "version": 1,
+  "description": "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "mc-001",
+      "input": {
+        "currency": "UZS",
+        "revenue": "1800000000",
+        "expenses": "970000000",
+        "depreciation": "20000000",
+        "ownerSalary": "500000000",
+        "ownerPaid": "500000000",
+        "tax": {
+          "base": "REVENUE",
+          "bp": 400,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "72000000",
+        "ownerPay": "500000000",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "258000000",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "77400000",
+          "working": "129000000",
+          "expansion": "51600000",
+          "sadaqa": "0"
+        },
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-002",
+      "input": {
+        "currency": "UZS",
+        "revenue": "600000000",
+        "expenses": "450000000",
+        "depreciation": "15000000",
+        "ownerSalary": "400000000",
+        "ownerPaid": "200000000",
+        "tax": {
+          "base": "NONE",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "0",
+        "ownerPay": "400000000",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "-250000000",
+        "needsExplanation": true,
+        "allocation": null,
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-003",
+      "input": {
+        "currency": "UZS",
+        "revenue": "1000000000",
+        "expenses": "600000000",
+        "depreciation": "0",
+        "ownerSalary": "200000000",
+        "ownerPaid": "200000000",
+        "tax": {
+          "base": "PROFIT",
+          "bp": 1000,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 2500,
+          "workingBp": 5000,
+          "expansionBp": 1500,
+          "sadaqaBp": 1000
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "40000000",
+        "ownerPay": "200000000",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "160000000",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "40000000",
+          "working": "80000000",
+          "expansion": "24000000",
+          "sadaqa": "16000000"
+        },
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-004",
+      "input": {
+        "currency": "UZS",
+        "revenue": "10001",
+        "expenses": "0",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "NONE",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3333,
+          "workingBp": 3333,
+          "expansionBp": 3334,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "0",
+        "ownerPay": "0",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "10001",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "3333",
+          "working": "3333",
+          "expansion": "3335",
+          "sadaqa": "0"
+        },
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-005",
+      "input": {
+        "currency": "UZS",
+        "revenue": "900000000",
+        "expenses": "300000000",
+        "depreciation": "0",
+        "ownerSalary": "300000000",
+        "ownerPaid": "450000000",
+        "tax": {
+          "base": "NONE",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": true
+      },
+      "expected": {
+        "tax": "0",
+        "ownerPay": "450000000",
+        "overdrawn": "150000000",
+        "carryForward": "150000000",
+        "remaining": "150000000",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "45000000",
+          "working": "75000000",
+          "expansion": "30000000",
+          "sadaqa": "0"
+        },
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-006",
+      "input": {
+        "currency": "UZS",
+        "revenue": "500000000",
+        "expenses": "300000000",
+        "depreciation": "90000000",
+        "ownerSalary": "70000000",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "FIXED",
+          "bp": 0,
+          "amount": "30000000"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "30000000",
+        "ownerPay": "70000000",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "100000000",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "30000000",
+          "working": "50000000",
+          "expansion": "20000000",
+          "sadaqa": "0"
+        },
+        "reserveBelowDepreciation": true
+      }
+    },
+    {
+      "id": "mc-007",
+      "input": {
+        "currency": "UZS",
+        "revenue": "400000000",
+        "expenses": "100000000",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "100000000",
+        "tax": {
+          "base": "REVENUE",
+          "bp": 300,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 5000,
+          "workingBp": 5000,
+          "expansionBp": 0,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "12000000",
+        "ownerPay": "100000000",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "188000000",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "94000000",
+          "working": "94000000",
+          "expansion": "0",
+          "sadaqa": "0"
+        },
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-008",
+      "input": {
+        "currency": "UZS",
+        "revenue": "300000000",
+        "expenses": "350000000",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "PROFIT",
+          "bp": 1500,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "0",
+        "ownerPay": "0",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "-50000000",
+        "needsExplanation": true,
+        "allocation": null,
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-009",
+      "input": {
+        "currency": "UZS",
+        "revenue": "400000000",
+        "expenses": "100000000",
+        "depreciation": "0",
+        "ownerSalary": "300000000",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "NONE",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "tax": "0",
+        "ownerPay": "300000000",
+        "overdrawn": "0",
+        "carryForward": "0",
+        "remaining": "0",
+        "needsExplanation": false,
+        "allocation": {
+          "reserve": "0",
+          "working": "0",
+          "expansion": "0",
+          "sadaqa": "0"
+        },
+        "reserveBelowDepreciation": false
+      }
+    },
+    {
+      "id": "mc-neg-001",
+      "input": {
+        "currency": "UZS",
+        "revenue": "100000000",
+        "expenses": "0",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "NONE",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 1000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "error": "INVALID_RULE"
+      }
+    },
+    {
+      "id": "mc-neg-002",
+      "input": {
+        "currency": "UZS",
+        "revenue": "-100",
+        "expenses": "0",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "NONE",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "mc-neg-003",
+      "input": {
+        "currency": "UZS",
+        "revenue": "100000000",
+        "expenses": "0",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "REVENUE",
+          "bp": 10001,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    },
+    {
+      "id": "mc-neg-004",
+      "input": {
+        "currency": "UZS",
+        "revenue": "100000000",
+        "expenses": "0",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "FIXED",
+          "bp": 0,
+          "amount": "-100"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "mc-neg-005",
+      "input": {
+        "currency": "UZS",
+        "revenue": "100000000",
+        "expenses": "0",
+        "depreciation": "0",
+        "ownerSalary": "0",
+        "ownerPaid": "0",
+        "tax": {
+          "base": "MONTHLY",
+          "bp": 0,
+          "amount": "0"
+        },
+        "rule": {
+          "reserveBp": 3000,
+          "workingBp": 5000,
+          "expansionBp": 2000,
+          "sadaqaBp": 0
+        },
+        "carryOverdraw": false
+      },
+      "expected": {
+        "error": "INVALID_TAX_BASE"
+      }
+    }
+  ]
+}

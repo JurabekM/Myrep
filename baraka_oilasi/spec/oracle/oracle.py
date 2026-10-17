@@ -931,6 +931,43 @@ def kk_true_profit(revenue, cogs, opex, owner_labor, family, depreciation, dispo
             "trueProfit": _s(visible - owner_labor - unpaid - depreciation - disposal)}
 
 
+KK_TAX_BASES = ("NONE", "REVENUE", "PROFIT", "FIXED")
+
+
+def kk_month_close(revenue, expenses, depreciation, salary, paid, tax, rule, carry_overdraw):
+    """«Hisob kuni» (SPEC 4.5). Tartib: (1) soliq zaxirasi — egasi kiritgan qoida: tushumdan yoki
+    foydadan (tushum − chiqim, manfiy bo'lsa 0) foiz, yoki qat'iy summa; (2) egasi maoshi — belgilangan
+    maosh, lekin olingan undan ko'p bo'lsa — olingani; (3) qolgan = tushum − soliq − chiqim − maosh;
+    manfiy bo'lmasa — taqsimot qoidasi (zaxira / aylanma / kengayish / sadaqa, bp, jami 10 000) bo'yicha
+    largest remainder. Manfiy — taqsimot yo'q, izoh so'raladi. Zaxira eskirishdan kam bo'lsa — belgi.
+    Maoshdan ortiq olingan summa tanlansa keyingi oy maoshidan ushlanadi."""
+    for v in (revenue, expenses, depreciation, salary, paid):
+        if v < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+    parts = [rule["reserveBp"], rule["workingBp"], rule["expansionBp"], rule["sadaqaBp"]]
+    if any(p < 0 for p in parts) or sum(parts) != 10000:
+        raise OracleError("INVALID_RULE")
+    base = tax["base"]
+    if base not in KK_TAX_BASES:
+        raise OracleError("INVALID_TAX_BASE")
+    if base == "FIXED":
+        t = int(tax["amount"])
+        if t < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+    elif base == "NONE":
+        t = 0
+    else:
+        t = percent_of(revenue if base == "REVENUE" else max(0, revenue - expenses), tax["bp"])
+    owner_pay = max(salary, paid)
+    overdrawn = max(0, paid - salary) if salary > 0 else 0
+    remaining = revenue - t - expenses - owner_pay
+    alloc = None if remaining < 0 else allocate(remaining, parts)
+    return {"tax": _s(t), "ownerPay": _s(owner_pay), "overdrawn": _s(overdrawn), "carryForward": _s(overdrawn if carry_overdraw else 0),
+            "remaining": _s(remaining), "needsExplanation": remaining < 0,
+            "allocation": None if alloc is None else {"reserve": _s(alloc[0]), "working": _s(alloc[1]), "expansion": _s(alloc[2]), "sadaqa": _s(alloc[3])},
+            "reserveBelowDepreciation": alloc is not None and alloc[0] < depreciation}
+
+
 def kk_order_quote(material, hours100, rate, travel, depreciation, reserve_bp, price=None, advance=None):
     """Buyurtma kalkulyatori (SPEC 3.2): tannarx = material + mehnat + yo'l + eskirish ulushi + zaxira
     (shu yig'indidan foiz). Narx berilsa: marja, o'z mehnatingizga qoladigan pul (narx − mehnatsiz
@@ -1583,6 +1620,43 @@ def build_suites():
                     "reserveBp": bp, "price": None if pr is None else _s(t(pr)), "advance": None if av is None else _s(t(av))},
               lambda m=m, h=h, r=r, tr=tr, d=d, bp=bp, pr=pr, av=av: kk_order_quote(t(m), h, t(r), t(tr), t(d), bp, t(pr), t(av)))
         for cid, m, h, r, tr, d, bp, pr, av in oq])
+
+    # K3: «Hisob kuni». Summalar so'mda (`Fraction` — tiyin bilan), vektorda tiyin.
+    def rule(r, w, e, sd=0):
+        return {"reserveBp": r, "workingBp": w, "expansionBp": e, "sadaqaBp": sd}
+    def tax(base, bp=0, amount=0):
+        return {"base": base, "bp": bp, "amount": _s(t(amount))}
+    mc = [
+        # SPEC 4.5 Nilufar: 18 mln − soliq 4 % (720 000) − chiqim 8,5 mln − to'langan yordam 1,2 mln − maosh 5 mln
+        # = 2 580 000 → 30/50/20: 774 000 / 1 290 000 / 516 000.
+        ("mc-001", 18000000, 9700000, 200000, 5000000, 5000000, tax("REVENUE", 400), rule(3000, 5000, 2000), False),
+        # Qolgan pul manfiy — taqsimot yo'q, izoh so'raladi.
+        ("mc-002", 6000000, 4500000, 150000, 4000000, 2000000, tax("NONE"), rule(3000, 5000, 2000), False),
+        # Soliq foydadan (10 %), sadaqa ulushi bilan.
+        ("mc-003", 10000000, 6000000, 0, 2000000, 2000000, tax("PROFIT", 1000), rule(2500, 5000, 1500, 1000), False),
+        # Largest remainder: qolgan 100,01 so'm uch qismga.
+        ("mc-004", Fraction(10001, 100), 0, 0, 0, 0, tax("NONE"), rule(3333, 3333, 3334), False),
+        # «Egasi oldi» maoshdan 1,5 mln ko'p — maosh o'rniga olingani; ortig'i keyingi oyga ushlanadi.
+        ("mc-005", 9000000, 3000000, 0, 3000000, 4500000, tax("NONE"), rule(3000, 5000, 2000), True),
+        # Qat'iy soliq summasi; zaxira eskirishdan kam — belgi.
+        ("mc-006", 5000000, 3000000, 900000, 700000, 0, tax("FIXED", amount=300000), rule(3000, 5000, 2000), False),
+        # Maosh belgilanmagan: «egasi oldi» — egasi maoshi o'rnida.
+        ("mc-007", 4000000, 1000000, 0, 0, 1000000, tax("REVENUE", 300), rule(5000, 5000, 0), False),
+        # Chiqim tushumdan ko'p: foydadan soliq 0, qolgan manfiy.
+        ("mc-008", 3000000, 3500000, 0, 0, 0, tax("PROFIT", 1500), rule(3000, 5000, 2000), False),
+        # Qolgan aniq 0 — taqsimot nollar, izoh shart emas.
+        ("mc-009", 4000000, 1000000, 0, 3000000, 0, tax("NONE"), rule(3000, 5000, 2000), False),
+        ("mc-neg-001", 1000000, 0, 0, 0, 0, tax("NONE"), rule(3000, 5000, 1000), False),
+        ("mc-neg-002", -1, 0, 0, 0, 0, tax("NONE"), rule(3000, 5000, 2000), False),
+        ("mc-neg-003", 1000000, 0, 0, 0, 0, tax("REVENUE", 10001), rule(3000, 5000, 2000), False),
+        ("mc-neg-004", 1000000, 0, 0, 0, 0, tax("FIXED", amount=-1), rule(3000, 5000, 2000), False),
+        ("mc-neg-005", 1000000, 0, 0, 0, 0, tax("MONTHLY"), rule(3000, 5000, 2000), False),
+    ]
+    suites["kk_month_close"] = _suite("kk_month_close", "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)", [
+        _case(cid, {"currency": U, "revenue": _s(t(r)), "expenses": _s(t(ex)), "depreciation": _s(t(dp)), "ownerSalary": _s(t(sal)), "ownerPaid": _s(t(pd)),
+                    "tax": tx, "rule": ru, "carryOverdraw": co},
+              lambda r=r, ex=ex, dp=dp, sal=sal, pd=pd, tx=tx, ru=ru, co=co: kk_month_close(t(r), t(ex), t(dp), t(sal), t(pd), tx, ru, co))
+        for cid, r, ex, dp, sal, pd, tx, ru, co in mc])
     return suites
 
 
@@ -1590,7 +1664,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
-                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote")
+                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close")
 
 
 def generate(directory: str) -> None:
@@ -1660,6 +1734,11 @@ def selftest() -> None:
     sched = kk_depreciation(700000000, 0, 36, [])["schedule"]
     assert sched.count("19444445") == 16 and sched.count("19444444") == 20 and sum(map(int, sched)) == 700000000
     assert kk_order_quote(45000000, 600, 4000000, 5000000, 2000000, 500, 70000000)["cost"] == "79800000"
+    # K3 (kasbkor/SPEC 4.5): qolgan 2 580 000 → 774 000 / 1 290 000 / 516 000.
+    nil = kk_month_close(1800000000, 970000000, 20000000, 500000000, 500000000, {"base": "REVENUE", "bp": 400},
+                         {"reserveBp": 3000, "workingBp": 5000, "expansionBp": 2000, "sadaqaBp": 0}, False)
+    assert (nil["tax"], nil["remaining"]) == ("72000000", "258000000")
+    assert nil["allocation"] == {"reserve": "77400000", "working": "129000000", "expansion": "51600000", "sadaqa": "0"}
     # allocate / percent_of (DESKTOP_PROMPT 5.3 + BARAKA_OILASI 12.3)
     assert allocate(100, [1, 1, 1]) == [34, 33, 33]
     assert allocate(800000000, [70, 20, 10]) == [560000000, 160000000, 80000000]
