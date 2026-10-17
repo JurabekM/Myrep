@@ -32,6 +32,18 @@ tamga status
 tamga verify
 ```
 
+**F3 — Cedar siyosatlari** tayyor: standart to'plam (`no-secret-exfil`, `no-pipe-to-shell`,
+`no-destructive-outside-workspace`, `ask-*`), sessiya taint'i va foydalanuvchi siyosatlari.
+Haqiqiy Claude Code sessiyasida `.env`ni tashqariga yuborish bajarilishidan oldin bloklandi.
+
+O'z siyosatingiz — `<TAMGA_HOME>/policies/<nom>.cedar` (sxema: `crates/tamga-policy/policies/schema.cedarschema`):
+
+```cedar
+@id("no-webfetch-to-pastebins") @verdict("deny") @reason("pastebin taqiqlangan")
+forbid (principal, action == Tamga::Action::"use_tool", resource == Tamga::Tool::"WebFetch")
+when { context.url like "*pastebin*" };
+```
+
 ![TAMGA Studio — Jonli ekran (F0, namuna ma'lumot)](docs/screenshots/f0-studio-live.png)
 
 ## Ishga tushirish (Windows)

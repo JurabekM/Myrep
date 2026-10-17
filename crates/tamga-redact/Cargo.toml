@@ -1,6 +1,6 @@
 [package]
 name = "tamga-redact"
-description = "Sirlarni (API kalit, token, .env) yozuvdan oldin yashirish"
+description = "Maxfiy qiymatlarni topish: API kalitlari, tokenlar, .env qatorlari"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+regex = "1.13"
 
 [lints]
 workspace = true

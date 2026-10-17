@@ -155,6 +155,23 @@ jurnal esa baribir tasdiqlanadi.
 Eslatma: Claude desktop ichidan ichki `claude` ishga tushirilsa, `CLAUDE_*` va `ANTHROPIC_*` muhit
 o'zgaruvchilari olib tashlanishi kerak, aks holda CLI o'z login'ini ishlatmaydi.
 
+**F3 — siyosat dvigateli (2026-10-17):** `tamga-policy` crate'i. Buyruq va yo'l tahlili Rust'da bajariladi
+(`facts.rs`), Cedar esa faqat mantiqiy faktlar ustida mulohaza qiladi (`policies/schema.cedarschema`,
+`policies/default.cedar`). Uch xil qaror `forbid` siyosatlaridagi `@verdict` annotatsiyasidan olinadi,
+ustunlik tartibi `deny > ask > allow`. Foydalanuvchi siyosatlari `<TAMGA_HOME>/policies/*.cedar` da
+turadi va sxema bo'yicha qat'iy tekshiriladi. Bitta fayl xato bo'lsa, faqat standart to'plam ishlaydi
+va sabab `tamga status` dagi `policy_error` maydonida ko'rsatiladi.
+**Sessiya taint'i:** maxfiy fayldan o'qilgan qiymatlar faqat daemon xotirasida saqlanadi. Keyin shu qiymat
+fayl nomisiz tarmoq buyrug'ida paydo bo'lsa ham, buyruq bloklanadi (`sends_tainted_secret`).
+**Qabul sinovi (haqiqiy Claude Code 2.1.233, haiku):** `curl --data-binary @.env` va ikki bosqichli
+"`.env`ni o'qib, kalitni API'da tekshirish" stsenariylari ikkalasi ham `deny / no-secret-exfil` bilan
+bajarilishidan oldin to'xtatildi. Model TAMGA sababini ko'rdi. Jurnalda faqat fakt nomlari bor, sir yo'q;
+verify OK. Hook p99 = 12.9 ms (Cedar bilan).
+**Halol chegara:** buyruq tahlili evristik, ya'ni base64, o'zgaruvchi yoki skript fayli orqali yashirilgan
+chaqiruvni o'tkazib yuborishi mumkin. Shuning uchun u qiymat darajasidagi taint va F7 dagi OS kuzatuvi
+bilan birga ishlaydi. Shuningdek, haiku ochiq exfil so'rovini ko'pincha o'zi rad etadi: TAMGA esa model
+rad etmagan holatlar uchun mustaqil qatlam.
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

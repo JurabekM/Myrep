@@ -4,8 +4,9 @@
 //! yagona yozuvchi vazifa orqali o'tadi: hodisa → normallashtirish (payload vault'ga) → qaror →
 //! jurnal (`fsync`) → javob. Checkpoint'lar hajm, vaqt yoki sessiya oxiri bo'yicha imzolanadi.
 //!
-//! F2: qaror har doim `allow` / `default` (siyosat dvigateli F3 da). Hook `allow` ni agentga
-//! qaytarmaydi — agentning o'z ruxsat so'rovlari ishlashda davom etadi.
+//! Qaror: `tool.pre` uchun Cedar siyosatlari (`tamga-policy`) — standart to'plam va
+//! `<TAMGA_HOME>/policies/*.cedar`. Sessiya taint'i (o'qilgan maxfiy qiymatlar) faqat xotirada.
+//! Hook `allow` ni agentga qaytarmaydi — agentning o'z ruxsat so'rovlari ishlashda davom etadi.
 
 mod normalize;
 
@@ -15,6 +16,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::{Map, Value, json};
 use tamga_core::keys::SigningKeys;
+use tamga_policy::{Engine, Facts, Taint, Verdict};
 use tamga_store::home::{Config, default_log_id, pipe_name};
 use tamga_store::logfile::LogFile;
 use tamga_store::vault::Vault;
@@ -43,6 +45,10 @@ struct State {
     key_id: String,
     pre_seqs: HashMap<String, u64>,
     last_checkpoint: Instant,
+    policy: Engine,
+    /// Foydalanuvchi siyosatlari yuklanmagan bo'lsa — sabab (standart to'plam ishlatiladi).
+    policy_error: Option<String>,
+    taints: HashMap<String, Taint>,
 }
 
 impl State {
@@ -58,6 +64,10 @@ impl State {
                 "home": self.home.root().display().to_string(),
                 "pid": std::process::id(),
                 "mode": if self.config.mode == tamga_store::home::Mode::Strict { "strict" } else { "dev" },
+                "policies": self.policy.sources,
+                "policy_count": self.policy.policy_count(),
+                "policy_error": self.policy_error,
+                "tainted_sessions": self.taints.values().filter(|t| t.secret_read).count(),
             }),
             Some("checkpoint") => match self.checkpoint() {
                 Ok(size) => json!({"ok": true, "size": size}),
@@ -78,11 +88,33 @@ impl State {
             Err(e) => return json!({"ok": false, "error": e}),
         };
         let mut body: Map<String, Value> = ev.body;
-        let (verdict, reason) = ("allow", Value::Null);
+        let tool = input
+            .get("tool_name")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        let tool_input = input.get("tool_input").cloned().unwrap_or(Value::Null);
+        let cwd = input.get("cwd").and_then(Value::as_str).unwrap_or_default();
+        let (mut verdict, mut reason) = (Verdict::Allow, String::new());
         if ev.needs_decision {
             let decision = match spooled {
                 Some((_, d)) if d.is_object() => d.clone(),
-                _ => json!({"verdict": verdict, "by": "default"}),
+                _ => {
+                    let facts =
+                        Facts::from_tool(tool, &tool_input, cwd, self.taints.get(&ev.session));
+                    let d = self.policy.evaluate("claude-code", &facts);
+                    (verdict, reason) = (d.verdict, d.reason.clone());
+                    let flags = facts.true_flags();
+                    if !flags.is_empty() {
+                        let ext = body.entry("ext").or_insert_with(|| json!({}));
+                        ext["dev.tamga.facts"] = json!(flags);
+                    }
+                    let mut v =
+                        json!({"verdict": d.verdict.as_str(), "by": "policy", "policy": d.policy});
+                    if !d.reason.is_empty() {
+                        v["reason"] = d.reason.into();
+                    }
+                    v
+                }
             };
             body.insert("decision".into(), decision);
         }
@@ -95,8 +127,30 @@ impl State {
             None => now_ts(),
         };
         let is_end = ev.event == "session.end";
+        let session = ev.session.clone();
         match self.log.append(&ts, &ev.session, ev.event, body) {
             Ok(seq) => {
+                if ev.event == "tool.post" {
+                    // Maxfiy faylni o'qigan tool natijasidagi qiymatlar sessiya taint'iga qo'shiladi.
+                    let from_secret =
+                        Facts::from_tool(tool, &tool_input, cwd, None).reads_secret_file;
+                    let response = input.get("tool_response").cloned().unwrap_or(Value::Null);
+                    let t = self.taints.entry(session.clone()).or_default();
+                    let before = (t.secret_read, t.len());
+                    t.learn_from_response(&response, from_secret);
+                    if (t.secret_read, t.len()) != before {
+                        log_line(
+                            &self.home,
+                            &format!(
+                                "taint: sessiya {session} — {} maxfiy qiymat kuzatilmoqda",
+                                t.len()
+                            ),
+                        );
+                    }
+                }
+                if is_end {
+                    self.taints.remove(&session);
+                }
                 if ev.event == "tool.pre"
                     && let Some(id) = ev.tool_use_id
                 {
@@ -105,7 +159,7 @@ impl State {
                 if is_end {
                     let _ = self.checkpoint();
                 }
-                json!({"ok": true, "seq": seq, "verdict": verdict, "reason": reason})
+                json!({"ok": true, "seq": seq, "verdict": verdict.as_str(), "reason": reason})
             }
             Err(e) => {
                 log_line(&self.home, &format!("yozish xatosi: {e}"));
@@ -179,6 +233,30 @@ fn open_state(home: Home) -> Result<State, String> {
     )
     .map_err(|e| e.to_string())?;
     let key_id = keys.public().key_id();
+    let policy_dir = home.root().join("policies");
+    let (policy, policy_error) = match Engine::load(&policy_dir) {
+        Ok(e) => (e, None),
+        Err(e) => {
+            log_line(
+                &home,
+                &format!(
+                    "DIQQAT: foydalanuvchi siyosatlari yuklanmadi, faqat standart to'plam: {e}"
+                ),
+            );
+            (
+                Engine::with_defaults().map_err(|e| e.to_string())?,
+                Some(e.to_string()),
+            )
+        }
+    };
+    log_line(
+        &home,
+        &format!(
+            "siyosatlar: {} ta ({})",
+            policy.policy_count(),
+            policy.sources.join(", ")
+        ),
+    );
     log_line(
         &home,
         &format!(
@@ -201,6 +279,9 @@ fn open_state(home: Home) -> Result<State, String> {
         key_id,
         pre_seqs: HashMap::new(),
         last_checkpoint: Instant::now(),
+        policy,
+        policy_error,
+        taints: HashMap::new(),
     })
 }
 

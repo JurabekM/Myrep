@@ -10,6 +10,7 @@ publish.workspace = true
 [dependencies]
 tamga-core = { workspace = true }
 tamga-store = { workspace = true }
+tamga-policy = { workspace = true }
 serde_json = { workspace = true }
 tokio = { version = "1.53", features = ["rt", "net", "io-util", "sync", "time", "macros", "signal"] }
 
