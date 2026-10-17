@@ -111,6 +111,7 @@ version = "0.1.0"
 dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
+ "baraka-domain-kasbkor",
  "baraka-domain-uy",
  "baraka-interchange",
  "baraka-journal",

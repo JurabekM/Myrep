@@ -13,6 +13,7 @@ mod dto;
 mod error;
 mod events;
 mod governance;
+mod kasbkor;
 mod partnership;
 mod receipt;
 mod recovery;

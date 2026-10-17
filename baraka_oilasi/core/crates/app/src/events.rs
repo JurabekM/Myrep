@@ -25,6 +25,7 @@ pub enum Topic {
     Governance,
     Devices,
     Sync,
+    Kasbkor,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

@@ -9,6 +9,7 @@ pub mod governance;
 pub mod household;
 pub mod incomes;
 pub mod journal;
+pub mod kk;
 pub mod partnerships;
 pub mod recovery;
 pub mod rules;

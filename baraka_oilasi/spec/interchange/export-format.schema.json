@@ -219,7 +219,9 @@
             "disputes",
             "dispute_claims",
             "arbiter_decisions",
-            "family_signoffs"
+            "family_signoffs",
+            "kk_settings",
+            "kk_moves"
           ]
         },
         "data": {
@@ -526,6 +528,18 @@
       {
         "name": "family_signoffs",
         "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_moves",
+        "mode": "MUTABLE",
         "primaryKey": "id",
         "blobColumns": []
       }

@@ -920,6 +920,49 @@ impl BarakaCore {
             .join_household(&take_secret(platform_secret)?, &pin, &file, input)
     }
 
+    // ---- K1: Kasb-kor «ikki cho'ntak» ----
+
+    pub fn kk_overview(
+        &self,
+        space_id: String,
+        date: Option<String>,
+    ) -> Result<KkOverviewDto, AppError> {
+        self.session.app()?.kk_overview(&space_id, date)
+    }
+
+    pub fn kk_set_owner_salary(
+        &self,
+        space_id: String,
+        amount: String,
+    ) -> Result<KkOverviewDto, AppError> {
+        self.session.app()?.kk_set_owner_salary(&space_id, amount)
+    }
+
+    pub fn kk_record_sale(
+        &self,
+        space_id: String,
+        input: KkSaleInput,
+    ) -> Result<KkOverviewDto, AppError> {
+        self.session.app()?.kk_record_sale(&space_id, input)
+    }
+
+    pub fn kk_record_move(
+        &self,
+        space_id: String,
+        input: KkMoveInput,
+    ) -> Result<KkOverviewDto, AppError> {
+        self.session.app()?.kk_record_move(&space_id, input)
+    }
+
+    /// Maosh Uy makoniga: Kasb-kor va Uy yozuvlari bitta tranzaksiyada.
+    pub fn kk_pay_owner_salary(
+        &self,
+        space_id: String,
+        input: KkSalaryInput,
+    ) -> Result<KkSalaryPaidDto, AppError> {
+        self.session.app()?.kk_pay_owner_salary(&space_id, input)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

@@ -13,6 +13,7 @@ baraka-journal.workspace = true
 sha2.workspace = true
 baraka-domain-common.workspace = true
 baraka-domain-uy.workspace = true
+baraka-domain-kasbkor.workspace = true
 baraka-agreements.workspace = true
 baraka-security.workspace = true
 baraka-storage.workspace = true

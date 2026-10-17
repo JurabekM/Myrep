@@ -30,7 +30,7 @@ const MAX_LABEL: usize = 80;
 /// `*_json` ustunlari (xarajatlar ro'yxati, stsenariylar) ziddiyat jadvalida shu uzunlikkacha.
 const MAX_JSON_VALUE: usize = 400;
 
-pub(crate) const ALL_TOPICS: [Topic; 17] = [
+pub(crate) const ALL_TOPICS: [Topic; 18] = [
     Topic::Household,
     Topic::Categories,
     Topic::Incomes,
@@ -48,6 +48,7 @@ pub(crate) const ALL_TOPICS: [Topic; 17] = [
     Topic::Governance,
     Topic::Devices,
     Topic::Sync,
+    Topic::Kasbkor,
 ];
 
 fn corrupt() -> AppError {

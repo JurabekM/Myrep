@@ -49,6 +49,22 @@ pub fn insert(
     Ok(())
 }
 
+/// Makonlararo o'tkazmaning qabul qiluvchi tomoni (`BARAKA_OILASI.md` 4.6): umumiy `transfer_id`.
+pub fn insert_with_transfer(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    i: &IncomeRow,
+    transfer_id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    insert(tx, s, i, m)?;
+    tx.execute(
+        "UPDATE incomes SET transfer_id = ?3 WHERE household_id = ?1 AND id = ?2",
+        params![s.household_id, i.id, transfer_id],
+    )?;
+    Ok(())
+}
+
 pub fn get(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<IncomeRow>, StorageError> {
     Ok(c.query_row(
         &format!("SELECT {COLS} FROM incomes WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL"),

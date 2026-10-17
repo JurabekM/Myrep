@@ -2074,3 +2074,95 @@ pub struct NudgeDto {
     pub kind: String,
     pub days: Option<u32>,
 }
+
+// ---- K1: Kasb-kor «ikki cho'ntak» ----
+
+/// Kasb-kor bosh sahifasi. `cashFlow` = tushum − chiqim («egasi oldi», kapital va maosh kirmaydi).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkOverviewDto {
+    pub period_start: String,
+    pub period_end: String,
+    /// Egasining oylik maoshi; belgilanmagan bo'lsa `null`.
+    pub owner_salary: Option<MoneyDto>,
+    pub revenue: MoneyDto,
+    pub expenses: MoneyDto,
+    pub cash_flow: MoneyDto,
+    pub owner_draws: MoneyDto,
+    pub owner_salary_transferred: MoneyDto,
+    pub contributions: MoneyDto,
+    /// Bosh ekran 2-raqami: Uy'ga o'tkazilgan maosh + «egasi oldi».
+    pub owner_paid: MoneyDto,
+    pub salary_remaining: Option<MoneyDto>,
+    /// Maoshdan ortiq olingan (faqat musbat bo'lsa).
+    pub overdrawn: Option<MoneyDto>,
+    pub cash: MoneyDto,
+    pub card: MoneyDto,
+    /// Manfiy qoldiqli hamyonlar: `CASH`, `CARD`.
+    pub negative_wallets: Vec<String>,
+    /// Shu oy yozuvlari (yangisi birinchi).
+    pub entries: Vec<KkEntryDto>,
+}
+
+/// `kind`: `SALE`, `EXPENSE`, `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `OWNER_SALARY`, `TRANSFER`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkEntryDto {
+    pub id: String,
+    pub kind: String,
+    pub wallet: String,
+    pub to_wallet: Option<String>,
+    pub amount: MoneyDto,
+    pub occurred_on: String,
+    pub note: Option<String>,
+    pub category_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSaleInput {
+    pub amount: String,
+    /// `CASH` yoki `CARD`.
+    pub channel: String,
+    pub occurred_on: Option<String>,
+    /// Buyurtma, mijoz yoki izoh.
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkMoveInput {
+    /// `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `TRANSFER`.
+    pub kind: String,
+    pub wallet: String,
+    pub to_wallet: Option<String>,
+    pub amount: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSalaryInput {
+    /// Bo'lmasa — shu oy maosh qoldig'i.
+    pub amount: Option<String>,
+    /// Qaysi hamyondan: `CASH` yoki `CARD` (Uy'dagi daromad kanali ham shu).
+    pub wallet: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+/// Maosh o'tkazildi: Kasb-kor hisobi va Uy'dagi daromad (1-qonun ulushi taklifi bilan).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSalaryPaidDto {
+    pub overview: KkOverviewDto,
+    pub uy_space_id: String,
+    pub uy_income: IncomeRecordedDto,
+}

@@ -25,7 +25,7 @@ use crate::events::Topic;
 use crate::text::{clean_opt, required};
 use crate::*;
 
-fn positive(ctx: &Ctx, amount: &str, field: &str) -> Result<Money, AppError> {
+pub(crate) fn positive(ctx: &Ctx, amount: &str, field: &str) -> Result<Money, AppError> {
     let m = parse_amount(amount, ctx.currency).map_err(|e| AppError::on(e.code(), field))?;
     if m.is_positive() {
         Ok(m)
@@ -34,7 +34,7 @@ fn positive(ctx: &Ctx, amount: &str, field: &str) -> Result<Money, AppError> {
     }
 }
 
-fn channel(s: &str) -> Result<Channel, AppError> {
+pub(crate) fn channel(s: &str) -> Result<Channel, AppError> {
     Channel::parse(s).ok_or(AppError::on("INVALID_CHANNEL", "channel"))
 }
 
@@ -142,14 +142,24 @@ impl App {
         self.db
             .write(|tx| incomes::insert(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Incomes]);
+        self.income_offer(&ctx, &scope, row, amount)
+    }
 
-        let (suggested, progressive) = match self.rule(&ctx, &scope)? {
+    /// Saqlangan daromad va 1-qonun ulushi taklifi (progressiv rejim bilan).
+    pub(crate) fn income_offer(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        row: incomes::IncomeRow,
+        amount: Money,
+    ) -> Result<IncomeRecordedDto, AppError> {
+        let (suggested, progressive) = match self.rule(ctx, scope)? {
             Some((rule, dto)) => {
                 let share = suggest_share(amount, rule)?;
                 let prog = match (rule, dto.progressive) {
                     (AllocationRule::Percent(bp), true) => {
-                        let vault_id = self.vault_asset(&scope)?.id;
-                        let streak = self.streak_of(&ctx, &scope, &vault_id)?;
+                        let vault_id = self.vault_asset(scope)?.id;
+                        let streak = self.streak_of(ctx, scope, &vault_id)?;
                         progressive_suggestion(
                             bp,
                             streak.current_weeks,
@@ -165,12 +175,12 @@ impl App {
         Ok(IncomeRecordedDto {
             income: IncomeDto {
                 id: row.id,
-                amount: self.money_dto(&ctx, amount),
+                amount: self.money_dto(ctx, amount),
                 source: row.source,
                 channel: row.channel,
                 occurred_on: row.occurred_on,
             },
-            suggested_share: self.money_dto(&ctx, suggested),
+            suggested_share: self.money_dto(ctx, suggested),
             progressive_suggestion_bp: progressive.and_then(|v| i32::try_from(v).ok()),
             progressive_suggestion_percent: progressive.map(baraka_money::format_percent_bp),
         })
