@@ -1,0 +1,18 @@
+# Build natijalari
+target/
+bin/
+control/go.sum
+
+# Demo va yuk sinovi ish papkalari (kalitlar, ma'lumot, loglar, hisobot)
+run-demo/
+loadtest-out/
+
+# Maxfiy identity kalitlari — hech qachon commit qilinmasin
+keys/
+*.key
+
+# Referens fayllarining zaxira nusxalari (asl manba: aether_q_v3/ — git emas)
+backup/
+
+# make_icon.py tekshiruv rasmi (yig'ishga kerak emas)
+crates/aq-studio/assets/preview.png

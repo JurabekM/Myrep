@@ -1,0 +1,4 @@
+# MSVC toolchain (Visual Studio 2022 Build Tools). Build uchun vcvars64.bat muhiti kerak.
+# GNU (MinGW) toolchain getrandom 0.4 / dlltool va -lgcc_eh muammolari tufayli ishlamadi.
+[toolchain]
+channel = "stable-x86_64-pc-windows-msvc"
