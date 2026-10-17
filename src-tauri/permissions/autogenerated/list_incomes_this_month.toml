@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-incomes-this-month"
+description = "Enables the list_incomes_this_month command without any pre-configured scope."
+commands.allow = ["list_incomes_this_month"]
+
+[[permission]]
+identifier = "deny-list-incomes-this-month"
+description = "Denies the list_incomes_this_month command without any pre-configured scope."
+commands.deny = ["list_incomes_this_month"]

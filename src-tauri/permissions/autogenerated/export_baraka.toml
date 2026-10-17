@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-baraka"
+description = "Enables the export_baraka command without any pre-configured scope."
+commands.allow = ["export_baraka"]
+
+[[permission]]
+identifier = "deny-export-baraka"
+description = "Denies the export_baraka command without any pre-configured scope."
+commands.deny = ["export_baraka"]

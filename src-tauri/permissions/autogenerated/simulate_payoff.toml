@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-simulate-payoff"
+description = "Enables the simulate_payoff command without any pre-configured scope."
+commands.allow = ["simulate_payoff"]
+
+[[permission]]
+identifier = "deny-simulate-payoff"
+description = "Denies the simulate_payoff command without any pre-configured scope."
+commands.deny = ["simulate_payoff"]

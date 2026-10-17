@@ -1,0 +1,30 @@
+[package]
+name = "baraka-domain"
+description = "Baraka Daftari — domen modeli: entitylar, Clock va IdGen traitlari (IO va tasodifiylik yo'q)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kod ichida import nomi: `domain`.
+[lib]
+name = "domain"
+
+[dependencies]
+# Pul hisobi (ADR: money crate). Domen qoidalari shu crate orqali summa bilan ishlaydi.
+money = { package = "baraka-money", path = "../money" }
+# Vaqt qiymatlari (UTC). Joriy vaqtni olish — Clock trait orqali, bu yerda emas.
+time = "0.3"
+# Xatolar (ADR: thiserror).
+thiserror = "2"
+# Kontent JSON'ini o'qish (spec/content/chapters.json). Workspace'da allaqachon bor (vectors, src-tauri).
+serde_json = "1"
+# Jurnal xeshi (SHA-256, SPEC 2F.6). ADR: sha2 — RustCrypto, boshqa xesh kutubxonasi qo'shilmaydi.
+sha2 = "0.10"
+
+[dev-dependencies]
+# Testlarda aniq vaqt konstantalari uchun (`datetime!`).
+time = { version = "0.3", features = ["macros"] }
+
+[lints]
+workspace = true

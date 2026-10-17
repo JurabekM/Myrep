@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-venture"
+description = "Enables the get_venture command without any pre-configured scope."
+commands.allow = ["get_venture"]
+
+[[permission]]
+identifier = "deny-get-venture"
+description = "Denies the get_venture command without any pre-configured scope."
+commands.deny = ["get_venture"]

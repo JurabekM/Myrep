@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-withdraw"
+description = "Enables the withdraw command without any pre-configured scope."
+commands.allow = ["withdraw"]
+
+[[permission]]
+identifier = "deny-withdraw"
+description = "Denies the withdraw command without any pre-configured scope."
+commands.deny = ["withdraw"]

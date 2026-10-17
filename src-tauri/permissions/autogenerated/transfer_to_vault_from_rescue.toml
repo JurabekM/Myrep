@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-transfer-to-vault-from-rescue"
+description = "Enables the transfer_to_vault_from_rescue command without any pre-configured scope."
+commands.allow = ["transfer_to_vault_from_rescue"]
+
+[[permission]]
+identifier = "deny-transfer-to-vault-from-rescue"
+description = "Denies the transfer_to_vault_from_rescue command without any pre-configured scope."
+commands.deny = ["transfer_to_vault_from_rescue"]

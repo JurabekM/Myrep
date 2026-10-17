@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-confirm-ceremony"
+description = "Enables the confirm_ceremony command without any pre-configured scope."
+commands.allow = ["confirm_ceremony"]
+
+[[permission]]
+identifier = "deny-confirm-ceremony"
+description = "Denies the confirm_ceremony command without any pre-configured scope."
+commands.deny = ["confirm_ceremony"]

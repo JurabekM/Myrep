@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-daftar-page"
+description = "Enables the save_daftar_page command without any pre-configured scope."
+commands.allow = ["save_daftar_page"]
+
+[[permission]]
+identifier = "deny-save-daftar-page"
+description = "Denies the save_daftar_page command without any pre-configured scope."
+commands.deny = ["save_daftar_page"]

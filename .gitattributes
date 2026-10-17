@@ -1,0 +1,8 @@
+# Matn fayllari har doim LF bilan saqlanadi (Windows'da CRLF chalkashmasin)
+* text=auto eol=lf
+
+# Ikonka va rasm fayllari — matn sifatida qayta yozilmasin
+*.ico binary
+*.icns binary
+*.png binary
+*.woff2 binary

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-family-agreement"
+description = "Enables the create_family_agreement command without any pre-configured scope."
+commands.allow = ["create_family_agreement"]
+
+[[permission]]
+identifier = "deny-create-family-agreement"
+description = "Denies the create_family_agreement command without any pre-configured scope."
+commands.deny = ["create_family_agreement"]

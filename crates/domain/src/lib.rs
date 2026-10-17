@@ -1,0 +1,518 @@
+//! Domen modeli: entitylar va qoidalar. Bu crate sof: vaqt, tasodifiylik va IO yo'q.
+//!
+//! Joriy vaqt [`Clock`] orqali, identifikatorlar [`IdGen`] orqali beriladi (DESKTOP_PROMPT.md 3.2).
+//! Barcha entitylar umumiy konvensiyalarga ega: UUIDv7 identifikator, UTC vaqt, mantiqiy o'chirish
+//! va versiya raqami (DESKTOP_PROMPT.md 6.1).
+
+pub mod agreement;
+pub mod amortization;
+pub mod calendar;
+pub mod category;
+pub mod ceremony;
+pub mod content;
+pub mod content_parser;
+pub mod debt;
+pub mod emergency;
+pub mod envelope;
+pub mod expense;
+pub mod habit;
+pub mod income;
+pub mod income_source;
+pub mod inflation;
+pub mod interchange;
+pub mod journal;
+pub mod ledger;
+pub mod limit;
+pub mod loans;
+pub mod necessity;
+pub mod obligation;
+pub mod odat;
+pub mod offer_check;
+pub mod partnership;
+pub mod profit_spike;
+pub mod progress;
+pub mod readiness;
+pub mod recovery;
+pub mod report;
+pub mod rescue;
+pub mod review;
+pub mod share;
+pub mod subscription;
+pub mod treat;
+pub mod unlock;
+pub mod vault;
+pub mod venture;
+
+pub use category::{Category, CategoryKey};
+pub use content::{Chapter, ContentBlock, ContentLoadResult, TaskTrigger};
+pub use debt::{DebtPayment, ShopDebt};
+pub use envelope::Envelope;
+pub use expense::{Expense, ExpenseDraft};
+pub use habit::{HabitStats, habit_stats, streak_since};
+pub use income::{Channel, Income, IncomeDraft};
+pub use ledger::{
+    LedgerInput, MoneyOwner, MonthLedger, ObligationLine, build_month_ledger, whose_money,
+};
+pub use limit::{HavasLimit, LimitConsent, LimitLevel};
+pub use necessity::{Necessity, NecessityChange};
+pub use obligation::{Obligation, ObligationDraft, ObligationKind};
+pub use progress::{DaftarPage, TaskCompletion};
+pub use report::MonthlyReport;
+pub use rescue::{RescueBreakdown, RescueKind, SavingsRescue};
+pub use share::{ShareRule, ShareTarget, progression_offer, suggest_share};
+pub use subscription::Subscription;
+pub use treat::ScheduledTreat;
+pub use unlock::{ChapterUnlock, ChapterUnlockPolicy, HabitUnlockPolicy, UnlockContext};
+pub use vault::{VaultEntry, VaultMovement};
+
+use thiserror::Error;
+use time::OffsetDateTime;
+
+/// Nom uzunligi chegarasi (belgilarda).
+pub const NAME_MAX_CHARS: usize = 100;
+
+/// Joriy UTC vaqt manbai. Ishlab chiqarishda tizim soati, testlarda qo'lda berilgan vaqt.
+pub trait Clock: Send + Sync {
+    /// Joriy vaqt (UTC).
+    fn now_utc(&self) -> OffsetDateTime;
+}
+
+/// Identifikator generatori. Ishlab chiqarishda UUIDv7.
+pub trait IdGen: Send + Sync {
+    /// Yangi identifikator (36 belgili kichik harfli UUID satri).
+    fn next_id(&self) -> String;
+}
+
+/// Domen qoidalari buzilganda qaytariladigan xatolar. [`DomainError::code`] barqaror kod beradi.
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum DomainError {
+    /// Identifikator UUIDv7 formatida emas.
+    #[error("identifikator UUIDv7 formatida emas")]
+    InvalidId,
+    /// Nom bo'sh yoki chegaradan uzun.
+    #[error("nom bo'sh yoki 100 belgidan uzun")]
+    InvalidName,
+    /// Noma'lum a'zo roli.
+    #[error("noma'lum a'zo roli")]
+    InvalidRole,
+    /// Sabab (masalan, pul olish sababi) bo'sh.
+    #[error("sabab kiritilishi shart")]
+    ReasonRequired,
+    /// Summa nol yoki manfiy.
+    #[error("summa musbat bo'lishi kerak")]
+    AmountNotPositive,
+    /// «Kelajagim» balansidan ko'p olib bo'lmaydi.
+    #[error("balansda mablag' yetarli emas")]
+    InsufficientBalance,
+    /// Boshlang'ich balans (ro'molcha) allaqachon kiritilgan.
+    #[error("boshlang'ich balans allaqachon kiritilgan")]
+    InitialAlreadySet,
+    /// Shu daromaddan ulush allaqachon ajratilgan.
+    #[error("bu daromaddan ulush allaqachon ajratilgan")]
+    IncomeAlreadyShared,
+    /// Ajratilgan ulush daromaddan katta.
+    #[error("ajratilgan summa daromaddan katta bo'lmasligi kerak")]
+    ShareExceedsIncome,
+    /// Ulush qoidasi noto'g'ri (foiz chegaradan tashqarida, progressiv qat'iy summa bilan).
+    #[error("ulush qoidasi noto'g'ri")]
+    InvalidRule,
+    /// Nasiyani ortiqcha to'lash (qoldiqdan katta).
+    #[error("to'lov nasiya qoldig'idan katta")]
+    DebtOverpaid,
+    /// Oylik to'lov kuni 1 dan 31 gacha bo'lishi kerak.
+    #[error("kun 1 dan 31 gacha bo'lishi kerak")]
+    InvalidDay,
+    /// Shu oy uchun audit allaqachon yakunlangan.
+    #[error("bu oy uchun audit allaqachon yakunlangan")]
+    AuditAlreadyDone,
+    /// Izohsiz qolgan summa yo'q: belgilash uchun hech narsa yo'q.
+    #[error("izohsiz qolgan summa yo'q")]
+    NothingToMark,
+    /// Bob hali ochilmagan: uning sahifasi va vazifalari ochiq emas.
+    #[error("bob hali ochilmagan")]
+    ChapterLocked,
+    /// Vazifa joriy bobga tegishli emas (faqat joriy bobning haftalik vazifalari belgilanadi).
+    #[error("vazifa joriy bobga tegishli emas")]
+    TaskNotCurrent,
+    /// «Daftar sahifasi» matni bo'sh.
+    #[error("sahifa matni bo'sh bo'lmasligi kerak")]
+    BodyRequired,
+    /// «Daftar sahifasi» matni chegaradan uzun.
+    #[error("sahifa matni 5000 belgidan oshmasligi kerak")]
+    BodyTooLong,
+    /// Obuna allaqachon bekor qilingan.
+    #[error("obuna allaqachon bekor qilingan")]
+    SubscriptionCancelled,
+    /// «Kelajagim»ga o'tkazish qutqarilgan summadan katta.
+    #[error("o'tkazish qutqarilgan summadan katta")]
+    RescueExceedsAvailable,
+    /// Konvert shu hafta uchun allaqachon yopilgan (qoldiq ikki marta qutqarilmaydi).
+    #[error("konvert bu hafta allaqachon yopilgan")]
+    EnvelopeWeekClosed,
+    /// Narx yoki og'irlik noto'g'ri (nol/manfiy bazaviy narx, valyuta mos emas, og'irliklar yig'indisi 0).
+    #[error("narx yoki og'irlik noto'g'ri")]
+    InvalidPrice,
+    /// Taqsimot ulushlari yig'indisi 100% (10 000 bp) emas.
+    #[error("taqsimot 100% bo'lishi kerak")]
+    SplitNotHundred,
+    /// Jamg'arma ulushi minimumdan (1%) kam.
+    #[error("jamg'arma ulushi kamida 1% bo'lishi kerak")]
+    SavingsBelowMinimum,
+    /// Sherik ulushlari yig'indisi 100% (10 000 bp) emas.
+    #[error("foyda ulushlari yig'indisi 100% bo'lishi kerak")]
+    ProfitSharesNotHundred,
+    /// Kafolatli (qat'iy) summa sheriklikda taqiqlangan.
+    #[error("kafolatli daromad taqiqlangan")]
+    GuaranteedReturnForbidden,
+    /// Qarz uchun to'lash rejasi kiritilmagan: rejasiz qarz saqlanmaydi.
+    #[error("to'lash rejasi majburiy")]
+    RepaymentPlanRequired,
+    /// Reja summasi qarz summasiga teng emas.
+    #[error("reja summasi qarzga teng emas")]
+    PlanMismatch,
+    /// Qarzli marosim: oilaviy muhokama o'tkazilmagan.
+    #[error("tasdiqlashdan oldin oilaviy muhokama kerak")]
+    FamilyDiscussionRequired,
+    /// Kelishuv nizoda: taqsimot bloklangan.
+    #[error("nizo sababli taqsimot bloklangan")]
+    DistributionBlocked,
+    /// Yozuvni faqat hisob yurituvchi qurilma qo'shishi mumkin.
+    #[error("bu qurilma hisob yurituvchi emas")]
+    NotKeeperDevice,
+    /// Bazaviy davr joriy davrdan oldin bo'lishi kerak.
+    #[error("bazaviy davr joriy davrdan oldin bo'lishi kerak")]
+    BaselineNotPast,
+    /// CSV matnida xatoli satrlar bor: import qilinmaydi.
+    #[error("CSV matnida xatoli satrlar bor")]
+    CsvHasErrors,
+    /// Kelishuv 9/9 to'ldirilmagan: imzolab bo'lmaydi.
+    #[error("kelishuvning barcha 9 savoli to'ldirilmagan")]
+    AgreementIncomplete,
+    /// Hamma tomon (va hakam) imzolamagan: yakunlab bo'lmaydi.
+    #[error("barcha imzolar hali qo'yilmagan")]
+    SignaturesMissing,
+    /// Kelishuv imzolanmagan: jurnalga yozib bo'lmaydi.
+    #[error("kelishuv hali imzolanmagan")]
+    AgreementNotSigned,
+    /// Kelishuv nizoda yoki tugagan: o'zgartirib bo'lmaydi.
+    #[error("kelishuv nizoda yoki tugagan")]
+    AgreementLocked,
+    /// Toifa o'zgarmagan: yangi va eski toifa bir xil.
+    #[error("toifa o'zgarmagan")]
+    NecessityUnchanged,
+    /// A'zoning PIN'i hali o'rnatilmagan: rozilik berib bo'lmaydi.
+    #[error("a'zoning PIN'i o'rnatilmagan")]
+    PinNotSet,
+    /// Kapital qabul qilishda oilaviy rozilik yo'q: imzolab bo'lmaydi (SPEC 2E.6).
+    #[error("oilaviy rozilik kerak")]
+    FamilyConsentRequired,
+    /// Tayyorgarlik darvozasi yopiq: kapital kiritib bo'lmaydi (SPEC 2C.4, 2E.6).
+    #[error("tayyorgarlik darvozasi yopiq")]
+    ReadinessGateLocked,
+    /// Sheriklik tuzilmasi turga mos emas (mudaraba: bitta kapital; musharaka: kamida ikkita).
+    #[error("sheriklik tuzilmasi turga mos emas")]
+    PartnershipStructureInvalid,
+    /// Davr yopilgan: unga yozuv qo'shib yoki uni o'zgartirib bo'lmaydi.
+    #[error("davr yopilgan")]
+    PeriodClosed,
+    /// Ongli chetlab o'tish uchun sabab kamida 20 belgi bo'lishi kerak.
+    #[error("chetlab o'tish sababi juda qisqa")]
+    OverrideReasonRequired,
+    /// Biriktirma yaroqsiz (rasm emas yoki juda katta).
+    #[error("biriktirma yaroqsiz")]
+    AttachmentInvalid,
+    /// Kengash muhokamasi qarori matni kamida 20 belgi bo'lishi kerak (D11).
+    #[error("muhokama qarori matni juda qisqa")]
+    DiscussionNoteRequired,
+    /// Pul amalidagi xato (valyuta mosligi va boshqalar).
+    #[error(transparent)]
+    Money(#[from] money::MoneyError),
+}
+
+impl DomainError {
+    /// Barqaror xato kodi (SCREAMING_SNAKE_CASE). Frontend shu kod bo'yicha matn tanlaydi.
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::InvalidId => "INVALID_ID",
+            Self::InvalidName => "INVALID_NAME",
+            Self::InvalidRole => "INVALID_ROLE",
+            Self::ReasonRequired => "REASON_REQUIRED",
+            Self::AmountNotPositive => "AMOUNT_NOT_POSITIVE",
+            Self::InsufficientBalance => "INSUFFICIENT_BALANCE",
+            Self::InitialAlreadySet => "INITIAL_ALREADY_SET",
+            Self::IncomeAlreadyShared => "INCOME_ALREADY_SHARED",
+            Self::ShareExceedsIncome => "SHARE_EXCEEDS_INCOME",
+            Self::InvalidRule => "INVALID_RULE",
+            Self::DebtOverpaid => "DEBT_OVERPAID",
+            Self::InvalidDay => "INVALID_DAY",
+            Self::AuditAlreadyDone => "AUDIT_ALREADY_DONE",
+            Self::NothingToMark => "NOTHING_TO_MARK",
+            Self::ChapterLocked => "CHAPTER_LOCKED",
+            Self::TaskNotCurrent => "TASK_NOT_CURRENT",
+            Self::BodyRequired => "BODY_REQUIRED",
+            Self::BodyTooLong => "BODY_TOO_LONG",
+            Self::SubscriptionCancelled => "SUBSCRIPTION_CANCELLED",
+            Self::RescueExceedsAvailable => "RESCUE_EXCEEDS_AVAILABLE",
+            Self::EnvelopeWeekClosed => "ENVELOPE_WEEK_CLOSED",
+            Self::InvalidPrice => "INVALID_PRICE",
+            Self::SplitNotHundred => "SPLIT_NOT_100_PERCENT",
+            Self::SavingsBelowMinimum => "SAVINGS_BELOW_MINIMUM",
+            Self::ProfitSharesNotHundred => "PROFIT_SHARES_NOT_100",
+            Self::GuaranteedReturnForbidden => "GUARANTEED_RETURN_FORBIDDEN",
+            Self::RepaymentPlanRequired => "REPAYMENT_PLAN_REQUIRED",
+            Self::PlanMismatch => "PLAN_MISMATCH",
+            Self::FamilyDiscussionRequired => "FAMILY_DISCUSSION_REQUIRED",
+            Self::DistributionBlocked => "IN_DISPUTE",
+            Self::NotKeeperDevice => "NOT_KEEPER_DEVICE",
+            Self::BaselineNotPast => "BASELINE_NOT_PAST",
+            Self::CsvHasErrors => "CSV_HAS_ERRORS",
+            Self::AgreementIncomplete => "AGREEMENT_INCOMPLETE",
+            Self::SignaturesMissing => "SIGNATURES_MISSING",
+            Self::AgreementNotSigned => "AGREEMENT_NOT_SIGNED",
+            Self::AgreementLocked => "AGREEMENT_LOCKED",
+            Self::NecessityUnchanged => "NECESSITY_UNCHANGED",
+            Self::PinNotSet => "PIN_NOT_SET",
+            Self::FamilyConsentRequired => "FAMILY_CONSENT_REQUIRED",
+            Self::ReadinessGateLocked => "READINESS_GATE_LOCKED",
+            Self::PartnershipStructureInvalid => "PARTNERSHIP_STRUCTURE_INVALID",
+            Self::PeriodClosed => "PERIOD_CLOSED",
+            Self::OverrideReasonRequired => "OVERRIDE_REASON_REQUIRED",
+            Self::AttachmentInvalid => "ATTACHMENT_INVALID",
+            Self::DiscussionNoteRequired => "DISCUSSION_NOTE_REQUIRED",
+            Self::Money(error) => error.code(),
+        }
+    }
+}
+
+/// UUIDv7 formatini tekshiradi: 8-4-4-4-12 kichik harfli hex, versiya belgisi `7`, variant `8`/`9`/`a`/`b`.
+pub fn validate_uuid_v7(id: &str) -> Result<(), DomainError> {
+    let bytes = id.as_bytes();
+    let well_formed = bytes.len() == 36
+        && bytes.iter().enumerate().all(|(index, &byte)| match index {
+            8 | 13 | 18 | 23 => byte == b'-',
+            _ => byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte),
+        });
+    let version_ok = bytes.get(14) == Some(&b'7');
+    let variant_ok = matches!(bytes.get(19), Some(b'8' | b'9' | b'a' | b'b'));
+    if well_formed && version_ok && variant_ok {
+        Ok(())
+    } else {
+        Err(DomainError::InvalidId)
+    }
+}
+
+/// Nomni tekshiradi va chetki bo'shliqlarini olib tashlaydi.
+pub fn validate_name(name: &str) -> Result<String, DomainError> {
+    let trimmed = name.trim();
+    let length = trimmed.chars().count();
+    if (1..=NAME_MAX_CHARS).contains(&length) {
+        Ok(trimmed.to_owned())
+    } else {
+        Err(DomainError::InvalidName)
+    }
+}
+
+/// Yozuv metama'lumoti: yaratilgan va yangilangan vaqt, mantiqiy o'chirish, versiya, qurilma.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Meta {
+    /// Yaratilgan vaqt (UTC).
+    pub created_at: OffsetDateTime,
+    /// Oxirgi o'zgarish vaqti (UTC).
+    pub updated_at: OffsetDateTime,
+    /// Mantiqiy o'chirilgan vaqt; `None` bo'lsa yozuv faol.
+    pub deleted_at: Option<OffsetDateTime>,
+    /// Optimistik parallelizm uchun versiya; har o'zgarishda oshadi.
+    pub version: i64,
+    /// Yozuvni yaratgan qurilma (sinxronlashda kerak bo'ladi).
+    pub origin_device_id: String,
+}
+
+impl Meta {
+    /// Yangi yozuv uchun metama'lumot (versiya 1).
+    pub fn created(now: OffsetDateTime, origin_device_id: &str) -> Self {
+        Self {
+            created_at: now,
+            updated_at: now,
+            deleted_at: None,
+            version: 1,
+            origin_device_id: origin_device_id.to_owned(),
+        }
+    }
+}
+
+/// Xonadon: byudjet va a'zolar birligi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Household {
+    /// UUIDv7.
+    pub id: String,
+    /// Xonadon nomi.
+    pub name: String,
+    /// Oylik davr boshlanadigan kun (1..31); standart — 1.
+    pub month_start_day: u8,
+    /// Umumiy metama'lumot.
+    pub meta: Meta,
+}
+
+impl Household {
+    /// Yangi xonadon. Identifikator va nom qoidalarga javob berishi kerak.
+    pub fn create(
+        id: &str,
+        name: &str,
+        now: OffsetDateTime,
+        origin_device_id: &str,
+    ) -> Result<Self, DomainError> {
+        validate_uuid_v7(id)?;
+        Ok(Self {
+            id: id.to_owned(),
+            name: validate_name(name)?,
+            month_start_day: calendar::DEFAULT_MONTH_START_DAY,
+            meta: Meta::created(now, origin_device_id),
+        })
+    }
+
+    /// Oylik kunni o'zgartiradi (1..31). Noto'g'ri qiymat — [`DomainError::InvalidDay`].
+    pub fn with_month_start_day(mut self, day: u8) -> Result<Self, DomainError> {
+        if !(1..=31).contains(&day) {
+            return Err(DomainError::InvalidDay);
+        }
+        self.month_start_day = day;
+        Ok(self)
+    }
+}
+
+/// Xonadon a'zosi roli: kattalar kelishuvni tasdiqlaydi, bolalar tasdiqlamaydi (SPEC 2B.3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MemberRole {
+    /// Kattalar: havas chegarasini va kelishuvlarni tasdiqlaydi.
+    Adult,
+    /// Bola: ko'rsatiladi, lekin tasdiqlamaydi.
+    Child,
+}
+
+impl MemberRole {
+    /// Bazada saqlanadigan kod.
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Adult => "ADULT",
+            Self::Child => "CHILD",
+        }
+    }
+
+    /// Koddan rol. Noma'lum kod — `None`.
+    pub fn from_code(code: &str) -> Option<Self> {
+        match code {
+            "ADULT" => Some(Self::Adult),
+            "CHILD" => Some(Self::Child),
+            _ => None,
+        }
+    }
+}
+
+/// Xonadon a'zosi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Member {
+    /// UUIDv7.
+    pub id: String,
+    /// A'zo tegishli bo'lgan xonadon.
+    pub household_id: String,
+    /// A'zo ismi.
+    pub name: String,
+    /// Rol.
+    pub role: MemberRole,
+    /// Umumiy metama'lumot.
+    pub meta: Meta,
+}
+
+impl Member {
+    /// Yangi a'zo. Ikkala identifikator ham UUIDv7 bo'lishi kerak.
+    pub fn create(
+        id: &str,
+        household_id: &str,
+        name: &str,
+        role: MemberRole,
+        now: OffsetDateTime,
+        origin_device_id: &str,
+    ) -> Result<Self, DomainError> {
+        validate_uuid_v7(id)?;
+        validate_uuid_v7(household_id)?;
+        Ok(Self {
+            id: id.to_owned(),
+            household_id: household_id.to_owned(),
+            name: validate_name(name)?,
+            role,
+            meta: Meta::created(now, origin_device_id),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use time::macros::datetime;
+
+    const ID: &str = "0192a000-0000-7000-8000-0000000000a1";
+
+    #[test]
+    fn uuid_v7_togri_qabul_qilinadi() {
+        assert_eq!(validate_uuid_v7(ID), Ok(()));
+    }
+
+    #[test]
+    fn uuid_v7_notogri_formatlar_rad_etiladi() {
+        // v4 versiyasi
+        assert_eq!(
+            validate_uuid_v7("0192a000-0000-4000-8000-0000000000a1"),
+            Err(DomainError::InvalidId)
+        );
+        // katta harf
+        assert_eq!(
+            validate_uuid_v7("0192A000-0000-7000-8000-0000000000A1"),
+            Err(DomainError::InvalidId)
+        );
+        // noto'g'ri variant
+        assert_eq!(
+            validate_uuid_v7("0192a000-0000-7000-c000-0000000000a1"),
+            Err(DomainError::InvalidId)
+        );
+        // qisqa va bo'sh
+        assert_eq!(validate_uuid_v7("abc"), Err(DomainError::InvalidId));
+        assert_eq!(validate_uuid_v7(""), Err(DomainError::InvalidId));
+    }
+
+    #[test]
+    fn nom_tekshiriladi_va_tozalanadi() {
+        assert_eq!(validate_name("  Anvar oila  "), Ok("Anvar oila".to_owned()));
+        assert_eq!(validate_name("   "), Err(DomainError::InvalidName));
+        let long = "a".repeat(NAME_MAX_CHARS + 1);
+        assert_eq!(validate_name(&long), Err(DomainError::InvalidName));
+        let max = "a".repeat(NAME_MAX_CHARS);
+        assert!(validate_name(&max).is_ok());
+    }
+
+    #[test]
+    fn rol_kodlari_qaytariladi() {
+        for role in [MemberRole::Adult, MemberRole::Child] {
+            assert_eq!(MemberRole::from_code(role.code()), Some(role));
+        }
+        assert_eq!(MemberRole::from_code("ADMIN"), None);
+    }
+
+    #[test]
+    fn xonadon_va_azo_yaratiladi_metama_bilan() {
+        let now = datetime!(2026-10-14 09:00 UTC);
+        let household = Household::create(ID, "Oila", now, "device-1").expect("to'g'ri");
+        assert_eq!(household.meta.version, 1);
+        assert_eq!(household.meta.created_at, now);
+        assert_eq!(household.meta.deleted_at, None);
+
+        let member =
+            Member::create(ID, ID, "Dilshod", MemberRole::Adult, now, "device-1").expect("to'g'ri");
+        assert_eq!(member.household_id, ID);
+        assert_eq!(member.role, MemberRole::Adult);
+
+        assert_eq!(
+            Household::create("noto'g'ri", "Oila", now, "device-1"),
+            Err(DomainError::InvalidId)
+        );
+    }
+}
