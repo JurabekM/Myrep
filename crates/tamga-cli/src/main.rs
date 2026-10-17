@@ -195,6 +195,7 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             Ok(ExitCode::SUCCESS)
         }
         ["show", seq] => show(&home, seq),
+        ["export", rest @ ..] => export(&home, rest),
         ["shred", session] => {
             open_vault(&home)?
                 .shred(session)
@@ -246,6 +247,47 @@ fn show(home: &Home, seq: &str) -> Result<ExitCode, String> {
             None => println!("--- {name}: vault'da yo'q yoki sessiya unutilgan (shred) ---"),
         }
     }
+    Ok(ExitCode::SUCCESS)
+}
+
+/// `tamga export [--out <fayl.zip>] [--session <id>]... [--payloads]`
+fn export(home: &Home, rest: &[&str]) -> Result<ExitCode, String> {
+    use tamga_store::export::{ExportOptions, default_path, export};
+    let mut opts = ExportOptions {
+        out: default_path(home),
+        ..Default::default()
+    };
+    let mut it = rest.iter();
+    while let Some(a) = it.next() {
+        match *a {
+            "--out" => opts.out = it.next().ok_or("--out qiymatsiz")?.into(),
+            "--session" => opts
+                .sessions
+                .push((*it.next().ok_or("--session qiymatsiz")?).to_owned()),
+            "--payloads" => opts.include_payloads = true,
+            other => return Err(format!("noma'lum bayroq: {other}")),
+        }
+    }
+    let vault = if opts.include_payloads {
+        Some(open_vault(home)?)
+    } else {
+        None
+    };
+    let r = export(home, vault.as_ref(), &opts).map_err(|e| e.to_string())?;
+    println!("Dalil to'plami: {}", r.path.display());
+    println!(
+        "{} yozuv, {} checkpoint, {} payload ({} unutilgan), jurnal {}",
+        r.records,
+        r.checkpoints,
+        r.payloads,
+        r.shredded,
+        if r.verified {
+            "butun"
+        } else {
+            "BUZILGAN — natija MANIFEST.json da"
+        }
+    );
+    println!("SHA-256: {}", r.sha256);
     Ok(ExitCode::SUCCESS)
 }
 

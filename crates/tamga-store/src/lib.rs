@@ -13,6 +13,7 @@
 //! ```
 
 pub mod client;
+pub mod export;
 pub mod home;
 pub mod keystore;
 pub mod logfile;

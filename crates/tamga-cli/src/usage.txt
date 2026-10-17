@@ -9,4 +9,5 @@ foydalanish:
   tamga install claude-code --user            ~/.claude/settings.json ga hook qo'shish
   tamga uninstall claude-code (--project <dir> | --user)
   tamga show <seq>                            yozuv va uning payload'larini vault'dan ochish
+  tamga export [--out f.zip] [--session id]... [--payloads]   auditor uchun dalil to'plami
   tamga shred <session>                       sessiya payload'larini unutish

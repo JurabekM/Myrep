@@ -115,6 +115,17 @@ impl Vault {
     /// Payload'ni ochadi va jurnaldagi majburiyatga mosligini tekshiradi.
     /// `None` — topilmadi yoki sessiya unutilgan.
     pub fn get(&self, session: &str, reference: &Value) -> Result<Option<Vec<u8>>> {
+        Ok(self
+            .get_with_salt(session, reference)?
+            .map(|(_, data)| data))
+    }
+
+    /// [`Self::get`] + tuz: dalil to'plamida auditor majburiyatni o'zi tekshirishi uchun.
+    pub fn get_with_salt(
+        &self,
+        session: &str,
+        reference: &Value,
+    ) -> Result<Option<([u8; payload::SALT_LEN], Vec<u8>)>> {
         let Some(key) = self.session_key(session, false)? else {
             return Ok(None);
         };
@@ -150,7 +161,7 @@ impl Vault {
                     "payload jurnal majburiyatiga mos emas".into(),
                 ));
             }
-            return Ok(Some(data));
+            return Ok(Some((salt, data)));
         }
         Ok(None)
     }

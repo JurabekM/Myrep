@@ -199,6 +199,17 @@ umumiy sessiya taint'i o'chib ketmasligi uchun daemon ishtirokchilarni sanaydi.
 `deny / no-secret-exfil (sends_tainted_secret)` bilan to'xtatildi. Sir token shakliga o'xshamaydi,
 ya'ni blok faqat taint orqali bo'ldi.
 
+**F6 — verifikator va dalil (2026-10-17):** `verify-py` haqiqatan mustaqil: Ed25519 va ML-DSA-65 sof
+Python'da noldan yozilgan va Rust, RustCrypto hamda liboqs imzolarini tasdiqlaydi. Spec vektorlari bo'yicha
+11 test (16 buzilish holati va har bir bayt testi) o'tdi. Haqiqiy jurnallar va ularning tasodifiy buzilgan
+variantlarida 45/45 holatda Rust bilan bir xil hukm chiqdi. Dalil to'plami (`tamga export`, Studio
+Hisobotlar ekrani) buzilgan jurnal bo'lsa ham yaratiladi, natija `MANIFEST.json` ga yoziladi. Payload'lar
+ochiq matnda (tuz bilan) qo'shiladi, chunki aks holda auditor majburiyatni tekshira olmaydi; Studio buni
+ogohlantirish bilan ko'rsatadi. Auditor sifatida sinaldi: to'plam ichidagi verifikator OK berdi;
+o'zgartirilgan payload `PAYLOAD ... mos emas`, o'zgartirilgan inson qarori `E_HASH indeks 25` bilan ushlandi.
+**Ochiq chegara:** sessiya taint'i daemon xotirasida turadi va daemon qayta ishga tushganda yo'qoladi
+(diskda shifrlab saqlash keyingi bosqichga qoldirildi).
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

@@ -183,6 +183,78 @@ fn config_set(
     }
 }
 
+/// Dalil to'plami (ZIP) `<TAMGA_HOME>/exports/` ga.
+#[tauri::command]
+async fn export_bundle(
+    state: tauri::State<'_, AppState>,
+    sessions: Vec<String>,
+    include_payloads: bool,
+) -> Result<Value, String> {
+    let home = state.home.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        use tamga_store::export::{ExportOptions, default_path, export};
+        let vault = if include_payloads {
+            let store = tamga_store::secrets::default_store(&home).map_err(|e| e.to_string())?;
+            let master = tamga_store::keystore::vault_master(store.as_ref()).map_err(|e| e.to_string())?;
+            Some(tamga_store::vault::Vault::new(home.vault(), master).map_err(|e| e.to_string())?)
+        } else {
+            None
+        };
+        let opts = ExportOptions { sessions, include_payloads, out: default_path(&home) };
+        let r = export(&home, vault.as_ref(), &opts).map_err(|e| e.to_string())?;
+        Ok::<_, String>(json!({
+            "ok": true, "path": r.path.display().to_string(), "records": r.records, "checkpoints": r.checkpoints,
+            "payloads": r.payloads, "shredded": r.shredded, "verified": r.verified, "sha256": r.sha256,
+        }))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Avval yaratilgan dalil to'plamlari (eng yangisi birinchi).
+#[tauri::command]
+fn list_exports(state: tauri::State<'_, AppState>) -> Value {
+    let dir = state.home.root().join("exports");
+    let mut items: Vec<(std::time::SystemTime, Value)> = std::fs::read_dir(&dir)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|x| x == "zip"))
+        .filter_map(|e| {
+            let m = e.metadata().ok()?;
+            let t = m.modified().ok()?;
+            let secs = t.duration_since(std::time::UNIX_EPOCH).ok()?.as_millis() as i64;
+            Some((t, json!({"path": e.path().display().to_string(), "name": e.file_name().to_string_lossy(), "size": m.len(), "ts": tamga_store::format_ts(secs)})))
+        })
+        .collect();
+    items.sort_by_key(|(t, _)| std::cmp::Reverse(*t));
+    json!({"ok": true, "dir": dir.display().to_string(), "items": items.into_iter().map(|(_, v)| v).collect::<Vec<_>>()})
+}
+
+/// Faylni Explorer'da belgilab ko'rsatadi (faqat TAMGA eksport papkasi ichidagi fayllar).
+#[tauri::command]
+fn reveal(state: tauri::State<'_, AppState>, path: String) -> Value {
+    let dir = state.home.root().join("exports");
+    let p = std::path::PathBuf::from(&path);
+    let inside = p
+        .canonicalize()
+        .ok()
+        .zip(dir.canonicalize().ok())
+        .is_some_and(|(p, d)| p.starts_with(d));
+    if !inside {
+        return json!({"ok": false, "error": "faqat eksport papkasidagi fayllar ko'rsatiladi"});
+    }
+    // Explorer faqat Windows ko'rinishidagi yo'lni tushunadi (teskari chiziq, `\\?\` prefiksisiz).
+    let win_path = p.display().to_string().replace('/', "\\");
+    match std::process::Command::new("explorer")
+        .arg(format!("/select,{win_path}"))
+        .spawn()
+    {
+        Ok(_) => json!({"ok": true}),
+        Err(e) => json!({"ok": false, "error": e.to_string()}),
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(AppState {
@@ -202,7 +274,10 @@ pub fn run() {
             session_records,
             verify,
             config_get,
-            config_set
+            config_set,
+            export_bundle,
+            list_exports,
+            reveal
         ])
         .run(tauri::generate_context!())
         .expect("TAMGA Studio ishga tushmadi");

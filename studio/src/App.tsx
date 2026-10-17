@@ -5,8 +5,8 @@ import { call, usePoll, type Status } from "./api";
 import { ApprovalsScreen } from "./screens/ApprovalsScreen";
 import { IntegrityScreen } from "./screens/IntegrityScreen";
 import { LiveScreen } from "./screens/LiveScreen";
-import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { PoliciesScreen } from "./screens/PoliciesScreen";
+import { ReportsScreen } from "./screens/ReportsScreen";
 import { SessionsScreen } from "./screens/SessionsScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { WindowControls } from "./WindowControls";
@@ -79,14 +79,7 @@ export function App() {
       case "settings":
         return <SettingsScreen status={status} />;
       case "reports":
-        return (
-          <PlaceholderScreen
-            title="Hisobotlar"
-            icon={FileOutput}
-            phase="F6"
-            summary="Auditor uchun dalil to'plami: yozuvlar, imzolangan checkpoint'lar va mustaqil verifikator yo'riqnomasi."
-          />
-        );
+        return <ReportsScreen />;
     }
   })();
 

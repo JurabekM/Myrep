@@ -59,11 +59,25 @@ ni bo'lishsa, biri o'qigan sirni boshqasi orqali yuborib bo'lmaydi.
   "node", "server-filesystem/dist/index.js", "C:/proj"]}}}
 ```
 
+**F6 — mustaqil verifikator va dalil to'plami:** `verify-py/` faqat Python standart kutubxonasidan
+foydalanadi: Ed25519 (RFC 8032, qat'iy) va ML-DSA-65 (FIPS 204) noldan yozilgan, Rust yoki liboqs bilan
+umumiy kodi yo'q. U Rust, RustCrypto va liboqs imzolarini, 16 buzilish vektorini va haqiqiy jurnallarni
+tekshiradi: 45/45 holatda Rust bilan aynan bir xil kod va indeks chiqdi
+(`py scripts/crosscheck_verifiers.py`). `tamga export` yoki Studio'dagi Hisobotlar ekrani auditor uchun
+ZIP yaratadi: jurnal, checkpoint'lar, kalit, HTML xulosa, ixtiyoriy payload'lar (tuz bilan) va to'plam
+ichida verifikatorning o'zi.
+
+```bash
+cd verify && python -m tamga_verify ../evidence/log.jsonl --checkpoints ../evidence/checkpoints.jsonl --key ../evidence/public-key.json --payloads ../payloads
+```
+
 | Jonli oqim va tafsilot | Tasdiqlash navbati (haqiqiy `claude -p` kutmoqda) |
 |---|---|
 | ![](docs/screenshots/f4-detail.png) | ![](docs/screenshots/f4-approval.png) |
 | **Sessiya transkripti** | **Buzilish aniqlandi (bitta yozuv qo'lda o'zgartirilgan)** |
 | ![](docs/screenshots/f4-sessions.png) | ![](docs/screenshots/f4-tamper.png) |
+| **Hisobotlar: dalil to'plami** | |
+| ![](docs/screenshots/f6-reports.png) | |
 
 ## Ishga tushirish (Windows)
 
