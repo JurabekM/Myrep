@@ -99,6 +99,19 @@ pub struct Config {
     pub checkpoint_secs: u64,
     /// Checkpoint nusxalari yoziladigan tashqi papka (boshqa disk, tarmoq papkasi, git repo).
     pub witness_dir: Option<PathBuf>,
+    pub ask_route: AskRoute,
+    /// Studio navbatida inson javobini kutish muddati; o'tsa — rad etiladi.
+    pub ask_timeout_secs: u64,
+}
+
+/// `ask` qarori kimga yuboriladi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AskRoute {
+    /// Agentning o'z ruxsat oynasiga (Claude Code foydalanuvchidan so'raydi).
+    Agent,
+    /// TAMGA Studio tasdiqlash navbatiga: daemon hook javobini inson qaror qilguncha ushlab turadi
+    /// (headless agentlar uchun — `claude -p`, CI).
+    Studio,
 }
 
 impl Default for Config {
@@ -108,12 +121,14 @@ impl Default for Config {
             checkpoint_every: 32,
             checkpoint_secs: 30,
             witness_dir: None,
+            ask_route: AskRoute::Agent,
+            ask_timeout_secs: 120,
         }
     }
 }
 
 impl Config {
-    fn from_json(v: &Value) -> Self {
+    pub fn from_json(v: &Value) -> Self {
         let d = Self::default();
         Self {
             mode: match v.get("mode").and_then(Value::as_str) {
@@ -134,15 +149,26 @@ impl Config {
                 .get("witness_dir")
                 .and_then(Value::as_str)
                 .map(PathBuf::from),
+            ask_route: match v.get("ask_route").and_then(Value::as_str) {
+                Some("studio") => AskRoute::Studio,
+                _ => d.ask_route,
+            },
+            ask_timeout_secs: v
+                .get("ask_timeout_secs")
+                .and_then(Value::as_u64)
+                .filter(|n| (5..=3600).contains(n))
+                .unwrap_or(d.ask_timeout_secs),
         }
     }
 
-    fn to_json(&self) -> Value {
+    pub fn to_json(&self) -> Value {
         json!({
             "mode": if self.mode == Mode::Strict { "strict" } else { "dev" },
             "checkpoint_every": self.checkpoint_every,
             "checkpoint_secs": self.checkpoint_secs,
             "witness_dir": self.witness_dir.as_ref().map(|p| p.display().to_string()),
+            "ask_route": if self.ask_route == AskRoute::Studio { "studio" } else { "agent" },
+            "ask_timeout_secs": self.ask_timeout_secs,
         })
     }
 }

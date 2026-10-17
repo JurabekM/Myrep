@@ -172,6 +172,17 @@ chaqiruvni o'tkazib yuborishi mumkin. Shuning uchun u qiymat darajasidagi taint 
 bilan birga ishlaydi. Shuningdek, haiku ochiq exfil so'rovini ko'pincha o'zi rad etadi: TAMGA esa model
 rad etmagan holatlar uchun mustaqil qatlam.
 
+**F4 — Studio va tasdiqlash navbati (2026-10-17):** `ask_route` config'i. `agent` qiymatida (standart) `ask`
+qarorini Claude Code oynasi so'raydi. `studio` qiymatida daemon hook javobini ushlab turadi, kutilayotgan so'rov
+Studio'da (yoki `tamga pending`/`decide` orqali) ko'rinadi. Qaror `decision.human` (`ref` → `tool.pre`) bo'lib
+zanjirga yoziladi. Javob kelmasa `ask_timeout_secs` (standart 120) o'tgach rad etiladi (`by: default`). "Shu
+sessiyada doim" faqat (sessiya, siyosat) juftligiga taalluqli va sessiya oxirida o'chadi. Shu sabab PreToolUse
+hook timeout'i 180 s qilindi.
+**Qabul sinovi:** haqiqiy headless `claude -p` ishchi papkadan tashqariga Write qilmoqchi bo'ldi. Studio'da
+so'rov paydo bo'ldi, "Ruxsat" bosildi va Claude faylni yaratdi. Jurnalda `tool.pre ask → decision.human allow
+(24 s) → tool.post` ketma-ketligi bor, verify OK. Jurnaldagi bitta yozuv diskda o'zgartirilganda Studio
+`E_HASH, indeks 14` ni ko'rsatdi. Barcha ekran va tugmalar UI Automation orqali bosib sinaldi.
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

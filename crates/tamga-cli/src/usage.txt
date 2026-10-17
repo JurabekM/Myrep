@@ -3,6 +3,8 @@ foydalanish:
   tamga status                                daemon holati
   tamga verify                                o'z jurnalini to'liq tekshirish
   tamga checkpoint                            darhol checkpoint yozish
+  tamga pending                               Studio navbatida kutilayotgan 'ask' so'rovlari
+  tamga decide <seq> allow|deny [--session]   kutilayotgan so'rovga inson qarori
   tamga install claude-code --project <dir>   loyiha .claude/settings.json ga hook qo'shish
   tamga install claude-code --user            ~/.claude/settings.json ga hook qo'shish
   tamga uninstall claude-code (--project <dir> | --user)

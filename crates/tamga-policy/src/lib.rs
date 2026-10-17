@@ -51,6 +51,17 @@ impl Verdict {
     }
 }
 
+/// Siyosatning qisqa tavsifi.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PolicyInfo {
+    pub id: String,
+    pub source: String,
+    pub effect: &'static str,
+    pub verdict: &'static str,
+    pub reason: String,
+    pub text: String,
+}
+
 /// Siyosat qarori: hal qiluvchi siyosat nomi va sabab bilan.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Decision {
@@ -135,6 +146,36 @@ impl Engine {
 
     pub fn policy_count(&self) -> usize {
         self.policies.policies().count()
+    }
+
+    /// Yuklangan siyosatlar ro'yxati (Studio va `tamga status` uchun).
+    pub fn describe(&self) -> Vec<PolicyInfo> {
+        self.policies
+            .policies()
+            .map(|p| {
+                let full = p.id().to_string();
+                let source = full.split_once(':').map_or("", |(s, _)| s).to_owned();
+                let ann = |k: &str| p.annotation(k).unwrap_or_default().to_owned();
+                let permit = p.effect() == cedar_policy::Effect::Permit;
+                let verdict = match (permit, ann("verdict").as_str()) {
+                    (true, _) => "allow",
+                    (false, "ask") => "ask",
+                    _ => "deny",
+                };
+                PolicyInfo {
+                    id: if ann("id").is_empty() {
+                        full.clone()
+                    } else {
+                        ann("id")
+                    },
+                    source,
+                    effect: if permit { "permit" } else { "forbid" },
+                    verdict,
+                    reason: ann("reason"),
+                    text: p.to_string(),
+                }
+            })
+            .collect()
     }
 
     /// Harakatni baholaydi. Kutilmagan xato (sxema mos kelmasligi) bo'lsa — `ask`: na jim ruxsat,
@@ -235,6 +276,17 @@ mod tests {
     fn default_set_loads_and_validates() {
         let e = Engine::with_defaults().unwrap();
         assert_eq!(e.policy_count(), 8);
+        let d = e.describe();
+        let exfil = d.iter().find(|p| p.id == "no-secret-exfil").unwrap();
+        assert_eq!(
+            (exfil.effect, exfil.verdict, exfil.source.as_str()),
+            ("forbid", "deny", "default.cedar")
+        );
+        assert!(
+            d.iter()
+                .any(|p| p.id == "allow-by-default" && p.verdict == "allow")
+        );
+        assert_eq!(d.iter().filter(|p| p.verdict == "ask").count(), 4);
     }
 
     #[test]

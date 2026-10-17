@@ -19,6 +19,9 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2.12", default-features = false, features = ["wry", "compression"] }
 serde = { workspace = true }
 tamga-core = { workspace = true }
+tamga-store = { workspace = true }
+tamga-redact = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

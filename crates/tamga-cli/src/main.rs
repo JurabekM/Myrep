@@ -37,13 +37,17 @@ fn sibling(name: &str) -> Option<std::path::PathBuf> {
 }
 
 fn daemon(op: &str) -> Result<Value, String> {
+    daemon_req(&json!({"op": op}))
+}
+
+fn daemon_req(req: &Value) -> Result<Value, String> {
     let mut pipe = client::connect(
         &pipe_name(),
         sibling("tamgad").as_deref(),
         Duration::from_secs(3),
     )
     .map_err(|e| e.to_string())?;
-    client::request(&mut pipe, &json!({"op": op})).map_err(|e| e.to_string())
+    client::request(&mut pipe, req).map_err(|e| e.to_string())
 }
 
 fn init(home: &Home) -> Result<(), String> {
@@ -121,6 +125,45 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             let v = daemon("status")?;
             println!("{}", serde_json::to_string_pretty(&v).expect("json"));
             Ok(ExitCode::SUCCESS)
+        }
+        ["pending"] => {
+            let v = daemon("pending")?;
+            let items = v["items"].as_array().cloned().unwrap_or_default();
+            println!(
+                "yo'nalish: {} — {} ta so'rov kutilmoqda",
+                v["route"].as_str().unwrap_or("?"),
+                items.len()
+            );
+            for i in items {
+                println!(
+                    "#{} [{}] {} — {} ({} s qoldi)
+    {}",
+                    i["seq"],
+                    i["tool"].as_str().unwrap_or(""),
+                    i["policy"].as_str().unwrap_or(""),
+                    i["reason"].as_str().unwrap_or(""),
+                    i["expires_in_secs"],
+                    i["preview"].as_str().unwrap_or("")
+                );
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        ["decide", seq, verdict, rest @ ..] => {
+            let seq: u64 = seq.parse().map_err(|_| "seq butun son bo'lishi kerak")?;
+            let scope = if rest == ["--session"] {
+                "session"
+            } else {
+                "once"
+            };
+            let v = daemon_req(
+                &json!({"op": "decide", "seq": seq, "verdict": verdict, "scope": scope}),
+            )?;
+            println!("{v}");
+            Ok(if v["ok"] == true {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::from(1)
+            })
         }
         ["checkpoint"] => {
             let v = daemon("checkpoint")?;

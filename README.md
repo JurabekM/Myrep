@@ -44,7 +44,16 @@ forbid (principal, action == Tamga::Action::"use_tool", resource == Tamga::Tool:
 when { context.url like "*pastebin*" };
 ```
 
-![TAMGA Studio — Jonli ekran (F0, namuna ma'lumot)](docs/screenshots/f0-studio-live.png)
+**F4 — TAMGA Studio jonli ma'lumot bilan:** jonli oqim (faktlar, qarorlar, vault'dagi payload, sirlar yashirilgan),
+**tasdiqlash navbati** (`ask_route: "studio"` — headless agent ham inson qarorini kutadi, qaror `decision.human`
+bo'lib zanjirga muhrlanadi), sessiyalar (Claude Code transkripti uslubida), yaxlitlik (buzilishni aniq indeks bilan
+ko'rsatadi), siyosatlar va sozlamalar (daemon jonli qabul qiladi). CLI: `tamga pending`, `tamga decide <seq> allow|deny`.
+
+| Jonli oqim va tafsilot | Tasdiqlash navbati (haqiqiy `claude -p` kutmoqda) |
+|---|---|
+| ![](docs/screenshots/f4-detail.png) | ![](docs/screenshots/f4-approval.png) |
+| **Sessiya transkripti** | **Buzilish aniqlandi (bitta yozuv qo'lda o'zgartirilgan)** |
+| ![](docs/screenshots/f4-sessions.png) | ![](docs/screenshots/f4-tamper.png) |
 
 ## Ishga tushirish (Windows)
 

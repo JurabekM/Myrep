@@ -1,11 +1,24 @@
-//! TAMGA Studio — Tauri qobig'i. F0: faqat ilova haqida ma'lumot beradigan command.
+//! TAMGA Studio — Tauri qobig'i. Jurnalni fayldan o'qiydi, boshqaruv buyruqlarini `tamgad` ga yuboradi.
+
+mod data;
+
+use std::sync::Mutex;
+use std::time::Duration;
 
 use serde::Serialize;
+use serde_json::{Value, json};
+use tamga_store::home::{AskRoute, Mode, pipe_name};
+use tamga_store::{Home, client};
 
 #[derive(Debug, Serialize)]
 pub struct AppInfo {
     pub version: &'static str,
     pub format_version: &'static str,
+}
+
+struct AppState {
+    home: Home,
+    cache: Mutex<data::Cache>,
 }
 
 #[tauri::command]
@@ -16,9 +29,181 @@ fn app_info() -> AppInfo {
     }
 }
 
+/// `tamgad` ga so'rov. Daemon ishlamasa, Studio yonidagi `tamgad.exe` ni ishga tushiradi.
+fn daemon(req: Value) -> Value {
+    let exe = std::env::current_exe()
+        .ok()
+        .and_then(|p| {
+            p.parent().map(|d| {
+                d.join(if cfg!(windows) {
+                    "tamgad.exe"
+                } else {
+                    "tamgad"
+                })
+            })
+        })
+        .filter(|p| p.exists());
+    match client::connect(&pipe_name(), exe.as_deref(), Duration::from_secs(3))
+        .and_then(|mut p| client::request(&mut p, &req))
+    {
+        Ok(v) => v,
+        Err(e) => json!({"ok": false, "error": e.to_string()}),
+    }
+}
+
+#[tauri::command]
+async fn status() -> Value {
+    tauri::async_runtime::spawn_blocking(|| daemon(json!({"op": "status"})))
+        .await
+        .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+}
+
+#[tauri::command]
+async fn pending() -> Value {
+    tauri::async_runtime::spawn_blocking(|| daemon(json!({"op": "pending"})))
+        .await
+        .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+}
+
+#[tauri::command]
+async fn policies() -> Value {
+    tauri::async_runtime::spawn_blocking(|| daemon(json!({"op": "policies"})))
+        .await
+        .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+}
+
+#[tauri::command]
+async fn decide(seq: u64, verdict: String, scope: String) -> Value {
+    tauri::async_runtime::spawn_blocking(move || {
+        daemon(json!({"op": "decide", "seq": seq, "verdict": verdict, "scope": scope}))
+    })
+    .await
+    .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+}
+
+#[tauri::command]
+async fn checkpoint_now() -> Value {
+    tauri::async_runtime::spawn_blocking(|| daemon(json!({"op": "checkpoint"})))
+        .await
+        .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+}
+
+/// `after` dan keyingi yozuvlar (ixcham). `after` berilmasa — oxirgi `limit` ta.
+#[tauri::command]
+fn records(state: tauri::State<'_, AppState>, after: Option<u64>, limit: Option<usize>) -> Value {
+    let mut cache = state.cache.lock().expect("kesh");
+    if let Err(e) = cache.refresh(&state.home) {
+        return json!({"ok": false, "error": e});
+    }
+    let all = cache.records();
+    let limit = limit.unwrap_or(500);
+    let items: Vec<Value> = match after {
+        Some(a) => all
+            .iter()
+            .filter(|r| r["seq"].as_u64().is_some_and(|s| s > a))
+            .take(limit)
+            .map(data::compact)
+            .collect(),
+        None => all[all.len().saturating_sub(limit)..]
+            .iter()
+            .map(data::compact)
+            .collect(),
+    };
+    json!({"ok": true, "total": all.len(), "items": items})
+}
+
+#[tauri::command]
+fn record_detail(state: tauri::State<'_, AppState>, seq: u64) -> Value {
+    let mut cache = state.cache.lock().expect("kesh");
+    let _ = cache.refresh(&state.home);
+    data::record_detail(&state.home, cache.records(), seq)
+}
+
+#[tauri::command]
+fn sessions(state: tauri::State<'_, AppState>) -> Value {
+    let mut cache = state.cache.lock().expect("kesh");
+    if let Err(e) = cache.refresh(&state.home) {
+        return json!({"ok": false, "error": e});
+    }
+    json!({"ok": true, "items": data::sessions(cache.records())})
+}
+
+#[tauri::command]
+fn session_records(state: tauri::State<'_, AppState>, session: String) -> Value {
+    let mut cache = state.cache.lock().expect("kesh");
+    let _ = cache.refresh(&state.home);
+    let items: Vec<Value> = cache
+        .records()
+        .iter()
+        .filter(|r| r["session"] == session.as_str())
+        .map(data::compact)
+        .collect();
+    json!({"ok": true, "items": items})
+}
+
+#[tauri::command]
+async fn verify(state: tauri::State<'_, AppState>) -> Result<Value, String> {
+    let home = state.home.clone();
+    tauri::async_runtime::spawn_blocking(move || data::verify(&home))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn config_get(state: tauri::State<'_, AppState>) -> Value {
+    let c = state.home.config();
+    json!({"ok": true, "home": state.home.root().display().to_string(), "config": c.to_json()})
+}
+
+/// Rejim va `ask` yo'nalishini o'zgartiradi. Daemon config'ni har soniyada qayta o'qiydi.
+#[tauri::command]
+fn config_set(
+    state: tauri::State<'_, AppState>,
+    mode: Option<String>,
+    ask_route: Option<String>,
+) -> Value {
+    let mut c = state.home.config();
+    if let Some(m) = mode {
+        c.mode = if m == "strict" {
+            Mode::Strict
+        } else {
+            Mode::Dev
+        };
+    }
+    if let Some(r) = ask_route {
+        c.ask_route = if r == "studio" {
+            AskRoute::Studio
+        } else {
+            AskRoute::Agent
+        };
+    }
+    match state.home.write_config(&c) {
+        Ok(()) => json!({"ok": true, "config": c.to_json()}),
+        Err(e) => json!({"ok": false, "error": e.to_string()}),
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![app_info])
+        .manage(AppState {
+            home: Home::from_env(),
+            cache: Mutex::new(data::Cache::default()),
+        })
+        .invoke_handler(tauri::generate_handler![
+            app_info,
+            status,
+            pending,
+            policies,
+            decide,
+            checkpoint_now,
+            records,
+            record_detail,
+            sessions,
+            session_records,
+            verify,
+            config_get,
+            config_set
+        ])
         .run(tauri::generate_context!())
         .expect("TAMGA Studio ishga tushmadi");
 }

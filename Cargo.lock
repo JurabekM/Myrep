@@ -3708,7 +3708,10 @@ name = "tamga-studio"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "tamga-core",
+ "tamga-redact",
+ "tamga-store",
  "tauri",
  "tauri-build",
 ]
@@ -3735,6 +3738,7 @@ dependencies = [
  "serde_json",
  "tamga-core",
  "tamga-policy",
+ "tamga-redact",
  "tamga-store",
  "tokio",
 ]

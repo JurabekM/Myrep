@@ -90,8 +90,10 @@ pub fn install(settings: &Path, hook: &Path) -> Result<(), String> {
             .as_array_mut()
             .ok_or(format!("`hooks.{event}` massiv emas"))?;
         list.retain(|e| !is_tamga(e)); // qayta o'rnatish — yo'l yangilanadi, takrorlanmaydi
+        // PreToolUse Studio tasdiqlash navbatida inson qarorini kutishi mumkin (ask_timeout_secs ≤ 120 s standart).
+        let timeout = if event == "PreToolUse" { 180 } else { 10 };
         let mut entry =
-            json!({"hooks": [{"type": "command", "command": command(hook), "timeout": 10}]});
+            json!({"hooks": [{"type": "command", "command": command(hook), "timeout": timeout}]});
         if let Some(mt) = matcher {
             entry["matcher"] = mt.into();
         }
