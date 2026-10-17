@@ -325,7 +325,7 @@
   "receipt_another": "Yangi tilxat",
   "error_BORROW_CHECK_REQUIRED": "Yangi qarz uchun «Toʻxta va oʻyla» savollariga javob bering",
   "error_PAYMENT_EXCEEDS_REMAINING": "Toʻlov qoldiqdan katta boʻlmaydi",
-  "error_ALREADY_CLOSED": "Bu qarz allaqachon yopilgan",
+  "error_ALREADY_CLOSED": "Bu oy allaqachon yopilgan",
   "error_MARKUP_REQUIRED": "Ustama summasini kiriting",
   "error_MARKUP_NOT_ALLOWED": "Bank rejasida ustama alohida kiritilmaydi — stavkani kiriting",
   "error_INVALID_TERM": "Oylar soni 1 dan 600 gacha boʻlsin",
@@ -2389,5 +2389,123 @@
   "pdf_kkclose_sadaqa": "Sadaqa",
   "pdf_kkclose_explanation": "Nima boʻldi?",
   "pdf_kkclose_reserveBelowDepreciation": "Zaxira ulushi shu oy eskirishidan kam: uskunani almashtirishga pul yetmasligi mumkin.",
-  "pdf_kkclose_disclaimer": "Boshqaruv hisobi — egasi oʻzi uchun. Soliq hisoboti emas; soliq zaxirasi stavkasini egasi oʻzi kiritgan."
+  "pdf_kkclose_disclaimer": "Boshqaruv hisobi — egasi oʻzi uchun. Soliq hisoboti emas; soliq zaxirasi stavkasini egasi oʻzi kiritgan.",
+  "nav_kkClose": "Hisob kuni",
+  "mentor_kkClose": "Oyda bir kun hisob qiling: avval soliq, keyin oʻzingizning maoshingiz, qolganini — zaxira, aylanma va kengayishga. Yozilgan hisob — tinch uyqu.",
+  "kk_closeDue": "Oʻtgan oy ({date} dan) hali yopilmagan — «Hisob kuni» vaqti.",
+  "@kk_closeDue": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_salaryCarry": "Oʻtgan oy maoshdan ortiq olingani uchun shu oy maoshidan {amount} ushlandi.",
+  "@kk_salaryCarry": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_close_open": "Hisob kuni",
+  "kk_close_title": "Hisob kuni",
+  "kk_close_intro": "Oyni yoping: soliq zaxirasi → oʻzingizning maoshingiz → qolgan pulni zaxira, aylanma va kengayishga boʻlish. Bayonnoma yopilgandan keyin oʻzgarmaydi.",
+  "kk_close_lastClosed": "Oʻtgan oy yopilgan. Joriy oy tugagach, yana shu yerga keling.",
+  "kk_close_rules": "Qoidalar",
+  "kk_close_rulesChange": "Oʻzgartirish",
+  "kk_close_rulesForm": "Qoidalarni oʻzgartirish",
+  "kk_close_taxNone": "Soliq zaxirasi yoʻq",
+  "kk_close_taxShow_REVENUE": "Soliq zaxirasi: tushumdan {percent} %",
+  "@kk_close_taxShow_REVENUE": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "kk_close_taxShow_PROFIT": "Soliq zaxirasi: foydadan {percent} %",
+  "@kk_close_taxShow_PROFIT": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "kk_close_taxFixedShow": "Soliq zaxirasi: oyiga {amount}",
+  "@kk_close_taxFixedShow": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_close_splitShow": "Taqsimot: zaxira {reserve} %, aylanma {working} %, kengayish {expansion} %, sadaqa {sadaqa} %",
+  "@kk_close_splitShow": {
+    "placeholders": {
+      "expansion": {},
+      "reserve": {},
+      "sadaqa": {},
+      "working": {}
+    }
+  },
+  "kk_close_taxBase": "Soliq zaxirasi qayerdan",
+  "kk_close_base_NONE": "Yoʻq",
+  "kk_close_base_REVENUE": "Tushumdan foiz",
+  "kk_close_base_PROFIT": "Foydadan foiz",
+  "kk_close_base_FIXED": "Qatʼiy summa",
+  "kk_close_taxPercent": "Foiz (%)",
+  "kk_close_taxFixed": "Oylik summa",
+  "kk_close_taxDisclaimer": "Stavkani oʻzingiz kiriting — ilova soliq rejimi yoki stavka tavsiya qilmaydi (soliq maslahati emas).",
+  "kk_close_splitLegend": "Qolgan pul taqsimoti (jami 100 %)",
+  "kk_close_part_reserve": "Zaxira",
+  "kk_close_part_working": "Aylanma (tovar)",
+  "kk_close_part_expansion": "Kengayish",
+  "kk_close_part_sadaqa": "Sadaqa",
+  "kk_close_draft": "Hisob kuni: {period}",
+  "@kk_close_draft": {
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "kk_close_step1": "1. Oy yakunlari ({period})",
+  "@kk_close_step1": {
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "kk_close_expenses": "Chiqimlar",
+  "kk_close_step2": "2. Soliq zaxirasi va egasi maoshi",
+  "kk_close_taxReserve": "Soliq zaxirasi",
+  "kk_close_ownerPay": "Egasi maoshi",
+  "kk_close_salaryNotPaid": "Maoshdan {amount} hali Uy'ga oʻtkazilmagan — bosh sahifadan oʻtkazishingiz mumkin. Hisobda maosh toʻliq ayiriladi.",
+  "@kk_close_salaryNotPaid": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_close_carry": "Maoshdan {amount} ortiq olindi. Keyingi oy maoshidan ushlab qolinsin.",
+  "@kk_close_carry": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_close_step3": "3. Qolgan pul va taqsimot",
+  "kk_close_remainingFormula": "Tushum − soliq zaxirasi − chiqimlar − egasi maoshi",
+  "kk_close_explanation": "Nima boʻldi?",
+  "kk_close_negative": "Qolgan pul manfiy — taqsimot yoʻq. Sababini qisqacha yozing: bu ayb emas, keyingi oy uchun saboq.",
+  "kk_close_reserveBelowDepreciation": "Zaxira ulushi shu oy eskirishidan ({amount}) kam: uskunani almashtirishga pul yetmasligi mumkin. Zaxira foizini oshirishni oʻylab koʻring.",
+  "@kk_close_reserveBelowDepreciation": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_close_finalWarning": "Yopilgandan keyin bu oyga yozuv qoʻshib ham, oʻchirib ham boʻlmaydi — tuzatishlar keyingi oyga yoziladi.",
+  "kk_close_submit": "Oyni yopish",
+  "kk_close_history": "Bayonnomalar",
+  "kk_close_col_period": "Davr",
+  "kk_close_col_remaining": "Qolgan",
+  "kk_close_col_reserve": "Zaxiraga",
+  "kk_close_col_code": "Tekshirish kodi",
+  "kk_close_pdf": "PDF",
+  "kk_close_pdfNamed": "PDF saqlash: {period}",
+  "@kk_close_pdfNamed": {
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "error_PERIOD_NOT_ENDED": "Bu oy hali tugamagan",
+  "error_LATER_PERIOD_CLOSED": "Keyingi oy yopilgan — oldingi oyni endi yopib boʻlmaydi",
+  "error_INVALID_RULE": "Taqsimot foizlari jami 100 % boʻlsin",
+  "error_INVALID_TAX_BASE": "Soliq zaxirasi turini tanlang"
 }

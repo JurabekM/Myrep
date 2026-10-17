@@ -72,6 +72,9 @@ const overview = {
     trueProfit: m("3 100 000 soʻm"),
   },
   negativeWallets: ["CARD"],
+  salaryCarry: null,
+  closedUntil: null,
+  closeDue: null,
   entries: [],
 };
 

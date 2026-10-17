@@ -132,6 +132,12 @@
     "allow-kk-family-labor",
     "allow-kk-add-family-labor",
     "allow-kk-delete-family-labor",
-    "allow-kk-order-quote"
+    "allow-kk-order-quote",
+    "allow-kk-close-rules",
+    "allow-kk-set-close-rules",
+    "allow-kk-close-draft",
+    "allow-kk-close-month",
+    "allow-kk-month-closes",
+    "allow-export-kk-month-close"
   ]
 }

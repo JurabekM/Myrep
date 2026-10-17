@@ -12,6 +12,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `03-restore` | Zaxira nusxa → yangi profil → «Mavjud xonadonga qo'shilish» → ma'lumotlar 1:1 |
 | `04-kasbkor` | Kasb-kor «ikki cho'ntak»: boshlang'ich qoldiq → maosh → tushum (`Ctrl+N`) → chiqim → «egasi oldi» (pul oqimi kamaymaydi) → maosh Uy'ga → ulush → Uy'da daromad |
 | `05-kasbkor-profit` | Kasb-kor haqiqiy foyda (SPEC 3.1 Nilufar): tushum va chiqimlar → o'z mehnati → qizining 80 soati → tikuv mashinalari 12 mln / 60 oy → **3 100 000**; Jasur buyurtmasi tannarxdan past; uskuna sotildi → bir martalik xarajat |
+| `06-kasbkor-close` | Kasb-kor «Hisob kuni» (SPEC 4.5 Nilufar): joriy oyda yozuvlar → ilova keyingi oyga siljitilib qayta ochiladi → eslatma → soliq 4 % tushumdan → qolgan **2 580 000** → 774 000 / 1 290 000 / 516 000 → oy yopiladi, bayonnoma PDF |
 
 ## Ishga tushirish (Linux)
 ```bash

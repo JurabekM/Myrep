@@ -155,6 +155,12 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_add_family_labor,
             commands::kk_delete_family_labor,
             commands::kk_order_quote,
+            commands::kk_close_rules,
+            commands::kk_set_close_rules,
+            commands::kk_close_draft,
+            commands::kk_close_month,
+            commands::kk_month_closes,
+            commands::export_kk_month_close,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim) va K2 (3-bo'lim) amalga oshirildi — farqlari 2.4 va 3.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim) va K3 (4.5) amalga oshirildi — farqlari 2.4, 3.4 va 4.6 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -134,6 +134,15 @@ Qonunning mazmuni: javondagi tovar — muzlagan pul. Uni eski narxda hisoblash k
 - Qolgan pul manfiy bo'lsa — taqsimot yo'q; «nima bo'ldi?» audit qadami (Uy'dagi «izohsiz summa» analogi).
 
 **Misol (Nilufar, oy):** tushum 18 000 000; soliq zaxirasi (foydalanuvchi kiritgan 4% tushumdan — misol, soliq maslahati emas) 720 000; to'langan xarajatlar 8 500 000; qizining yordami uchun to'langan 1 200 000; egasi maoshi 5 000 000 → qolgan **2 580 000**. Qoida 30/50/20 → zaxira 774 000, aylanma 1 290 000, kengayish 516 000.
+
+### 4.6. K3 da qanday qilindi (farqlar)
+- «Qolgan pul» — naqd asosida: tushum − soliq zaxirasi − chiqimlar − egasi maoshi (haqiqiy foyda bayonnomada ma'lumot uchun). Uskuna xaridi ayirilmaydi.
+- Egasi maoshi — belgilangan maosh; olingan (o'tkazma + «egasi oldi») undan ko'p bo'lsa — olingani. Maosh belgilanmagan bo'lsa — olingani. Ortig'ini keyingi oy maoshidan ushlash — egasi tanlaydi.
+- Soliq «foydadan» — tushum − chiqim (manfiy bo'lsa 0).
+- Zaxira ulushi eskirishdan kam bo'lsa — faqat ogohlantirish (qoida avtomatik o'zgartirilmaydi).
+- «Hisob kuni» egasi tanlagan kunda emas: o'tgan oy tugagach istalgan payt, bosh sahifada eslatma bilan. Oylar tartib bilan yopiladi (keyingisi yopilgan bo'lsa, oldingisi yopilmaydi).
+- Bayonnoma `kk_month_closes` da; zanjir — har bayonnoma xeshi oldingisinikini o'z ichiga oladi. Yopilgan kungacha sanaga yozuv qo'shilmaydi va o'chirilmaydi.
+- Taqsimot «hamyonlari» (zaxira, aylanma, kengayish qoldig'i) hali yo'q — bayonnomada summalar saqlanadi, K7 darvozasi shulardan foydalanadi.
 
 ## 5. 4-QONUN: «NASIYANI ADOLAT BILAN YURIT» — FUNKSIONAL TALABLAR (K4)
 Qonunning mazmuni: nasiya — kelishuv. Narx savdo paytida qotiriladi; kechikkan uchun ustama yo'q; yozilmagan nasiya — yo'qolgan nasiya.

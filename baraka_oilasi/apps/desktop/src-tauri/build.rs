@@ -126,6 +126,12 @@ const COMMANDS: &[&str] = &[
     "kk_add_family_labor",
     "kk_delete_family_labor",
     "kk_order_quote",
+    "kk_close_rules",
+    "kk_set_close_rules",
+    "kk_close_draft",
+    "kk_close_month",
+    "kk_month_closes",
+    "export_kk_month_close",
 ];
 
 fn main() {

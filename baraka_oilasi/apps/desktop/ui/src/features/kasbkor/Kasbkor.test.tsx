@@ -64,6 +64,9 @@ const overview = {
     trueProfit: money("11 500 000 soʻm", "11 500 000"),
   },
   negativeWallets: ["CASH"],
+  salaryCarry: null,
+  closedUntil: null,
+  closeDue: null,
   entries: [
     { id: "e1", kind: "SALE", wallet: "CARD", toWallet: null, amount: money("20 000 000 soʻm", "20 000 000"), occurredOn: "2026-10-05", note: "Toʻy libosi", categoryId: null },
     { id: "e2", kind: "EXPENSE", wallet: "CARD", toWallet: null, amount: money("8 500 000 soʻm", "8 500 000"), occurredOn: "2026-10-06", note: null, categoryId: "c-mat" },

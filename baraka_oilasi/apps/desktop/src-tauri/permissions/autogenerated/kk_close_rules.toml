@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-close-rules"
+description = "Enables the kk_close_rules command without any pre-configured scope."
+commands.allow = ["kk_close_rules"]
+
+[[permission]]
+identifier = "deny-kk-close-rules"
+description = "Denies the kk_close_rules command without any pre-configured scope."
+commands.deny = ["kk_close_rules"]

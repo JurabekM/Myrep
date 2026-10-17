@@ -34,6 +34,9 @@ export const keys = {
   kk: (spaceId: string) => ["kk", spaceId] as const,
   kkEquipment: (spaceId: string) => ["kkEquipment", spaceId] as const,
   kkLabor: (spaceId: string) => ["kkLabor", spaceId] as const,
+  kkClose: (spaceId: string) => ["kkClose", spaceId] as const,
+  kkCloseRules: (spaceId: string) => ["kkCloseRules", spaceId] as const,
+  kkCloses: (spaceId: string) => ["kkCloses", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

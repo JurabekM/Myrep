@@ -159,6 +159,13 @@ export const commands = {
 	kkAddFamilyLabor: (spaceId: string, input: KkFamilyLaborInput) => typedError<KkFamilyLaborDto[], AppError>(__TAURI_INVOKE("kk_add_family_labor", { spaceId, input })),
 	kkDeleteFamilyLabor: (spaceId: string, id: string) => typedError<KkFamilyLaborDto[], AppError>(__TAURI_INVOKE("kk_delete_family_labor", { spaceId, id })),
 	kkOrderQuote: (spaceId: string, input: KkQuoteInput) => typedError<KkQuoteDto, AppError>(__TAURI_INVOKE("kk_order_quote", { spaceId, input })),
+	kkCloseRules: (spaceId: string) => typedError<KkCloseRulesDto, AppError>(__TAURI_INVOKE("kk_close_rules", { spaceId })),
+	kkSetCloseRules: (spaceId: string, input: KkCloseRulesInput) => typedError<KkCloseRulesDto, AppError>(__TAURI_INVOKE("kk_set_close_rules", { spaceId, input })),
+	kkCloseDraft: (spaceId: string, periodStart: string | null) => typedError<KkCloseDraftDto, AppError>(__TAURI_INVOKE("kk_close_draft", { spaceId, periodStart })),
+	kkCloseMonth: (spaceId: string, input: KkCloseInput) => typedError<KkMonthCloseDto, AppError>(__TAURI_INVOKE("kk_close_month", { spaceId, input })),
+	kkMonthCloses: (spaceId: string) => typedError<KkMonthCloseDto[], AppError>(__TAURI_INVOKE("kk_month_closes", { spaceId })),
+	/**  «Hisob kuni» bayonnomasi PDF'i — «Saqlash» oynasi orqali. */
+	exportKkMonthClose: (spaceId: string, closeId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_kk_month_close", { spaceId, closeId })),
 };
 
 /** Events */
@@ -940,6 +947,71 @@ export type JoinInput = {
 	platform: string,
 };
 
+export type KkAllocationDto = {
+	reserve: MoneyDto,
+	working: MoneyDto,
+	expansion: MoneyDto,
+	sadaqa: MoneyDto,
+};
+
+/**
+ *  «Hisob kuni» hisobi (kasbkor/SPEC 4.5): oy yakunlari, soliq zaxirasi, egasi maoshi, qolgan pul va
+ *  uning taqsimoti. Qolgan manfiy bo'lsa — taqsimot yo'q, izoh so'raladi.
+ */
+export type KkCloseDraftDto = {
+	periodStart: string,
+	periodEnd: string,
+	revenue: MoneyDto,
+	expenses: MoneyDto,
+	depreciation: MoneyDto,
+	trueProfit: MoneyDto,
+	/**  Shu oy maoshi; belgilanmagan bo'lsa `null` (unda «egasi oldi» maosh o'rnida). */
+	ownerSalary: MoneyDto | null,
+	ownerPaid: MoneyDto,
+	salaryRemaining: MoneyDto | null,
+	rules: KkCloseRulesDto,
+	tax: MoneyDto,
+	ownerPay: MoneyDto,
+	/**  Maoshdan ortiq olingan (faqat musbat bo'lsa). */
+	overdrawn: MoneyDto | null,
+	remaining: MoneyDto,
+	needsExplanation: boolean,
+	allocation: KkAllocationDto | null,
+	/**  Zaxira ulushi shu oy eskirishidan kam («uskunani almashtirish puli» yetmaydi). */
+	reserveBelowDepreciation: boolean,
+};
+
+export type KkCloseInput = {
+	/**  Yopiladigan davr boshi (`YYYY-MM-DD`). */
+	periodStart: string,
+	/**  Maoshdan ortig'i keyingi oy maoshidan ushlansinmi. */
+	carryOverdraw: boolean,
+	/**  Qolgan pul manfiy bo'lsa — majburiy: «nima bo'ldi?». */
+	explanation: string | null,
+};
+
+/**  «Hisob kuni» qoidalari: soliq zaxirasi (OQ-K3) va qolgan pul taqsimoti. Foizlar matn (`4`, `2,5`). */
+export type KkCloseRulesDto = {
+	/**  `NONE`, `REVENUE`, `PROFIT`, `FIXED`. */
+	taxBase: string,
+	taxPercent: string,
+	taxFixed: MoneyDto | null,
+	reservePercent: string,
+	workingPercent: string,
+	expansionPercent: string,
+	sadaqaPercent: string,
+};
+
+export type KkCloseRulesInput = {
+	taxBase: string,
+	taxPercent: string | null,
+	taxFixed: string | null,
+	reservePercent: string,
+	workingPercent: string,
+	expansionPercent: string,
+	sadaqaPercent: string,
+};
+
 export type KkDisposeInput = {
 	/**  Sotilgan narx; bo'lmasa yoki 0 — yaroqsiz bo'ldi. */
 	proceeds: string | null,
@@ -1015,6 +1087,17 @@ export type KkFamilyLaborInput = {
 	note: string | null,
 };
 
+/**  Yopilgan oy bayonnomasi (o'zgarmas). */
+export type KkMonthCloseDto = {
+	id: string,
+	closedAt: string,
+	summary: KkCloseDraftDto,
+	carryForward: MoneyDto,
+	explanation: string | null,
+	/**  Tekshirish kodi (bayonnomalar zanjiri xeshining boshi). */
+	shortCode: string,
+};
+
 export type KkMoveInput = {
 	/**  `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `TRANSFER`. */
 	kind: string,
@@ -1030,8 +1113,10 @@ export type KkOverviewDto = {
 	periodStart: string,
 	/**  Davrning oxirgi kuni (shu kun ham kiradi). */
 	periodEnd: string,
-	/**  Egasining oylik maoshi; belgilanmagan bo'lsa `null`. */
+	/**  Shu oy egasi maoshi (o'tgan «Hisob kuni»da ushlangan summa ayirilgan); belgilanmagan bo'lsa `null`. */
 	ownerSalary: MoneyDto | null,
+	/**  O'tgan oy maoshdan ortiq olingani uchun shu oy maoshidan ushlangan summa. */
+	salaryCarry: MoneyDto | null,
 	revenue: MoneyDto,
 	expenses: MoneyDto,
 	cashFlow: MoneyDto,
@@ -1054,6 +1139,10 @@ export type KkOverviewDto = {
 	negativeWallets: string[],
 	/**  Shu oy yozuvlari (yangisi birinchi). */
 	entries: KkEntryDto[],
+	/**  Oxirgi yopilgan davrning oxirgi kuni: undan oldingi sanaga yozib bo'lmaydi. */
+	closedUntil: string | null,
+	/**  O'tgan oy hali yopilmagan va unda yozuvlar bor bo'lsa — o'sha davr boshi («Hisob kuni» eslatmasi). */
+	closeDue: string | null,
 };
 
 /**

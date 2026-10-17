@@ -25,6 +25,7 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
   const kkEntry = useUi((s) => s.kkEntry);
   const openKkEntry = useUi((s) => s.openKkEntry);
   const closeKkEntry = useUi((s) => s.closeKkEntry);
+  const setScreen = useUi((s) => s.setScreen);
   const [salaryOpen, setSalaryOpen] = useState(false);
   const d = o.data;
   const category = (id: string | null) => {
@@ -35,6 +36,14 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
   return (
     <section className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold">{t("space.KASBKOR")}</h1>
+      {d?.closeDue && (
+        <div data-testid="kk-close-due" className="card flex flex-wrap items-center justify-between gap-3 border-accent/60 py-3">
+          <p>{t("kk.closeDue", { date: showDate(d.closeDue) })}</p>
+          <button className="btn-primary" onClick={() => setScreen("kkClose")}>
+            {t("kk.close.open")}
+          </button>
+        </div>
+      )}
       <div className="grid gap-5 md:grid-cols-2">
         <div className="card">
           <p className="text-sm text-ink-muted">{t("kk.trueProfit")}</p>
@@ -255,6 +264,7 @@ function SalaryCard({ spaceId, onPay }: { spaceId: string; onPay: () => void }) 
             {t("kk.salaryMonthly", { amount: d.ownerSalary.formatted })} ·{" "}
             <span data-testid="kk-salary-remaining">{t("kk.salaryRemaining", { amount: d.salaryRemaining?.formatted ?? "" })}</span>
           </p>
+          {d.salaryCarry && <p className="text-sm text-ink-muted">{t("kk.salaryCarry", { amount: d.salaryCarry.formatted })}</p>}
           {d.overdrawn && (
             <p role="note" className="text-sm text-warn">
               {t("kk.overdrawn", { amount: d.overdrawn.formatted })}

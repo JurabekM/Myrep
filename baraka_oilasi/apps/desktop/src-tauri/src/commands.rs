@@ -1482,6 +1482,67 @@ pub async fn kk_order_quote(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_close_rules(state: State<'_, Desktop>, space_id: String) -> R<KkCloseRulesDto> {
+    state.session.app()?.kk_close_rules(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_set_close_rules(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkCloseRulesInput,
+) -> R<KkCloseRulesDto> {
+    state.session.app()?.kk_set_close_rules(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_close_draft(
+    state: State<'_, Desktop>,
+    space_id: String,
+    period_start: Option<String>,
+) -> R<KkCloseDraftDto> {
+    state.session.app()?.kk_close_draft(&space_id, period_start)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_close_month(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkCloseInput,
+) -> R<KkMonthCloseDto> {
+    state.session.app()?.kk_close_month(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_month_closes(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<KkMonthCloseDto>> {
+    state.session.app()?.kk_month_closes(&space_id)
+}
+
+/// «Hisob kuni» bayonnomasi PDF'i — «Saqlash» oynasi orqali.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_kk_month_close(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    close_id: String,
+) -> R<bool> {
+    let pdf = state
+        .session
+        .app()?
+        .kk_month_close_pdf(&space_id, &close_id)?;
+    save_pdf(&handle, pdf, "hisob-kuni.pdf")
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

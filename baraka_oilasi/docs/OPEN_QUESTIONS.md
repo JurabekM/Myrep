@@ -95,7 +95,8 @@
 ### OQ-K3. Soliq zaxirasi qoidasi
 - **Taklif:** egasi o'zi kiritadi: baza (tushum yoki foyda) va foiz yoki qat'iy summa. Ilova rejim va stavka tavsiya qilmaydi («soliq maslahati emas»).
 - **Savol:** onboarding'da shu qadam bo'lsinmi yoki birinchi «Hisob kuni»da?
-- **To'sadi:** K3. **Holat:** OCHIQ.
+- **Vaqtinchalik qaror (K3):** taklif bo'yicha — egasi o'zi kiritadi (yo'q / tushumdan % / foydadan % / qat'iy summa), «Hisob kuni» ekranidagi «Qoidalar» kartasida; onboarding'da so'ralmaydi. Standart — soliq zaxirasi yo'q. Foyda = tushum − chiqim (manfiy bo'lsa 0).
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ### OQ-K4. «Muzlagan tovar» chegarasi
 - **Taklif:** oxirgi sotuvdan 90 kun, tovar bo'yicha o'zgartiriladi. Muzlagan tovar qayta tiklash narxida ko'rsatiladi.
