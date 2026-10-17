@@ -21,7 +21,7 @@ use crate::uy::positive;
 use crate::*;
 
 /// `80`, `2,5`, `2.25` → yuzdan birlarda (8000, 250, 225). Ko'pi bilan 2 kasr raqam.
-fn parse_hundredths(s: &str, code: &str, field: &str) -> Result<i64, AppError> {
+pub(crate) fn parse_hundredths(s: &str, code: &str, field: &str) -> Result<i64, AppError> {
     let err = || AppError::on(code, field);
     let t = s.trim().replace(',', ".");
     let (int, frac) = t.split_once('.').unwrap_or((&t, ""));
@@ -42,7 +42,7 @@ fn parse_hundredths(s: &str, code: &str, field: &str) -> Result<i64, AppError> {
 }
 
 /// 250 → `2,5`; 8000 → `80`.
-fn show_hundredths(h: i64) -> String {
+pub(crate) fn show_hundredths(h: i64) -> String {
     let (int, frac) = (h / 100, h % 100);
     match frac {
         0 => int.to_string(),
@@ -293,6 +293,7 @@ impl App {
             .map(|w| wallet(w, "wallet"))
             .transpose()?;
         let acquired = self.date_or_today(&ctx, input.acquired_on.as_deref(), "acquiredOn")?;
+        self.kk_ensure_open(&scope, &ymd(acquired), "acquiredOn")?;
         let row = kk::KkEquipmentRow {
             id: self.new_id(),
             name,
@@ -344,6 +345,7 @@ impl App {
             None
         };
         let on = self.date_or_today(&ctx, input.disposed_on.as_deref(), "disposedOn")?;
+        self.kk_ensure_open(&scope, &ymd(on), "disposedOn")?;
         if ymd(on) < row.acquired_on {
             return Err(AppError::on("BEFORE_ACQUIRED", "disposedOn"));
         }
@@ -371,6 +373,15 @@ impl App {
     ) -> Result<Vec<KkEquipmentDto>, AppError> {
         let ctx = self.ctx()?;
         let scope = self.kk_scope(&ctx, space_id)?;
+        // Yopilgan oylarda eskirishi hisoblangan uskunani o'chirib bo'lmaydi.
+        if let Some(r) = self
+            .db
+            .read(|c| kk::equipment(c, &scope))?
+            .into_iter()
+            .find(|r| r.id == id)
+        {
+            self.kk_ensure_open(&scope, &r.acquired_on, "id")?;
+        }
         let meta = self.meta();
         self.db
             .write(|tx| kk::delete_equipment(tx, &scope, id, &meta))?;
@@ -425,6 +436,7 @@ impl App {
         // Qiymat sig'ishini oldindan tekshirish.
         hours_value(hours100, rate)?;
         let on = self.date_or_today(&ctx, input.worked_on.as_deref(), "workedOn")?;
+        self.kk_ensure_open(&scope, &ymd(on), "workedOn")?;
         let row = kk::KkFamilyLaborRow {
             id: self.new_id(),
             person,
@@ -450,6 +462,14 @@ impl App {
     ) -> Result<Vec<KkFamilyLaborDto>, AppError> {
         let ctx = self.ctx()?;
         let scope = self.kk_scope(&ctx, space_id)?;
+        if let Some(r) = self
+            .db
+            .read(|c| kk::family_labor_between(c, &scope, "0000-01-01", "9999-12-31"))?
+            .into_iter()
+            .find(|r| r.id == id)
+        {
+            self.kk_ensure_open(&scope, &r.worked_on, "id")?;
+        }
         let meta = self.meta();
         self.db
             .write(|tx| kk::delete_family_labor(tx, &scope, id, &meta))?;

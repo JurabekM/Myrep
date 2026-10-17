@@ -4,11 +4,12 @@
 //! Hisob `domain-kasbkor::owner` da (vektorlar `kk_owner_pay`); bu yerda ma'lumotni yig'ish,
 //! saqlash va DTO. Chiqimlar — umumiy `record_expense` (Kasb-kor kategoriyalari bilan).
 use baraka_domain_common::{month_period, SpaceKind};
-use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
-use baraka_domain_kasbkor::profit::{true_profit, ProfitInput};
+use baraka_domain_kasbkor::owner::{month_report, MonthReport, Move, MoveKind, Wallet};
+use baraka_domain_kasbkor::profit::{true_profit, ProfitInput, TrueProfit};
 use baraka_money::Money;
 use baraka_storage::repo::{expenses, household, incomes, kk};
 use baraka_storage::SpaceScope;
+use chrono::NaiveDate;
 
 use crate::app::Ctx;
 use crate::events::Topic;
@@ -30,6 +31,22 @@ pub(crate) fn wallet(s: &str, field: &str) -> Result<Wallet, AppError> {
 /// `CASH` / `CARD` kanal — hamyonning o'zi.
 fn wallet_of_channel(s: &str) -> Wallet {
     Wallet::parse(s).unwrap_or(Wallet::Cash)
+}
+
+/// Bitta davr hisobi (`kk_period`).
+pub(crate) struct Period {
+    pub start: NaiveDate,
+    pub last: NaiveDate,
+    /// Belgilangan maosh (0 — yo'q).
+    pub base_salary: Money,
+    /// Shu oy maoshi: belgilangan − o'tgan oydan ushlangan.
+    pub salary: Money,
+    pub carry: Money,
+    pub owner_labor: Money,
+    pub r: MonthReport,
+    pub p: TrueProfit,
+    pub entries: Vec<KkEntryDto>,
+    pub has_activity: bool,
 }
 
 struct Book {
@@ -217,21 +234,20 @@ impl App {
         Ok(book)
     }
 
-    /// Kasb-kor bosh sahifasi: shu oy (yoki `date` tushgan oy) hisobi va hamyonlar.
-    pub fn kk_overview(
+    /// `day` tushgan davr hisobi: hamyonlar, egasi maoshi (o'tgan «Hisob kuni»da ushlangan summa
+    /// ayirilgan), haqiqiy foyda va yozuvlar. Bosh sahifa va «Hisob kuni» uchun umumiy.
+    pub(crate) fn kk_period(
         &self,
-        space_id: &str,
-        date: Option<String>,
-    ) -> Result<KkOverviewDto, AppError> {
-        let ctx = self.ctx()?;
-        let scope = self.kk_scope(&ctx, space_id)?;
-        let day = self.date_or_today(&ctx, date.as_deref(), "date")?;
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        day: NaiveDate,
+    ) -> Result<Period, AppError> {
         let (start, end) =
             month_period(day, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
         let last = end.pred_opt().ok_or(AppError::new("INVALID_PERIOD"))?;
         let zero = Money::zero(ctx.currency);
         // Oy boshidagi qoldiq — oldingi barcha harakatlar (maoshsiz hisob).
-        let before = self.kk_book(&ctx, &scope, BEGINNING, &ymd(start))?;
+        let before = self.kk_book(ctx, scope, BEGINNING, &ymd(start))?;
         let prior = month_report(
             ctx.currency,
             before.opening_cash,
@@ -239,9 +255,24 @@ impl App {
             zero,
             &before.moves,
         )?;
-        let month = self.kk_book(&ctx, &scope, &ymd(start), &ymd(end))?;
-        let salary = self.kk_salary(&ctx, &scope)?;
-        let settings = self.db.read(|c| kk::settings(c, &scope))?;
+        let month = self.kk_book(ctx, scope, &ymd(start), &ymd(end))?;
+        let base_salary = self.kk_salary(ctx, scope)?;
+        // O'tgan oy «Hisob kuni»da maoshdan ortig'i ushlansa — shu oy maoshidan ayiriladi.
+        let prev_last = ymd(start.pred_opt().ok_or(AppError::new("INVALID_PERIOD"))?);
+        let carry = Money::new(
+            self.db
+                .read(|c| kk::closes(c, scope))?
+                .into_iter()
+                .find(|c| c.period_end == prev_last && c.currency == ctx.currency.code())
+                .map_or(0, |c| c.carry_minor),
+            ctx.currency,
+        );
+        let salary = if base_salary.is_positive() {
+            base_salary.checked_sub(carry)?.clamp_non_negative()
+        } else {
+            zero
+        };
+        let settings = self.db.read(|c| kk::settings(c, scope))?;
         let owner_labor = Money::new(settings.map_or(0, |s| s.owner_labor_minor), ctx.currency);
         let r = month_report(
             ctx.currency,
@@ -250,8 +281,8 @@ impl App {
             salary,
             &month.moves,
         )?;
-        let (depreciation, disposal) = self.kk_depreciation_in(&ctx, &scope, start)?;
-        let family = self.kk_family_rows(&ctx, &scope, start, end)?;
+        let (depreciation, disposal) = self.kk_depreciation_in(ctx, scope, start)?;
+        let family = self.kk_family_rows(ctx, scope, start, end)?;
         let p = true_profit(
             ctx.currency,
             ProfitInput {
@@ -264,6 +295,43 @@ impl App {
             },
             &family.iter().map(|(_, f)| *f).collect::<Vec<_>>(),
         )?;
+        let has_activity = !month.entries.is_empty() || !family.is_empty();
+        Ok(Period {
+            start,
+            last,
+            base_salary,
+            salary,
+            carry,
+            owner_labor,
+            r,
+            p,
+            entries: month.entries,
+            has_activity,
+        })
+    }
+
+    /// Kasb-kor bosh sahifasi: shu oy (yoki `date` tushgan oy) hisobi va hamyonlar.
+    pub fn kk_overview(
+        &self,
+        space_id: &str,
+        date: Option<String>,
+    ) -> Result<KkOverviewDto, AppError> {
+        let ctx = self.ctx()?;
+        let scope = self.kk_scope(&ctx, space_id)?;
+        let day = self.date_or_today(&ctx, date.as_deref(), "date")?;
+        let Period {
+            start,
+            last,
+            base_salary,
+            salary,
+            carry,
+            owner_labor,
+            r,
+            p,
+            entries,
+            ..
+        } = self.kk_period(&ctx, &scope, day)?;
+        let zero = Money::zero(ctx.currency);
         let d = |m: Money| self.money_dto(&ctx, m);
         let profit = KkProfitDto {
             revenue: d(r.revenue),
@@ -277,10 +345,13 @@ impl App {
             disposal: d(p.disposal),
             true_profit: d(p.true_profit),
         };
+        let closed_until = self.db.read(|c| kk::closed_until(c, &scope))?;
+        let close_due = self.kk_close_due(&ctx, &scope, start, closed_until.as_deref())?;
         Ok(KkOverviewDto {
             period_start: ymd(start),
             period_end: ymd(last),
-            owner_salary: salary.is_positive().then(|| d(salary)),
+            owner_salary: base_salary.is_positive().then(|| d(salary)),
+            salary_carry: (base_salary.is_positive() && carry.is_positive()).then(|| d(carry)),
             revenue: d(r.revenue),
             expenses: d(r.expenses),
             cash_flow: d(r.cash_flow),
@@ -300,7 +371,9 @@ impl App {
                 .iter()
                 .map(|w| w.as_str().to_string())
                 .collect(),
-            entries: month.entries,
+            entries,
+            closed_until,
+            close_due,
         })
     }
 
@@ -342,6 +415,7 @@ impl App {
         let amount = positive(&ctx, &input.amount, "amount")?;
         let ch = channel(&input.channel)?;
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
         let row = incomes::IncomeRow {
             id: self.new_id(),
             member_id: None,
@@ -389,6 +463,7 @@ impl App {
             _ => None,
         };
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
         let row = kk::KkMoveRow {
             id: self.new_id(),
             kind: kind.to_string(),
@@ -418,6 +493,7 @@ impl App {
         let scope = self.kk_scope(&ctx, space_id)?;
         let from = wallet(&input.wallet, "wallet")?;
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
         let amount = match input
             .amount
             .as_deref()

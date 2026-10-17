@@ -1036,6 +1036,49 @@ impl BarakaCore {
         self.session.app()?.kk_order_quote(&space_id, input)
     }
 
+    // ---- K3: «Hisob kuni» ----
+
+    pub fn kk_close_rules(&self, space_id: String) -> Result<KkCloseRulesDto, AppError> {
+        self.session.app()?.kk_close_rules(&space_id)
+    }
+
+    pub fn kk_set_close_rules(
+        &self,
+        space_id: String,
+        input: KkCloseRulesInput,
+    ) -> Result<KkCloseRulesDto, AppError> {
+        self.session.app()?.kk_set_close_rules(&space_id, input)
+    }
+
+    pub fn kk_close_draft(
+        &self,
+        space_id: String,
+        period_start: Option<String>,
+    ) -> Result<KkCloseDraftDto, AppError> {
+        self.session.app()?.kk_close_draft(&space_id, period_start)
+    }
+
+    /// Bayonnoma o'zgarmas; yopilgan oyga keyin yozib bo'lmaydi.
+    pub fn kk_close_month(
+        &self,
+        space_id: String,
+        input: KkCloseInput,
+    ) -> Result<KkMonthCloseDto, AppError> {
+        self.session.app()?.kk_close_month(&space_id, input)
+    }
+
+    pub fn kk_month_closes(&self, space_id: String) -> Result<Vec<KkMonthCloseDto>, AppError> {
+        self.session.app()?.kk_month_closes(&space_id)
+    }
+
+    pub fn kk_month_close_pdf(
+        &self,
+        space_id: String,
+        close_id: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session.app()?.kk_month_close_pdf(&space_id, &close_id)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

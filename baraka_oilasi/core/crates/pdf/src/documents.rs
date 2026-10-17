@@ -12,6 +12,7 @@ const PARTNERSHIP_CONTRACT: &str = include_str!("../../../../shared/pdf/partners
 const VENTURE_REPORT: &str = include_str!("../../../../shared/pdf/venture_report.typ");
 const REVIEW_PROTOCOL: &str = include_str!("../../../../shared/pdf/review_protocol.typ");
 const ARBITER_FOLDER: &str = include_str!("../../../../shared/pdf/arbiter_folder.typ");
+const KK_MONTH_CLOSE: &str = include_str!("../../../../shared/pdf/kk_month_close.typ");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PdfLocale {
@@ -607,5 +608,50 @@ impl ArbiterFolder {
             "decision": self.decision,
         });
         engine.render(ARBITER_FOLDER, &data, &[], &self.ident, today)
+    }
+}
+
+/// Kasb-kor «Hisob kuni» bayonnomasi (kasbkor/SPEC 4.5): oy yakunlari, soliq zaxirasi, egasi maoshi,
+/// qolgan pul va taqsimot; oxirida bayonnomalar zanjiri boshi. Qatorlar — `(yorliq kaliti, qiymat)`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KkCloseReport {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub business: String,
+    pub period: String,
+    pub closed_on: String,
+    pub totals: Vec<(String, String)>,
+    pub rule: Vec<(String, String)>,
+    pub allocation: Option<Vec<(String, String)>>,
+    pub notes: Vec<String>,
+    pub explanation: Option<String>,
+    pub chain_head: String,
+    pub chain_short_code: String,
+}
+
+impl KkCloseReport {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = labels
+            .get("kkclose.title")
+            .and_then(Value::as_str)
+            .unwrap_or("Hisob kuni bayonnomasi")
+            .to_string();
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.period),
+            "labels": labels,
+            "business": self.business,
+            "period": self.period,
+            "closedOn": self.closed_on,
+            "totals": self.totals,
+            "rule": self.rule,
+            "allocation": self.allocation,
+            "notes": self.notes,
+            "explanation": self.explanation,
+            "chain_short_code": self.chain_short_code,
+        });
+        let files = vec![("qr.svg", qr_svg(&self.chain_head)?)];
+        engine.render(KK_MONTH_CLOSE, &data, &files, &self.ident, today)
     }
 }

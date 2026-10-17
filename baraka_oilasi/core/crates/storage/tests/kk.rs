@@ -181,3 +181,51 @@ fn equipment_constraints_and_single_disposal() {
         .unwrap();
     assert!(db.read(|c| kk::equipment(c, &s)).unwrap().is_empty());
 }
+
+/// K3: «Hisob kuni» bayonnomasi o'zgarmas; bir davr bir marta; manfiy qolgan izohsiz yozilmaydi.
+#[test]
+fn month_close_is_immutable() {
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let row = kk::KkCloseRow {
+        id: "c1".into(),
+        period_start: "2026-11-01".into(),
+        period_end: "2026-11-30".into(),
+        currency: "UZS".into(),
+        remaining_minor: 100,
+        carry_minor: 0,
+        reserve_minor: 30,
+        explanation: None,
+        result_json: "{}".into(),
+        prev_hash: "0".into(),
+        content_hash: "h1".into(),
+        closed_at: m.now.clone(),
+    };
+    db.write(|tx| kk::insert_close(tx, &s, &row, &m)).unwrap();
+    let dup = kk::KkCloseRow {
+        id: "c2".into(),
+        ..row.clone()
+    };
+    assert!(db.write(|tx| kk::insert_close(tx, &s, &dup, &m)).is_err());
+    let negative = kk::KkCloseRow {
+        id: "c3".into(),
+        period_start: "2026-12-01".into(),
+        period_end: "2026-12-31".into(),
+        remaining_minor: -1,
+        ..row.clone()
+    };
+    assert!(db
+        .write(|tx| kk::insert_close(tx, &s, &negative, &m))
+        .is_err());
+    for sql in [
+        "UPDATE kk_month_closes SET remaining_minor = 0",
+        "DELETE FROM kk_month_closes",
+    ] {
+        let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
+        assert_eq!(err.code(), "EVIDENCE_IMMUTABLE");
+    }
+    assert_eq!(
+        db.read(|c| kk::closed_until(c, &s)).unwrap().as_deref(),
+        Some("2026-11-30")
+    );
+}

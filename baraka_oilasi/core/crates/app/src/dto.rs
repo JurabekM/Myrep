@@ -2085,8 +2085,10 @@ pub struct KkOverviewDto {
     pub period_start: String,
     /// Davrning oxirgi kuni (shu kun ham kiradi).
     pub period_end: String,
-    /// Egasining oylik maoshi; belgilanmagan bo'lsa `null`.
+    /// Shu oy egasi maoshi (o'tgan «Hisob kuni»da ushlangan summa ayirilgan); belgilanmagan bo'lsa `null`.
     pub owner_salary: Option<MoneyDto>,
+    /// O'tgan oy maoshdan ortiq olingani uchun shu oy maoshidan ushlangan summa.
+    pub salary_carry: Option<MoneyDto>,
     pub revenue: MoneyDto,
     pub expenses: MoneyDto,
     pub cash_flow: MoneyDto,
@@ -2109,6 +2111,10 @@ pub struct KkOverviewDto {
     pub negative_wallets: Vec<String>,
     /// Shu oy yozuvlari (yangisi birinchi).
     pub entries: Vec<KkEntryDto>,
+    /// Oxirgi yopilgan davrning oxirgi kuni: undan oldingi sanaga yozib bo'lmaydi.
+    pub closed_until: Option<String>,
+    /// O'tgan oy hali yopilmagan va unda yozuvlar bor bo'lsa — o'sha davr boshi («Hisob kuni» eslatmasi).
+    pub close_due: Option<String>,
 }
 
 /// `kind`: `SALE`, `EXPENSE`, `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `OWNER_SALARY`, `TRANSFER`.
@@ -2304,4 +2310,96 @@ pub struct KkQuoteDto {
     pub effective_hourly_rate: Option<MoneyDto>,
     pub material_shortfall: Option<MoneyDto>,
     pub advance_after_material: Option<MoneyDto>,
+}
+
+/// «Hisob kuni» qoidalari: soliq zaxirasi (OQ-K3) va qolgan pul taqsimoti. Foizlar matn (`4`, `2,5`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkCloseRulesDto {
+    /// `NONE`, `REVENUE`, `PROFIT`, `FIXED`.
+    pub tax_base: String,
+    pub tax_percent: String,
+    pub tax_fixed: Option<MoneyDto>,
+    pub reserve_percent: String,
+    pub working_percent: String,
+    pub expansion_percent: String,
+    pub sadaqa_percent: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkCloseRulesInput {
+    pub tax_base: String,
+    pub tax_percent: Option<String>,
+    pub tax_fixed: Option<String>,
+    pub reserve_percent: String,
+    pub working_percent: String,
+    pub expansion_percent: String,
+    pub sadaqa_percent: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkAllocationDto {
+    pub reserve: MoneyDto,
+    pub working: MoneyDto,
+    pub expansion: MoneyDto,
+    pub sadaqa: MoneyDto,
+}
+
+/// «Hisob kuni» hisobi (kasbkor/SPEC 4.5): oy yakunlari, soliq zaxirasi, egasi maoshi, qolgan pul va
+/// uning taqsimoti. Qolgan manfiy bo'lsa — taqsimot yo'q, izoh so'raladi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkCloseDraftDto {
+    pub period_start: String,
+    pub period_end: String,
+    pub revenue: MoneyDto,
+    pub expenses: MoneyDto,
+    pub depreciation: MoneyDto,
+    pub true_profit: MoneyDto,
+    /// Shu oy maoshi; belgilanmagan bo'lsa `null` (unda «egasi oldi» maosh o'rnida).
+    pub owner_salary: Option<MoneyDto>,
+    pub owner_paid: MoneyDto,
+    pub salary_remaining: Option<MoneyDto>,
+    pub rules: KkCloseRulesDto,
+    pub tax: MoneyDto,
+    pub owner_pay: MoneyDto,
+    /// Maoshdan ortiq olingan (faqat musbat bo'lsa).
+    pub overdrawn: Option<MoneyDto>,
+    pub remaining: MoneyDto,
+    pub needs_explanation: bool,
+    pub allocation: Option<KkAllocationDto>,
+    /// Zaxira ulushi shu oy eskirishidan kam («uskunani almashtirish puli» yetmaydi).
+    pub reserve_below_depreciation: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkCloseInput {
+    /// Yopiladigan davr boshi (`YYYY-MM-DD`).
+    pub period_start: String,
+    /// Maoshdan ortig'i keyingi oy maoshidan ushlansinmi.
+    pub carry_overdraw: bool,
+    /// Qolgan pul manfiy bo'lsa — majburiy: «nima bo'ldi?».
+    pub explanation: Option<String>,
+}
+
+/// Yopilgan oy bayonnomasi (o'zgarmas).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkMonthCloseDto {
+    pub id: String,
+    pub closed_at: String,
+    pub summary: KkCloseDraftDto,
+    pub carry_forward: MoneyDto,
+    pub explanation: Option<String>,
+    /// Tekshirish kodi (bayonnomalar zanjiri xeshining boshi).
+    pub short_code: String,
 }

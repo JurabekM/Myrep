@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, Transaction};
+use rusqlite::{params, Connection, OptionalExtension, Transaction};
 
 use super::{opt_bool, SpaceScope};
 use crate::{Meta, StorageError};
@@ -90,4 +90,18 @@ pub fn soft_delete(
     } else {
         Ok(())
     }
+}
+
+/// Chiqim sanasi (o'chirilmagan bo'lsa).
+pub fn occurred_on(
+    c: &Connection,
+    s: &SpaceScope,
+    id: &str,
+) -> Result<Option<String>, StorageError> {
+    Ok(c.query_row(
+        "SELECT occurred_on FROM expenses WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id, id],
+        |r| r.get(0),
+    )
+    .optional()?)
 }

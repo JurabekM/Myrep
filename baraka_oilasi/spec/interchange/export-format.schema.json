@@ -223,7 +223,8 @@
             "kk_settings",
             "kk_moves",
             "kk_equipment",
-            "kk_family_labor"
+            "kk_family_labor",
+            "kk_month_closes"
           ]
         },
         "data": {
@@ -554,6 +555,12 @@
       {
         "name": "kk_family_labor",
         "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_month_closes",
+        "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []
       }

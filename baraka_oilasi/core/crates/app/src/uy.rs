@@ -127,6 +127,7 @@ impl App {
             ),
         };
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
         let row = incomes::IncomeRow {
             id: self.new_id(),
             member_id: input.member_id.clone(),
@@ -392,6 +393,7 @@ impl App {
             None => category.default_necessity.clone(),
         };
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
         let row = expenses::ExpenseRow {
             id: self.new_id(),
             category_id: category.id,
@@ -424,6 +426,12 @@ impl App {
     pub fn delete_expense(&self, space_id: &str, expense_id: &str) -> Result<(), AppError> {
         let ctx = self.ctx()?;
         let scope = self.scope(&ctx, space_id)?;
+        if let Some(on) = self
+            .db
+            .read(|c| expenses::occurred_on(c, &scope, expense_id))?
+        {
+            self.kk_ensure_open(&scope, &on, "id")?;
+        }
         let meta = self.meta();
         self.db
             .write(|tx| expenses::soft_delete(tx, &scope, expense_id, &meta))?;

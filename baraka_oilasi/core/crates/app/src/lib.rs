@@ -14,6 +14,7 @@ mod error;
 mod events;
 mod governance;
 mod kasbkor;
+mod kasbkor_close;
 mod kasbkor_profit;
 mod partnership;
 mod receipt;

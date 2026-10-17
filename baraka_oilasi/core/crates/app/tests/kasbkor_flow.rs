@@ -552,3 +552,202 @@ fn equipment_family_labor_and_quote_validation() {
         "INVALID_PERCENT"
     );
 }
+
+fn at(c: &FixedClock, t: &str) {
+    c.set(DateTime::parse_from_rfc3339(t).unwrap().with_timezone(&Utc));
+}
+
+fn rules(tax_base: &str, tax: Option<&str>, split: [&str; 4]) -> KkCloseRulesInput {
+    KkCloseRulesInput {
+        tax_base: tax_base.into(),
+        tax_percent: tax.filter(|_| tax_base != "FIXED").map(str::to_string),
+        tax_fixed: tax.filter(|_| tax_base == "FIXED").map(str::to_string),
+        reserve_percent: split[0].into(),
+        working_percent: split[1].into(),
+        expansion_percent: split[2].into(),
+        sadaqa_percent: split[3].into(),
+    }
+}
+
+/// SPEC 4.5 Nilufar: qolgan 2 580 000 → 774 000 / 1 290 000 / 516 000; bayonnoma o'zgarmas, yopilgan
+/// oyga yozib bo'lmaydi.
+#[test]
+fn month_close_nilufar_and_closed_period_guard() {
+    let c = clock("2026-11-20T10:00:00+05:00");
+    let (app, _, kk) = app_with(c.clone(), &["UY", "KASBKOR"]);
+    app.kk_record_sale(&kk, sale("18 000 000", "CARD")).unwrap();
+    expense(&app, &kk, "category.kk.materials", "6 000 000");
+    expense(&app, &kk, "category.kk.rent", "2 000 000");
+    expense(&app, &kk, "category.kk.other", "500 000");
+    // Qizining yordami uchun to'langan.
+    expense(&app, &kk, "category.kk.wages", "1 200 000");
+    app.kk_set_owner_salary(&kk, "5 000 000".into()).unwrap();
+    app.kk_record_move(&kk, mv("OWNER_DRAW", "CARD", "5 000 000"))
+        .unwrap();
+    let r = app
+        .kk_set_close_rules(&kk, rules("REVENUE", Some("4"), ["30", "50", "20", "0"]))
+        .unwrap();
+    assert_eq!(
+        (r.tax_percent.as_str(), r.reserve_percent.as_str()),
+        ("4", "30")
+    );
+    let bad = app.kk_set_close_rules(&kk, rules("REVENUE", Some("4"), ["30", "50", "10", "0"]));
+    assert_eq!(bad.unwrap_err().code, "INVALID_RULE");
+    assert_eq!(
+        app.kk_set_close_rules(&kk, rules("MONTHLY", None, ["30", "50", "20", "0"]))
+            .unwrap_err()
+            .code,
+        "INVALID_TAX_BASE"
+    );
+    // Joriy oy hali tugamagan.
+    let err = app
+        .kk_close_draft(&kk, Some("2026-11-01".into()))
+        .unwrap_err();
+    assert_eq!(err.code, "PERIOD_NOT_ENDED");
+
+    at(&c, "2026-12-03T10:00:00+05:00");
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(o.close_due.as_deref(), Some("2026-11-01"));
+    let d = app.kk_close_draft(&kk, None).unwrap();
+    assert_eq!(
+        (d.period_start.as_str(), d.period_end.as_str()),
+        ("2026-11-01", "2026-11-30")
+    );
+    assert_eq!(minor(&d.tax), 72_000_000);
+    assert_eq!(minor(&d.remaining), 258_000_000);
+    let a = d.allocation.as_ref().unwrap();
+    assert_eq!(
+        (minor(&a.reserve), minor(&a.working), minor(&a.expansion)),
+        (77_400_000, 129_000_000, 51_600_000)
+    );
+    assert!(!d.needs_explanation);
+
+    let closed = app
+        .kk_close_month(
+            &kk,
+            KkCloseInput {
+                period_start: "2026-11-01".into(),
+                carry_overdraw: false,
+                explanation: None,
+            },
+        )
+        .unwrap();
+    assert_eq!(closed.summary, d);
+    assert_eq!(closed.short_code.len(), 19);
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(o.close_due, None);
+    assert_eq!(o.closed_until.as_deref(), Some("2026-11-30"));
+    assert_eq!(
+        app.kk_close_month(
+            &kk,
+            KkCloseInput {
+                period_start: "2026-11-01".into(),
+                carry_overdraw: false,
+                explanation: None
+            }
+        )
+        .unwrap_err()
+        .code,
+        "ALREADY_CLOSED"
+    );
+    // Yopilgan oyga yozuv ham, o'chirish ham yo'q; keyingi oyga — bor.
+    let mut late = sale("100 000", "CASH");
+    late.occurred_on = Some("2026-11-29".into());
+    let err = app.kk_record_sale(&kk, late).unwrap_err();
+    assert_eq!(
+        (err.code.as_str(), err.field.as_deref()),
+        ("PERIOD_CLOSED", Some("occurredOn"))
+    );
+    let nov_expense = o_entry(&app, &kk, "2026-11-15", "EXPENSE");
+    assert_eq!(
+        app.delete_expense(&kk, &nov_expense).unwrap_err().code,
+        "PERIOD_CLOSED"
+    );
+    app.kk_record_sale(&kk, sale("100 000", "CASH")).unwrap();
+    // Oldingi oyni endi yopib bo'lmaydi (zanjir tartibi).
+    assert_eq!(
+        app.kk_close_draft(&kk, Some("2026-10-01".into()))
+            .unwrap_err()
+            .code,
+        "LATER_PERIOD_CLOSED"
+    );
+
+    let list = app.kk_month_closes(&kk).unwrap();
+    assert_eq!(list.len(), 1);
+    let pdf = app.kk_month_close_pdf(&kk, &list[0].id).unwrap();
+    assert!(pdf.starts_with(b"%PDF"));
+    if let Ok(dir) = std::env::var("BARAKA_PDF_PREVIEW") {
+        std::fs::write(format!("{dir}/kk-close.pdf"), &pdf).unwrap();
+    }
+}
+
+fn o_entry(app: &App, kk: &str, date: &str, kind: &str) -> String {
+    app.kk_overview(kk, Some(date.into()))
+        .unwrap()
+        .entries
+        .into_iter()
+        .find(|e| e.kind == kind)
+        .unwrap()
+        .id
+}
+
+/// Manfiy qolgan — izohsiz yopilmaydi; maoshdan ortig'i keyingi oy maoshidan ushlanadi.
+#[test]
+fn month_close_negative_needs_explanation_and_overdraw_carries() {
+    let c = clock("2026-11-20T10:00:00+05:00");
+    let (app, _, kk) = app_with(c.clone(), &["UY", "KASBKOR"]);
+    app.kk_set_owner_salary(&kk, "3 000 000".into()).unwrap();
+    app.kk_record_sale(&kk, sale("4 000 000", "CASH")).unwrap();
+    app.kk_record_move(&kk, mv("OWNER_DRAW", "CASH", "4 500 000"))
+        .unwrap();
+    at(&c, "2026-12-02T10:00:00+05:00");
+    let d = app.kk_close_draft(&kk, None).unwrap();
+    assert_eq!(minor(&d.owner_pay), 450_000_000);
+    assert_eq!(minor(d.overdrawn.as_ref().unwrap()), 150_000_000);
+    assert_eq!(minor(&d.remaining), -50_000_000);
+    assert!(d.needs_explanation && d.allocation.is_none());
+    let input = |e: Option<&str>| KkCloseInput {
+        period_start: "2026-11-01".into(),
+        carry_overdraw: true,
+        explanation: e.map(str::to_string),
+    };
+    let err = app.kk_close_month(&kk, input(Some("   "))).unwrap_err();
+    assert_eq!(
+        (err.code.as_str(), err.field.as_deref()),
+        ("REQUIRED", Some("explanation"))
+    );
+    let closed = app
+        .kk_close_month(&kk, input(Some("Toʻy uchun koʻproq oldim")))
+        .unwrap();
+    assert_eq!(minor(&closed.carry_forward), 150_000_000);
+    assert_eq!(
+        closed.explanation.as_deref(),
+        Some("Toʻy uchun koʻproq oldim")
+    );
+    // Dekabr maoshi: 3 mln − 1,5 mln.
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(minor(o.owner_salary.as_ref().unwrap()), 150_000_000);
+    assert_eq!(minor(o.salary_carry.as_ref().unwrap()), 150_000_000);
+    assert_eq!(minor(o.salary_remaining.as_ref().unwrap()), 150_000_000);
+    // Yanvarda ushlash tugaydi.
+    at(&c, "2027-01-05T10:00:00+05:00");
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(minor(o.owner_salary.as_ref().unwrap()), 300_000_000);
+    assert_eq!(o.salary_carry, None);
+    // Dekabrni yopish: zanjirning ikkinchi bo'g'ini, kod boshqacha.
+    let mut dec_sale = sale("3 000 000", "CARD");
+    dec_sale.occurred_on = Some("2026-12-10".into());
+    app.kk_record_sale(&kk, dec_sale).unwrap();
+    let dec = app
+        .kk_close_month(
+            &kk,
+            KkCloseInput {
+                period_start: "2026-12-01".into(),
+                carry_overdraw: false,
+                explanation: None,
+            },
+        )
+        .unwrap();
+    assert_ne!(dec.short_code, closed.short_code);
+    assert_eq!(app.kk_month_closes(&kk).unwrap()[0].id, dec.id);
+}
