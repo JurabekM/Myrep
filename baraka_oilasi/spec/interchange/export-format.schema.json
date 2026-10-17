@@ -221,7 +221,9 @@
             "arbiter_decisions",
             "family_signoffs",
             "kk_settings",
-            "kk_moves"
+            "kk_moves",
+            "kk_equipment",
+            "kk_family_labor"
           ]
         },
         "data": {
@@ -539,6 +541,18 @@
       },
       {
         "name": "kk_moves",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_equipment",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_family_labor",
         "mode": "MUTABLE",
         "primaryKey": "id",
         "blobColumns": []

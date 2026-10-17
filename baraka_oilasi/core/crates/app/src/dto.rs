@@ -2100,6 +2100,11 @@ pub struct KkOverviewDto {
     pub overdrawn: Option<MoneyDto>,
     pub cash: MoneyDto,
     pub card: MoneyDto,
+    /// Uskuna xaridi va sotuvi (hamyonga ta'sir qiladi, pul oqimiga kirmaydi).
+    pub equipment_purchases: MoneyDto,
+    pub equipment_sales: MoneyDto,
+    /// Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2).
+    pub profit: KkProfitDto,
     /// Manfiy qoldiqli hamyonlar: `CASH`, `CARD`.
     pub negative_wallets: Vec<String>,
     /// Shu oy yozuvlari (yangisi birinchi).
@@ -2166,4 +2171,137 @@ pub struct KkSalaryPaidDto {
     pub overview: KkOverviewDto,
     pub uy_space_id: String,
     pub uy_income: IncomeRecordedDto,
+}
+
+/// Haqiqiy foyda (kasbkor/SPEC 3.1): ko'rinadigan − o'z mehnati − to'lanmagan oilaviy mehnat − eskirish
+/// − uskuna chiqib ketishi. Sotilgan tovar tannarxi — K5 gacha 0.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkProfitDto {
+    pub revenue: MoneyDto,
+    pub cogs: MoneyDto,
+    pub operating_expenses: MoneyDto,
+    pub visible_profit: MoneyDto,
+    /// O'z mehnati bahosi; kiritilmagan bo'lsa `null` (hisobda 0).
+    pub owner_labor: Option<MoneyDto>,
+    pub family_labor: MoneyDto,
+    /// To'langan oilaviy mehnat (chiqimda bor; qayta ayirilmaydi).
+    pub family_labor_paid: MoneyDto,
+    pub depreciation: MoneyDto,
+    /// Uskuna chiqib ketishi; manfiy — balansdan qimmatga sotilgan.
+    pub disposal: MoneyDto,
+    pub true_profit: MoneyDto,
+}
+
+/// `status`: `ACTIVE`, `DEPRECIATED` (muddat tugagan, ishlatilyapti), `DISPOSED`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkEquipmentDto {
+    pub id: String,
+    pub name: String,
+    pub cost: MoneyDto,
+    pub salvage: MoneyDto,
+    pub useful_months: u32,
+    pub acquired_on: String,
+    /// Qaysi hamyondan to'langan; `null` — ilovagacha bor edi.
+    pub wallet: Option<String>,
+    /// Shu oy eskirishi.
+    pub month_depreciation: MoneyDto,
+    /// Shu oy oxiridagi balans qiymati.
+    pub book_value: MoneyDto,
+    /// Shu oydan keyin qolgan eskirish oylari.
+    pub months_left: u32,
+    pub status: String,
+    pub disposed_on: Option<String>,
+    pub disposal_proceeds: Option<MoneyDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkEquipmentInput {
+    pub name: String,
+    pub cost: String,
+    /// Muddat oxirida qoladigan qiymat; bo'lmasa — 0.
+    pub salvage: Option<String>,
+    pub useful_months: u32,
+    pub acquired_on: Option<String>,
+    /// `CASH` / `CARD`; `null` — ilovagacha bor edi (hamyondan pul chiqmaydi).
+    pub wallet: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkDisposeInput {
+    /// Sotilgan narx; bo'lmasa yoki 0 — yaroqsiz bo'ldi.
+    pub proceeds: Option<String>,
+    /// Pul tushgan hamyon (sotilgan bo'lsa majburiy).
+    pub wallet: Option<String>,
+    pub disposed_on: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkFamilyLaborDto {
+    pub id: String,
+    pub person: String,
+    pub worked_on: String,
+    /// Ko'rsatish uchun: `80`, `2,5`.
+    pub hours: String,
+    pub hourly_rate: MoneyDto,
+    pub value: MoneyDto,
+    pub paid: bool,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkFamilyLaborInput {
+    pub person: String,
+    /// Soat: `80`, `2,5` (ko'pi bilan 2 kasr raqam).
+    pub hours: String,
+    pub hourly_rate: String,
+    /// Pul to'langan va chiqim sifatida yozilgan.
+    pub paid: bool,
+    pub worked_on: Option<String>,
+    pub note: Option<String>,
+}
+
+/// Buyurtma kalkulyatori (kasbkor/SPEC 3.2). Summalar matn, yadroda parse qilinadi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkQuoteInput {
+    pub material: Option<String>,
+    pub hours: Option<String>,
+    pub hourly_rate: Option<String>,
+    pub travel: Option<String>,
+    /// Uskuna eskirishidan shu buyurtmaga ulush.
+    pub depreciation: Option<String>,
+    /// Zaxira foizi: `5`, `2,5`.
+    pub reserve_percent: Option<String>,
+    pub price: Option<String>,
+    pub advance: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkQuoteDto {
+    pub labor: MoneyDto,
+    pub subtotal: MoneyDto,
+    pub reserve: MoneyDto,
+    pub cost: MoneyDto,
+    pub margin: Option<MoneyDto>,
+    /// Narx berilsa: o'z mehnatingizga qoladigan pul.
+    pub labor_paid: Option<MoneyDto>,
+    pub below_cost: Option<bool>,
+    pub effective_hourly_rate: Option<MoneyDto>,
+    pub material_shortfall: Option<MoneyDto>,
+    pub advance_after_material: Option<MoneyDto>,
 }

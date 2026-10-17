@@ -1,5 +1,5 @@
-//! Kasb-kor (K1): egasi maoshi sozlamasi va egasi/hamyon harakatlari. Tushum va chiqim —
-//! `incomes` / `expenses` (makon bo'yicha).
+//! Kasb-kor: egasi maoshi va o'z mehnati bahosi, egasi/hamyon harakatlari (K1), uskunalar va oilaviy
+//! mehnat (K2). Tushum va chiqim — `incomes` / `expenses` (makon bo'yicha).
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 
 use super::SpaceScope;
@@ -8,18 +8,20 @@ use crate::{Meta, StorageError};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KkSettingsRow {
     pub owner_salary_minor: i64,
+    pub owner_labor_minor: i64,
     pub currency: String,
 }
 
 pub fn settings(c: &Connection, s: &SpaceScope) -> Result<Option<KkSettingsRow>, StorageError> {
     Ok(c.query_row(
-        "SELECT owner_salary_minor, currency FROM kk_settings
+        "SELECT owner_salary_minor, owner_labor_minor, currency FROM kk_settings
          WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
         params![s.household_id, s.space_id],
         |r| {
             Ok(KkSettingsRow {
                 owner_salary_minor: r.get(0)?,
-                currency: r.get(1)?,
+                owner_labor_minor: r.get(1)?,
+                currency: r.get(2)?,
             })
         },
     )
@@ -35,13 +37,15 @@ pub fn upsert_settings(
     m: &Meta,
 ) -> Result<(), StorageError> {
     tx.execute(
-        "INSERT INTO kk_settings (id, household_id, space_id, owner_salary_minor, currency, created_at,
-            updated_at, origin_device_id, updated_by_device_id)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6, ?7, ?7)
+        "INSERT INTO kk_settings (id, household_id, space_id, owner_salary_minor, owner_labor_minor, currency,
+            created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?8, ?5, ?6, ?6, ?7, ?7)
          ON CONFLICT (space_id) DO UPDATE SET owner_salary_minor = excluded.owner_salary_minor,
+            owner_labor_minor = excluded.owner_labor_minor,
             currency = excluded.currency, updated_at = excluded.updated_at,
             updated_by_device_id = excluded.updated_by_device_id, version = kk_settings.version + 1",
-        params![id, s.household_id, s.space_id, row.owner_salary_minor, row.currency, m.now, m.device_id],
+        params![id, s.household_id, s.space_id, row.owner_salary_minor, row.currency, m.now, m.device_id,
+            row.owner_labor_minor],
     )?;
     Ok(())
 }
@@ -105,4 +109,184 @@ pub fn moves_between(
     ))?;
     let rows = st.query_map(params![s.household_id, s.space_id, from, to], map)?;
     Ok(rows.collect::<Result<_, _>>()?)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KkEquipmentRow {
+    pub id: String,
+    pub name: String,
+    pub cost_minor: i64,
+    pub salvage_minor: i64,
+    pub useful_months: i64,
+    pub currency: String,
+    pub acquired_on: String,
+    pub wallet: Option<String>,
+    pub disposed_on: Option<String>,
+    pub disposal_proceeds_minor: Option<i64>,
+    pub disposal_wallet: Option<String>,
+}
+
+const EQ_COLS: &str =
+    "id, name, cost_minor, salvage_minor, useful_months, currency, acquired_on, wallet,
+    disposed_on, disposal_proceeds_minor, disposal_wallet";
+
+fn map_equipment(r: &rusqlite::Row<'_>) -> rusqlite::Result<KkEquipmentRow> {
+    Ok(KkEquipmentRow {
+        id: r.get(0)?,
+        name: r.get(1)?,
+        cost_minor: r.get(2)?,
+        salvage_minor: r.get(3)?,
+        useful_months: r.get(4)?,
+        currency: r.get(5)?,
+        acquired_on: r.get(6)?,
+        wallet: r.get(7)?,
+        disposed_on: r.get(8)?,
+        disposal_proceeds_minor: r.get(9)?,
+        disposal_wallet: r.get(10)?,
+    })
+}
+
+pub fn insert_equipment(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    row: &KkEquipmentRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO kk_equipment (id, household_id, space_id, name, cost_minor, salvage_minor, useful_months,
+            currency, acquired_on, wallet, created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?11, ?12, ?12)",
+        params![row.id, s.household_id, s.space_id, row.name, row.cost_minor, row.salvage_minor,
+            row.useful_months, row.currency, row.acquired_on, row.wallet, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+/// Makondagi barcha uskunalar (o'chirilmaganlari), xarid sanasi bo'yicha.
+pub fn equipment(c: &Connection, s: &SpaceScope) -> Result<Vec<KkEquipmentRow>, StorageError> {
+    let mut st = c.prepare(&format!(
+        "SELECT {EQ_COLS} FROM kk_equipment WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
+         ORDER BY acquired_on, created_at"
+    ))?;
+    let rows = st.query_map(params![s.household_id, s.space_id], map_equipment)?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+/// Sotildi yoki yaroqsiz bo'ldi. Faqat hali chiqib ketmagan uskuna uchun.
+pub fn dispose_equipment(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    disposed_on: &str,
+    proceeds_minor: i64,
+    wallet: Option<&str>,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        "UPDATE kk_equipment SET disposed_on = ?4, disposal_proceeds_minor = ?5, disposal_wallet = ?6,
+            updated_at = ?7, updated_by_device_id = ?8, version = version + 1
+         WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL AND disposed_on IS NULL",
+        params![s.household_id, s.space_id, id, disposed_on, proceeds_minor, wallet, m.now, m.device_id],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn delete_equipment(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    soft_delete(tx, "kk_equipment", s, id, m)
+}
+
+fn soft_delete(
+    tx: &Transaction<'_>,
+    table: &str,
+    s: &SpaceScope,
+    id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        &format!(
+            "UPDATE {table} SET deleted_at = ?4, updated_at = ?4, updated_by_device_id = ?5, version = version + 1
+             WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL"
+        ),
+        params![s.household_id, s.space_id, id, m.now, m.device_id],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KkFamilyLaborRow {
+    pub id: String,
+    pub person: String,
+    pub member_id: Option<String>,
+    pub worked_on: String,
+    pub hours100: i64,
+    pub hourly_rate_minor: i64,
+    pub currency: String,
+    pub paid: bool,
+    pub note: Option<String>,
+}
+
+pub fn insert_family_labor(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    row: &KkFamilyLaborRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO kk_family_labor (id, household_id, space_id, person, member_id, worked_on, hours100,
+            hourly_rate_minor, currency, paid, note, created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?12, ?13, ?13)",
+        params![row.id, s.household_id, s.space_id, row.person, row.member_id, row.worked_on, row.hours100,
+            row.hourly_rate_minor, row.currency, row.paid, row.note, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+/// `[from, to)` oralig'idagi oilaviy mehnat yozuvlari.
+pub fn family_labor_between(
+    c: &Connection,
+    s: &SpaceScope,
+    from: &str,
+    to: &str,
+) -> Result<Vec<KkFamilyLaborRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, person, member_id, worked_on, hours100, hourly_rate_minor, currency, paid, note
+         FROM kk_family_labor WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
+         AND worked_on >= ?3 AND worked_on < ?4 ORDER BY worked_on, created_at",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id, from, to], |r| {
+        Ok(KkFamilyLaborRow {
+            id: r.get(0)?,
+            person: r.get(1)?,
+            member_id: r.get(2)?,
+            worked_on: r.get(3)?,
+            hours100: r.get(4)?,
+            hourly_rate_minor: r.get(5)?,
+            currency: r.get(6)?,
+            paid: r.get(7)?,
+            note: r.get(8)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+pub fn delete_family_labor(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    soft_delete(tx, "kk_family_labor", s, id, m)
 }

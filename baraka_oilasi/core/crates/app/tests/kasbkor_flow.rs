@@ -280,3 +280,275 @@ fn salary_needs_uy_space_and_writes_nothing_without_it() {
     assert_eq!(minor(&o.owner_paid), 0);
     assert!(o.entries.is_empty());
 }
+
+fn expense(app: &App, kk: &str, key: &str, amount: &str) {
+    let cat = app
+        .categories(kk)
+        .unwrap()
+        .into_iter()
+        .find(|c| c.name_key == key)
+        .unwrap();
+    app.record_expense(
+        kk,
+        NewExpenseInput {
+            amount: amount.into(),
+            category_id: cat.id,
+            channel: "CARD".into(),
+            member_id: None,
+            occurred_on: None,
+            necessity: None,
+            obligation_id: None,
+            is_gift: false,
+            is_ostentation: false,
+            funded_by_debt: false,
+            note: None,
+        },
+    )
+    .unwrap();
+}
+
+fn machine(cost: &str, months: u32, wallet: Option<&str>) -> KkEquipmentInput {
+    KkEquipmentInput {
+        name: "Tikuv mashinalari (2 ta)".into(),
+        cost: cost.into(),
+        salvage: None,
+        useful_months: months,
+        acquired_on: None,
+        wallet: wallet.map(str::to_string),
+    }
+}
+
+/// SPEC 3.1 Nilufar: ko'rinadigan foyda 9 500 000, haqiqiy foyda 3 100 000.
+#[test]
+fn true_profit_nilufar_and_equipment_lifecycle() {
+    let c = clock("2026-11-20T10:00:00+05:00");
+    let (app, _, kk) = app_with(c.clone(), &["UY", "KASBKOR"]);
+    app.kk_record_sale(&kk, sale("18 000 000", "CARD")).unwrap();
+    expense(&app, &kk, "category.kk.materials", "6 000 000");
+    expense(&app, &kk, "category.kk.rent", "2 000 000");
+    expense(&app, &kk, "category.kk.other", "500 000");
+    app.kk_set_owner_salary(&kk, "4 000 000".into()).unwrap();
+    app.kk_set_owner_labor(&kk, "5 000 000".into()).unwrap();
+    // Maosh va o'z mehnati bahosi bir-birini o'chirmaydi.
+    let o = app.kk_set_owner_salary(&kk, "4 000 000".into()).unwrap();
+    assert_eq!(minor(o.profit.owner_labor.as_ref().unwrap()), 500_000_000);
+    app.kk_add_family_labor(
+        &kk,
+        KkFamilyLaborInput {
+            person: "Madina (qizim)".into(),
+            hours: "80".into(),
+            hourly_rate: "15 000".into(),
+            paid: false,
+            worked_on: None,
+            note: None,
+        },
+    )
+    .unwrap();
+    // To'langan yordam chiqimda bor — haqiqiy foydadan qayta ayirilmaydi.
+    let fl = app
+        .kk_add_family_labor(
+            &kk,
+            KkFamilyLaborInput {
+                person: "Jiyanim".into(),
+                hours: "2,5".into(),
+                hourly_rate: "20 000".into(),
+                paid: true,
+                worked_on: None,
+                note: Some("dazmol".into()),
+            },
+        )
+        .unwrap();
+    assert_eq!(fl.len(), 2);
+    assert_eq!(fl[1].hours, "2,5");
+    assert_eq!(minor(&fl[1].value), 5_000_000);
+    let eq = app
+        .kk_add_equipment(&kk, machine("12 000 000", 60, Some("CARD")))
+        .unwrap();
+    assert_eq!(minor(&eq[0].month_depreciation), 20_000_000);
+    assert_eq!(eq[0].months_left, 59);
+
+    let o = app.kk_overview(&kk, None).unwrap();
+    let p = &o.profit;
+    assert_eq!(minor(&p.visible_profit), 950_000_000);
+    assert_eq!(minor(&p.family_labor), 120_000_000);
+    assert_eq!(minor(&p.family_labor_paid), 5_000_000);
+    assert_eq!(minor(&p.depreciation), 20_000_000);
+    assert_eq!(minor(&p.true_profit), 310_000_000);
+    // Uskuna xaridi pul oqimiga kirmaydi, lekin kartadan chiqdi.
+    assert_eq!(minor(&o.cash_flow), 950_000_000);
+    assert_eq!(minor(&o.equipment_purchases), 1_200_000_000);
+    assert_eq!(minor(&o.card), 1_800_000_000 - 850_000_000 - 1_200_000_000);
+    assert!(o.entries.iter().any(|e| e.kind == "EQUIPMENT_PURCHASE"));
+
+    // 10 oydan keyin (2027-09) sotildi: balans 12 mln − 10 × 200 000 = 10 mln; 4 mln ga — 6 mln bir martalik.
+    c.set(
+        DateTime::parse_from_rfc3339("2027-09-10T10:00:00+05:00")
+            .unwrap()
+            .with_timezone(&Utc),
+    );
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(minor(&o.profit.depreciation), 20_000_000);
+    assert_eq!(minor(&o.profit.family_labor), 0);
+    let id = eq[0].id.clone();
+    let err = app
+        .kk_dispose_equipment(
+            &kk,
+            &id,
+            KkDisposeInput {
+                proceeds: Some("4 000 000".into()),
+                wallet: None,
+                disposed_on: None,
+            },
+        )
+        .unwrap_err();
+    assert_eq!(
+        (err.code.as_str(), err.field.as_deref()),
+        ("REQUIRED", Some("wallet"))
+    );
+    let eq = app
+        .kk_dispose_equipment(
+            &kk,
+            &id,
+            KkDisposeInput {
+                proceeds: Some("4 000 000".into()),
+                wallet: Some("CASH".into()),
+                disposed_on: None,
+            },
+        )
+        .unwrap();
+    assert_eq!(eq[0].status, "DISPOSED");
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(minor(&o.profit.depreciation), 0);
+    assert_eq!(minor(&o.profit.disposal), 600_000_000);
+    assert_eq!(minor(&o.equipment_sales), 400_000_000);
+    assert_eq!(minor(&o.cash), 400_000_000);
+    assert_eq!(
+        app.kk_dispose_equipment(
+            &kk,
+            &id,
+            KkDisposeInput {
+                proceeds: None,
+                wallet: None,
+                disposed_on: None
+            }
+        )
+        .unwrap_err()
+        .code,
+        "ALREADY_DISPOSED"
+    );
+    // Keyingi oy: eskirish ham, chiqib ketish ham yo'q.
+    c.set(
+        DateTime::parse_from_rfc3339("2027-10-10T10:00:00+05:00")
+            .unwrap()
+            .with_timezone(&Utc),
+    );
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(
+        (minor(&o.profit.depreciation), minor(&o.profit.disposal)),
+        (0, 0)
+    );
+}
+
+#[test]
+fn equipment_family_labor_and_quote_validation() {
+    let c = clock("2026-11-20T10:00:00+05:00");
+    let (app, uy, kk) = app_with(c, &["UY", "KASBKOR"]);
+    let code = |r: Result<Vec<KkEquipmentDto>, AppError>| r.unwrap_err().code;
+    let mut bad = machine("1 000 000", 12, None);
+    bad.salvage = Some("2 000 000".into());
+    assert_eq!(code(app.kk_add_equipment(&kk, bad)), "INVALID_SALVAGE");
+    assert_eq!(
+        code(app.kk_add_equipment(&kk, machine("1 000 000", 0, None))),
+        "INVALID_USEFUL_LIFE"
+    );
+    assert_eq!(
+        code(app.kk_add_equipment(&kk, machine("0", 12, None))),
+        "AMOUNT_NOT_POSITIVE"
+    );
+    assert_eq!(
+        code(app.kk_add_equipment(&kk, machine("1 000 000", 12, Some("SAFE")))),
+        "INVALID_WALLET"
+    );
+    // Ilovagacha bor edi — hamyonga ta'sir qilmaydi, eskirish esa hisoblanadi.
+    let mut old = machine("3 600 000", 36, None);
+    old.acquired_on = Some("2026-05-03".into());
+    let eq = app.kk_add_equipment(&kk, old).unwrap();
+    assert_eq!(eq[0].months_left, 29);
+    assert_eq!(minor(&eq[0].book_value), 360_000_000 - 7 * 10_000_000);
+    let o = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(
+        (minor(&o.card), minor(&o.profit.depreciation)),
+        (0, 10_000_000)
+    );
+    let disposed_early = app
+        .kk_dispose_equipment(
+            &kk,
+            &eq[0].id,
+            KkDisposeInput {
+                proceeds: None,
+                wallet: None,
+                disposed_on: Some("2026-04-01".into()),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(disposed_early.code, "BEFORE_ACQUIRED");
+    assert_eq!(app.kk_delete_equipment(&kk, &eq[0].id).unwrap().len(), 0);
+
+    let labor = |hours: &str, rate: &str| {
+        app.kk_add_family_labor(
+            &kk,
+            KkFamilyLaborInput {
+                person: "Madina".into(),
+                hours: hours.into(),
+                hourly_rate: rate.into(),
+                paid: false,
+                worked_on: None,
+                note: None,
+            },
+        )
+    };
+    assert_eq!(labor("2,555", "10 000").unwrap_err().code, "INVALID_HOURS");
+    assert_eq!(labor("0", "10 000").unwrap_err().code, "INVALID_HOURS");
+    assert_eq!(labor("3", "-1").unwrap_err().code, "AMOUNT_NEGATIVE");
+    let fl = labor("3", "10 000").unwrap();
+    assert_eq!(app.kk_delete_family_labor(&kk, &fl[0].id).unwrap().len(), 0);
+    assert_eq!(
+        app.kk_family_labor(&uy.unwrap(), None).unwrap_err().code,
+        "NOT_KASBKOR_SPACE"
+    );
+
+    // SPEC 3.2 Jasur: tannarx 798 000, narx 700 000 — mehnatga 142 000 qoladi; avans materialga yetmaydi.
+    let q = app
+        .kk_order_quote(
+            &kk,
+            KkQuoteInput {
+                material: Some("450 000".into()),
+                hours: Some("6".into()),
+                hourly_rate: Some("40 000".into()),
+                travel: Some("50 000".into()),
+                depreciation: Some("20 000".into()),
+                reserve_percent: Some("5".into()),
+                price: Some("700 000".into()),
+                advance: Some("300 000".into()),
+            },
+        )
+        .unwrap();
+    assert_eq!(minor(&q.cost), 79_800_000);
+    assert_eq!(q.below_cost, Some(true));
+    assert_eq!(minor(q.labor_paid.as_ref().unwrap()), 14_200_000);
+    assert_eq!(minor(q.material_shortfall.as_ref().unwrap()), 15_000_000);
+    let empty = KkQuoteInput {
+        material: None,
+        hours: None,
+        hourly_rate: None,
+        travel: None,
+        depreciation: None,
+        reserve_percent: Some("100,5".into()),
+        price: None,
+        advance: None,
+    };
+    assert_eq!(
+        app.kk_order_quote(&kk, empty).unwrap_err().code,
+        "INVALID_PERCENT"
+    );
+}

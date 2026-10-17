@@ -5,6 +5,7 @@
 //! saqlash va DTO. Chiqimlar — umumiy `record_expense` (Kasb-kor kategoriyalari bilan).
 use baraka_domain_common::{month_period, SpaceKind};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
+use baraka_domain_kasbkor::profit::{true_profit, ProfitInput};
 use baraka_money::Money;
 use baraka_storage::repo::{expenses, household, incomes, kk};
 use baraka_storage::SpaceScope;
@@ -22,7 +23,7 @@ const SALARY_SOURCE_TYPE: &str = "TER";
 const SALARY_SOURCE: &str = "Kasb-kor";
 const BEGINNING: &str = "0000-01-01";
 
-fn wallet(s: &str, field: &str) -> Result<Wallet, AppError> {
+pub(crate) fn wallet(s: &str, field: &str) -> Result<Wallet, AppError> {
     Wallet::parse(s).ok_or(AppError::on("INVALID_WALLET", field))
 }
 
@@ -39,7 +40,7 @@ struct Book {
 }
 
 impl App {
-    fn kk_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
+    pub(crate) fn kk_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
         let scope = self.scope(ctx, space_id)?;
         let kind = self
             .db
@@ -167,6 +168,50 @@ impl App {
                 amount: m(r.amount_minor),
             });
         }
+        // Uskuna xaridi va sotuvi (K2): hamyondan pul chiqqan yoki tushgan bo'lsa.
+        let in_range = |d: &str| d >= from && d < to;
+        for r in self
+            .db
+            .read(|c| kk::equipment(c, scope))?
+            .into_iter()
+            .filter(|r| r.currency == cur.code())
+        {
+            if let Some(w) = r.wallet.as_deref().filter(|_| in_range(&r.acquired_on)) {
+                let w = wallet(w, "wallet")?;
+                book.moves.push(Move {
+                    kind: MoveKind::EquipmentPurchase,
+                    wallet: w,
+                    amount: m(r.cost_minor),
+                });
+                let mut e = entry(
+                    &r.id,
+                    "EQUIPMENT_PURCHASE",
+                    w,
+                    None,
+                    r.cost_minor,
+                    &r.acquired_on,
+                );
+                e.note = Some(r.name.clone());
+                book.entries.push(e);
+            }
+            if let (Some(on), Some(w), Some(p)) = (
+                r.disposed_on.as_deref(),
+                r.disposal_wallet.as_deref(),
+                r.disposal_proceeds_minor,
+            ) {
+                if in_range(on) {
+                    let w = wallet(w, "wallet")?;
+                    book.moves.push(Move {
+                        kind: MoveKind::EquipmentSale,
+                        wallet: w,
+                        amount: m(p),
+                    });
+                    let mut e = entry(&format!("{}-sale", r.id), "EQUIPMENT_SALE", w, None, p, on);
+                    e.note = Some(r.name.clone());
+                    book.entries.push(e);
+                }
+            }
+        }
         book.entries
             .sort_by(|a, b| b.occurred_on.cmp(&a.occurred_on).then(b.id.cmp(&a.id)));
         Ok(book)
@@ -196,6 +241,8 @@ impl App {
         )?;
         let month = self.kk_book(&ctx, &scope, &ymd(start), &ymd(end))?;
         let salary = self.kk_salary(&ctx, &scope)?;
+        let settings = self.db.read(|c| kk::settings(c, &scope))?;
+        let owner_labor = Money::new(settings.map_or(0, |s| s.owner_labor_minor), ctx.currency);
         let r = month_report(
             ctx.currency,
             prior.cash.checked_add(month.opening_cash)?,
@@ -203,7 +250,33 @@ impl App {
             salary,
             &month.moves,
         )?;
+        let (depreciation, disposal) = self.kk_depreciation_in(&ctx, &scope, start)?;
+        let family = self.kk_family_rows(&ctx, &scope, start, end)?;
+        let p = true_profit(
+            ctx.currency,
+            ProfitInput {
+                revenue: r.revenue,
+                cogs: zero,
+                operating_expenses: r.expenses,
+                owner_labor,
+                depreciation,
+                disposal,
+            },
+            &family.iter().map(|(_, f)| *f).collect::<Vec<_>>(),
+        )?;
         let d = |m: Money| self.money_dto(&ctx, m);
+        let profit = KkProfitDto {
+            revenue: d(r.revenue),
+            cogs: d(zero),
+            operating_expenses: d(r.expenses),
+            visible_profit: d(p.visible_profit),
+            owner_labor: owner_labor.is_positive().then(|| d(owner_labor)),
+            family_labor: d(p.family_labor),
+            family_labor_paid: d(p.family_labor_paid),
+            depreciation: d(p.depreciation),
+            disposal: d(p.disposal),
+            true_profit: d(p.true_profit),
+        };
         Ok(KkOverviewDto {
             period_start: ymd(start),
             period_end: ymd(last),
@@ -219,6 +292,9 @@ impl App {
             overdrawn: r.overdrawn.filter(Money::is_positive).map(d),
             cash: d(r.cash),
             card: d(r.card),
+            equipment_purchases: d(r.equipment_purchases),
+            equipment_sales: d(r.equipment_sales),
+            profit,
             negative_wallets: r
                 .negative_wallets
                 .iter()
@@ -246,20 +322,11 @@ impl App {
             }
             m
         };
-        let id = self.new_id();
-        let meta = self.meta();
-        self.db.write(|tx| {
-            kk::upsert_settings(
-                tx,
-                &scope,
-                &id,
-                &kk::KkSettingsRow {
-                    owner_salary_minor: salary.minor(),
-                    currency: ctx.currency.code().to_string(),
-                },
-                &meta,
-            )
-        })?;
+        let labor = self
+            .db
+            .read(|c| kk::settings(c, &scope))?
+            .map_or(0, |s| s.owner_labor_minor);
+        self.kk_save_settings(&ctx, &scope, salary.minor(), labor)?;
         self.publish(Some(space_id), &[Topic::Kasbkor]);
         self.kk_overview(space_id, None)
     }

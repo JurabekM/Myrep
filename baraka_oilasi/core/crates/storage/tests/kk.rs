@@ -89,3 +89,95 @@ fn salary_transfer_is_atomic() {
         .write(|tx| kk::insert_move(tx, &kk_scope, &bad, &m))
         .is_err());
 }
+
+fn db_with_kk() -> (Database, SpaceScope) {
+    let db = Database::open_in_memory(&DbKey::from_bytes([2; 32])).unwrap();
+    let m = meta();
+    db.write(|tx| {
+        household::insert_household(
+            tx,
+            &HouseholdRow {
+                id: "h".into(),
+                name: "x".into(),
+                base_currency: "UZS".into(),
+                locale: "uz".into(),
+                tz: "Asia/Tashkent".into(),
+                month_start_day: 1,
+            },
+            &m,
+        )?;
+        household::insert_space(
+            tx,
+            &SpaceRow {
+                id: "kk".into(),
+                household_id: "h".into(),
+                kind: "KASBKOR".into(),
+                name: "KASBKOR".into(),
+            },
+            &m,
+        )
+    })
+    .unwrap();
+    let s = SpaceScope {
+        household_id: "h".into(),
+        space_id: "kk".into(),
+    };
+    (db, s)
+}
+
+/// K2: uskuna jadvali qoidalari DB darajasida ham; chiqib ketish bir marta.
+#[test]
+fn equipment_constraints_and_single_disposal() {
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let row = kk::KkEquipmentRow {
+        id: "e1".into(),
+        name: "Overlok".into(),
+        cost_minor: 100_000,
+        salvage_minor: 0,
+        useful_months: 12,
+        currency: "UZS".into(),
+        acquired_on: "2026-11-01".into(),
+        wallet: Some("CARD".into()),
+        disposed_on: None,
+        disposal_proceeds_minor: None,
+        disposal_wallet: None,
+    };
+    for bad in [
+        kk::KkEquipmentRow {
+            salvage_minor: 100_001,
+            ..row.clone()
+        },
+        kk::KkEquipmentRow {
+            useful_months: 0,
+            ..row.clone()
+        },
+        kk::KkEquipmentRow {
+            wallet: Some("SAFE".into()),
+            ..row.clone()
+        },
+    ] {
+        assert!(db
+            .write(|tx| kk::insert_equipment(tx, &s, &bad, &m))
+            .is_err());
+    }
+    db.write(|tx| kk::insert_equipment(tx, &s, &row, &m))
+        .unwrap();
+    // Yaroqsiz bo'ldi (pul tushmadi) — hamyon yozilmaydi; xariddan oldin chiqib keta olmaydi.
+    assert!(db
+        .write(|tx| kk::dispose_equipment(tx, &s, "e1", "2026-10-01", 0, None, &m))
+        .is_err());
+    assert!(db
+        .write(|tx| kk::dispose_equipment(tx, &s, "e1", "2026-12-01", 0, Some("CASH"), &m))
+        .is_err());
+    db.write(|tx| kk::dispose_equipment(tx, &s, "e1", "2026-12-01", 0, None, &m))
+        .unwrap();
+    assert!(db
+        .write(|tx| kk::dispose_equipment(tx, &s, "e1", "2026-12-02", 500, Some("CASH"), &m))
+        .is_err());
+    let rows = db.read(|c| kk::equipment(c, &s)).unwrap();
+    assert_eq!(rows[0].disposal_proceeds_minor, Some(0));
+    db.write(|tx| kk::delete_equipment(tx, &s, "e1", &m))
+        .unwrap();
+    assert!(db.read(|c| kk::equipment(c, &s)).unwrap().is_empty());
+}

@@ -963,6 +963,79 @@ impl BarakaCore {
         self.session.app()?.kk_pay_owner_salary(&space_id, input)
     }
 
+    // ---- K2: haqiqiy foyda, uskunalar, oilaviy mehnat, buyurtma kalkulyatori ----
+
+    pub fn kk_set_owner_labor(
+        &self,
+        space_id: String,
+        amount: String,
+    ) -> Result<KkOverviewDto, AppError> {
+        self.session.app()?.kk_set_owner_labor(&space_id, amount)
+    }
+
+    pub fn kk_equipment(&self, space_id: String) -> Result<Vec<KkEquipmentDto>, AppError> {
+        self.session.app()?.kk_equipment(&space_id)
+    }
+
+    pub fn kk_add_equipment(
+        &self,
+        space_id: String,
+        input: KkEquipmentInput,
+    ) -> Result<Vec<KkEquipmentDto>, AppError> {
+        self.session.app()?.kk_add_equipment(&space_id, input)
+    }
+
+    pub fn kk_dispose_equipment(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkDisposeInput,
+    ) -> Result<Vec<KkEquipmentDto>, AppError> {
+        self.session
+            .app()?
+            .kk_dispose_equipment(&space_id, &id, input)
+    }
+
+    pub fn kk_delete_equipment(
+        &self,
+        space_id: String,
+        id: String,
+    ) -> Result<Vec<KkEquipmentDto>, AppError> {
+        self.session.app()?.kk_delete_equipment(&space_id, &id)
+    }
+
+    pub fn kk_family_labor(
+        &self,
+        space_id: String,
+        date: Option<String>,
+    ) -> Result<Vec<KkFamilyLaborDto>, AppError> {
+        self.session.app()?.kk_family_labor(&space_id, date)
+    }
+
+    pub fn kk_add_family_labor(
+        &self,
+        space_id: String,
+        input: KkFamilyLaborInput,
+    ) -> Result<Vec<KkFamilyLaborDto>, AppError> {
+        self.session.app()?.kk_add_family_labor(&space_id, input)
+    }
+
+    pub fn kk_delete_family_labor(
+        &self,
+        space_id: String,
+        id: String,
+    ) -> Result<Vec<KkFamilyLaborDto>, AppError> {
+        self.session.app()?.kk_delete_family_labor(&space_id, &id)
+    }
+
+    pub fn kk_order_quote(
+        &self,
+        space_id: String,
+        input: KkQuoteInput,
+    ) -> Result<KkQuoteDto, AppError> {
+        self.session.app()?.kk_order_quote(&space_id, input)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {
