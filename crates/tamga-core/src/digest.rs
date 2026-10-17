@@ -29,8 +29,10 @@ impl Digest {
             return None;
         }
         let mut out = [0u8; 32];
-        for (i, pair) in hex.as_bytes().chunks_exact(2).enumerate() {
-            out[i] = (nibble(pair[0])? << 4) | nibble(pair[1])?;
+        // Uzunlik 64 — qoldiq bo'sh.
+        let (pairs, _) = hex.as_bytes().as_chunks::<2>();
+        for (i, &[hi, lo]) in pairs.iter().enumerate() {
+            out[i] = (nibble(hi)? << 4) | nibble(lo)?;
         }
         Some(Digest(out))
     }
