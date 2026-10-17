@@ -1,0 +1,13 @@
+[package]
+name = "tamga-store"
+description = "Append-only segment fayllar, SQLite indeks va shifrlangan payload vault"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

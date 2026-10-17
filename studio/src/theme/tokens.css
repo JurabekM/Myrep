@@ -1,0 +1,54 @@
+/*
+ * TAMGA dizayn tokenlari — Claude Code desktop ilovasining dark theme'i.
+ *
+ * Manba: Claude desktop oynasining skrinshotidan piksel o'lchovi (2026-10-17, F0).
+ * O'lchangan qiymat "o'lchangan", Claude Code CLI temasidan olingani "CLI" deb belgilangan.
+ * QOIDA: komponentlarda hex yozilmaydi — faqat shu tokenlar.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Sirtlar */
+  --bg-app: #151515; /* o'lchangan: asosiy maydon, sarlavha paneli */
+  --bg-sidebar: #111111; /* o'lchangan: chap panel */
+  --bg-field: #1d1d1d; /* o'lchangan: qidiruv maydoni */
+  --bg-input: #20201f; /* o'lchangan: prompt kiritish qutisi */
+  --bg-bubble: #1c1c1c; /* o'lchangan: foydalanuvchi xabari */
+  --bg-selected: #343434; /* o'lchangan: tanlangan yon panel elementi, faol tugma */
+  --bg-hover: #1f1f1f; /* bg-app va bg-selected oralig'i */
+  --bg-code: #0e0e0e; /* kod/terminal bloklari: bg-app dan bir pog'ona to'q */
+
+  /* Chegaralar */
+  --border: #292929; /* o'lchangan: panel ajratuvchisi */
+  --border-subtle: #232323; /* o'lchangan: vazifalar kartasi */
+  --border-strong: #373736; /* o'lchangan: kiritish qutisi chegarasi */
+
+  /* Matn */
+  --text-primary: #f0efec; /* o'lchangan: sarlavha matni */
+  --text-secondary: #c3c2b7; /* o'lchangan: yon panel matni */
+  --text-muted: #898781; /* o'lchangan: placeholder, bo'lim sarlavhasi */
+  --text-faint: #5a5955; /* o'lchangan: yig'ilgan tool qatori */
+
+  /* Urg'u va holatlar */
+  --accent: #d97757; /* Claude "clay" */
+  --accent-hover: #c6613f;
+  --on-accent: #ffffff;
+  --success: #4eba65; /* CLI: success — allow, zanjir butun */
+  --danger: #ff6b80; /* CLI: error — deny, buzilish */
+  --warning: #ffc107; /* CLI: warning — OS ogohlantirishi */
+  --ask: #b1b9f9; /* CLI: permission — inson tasdig'i kutilmoqda */
+  --success-bg: #16261b;
+  --danger-bg: #2c1519;
+  --warning-bg: #2b2410;
+  --ask-bg: #1e2033;
+
+  /* Shrift va o'lchamlar */
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "Cascadia Mono", Consolas, monospace;
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --sidebar-w: 248px;
+  --close-hover: #c42b1c; /* Windows standart yopish tugmasi */
+  --titlebar-h: 52px;
+}
