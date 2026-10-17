@@ -29,7 +29,9 @@ vi.mock("../../bindings/bindings", () => ({
     addCeremonyScenario: vi.fn(),
     addCeremonyLine: vi.fn(),
     removeCeremonyLine: vi.fn(),
-    discussCeremony: vi.fn(),
+    startCeremonyDiscussion: vi.fn(),
+    consentCeremonyDiscussion: vi.fn(),
+    createCeremonyMinutesPdf: vi.fn(),
     confirmCeremony: vi.fn(),
     setCeremonyGoal: vi.fn(),
     createCeremonyPdf: vi.fn(),
@@ -98,6 +100,7 @@ const CEREMONY: CeremoniesDto["items"][number] = {
   goalTarget: null,
   hasDebt: true,
   scenarios: [BIG, SMALL],
+  discussion: null,
 };
 
 const DATA: CeremoniesDto = { items: [CEREMONY] };
@@ -150,22 +153,132 @@ describe("marosimlar", () => {
     expect(commands.confirmCeremony).toHaveBeenCalledWith({ id: "c-1", scenarioId: "s-big" });
   });
 
-  it("muhokama belgilanadi, qator qo'shiladi va PDF yo'li ko'rsatiladi", async () => {
-    const discussed: CeremoniesDto = {
-      items: [{ ...CEREMONY, familyDiscussed: true }],
+  it("oila kengashi: qaror yoziladi, kattalar PIN bilan rozi bo'ladi, bayonnoma PDF", async () => {
+    const anvar = { memberId: "m-1", name: "Anvar", consented: false, hasPin: true };
+    const nodira = { memberId: "m-2", name: "Nodira", consented: false, hasPin: true };
+    const adults = [anvar, nodira];
+    const started: CeremoniesDto = {
+      items: [
+        {
+          ...CEREMONY,
+          discussion: {
+            id: "d-1",
+            scenarioId: "s-small",
+            scenarioName: "Ixcham",
+            note: "Mehmonlar 100 kishi, sarpo oila hissasidan — qarz olinmaydi.",
+            startedOn: "2026-10-17",
+            completedOn: null,
+            adults,
+            complete: false,
+          },
+        },
+      ],
     };
-    vi.mocked(commands.discussCeremony).mockResolvedValue({ status: "ok", data: discussed });
-    vi.mocked(commands.addCeremonyLine).mockResolvedValue({ status: "ok", data: discussed });
+    const first = started.items[0];
+    if (first?.discussion === undefined || first.discussion === null) {
+      throw new Error("muhokama fixture");
+    }
+    const base = first.discussion;
+    const half: CeremoniesDto = {
+      items: [
+        {
+          ...CEREMONY,
+          discussion: { ...base, adults: [{ ...anvar, consented: true }, nodira] },
+        },
+      ],
+    };
+    const complete: CeremoniesDto = {
+      items: [
+        {
+          ...CEREMONY,
+          familyDiscussed: true,
+          discussion: {
+            ...base,
+            completedOn: "2026-10-17",
+            complete: true,
+            adults: adults.map((a) => ({ ...a, consented: true })),
+          },
+        },
+      ],
+    };
+    vi.mocked(commands.startCeremonyDiscussion).mockResolvedValue({ status: "ok", data: started });
+    vi.mocked(commands.consentCeremonyDiscussion)
+      .mockResolvedValueOnce({ status: "error", error: { code: "WRONG_PIN" } })
+      .mockResolvedValueOnce({ status: "ok", data: half })
+      .mockResolvedValueOnce({ status: "ok", data: complete });
+    vi.mocked(commands.createCeremonyMinutesPdf).mockResolvedValue({
+      status: "ok",
+      data: "C:\\reports\\kengash-marosim-1.pdf",
+    });
+    render(<App />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Oila kengashi: qarzsiz muhokama" }),
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Oila kengashi: qarzsiz muhokama" });
+    // 1-qadam: taqqoslash jadvali, stsenariy va qaror matni (kamida 20 belgi).
+    expect(within(dialog).getByRole("table", { name: "Taqqoslash" })).toBeInTheDocument();
+    const start = within(dialog).getByRole("button", { name: "Muhokamani boshlash" });
+    expect(start).toBeDisabled();
+    await user.selectOptions(within(dialog).getByLabelText("Tanlangan stsenariy"), "s-small");
+    await user.type(
+      within(dialog).getByLabelText("Qaror: buni qarzsiz qanday o'tkazamiz?"),
+      "Mehmonlar 100 kishi, sarpo oila hissasidan — qarz olinmaydi.",
+    );
+    expect(start).toBeEnabled();
+    await user.click(start);
+    expect(commands.startCeremonyDiscussion).toHaveBeenCalledWith({
+      ceremonyId: "c-1",
+      scenarioId: "s-small",
+      note: "Mehmonlar 100 kishi, sarpo oila hissasidan — qarz olinmaydi.",
+    });
+    // 2-qadam: noto'g'ri PIN rad, so'ng ikkala katta rozi.
+    expect(await within(dialog).findByText("Tanlangan stsenariy: Ixcham")).toBeInTheDocument();
+    const anvarRow = within(dialog).getByLabelText("Anvar — PIN").closest("li");
+    if (anvarRow === null) {
+      throw new Error("qator topilmadi");
+    }
+    await user.type(within(anvarRow).getByLabelText("Anvar — PIN"), "000000");
+    await user.click(within(anvarRow).getByRole("button", { name: "Rozilik berish" }));
+    expect(
+      await within(anvarRow).findByText("PIN notoʻgʻri. Qayta urinib koʻring."),
+    ).toBeInTheDocument();
+    await user.type(within(anvarRow).getByLabelText("Anvar — PIN"), "111111");
+    await user.click(within(anvarRow).getByRole("button", { name: "Rozilik berish" }));
+    expect(commands.consentCeremonyDiscussion).toHaveBeenLastCalledWith({
+      ceremonyId: "c-1",
+      memberId: "m-1",
+      pin: "111111",
+    });
+    expect(await within(dialog).findByText(/Rozi: 1 \/ 2/)).toBeInTheDocument();
+    await user.type(within(dialog).getByLabelText("Nodira — PIN"), "222222");
+    await user.click(within(dialog).getByRole("button", { name: "Rozilik berish" }));
+    expect(
+      await within(dialog).findByText(
+        "Hamma katta rozi — muhokama yakunlandi, sanani tasdiqlash mumkin.",
+      ),
+    ).toBeInTheDocument();
+    // 3-qadam: bayonnoma PDF va yakun.
+    await user.click(within(dialog).getByRole("button", { name: "Keyingi" }));
+    await user.click(within(dialog).getByRole("button", { name: "Bayonnoma PDF" }));
+    expect(await within(dialog).findByText(/kengash-marosim-1\.pdf/)).toBeInTheDocument();
+    expect(commands.createCeremonyMinutesPdf).toHaveBeenCalledWith("c-1");
+    await user.click(within(dialog).getByRole("button", { name: "Yakunlash" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // Kartada belgi va qaror satri.
+    expect(screen.getByText("Muhokama o'tkazilgan ✓")).toBeInTheDocument();
+    expect(screen.getByText(/Kengash qarori \(Ixcham, rozi 2 \/ 2\)/)).toBeInTheDocument();
+  });
+
+  it("qator qo'shiladi va smeta PDF yo'li ko'rsatiladi", async () => {
+    vi.mocked(commands.addCeremonyLine).mockResolvedValue({ status: "ok", data: DATA });
     vi.mocked(commands.createCeremonyPdf).mockResolvedValue({
       status: "ok",
       data: "C:\\reports\\smeta-1.pdf",
     });
     render(<App />);
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Oilaviy muhokama o'tkazildi" }));
-    expect(await screen.findByText("Muhokama o'tkazilgan ✓")).toBeInTheDocument();
-
-    const small = screen.getByRole("region", { name: "Ixcham" });
+    const small = await screen.findByRole("region", { name: "Ixcham" });
     await user.type(within(small).getByLabelText("Qator nomi"), "Xonanda");
     await user.type(within(small).getByLabelText("Birlik narxi"), "6 000 000");
     await user.selectOptions(within(small).getByLabelText("Manba"), "FAMILY");

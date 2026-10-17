@@ -1,4 +1,5 @@
-//! D11 repo: marosim rejalari, stsenariylar va byudjet qatorlari (sxema v12).
+//! D11 repo: marosim rejalari, stsenariylar va byudjet qatorlari (sxema v12); kengash muhokamasi va
+//! kattalar roziligi (sxema v17).
 //!
 //! Marosim bir nechta stsenariyga ega (masalan, «3 kun, 200 kishi» va «1 kun, 100 kishi»); har stsenariyning
 //! o'z qatorlari bor. Holat (`PLANNED | CONFIRMED`) va oilaviy muhokama belgisi marosimda saqlanadi.
@@ -394,5 +395,144 @@ impl Raw {
             created_at: meta.created_at,
             origin_device_id: meta.origin_device_id,
         })
+    }
+}
+
+/// «Buni qarzsiz qanday o'tkazamiz?» muhokamasi (oxirgisi amal qiladi).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DiscussionRow {
+    /// UUIDv7.
+    pub id: String,
+    /// Xonadon.
+    pub household_id: String,
+    /// Marosim.
+    pub ceremony_id: String,
+    /// Muhokamada tanlangan stsenariy.
+    pub scenario_id: String,
+    /// Qaror matni (kamida 20 belgi).
+    pub note: String,
+    /// Boshlangan vaqt.
+    pub started_at: OffsetDateTime,
+    /// Hamma katta rozi bo'lgan vaqt (bo'lmasa — davom etmoqda).
+    pub completed_at: Option<OffsetDateTime>,
+    /// Qurilma.
+    pub origin_device_id: String,
+}
+
+/// Kengash muhokamalari.
+pub struct DiscussionRepo<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> DiscussionRepo<'a> {
+    /// Ulanish ustida repo.
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    /// Yangi muhokama (oldingisi tarixda qoladi, roziliklar qaytadan).
+    pub fn insert(&self, row: &DiscussionRow) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT INTO ceremony_discussions (id, household_id, ceremony_id, scenario_id, note, started_at, \
+             completed_at, origin_device_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![
+                row.id,
+                row.household_id,
+                row.ceremony_id,
+                row.scenario_id,
+                row.note,
+                format_ts(row.started_at)?,
+                row.completed_at.map(format_ts).transpose()?,
+                row.origin_device_id,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Marosimning oxirgi muhokamasi.
+    pub fn latest(&self, ceremony_id: &str) -> Result<Option<DiscussionRow>, StorageError> {
+        let raw = self
+            .conn
+            .query_row(
+                "SELECT id, household_id, ceremony_id, scenario_id, note, started_at, completed_at, origin_device_id \
+                 FROM ceremony_discussions WHERE ceremony_id = ?1 ORDER BY started_at DESC, id DESC LIMIT 1",
+                [ceremony_id],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, String>(3)?,
+                        row.get::<_, String>(4)?,
+                        row.get::<_, String>(5)?,
+                        row.get::<_, Option<String>>(6)?,
+                        row.get::<_, String>(7)?,
+                    ))
+                },
+            )
+            .optional()?;
+        let Some((id, household_id, ceremony_id, scenario_id, note, started, completed, device)) =
+            raw
+        else {
+            return Ok(None);
+        };
+        Ok(Some(DiscussionRow {
+            id,
+            household_id,
+            ceremony_id,
+            scenario_id,
+            note,
+            started_at: crate::repo::parse_ts(&started)?,
+            completed_at: completed
+                .as_deref()
+                .map(crate::repo::parse_ts)
+                .transpose()?,
+            origin_device_id: device,
+        }))
+    }
+
+    /// Katta a'zoning roziligi (takror — yo'q qilinmaydi, jim o'tadi).
+    pub fn insert_consent(
+        &self,
+        id: &str,
+        discussion_id: &str,
+        member_id: &str,
+        now: OffsetDateTime,
+    ) -> Result<(), StorageError> {
+        self.conn.execute(
+            "INSERT OR IGNORE INTO ceremony_discussion_consents (id, discussion_id, member_id, consented_at) \
+             VALUES (?1, ?2, ?3, ?4)",
+            params![id, discussion_id, member_id, format_ts(now)?],
+        )?;
+        Ok(())
+    }
+
+    /// Rozi bo'lgan a'zolar.
+    pub fn consented_members(&self, discussion_id: &str) -> Result<Vec<String>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT member_id FROM ceremony_discussion_consents WHERE discussion_id = ?1 ORDER BY consented_at",
+        )?;
+        let rows = statement.query_map([discussion_id], |row| row.get::<_, String>(0))?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row?);
+        }
+        Ok(out)
+    }
+
+    /// Muhokama yakunlandi (hamma katta rozi).
+    pub fn set_completed(
+        &self,
+        discussion_id: &str,
+        now: OffsetDateTime,
+    ) -> Result<(), StorageError> {
+        let changed = self.conn.execute(
+            "UPDATE ceremony_discussions SET completed_at = ?2 WHERE id = ?1",
+            params![discussion_id, format_ts(now)?],
+        )?;
+        if changed == 0 {
+            return Err(StorageError::NotFound);
+        }
+        Ok(())
     }
 }

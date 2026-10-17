@@ -4,6 +4,46 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D11+ — Oila kengashi rejimi: «Buni qarzsiz qanday o'tkazamiz?» (2026-10-17)
+
+2-toifa birinchi bandi. Avvalgi «muhokama o'tkazildi» tugmasi (bitta belgi) o'rniga to'liq ekranli kengash sessiyasi
+(DESKTOP_PROMPT 7-bo'lim «Oila kengashi rejimi» uslubi, D6 havas chegarasidagi rozilik qoidasi bilan). Sxema **v17**.
+
+**Qo'shildi**
+
+- `ceremony_discussions` (marosim, tanlangan stsenariy, qaror matni ≥ 20 belgi, boshlangan/yakunlangan vaqt) va
+  `ceremony_discussion_consents` (a'zo, vaqt; `UNIQUE`). Repo `DiscussionRepo`. Oxirgi muhokama amal qiladi;
+  yangi qaror — roziliklar qaytadan (havas chegarasidagi kabi).
+- Xizmat: `start_discussion` (qisqa matn → `DISCUSSION_NOTE_REQUIRED`), `consent_discussion` (faqat `ADULT`,
+  o'z PIN'i, noto'g'ri urinish kutish qoidasiga kiradi; **hamma katta rozi bo'lgach** `completed_at` va
+  `ceremonies.family_discussed = 1` — shundan keyingina qarzli stsenariy tasdiqlanadi), `minutes_pdf`.
+- Bayonnoma PDF (`crates/pdf/src/discussion.rs`, `DiscussionMinutes`, snapshot `discussion-minutes.pdf`):
+  stsenariylar taqqoslash jadvali, qaror, kattalar roziligi.
+- Buyruqlar: `start_ceremony_discussion`, `consent_ceremony_discussion`, `create_ceremony_minutes_pdf`
+  (`discuss_ceremony` olib tashlandi). DTO: `CeremonyDto.discussion` (`DiscussionDto`: stsenariy, qaror, sanalar,
+  `adults: AdultConsentDto[]`, `complete`).
+- UI: `CeremonyCouncilPage` — 3 qadam: 1) taqqoslash jadvali + stsenariy + qaror matni (hisoblagich «n / kamida
+  20»); 2) har katta uchun PIN maydoni, «Rozi: n / m», noto'g'ri PIN xabari, maydon har urinishdan keyin
+  tozalanadi; 3) yakun + «Bayonnoma PDF». Kartada «Kengash qarori (stsenariy, rozi n / m) — matn» satri va
+  «Oila kengashi: qarzsiz muhokama» / «…davom ettirish» tugmasi. `Esc` yopadi.
+
+**Qarorlar**
+
+- Muhokama = qaror matni + barcha katta a'zolarning PIN roziligi (bitta kattali xonadonda — o'zi). Rozilik
+  bermagan katta bo'lsa marosim tasdiqlanmaydi; PIN'siz katta avval Xarajatlar → Oila kengashida PIN o'rnatadi.
+- Bayonnoma D4 kengash bayonnomasidan alohida hujjat (`kengash-marosim-*.pdf`), chunki mavzu va tuzilma boshqa.
+
+Testlar: Rust (xizmat: qisqa qaror rad, muhokamasiz rozilik yo'q, noto'g'ri PIN, 1/2 → 2/2 yakun, PDF, tasdiq,
+tasdiqlangan marosimda yangi muhokama yo'q; sxema v17 ×3; PDF 2), vitest 91 (kengash oqimi to'liq).
+
+**GUI sinovi (toza dev profil, haqiqiy oyna, 2026-10-17):** «Qizimizning to'yi» → stsenariy «Katta» (3 kun, 200
+kishi: osh 200 × 45 000 jamg'arma, sarpo 8 000 000 qarz) → «Sanani tasdiqlash» rad («Qarzli reja uchun avval oilaviy
+muhokama o'tkaziladi») → «Oila kengashi: qarzsiz muhokama»: taqqoslash jadvali, qaror 59 belgi (tugma 20 dan keyin
+faollashdi), 2-qadam: noto'g'ri PIN rad, to'g'ri a'zo PIN'i → «Rozi: 1 / 1», «Hamma katta rozi»; 3-qadam:
+bayonnoma PDF (`reports/kengash-marosim-*.pdf`, mazmuni tekshirildi) → «Yakunlash» → kartada «Kengash qarori
+(Katta, rozi 1 / 1) — …», «Muhokama o'tkazilgan ✓» → «Sanani tasdiqlash» → «Marosim tasdiqlangan». Eslatma:
+WebView2 mutatsiyadan keyin 1–2 s qora kadr beradi (skrinshot vaqtidagi repaint, funksional xato emas).
+
 ### D10+ qoldiqlari — DebtContributor, yopish strategiyasi, sotiladigan buyumlar, ongli chetlab o'tish, chek rasmlari (2026-10-16)
 
 Bitta sessiyada D10–D13 dan qolgan 1-toifa (koddan hal bo'ladigan) bandlar yopildi. Sxema **v16**.
@@ -167,7 +207,7 @@ Testlar: Rust 351 (shundan `payoff_strategy_taklif_vektorlari`), vitest 90 (yang
 
 **Qarorlar**
 
-- «Oila kengashi rejimi» — alohida ekran emas: muhokama tugmasi + izoh (D4 kengash bayonnomasi bilan bog'lash keyingi bosqichga).
+- «Oila kengashi rejimi» — alohida ekran emas: muhokama tugmasi + izoh (D4 kengash bayonnomasi bilan bog'lash keyingi bosqichga). **2026-10-17: to'liq ekranli sessiya va bayonnoma bilan almashtirildi (D11+).**
 - «Qolgan ulushlar bo'yicha payoff D10 simulyatori bilan» — qarz qismi uchun oddiy bo'linma (foizsiz), chunki oilaviy qarz ustamasiz; ustamali qarz uchun foydalanuvchi D10 rejalashtiruvchisini qo'lda ishlatadi.
 - `Goal` MVP'da virtual: nom + summa; ulashiladigan havola yo'q (SPEC shunday deydi).
 

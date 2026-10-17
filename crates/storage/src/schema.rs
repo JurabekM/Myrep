@@ -835,6 +835,31 @@ CREATE TABLE venture_attachments (
 CREATE INDEX venture_attachments_by_agreement ON venture_attachments (agreement_id, seq);
 "#;
 
+/// v17 (D11 kengash muhokamasi): «Buni qarzsiz qanday o'tkazamiz?» muhokamasi — tanlangan stsenariy, qaror
+/// matni (kamida 20 belgi) va har bir katta a'zoning PIN bilan roziligi. Oxirgi muhokama amal qiladi; hamma
+/// katta rozi bo'lgach `completed_at` yoziladi va `ceremonies.family_discussed = 1` bo'ladi.
+pub const SCHEMA_V17: &str = r#"
+CREATE TABLE ceremony_discussions (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    ceremony_id TEXT NOT NULL REFERENCES ceremonies (id),
+    scenario_id TEXT NOT NULL REFERENCES ceremony_scenarios (id),
+    note TEXT NOT NULL CHECK (length(trim(note)) >= 20),
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX ceremony_discussions_by_ceremony ON ceremony_discussions (ceremony_id, started_at);
+
+CREATE TABLE ceremony_discussion_consents (
+    id TEXT PRIMARY KEY NOT NULL,
+    discussion_id TEXT NOT NULL REFERENCES ceremony_discussions (id),
+    member_id TEXT NOT NULL REFERENCES members (id),
+    consented_at TEXT NOT NULL,
+    UNIQUE (discussion_id, member_id)
+) STRICT;
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -854,6 +879,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V14),
         M::up(SCHEMA_V15),
         M::up(SCHEMA_V16),
+        M::up(SCHEMA_V17),
     ])
 }
 
@@ -905,4 +931,6 @@ pub const TABLES: &[&str] = &[
     "sellable_items",
     "gate_overrides",
     "venture_attachments",
+    "ceremony_discussions",
+    "ceremony_discussion_consents",
 ];

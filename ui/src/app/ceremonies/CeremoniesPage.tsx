@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, type SyntheticEvent, useCallback, useState } from "react";
+import { CeremonyCouncilPage } from "./CeremonyCouncilPage";
 import { useTranslation } from "react-i18next";
 import {
   type CeremoniesDto,
@@ -114,6 +115,7 @@ function CeremonyCard({ ceremony }: { ceremony: CeremonyDto }) {
   const { t } = useTranslation();
   const { run, error } = useCeremonyAction();
   const planned = ceremony.status === "PLANNED";
+  const [councilOpen, setCouncilOpen] = useState(false);
   const [chosen, setChosen] = useState(ceremony.scenarios[0]?.id ?? "");
   const chosenId = ceremony.scenarios.some((s) => s.id === chosen)
     ? chosen
@@ -144,20 +146,41 @@ function CeremonyCard({ ceremony }: { ceremony: CeremonyDto }) {
         <div className="flex flex-col gap-2 rounded-lg border border-warning/40 bg-app px-4 py-3">
           <p className="text-sm font-medium text-text">{t("ceremonies.debtQuestion")}</p>
           <p className="text-xs text-subtle">{t("ceremonies.debtHint")}</p>
+          {ceremony.discussion !== null ? (
+            <p className="text-sm text-text">
+              {t("ceremonies.council.summaryLine", {
+                scenario: ceremony.discussion.scenarioName,
+                done: ceremony.discussion.adults.filter((a) => a.consented).length,
+                total: ceremony.discussion.adults.length,
+              })}{" "}
+              <span className="text-muted">— {ceremony.discussion.note}</span>
+            </p>
+          ) : null}
           {ceremony.familyDiscussed ? (
             <p className="text-sm text-success">{t("ceremonies.discussed")}</p>
-          ) : planned ? (
+          ) : null}
+          {planned ? (
             <div>
-              <SecondaryButton
+              <PrimaryButton
                 onClick={() => {
-                  void run(() => commands.discussCeremony(ceremony.id).then(unwrap));
+                  setCouncilOpen(true);
                 }}
               >
-                {t("ceremonies.markDiscussed")}
-              </SecondaryButton>
+                {ceremony.discussion === null
+                  ? t("ceremonies.council.open")
+                  : t("ceremonies.council.continue")}
+              </PrimaryButton>
             </div>
           ) : null}
         </div>
+      ) : null}
+      {councilOpen ? (
+        <CeremonyCouncilPage
+          ceremony={ceremony}
+          onClose={() => {
+            setCouncilOpen(false);
+          }}
+        />
       ) : null}
 
       {planned && ceremony.scenarios.length > 0 ? (
@@ -201,7 +224,7 @@ function CeremonyCard({ ceremony }: { ceremony: CeremonyDto }) {
 }
 
 /** Stsenariylar yonma-yon: qatorlar — ko'rsatkich, ustunlar — stsenariy. */
-function ComparisonTable({ scenarios }: { scenarios: ScenarioDto[] }) {
+export function ComparisonTable({ scenarios }: { scenarios: ScenarioDto[] }) {
   const { t } = useTranslation();
   const rows: { label: string; cell: (s: ScenarioDto) => string }[] = [
     {

@@ -207,8 +207,12 @@ export const commands = {
 	addCeremonyLine: (input: CeremonyLineInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("add_ceremony_line", { input })),
 	/**  Qatorni o'chiradi. */
 	removeCeremonyLine: (lineId: string) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("remove_ceremony_line", { lineId })),
-	/**  Oilaviy muhokama o'tkazilganini qayd etadi. */
-	discussCeremony: (id: string) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("discuss_ceremony", { id })),
+	/**  Kengash muhokamasini boshlaydi (stsenariy + qaror matni). */
+	startCeremonyDiscussion: (input: StartDiscussionInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("start_ceremony_discussion", { input })),
+	/**  Katta a'zoning muhokamaga roziligi (o'z PIN'i bilan). */
+	consentCeremonyDiscussion: (input: ConsentDiscussionInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("consent_ceremony_discussion", { input })),
+	/**  Kengash bayonnomasi PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
+	createCeremonyMinutesPdf: (id: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_ceremony_minutes_pdf", { id })),
 	/**  Tasdiqlaydi (tanlangan stsenariy bilan). */
 	confirmCeremony: (input: ConfirmCeremonyInputDto) => typedError<CeremoniesDto, ApiError>(__TAURI_INVOKE("confirm_ceremony", { input })),
 	/**  To'yona o'rniga jamg'arma maqsadi. */
@@ -696,6 +700,8 @@ export type CeremonyDto = {
 	hasDebt: boolean,
 	/**  Stsenariylar (taqqoslash uchun). */
 	scenarios: ScenarioDto[],
+	/**  Oxirgi kengash muhokamasi (bo'lmasa — `null`). */
+	discussion: DiscussionDto | null,
 };
 
 /**  To'yona o'rniga jamg'arma maqsadi. */
@@ -857,6 +863,16 @@ export type ConflictDto = {
 	reason: string,
 };
 
+/**  Katta a'zoning muhokamaga roziligi (o'z PIN'i bilan). */
+export type ConsentDiscussionInputDto = {
+	/**  Marosim. */
+	ceremonyId: string,
+	/**  A'zo. */
+	memberId: string,
+	/**  A'zo PIN'i. */
+	pin: string,
+};
+
 /**  Oilaviy rozilik. */
 export type ConsentInputDto = {
 	/**  Sheriklik. */
@@ -996,6 +1012,26 @@ export type DecideDisputeInputDto = {
 	decision: string,
 	/**  Yangi versiya yaratilsinmi (qayta imzolash). */
 	newVersion: boolean,
+};
+
+/**  Kengash muhokamasi («Buni qarzsiz qanday o'tkazamiz?») holati. */
+export type DiscussionDto = {
+	/**  Identifikator. */
+	id: string,
+	/**  Muhokamada tanlangan stsenariy. */
+	scenarioId: string,
+	/**  Stsenariy nomi. */
+	scenarioName: string,
+	/**  Qaror matni. */
+	note: string,
+	/**  Boshlangan sana (`YYYY-MM-DD`). */
+	startedOn: string,
+	/**  Yakunlangan sana (`YYYY-MM-DD`); hamma katta rozi bo'lmaguncha — `null`. */
+	completedOn: string | null,
+	/**  Kattalar va roziligi (havas chegarasidagi kabi, har biri o'z PIN'i bilan). */
+	adults: AdultConsentDto[],
+	/**  Hamma katta rozi bo'lganmi. */
+	complete: boolean,
 };
 
 /**  Nizo. */
@@ -2260,6 +2296,16 @@ export type SignatureInputDto = {
 	role: string,
 	/**  Rasm (PNG, data URL). */
 	image: string,
+};
+
+/**  Muhokamani boshlash: stsenariy va qaror matni. */
+export type StartDiscussionInputDto = {
+	/**  Marosim. */
+	ceremonyId: string,
+	/**  Tanlangan stsenariy. */
+	scenarioId: string,
+	/**  Qaror matni (kamida 20 belgi): hajmni qisqartirish, muddatni surish, oila hissasi… */
+	note: string,
 };
 
 /**  Obuna satri. */

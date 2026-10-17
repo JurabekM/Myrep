@@ -25,7 +25,9 @@ pub use agreements::{
 };
 pub use budget::{EnvelopeRepo, RescueRepo, SubscriptionRepo, transfer_to_vault};
 pub use center::{CenterRepo, DisputeRow, IncidentRow, MarkRow, ReviewRow};
-pub use ceremonies::{CeremonyRepo, CeremonyRow, LineRow, ScenarioRow};
+pub use ceremonies::{
+    CeremonyRepo, CeremonyRow, DiscussionRepo, DiscussionRow, LineRow, ScenarioRow,
+};
 pub use db::Database;
 pub use error::StorageError;
 pub use family::{LimitRepo, PinRepo, PinState, TreatRepo};

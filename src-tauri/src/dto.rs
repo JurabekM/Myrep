@@ -1571,6 +1571,54 @@ pub struct CeremonyDto {
     pub has_debt: bool,
     /// Stsenariylar (taqqoslash uchun).
     pub scenarios: Vec<ScenarioDto>,
+    /// Oxirgi kengash muhokamasi (bo'lmasa — `null`).
+    pub discussion: Option<DiscussionDto>,
+}
+
+/// Kengash muhokamasi («Buni qarzsiz qanday o'tkazamiz?») holati.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DiscussionDto {
+    /// Identifikator.
+    pub id: String,
+    /// Muhokamada tanlangan stsenariy.
+    pub scenario_id: String,
+    /// Stsenariy nomi.
+    pub scenario_name: String,
+    /// Qaror matni.
+    pub note: String,
+    /// Boshlangan sana (`YYYY-MM-DD`).
+    pub started_on: String,
+    /// Yakunlangan sana (`YYYY-MM-DD`); hamma katta rozi bo'lmaguncha — `null`.
+    pub completed_on: Option<String>,
+    /// Kattalar va roziligi (havas chegarasidagi kabi, har biri o'z PIN'i bilan).
+    pub adults: Vec<AdultConsentDto>,
+    /// Hamma katta rozi bo'lganmi.
+    pub complete: bool,
+}
+
+/// Muhokamani boshlash: stsenariy va qaror matni.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct StartDiscussionInputDto {
+    /// Marosim.
+    pub ceremony_id: String,
+    /// Tanlangan stsenariy.
+    pub scenario_id: String,
+    /// Qaror matni (kamida 20 belgi): hajmni qisqartirish, muddatni surish, oila hissasi…
+    pub note: String,
+}
+
+/// Katta a'zoning muhokamaga roziligi (o'z PIN'i bilan).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsentDiscussionInputDto {
+    /// Marosim.
+    pub ceremony_id: String,
+    /// A'zo.
+    pub member_id: String,
+    /// A'zo PIN'i.
+    pub pin: String,
 }
 
 /// Marosim stsenariysi (hisoblangan ko'rsatkichlar bilan).

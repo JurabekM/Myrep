@@ -9,7 +9,7 @@ use crate::ceremonies;
 use crate::commands::{ApiError, run_blocking};
 use crate::dto::{
     CeremoniesDto, CeremonyGoalInputDto, CeremonyInputDto, CeremonyLineInputDto,
-    ConfirmCeremonyInputDto, ScenarioInputDto,
+    ConfirmCeremonyInputDto, ConsentDiscussionInputDto, ScenarioInputDto, StartDiscussionInputDto,
 };
 use crate::session::Session;
 
@@ -80,16 +80,33 @@ pub async fn remove_ceremony_line(
     .await
 }
 
-/// Oilaviy muhokama o'tkazilganini qayd etadi.
+/// Kengash muhokamasini boshlaydi (stsenariy + qaror matni).
 #[tauri::command]
 #[specta::specta]
-pub async fn discuss_ceremony(
+pub async fn start_ceremony_discussion(
     session: State<'_, Arc<Session>>,
-    id: String,
+    input: StartDiscussionInputDto,
 ) -> Result<CeremoniesDto, ApiError> {
     let session = session.inner().clone();
     run_blocking(move || {
-        session.with_database(|db| ceremonies::discuss(db, OffsetDateTime::now_utc(), &id))
+        session
+            .with_database(|db| ceremonies::start_discussion(db, OffsetDateTime::now_utc(), input))
+    })
+    .await
+}
+
+/// Katta a'zoning muhokamaga roziligi (o'z PIN'i bilan).
+#[tauri::command]
+#[specta::specta]
+pub async fn consent_ceremony_discussion(
+    session: State<'_, Arc<Session>>,
+    input: ConsentDiscussionInputDto,
+) -> Result<CeremoniesDto, ApiError> {
+    let session = session.inner().clone();
+    run_blocking(move || {
+        session.with_database(|db| {
+            ceremonies::consent_discussion(db, OffsetDateTime::now_utc(), input)
+        })
     })
     .await
 }
@@ -148,6 +165,33 @@ pub async fn create_ceremony_pdf(
         ))
         .unwrap_or_default();
     let path = dir.join(format!("smeta-{stamp}.pdf"));
+    std::fs::write(&path, bytes).map_err(|_| ApiError::Internal)?;
+    Ok(path.display().to_string())
+}
+
+/// Kengash bayonnomasi PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi.
+#[tauri::command]
+#[specta::specta]
+pub async fn create_ceremony_minutes_pdf(
+    app: tauri::AppHandle,
+    session: State<'_, Arc<Session>>,
+    id: String,
+) -> Result<String, ApiError> {
+    let dir = crate::data_dir(&app)
+        .map_err(|_| ApiError::Internal)?
+        .join("reports");
+    let session = session.inner().clone();
+    let bytes = run_blocking(move || {
+        session.with_database(|db| ceremonies::minutes_pdf(db, OffsetDateTime::now_utc(), &id))
+    })
+    .await?;
+    std::fs::create_dir_all(&dir).map_err(|_| ApiError::Internal)?;
+    let stamp = OffsetDateTime::now_utc()
+        .format(&time::macros::format_description!(
+            "[year][month][day]-[hour][minute][second]"
+        ))
+        .unwrap_or_default();
+    let path = dir.join(format!("kengash-marosim-{stamp}.pdf"));
     std::fs::write(&path, bytes).map_err(|_| ApiError::Internal)?;
     Ok(path.display().to_string())
 }

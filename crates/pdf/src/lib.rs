@@ -15,11 +15,13 @@ use typst::{Library, World};
 
 /// Bayonnoma shrifti. Libertinus Serif ʻ (U+02BB) va ʼ (U+02BC) belgilarini o'z ichiga oladi (testlangan).
 mod agreement;
+mod discussion;
 mod estimate;
 mod minutes;
 mod period;
 
 pub use agreement::AgreementDocument;
+pub use discussion::DiscussionMinutes;
 pub use estimate::CeremonyEstimate;
 pub use minutes::{ArbiterFolder, ReviewMinutes};
 pub use period::PeriodReport;
@@ -61,6 +63,14 @@ pub enum PdfError {
 /// Bayonnomani PDF baytlariga aylantiradi.
 pub fn render_council_report(report: &CouncilReport) -> Result<Vec<u8>, PdfError> {
     let world = ReportWorld::new(template(report));
+    let warned = typst::compile::<PagedDocument>(&world);
+    let document = warned.output.map_err(|_| PdfError::Compile)?;
+    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)
+}
+
+/// Marosim kengashi bayonnomasini PDF baytlariga aylantiradi.
+pub fn render_discussion_minutes(minutes: &DiscussionMinutes) -> Result<Vec<u8>, PdfError> {
+    let world = ReportWorld::new(discussion::template(minutes));
     let warned = typst::compile::<PagedDocument>(&world);
     let document = warned.output.map_err(|_| PdfError::Compile)?;
     typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|_| PdfError::Render)

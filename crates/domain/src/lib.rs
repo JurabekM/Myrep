@@ -221,6 +221,9 @@ pub enum DomainError {
     /// Biriktirma yaroqsiz (rasm emas yoki juda katta).
     #[error("biriktirma yaroqsiz")]
     AttachmentInvalid,
+    /// Kengash muhokamasi qarori matni kamida 20 belgi bo'lishi kerak (D11).
+    #[error("muhokama qarori matni juda qisqa")]
+    DiscussionNoteRequired,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -275,6 +278,7 @@ impl DomainError {
             Self::PeriodClosed => "PERIOD_CLOSED",
             Self::OverrideReasonRequired => "OVERRIDE_REASON_REQUIRED",
             Self::AttachmentInvalid => "ATTACHMENT_INVALID",
+            Self::DiscussionNoteRequired => "DISCUSSION_NOTE_REQUIRED",
             Self::Money(error) => error.code(),
         }
     }

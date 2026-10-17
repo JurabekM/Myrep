@@ -3,22 +3,36 @@
 //!
 //! Qoida (SPEC 2D.8): `DEBT` manbali qator bo'lsa, marosim muhokamasiz `CONFIRMED` bo'lmaydi — bu domen'da
 //! (`domain::ceremony::confirm`), bu yerda faqat chaqiriladi. Pul hisoblari domen va `money`da.
+//!
+//! Kengash muhokamasi (D11, DESKTOP_PROMPT 7-bo'lim «Oila kengashi rejimi»): stsenariylar taqqoslanadi,
+//! qaror matni yoziladi (kamida 20 belgi), har bir `ADULT` a'zo o'z PIN'i bilan rozilik beradi; hamma rozi
+//! bo'lgach muhokama yakunlanadi va `family_discussed` belgisi qo'yiladi. Bayonnoma PDF.
 
 use domain::DomainError;
 use domain::ceremony::{BudgetLine, CeremonyPlan, CeremonyStatus, FundingSource, confirm};
 use domain::emergency::emergency_target;
+use domain::{Member, MemberRole};
 use money::Money;
-use storage::{CeremonyRepo, CeremonyRow, Database, LineRow, ScenarioRow, StorageError};
+use security::{SecurityError, verify_member_pin};
+use storage::{
+    CeremonyRepo, CeremonyRow, Database, DiscussionRepo, DiscussionRow, LineRow, MemberRepo,
+    PinRepo, ScenarioRow, StorageError,
+};
 use time::format_description::well_known::Iso8601;
 use time::{Date, OffsetDateTime};
 
 use crate::dto::{
-    CeremoniesDto, CeremonyDto, CeremonyGoalInputDto, CeremonyInputDto, CeremonyLineDto,
-    CeremonyLineInputDto, ConfirmCeremonyInputDto, MoneyDto, ScenarioDto, ScenarioInputDto,
+    AdultConsentDto, CeremoniesDto, CeremonyDto, CeremonyGoalInputDto, CeremonyInputDto,
+    CeremonyLineDto, CeremonyLineInputDto, ConfirmCeremonyInputDto, ConsentDiscussionInputDto,
+    DiscussionDto, MoneyDto, ScenarioDto, ScenarioInputDto, StartDiscussionInputDto,
 };
+use crate::family::{ensure_not_locked, kdf_params};
 use crate::finance::{self, CURRENCY, Context, DEVICE_ID, UuidV7, date_text, parse_money};
 use crate::session::SessionError;
 use crate::{payoff, reserve};
+
+/// Qaror matnining eng kam uzunligi (belgi).
+const MIN_NOTE_CHARS: usize = 20;
 
 const KINDS: [&str; 5] = ["TOY", "BESHIK", "SUNNAT", "MARAKA", "OTHER"];
 const FUNDINGS: [&str; 4] = ["SAVINGS", "FAMILY", "EXPECTED_GIFTS", "DEBT"];
@@ -188,6 +202,7 @@ fn ceremony_dto(
     for scenario in &scenarios {
         dtos.push(scenario_dto(scenario, row.family_discussed, gauges)?);
     }
+    let discussion = discussion_dto(db, row, &scenarios)?;
     Ok(CeremonyDto {
         id: row.id.clone(),
         kind: row.kind.clone(),
@@ -200,7 +215,55 @@ fn ceremony_dto(
         goal_target: row.goal_target.map(MoneyDto::of),
         has_debt: dtos.iter().any(|s| s.has_debt),
         scenarios: dtos,
+        discussion,
     })
+}
+
+/// Xonadonning katta a'zolari (rozilik ro'yxati uchun).
+fn adults_of(db: &Database, household_id: &str) -> Result<Vec<Member>, SessionError> {
+    Ok(MemberRepo::new(db.connection())
+        .list_for_household(household_id)?
+        .into_iter()
+        .filter(|m| m.role == MemberRole::Adult)
+        .collect())
+}
+
+/// Oxirgi muhokama holati: kattalar roziligi bilan.
+fn discussion_dto(
+    db: &Database,
+    row: &CeremonyRow,
+    scenarios: &[ScenarioRow],
+) -> Result<Option<DiscussionDto>, SessionError> {
+    let repo = DiscussionRepo::new(db.connection());
+    let Some(discussion) = repo.latest(&row.id)? else {
+        return Ok(None);
+    };
+    let consented = repo.consented_members(&discussion.id)?;
+    let mut adults = Vec::new();
+    for adult in adults_of(db, &row.household_id)? {
+        let pin = PinRepo::new(db.connection()).find(&adult.id)?;
+        adults.push(AdultConsentDto {
+            member_id: adult.id.clone(),
+            name: adult.name.clone(),
+            consented: consented.contains(&adult.id),
+            has_pin: pin.and_then(|p| p.verifier).is_some(),
+        });
+    }
+    let scenario_name = scenarios
+        .iter()
+        .find(|s| s.id == discussion.scenario_id)
+        .map(|s| s.name.clone())
+        .unwrap_or_default();
+    Ok(Some(DiscussionDto {
+        id: discussion.id.clone(),
+        scenario_id: discussion.scenario_id.clone(),
+        scenario_name,
+        note: discussion.note.clone(),
+        started_on: date_text(discussion.started_at.date()),
+        completed_on: discussion.completed_at.map(|t| date_text(t.date())),
+        complete: discussion.completed_at.is_some(),
+        adults,
+    }))
 }
 
 /// Marosimlar sahifasi.
@@ -334,15 +397,80 @@ pub fn remove_line(
     overview(db, now)
 }
 
-/// «Buni qarzsiz qanday o'tkazamiz?» — oilaviy muhokama o'tkazilganini qayd etadi.
-pub fn discuss(
+/// Kengash muhokamasini boshlaydi: tanlangan stsenariy va qaror matni. Oldingi muhokama (va roziliklar)
+/// tarixda qoladi — yangi qaror yangi rozilik talab qiladi (havas chegarasidagi kabi).
+pub fn start_discussion(
     db: &Database,
     now: OffsetDateTime,
-    id: &str,
+    input: StartDiscussionInputDto,
 ) -> Result<CeremoniesDto, SessionError> {
-    let row = load(db, id)?;
+    let row = load(db, &input.ceremony_id)?;
     ensure_planned(&row)?;
-    CeremonyRepo::new(db.connection()).set_discussed(&row.id, now)?;
+    let note = input.note.trim();
+    if note.chars().count() < MIN_NOTE_CHARS {
+        return Err(DomainError::DiscussionNoteRequired.into());
+    }
+    let repo = CeremonyRepo::new(db.connection());
+    if !repo
+        .scenarios(&row.id)?
+        .iter()
+        .any(|s| s.id == input.scenario_id)
+    {
+        return Err(StorageError::NotFound.into());
+    }
+    DiscussionRepo::new(db.connection()).insert(&DiscussionRow {
+        id: domain::IdGen::next_id(&UuidV7),
+        household_id: row.household_id.clone(),
+        ceremony_id: row.id.clone(),
+        scenario_id: input.scenario_id,
+        note: note.to_owned(),
+        started_at: now,
+        completed_at: None,
+        origin_device_id: DEVICE_ID.to_owned(),
+    })?;
+    overview(db, now)
+}
+
+/// Katta a'zoning roziligi (o'z PIN'i bilan; noto'g'ri urinishlar kutish qoidasiga kiradi). Hamma katta rozi
+/// bo'lgach muhokama yakunlanadi va marosimda `family_discussed` belgisi qo'yiladi.
+pub fn consent_discussion(
+    db: &Database,
+    now: OffsetDateTime,
+    input: ConsentDiscussionInputDto,
+) -> Result<CeremoniesDto, SessionError> {
+    let row = load(db, &input.ceremony_id)?;
+    ensure_planned(&row)?;
+    let discussions = DiscussionRepo::new(db.connection());
+    let discussion = discussions.latest(&row.id)?.ok_or(StorageError::NotFound)?;
+    let member = MemberRepo::new(db.connection())
+        .find(&input.member_id)?
+        .ok_or(StorageError::NotFound)?;
+    if member.household_id != row.household_id || member.role != MemberRole::Adult {
+        return Err(DomainError::InvalidRole.into());
+    }
+    let pins = PinRepo::new(db.connection());
+    let state = pins.find(&member.id)?.ok_or(StorageError::NotFound)?;
+    let verifier = state.verifier.clone().ok_or(DomainError::PinNotSet)?;
+    ensure_not_locked(&state, now)?;
+    if !verify_member_pin(&input.pin, &verifier, kdf_params())? {
+        pins.record_failure(&member.id, now)?;
+        return Err(SecurityError::WrongPin.into());
+    }
+    pins.reset_failures(&member.id)?;
+    discussions.insert_consent(
+        &domain::IdGen::next_id(&UuidV7),
+        &discussion.id,
+        &member.id,
+        now,
+    )?;
+    let consented = discussions.consented_members(&discussion.id)?;
+    let all_adults = adults_of(db, &row.household_id)?
+        .iter()
+        .all(|a| consented.contains(&a.id));
+    if all_adults && discussion.completed_at.is_none() {
+        discussions.set_completed(&discussion.id, now)?;
+        CeremonyRepo::new(db.connection()).set_discussed(&row.id, now)?;
+    }
     overview(db, now)
 }
 
@@ -468,16 +596,140 @@ pub fn pdf(
     Ok(pdf::render_estimate(&estimate)?)
 }
 
+/// Kengash bayonnomasi PDF baytlari: taqqoslash jadvali, qaror, kattalar roziligi.
+pub fn minutes_pdf(db: &Database, now: OffsetDateTime, id: &str) -> Result<Vec<u8>, SessionError> {
+    let ctx = finance::context(db, now)?;
+    let row = load(db, id)?;
+    let gauges = gauges(db, &ctx)?;
+    let dto = ceremony_dto(db, &row, &gauges)?;
+    let discussion = dto.discussion.ok_or(StorageError::NotFound)?;
+    let mut subtitle = kind_label(&row.kind).to_owned();
+    if let Some(date) = row.event_on {
+        subtitle.push_str(&format!(" · {}", pretty_date(date)));
+    }
+    let mut headers = vec!["Ko'rsatkich".to_owned()];
+    headers.extend(dto.scenarios.iter().map(|s| s.name.clone()));
+    let cell = |f: &dyn Fn(&ScenarioDto) -> String| -> Vec<String> {
+        dto.scenarios.iter().map(f).collect()
+    };
+    let mut rows = Vec::new();
+    for (label, values) in [
+        (
+            "Hajmi",
+            cell(&|s| format!("{} kun, {} kishi", s.days, s.guests)),
+        ),
+        ("Umumiy narx", cell(&|s| s.total.formatted.clone())),
+        ("Qarz qismi", cell(&|s| s.debt_part.formatted.clone())),
+        (
+            "Qarzni to'lash muddati",
+            cell(&|s| match s.payoff_months {
+                Some(months) => format!("{months} oy"),
+                None if s.has_debt => "daromad ulushi yo'q".to_owned(),
+                None => "—".to_owned(),
+            }),
+        ),
+        (
+            "Shu pulga muqobil",
+            cell(&|s| match s.months_of_needs {
+                Some(months) => format!("{months} oylik zarur xarajat"),
+                None => "xarajat tarixi yo'q".to_owned(),
+            }),
+        ),
+    ] {
+        let mut line = vec![label.to_owned()];
+        line.extend(values);
+        rows.push(line);
+    }
+    let dotted = |iso: &str| {
+        Date::parse(iso, &Iso8601::DATE)
+            .map(pretty_date)
+            .unwrap_or_else(|_| iso.to_owned())
+    };
+    let decision = vec![
+        (
+            "Tanlangan stsenariy".to_owned(),
+            discussion.scenario_name.clone(),
+        ),
+        ("Qaror".to_owned(), discussion.note.clone()),
+        ("Boshlangan".to_owned(), dotted(&discussion.started_on)),
+        (
+            "Yakunlangan".to_owned(),
+            discussion
+                .completed_on
+                .as_deref()
+                .map_or_else(|| "hali yo'q".to_owned(), dotted),
+        ),
+    ];
+    let adults = discussion
+        .adults
+        .iter()
+        .map(|a| {
+            let state = if a.consented {
+                "rozi"
+            } else if a.has_pin {
+                "hali rozi emas"
+            } else {
+                "PIN o'rnatilmagan"
+            };
+            (a.name.clone(), state.to_owned())
+        })
+        .collect();
+    let minutes = pdf::DiscussionMinutes {
+        title: row.title.clone(),
+        subtitle,
+        generated_on: pretty_date(ctx.today),
+        headers,
+        rows,
+        decision,
+        adults,
+        disclaimer: DISCLAIMER.to_owned(),
+    };
+    Ok(pdf::render_discussion_minutes(&minutes)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dto::MemberInputDto;
+    use crate::family::{add_member, members, set_member_pin};
     use security::SecretKey;
     use time::macros::datetime;
 
     const NOW: OffsetDateTime = datetime!(2026-10-15 06:00 UTC);
+    const OWNER_PIN: &str = "111111";
+    const SPOUSE_PIN: &str = "222222";
 
     fn database() -> Database {
         Database::open_in_memory(&SecretKey::from_array([71; 32])).expect("xotirada baza")
+    }
+
+    /// Daftar egasi (katta) — PIN o'rnatilgan holda.
+    fn owner_with_pin(db: &Database) -> String {
+        let owner = members(db, NOW)
+            .expect("a'zolar")
+            .into_iter()
+            .find(|m| m.role == "ADULT")
+            .expect("egasi")
+            .id;
+        set_member_pin(db, NOW, &owner, None, OWNER_PIN).expect("egasi PIN");
+        owner
+    }
+
+    fn consent(
+        db: &Database,
+        id: &str,
+        member: &str,
+        pin: &str,
+    ) -> Result<CeremoniesDto, SessionError> {
+        consent_discussion(
+            db,
+            NOW,
+            ConsentDiscussionInputDto {
+                ceremony_id: id.to_owned(),
+                member_id: member.to_owned(),
+                pin: pin.to_owned(),
+            },
+        )
     }
 
     fn line(
@@ -577,7 +829,27 @@ mod tests {
             Err(SessionError::Domain(DomainError::FamilyDiscussionRequired))
         ));
         // Qarzsiz stsenariy darhol tasdiqlanadi — lekin biz avval muhokama orqali qarzlisini sinaymiz.
-        discuss(&db, NOW, &id).expect("muhokama");
+        let owner = owner_with_pin(&db);
+        start_discussion(
+            &db,
+            NOW,
+            StartDiscussionInputDto {
+                ceremony_id: id.clone(),
+                scenario_id: big.clone(),
+                note: "Sarpo oila hissasidan, qarz olinmaydi; qolgani jamg'armadan.".into(),
+            },
+        )
+        .expect("muhokama boshlandi");
+        consent_discussion(
+            &db,
+            NOW,
+            ConsentDiscussionInputDto {
+                ceremony_id: id.clone(),
+                member_id: owner,
+                pin: OWNER_PIN.into(),
+            },
+        )
+        .expect("rozilik");
         let view = confirm_ceremony(
             &db,
             NOW,
@@ -654,5 +926,95 @@ mod tests {
             .expect("stsenariy");
         assert!(!scenario.has_debt);
         assert!(!view.items[0].has_debt);
+    }
+
+    #[test]
+    fn kengash_muhokamasi_qisqa_qaror_rad_hamma_katta_rozi_bolgach_yakunlanadi() {
+        let db = database();
+        let (id, big, _) = setup(&db);
+        let owner = owner_with_pin(&db);
+        let spouse = add_member(
+            &db,
+            NOW,
+            MemberInputDto {
+                name: "Nodira".into(),
+                role: "ADULT".into(),
+                pin: Some(SPOUSE_PIN.into()),
+            },
+        )
+        .expect("katta")
+        .id;
+        // Qisqa qaror matni rad etiladi.
+        let err = start_discussion(
+            &db,
+            NOW,
+            StartDiscussionInputDto {
+                ceremony_id: id.clone(),
+                scenario_id: big.clone(),
+                note: "Qisqa".into(),
+            },
+        );
+        assert!(matches!(
+            err,
+            Err(SessionError::Domain(DomainError::DiscussionNoteRequired))
+        ));
+        // Rozilik muhokamasiz — topilmadi.
+        assert!(consent(&db, &id, &owner, OWNER_PIN).is_err());
+        let view = start_discussion(
+            &db,
+            NOW,
+            StartDiscussionInputDto {
+                ceremony_id: id.clone(),
+                scenario_id: big.clone(),
+                note: "Sarpo oila hissasidan, mehmonlar 150 kishi; qarz olinmaydi.".into(),
+            },
+        )
+        .expect("boshlandi");
+        let discussion = view.items[0].discussion.as_ref().expect("muhokama");
+        assert_eq!(discussion.scenario_name, "Katta");
+        assert_eq!(discussion.adults.len(), 2);
+        assert!(!discussion.complete);
+        assert!(!view.items[0].family_discussed);
+        // Noto'g'ri PIN rad, to'g'risi — bitta katta roziligi yetarli emas.
+        assert!(matches!(
+            consent(&db, &id, &owner, "000000"),
+            Err(SessionError::Security(SecurityError::WrongPin))
+        ));
+        let view = consent(&db, &id, &owner, OWNER_PIN).expect("egasi rozi");
+        let discussion = view.items[0].discussion.as_ref().expect("muhokama");
+        assert!(!discussion.complete);
+        assert_eq!(discussion.adults.iter().filter(|a| a.consented).count(), 1);
+        assert!(!view.items[0].family_discussed);
+        // Ikkinchi katta ham rozi — yakunlandi, belgisi qo'yildi, tasdiqlash ochiladi.
+        let view = consent(&db, &id, &spouse, SPOUSE_PIN).expect("turmush o'rtog'i rozi");
+        let discussion = view.items[0].discussion.as_ref().expect("muhokama");
+        assert!(discussion.complete);
+        assert_eq!(discussion.completed_on.as_deref(), Some("2026-10-15"));
+        assert!(view.items[0].family_discussed);
+        let bytes = minutes_pdf(&db, NOW, &id).expect("bayonnoma");
+        assert!(bytes.starts_with(b"%PDF-"));
+        let view = confirm_ceremony(
+            &db,
+            NOW,
+            ConfirmCeremonyInputDto {
+                id: id.clone(),
+                scenario_id: big,
+            },
+        )
+        .expect("tasdiqlandi");
+        assert_eq!(view.items[0].status, "CONFIRMED");
+        // Tasdiqlangan marosimda yangi muhokama boshlanmaydi.
+        assert!(matches!(
+            start_discussion(
+                &db,
+                NOW,
+                StartDiscussionInputDto {
+                    ceremony_id: id,
+                    scenario_id: view.items[0].scenarios[1].id.clone(),
+                    note: "Yana bir bor ko'rib chiqamiz, chunki narxlar o'zgardi.".into(),
+                },
+            ),
+            Err(SessionError::Domain(DomainError::AgreementLocked))
+        ));
     }
 }

@@ -48,6 +48,7 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 
 ## Hal qilingan
 
+- **Marosim muhokamasi — oila kengashi rejimi (D11+, 2026-10-17).** «Buni qarzsiz qanday o'tkazamiz?» endi to'liq ekranli sessiya: stsenariylar taqqoslanadi, qaror matni (≥ 20 belgi) yoziladi, har bir `ADULT` o'z PIN'i bilan rozilik beradi; hamma rozi bo'lgach `family_discussed` qo'yiladi va bayonnoma PDF chiqadi. Bitta belgi (`discuss_ceremony`) olib tashlandi.
 - **Almashishda xonadon identifikatori (D14, 2026-10-16).** Ilova ichida qoida: fayldagi xonadon mahalliydan farq qilsa, faqat avto-yaratilgan bo'sh daftar kiruvchi xonadonga bo'shatiladi; yozuvli daftarda import `household_mismatch` bilan to'xtaydi (ikkinchi qurilma birinchisining eksportidan boshlanadi). `spec/interchange/README.md` 8-band. _(15-band)_
 - **MoneyParser (D4, 2026-10-14).** `money::parse_amount` mobil qoidalari bo'yicha: bo'sh joy, `_`, apostroflar, valyuta belgisi va so'zi; `money_parse.json` (16 vektor, shu jumladan xato holatlari). _(6-band)_
 - **Kalit fayli yo'q, baza bor (D4, 2026-10-14).** Sozlash bunday holatda rad etiladi (`DATABASE_WITHOUT_KEY`) va aniq xabar chiqadi; ma'lumot jim ustiga yozilmaydi. Eski bazani zaxiraga ko'chirish imkoniyati — keyinroq. _(18-band)_

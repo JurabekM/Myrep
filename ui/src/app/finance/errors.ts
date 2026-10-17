@@ -56,6 +56,7 @@ export const RULE_ERROR_KEYS = {
   WEAK_PASSWORD: "errors.weakPassword",
   OVERRIDE_REASON_REQUIRED: "errors.overrideReasonRequired",
   ATTACHMENT_INVALID: "errors.attachmentInvalid",
+  DISCUSSION_NOTE_REQUIRED: "errors.discussionNoteRequired",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

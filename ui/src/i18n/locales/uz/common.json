@@ -121,7 +121,8 @@
     "corruptContainer": "Fayl buzilgan yoki .baraka emas",
     "weakPassword": "Parol kamida 8 belgi bo'lishi kerak",
     "overrideReasonRequired": "Chetlab o'tish sababi kamida 20 belgi bo'lishi kerak",
-    "attachmentInvalid": "Biriktirma rasm emas yoki juda katta (2 MB gacha)"
+    "attachmentInvalid": "Biriktirma rasm emas yoki juda katta (2 MB gacha)",
+    "discussionNoteRequired": "Kengash qarori matni kamida 20 belgi bo'lishi kerak"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -939,7 +940,6 @@
     "debtQuestion": "Buni qarzsiz qanday o'tkazamiz?",
     "debtHint": "Qarz bilan moliyalashtiriladigan qator bor. Sanani tasdiqlashdan oldin oila bilan muhokama qiling: hajmni kamaytirish, muddatni surish yoki oila hissasini oshirish mumkinmi?",
     "discussed": "Muhokama o'tkazilgan ✓",
-    "markDiscussed": "Oilaviy muhokama o'tkazildi",
     "chooseScenario": "Tanlangan stsenariy",
     "confirm": "Sanani tasdiqlash",
     "confirmedNote": "Marosim tasdiqlangan: reja o'zgarmaydi.",
@@ -953,7 +953,35 @@
     "kindLabel": "Turi",
     "titleLabel": "Nomi",
     "dateLabel": "Sana",
-    "create": "Reja yaratish"
+    "create": "Reja yaratish",
+    "council": {
+      "title": "Oila kengashi: qarzsiz muhokama",
+      "subtitle": "«{{title}}» — stsenariylarni birga ko'rib chiqing, qarorni yozing, har bir katta o'z PIN'i bilan tasdiqlasin.",
+      "steps": {
+        "compare": "Stsenariylarni taqqoslash",
+        "consent": "Kattalar roziligi",
+        "summary": "Yakun va bayonnoma"
+      },
+      "compareHint": "Qarz bilan moliyalashtiriladigan qator bor. Hajmni kamaytirish, muddatni surish yoki oila hissasini oshirish — qaysi yo'l? Qarorni yozing: u bayonnomada qoladi.",
+      "restartHint": "Oldingi muhokama ({{scenario}}) bor. Yangi qaror yozilsa, roziliklar qaytadan beriladi.",
+      "note": "Qaror: buni qarzsiz qanday o'tkazamiz?",
+      "notePlaceholder": "Masalan: mehmonlar 100 kishi, sarpo oila hissasidan, xonanda o'rniga yozuv — qarz olinmaydi.",
+      "noteCount": "{{count}} / kamida {{min}} belgi",
+      "start": "Muhokamani boshlash",
+      "restart": "Yangi qaror bilan qayta boshlash",
+      "noDiscussion": "Avval 1-qadamda qarorni yozing.",
+      "decisionLine": "Tanlangan stsenariy: {{scenario}}",
+      "consentHint": "Har bir katta a'zo o'z PIN'i bilan tasdiqlaydi. Rozi: {{done}} / {{total}}.",
+      "pinFor": "{{name}} — PIN",
+      "noPin": "PIN o'rnatilmagan — Xarajatlar → Oila kengashi bo'limida o'rnating.",
+      "complete": "Hamma katta rozi — muhokama yakunlandi, sanani tasdiqlash mumkin.",
+      "summaryComplete": "Muhokama yakunlandi: marosim «qarzsiz qanday o'tkazamiz?» savoliga javob bilan tasdiqlanishi mumkin.",
+      "summaryPending": "Rozilik to'liq emas ({{done}} / {{total}}). Qolgan kattalar 2-qadamda PIN kiritsin.",
+      "minutesPdf": "Bayonnoma PDF",
+      "open": "Oila kengashi: qarzsiz muhokama",
+      "continue": "Oila kengashini davom ettirish",
+      "summaryLine": "Kengash qarori ({{scenario}}, rozi {{done}} / {{total}})"
+    }
   },
   "partnerships": {
     "title": "Sheriklik",
