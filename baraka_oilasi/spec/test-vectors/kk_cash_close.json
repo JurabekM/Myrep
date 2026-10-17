@@ -1,0 +1,351 @@
+{
+  "suite": "kk_cash_close",
+  "version": 1,
+  "description": "Kasb-kor kunlik kassa yopish: kutilgan qoldiq, farq, sabab, takrorlanuvchi kamomad (kasbkor/SPEC 5.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "cc-001",
+      "input": {
+        "currency": "UZS",
+        "opening": "50000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "320000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CASH",
+            "amount": "40000000"
+          },
+          {
+            "kind": "OWNER_DRAW",
+            "wallet": "CASH",
+            "amount": "30000000"
+          },
+          {
+            "kind": "TRANSFER",
+            "wallet": "CASH",
+            "amount": "150000000",
+            "toWallet": "CARD"
+          }
+        ],
+        "counted": "145000000",
+        "reason": "UNKNOWN",
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "320000000",
+        "cashExpenses": "40000000",
+        "ownerDraws": "30000000",
+        "handedOver": "150000000",
+        "otherIn": "0",
+        "otherOut": "0",
+        "expected": "150000000",
+        "difference": "-5000000",
+        "status": "SHORT",
+        "reason": "UNKNOWN",
+        "suggestSearch": false
+      }
+    },
+    {
+      "id": "cc-002",
+      "input": {
+        "currency": "UZS",
+        "opening": "50000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "320000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CASH",
+            "amount": "40000000"
+          },
+          {
+            "kind": "TRANSFER",
+            "wallet": "CASH",
+            "amount": "150000000",
+            "toWallet": "CARD"
+          }
+        ],
+        "counted": "150000000",
+        "reason": "OWNER_TOOK",
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "320000000",
+        "cashExpenses": "40000000",
+        "ownerDraws": "0",
+        "handedOver": "150000000",
+        "otherIn": "0",
+        "otherOut": "0",
+        "expected": "180000000",
+        "difference": "-30000000",
+        "status": "SHORT",
+        "reason": "OWNER_TOOK",
+        "suggestSearch": false
+      }
+    },
+    {
+      "id": "cc-003",
+      "input": {
+        "currency": "UZS",
+        "opening": "50000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "320000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CASH",
+            "amount": "40000000"
+          },
+          {
+            "kind": "OWNER_DRAW",
+            "wallet": "CASH",
+            "amount": "30000000"
+          },
+          {
+            "kind": "TRANSFER",
+            "wallet": "CASH",
+            "amount": "150000000",
+            "toWallet": "CARD"
+          }
+        ],
+        "counted": "152000000",
+        "reason": "CHANGE_ERROR",
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "320000000",
+        "cashExpenses": "40000000",
+        "ownerDraws": "30000000",
+        "handedOver": "150000000",
+        "otherIn": "0",
+        "otherOut": "0",
+        "expected": "150000000",
+        "difference": "2000000",
+        "status": "OVER",
+        "reason": "CHANGE_ERROR",
+        "suggestSearch": false
+      }
+    },
+    {
+      "id": "cc-004",
+      "input": {
+        "currency": "UZS",
+        "opening": "20000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CARD",
+            "amount": "90000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CARD",
+            "amount": "10000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "30000000"
+          }
+        ],
+        "counted": "50000000",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "30000000",
+        "cashExpenses": "0",
+        "ownerDraws": "0",
+        "handedOver": "0",
+        "otherIn": "0",
+        "otherOut": "0",
+        "expected": "50000000",
+        "difference": "0",
+        "status": "EXACT",
+        "reason": null,
+        "suggestSearch": false
+      }
+    },
+    {
+      "id": "cc-005",
+      "input": {
+        "currency": "UZS",
+        "opening": "0",
+        "moves": [
+          {
+            "kind": "TRANSFER",
+            "wallet": "CARD",
+            "amount": "40000000",
+            "toWallet": "CASH"
+          },
+          {
+            "kind": "OWNER_CONTRIBUTION",
+            "wallet": "CASH",
+            "amount": "100000000"
+          },
+          {
+            "kind": "OWNER_SALARY",
+            "wallet": "CASH",
+            "amount": "60000000"
+          }
+        ],
+        "counted": "80000000",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "0",
+        "cashExpenses": "0",
+        "ownerDraws": "0",
+        "handedOver": "0",
+        "otherIn": "140000000",
+        "otherOut": "60000000",
+        "expected": "80000000",
+        "difference": "0",
+        "status": "EXACT",
+        "reason": null,
+        "suggestSearch": false
+      }
+    },
+    {
+      "id": "cc-006",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "50000000"
+          }
+        ],
+        "counted": "58000000",
+        "reason": "UNKNOWN",
+        "recentDifferences": [
+          "-1000000",
+          "500000",
+          "-300000"
+        ]
+      },
+      "expected": {
+        "cashSales": "50000000",
+        "cashExpenses": "0",
+        "ownerDraws": "0",
+        "handedOver": "0",
+        "otherIn": "0",
+        "otherOut": "0",
+        "expected": "60000000",
+        "difference": "-2000000",
+        "status": "SHORT",
+        "reason": "UNKNOWN",
+        "suggestSearch": true
+      }
+    },
+    {
+      "id": "cc-007",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "50000000"
+          }
+        ],
+        "counted": "58000000",
+        "reason": "UNKNOWN",
+        "recentDifferences": [
+          "-1000000",
+          "500000"
+        ]
+      },
+      "expected": {
+        "cashSales": "50000000",
+        "cashExpenses": "0",
+        "ownerDraws": "0",
+        "handedOver": "0",
+        "otherIn": "0",
+        "otherOut": "0",
+        "expected": "60000000",
+        "difference": "-2000000",
+        "status": "SHORT",
+        "reason": "UNKNOWN",
+        "suggestSearch": false
+      }
+    },
+    {
+      "id": "cc-neg-001",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "moves": [],
+        "counted": "9000000",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "REASON_REQUIRED"
+      }
+    },
+    {
+      "id": "cc-neg-002",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "moves": [],
+        "counted": "9000000",
+        "reason": "LOST",
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "INVALID_REASON"
+      }
+    },
+    {
+      "id": "cc-neg-003",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "moves": [],
+        "counted": "-100",
+        "reason": "UNKNOWN",
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "cc-neg-004",
+      "input": {
+        "currency": "UZS",
+        "opening": "0",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "0"
+          }
+        ],
+        "counted": "0",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}

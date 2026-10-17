@@ -55,6 +55,10 @@ pub enum MoveKind {
     EquipmentPurchase,
     /// Uskuna sotildi (tushum emas).
     EquipmentSale,
+    /// Kassa yopishda kamomad (K4): naqd hamyonni tuzatadi, pul oqimiga kirmaydi.
+    CashShort,
+    /// Kassa yopishda ortiqcha.
+    CashOver,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -78,6 +82,8 @@ pub struct MonthReport {
     pub overdrawn: Option<Money>,
     pub equipment_purchases: Money,
     pub equipment_sales: Money,
+    /// Kassa farqlari yig'indisi (ortiqcha − kamomad).
+    pub cash_difference: Money,
     pub cash: Money,
     pub card: Money,
     pub negative_wallets: Vec<Wallet>,
@@ -98,7 +104,7 @@ pub fn month_report(
     let (mut cash, mut card) = (opening_cash, opening_card);
     let (mut revenue, mut expenses, mut draws, mut contributions, mut salary_paid) =
         (zero, zero, zero, zero, zero);
-    let (mut bought, mut sold) = (zero, zero);
+    let (mut bought, mut sold, mut cash_diff) = (zero, zero, zero);
     for m in moves {
         if !m.amount.is_positive() {
             return Err(DomainError::on("AMOUNT_NOT_POSITIVE", "amount"));
@@ -134,6 +140,14 @@ pub fn month_report(
             }
             MoveKind::EquipmentSale => {
                 sold = sold.checked_add(m.amount)?;
+                (Some(m.wallet), None)
+            }
+            MoveKind::CashShort => {
+                cash_diff = cash_diff.checked_sub(m.amount)?;
+                (None, Some(m.wallet))
+            }
+            MoveKind::CashOver => {
+                cash_diff = cash_diff.checked_add(m.amount)?;
                 (Some(m.wallet), None)
             }
         };
@@ -176,6 +190,7 @@ pub fn month_report(
         overdrawn,
         equipment_purchases: bought,
         equipment_sales: sold,
+        cash_difference: cash_diff,
         cash,
         card,
         negative_wallets,

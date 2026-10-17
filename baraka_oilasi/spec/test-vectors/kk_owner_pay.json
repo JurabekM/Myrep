@@ -51,6 +51,7 @@
         "overdrawn": "0",
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "680000000",
         "card": "70000000",
         "negativeWallets": []
@@ -93,6 +94,7 @@
         "overdrawn": "50000000",
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "350000000",
         "card": "0",
         "negativeWallets": []
@@ -135,6 +137,7 @@
         "overdrawn": "0",
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "0",
         "card": "0",
         "negativeWallets": []
@@ -183,6 +186,7 @@
         "overdrawn": null,
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "150000000",
         "card": "350000000",
         "negativeWallets": []
@@ -220,6 +224,7 @@
         "overdrawn": null,
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "-15000000",
         "card": "5000000",
         "negativeWallets": [
@@ -259,6 +264,7 @@
         "overdrawn": "0",
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "0",
         "card": "850000000",
         "negativeWallets": []
@@ -285,6 +291,7 @@
         "overdrawn": "0",
         "equipmentPurchases": "0",
         "equipmentSales": "0",
+        "cashDifference": "0",
         "cash": "75000000",
         "card": "0",
         "negativeWallets": []
@@ -332,8 +339,52 @@
         "overdrawn": null,
         "equipmentPurchases": "1200000000",
         "equipmentSales": "80000000",
+        "cashDifference": "0",
         "cash": "180000000",
         "card": "600000000",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-009",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "50000000",
+        "openingCard": "0",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "320000000"
+          },
+          {
+            "kind": "CASH_SHORT",
+            "wallet": "CASH",
+            "amount": "5000000"
+          },
+          {
+            "kind": "CASH_OVER",
+            "wallet": "CASH",
+            "amount": "2000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "320000000",
+        "expenses": "0",
+        "cashFlow": "320000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "-3000000",
+        "cash": "367000000",
+        "card": "0",
         "negativeWallets": []
       }
     },

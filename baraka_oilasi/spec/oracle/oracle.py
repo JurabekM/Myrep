@@ -822,7 +822,7 @@ def offer_check(answers):
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
 KK_WALLETS = ("CASH", "CARD")
 KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1,
-             "EQUIPMENT_PURCHASE": -1, "EQUIPMENT_SALE": 1}
+             "EQUIPMENT_PURCHASE": -1, "EQUIPMENT_SALE": 1, "CASH_SHORT": -1, "CASH_OVER": 1}
 
 
 def kk_month_report(opening_cash, opening_card, salary, moves):
@@ -861,6 +861,7 @@ def kk_month_report(opening_cash, opening_card, salary, moves):
         "salaryRemaining": None if salary == 0 else _s(max(0, salary - paid)),
         "overdrawn": None if salary == 0 else _s(max(0, paid - salary)),
         "equipmentPurchases": _s(tot["EQUIPMENT_PURCHASE"]), "equipmentSales": _s(tot["EQUIPMENT_SALE"]),
+        "cashDifference": _s(tot["CASH_OVER"] - tot["CASH_SHORT"]),
         "cash": _s(bal["CASH"]), "card": _s(bal["CARD"]),
         "negativeWallets": [w for w in KK_WALLETS if bal[w] < 0],
     }
@@ -929,6 +930,134 @@ def kk_true_profit(revenue, cogs, opex, owner_labor, family, depreciation, dispo
     return {"visibleProfit": _s(visible), "ownerLabor": _s(owner_labor), "familyLabor": _s(unpaid), "familyLaborPaid": _s(paid),
             "depreciation": _s(depreciation), "disposal": _s(disposal),
             "trueProfit": _s(visible - owner_labor - unpaid - depreciation - disposal)}
+
+
+KK_CASH_REASONS = ("UNRECORDED_EXPENSE", "CHANGE_ERROR", "GIVEN_ON_CREDIT", "OWNER_TOOK", "UNKNOWN")
+KK_SHORTAGE_REPEAT = 3
+
+
+def kk_cash_close(opening, moves, counted, reason, recent):
+    """Kunlik kassa yopish (SPEC 5.1). Kutilgan = ochilish + kunning naqd kassaga ta'siri (naqd tushum,
+    naqd chiqim, naqd «egasi oldi», kartaga topshirilgan, kartadan olingan va boshqalar); karta
+    harakatlari kassaga ta'sir qilmaydi. Farq = sanalgan − kutilgan; nol bo'lmasa sabab tanlanadi.
+    `recent` — oxirgi 4 hafta (shu kunsiz) farqlari: shu bilan 3+ kamomad — «xato qidirish» taklifi."""
+    if counted < 0 or opening < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    br = {"cashSales": 0, "cashExpenses": 0, "ownerDraws": 0, "handedOver": 0, "otherIn": 0, "otherOut": 0}
+    for m in moves:
+        a = int(m["amount"])
+        if a <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        k, w = m["kind"], m["wallet"]
+        if w not in KK_WALLETS:
+            raise OracleError("INVALID_WALLET")
+        if k == "TRANSFER":
+            to = m.get("toWallet")
+            if to not in KK_WALLETS:
+                raise OracleError("INVALID_WALLET")
+            if to == w:
+                raise OracleError("SAME_WALLET")
+            if w == "CASH":
+                br["handedOver"] += a
+            else:
+                br["otherIn"] += a
+            continue
+        if k not in KK_EFFECT and k != "OPENING":
+            raise OracleError("INVALID_KIND")
+        if w != "CASH":
+            continue
+        sign = 1 if k == "OPENING" else KK_EFFECT[k]
+        key = {"SALE": "cashSales", "EXPENSE": "cashExpenses", "OWNER_DRAW": "ownerDraws"}.get(k, "otherIn" if sign > 0 else "otherOut")
+        br[key] += a
+    expected = opening + br["cashSales"] - br["cashExpenses"] - br["ownerDraws"] - br["handedOver"] + br["otherIn"] - br["otherOut"]
+    diff = counted - expected
+    if diff != 0:
+        if reason is None:
+            raise OracleError("REASON_REQUIRED")
+        if reason not in KK_CASH_REASONS:
+            raise OracleError("INVALID_REASON")
+    shortages = sum(1 for d in recent if int(d) < 0) + (1 if diff < 0 else 0)
+    return {**{k: _s(v) for k, v in br.items()}, "expected": _s(expected), "difference": _s(diff),
+            "status": "EXACT" if diff == 0 else ("SHORT" if diff < 0 else "OVER"),
+            "reason": reason if diff != 0 else None, "suggestSearch": diff < 0 and shortages >= KK_SHORTAGE_REPEAT}
+
+
+KK_MAX_INSTALLMENTS = 120
+
+
+def kk_credit_sale(credit_price, cash_price, n, first_due, events, today):
+    """Nasiya (SPEC 5.2). Nasiya narxi qotiriladi: `n` ta oylik to'lovga largest remainder bilan bo'linadi
+    (qoldiq tiyinlar birinchi to'lovlarga), birinchisi `first_due` da. Hodisalar sana tartibida:
+    to'lov, kechirish (to'liq yoki qisman), muddatni uzaytirish (yopilmagan to'lovlar `m` oyga
+    suriladi, summa o'zgarmaydi). Kechikish uchun ustama yo'q — qoldiq sanaga bog'liq emas.
+    Kechikkan kunlar — eng birinchi yopilmagan va muddati o'tgan to'lov sanasidan; guruhlar 1–30,
+    31–60, 61–90, 90+."""
+    if credit_price <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if cash_price is not None and cash_price <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if not 1 <= n <= KK_MAX_INSTALLMENTS:
+        raise OracleError("INVALID_INSTALLMENTS")
+    amounts = allocate(credit_price, [1] * n)
+    dues = [add_months(first_due, k) for k in range(n)]
+    paid = forgiven = 0
+    prev = None
+    for e in events:
+        d = date.fromisoformat(e["date"])
+        if prev is not None and d < prev:
+            raise OracleError("INVALID_DATE")
+        prev = d
+        outstanding = credit_price - paid - forgiven
+        if e["kind"] in ("PAYMENT", "FORGIVE"):
+            a = int(e["amount"])
+            if a <= 0:
+                raise OracleError("AMOUNT_NOT_POSITIVE")
+            if a > outstanding:
+                raise OracleError("EXCEEDS_OUTSTANDING")
+            if e["kind"] == "PAYMENT":
+                paid += a
+            else:
+                forgiven += a
+        elif e["kind"] == "EXTEND":
+            mths = e["months"]
+            if not 1 <= mths <= 24:
+                raise OracleError("INVALID_EXTENSION")
+            if outstanding == 0:
+                raise OracleError("ALREADY_SETTLED")
+            covered, cum = paid + forgiven, 0
+            for i in range(n):
+                cum += amounts[i]
+                if cum > covered:
+                    dues[i] = add_months(dues[i], mths)
+        else:
+            raise OracleError("INVALID_KIND")
+    covered, cum = paid + forgiven, 0
+    rows, earliest, nxt = [], None, None
+    for i in range(n):
+        c = min(amounts[i], max(0, covered - cum))
+        cum += amounts[i]
+        if c == amounts[i]:
+            state = "PAID"
+        elif dues[i] < today:
+            state = "OVERDUE"
+            earliest = earliest or dues[i]
+        else:
+            state = "DUE"
+        if c < amounts[i] and nxt is None:
+            nxt = {"date": dues[i].isoformat(), "amount": _s(amounts[i] - c)}
+        rows.append({"due": dues[i].isoformat(), "amount": _s(amounts[i]), "covered": _s(c), "state": state})
+    outstanding = credit_price - paid - forgiven
+    days = (today - earliest).days if earliest else 0
+    if outstanding == 0:
+        status, bucket = "SETTLED", None
+    elif days == 0:
+        status, bucket = "CURRENT", None
+    else:
+        status = "OVERDUE"
+        bucket = "D1_30" if days <= 30 else "D31_60" if days <= 60 else "D61_90" if days <= 90 else "D90_PLUS"
+    return {"schedule": rows, "paid": _s(paid), "forgiven": _s(forgiven), "outstanding": _s(outstanding),
+            "status": status, "overdueDays": days, "bucket": bucket, "nextDue": nxt,
+            "creditMarkup": None if cash_price is None else _s(credit_price - cash_price)}
 
 
 KK_TAX_BASES = ("NONE", "REVENUE", "PROFIT", "FIXED")
@@ -1529,6 +1658,8 @@ def build_suites():
         # K2: uskuna kartadan olindi, eskisi naqdga sotildi — hamyonlar o'zgaradi, pul oqimi o'zgarmaydi.
         ("kk-008", 1000000, 15000000, 0, [mv("SALE", "CARD", 4000000), mv("EXPENSE", "CARD", 1000000),
                                           mv("EQUIPMENT_PURCHASE", "CARD", 12000000), mv("EQUIPMENT_SALE", "CASH", 800000)]),
+        # K4: kassa yopishdagi farq — naqd hamyonni tuzatadi, pul oqimiga kirmaydi.
+        ("kk-009", 500000, 0, 0, [mv("SALE", "CASH", 3200000), mv("CASH_SHORT", "CASH", 50000), mv("CASH_OVER", "CASH", 20000)]),
         ("kk-neg-001", 0, 0, 1000000, [mv("SALE", "CASH", 0)]),
         ("kk-neg-002", 0, 0, 1000000, [{"kind": "TRANSFER", "wallet": "CASH", "toWallet": "CASH", "amount": "100"}]),
         ("kk-neg-003", 0, 0, 1000000, [{"kind": "SALE", "wallet": "SAFE", "amount": "100"}]),
@@ -1652,6 +1783,76 @@ def build_suites():
         ("mc-neg-004", 1000000, 0, 0, 0, 0, tax("FIXED", amount=-1), rule(3000, 5000, 2000), False),
         ("mc-neg-005", 1000000, 0, 0, 0, 0, tax("MONTHLY"), rule(3000, 5000, 2000), False),
     ]
+    # K4: kunlik kassa yopish. Summalar so'mda.
+    def cm(kind, wallet, amount, to=None):
+        m = {"kind": kind, "wallet": wallet, "amount": _s(amount * 100)}
+        if to:
+            m["toWallet"] = to
+        return m
+    bahodir = [cm("SALE", "CASH", 3200000), cm("EXPENSE", "CASH", 400000), cm("OWNER_DRAW", "CASH", 300000), cm("TRANSFER", "CASH", 1500000, "CARD")]
+    cc = [
+        # SPEC 5.1 Bahodir aka: kutilgan 1 500 000, sanalgan 1 450 000 → −50 000.
+        ("cc-001", 500000, bahodir, 1450000, "UNKNOWN", []),
+        # «Egasi oldi» yozilmagan: farq aynan shu summa, sabab — egasi oldi.
+        ("cc-002", 500000, bahodir[:2] + bahodir[3:], 1500000, "OWNER_TOOK", []),
+        # Ortiqcha (+) farq.
+        ("cc-003", 500000, bahodir, 1520000, "CHANGE_ERROR", []),
+        # Karta tushumi va kartadagi chiqim kassaga ta'sir qilmaydi; aniq — sabab kerak emas.
+        ("cc-004", 200000, [cm("SALE", "CARD", 900000), cm("EXPENSE", "CARD", 100000), cm("SALE", "CASH", 300000)], 500000, None, []),
+        # Kartadan naqdga olindi, kapital kiritildi, maosh naqdda o'tkazildi.
+        ("cc-005", 0, [cm("TRANSFER", "CARD", 400000, "CASH"), cm("OWNER_CONTRIBUTION", "CASH", 1000000), cm("OWNER_SALARY", "CASH", 600000)], 800000, None, []),
+        # 4 hafta ichida uchinchi kamomad — «xato qidirish» taklifi (ayblov emas).
+        ("cc-006", 100000, [cm("SALE", "CASH", 500000)], 580000, "UNKNOWN", ["-1000000", "500000", "-300000"]),
+        # Ikkinchi kamomad — hali taklif yo'q.
+        ("cc-007", 100000, [cm("SALE", "CASH", 500000)], 580000, "UNKNOWN", ["-1000000", "500000"]),
+        ("cc-neg-001", 100000, [], 90000, None, []),
+        ("cc-neg-002", 100000, [], 90000, "LOST", []),
+        ("cc-neg-003", 100000, [], -1, "UNKNOWN", []),
+        ("cc-neg-004", 0, [cm("SALE", "CASH", 0)], 0, None, []),
+    ]
+    suites["kk_cash_close"] = _suite("kk_cash_close", "Kasb-kor kunlik kassa yopish: kutilgan qoldiq, farq, sabab, takrorlanuvchi kamomad (kasbkor/SPEC 5.1)", [
+        _case(cid, {"currency": U, "opening": _s(o * 100), "moves": ms, "counted": _s(c * 100), "reason": r, "recentDifferences": rec},
+              lambda o=o, ms=ms, c=c, r=r, rec=rec: kk_cash_close(o * 100, ms, c * 100, r, rec))
+        for cid, o, ms, c, r, rec in cc])
+
+    # K4: nasiya. Summalar so'mda.
+    def pay(d, a):
+        return {"kind": "PAYMENT", "date": d, "amount": _s(a * 100)}
+    def forgive(d, a):
+        return {"kind": "FORGIVE", "date": d, "amount": _s(a * 100)}
+    def extend(d, m):
+        return {"kind": "EXTEND", "date": d, "months": m}
+    cs = [
+        # SPEC 5.2 Malika: naqd 600 000, nasiya 660 000 = 3 × 220 000; ikkinchi to'lov 20 kun kechikdi.
+        ("cs-001", 660000, 600000, 3, "2026-11-10", [pay("2026-11-10", 220000)], "2026-12-30"),
+        # Xuddi shu nasiya, yarim yildan keyin: qoldiq o'sha-o'sha (ustama yo'q), guruh 90+.
+        ("cs-002", 660000, 600000, 3, "2026-11-10", [pay("2026-11-10", 220000)], "2027-06-20"),
+        # Qoldiq tiyinlar birinchi to'lovlarga; qisman to'lov.
+        ("cs-003", 1000000, None, 3, "2026-12-31", [pay("2026-12-31", 200000)], "2027-01-15"),
+        # Muddat uzaytirildi (2 oy): yopilmagan to'lovlar suriladi, summa o'zgarmaydi.
+        ("cs-004", 900000, 800000, 3, "2026-11-05", [pay("2026-11-05", 300000), extend("2026-12-01", 2)], "2027-01-20"),
+        # Qisman kechirish va qolganini to'lash — yopildi.
+        ("cs-005", 500000, None, 2, "2026-10-01", [pay("2026-10-01", 250000), forgive("2026-11-15", 50000), pay("2026-11-20", 200000)], "2027-03-01"),
+        # Hammasi kechirildi.
+        ("cs-006", 300000, None, 1, "2026-10-01", [forgive("2026-12-01", 300000)], "2027-01-01"),
+        # Muddati hali kelmagan.
+        ("cs-007", 1200000, 1000000, 6, "2027-02-01", [], "2027-01-10"),
+        # 45 kun kechikkan.
+        ("cs-008", 600000, None, 2, "2026-11-15", [], "2026-12-30"),
+        ("cs-neg-001", 0, None, 3, "2026-11-01", [], "2026-11-01"),
+        ("cs-neg-002", 600000, None, 0, "2026-11-01", [], "2026-11-01"),
+        ("cs-neg-003", 600000, None, 3, "2026-11-01", [pay("2026-11-01", 700000)], "2026-11-01"),
+        ("cs-neg-004", 600000, None, 3, "2026-11-01", [pay("2026-11-05", 100000), pay("2026-11-02", 100000)], "2026-11-10"),
+        ("cs-neg-005", 600000, None, 3, "2026-11-01", [extend("2026-11-02", 25)], "2026-11-10"),
+        ("cs-neg-006", 300000, None, 1, "2026-11-01", [pay("2026-11-01", 300000), extend("2026-11-02", 1)], "2026-11-10"),
+    ]
+    suites["kk_credit_sale"] = _suite("kk_credit_sale", "Kasb-kor nasiya: qotirilgan narx va jadval, to'lov, muddat uzaytirish, kechirish, kechikish (ustamasiz), yosh guruhlari (kasbkor/SPEC 5.2)", [
+        _case(cid, {"currency": U, "creditPrice": _s(cp * 100), "cashPrice": None if cash is None else _s(cash * 100), "installments": n,
+                    "firstDue": fd, "events": ev, "today": td},
+              lambda cp=cp, cash=cash, n=n, fd=fd, ev=ev, td=td: kk_credit_sale(cp * 100, None if cash is None else cash * 100, n,
+                                                                              date.fromisoformat(fd), ev, date.fromisoformat(td)))
+        for cid, cp, cash, n, fd, ev, td in cs])
+
     suites["kk_month_close"] = _suite("kk_month_close", "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)", [
         _case(cid, {"currency": U, "revenue": _s(t(r)), "expenses": _s(t(ex)), "depreciation": _s(t(dp)), "ownerSalary": _s(t(sal)), "ownerPaid": _s(t(pd)),
                     "tax": tx, "rule": ru, "carryOverdraw": co},
@@ -1664,7 +1865,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
-                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close")
+                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale")
 
 
 def generate(directory: str) -> None:
@@ -1734,6 +1935,13 @@ def selftest() -> None:
     sched = kk_depreciation(700000000, 0, 36, [])["schedule"]
     assert sched.count("19444445") == 16 and sched.count("19444444") == 20 and sum(map(int, sched)) == 700000000
     assert kk_order_quote(45000000, 600, 4000000, 5000000, 2000000, 500, 70000000)["cost"] == "79800000"
+    # K4 (kasbkor/SPEC 5.1, 5.2): Bahodir — kutilgan 1 500 000, farq −50 000; Malika — 20 kun kechikkan.
+    bah = kk_cash_close(50000000, [{"kind": "SALE", "wallet": "CASH", "amount": "320000000"}, {"kind": "EXPENSE", "wallet": "CASH", "amount": "40000000"},
+                                   {"kind": "OWNER_DRAW", "wallet": "CASH", "amount": "30000000"},
+                                   {"kind": "TRANSFER", "wallet": "CASH", "toWallet": "CARD", "amount": "150000000"}], 145000000, "UNKNOWN", [])
+    assert (bah["expected"], bah["difference"]) == ("150000000", "-5000000")
+    mal = kk_credit_sale(66000000, 60000000, 3, date(2026, 11, 10), [{"kind": "PAYMENT", "date": "2026-11-10", "amount": "22000000"}], date(2026, 12, 30))
+    assert (mal["status"], mal["overdueDays"], mal["outstanding"]) == ("OVERDUE", 20, "44000000")
     # K3 (kasbkor/SPEC 4.5): qolgan 2 580 000 → 774 000 / 1 290 000 / 516 000.
     nil = kk_month_close(1800000000, 970000000, 20000000, 500000000, 500000000, {"base": "REVENUE", "bp": 400},
                          {"reserveBp": 3000, "workingBp": 5000, "expansionBp": 2000, "sadaqaBp": 0}, False)

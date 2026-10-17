@@ -1,0 +1,531 @@
+{
+  "suite": "kk_credit_sale",
+  "version": 1,
+  "description": "Kasb-kor nasiya: qotirilgan narx va jadval, to'lov, muddat uzaytirish, kechirish, kechikish (ustamasiz), yosh guruhlari (kasbkor/SPEC 5.2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "cs-001",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "66000000",
+        "cashPrice": "60000000",
+        "installments": 3,
+        "firstDue": "2026-11-10",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-10",
+            "amount": "22000000"
+          }
+        ],
+        "today": "2026-12-30"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-11-10",
+            "amount": "22000000",
+            "covered": "22000000",
+            "state": "PAID"
+          },
+          {
+            "due": "2026-12-10",
+            "amount": "22000000",
+            "covered": "0",
+            "state": "OVERDUE"
+          },
+          {
+            "due": "2027-01-10",
+            "amount": "22000000",
+            "covered": "0",
+            "state": "DUE"
+          }
+        ],
+        "paid": "22000000",
+        "forgiven": "0",
+        "outstanding": "44000000",
+        "status": "OVERDUE",
+        "overdueDays": 20,
+        "bucket": "D1_30",
+        "nextDue": {
+          "date": "2026-12-10",
+          "amount": "22000000"
+        },
+        "creditMarkup": "6000000"
+      }
+    },
+    {
+      "id": "cs-002",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "66000000",
+        "cashPrice": "60000000",
+        "installments": 3,
+        "firstDue": "2026-11-10",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-10",
+            "amount": "22000000"
+          }
+        ],
+        "today": "2027-06-20"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-11-10",
+            "amount": "22000000",
+            "covered": "22000000",
+            "state": "PAID"
+          },
+          {
+            "due": "2026-12-10",
+            "amount": "22000000",
+            "covered": "0",
+            "state": "OVERDUE"
+          },
+          {
+            "due": "2027-01-10",
+            "amount": "22000000",
+            "covered": "0",
+            "state": "OVERDUE"
+          }
+        ],
+        "paid": "22000000",
+        "forgiven": "0",
+        "outstanding": "44000000",
+        "status": "OVERDUE",
+        "overdueDays": 192,
+        "bucket": "D90_PLUS",
+        "nextDue": {
+          "date": "2026-12-10",
+          "amount": "22000000"
+        },
+        "creditMarkup": "6000000"
+      }
+    },
+    {
+      "id": "cs-003",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "100000000",
+        "cashPrice": null,
+        "installments": 3,
+        "firstDue": "2026-12-31",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-12-31",
+            "amount": "20000000"
+          }
+        ],
+        "today": "2027-01-15"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-12-31",
+            "amount": "33333334",
+            "covered": "20000000",
+            "state": "OVERDUE"
+          },
+          {
+            "due": "2027-01-31",
+            "amount": "33333333",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-02-28",
+            "amount": "33333333",
+            "covered": "0",
+            "state": "DUE"
+          }
+        ],
+        "paid": "20000000",
+        "forgiven": "0",
+        "outstanding": "80000000",
+        "status": "OVERDUE",
+        "overdueDays": 15,
+        "bucket": "D1_30",
+        "nextDue": {
+          "date": "2026-12-31",
+          "amount": "13333334"
+        },
+        "creditMarkup": null
+      }
+    },
+    {
+      "id": "cs-004",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "90000000",
+        "cashPrice": "80000000",
+        "installments": 3,
+        "firstDue": "2026-11-05",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-05",
+            "amount": "30000000"
+          },
+          {
+            "kind": "EXTEND",
+            "date": "2026-12-01",
+            "months": 2
+          }
+        ],
+        "today": "2027-01-20"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-11-05",
+            "amount": "30000000",
+            "covered": "30000000",
+            "state": "PAID"
+          },
+          {
+            "due": "2027-02-05",
+            "amount": "30000000",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-03-05",
+            "amount": "30000000",
+            "covered": "0",
+            "state": "DUE"
+          }
+        ],
+        "paid": "30000000",
+        "forgiven": "0",
+        "outstanding": "60000000",
+        "status": "CURRENT",
+        "overdueDays": 0,
+        "bucket": null,
+        "nextDue": {
+          "date": "2027-02-05",
+          "amount": "30000000"
+        },
+        "creditMarkup": "10000000"
+      }
+    },
+    {
+      "id": "cs-005",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "50000000",
+        "cashPrice": null,
+        "installments": 2,
+        "firstDue": "2026-10-01",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-10-01",
+            "amount": "25000000"
+          },
+          {
+            "kind": "FORGIVE",
+            "date": "2026-11-15",
+            "amount": "5000000"
+          },
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-20",
+            "amount": "20000000"
+          }
+        ],
+        "today": "2027-03-01"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-10-01",
+            "amount": "25000000",
+            "covered": "25000000",
+            "state": "PAID"
+          },
+          {
+            "due": "2026-11-01",
+            "amount": "25000000",
+            "covered": "25000000",
+            "state": "PAID"
+          }
+        ],
+        "paid": "45000000",
+        "forgiven": "5000000",
+        "outstanding": "0",
+        "status": "SETTLED",
+        "overdueDays": 0,
+        "bucket": null,
+        "nextDue": null,
+        "creditMarkup": null
+      }
+    },
+    {
+      "id": "cs-006",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "30000000",
+        "cashPrice": null,
+        "installments": 1,
+        "firstDue": "2026-10-01",
+        "events": [
+          {
+            "kind": "FORGIVE",
+            "date": "2026-12-01",
+            "amount": "30000000"
+          }
+        ],
+        "today": "2027-01-01"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-10-01",
+            "amount": "30000000",
+            "covered": "30000000",
+            "state": "PAID"
+          }
+        ],
+        "paid": "0",
+        "forgiven": "30000000",
+        "outstanding": "0",
+        "status": "SETTLED",
+        "overdueDays": 0,
+        "bucket": null,
+        "nextDue": null,
+        "creditMarkup": null
+      }
+    },
+    {
+      "id": "cs-007",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "120000000",
+        "cashPrice": "100000000",
+        "installments": 6,
+        "firstDue": "2027-02-01",
+        "events": [],
+        "today": "2027-01-10"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2027-02-01",
+            "amount": "20000000",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-03-01",
+            "amount": "20000000",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-04-01",
+            "amount": "20000000",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-05-01",
+            "amount": "20000000",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-06-01",
+            "amount": "20000000",
+            "covered": "0",
+            "state": "DUE"
+          },
+          {
+            "due": "2027-07-01",
+            "amount": "20000000",
+            "covered": "0",
+            "state": "DUE"
+          }
+        ],
+        "paid": "0",
+        "forgiven": "0",
+        "outstanding": "120000000",
+        "status": "CURRENT",
+        "overdueDays": 0,
+        "bucket": null,
+        "nextDue": {
+          "date": "2027-02-01",
+          "amount": "20000000"
+        },
+        "creditMarkup": "20000000"
+      }
+    },
+    {
+      "id": "cs-008",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "60000000",
+        "cashPrice": null,
+        "installments": 2,
+        "firstDue": "2026-11-15",
+        "events": [],
+        "today": "2026-12-30"
+      },
+      "expected": {
+        "schedule": [
+          {
+            "due": "2026-11-15",
+            "amount": "30000000",
+            "covered": "0",
+            "state": "OVERDUE"
+          },
+          {
+            "due": "2026-12-15",
+            "amount": "30000000",
+            "covered": "0",
+            "state": "OVERDUE"
+          }
+        ],
+        "paid": "0",
+        "forgiven": "0",
+        "outstanding": "60000000",
+        "status": "OVERDUE",
+        "overdueDays": 45,
+        "bucket": "D31_60",
+        "nextDue": {
+          "date": "2026-11-15",
+          "amount": "30000000"
+        },
+        "creditMarkup": null
+      }
+    },
+    {
+      "id": "cs-neg-001",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "0",
+        "cashPrice": null,
+        "installments": 3,
+        "firstDue": "2026-11-01",
+        "events": [],
+        "today": "2026-11-01"
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "cs-neg-002",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "60000000",
+        "cashPrice": null,
+        "installments": 0,
+        "firstDue": "2026-11-01",
+        "events": [],
+        "today": "2026-11-01"
+      },
+      "expected": {
+        "error": "INVALID_INSTALLMENTS"
+      }
+    },
+    {
+      "id": "cs-neg-003",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "60000000",
+        "cashPrice": null,
+        "installments": 3,
+        "firstDue": "2026-11-01",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-01",
+            "amount": "70000000"
+          }
+        ],
+        "today": "2026-11-01"
+      },
+      "expected": {
+        "error": "EXCEEDS_OUTSTANDING"
+      }
+    },
+    {
+      "id": "cs-neg-004",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "60000000",
+        "cashPrice": null,
+        "installments": 3,
+        "firstDue": "2026-11-01",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-05",
+            "amount": "10000000"
+          },
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-02",
+            "amount": "10000000"
+          }
+        ],
+        "today": "2026-11-10"
+      },
+      "expected": {
+        "error": "INVALID_DATE"
+      }
+    },
+    {
+      "id": "cs-neg-005",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "60000000",
+        "cashPrice": null,
+        "installments": 3,
+        "firstDue": "2026-11-01",
+        "events": [
+          {
+            "kind": "EXTEND",
+            "date": "2026-11-02",
+            "months": 25
+          }
+        ],
+        "today": "2026-11-10"
+      },
+      "expected": {
+        "error": "INVALID_EXTENSION"
+      }
+    },
+    {
+      "id": "cs-neg-006",
+      "input": {
+        "currency": "UZS",
+        "creditPrice": "30000000",
+        "cashPrice": null,
+        "installments": 1,
+        "firstDue": "2026-11-01",
+        "events": [
+          {
+            "kind": "PAYMENT",
+            "date": "2026-11-01",
+            "amount": "30000000"
+          },
+          {
+            "kind": "EXTEND",
+            "date": "2026-11-02",
+            "months": 1
+          }
+        ],
+        "today": "2026-11-10"
+      },
+      "expected": {
+        "error": "ALREADY_SETTLED"
+      }
+    }
+  ]
+}

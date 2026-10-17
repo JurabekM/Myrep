@@ -1,6 +1,8 @@
 use baraka_agreements::{check_completeness, AgreementDraft, AgreementType};
 use baraka_domain_common::WEEK_ANCHOR;
+use baraka_domain_kasbkor::cash::{cash_close, CashReason};
 use baraka_domain_kasbkor::close::{month_close, CloseInput, SplitRule, TaxRule};
+use baraka_domain_kasbkor::credit::{CreditEvent, CreditTerms};
 use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
@@ -137,6 +139,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_true_profit" => kk_true_profit(input),
         "kk_order_quote" => kk_order_quote(input),
         "kk_month_close" => kk_month_close(input),
+        "kk_cash_close" => kk_cash_close(input),
+        "kk_credit_sale" => kk_credit_sale(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1026,6 +1030,8 @@ fn kk_owner_pay(v: &Value) -> R {
             "OWNER_SALARY" => MoveKind::OwnerSalary,
             "EQUIPMENT_PURCHASE" => MoveKind::EquipmentPurchase,
             "EQUIPMENT_SALE" => MoveKind::EquipmentSale,
+            "CASH_SHORT" => MoveKind::CashShort,
+            "CASH_OVER" => MoveKind::CashOver,
             "TRANSFER" => MoveKind::Transfer {
                 to: wallet(m, "toWallet")?,
             },
@@ -1057,6 +1063,7 @@ fn kk_owner_pay(v: &Value) -> R {
         "overdrawn": opt(r.overdrawn),
         "equipmentPurchases": r.equipment_purchases.minor().to_string(),
         "equipmentSales": r.equipment_sales.minor().to_string(),
+        "cashDifference": r.cash_difference.minor().to_string(),
         "cash": r.cash.minor().to_string(),
         "card": r.card.minor().to_string(),
         "negativeWallets": r.negative_wallets.iter().map(|w| w.as_str()).collect::<Vec<_>>(),
@@ -1222,5 +1229,123 @@ fn kk_month_close(v: &Value) -> R {
             "sadaqa": m(a.sadaqa),
         })),
         "reserveBelowDepreciation": out.reserve_below_depreciation,
+    }))
+}
+
+fn kk_moves(v: &Value, c: Currency) -> Result<Vec<Move>, E> {
+    let wallet = |m: &Value, k: &str| -> Result<Wallet, E> {
+        Wallet::parse(s(m, k)?).ok_or_else(|| E("INVALID_WALLET".into()))
+    };
+    let mut moves = Vec::new();
+    for m in v.as_array().ok_or_else(|| bad("moves"))? {
+        let kind = match s(m, "kind")? {
+            "SALE" => MoveKind::Sale,
+            "EXPENSE" => MoveKind::Expense,
+            "OWNER_DRAW" => MoveKind::OwnerDraw,
+            "OWNER_CONTRIBUTION" => MoveKind::OwnerContribution,
+            "OWNER_SALARY" => MoveKind::OwnerSalary,
+            "EQUIPMENT_PURCHASE" => MoveKind::EquipmentPurchase,
+            "EQUIPMENT_SALE" => MoveKind::EquipmentSale,
+            "CASH_SHORT" => MoveKind::CashShort,
+            "CASH_OVER" => MoveKind::CashOver,
+            "TRANSFER" => MoveKind::Transfer {
+                to: wallet(m, "toWallet")?,
+            },
+            _ => return Err(E("INVALID_KIND".into())),
+        };
+        moves.push(Move {
+            kind,
+            wallet: wallet(m, "wallet")?,
+            amount: money(m, "amount", c)?,
+        });
+    }
+    Ok(moves)
+}
+
+fn kk_cash_close(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let reason = match v["reason"].as_str() {
+        None => None,
+        Some(r) => Some(CashReason::parse(r).ok_or_else(|| E("INVALID_REASON".into()))?),
+    };
+    let recent = v["recentDifferences"]
+        .as_array()
+        .ok_or_else(|| bad("recentDifferences"))?
+        .iter()
+        .map(|d| int_str(d).map(|m| Money::new(m, c)))
+        .collect::<Result<Vec<_>, _>>()?;
+    let r = cash_close(
+        money(v, "opening", c)?,
+        &kk_moves(&v["moves"], c)?,
+        money(v, "counted", c)?,
+        reason,
+        &recent,
+    )?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "cashSales": m(r.cash_sales),
+        "cashExpenses": m(r.cash_expenses),
+        "ownerDraws": m(r.owner_draws),
+        "handedOver": m(r.handed_over),
+        "otherIn": m(r.other_in),
+        "otherOut": m(r.other_out),
+        "expected": m(r.expected),
+        "difference": m(r.difference),
+        "status": r.status.as_str(),
+        "reason": r.reason.map(CashReason::as_str),
+        "suggestSearch": r.suggest_search,
+    }))
+}
+
+fn kk_credit_sale(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let terms = CreditTerms {
+        credit_price: money(v, "creditPrice", c)?,
+        cash_price: if v["cashPrice"].is_null() {
+            None
+        } else {
+            Some(money(v, "cashPrice", c)?)
+        },
+        installments: u32::try_from(i(v, "installments")?)
+            .map_err(|_| E("INVALID_INSTALLMENTS".into()))?,
+        first_due: date(&v["firstDue"])?,
+    };
+    let mut events = Vec::new();
+    for e in v["events"].as_array().ok_or_else(|| bad("events"))? {
+        let on = date(&e["date"])?;
+        events.push(match s(e, "kind")? {
+            "PAYMENT" => CreditEvent::Payment {
+                on,
+                amount: money(e, "amount", c)?,
+            },
+            "FORGIVE" => CreditEvent::Forgive {
+                on,
+                amount: money(e, "amount", c)?,
+            },
+            "EXTEND" => CreditEvent::Extend {
+                on,
+                months: u32::try_from(i(e, "months")?)
+                    .map_err(|_| E("INVALID_EXTENSION".into()))?,
+            },
+            _ => return Err(E("INVALID_KIND".into())),
+        });
+    }
+    let st = terms.state(&events, date(&v["today"])?)?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "schedule": st.schedule.iter().map(|r| json!({
+            "due": r.due.format("%Y-%m-%d").to_string(),
+            "amount": m(r.amount),
+            "covered": m(r.covered),
+            "state": r.state.as_str(),
+        })).collect::<Vec<_>>(),
+        "paid": m(st.paid),
+        "forgiven": m(st.forgiven),
+        "outstanding": m(st.outstanding),
+        "status": st.status.as_str(),
+        "overdueDays": st.overdue_days,
+        "bucket": st.bucket.map(|b| b.as_str()),
+        "nextDue": st.next_due.map(|(d, a)| json!({ "date": d.format("%Y-%m-%d").to_string(), "amount": m(a) })),
+        "creditMarkup": st.credit_markup.map(m),
     }))
 }

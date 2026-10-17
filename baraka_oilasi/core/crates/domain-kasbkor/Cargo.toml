@@ -10,6 +10,7 @@ publish.workspace = true
 [dependencies]
 baraka-money.workspace = true
 baraka-domain-common.workspace = true
+chrono.workspace = true
 
 [lints]
 workspace = true
