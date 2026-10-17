@@ -1,5 +1,6 @@
 use baraka_agreements::{check_completeness, AgreementDraft, AgreementType};
 use baraka_domain_common::WEEK_ANCHOR;
+use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -127,6 +128,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "venture_idea" => idea(input),
         "offer_check" => offer(input),
         "review_protocol" => protocol(input),
+        "kk_owner_pay" => kk_owner_pay(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -998,5 +1000,53 @@ fn protocol(v: &Value) -> R {
         "status": r.status.as_str(),
         "firstBroken": first,
         "entriesAfter": r.entries_after,
+    }))
+}
+
+fn kk_owner_pay(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let wallet = |m: &Value, k: &str| -> Result<Wallet, E> {
+        Wallet::parse(s(m, k)?).ok_or_else(|| E("INVALID_WALLET".into()))
+    };
+    let mut moves = Vec::new();
+    for m in v["moves"].as_array().ok_or_else(|| bad("moves"))? {
+        let kind = match s(m, "kind")? {
+            "SALE" => MoveKind::Sale,
+            "EXPENSE" => MoveKind::Expense,
+            "OWNER_DRAW" => MoveKind::OwnerDraw,
+            "OWNER_CONTRIBUTION" => MoveKind::OwnerContribution,
+            "OWNER_SALARY" => MoveKind::OwnerSalary,
+            "TRANSFER" => MoveKind::Transfer {
+                to: wallet(m, "toWallet")?,
+            },
+            _ => return Err(E("INVALID_KIND".into())),
+        };
+        moves.push(Move {
+            kind,
+            wallet: wallet(m, "wallet")?,
+            amount: money(m, "amount", c)?,
+        });
+    }
+    let r = month_report(
+        c,
+        money(v, "openingCash", c)?,
+        money(v, "openingCard", c)?,
+        money(v, "ownerSalary", c)?,
+        &moves,
+    )?;
+    let opt = |m: Option<Money>| m.map(|m| m.minor().to_string());
+    Ok(json!({
+        "revenue": r.revenue.minor().to_string(),
+        "expenses": r.expenses.minor().to_string(),
+        "cashFlow": r.cash_flow.minor().to_string(),
+        "ownerDraws": r.owner_draws.minor().to_string(),
+        "ownerSalaryTransferred": r.owner_salary_transferred.minor().to_string(),
+        "contributions": r.contributions.minor().to_string(),
+        "ownerPaid": r.owner_paid.minor().to_string(),
+        "salaryRemaining": opt(r.salary_remaining),
+        "overdrawn": opt(r.overdrawn),
+        "cash": r.cash.minor().to_string(),
+        "card": r.card.minor().to_string(),
+        "negativeWallets": r.negative_wallets.iter().map(|w| w.as_str()).collect::<Vec<_>>(),
     }))
 }

@@ -819,6 +819,50 @@ def offer_check(answers):
     return {"verdict": verdict, "flags": flags}
 
 
+# --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
+KK_WALLETS = ("CASH", "CARD")
+KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1}
+
+
+def kk_month_report(opening_cash, opening_card, salary, moves):
+    """Oy hisoboti: tushum, chiqim, pul oqimi (tushum − chiqim; egasi oldi, kapital va maosh bu yerga
+    kirmaydi), egasiga to'langan (maosh o'tkazmasi + «egasi oldi»), maosh qoldig'i yoki ortiqcha olingan
+    (maosh belgilangan bo'lsa), hamyon qoldiqlari (oy boshidagi qoldiq + harakatlar)."""
+    if salary < 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    bal = {"CASH": opening_cash, "CARD": opening_card}
+    tot = {k: 0 for k in ("SALE", "EXPENSE", "OWNER_DRAW", "OWNER_CONTRIBUTION", "OWNER_SALARY")}
+    for m in moves:
+        amount = int(m["amount"])
+        if amount <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        if m["wallet"] not in KK_WALLETS:
+            raise OracleError("INVALID_WALLET")
+        if m["kind"] == "TRANSFER":
+            to = m.get("toWallet")
+            if to not in KK_WALLETS:
+                raise OracleError("INVALID_WALLET")
+            if to == m["wallet"]:
+                raise OracleError("SAME_WALLET")
+            bal[m["wallet"]] -= amount
+            bal[to] += amount
+            continue
+        if m["kind"] not in KK_EFFECT:
+            raise OracleError("INVALID_KIND")
+        bal[m["wallet"]] += KK_EFFECT[m["kind"]] * amount
+        tot[m["kind"]] += amount
+    paid = tot["OWNER_SALARY"] + tot["OWNER_DRAW"]
+    return {
+        "revenue": _s(tot["SALE"]), "expenses": _s(tot["EXPENSE"]), "cashFlow": _s(tot["SALE"] - tot["EXPENSE"]),
+        "ownerDraws": _s(tot["OWNER_DRAW"]), "ownerSalaryTransferred": _s(tot["OWNER_SALARY"]),
+        "contributions": _s(tot["OWNER_CONTRIBUTION"]), "ownerPaid": _s(paid),
+        "salaryRemaining": None if salary == 0 else _s(max(0, salary - paid)),
+        "overdrawn": None if salary == 0 else _s(max(0, paid - salary)),
+        "cash": _s(bal["CASH"]), "card": _s(bal["CARD"]),
+        "negativeWallets": [w for w in KK_WALLETS if bal[w] < 0],
+    }
+
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -1326,13 +1370,47 @@ def build_suites():
         _case(cid, {"entries": es, "storedHashes": hs, "protocolSeq": n, "protocolHead": hd},
               lambda es=es, hs=hs, n=n, hd=hd: review_protocol(es, hs, n, hd))
         for cid, es, hs, n, hd in rp])
+
+    # K1: Kasb-kor — egasi maoshi va hamyonlar. Summalar tiyinda (UZS exponent 2).
+    def mv(kind, wallet, amount, to=None):
+        m = {"kind": kind, "wallet": wallet, "amount": _s(amount * 100)}
+        if to:
+            m["toWallet"] = to
+        return m
+    kk = [
+        # Nilufar (SPEC 2.2): maosh 5 mln; 1,2 mln «egasi oldi», 3,8 mln o'tkazildi — qoldiq 0.
+        ("kk-001", 0, 3000000, 5000000, [mv("SALE", "CARD", 10000000), mv("SALE", "CASH", 8000000), mv("EXPENSE", "CARD", 8500000),
+                                   mv("OWNER_DRAW", "CASH", 1200000), mv("OWNER_SALARY", "CARD", 3800000)]),
+        # Ortiqcha olingan: maosh 4 mln, «egasi oldi» 3 + 1,5 mln.
+        ("kk-002", 2000000, 0, 4000000, [mv("SALE", "CASH", 6000000), mv("OWNER_DRAW", "CASH", 3000000), mv("OWNER_DRAW", "CASH", 1500000)]),
+        # Kapital kiritish tushum emas va maoshga ta'sir qilmaydi; maosh qisman o'tkazilgan.
+        ("kk-003", 0, 0, 3000000, [mv("OWNER_CONTRIBUTION", "CARD", 5000000), mv("EXPENSE", "CARD", 4200000), mv("OWNER_SALARY", "CARD", 800000)]),
+        # Bahodir aka (SPEC 5.1 bilan bir xil raqamlar): kassadan kartaga topshirildi.
+        ("kk-004", 500000, 2000000, 0, [mv("SALE", "CASH", 3200000), mv("EXPENSE", "CASH", 400000), mv("OWNER_DRAW", "CASH", 300000),
+                                        mv("TRANSFER", "CASH", 1500000, "CARD")]),
+        # Maosh belgilanmagan; kassa minusga tushdi (yozilmagan tushum yoki xato) — belgi.
+        ("kk-005", 100000, 0, 0, [mv("EXPENSE", "CASH", 250000), mv("SALE", "CARD", 50000)]),
+        # Chiqim tushumdan ko'p — pul oqimi manfiy.
+        ("kk-006", 0, 10000000, 2000000, [mv("SALE", "CARD", 3000000), mv("EXPENSE", "CARD", 4500000)]),
+        # Bo'sh oy.
+        ("kk-007", 750000, 0, 2500000, []),
+        ("kk-neg-001", 0, 0, 1000000, [mv("SALE", "CASH", 0)]),
+        ("kk-neg-002", 0, 0, 1000000, [{"kind": "TRANSFER", "wallet": "CASH", "toWallet": "CASH", "amount": "100"}]),
+        ("kk-neg-003", 0, 0, 1000000, [{"kind": "SALE", "wallet": "SAFE", "amount": "100"}]),
+        ("kk-neg-004", 0, 0, -1, []),
+    ]
+    suites["kk_owner_pay"] = _suite("kk_owner_pay", "Kasb-kor: tushum, chiqim, pul oqimi, egasiga to'langan, maosh qoldig'i, naqd va karta qoldiqlari (kasbkor/SPEC 2)", [
+        _case(cid, {"currency": U, "openingCash": _s(oc * 100), "openingCard": _s(ob * 100), "ownerSalary": _s(sal * 100 if sal > 0 else sal), "moves": ms},
+              lambda oc=oc, ob=ob, sal=sal, ms=ms: kk_month_report(oc * 100, ob * 100, sal * 100 if sal > 0 else sal, ms))
+        for cid, oc, ob, sal, ms in kk])
     return suites
 
 
 ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format", "amortization", "emergency_target",
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
-                 "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol")
+                 "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
+                 "kk_owner_pay")
 
 
 def generate(directory: str) -> None:
@@ -1501,6 +1579,16 @@ def selftest() -> None:
     assert verify_chain(t1, chain(t1)) is None
     assert review_protocol(t1, chain(t1), 2, CHAIN_HASHES[1])["status"] == "HEAD_MISMATCH"
     assert review_protocol(CHAIN_ENTRIES, CHAIN_HASHES, 3, CHAIN_HASHES[2]) == {"status": "INTACT", "firstBroken": None, "entriesAfter": 0}
+    # K1 (kasbkor/SPEC 2.2, 5.1): «egasi oldi» foydani (pul oqimini) kamaytirmaydi, maoshdan hisoblanadi.
+    r = kk_month_report(0, 0, 500000000, [{"kind": "SALE", "wallet": "CASH", "amount": "1800000000"},
+                                          {"kind": "EXPENSE", "wallet": "CASH", "amount": "850000000"},
+                                          {"kind": "OWNER_DRAW", "wallet": "CASH", "amount": "120000000"}])
+    assert r["cashFlow"] == "950000000" and r["ownerPaid"] == "120000000" and r["salaryRemaining"] == "380000000"
+    r = kk_month_report(50000000, 0, 0, [{"kind": "SALE", "wallet": "CASH", "amount": "320000000"},
+                                         {"kind": "EXPENSE", "wallet": "CASH", "amount": "40000000"},
+                                         {"kind": "OWNER_DRAW", "wallet": "CASH", "amount": "30000000"},
+                                         {"kind": "TRANSFER", "wallet": "CASH", "toWallet": "CARD", "amount": "150000000"}])
+    assert r["cash"] == "150000000" and r["card"] == "150000000" and r["overdrawn"] is None
     print("oracle selftest: OK")
 
 

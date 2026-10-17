@@ -32,6 +32,7 @@ baraka-journal = { path = "core/crates/journal" }
 baraka-domain-common = { path = "core/crates/domain-common" }
 baraka-agreements = { path = "core/crates/agreements" }
 baraka-domain-uy = { path = "core/crates/domain-uy" }
+baraka-domain-kasbkor = { path = "core/crates/domain-kasbkor" }
 baraka-security = { path = "core/crates/security" }
 baraka-storage = { path = "core/crates/storage" }
 baraka-app = { path = "core/crates/app" }

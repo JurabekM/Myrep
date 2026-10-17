@@ -8,6 +8,8 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+baraka-money.workspace = true
+baraka-domain-common.workspace = true
 
 [lints]
 workspace = true
