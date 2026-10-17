@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-record-move"
+description = "Enables the kk_record_move command without any pre-configured scope."
+commands.allow = ["kk_record_move"]
+
+[[permission]]
+identifier = "deny-kk-record-move"
+description = "Denies the kk_record_move command without any pre-configured scope."
+commands.deny = ["kk_record_move"]

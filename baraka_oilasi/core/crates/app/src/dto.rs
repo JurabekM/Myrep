@@ -2083,6 +2083,7 @@ pub struct NudgeDto {
 #[serde(rename_all = "camelCase")]
 pub struct KkOverviewDto {
     pub period_start: String,
+    /// Davrning oxirgi kuni (shu kun ham kiradi).
     pub period_end: String,
     /// Egasining oylik maoshi; belgilanmagan bo'lsa `null`.
     pub owner_salary: Option<MoneyDto>,

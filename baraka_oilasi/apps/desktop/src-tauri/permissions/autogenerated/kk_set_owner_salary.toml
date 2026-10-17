@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-set-owner-salary"
+description = "Enables the kk_set_owner_salary command without any pre-configured scope."
+commands.allow = ["kk_set_owner_salary"]
+
+[[permission]]
+identifier = "deny-kk-set-owner-salary"
+description = "Denies the kk_set_owner_salary command without any pre-configured scope."
+commands.deny = ["kk_set_owner_salary"]

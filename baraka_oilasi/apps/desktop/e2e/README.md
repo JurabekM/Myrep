@@ -10,6 +10,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `01-onboarding` | 5 qadamli onboarding, tiklash kodi, «qarzim bor» → qarzlar ekrani, eslatmalar, til va shrift qayta ochilganda saqlanishi |
 | `02-anvar` | Anvar ssenariysi (mavjud funksiyalar bilan): daromad → ulush → xarajat → audit → qarz → 70/20/10 → «Qarzsiz kun» → qarz yopilishi → Dilshod bilan musharaka → kassa daftari → davr taqsimoti → vazifa hodisasi → oylik ko'rik → zaxira nusxa |
 | `03-restore` | Zaxira nusxa → yangi profil → «Mavjud xonadonga qo'shilish» → ma'lumotlar 1:1 |
+| `04-kasbkor` | Kasb-kor «ikki cho'ntak»: boshlang'ich qoldiq → maosh → tushum (`Ctrl+N`) → chiqim → «egasi oldi» (pul oqimi kamaymaydi) → maosh Uy'ga → ulush → Uy'da daromad |
 
 ## Ishga tushirish (Linux)
 ```bash

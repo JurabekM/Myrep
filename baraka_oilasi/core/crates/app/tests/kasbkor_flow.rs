@@ -183,6 +183,31 @@ fn two_pockets_owner_salary_goes_to_uy_atomically() {
 }
 
 #[test]
+fn month_boundary_next_period_first_day_is_not_counted() {
+    let c = clock("2026-11-20T10:00:00+05:00");
+    let (app, _, kk) = app_with(c, &["UY", "KASBKOR"]);
+    let mut s = sale("1 000 000", "CASH");
+    s.occurred_on = Some("2026-12-01".into());
+    app.kk_record_sale(&kk, s).unwrap();
+    let mut s = sale("400 000", "CASH");
+    s.occurred_on = Some("2026-11-30".into());
+    app.kk_record_sale(&kk, s).unwrap();
+
+    let nov = app.kk_overview(&kk, None).unwrap();
+    assert_eq!(
+        (nov.period_start.as_str(), nov.period_end.as_str()),
+        ("2026-11-01", "2026-11-30")
+    );
+    assert_eq!(minor(&nov.revenue), 40_000_000);
+    assert_eq!(minor(&nov.cash), 40_000_000);
+    assert_eq!(nov.entries.len(), 1);
+
+    let dec = app.kk_overview(&kk, Some("2026-12-15".into())).unwrap();
+    assert_eq!(minor(&dec.revenue), 100_000_000);
+    assert_eq!(minor(&dec.cash), 140_000_000);
+}
+
+#[test]
 fn wallet_transfers_and_validation() {
     let (app, _, kk) = app_with(clock("2026-11-20T10:00:00+05:00"), &["UY", "KASBKOR"]);
     app.kk_record_move(&kk, mv("OPENING", "CASH", "500 000"))

@@ -313,6 +313,7 @@ version = "0.1.0"
 dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
+ "baraka-domain-kasbkor",
  "baraka-domain-uy",
  "baraka-interchange",
  "baraka-journal",
@@ -358,6 +359,14 @@ dependencies = [
  "chrono-tz",
  "serde",
  "uuid",
+]
+
+[[package]]
+name = "baraka-domain-kasbkor"
+version = "0.1.0"
+dependencies = [
+ "baraka-domain-common",
+ "baraka-money",
 ]
 
 [[package]]

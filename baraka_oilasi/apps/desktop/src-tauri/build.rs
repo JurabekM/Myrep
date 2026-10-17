@@ -112,6 +112,11 @@ const COMMANDS: &[&str] = &[
     "settings",
     "update_settings",
     "home_nudges",
+    "kk_overview",
+    "kk_set_owner_salary",
+    "kk_record_sale",
+    "kk_record_move",
+    "kk_pay_owner_salary",
 ];
 
 fn main() {

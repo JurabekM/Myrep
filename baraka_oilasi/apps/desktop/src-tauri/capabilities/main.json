@@ -118,6 +118,11 @@
     "allow-join-household",
     "allow-settings",
     "allow-update-settings",
-    "allow-home-nudges"
+    "allow-home-nudges",
+    "allow-kk-overview",
+    "allow-kk-set-owner-salary",
+    "allow-kk-record-sale",
+    "allow-kk-record-move",
+    "allow-kk-pay-owner-salary"
   ]
 }

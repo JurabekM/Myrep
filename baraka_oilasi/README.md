@@ -35,7 +35,8 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | U13: vazifa hodisalari, oylik ochiq hisob ko'rigi (bayonnoma + zanjir boshi), «katta foyda»da qayta o'qish, nizo va hakam (taqsimot bloki, ish papkasi PDF), yillik yangilash, oilaviy kelishuvlar, kelishuvlar markazi va eslatmalar | ✅ yadro + desktop; Android UI — keyingi sessiya |
 | U14: `.baraka` eksport/import (shifrlangan, yagona sxema), uch tomonlama birlashtirish va ziddiyat tanlovi, jurnal ayrilishini aniqlash, zaxira nusxa, QR/kod bilan yangi qurilmani ulash | ✅ yadro + desktop + Python oracle; Android UI — keyingi sessiya |
 | U15: 5 qadamli onboarding (daromad ritmi, qarz savoli), sozlamalar (qurilma tili, shrift, mavzu), bosh sahifa eslatmalari, accessibility (WCAG kontrast tekshiruvi, axe, klaviatura, High Contrast), yakuniy E2E (`tauri-driver`), reliz cheklisti | ✅ yadro + desktop + Linux E2E; Windows imzo/E2E va Android UI — keyingi sessiya |
-| K0: Kasb-kor makoni spetsifikatsiyasi (`docs/kasbkor/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda; kod K1 dan |
+| K0: Kasb-kor makoni spetsifikatsiyasi (`docs/kasbkor/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda |
+| K1: Kasb-kor «ikki cho'ntak» — tushum/chiqim, «egasi oldi», kapital, naqd kassa va karta, egasi maoshi va uni Uy'ga atomar o'tkazish | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

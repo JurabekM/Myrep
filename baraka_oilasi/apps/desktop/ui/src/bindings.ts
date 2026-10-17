@@ -145,6 +145,11 @@ export const commands = {
 	settings: () => typedError<SettingsDto, AppError>(__TAURI_INVOKE("settings")),
 	updateSettings: (input: SettingsInput) => typedError<SettingsDto, AppError>(__TAURI_INVOKE("update_settings", { input })),
 	homeNudges: (spaceId: string) => typedError<NudgeDto[], AppError>(__TAURI_INVOKE("home_nudges", { spaceId })),
+	kkOverview: (spaceId: string, date: string | null) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_overview", { spaceId, date })),
+	kkSetOwnerSalary: (spaceId: string, amount: string) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_set_owner_salary", { spaceId, amount })),
+	kkRecordSale: (spaceId: string, input: KkSaleInput) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_record_sale", { spaceId, input })),
+	kkRecordMove: (spaceId: string, input: KkMoveInput) => typedError<KkOverviewDto, AppError>(__TAURI_INVOKE("kk_record_move", { spaceId, input })),
+	kkPayOwnerSalary: (spaceId: string, input: KkSalaryInput) => typedError<KkSalaryPaidDto, AppError>(__TAURI_INVOKE("kk_pay_owner_salary", { spaceId, input })),
 };
 
 /** Events */
@@ -924,6 +929,79 @@ export type JoinInput = {
 	secret: string,
 	deviceName: string,
 	platform: string,
+};
+
+/**  `kind`: `SALE`, `EXPENSE`, `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `OWNER_SALARY`, `TRANSFER`. */
+export type KkEntryDto = {
+	id: string,
+	kind: string,
+	wallet: string,
+	toWallet: string | null,
+	amount: MoneyDto,
+	occurredOn: string,
+	note: string | null,
+	categoryId: string | null,
+};
+
+export type KkMoveInput = {
+	/**  `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `TRANSFER`. */
+	kind: string,
+	wallet: string,
+	toWallet: string | null,
+	amount: string,
+	occurredOn: string | null,
+	note: string | null,
+};
+
+/**  Kasb-kor bosh sahifasi. `cashFlow` = tushum − chiqim («egasi oldi», kapital va maosh kirmaydi). */
+export type KkOverviewDto = {
+	periodStart: string,
+	/**  Davrning oxirgi kuni (shu kun ham kiradi). */
+	periodEnd: string,
+	/**  Egasining oylik maoshi; belgilanmagan bo'lsa `null`. */
+	ownerSalary: MoneyDto | null,
+	revenue: MoneyDto,
+	expenses: MoneyDto,
+	cashFlow: MoneyDto,
+	ownerDraws: MoneyDto,
+	ownerSalaryTransferred: MoneyDto,
+	contributions: MoneyDto,
+	/**  Bosh ekran 2-raqami: Uy'ga o'tkazilgan maosh + «egasi oldi». */
+	ownerPaid: MoneyDto,
+	salaryRemaining: MoneyDto | null,
+	/**  Maoshdan ortiq olingan (faqat musbat bo'lsa). */
+	overdrawn: MoneyDto | null,
+	cash: MoneyDto,
+	card: MoneyDto,
+	/**  Manfiy qoldiqli hamyonlar: `CASH`, `CARD`. */
+	negativeWallets: string[],
+	/**  Shu oy yozuvlari (yangisi birinchi). */
+	entries: KkEntryDto[],
+};
+
+export type KkSalaryInput = {
+	/**  Bo'lmasa — shu oy maosh qoldig'i. */
+	amount: string | null,
+	/**  Qaysi hamyondan: `CASH` yoki `CARD` (Uy'dagi daromad kanali ham shu). */
+	wallet: string,
+	occurredOn: string | null,
+	note: string | null,
+};
+
+/**  Maosh o'tkazildi: Kasb-kor hisobi va Uy'dagi daromad (1-qonun ulushi taklifi bilan). */
+export type KkSalaryPaidDto = {
+	overview: KkOverviewDto,
+	uySpaceId: string,
+	uyIncome: IncomeRecordedDto,
+};
+
+export type KkSaleInput = {
+	amount: string,
+	/**  `CASH` yoki `CARD`. */
+	channel: string,
+	occurredOn: string | null,
+	/**  Buyurtma, mijoz yoki izoh. */
+	note: string | null,
 };
 
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */
@@ -1724,7 +1802,7 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync" | "kasbkor";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {

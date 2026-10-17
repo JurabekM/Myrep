@@ -49,3 +49,22 @@ pub(crate) const SADAQA_KEY: &str = "category.sadaqa";
 
 /// Boshlang'ich avto-ulush: 5% (uy/SPEC 2.2).
 pub(crate) const DEFAULT_SHARE_BP: i64 = 500;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Har bir standart kategoriya nomi tarjima manbasida bor (aks holda UI kalitni ko'rsatadi).
+    #[test]
+    fn every_category_key_is_translated() {
+        let uz = include_str!("../../../../shared/i18n/uz.json");
+        let ru = include_str!("../../../../shared/i18n/ru.json");
+        for kind in SpaceKind::ALL {
+            for (key, _) in default_categories(*kind) {
+                let needle = format!("\"{key}\":");
+                assert!(uz.contains(&needle), "uz.json: {key}");
+                assert!(ru.contains(&needle), "ru.json: {key}");
+            }
+        }
+    }
+}

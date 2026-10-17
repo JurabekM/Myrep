@@ -89,7 +89,8 @@
 ### OQ-K2. Egasi maoshi Uy makonida qanday daromad?
 - **Masala:** `BARAKA_OILASI.md` 4.6 da «egasi maoshi Uy'da `MOL | TAVAKKAL`» deyilgan. Lekin maosh — egasining mehnati uchun (`TER`), foyda ulushi esa kapital va tavakkal uchun (`MOL` / `TAVAKKAL`).
 - **Taklif:** maosh → `TER`; «Hisob kuni»da egasiga foyda ulushi o'tkazilsa → `MOL`. 4.6 matni shunga moslanadi.
-- **To'sadi:** K1. **Holat:** OCHIQ.
+- **Vaqtinchalik qaror (K1):** kodda maosh → `TER` (`kasbkor.rs`, `SALARY_SOURCE_TYPE` — bitta joy). `BARAKA_OILASI.md` 4.6 matni (3-bo'lim emas) mahsulot egasi tasdig'idan keyin moslanadi.
+- **To'sadi:** K3 (foyda ulushi). **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ### OQ-K3. Soliq zaxirasi qoidasi
 - **Taklif:** egasi o'zi kiritadi: baza (tushum yoki foyda) va foiz yoki qat'iy summa. Ilova rejim va stavka tavsiya qilmaydi («soliq maslahati emas»).

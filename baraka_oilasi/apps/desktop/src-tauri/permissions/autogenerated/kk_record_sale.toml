@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-record-sale"
+description = "Enables the kk_record_sale command without any pre-configured scope."
+commands.allow = ["kk_record_sale"]
+
+[[permission]]
+identifier = "deny-kk-record-sale"
+description = "Denies the kk_record_sale command without any pre-configured scope."
+commands.deny = ["kk_record_sale"]

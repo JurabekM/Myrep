@@ -2057,5 +2057,120 @@
   "nudge_action_BACKUP": "Zaxira olish",
   "nudge_dismiss": "Eslatmasin",
   "error_INVALID_INCOME_RHYTHM": "Daromad ritmini tanlang",
-  "error_INVALID_LOCALE": "Bunday til yoʻq"
+  "error_INVALID_LOCALE": "Bunday til yoʻq",
+  "kk_ownerPaid": "Egasiga toʻlangan (shu oy)",
+  "kk_ownerPaidSplit": "Maosh: {salary} · Egasi oldi: {draws}",
+  "@kk_ownerPaidSplit": {
+    "placeholders": {
+      "draws": {},
+      "salary": {}
+    }
+  },
+  "kk_cashFlow": "Pul oqimi (shu oy)",
+  "kk_cashFlowSplit": "Tushum: {revenue} · Chiqim: {expenses}",
+  "@kk_cashFlowSplit": {
+    "placeholders": {
+      "expenses": {},
+      "revenue": {}
+    }
+  },
+  "kk_cashFlowHint": "Tushum − chiqim. «Egasi oldi», kapital kiritish va maosh bu yerga kirmaydi — ular foydani kamaytirmaydi.",
+  "kk_wallets": "Hamyonlar",
+  "kk_wallet_CASH": "Naqd kassa",
+  "kk_wallet_CARD": "Karta",
+  "kk_walletLabel": "Hamyon",
+  "kk_fromWallet": "Qaysi hamyondan",
+  "kk_toWallet": "Qaysi hamyonga",
+  "kk_negativeWallet": "Qoldiq manfiy: yozuvlarni yoki boshlangʻich qoldiqni tekshiring.",
+  "kk_actions": "Yozuv qoʻshish",
+  "kk_action_SALE": "Tushum",
+  "kk_action_EXPENSE": "Chiqim",
+  "kk_action_OWNER_DRAW": "Egasi oldi",
+  "kk_action_OWNER_CONTRIBUTION": "Kapital kiritish",
+  "kk_action_TRANSFER": "Hamyonlar orasida",
+  "kk_action_OPENING": "Boshlangʻich qoldiq",
+  "kk_hint_SALE": "Mijozdan tushgan pul: buyurtma, sotuv yoki xizmat.",
+  "kk_hint_EXPENSE": "Ish uchun sarf: material, ijara, ish haqi, soliq…",
+  "kk_hint_OWNER_DRAW": "Egasi kassadan oʻziga oldi. Foydani kamaytirmaydi, lekin «Egasiga toʻlangan» ga qoʻshiladi.",
+  "kk_hint_OWNER_CONTRIBUTION": "Egasi ishga oʻz pulini qoʻydi. Tushum hisoblanmaydi.",
+  "kk_hint_TRANSFER": "Masalan, kassadagi naqdni kartaga qoʻyish. Pul oqimiga taʼsir qilmaydi.",
+  "kk_hint_OPENING": "Hisobni boshlagan kundagi hamyon qoldigʻi.",
+  "kk_category": "Kategoriya",
+  "kk_date": "Sana (boʻsh — bugun)",
+  "kk_note": "Izoh",
+  "kk_saleNote": "Buyurtma yoki mijoz",
+  "kk_entries": "Shu oy yozuvlari",
+  "kk_period": "{from} – {to}",
+  "@kk_period": {
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
+  },
+  "kk_noEntries": "Bu oy hali yozuv yoʻq. Birinchi tushumdan boshlang (Ctrl+N).",
+  "kk_col_date": "Sana",
+  "kk_col_kind": "Tur",
+  "kk_col_wallet": "Hamyon",
+  "kk_col_note": "Izoh",
+  "kk_col_amount": "Summa",
+  "kk_kind_SALE": "Tushum",
+  "kk_kind_EXPENSE": "Chiqim",
+  "kk_kind_OPENING": "Boshlangʻich qoldiq",
+  "kk_kind_OWNER_DRAW": "Egasi oldi",
+  "kk_kind_OWNER_CONTRIBUTION": "Kapital kiritish",
+  "kk_kind_OWNER_SALARY": "Egasi maoshi → Uy",
+  "kk_kind_TRANSFER": "Hamyonlar orasida",
+  "kk_salary": "Egasining maoshi",
+  "kk_salarySet": "Maosh belgilash",
+  "kk_salaryChange": "Oʻzgartirish",
+  "kk_salaryAmount": "Oylik maosh",
+  "kk_salaryMonthly": "Oyiga {amount}",
+  "@kk_salaryMonthly": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_salaryRemaining": "Shu oy qoldi: {amount}",
+  "@kk_salaryRemaining": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_overdrawn": "Bu oy maoshdan {amount} koʻp olindi. Keyingi oy maoshidan ushlab qolamizmi yoki maoshni qayta koʻrib chiqamizmi?",
+  "@kk_overdrawn": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_salaryHint": "Oʻzingizga qatʼiy oylik belgilang: ish puli va uy puli aralashmaydi, maosh esa Uy makoniga daromad boʻlib tushadi.",
+  "kk_paySalary": "Maoshni Uy'ga oʻtkazish",
+  "kk_paySalaryHint": "Bitta yozuv: Kasb-kor'da maosh chiqimi, Uy'da daromad. Keyin Uy'dagi odatiy ulush taklifi.",
+  "kk_transfer": "Oʻtkazish",
+  "kk_salaryPaid": "Uy makoniga {amount} daromad yozildi.",
+  "@kk_salaryPaid": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mentor_kk": "Ish puli — ishniki, uy puli — uyniki. Oʻzingizga qatʼiy maosh belgilang va har oy Uy'ga oʻtkazing.",
+  "category_kk_materials": "Material va xomashyo",
+  "category_kk_rent": "Ijara (ustaxona, doʻkon)",
+  "category_kk_wages": "Ishchilar haqi",
+  "category_kk_transport": "Yetkazish va yoʻl",
+  "category_kk_marketing": "Reklama",
+  "category_kk_tax": "Soliq va yigʻimlar",
+  "category_kk_equipment": "Asbob-uskuna",
+  "category_kk_other": "Boshqa",
+  "category_mf_rent": "Turar joy ijarasi",
+  "category_mf_food": "Oziq-ovqat",
+  "category_mf_transport": "Yoʻl",
+  "category_mf_phone": "Telefon va internet",
+  "category_mf_transfer_fee": "Pul joʻnatish komissiyasi",
+  "category_mf_other": "Boshqa",
+  "error_NOT_KASBKOR_SPACE": "Bu amal faqat Kasb-kor makonida",
+  "error_INVALID_WALLET": "Naqd kassa yoki kartani tanlang",
+  "error_SAME_WALLET": "Ikki xil hamyonni tanlang",
+  "error_OWNER_SALARY_NOT_SET": "Avval oylik maoshni belgilang",
+  "error_SALARY_ALREADY_PAID": "Shu oy maoshi toʻliq oʻtkazilgan. Kerak boʻlsa, summani oʻzingiz kiriting.",
+  "error_UY_SPACE_REQUIRED": "Maoshni oʻtkazish uchun xonadonda Uy makoni kerak"
 }

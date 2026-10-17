@@ -12,6 +12,7 @@ import { DebtsScreen } from "../features/inventory/DebtsScreen";
 import { PartnershipsScreen } from "../features/partnership/PartnershipsScreen";
 import { PayoffScreen } from "../features/payoff/PayoffScreen";
 import { IncomeDialog } from "../features/income/IncomeDialog";
+import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import { SyncScreen } from "../features/sync/SyncScreen";
@@ -40,6 +41,9 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "settings", label: "nav.settings" },
 ];
 
+/** Kasb-kor makonida (K1): bosh sahifa, sinxronlash va sozlamalar; qolgan bo'limlar keyingi vazifalarda. */
+const KK_SCREENS: Screen[] = ["home", "sync", "settings"];
+
 const MENTOR: Record<Screen, string> = {
   home: "mentor.home",
   vault: "mentor.vault",
@@ -60,13 +64,16 @@ const MENTOR: Record<Screen, string> = {
 export function Shell() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-  const { screen, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
+  const { screen: picked, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, openKkEntry, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
   const settings = useQuery({ queryKey: keys.settings, queryFn: () => call(commands.settings()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
 
   const spaces = household.data?.spaces ?? [];
   const active = spaceId ?? spaces[0]?.id ?? null;
+  const kasbkor = spaces.find((s) => s.id === active)?.kind === "KASBKOR";
+  const screen: Screen = kasbkor && !KK_SCREENS.includes(picked) ? "home" : picked;
+  const nav = kasbkor ? NAV.filter((n) => KK_SCREENS.includes(n.screen)) : NAV;
 
   // Bazadagi til (shu qurilma yoki xonadon) — UI shu tilda; qulf ekrani uchun ham eslab qolinadi.
   const locale = settings.data?.locale;
@@ -79,7 +86,8 @@ export function Shell() {
       if (!e.ctrlKey) return;
       if (e.key === "n" || e.key === "N") {
         e.preventDefault();
-        openIncome();
+        if (kasbkor) openKkEntry("SALE");
+        else openIncome();
       } else if (e.key === "l" || e.key === "L") {
         e.preventDefault();
         lock.mutate();
@@ -87,7 +95,7 @@ export function Shell() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openIncome, lock]);
+  }, [openIncome, openKkEntry, kasbkor, lock]);
 
   return (
     <div className="flex h-full">
@@ -103,7 +111,7 @@ export function Shell() {
             </button>
           ))}
         </div>
-        {NAV.map((n) => (
+        {nav.map((n) => (
           <button
             key={n.screen}
             aria-current={screen === n.screen ? "page" : undefined}
@@ -121,7 +129,7 @@ export function Shell() {
         </button>
       </nav>
       <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-8 outline-none">
-        {active && screen === "home" && <HomeScreen spaceId={active} />}
+        {active && screen === "home" && (kasbkor ? <KkHomeScreen spaceId={active} /> : <HomeScreen spaceId={active} />)}
         {active && screen === "vault" && <VaultScreen spaceId={active} />}
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}
         {active && screen === "audit" && <AuditScreen spaceId={active} />}
@@ -135,8 +143,8 @@ export function Shell() {
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>
-      <Mentor tipKey={MENTOR[screen]} />
-      {incomeOpen && active && <IncomeDialog spaceId={active} onClose={closeIncome} />}
+      <Mentor tipKey={kasbkor && screen === "home" ? "mentor.kk" : MENTOR[screen]} />
+      {incomeOpen && active && !kasbkor && <IncomeDialog spaceId={active} onClose={closeIncome} />}
       {offerOpen && <OfferCheckDialog onClose={closeOffer} />}
       {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}
     </div>

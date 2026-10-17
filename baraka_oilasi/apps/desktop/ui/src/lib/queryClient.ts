@@ -31,6 +31,7 @@ export const keys = {
   devices: ["devices"] as const,
   settings: ["settings"] as const,
   nudges: (spaceId: string) => ["nudges", spaceId] as const,
+  kk: (spaceId: string) => ["kk", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

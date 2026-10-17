@@ -183,7 +183,7 @@ impl App {
         let day = self.date_or_today(&ctx, date.as_deref(), "date")?;
         let (start, end) =
             month_period(day, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
-        let next = end.succ_opt().ok_or(AppError::new("INVALID_PERIOD"))?;
+        let last = end.pred_opt().ok_or(AppError::new("INVALID_PERIOD"))?;
         let zero = Money::zero(ctx.currency);
         // Oy boshidagi qoldiq — oldingi barcha harakatlar (maoshsiz hisob).
         let before = self.kk_book(&ctx, &scope, BEGINNING, &ymd(start))?;
@@ -194,7 +194,7 @@ impl App {
             zero,
             &before.moves,
         )?;
-        let month = self.kk_book(&ctx, &scope, &ymd(start), &ymd(next))?;
+        let month = self.kk_book(&ctx, &scope, &ymd(start), &ymd(end))?;
         let salary = self.kk_salary(&ctx, &scope)?;
         let r = month_report(
             ctx.currency,
@@ -206,7 +206,7 @@ impl App {
         let d = |m: Money| self.money_dto(&ctx, m);
         Ok(KkOverviewDto {
             period_start: ymd(start),
-            period_end: ymd(end),
+            period_end: ymd(last),
             owner_salary: salary.is_positive().then(|| d(salary)),
             revenue: d(r.revenue),
             expenses: d(r.expenses),

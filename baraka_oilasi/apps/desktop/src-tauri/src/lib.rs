@@ -141,6 +141,11 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::settings,
             commands::update_settings,
             commands::home_nudges,
+            commands::kk_overview,
+            commands::kk_set_owner_salary,
+            commands::kk_record_sale,
+            commands::kk_record_move,
+            commands::kk_pay_owner_salary,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

@@ -1342,6 +1342,56 @@ fn read_baraka(path: &str) -> R<Vec<u8>> {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_overview(
+    state: State<'_, Desktop>,
+    space_id: String,
+    date: Option<String>,
+) -> R<KkOverviewDto> {
+    state.session.app()?.kk_overview(&space_id, date)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_set_owner_salary(
+    state: State<'_, Desktop>,
+    space_id: String,
+    amount: String,
+) -> R<KkOverviewDto> {
+    state.session.app()?.kk_set_owner_salary(&space_id, amount)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_record_sale(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkSaleInput,
+) -> R<KkOverviewDto> {
+    state.session.app()?.kk_record_sale(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_record_move(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkMoveInput,
+) -> R<KkOverviewDto> {
+    state.session.app()?.kk_record_move(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_pay_owner_salary(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkSalaryInput,
+) -> R<KkSalaryPaidDto> {
+    state.session.app()?.kk_pay_owner_salary(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

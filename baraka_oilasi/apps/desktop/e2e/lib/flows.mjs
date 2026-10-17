@@ -1,11 +1,12 @@
 // Bir nechta spec'da takrorlanadigan oqimlar.
 export const PIN = "246810";
 
-/** 5 qadamli onboarding. Tiklash kodini qaytaradi. */
-export async function onboard(app, { household = "Anvarlar oilasi", name = "Anvar", members = [], rhythm = "Har kuni naqd", debts = false, pin = PIN } = {}) {
+/** 5 qadamli onboarding. `spaces` — Uy'dan tashqari daftarlar (masalan, «Kasb-kor»). Tiklash kodini qaytaradi. */
+export async function onboard(app, { household = "Anvarlar oilasi", name = "Anvar", members = [], spaces = [], rhythm = "Har kuni naqd", debts = false, pin = PIN } = {}) {
   await app.click("Davom etish");
   await app.type("Oila nomi", household);
   await app.type("Ismingiz", name);
+  for (const s of spaces) await app.choose(s);
   for (const [i, m] of members.entries()) {
     await app.click("+ Aʼzo qoʻshish");
     await app.type(`${i + 2}-aʼzo ismi`, m.name);

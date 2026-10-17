@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim) amalga oshirildi — farqlari 2.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -61,6 +61,13 @@ Qonunning mazmuni: biznes puli — **omonat**. Egasi undan o'zboshimchalik bilan
 ### 2.3. Biznes qoldiqlari
 - Naqd kassa, karta/hisob raqami — alohida «hamyonlar» (`Asset`, `asset_type = CASH | BANK`), Uy makonidagi pul bilan aralashmaydi.
 - Biznesga egasining shaxsiy pulidan qo'shilgan mablag' — **kapital kiritish** (`OWNER_CONTRIBUTION`), qarz emas va tushum emas.
+
+### 2.4. K1 da qanday qilindi (farqlar)
+- Hamyonlar alohida `Asset` yozuvi emas: `kk_moves.wallet` / `incomes.channel` / `expenses.channel` = `CASH | CARD`; boshlang'ich qoldiq — `OPENING` harakati. Bank hisob raqami — hozircha «karta».
+- Tushum kanali: naqd yoki karta («o'tkazma» — karta sifatida).
+- Maosh sozlamalarda emas, Kasb-kor bosh sahifasidagi «Egasining maoshi» kartasida belgilanadi; onboarding'da so'ralmaydi.
+- «Maoshdan ko'p olindi» — savol ko'rsatiladi; keyingi oy maoshidan ushlab qolish «Hisob kuni» bilan (K3).
+- Uy'dagi `sourceType` — vaqtincha `TER` (OQ-K2).
 
 ## 3. 2-QONUN: «HAQIQIY FOYDANI BIL» — FUNKSIONAL TALABLAR (K2)
 Qonunning mazmuni: egasining mehnati, oila a'zolarining yordami va uskunaning eskirishi tannarxga kirmaguncha «foyda» — aslida maosh.
