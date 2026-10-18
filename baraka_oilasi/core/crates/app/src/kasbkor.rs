@@ -269,6 +269,25 @@ impl App {
             e.note = Some(name);
             book.entries.push(e);
         }
+        // Ta'minotchiga to'lov (K6, tovar bog'langan): tovar xaridi kabi, pul oqimiga kirmaydi.
+        for (r, name) in self.kk_supply_stock_payments(ctx, scope, from, to)? {
+            let w = wallet(&r.wallet, "wallet")?;
+            book.moves.push(Move {
+                kind: MoveKind::StockPurchase,
+                wallet: w,
+                amount: m(r.amount_minor),
+            });
+            let mut e = entry(
+                &r.id,
+                "SUPPLIER_PAYMENT",
+                w,
+                None,
+                r.amount_minor,
+                &r.paid_on,
+            );
+            e.note = Some(name);
+            book.entries.push(e);
+        }
         book.entries
             .sort_by(|a, b| b.occurred_on.cmp(&a.occurred_on).then(b.id.cmp(&a.id)));
         Ok(book)
@@ -378,6 +397,8 @@ impl App {
         let d = |m: Money| self.money_dto(&ctx, m);
         let (stock_value, stock_frozen, stock_frozen_count) =
             self.kk_stock_summary(&ctx, &scope)?;
+        let (_, payables, payables_overdue, _) = self.kk_suppliers_summary(&ctx, &scope)?;
+        let (_, wages_owed, _) = self.kk_staff_summary(&ctx, &scope)?;
         let profit = KkProfitDto {
             revenue: d(r.revenue),
             cogs: d(cogs),
@@ -416,6 +437,9 @@ impl App {
             stock_value: d(stock_value),
             stock_frozen_value: d(stock_frozen),
             stock_frozen_count,
+            payables: d(payables),
+            payables_overdue: d(payables_overdue),
+            wages_owed: d(wages_owed),
             profit,
             negative_wallets: r
                 .negative_wallets

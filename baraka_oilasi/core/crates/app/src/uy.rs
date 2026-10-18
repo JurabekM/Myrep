@@ -428,6 +428,12 @@ impl App {
     pub fn delete_expense(&self, space_id: &str, expense_id: &str) -> Result<(), AppError> {
         let ctx = self.ctx()?;
         let scope = self.scope(&ctx, space_id)?;
+        if self
+            .db
+            .read(|c| baraka_storage::repo::kk_staff::expense_linked(c, &scope, expense_id))?
+        {
+            return Err(AppError::on("LINKED_RECORD", "id"));
+        }
         if let Some((on, channel)) = self
             .db
             .read(|c| expenses::date_channel(c, &scope, expense_id))?

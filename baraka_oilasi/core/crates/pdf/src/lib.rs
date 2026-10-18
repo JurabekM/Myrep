@@ -13,7 +13,8 @@ pub use documents::{
     AckLine, ArbiterFolder, CeremonyEstimate, ContractBuyout, ContractBuyoutRow, ContractCapital,
     ContractClause, ContractDuty, ContractParty, ContractSigner, EstimateAgreement, EstimateAnswer,
     EstimateLine, EstimateTotal, FolderClaim, FolderDecision, FolderPeriod, FolderReview,
-    FolderVersion, IncidentLine, KkCloseReport, LoanReceipt, PartnershipContract, PdfLocale,
-    ReportBuyout, ReportEntry, ReportParty, ReviewProtocol, ScheduleLine, VentureReport,
+    FolderVersion, IncidentLine, KkAgreementDoc, KkClauseLine, KkCloseReport, KkPayslip,
+    LoanReceipt, PartnershipContract, PdfLocale, ReportBuyout, ReportEntry, ReportParty,
+    ReviewProtocol, ScheduleLine, VentureReport,
 };
 pub use engine::{PdfEngine, PdfError, Rendered};

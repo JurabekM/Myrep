@@ -485,3 +485,129 @@ fn stock_moves_are_checked_and_immutable() {
         .write(|tx| kk_stock::delete_item(tx, &s, "i1", &m))
         .is_err());
 }
+
+/// K6: xodim va ta'minotchi jadvallarida foiz, ustama yoki jarima ustuni yo'q; imzolangan versiya,
+/// yetkazish va to'lov o'zgarmas; telefon — faqat rozilik bilan.
+#[test]
+fn staff_and_supply_have_no_penalty_and_are_immutable() {
+    use baraka_storage::repo::kk_staff;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    for table in [
+        "kk_agreements",
+        "kk_agreement_versions",
+        "kk_staff_events",
+        "kk_supply_deliveries",
+        "kk_supply_payments",
+    ] {
+        let cols: Vec<String> = db
+            .read(|c| {
+                let mut st =
+                    c.prepare(&format!("SELECT name FROM pragma_table_info('{table}')"))?;
+                let rows = st.query_map([], |r| r.get::<_, String>(0))?;
+                Ok(rows.collect::<Result<Vec<_>, _>>()?)
+            })
+            .unwrap();
+        for bad in [
+            "markup",
+            "penalty",
+            "interest",
+            "fee",
+            "late",
+            "surcharge",
+            "rate",
+        ] {
+            assert!(
+                cols.iter().all(|c| c.split('_').all(|w| w != bad)),
+                "{table}.{bad}: {cols:?}"
+            );
+        }
+    }
+    let row = kk_staff::KkAgreementRow {
+        id: "a1".into(),
+        kind: "SUPPLY".into(),
+        party_name: "Ulgurji baza".into(),
+        phone: Some("+998".into()),
+        phone_consent: false,
+        status: "DRAFT".into(),
+        currency: "UZS".into(),
+        terms_json: "{}".into(),
+        started_on: "2026-11-01".into(),
+        ended_on: None,
+        opening_balance_minor: 0,
+    };
+    assert!(db
+        .write(|tx| kk_staff::insert_agreement(tx, &s, &row, &m))
+        .is_err());
+    let row = kk_staff::KkAgreementRow {
+        phone_consent: true,
+        ..row
+    };
+    db.write(|tx| kk_staff::insert_agreement(tx, &s, &row, &m))
+        .unwrap();
+    let ended_without_date = kk_staff::KkAgreementRow {
+        status: "ENDED".into(),
+        ..row.clone()
+    };
+    assert!(db
+        .write(|tx| kk_staff::update_agreement(tx, &s, &ended_without_date, &m))
+        .is_err());
+    let v = kk_staff::KkAgreementVersionRow {
+        id: "v1".into(),
+        agreement_id: "a1".into(),
+        seq: 1,
+        terms_json: "{}".into(),
+        terms_hash: "h".into(),
+        template_version: 1,
+        template_review: "PENDING".into(),
+        effective_from: "2026-11-01".into(),
+        signed_on: "2026-11-01".into(),
+    };
+    db.write(|tx| kk_staff::insert_version(tx, &s, &v, &m))
+        .unwrap();
+    let d = kk_staff::KkDeliveryRow {
+        id: "d1".into(),
+        agreement_id: "a1".into(),
+        delivered_on: "2026-11-01".into(),
+        amount_minor: 125_000_000,
+        currency: "UZS".into(),
+        due_days: 30,
+        stock_move_id: None,
+        note: None,
+    };
+    db.write(|tx| kk_staff::insert_delivery(tx, &s, &d, &m))
+        .unwrap();
+    let too_long = kk_staff::KkDeliveryRow {
+        id: "d2".into(),
+        due_days: 400,
+        ..d.clone()
+    };
+    assert!(db
+        .write(|tx| kk_staff::insert_delivery(tx, &s, &too_long, &m))
+        .is_err());
+    let p = kk_staff::KkSupplyPaymentRow {
+        id: "p1".into(),
+        agreement_id: "a1".into(),
+        paid_on: "2026-11-10".into(),
+        amount_minor: 50_000_000,
+        currency: "UZS".into(),
+        wallet: "CARD".into(),
+        expense_id: None,
+        note: None,
+    };
+    db.write(|tx| kk_staff::insert_supply_payment(tx, &s, &p, &m))
+        .unwrap();
+    for sql in [
+        "UPDATE kk_agreement_versions SET terms_json = '{\"salary\":1}'",
+        "DELETE FROM kk_agreement_versions",
+        "UPDATE kk_supply_deliveries SET amount_minor = 1",
+        "DELETE FROM kk_supply_payments",
+    ] {
+        let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
+        assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
+    }
+    // Imzolangan yoki yozuvi bor kelishuv o'chirilmaydi.
+    assert!(db
+        .write(|tx| kk_staff::delete_agreement(tx, &s, "a1", &m))
+        .is_err());
+}

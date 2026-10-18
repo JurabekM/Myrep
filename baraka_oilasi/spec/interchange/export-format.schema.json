@@ -230,7 +230,12 @@
             "kk_credit_sales",
             "kk_credit_events",
             "kk_items",
-            "kk_stock_moves"
+            "kk_stock_moves",
+            "kk_agreements",
+            "kk_agreement_versions",
+            "kk_staff_events",
+            "kk_supply_deliveries",
+            "kk_supply_payments"
           ]
         },
         "data": {
@@ -602,6 +607,36 @@
       },
       {
         "name": "kk_stock_moves",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_agreements",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_agreement_versions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_staff_events",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_supply_deliveries",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_supply_payments",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []

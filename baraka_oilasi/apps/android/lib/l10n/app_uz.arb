@@ -1390,7 +1390,7 @@
   "error_NOT_KEEPER": "Bu daftarga faqat hisob yurituvchi yozadi",
   "error_PERIOD_CLOSED": "Bu sana yopilgan davrga tushadi — tuzatuvchi yozuvdan foydalaning",
   "error_FUTURE_DATE": "Kelajakdagi sana boʻlmaydi",
-  "error_BEFORE_START": "Sana sheriklik boshlanishidan oldin",
+  "error_BEFORE_START": "Sana kelishuv boshlanishidan oldin",
   "error_INVALID_CATEGORY": "Turi notoʻgʻri",
   "error_INVALID_ENTRY_KIND": "Yozuv turi notoʻgʻri",
   "error_CORRECTION_OF_CORRECTION": "Tuzatishni emas, asl yozuvni tuzating",
@@ -2689,7 +2689,7 @@
   "error_REASON_REQUIRED": "Farq sababini tanlang",
   "error_PHONE_CONSENT_REQUIRED": "Telefonni saqlash uchun mijoz roziligini belgilang",
   "error_EXCEEDS_OUTSTANDING": "Summa qoldiqdan koʻp",
-  "error_INVALID_INSTALLMENTS": "Toʻlovlar soni 1 dan 120 gacha",
+  "error_INVALID_INSTALLMENTS": "Toʻlovlar soni notoʻgʻri: nasiyada 1–120, avansda — kelishuvdagi chegaragacha",
   "error_INVALID_EXTENSION": "Uzaytirish 1 dan 24 oygacha",
   "error_ALREADY_SETTLED": "Bu nasiya yopilgan",
   "error_CREDIT_HAS_EVENTS": "Toʻlov yoki boshqa yozuvi bor nasiyani oʻchirib boʻlmaydi",
@@ -2886,5 +2886,159 @@
   "error_ITEM_HAS_MOVES": "Harakati bor tovarni oʻchirib boʻlmaydi",
   "error_INVALID_UNIT": "Birlikni tanlang",
   "error_INVALID_METHOD": "Tannarx usulini tanlang",
-  "error_INVALID_DAYS": "Kunlar soni 1 dan 3650 gacha"
+  "error_INVALID_DAYS": "Kunlar soni notoʻgʻri (muzlash chegarasi 1–3650, toʻlov muddati 0–365, ogohlantirish 0–90)",
+  "pdf_tpl_q_parties": "Tomonlar",
+  "pdf_tpl_q_contributions": "Kim nima qoʻshadi",
+  "pdf_tpl_q_duties": "Vazifalar va ish vaqti",
+  "pdf_tpl_q_pay": "Haq va toʻlov kuni",
+  "pdf_tpl_q_advance": "Avans",
+  "pdf_tpl_q_loss": "Zarar",
+  "pdf_tpl_q_records": "Hisob va varaqcha",
+  "pdf_tpl_q_exit": "Ajralish",
+  "pdf_tpl_q_arbiter": "Kelishmovchilik",
+  "pdf_tpl_q_term": "Muddat va qayta koʻrish",
+  "pdf_tpl_q_goods": "Tovar va narx",
+  "pdf_tpl_q_delivery": "Yetkazish",
+  "pdf_tpl_q_payment": "Toʻlov",
+  "pdf_tpl_q_returns": "Sifat va qaytarish",
+  "pdf_tpl_employment_parties": "Ish beruvchi: {owner}. Xodim: {party}, lavozimi — {role}.",
+  "@pdf_tpl_employment_parties": {
+    "placeholders": {
+      "owner": {},
+      "party": {},
+      "role": {}
+    }
+  },
+  "pdf_tpl_employment_contributions": "Xodim — mehnati va vaqtini; ish beruvchi — ish joyi, vositalar va kelishilgan haqni beradi.",
+  "pdf_tpl_employment_duties": "Vazifalar: {duties}. Ish vaqti: {hours}.",
+  "@pdf_tpl_employment_duties": {
+    "placeholders": {
+      "duties": {},
+      "hours": {}
+    }
+  },
+  "pdf_tpl_employment_pay": "Oylik qatʼiy haq — {salary}; har oyning {payDay}-kunigacha toʻlanadi. Haq biznes foyda koʻrgan-koʻrmaganidan qatʼi nazar toʻlanadi.",
+  "@pdf_tpl_employment_pay": {
+    "placeholders": {
+      "payDay": {},
+      "salary": {}
+    }
+  },
+  "pdf_tpl_employment_advance": "Avans foizsiz beriladi. Qoldigʻi {maxAdvance} dan oshmaydi va koʻpi bilan {maxInstallments} oyda keyingi haqdan teng ulushlarda ushlanadi. Haq yetmagan oyda ushlanmagan qism keyingi oyga oʻtadi. Kechikish yoki ishdan ketish uchun jarima qoʻllanilmaydi.",
+  "@pdf_tpl_employment_advance": {
+    "placeholders": {
+      "maxAdvance": {},
+      "maxInstallments": {}
+    }
+  },
+  "pdf_tpl_employment_loss": "Biznes zarari xodimga yuklanmaydi. Xodim qasddan yoki beparvolik bilan yetkazgan zarar alohida, yozma kelishiladi.",
+  "pdf_tpl_employment_records": "Hisobni ish beruvchi yuritadi. Har oy xodimga haq, ushlangan avans, toʻlangan summa va qoldiq koʻrsatilgan varaqcha beriladi.",
+  "pdf_tpl_employment_exit": "Har bir tomon ajralishdan {noticeDays} kun oldin ogohlantiradi. Oxirgi hisob ajralish kunidan 7 kun ichida yopiladi; ushlanmagan avans kelishilgan jadval boʻyicha qaytariladi.",
+  "@pdf_tpl_employment_exit": {
+    "placeholders": {
+      "noticeDays": {}
+    }
+  },
+  "pdf_tpl_employment_disclaimer": "Bu yozuv tomonlar kelishuvini eslab qolish uchun. Rasmiy mehnat shartnomasi va qonun talablari oʻrnini bosmaydi.",
+  "pdf_tpl_supply_parties": "Xaridor: {owner}. Taʼminotchi: {party}.",
+  "@pdf_tpl_supply_parties": {
+    "placeholders": {
+      "owner": {},
+      "party": {}
+    }
+  },
+  "pdf_tpl_supply_goods": "Tovar: {goods}. Narx: {unitPrice} — shu kelishuvda qotiriladi; oʻzgartirish faqat yangi versiya bilan.",
+  "@pdf_tpl_supply_goods": {
+    "placeholders": {
+      "goods": {},
+      "unitPrice": {}
+    }
+  },
+  "pdf_tpl_supply_delivery": "Yetkazish: {delivery}.",
+  "@pdf_tpl_supply_delivery": {
+    "placeholders": {
+      "delivery": {}
+    }
+  },
+  "pdf_tpl_supply_payment": "Toʻlov yetkazishdan {paymentDays} kun ichida. Kechikish uchun jarima yoki ustama yoʻq; toʻlov kechikishi mumkin boʻlsa, xaridor oldindan xabar beradi va yangi muddat kelishiladi.",
+  "@pdf_tpl_supply_payment": {
+    "placeholders": {
+      "paymentDays": {}
+    }
+  },
+  "pdf_tpl_supply_returns": "Sifat va qaytarish: {returns}.",
+  "@pdf_tpl_supply_returns": {
+    "placeholders": {
+      "returns": {}
+    }
+  },
+  "pdf_tpl_supply_records": "Har yetkazish va toʻlov ikkala tomonda yoziladi; oyda bir marta qoldiq solishtiriladi.",
+  "pdf_tpl_supply_exit": "Har bir tomon oldindan ogohlantirib, kelishuvni tugatishi mumkin; yetkazilgan tovar uchun qarz kelishilgan muddatda toʻlanadi.",
+  "pdf_tpl_supply_disclaimer": "Bu yozuv tomonlar kelishuvini eslab qolish uchun; rasmiy shartnoma va qonun talablari oʻrnini bosmaydi. Konsignatsiya (sotilgach toʻlash) shartlari bu namunada yoʻq.",
+  "pdf_tpl_common_arbiter": "Kelishmovchilik avval tomonlar oʻrtasida hal qilinadi; hal boʻlmasa — hakam: {arbiter}.",
+  "@pdf_tpl_common_arbiter": {
+    "placeholders": {
+      "arbiter": {}
+    }
+  },
+  "pdf_tpl_common_term": "Kelishuv {startedOn} dan amal qiladi va {reviewOn} da birga qayta koʻrib chiqiladi.",
+  "@pdf_tpl_common_term": {
+    "placeholders": {
+      "reviewOn": {},
+      "startedOn": {}
+    }
+  },
+  "pdf_tpl_agreed": "tomonlar kelishgan tartibda",
+  "pdf_tpl_noLimit": "har safar alohida kelishilgan summa",
+  "pdf_tpl_noArbiter": "tomonlar birga tanlagan ishonchli kishi",
+  "pdf_tpl_priceEach": "har yetkazishda yozma kelishilgan narx",
+  "pdf_tpl_returnsDefault": "sifatsiz tovar 7 kun ichida qaytariladi yoki almashtiriladi",
+  "pdf_kkagr_title_EMPLOYMENT": "Xodim bilan kelishuv",
+  "pdf_kkagr_title_SUPPLY": "Taʼminotchi bilan kelishuv",
+  "pdf_kkagr_version": "Versiya",
+  "pdf_kkagr_draft": "QORALAMA — imzolanmagan",
+  "pdf_kkagr_signedOn": "Imzolangan",
+  "pdf_kkagr_effectiveFrom": "Amal qiladi",
+  "pdf_kkagr_code": "Matn kodi",
+  "pdf_kkagr_reviewPending": "Bu shablon hali yurist koʻrigidan oʻtmagan — namuna sifatida foydalaning va kerak boʻlsa mutaxassisga koʻrsating.",
+  "pdf_kkagr_watermark": "Tekshiruvdan oʻtmagan namuna",
+  "pdf_kkagr_signatures": "Imzolar",
+  "pdf_kkagr_signer_employer": "Ish beruvchi",
+  "pdf_kkagr_signer_employee": "Xodim",
+  "pdf_kkagr_signer_buyer": "Xaridor",
+  "pdf_kkagr_signer_supplier": "Taʼminotchi",
+  "pdf_kkslip_title": "Xodim bilan hisob varaqchasi",
+  "pdf_kkslip_employee": "Xodim",
+  "pdf_kkslip_period": "Davr",
+  "pdf_kkslip_totals": "Hisob",
+  "pdf_kkslip_opening": "Oy boshidagi qoldiq",
+  "pdf_kkslip_salary": "Oylik haq",
+  "pdf_kkslip_deducted": "Avansdan ushlandi",
+  "pdf_kkslip_net": "Shu oy hisoblangan",
+  "pdf_kkslip_paid": "Toʻlandi",
+  "pdf_kkslip_balance": "Oy oxiridagi qoldiq",
+  "pdf_kkslip_advances": "Ushlanmagan avans",
+  "pdf_kkslip_balanceHint": "Qoldiq: musbat — xodimga toʻlanadi, manfiy — ortiq toʻlangan (keyingi haqdan qoplanadi).",
+  "pdf_kkslip_payments": "Shu oy toʻlovlari",
+  "pdf_kkslip_noPayments": "Shu oy toʻlov boʻlmagan.",
+  "pdf_kkslip_date": "Sana",
+  "pdf_kkslip_kind": "Turi",
+  "pdf_kkslip_amount": "Summa",
+  "pdf_kkslip_kind_ADVANCE": "Avans",
+  "pdf_kkslip_kind_WAGE": "Haq toʻlovi",
+  "pdf_kkslip_noPenalty": "Avans foizsiz; kechikish uchun jarima yoʻq.",
+  "pdf_kkslip_signatures": "Tanishdik",
+  "pdf_kkslip_signer_employee": "Xodim (tanishdim)",
+  "error_AGREEMENT_NOT_SIGNED": "Avval kelishuvni imzolang — imzolangan shartlar boʻyicha hisob yuritiladi",
+  "error_AGREEMENT_ENDED": "Bu kelishuv tugagan",
+  "error_AGREEMENT_INCOMPLETE": "Imzolashdan oldin kelishuvni toʻldiring",
+  "error_AGREEMENT_SIGNED": "Imzolangan kelishuvni oʻchirib boʻlmaydi — uni tugating",
+  "error_AGREEMENT_HAS_RECORDS": "Yozuvi bor kelishuvni oʻchirib boʻlmaydi",
+  "error_NOTHING_TO_SIGN": "Shartlar oʻzgarmagan — imzolash kerak emas",
+  "error_ADVANCE_ABOVE_LIMIT": "Avans qoldigʻi kelishilgan chegaradan oshadi",
+  "error_INVALID_START": "Ushlash avans berilgan oydan oldin boshlanmaydi",
+  "error_INVALID_PAY_DAY": "Toʻlov kuni 1 dan 28 gacha",
+  "error_NOTHING_OWED": "Toʻlanadigan qoldiq yoʻq — summani kiriting",
+  "error_LINKED_RECORD": "Bu chiqim xodim yoki taʼminotchi hisobiga bogʻlangan — u yerda tuzating",
+  "error_CATEGORY_MISSING": "Kasb-kor kategoriyasi topilmadi"
 }

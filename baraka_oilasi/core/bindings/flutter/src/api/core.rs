@@ -1222,6 +1222,127 @@ impl BarakaCore {
             .kk_stock_move(&space_id, &item_id, input)
     }
 
+    pub fn kk_staff(&self, space_id: String) -> Result<KkStaffDto, AppError> {
+        self.session.app()?.kk_staff(&space_id)
+    }
+
+    pub fn kk_add_employee(
+        &self,
+        space_id: String,
+        input: KkEmployeeInput,
+    ) -> Result<KkStaffDto, AppError> {
+        self.session.app()?.kk_add_employee(&space_id, input)
+    }
+
+    pub fn kk_update_employee(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkEmployeeInput,
+    ) -> Result<KkStaffDto, AppError> {
+        self.session
+            .app()?
+            .kk_update_employee(&space_id, &id, input)
+    }
+
+    pub fn kk_staff_advance(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkAdvanceInput,
+    ) -> Result<KkStaffDto, AppError> {
+        self.session.app()?.kk_staff_advance(&space_id, &id, input)
+    }
+
+    pub fn kk_staff_pay(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkWageInput,
+    ) -> Result<KkStaffDto, AppError> {
+        self.session.app()?.kk_staff_pay(&space_id, &id, input)
+    }
+
+    pub fn kk_payslip_pdf(
+        &self,
+        space_id: String,
+        id: String,
+        month: String,
+    ) -> Result<Vec<u8>, AppError> {
+        self.session.app()?.kk_payslip_pdf(&space_id, &id, month)
+    }
+
+    pub fn kk_suppliers(&self, space_id: String) -> Result<KkSuppliersDto, AppError> {
+        self.session.app()?.kk_suppliers(&space_id)
+    }
+
+    pub fn kk_add_supplier(
+        &self,
+        space_id: String,
+        input: KkSupplierInput,
+    ) -> Result<KkSuppliersDto, AppError> {
+        self.session.app()?.kk_add_supplier(&space_id, input)
+    }
+
+    pub fn kk_update_supplier(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkSupplierInput,
+    ) -> Result<KkSuppliersDto, AppError> {
+        self.session
+            .app()?
+            .kk_update_supplier(&space_id, &id, input)
+    }
+
+    pub fn kk_supply_delivery(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkDeliveryInput,
+    ) -> Result<KkSuppliersDto, AppError> {
+        self.session
+            .app()?
+            .kk_supply_delivery(&space_id, &id, input)
+    }
+
+    pub fn kk_supply_payment(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkSupplyPaymentInput,
+    ) -> Result<KkSuppliersDto, AppError> {
+        self.session.app()?.kk_supply_payment(&space_id, &id, input)
+    }
+
+    pub fn kk_sign_agreement(
+        &self,
+        space_id: String,
+        id: String,
+        input: KkSignInput,
+    ) -> Result<(), AppError> {
+        self.session.app()?.kk_sign_agreement(&space_id, &id, input)
+    }
+
+    pub fn kk_end_agreement(
+        &self,
+        space_id: String,
+        id: String,
+        ended_on: Option<String>,
+    ) -> Result<(), AppError> {
+        self.session
+            .app()?
+            .kk_end_agreement(&space_id, &id, ended_on)
+    }
+
+    pub fn kk_delete_agreement(&self, space_id: String, id: String) -> Result<(), AppError> {
+        self.session.app()?.kk_delete_agreement(&space_id, &id)
+    }
+
+    pub fn kk_agreement_pdf(&self, space_id: String, id: String) -> Result<Vec<u8>, AppError> {
+        self.session.app()?.kk_agreement_pdf(&space_id, &id)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

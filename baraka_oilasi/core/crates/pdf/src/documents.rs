@@ -13,6 +13,8 @@ const VENTURE_REPORT: &str = include_str!("../../../../shared/pdf/venture_report
 const REVIEW_PROTOCOL: &str = include_str!("../../../../shared/pdf/review_protocol.typ");
 const ARBITER_FOLDER: &str = include_str!("../../../../shared/pdf/arbiter_folder.typ");
 const KK_MONTH_CLOSE: &str = include_str!("../../../../shared/pdf/kk_month_close.typ");
+const KK_AGREEMENT: &str = include_str!("../../../../shared/pdf/kk_agreement.typ");
+const KK_PAYSLIP: &str = include_str!("../../../../shared/pdf/kk_payslip.typ");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PdfLocale {
@@ -653,5 +655,129 @@ impl KkCloseReport {
         });
         let files = vec![("qr.svg", qr_svg(&self.chain_head)?)];
         engine.render(KK_MONTH_CLOSE, &data, &files, &self.ident, today)
+    }
+}
+
+/// Shablon bandi: 9 savol raqami, yorliq va matn kalitlari (`shared/content/templates`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KkClauseLine {
+    pub n: u32,
+    pub label: String,
+    pub text: String,
+}
+
+/// Kasb-kor xodim (`EMPLOYMENT`) yoki ta'minotchi (`SUPPLY`) kelishuvi (kasbkor/SPEC 7). Band matnlaridagi
+/// `{kalit}` lar `values` dan to'ldiriladi; qiymat `(matn, true)` bo'lsa — matn yorliq kaliti.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KkAgreementDoc {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub kind: String,
+    pub business: String,
+    pub party: String,
+    /// Imzolangan versiya raqami; `None` — qoralama.
+    pub version: Option<String>,
+    pub signed_on: Option<String>,
+    pub effective_from: Option<String>,
+    pub hash_code: Option<String>,
+    /// Shablon yurist ko'rigidan o'tmagan (`reviewStatus = PENDING`) — «Tekshiruvdan o'tmagan namuna».
+    pub review_pending: bool,
+    pub clauses: Vec<KkClauseLine>,
+    pub values: Vec<(String, (String, bool))>,
+    pub disclaimer: String,
+}
+
+fn label_of(labels: &Value, key: &str) -> String {
+    labels
+        .get(key)
+        .and_then(Value::as_str)
+        .unwrap_or(key)
+        .to_string()
+}
+
+impl KkAgreementDoc {
+    fn fill(&self, labels: &Value, key: &str) -> String {
+        let mut text = label_of(labels, key);
+        for (k, (v, is_key)) in &self.values {
+            let v = if *is_key {
+                label_of(labels, v)
+            } else {
+                v.clone()
+            };
+            text = text.replace(&format!("{{{k}}}"), &v);
+        }
+        text
+    }
+
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = label_of(&labels, &format!("kkagr.title.{}", self.kind));
+        let clauses: Vec<Value> = self
+            .clauses
+            .iter()
+            .map(|c| {
+                json!({
+                    "n": c.n,
+                    "label": label_of(&labels, &c.label),
+                    "text": self.fill(&labels, &c.text),
+                })
+            })
+            .collect();
+        let signers = if self.kind == "EMPLOYMENT" {
+            ["kkagr.signer.employer", "kkagr.signer.employee"]
+        } else {
+            ["kkagr.signer.buyer", "kkagr.signer.supplier"]
+        };
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": title,
+            "labels": labels,
+            "business": self.business,
+            "version": self.version,
+            "signedOn": self.signed_on,
+            "effectiveFrom": self.effective_from,
+            "hashCode": self.hash_code,
+            "reviewPending": self.review_pending,
+            "clauses": clauses,
+            "disclaimer": label_of(&labels, &self.disclaimer),
+            "signers": [
+                { "role": label_of(&labels, signers[0]), "name": self.business },
+                { "role": label_of(&labels, signers[1]), "name": self.party },
+            ],
+        });
+        engine.render(KK_AGREEMENT, &data, &[], &self.ident, today)
+    }
+}
+
+/// Xodim bilan oylik hisob varaqchasi (kasbkor/SPEC 7.2): qatorlar — `(yorliq kaliti, qiymat)`, to'lovlar —
+/// `(sana, tur yorlig'i kaliti, summa)`; oxirida imzo joyi.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KkPayslip {
+    pub ident: String,
+    pub locale: PdfLocale,
+    pub business: String,
+    pub employee: String,
+    pub role: Option<String>,
+    pub period: String,
+    pub rows: Vec<(String, String)>,
+    pub payments: Vec<(String, String, String)>,
+}
+
+impl KkPayslip {
+    pub fn render(&self, engine: &PdfEngine, today: NaiveDate) -> Result<Rendered, PdfError> {
+        let labels = self.locale.labels();
+        let title = label_of(&labels, "kkslip.title");
+        let data = json!({
+            "locale": self.locale.tag(),
+            "title": format!("{title}: {}", self.period),
+            "labels": labels,
+            "business": self.business,
+            "employee": self.employee,
+            "role": self.role,
+            "period": self.period,
+            "rows": self.rows,
+            "payments": self.payments,
+        });
+        engine.render(KK_PAYSLIP, &data, &[], &self.ident, today)
     }
 }

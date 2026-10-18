@@ -17,6 +17,7 @@ mod kasbkor;
 mod kasbkor_close;
 mod kasbkor_ledger;
 mod kasbkor_profit;
+mod kasbkor_staff;
 mod kasbkor_stock;
 mod partnership;
 mod receipt;

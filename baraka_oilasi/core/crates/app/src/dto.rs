@@ -2111,6 +2111,11 @@ pub struct KkOverviewDto {
     pub stock_value: MoneyDto,
     pub stock_frozen_value: MoneyDto,
     pub stock_frozen_count: u32,
+    /// Ta'minotchilarga qarz va undan muddati o'tgani (K6).
+    pub payables: MoneyDto,
+    pub payables_overdue: MoneyDto,
+    /// Xodimlarga hozir to'lanadigani — o'tgan oylar uchun (K6).
+    pub wages_owed: MoneyDto,
     /// Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2).
     pub profit: KkProfitDto,
     /// Manfiy qoldiqli hamyonlar: `CASH`, `CARD`.
@@ -2730,4 +2735,303 @@ pub struct KkStockDto {
     /// Muzlagan tovarlar qiymati (qayta tiklash narxida).
     pub frozen_value: MoneyDto,
     pub frozen_count: u32,
+}
+
+// ---- K6: Kasb-kor «Kelishuvni yozing» — xodimlar va ta'minotchilar ----
+
+/// Xodim kelishuvi (`EMPLOYMENT`) shartlari. Summalar matn holida («3 000 000»); foiz, ustama yoki jarima
+/// maydoni yo'q.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkEmployeeInput {
+    pub name: String,
+    pub role: Option<String>,
+    pub phone: Option<String>,
+    pub phone_consent: bool,
+    pub duties: Option<String>,
+    pub hours: Option<String>,
+    /// Oylik qat'iy haq.
+    pub salary: String,
+    /// Har oyning qaysi kuni to'lanadi (1–28).
+    pub pay_day: u32,
+    pub notice_days: u32,
+    /// Avans qoldig'i chegarasi; bo'lmasa — kelishilmagan.
+    pub max_advance: Option<String>,
+    /// Avans necha oygacha ushlanadi (standart — 3).
+    pub max_advance_installments: Option<u32>,
+    /// Ishga kirgan sana (bo'lmasa — bugun).
+    pub started_on: Option<String>,
+    /// Ilovagacha xodimga qolgan qarz (manfiy — ortiq to'langan).
+    pub opening_balance: Option<String>,
+    pub arbiter: Option<String>,
+    /// Qayta ko'rish sanasi (bo'lmasa — bir yildan keyin).
+    pub review_on: Option<String>,
+    pub note: Option<String>,
+}
+
+/// Ta'minotchi kelishuvi (`SUPPLY`). Tovar bog'lansa — yetkazish tovar qoldig'iga kiradi, narx shu
+/// kelishuvda qotiriladi (ko'rsatish birligiga).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSupplierInput {
+    pub name: String,
+    pub phone: Option<String>,
+    pub phone_consent: bool,
+    pub goods: Option<String>,
+    pub item_id: Option<String>,
+    pub unit_price: Option<String>,
+    /// Yetkazishdan necha kun ichida to'lanadi (0 — darhol).
+    pub payment_days: u32,
+    pub delivery: Option<String>,
+    pub returns: Option<String>,
+    pub started_on: Option<String>,
+    pub arbiter: Option<String>,
+    pub review_on: Option<String>,
+    pub note: Option<String>,
+}
+
+/// Kelishuv holati. `status`: `DRAFT`, `SIGNED`, `ENDED`. `missing` — imzolashdan oldin to'ldiriladigan
+/// maydonlar. `templateReview`: `PENDING` — shablon yurist ko'rigidan o'tmagan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkAgreementStateDto {
+    pub status: String,
+    pub signed_versions: u32,
+    pub signed_on: Option<String>,
+    pub effective_from: Option<String>,
+    /// Oxirgi imzolangan versiyadan keyin shartlar o'zgargan.
+    pub unsigned_changes: bool,
+    pub missing: Vec<String>,
+    pub can_sign: bool,
+    pub template_version: u32,
+    pub template_review: String,
+    pub started_on: String,
+    pub ended_on: Option<String>,
+    pub review_on: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSignInput {
+    /// Qog'oz nusxa imzolangan sana (bo'lmasa — bugun).
+    pub signed_on: Option<String>,
+    /// Yangi shartlar qachondan amal qiladi (bo'lmasa — birinchi versiyada ishga kirgan sana, keyin — imzo sanasi).
+    pub effective_from: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkEmployeeTermsDto {
+    pub role: Option<String>,
+    pub duties: Option<String>,
+    pub hours: Option<String>,
+    pub salary: MoneyDto,
+    pub pay_day: u32,
+    pub notice_days: u32,
+    pub max_advance: Option<MoneyDto>,
+    pub max_advance_installments: u32,
+    pub opening_balance: MoneyDto,
+    pub arbiter: Option<String>,
+    pub note: Option<String>,
+}
+
+/// Oylik hisob: `balance` — oy oxirida xodimga qarzimiz (manfiy — ortiq to'langan).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkPayMonthDto {
+    pub period_start: String,
+    pub period_end: String,
+    pub salary: MoneyDto,
+    pub deducted: MoneyDto,
+    pub net: MoneyDto,
+    pub paid: MoneyDto,
+    pub balance: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkAdvanceDto {
+    pub id: String,
+    pub given_on: String,
+    pub amount: MoneyDto,
+    pub installments: u32,
+    /// Har oy ushlanadigan ulushlar: davr boshi va summa.
+    pub schedule: Vec<KkNextDueDto>,
+    pub deducted: MoneyDto,
+    pub outstanding: MoneyDto,
+}
+
+/// `kind`: `ADVANCE`, `WAGE`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStaffEventDto {
+    pub id: String,
+    pub kind: String,
+    pub occurred_on: String,
+    pub amount: MoneyDto,
+    pub wallet: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkEmployeeDto {
+    pub id: String,
+    pub name: String,
+    pub phone: Option<String>,
+    pub agreement: KkAgreementStateDto,
+    pub terms: KkEmployeeTermsDto,
+    /// Shu oy hisoblangani bilan qoldiq (manfiy — ortiq to'langan).
+    pub balance: MoneyDto,
+    /// Hozir to'lanadigani: o'tgan oylar uchun qoldiq − shu oy to'langan (manfiy bo'lsa 0).
+    pub due_now: MoneyDto,
+    pub advances_outstanding: MoneyDto,
+    /// Shu oy (yangisi birinchi).
+    pub months: Vec<KkPayMonthDto>,
+    pub advances: Vec<KkAdvanceDto>,
+    pub events: Vec<KkStaffEventDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStaffDto {
+    pub employees: Vec<KkEmployeeDto>,
+    /// Xodimlarga hozir to'lanadigani (o'tgan oylar uchun).
+    pub owed: MoneyDto,
+    pub advances_outstanding: MoneyDto,
+    pub template_review: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkAdvanceInput {
+    pub amount: String,
+    pub installments: u32,
+    /// Ushlash boshlanadigan oy ichidagi sana (bo'lmasa — avans berilgan oy).
+    pub start_on: Option<String>,
+    pub wallet: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkWageInput {
+    /// Bo'lmasa — hozirgi qoldiq (xodimga qarzimiz).
+    pub amount: Option<String>,
+    pub wallet: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSupplyTermsDto {
+    pub goods: Option<String>,
+    pub item_id: Option<String>,
+    pub item_name: Option<String>,
+    /// Tovar birligi: `G`, `ML`, `PCS`, `MM`.
+    pub unit: Option<String>,
+    pub unit_price: Option<MoneyDto>,
+    pub payment_days: u32,
+    pub delivery: Option<String>,
+    pub returns: Option<String>,
+    pub arbiter: Option<String>,
+    pub note: Option<String>,
+}
+
+/// `state`: `PAID`, `DUE`, `OVERDUE`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkDeliveryDto {
+    pub id: String,
+    pub delivered_on: String,
+    pub due_on: String,
+    pub amount: MoneyDto,
+    pub paid: MoneyDto,
+    pub outstanding: MoneyDto,
+    pub state: String,
+    pub overdue_days: i64,
+    /// Tovar bog'langan bo'lsa — miqdor (ko'rsatish birligida).
+    pub qty: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSupplyPaymentDto {
+    pub id: String,
+    pub paid_on: String,
+    pub amount: MoneyDto,
+    pub wallet: String,
+    /// Tovarsiz ta'minot: to'lov chiqim sifatida yozilgan.
+    pub as_expense: bool,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSupplierDto {
+    pub id: String,
+    pub name: String,
+    pub phone: Option<String>,
+    pub agreement: KkAgreementStateDto,
+    pub terms: KkSupplyTermsDto,
+    pub outstanding: MoneyDto,
+    pub overdue: MoneyDto,
+    pub due_soon: MoneyDto,
+    pub next_due: Option<KkNextDueDto>,
+    /// Yangisi birinchi.
+    pub deliveries: Vec<KkDeliveryDto>,
+    pub payments: Vec<KkSupplyPaymentDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSuppliersDto {
+    pub suppliers: Vec<KkSupplierDto>,
+    pub outstanding: MoneyDto,
+    pub overdue: MoneyDto,
+    pub due_soon: MoneyDto,
+    pub template_review: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkDeliveryInput {
+    pub delivered_on: Option<String>,
+    /// Tovar bog'langan bo'lsa majburiy (ko'rsatish birligida).
+    pub qty: Option<String>,
+    /// Bo'lmasa — qotirilgan narx × miqdor.
+    pub amount: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSupplyPaymentInput {
+    /// Bo'lmasa — eng yaqin muddatdagi qoldiq.
+    pub amount: Option<String>,
+    pub wallet: String,
+    pub paid_on: Option<String>,
+    pub note: Option<String>,
 }
