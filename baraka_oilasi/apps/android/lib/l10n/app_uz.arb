@@ -3709,7 +3709,7 @@
   "sync_pairRoleHint_SELLER": "Faqat sotuv, nasiya toʻlovi va smena. Foyda, chiqim, maosh va «egasi oldi» bu qurilmaga yuborilmaydi.",
   "sync_pairRole_ACCOUNTANT": "Hisobchi",
   "sync_pairRoleHint_ACCOUNTANT": "Biznesning barcha raqamlari — faqat koʻrish uchun. Uy makoni yuborilmaydi.",
-  "sync_pairSpace": "Qaysi biznes",
+  "sync_pairSpace": "Qaysi makon",
   "sync_table_kk_stock_moves": "Tovar harakati",
   "sync_table_kk_credit_events": "Nasiya toʻlovi",
   "sync_table_kk_shifts": "Smena",
@@ -3929,5 +3929,111 @@
   "error_ALREADY_RECEIVED": "Bu pul allaqachon qabul qilingan",
   "error_SHARES_NOT_FULL": "Maqsadlar ulushlari yigʻindisi 100 % boʻlsin",
   "error_DUPLICATE_PURPOSE": "Bir maqsad ikki marta tanlangan",
-  "error_INVALID_PURPOSE": "Maqsadni tanlang"
+  "error_INVALID_PURPOSE": "Maqsadni tanlang",
+  "nav_twoShores": "Ikki qirgʻoq",
+  "mentor_twoShores": "Kelgan pulni darhol qabul qiling va har xarajatni maqsadi bilan yozing. Ochiq hisob — ikki qirgʻoq orasidagi koʻprik.",
+  "role_badge_HOME": "Uydagi oila qurilmasi",
+  "family_remittanceNote": "Bu kelishuv musofirning «Ikki qirgʻoq» shartlaridan tuzilgan — oʻzgartirish Musofir makonida. Tasdiqlash — shu yerda.",
+  "sync_role_HOME": "Uydagi oila",
+  "sync_pairRole_HOME": "Uydagi oila qurilmasi",
+  "sync_pairRoleHint_HOME": "Uy makoni toʻliq va «Ikki qirgʻoq». Musofirning maoshi, chet eldagi xarajatlari, jamgʻarmasi, sozlamalari va kurslari bu qurilmaga yuborilmaydi.",
+  "sync_pairingFor_HOME": "Fayl uydagi oila uchun: musofirning shaxsiy hisobi (maosh, xarajat, jamgʻarma, kurslar) unda yoʻq. Bu qurilma xonadon egasi boʻlsagina maxfiylik taʼminlanadi.",
+  "mf_purposesLegend": "Maqsadlar (yigʻindisi 100 %)",
+  "mf_sharePercent": "{purpose}, foiz",
+  "@mf_sharePercent": {
+    "placeholders": {
+      "purpose": {}
+    }
+  },
+  "mf_purpose_HOUSEHOLD": "Uy xarajati",
+  "mf_purpose_DEBT": "Qarz toʻlovi",
+  "mf_purpose_BUILD": "Qurilish va taʼmir",
+  "mf_purpose_EDUCATION": "Oʻqish",
+  "mf_purpose_CEREMONY": "Marosim",
+  "mf_purpose_SAVINGS": "Uydagi jamgʻarma",
+  "mf_purpose_OTHER": "Boshqa",
+  "mf_terms_title": "Ikki qirgʻoq: oila bilan kelishuv",
+  "mf_terms_intro": "Yuborilgan pul qaysi maqsadga qancha boʻlinadi va uyda kim qabul qiladi. Matni — Uy makonidagi oilaviy kelishuv, kattalar tasdiqlaydi.",
+  "mf_terms_set": "Shartlarni belgilash",
+  "mf_terms_change": "Shartlarni oʻzgartirish",
+  "mf_terms_none": "Shartlar hali yoʻq — har yuborish uy xarajatiga yoziladi.",
+  "mf_terms_receiverLine": "Uyda qabul qiladi: {name}",
+  "@mf_terms_receiverLine": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "mf_terms_status_DRAFT": "Kelishuv hali hamma kattalar tomonidan tasdiqlanmagan",
+  "mf_terms_status_ACTIVE": "Kelishuv kuchda — hamma kattalar tasdiqlagan",
+  "mf_terms_notYet": "hali tasdiqlamagan",
+  "mf_terms_confirmWhere": "Har bir katta aʼzo «Kelishuvlar» boʻlimida PIN bilan tasdiqlaydi (uydagi qurilmada ham).",
+  "mf_terms_part": "{percent} % — {purpose}",
+  "@mf_terms_part": {
+    "placeholders": {
+      "percent": {},
+      "purpose": {}
+    }
+  },
+  "mf_terms_item1": "Har yuborilgan pul shunday boʻlinadi: {parts}.",
+  "@mf_terms_item1": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "mf_terms_item2": "Pulni uyda {name} qabul qiladi va ilovaga yozadi.",
+  "@mf_terms_item2": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "mf_terms_item2Any": "Pulni uyda olgan kishi qabul qilganini ilovaga yozadi.",
+  "mf_terms_item3": "Har bir xarajat maqsadi bilan yoziladi; maqsaddan chetga chiqilsa — kelishuvni birga yangilaymiz.",
+  "mf_terms_item4": "Musofirning oʻz ulushi va chet eldagi xarajatlari — uning shaxsiy hisobi.",
+  "mf_terms_form": "Ikki qirgʻoq shartlari",
+  "mf_terms_receiver": "Uyda kim qabul qiladi",
+  "mf_terms_anyone": "— Kim olsa —",
+  "mf_terms_defaultTitle": "Ikki qirgʻoq",
+  "mf_terms_text": "Kelishuv matni (har qator — bitta band)",
+  "mf_terms_regenerate": "Matnni shartlardan qayta tuzish",
+  "mf_terms_resetHint": "Matn oʻzgarsa, kattalar qayta tasdiqlaydi.",
+  "mf_shores_title": "Ikki qirgʻoq",
+  "mf_shores_intro": "Musofirdan kelgan pullar: qabul qiling va har xarajatni maqsadi bilan yozing. Maqsadlar qoldigʻini ikkala tomon koʻradi.",
+  "mf_shores_summary": "Uyda: maqsadlar boʻyicha",
+  "mf_shores_noneYet": "Hali qabul qilingan pul yoʻq.",
+  "mf_shores_purpose": "Maqsad",
+  "mf_shores_received": "Olindi",
+  "mf_shores_spent": "Sarflandi",
+  "mf_shores_balance": "Qoldiq",
+  "mf_shores_total": "Jami",
+  "mf_shores_overspent": "Baʼzi maqsadda kelishilganidan koʻp sarflandi. Kelishuvni birga yangilaymizmi?",
+  "mf_shores_purposes": "Maqsadlar qoldigʻi",
+  "mf_shores_incoming": "Kelgan pullar",
+  "mf_shores_pending": "yoʻlda: {count}",
+  "@mf_shores_pending": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_shores_noRemittances": "Hali yuborilgan pul yoʻq.",
+  "mf_shores_sentOn": "{date} yuborilgan",
+  "@mf_shores_sentOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mf_shores_receivedLine": "Qabul qilindi: {amount} ({date})",
+  "@mf_shores_receivedLine": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "mf_shores_onTheWay": "Yoʻlda — qabul qilinmagan",
+  "mf_shores_confirmForm": "Qabul qilish",
+  "mf_shores_receivedAmount": "Olingan summa (soʻmda)",
+  "mf_shores_who": "Kim oldi",
+  "mf_shores_confirm": "Qabul qildim",
+  "mf_shores_spendForm": "Maqsad boʻyicha xarajat",
+  "mf_shores_saveSpend": "Xarajatni yozish",
+  "mf_shores_spends": "Maqsad boʻyicha xarajatlar"
 }

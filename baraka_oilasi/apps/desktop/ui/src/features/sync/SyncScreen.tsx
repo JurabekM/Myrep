@@ -578,7 +578,7 @@ function Conflict({
   );
 }
 
-type PairRole = "FAMILY" | "SELLER" | "ACCOUNTANT";
+type PairRole = "FAMILY" | "SELLER" | "ACCOUNTANT" | "HOME";
 
 function Pairing() {
   const { t } = useTranslation();
@@ -590,15 +590,20 @@ function Pairing() {
   const businesses = (household.data?.spaces ?? []).filter(
     (s) => s.kind === "KASBKOR",
   );
+  // Uydagi oila qurilmasi (ADR-0004) — Musofir makoniga bog'lanadi.
+  const musofirs = (household.data?.spaces ?? []).filter(
+    (s) => s.kind === "MUSOFIR",
+  );
   const [role, setRole] = useState<PairRole>("FAMILY");
   const [space, setSpace] = useState("");
+  const targets = role === "HOME" ? musofirs : businesses;
   const offer = useMutation({
     mutationFn: () =>
       call(
         commands.pairingOffer(
           role === "FAMILY"
             ? { role: null, spaceId: null }
-            : { role, spaceId: space || (businesses[0]?.id ?? null) },
+            : { role, spaceId: space || (targets[0]?.id ?? null) },
         ),
       ),
     onSuccess: (v) => v && setView(v),
@@ -649,15 +654,21 @@ function Pairing() {
             aria-label={t("sync.pairRole")}
             className="flex flex-col gap-2 text-sm"
           >
-            {(["FAMILY", "SELLER", "ACCOUNTANT"] as const).map((r) => (
+            {(["FAMILY", "HOME", "SELLER", "ACCOUNTANT"] as const).map((r) => (
               <label key={r} className="flex items-start gap-2">
                 <input
                   type="radio"
                   name="pair-role"
                   className="mt-1"
                   checked={role === r}
-                  disabled={r !== "FAMILY" && businesses.length === 0}
-                  onChange={() => setRole(r)}
+                  disabled={
+                    r !== "FAMILY" &&
+                    (r === "HOME" ? musofirs : businesses).length === 0
+                  }
+                  onChange={() => {
+                    setRole(r);
+                    setSpace("");
+                  }}
                 />
                 <span>
                   <span className="font-medium">{t(`sync.pairRole.${r}`)}</span>
@@ -668,15 +679,15 @@ function Pairing() {
               </label>
             ))}
           </div>
-          {role !== "FAMILY" && businesses.length > 1 && (
+          {role !== "FAMILY" && targets.length > 1 && (
             <label className="max-w-sm">
               <span className="label">{t("sync.pairSpace")}</span>
               <select
                 className="field"
-                value={space || (businesses[0]?.id ?? "")}
+                value={space || (targets[0]?.id ?? "")}
                 onChange={(e) => setSpace(e.target.value)}
               >
-                {businesses.map((b) => (
+                {targets.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
                   </option>

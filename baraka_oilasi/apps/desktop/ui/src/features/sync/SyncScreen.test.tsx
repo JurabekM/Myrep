@@ -75,7 +75,7 @@ beforeEach(() => {
   fns.devices.mockResolvedValue(ok(devices));
   fns.deviceRole.mockResolvedValue(ok({ role: "OWNER", spaceId: null, spaceName: null }));
   fns.household.mockResolvedValue(
-    ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, members: [], spaces: [{ id: "uy", kind: "UY", name: "Uy" }, { id: "kk", kind: "KASBKOR", name: "Do'kon" }] }),
+    ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, members: [], spaces: [{ id: "uy", kind: "UY", name: "Uy" }, { id: "kk", kind: "KASBKOR", name: "Do'kon" }, { id: "mf", kind: "MUSOFIR", name: "Musofir" }] }),
   );
   fns.pickBarakaFile.mockResolvedValue(ok({ path: "/tmp/x.baraka", name: "x.baraka" }));
 });
@@ -200,5 +200,17 @@ describe("SyncScreen", () => {
     wrap(<SyncScreen />);
     expect(await screen.findByText(/faqat egasining qurilmasi bilan/)).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Yangi qurilmani ulash" })).not.toBeInTheDocument();
+  });
+
+  it("M2: uydagi oila qurilmasi — Musofir makoniga bog'lanadi", async () => {
+    fns.pairingOffer.mockResolvedValue(ok({ code: "ABCD-EFGH-IJKL-MNOP-QRST-UVWX-YZ23-4567", qrSvg: "<svg/>", householdName: "Oila", fileName: "ulash.baraka" }));
+    const user = userEvent.setup();
+    wrap(<SyncScreen />);
+    const section = screen.getByRole("region", { name: "Yangi qurilmani ulash" });
+    await user.click(await within(section).findByLabelText(/^Uydagi oila qurilmasi/));
+    expect(within(section).getByText(/maoshi, chet eldagi xarajatlari/)).toBeInTheDocument();
+    await user.click(within(section).getByRole("button", { name: "Ulash faylini yaratish" }));
+    expect(fns.pairingOffer).toHaveBeenCalledWith({ role: "HOME", spaceId: "mf" });
+    expect(await screen.findByTestId("pairing-role")).toHaveTextContent("musofirning shaxsiy hisobi");
   });
 });

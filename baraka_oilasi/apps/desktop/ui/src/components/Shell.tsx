@@ -28,6 +28,7 @@ import { KkQuoteScreen } from "../features/kasbkor/KkQuoteScreen";
 import { KkSellerCreditScreen, KkSellerScreen } from "../features/kasbkor/KkSellerScreen";
 import { KkShiftScreen } from "../features/kasbkor/KkShiftScreen";
 import { MfHomeScreen } from "../features/musofir/MfHomeScreen";
+import { TwoShoresScreen } from "../features/musofir/TwoShoresScreen";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import { SyncScreen } from "../features/sync/SyncScreen";
@@ -117,6 +118,7 @@ const MENTOR: Record<Screen, string> = {
   kkMeasure: "mentor.kkMeasure",
   kkSellerCredit: "mentor.kkSellerCredit",
   kkShift: "mentor.kkShift",
+  twoShores: "mentor.twoShores",
   sync: "mentor.sync",
   settings: "mentor.settings",
 };
@@ -134,12 +136,18 @@ export function Shell() {
   const role = deviceRole.data?.role ?? "OWNER";
   const seller = role === "SELLER";
 
-  const spaces = household.data?.spaces ?? [];
-  const active = spaceId ?? spaces[0]?.id ?? null;
+  const allSpaces = household.data?.spaces ?? [];
+  // Uydagi oila qurilmasi (ADR-0004): Musofir makoni — musofirning shaxsiy hisobi, ko'rsatilmaydi.
+  const home = role === "HOME";
+  const spaces = home ? allSpaces.filter((s) => s.kind !== "MUSOFIR") : allSpaces;
+  const active = spaceId && spaces.some((s) => s.id === spaceId) ? spaceId : (spaces[0]?.id ?? null);
   const activeKind = spaces.find((s) => s.id === active)?.kind;
   const kasbkor = activeKind === "KASBKOR";
   const musofir = activeKind === "MUSOFIR";
-  const nav = seller ? SELLER_NAV : kasbkor ? KK_NAV : musofir ? MF_NAV : NAV;
+  // «Ikki qirg'oq» (M2): xonadonda Musofir makoni bo'lsa — Uy makonida uy tomoni ekrani.
+  const mfSpaceId = home ? (deviceRole.data?.spaceId ?? null) : (allSpaces.find((s) => s.kind === "MUSOFIR")?.id ?? null);
+  const uyNav = mfSpaceId ? [...NAV.slice(0, -2), { screen: "twoShores" as Screen, label: "nav.twoShores" }, ...NAV.slice(-2)] : NAV;
+  const nav = seller ? SELLER_NAV : kasbkor ? KK_NAV : musofir ? MF_NAV : uyNav;
   // Boshqa makonga o'tilganda shu makonda yo'q bo'lim tanlangan bo'lsa — bosh sahifa.
   const screen: Screen = nav.some((n) => n.screen === picked) ? picked : "home";
 
@@ -197,8 +205,13 @@ export function Shell() {
             </button>
           ))}
         </div>
-        {role === "OWNER" ? (
-          <button className="btn-ghost mt-3 text-sm" onClick={openOffer}>
+        {role === "HOME" && (
+          <p data-testid="role-badge" className="mt-3 rounded-md border border-line px-3 py-2 text-xs text-ink-muted">
+            {t("role.badge.HOME")}
+          </p>
+        )}
+        {role === "OWNER" || role === "HOME" ? (
+          <button className={`btn-ghost text-sm ${home ? "" : "mt-3"}`} onClick={openOffer}>
             {t("offer.open")}
           </button>
         ) : (
@@ -218,6 +231,7 @@ export function Shell() {
         )}
         {active && screen === "home" && (seller ? <KkSellerScreen spaceId={active} /> : kasbkor ? <KkHomeScreen spaceId={active} /> : musofir ? <MfHomeScreen spaceId={active} /> : <HomeScreen spaceId={active} />)}
         {active && seller && screen === "kkSellerCredit" && <KkSellerCreditScreen spaceId={active} />}
+        {active && mfSpaceId && screen === "twoShores" && <TwoShoresScreen mfSpaceId={mfSpaceId} uySpaceId={active} />}
         {active && seller && screen === "kkShift" && <KkShiftScreen spaceId={active} />}
         {active && screen === "vault" && <VaultScreen spaceId={active} />}
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}

@@ -10,6 +10,8 @@ import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
 import { useUi } from "../../state/ui";
 import { MfEntryDialog, type MfEntryMode } from "./MfEntryDialog";
+import { MfTermsCard } from "./MfTermsCard";
+import { PurposesTable } from "./TwoShoresScreen";
 
 const ACTIONS: MfEntryMode[] = ["SALARY", "EXPENSE", "SENT_HOME", "FUND_IN", "FUND_OUT", "OTHER_INCOME", "OPENING", "FUND_OPENING"];
 const CURRENCIES = ["KRW", "RUB", "KZT", "TRY", "USD", "EUR", "GBP", "UZS"] as const;
@@ -268,6 +270,9 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
         </section>
       )}
 
+      <ShoresSummary spaceId={spaceId} />
+      <MfTermsCard spaceId={spaceId} />
+
       <div className="grid gap-5 md:grid-cols-2">
         <RateCard spaceId={spaceId} d={d} s={s} />
         <section className="card flex flex-col gap-2" aria-label={t("mf.setup.summary")}>
@@ -354,6 +359,24 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
         />
       )}
     </>
+  );
+}
+
+/** «Ikki qirg'oq» xulosasi: uyda maqsadlar qoldig'i (uy tomoni yozuvlari fayl orqali keladi). */
+function ShoresSummary({ spaceId }: { spaceId: string }) {
+  const { t } = useTranslation();
+  const v = useQuery({ queryKey: keys.mfTwoShores(spaceId), queryFn: () => call(commands.mfTwoShores(spaceId)) });
+  const d = v.error ? undefined : v.data;
+  if (!d || d.remittances.length === 0) return null;
+  return (
+    <section className="card flex flex-col gap-2" aria-label={t("mf.shores.summary")}>
+      <h2 className="text-lg font-semibold">
+        {t("mf.shores.summary")}
+        {d.pending > 0 && <span className="ml-2 text-sm font-normal text-warn">{t("mf.shores.pending", { count: d.pending })}</span>}
+      </h2>
+      <PurposesTable v={d} />
+      {d.overspent && <p className="text-sm text-warn">{t("mf.shores.overspent")}</p>}
+    </section>
   );
 }
 

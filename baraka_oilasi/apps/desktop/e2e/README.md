@@ -19,6 +19,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `10-kasbkor-growth` | Kasb-kor o'sish: 120 mln tushum, 2 mln chiqim → darvoza yopiq (zaxira, «Hisob kuni», reja — keyingi qadamlar) → zakot: oltin 1 100 000 × 85 g, hawl tasdig'i → 2 950 000, hisob saqlandi → tarozi tekshirildi, shakar sanaldi (9,5 kg) → [+35 kun] bosh sahifada tarozi eslatmasi |
 | `11-kasbkor-roles` | Ikki ilova: egasi (Shakar 10 kg, sotuv narxi 15 000) «Sotuvchi» rolida ulash fayli → sotuvchi qo'shiladi: menyuda faqat sotuv, nasiya to'lovi, smena, foyda yo'q; 2 kg shakar (30 000) va 50 000 karta; smena 100 000 + 30 000 = 130 000, egasiga 100 000 → fayl egasiga: shakar 8 kg, «Sotuvchi smenalari», qurilma «Sotuvchi» |
 | `12-musofir` | Onboarding'da Musofir → sozlash (KRW, ulush 20 %, maqsad 120 mln so'm, qaytish 13 oydan keyin) → o'tgan 3 oy (maosh 2 600 000 von, jamg'armaga 520/500/540 ming, qolgani uyga) → shu oy: maosh (`Ctrl+N`) va ulush taklifi, 3 xarajat, uyga 1 200 000 + 5 000 komissiya → kurssiz so'mdagi qiymat yo'q → kurs 9,1: 54,6 mln, qaytishda 3 884 000 kam → ulush qo'yildi: qo'lda 215 000, maqsadga yetadi |
+| `13-musofir-two-shores` | Ikki ilova: musofir (xonadon egasi) shartlar 50/30/20, Gulnora qabul qiladi → uyga 1 200 000 von (uyda 10 900 000) → «Uydagi oila qurilmasi» ulash → oila: Musofir makoni ko'rinmaydi, yo'ldagi pul qabul qilinadi (summa taklifdan), uy xarajati 5 450 000 dan 2 000 000 sarflanadi, Gulnora kelishuvni PIN bilan tasdiqlaydi → fayl musofirga: qoldiq 3 450 000, Gulnora ✓ |
 
 ## Ishga tushirish (Linux)
 ```bash

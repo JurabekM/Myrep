@@ -325,14 +325,21 @@ function FamilyCard({ spaceId, f, onChanged, onEdit }: { spaceId: string; f: Fam
         </form>
       )}
       <ErrorText error={confirm.error ?? remove.error} />
-      <div className="flex gap-2">
-        <button className="btn-ghost px-3 py-1 text-sm" onClick={onEdit}>
-          {t("family.editButton")}
-        </button>
-        <button className="btn-ghost px-3 py-1 text-sm" disabled={remove.isPending} onClick={() => remove.mutate()}>
-          {t("family.delete")}
-        </button>
-      </div>
+      {/* «Ikki qirg'oq» (M2): matn musofirning shartlaridan — o'zgartirish faqat Musofir makonida. */}
+      {f.templateKey === "REMITTANCE" ? (
+        <p data-testid="family-remittance-note" className="text-sm text-ink-muted">
+          {t("family.remittanceNote")}
+        </p>
+      ) : (
+        <div className="flex gap-2">
+          <button className="btn-ghost px-3 py-1 text-sm" onClick={onEdit}>
+            {t("family.editButton")}
+          </button>
+          <button className="btn-ghost px-3 py-1 text-sm" disabled={remove.isPending} onClick={() => remove.mutate()}>
+            {t("family.delete")}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

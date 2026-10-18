@@ -1,7 +1,7 @@
 # «MUSOFIR» MAKONI — SPETSIFIKATSIYA
 ### Chet elda ishlaydigan migrant va uning uydagi oilasi uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (M0)**; M1 (2–4-bo'limlar) amalga oshirildi — farqlari 4.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-MF*).
+> Versiya: **v0.1 — QORALAMA (M0)**; M1 (2–4-bo'limlar) va M2 (5, 8-bo'limlar, ADR-0004) amalga oshirildi — farqlari 4.4 va 5.1 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-MF*).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-qonun ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar).
 
@@ -103,6 +103,14 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - **Maqsadlar qoldig'i** (`mf_remittance`): har qabul qilingan summa ulushlar bo'yicha bo'linadi (largest remainder); maqsad bo'yicha olingan − sarflangan = qoldiq. Qabul qilinmagan yuborishlar — «yo'lda». Ikkala tomon ham ko'radi.
 - Ayblovsiz: maqsaddan ortiq sarflansa (`OVERSPENT`) — «kelishuvni yangilaymizmi?» savoli, gina emas; xarajat taqiqlanmaydi.
 - Transport — `.baraka` fayl (U14); relay — R1 (alohida ADR).
+
+### 5.1. M2 da qanday qilindi (farqlar)
+- **Kelishuv** — 9 savolli dvigatel emas, U13 dagi **oilaviy kelishuv** (`REMITTANCE` shabloni): musofir shartlarni (ulushlar, qabul qiluvchi) va matnni Musofir makonida belgilaydi, kelishuv Uy makonida yaratiladi; kattalar «Kelishuvlar» bo'limida PIN bilan tasdiqlaydi (oila qurilmasida ham). Kelishuvlar markazida bu kelishuv tahrirlanmaydi (OQ-MF7).
+- **Ulushlar** har yuborishda yoziladi (`mf_remittance_parts`, o'zgarmas); shartlar keyin o'zgarsa, eski yuborishlar o'z ulushlari bilan qoladi. Maqsadsiz eski (M1) yuborish — uy xarajati 100 %.
+- **Qabul** — uydagi qurilmada yoki musofirning o'zida (oila ilovasiz bo'lsa); bir yuborish bir marta qabul qilinadi (`ALREADY_RECEIVED`). Musofir yozgan «uyda olingan» summa — faqat taklif; maqsadlarga **haqiqatda olingan** summa bo'linadi.
+- **Maqsad bo'yicha xarajat** — Uy makonidagi oddiy xarajat (Uy kategoriyalari bilan) + maqsad belgisi (`mf_spends`); oylik audit va Uy hisobotlarida odatdagidek ko'rinadi.
+- **Maxfiylik** (ADR-0004): `HOME` roli; filtr xonadondagi **barcha** Musofir makonlariga qo'llanadi; oila qurilmasida Musofir makoni tugmasi ko'rsatilmaydi, `mf_*` shaxsiy use-case'lari `ROLE_FORBIDDEN`. Oila qurilmasi Uy makonida hamma narsani yozadi va jurnal yozuvlari ham qabul qilinadi.
+- Qilinmagan: qabulni yoki maqsad belgisini tuzatish, maqsadlar orasida ko'chirish, qabul bo'yicha eslatma (masalan, 3 kun qabul qilinmasa), relay (R1), Android UI.
 
 ## 6. 4, 5, 7-QONUNLAR (M3)
 - **Yo'l qarzidan chiqish:** U8/U9 qarz inventari va payoff ish valyutasida; birinchi maoshlardan qarz rejasi.

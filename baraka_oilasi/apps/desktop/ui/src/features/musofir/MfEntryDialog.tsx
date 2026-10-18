@@ -8,6 +8,7 @@ import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
 import { keys } from "../../lib/queryClient";
 import { useDialog } from "../../lib/useDialog";
+import { draftFrom, PurposeShares, type SharesDraft, sharesInput } from "./PurposeShares";
 
 export type MfEntryMode = "SALARY" | "OTHER_INCOME" | "EXPENSE" | "SENT_HOME" | "FUND_IN" | "FUND_OUT" | "OPENING" | "FUND_OPENING";
 type Channel = "CASH" | "CARD";
@@ -45,6 +46,10 @@ export function MfEntryDialog({
   const [received, setReceived] = useState("");
   const [occurredOn, setOccurredOn] = useState("");
   const [note, setNote] = useState("");
+  // Uyga yuborish: maqsadlar — kelishuv shartlaridan taklif, o'zgartirish mumkin (M2).
+  const terms = useQuery({ queryKey: keys.mfTerms(spaceId), queryFn: () => call(commands.mfTerms(spaceId)), enabled: mode === "SENT_HOME" });
+  const [shares, setShares] = useState<SharesDraft | null>(null);
+  const purposes = shares ?? draftFrom(terms.data?.shares);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -69,7 +74,7 @@ export function MfEntryDialog({
           received: sent ? received.trim() || null : null,
           occurredOn: date,
           note: text,
-          purposes: null,
+          purposes: sent ? sharesInput(purposes) : null,
         }),
       );
     },
@@ -115,6 +120,7 @@ export function MfEntryDialog({
                 <span className="label">{t("mf.received", { currency: homeCurrency })}</span>
                 <AmountInput value={received} onChange={(e) => setReceived(e.target.value)} />
               </label>
+              <PurposeShares legend={t("mf.purposesLegend")} value={purposes} onChange={setShares} />
             </>
           )}
           {hasChannel && (

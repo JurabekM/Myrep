@@ -13,6 +13,7 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 | [docs/BARAKA_OILASI.md](docs/BARAKA_OILASI.md) | Bosh loyiha prompti: stek, arxitektura, pul algoritmlari, xavfsizlik, ish rejasi |
 | [docs/adr/0001-umumiy-rust-yadro.md](docs/adr/0001-umumiy-rust-yadro.md) | Asosiy arxitektura qarori |
 | [docs/adr/0003-kop-qurilma-va-rollar.md](docs/adr/0003-kop-qurilma-va-rollar.md) | Kasb-kor: ko'p qurilma va rollar (K8) |
+| [docs/adr/0004-musofir-uy-qurilmasi.md](docs/adr/0004-musofir-uy-qurilmasi.md) | Musofir: uydagi oila qurilmasi (M2) |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Mahsulot egasi, ulamo va yurist uchun ochiq savollar |
 | [docs/uy/](docs/uy/) | «Baraka daftari» spetsifikatsiyasi va dastlabki rejalar |
 | [docs/kasbkor/SPEC.md](docs/kasbkor/SPEC.md) | Kasb-kor makoni spetsifikatsiyasi (K0, qoralama) |
@@ -48,6 +49,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | K8: Kasb-kor ko'p qurilma va rollar (ADR-0003) — sotuvchi qurilmasi (sotuv, nasiya to'lovi, smena; foyda ma'lumoti unga yuborilmaydi), hisobchi (faqat o'qish), egasida yozish filtri va bekor qilish | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M0: Musofir makoni spetsifikatsiyasi (`docs/musofir/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda |
 | M1: Musofir — ish valyutasi va kurs (taxminsiz), chet eldagi maosh va xarajat, uyga yuborilgan (komissiya bilan), o'z ulushi va qaytish jamg'armasi, qaytish sanasigacha prognoz | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
+| M2: Musofir «Ikki qirg'oq» — yuborishning maqsadlari, oila bilan kelishuv (kattalar tasdig'i), uyda qabul va maqsad bo'yicha xarajat; uydagi oila qurilmasi (ADR-0004) — musofirning shaxsiy hisobi unga yuborilmaydi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

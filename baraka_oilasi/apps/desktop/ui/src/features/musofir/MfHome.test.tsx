@@ -13,6 +13,12 @@ const mfSetRate = vi.fn();
 const mfRecordIncome = vi.fn();
 const mfRecordMove = vi.fn();
 const categories = vi.fn();
+const mfTerms = vi.fn();
+const mfSetTerms = vi.fn();
+const mfTwoShores = vi.fn();
+const mfConfirmReceipt = vi.fn();
+const mfRecordSpend = vi.fn();
+const household = vi.fn();
 
 vi.mock("../../bindings", () => ({
   commands: {
@@ -23,6 +29,12 @@ vi.mock("../../bindings", () => ({
     mfRecordMove: (...a: unknown[]) => mfRecordMove(...a),
     mfRecordExpense: vi.fn(),
     categories: (...a: unknown[]) => categories(...a),
+    mfTerms: (...a: unknown[]) => mfTerms(...a),
+    mfSetTerms: (...a: unknown[]) => mfSetTerms(...a),
+    mfTwoShores: (...a: unknown[]) => mfTwoShores(...a),
+    mfConfirmReceipt: (...a: unknown[]) => mfConfirmReceipt(...a),
+    mfRecordSpend: (...a: unknown[]) => mfRecordSpend(...a),
+    household: (...a: unknown[]) => household(...a),
   },
 }));
 
@@ -86,9 +98,44 @@ const overview = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const u = (formatted: string, minor = "1") => m(formatted, minor, "UZS");
+const share = (purpose: string, bp: number) => ({ purpose, bp, percent: String(bp / 100) });
+const shores = (over: Record<string, unknown> = {}) => ({
+  uySpaceId: "uy",
+  remittances: [
+    {
+      moveId: "mv1",
+      sent: m("1 200 000 KRW"),
+      sentOn: "2026-10-12",
+      note: null,
+      shares: [share("HOUSEHOLD", 5000), share("DEBT", 3000), share("BUILD", 2000)],
+      expected: u("10 900 000 soʻm", "1090000000"),
+      receipt: null,
+      allocation: [],
+    },
+  ],
+  purposes: [
+    { purpose: "HOUSEHOLD", received: u("0 soʻm", "0"), spent: u("0 soʻm", "0"), balance: u("0 soʻm", "0"), overspent: false },
+  ],
+  received: u("0 soʻm", "0"),
+  spent: u("0 soʻm", "0"),
+  balance: u("0 soʻm", "0"),
+  pending: 1,
+  overspent: false,
+  spends: [],
+  ...over,
+});
+const members = [
+  { id: "m1", displayName: "Rustam", role: "ADULT" },
+  { id: "m2", displayName: "Gulnora", role: "ADULT" },
+];
+
 beforeEach(() => {
-  [mfOverview, mfSetSettings, mfSetRate, mfRecordIncome, mfRecordMove, categories].forEach((f) => f.mockReset());
-  categories.mockResolvedValue(ok([]));
+  [mfOverview, mfSetSettings, mfSetRate, mfRecordIncome, mfRecordMove, categories, mfTerms, mfSetTerms, mfTwoShores, mfConfirmReceipt, mfRecordSpend, household].forEach((f) => f.mockReset());
+  categories.mockResolvedValue(ok([{ id: "c1", nameKey: "category.food", customName: null, defaultNecessity: null, isSystem: true }]));
+  mfTerms.mockResolvedValue(ok({ shares: [share("HOUSEHOLD", 5000), share("DEBT", 3000), share("BUILD", 2000)], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
+  mfTwoShores.mockResolvedValue(ok(shores({ remittances: [] })));
+  household.mockResolvedValue(ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, members, spaces: [] }));
   useUi.setState({ mfEntry: null });
 });
 
@@ -161,7 +208,7 @@ describe("Musofir bosh sahifasi", () => {
     await user.type(within(dialog).getByLabelText("Komissiya (KRW)"), "5 000");
     await user.type(within(dialog).getByLabelText("Uyda olingan summa (UZS)"), "10 900 000");
     await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
-    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "SENT_HOME", amount: "1 200 000", fee: "5 000", received: "10 900 000", occurredOn: null, note: null, purposes: null });
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "SENT_HOME", amount: "1 200 000", fee: "5 000", received: "10 900 000", occurredOn: null, note: null, purposes: [{ purpose: "HOUSEHOLD", percent: "50" }, { purpose: "DEBT", percent: "30" }, { purpose: "BUILD", percent: "20" }] });
   });
 
   it("kurs: «1 KRW necha UZS»", async () => {
@@ -174,4 +221,55 @@ describe("Musofir bosh sahifasi", () => {
     await user.click(within(form).getByRole("button", { name: "Kursni saqlash" }));
     expect(mfSetRate).toHaveBeenCalledWith("mf", { rate: "9,1", rateOn: null, source: null });
   });
+
+  it("M2: uyga yuborishda maqsadlar — shartlardan, o'zgartirish mumkin", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    mfRecordMove.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    wrap(<MfHomeScreen spaceId="mf" />);
+    await user.click(await screen.findByRole("button", { name: "Uyga yuborish" }));
+    const dialog = screen.getByRole("dialog");
+    const household = await within(dialog).findByLabelText("Uy xarajati, foiz");
+    await waitForValue(household, "50");
+    await user.clear(household);
+    await user.type(household, "40");
+    await user.type(within(dialog).getByLabelText("Oʻqish, foiz"), "10");
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "500 000");
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordMove.mock.calls[0]?.[1].purposes).toEqual([
+      { purpose: "HOUSEHOLD", percent: "40" },
+      { purpose: "DEBT", percent: "30" },
+      { purpose: "BUILD", percent: "20" },
+      { purpose: "EDUCATION", percent: "10" },
+    ]);
+  });
+
+  it("M2: shartlar — ulushlar, qabul qiluvchi va kelishuv matni", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    mfTerms.mockResolvedValue(ok({ shares: [], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
+    mfSetTerms.mockResolvedValue(ok({ shares: [], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
+    const user = userEvent.setup();
+    const { container } = wrap(<MfHomeScreen spaceId="mf" />);
+    await user.click(await screen.findByRole("button", { name: "Shartlarni belgilash" }));
+    const form = screen.getByRole("form", { name: "Ikki qirgʻoq shartlari" });
+    const hh = within(form).getByLabelText("Uy xarajati, foiz");
+    await user.clear(hh);
+    await user.type(hh, "70");
+    await user.type(within(form).getByLabelText("Qarz toʻlovi, foiz"), "30");
+    await user.selectOptions(within(form).getByLabelText("Uyda kim qabul qiladi"), "m2");
+    expect((within(form).getByLabelText(/Kelishuv matni/) as HTMLTextAreaElement).value).toContain("70 % — uy xarajati, 30 % — qarz toʻlovi");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(within(form).getByRole("button", { name: "Saqlash" }));
+    const input = mfSetTerms.mock.calls[0]?.[1];
+    expect(input.shares).toEqual([
+      { purpose: "HOUSEHOLD", percent: "70" },
+      { purpose: "DEBT", percent: "30" },
+    ]);
+    expect(input.receiverMemberId).toBe("m2");
+    expect(input.items[1]).toBe("Pulni uyda Gulnora qabul qiladi va ilovaga yozadi.");
+  });
 });
+
+async function waitForValue(el: HTMLElement, value: string) {
+  await vi.waitFor(() => expect(el).toHaveValue(value));
+}
