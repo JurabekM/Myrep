@@ -1453,6 +1453,111 @@ def kk_funds(events):
     return {"funds": [{"fund": f, "added": _s(added[f]), "used": _s(used[f]), "balance": _s(bal[f])} for f in KK_FUNDS]}
 
 
+
+# --- Musofir (musofir/SPEC 2–4) ------------------------------------------------------------
+MF_KINDS = ("SALARY", "OTHER_INCOME", "EXPENSE", "SENT_HOME", "FUND_IN", "FUND_OUT", "OPENING", "FUND_OPENING")
+
+
+def bp_of(part: int, whole: int) -> int:
+    """Ulush basis points'da: round_half_up(part × 10000 / whole), whole > 0."""
+    return round_half_up(Fraction(part * 10000, whole))
+
+
+def mf_month(opening, fund_opening, share_bp, moves):
+    """Musofir oy hisoboti (SPEC 2.1, 3), ish valyutasida. Qo'ldagi pul = boshlang'ich + daromad − xarajat −
+    uyga yuborilgan − komissiya − jamg'armaga sof. O'z ulushi maqsadi = percent_of(daromad, share_bp); yetmagani =
+    max(0, maqsad − jamg'armaga sof). Jamg'armadan olish qoldiqdan oshmaydi (yozuvlar tartibida)."""
+    if not 0 <= share_bp <= 10000:
+        raise OracleError("INVALID_BP")
+    if fund_opening < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    t = {k: 0 for k in MF_KINDS}
+    fees, fund = 0, fund_opening
+    for m in moves:
+        k, a = m["kind"], int(m["amount"])
+        if k not in MF_KINDS:
+            raise OracleError("INVALID_KIND")
+        if a <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        if k == "SENT_HOME":
+            f = int(m.get("fee") or "0")
+            if f < 0:
+                raise OracleError("FEE_NEGATIVE")
+            fees += f
+        if k in ("FUND_IN", "FUND_OPENING"):
+            fund += a
+        elif k == "FUND_OUT":
+            if a > fund:
+                raise OracleError("FUND_INSUFFICIENT")
+            fund -= a
+        t[k] += a
+    income = t["SALARY"] + t["OTHER_INCOME"]
+    fund_net = t["FUND_IN"] - t["FUND_OUT"]
+    pocket = opening + t["OPENING"] + income - t["EXPENSE"] - t["SENT_HOME"] - fees - fund_net
+    target = percent_of(income, share_bp)
+    gap = max(0, target - fund_net)
+    warnings = []
+    if pocket < 0:
+        warnings.append("POCKET_NEGATIVE")
+    if target > 0 and fund_net <= 0:
+        warnings.append("NO_SHARE")
+    elif 0 < fund_net < target:
+        warnings.append("SHARE_BELOW_TARGET")
+    if t["FUND_OUT"] > 0:
+        warnings.append("FUND_WITHDRAWN")
+    bp = (lambda x: bp_of(x, income)) if income > 0 else (lambda x: None)
+    return {"income": _s(income), "expenses": _s(t["EXPENSE"]), "sentHome": _s(t["SENT_HOME"]), "fees": _s(fees),
+            "fundIn": _s(t["FUND_IN"]), "fundOut": _s(t["FUND_OUT"]), "fundNet": _s(fund_net), "fundBalance": _s(fund),
+            "pocket": _s(pocket), "shareTarget": _s(target), "shareGap": _s(gap),
+            "expensesBp": bp(t["EXPENSE"]), "sentBp": bp(t["SENT_HOME"] + fees), "fundBp": bp(fund_net), "warnings": warnings}
+
+
+def months_between(start: date, end: date) -> int:
+    """`start` dan `end` gacha to'liq oylar soni (o'tib ketgan bo'lsa 0)."""
+    n = (end.year - start.year) * 12 + end.month - start.month - (1 if end.day < start.day else 0)
+    return max(0, n)
+
+
+def mf_return_fund(cur, home, balance, rate, target, monthly, today, return_on):
+    """Qaytish jamg'armasi prognozi (SPEC 2.2). `rate` — (num, den): 1 ish valyutasi = num/den uy valyutasi; yo'q bo'lsa
+    uy valyutasidagi ko'rsatkichlar yo'q (taxmin qilinmaydi). O'rtacha — berilgan oylar sof jamg'armasining o'rtachasi;
+    maqsadgacha oylar — yuqoriga yaxlitlangan; qaytishdagi prognoz = qoldiq + o'rtacha × to'liq oylar (≥ 0)."""
+    if balance < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    if target is not None and target <= 0:
+        raise OracleError("INVALID_TARGET")
+    if rate is not None and (rate[0] <= 0 or rate[1] <= 0):
+        raise OracleError("INVALID_RATE")
+    avg = round_half_up(Fraction(sum(monthly), len(monthly))) if monthly else None
+    left = months_between(today, return_on) if return_on else None
+    out = {"avgMonthly": None if avg is None else _s(avg), "monthsUntilReturn": left, "balanceHome": None,
+           "avgMonthlyHome": None, "remainingHome": None, "progressBp": None, "monthsToTarget": None,
+           "projectedHome": None, "shortfallAtReturn": None}
+    if rate is None:
+        out["status"] = "NO_RATE"
+        return out
+    bh = convert(balance, cur, home, rate[0], rate[1])
+    ah = None if avg is None else convert(avg, cur, home, rate[0], rate[1])
+    projected = None if left is None else max(0, bh + (ah or 0) * left)
+    out.update({"balanceHome": _s(bh), "avgMonthlyHome": None if ah is None else _s(ah),
+                "projectedHome": None if projected is None else _s(projected)})
+    if target is None:
+        out["status"] = "NO_TARGET"
+        return out
+    remaining = max(0, target - bh)
+    out["remainingHome"] = _s(remaining)
+    out["progressBp"] = min(10000, bp_of(bh, target))
+    if projected is not None:
+        out["shortfallAtReturn"] = _s(max(0, target - projected))
+    if remaining == 0:
+        out["monthsToTarget"], out["status"] = 0, "REACHED"
+    elif ah is None or ah <= 0:
+        out["status"] = "NO_SAVING"
+    else:
+        out["monthsToTarget"] = ceil_div(remaining, ah)
+        out["status"] = "BEHIND" if projected is not None and projected < target else "ON_TRACK"
+    return out
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -2409,6 +2514,74 @@ def build_suites():
                     "tax": tx, "rule": ru, "carryOverdraw": co},
               lambda r=r, ex=ex, dp=dp, sal=sal, pd=pd, tx=tx, ru=ru, co=co: kk_month_close(t(r), t(ex), t(dp), t(sal), t(pd), tx, ru, co))
         for cid, r, ex, dp, sal, pd, tx, ru, co in mc])
+
+    def mv(k, a, fee=None):
+        m = {"kind": k, "amount": _s(a)}
+        if fee is not None:
+            m["fee"] = _s(fee)
+        return m
+    # Rustam aka (KRW, kasrsiz): maosh 2 600 000, ijara 400 000, ovqat 350 000, telefon 60 000, uyga 1 200 000 + 5 000.
+    rustam = [mv("SALARY", 2600000), mv("EXPENSE", 400000), mv("EXPENSE", 350000), mv("EXPENSE", 60000), mv("SENT_HOME", 1200000, 5000)]
+    mm = [
+        # O'z ulushi 20 % = 520 000 jamg'armaga qo'yildi; qo'lda 215 000 qoldi.
+        ("mf-001", "KRW", 150000, 0, 2000, rustam + [mv("FUND_IN", 520000)]),
+        # Ulush yetmadi: 320 000 — 200 000 kam.
+        ("mf-002", "KRW", 150000, 0, 2000, rustam + [mv("FUND_IN", 320000)]),
+        # Hammasi uyga: jamg'arma yo'q.
+        ("mf-003", "KRW", 150000, 0, 2000, rustam[:4] + [mv("SENT_HOME", 1700000, 5000)]),
+        # Jamg'armadan olindi (sof manfiy).
+        ("mf-004", "KRW", 150000, 3000000, 2000, rustam + [mv("FUND_IN", 520000), mv("FUND_OUT", 800000)]),
+        # Dilnoza (RUB): qo'ldagi pul manfiy.
+        ("mf-005", "RUB", 0, 0, 2000, [mv("SALARY", 8000000), mv("EXPENSE", 3500000), mv("EXPENSE", 2500000), mv("EXPENSE", 600000),
+                                       mv("SENT_HOME", 2000000, 30000)]),
+        # Daromadsiz oy: ulushlar yo'q, ogohlantirish yo'q.
+        ("mf-006", "KRW", 500000, 1000000, 2000, [mv("EXPENSE", 300000)]),
+        # USD: maosh 1 234,57 + bonus 50; jamg'arma 246,91 — largest remainder va bp yaxlitlash.
+        ("mf-007", "USD", 10000, 0, 2000, [mv("SALARY", 123457), mv("OTHER_INCOME", 5000), mv("FUND_IN", 24691), mv("EXPENSE", 33333)]),
+        # Boshlang'ich qoldiqlar yozuv sifatida; ulush 0 % — maqsad yo'q.
+        ("mf-008", "KRW", 0, 0, 0, [mv("OPENING", 100000), mv("FUND_OPENING", 2000000), mv("SALARY", 2600000), mv("SENT_HOME", 2000000)]),
+        ("mf-neg-001", "KRW", 0, 0, 2000, [mv("SALARY", 0)]),
+        ("mf-neg-002", "KRW", 0, 0, 2000, [mv("SALARY", 1000), mv("SENT_HOME", 500, -1)]),
+        ("mf-neg-003", "KRW", 0, 0, 2000, [mv("LOAN", 1000)]),
+        ("mf-neg-004", "KRW", 0, 0, 10001, [mv("SALARY", 1000)]),
+        ("mf-neg-005", "KRW", 0, 100, 2000, [mv("FUND_IN", 50), mv("FUND_OUT", 151)]),
+    ]
+    suites["mf_month"] = _suite("mf_month", "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3)", [
+        _case(cid, {"currency": c, "opening": _s(o), "fundOpening": _s(fo), "shareBp": bp, "moves": ms},
+              lambda o=o, fo=fo, bp=bp, ms=ms: mf_month(o, fo, bp, ms))
+        for cid, c, o, fo, bp, ms in mm])
+
+    krw = (91, 10)
+    rf = [
+        # Rustam aka: 6 mln von (54,6 mln so'm), maqsad 120 mln so'm, oyiga ~520 000 von; 2027-12-01 gacha 13 oy — yetmaydi.
+        ("rf-001", "KRW", 6000000, krw, 12000000000, [520000, 500000, 540000], "2026-10-18", "2027-12-01"),
+        # Qaytish 2028-03-01 — shu sur'atda yetadi.
+        ("rf-002", "KRW", 6000000, krw, 12000000000, [520000, 500000, 540000], "2026-10-18", "2028-03-01"),
+        # Maqsadga yetgan.
+        ("rf-003", "KRW", 14000000, krw, 12000000000, [520000], "2026-10-18", None),
+        # Jamg'arish yo'q (o'rtacha manfiy).
+        ("rf-004", "KRW", 6000000, krw, 12000000000, [0, -100000], "2026-10-18", "2027-06-01"),
+        # Maqsadsiz.
+        ("rf-005", "KRW", 6000000, krw, None, [520000], "2026-10-18", "2027-06-01"),
+        # Kurs yo'q — uy valyutasidagi ko'rsatkichlar yo'q.
+        ("rf-006", "KRW", 6000000, None, 12000000000, [520000], "2026-10-18", "2027-06-01"),
+        # USD, o'rtacha yaxlitlash (300 001 / 3).
+        ("rf-007", "USD", 500000, (12650, 1), 12000000000, [100001, 100000, 100000], "2026-10-18", "2027-10-18"),
+        # Qaytish sanasi o'tib ketgan — 0 oy.
+        ("rf-008", "KRW", 6000000, krw, 12000000000, [520000], "2026-10-18", "2026-09-01"),
+        # Yozuvli oy yo'q — prognoz yo'q.
+        ("rf-009", "KRW", 6000000, krw, 12000000000, [], "2026-10-18", "2027-06-01"),
+        ("rf-neg-001", "KRW", 6000000, (91, 0), 12000000000, [], "2026-10-18", None),
+        ("rf-neg-002", "KRW", 6000000, krw, 0, [], "2026-10-18", None),
+        ("rf-neg-003", "KRW", -1, krw, None, [], "2026-10-18", None),
+    ]
+    suites["mf_return_fund"] = _suite("mf_return_fund", "Musofir qaytish jamg'armasi: kurs bilan uy valyutasidagi qoldiq, maqsadgacha qolgan va necha oy, qaytish sanasidagi prognoz va holat; kurssiz — taxmin yo'q (musofir/SPEC 2.2, 4.1)", [
+        _case(cid, {"currency": c, "homeCurrency": U, "balance": _s(b), "rateNum": None if r is None else r[0],
+                    "rateDen": None if r is None else r[1], "target": None if tg is None else _s(tg),
+                    "monthly": [_s(x) for x in mo], "today": td, "returnOn": ro},
+              lambda c=c, b=b, r=r, tg=tg, mo=mo, td=td, ro=ro: mf_return_fund(c, U, b, r, tg, mo, date.fromisoformat(td),
+                                                                              date.fromisoformat(ro) if ro else None))
+        for cid, c, b, r, tg, mo, td, ro in rf])
     return suites
 
 
@@ -2417,7 +2590,8 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
-                 "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close")
+                 "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
+                 "mf_month", "mf_return_fund")
 
 
 def generate(directory: str) -> None:
@@ -2481,6 +2655,12 @@ def _expect_error(code, fn, *args):
 
 
 def selftest() -> None:
+    # M1 (musofir/SPEC 2.1): Rustam aka — ulush 520 000 von bajarildi, qo'lda 215 000; 13 oyda 116,1 mln — 3,9 mln kam.
+    rm = mf_month(150000, 0, 2000, [{"kind": "SALARY", "amount": "2600000"}, {"kind": "EXPENSE", "amount": "810000"},
+                                    {"kind": "SENT_HOME", "amount": "1200000", "fee": "5000"}, {"kind": "FUND_IN", "amount": "520000"}])
+    assert (rm["pocket"], rm["shareGap"], rm["sentBp"], rm["warnings"]) == ("215000", "0", 4635, [])
+    rr = mf_return_fund("KRW", "UZS", 6000000, (91, 10), 12000000000, [520000, 500000, 540000], date(2026, 10, 18), date(2027, 12, 1))
+    assert (rr["monthsUntilReturn"], rr["monthsToTarget"], rr["shortfallAtReturn"], rr["status"]) == (13, 14, "388400000", "BEHIND")
     # K8 (ADR-0003): sotuvchi smenasi — kutilgan 1 200 000, topshirildi 1 000 000, qoldi 200 000.
     shf = kk_shift_close(20000000, [{"kind": "SALE", "wallet": "CASH", "amount": "85000000"},
                                     {"kind": "CREDIT_PAYMENT", "wallet": "CASH", "amount": "15000000"},

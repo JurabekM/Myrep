@@ -1,0 +1,316 @@
+{
+  "suite": "mf_return_fund",
+  "version": 1,
+  "description": "Musofir qaytish jamg'armasi: kurs bilan uy valyutasidagi qoldiq, maqsadgacha qolgan va necha oy, qaytish sanasidagi prognoz va holat; kurssiz — taxmin yo'q (musofir/SPEC 2.2, 4.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "rf-001",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "12000000000",
+        "monthly": [
+          "520000",
+          "500000",
+          "540000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2027-12-01"
+      },
+      "expected": {
+        "avgMonthly": "520000",
+        "monthsUntilReturn": 13,
+        "balanceHome": "5460000000",
+        "avgMonthlyHome": "473200000",
+        "remainingHome": "6540000000",
+        "progressBp": 4550,
+        "monthsToTarget": 14,
+        "projectedHome": "11611600000",
+        "shortfallAtReturn": "388400000",
+        "status": "BEHIND"
+      }
+    },
+    {
+      "id": "rf-002",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "12000000000",
+        "monthly": [
+          "520000",
+          "500000",
+          "540000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2028-03-01"
+      },
+      "expected": {
+        "avgMonthly": "520000",
+        "monthsUntilReturn": 16,
+        "balanceHome": "5460000000",
+        "avgMonthlyHome": "473200000",
+        "remainingHome": "6540000000",
+        "progressBp": 4550,
+        "monthsToTarget": 14,
+        "projectedHome": "13031200000",
+        "shortfallAtReturn": "0",
+        "status": "ON_TRACK"
+      }
+    },
+    {
+      "id": "rf-003",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "14000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "12000000000",
+        "monthly": [
+          "520000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": null
+      },
+      "expected": {
+        "avgMonthly": "520000",
+        "monthsUntilReturn": null,
+        "balanceHome": "12740000000",
+        "avgMonthlyHome": "473200000",
+        "remainingHome": "0",
+        "progressBp": 10000,
+        "monthsToTarget": 0,
+        "projectedHome": null,
+        "shortfallAtReturn": null,
+        "status": "REACHED"
+      }
+    },
+    {
+      "id": "rf-004",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "12000000000",
+        "monthly": [
+          "0",
+          "-100000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2027-06-01"
+      },
+      "expected": {
+        "avgMonthly": "-50000",
+        "monthsUntilReturn": 7,
+        "balanceHome": "5460000000",
+        "avgMonthlyHome": "-45500000",
+        "remainingHome": "6540000000",
+        "progressBp": 4550,
+        "monthsToTarget": null,
+        "projectedHome": "5141500000",
+        "shortfallAtReturn": "6858500000",
+        "status": "NO_SAVING"
+      }
+    },
+    {
+      "id": "rf-005",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": null,
+        "monthly": [
+          "520000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2027-06-01"
+      },
+      "expected": {
+        "avgMonthly": "520000",
+        "monthsUntilReturn": 7,
+        "balanceHome": "5460000000",
+        "avgMonthlyHome": "473200000",
+        "remainingHome": null,
+        "progressBp": null,
+        "monthsToTarget": null,
+        "projectedHome": "8772400000",
+        "shortfallAtReturn": null,
+        "status": "NO_TARGET"
+      }
+    },
+    {
+      "id": "rf-006",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": null,
+        "rateDen": null,
+        "target": "12000000000",
+        "monthly": [
+          "520000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2027-06-01"
+      },
+      "expected": {
+        "avgMonthly": "520000",
+        "monthsUntilReturn": 7,
+        "balanceHome": null,
+        "avgMonthlyHome": null,
+        "remainingHome": null,
+        "progressBp": null,
+        "monthsToTarget": null,
+        "projectedHome": null,
+        "shortfallAtReturn": null,
+        "status": "NO_RATE"
+      }
+    },
+    {
+      "id": "rf-007",
+      "input": {
+        "currency": "USD",
+        "homeCurrency": "UZS",
+        "balance": "500000",
+        "rateNum": 12650,
+        "rateDen": 1,
+        "target": "12000000000",
+        "monthly": [
+          "100001",
+          "100000",
+          "100000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2027-10-18"
+      },
+      "expected": {
+        "avgMonthly": "100000",
+        "monthsUntilReturn": 12,
+        "balanceHome": "6325000000",
+        "avgMonthlyHome": "1265000000",
+        "remainingHome": "5675000000",
+        "progressBp": 5271,
+        "monthsToTarget": 5,
+        "projectedHome": "21505000000",
+        "shortfallAtReturn": "0",
+        "status": "ON_TRACK"
+      }
+    },
+    {
+      "id": "rf-008",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "12000000000",
+        "monthly": [
+          "520000"
+        ],
+        "today": "2026-10-18",
+        "returnOn": "2026-09-01"
+      },
+      "expected": {
+        "avgMonthly": "520000",
+        "monthsUntilReturn": 0,
+        "balanceHome": "5460000000",
+        "avgMonthlyHome": "473200000",
+        "remainingHome": "6540000000",
+        "progressBp": 4550,
+        "monthsToTarget": 14,
+        "projectedHome": "5460000000",
+        "shortfallAtReturn": "6540000000",
+        "status": "BEHIND"
+      }
+    },
+    {
+      "id": "rf-009",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "12000000000",
+        "monthly": [],
+        "today": "2026-10-18",
+        "returnOn": "2027-06-01"
+      },
+      "expected": {
+        "avgMonthly": null,
+        "monthsUntilReturn": 7,
+        "balanceHome": "5460000000",
+        "avgMonthlyHome": null,
+        "remainingHome": "6540000000",
+        "progressBp": 4550,
+        "monthsToTarget": null,
+        "projectedHome": "5460000000",
+        "shortfallAtReturn": "6540000000",
+        "status": "NO_SAVING"
+      }
+    },
+    {
+      "id": "rf-neg-001",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 0,
+        "target": "12000000000",
+        "monthly": [],
+        "today": "2026-10-18",
+        "returnOn": null
+      },
+      "expected": {
+        "error": "INVALID_RATE"
+      }
+    },
+    {
+      "id": "rf-neg-002",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "6000000",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": "0",
+        "monthly": [],
+        "today": "2026-10-18",
+        "returnOn": null
+      },
+      "expected": {
+        "error": "INVALID_TARGET"
+      }
+    },
+    {
+      "id": "rf-neg-003",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "balance": "-1",
+        "rateNum": 91,
+        "rateDen": 10,
+        "target": null,
+        "monthly": [],
+        "today": "2026-10-18",
+        "returnOn": null
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    }
+  ]
+}

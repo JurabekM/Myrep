@@ -13,6 +13,7 @@ baraka-journal.workspace = true
 baraka-domain-common.workspace = true
 baraka-domain-uy.workspace = true
 baraka-domain-kasbkor.workspace = true
+baraka-domain-musofir.workspace = true
 baraka-agreements.workspace = true
 serde_json.workspace = true
 chrono.workspace = true

@@ -14,6 +14,8 @@ use baraka_domain_kasbkor::shift::{shift_close, ShiftIn, ShiftInKind};
 use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
 use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
+use baraka_domain_musofir::fund::return_fund;
+use baraka_domain_musofir::month::{month_report as mf_month_report, MfKind, MfMove};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -156,6 +158,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_zakat" => kk_zakat(input),
         "kk_funds" => kk_funds(input),
         "kk_shift_close" => kk_shift_close(input),
+        "mf_month" => mf_month(input),
+        "mf_return_fund" => mf_return_fund(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1654,5 +1658,91 @@ fn kk_funds(v: &Value) -> R {
             "used": m(f.used),
             "balance": m(f.balance),
         })).collect::<Vec<_>>(),
+    }))
+}
+
+fn mf_month(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let mut moves = Vec::new();
+    for m in v["moves"].as_array().ok_or_else(|| bad("moves"))? {
+        moves.push(MfMove {
+            kind: MfKind::parse(s(m, "kind")?).ok_or_else(|| E("INVALID_KIND".into()))?,
+            amount: money(m, "amount", c)?,
+            fee: if m["fee"].is_null() {
+                None
+            } else {
+                Some(money(m, "fee", c)?)
+            },
+        });
+    }
+    let r = mf_month_report(
+        money(v, "opening", c)?,
+        money(v, "fundOpening", c)?,
+        i(v, "shareBp")?,
+        &moves,
+    )?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "income": m(r.income),
+        "expenses": m(r.expenses),
+        "sentHome": m(r.sent_home),
+        "fees": m(r.fees),
+        "fundIn": m(r.fund_in),
+        "fundOut": m(r.fund_out),
+        "fundNet": m(r.fund_net),
+        "fundBalance": m(r.fund_balance),
+        "pocket": m(r.pocket),
+        "shareTarget": m(r.share_target),
+        "shareGap": m(r.share_gap),
+        "expensesBp": r.expenses_bp,
+        "sentBp": r.sent_bp,
+        "fundBp": r.fund_bp,
+        "warnings": r.warnings.iter().map(|w| w.as_str()).collect::<Vec<_>>(),
+    }))
+}
+
+fn mf_return_fund(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let home = cur(v, "homeCurrency")?;
+    let rate = if v["rateNum"].is_null() {
+        None
+    } else {
+        Some(FxRate {
+            from: c,
+            to: home,
+            rate_num: i(v, "rateNum")?,
+            rate_den: i(v, "rateDen")?,
+        })
+    };
+    let target = if v["target"].is_null() {
+        None
+    } else {
+        Some(money(v, "target", home)?)
+    };
+    let return_on = if v["returnOn"].is_null() {
+        None
+    } else {
+        Some(date(&v["returnOn"])?)
+    };
+    let r = return_fund(
+        money(v, "balance", c)?,
+        rate.as_ref(),
+        target,
+        &moneys(v, "monthly", c)?,
+        date(&v["today"])?,
+        return_on,
+    )?;
+    let m = |x: Option<Money>| x.map(|x| x.minor().to_string());
+    Ok(json!({
+        "avgMonthly": m(r.avg_monthly),
+        "monthsUntilReturn": r.months_until_return,
+        "balanceHome": m(r.balance_home),
+        "avgMonthlyHome": m(r.avg_monthly_home),
+        "remainingHome": m(r.remaining_home),
+        "progressBp": r.progress_bp,
+        "monthsToTarget": r.months_to_target,
+        "projectedHome": m(r.projected_home),
+        "shortfallAtReturn": m(r.shortfall_at_return),
+        "status": r.status.as_str(),
     }))
 }

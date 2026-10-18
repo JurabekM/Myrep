@@ -1,6 +1,6 @@
 [package]
 name = "baraka-domain-musofir"
-description = "Musofir makoni domen qoidalari (M-vazifalarda to'ldiriladi)"
+description = "Musofir makoni domen qoidalari (docs/musofir/SPEC.md)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,9 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+baraka-money.workspace = true
+baraka-domain-common.workspace = true
+chrono.workspace = true
 
 [lints]
 workspace = true
