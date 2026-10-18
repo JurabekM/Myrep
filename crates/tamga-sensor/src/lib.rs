@@ -108,6 +108,62 @@ impl ProcTable {
     }
 }
 
+/// Pipe mijozi: exe yo'li va ajdodlar nomlari (yaqinidan uzog'iga) — K1 tekshiruvi uchun.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Caller {
+    pub pid: u32,
+    pub exe: Option<PathBuf>,
+    pub name: String,
+    pub ancestors: Vec<String>,
+}
+
+impl Caller {
+    /// Agent nomidan ishlayotgan jarayonmi: o'zi yoki ajdodi `claude*`, yoki TAMGA hook / MCP proxy
+    /// (ular va ularning avlodlari — agent ishga tushirgan tool'lar va MCP serverlar).
+    pub fn from_agent(&self) -> bool {
+        std::iter::once(&self.name)
+            .chain(&self.ancestors)
+            .map(|n| stem(n))
+            .any(|n| n.starts_with("claude") || n == "tamga-hook" || n == "tamga-mcp-proxy")
+    }
+}
+
+/// Jarayonni darhol aniqlaydi (sensor o'chiq bo'lsa ham ishlaydi): yangi snapshot oladi.
+pub fn identify(pid: u32) -> Option<Caller> {
+    let mut sys = System::new();
+    sys.refresh_processes_specifics(
+        ProcessesToUpdate::All,
+        true,
+        ProcessRefreshKind::nothing().with_exe(UpdateKind::OnlyIfNotSet),
+    );
+    let me = sys.process(Pid::from_u32(pid))?;
+    let table = ProcTable(
+        sys.processes()
+            .iter()
+            .map(|(p, info)| {
+                (
+                    p.as_u32(),
+                    ProcInfo {
+                        ppid: info.parent().map(Pid::as_u32),
+                        name: info.name().to_string_lossy().into_owned(),
+                        cmd: String::new(),
+                    },
+                )
+            })
+            .collect(),
+    );
+    Some(Caller {
+        pid,
+        exe: me.exe().map(Path::to_path_buf),
+        name: me.name().to_string_lossy().into_owned(),
+        ancestors: table
+            .ancestors(pid)
+            .iter()
+            .map(|a| table.name(*a))
+            .collect(),
+    })
+}
+
 fn stem(name: &str) -> String {
     let n = name.to_ascii_lowercase();
     n.strip_suffix(".exe").unwrap_or(&n).to_owned()
@@ -376,6 +432,32 @@ fn poll_loop(table: &RwLock<ProcTable>, roots: &Mutex<HashSet<u32>>, tx: &Sender
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn caller_from_agent_tree() {
+        let c = |name: &str, anc: &[&str]| Caller {
+            pid: 1,
+            exe: None,
+            name: name.into(),
+            ancestors: anc.iter().map(|s| (*s).to_owned()).collect(),
+        };
+        assert!(c("tamga.exe", &["pwsh.exe", "claude.exe", "explorer.exe"]).from_agent());
+        assert!(c("tamga-hook.exe", &["node.exe"]).from_agent());
+        assert!(
+            c("node.exe", &["tamga-mcp-proxy.exe", "Cursor.exe"]).from_agent(),
+            "MCP server"
+        );
+        assert!(c("Claude.exe", &[]).from_agent());
+        assert!(!c("tamga-studio.exe", &["explorer.exe"]).from_agent());
+        assert!(!c("tamga.exe", &["WindowsTerminal.exe", "explorer.exe"]).from_agent());
+    }
+
+    #[test]
+    fn identify_finds_this_test_process() {
+        let me = identify(std::process::id()).expect("o'z jarayoni");
+        assert!(me.exe.is_some());
+        assert!(!me.ancestors.is_empty());
+    }
 
     fn table(rows: &[(u32, u32, &str)]) -> ProcTable {
         ProcTable(

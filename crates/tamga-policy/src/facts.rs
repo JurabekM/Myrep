@@ -56,6 +56,16 @@ re!(
     r"(?i)(\breg(\.exe)?\s+(add|delete|import)\b|\bsetx\b|\bschtasks\b|\bsc(\.exe)?\s+(config|create|delete|stop)\b|\bnetsh\b|\bbcdedit\b|\bset-executionpolicy\b|\bnew-service\b|\bset-itemproperty\b.*\bhk(lm|cu):|\bnew-itemproperty\b|\bsystemctl\s+(enable|disable|stop|mask)\b|\bchmod\s+-r\s+777\b|\bsudo\b)"
 );
 re!(SEGMENT_SPLIT, r"\|\||&&|[|;&\n]|\$\(|`");
+// TAMGA'ning o'zi: daemon, boshqaruv buyruqlari, pipe, ma'lumot va o'rnatish papkalari (K1/K2).
+re!(
+    TAMGA_CONTROL,
+    r"(?i)(\btamgad(\.exe)?\b|\btamga(\.exe)?[\x22']?\s+(stop|decide|key|uninstall|install)\b|pipe[\\/]+tamga|\btamga_(home|pipe|secrets|sensor)\b)"
+);
+// TAMGA ma'lumotlari, o'rnatish papkasi va agent hook sozlamalari (yo'l sifatida).
+re!(
+    TAMGA_PATH,
+    r"(?i)(appdata[\\/]+local[\\/]+tamga([\\/]|\b)|localappdata%?[\\/]+tamga\b|tamga studio[\\/]|\.claude[\\/]+settings(\.local)?\.json)"
+);
 
 /// Yo'l yoki buyruq tokeni ishchi papka tashqarisidagi absolyut yo'lmi.
 fn outside(path: &str, cwd: &str) -> bool {
@@ -163,6 +173,7 @@ fn generic(f: &mut Facts, tool: &str, input: &Value, cwd: &str) {
         f.destructive_outside_workspace |= sub.destructive_outside_workspace;
         f.force_push |= sub.force_push;
         f.system_change |= sub.system_change;
+        f.tamper_with_tamga |= sub.tamper_with_tamga;
     }
     // Faqat MCP server nomini emas, tool qismini tekshiramiz: `mcp:fetch/fetch` → `fetch`.
     let name = tool.rsplit(['/', ':']).next().unwrap_or(tool);
@@ -172,6 +183,9 @@ fn generic(f: &mut Facts, tool: &str, input: &Value, cwd: &str) {
         .any(|p| SECRET_FILE.is_match(&format!(" {p}")) && !SAMPLE_FILE.is_match(p));
     if TOOL_WRITES.is_match(name) && !cwd.is_empty() {
         f.writes_outside_workspace |= paths.iter().any(|p| outside(p, cwd));
+    }
+    if TOOL_WRITES.is_match(name) {
+        f.tamper_with_tamga |= paths.iter().any(|p| TAMGA_PATH.is_match(p));
     }
     if f.path.is_empty()
         && let Some(p) = paths.first()
@@ -204,6 +218,8 @@ pub struct Facts {
     pub force_push: bool,
     pub writes_outside_workspace: bool,
     pub system_change: bool,
+    /// Agent TAMGA'ning o'zini (daemon, sozlamalar, kalitlar, Claude Code hook'lari) o'zgartirmoqchi.
+    pub tamper_with_tamga: bool,
 }
 
 impl Facts {
@@ -259,6 +275,7 @@ impl Facts {
                 });
             f.force_push = FORCE_PUSH.is_match(&command);
             f.system_change = SYSTEM_CHANGE.is_match(&command);
+            f.tamper_with_tamga = TAMGA_CONTROL.is_match(&command) || TAMGA_PATH.is_match(&command);
         }
         match tool {
             "WebFetch" | "WebSearch" => f.network_egress = true,
@@ -269,6 +286,7 @@ impl Facts {
             "Write" | "Edit" | "MultiEdit" | "NotebookEdit" => {
                 f.writes_outside_workspace =
                     !path.is_empty() && !cwd.is_empty() && outside(&path, cwd);
+                f.tamper_with_tamga = TAMGA_PATH.is_match(&path);
             }
             "Bash" | "PowerShell" => {}
             // Noma'lum tool (masalan MCP: `mcp:filesystem/write_file`): argument kalitlari va nomi bo'yicha.
@@ -304,6 +322,7 @@ impl Facts {
             "force_push": self.force_push,
             "writes_outside_workspace": self.writes_outside_workspace,
             "system_change": self.system_change,
+            "tamper_with_tamga": self.tamper_with_tamga,
         })
     }
 
@@ -324,6 +343,7 @@ impl Facts {
             ("force_push", self.force_push),
             ("writes_outside_workspace", self.writes_outside_workspace),
             ("system_change", self.system_change),
+            ("tamper_with_tamga", self.tamper_with_tamga),
         ]
         .into_iter()
         .filter_map(|(n, v)| v.then_some(n))
@@ -372,6 +392,35 @@ mod tests {
             None,
         );
         assert!(read.reads_secret_file);
+    }
+
+    #[test]
+    fn tampering_with_tamga_itself() {
+        assert!(bash("tamga stop").tamper_with_tamga);
+        assert!(bash("\"C:/Tools/TAMGA Studio/tamga.exe\" decide 12 allow").tamper_with_tamga);
+        assert!(bash("taskkill /im tamgad.exe /f").tamper_with_tamga);
+        assert!(bash("notepad %LOCALAPPDATA%\\tamga\\config.json").tamper_with_tamga);
+        assert!(bash("cat ~/.claude/settings.json").tamper_with_tamga);
+        let edit = Facts::from_tool(
+            "Edit",
+            &json!({"file_path": "C:\\Users\\me\\.claude\\settings.json"}),
+            CWD,
+            None,
+        );
+        assert!(edit.tamper_with_tamga);
+        let mcp = Facts::from_tool(
+            "mcp:files/write_file",
+            &json!({"path": "C:/Users/me/AppData/Local/tamga/config.json", "content": "{}"}),
+            CWD,
+            None,
+        );
+        assert!(mcp.tamper_with_tamga);
+        assert!(
+            !bash("cargo test -p tamga-core").tamper_with_tamga,
+            "loyiha nomi emas"
+        );
+        assert!(!bash("git log --grep tamga").tamper_with_tamga);
+        assert!(!bash("cat docs/tamga-guide.md").tamper_with_tamga);
     }
 
     #[test]

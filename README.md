@@ -179,8 +179,11 @@ siyosat bloklagan buyruq bajarilmaydi.
   o'tkazib yuborishi mumkin, UDP/DNS kuzatilmaydi, fayl o'zgarishi jarayonga vaqt bo'yicha bog'lanadi.
 - `dev` rejimida daemon ishlamasa hodisa spool'ga yoziladi va amal ruxsat etiladi; `strict` — bloklanadi.
 - Hozircha faqat Windows (named pipe, Credential Manager, sensor). Format va verifikator — platformaga bog'liq emas.
-- Agent va daemon bir xil Windows foydalanuvchisi huquqida ishlaydi. Pipe'dagi boshqaruv buyruqlari
-  (`decide`, `shutdown`, `rotate`) hozircha chaqiruvchini tekshirmaydi. Bu ochiq zaif nuqta: [AUDIT-GUIDE §4, K1](docs/AUDIT-GUIDE.md).
+- Agent va daemon bir xil Windows foydalanuvchisi huquqida ishlaydi. Daemon boshqaruv buyruqlarini
+  (`decide`, `shutdown`, `rotate`) faqat o'z papkasidagi `tamga.exe` / TAMGA Studio'dan va agent jarayon
+  daraxtidan tashqarida qabul qiladi, har urinishni jurnalga yozadi; siyosat agentning TAMGA'ga qaratilgan
+  buyruqlarini bloklaydi. Bu to'siq, lekin bir foydalanuvchi ichida mutlaq chegara emas ([AUDIT-GUIDE §4, K1/K2](docs/AUDIT-GUIDE.md)).
+  Shu sababli `tamga decide` / `stop` ni Claude Code ichidagi terminaldan emas, oddiy terminal yoki Studio'dan bering.
 
 ## Dasturchilar uchun
 

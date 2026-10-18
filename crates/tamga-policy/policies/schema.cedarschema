@@ -23,6 +23,7 @@ namespace Tamga {
       force_push: Bool,
       writes_outside_workspace: Bool,
       system_change: Bool,
+      tamper_with_tamga: Bool,
     }
   };
 }

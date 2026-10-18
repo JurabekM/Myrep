@@ -30,6 +30,12 @@ when { context.pipes_to_shell };
 forbid (principal, action == Tamga::Action::"use_tool", resource)
 when { context.destructive_outside_workspace };
 
+@id("no-tamga-tamper")
+@verdict("deny")
+@reason("agent TAMGA'ning o'zini (daemon, sozlamalar, kalitlar yoki Claude Code hook'lari) o'zgartirmoqchi")
+forbid (principal, action == Tamga::Action::"use_tool", resource)
+when { context.tamper_with_tamga };
+
 @id("ask-egress-after-secret-read")
 @verdict("ask")
 @reason("bu sessiya maxfiy ma'lumotni o'qigan, endi tarmoqqa chiqmoqda")

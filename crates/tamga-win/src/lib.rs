@@ -10,6 +10,9 @@
 //! F8 demosida PowerShell orqali ishga tushirilganda boshqa meros handle'lar baribir o'tib ketdi.
 //! Endi daemon `CreateProcessW(bInheritHandles = FALSE)` bilan yaratiladi: hech qanday handle
 //! meros bo'lmaydi, std handle'lar bo'sh (daemon faqat o'z log fayliga yozadi).
+//!
+//! [`pipe_client_pid`] — pipe mijozining PID'i (`GetNamedPipeClientProcessId`), daemon boshqaruv
+//! buyruqlarini kim yuborganini tekshirishi uchun.
 
 use std::path::Path;
 
@@ -77,6 +80,19 @@ pub fn spawn_detached(exe: &Path) -> std::io::Result<()> {
         CloseHandle(pi.hProcess);
     }
     Ok(())
+}
+
+/// Named pipe'ning server tomonidan ulangan mijoz jarayonining PID'i (K1: boshqaruv buyruqlarini
+/// kim yuborganini aniqlash). Handle qarzga olinadi — chaqiruv davomida yaroqli.
+#[cfg(windows)]
+#[allow(unsafe_code)]
+pub fn pipe_client_pid(pipe: &impl std::os::windows::io::AsRawHandle) -> Option<u32> {
+    use windows_sys::Win32::System::Pipes::GetNamedPipeClientProcessId;
+    let mut pid = 0u32;
+    // SAFETY: `pipe` qarzga olingan, ochiq handle (`AsRawHandle` egasi tirik); `pid` — shu
+    // funksiya stekidagi `u32`, API unga faqat 4 bayt yozadi. Handle pipe bo'lmasa API xato qaytaradi.
+    let ok = unsafe { GetNamedPipeClientProcessId(pipe.as_raw_handle(), &mut pid) };
+    (ok != 0 && pid != 0).then_some(pid)
 }
 
 #[cfg(not(windows))]

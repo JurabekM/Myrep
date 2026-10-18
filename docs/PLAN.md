@@ -282,6 +282,14 @@ E2E: 2 almashtirish (biri `compromise`) → uchala verifikator bir xil zanjir; z
 imzolash davom etdi; noto'g'ri parol va boshqa kalit rad etildi.
 (3) *Audit:* [AUDIT-GUIDE.md](AUDIT-GUIDE.md) — AI/inson auditor uchun. Tayyorlash paytida ochiq
 zaif nuqta topildi: pipe boshqaruv buyruqlari chaqiruvchini tekshirmaydi (K1).
+(4) *K1/K2 tuzatildi:* `tamga-win::pipe_client_pid` (`GetNamedPipeClientProcessId`) +
+`tamga-sensor::identify` (exe va ajdodlar) → `tamgad/src/control.rs`: `decide`/`shutdown`/`rotate` faqat
+daemon papkasidagi `tamga.exe`/`tamga-studio.exe` dan, agent daraxtidan tashqarida; har urinish `control`
+yozuvi (rad etilganlar daqiqasiga 20 tagacha). Config o'zgarishi va foydalanuvchi Claude Code hook'lari
+olib tashlanishi ham `control` yozuvi. Siyosat: `tamper_with_tamga` fakti + `no-tamga-tamper` deny.
+O'chiruvchi: `stop` rad etilsa faqat shu papkadagi `tamgad.exe` majburan yopiladi. Qum qutisi sinovi: agent
+daraxtidan `stop`/`decide` rad etildi, `explorer` orqali ochilgan `tamga.exe` va Studio «Ruxsat» qabul qilindi,
+jurnal ikkala verifikatordan o'tdi. Qoldiq chegaralar AUDIT-GUIDE §4 da.
 
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga

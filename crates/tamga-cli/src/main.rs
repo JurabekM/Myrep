@@ -58,6 +58,9 @@ fn stop() -> Result<ExitCode, String> {
     };
     let v = client::request(&mut pipe, &json!({"op": "shutdown"})).map_err(|e| e.to_string())?;
     drop(pipe);
+    if v["ok"] != true {
+        return Err(v["error"].as_str().unwrap_or("daemon rad etdi").to_owned());
+    }
     let pid = v["pid"].as_u64();
     let deadline = std::time::Instant::now() + Duration::from_secs(10);
     while let Some(pid) = pid {
