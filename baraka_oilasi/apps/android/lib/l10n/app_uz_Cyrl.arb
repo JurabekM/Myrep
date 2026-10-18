@@ -2070,5 +2070,13 @@
   "kk_supply_state_OVERDUE": "{days} кун кечиккан (муддати {date})",
   "kk_supply_priceRow": "Нарх",
   "kk_supply_paymentRow": "Тўлов муддати",
-  "kk_staff_payDayRow": "Тўлов куни"
+  "kk_staff_payDayRow": "Тўлов куни",
+  "error_FUND_INSUFFICIENT": "Конвертда бунча пул йўқ",
+  "error_INVALID_FUND": "Бу конвертдан фойдаланиб бўлмайди (солиқ захираси — «Солиқ» чиқими билан)",
+  "error_INVALID_MONTHS": "Ойлар сони 1 дан 24 гача",
+  "error_INVALID_NISAB": "Нисоб грамми 1 дан 1000 гача",
+  "error_INVALID_VALUATION": "Баҳолаш усулини танланг",
+  "error_INVALID_RESULT": "Натижани танланг",
+  "error_HOPELESS_NOT_90": "Фақат 90 кундан ортиқ кечиккан насияни «умидсиз» деб белгилаш мумкин",
+  "rel_kk_zakat_note": "Савдо моллари закоти — тижорат учун тутилган мол ва пулдан, нисобга етиб устидан бир қамарий йил ўтганда, 2,5 фоиз миқдорида берилади."
 }

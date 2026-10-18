@@ -2116,6 +2116,10 @@ pub struct KkOverviewDto {
     pub payables_overdue: MoneyDto,
     /// Xodimlarga hozir to'lanadigani — o'tgan oylar uchun (K6).
     pub wages_owed: MoneyDto,
+    /// Keyingi «Zakot kuni» — 30 kun ichida bo'lsa (K7).
+    pub zakat_reminder: Option<String>,
+    /// Tarozi tekshiruvi vaqti keldi (K7).
+    pub scale_check_due: bool,
     /// Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2).
     pub profit: KkProfitDto,
     /// Manfiy qoldiqli hamyonlar: `CASH`, `CARD`.
@@ -3034,4 +3038,236 @@ pub struct KkSupplyPaymentInput {
     pub wallet: String,
     pub paid_on: Option<String>,
     pub note: Option<String>,
+}
+
+// ---- K7: Kasb-kor kengayish darvozasi, konvertlar, zakot, inventarizatsiya, tarozi ----
+
+/// `fund`: `TAX`, `RESERVE`, `WORKING`, `EXPANSION`, `SADAQA`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkFundDto {
+    pub fund: String,
+    pub added: MoneyDto,
+    pub used: MoneyDto,
+    pub balance: MoneyDto,
+}
+
+/// `code`: `RESERVE`, `PROFIT`, `RECEIVABLES`, `INTEREST_DEBT`, `PLAN`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkGateConditionDto {
+    pub code: String,
+    pub ok: bool,
+}
+
+/// Kengayish darvozasi (kasbkor/SPEC 6.1): shartlar, ularning raqamlari va konvertlar.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkGateDto {
+    pub open: bool,
+    pub conditions: Vec<KkGateConditionDto>,
+    pub reasons: Vec<String>,
+    /// Biznes zaxirasi (konvert qoldig'i).
+    pub reserve: MoneyDto,
+    pub average_opex: Option<MoneyDto>,
+    pub required_reserve: Option<MoneyDto>,
+    /// Necha oylik zaxira: «2,35».
+    pub coverage_months: Option<String>,
+    pub required_months: u32,
+    /// Hisobga olingan oxirgi «Hisob kuni»lar haqiqiy foydasi (eskisi birinchi).
+    pub true_profits: Vec<MoneyDto>,
+    pub receivables: MoneyDto,
+    pub receivables_90: MoneyDto,
+    /// 90+ nasiya ulushi va chegarasi, foizda («5», «10»).
+    pub bad_debt_percent: String,
+    pub max_bad_percent: String,
+    pub has_interest_debt: bool,
+    pub has_payoff_plan: bool,
+    /// Kengayish rejalari («Hunardan ishga») soni.
+    pub plans: u32,
+    pub funds: Vec<KkFundDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkFundUseInput {
+    /// `RESERVE`, `WORKING`, `EXPANSION`, `SADAQA` (soliq zaxirasi — «Soliq» chiqimi bilan).
+    pub fund: String,
+    pub amount: String,
+    pub used_on: Option<String>,
+    pub note: Option<String>,
+}
+
+/// Darvoza chegaralari (OQ-K6), «Zakot kuni» (hijriy oy/kun), oltin narxi va nisob (OQ-D7), tovarni baholash
+/// (`REPLACEMENT` yoki `BOOK`, OQ-D5), tarozi eslatmasi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkGrowthSettingsDto {
+    pub reserve_months: u32,
+    pub max_bad_percent: String,
+    pub zakat_month: Option<u32>,
+    pub zakat_day: Option<u32>,
+    /// Keyingi «Zakot kuni» (milodiy, taxminiy ±1–2 kun).
+    pub next_zakat_day: Option<String>,
+    pub gold_price: Option<MoneyDto>,
+    pub nisab_grams: u32,
+    pub stock_valuation: String,
+    pub scale_reminder: bool,
+    /// Bugungi hijriy sana: `1448-05-06`.
+    pub today_hijri: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkGrowthSettingsInput {
+    pub reserve_months: u32,
+    pub max_bad_percent: String,
+    pub zakat_month: Option<u32>,
+    pub zakat_day: Option<u32>,
+    pub gold_price: Option<String>,
+    pub nisab_grams: u32,
+    pub stock_valuation: String,
+    pub scale_reminder: bool,
+}
+
+/// `result`: `OK`, `ADJUSTED`, `FAULTY`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkScaleCheckInput {
+    pub result: String,
+    pub checked_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkScaleCheckDto {
+    pub id: String,
+    pub checked_on: String,
+    pub result: String,
+    pub note: Option<String>,
+}
+
+/// Tarozi tekshiruvlari; `due` — eslatma yoqilgan va oxirgi tekshiruvdan 30 kundan ko'p o'tgan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkScaleDto {
+    pub checks: Vec<KkScaleCheckDto>,
+    pub reminder: bool,
+    pub due: bool,
+}
+
+/// Zakot hisobi kiritmalari; bo'sh maydonlar — sozlamalardan yoki taklifdan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkZakatInput {
+    pub gold_price: Option<String>,
+    pub nisab_grams: Option<u32>,
+    /// `REPLACEMENT` yoki `BOOK`.
+    pub valuation: Option<String>,
+    /// Egasi «umidsiz» deb belgilagan 90+ kunlik nasiyalar — bazaga kirmaydi.
+    pub hopeless_sale_ids: Vec<String>,
+    /// Hawl to'ldimi; bo'lmasa — ilova taklifi (birinchi yozuv yoki oxirgi hisobdan bir qamariy yil).
+    pub hawl_complete: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkZakatReceivableDto {
+    pub sale_id: String,
+    pub customer: String,
+    pub item: String,
+    pub outstanding: MoneyDto,
+    pub overdue_days: u32,
+    /// 90+ kun — «umidsiz» deb belgilash mumkin.
+    pub d90_plus: bool,
+    pub hopeless: bool,
+}
+
+/// Zakot hisobi (kasbkor/SPEC 8.3) — **hisob, fatvo emas**. `religiousNote` — faqat ulamo tasdiqlagan matn
+/// (`religiousReviewStatus = APPROVED`), aks holda `null`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkZakatDto {
+    pub calculated_on: String,
+    pub hijri_date: String,
+    pub valuation: String,
+    pub stock: MoneyDto,
+    pub cash: MoneyDto,
+    pub receivables: MoneyDto,
+    pub payables: MoneyDto,
+    pub wages_due: MoneyDto,
+    pub debts: MoneyDto,
+    pub gold_price: Option<MoneyDto>,
+    pub nisab_grams: u32,
+    pub nisab: Option<MoneyDto>,
+    pub base: MoneyDto,
+    pub zakat: MoneyDto,
+    pub due: bool,
+    /// `BASE_NOT_POSITIVE`, `BELOW_NISAB`, `HAWL_NOT_COMPLETE`, `GOLD_PRICE_MISSING`.
+    pub reason: Option<String>,
+    pub hawl_complete: bool,
+    pub hawl_suggested: bool,
+    pub hawl_since: Option<String>,
+    pub receivable_lines: Vec<KkZakatReceivableDto>,
+    pub religious_note: Option<String>,
+    pub religious_review: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkZakatCalcDto {
+    pub id: String,
+    pub calculated_on: String,
+    pub hijri_date: String,
+    pub base: MoneyDto,
+    pub nisab: MoneyDto,
+    pub zakat: MoneyDto,
+    pub reason: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkInventoryLineInput {
+    pub item_id: String,
+    /// Sanalgan miqdor (ko'rsatish birligida); bo'sh — sanalmadi.
+    pub counted: String,
+}
+
+/// Yillik inventarizatsiya (kasbkor/SPEC 8.4): barcha sanalgan tovarlar bitta tranzaksiyada.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkInventoryInput {
+    pub counted_on: Option<String>,
+    /// Farqlar uchun umumiy izoh.
+    pub reason: String,
+    pub lines: Vec<KkInventoryLineInput>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStockCountDto {
+    pub id: String,
+    pub counted_on: String,
+    pub value_before: MoneyDto,
+    pub value_after: MoneyDto,
+    /// Sanalgan va farqi bor tovarlar soni.
+    pub counted: u32,
+    pub changed: u32,
 }

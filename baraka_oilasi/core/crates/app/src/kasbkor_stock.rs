@@ -198,6 +198,29 @@ impl App {
         replay(items, moves, ctx.currency)
     }
 
+    /// Hisobdagi jami qiymat: saqlangan harakatlar va `extra` (hali saqlanmagan inventarizatsiya) bilan (K7).
+    pub(crate) fn kk_stock_value_with(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        extra: &[kk_stock::KkStockMoveRow],
+    ) -> Result<Money, AppError> {
+        let items = self.db.read(|c| kk_stock::items(c, scope))?;
+        let mut moves = self.db.read(|c| kk_stock::moves(c, scope))?;
+        moves.extend(extra.iter().cloned());
+        // Barqaror saralash: bir kunda — saqlanganlar, keyin yangilari.
+        moves.sort_by(|a, b| {
+            a.item_id
+                .cmp(&b.item_id)
+                .then(a.occurred_on.cmp(&b.occurred_on))
+        });
+        replay(items, moves, ctx.currency)?
+            .iter()
+            .try_fold(Money::zero(ctx.currency), |s, x| {
+                Ok(s.checked_add(x.stock.value)?)
+            })
+    }
+
     /// `[from, to)` dagi sotuv tannarxi va yo'qotishlar (`kk_period` uchun).
     pub(crate) fn kk_stock_period(
         &self,
@@ -483,19 +506,44 @@ impl App {
         input: KkStockMoveInput,
     ) -> Result<KkStockDto, AppError> {
         let ctx = self.ctx()?;
-        let cur = ctx.currency;
         let scope = self.kk_scope(&ctx, space_id)?;
-        let items = self.db.read(|c| kk_stock::items(c, &scope))?;
+        let (row, income) = self.kk_stock_prepare(&ctx, &scope, item_id, &input)?;
+        let meta = self.meta();
+        self.db.write(|tx| {
+            if let Some(inc) = &income {
+                incomes::insert(tx, &scope, inc, &meta)?;
+            }
+            kk_stock::insert_move(tx, &scope, &row, &meta)
+        })?;
+        let topics: &[Topic] = if income.is_some() {
+            &[Topic::Incomes, Topic::Kasbkor]
+        } else {
+            &[Topic::Kasbkor]
+        };
+        self.publish(Some(space_id), topics);
+        self.kk_stock(space_id)
+    }
+
+    /// Harakatni tekshiradi va quradi (saqlamaydi): sotuvda — tushum ham. Inventarizatsiya (K7) ham shu orqali.
+    pub(crate) fn kk_stock_prepare(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        item_id: &str,
+        input: &KkStockMoveInput,
+    ) -> Result<(kk_stock::KkStockMoveRow, Option<incomes::IncomeRow>), AppError> {
+        let cur = ctx.currency;
+        let items = self.db.read(|c| kk_stock::items(c, scope))?;
         let item = items
             .into_iter()
             .find(|i| i.id == item_id && i.currency == cur.code())
             .ok_or(AppError::on("NOT_FOUND", "itemId"))?;
         let f = factor(&item.unit)?;
-        let on = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        let on = self.date_or_today(ctx, input.occurred_on.as_deref(), "occurredOn")?;
         let day = ymd(on);
         let all: Vec<_> = self
             .db
-            .read(|c| kk_stock::moves(c, &scope))?
+            .read(|c| kk_stock::moves(c, scope))?
             .into_iter()
             .filter(|m| m.item_id == item_id)
             .collect();
@@ -515,7 +563,7 @@ impl App {
                 .filter(|t| !t.is_empty())
             {
                 None => Ok(None),
-                Some(t) => Ok(Some(positive(&ctx, t, field)?)),
+                Some(t) => Ok(Some(positive(ctx, t, field)?)),
             }
         };
         let w = input
@@ -621,29 +669,16 @@ impl App {
             }
             _ => return Err(AppError::on("INVALID_KIND", "kind")),
         }
-        self.kk_ensure_open(&scope, &day, "occurredOn")?;
+        self.kk_ensure_open(scope, &day, "occurredOn")?;
         let touches_cash = row.wallet.as_deref() == Some("CASH");
-        self.kk_ensure_cash_open(&scope, &day, touches_cash)?;
+        self.kk_ensure_cash_open(scope, &day, touches_cash)?;
         // To'liq qayta o'ynash: yangi harakat o'z sanasidagi oxirgi o'rinda.
         let mut check = before;
         check.apply(row.clone(), cur)?;
         for m in all[split..].iter().cloned() {
             check.apply(m, cur)?;
         }
-        let meta = self.meta();
-        self.db.write(|tx| {
-            if let Some(inc) = &income {
-                incomes::insert(tx, &scope, inc, &meta)?;
-            }
-            kk_stock::insert_move(tx, &scope, &row, &meta)
-        })?;
-        let topics: &[Topic] = if income.is_some() {
-            &[Topic::Incomes, Topic::Kasbkor]
-        } else {
-            &[Topic::Kasbkor]
-        };
-        self.publish(Some(space_id), topics);
-        self.kk_stock(space_id)
+        Ok((row, income))
     }
 }
 

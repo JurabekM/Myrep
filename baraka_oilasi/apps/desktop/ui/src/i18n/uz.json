@@ -2069,5 +2069,13 @@
   "kk.supply.state.OVERDUE": "{days} kun kechikkan (muddati {date})",
   "kk.supply.priceRow": "Narx",
   "kk.supply.paymentRow": "Toʻlov muddati",
-  "kk.staff.payDayRow": "Toʻlov kuni"
+  "kk.staff.payDayRow": "Toʻlov kuni",
+  "error.FUND_INSUFFICIENT": "Konvertda buncha pul yoʻq",
+  "error.INVALID_FUND": "Bu konvertdan foydalanib boʻlmaydi (soliq zaxirasi — «Soliq» chiqimi bilan)",
+  "error.INVALID_MONTHS": "Oylar soni 1 dan 24 gacha",
+  "error.INVALID_NISAB": "Nisob grammi 1 dan 1000 gacha",
+  "error.INVALID_VALUATION": "Baholash usulini tanlang",
+  "error.INVALID_RESULT": "Natijani tanlang",
+  "error.HOPELESS_NOT_90": "Faqat 90 kundan ortiq kechikkan nasiyani «umidsiz» deb belgilash mumkin",
+  "rel.kk.zakat.note": "Savdo mollari zakoti — tijorat uchun tutilgan mol va puldan, nisobga yetib ustidan bir qamariy yil oʻtganda, 2,5 foiz miqdorida beriladi."
 }

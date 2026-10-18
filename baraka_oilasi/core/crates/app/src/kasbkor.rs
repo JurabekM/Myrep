@@ -399,6 +399,7 @@ impl App {
             self.kk_stock_summary(&ctx, &scope)?;
         let (_, payables, payables_overdue, _) = self.kk_suppliers_summary(&ctx, &scope)?;
         let (_, wages_owed, _) = self.kk_staff_summary(&ctx, &scope)?;
+        let (zakat_reminder, scale_check_due) = self.kk_growth_reminders(&ctx, &scope)?;
         let profit = KkProfitDto {
             revenue: d(r.revenue),
             cogs: d(cogs),
@@ -440,6 +441,8 @@ impl App {
             payables: d(payables),
             payables_overdue: d(payables_overdue),
             wages_owed: d(wages_owed),
+            zakat_reminder,
+            scale_check_due,
             profit,
             negative_wallets: r
                 .negative_wallets

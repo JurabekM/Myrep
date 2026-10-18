@@ -92,6 +92,15 @@ fn content_hash(prev: &str, json: &str) -> String {
     hex(&h.finalize())
 }
 
+/// Bitta bayonnomaning K7 uchun kerakli raqamlari (minor).
+pub(crate) struct CloseFigures {
+    pub closed_on: String,
+    pub tax: i64,
+    /// Zaxira, aylanma, kengayish, sadaqa.
+    pub allocation: [i64; 4],
+    pub true_profit: i64,
+}
+
 impl App {
     /// Yopilgan davr ichidagi sanaga yozib bo'lmaydi (bayonnoma o'zgarmas). Faqat Kasb-kor makonlarida
     /// bayonnoma bo'ladi, boshqa makonlar uchun tekshiruv doim o'tadi.
@@ -296,6 +305,32 @@ impl App {
             reserve_below_depreciation: c.reserve_below_depreciation,
             explanation,
         })
+    }
+
+    /// Yopilgan oylar raqamlari (eskisi birinchi): konvertlar va kengayish darvozasi uchun (K7).
+    pub(crate) fn kk_close_figures(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+    ) -> Result<Vec<CloseFigures>, AppError> {
+        let mut out = Vec::new();
+        for row in self
+            .db
+            .read(|c| kk::closes(c, scope))?
+            .into_iter()
+            .filter(|r| r.currency == ctx.currency.code())
+            .rev()
+        {
+            let r: CloseRecord =
+                serde_json::from_str(&row.result_json).map_err(|_| AppError::new("CORRUPT_ROW"))?;
+            out.push(CloseFigures {
+                closed_on: row.closed_at.get(..10).unwrap_or_default().to_string(),
+                tax: r.tax,
+                allocation: r.allocation.unwrap_or([0; 4]),
+                true_profit: r.true_profit,
+            });
+        }
+        Ok(out)
     }
 
     fn draft_dto(&self, ctx: &Ctx, r: &CloseRecord) -> KkCloseDraftDto {

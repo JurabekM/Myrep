@@ -3323,5 +3323,13 @@
   },
   "kk_supply_priceRow": "Narx",
   "kk_supply_paymentRow": "Toʻlov muddati",
-  "kk_staff_payDayRow": "Toʻlov kuni"
+  "kk_staff_payDayRow": "Toʻlov kuni",
+  "error_FUND_INSUFFICIENT": "Konvertda buncha pul yoʻq",
+  "error_INVALID_FUND": "Bu konvertdan foydalanib boʻlmaydi (soliq zaxirasi — «Soliq» chiqimi bilan)",
+  "error_INVALID_MONTHS": "Oylar soni 1 dan 24 gacha",
+  "error_INVALID_NISAB": "Nisob grammi 1 dan 1000 gacha",
+  "error_INVALID_VALUATION": "Baholash usulini tanlang",
+  "error_INVALID_RESULT": "Natijani tanlang",
+  "error_HOPELESS_NOT_90": "Faqat 90 kundan ortiq kechikkan nasiyani «umidsiz» deb belgilash mumkin",
+  "rel_kk_zakat_note": "Savdo mollari zakoti — tijorat uchun tutilgan mol va puldan, nisobga yetib ustidan bir qamariy yil oʻtganda, 2,5 foiz miqdorida beriladi."
 }

@@ -235,7 +235,12 @@
             "kk_agreement_versions",
             "kk_staff_events",
             "kk_supply_deliveries",
-            "kk_supply_payments"
+            "kk_supply_payments",
+            "kk_growth_settings",
+            "kk_fund_uses",
+            "kk_scale_checks",
+            "kk_zakat_calcs",
+            "kk_stock_counts"
           ]
         },
         "data": {
@@ -637,6 +642,36 @@
       },
       {
         "name": "kk_supply_payments",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_growth_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_fund_uses",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_scale_checks",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_zakat_calcs",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_stock_counts",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []

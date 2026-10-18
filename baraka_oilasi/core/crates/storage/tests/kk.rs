@@ -611,3 +611,89 @@ fn staff_and_supply_have_no_penalty_and_are_immutable() {
         .write(|tx| kk_staff::delete_agreement(tx, &s, "a1", &m))
         .is_err());
 }
+
+/// K7: konvertdan foydalanish, tarozi, zakot va inventarizatsiya snapshot'lari o'zgarmas; qoidalar DB da ham.
+#[test]
+fn growth_records_are_checked_and_immutable() {
+    use baraka_storage::repo::kk_growth;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let tax_use = kk_growth::KkFundUseRow {
+        id: "u0".into(),
+        fund: "TAX".into(),
+        used_on: "2026-11-05".into(),
+        amount_minor: 100,
+        currency: "UZS".into(),
+        note: None,
+    };
+    assert!(
+        db.write(|tx| kk_growth::insert_fund_use(tx, &s, &tax_use, &m))
+            .is_err(),
+        "soliq zaxirasi — faqat «Soliq» chiqimi bilan"
+    );
+    let reserve = kk_growth::KkFundUseRow {
+        id: "u1".into(),
+        fund: "RESERVE".into(),
+        ..tax_use
+    };
+    db.write(|tx| kk_growth::insert_fund_use(tx, &s, &reserve, &m))
+        .unwrap();
+    db.write(|tx| {
+        kk_growth::insert_scale_check(
+            tx,
+            &s,
+            &kk_growth::KkScaleCheckRow {
+                id: "c1".into(),
+                checked_on: "2026-11-05".into(),
+                result: "OK".into(),
+                note: None,
+            },
+            &m,
+        )
+    })
+    .unwrap();
+    let calc = kk_growth::KkZakatCalcRow {
+        id: "z1".into(),
+        calculated_on: "2026-11-20".into(),
+        hijri_date: "1448-06-09".into(),
+        currency: "UZS".into(),
+        inputs_json: "{}".into(),
+        base_minor: 10_000_000_000,
+        nisab_minor: 9_350_000_000,
+        zakat_minor: 250_000_000,
+        reason: None,
+    };
+    db.write(|tx| kk_growth::insert_zakat_calc(tx, &s, &calc, &m))
+        .unwrap();
+    let below_with_zakat = kk_growth::KkZakatCalcRow {
+        id: "z2".into(),
+        reason: Some("BELOW_NISAB".into()),
+        ..calc
+    };
+    assert!(db
+        .write(|tx| kk_growth::insert_zakat_calc(tx, &s, &below_with_zakat, &m))
+        .is_err());
+    let half_zakat_day = kk_growth::KkGrowthSettingsRow {
+        reserve_months: 3,
+        max_bad_bp: 1000,
+        zakat_month: Some(9),
+        zakat_day: None,
+        gold_price_minor: None,
+        nisab_grams: 85,
+        stock_valuation: "REPLACEMENT".into(),
+        scale_reminder: false,
+        currency: "UZS".into(),
+    };
+    assert!(db
+        .write(|tx| kk_growth::upsert_growth_settings(tx, &s, "g1", &half_zakat_day, &m))
+        .is_err());
+    for sql in [
+        "UPDATE kk_fund_uses SET amount_minor = 1",
+        "DELETE FROM kk_scale_checks",
+        "UPDATE kk_zakat_calcs SET zakat_minor = 0",
+        "DELETE FROM kk_zakat_calcs",
+    ] {
+        let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
+        assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
+    }
+}

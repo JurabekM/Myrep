@@ -273,7 +273,7 @@ impl App {
     // ---- Nasiya daftari ----
 
     /// Har bir nasiyaning `today` dagi holati: (qator, hodisalar, holat).
-    fn kk_credit_states(
+    pub(crate) fn kk_credit_states(
         &self,
         ctx: &Ctx,
         scope: &SpaceScope,

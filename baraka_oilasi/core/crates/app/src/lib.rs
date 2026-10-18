@@ -15,6 +15,7 @@ mod events;
 mod governance;
 mod kasbkor;
 mod kasbkor_close;
+mod kasbkor_growth;
 mod kasbkor_ledger;
 mod kasbkor_profit;
 mod kasbkor_staff;

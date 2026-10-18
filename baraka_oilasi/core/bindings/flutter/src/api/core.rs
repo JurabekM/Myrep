@@ -1343,6 +1343,74 @@ impl BarakaCore {
         self.session.app()?.kk_agreement_pdf(&space_id, &id)
     }
 
+    pub fn kk_gate(&self, space_id: String) -> Result<KkGateDto, AppError> {
+        self.session.app()?.kk_gate(&space_id)
+    }
+
+    pub fn kk_use_fund(
+        &self,
+        space_id: String,
+        input: KkFundUseInput,
+    ) -> Result<KkGateDto, AppError> {
+        self.session.app()?.kk_use_fund(&space_id, input)
+    }
+
+    pub fn kk_growth_settings(&self, space_id: String) -> Result<KkGrowthSettingsDto, AppError> {
+        self.session.app()?.kk_growth_settings(&space_id)
+    }
+
+    pub fn kk_set_growth_settings(
+        &self,
+        space_id: String,
+        input: KkGrowthSettingsInput,
+    ) -> Result<KkGrowthSettingsDto, AppError> {
+        self.session.app()?.kk_set_growth_settings(&space_id, input)
+    }
+
+    pub fn kk_scale(&self, space_id: String) -> Result<KkScaleDto, AppError> {
+        self.session.app()?.kk_scale(&space_id)
+    }
+
+    pub fn kk_scale_check(
+        &self,
+        space_id: String,
+        input: KkScaleCheckInput,
+    ) -> Result<KkScaleDto, AppError> {
+        self.session.app()?.kk_scale_check(&space_id, input)
+    }
+
+    pub fn kk_zakat_draft(
+        &self,
+        space_id: String,
+        input: KkZakatInput,
+    ) -> Result<KkZakatDto, AppError> {
+        self.session.app()?.kk_zakat_draft(&space_id, input)
+    }
+
+    pub fn kk_save_zakat(
+        &self,
+        space_id: String,
+        input: KkZakatInput,
+    ) -> Result<Vec<KkZakatCalcDto>, AppError> {
+        self.session.app()?.kk_save_zakat(&space_id, input)
+    }
+
+    pub fn kk_zakat_history(&self, space_id: String) -> Result<Vec<KkZakatCalcDto>, AppError> {
+        self.session.app()?.kk_zakat_history(&space_id)
+    }
+
+    pub fn kk_inventory(
+        &self,
+        space_id: String,
+        input: KkInventoryInput,
+    ) -> Result<KkStockDto, AppError> {
+        self.session.app()?.kk_inventory(&space_id, input)
+    }
+
+    pub fn kk_stock_counts(&self, space_id: String) -> Result<Vec<KkStockCountDto>, AppError> {
+        self.session.app()?.kk_stock_counts(&space_id)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

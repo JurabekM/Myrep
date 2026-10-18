@@ -1,0 +1,8 @@
+{
+  "id": "kk_zakat",
+  "religiousReviewStatus": "PENDING",
+  "source": null,
+  "reviewer": null,
+  "openQuestions": ["OQ-D5", "OQ-D7"],
+  "texts": ["rel.kk.zakat.note"]
+}
