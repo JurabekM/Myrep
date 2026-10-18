@@ -1,7 +1,7 @@
 //! K2 — «Haqiqiy foydani bil» (SPEC 3.1).
 //!
 //! ```text
-//! Ko'rinadigan foyda = Tushum − Sotilgan tovar tannarxi − Operatsion xarajatlar
+//! Ko'rinadigan foyda = Tushum − Sotilgan tovar tannarxi − Tovar yo'qotishi − Operatsion xarajatlar
 //! Haqiqiy foyda      = Ko'rinadigan − O'z mehnati − Oilaviy mehnat − Eskirish − Uskuna chiqib ketishi
 //! ```
 //! Oilaviy mehnat pul to'lanmasa ham tannarxga kiradi; to'langan bo'lsa — u operatsion xarajatda,
@@ -43,11 +43,14 @@ pub struct ProfitInput {
     pub depreciation: Money,
     /// Uskuna chiqib ketishi (manfiy — foyda).
     pub disposal: Money,
+    /// Hisobdan chiqarilgan tovar va inventarizatsiya farqi (K5; manfiy — topilgan tovar).
+    pub stock_losses: Money,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TrueProfit {
     pub visible_profit: Money,
+    pub stock_losses: Money,
     pub owner_labor: Money,
     /// To'lanmagan oilaviy mehnat bahosi.
     pub family_labor: Money,
@@ -88,6 +91,7 @@ pub fn true_profit(
     let visible = input
         .revenue
         .checked_sub(input.cogs)?
+        .checked_sub(input.stock_losses)?
         .checked_sub(input.operating_expenses)?;
     let true_profit = visible
         .checked_sub(input.owner_labor)?
@@ -96,6 +100,7 @@ pub fn true_profit(
         .checked_sub(input.disposal)?;
     Ok(TrueProfit {
         visible_profit: visible,
+        stock_losses: input.stock_losses,
         owner_labor: input.owner_labor,
         family_labor: unpaid,
         family_labor_paid: paid,

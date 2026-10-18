@@ -9,5 +9,6 @@ pub mod equipment;
 pub mod owner;
 pub mod profit;
 pub mod quote;
+pub mod stock;
 
 pub use baraka_domain_common::DomainError;

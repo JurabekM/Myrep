@@ -20,10 +20,12 @@
           }
         ],
         "depreciation": "20000000",
-        "disposal": "0"
+        "disposal": "0",
+        "stockLosses": "0"
       },
       "expected": {
         "visibleProfit": "950000000",
+        "stockLosses": "0",
         "ownerLabor": "500000000",
         "familyLabor": "120000000",
         "familyLaborPaid": "0",
@@ -53,10 +55,12 @@
           }
         ],
         "depreciation": "20000000",
-        "disposal": "0"
+        "disposal": "0",
+        "stockLosses": "0"
       },
       "expected": {
         "visibleProfit": "900000000",
+        "stockLosses": "0",
         "ownerLabor": "500000000",
         "familyLabor": "30000000",
         "familyLaborPaid": "50000000",
@@ -81,10 +85,12 @@
           }
         ],
         "depreciation": "15000000",
-        "disposal": "0"
+        "disposal": "0",
+        "stockLosses": "0"
       },
       "expected": {
         "visibleProfit": "250000000",
+        "stockLosses": "0",
         "ownerLabor": "400000000",
         "familyLabor": "60000000",
         "familyLaborPaid": "0",
@@ -103,10 +109,12 @@
         "ownerLabor": "0",
         "familyLabor": [],
         "depreciation": "0",
-        "disposal": "0"
+        "disposal": "0",
+        "stockLosses": "0"
       },
       "expected": {
         "visibleProfit": "120000000",
+        "stockLosses": "0",
         "ownerLabor": "0",
         "familyLabor": "0",
         "familyLaborPaid": "0",
@@ -131,10 +139,12 @@
           }
         ],
         "depreciation": "0",
-        "disposal": "-25000000"
+        "disposal": "-25000000",
+        "stockLosses": "0"
       },
       "expected": {
         "visibleProfit": "100000000",
+        "stockLosses": "0",
         "ownerLabor": "0",
         "familyLabor": "3333333",
         "familyLaborPaid": "0",
@@ -153,7 +163,8 @@
         "ownerLabor": "0",
         "familyLabor": [],
         "depreciation": "0",
-        "disposal": "0"
+        "disposal": "0",
+        "stockLosses": "0"
       },
       "expected": {
         "error": "AMOUNT_NEGATIVE"
@@ -175,10 +186,59 @@
           }
         ],
         "depreciation": "0",
-        "disposal": "0"
+        "disposal": "0",
+        "stockLosses": "0"
       },
       "expected": {
         "error": "INVALID_HOURS"
+      }
+    },
+    {
+      "id": "tp-006",
+      "input": {
+        "currency": "UZS",
+        "revenue": "500000000",
+        "cogs": "300000000",
+        "operatingExpenses": "50000000",
+        "ownerLabor": "0",
+        "familyLabor": [],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "12000000"
+      },
+      "expected": {
+        "visibleProfit": "138000000",
+        "stockLosses": "12000000",
+        "ownerLabor": "0",
+        "familyLabor": "0",
+        "familyLaborPaid": "0",
+        "depreciation": "0",
+        "disposal": "0",
+        "trueProfit": "138000000"
+      }
+    },
+    {
+      "id": "tp-007",
+      "input": {
+        "currency": "UZS",
+        "revenue": "500000000",
+        "cogs": "300000000",
+        "operatingExpenses": "50000000",
+        "ownerLabor": "0",
+        "familyLabor": [],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "-3000000"
+      },
+      "expected": {
+        "visibleProfit": "153000000",
+        "stockLosses": "-3000000",
+        "ownerLabor": "0",
+        "familyLabor": "0",
+        "familyLaborPaid": "0",
+        "depreciation": "0",
+        "disposal": "0",
+        "trueProfit": "153000000"
       }
     }
   ]

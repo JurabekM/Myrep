@@ -1,0 +1,116 @@
+{
+  "suite": "kk_replacement",
+  "version": 1,
+  "description": "Kasb-kor qayta tiklash narxi: qoldiqning bugungi xarid narxidagi qiymati, «inflyatsiya yegan kapital», sotuv narxi past — ogohlantirish (kasbkor/SPEC 4.3)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "rp-001",
+      "input": {
+        "currency": "UZS",
+        "qty": 70000,
+        "bookValue": "84000000",
+        "price": "1350000",
+        "factor": 1000,
+        "salePrice": "1300000"
+      },
+      "expected": {
+        "replacementValue": "94500000",
+        "inflationGap": "10500000",
+        "saleBelowReplacement": true
+      }
+    },
+    {
+      "id": "rp-002",
+      "input": {
+        "currency": "UZS",
+        "qty": 70000,
+        "bookValue": "84000000",
+        "price": "1150000",
+        "factor": 1000,
+        "salePrice": "1400000"
+      },
+      "expected": {
+        "replacementValue": "80500000",
+        "inflationGap": "-3500000",
+        "saleBelowReplacement": false
+      }
+    },
+    {
+      "id": "rp-003",
+      "input": {
+        "currency": "UZS",
+        "qty": 12,
+        "bookValue": "60000000",
+        "price": "5500000",
+        "factor": 1,
+        "salePrice": null
+      },
+      "expected": {
+        "replacementValue": "66000000",
+        "inflationGap": "6000000",
+        "saleBelowReplacement": false
+      }
+    },
+    {
+      "id": "rp-004",
+      "input": {
+        "currency": "UZS",
+        "qty": 0,
+        "bookValue": "0",
+        "price": "1350000",
+        "factor": 1000,
+        "salePrice": "1300000"
+      },
+      "expected": {
+        "replacementValue": "0",
+        "inflationGap": "0",
+        "saleBelowReplacement": true
+      }
+    },
+    {
+      "id": "rp-005",
+      "input": {
+        "currency": "UZS",
+        "qty": 333,
+        "bookValue": "400000",
+        "price": "1234567",
+        "factor": 1000,
+        "salePrice": null
+      },
+      "expected": {
+        "replacementValue": "411111",
+        "inflationGap": "11111",
+        "saleBelowReplacement": false
+      }
+    },
+    {
+      "id": "rp-neg-001",
+      "input": {
+        "currency": "UZS",
+        "qty": 10,
+        "bookValue": "10000",
+        "price": "0",
+        "factor": 1000,
+        "salePrice": null
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "rp-neg-002",
+      "input": {
+        "currency": "UZS",
+        "qty": -1,
+        "bookValue": "0",
+        "price": "10000",
+        "factor": 1000,
+        "salePrice": null
+      },
+      "expected": {
+        "error": "INVALID_QTY"
+      }
+    }
+  ]
+}

@@ -112,9 +112,13 @@ pub fn cash_close(
             (MoveKind::OwnerContribution | MoveKind::EquipmentSale | MoveKind::CashOver, _) => {
                 &mut other_in
             }
-            (MoveKind::OwnerSalary | MoveKind::EquipmentPurchase | MoveKind::CashShort, _) => {
-                &mut other_out
-            }
+            (
+                MoveKind::OwnerSalary
+                | MoveKind::EquipmentPurchase
+                | MoveKind::CashShort
+                | MoveKind::StockPurchase,
+                _,
+            ) => &mut other_out,
         };
         *slot = slot.checked_add(m.amount)?;
     }

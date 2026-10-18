@@ -59,6 +59,8 @@ pub enum MoveKind {
     CashShort,
     /// Kassa yopishda ortiqcha.
     CashOver,
+    /// Tovar xaridi (K5): zaxiraga kiradi — xarajat emas, pul oqimiga kirmaydi.
+    StockPurchase,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -84,6 +86,7 @@ pub struct MonthReport {
     pub equipment_sales: Money,
     /// Kassa farqlari yig'indisi (ortiqcha − kamomad).
     pub cash_difference: Money,
+    pub stock_purchases: Money,
     pub cash: Money,
     pub card: Money,
     pub negative_wallets: Vec<Wallet>,
@@ -104,7 +107,7 @@ pub fn month_report(
     let (mut cash, mut card) = (opening_cash, opening_card);
     let (mut revenue, mut expenses, mut draws, mut contributions, mut salary_paid) =
         (zero, zero, zero, zero, zero);
-    let (mut bought, mut sold, mut cash_diff) = (zero, zero, zero);
+    let (mut bought, mut sold, mut cash_diff, mut stock) = (zero, zero, zero, zero);
     for m in moves {
         if !m.amount.is_positive() {
             return Err(DomainError::on("AMOUNT_NOT_POSITIVE", "amount"));
@@ -150,6 +153,10 @@ pub fn month_report(
                 cash_diff = cash_diff.checked_add(m.amount)?;
                 (Some(m.wallet), None)
             }
+            MoveKind::StockPurchase => {
+                stock = stock.checked_add(m.amount)?;
+                (None, Some(m.wallet))
+            }
         };
         for (w, sign) in [(plus, true), (minus, false)] {
             let Some(w) = w else { continue };
@@ -191,6 +198,7 @@ pub fn month_report(
         equipment_purchases: bought,
         equipment_sales: sold,
         cash_difference: cash_diff,
+        stock_purchases: stock,
         cash,
         card,
         negative_wallets,

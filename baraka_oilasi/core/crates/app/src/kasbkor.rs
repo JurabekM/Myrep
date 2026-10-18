@@ -317,6 +317,7 @@ impl App {
                 owner_labor,
                 depreciation,
                 disposal,
+                stock_losses: zero,
             },
             &family.iter().map(|(_, f)| *f).collect::<Vec<_>>(),
         )?;

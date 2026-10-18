@@ -7,6 +7,7 @@ use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
 use baraka_domain_kasbkor::quote::{order_quote, QuoteInput};
+use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -141,6 +142,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_month_close" => kk_month_close(input),
         "kk_cash_close" => kk_cash_close(input),
         "kk_credit_sale" => kk_credit_sale(input),
+        "kk_cogs" => kk_cogs(input),
+        "kk_replacement" => kk_replacement(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1032,6 +1035,7 @@ fn kk_owner_pay(v: &Value) -> R {
             "EQUIPMENT_SALE" => MoveKind::EquipmentSale,
             "CASH_SHORT" => MoveKind::CashShort,
             "CASH_OVER" => MoveKind::CashOver,
+            "STOCK_PURCHASE" => MoveKind::StockPurchase,
             "TRANSFER" => MoveKind::Transfer {
                 to: wallet(m, "toWallet")?,
             },
@@ -1064,6 +1068,7 @@ fn kk_owner_pay(v: &Value) -> R {
         "equipmentPurchases": r.equipment_purchases.minor().to_string(),
         "equipmentSales": r.equipment_sales.minor().to_string(),
         "cashDifference": r.cash_difference.minor().to_string(),
+        "stockPurchases": r.stock_purchases.minor().to_string(),
         "cash": r.cash.minor().to_string(),
         "card": r.card.minor().to_string(),
         "negativeWallets": r.negative_wallets.iter().map(|w| w.as_str()).collect::<Vec<_>>(),
@@ -1136,11 +1141,13 @@ fn kk_true_profit(v: &Value) -> R {
             owner_labor: money(v, "ownerLabor", c)?,
             depreciation: money(v, "depreciation", c)?,
             disposal: money(v, "disposal", c)?,
+            stock_losses: money(v, "stockLosses", c)?,
         },
         &family,
     )?;
     Ok(json!({
         "visibleProfit": r.visible_profit.minor().to_string(),
+        "stockLosses": r.stock_losses.minor().to_string(),
         "ownerLabor": r.owner_labor.minor().to_string(),
         "familyLabor": r.family_labor.minor().to_string(),
         "familyLaborPaid": r.family_labor_paid.minor().to_string(),
@@ -1248,6 +1255,7 @@ fn kk_moves(v: &Value, c: Currency) -> Result<Vec<Move>, E> {
             "EQUIPMENT_SALE" => MoveKind::EquipmentSale,
             "CASH_SHORT" => MoveKind::CashShort,
             "CASH_OVER" => MoveKind::CashOver,
+            "STOCK_PURCHASE" => MoveKind::StockPurchase,
             "TRANSFER" => MoveKind::Transfer {
                 to: wallet(m, "toWallet")?,
             },
@@ -1347,5 +1355,71 @@ fn kk_credit_sale(v: &Value) -> R {
         "bucket": st.bucket.map(|b| b.as_str()),
         "nextDue": st.next_due.map(|(d, a)| json!({ "date": d.format("%Y-%m-%d").to_string(), "amount": m(a) })),
         "creditMarkup": st.credit_markup.map(m),
+    }))
+}
+
+fn kk_cogs(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let method = CostMethod::parse(s(v, "method")?).ok_or_else(|| E("INVALID_METHOD".into()))?;
+    let factor = i(v, "factor")?;
+    validate_factor(factor)?;
+    let mut stock = Stock::new(method, c);
+    let mut out = Vec::new();
+    for m in v["moves"].as_array().ok_or_else(|| bad("moves"))? {
+        let qty = i(m, "qty")?;
+        let amount = || {
+            if m["amount"].is_null() {
+                Ok(Money::zero(c))
+            } else {
+                money(m, "amount", c)
+            }
+        };
+        let kind = s(m, "kind")?;
+        let mv = match kind {
+            "PURCHASE" => StockMove::Purchase {
+                qty,
+                amount: amount()?,
+            },
+            "SALE" => StockMove::Sale { qty },
+            "WRITE_OFF" => StockMove::WriteOff { qty },
+            "ADJUST" => StockMove::Adjust {
+                qty,
+                amount: amount()?,
+            },
+            _ => return Err(E("INVALID_KIND".into())),
+        };
+        let cost = stock.apply(mv)?;
+        out.push(json!({ "kind": kind, "cost": cost.minor().to_string() }));
+    }
+    Ok(json!({
+        "moves": out,
+        "qty": stock.qty,
+        "value": stock.value.minor().to_string(),
+        "unitCost": stock.unit_cost(factor)?.map(|m| m.minor().to_string()),
+        "layers": match method {
+            CostMethod::Fifo => json!(stock.layers.iter().map(|(q, v)| json!({ "qty": q, "value": v.minor().to_string() })).collect::<Vec<_>>()),
+            CostMethod::Average => Value::Null,
+        },
+    }))
+}
+
+fn kk_replacement(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let sale = if v["salePrice"].is_null() {
+        None
+    } else {
+        Some(money(v, "salePrice", c)?)
+    };
+    let r = replacement(
+        i(v, "qty")?,
+        money(v, "bookValue", c)?,
+        money(v, "price", c)?,
+        i(v, "factor")?,
+        sale,
+    )?;
+    Ok(json!({
+        "replacementValue": r.replacement_value.minor().to_string(),
+        "inflationGap": r.inflation_gap.minor().to_string(),
+        "saleBelowReplacement": r.sale_below_replacement,
     }))
 }

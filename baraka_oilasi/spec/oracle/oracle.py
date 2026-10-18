@@ -822,7 +822,7 @@ def offer_check(answers):
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
 KK_WALLETS = ("CASH", "CARD")
 KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1,
-             "EQUIPMENT_PURCHASE": -1, "EQUIPMENT_SALE": 1, "CASH_SHORT": -1, "CASH_OVER": 1}
+             "EQUIPMENT_PURCHASE": -1, "EQUIPMENT_SALE": 1, "CASH_SHORT": -1, "CASH_OVER": 1, "STOCK_PURCHASE": -1}
 
 
 def kk_month_report(opening_cash, opening_card, salary, moves):
@@ -862,6 +862,7 @@ def kk_month_report(opening_cash, opening_card, salary, moves):
         "overdrawn": None if salary == 0 else _s(max(0, paid - salary)),
         "equipmentPurchases": _s(tot["EQUIPMENT_PURCHASE"]), "equipmentSales": _s(tot["EQUIPMENT_SALE"]),
         "cashDifference": _s(tot["CASH_OVER"] - tot["CASH_SHORT"]),
+        "stockPurchases": _s(tot["STOCK_PURCHASE"]),
         "cash": _s(bal["CASH"]), "card": _s(bal["CARD"]),
         "negativeWallets": [w for w in KK_WALLETS if bal[w] < 0],
     }
@@ -912,8 +913,9 @@ def kk_hours_value(hours100, rate):
     return round_half_up(Fraction(hours100 * rate, 100))
 
 
-def kk_true_profit(revenue, cogs, opex, owner_labor, family, depreciation, disposal):
-    """Haqiqiy foyda (SPEC 3.1): ko'rinadigan = tushum − sotilgan tovar tannarxi − operatsion xarajat;
+def kk_true_profit(revenue, cogs, opex, owner_labor, family, depreciation, disposal, stock_losses=0):
+    """Haqiqiy foyda (SPEC 3.1): ko'rinadigan = tushum − sotilgan tovar tannarxi − tovar yo'qotishi
+    (hisobdan chiqarish va inventarizatsiya farqi; manfiy — topilgan tovar) − operatsion xarajat;
     haqiqiy = ko'rinadigan − o'z mehnati − to'lanmagan oilaviy mehnat − eskirish − uskuna chiqib ketishi.
     To'langan oilaviy mehnat operatsion xarajatda bor — ikki marta hisoblanmaydi."""
     for v in (revenue, cogs, opex, owner_labor, depreciation):
@@ -926,8 +928,8 @@ def kk_true_profit(revenue, cogs, opex, owner_labor, family, depreciation, dispo
             paid += v
         else:
             unpaid += v
-    visible = revenue - cogs - opex
-    return {"visibleProfit": _s(visible), "ownerLabor": _s(owner_labor), "familyLabor": _s(unpaid), "familyLaborPaid": _s(paid),
+    visible = revenue - cogs - stock_losses - opex
+    return {"visibleProfit": _s(visible), "stockLosses": _s(stock_losses), "ownerLabor": _s(owner_labor), "familyLabor": _s(unpaid), "familyLaborPaid": _s(paid),
             "depreciation": _s(depreciation), "disposal": _s(disposal),
             "trueProfit": _s(visible - owner_labor - unpaid - depreciation - disposal)}
 
@@ -1058,6 +1060,96 @@ def kk_credit_sale(credit_price, cash_price, n, first_due, events, today):
     return {"schedule": rows, "paid": _s(paid), "forgiven": _s(forgiven), "outstanding": _s(outstanding),
             "status": status, "overdueDays": days, "bucket": bucket, "nextDue": nxt,
             "creditMarkup": None if cash_price is None else _s(credit_price - cash_price)}
+
+
+KK_COST_METHODS = ("AVERAGE", "FIFO")
+
+
+def kk_cogs(method, factor, moves):
+    """Tovar qoldig'i va tannarx (SPEC 4.1–4.2). Miqdorlar butun sonda (asosiy birlik: g, ml, dona, mm).
+    Driftsiz: o'rtachada tannarx = round_half_up(qoldiq qiymati × chiqim / qoldiq miqdor), qiymat shunga
+    kamayadi — oxirgi birlik chiqqanda qiymat aniq 0. FIFO — eng eski partiyadan, qisman partiya shu
+    formula bilan. Chiqimlar: sotuv, hisobdan chiqarish, inventarizatsiyada kamomad (manfiy tuzatish).
+    Ortiqcha (musbat tuzatish) — `amount` qiymat bilan yangi partiya. `factor` — narx ko'rsatish birligi
+    (1000: kg, l, m; 1: dona)."""
+    if method not in KK_COST_METHODS:
+        raise OracleError("INVALID_METHOD")
+    if factor not in (1, 1000):
+        raise OracleError("INVALID_UNIT")
+    qty = value = 0
+    layers = []
+    out = []
+
+    def take(q):
+        nonlocal qty, value
+        if q > qty:
+            raise OracleError("INSUFFICIENT_STOCK")
+        if method == "AVERAGE":
+            c = round_half_up(Fraction(value * q, qty))
+        else:
+            c, left = 0, q
+            while left:
+                lq, lv = layers[0]
+                t = min(left, lq)
+                part = lv if t == lq else round_half_up(Fraction(lv * t, lq))
+                layers[0] = [lq - t, lv - part]
+                if layers[0][0] == 0:
+                    layers.pop(0)
+                c += part
+                left -= t
+        qty -= q
+        value -= c
+        return c
+
+    for m in moves:
+        k, q = m["kind"], int(m["qty"])
+        if k == "PURCHASE":
+            a = int(m["amount"])
+            if q <= 0:
+                raise OracleError("INVALID_QTY")
+            if a <= 0:
+                raise OracleError("AMOUNT_NOT_POSITIVE")
+            qty, value = qty + q, value + a
+            layers.append([q, a])
+            out.append({"kind": k, "cost": _s(a)})
+        elif k in ("SALE", "WRITE_OFF"):
+            if q <= 0:
+                raise OracleError("INVALID_QTY")
+            out.append({"kind": k, "cost": _s(take(q))})
+        elif k == "ADJUST":
+            if q == 0:
+                raise OracleError("INVALID_QTY")
+            if q < 0:
+                out.append({"kind": k, "cost": _s(take(-q))})
+            else:
+                a = int(m["amount"])
+                if a < 0:
+                    raise OracleError("AMOUNT_NEGATIVE")
+                qty, value = qty + q, value + a
+                layers.append([q, a])
+                out.append({"kind": k, "cost": _s(-a)})
+        else:
+            raise OracleError("INVALID_KIND")
+    return {"moves": out, "qty": qty, "value": _s(value),
+            "unitCost": None if qty == 0 else _s(round_half_up(Fraction(value * factor, qty))),
+            "layers": [{"qty": lq, "value": _s(lv)} for lq, lv in layers] if method == "FIFO" else None}
+
+
+def kk_replacement(qty, book_value, price, factor, sale_price):
+    """Qayta tiklash narxi (SPEC 4.3): qoldiqning bugungi xarid narxidagi qiymati
+    = round_half_up(miqdor × narx / factor); farq — «inflyatsiya yegan kapital» (manfiy — narx tushgan).
+    Sotuv narxi qayta tiklash narxidan past bo'lsa — ogohlantirish."""
+    if qty < 0:
+        raise OracleError("INVALID_QTY")
+    if factor not in (1, 1000):
+        raise OracleError("INVALID_UNIT")
+    if price <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if book_value < 0 or (sale_price is not None and sale_price <= 0):
+        raise OracleError("AMOUNT_NEGATIVE")
+    rv = round_half_up(Fraction(qty * price, factor))
+    return {"replacementValue": _s(rv), "inflationGap": _s(rv - book_value),
+            "saleBelowReplacement": sale_price is not None and sale_price < price}
 
 
 KK_TAX_BASES = ("NONE", "REVENUE", "PROFIT", "FIXED")
@@ -1660,6 +1752,8 @@ def build_suites():
                                           mv("EQUIPMENT_PURCHASE", "CARD", 12000000), mv("EQUIPMENT_SALE", "CASH", 800000)]),
         # K4: kassa yopishdagi farq — naqd hamyonni tuzatadi, pul oqimiga kirmaydi.
         ("kk-009", 500000, 0, 0, [mv("SALE", "CASH", 3200000), mv("CASH_SHORT", "CASH", 50000), mv("CASH_OVER", "CASH", 20000)]),
+        # K5: tovar xaridi zaxiraga kiradi — hamyondan chiqadi, pul oqimiga kirmaydi.
+        ("kk-010", 2000000, 0, 0, [mv("STOCK_PURCHASE", "CASH", 1250000), mv("SALE", "CASH", 1120000)]),
         ("kk-neg-001", 0, 0, 1000000, [mv("SALE", "CASH", 0)]),
         ("kk-neg-002", 0, 0, 1000000, [{"kind": "TRANSFER", "wallet": "CASH", "toWallet": "CASH", "amount": "100"}]),
         ("kk-neg-003", 0, 0, 1000000, [{"kind": "SALE", "wallet": "SAFE", "amount": "100"}]),
@@ -1721,11 +1815,16 @@ def build_suites():
         ("tp-neg-001", -1, 0, 0, 0, [], 0, 0),
         ("tp-neg-002", 1000000, 0, 0, 0, [fl(-100, 10000)], 0, 0),
     ]
+    tp = [row + (0,) for row in tp] + [
+        # K5: hisobdan chiqarilgan tovar (buzilgan) — yo'qotish; inventarizatsiyada topilgan — manfiy yo'qotish.
+        ("tp-006", 5000000, 3000000, 500000, 0, [], 0, 0, 120000),
+        ("tp-007", 5000000, 3000000, 500000, 0, [], 0, 0, -30000),
+    ]
     suites["kk_true_profit"] = _suite("kk_true_profit", "Kasb-kor: ko'rinadigan va haqiqiy foyda — o'z mehnati, to'lanmagan oilaviy mehnat, eskirish (kasbkor/SPEC 3.1)", [
         _case(cid, {"currency": U, "revenue": _s(r * 100), "cogs": _s(cg * 100), "operatingExpenses": _s(op * 100), "ownerLabor": _s(ol * 100),
-                    "familyLabor": fs, "depreciation": _s(dp * 100), "disposal": _s(ds * 100)},
-              lambda r=r, cg=cg, op=op, ol=ol, fs=fs, dp=dp, ds=ds: kk_true_profit(r * 100, cg * 100, op * 100, ol * 100, fs, dp * 100, ds * 100))
-        for cid, r, cg, op, ol, fs, dp, ds in tp])
+                    "familyLabor": fs, "depreciation": _s(dp * 100), "disposal": _s(ds * 100), "stockLosses": _s(sl * 100)},
+              lambda r=r, cg=cg, op=op, ol=ol, fs=fs, dp=dp, ds=ds, sl=sl: kk_true_profit(r * 100, cg * 100, op * 100, ol * 100, fs, dp * 100, ds * 100, sl * 100))
+        for cid, r, cg, op, ol, fs, dp, ds, sl in tp])
 
     # K2: buyurtma kalkulyatori.
     oq = [
@@ -1853,6 +1952,56 @@ def build_suites():
                                                                               date.fromisoformat(fd), ev, date.fromisoformat(td)))
         for cid, cp, cash, n, fd, ev, td in cs])
 
+    # K5: tovar qoldig'i va tannarx. Miqdor grammda (yoki donada), summalar so'mda.
+    def sm(kind, qty, amount=None):
+        m = {"kind": kind, "qty": qty}
+        if amount is not None:
+            m["amount"] = _s(t(amount))
+        return m
+    sugar = [sm("PURCHASE", 50000, 550000), sm("PURCHASE", 100000, 1250000), sm("SALE", 80000)]
+    cg = [
+        # SPEC 4.2 Bahodir aka, shakar: o'rtacha — tannarx 960 000, qolgan 70 kg 840 000 (12 000/kg).
+        ("cg-001", "AVERAGE", 1000, sugar),
+        # Xuddi shu, FIFO — tannarx 925 000, qolgan 875 000.
+        ("cg-002", "FIFO", 1000, sugar),
+        # Oxirgi birlik: qiymat aniq 0 (3 donaga 1000 so'm, uchta alohida sotuv).
+        ("cg-003", "AVERAGE", 1, [sm("PURCHASE", 3, 1000), sm("SALE", 1), sm("SALE", 1), sm("SALE", 1)]),
+        ("cg-004", "FIFO", 1, [sm("PURCHASE", 3, 1000), sm("SALE", 1), sm("SALE", 1), sm("SALE", 1)]),
+        # Buzilgan tovar hisobdan chiqarildi; inventarizatsiyada kamomad va ortiqcha.
+        ("cg-005", "AVERAGE", 1000, sugar + [sm("WRITE_OFF", 2000), sm("ADJUST", -500), sm("ADJUST", 1000, 12000)]),
+        ("cg-006", "FIFO", 1000, [sm("PURCHASE", 10000, 110000), sm("PURCHASE", 10000, 125000), sm("WRITE_OFF", 12000), sm("ADJUST", 300, 3750)]),
+        # Tiyinli yaxlitlash: 7 dona 1000 so'mga, 3 ta sotuv.
+        ("cg-007", "AVERAGE", 1, [sm("PURCHASE", 7, 1000), sm("SALE", 3), sm("SALE", 2)]),
+        ("cg-neg-001", "AVERAGE", 1000, [sm("PURCHASE", 1000, 10000), sm("SALE", 1001)]),
+        ("cg-neg-002", "FIFO", 1000, [sm("SALE", 1)]),
+        ("cg-neg-003", "AVERAGE", 1000, [sm("PURCHASE", 0, 10000)]),
+        ("cg-neg-004", "AVERAGE", 1000, [sm("PURCHASE", 10, 0)]),
+        ("cg-neg-005", "LIFO", 1000, []),
+        ("cg-neg-006", "AVERAGE", 12, []),
+    ]
+    suites["kk_cogs"] = _suite("kk_cogs", "Kasb-kor tovar qoldig'i va tannarx: o'rtacha tortilgan va FIFO, driftsiz (oxirgi birlik — qiymat aniq 0), hisobdan chiqarish, inventarizatsiya (kasbkor/SPEC 4.1–4.2)", [
+        _case(cid, {"currency": U, "method": mt, "factor": fc, "moves": ms}, lambda mt=mt, fc=fc, ms=ms: kk_cogs(mt, fc, ms))
+        for cid, mt, fc, ms in cg])
+
+    rp = [
+        # SPEC 4.3: 70 kg shakar hisobda 840 000, joriy xarid narxi 13 500/kg → 945 000, farq 105 000; 13 000 ga sotish — ogohlantirish.
+        ("rp-001", 70000, 840000, 13500, 1000, 13000),
+        # Narx tushdi: farq manfiy, sotuv narxi yuqori — ogohlantirish yo'q.
+        ("rp-002", 70000, 840000, 11500, 1000, 14000),
+        # Dona bilan, sotuv narxi kiritilmagan.
+        ("rp-003", 12, 600000, 55000, 1, None),
+        # Qoldiq yo'q.
+        ("rp-004", 0, 0, 13500, 1000, 13000),
+        # Tiyinli yaxlitlash: 333 g, 12 345,67 so'm/kg.
+        ("rp-005", 333, 4000, Fraction(1234567, 100), 1000, None),
+        ("rp-neg-001", 10, 100, 0, 1000, None),
+        ("rp-neg-002", -1, 0, 100, 1000, None),
+    ]
+    suites["kk_replacement"] = _suite("kk_replacement", "Kasb-kor qayta tiklash narxi: qoldiqning bugungi xarid narxidagi qiymati, «inflyatsiya yegan kapital», sotuv narxi past — ogohlantirish (kasbkor/SPEC 4.3)", [
+        _case(cid, {"currency": U, "qty": q, "bookValue": _s(t(bv)), "price": _s(t(pr)), "factor": fc, "salePrice": None if sp is None else _s(t(sp))},
+              lambda q=q, bv=bv, pr=pr, fc=fc, sp=sp: kk_replacement(q, t(bv), t(pr), fc, t(sp)))
+        for cid, q, bv, pr, fc, sp in rp])
+
     suites["kk_month_close"] = _suite("kk_month_close", "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)", [
         _case(cid, {"currency": U, "revenue": _s(t(r)), "expenses": _s(t(ex)), "depreciation": _s(t(dp)), "ownerSalary": _s(t(sal)), "ownerPaid": _s(t(pd)),
                     "tax": tx, "rule": ru, "carryOverdraw": co},
@@ -1865,7 +2014,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
-                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale")
+                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement")
 
 
 def generate(directory: str) -> None:
@@ -1935,6 +2084,12 @@ def selftest() -> None:
     sched = kk_depreciation(700000000, 0, 36, [])["schedule"]
     assert sched.count("19444445") == 16 and sched.count("19444444") == 20 and sum(map(int, sched)) == 700000000
     assert kk_order_quote(45000000, 600, 4000000, 5000000, 2000000, 500, 70000000)["cost"] == "79800000"
+    # K5 (kasbkor/SPEC 4.2, 4.3): shakar — o'rtacha 960 000 / 840 000, FIFO 925 000 / 875 000; qayta tiklash farqi 105 000.
+    sug = [{"kind": "PURCHASE", "qty": 50000, "amount": "55000000"}, {"kind": "PURCHASE", "qty": 100000, "amount": "125000000"}, {"kind": "SALE", "qty": 80000}]
+    avg, fifo = kk_cogs("AVERAGE", 1000, sug), kk_cogs("FIFO", 1000, sug)
+    assert (avg["moves"][2]["cost"], avg["value"], avg["unitCost"]) == ("96000000", "84000000", "1200000")
+    assert (fifo["moves"][2]["cost"], fifo["value"]) == ("92500000", "87500000")
+    assert kk_replacement(70000, 84000000, 1350000, 1000, 1300000) == {"replacementValue": "94500000", "inflationGap": "10500000", "saleBelowReplacement": True}
     # K4 (kasbkor/SPEC 5.1, 5.2): Bahodir — kutilgan 1 500 000, farq −50 000; Malika — 20 kun kechikkan.
     bah = kk_cash_close(50000000, [{"kind": "SALE", "wallet": "CASH", "amount": "320000000"}, {"kind": "EXPENSE", "wallet": "CASH", "amount": "40000000"},
                                    {"kind": "OWNER_DRAW", "wallet": "CASH", "amount": "30000000"},

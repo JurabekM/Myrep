@@ -52,6 +52,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "680000000",
         "card": "70000000",
         "negativeWallets": []
@@ -95,6 +96,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "350000000",
         "card": "0",
         "negativeWallets": []
@@ -138,6 +140,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "0",
         "card": "0",
         "negativeWallets": []
@@ -187,6 +190,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "150000000",
         "card": "350000000",
         "negativeWallets": []
@@ -225,6 +229,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "-15000000",
         "card": "5000000",
         "negativeWallets": [
@@ -265,6 +270,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "0",
         "card": "850000000",
         "negativeWallets": []
@@ -292,6 +298,7 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "75000000",
         "card": "0",
         "negativeWallets": []
@@ -340,6 +347,7 @@
         "equipmentPurchases": "1200000000",
         "equipmentSales": "80000000",
         "cashDifference": "0",
+        "stockPurchases": "0",
         "cash": "180000000",
         "card": "600000000",
         "negativeWallets": []
@@ -383,7 +391,47 @@
         "equipmentPurchases": "0",
         "equipmentSales": "0",
         "cashDifference": "-3000000",
+        "stockPurchases": "0",
         "cash": "367000000",
+        "card": "0",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-010",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "200000000",
+        "openingCard": "0",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "STOCK_PURCHASE",
+            "wallet": "CASH",
+            "amount": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "112000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "112000000",
+        "expenses": "0",
+        "cashFlow": "112000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "125000000",
+        "cash": "187000000",
         "card": "0",
         "negativeWallets": []
       }
