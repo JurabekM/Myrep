@@ -63,13 +63,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"xato: {e}", file=sys.stderr)
         return 2
     if a.json:
-        print(json.dumps({"ok": not problems, "records": len(rep.hashes), "checkpoints": len(rep.checkpoints), "payload_problems": problems}))
+        print(json.dumps({"ok": not problems, "records": len(rep.hashes), "checkpoints": len(rep.checkpoints), "keys": rep.keys, "key_warnings": rep.key_warnings, "payload_problems": problems}))
     else:
         sealed = max((c["size"] for c in rep.checkpoints), default=0)
         print(f"OK: `{rep.log}` jurnali butun — {len(rep.hashes)} yozuv, {len(rep.checkpoints)} ta checkpoint (Ed25519 + ML-DSA-65), muhrlangan: {sealed}.")
         if not a.checkpoints:
             print("Eslatma: checkpoint'siz faqat ichki izchillik tekshiriladi; oxirini kesish sezilmaydi.")
-        for w in rep.warnings:
+        if len(rep.keys) > 1:
+            print("Kalitlar zanjiri (spec §7.5): " + " → ".join(rep.keys))
+        for w in rep.warnings + rep.key_warnings:
             print(f"ogohlantirish: {w}")
         for p in problems:
             print(f"PAYLOAD: {p}")

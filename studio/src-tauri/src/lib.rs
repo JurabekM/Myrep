@@ -81,6 +81,14 @@ async fn decide(seq: u64, verdict: String, scope: String) -> Value {
     .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
 }
 
+/// Imzo kalitini almashtirish (spec §7.5): yozuv + eski kalit checkpoint'i + yangi kalit.
+#[tauri::command]
+async fn rotate_key(reason: String) -> Value {
+    tauri::async_runtime::spawn_blocking(move || daemon(json!({"op": "rotate", "reason": reason})))
+        .await
+        .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+}
+
 #[tauri::command]
 async fn checkpoint_now() -> Value {
     tauri::async_runtime::spawn_blocking(|| daemon(json!({"op": "checkpoint"})))
@@ -320,6 +328,7 @@ pub fn run() {
             policies,
             decide,
             checkpoint_now,
+            rotate_key,
             records,
             record_detail,
             sessions,

@@ -98,7 +98,10 @@ fn run(args: &Args) -> Result<Result<String, VerifyError>, String> {
         {
             out += &format!("Eslatma: oxirgi {} yozuv hali checkpoint bilan muhrlanmagan.\n", r.log.len() - last);
         }
-        for w in &r.log.warnings {
+        if r.keys.len() > 1 {
+            out += &format!("Kalitlar zanjiri (spec §7.5): {}\n", r.keys.join(" → "));
+        }
+        for w in r.log.warnings.iter().chain(&r.key_warnings) {
             out += &format!("ogohlantirish: {w}\n");
         }
         out

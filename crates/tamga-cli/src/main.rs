@@ -96,6 +96,126 @@ fn process_alive(pid: u64) -> bool {
     std::path::Path::new(&format!("/proc/{pid}")).exists()
 }
 
+/// Zaxira paroli: `TAMGA_BACKUP_PASSPHRASE` (avtomatlashtirish) yoki konsoldan, ekranda ko'rinmasdan.
+fn passphrase(confirm: bool) -> Result<String, String> {
+    if let Ok(p) = std::env::var("TAMGA_BACKUP_PASSPHRASE") {
+        return Ok(p);
+    }
+    let p = rpassword::prompt_password("Zaxira paroli: ").map_err(|e| e.to_string())?;
+    if confirm {
+        let again =
+            rpassword::prompt_password("Parolni takrorlang: ").map_err(|e| e.to_string())?;
+        if again != p {
+            return Err("parollar mos emas".into());
+        }
+    }
+    Ok(p)
+}
+
+/// `tamga key show | rotate [--reason r] | backup --out f | restore <f> [--force]` — spec §7.5.
+fn key(home: &Home, rest: &[&str]) -> Result<ExitCode, String> {
+    let store = || secrets::default_store(home).map_err(|e| e.to_string());
+    match rest {
+        ["show"] => {
+            let anchor = keystore::anchor(home).map_err(|e| e.to_string())?;
+            println!("Langar kalit (auditorga beriladi): {}", anchor.key_id());
+            println!("  fayl: {}", home.public_key().display());
+            let log = std::fs::read_to_string(home.log_path(&default_log_id())).unwrap_or_default();
+            match tamga_core::chain::verify_log(&log) {
+                Ok(s) if s.rotations.is_empty() => println!("Almashtirishlar: yo'q"),
+                Ok(s) => {
+                    println!("Almashtirishlar ({}):", s.rotations.len());
+                    for r in &s.rotations {
+                        println!(
+                            "  #{} {} -> {} ({})",
+                            r.seq,
+                            r.from,
+                            r.to.key_id(),
+                            r.reason
+                        );
+                    }
+                }
+                Err(e) => println!("jurnal o'qilmadi: {e}"),
+            }
+            if let Ok(v) = client::connect(&pipe_name(), None, Duration::from_millis(500))
+                .map_err(|e| e.to_string())
+                .and_then(|mut p| {
+                    client::request(&mut p, &json!({"op": "status"})).map_err(|e| e.to_string())
+                })
+            {
+                println!("Faol kalit (daemon): {}", v["key"].as_str().unwrap_or("?"));
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        ["rotate", opts @ ..] => {
+            let reason = match opts {
+                [] => "scheduled",
+                ["--reason", r] => r,
+                _ => return Err("tamga key rotate [--reason scheduled|compromise|restore]".into()),
+            };
+            let v = daemon_req(&json!({"op": "rotate", "reason": reason}))?;
+            if v["ok"] == true {
+                println!(
+                    "Kalit almashtirildi (yozuv #{}): {} -> {}",
+                    v["seq"],
+                    v["from"].as_str().unwrap_or(""),
+                    v["to"].as_str().unwrap_or("")
+                );
+                println!(
+                    "Eski kalit yo'q qilindi. Yangi zaxira oling: tamga key backup --out <fayl>"
+                );
+                Ok(ExitCode::SUCCESS)
+            } else {
+                Err(v["error"].as_str().unwrap_or("xato").to_owned())
+            }
+        }
+        ["backup", "--out", out] => {
+            let out = std::path::Path::new(out);
+            if out.exists() {
+                return Err(format!(
+                    "{} allaqachon bor — boshqa nom bering",
+                    out.display()
+                ));
+            }
+            let text = keystore::backup(store()?.as_ref(), home, &passphrase(true)?)
+                .map_err(|e| e.to_string())?;
+            std::fs::write(out, text).map_err(|e| format!("{}: {e}", out.display()))?;
+            println!("Zaxira yozildi: {}", out.display());
+            println!(
+                "Uni boshqa joyda saqlang (USB, parol menejeri). Parolsiz uni ochib bo'lmaydi."
+            );
+            Ok(ExitCode::SUCCESS)
+        }
+        ["restore", file, opts @ ..] => {
+            let force = match opts {
+                [] => false,
+                ["--force"] => true,
+                _ => return Err("tamga key restore <fayl> [--force]".into()),
+            };
+            if client::connect(&pipe_name(), None, Duration::from_millis(300)).is_ok() {
+                return Err("daemon ishlayapti — avval `tamga stop`".into());
+            }
+            let text = std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
+            home.ensure().map_err(|e| e.to_string())?;
+            let info =
+                keystore::restore(store()?.as_ref(), home, &text, &passphrase(false)?, force)
+                    .map_err(|e| e.to_string())?;
+            println!(
+                "Tiklandi: imzo kaliti {}, langar {} (zaxira {})",
+                info.key, info.anchor, info.created
+            );
+            println!(
+                "Zaxira begona qo'lga tushgan bo'lishi mumkin bo'lsa: tamga key rotate --reason restore"
+            );
+            Ok(ExitCode::SUCCESS)
+        }
+        _ => Err(
+            "tamga key show | rotate [--reason r] | backup --out <fayl> | restore <fayl> [--force]"
+                .into(),
+        ),
+    }
+}
+
 fn init(home: &Home) -> Result<(), String> {
     home.ensure().map_err(|e| e.to_string())?;
     let store = secrets::default_store(home).map_err(|e| e.to_string())?;
@@ -150,7 +270,10 @@ fn verify(home: &Home) -> Result<bool, String> {
                 r.checkpoints.len(),
                 sealed
             );
-            for w in r.log.warnings {
+            if r.keys.len() > 1 {
+                println!("Kalitlar zanjiri: {}", r.keys.join(" -> "));
+            }
+            for w in r.log.warnings.iter().chain(&r.key_warnings) {
                 println!("ogohlantirish: {w}");
             }
             Ok(true)
@@ -173,6 +296,7 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
             Ok(ExitCode::SUCCESS)
         }
         ["stop"] => stop(),
+        ["key", rest @ ..] => key(&home, rest),
         ["pending"] => {
             let v = daemon("pending")?;
             let items = v["items"].as_array().cloned().unwrap_or_default();

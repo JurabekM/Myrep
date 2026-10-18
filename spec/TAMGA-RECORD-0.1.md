@@ -98,6 +98,7 @@ The `0x00` prefix makes the record hash identical to the RFC 9162 Merkle **leaf 
 | `tool.post` | the tool call finished; carries the result digest |
 | `decision.human` | a human resolved an `ask` decision |
 | `os.observed` | the operating system observed an action (file, process, network) |
+| `key.rotate` | the signing key is replaced; carries `key_rotation` (§7.5) |
 
 Verifiers MUST accept unknown `event` values (and report them as warnings) so that the format
 can grow without breaking old verifiers.
@@ -210,6 +211,44 @@ machine, a git remote, an RFC 3161 timestamp authority). A witness that holds ch
 `(size, root)` detects truncation or rewriting of the first `size` records, and a consistency
 proof (§6) shows that a later checkpoint extends an earlier one.
 
+### 7.5 Key rotation
+
+A log outlives its signing key: keys are rotated on a schedule, replaced after a suspected
+compromise, or re-established after a restore. Rotation is recorded **in the log itself**, so an
+auditor needs only the first key (the *anchor*) from the operator.
+
+A rotation is a record with `event` = `"key.rotate"` and the member:
+
+```json
+"key_rotation": {"from": key-id, "to": key-id, "reason": "scheduled" | "compromise" | "restore",
+                 "ed25519": "<32 bytes>", "ml-dsa-65": "<1952 bytes>",
+                 "proof": {"ed25519": bytes, "ml-dsa-65": bytes}}
+```
+
+```
+P = "TAMGA-ROTATE-v1" || 0x00 || JCS({"from": from, "log": log, "seq": seq, "to": to})
+proof = hybrid signature of P by the NEW key; ML-DSA context = "tamga-rotate"
+```
+
+`to` MUST equal the key identifier (§7.3) of the two new public keys, and `from` ≠ `to`. The proof
+shows possession of the new key and binds it to this log and position; it cannot be moved to
+another record.
+
+The rotation is **authorized** by the first checkpoint that covers the record (`size > seq`) and
+verifies under the key active at that time. Verification (extends §8):
+
+1. The anchor is the active key.
+2. Checkpoints are processed in file order. Each MUST verify under the active key (`key`
+   mismatch → `E_CKPT_FORMAT`). After the checkpoint is fully checked, every not yet applied
+   rotation with `seq < size` is applied in `seq` order: its `from` MUST equal the active key
+   (`E_KEY_ROTATE` at the record's `seq`), and its `to` becomes the active key.
+3. A rotation that no checkpoint authorizes yet is reported as a warning.
+4. A rotation with `reason` = `"compromise"` is reported as a warning: checkpoints signed earlier
+   by the compromised key are only as trustworthy as an independent witness copy of them.
+
+Writers append the rotation record, immediately write a checkpoint with the **old** key, and only
+then switch to the new key. The old private key is destroyed afterwards.
+
 ## 8. Verification
 
 Given a log file, optionally a checkpoint file and a public key, a verifier processes lines in
@@ -230,6 +269,7 @@ order and stops at the **first** error, reporting its code and the zero-based li
 | `E_CKPT_SIG` | a checkpoint signature does not verify |
 | `E_CKPT_SIZE` | a checkpoint covers more records than the log contains — the log was truncated |
 | `E_CKPT_ROOT` | `root` or `last` does not match the log — records covered by the checkpoint were rewritten |
+| `E_KEY_ROTATE` | a `key.rotate` record is malformed, its proof does not verify, or it rotates away from a key that is not active (§7.5); index = the record's `seq` |
 
 Notes:
 
@@ -250,6 +290,7 @@ Notes:
 | `merkle.json` | roots for every prefix of the chain, inclusion and consistency proofs |
 | `checkpoint.json` | key seeds, public keys, signed message `M` (hex), checkpoint line |
 | `tamper.json` | modified logs with the exact expected error code and index |
+| `rotation.json` | a log rotating key A → B (§7.5), valid and invalid checkpoint sets with expected results |
 
 ML-DSA-65 key generation in the vectors uses the 32-byte seed ξ (FIPS 204 `ML-DSA.KeyGen_internal`)
 and signing uses the deterministic variant (`rnd` = 32 zero bytes), so the vectors are

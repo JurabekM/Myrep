@@ -123,6 +123,46 @@ liboqs imzolari, buzilish vektorlari, haqiqiy jurnallar) Rust verifikatori bilan
 indeks beradi (`py scripts/crosscheck_verifiers.py`). Kalit ishonchi auditorga operatordan alohida
 kanal orqali beriladi (spec §10).
 
+Mustaqil xavfsizlik auditi uchun: [docs/AUDIT-GUIDE.md](docs/AUDIT-GUIDE.md) — AI yoki inson auditor
+uchun da'volar ro'yxati (C1–C14), tahdid modeli, muallif topgan ochiq zaif nuqtalar (K1–K6), bosqichma-bosqich
+tekshiruv va hisobot shakli.
+
+## Imzo kalitlari: almashtirish va zaxira
+
+Auditor faqat **langar** kalitni (`public-key.json`, jurnalning birinchi kaliti) operatordan oladi.
+Kalit almashtirilganda jurnalga `key.rotate` yozuvi tushadi, uni eski kalit checkpoint bilan imzolaydi,
+shundan keyin faqat yangi kalit qabul qilinadi (spec §7.5). Uchala verifikator zanjirni langardan o'zi tekshiradi.
+
+```powershell
+tamga key show                              # langar, almashtirishlar tarixi, faol kalit
+tamga key rotate                            # rejali almashtirish (Studio → Sozlamalar → «Kalitni almashtirish»)
+tamga key rotate --reason compromise        # kalit sizib chiqqan bo'lsa: verifikatorlar ogohlantiradi
+tamga key backup --out D:\tamga.tamgakey    # imzo + vault kalitlari, parol bilan (Argon2id 64 MiB + XChaCha20-Poly1305)
+tamga stop; tamga key restore D:\tamga.tamgakey   # yangi kompyuterda (jurnal fayllarini alohida ko'chiring)
+```
+
+Almashtirish yiqilishga chidamli: yangi kalit avval alohida joyda saqlanadi va faqat eski kalit
+checkpoint'i yozilgandan keyin asosiyga aylanadi. Daemon ishga tushganda yarim qolgan almashtirishni
+yakunlaydi yoki bekor qiladi. Ombordagi kalit jurnal kutgan kalitga mos kelmasa, imzolashdan bosh tortadi.
+
+![Yaxlitlik: kalitlar zanjiri va buzilgan kalit ogohlantirishi](docs/screenshots/f9-key-chain.png)
+
+## Kod imzosi
+
+`scripts/build-installer.ps1` sertifikat berilsa 5 ta sidecar'ni, Studio'ni, `uninstall.exe` ni va
+o'rnatuvchining o'zini Authenticode bilan imzolaydi, RFC 3161 vaqt tamg'asi qo'yadi va `SHA256SUMS.txt`
+yozadi. Sertifikat [scripts/sign.ps1](scripts/sign.ps1) orqali uch yo'ldan biri bilan beriladi:
+
+| Usul | O'zgaruvchilar |
+|---|---|
+| Windows sertifikat ombori yoki USB token (OV/EV) | `TAMGA_SIGN_THUMBPRINT` |
+| `.pfx` fayl | `TAMGA_SIGN_PFX`, `TAMGA_SIGN_PFX_PASSWORD` |
+| Azure Trusted Signing | `TAMGA_SIGN_AZURE_DLIB`, `TAMGA_SIGN_AZURE_METADATA` |
+
+Reliz yig'ishda `TAMGA_SIGN_REQUIRED=1` qo'ying: sertifikat bo'lmasa yig'ish to'xtaydi. Sertifikatning
+o'zi (CA'dan sotib olinadi yoki Azure Trusted Signing obunasi) repo'da yo'q. U bo'lmaguncha o'rnatuvchi
+imzosiz va SmartScreen «noma'lum nashriyotchi» deb ogohlantiradi.
+
 ## Xavfsizlik modeli va halol chegaralar
 
 TAMGA **nimani kafolatlaydi:** yozilgan har yozuvni keyin o'zgartirish, o'chirish, qayta tartiblash yoki
@@ -139,6 +179,8 @@ siyosat bloklagan buyruq bajarilmaydi.
   o'tkazib yuborishi mumkin, UDP/DNS kuzatilmaydi, fayl o'zgarishi jarayonga vaqt bo'yicha bog'lanadi.
 - `dev` rejimida daemon ishlamasa hodisa spool'ga yoziladi va amal ruxsat etiladi; `strict` — bloklanadi.
 - Hozircha faqat Windows (named pipe, Credential Manager, sensor). Format va verifikator — platformaga bog'liq emas.
+- Agent va daemon bir xil Windows foydalanuvchisi huquqida ishlaydi. Pipe'dagi boshqaruv buyruqlari
+  (`decide`, `shutdown`, `rotate`) hozircha chaqiruvchini tekshirmaydi. Bu ochiq zaif nuqta: [AUDIT-GUIDE §4, K1](docs/AUDIT-GUIDE.md).
 
 ## Dasturchilar uchun
 

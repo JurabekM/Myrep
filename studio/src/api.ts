@@ -71,6 +71,9 @@ export interface Payload {
 
 export interface Integrity {
   ok: boolean;
+  /** Langar → ... → faol kalit (spec §7.5). */
+  keys?: string[];
+  key_warnings?: string[];
   log?: string;
   key?: string;
   records?: number;
@@ -96,6 +99,7 @@ export interface Status {
   records?: number;
   checkpointed?: number;
   key?: string;
+  anchor?: string;
   home?: string;
   mode?: string;
   pending?: number;

@@ -28,6 +28,8 @@ pub struct OpenReport {
     pub records: u64,
     pub recovered_partial_line: bool,
     pub warnings: Vec<String>,
+    /// Jurnaldagi `key.rotate` yozuvlari: (seq, yangi kalit identifikatori) — spec §7.5.
+    pub rotations: Vec<(u64, String)>,
 }
 
 impl LogFile {
@@ -77,6 +79,11 @@ impl LogFile {
         }
         report.records = summary.len();
         report.warnings = summary.warnings;
+        report.rotations = summary
+            .rotations
+            .iter()
+            .map(|r| (r.seq, r.to.key_id()))
+            .collect();
 
         let checkpointed = std::fs::read_to_string(ckpt_path)
             .ok()
@@ -117,6 +124,11 @@ impl LogFile {
 
     pub fn log_id(&self) -> &str {
         self.writer.log_id()
+    }
+
+    /// Oxirgi checkpoint qamragan yozuvlar soni.
+    pub fn checkpointed(&self) -> u64 {
+        self.checkpointed
     }
 
     pub fn uncheckpointed(&self) -> u64 {

@@ -17,10 +17,13 @@ MAX_LINE = 1 << 20
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 _TS = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
 _LOG_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
-KNOWN_EVENTS = {"session.start", "session.end", "prompt", "tool.pre", "tool.post", "decision.human", "os.observed"}
+KNOWN_EVENTS = {"session.start", "session.end", "prompt", "tool.pre", "tool.post", "decision.human", "os.observed", "key.rotate"}
 CKPT_DOMAIN = b"TAMGA-CHECKPOINT-v1\x00"
 KEY_DOMAIN = b"TAMGA-KEY-v1\x00"
 ML_DSA_CONTEXT = b"tamga-checkpoint"
+ROTATE_DOMAIN = b"TAMGA-ROTATE-v1\x00"
+ROTATE_CONTEXT = b"tamga-rotate"
+ROTATE_REASONS = ("scheduled", "compromise", "restore")
 
 
 class VerifyError(Exception):
@@ -35,6 +38,9 @@ class Report:
     hashes: list[bytes] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     checkpoints: list[dict] = field(default_factory=list)
+    rotations: list[dict] = field(default_factory=list)
+    keys: list[str] = field(default_factory=list)
+    key_warnings: list[str] = field(default_factory=list)
 
 
 def b64url(s: str) -> bytes | None:
@@ -155,6 +161,11 @@ def verify_log(text: str) -> Report:
         expected_prev = rep.hashes[-1] if rep.hashes else bytes(32)
         if _digest(o["prev"]) != expected_prev:
             raise VerifyError("E_PREV", index, "zanjir uzilgan")
+        if o["event"] == "key.rotate":
+            try:
+                rep.rotations.append(_parse_rotation(o, index))
+            except ValueError as e:
+                raise VerifyError("E_KEY_ROTATE", index, str(e)) from None
         if o["event"] not in KNOWN_EVENTS:
             rep.warnings.append(f"#{index}: noma'lum hodisa `{o['event']}`")
         if last_ts is not None and o["ts"] < last_ts:
@@ -183,13 +194,44 @@ class PublicKey:
             raise ValueError("ochiq kalit fayli: `key` identifikatori mos emas")
         return cls(ed, ml, v["key"])
 
-    def verify(self, message: bytes, sig_ed: bytes, sig_ml: bytes) -> bool:
+    def verify(self, message: bytes, sig_ed: bytes, sig_ml: bytes, ctx: bytes = ML_DSA_CONTEXT) -> bool:
         # Gibrid AND: ikkalasi ham shart.
-        return ed25519.verify(self.ed, message, sig_ed) and mldsa65.verify(self.ml, message, sig_ml, ML_DSA_CONTEXT)
+        return ed25519.verify(self.ed, message, sig_ed) and mldsa65.verify(self.ml, message, sig_ml, ctx)
+
+
+def _parse_rotation(o: dict, seq: int) -> dict:
+    """Spec §7.5: `key.rotate` yozuvining o'z-o'zidan tekshiriladigan qismi (shakl, `to`, isbot)."""
+    m = o.get("key_rotation")
+    if not isinstance(m, dict):
+        raise ValueError("`key_rotation` obyekti yo'q")
+    frm, to, reason = m.get("from"), m.get("to"), m.get("reason")
+    if not all(isinstance(x, str) for x in (frm, to, reason)):
+        raise ValueError("`key_rotation` maydonlari satr emas")
+    if reason not in ROTATE_REASONS:
+        raise ValueError(f"noma'lum sabab `{reason}`")
+    ed, ml = b64url(m.get("ed25519") or ""), b64url(m.get("ml-dsa-65") or "")
+    if ed is None or ml is None or len(ed) != 32 or len(ml) != mldsa65.PK_LEN:
+        raise ValueError("yangi kalit uzunligi noto'g'ri")
+    if PublicKey.compute_id(ed, ml) != to:
+        raise ValueError("`to` yangi ochiq kalitlarga mos emas")
+    if frm == to:
+        raise ValueError("kalit o'ziga almashtirilgan")
+    proof = m.get("proof")
+    if not isinstance(proof, dict):
+        raise ValueError("`proof` obyekt emas")
+    p_ed, p_ml = b64url(proof.get("ed25519") or ""), b64url(proof.get("ml-dsa-65") or "")
+    msg = ROTATE_DOMAIN + canonical({"from": frm, "log": o["log"], "seq": seq, "to": to}).encode("utf-8")
+    pk = PublicKey(ed, ml, to)
+    if p_ed is None or p_ml is None or not pk.verify(msg, p_ed, p_ml, ROTATE_CONTEXT):
+        raise ValueError("egalik isboti (yangi kalit imzosi) tasdiqlanmadi")
+    return {"seq": seq, "from": frm, "to": pk, "reason": reason}
 
 
 def verify_all(log_text: str, checkpoint_text: str, pk: PublicKey) -> Report:
+    """`pk` — langar (operator bergan birinchi) kalit; almashtirishlar jurnalning o'zidan (spec §7.5)."""
     rep = verify_log(log_text)
+    active, applied = pk, 0
+    rep.keys.append(pk.key_id)
     for index, (line, ended) in enumerate(_lines(checkpoint_text)):
         try:
             c = _parse_canonical(line, ended, index, "E_CKPT_FORMAT", "E_CKPT_FORMAT")
@@ -206,7 +248,7 @@ def verify_all(log_text: str, checkpoint_text: str, pk: PublicKey) -> Report:
             raise fmt("`root`/`last` digest emas")
         if not isinstance(c.get("log"), str) or not _LOG_ID.match(c["log"]) or not _valid_ts(c.get("ts")):
             raise fmt("`log`/`ts` noto'g'ri")
-        if c.get("key") != pk.key_id:
+        if c.get("key") != active.key_id:
             raise fmt("`key` berilgan ochiq kalitga mos emas")
         sig = c.get("sig")
         if not isinstance(sig, dict):
@@ -215,7 +257,7 @@ def verify_all(log_text: str, checkpoint_text: str, pk: PublicKey) -> Report:
         if sig_ed is None or sig_ml is None:
             raise fmt("imzo base64url emas")
         message = CKPT_DOMAIN + canonical(without(c, "sig")).encode("utf-8")
-        if not pk.verify(message, sig_ed, sig_ml):
+        if not active.verify(message, sig_ed, sig_ml):
             raise VerifyError("E_CKPT_SIG", index, "imzo tasdiqlanmadi")
         if rep.log is not None and c["log"] != rep.log:
             raise fmt("checkpoint boshqa jurnalga tegishli")
@@ -224,7 +266,18 @@ def verify_all(log_text: str, checkpoint_text: str, pk: PublicKey) -> Report:
         covered = rep.hashes[:size]
         if merkle.root(covered) != root or covered[-1] != last:
             raise VerifyError("E_CKPT_ROOT", index, f"dastlabki {size} yozuv checkpoint'dan keyin qayta yozilgan")
+        while applied < len(rep.rotations) and rep.rotations[applied]["seq"] < size:
+            r = rep.rotations[applied]
+            if r["from"] != active.key_id:
+                raise VerifyError("E_KEY_ROTATE", r["seq"], f"almashtirish `{r['from']}` dan, lekin faol kalit `{active.key_id}`")
+            if r["reason"] == "compromise":
+                rep.key_warnings.append(f"#{r['seq']}: kalit {r['from']} buzilgan deb e'lon qilingan")
+            active = r["to"]
+            rep.keys.append(active.key_id)
+            applied += 1
         rep.checkpoints.append({"size": size, "ts": c["ts"]})
+    for r in rep.rotations[applied:]:
+        rep.key_warnings.append(f"#{r['seq']}: {r['to'].key_id} ga almashtirish hali tasdiqlanmagan")
     return rep
 
 

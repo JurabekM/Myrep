@@ -266,6 +266,23 @@ bo'lmasa ham faylni qayta yozardi va `settings.json` yo'q bo'lsa uni yaratardi �
 (c) soxta `USERPROFILE` bilan o'chirishda yorliq qoldi — Windows `User Shell Folders` ni jarayon
 muhitidan kengaytiradi; bu sinov artefakti, oddiy muhitda yorliq o'chadi (tekshirildi).
 
+**Production tayyorgarligi (2026-10-18):**
+(1) *Kod imzosi:* `scripts/sign.ps1` (sertifikat ombori/USB token, `.pfx` yoki Azure Trusted Signing;
+RFC 3161 vaqt tamg'asi), Tauri `signCommand` orqali ulanadi; sidecar'lar bundle'dan oldin imzolanadi;
+`SHA256SUMS.txt`; `TAMGA_SIGN_REQUIRED=1`. Bir martalik o'z-o'zini imzolagan sertifikat (fayl,
+omborga qo'shilmagan) bilan sinaldi: o'rnatuvchi va o'rnatilgan 7 ta exe imzolangan. Haqiqiy
+sertifikat yo'q — u sotib olinishi kerak.
+(2) *Kalitlar:* spec §7.5 `key.rotate` (yangi kalit egalik isboti `TAMGA-ROTATE-v1`, ML-DSA konteksti
+`tamga-rotate`; eski kalit checkpoint'i bilan tasdiqlanadi), `E_KEY_ROTATE`, `rotation.json` vektorlari
+(5 holat, Rust va Python bir xil). Daemon: `rotate` op, yiqilishga chidamli bosqichlash
+(`signing-seed-next-v1`), ishga tushishda tiklash, ombordagi kalit jurnalga mos kelmasa imzolamaydi.
+`tamga key show|rotate|backup|restore`: zaxira Argon2id (64 MiB, t=3) + XChaCha20-Poly1305, sarlavha
+AAD. Studio: Sozlamalar → «Imzo kalitlari» (almashtirish, tasdiq bilan), Yaxlitlik → kalitlar zanjiri.
+E2E: 2 almashtirish (biri `compromise`) → uchala verifikator bir xil zanjir; zaxira → yangi papka →
+imzolash davom etdi; noto'g'ri parol va boshqa kalit rad etildi.
+(3) *Audit:* [AUDIT-GUIDE.md](AUDIT-GUIDE.md) — AI/inson auditor uchun. Tayyorlash paytida ochiq
+zaif nuqta topildi: pipe boshqaruv buyruqlari chaqiruvchini tekshirmaydi (K1).
+
 **Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
 `rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
 `curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.

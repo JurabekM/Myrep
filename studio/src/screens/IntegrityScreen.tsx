@@ -63,14 +63,14 @@ export function IntegrityScreen() {
           <div className="kv">
             <span className="label">Jurnal</span>
             <span className="mono">{d.log}</span>
-            <span className="label">Imzo kaliti</span>
-            <span className="mono">{d.key}</span>
+            <span className="label">{(d.keys?.length ?? 0) > 1 ? "Kalitlar zanjiri" : "Imzo kaliti"}</span>
+            <span className="mono wrap">{(d.keys?.length ?? 0) > 1 ? d.keys!.join(" → ") : d.key}</span>
             <span className="label">Algoritm</span>
             <span>SHA-256 zanjir · RFC 9162 Merkle · Ed25519 + ML-DSA-65 (ikkalasi shart)</span>
-            {d.warnings?.length ? (
+            {d.warnings?.length || d.key_warnings?.length ? (
               <>
                 <span className="label">Ogohlantirishlar</span>
-                {d.warnings.map((w) => (
+                {[...(d.warnings ?? []), ...(d.key_warnings ?? [])].map((w) => (
                   <span key={w} className="dim">
                     {w}
                   </span>

@@ -105,6 +105,8 @@ pub struct LogSummary {
     /// Har bir yozuv xeshi, `seq` tartibida — Merkle daraxti barglari.
     pub hashes: Vec<Digest>,
     pub warnings: Vec<String>,
+    /// `key.rotate` yozuvlari (o'z-o'zidan tekshirilgan qismi bilan), `seq` tartibida — spec §7.5.
+    pub rotations: Vec<crate::rotation::Rotation>,
 }
 
 impl LogSummary {
@@ -204,6 +206,7 @@ pub fn verify_log(text: &str) -> Result<LogSummary, VerifyError> {
                 format!("seq {} kutilgan {index}", header.seq),
             ));
         }
+        let rotation_map = (header.event == crate::rotation::EVENT).then(|| map.clone());
         let computed = record::record_hash(&Value::Object(map))
             .map_err(|e| VerifyError::new(ErrorCode::NonCanonical, index, e.to_string()))?;
         if computed != header.hash {
@@ -222,6 +225,11 @@ pub fn verify_log(text: &str) -> Result<LogSummary, VerifyError> {
             ));
         }
 
+        if let Some(m) = rotation_map {
+            let r = crate::rotation::parse(&m, &header.log, index)
+                .map_err(|d| VerifyError::new(ErrorCode::KeyRotate, index, d))?;
+            summary.rotations.push(r);
+        }
         if !KNOWN_EVENTS.contains(&header.event.as_str()) {
             summary
                 .warnings

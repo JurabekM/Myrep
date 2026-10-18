@@ -17,6 +17,7 @@ pub enum ErrorCode {
     CkptSig,
     CkptSize,
     CkptRoot,
+    KeyRotate,
 }
 
 impl ErrorCode {
@@ -34,6 +35,7 @@ impl ErrorCode {
             Self::CkptSig => "E_CKPT_SIG",
             Self::CkptSize => "E_CKPT_SIZE",
             Self::CkptRoot => "E_CKPT_ROOT",
+            Self::KeyRotate => "E_KEY_ROTATE",
         }
     }
 
@@ -42,7 +44,7 @@ impl ErrorCode {
     }
 }
 
-const ALL: [ErrorCode; 12] = [
+const ALL: [ErrorCode; 13] = [
     ErrorCode::Parse,
     ErrorCode::NonCanonical,
     ErrorCode::Version,
@@ -55,6 +57,7 @@ const ALL: [ErrorCode; 12] = [
     ErrorCode::CkptSig,
     ErrorCode::CkptSize,
     ErrorCode::CkptRoot,
+    ErrorCode::KeyRotate,
 ];
 
 impl fmt::Display for ErrorCode {

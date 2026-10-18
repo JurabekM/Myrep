@@ -169,23 +169,33 @@ pub fn verify_one(
 pub struct Report {
     pub log: LogSummary,
     pub checkpoints: Vec<Checkpoint>,
+    /// Kalitlar zanjiri: langar (operator bergan) va kuchga kirgan har almashtirishdan keyingi kalit.
+    pub keys: Vec<String>,
+    /// Kalitlar bo'yicha ogohlantirishlar (buzilgan deb e'lon qilingan kalit, tasdiqlanmagan almashtirish).
+    pub key_warnings: Vec<String>,
 }
 
-/// Jurnal + checkpoint fayli + ochiq kalit: spec §8 bo'yicha to'liq tekshiruv.
-/// Avval zanjir, keyin har bir checkpoint (imzo → o'lcham → ildiz) tekshiriladi.
+/// Jurnal + checkpoint fayli + **langar** ochiq kalit: spec §8 bo'yicha to'liq tekshiruv.
+/// Avval zanjir, keyin har bir checkpoint (imzo → o'lcham → ildiz). Checkpoint faqat shu paytdagi
+/// faol kalit bilan qabul qilinadi; u qamragan `key.rotate` yozuvlari tartib bilan qo'llanadi
+/// (spec §7.5) va keyingi checkpoint'lar yangi kalitni talab qiladi.
 pub fn verify_all(
     log_text: &str,
     checkpoint_text: &str,
-    pk: &PublicKeys,
+    anchor: &PublicKeys,
 ) -> Result<Report, VerifyError> {
     let summary = chain::verify_log(log_text)?;
     let mut checkpoints = Vec::new();
+    let mut active = anchor.clone();
+    let mut keys = vec![anchor.key_id()];
+    let mut key_warnings = Vec::new();
+    let mut applied = 0usize;
 
     for (i, line) in chain::split_lines(checkpoint_text).into_iter().enumerate() {
         let index = i as u64;
         let map = chain::parse_canonical(line, index)
             .map_err(|e| VerifyError::new(ErrorCode::CkptFormat, index, e.detail))?;
-        let cp = verify_one(&map, pk, index)?;
+        let cp = verify_one(&map, &active, index)?;
 
         if summary.log.as_deref().is_some_and(|l| l != cp.log) {
             return Err(VerifyError::new(
@@ -216,11 +226,43 @@ pub fn verify_all(
                 ),
             ));
         }
+        // Faol kalit imzolagan checkpoint qamragan almashtirishlar endi tasdiqlangan.
+        while let Some(r) = summary.rotations.get(applied).filter(|r| r.seq < cp.size) {
+            if r.from != active.key_id() {
+                return Err(VerifyError::new(
+                    ErrorCode::KeyRotate,
+                    r.seq,
+                    format!(
+                        "almashtirish `{}` dan, lekin faol kalit `{}`",
+                        r.from,
+                        active.key_id()
+                    ),
+                ));
+            }
+            if r.reason == "compromise" {
+                key_warnings.push(format!(
+                    "#{}: kalit {} buzilgan deb e'lon qilingan — u imzolagan checkpoint'larga faqat guvoh nusxasi bilan ishoning",
+                    r.seq, r.from
+                ));
+            }
+            active = r.to.clone();
+            keys.push(active.key_id());
+            applied += 1;
+        }
         checkpoints.push(cp);
+    }
+    for r in &summary.rotations[applied..] {
+        key_warnings.push(format!(
+            "#{}: {} ga almashtirish hali eski kalit imzolagan checkpoint bilan tasdiqlanmagan",
+            r.seq,
+            r.to.key_id()
+        ));
     }
     Ok(Report {
         log: summary,
         checkpoints,
+        keys,
+        key_warnings,
     })
 }
 
@@ -313,5 +355,86 @@ mod tests {
             verify_all(&text, &forged, &keys.public()).unwrap_err().code,
             ErrorCode::CkptSig
         );
+    }
+
+    /// 0..3 yozuv, #3 = A→B almashtirish, 4..6 yozuv. Checkpoint'lar: A(4), B(7).
+    fn rotated() -> (String, Vec<Digest>, SigningKeys, SigningKeys) {
+        let (a, b) = (
+            SigningKeys::from_seeds(&[1; 32], &[2; 32]),
+            SigningKeys::from_seeds(&[5; 32], &[6; 32]),
+        );
+        let mut w = LogWriter::new("cp").unwrap();
+        let mut text = String::new();
+        for i in 0..7u64 {
+            let ts = format!("2026-10-17T10:00:{i:02}.000Z");
+            text += &if i == 3 {
+                let body = crate::rotation::body("cp", 3, &a.public(), &b, "scheduled", None);
+                w.append(&ts, "tamga", crate::rotation::EVENT, body)
+                    .unwrap()
+            } else {
+                w.append(&ts, "s", "prompt", Map::new()).unwrap()
+            };
+        }
+        (text, w.hashes().to_vec(), a, b)
+    }
+
+    #[test]
+    fn rotation_hands_over_to_new_key() {
+        let (text, hashes, a, b) = rotated();
+        let ts = "2026-10-17T10:01:00.000Z";
+        let cps =
+            create("cp", &hashes, 4, ts, &a).unwrap() + &create("cp", &hashes, 7, ts, &b).unwrap();
+        let rep = verify_all(&text, &cps, &a.public()).unwrap();
+        assert_eq!(rep.keys, vec![a.public().key_id(), b.public().key_id()]);
+        assert!(rep.key_warnings.is_empty());
+
+        // Almashtirishdan keyin eski kalit bilan imzolash rad etiladi.
+        let old =
+            create("cp", &hashes, 4, ts, &a).unwrap() + &create("cp", &hashes, 7, ts, &a).unwrap();
+        let e = verify_all(&text, &old, &a.public()).unwrap_err();
+        assert_eq!((e.code, e.index), (ErrorCode::CkptFormat, 1));
+
+        // Eski kalit qamramagan almashtirish kuchga kirmaydi: yangi kalit hali faol emas.
+        let skip = create("cp", &hashes, 7, ts, &b).unwrap();
+        let e = verify_all(&text, &skip, &a.public()).unwrap_err();
+        assert_eq!((e.code, e.index), (ErrorCode::CkptFormat, 0));
+
+        // Hali checkpoint yo'q: ogohlantirish, xato emas.
+        let rep = verify_all(&text, "", &a.public()).unwrap();
+        assert_eq!(rep.key_warnings.len(), 1);
+    }
+
+    #[test]
+    fn rotation_from_wrong_key_or_forged_proof_is_rejected() {
+        let (_, _, a, b) = rotated();
+        let c = SigningKeys::from_seeds(&[8; 32], &[9; 32]);
+        let ts = "2026-10-17T10:00:00.000Z";
+        // C→B almashtirish, lekin faol kalit A.
+        let mut w = LogWriter::new("cp").unwrap();
+        let mut text = w.append(ts, "s", "prompt", Map::new()).unwrap();
+        text += &w
+            .append(
+                ts,
+                "tamga",
+                crate::rotation::EVENT,
+                crate::rotation::body("cp", 1, &c.public(), &b, "scheduled", None),
+            )
+            .unwrap();
+        let cps = create("cp", w.hashes(), 2, ts, &a).unwrap();
+        let e = verify_all(&text, &cps, &a.public()).unwrap_err();
+        assert_eq!((e.code, e.index), (ErrorCode::KeyRotate, 1));
+
+        // Isbot boshqa seq uchun qo'yilgan — zanjirning o'zi rad etadi.
+        let mut w = LogWriter::new("cp").unwrap();
+        let text = w
+            .append(
+                ts,
+                "tamga",
+                crate::rotation::EVENT,
+                crate::rotation::body("cp", 9, &a.public(), &b, "scheduled", None),
+            )
+            .unwrap();
+        let e = chain::verify_log(&text).unwrap_err();
+        assert_eq!((e.code, e.index), (ErrorCode::KeyRotate, 0));
     }
 }

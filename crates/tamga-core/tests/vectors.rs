@@ -12,11 +12,17 @@ use tamga_core::checkpoint::{self, verify_all};
 use tamga_core::digest::{Digest, to_hex};
 use tamga_core::error::ErrorCode;
 use tamga_core::keys::{PublicKeys, SigningKeys};
-use tamga_core::{jcs, merkle, payload};
+use tamga_core::{jcs, merkle, payload, rotation};
 
 const LOG: &str = "tamga-demo";
 const ED_SEED: [u8; 32] = [0x11; 32];
 const ML_SEED: [u8; 32] = [0x22; 32];
+/// Almashtirishdan keyingi (B) kalit urug'lari.
+const ED_SEED_B: [u8; 32] = [0x33; 32];
+const ML_SEED_B: [u8; 32] = [0x44; 32];
+/// Faol bo'lmagan begona kalit (C).
+const ED_SEED_C: [u8; 32] = [0x55; 32];
+const ML_SEED_C: [u8; 32] = [0x66; 32];
 
 fn obj(v: Value) -> Map<String, Value> {
     v.as_object().cloned().expect("obyekt")
@@ -422,7 +428,66 @@ fn build() -> BTreeMap<&'static str, Value> {
             })).collect::<Vec<_>>(),
         }),
     );
+    files.insert("rotation.json", rotation_vectors());
     files
+}
+
+/// 7 yozuvli jurnal, #3 = `key.rotate`. `from`/`proof_seq` buzilgan holatlar uchun almashtiriladi.
+fn rotation_log(from: &SigningKeys, proof_seq: u64) -> (String, Vec<Digest>) {
+    let b = SigningKeys::from_seeds(&ED_SEED_B, &ML_SEED_B);
+    let mut w = LogWriter::new(LOG).unwrap();
+    let mut text = String::new();
+    for i in 0..7u64 {
+        let ts = format!("2026-10-18T09:00:{i:02}.000Z");
+        text += &if i == 3 {
+            let body = rotation::body(LOG, proof_seq, &from.public(), &b, "scheduled", None);
+            w.append(&ts, "tamga", rotation::EVENT, body).unwrap()
+        } else {
+            let body = obj(json!({"agent": {"kind": "claude-code"}}));
+            w.append(&ts, "s-rot", "prompt", body).unwrap()
+        };
+    }
+    (text, w.hashes().to_vec())
+}
+
+fn rotation_vectors() -> Value {
+    let (a, b) = (keys(), SigningKeys::from_seeds(&ED_SEED_B, &ML_SEED_B));
+    let c = SigningKeys::from_seeds(&ED_SEED_C, &ML_SEED_C);
+    let ts = "2026-10-18T09:01:00.000Z";
+    let cp = |h: &[Digest], size, k: &SigningKeys| checkpoint::create(LOG, h, size, ts, k).unwrap();
+    let (text, hashes) = rotation_log(&a, 3);
+    let good = cp(&hashes, 4, &a) + &cp(&hashes, 7, &b);
+    let (bad_seq, bad_seq_h) = rotation_log(&a, 4);
+    let (bad_from, bad_from_h) = rotation_log(&c, 3);
+    let case = |name: &str, desc: &str, log: &str, cps: String, expect: Value| {
+        let strip = |t: &str| {
+            lines(t)
+                .iter()
+                .map(|l| l.trim_end_matches('\n').to_owned())
+                .collect::<Vec<_>>()
+        };
+        json!({"name": name, "description": desc, "log": strip(log), "checkpoints": strip(&cps), "expect": expect})
+    };
+    let err = |code: ErrorCode, index: u64| json!({"code": code.as_str(), "index": index});
+    json!({
+        "description": "Key rotation inside the log (spec §7.5). Anchor key = checkpoint.json public_key (A). Record #3 rotates A -> B; the checkpoint over 4 records is signed by A, later ones by B. Proof signatures use ML-DSA context `tamga-rotate`, deterministic (rnd = 0).",
+        "ed25519_seed_b": to_hex(&ED_SEED_B),
+        "ml_dsa_65_seed_b": to_hex(&ML_SEED_B),
+        "public_key_b": b.public().to_json(),
+        "proof_message_hex": to_hex(&rotation::proof_message(LOG, 3, &a.public().key_id(), &b.public().key_id())),
+        "cases": [
+            case("valid", "A signs the checkpoint covering the rotation, B signs the next one", &text, good,
+                 json!({"ok": true, "keys": [a.public().key_id(), b.public().key_id()]})),
+            case("old-key-after-rotation", "after the rotation took effect the old key A signs again",
+                 &text, cp(&hashes, 4, &a) + &cp(&hashes, 7, &a), err(ErrorCode::CkptFormat, 1)),
+            case("rotation-not-authorized", "no checkpoint by A covers the rotation, so B is not yet trusted",
+                 &text, cp(&hashes, 7, &b), err(ErrorCode::CkptFormat, 0)),
+            case("proof-for-other-seq", "the new key's proof was made for seq 4, not for the record's seq 3",
+                 &bad_seq, cp(&bad_seq_h, 7, &a), err(ErrorCode::KeyRotate, 3)),
+            case("rotation-from-inactive-key", "the record rotates away from key C, but A is active",
+                 &bad_from, cp(&bad_from_h, 7, &a), err(ErrorCode::KeyRotate, 3)),
+        ],
+    })
 }
 
 fn vectors_dir() -> PathBuf {
@@ -521,4 +586,32 @@ fn public_key_vector_round_trips() {
     let pk = keys().public();
     let back = PublicKeys::from_json(&pk.to_json()).unwrap();
     assert_eq!(back.key_id(), pk.key_id());
+}
+
+#[test]
+fn rotation_cases_report_exact_result() {
+    let v = rotation_vectors();
+    let pk = keys().public();
+    for c in v["cases"].as_array().unwrap() {
+        let join = |k: &str| {
+            c[k].as_array()
+                .unwrap()
+                .iter()
+                .map(|l| l.as_str().unwrap().to_owned() + "\n")
+                .collect::<String>()
+        };
+        let r = verify_all(&join("log"), &join("checkpoints"), &pk);
+        let name = c["name"].as_str().unwrap();
+        match (&c["expect"]["ok"], r) {
+            (Value::Bool(true), Ok(rep)) => {
+                assert_eq!(json!(rep.keys), c["expect"]["keys"], "{name}")
+            }
+            (_, Err(e)) => assert_eq!(
+                json!({"code": e.code.as_str(), "index": e.index}),
+                c["expect"],
+                "{name}: {e}"
+            ),
+            (_, Ok(_)) => panic!("{name}: xato kutilgan edi"),
+        }
+    }
 }

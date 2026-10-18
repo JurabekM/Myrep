@@ -6,6 +6,7 @@
 //! - [`chain`] — jurnal yozuvchi ([`chain::LogWriter`]) va zanjir verifikatori.
 //! - [`merkle`] — RFC 9162 Merkle daraxti, inclusion va consistency isbotlari.
 //! - [`keys`], [`checkpoint`] — gibrid Ed25519 + ML-DSA-65 imzoli checkpoint'lar.
+//! - [`rotation`] — imzo kalitini jurnal ichida almashtirish (`key.rotate`, spec §7.5).
 //! - [`payload`] — tuzlangan payload majburiyati (crypto-shredding uchun).
 
 pub mod b64;
@@ -18,6 +19,7 @@ pub mod keys;
 pub mod merkle;
 pub mod payload;
 pub mod record;
+pub mod rotation;
 
 pub use digest::Digest;
 pub use error::{ErrorCode, VerifyError};

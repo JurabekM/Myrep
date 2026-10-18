@@ -12,7 +12,7 @@ pub const LEAF_PREFIX: u8 = 0x00;
 pub const RESERVED: [&str; 7] = ["tamga", "log", "seq", "ts", "session", "event", "prev"];
 
 /// Spec §3.3 dagi ma'lum hodisalar. Noma'lumlari qabul qilinadi, lekin ogohlantirish beriladi.
-pub const KNOWN_EVENTS: [&str; 7] = [
+pub const KNOWN_EVENTS: [&str; 8] = [
     "session.start",
     "session.end",
     "prompt",
@@ -20,6 +20,7 @@ pub const KNOWN_EVENTS: [&str; 7] = [
     "tool.post",
     "decision.human",
     "os.observed",
+    "key.rotate",
 ];
 
 /// `hash = H(0x00 || JCS(record \ "hash"))`.

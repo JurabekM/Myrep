@@ -41,34 +41,28 @@ impl SigningKeys {
     /// Ikkala imzo, ML-DSA hedged variantda (FIPS 204 Algorithm 2): `rnd` — 32 tasodifiy bayt.
     /// Hedged imzo yon kanal hujumlariga chidamliroq; tekshirish deterministik bilan bir xil.
     pub fn sign_hedged(&self, message: &[u8], rnd: &[u8; 32]) -> HybridSignature {
-        use ed25519_dalek::Signer as _;
-        let ed = self.ed.sign(message).to_bytes();
-        // M' = 0 || |ctx| || ctx || M (FIPS 204 Algorithm 2, 23-qator).
-        let prefix = [0u8, ML_DSA_CONTEXT.len() as u8];
-        let ml = self
-            .ml
-            .expanded_key()
-            .sign_internal(
-                &[&prefix, ML_DSA_CONTEXT, message],
-                &ml_dsa::B32::from(*rnd),
-            )
-            .encode();
-        HybridSignature {
-            ed,
-            ml: ml.to_vec(),
-        }
+        self.sign_with(message, ML_DSA_CONTEXT, Some(rnd))
     }
 
     /// Ikkala imzo. ML-DSA deterministik variantda (`rnd` = 0) — test vektorlari takrorlanadigan
     /// bo'lishi uchun. Ishlab chiqarishda [`Self::sign_hedged`] ishlatiladi.
     pub fn sign(&self, message: &[u8]) -> HybridSignature {
+        self.sign_with(message, ML_DSA_CONTEXT, None)
+    }
+
+    /// Ixtiyoriy FIPS 204 kontekst satri bilan imzo (`rnd = None` — deterministik variant).
+    /// Turli maqsadlar (checkpoint, kalit almashtirish isboti) turli kontekst va domen oladi.
+    pub fn sign_with(&self, message: &[u8], ctx: &[u8], rnd: Option<&[u8; 32]>) -> HybridSignature {
         use ed25519_dalek::Signer as _;
+        assert!(ctx.len() <= 255, "FIPS 204 konteksti 255 baytdan oshmaydi");
         let ed = self.ed.sign(message).to_bytes();
+        // M' = 0 || |ctx| || ctx || M (FIPS 204 Algorithm 2, 23-qator).
+        let prefix = [0u8, ctx.len() as u8];
+        let rnd = rnd.copied().unwrap_or([0; 32]);
         let ml = self
             .ml
             .expanded_key()
-            .sign_deterministic(message, ML_DSA_CONTEXT)
-            .expect("kontekst 255 baytdan qisqa")
+            .sign_internal(&[&prefix, ctx, message], &ml_dsa::B32::from(rnd))
             .encode();
         HybridSignature {
             ed,
@@ -161,6 +155,11 @@ impl PublicKeys {
     /// Gibrid AND: ikkala imzo ham haqiqiy bo'lishi shart. Ed25519 qat'iy rejimda
     /// (kanonik S, kichik tartibli kalitlar rad etiladi).
     pub fn verify(&self, message: &[u8], ed_sig: &[u8], ml_sig: &[u8]) -> bool {
+        self.verify_with(message, ML_DSA_CONTEXT, ed_sig, ml_sig)
+    }
+
+    /// [`Self::verify`], lekin berilgan FIPS 204 kontekst satri bilan.
+    pub fn verify_with(&self, message: &[u8], ctx: &[u8], ed_sig: &[u8], ml_sig: &[u8]) -> bool {
         let ed_ok = <[u8; ED25519_SIG_LEN]>::try_from(ed_sig).is_ok_and(|s| {
             self.ed
                 .verify_strict(message, &ed25519_dalek::Signature::from_bytes(&s))
@@ -169,7 +168,7 @@ impl PublicKeys {
         let ml_ok = EncodedSignature::<MlDsa65>::try_from(ml_sig)
             .ok()
             .and_then(|enc| ml_dsa::Signature::<MlDsa65>::decode(&enc))
-            .is_some_and(|s| self.ml.verify_with_context(message, ML_DSA_CONTEXT, &s));
+            .is_some_and(|s| self.ml.verify_with_context(message, ctx, &s));
         ed_ok && ml_ok
     }
 }

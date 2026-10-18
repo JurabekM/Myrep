@@ -20,12 +20,14 @@ use std::time::{Duration, Instant};
 
 use serde_json::{Map, Value, json};
 use tamga_core::keys::SigningKeys;
+use tamga_core::rotation;
 use tamga_policy::{Engine, Facts, Taint, Verdict};
 use tamga_sensor::{Observation, Sensor};
 use tamga_store::home::{AskRoute, Config, Mode, default_log_id, pipe_name};
 use tamga_store::logfile::LogFile;
+use tamga_store::secrets::SecretStore;
 use tamga_store::vault::Vault;
-use tamga_store::{Home, keystore, now_ts, secrets, spool};
+use tamga_store::{Home, keystore, now_ts, random, secrets, spool};
 use tokio::sync::{mpsc, oneshot};
 
 type Reply = oneshot::Sender<Value>;
@@ -91,6 +93,12 @@ struct State {
     file_dedupe: HashMap<(String, &'static str), Instant>,
     /// `shutdown` bajarilgan: yakuniy checkpoint ikki marta yozilmaydi.
     stopped: bool,
+    /// Maxfiy kalitlar ombori (kalit almashtirish uchun).
+    store: Box<dyn SecretStore>,
+    /// Langar (birinchi) kalit identifikatori — `public-key.json`.
+    anchor_id: String,
+    /// Jurnalga yozilgan, lekin hali eski kalit checkpoint'i bilan tasdiqlanmagan almashtirish.
+    pending_rotation: Option<(u64, SigningKeys)>,
 }
 
 fn preview(tool_input: &Value) -> String {
@@ -127,6 +135,7 @@ impl State {
                 Err(e) => json!({"ok": false, "error": e}),
             },
             Some("pending") => self.pending_list(),
+            Some("rotate") => self.rotate(req),
             Some("decide") => self.decide(req),
             Some("policies") => json!({
                 "ok": true,
@@ -149,6 +158,7 @@ impl State {
             "records": self.log.len(),
             "checkpointed": self.log.len() - self.log.uncheckpointed(),
             "key": self.key_id,
+            "anchor": self.anchor_id,
             "home": self.home.root().display().to_string(),
             "pid": std::process::id(),
             "mode": if self.config.mode == Mode::Strict { "strict" } else { "dev" },
@@ -422,8 +432,86 @@ impl State {
         self.last_checkpoint = Instant::now();
         if let Ok(Some(size)) = &r {
             log_line(&self.home, &format!("checkpoint: {size} yozuv"));
+            // Eski kalit almashtirish yozuvini qamradi — endi yangi kalit faol (spec §7.5).
+            if self
+                .pending_rotation
+                .as_ref()
+                .is_some_and(|(seq, _)| size > seq)
+            {
+                let (_, next) = self.pending_rotation.take().expect("tekshirildi");
+                self.activate(next);
+            }
         }
         r
+    }
+
+    /// Yangi kalitni xotirada darhol faollashtiradi; omborga ko'chirish xato bersa ham —
+    /// keyingi checkpoint'lar baribir yangi kalit bilan bo'lishi shart. Ombor qayta ishga
+    /// tushishda tiklanadi (`open_state`).
+    fn activate(&mut self, next: SigningKeys) {
+        let from = std::mem::replace(&mut self.key_id, next.public().key_id());
+        self.keys = next;
+        match keystore::promote_next(self.store.as_ref()) {
+            Ok(()) => log_line(
+                &self.home,
+                &format!("kalit almashtirildi: {from} -> {}", self.key_id),
+            ),
+            Err(e) => log_line(
+                &self.home,
+                &format!(
+                    "kalit {} faol, lekin omborga ko'chirilmadi: {e}",
+                    self.key_id
+                ),
+            ),
+        }
+    }
+
+    /// `tamga key rotate`: yozuv → eski kalit bilan checkpoint → yangi kalit (spec §7.5).
+    fn rotate(&mut self, req: &Value) -> Value {
+        let reason = req
+            .get("reason")
+            .and_then(Value::as_str)
+            .unwrap_or("scheduled");
+        if !rotation::REASONS.contains(&reason) {
+            return json!({"ok": false, "error": format!("sabab {} dan biri bo'lsin", rotation::REASONS.join(", "))});
+        }
+        if self.pending_rotation.is_some() {
+            return json!({"ok": false, "error": "oldingi almashtirish hali tasdiqlanmagan"});
+        }
+        let next = match keystore::stage_next(self.store.as_ref()) {
+            Ok(k) => k,
+            Err(e) => return json!({"ok": false, "error": e.to_string()}),
+        };
+        let (from, to, seq) = (self.key_id.clone(), next.public().key_id(), self.log.len());
+        let rnd: [u8; 32] = random();
+        let body = rotation::body(
+            self.log.log_id(),
+            seq,
+            &self.keys.public(),
+            &next,
+            reason,
+            Some(&rnd),
+        );
+        if let Err(e) = self.log.append(&now_ts(), "tamga", rotation::EVENT, body) {
+            let _ = keystore::discard_next(self.store.as_ref());
+            return json!({"ok": false, "error": e.to_string()});
+        }
+        log_line(
+            &self.home,
+            &format!("kalit almashtirish #{seq} ({reason}): {from} -> {to}"),
+        );
+        self.pending_rotation = Some((seq, next));
+        match self.checkpoint() {
+            Ok(_) if self.pending_rotation.is_none() => {
+                json!({"ok": true, "seq": seq, "from": from, "to": to, "reason": reason})
+            }
+            Ok(_) => {
+                json!({"ok": false, "error": "checkpoint yozilmadi — keyingisida yakunlanadi"})
+            }
+            Err(e) => {
+                json!({"ok": false, "error": format!("yozuv #{seq} bor, checkpoint xatosi: {e} — keyingisida yakunlanadi")})
+            }
+        }
     }
 
     /// Sessiya holatini (taint + ishtirokchilar soni) diskka, sessiya vault kaliti bilan shifrlab yozadi.
@@ -653,8 +741,9 @@ fn open_state(
     home.ensure().map_err(|e| e.to_string())?;
     let config = home.config();
     let store = secrets::default_store(&home).map_err(|e| e.to_string())?;
-    let (keys, created) =
+    let (mut keys, created) =
         keystore::load_or_create(store.as_ref(), &home).map_err(|e| e.to_string())?;
+    let anchor_id = keystore::anchor(&home).map_err(|e| e.to_string())?.key_id();
     let master = keystore::vault_master(store.as_ref()).map_err(|e| e.to_string())?;
     let log_id = default_log_id();
     let (log, report) = LogFile::open(
@@ -664,7 +753,45 @@ fn open_state(
         config.witness_dir.clone(),
     )
     .map_err(|e| e.to_string())?;
+    // Kalit almashtirish yiqilish bilan uzilgan bo'lsa — davom ettiriladi yoki bekor qilinadi.
+    let checkpointed = log.checkpointed();
+    let mut pending_rotation = None;
+    if let Some(next) = keystore::staged_next(store.as_ref()).map_err(|e| e.to_string())? {
+        let next_id = next.public().key_id();
+        match report.rotations.iter().rev().find(|(_, to)| *to == next_id) {
+            Some(&(seq, _)) if checkpointed > seq => {
+                keystore::promote_next(store.as_ref()).map_err(|e| e.to_string())?;
+                keys = next;
+                log_line(
+                    &home,
+                    &format!("uzilgan almashtirish #{seq} yakunlandi: kalit {next_id}"),
+                );
+            }
+            Some(&(seq, _)) => {
+                log_line(
+                    &home,
+                    &format!("almashtirish #{seq} eski kalit checkpoint'ini kutmoqda"),
+                );
+                pending_rotation = Some((seq, next));
+            }
+            None => {
+                keystore::discard_next(store.as_ref()).map_err(|e| e.to_string())?;
+                log_line(&home, "jurnalga yozilmagan almashtirish bekor qilindi");
+            }
+        }
+    }
+    // Ombordagi kalit jurnal kutgan faol kalit bo'lishi shart, aks holda checkpoint'lar tekshiruvdan o'tmaydi.
+    let expected = report
+        .rotations
+        .iter()
+        .rfind(|(seq, _)| *seq < checkpointed)
+        .map_or(anchor_id.clone(), |(_, k)| k.clone());
     let key_id = keys.public().key_id();
+    if key_id != expected {
+        return Err(format!(
+            "ombordagi imzo kaliti {key_id} jurnaldagi faol kalit {expected} emas — to'g'ri zaxirani `tamga key restore` bilan tiklang"
+        ));
+    }
     let (policy, policy_error) = match Engine::load(&home.root().join("policies")) {
         Ok(e) => (e, None),
         Err(e) => {
@@ -736,8 +863,14 @@ fn open_state(
         corr: observe::Correlator::new(profile),
         file_dedupe: HashMap::new(),
         stopped: false,
+        store,
+        anchor_id,
+        pending_rotation,
     };
     state.restore();
+    if state.pending_rotation.is_some() {
+        let _ = state.checkpoint();
+    }
     Ok((state, observations))
 }
 

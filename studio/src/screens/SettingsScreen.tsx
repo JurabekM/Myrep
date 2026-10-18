@@ -31,6 +31,13 @@ export function SettingsScreen({ status }: { status: Status | null }) {
     5000,
   );
   const [msg, setMsg] = useState<string | null>(null);
+  const [rotateArm, setRotateArm] = useState<string | null>(null);
+  const [keyMsg, setKeyMsg] = useState<string | null>(null);
+  const rotate = async (reason: string) => {
+    setRotateArm(null);
+    const r = await call<{ ok: boolean; error?: string; from?: string; to?: string; seq?: number }>("rotate_key", { reason });
+    setKeyMsg(r.ok ? `Almashtirildi (yozuv #${r.seq}): ${r.from} → ${r.to}. Yangi zaxira oling: tamga key backup --out <fayl>` : (r.error ?? "xato"));
+  };
   const integrate = async (action: "install" | "uninstall") => {
     const r = await call<{ ok: boolean; error?: string; changed?: number }>("integrate", { action });
     setMsg(r.ok ? (action === "install" ? "Ulandi. Yangi Claude Code sessiyalari TAMGA orqali yoziladi." : `Ajratildi: ${r.changed} ta hook olib tashlandi.`) : (r.error ?? "xato"));
@@ -58,6 +65,42 @@ export function SettingsScreen({ status }: { status: Status | null }) {
           {!integ?.hook && <span className="dim">tamga-hook.exe topilmadi (o'rnatilgan nusxada bo'ladi)</span>}
         </div>
         {msg && <p className="verdict-note" style={{ marginTop: 8 }}>{msg}</p>}
+      </section>
+      <section>
+        <h3>Imzo kalitlari</h3>
+        <p className="dim">
+          Langar kalit auditorga bir marta beriladi. Almashtirish jurnalga yoziladi va eski kalit bilan imzolanadi — auditor zanjirni
+          shu langardan tekshiradi. Zaxira: <span className="mono">tamga key backup --out &lt;fayl&gt;</span> (parol bilan shifrlangan).
+        </p>
+        <div className="kv">
+          <span className="label">Langar</span>
+          <span className="mono">{status?.anchor ?? "—"}</span>
+          <span className="label">Faol kalit</span>
+          <span className="mono">{status?.key ?? "—"}</span>
+        </div>
+        <div className="actions-row" style={{ marginTop: 10 }}>
+          {rotateArm ? (
+            <>
+              <button className="btn primary" onClick={() => void rotate(rotateArm)}>
+                {rotateArm === "compromise" ? "Ha, kalit buzilgan — almashtir" : "Ha, almashtir"}
+              </button>
+              <button className="btn" onClick={() => setRotateArm(null)}>
+                Bekor qilish
+              </button>
+              <span className="dim">Eski kalit yo'q qilinadi.</span>
+            </>
+          ) : (
+            <>
+              <button className="btn" disabled={!status?.key} onClick={() => setRotateArm("scheduled")}>
+                Kalitni almashtirish
+              </button>
+              <button className="btn" disabled={!status?.key} onClick={() => setRotateArm("compromise")}>
+                Kalit buzilgan
+              </button>
+            </>
+          )}
+        </div>
+        {keyMsg && <p className="verdict-note" style={{ marginTop: 8 }}>{keyMsg}</p>}
       </section>
       <section>
         <h3>Daemon ishlamasa</h3>

@@ -144,5 +144,23 @@ class Tamper(unittest.TestCase):
         self.assertGreater(checked, 5000)
 
 
+
+class Rotation(unittest.TestCase):
+    """spec §7.5: kalit almashtirish — Rust bilan aynan bir xil natija."""
+
+    def test_rotation_cases(self):
+        v = load("rotation.json")
+        for case in v["cases"]:
+            log = "".join(l + "\n" for l in case["log"])
+            cps = "".join(l + "\n" for l in case["checkpoints"])
+            with self.subTest(case["name"]):
+                if case["expect"].get("ok"):
+                    rep = verify_all(log, cps, PK)
+                    self.assertEqual(rep.keys, case["expect"]["keys"])
+                else:
+                    with self.assertRaises(VerifyError) as cm:
+                        verify_all(log, cps, PK)
+                    self.assertEqual({"code": cm.exception.code, "index": cm.exception.index}, case["expect"])
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,6 +10,8 @@ const SERVICE: &str = "tamga";
 pub trait SecretStore: Send + Sync {
     fn get(&self, name: &str) -> Result<Option<Vec<u8>>>;
     fn set(&self, name: &str, secret: &[u8]) -> Result<()>;
+    /// Yozuvni o'chiradi; yo'q bo'lsa — xato emas.
+    fn delete(&self, name: &str) -> Result<()>;
 }
 
 /// Tanlov: `TAMGA_SECRETS=file` bo'lsa — fayl ombori (`<home>/secrets`, sinov uchun),
@@ -71,6 +73,13 @@ impl SecretStore for CredentialStore {
             .set_secret(secret)
             .map_err(|e| StoreError::Secret(e.to_string()))
     }
+
+    fn delete(&self, name: &str) -> Result<()> {
+        match Self::entry(name)?.delete_credential() {
+            Ok(()) | Err(keyring_core::Error::NoEntry) => Ok(()),
+            Err(e) => Err(StoreError::Secret(e.to_string())),
+        }
+    }
 }
 
 /// Fayl ombori — himoyasiz, faqat sinov va CI uchun.
@@ -98,6 +107,15 @@ impl SecretStore for FileStore {
     fn set(&self, name: &str, secret: &[u8]) -> Result<()> {
         let p = self.dir.join(name);
         std::fs::write(&p, secret).map_err(io_err(&p))
+    }
+
+    fn delete(&self, name: &str) -> Result<()> {
+        let p = self.dir.join(name);
+        match std::fs::remove_file(&p) {
+            Ok(()) => Ok(()),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(e) => Err(io_err(&p)(e)),
+        }
     }
 }
 

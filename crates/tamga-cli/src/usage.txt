@@ -11,4 +11,8 @@ foydalanish:
   tamga uninstall claude-code (--project <dir> | --user)
   tamga show <seq>                            yozuv va uning payload'larini vault'dan ochish
   tamga export [--out f.zip] [--session id]... [--payloads]   auditor uchun dalil to'plami
+  tamga key show                              langar kalit, almashtirishlar, faol kalit
+  tamga key rotate [--reason scheduled|compromise|restore]   imzo kalitini almashtirish
+  tamga key backup --out <fayl>               kalitlarni parol bilan shifrlangan zaxiraga
+  tamga key restore <fayl> [--force]          zaxiradan tiklash (daemon to'xtatilgan bo'lsin)
   tamga shred <session>                       sessiya payload'larini unutish

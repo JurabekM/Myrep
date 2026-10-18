@@ -151,6 +151,7 @@ pub fn verify(home: &Home) -> Value {
     match verify_all(&log, &cps, &pk) {
         Ok(r) => json!({
             "ok": true, "log": log_id, "records": r.log.len(), "key": pk.key_id(),
+            "keys": r.keys, "key_warnings": r.key_warnings,
             "checkpoints": checkpoint_list(&cps), "warnings": r.log.warnings,
             "sealed": r.checkpoints.iter().map(|c| c.size).max().unwrap_or(0),
         }),
