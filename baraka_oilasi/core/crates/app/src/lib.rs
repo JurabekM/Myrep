@@ -5,6 +5,7 @@
 //! Kirishdagi summalar string, chiqishdagi pul — `MoneyDto { minor, currency, formatted }`.
 #![deny(clippy::float_arithmetic)]
 
+mod access;
 mod app;
 mod catalog;
 mod ceremony;
@@ -18,6 +19,7 @@ mod kasbkor_close;
 mod kasbkor_growth;
 mod kasbkor_ledger;
 mod kasbkor_profit;
+mod kasbkor_seller;
 mod kasbkor_staff;
 mod kasbkor_stock;
 mod partnership;

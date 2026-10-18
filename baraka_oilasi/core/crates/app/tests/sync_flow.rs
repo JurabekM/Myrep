@@ -120,7 +120,12 @@ fn incremental(app: &App, peer: &str) -> ExportFileDto {
 
 /// Ulash: desktop kod va fayl beradi, telefon shu bilan xonadonga qo'shiladi.
 fn pair(desktop: &App, phone_dev: &Device) -> App {
-    let offer = desktop.pairing_offer().unwrap();
+    let offer = desktop
+        .pairing_offer(PairingInput {
+            role: None,
+            space_id: None,
+        })
+        .unwrap();
     let phone = phone_dev.app();
     phone
         .join_household(
@@ -362,7 +367,12 @@ fn pairing_round_trip_is_one_to_one() {
     let dir = tempfile::tempdir().unwrap();
     let (desktop_dev, desktop, uy, p) = rich_desktop(dir.path());
     let household = desktop.household().unwrap().id;
-    let offer = desktop.pairing_offer().unwrap();
+    let offer = desktop
+        .pairing_offer(PairingInput {
+            role: None,
+            space_id: None,
+        })
+        .unwrap();
     assert!(offer.qr_svg.contains("<svg"));
     assert_eq!(offer.code.len(), 39);
 

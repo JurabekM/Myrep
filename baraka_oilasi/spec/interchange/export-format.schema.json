@@ -129,6 +129,26 @@
         "rowCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "audience": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "spaceId"
+          ],
+          "description": "Rolli qurilma uchun kamaytirilgan fayl (ADR-0003): yangi qurilma rolini shundan biladi.",
+          "properties": {
+            "role": {
+              "enum": [
+                "SELLER",
+                "ACCOUNTANT"
+              ]
+            },
+            "spaceId": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -240,7 +260,9 @@
             "kk_fund_uses",
             "kk_scale_checks",
             "kk_zakat_calcs",
-            "kk_stock_counts"
+            "kk_stock_counts",
+            "device_access",
+            "kk_shifts"
           ]
         },
         "data": {
@@ -672,6 +694,18 @@
       },
       {
         "name": "kk_stock_counts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "device_access",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_shifts",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []

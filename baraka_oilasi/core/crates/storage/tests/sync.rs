@@ -56,6 +56,7 @@ fn registry_covers_every_table() {
         "sync_base",
         "sync_imports",
         "device_settings",
+        "local_device_role",
     ];
     let synced: Vec<String> = local
         .into_iter()

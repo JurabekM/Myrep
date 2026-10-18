@@ -1996,6 +1996,68 @@ pub async fn kk_stock_counts(
     state.session.app()?.kk_stock_counts(&space_id)
 }
 
+// ---- K8: ko'p qurilma va rollar (ADR-0003) ----
+
+#[tauri::command]
+#[specta::specta]
+pub async fn device_role(state: State<'_, Desktop>) -> R<DeviceRoleDto> {
+    state.session.app()?.device_role()
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn revoke_device(state: State<'_, Desktop>, device_id: String) -> R<Vec<DeviceDto>> {
+    state.session.app()?.revoke_device(&device_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_catalog(state: State<'_, Desktop>, space_id: String) -> R<Vec<KkCatalogItemDto>> {
+    state.session.app()?.kk_catalog(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_seller_sale(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkSellerSaleInput,
+) -> R<KkSellerDayDto> {
+    state.session.app()?.kk_seller_sale(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_seller_day(state: State<'_, Desktop>, space_id: String) -> R<KkSellerDayDto> {
+    state.session.app()?.kk_seller_day(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_shift_draft(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkShiftInput,
+) -> R<KkShiftDto> {
+    state.session.app()?.kk_shift_draft(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_close_shift(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkShiftInput,
+) -> R<KkShiftDto> {
+    state.session.app()?.kk_close_shift(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_shifts(state: State<'_, Desktop>, space_id: String) -> R<Vec<KkShiftRecordDto>> {
+    state.session.app()?.kk_shifts(&space_id)
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
@@ -2090,8 +2152,12 @@ pub async fn apply_baraka(
 /// Yangi qurilmani ulash: kod bilan shifrlangan fayl saqlanadi, QR va kod ko'rsatiladi.
 #[tauri::command]
 #[specta::specta]
-pub async fn pairing_offer(handle: AppHandle, state: State<'_, Desktop>) -> R<Option<PairingView>> {
-    let offer = state.session.app()?.pairing_offer()?;
+pub async fn pairing_offer(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    input: PairingInput,
+) -> R<Option<PairingView>> {
+    let offer = state.session.app()?.pairing_offer(input)?;
     Ok(
         save_baraka(&handle, &offer.bytes, &offer.file_name)?.map(|file_name| PairingView {
             code: offer.code,

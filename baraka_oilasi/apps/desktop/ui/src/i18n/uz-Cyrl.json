@@ -2208,5 +2208,12 @@
   "kk.measure.countedNamed": "{name}: саналган ({unit})",
   "kk.measure.reason": "Изоҳ (фарқлар учун)",
   "kk.measure.inventorySave": "Инвентаризатсияни ёзиш",
-  "kk.measure.countLine": "{date}: {counted} та товар саналди, {changed} тасида фарқ; қиймат {before} → {after}"
+  "kk.measure.countLine": "{date}: {counted} та товар саналди, {changed} тасида фарқ; қиймат {before} → {after}",
+  "error.ROLE_FORBIDDEN": "Бу қурилма роли бунга рухсат бермайди",
+  "error.ROLE_READ_ONLY": "Ҳисобчи қурилмаси — фақат ўқиш учун",
+  "error.DEVICE_REVOKED": "Бу қурилма бекор қилинган — у билан алмашиш йўқ",
+  "error.SHIFT_CLOSED": "Бугунги смена ёпилган",
+  "error.DATE_NOT_TODAY": "Сотувчи фақат бугунги сана билан ёзади",
+  "error.HANDOVER_ABOVE_COUNTED": "Топширилган сумма саналгандан кўп бўлмайди",
+  "error.LINKED_REJECTED": "Боғлиқ ёзув қабул қилинмади"
 }

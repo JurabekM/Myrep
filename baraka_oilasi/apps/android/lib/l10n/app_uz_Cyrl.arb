@@ -2209,5 +2209,12 @@
   "kk_measure_countedNamed": "{name}: саналган ({unit})",
   "kk_measure_reason": "Изоҳ (фарқлар учун)",
   "kk_measure_inventorySave": "Инвентаризатсияни ёзиш",
-  "kk_measure_countLine": "{date}: {counted} та товар саналди, {changed} тасида фарқ; қиймат {before} → {after}"
+  "kk_measure_countLine": "{date}: {counted} та товар саналди, {changed} тасида фарқ; қиймат {before} → {after}",
+  "error_ROLE_FORBIDDEN": "Бу қурилма роли бунга рухсат бермайди",
+  "error_ROLE_READ_ONLY": "Ҳисобчи қурилмаси — фақат ўқиш учун",
+  "error_DEVICE_REVOKED": "Бу қурилма бекор қилинган — у билан алмашиш йўқ",
+  "error_SHIFT_CLOSED": "Бугунги смена ёпилган",
+  "error_DATE_NOT_TODAY": "Сотувчи фақат бугунги сана билан ёзади",
+  "error_HANDOVER_ABOVE_COUNTED": "Топширилган сумма саналгандан кўп бўлмайди",
+  "error_LINKED_REJECTED": "Боғлиқ ёзув қабул қилинмади"
 }

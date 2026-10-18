@@ -1411,6 +1411,52 @@ impl BarakaCore {
         self.session.app()?.kk_stock_counts(&space_id)
     }
 
+    // ---- K8: ko'p qurilma va rollar (ADR-0003) ----
+
+    pub fn device_role(&self) -> Result<DeviceRoleDto, AppError> {
+        self.session.app()?.device_role()
+    }
+
+    pub fn revoke_device(&self, device_id: String) -> Result<Vec<DeviceDto>, AppError> {
+        self.session.app()?.revoke_device(&device_id)
+    }
+
+    pub fn kk_catalog(&self, space_id: String) -> Result<Vec<KkCatalogItemDto>, AppError> {
+        self.session.app()?.kk_catalog(&space_id)
+    }
+
+    pub fn kk_seller_sale(
+        &self,
+        space_id: String,
+        input: KkSellerSaleInput,
+    ) -> Result<KkSellerDayDto, AppError> {
+        self.session.app()?.kk_seller_sale(&space_id, input)
+    }
+
+    pub fn kk_seller_day(&self, space_id: String) -> Result<KkSellerDayDto, AppError> {
+        self.session.app()?.kk_seller_day(&space_id)
+    }
+
+    pub fn kk_shift_draft(
+        &self,
+        space_id: String,
+        input: KkShiftInput,
+    ) -> Result<KkShiftDto, AppError> {
+        self.session.app()?.kk_shift_draft(&space_id, input)
+    }
+
+    pub fn kk_close_shift(
+        &self,
+        space_id: String,
+        input: KkShiftInput,
+    ) -> Result<KkShiftDto, AppError> {
+        self.session.app()?.kk_close_shift(&space_id, input)
+    }
+
+    pub fn kk_shifts(&self, space_id: String) -> Result<Vec<KkShiftRecordDto>, AppError> {
+        self.session.app()?.kk_shifts(&space_id)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {
@@ -1452,9 +1498,10 @@ impl BarakaCore {
         self.session.app()?.apply_baraka(&file, &password, choices)
     }
 
-    /// Yangi qurilmani ulash: kod, QR (SVG) va shu kod bilan shifrlangan fayl.
-    pub fn pairing_offer(&self) -> Result<PairingOfferDto, AppError> {
-        self.session.app()?.pairing_offer()
+    /// Yangi qurilmani ulash: kod, QR (SVG) va shu kod bilan shifrlangan fayl. Rol bilan (K8) —
+    /// sotuvchi yoki hisobchi qurilmasi uchun kamaytirilgan.
+    pub fn pairing_offer(&self, input: PairingInput) -> Result<PairingOfferDto, AppError> {
+        self.session.app()?.pairing_offer(input)
     }
 
     /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.

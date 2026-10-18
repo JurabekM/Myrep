@@ -501,7 +501,7 @@ function Pairing() {
   const { t } = useTranslation();
   const [view, setView] = useState<PairingView | null>(null);
   const offer = useMutation({
-    mutationFn: () => call(commands.pairingOffer()),
+    mutationFn: () => call(commands.pairingOffer({ role: null, spaceId: null })),
     onSuccess: (v) => v && setView(v),
   });
   return (

@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
 use baraka_security::DbKey;
@@ -24,6 +25,7 @@ const MIGRATIONS_SLICE: &[M<'_>] = &[
     M::up(include_str!("../migrations/014_kasbkor_stock.sql")),
     M::up(include_str!("../migrations/015_kasbkor_staff_supply.sql")),
     M::up(include_str!("../migrations/016_kasbkor_growth.sql")),
+    M::up(include_str!("../migrations/017_device_roles.sql")),
 ];
 const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
@@ -36,6 +38,8 @@ pub struct Meta {
 
 pub struct Database {
     conn: Mutex<Connection>,
+    /// Hisobchi qurilmasi: oddiy yozuvlar rad etiladi, faqat sinxronlash importi (`write_sync`).
+    read_only: AtomicBool,
 }
 
 fn apply_key(conn: &Connection, key: &DbKey) -> Result<(), StorageError> {
@@ -58,6 +62,7 @@ fn prepare(mut conn: Connection, key: &DbKey, wal: bool) -> Result<Database, Sto
     MIGRATIONS.to_latest(&mut conn)?;
     Ok(Database {
         conn: Mutex::new(conn),
+        read_only: AtomicBool::new(false),
     })
 }
 
@@ -83,8 +88,27 @@ impl Database {
         f(&conn)
     }
 
+    pub fn set_read_only(&self, on: bool) {
+        self.read_only.store(on, Ordering::SeqCst);
+    }
+
+    pub fn is_read_only(&self) -> bool {
+        self.read_only.load(Ordering::SeqCst)
+    }
+
     /// Barcha yozuvlar tranzaksiyada: `f` xato qaytarsa, hech narsa saqlanmaydi.
     pub fn write<T>(
+        &self,
+        f: impl FnOnce(&Transaction<'_>) -> Result<T, StorageError>,
+    ) -> Result<T, StorageError> {
+        if self.is_read_only() {
+            return Err(StorageError::ReadOnly);
+        }
+        self.write_sync(f)
+    }
+
+    /// Faqat o'qish rejimida ham ishlaydi: sinxronlash importi va qurilmaning o'z sozlamalari.
+    pub fn write_sync<T>(
         &self,
         f: impl FnOnce(&Transaction<'_>) -> Result<T, StorageError>,
     ) -> Result<T, StorageError> {
@@ -112,7 +136,7 @@ mod tests {
         let key = DbKey::from_bytes([1; 32]);
         {
             let db = Database::open(&path, &key).unwrap();
-            assert_eq!(db.schema_version().unwrap(), 16);
+            assert_eq!(db.schema_version().unwrap(), 17);
         }
         let wrong = DbKey::from_bytes([2; 32]);
         assert!(matches!(

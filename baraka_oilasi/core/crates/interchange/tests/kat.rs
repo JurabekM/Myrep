@@ -36,6 +36,7 @@ fn meta(v: &Value) -> Meta {
         },
         exported_at: s(v, "exportedAt"),
         row_count: 0,
+        audience: None,
     }
 }
 

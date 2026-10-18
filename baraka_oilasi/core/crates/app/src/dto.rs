@@ -1906,6 +1906,10 @@ pub struct DeviceDto {
     pub is_this: bool,
     pub last_import_at: Option<String>,
     pub last_export_at: Option<String>,
+    /// K8: `SELLER` yoki `ACCOUNTANT` (rolsiz — egasi va oila qurilmasi).
+    pub role: Option<String>,
+    pub space_id: Option<String>,
+    pub revoked: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1939,6 +1943,18 @@ pub struct ImportItemDto {
     pub table: String,
     pub row_id: String,
     pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct RejectedItemDto {
+    pub key: String,
+    pub table: String,
+    pub row_id: String,
+    pub label: String,
+    /// `ROLE_FORBIDDEN`, `PERIOD_CLOSED`, `CASH_DAY_CLOSED`, `INSUFFICIENT_STOCK`, `EXCEEDS_OUTSTANDING`, `LINKED_REJECTED`.
+    pub reason: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1992,6 +2008,10 @@ pub struct ImportPreviewDto {
     pub kept_local: u32,
     pub journal_appended: u32,
     pub protected: Vec<ImportItemDto>,
+    /// K8: rolli qurilmaning qabul qilinmagan yozuvlari (sababi bilan).
+    pub rejected: Vec<RejectedItemDto>,
+    /// K8: rolli qurilma faylidagi egasining o'z yozuvlari — e'tiborsiz.
+    pub ignored: u32,
     pub conflicts: Vec<ConflictDto>,
     pub forks: Vec<ForkDto>,
     /// Ayrilish yo'q — import qilish mumkin (ziddiyatlar tanlangandan keyin).
@@ -2017,6 +2037,8 @@ pub struct ImportResultDto {
     pub conflicts_remote: u32,
     pub protected: u32,
     pub journal_appended: u32,
+    pub rejected: u32,
+    pub ignored: u32,
 }
 
 /// Yangi qurilmani ulash (8.5): QR va qo'lda kiritiladigan kod, shu kod bilan shifrlangan fayl.
@@ -3270,4 +3292,130 @@ pub struct KkStockCountDto {
     /// Sanalgan va farqi bor tovarlar soni.
     pub counted: u32,
     pub changed: u32,
+}
+
+// ---- K8: ko'p qurilma va rollar (ADR-0003) ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceRoleDto {
+    /// `OWNER`, `SELLER`, `ACCOUNTANT`.
+    pub role: String,
+    pub space_id: Option<String>,
+    pub space_name: Option<String>,
+}
+
+/// Ulash taklifi: rolsiz (oila qurilmasi, to'liq) yoki rol va Kasb-kor makoni bilan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PairingInput {
+    pub role: Option<String>,
+    pub space_id: Option<String>,
+}
+
+/// Sotuvchi uchun tovar katalogi: tannarxsiz.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkCatalogItemDto {
+    pub id: String,
+    pub name: String,
+    pub unit: String,
+    pub sale_price: Option<MoneyDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSellerSaleInput {
+    /// Katalogdan tovar (bo'lsa — miqdor majburiy, summa bo'sh bo'lsa sotuv narxi × miqdor).
+    pub item_id: Option<String>,
+    pub qty: Option<String>,
+    pub amount: Option<String>,
+    /// `CASH` yoki `CARD`.
+    pub channel: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSellerSaleDto {
+    pub id: String,
+    /// `SALE` yoki `CREDIT_PAYMENT`.
+    pub kind: String,
+    pub label: String,
+    pub qty: Option<String>,
+    pub amount: MoneyDto,
+    pub channel: String,
+}
+
+/// Sotuvchining bugungi kuni: faqat o'z yozuvlari.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkSellerDayDto {
+    pub day: String,
+    pub sales: Vec<KkSellerSaleDto>,
+    pub cash: MoneyDto,
+    pub card: MoneyDto,
+    pub shift_closed: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkShiftInput {
+    /// Faqat birinchi smenada (oldingi smena bo'lmasa): kassadagi boshlang'ich naqd.
+    pub opening: Option<String>,
+    pub counted: Option<String>,
+    pub handed_over: Option<String>,
+    /// Farq bo'lsa majburiy (kassa yopish sabablari).
+    pub reason: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkShiftDto {
+    pub day: String,
+    pub opening: MoneyDto,
+    /// Ochilish oldingi smenadan olingan (kiritish shart emas).
+    pub opening_known: bool,
+    pub cash_sales: MoneyDto,
+    pub credit_payments: MoneyDto,
+    pub card_in: MoneyDto,
+    pub expected: MoneyDto,
+    pub counted: Option<MoneyDto>,
+    pub difference: Option<MoneyDto>,
+    pub status: Option<String>,
+    pub handed_over: Option<MoneyDto>,
+    pub left: Option<MoneyDto>,
+    pub suggest_search: bool,
+    pub closed: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkShiftRecordDto {
+    pub id: String,
+    pub device_id: String,
+    pub device_name: String,
+    pub day: String,
+    pub opening: MoneyDto,
+    pub cash_sales: MoneyDto,
+    pub credit_payments: MoneyDto,
+    pub card_in: MoneyDto,
+    pub expected: MoneyDto,
+    pub counted: MoneyDto,
+    pub difference: MoneyDto,
+    pub status: String,
+    pub reason: Option<String>,
+    pub handed_over: MoneyDto,
+    pub left: MoneyDto,
+    pub note: Option<String>,
 }

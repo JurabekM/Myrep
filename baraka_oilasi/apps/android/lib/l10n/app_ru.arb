@@ -2209,5 +2209,12 @@
   "kk_measure_countedNamed": "{name}: пересчитано ({unit})",
   "kk_measure_reason": "Комментарий (для расхождений)",
   "kk_measure_inventorySave": "Записать инвентаризацию",
-  "kk_measure_countLine": "{date}: пересчитано товаров — {counted}, с расхождением — {changed}; стоимость {before} → {after}"
+  "kk_measure_countLine": "{date}: пересчитано товаров — {counted}, с расхождением — {changed}; стоимость {before} → {after}",
+  "error_ROLE_FORBIDDEN": "Роль этого устройства не позволяет это действие",
+  "error_ROLE_READ_ONLY": "Устройство бухгалтера — только для просмотра",
+  "error_DEVICE_REVOKED": "Это устройство отключено — обмен с ним невозможен",
+  "error_SHIFT_CLOSED": "Сегодняшняя смена закрыта",
+  "error_DATE_NOT_TODAY": "Продавец записывает только сегодняшним числом",
+  "error_HANDOVER_ABOVE_COUNTED": "Переданная сумма не может быть больше пересчитанной",
+  "error_LINKED_REJECTED": "Связанная запись не принята"
 }

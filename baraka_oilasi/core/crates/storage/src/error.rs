@@ -27,6 +27,9 @@ pub enum StorageError {
     /// Import: noma'lum jadval yoki ustun (boshqa sxema versiyasi).
     #[error("INTERCHANGE_SCHEMA_MISMATCH")]
     SchemaMismatch,
+    /// Hisobchi qurilmasi — faqat o'qish (ADR-0003).
+    #[error("ROLE_READ_ONLY")]
+    ReadOnly,
 }
 
 impl StorageError {
@@ -43,6 +46,7 @@ impl StorageError {
             Self::CorruptRow => "CORRUPT_ROW",
             Self::LockPoisoned => "LOCK_POISONED",
             Self::SchemaMismatch => "INTERCHANGE_SCHEMA_MISMATCH",
+            Self::ReadOnly => "ROLE_READ_ONLY",
         }
     }
 }
@@ -67,6 +71,7 @@ impl From<rusqlite::Error> for StorageError {
             || msg.contains("KK_STAFF_EVENT_IMMUTABLE")
             || msg.contains("KK_SUPPLY_IMMUTABLE")
             || msg.contains("KK_GROWTH_IMMUTABLE")
+            || msg.contains("KK_SHIFT_IMMUTABLE")
         {
             Self::EvidenceImmutable
         } else if msg.contains("file is not a database") {

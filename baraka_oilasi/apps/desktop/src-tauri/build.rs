@@ -175,6 +175,14 @@ const COMMANDS: &[&str] = &[
     "kk_zakat_history",
     "kk_inventory",
     "kk_stock_counts",
+    "device_role",
+    "revoke_device",
+    "kk_catalog",
+    "kk_seller_sale",
+    "kk_seller_day",
+    "kk_shift_draft",
+    "kk_close_shift",
+    "kk_shifts",
 ];
 
 fn main() {

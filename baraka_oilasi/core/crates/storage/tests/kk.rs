@@ -4,7 +4,7 @@
 use baraka_security::DbKey;
 use baraka_storage::repo::household::{self, HouseholdRow, SpaceRow};
 use baraka_storage::repo::{incomes, kk};
-use baraka_storage::{Database, Meta, SpaceScope};
+use baraka_storage::{Database, Meta, SpaceScope, StorageError};
 
 fn meta() -> Meta {
     Meta {
@@ -696,4 +696,94 @@ fn growth_records_are_checked_and_immutable() {
         let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
         assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
     }
+}
+
+#[test]
+fn shifts_and_device_roles_are_checked() {
+    use baraka_storage::repo::roles;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    db.write(|tx| household::insert_device(tx, "h", "Do'kon telefoni", "android", &m))
+        .unwrap();
+    let shift = roles::KkShiftRow {
+        id: "s1".into(),
+        device_id: "dev-1".into(),
+        day: "2026-11-20".into(),
+        currency: "UZS".into(),
+        opening_minor: 20_000_000,
+        cash_sales_minor: 3_000_000,
+        credit_payments_minor: 22_000_000,
+        card_in_minor: 5_000_000,
+        expected_minor: 45_000_000,
+        counted_minor: 44_000_000,
+        difference_minor: -1_000_000,
+        reason: Some("CHANGE_ERROR".into()),
+        handed_over_minor: 30_000_000,
+        note: None,
+        closed_at: m.now.clone(),
+    };
+    // Kutilgan = ochilish + naqd tushum + naqd nasiya to'lovlari; topshirilgan ≤ sanalgan; farq — sabab bilan.
+    for bad in [
+        roles::KkShiftRow {
+            expected_minor: 46_000_000,
+            difference_minor: -2_000_000,
+            ..shift.clone()
+        },
+        roles::KkShiftRow {
+            handed_over_minor: 45_000_000,
+            ..shift.clone()
+        },
+        roles::KkShiftRow {
+            reason: None,
+            ..shift.clone()
+        },
+    ] {
+        assert!(db
+            .write(|tx| roles::insert_shift(tx, &s, &bad, &m))
+            .is_err());
+    }
+    db.write(|tx| roles::insert_shift(tx, &s, &shift, &m))
+        .unwrap();
+    // Qurilmada kuniga bitta, o'zgarmas.
+    let again = roles::KkShiftRow {
+        id: "s2".into(),
+        ..shift.clone()
+    };
+    assert!(db
+        .write(|tx| roles::insert_shift(tx, &s, &again, &m))
+        .is_err());
+    let upd = db.write(|tx| {
+        tx.execute("UPDATE kk_shifts SET counted_minor = 45000000", [])?;
+        Ok(())
+    });
+    assert!(matches!(upd, Err(StorageError::EvidenceImmutable)));
+    // Rol: faqat SELLER / ACCOUNTANT, kalit — qurilma.
+    let access = roles::DeviceAccessRow {
+        device_id: "dev-1".into(),
+        role: "OWNER".into(),
+        space_id: "kk".into(),
+        revoked_at: None,
+    };
+    assert!(db
+        .write(|tx| roles::insert_access(tx, "h", &access, &m))
+        .is_err());
+    let seller = roles::DeviceAccessRow {
+        role: "SELLER".into(),
+        ..access
+    };
+    db.write(|tx| roles::insert_access(tx, "h", &seller, &m))
+        .unwrap();
+    assert!(db
+        .write(|tx| roles::revoke_access(tx, "h", "dev-1", &m))
+        .unwrap());
+    assert!(!db
+        .write(|tx| roles::revoke_access(tx, "h", "dev-1", &m))
+        .unwrap());
+    // Hisobchi qurilmasi: oddiy yozuv yo'q, sinxronlash importi bor.
+    db.set_read_only(true);
+    assert!(matches!(
+        db.write(|tx| roles::insert_shift(tx, &s, &again, &m)),
+        Err(StorageError::ReadOnly)
+    ));
+    assert!(db.write_sync(|_| Ok(())).is_ok());
 }

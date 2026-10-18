@@ -59,9 +59,14 @@ impl App {
         }
         let rhythm = parse_rhythm(input.income_rhythm.as_deref())?;
         let meta = self.meta();
-        self.db.write(|tx| {
+        // Rolli qurilmada (K8) faqat shu qurilmaning tili; xonadon sozlamalari — egasida.
+        let owner = self.access(&ctx)?.role == crate::access::Role::Owner;
+        self.db.write_sync(|tx| {
             household::set_device_locale(tx, input.locale.as_deref(), &meta)?;
-            household::set_prefs(tx, &ctx.household_id, rhythm, input.debts_declared, &meta)
+            if owner {
+                household::set_prefs(tx, &ctx.household_id, rhythm, input.debts_declared, &meta)?;
+            }
+            Ok(())
         })?;
         // Til o'zgarsa, barcha formatlangan summalar qayta so'raladi.
         self.publish(None, &crate::sync::ALL_TOPICS);

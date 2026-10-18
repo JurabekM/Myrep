@@ -68,14 +68,17 @@ impl App {
     }
 
     fn with_db(db: Database, device_id: &str, clock: Arc<dyn Clock>, ids: Arc<dyn IdGen>) -> Self {
-        Self {
+        let app = Self {
             db,
             clock,
             ids,
             device_id: device_id.to_string(),
             events: EventBus::default(),
             export_kdf: std::sync::Mutex::new(baraka_interchange::container::Kdf::STANDARD),
-        }
+        };
+        // Hisobchi qurilmasi — faqat o'qish (K8).
+        app.refresh_role();
+        app
     }
 
     /// `.baraka` eksport kaliti uchun Argon2id parametrlari (`keys.bin` dagi bilan bir xil).
@@ -131,8 +134,17 @@ impl App {
         })
     }
 
-    /// Makon shu xonadonga tegishli ekanini tekshiradi va `SpaceScope` qaytaradi.
+    /// Makon shu xonadonga tegishli ekanini tekshiradi va `SpaceScope` qaytaradi. Sotuvchi
+    /// qurilmasida umumiy use-case'lar yopiq — unga faqat `kk_scope_seller` orqali (K8).
     pub(crate) fn scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
+        if self.access(ctx)?.role == crate::access::Role::Seller {
+            return Err(AppError::new("ROLE_FORBIDDEN"));
+        }
+        self.space_scope(ctx, space_id)
+    }
+
+    /// Rolni tekshirmasdan (rol tekshiruvi chaqiruvchida).
+    pub(crate) fn space_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
         let spaces = self
             .db
             .read(|c| household::list_spaces(c, &ctx.household_id))?;

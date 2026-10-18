@@ -16,6 +16,7 @@ pub mod kk_staff;
 pub mod kk_stock;
 pub mod partnerships;
 pub mod recovery;
+pub mod roles;
 pub mod rules;
 pub mod sync;
 pub mod vault;

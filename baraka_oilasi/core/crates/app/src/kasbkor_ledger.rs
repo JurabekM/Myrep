@@ -307,6 +307,36 @@ impl App {
         Ok(out)
     }
 
+    /// Saqlanmagan nasiya hodisalari bilan barcha nasiyalar holati to'g'rimi (K8: sotuvchi importi).
+    pub(crate) fn kk_credit_check_with(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        extra: &[kk_ledger::KkCreditEventRow],
+    ) -> Result<(), AppError> {
+        let today = self.today(ctx);
+        let mut events = self.db.read(|c| kk_ledger::credit_events(c, scope))?;
+        events.extend(extra.iter().cloned());
+        let sales = self.db.read(|c| kk_ledger::credit_sales(c, scope))?;
+        if extra
+            .iter()
+            .any(|e| !sales.iter().any(|s| s.id == e.sale_id))
+        {
+            return Err(AppError::on("NOT_FOUND", "saleId"));
+        }
+        for sale in sales.iter().filter(|s| s.currency == ctx.currency.code()) {
+            let mut mine: Vec<_> = events
+                .iter()
+                .filter(|e| e.sale_id == sale.id)
+                .cloned()
+                .collect();
+            mine.sort_by(|a, b| a.occurred_on.cmp(&b.occurred_on));
+            self.credit_terms(ctx, sale)?
+                .state(&to_events(ctx, &mine)?, today)?;
+        }
+        Ok(())
+    }
+
     fn credit_terms(
         &self,
         ctx: &Ctx,
@@ -408,7 +438,7 @@ impl App {
     /// Nasiya daftari: ochiq nasiyalar (eng ko'p kechikkani birinchi), keyin yopilganlar; yosh guruhlari.
     pub fn kk_credit_book(&self, space_id: &str) -> Result<KkCreditBookDto, AppError> {
         let ctx = self.ctx()?;
-        let scope = self.kk_scope(&ctx, space_id)?;
+        let scope = self.kk_scope_seller(&ctx, space_id)?;
         let today = self.today(&ctx);
         let week = ymd(week_start(today, WEEK_ANCHOR));
         let customers = self.db.read(|c| kk_ledger::customers(c, &scope))?;
@@ -598,12 +628,14 @@ impl App {
         input: KkCreditPaymentInput,
     ) -> Result<KkCreditBookDto, AppError> {
         let ctx = self.ctx()?;
-        let scope = self.kk_scope(&ctx, space_id)?;
+        let scope = self.kk_scope_seller(&ctx, space_id)?;
         let amount = positive(&ctx, &input.amount, "amount")?;
         let w = wallet(&input.wallet, "wallet")?;
         let on = self.date_or_today(&ctx, input.paid_on.as_deref(), "paidOn")?;
+        self.kk_ensure_seller_today(&ctx, on, "paidOn")?;
         self.kk_ensure_open(&scope, &ymd(on), "paidOn")?;
         self.kk_ensure_cash_open(&scope, &ymd(on), w.as_str() == "CASH")?;
+        self.kk_ensure_shift_open(&scope, &ymd(on))?;
         let (sale, _) =
             self.credit_check(&ctx, &scope, sale_id, CreditEvent::Payment { on, amount })?;
         let name = self

@@ -31,7 +31,7 @@
    - `ACCOUNTANT` qurilmasida barcha yozuvlar `ROLE_READ_ONLY` (sinxronlash importidan tashqari).
    - Rolli qurilma yangi qurilma ulay olmaydi.
 8. **Rolni bekor qilish.** Egasi qurilmani bekor qiladi: unga eksport qilinmaydi va undan import qilinmaydi (`DEVICE_REVOKED`). Qurilmadagi mavjud ma'lumotni masofadan o'chirib bo'lmaydi — bu ochiq aytiladi.
-9. **Transport** — o'zgarmaydi: U14 dagi shifrlangan `.baraka` fayl (USB, messenjer, LAN papka). Relay server — R1, alohida ADR bilan. Jurnal va hisob yurituvchi qurilma qoidasi (6.6) saqlanadi: rolli qurilmaga jurnal yuborilmaydi.
+9. **Transport** — o'zgarmaydi: U14 dagi shifrlangan `.baraka` fayl (USB, messenjer, LAN papka). Relay server — R1, alohida ADR bilan. Jurnal va hisob yurituvchi qurilma qoidasi (6.6) saqlanadi: sotuvchiga jurnal yuborilmaydi, hisobchi uni faqat o'qiydi (rolli qurilmadan jurnal yozuvi qabul qilinmaydi).
 
 ## Ko'rib chiqilgan muqobillar
 | Variant | Nega tanlanmadi |

@@ -3564,5 +3564,12 @@
       "counted": {},
       "date": {}
     }
-  }
+  },
+  "error_ROLE_FORBIDDEN": "Bu qurilma roli bunga ruxsat bermaydi",
+  "error_ROLE_READ_ONLY": "Hisobchi qurilmasi — faqat oʻqish uchun",
+  "error_DEVICE_REVOKED": "Bu qurilma bekor qilingan — u bilan almashish yoʻq",
+  "error_SHIFT_CLOSED": "Bugungi smena yopilgan",
+  "error_DATE_NOT_TODAY": "Sotuvchi faqat bugungi sana bilan yozadi",
+  "error_HANDOVER_ABOVE_COUNTED": "Topshirilgan summa sanalgandan koʻp boʻlmaydi",
+  "error_LINKED_REJECTED": "Bogʻliq yozuv qabul qilinmadi"
 }

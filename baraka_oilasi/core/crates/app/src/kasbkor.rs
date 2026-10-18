@@ -11,6 +11,7 @@ use baraka_storage::repo::{expenses, household, incomes, kk, kk_ledger};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 
+use crate::access::Role;
 use crate::app::Ctx;
 use crate::events::Topic;
 use crate::receipt::ymd;
@@ -59,8 +60,34 @@ pub(crate) struct Book {
 }
 
 impl App {
+    /// Kasb-kor makoni. Sotuvchi qurilmasida egasi bo'limlari yopiq (ADR-0003): `ROLE_FORBIDDEN`.
     pub(crate) fn kk_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
-        let scope = self.scope(ctx, space_id)?;
+        self.kk_scope_for(ctx, space_id, false)
+    }
+
+    /// Sotuvchiga ham ochiq use-case'lar (sotuv, nasiya to'lovi, smena).
+    pub(crate) fn kk_scope_seller(
+        &self,
+        ctx: &Ctx,
+        space_id: &str,
+    ) -> Result<SpaceScope, AppError> {
+        self.kk_scope_for(ctx, space_id, true)
+    }
+
+    fn kk_scope_for(
+        &self,
+        ctx: &Ctx,
+        space_id: &str,
+        seller_ok: bool,
+    ) -> Result<SpaceScope, AppError> {
+        let access = self.access(ctx)?;
+        if access.role == Role::Seller && !seller_ok {
+            return Err(AppError::new("ROLE_FORBIDDEN"));
+        }
+        if access.space_id.as_deref().is_some_and(|s| s != space_id) {
+            return Err(AppError::on("NOT_FOUND", "spaceId"));
+        }
+        let scope = self.space_scope(ctx, space_id)?;
         let kind = self
             .db
             .read(|c| household::list_spaces(c, &ctx.household_id))?

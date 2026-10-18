@@ -134,12 +134,12 @@ export const commands = {
 	inspectBaraka: (path: string, password: string) => typedError<ImportPreviewDto, AppError>(__TAURI_INVOKE("inspect_baraka", { path, password })),
 	applyBaraka: (path: string, password: string, choices: ConflictChoiceInput[]) => typedError<ImportResultDto, AppError>(__TAURI_INVOKE("apply_baraka", { path, password, choices })),
 	/**  Yangi qurilmani ulash: kod bilan shifrlangan fayl saqlanadi, QR va kod ko'rsatiladi. */
-	pairingOffer: () => typedError<{
+	pairingOffer: (input: PairingInput) => typedError<{
 	code: string,
 	qrSvg: string,
 	householdName: string,
 	fileName: string,
-} | null, AppError>(__TAURI_INVOKE("pairing_offer")),
+} | null, AppError>(__TAURI_INVOKE("pairing_offer", { input })),
 	/**  O'rnatishda: mavjud xonadonga qo'shilish (ulash kodi) yoki zaxira nusxadan tiklash (parol). */
 	joinHousehold: (path: string, pin: string, input: JoinInput) => typedError<SetupResult, AppError>(__TAURI_INVOKE("join_household", { path, pin, input })),
 	settings: () => typedError<SettingsDto, AppError>(__TAURI_INVOKE("settings")),
@@ -211,6 +211,14 @@ export const commands = {
 	kkZakatHistory: (spaceId: string) => typedError<KkZakatCalcDto[], AppError>(__TAURI_INVOKE("kk_zakat_history", { spaceId })),
 	kkInventory: (spaceId: string, input: KkInventoryInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_inventory", { spaceId, input })),
 	kkStockCounts: (spaceId: string) => typedError<KkStockCountDto[], AppError>(__TAURI_INVOKE("kk_stock_counts", { spaceId })),
+	deviceRole: () => typedError<DeviceRoleDto, AppError>(__TAURI_INVOKE("device_role")),
+	revokeDevice: (deviceId: string) => typedError<DeviceDto[], AppError>(__TAURI_INVOKE("revoke_device", { deviceId })),
+	kkCatalog: (spaceId: string) => typedError<KkCatalogItemDto[], AppError>(__TAURI_INVOKE("kk_catalog", { spaceId })),
+	kkSellerSale: (spaceId: string, input: KkSellerSaleInput) => typedError<KkSellerDayDto, AppError>(__TAURI_INVOKE("kk_seller_sale", { spaceId, input })),
+	kkSellerDay: (spaceId: string) => typedError<KkSellerDayDto, AppError>(__TAURI_INVOKE("kk_seller_day", { spaceId })),
+	kkShiftDraft: (spaceId: string, input: KkShiftInput) => typedError<KkShiftDto, AppError>(__TAURI_INVOKE("kk_shift_draft", { spaceId, input })),
+	kkCloseShift: (spaceId: string, input: KkShiftInput) => typedError<KkShiftDto, AppError>(__TAURI_INVOKE("kk_close_shift", { spaceId, input })),
+	kkShifts: (spaceId: string) => typedError<KkShiftRecordDto[], AppError>(__TAURI_INVOKE("kk_shifts", { spaceId })),
 };
 
 /** Events */
@@ -659,6 +667,17 @@ export type DeviceDto = {
 	isThis: boolean,
 	lastImportAt: string | null,
 	lastExportAt: string | null,
+	/**  K8: `SELLER` yoki `ACCOUNTANT` (rolsiz — egasi va oila qurilmasi). */
+	role: string | null,
+	spaceId: string | null,
+	revoked: boolean,
+};
+
+export type DeviceRoleDto = {
+	/**  `OWNER`, `SELLER`, `ACCOUNTANT`. */
+	role: string,
+	spaceId: string | null,
+	spaceName: string | null,
 };
 
 export type DiscussionAnswerDto = {
@@ -902,6 +921,10 @@ export type ImportPreviewDto = {
 	keptLocal: number,
 	journalAppended: number,
 	protected: ImportItemDto[],
+	/**  K8: rolli qurilmaning qabul qilinmagan yozuvlari (sababi bilan). */
+	rejected: RejectedItemDto[],
+	/**  K8: rolli qurilma faylidagi egasining o'z yozuvlari — e'tiborsiz. */
+	ignored: number,
 	conflicts: ConflictDto[],
 	forks: ForkDto[],
 	/**  Ayrilish yo'q — import qilish mumkin (ziddiyatlar tanlangandan keyin). */
@@ -915,6 +938,8 @@ export type ImportResultDto = {
 	conflictsRemote: number,
 	protected: number,
 	journalAppended: number,
+	rejected: number,
+	ignored: number,
 };
 
 export type IncidentDto = {
@@ -1090,6 +1115,14 @@ export type KkCashDraftDto = {
 	/**  4 hafta ichida 3+ kamomad — «xato qidirish» taklifi. */
 	suggestSearch: boolean,
 	lastClosed: string | null,
+};
+
+/**  Sotuvchi uchun tovar katalogi: tannarxsiz. */
+export type KkCatalogItemDto = {
+	id: string,
+	name: string,
+	unit: string,
+	salePrice: MoneyDto | null,
 };
 
 /**
@@ -1746,6 +1779,82 @@ export type KkScaleDto = {
 	due: boolean,
 };
 
+/**  Sotuvchining bugungi kuni: faqat o'z yozuvlari. */
+export type KkSellerDayDto = {
+	day: string,
+	sales: KkSellerSaleDto[],
+	cash: MoneyDto,
+	card: MoneyDto,
+	shiftClosed: boolean,
+};
+
+export type KkSellerSaleDto = {
+	id: string,
+	/**  `SALE` yoki `CREDIT_PAYMENT`. */
+	kind: string,
+	label: string,
+	qty: string | null,
+	amount: MoneyDto,
+	channel: string,
+};
+
+export type KkSellerSaleInput = {
+	/**  Katalogdan tovar (bo'lsa — miqdor majburiy, summa bo'sh bo'lsa sotuv narxi × miqdor). */
+	itemId: string | null,
+	qty: string | null,
+	amount: string | null,
+	/**  `CASH` yoki `CARD`. */
+	channel: string,
+	note: string | null,
+};
+
+export type KkShiftDto = {
+	day: string,
+	opening: MoneyDto,
+	/**  Ochilish oldingi smenadan olingan (kiritish shart emas). */
+	openingKnown: boolean,
+	cashSales: MoneyDto,
+	creditPayments: MoneyDto,
+	cardIn: MoneyDto,
+	expected: MoneyDto,
+	counted: MoneyDto | null,
+	difference: MoneyDto | null,
+	status: string | null,
+	handedOver: MoneyDto | null,
+	left: MoneyDto | null,
+	suggestSearch: boolean,
+	closed: boolean,
+};
+
+export type KkShiftInput = {
+	/**  Faqat birinchi smenada (oldingi smena bo'lmasa): kassadagi boshlang'ich naqd. */
+	opening: string | null,
+	counted: string | null,
+	handedOver: string | null,
+	/**  Farq bo'lsa majburiy (kassa yopish sabablari). */
+	reason: string | null,
+	note: string | null,
+};
+
+export type KkShiftRecordDto = {
+	id: string,
+	deviceId: string,
+	deviceName: string,
+	day: string,
+	opening: MoneyDto,
+	cashSales: MoneyDto,
+	creditPayments: MoneyDto,
+	cardIn: MoneyDto,
+	expected: MoneyDto,
+	counted: MoneyDto,
+	difference: MoneyDto,
+	status: string,
+	reason: string | null,
+	handedOver: MoneyDto,
+	left: MoneyDto,
+	note: string | null,
+};
+
 export type KkSignInput = {
 	/**  Qog'oz nusxa imzolangan sana (bo'lmasa — bugun). */
 	signedOn: string | null,
@@ -2230,6 +2339,12 @@ export type OpenPeriodDto = {
 	result: MoneyDto,
 };
 
+/**  Ulash taklifi: rolsiz (oila qurilmasi, to'liq) yoki rol va Kasb-kor makoni bilan. */
+export type PairingInput = {
+	role: string | null,
+	spaceId: string | null,
+};
+
 /**  Ulash oynasi uchun: QR, qo'lda kiritiladigan kod va saqlangan fayl nomi. */
 export type PairingView = {
 	code: string,
@@ -2477,6 +2592,15 @@ export type ReceivableDto = {
 	plan: PlanLineDto[],
 	payments: RepaymentDto[],
 	agreementId: string | null,
+};
+
+export type RejectedItemDto = {
+	key: string,
+	table: string,
+	rowId: string,
+	label: string,
+	/**  `ROLE_FORBIDDEN`, `PERIOD_CLOSED`, `CASH_DAY_CLOSED`, `INSUFFICIENT_STOCK`, `EXCEEDS_OUTSTANDING`, `LINKED_REJECTED`. */
+	reason: string,
 };
 
 /**  Eslatma: `REVIEW` (ochiq hisob ko'rigi) yoki `RENEWAL` (yillik yangilash). */

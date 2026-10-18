@@ -300,7 +300,7 @@ impl Session {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::NewMemberInput;
+    use crate::{NewMemberInput, PairingInput};
     use baraka_domain_common::{FixedClock, UuidV7Gen};
 
     fn input() -> BootstrapInput {
@@ -382,7 +382,14 @@ mod tests {
         let first = session(&dir.path().join("desktop"), clock.clone());
         let p1 = PlatformSecret::generate().unwrap();
         let h = first.setup(&p1, "112233", input()).unwrap().household;
-        let offer = first.app().unwrap().pairing_offer().unwrap();
+        let offer = first
+            .app()
+            .unwrap()
+            .pairing_offer(PairingInput {
+                role: None,
+                space_id: None,
+            })
+            .unwrap();
 
         let second_dir = dir.path().join("phone");
         let second = session(&second_dir, clock.clone());

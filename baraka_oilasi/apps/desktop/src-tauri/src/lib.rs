@@ -204,6 +204,14 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_zakat_history,
             commands::kk_inventory,
             commands::kk_stock_counts,
+            commands::device_role,
+            commands::revoke_device,
+            commands::kk_catalog,
+            commands::kk_seller_sale,
+            commands::kk_seller_day,
+            commands::kk_shift_draft,
+            commands::kk_close_shift,
+            commands::kk_shifts,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

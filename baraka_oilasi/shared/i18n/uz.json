@@ -2208,5 +2208,12 @@
   "kk.measure.countedNamed": "{name}: sanalgan ({unit})",
   "kk.measure.reason": "Izoh (farqlar uchun)",
   "kk.measure.inventorySave": "Inventarizatsiyani yozish",
-  "kk.measure.countLine": "{date}: {counted} ta tovar sanaldi, {changed} tasida farq; qiymat {before} → {after}"
+  "kk.measure.countLine": "{date}: {counted} ta tovar sanaldi, {changed} tasida farq; qiymat {before} → {after}",
+  "error.ROLE_FORBIDDEN": "Bu qurilma roli bunga ruxsat bermaydi",
+  "error.ROLE_READ_ONLY": "Hisobchi qurilmasi — faqat oʻqish uchun",
+  "error.DEVICE_REVOKED": "Bu qurilma bekor qilingan — u bilan almashish yoʻq",
+  "error.SHIFT_CLOSED": "Bugungi smena yopilgan",
+  "error.DATE_NOT_TODAY": "Sotuvchi faqat bugungi sana bilan yozadi",
+  "error.HANDOVER_ABOVE_COUNTED": "Topshirilgan summa sanalgandan koʻp boʻlmaydi",
+  "error.LINKED_REJECTED": "Bogʻliq yozuv qabul qilinmadi"
 }

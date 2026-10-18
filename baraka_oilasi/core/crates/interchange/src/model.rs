@@ -42,6 +42,17 @@ pub struct Meta {
     pub mode: Mode,
     pub exported_at: String,
     pub row_count: u64,
+    /// Rolli qurilma uchun ulash fayli (ADR-0003): yangi qurilma rolini shundan biladi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audience: Option<Audience>,
+}
+
+/// Fayl kim uchun kamaytirilgan: rol va bog'langan Kasb-kor makoni.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Audience {
+    pub role: String,
+    pub space_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -145,6 +156,7 @@ mod tests {
             mode: Mode::Full,
             exported_at: "2026-10-16T09:00:00.000Z".into(),
             row_count: 0,
+            audience: None,
         }
     }
 
