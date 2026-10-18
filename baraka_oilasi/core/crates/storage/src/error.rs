@@ -72,6 +72,7 @@ impl From<rusqlite::Error> for StorageError {
             || msg.contains("KK_SUPPLY_IMMUTABLE")
             || msg.contains("KK_GROWTH_IMMUTABLE")
             || msg.contains("KK_SHIFT_IMMUTABLE")
+            || msg.contains("MF_RATE_IMMUTABLE")
         {
             Self::EvidenceImmutable
         } else if msg.contains("file is not a database") {

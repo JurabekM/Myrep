@@ -219,6 +219,12 @@ export const commands = {
 	kkShiftDraft: (spaceId: string, input: KkShiftInput) => typedError<KkShiftDto, AppError>(__TAURI_INVOKE("kk_shift_draft", { spaceId, input })),
 	kkCloseShift: (spaceId: string, input: KkShiftInput) => typedError<KkShiftDto, AppError>(__TAURI_INVOKE("kk_close_shift", { spaceId, input })),
 	kkShifts: (spaceId: string) => typedError<KkShiftRecordDto[], AppError>(__TAURI_INVOKE("kk_shifts", { spaceId })),
+	mfOverview: (spaceId: string, date: string | null) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_overview", { spaceId, date })),
+	mfSetSettings: (spaceId: string, input: MfSettingsInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_set_settings", { spaceId, input })),
+	mfSetRate: (spaceId: string, input: MfRateInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_set_rate", { spaceId, input })),
+	mfRecordIncome: (spaceId: string, input: MfIncomeInput) => typedError<MfIncomeRecordedDto, AppError>(__TAURI_INVOKE("mf_record_income", { spaceId, input })),
+	mfRecordExpense: (spaceId: string, input: MfExpenseInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_record_expense", { spaceId, input })),
+	mfRecordMove: (spaceId: string, input: MfMoveInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_record_move", { spaceId, input })),
 };
 
 /** Events */
@@ -2129,6 +2135,151 @@ export type MemberDto = {
 	role: string,
 };
 
+export type MfEntryDto = {
+	id: string,
+	/**  `SALARY`, `OTHER_INCOME`, `EXPENSE` yoki `mf_moves` turi. */
+	kind: string,
+	amount: MoneyDto,
+	fee: MoneyDto | null,
+	received: MoneyDto | null,
+	channel: string | null,
+	categoryId: string | null,
+	occurredOn: string,
+	note: string | null,
+};
+
+export type MfExpenseInput = {
+	amount: string,
+	categoryId: string,
+	channel: string,
+	occurredOn: string | null,
+	note: string | null,
+};
+
+export type MfFundDto = {
+	/**  Ish valyutasida. */
+	balance: MoneyDto,
+	avgMonthly: MoneyDto | null,
+	/**  Prognozga olingan to'liq oylar soni (0 — prognoz yo'q). */
+	monthsUsed: number,
+	monthsUntilReturn: number | null,
+	/**  Quyidagilar — uy valyutasida, kurs bilan (kurs yo'q bo'lsa `null`). */
+	balanceHome: MoneyDto | null,
+	avgMonthlyHome: MoneyDto | null,
+	target: MoneyDto | null,
+	remainingHome: MoneyDto | null,
+	progressBp: number | null,
+	progressPercent: string | null,
+	monthsToTarget: number | null,
+	projectedHome: MoneyDto | null,
+	shortfallAtReturn: MoneyDto | null,
+	/**  `REACHED`, `ON_TRACK`, `BEHIND`, `NO_SAVING`, `NO_TARGET`, `NO_RATE`. */
+	status: string,
+};
+
+export type MfIncomeInput = {
+	/**  `SALARY` yoki `OTHER_INCOME`. */
+	kind: string,
+	amount: string,
+	channel: string,
+	occurredOn: string | null,
+	note: string | null,
+};
+
+export type MfIncomeRecordedDto = {
+	overview: MfOverviewDto,
+	/**  O'z ulushi taklifi: shu daromaddan qaytish jamg'armasiga. */
+	suggestedShare: MoneyDto,
+};
+
+export type MfMonthDto = {
+	income: MoneyDto,
+	expenses: MoneyDto,
+	sentHome: MoneyDto,
+	fees: MoneyDto,
+	fundIn: MoneyDto,
+	fundOut: MoneyDto,
+	fundNet: MoneyDto,
+	pocket: MoneyDto,
+	shareTarget: MoneyDto,
+	shareGap: MoneyDto,
+	/**  Daromaddan ulushlar (`"31,15 %"`); daromad bo'lmasa `null`. */
+	expensesPercent: string | null,
+	sentPercent: string | null,
+	fundPercent: string | null,
+	/**  `POCKET_NEGATIVE`, `NO_SHARE`, `SHARE_BELOW_TARGET`, `FUND_WITHDRAWN`. */
+	warnings: string[],
+};
+
+export type MfMoveInput = {
+	/**  `OPENING`, `SENT_HOME`, `FUND_IN`, `FUND_OUT`, `FUND_OPENING`. */
+	kind: string,
+	amount: string,
+	/**  `SENT_HOME`: komissiya (ish valyutasida). */
+	fee: string | null,
+	/**  `SENT_HOME`: uyda olingan summa (uy valyutasida). */
+	received: string | null,
+	occurredOn: string | null,
+	/**  `FUND_OUT` uchun majburiy (sabab). */
+	note: string | null,
+};
+
+export type MfOverviewDto = {
+	/**  Sozlanmagan bo'lsa `null` — UI sozlash ustasini ochadi. */
+	settings: MfSettingsDto | null,
+	/**  Sozlash ustasidagi standart o'z ulushi (OQ-MF1). */
+	defaultSharePercent: string,
+	periodStart: string,
+	periodEnd: string,
+	month: MfMonthDto | null,
+	fund: MfFundDto | null,
+	rate: MfRateDto | null,
+	entries: MfEntryDto[],
+};
+
+export type MfRateDto = {
+	fromCurrency: string,
+	toCurrency: string,
+	/**  `"9,1"`. */
+	rate: string,
+	rateOn: string,
+	source: string | null,
+	/**  30 kundan eski. */
+	stale: boolean,
+	/**  Ish valyutasi uy valyutasi bilan bir xil (kurs 1). */
+	identity: boolean,
+};
+
+export type MfRateInput = {
+	/**  1 ish valyutasi necha uy valyutasi: `"9,1"`. */
+	rate: string,
+	rateOn: string | null,
+	source: string | null,
+};
+
+export type MfSettingsDto = {
+	country: string | null,
+	workCurrency: string,
+	homeCurrency: string,
+	shareBp: number,
+	sharePercent: string,
+	target: MoneyDto | null,
+	returnOn: string | null,
+	/**  Ish valyutasidagi yozuvlar bor — valyutani o'zgartirib bo'lmaydi. */
+	currencyLocked: boolean,
+};
+
+export type MfSettingsInput = {
+	country: string | null,
+	/**  `KRW`, `RUB`, `KZT`, `TRY`, `USD`, `EUR`, `GBP` (yoki uy valyutasi). */
+	workCurrency: string,
+	/**  O'z ulushi foizda: `"20"`, `"12,5"`. */
+	sharePercent: string,
+	/**  Qaytish jamg'armasi maqsadi — uy valyutasida (bo'sh — yo'q). */
+	target: string | null,
+	returnOn: string | null,
+};
+
 export type MoneyDto = {
 	minor: string,
 	currency: string,
@@ -2888,7 +3039,7 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync" | "kasbkor";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync" | "kasbkor" | "musofir";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {

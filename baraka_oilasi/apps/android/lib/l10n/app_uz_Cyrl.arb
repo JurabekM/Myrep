@@ -2297,5 +2297,16 @@
   "sync_table_kk_shifts": "Смена",
   "sync_table_device_access": "Қурилма роли",
   "sync_pairingFor_SELLER": "Файл сотувчи учун камайтирилган: унда фойда, чиқим, маош ва «эгаси олди» йўқ.",
-  "sync_pairingFor_ACCOUNTANT": "Файл ҳисобчи учун: фақат шу бизнес, Уй макони йўқ; қурилма фақат кўради."
+  "sync_pairingFor_ACCOUNTANT": "Файл ҳисобчи учун: фақат шу бизнес, Уй макони йўқ; қурилма фақат кўради.",
+  "error_MF_NOT_CONFIGURED": "Аввал Мусофир маконини созланг: иш валютаси ва ўз улуши",
+  "error_NOT_MUSOFIR_SPACE": "Бу амал фақат Мусофир маконида",
+  "error_WORK_CURRENCY_LOCKED": "Ёзувлар бор — иш валютасини ўзгартириб бўлмайди",
+  "error_RATE_NOT_NEEDED": "Иш валютаси уй валютаси билан бир хил — курс керак эмас",
+  "error_FEE_NEGATIVE": "Комиссия манфий бўлмайди",
+  "error_FIELD_NOT_ALLOWED": "Бу майдон фақат уйга юборишда тўлдирилади",
+  "error_INVALID_CURRENCY": "Валютани танланг",
+  "error_INVALID_TARGET": "Мақсад суммаси нолдан катта бўлсин",
+  "error_CURRENCY_MISMATCH": "Валюталар мос эмас",
+  "error_INVALID_FX_RATE": "Курсни рақам билан киритинг, масалан 9,1",
+  "error_RETURN_FUND_INSUFFICIENT": "Қайтиш жамғармасида бунча пул йўқ"
 }

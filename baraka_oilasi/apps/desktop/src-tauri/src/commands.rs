@@ -2058,6 +2058,68 @@ pub async fn kk_shifts(state: State<'_, Desktop>, space_id: String) -> R<Vec<KkS
     state.session.app()?.kk_shifts(&space_id)
 }
 
+// ---- M1: Musofir makoni ----
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_overview(
+    state: State<'_, Desktop>,
+    space_id: String,
+    date: Option<String>,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_overview(&space_id, date)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_set_settings(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfSettingsInput,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_set_settings(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_set_rate(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfRateInput,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_set_rate(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_record_income(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfIncomeInput,
+) -> R<MfIncomeRecordedDto> {
+    state.session.app()?.mf_record_income(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_record_expense(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfExpenseInput,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_record_expense(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_record_move(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfMoveInput,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_record_move(&space_id, input)
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {

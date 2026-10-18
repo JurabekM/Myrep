@@ -212,6 +212,12 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_shift_draft,
             commands::kk_close_shift,
             commands::kk_shifts,
+            commands::mf_overview,
+            commands::mf_set_settings,
+            commands::mf_set_rate,
+            commands::mf_record_income,
+            commands::mf_record_expense,
+            commands::mf_record_move,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

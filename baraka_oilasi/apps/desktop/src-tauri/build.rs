@@ -183,6 +183,12 @@ const COMMANDS: &[&str] = &[
     "kk_shift_draft",
     "kk_close_shift",
     "kk_shifts",
+    "mf_overview",
+    "mf_set_settings",
+    "mf_set_rate",
+    "mf_record_income",
+    "mf_record_expense",
+    "mf_record_move",
 ];
 
 fn main() {

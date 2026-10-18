@@ -262,7 +262,10 @@
             "kk_zakat_calcs",
             "kk_stock_counts",
             "device_access",
-            "kk_shifts"
+            "kk_shifts",
+            "mf_settings",
+            "mf_rates",
+            "mf_moves"
           ]
         },
         "data": {
@@ -707,6 +710,24 @@
       {
         "name": "kk_shifts",
         "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_rates",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_moves",
+        "mode": "MUTABLE",
         "primaryKey": "id",
         "blobColumns": []
       }

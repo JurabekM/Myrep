@@ -3715,5 +3715,16 @@
   "sync_table_kk_shifts": "Smena",
   "sync_table_device_access": "Qurilma roli",
   "sync_pairingFor_SELLER": "Fayl sotuvchi uchun kamaytirilgan: unda foyda, chiqim, maosh va «egasi oldi» yoʻq.",
-  "sync_pairingFor_ACCOUNTANT": "Fayl hisobchi uchun: faqat shu biznes, Uy makoni yoʻq; qurilma faqat koʻradi."
+  "sync_pairingFor_ACCOUNTANT": "Fayl hisobchi uchun: faqat shu biznes, Uy makoni yoʻq; qurilma faqat koʻradi.",
+  "error_MF_NOT_CONFIGURED": "Avval Musofir makonini sozlang: ish valyutasi va oʻz ulushi",
+  "error_NOT_MUSOFIR_SPACE": "Bu amal faqat Musofir makonida",
+  "error_WORK_CURRENCY_LOCKED": "Yozuvlar bor — ish valyutasini oʻzgartirib boʻlmaydi",
+  "error_RATE_NOT_NEEDED": "Ish valyutasi uy valyutasi bilan bir xil — kurs kerak emas",
+  "error_FEE_NEGATIVE": "Komissiya manfiy boʻlmaydi",
+  "error_FIELD_NOT_ALLOWED": "Bu maydon faqat uyga yuborishda toʻldiriladi",
+  "error_INVALID_CURRENCY": "Valyutani tanlang",
+  "error_INVALID_TARGET": "Maqsad summasi noldan katta boʻlsin",
+  "error_CURRENCY_MISMATCH": "Valyutalar mos emas",
+  "error_INVALID_FX_RATE": "Kursni raqam bilan kiriting, masalan 9,1",
+  "error_RETURN_FUND_INSUFFICIENT": "Qaytish jamgʻarmasida buncha pul yoʻq"
 }

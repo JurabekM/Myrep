@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-set-rate"
+description = "Enables the mf_set_rate command without any pre-configured scope."
+commands.allow = ["mf_set_rate"]
+
+[[permission]]
+identifier = "deny-mf-set-rate"
+description = "Denies the mf_set_rate command without any pre-configured scope."
+commands.deny = ["mf_set_rate"]

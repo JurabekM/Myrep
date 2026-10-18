@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-set-settings"
+description = "Enables the mf_set_settings command without any pre-configured scope."
+commands.allow = ["mf_set_settings"]
+
+[[permission]]
+identifier = "deny-mf-set-settings"
+description = "Denies the mf_set_settings command without any pre-configured scope."
+commands.deny = ["mf_set_settings"]

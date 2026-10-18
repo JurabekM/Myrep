@@ -1457,6 +1457,56 @@ impl BarakaCore {
         self.session.app()?.kk_shifts(&space_id)
     }
 
+    // ---- M1: Musofir makoni ----
+
+    pub fn mf_overview(
+        &self,
+        space_id: String,
+        date: Option<String>,
+    ) -> Result<MfOverviewDto, AppError> {
+        self.session.app()?.mf_overview(&space_id, date)
+    }
+
+    pub fn mf_set_settings(
+        &self,
+        space_id: String,
+        input: MfSettingsInput,
+    ) -> Result<MfOverviewDto, AppError> {
+        self.session.app()?.mf_set_settings(&space_id, input)
+    }
+
+    pub fn mf_set_rate(
+        &self,
+        space_id: String,
+        input: MfRateInput,
+    ) -> Result<MfOverviewDto, AppError> {
+        self.session.app()?.mf_set_rate(&space_id, input)
+    }
+
+    pub fn mf_record_income(
+        &self,
+        space_id: String,
+        input: MfIncomeInput,
+    ) -> Result<MfIncomeRecordedDto, AppError> {
+        self.session.app()?.mf_record_income(&space_id, input)
+    }
+
+    pub fn mf_record_expense(
+        &self,
+        space_id: String,
+        input: MfExpenseInput,
+    ) -> Result<MfOverviewDto, AppError> {
+        self.session.app()?.mf_record_expense(&space_id, input)
+    }
+
+    pub fn mf_record_move(
+        &self,
+        space_id: String,
+        input: MfMoveInput,
+    ) -> Result<MfOverviewDto, AppError> {
+        self.session.app()?.mf_record_move(&space_id, input)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

@@ -112,6 +112,7 @@ dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
  "baraka-domain-kasbkor",
+ "baraka-domain-musofir",
  "baraka-domain-uy",
  "baraka-interchange",
  "baraka-journal",

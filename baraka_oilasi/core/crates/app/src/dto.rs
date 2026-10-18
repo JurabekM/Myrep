@@ -3419,3 +3419,186 @@ pub struct KkShiftRecordDto {
     pub left: MoneyDto,
     pub note: Option<String>,
 }
+
+// ---- M1: Musofir makoni (docs/musofir/SPEC.md 2–4) ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfSettingsInput {
+    pub country: Option<String>,
+    /// `KRW`, `RUB`, `KZT`, `TRY`, `USD`, `EUR`, `GBP` (yoki uy valyutasi).
+    pub work_currency: String,
+    /// O'z ulushi foizda: `"20"`, `"12,5"`.
+    pub share_percent: String,
+    /// Qaytish jamg'armasi maqsadi — uy valyutasida (bo'sh — yo'q).
+    pub target: Option<String>,
+    pub return_on: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfSettingsDto {
+    pub country: Option<String>,
+    pub work_currency: String,
+    pub home_currency: String,
+    pub share_bp: i32,
+    pub share_percent: String,
+    pub target: Option<MoneyDto>,
+    pub return_on: Option<String>,
+    /// Ish valyutasidagi yozuvlar bor — valyutani o'zgartirib bo'lmaydi.
+    pub currency_locked: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfRateInput {
+    /// 1 ish valyutasi necha uy valyutasi: `"9,1"`.
+    pub rate: String,
+    pub rate_on: Option<String>,
+    pub source: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfRateDto {
+    pub from_currency: String,
+    pub to_currency: String,
+    /// `"9,1"`.
+    pub rate: String,
+    pub rate_on: String,
+    pub source: Option<String>,
+    /// 30 kundan eski.
+    pub stale: bool,
+    /// Ish valyutasi uy valyutasi bilan bir xil (kurs 1).
+    pub identity: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfIncomeInput {
+    /// `SALARY` yoki `OTHER_INCOME`.
+    pub kind: String,
+    pub amount: String,
+    pub channel: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfExpenseInput {
+    pub amount: String,
+    pub category_id: String,
+    pub channel: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfMoveInput {
+    /// `OPENING`, `SENT_HOME`, `FUND_IN`, `FUND_OUT`, `FUND_OPENING`.
+    pub kind: String,
+    pub amount: String,
+    /// `SENT_HOME`: komissiya (ish valyutasida).
+    pub fee: Option<String>,
+    /// `SENT_HOME`: uyda olingan summa (uy valyutasida).
+    pub received: Option<String>,
+    pub occurred_on: Option<String>,
+    /// `FUND_OUT` uchun majburiy (sabab).
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfEntryDto {
+    pub id: String,
+    /// `SALARY`, `OTHER_INCOME`, `EXPENSE` yoki `mf_moves` turi.
+    pub kind: String,
+    pub amount: MoneyDto,
+    pub fee: Option<MoneyDto>,
+    pub received: Option<MoneyDto>,
+    pub channel: Option<String>,
+    pub category_id: Option<String>,
+    pub occurred_on: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfMonthDto {
+    pub income: MoneyDto,
+    pub expenses: MoneyDto,
+    pub sent_home: MoneyDto,
+    pub fees: MoneyDto,
+    pub fund_in: MoneyDto,
+    pub fund_out: MoneyDto,
+    pub fund_net: MoneyDto,
+    pub pocket: MoneyDto,
+    pub share_target: MoneyDto,
+    pub share_gap: MoneyDto,
+    /// Daromaddan ulushlar (`"31,15 %"`); daromad bo'lmasa `null`.
+    pub expenses_percent: Option<String>,
+    pub sent_percent: Option<String>,
+    pub fund_percent: Option<String>,
+    /// `POCKET_NEGATIVE`, `NO_SHARE`, `SHARE_BELOW_TARGET`, `FUND_WITHDRAWN`.
+    pub warnings: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfFundDto {
+    /// Ish valyutasida.
+    pub balance: MoneyDto,
+    pub avg_monthly: Option<MoneyDto>,
+    /// Prognozga olingan to'liq oylar soni (0 — prognoz yo'q).
+    pub months_used: u32,
+    pub months_until_return: Option<i32>,
+    /// Quyidagilar — uy valyutasida, kurs bilan (kurs yo'q bo'lsa `null`).
+    pub balance_home: Option<MoneyDto>,
+    pub avg_monthly_home: Option<MoneyDto>,
+    pub target: Option<MoneyDto>,
+    pub remaining_home: Option<MoneyDto>,
+    pub progress_bp: Option<i32>,
+    pub progress_percent: Option<String>,
+    pub months_to_target: Option<i32>,
+    pub projected_home: Option<MoneyDto>,
+    pub shortfall_at_return: Option<MoneyDto>,
+    /// `REACHED`, `ON_TRACK`, `BEHIND`, `NO_SAVING`, `NO_TARGET`, `NO_RATE`.
+    pub status: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfOverviewDto {
+    /// Sozlanmagan bo'lsa `null` — UI sozlash ustasini ochadi.
+    pub settings: Option<MfSettingsDto>,
+    /// Sozlash ustasidagi standart o'z ulushi (OQ-MF1).
+    pub default_share_percent: String,
+    pub period_start: String,
+    pub period_end: String,
+    pub month: Option<MfMonthDto>,
+    pub fund: Option<MfFundDto>,
+    pub rate: Option<MfRateDto>,
+    pub entries: Vec<MfEntryDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfIncomeRecordedDto {
+    pub overview: MfOverviewDto,
+    /// O'z ulushi taklifi: shu daromaddan qaytish jamg'armasiga.
+    pub suggested_share: MoneyDto,
+}

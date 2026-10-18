@@ -189,6 +189,12 @@
     "allow-kk-seller-day",
     "allow-kk-shift-draft",
     "allow-kk-close-shift",
-    "allow-kk-shifts"
+    "allow-kk-shifts",
+    "allow-mf-overview",
+    "allow-mf-set-settings",
+    "allow-mf-set-rate",
+    "allow-mf-record-income",
+    "allow-mf-record-expense",
+    "allow-mf-record-move"
   ]
 }

@@ -314,6 +314,7 @@ dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
  "baraka-domain-kasbkor",
+ "baraka-domain-musofir",
  "baraka-domain-uy",
  "baraka-interchange",
  "baraka-journal",
@@ -363,6 +364,15 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-kasbkor"
+version = "0.1.0"
+dependencies = [
+ "baraka-domain-common",
+ "baraka-money",
+ "chrono",
+]
+
+[[package]]
+name = "baraka-domain-musofir"
 version = "0.1.0"
 dependencies = [
  "baraka-domain-common",
