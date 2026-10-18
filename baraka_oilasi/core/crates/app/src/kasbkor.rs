@@ -7,7 +7,7 @@ use baraka_domain_common::{month_period, SpaceKind};
 use baraka_domain_kasbkor::owner::{month_report, MonthReport, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::profit::{true_profit, ProfitInput, TrueProfit};
 use baraka_money::Money;
-use baraka_storage::repo::{expenses, household, incomes, kk};
+use baraka_storage::repo::{expenses, household, incomes, kk, kk_ledger};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 
@@ -49,11 +49,11 @@ pub(crate) struct Period {
     pub has_activity: bool,
 }
 
-struct Book {
-    opening_cash: Money,
-    opening_card: Money,
-    moves: Vec<Move>,
-    entries: Vec<KkEntryDto>,
+pub(crate) struct Book {
+    pub opening_cash: Money,
+    pub opening_card: Money,
+    pub moves: Vec<Move>,
+    pub entries: Vec<KkEntryDto>,
 }
 
 impl App {
@@ -81,7 +81,7 @@ impl App {
     }
 
     /// `[from, to)` oralig'idagi barcha harakatlar; `OPENING` — boshlang'ich qoldiqqa.
-    fn kk_book(
+    pub(crate) fn kk_book(
         &self,
         ctx: &Ctx,
         scope: &SpaceScope,
@@ -184,6 +184,31 @@ impl App {
                 wallet: w,
                 amount: m(r.amount_minor),
             });
+        }
+        // Kassa yopishdagi farq (K4): naqd kassani tuzatadi, pul oqimiga kirmaydi.
+        for r in self
+            .db
+            .read(|c| kk_ledger::cash_days_between(c, scope, from, to))?
+            .into_iter()
+            .filter(|r| r.currency == cur.code() && r.difference_minor != 0)
+        {
+            let (kind, k) = if r.difference_minor < 0 {
+                (MoveKind::CashShort, "CASH_SHORT")
+            } else {
+                (MoveKind::CashOver, "CASH_OVER")
+            };
+            let amount = r
+                .difference_minor
+                .checked_abs()
+                .ok_or(AppError::new("CORRUPT_ROW"))?;
+            book.moves.push(Move {
+                kind,
+                wallet: Wallet::Cash,
+                amount: m(amount),
+            });
+            let mut e = entry(&r.id, k, Wallet::Cash, None, amount, &r.day);
+            e.note = r.note.clone();
+            book.entries.push(e);
         }
         // Uskuna xaridi va sotuvi (K2): hamyondan pul chiqqan yoki tushgan bo'lsa.
         let in_range = |d: &str| d >= from && d < to;
@@ -346,6 +371,7 @@ impl App {
             true_profit: d(p.true_profit),
         };
         let closed_until = self.db.read(|c| kk::closed_until(c, &scope))?;
+        let (receivables, receivables_overdue) = self.kk_receivables(&ctx, &scope)?;
         let close_due = self.kk_close_due(&ctx, &scope, start, closed_until.as_deref())?;
         Ok(KkOverviewDto {
             period_start: ymd(start),
@@ -374,6 +400,9 @@ impl App {
             entries,
             closed_until,
             close_due,
+            cash_closed_until: self.db.read(|c| kk_ledger::cash_closed_until(c, &scope))?,
+            receivables: d(receivables),
+            receivables_overdue: d(receivables_overdue),
         })
     }
 
@@ -416,6 +445,7 @@ impl App {
         let ch = channel(&input.channel)?;
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
+        self.kk_ensure_cash_open(&scope, &ymd(date), ch.as_str() == "CASH")?;
         let row = incomes::IncomeRow {
             id: self.new_id(),
             member_id: None,
@@ -464,6 +494,11 @@ impl App {
         };
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
+        self.kk_ensure_cash_open(
+            &scope,
+            &ymd(date),
+            from == Wallet::Cash || to == Some(Wallet::Cash),
+        )?;
         let row = kk::KkMoveRow {
             id: self.new_id(),
             kind: kind.to_string(),
@@ -494,6 +529,7 @@ impl App {
         let from = wallet(&input.wallet, "wallet")?;
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
+        self.kk_ensure_cash_open(&scope, &ymd(date), from == Wallet::Cash)?;
         let amount = match input
             .amount
             .as_deref()

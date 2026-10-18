@@ -128,6 +128,7 @@ impl App {
         };
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
+        self.kk_ensure_cash_open(&scope, &ymd(date), ch.as_str() == "CASH")?;
         let row = incomes::IncomeRow {
             id: self.new_id(),
             member_id: input.member_id.clone(),
@@ -394,6 +395,7 @@ impl App {
         };
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
+        self.kk_ensure_cash_open(&scope, &ymd(date), ch.as_str() == "CASH")?;
         let row = expenses::ExpenseRow {
             id: self.new_id(),
             category_id: category.id,
@@ -426,11 +428,12 @@ impl App {
     pub fn delete_expense(&self, space_id: &str, expense_id: &str) -> Result<(), AppError> {
         let ctx = self.ctx()?;
         let scope = self.scope(&ctx, space_id)?;
-        if let Some(on) = self
+        if let Some((on, channel)) = self
             .db
-            .read(|c| expenses::occurred_on(c, &scope, expense_id))?
+            .read(|c| expenses::date_channel(c, &scope, expense_id))?
         {
             self.kk_ensure_open(&scope, &on, "id")?;
+            self.kk_ensure_cash_open(&scope, &on, channel == "CASH")?;
         }
         let meta = self.meta();
         self.db

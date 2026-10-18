@@ -92,16 +92,16 @@ pub fn soft_delete(
     }
 }
 
-/// Chiqim sanasi (o'chirilmagan bo'lsa).
-pub fn occurred_on(
+/// Chiqim sanasi va kanali (o'chirilmagan bo'lsa).
+pub fn date_channel(
     c: &Connection,
     s: &SpaceScope,
     id: &str,
-) -> Result<Option<String>, StorageError> {
+) -> Result<Option<(String, String)>, StorageError> {
     Ok(c.query_row(
-        "SELECT occurred_on FROM expenses WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
+        "SELECT occurred_on, channel FROM expenses WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
         params![s.household_id, s.space_id, id],
-        |r| r.get(0),
+        |r| Ok((r.get(0)?, r.get(1)?)),
     )
     .optional()?)
 }

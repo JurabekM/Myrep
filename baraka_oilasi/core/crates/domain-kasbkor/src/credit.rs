@@ -263,3 +263,68 @@ impl CreditTerms {
         })
     }
 }
+
+/// Mijozlardagi pul yoshi bo'yicha (SPEC 5.2): muddati o'tmagan va 4 ta guruh.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Aging {
+    pub current: Money,
+    /// `D1To30`, `D31To60`, `D61To90`, `D90Plus` tartibida.
+    pub overdue: [Money; 4],
+    pub total: Money,
+}
+
+pub fn aging(
+    currency: baraka_money::Currency,
+    states: &[&CreditState],
+) -> Result<Aging, DomainError> {
+    let zero = Money::zero(currency);
+    let mut a = Aging {
+        current: zero,
+        overdue: [zero; 4],
+        total: zero,
+    };
+    for s in states {
+        let slot = match s.bucket {
+            None => &mut a.current,
+            Some(AgingBucket::D1To30) => &mut a.overdue[0],
+            Some(AgingBucket::D31To60) => &mut a.overdue[1],
+            Some(AgingBucket::D61To90) => &mut a.overdue[2],
+            Some(AgingBucket::D90Plus) => &mut a.overdue[3],
+        };
+        *slot = slot.checked_add(s.outstanding)?;
+        a.total = a.total.checked_add(s.outstanding)?;
+    }
+    Ok(a)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use baraka_money::Currency;
+
+    fn d(s: &str) -> NaiveDate {
+        NaiveDate::parse_from_str(s, "%Y-%m-%d").unwrap()
+    }
+
+    /// Ustama yo'q: qancha kechiksa ham qoldiq o'zgarmaydi.
+    #[test]
+    fn lateness_never_changes_outstanding() {
+        let t = CreditTerms {
+            credit_price: Money::from_major(660_000, Currency::Uzs).unwrap(),
+            cash_price: None,
+            installments: 3,
+            first_due: d("2026-11-10"),
+        };
+        let ev = [CreditEvent::Payment {
+            on: d("2026-11-10"),
+            amount: Money::from_major(220_000, Currency::Uzs).unwrap(),
+        }];
+        let a = t.state(&ev, d("2026-12-30")).unwrap();
+        let b = t.state(&ev, d("2036-12-30")).unwrap();
+        assert_eq!(a.outstanding, b.outstanding);
+        let ag = aging(Currency::Uzs, &[&a, &b]).unwrap();
+        assert_eq!(ag.overdue[0], a.outstanding);
+        assert_eq!(ag.overdue[3], b.outstanding);
+        assert_eq!(ag.total, a.outstanding.checked_add(b.outstanding).unwrap());
+    }
+}

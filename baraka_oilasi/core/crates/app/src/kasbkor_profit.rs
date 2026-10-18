@@ -5,6 +5,7 @@
 //! `kk_true_profit`, `kk_order_quote`); bu yerda kiritilgan matnni o'qish, saqlash va DTO.
 use baraka_domain_common::month_period;
 use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
+use baraka_domain_kasbkor::owner::Wallet;
 use baraka_domain_kasbkor::profit::{hours_value, FamilyLabor};
 use baraka_domain_kasbkor::quote::{order_quote, QuoteInput};
 use baraka_money::{parse_amount, Money};
@@ -294,6 +295,7 @@ impl App {
             .transpose()?;
         let acquired = self.date_or_today(&ctx, input.acquired_on.as_deref(), "acquiredOn")?;
         self.kk_ensure_open(&scope, &ymd(acquired), "acquiredOn")?;
+        self.kk_ensure_cash_open(&scope, &ymd(acquired), w == Some(Wallet::Cash))?;
         let row = kk::KkEquipmentRow {
             id: self.new_id(),
             name,
@@ -346,6 +348,7 @@ impl App {
         };
         let on = self.date_or_today(&ctx, input.disposed_on.as_deref(), "disposedOn")?;
         self.kk_ensure_open(&scope, &ymd(on), "disposedOn")?;
+        self.kk_ensure_cash_open(&scope, &ymd(on), w == Some(Wallet::Cash))?;
         if ymd(on) < row.acquired_on {
             return Err(AppError::on("BEFORE_ACQUIRED", "disposedOn"));
         }

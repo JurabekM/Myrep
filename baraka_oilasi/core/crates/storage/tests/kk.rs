@@ -229,3 +229,148 @@ fn month_close_is_immutable() {
         Some("2026-11-30")
     );
 }
+
+/// K4: nasiyada ustama, jarima yoki foiz ustuni yo'q; narx va jadval o'zgarmaydi; hodisalar va kassa
+/// kuni o'zgarmas; telefon roziliksiz saqlanmaydi.
+#[test]
+fn credit_has_no_surcharge_and_is_immutable() {
+    use baraka_storage::repo::kk_ledger;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let cols: Vec<String> = db
+        .read(|c| {
+            let mut st = c.prepare("SELECT name FROM pragma_table_info('kk_credit_sales')")?;
+            let rows = st.query_map([], |r| r.get::<_, String>(0))?;
+            Ok(rows.collect::<Result<Vec<_>, _>>()?)
+        })
+        .unwrap();
+    for bad in [
+        "markup",
+        "penalty",
+        "interest",
+        "fee",
+        "late",
+        "surcharge",
+        "rate",
+    ] {
+        assert!(cols.iter().all(|c| !c.contains(bad)), "{bad}: {cols:?}");
+    }
+    let no_consent = kk_ledger::KkCustomerRow {
+        id: "c0".into(),
+        name: "Malika".into(),
+        phone: Some("+998".into()),
+        phone_consent: false,
+        note: None,
+    };
+    assert!(db
+        .write(|tx| kk_ledger::insert_customer(tx, &s, &no_consent, &m))
+        .is_err());
+    let customer = kk_ledger::KkCustomerRow {
+        id: "c1".into(),
+        phone_consent: true,
+        ..no_consent
+    };
+    db.write(|tx| kk_ledger::insert_customer(tx, &s, &customer, &m))
+        .unwrap();
+    let sale = kk_ledger::KkCreditSaleRow {
+        id: "s1".into(),
+        customer_id: "c1".into(),
+        item: "Koʻylak".into(),
+        currency: "UZS".into(),
+        cash_price_minor: Some(60_000_000),
+        credit_price_minor: 66_000_000,
+        installments: 3,
+        sold_on: "2026-11-10".into(),
+        first_due: "2026-11-10".into(),
+        witness: None,
+        note: None,
+        review_week: None,
+    };
+    db.write(|tx| kk_ledger::insert_credit_sale(tx, &s, &sale, &m))
+        .unwrap();
+    let err = db
+        .write(|tx| {
+            Ok(tx.execute(
+                "UPDATE kk_credit_sales SET credit_price_minor = 70000000",
+                [],
+            )?)
+        })
+        .unwrap_err();
+    assert_eq!(err.code(), "EVIDENCE_IMMUTABLE");
+    db.write(|tx| kk_ledger::set_review_week(tx, &s, "s1", Some("2026-12-25"), &m))
+        .unwrap();
+    let ev = kk_ledger::KkCreditEventRow {
+        id: "e1".into(),
+        sale_id: "s1".into(),
+        kind: "EXTEND".into(),
+        occurred_on: "2026-12-01".into(),
+        amount_minor: None,
+        months: Some(1),
+        wallet: None,
+        income_id: None,
+        note: None,
+    };
+    db.write(|tx| kk_ledger::insert_credit_event(tx, &s, &ev, &m))
+        .unwrap();
+    let bad_payment = kk_ledger::KkCreditEventRow {
+        id: "e2".into(),
+        kind: "PAYMENT".into(),
+        months: None,
+        amount_minor: Some(100),
+        ..ev.clone()
+    };
+    assert!(
+        db.write(|tx| kk_ledger::insert_credit_event(tx, &s, &bad_payment, &m))
+            .is_err(),
+        "to'lov hamyonsiz va tushumsiz yozilmaydi"
+    );
+    for sql in [
+        "UPDATE kk_credit_events SET months = 2",
+        "DELETE FROM kk_credit_events",
+    ] {
+        assert_eq!(
+            db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err().code(),
+            "EVIDENCE_IMMUTABLE"
+        );
+    }
+    assert!(db
+        .write(|tx| kk_ledger::delete_credit_sale(tx, &s, "s1", &m))
+        .is_err());
+
+    let day = kk_ledger::KkCashDayRow {
+        id: "d1".into(),
+        day: "2026-11-20".into(),
+        currency: "UZS".into(),
+        opening_minor: 50_000_000,
+        expected_minor: 150_000_000,
+        counted_minor: 145_000_000,
+        difference_minor: -5_000_000,
+        reason: None,
+        note: None,
+        result_json: "{}".into(),
+        closed_at: m.now.clone(),
+    };
+    assert!(
+        db.write(|tx| kk_ledger::insert_cash_day(tx, &s, &day, &m))
+            .is_err(),
+        "farq bor — sabab shart"
+    );
+    let day = kk_ledger::KkCashDayRow {
+        reason: Some("UNKNOWN".into()),
+        ..day
+    };
+    db.write(|tx| kk_ledger::insert_cash_day(tx, &s, &day, &m))
+        .unwrap();
+    assert_eq!(
+        db.write(|tx| Ok(tx.execute("UPDATE kk_cash_days SET counted_minor = 150000000", [])?))
+            .unwrap_err()
+            .code(),
+        "EVIDENCE_IMMUTABLE"
+    );
+    assert_eq!(
+        db.read(|c| kk_ledger::cash_closed_until(c, &s))
+            .unwrap()
+            .as_deref(),
+        Some("2026-11-20")
+    );
+}

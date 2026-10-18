@@ -1079,6 +1079,107 @@ impl BarakaCore {
         self.session.app()?.kk_month_close_pdf(&space_id, &close_id)
     }
 
+    // ---- K4: kunlik kassa yopish va nasiya daftari ----
+
+    pub fn kk_cash_draft(
+        &self,
+        space_id: String,
+        day: Option<String>,
+        counted: Option<String>,
+    ) -> Result<KkCashDraftDto, AppError> {
+        self.session.app()?.kk_cash_draft(&space_id, day, counted)
+    }
+
+    pub fn kk_close_cash_day(
+        &self,
+        space_id: String,
+        input: KkCashCloseInput,
+    ) -> Result<KkCashDayDto, AppError> {
+        self.session.app()?.kk_close_cash_day(&space_id, input)
+    }
+
+    pub fn kk_cash_days(&self, space_id: String) -> Result<Vec<KkCashDayDto>, AppError> {
+        self.session.app()?.kk_cash_days(&space_id)
+    }
+
+    pub fn kk_customers(&self, space_id: String) -> Result<Vec<KkCustomerDto>, AppError> {
+        self.session.app()?.kk_customers(&space_id)
+    }
+
+    pub fn kk_add_customer(
+        &self,
+        space_id: String,
+        input: KkCustomerInput,
+    ) -> Result<Vec<KkCustomerDto>, AppError> {
+        self.session.app()?.kk_add_customer(&space_id, input)
+    }
+
+    pub fn kk_credit_book(&self, space_id: String) -> Result<KkCreditBookDto, AppError> {
+        self.session.app()?.kk_credit_book(&space_id)
+    }
+
+    pub fn kk_add_credit_sale(
+        &self,
+        space_id: String,
+        input: KkCreditSaleInput,
+    ) -> Result<KkCreditBookDto, AppError> {
+        self.session.app()?.kk_add_credit_sale(&space_id, input)
+    }
+
+    pub fn kk_credit_payment(
+        &self,
+        space_id: String,
+        sale_id: String,
+        input: KkCreditPaymentInput,
+    ) -> Result<KkCreditBookDto, AppError> {
+        self.session
+            .app()?
+            .kk_credit_payment(&space_id, &sale_id, input)
+    }
+
+    pub fn kk_credit_forgive(
+        &self,
+        space_id: String,
+        sale_id: String,
+        input: KkCreditForgiveInput,
+    ) -> Result<KkCreditBookDto, AppError> {
+        self.session
+            .app()?
+            .kk_credit_forgive(&space_id, &sale_id, input)
+    }
+
+    pub fn kk_credit_extend(
+        &self,
+        space_id: String,
+        sale_id: String,
+        input: KkCreditExtendInput,
+    ) -> Result<KkCreditBookDto, AppError> {
+        self.session
+            .app()?
+            .kk_credit_extend(&space_id, &sale_id, input)
+    }
+
+    pub fn kk_credit_mark(
+        &self,
+        space_id: String,
+        sale_id: String,
+        talk: bool,
+    ) -> Result<KkCreditBookDto, AppError> {
+        self.session
+            .app()?
+            .kk_credit_mark(&space_id, &sale_id, talk)
+    }
+
+    pub fn kk_delete_credit_sale(
+        &self,
+        space_id: String,
+        sale_id: String,
+    ) -> Result<KkCreditBookDto, AppError> {
+        self.session
+            .app()?
+            .kk_delete_credit_sale(&space_id, &sale_id)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

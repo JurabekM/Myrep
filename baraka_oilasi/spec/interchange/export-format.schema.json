@@ -224,7 +224,11 @@
             "kk_moves",
             "kk_equipment",
             "kk_family_labor",
-            "kk_month_closes"
+            "kk_month_closes",
+            "kk_cash_days",
+            "kk_customers",
+            "kk_credit_sales",
+            "kk_credit_events"
           ]
         },
         "data": {
@@ -560,6 +564,30 @@
       },
       {
         "name": "kk_month_closes",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_cash_days",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_customers",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_credit_sales",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_credit_events",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []
