@@ -1896,6 +1896,108 @@ pub async fn export_kk_payslip(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_gate(state: State<'_, Desktop>, space_id: String) -> R<KkGateDto> {
+    state.session.app()?.kk_gate(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_use_fund(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkFundUseInput,
+) -> R<KkGateDto> {
+    state.session.app()?.kk_use_fund(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_growth_settings(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<KkGrowthSettingsDto> {
+    state.session.app()?.kk_growth_settings(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_set_growth_settings(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkGrowthSettingsInput,
+) -> R<KkGrowthSettingsDto> {
+    state
+        .session
+        .app()?
+        .kk_set_growth_settings(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_scale(state: State<'_, Desktop>, space_id: String) -> R<KkScaleDto> {
+    state.session.app()?.kk_scale(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_scale_check(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkScaleCheckInput,
+) -> R<KkScaleDto> {
+    state.session.app()?.kk_scale_check(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_zakat_draft(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkZakatInput,
+) -> R<KkZakatDto> {
+    state.session.app()?.kk_zakat_draft(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_save_zakat(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkZakatInput,
+) -> R<Vec<KkZakatCalcDto>> {
+    state.session.app()?.kk_save_zakat(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_zakat_history(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<KkZakatCalcDto>> {
+    state.session.app()?.kk_zakat_history(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_inventory(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkInventoryInput,
+) -> R<KkStockDto> {
+    state.session.app()?.kk_inventory(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_stock_counts(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<KkStockCountDto>> {
+    state.session.app()?.kk_stock_counts(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

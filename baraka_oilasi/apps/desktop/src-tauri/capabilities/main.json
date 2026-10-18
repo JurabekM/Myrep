@@ -170,6 +170,17 @@
     "allow-kk-end-agreement",
     "allow-kk-delete-agreement",
     "allow-export-kk-agreement",
-    "allow-export-kk-payslip"
+    "allow-export-kk-payslip",
+    "allow-kk-gate",
+    "allow-kk-use-fund",
+    "allow-kk-growth-settings",
+    "allow-kk-set-growth-settings",
+    "allow-kk-scale",
+    "allow-kk-scale-check",
+    "allow-kk-zakat-draft",
+    "allow-kk-save-zakat",
+    "allow-kk-zakat-history",
+    "allow-kk-inventory",
+    "allow-kk-stock-counts"
   ]
 }

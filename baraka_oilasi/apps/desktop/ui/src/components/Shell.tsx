@@ -16,8 +16,11 @@ import { KkCashScreen } from "../features/kasbkor/KkCashScreen";
 import { KkCloseScreen } from "../features/kasbkor/KkCloseScreen";
 import { KkCreditScreen } from "../features/kasbkor/KkCreditScreen";
 import { KkStaffScreen } from "../features/kasbkor/KkStaffScreen";
+import { KkGateScreen } from "../features/kasbkor/KkGateScreen";
+import { KkMeasureScreen } from "../features/kasbkor/KkMeasureScreen";
 import { KkStockScreen } from "../features/kasbkor/KkStockScreen";
 import { KkSuppliersScreen } from "../features/kasbkor/KkSuppliersScreen";
+import { KkZakatScreen } from "../features/kasbkor/KkZakatScreen";
 import { KkEquipmentScreen } from "../features/kasbkor/KkEquipmentScreen";
 import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
 import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
@@ -62,6 +65,9 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "kkLabor", label: "nav.kkLabor" },
   { screen: "kkQuote", label: "nav.kkQuote" },
   { screen: "kkClose", label: "nav.kkClose" },
+  { screen: "kkGate", label: "nav.kkGate" },
+  { screen: "kkZakat", label: "nav.kkZakat" },
+  { screen: "kkMeasure", label: "nav.kkMeasure" },
   { screen: "sync", label: "nav.sync" },
   { screen: "settings", label: "nav.settings" },
 ];
@@ -87,6 +93,9 @@ const MENTOR: Record<Screen, string> = {
   kkStock: "mentor.kkStock",
   kkStaff: "mentor.kkStaff",
   kkSuppliers: "mentor.kkSuppliers",
+  kkGate: "mentor.kkGate",
+  kkZakat: "mentor.kkZakat",
+  kkMeasure: "mentor.kkMeasure",
   sync: "mentor.sync",
   settings: "mentor.settings",
 };
@@ -134,7 +143,7 @@ export function Shell() {
       <a href="#main" className="skip-link">
         {t("a11y.skipToMain")}
       </a>
-      <nav aria-label={t("a11y.mainNav")} className="flex w-60 shrink-0 flex-col gap-1 border-r border-line bg-sidebar p-4">
+      <nav aria-label={t("a11y.mainNav")} className="flex min-h-0 w-60 shrink-0 flex-col gap-1 border-r border-line bg-sidebar p-4">
         <p className="mb-4 font-serif text-xl font-semibold">{t("app.name")}</p>
         <div role="group" aria-label={t("a11y.spaces")} className="mb-4 flex flex-wrap gap-1">
           {spaces.map((s) => (
@@ -143,17 +152,20 @@ export function Shell() {
             </button>
           ))}
         </div>
-        {nav.map((n) => (
-          <button
-            key={n.screen}
-            aria-current={screen === n.screen ? "page" : undefined}
-            className={`rounded-md px-3 py-2 text-left ${screen === n.screen ? "bg-surface font-medium text-ink" : "text-ink-muted hover:bg-surface hover:text-ink"}`}
-            onClick={() => setScreen(n.screen)}
-          >
-            {t(n.label)}
-          </button>
-        ))}
-        <button className="btn-ghost mt-auto text-sm" onClick={openOffer}>
+        {/* Bandlar ko'p (Kasb-kor) — ro'yxat o'zi aylanadi, oyna emas; pastki tugmalar doim ko'rinadi. */}
+        <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-1">
+          {nav.map((n) => (
+            <button
+              key={n.screen}
+              aria-current={screen === n.screen ? "page" : undefined}
+              className={`shrink-0 rounded-md px-3 py-2 text-left ${screen === n.screen ? "bg-surface font-medium text-ink" : "text-ink-muted hover:bg-surface hover:text-ink"}`}
+              onClick={() => setScreen(n.screen)}
+            >
+              {t(n.label)}
+            </button>
+          ))}
+        </div>
+        <button className="btn-ghost mt-3 text-sm" onClick={openOffer}>
           {t("offer.open")}
         </button>
         <button className="btn-ghost" onClick={() => lock.mutate()}>
@@ -181,6 +193,9 @@ export function Shell() {
         {active && kasbkor && screen === "kkStock" && <KkStockScreen spaceId={active} />}
         {active && kasbkor && screen === "kkSuppliers" && <KkSuppliersScreen spaceId={active} />}
         {active && kasbkor && screen === "kkStaff" && <KkStaffScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkGate" && <KkGateScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkZakat" && <KkZakatScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkMeasure" && <KkMeasureScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>

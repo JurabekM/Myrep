@@ -200,6 +200,17 @@ export const commands = {
 	exportKkAgreement: (spaceId: string, id: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_kk_agreement", { spaceId, id })),
 	/**  Xodim bilan oylik hisob varaqchasi PDF'i; `month` — oy ichidagi istalgan sana. */
 	exportKkPayslip: (spaceId: string, id: string, month: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_kk_payslip", { spaceId, id, month })),
+	kkGate: (spaceId: string) => typedError<KkGateDto, AppError>(__TAURI_INVOKE("kk_gate", { spaceId })),
+	kkUseFund: (spaceId: string, input: KkFundUseInput) => typedError<KkGateDto, AppError>(__TAURI_INVOKE("kk_use_fund", { spaceId, input })),
+	kkGrowthSettings: (spaceId: string) => typedError<KkGrowthSettingsDto, AppError>(__TAURI_INVOKE("kk_growth_settings", { spaceId })),
+	kkSetGrowthSettings: (spaceId: string, input: KkGrowthSettingsInput) => typedError<KkGrowthSettingsDto, AppError>(__TAURI_INVOKE("kk_set_growth_settings", { spaceId, input })),
+	kkScale: (spaceId: string) => typedError<KkScaleDto, AppError>(__TAURI_INVOKE("kk_scale", { spaceId })),
+	kkScaleCheck: (spaceId: string, input: KkScaleCheckInput) => typedError<KkScaleDto, AppError>(__TAURI_INVOKE("kk_scale_check", { spaceId, input })),
+	kkZakatDraft: (spaceId: string, input: KkZakatInput) => typedError<KkZakatDto, AppError>(__TAURI_INVOKE("kk_zakat_draft", { spaceId, input })),
+	kkSaveZakat: (spaceId: string, input: KkZakatInput) => typedError<KkZakatCalcDto[], AppError>(__TAURI_INVOKE("kk_save_zakat", { spaceId, input })),
+	kkZakatHistory: (spaceId: string) => typedError<KkZakatCalcDto[], AppError>(__TAURI_INVOKE("kk_zakat_history", { spaceId })),
+	kkInventory: (spaceId: string, input: KkInventoryInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_inventory", { spaceId, input })),
+	kkStockCounts: (spaceId: string) => typedError<KkStockCountDto[], AppError>(__TAURI_INVOKE("kk_stock_counts", { spaceId })),
 };
 
 /** Events */
@@ -1397,12 +1408,104 @@ export type KkFamilyLaborInput = {
 	note: string | null,
 };
 
+/**  `fund`: `TAX`, `RESERVE`, `WORKING`, `EXPANSION`, `SADAQA`. */
+export type KkFundDto = {
+	fund: string,
+	added: MoneyDto,
+	used: MoneyDto,
+	balance: MoneyDto,
+};
+
+export type KkFundUseInput = {
+	/**  `RESERVE`, `WORKING`, `EXPANSION`, `SADAQA` (soliq zaxirasi — «Soliq» chiqimi bilan). */
+	fund: string,
+	amount: string,
+	usedOn: string | null,
+	note: string | null,
+};
+
+/**  `code`: `RESERVE`, `PROFIT`, `RECEIVABLES`, `INTEREST_DEBT`, `PLAN`. */
+export type KkGateConditionDto = {
+	code: string,
+	ok: boolean,
+};
+
+/**  Kengayish darvozasi (kasbkor/SPEC 6.1): shartlar, ularning raqamlari va konvertlar. */
+export type KkGateDto = {
+	open: boolean,
+	conditions: KkGateConditionDto[],
+	reasons: string[],
+	/**  Biznes zaxirasi (konvert qoldig'i). */
+	reserve: MoneyDto,
+	averageOpex: MoneyDto | null,
+	requiredReserve: MoneyDto | null,
+	/**  Necha oylik zaxira: «2,35». */
+	coverageMonths: string | null,
+	requiredMonths: number,
+	/**  Hisobga olingan oxirgi «Hisob kuni»lar haqiqiy foydasi (eskisi birinchi). */
+	trueProfits: MoneyDto[],
+	receivables: MoneyDto,
+	receivables90: MoneyDto,
+	/**  90+ nasiya ulushi va chegarasi, foizda («5», «10»). */
+	badDebtPercent: string,
+	maxBadPercent: string,
+	hasInterestDebt: boolean,
+	hasPayoffPlan: boolean,
+	/**  Kengayish rejalari («Hunardan ishga») soni. */
+	plans: number,
+	funds: KkFundDto[],
+};
+
+/**
+ *  Darvoza chegaralari (OQ-K6), «Zakot kuni» (hijriy oy/kun), oltin narxi va nisob (OQ-D7), tovarni baholash
+ *  (`REPLACEMENT` yoki `BOOK`, OQ-D5), tarozi eslatmasi.
+ */
+export type KkGrowthSettingsDto = {
+	reserveMonths: number,
+	maxBadPercent: string,
+	zakatMonth: number | null,
+	zakatDay: number | null,
+	/**  Keyingi «Zakot kuni» (milodiy, taxminiy ±1–2 kun). */
+	nextZakatDay: string | null,
+	goldPrice: MoneyDto | null,
+	nisabGrams: number,
+	stockValuation: string,
+	scaleReminder: boolean,
+	/**  Bugungi hijriy sana: `1448-05-06`. */
+	todayHijri: string,
+};
+
+export type KkGrowthSettingsInput = {
+	reserveMonths: number,
+	maxBadPercent: string,
+	zakatMonth: number | null,
+	zakatDay: number | null,
+	goldPrice: string | null,
+	nisabGrams: number,
+	stockValuation: string,
+	scaleReminder: boolean,
+};
+
 export type KkInstallmentDto = {
 	due: string,
 	amount: MoneyDto,
 	covered: MoneyDto,
 	/**  `PAID`, `OVERDUE`, `DUE`. */
 	state: string,
+};
+
+/**  Yillik inventarizatsiya (kasbkor/SPEC 8.4): barcha sanalgan tovarlar bitta tranzaksiyada. */
+export type KkInventoryInput = {
+	countedOn: string | null,
+	/**  Farqlar uchun umumiy izoh. */
+	reason: string,
+	lines: KkInventoryLineInput[],
+};
+
+export type KkInventoryLineInput = {
+	itemId: string,
+	/**  Sanalgan miqdor (ko'rsatish birligida); bo'sh — sanalmadi. */
+	counted: string,
 };
 
 export type KkItemDto = {
@@ -1515,6 +1618,10 @@ export type KkOverviewDto = {
 	payablesOverdue: MoneyDto,
 	/**  Xodimlarga hozir to'lanadigani — o'tgan oylar uchun (K6). */
 	wagesOwed: MoneyDto,
+	/**  Keyingi «Zakot kuni» — 30 kun ichida bo'lsa (K7). */
+	zakatReminder: string | null,
+	/**  Tarozi tekshiruvi vaqti keldi (K7). */
+	scaleCheckDue: boolean,
 	/**  Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2). */
 	profit: KkProfitDto,
 	/**  Manfiy qoldiqli hamyonlar: `CASH`, `CARD`. */
@@ -1618,6 +1725,27 @@ export type KkSaleInput = {
 	note: string | null,
 };
 
+export type KkScaleCheckDto = {
+	id: string,
+	checkedOn: string,
+	result: string,
+	note: string | null,
+};
+
+/**  `result`: `OK`, `ADJUSTED`, `FAULTY`. */
+export type KkScaleCheckInput = {
+	result: string,
+	checkedOn: string | null,
+	note: string | null,
+};
+
+/**  Tarozi tekshiruvlari; `due` — eslatma yoqilgan va oxirgi tekshiruvdan 30 kundan ko'p o'tgan. */
+export type KkScaleDto = {
+	checks: KkScaleCheckDto[],
+	reminder: boolean,
+	due: boolean,
+};
+
 export type KkSignInput = {
 	/**  Qog'oz nusxa imzolangan sana (bo'lmasa — bugun). */
 	signedOn: string | null,
@@ -1641,6 +1769,16 @@ export type KkStaffEventDto = {
 	amount: MoneyDto,
 	wallet: string,
 	note: string | null,
+};
+
+export type KkStockCountDto = {
+	id: string,
+	countedOn: string,
+	valueBefore: MoneyDto,
+	valueAfter: MoneyDto,
+	/**  Sanalgan va farqi bor tovarlar soni. */
+	counted: number,
+	changed: number,
 };
 
 /**  Tovarlar sahifasi: qoldiqlar va jami qiymatlar (qayta tiklash narxi bo'lmasa — hisobdagi). */
@@ -1763,6 +1901,69 @@ export type KkWageInput = {
 	wallet: string,
 	occurredOn: string | null,
 	note: string | null,
+};
+
+export type KkZakatCalcDto = {
+	id: string,
+	calculatedOn: string,
+	hijriDate: string,
+	base: MoneyDto,
+	nisab: MoneyDto,
+	zakat: MoneyDto,
+	reason: string | null,
+};
+
+/**
+ *  Zakot hisobi (kasbkor/SPEC 8.3) — **hisob, fatvo emas**. `religiousNote` — faqat ulamo tasdiqlagan matn
+ *  (`religiousReviewStatus = APPROVED`), aks holda `null`.
+ */
+export type KkZakatDto = {
+	calculatedOn: string,
+	hijriDate: string,
+	valuation: string,
+	stock: MoneyDto,
+	cash: MoneyDto,
+	receivables: MoneyDto,
+	payables: MoneyDto,
+	wagesDue: MoneyDto,
+	debts: MoneyDto,
+	goldPrice: MoneyDto | null,
+	nisabGrams: number,
+	nisab: MoneyDto | null,
+	base: MoneyDto,
+	zakat: MoneyDto,
+	due: boolean,
+	/**  `BASE_NOT_POSITIVE`, `BELOW_NISAB`, `HAWL_NOT_COMPLETE`, `GOLD_PRICE_MISSING`. */
+	reason: string | null,
+	hawlComplete: boolean,
+	hawlSuggested: boolean,
+	hawlSince: string | null,
+	receivableLines: KkZakatReceivableDto[],
+	religiousNote: string | null,
+	religiousReview: string,
+};
+
+/**  Zakot hisobi kiritmalari; bo'sh maydonlar — sozlamalardan yoki taklifdan. */
+export type KkZakatInput = {
+	goldPrice: string | null,
+	nisabGrams: number | null,
+	/**  `REPLACEMENT` yoki `BOOK`. */
+	valuation: string | null,
+	/**  Egasi «umidsiz» deb belgilagan 90+ kunlik nasiyalar — bazaga kirmaydi. */
+	hopelessSaleIds: string[],
+	/**  Hawl to'ldimi; bo'lmasa — ilova taklifi (birinchi yozuv yoki oxirgi hisobdan bir qamariy yil). */
+	hawlComplete: boolean | null,
+};
+
+export type KkZakatReceivableDto = {
+	saleId: string,
+	customer: string,
+	item: string,
+	outstanding: MoneyDto,
+	overdueDays: number,
+	/**  90+ kun — «umidsiz» deb belgilash mumkin. */
+	d90Plus: boolean,
+	hopeless: boolean,
 };
 
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */

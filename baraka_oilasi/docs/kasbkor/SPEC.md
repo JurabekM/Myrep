@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4) va K6 (7-bo'lim) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4 va 7.3 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim) va K7 (6, 8-bo'limlar) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3 va 8.5 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -204,6 +204,13 @@ Yopiq bo'lsa — sabablar ro'yxati va har biri uchun keyingi qadam.
 - Jamg'arma bilan bosqichma-bosqich; **sheriklik** (mudoraba/musharaka, U11–U13); ta'minotchidan qotirilgan narxda bo'lib to'lash; foizsiz qarz (U8 tilxati bilan).
 - Ilova moliyaviy tashkilotlarni tavsiya qilmaydi va reklama qilmaydi; «islomiy mahsulot» deb atalgan takliflar uchun — «Taklifni tekshirish» (U12) savollari.
 
+### 6.3. K7 da qanday qilindi (farqlar)
+- Zaxira — «Hisob kuni» taqsimotidagi zaxira konverti qoldig'i (bayonnomalar qo'shadi, egasi qayd etgan foydalanish ayiradi), kassa qoldig'i emas. Konvertlar «virtual»: pul hamyonlarda, konvert — uning qaysi qismi nima uchun ajratilgani.
+- Operatsion xarajat — oxirgi 3 to'liq oyning (yozuvi borlarining) Kasb-kor chiqimlari o'rtachasi; tarix yo'q bo'lsa 1-shart bajarilmagan. 2-shart — oxirgi 3 bayonnoma; 3 tadan kam bo'lsa bajarilmagan.
+- 4-shart — xonadondagi Uy makonlari va shu makondagi faol foizli qarzlar va «Qarzdan chiqish» rejimi.
+- 5-shart — «Hunardan ishga»da kamida bitta yozilgan g'oya (CAPEX va stsenariylar o'sha kalkulyatorda); reja tugmasi shu bo'limga olib boradi.
+- Chegaralar (OQ-K6) darvoza ekranida o'zgartiriladi; boshqa sozlamalarga tegmaydi.
+
 ## 7. 6-QONUN: «KELISHUVNI YOZING» — FUNKSIONAL TALABLAR (K6)
 Qonunning mazmuni: sherik, xodim, ta'minotchi, mijoz — hamma kelishuv yoziladi (9 savol, `docs/uy/SPEC.md` 2F).
 
@@ -253,6 +260,12 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 
 ### 8.4. Yillik inventarizatsiya
 - Ustasi: tovarlar ro'yxati → sanalgan miqdor → farqlar (izoh bilan) → yangilangan qoldiq → zakot kuniga tayyor baza.
+
+### 8.5. K7 da qanday qilindi (farqlar)
+- **Tarozi:** eslatma ixtiyoriy (egasi «tarozida sotaman» deb yoqadi); oxirgi tekshiruvdan 30 kun o'tsa bosh sahifada eslatma. Natija: to'g'ri / sozlandi / nosoz; oxirgi ikkisida izoh majburiy. Yozuvlar o'zgarmas.
+- **Soliq zaxirasi:** «Hisob kuni»dagi soliq summasi konvertga qo'shiladi; `category.kk.tax` chiqimlari zaxiradan ayiriladi (zaxira yetgancha; ortig'i — zaxirasiz to'langan soliq, xato emas).
+- **Zakot:** «Zakot kuni» — egasi tanlagan hijriy oy va kun; hijriy sana jadvalli kalendar bo'yicha (kuzatilgan oydan ±1–2 kun farq qilishi mumkin — ekranda aytiladi); eslatma 30 kun oldin. Baza = tovar (standart — qayta tiklash narxida, OQ-D5) + naqd kassa va karta (manfiylari 0) + umidli nasiya − ta'minotchilarga qarz − xodimlarga hozir to'lanadigan haq (OQ-D7). Oltin narxi kiritilmasa zakot hisoblanmaydi (`GOLD_PRICE_MISSING`). Hawl ilova tomonidan taklif qilinadi (oxirgi saqlangan hisobdan yoki birinchi yozuvdan bir qamariy yil), egasi tasdiqlaydi. Saqlangan hisob — `kk_zakat_calcs` dagi o'zgarmas snapshot (umumiy `asset_snapshots` emas: Kasb-kor makoniga bog'liq kiritmalar bilan). Diniy izoh — `shared/content/religious/kk_zakat.json`, `APPROVED` bo'lmaguncha ko'rsatilmaydi.
+- **Inventarizatsiya:** bitta forma — har tovar uchun sanalgan miqdor (bo'sh — sanalmadi) va umumiy sabab; farqi borlari bitta tranzaksiyada K5 dagi `COUNT` harakati bo'ladi, yozuvda tovarlar soni, farqlilar soni va qiymat oldin/keyin saqlanadi.
 
 ## 9. DOMEN MODELI VA VEKTOR SUITE'LARI
 ### 9.1. Yangi tushunchalar (taxminiy; aniq sxema — K1+ sessiyalarida, `BARAKA_OILASI.md` 8)

@@ -164,6 +164,17 @@ const COMMANDS: &[&str] = &[
     "kk_delete_agreement",
     "export_kk_agreement",
     "export_kk_payslip",
+    "kk_gate",
+    "kk_use_fund",
+    "kk_growth_settings",
+    "kk_set_growth_settings",
+    "kk_scale",
+    "kk_scale_check",
+    "kk_zakat_draft",
+    "kk_save_zakat",
+    "kk_zakat_history",
+    "kk_inventory",
+    "kk_stock_counts",
 ];
 
 fn main() {

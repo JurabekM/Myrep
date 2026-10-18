@@ -140,6 +140,23 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
         </div>
       )}
 
+      {d?.zakatReminder && (
+        <div data-testid="kk-zakat-reminder" className="card flex flex-wrap items-center justify-between gap-3 border-accent/60 py-3">
+          <p>{t("kk.zakatReminder", { date: showDate(d.zakatReminder) })}</p>
+          <button className="btn-ghost" onClick={() => setScreen("kkZakat")}>
+            {t("nav.kkZakat")}
+          </button>
+        </div>
+      )}
+      {d?.scaleCheckDue && (
+        <div data-testid="kk-scale-reminder" className="card flex flex-wrap items-center justify-between gap-3 py-3">
+          <p>{t("kk.scaleReminder")}</p>
+          <button className="btn-ghost" onClick={() => setScreen("kkMeasure")}>
+            {t("nav.kkMeasure")}
+          </button>
+        </div>
+      )}
+
       {d && (d.payables.minor !== "0" || d.wagesOwed.minor !== "0") && (
         <section aria-label={t("kk.obligations")} className="grid gap-5 md:grid-cols-2">
           {d.payables.minor !== "0" && (

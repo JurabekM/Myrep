@@ -16,6 +16,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `07-kasbkor-ledger` | Kasb-kor kassa va nasiya: Bahodir (kutilgan 1 500 000, sanalgan 1 450 000 → −50 000, kunni yopish) → Malika (660 000 = 3 × 220 000, birinchi to'lov) → [+2 oy 20 kun] 20 kun kechikkan, summa o'zgarmagan, haftalik ko'rik |
 | `08-kasbkor-stock` | Kasb-kor tovarlar: Bahodir shakari (50 kg ilovagacha + 100 kg kartadan, 80 kg sotuv → o'rtacha tannarx 960 000, qoldiq 840 000) → joriy narx 13 500: farq 105 000, 13 000 ga sotish ogohlantirishi → sanoq 69,5 kg: 6 000 yo'qotish → [+91 kun] muzlagan tovar |
 | `09-kasbkor-staff` | Kasb-kor xodim va ta'minotchi: Sardor (kelishuv, imzo, 1 000 000 avans 2 oyda, kelishuv PDF) → Ulgurji baza (shakar 12 500 dan, 100 kg nasiyaga qoldiqqa, 500 000 to'lov, bosh sahifada qarz) → [+35 kun] qarz kechikdi (jarimasiz), haq to'landi, varaqcha PDF |
+| `10-kasbkor-growth` | Kasb-kor o'sish: 120 mln tushum, 2 mln chiqim → darvoza yopiq (zaxira, «Hisob kuni», reja — keyingi qadamlar) → zakot: oltin 1 100 000 × 85 g, hawl tasdig'i → 2 950 000, hisob saqlandi → tarozi tekshirildi, shakar sanaldi (9,5 kg) → [+35 kun] bosh sahifada tarozi eslatmasi |
 
 ## Ishga tushirish (Linux)
 ```bash

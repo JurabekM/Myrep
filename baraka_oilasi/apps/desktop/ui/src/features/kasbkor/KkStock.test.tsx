@@ -212,6 +212,8 @@ describe("Kasb-kor bosh sahifa: tovar (K5) va majburiyatlar (K6)", () => {
         payables: m("750 000 soʻm"),
         payablesOverdue: m("750 000 soʻm"),
         wagesOwed: m("3 000 000 soʻm"),
+        zakatReminder: "2026-12-01",
+        scaleCheckDue: true,
         profit: {
           revenue: m("1 120 000 soʻm"),
           cogs: m("960 000 soʻm"),
@@ -242,6 +244,9 @@ describe("Kasb-kor bosh sahifa: tovar (K5) va majburiyatlar (K6)", () => {
     expect(screen.getByTestId("kk-payables")).toHaveTextContent("750 000 soʻm");
     expect(screen.getByText("Shundan muddati oʻtgan: 750 000 soʻm")).toBeInTheDocument();
     expect(screen.getByTestId("kk-wages-owed")).toHaveTextContent("3 000 000 soʻm");
+    // K7: «Zakot kuni» va tarozi eslatmalari.
+    expect(screen.getByTestId("kk-zakat-reminder")).toHaveTextContent("01.12.2026");
+    expect(screen.getByTestId("kk-scale-reminder")).toHaveTextContent("Tarozini tekshirish vaqti keldi");
     const card = screen.getByRole("region", { name: "Foyda qanday hosil boʻldi" });
     expect(within(card).getByRole("rowheader", { name: /Sotilgan tovar tannarxi/ }).nextSibling).toHaveTextContent("− 960 000 soʻm");
     expect(within(card).getByRole("rowheader", { name: /Tovar yoʻqotishlari/ }).nextSibling).toHaveTextContent("− 6 000 soʻm");

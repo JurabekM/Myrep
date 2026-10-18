@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-growth-settings"
+description = "Enables the kk_growth_settings command without any pre-configured scope."
+commands.allow = ["kk_growth_settings"]
+
+[[permission]]
+identifier = "deny-kk-growth-settings"
+description = "Denies the kk_growth_settings command without any pre-configured scope."
+commands.deny = ["kk_growth_settings"]

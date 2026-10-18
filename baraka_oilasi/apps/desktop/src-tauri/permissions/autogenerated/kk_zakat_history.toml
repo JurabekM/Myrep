@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-zakat-history"
+description = "Enables the kk_zakat_history command without any pre-configured scope."
+commands.allow = ["kk_zakat_history"]
+
+[[permission]]
+identifier = "deny-kk-zakat-history"
+description = "Denies the kk_zakat_history command without any pre-configured scope."
+commands.deny = ["kk_zakat_history"]

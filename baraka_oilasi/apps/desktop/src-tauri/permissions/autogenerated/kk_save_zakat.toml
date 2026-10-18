@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-save-zakat"
+description = "Enables the kk_save_zakat command without any pre-configured scope."
+commands.allow = ["kk_save_zakat"]
+
+[[permission]]
+identifier = "deny-kk-save-zakat"
+description = "Denies the kk_save_zakat command without any pre-configured scope."
+commands.deny = ["kk_save_zakat"]

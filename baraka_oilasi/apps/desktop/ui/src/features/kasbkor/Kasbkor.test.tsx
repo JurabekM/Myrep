@@ -58,6 +58,8 @@ const overview = {
   payables: money("0 soʻm", "0"),
   payablesOverdue: money("0 soʻm", "0"),
   wagesOwed: money("0 soʻm", "0"),
+  zakatReminder: null,
+  scaleCheckDue: false,
   profit: {
     revenue: money("20 000 000 soʻm", "20 000 000"),
     cogs: money("0 soʻm", "0"),

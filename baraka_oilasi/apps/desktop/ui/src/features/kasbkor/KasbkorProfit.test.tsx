@@ -66,6 +66,8 @@ const overview = {
   payables: zero,
   payablesOverdue: zero,
   wagesOwed: zero,
+  zakatReminder: null,
+  scaleCheckDue: false,
   profit: {
     revenue: m("18 000 000 soʻm"),
     cogs: zero,

@@ -42,6 +42,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | K4: Kasb-kor kunlik kassa yopish, nasiya daftari (ustamasiz), yosh guruhlari va haftalik ko'rik | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | K5: Kasb-kor tovar qoldig'i — o'rtacha/FIFO tannarx, qayta tiklash narxi («inflyatsiya yegan kapital»), muzlagan tovar | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | K6: Kasb-kor xodim va ta'minotchi kelishuvlari (`reviewStatus` li shablonlar), foizsiz va jarimasiz avans, oylik varaqcha, ta'minotchiga qarz | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
+| K7: Kasb-kor kengayish darvozasi (5 shart va keyingi qadamlar), «Hisob kuni» konvertlari va soliq zaxirasi, halol muqobillar, zakot hisobi (hijriy «Zakot kuni», hisob — fatvo emas), tarozi tekshiruvi, yillik inventarizatsiya | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

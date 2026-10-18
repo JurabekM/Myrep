@@ -193,6 +193,17 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_delete_agreement,
             commands::export_kk_agreement,
             commands::export_kk_payslip,
+            commands::kk_gate,
+            commands::kk_use_fund,
+            commands::kk_growth_settings,
+            commands::kk_set_growth_settings,
+            commands::kk_scale,
+            commands::kk_scale_check,
+            commands::kk_zakat_draft,
+            commands::kk_save_zakat,
+            commands::kk_zakat_history,
+            commands::kk_inventory,
+            commands::kk_stock_counts,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

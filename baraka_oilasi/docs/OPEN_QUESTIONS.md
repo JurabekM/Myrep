@@ -113,7 +113,8 @@
 ### OQ-K6. Kengayish darvozasi chegaralari
 - **Taklif:** zaxira ≥ 3 oylik operatsion xarajat; oxirgi 3 «Hisob kuni»da haqiqiy foyda > 0; 90+ kunlik nasiya ≤ 10%; foizli qarz yo'q yoki reja bilan; yozilgan kengayish rejasi.
 - **Savol:** chegaralar to'g'rimi? Mavsumiy biznes (masalan, to'y libosi) uchun «3 oy» qanday hisoblanadi?
-- **To'sadi:** K7. **Holat:** OCHIQ.
+- **Vaqtinchalik qaror (K7):** taklifdagi qiymatlar standart (3 oy, 10 %), egasi «Kengayish darvozasi» ekranida o'zgartiradi. Zaxira — «Hisob kuni» zaxira konverti qoldig'i; operatsion xarajat — oxirgi 3 to'liq oyning yozuvi borlari o'rtachasi (tarix yo'q bo'lsa shart bajarilmagan); foyda — oxirgi 3 bayonnoma (3 tadan kam bo'lsa bajarilmagan). Mavsumiylik hisobga olinmaydi.
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ## Oila va maxfiylik
 
@@ -161,12 +162,14 @@
 - **K0 da (SPEC 5.2, 7.1, 8.3):** nasiya narxi kelishuvda qotiriladi va keyin oshirilmaydi, ustama/jarima maydoni yo'q; zakot bazasidagi tovar baholash usuli (xarid, qayta tiklash yoki sotuv narxi) ochiq — SPEC'dagi misol shartli.
 - **K4 da qilindi:** nasiya narxi kelishuvda qotiriladi (trigger), ustama/jarima/foiz ustuni yo'q; naqd narx va farqi faqat ma'lumot uchun ko'rsatiladi. Bay' muajjal joizligi — ulamo tasdig'i kutilmoqda.
 - **K6 da:** xodim bilan faqat qat'iy haq (foyda ulushi — (3) javobigacha qilinmadi); konsignatsiya shartlari shablonda yo'q ((4) javobigacha). Avans foizsiz va jarimasiz.
-- **To'sadi:** K7 (zakot baholash), xodim foyda ulushi, konsignatsiya. **Holat:** OCHIQ.
+- **K7 da (vaqtinchalik):** zakot bazasidagi tovar standart — **qayta tiklash narxida** (joriy xarid narxi × qoldiq, K5); egasi «hisobdagi qiymat» (tannarx) ni tanlashi mumkin; sotuv narxi varianti yo'q. Tanlangan usul har hisob snapshot'ida saqlanadi.
+- **To'sadi:** xodim foyda ulushi, konsignatsiya; zakot baholash — ulamo tasdig'i. **Holat:** OCHIQ.
 
 ### OQ-D7. Savdo mollari zakoti: nisob, nasiya, oilaviy mehnat, oldindan to'lov
 - **Savollar:** (1) nisob oltin (85 g) yoki kumush bo'yicha hisoblanadimi, kim tanlaydi? (2) umidli nasiya bazaga kiradi, umidsiz (90+ va egasi belgilagan) kirmaydi — to'g'rimi; umidsiz nasiya keyin qaytsa? (3) yaqin muddatli qarzlar (ta'minotchiga) bazadan ayiriladimi? (4) nasiyani muddatidan oldin to'lagan mijozga chegirma berish (da' va ta'ajjal) joizmi — ilovada bunday tugma bo'lsinmi? (5) oilaviy mehnatni tannarxga «bahosi» bilan kiritish — bu faqat hisob usuli, fiqhiy masala emas deb tushunamiz; to'g'rimi?
 - **K0 da:** formula `docs/kasbkor/SPEC.md` 8.3 (2,5% = 250 bp, hawl va nisob sharti); natija «hisob, fatvo emas».
-- **To'sadi:** K7. **Holat:** OCHIQ.
+- **K7 da (vaqtinchalik):** (1) nisob — oltin, standart 85 g (egasi grammni o'zgartira oladi), oltin narxini egasi kiritadi; kumush yo'q. (2) umidli nasiya bazaga kiradi; egasi faqat 90+ nasiyani «umidsiz» deb belgilay oladi va u bazaga kirmaydi; keyin qaytsa — keyingi hisobda naqd sifatida kiradi. (3) bazadan ayiriladi: ta'minotchilarga qarz va xodimlarga hozir to'lanadigan haq. (4) chegirma tugmasi yo'q. Hawl — oxirgi saqlangan hisobdan (bo'lmasa birinchi yozuvdan) bir qamariy yil; ilova taklif qiladi, egasi tasdiqlaydi. Zakot izohi `religiousReviewStatus: PENDING` — tasdiqlanmaguncha ko'rsatilmaydi.
+- **To'sadi:** — (hisob ishlaydi, raqamlar shartli). **Holat:** OCHIQ — ulamo javobi kutilmoqda.
 
 ### OQ-D6. Kamayib boruvchi musharakada ulush narxi
 - **Savol:** mehnat egasi kapital egasining ulushini bosqichma-bosqich sotib olganda, har bir qism narxini **oldindan qotirib** (masalan, 30 mln / 20 = 1,5 mln) va'da qilish joizmi? Bizning tushunishimizcha, AAOIFI shariat standartida (12, sheriklik) ulushni asl (nominal) qiymatda sotib olish majburiyati kapitalni kafolatlaydi va qarzga o'xshab qoladi, shuning uchun sotilgan kundagi bozor yoki o'sha kuni kelishilgan qiymat ko'rsatiladi — ulamo tasdiqlashi kerak.

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-scale-check"
+description = "Enables the kk_scale_check command without any pre-configured scope."
+commands.allow = ["kk_scale_check"]
+
+[[permission]]
+identifier = "deny-kk-scale-check"
+description = "Denies the kk_scale_check command without any pre-configured scope."
+commands.deny = ["kk_scale_check"]

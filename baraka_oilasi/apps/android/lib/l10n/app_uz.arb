@@ -3331,5 +3331,238 @@
   "error_INVALID_VALUATION": "Baholash usulini tanlang",
   "error_INVALID_RESULT": "Natijani tanlang",
   "error_HOPELESS_NOT_90": "Faqat 90 kundan ortiq kechikkan nasiyani «umidsiz» deb belgilash mumkin",
-  "rel_kk_zakat_note": "Savdo mollari zakoti — tijorat uchun tutilgan mol va puldan, nisobga yetib ustidan bir qamariy yil oʻtganda, 2,5 foiz miqdorida beriladi."
+  "rel_kk_zakat_note": "Savdo mollari zakoti — tijorat uchun tutilgan mol va puldan, nisobga yetib ustidan bir qamariy yil oʻtganda, 2,5 foiz miqdorida beriladi.",
+  "nav_kkGate": "Kengayish darvozasi",
+  "nav_kkZakat": "Zakot hisobi",
+  "nav_kkMeasure": "Tarozi va sanoq",
+  "mentor_kkGate": "Kengayish — tayyorgarlik bilan. Avval zaxira, foyda va toza nasiya; keyin reja. Foizli kredit oʻrniga — jamgʻarma va sheriklik.",
+  "mentor_kkZakat": "Bu yerda faqat hisob: raqamlarni bir joyga yigʻib beradi. Qaror va fatvo — ulamoniki.",
+  "mentor_kkMeasure": "Halol oʻlchov — halol savdoning boshi. Oyda bir marta tarozini etalon bilan tekshiring, yilda bir marta tovarni sanang.",
+  "kk_zakatReminder": "«Zakot kuni» yaqin: {date} (taxminan). Hisobni oldindan tayyorlab qoʻying.",
+  "@kk_zakatReminder": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_scaleReminder": "Tarozini tekshirish vaqti keldi — etalon ogʻirlik bilan tekshirib, natijani yozib qoʻying.",
+  "kk_gate_title": "Kengayish darvozasi",
+  "kk_gate_intro": "Kengayishdan oldin beshta shart tekshiriladi. Hammasi bajarilsa — darvoza ochiq; aks holda har biri uchun keyingi qadam.",
+  "kk_gate_open": "Darvoza ochiq — kengayishga tayyorsiz.",
+  "kk_gate_closed": "Darvoza yopiq: {count} ta shart bajarilmagan.",
+  "@kk_gate_closed": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kk_gate_conditions": "Shartlar",
+  "kk_gate_met": "bajarilgan",
+  "kk_gate_notMet": "bajarilmagan",
+  "kk_gate_cond_RESERVE": "Biznes zaxirasi yetarli",
+  "kk_gate_cond_PROFIT": "Oxirgi 3 «Hisob kuni»da haqiqiy foyda",
+  "kk_gate_cond_RECEIVABLES": "90+ kunlik nasiya oz",
+  "kk_gate_cond_INTEREST_DEBT": "Foizli qarz yoʻq yoki undan chiqish rejasi bor",
+  "kk_gate_cond_PLAN": "Kengayish rejasi yozilgan",
+  "kk_gate_detail_RESERVE": "Zaxira {reserve}; kerak {required} ({months} oylik oʻrtacha xarajat). Hozir {coverage} oylik.",
+  "@kk_gate_detail_RESERVE": {
+    "placeholders": {
+      "coverage": {},
+      "months": {},
+      "required": {},
+      "reserve": {}
+    }
+  },
+  "kk_gate_detail_RESERVE_NO_HISTORY": "Zaxira {reserve}; oʻtgan oylar xarajati hali yoʻq — oʻrtachani hisoblab boʻlmaydi.",
+  "@kk_gate_detail_RESERVE_NO_HISTORY": {
+    "placeholders": {
+      "reserve": {}
+    }
+  },
+  "kk_gate_detail_PROFIT": "Haqiqiy foyda: {list}",
+  "@kk_gate_detail_PROFIT": {
+    "placeholders": {
+      "list": {}
+    }
+  },
+  "kk_gate_detail_PROFIT_NONE": "Hali «Hisob kuni» oʻtkazilmagan.",
+  "kk_gate_detail_RECEIVABLES": "90+ kunlik nasiya: {amount} — jami nasiyaning {bad}% (chegara {max}%).",
+  "@kk_gate_detail_RECEIVABLES": {
+    "placeholders": {
+      "amount": {},
+      "bad": {},
+      "max": {}
+    }
+  },
+  "kk_gate_detail_NO_DEBT": "Foizli qarz yoʻq.",
+  "kk_gate_detail_DEBT_PLAN": "Foizli qarz bor, «Qarzdan chiqish» rejasi yoqilgan.",
+  "kk_gate_detail_DEBT_NO_PLAN": "Foizli qarz bor, chiqish rejasi yoʻq.",
+  "kk_gate_detail_PLAN": "Yozilgan rejalar: {count}",
+  "@kk_gate_detail_PLAN": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kk_gate_next_RESERVE": "Keyingi qadam: «Hisob kuni» taqsimotida zaxira ulushini oshiring yoki zaxiradan foydalanishni kamaytiring.",
+  "kk_gate_next_PROFIT": "Keyingi qadam: har oy «Hisob kuni»ni oʻtkazing; zararli oy boʻlsa — sababini toping.",
+  "kk_gate_next_RECEIVABLES": "Keyingi qadam: «Nasiya daftari»dagi haftalik koʻrikda 90+ kunlik mijozlar bilan gaplashing.",
+  "kk_gate_next_INTEREST_DEBT": "Keyingi qadam: Uy makonida «Qarzdan chiqish» rejasini yoqing.",
+  "kk_gate_next_PLAN": "Keyingi qadam: «Hunardan ishga» kalkulyatorida CAPEX va uch stsenariy bilan reja yozing.",
+  "kk_gate_planButton": "Kengayish rejasi («Hunardan ishga»)",
+  "kk_gate_altTitle": "Foizli kreditga halol muqobillar",
+  "kk_gate_alt_SAVINGS": "Jamgʻarma bilan bosqichma-bosqich kengayish (kengayish konverti).",
+  "kk_gate_alt_PARTNERSHIP": "Sheriklik — mudoraba yoki musharaka (Uy makonidagi «Sheriklik»).",
+  "kk_gate_alt_SUPPLIER": "Taʼminotchidan qotirilgan narxda boʻlib toʻlash.",
+  "kk_gate_alt_QARZ": "Foizsiz qarz — tilxat bilan.",
+  "kk_gate_altNoAds": "Ilova moliyaviy tashkilotlarni tavsiya qilmaydi va reklama qilmaydi.",
+  "kk_gate_checkOffer": "Taklifni tekshirish",
+  "kk_gate_thresholds": "Darvoza chegaralari",
+  "kk_gate_reserveMonths": "Zaxira necha oylik xarajatga teng boʻlsin",
+  "kk_gate_maxBad": "90+ nasiya chegarasi, %",
+  "kk_funds_title": "«Hisob kuni» konvertlari",
+  "kk_funds_intro": "Har «Hisob kuni» qolgan pulni konvertlarga ajratadi. Bu pul harakati emas — hamyondagi pulning qaysi maqsadga atalgani.",
+  "kk_funds_flow": "Qoʻshilgan {added} · ishlatilgan {used}",
+  "@kk_funds_flow": {
+    "placeholders": {
+      "added": {},
+      "used": {}
+    }
+  },
+  "kk_funds_taxHint": "Soliq zaxirasidan foydalanish — «Soliq» kategoriyasidagi chiqim bilan avtomatik.",
+  "kk_funds_name_TAX": "Soliq zaxirasi",
+  "kk_funds_name_RESERVE": "Zaxira",
+  "kk_funds_name_WORKING": "Aylanma (tovar)",
+  "kk_funds_name_EXPANSION": "Kengayish",
+  "kk_funds_name_SADAQA": "Sadaqa",
+  "kk_funds_use": "Konvertdan foydalanish",
+  "kk_funds_fund": "Konvert",
+  "kk_funds_amount": "Summa",
+  "kk_funds_note": "Nimaga",
+  "kk_funds_useButton": "Yozib qoʻyish",
+  "kk_zakat_title": "Zakot hisobi",
+  "kk_zakat_disclaimer": "Hisob, fatvo emas. Tovarni baholash usuli, nisob va bazaga nima kirishi ulamo tasdigʻini kutmoqda — natijani ulamo bilan tekshiring.",
+  "kk_zakat_settings": "Sozlamalar",
+  "kk_zakat_today": "Bugun: {date}",
+  "@kk_zakat_today": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_zakat_day": "«Zakot kuni» (hijriy sana)",
+  "kk_zakat_month": "Oy",
+  "kk_zakat_dayOfMonth": "Kun",
+  "kk_zakat_notSet": "Belgilanmagan",
+  "kk_zakat_next": "Keyingisi: {date} (jadvalli kalendar, ±1–2 kun). Eslatma 30 kun oldin.",
+  "@kk_zakat_next": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_zakat_dayHint": "Sanani tanlasangiz, bosh sahifada 30 kun oldin eslatma chiqadi.",
+  "kk_zakat_gold": "Oltin narxi (1 gramm)",
+  "kk_zakat_grams": "Nisob, gramm",
+  "kk_zakat_valuation": "Tovarni baholash",
+  "kk_zakat_stock_REPLACEMENT": "Tovar (qayta tiklash narxida)",
+  "kk_zakat_stock_BOOK": "Tovar (hisobdagi qiymatda)",
+  "kk_zakat_calc": "Hisob",
+  "kk_zakat_cash": "Naqd kassa va karta",
+  "kk_zakat_receivables": "Umidli nasiya",
+  "kk_zakat_payables": "Taʼminotchilarga qarz",
+  "kk_zakat_wages": "Xodimlarga toʻlanadigani",
+  "kk_zakat_base": "Baza",
+  "kk_zakat_nisab": "Nisob",
+  "kk_zakat_nisabLine": "Nisob ({grams} g × {price})",
+  "@kk_zakat_nisabLine": {
+    "placeholders": {
+      "grams": {},
+      "price": {}
+    }
+  },
+  "kk_zakat_amount": "Zakot",
+  "kk_zakat_amountLong": "Hisoblangan summa (bazaning 2,5%)",
+  "kk_zakat_reason_BASE_NOT_POSITIVE": "Baza musbat emas — zakot hisoblanmadi.",
+  "kk_zakat_reason_BELOW_NISAB": "Baza nisobdan past — zakot hisoblanmadi.",
+  "kk_zakat_reason_HAWL_NOT_COMPLETE": "Bir qamariy yil (hawl) toʻlmagan — zakot hisoblanmadi.",
+  "kk_zakat_reason_GOLD_PRICE_MISSING": "Oltin narxini kiriting — nisob shundan hisoblanadi.",
+  "kk_zakat_adjust": "Aniqlashtirish",
+  "kk_zakat_hawl": "Biznes kamida bir qamariy yildan beri bor (hawl toʻlgan)",
+  "kk_zakat_hawlYes": "Ilova hisobi: {date} dan beri — toʻlgan.",
+  "@kk_zakat_hawlYes": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_zakat_hawlNo": "Ilova hisobi: {date} dan beri — hali toʻlmagan. Biznes ilovadan oldin boshlangan boʻlsa, belgilang.",
+  "@kk_zakat_hawlNo": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_zakat_hawlNoData": "Ilovada hali yozuv yoʻq.",
+  "kk_zakat_hopeless": "90+ kunlik nasiya: umidsizlarini belgilang (bazaga kirmaydi)",
+  "kk_zakat_hopelessLine": "{customer} — {item}: {amount} ({days} kun)",
+  "@kk_zakat_hopelessLine": {
+    "placeholders": {
+      "amount": {},
+      "customer": {},
+      "days": {},
+      "item": {}
+    }
+  },
+  "kk_zakat_save": "Hisobni saqlash",
+  "kk_zakat_history": "Saqlangan hisoblar",
+  "kk_hijri_date": "{day} {month} {year}",
+  "@kk_hijri_date": {
+    "placeholders": {
+      "day": {},
+      "month": {},
+      "year": {}
+    }
+  },
+  "kk_hijri_m1": "muharram",
+  "kk_hijri_m2": "safar",
+  "kk_hijri_m3": "rabiul avval",
+  "kk_hijri_m4": "rabiul oxir",
+  "kk_hijri_m5": "jumodul avval",
+  "kk_hijri_m6": "jumodul oxir",
+  "kk_hijri_m7": "rajab",
+  "kk_hijri_m8": "shaʼbon",
+  "kk_hijri_m9": "ramazon",
+  "kk_hijri_m10": "shavvol",
+  "kk_hijri_m11": "zulqaʼda",
+  "kk_hijri_m12": "zulhijja",
+  "kk_measure_title": "Tarozi va sanoq",
+  "kk_measure_intro": "Ilova tarozini oʻlchamaydi — odatni eslatadi va natijani yozib qoʻyadi. Yillik inventarizatsiyada tovar sanaladi va farqlar bitta yozuvda tuzatiladi.",
+  "kk_measure_scale": "Tarozi tekshiruvi",
+  "kk_measure_reminder": "Har oy eslatish (tarozida sotaman)",
+  "kk_measure_due": "Oxirgi tekshiruvdan 30 kundan koʻp oʻtdi — tarozini etalon ogʻirlik bilan tekshiring.",
+  "kk_measure_checkTitle": "Tekshiruv natijasi",
+  "kk_measure_result": "Natija",
+  "kk_measure_res_OK": "Toʻgʻri",
+  "kk_measure_res_ADJUSTED": "Sozlandi",
+  "kk_measure_res_FAULTY": "Nosoz",
+  "kk_measure_note": "Izoh (sozlangan yoki nosoz boʻlsa — majburiy)",
+  "kk_measure_checkSave": "Tekshirildi",
+  "kk_measure_inventory": "Yillik inventarizatsiya",
+  "kk_measure_inventoryHint": "Sanagan tovarlaringizni kiriting (boʻsh — sanalmadi). Farqlar sabab bilan bitta yozuvda tuzatiladi; zakot hisobi yangilangan qoldiqdan.",
+  "kk_measure_inventoryForm": "Sanalgan miqdorlar",
+  "kk_measure_book": "Hisobda",
+  "kk_measure_counted": "Sanalgan",
+  "kk_measure_countedNamed": "{name}: sanalgan ({unit})",
+  "@kk_measure_countedNamed": {
+    "placeholders": {
+      "name": {},
+      "unit": {}
+    }
+  },
+  "kk_measure_reason": "Izoh (farqlar uchun)",
+  "kk_measure_inventorySave": "Inventarizatsiyani yozish",
+  "kk_measure_countLine": "{date}: {counted} ta tovar sanaldi, {changed} tasida farq; qiymat {before} → {after}",
+  "@kk_measure_countLine": {
+    "placeholders": {
+      "after": {},
+      "before": {},
+      "changed": {},
+      "counted": {},
+      "date": {}
+    }
+  }
 }

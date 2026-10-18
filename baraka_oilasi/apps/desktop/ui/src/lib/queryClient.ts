@@ -44,6 +44,12 @@ export const keys = {
   kkStock: (spaceId: string) => ["kkStock", spaceId] as const,
   kkStaff: (spaceId: string) => ["kkStaff", spaceId] as const,
   kkSuppliers: (spaceId: string) => ["kkSuppliers", spaceId] as const,
+  kkGate: (spaceId: string) => ["kkGate", spaceId] as const,
+  kkGrowthSettings: (spaceId: string) => ["kkGrowthSettings", spaceId] as const,
+  kkZakat: (spaceId: string, input: string) => ["kkZakat", spaceId, input] as const,
+  kkZakatHistory: (spaceId: string) => ["kkZakatHistory", spaceId] as const,
+  kkScale: (spaceId: string) => ["kkScale", spaceId] as const,
+  kkStockCounts: (spaceId: string) => ["kkStockCounts", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 
