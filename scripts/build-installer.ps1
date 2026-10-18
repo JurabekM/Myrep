@@ -16,6 +16,12 @@ $crates = "tamgad", "tamga-hook", "tamga-mcp-proxy", "tamga-cli", "tamga-verify"
 $sign = Join-Path $PSScriptRoot "sign.ps1"
 $signing = [bool]($env:TAMGA_SIGN_THUMBPRINT -or $env:TAMGA_SIGN_PFX -or ($env:TAMGA_SIGN_AZURE_DLIB -and $env:TAMGA_SIGN_AZURE_METADATA))
 
+# Binarlarga yig'uvchi kompyuterning yo'llari (foydalanuvchi nomi bilan) yozilmasin: panic va
+# bog'liqliklar manbasi yo'llari `~` va `tamga` ga almashtiriladi. Mavjud bayroqlar saqlanadi.
+$sep = [char]0x1f
+$remap = "--remap-path-prefix=$($env:USERPROFILE)=~" + $sep + "--remap-path-prefix=$root=tamga"
+$env:CARGO_ENCODED_RUSTFLAGS = if ($env:CARGO_ENCODED_RUSTFLAGS) { $env:CARGO_ENCODED_RUSTFLAGS + $sep + $remap } else { $remap }
+
 Push-Location $root
 try {
     cargo build --release @($crates | ForEach-Object { "-p", $_ })
