@@ -16,6 +16,7 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Mahsulot egasi, ulamo va yurist uchun ochiq savollar |
 | [docs/uy/](docs/uy/) | «Baraka daftari» spetsifikatsiyasi va dastlabki rejalar |
 | [docs/kasbkor/SPEC.md](docs/kasbkor/SPEC.md) | Kasb-kor makoni spetsifikatsiyasi (K0, qoralama) |
+| [docs/musofir/SPEC.md](docs/musofir/SPEC.md) | Musofir makoni spetsifikatsiyasi (M0, qoralama) |
 | [CLAUDE.md](CLAUDE.md) | AI-dasturchi uchun sessiya qoidalari |
 
 Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.baraka` formati — `python3 -I spec/interchange/oracle.py --check spec/interchange/vectors.json` (`cryptography` kerak).
@@ -45,6 +46,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | K6: Kasb-kor xodim va ta'minotchi kelishuvlari (`reviewStatus` li shablonlar), foizsiz va jarimasiz avans, oylik varaqcha, ta'minotchiga qarz | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | K7: Kasb-kor kengayish darvozasi (5 shart va keyingi qadamlar), «Hisob kuni» konvertlari va soliq zaxirasi, halol muqobillar, zakot hisobi (hijriy «Zakot kuni», hisob — fatvo emas), tarozi tekshiruvi, yillik inventarizatsiya | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | K8: Kasb-kor ko'p qurilma va rollar (ADR-0003) — sotuvchi qurilmasi (sotuv, nasiya to'lovi, smena; foyda ma'lumoti unga yuborilmaydi), hisobchi (faqat o'qish), egasida yozish filtri va bekor qilish | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
+| M0: Musofir makoni spetsifikatsiyasi (`docs/musofir/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

@@ -6,6 +6,10 @@
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
 - Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
 
+### Qo'shildi — M0: Musofir makoni spetsifikatsiyasi (hujjat, kod yo'q)
+- `docs/musofir/SPEC.md` v0.1 — **qoralama, mahsulot egasi tasdig'i kutilmoqda**. Tashxis («yillar ishlaydi, qaytganda qo'lida hech narsa yo'q»), odat ritmi, bosh ekran (1-raqam «Qaytish jamg'armasi», 2-raqam «Shu oy o'z ulushi»), 5 personaj, 7 qonunning M1–M3 ga bo'linishi, ko'p valyuta va kurs qoidalari (kurssiz taxmin yo'q), domen modeli, vektor suite'lari, cheklovlar va maxfiylik. M1 qismi batafsil, M2/M3 — reja darajasida.
+- `OPEN_QUESTIONS.md`: OQ-MF1…OQ-MF5 (o'z ulushi foizi, oila nimani ko'radi, qorovul pul, kurs manbai, relay ADR — R1 dan oldin).
+
 ### Qo'shildi — K8: Kasb-kor ko'p qurilma va rollar (kasbkor/SPEC 12, ADR-0003)
 - **Avval ADR:** `docs/adr/0003-kop-qurilma-va-rollar.md` — rol qurilmaga beriladi (`OWNER` — rolsiz, `SELLER`, `ACCOUNTANT`), rolni faqat egasi yozadi; asosiy himoya — **kamaytirilgan ma'lumot** (kerak bo'lmagan yozuv rolli qurilmaga umuman bormaydi), egasining qurilmasida yozish filtri; transport — U14 fayl almashish (relay — R1).
 - **Vektorlar (avval oracle):** `kk_shift_close` (10 case: do'kon smenasi — ochilish 200 000 + naqd savdo 850 000 + nasiya to'lovi 150 000 = **1 200 000**, karta 300 000 kassaga kirmaydi, egasiga 1 000 000 → keyingi smenaga 200 000; kamomad va sabab; ortiqcha; 4 hafta ichida uchinchi kamomad; savdosiz smena; xatolar — topshirilgan sanalgandan ko'p, sababsiz farq, noma'lum tur, manfiy, nol summa). Rust birinchi urinishda mos keldi. `domain-kasbkor::shift` — kunlik kassa yopish qoidasi ustida.

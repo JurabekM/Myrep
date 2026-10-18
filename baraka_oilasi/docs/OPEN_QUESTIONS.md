@@ -122,6 +122,32 @@
 - **Savollar:** sotuvchi nasiya bera olsinmi (egasi tasdiqlaydigan «so'rov» bilan)? Sotuvchi o'z chiqimini (masalan, kichik xarajat) yoza olsinmi? Bir nechta sotuvchi bitta kassada ishlasa — smena qurilmaga emas, odamga bog'lansinmi?
 - **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
+## Musofir (mahsulot egasi uchun; `docs/musofir/SPEC.md`)
+
+### OQ-MF1. O'z ulushi foizi va jamg'arma maqsadi
+- **Taklif (M1):** standart o'z ulushi — maoshning 20 %; maqsad — uy valyutasida summa (egasi kiritadi), ixtiyoriy qaytish sanasi; prognoz — oxirgi 3 to'liq oy o'rtachasi.
+- **Savol:** standart 20 % to'g'rimi (oilasi qarzda bo'lsa — kamroq)? Maqsadni «qaytgach N oy yashash» ko'rinishida (Uy makonidagi oylik xarajatdan) so'rash kerakmi?
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+
+### OQ-MF2. Uydagi oila musofirning nimasini ko'radi
+- **Masala:** M2 da uydagi qurilma «Ikki qirg'oq» ma'lumotini oladi. Musofirning chet eldagi xarajatlari va qaytish jamg'armasi oilaga ko'rinsinmi?
+- **Taklif:** standart — ko'rinmaydi; musofir xohlasa jamg'arma qoldig'ini ulashadi. Texnik vosita — K8 rol filtri (ADR-0003).
+- **To'sadi:** M2. **Holat:** OCHIQ.
+
+### OQ-MF3. Chet eldagi qorovul pul
+- **Savol:** qorovul pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
+- **To'sadi:** M3. **Holat:** OCHIQ.
+
+### OQ-MF4. Kurs manbai va eskirishi
+- **Vaqtinchalik qaror (M1):** kursni foydalanuvchi kiritadi (sana va ixtiyoriy manba bilan); 30 kundan eski kurs — «yangilang» belgisi; kurs yo'q bo'lsa uy valyutasidagi ko'rsatkich ko'rsatilmaydi. Markaziy bank kursini avtomatik olish — yo'q (tarmoqqa chiqmaslik qoidasi).
+- **Savol:** «uyda olingan» summadan kursni avtomatik taklif qilish kerakmi?
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+
+### OQ-MF5. Relay server ADR
+- **Masala:** `BARAKA_OILASI.md` 14: M0 — SPEC va relay ADR loyihasi. M1 uchun relay kerak emas; M2 `.baraka` fayl (U14) bilan ishlaydi.
+- **Qaror (M0):** relay ADR (`docs/adr/0004-relay.md`) R1 dan oldin yoziladi; M0 da qoldirildi.
+- **To'sadi:** R1. **Holat:** OCHIQ.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik
