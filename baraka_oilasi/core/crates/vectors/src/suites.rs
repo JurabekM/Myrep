@@ -16,6 +16,7 @@ use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
 use baraka_domain_musofir::fund::return_fund;
 use baraka_domain_musofir::month::{month_report as mf_month_report, MfKind, MfMove};
+use baraka_domain_musofir::remittance::{remittance_book, Purpose, Remittance, Share};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -160,6 +161,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_shift_close" => kk_shift_close(input),
         "mf_month" => mf_month(input),
         "mf_return_fund" => mf_return_fund(input),
+        "mf_remittance" => mf_remittance(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1744,5 +1746,58 @@ fn mf_return_fund(v: &Value) -> R {
         "projectedHome": m(r.projected_home),
         "shortfallAtReturn": m(r.shortfall_at_return),
         "status": r.status.as_str(),
+    }))
+}
+
+fn mf_purpose(v: &Value) -> Result<Purpose, E> {
+    Purpose::parse(s(v, "purpose")?).ok_or_else(|| E("INVALID_PURPOSE".into()))
+}
+
+fn mf_remittance(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let mut rems = Vec::new();
+    for r in v["remittances"]
+        .as_array()
+        .ok_or_else(|| bad("remittances"))?
+    {
+        let mut shares = Vec::new();
+        for x in r["shares"].as_array().ok_or_else(|| bad("shares"))? {
+            shares.push(Share {
+                purpose: mf_purpose(x)?,
+                bp: i(x, "bp")?,
+            });
+        }
+        rems.push(Remittance {
+            received: if r["received"].is_null() {
+                None
+            } else {
+                Some(money(r, "received", c)?)
+            },
+            shares,
+        });
+    }
+    let mut spends = Vec::new();
+    for x in v["spends"].as_array().ok_or_else(|| bad("spends"))? {
+        spends.push((mf_purpose(x)?, money(x, "amount", c)?));
+    }
+    let b = remittance_book(c, &rems, &spends)?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "purposes": b.purposes.iter().map(|p| json!({
+            "purpose": p.purpose.as_str(),
+            "received": m(p.received),
+            "spent": m(p.spent),
+            "balance": m(p.balance),
+            "status": if p.overspent { "OVERSPENT" } else { "OK" },
+        })).collect::<Vec<_>>(),
+        "received": m(b.received),
+        "spent": m(b.spent),
+        "balance": m(b.balance),
+        "pending": b.pending,
+        "overspent": b.overspent,
+        "allocations": b.allocations.iter().map(|a| a.as_ref().map(|parts| parts.iter().map(|(p, x)| json!({
+            "purpose": p.as_str(),
+            "amount": m(*x),
+        })).collect::<Vec<_>>())).collect::<Vec<_>>(),
     }))
 }

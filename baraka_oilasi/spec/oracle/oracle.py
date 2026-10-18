@@ -1558,6 +1558,65 @@ def mf_return_fund(cur, home, balance, rate, target, monthly, today, return_on):
         out["status"] = "BEHIND" if projected is not None and projected < target else "ON_TRACK"
     return out
 
+
+MF_PURPOSES = ("HOUSEHOLD", "DEBT", "BUILD", "EDUCATION", "CEREMONY", "SAVINGS", "OTHER")
+
+
+def mf_shares(shares):
+    """«Ikki qirg'oq» ulushlari (SPEC 5): har biri 1–10000 bp, maqsad takrorlanmaydi, yig'indisi 100 %.
+    Kanonik maqsadlar tartibida qaytadi (largest remainder shu tartibda)."""
+    seen = set()
+    for x in shares:
+        if x["purpose"] not in MF_PURPOSES:
+            raise OracleError("INVALID_PURPOSE")
+        if x["purpose"] in seen:
+            raise OracleError("DUPLICATE_PURPOSE")
+        if not 1 <= x["bp"] <= 10000:
+            raise OracleError("INVALID_BP")
+        seen.add(x["purpose"])
+    if sum(x["bp"] for x in shares) != 10000:
+        raise OracleError("SHARES_NOT_FULL")
+    return sorted(shares, key=lambda x: MF_PURPOSES.index(x["purpose"]))
+
+
+def mf_remittance(remittances, spends):
+    """Maqsadlar qoldig'i (SPEC 5): har qabul qilingan summa ulushlar bo'yicha bo'linadi (allocate);
+    maqsad bo'yicha olingan − sarflangan = qoldiq. Qabul qilinmagani — «yo'lda» (`pending`)."""
+    rec = {p: 0 for p in MF_PURPOSES}
+    spent = {p: 0 for p in MF_PURPOSES}
+    used, pending, allocations = set(), 0, []
+    for r in remittances:
+        ordered = mf_shares(r["shares"])
+        used |= {x["purpose"] for x in ordered}
+        if r.get("received") is None:
+            pending += 1
+            allocations.append(None)
+            continue
+        a = int(r["received"])
+        if a <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        parts = allocate(a, [x["bp"] for x in ordered])
+        allocations.append([{"purpose": x["purpose"], "amount": _s(v)} for x, v in zip(ordered, parts)])
+        for x, v in zip(ordered, parts):
+            rec[x["purpose"]] += v
+    for x in spends:
+        if x["purpose"] not in MF_PURPOSES:
+            raise OracleError("INVALID_PURPOSE")
+        a = int(x["amount"])
+        if a <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        spent[x["purpose"]] += a
+        used.add(x["purpose"])
+    rows = []
+    for p in MF_PURPOSES:
+        if p in used:
+            bal = rec[p] - spent[p]
+            rows.append({"purpose": p, "received": _s(rec[p]), "spent": _s(spent[p]), "balance": _s(bal),
+                         "status": "OVERSPENT" if bal < 0 else "OK"})
+    tr, ts = sum(rec.values()), sum(spent.values())
+    return {"purposes": rows, "received": _s(tr), "spent": _s(ts), "balance": _s(tr - ts), "pending": pending,
+            "overspent": any(r["status"] == "OVERSPENT" for r in rows), "allocations": allocations}
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -2582,6 +2641,36 @@ def build_suites():
               lambda c=c, b=b, r=r, tg=tg, mo=mo, td=td, ro=ro: mf_return_fund(c, U, b, r, tg, mo, date.fromisoformat(td),
                                                                               date.fromisoformat(ro) if ro else None))
         for cid, c, b, r, tg, mo, td, ro in rf])
+    def sh(*pairs):
+        return [{"purpose": p, "bp": b} for p, b in pairs]
+    def sp(p, a):
+        return {"purpose": p, "amount": _s(a)}
+    gul = sh(("HOUSEHOLD", 5000), ("DEBT", 3000), ("BUILD", 2000))
+    rm = [
+        # Gulnora: 10 900 000 so'm qabul qilindi — 50/30/20; uy xarajati 2 mln, qarz to'liq.
+        ("rm-001", [{"received": _s(1090000000), "shares": gul}], [sp("HOUSEHOLD", 200000000), sp("DEBT", 327000000)]),
+        # Largest remainder: 100 000,01 so'm uchga (ulushlar tartibsiz berilgan).
+        ("rm-002", [{"received": _s(10000001), "shares": sh(("BUILD", 3334), ("HOUSEHOLD", 3333), ("DEBT", 3333))}], []),
+        # Ikki yuborish turli ulushlar bilan, bittasi hali yo'lda.
+        ("rm-003", [{"received": _s(1090000000), "shares": gul},
+                    {"received": _s(500000000), "shares": sh(("HOUSEHOLD", 10000))},
+                    {"received": None, "shares": gul}], [sp("HOUSEHOLD", 600000000)]),
+        # Uy xarajati maqsaddan ortiq.
+        ("rm-004", [{"received": _s(1090000000), "shares": gul}], [sp("HOUSEHOLD", 600000000)]),
+        # Ulushsiz maqsadga xarajat (marosim).
+        ("rm-005", [{"received": _s(1090000000), "shares": gul}], [sp("CEREMONY", 100000000)]),
+        # Faqat yo'lda.
+        ("rm-006", [{"received": None, "shares": gul}], []),
+        ("rm-neg-001", [{"received": _s(100), "shares": sh(("HOUSEHOLD", 9000))}], []),
+        ("rm-neg-002", [{"received": _s(100), "shares": sh(("HOUSEHOLD", 5000), ("HOUSEHOLD", 5000))}], []),
+        ("rm-neg-003", [{"received": _s(100), "shares": sh(("HOUSEHOLD", 10000), ("DEBT", 0))}], []),
+        ("rm-neg-004", [{"received": _s(100), "shares": sh(("CAR", 10000))}], []),
+        ("rm-neg-005", [{"received": _s(0), "shares": gul}], []),
+        ("rm-neg-006", [{"received": _s(100), "shares": gul}], [sp("DEBT", 0)]),
+    ]
+    suites["mf_remittance"] = _suite("mf_remittance", "Musofir «Ikki qirg'oq»: qabul qilingan pulni maqsad ulushlariga bo'lish (largest remainder), maqsad bo'yicha sarflangan va qoldiq, yo'ldagi yuborishlar, maqsaddan ortiq sarf (musofir/SPEC 5)", [
+        _case(cid, {"currency": U, "remittances": rs, "spends": ss}, lambda rs=rs, ss=ss: mf_remittance(rs, ss))
+        for cid, rs, ss in rm])
     return suites
 
 
@@ -2591,7 +2680,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
-                 "mf_month", "mf_return_fund")
+                 "mf_month", "mf_return_fund", "mf_remittance")
 
 
 def generate(directory: str) -> None:
@@ -2655,6 +2744,10 @@ def _expect_error(code, fn, *args):
 
 
 def selftest() -> None:
+    # M2 (musofir/SPEC 5): 10 900 000 so'm 50/30/20 — uy 5 450 000, qarz 3 270 000, qurilish 2 180 000.
+    rr2 = mf_remittance([{"received": "1090000000", "shares": [{"purpose": "HOUSEHOLD", "bp": 5000}, {"purpose": "DEBT", "bp": 3000},
+                                                              {"purpose": "BUILD", "bp": 2000}]}], [])
+    assert [p["received"] for p in rr2["purposes"]] == ["545000000", "327000000", "218000000"]
     # M1 (musofir/SPEC 2.1): Rustam aka — ulush 520 000 von bajarildi, qo'lda 215 000; 13 oyda 116,1 mln — 3,9 mln kam.
     rm = mf_month(150000, 0, 2000, [{"kind": "SALARY", "amount": "2600000"}, {"kind": "EXPENSE", "amount": "810000"},
                                     {"kind": "SENT_HOME", "amount": "1200000", "fee": "5000"}, {"kind": "FUND_IN", "amount": "520000"}])

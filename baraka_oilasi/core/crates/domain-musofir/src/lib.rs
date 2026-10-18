@@ -5,6 +5,7 @@
 pub mod fund;
 pub mod month;
 pub mod rate;
+pub mod remittance;
 
 pub use baraka_domain_common::DomainError;
 

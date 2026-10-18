@@ -97,9 +97,12 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - Qilinmagan: yozuvni tuzatish va o'chirish, qorovul pul (OQ-MF3), uydagi oila bilan bog'lanish (M2), Android UI.
 
 ## 5. 6-QONUN: «IKKI QIRG'OQ» — OILA BILAN PUL KELISHUVI (M2)
-- Har bir yuborishning **maqsadi** (uy xarajati, qarz to'lovi, qurilish, jamg'arma, marosim, boshqa) va oila bilan **`REMITTANCE` kelishuvi** (9 savol: kim oladi, qaysi maqsadga qancha, hisobot qanday, o'zgartirish tartibi).
-- Uydagi a'zo (Uy makoni) kelgan pulni maqsad bo'yicha qabul qiladi va xarajatni shu maqsadga bog'lab yozadi; musofir maqsad bo'yicha qoldiqni ko'radi. Transport — `.baraka` fayl (U14); relay — R1 (alohida ADR).
-- Ayblovsiz: maqsaddan chetga chiqish — «kelishuvni yangilaymizmi?» savoli, gina emas.
+- Har bir yuborishning **maqsadlari** — ulushlar bilan (bp, yig'indisi 100 %): uy xarajati, qarz to'lovi, qurilish va ta'mir, o'qish, marosim, uydagi jamg'arma, boshqa. Standart bo'linish — kelishuv shartlaridan, har yuborishda o'zgartirish mumkin.
+- Oila bilan **«Ikki qirg'oq» kelishuvi** (`REMITTANCE`): shartlar (maqsadlar va ulushlar, kim qabul qiladi) va ulardan yasalgan matn — Uy makonidagi **oilaviy kelishuv** (U13): har bir katta a'zo PIN bilan tasdiqlaydi, matn o'zgarsa hamma qayta tasdiqlaydi.
+- **Uy tomoni:** kelgan pulni qabul qilish — haqiqatda olingan summa uy valyutasida va kim oldi; qabul **Uy makonida daromad** bo'lib tushadi (bitta tranzaksiyada). Xarajatni maqsadga bog'lab yozish — Uy makonidagi oddiy xarajat + maqsad belgisi.
+- **Maqsadlar qoldig'i** (`mf_remittance`): har qabul qilingan summa ulushlar bo'yicha bo'linadi (largest remainder); maqsad bo'yicha olingan − sarflangan = qoldiq. Qabul qilinmagan yuborishlar — «yo'lda». Ikkala tomon ham ko'radi.
+- Ayblovsiz: maqsaddan ortiq sarflansa (`OVERSPENT`) — «kelishuvni yangilaymizmi?» savoli, gina emas; xarajat taqiqlanmaydi.
+- Transport — `.baraka` fayl (U14); relay — R1 (alohida ADR).
 
 ## 6. 4, 5, 7-QONUNLAR (M3)
 - **Yo'l qarzidan chiqish:** U8/U9 qarz inventari va payoff ish valyutasida; birinchi maoshlardan qarz rejasi.
@@ -114,7 +117,8 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - Uydagi oila haqida ayblovchi matn yo'q («hammasini sarflab yuborishdi» emas — «kelishuv bo'yicha qancha qoldi»).
 
 ## 8. MAXFIYLIK
-- Musofir makoni shu xonadon bazasida; uydagi qurilmaga (M2) faqat kelishilgan ma'lumot ketadi — musofirning chet eldagi xarajatlari va jamg'armasi oilaga avtomatik ko'rsatilmaydi (OQ-MF2). Texnik vosita — K8 dagi rol filtri naqshi (ADR-0003).
+- **Mahsulot egasi qarori (OQ-MF2): oila ko'rmaydi.** Uydagi oila qurilmasi — `HOME` roli (ADR-0004): unga musofirning maoshi, chet eldagi xarajatlari, qaytish jamg'armasi, sozlamalari va kurslari **umuman yuborilmaydi**; faqat uyga yuborilganlar (komissiyasiz), maqsadlar, qabul va maqsad bo'yicha xarajatlar. Uy makoni ikkala tomonda to'liq.
+- Shart: musofirning qurilmasi xonadon egasi (rolsiz) bo'lishi kerak (ADR-0004, 5; OQ-MF6).
 
 ## 9. VEKTOR SUITE'LARI
 ### 9.1. M1
@@ -124,7 +128,8 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 | `mf_return_fund` | maqsadga yetgan; shu sur'atda N oy (yuqoriga yaxlitlash); qaytish sanasigacha yetmaydi (`BEHIND`); jamg'arish yo'q (`NO_SAVING`); maqsadsiz; o'rtacha qoldiq yaxlitlash; qaytish sanasi o'tib ketgan (0 oy); xatolar — noto'g'ri kurs |
 
 ### 9.2. M2, M3
-- `mf_remittance` (maqsadlar bo'yicha qoldiq), `mf_travel_debt`, `mf_cooling` — tegishli sessiyalarda.
+- `mf_remittance` (M2): bitta va bir nechta yuborish, largest remainder qoldiq birliklari, qabul qilinmagan («yo'lda»), maqsaddan ortiq sarflangan, ulushsiz maqsadga xarajat; xatolar — ulushlar yig'indisi ≠ 100 %, takroriy maqsad, nol ulush, noma'lum maqsad, summa ≤ 0.
+- `mf_travel_debt`, `mf_cooling` — M3.
 
 ## 10. ISH REJASI
 | # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |

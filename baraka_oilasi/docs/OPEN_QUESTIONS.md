@@ -130,9 +130,8 @@
 - **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ### OQ-MF2. Uydagi oila musofirning nimasini ko'radi
-- **Masala:** M2 da uydagi qurilma «Ikki qirg'oq» ma'lumotini oladi. Musofirning chet eldagi xarajatlari va qaytish jamg'armasi oilaga ko'rinsinmi?
-- **Taklif:** standart — ko'rinmaydi; musofir xohlasa jamg'arma qoldig'ini ulashadi. Texnik vosita — K8 rol filtri (ADR-0003).
-- **To'sadi:** M2. **Holat:** OCHIQ.
+- **Qaror (mahsulot egasi, M2):** oila **ko'rmaydi** — musofirning maoshi, chet eldagi xarajatlari, qaytish jamg'armasi, sozlamalari va kurslari uydagi qurilmaga yuborilmaydi; faqat uyga yuborilgan pul (komissiyasiz), maqsadlar, qabul va xarajatlar. Texnik yechim — `HOME` roli (ADR-0004).
+- **Holat:** YECHILGAN.
 
 ### OQ-MF3. Chet eldagi qorovul pul
 - **Savol:** qorovul pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
@@ -145,8 +144,19 @@
 
 ### OQ-MF5. Relay server ADR
 - **Masala:** `BARAKA_OILASI.md` 14: M0 — SPEC va relay ADR loyihasi. M1 uchun relay kerak emas; M2 `.baraka` fayl (U14) bilan ishlaydi.
-- **Qaror (M0):** relay ADR (`docs/adr/0004-relay.md`) R1 dan oldin yoziladi; M0 da qoldirildi.
+- **Qaror (M0):** relay ADR (`docs/adr/0005-relay.md`) R1 dan oldin yoziladi; M0 da qoldirildi.
 - **To'sadi:** R1. **Holat:** OCHIQ.
+
+### OQ-MF6. Xonadon uydagi qurilmada yaratilgan bo'lsa
+- **Masala:** `HOME` filtri (ADR-0004) musofirning qurilmasi xonadon egasi bo'lganda ishlaydi. Xonadonni oila yaratib, musofir keyin qo'shilsa, oila qurilmasi egasi bo'ladi va musofir ma'lumotini oladi.
+- **Vaqtinchalik qaror (M2):** ulash ekranida ochiq ogohlantirish; egalikni o'tkazish — keyinroq.
+- **Savol:** egalikni musofirga o'tkazish oqimi kerakmi (masalan, oila qurilmasi o'zini `HOME` qilib qayta ulanishi)?
+- **To'sadi:** — . **Holat:** OCHIQ.
+
+### OQ-MF7. «Ikki qirg'oq» kelishuvi — 9 savolmi yoki oilaviy kelishuvmi
+- **Vaqtinchalik qaror (M2):** SPEC'dagi `REMITTANCE` kelishuvi U13 dagi **oilaviy kelishuv** shabloni sifatida (kattalar PIN bilan tasdiqlaydi); 9 savolli dvigatel (U7/U11) ishlatilmadi — tomonlar bitta oila, guvoh va hakam talab qilinmaydi.
+- **Savol:** «Ikki qirg'oq» kelishuviga guvoh (masalan, ota-ona) yoki chop etiladigan PDF kerakmi?
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ## Oila va maxfiylik
 
