@@ -374,3 +374,114 @@ fn credit_has_no_surcharge_and_is_immutable() {
         Some("2026-11-20")
     );
 }
+
+/// K5: tovar harakatlari o'zgarmas; qoidalar DB darajasida ham (miqdor butun, sabab va narx majburiy).
+#[test]
+fn stock_moves_are_checked_and_immutable() {
+    use baraka_storage::repo::kk_stock;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let item = kk_stock::KkItemRow {
+        id: "i1".into(),
+        name: "Shakar".into(),
+        unit: "G".into(),
+        method: "AVERAGE".into(),
+        currency: "UZS".into(),
+        sale_price_minor: None,
+        replacement_price_minor: None,
+        min_qty: None,
+        frozen_days: 90,
+        note: None,
+    };
+    db.write(|tx| kk_stock::insert_item(tx, &s, &item, &m))
+        .unwrap();
+    let bad_unit = kk_stock::KkItemRow {
+        id: "i2".into(),
+        unit: "KG".into(),
+        ..item.clone()
+    };
+    assert!(db
+        .write(|tx| kk_stock::insert_item(tx, &s, &bad_unit, &m))
+        .is_err());
+    let purchase = kk_stock::KkStockMoveRow {
+        id: "m1".into(),
+        item_id: "i1".into(),
+        kind: "PURCHASE".into(),
+        occurred_on: "2026-11-01".into(),
+        qty: 50_000,
+        amount_minor: Some(55_000_000),
+        wallet: None,
+        income_id: None,
+        reason: None,
+    };
+    db.write(|tx| kk_stock::insert_move(tx, &s, &purchase, &m))
+        .unwrap();
+    let bad = [
+        kk_stock::KkStockMoveRow {
+            id: "b1".into(),
+            amount_minor: None,
+            ..purchase.clone()
+        },
+        kk_stock::KkStockMoveRow {
+            id: "b2".into(),
+            qty: -1,
+            ..purchase.clone()
+        },
+        kk_stock::KkStockMoveRow {
+            id: "b3".into(),
+            kind: "WRITE_OFF".into(),
+            amount_minor: None,
+            ..purchase.clone()
+        },
+        kk_stock::KkStockMoveRow {
+            id: "b4".into(),
+            kind: "SALE".into(),
+            wallet: Some("CASH".into()),
+            ..purchase.clone()
+        },
+        kk_stock::KkStockMoveRow {
+            id: "b5".into(),
+            kind: "ADJUST".into(),
+            qty: 100,
+            amount_minor: None,
+            reason: Some("topildi".into()),
+            ..purchase.clone()
+        },
+    ];
+    for b in &bad {
+        assert!(
+            db.write(|tx| kk_stock::insert_move(tx, &s, b, &m)).is_err(),
+            "{}",
+            b.id
+        );
+    }
+    let shortage = kk_stock::KkStockMoveRow {
+        id: "m2".into(),
+        kind: "ADJUST".into(),
+        qty: -500,
+        amount_minor: None,
+        reason: Some("toʻkilgan".into()),
+        ..purchase.clone()
+    };
+    db.write(|tx| kk_stock::insert_move(tx, &s, &shortage, &m))
+        .unwrap();
+    assert_eq!(
+        db.read(|c| kk_stock::moves(c, &s))
+            .unwrap()
+            .iter()
+            .map(|r| r.qty)
+            .collect::<Vec<_>>(),
+        [50_000, -500]
+    );
+    for sql in [
+        "UPDATE kk_stock_moves SET qty = 1",
+        "DELETE FROM kk_stock_moves",
+    ] {
+        let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
+        assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
+    }
+    // Harakati bor tovar o'chirilmaydi.
+    assert!(db
+        .write(|tx| kk_stock::delete_item(tx, &s, "i1", &m))
+        .is_err());
+}

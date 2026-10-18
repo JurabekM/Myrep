@@ -2105,6 +2105,12 @@ pub struct KkOverviewDto {
     /// Uskuna xaridi va sotuvi (hamyonga ta'sir qiladi, pul oqimiga kirmaydi).
     pub equipment_purchases: MoneyDto,
     pub equipment_sales: MoneyDto,
+    /// Tovar xaridi (K5): hamyondan chiqadi, pul oqimiga kirmaydi (tannarx sotilganda foydadan ayiriladi).
+    pub stock_purchases: MoneyDto,
+    /// Tovar qoldig'i hisobdagi qiymati va muzlagan tovarlar (qayta tiklash narxida), bugungi holat.
+    pub stock_value: MoneyDto,
+    pub stock_frozen_value: MoneyDto,
+    pub stock_frozen_count: u32,
     /// Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2).
     pub profit: KkProfitDto,
     /// Manfiy qoldiqli hamyonlar: `CASH`, `CARD`.
@@ -2185,13 +2191,15 @@ pub struct KkSalaryPaidDto {
 }
 
 /// Haqiqiy foyda (kasbkor/SPEC 3.1): ko'rinadigan − o'z mehnati − to'lanmagan oilaviy mehnat − eskirish
-/// − uskuna chiqib ketishi. Sotilgan tovar tannarxi — K5 gacha 0.
+/// − uskuna chiqib ketishi. Ko'rinadigan = tushum − sotilgan tovar tannarxi − tovar yo'qotishlari − chiqim (K5).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct KkProfitDto {
     pub revenue: MoneyDto,
     pub cogs: MoneyDto,
+    /// Hisobdan chiqarish va inventarizatsiya farqi (manfiy — ortiqcha topilgan).
+    pub stock_losses: MoneyDto,
     pub operating_expenses: MoneyDto,
     pub visible_profit: MoneyDto,
     /// O'z mehnati bahosi; kiritilmagan bo'lsa `null` (hisobda 0).
@@ -2619,4 +2627,107 @@ pub struct KkCreditExtendInput {
     pub months: u32,
     pub on: Option<String>,
     pub note: Option<String>,
+}
+
+// ---- K5: Kasb-kor «Tovar ham pul» ----
+
+/// Tovar kartochkasi. Narxlar ko'rsatish birligiga: kg, l, m (`G`, `ML`, `MM`) yoki dona (`PCS`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkItemInput {
+    pub name: String,
+    /// `G`, `ML`, `PCS`, `MM`; yaratilgandan keyin o'zgarmaydi.
+    pub unit: String,
+    /// `AVERAGE` (standart) yoki `FIFO`; harakat bo'lgach o'zgarmaydi.
+    pub method: Option<String>,
+    pub sale_price: Option<String>,
+    /// Joriy xarid narxi (qo'lda); bo'lmasa — oxirgi xarid narxi.
+    pub replacement_price: Option<String>,
+    /// Minimal qoldiq, ko'rsatish birligida (masalan «20» kg yoki «1,5» l).
+    pub min_qty: Option<String>,
+    /// «Muzlagan» chegarasi, kun (standart 90).
+    pub frozen_days: Option<u32>,
+    pub note: Option<String>,
+}
+
+/// `kind`: `PURCHASE`, `SALE`, `WRITE_OFF`, `COUNT` (inventarizatsiya: sanalgan miqdor).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStockMoveInput {
+    pub kind: String,
+    /// Ko'rsatish birligida (kg uchun 3 xonagacha kasr). `COUNT` da — sanalgan miqdor.
+    pub qty: String,
+    /// Xaridda — jami narx; sotuvda — tushum (bo'lmasa — sotuv narxi × miqdor); ortiqchada — qiymat.
+    pub amount: Option<String>,
+    /// Xaridda ixtiyoriy (`null` — ilovagacha bor edi); sotuvda majburiy.
+    pub wallet: Option<String>,
+    pub occurred_on: Option<String>,
+    /// Hisobdan chiqarish va inventarizatsiyada majburiy.
+    pub reason: Option<String>,
+}
+
+/// `kind`: `PURCHASE`, `SALE`, `WRITE_OFF`, `ADJUST`. `cost` — tannarx (xaridda — narx, ortiqchada — manfiy).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStockMoveDto {
+    pub id: String,
+    pub kind: String,
+    pub occurred_on: String,
+    /// Ishorali miqdor, ko'rsatish birligida («-80», «1,5»).
+    pub qty: String,
+    pub amount: Option<MoneyDto>,
+    pub cost: MoneyDto,
+    pub wallet: Option<String>,
+    pub reason: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkItemDto {
+    pub id: String,
+    pub name: String,
+    pub unit: String,
+    pub method: String,
+    /// Qoldiq, ko'rsatish birligida («70», «1,5»).
+    pub qty: String,
+    /// Hisobdagi qiymat (tannarx bo'yicha).
+    pub value: MoneyDto,
+    /// Bir birlik tannarxi; qoldiq yo'q bo'lsa `null`.
+    pub unit_cost: Option<MoneyDto>,
+    pub sale_price: Option<MoneyDto>,
+    /// Qo'lda kiritilgan joriy xarid narxi.
+    pub replacement_price_input: Option<MoneyDto>,
+    /// Hisobda ishlatilgani: qo'lda kiritilgan yoki oxirgi xarid narxi.
+    pub replacement_price: Option<MoneyDto>,
+    pub replacement_value: Option<MoneyDto>,
+    /// «Inflyatsiya yegan kapital»: qayta tiklash − hisobdagi.
+    pub inflation_gap: Option<MoneyDto>,
+    /// «Shu narxda sotsangiz, bu tovarni qayta ololmaysiz».
+    pub sale_below_replacement: bool,
+    pub min_qty: Option<String>,
+    pub below_min: bool,
+    pub frozen_days: u32,
+    pub last_sale_on: Option<String>,
+    pub frozen: bool,
+    pub note: Option<String>,
+    /// Harakatlar (yangisi birinchi).
+    pub moves: Vec<KkStockMoveDto>,
+}
+
+/// Tovarlar sahifasi: qoldiqlar va jami qiymatlar (qayta tiklash narxi bo'lmasa — hisobdagi).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStockDto {
+    pub items: Vec<KkItemDto>,
+    pub value: MoneyDto,
+    pub replacement_value: MoneyDto,
+    pub inflation_gap: MoneyDto,
+    /// Muzlagan tovarlar qiymati (qayta tiklash narxida).
+    pub frozen_value: MoneyDto,
+    pub frozen_count: u32,
 }

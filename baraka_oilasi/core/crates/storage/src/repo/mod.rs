@@ -11,6 +11,7 @@ pub mod incomes;
 pub mod journal;
 pub mod kk;
 pub mod kk_ledger;
+pub mod kk_stock;
 pub mod partnerships;
 pub mod recovery;
 pub mod rules;

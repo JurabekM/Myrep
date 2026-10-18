@@ -45,6 +45,8 @@ pub(crate) struct Period {
     pub owner_labor: Money,
     pub r: MonthReport,
     pub p: TrueProfit,
+    /// Sotilgan tovar tannarxi (K5).
+    pub cogs: Money,
     pub entries: Vec<KkEntryDto>,
     pub has_activity: bool,
 }
@@ -254,6 +256,19 @@ impl App {
                 }
             }
         }
+        // Tovar xaridi (K5): hamyondan to'langan bo'lsa.
+        for (r, name) in self.kk_stock_purchases(ctx, scope, from, to)? {
+            let w = wallet(r.wallet.as_deref().unwrap_or_default(), "wallet")?;
+            let amount = r.amount_minor.ok_or(AppError::new("CORRUPT_ROW"))?;
+            book.moves.push(Move {
+                kind: MoveKind::StockPurchase,
+                wallet: w,
+                amount: m(amount),
+            });
+            let mut e = entry(&r.id, "STOCK_PURCHASE", w, None, amount, &r.occurred_on);
+            e.note = Some(name);
+            book.entries.push(e);
+        }
         book.entries
             .sort_by(|a, b| b.occurred_on.cmp(&a.occurred_on).then(b.id.cmp(&a.id)));
         Ok(book)
@@ -308,20 +323,21 @@ impl App {
         )?;
         let (depreciation, disposal) = self.kk_depreciation_in(ctx, scope, start)?;
         let family = self.kk_family_rows(ctx, scope, start, end)?;
+        let stock = self.kk_stock_period(ctx, scope, &ymd(start), &ymd(end))?;
         let p = true_profit(
             ctx.currency,
             ProfitInput {
                 revenue: r.revenue,
-                cogs: zero,
+                cogs: stock.cogs,
                 operating_expenses: r.expenses,
                 owner_labor,
                 depreciation,
                 disposal,
-                stock_losses: zero,
+                stock_losses: stock.losses,
             },
             &family.iter().map(|(_, f)| *f).collect::<Vec<_>>(),
         )?;
-        let has_activity = !month.entries.is_empty() || !family.is_empty();
+        let has_activity = !month.entries.is_empty() || !family.is_empty() || stock.has_moves;
         Ok(Period {
             start,
             last,
@@ -331,6 +347,7 @@ impl App {
             owner_labor,
             r,
             p,
+            cogs: stock.cogs,
             entries: month.entries,
             has_activity,
         })
@@ -354,14 +371,17 @@ impl App {
             owner_labor,
             r,
             p,
+            cogs,
             entries,
             ..
         } = self.kk_period(&ctx, &scope, day)?;
-        let zero = Money::zero(ctx.currency);
         let d = |m: Money| self.money_dto(&ctx, m);
+        let (stock_value, stock_frozen, stock_frozen_count) =
+            self.kk_stock_summary(&ctx, &scope)?;
         let profit = KkProfitDto {
             revenue: d(r.revenue),
-            cogs: d(zero),
+            cogs: d(cogs),
+            stock_losses: d(p.stock_losses),
             operating_expenses: d(r.expenses),
             visible_profit: d(p.visible_profit),
             owner_labor: owner_labor.is_positive().then(|| d(owner_labor)),
@@ -392,6 +412,10 @@ impl App {
             card: d(r.card),
             equipment_purchases: d(r.equipment_purchases),
             equipment_sales: d(r.equipment_sales),
+            stock_purchases: d(r.stock_purchases),
+            stock_value: d(stock_value),
+            stock_frozen_value: d(stock_frozen),
+            stock_frozen_count,
             profit,
             negative_wallets: r
                 .negative_wallets

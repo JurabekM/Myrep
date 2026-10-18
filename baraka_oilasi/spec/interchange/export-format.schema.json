@@ -228,7 +228,9 @@
             "kk_cash_days",
             "kk_customers",
             "kk_credit_sales",
-            "kk_credit_events"
+            "kk_credit_events",
+            "kk_items",
+            "kk_stock_moves"
           ]
         },
         "data": {
@@ -588,6 +590,18 @@
       },
       {
         "name": "kk_credit_events",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_items",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_stock_moves",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []

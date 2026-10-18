@@ -1180,6 +1180,48 @@ impl BarakaCore {
             .kk_delete_credit_sale(&space_id, &sale_id)
     }
 
+    pub fn kk_stock(&self, space_id: String) -> Result<KkStockDto, AppError> {
+        self.session.app()?.kk_stock(&space_id)
+    }
+
+    pub fn kk_add_item(
+        &self,
+        space_id: String,
+        input: KkItemInput,
+    ) -> Result<KkStockDto, AppError> {
+        self.session.app()?.kk_add_item(&space_id, input)
+    }
+
+    pub fn kk_update_item(
+        &self,
+        space_id: String,
+        item_id: String,
+        input: KkItemInput,
+    ) -> Result<KkStockDto, AppError> {
+        self.session
+            .app()?
+            .kk_update_item(&space_id, &item_id, input)
+    }
+
+    pub fn kk_delete_item(
+        &self,
+        space_id: String,
+        item_id: String,
+    ) -> Result<KkStockDto, AppError> {
+        self.session.app()?.kk_delete_item(&space_id, &item_id)
+    }
+
+    pub fn kk_stock_move(
+        &self,
+        space_id: String,
+        item_id: String,
+        input: KkStockMoveInput,
+    ) -> Result<KkStockDto, AppError> {
+        self.session
+            .app()?
+            .kk_stock_move(&space_id, &item_id, input)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

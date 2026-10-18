@@ -243,9 +243,15 @@ impl App {
     ) -> Result<CloseRecord, AppError> {
         let p = self.kk_period(ctx, scope, start)?;
         let rules = rules_or_default(self.db.read(|c| kk::close_rules(c, scope))?);
+        // K5: tovar xaridi emas, sotilgan tovar tannarxi va tovar yo'qotishlari chiqimga qo'shiladi.
+        let expenses =
+            p.r.expenses
+                .checked_add(p.cogs)?
+                .checked_add(p.p.stock_losses)?
+                .clamp_non_negative();
         let c = month_close(CloseInput {
             revenue: p.r.revenue,
-            expenses: p.r.expenses,
+            expenses,
             depreciation: p.p.depreciation,
             owner_salary: p.salary,
             owner_paid: p.r.owner_paid,
@@ -259,7 +265,7 @@ impl App {
             period_end: ymd(p.last),
             currency: ctx.currency.code().to_string(),
             revenue: p.r.revenue.minor(),
-            expenses: p.r.expenses.minor(),
+            expenses: expenses.minor(),
             depreciation: p.p.depreciation.minor(),
             true_profit: p.p.true_profit.minor(),
             owner_salary: p.base_salary.is_positive().then(|| p.salary.minor()),
