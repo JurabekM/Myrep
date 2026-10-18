@@ -984,6 +984,37 @@ def kk_cash_close(opening, moves, counted, reason, recent):
             "reason": reason if diff != 0 else None, "suggestSearch": diff < 0 and shortages >= KK_SHORTAGE_REPEAT}
 
 
+KK_SHIFT_IN = ("SALE", "CREDIT_PAYMENT")
+
+
+def kk_shift_close(opening, ins, counted, handed_over, reason, recent):
+    """Sotuvchi smenasi (kasbkor/SPEC 12, ADR-0003). Sotuvchi qurilmasi faqat o'z naqd tushumi va naqd
+    nasiya to'lovlarini biladi: kutilgan = ochilish + ular (kunlik kassa yopish qoidasi, `kk_cash_close`).
+    Sanalgandan egasiga topshirilgani ayriladi — qolgani keyingi smena ochilishi. Karta tushumlari
+    kassaga ta'sir qilmaydi (ma'lumot uchun alohida)."""
+    if handed_over < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    moves, sales, payments, card = [], 0, 0, 0
+    for m in ins:
+        if m["kind"] not in KK_SHIFT_IN:
+            raise OracleError("INVALID_KIND")
+        a = int(m["amount"])
+        if m["wallet"] == "CARD" and a > 0:
+            card += a
+        elif m["wallet"] == "CASH" and a > 0:
+            if m["kind"] == "SALE":
+                sales += a
+            else:
+                payments += a
+        moves.append({"kind": "SALE", "wallet": m["wallet"], "amount": m["amount"]})
+    r = kk_cash_close(opening, moves, counted, reason, recent)
+    if handed_over > counted:
+        raise OracleError("HANDOVER_ABOVE_COUNTED")
+    return {"cashSales": _s(sales), "creditPayments": _s(payments), "cardIn": _s(card), "expected": r["expected"],
+            "difference": r["difference"], "status": r["status"], "reason": r["reason"], "suggestSearch": r["suggestSearch"],
+            "handedOver": _s(handed_over), "left": _s(counted - handed_over)}
+
+
 KK_MAX_INSTALLMENTS = 120
 
 
@@ -2345,6 +2376,34 @@ def build_suites():
     suites["kk_funds"] = _suite("kk_funds", "Kasb-kor «Hisob kuni» konvertlari: soliq zaxirasi, zaxira, aylanma, kengayish, sadaqa — qo'shilgan, ishlatilgan, qoldiq; qoldiqdan ko'p ishlatib bo'lmaydi (kasbkor/SPEC 4.5, 8.2)", [
         _case(cid, {"currency": U, "events": ev}, lambda ev=ev: kk_funds(ev)) for cid, ev in fd])
 
+    # K8 (ADR-0003): sotuvchi smenasi. Summalar so'mda.
+    def si(k, w, a):
+        return {"kind": k, "wallet": w, "amount": _s(a * 100)}
+    sh = [
+        # Do'kon: ochilish 200 000, naqd savdo 850 000, nasiya to'lovi 150 000, kartaga 300 000 → kutilgan 1 200 000;
+        # sanaldi 1 200 000, egasiga 1 000 000 topshirildi → keyingi smenaga 200 000.
+        ("sh-001", 200000, [si("SALE", "CASH", 500000), si("SALE", "CASH", 350000), si("CREDIT_PAYMENT", "CASH", 150000),
+                            si("SALE", "CARD", 300000)], 1200000, 1000000, None, []),
+        # Kamomad 20 000 — sabab majburiy.
+        ("sh-002", 200000, [si("SALE", "CASH", 850000)], 1030000, 1000000, "CHANGE_ERROR", []),
+        # Ortiqcha; hech narsa topshirilmadi.
+        ("sh-003", 0, [si("SALE", "CASH", 100000)], 105000, 0, "UNKNOWN", []),
+        # Uchinchi kamomad 4 hafta ichida — «xato qidirish» taklifi.
+        ("sh-004", 100000, [si("SALE", "CASH", 400000)], 490000, 490000, "UNKNOWN", ["-5000", "-12000"]),
+        # Savdosiz smena: hammasi topshirildi.
+        ("sh-005", 300000, [], 300000, 300000, None, []),
+        ("sh-neg-001", 100000, [si("SALE", "CASH", 50000)], 150000, 160000, None, []),
+        ("sh-neg-002", 100000, [], 90000, 0, None, []),
+        ("sh-neg-003", 100000, [si("REFUND", "CASH", 50000)], 50000, 0, None, []),
+        ("sh-neg-004", 100000, [], 100000, -1, None, []),
+        ("sh-neg-005", 100000, [si("SALE", "CASH", 0)], 100000, 0, None, []),
+    ]
+    suites["kk_shift_close"] = _suite("kk_shift_close", "Kasb-kor sotuvchi smenasi: o'z naqd tushumi va nasiya to'lovlari bilan kutilgan kassa, farq va sabab, egasiga topshirilgan, keyingi smenaga qolgan (kasbkor/SPEC 12, ADR-0003)", [
+        _case(cid, {"currency": U, "opening": _s(o * 100), "ins": ins, "counted": _s(c * 100), "handedOver": _s(h * 100), "reason": r,
+                    "recentDifferences": [_s(int(x) * 100) for x in rec]},
+              lambda o=o, ins=ins, c=c, h=h, r=r, rec=rec: kk_shift_close(o * 100, ins, c * 100, h * 100, r, [_s(int(x) * 100) for x in rec]))
+        for cid, o, ins, c, h, r, rec in sh])
+
     suites["kk_month_close"] = _suite("kk_month_close", "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)", [
         _case(cid, {"currency": U, "revenue": _s(t(r)), "expenses": _s(t(ex)), "depreciation": _s(t(dp)), "ownerSalary": _s(t(sal)), "ownerPaid": _s(t(pd)),
                     "tax": tx, "rule": ru, "carryOverdraw": co},
@@ -2358,7 +2417,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
-                 "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds")
+                 "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close")
 
 
 def generate(directory: str) -> None:
@@ -2422,6 +2481,11 @@ def _expect_error(code, fn, *args):
 
 
 def selftest() -> None:
+    # K8 (ADR-0003): sotuvchi smenasi — kutilgan 1 200 000, topshirildi 1 000 000, qoldi 200 000.
+    shf = kk_shift_close(20000000, [{"kind": "SALE", "wallet": "CASH", "amount": "85000000"},
+                                    {"kind": "CREDIT_PAYMENT", "wallet": "CASH", "amount": "15000000"},
+                                    {"kind": "SALE", "wallet": "CARD", "amount": "30000000"}], 120000000, 100000000, None, [])
+    assert (shf["expected"], shf["difference"], shf["left"], shf["cardIn"]) == ("120000000", "0", "20000000", "30000000")
     # K2 (kasbkor/SPEC 3.1): Nilufar — haqiqiy foyda 3 100 000; 7 mln / 36 oy → 16 × 194 444,45 + 20 × 194 444,44.
     assert kk_true_profit(1800000000, 600000000, 250000000, 500000000, [{"hours100": 8000, "hourlyRate": "1500000", "paid": False}],
                           20000000, 0)["trueProfit"] == "310000000"

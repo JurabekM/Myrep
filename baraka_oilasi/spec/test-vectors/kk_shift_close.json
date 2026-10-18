@@ -1,0 +1,263 @@
+{
+  "suite": "kk_shift_close",
+  "version": 1,
+  "description": "Kasb-kor sotuvchi smenasi: o'z naqd tushumi va nasiya to'lovlari bilan kutilgan kassa, farq va sabab, egasiga topshirilgan, keyingi smenaga qolgan (kasbkor/SPEC 12, ADR-0003)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "sh-001",
+      "input": {
+        "currency": "UZS",
+        "opening": "20000000",
+        "ins": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "50000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "35000000"
+          },
+          {
+            "kind": "CREDIT_PAYMENT",
+            "wallet": "CASH",
+            "amount": "15000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CARD",
+            "amount": "30000000"
+          }
+        ],
+        "counted": "120000000",
+        "handedOver": "100000000",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "85000000",
+        "creditPayments": "15000000",
+        "cardIn": "30000000",
+        "expected": "120000000",
+        "difference": "0",
+        "status": "EXACT",
+        "reason": null,
+        "suggestSearch": false,
+        "handedOver": "100000000",
+        "left": "20000000"
+      }
+    },
+    {
+      "id": "sh-002",
+      "input": {
+        "currency": "UZS",
+        "opening": "20000000",
+        "ins": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "85000000"
+          }
+        ],
+        "counted": "103000000",
+        "handedOver": "100000000",
+        "reason": "CHANGE_ERROR",
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "85000000",
+        "creditPayments": "0",
+        "cardIn": "0",
+        "expected": "105000000",
+        "difference": "-2000000",
+        "status": "SHORT",
+        "reason": "CHANGE_ERROR",
+        "suggestSearch": false,
+        "handedOver": "100000000",
+        "left": "3000000"
+      }
+    },
+    {
+      "id": "sh-003",
+      "input": {
+        "currency": "UZS",
+        "opening": "0",
+        "ins": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "10000000"
+          }
+        ],
+        "counted": "10500000",
+        "handedOver": "0",
+        "reason": "UNKNOWN",
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "10000000",
+        "creditPayments": "0",
+        "cardIn": "0",
+        "expected": "10000000",
+        "difference": "500000",
+        "status": "OVER",
+        "reason": "UNKNOWN",
+        "suggestSearch": false,
+        "handedOver": "0",
+        "left": "10500000"
+      }
+    },
+    {
+      "id": "sh-004",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "ins": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "40000000"
+          }
+        ],
+        "counted": "49000000",
+        "handedOver": "49000000",
+        "reason": "UNKNOWN",
+        "recentDifferences": [
+          "-500000",
+          "-1200000"
+        ]
+      },
+      "expected": {
+        "cashSales": "40000000",
+        "creditPayments": "0",
+        "cardIn": "0",
+        "expected": "50000000",
+        "difference": "-1000000",
+        "status": "SHORT",
+        "reason": "UNKNOWN",
+        "suggestSearch": true,
+        "handedOver": "49000000",
+        "left": "0"
+      }
+    },
+    {
+      "id": "sh-005",
+      "input": {
+        "currency": "UZS",
+        "opening": "30000000",
+        "ins": [],
+        "counted": "30000000",
+        "handedOver": "30000000",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "cashSales": "0",
+        "creditPayments": "0",
+        "cardIn": "0",
+        "expected": "30000000",
+        "difference": "0",
+        "status": "EXACT",
+        "reason": null,
+        "suggestSearch": false,
+        "handedOver": "30000000",
+        "left": "0"
+      }
+    },
+    {
+      "id": "sh-neg-001",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "ins": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "5000000"
+          }
+        ],
+        "counted": "15000000",
+        "handedOver": "16000000",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "HANDOVER_ABOVE_COUNTED"
+      }
+    },
+    {
+      "id": "sh-neg-002",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "ins": [],
+        "counted": "9000000",
+        "handedOver": "0",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "REASON_REQUIRED"
+      }
+    },
+    {
+      "id": "sh-neg-003",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "ins": [
+          {
+            "kind": "REFUND",
+            "wallet": "CASH",
+            "amount": "5000000"
+          }
+        ],
+        "counted": "5000000",
+        "handedOver": "0",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "INVALID_KIND"
+      }
+    },
+    {
+      "id": "sh-neg-004",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "ins": [],
+        "counted": "10000000",
+        "handedOver": "-100",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "sh-neg-005",
+      "input": {
+        "currency": "UZS",
+        "opening": "10000000",
+        "ins": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "0"
+          }
+        ],
+        "counted": "10000000",
+        "handedOver": "0",
+        "reason": null,
+        "recentDifferences": []
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}

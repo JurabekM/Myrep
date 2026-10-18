@@ -10,6 +10,7 @@ use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::payroll::{payroll, Advance, PayMonth};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
 use baraka_domain_kasbkor::quote::{order_quote, QuoteInput};
+use baraka_domain_kasbkor::shift::{shift_close, ShiftIn, ShiftInKind};
 use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
 use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
@@ -154,6 +155,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_expansion_gate" => kk_expansion_gate(input),
         "kk_zakat" => kk_zakat(input),
         "kk_funds" => kk_funds(input),
+        "kk_shift_close" => kk_shift_close(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1312,6 +1314,49 @@ fn kk_cash_close(v: &Value) -> R {
         "status": r.status.as_str(),
         "reason": r.reason.map(CashReason::as_str),
         "suggestSearch": r.suggest_search,
+    }))
+}
+
+fn kk_shift_close(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let reason = match v["reason"].as_str() {
+        None => None,
+        Some(r) => Some(CashReason::parse(r).ok_or_else(|| E("INVALID_REASON".into()))?),
+    };
+    let recent = v["recentDifferences"]
+        .as_array()
+        .ok_or_else(|| bad("recentDifferences"))?
+        .iter()
+        .map(|d| int_str(d).map(|m| Money::new(m, c)))
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut ins = Vec::new();
+    for m in v["ins"].as_array().ok_or_else(|| bad("ins"))? {
+        ins.push(ShiftIn {
+            kind: ShiftInKind::parse(s(m, "kind")?).ok_or_else(|| E("INVALID_KIND".into()))?,
+            wallet: Wallet::parse(s(m, "wallet")?).ok_or_else(|| E("INVALID_WALLET".into()))?,
+            amount: money(m, "amount", c)?,
+        });
+    }
+    let r = shift_close(
+        money(v, "opening", c)?,
+        &ins,
+        money(v, "counted", c)?,
+        money(v, "handedOver", c)?,
+        reason,
+        &recent,
+    )?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "cashSales": m(r.cash_sales),
+        "creditPayments": m(r.credit_payments),
+        "cardIn": m(r.card_in),
+        "expected": m(r.expected),
+        "difference": m(r.difference),
+        "status": r.status.as_str(),
+        "reason": r.reason.map(CashReason::as_str),
+        "suggestSearch": r.suggest_search,
+        "handedOver": m(r.handed_over),
+        "left": m(r.left),
     }))
 }
 

@@ -12,6 +12,7 @@ pub mod owner;
 pub mod payroll;
 pub mod profit;
 pub mod quote;
+pub mod shift;
 pub mod stock;
 pub mod supply;
 pub mod terms;
