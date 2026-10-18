@@ -3,6 +3,7 @@
 
 mod enums;
 mod error;
+pub mod hijri;
 mod ids;
 mod time;
 

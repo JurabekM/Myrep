@@ -1326,6 +1326,102 @@ def kk_supplier_balance(deliveries, payments, today):
             "overdue": _s(overdue), "dueSoon": _s(soon), "nextDue": nxt}
 
 
+KK_GATE_CONDITIONS = ("RESERVE", "PROFIT", "RECEIVABLES", "INTEREST_DEBT", "PLAN")
+
+
+def kk_expansion_gate(reserve, opex_months, required_months, true_profits, receivables, receivables_90, max_bad_bp,
+                      has_interest_debt, has_payoff_plan, has_plan):
+    """Kengayish darvozasi (SPEC 6.1): beshala shart bajarilsa ochiq. (1) biznes zaxirasi ≥ `required_months` ×
+    oxirgi to'liq oylar operatsion xarajati o'rtachasi (`round_half_up`; xarajat 0 bo'lsa — bajarilgan, tarix
+    yo'q bo'lsa — bajarilmagan); (2) oxirgi 3 «Hisob kuni»da haqiqiy foyda > 0 (3 tadan kam — bajarilmagan);
+    (3) 90+ kunlik nasiya ≤ `max_bad_bp` × jami nasiya; (4) foizli qarz yo'q yoki qarzdan chiqish rejasi bor;
+    (5) kengayish rejasi yozilgan. Qamrov — yuzdan bir oyda, `round_half_up`."""
+    if reserve < 0 or receivables < 0 or receivables_90 < 0 or any(x < 0 for x in opex_months):
+        raise OracleError("AMOUNT_NEGATIVE")
+    if not 1 <= required_months <= 24:
+        raise OracleError("INVALID_MONTHS")
+    if not 0 <= max_bad_bp <= 10000:
+        raise OracleError("INVALID_BP")
+    if receivables_90 > receivables:
+        raise OracleError("INVALID_RECEIVABLES")
+    avg = round_half_up(Fraction(sum(opex_months), len(opex_months))) if opex_months else None
+    if avg is None:
+        reserve_ok, coverage = False, None
+    elif avg == 0:
+        reserve_ok, coverage = True, None
+    else:
+        reserve_ok = reserve >= avg * required_months
+        coverage = round_half_up(Fraction(reserve * 100, avg))
+    profit_ok = len(true_profits) >= 3 and all(p > 0 for p in true_profits[-3:])
+    bad_bp = round_half_up(Fraction(receivables_90 * 10000, receivables)) if receivables > 0 else 0
+    receivables_ok = receivables_90 * 10000 <= max_bad_bp * receivables
+    debt_ok = (not has_interest_debt) or has_payoff_plan
+    ok = {"RESERVE": reserve_ok, "PROFIT": profit_ok, "RECEIVABLES": receivables_ok, "INTEREST_DEBT": debt_ok, "PLAN": has_plan}
+    return {"open": all(ok.values()), "conditions": [{"code": c, "ok": ok[c]} for c in KK_GATE_CONDITIONS],
+            "reasons": [c for c in KK_GATE_CONDITIONS if not ok[c]],
+            "averageOpex": None if avg is None else _s(avg), "requiredReserve": None if avg is None else _s(avg * required_months),
+            "coverageCentiMonths": coverage, "badDebtBp": bad_bp}
+
+
+ZAKAT_BP = 250
+
+
+def kk_zakat(stock, cash, receivables, debts, gold_price, nisab_grams, hawl_complete):
+    """Savdo mollari zakoti hisobi (SPEC 8.3; ulamo tasdig'igacha shartli — OQ-D5, OQ-D7). Baza = tovar + naqd va
+    hisobdagi pul + umidli nasiya − yaqin muddatli qarzlar; nisob = oltin narxi (1 g) × gramm. Zakot =
+    percent_of(baza, 250 bp), agar baza ≥ nisob va hawl to'lgan bo'lsa; aks holda 0 va sababi."""
+    if min(stock, cash, receivables, debts) < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    if gold_price <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if not 1 <= nisab_grams <= 1000:
+        raise OracleError("INVALID_NISAB")
+    base = stock + cash + receivables - debts
+    nisab = gold_price * nisab_grams
+    if base <= 0:
+        reason = "BASE_NOT_POSITIVE"
+    elif base < nisab:
+        reason = "BELOW_NISAB"
+    elif not hawl_complete:
+        reason = "HAWL_NOT_COMPLETE"
+    else:
+        reason = None
+    zakat = percent_of(base, ZAKAT_BP) if reason is None else 0
+    return {"base": _s(base), "nisab": _s(nisab), "due": reason is None, "zakat": _s(zakat), "reason": reason}
+
+
+KK_FUNDS = ("TAX", "RESERVE", "WORKING", "EXPANSION", "SADAQA")
+
+
+def kk_funds(events):
+    """«Hisob kuni» konvertlari (SPEC 4.5, 8.2): har bayonnoma soliq zaxirasi va taqsimotni qo'shadi, foydalanish
+    ayiradi (soliq zaxirasidan — to'langan soliq). Foydalanish qoldiqdan oshmaydi. Hodisalar sana tartibida."""
+    bal = {f: 0 for f in KK_FUNDS}
+    added = {f: 0 for f in KK_FUNDS}
+    used = {f: 0 for f in KK_FUNDS}
+    for e in events:
+        if e["kind"] == "CLOSE":
+            for f in KK_FUNDS:
+                a = int(e.get(f.lower(), "0"))
+                if a < 0:
+                    raise OracleError("AMOUNT_NEGATIVE")
+                bal[f] += a
+                added[f] += a
+        elif e["kind"] == "USE":
+            f, a = e["fund"], int(e["amount"])
+            if f not in KK_FUNDS:
+                raise OracleError("INVALID_FUND")
+            if a <= 0:
+                raise OracleError("AMOUNT_NOT_POSITIVE")
+            if a > bal[f]:
+                raise OracleError("FUND_INSUFFICIENT")
+            bal[f] -= a
+            used[f] += a
+        else:
+            raise OracleError("INVALID_KIND")
+    return {"funds": [{"fund": f, "added": _s(added[f]), "used": _s(used[f]), "balance": _s(bal[f])} for f in KK_FUNDS]}
+
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -2174,6 +2270,81 @@ def build_suites():
               lambda ds=ds, ps=ps, td=td: kk_supplier_balance(ds, ps, date.fromisoformat(td)))
         for cid, ds, ps, td in sp])
 
+    # K7: kengayish darvozasi. Summalar so'mda.
+    gt = [
+        # Hammasi bajarilgan: zaxira 30 mln, o'rtacha xarajat 8,5 mln × 3 = 25,5 mln; foyda 3 oy musbat; 90+ 5%.
+        ("gt-001", 30000000, [8000000, 9000000, 8500000], 3, [2580000, 1900000, 3100000], 10000000, 500000, 1000, False, False, True),
+        # Zaxira yetmaydi (qamrov 2,35 oy).
+        ("gt-002", 20000000, [8000000, 9000000, 8500000], 3, [2580000, 1900000, 3100000], 10000000, 500000, 1000, False, False, True),
+        # Oxirgi 3 oyning birida zarar; faqat 2 ta «Hisob kuni».
+        ("gt-003", 30000000, [8500000], 3, [2580000, -400000, 3100000], 0, 0, 1000, False, False, True),
+        ("gt-004", 30000000, [8500000], 3, [2580000, 3100000], 0, 0, 1000, False, False, True),
+        # 90+ nasiya 15% > 10%; aynan 10% — bajarilgan.
+        ("gt-005", 30000000, [8500000], 3, [1, 1, 1], 10000000, 1500000, 1000, False, False, True),
+        ("gt-006", 30000000, [8500000], 3, [1, 1, 1], 10000000, 1000000, 1000, False, False, True),
+        # Foizli qarz: rejasiz — yopiq, reja bilan — bajarilgan.
+        ("gt-007", 30000000, [8500000], 3, [1, 1, 1], 0, 0, 1000, True, False, True),
+        ("gt-008", 30000000, [8500000], 3, [1, 1, 1], 0, 0, 1000, True, True, True),
+        # Reja yozilmagan; hech narsa bajarilmagan; xarajat tarixi yo'q.
+        ("gt-009", 30000000, [8500000], 3, [1, 1, 1], 0, 0, 1000, False, False, False),
+        ("gt-010", 0, [], 3, [], 1000000, 1000000, 1000, True, False, False),
+        # Xarajat 0 — zaxira sharti bajarilgan; 6 oylik talab.
+        ("gt-011", 0, [0, 0, 0], 6, [1, 1, 1], 0, 0, 1000, False, False, True),
+        ("gt-neg-001", -1, [1], 3, [], 0, 0, 1000, False, False, True),
+        ("gt-neg-002", 0, [1], 0, [], 0, 0, 1000, False, False, True),
+        ("gt-neg-003", 0, [1], 3, [], 100, 200, 1000, False, False, True),
+        ("gt-neg-004", 0, [1], 3, [], 0, 0, 10001, False, False, True),
+    ]
+    suites["kk_expansion_gate"] = _suite("kk_expansion_gate", "Kasb-kor kengayish darvozasi: zaxira ≥ N oylik xarajat, oxirgi 3 «Hisob kuni»da foyda, 90+ nasiya ulushi, foizli qarz va reja, kengayish rejasi — har biri alohida va birga (kasbkor/SPEC 6.1)", [
+        _case(cid, {"currency": U, "reserve": _s(t(rs)), "opexMonths": [_s(t(x)) for x in om], "requiredMonths": rm,
+                    "trueProfits": [_s(t(x)) for x in tp], "receivables": _s(t(rc)), "receivables90": _s(t(r9)), "maxBadBp": mb,
+                    "hasInterestDebt": hd, "hasPayoffPlan": hp, "hasPlan": pl},
+              lambda rs=rs, om=om, rm=rm, tp=tp, rc=rc, r9=r9, mb=mb, hd=hd, hp=hp, pl=pl: kk_expansion_gate(
+                  t(rs), [t(x) for x in om], rm, [t(x) for x in tp], t(rc), t(r9), mb, hd, hp, pl))
+        for cid, rs, om, rm, tp, rc, r9, mb, hd, hp, pl in gt])
+
+    zk = [
+        # SPEC 8.3 Bahodir aka: 90 + 12 + 8 − 10 = 100 mln; nisob 1 100 000 × 85 = 93,5 mln → 2 500 000.
+        ("zk-001", 90000000, 12000000, 8000000, 10000000, 1100000, 85, True),
+        # Nisobdan past.
+        ("zk-002", 60000000, 12000000, 8000000, 10000000, 1100000, 85, True),
+        # Hawl to'lmagan.
+        ("zk-003", 90000000, 12000000, 8000000, 10000000, 1100000, 85, False),
+        # Qarzlar bazadan katta.
+        ("zk-004", 5000000, 1000000, 0, 10000000, 1100000, 85, True),
+        # Aynan nisob; tiyinli yaxlitlash.
+        ("zk-005", 93500000, 0, 0, 0, 1100000, 85, True),
+        ("zk-006", Fraction(9350000033, 100), 0, 0, 0, 1100000, 85, True),
+        ("zk-neg-001", -1, 0, 0, 0, 1100000, 85, True),
+        ("zk-neg-002", 1, 0, 0, 0, 0, 85, True),
+        ("zk-neg-003", 1, 0, 0, 0, 1100000, 0, True),
+    ]
+    suites["kk_zakat"] = _suite("kk_zakat", "Kasb-kor savdo mollari zakoti hisobi: baza, nisob (oltin × gramm), 2,5% — baza ≥ nisob va hawl to'lganda; hisob, fatvo emas (kasbkor/SPEC 8.3, OQ-D5, OQ-D7)", [
+        _case(cid, {"currency": U, "stock": _s(t(st)), "cash": _s(t(ca)), "receivables": _s(t(rc)), "debts": _s(t(db)),
+                    "goldPrice": _s(t(gp)), "nisabGrams": ng, "hawlComplete": hw},
+              lambda st=st, ca=ca, rc=rc, db=db, gp=gp, ng=ng, hw=hw: kk_zakat(t(st), t(ca), t(rc), t(db), t(gp), ng, hw))
+        for cid, st, ca, rc, db, gp, ng, hw in zk])
+
+    def close(**kw):
+        return {"kind": "CLOSE", **{k: _s(t(v)) for k, v in kw.items()}}
+
+    def use(fund, amount):
+        return {"kind": "USE", "fund": fund, "amount": _s(t(amount))}
+    fd = [
+        # Nilufar: oktyabr va noyabr «Hisob kuni»; soliq to'landi, zaxiradan uskuna tuzatildi.
+        ("fd-001", [close(tax=720000, reserve=774000, working=1290000, expansion=516000),
+                    close(tax=680000, reserve=600000, working=1000000, expansion=400000, sadaqa=100000),
+                    use("TAX", 720000), use("RESERVE", 300000)]),
+        # Hammasi ishlatildi — qoldiq 0.
+        ("fd-002", [close(working=1000000), use("WORKING", 1000000)]),
+        ("fd-neg-001", [close(reserve=100000), use("RESERVE", 100001)]),
+        ("fd-neg-002", [use("SADAQA", 1)]),
+        ("fd-neg-003", [close(reserve=100000), use("RESERVE", 0)]),
+        ("fd-neg-004", [use("BONUS", 1)]),
+    ]
+    suites["kk_funds"] = _suite("kk_funds", "Kasb-kor «Hisob kuni» konvertlari: soliq zaxirasi, zaxira, aylanma, kengayish, sadaqa — qo'shilgan, ishlatilgan, qoldiq; qoldiqdan ko'p ishlatib bo'lmaydi (kasbkor/SPEC 4.5, 8.2)", [
+        _case(cid, {"currency": U, "events": ev}, lambda ev=ev: kk_funds(ev)) for cid, ev in fd])
+
     suites["kk_month_close"] = _suite("kk_month_close", "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)", [
         _case(cid, {"currency": U, "revenue": _s(t(r)), "expenses": _s(t(ex)), "depreciation": _s(t(dp)), "ownerSalary": _s(t(sal)), "ownerPaid": _s(t(pd)),
                     "tax": tx, "rule": ru, "carryOverdraw": co},
@@ -2187,7 +2358,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
-                 "kk_payroll", "kk_supplier_balance")
+                 "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds")
 
 
 def generate(directory: str) -> None:
@@ -2288,6 +2459,11 @@ def selftest() -> None:
     sup = kk_supplier_balance([{"id": "d1", "on": "2026-11-01", "amount": "500000000", "dueDays": 30}],
                               [{"on": "2026-11-10", "amount": "200000000"}], date(2026, 12, 5))
     assert (sup["outstanding"], sup["overdue"], sup["deliveries"][0]["overdueDays"]) == ("300000000", "300000000", 4)
+    # K7 (kasbkor/SPEC 8.3): baza 100 mln, nisob 93,5 mln → zakot 2 500 000 (shartli misol).
+    zak = kk_zakat(9000000000, 1200000000, 800000000, 1000000000, 110000000, 85, True)
+    assert (zak["base"], zak["nisab"], zak["zakat"]) == ("10000000000", "9350000000", "250000000")
+    gate = kk_expansion_gate(3000000000, [800000000, 900000000, 850000000], 3, [1, 1, 1], 0, 0, 1000, False, False, True)
+    assert gate["open"] and gate["requiredReserve"] == "2550000000"
     # allocate / percent_of (DESKTOP_PROMPT 5.3 + BARAKA_OILASI 12.3)
     assert allocate(100, [1, 1, 1]) == [34, 33, 33]
     assert allocate(800000000, [70, 20, 10]) == [560000000, 160000000, 80000000]

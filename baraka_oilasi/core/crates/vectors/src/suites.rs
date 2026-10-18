@@ -4,12 +4,15 @@ use baraka_domain_kasbkor::cash::{cash_close, CashReason};
 use baraka_domain_kasbkor::close::{month_close, CloseInput, SplitRule, TaxRule};
 use baraka_domain_kasbkor::credit::{CreditEvent, CreditTerms};
 use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
+use baraka_domain_kasbkor::funds::{funds, Fund, FundEvent};
+use baraka_domain_kasbkor::gate::{expansion_gate, GateInput as KkGateInput};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::payroll::{payroll, Advance, PayMonth};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
 use baraka_domain_kasbkor::quote::{order_quote, QuoteInput};
 use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
 use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
+use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -148,6 +151,9 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_replacement" => kk_replacement(input),
         "kk_payroll" => kk_payroll(input),
         "kk_supplier_balance" => kk_supplier_balance(input),
+        "kk_expansion_gate" => kk_expansion_gate(input),
+        "kk_zakat" => kk_zakat(input),
+        "kk_funds" => kk_funds(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1514,5 +1520,94 @@ fn kk_supplier_balance(v: &Value) -> R {
         "overdue": m(r.overdue),
         "dueSoon": m(r.due_soon),
         "nextDue": r.next_due.map(|(d, a)| json!({ "date": ymd(d), "amount": m(a) })),
+    }))
+}
+
+fn moneys(v: &Value, k: &str, c: Currency) -> Result<Vec<Money>, E> {
+    v[k].as_array()
+        .ok_or_else(|| bad(k))?
+        .iter()
+        .map(|x| Ok(Money::new(int_str(x)?, c)))
+        .collect()
+}
+
+fn kk_expansion_gate(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let r = expansion_gate(&KkGateInput {
+        reserve: money(v, "reserve", c)?,
+        opex_months: moneys(v, "opexMonths", c)?,
+        required_months: u32_of(v, "requiredMonths", "INVALID_MONTHS")?,
+        true_profits: moneys(v, "trueProfits", c)?,
+        receivables: money(v, "receivables", c)?,
+        receivables_90: money(v, "receivables90", c)?,
+        max_bad_bp: i(v, "maxBadBp")?,
+        has_interest_debt: b(v, "hasInterestDebt")?,
+        has_payoff_plan: b(v, "hasPayoffPlan")?,
+        has_plan: b(v, "hasPlan")?,
+    })?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "open": r.open,
+        "conditions": r.conditions.iter().map(|(c, ok)| json!({ "code": c.as_str(), "ok": ok })).collect::<Vec<_>>(),
+        "reasons": r.reasons().iter().map(|c| c.as_str()).collect::<Vec<_>>(),
+        "averageOpex": r.average_opex.map(m),
+        "requiredReserve": r.required_reserve.map(m),
+        "coverageCentiMonths": r.coverage_centi_months,
+        "badDebtBp": r.bad_debt_bp,
+    }))
+}
+
+fn kk_zakat(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let r = zakat(&ZakatInput {
+        stock: money(v, "stock", c)?,
+        cash: money(v, "cash", c)?,
+        receivables: money(v, "receivables", c)?,
+        debts: money(v, "debts", c)?,
+        gold_price: money(v, "goldPrice", c)?,
+        nisab_grams: u32_of(v, "nisabGrams", "INVALID_NISAB")?,
+        hawl_complete: b(v, "hawlComplete")?,
+    })?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "base": m(r.base),
+        "nisab": m(r.nisab),
+        "due": r.reason.is_none(),
+        "zakat": m(r.zakat),
+        "reason": r.reason.map(|x| x.as_str()),
+    }))
+}
+
+fn kk_funds(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let mut events = Vec::new();
+    for e in v["events"].as_array().ok_or_else(|| bad("events"))? {
+        events.push(match s(e, "kind")? {
+            "CLOSE" => {
+                let mut a = [Money::zero(c); 5];
+                for (slot, f) in a.iter_mut().zip(Fund::ALL) {
+                    let k = f.as_str().to_lowercase();
+                    if !e[k.as_str()].is_null() {
+                        *slot = money(e, &k, c)?;
+                    }
+                }
+                FundEvent::Close(a)
+            }
+            "USE" => FundEvent::Use {
+                fund: Fund::parse(s(e, "fund")?).ok_or_else(|| E("INVALID_FUND".into()))?,
+                amount: money(e, "amount", c)?,
+            },
+            _ => return Err(E("INVALID_KIND".into())),
+        });
+    }
+    let r = funds(c, &events)?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "funds": r.iter().map(|f| json!({
+            "fund": f.fund.as_str(),
+            "added": m(f.added),
+            "used": m(f.used),
+            "balance": m(f.balance),
+        })).collect::<Vec<_>>(),
     }))
 }

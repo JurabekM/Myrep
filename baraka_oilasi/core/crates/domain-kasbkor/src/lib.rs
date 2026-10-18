@@ -6,6 +6,8 @@ pub mod cash;
 pub mod close;
 pub mod credit;
 pub mod equipment;
+pub mod funds;
+pub mod gate;
 pub mod owner;
 pub mod payroll;
 pub mod profit;
@@ -13,5 +15,6 @@ pub mod quote;
 pub mod stock;
 pub mod supply;
 pub mod terms;
+pub mod zakat;
 
 pub use baraka_domain_common::DomainError;
