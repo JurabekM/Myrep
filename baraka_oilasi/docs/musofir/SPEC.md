@@ -88,7 +88,13 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 | `MfMove` | `OPENING`, `SENT_HOME` (komissiya, uyda olingan), `FUND_IN`, `FUND_OUT` (sabab), `FUND_OPENING` | yangi (`mf_moves`) |
 
 ### 4.4. M1 da qanday qilindi (farqlar)
-_(M1c oxirida to'ldiriladi.)_
+- **Maosh va boshqa daromad** — bitta `incomes` jadvali: maosh `source_type = TER` (mehnat daromadi), boshqa daromad — `NULL`. O'z ulushi **butun daromaddan** hisoblanadi (maosh + boshqa); taklif har bir daromad yozilganda chiqadi.
+- **Komissiya** uyga yuborish yozuvining ichida (alohida xarajat emas); oy hisobida alohida qator, «uyga» ulushiga qo'shiladi. «Uyda olingan» summa faqat ko'rsatiladi (haqiqiy kurs) — hisobga kirmaydi.
+- **Prognoz** — joriy oydan oldingi 3 ta to'liq oydan yozuvi borlari; bitta ham bo'lmasa, prognoz yo'q («bir oy to'lgach»). Jamg'arma qoldig'i — ko'rilayotgan oy oxiridagi.
+- **Kurs** — `mf_rates` (o'zgarmas, sinxronlanadi); amaldagisi — bugungacha eng so'nggi sanali; 30 kundan eski bo'lsa belgisi. Ish valyutasi uy valyutasi bilan bir xil bo'lsa — kurs 1, kiritish kerak emas (`RATE_NOT_NEEDED`). Kurs yo'q — uy valyutasidagi ko'rsatkichlar umuman ko'rsatilmaydi, holat `NO_RATE`.
+- **Ish valyutasi** — makonda yozuv paydo bo'lgach o'zgarmaydi (`WORK_CURRENCY_LOCKED`); ulush, maqsad, sana va mamlakat o'zgaradi.
+- **Jamg'armadan olish** — sabab majburiy (DB CHECK ham), butun qoldiqdan oshmaydi.
+- Qilinmagan: yozuvni tuzatish va o'chirish, qorovul pul (OQ-MF3), uydagi oila bilan bog'lanish (M2), Android UI.
 
 ## 5. 6-QONUN: «IKKI QIRG'OQ» — OILA BILAN PUL KELISHUVI (M2)
 - Har bir yuborishning **maqsadi** (uy xarajati, qarz to'lovi, qurilish, jamg'arma, marosim, boshqa) va oila bilan **`REMITTANCE` kelishuvi** (9 savol: kim oladi, qaysi maqsadga qancha, hisobot qanday, o'zgartirish tartibi).

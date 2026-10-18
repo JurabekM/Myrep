@@ -27,6 +27,7 @@ import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
 import { KkQuoteScreen } from "../features/kasbkor/KkQuoteScreen";
 import { KkSellerCreditScreen, KkSellerScreen } from "../features/kasbkor/KkSellerScreen";
 import { KkShiftScreen } from "../features/kasbkor/KkShiftScreen";
+import { MfHomeScreen } from "../features/musofir/MfHomeScreen";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import { SyncScreen } from "../features/sync/SyncScreen";
@@ -74,6 +75,13 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "settings", label: "nav.settings" },
 ];
 
+/** Musofir makoni (M1): bosh sahifa — hamma narsa shu yerda. */
+const MF_NAV: { screen: Screen; label: string }[] = [
+  { screen: "home", label: "nav.home" },
+  { screen: "sync", label: "nav.sync" },
+  { screen: "settings", label: "nav.settings" },
+];
+
 /** Sotuvchi qurilmasi (ADR-0003): faqat sotuv, nasiya to'lovi va smena. */
 const SELLER_NAV: { screen: Screen; label: string }[] = [
   { screen: "home", label: "nav.kkSell" },
@@ -117,7 +125,7 @@ const MENTOR: Record<Screen, string> = {
 export function Shell() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-  const { screen: picked, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, openKkEntry, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
+  const { screen: picked, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, openKkEntry, openMfEntry, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
   const settings = useQuery({ queryKey: keys.settings, queryFn: () => call(commands.settings()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
@@ -128,8 +136,10 @@ export function Shell() {
 
   const spaces = household.data?.spaces ?? [];
   const active = spaceId ?? spaces[0]?.id ?? null;
-  const kasbkor = spaces.find((s) => s.id === active)?.kind === "KASBKOR";
-  const nav = seller ? SELLER_NAV : kasbkor ? KK_NAV : NAV;
+  const activeKind = spaces.find((s) => s.id === active)?.kind;
+  const kasbkor = activeKind === "KASBKOR";
+  const musofir = activeKind === "MUSOFIR";
+  const nav = seller ? SELLER_NAV : kasbkor ? KK_NAV : musofir ? MF_NAV : NAV;
   // Boshqa makonga o'tilganda shu makonda yo'q bo'lim tanlangan bo'lsa — bosh sahifa.
   const screen: Screen = nav.some((n) => n.screen === picked) ? picked : "home";
 
@@ -146,6 +156,10 @@ export function Shell() {
         e.preventDefault();
         if (seller) setScreen("home");
         else if (kasbkor) openKkEntry("SALE");
+        else if (musofir) {
+          setScreen("home");
+          openMfEntry("SALARY");
+        }
         else openIncome();
       } else if (e.key === "l" || e.key === "L") {
         e.preventDefault();
@@ -154,7 +168,7 @@ export function Shell() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openIncome, openKkEntry, kasbkor, seller, setScreen, lock]);
+  }, [openIncome, openKkEntry, openMfEntry, kasbkor, musofir, seller, setScreen, lock]);
 
   return (
     <div className="flex h-full">
@@ -202,7 +216,7 @@ export function Shell() {
             {t("role.readOnly")}
           </p>
         )}
-        {active && screen === "home" && (seller ? <KkSellerScreen spaceId={active} /> : kasbkor ? <KkHomeScreen spaceId={active} /> : <HomeScreen spaceId={active} />)}
+        {active && screen === "home" && (seller ? <KkSellerScreen spaceId={active} /> : kasbkor ? <KkHomeScreen spaceId={active} /> : musofir ? <MfHomeScreen spaceId={active} /> : <HomeScreen spaceId={active} />)}
         {active && seller && screen === "kkSellerCredit" && <KkSellerCreditScreen spaceId={active} />}
         {active && seller && screen === "kkShift" && <KkShiftScreen spaceId={active} />}
         {active && screen === "vault" && <VaultScreen spaceId={active} />}
@@ -230,8 +244,8 @@ export function Shell() {
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>
-      <Mentor tipKey={seller && screen === "home" ? "mentor.kkSeller" : kasbkor && screen === "home" ? "mentor.kk" : MENTOR[screen]} />
-      {incomeOpen && active && !kasbkor && <IncomeDialog spaceId={active} onClose={closeIncome} />}
+      <Mentor tipKey={seller && screen === "home" ? "mentor.kkSeller" : kasbkor && screen === "home" ? "mentor.kk" : musofir && screen === "home" ? "mentor.mf" : MENTOR[screen]} />
+      {incomeOpen && active && !kasbkor && !musofir && <IncomeDialog spaceId={active} onClose={closeIncome} />}
       {offerOpen && <OfferCheckDialog onClose={closeOffer} />}
       {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}
     </div>

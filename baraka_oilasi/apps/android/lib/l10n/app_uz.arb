@@ -3726,5 +3726,204 @@
   "error_INVALID_TARGET": "Maqsad summasi noldan katta boʻlsin",
   "error_CURRENCY_MISMATCH": "Valyutalar mos emas",
   "error_INVALID_FX_RATE": "Kursni raqam bilan kiriting, masalan 9,1",
-  "error_RETURN_FUND_INSUFFICIENT": "Qaytish jamgʻarmasida buncha pul yoʻq"
+  "error_RETURN_FUND_INSUFFICIENT": "Qaytish jamgʻarmasida buncha pul yoʻq",
+  "mentor_mf": "Musofirning puli ikki marta ishlanadi — biri ishda, biri hisobda. Har maoshda avval oʻz ulushingizni ajrating, keyin uyga yuboring.",
+  "mf_action_SALARY": "Maosh",
+  "mf_action_OTHER_INCOME": "Boshqa daromad",
+  "mf_action_EXPENSE": "Xarajat",
+  "mf_action_SENT_HOME": "Uyga yuborish",
+  "mf_action_FUND_IN": "Jamgʻarmaga",
+  "mf_action_FUND_OUT": "Jamgʻarmadan olish",
+  "mf_action_OPENING": "Qoʻldagi pul (boshlangʻich)",
+  "mf_action_FUND_OPENING": "Jamgʻarma (boshlangʻich)",
+  "mf_hint_SALARY": "Ish haqi. Saqlangach, oʻz ulushingizni jamgʻarmaga qoʻyishni taklif qilamiz.",
+  "mf_hint_OTHER_INCOME": "Bonus, qoʻshimcha ish yoki boshqa tushum.",
+  "mf_hint_EXPENSE": "Chet eldagi xarajat: ijara, ovqat, yoʻl, telefon.",
+  "mf_hint_SENT_HOME": "Oilaga yuborilgan pul. Komissiya va uyda olingan summa — ixtiyoriy, haqiqiy kursni koʻrsatadi.",
+  "mf_hint_FUND_IN": "Qaytish jamgʻarmasi — uyga yuborilmaydigan oʻz ulushingiz.",
+  "mf_hint_FUND_OUT": "Jamgʻarmadan olish. Sababini yozing — bu ayblov emas, oʻzingiz uchun eslatma.",
+  "mf_hint_OPENING": "Ilovagacha qoʻlingizda (kartada) bor edi.",
+  "mf_hint_FUND_OPENING": "Ilovagacha jamgʻargan pulingiz.",
+  "mf_amountIn": "Summa ({currency})",
+  "@mf_amountIn": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mf_fee": "Komissiya ({currency})",
+  "@mf_fee": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mf_received": "Uyda olingan summa ({currency})",
+  "@mf_received": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mf_channel": "Qayerdan",
+  "mf_reason": "Sabab",
+  "mf_setup_title": "Musofir makonini sozlash",
+  "mf_setup_intro": "Qaysi valyutada ishlaysiz va har maoshdan qancha ulushni oʻzingiz uchun ajratasiz? Maqsad va qaytish sanasi — ixtiyoriy.",
+  "mf_setup_country": "Mamlakat",
+  "mf_setup_currency": "Ish valyutasi",
+  "mf_setup_share": "Oʻz ulushi (%)",
+  "mf_setup_shareHint": "Har maoshdan qaytish jamgʻarmasiga. Uyga yuborilmaydi.",
+  "mf_setup_target": "Qaytish jamgʻarmasi maqsadi (soʻmda)",
+  "mf_setup_targetHint": "Qaytgach necha oy yashash va ish boshlash uchun kerak boʻlgan summa.",
+  "mf_setup_returnOn": "Qaytish sanasi (taxminiy)",
+  "mf_setup_summary": "Sozlamalar",
+  "mf_setup_summaryLine": "Oʻz ulushi: {percent} %",
+  "@mf_setup_summaryLine": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "mf_setup_edit": "Oʻzgartirish",
+  "mf_currency_KRW": "Koreya voni (KRW)",
+  "mf_currency_RUB": "Rossiya rubli (RUB)",
+  "mf_currency_KZT": "Qozogʻiston tengesi (KZT)",
+  "mf_currency_TRY": "Turk lirasi (TRY)",
+  "mf_currency_USD": "AQSh dollari (USD)",
+  "mf_currency_EUR": "Yevro (EUR)",
+  "mf_currency_GBP": "Funt sterling (GBP)",
+  "mf_currency_UZS": "Soʻm (UZS) — Oʻzbekistonda",
+  "mf_rateLine": "Kurs: 1 {from} = {rate} {to} ({date})",
+  "@mf_rateLine": {
+    "placeholders": {
+      "date": {},
+      "from": {},
+      "rate": {},
+      "to": {}
+    }
+  },
+  "mf_fund_title": "Qaytish jamgʻarmasi",
+  "mf_noRateHome": "Kurs kiritilmagan — soʻmdagi qiymat koʻrsatilmaydi.",
+  "mf_share_title": "Shu oy oʻz ulushi ({percent} %)",
+  "@mf_share_title": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "mf_share_target": "Maqsad: {amount}",
+  "@mf_share_target": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_share_gap": "Yana {amount} ajratilmagan",
+  "@mf_share_gap": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_offer": "Shu maoshdan {amount} — qaytish jamgʻarmangizga. Hozir qoʻyamizmi?",
+  "@mf_offer": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_offerAccept": "Jamgʻarmaga qoʻyish",
+  "mf_offerLater": "Keyinroq",
+  "mf_warning_POCKET_NEGATIVE": "Qoʻldagi pul manfiy: yozilmagan daromad bormi yoki qarz olindimi? Tekshirib koʻraylik.",
+  "mf_warning_NO_SHARE": "Bu oy oʻz ulushingiz hali ajratilmagan ({amount}). Uyga yuborishdan oldin — avval oʻzingizga.",
+  "@mf_warning_NO_SHARE": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_warning_SHARE_BELOW_TARGET": "Ulush toʻliq emas: yana {amount}. Keyingi maoshdan qoʻshamizmi?",
+  "@mf_warning_SHARE_BELOW_TARGET": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_warning_FUND_WITHDRAWN": "Bu oy jamgʻarmadan olindi. Qaytarish rejasini oʻylab koʻring.",
+  "mf_prognosis_title": "Qaytishga tayyorgarlik",
+  "mf_prognosis_progress": "Maqsadga yetilgan qism",
+  "mf_prognosis_progressLine": "{percent} % — maqsad {target}",
+  "@mf_prognosis_progressLine": {
+    "placeholders": {
+      "percent": {},
+      "target": {}
+    }
+  },
+  "mf_prognosis_target": "Maqsad",
+  "mf_prognosis_remaining": "Qolgan",
+  "mf_prognosis_avg": "Oyiga oʻrtacha ({count} oy)",
+  "@mf_prognosis_avg": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_prognosis_noHistory": "bir oy toʻlgach",
+  "mf_prognosis_monthsToTarget": "Shu surʼatda maqsadgacha",
+  "mf_prognosis_returnOn": "Qaytishgacha ({date})",
+  "@mf_prognosis_returnOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mf_prognosis_projected": "Qaytishda jamgʻarma (prognoz)",
+  "mf_prognosis_shortfall": "Maqsaddan kam",
+  "mf_months": "{count} oy",
+  "@mf_months": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_fund_status_REACHED": "Maqsadga yetdingiz. Endi — qaytgach ish rejasi.",
+  "mf_fund_status_ON_TRACK": "Shu surʼatda qaytishgacha maqsadga yetasiz.",
+  "mf_fund_status_BEHIND": "Shu surʼatda qaytishda {shortfall} yetmaydi. Ulushni oshirish yoki sanani surish mumkin.",
+  "@mf_fund_status_BEHIND": {
+    "placeholders": {
+      "shortfall": {}
+    }
+  },
+  "mf_fund_status_NO_SAVING": "Oxirgi oylarda jamgʻarma oʻsmagan. Har maoshdan ozgina boʻlsa ham ajrataylik.",
+  "mf_fund_status_NO_TARGET": "Maqsad belgilanmagan — sozlamalarda qoʻshing.",
+  "mf_fund_status_NO_RATE": "Prognoz uchun kursni kiriting.",
+  "mf_flow_title": "Shu oy pul oqimi",
+  "mf_flow_income": "Daromad",
+  "mf_flow_expenses": "Chet eldagi xarajat",
+  "mf_flow_sentHome": "Uyga yuborildi",
+  "mf_flow_fees": "Joʻnatish komissiyasi",
+  "mf_flow_fund": "Qaytish jamgʻarmasiga",
+  "mf_flow_pocket": "Qoʻlda qoldi",
+  "mf_flow_hint": "Foizlar — daromaddan.",
+  "mf_rate_title": "Valyuta kursi",
+  "mf_rate_identity": "Ish valyutasi soʻm — kurs kerak emas.",
+  "mf_rate_stale": "Kurs 30 kundan eski — yangilang.",
+  "mf_rate_none": "Kurs hali kiritilmagan.",
+  "mf_rate_input": "1 {from} necha {to}",
+  "@mf_rate_input": {
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
+  },
+  "mf_rate_source": "Manba (bank, oʻtkazma ilovasi)",
+  "mf_rate_hint": "Kursni oʻzingiz kiritasiz; ilova kurs bashorat qilmaydi va ayirboshlashni maslahat bermaydi.",
+  "mf_rate_save": "Kursni saqlash",
+  "mf_kind_SALARY": "Maosh",
+  "mf_kind_OTHER_INCOME": "Boshqa daromad",
+  "mf_kind_EXPENSE": "Xarajat",
+  "mf_kind_SENT_HOME": "Uyga",
+  "mf_kind_FUND_IN": "Jamgʻarmaga",
+  "mf_kind_FUND_OUT": "Jamgʻarmadan",
+  "mf_kind_OPENING": "Boshlangʻich (qoʻlda)",
+  "mf_kind_FUND_OPENING": "Boshlangʻich (jamgʻarma)",
+  "mf_feeShort": "komissiya {amount}",
+  "@mf_feeShort": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_receivedShort": "uyda {amount}",
+  "@mf_receivedShort": {
+    "placeholders": {
+      "amount": {}
+    }
+  }
 }

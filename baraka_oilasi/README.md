@@ -47,6 +47,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | K7: Kasb-kor kengayish darvozasi (5 shart va keyingi qadamlar), «Hisob kuni» konvertlari va soliq zaxirasi, halol muqobillar, zakot hisobi (hijriy «Zakot kuni», hisob — fatvo emas), tarozi tekshiruvi, yillik inventarizatsiya | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | K8: Kasb-kor ko'p qurilma va rollar (ADR-0003) — sotuvchi qurilmasi (sotuv, nasiya to'lovi, smena; foyda ma'lumoti unga yuborilmaydi), hisobchi (faqat o'qish), egasida yozish filtri va bekor qilish | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M0: Musofir makoni spetsifikatsiyasi (`docs/musofir/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda |
+| M1: Musofir — ish valyutasi va kurs (taxminsiz), chet eldagi maosh va xarajat, uyga yuborilgan (komissiya bilan), o'z ulushi va qaytish jamg'armasi, qaytish sanasigacha prognoz | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

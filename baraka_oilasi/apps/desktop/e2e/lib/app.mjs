@@ -96,6 +96,22 @@ export class App {
     return (within ?? this.b).$(xp);
   }
 
+  /** `type="date"` maydon: ko'rinishi lokalga bog'liq (WebKit), shuning uchun qiymat ISO bilan React orqali beriladi. */
+  async setDate(name, iso, within) {
+    const el = await this.field(name, within);
+    await el.waitForDisplayed();
+    await this.b.execute(
+      (e, v) => {
+        const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+        set.call(e, v);
+        e.dispatchEvent(new Event("input", { bubbles: true }));
+        e.dispatchEvent(new Event("change", { bubbles: true }));
+      },
+      el,
+      iso,
+    );
+  }
+
   async type(name, value, within) {
     const el = await this.field(name, within);
     await el.waitForDisplayed();

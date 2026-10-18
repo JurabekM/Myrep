@@ -33,6 +33,7 @@ export const keys = {
   settings: ["settings"] as const,
   nudges: (spaceId: string) => ["nudges", spaceId] as const,
   kk: (spaceId: string) => ["kk", spaceId] as const,
+  mf: (spaceId: string) => ["mf", spaceId] as const,
   kkEquipment: (spaceId: string) => ["kkEquipment", spaceId] as const,
   kkLabor: (spaceId: string) => ["kkLabor", spaceId] as const,
   kkClose: (spaceId: string) => ["kkClose", spaceId] as const,

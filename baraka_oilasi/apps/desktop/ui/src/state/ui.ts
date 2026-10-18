@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import type { RepaymentResultDto } from "../bindings";
 import type { EntryMode } from "../features/kasbkor/KkEntryDialog";
+import type { MfEntryMode } from "../features/musofir/MfEntryDialog";
 
 export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "kkCash" | "kkCredit" | "kkStock" | "kkStaff" | "kkSuppliers" | "kkGate" | "kkZakat" | "kkMeasure" | "kkSellerCredit" | "kkShift" | "sync" | "settings";
 
@@ -11,6 +12,8 @@ type UiState = {
   incomeOpen: boolean;
   /** Kasb-kor yozuvi oynasi (Ctrl+N — tushum). */
   kkEntry: EntryMode | null;
+  /** Musofir yozuvi oynasi (Ctrl+N — maosh). */
+  mfEntry: MfEntryMode | null;
   /** «Taklifni tekshirish» oynasi — ilovaning istalgan joyidan (uy/SPEC 2E.5). */
   offerOpen: boolean;
   /** Qarz yopilganda nishonlash oynasi (uy/SPEC 2D.9). */
@@ -23,6 +26,8 @@ type UiState = {
   closeIncome: () => void;
   openKkEntry: (mode: EntryMode) => void;
   closeKkEntry: () => void;
+  openMfEntry: (mode: MfEntryMode) => void;
+  closeMfEntry: () => void;
   openOffer: () => void;
   closeOffer: () => void;
   /** Toʻlov natijasi: qarz yopilgan boʻlsa, nishonlash oynasi ochiladi. */
@@ -38,6 +43,7 @@ export const useUi = create<UiState>((set) => ({
   spaceId: null,
   incomeOpen: false,
   kkEntry: null,
+  mfEntry: null,
   offerOpen: false,
   celebration: null,
   partnershipFocus: null,
@@ -47,6 +53,8 @@ export const useUi = create<UiState>((set) => ({
   closeIncome: () => set({ incomeOpen: false }),
   openKkEntry: (mode) => set({ kkEntry: mode }),
   closeKkEntry: () => set({ kkEntry: null }),
+  openMfEntry: (mode) => set({ mfEntry: mode }),
+  closeMfEntry: () => set({ mfEntry: null }),
   openOffer: () => set({ offerOpen: true }),
   closeOffer: () => set({ offerOpen: false }),
   afterRepayment: (r) => set(r.closed ? { celebration: r } : {}),
