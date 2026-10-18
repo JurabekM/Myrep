@@ -11,6 +11,7 @@
 //! `ask` + `ask_route: "studio"`: hook javobi ushlab turiladi, Studio `decide` yuboradi, inson
 //! qarori `decision.human` yozuvi bo'lib zanjirga tushadi. Javob kelmasa — timeout'da rad etiladi.
 
+mod control;
 mod normalize;
 mod observe;
 
@@ -34,7 +35,8 @@ type Reply = oneshot::Sender<Value>;
 
 /// Yopilmay qolgan (masalan, agent yiqilgan) sessiya taint'i shuncha vaqt saqlanadi.
 const TAINT_TTL: Duration = Duration::from_secs(7 * 24 * 3600);
-type Job = (Value, Reply);
+/// So'rov, pipe mijozining PID'i (K1) va javob kanali.
+type Job = (Value, Option<u32>, Reply);
 
 fn log_line(home: &Home, msg: &str) {
     let p = home.daemon_log();
@@ -99,6 +101,13 @@ struct State {
     anchor_id: String,
     /// Jurnalga yozilgan, lekin hali eski kalit checkpoint'i bilan tasdiqlanmagan almashtirish.
     pending_rotation: Option<(u64, SigningKeys)>,
+    /// K1: ishonchli boshqaruv dasturlari (`tamga.exe`, `tamga-studio.exe`) shu papkada bo'lishi kerak.
+    own_dir: Option<std::path::PathBuf>,
+    deny_limit: control::DenyLimiter,
+    /// K2: oxirgi ko'rilgan config va Claude Code hook'lari holati — o'zgarsa `control` yozuvi.
+    last_config: Value,
+    hooks_installed: Option<bool>,
+    hooks_checked: Instant,
 }
 
 fn preview(tool_input: &Value) -> String {
@@ -115,7 +124,14 @@ fn preview(tool_input: &Value) -> String {
 }
 
 impl State {
-    fn handle(&mut self, req: &Value, reply: Reply) {
+    fn handle(&mut self, req: &Value, client: Option<u32>, reply: Reply) {
+        let op = req.get("op").and_then(Value::as_str).unwrap_or_default();
+        if control::GATED.contains(&op)
+            && let Err(why) = self.gate(op, req, client)
+        {
+            let _ = reply.send(json!({"ok": false, "denied": true, "error": why}));
+            return;
+        }
         let resp = match req.get("op").and_then(Value::as_str) {
             Some("hook") => match self.hook(req, None) {
                 Outcome::Now(v) => v,
@@ -149,6 +165,38 @@ impl State {
             _ => json!({"ok": false, "error": "noma'lum op"}),
         };
         let _ = reply.send(resp);
+    }
+
+    /// K1: boshqaruv buyrug'ini yuborgan jarayonni tekshiradi; urinish (qabul yoki rad) jurnalga yoziladi.
+    fn gate(&mut self, op: &str, req: &Value, client: Option<u32>) -> Result<(), String> {
+        let caller = client.and_then(tamga_sensor::identify);
+        let verdict = control::authorize(caller.as_ref(), self.own_dir.as_deref());
+        if verdict.is_ok() || self.deny_limit.allow() {
+            let mut c = json!({"op": op, "accepted": verdict.is_ok(), "client": control::client_json(caller.as_ref())});
+            if let Err(why) = &verdict {
+                c["reason"] = why.clone().into();
+            }
+            self.control_record(c, req.get("seq").and_then(Value::as_u64));
+        }
+        if let Err(why) = &verdict {
+            log_line(
+                &self.home,
+                &format!("boshqaruv buyrug'i rad etildi ({op}): {why}"),
+            );
+        }
+        verdict
+    }
+
+    /// `control` yozuvi (spec §3.3): boshqaruv urinishlari va config / hook o'zgarishlari.
+    fn control_record(&mut self, control: Value, reference: Option<u64>) {
+        let mut body = Map::new();
+        body.insert("control".into(), control);
+        if let Some(r) = reference {
+            body.insert("ref".into(), r.into());
+        }
+        if let Err(e) = self.log.append(&now_ts(), "tamga", "control", body) {
+            log_line(&self.home, &format!("control yozuvi yozilmadi: {e}"));
+        }
     }
 
     fn status(&self) -> Value {
@@ -669,7 +717,41 @@ impl State {
         self.file_dedupe
             .retain(|_, t| now.duration_since(*t) < Duration::from_secs(10));
         // Config jonli: Studio yoki foydalanuvchi o'zgartirsa, qayta ishga tushirish shart emas.
+        // K2: har o'zgarish jurnalga yoziladi (kim o'zgartirganini fayl aytmaydi, lekin iz qoladi).
         self.config = self.home.config();
+        let before = std::mem::replace(&mut self.last_config, self.config.to_json());
+        let changes = control::config_diff(&before, &self.last_config);
+        if !changes.is_empty() {
+            log_line(
+                &self.home,
+                &format!("config o'zgardi: {}", Value::Object(changes.clone())),
+            );
+            self.control_record(
+                json!({"op": "config", "accepted": true, "source": "config.json", "changes": changes}),
+                None,
+            );
+        }
+        if self.hooks_checked.elapsed() >= Duration::from_secs(15) {
+            self.hooks_checked = now;
+            let current = tamga_store::integrate::target(&["--user"])
+                .ok()
+                .and_then(|p| tamga_store::integrate::installed(&p).ok());
+            if let (Some(prev), Some(cur)) = (self.hooks_installed, current)
+                && prev != cur
+            {
+                log_line(
+                    &self.home,
+                    &format!("Claude Code hook'lari (foydalanuvchi): {prev} -> {cur}"),
+                );
+                self.control_record(
+                    json!({"op": "integration", "accepted": true, "target": "claude-code-user", "installed": cur}),
+                    None,
+                );
+            }
+            if current.is_some() {
+                self.hooks_installed = current;
+            }
+        }
         let timeout = Duration::from_secs(self.config.ask_timeout_secs);
         let expired: Vec<u64> = self
             .pending
@@ -844,6 +926,7 @@ fn open_state(
             s.watch_dir(&std::path::Path::new(&profile).join(d), true);
         }
     }
+    let last_config = config.to_json();
     let mut state = State {
         vault: Vault::new(home.vault(), master).map_err(|e| e.to_string())?,
         home,
@@ -866,6 +949,11 @@ fn open_state(
         store,
         anchor_id,
         pending_rotation,
+        own_dir: control::own_dir(),
+        deny_limit: control::DenyLimiter::new(),
+        last_config,
+        hooks_installed: None,
+        hooks_checked: Instant::now() - Duration::from_secs(60),
     };
     state.restore();
     if state.pending_rotation.is_some() {
@@ -886,12 +974,19 @@ async fn writer(
         tokio::select! {
             job = rx.recv() => match job {
                 // `tamga stop` (o'rnatuvchi/o'chiruvchi ham chaqiradi): javob yakuniy holat yozilgandan keyin.
-                Some((req, reply)) if req.get("op").and_then(Value::as_str) == Some("shutdown") => {
-                    let size = state.shutdown("tamga stop");
-                    let _ = reply.send(json!({"ok": true, "pid": std::process::id(), "checkpoint": size}));
-                    break;
+                Some((req, client, reply)) if req.get("op").and_then(Value::as_str) == Some("shutdown") => {
+                    match state.gate("shutdown", &req, client) {
+                        Ok(()) => {
+                            let size = state.shutdown("tamga stop");
+                            let _ = reply.send(json!({"ok": true, "pid": std::process::id(), "checkpoint": size}));
+                            break;
+                        }
+                        Err(why) => {
+                            let _ = reply.send(json!({"ok": false, "denied": true, "error": why}));
+                        }
+                    }
                 }
-                Some((req, reply)) => state.handle(&req, reply),
+                Some((req, client, reply)) => state.handle(&req, client, reply),
                 None => break,
             },
             Some(o) = obs.recv() => state.observe(o),
@@ -935,6 +1030,8 @@ async fn serve(pipe: String, tx: mpsc::Sender<Job>) -> std::io::Result<()> {
     loop {
         server.connect().await?;
         let conn = server;
+        // K1: kim ulanganini bilish uchun (boshqaruv buyruqlari shu PID bo'yicha tekshiriladi).
+        let client = tamga_win::pipe_client_pid(&conn);
         server = ServerOptions::new()
             .reject_remote_clients(true)
             .create(&pipe)?;
@@ -946,7 +1043,7 @@ async fn serve(pipe: String, tx: mpsc::Sender<Job>) -> std::io::Result<()> {
                 let resp = match serde_json::from_str::<Value>(&line) {
                     Ok(req) => {
                         let (reply_tx, reply_rx) = oneshot::channel();
-                        if tx.send((req, reply_tx)).await.is_err() {
+                        if tx.send((req, client, reply_tx)).await.is_err() {
                             break;
                         }
                         reply_rx

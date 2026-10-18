@@ -17,6 +17,11 @@ powershell -ExecutionPolicy Bypass -File demo\run-demo.ps1
 | `-Model sonnet` | Boshqa model (standart `haiku` — tez va arzon) |
 | `-Bin <papka>` | Boshqa binarlar (standart: o'rnatilgan TAMGA Studio, keyin `cargo` target) |
 
+**Qayerdan ishga tushirish:** oddiy terminaldan (Windows Terminal, Start menyu). Claude Code
+ichidan ishga tushirilsa, daemon skriptning `tamga decide` / `tamga stop` buyruqlarini agent
+daraxtidan kelgani uchun rad etadi (K1 himoyasi) va 4-parda `SKIP` bo'ladi. Bu holatda `-Studio -Manual`
+bilan ruxsatni Studio'da (Start menyudan ochilgan) bering.
+
 Talablar: Windows 10/11, TAMGA Studio o'rnatilgan (yoki `cargo build --release`), Claude Code CLI
 (`claude` tizimga kirgan), Python 3 (`py` yoki `python`) — 3- va 6-pardalar uchun.
 

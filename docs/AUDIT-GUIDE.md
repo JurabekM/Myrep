@@ -106,15 +106,15 @@ o'ziga ta'sir qila olishi (§4) birinchi tekshiriladi.
 
 | # | Muammo | Joy | Holat |
 |---|---|---|---|
-| K1 | Pipe'dagi boshqaruv buyruqlari (`decide`, `shutdown`, `rotate`) chaqiruvchini autentifikatsiya qilmaydi. Shu foydalanuvchi nomidagi istalgan jarayon `ask` so'roviga qaror berishi yoki daemon'ni to'xtatishi mumkin; `dev` rejimida daemon to'xtasa amallar ruxsat etiladi | `tamgad/src/main.rs` (`handle`, `decide`) | ochiq |
-| K2 | Agent TAMGA sozlamalarini (`config.json`, Claude Code hook'lari) o'zgartirishi mumkin; standart siyosatda buni alohida ushlaydigan fakt yo'q | `facts.rs`, `default.cedar` | ochiq |
+| K1 | Pipe'dagi boshqaruv buyruqlari (`decide`, `shutdown`, `rotate`) chaqiruvchini tekshirmas edi. **Tuzatildi (2026-10-18):** daemon mijoz PID'ini oladi (`GetNamedPipeClientProcessId`), jarayon daraxtini ko'radi va bu buyruqlarni faqat daemon bilan bir papkadagi `tamga.exe` / `tamga-studio.exe` dan, agent daraxtidan (`claude*`, hook, MCP proxy avlodlari) tashqarida qabul qiladi; har urinish `control` yozuvi. **Qoldiq:** bir foydalanuvchi ichida bu mutlaq chegara emas — ota jarayoni chiqib ketgan (ajralgan) jarayonning ajdodlari ko'rinmaydi; jarayonni o'ldirishni (kill) daemon to'xtata olmaydi (hook keyingi chaqiruvda uni qayta ishga tushiradi). Shuning uchun K2 dagi siyosat bloki va jurnal izi ham bor | `tamgad/src/control.rs`, `tamga-win`, `tamga-sensor::identify` | qisman (to'siq + iz) |
+| K2 | Agent TAMGA sozlamalarini (`config.json`, Claude Code hook'lari) o'zgartirishi mumkin edi. **Tuzatildi:** `tamper_with_tamga` fakti (TAMGA boshqaruv buyruqlari, daemon, pipe, `%LOCALAPPDATA%\tamga`, o'rnatish papkasi, `.claude/settings*.json`) va `no-tamga-tamper` deny qoidasi; daemon config o'zgarishini va foydalanuvchi darajasidagi Claude Code hook'lari olib tashlanishini `control` yozuvi qiladi. **Qoldiq:** fakt buyruq matniga tayanadi (K4) | `facts.rs`, `default.cedar`, `tamgad::tick` | qisman |
 | K3 | Spool papkasi foydalanuvchi yoza oladigan joyda; u yerdan o'qilgan hodisalar faqat `dev.tamga.spooled` belgisi bilan ajratiladi | `spool.rs`, `tamgad::drain_spool` | qisman |
 | K4 | Faktlar tahlilchisi buyruq matniga tayanadi va hamma variantni qamrab ololmaydi | `facts.rs` | ma'lum; OS sensori qisman qoplaydi |
 | K5 | Oxirgi checkpoint'dan keyingi dumni kesish faqat tashqi guvoh bilan aniqlanadi; `witness_dir` standart o'chiq | spec §7.4 | ma'lum |
 | K6 | `dev` rejimi fail-open (daemon ishlamasa amal ruxsat etiladi) | `tamga-hook` | ataylab; `strict` mavjud |
 
 Auditor K1–K6 ni qum qutisida tasdiqlashi, og'irligini baholashi va tuzatish yo'lini taklif qilishi
-kerak (masalan K1 uchun: pipe mijozining PID'i orqali jarayon yo'lini va imzosini tekshirish,
+kerak. K1/K2 tuzatishining o'zini ham tekshiring (`crates/tamgad/src/control.rs`): agent daraxtidan `tamga decide` / `tamga stop` rad etiladimi, Studio'dan qabul qilinadimi, `control` yozuvlari to'g'rimi; qoldiq yo'llarni baholang (masalan K1 uchun yana: pipe mijozining PID'i orqali jarayon yo'lini va imzosini tekshirish,
 boshqaruv buyruqlarini jurnalga yozish, agent jarayon daraxtidan kelgan boshqaruv so'rovlarini rad
 etish).
 

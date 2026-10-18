@@ -275,7 +275,7 @@ mod tests {
     #[test]
     fn default_set_loads_and_validates() {
         let e = Engine::with_defaults().unwrap();
-        assert_eq!(e.policy_count(), 8);
+        assert_eq!(e.policy_count(), 9);
         let d = e.describe();
         let exfil = d.iter().find(|p| p.id == "no-secret-exfil").unwrap();
         assert_eq!(

@@ -156,6 +156,8 @@ export const EVENT_LABEL: Record<string, string> = {
   "tool.post": "tool natijasi",
   "decision.human": "inson qarori",
   "os.observed": "OS kuzatuvi",
+  "key.rotate": "kalit almashtirildi",
+  control: "boshqaruv",
 };
 
 export const FACT_LABEL: Record<string, string> = {

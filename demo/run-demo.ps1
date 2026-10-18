@@ -108,6 +108,7 @@ function Show-Records($recs) {
         if ($r.tool) { $what = "$($r.event) $($r.tool.name)" }
         $v = ""
         if ($r.decision) { $v = "$($r.decision.verdict) ($($r.decision.policy))" }
+        if ($r.control) { $v = "$($r.control.op) accepted=$($r.control.accepted) ($($r.control.client.image))" }
         $os = $r.ext.'dev.tamga.os'
         if ($os) {
             $v = "$($os.kind) $($os.image)$($os.op) $($os.remote)$($os.path)"
@@ -233,7 +234,7 @@ $mode = "haqiqiy Claude Code ($Model)"
 if ($Simulate) { $mode = "simulyatsiya (hook JSON)" }
 Say "  agent    : $mode"
 
-[void](Tamga stop)   # oldingi demo daemon'i qolgan bo'lsa
+[void](Tamga stop 2>$null)   # oldingi demo daemon'i qolgan bo'lsa (K1: agent ichidan rad etiladi)
 if (Test-Path $Out) { Remove-Item -Recurse -Force $Out }
 New-Item -ItemType Directory -Force $H, $Proj, $Outside | Out-Null
 Copy-Item (Join-Path $PSScriptRoot "project\*") $Proj -Recurse
@@ -342,6 +343,9 @@ if ($human.Count -and $human[0].decision.verdict -eq "allow") {
     $extra = ""
     if (-not $Simulate) { if (Test-Path $target) { $extra = ", fayl yozildi" } else { $extra = ", lekin fayl yo'q" } }
     Result 4 PASS ("ask #{0} -> inson qarori #{1}: allow (by={2}){3}" -f $ask[0].seq, $human[0].seq, $human[0].decision.by, $extra)
+} elseif (@($recs | Where-Object { $_.event -eq "control" -and $_.control.op -eq "decide" -and -not $_.control.accepted }).Count) {
+    # K1: daemon agent jarayon daraxtidan kelgan boshqaruv buyrug'ini rad etdi - bu himoya ishlagani.
+    Result 4 SKIP "skript qarori rad etildi (K1: skript agent daraxtidan ishga tushirilgan) - oddiy terminaldan yoki -Studio -Manual bilan ishga tushiring"
 } elseif ($ask.Count) { Result 4 FAIL "ask navbatga tushdi, lekin ruxsat qarori yozilmadi" }
 else { Result 4 SKIP "agent tashqariga yozishga urinmadi" }
 

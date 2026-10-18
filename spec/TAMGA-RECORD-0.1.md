@@ -99,6 +99,7 @@ The `0x00` prefix makes the record hash identical to the RFC 9162 Merkle **leaf 
 | `decision.human` | a human resolved an `ask` decision |
 | `os.observed` | the operating system observed an action (file, process, network) |
 | `key.rotate` | the signing key is replaced; carries `key_rotation` (§7.5) |
+| `control` | a control request to the log writer (accepted or refused), or a configuration / agent-integration change it observed; carries `control` |
 
 Verifiers MUST accept unknown `event` values (and report them as warnings) so that the format
 can grow without breaking old verifiers.
@@ -113,6 +114,7 @@ can grow without breaking old verifiers.
 | `result` | payload-ref (for `tool.post`) |
 | `decision` | `{"verdict": "allow" \| "deny" \| "ask", "by": "policy" \| "human" \| "default", "policy"?: string, "reason"?: string}` |
 | `ref` | integer — `seq` of the record this one answers (e.g. `tool.post` → its `tool.pre`) |
+| `control` | `{"op": string, "accepted": bool, "client"?: {"pid": integer, "image": string, "from_agent": bool}, "reason"?: string, ...}` — for `event` = `control`; `ref` names the record a `decide` answers |
 | `ext` | object — vendor extensions, keys SHOULD be reverse-DNS names |
 
 Unknown top-level members MUST be accepted; they are covered by `hash` like any other member.

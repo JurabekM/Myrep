@@ -4117,6 +4117,7 @@ dependencies = [
  "tamga-redact",
  "tamga-sensor",
  "tamga-store",
+ "tamga-win",
  "tokio",
 ]
 
