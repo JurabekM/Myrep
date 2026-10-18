@@ -441,16 +441,16 @@ impl State {
                             0
                         }
                     };
+                    // H-2: sessiya tugaganda taint'ni O'CHIRMAYMIZ. Aks holda autentifikatsiyasiz
+                    // `SessionEnd` (yoki `claude --resume` har qadamda yuboradigan) o'qilgan sir
+                    // himoyasini tozalab, keyingi yuborishni ruxsat etardi. Taint diskda TTL (7 kun)
+                    // yoki aniq `tamga shred <sessiya>` gacha qoladi. Faqat sensor va bir martalik
+                    // "shu sessiyada doim ruxsat" grantlari tozalanadi.
                     if left == 0 {
                         self.untrack_session(&session);
-                        self.taints.remove(&session);
                         self.session_allow.retain(|(s, _)| *s != session);
-                        if let Err(e) = self.vault.remove_state(&session) {
-                            log_line(&self.home, &format!("holat o'chirilmadi: {e}"));
-                        }
-                    } else {
-                        self.persist(&session);
                     }
+                    self.persist(&session);
                     let _ = self.checkpoint();
                 }
                 if defer {

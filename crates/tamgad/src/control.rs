@@ -40,6 +40,14 @@ pub fn own_dir() -> Option<PathBuf> {
 /// Boshqaruv buyrug'ini qabul qilish mumkinmi. `Err` — inson o'qiydigan sabab.
 pub fn authorize(caller: Option<&Caller>, own_dir: Option<&Path>) -> Result<(), String> {
     let c = caller.ok_or("chaqiruvchi jarayon aniqlanmadi")?;
+    // H-3: bevosita ota-jarayon ko'rinmasa (etim yoki double-fork — oraliq jarayon o'lgan),
+    // chaqiruvchining agentdan emasligini isbotlab bo'lmaydi — fail-closed.
+    if !c.parent_known {
+        return Err(format!(
+            "{} ota-jarayoni ko'rinmaydi (etim yoki double-fork) — boshqaruv buyruqlari rad etiladi",
+            c.name
+        ));
+    }
     if c.from_agent() {
         return Err(format!(
             "{} agent jarayon daraxtidan ({}) — boshqaruv buyruqlari faqat foydalanuvchidan (TAMGA Studio yoki alohida terminal)",
@@ -131,6 +139,7 @@ mod tests {
             name: exe.file_name().unwrap().to_string_lossy().into_owned(),
             exe: Some(exe),
             ancestors: ancestors.iter().map(|s| (*s).to_owned()).collect(),
+            parent_known: true,
         }
     }
 
@@ -170,6 +179,47 @@ mod tests {
             authorize(None, Some(&dir)).is_err(),
             "aniqlanmasa — rad (fail-closed)"
         );
+
+        // H-3: node (npm Claude Code) va boshqa agent xostlari ham rad etiladi.
+        let node = caller(&own("tamga.exe"), &["node.exe"]);
+        assert!(
+            authorize(Some(&node), Some(&dir))
+                .unwrap_err()
+                .contains("agent")
+        );
+        let cursor = caller(&own("tamga.exe"), &["pwsh.exe", "cursor.exe"]);
+        assert!(
+            authorize(Some(&cursor), Some(&dir))
+                .unwrap_err()
+                .contains("agent")
+        );
+
+        // H-3: bevosita ota ko'rinmasa (double-fork/etim) — rad etiladi.
+        let mut orphan = caller(&own("tamga.exe"), &[]);
+        orphan.parent_known = false;
+        assert!(
+            authorize(Some(&orphan), Some(&dir))
+                .unwrap_err()
+                .contains("ota-jarayoni"),
+            "double-fork fail-closed"
+        );
+    }
+
+    #[test]
+    fn parent_known_detects_dangling_parent() {
+        use std::collections::HashMap;
+        use tamga_sensor::{ProcInfo, ProcTable};
+        let mk = |ppid: Option<u32>| ProcInfo {
+            ppid,
+            name: "x".into(),
+            cmd: String::new(),
+        };
+        // 10 (tamga) → 20 (tirik) → yo'q: 10 ning otasi ko'rinadi.
+        let live = ProcTable(HashMap::from([(10, mk(Some(20))), (20, mk(None))]));
+        assert!(live.parent_known(10));
+        // 10 ning otasi 99 jadvalda yo'q (double-fork: oraliq o'lgan).
+        let dead = ProcTable(HashMap::from([(10u32, mk(Some(99)))]));
+        assert!(!dead.parent_known(10));
     }
 
     #[test]

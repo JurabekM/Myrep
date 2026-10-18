@@ -75,6 +75,17 @@ impl ProcTable {
         out
     }
 
+    /// Chaqiruvchining **bevosita** ota-jarayoni ko'rinadimi. `false` — ota PID yozilgan, lekin
+    /// jadvalda yo'q: jarayon etim yoki double-fork orqali ishga tushirilgan (oraliq jarayon o'lgan),
+    /// shuning uchun uning agentdan emasligini isbotlab bo'lmaydi (H-3). Windows'da daraxtning yuqori
+    /// qismi (explorer → userinit) normal holda uzilgani uchun faqat bevosita otani tekshiramiz.
+    pub fn parent_known(&self, pid: u32) -> bool {
+        match self.0.get(&pid).and_then(|p| p.ppid) {
+            None => true, // ota-jarayon yo'q (ildiz) — to'g'ri
+            Some(pp) => self.0.contains_key(&pp),
+        }
+    }
+
     pub fn name(&self, pid: u32) -> String {
         self.0.get(&pid).map(|p| p.name.clone()).unwrap_or_default()
     }
@@ -115,16 +126,33 @@ pub struct Caller {
     pub exe: Option<PathBuf>,
     pub name: String,
     pub ancestors: Vec<String>,
+    /// Bevosita ota-jarayon jadvalda ko'rinadimi (double-fork/etim bo'lmaganmi) — H-3.
+    pub parent_known: bool,
 }
 
+/// Agent xost dasturlari (o'zi yoki ajdodi shular bo'lsa — boshqaruv buyruqlari rad etiladi).
+/// `claude*` alohida (prefiks bilan) tekshiriladi. Boshqa koding-agent xostlari ham qo'shilgan (H-3).
+const AGENT_HOSTS: [&str; 10] = [
+    "tamga-hook",
+    "tamga-mcp-proxy",
+    "node",
+    "cursor",
+    "windsurf",
+    "codex",
+    "aider",
+    "goose",
+    "cline",
+    "electron",
+];
+
 impl Caller {
-    /// Agent nomidan ishlayotgan jarayonmi: o'zi yoki ajdodi `claude*`, yoki TAMGA hook / MCP proxy
-    /// (ular va ularning avlodlari — agent ishga tushirgan tool'lar va MCP serverlar).
+    /// Agent nomidan ishlayotgan jarayonmi: o'zi yoki ajdodi `claude*` yoxud boshqa agent xosti
+    /// (`AGENT_HOSTS`). Ular va avlodlari — agent ishga tushirgan tool'lar va MCP serverlar.
     pub fn from_agent(&self) -> bool {
         std::iter::once(&self.name)
             .chain(&self.ancestors)
             .map(|n| stem(n))
-            .any(|n| n.starts_with("claude") || n == "tamga-hook" || n == "tamga-mcp-proxy")
+            .any(|n| n.starts_with("claude") || AGENT_HOSTS.contains(&n.as_str()))
     }
 }
 
@@ -161,6 +189,7 @@ pub fn identify(pid: u32) -> Option<Caller> {
             .iter()
             .map(|a| table.name(*a))
             .collect(),
+        parent_known: table.parent_known(pid),
     })
 }
 
@@ -440,6 +469,7 @@ mod tests {
             exe: None,
             name: name.into(),
             ancestors: anc.iter().map(|s| (*s).to_owned()).collect(),
+            parent_known: true,
         };
         assert!(c("tamga.exe", &["pwsh.exe", "claude.exe", "explorer.exe"]).from_agent());
         assert!(c("tamga-hook.exe", &["node.exe"]).from_agent());
