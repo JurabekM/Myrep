@@ -54,8 +54,7 @@ pub fn next_occurrence(month: u32, day: u32, from: NaiveDate) -> Option<NaiveDat
     if !(1..=12).contains(&month) || !(1..=30).contains(&day) {
         return None;
     }
-    let mut year = from_gregorian(from).year;
-    for _ in 0..3 {
+    for year in (from_gregorian(from).year..).take(3) {
         let d = day.min(month_length(year, month));
         let g = to_gregorian(HijriDate {
             year,
@@ -65,7 +64,6 @@ pub fn next_occurrence(month: u32, day: u32, from: NaiveDate) -> Option<NaiveDat
         if g >= from {
             return Some(g);
         }
-        year += 1;
     }
     None
 }
