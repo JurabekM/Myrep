@@ -397,6 +397,7 @@ impl App {
                 role: Role::parse(&a.role).ok_or_else(corrupt)?,
                 space_id: a.space_id,
                 device_id: Some(a.device_id),
+                private_spaces: self.musofir_spaces(household_id)?,
             })),
             None => Ok(None),
         }
@@ -416,11 +417,16 @@ impl App {
                     .ok_or(AppError::on("INVALID_ROLE", "role"))?;
                 let space = clean_opt(input.space_id.as_deref())
                     .ok_or(AppError::on("REQUIRED", "spaceId"))?;
-                self.kk_scope(&ctx, &space)?;
+                if role == Role::Home {
+                    self.mf_space_check(&ctx, &space)?;
+                } else {
+                    self.kk_scope(&ctx, &space)?;
+                }
                 Some(Audience {
                     role,
                     space_id: space,
                     device_id: None,
+                    private_spaces: self.musofir_spaces(&h.id)?,
                 })
             }
         };
@@ -522,6 +528,7 @@ impl App {
                     role: Role::parse(&role).ok_or_else(corrupt)?,
                     space_id: space,
                     device_id: Some(peer.clone()),
+                    private_spaces: self.musofir_spaces(household_id)?,
                 }),
                 None => None,
             }
@@ -557,7 +564,9 @@ impl App {
         // Jurnal: zanjirni qayta hisoblash va mahalliy nusxa bilan solishtirish.
         let incoming_journal: Vec<&Row> = rows
             .iter()
-            .filter(|r| r.table == JOURNAL && audience.is_none())
+            .filter(|r| {
+                r.table == JOURNAL && audience.as_ref().is_none_or(|a| a.role == Role::Home)
+            })
             .map(|r| &r.data)
             .collect();
         let local_journal_rows = self.db.read(|c| sync::dump(c, household_id, JOURNAL))?;

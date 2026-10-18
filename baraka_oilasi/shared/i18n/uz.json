@@ -2406,5 +2406,9 @@
   "mf.kind.OPENING": "Boshlangʻich (qoʻlda)",
   "mf.kind.FUND_OPENING": "Boshlangʻich (jamgʻarma)",
   "mf.feeShort": "komissiya {amount}",
-  "mf.receivedShort": "uyda {amount}"
+  "mf.receivedShort": "uyda {amount}",
+  "error.ALREADY_RECEIVED": "Bu pul allaqachon qabul qilingan",
+  "error.SHARES_NOT_FULL": "Maqsadlar ulushlari yigʻindisi 100 % boʻlsin",
+  "error.DUPLICATE_PURPOSE": "Bir maqsad ikki marta tanlangan",
+  "error.INVALID_PURPOSE": "Maqsadni tanlang"
 }

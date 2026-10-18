@@ -146,7 +146,7 @@ describe("Musofir bosh sahifasi", () => {
     const fund = screen.getByRole("dialog");
     expect(within(fund).getByLabelText("Summa (KRW)")).toHaveValue("520 000");
     await user.click(within(fund).getByRole("button", { name: "Saqlash" }));
-    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "FUND_IN", amount: "520 000", fee: null, received: null, occurredOn: null, note: null });
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "FUND_IN", amount: "520 000", fee: null, received: null, occurredOn: null, note: null, purposes: null });
   });
 
   it("uyga yuborish: komissiya va uyda olingan summa", async () => {
@@ -161,7 +161,7 @@ describe("Musofir bosh sahifasi", () => {
     await user.type(within(dialog).getByLabelText("Komissiya (KRW)"), "5 000");
     await user.type(within(dialog).getByLabelText("Uyda olingan summa (UZS)"), "10 900 000");
     await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
-    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "SENT_HOME", amount: "1 200 000", fee: "5 000", received: "10 900 000", occurredOn: null, note: null });
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "SENT_HOME", amount: "1 200 000", fee: "5 000", received: "10 900 000", occurredOn: null, note: null, purposes: null });
   });
 
   it("kurs: «1 KRW necha UZS»", async () => {

@@ -218,6 +218,11 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::mf_record_income,
             commands::mf_record_expense,
             commands::mf_record_move,
+            commands::mf_terms,
+            commands::mf_set_terms,
+            commands::mf_two_shores,
+            commands::mf_confirm_receipt,
+            commands::mf_record_spend,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

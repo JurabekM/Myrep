@@ -27,6 +27,7 @@ const MIGRATIONS_SLICE: &[M<'_>] = &[
     M::up(include_str!("../migrations/016_kasbkor_growth.sql")),
     M::up(include_str!("../migrations/017_device_roles.sql")),
     M::up(include_str!("../migrations/018_musofir.sql")),
+    M::up(include_str!("../migrations/019_musofir_remittance.sql")),
 ];
 const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
@@ -130,6 +131,52 @@ mod tests {
         assert!(MIGRATIONS.validate().is_ok());
     }
 
+    /// v19 rol jadvallarini qayta quradi: mavjud rollar, ulash takliflari va kutilayotgan eksport
+    /// yozuvlari (`sync_pending` → `sync_exports`) saqlanib qolishi kerak.
+    #[test]
+    fn v19_keeps_roles_and_pending_rows() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("PRAGMA foreign_keys = ON;").unwrap();
+        MIGRATIONS.to_version(&mut conn, 18).unwrap();
+        conn.execute_batch(
+            "INSERT INTO households (id, household_id, name, base_currency, locale, tz, month_start_day, created_at,
+                updated_at, origin_device_id, updated_by_device_id)
+                VALUES ('h', 'h', 'x', 'UZS', 'uz', 'Asia/Tashkent', 1, 't', 't', 'd1', 'd1');
+             INSERT INTO devices (id, household_id, name, platform, paired_at, created_at, updated_at,
+                origin_device_id, updated_by_device_id)
+                VALUES ('d2', 'h', 'Telefon', 'android', 't', 't', 't', 'd1', 'd1');
+             INSERT INTO spaces (id, household_id, kind, name, created_at, updated_at, origin_device_id,
+                updated_by_device_id) VALUES ('kk', 'h', 'KASBKOR', 'KASBKOR', 't', 't', 'd1', 'd1');
+             INSERT INTO device_access (id, household_id, device_id, role, space_id, created_at, updated_at,
+                origin_device_id, updated_by_device_id) VALUES ('d2', 'h', 'd2', 'SELLER', 'kk', 't', 't', 'd1', 'd1');
+             INSERT INTO sync_exports (export_id, household_id, peer_device_id, mode, row_count, created_at,
+                role, role_space_id) VALUES ('e1', 'h', NULL, 'PAIRING', 3, 't', 'SELLER', 'kk');
+             INSERT INTO sync_pending (export_id, tbl, row_id, hash) VALUES ('e1', 'spaces', 'kk', 'abc');",
+        )
+        .unwrap();
+        MIGRATIONS.to_latest(&mut conn).unwrap();
+        let count = |sql: &str| conn.query_row(sql, [], |r| r.get::<_, i64>(0)).unwrap();
+        assert_eq!(
+            count("SELECT count(*) FROM device_access WHERE role = 'SELLER'"),
+            1
+        );
+        assert_eq!(
+            count("SELECT count(*) FROM sync_exports WHERE role = 'SELLER'"),
+            1
+        );
+        assert_eq!(
+            count("SELECT count(*) FROM sync_pending WHERE export_id = 'e1'"),
+            1
+        );
+        assert_eq!(count("SELECT count(*) FROM pragma_foreign_key_check"), 0);
+        // Tashqi kalit yangi `sync_exports` ga qaraydi; yangi rol qabul qilinadi.
+        assert!(conn
+            .execute("INSERT INTO sync_pending (export_id, tbl, row_id, hash) VALUES ('e9', 'x', 'y', 'z')", [])
+            .is_err());
+        conn.execute("UPDATE device_access SET role = 'HOME' WHERE id = 'd2'", [])
+            .unwrap();
+    }
+
     #[test]
     fn file_cannot_be_opened_without_the_key() {
         let dir = tempfile::tempdir().unwrap();
@@ -137,7 +184,7 @@ mod tests {
         let key = DbKey::from_bytes([1; 32]);
         {
             let db = Database::open(&path, &key).unwrap();
-            assert_eq!(db.schema_version().unwrap(), 18);
+            assert_eq!(db.schema_version().unwrap(), 19);
         }
         let wrong = DbKey::from_bytes([2; 32]);
         assert!(matches!(

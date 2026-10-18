@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-confirm-receipt"
+description = "Enables the mf_confirm_receipt command without any pre-configured scope."
+commands.allow = ["mf_confirm_receipt"]
+
+[[permission]]
+identifier = "deny-mf-confirm-receipt"
+description = "Denies the mf_confirm_receipt command without any pre-configured scope."
+commands.deny = ["mf_confirm_receipt"]

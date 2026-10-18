@@ -2406,5 +2406,9 @@
   "mf.kind.OPENING": "Начальный (на руках)",
   "mf.kind.FUND_OPENING": "Начальный (фонд)",
   "mf.feeShort": "комиссия {amount}",
-  "mf.receivedShort": "дома {amount}"
+  "mf.receivedShort": "дома {amount}",
+  "error.ALREADY_RECEIVED": "Эти деньги уже приняты",
+  "error.SHARES_NOT_FULL": "Сумма долей по целям должна быть 100 %",
+  "error.DUPLICATE_PURPOSE": "Одна цель выбрана дважды",
+  "error.INVALID_PURPOSE": "Выберите цель"
 }

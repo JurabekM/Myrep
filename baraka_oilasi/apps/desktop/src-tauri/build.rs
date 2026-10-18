@@ -189,6 +189,11 @@ const COMMANDS: &[&str] = &[
     "mf_record_income",
     "mf_record_expense",
     "mf_record_move",
+    "mf_terms",
+    "mf_set_terms",
+    "mf_two_shores",
+    "mf_confirm_receipt",
+    "mf_record_spend",
 ];
 
 fn main() {

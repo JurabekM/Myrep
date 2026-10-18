@@ -195,6 +195,11 @@
     "allow-mf-set-rate",
     "allow-mf-record-income",
     "allow-mf-record-expense",
-    "allow-mf-record-move"
+    "allow-mf-record-move",
+    "allow-mf-terms",
+    "allow-mf-set-terms",
+    "allow-mf-two-shores",
+    "allow-mf-confirm-receipt",
+    "allow-mf-record-spend"
   ]
 }

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-terms"
+description = "Enables the mf_terms command without any pre-configured scope."
+commands.allow = ["mf_terms"]
+
+[[permission]]
+identifier = "deny-mf-terms"
+description = "Denies the mf_terms command without any pre-configured scope."
+commands.deny = ["mf_terms"]

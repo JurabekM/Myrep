@@ -1507,6 +1507,43 @@ impl BarakaCore {
         self.session.app()?.mf_record_move(&space_id, input)
     }
 
+    // ---- M2: «Ikki qirg'oq» ----
+
+    pub fn mf_terms(&self, space_id: String) -> Result<MfTermsDto, AppError> {
+        self.session.app()?.mf_terms(&space_id)
+    }
+
+    pub fn mf_set_terms(
+        &self,
+        space_id: String,
+        input: MfTermsInput,
+    ) -> Result<MfTermsDto, AppError> {
+        self.session.app()?.mf_set_terms(&space_id, input)
+    }
+
+    pub fn mf_two_shores(&self, space_id: String) -> Result<MfTwoShoresDto, AppError> {
+        self.session.app()?.mf_two_shores(&space_id)
+    }
+
+    pub fn mf_confirm_receipt(
+        &self,
+        space_id: String,
+        move_id: String,
+        input: MfReceiptInput,
+    ) -> Result<MfTwoShoresDto, AppError> {
+        self.session
+            .app()?
+            .mf_confirm_receipt(&space_id, &move_id, input)
+    }
+
+    pub fn mf_record_spend(
+        &self,
+        space_id: String,
+        input: MfSpendInput,
+    ) -> Result<MfTwoShoresDto, AppError> {
+        self.session.app()?.mf_record_spend(&space_id, input)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

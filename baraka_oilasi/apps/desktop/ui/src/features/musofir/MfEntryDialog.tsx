@@ -69,6 +69,7 @@ export function MfEntryDialog({
           received: sent ? received.trim() || null : null,
           occurredOn: date,
           note: text,
+          purposes: null,
         }),
       );
     },

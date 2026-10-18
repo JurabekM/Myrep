@@ -3925,5 +3925,9 @@
     "placeholders": {
       "amount": {}
     }
-  }
+  },
+  "error_ALREADY_RECEIVED": "Bu pul allaqachon qabul qilingan",
+  "error_SHARES_NOT_FULL": "Maqsadlar ulushlari yigʻindisi 100 % boʻlsin",
+  "error_DUPLICATE_PURPOSE": "Bir maqsad ikki marta tanlangan",
+  "error_INVALID_PURPOSE": "Maqsadni tanlang"
 }

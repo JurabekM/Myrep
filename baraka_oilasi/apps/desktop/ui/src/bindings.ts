@@ -225,6 +225,11 @@ export const commands = {
 	mfRecordIncome: (spaceId: string, input: MfIncomeInput) => typedError<MfIncomeRecordedDto, AppError>(__TAURI_INVOKE("mf_record_income", { spaceId, input })),
 	mfRecordExpense: (spaceId: string, input: MfExpenseInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_record_expense", { spaceId, input })),
 	mfRecordMove: (spaceId: string, input: MfMoveInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_record_move", { spaceId, input })),
+	mfTerms: (spaceId: string) => typedError<MfTermsDto, AppError>(__TAURI_INVOKE("mf_terms", { spaceId })),
+	mfSetTerms: (spaceId: string, input: MfTermsInput) => typedError<MfTermsDto, AppError>(__TAURI_INVOKE("mf_set_terms", { spaceId, input })),
+	mfTwoShores: (spaceId: string) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_two_shores", { spaceId })),
+	mfConfirmReceipt: (spaceId: string, moveId: string, input: MfReceiptInput) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_confirm_receipt", { spaceId, moveId, input })),
+	mfRecordSpend: (spaceId: string, input: MfSpendInput) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_record_spend", { spaceId, input })),
 };
 
 /** Events */
@@ -2222,6 +2227,8 @@ export type MfMoveInput = {
 	occurredOn: string | null,
 	/**  `FUND_OUT` uchun majburiy (sabab). */
 	note: string | null,
+	/**  `SENT_HOME`: maqsadlar (M2); bo'lmasa — kelishuv shartlaridan, ular ham bo'lmasa — uy xarajati 100 %. */
+	purposes: MfShareInput[] | null,
 };
 
 export type MfOverviewDto = {
@@ -2235,6 +2242,19 @@ export type MfOverviewDto = {
 	fund: MfFundDto | null,
 	rate: MfRateDto | null,
 	entries: MfEntryDto[],
+};
+
+export type MfPurposeAmountDto = {
+	purpose: string,
+	amount: MoneyDto,
+};
+
+export type MfPurposeDto = {
+	purpose: string,
+	received: MoneyDto,
+	spent: MoneyDto,
+	balance: MoneyDto,
+	overspent: boolean,
 };
 
 export type MfRateDto = {
@@ -2255,6 +2275,38 @@ export type MfRateInput = {
 	rate: string,
 	rateOn: string | null,
 	source: string | null,
+};
+
+export type MfReceiptDto = {
+	received: MoneyDto,
+	receivedOn: string,
+	memberId: string | null,
+	memberName: string | null,
+	note: string | null,
+};
+
+export type MfReceiptInput = {
+	/**  Haqiqatda olingan summa — uy valyutasida. */
+	received: string,
+	channel: string,
+	memberId: string | null,
+	receivedOn: string | null,
+	note: string | null,
+};
+
+export type MfRemittanceDto = {
+	moveId: string,
+	/**  Ish valyutasida (komissiyasiz). */
+	sent: MoneyDto,
+	sentOn: string,
+	note: string | null,
+	shares: MfShareDto[],
+	/**  Musofir yozgan «uyda olingan» summa (taklif sifatida). */
+	expected: MoneyDto | null,
+	/**  `null` — hali qabul qilinmagan («yo'lda»). */
+	receipt: MfReceiptDto | null,
+	/**  Qabul qilingan summaning maqsadlarga bo'linishi. */
+	allocation: MfPurposeAmountDto[],
 };
 
 export type MfSettingsDto = {
@@ -2278,6 +2330,69 @@ export type MfSettingsInput = {
 	/**  Qaytish jamg'armasi maqsadi — uy valyutasida (bo'sh — yo'q). */
 	target: string | null,
 	returnOn: string | null,
+};
+
+export type MfShareDto = {
+	purpose: string,
+	bp: number,
+	percent: string,
+};
+
+export type MfShareInput = {
+	/**  `HOUSEHOLD`, `DEBT`, `BUILD`, `EDUCATION`, `CEREMONY`, `SAVINGS`, `OTHER`. */
+	purpose: string,
+	/**  Foizda: `"50"`, `"12,5"`. */
+	percent: string,
+};
+
+export type MfSpendDto = {
+	expenseId: string,
+	purpose: string,
+	amount: MoneyDto,
+	categoryId: string,
+	occurredOn: string,
+	note: string | null,
+};
+
+export type MfSpendInput = {
+	purpose: string,
+	amount: string,
+	/**  Uy makonining kategoriyasi. */
+	categoryId: string,
+	channel: string,
+	occurredOn: string | null,
+	note: string | null,
+};
+
+export type MfTermsDto = {
+	/**  Belgilanmagan bo'lsa — bo'sh (standart: uy xarajati 100 %). */
+	shares: MfShareDto[],
+	receiverMemberId: string | null,
+	/**  Uy makonidagi oilaviy kelishuv (kattalar tasdig'i bilan). */
+	agreement: FamilyAgreementDto | null,
+	uySpaceId: string | null,
+};
+
+export type MfTermsInput = {
+	shares: MfShareInput[],
+	/**  Uyda kim qabul qiladi (xonadon a'zosi). */
+	receiverMemberId: string | null,
+	/**  Oilaviy kelishuv matni (UI shartlardan taklif qiladi, foydalanuvchi o'zgartiradi). */
+	title: string,
+	items: string[],
+};
+
+export type MfTwoShoresDto = {
+	uySpaceId: string | null,
+	remittances: MfRemittanceDto[],
+	purposes: MfPurposeDto[],
+	received: MoneyDto,
+	spent: MoneyDto,
+	balance: MoneyDto,
+	/**  Qabul qilinmagan yuborishlar. */
+	pending: number,
+	overspent: boolean,
+	spends: MfSpendDto[],
 };
 
 export type MoneyDto = {

@@ -48,7 +48,15 @@ const PARTNERSHIP: &str = "PARTNERSHIP";
 const REASONS: [&str; 3] = ["SCHEDULED", "PROFIT_SPIKE", "EXTRA"];
 const VERDICTS: [&str; 2] = ["AGREE", "OBJECT"];
 const OUTCOMES: [&str; 2] = ["RESUME", "AMEND"];
-const FAMILY_TEMPLATES: [&str; 5] = ["CHORES", "MONEY_PLACE", "WANT_LIMIT", "COUNCIL", "OTHER"];
+/// `REMITTANCE` — Musofir «Ikki qirg'oq» kelishuvi (M2, OQ-MF7).
+const FAMILY_TEMPLATES: [&str; 6] = [
+    "CHORES",
+    "MONEY_PLACE",
+    "WANT_LIMIT",
+    "COUNCIL",
+    "OTHER",
+    "REMITTANCE",
+];
 const MAX_FAMILY_ITEMS: usize = 20;
 const MAX_TEXT: usize = 500;
 /// Versiya izohlari (PDF'da `vnote.*` kalitlari bilan ko'rsatiladi).

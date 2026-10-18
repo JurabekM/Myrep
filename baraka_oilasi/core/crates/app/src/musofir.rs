@@ -12,6 +12,7 @@ use baraka_storage::repo::{categories, expenses, household, incomes, mf};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 
+use crate::access::Role;
 use crate::app::Ctx;
 use crate::events::Topic;
 use crate::receipt::{positive, ymd};
@@ -43,7 +44,7 @@ struct Book {
 }
 
 /// `"20"`, `"12,5"`, `"20 %"` → bp (0–100 %, ko'pi bilan 2 kasr xonasi).
-fn parse_percent_bp(s: &str) -> Result<i64, AppError> {
+pub(crate) fn parse_percent_bp(s: &str) -> Result<i64, AppError> {
     let err = || AppError::on("INVALID_PERCENT", "sharePercent");
     let t: String = s
         .chars()
@@ -72,8 +73,16 @@ fn parse_percent_bp(s: &str) -> Result<i64, AppError> {
 }
 
 impl App {
-    /// Musofir makoni (sotuvchi qurilmasida yopiq — umumiy `scope`).
-    fn mf_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
+    /// Musofirning shaxsiy bo'limlari: uydagi oila qurilmasida (ADR-0004) va sotuvchida yopiq.
+    pub(crate) fn mf_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
+        if self.access(ctx)?.role == Role::Home {
+            return Err(AppError::new("ROLE_FORBIDDEN"));
+        }
+        self.mf_space_check(ctx, space_id)
+    }
+
+    /// Musofir makoni ekanini tekshiradi (rol tekshiruvi — chaqiruvchida yoki umumiy `scope`da).
+    pub(crate) fn mf_space_check(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
         let scope = self.scope(ctx, space_id)?;
         let kind = self
             .db
@@ -620,10 +629,22 @@ impl App {
                 .transpose()?;
             (fee, received)
         } else {
-            if opt(input.fee.as_deref()).is_some() || opt(input.received.as_deref()).is_some() {
+            if opt(input.fee.as_deref()).is_some()
+                || opt(input.received.as_deref()).is_some()
+                || input.purposes.is_some()
+            {
                 return Err(AppError::on("FIELD_NOT_ALLOWED", "fee"));
             }
             (Money::zero(setup.work), None)
+        };
+        // M2: yuborishning maqsadlari — berilgan, kelishuv shartlaridan yoki uy xarajati 100 %.
+        let shares = if kind == MfKind::SentHome {
+            match &input.purposes {
+                Some(p) => crate::musofir_remit::shares_from_input(p)?,
+                None => self.mf_default_shares(&scope)?,
+            }
+        } else {
+            Vec::new()
         };
         let note = clean_opt(input.note.as_deref());
         if kind == MfKind::FundOut && note.is_none() {
@@ -658,9 +679,23 @@ impl App {
             occurred_on: ymd(date),
             note,
         };
+        let parts: Vec<mf::MfPartRow> = shares
+            .iter()
+            .map(|s| mf::MfPartRow {
+                id: self.new_id(),
+                move_id: row.id.clone(),
+                purpose: s.purpose.as_str().to_string(),
+                share_bp: s.bp,
+            })
+            .collect();
         let meta = self.meta();
-        self.db
-            .write(|tx| mf::insert_move(tx, &scope, &row, &meta))?;
+        self.db.write(|tx| {
+            mf::insert_move(tx, &scope, &row, &meta)?;
+            for p in &parts {
+                mf::insert_part(tx, &scope, p, &meta)?;
+            }
+            Ok(())
+        })?;
         self.publish(Some(space_id), &[Topic::Musofir]);
         self.mf_overview(space_id, Some(row.occurred_on))
     }

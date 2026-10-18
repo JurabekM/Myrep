@@ -199,3 +199,195 @@ pub fn has_records_other_than(
     )?;
     Ok(n > 0)
 }
+
+// ---- M2: «Ikki qirg'oq» ----
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfTermsRow {
+    pub shares_json: String,
+    pub receiver_member_id: Option<String>,
+    pub agreement_id: Option<String>,
+}
+
+pub fn terms(c: &Connection, s: &SpaceScope) -> Result<Option<MfTermsRow>, StorageError> {
+    Ok(c.query_row(
+        "SELECT shares_json, receiver_member_id, agreement_id FROM mf_remittance_terms
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id],
+        |r| {
+            Ok(MfTermsRow {
+                shares_json: r.get(0)?,
+                receiver_member_id: r.get(1)?,
+                agreement_id: r.get(2)?,
+            })
+        },
+    )
+    .optional()?)
+}
+
+pub fn upsert_terms(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    row: &MfTermsRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_remittance_terms (id, household_id, space_id, shares_json, receiver_member_id,
+            agreement_id, created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7, ?8, ?8)
+         ON CONFLICT (space_id) DO UPDATE SET shares_json = excluded.shares_json,
+            receiver_member_id = excluded.receiver_member_id, agreement_id = excluded.agreement_id,
+            updated_at = excluded.updated_at, updated_by_device_id = excluded.updated_by_device_id,
+            version = mf_remittance_terms.version + 1",
+        params![id, s.household_id, s.space_id, row.shares_json, row.receiver_member_id,
+            row.agreement_id, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfPartRow {
+    pub id: String,
+    pub move_id: String,
+    pub purpose: String,
+    pub share_bp: i64,
+}
+
+pub fn insert_part(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    row: &MfPartRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_remittance_parts (id, household_id, space_id, move_id, purpose, share_bp, created_at,
+            origin_device_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        params![row.id, s.household_id, s.space_id, row.move_id, row.purpose, row.share_bp, m.now,
+            m.device_id],
+    )?;
+    Ok(())
+}
+
+pub fn parts(c: &Connection, s: &SpaceScope) -> Result<Vec<MfPartRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, move_id, purpose, share_bp FROM mf_remittance_parts
+         WHERE household_id = ?1 AND space_id = ?2 ORDER BY move_id, purpose",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(MfPartRow {
+            id: r.get(0)?,
+            move_id: r.get(1)?,
+            purpose: r.get(2)?,
+            share_bp: r.get(3)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+/// Uyga yuborilganlarning hammasi (eng yangisi birinchi).
+pub fn sent_home(c: &Connection, s: &SpaceScope) -> Result<Vec<MfMoveRow>, StorageError> {
+    let mut st = c.prepare(&format!(
+        "SELECT {COLS} FROM mf_moves WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
+         AND kind = 'SENT_HOME' ORDER BY occurred_on DESC, created_at DESC"
+    ))?;
+    let rows = st.query_map(params![s.household_id, s.space_id], map)?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfReceiptRow {
+    pub id: String,
+    pub move_id: String,
+    pub income_id: String,
+    pub member_id: Option<String>,
+    pub received_minor: i64,
+    pub currency: String,
+    pub received_on: String,
+    pub note: Option<String>,
+}
+
+pub fn insert_receipt(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    row: &MfReceiptRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_receipts (id, household_id, space_id, move_id, income_id, member_id, received_minor,
+            currency, received_on, note, created_at, origin_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+        params![row.id, s.household_id, s.space_id, row.move_id, row.income_id, row.member_id,
+            row.received_minor, row.currency, row.received_on, row.note, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+pub fn receipts(c: &Connection, s: &SpaceScope) -> Result<Vec<MfReceiptRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, move_id, income_id, member_id, received_minor, currency, received_on, note FROM mf_receipts
+         WHERE household_id = ?1 AND space_id = ?2 ORDER BY received_on, created_at",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(MfReceiptRow {
+            id: r.get(0)?,
+            move_id: r.get(1)?,
+            income_id: r.get(2)?,
+            member_id: r.get(3)?,
+            received_minor: r.get(4)?,
+            currency: r.get(5)?,
+            received_on: r.get(6)?,
+            note: r.get(7)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+pub fn insert_spend(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    expense_id: &str,
+    purpose: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_spends (id, household_id, space_id, expense_id, purpose, created_at, origin_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![id, s.household_id, s.space_id, expense_id, purpose, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+/// Maqsad bo'yicha xarajat: Uy makonidagi (o'chirilmagan) xarajat bilan.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfSpendRow {
+    pub expense_id: String,
+    pub purpose: String,
+    pub amount_minor: i64,
+    pub currency: String,
+    pub category_id: String,
+    pub occurred_on: String,
+    pub note: Option<String>,
+}
+
+pub fn spends(c: &Connection, s: &SpaceScope) -> Result<Vec<MfSpendRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT e.id, sp.purpose, e.amount_minor, e.currency, e.category_id, e.occurred_on, e.note
+         FROM mf_spends sp JOIN expenses e ON e.id = sp.expense_id AND e.household_id = sp.household_id
+         WHERE sp.household_id = ?1 AND sp.space_id = ?2 AND e.deleted_at IS NULL
+         ORDER BY e.occurred_on DESC, e.created_at DESC",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(MfSpendRow {
+            expense_id: r.get(0)?,
+            purpose: r.get(1)?,
+            amount_minor: r.get(2)?,
+            currency: r.get(3)?,
+            category_id: r.get(4)?,
+            occurred_on: r.get(5)?,
+            note: r.get(6)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}

@@ -2406,5 +2406,9 @@
   "mf.kind.OPENING": "Бошланғич (қўлда)",
   "mf.kind.FUND_OPENING": "Бошланғич (жамғарма)",
   "mf.feeShort": "комиссия {amount}",
-  "mf.receivedShort": "уйда {amount}"
+  "mf.receivedShort": "уйда {amount}",
+  "error.ALREADY_RECEIVED": "Бу пул аллақачон қабул қилинган",
+  "error.SHARES_NOT_FULL": "Мақсадлар улушлари йиғиндиси 100 % бўлсин",
+  "error.DUPLICATE_PURPOSE": "Бир мақсад икки марта танланган",
+  "error.INVALID_PURPOSE": "Мақсадни танланг"
 }

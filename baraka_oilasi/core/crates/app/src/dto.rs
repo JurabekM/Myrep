@@ -3514,6 +3514,8 @@ pub struct MfMoveInput {
     pub occurred_on: Option<String>,
     /// `FUND_OUT` uchun majburiy (sabab).
     pub note: Option<String>,
+    /// `SENT_HOME`: maqsadlar (M2); bo'lmasa — kelishuv shartlaridan, ular ham bo'lmasa — uy xarajati 100 %.
+    pub purposes: Option<Vec<MfShareInput>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -3601,4 +3603,150 @@ pub struct MfIncomeRecordedDto {
     pub overview: MfOverviewDto,
     /// O'z ulushi taklifi: shu daromaddan qaytish jamg'armasiga.
     pub suggested_share: MoneyDto,
+}
+
+// ---- M2: «Ikki qirg'oq» (docs/musofir/SPEC.md 5, ADR-0004) ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfShareInput {
+    /// `HOUSEHOLD`, `DEBT`, `BUILD`, `EDUCATION`, `CEREMONY`, `SAVINGS`, `OTHER`.
+    pub purpose: String,
+    /// Foizda: `"50"`, `"12,5"`.
+    pub percent: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfShareDto {
+    pub purpose: String,
+    pub bp: i32,
+    pub percent: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTermsInput {
+    pub shares: Vec<MfShareInput>,
+    /// Uyda kim qabul qiladi (xonadon a'zosi).
+    pub receiver_member_id: Option<String>,
+    /// Oilaviy kelishuv matni (UI shartlardan taklif qiladi, foydalanuvchi o'zgartiradi).
+    pub title: String,
+    pub items: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTermsDto {
+    /// Belgilanmagan bo'lsa — bo'sh (standart: uy xarajati 100 %).
+    pub shares: Vec<MfShareDto>,
+    pub receiver_member_id: Option<String>,
+    /// Uy makonidagi oilaviy kelishuv (kattalar tasdig'i bilan).
+    pub agreement: Option<FamilyAgreementDto>,
+    pub uy_space_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfPurposeAmountDto {
+    pub purpose: String,
+    pub amount: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfReceiptDto {
+    pub received: MoneyDto,
+    pub received_on: String,
+    pub member_id: Option<String>,
+    pub member_name: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfRemittanceDto {
+    pub move_id: String,
+    /// Ish valyutasida (komissiyasiz).
+    pub sent: MoneyDto,
+    pub sent_on: String,
+    pub note: Option<String>,
+    pub shares: Vec<MfShareDto>,
+    /// Musofir yozgan «uyda olingan» summa (taklif sifatida).
+    pub expected: Option<MoneyDto>,
+    /// `null` — hali qabul qilinmagan («yo'lda»).
+    pub receipt: Option<MfReceiptDto>,
+    /// Qabul qilingan summaning maqsadlarga bo'linishi.
+    pub allocation: Vec<MfPurposeAmountDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfPurposeDto {
+    pub purpose: String,
+    pub received: MoneyDto,
+    pub spent: MoneyDto,
+    pub balance: MoneyDto,
+    pub overspent: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfSpendDto {
+    pub expense_id: String,
+    pub purpose: String,
+    pub amount: MoneyDto,
+    pub category_id: String,
+    pub occurred_on: String,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTwoShoresDto {
+    pub uy_space_id: Option<String>,
+    pub remittances: Vec<MfRemittanceDto>,
+    pub purposes: Vec<MfPurposeDto>,
+    pub received: MoneyDto,
+    pub spent: MoneyDto,
+    pub balance: MoneyDto,
+    /// Qabul qilinmagan yuborishlar.
+    pub pending: u32,
+    pub overspent: bool,
+    pub spends: Vec<MfSpendDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfReceiptInput {
+    /// Haqiqatda olingan summa — uy valyutasida.
+    pub received: String,
+    pub channel: String,
+    pub member_id: Option<String>,
+    pub received_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfSpendInput {
+    pub purpose: String,
+    pub amount: String,
+    /// Uy makonining kategoriyasi.
+    pub category_id: String,
+    pub channel: String,
+    pub occurred_on: Option<String>,
+    pub note: Option<String>,
 }

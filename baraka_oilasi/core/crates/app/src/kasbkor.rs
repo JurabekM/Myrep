@@ -84,7 +84,8 @@ impl App {
         if access.role == Role::Seller && !seller_ok {
             return Err(AppError::new("ROLE_FORBIDDEN"));
         }
-        if access.space_id.as_deref().is_some_and(|s| s != space_id) {
+        let bound = matches!(access.role, Role::Seller | Role::Accountant);
+        if bound && access.space_id.as_deref().is_some_and(|s| s != space_id) {
             return Err(AppError::on("NOT_FOUND", "spaceId"));
         }
         let scope = self.space_scope(ctx, space_id)?;

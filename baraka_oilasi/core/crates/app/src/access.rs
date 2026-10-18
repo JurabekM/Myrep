@@ -1,4 +1,5 @@
-//! Qurilma rollari (K8, ADR-0003): `OWNER` (rolsiz qurilma), `SELLER`, `ACCOUNTANT`.
+//! Qurilma rollari (K8, ADR-0003): `OWNER` (rolsiz qurilma), `SELLER`, `ACCOUNTANT`; M2 (ADR-0004):
+//! `HOME` — uydagi oila qurilmasi, Musofir makonlarining shaxsiy yozuvlarisiz.
 //!
 //! * Rolli qurilmaga eksport kamaytiriladi — kerak bo'lmagan yozuv u qurilmaga umuman bormaydi
 //!   ([`Audience::filter`]).
@@ -20,6 +21,7 @@ pub enum Role {
     Owner,
     Seller,
     Accountant,
+    Home,
 }
 
 impl Role {
@@ -28,6 +30,7 @@ impl Role {
             "OWNER" => Some(Self::Owner),
             "SELLER" => Some(Self::Seller),
             "ACCOUNTANT" => Some(Self::Accountant),
+            "HOME" => Some(Self::Home),
             _ => None,
         }
     }
@@ -37,6 +40,7 @@ impl Role {
             Self::Owner => "OWNER",
             Self::Seller => "SELLER",
             Self::Accountant => "ACCOUNTANT",
+            Self::Home => "HOME",
         }
     }
 }
@@ -50,6 +54,12 @@ pub(crate) struct Access {
 
 /// Rolli qurilma ko'ra oladigan tushum va nasiya yozuvlari: sotuvchi ishlaydigan jadvallar.
 const SELLER_SPACE_TABLES: [&str; 3] = ["kk_customers", "kk_credit_sales", "kk_credit_events"];
+/// Uydagi oila qurilmasiga Musofir makonlaridan faqat shu jadvallar (ADR-0004); `mf_moves` dan —
+/// faqat `SENT_HOME`, komissiyasiz.
+const HOME_SHARED_TABLES: [&str; 3] = ["mf_remittance_parts", "mf_receipts", "mf_spends"];
+/// Oila qurilmasi yaratishi mumkin bo'lgan Musofir yozuvlari (qabul va maqsad bo'yicha xarajat).
+const HOME_WRITE_TABLES: [&str; 2] = ["mf_receipts", "mf_spends"];
+
 /// Sotuvchiga yuborilmaydigan ustunlar (qiymati `null` bo'ladi): tannarx ma'lumoti.
 const SELLER_REDACTED: [(&str, &str); 1] = [("kk_items", "replacement_price_minor")];
 
@@ -63,6 +73,8 @@ pub(crate) struct Audience {
     pub role: Role,
     pub space_id: String,
     pub device_id: Option<String>,
+    /// `HOME` uchun: barcha Musofir makonlari (shaxsiy yozuvlari yuborilmaydi).
+    pub private_spaces: Vec<String>,
 }
 
 /// Rolli qurilmadan kelgan yozuv bo'yicha egasining qarori.
@@ -80,6 +92,10 @@ impl Audience {
         text(row, "space_id") == Some(self.space_id.as_str())
     }
 
+    fn private(&self, row: &Row) -> bool {
+        text(row, "space_id").is_some_and(|s| self.private_spaces.iter().any(|p| p == s))
+    }
+
     fn own(&self, row: &Row, column: &str) -> bool {
         self.device_id.is_some() && text(row, column) == self.device_id.as_deref()
     }
@@ -88,6 +104,16 @@ impl Audience {
     pub fn filter(&self, tables: Vec<(String, Vec<Row>)>) -> Vec<(String, Vec<Row>)> {
         match self.role {
             Role::Owner => tables,
+            Role::Home => tables
+                .into_iter()
+                .map(|(t, rows)| {
+                    let kept = rows
+                        .into_iter()
+                        .filter_map(|r| self.home_row(&t, r))
+                        .collect();
+                    (t, kept)
+                })
+                .collect(),
             Role::Seller => {
                 // Nasiya to'lovlari tushumlari — nasiya daftari ishlashi uchun (tashqi kalit).
                 let credit_incomes: HashSet<String> = tables
@@ -175,6 +201,24 @@ impl Audience {
         Some(row)
     }
 
+    /// Uydagi oila qurilmasi: hamma narsa, Musofir makonlarining shaxsiy yozuvlaridan tashqari.
+    fn home_row(&self, table: &str, mut row: Row) -> Option<Row> {
+        if table == "device_access" {
+            return self.own(&row, "device_id").then_some(row);
+        }
+        if !self.private(&row) {
+            return Some(row);
+        }
+        match table {
+            "mf_moves" if text(&row, "kind") == Some("SENT_HOME") => {
+                row.insert("fee_minor".into(), Value::from(0));
+                Some(row)
+            }
+            t if HOME_SHARED_TABLES.contains(&t) => Some(row),
+            _ => None,
+        }
+    }
+
     fn accountant_keeps(&self, table: &str, row: &Row) -> bool {
         match table {
             "households" | "devices" | "members" => true,
@@ -186,6 +230,26 @@ impl Audience {
 
     /// Rolli qurilma (`source`) faylidagi yozuv qabul qilinadimi.
     pub fn verdict(&self, source: &str, table: &str, row: &Row) -> Verdict {
+        let mine = text(row, "origin_device_id") == Some(source);
+        if self.role == Role::Home {
+            // Uy va boshqa makonlar — oddiy qurilmadagi kabi birlashtiriladi; Musofir makonlaridan
+            // faqat oila yaratgan qabul va xarajat belgisi; rolni faqat egasi yozadi.
+            return if table == "device_access" {
+                if mine {
+                    Verdict::Reject("ROLE_FORBIDDEN")
+                } else {
+                    Verdict::Ignore
+                }
+            } else if !self.private(row) {
+                Verdict::Accept
+            } else if !mine {
+                Verdict::Ignore
+            } else if HOME_WRITE_TABLES.contains(&table) {
+                Verdict::Accept
+            } else {
+                Verdict::Reject("ROLE_FORBIDDEN")
+            };
+        }
         if table == "devices" {
             return if text(row, "id") == Some(source) {
                 Verdict::Accept
@@ -253,6 +317,17 @@ impl App {
         self.db.set_read_only(role == Role::Accountant);
     }
 
+    /// Xonadondagi barcha Musofir makonlari (ADR-0004: shaxsiy yozuvlari oila qurilmasiga bormaydi).
+    pub(crate) fn musofir_spaces(&self, household_id: &str) -> Result<Vec<String>, AppError> {
+        Ok(self
+            .db
+            .read(|c| household::list_spaces(c, household_id))?
+            .into_iter()
+            .filter(|s| s.kind == "MUSOFIR")
+            .map(|s| s.id)
+            .collect())
+    }
+
     /// Faqat egasining qurilmasida (ulash, rol berish, bekor qilish).
     pub(crate) fn ensure_owner(&self, ctx: &Ctx) -> Result<(), AppError> {
         if self.access(ctx)?.role == Role::Owner {
@@ -297,6 +372,7 @@ mod tests {
             role: Role::Seller,
             space_id: "kk".into(),
             device_id: Some("d2".into()),
+            private_spaces: vec![],
         }
     }
 
@@ -422,6 +498,121 @@ mod tests {
                 "d2",
                 "incomes",
                 &row(json!({"space_id": "kk", "origin_device_id": "d2"}))
+            ),
+            Verdict::Reject("ROLE_FORBIDDEN")
+        );
+    }
+
+    fn home() -> Audience {
+        Audience {
+            role: Role::Home,
+            space_id: "mf".into(),
+            device_id: Some("d2".into()),
+            private_spaces: vec!["mf".into()],
+        }
+    }
+
+    #[test]
+    fn home_device_gets_no_private_musofir_rows() {
+        let tables = vec![
+            (
+                "spaces".to_string(),
+                vec![row(json!({"id": "uy"})), row(json!({"id": "mf"}))],
+            ),
+            (
+                "incomes".to_string(),
+                vec![
+                    row(json!({"id": "i1", "space_id": "uy"})),
+                    row(json!({"id": "i2", "space_id": "mf"})),
+                ],
+            ),
+            (
+                "mf_settings".to_string(),
+                vec![row(json!({"id": "s1", "space_id": "mf"}))],
+            ),
+            (
+                "mf_moves".to_string(),
+                vec![
+                    row(
+                        json!({"id": "m1", "space_id": "mf", "kind": "SENT_HOME", "fee_minor": 5000}),
+                    ),
+                    row(json!({"id": "m2", "space_id": "mf", "kind": "FUND_IN", "fee_minor": 0})),
+                ],
+            ),
+            (
+                "mf_remittance_parts".to_string(),
+                vec![row(json!({"id": "p1", "space_id": "mf"}))],
+            ),
+            (
+                "device_access".to_string(),
+                vec![
+                    row(json!({"id": "d2", "device_id": "d2"})),
+                    row(json!({"id": "d3", "device_id": "d3"})),
+                ],
+            ),
+        ];
+        let out: std::collections::HashMap<String, Vec<Row>> =
+            home().filter(tables).into_iter().collect();
+        let ids = |t: &str| -> Vec<String> {
+            out[t]
+                .iter()
+                .filter_map(|r| text(r, "id").map(str::to_string))
+                .collect()
+        };
+        assert_eq!(ids("spaces"), ["uy", "mf"]);
+        assert_eq!(ids("incomes"), ["i1"]);
+        assert!(ids("mf_settings").is_empty());
+        assert_eq!(ids("mf_moves"), ["m1"]);
+        assert_eq!(out["mf_moves"][0]["fee_minor"], json!(0));
+        assert_eq!(ids("mf_remittance_parts"), ["p1"]);
+        assert_eq!(ids("device_access"), ["d2"]);
+    }
+
+    #[test]
+    fn owner_accepts_home_writes_except_private_ones() {
+        let a = home();
+        let v = |t: &str, r: Value| a.verdict("d2", t, &row(r));
+        // Uy makoni — egasining yozuvini o'zgartirgan bo'lsa ham qabul qilinadi.
+        assert_eq!(
+            v(
+                "expenses",
+                json!({"space_id": "uy", "origin_device_id": "d1"})
+            ),
+            Verdict::Accept
+        );
+        assert_eq!(
+            v(
+                "mf_receipts",
+                json!({"space_id": "mf", "origin_device_id": "d2"})
+            ),
+            Verdict::Accept
+        );
+        assert_eq!(
+            v(
+                "mf_spends",
+                json!({"space_id": "mf", "origin_device_id": "d2"})
+            ),
+            Verdict::Accept
+        );
+        // Egasining kamaytirilgan yozuvi qaytib keldi.
+        assert_eq!(
+            v(
+                "mf_moves",
+                json!({"space_id": "mf", "origin_device_id": "d1"})
+            ),
+            Verdict::Ignore
+        );
+        assert_eq!(
+            v(
+                "mf_moves",
+                json!({"space_id": "mf", "origin_device_id": "d2"})
+            ),
+            Verdict::Reject("ROLE_FORBIDDEN")
+        );
+        assert_eq!(
+            v(
+                "device_access",
+                json!({"id": "d2", "origin_device_id": "d2"})
             ),
             Verdict::Reject("ROLE_FORBIDDEN")
         );

@@ -261,11 +261,15 @@
             "kk_scale_checks",
             "kk_zakat_calcs",
             "kk_stock_counts",
-            "device_access",
             "kk_shifts",
             "mf_settings",
             "mf_rates",
-            "mf_moves"
+            "mf_moves",
+            "device_access",
+            "mf_remittance_terms",
+            "mf_remittance_parts",
+            "mf_receipts",
+            "mf_spends"
           ]
         },
         "data": {
@@ -702,12 +706,6 @@
         "blobColumns": []
       },
       {
-        "name": "device_access",
-        "mode": "MUTABLE",
-        "primaryKey": "id",
-        "blobColumns": []
-      },
-      {
         "name": "kk_shifts",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
@@ -728,6 +726,36 @@
       {
         "name": "mf_moves",
         "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "device_access",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_remittance_terms",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_remittance_parts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_receipts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_spends",
+        "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []
       }

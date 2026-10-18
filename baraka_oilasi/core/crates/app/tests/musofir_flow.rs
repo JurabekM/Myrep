@@ -84,6 +84,7 @@ fn mv(kind: &str, amount: &str, on: &str) -> MfMoveInput {
         received: None,
         occurred_on: Some(on.into()),
         note: None,
+        purposes: None,
     }
 }
 

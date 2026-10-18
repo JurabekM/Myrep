@@ -60,7 +60,10 @@ impl App {
         let rhythm = parse_rhythm(input.income_rhythm.as_deref())?;
         let meta = self.meta();
         // Rolli qurilmada (K8) faqat shu qurilmaning tili; xonadon sozlamalari — egasida.
-        let owner = self.access(&ctx)?.role == crate::access::Role::Owner;
+        let owner = matches!(
+            self.access(&ctx)?.role,
+            crate::access::Role::Owner | crate::access::Role::Home
+        );
         self.db.write_sync(|tx| {
             household::set_device_locale(tx, input.locale.as_deref(), &meta)?;
             if owner {

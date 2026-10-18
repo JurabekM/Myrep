@@ -2120,6 +2120,54 @@ pub async fn mf_record_move(
     state.session.app()?.mf_record_move(&space_id, input)
 }
 
+// ---- M2: «Ikki qirg'oq» ----
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_terms(state: State<'_, Desktop>, space_id: String) -> R<MfTermsDto> {
+    state.session.app()?.mf_terms(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_set_terms(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfTermsInput,
+) -> R<MfTermsDto> {
+    state.session.app()?.mf_set_terms(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_two_shores(state: State<'_, Desktop>, space_id: String) -> R<MfTwoShoresDto> {
+    state.session.app()?.mf_two_shores(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_confirm_receipt(
+    state: State<'_, Desktop>,
+    space_id: String,
+    move_id: String,
+    input: MfReceiptInput,
+) -> R<MfTwoShoresDto> {
+    state
+        .session
+        .app()?
+        .mf_confirm_receipt(&space_id, &move_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_record_spend(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfSpendInput,
+) -> R<MfTwoShoresDto> {
+    state.session.app()?.mf_record_spend(&space_id, input)
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
