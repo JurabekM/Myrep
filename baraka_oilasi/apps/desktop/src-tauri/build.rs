@@ -132,6 +132,18 @@ const COMMANDS: &[&str] = &[
     "kk_close_month",
     "kk_month_closes",
     "export_kk_month_close",
+    "kk_cash_draft",
+    "kk_close_cash_day",
+    "kk_cash_days",
+    "kk_customers",
+    "kk_add_customer",
+    "kk_credit_book",
+    "kk_add_credit_sale",
+    "kk_credit_payment",
+    "kk_credit_forgive",
+    "kk_credit_extend",
+    "kk_credit_mark",
+    "kk_delete_credit_sale",
 ];
 
 fn main() {

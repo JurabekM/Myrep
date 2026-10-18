@@ -1543,6 +1543,134 @@ pub async fn export_kk_month_close(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_cash_draft(
+    state: State<'_, Desktop>,
+    space_id: String,
+    day: Option<String>,
+    counted: Option<String>,
+) -> R<KkCashDraftDto> {
+    state.session.app()?.kk_cash_draft(&space_id, day, counted)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_close_cash_day(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkCashCloseInput,
+) -> R<KkCashDayDto> {
+    state.session.app()?.kk_close_cash_day(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_cash_days(state: State<'_, Desktop>, space_id: String) -> R<Vec<KkCashDayDto>> {
+    state.session.app()?.kk_cash_days(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_customers(state: State<'_, Desktop>, space_id: String) -> R<Vec<KkCustomerDto>> {
+    state.session.app()?.kk_customers(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_customer(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkCustomerInput,
+) -> R<Vec<KkCustomerDto>> {
+    state.session.app()?.kk_add_customer(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_credit_book(state: State<'_, Desktop>, space_id: String) -> R<KkCreditBookDto> {
+    state.session.app()?.kk_credit_book(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_credit_sale(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkCreditSaleInput,
+) -> R<KkCreditBookDto> {
+    state.session.app()?.kk_add_credit_sale(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_credit_payment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    sale_id: String,
+    input: KkCreditPaymentInput,
+) -> R<KkCreditBookDto> {
+    state
+        .session
+        .app()?
+        .kk_credit_payment(&space_id, &sale_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_credit_forgive(
+    state: State<'_, Desktop>,
+    space_id: String,
+    sale_id: String,
+    input: KkCreditForgiveInput,
+) -> R<KkCreditBookDto> {
+    state
+        .session
+        .app()?
+        .kk_credit_forgive(&space_id, &sale_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_credit_extend(
+    state: State<'_, Desktop>,
+    space_id: String,
+    sale_id: String,
+    input: KkCreditExtendInput,
+) -> R<KkCreditBookDto> {
+    state
+        .session
+        .app()?
+        .kk_credit_extend(&space_id, &sale_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_credit_mark(
+    state: State<'_, Desktop>,
+    space_id: String,
+    sale_id: String,
+    talk: bool,
+) -> R<KkCreditBookDto> {
+    state
+        .session
+        .app()?
+        .kk_credit_mark(&space_id, &sale_id, talk)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delete_credit_sale(
+    state: State<'_, Desktop>,
+    space_id: String,
+    sale_id: String,
+) -> R<KkCreditBookDto> {
+    state
+        .session
+        .app()?
+        .kk_delete_credit_sale(&space_id, &sale_id)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

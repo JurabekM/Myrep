@@ -161,6 +161,18 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_close_month,
             commands::kk_month_closes,
             commands::export_kk_month_close,
+            commands::kk_cash_draft,
+            commands::kk_close_cash_day,
+            commands::kk_cash_days,
+            commands::kk_customers,
+            commands::kk_add_customer,
+            commands::kk_credit_book,
+            commands::kk_add_credit_sale,
+            commands::kk_credit_payment,
+            commands::kk_credit_forgive,
+            commands::kk_credit_extend,
+            commands::kk_credit_mark,
+            commands::kk_delete_credit_sale,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

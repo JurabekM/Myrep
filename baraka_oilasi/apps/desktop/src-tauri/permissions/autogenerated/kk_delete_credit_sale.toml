@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-delete-credit-sale"
+description = "Enables the kk_delete_credit_sale command without any pre-configured scope."
+commands.allow = ["kk_delete_credit_sale"]
+
+[[permission]]
+identifier = "deny-kk-delete-credit-sale"
+description = "Denies the kk_delete_credit_sale command without any pre-configured scope."
+commands.deny = ["kk_delete_credit_sale"]

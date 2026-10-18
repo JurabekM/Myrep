@@ -138,6 +138,18 @@
     "allow-kk-close-draft",
     "allow-kk-close-month",
     "allow-kk-month-closes",
-    "allow-export-kk-month-close"
+    "allow-export-kk-month-close",
+    "allow-kk-cash-draft",
+    "allow-kk-close-cash-day",
+    "allow-kk-cash-days",
+    "allow-kk-customers",
+    "allow-kk-add-customer",
+    "allow-kk-credit-book",
+    "allow-kk-add-credit-sale",
+    "allow-kk-credit-payment",
+    "allow-kk-credit-forgive",
+    "allow-kk-credit-extend",
+    "allow-kk-credit-mark",
+    "allow-kk-delete-credit-sale"
   ]
 }

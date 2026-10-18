@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim) va K3 (4.5) amalga oshirildi — farqlari 2.4, 3.4 va 4.6 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5) va K4 (5-bo'lim) amalga oshirildi — farqlari 2.4, 3.4, 4.6 va 5.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -168,6 +168,14 @@ Kassa farqi     = Sanalgan − Kutilgan
 
 ### 5.3. Ta'minotchiga qarz
 - Tovarni nasiyaga olish — Uy makonidagi qarz inventari mexanizmi bilan (`docs/uy/SPEC.md` 2C.7, U8), lekin Kasb-kor makonida va `SUPPLY` kelishuviga bog'lanadi (6-bo'lim).
+
+### 5.4. K4 da qanday qilindi (farqlar)
+- Kassa farqi naqd kassani tuzatadi (pul oqimiga kirmaydi); keyingi kun ochilishi = sanalgan summa. Kunlar tartib bilan yopiladi (oxirgi yopilgandan keyingi kun); kunni o'tkazib yuborish mumkin.
+- Yopilgan kunga faqat **naqd** yozuvlar to'xtatiladi; karta yozuvlari ochiq.
+- Ochilish qoldig'i manfiy bo'lsa kun yopilmaydi — avval boshlang'ich qoldiq yoki yozuvlar tekshiriladi.
+- Nasiya — `Agreement(CREDIT_SALE)` emas, alohida jadvallar (`kk_credit_sales`, `kk_credit_events`); narx va jadval trigger bilan qotirilgan. Hisob naqd asosida: savdo paytida tushum yo'q, har bir to'lov — tushum.
+- To'lovlar oylik, teng (qoldiq tiyinlar birinchi to'lovlarga); uzaytirish — yopilmagan to'lovlarni N oyga surish. Kechikish — eng birinchi yopilmagan va muddati o'tgan to'lov sanasidan; «muddati kelmagan» guruh ham ko'rsatiladi.
+- Haftalik ko'rik — muddati o'tganlar va «bu hafta gaplashaman» belgilanganlar; hafta boshi — juma.
 
 ## 6. 5-QONUN: «KENGAYISHGA REJA BILAN CHIQ» — FUNKSIONAL TALABLAR (K7)
 Qonunning mazmuni: kengayish — tayyorgarlik bilan; foizli kredit o'rniga halol yo'llar.

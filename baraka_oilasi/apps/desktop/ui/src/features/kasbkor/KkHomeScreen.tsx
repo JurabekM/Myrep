@@ -73,7 +73,7 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
 
       <SalaryCard spaceId={spaceId} onPay={() => setSalaryOpen(true)} />
 
-      <section aria-label={t("kk.wallets")} className="grid gap-5 md:grid-cols-3">
+      <section aria-label={t("kk.wallets")} className="grid gap-5 md:grid-cols-2">
         <div className="card">
           <p className="text-sm text-ink-muted">{t("kk.cashFlow")}</p>
           <p data-testid="kk-cash-flow" className="text-2xl font-semibold tabular-nums">
@@ -104,6 +104,21 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
           );
         })}
       </section>
+
+      {d && d.receivables.minor !== "0" && (
+        <div className="card flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-ink-muted">{t("kk.receivables")}</p>
+            <p data-testid="kk-receivables" className="text-2xl font-semibold tabular-nums">
+              {d.receivables.formatted}
+            </p>
+            {d.receivablesOverdue.minor !== "0" && <p className="text-sm text-warn">{t("kk.receivablesOverdue", { amount: d.receivablesOverdue.formatted })}</p>}
+          </div>
+          <button className="btn-ghost" onClick={() => setScreen("kkCredit")}>
+            {t("nav.kkCredit")}
+          </button>
+        </div>
+      )}
 
       <div role="group" aria-label={t("kk.actions")} className="flex flex-wrap gap-2">
         {ACTIONS.map((a, i) => (

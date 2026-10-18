@@ -367,6 +367,7 @@ version = "0.1.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-money",
+ "chrono",
 ]
 
 [[package]]

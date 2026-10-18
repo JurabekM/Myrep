@@ -75,6 +75,9 @@ const overview = {
   salaryCarry: null,
   closedUntil: null,
   closeDue: null,
+  cashClosedUntil: null,
+  receivables: zero,
+  receivablesOverdue: zero,
   entries: [],
 };
 

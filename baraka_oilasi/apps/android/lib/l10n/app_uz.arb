@@ -1767,7 +1767,7 @@
   "error_INVALID_TEMPLATE": "Notoʻgʻri shablon",
   "error_TOO_MANY_ITEMS": "Bandlar juda koʻp",
   "error_TOO_LONG": "Matn juda uzun",
-  "error_INVALID_REASON": "Koʻrik sababini tanlang",
+  "error_INVALID_REASON": "Bunday sabab yoʻq",
   "error_INVALID_VERDICT": "Belgini tanlang",
   "gov_today": "bugun",
   "gov_reviewNo": "{n}-koʻrik",
@@ -2507,5 +2507,190 @@
   "error_PERIOD_NOT_ENDED": "Bu oy hali tugamagan",
   "error_LATER_PERIOD_CLOSED": "Keyingi oy yopilgan — oldingi oyni endi yopib boʻlmaydi",
   "error_INVALID_RULE": "Taqsimot foizlari jami 100 % boʻlsin",
-  "error_INVALID_TAX_BASE": "Soliq zaxirasi turini tanlang"
+  "error_INVALID_TAX_BASE": "Soliq zaxirasi turini tanlang",
+  "nav_kkCash": "Kassa",
+  "nav_kkCredit": "Nasiya daftari",
+  "mentor_kkCash": "Har kuni 5 daqiqa: kassani sanang. Farq chiqsa — ayb emas, sababini yozib qoʻying; takrorlansa, birga qidiramiz.",
+  "mentor_kkCredit": "Nasiya — kelishuv. Narxni savdo paytida qotiring, kechikkani uchun ustama olmang. Yozilmagan nasiya — yoʻqolgan nasiya.",
+  "kk_receivables": "Mijozlardagi pul (nasiya)",
+  "kk_receivablesOverdue": "Shundan muddati oʻtgan: {amount}",
+  "@kk_receivablesOverdue": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_kind_CASH_SHORT": "Kassa kamomadi",
+  "kk_kind_CASH_OVER": "Kassa ortiqchasi",
+  "kk_cash_title": "Kassa",
+  "kk_cash_intro": "Kunni yopish: naqd harakatlar boʻyicha kassada qancha boʻlishi kerakligini yadro hisoblaydi, siz sanaysiz. Karta tushumlari kassaga taʼsir qilmaydi.",
+  "kk_cash_todayClosed": "Bugungi kassa yopilgan. Ertaga shu yerda.",
+  "kk_cash_day": "Kassa: {date}",
+  "@kk_cash_day": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_cash_opening": "Ochilish qoldigʻi",
+  "kk_cash_sales": "Naqd tushum",
+  "kk_cash_expenses": "Naqd chiqim",
+  "kk_cash_ownerDraws": "«Egasi oldi» (naqd)",
+  "kk_cash_handedOver": "Kartaga (bankka) topshirildi",
+  "kk_cash_otherIn": "Boshqa naqd kirim",
+  "kk_cash_otherOut": "Boshqa naqd chiqim",
+  "kk_cash_expected": "Kutilgan qoldiq",
+  "kk_cash_countForm": "Kassani sanash",
+  "kk_cash_counted": "Sanalgan summa",
+  "kk_cash_countedShort": "Sanalgan",
+  "kk_cash_difference": "Farq",
+  "kk_cash_check": "Tekshirish",
+  "kk_cash_status_EXACT": "Farq yoʻq — kassa aniq.",
+  "kk_cash_status_SHORT": "Kamomad: {amount}",
+  "@kk_cash_status_SHORT": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_cash_status_OVER": "Ortiqcha: +{amount}",
+  "@kk_cash_status_OVER": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_cash_suggestSearch": "Bu 4 hafta ichidagi uchinchi kamomad. Xatoni birga qidiraylik: yozilmagan chiqimlar, qaytim, nasiyaga berilgan tovar. Bu ayblov emas — tizimni tuzatish uchun.",
+  "kk_cash_reason": "Farq sababi",
+  "kk_cash_reasons_UNRECORDED_EXPENSE": "Yozilmagan chiqim",
+  "kk_cash_reasons_CHANGE_ERROR": "Qaytim xatosi",
+  "kk_cash_reasons_GIVEN_ON_CREDIT": "Nasiyaga berilgan",
+  "kk_cash_reasons_OWNER_TOOK": "Egasi oldi (yozilmagan)",
+  "kk_cash_reasons_UNKNOWN": "Nomaʼlum",
+  "kk_cash_finalWarning": "Yopilgan kun oʻzgarmaydi: bu kunga naqd yozuv qoʻshib ham, oʻchirib ham boʻlmaydi — tuzatish keyingi kunga.",
+  "kk_cash_close": "Kunni yopish",
+  "kk_cash_history": "Yopilgan kunlar",
+  "kk_credit_title": "Nasiya daftari",
+  "kk_credit_intro": "Nasiya — mijoz bilan kelishuv: narx savdo paytida qotiriladi, kechikkani uchun ustama yoʻq. Har bir toʻlov — tushum.",
+  "kk_credit_aging": "Mijozlardagi pul",
+  "kk_credit_bucket_current": "Muddati kelmagan",
+  "kk_credit_bucket_d1_30": "1–30 kun",
+  "kk_credit_bucket_d31_60": "31–60 kun",
+  "kk_credit_bucket_d61_90": "61–90 kun",
+  "kk_credit_bucket_d90_plus": "90+ kun (umidsiz boʻlishi mumkin)",
+  "kk_credit_review": "Haftalik koʻrik (juma)",
+  "kk_credit_reviewHint": "Muddati oʻtganlar va «bu hafta gaplashaman» deb belgilanganlar. Eslatmani nusxalab, oʻzingiz yuborasiz — ilova xabar yubormaydi.",
+  "kk_credit_overdueDays": "{n} kun kechikkan",
+  "@kk_credit_overdueDays": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_credit_reminderLabel": "Eslatma matni",
+  "kk_credit_reminder": "Assalomu alaykum, {name}! {item} uchun {amount} toʻlov muddati {date} edi. Imkoningiz boʻlganda toʻlab qoʻysangiz, xursand boʻlardik. Rahmat!",
+  "@kk_credit_reminder": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "item": {},
+      "name": {}
+    }
+  },
+  "kk_credit_copy": "Nusxalash",
+  "kk_credit_copied": "Nusxalandi",
+  "kk_credit_talk": "Bu hafta gaplashaman",
+  "kk_credit_new": "Yangi nasiya",
+  "kk_credit_newHint": "Narx va jadval saqlangandan keyin oʻzgarmaydi. Keyin faqat toʻlov, muddatni uzaytirish yoki kechirish yoziladi.",
+  "kk_credit_saleForm": "Nasiya shartlari",
+  "kk_credit_customer": "Mijoz",
+  "kk_credit_addCustomer": "Yangi mijoz",
+  "kk_credit_item": "Tovar yoki xizmat",
+  "kk_credit_cashPrice": "Naqd narxi (maʼlumot uchun)",
+  "kk_credit_creditPrice": "Nasiya narxi (qotiriladi)",
+  "kk_credit_installments": "Toʻlovlar soni (oylik)",
+  "kk_credit_firstDue": "Birinchi toʻlov sanasi (boʻsh — bir oydan keyin)",
+  "kk_credit_soldOn": "Sotilgan sana (boʻsh — bugun)",
+  "kk_credit_witness": "Guvoh (ixtiyoriy)",
+  "kk_credit_noSurcharge": "Kechikish uchun ustama, jarima yoki foiz maydoni yoʻq — narx qotirilgan.",
+  "kk_credit_customerForm": "Yangi mijoz",
+  "kk_credit_customerName": "Ism",
+  "kk_credit_phone": "Telefon (ixtiyoriy)",
+  "kk_credit_consent": "Mijoz telefon raqami shu daftarda saqlanishiga rozi (faqat shu qurilmada, shifrlangan).",
+  "kk_credit_saveCustomer": "Mijozni saqlash",
+  "kk_credit_status_SETTLED": "Yopilgan",
+  "kk_credit_status_CURRENT": "Muddatida",
+  "kk_credit_terms": "{price}, {n} ta toʻlov, {date} da sotilgan",
+  "@kk_credit_terms": {
+    "placeholders": {
+      "date": {},
+      "n": {},
+      "price": {}
+    }
+  },
+  "kk_credit_markup": "naqd {cash}, farqi {diff}",
+  "@kk_credit_markup": {
+    "placeholders": {
+      "cash": {},
+      "diff": {}
+    }
+  },
+  "kk_credit_witnessShow": "guvoh: {name}",
+  "@kk_credit_witnessShow": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_credit_outstanding": "Qoldiq",
+  "kk_credit_next": "Navbatdagi: {date}, {amount}",
+  "@kk_credit_next": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "kk_credit_schedule": "Jadval va yozuvlar",
+  "kk_credit_covered": "Toʻlangan",
+  "kk_credit_state_PAID": "Toʻlangan",
+  "kk_credit_state_OVERDUE": "Kechikkan",
+  "kk_credit_state_DUE": "Kutilmoqda",
+  "kk_credit_event_PAYMENT": "Toʻlov {amount}",
+  "@kk_credit_event_PAYMENT": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_credit_event_FORGIVE": "Kechirildi {amount}",
+  "@kk_credit_event_FORGIVE": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_credit_event_EXTEND": "Muddat {n} oyga uzaytirildi",
+  "@kk_credit_event_EXTEND": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_credit_action_pay": "Toʻlov",
+  "kk_credit_action_extend": "Muddatni uzaytirish",
+  "kk_credit_action_forgive": "Kechirish",
+  "kk_credit_actionHint_pay": "Toʻlov Kasb-kor tushumi sifatida yoziladi.",
+  "kk_credit_actionHint_extend": "Yopilmagan toʻlovlar shuncha oyga suriladi; summa oʻzgarmaydi.",
+  "kk_credit_actionHint_forgive": "Summa boʻsh boʻlsa — butun qoldiq kechiriladi.",
+  "kk_credit_months": "Necha oyga",
+  "kk_credit_forgiveAmount": "Kechiriladigan summa (boʻsh — hammasi)",
+  "kk_credit_deleteNamed": "Oʻchirish: {name}, {item}",
+  "@kk_credit_deleteNamed": {
+    "placeholders": {
+      "item": {},
+      "name": {}
+    }
+  },
+  "kk_credit_list": "Nasiyalar",
+  "error_CASH_DAY_CLOSED": "Bu kunning kassasi yopilgan — naqd tuzatishni keyingi kunga yozing",
+  "error_FUTURE_DAY": "Kelgusi kunni yopib boʻlmaydi",
+  "error_CASH_OPENING_NEGATIVE": "Kassa qoldigʻi manfiy — avval boshlangʻich qoldiqni yoki yozuvlarni tekshiring",
+  "error_REASON_REQUIRED": "Farq sababini tanlang",
+  "error_PHONE_CONSENT_REQUIRED": "Telefonni saqlash uchun mijoz roziligini belgilang",
+  "error_EXCEEDS_OUTSTANDING": "Summa qoldiqdan koʻp",
+  "error_INVALID_INSTALLMENTS": "Toʻlovlar soni 1 dan 120 gacha",
+  "error_INVALID_EXTENSION": "Uzaytirish 1 dan 24 oygacha",
+  "error_ALREADY_SETTLED": "Bu nasiya yopilgan",
+  "error_CREDIT_HAS_EVENTS": "Toʻlov yoki boshqa yozuvi bor nasiyani oʻchirib boʻlmaydi"
 }

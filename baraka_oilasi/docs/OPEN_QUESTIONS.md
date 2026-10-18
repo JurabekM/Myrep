@@ -157,7 +157,8 @@
 ### OQ-D5. Muzoraa, nasiya narxi, savdo mollari zakoti
 - **Savollar:** (1) nasiyada narxni oldindan qotirib sotish (bay' muajjal) va kechikish uchun ustama taqiqi; (2) savdo mollari zakotini bozor narxida baholash; (3) xodim bilan foyda ulushi asosidagi kelishuv; (4) konsignatsiya.
 - **K0 da (SPEC 5.2, 7.1, 8.3):** nasiya narxi kelishuvda qotiriladi va keyin oshirilmaydi, ustama/jarima maydoni yo'q; zakot bazasidagi tovar baholash usuli (xarid, qayta tiklash yoki sotuv narxi) ochiq — SPEC'dagi misol shartli.
-- **To'sadi:** K4, K6, K7. **Holat:** OCHIQ.
+- **K4 da qilindi:** nasiya narxi kelishuvda qotiriladi (trigger), ustama/jarima/foiz ustuni yo'q; naqd narx va farqi faqat ma'lumot uchun ko'rsatiladi. Bay' muajjal joizligi — ulamo tasdig'i kutilmoqda.
+- **To'sadi:** K6, K7. **Holat:** OCHIQ.
 
 ### OQ-D7. Savdo mollari zakoti: nisob, nasiya, oilaviy mehnat, oldindan to'lov
 - **Savollar:** (1) nisob oltin (85 g) yoki kumush bo'yicha hisoblanadimi, kim tanlaydi? (2) umidli nasiya bazaga kiradi, umidsiz (90+ va egasi belgilagan) kirmaydi — to'g'rimi; umidsiz nasiya keyin qaytsa? (3) yaqin muddatli qarzlar (ta'minotchiga) bazadan ayiriladimi? (4) nasiyani muddatidan oldin to'lagan mijozga chegirma berish (da' va ta'ajjal) joizmi — ilovada bunday tugma bo'lsinmi? (5) oilaviy mehnatni tannarxga «bahosi» bilan kiritish — bu faqat hisob usuli, fiqhiy masala emas deb tushunamiz; to'g'rimi?
@@ -184,7 +185,8 @@
 ### OQ-Y3. Kasb-kor: mijozlarning shaxsiy ma'lumotlari
 - **Savol:** nasiya olgan mijozlarning ism va telefonlarini saqlaganda do'kondor operator hisoblanadimi? Qanday rozilik shakli kerak?
 - **K0 da (SPEC 5.2, 11):** telefon ixtiyoriy, saqlanganda rozilik belgisi; ma'lumot faqat qurilmada shifrlangan; eslatmani ilova o'zi yubormaydi (matn nusxalanadi). Xodim ma'lumotlari ham minimal (7.2).
-- **To'sadi:** K4, K6. **Holat:** OCHIQ.
+- **K4 da qilindi:** telefon faqat rozilik belgisi bilan saqlanadi (DB CHECK ham); eslatma matni nusxalanadi. Rozilikning yuridik shakli hali ochiq.
+- **To'sadi:** K6. **Holat:** OCHIQ.
 
 ### OQ-Y4. Sheriklik shartnomasi shakli
 - **Savol:** mudoraba/musharaka kelishuvi Fuqarolik kodeksidagi oddiy shirkat (birgalikdagi faoliyat) shartnomasiga qanday mos keladi?

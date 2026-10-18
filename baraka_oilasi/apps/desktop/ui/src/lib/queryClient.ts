@@ -37,6 +37,10 @@ export const keys = {
   kkClose: (spaceId: string) => ["kkClose", spaceId] as const,
   kkCloseRules: (spaceId: string) => ["kkCloseRules", spaceId] as const,
   kkCloses: (spaceId: string) => ["kkCloses", spaceId] as const,
+  kkCash: (spaceId: string) => ["kkCash", spaceId] as const,
+  kkCashDays: (spaceId: string) => ["kkCashDays", spaceId] as const,
+  kkCredit: (spaceId: string) => ["kkCredit", spaceId] as const,
+  kkCustomers: (spaceId: string) => ["kkCustomers", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

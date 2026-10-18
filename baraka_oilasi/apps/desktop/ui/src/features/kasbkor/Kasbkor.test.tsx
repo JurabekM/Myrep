@@ -67,6 +67,9 @@ const overview = {
   salaryCarry: null,
   closedUntil: null,
   closeDue: null,
+  cashClosedUntil: null,
+  receivables: money("0 soʻm", "0"),
+  receivablesOverdue: money("0 soʻm", "0"),
   entries: [
     { id: "e1", kind: "SALE", wallet: "CARD", toWallet: null, amount: money("20 000 000 soʻm", "20 000 000"), occurredOn: "2026-10-05", note: "Toʻy libosi", categoryId: null },
     { id: "e2", kind: "EXPENSE", wallet: "CARD", toWallet: null, amount: money("8 500 000 soʻm", "8 500 000"), occurredOn: "2026-10-06", note: null, categoryId: "c-mat" },

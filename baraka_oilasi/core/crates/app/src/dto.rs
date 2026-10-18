@@ -2571,9 +2571,13 @@ pub struct KkCreditSaleDto {
 #[serde(rename_all = "camelCase")]
 pub struct KkAgingDto {
     pub current: MoneyDto,
+    #[serde(rename = "d1_30")]
     pub d1_30: MoneyDto,
+    #[serde(rename = "d31_60")]
     pub d31_60: MoneyDto,
+    #[serde(rename = "d61_90")]
     pub d61_90: MoneyDto,
+    #[serde(rename = "d90_plus")]
     pub d90_plus: MoneyDto,
     pub total: MoneyDto,
 }

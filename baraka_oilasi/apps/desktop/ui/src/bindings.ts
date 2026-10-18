@@ -166,6 +166,18 @@ export const commands = {
 	kkMonthCloses: (spaceId: string) => typedError<KkMonthCloseDto[], AppError>(__TAURI_INVOKE("kk_month_closes", { spaceId })),
 	/**  «Hisob kuni» bayonnomasi PDF'i — «Saqlash» oynasi orqali. */
 	exportKkMonthClose: (spaceId: string, closeId: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_kk_month_close", { spaceId, closeId })),
+	kkCashDraft: (spaceId: string, day: string | null, counted: string | null) => typedError<KkCashDraftDto, AppError>(__TAURI_INVOKE("kk_cash_draft", { spaceId, day, counted })),
+	kkCloseCashDay: (spaceId: string, input: KkCashCloseInput) => typedError<KkCashDayDto, AppError>(__TAURI_INVOKE("kk_close_cash_day", { spaceId, input })),
+	kkCashDays: (spaceId: string) => typedError<KkCashDayDto[], AppError>(__TAURI_INVOKE("kk_cash_days", { spaceId })),
+	kkCustomers: (spaceId: string) => typedError<KkCustomerDto[], AppError>(__TAURI_INVOKE("kk_customers", { spaceId })),
+	kkAddCustomer: (spaceId: string, input: KkCustomerInput) => typedError<KkCustomerDto[], AppError>(__TAURI_INVOKE("kk_add_customer", { spaceId, input })),
+	kkCreditBook: (spaceId: string) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_book", { spaceId })),
+	kkAddCreditSale: (spaceId: string, input: KkCreditSaleInput) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_add_credit_sale", { spaceId, input })),
+	kkCreditPayment: (spaceId: string, saleId: string, input: KkCreditPaymentInput) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_payment", { spaceId, saleId, input })),
+	kkCreditForgive: (spaceId: string, saleId: string, input: KkCreditForgiveInput) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_forgive", { spaceId, saleId, input })),
+	kkCreditExtend: (spaceId: string, saleId: string, input: KkCreditExtendInput) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_extend", { spaceId, saleId, input })),
+	kkCreditMark: (spaceId: string, saleId: string, talk: boolean) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_mark", { spaceId, saleId, talk })),
+	kkDeleteCreditSale: (spaceId: string, saleId: string) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_delete_credit_sale", { spaceId, saleId })),
 };
 
 /** Events */
@@ -947,11 +959,63 @@ export type JoinInput = {
 	platform: string,
 };
 
+export type KkAgingDto = {
+	current: MoneyDto,
+	d1_30: MoneyDto,
+	d31_60: MoneyDto,
+	d61_90: MoneyDto,
+	d90_plus: MoneyDto,
+	total: MoneyDto,
+};
+
 export type KkAllocationDto = {
 	reserve: MoneyDto,
 	working: MoneyDto,
 	expansion: MoneyDto,
 	sadaqa: MoneyDto,
+};
+
+export type KkCashCloseInput = {
+	day: string,
+	counted: string,
+	/**  Farq bo'lsa majburiy: `UNRECORDED_EXPENSE`, `CHANGE_ERROR`, `GIVEN_ON_CREDIT`, `OWNER_TOOK`, `UNKNOWN`. */
+	reason: string | null,
+	note: string | null,
+};
+
+/**  Yopilgan kassa kuni (o'zgarmas). */
+export type KkCashDayDto = {
+	id: string,
+	day: string,
+	opening: MoneyDto,
+	expected: MoneyDto,
+	counted: MoneyDto,
+	difference: MoneyDto,
+	status: string,
+	reason: string | null,
+	note: string | null,
+	suggestSearch: boolean,
+};
+
+/**  Kunlik kassa yopish hisobi (kasbkor/SPEC 5.1). `counted` berilsa — farq va holat ham. */
+export type KkCashDraftDto = {
+	day: string,
+	opening: MoneyDto,
+	cashSales: MoneyDto,
+	cashExpenses: MoneyDto,
+	ownerDraws: MoneyDto,
+	/**  Kassadan kartaga (bankka) topshirilgan. */
+	handedOver: MoneyDto,
+	otherIn: MoneyDto,
+	otherOut: MoneyDto,
+	expected: MoneyDto,
+	counted: MoneyDto | null,
+	difference: MoneyDto | null,
+	/**  `EXACT`, `SHORT`, `OVER`. */
+	status: string | null,
+	/**  4 hafta ichida 3+ kamomad — «xato qidirish» taklifi. */
+	suggestSearch: boolean,
+	lastClosed: string | null,
 };
 
 /**
@@ -1010,6 +1074,104 @@ export type KkCloseRulesInput = {
 	workingPercent: string,
 	expansionPercent: string,
 	sadaqaPercent: string,
+};
+
+/**  Nasiya daftari: savdolar (ochiqlari birinchi), yosh guruhlari va joriy hafta (juma) boshi. */
+export type KkCreditBookDto = {
+	sales: KkCreditSaleDto[],
+	aging: KkAgingDto,
+	weekStart: string,
+};
+
+export type KkCreditEventDto = {
+	id: string,
+	/**  `PAYMENT`, `FORGIVE`, `EXTEND`. */
+	kind: string,
+	occurredOn: string,
+	amount: MoneyDto | null,
+	months: number | null,
+	wallet: string | null,
+	note: string | null,
+};
+
+export type KkCreditExtendInput = {
+	months: number,
+	on: string | null,
+	note: string | null,
+};
+
+export type KkCreditForgiveInput = {
+	/**  Bo'lmasa — butun qoldiq. */
+	amount: string | null,
+	on: string | null,
+	note: string | null,
+};
+
+export type KkCreditPaymentInput = {
+	amount: string,
+	wallet: string,
+	paidOn: string | null,
+	note: string | null,
+};
+
+export type KkCreditSaleDto = {
+	id: string,
+	customerId: string,
+	customerName: string,
+	customerPhone: string | null,
+	item: string,
+	soldOn: string,
+	cashPrice: MoneyDto | null,
+	creditPrice: MoneyDto,
+	installments: number,
+	witness: string | null,
+	note: string | null,
+	schedule: KkInstallmentDto[],
+	paid: MoneyDto,
+	forgiven: MoneyDto,
+	outstanding: MoneyDto,
+	/**  `SETTLED`, `CURRENT`, `OVERDUE`. */
+	status: string,
+	overdueDays: number,
+	/**  `D1_30`, `D31_60`, `D61_90`, `D90_PLUS`. */
+	bucket: string | null,
+	nextDue: KkNextDueDto | null,
+	/**  Nasiya narxi − naqd narx (ma'lumot uchun). */
+	creditMarkup: MoneyDto | null,
+	events: KkCreditEventDto[],
+	/**  Shu hafta «gaplashaman» deb belgilangan. */
+	talkThisWeek: boolean,
+};
+
+/**  Nasiya (kasbkor/SPEC 5.2). Ustama, jarima yoki foiz maydoni yo'q. */
+export type KkCreditSaleInput = {
+	customerId: string,
+	item: string,
+	cashPrice: string | null,
+	creditPrice: string,
+	installments: number,
+	soldOn: string | null,
+	/**  Bo'lmasa — sotuvdan bir oy keyin. */
+	firstDue: string | null,
+	witness: string | null,
+	note: string | null,
+};
+
+export type KkCustomerDto = {
+	id: string,
+	name: string,
+	phone: string | null,
+	note: string | null,
+	outstanding: MoneyDto,
+	openSales: number,
+};
+
+export type KkCustomerInput = {
+	name: string,
+	phone: string | null,
+	/**  Telefon saqlansa — mijoz roziligi belgisi majburiy (OQ-Y3). */
+	phoneConsent: boolean,
+	note: string | null,
 };
 
 export type KkDisposeInput = {
@@ -1087,6 +1249,14 @@ export type KkFamilyLaborInput = {
 	note: string | null,
 };
 
+export type KkInstallmentDto = {
+	due: string,
+	amount: MoneyDto,
+	covered: MoneyDto,
+	/**  `PAID`, `OVERDUE`, `DUE`. */
+	state: string,
+};
+
 /**  Yopilgan oy bayonnomasi (o'zgarmas). */
 export type KkMonthCloseDto = {
 	id: string,
@@ -1106,6 +1276,11 @@ export type KkMoveInput = {
 	amount: string,
 	occurredOn: string | null,
 	note: string | null,
+};
+
+export type KkNextDueDto = {
+	date: string,
+	amount: MoneyDto,
 };
 
 /**  Kasb-kor bosh sahifasi. `cashFlow` = tushum − chiqim («egasi oldi», kapital va maosh kirmaydi). */
@@ -1143,6 +1318,11 @@ export type KkOverviewDto = {
 	closedUntil: string | null,
 	/**  O'tgan oy hali yopilmagan va unda yozuvlar bor bo'lsa — o'sha davr boshi («Hisob kuni» eslatmasi). */
 	closeDue: string | null,
+	/**  Oxirgi yopilgan kassa kuni (K4). */
+	cashClosedUntil: string | null,
+	/**  Mijozlardagi pul (nasiya qoldig'i) va undan muddati o'tgani. */
+	receivables: MoneyDto,
+	receivablesOverdue: MoneyDto,
 };
 
 /**

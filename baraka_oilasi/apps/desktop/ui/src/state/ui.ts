@@ -3,7 +3,7 @@ import { create } from "zustand";
 import type { RepaymentResultDto } from "../bindings";
 import type { EntryMode } from "../features/kasbkor/KkEntryDialog";
 
-export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "sync" | "settings";
+export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "kkCash" | "kkCredit" | "sync" | "settings";
 
 type UiState = {
   screen: Screen;
