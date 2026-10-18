@@ -17,6 +17,24 @@ const SIGNING_SEED: &str = "signing-seed-v1";
 /// checkpoint olingandan keyingina asosiy nomga ko'chiriladi (yiqilishga chidamli).
 const SIGNING_SEED_NEXT: &str = "signing-seed-next-v1";
 pub const VAULT_MASTER: &str = "vault-master-v1";
+/// Langar (birinchi) ochiq kalit — `ed(32) || ml(1952)`. `public-key.json` o'chirilsa shundan
+/// tiklanadi, aks holda joriy (almashtirilgan) kalit langar o'rniga yozilib qolardi (L-1).
+const ANCHOR_PUBLIC: &str = "anchor-public-v1";
+
+fn store_anchor(store: &dyn SecretStore, pk: &PublicKeys) -> Result<()> {
+    let mut bytes = pk.ed_bytes().to_vec();
+    bytes.extend_from_slice(&pk.ml_bytes());
+    store.set(ANCHOR_PUBLIC, &bytes)
+}
+
+fn load_anchor(store: &dyn SecretStore) -> Result<Option<PublicKeys>> {
+    match store.get(ANCHOR_PUBLIC)? {
+        Some(b) if b.len() == 32 + 1952 => PublicKeys::from_bytes(&b[..32], &b[32..])
+            .map(Some)
+            .map_err(|e| StoreError::Secret(e.to_string())),
+        _ => Ok(None),
+    }
+}
 
 fn keys_from_seed(seed: &[u8]) -> Result<SigningKeys> {
     let seed: [u8; 64] = seed
@@ -40,8 +58,23 @@ pub fn load_or_create(store: &dyn SecretStore, home: &Home) -> Result<(SigningKe
         }
     };
     let keys = keys_from_seed(&seed)?;
-    if created || !home.public_key().exists() {
+    if created {
+        // Birinchi kalit — langar. Uni faylga ham, omborga ham yozamiz.
         export_public(&keys.public(), home)?;
+        store_anchor(store, &keys.public())?;
+    } else if !home.public_key().exists() {
+        // L-1: fayl o'chirilgan. Langarni omboridagi nusxadan tiklaymiz, joriy kalitdan emas.
+        // Omborda langar bo'lmasa (eski o'rnatish) — joriy kalitni yozib, uni langar deb belgilaymiz.
+        match load_anchor(store)? {
+            Some(anchor) => export_public(&anchor, home)?,
+            None => {
+                export_public(&keys.public(), home)?;
+                store_anchor(store, &keys.public())?;
+            }
+        }
+    } else if load_anchor(store)?.is_none() {
+        // Eski o'rnatish: fayl bor, lekin omborda langar yo'q — fayldagini langar deb saqlaymiz.
+        store_anchor(store, &anchor(home)?)?;
     }
     Ok((keys, created))
 }
@@ -274,6 +307,7 @@ pub fn restore(
     }
     store.set(SIGNING_SEED, &seed)?;
     store.set(VAULT_MASTER, &master)?;
+    store_anchor(store, &anchor_pk)?;
     discard_next(store)?;
     export_public(&anchor_pk, home)?;
     Ok(RestoreInfo {
@@ -320,6 +354,20 @@ mod tests {
         let (k1, _) = load_or_create(&store, &home).unwrap();
         assert_eq!(k1.public().key_id(), next.public().key_id());
         assert_eq!(anchor(&home).unwrap().key_id(), a, "langar o'zgarmaydi");
+
+        // L-1: public-key.json o'chirilsa, langar (K0) omboridan tiklanadi, joriy kalit (K1) emas.
+        std::fs::remove_file(home.public_key()).unwrap();
+        let (k_after, _) = load_or_create(&store, &home).unwrap();
+        assert_eq!(
+            k_after.public().key_id(),
+            next.public().key_id(),
+            "imzo kaliti K1 bo'lib qoladi"
+        );
+        assert_eq!(
+            anchor(&home).unwrap().key_id(),
+            a,
+            "langar K0 dan tiklandi, K1 yozilmadi"
+        );
         std::fs::remove_dir_all(home.root()).ok();
     }
 

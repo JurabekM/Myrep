@@ -49,6 +49,9 @@ def mutations(lines: list[str], rng: random.Random):
 
 
 def main() -> int:
+    if len(sys.argv) < 3:
+        print("foydalanish: py scripts/crosscheck_verifiers.py <tamga-verify.exe> <TAMGA_HOME> [TAMGA_HOME ...]", file=sys.stderr)
+        return 2
     exe, homes = sys.argv[1], [Path(h) for h in sys.argv[2:]]
     rng = random.Random(2026)
     total = mismatches = 0

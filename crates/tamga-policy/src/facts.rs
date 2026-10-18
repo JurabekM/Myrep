@@ -64,21 +64,59 @@ re!(
 // TAMGA ma'lumotlari, o'rnatish papkasi va agent hook sozlamalari (yo'l sifatida).
 re!(
     TAMGA_PATH,
-    r"(?i)(appdata[\\/]+local[\\/]+tamga([\\/]|\b)|localappdata%?[\\/]+tamga\b|tamga studio[\\/]|\.claude[\\/]+settings(\.local)?\.json)"
+    r"(?i)(appdata[\\/]+local[\\/]+tamga([\\/]|\b)|localappdata%?[\\/]+tamga\b|tamga studio[\\/]|\.claude[\\/]+settings(\.local)?\.json|(^|[\\/])\.(mcp|claude)\.json\b)"
 );
 
-/// Yo'l yoki buyruq tokeni ishchi papka tashqarisidagi absolyut yo'lmi.
-fn outside(path: &str, cwd: &str) -> bool {
-    let norm = |p: &str| p.replace('\\', "/").trim_end_matches('/').to_lowercase();
-    let p = norm(path.trim_matches(|c| c == '"' || c == '\''));
-    let absolute = p.starts_with('/')
-        || p.starts_with('~')
-        || p.as_bytes().get(1) == Some(&b':')
-        || p.starts_with("$home");
-    if !absolute {
-        return p.starts_with("..");
+/// TAMGA_PATH ga solishtirishdan oldin yo'lni normallashtiradi: `.claude/./settings.json` kabi
+/// `/./` orqali chetlab o'tishlarni yopadi (M-2).
+fn tamga_path_hit(s: &str) -> bool {
+    let squashed = s.replace('\\', "/").replace("/./", "/");
+    TAMGA_PATH.is_match(s) || TAMGA_PATH.is_match(&squashed)
+}
+
+/// `.` va `..` segmentlarini leksik yig'adi (diskka tegmay). Yetib bo'lmaydigan `..` saqlanadi.
+fn lexical_norm(p: &str) -> String {
+    let mut out: Vec<&str> = Vec::new();
+    for seg in p.split('/') {
+        match seg {
+            "" | "." => {}
+            ".." => {
+                if matches!(out.last(), Some(&s) if s != "..") && out.last() != Some(&"") {
+                    out.pop();
+                } else {
+                    out.push("..");
+                }
+            }
+            s => out.push(s),
+        }
     }
-    let c = norm(cwd);
+    let joined = out.join("/");
+    if p.starts_with('/') {
+        format!("/{joined}")
+    } else {
+        joined
+    }
+}
+
+/// Yo'l yoki buyruq tokeni ishchi papka tashqarisidagimi (`.`/`..` normallashtirilgandan keyin, M-2).
+fn outside(path: &str, cwd: &str) -> bool {
+    let clean = |p: &str| p.replace('\\', "/").trim_end_matches('/').to_lowercase();
+    let raw = clean(path.trim_matches(|c| c == '"' || c == '\''));
+    let absolute = raw.starts_with('/')
+        || raw.starts_with('~')
+        || raw.as_bytes().get(1) == Some(&b':')
+        || raw.starts_with("$home");
+    let c = clean(cwd);
+    // Nisbiy yo'lni cwd ga nisbatan yechamiz, so'ng leksik normallashtiramiz.
+    let p = if absolute {
+        lexical_norm(&raw)
+    } else {
+        lexical_norm(&format!("{c}/{raw}"))
+    };
+    // Normallashtirilgandan keyin ham `..` qolgan bo'lsa — cwd'dan yuqoriga chiqadi.
+    if p.starts_with("..") || p.contains("/../") || p.ends_with("/..") {
+        return true;
+    }
     // Git Bash yo'llari: /c/users/... ≡ c:/users/...
     let c_alt = if c.as_bytes().get(1) == Some(&b':') {
         format!("/{}{}", &c[..1], &c[2..])
@@ -185,7 +223,7 @@ fn generic(f: &mut Facts, tool: &str, input: &Value, cwd: &str) {
         f.writes_outside_workspace |= paths.iter().any(|p| outside(p, cwd));
     }
     if TOOL_WRITES.is_match(name) {
-        f.tamper_with_tamga |= paths.iter().any(|p| TAMGA_PATH.is_match(p));
+        f.tamper_with_tamga |= paths.iter().any(|p| tamga_path_hit(p));
     }
     if f.path.is_empty()
         && let Some(p) = paths.first()
@@ -275,7 +313,7 @@ impl Facts {
                 });
             f.force_push = FORCE_PUSH.is_match(&command);
             f.system_change = SYSTEM_CHANGE.is_match(&command);
-            f.tamper_with_tamga = TAMGA_CONTROL.is_match(&command) || TAMGA_PATH.is_match(&command);
+            f.tamper_with_tamga = TAMGA_CONTROL.is_match(&command) || tamga_path_hit(&command);
         }
         match tool {
             "WebFetch" | "WebSearch" => f.network_egress = true,
@@ -286,7 +324,7 @@ impl Facts {
             "Write" | "Edit" | "MultiEdit" | "NotebookEdit" => {
                 f.writes_outside_workspace =
                     !path.is_empty() && !cwd.is_empty() && outside(&path, cwd);
-                f.tamper_with_tamga = TAMGA_PATH.is_match(&path);
+                f.tamper_with_tamga = tamga_path_hit(&path);
             }
             "Bash" | "PowerShell" => {}
             // Noma'lum tool (masalan MCP: `mcp:filesystem/write_file`): argument kalitlari va nomi bo'yicha.
@@ -461,6 +499,34 @@ mod tests {
             w("C:\\work\\proj2\\x.txt"),
             "o'xshash prefiks — boshqa papka"
         );
+        // M-2: `..` va `.` segmentlari normallashtirilib, cwd'dan chiqish aniqlanadi.
+        assert!(
+            w("C:\\work\\proj\\..\\..\\outside.txt"),
+            "absolyut .. bilan tashqariga"
+        );
+        assert!(w("./../../outside.txt"), "nisbiy .. bilan tashqariga");
+        assert!(w("..\\secret.txt"), "to'g'ridan-to'g'ri ota papka");
+        assert!(
+            !w("C:\\work\\proj\\.\\sub\\x.txt"),
+            ". segmenti ichkarida qoladi"
+        );
+        assert!(!w("sub/../other.txt"), "ichkarida normallashadi");
+    }
+
+    #[test]
+    fn tamga_tamper_through_dot_segments() {
+        // M-2: `.claude/./settings.json` va yangi config fayllari ham ushlanadi.
+        let edit = |p: &str| {
+            Facts::from_tool("Edit", &json!({"file_path": p, "content": "{}"}), CWD, None)
+                .tamper_with_tamga
+        };
+        assert!(
+            edit("C:\\work\\proj\\.claude\\.\\settings.json"),
+            "/./ orqali chetlab o'tish"
+        );
+        assert!(edit("C:\\work\\proj\\.mcp.json"));
+        assert!(edit("C:\\work\\proj\\.claude.json"));
+        assert!(!edit("C:\\work\\proj\\src\\claude.json"), "boshqa fayl");
     }
 
     #[test]

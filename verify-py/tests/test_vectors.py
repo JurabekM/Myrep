@@ -112,6 +112,29 @@ class Signatures(unittest.TestCase):
         with self.assertRaises(ValueError):
             PublicKey.from_json(bad)
 
+    def test_rust_parity_edge_cases(self):
+        """M-1: chegaraviy holatlarda Rust bilan bir xil natija (OK/FAIL va kod)."""
+        # 1) result.size = true (bool) -> E_FIELD (Rust bilan bir xil), OK emas.
+        rec = json.loads(LOG_TEXT.splitlines()[-1])
+        rec["result"] = {"digest": "sha256:" + "0" * 64, "size": True}
+        from tamga_verify.jcs import canonical as _canon
+        line = _canon(rec)
+        with self.assertRaises(VerifyError) as cm:
+            verify_log(line + "\n")
+        self.assertEqual(cm.exception.code, "E_FIELD")
+
+        # 2) checkpoint sig = {} -> E_CKPT_FORMAT (Rust bilan bir xil), E_CKPT_SIG emas.
+        cp = json.loads(CKPT["lines"][0])
+        cp["sig"] = {}
+        with self.assertRaises(VerifyError) as cm:
+            verify_all(LOG_TEXT, _canon(cp) + "\n", PK)
+        self.assertEqual(cm.exception.code, "E_CKPT_FORMAT")
+
+        # 3) egri chiziqdan tashqari ed25519 kaliti -> ValueError (CLI da exit 2, Rust bilan bir xil).
+        off = dict(CKPT["public_key"], ed25519="A" * 43)
+        with self.assertRaises(ValueError):
+            PublicKey.from_json(off)
+
 
 class Tamper(unittest.TestCase):
     def test_every_case_reports_the_same_error_as_rust(self):

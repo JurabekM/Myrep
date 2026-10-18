@@ -11,6 +11,10 @@
 //! `ask` + `ask_route: "studio"`: hook javobi ushlab turiladi, Studio `decide` yuboradi, inson
 //! qarori `decision.human` yozuvi bo'lib zanjirga tushadi. Javob kelmasa — timeout'da rad etiladi.
 
+// L-3 (mustahkamlash): reliz'da konsol oynasiz. Daemon faqat log fayliga yozadi; hook uni
+// CREATE_NO_WINDOW bilan ishga tushiradi, lekin to'g'ridan-to'g'ri ishga tushirilsa ham oyna chiqmaydi.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod control;
 mod normalize;
 mod observe;
@@ -35,6 +39,8 @@ type Reply = oneshot::Sender<Value>;
 
 /// Yopilmay qolgan (masalan, agent yiqilgan) sessiya taint'i shuncha vaqt saqlanadi.
 const TAINT_TTL: Duration = Duration::from_secs(7 * 24 * 3600);
+/// Pipe'dagi bitta so'rov va spool faylining eng katta hajmi (hook `MAX_INPUT` bilan bir xil, M-4).
+const MAX_MSG: u64 = 8 << 20;
 /// So'rov, pipe mijozining PID'i (K1) va javob kanali.
 type Job = (Value, Option<u32>, Reply);
 
@@ -784,6 +790,11 @@ impl State {
 
     fn drain_spool(&mut self) {
         for path in spool::pending(&self.home.spool()) {
+            // M-4: spool papkasiga foydalanuvchi yoza oladi — haddan katta faylni o'qimaymiz.
+            if std::fs::metadata(&path).is_ok_and(|m| m.len() > MAX_MSG) {
+                let _ = std::fs::rename(&path, path.with_extension("bad"));
+                continue;
+            }
             let Ok(text) = std::fs::read_to_string(&path) else {
                 continue;
             };
@@ -835,6 +846,24 @@ fn open_state(
         config.witness_dir.clone(),
     )
     .map_err(|e| e.to_string())?;
+    // M-3: ishga tushishda mavjud checkpoint'larni langar kalit bilan to'liq tekshiramiz. Jurnal
+    // qisqartirilgan yoki checkpoint'dan keyin qayta yozilgan bo'lsa, buzilgan zanjirga yangi yozuv
+    // qo'shishdan oldin aniq xato bilan to'xtaymiz (verify_log `open` da allaqachon bajarilgan).
+    if log.checkpointed() > 0 {
+        let anchor = keystore::anchor(&home).map_err(|e| e.to_string())?;
+        let log_text =
+            std::fs::read_to_string(home.log_path(&log_id)).map_err(|e| e.to_string())?;
+        let ckpt_text = std::fs::read_to_string(home.checkpoint_path(&log_id)).unwrap_or_default();
+        if let Err(e) = tamga_core::checkpoint::verify_all(&log_text, &ckpt_text, &anchor) {
+            log_line(
+                &home,
+                &format!("DIQQAT: jurnal checkpoint tekshiruvidan o'tmadi: {e}"),
+            );
+            return Err(format!(
+                "jurnal buzilgan ({e}) — yozishdan to'xtatildi; to'g'ri nusxani tiklang yoki guvoh bilan solishtiring"
+            ));
+        }
+    }
     // Kalit almashtirish yiqilish bilan uzilgan bo'lsa — davom ettiriladi yoki bekor qilinadi.
     let checkpointed = log.checkpointed();
     let mut pending_rotation = None;
@@ -1037,8 +1066,11 @@ async fn serve(pipe: String, tx: mpsc::Sender<Job>) -> std::io::Result<()> {
             .create(&pipe)?;
         let tx = tx.clone();
         tokio::spawn(async move {
+            use tokio::io::AsyncReadExt as _;
             let (r, mut w) = tokio::io::split(conn);
-            let mut lines = BufReader::new(r).lines();
+            // M-4: bitta so'rov qatori 8 MiB bilan cheklanadi (hook MAX_INPUT bilan bir xil), aks holda
+            // `\n` yubormaydigan mahalliy jarayon daemon xotirasini to'ldira oladi.
+            let mut lines = BufReader::new(r.take(MAX_MSG)).lines();
             while let Ok(Some(line)) = lines.next_line().await {
                 let resp = match serde_json::from_str::<Value>(&line) {
                     Ok(req) => {

@@ -136,7 +136,9 @@ def _check_fields(o: dict) -> str | None:
 
 
 def _payload_ok(p) -> bool:
-    return isinstance(p, dict) and _digest(p.get("digest")) is not None and isinstance(p.get("size"), int) and p["size"] >= 0
+    # M-1: Python'da isinstance(True, int) == True; Rust bilan mos bo'lishi uchun bool'ni rad etamiz.
+    size = p.get("size") if isinstance(p, dict) else None
+    return isinstance(p, dict) and _digest(p.get("digest")) is not None and isinstance(size, int) and not isinstance(size, bool) and size >= 0
 
 
 def verify_log(text: str) -> Report:
@@ -190,6 +192,9 @@ class PublicKey:
         ed, ml = b64url(v.get("ed25519", "")), b64url(v.get("ml-dsa-65", ""))
         if ed is None or ml is None or len(ed) != 32 or len(ml) != mldsa65.PK_LEN:
             raise ValueError("ochiq kalit fayli: kalit uzunligi noto'g'ri")
+        # M-1: Ed25519 kaliti egri chiziqda ekanini darhol tekshiramiz (Rust from_bytes bilan bir xil).
+        if ed25519._decompress(ed) is None:
+            raise ValueError("ochiq kalit fayli: ed25519 kaliti egri chiziqda emas")
         if cls.compute_id(ed, ml) != v.get("key"):
             raise ValueError("ochiq kalit fayli: `key` identifikatori mos emas")
         return cls(ed, ml, v["key"])
@@ -253,7 +258,11 @@ def verify_all(log_text: str, checkpoint_text: str, pk: PublicKey) -> Report:
         sig = c.get("sig")
         if not isinstance(sig, dict):
             raise fmt("`sig` obyekt emas")
-        sig_ed, sig_ml = b64url(sig.get("ed25519", "") or ""), b64url(sig.get("ml-dsa-65", "") or "")
+        # M-1: `sig` maydonlari bo'lmasa yoki satr bo'lmasa E_CKPT_FORMAT (Rust bilan bir xil),
+        # E_CKPT_SIG emas — imzo umuman berilmagan.
+        if not isinstance(sig.get("ed25519"), str) or not isinstance(sig.get("ml-dsa-65"), str):
+            raise fmt("`sig.ed25519`/`sig.ml-dsa-65` satr emas")
+        sig_ed, sig_ml = b64url(sig["ed25519"]), b64url(sig["ml-dsa-65"])
         if sig_ed is None or sig_ml is None:
             raise fmt("imzo base64url emas")
         message = CKPT_DOMAIN + canonical(without(c, "sig")).encode("utf-8")

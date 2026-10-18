@@ -11,13 +11,13 @@ from pathlib import Path
 from .verify import PublicKey, VerifyError, payload_opens, verify_all, verify_log
 
 
-def _read(path: str) -> str:
+def _read(path: str, code: str = "E_PARSE") -> str:
     raw = Path(path).read_bytes()
     try:
         return raw.decode("utf-8")
     except UnicodeDecodeError as e:
         line = raw[: e.start].count(b"\n")
-        raise VerifyError("E_PARSE", line, "UTF-8 emas") from None
+        raise VerifyError(code, line, "UTF-8 emas") from None
 
 
 def _check_payloads(log_text: str, folder: Path) -> list[str]:
@@ -49,7 +49,11 @@ def main(argv: list[str] | None = None) -> int:
         log = _read(a.log)
         if a.checkpoints:
             pk = PublicKey.from_json(json.loads(Path(a.key).read_text(encoding="utf-8")))
-            rep = verify_all(log, _read(a.checkpoints), pk)
+            cps = _read(a.checkpoints, "E_CKPT_FORMAT")
+            # L-2: checkpoint fayli berilgan, lekin bo'sh, jurnal esa bo'sh emas — imzo chetlab o'tilmasin.
+            if not cps.strip() and log.strip():
+                raise VerifyError("E_CKPT_FORMAT", 0, "checkpoint fayli bo'sh, jurnal esa bo'sh emas")
+            rep = verify_all(log, cps, pk)
         else:
             rep = verify_log(log)
         problems = _check_payloads(log, Path(a.payloads)) if a.payloads else []

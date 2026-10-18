@@ -85,6 +85,15 @@ fn run(args: &Args) -> Result<Result<String, VerifyError>, String> {
         Ok(t) => t,
         Err(e) => return Ok(Err(e)),
     };
+    // L-2: checkpoint fayli ataylab berilgan, lekin bo'sh (0 baytga qisqartirilgan), jurnal esa bo'sh
+    // emas — bu imzo tekshiruvini chetlab o'tishga urinish, OK emas.
+    if cps.trim().is_empty() && !log.trim().is_empty() {
+        return Ok(Err(VerifyError::new(
+            ErrorCode::CkptFormat,
+            0,
+            "checkpoint fayli bo'sh, jurnal esa bo'sh emas — imzo tekshirib bo'lmaydi (qisqartirilgan?)",
+        )));
+    }
     Ok(verify_all(&log, &cps, &pk).map(|r| {
         let mut out = format!(
             "OK: `{}` jurnali butun — {} yozuv, {} ta checkpoint (Ed25519 + ML-DSA-65) tasdiqlandi, kalit {}.\n",

@@ -190,12 +190,26 @@ pub fn verify_all(
     let mut keys = vec![anchor.key_id()];
     let mut key_warnings = Vec::new();
     let mut applied = 0usize;
+    let mut prev_size = 0u64;
 
     for (i, line) in chain::split_lines(checkpoint_text).into_iter().enumerate() {
         let index = i as u64;
         let map = chain::parse_canonical(line, index)
             .map_err(|e| VerifyError::new(ErrorCode::CkptFormat, index, e.detail))?;
         let cp = verify_one(&map, &active, index)?;
+
+        // L-2: checkpoint'lar o'suvchi tartibda bo'lishi shart (keyingisi oldingisidan kam qamramaydi).
+        if cp.size < prev_size {
+            return Err(VerifyError::new(
+                ErrorCode::CkptFormat,
+                index,
+                format!(
+                    "checkpoint {} yozuvni qamraydi, oldingisi {} — kamaygan",
+                    cp.size, prev_size
+                ),
+            ));
+        }
+        prev_size = cp.size;
 
         if summary.log.as_deref().is_some_and(|l| l != cp.log) {
             return Err(VerifyError::new(
@@ -355,6 +369,17 @@ mod tests {
             verify_all(&text, &forged, &keys.public()).unwrap_err().code,
             ErrorCode::CkptSig
         );
+    }
+
+    #[test]
+    fn checkpoint_size_must_not_decrease() {
+        // L-2: kamayuvchi tartibdagi checkpoint'lar (4 dan keyin 2) rad etiladi.
+        let (text, hashes, keys) = setup(4);
+        let ts = "2026-10-17T10:01:00.000Z";
+        let cps = create("cp", &hashes, 4, ts, &keys).unwrap()
+            + &create("cp", &hashes, 2, ts, &keys).unwrap();
+        let e = verify_all(&text, &cps, &keys.public()).unwrap_err();
+        assert_eq!((e.code, e.index), (ErrorCode::CkptFormat, 1));
     }
 
     /// 0..3 yozuv, #3 = A→B almashtirish, 4..6 yozuv. Checkpoint'lar: A(4), B(7).

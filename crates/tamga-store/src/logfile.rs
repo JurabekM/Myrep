@@ -132,7 +132,9 @@ impl LogFile {
     }
 
     pub fn uncheckpointed(&self) -> u64 {
-        self.len() - self.checkpointed
+        // Checkpoint jurnaldan ko'proq yozuvni qamragan bo'lsa (qisqartirilgan jurnal) — ayirish
+        // to'lib ketmasin (M-3). Bunday holat `open` da `verify_checkpoints` orqali rad etiladi.
+        self.len().saturating_sub(self.checkpointed)
     }
 
     /// Yozuv qo'shadi va diskka majburan yozadi (`sync_data`). Qaytadi: `seq`.
