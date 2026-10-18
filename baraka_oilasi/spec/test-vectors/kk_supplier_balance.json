@@ -1,0 +1,439 @@
+{
+  "suite": "kk_supplier_balance",
+  "version": 1,
+  "description": "Kasb-kor ta'minotchiga qarz: yetkazishlar va to'lov muddatlari, to'lovlar eng erta muddatdan yopiladi, kechikish (jarimasiz), 7 kun ichida to'lanadigani (kasbkor/SPEC 7.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "sp-001",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "500000000",
+            "dueDays": 30
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-10",
+            "amount": "200000000"
+          }
+        ],
+        "today": "2026-11-20"
+      },
+      "expected": {
+        "deliveries": [
+          {
+            "id": "d1",
+            "due": "2026-12-01",
+            "amount": "500000000",
+            "paid": "200000000",
+            "outstanding": "300000000",
+            "state": "DUE",
+            "overdueDays": 0
+          }
+        ],
+        "paid": "200000000",
+        "outstanding": "300000000",
+        "overdue": "0",
+        "dueSoon": "0",
+        "nextDue": {
+          "date": "2026-12-01",
+          "amount": "300000000"
+        }
+      }
+    },
+    {
+      "id": "sp-002",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "500000000",
+            "dueDays": 30
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-10",
+            "amount": "200000000"
+          }
+        ],
+        "today": "2026-12-05"
+      },
+      "expected": {
+        "deliveries": [
+          {
+            "id": "d1",
+            "due": "2026-12-01",
+            "amount": "500000000",
+            "paid": "200000000",
+            "outstanding": "300000000",
+            "state": "OVERDUE",
+            "overdueDays": 4
+          }
+        ],
+        "paid": "200000000",
+        "outstanding": "300000000",
+        "overdue": "300000000",
+        "dueSoon": "0",
+        "nextDue": {
+          "date": "2026-12-01",
+          "amount": "300000000"
+        }
+      }
+    },
+    {
+      "id": "sp-003",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "200000000",
+            "dueDays": 14
+          },
+          {
+            "id": "d2",
+            "on": "2026-11-05",
+            "amount": "300000000",
+            "dueDays": 14
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-12",
+            "amount": "250000000"
+          }
+        ],
+        "today": "2026-11-14"
+      },
+      "expected": {
+        "deliveries": [
+          {
+            "id": "d1",
+            "due": "2026-11-15",
+            "amount": "200000000",
+            "paid": "200000000",
+            "outstanding": "0",
+            "state": "PAID",
+            "overdueDays": 0
+          },
+          {
+            "id": "d2",
+            "due": "2026-11-19",
+            "amount": "300000000",
+            "paid": "50000000",
+            "outstanding": "250000000",
+            "state": "DUE",
+            "overdueDays": 0
+          }
+        ],
+        "paid": "250000000",
+        "outstanding": "250000000",
+        "overdue": "0",
+        "dueSoon": "250000000",
+        "nextDue": {
+          "date": "2026-11-19",
+          "amount": "250000000"
+        }
+      }
+    },
+    {
+      "id": "sp-004",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "200000000",
+            "dueDays": 30
+          },
+          {
+            "id": "d2",
+            "on": "2026-11-03",
+            "amount": "100000000",
+            "dueDays": 7
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-05",
+            "amount": "150000000"
+          }
+        ],
+        "today": "2026-11-06"
+      },
+      "expected": {
+        "deliveries": [
+          {
+            "id": "d1",
+            "due": "2026-12-01",
+            "amount": "200000000",
+            "paid": "50000000",
+            "outstanding": "150000000",
+            "state": "DUE",
+            "overdueDays": 0
+          },
+          {
+            "id": "d2",
+            "due": "2026-11-10",
+            "amount": "100000000",
+            "paid": "100000000",
+            "outstanding": "0",
+            "state": "PAID",
+            "overdueDays": 0
+          }
+        ],
+        "paid": "150000000",
+        "outstanding": "150000000",
+        "overdue": "0",
+        "dueSoon": "0",
+        "nextDue": {
+          "date": "2026-12-01",
+          "amount": "150000000"
+        }
+      }
+    },
+    {
+      "id": "sp-005",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "100000000",
+            "dueDays": 20
+          },
+          {
+            "id": "d2",
+            "on": "2026-11-15",
+            "amount": "40000000",
+            "dueDays": 0
+          }
+        ],
+        "payments": [],
+        "today": "2026-11-15"
+      },
+      "expected": {
+        "deliveries": [
+          {
+            "id": "d1",
+            "due": "2026-11-21",
+            "amount": "100000000",
+            "paid": "0",
+            "outstanding": "100000000",
+            "state": "DUE",
+            "overdueDays": 0
+          },
+          {
+            "id": "d2",
+            "due": "2026-11-15",
+            "amount": "40000000",
+            "paid": "0",
+            "outstanding": "40000000",
+            "state": "DUE",
+            "overdueDays": 0
+          }
+        ],
+        "paid": "0",
+        "outstanding": "140000000",
+        "overdue": "0",
+        "dueSoon": "140000000",
+        "nextDue": {
+          "date": "2026-11-15",
+          "amount": "40000000"
+        }
+      }
+    },
+    {
+      "id": "sp-006",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "100000000",
+            "dueDays": 10
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-02",
+            "amount": "40000000"
+          },
+          {
+            "on": "2026-11-09",
+            "amount": "60000000"
+          }
+        ],
+        "today": "2026-11-30"
+      },
+      "expected": {
+        "deliveries": [
+          {
+            "id": "d1",
+            "due": "2026-11-11",
+            "amount": "100000000",
+            "paid": "100000000",
+            "outstanding": "0",
+            "state": "PAID",
+            "overdueDays": 0
+          }
+        ],
+        "paid": "100000000",
+        "outstanding": "0",
+        "overdue": "0",
+        "dueSoon": "0",
+        "nextDue": null
+      }
+    },
+    {
+      "id": "sp-neg-001",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "0",
+            "dueDays": 10
+          }
+        ],
+        "payments": [],
+        "today": "2026-11-02"
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "sp-neg-002",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "100000000",
+            "dueDays": 400
+          }
+        ],
+        "payments": [],
+        "today": "2026-11-02"
+      },
+      "expected": {
+        "error": "INVALID_DAYS"
+      }
+    },
+    {
+      "id": "sp-neg-003",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "100000000",
+            "dueDays": 10
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-02",
+            "amount": "100000100"
+          }
+        ],
+        "today": "2026-11-02"
+      },
+      "expected": {
+        "error": "EXCEEDS_OUTSTANDING"
+      }
+    },
+    {
+      "id": "sp-neg-004",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-05",
+            "amount": "100000000",
+            "dueDays": 10
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-02",
+            "amount": "10000000"
+          }
+        ],
+        "today": "2026-11-06"
+      },
+      "expected": {
+        "error": "EXCEEDS_OUTSTANDING"
+      }
+    },
+    {
+      "id": "sp-neg-005",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "100000000",
+            "dueDays": 10
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-05",
+            "amount": "10000000"
+          },
+          {
+            "on": "2026-11-03",
+            "amount": "10000000"
+          }
+        ],
+        "today": "2026-11-06"
+      },
+      "expected": {
+        "error": "INVALID_DATE"
+      }
+    },
+    {
+      "id": "sp-neg-006",
+      "input": {
+        "currency": "UZS",
+        "deliveries": [
+          {
+            "id": "d1",
+            "on": "2026-11-01",
+            "amount": "100000000",
+            "dueDays": 10
+          }
+        ],
+        "payments": [
+          {
+            "on": "2026-11-05",
+            "amount": "0"
+          }
+        ],
+        "today": "2026-11-06"
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}

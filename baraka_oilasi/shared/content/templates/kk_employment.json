@@ -1,0 +1,21 @@
+{
+  "id": "kk_employment",
+  "agreementType": "EMPLOYMENT",
+  "version": 1,
+  "reviewStatus": "PENDING",
+  "reviewers": ["yurist", "ulamo"],
+  "openQuestions": ["OQ-Y6", "OQ-D5", "OQ-Y3"],
+  "clauses": [
+    { "n": 1, "label": "pdf.tpl.q.parties", "text": "pdf.tpl.employment.parties" },
+    { "n": 2, "label": "pdf.tpl.q.contributions", "text": "pdf.tpl.employment.contributions" },
+    { "n": 3, "label": "pdf.tpl.q.duties", "text": "pdf.tpl.employment.duties" },
+    { "n": 4, "label": "pdf.tpl.q.pay", "text": "pdf.tpl.employment.pay" },
+    { "n": 4, "label": "pdf.tpl.q.advance", "text": "pdf.tpl.employment.advance" },
+    { "n": 5, "label": "pdf.tpl.q.loss", "text": "pdf.tpl.employment.loss" },
+    { "n": 6, "label": "pdf.tpl.q.records", "text": "pdf.tpl.employment.records" },
+    { "n": 7, "label": "pdf.tpl.q.exit", "text": "pdf.tpl.employment.exit" },
+    { "n": 8, "label": "pdf.tpl.q.arbiter", "text": "pdf.tpl.common.arbiter" },
+    { "n": 9, "label": "pdf.tpl.q.term", "text": "pdf.tpl.common.term" }
+  ],
+  "disclaimer": "pdf.tpl.employment.disclaimer"
+}

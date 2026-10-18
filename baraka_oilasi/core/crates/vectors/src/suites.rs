@@ -5,9 +5,11 @@ use baraka_domain_kasbkor::close::{month_close, CloseInput, SplitRule, TaxRule};
 use baraka_domain_kasbkor::credit::{CreditEvent, CreditTerms};
 use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
+use baraka_domain_kasbkor::payroll::{payroll, Advance, PayMonth};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
 use baraka_domain_kasbkor::quote::{order_quote, QuoteInput};
 use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
+use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -144,6 +146,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "kk_credit_sale" => kk_credit_sale(input),
         "kk_cogs" => kk_cogs(input),
         "kk_replacement" => kk_replacement(input),
+        "kk_payroll" => kk_payroll(input),
+        "kk_supplier_balance" => kk_supplier_balance(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1421,5 +1425,94 @@ fn kk_replacement(v: &Value) -> R {
         "replacementValue": r.replacement_value.minor().to_string(),
         "inflationGap": r.inflation_gap.minor().to_string(),
         "saleBelowReplacement": r.sale_below_replacement,
+    }))
+}
+
+fn u32_of(v: &Value, k: &str, code: &str) -> Result<u32, E> {
+    u32::try_from(i(v, k)?).map_err(|_| E(code.into()))
+}
+
+fn kk_payroll(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let mut months = Vec::new();
+    for m in v["months"].as_array().ok_or_else(|| bad("months"))? {
+        let mut paid = Vec::new();
+        for p in m["paid"].as_array().ok_or_else(|| bad("paid"))? {
+            paid.push(Money::new(int_str(p)?, c));
+        }
+        months.push(PayMonth {
+            salary: money(m, "salary", c)?,
+            paid,
+        });
+    }
+    let mut advances = Vec::new();
+    for a in v["advances"].as_array().ok_or_else(|| bad("advances"))? {
+        advances.push(Advance {
+            id: s(a, "id")?.to_string(),
+            month: u32_of(a, "month", "INVALID_START")?,
+            amount: money(a, "amount", c)?,
+            installments: u32_of(a, "installments", "INVALID_INSTALLMENTS")?,
+            start_month: u32_of(a, "startMonth", "INVALID_START")?,
+        });
+    }
+    let r = payroll(c, &months, &advances, money(v, "opening", c)?)?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "months": r.months.iter().map(|p| json!({
+            "salary": m(p.salary),
+            "scheduled": m(p.scheduled),
+            "deducted": m(p.deducted),
+            "net": m(p.net),
+            "paid": m(p.paid),
+            "balance": m(p.balance),
+        })).collect::<Vec<_>>(),
+        "advances": r.advances.iter().map(|a| json!({
+            "id": a.id,
+            "schedule": a.schedule.iter().map(|(mo, x)| json!({ "month": mo, "amount": m(*x) })).collect::<Vec<_>>(),
+            "deducted": m(a.deducted),
+            "outstanding": m(a.outstanding),
+        })).collect::<Vec<_>>(),
+    }))
+}
+
+fn kk_supplier_balance(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let mut deliveries = Vec::new();
+    for d in v["deliveries"]
+        .as_array()
+        .ok_or_else(|| bad("deliveries"))?
+    {
+        deliveries.push(Delivery {
+            id: s(d, "id")?.to_string(),
+            on: date(&d["on"])?,
+            amount: money(d, "amount", c)?,
+            due_days: u32_of(d, "dueDays", "INVALID_DAYS")?,
+        });
+    }
+    let mut payments = Vec::new();
+    for p in v["payments"].as_array().ok_or_else(|| bad("payments"))? {
+        payments.push(SupplyPayment {
+            on: date(&p["on"])?,
+            amount: money(p, "amount", c)?,
+        });
+    }
+    let r = supplier_balance(c, &deliveries, &payments, date(&v["today"])?)?;
+    let m = |x: Money| x.minor().to_string();
+    let ymd = |d: NaiveDate| d.format("%Y-%m-%d").to_string();
+    Ok(json!({
+        "deliveries": r.deliveries.iter().map(|d| json!({
+            "id": d.id,
+            "due": ymd(d.due),
+            "amount": m(d.amount),
+            "paid": m(d.paid),
+            "outstanding": m(d.outstanding),
+            "state": d.state.as_str(),
+            "overdueDays": d.overdue_days,
+        })).collect::<Vec<_>>(),
+        "paid": m(r.paid),
+        "outstanding": m(r.outstanding),
+        "overdue": m(r.overdue),
+        "dueSoon": m(r.due_soon),
+        "nextDue": r.next_due.map(|(d, a)| json!({ "date": ymd(d), "amount": m(a) })),
     }))
 }

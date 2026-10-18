@@ -1216,6 +1216,116 @@ def kk_order_quote(material, hours100, rate, travel, depreciation, reserve_bp, p
     return out
 
 
+KK_MAX_ADVANCE_INSTALLMENTS = 24
+
+
+def kk_payroll(months, advances, opening=0):
+    """Xodim bilan oylik hisob (SPEC 7.2). `months` — xodim ishlagan oylar (0 dan), har birida oylik haq va
+    shu oy to'langan summalar. Avans foizsiz va jarimasiz: summa `n` ta teng ulushga largest remainder bilan
+    bo'linadi (qoldiq tiyinlar birinchi ulushlarga), `startMonth` dan boshlab har oy haqdan ushlanadi.
+    Haq yetmasa (masalan, haqsiz ta'til) — ushlanmagan qism keyingi oyga o'tadi, ustama yo'q. Bir nechta avans —
+    berilgan oy va tartib bo'yicha (eskisi birinchi). Qoldiq = oldingi qoldiq + (haq − ushlangan) − to'langan;
+    manfiy — ortiq to'langan (keyingi oy haqidan qoplanadi)."""
+    rows_in = []
+    for m in months:
+        salary = int(m["salary"])
+        if salary < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+        paid = [int(x) for x in m.get("paid", [])]
+        if any(x <= 0 for x in paid):
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        rows_in.append((salary, sum(paid)))
+    plans = []
+    for idx, a in enumerate(advances):
+        amount, n, given, start = int(a["amount"]), a["installments"], a["month"], a["startMonth"]
+        if amount <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        if not 1 <= n <= KK_MAX_ADVANCE_INSTALLMENTS:
+            raise OracleError("INVALID_INSTALLMENTS")
+        if given < 0 or start < given:
+            raise OracleError("INVALID_START")
+        plans.append({"id": a["id"], "given": given, "idx": idx, "start": start, "amount": amount,
+                      "parts": allocate(amount, [1] * n), "due": 0, "deducted": 0})
+    order = sorted(plans, key=lambda p: (p["given"], p["idx"]))
+    balance = opening
+    rows = []
+    for i, (salary, paid) in enumerate(rows_in):
+        avail, scheduled, deducted = salary, 0, 0
+        for p in order:
+            k = i - p["start"]
+            if 0 <= k < len(p["parts"]):
+                p["due"] += p["parts"][k]
+            if p["due"] > 0:
+                scheduled += p["due"]
+                d = min(p["due"], avail)
+                p["due"] -= d
+                p["deducted"] += d
+                avail -= d
+                deducted += d
+        net = salary - deducted
+        balance += net - paid
+        rows.append({"salary": _s(salary), "scheduled": _s(scheduled), "deducted": _s(deducted), "net": _s(net),
+                     "paid": _s(paid), "balance": _s(balance)})
+    adv = [{"id": p["id"], "schedule": [{"month": p["start"] + k, "amount": _s(v)} for k, v in enumerate(p["parts"])],
+            "deducted": _s(p["deducted"]), "outstanding": _s(p["amount"] - p["deducted"])} for p in plans]
+    return {"months": rows, "advances": adv}
+
+
+KK_MAX_SUPPLY_DAYS = 365
+KK_DUE_SOON_DAYS = 7
+
+
+def kk_supplier_balance(deliveries, payments, today):
+    """Ta'minotchiga qarz (SPEC 7.1 `SUPPLY`). Har yetkazish — summa va to'lov muddati (kun, 0 — darhol).
+    To'lovlar sana tartibida eng erta muddatli ochiq yetkazishdan yopiladi (muddat, yetkazilgan sana, tartib);
+    to'lov shu kungacha yetkazilganlar qoldig'idan oshmaydi (oldindan to'lov — K6 da yo'q). Kechikish uchun
+    jarima yoki ustama yo'q. `dueSoon` — 7 kun ichida muddati keladigan qoldiq."""
+    dl = []
+    for idx, d in enumerate(deliveries):
+        amount, days = int(d["amount"]), d["dueDays"]
+        if amount <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        if not 0 <= days <= KK_MAX_SUPPLY_DAYS:
+            raise OracleError("INVALID_DAYS")
+        on = date.fromisoformat(d["on"])
+        dl.append({"id": d["id"], "idx": idx, "on": on, "due": on + timedelta(days=days), "amount": amount, "left": amount})
+    prev = None
+    paid_total = 0
+    for p in payments:
+        on, a = date.fromisoformat(p["on"]), int(p["amount"])
+        if prev is not None and on < prev:
+            raise OracleError("INVALID_DATE")
+        prev = on
+        if a <= 0:
+            raise OracleError("AMOUNT_NOT_POSITIVE")
+        open_ = sorted((d for d in dl if d["on"] <= on and d["left"] > 0), key=lambda d: (d["due"], d["on"], d["idx"]))
+        if a > sum(d["left"] for d in open_):
+            raise OracleError("EXCEEDS_OUTSTANDING")
+        paid_total += a
+        for d in open_:
+            x = min(a, d["left"])
+            d["left"] -= x
+            a -= x
+    rows, overdue, soon, nxt = [], 0, 0, None
+    for d in dl:
+        if d["left"] == 0:
+            state, days = "PAID", 0
+        elif d["due"] < today:
+            state, days = "OVERDUE", (today - d["due"]).days
+            overdue += d["left"]
+        else:
+            state, days = "DUE", 0
+            if (d["due"] - today).days <= KK_DUE_SOON_DAYS:
+                soon += d["left"]
+        rows.append({"id": d["id"], "due": d["due"].isoformat(), "amount": _s(d["amount"]), "paid": _s(d["amount"] - d["left"]),
+                     "outstanding": _s(d["left"]), "state": state, "overdueDays": days})
+    unpaid = sorted((d for d in dl if d["left"] > 0), key=lambda d: (d["due"], d["on"], d["idx"]))
+    if unpaid:
+        nxt = {"date": unpaid[0]["due"].isoformat(), "amount": _s(unpaid[0]["left"])}
+    return {"deliveries": rows, "paid": _s(paid_total), "outstanding": _s(sum(d["left"] for d in dl)),
+            "overdue": _s(overdue), "dueSoon": _s(soon), "nextDue": nxt}
+
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -2002,6 +2112,68 @@ def build_suites():
               lambda q=q, bv=bv, pr=pr, fc=fc, sp=sp: kk_replacement(q, t(bv), t(pr), fc, t(sp)))
         for cid, q, bv, pr, fc, sp in rp])
 
+    # K6: xodim bilan hisob (oylar 0 dan), summalar so'mda.
+    def pm(salary, *paid):
+        return {"salary": _s(t(salary)), "paid": [_s(t(x)) for x in paid]}
+
+    def adv(aid, month, amount, n, start):
+        return {"id": aid, "month": month, "amount": _s(t(amount)), "installments": n, "startMonth": start}
+    py = [
+        # Sardor (Bahodir akaning sotuvchisi): haq 3 000 000; noyabrda 1 000 000 avans, dekabrdan 2 oyda ushlanadi.
+        ("py-001", [pm(3000000, 3000000), pm(3000000, 2500000), pm(3000000, 2500000)], [adv("a1", 0, 1000000, 2, 1)], 0),
+        # Qoldiq tiyinlar birinchi ulushga: 100 000 / 3.
+        ("py-002", [pm(3000000), pm(3000000), pm(3000000)], [adv("a1", 0, 100000, 3, 0)], 0),
+        # Haqsiz ta'til oyi: ushlanmagan ulush keyingi oyga o'tadi, ustama yo'q.
+        ("py-003", [pm(3000000), pm(0), pm(3000000)], [adv("a1", 0, 1000000, 2, 1)], 0),
+        # Haq ulushdan kam: qisman ushlanadi, qolgani keyingi oyga.
+        ("py-004", [pm(400000), pm(3000000)], [adv("a1", 0, 1000000, 2, 0)], 0),
+        # Ikki avans: eskisi birinchi ushlanadi.
+        ("py-005", [pm(2000000), pm(2000000), pm(2000000)], [adv("a2", 1, 600000, 1, 1), adv("a1", 0, 3000000, 3, 0)], 0),
+        # Qisman to'lov va ortiq to'lov: qoldiq keyingi oyga o'tadi (manfiy — ortiq to'langan).
+        ("py-006", [pm(3000000, 1000000), pm(3000000, 4000000, 1500000), pm(3000000, 2000000)], [], 0),
+        # Ilovagacha qolgan qarz (xodimga 500 000) va avans shu oy ushlanadi.
+        ("py-007", [pm(3000000, 3000000), pm(3000000, 2800000)], [adv("a1", 0, 300000, 1, 0)], t(500000)),
+        ("py-neg-001", [pm(3000000)], [adv("a1", 0, 0, 2, 0)], 0),
+        ("py-neg-002", [pm(3000000)], [adv("a1", 0, 1000000, 0, 0)], 0),
+        ("py-neg-003", [pm(3000000)], [adv("a1", 0, 1000000, 25, 0)], 0),
+        ("py-neg-004", [pm(3000000)], [adv("a1", 2, 1000000, 2, 1)], 0),
+        ("py-neg-005", [pm(-1)], [], 0),
+        ("py-neg-006", [pm(3000000, 0)], [], 0),
+    ]
+    suites["kk_payroll"] = _suite("kk_payroll", "Kasb-kor xodim bilan hisob: oylik haq, foizsiz va jarimasiz avans (teng ulushlar, ushlanmagani keyingi oyga), to'langan va qoldiq (kasbkor/SPEC 7.2)", [
+        _case(cid, {"currency": U, "months": ms, "advances": ad, "opening": _s(op)}, lambda ms=ms, ad=ad, op=op: kk_payroll(ms, ad, op))
+        for cid, ms, ad, op in py])
+
+    def dv(did, on, amount, days):
+        return {"id": did, "on": on, "amount": _s(t(amount)), "dueDays": days}
+
+    def sp_pay(on, amount):
+        return {"on": on, "amount": _s(t(amount))}
+    sp = [
+        # Bahodir aka va ulgurji baza: 5 000 000 lik shakar 30 kunlik muddat bilan, 10-noyabrda 2 000 000 to'landi.
+        ("sp-001", [dv("d1", "2026-11-01", 5000000, 30)], [sp_pay("2026-11-10", 2000000)], "2026-11-20"),
+        # Xuddi shu, muddatdan 4 kun o'tdi: jarima yo'q, qoldiq o'sha-o'sha.
+        ("sp-002", [dv("d1", "2026-11-01", 5000000, 30)], [sp_pay("2026-11-10", 2000000)], "2026-12-05"),
+        # Ikki yetkazish: to'lov birinchisini yopadi, ikkinchisining bir qismini.
+        ("sp-003", [dv("d1", "2026-11-01", 2000000, 14), dv("d2", "2026-11-05", 3000000, 14)], [sp_pay("2026-11-12", 2500000)], "2026-11-14"),
+        # Keyingi yetkazishning muddati qisqaroq — to'lov avval unga.
+        ("sp-004", [dv("d1", "2026-11-01", 2000000, 30), dv("d2", "2026-11-03", 1000000, 7)], [sp_pay("2026-11-05", 1500000)], "2026-11-06"),
+        # 7 kun ichida muddati keladi; darhol to'lanadigan (0 kun) yetkazish.
+        ("sp-005", [dv("d1", "2026-11-01", 1000000, 20), dv("d2", "2026-11-15", 400000, 0)], [], "2026-11-15"),
+        # To'liq to'landi.
+        ("sp-006", [dv("d1", "2026-11-01", 1000000, 10)], [sp_pay("2026-11-02", 400000), sp_pay("2026-11-09", 600000)], "2026-11-30"),
+        ("sp-neg-001", [dv("d1", "2026-11-01", 0, 10)], [], "2026-11-02"),
+        ("sp-neg-002", [dv("d1", "2026-11-01", 1000000, 400)], [], "2026-11-02"),
+        ("sp-neg-003", [dv("d1", "2026-11-01", 1000000, 10)], [sp_pay("2026-11-02", 1000001)], "2026-11-02"),
+        ("sp-neg-004", [dv("d1", "2026-11-05", 1000000, 10)], [sp_pay("2026-11-02", 100000)], "2026-11-06"),
+        ("sp-neg-005", [dv("d1", "2026-11-01", 1000000, 10)], [sp_pay("2026-11-05", 100000), sp_pay("2026-11-03", 100000)], "2026-11-06"),
+        ("sp-neg-006", [dv("d1", "2026-11-01", 1000000, 10)], [sp_pay("2026-11-05", 0)], "2026-11-06"),
+    ]
+    suites["kk_supplier_balance"] = _suite("kk_supplier_balance", "Kasb-kor ta'minotchiga qarz: yetkazishlar va to'lov muddatlari, to'lovlar eng erta muddatdan yopiladi, kechikish (jarimasiz), 7 kun ichida to'lanadigani (kasbkor/SPEC 7.1)", [
+        _case(cid, {"currency": U, "deliveries": ds, "payments": ps, "today": td},
+              lambda ds=ds, ps=ps, td=td: kk_supplier_balance(ds, ps, date.fromisoformat(td)))
+        for cid, ds, ps, td in sp])
+
     suites["kk_month_close"] = _suite("kk_month_close", "Kasb-kor «Hisob kuni»: soliq zaxirasi, egasi maoshi, qolgan pul va taqsimot qoidasi (largest remainder), maoshdan ortig'ini o'tkazish (kasbkor/SPEC 4.5)", [
         _case(cid, {"currency": U, "revenue": _s(t(r)), "expenses": _s(t(ex)), "depreciation": _s(t(dp)), "ownerSalary": _s(t(sal)), "ownerPaid": _s(t(pd)),
                     "tax": tx, "rule": ru, "carryOverdraw": co},
@@ -2014,7 +2186,8 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "personal_inflation", "unexplained_gap", "profit_spike", "profit_distribution", "debt_recovery_split",
                  "journal_chain", "debt_plan", "debt_status", "debt_load", "payoff_projection", "payoff_plan", "ceremony_scenarios",
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
-                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement")
+                 "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
+                 "kk_payroll", "kk_supplier_balance")
 
 
 def generate(directory: str) -> None:
@@ -2102,6 +2275,19 @@ def selftest() -> None:
                          {"reserveBp": 3000, "workingBp": 5000, "expansionBp": 2000, "sadaqaBp": 0}, False)
     assert (nil["tax"], nil["remaining"]) == ("72000000", "258000000")
     assert nil["allocation"] == {"reserve": "77400000", "working": "129000000", "expansion": "51600000", "sadaqa": "0"}
+    # K6 (kasbkor/SPEC 7.2): Sardor — 1 000 000 avans dekabrdan 2 oyda; haqsiz oyda ushlanmagani keyingi oyga.
+    sar = kk_payroll([{"salary": "300000000", "paid": ["300000000"]}, {"salary": "300000000", "paid": ["250000000"]},
+                      {"salary": "300000000", "paid": ["250000000"]}],
+                     [{"id": "a1", "month": 0, "amount": "100000000", "installments": 2, "startMonth": 1}])
+    assert [m["deducted"] for m in sar["months"]] == ["0", "50000000", "50000000"]
+    assert sar["advances"][0]["outstanding"] == "0" and sar["months"][-1]["balance"] == "0"
+    gap = kk_payroll([{"salary": "300000000"}, {"salary": "0"}, {"salary": "300000000"}],
+                     [{"id": "a1", "month": 0, "amount": "100000000", "installments": 2, "startMonth": 1}])
+    assert [m["deducted"] for m in gap["months"]] == ["0", "0", "100000000"]
+    # K6 (SPEC 7.1 SUPPLY): 5 000 000 − 2 000 000 = 3 000 000; muddatdan 4 kun o'tdi — jarimasiz.
+    sup = kk_supplier_balance([{"id": "d1", "on": "2026-11-01", "amount": "500000000", "dueDays": 30}],
+                              [{"on": "2026-11-10", "amount": "200000000"}], date(2026, 12, 5))
+    assert (sup["outstanding"], sup["overdue"], sup["deliveries"][0]["overdueDays"]) == ("300000000", "300000000", 4)
     # allocate / percent_of (DESKTOP_PROMPT 5.3 + BARAKA_OILASI 12.3)
     assert allocate(100, [1, 1, 1]) == [34, 33, 33]
     assert allocate(800000000, [70, 20, 10]) == [560000000, 160000000, 80000000]

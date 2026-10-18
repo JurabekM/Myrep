@@ -1,0 +1,660 @@
+{
+  "suite": "kk_payroll",
+  "version": 1,
+  "description": "Kasb-kor xodim bilan hisob: oylik haq, foizsiz va jarimasiz avans (teng ulushlar, ushlanmagani keyingi oyga), to'langan va qoldiq (kasbkor/SPEC 7.2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "py-001",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": [
+              "300000000"
+            ]
+          },
+          {
+            "salary": "300000000",
+            "paid": [
+              "250000000"
+            ]
+          },
+          {
+            "salary": "300000000",
+            "paid": [
+              "250000000"
+            ]
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "100000000",
+            "installments": 2,
+            "startMonth": 1
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "300000000",
+            "scheduled": "0",
+            "deducted": "0",
+            "net": "300000000",
+            "paid": "300000000",
+            "balance": "0"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "50000000",
+            "deducted": "50000000",
+            "net": "250000000",
+            "paid": "250000000",
+            "balance": "0"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "50000000",
+            "deducted": "50000000",
+            "net": "250000000",
+            "paid": "250000000",
+            "balance": "0"
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "schedule": [
+              {
+                "month": 1,
+                "amount": "50000000"
+              },
+              {
+                "month": 2,
+                "amount": "50000000"
+              }
+            ],
+            "deducted": "100000000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "py-002",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": []
+          },
+          {
+            "salary": "300000000",
+            "paid": []
+          },
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "10000000",
+            "installments": 3,
+            "startMonth": 0
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "300000000",
+            "scheduled": "3333334",
+            "deducted": "3333334",
+            "net": "296666666",
+            "paid": "0",
+            "balance": "296666666"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "3333333",
+            "deducted": "3333333",
+            "net": "296666667",
+            "paid": "0",
+            "balance": "593333333"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "3333333",
+            "deducted": "3333333",
+            "net": "296666667",
+            "paid": "0",
+            "balance": "890000000"
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "schedule": [
+              {
+                "month": 0,
+                "amount": "3333334"
+              },
+              {
+                "month": 1,
+                "amount": "3333333"
+              },
+              {
+                "month": 2,
+                "amount": "3333333"
+              }
+            ],
+            "deducted": "10000000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "py-003",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": []
+          },
+          {
+            "salary": "0",
+            "paid": []
+          },
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "100000000",
+            "installments": 2,
+            "startMonth": 1
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "300000000",
+            "scheduled": "0",
+            "deducted": "0",
+            "net": "300000000",
+            "paid": "0",
+            "balance": "300000000"
+          },
+          {
+            "salary": "0",
+            "scheduled": "50000000",
+            "deducted": "0",
+            "net": "0",
+            "paid": "0",
+            "balance": "300000000"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "100000000",
+            "deducted": "100000000",
+            "net": "200000000",
+            "paid": "0",
+            "balance": "500000000"
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "schedule": [
+              {
+                "month": 1,
+                "amount": "50000000"
+              },
+              {
+                "month": 2,
+                "amount": "50000000"
+              }
+            ],
+            "deducted": "100000000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "py-004",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "40000000",
+            "paid": []
+          },
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "100000000",
+            "installments": 2,
+            "startMonth": 0
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "40000000",
+            "scheduled": "50000000",
+            "deducted": "40000000",
+            "net": "0",
+            "paid": "0",
+            "balance": "0"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "60000000",
+            "deducted": "60000000",
+            "net": "240000000",
+            "paid": "0",
+            "balance": "240000000"
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "schedule": [
+              {
+                "month": 0,
+                "amount": "50000000"
+              },
+              {
+                "month": 1,
+                "amount": "50000000"
+              }
+            ],
+            "deducted": "100000000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "py-005",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "200000000",
+            "paid": []
+          },
+          {
+            "salary": "200000000",
+            "paid": []
+          },
+          {
+            "salary": "200000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a2",
+            "month": 1,
+            "amount": "60000000",
+            "installments": 1,
+            "startMonth": 1
+          },
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "300000000",
+            "installments": 3,
+            "startMonth": 0
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "200000000",
+            "scheduled": "100000000",
+            "deducted": "100000000",
+            "net": "100000000",
+            "paid": "0",
+            "balance": "100000000"
+          },
+          {
+            "salary": "200000000",
+            "scheduled": "160000000",
+            "deducted": "160000000",
+            "net": "40000000",
+            "paid": "0",
+            "balance": "140000000"
+          },
+          {
+            "salary": "200000000",
+            "scheduled": "100000000",
+            "deducted": "100000000",
+            "net": "100000000",
+            "paid": "0",
+            "balance": "240000000"
+          }
+        ],
+        "advances": [
+          {
+            "id": "a2",
+            "schedule": [
+              {
+                "month": 1,
+                "amount": "60000000"
+              }
+            ],
+            "deducted": "60000000",
+            "outstanding": "0"
+          },
+          {
+            "id": "a1",
+            "schedule": [
+              {
+                "month": 0,
+                "amount": "100000000"
+              },
+              {
+                "month": 1,
+                "amount": "100000000"
+              },
+              {
+                "month": 2,
+                "amount": "100000000"
+              }
+            ],
+            "deducted": "300000000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "py-006",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": [
+              "100000000"
+            ]
+          },
+          {
+            "salary": "300000000",
+            "paid": [
+              "400000000",
+              "150000000"
+            ]
+          },
+          {
+            "salary": "300000000",
+            "paid": [
+              "200000000"
+            ]
+          }
+        ],
+        "advances": [],
+        "opening": "0"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "300000000",
+            "scheduled": "0",
+            "deducted": "0",
+            "net": "300000000",
+            "paid": "100000000",
+            "balance": "200000000"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "0",
+            "deducted": "0",
+            "net": "300000000",
+            "paid": "550000000",
+            "balance": "-50000000"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "0",
+            "deducted": "0",
+            "net": "300000000",
+            "paid": "200000000",
+            "balance": "50000000"
+          }
+        ],
+        "advances": []
+      }
+    },
+    {
+      "id": "py-007",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": [
+              "300000000"
+            ]
+          },
+          {
+            "salary": "300000000",
+            "paid": [
+              "280000000"
+            ]
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "30000000",
+            "installments": 1,
+            "startMonth": 0
+          }
+        ],
+        "opening": "50000000"
+      },
+      "expected": {
+        "months": [
+          {
+            "salary": "300000000",
+            "scheduled": "30000000",
+            "deducted": "30000000",
+            "net": "270000000",
+            "paid": "300000000",
+            "balance": "20000000"
+          },
+          {
+            "salary": "300000000",
+            "scheduled": "0",
+            "deducted": "0",
+            "net": "300000000",
+            "paid": "280000000",
+            "balance": "40000000"
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "schedule": [
+              {
+                "month": 0,
+                "amount": "30000000"
+              }
+            ],
+            "deducted": "30000000",
+            "outstanding": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "py-neg-001",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "0",
+            "installments": 2,
+            "startMonth": 0
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "py-neg-002",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "100000000",
+            "installments": 0,
+            "startMonth": 0
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "error": "INVALID_INSTALLMENTS"
+      }
+    },
+    {
+      "id": "py-neg-003",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 0,
+            "amount": "100000000",
+            "installments": 25,
+            "startMonth": 0
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "error": "INVALID_INSTALLMENTS"
+      }
+    },
+    {
+      "id": "py-neg-004",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": []
+          }
+        ],
+        "advances": [
+          {
+            "id": "a1",
+            "month": 2,
+            "amount": "100000000",
+            "installments": 2,
+            "startMonth": 1
+          }
+        ],
+        "opening": "0"
+      },
+      "expected": {
+        "error": "INVALID_START"
+      }
+    },
+    {
+      "id": "py-neg-005",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "-100",
+            "paid": []
+          }
+        ],
+        "advances": [],
+        "opening": "0"
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "py-neg-006",
+      "input": {
+        "currency": "UZS",
+        "months": [
+          {
+            "salary": "300000000",
+            "paid": [
+              "0"
+            ]
+          }
+        ],
+        "advances": [],
+        "opening": "0"
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}
