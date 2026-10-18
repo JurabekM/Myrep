@@ -17,6 +17,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `08-kasbkor-stock` | Kasb-kor tovarlar: Bahodir shakari (50 kg ilovagacha + 100 kg kartadan, 80 kg sotuv → o'rtacha tannarx 960 000, qoldiq 840 000) → joriy narx 13 500: farq 105 000, 13 000 ga sotish ogohlantirishi → sanoq 69,5 kg: 6 000 yo'qotish → [+91 kun] muzlagan tovar |
 | `09-kasbkor-staff` | Kasb-kor xodim va ta'minotchi: Sardor (kelishuv, imzo, 1 000 000 avans 2 oyda, kelishuv PDF) → Ulgurji baza (shakar 12 500 dan, 100 kg nasiyaga qoldiqqa, 500 000 to'lov, bosh sahifada qarz) → [+35 kun] qarz kechikdi (jarimasiz), haq to'landi, varaqcha PDF |
 | `10-kasbkor-growth` | Kasb-kor o'sish: 120 mln tushum, 2 mln chiqim → darvoza yopiq (zaxira, «Hisob kuni», reja — keyingi qadamlar) → zakot: oltin 1 100 000 × 85 g, hawl tasdig'i → 2 950 000, hisob saqlandi → tarozi tekshirildi, shakar sanaldi (9,5 kg) → [+35 kun] bosh sahifada tarozi eslatmasi |
+| `11-kasbkor-roles` | Ikki ilova: egasi (Shakar 10 kg, sotuv narxi 15 000) «Sotuvchi» rolida ulash fayli → sotuvchi qo'shiladi: menyuda faqat sotuv, nasiya to'lovi, smena, foyda yo'q; 2 kg shakar (30 000) va 50 000 karta; smena 100 000 + 30 000 = 130 000, egasiga 100 000 → fayl egasiga: shakar 8 kg, «Sotuvchi smenalari», qurilma «Sotuvchi» |
 
 ## Ishga tushirish (Linux)
 ```bash

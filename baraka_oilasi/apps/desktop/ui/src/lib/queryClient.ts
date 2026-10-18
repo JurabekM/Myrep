@@ -29,6 +29,7 @@ export const keys = {
   agreements: (spaceId: string) => ["agreements", spaceId] as const,
   family: (spaceId: string) => ["family", spaceId] as const,
   devices: ["devices"] as const,
+  deviceRole: ["deviceRole"] as const,
   settings: ["settings"] as const,
   nudges: (spaceId: string) => ["nudges", spaceId] as const,
   kk: (spaceId: string) => ["kk", spaceId] as const,
@@ -50,6 +51,10 @@ export const keys = {
   kkZakatHistory: (spaceId: string) => ["kkZakatHistory", spaceId] as const,
   kkScale: (spaceId: string) => ["kkScale", spaceId] as const,
   kkStockCounts: (spaceId: string) => ["kkStockCounts", spaceId] as const,
+  kkCatalog: (spaceId: string) => ["kkCatalog", spaceId] as const,
+  kkSellerDay: (spaceId: string) => ["kkSellerDay", spaceId] as const,
+  kkShiftDraft: (spaceId: string, input: string) => ["kkShiftDraft", spaceId, input] as const,
+  kkShifts: (spaceId: string) => ["kkShifts", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

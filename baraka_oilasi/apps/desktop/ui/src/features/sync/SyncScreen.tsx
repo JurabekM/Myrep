@@ -25,6 +25,11 @@ const when = (iso: string | null) =>
  */
 export function SyncScreen() {
   const { t } = useTranslation();
+  const role = useQuery({
+    queryKey: keys.deviceRole,
+    queryFn: () => call(commands.deviceRole()),
+  });
+  const owner = (role.data?.role ?? "OWNER") === "OWNER";
   return (
     <section className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold">{t("sync.title")}</h1>
@@ -34,19 +39,31 @@ export function SyncScreen() {
         </p>
         <p>{t("sync.intro")}</p>
       </aside>
-      <Devices />
+      <Devices owner={owner} />
       <Export />
       <Import />
-      <Pairing />
+      {owner ? (
+        <Pairing />
+      ) : (
+        <p role="note" className="card text-sm text-ink-muted">
+          {t("sync.roleNote")}
+        </p>
+      )}
     </section>
   );
 }
 
-function Devices() {
+function Devices({ owner }: { owner: boolean }) {
   const { t } = useTranslation();
   const q = useQuery({
     queryKey: keys.devices,
     queryFn: () => call(commands.devices()),
+  });
+  // Bekor qilish — ikki bosqichda (tasdiq shu yerning o'zida).
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const revoke = useMutation({
+    mutationFn: (id: string) => call(commands.revokeDevice(id)),
+    onSuccess: () => setConfirm(null),
   });
   return (
     <section className="card flex flex-col gap-2">
@@ -65,6 +82,15 @@ function Devices() {
                 {t("sync.thisDevice")}
               </span>
             )}
+            {d.role && (
+              <span
+                data-testid={`device-role-${d.name}`}
+                className="ml-2 rounded border border-line px-2 py-0.5 text-xs"
+              >
+                {t(`sync.role.${d.role}`)}
+                {d.revoked && ` · ${t("sync.revoked")}`}
+              </span>
+            )}
           </span>
           {!d.isThis && (
             <span className="text-ink-muted tabular-nums">
@@ -72,8 +98,38 @@ function Devices() {
               {t("sync.lastExport")}: {when(d.lastExportAt)}
             </span>
           )}
+          {owner && d.role && !d.revoked && (
+            <span className="flex w-full flex-wrap items-center gap-2">
+              {confirm === d.id ? (
+                <>
+                  <span className="text-warn">{t("sync.revokeConfirm")}</span>
+                  <button
+                    className="btn-ghost px-3 py-1 text-sm"
+                    disabled={revoke.isPending}
+                    onClick={() => revoke.mutate(d.id)}
+                  >
+                    {t("sync.revokeYes")}
+                  </button>
+                  <button
+                    className="btn-ghost px-3 py-1 text-sm"
+                    onClick={() => setConfirm(null)}
+                  >
+                    {t("common.cancel")}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn-ghost px-3 py-1 text-sm"
+                  onClick={() => setConfirm(d.id)}
+                >
+                  {t("sync.revoke")}
+                </button>
+              )}
+            </span>
+          )}
         </div>
       ))}
+      <ErrorText error={revoke.error} />
       {(q.data ?? []).filter((d) => !d.isThis).length === 0 && (
         <p className="text-sm text-ink-muted">{t("sync.noPeers")}</p>
       )}
@@ -332,6 +388,8 @@ function Import() {
             journal: apply.data.journalAppended,
             conflicts: apply.data.conflictsLocal + apply.data.conflictsRemote,
           })}
+          {apply.data.rejected > 0 &&
+            ` ${t("sync.appliedRejected", { count: apply.data.rejected })}`}
         </p>
       )}
     </section>
@@ -398,6 +456,29 @@ function Preview({
             </p>
           ))}
         </div>
+      )}
+      {pv.rejected.length > 0 && (
+        <div
+          data-testid="sync-rejected"
+          className="flex flex-col gap-1 rounded border border-warn p-3 text-sm"
+        >
+          <p className="font-semibold text-warn">
+            {t("sync.rejectedTitle", { count: pv.rejected.length })}
+          </p>
+          <p className="text-ink-muted">{t("sync.rejectedHint")}</p>
+          {pv.rejected.map((r) => (
+            <p key={r.key}>
+              {t(`sync.table.${r.table}`, { defaultValue: r.table })}:{" "}
+              {r.label || r.rowId} —{" "}
+              <span className="text-warn">{t(`error.${r.reason}`)}</span>
+            </p>
+          ))}
+        </div>
+      )}
+      {pv.ignored > 0 && (
+        <p className="text-sm text-ink-muted">
+          {t("sync.ignored", { count: pv.ignored })}
+        </p>
       )}
       {pv.conflicts.length > 0 && (
         <div className="flex flex-col gap-3">
@@ -497,11 +578,29 @@ function Conflict({
   );
 }
 
+type PairRole = "FAMILY" | "SELLER" | "ACCOUNTANT";
+
 function Pairing() {
   const { t } = useTranslation();
   const [view, setView] = useState<PairingView | null>(null);
+  const household = useQuery({
+    queryKey: keys.household,
+    queryFn: () => call(commands.household()),
+  });
+  const businesses = (household.data?.spaces ?? []).filter(
+    (s) => s.kind === "KASBKOR",
+  );
+  const [role, setRole] = useState<PairRole>("FAMILY");
+  const [space, setSpace] = useState("");
   const offer = useMutation({
-    mutationFn: () => call(commands.pairingOffer({ role: null, spaceId: null })),
+    mutationFn: () =>
+      call(
+        commands.pairingOffer(
+          role === "FAMILY"
+            ? { role: null, spaceId: null }
+            : { role, spaceId: space || (businesses[0]?.id ?? null) },
+        ),
+      ),
     onSuccess: (v) => v && setView(v),
   });
   return (
@@ -521,6 +620,11 @@ function Pairing() {
           />
           <div className="flex min-w-0 flex-1 flex-col gap-2 text-sm">
             <p>{t("sync.pairingSaved", { file: view.fileName })}</p>
+            {role !== "FAMILY" && (
+              <p data-testid="pairing-role" className="text-accent-text">
+                {t(`sync.pairingFor.${role}`)}
+              </p>
+            )}
             <p className="text-ink-muted">{t("sync.pairingCode")}</p>
             {/* 8 guruh: 24ch kenglikda ikki qatorga 4 tadan, chiziqcha joyida bo'linadi. */}
             <p
@@ -539,13 +643,55 @@ function Pairing() {
           </div>
         </div>
       ) : (
-        <button
-          className="btn-ghost self-start"
-          disabled={offer.isPending}
-          onClick={() => offer.mutate()}
-        >
-          {t("sync.pairingStart")}
-        </button>
+        <>
+          <div
+            role="radiogroup"
+            aria-label={t("sync.pairRole")}
+            className="flex flex-col gap-2 text-sm"
+          >
+            {(["FAMILY", "SELLER", "ACCOUNTANT"] as const).map((r) => (
+              <label key={r} className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  name="pair-role"
+                  className="mt-1"
+                  checked={role === r}
+                  disabled={r !== "FAMILY" && businesses.length === 0}
+                  onChange={() => setRole(r)}
+                />
+                <span>
+                  <span className="font-medium">{t(`sync.pairRole.${r}`)}</span>
+                  <span className="block text-ink-muted">
+                    {t(`sync.pairRoleHint.${r}`)}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {role !== "FAMILY" && businesses.length > 1 && (
+            <label className="max-w-sm">
+              <span className="label">{t("sync.pairSpace")}</span>
+              <select
+                className="field"
+                value={space || (businesses[0]?.id ?? "")}
+                onChange={(e) => setSpace(e.target.value)}
+              >
+                {businesses.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <button
+            className="btn-ghost self-start"
+            disabled={offer.isPending}
+            onClick={() => offer.mutate()}
+          >
+            {t("sync.pairingStart")}
+          </button>
+        </>
       )}
     </section>
   );

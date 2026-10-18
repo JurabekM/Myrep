@@ -8,6 +8,7 @@ import { ErrorText } from "../../components/ErrorText";
 import { call, CoreError } from "../../lib/api";
 import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
+import { KkShiftsTable } from "./KkShiftScreen";
 
 const REASONS = ["UNRECORDED_EXPENSE", "CHANGE_ERROR", "GIVEN_ON_CREDIT", "OWNER_TOOK", "UNKNOWN"] as const;
 
@@ -31,6 +32,7 @@ export function KkCashScreen({ spaceId }: { spaceId: string }) {
       {draft.error && !closed && <ErrorText error={draft.error} />}
       {draft.data && !draft.error && <CloseForm spaceId={spaceId} d={draft.data} />}
       <History spaceId={spaceId} />
+      <KkShiftsTable spaceId={spaceId} title={t("kk.shift.sellers")} hideEmpty />
     </section>
   );
 }

@@ -25,6 +25,8 @@ import { KkEquipmentScreen } from "../features/kasbkor/KkEquipmentScreen";
 import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
 import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
 import { KkQuoteScreen } from "../features/kasbkor/KkQuoteScreen";
+import { KkSellerCreditScreen, KkSellerScreen } from "../features/kasbkor/KkSellerScreen";
+import { KkShiftScreen } from "../features/kasbkor/KkShiftScreen";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import { SyncScreen } from "../features/sync/SyncScreen";
@@ -72,6 +74,15 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "settings", label: "nav.settings" },
 ];
 
+/** Sotuvchi qurilmasi (ADR-0003): faqat sotuv, nasiya to'lovi va smena. */
+const SELLER_NAV: { screen: Screen; label: string }[] = [
+  { screen: "home", label: "nav.kkSell" },
+  { screen: "kkSellerCredit", label: "nav.kkSellerCredit" },
+  { screen: "kkShift", label: "nav.kkShift" },
+  { screen: "sync", label: "nav.sync" },
+  { screen: "settings", label: "nav.settings" },
+];
+
 const MENTOR: Record<Screen, string> = {
   home: "mentor.home",
   vault: "mentor.vault",
@@ -96,6 +107,8 @@ const MENTOR: Record<Screen, string> = {
   kkGate: "mentor.kkGate",
   kkZakat: "mentor.kkZakat",
   kkMeasure: "mentor.kkMeasure",
+  kkSellerCredit: "mentor.kkSellerCredit",
+  kkShift: "mentor.kkShift",
   sync: "mentor.sync",
   settings: "mentor.settings",
 };
@@ -108,11 +121,15 @@ export function Shell() {
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
   const settings = useQuery({ queryKey: keys.settings, queryFn: () => call(commands.settings()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
+  // Qurilma roli (ADR-0003): sotuvchi — alohida qisqa menyu, hisobchi — faqat o'qish.
+  const deviceRole = useQuery({ queryKey: keys.deviceRole, queryFn: () => call(commands.deviceRole()) });
+  const role = deviceRole.data?.role ?? "OWNER";
+  const seller = role === "SELLER";
 
   const spaces = household.data?.spaces ?? [];
   const active = spaceId ?? spaces[0]?.id ?? null;
   const kasbkor = spaces.find((s) => s.id === active)?.kind === "KASBKOR";
-  const nav = kasbkor ? KK_NAV : NAV;
+  const nav = seller ? SELLER_NAV : kasbkor ? KK_NAV : NAV;
   // Boshqa makonga o'tilganda shu makonda yo'q bo'lim tanlangan bo'lsa — bosh sahifa.
   const screen: Screen = nav.some((n) => n.screen === picked) ? picked : "home";
 
@@ -127,7 +144,8 @@ export function Shell() {
       if (!e.ctrlKey) return;
       if (e.key === "n" || e.key === "N") {
         e.preventDefault();
-        if (kasbkor) openKkEntry("SALE");
+        if (seller) setScreen("home");
+        else if (kasbkor) openKkEntry("SALE");
         else openIncome();
       } else if (e.key === "l" || e.key === "L") {
         e.preventDefault();
@@ -136,7 +154,7 @@ export function Shell() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openIncome, openKkEntry, kasbkor, lock]);
+  }, [openIncome, openKkEntry, kasbkor, seller, setScreen, lock]);
 
   return (
     <div className="flex h-full">
@@ -165,15 +183,28 @@ export function Shell() {
             </button>
           ))}
         </div>
-        <button className="btn-ghost mt-3 text-sm" onClick={openOffer}>
-          {t("offer.open")}
-        </button>
+        {role === "OWNER" ? (
+          <button className="btn-ghost mt-3 text-sm" onClick={openOffer}>
+            {t("offer.open")}
+          </button>
+        ) : (
+          <p data-testid="role-badge" className="mt-3 rounded-md border border-line px-3 py-2 text-xs text-ink-muted">
+            {t(`role.badge.${role}`, { space: t(`space.${spaces.find((s) => s.id === deviceRole.data?.spaceId)?.kind ?? "KASBKOR"}`) })}
+          </p>
+        )}
         <button className="btn-ghost" onClick={() => lock.mutate()}>
           {t("nav.lock")} <kbd className="text-xs">Ctrl+L</kbd>
         </button>
       </nav>
       <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-8 outline-none">
-        {active && screen === "home" && (kasbkor ? <KkHomeScreen spaceId={active} /> : <HomeScreen spaceId={active} />)}
+        {role === "ACCOUNTANT" && (
+          <p role="note" data-testid="role-read-only" className="card mb-5 border-warn py-3 text-sm text-warn">
+            {t("role.readOnly")}
+          </p>
+        )}
+        {active && screen === "home" && (seller ? <KkSellerScreen spaceId={active} /> : kasbkor ? <KkHomeScreen spaceId={active} /> : <HomeScreen spaceId={active} />)}
+        {active && seller && screen === "kkSellerCredit" && <KkSellerCreditScreen spaceId={active} />}
+        {active && seller && screen === "kkShift" && <KkShiftScreen spaceId={active} />}
         {active && screen === "vault" && <VaultScreen spaceId={active} />}
         {active && screen === "expenses" && <ExpensesScreen spaceId={active} />}
         {active && screen === "audit" && <AuditScreen spaceId={active} />}
@@ -199,7 +230,7 @@ export function Shell() {
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>
-      <Mentor tipKey={kasbkor && screen === "home" ? "mentor.kk" : MENTOR[screen]} />
+      <Mentor tipKey={seller && screen === "home" ? "mentor.kkSeller" : kasbkor && screen === "home" ? "mentor.kk" : MENTOR[screen]} />
       {incomeOpen && active && !kasbkor && <IncomeDialog spaceId={active} onClose={closeIncome} />}
       {offerOpen && <OfferCheckDialog onClose={closeOffer} />}
       {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}

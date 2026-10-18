@@ -3571,5 +3571,149 @@
   "error_SHIFT_CLOSED": "Bugungi smena yopilgan",
   "error_DATE_NOT_TODAY": "Sotuvchi faqat bugungi sana bilan yozadi",
   "error_HANDOVER_ABOVE_COUNTED": "Topshirilgan summa sanalgandan koʻp boʻlmaydi",
-  "error_LINKED_REJECTED": "Bogʻliq yozuv qabul qilinmadi"
+  "error_LINKED_REJECTED": "Bogʻliq yozuv qabul qilinmadi",
+  "nav_kkSell": "Sotuv",
+  "nav_kkSellerCredit": "Nasiya toʻlovi",
+  "nav_kkShift": "Smena",
+  "mentor_kkSeller": "Har sotuvni oʻsha zahoti yozing — kechqurun smena oson yopiladi. Halol hisob — ishonchning asosi.",
+  "mentor_kkSellerCredit": "Mijoz toʻlov olib kelsa — darhol yozing va qoldiqni unga aytib qoʻying.",
+  "mentor_kkShift": "Kassani sanab, egasiga topshirganingizni yozing. Farq boʻlsa — sababini halol ayting, bu ayblov emas.",
+  "role_badge_SELLER": "Sotuvchi qurilmasi · {space}",
+  "@role_badge_SELLER": {
+    "placeholders": {
+      "space": {}
+    }
+  },
+  "role_badge_ACCOUNTANT": "Hisobchi qurilmasi · {space}",
+  "@role_badge_ACCOUNTANT": {
+    "placeholders": {
+      "space": {}
+    }
+  },
+  "role_readOnly": "Hisobchi qurilmasi: faqat koʻrish. Yozuvlar egasining qurilmasida kiritiladi.",
+  "kk_channel_CASH": "Naqd",
+  "kk_channel_CARD": "Karta",
+  "kk_seller_title": "Sotuv",
+  "kk_seller_intro": "Sotuvni yozing: katalogdan tovar va miqdor yoki erkin summa. Foyda va chiqimlar bu qurilmada yoʻq — ular egasida.",
+  "kk_seller_shiftClosed": "Bugungi smena yopilgan. Yangi sotuv — ertaga.",
+  "kk_seller_today": "Bugungi yozuvlarim",
+  "kk_seller_totals": "Naqd: {cash} · Karta: {card}",
+  "@kk_seller_totals": {
+    "placeholders": {
+      "card": {},
+      "cash": {}
+    }
+  },
+  "kk_seller_empty": "Bugun hali yozuv yoʻq.",
+  "kk_seller_noNote": "Sotuv",
+  "kk_seller_creditPayment": "nasiya toʻlovi",
+  "kk_seller_channel": "Toʻlov",
+  "kk_seller_form": "Yangi sotuv",
+  "kk_seller_item": "Tovar",
+  "kk_seller_freeAmount": "— Katalogsiz (erkin summa) —",
+  "kk_seller_itemPrice": "{name} — {price} / {unit}",
+  "@kk_seller_itemPrice": {
+    "placeholders": {
+      "name": {},
+      "price": {},
+      "unit": {}
+    }
+  },
+  "kk_seller_qty": "Miqdor ({unit})",
+  "@kk_seller_qty": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_seller_amountOptional": "Summa (boʻsh — sotuv narxi × miqdor)",
+  "kk_seller_amount": "Summa",
+  "kk_seller_save": "Sotuvni yozish",
+  "kk_seller_creditTitle": "Nasiya toʻlovi",
+  "kk_seller_creditIntro": "Mijoz toʻlov olib kelsa — shu yerda yozing. Yangi nasiya va kechirish — egasida.",
+  "kk_seller_creditEmpty": "Ochiq nasiya yoʻq.",
+  "kk_seller_outstanding": "Qoldiq: {amount}",
+  "@kk_seller_outstanding": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_seller_payAmount": "Toʻlov summasi",
+  "kk_seller_pay": "Toʻlovni yozish",
+  "kk_shift_title": "Smena",
+  "kk_shift_intro": "Kun oxirida kassani sanang: kutilgan summa — ochilish va bugungi naqd tushumlaringiz. Egasiga topshirganingiz yoziladi, qolgani ertangi smenaga.",
+  "kk_shift_closedToday": "Bugungi smena yopilgan. Ertaga shu yerda.",
+  "kk_shift_history": "Mening smenalarim",
+  "kk_shift_form": "Smenani yopish",
+  "kk_shift_day": "Smena: {date}",
+  "@kk_shift_day": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_shift_openingInput": "Kassadagi boshlangʻich naqd",
+  "kk_shift_openingHint": "Faqat birinchi smenada: egasi bergan maydalik. Keyin — oldingi smenada qolgani avtomatik.",
+  "kk_shift_opening": "Ochilish",
+  "kk_shift_cashSales": "Naqd savdo",
+  "kk_shift_creditPayments": "Naqd nasiya toʻlovlari",
+  "kk_shift_expected": "Kutilgan",
+  "kk_shift_cardInfo": "Karta tushumlari ({amount}) kassaga kirmaydi.",
+  "@kk_shift_cardInfo": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_shift_counted": "Sanalgan summa",
+  "kk_shift_handedOver": "Egasiga topshirildi",
+  "kk_shift_left": "Kassada qoladi (ertangi ochilish): {amount}",
+  "@kk_shift_left": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_shift_finalWarning": "Yopilgan smena oʻzgarmaydi; bugun yangi sotuv yozilmaydi.",
+  "kk_shift_close": "Smenani yopish",
+  "kk_shift_none": "Hali smena yoʻq.",
+  "kk_shift_device": "Qurilma",
+  "kk_shift_handedShort": "Topshirildi",
+  "kk_shift_sellers": "Sotuvchi smenalari",
+  "sync_roleNote": "Bu qurilma rolli: u faqat egasining qurilmasi bilan fayl almashadi va yangi qurilma ulay olmaydi.",
+  "sync_role_SELLER": "Sotuvchi",
+  "sync_role_ACCOUNTANT": "Hisobchi",
+  "sync_revoked": "bekor qilingan",
+  "sync_revoke": "Ulanishni bekor qilish",
+  "sync_revokeConfirm": "Bu qurilmaga endi fayl berilmaydi va undan olinmaydi. Undagi maʼlumot oʻchmaydi.",
+  "sync_revokeYes": "Ha, bekor qilish",
+  "sync_appliedRejected": "{count} ta yozuv qabul qilinmadi.",
+  "@sync_appliedRejected": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_rejectedTitle": "Qabul qilinmaydigan yozuvlar: {count}",
+  "@sync_rejectedTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_rejectedHint": "Sotuvchi yozuvlari egasining qoidalari bilan tekshiriladi. Kerak boʻlsa, ularni qoʻlda kiriting.",
+  "sync_ignored": "Egasining oʻz yozuvlari qaytib kelgan ({count}) — eʼtiborsiz.",
+  "@sync_ignored": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "sync_pairRole": "Qurilma turi",
+  "sync_pairRole_FAMILY": "Oila qurilmasi (toʻliq)",
+  "sync_pairRoleHint_FAMILY": "Hamma maʼlumot va hamma amal — oʻzingiz yoki oila aʼzosi uchun.",
+  "sync_pairRole_SELLER": "Sotuvchi",
+  "sync_pairRoleHint_SELLER": "Faqat sotuv, nasiya toʻlovi va smena. Foyda, chiqim, maosh va «egasi oldi» bu qurilmaga yuborilmaydi.",
+  "sync_pairRole_ACCOUNTANT": "Hisobchi",
+  "sync_pairRoleHint_ACCOUNTANT": "Biznesning barcha raqamlari — faqat koʻrish uchun. Uy makoni yuborilmaydi.",
+  "sync_pairSpace": "Qaysi biznes",
+  "sync_table_kk_stock_moves": "Tovar harakati",
+  "sync_table_kk_credit_events": "Nasiya toʻlovi",
+  "sync_table_kk_shifts": "Smena",
+  "sync_table_device_access": "Qurilma roli",
+  "sync_pairingFor_SELLER": "Fayl sotuvchi uchun kamaytirilgan: unda foyda, chiqim, maosh va «egasi oldi» yoʻq.",
+  "sync_pairingFor_ACCOUNTANT": "Fayl hisobchi uchun: faqat shu biznes, Uy makoni yoʻq; qurilma faqat koʻradi."
 }

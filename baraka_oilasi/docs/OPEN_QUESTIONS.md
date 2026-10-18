@@ -116,6 +116,12 @@
 - **Vaqtinchalik qaror (K7):** taklifdagi qiymatlar standart (3 oy, 10 %), egasi «Kengayish darvozasi» ekranida o'zgartiradi. Zaxira — «Hisob kuni» zaxira konverti qoldig'i; operatsion xarajat — oxirgi 3 to'liq oyning yozuvi borlari o'rtachasi (tarix yo'q bo'lsa shart bajarilmagan); foyda — oxirgi 3 bayonnoma (3 tadan kam bo'lsa bajarilmagan). Mavsumiylik hisobga olinmaydi.
 - **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
+### OQ-K7. Sotuvchi qurilmasi nimani qila oladi (K8, ADR-0003)
+- **Masala:** SPEC 12 — sotuvchi tushum, kassa yopish va nasiya to'lovini yozadi; foyda, maosh, «egasi oldi», taqsimot va xodimlar haqini ko'rmaydi.
+- **Vaqtinchalik qaror (K8):** sotuvchi faqat bugungi sana bilan sotuv (katalogdan yoki erkin summa) va nasiya to'lovini yozadi, kun oxirida **smena** yopadi (egasining kunlik kassa yopishi o'rniga emas — uning yonida). Nasiya berish, mijoz qo'shish, chiqim, tovar xaridi — yo'q. Sotuvchi o'z savdosi va nasiya to'lovlarining summalarini ko'radi (ish uchun zarur), tovarning tannarxi va qayta tiklash narxini ko'rmaydi. Qoldiqdan ko'p sotuv va yopilgan kunga tushgan sotuv egasining importida rad etiladi.
+- **Savollar:** sotuvchi nasiya bera olsinmi (egasi tasdiqlaydigan «so'rov» bilan)? Sotuvchi o'z chiqimini (masalan, kichik xarajat) yoza olsinmi? Bir nechta sotuvchi bitta kassada ishlasa — smena qurilmaga emas, odamga bog'lansinmi?
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik
@@ -193,6 +199,7 @@
 - **K0 da (SPEC 5.2, 11):** telefon ixtiyoriy, saqlanganda rozilik belgisi; ma'lumot faqat qurilmada shifrlangan; eslatmani ilova o'zi yubormaydi (matn nusxalanadi). Xodim ma'lumotlari ham minimal (7.2).
 - **K4 da qilindi:** telefon faqat rozilik belgisi bilan saqlanadi (DB CHECK ham); eslatma matni nusxalanadi. Rozilikning yuridik shakli hali ochiq.
 - **K6 da:** xodim va ta'minotchi uchun ham xuddi shunday — ism, lavozim, haq; telefon faqat rozilik bilan (DB CHECK). Rozilikning yuridik shakli hali ochiq.
+- **K8 da:** sotuvchi qurilmasiga mijozlar ro'yxati (ism, rozilik bilan telefon) va nasiyalar yuboriladi — nasiya to'lovini qabul qilish uchun; xodim va ta'minotchi ma'lumotlari yuborilmaydi. Mijoz ma'lumoti sotuvchi qurilmasiga o'tishi uchun alohida rozilik kerakmi — ochiq.
 - **To'sadi:** — . **Holat:** OCHIQ.
 
 ### OQ-Y4. Sheriklik shartnomasi shakli

@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim) va K7 (6, 8-bo'limlar) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3 va 8.5 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim), K7 (6, 8-bo'limlar) va K8 (12-bo'lim, ADR-0003) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3, 8.5 va 12.1 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -317,6 +317,14 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 - Sotuvchi qurilmasiga faqat kerakli ma'lumot ketadi (tovar katalogi, o'z yozuvlari) — `.baraka` eksportida rol bo'yicha filtr; qabul qilishda sotuvchi faqat ruxsat etilgan jadvallarga yozadi.
 - Transport: avval U14 dagi fayl almashish (LAN/fayl); relay server — R1 (ADR tasdiqlangandan keyin). Hisob yurituvchi qurilma qoidasi (6.6) saqlanadi.
 
+### 12.1. K8 da qanday qilindi (farqlar, ADR-0003)
+- Rol **qurilmaga** beriladi (odamga emas): egasi ulash faylini rol va Kasb-kor makoni bilan yaratadi; yangi qurilma birinchi faylida uni tasdiqlaganda egasi qurilmani rolga bog'laydi. Rolsiz qurilma — egasi (oila qurilmalari U14 dagi kabi to'liq).
+- **«Kassa yopish» o'rniga smena:** sotuvchi barcha naqd harakatlarni (chiqim, «egasi oldi») bilmaydi, shuning uchun egasining kunlik yopishini qila olmaydi. Smena: ochilish (oldingi smenada qolgani, birinchisida — kiritiladi) + o'z naqd savdosi + naqd nasiya to'lovlari = kutilgan; sanalgan → farq va sabab (kassa sabablari); egasiga topshirilgan → keyingi smenaga qolgani (`kk_shift_close`). Egasi smenalarni «Kassa» bo'limida ko'radi; o'z kunlik yopishini avvalgidek qiladi (sotuvchi faylini import qilgandan keyin).
+- Sotuvchiga tovar xaridlari yuborilmaydi (tannarx), shuning uchun sotuv qoldiqqa sotuvchi qurilmasida emas, **egasining importida** tekshiriladi; qoldiqdan ko'p sotuv, yopilgan oy yoki kassa kuniga tushgan yozuv rad etiladi (tushumi bilan birga) va import ko'rinishida sababi bilan ko'rsatiladi.
+- Sotuvchi nasiya bermaydi va mijoz qo'shmaydi (faqat to'lov qabul qiladi), sanasi — faqat bugun (OQ-K7).
+- Hisobchi qurilmasi biznesning hamma yozuvini oladi (Uy makonisiz) va faqat o'qiydi — yozish baza darajasida to'xtatiladi.
+- Bekor qilingan qurilma bilan fayl almashilmaydi; undagi mavjud ma'lumot masofadan o'chirilmaydi.
+
 ## 13. ISH REJASI (K1–K8)
 | # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |
 |---|---|---|---|
@@ -332,4 +340,4 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 Har bir K-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar), Uy vazifalari kabi.
 
 ## 14. OCHIQ SAVOLLAR
-`docs/OPEN_QUESTIONS.md`: mahsulot egasi — OQ-K1…OQ-K6; ulamo — OQ-D5 (nasiya narxi, zakot baholash, xodim foyda ulushi, konsignatsiya), OQ-D7 (nisob, umidli nasiya, oilaviy mehnat, oldindan to'lov chegirmasi); yurist — OQ-Y3 (mijoz ma'lumotlari), OQ-Y6 (xodim va ta'minotchi kelishuvlari), OQ-Y7 (fiskal talablar va «boshqaruv hisobi» chegarasi).
+`docs/OPEN_QUESTIONS.md`: mahsulot egasi — OQ-K1…OQ-K7; ulamo — OQ-D5 (nasiya narxi, zakot baholash, xodim foyda ulushi, konsignatsiya), OQ-D7 (nisob, umidli nasiya, oilaviy mehnat, oldindan to'lov chegirmasi); yurist — OQ-Y3 (mijoz ma'lumotlari), OQ-Y6 (xodim va ta'minotchi kelishuvlari), OQ-Y7 (fiskal talablar va «boshqaruv hisobi» chegarasi).

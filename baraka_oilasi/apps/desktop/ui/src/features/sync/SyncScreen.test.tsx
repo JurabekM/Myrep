@@ -12,6 +12,9 @@ const fns = {
   inspectBaraka: vi.fn(),
   applyBaraka: vi.fn(),
   pairingOffer: vi.fn(),
+  deviceRole: vi.fn(),
+  household: vi.fn(),
+  revokeDevice: vi.fn(),
 };
 vi.mock("../../bindings", () => ({
   commands: new Proxy(
@@ -31,9 +34,11 @@ function wrap(ui: ReactNode) {
 }
 
 const devices = [
-  { id: "dev-desktop", name: "Kompyuter", platform: "linux", pairedAt: "2026-10-15", isThis: true, lastImportAt: null, lastExportAt: null },
-  { id: "dev-phone", name: "Nilufarning telefoni", platform: "android", pairedAt: "2026-12-02", isThis: false, lastImportAt: "2026-12-02T09:10:00.000Z", lastExportAt: null },
+  { id: "dev-desktop", name: "Kompyuter", platform: "linux", pairedAt: "2026-10-15", isThis: true, lastImportAt: null, lastExportAt: null, role: null, spaceId: null, revoked: false },
+  { id: "dev-phone", name: "Nilufarning telefoni", platform: "android", pairedAt: "2026-12-02", isThis: false, lastImportAt: "2026-12-02T09:10:00.000Z", lastExportAt: null, role: null, spaceId: null, revoked: false },
 ];
+
+const shop = { id: "dev-shop", name: "Do'kon telefoni", platform: "android", pairedAt: "2026-12-02", isThis: false, lastImportAt: null, lastExportAt: null, role: "SELLER", spaceId: "kk", revoked: false };
 
 const preview = (over: Record<string, unknown> = {}) => ({
   sourceDeviceId: "dev-phone",
@@ -47,6 +52,8 @@ const preview = (over: Record<string, unknown> = {}) => ({
   keptLocal: 0,
   journalAppended: 0,
   protected: [{ key: "venture_periods:p1", table: "venture_periods", rowId: "p1", label: "" }],
+  rejected: [],
+  ignored: 0,
   conflicts: [
     {
       key: "categories:c1",
@@ -66,6 +73,10 @@ const preview = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   Object.values(fns).forEach((f) => f.mockReset());
   fns.devices.mockResolvedValue(ok(devices));
+  fns.deviceRole.mockResolvedValue(ok({ role: "OWNER", spaceId: null, spaceName: null }));
+  fns.household.mockResolvedValue(
+    ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, members: [], spaces: [{ id: "uy", kind: "UY", name: "Uy" }, { id: "kk", kind: "KASBKOR", name: "Do'kon" }] }),
+  );
   fns.pickBarakaFile.mockResolvedValue(ok({ path: "/tmp/x.baraka", name: "x.baraka" }));
 });
 
@@ -92,7 +103,7 @@ describe("SyncScreen", () => {
 
   it("import: ziddiyat tanlanmaguncha qabul qilinmaydi, yopilgan yozuv ko'rsatiladi", async () => {
     fns.inspectBaraka.mockResolvedValue(ok(preview()));
-    fns.applyBaraka.mockResolvedValue(ok({ inserted: 1, updated: 0, conflictsLocal: 0, conflictsRemote: 1, protected: 1, journalAppended: 0 }));
+    fns.applyBaraka.mockResolvedValue(ok({ inserted: 1, updated: 0, conflictsLocal: 0, conflictsRemote: 1, protected: 1, journalAppended: 0, rejected: 0, ignored: 0 }));
     const user = userEvent.setup();
     wrap(<SyncScreen />);
     const section = screen.getByRole("region", { name: "Import" });
@@ -133,5 +144,61 @@ describe("SyncScreen", () => {
     await user.click(screen.getByRole("button", { name: "Ulash faylini yaratish" }));
     expect(await screen.findByTestId("pairing-code")).toHaveTextContent("ABCD-EFGH");
     expect(screen.getByAltText("Ulash QR kodi")).toBeInTheDocument();
+  });
+
+  it("K8: sotuvchi qurilmasini ulash — rol va biznes makoni bilan", async () => {
+    fns.pairingOffer.mockResolvedValue(ok({ code: "ABCD-EFGH-IJKL-MNOP-QRST-UVWX-YZ23-4567", qrSvg: "<svg/>", householdName: "Oila", fileName: "ulash.baraka" }));
+    const user = userEvent.setup();
+    wrap(<SyncScreen />);
+    const section = screen.getByRole("region", { name: "Yangi qurilmani ulash" });
+    await user.click(await within(section).findByLabelText(/^Sotuvchi/));
+    await user.click(within(section).getByRole("button", { name: "Ulash faylini yaratish" }));
+    expect(fns.pairingOffer).toHaveBeenCalledWith({ role: "SELLER", spaceId: "kk" });
+  });
+
+  it("K8: rolli qurilma ro'yxatda, bekor qilish — tasdiq bilan", async () => {
+    fns.devices.mockResolvedValue(ok([...devices, shop]));
+    fns.revokeDevice.mockResolvedValue(ok([...devices, { ...shop, revoked: true }]));
+    const user = userEvent.setup();
+    wrap(<SyncScreen />);
+    expect(await screen.findByTestId("device-role-Do'kon telefoni")).toHaveTextContent("Sotuvchi");
+    await user.click(screen.getByRole("button", { name: "Ulanishni bekor qilish" }));
+    expect(fns.revokeDevice).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Ha, bekor qilish" }));
+    expect(fns.revokeDevice).toHaveBeenCalledWith("dev-shop");
+  });
+
+  it("K8: sotuvchi faylidagi rad etilgan yozuvlar sababi bilan", async () => {
+    fns.inspectBaraka.mockResolvedValue(
+      ok(
+        preview({
+          conflicts: [],
+          protected: [],
+          ignored: 12,
+          rejected: [
+            { key: "kk_stock_moves:m1", table: "kk_stock_moves", rowId: "m1", label: "Shakar", reason: "INSUFFICIENT_STOCK" },
+            { key: "incomes:i1", table: "incomes", rowId: "i1", label: "Shakar", reason: "LINKED_REJECTED" },
+          ],
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    wrap(<SyncScreen />);
+    const section = screen.getByRole("region", { name: "Import" });
+    await user.click(within(section).getByRole("button", { name: "Fayl tanlash" }));
+    await user.type(await within(section).findByLabelText("Fayl paroli"), "x");
+    await user.click(within(section).getByRole("button", { name: "Koʻrib chiqish" }));
+    const box = await within(section).findByTestId("sync-rejected");
+    expect(box).toHaveTextContent("Qabul qilinmaydigan yozuvlar: 2");
+    expect(box).toHaveTextContent("Tovar harakati: Shakar");
+    expect(box).toHaveTextContent("Bogʻliq yozuv qabul qilinmadi");
+    expect(within(section).getByText(/\(12\)/)).toBeInTheDocument();
+  });
+
+  it("K8: rolli qurilmada ulash yo'q", async () => {
+    fns.deviceRole.mockResolvedValue(ok({ role: "SELLER", spaceId: "kk", spaceName: "Do'kon" }));
+    wrap(<SyncScreen />);
+    expect(await screen.findByText(/faqat egasining qurilmasi bilan/)).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Yangi qurilmani ulash" })).not.toBeInTheDocument();
   });
 });
