@@ -1725,6 +1725,177 @@ pub async fn kk_stock_move(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_staff(state: State<'_, Desktop>, space_id: String) -> R<KkStaffDto> {
+    state.session.app()?.kk_staff(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_employee(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkEmployeeInput,
+) -> R<KkStaffDto> {
+    state.session.app()?.kk_add_employee(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_update_employee(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkEmployeeInput,
+) -> R<KkStaffDto> {
+    state
+        .session
+        .app()?
+        .kk_update_employee(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_staff_advance(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkAdvanceInput,
+) -> R<KkStaffDto> {
+    state.session.app()?.kk_staff_advance(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_staff_pay(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkWageInput,
+) -> R<KkStaffDto> {
+    state.session.app()?.kk_staff_pay(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_suppliers(state: State<'_, Desktop>, space_id: String) -> R<KkSuppliersDto> {
+    state.session.app()?.kk_suppliers(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_supplier(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkSupplierInput,
+) -> R<KkSuppliersDto> {
+    state.session.app()?.kk_add_supplier(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_update_supplier(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkSupplierInput,
+) -> R<KkSuppliersDto> {
+    state
+        .session
+        .app()?
+        .kk_update_supplier(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_supply_delivery(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkDeliveryInput,
+) -> R<KkSuppliersDto> {
+    state
+        .session
+        .app()?
+        .kk_supply_delivery(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_supply_payment(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkSupplyPaymentInput,
+) -> R<KkSuppliersDto> {
+    state
+        .session
+        .app()?
+        .kk_supply_payment(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_sign_agreement(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    input: KkSignInput,
+) -> R<()> {
+    state
+        .session
+        .app()?
+        .kk_sign_agreement(&space_id, &id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_end_agreement(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    ended_on: Option<String>,
+) -> R<()> {
+    state
+        .session
+        .app()?
+        .kk_end_agreement(&space_id, &id, ended_on)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delete_agreement(state: State<'_, Desktop>, space_id: String, id: String) -> R<()> {
+    state.session.app()?.kk_delete_agreement(&space_id, &id)
+}
+
+/// Xodim yoki ta'minotchi kelishuvi PDF'i (imzolangan versiya yoki qoralama) — «Saqlash» oynasi orqali.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_kk_agreement(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+) -> R<bool> {
+    let pdf = state.session.app()?.kk_agreement_pdf(&space_id, &id)?;
+    save_pdf(&handle, pdf, "kelishuv.pdf")
+}
+
+/// Xodim bilan oylik hisob varaqchasi PDF'i; `month` — oy ichidagi istalgan sana.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_kk_payslip(
+    handle: AppHandle,
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+    month: String,
+) -> R<bool> {
+    let pdf = state.session.app()?.kk_payslip_pdf(&space_id, &id, month)?;
+    save_pdf(&handle, pdf, "varaqcha.pdf")
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

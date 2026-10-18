@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim) va K5 (4.1–4.4) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7 va 5.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4) va K6 (7-bo'lim) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4 va 7.3 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -222,6 +222,15 @@ Qonunning mazmuni: sherik, xodim, ta'minotchi, mijoz — hamma kelishuv yoziladi
 - **Avans** — foizsiz; keyingi to'lovlardan kelishilgan jadval bo'yicha ushlanadi; jarima yo'q. Avans yozuvi xodim kelishuvi jurnaliga tushadi.
 - Oylik «xodimlar bilan hisob» — to'langan, ushlangan, qoldiq; PDF varaqcha (imzo joyi bilan).
 
+### 7.3. K6 da qanday qilindi (farqlar)
+- `EMPLOYMENT` va `SUPPLY` umumiy `agreements` jadvalida emas: uning turlari CHECK bilan qotirilgan (SQLite'da o'zgartirish — jadvalni qayta qurish, FK'lar bilan xavfli), shuning uchun alohida jadvallar (`kk_agreements`, imzolangan versiyalar — `kk_agreement_versions`), K4 dagi nasiya kabi. Kelishuvlar markaziga (D13A) va umumiy jurnalga ko'chirish — keyin.
+- 9 savol shablon bandlari sifatida (`shared/content/templates/*.json`, `reviewStatus`); imzolash uchun majburiy: xodimda — lavozim va vazifalar, ta'minotchida — tovar. Hakam ixtiyoriy (bo'lmasa — «tomonlar birga tanlagan ishonchli kishi»), qayta ko'rish — standart bir yildan keyin.
+- Imzo — raqamli emas: PDF chop etiladi, ikki tomon qog'ozda imzolaydi, ilovada imzolangan sana yoziladi va shartlar o'zgarmas versiya sifatida qotiriladi (xesh bilan). Hisob faqat imzolangan shartlar bo'yicha; o'zgarish yangi versiya imzolanguncha amal qilmaydi (`effectiveFrom`).
+- Haq — faqat oylik qat'iy (foyda ulushi — OQ-D5). Oy davri — makonning oy boshi kuni bo'yicha; birinchi oy haqi to'liq (kunlarga bo'linmaydi). «Hozir to'lanadigani» — o'tgan oylar qoldig'i; shu oy haqi oy tugagach.
+- Avans va haq to'lovi — naqd asosida Kasb-kor chiqimi (`category.kk.wages`): avans berilganda chiqim, keyin haqdan ushlangani to'lovni kamaytiradi (jami chiqim = jami haq). Avans qoidasi: qoldiq chegarasi va eng ko'p necha oyda; ushlash avans berilgan oydan (yoki tanlangan oydan) boshlanadi.
+- Ta'minot: tovar bog'langan bo'lsa — yetkazish hamyonsiz xarid sifatida tovar qoldig'iga kiradi (narx — qotirilgan narx × miqdor), to'lov — tovar xaridi kabi (pul oqimiga kirmaydi); tovarsiz bo'lsa — to'lov chiqim (`category.kk.materials`). Oldindan to'lov, qaytarish va konsignatsiya — hali yo'q.
+- Yozuvlar o'zgarmas: noto'g'ri avans yoki to'lov o'chirilmaydi (keyingi to'lov bilan tuzatiladi); bog'langan chiqim «Chiqimlar»dan alohida o'chirilmaydi.
+
 ## 8. 7-QONUN: «TAROZINGNI TO'G'RI TUT» — FUNKSIONAL TALABLAR (K7)
 Qonunning mazmuni: halol o'lchov, halol hisob, soliq va zakot — barakaning sharti.
 
@@ -273,6 +282,8 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 | `kk_month_close` | 4.5 misoli; qolgan pul manfiy; soliq foydadan; largest remainder qoldiq tiyinlari |
 | `kk_credit_sale` | jadval yig'indisi = nasiya narxi; kechikish (summa o'zgarmaydi); qisman kechirish; yosh guruhlari |
 | `kk_expansion_gate` | 6.1 ning har bir sharti alohida va birga |
+| `kk_payroll` | avans teng ulushlarda (qoldiq tiyinlar); haqsiz oy — ushlanmagani keyingi oyga, ustamasiz; ikki avans; qisman va ortiq to'lov |
+| `kk_supplier_balance` | to'lov eng erta muddatdan; kechikish jarimasiz; qoldiqdan ko'p to'lov — xato; 7 kun ichida to'lanadigani |
 | `kk_zakat` | 8.3 misoli; nisobdan past; umidsiz nasiya chiqarilgan; qarzlar bazadan katta (baza ≤ 0) |
 
 ## 10. UI/UX

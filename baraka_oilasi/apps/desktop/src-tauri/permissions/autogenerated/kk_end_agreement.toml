@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-end-agreement"
+description = "Enables the kk_end_agreement command without any pre-configured scope."
+commands.allow = ["kk_end_agreement"]
+
+[[permission]]
+identifier = "deny-kk-end-agreement"
+description = "Denies the kk_end_agreement command without any pre-configured scope."
+commands.deny = ["kk_end_agreement"]

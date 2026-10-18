@@ -1098,7 +1098,7 @@ impl App {
                     paid: d(st.paid),
                     outstanding: d(st.outstanding),
                     state: st.state.as_str().to_string(),
-                    overdue_days: st.overdue_days,
+                    overdue_days: u32::try_from(st.overdue_days).map_err(|_| corrupt())?,
                     qty,
                     note: row.note.clone(),
                 });

@@ -184,7 +184,7 @@ describe("Kasb-kor: tovarlar (K5)", () => {
   });
 });
 
-describe("Kasb-kor bosh sahifa: tovar (K5)", () => {
+describe("Kasb-kor bosh sahifa: tovar (K5) va majburiyatlar (K6)", () => {
   it("tovar qoldig'i, muzlagan tovar va tovar yo'qotishlari foyda tarkibida", async () => {
     kkOverview.mockResolvedValue(
       ok({
@@ -209,6 +209,9 @@ describe("Kasb-kor bosh sahifa: tovar (K5)", () => {
         stockValue: m("834 000 soʻm"),
         stockFrozenValue: m("30 000 soʻm"),
         stockFrozenCount: 1,
+        payables: m("750 000 soʻm"),
+        payablesOverdue: m("750 000 soʻm"),
+        wagesOwed: m("3 000 000 soʻm"),
         profit: {
           revenue: m("1 120 000 soʻm"),
           cogs: m("960 000 soʻm"),
@@ -235,6 +238,10 @@ describe("Kasb-kor bosh sahifa: tovar (K5)", () => {
     expect(await screen.findByTestId("kk-stock-value")).toHaveTextContent("834 000 soʻm");
     expect(screen.getByTestId("kk-stock-frozen")).toHaveTextContent("Muzlagan tovar: 30 000 soʻm (1 ta)");
     expect(screen.getByText(/Tovar xaridi: 1 250 000 soʻm/)).toBeInTheDocument();
+    // K6: ta'minotchilarga qarz va xodimlarga to'lanadigani.
+    expect(screen.getByTestId("kk-payables")).toHaveTextContent("750 000 soʻm");
+    expect(screen.getByText("Shundan muddati oʻtgan: 750 000 soʻm")).toBeInTheDocument();
+    expect(screen.getByTestId("kk-wages-owed")).toHaveTextContent("3 000 000 soʻm");
     const card = screen.getByRole("region", { name: "Foyda qanday hosil boʻldi" });
     expect(within(card).getByRole("rowheader", { name: /Sotilgan tovar tannarxi/ }).nextSibling).toHaveTextContent("− 960 000 soʻm");
     expect(within(card).getByRole("rowheader", { name: /Tovar yoʻqotishlari/ }).nextSibling).toHaveTextContent("− 6 000 soʻm");

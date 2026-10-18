@@ -3040,5 +3040,288 @@
   "error_INVALID_PAY_DAY": "Toʻlov kuni 1 dan 28 gacha",
   "error_NOTHING_OWED": "Toʻlanadigan qoldiq yoʻq — summani kiriting",
   "error_LINKED_RECORD": "Bu chiqim xodim yoki taʼminotchi hisobiga bogʻlangan — u yerda tuzating",
-  "error_CATEGORY_MISSING": "Kasb-kor kategoriyasi topilmadi"
+  "error_CATEGORY_MISSING": "Kasb-kor kategoriyasi topilmadi",
+  "nav_kkStaff": "Xodimlar",
+  "nav_kkSuppliers": "Taʼminotchilar",
+  "mentor_kkStaff": "Xodimning haqini oʻz vaqtida bering. Kelishuvni yozing, avansni foizsiz bering va har oy varaqcha bilan hisob qiling — shunda ikki tomon ham tinch.",
+  "mentor_kkSuppliers": "Narxni kelishuvda qotiring, toʻlov muddatini yozing. Kechiksangiz — oldindan ayting; vaʼdaga vafo — savdoning barakasi.",
+  "kk_kind_SUPPLIER_PAYMENT": "Taʼminotchiga toʻlov",
+  "kk_obligations": "Majburiyatlar",
+  "kk_payables": "Taʼminotchilarga qarz",
+  "kk_payablesOverdue": "Shundan muddati oʻtgan: {amount}",
+  "@kk_payablesOverdue": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_wagesOwed": "Xodimlarga toʻlanadigani",
+  "kk_agr_reviewPending": "Kelishuv shabloni hali yurist koʻrigidan oʻtmagan — namuna sifatida foydalaning; PDF «Tekshiruvdan oʻtmagan namuna» belgisi bilan chiqadi.",
+  "kk_agr_status_DRAFT": "Qoralama — imzolanmagan",
+  "kk_agr_status_SIGNED": "Imzolangan: {n}-versiya, {date}",
+  "@kk_agr_status_SIGNED": {
+    "placeholders": {
+      "date": {},
+      "n": {}
+    }
+  },
+  "kk_agr_status_ENDED": "Tugagan: {date}",
+  "@kk_agr_status_ENDED": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_agr_unsignedChanges": "Shartlar oʻzgargan — yangi versiya imzolanguncha eski shartlar amal qiladi.",
+  "kk_agr_missing": "Imzolashdan oldin toʻldiring: {fields}",
+  "@kk_agr_missing": {
+    "placeholders": {
+      "fields": {}
+    }
+  },
+  "kk_agr_field_role": "lavozim",
+  "kk_agr_field_duties": "vazifalar",
+  "kk_agr_field_goods": "tovar",
+  "kk_agr_actions": "{name}: amallar",
+  "@kk_agr_actions": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_agr_sign": "Imzolash",
+  "kk_agr_signTitle": "{name}: imzolash",
+  "@kk_agr_signTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_agr_signHint": "Avval PDF ni chop eting va ikkala tomon imzolasin. Bu yerda faqat imzolangan sana yoziladi — shartlar shu versiyada qotiriladi.",
+  "kk_agr_signedOn": "Imzolangan sana (boʻsh — bugun)",
+  "kk_agr_effectiveFrom": "Yangi shartlar qachondan (boʻsh — imzo kuni)",
+  "kk_agr_signSave": "Imzolandi deb yozish",
+  "kk_agr_edit": "Tahrirlash",
+  "kk_agr_editTitle": "{name}: tahrirlash",
+  "@kk_agr_editTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_agr_endTitle": "{name}: tugatish",
+  "@kk_agr_endTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_agr_endedOn": "Tugash sanasi (boʻsh — bugun)",
+  "kk_agr_endSave": "Tugatish",
+  "kk_agr_pdf": "Kelishuv PDF",
+  "kk_agr_pdfNamed": "{name} — kelishuv PDF",
+  "@kk_agr_pdfNamed": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_agr_pdfSaved": "PDF saqlandi",
+  "kk_agr_delete": "Oʻchirish",
+  "kk_agr_deleteNamed": "{name} — oʻchirish",
+  "@kk_agr_deleteNamed": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_agr_phone": "Telefon (ixtiyoriy)",
+  "kk_agr_phoneConsent": "Telefonini saqlashga roziligi bor",
+  "kk_agr_arbiter": "Hakam (ixtiyoriy)",
+  "kk_agr_reviewOn": "Qayta koʻrish sanasi (boʻsh — bir yildan keyin)",
+  "kk_staff_title": "Xodimlar",
+  "kk_staff_intro": "Har bir xodim bilan kelishuv (9 savol) yoziladi va imzolanadi. Avans foizsiz, kelishilgan qoida boʻyicha keyingi haqdan ushlanadi; jarima yoʻq. Haq va avans — Kasb-kor chiqimi («Ish haqi»).",
+  "kk_staff_totals": "Xodimlar bilan hisob",
+  "kk_staff_owed": "Hozir toʻlanadigani",
+  "kk_staff_owedHint": "Oʻtgan oylar uchun; shu oy haqi oy tugagach",
+  "kk_staff_advances": "Ushlanmagan avans",
+  "kk_staff_advancesHint": "Foizsiz; keyingi haqlardan teng ulushlarda",
+  "kk_staff_add": "Yangi xodim",
+  "kk_staff_addButton": "Xodimni qoʻshish",
+  "kk_staff_formHint": "Shaxsiy maʼlumot — minimal: ism, lavozim, haq. Telefon — faqat roziligi bilan.",
+  "kk_staff_list": "Xodimlar roʻyxati",
+  "kk_staff_empty": "Hali xodim yoʻq.",
+  "kk_staff_name": "Ism",
+  "kk_staff_role": "Lavozim",
+  "kk_staff_duties": "Vazifalar",
+  "kk_staff_hours": "Ish vaqti",
+  "kk_staff_salary": "Oylik haq",
+  "kk_staff_payDay": "Toʻlov kuni (1–28)",
+  "kk_staff_payDayValue": "har oyning {day}-kunigacha",
+  "@kk_staff_payDayValue": {
+    "placeholders": {
+      "day": {}
+    }
+  },
+  "kk_staff_maxAdvance": "Avans qoldigʻi chegarasi (ixtiyoriy)",
+  "kk_staff_maxInstallments": "Avans necha oygacha ushlanadi",
+  "kk_staff_noticeDays": "Ajralishdan necha kun oldin ogohlantiriladi",
+  "kk_staff_startedOn": "Ishga kirgan sana (boʻsh — bugun)",
+  "kk_staff_opening": "Ilovagacha qolgan qarz (ixtiyoriy)",
+  "kk_staff_dueNow": "Hozir toʻlanadigani",
+  "kk_staff_balance": "Shu oy hisoblangani bilan",
+  "kk_staff_advance": "Avans",
+  "kk_staff_advanceTitle": "{name}: avans",
+  "@kk_staff_advanceTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_staff_advanceRule": "Kelishuv: foizsiz, jarimasiz; qoldigʻi {max} gacha, koʻpi bilan {n} oyda ushlanadi.",
+  "@kk_staff_advanceRule": {
+    "placeholders": {
+      "max": {},
+      "n": {}
+    }
+  },
+  "kk_staff_advanceRuleNoLimit": "Kelishuv: foizsiz, jarimasiz; koʻpi bilan {n} oyda ushlanadi.",
+  "@kk_staff_advanceRuleNoLimit": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_staff_amount": "Summa",
+  "kk_staff_installments": "Necha oyda ushlanadi",
+  "kk_staff_installmentsValue": "{n} oyda",
+  "@kk_staff_installmentsValue": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_staff_startOn": "Ushlash qaysi oydan (boʻsh — shu oy)",
+  "kk_staff_fromWallet": "Qaysi hamyondan",
+  "kk_staff_advanceSave": "Avansni yozish",
+  "kk_staff_pay": "Haq toʻlash",
+  "kk_staff_payTitle": "{name}: haq toʻlash",
+  "@kk_staff_payTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_staff_end": "Ajralish",
+  "kk_staff_months": "Oylik hisob",
+  "kk_staff_col_period": "Oy",
+  "kk_staff_col_deducted": "Ushlandi",
+  "kk_staff_col_paid": "Toʻlandi",
+  "kk_staff_col_balance": "Qoldiq",
+  "kk_staff_slip": "Varaqcha",
+  "kk_staff_slipNamed": "{period} — varaqcha PDF",
+  "@kk_staff_slipNamed": {
+    "placeholders": {
+      "period": {}
+    }
+  },
+  "kk_staff_advanceList": "Avanslar ({count})",
+  "@kk_staff_advanceList": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kk_staff_advanceLine": "{date}: {amount}, {n} oyda; qoldi {outstanding}",
+  "@kk_staff_advanceLine": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "n": {},
+      "outstanding": {}
+    }
+  },
+  "kk_supply_title": "Taʼminotchilar",
+  "kk_supply_intro": "Har taʼminotchi bilan kelishuv yoziladi: narx qotiriladi, toʻlov muddati kelishiladi. Tovar bogʻlansa — yetkazish tovar qoldigʻiga kiradi; toʻlov eng erta muddatdan yopiladi. Kechikish uchun jarima yoʻq.",
+  "kk_supply_totals": "Taʼminotchilar bilan hisob",
+  "kk_supply_outstanding": "Qarzimiz",
+  "kk_supply_overdue": "Muddati oʻtgan",
+  "kk_supply_dueSoon": "7 kun ichida",
+  "kk_supply_add": "Yangi taʼminotchi",
+  "kk_supply_addButton": "Taʼminotchini qoʻshish",
+  "kk_supply_list": "Taʼminotchilar roʻyxati",
+  "kk_supply_empty": "Hali taʼminotchi yoʻq.",
+  "kk_supply_name": "Nomi",
+  "kk_supply_goods": "Tovar",
+  "kk_supply_item": "Tovar qoldigʻidagi tovar",
+  "kk_supply_noItem": "Bogʻlanmagan",
+  "kk_supply_itemHint": "Yetkazish shu tovar qoldigʻiga kiradi; toʻlov tovar xaridi kabi (pul oqimiga kirmaydi).",
+  "kk_supply_noItemHint": "Tovarsiz: toʻlov chiqim sifatida yoziladi («Material va xomashyo»).",
+  "kk_supply_price": "Qotirilgan narx (ixtiyoriy)",
+  "kk_supply_priceUnit": "Qotirilgan narx (1 {unit})",
+  "@kk_supply_priceUnit": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_supply_priceEach": "har yetkazishda",
+  "kk_supply_paymentDays": "Toʻlov muddati, kun (0 — darhol)",
+  "kk_supply_paymentDaysValue": "yetkazishdan {n} kun ichida",
+  "@kk_supply_paymentDaysValue": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_supply_deliveryTerms": "Yetkazish tartibi",
+  "kk_supply_returns": "Sifat va qaytarish",
+  "kk_supply_startedOn": "Kelishuv sanasi (boʻsh — bugun)",
+  "kk_supply_nextDue": "Eng yaqin muddat",
+  "kk_supply_nextDueValue": "{date}: {amount}",
+  "@kk_supply_nextDueValue": {
+    "placeholders": {
+      "amount": {},
+      "date": {}
+    }
+  },
+  "kk_supply_overdueNote": "Muddati oʻtgan: {amount}. Jarima yoʻq — taʼminotchiga oldindan xabar bering va yangi muddat kelishing.",
+  "@kk_supply_overdueNote": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_supply_delivery": "Yetkazish",
+  "kk_supply_deliveryTitle": "{name}: yetkazish",
+  "@kk_supply_deliveryTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_supply_deliveryHint": "Nasiyaga: toʻlov muddati — yetkazishdan {n} kun.",
+  "@kk_supply_deliveryHint": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "kk_supply_amount": "Summa",
+  "kk_supply_amountOptional": "Summa (boʻsh — qotirilgan narx × miqdor)",
+  "kk_supply_payment": "Toʻlov",
+  "kk_supply_paymentTitle": "{name}: toʻlov",
+  "@kk_supply_paymentTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_supply_end": "Tugatish",
+  "kk_supply_history": "Yetkazish va toʻlovlar ({count})",
+  "@kk_supply_history": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kk_supply_kind_DELIVERY": "Yetkazish",
+  "kk_supply_kind_PAYMENT": "Toʻlov",
+  "kk_supply_state_PAID": "toʻlangan",
+  "kk_supply_state_DUE": "muddati {date}",
+  "@kk_supply_state_DUE": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "kk_supply_state_OVERDUE": "{days} kun kechikkan (muddati {date})",
+  "@kk_supply_state_OVERDUE": {
+    "placeholders": {
+      "date": {},
+      "days": {}
+    }
+  },
+  "kk_supply_priceRow": "Narx",
+  "kk_supply_paymentRow": "Toʻlov muddati",
+  "kk_staff_payDayRow": "Toʻlov kuni"
 }

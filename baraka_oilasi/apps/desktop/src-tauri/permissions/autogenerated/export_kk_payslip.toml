@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-kk-payslip"
+description = "Enables the export_kk_payslip command without any pre-configured scope."
+commands.allow = ["export_kk_payslip"]
+
+[[permission]]
+identifier = "deny-export-kk-payslip"
+description = "Denies the export_kk_payslip command without any pre-configured scope."
+commands.deny = ["export_kk_payslip"]

@@ -63,6 +63,9 @@ const overview = {
   stockValue: zero,
   stockFrozenValue: zero,
   stockFrozenCount: 0,
+  payables: zero,
+  payablesOverdue: zero,
+  wagesOwed: zero,
   profit: {
     revenue: m("18 000 000 soʻm"),
     cogs: zero,

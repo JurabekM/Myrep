@@ -2965,7 +2965,7 @@ pub struct KkDeliveryDto {
     pub paid: MoneyDto,
     pub outstanding: MoneyDto,
     pub state: String,
-    pub overdue_days: i64,
+    pub overdue_days: u32,
     /// Tovar bog'langan bo'lsa — miqdor (ko'rsatish birligida).
     pub qty: Option<String>,
     pub note: Option<String>,

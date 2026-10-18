@@ -183,6 +183,23 @@ export const commands = {
 	kkUpdateItem: (spaceId: string, itemId: string, input: KkItemInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_update_item", { spaceId, itemId, input })),
 	kkDeleteItem: (spaceId: string, itemId: string) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_delete_item", { spaceId, itemId })),
 	kkStockMove: (spaceId: string, itemId: string, input: KkStockMoveInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_stock_move", { spaceId, itemId, input })),
+	kkStaff: (spaceId: string) => typedError<KkStaffDto, AppError>(__TAURI_INVOKE("kk_staff", { spaceId })),
+	kkAddEmployee: (spaceId: string, input: KkEmployeeInput) => typedError<KkStaffDto, AppError>(__TAURI_INVOKE("kk_add_employee", { spaceId, input })),
+	kkUpdateEmployee: (spaceId: string, id: string, input: KkEmployeeInput) => typedError<KkStaffDto, AppError>(__TAURI_INVOKE("kk_update_employee", { spaceId, id, input })),
+	kkStaffAdvance: (spaceId: string, id: string, input: KkAdvanceInput) => typedError<KkStaffDto, AppError>(__TAURI_INVOKE("kk_staff_advance", { spaceId, id, input })),
+	kkStaffPay: (spaceId: string, id: string, input: KkWageInput) => typedError<KkStaffDto, AppError>(__TAURI_INVOKE("kk_staff_pay", { spaceId, id, input })),
+	kkSuppliers: (spaceId: string) => typedError<KkSuppliersDto, AppError>(__TAURI_INVOKE("kk_suppliers", { spaceId })),
+	kkAddSupplier: (spaceId: string, input: KkSupplierInput) => typedError<KkSuppliersDto, AppError>(__TAURI_INVOKE("kk_add_supplier", { spaceId, input })),
+	kkUpdateSupplier: (spaceId: string, id: string, input: KkSupplierInput) => typedError<KkSuppliersDto, AppError>(__TAURI_INVOKE("kk_update_supplier", { spaceId, id, input })),
+	kkSupplyDelivery: (spaceId: string, id: string, input: KkDeliveryInput) => typedError<KkSuppliersDto, AppError>(__TAURI_INVOKE("kk_supply_delivery", { spaceId, id, input })),
+	kkSupplyPayment: (spaceId: string, id: string, input: KkSupplyPaymentInput) => typedError<KkSuppliersDto, AppError>(__TAURI_INVOKE("kk_supply_payment", { spaceId, id, input })),
+	kkSignAgreement: (spaceId: string, id: string, input: KkSignInput) => typedError<null, AppError>(__TAURI_INVOKE("kk_sign_agreement", { spaceId, id, input })),
+	kkEndAgreement: (spaceId: string, id: string, endedOn: string | null) => typedError<null, AppError>(__TAURI_INVOKE("kk_end_agreement", { spaceId, id, endedOn })),
+	kkDeleteAgreement: (spaceId: string, id: string) => typedError<null, AppError>(__TAURI_INVOKE("kk_delete_agreement", { spaceId, id })),
+	/**  Xodim yoki ta'minotchi kelishuvi PDF'i (imzolangan versiya yoki qoralama) — «Saqlash» oynasi orqali. */
+	exportKkAgreement: (spaceId: string, id: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_kk_agreement", { spaceId, id })),
+	/**  Xodim bilan oylik hisob varaqchasi PDF'i; `month` — oy ichidagi istalgan sana. */
+	exportKkPayslip: (spaceId: string, id: string, month: string) => typedError<boolean, AppError>(__TAURI_INVOKE("export_kk_payslip", { spaceId, id, month })),
 };
 
 /** Events */
@@ -964,6 +981,27 @@ export type JoinInput = {
 	platform: string,
 };
 
+export type KkAdvanceDto = {
+	id: string,
+	givenOn: string,
+	amount: MoneyDto,
+	installments: number,
+	/**  Har oy ushlanadigan ulushlar: davr boshi va summa. */
+	schedule: KkNextDueDto[],
+	deducted: MoneyDto,
+	outstanding: MoneyDto,
+};
+
+export type KkAdvanceInput = {
+	amount: string,
+	installments: number,
+	/**  Ushlash boshlanadigan oy ichidagi sana (bo'lmasa — avans berilgan oy). */
+	startOn: string | null,
+	wallet: string,
+	occurredOn: string | null,
+	note: string | null,
+};
+
 export type KkAgingDto = {
 	current: MoneyDto,
 	d1_30: MoneyDto,
@@ -971,6 +1009,26 @@ export type KkAgingDto = {
 	d61_90: MoneyDto,
 	d90_plus: MoneyDto,
 	total: MoneyDto,
+};
+
+/**
+ *  Kelishuv holati. `status`: `DRAFT`, `SIGNED`, `ENDED`. `missing` — imzolashdan oldin to'ldiriladigan
+ *  maydonlar. `templateReview`: `PENDING` — shablon yurist ko'rigidan o'tmagan.
+ */
+export type KkAgreementStateDto = {
+	status: string,
+	signedVersions: number,
+	signedOn: string | null,
+	effectiveFrom: string | null,
+	/**  Oxirgi imzolangan versiyadan keyin shartlar o'zgargan. */
+	unsignedChanges: boolean,
+	missing: string[],
+	canSign: boolean,
+	templateVersion: number,
+	templateReview: string,
+	startedOn: string,
+	endedOn: string | null,
+	reviewOn: string,
 };
 
 export type KkAllocationDto = {
@@ -1179,12 +1237,97 @@ export type KkCustomerInput = {
 	note: string | null,
 };
 
+/**  `state`: `PAID`, `DUE`, `OVERDUE`. */
+export type KkDeliveryDto = {
+	id: string,
+	deliveredOn: string,
+	dueOn: string,
+	amount: MoneyDto,
+	paid: MoneyDto,
+	outstanding: MoneyDto,
+	state: string,
+	overdueDays: number,
+	/**  Tovar bog'langan bo'lsa — miqdor (ko'rsatish birligida). */
+	qty: string | null,
+	note: string | null,
+};
+
+export type KkDeliveryInput = {
+	deliveredOn: string | null,
+	/**  Tovar bog'langan bo'lsa majburiy (ko'rsatish birligida). */
+	qty: string | null,
+	/**  Bo'lmasa — qotirilgan narx × miqdor. */
+	amount: string | null,
+	note: string | null,
+};
+
 export type KkDisposeInput = {
 	/**  Sotilgan narx; bo'lmasa yoki 0 — yaroqsiz bo'ldi. */
 	proceeds: string | null,
 	/**  Pul tushgan hamyon (sotilgan bo'lsa majburiy). */
 	wallet: string | null,
 	disposedOn: string | null,
+};
+
+export type KkEmployeeDto = {
+	id: string,
+	name: string,
+	phone: string | null,
+	agreement: KkAgreementStateDto,
+	terms: KkEmployeeTermsDto,
+	/**  Shu oy hisoblangani bilan qoldiq (manfiy — ortiq to'langan). */
+	balance: MoneyDto,
+	/**  Hozir to'lanadigani: o'tgan oylar uchun qoldiq − shu oy to'langan (manfiy bo'lsa 0). */
+	dueNow: MoneyDto,
+	advancesOutstanding: MoneyDto,
+	/**  Shu oy (yangisi birinchi). */
+	months: KkPayMonthDto[],
+	advances: KkAdvanceDto[],
+	events: KkStaffEventDto[],
+};
+
+/**
+ *  Xodim kelishuvi (`EMPLOYMENT`) shartlari. Summalar matn holida («3 000 000»); foiz, ustama yoki jarima
+ *  maydoni yo'q.
+ */
+export type KkEmployeeInput = {
+	name: string,
+	role: string | null,
+	phone: string | null,
+	phoneConsent: boolean,
+	duties: string | null,
+	hours: string | null,
+	/**  Oylik qat'iy haq. */
+	salary: string,
+	/**  Har oyning qaysi kuni to'lanadi (1–28). */
+	payDay: number,
+	noticeDays: number,
+	/**  Avans qoldig'i chegarasi; bo'lmasa — kelishilmagan. */
+	maxAdvance: string | null,
+	/**  Avans necha oygacha ushlanadi (standart — 3). */
+	maxAdvanceInstallments: number | null,
+	/**  Ishga kirgan sana (bo'lmasa — bugun). */
+	startedOn: string | null,
+	/**  Ilovagacha xodimga qolgan qarz (manfiy — ortiq to'langan). */
+	openingBalance: string | null,
+	arbiter: string | null,
+	/**  Qayta ko'rish sanasi (bo'lmasa — bir yildan keyin). */
+	reviewOn: string | null,
+	note: string | null,
+};
+
+export type KkEmployeeTermsDto = {
+	role: string | null,
+	duties: string | null,
+	hours: string | null,
+	salary: MoneyDto,
+	payDay: number,
+	noticeDays: number,
+	maxAdvance: MoneyDto | null,
+	maxAdvanceInstallments: number,
+	openingBalance: MoneyDto,
+	arbiter: string | null,
+	note: string | null,
 };
 
 /**  `kind`: `SALE`, `EXPENSE`, `OPENING`, `OWNER_DRAW`, `OWNER_CONTRIBUTION`, `OWNER_SALARY`, `TRANSFER`. */
@@ -1367,6 +1510,11 @@ export type KkOverviewDto = {
 	stockValue: MoneyDto,
 	stockFrozenValue: MoneyDto,
 	stockFrozenCount: number,
+	/**  Ta'minotchilarga qarz va undan muddati o'tgani (K6). */
+	payables: MoneyDto,
+	payablesOverdue: MoneyDto,
+	/**  Xodimlarga hozir to'lanadigani — o'tgan oylar uchun (K6). */
+	wagesOwed: MoneyDto,
 	/**  Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2). */
 	profit: KkProfitDto,
 	/**  Manfiy qoldiqli hamyonlar: `CASH`, `CARD`. */
@@ -1382,6 +1530,17 @@ export type KkOverviewDto = {
 	/**  Mijozlardagi pul (nasiya qoldig'i) va undan muddati o'tgani. */
 	receivables: MoneyDto,
 	receivablesOverdue: MoneyDto,
+};
+
+/**  Oylik hisob: `balance` — oy oxirida xodimga qarzimiz (manfiy — ortiq to'langan). */
+export type KkPayMonthDto = {
+	periodStart: string,
+	periodEnd: string,
+	salary: MoneyDto,
+	deducted: MoneyDto,
+	net: MoneyDto,
+	paid: MoneyDto,
+	balance: MoneyDto,
 };
 
 /**
@@ -1459,6 +1618,31 @@ export type KkSaleInput = {
 	note: string | null,
 };
 
+export type KkSignInput = {
+	/**  Qog'oz nusxa imzolangan sana (bo'lmasa — bugun). */
+	signedOn: string | null,
+	/**  Yangi shartlar qachondan amal qiladi (bo'lmasa — birinchi versiyada ishga kirgan sana, keyin — imzo sanasi). */
+	effectiveFrom: string | null,
+};
+
+export type KkStaffDto = {
+	employees: KkEmployeeDto[],
+	/**  Xodimlarga hozir to'lanadigani (o'tgan oylar uchun). */
+	owed: MoneyDto,
+	advancesOutstanding: MoneyDto,
+	templateReview: string,
+};
+
+/**  `kind`: `ADVANCE`, `WAGE`. */
+export type KkStaffEventDto = {
+	id: string,
+	kind: string,
+	occurredOn: string,
+	amount: MoneyDto,
+	wallet: string,
+	note: string | null,
+};
+
 /**  Tovarlar sahifasi: qoldiqlar va jami qiymatlar (qayta tiklash narxi bo'lmasa — hisobdagi). */
 export type KkStockDto = {
 	items: KkItemDto[],
@@ -1495,6 +1679,90 @@ export type KkStockMoveInput = {
 	occurredOn: string | null,
 	/**  Hisobdan chiqarish va inventarizatsiyada majburiy. */
 	reason: string | null,
+};
+
+export type KkSupplierDto = {
+	id: string,
+	name: string,
+	phone: string | null,
+	agreement: KkAgreementStateDto,
+	terms: KkSupplyTermsDto,
+	outstanding: MoneyDto,
+	overdue: MoneyDto,
+	dueSoon: MoneyDto,
+	nextDue: KkNextDueDto | null,
+	/**  Yangisi birinchi. */
+	deliveries: KkDeliveryDto[],
+	payments: KkSupplyPaymentDto[],
+};
+
+/**
+ *  Ta'minotchi kelishuvi (`SUPPLY`). Tovar bog'lansa — yetkazish tovar qoldig'iga kiradi, narx shu
+ *  kelishuvda qotiriladi (ko'rsatish birligiga).
+ */
+export type KkSupplierInput = {
+	name: string,
+	phone: string | null,
+	phoneConsent: boolean,
+	goods: string | null,
+	itemId: string | null,
+	unitPrice: string | null,
+	/**  Yetkazishdan necha kun ichida to'lanadi (0 — darhol). */
+	paymentDays: number,
+	delivery: string | null,
+	returns: string | null,
+	startedOn: string | null,
+	arbiter: string | null,
+	reviewOn: string | null,
+	note: string | null,
+};
+
+export type KkSuppliersDto = {
+	suppliers: KkSupplierDto[],
+	outstanding: MoneyDto,
+	overdue: MoneyDto,
+	dueSoon: MoneyDto,
+	templateReview: string,
+};
+
+export type KkSupplyPaymentDto = {
+	id: string,
+	paidOn: string,
+	amount: MoneyDto,
+	wallet: string,
+	/**  Tovarsiz ta'minot: to'lov chiqim sifatida yozilgan. */
+	asExpense: boolean,
+	note: string | null,
+};
+
+export type KkSupplyPaymentInput = {
+	/**  Bo'lmasa — eng yaqin muddatdagi qoldiq. */
+	amount: string | null,
+	wallet: string,
+	paidOn: string | null,
+	note: string | null,
+};
+
+export type KkSupplyTermsDto = {
+	goods: string | null,
+	itemId: string | null,
+	itemName: string | null,
+	/**  Tovar birligi: `G`, `ML`, `PCS`, `MM`. */
+	unit: string | null,
+	unitPrice: MoneyDto | null,
+	paymentDays: number,
+	delivery: string | null,
+	returns: string | null,
+	arbiter: string | null,
+	note: string | null,
+};
+
+export type KkWageInput = {
+	/**  Bo'lmasa — hozirgi qoldiq (xodimga qarzimiz). */
+	amount: string | null,
+	wallet: string,
+	occurredOn: string | null,
+	note: string | null,
 };
 
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */

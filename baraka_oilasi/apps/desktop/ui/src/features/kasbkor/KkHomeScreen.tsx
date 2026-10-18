@@ -140,6 +140,38 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
         </div>
       )}
 
+      {d && (d.payables.minor !== "0" || d.wagesOwed.minor !== "0") && (
+        <section aria-label={t("kk.obligations")} className="grid gap-5 md:grid-cols-2">
+          {d.payables.minor !== "0" && (
+            <div className="card flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-ink-muted">{t("kk.payables")}</p>
+                <p data-testid="kk-payables" className="text-2xl font-semibold tabular-nums">
+                  {d.payables.formatted}
+                </p>
+                {d.payablesOverdue.minor !== "0" && <p className="text-sm text-warn">{t("kk.payablesOverdue", { amount: d.payablesOverdue.formatted })}</p>}
+              </div>
+              <button className="btn-ghost" onClick={() => setScreen("kkSuppliers")}>
+                {t("nav.kkSuppliers")}
+              </button>
+            </div>
+          )}
+          {d.wagesOwed.minor !== "0" && (
+            <div className="card flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-ink-muted">{t("kk.wagesOwed")}</p>
+                <p data-testid="kk-wages-owed" className="text-2xl font-semibold tabular-nums">
+                  {d.wagesOwed.formatted}
+                </p>
+              </div>
+              <button className="btn-ghost" onClick={() => setScreen("kkStaff")}>
+                {t("nav.kkStaff")}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
       <div role="group" aria-label={t("kk.actions")} className="flex flex-wrap gap-2">
         {ACTIONS.map((a, i) => (
           <button key={a} className={i === 0 ? "btn-primary" : "btn-ghost"} onClick={() => openKkEntry(a)}>

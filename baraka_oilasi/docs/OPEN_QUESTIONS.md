@@ -160,7 +160,8 @@
 - **Savollar:** (1) nasiyada narxni oldindan qotirib sotish (bay' muajjal) va kechikish uchun ustama taqiqi; (2) savdo mollari zakotini bozor narxida baholash; (3) xodim bilan foyda ulushi asosidagi kelishuv; (4) konsignatsiya.
 - **K0 da (SPEC 5.2, 7.1, 8.3):** nasiya narxi kelishuvda qotiriladi va keyin oshirilmaydi, ustama/jarima maydoni yo'q; zakot bazasidagi tovar baholash usuli (xarid, qayta tiklash yoki sotuv narxi) ochiq — SPEC'dagi misol shartli.
 - **K4 da qilindi:** nasiya narxi kelishuvda qotiriladi (trigger), ustama/jarima/foiz ustuni yo'q; naqd narx va farqi faqat ma'lumot uchun ko'rsatiladi. Bay' muajjal joizligi — ulamo tasdig'i kutilmoqda.
-- **To'sadi:** K6, K7. **Holat:** OCHIQ.
+- **K6 da:** xodim bilan faqat qat'iy haq (foyda ulushi — (3) javobigacha qilinmadi); konsignatsiya shartlari shablonda yo'q ((4) javobigacha). Avans foizsiz va jarimasiz.
+- **To'sadi:** K7 (zakot baholash), xodim foyda ulushi, konsignatsiya. **Holat:** OCHIQ.
 
 ### OQ-D7. Savdo mollari zakoti: nisob, nasiya, oilaviy mehnat, oldindan to'lov
 - **Savollar:** (1) nisob oltin (85 g) yoki kumush bo'yicha hisoblanadimi, kim tanlaydi? (2) umidli nasiya bazaga kiradi, umidsiz (90+ va egasi belgilagan) kirmaydi — to'g'rimi; umidsiz nasiya keyin qaytsa? (3) yaqin muddatli qarzlar (ta'minotchiga) bazadan ayiriladimi? (4) nasiyani muddatidan oldin to'lagan mijozga chegirma berish (da' va ta'ajjal) joizmi — ilovada bunday tugma bo'lsinmi? (5) oilaviy mehnatni tannarxga «bahosi» bilan kiritish — bu faqat hisob usuli, fiqhiy masala emas deb tushunamiz; to'g'rimi?
@@ -188,7 +189,8 @@
 - **Savol:** nasiya olgan mijozlarning ism va telefonlarini saqlaganda do'kondor operator hisoblanadimi? Qanday rozilik shakli kerak?
 - **K0 da (SPEC 5.2, 11):** telefon ixtiyoriy, saqlanganda rozilik belgisi; ma'lumot faqat qurilmada shifrlangan; eslatmani ilova o'zi yubormaydi (matn nusxalanadi). Xodim ma'lumotlari ham minimal (7.2).
 - **K4 da qilindi:** telefon faqat rozilik belgisi bilan saqlanadi (DB CHECK ham); eslatma matni nusxalanadi. Rozilikning yuridik shakli hali ochiq.
-- **To'sadi:** K6. **Holat:** OCHIQ.
+- **K6 da:** xodim va ta'minotchi uchun ham xuddi shunday — ism, lavozim, haq; telefon faqat rozilik bilan (DB CHECK). Rozilikning yuridik shakli hali ochiq.
+- **To'sadi:** — . **Holat:** OCHIQ.
 
 ### OQ-Y4. Sheriklik shartnomasi shakli
 - **Savol:** mudoraba/musharaka kelishuvi Fuqarolik kodeksidagi oddiy shirkat (birgalikdagi faoliyat) shartnomasiga qanday mos keladi?
@@ -202,7 +204,8 @@
 
 ### OQ-Y6. Xodim, ta'minotchi va nasiya kelishuvlari
 - **Savol:** `EMPLOYMENT`, `SUPPLY`, `CREDIT_SALE` shablonlari (9 savol asosida) qanday ko'rinishda bo'lishi kerak, rasmiy mehnat shartnomasi va oldi-sotdi shartnomasidan qanday ajratiladi? Ilova bu hujjatlarni «ichki kelishuv» deb ataydimi?
-- **To'sadi:** K4, K6. **Holat:** OCHIQ.
+- **K6 da:** `EMPLOYMENT` va `SUPPLY` shablonlari yozildi (`shared/content/templates`, `reviewStatus: PENDING`): «kelishuv» deb ataladi, har PDF'da «rasmiy mehnat shartnomasi / shartnoma va qonun talablari o'rnini bosmaydi» bandi va «Tekshiruvdan o'tmagan namuna» belgisi. Band matnlari yurist ko'rigini kutadi; ko'rikdan keyin `reviewStatus: APPROVED` va `version` oshiriladi.
+- **To'sadi:** release (shablonlar `APPROVED` bo'lishi). **Holat:** OCHIQ — yurist ko'rigi kutilmoqda.
 
 ### OQ-Y7. Fiskal talablar va «boshqaruv hisobi» chegarasi
 - **Savol:** ilova onlayn-kassa (fiskal) va soliq hisobotlari o'rnini bosmaydi, egasi o'zi uchun hisob yuritadi. Kunlik kassa yopish va nasiya daftari qanday ifodalanishi kerakki, foydalanuvchi uni rasmiy hujjat deb o'ylamasin? Qanday disklеymer kerak?

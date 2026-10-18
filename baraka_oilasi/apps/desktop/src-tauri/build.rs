@@ -149,6 +149,21 @@ const COMMANDS: &[&str] = &[
     "kk_update_item",
     "kk_delete_item",
     "kk_stock_move",
+    "kk_staff",
+    "kk_add_employee",
+    "kk_update_employee",
+    "kk_staff_advance",
+    "kk_staff_pay",
+    "kk_suppliers",
+    "kk_add_supplier",
+    "kk_update_supplier",
+    "kk_supply_delivery",
+    "kk_supply_payment",
+    "kk_sign_agreement",
+    "kk_end_agreement",
+    "kk_delete_agreement",
+    "export_kk_agreement",
+    "export_kk_payslip",
 ];
 
 fn main() {

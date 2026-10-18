@@ -178,6 +178,21 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_update_item,
             commands::kk_delete_item,
             commands::kk_stock_move,
+            commands::kk_staff,
+            commands::kk_add_employee,
+            commands::kk_update_employee,
+            commands::kk_staff_advance,
+            commands::kk_staff_pay,
+            commands::kk_suppliers,
+            commands::kk_add_supplier,
+            commands::kk_update_supplier,
+            commands::kk_supply_delivery,
+            commands::kk_supply_payment,
+            commands::kk_sign_agreement,
+            commands::kk_end_agreement,
+            commands::kk_delete_agreement,
+            commands::export_kk_agreement,
+            commands::export_kk_payslip,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

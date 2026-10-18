@@ -15,7 +15,9 @@ import { IncomeDialog } from "../features/income/IncomeDialog";
 import { KkCashScreen } from "../features/kasbkor/KkCashScreen";
 import { KkCloseScreen } from "../features/kasbkor/KkCloseScreen";
 import { KkCreditScreen } from "../features/kasbkor/KkCreditScreen";
+import { KkStaffScreen } from "../features/kasbkor/KkStaffScreen";
 import { KkStockScreen } from "../features/kasbkor/KkStockScreen";
+import { KkSuppliersScreen } from "../features/kasbkor/KkSuppliersScreen";
 import { KkEquipmentScreen } from "../features/kasbkor/KkEquipmentScreen";
 import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
 import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
@@ -54,6 +56,8 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "kkCash", label: "nav.kkCash" },
   { screen: "kkCredit", label: "nav.kkCredit" },
   { screen: "kkStock", label: "nav.kkStock" },
+  { screen: "kkSuppliers", label: "nav.kkSuppliers" },
+  { screen: "kkStaff", label: "nav.kkStaff" },
   { screen: "kkEquipment", label: "nav.kkEquipment" },
   { screen: "kkLabor", label: "nav.kkLabor" },
   { screen: "kkQuote", label: "nav.kkQuote" },
@@ -81,6 +85,8 @@ const MENTOR: Record<Screen, string> = {
   kkCash: "mentor.kkCash",
   kkCredit: "mentor.kkCredit",
   kkStock: "mentor.kkStock",
+  kkStaff: "mentor.kkStaff",
+  kkSuppliers: "mentor.kkSuppliers",
   sync: "mentor.sync",
   settings: "mentor.settings",
 };
@@ -173,6 +179,8 @@ export function Shell() {
         {active && kasbkor && screen === "kkCash" && <KkCashScreen spaceId={active} />}
         {active && kasbkor && screen === "kkCredit" && <KkCreditScreen spaceId={active} />}
         {active && kasbkor && screen === "kkStock" && <KkStockScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkSuppliers" && <KkSuppliersScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkStaff" && <KkStaffScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>

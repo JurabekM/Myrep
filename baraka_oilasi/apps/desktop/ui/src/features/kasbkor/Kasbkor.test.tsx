@@ -55,6 +55,9 @@ const overview = {
   stockValue: money("0 soʻm", "0"),
   stockFrozenValue: money("0 soʻm", "0"),
   stockFrozenCount: 0,
+  payables: money("0 soʻm", "0"),
+  payablesOverdue: money("0 soʻm", "0"),
+  wagesOwed: money("0 soʻm", "0"),
   profit: {
     revenue: money("20 000 000 soʻm", "20 000 000"),
     cogs: money("0 soʻm", "0"),

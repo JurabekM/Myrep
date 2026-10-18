@@ -155,6 +155,21 @@
     "allow-kk-add-item",
     "allow-kk-update-item",
     "allow-kk-delete-item",
-    "allow-kk-stock-move"
+    "allow-kk-stock-move",
+    "allow-kk-staff",
+    "allow-kk-add-employee",
+    "allow-kk-update-employee",
+    "allow-kk-staff-advance",
+    "allow-kk-staff-pay",
+    "allow-kk-suppliers",
+    "allow-kk-add-supplier",
+    "allow-kk-update-supplier",
+    "allow-kk-supply-delivery",
+    "allow-kk-supply-payment",
+    "allow-kk-sign-agreement",
+    "allow-kk-end-agreement",
+    "allow-kk-delete-agreement",
+    "allow-export-kk-agreement",
+    "allow-export-kk-payslip"
   ]
 }
