@@ -15,6 +15,7 @@ import { IncomeDialog } from "../features/income/IncomeDialog";
 import { KkCashScreen } from "../features/kasbkor/KkCashScreen";
 import { KkCloseScreen } from "../features/kasbkor/KkCloseScreen";
 import { KkCreditScreen } from "../features/kasbkor/KkCreditScreen";
+import { KkStockScreen } from "../features/kasbkor/KkStockScreen";
 import { KkEquipmentScreen } from "../features/kasbkor/KkEquipmentScreen";
 import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
 import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
@@ -52,6 +53,7 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "home", label: "nav.home" },
   { screen: "kkCash", label: "nav.kkCash" },
   { screen: "kkCredit", label: "nav.kkCredit" },
+  { screen: "kkStock", label: "nav.kkStock" },
   { screen: "kkEquipment", label: "nav.kkEquipment" },
   { screen: "kkLabor", label: "nav.kkLabor" },
   { screen: "kkQuote", label: "nav.kkQuote" },
@@ -78,6 +80,7 @@ const MENTOR: Record<Screen, string> = {
   kkClose: "mentor.kkClose",
   kkCash: "mentor.kkCash",
   kkCredit: "mentor.kkCredit",
+  kkStock: "mentor.kkStock",
   sync: "mentor.sync",
   settings: "mentor.settings",
 };
@@ -169,6 +172,7 @@ export function Shell() {
         {active && kasbkor && screen === "kkClose" && <KkCloseScreen spaceId={active} />}
         {active && kasbkor && screen === "kkCash" && <KkCashScreen spaceId={active} />}
         {active && kasbkor && screen === "kkCredit" && <KkCreditScreen spaceId={active} />}
+        {active && kasbkor && screen === "kkStock" && <KkStockScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>

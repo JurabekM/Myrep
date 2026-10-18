@@ -178,6 +178,11 @@ export const commands = {
 	kkCreditExtend: (spaceId: string, saleId: string, input: KkCreditExtendInput) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_extend", { spaceId, saleId, input })),
 	kkCreditMark: (spaceId: string, saleId: string, talk: boolean) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_credit_mark", { spaceId, saleId, talk })),
 	kkDeleteCreditSale: (spaceId: string, saleId: string) => typedError<KkCreditBookDto, AppError>(__TAURI_INVOKE("kk_delete_credit_sale", { spaceId, saleId })),
+	kkStock: (spaceId: string) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_stock", { spaceId })),
+	kkAddItem: (spaceId: string, input: KkItemInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_add_item", { spaceId, input })),
+	kkUpdateItem: (spaceId: string, itemId: string, input: KkItemInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_update_item", { spaceId, itemId, input })),
+	kkDeleteItem: (spaceId: string, itemId: string) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_delete_item", { spaceId, itemId })),
+	kkStockMove: (spaceId: string, itemId: string, input: KkStockMoveInput) => typedError<KkStockDto, AppError>(__TAURI_INVOKE("kk_stock_move", { spaceId, itemId, input })),
 };
 
 /** Events */
@@ -1257,6 +1262,54 @@ export type KkInstallmentDto = {
 	state: string,
 };
 
+export type KkItemDto = {
+	id: string,
+	name: string,
+	unit: string,
+	method: string,
+	/**  Qoldiq, ko'rsatish birligida («70», «1,5»). */
+	qty: string,
+	/**  Hisobdagi qiymat (tannarx bo'yicha). */
+	value: MoneyDto,
+	/**  Bir birlik tannarxi; qoldiq yo'q bo'lsa `null`. */
+	unitCost: MoneyDto | null,
+	salePrice: MoneyDto | null,
+	/**  Qo'lda kiritilgan joriy xarid narxi. */
+	replacementPriceInput: MoneyDto | null,
+	/**  Hisobda ishlatilgani: qo'lda kiritilgan yoki oxirgi xarid narxi. */
+	replacementPrice: MoneyDto | null,
+	replacementValue: MoneyDto | null,
+	/**  «Inflyatsiya yegan kapital»: qayta tiklash − hisobdagi. */
+	inflationGap: MoneyDto | null,
+	/**  «Shu narxda sotsangiz, bu tovarni qayta ololmaysiz». */
+	saleBelowReplacement: boolean,
+	minQty: string | null,
+	belowMin: boolean,
+	frozenDays: number,
+	lastSaleOn: string | null,
+	frozen: boolean,
+	note: string | null,
+	/**  Harakatlar (yangisi birinchi). */
+	moves: KkStockMoveDto[],
+};
+
+/**  Tovar kartochkasi. Narxlar ko'rsatish birligiga: kg, l, m (`G`, `ML`, `MM`) yoki dona (`PCS`). */
+export type KkItemInput = {
+	name: string,
+	/**  `G`, `ML`, `PCS`, `MM`; yaratilgandan keyin o'zgarmaydi. */
+	unit: string,
+	/**  `AVERAGE` (standart) yoki `FIFO`; harakat bo'lgach o'zgarmaydi. */
+	method: string | null,
+	salePrice: string | null,
+	/**  Joriy xarid narxi (qo'lda); bo'lmasa — oxirgi xarid narxi. */
+	replacementPrice: string | null,
+	/**  Minimal qoldiq, ko'rsatish birligida (masalan «20» kg yoki «1,5» l). */
+	minQty: string | null,
+	/**  «Muzlagan» chegarasi, kun (standart 90). */
+	frozenDays: number | null,
+	note: string | null,
+};
+
 /**  Yopilgan oy bayonnomasi (o'zgarmas). */
 export type KkMonthCloseDto = {
 	id: string,
@@ -1308,6 +1361,12 @@ export type KkOverviewDto = {
 	/**  Uskuna xaridi va sotuvi (hamyonga ta'sir qiladi, pul oqimiga kirmaydi). */
 	equipmentPurchases: MoneyDto,
 	equipmentSales: MoneyDto,
+	/**  Tovar xaridi (K5): hamyondan chiqadi, pul oqimiga kirmaydi (tannarx sotilganda foydadan ayiriladi). */
+	stockPurchases: MoneyDto,
+	/**  Tovar qoldig'i hisobdagi qiymati va muzlagan tovarlar (qayta tiklash narxida), bugungi holat. */
+	stockValue: MoneyDto,
+	stockFrozenValue: MoneyDto,
+	stockFrozenCount: number,
 	/**  Bosh ekran 1-raqami: haqiqiy foyda va uning tarkibi (K2). */
 	profit: KkProfitDto,
 	/**  Manfiy qoldiqli hamyonlar: `CASH`, `CARD`. */
@@ -1327,11 +1386,13 @@ export type KkOverviewDto = {
 
 /**
  *  Haqiqiy foyda (kasbkor/SPEC 3.1): ko'rinadigan − o'z mehnati − to'lanmagan oilaviy mehnat − eskirish
- *  − uskuna chiqib ketishi. Sotilgan tovar tannarxi — K5 gacha 0.
+ *  − uskuna chiqib ketishi. Ko'rinadigan = tushum − sotilgan tovar tannarxi − tovar yo'qotishlari − chiqim (K5).
  */
 export type KkProfitDto = {
 	revenue: MoneyDto,
 	cogs: MoneyDto,
+	/**  Hisobdan chiqarish va inventarizatsiya farqi (manfiy — ortiqcha topilgan). */
+	stockLosses: MoneyDto,
 	operatingExpenses: MoneyDto,
 	visibleProfit: MoneyDto,
 	/**  O'z mehnati bahosi; kiritilmagan bo'lsa `null` (hisobda 0). */
@@ -1396,6 +1457,44 @@ export type KkSaleInput = {
 	occurredOn: string | null,
 	/**  Buyurtma, mijoz yoki izoh. */
 	note: string | null,
+};
+
+/**  Tovarlar sahifasi: qoldiqlar va jami qiymatlar (qayta tiklash narxi bo'lmasa — hisobdagi). */
+export type KkStockDto = {
+	items: KkItemDto[],
+	value: MoneyDto,
+	replacementValue: MoneyDto,
+	inflationGap: MoneyDto,
+	/**  Muzlagan tovarlar qiymati (qayta tiklash narxida). */
+	frozenValue: MoneyDto,
+	frozenCount: number,
+};
+
+/**  `kind`: `PURCHASE`, `SALE`, `WRITE_OFF`, `ADJUST`. `cost` — tannarx (xaridda — narx, ortiqchada — manfiy). */
+export type KkStockMoveDto = {
+	id: string,
+	kind: string,
+	occurredOn: string,
+	/**  Ishorali miqdor, ko'rsatish birligida («-80», «1,5»). */
+	qty: string,
+	amount: MoneyDto | null,
+	cost: MoneyDto,
+	wallet: string | null,
+	reason: string | null,
+};
+
+/**  `kind`: `PURCHASE`, `SALE`, `WRITE_OFF`, `COUNT` (inventarizatsiya: sanalgan miqdor). */
+export type KkStockMoveInput = {
+	kind: string,
+	/**  Ko'rsatish birligida (kg uchun 3 xonagacha kasr). `COUNT` da — sanalgan miqdor. */
+	qty: string,
+	/**  Xaridda — jami narx; sotuvda — tushum (bo'lmasa — sotuv narxi × miqdor); ortiqchada — qiymat. */
+	amount: string | null,
+	/**  Xaridda ixtiyoriy (`null` — ilovagacha bor edi); sotuvda majburiy. */
+	wallet: string | null,
+	occurredOn: string | null,
+	/**  Hisobdan chiqarish va inventarizatsiyada majburiy. */
+	reason: string | null,
 };
 
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */

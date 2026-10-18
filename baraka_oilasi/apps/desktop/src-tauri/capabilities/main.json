@@ -150,6 +150,11 @@
     "allow-kk-credit-forgive",
     "allow-kk-credit-extend",
     "allow-kk-credit-mark",
-    "allow-kk-delete-credit-sale"
+    "allow-kk-delete-credit-sale",
+    "allow-kk-stock",
+    "allow-kk-add-item",
+    "allow-kk-update-item",
+    "allow-kk-delete-item",
+    "allow-kk-stock-move"
   ]
 }

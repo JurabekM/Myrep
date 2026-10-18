@@ -41,6 +41,7 @@ export const keys = {
   kkCashDays: (spaceId: string) => ["kkCashDays", spaceId] as const,
   kkCredit: (spaceId: string) => ["kkCredit", spaceId] as const,
   kkCustomers: (spaceId: string) => ["kkCustomers", spaceId] as const,
+  kkStock: (spaceId: string) => ["kkStock", spaceId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

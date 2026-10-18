@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5) va K4 (5-bo'lim) amalga oshirildi — farqlari 2.4, 3.4, 4.6 va 5.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim) va K5 (4.1–4.4) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7 va 5.4 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -143,6 +143,16 @@ Qonunning mazmuni: javondagi tovar — muzlagan pul. Uni eski narxda hisoblash k
 - «Hisob kuni» egasi tanlagan kunda emas: o'tgan oy tugagach istalgan payt, bosh sahifada eslatma bilan. Oylar tartib bilan yopiladi (keyingisi yopilgan bo'lsa, oldingisi yopilmaydi).
 - Bayonnoma `kk_month_closes` da; zanjir — har bayonnoma xeshi oldingisinikini o'z ichiga oladi. Yopilgan kungacha sanaga yozuv qo'shilmaydi va o'chirilmaydi.
 - Taqsimot «hamyonlari» (zaxira, aylanma, kengayish qoldig'i) hali yo'q — bayonnomada summalar saqlanadi, K7 darvozasi shulardan foydalanadi.
+
+### 4.7. K5 da qanday qilindi (farqlar)
+- Miqdorlar butun sonda, asosiy birlikda: g, ml, mm, dona; ekranda kg, l, m (3 xonagacha kasr) yoki dona. Narxlar — ko'rsatish birligiga (1 kg, 1 l, 1 m, 1 dona).
+- Tovar kartochkasida «xarid narxi» alohida maydon emas: tannarx xaridlardan; «joriy xarid narxi» ixtiyoriy (bo'lmasa — oxirgi xarid narxi = qayta tiklash narxi).
+- Boshlang'ich qoldiq — «ilovagacha bor edi» belgili xarid (hamyonsiz). Hamyondan to'langan xarid kassa/kartadan chiqadi, lekin pul oqimiga kirmaydi; tannarx sotilganda foydadan ayiriladi.
+- Sotuv «Tovarlar»dan yozilsa — bitta tranzaksiyada Kasb-kor tushumi (manba — tovar nomi). Oddiy «Tushum» tovarsiz qoladi (xizmat, tovari yozilmagan savdo).
+- Inventarizatsiya: sanalgan miqdor kiritiladi, farqni yadro hisoblaydi; kamomad — o'rtacha (FIFO da eng eski) tannarxda yo'qotish, ortiqcha — kiritilgan qiymatda, bo'lmasa o'rtacha tannarx (qoldiq yo'q bo'lsa qayta tiklash narxi) bo'yicha. Hisobdan chiqarish va sanoq farqi — «tovar yo'qotishlari» qatori (operatsion chiqimdan alohida).
+- Muzlagan tovar takliflari (chegirma, almashtirish, sadaqa) — matn; yozuv oddiy sotuv yoki hisobdan chiqarish (sabab bilan) orqali.
+- «Hisob kuni»: chiqim = operatsion chiqim + sotilgan tovar tannarxi + tovar yo'qotishlari (manfiy bo'lsa 0); tovar xaridi ayirilmaydi — u aylanma (tovar) ulushidan qoplanadi.
+- Har harakatdan keyin qayta hisob: barcha harakatlar sana tartibida qayta o'ynaladi. Orqa sanadagi harakat keyingi chiqimni qoldiqdan oshirsa — rad etiladi; yopilgan oyga yozilmaydi.
 
 ## 5. 4-QONUN: «NASIYANI ADOLAT BILAN YURIT» — FUNKSIONAL TALABLAR (K4)
 Qonunning mazmuni: nasiya — kelishuv. Narx savdo paytida qotiriladi; kechikkan uchun ustama yo'q; yozilmagan nasiya — yo'qolgan nasiya.

@@ -173,6 +173,11 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::kk_credit_extend,
             commands::kk_credit_mark,
             commands::kk_delete_credit_sale,
+            commands::kk_stock,
+            commands::kk_add_item,
+            commands::kk_update_item,
+            commands::kk_delete_item,
+            commands::kk_stock_move,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

@@ -84,7 +84,8 @@
 ### OQ-K1. Tannarx usuli
 - **Taklif:** standart — o'rtacha tortilgan; FIFO — tovar bo'yicha ixtiyoriy (muddati bor tovarlar). Ikkalasi ham vektor bilan (`kk_cogs`).
 - **Savol:** kichik do'kon uchun bitta usul yetarlimi yoki tanlov kerakmi? «Asosiy tovarlar» rejimi (20–30 pozitsiya) standart bo'lsinmi?
-- **To'sadi:** K5. **Holat:** OCHIQ.
+- **Vaqtinchalik qaror (K5):** taklif bo'yicha — standart o'rtacha, FIFO tovar bo'yicha; birinchi harakatdan keyin usul o'zgarmaydi (o'tgan tannarx qayta yozilmasligi uchun). «Asosiy tovarlar» — rejim emas, maslahat: hamma tovarni yozish shart emas (ekran matni); sanoq va cheklov yo'q.
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ### OQ-K2. Egasi maoshi Uy makonida qanday daromad?
 - **Masala:** `BARAKA_OILASI.md` 4.6 da «egasi maoshi Uy'da `MOL | TAVAKKAL`» deyilgan. Lekin maosh — egasining mehnati uchun (`TER`), foyda ulushi esa kapital va tavakkal uchun (`MOL` / `TAVAKKAL`).
@@ -100,7 +101,8 @@
 
 ### OQ-K4. «Muzlagan tovar» chegarasi
 - **Taklif:** oxirgi sotuvdan 90 kun, tovar bo'yicha o'zgartiriladi. Muzlagan tovar qayta tiklash narxida ko'rsatiladi.
-- **To'sadi:** K5. **Holat:** OCHIQ.
+- **Vaqtinchalik qaror (K5):** taklif bo'yicha — 90 kun standart (1–3650, tovar bo'yicha); hech sotilmagan tovar — birinchi xariddan hisoblanadi; «90 kundan ko'p» (91-kundan). Qayta tiklash narxi bo'lmasa — hisobdagi qiymatda.
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ### OQ-K5. «O'z mehnati bahosi»
 - **Masala:** haqiqiy foyda egasi kiritgan bahoga bog'liq. Juda past yozilsa — tashxis yo'qoladi, juda baland — doim «zarar».

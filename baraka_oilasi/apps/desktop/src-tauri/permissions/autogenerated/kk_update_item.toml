@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-update-item"
+description = "Enables the kk_update_item command without any pre-configured scope."
+commands.allow = ["kk_update_item"]
+
+[[permission]]
+identifier = "deny-kk-update-item"
+description = "Denies the kk_update_item command without any pre-configured scope."
+commands.deny = ["kk_update_item"]

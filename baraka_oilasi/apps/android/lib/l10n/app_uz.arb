@@ -2190,7 +2190,7 @@
   "kk_profit_title": "Foyda qanday hosil boʻldi",
   "kk_profit_revenue": "Tushum",
   "kk_profit_cogs": "Sotilgan tovar tannarxi",
-  "kk_profit_cogsHint": "Tovar qoldigʻi hisobi keyingi bosqichda (K5)",
+  "kk_profit_cogsHint": "Oʻrtacha yoki FIFO tannarx — «Tovarlar» boʻlimidan",
   "kk_profit_operating": "Operatsion chiqimlar",
   "kk_profit_visible": "Koʻrinadigan foyda",
   "kk_profit_ownerLabor": "Oʻz mehnatingiz bahosi",
@@ -2692,5 +2692,199 @@
   "error_INVALID_INSTALLMENTS": "Toʻlovlar soni 1 dan 120 gacha",
   "error_INVALID_EXTENSION": "Uzaytirish 1 dan 24 oygacha",
   "error_ALREADY_SETTLED": "Bu nasiya yopilgan",
-  "error_CREDIT_HAS_EVENTS": "Toʻlov yoki boshqa yozuvi bor nasiyani oʻchirib boʻlmaydi"
+  "error_CREDIT_HAS_EVENTS": "Toʻlov yoki boshqa yozuvi bor nasiyani oʻchirib boʻlmaydi",
+  "nav_kkStock": "Tovarlar",
+  "mentor_kkStock": "Javondagi tovar — muzlagan pul. Uni bugungi xarid narxida koʻring: farq — inflyatsiya yegan kapital. Qayta ololmaydigan narxda sotmang.",
+  "kk_kind_STOCK_PURCHASE": "Tovar xaridi",
+  "kk_stockPurchasesLine": "Tovar xaridi: {amount} — hamyondan chiqdi, pul oqimiga kirmaydi (tannarx sotilganda ayiriladi)",
+  "@kk_stockPurchasesLine": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kk_stockValue": "Tovar qoldigʻi (hisobda)",
+  "kk_stockFrozen": "Muzlagan tovar: {amount} ({count} ta)",
+  "@kk_stockFrozen": {
+    "placeholders": {
+      "amount": {},
+      "count": {}
+    }
+  },
+  "kk_profit_stockLosses": "Tovar yoʻqotishlari (hisobdan chiqarish, sanoq farqi)",
+  "kk_unit_G": "kg",
+  "kk_unit_ML": "l",
+  "kk_unit_MM": "m",
+  "kk_unit_PCS": "dona",
+  "kk_stock_title": "Tovarlar",
+  "kk_stock_intro": "Hamma tovarni yozish shart emas: eng koʻp pul bogʻlaydigan 20–30 tasini yuriting. Tannarx har xariddan keyin yadroda qayta hisoblanadi; sotuv shu yerdan yozilsa — tushum ham yoziladi.",
+  "kk_stock_totals": "Tovar qoldigʻi jami",
+  "kk_stock_bookValue": "Hisobdagi qiymat",
+  "kk_stock_replacementValue": "Qayta tiklash narxida",
+  "kk_stock_gap": "Inflyatsiya yegan kapital",
+  "kk_stock_gapHint": "Qayta tiklash − hisobdagi: shuncha pul qoʻshmasangiz, shu qoldiqni qayta ololmaysiz",
+  "kk_stock_frozenTotal": "Muzlagan tovar (qayta tiklash narxida)",
+  "kk_stock_frozenCount": "{count} ta tovar",
+  "@kk_stock_frozenCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kk_stock_add": "Yangi tovar",
+  "kk_stock_addButton": "Tovarni qoʻshish",
+  "kk_stock_list": "Tovarlar roʻyxati",
+  "kk_stock_empty": "Hali tovar yoʻq. Eng koʻp pul bogʻlaydigan tovardan boshlang.",
+  "kk_stock_name": "Nomi",
+  "kk_stock_unit": "Birlik",
+  "kk_stock_methodLabel": "Tannarx usuli",
+  "kk_stock_method_AVERAGE": "Oʻrtacha",
+  "kk_stock_method_FIFO": "FIFO",
+  "kk_stock_methodHint": "Standart — oʻrtacha; muddati bor tovarlar uchun — FIFO (eng eski partiya birinchi)",
+  "kk_stock_methodLocked": "Harakat yozilgan — usulni oʻzgartirib boʻlmaydi",
+  "kk_stock_salePrice": "Sotuv narxi (1 {unit})",
+  "@kk_stock_salePrice": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_currentPrice": "Joriy xarid narxi (1 {unit})",
+  "@kk_stock_currentPrice": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_currentPriceHint": "Boʻsh — oxirgi xarid narxi",
+  "kk_stock_minQty": "Minimal qoldiq ({unit}, ixtiyoriy)",
+  "@kk_stock_minQty": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_frozenDays": "Necha kun sotilmasa «muzlagan»",
+  "kk_stock_unitCost": "Tannarx (1 {unit})",
+  "@kk_stock_unitCost": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_replacementPrice": "Qayta tiklash narxi (1 {unit})",
+  "@kk_stock_replacementPrice": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_saleBelow": "Shu narxda sotsangiz, bu tovarni qayta ololmaysiz.",
+  "kk_stock_belowMin": "Qoldiq minimaldan kam ({qty} {unit}) — buyurtma vaqti.",
+  "@kk_stock_belowMin": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "kk_stock_frozenSince": "Muzlagan: oxirgi sotuv {date} ({days} kundan koʻp).",
+  "@kk_stock_frozenSince": {
+    "placeholders": {
+      "date": {},
+      "days": {}
+    }
+  },
+  "kk_stock_frozenNeverSold": "Muzlagan: xariddan beri {days} kundan koʻp sotilmadi.",
+  "@kk_stock_frozenNeverSold": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "kk_stock_frozenOffer": "Chegirma bilan sotish, almashtirish yoki sadaqa — har birini yozib qoʻying.",
+  "kk_stock_actions": "{name}: amallar",
+  "@kk_stock_actions": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_stock_action_PURCHASE": "Xarid",
+  "kk_stock_action_SALE": "Sotuv",
+  "kk_stock_action_WRITE_OFF": "Hisobdan chiqarish",
+  "kk_stock_action_COUNT": "Sanash",
+  "kk_stock_edit": "Tahrirlash",
+  "kk_stock_editTitle": "{name}: tahrirlash",
+  "@kk_stock_editTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_stock_delete": "Oʻchirish",
+  "kk_stock_deleteNamed": "{name} — oʻchirish",
+  "@kk_stock_deleteNamed": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "kk_stock_formTitle": "{name}: {action}",
+  "@kk_stock_formTitle": {
+    "placeholders": {
+      "action": {},
+      "name": {}
+    }
+  },
+  "kk_stock_qty": "Miqdor ({unit})",
+  "@kk_stock_qty": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_qtyShort": "Miqdor, {unit}",
+  "@kk_stock_qtyShort": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_counted": "Sanalgan miqdor ({unit})",
+  "@kk_stock_counted": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "kk_stock_bookQty": "Hisobda: {qty} {unit}",
+  "@kk_stock_bookQty": {
+    "placeholders": {
+      "qty": {},
+      "unit": {}
+    }
+  },
+  "kk_stock_amount_PURCHASE": "Jami narx",
+  "kk_stock_amount_SALE": "Tushum",
+  "kk_stock_amount_COUNT": "Topilgan tovar qiymati (ixtiyoriy)",
+  "kk_stock_saleAmountHint": "Boʻsh qoldirsangiz — {price} / {unit} boʻyicha",
+  "@kk_stock_saleAmountHint": {
+    "placeholders": {
+      "price": {},
+      "unit": {}
+    }
+  },
+  "kk_stock_foundValueHint": "Ortiqcha chiqsa: boʻsh — oʻrtacha tannarxda",
+  "kk_stock_paidFrom": "Qaysi hamyondan",
+  "kk_stock_paidTo": "Qaysi hamyonga",
+  "kk_stock_paidBefore": "Ilovagacha bor edi",
+  "kk_stock_reason": "Sabab",
+  "kk_stock_reasonHint_WRITE_OFF": "Masalan: buzilgan, muddati oʻtgan, sadaqa",
+  "kk_stock_reasonHint_COUNT": "Masalan: toʻkilgan, tortishda xato",
+  "kk_stock_history": "Harakatlar ({count})",
+  "@kk_stock_history": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kk_stock_cost": "Tannarx",
+  "kk_stock_kind_PURCHASE": "Xarid",
+  "kk_stock_kind_SALE": "Sotuv",
+  "kk_stock_kind_WRITE_OFF": "Hisobdan chiqarish",
+  "kk_stock_kind_ADJUST": "Sanoq farqi",
+  "error_INSUFFICIENT_STOCK": "Qoldiqda buncha tovar yoʻq (shu sanada yoki keyingi harakatlar uchun)",
+  "error_INVALID_QTY": "Miqdorni toʻgʻri kiriting (kg, l, m uchun 3 xonagacha kasr; dona — butun)",
+  "error_NO_DIFFERENCE": "Sanalgan miqdor hisobdagiga teng — tuzatish kerak emas",
+  "error_METHOD_LOCKED": "Harakat yozilgan tovarning tannarx usuli oʻzgarmaydi",
+  "error_UNIT_LOCKED": "Birlik oʻzgarmaydi — yangi tovar sifatida qoʻshing",
+  "error_ITEM_HAS_MOVES": "Harakati bor tovarni oʻchirib boʻlmaydi",
+  "error_INVALID_UNIT": "Birlikni tanlang",
+  "error_INVALID_METHOD": "Tannarx usulini tanlang",
+  "error_INVALID_DAYS": "Kunlar soni 1 dan 3650 gacha"
 }

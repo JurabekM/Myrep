@@ -14,6 +14,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 | `05-kasbkor-profit` | Kasb-kor haqiqiy foyda (SPEC 3.1 Nilufar): tushum va chiqimlar → o'z mehnati → qizining 80 soati → tikuv mashinalari 12 mln / 60 oy → **3 100 000**; Jasur buyurtmasi tannarxdan past; uskuna sotildi → bir martalik xarajat |
 | `06-kasbkor-close` | Kasb-kor «Hisob kuni» (SPEC 4.5 Nilufar): joriy oyda yozuvlar → ilova keyingi oyga siljitilib qayta ochiladi → eslatma → soliq 4 % tushumdan → qolgan **2 580 000** → 774 000 / 1 290 000 / 516 000 → oy yopiladi, bayonnoma PDF |
 | `07-kasbkor-ledger` | Kasb-kor kassa va nasiya: Bahodir (kutilgan 1 500 000, sanalgan 1 450 000 → −50 000, kunni yopish) → Malika (660 000 = 3 × 220 000, birinchi to'lov) → [+2 oy 20 kun] 20 kun kechikkan, summa o'zgarmagan, haftalik ko'rik |
+| `08-kasbkor-stock` | Kasb-kor tovarlar: Bahodir shakari (50 kg ilovagacha + 100 kg kartadan, 80 kg sotuv → o'rtacha tannarx 960 000, qoldiq 840 000) → joriy narx 13 500: farq 105 000, 13 000 ga sotish ogohlantirishi → sanoq 69,5 kg: 6 000 yo'qotish → [+91 kun] muzlagan tovar |
 
 ## Ishga tushirish (Linux)
 ```bash

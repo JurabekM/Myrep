@@ -144,6 +144,11 @@ const COMMANDS: &[&str] = &[
     "kk_credit_extend",
     "kk_credit_mark",
     "kk_delete_credit_sale",
+    "kk_stock",
+    "kk_add_item",
+    "kk_update_item",
+    "kk_delete_item",
+    "kk_stock_move",
 ];
 
 fn main() {

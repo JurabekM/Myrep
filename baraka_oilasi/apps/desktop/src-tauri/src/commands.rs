@@ -1671,6 +1671,60 @@ pub async fn kk_delete_credit_sale(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_stock(state: State<'_, Desktop>, space_id: String) -> R<KkStockDto> {
+    state.session.app()?.kk_stock(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_add_item(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkItemInput,
+) -> R<KkStockDto> {
+    state.session.app()?.kk_add_item(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_update_item(
+    state: State<'_, Desktop>,
+    space_id: String,
+    item_id: String,
+    input: KkItemInput,
+) -> R<KkStockDto> {
+    state
+        .session
+        .app()?
+        .kk_update_item(&space_id, &item_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delete_item(
+    state: State<'_, Desktop>,
+    space_id: String,
+    item_id: String,
+) -> R<KkStockDto> {
+    state.session.app()?.kk_delete_item(&space_id, &item_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_stock_move(
+    state: State<'_, Desktop>,
+    space_id: String,
+    item_id: String,
+    input: KkStockMoveInput,
+) -> R<KkStockDto> {
+    state
+        .session
+        .app()?
+        .kk_stock_move(&space_id, &item_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

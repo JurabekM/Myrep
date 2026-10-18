@@ -85,6 +85,7 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
             </p>
           )}
           <p className="mt-1 text-xs text-ink-muted">{t("kk.cashFlowHint")}</p>
+          {d && d.stockPurchases.minor !== "0" && <p className="mt-1 text-xs text-ink-muted">{t("kk.stockPurchasesLine", { amount: d.stockPurchases.formatted })}</p>}
         </div>
         {(["CASH", "CARD"] as const).map((w) => {
           const bal = w === "CASH" ? d?.cash : d?.card;
@@ -116,6 +117,25 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
           </div>
           <button className="btn-ghost" onClick={() => setScreen("kkCredit")}>
             {t("nav.kkCredit")}
+          </button>
+        </div>
+      )}
+
+      {d && (d.stockValue.minor !== "0" || d.stockFrozenCount > 0) && (
+        <div className={`card flex flex-wrap items-center justify-between gap-3 ${d.stockFrozenCount > 0 ? "border-warn" : ""}`}>
+          <div>
+            <p className="text-sm text-ink-muted">{t("kk.stockValue")}</p>
+            <p data-testid="kk-stock-value" className="text-2xl font-semibold tabular-nums">
+              {d.stockValue.formatted}
+            </p>
+            {d.stockFrozenCount > 0 && (
+              <p data-testid="kk-stock-frozen" className="text-sm text-warn">
+                {t("kk.stockFrozen", { amount: d.stockFrozenValue.formatted, count: d.stockFrozenCount })}
+              </p>
+            )}
+          </div>
+          <button className="btn-ghost" onClick={() => setScreen("kkStock")}>
+            {t("nav.kkStock")}
           </button>
         </div>
       )}
@@ -187,6 +207,8 @@ function ProfitCard({ spaceId, overview: d }: { spaceId: string; overview: KkOve
     [t("kk.profit.familyLabor"), `− ${p.familyLabor.formatted}`, p.familyLaborPaid.minor !== "0" ? t("kk.profit.familyPaid", { amount: p.familyLaborPaid.formatted }) : undefined],
     [t("kk.profit.depreciation"), `− ${p.depreciation.formatted}`],
   ];
+  // Ortiqcha topilgan tovar (manfiy yo'qotish) foydaga qo'shiladi; faqat belgi almashadi.
+  if (p.stockLosses.minor !== "0") rows.splice(2, 0, [t("kk.profit.stockLosses"), p.stockLosses.minor.startsWith("-") ? `+ ${p.stockLosses.formatted.slice(1)}` : `− ${p.stockLosses.formatted}`]);
   // Manfiy chiqib ketish — uskuna balansdan qimmatga sotilgan (foydaga qo'shiladi); faqat belgi almashadi.
   if (p.disposal.minor !== "0") rows.push([t("kk.profit.disposal"), p.disposal.minor.startsWith("-") ? `+ ${p.disposal.formatted.slice(1)}` : `− ${p.disposal.formatted}`]);
   return (
