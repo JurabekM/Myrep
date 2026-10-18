@@ -113,6 +113,30 @@ o'ziga ta'sir qila olishi (§4) birinchi tekshiriladi.
 | K5 | Oxirgi checkpoint'dan keyingi dumni kesish faqat tashqi guvoh bilan aniqlanadi; `witness_dir` standart o'chiq | spec §7.4 | ma'lum |
 | K6 | `dev` rejimi fail-open (daemon ishlamasa amal ruxsat etiladi) | `tamga-hook` | ataylab; `strict` mavjud |
 
+### Tashqi audit natijalari (2026-10-18)
+
+Mustaqil AI auditor (Antigravity) 11 ta topilma berdi (0 Critical, 3 High, 4 Medium, 3 Low, 1 Info).
+Barchasi tuzatildi (commit'lar `e3d56561`, `4321b6b2`), har biriga regressiya testi qo'shildi:
+
+| Topilma | Mavzu | Tuzatish |
+|---|---|---|
+| H-1 | Fakt tahlili chetlab o'tilishi (`# .env.example` izohi, `bash -c '…'`, MCP massiv) | `facts.rs`: fayl nomlarini alohida, shell o'rovchi ichini va massivning hamma elementini tahlil |
+| H-2 | `SessionEnd`/`--resume` da taint yo'qolishi | `tamgad`: sessiya tugaganda taint o'chirilmaydi (TTL yoki `shred` gacha) |
+| H-3 | Boshqaruv avtorizatsiyasini double-fork/`node` bilan chetlab o'tish | bevosita ota ko'rinmasa fail-closed; `AGENT_HOSTS` kengaytirildi |
+| M-1 | Rust/Python verifikator farqlari (4 holat) | `verify-py`: bool `size`, bo'sh `sig`, UTF-8 kod, off-curve kalit |
+| M-2 | Yo'l `.`/`..` normallashtirilmasligi | `facts.rs`: `lexical_norm`; `.mcp.json`/`.claude.json`/`/./` |
+| M-3 | Qisqargan jurnalda panic; ishga tushishda checkpoint tekshirilmasligi | `logfile`: `saturating_sub`; `tamgad`: ishga tushishda `verify_all` |
+| M-4 | Pipe/spool o'qishida hajm chegarasi yo'qligi (DoS) | 8 MiB chegara |
+| L-1 | `public-key.json` o'chirilsa langar ustiga yozilishi | langar omborda saqlanadi, undan tiklanadi |
+| L-2 | Bo'sh checkpoint fayli OK; size monotonligi | bo'sh fayl rad; `cp.size` kamaymasligi tekshiriladi |
+| L-3 | `tamgad` konsol subsystem (mustahkamlash) | reliz'da `windows_subsystem = "windows"` |
+| I-1 | Hujjat nomuvofiqliklari | `crosscheck_verifiers.py` foydalanish xabari |
+
+**Qoldiq (K1/H-3):** bir foydalanuvchi ichida boshqaruv avtorizatsiyasi mutlaq emas. `parent_known`
+double-fork'ni yopadi, lekin PID qayta ishlatilishi (reuse) yoki jarayonni to'g'ridan-to'g'ri
+`Stop-Process` bilan o'ldirish qolgan vektorlar. To'liq yechim — `tamgad` ni alohida foydalanuvchi
+yoki Windows xizmati sifatida ishga tushirish (ochiq savol).
+
 Auditor K1–K6 ni qum qutisida tasdiqlashi, og'irligini baholashi va tuzatish yo'lini taklif qilishi
 kerak. K1/K2 tuzatishining o'zini ham tekshiring (`crates/tamgad/src/control.rs`): agent daraxtidan `tamga decide` / `tamga stop` rad etiladimi, Studio'dan qabul qilinadimi, `control` yozuvlari to'g'rimi; qoldiq yo'llarni baholang (masalan K1 uchun yana: pipe mijozining PID'i orqali jarayon yo'lini va imzosini tekshirish,
 boshqaruv buyruqlarini jurnalga yozish, agent jarayon daraxtidan kelgan boshqaruv so'rovlarini rad

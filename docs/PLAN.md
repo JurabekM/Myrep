@@ -363,6 +363,14 @@ natija haqiqiy ishga tushirib ko'rsatiladi.
 yubormoqchi bo'ladi → TAMGA bloklaydi. Keyin kimdir jurnaldan bitta yozuvni o'chiradi →
 `tamga-verify` aniq qaysi joy buzilganini qizil bilan ko'rsatadi.
 
+**Tashqi audit (2026-10-18):** mustaqil AI auditor (Antigravity) `e8ba44c9` ustida 11 ta topilma
+berdi (0 Critical, 3 High, 4 Medium, 3 Low, 1 Info). Barchasi tuzatildi va regressiya testi bilan
+yopildi: H-1 (fakt tahlili chetlab o'tilishi — izoh, subshell, MCP massiv), H-2 (SessionEnd/`--resume`
+da taint yo'qolishi), H-3 (boshqaruv avtorizatsiyasini double-fork/`node` bilan chetlab o'tish),
+M-1..M-4, L-1..L-3, I-1. Tafsilot: [AUDIT-GUIDE.md](AUDIT-GUIDE.md) §4. Commit'lar `e3d56561`
+(M/L/I), `4321b6b2` (H). Qoldiq ochiq savol: bir foydalanuvchi ichida boshqaruv avtorizatsiyasini
+mutlaq qilish uchun `tamgad` ni alohida foydalanuvchi/Windows xizmati sifatida ishga tushirish.
+
 ## 8. Sifat qoidalari
 
 - Kriptografiya: faqat tekshirilgan crate'lar. O'z primitivlarimizni yozmaymiz.
