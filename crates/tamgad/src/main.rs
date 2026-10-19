@@ -42,7 +42,17 @@ const TAINT_TTL: Duration = Duration::from_secs(7 * 24 * 3600);
 /// Pipe'dagi bitta so'rov va spool faylining eng katta hajmi (hook `MAX_INPUT` bilan bir xil, M-4).
 const MAX_MSG: u64 = 8 << 20;
 /// So'rov, pipe mijozining PID'i (K1) va javob kanali.
-type Job = (Value, Option<u32>, Reply);
+/// Pipe mijozi haqida: PID (K1) va himoyalangan rejimda Windows identifikatori.
+#[derive(Debug, Clone, Default)]
+struct ClientInfo {
+    pid: Option<u32>,
+    /// Mijoz foydalanuvchisining SID'i (faqat xizmat rejimi).
+    sid: Option<String>,
+    /// Mijoz tokeni UAC bilan ko'tarilganmi (faqat xizmat rejimi).
+    elevated: bool,
+}
+
+type Job = (Value, ClientInfo, Reply);
 
 fn log_line(home: &Home, msg: &str) {
     let p = home.daemon_log();
@@ -101,6 +111,8 @@ struct State {
     file_dedupe: HashMap<(String, &'static str), Instant>,
     /// `shutdown` bajarilgan: yakuniy checkpoint ikki marta yozilmaydi.
     stopped: bool,
+    /// Joriy hook so'rovini yuborgan mijozning SID'i (faqat xizmat rejimi, so'rov davomida).
+    client_sid: Option<String>,
     /// Maxfiy kalitlar ombori (kalit almashtirish uchun).
     store: Box<dyn SecretStore>,
     /// Langar (birinchi) kalit identifikatori — `public-key.json`.
@@ -130,16 +142,16 @@ fn preview(tool_input: &Value) -> String {
 }
 
 impl State {
-    fn handle(&mut self, req: &Value, client: Option<u32>, reply: Reply) {
+    fn handle(&mut self, req: &Value, client: ClientInfo, reply: Reply) {
         let op = req.get("op").and_then(Value::as_str).unwrap_or_default();
         if control::GATED.contains(&op)
-            && let Err(why) = self.gate(op, req, client)
+            && let Err(why) = self.gate(op, req, &client)
         {
             let _ = reply.send(json!({"ok": false, "denied": true, "error": why}));
             return;
         }
         let resp = match req.get("op").and_then(Value::as_str) {
-            Some("hook") => match self.hook(req, None) {
+            Some("hook") => match self.hook_from(req, client.sid.as_deref()) {
                 Outcome::Now(v) => v,
                 Outcome::Defer(seq, mut p) => {
                     p.reply = reply;
@@ -174,11 +186,23 @@ impl State {
     }
 
     /// K1: boshqaruv buyrug'ini yuborgan jarayonni tekshiradi; urinish (qabul yoki rad) jurnalga yoziladi.
-    fn gate(&mut self, op: &str, req: &Value, client: Option<u32>) -> Result<(), String> {
-        let caller = client.and_then(tamga_sensor::identify);
-        let verdict = control::authorize(caller.as_ref(), self.own_dir.as_deref());
+    fn gate(&mut self, op: &str, req: &Value, client: &ClientInfo) -> Result<(), String> {
+        let caller = client.pid.and_then(tamga_sensor::identify);
+        let mut verdict = control::authorize(caller.as_ref(), self.own_dir.as_deref());
+        // Himoyalangan rejim: boshqaruv buyruqlari faqat administrator (UAC tasdiqlangan) tokenidan.
+        // UAC so'rovi xavfsiz ish stolida — uni foydalanuvchining o'zi tasdiqlaydi.
+        if verdict.is_ok() && self.home.is_service() && !client.elevated {
+            verdict = Err(
+                "himoyalangan rejimda boshqaruv buyruqlari faqat administrator (UAC) tasdig'i bilan".into(),
+            );
+        }
         if verdict.is_ok() || self.deny_limit.allow() {
-            let mut c = json!({"op": op, "accepted": verdict.is_ok(), "client": control::client_json(caller.as_ref())});
+            let mut info = control::client_json(caller.as_ref());
+            if self.home.is_service() {
+                info["sid"] = client.sid.clone().map_or(Value::Null, Value::from);
+                info["elevated"] = client.elevated.into();
+            }
+            let mut c = json!({"op": op, "accepted": verdict.is_ok(), "client": info});
             if let Err(why) = &verdict {
                 c["reason"] = why.clone().into();
             }
@@ -300,6 +324,18 @@ impl State {
     }
 
     /// Agent hodisasini yozadi. `spooled` — spool'dan kelgan hodisa: (asl vaqt, hook qarori).
+    /// Pipe'dan kelgan hook: xizmat rejimida yozuvdagi `actor.user` — mijozning SID'i.
+    fn hook_from(&mut self, req: &Value, sid: Option<&str>) -> Outcome {
+        self.client_sid = if self.home.is_service() {
+            sid.map(str::to_owned)
+        } else {
+            None
+        };
+        let out = self.hook(req, None);
+        self.client_sid = None;
+        out
+    }
+
     fn hook(&mut self, req: &Value, spooled: Option<(&str, &Value)>) -> Outcome {
         // Agentlar: Claude Code hook'i va `tamga-mcp-proxy` (agent nomi `mcp-proxy:<server>`).
         let agent = req
@@ -316,6 +352,11 @@ impl State {
             Err(e) => return Outcome::Now(json!({"ok": false, "error": e})),
         };
         let mut body: Map<String, Value> = ev.body;
+        if let Some(sid) = &self.client_sid
+            && let Some(a) = body.get_mut("actor").and_then(Value::as_object_mut)
+        {
+            a.insert("user".into(), sid.clone().into());
+        }
         let tool = input
             .get("tool_name")
             .and_then(Value::as_str)
@@ -975,6 +1016,7 @@ fn open_state(
         corr: observe::Correlator::new(profile),
         file_dedupe: HashMap::new(),
         stopped: false,
+        client_sid: None,
         store,
         anchor_id,
         pending_rotation,
@@ -1004,7 +1046,7 @@ async fn writer(
             job = rx.recv() => match job {
                 // `tamga stop` (o'rnatuvchi/o'chiruvchi ham chaqiradi): javob yakuniy holat yozilgandan keyin.
                 Some((req, client, reply)) if req.get("op").and_then(Value::as_str) == Some("shutdown") => {
-                    match state.gate("shutdown", &req, client) {
+                    match state.gate("shutdown", &req, &client) {
                         Ok(()) => {
                             let size = state.shutdown("tamga stop");
                             let _ = reply.send(json!({"ok": true, "pid": std::process::id(), "checkpoint": size}));
@@ -1046,36 +1088,70 @@ impl State {
     }
 }
 
+/// Himoyalangan rejimda pipe xavfsizlik deskriptori (oddiy rejimda — yo'q, standart DACL).
 #[cfg(windows)]
-async fn serve(pipe: String, tx: mpsc::Sender<Job>) -> std::io::Result<()> {
-    use tokio::io::{AsyncBufReadExt as _, AsyncWriteExt as _, BufReader};
-    use tokio::net::windows::named_pipe::ServerOptions;
+type Secure = Option<std::sync::Arc<tamga_win::service::SecurityDescriptor>>;
+#[cfg(not(windows))]
+type Secure = Option<()>;
 
-    // Birinchi nusxa: boshqa daemon allaqachon ishlayotgan bo'lsa, xato qaytadi.
-    let mut server = ServerOptions::new()
-        .first_pipe_instance(true)
-        .reject_remote_clients(true)
-        .create(&pipe)?;
+/// Windows xizmati nomi (o'rnatuvchi shu nom bilan yaratadi).
+const SERVICE_NAME: &str = "tamgad";
+/// Belgi faylida pipe ko'rsatilmagan bo'lsa.
+const DEFAULT_SERVICE_PIPE: &str = r"\\.\pipe\tamga-service";
+
+#[cfg(windows)]
+async fn serve(pipe: String, tx: mpsc::Sender<Job>, secure: Secure) -> std::io::Result<()> {
+    use tokio::io::{AsyncBufReadExt as _, AsyncReadExt as _, AsyncWriteExt as _, BufReader};
+    use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
+
+    let create = |first: bool| -> std::io::Result<NamedPipeServer> {
+        let mut o = ServerOptions::new();
+        o.first_pipe_instance(first).reject_remote_clients(true);
+        match &secure {
+            Some(sd) => tamga_win::service::create_pipe_server(&o, &pipe, sd),
+            None => o.create(&pipe),
+        }
+    };
+    // Birinchi nusxa: boshqa daemon (yoki nomni egallab olgan jarayon) bo'lsa — xato.
+    let mut server = create(true)?;
+    let service = secure.is_some();
     loop {
         server.connect().await?;
         let conn = server;
         // K1: kim ulanganini bilish uchun (boshqaruv buyruqlari shu PID bo'yicha tekshiriladi).
-        let client = tamga_win::pipe_client_pid(&conn);
-        server = ServerOptions::new()
-            .reject_remote_clients(true)
-            .create(&pipe)?;
+        let pid = tamga_win::pipe_client_pid(&conn);
+        server = create(false)?;
         let tx = tx.clone();
         tokio::spawn(async move {
-            use tokio::io::AsyncReadExt as _;
-            let (r, mut w) = tokio::io::split(conn);
-            // M-4: bitta so'rov qatori 8 MiB bilan cheklanadi (hook MAX_INPUT bilan bir xil), aks holda
-            // `\n` yubormaydigan mahalliy jarayon daemon xotirasini to'ldira oladi.
-            let mut lines = BufReader::new(r.take(MAX_MSG)).lines();
-            while let Ok(Some(line)) = lines.next_line().await {
-                let resp = match serde_json::from_str::<Value>(&line) {
+            // M-4: ulanish 8 MiB bilan cheklanadi. Pipe ajratilmaydi (split) — himoyalangan rejimda
+            // impersonatsiya uchun server handle'i kerak.
+            let mut reader = BufReader::new(conn.take(MAX_MSG));
+            let mut client = ClientInfo {
+                pid,
+                ..ClientInfo::default()
+            };
+            let mut identified = false;
+            let mut line = String::new();
+            loop {
+                line.clear();
+                match reader.read_line(&mut line).await {
+                    Ok(0) | Err(_) => break,
+                    Ok(_) => {}
+                }
+                // Himoyalangan rejim: mijoz identifikatori birinchi xabardan keyin (impersonatsiya talabi).
+                if service && !identified {
+                    identified = true;
+                    if let Some(id) =
+                        tamga_win::service::pipe_client_identity(reader.get_ref().get_ref())
+                    {
+                        client.sid = Some(id.sid);
+                        client.elevated = id.elevated;
+                    }
+                }
+                let resp = match serde_json::from_str::<Value>(line.trim_end()) {
                     Ok(req) => {
                         let (reply_tx, reply_rx) = oneshot::channel();
-                        if tx.send((req, client, reply_tx)).await.is_err() {
+                        if tx.send((req, client.clone(), reply_tx)).await.is_err() {
                             break;
                         }
                         reply_rx
@@ -1086,7 +1162,13 @@ async fn serve(pipe: String, tx: mpsc::Sender<Job>) -> std::io::Result<()> {
                 };
                 let mut out = resp.to_string();
                 out.push('\n');
-                if w.write_all(out.as_bytes()).await.is_err() {
+                if reader
+                    .get_mut()
+                    .get_mut()
+                    .write_all(out.as_bytes())
+                    .await
+                    .is_err()
+                {
                     break;
                 }
             }
@@ -1095,20 +1177,26 @@ async fn serve(pipe: String, tx: mpsc::Sender<Job>) -> std::io::Result<()> {
 }
 
 #[cfg(not(windows))]
-async fn serve(_pipe: String, _tx: mpsc::Sender<Job>) -> std::io::Result<()> {
+async fn serve(_pipe: String, _tx: mpsc::Sender<Job>, _secure: Secure) -> std::io::Result<()> {
     Err(std::io::Error::other(
         "hozircha faqat Windows named pipe qo'llab-quvvatlanadi",
     ))
 }
 
-fn main() -> std::process::ExitCode {
-    let home = Home::from_env();
+/// Daemon tanasi (oddiy va xizmat rejimi uchun umumiy). `stop` — tashqi to'xtatish signali
+/// (xizmat rejimida SCM). Qaytadi: chiqish kodi.
+fn run(
+    home: Home,
+    pipe: String,
+    secure: Secure,
+    stop: impl std::future::Future<Output = ()>,
+) -> u8 {
     let (state, observations) = match open_state(home.clone()) {
         Ok(s) => s,
         Err(e) => {
             log_line(&home, &format!("ishga tushmadi: {e}"));
             eprintln!("tamgad: {e}");
-            return std::process::ExitCode::from(1);
+            return 1;
         }
     };
     let rt = tokio::runtime::Builder::new_current_thread()
@@ -1130,10 +1218,10 @@ fn main() -> std::process::ExitCode {
         }
         let (stopped_tx, stopped_rx) = oneshot::channel();
         let writer = tokio::spawn(writer(state, rx, obs_rx, stopped_tx));
-        let pipe = pipe_name();
         let result = tokio::select! {
-            r = serve(pipe.clone(), tx) => r,
+            r = serve(pipe.clone(), tx, secure) => r,
             _ = tokio::signal::ctrl_c() => Ok(()),
+            () = stop => Ok(()),
             _ = stopped_rx => {
                 // `shutdown` javobi ulanish vazifasi orqali pipe'ga yozib ulgursin.
                 tokio::time::sleep(Duration::from_millis(200)).await;
@@ -1143,18 +1231,87 @@ fn main() -> std::process::ExitCode {
         // `tx` tushirildi — yozuvchi kutilayotganlarni rad etib, oxirgi checkpoint'ni yozib to'xtaydi.
         let _ = writer.await;
         match result {
-            Ok(()) => std::process::ExitCode::SUCCESS,
+            Ok(()) => 0,
             Err(e)
                 if e.kind() == std::io::ErrorKind::PermissionDenied
                     || e.raw_os_error() == Some(231) =>
             {
                 log_line(&home, &format!("{pipe} band — boshqa tamgad ishlayapti"));
-                std::process::ExitCode::SUCCESS
+                0
             }
             Err(e) => {
                 log_line(&home, &format!("pipe xatosi: {e}"));
-                std::process::ExitCode::from(1)
+                1
             }
         }
     })
+}
+
+/// Himoyalangan rejim sozlamalari: `%ProgramData%\TAMGA`, belgidagi pipe, himoyalangan deskriptor.
+#[cfg(windows)]
+fn service_setup() -> Result<(Home, String, Secure), String> {
+    use tamga_store::home::{Deployment, deployment_at, service_root};
+    let root = service_root().ok_or("%ProgramData% aniqlanmadi")?;
+    let pipe = match deployment_at(&root) {
+        Deployment::Service(s) => s.pipe,
+        Deployment::PerUser => DEFAULT_SERVICE_PIPE.to_owned(),
+    };
+    let sd =
+        tamga_win::service::SecurityDescriptor::from_sddl(tamga_win::service::SERVICE_PIPE_SDDL)
+            .map_err(|e| format!("pipe deskriptori: {e}"))?;
+    Ok((Home::service(root), pipe, Some(std::sync::Arc::new(sd))))
+}
+
+/// SCM chaqiradigan xizmat tanasi.
+#[cfg(windows)]
+fn service_body(stop: std::sync::mpsc::Receiver<()>) -> u32 {
+    let (home, pipe, secure) = match service_setup() {
+        Ok(v) => v,
+        Err(_) => return 2,
+    };
+    let (tx, rx) = oneshot::channel::<()>();
+    std::thread::spawn(move || {
+        let _ = stop.recv();
+        let _ = tx.send(());
+    });
+    u32::from(run(home, pipe, secure, async move {
+        let _ = rx.await;
+    }))
+}
+
+fn main() -> std::process::ExitCode {
+    let arg = std::env::args().nth(1);
+    #[cfg(windows)]
+    match arg.as_deref() {
+        // SCM tomonidan: `sc create tamgad binPath= "...\tamgad.exe --service"`.
+        Some("--service") => {
+            return match tamga_win::service::run_as_service(SERVICE_NAME, service_body) {
+                Ok(()) => std::process::ExitCode::SUCCESS,
+                Err(e) => {
+                    eprintln!("tamgad --service: SCM orqali ishga tushirilmagan ({e})");
+                    std::process::ExitCode::from(2)
+                }
+            };
+        }
+        // Himoyalangan rejimni oldingi planda sinash (administrator konsoli, Ctrl+C bilan to'xtaydi).
+        Some("--service-console") => {
+            return match service_setup() {
+                Ok((home, pipe, secure)) => {
+                    std::process::ExitCode::from(run(home, pipe, secure, std::future::pending()))
+                }
+                Err(e) => {
+                    eprintln!("tamgad: {e}");
+                    std::process::ExitCode::from(2)
+                }
+            };
+        }
+        _ => {}
+    }
+    let _ = arg;
+    std::process::ExitCode::from(run(
+        Home::from_env(),
+        pipe_name(),
+        None,
+        std::future::pending(),
+    ))
 }

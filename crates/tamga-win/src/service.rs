@@ -326,6 +326,76 @@ pub fn pipe_server_image(pipe: &impl AsRawHandle) -> Option<PathBuf> {
     (ok != 0).then(|| PathBuf::from(String::from_utf16_lossy(&buf[..size as usize])))
 }
 
+// ---------------------------------------------------------------- Windows xizmati (SCM)
+
+/// Xizmat tanasi: SCM `Stop`/`Shutdown` yuborganda `stop` kanaliga signal tushadi. Qaytgan qiymat —
+/// xizmatga xos chiqish kodi (0 — muvaffaqiyat).
+pub type ServiceBody = fn(stop: std::sync::mpsc::Receiver<()>) -> u32;
+
+static SERVICE_NAME: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+static SERVICE_BODY: std::sync::OnceLock<ServiceBody> = std::sync::OnceLock::new();
+
+// Makro `extern "system"` kirish nuqtasini yaratadi (ichida `unsafe` bor — shuning uchun shu crate'da).
+windows_service::define_windows_service!(ffi_service_main, service_main);
+
+fn service_main(_args: Vec<std::ffi::OsString>) {
+    use windows_service::service::{
+        ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus,
+        ServiceType,
+    };
+    use windows_service::service_control_handler::{self, ServiceControlHandlerResult};
+
+    let (Some(name), Some(body)) = (SERVICE_NAME.get(), SERVICE_BODY.get()) else {
+        return;
+    };
+    let (tx, rx) = std::sync::mpsc::channel();
+    let handler = move |ev| match ev {
+        ServiceControl::Stop | ServiceControl::Shutdown => {
+            let _ = tx.send(());
+            ServiceControlHandlerResult::NoError
+        }
+        ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
+        _ => ServiceControlHandlerResult::NotImplemented,
+    };
+    let Ok(status) = service_control_handler::register(name, handler) else {
+        return;
+    };
+    let report = |state, accept, exit| {
+        let _ = status.set_service_status(ServiceStatus {
+            service_type: ServiceType::OWN_PROCESS,
+            current_state: state,
+            controls_accepted: accept,
+            exit_code: exit,
+            checkpoint: 0,
+            wait_hint: std::time::Duration::from_secs(10),
+            process_id: None,
+        });
+    };
+    report(
+        ServiceState::Running,
+        ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN,
+        ServiceExitCode::Win32(0),
+    );
+    let code = body(rx);
+    report(
+        ServiceState::Stopped,
+        ServiceControlAccept::empty(),
+        if code == 0 {
+            ServiceExitCode::Win32(0)
+        } else {
+            ServiceExitCode::ServiceSpecific(code)
+        },
+    );
+}
+
+/// SCM dispetcherini ishga tushiradi (bloklaydi). Faqat xizmat sifatida (SCM tomonidan) ishga
+/// tushirilganda ishlaydi; oddiy jarayondan chaqirilsa xato qaytadi.
+pub fn run_as_service(name: &str, body: ServiceBody) -> io::Result<()> {
+    let _ = SERVICE_NAME.set(name.to_owned());
+    let _ = SERVICE_BODY.set(body);
+    windows_service::service_dispatcher::start(name, ffi_service_main).map_err(io::Error::other)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
