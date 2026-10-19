@@ -296,6 +296,29 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
         }
         ["stop"] => stop(),
         ["key", rest @ ..] => key(&home, rest),
+        ["config", "set", k, v] => {
+            // Himoyalangan rejimda daemon faqat administrator (UAC) tokenidan qabul qiladi.
+            let value: Value = match *k {
+                "mode" | "ask_route" => Value::from(*v),
+                "ask_timeout_secs" => v
+                    .parse::<u64>()
+                    .map(Value::from)
+                    .map_err(|_| "butun son kerak")?,
+                _ => return Err("kalit: mode | ask_route | ask_timeout_secs".into()),
+            };
+            let mut req = json!({"op": "config_set"});
+            req[*k] = value;
+            let r = daemon_req(&req)?;
+            if r["ok"] == true {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&r["config"]).expect("json")
+                );
+                Ok(ExitCode::SUCCESS)
+            } else {
+                Err(r["error"].as_str().unwrap_or("xato").to_owned())
+            }
+        }
         ["pending"] => {
             let v = daemon("pending")?;
             let items = v["items"].as_array().cloned().unwrap_or_default();

@@ -15,4 +15,5 @@ foydalanish:
   tamga key rotate [--reason scheduled|compromise|restore]   imzo kalitini almashtirish
   tamga key backup --out <fayl>               kalitlarni parol bilan shifrlangan zaxiraga
   tamga key restore <fayl> [--force]          zaxiradan tiklash (daemon to'xtatilgan bo'lsin)
+  tamga config set mode|ask_route|ask_timeout_secs <qiymat>   sozlama (himoyalangan rejimda — administrator)
   tamga shred <session>                       sessiya payload'larini unutish

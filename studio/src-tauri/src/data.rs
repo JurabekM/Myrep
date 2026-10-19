@@ -169,9 +169,16 @@ pub fn record_detail(home: &Home, records: &[Value], seq: u64) -> Value {
         return json!({"ok": false, "error": "yozuv topilmadi"});
     };
     let session = r["session"].as_str().unwrap_or_default();
-    let vault = tamga_store::secrets::default_store(home)
-        .and_then(|s| tamga_store::keystore::vault_master(s.as_ref()))
-        .and_then(|m| tamga_store::vault::Vault::new(home.vault(), m));
+    // Himoyalangan rejimda payload'lar faqat xizmat ichida ochiladi (kalitlar xizmatga tegishli).
+    let vault = if crate::protected() {
+        Err(tamga_store::StoreError::Secret(
+            "himoyalangan rejim: payload'lar faqat xizmatda".into(),
+        ))
+    } else {
+        tamga_store::secrets::default_store(home)
+            .and_then(|s| tamga_store::keystore::vault_master(s.as_ref()))
+            .and_then(|m| tamga_store::vault::Vault::new(home.vault(), m))
+    };
     let mut payloads = Vec::new();
     for (name, reference) in [("input", &r["tool"]["input"]), ("result", &r["result"])] {
         if reference.is_null() {

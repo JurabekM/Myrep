@@ -4088,6 +4088,7 @@ dependencies = [
  "tamga-core",
  "tamga-redact",
  "tamga-store",
+ "tamga-win",
  "tauri",
  "tauri-build",
 ]

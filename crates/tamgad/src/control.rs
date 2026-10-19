@@ -17,7 +17,7 @@ use serde_json::{Map, Value, json};
 use tamga_sensor::Caller;
 
 /// Chaqiruvchisi tekshiriladigan buyruqlar. `checkpoint` faqat imzo qo'shadi — cheklanmaydi.
-pub const GATED: [&str; 3] = ["decide", "shutdown", "rotate"];
+pub const GATED: [&str; 4] = ["decide", "shutdown", "rotate", "config_set"];
 /// Boshqaruv dasturlari (fayl nomi, kengaytmasiz).
 const TRUSTED: [&str; 2] = ["tamga", "tamga-studio"];
 

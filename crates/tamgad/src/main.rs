@@ -170,6 +170,7 @@ impl State {
             },
             Some("pending") => self.pending_list(),
             Some("rotate") => self.rotate(req),
+            Some("config_set") => self.config_set(req),
             Some("decide") => self.decide(req),
             Some("policies") => json!({
                 "ok": true,
@@ -558,6 +559,37 @@ impl State {
                     self.key_id
                 ),
             ),
+        }
+    }
+
+    /// `tamga config set` (himoyalangan rejimda foydalanuvchi config faylini o'zi yoza olmaydi):
+    /// ruxsat etilgan maydonlarni tekshirib yozadi. O'zgarish `tick` dagi `control` yozuviga tushadi.
+    fn config_set(&mut self, req: &Value) -> Value {
+        let mut c = self.home.config();
+        let s = |k: &str| req.get(k).and_then(Value::as_str);
+        if let Some(m) = s("mode") {
+            c.mode = match m {
+                "strict" => Mode::Strict,
+                "dev" => Mode::Dev,
+                _ => return json!({"ok": false, "error": "mode: strict yoki dev"}),
+            };
+        }
+        if let Some(r) = s("ask_route") {
+            c.ask_route = match r {
+                "agent" => AskRoute::Agent,
+                "studio" => AskRoute::Studio,
+                _ => return json!({"ok": false, "error": "ask_route: agent yoki studio"}),
+            };
+        }
+        if let Some(t) = req.get("ask_timeout_secs") {
+            match t.as_u64().filter(|t| (10..=3600).contains(t)) {
+                Some(t) => c.ask_timeout_secs = t,
+                None => return json!({"ok": false, "error": "ask_timeout_secs: 10..3600"}),
+            }
+        }
+        match self.home.write_config(&c) {
+            Ok(()) => json!({"ok": true, "config": c.to_json()}),
+            Err(e) => json!({"ok": false, "error": e.to_string()}),
         }
     }
 

@@ -26,6 +26,8 @@ export function SettingsScreen({ status }: { status: Status | null }) {
     refresh();
   };
   const c = data?.config;
+  const { data: dep } = usePoll(() => call<{ mode: string; root?: string; install_dir?: string }>("deployment_info"), 15000);
+  const protectedMode = dep?.mode === "service";
   const { data: integ, refresh: refreshInteg } = usePoll(
     () => call<{ ok: boolean; settings: string; installed: boolean | null; error: string | null; hook: string | null }>("integration_status"),
     5000,
@@ -36,7 +38,13 @@ export function SettingsScreen({ status }: { status: Status | null }) {
   const rotate = async (reason: string) => {
     setRotateArm(null);
     const r = await call<{ ok: boolean; error?: string; from?: string; to?: string; seq?: number }>("rotate_key", { reason });
-    setKeyMsg(r.ok ? `Almashtirildi (yozuv #${r.seq}): ${r.from} → ${r.to}. Yangi zaxira oling: tamga key backup --out <fayl>` : (r.error ?? "xato"));
+    setKeyMsg(
+      !r.ok
+        ? (r.error ?? "xato")
+        : r.to
+          ? `Almashtirildi (yozuv #${r.seq}): ${r.from} → ${r.to}. Yangi zaxira oling: tamga key backup --out <fayl>`
+          : "Almashtirildi (administrator tasdig'i bilan). Yangi kalit Yaxlitlik ekranida ko'rinadi.",
+    );
   };
   const integrate = async (action: "install" | "uninstall") => {
     const r = await call<{ ok: boolean; error?: string; changed?: number }>("integrate", { action });
@@ -45,6 +53,17 @@ export function SettingsScreen({ status }: { status: Status | null }) {
   };
   return (
     <div className="page settings">
+      <section>
+        <h3>O'rnatish rejimi</h3>
+        <div className="actions-row">
+          <span className={`pill ${protectedMode ? "allow" : "muted"}`}>{protectedMode ? "himoyalangan (Windows xizmati)" : "oddiy (foydalanuvchi)"}</span>
+        </div>
+        <p className="dim" style={{ marginTop: 8 }}>
+          {protectedMode
+            ? `Daemon alohida xizmat hisobida ishlaydi; jurnal va kalitlar ${dep?.root ?? "%ProgramData%\\TAMGA"} da, agent ularni o'zgartira olmaydi. Qaror, kalit almashtirish va sozlamalar administrator tasdig'ini (UAC) so'raydi.`
+            : "Daemon sizning foydalanuvchingiz huquqida ishlaydi. Agentdan to'liq ajratish uchun o'rnatuvchida «Barcha foydalanuvchilar uchun» (himoyalangan rejim) tanlang."}
+        </p>
+      </section>
       <section>
         <h3>Claude Code integratsiyasi</h3>
         <p className="dim">

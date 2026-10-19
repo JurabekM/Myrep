@@ -23,5 +23,8 @@ tamga-store = { workspace = true }
 tamga-redact = { workspace = true }
 serde_json = { workspace = true }
 
+[target.'cfg(windows)'.dependencies]
+tamga-win = { workspace = true }
+
 [lints]
 workspace = true

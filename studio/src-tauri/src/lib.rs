@@ -75,6 +75,14 @@ async fn policies() -> Value {
 #[tauri::command]
 async fn decide(seq: u64, verdict: String, scope: String) -> Value {
     tauri::async_runtime::spawn_blocking(move || {
+        if protected() {
+            let seq = seq.to_string();
+            let mut args = vec!["decide", seq.as_str(), verdict.as_str()];
+            if scope == "session" {
+                args.push("--session");
+            }
+            return elevated(&args);
+        }
         daemon(json!({"op": "decide", "seq": seq, "verdict": verdict, "scope": scope}))
     })
     .await
@@ -84,9 +92,14 @@ async fn decide(seq: u64, verdict: String, scope: String) -> Value {
 /// Imzo kalitini almashtirish (spec §7.5): yozuv + eski kalit checkpoint'i + yangi kalit.
 #[tauri::command]
 async fn rotate_key(reason: String) -> Value {
-    tauri::async_runtime::spawn_blocking(move || daemon(json!({"op": "rotate", "reason": reason})))
-        .await
-        .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
+    tauri::async_runtime::spawn_blocking(move || {
+        if protected() {
+            return elevated(&["key", "rotate", "--reason", reason.as_str()]);
+        }
+        daemon(json!({"op": "rotate", "reason": reason}))
+    })
+    .await
+    .unwrap_or_else(|e| json!({"ok": false, "error": e.to_string()}))
 }
 
 #[tauri::command]
@@ -170,6 +183,18 @@ fn config_set(
     mode: Option<String>,
     ask_route: Option<String>,
 ) -> Value {
+    if protected() {
+        // Himoyalangan rejim: config xizmat papkasida — daemon orqali, administrator tasdig'i bilan.
+        for (k, v) in [("mode", &mode), ("ask_route", &ask_route)] {
+            if let Some(v) = v {
+                let r = elevated(&["config", "set", k, v.as_str()]);
+                if r["ok"] != true {
+                    return r;
+                }
+            }
+        }
+        return json!({"ok": true, "config": state.home.config().to_json()});
+    }
     let mut c = state.home.config();
     if let Some(m) = mode {
         c.mode = if m == "strict" {
@@ -201,14 +226,20 @@ async fn export_bundle(
     let home = state.home.clone();
     tauri::async_runtime::spawn_blocking(move || {
         use tamga_store::export::{ExportOptions, default_path, export};
-        let vault = if include_payloads {
+        let vault = if include_payloads && !protected() {
             let store = tamga_store::secrets::default_store(&home).map_err(|e| e.to_string())?;
             let master = tamga_store::keystore::vault_master(store.as_ref()).map_err(|e| e.to_string())?;
             Some(tamga_store::vault::Vault::new(home.vault(), master).map_err(|e| e.to_string())?)
         } else {
             None
         };
-        let opts = ExportOptions { sessions, include_payloads, out: default_path(&home) };
+        let name = default_path(&home)
+            .file_name()
+            .map(std::ffi::OsStr::to_owned)
+            .unwrap_or_else(|| "tamga-evidence.zip".into());
+        let out = exports_dir(&home).join(name);
+        let include_payloads = include_payloads && vault.is_some();
+        let opts = ExportOptions { sessions, include_payloads, out };
         let r = export(&home, vault.as_ref(), &opts).map_err(|e| e.to_string())?;
         Ok::<_, String>(json!({
             "ok": true, "path": r.path.display().to_string(), "records": r.records, "checkpoints": r.checkpoints,
@@ -222,7 +253,7 @@ async fn export_bundle(
 /// Avval yaratilgan dalil to'plamlari (eng yangisi birinchi).
 #[tauri::command]
 fn list_exports(state: tauri::State<'_, AppState>) -> Value {
-    let dir = state.home.root().join("exports");
+    let dir = exports_dir(&state.home);
     let mut items: Vec<(std::time::SystemTime, Value)> = std::fs::read_dir(&dir)
         .into_iter()
         .flatten()
@@ -242,7 +273,7 @@ fn list_exports(state: tauri::State<'_, AppState>) -> Value {
 /// Faylni Explorer'da belgilab ko'rsatadi (faqat TAMGA eksport papkasi ichidagi fayllar).
 #[tauri::command]
 fn reveal(state: tauri::State<'_, AppState>, path: String) -> Value {
-    let dir = state.home.root().join("exports");
+    let dir = exports_dir(&state.home);
     let p = std::path::PathBuf::from(&path);
     let inside = p
         .canonicalize()
@@ -260,6 +291,64 @@ fn reveal(state: tauri::State<'_, AppState>, path: String) -> Value {
     {
         Ok(_) => json!({"ok": true}),
         Err(e) => json!({"ok": false, "error": e.to_string()}),
+    }
+}
+
+/// Mashina himoyalangan (Windows xizmati) rejimidami.
+pub(crate) fn protected() -> bool {
+    matches!(
+        tamga_store::home::deployment(),
+        tamga_store::home::Deployment::Service(_)
+    )
+}
+
+/// Himoyalangan rejim: boshqaruv buyrug'i `tamga.exe` ni administrator sifatida (UAC) ishga
+/// tushirib bajariladi — daemon faqat ko'tarilgan tokendan qabul qiladi.
+fn elevated(args: &[&str]) -> Value {
+    #[cfg(windows)]
+    {
+        let Some(exe) = sibling("tamga") else {
+            return json!({"ok": false, "error": "tamga.exe topilmadi"});
+        };
+        match tamga_win::service::run_elevated(&exe, args) {
+            Ok(0) => json!({"ok": true, "elevated": true}),
+            Ok(c) => {
+                json!({"ok": false, "error": format!("tamga.exe xato bilan tugadi (kod {c})")})
+            }
+            Err(e) if e.raw_os_error() == Some(1223) => {
+                json!({"ok": false, "error": "UAC so'rovi rad etildi"})
+            }
+            Err(e) => json!({"ok": false, "error": e.to_string()}),
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = args;
+        json!({"ok": false, "error": "faqat Windows"})
+    }
+}
+
+/// Eksport papkasi: himoyalangan rejimda `%ProgramData%` ga yozib bo'lmaydi — foydalanuvchi papkasi.
+fn exports_dir(home: &Home) -> std::path::PathBuf {
+    if protected()
+        && let Some(local) = std::env::var_os("LOCALAPPDATA")
+    {
+        return std::path::PathBuf::from(local)
+            .join("tamga")
+            .join("exports");
+    }
+    home.root().join("exports")
+}
+
+/// O'rnatish turi (Studio interfeysi uchun).
+#[tauri::command]
+fn deployment_info() -> Value {
+    match tamga_store::home::deployment() {
+        tamga_store::home::Deployment::Service(s) => json!({
+            "mode": "service", "pipe": s.pipe,
+            "root": s.root.display().to_string(), "install_dir": s.install_dir.display().to_string(),
+        }),
+        tamga_store::home::Deployment::PerUser => json!({"mode": "per-user"}),
     }
 }
 
@@ -323,6 +412,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             app_info,
+            deployment_info,
             status,
             pending,
             policies,

@@ -326,6 +326,91 @@ pub fn pipe_server_image(pipe: &impl AsRawHandle) -> Option<PathBuf> {
     (ok != 0).then(|| PathBuf::from(String::from_utf16_lossy(&buf[..size as usize])))
 }
 
+// ---------------------------------------------------------------- UAC bilan ishga tushirish
+
+/// Argumentni Windows buyruq qatori qoidalari bo'yicha qo'shtirnoqqa oladi.
+fn quote_arg(a: &str) -> String {
+    if !a.is_empty() && !a.chars().any(|c| c.is_whitespace() || c == '"') {
+        return a.to_owned();
+    }
+    let mut out = String::from("\"");
+    let mut backslashes = 0;
+    for c in a.chars() {
+        match c {
+            '\\' => backslashes += 1,
+            '"' => {
+                out.push_str(&"\\".repeat(backslashes * 2 + 1));
+                out.push('"');
+                backslashes = 0;
+            }
+            _ => {
+                out.push_str(&"\\".repeat(backslashes));
+                out.push(c);
+                backslashes = 0;
+            }
+        }
+    }
+    out.push_str(&"\\".repeat(backslashes * 2));
+    out.push('"');
+    out
+}
+
+/// `exe` ni administrator sifatida ishga tushiradi (UAC so'rovi xavfsiz ish stolida — uni faqat
+/// foydalanuvchi tasdiqlaydi), tugashini kutadi va chiqish kodini qaytaradi. Foydalanuvchi rad etsa —
+/// `ERROR_CANCELLED` (1223) xatosi.
+#[allow(unsafe_code)]
+pub fn run_elevated(exe: &std::path::Path, args: &[&str]) -> io::Result<u32> {
+    use windows_sys::Win32::System::Threading::{
+        GetExitCodeProcess, INFINITE, WaitForSingleObject,
+    };
+    use windows_sys::Win32::UI::Shell::{
+        SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW, ShellExecuteExW,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_HIDE;
+
+    let verb = wide("runas");
+    let file = wide(&exe.to_string_lossy());
+    let params = wide(
+        &args
+            .iter()
+            .map(|a| quote_arg(a))
+            .collect::<Vec<_>>()
+            .join(" "),
+    );
+    let mut info = SHELLEXECUTEINFOW {
+        cbSize: u32::try_from(size_of::<SHELLEXECUTEINFOW>()).expect("o'lcham"),
+        fMask: SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC,
+        lpVerb: verb.as_ptr(),
+        lpFile: file.as_ptr(),
+        lpParameters: params.as_ptr(),
+        nShow: SW_HIDE,
+        ..Default::default()
+    };
+    // SAFETY: `info` to'g'ri `cbSize` bilan to'ldirilgan; satr ko'rsatkichlari NUL bilan tugaydigan,
+    // chaqiruv davomida tirik `verb`/`file`/`params` buferlariga ishora qiladi. Muvaffaqiyatda API
+    // `hProcess` ga bizga tegishli jarayon handle'ini yozadi (`SEE_MASK_NOCLOSEPROCESS`).
+    if unsafe { ShellExecuteExW(&mut info) } == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    let h = info.hProcess;
+    if h.is_null() {
+        return Err(io::Error::other("jarayon handle'i qaytmadi"));
+    }
+    let mut code = 0u32;
+    // SAFETY: `h` — ochiq, bizga tegishli jarayon handle'i; kutish va chiqish kodini o'qish, so'ng bir
+    // marta yopish. `code` — 4 baytli chiqish.
+    let ok = unsafe {
+        WaitForSingleObject(h, INFINITE);
+        let ok = GetExitCodeProcess(h, &mut code);
+        CloseHandle(h);
+        ok
+    };
+    if ok == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(code)
+}
+
 // ---------------------------------------------------------------- Windows xizmati (SCM)
 
 /// Xizmat tanasi: SCM `Stop`/`Shutdown` yuborganda `stop` kanaliga signal tushadi. Qaytgan qiymat —
@@ -410,6 +495,15 @@ mod tests {
             dpapi_unprotect(&ct, b"boshqa-maqsad").is_err(),
             "entropy bog'langan"
         );
+    }
+
+    #[test]
+    fn arguments_are_quoted_for_the_command_line() {
+        assert_eq!(quote_arg("decide"), "decide");
+        assert_eq!(quote_arg("a b"), "\"a b\"");
+        assert_eq!(quote_arg(""), "\"\"");
+        assert_eq!(quote_arg("x\"y"), "\"x\\\"y\"");
+        assert_eq!(quote_arg(r"C:\Program Files\"), "\"C:\\Program Files\\\\\"");
     }
 
     #[test]
