@@ -1,0 +1,15 @@
+[package]
+name = "tamga-mcp-proxy"
+description = "stdio MCP proxy: istalgan MCP serverni o'rab, tools/call chaqiruvlarini yozadi va siyosat bilan bloklaydi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+tamga-store = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

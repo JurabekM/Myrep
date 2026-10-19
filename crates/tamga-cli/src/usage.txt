@@ -1,0 +1,19 @@
+foydalanish:
+  tamga init                                  kalitlar va papkalarni tayyorlash
+  tamga status                                daemon holati
+  tamga stop                                  daemon'ni to'xtatish (oxirgi checkpoint bilan)
+  tamga verify                                o'z jurnalini to'liq tekshirish
+  tamga checkpoint                            darhol checkpoint yozish
+  tamga pending                               Studio navbatida kutilayotgan 'ask' so'rovlari
+  tamga decide <seq> allow|deny [--session]   kutilayotgan so'rovga inson qarori
+  tamga install claude-code --project <dir>   loyiha .claude/settings.json ga hook qo'shish
+  tamga install claude-code --user            ~/.claude/settings.json ga hook qo'shish
+  tamga uninstall claude-code (--project <dir> | --user)
+  tamga show <seq>                            yozuv va uning payload'larini vault'dan ochish
+  tamga export [--out f.zip] [--session id]... [--payloads]   auditor uchun dalil to'plami
+  tamga key show                              langar kalit, almashtirishlar, faol kalit
+  tamga key rotate [--reason scheduled|compromise|restore]   imzo kalitini almashtirish
+  tamga key backup --out <fayl>               kalitlarni parol bilan shifrlangan zaxiraga
+  tamga key restore <fayl> [--force]          zaxiradan tiklash (daemon to'xtatilgan bo'lsin)
+  tamga config set mode|ask_route|ask_timeout_secs <qiymat>   sozlama (himoyalangan rejimda — administrator)
+  tamga shred <session>                       sessiya payload'larini unutish

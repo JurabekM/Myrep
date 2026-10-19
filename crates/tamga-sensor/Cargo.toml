@@ -1,0 +1,16 @@
+[package]
+name = "tamga-sensor"
+description = "Admin huquqisiz OS sensori: agent jarayon daraxti, TCP ulanishlari va fayl o'zgarishlari"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+netstat2 = "0.11"
+notify = "8"
+
+[lints]
+workspace = true

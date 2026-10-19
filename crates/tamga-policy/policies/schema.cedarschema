@@ -1,0 +1,29 @@
+// TAMGA siyosat sxemasi. Kontekst maydonlari tamga-policy/src/facts.rs dagi `Facts` bilan bir xil.
+namespace Tamga {
+  entity Agent;
+  entity Tool;
+
+  action "use_tool" appliesTo {
+    principal: [Agent],
+    resource: [Tool],
+    context: {
+      tool: String,
+      command: String,
+      path: String,
+      url: String,
+      cwd: String,
+      network_egress: Bool,
+      reads_secret_file: Bool,
+      sends_tainted_secret: Bool,
+      contains_secret_pattern: Bool,
+      session_secret_read: Bool,
+      pipes_to_shell: Bool,
+      destructive: Bool,
+      destructive_outside_workspace: Bool,
+      force_push: Bool,
+      writes_outside_workspace: Bool,
+      system_change: Bool,
+      tamper_with_tamga: Bool,
+    }
+  };
+}

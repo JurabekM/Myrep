@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "publisher": "TAMGA",
+    "copyright": "Apache-2.0",
+    "longDescription": "TAMGA — AI agentlar uchun qora quti: har bir harakatni bajarilishidan oldin siyosat bilan tekshiradi, post-kvant imzoli o'zgartirib bo'lmaydigan jurnalga yozadi va OS bilan solishtiradi.",
+    "externalBin": [
+      "binaries/tamgad",
+      "binaries/tamga-hook",
+      "binaries/tamga-mcp-proxy",
+      "binaries/tamga",
+      "binaries/tamga-verify"
+    ],
+    "resources": {
+      "service-acl.ps1": "service-acl.ps1"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": [
+          "Uzbek",
+          "English"
+        ],
+        "installerHooks": "installer-hooks.nsh",
+        "customLanguageFiles": {
+          "Uzbek": "nsis/Uzbek.nsh"
+        }
+      }
+    }
+  }
+}

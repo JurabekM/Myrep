@@ -1,0 +1,11 @@
+scripts/icon_preview.png
+/target/
+**/node_modules/
+__pycache__/
+*.pyc
+
+# Auditorga beriladigan paket (yig'iladi, repo'ga kirmaydi)
+/audit-package/
+
+# Yig'ilgan o'rnatuvchilar (repo'ga kirmaydi)
+/dist/

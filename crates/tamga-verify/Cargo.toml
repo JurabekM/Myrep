@@ -1,0 +1,15 @@
+[package]
+name = "tamga-verify"
+description = "Mustaqil verifikator: faqat tamga-core'ga tayanib jurnalni tekshiradi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+tamga-core = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true
