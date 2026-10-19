@@ -4205,5 +4205,9 @@
   },
   "mf_shores_debt": "Qaysi qarz",
   "mf_shores_noDebts": "Uy makonida faol qarz yoʻq — avval «Qarzlar»da yozing.",
-  "mf_shores_payDebt": "Qarzni toʻlash"
+  "mf_shores_payDebt": "Qarzni toʻlash",
+  "error_RESERVE_INSUFFICIENT": "Qorovul pulda buncha pul yoʻq",
+  "error_STARTUP_EXCEEDS_TARGET": "Ish boshlash summasi qaytish jamgʻarmasi maqsadidan katta boʻlmasin",
+  "error_OUTCOME_ALREADY_SET": "Bu qarorning natijasi allaqachon belgilangan",
+  "error_BEFORE_DECISION": "Natija sanasi qaror sanasidan oldin boʻlmasin"
 }

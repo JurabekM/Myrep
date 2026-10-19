@@ -202,6 +202,8 @@ const COMMANDS: &[&str] = &[
     "mf_record_decision",
     "mf_decisions",
     "mf_decision_questions",
+    "mf_set_plan",
+    "mf_set_outcome",
 ];
 
 fn main() {

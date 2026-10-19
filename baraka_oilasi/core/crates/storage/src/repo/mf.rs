@@ -193,7 +193,9 @@ pub fn has_records_other_than(
               + (SELECT COUNT(*) FROM expenses WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
                     AND currency <> ?3)
               + (SELECT COUNT(*) FROM mf_moves WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
-                    AND currency <> ?3)",
+                    AND currency <> ?3)
+              + (SELECT COUNT(*) FROM mf_reserve_moves WHERE household_id = ?1 AND space_id = ?2
+                    AND deleted_at IS NULL AND currency <> ?3)",
         params![s.household_id, s.space_id, currency],
         |r| r.get(0),
     )?;
@@ -578,6 +580,137 @@ pub fn decisions(c: &Connection, s: &SpaceScope) -> Result<Vec<MfDecisionRow>, S
             wait_until: r.get(10)?,
             choice: r.get(11)?,
             note: r.get(12)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+// ---- M4: qorovul pul, ish boshlash summasi, qaror natijasi ----
+
+/// Qorovul pul harakati — `MfMoveRow` shaklida (komissiya 0, uyda olingan yo'q).
+pub fn insert_reserve_move(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    row: &MfMoveRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_reserve_moves (id, household_id, space_id, kind, amount_minor, currency, occurred_on,
+            note, created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9, ?10, ?10)",
+        params![row.id, s.household_id, s.space_id, row.kind, row.amount_minor, row.currency,
+            row.occurred_on, row.note, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+/// `[from, to)` oralig'idagi qorovul pul harakatlari.
+pub fn reserve_moves_between(
+    c: &Connection,
+    s: &SpaceScope,
+    from: &str,
+    to: &str,
+) -> Result<Vec<MfMoveRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, kind, amount_minor, currency, 0, NULL, NULL, occurred_on, note FROM mf_reserve_moves
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
+         AND occurred_on >= ?3 AND occurred_on < ?4 ORDER BY occurred_on, created_at",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id, from, to], map)?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct MfPlanRow {
+    pub reserve_months: Option<i64>,
+    pub startup_minor: Option<i64>,
+    pub startup_currency: Option<String>,
+    pub startup_idea_id: Option<String>,
+}
+
+pub fn plan_info(c: &Connection, s: &SpaceScope) -> Result<MfPlanRow, StorageError> {
+    Ok(c.query_row(
+        "SELECT reserve_months, startup_minor, startup_currency, startup_idea_id FROM mf_settings
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id],
+        |r| {
+            Ok(MfPlanRow {
+                reserve_months: r.get(0)?,
+                startup_minor: r.get(1)?,
+                startup_currency: r.get(2)?,
+                startup_idea_id: r.get(3)?,
+            })
+        },
+    )
+    .optional()?
+    .unwrap_or_default())
+}
+
+pub fn set_plan(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    p: &MfPlanRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        "UPDATE mf_settings SET reserve_months = ?3, startup_minor = ?4, startup_currency = ?5,
+            startup_idea_id = ?6, updated_at = ?7, updated_by_device_id = ?8, version = version + 1
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
+        params![
+            s.household_id,
+            s.space_id,
+            p.reserve_months,
+            p.startup_minor,
+            p.startup_currency,
+            p.startup_idea_id,
+            m.now,
+            m.device_id
+        ],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfOutcomeRow {
+    pub id: String,
+    pub decision_id: String,
+    pub outcome: String,
+    pub outcome_on: String,
+    pub note: Option<String>,
+}
+
+pub fn insert_outcome(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    o: &MfOutcomeRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_decision_outcomes (id, household_id, space_id, decision_id, outcome, outcome_on, note,
+            created_at, origin_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        params![o.id, s.household_id, s.space_id, o.decision_id, o.outcome, o.outcome_on, o.note, m.now,
+            m.device_id],
+    )?;
+    Ok(())
+}
+
+pub fn outcomes(c: &Connection, s: &SpaceScope) -> Result<Vec<MfOutcomeRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, decision_id, outcome, outcome_on, note FROM mf_decision_outcomes
+         WHERE household_id = ?1 AND space_id = ?2",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(MfOutcomeRow {
+            id: r.get(0)?,
+            decision_id: r.get(1)?,
+            outcome: r.get(2)?,
+            outcome_on: r.get(3)?,
+            note: r.get(4)?,
         })
     })?;
     Ok(rows.collect::<Result<_, _>>()?)

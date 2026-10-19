@@ -2556,5 +2556,9 @@
   "mf_flag_LARGE_SHARE": "Это {percent} % привезённого — очень большая доля, особенно в период охлаждения (до {date}).",
   "mf_shores_debt": "Какой долг",
   "mf_shores_noDebts": "В пространстве «Дом» нет активных долгов — сначала запишите в «Долгах».",
-  "mf_shores_payDebt": "Оплатить долг"
+  "mf_shores_payDebt": "Оплатить долг",
+  "error_RESERVE_INSUFFICIENT": "В резерве нет такой суммы",
+  "error_STARTUP_EXCEEDS_TARGET": "Сумма на начало дела не должна превышать цель фонда возвращения",
+  "error_OUTCOME_ALREADY_SET": "Итог этого решения уже отмечен",
+  "error_BEFORE_DECISION": "Дата итога не может быть раньше даты решения"
 }

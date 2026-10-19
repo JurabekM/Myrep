@@ -134,7 +134,7 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - **Qorovul pul** — chet eldagi kutilmagan xarajat (kasallik, ishsiz qolish) uchun **qaytish jamg'armasidan alohida** pul, ish valyutasida. Harakatlar: «Qorovul pulga», «Qorovul puldan» (sabab majburiy, qoldiqdan oshmaydi), «Qorovul pul (boshlang'ich)».
 - **Maqsad** = oxirgi to'liq oylardagi (yozuvi borlari, ko'pi bilan 3 ta) **chet eldagi o'rtacha oylik xarajat × N oy**; N — sozlamada, 1–3, standart **1**. Tarix bo'lmasa — maqsad yo'q (`NO_HISTORY`), qo'lda kiritilmaydi.
 - **Navbat:** o'z ulushi avval qorovul pulga, to'lgach — qaytish jamg'armasiga. Maoshdan keyingi taklif ikkiga bo'linadi: `qorovulga = min(ulush, yetmagani)`, `jamg'armaga = ulush − qorovulga`.
-- **Oy hisobi:** qo'ldagi pul qorovul pulga sof qo'yilgancha kamayadi; **o'z ulushi** = jamg'armaga sof + qorovul pulga sof (ogohlantirishlar shunga qarab). Qorovul puldan olish — ayblovsiz, ogohlantirish yo'q (u shuning uchun bor).
+- **Oy hisobi:** qo'ldagi pul qorovul pulga sof qo'yilgancha kamayadi; **o'z ulushi** = jamg'armaga sof + qorovul pulga qo'yilgan (qorovul puldan olish ulushni kamaytirmaydi; ogohlantirishlar shunga qarab). Qorovul puldan olish — ayblovsiz, ogohlantirish yo'q (u shuning uchun bor).
 - Holatlar: `FULL`, `PARTIAL`, `EMPTY`, `NO_HISTORY`. Qorovul pul — musofirning shaxsiy hisobi (oilaga yuborilmaydi).
 
 ### 6.5. M3 da qanday qilindi (farqlar)

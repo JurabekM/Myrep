@@ -3504,7 +3504,8 @@ pub struct MfExpenseInput {
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct MfMoveInput {
-    /// `OPENING`, `SENT_HOME`, `FUND_IN`, `FUND_OUT`, `FUND_OPENING`.
+    /// `OPENING`, `SENT_HOME`, `FUND_IN`, `FUND_OUT`, `FUND_OPENING`; M4 — `RESERVE_IN`, `RESERVE_OUT`,
+    /// `RESERVE_OPENING`.
     pub kind: String,
     pub amount: String,
     /// `SENT_HOME`: komissiya (ish valyutasida).
@@ -3512,7 +3513,7 @@ pub struct MfMoveInput {
     /// `SENT_HOME`: uyda olingan summa (uy valyutasida).
     pub received: Option<String>,
     pub occurred_on: Option<String>,
-    /// `FUND_OUT` uchun majburiy (sabab).
+    /// `FUND_OUT` va `RESERVE_OUT` uchun majburiy (sabab).
     pub note: Option<String>,
     /// `SENT_HOME`: maqsadlar (M2); bo'lmasa — kelishuv shartlaridan, ular ham bo'lmasa — uy xarajati 100 %.
     pub purposes: Option<Vec<MfShareInput>>,
@@ -3545,6 +3546,11 @@ pub struct MfMonthDto {
     pub fund_in: MoneyDto,
     pub fund_out: MoneyDto,
     pub fund_net: MoneyDto,
+    /// Qorovul pulga / undan (M4).
+    pub reserve_in: MoneyDto,
+    pub reserve_out: MoneyDto,
+    /// O'z ulushi: jamg'armaga sof + qorovul pulga qo'yilgan.
+    pub saved_net: MoneyDto,
     pub pocket: MoneyDto,
     pub share_target: MoneyDto,
     pub share_gap: MoneyDto,
@@ -3552,6 +3558,7 @@ pub struct MfMonthDto {
     pub expenses_percent: Option<String>,
     pub sent_percent: Option<String>,
     pub fund_percent: Option<String>,
+    pub reserve_percent: Option<String>,
     /// `POCKET_NEGATIVE`, `NO_SHARE`, `SHARE_BELOW_TARGET`, `FUND_WITHDRAWN`.
     pub warnings: Vec<String>,
 }
@@ -3596,6 +3603,10 @@ pub struct MfOverviewDto {
     pub entries: Vec<MfEntryDto>,
     /// «Qaytdim» belgilangan bo'lsa — sovutish davri (M3).
     pub cooling: Option<MfCoolingDto>,
+    /// Qorovul pul (M4); sozlanmagan makonda `null`.
+    pub reserve: Option<MfReserveDto>,
+    /// Ish boshlash summasi (M4); belgilanmagan bo'lsa `null`.
+    pub startup: Option<MfStartupDto>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -3603,8 +3614,10 @@ pub struct MfOverviewDto {
 #[serde(rename_all = "camelCase")]
 pub struct MfIncomeRecordedDto {
     pub overview: MfOverviewDto,
-    /// O'z ulushi taklifi: shu daromaddan qaytish jamg'armasiga.
+    /// O'z ulushi taklifi: shu daromaddan (M4: avval qorovul pulga, qolgani jamg'armaga).
     pub suggested_share: MoneyDto,
+    pub suggested_reserve: MoneyDto,
+    pub suggested_fund: MoneyDto,
 }
 
 // ---- M2: «Ikki qirg'oq» (docs/musofir/SPEC.md 5, ADR-0004) ----
@@ -3920,5 +3933,75 @@ pub struct MfDecisionDto {
     pub in_cooling: bool,
     pub wait_until: Option<String>,
     pub choice: String,
+    pub note: Option<String>,
+    /// Keyin belgilangan natija (M4).
+    pub outcome: Option<MfOutcomeDto>,
+}
+
+// ---- M4: qorovul pul, ish boshlash summasi, qaror natijasi (docs/musofir/SPEC.md 6.4, 6.6) ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfReserveDto {
+    /// Ish valyutasida.
+    pub balance: MoneyDto,
+    /// Maqsad necha oylik xarajat (1–3).
+    pub months: u32,
+    /// O'rtachaga olingan to'liq oylar (0 — tarix yo'q).
+    pub months_used: u32,
+    pub avg_monthly: Option<MoneyDto>,
+    pub target: Option<MoneyDto>,
+    pub gap: Option<MoneyDto>,
+    pub progress_bp: Option<i32>,
+    pub progress_percent: Option<String>,
+    /// `FULL`, `PARTIAL`, `EMPTY`, `NO_HISTORY`.
+    pub status: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfStartupDto {
+    /// Uy valyutasida.
+    pub startup: MoneyDto,
+    /// Yashash uchun = maqsad − ish boshlash (maqsadsiz yoki oshib ketsa — `null`).
+    pub living: Option<MoneyDto>,
+    pub startup_percent: Option<String>,
+    /// Maqsad keyin kamaytirilib, ish boshlash summasidan kichik bo'lib qolgan.
+    pub exceeds_target: bool,
+    /// «Hunardan ishga» g'oyasi (Uy makonida).
+    pub idea_id: Option<String>,
+    pub idea_title: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfPlanInput {
+    /// 1–3; bo'lmasa — 1.
+    pub reserve_months: Option<u32>,
+    /// Ish boshlash summasi (uy valyutasida); bo'sh — yo'q.
+    pub startup: Option<String>,
+    /// «Hunardan ishga» g'oyasi (Uy makonidagi).
+    pub startup_idea_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfOutcomeInput {
+    /// `DONE` — qildim, `DROPPED` — qilmadim.
+    pub outcome: String,
+    pub outcome_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfOutcomeDto {
+    pub outcome: String,
+    pub outcome_on: String,
     pub note: Option<String>,
 }

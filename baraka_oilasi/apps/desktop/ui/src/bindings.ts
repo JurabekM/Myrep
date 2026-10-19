@@ -238,6 +238,8 @@ export const commands = {
 	mfRecordDecision: (spaceId: string, input: MfDecisionInput) => typedError<MfDecisionDto[], AppError>(__TAURI_INVOKE("mf_record_decision", { spaceId, input })),
 	mfDecisions: (spaceId: string) => typedError<MfDecisionDto[], AppError>(__TAURI_INVOKE("mf_decisions", { spaceId })),
 	mfDecisionQuestions: (kind: string) => typedError<string[], AppError>(__TAURI_INVOKE("mf_decision_questions", { kind })),
+	mfSetPlan: (spaceId: string, input: MfPlanInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_set_plan", { spaceId, input })),
+	mfSetOutcome: (spaceId: string, decisionId: string, input: MfOutcomeInput) => typedError<MfDecisionDto[], AppError>(__TAURI_INVOKE("mf_set_outcome", { spaceId, decisionId, input })),
 };
 
 /** Events */
@@ -2211,6 +2213,8 @@ export type MfDecisionDto = {
 	waitUntil: string | null,
 	choice: string,
 	note: string | null,
+	/**  Keyin belgilangan natija (M4). */
+	outcome: MfOutcomeDto | null,
 };
 
 export type MfDecisionInput = {
@@ -2284,8 +2288,10 @@ export type MfIncomeInput = {
 
 export type MfIncomeRecordedDto = {
 	overview: MfOverviewDto,
-	/**  O'z ulushi taklifi: shu daromaddan qaytish jamg'armasiga. */
+	/**  O'z ulushi taklifi: shu daromaddan (M4: avval qorovul pulga, qolgani jamg'armaga). */
 	suggestedShare: MoneyDto,
+	suggestedReserve: MoneyDto,
+	suggestedFund: MoneyDto,
 };
 
 export type MfMonthDto = {
@@ -2296,6 +2302,11 @@ export type MfMonthDto = {
 	fundIn: MoneyDto,
 	fundOut: MoneyDto,
 	fundNet: MoneyDto,
+	/**  Qorovul pulga / undan (M4). */
+	reserveIn: MoneyDto,
+	reserveOut: MoneyDto,
+	/**  O'z ulushi: jamg'armaga sof + qorovul pulga qo'yilgan. */
+	savedNet: MoneyDto,
 	pocket: MoneyDto,
 	shareTarget: MoneyDto,
 	shareGap: MoneyDto,
@@ -2303,12 +2314,16 @@ export type MfMonthDto = {
 	expensesPercent: string | null,
 	sentPercent: string | null,
 	fundPercent: string | null,
+	reservePercent: string | null,
 	/**  `POCKET_NEGATIVE`, `NO_SHARE`, `SHARE_BELOW_TARGET`, `FUND_WITHDRAWN`. */
 	warnings: string[],
 };
 
 export type MfMoveInput = {
-	/**  `OPENING`, `SENT_HOME`, `FUND_IN`, `FUND_OUT`, `FUND_OPENING`. */
+	/**
+	 *  `OPENING`, `SENT_HOME`, `FUND_IN`, `FUND_OUT`, `FUND_OPENING`; M4 — `RESERVE_IN`, `RESERVE_OUT`,
+	 *  `RESERVE_OPENING`.
+	 */
 	kind: string,
 	amount: string,
 	/**  `SENT_HOME`: komissiya (ish valyutasida). */
@@ -2316,10 +2331,23 @@ export type MfMoveInput = {
 	/**  `SENT_HOME`: uyda olingan summa (uy valyutasida). */
 	received: string | null,
 	occurredOn: string | null,
-	/**  `FUND_OUT` uchun majburiy (sabab). */
+	/**  `FUND_OUT` va `RESERVE_OUT` uchun majburiy (sabab). */
 	note: string | null,
 	/**  `SENT_HOME`: maqsadlar (M2); bo'lmasa — kelishuv shartlaridan, ular ham bo'lmasa — uy xarajati 100 %. */
 	purposes: MfShareInput[] | null,
+};
+
+export type MfOutcomeDto = {
+	outcome: string,
+	outcomeOn: string,
+	note: string | null,
+};
+
+export type MfOutcomeInput = {
+	/**  `DONE` — qildim, `DROPPED` — qilmadim. */
+	outcome: string,
+	outcomeOn: string | null,
+	note: string | null,
 };
 
 export type MfOverviewDto = {
@@ -2335,6 +2363,19 @@ export type MfOverviewDto = {
 	entries: MfEntryDto[],
 	/**  «Qaytdim» belgilangan bo'lsa — sovutish davri (M3). */
 	cooling: MfCoolingDto | null,
+	/**  Qorovul pul (M4); sozlanmagan makonda `null`. */
+	reserve: MfReserveDto | null,
+	/**  Ish boshlash summasi (M4); belgilanmagan bo'lsa `null`. */
+	startup: MfStartupDto | null,
+};
+
+export type MfPlanInput = {
+	/**  1–3; bo'lmasa — 1. */
+	reserveMonths: number | null,
+	/**  Ish boshlash summasi (uy valyutasida); bo'sh — yo'q. */
+	startup: string | null,
+	/**  «Hunardan ishga» g'oyasi (Uy makonidagi). */
+	startupIdeaId: string | null,
 };
 
 export type MfPurposeAmountDto = {
@@ -2400,6 +2441,22 @@ export type MfRemittanceDto = {
 	receipt: MfReceiptDto | null,
 	/**  Qabul qilingan summaning maqsadlarga bo'linishi. */
 	allocation: MfPurposeAmountDto[],
+};
+
+export type MfReserveDto = {
+	/**  Ish valyutasida. */
+	balance: MoneyDto,
+	/**  Maqsad necha oylik xarajat (1–3). */
+	months: number,
+	/**  O'rtachaga olingan to'liq oylar (0 — tarix yo'q). */
+	monthsUsed: number,
+	avgMonthly: MoneyDto | null,
+	target: MoneyDto | null,
+	gap: MoneyDto | null,
+	progressBp: number | null,
+	progressPercent: string | null,
+	/**  `FULL`, `PARTIAL`, `EMPTY`, `NO_HISTORY`. */
+	status: string,
 };
 
 export type MfReturnInput = {
@@ -2469,6 +2526,19 @@ export type MfSpendInput = {
 	channel: string,
 	occurredOn: string | null,
 	note: string | null,
+};
+
+export type MfStartupDto = {
+	/**  Uy valyutasida. */
+	startup: MoneyDto,
+	/**  Yashash uchun = maqsad − ish boshlash (maqsadsiz yoki oshib ketsa — `null`). */
+	living: MoneyDto | null,
+	startupPercent: string | null,
+	/**  Maqsad keyin kamaytirilib, ish boshlash summasidan kichik bo'lib qolgan. */
+	exceedsTarget: boolean,
+	/**  «Hunardan ishga» g'oyasi (Uy makonida). */
+	ideaId: string | null,
+	ideaTitle: string | null,
 };
 
 export type MfTermsDto = {

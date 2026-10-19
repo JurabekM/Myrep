@@ -271,7 +271,9 @@
             "mf_receipts",
             "mf_spends",
             "mf_debt_payments",
-            "mf_decisions"
+            "mf_decisions",
+            "mf_reserve_moves",
+            "mf_decision_outcomes"
           ]
         },
         "data": {
@@ -769,6 +771,18 @@
       },
       {
         "name": "mf_decisions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_reserve_moves",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_decision_outcomes",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []

@@ -231,6 +231,8 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::mf_record_decision,
             commands::mf_decisions,
             commands::mf_decision_questions,
+            commands::mf_set_plan,
+            commands::mf_set_outcome,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

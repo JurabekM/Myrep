@@ -7,11 +7,13 @@ use baraka_domain_common::month_period;
 use baraka_domain_musofir::cooling::{
     cooling_check, cooling_window, questions, DecisionKind, Reply,
 };
+use baraka_domain_musofir::fund::startup_split;
 use baraka_domain_musofir::remittance::Purpose;
+use baraka_domain_musofir::reserve::{reserve_plan, DEFAULT_MONTHS, MAX_MONTHS, MIN_MONTHS};
 use baraka_domain_musofir::travel::travel_debt_plan;
 use baraka_money::{format_percent_bp, Money};
 use baraka_storage::repo::debts::{self, Owner};
-use baraka_storage::repo::mf;
+use baraka_storage::repo::{mf, ventures};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -27,6 +29,7 @@ use crate::*;
 /// «Birinchi maoshlardan» maqsadli muddat (OQ-MF8).
 const DEFAULT_TARGET_MONTHS: i64 = 6;
 const CHOICES: [&str; 3] = ["WAIT", "PROCEED", "DECLINE"];
+const OUTCOMES: [&str; 2] = ["DONE", "DROPPED"];
 
 #[derive(Serialize, Deserialize)]
 struct StoredAnswer {
@@ -473,6 +476,7 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.mf_scope(&ctx, space_id)?;
         let corrupt = |_| AppError::new("CORRUPT_ROW");
+        let outcomes = self.db.read(|c| mf::outcomes(c, &scope))?;
         self.db
             .read(|c| mf::decisions(c, &scope))?
             .into_iter()
@@ -481,7 +485,17 @@ impl App {
                     serde_json::from_str(&r.answers_json).map_err(corrupt)?;
                 let flags: Vec<StoredFlag> =
                     serde_json::from_str(&r.flags_json).map_err(corrupt)?;
+                let outcome =
+                    outcomes
+                        .iter()
+                        .find(|o| o.decision_id == r.id)
+                        .map(|o| MfOutcomeDto {
+                            outcome: o.outcome.clone(),
+                            outcome_on: o.outcome_on.clone(),
+                            note: o.note.clone(),
+                        });
                 Ok(MfDecisionDto {
+                    outcome,
                     amount: self.money_dto(&ctx, money_of(r.amount_minor, &r.currency)?),
                     id: r.id,
                     decided_on: r.decided_on,
@@ -509,5 +523,179 @@ impl App {
                 })
             })
             .collect()
+    }
+}
+
+impl App {
+    pub(crate) fn mf_reserve_months(&self, scope: &SpaceScope) -> Result<i64, AppError> {
+        Ok(self
+            .db
+            .read(|c| mf::plan_info(c, scope))?
+            .reserve_months
+            .unwrap_or(DEFAULT_MONTHS))
+    }
+
+    /// Qorovul pul kartasi: qoldiq va oxirgi oylardagi chet el xarajatidan maqsad (SPEC 6.4).
+    pub(crate) fn mf_reserve_dto(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        balance: Money,
+        spent: &[Money],
+    ) -> Result<MfReserveDto, AppError> {
+        let months = self.mf_reserve_months(scope)?;
+        let r = reserve_plan(balance, spent, months, None)?;
+        let d = |m: Money| self.money_dto(ctx, m);
+        Ok(MfReserveDto {
+            balance: d(balance),
+            months: u32::try_from(months).unwrap_or(1),
+            months_used: u32::try_from(spent.len()).unwrap_or(0),
+            avg_monthly: r.avg_monthly.map(d),
+            target: r.target.map(d),
+            gap: r.gap.map(d),
+            progress_bp: r.progress_bp.map(small),
+            progress_percent: r.progress_bp.map(format_percent_bp),
+            status: r.status.as_str().to_string(),
+        })
+    }
+
+    /// Ish boshlash summasi: maqsadning bir qismi (SPEC 6.6). Maqsad keyin kamaytirilgan bo'lsa —
+    /// `exceeds_target`.
+    pub(crate) fn mf_startup_dto(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        target: Option<Money>,
+    ) -> Result<Option<MfStartupDto>, AppError> {
+        let plan = self.db.read(|c| mf::plan_info(c, scope))?;
+        let startup = match (plan.startup_minor, plan.startup_currency.as_deref()) {
+            (Some(v), Some(c)) if c == ctx.currency.code() => Money::new(v, ctx.currency),
+            _ => return Ok(None),
+        };
+        let d = |m: Money| self.money_dto(ctx, m);
+        let (living, bp, exceeds) = match startup_split(target, startup) {
+            Ok(s) => (s.living, s.startup_bp, false),
+            Err(e) if e.code == "STARTUP_EXCEEDS_TARGET" => (None, None, true),
+            Err(e) => return Err(e.into()),
+        };
+        let idea_title = match (&plan.startup_idea_id, self.uy_space(ctx)?) {
+            (Some(id), Some(uy)) => self
+                .db
+                .read(|c| ventures::ideas(c, &uy))?
+                .into_iter()
+                .find(|i| &i.id == id)
+                .map(|i| i.title),
+            _ => None,
+        };
+        Ok(Some(MfStartupDto {
+            startup: d(startup),
+            living: living.map(d),
+            startup_percent: bp.map(format_percent_bp),
+            exceeds_target: exceeds,
+            idea_id: plan.startup_idea_id.filter(|_| idea_title.is_some()),
+            idea_title,
+        }))
+    }
+
+    /// Qorovul pul muddati va ish boshlash summasi (ixtiyoriy «Hunardan ishga» g'oyasi bilan).
+    pub fn mf_set_plan(
+        &self,
+        space_id: &str,
+        input: MfPlanInput,
+    ) -> Result<MfOverviewDto, AppError> {
+        let ctx = self.ctx()?;
+        let scope = self.mf_scope(&ctx, space_id)?;
+        let settings = self
+            .db
+            .read(|c| mf::settings(c, &scope))?
+            .ok_or(AppError::new("MF_NOT_CONFIGURED"))?;
+        let months = match input.reserve_months {
+            None => None,
+            Some(m) if (MIN_MONTHS..=MAX_MONTHS).contains(&i64::from(m)) => Some(i64::from(m)),
+            Some(_) => return Err(AppError::on("INVALID_MONTHS", "reserveMonths")),
+        };
+        let startup = clean_opt(input.startup.as_deref())
+            .map(|t| positive(&t, ctx.currency, "startup"))
+            .transpose()?;
+        if let Some(s) = startup {
+            let target = match (settings.target_minor, settings.target_currency.as_deref()) {
+                (Some(v), Some(c)) if c == ctx.currency.code() => Some(Money::new(v, ctx.currency)),
+                _ => None,
+            };
+            startup_split(target, s).map_err(|e| AppError::on(e.code, "startup"))?;
+        }
+        let idea_id = match clean_opt(input.startup_idea_id.as_deref()) {
+            None => None,
+            Some(id) => {
+                let uy = self.uy_required(&ctx)?;
+                if !self
+                    .db
+                    .read(|c| ventures::ideas(c, &uy))?
+                    .iter()
+                    .any(|i| i.id == id)
+                {
+                    return Err(AppError::on("NOT_FOUND", "startupIdeaId"));
+                }
+                Some(id)
+            }
+        };
+        let row = mf::MfPlanRow {
+            reserve_months: months,
+            startup_minor: startup.map(|s| s.minor()),
+            startup_currency: startup.map(|s| s.currency().code().to_string()),
+            startup_idea_id: idea_id,
+        };
+        let meta = self.meta();
+        self.db.write(|tx| mf::set_plan(tx, &scope, &row, &meta))?;
+        self.publish(Some(space_id), &[Topic::Musofir]);
+        self.mf_overview(space_id, None)
+    }
+
+    /// Qarorning natijasi — bir marta: «qildim» yoki «qilmadim» (o'zgarmas).
+    pub fn mf_set_outcome(
+        &self,
+        space_id: &str,
+        decision_id: &str,
+        input: MfOutcomeInput,
+    ) -> Result<Vec<MfDecisionDto>, AppError> {
+        let ctx = self.ctx()?;
+        let scope = self.mf_scope(&ctx, space_id)?;
+        let decision = self
+            .db
+            .read(|c| mf::decisions(c, &scope))?
+            .into_iter()
+            .find(|d| d.id == decision_id)
+            .ok_or(AppError::on("NOT_FOUND", "decisionId"))?;
+        if self
+            .db
+            .read(|c| mf::outcomes(c, &scope))?
+            .iter()
+            .any(|o| o.decision_id == decision_id)
+        {
+            return Err(AppError::on("OUTCOME_ALREADY_SET", "decisionId"));
+        }
+        let outcome = input.outcome.trim();
+        if !OUTCOMES.contains(&outcome) {
+            return Err(AppError::on("INVALID_OUTCOME", "outcome"));
+        }
+        let on = self.date_or_today(&ctx, input.outcome_on.as_deref(), "outcomeOn")?;
+        if on > self.today(&ctx) {
+            return Err(AppError::on("FUTURE_DATE", "outcomeOn"));
+        }
+        if on < date_of(&decision.decided_on)? {
+            return Err(AppError::on("BEFORE_DECISION", "outcomeOn"));
+        }
+        let row = mf::MfOutcomeRow {
+            id: self.new_id(),
+            decision_id: decision.id,
+            outcome: outcome.to_string(),
+            outcome_on: ymd(on),
+            note: clean_opt(input.note.as_deref()),
+        };
+        let meta = self.meta();
+        self.db
+            .write(|tx| mf::insert_outcome(tx, &scope, &row, &meta))?;
+        self.publish(Some(space_id), &[Topic::Musofir]);
+        self.mf_decisions(space_id)
     }
 }

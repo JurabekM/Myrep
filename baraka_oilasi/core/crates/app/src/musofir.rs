@@ -7,6 +7,7 @@ use baraka_domain_common::{month_period, SpaceKind};
 use baraka_domain_musofir::fund::{return_fund, ReturnFund};
 use baraka_domain_musofir::month::{month_report, MfKind, MfMonth, MfMove};
 use baraka_domain_musofir::rate::{format_rate, parse_rate};
+use baraka_domain_musofir::reserve::reserve_plan;
 use baraka_money::{format_percent_bp, percent_of, Currency, FxRate, Money};
 use baraka_storage::repo::{categories, expenses, household, incomes, mf};
 use baraka_storage::SpaceScope;
@@ -180,12 +181,13 @@ impl App {
                 note: r.note,
             });
         }
-        for r in self
-            .db
-            .read(|c| mf::moves_between(c, scope, from, to))?
-            .into_iter()
-            .filter(|r| r.currency == work.code())
-        {
+        // Jamg'arma va qorovul pul alohida qoldiqlar: har biri o'z jadvalida sana tartibida.
+        let mut rows = self.db.read(|c| mf::moves_between(c, scope, from, to))?;
+        rows.extend(
+            self.db
+                .read(|c| mf::reserve_moves_between(c, scope, from, to))?,
+        );
+        for r in rows.into_iter().filter(|r| r.currency == work.code()) {
             let kind = MfKind::parse(&r.kind).ok_or(AppError::new("CORRUPT_ROW"))?;
             let fee = (r.fee_minor > 0).then(|| m(r.fee_minor));
             book.moves.push(MfMove {
@@ -238,6 +240,33 @@ impl App {
             &book.moves,
         )?;
         Ok((r, book))
+    }
+
+    /// `start` dan oldingi oxirgi to'liq oylar (yozuvi borlari, ko'pi bilan 3 ta): sof jamg'arma va chet el
+    /// xarajati.
+    fn mf_history(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        setup: &Setup,
+        start: NaiveDate,
+    ) -> Result<(Vec<Money>, Vec<Money>), AppError> {
+        let (mut fund, mut spent) = (Vec::new(), Vec::new());
+        let mut cursor = start;
+        for _ in 0..PROGNOSIS_MONTHS {
+            let Some(prev_day) = cursor.pred_opt() else {
+                break;
+            };
+            let (p_start, p_end) = month_period(prev_day, ctx.month_start_day)
+                .ok_or(AppError::new("INVALID_PERIOD"))?;
+            let (pr, pb) = self.mf_month_of(ctx, scope, setup, p_start, p_end)?;
+            if !pb.entries.is_empty() {
+                fund.push(pr.fund_net);
+                spent.push(pr.expenses);
+            }
+            cursor = p_start;
+        }
+        Ok((fund, spent))
     }
 
     /// Ish valyutasidan uy valyutasiga amaldagi kurs (bir xil valyutada — 1).
@@ -349,25 +378,14 @@ impl App {
                 rate: None,
                 entries: Vec::new(),
                 cooling: None,
+                reserve: None,
+                startup: None,
             });
         };
         let (r, book) = self.mf_month_of(&ctx, &scope, &setup, start, end)?;
         let rate = self.mf_rate(&ctx, &scope, setup.work)?;
-        // Prognoz: oxirgi to'liq oylarning (yozuvi borlari) sof jamg'armasi.
-        let mut monthly = Vec::new();
-        let mut cursor = start;
-        for _ in 0..PROGNOSIS_MONTHS {
-            let Some(prev_day) = cursor.pred_opt() else {
-                break;
-            };
-            let (p_start, p_end) = month_period(prev_day, ctx.month_start_day)
-                .ok_or(AppError::new("INVALID_PERIOD"))?;
-            let (pr, pb) = self.mf_month_of(&ctx, &scope, &setup, p_start, p_end)?;
-            if !pb.entries.is_empty() {
-                monthly.push(pr.fund_net);
-            }
-            cursor = p_start;
-        }
+        // Prognoz: oxirgi to'liq oylarning (yozuvi borlari) sof jamg'armasi va chet el xarajati.
+        let (monthly, spent) = self.mf_history(&ctx, &scope, &setup, start)?;
         let target = match (setup.row.target_minor, setup.row.target_currency.as_deref()) {
             (Some(v), Some(c)) if c == ctx.currency.code() => Some(Money::new(v, ctx.currency)),
             _ => None,
@@ -395,12 +413,16 @@ impl App {
             fund_in: d(r.fund_in),
             fund_out: d(r.fund_out),
             fund_net: d(r.fund_net),
+            reserve_in: d(r.reserve_in),
+            reserve_out: d(r.reserve_out),
+            saved_net: d(r.saved_net),
             pocket: d(r.pocket),
             share_target: d(r.share_target),
             share_gap: d(r.share_gap),
             expenses_percent: pct(r.expenses_bp),
             sent_percent: pct(r.sent_bp),
             fund_percent: pct(r.fund_bp),
+            reserve_percent: pct(r.reserve_bp),
             warnings: r.warnings.iter().map(|w| w.as_str().to_string()).collect(),
         };
         let fund = MfFundDto {
@@ -429,6 +451,8 @@ impl App {
             rate: rate.map(|(_, dto)| dto),
             entries: book.entries,
             cooling: self.mf_cooling_dto(&ctx, &self.db.read(|c| mf::return_info(c, &scope))?)?,
+            reserve: Some(self.mf_reserve_dto(&ctx, &scope, r.reserve_balance, &spent)?),
+            startup: self.mf_startup_dto(&ctx, &scope, target)?,
         })
     }
 
@@ -546,9 +570,23 @@ impl App {
             .write(|tx| incomes::insert(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Incomes, Topic::Musofir]);
         let share = percent_of(amount, setup.share_bp)?;
+        // M4: ulush avval qorovul pulga (yetmaganicha), qolgani jamg'armaga.
+        let (start, end) =
+            month_period(date, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
+        let (month, _) = self.mf_month_of(&ctx, &scope, &setup, start, end)?;
+        let (_, spent) = self.mf_history(&ctx, &scope, &setup, start)?;
+        let split = reserve_plan(
+            month.reserve_balance,
+            &spent,
+            self.mf_reserve_months(&scope)?,
+            Some(share),
+        )?;
+        let d = |m: Option<Money>| self.money_dto(&ctx, m.unwrap_or(Money::zero(setup.work)));
         Ok(MfIncomeRecordedDto {
             overview: self.mf_overview(space_id, Some(row.occurred_on))?,
             suggested_share: self.money_dto(&ctx, share),
+            suggested_reserve: d(split.to_reserve),
+            suggested_fund: d(split.to_fund),
         })
     }
 
@@ -605,7 +643,10 @@ impl App {
                 | MfKind::SentHome
                 | MfKind::FundIn
                 | MfKind::FundOut
-                | MfKind::FundOpening),
+                | MfKind::FundOpening
+                | MfKind::ReserveIn
+                | MfKind::ReserveOut
+                | MfKind::ReserveOpening),
             ) => k,
             _ => return Err(AppError::on("INVALID_KIND", "kind")),
         };
@@ -650,7 +691,7 @@ impl App {
             Vec::new()
         };
         let note = clean_opt(input.note.as_deref());
-        if kind == MfKind::FundOut && note.is_none() {
+        if matches!(kind, MfKind::FundOut | MfKind::ReserveOut) && note.is_none() {
             return Err(AppError::on("REASON_REQUIRED", "note"));
         }
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
@@ -659,8 +700,8 @@ impl App {
             amount,
             fee: fee.is_positive().then_some(fee),
         };
-        if kind == MfKind::FundOut {
-            // Jamg'armadan olish — butun qoldiqdan oshmaydi (domen tekshiradi).
+        if matches!(kind, MfKind::FundOut | MfKind::ReserveOut) {
+            // Jamg'arma va qorovul puldan olish — butun qoldiqdan oshmaydi (domen tekshiradi).
             let mut all = self
                 .mf_book(&ctx, &scope, setup.work, BEGINNING, END_OF_TIME)?
                 .moves;
@@ -691,8 +732,15 @@ impl App {
                 share_bp: s.bp,
             })
             .collect();
+        let reserve = matches!(
+            kind,
+            MfKind::ReserveIn | MfKind::ReserveOut | MfKind::ReserveOpening
+        );
         let meta = self.meta();
         self.db.write(|tx| {
+            if reserve {
+                return mf::insert_reserve_move(tx, &scope, &row, &meta);
+            }
             mf::insert_move(tx, &scope, &row, &meta)?;
             for p in &parts {
                 mf::insert_part(tx, &scope, p, &meta)?;

@@ -2555,5 +2555,9 @@
   "mf.flag.LARGE_SHARE": "Bu olib kelinganning {percent} %i — juda katta ulush, ayniqsa sovutish davrida ({date} gacha).",
   "mf.shores.debt": "Qaysi qarz",
   "mf.shores.noDebts": "Uy makonida faol qarz yoʻq — avval «Qarzlar»da yozing.",
-  "mf.shores.payDebt": "Qarzni toʻlash"
+  "mf.shores.payDebt": "Qarzni toʻlash",
+  "error.RESERVE_INSUFFICIENT": "Qorovul pulda buncha pul yoʻq",
+  "error.STARTUP_EXCEEDS_TARGET": "Ish boshlash summasi qaytish jamgʻarmasi maqsadidan katta boʻlmasin",
+  "error.OUTCOME_ALREADY_SET": "Bu qarorning natijasi allaqachon belgilangan",
+  "error.BEFORE_DECISION": "Natija sanasi qaror sanasidan oldin boʻlmasin"
 }

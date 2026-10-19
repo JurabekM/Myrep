@@ -872,4 +872,35 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
         )
         .unwrap();
     assert!(ov.cooling.is_none());
+
+    // M4: qorovul pul va qaror natijasi ham oilaga bormaydi.
+    let mut opening = mv("RESERVE_OPENING", "800 000");
+    opening.occurred_on = Some("2026-11-01".into());
+    o.app.mf_record_move(&o.mf, opening).unwrap();
+    let decision = o.app.mf_decisions(&o.mf).unwrap()[0].id.clone();
+    o.app
+        .mf_set_outcome(
+            &o.mf,
+            &decision,
+            MfOutcomeInput {
+                outcome: "DROPPED".into(),
+                outcome_on: None,
+                note: None,
+            },
+        )
+        .unwrap();
+    import(&home, &export(&o.app, &home_dev.id));
+    assert!(home_dev.rows("mf_reserve_moves").is_empty());
+    assert!(home_dev.rows("mf_decision_outcomes").is_empty());
+    assert_eq!(
+        err(home.mf_set_plan(
+            &o.mf,
+            MfPlanInput {
+                reserve_months: Some(2),
+                startup: None,
+                startup_idea_id: None,
+            }
+        )),
+        "ROLE_FORBIDDEN"
+    );
 }

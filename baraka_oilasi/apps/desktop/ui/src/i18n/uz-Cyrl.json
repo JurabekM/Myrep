@@ -2555,5 +2555,9 @@
   "mf.flag.LARGE_SHARE": "Бу олиб келинганнинг {percent} %и — жуда катта улуш, айниқса совутиш даврида ({date} гача).",
   "mf.shores.debt": "Қайси қарз",
   "mf.shores.noDebts": "Уй маконида фаол қарз йўқ — аввал «Қарзлар»да ёзинг.",
-  "mf.shores.payDebt": "Қарзни тўлаш"
+  "mf.shores.payDebt": "Қарзни тўлаш",
+  "error.RESERVE_INSUFFICIENT": "Қоровул пулда бунча пул йўқ",
+  "error.STARTUP_EXCEEDS_TARGET": "Иш бошлаш суммаси қайтиш жамғармаси мақсадидан катта бўлмасин",
+  "error.OUTCOME_ALREADY_SET": "Бу қарорнинг натижаси аллақачон белгиланган",
+  "error.BEFORE_DECISION": "Натижа санаси қарор санасидан олдин бўлмасин"
 }

@@ -208,6 +208,8 @@
     "allow-mf-check-decision",
     "allow-mf-record-decision",
     "allow-mf-decisions",
-    "allow-mf-decision-questions"
+    "allow-mf-decision-questions",
+    "allow-mf-set-plan",
+    "allow-mf-set-outcome"
   ]
 }

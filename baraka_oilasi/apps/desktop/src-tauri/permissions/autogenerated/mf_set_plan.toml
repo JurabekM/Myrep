@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-set-plan"
+description = "Enables the mf_set_plan command without any pre-configured scope."
+commands.allow = ["mf_set_plan"]
+
+[[permission]]
+identifier = "deny-mf-set-plan"
+description = "Denies the mf_set_plan command without any pre-configured scope."
+commands.deny = ["mf_set_plan"]

@@ -2244,6 +2244,27 @@ pub async fn mf_decision_questions(state: State<'_, Desktop>, kind: String) -> R
 
 #[tauri::command]
 #[specta::specta]
+pub async fn mf_set_plan(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfPlanInput,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_set_plan(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_set_outcome(
+    state: State<'_, Desktop>,
+    space_id: String,
+    decision_id: String,
+    input: MfOutcomeInput,
+) -> R<Vec<MfDecisionDto>> {
+    state.session.app()?.mf_set_outcome(&space_id, &decision_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }
