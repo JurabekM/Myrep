@@ -45,28 +45,51 @@ try {
     $configs = @("--config", "src-tauri/tauri.bundle.json")
     if ($signing) { $configs += @("--config", $signCfg) }
 
+    # Ikki o'rnatuvchi (docs/SERVICE-DESIGN.md): oddiy (currentUser, admin'siz) va himoyalangan
+    # (perMachine, administrator, Windows xizmati). Tauri ikkalasiga bir xil fayl nomi beradi —
+    # har biri yig'ilgach ko'chiriladi.
+    $nsis = Join-Path $target "release/bundle/nsis"
+    $outDir = Join-Path $nsis "out"
+    Remove-Item -Recurse -Force $outDir -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $outDir | Out-Null
+    $protCfg = Join-Path ([IO.Path]::GetTempPath()) "tamga-protected-config.json"
+    $prot = @{ bundle = @{ windows = @{ nsis = @{ installMode = "perMachine" } } } }
+    [IO.File]::WriteAllText($protCfg, ($prot | ConvertTo-Json -Depth 6), (New-Object Text.UTF8Encoding $false))
+
     Push-Location (Join-Path $root "studio")
     pnpm install --frozen-lockfile
-    pnpm tauri build @configs
-    if ($LASTEXITCODE -ne 0) { throw "tauri build yiqildi" }
+    $built = @()
+    foreach ($variant in @(
+            @{ name = "TAMGA Studio"; extra = @() },
+            @{ name = "TAMGA Studio Protected"; extra = @("--config", $protCfg) })) {
+        Remove-Item (Join-Path $nsis "*-setup.exe") -ErrorAction SilentlyContinue
+        $buildArgs = @($configs) + @($variant.extra)
+        pnpm tauri build @buildArgs
+        if ($LASTEXITCODE -ne 0) { throw "tauri build yiqildi ($($variant.name))" }
+        $out = Get-ChildItem (Join-Path $nsis "*-setup.exe") | Sort-Object LastWriteTime | Select-Object -Last 1
+        $dest = Join-Path $outDir ($out.Name -replace '^TAMGA Studio', $variant.name)
+        Move-Item $out.FullName $dest -Force
+        $built += Get-Item $dest
+    }
     Pop-Location
 
-    $setup = Get-ChildItem (Join-Path $target "release/bundle/nsis/*.exe") | Sort-Object LastWriteTime | Select-Object -Last 1
-    $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLower()
-    $sums = Join-Path $setup.DirectoryName "SHA256SUMS.txt"
-    [IO.File]::WriteAllText($sums, "$hash  $($setup.Name)`n", (New-Object Text.UTF8Encoding $false))
+    $sums = Join-Path $outDir "SHA256SUMS.txt"
+    $lines = $built | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name }
+    [IO.File]::WriteAllText($sums, ($lines -join "`n") + "`n", (New-Object Text.UTF8Encoding $false))
 
     Write-Host ""
-    Write-Host "O'rnatuvchi: $($setup.FullName)" -ForegroundColor Green
-    Write-Host "SHA-256    : $hash  ($sums)"
-    $sig = Get-AuthenticodeSignature $setup.FullName
-    if ($sig.SignerCertificate) {
-        Write-Host ("Imzo       : {0} | {1} | vaqt tamg'asi: {2}" -f $sig.Status, $sig.SignerCertificate.Subject, [bool]$sig.TimeStamperCertificate)
-    } elseif ($signing) {
-        throw "sertifikat sozlangan, lekin o'rnatuvchi imzolanmagan"
-    } else {
-        Write-Host "Imzo       : YO'Q (dev build; SmartScreen 'noma'lum nashriyotchi' deydi)" -ForegroundColor Yellow
+    foreach ($setup in $built) {
+        Write-Host "O'rnatuvchi: $($setup.FullName)" -ForegroundColor Green
+        $sig = Get-AuthenticodeSignature $setup.FullName
+        if ($sig.SignerCertificate) {
+            Write-Host ("Imzo       : {0} | {1} | vaqt tamg'asi: {2}" -f $sig.Status, $sig.SignerCertificate.Subject, [bool]$sig.TimeStamperCertificate)
+        } elseif ($signing) {
+            throw "sertifikat sozlangan, lekin o'rnatuvchi imzolanmagan: $($setup.Name)"
+        } else {
+            Write-Host "Imzo       : YO'Q (dev build; SmartScreen 'noma'lum nashriyotchi' deydi)" -ForegroundColor Yellow
+        }
     }
+    Write-Host "SHA-256    : $sums"
 } finally {
     Pop-Location
 }

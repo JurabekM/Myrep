@@ -1,6 +1,18 @@
-# TAMGA daemon'ini alohida hisobga ko'chirish — dizayn (taklif)
+# TAMGA daemon'ini alohida hisobga ko'chirish — dizayn
 
-Holat: **taklif, qaror kutilmoqda.** Audit (K1/H-3) qoldig'ini arxitektura darajasida yopish uchun.
+Holat: **amalga oshirildi (S1–S5), administrator sinovi kutilmoqda** — [SERVICE-TEST.md](SERVICE-TEST.md).
+Audit (K1/H-3) qoldig'ini arxitektura darajasida yopish uchun.
+
+**Qabul qilingan qarorlar (2026-10-19):**
+- Ikki rejim: oddiy (admin'siz) qoladi, himoyalangan rejim qo'shiladi. Ikkalasi **alohida o'rnatuvchi**
+  (`TAMGA Studio` va `TAMGA Studio Protected`): NSIS `both` rejimi administrator foydalanuvchidan
+  oddiy o'rnatishda ham UAC so'raydi, bu admin'siz xususiyatni buzardi.
+- `ask` va boshqa boshqaruv amallari himoyalangan rejimda har safar UAC orqali (Studio `tamga.exe` ni
+  administrator sifatida ishga tushiradi).
+- Bir mashinada bir nechta foydalanuvchi: bitta mashina jurnali, har yozuvda `actor.user` = mijoz SID'i.
+- Kalitlar xizmat kontekstida: DPAPI (mashina doirasi) + papka ACL'i (foydalanuvchiga yopiq).
+- Himoyalangan rejimda spool yo'q va hook har doim fail-closed.
+- Mavjud oddiy rejim jurnalini ko'chirish hali avtomatlashtirilmagan (§5 — keyingi bosqich).
 
 ## 1. Muammo
 
