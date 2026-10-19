@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use serde_json::{Value, json};
-use tamga_store::home::Mode;
+use tamga_store::home::{Deployment, Mode, deployment};
 use tamga_store::{Home, client, spool};
 
 pub struct Config {
@@ -126,7 +126,10 @@ impl Ctx {
                 }
             })
             .inspect_err(|_| {
-                // Hodisa yo'qolmasin: spool, daemon keyin oladi.
+                // Hodisa yo'qolmasin: spool, daemon keyin oladi. Himoyalangan rejimda spool yo'q (K3).
+                if matches!(deployment(), Deployment::Service(_)) {
+                    return;
+                }
                 let home = Home::from_env();
                 let _ = spool::write(&home.spool(), &self.cfg.agent, &input, &Value::Null);
             })
@@ -157,7 +160,10 @@ impl Ctx {
             }
             Err(e) => {
                 eprintln!("tamga-mcp-proxy: daemon'ga ulanmadi: {e}");
-                (Home::from_env().config().mode == Mode::Strict).then(|| {
+                // Himoyalangan rejim: har doim fail-closed. `Home::from_env` ga tayanilmaydi — uni
+                // `TAMGA_HOME` (proxy'ni ishga tushiruvchi MCP konfiguratsiyasidagi env) burishi mumkin.
+                let protected = matches!(deployment(), Deployment::Service(_));
+                (protected || Home::from_env().config().mode == Mode::Strict).then(|| {
                     "TAMGA: daemon ishlamayapti (strict rejim), chaqiruv bloklandi".to_owned()
                 })
             }

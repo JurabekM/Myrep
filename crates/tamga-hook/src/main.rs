@@ -40,6 +40,9 @@ fn main() {
         .is_err()
     {
         eprintln!("tamga-hook: stdin o'qilmadi");
+        if matches!(deployment(), Deployment::Service(_)) {
+            std::process::exit(2);
+        }
         return;
     }
     // Ba'zi chaqiruvchilar (.NET) stdin boshiga UTF-8 BOM qo'shadi.
@@ -47,10 +50,11 @@ fn main() {
         Ok(v) => v,
         Err(e) => {
             // Hodisa yo'qolmasin: xom matn spool'ga tushadi (daemon uni `.bad` deb ajratadi).
-            // Himoyalangan rejimda spool yo'q.
             eprintln!("tamga-hook: stdin JSON emas: {e}");
+            // Himoyalangan rejimda spool yo'q va har doim fail-closed: qaror yo'q — exit 2 (Claude Code
+            // `PreToolUse` uchun buni bloklash deb qabul qiladi, sabab stderr'dan agentga ko'rsatiladi).
             if matches!(deployment(), Deployment::Service(_)) {
-                return;
+                std::process::exit(2);
             }
             let home = Home::from_env();
             let _ = spool::write(
