@@ -4104,6 +4104,7 @@ dependencies = [
 name = "tamga-win"
 version = "0.1.0"
 dependencies = [
+ "tokio",
  "windows-sys 0.61.2",
 ]
 

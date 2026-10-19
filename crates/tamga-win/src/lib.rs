@@ -13,6 +13,12 @@
 //!
 //! [`pipe_client_pid`] — pipe mijozining PID'i (`GetNamedPipeClientProcessId`), daemon boshqaruv
 //! buyruqlarini kim yuborganini tekshirishi uchun.
+//!
+//! [`service`] — himoyalangan (Windows xizmati) rejimi: DPAPI, pipe xavfsizlik deskriptori, mijoz
+//! identifikatori (SID + UAC ko'tarilganligi) va server exe tekshiruvi.
+
+#[cfg(windows)]
+pub mod service;
 
 use std::path::Path;
 
