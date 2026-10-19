@@ -228,11 +228,12 @@ impl App {
     ) -> Result<(MfMonth, Book), AppError> {
         let zero = Money::zero(setup.work);
         let before = self.mf_book(ctx, scope, setup.work, BEGINNING, &ymd(start))?;
-        let prior = month_report(zero, zero, 0, &before.moves)?;
+        let prior = month_report(zero, zero, zero, 0, &before.moves)?;
         let book = self.mf_book(ctx, scope, setup.work, &ymd(start), &ymd(end))?;
         let r = month_report(
             prior.pocket,
             prior.fund_balance,
+            prior.reserve_balance,
             setup.share_bp,
             &book.moves,
         )?;
@@ -665,7 +666,7 @@ impl App {
                 .moves;
             all.push(new_move);
             let zero = Money::zero(setup.work);
-            month_report(zero, zero, 0, &all).map_err(|e| match e.code {
+            month_report(zero, zero, zero, 0, &all).map_err(|e| match e.code {
                 "FUND_INSUFFICIENT" => AppError::on("RETURN_FUND_INSUFFICIENT", "amount"),
                 c => AppError::on(c, "amount"),
             })?;

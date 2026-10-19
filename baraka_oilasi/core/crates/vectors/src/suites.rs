@@ -15,9 +15,10 @@ use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Sto
 use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
 use baraka_domain_musofir::cooling::{cooling_check, DecisionKind, Reply as MfReply};
-use baraka_domain_musofir::fund::return_fund;
+use baraka_domain_musofir::fund::{return_fund, startup_split};
 use baraka_domain_musofir::month::{month_report as mf_month_report, MfKind, MfMove};
 use baraka_domain_musofir::remittance::{remittance_book, Purpose, Remittance, Share};
+use baraka_domain_musofir::reserve::reserve_plan;
 use baraka_domain_musofir::travel::travel_debt_plan;
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
@@ -166,6 +167,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "mf_remittance" => mf_remittance(input),
         "mf_travel_debt" => mf_travel_debt(input),
         "mf_cooling" => mf_cooling(input),
+        "mf_reserve" => mf_reserve(input),
+        "mf_startup" => mf_startup(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1684,6 +1687,7 @@ fn mf_month(v: &Value) -> R {
     let r = mf_month_report(
         money(v, "opening", c)?,
         money(v, "fundOpening", c)?,
+        money(v, "reserveOpening", c)?,
         i(v, "shareBp")?,
         &moves,
     )?;
@@ -1697,12 +1701,18 @@ fn mf_month(v: &Value) -> R {
         "fundOut": m(r.fund_out),
         "fundNet": m(r.fund_net),
         "fundBalance": m(r.fund_balance),
+        "reserveIn": m(r.reserve_in),
+        "reserveOut": m(r.reserve_out),
+        "reserveNet": m(r.reserve_net),
+        "reserveBalance": m(r.reserve_balance),
+        "savedNet": m(r.saved_net),
         "pocket": m(r.pocket),
         "shareTarget": m(r.share_target),
         "shareGap": m(r.share_gap),
         "expensesBp": r.expenses_bp,
         "sentBp": r.sent_bp,
         "fundBp": r.fund_bp,
+        "reserveBp": r.reserve_bp,
         "warnings": r.warnings.iter().map(|w| w.as_str()).collect::<Vec<_>>(),
     }))
 }
@@ -1823,6 +1833,47 @@ fn mf_travel_debt(v: &Value) -> R {
         "clearOn": p.clear_on.map(|d| d.format("%Y-%m-%d").to_string()),
         "requiredMonthly": m(p.required_monthly),
         "status": p.status.as_str(),
+    }))
+}
+
+fn mf_reserve(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let share = if v["share"].is_null() {
+        None
+    } else {
+        Some(money(v, "share", c)?)
+    };
+    let r = reserve_plan(
+        money(v, "balance", c)?,
+        &moneys(v, "monthly", c)?,
+        i(v, "months")?,
+        share,
+    )?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "avgMonthly": r.avg_monthly.map(m),
+        "target": r.target.map(m),
+        "gap": r.gap.map(m),
+        "progressBp": r.progress_bp,
+        "status": r.status.as_str(),
+        "toReserve": r.to_reserve.map(m),
+        "toFund": r.to_fund.map(m),
+    }))
+}
+
+fn mf_startup(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let target = if v["target"].is_null() {
+        None
+    } else {
+        Some(money(v, "target", c)?)
+    };
+    let r = startup_split(target, money(v, "startup", c)?)?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "startup": m(r.startup),
+        "living": r.living.map(m),
+        "startupBp": r.startup_bp,
     }))
 }
 

@@ -153,6 +153,39 @@ pub fn return_fund(
     Ok(out)
 }
 
+/// Ish boshlash summasi (SPEC 6.6) — maqsadning bir qismi: yashash uchun = maqsad − ish boshlash.
+/// Vektorlar: `spec/test-vectors/mf_startup.json`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StartupSplit {
+    pub startup: Money,
+    pub living: Option<Money>,
+    pub startup_bp: Option<i64>,
+}
+
+pub fn startup_split(target: Option<Money>, startup: Money) -> Result<StartupSplit, DomainError> {
+    if !startup.is_positive() {
+        return Err(DomainError::on("AMOUNT_NOT_POSITIVE", "startup"));
+    }
+    let Some(t) = target else {
+        return Ok(StartupSplit {
+            startup,
+            living: None,
+            startup_bp: None,
+        });
+    };
+    if !t.is_positive() {
+        return Err(DomainError::on("INVALID_TARGET", "target"));
+    }
+    if startup.compare(&t)?.is_gt() {
+        return Err(DomainError::on("STARTUP_EXCEEDS_TARGET", "startup"));
+    }
+    Ok(StartupSplit {
+        startup,
+        living: Some(t.checked_sub(startup)?),
+        startup_bp: Some(bp_of(startup.minor(), t.minor())?),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1455,7 +1455,8 @@ def kk_funds(events):
 
 
 # --- Musofir (musofir/SPEC 2–4) ------------------------------------------------------------
-MF_KINDS = ("SALARY", "OTHER_INCOME", "EXPENSE", "SENT_HOME", "FUND_IN", "FUND_OUT", "OPENING", "FUND_OPENING")
+MF_KINDS = ("SALARY", "OTHER_INCOME", "EXPENSE", "SENT_HOME", "FUND_IN", "FUND_OUT", "OPENING", "FUND_OPENING",
+            "RESERVE_IN", "RESERVE_OUT", "RESERVE_OPENING")
 
 
 def bp_of(part: int, whole: int) -> int:
@@ -1463,16 +1464,17 @@ def bp_of(part: int, whole: int) -> int:
     return round_half_up(Fraction(part * 10000, whole))
 
 
-def mf_month(opening, fund_opening, share_bp, moves):
-    """Musofir oy hisoboti (SPEC 2.1, 3), ish valyutasida. Qo'ldagi pul = boshlang'ich + daromad − xarajat −
-    uyga yuborilgan − komissiya − jamg'armaga sof. O'z ulushi maqsadi = percent_of(daromad, share_bp); yetmagani =
-    max(0, maqsad − jamg'armaga sof). Jamg'armadan olish qoldiqdan oshmaydi (yozuvlar tartibida)."""
+def mf_month(opening, fund_opening, share_bp, moves, reserve_opening=0):
+    """Musofir oy hisoboti (SPEC 2.1, 3, 6.4), ish valyutasida. Qo'ldagi pul = boshlang'ich + daromad − xarajat −
+    uyga yuborilgan − komissiya − jamg'armaga sof − qorovul pulga sof. O'z ulushi = jamg'armaga sof + qorovul pulga
+    qo'yilgan (qorovul puldan olish ulushni kamaytirmaydi — u shuning uchun bor); maqsad = percent_of(daromad,
+    share_bp); yetmagani = max(0, maqsad − o'z ulushi). Jamg'arma va qorovul puldan olish qoldiqdan oshmaydi."""
     if not 0 <= share_bp <= 10000:
         raise OracleError("INVALID_BP")
-    if fund_opening < 0:
+    if fund_opening < 0 or reserve_opening < 0:
         raise OracleError("AMOUNT_NEGATIVE")
     t = {k: 0 for k in MF_KINDS}
-    fees, fund = 0, fund_opening
+    fees, fund, reserve = 0, fund_opening, reserve_opening
     for m in moves:
         k, a = m["kind"], int(m["amount"])
         if k not in MF_KINDS:
@@ -1490,26 +1492,74 @@ def mf_month(opening, fund_opening, share_bp, moves):
             if a > fund:
                 raise OracleError("FUND_INSUFFICIENT")
             fund -= a
+        elif k in ("RESERVE_IN", "RESERVE_OPENING"):
+            reserve += a
+        elif k == "RESERVE_OUT":
+            if a > reserve:
+                raise OracleError("RESERVE_INSUFFICIENT")
+            reserve -= a
         t[k] += a
     income = t["SALARY"] + t["OTHER_INCOME"]
     fund_net = t["FUND_IN"] - t["FUND_OUT"]
-    pocket = opening + t["OPENING"] + income - t["EXPENSE"] - t["SENT_HOME"] - fees - fund_net
+    reserve_net = t["RESERVE_IN"] - t["RESERVE_OUT"]
+    saved = fund_net + t["RESERVE_IN"]
+    pocket = opening + t["OPENING"] + income - t["EXPENSE"] - t["SENT_HOME"] - fees - fund_net - reserve_net
     target = percent_of(income, share_bp)
-    gap = max(0, target - fund_net)
+    gap = max(0, target - saved)
     warnings = []
     if pocket < 0:
         warnings.append("POCKET_NEGATIVE")
-    if target > 0 and fund_net <= 0:
+    if target > 0 and saved <= 0:
         warnings.append("NO_SHARE")
-    elif 0 < fund_net < target:
+    elif 0 < saved < target:
         warnings.append("SHARE_BELOW_TARGET")
     if t["FUND_OUT"] > 0:
         warnings.append("FUND_WITHDRAWN")
     bp = (lambda x: bp_of(x, income)) if income > 0 else (lambda x: None)
     return {"income": _s(income), "expenses": _s(t["EXPENSE"]), "sentHome": _s(t["SENT_HOME"]), "fees": _s(fees),
             "fundIn": _s(t["FUND_IN"]), "fundOut": _s(t["FUND_OUT"]), "fundNet": _s(fund_net), "fundBalance": _s(fund),
+            "reserveIn": _s(t["RESERVE_IN"]), "reserveOut": _s(t["RESERVE_OUT"]), "reserveNet": _s(reserve_net),
+            "reserveBalance": _s(reserve), "savedNet": _s(saved),
             "pocket": _s(pocket), "shareTarget": _s(target), "shareGap": _s(gap),
-            "expensesBp": bp(t["EXPENSE"]), "sentBp": bp(t["SENT_HOME"] + fees), "fundBp": bp(fund_net), "warnings": warnings}
+            "expensesBp": bp(t["EXPENSE"]), "sentBp": bp(t["SENT_HOME"] + fees), "fundBp": bp(fund_net),
+            "reserveBp": bp(t["RESERVE_IN"]), "warnings": warnings}
+
+
+def mf_reserve(balance, monthly, months, share):
+    """Qorovul pul (SPEC 6.4, OQ-MF3), ish valyutasida. Maqsad = round_half_up(Σ oylik xarajat × N / oylar soni)
+    (oxirgi to'liq oylar, yozuvi borlari); N — 1–3. Tarix yo'q — maqsad yo'q. O'z ulushi avval qorovul pulga:
+    qorovulga = min(ulush, yetmagani), jamg'armaga = qolgani."""
+    if not 1 <= months <= 3:
+        raise OracleError("INVALID_MONTHS")
+    if balance < 0 or (share is not None and share < 0) or any(x < 0 for x in monthly):
+        raise OracleError("AMOUNT_NEGATIVE")
+    out = {"avgMonthly": None, "target": None, "gap": None, "progressBp": None, "status": "NO_HISTORY",
+           "toReserve": None if share is None else _s(0), "toFund": None if share is None else _s(share)}
+    if not monthly:
+        return out
+    target = round_half_up(Fraction(sum(monthly) * months, len(monthly)))
+    gap = max(0, target - balance)
+    out.update({"avgMonthly": _s(round_half_up(Fraction(sum(monthly), len(monthly)))), "target": _s(target),
+                "gap": _s(gap), "progressBp": min(10000, bp_of(balance, target)) if target > 0 else 10000,
+                "status": "FULL" if gap == 0 else "EMPTY" if balance == 0 else "PARTIAL"})
+    if share is not None:
+        to_reserve = min(share, gap)
+        out.update({"toReserve": _s(to_reserve), "toFund": _s(share - to_reserve)})
+    return out
+
+
+def mf_startup(target, startup):
+    """Ish boshlash summasi (SPEC 6.6) — qaytish jamg'armasi maqsadining bir qismi, uy valyutasida:
+    yashash uchun = maqsad − ish boshlash; maqsaddan oshmaydi. Maqsadsiz — faqat summa."""
+    if startup <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if target is None:
+        return {"startup": _s(startup), "living": None, "startupBp": None}
+    if target <= 0:
+        raise OracleError("INVALID_TARGET")
+    if startup > target:
+        raise OracleError("STARTUP_EXCEEDS_TARGET")
+    return {"startup": _s(startup), "living": _s(target - startup), "startupBp": bp_of(startup, target)}
 
 
 def months_between(start: date, end: date) -> int:
@@ -2686,10 +2736,59 @@ def build_suites():
         ("mf-neg-004", "KRW", 0, 0, 10001, [mv("SALARY", 1000)]),
         ("mf-neg-005", "KRW", 0, 100, 2000, [mv("FUND_IN", 50), mv("FUND_OUT", 151)]),
     ]
-    suites["mf_month"] = _suite("mf_month", "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3)", [
-        _case(cid, {"currency": c, "opening": _s(o), "fundOpening": _s(fo), "shareBp": bp, "moves": ms},
-              lambda o=o, fo=fo, bp=bp, ms=ms: mf_month(o, fo, bp, ms))
-        for cid, c, o, fo, bp, ms in mm])
+    mm = [(cid, c, o, fo, 0, bp, ms) for cid, c, o, fo, bp, ms in mm] + [
+        # M4: ulush avval qorovul pulga (300 000), qolgani jamg'armaga (220 000) — ulush bajarildi.
+        ("mf-009", "KRW", 150000, 6000000, 510000, 2000, [mv("SALARY", 2600000), mv("EXPENSE", 810000),
+                                                      mv("SENT_HOME", 1200000, 5000), mv("RESERVE_IN", 300000), mv("FUND_IN", 220000)]),
+        # Kasal bo'ldi: qorovul puldan 400 000 — ulush kamaymaydi, ogohlantirish yo'q.
+        ("mf-010", "KRW", 0, 6000000, 810000, 2000, [mv("SALARY", 2600000), mv("EXPENSE", 1210000), mv("RESERVE_OUT", 400000),
+                                                   mv("SENT_HOME", 1200000), mv("FUND_IN", 520000)]),
+        # Boshlang'ich qorovul pul yozuv sifatida; faqat qorovulga — ulush yetmadi.
+        ("mf-011", "KRW", 0, 0, 0, 2000, [mv("RESERVE_OPENING", 500000), mv("SALARY", 2600000), mv("RESERVE_IN", 200000)]),
+        ("mf-neg-006", "KRW", 0, 0, 100, 2000, [mv("RESERVE_OUT", 101)]),
+        ("mf-neg-007", "KRW", 0, 0, -1, 2000, [mv("SALARY", 1000)]),
+    ]
+    suites["mf_month"] = _suite("mf_month", "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi va qorovul pul, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3, 6.4)", [
+        _case(cid, {"currency": c, "opening": _s(o), "fundOpening": _s(fo), "reserveOpening": _s(ro), "shareBp": bp, "moves": ms},
+              lambda o=o, fo=fo, ro=ro, bp=bp, ms=ms: mf_month(o, fo, bp, ms, ro))
+        for cid, c, o, fo, ro, bp, ms in mm])
+    rs_ = [
+        # Rustam aka: oyiga ~800 000 von xarajat, 1 oy — maqsad 805 000; qoldiq 300 000; ulush 520 000 → 505 000 qorovulga.
+        ("rs-001", "KRW", 300000, [810000, 790000, 815000], 1, 520000),
+        # To'la — ulush to'liq jamg'armaga.
+        ("rs-002", "KRW", 900000, [810000, 790000, 815000], 1, 520000),
+        # 2 oy, bo'sh; ulush hammasi qorovulga.
+        ("rs-003", "KRW", 0, [810000, 790000], 2, 520000),
+        # Tarix yo'q — maqsad yo'q, ulush jamg'armaga.
+        ("rs-004", "KRW", 0, [], 1, 520000),
+        # USD, yaxlitlash: (100 001 + 100 000) × 3 / 2; ulushsiz.
+        ("rs-005", "USD", 150000, [100001, 100000], 3, None),
+        # Xarajatsiz oylar — maqsad 0, to'la.
+        ("rs-006", "KRW", 0, [0, 0], 1, 100000),
+        ("rs-neg-001", "KRW", 0, [800000], 4, None),
+        ("rs-neg-002", "KRW", -1, [800000], 1, None),
+        ("rs-neg-003", "KRW", 0, [800000], 1, -5),
+    ]
+    suites["mf_reserve"] = _suite("mf_reserve", "Musofir qorovul pul: chet eldagi o'rtacha oylik xarajat × N oy maqsad, yetmagani, holat va o'z ulushini qorovul pul va jamg'arma orasida bo'lish (musofir/SPEC 6.4)", [
+        _case(cid, {"currency": c, "balance": _s(b), "monthly": [_s(x) for x in mo], "months": n, "share": None if sh_ is None else _s(sh_)},
+              lambda b=b, mo=mo, n=n, sh_=sh_: mf_reserve(b, mo, n, sh_))
+        for cid, c, b, mo, n, sh_ in rs_])
+    su = [
+        # Maqsad 120 mln, shundan ish boshlash (tikuv sexi) 30 mln — yashash uchun 90 mln.
+        ("su-001", 12000000000, 3000000000),
+        # Butun maqsad — ish boshlash.
+        ("su-002", 12000000000, 12000000000),
+        # Maqsadsiz.
+        ("su-003", None, 3000000000),
+        # bp yaxlitlash: 1 / 3.
+        ("su-004", 300, 100),
+        ("su-neg-001", 12000000000, 12000000001),
+        ("su-neg-002", 12000000000, 0),
+    ]
+    suites["mf_startup"] = _suite("mf_startup", "Musofir ish boshlash summasi: qaytish jamg'armasi maqsadining bir qismi, yashash uchun qolgani (musofir/SPEC 6.6)", [
+        _case(cid, {"currency": U, "target": None if tg is None else _s(tg), "startup": _s(st)},
+              lambda tg=tg, st=st: mf_startup(tg, st))
+        for cid, tg, st in su])
 
     krw = (91, 10)
     rf = [
@@ -2811,7 +2910,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
                  "mf_month", "mf_return_fund", "mf_remittance",
-                 "mf_travel_debt", "mf_cooling")
+                 "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup")
 
 
 def generate(directory: str) -> None:
@@ -2876,6 +2975,13 @@ def _expect_error(code, fn, *args):
 
 def selftest() -> None:
     # M3 (musofir/SPEC 6): 15 mln yo'l qarzi, maqsadda 3,27 mln, oyiga ~3 mln → 4 oy; qarindosh 15 mln muddatsiz qarz.
+    rsv = mf_reserve(300000, [810000, 790000, 815000], 1, 520000)
+    assert (rsv["target"], rsv["toReserve"], rsv["toFund"], rsv["status"]) == ("805000", "505000", "15000", "PARTIAL"), rsv
+    m4 = mf_month(150000, 6000000, 2000, [{"kind": "SALARY", "amount": "2600000"}, {"kind": "RESERVE_IN", "amount": "300000"},
+                                          {"kind": "FUND_IN", "amount": "220000"}], 510000)
+    assert (m4["savedNet"], m4["shareGap"], m4["reserveBalance"], m4["pocket"]) == ("520000", "0", "810000", "2230000"), m4
+    assert mf_startup(12000000000, 3000000000)["living"] == "9000000000"
+    _expect_error("STARTUP_EXCEEDS_TARGET", mf_startup, 100, 101)
     tdr = mf_travel_debt(1500000000, 327000000, [327000000, 300000000, 280000000], 6, date(2026, 10, 19))
     assert (tdr["remaining"], tdr["monthsToClear"], tdr["clearOn"], tdr["status"]) == ("1173000000", 4, "2027-02-19", "ON_TRACK")
     cor = mf_cooling(date(2026, 11, 8), date(2026, 10, 19), 12000000000, "LEND", 1500000000,

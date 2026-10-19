@@ -135,7 +135,8 @@
 
 ### OQ-MF3. Chet eldagi qorovul pul
 - **Savol:** qorovul pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
-- **To'sadi:** M3. **Holat:** OCHIQ.
+- **Qaror (mahsulot egasi, 2026-10-19):** qaytish jamg'armasidan **alohida**; maqsad — chet eldagi o'rtacha oylik xarajat × 1 oy (sozlamada 1–3 oy); o'z ulushi avval qorovul pulga, keyin jamg'armaga. Amalga oshirildi — M4 (musofir/SPEC 6.4).
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF4. Kurs manbai va eskirishi
 - **Vaqtinchalik qaror (M1):** kursni foydalanuvchi kiritadi (sana va ixtiyoriy manba bilan); 30 kundan eski kurs — «yangilang» belgisi; kurs yo'q bo'lsa uy valyutasidagi ko'rsatkich ko'rsatilmaydi. Markaziy bank kursini avtomatik olish — yo'q (tarmoqqa chiqmaslik qoidasi).

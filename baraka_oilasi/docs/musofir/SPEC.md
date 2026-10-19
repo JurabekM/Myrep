@@ -130,8 +130,12 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
   - sovutish qoidasi: davr ichida summa olib kelinganining 10 %idan ko'p bo'lsa — «kuting» (sariq), 30 %idan ko'p bo'lsa — qizil (OQ-MF8).
 - Natija: yashil / sariq / qizil, har bir bayroq izohi bilan va «kutish sanasi». Qaror **taqiqlanmaydi** — musofir tanlaydi: «kutaman», «baribir qilaman», «rad etaman»; tanlov o'zgarmas qarorlar jurnaliga yoziladi (musofirning shaxsiy hisobi — oilaga yuborilmaydi, ADR-0004).
 
-### 6.4. Qorovul pul
-- Chet eldagi qorovul pul — OQ-MF3 (mahsulot egasi qarori kutilmoqda).
+### 6.4. Qorovul pul (M4, OQ-MF3 — mahsulot egasi qarori)
+- **Qorovul pul** — chet eldagi kutilmagan xarajat (kasallik, ishsiz qolish) uchun **qaytish jamg'armasidan alohida** pul, ish valyutasida. Harakatlar: «Qorovul pulga», «Qorovul puldan» (sabab majburiy, qoldiqdan oshmaydi), «Qorovul pul (boshlang'ich)».
+- **Maqsad** = oxirgi to'liq oylardagi (yozuvi borlari, ko'pi bilan 3 ta) **chet eldagi o'rtacha oylik xarajat × N oy**; N — sozlamada, 1–3, standart **1**. Tarix bo'lmasa — maqsad yo'q (`NO_HISTORY`), qo'lda kiritilmaydi.
+- **Navbat:** o'z ulushi avval qorovul pulga, to'lgach — qaytish jamg'armasiga. Maoshdan keyingi taklif ikkiga bo'linadi: `qorovulga = min(ulush, yetmagani)`, `jamg'armaga = ulush − qorovulga`.
+- **Oy hisobi:** qo'ldagi pul qorovul pulga sof qo'yilgancha kamayadi; **o'z ulushi** = jamg'armaga sof + qorovul pulga sof (ogohlantirishlar shunga qarab). Qorovul puldan olish — ayblovsiz, ogohlantirish yo'q (u shuning uchun bor).
+- Holatlar: `FULL`, `PARTIAL`, `EMPTY`, `NO_HISTORY`. Qorovul pul — musofirning shaxsiy hisobi (oilaga yuborilmaydi).
 
 ### 6.5. M3 da qanday qilindi (farqlar)
 - **Yo'l qarzi** faqat uy valyutasidagi faol Uy qarzi bo'la oladi (`CURRENCY_MISMATCH`); belgi, maqsadli muddat (1–60 oy), qaytish sanasi va olib kelingan summa — `mf_settings` da (musofirning shaxsiy hisobi, oilaga yuborilmaydi). Reja — faqat musofirda.
@@ -140,6 +144,10 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - **«Qaytdim»** — kelajakdagi sana bo'lmaydi (`FUTURE_DATE`); belgini olib tashlash mumkin. Sovutish davri bosh sahifada (qolgan kunlar).
 - **Katta qaror tekshiruvi** sovutish davridan tashqarida ham ishlaydi (taklif detektori). Savollar yadrodan (`mf_decision_questions`); javoblar to'liq bo'lmasa `MISSING_ANSWER`, ortiqcha yoki noma'lum kalit — `INVALID_ANSWER`. Yozishda tanlov majburiy (`WAIT`, `PROCEED`, `DECLINE`); `mf_decisions` — o'zgarmas, oilaga yuborilmaydi.
 - Qilinmagan: qorovul pul (OQ-MF3), «Hunardan ishga» havolasi (6.2), qarorni keyin «bajarildi/bekor» deb belgilash, Android UI.
+
+### 6.6. Ish boshlash summasi va qaror natijasi (M4)
+- **Ish boshlash summasi** (5-qonun, 6.2) — qaytish jamg'armasi maqsadining bir qismi, uy valyutasida; ixtiyoriy ravishda Uy makonidagi «Hunardan ishga» g'oyasiga bog'lanadi (summani g'oyaning boshlang'ich sarmoyasidan taklif qilish mumkin). Maqsad ikkiga bo'linib ko'rsatiladi: `yashash uchun = maqsad − ish boshlash` (ish boshlash summasi maqsaddan oshmaydi — `STARTUP_EXCEEDS_TARGET`). Bosh sahifadan «Hunardan ishga»ga havola.
+- **Qaror natijasi:** jurnaldagi qaror keyin bir marta belgilanadi — «qildim» (`DONE`) yoki «qilmadim» (`DROPPED`), sana va izoh bilan; o'zgarmas, shaxsiy.
 
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.
@@ -161,6 +169,7 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 ### 9.2. M2, M3
 - `mf_remittance` (M2): bitta va bir nechta yuborish, largest remainder qoldiq birliklari, qabul qilinmagan («yo'lda»), maqsaddan ortiq sarflangan, ulushsiz maqsadga xarajat; xatolar — ulushlar yig'indisi ≠ 100 %, takroriy maqsad, nol ulush, noma'lum maqsad, summa ≤ 0.
 - `mf_travel_debt`, `mf_cooling` — M3.
+- `mf_reserve`, `mf_startup` (M4); `mf_month` qorovul pul harakatlari bilan kengayadi.
 
 ## 10. ISH REJASI
 | # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |
@@ -168,6 +177,7 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 | M1 | Ko'p valyuta, chet eldagi maosh va xarajat, o'z ulushi, qaytish jamg'armasi | 2–4 | `mf_month`, `mf_return_fund` yashil; uy valyutasidagi har ko'rsatkich kursi bilan; kurssiz — taxmin yo'q; bosh ekran 1 va 2-raqami |
 | M2 | «Ikki qirg'oq»: maqsadlar, `REMITTANCE`, uyda maqsad bo'yicha xarajat | 5, 8 | maqsad bo'yicha qoldiq; kelishuv 9 savol; `.baraka` round-trip |
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori | 6 | 90 kunlik sovutish; detektor vektorlari |
+| M4 | Qorovul pul (OQ-MF3), ish boshlash summasi va «Hunardan ishga» havolasi, qaror natijasi | 6.4, 6.6 | `mf_month` (qorovul harakatlari), `mf_reserve`, `mf_startup` yashil; ulush avval qorovulga |
 
 Har bir M-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar).
 
