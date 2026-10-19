@@ -133,6 +133,14 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 ### 6.4. Qorovul pul
 - Chet eldagi qorovul pul — OQ-MF3 (mahsulot egasi qarori kutilmoqda).
 
+### 6.5. M3 da qanday qilindi (farqlar)
+- **Yo'l qarzi** faqat uy valyutasidagi faol Uy qarzi bo'la oladi (`CURRENCY_MISMATCH`); belgi, maqsadli muddat (1–60 oy), qaytish sanasi va olib kelingan summa — `mf_settings` da (musofirning shaxsiy hisobi, oilaga yuborilmaydi). Reja — faqat musofirda.
+- **«Qarz to'lovi» maqsadidan to'lov** istalgan faol Uy qarziga qilinadi (yo'l qarzi bilan cheklanmaydi; oila qurilmasi yo'l qarzi belgisini ko'rmaydi). U8 to'lovi va `mf_debt_payments` belgisi bitta tranzaksiyada; belgi o'zgarmas va oila qurilmasidan qabul qilinadi. «Ikki qirg'oq»da xarajatlar ro'yxatida `DEBT_PAYMENT` bo'lib, kreditor bilan ko'rinadi; maqsaddan ortiq to'lov taqiqlanmaydi.
+- **Oylik o'rtacha** — oxirgi 3 to'liq oyda (qabuli borlari) uyda qabul qilingan yuborishlarning «Qarz to'lovi» bo'lagi; qabul sanasi bo'yicha. Joriy oy hisobga olinmaydi (`NO_PAYMENTS` matni shunga mos).
+- **«Qaytdim»** — kelajakdagi sana bo'lmaydi (`FUTURE_DATE`); belgini olib tashlash mumkin. Sovutish davri bosh sahifada (qolgan kunlar).
+- **Katta qaror tekshiruvi** sovutish davridan tashqarida ham ishlaydi (taklif detektori). Savollar yadrodan (`mf_decision_questions`); javoblar to'liq bo'lmasa `MISSING_ANSWER`, ortiqcha yoki noma'lum kalit — `INVALID_ANSWER`. Yozishda tanlov majburiy (`WAIT`, `PROCEED`, `DECLINE`); `mf_decisions` — o'zgarmas, oilaga yuborilmaydi.
+- Qilinmagan: qorovul pul (OQ-MF3), «Hunardan ishga» havolasi (6.2), qarorni keyin «bajarildi/bekor» deb belgilash, Android UI.
+
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.
 - Kurs prognozi, «qachon ayirboshlash foydali», o'tkazma xizmatlarini reklama qilish yoki reytingi yo'q.

@@ -35,6 +35,8 @@ vi.mock("../../bindings", () => ({
     mfConfirmReceipt: (...a: unknown[]) => mfConfirmReceipt(...a),
     mfRecordSpend: (...a: unknown[]) => mfRecordSpend(...a),
     household: (...a: unknown[]) => household(...a),
+    mfTravelDebt: () => Promise.resolve({ status: "ok", data: { debt: null, targetMonths: 6, candidates: [], plan: null } }),
+    mfDecisions: () => Promise.resolve({ status: "ok", data: [] }),
   },
 }));
 
@@ -59,6 +61,7 @@ const settings = {
 const overview = (over: Record<string, unknown> = {}) => ({
   settings,
   defaultSharePercent: "20",
+  cooling: null,
   periodStart: "2026-10-01",
   periodEnd: "2026-10-31",
   month: {

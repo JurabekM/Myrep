@@ -172,26 +172,36 @@ function Remittance({ mfSpaceId, r, members }: { mfSpaceId: string; r: MfRemitta
   );
 }
 
+/**
+ * Maqsad bo'yicha xarajat. «Qarz to'lovi» maqsadida — Uy qarzlaridan biriga U8 to'lovi (yo'l qarzi,
+ * musofir/SPEC 6.1): kategoriya o'rniga qarz tanlanadi.
+ */
 function SpendForm({ mfSpaceId, uySpaceId }: { mfSpaceId: string; uySpaceId: string }) {
   const { t } = useTranslation();
   const categories = useQuery({ queryKey: keys.categories(uySpaceId), queryFn: () => call(commands.categories(uySpaceId)) });
   const [purpose, setPurpose] = useState<string>("HOUSEHOLD");
+  const isDebt = purpose === "DEBT";
+  const debts = useQuery({ queryKey: keys.debts(uySpaceId), queryFn: () => call(commands.debtsOverview(uySpaceId)), enabled: isDebt });
+  const active = (debts.data?.debts ?? []).filter((d) => d.status === "ACTIVE");
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [debtId, setDebtId] = useState("");
   const [channel, setChannel] = useState<Channel>("CASH");
   const [note, setNote] = useState("");
   const save = useMutation({
     mutationFn: () =>
-      call(
-        commands.mfRecordSpend(mfSpaceId, {
-          purpose,
-          amount,
-          categoryId: categoryId || categories.data?.[0]?.id || "",
-          channel,
-          occurredOn: null,
-          note: note.trim() || null,
-        }),
-      ),
+      isDebt
+        ? call(commands.mfPayDebt(mfSpaceId, { debtId: debtId || active[0]?.id || "", amount, paidOn: null, note: note.trim() || null }))
+        : call(
+            commands.mfRecordSpend(mfSpaceId, {
+              purpose,
+              amount,
+              categoryId: categoryId || categories.data?.[0]?.id || "",
+              channel,
+              occurredOn: null,
+              note: note.trim() || null,
+            }),
+          ),
     onSuccess: () => {
       setAmount("");
       setNote("");
@@ -218,17 +228,31 @@ function SpendForm({ mfSpaceId, uySpaceId }: { mfSpaceId: string; uySpaceId: str
         <span className="label">{t("common.amount")}</span>
         <AmountInput value={amount} onChange={(e) => setAmount(e.target.value)} required />
       </label>
-      <label>
-        <span className="label">{t("kk.category")}</span>
-        <select className="field" value={categoryId || categories.data?.[0]?.id || ""} onChange={(e) => setCategoryId(e.target.value)}>
-          {categories.data?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.customName ?? t(c.nameKey)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <ChannelButtons value={channel} onChange={setChannel} />
+      {isDebt ? (
+        <label>
+          <span className="label">{t("mf.shores.debt")}</span>
+          <select className="field" value={debtId || active[0]?.id || ""} onChange={(e) => setDebtId(e.target.value)}>
+            {active.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.creditor} · {d.balance.formatted}
+              </option>
+            ))}
+          </select>
+          {debts.data && active.length === 0 && <span className="mt-1 block text-xs text-warn">{t("mf.shores.noDebts")}</span>}
+        </label>
+      ) : (
+        <label>
+          <span className="label">{t("kk.category")}</span>
+          <select className="field" value={categoryId || categories.data?.[0]?.id || ""} onChange={(e) => setCategoryId(e.target.value)}>
+            {categories.data?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.customName ?? t(c.nameKey)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {!isDebt && <ChannelButtons value={channel} onChange={setChannel} />}
       <label className="md:col-span-2">
         <span className="label">{t("kk.note")}</span>
         <input className="field" value={note} onChange={(e) => setNote(e.target.value)} />
@@ -237,7 +261,7 @@ function SpendForm({ mfSpaceId, uySpaceId }: { mfSpaceId: string; uySpaceId: str
         <ErrorText error={save.error} />
       </div>
       <button className="btn-primary self-start md:col-span-2 md:justify-self-start" disabled={save.isPending}>
-        {t("mf.shores.saveSpend")}
+        {isDebt ? t("mf.shores.payDebt") : t("mf.shores.saveSpend")}
       </button>
     </form>
   );

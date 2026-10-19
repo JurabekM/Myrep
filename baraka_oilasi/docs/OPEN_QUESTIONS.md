@@ -160,7 +160,7 @@
 
 ### OQ-MF8. Sovutish davri chegaralari va yo'l qarzi muddati
 - **Vaqtinchalik qaror (M3):** sovutish davri — qaytgandan keyin 90 kun; katta qaror — olib kelingan summaning 10 %idan ko'pi (sariq, «kuting»), 30 %idan ko'pi (qizil). Yo'l qarzi uchun «birinchi maoshlardan» maqsadli muddat — 6 oy.
-- **Savol:** 90 kun, 10 % va 30 % to'g'rimi? Olib kelingan summa kiritilmasa (masalan, pul hali Koreyada) — chegarani qaytish jamg'armasidan olaylikmi?
+- **Savol:** 90 kun, 10 % va 30 % to'g'rimi? Olib kelingan summa kiritilmasa (masalan, pul hali Koreyada) — chegarani qaytish jamg'armasidan olaylikmi? Hozir (M3): summa kiritilmasa, davr ichidagi har katta qaror sariq (`COOLING_PERIOD`).
 - **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
 ## Oila va maxfiylik

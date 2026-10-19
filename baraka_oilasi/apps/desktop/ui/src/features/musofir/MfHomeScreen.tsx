@@ -11,6 +11,8 @@ import { keys } from "../../lib/queryClient";
 import { useUi } from "../../state/ui";
 import { MfEntryDialog, type MfEntryMode } from "./MfEntryDialog";
 import { MfTermsCard } from "./MfTermsCard";
+import { ReturnCard } from "./ReturnCard";
+import { TravelDebtCard } from "./TravelDebtCard";
 import { PurposesTable } from "./TwoShoresScreen";
 
 const ACTIONS: MfEntryMode[] = ["SALARY", "EXPENSE", "SENT_HOME", "FUND_IN", "FUND_OUT", "OTHER_INCOME", "OPENING", "FUND_OPENING"];
@@ -272,6 +274,10 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
 
       <ShoresSummary spaceId={spaceId} />
       <MfTermsCard spaceId={spaceId} />
+      <div className="grid gap-5 md:grid-cols-2">
+        <TravelDebtCard spaceId={spaceId} />
+        <ReturnCard spaceId={spaceId} d={d} homeCurrency={s.homeCurrency} />
+      </div>
 
       <div className="grid gap-5 md:grid-cols-2">
         <RateCard spaceId={spaceId} d={d} s={s} />

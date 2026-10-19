@@ -11,6 +11,8 @@ const mfConfirmReceipt = vi.fn();
 const mfRecordSpend = vi.fn();
 const household = vi.fn();
 const categories = vi.fn();
+const debtsOverview = vi.fn();
+const mfPayDebt = vi.fn();
 
 vi.mock("../../bindings", () => ({
   commands: {
@@ -19,6 +21,8 @@ vi.mock("../../bindings", () => ({
     mfRecordSpend: (...a: unknown[]) => mfRecordSpend(...a),
     household: (...a: unknown[]) => household(...a),
     categories: (...a: unknown[]) => categories(...a),
+    debtsOverview: (...a: unknown[]) => debtsOverview(...a),
+    mfPayDebt: (...a: unknown[]) => mfPayDebt(...a),
   },
 }));
 
@@ -63,7 +67,7 @@ const view = (over: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
-  [mfTwoShores, mfConfirmReceipt, mfRecordSpend, household, categories].forEach((f) => f.mockReset());
+  [mfTwoShores, mfConfirmReceipt, mfRecordSpend, household, categories, debtsOverview, mfPayDebt].forEach((f) => f.mockReset());
   household.mockResolvedValue(ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, spaces: [], members: [{ id: "m2", displayName: "Gulnora", role: "ADULT" }] }));
   categories.mockResolvedValue(ok([{ id: "c1", nameKey: "category.food", customName: "Bozor", defaultNecessity: null, isSystem: false }]));
 });
@@ -116,9 +120,43 @@ describe("Ikki qirg'oq — uy tomoni", () => {
     expect(screen.getByTestId("mf-purpose-HOUSEHOLD")).toHaveTextContent("-550 000");
     expect(await axeViolations(container)).toEqual([]);
     const form = screen.getByRole("form", { name: "Maqsad boʻyicha xarajat" });
-    await user.selectOptions(within(form).getByLabelText("Maqsad"), "DEBT");
+    await user.selectOptions(within(form).getByLabelText("Maqsad"), "BUILD");
     await user.type(within(form).getByLabelText("Summa"), "1 000 000");
     await user.click(within(form).getByRole("button", { name: "Xarajatni yozish" }));
-    expect(mfRecordSpend).toHaveBeenCalledWith("mf", { purpose: "DEBT", amount: "1 000 000", categoryId: "c1", channel: "CASH", occurredOn: null, note: null });
+    expect(mfRecordSpend).toHaveBeenCalledWith("mf", { purpose: "BUILD", amount: "1 000 000", categoryId: "c1", channel: "CASH", occurredOn: null, note: null });
+  });
+
+  it("«Qarz to'lovi» maqsadi: kategoriya o'rniga Uy qarzi va «Qarzni to'lash»", async () => {
+    mfTwoShores.mockResolvedValue(
+      ok(
+        view({
+          pending: 0,
+          spends: [{ id: "r1", kind: "DEBT_PAYMENT", purpose: "DEBT", amount: u("1 000 000 soʻm"), categoryId: null, debtId: "d1", creditor: "Togʻam", occurredOn: "2026-10-15", note: null }],
+        }),
+      ),
+    );
+    debtsOverview.mockResolvedValue(
+      ok({
+        debts: [
+          { id: "d0", creditor: "Bank", status: "CLOSED", balance: u("0 soʻm", "0") },
+          { id: "d1", creditor: "Togʻam", status: "ACTIVE", balance: u("14 000 000 soʻm", "1400000000") },
+        ],
+      }),
+    );
+    mfPayDebt.mockResolvedValue(ok(view()));
+    const user = userEvent.setup();
+    const { container } = wrap(<TwoShoresScreen mfSpaceId="mf" uySpaceId="uy" />);
+    expect(await screen.findByTestId("mf-spend")).toHaveTextContent("kimga: Togʻam");
+    const form = screen.getByRole("form", { name: "Maqsad boʻyicha xarajat" });
+    await user.selectOptions(within(form).getByLabelText("Maqsad"), "DEBT");
+    const debt = await within(form).findByLabelText("Qaysi qarz");
+    expect(await within(debt).findByRole("option", { name: "Togʻam · 14 000 000 soʻm" })).toBeInTheDocument();
+    expect(within(debt).queryByRole("option", { name: /Bank/ })).not.toBeInTheDocument();
+    expect(within(form).queryByLabelText("Kategoriya")).not.toBeInTheDocument();
+    await user.type(within(form).getByLabelText("Summa"), "500 000");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(within(form).getByRole("button", { name: "Qarzni toʻlash" }));
+    expect(mfPayDebt).toHaveBeenCalledWith("mf", { debtId: "d1", amount: "500 000", paidOn: null, note: null });
+    expect(mfRecordSpend).not.toHaveBeenCalled();
   });
 });

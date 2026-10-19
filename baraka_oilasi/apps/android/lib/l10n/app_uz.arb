@@ -4039,10 +4039,171 @@
   "error_INVALID_DECISION_KIND": "Qaror turini tanlang",
   "error_INVALID_CHOICE": "Tanlovingizni belgilang: kutaman, baribir qilaman yoki rad etaman",
   "error_MISSING_ANSWER": "Barcha savollarga javob bering",
-  "mf_shores_paidTo": "Qarz toʻlovi: {creditor}",
+  "mf_shores_paidTo": "kimga: {creditor}",
   "@mf_shores_paidTo": {
     "placeholders": {
       "creditor": {}
     }
-  }
+  },
+  "mf_travel_title": "Yoʻl qarzi",
+  "mf_travel_intro": "Yoʻlga olingan qarzni belgilang — uni birinchi maoshlardan qanday yopishni koʻrsataman.",
+  "mf_travel_noDebts": "Avval Uy makonidagi «Qarzlar»da yoʻl qarzini yozing (kim bergan, qancha, reja) — keyin shu yerda belgilaysiz.",
+  "mf_travel_choose": "Yoʻl qarzini belgilash",
+  "mf_travel_change": "Oʻzgartirish",
+  "mf_travel_form": "Yoʻl qarzi sozlamasi",
+  "mf_travel_which": "Qaysi qarz",
+  "mf_travel_targetMonths": "Necha oyda yopmoqchisiz",
+  "mf_travel_targetHint": "Odatda — birinchi 6 oylik maoshdan.",
+  "mf_travel_unmark": "Belgini olib tashlash",
+  "mf_travel_outstanding": "Qarz qoldigʻi",
+  "mf_travel_available": "Uyda «Qarz toʻlovi» maqsadida",
+  "mf_travel_remaining": "Yopish uchun qoldi",
+  "mf_travel_avg": "Qarz maqsadiga oyiga oʻrtacha ({count} oy)",
+  "@mf_travel_avg": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_travel_required": "{count} oyda yopish uchun oyiga",
+  "@mf_travel_required": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_travel_status_CLEARED": "Yoʻl qarzini yopishga uyda yetarli pul bor. Barakalla!",
+  "mf_travel_status_ON_TRACK": "Shu surʼatda {months} oyda ({date}) yopiladi — {target} oylik maqsad ichida.",
+  "@mf_travel_status_ON_TRACK": {
+    "placeholders": {
+      "date": {},
+      "months": {},
+      "target": {}
+    }
+  },
+  "mf_travel_status_BEHIND": "Shu surʼatda {months} oyda ({date}) yopiladi. {target} oyda yopish uchun oyiga {amount} kerak.",
+  "@mf_travel_status_BEHIND": {
+    "placeholders": {
+      "amount": {},
+      "date": {},
+      "months": {},
+      "target": {}
+    }
+  },
+  "mf_travel_status_NO_PAYMENTS": "Oxirgi toʻliq oylarda qarz maqsadiga pul kelmagan — surʼatni hali hisoblab boʻlmaydi. {target} oyda yopish uchun oyiga {amount} kerak.",
+  "@mf_travel_status_NO_PAYMENTS": {
+    "placeholders": {
+      "amount": {},
+      "target": {}
+    }
+  },
+  "mf_travel_raiseShare": "Kelishuv shartlarida «Qarz toʻlovi» ulushini oshirsangiz, qarz tezroq yopiladi.",
+  "mf_travel_payWhere": "Toʻlov uyda «Ikki qirgʻoq»dan yoziladi: maqsad — «Qarz toʻlovi».",
+  "mf_return_title": "Qaytish va sovutish davri",
+  "mf_return_intro": "Uyga qaytganingizda «Qaytdim» deb belgilang. Keyingi 90 kun — sovutish davri: katta qarorlardan oldin shoshilmang.",
+  "mf_return_mark": "Qaytdim",
+  "mf_return_form": "Qaytish",
+  "mf_return_date": "Qaytgan sana",
+  "mf_return_brought": "Olib kelingan summa ({currency})",
+  "@mf_return_brought": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mf_return_broughtHint": "Uyga olib kelgan pulingiz — sovutish qoidasi shundan hisoblanadi.",
+  "mf_return_cooling": "Sovutish davri: yana {count} kun ({date} gacha)",
+  "@mf_return_cooling": {
+    "placeholders": {
+      "count": {},
+      "date": {}
+    }
+  },
+  "mf_return_over": "Sovutish davri tugagan ({date}).",
+  "@mf_return_over": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mf_return_returnedLine": "Qaytgan sana: {date}",
+  "@mf_return_returnedLine": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mf_return_broughtLine": "olib kelingan: {amount}",
+  "@mf_return_broughtLine": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_return_rule": "Bu davrda olib kelinganning 10 %idan ortiq qaror — «kuting» (sariq), 30 %idan ortigʻi — qizil belgi.",
+  "mf_return_change": "Oʻzgartirish",
+  "mf_return_unmark": "Belgini olib tashlash",
+  "mf_decision_log": "Katta qarorlar",
+  "mf_decision_intro": "Qarz berish, sheriklik, sarmoya yoki katta xariddan oldin tekshiring. Qaror sizniki — tekshiruv faqat ogohlantiradi.",
+  "mf_decision_open": "Katta qarorni tekshirish",
+  "mf_decision_title": "Katta qaror oldidan tekshiruv",
+  "mf_decision_dialogIntro": "Qaytgan musofirga takliflar koʻp keladi. Har savolga halol javob bering; bilmasangiz — «Bilmayman».",
+  "mf_decision_kind": "Qaror turi",
+  "mf_decision_kindName_LEND": "Qarz berish",
+  "mf_decision_kindName_PARTNERSHIP": "Sheriklik",
+  "mf_decision_kindName_INVEST": "Sarmoya",
+  "mf_decision_kindName_PURCHASE": "Katta xarid",
+  "mf_decision_kindName_OTHER": "Boshqa",
+  "mf_decision_amount": "Summa ({currency})",
+  "@mf_decision_amount": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mf_decision_what": "Nima haqida",
+  "mf_decision_waitUntil": "Kutish sanasi: {date}",
+  "@mf_decision_waitUntil": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mf_decision_advice_GREEN": "Baribir yozma kelishuv va guvoh bilan qiling.",
+  "mf_decision_advice_YELLOW": "Shoshilmang: javobsiz savollarga aniq javob oling, oila bilan maslahatlashing va kutish sanasigacha kuting.",
+  "mf_decision_advice_RED": "Bu qaror yillik mehnatingizni xavfga qoʻyadi. Rad etish yoki kutish — eng xavfsiz yoʻl.",
+  "mf_decision_choose": "Tanlovingiz",
+  "mf_verdict_GREEN": "Yashil: jiddiy xavf belgisi topilmadi",
+  "mf_verdict_YELLOW": "Sariq: kuting va aniqlang",
+  "mf_verdict_RED": "Qizil: katta xavf",
+  "mf_choice_WAIT": "Kutaman",
+  "mf_choice_PROCEED": "Baribir qilaman",
+  "mf_choice_DECLINE": "Rad etaman",
+  "mf_q_approached": "Taklif qaytganingizdan keyin tanish yoki qarindosh orqali keldimi?",
+  "mf_q_upfront": "Avval pul, keyin hujjat yoki mol soʻralyaptimi?",
+  "mf_q_abroadJobFee": "Chet elga qayta ish yoki viza uchun pul soʻralyaptimi?",
+  "mf_q_repaymentDate": "Qaytarish muddati aniq (yozma) belgilanganmi?",
+  "mf_q_familyDiscussed": "Oila bilan maslahatlashdingizmi?",
+  "mf_flag_FRESH_RETURN_APPROACH": "Qaytganingiz zahoti kelgan taklif — pulingiz borligini bilib kelishgan boʻlishi mumkin.",
+  "mf_flag_UPFRONT_BEFORE_DOCUMENTS": "Avval pul, keyin hujjat — firibgarlikning eng koʻp uchraydigan usuli.",
+  "mf_flag_UPFRONT_UNKNOWN": "Pul hujjatdan oldin soʻraladimi — aniq emas. Avval hujjatni koʻring.",
+  "mf_flag_ABROAD_JOB_FEE": "Chet elga ish yoki viza uchun oldindan pul — koʻpincha aldov. Faqat rasmiy idoralar orqali.",
+  "mf_flag_NO_REPAYMENT_DATE": "Qaytarish muddati yoʻq. «Muddatli qarzni yozinglar» — Baqara, 282.",
+  "mf_flag_REPAYMENT_DATE_UNKNOWN": "Qaytarish muddati aniq emas — yozma belgilang.",
+  "mf_flag_NOT_DISCUSSED": "Oila bilan maslahatlashilmagan. Bu pul — butun oilaning mehnati.",
+  "mf_flag_COOLING_PERIOD": "Sovutish davri: yana {days} kun. Olib kelingan summa yozilmagan — ulushini hisoblab boʻlmadi.",
+  "@mf_flag_COOLING_PERIOD": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "mf_flag_COOLING_BIG_DECISION": "Bu olib kelinganning {percent} %i. Sovutish davri — {date} gacha kutish tavsiya etiladi.",
+  "@mf_flag_COOLING_BIG_DECISION": {
+    "placeholders": {
+      "date": {},
+      "percent": {}
+    }
+  },
+  "mf_flag_LARGE_SHARE": "Bu olib kelinganning {percent} %i — juda katta ulush, ayniqsa sovutish davrida ({date} gacha).",
+  "@mf_flag_LARGE_SHARE": {
+    "placeholders": {
+      "date": {},
+      "percent": {}
+    }
+  },
+  "mf_shores_debt": "Qaysi qarz",
+  "mf_shores_noDebts": "Uy makonida faol qarz yoʻq — avval «Qarzlar»da yozing.",
+  "mf_shores_payDebt": "Qarzni toʻlash"
 }

@@ -50,6 +50,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | M0: Musofir makoni spetsifikatsiyasi (`docs/musofir/SPEC.md`) | 📝 qoralama v0.1 — mahsulot egasi tasdig'i kutilmoqda |
 | M1: Musofir — ish valyutasi va kurs (taxminsiz), chet eldagi maosh va xarajat, uyga yuborilgan (komissiya bilan), o'z ulushi va qaytish jamg'armasi, qaytish sanasigacha prognoz | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M2: Musofir «Ikki qirg'oq» — yuborishning maqsadlari, oila bilan kelishuv (kattalar tasdig'i), uyda qabul va maqsad bo'yicha xarajat; uydagi oila qurilmasi (ADR-0004) — musofirning shaxsiy hisobi unga yuborilmaydi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
+| M3: Musofir — yo'l qarzidan chiqish («Qarz to'lovi» maqsadidan uyda to'lanadi, necha oyda yopilishi), «Qaytdim» va 90 kunlik sovutish davri, katta qaror oldidan tekshiruv va qarorlar jurnali | ✅ yadro + desktop + Linux E2E; qorovul pul — OQ-MF3; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish
