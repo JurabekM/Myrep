@@ -40,7 +40,12 @@ pub const SERVICE_MARKER: &str = "service.json";
 
 /// `%ProgramData%\TAMGA`.
 pub fn service_root() -> Option<PathBuf> {
-    std::env::var_os("ProgramData").map(|p| PathBuf::from(p).join("TAMGA"))
+    // Muhit o'zgaruvchisi emas: uni mijoz jarayoni o'zgartirib, belgini "ko'rmay" qolishi mumkin edi.
+    #[cfg(windows)]
+    let base = tamga_win::service::program_data();
+    #[cfg(not(windows))]
+    let base: Option<PathBuf> = None;
+    base.map(|p| p.join("TAMGA"))
 }
 
 /// Mashinadagi o'rnatish turi (belgi faylidan).

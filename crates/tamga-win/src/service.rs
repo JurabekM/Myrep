@@ -18,6 +18,39 @@ fn wide(s: &str) -> Vec<u16> {
         .collect()
 }
 
+// ---------------------------------------------------------------- mashina papkasi
+
+/// `%ProgramData%` — Windows'ning ma'lum papka API'si orqali, **muhit o'zgaruvchisidan emas**:
+/// `ProgramData` o'zgaruvchisini har bir jarayon o'zi uchun o'zgartira oladi va shu bilan mijozni
+/// himoyalangan rejim belgisini ko'rmaydigan qilib, oddiy rejimga (o'z daemon'iga) o'tkazishi mumkin edi.
+#[allow(unsafe_code)]
+pub fn program_data() -> Option<PathBuf> {
+    use windows_sys::Win32::System::Com::CoTaskMemFree;
+    use windows_sys::Win32::UI::Shell::{FOLDERID_ProgramData, SHGetKnownFolderPath};
+    let mut out: windows_sys::core::PWSTR = std::ptr::null_mut();
+    // SAFETY: `FOLDERID_ProgramData` — statik GUID; token null (joriy foydalanuvchi, ProgramData uchun
+    // ahamiyatsiz); `out` — chiqish, API `CoTaskMemAlloc` bilan ajratgan NUL bilan tugaydigan satr yozadi.
+    let hr =
+        unsafe { SHGetKnownFolderPath(&FOLDERID_ProgramData, 0, std::ptr::null_mut(), &mut out) };
+    if out.is_null() {
+        return None;
+    }
+    // SAFETY: muvaffaqiyatda `out` NUL bilan tugaydigan UTF-16 satr; uzunlikni NUL gacha sanab
+    // nusxalaymiz. Bufer xato bo'lganda ham `CoTaskMemFree` bilan bir marta bo'shatiladi (hujjat talabi).
+    let s = unsafe {
+        let s = (hr >= 0).then(|| {
+            let mut n = 0;
+            while *out.add(n) != 0 {
+                n += 1;
+            }
+            String::from_utf16_lossy(std::slice::from_raw_parts(out, n))
+        });
+        CoTaskMemFree(out.cast());
+        s
+    };
+    s.filter(|s| !s.is_empty()).map(PathBuf::from)
+}
+
 // ---------------------------------------------------------------- DPAPI
 
 /// DPAPI bilan shifrlash, **mashina doirasida** (`CRYPTPROTECT_LOCAL_MACHINE`). Faylni o'qiy oladigan
@@ -297,20 +330,25 @@ fn sid_string(sid: *mut c_void) -> Option<String> {
 
 // ---------------------------------------------------------------- server tekshiruvi (mijoz tomoni)
 
-/// Mijoz tomonidagi pipe handle'i orqali server jarayonining to'liq exe yo'li. Mijoz (hook, CLI,
-/// Studio) undan pipe nomini egallab olgan soxta serverni aniqlash uchun foydalanadi.
+/// Mijoz tomonidagi pipe handle'i orqali server jarayonining PID'i.
 #[allow(unsafe_code)]
-pub fn pipe_server_image(pipe: &impl AsRawHandle) -> Option<PathBuf> {
+pub fn pipe_server_pid(pipe: &impl AsRawHandle) -> Option<u32> {
     use windows_sys::Win32::System::Pipes::GetNamedPipeServerProcessId;
-    use windows_sys::Win32::System::Threading::{
-        OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
-        QueryFullProcessImageNameW,
-    };
     let mut pid = 0u32;
     // SAFETY: `pipe` qarzga olingan ochiq handle; `pid` — 4 baytli chiqish.
     if unsafe { GetNamedPipeServerProcessId(pipe.as_raw_handle(), &mut pid) } == 0 || pid == 0 {
         return None;
     }
+    Some(pid)
+}
+
+/// Jarayonning to'liq exe yo'li (cheklangan so'rov huquqi bilan).
+#[allow(unsafe_code)]
+pub fn process_image(pid: u32) -> Option<PathBuf> {
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
+        QueryFullProcessImageNameW,
+    };
     // SAFETY: faqat cheklangan so'rov huquqi bilan ochiladi; natija null bo'lsa xato.
     let h = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
     if h.is_null() {
@@ -324,6 +362,27 @@ pub fn pipe_server_image(pipe: &impl AsRawHandle) -> Option<PathBuf> {
     // SAFETY: `h` — `OpenProcess` qaytargan bizga tegishli handle, bir marta yopiladi.
     unsafe { CloseHandle(h) };
     (ok != 0).then(|| PathBuf::from(String::from_utf16_lossy(&buf[..size as usize])))
+}
+
+/// Mijoz tomonidagi pipe handle'i orqali server jarayonining to'liq exe yo'li.
+pub fn pipe_server_image(pipe: &impl AsRawHandle) -> Option<PathBuf> {
+    process_image(pipe_server_pid(pipe)?)
+}
+
+/// Xizmat ishlab turgan bo'lsa — SCM bo'yicha uning jarayon PID'i. Mijoz pipe serveri aynan shu
+/// jarayon ekanini tekshiradi: exe yo'li yetarli emas, chunki oddiy foydalanuvchi ham o'rnatish
+/// papkasidagi `tamgad.exe` ni o'z huquqi bilan ishga tushira oladi (xizmat to'xtagan paytda pipe
+/// nomini egallash uchun). `SERVICE_QUERY_STATUS` interaktiv foydalanuvchilarga standart ochiq.
+pub fn service_pid(name: &str) -> Option<u32> {
+    use windows_service::service::{ServiceAccess, ServiceState};
+    use windows_service::service_manager::{ServiceManager, ServiceManagerAccess};
+    let scm = ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT).ok()?;
+    let svc = scm.open_service(name, ServiceAccess::QUERY_STATUS).ok()?;
+    let st = svc.query_status().ok()?;
+    (st.current_state == ServiceState::Running)
+        .then_some(st.process_id)
+        .flatten()
+        .filter(|&p| p != 0)
 }
 
 // ---------------------------------------------------------------- UAC bilan ishga tushirish
@@ -417,7 +476,10 @@ pub fn run_elevated(exe: &std::path::Path, args: &[&str]) -> io::Result<u32> {
 /// xizmatga xos chiqish kodi (0 — muvaffaqiyat).
 pub type ServiceBody = fn(stop: std::sync::mpsc::Receiver<()>) -> u32;
 
-static SERVICE_NAME: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+/// Windows xizmati nomi (o'rnatuvchi `sc create tamgad` bilan yaratadi).
+pub const SERVICE_NAME: &str = "tamgad";
+
+static RUNNING_AS: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 static SERVICE_BODY: std::sync::OnceLock<ServiceBody> = std::sync::OnceLock::new();
 
 // Makro `extern "system"` kirish nuqtasini yaratadi (ichida `unsafe` bor — shuning uchun shu crate'da).
@@ -430,7 +492,7 @@ fn service_main(_args: Vec<std::ffi::OsString>) {
     };
     use windows_service::service_control_handler::{self, ServiceControlHandlerResult};
 
-    let (Some(name), Some(body)) = (SERVICE_NAME.get(), SERVICE_BODY.get()) else {
+    let (Some(name), Some(body)) = (RUNNING_AS.get(), SERVICE_BODY.get()) else {
         return;
     };
     let (tx, rx) = std::sync::mpsc::channel();
@@ -476,7 +538,7 @@ fn service_main(_args: Vec<std::ffi::OsString>) {
 /// SCM dispetcherini ishga tushiradi (bloklaydi). Faqat xizmat sifatida (SCM tomonidan) ishga
 /// tushirilganda ishlaydi; oddiy jarayondan chaqirilsa xato qaytadi.
 pub fn run_as_service(name: &str, body: ServiceBody) -> io::Result<()> {
-    let _ = SERVICE_NAME.set(name.to_owned());
+    let _ = RUNNING_AS.set(name.to_owned());
     let _ = SERVICE_BODY.set(body);
     windows_service::service_dispatcher::start(name, ffi_service_main).map_err(io::Error::other)
 }
@@ -507,6 +569,18 @@ mod tests {
     }
 
     #[test]
+    fn program_data_comes_from_the_known_folder() {
+        let p = program_data().expect("ProgramData");
+        assert!(p.is_absolute(), "{}", p.display());
+        assert!(p.is_dir(), "{}", p.display());
+    }
+
+    #[test]
+    fn missing_service_has_no_pid() {
+        assert_eq!(service_pid("tamga-bunday-xizmat-yoq"), None);
+    }
+
+    #[test]
     fn sddl_parses_and_rejects_garbage() {
         assert!(SecurityDescriptor::from_sddl(SERVICE_PIPE_SDDL).is_ok());
         assert!(SecurityDescriptor::from_sddl("bu SDDL emas").is_err());
@@ -534,6 +608,7 @@ mod tests {
 
             let id = pipe_client_identity(&server).expect("mijoz identifikatori");
             assert!(id.sid.starts_with("S-1-5-"), "{}", id.sid);
+            assert_eq!(pipe_server_pid(&client), Some(std::process::id()));
             let img = pipe_server_image(&client).expect("server exe");
             let me = std::env::current_exe().unwrap();
             assert_eq!(

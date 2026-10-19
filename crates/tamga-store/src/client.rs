@@ -33,8 +33,8 @@ pub enum ClientError {
 /// O'rnatish turiga qarab daemon'ga ulanadi:
 /// - oddiy rejim — `pipe_name()`, kerak bo'lsa `spawn` (yonidagi `tamgad`) ishga tushiriladi;
 /// - himoyalangan rejim — xizmat pipe'i, hech narsa ishga tushirilmaydi (xizmatni SCM boshqaradi) va
-///   server jarayoni `install_dir\tamgad.exe` ekani tekshiriladi: pipe nomini oldindan egallab olgan
-///   soxta server bilan gaplashilmaydi.
+///   server jarayoni SCM bo'yicha ishlab turgan `tamgad` xizmatining o'zi va `install_dir\tamgad.exe`
+///   ekani tekshiriladi: pipe nomini oldindan egallab olgan soxta server bilan gaplashilmaydi.
 pub fn connect_auto(spawn: Option<&Path>, wait: Duration) -> Result<std::fs::File, ClientError> {
     use crate::home::{Deployment, deployment, pipe_name};
     match deployment() {
@@ -55,8 +55,27 @@ fn verify_server(f: &std::fs::File, expected: &Path) -> Result<(), ClientError> 
             .to_string_lossy()
             .to_lowercase()
     };
-    let got = tamga_win::service::pipe_server_image(f)
+    use tamga_win::service::{SERVICE_NAME, pipe_server_pid, process_image, service_pid};
+    // Exe yo'li yetarli emas: oddiy foydalanuvchi o'rnatish papkasidagi `tamgad.exe` ni o'zi ham
+    // ishga tushira oladi (xizmat to'xtagan paytda pipe nomini egallash uchun). Server — aynan SCM
+    // ishga tushirgan xizmat jarayoni bo'lishi shart.
+    let pid = pipe_server_pid(f)
         .ok_or_else(|| ClientError::Untrusted("server jarayoni aniqlanmadi".into()))?;
+    match service_pid(SERVICE_NAME) {
+        Some(svc) if svc == pid => {}
+        Some(svc) => {
+            return Err(ClientError::Untrusted(format!(
+                "pipe serveri PID {pid}, xizmat PID {svc}"
+            )));
+        }
+        None => {
+            return Err(ClientError::Untrusted(format!(
+                "`{SERVICE_NAME}` xizmati ishlamayapti, pipe serveri (PID {pid}) — begona jarayon"
+            )));
+        }
+    }
+    let got = process_image(pid)
+        .ok_or_else(|| ClientError::Untrusted("server exe yo'li aniqlanmadi".into()))?;
     if canon(&got) == canon(expected) {
         Ok(())
     } else {

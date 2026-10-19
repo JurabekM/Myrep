@@ -56,6 +56,15 @@ Remove-Item "$env:ProgramData\TAMGA\service.json"           # RAD: Access denied
 2. Claude Code'da biror buyruq bajaring → **bloklansin** («daemon ishlamayapti»).
 3. [A] `net start tamgad` → yana ishlasin.
 
+## 5a. Pipe nomini egallab bo'lmaydi
+
+1. [A] `net stop tamgad`
+2. [U] `$env:TAMGA_HOME = "$env:TEMP\tamga-fake"; & "C:\Program Files\TAMGA Studio\tamgad.exe"` →
+   **rad**: «himoyalangan rejim o'rnatilgan — daemon faqat Windows xizmati sifatida ishlaydi», exit 2.
+3. [U] `& "C:\Program Files\TAMGA Studio\tamga.exe" status` → «xizmati ishlamayapti» yoki ulanish xatosi
+   (hech qachon `TAMGA_HOME` dagi soxta jurnal emas).
+4. [A] `net start tamgad`.
+
 ## 6. Qayta ishga tushish va yiqilish
 
 1. Kompyuterni qayta yoqing → `sc query tamgad` RUNNING (avto-start).

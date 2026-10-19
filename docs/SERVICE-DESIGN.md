@@ -69,6 +69,17 @@ mutlaq chegara emas — buni audit ham, muallif ham qayd etgan.
   qarori uchun alohida, ma'muriy bo'lmagan, lekin xizmat tomonidan yaratilgan bir martalik oyna
   (xizmat o'zi ko'rsatadigan tasdiqlash dialogi). Bu ochiq dizayn savoli (§7).
 
+**Soxta serverdan himoya (pipe squatting).** Xizmat to'xtagan paytda oddiy foydalanuvchi ham pipe
+nomini egallashi mumkin (`AU` da `FILE_CREATE_PIPE_INSTANCE` yo'q, lekin nom bo'sh bo'lsa birinchi
+nusxani istalgan jarayon yaratadi). Shuning uchun mijoz (hook, CLI, Studio) ulanishdan keyin tekshiradi:
+1. pipe serveri PID'i == SCM bo'yicha ishlab turgan `tamgad` xizmatining PID'i (`QueryServiceStatusEx`);
+2. server exe yo'li == `install_dir\tamgad.exe`.
+Faqat exe yo'li yetarli emas: o'rnatish papkasidagi `tamgad.exe` ni foydalanuvchi o'zi ham ishga tushira
+oladi. Ikkinchi qatlam: himoyalangan rejim belgisi bor mashinada `tamgad.exe` xizmatdan tashqari ishga
+tushmaydi. `%ProgramData%` muhit o'zgaruvchisidan emas, `SHGetKnownFolderPath` dan olinadi — aks holda
+mijoz jarayoni o'zgaruvchini almashtirib, belgini "ko'rmay", oddiy rejimga (o'z daemon'iga) o'tib ketardi.
+Pipe orqali SID aniqlanmasa (anonim impersonatsiya darajasi), `actor.user` = `unidentified`.
+
 **Hook va proxy** o'zgarmaydi (oddiy foydalanuvchi, pipe orqali). Daemon ishlamasa — hozirgi
 `dev`/`strict` siyosati.
 

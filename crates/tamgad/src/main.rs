@@ -327,8 +327,10 @@ impl State {
     /// Agent hodisasini yozadi. `spooled` — spool'dan kelgan hodisa: (asl vaqt, hook qarori).
     /// Pipe'dan kelgan hook: xizmat rejimida yozuvdagi `actor.user` — mijozning SID'i.
     fn hook_from(&mut self, req: &Value, sid: Option<&str>) -> Outcome {
+        // Mijoz anonim impersonatsiya darajasi bilan ulansa token ochilmaydi: unda hook JSON'idagi
+        // (mijoz o'zi yozgan) foydalanuvchi nomi qoldirilmaydi.
         self.client_sid = if self.home.is_service() {
-            sid.map(str::to_owned)
+            Some(sid.unwrap_or(UNIDENTIFIED).to_owned())
         } else {
             None
         };
@@ -1126,8 +1128,10 @@ type Secure = Option<std::sync::Arc<tamga_win::service::SecurityDescriptor>>;
 #[cfg(not(windows))]
 type Secure = Option<()>;
 
-/// Windows xizmati nomi (o'rnatuvchi shu nom bilan yaratadi).
-const SERVICE_NAME: &str = "tamgad";
+#[cfg(windows)]
+use tamga_win::service::SERVICE_NAME;
+/// Himoyalangan rejimda mijoz SID'i aniqlanmasa `actor.user` qiymati.
+const UNIDENTIFIED: &str = "unidentified";
 /// Belgi faylida pipe ko'rsatilmagan bo'lsa.
 const DEFAULT_SERVICE_PIPE: &str = r"\\.\pipe\tamga-service";
 
@@ -1313,33 +1317,29 @@ fn service_body(stop: std::sync::mpsc::Receiver<()>) -> u32 {
 
 fn main() -> std::process::ExitCode {
     let arg = std::env::args().nth(1);
+    // SCM tomonidan: `sc create tamgad binPath= "...\tamgad.exe --service"`. Xizmat rejimini konsolda
+    // ishga tushirish (avvalgi `--service-console`) olib tashlandi: mijozlar baribir faqat SCM ishga
+    // tushirgan jarayonga ishonadi, ortiqcha kirish nuqtasi kerak emas.
     #[cfg(windows)]
-    match arg.as_deref() {
-        // SCM tomonidan: `sc create tamgad binPath= "...\tamgad.exe --service"`.
-        Some("--service") => {
-            return match tamga_win::service::run_as_service(SERVICE_NAME, service_body) {
-                Ok(()) => std::process::ExitCode::SUCCESS,
-                Err(e) => {
-                    eprintln!("tamgad --service: SCM orqali ishga tushirilmagan ({e})");
-                    std::process::ExitCode::from(2)
-                }
-            };
-        }
-        // Himoyalangan rejimni oldingi planda sinash (administrator konsoli, Ctrl+C bilan to'xtaydi).
-        Some("--service-console") => {
-            return match service_setup() {
-                Ok((home, pipe, secure)) => {
-                    std::process::ExitCode::from(run(home, pipe, secure, std::future::pending()))
-                }
-                Err(e) => {
-                    eprintln!("tamgad: {e}");
-                    std::process::ExitCode::from(2)
-                }
-            };
-        }
-        _ => {}
+    if arg.as_deref() == Some("--service") {
+        return match tamga_win::service::run_as_service(SERVICE_NAME, service_body) {
+            Ok(()) => std::process::ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("tamgad --service: SCM orqali ishga tushirilmagan ({e})");
+                std::process::ExitCode::from(2)
+            }
+        };
     }
     let _ = arg;
+    // Himoyalangan rejim o'rnatilgan mashinada daemon faqat xizmat sifatida ishlaydi: oddiy jarayon
+    // (masalan, `TAMGA_HOME` bilan) xizmat pipe'i nomini egallab olib, hook'larni o'z jurnaliga
+    // burishi mumkin edi. Mijozlar buni SCM PID tekshiruvi bilan ham rad etadi — bu ikkinchi qatlam.
+    if let tamga_store::home::Deployment::Service(_) = tamga_store::home::deployment() {
+        eprintln!(
+            "tamgad: himoyalangan rejim o'rnatilgan — daemon faqat Windows xizmati sifatida ishlaydi (`sc start tamgad`)"
+        );
+        return std::process::ExitCode::from(2);
+    }
     std::process::ExitCode::from(run(
         Home::from_env(),
         pipe_name(),
