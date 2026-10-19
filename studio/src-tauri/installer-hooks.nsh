@@ -11,7 +11,7 @@
 ; Jurnal va kalitlar o'chirilmaydi: bu dalil, uni foydalanuvchi o'zi saqlaydi yoki o'chiradi.
 
 Var TamgaRc
-Var TamgaPD
+Var TamgaFail
 
 ; Eslatma: bu fayl shablonda `INSTALLMODE` aniqlanishidan oldin ulanadi, shuning uchun rejim
 ; tekshiruvi makrolar ichida (ular keyinroq, aniqlangandan so'ng qo'yiladi).
@@ -39,51 +39,49 @@ Var TamgaPD
   Pop $TamgaRc
 !macroend
 
-!macro TAMGA_SERVICE_INSTALL
-  ReadEnvStr $TamgaPD "ProgramData"
-  ; %ProgramData% da oddiy foydalanuvchi ham papka yarata oladi. Agar TAMGA papkasi oldindan bor va
-  ; uning egasi administratorlar yoki SYSTEM bo'lmasa — u bizniki emas (egasi ACL'ni qayta o'zgartira
-  ; olardi, ichiga oldindan fayl qo'yilgan bo'lishi mumkin). Uni chetga olib, yangisini yaratamiz.
-  nsExec::Exec `powershell -NoProfile -Command "$$p = Join-Path $$env:ProgramData 'TAMGA'; if (Test-Path $$p) { $$o = (Get-Acl $$p).GetOwner([Security.Principal.SecurityIdentifier]).Value; if ($$o -ne 'S-1-5-32-544' -and $$o -ne 'S-1-5-18') { Rename-Item $$p ('TAMGA.untrusted-' + (Get-Date -Format yyyyMMddHHmmss)) } }"`
+; Muhim qadam natijasini yig'adi. nsExec ishga tusha olmasa "error" qaytaradi — shuning uchun satr
+; sifatida solishtiriladi (son sifatida "error" = 0, ya'ni "muvaffaqiyat" bo'lib qolardi).
+!macro TAMGA_MUST what
   Pop $TamgaRc
-  CreateDirectory "$TamgaPD\TAMGA\logs"
-  CreateDirectory "$TamgaPD\TAMGA\vault"
-  CreateDirectory "$TamgaPD\TAMGA\secrets"
-  CreateDirectory "$TamgaPD\TAMGA\spool"
-  CreateDirectory "$TamgaPD\TAMGA\policies"
+  ${If} $TamgaRc != "0"
+    StrCpy $TamgaFail "$TamgaFail ${what}=$TamgaRc"
+  ${EndIf}
+!macroend
 
-  ; Xizmat: virtual hisob, avto-start. Bor bo'lsa (yangilash) — `config` yo'lni yangilaydi.
+!macro TAMGA_SERVICE_INSTALL
+  StrCpy $TamgaFail ""
+  ; Xizmat: virtual hisob, avto-start. Bor bo'lsa (yangilash) `create` xato beradi — muhimi `config`.
+  ; Xizmat avval yaratiladi: `NT SERVICE\tamgad` SID'i ACL uchun shundan keyin aniqlanadi.
   nsExec::Exec 'sc.exe create tamgad binPath= "\"$INSTDIR\tamgad.exe\" --service" start= auto obj= "NT SERVICE\tamgad" DisplayName= "TAMGA daemon"'
   Pop $TamgaRc
   nsExec::Exec 'sc.exe config tamgad binPath= "\"$INSTDIR\tamgad.exe\" --service" start= auto obj= "NT SERVICE\tamgad"'
-  Pop $TamgaRc
+  !insertmacro TAMGA_MUST "sc-config"
   nsExec::Exec 'sc.exe description tamgad "TAMGA: AI agentlar uchun qora quti (himoyalangan rejim)"'
   Pop $TamgaRc
   nsExec::Exec 'sc.exe failure tamgad reset= 86400 actions= restart/5000/restart/5000/restart/60000'
   Pop $TamgaRc
 
-  ; Egasi — administratorlar (ACL ni faqat ular o'zgartira oladi).
-  nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA" /setowner *S-1-5-32-544 /T /C /Q'
-  Pop $TamgaRc
-  ; ACL (SID bilan — Windows tiliga bog'liq emas): SYSTEM va administratorlar — to'liq; xizmat —
-  ; o'zgartirish; foydalanuvchilar (S-1-5-32-545) — faqat o'qish. Meros uzilib, eskisi almashtiriladi.
-  nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F "NT SERVICE\tamgad:(OI)(CI)M" *S-1-5-32-545:(OI)(CI)RX /T /C /Q'
-  Pop $TamgaRc
-  ; Kalitlar, vault va spool — foydalanuvchilarga umuman yopiq.
-  nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA\secrets" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F "NT SERVICE\tamgad:(OI)(CI)M" /T /C /Q'
-  Pop $TamgaRc
-  nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA\vault" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F "NT SERVICE\tamgad:(OI)(CI)M" /T /C /Q'
-  Pop $TamgaRc
-  nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA\spool" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F "NT SERVICE\tamgad:(OI)(CI)M" /T /C /Q'
-  Pop $TamgaRc
+  ; %ProgramData%\TAMGA: ishonchsiz oldingi papkani chetga olish, himoyalangan DACL bilan yaratish,
+  ; reparse point'larga yurmaslik, yakuniy tekshiruv va belgi (service.json) — service-acl.ps1 da.
+  ; Skript $INSTDIR da (Program Files — faqat administratorlar yoza oladi). NSIS satri 1024 belgi bilan
+  ; cheklangani uchun bu mantiq buyruq qatorida emas.
+  ${If} $TamgaFail == ""
+    nsExec::ExecToLog 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\service-acl.ps1" -InstallDir "$INSTDIR"'
+    !insertmacro TAMGA_MUST "data-dir"
+  ${EndIf}
 
-  ; Belgi: mijozlar (hook, CLI, Studio) himoyalangan rejimni shundan biladi. Ildiz ACL'ini meros
-  ; oladi — foydalanuvchi o'qiydi, o'zgartira olmaydi. JSON (yo'ldagi `\`) PowerShell bilan to'g'ri ekranlanadi.
-  nsExec::Exec `powershell -NoProfile -Command "[IO.File]::WriteAllText('$TamgaPD\TAMGA\service.json', (@{ mode = 'service'; pipe = 'tamga-service'; install_dir = '$INSTDIR' } | ConvertTo-Json))"`
-  Pop $TamgaRc
-
-  nsExec::Exec 'sc.exe start tamgad'
-  Pop $TamgaRc
+  ${If} $TamgaFail == ""
+    nsExec::Exec 'sc.exe start tamgad'
+    !insertmacro TAMGA_MUST "sc-start"
+  ${Else}
+    ; Himoya kafolatlanmaydi — xizmat ishga tushirilmaydi.
+    nsExec::Exec 'sc.exe config tamgad start= disabled'
+    Pop $TamgaRc
+  ${EndIf}
+  ${If} $TamgaFail != ""
+    MessageBox MB_ICONSTOP|MB_OK "TAMGA himoyalangan rejimi to'liq sozlanmadi:$\n$TamgaFail$\n$\nXizmat ishga tushirilmadi. Batafsil: o'rnatuvchi jurnali. O'rnatuvchini administrator sifatida qayta ishga tushiring." /SD IDOK
+    SetErrorLevel 2
+  ${EndIf}
 !macroend
 
 !macro TAMGA_SERVICE_REMOVE
@@ -92,8 +90,9 @@ Var TamgaPD
   Pop $TamgaRc
   ; Belgi qolsa, hook'lar mavjud bo'lmagan xizmatni kutib har amalni bloklardi (fail-closed).
   ; Jurnal, checkpoint'lar va ochiq kalit (dalil) saqlanadi.
-  ReadEnvStr $TamgaPD "ProgramData"
-  Delete "$TamgaPD\TAMGA\service.json"
+  ; Yo'l muhit o'zgaruvchisidan emas (foydalanuvchi HKCU\Environment orqali uni almashtira oladi).
+  nsExec::Exec `powershell -NoProfile -Command "Remove-Item -LiteralPath (Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'TAMGA\service.json') -Force -ErrorAction SilentlyContinue"`
+  Pop $TamgaRc
 !macroend
 
 ; ---------------------------------------------------------------- Tauri hook'lari

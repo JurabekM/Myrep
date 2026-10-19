@@ -11,6 +11,9 @@
       "binaries/tamga",
       "binaries/tamga-verify"
     ],
+    "resources": {
+      "service-acl.ps1": "service-acl.ps1"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser",

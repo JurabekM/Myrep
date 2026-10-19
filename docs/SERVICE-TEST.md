@@ -23,6 +23,19 @@ icacls "$env:ProgramData\TAMGA\secrets"                # [U] Users YO'Q
 Get-ChildItem "$env:ProgramData\TAMGA"                 # [U] public-key.json, logs\, config.json
 ```
 
+## 1a. O'rnatuvchi oldindan tayyorlangan papkaga ishonmaydi
+
+Toza mashinada (yoki o'chirib, `%ProgramData%\TAMGA` ni nomini o'zgartirib) sinang:
+1. [U] Oddiy foydalanuvchi sifatida `New-Item -ItemType Directory "$env:ProgramData\TAMGA\logs"`.
+2. `TAMGA Studio Protected` o'rnatuvchisini ishga tushiring.
+3. [U] `Get-ChildItem $env:ProgramData -Filter "TAMGA*"` → `TAMGA` (yangi) va `TAMGA.untrusted-<vaqt>` (eski).
+4. [U] `(Get-Acl "$env:ProgramData\TAMGA").Owner` → `BUILTIN\Administrators`.
+5. Ixtiyoriy: 1-qadamda papka o'rniga junction (`cmd /c mklink /J ...\TAMGA <boshqa papka>`) — natija xuddi
+   shunday, junction nishonining ACL'i o'zgarmaydi.
+
+O'rnatuvchi xato ko'rsatsa (MessageBox «to'liq sozlanmadi») — matnini va `sc.exe qc tamgad`
+(START_TYPE: DISABLED bo'lishi kerak) chiqishini saqlang.
+
 ## 2. Oddiy foydalanuvchi daemon'ni boshqara olmaydi [U]
 
 ```powershell

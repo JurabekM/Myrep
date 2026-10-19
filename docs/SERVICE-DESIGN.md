@@ -80,6 +80,15 @@ tushmaydi. `%ProgramData%` muhit o'zgaruvchisidan emas, `SHGetKnownFolderPath` d
 mijoz jarayoni o'zgaruvchini almashtirib, belgini "ko'rmay", oddiy rejimga (o'z daemon'iga) o'tib ketardi.
 Pipe orqali SID aniqlanmasa (anonim impersonatsiya darajasi), `actor.user` = `unidentified`.
 
+**O'rnatuvchi va `%ProgramData%`.** Oddiy foydalanuvchi `%ProgramData%` da papka yarata oladi, o'rnatuvchi
+esa administrator huquqida ishlaydi — oldindan tayyorlangan papkaga (junction, begona fayllar) ishonib
+rekursiv ACL qo'yish tizim fayllariga tegishi yoki begona faylni «himoyalangan» deb qabul qilishi mumkin.
+`studio/src-tauri/service-acl.ps1`: mavjud papka faqat ishonchli bo'lsa saqlanadi (egasi administratorlar/
+SYSTEM, reparse point yo'q, boshqalarda yozish huquqi yo'q), aks holda `TAMGA.untrusted-<vaqt>` ga olinadi;
+yangi papka himoyalangan DACL bilan **bir vaqtda** yaratiladi; amallar reparse point ortidan yurmaydi;
+oxirida butun daraxt qayta tekshiriladi. Biror muhim qadam yiqilsa xizmat `disabled` qilinadi va
+o'rnatuvchi xato bilan tugaydi (exit 2) — himoya jim yo'qolmaydi.
+
 **Hook va proxy** o'zgarmaydi (oddiy foydalanuvchi, pipe orqali). Daemon ishlamasa — hozirgi
 `dev`/`strict` siyosati.
 
