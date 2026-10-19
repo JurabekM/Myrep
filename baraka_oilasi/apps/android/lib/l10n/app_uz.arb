@@ -3937,7 +3937,7 @@
   "sync_role_HOME": "Uydagi oila",
   "sync_pairRole_HOME": "Uydagi oila qurilmasi",
   "sync_pairRoleHint_HOME": "Uy makoni toʻliq va «Ikki qirgʻoq». Musofirning maoshi, chet eldagi xarajatlari, jamgʻarmasi, sozlamalari va kurslari bu qurilmaga yuborilmaydi.",
-  "sync_pairingFor_HOME": "Fayl uydagi oila uchun: musofirning shaxsiy hisobi (maosh, xarajat, jamgʻarma, kurslar) unda yoʻq. Bu qurilma xonadon egasi boʻlsagina maxfiylik taʼminlanadi.",
+  "sync_pairingFor_HOME": "Fayl uydagi oila uchun: musofirning shaxsiy hisobi (maosh, xarajat, jamgʻarma, kurslar) unda yoʻq. Bu qurilma xonadon egasi boʻlsagina maxfiylik taʼminlanadi. Xonadon uydagi qurilmada yaratilgan boʻlsa — oʻsha qurilma kelishilgan seyfda saqlanadi.",
   "mf_purposesLegend": "Maqsadlar (yigʻindisi 100 %)",
   "mf_sharePercent": "{purpose}, foiz",
   "@mf_sharePercent": {

@@ -6,6 +6,11 @@
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
 - Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
 
+### O'zgardi — Musofir: mahsulot egasi qarorlari (2026-10-19)
+- `docs/musofir/SPEC.md` — **v1.0, tasdiqlandi**. OQ-MF1 (o'z ulushi 20 %), OQ-MF4 (kursni foydalanuvchi kiritadi, 30 kunlik eskirish), OQ-MF7 (oilaviy kelishuv shakli) va OQ-MF8 (90 kun, 10 % / 30 %, yo'l qarzi 6 oy) — tasdiqlandi, kod o'zgarmadi.
+- OQ-MF6 — **yechildi:** egalikni o'tkazish oqimi qilinmaydi; xonadon uydagi oila qurilmasida yaratilgan bo'lsa, o'sha qurilma oila bilan kelishilgan seyfda saqlanadi. «Uydagi oila qurilmasi» ulash xabari shunga yangilandi (SPEC 8).
+- OQ-MF5 — relay (R1) **keyinga qoldirildi**: «Ikki qirg'oq» faqat `.baraka` fayl almashish orqali. Android UI ham keyingi bosqichga.
+
 ### Qo'shildi — M4: Musofir — qorovul pul, ish boshlash summasi va qaror natijasi (musofir/SPEC 6.4, 6.6)
 - **Mahsulot egasi qarori (OQ-MF3):** qorovul pul qaytish jamg'armasidan **alohida**; maqsad — chet eldagi o'rtacha oylik xarajat × 1 oy (sozlamada 1–3); o'z ulushi avval qorovul pulga, to'lgach — jamg'armaga. SPEC 6.4, 6.6, 6.7; OQ-MF3 yechildi.
 - **Vektorlar (avval oracle):** `mf_month` qorovul pul harakatlari bilan kengaydi (`RESERVE_IN` / `RESERVE_OUT` / `RESERVE_OPENING`; o'z ulushi = jamg'armaga sof + qorovul pulga qo'yilgan — qorovul puldan olish ulushni kamaytirmaydi; `RESERVE_INSUFFICIENT`); yangi `mf_reserve` (maqsad, yetmagani, holat, ulushni qorovul va jamg'arma orasida bo'lish; 9 case) va `mf_startup` (yashash uchun = maqsad − ish boshlash; 6 case). `domain-musofir::reserve`, `fund::startup_split`.

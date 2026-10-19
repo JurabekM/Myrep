@@ -1,7 +1,7 @@
 # «MUSOFIR» MAKONI — SPETSIFIKATSIYA
 ### Chet elda ishlaydigan migrant va uning uydagi oilasi uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (M0)**; M1 (2–4-bo'limlar) va M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-MF*).
+> Versiya: **v1.0 — mahsulot egasi tasdiqladi (2026-10-19)**; M1 (2–4-bo'limlar), M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Mahsulot savollari OQ-MF1…OQ-MF8 yopildi (OQ-MF5 — relay keyinga qoldirildi); ulamo savoli — OQ-D3 (`docs/OPEN_QUESTIONS.md`). Android UI — keyingi bosqichda.
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-qonun ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar).
 
@@ -166,7 +166,8 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 
 ## 8. MAXFIYLIK
 - **Mahsulot egasi qarori (OQ-MF2): oila ko'rmaydi.** Uydagi oila qurilmasi — `HOME` roli (ADR-0004): unga musofirning maoshi, chet eldagi xarajatlari, qaytish jamg'armasi, sozlamalari va kurslari **umuman yuborilmaydi**; faqat uyga yuborilganlar (komissiyasiz), maqsadlar, qabul va maqsad bo'yicha xarajatlar. Uy makoni ikkala tomonda to'liq.
-- Shart: musofirning qurilmasi xonadon egasi (rolsiz) bo'lishi kerak (ADR-0004, 5; OQ-MF6).
+- Shart: musofirning qurilmasi xonadon egasi (rolsiz) bo'lishi kerak (ADR-0004, 5). Xonadon uydagi oila qurilmasida yaratilgan bo'lsa — egalik o'tkazilmaydi; **o'sha qurilma maxfiy joyda, oila bilan kelishilgan seyfda saqlanadi** (OQ-MF6, mahsulot egasi qarori). Ilova buni ulash ekranida aytadi.
+- Sinxronlash — faqat `.baraka` fayl almashish (U14); relay (R1) keyinga qoldirildi (OQ-MF5).
 
 ## 9. VEKTOR SUITE'LARI
 ### 9.1. M1

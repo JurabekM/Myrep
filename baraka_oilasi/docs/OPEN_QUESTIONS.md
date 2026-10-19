@@ -127,7 +127,8 @@
 ### OQ-MF1. O'z ulushi foizi va jamg'arma maqsadi
 - **Taklif (M1):** standart o'z ulushi — maoshning 20 %; maqsad — uy valyutasida summa (egasi kiritadi), ixtiyoriy qaytish sanasi; prognoz — oxirgi 3 to'liq oy o'rtachasi.
 - **Savol:** standart 20 % to'g'rimi (oilasi qarzda bo'lsa — kamroq)? Maqsadni «qaytgach N oy yashash» ko'rinishida (Uy makonidagi oylik xarajatdan) so'rash kerakmi?
-- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+- **Qaror (mahsulot egasi, 2026-10-19):** tasdiqlandi — standart o'z ulushi 20 %, maqsad uy valyutasida, prognoz oxirgi 3 to'liq oydan.
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF2. Uydagi oila musofirning nimasini ko'radi
 - **Qaror (mahsulot egasi, M2):** oila **ko'rmaydi** — musofirning maoshi, chet eldagi xarajatlari, qaytish jamg'armasi, sozlamalari va kurslari uydagi qurilmaga yuborilmaydi; faqat uyga yuborilgan pul (komissiyasiz), maqsadlar, qabul va xarajatlar. Texnik yechim — `HOME` roli (ADR-0004).
@@ -141,28 +142,33 @@
 ### OQ-MF4. Kurs manbai va eskirishi
 - **Vaqtinchalik qaror (M1):** kursni foydalanuvchi kiritadi (sana va ixtiyoriy manba bilan); 30 kundan eski kurs — «yangilang» belgisi; kurs yo'q bo'lsa uy valyutasidagi ko'rsatkich ko'rsatilmaydi. Markaziy bank kursini avtomatik olish — yo'q (tarmoqqa chiqmaslik qoidasi).
 - **Savol:** «uyda olingan» summadan kursni avtomatik taklif qilish kerakmi?
-- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+- **Qaror (mahsulot egasi, 2026-10-19):** tasdiqlandi — kursni foydalanuvchi kiritadi (sana va manba bilan), 30 kundan eskisi — «yangilang», kurssiz — taxmin yo'q, avtomatik yuklab olish yo'q.
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF5. Relay server ADR
 - **Masala:** `BARAKA_OILASI.md` 14: M0 — SPEC va relay ADR loyihasi. M1 uchun relay kerak emas; M2 `.baraka` fayl (U14) bilan ishlaydi.
 - **Qaror (M0):** relay ADR (`docs/adr/0005-relay.md`) R1 dan oldin yoziladi; M0 da qoldirildi.
-- **To'sadi:** R1. **Holat:** OCHIQ.
+- **Qaror (mahsulot egasi, 2026-10-19):** «Ikki qirg'oq» hozircha **faqat `.baraka` fayl almashish** orqali ishlaydi; relay (R1) va uning ADR'i keyinga qoldirildi.
+- **To'sadi:** R1. **Holat:** KEYINGA QOLDIRILGAN.
 
 ### OQ-MF6. Xonadon uydagi qurilmada yaratilgan bo'lsa
 - **Masala:** `HOME` filtri (ADR-0004) musofirning qurilmasi xonadon egasi bo'lganda ishlaydi. Xonadonni oila yaratib, musofir keyin qo'shilsa, oila qurilmasi egasi bo'ladi va musofir ma'lumotini oladi.
 - **Vaqtinchalik qaror (M2):** ulash ekranida ochiq ogohlantirish; egalikni o'tkazish — keyinroq.
 - **Savol:** egalikni musofirga o'tkazish oqimi kerakmi (masalan, oila qurilmasi o'zini `HOME` qilib qayta ulanishi)?
-- **To'sadi:** — . **Holat:** OCHIQ.
+- **Qaror (mahsulot egasi, 2026-10-19):** egalikni o'tkazish oqimi qilinmaydi. Xonadon uydagi oila qurilmasida yaratilgan bo'lsa, **o'sha qurilma maxfiy joyda — oila bilan kelishilgan seyfda saqlanadi** (tashkiliy chora). Ilova buni ulash ekranida aytadi.
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF7. «Ikki qirg'oq» kelishuvi — 9 savolmi yoki oilaviy kelishuvmi
 - **Vaqtinchalik qaror (M2):** SPEC'dagi `REMITTANCE` kelishuvi U13 dagi **oilaviy kelishuv** shabloni sifatida (kattalar PIN bilan tasdiqlaydi); 9 savolli dvigatel (U7/U11) ishlatilmadi — tomonlar bitta oila, guvoh va hakam talab qilinmaydi.
 - **Savol:** «Ikki qirg'oq» kelishuviga guvoh (masalan, ota-ona) yoki chop etiladigan PDF kerakmi?
-- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+- **Qaror (mahsulot egasi, 2026-10-19):** tasdiqlandi — oilaviy kelishuv shakli (kattalar PIN bilan), 9 savolli dvigatelsiz.
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF8. Sovutish davri chegaralari va yo'l qarzi muddati
 - **Vaqtinchalik qaror (M3):** sovutish davri — qaytgandan keyin 90 kun; katta qaror — olib kelingan summaning 10 %idan ko'pi (sariq, «kuting»), 30 %idan ko'pi (qizil). Yo'l qarzi uchun «birinchi maoshlardan» maqsadli muddat — 6 oy.
 - **Savol:** 90 kun, 10 % va 30 % to'g'rimi? Olib kelingan summa kiritilmasa (masalan, pul hali Koreyada) — chegarani qaytish jamg'armasidan olaylikmi? Hozir (M3): summa kiritilmasa, davr ichidagi har katta qaror sariq (`COOLING_PERIOD`).
-- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+- **Qaror (mahsulot egasi, 2026-10-19):** tasdiqlandi — 90 kun, 10 % (sariq) va 30 % (qizil), yo'l qarzi uchun 6 oy; summa kiritilmasa — sariq.
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ## Oila va maxfiylik
 

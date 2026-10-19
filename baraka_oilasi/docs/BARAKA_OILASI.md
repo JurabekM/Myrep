@@ -17,7 +17,7 @@
 | `docs/uy/MVP_PLAN.md` | Uy makoni vazifalarining **funksional** mazmuni va qabul mezonlari | amalda, texnik qismlaridan tashqari |
 | `docs/uy/DESKTOP_PROMPT.md` | Desktop UX (7-bo'lim), test vektorlari (5-bo'lim), desktop vazifalari | qisman amalda (Ilova A) |
 | `docs/kasbkor/SPEC.md` | Kasb-kor makoni spetsifikatsiyasi | **K0 vazifasida yoziladi** |
-| `docs/musofir/SPEC.md` | Musofir makoni spetsifikatsiyasi | v0.1 qoralama (M0) — tasdiq kutilmoqda |
+| `docs/musofir/SPEC.md` | Musofir makoni spetsifikatsiyasi | v1.0 — tasdiqlangan (2026-10-19); M1–M4 amalga oshirilgan |
 | `docs/OPEN_QUESTIONS.md` | Ochiq savollar: mahsulot egasi, ulamo, yurist | jonli hujjat |
 | `docs/adr/` | Arxitektura qarorlari | jonli |
 | `docs/CHANGELOG.md` | Har vazifadan keyin yangilanadi | jonli |
