@@ -113,10 +113,25 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - Qilinmagan: qabulni yoki maqsad belgisini tuzatish, maqsadlar orasida ko'chirish, qabul bo'yicha eslatma (masalan, 3 kun qabul qilinmasa), relay (R1), Android UI.
 
 ## 6. 4, 5, 7-QONUNLAR (M3)
-- **Yo'l qarzidan chiqish:** U8/U9 qarz inventari va payoff ish valyutasida; birinchi maoshlardan qarz rejasi.
-- **Qaytgandan keyingi ish rejasi:** «Hunardan ishga» (U12) qaytish jamg'armasi bilan; ish boshlash summasi maqsadning bir qismi.
-- **Sovutish davri:** qaytgandan keyin 90 kun — katta qarorlar (qarz berish, sheriklik, katta xarid) uchun «to'xta va o'yla» va kengaytirilgan «Taklifni tekshirish» (`docs/uy/SPEC.md` 2E.5).
-- **Qorovul pul** chet elda (OQ-MF3).
+### 6.1. Yo'l qarzidan chiqish (4-qonun)
+- Yo'l qarzi — U8 qarz inventaridagi oddiy **Uy qarzi** (kreditor, summa, reja; odatda qarindoshdan, foizsiz). Musofir uni Musofir makonida «yo'l qarzi» deb belgilaydi.
+- Qarz uyda to'lanadi: «Ikki qirg'oq»dagi **«Qarz to'lovi»** maqsadidan oila (yoki musofir) U8 to'lovini yozadi — to'lov maqsad belgisi bilan (`DEBT`), maqsad qoldig'i kamayadi, qarz qoldig'i kamayadi.
+- **Reja** (`mf_travel_debt`): qarz qoldig'i − «Qarz to'lovi» maqsadida turgan pul = qolgan; oxirgi to'liq oylarda shu maqsadga kelgan o'rtacha → necha oyda yopiladi; «birinchi maoshlardan» maqsadli muddat (standart 6 oy, OQ-MF8) uchun oyiga qancha kerak. Holatlar: `CLEARED`, `ON_TRACK`, `BEHIND`, `NO_PAYMENTS`.
+- Ayblovsiz: «Qarz ulushini oshirsak, N oyda yopiladi» — kelishuv shartlarini o'zgartirishga havola.
+
+### 6.2. Qaytgandan keyingi ish rejasi (5-qonun)
+- «Hunardan ishga» (U12) — Uy makonida; Musofir bosh sahifasidan havola. Ish boshlash summasi qaytish jamg'armasi maqsadining bir qismi sifatida rejalashtiriladi.
+
+### 6.3. Sovutish davri va «kalxatlar» (7-qonun)
+- Musofir **«Qaytdim»** deb belgilaydi: sana va olib kelingan summa (uy valyutasida). Keyingi **90 kun** — sovutish davri; bosh sahifada qolgan kunlar.
+- Har bir **katta qaror** (qarz berish, sheriklik, sarmoya, katta xarid, boshqa) oldidan tekshiruv (`mf_cooling`):
+  - U12 dagi «Taklifni tekshirish» 6 savoli — sheriklik va sarmoyada;
+  - musofirga xos savollar: taklif qaytganingizdan keyin tanish yoki qarindosh orqali keldimi; avval pul, keyin hujjat yoki mol so'ralyaptimi; chet elga qayta ish yoki viza uchun pul so'ralyaptimi; qarz berishda qaytarish muddati bormi; oila bilan maslahatlashdingizmi;
+  - sovutish qoidasi: davr ichida summa olib kelinganining 10 %idan ko'p bo'lsa — «kuting» (sariq), 30 %idan ko'p bo'lsa — qizil (OQ-MF8).
+- Natija: yashil / sariq / qizil, har bir bayroq izohi bilan va «kutish sanasi». Qaror **taqiqlanmaydi** — musofir tanlaydi: «kutaman», «baribir qilaman», «rad etaman»; tanlov o'zgarmas qarorlar jurnaliga yoziladi (musofirning shaxsiy hisobi — oilaga yuborilmaydi, ADR-0004).
+
+### 6.4. Qorovul pul
+- Chet eldagi qorovul pul — OQ-MF3 (mahsulot egasi qarori kutilmoqda).
 
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.

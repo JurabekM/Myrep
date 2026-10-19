@@ -1617,6 +1617,87 @@ def mf_remittance(remittances, spends):
     return {"purposes": rows, "received": _s(tr), "spent": _s(ts), "balance": _s(tr - ts), "pending": pending,
             "overspent": any(r["status"] == "OVERSPENT" for r in rows), "allocations": allocations}
 
+
+def mf_travel_debt(outstanding, available, monthly, target_months, today):
+    """Yo'l qarzi rejasi (SPEC 6.1), uy valyutasida: qolgan = qoldiq − «Qarz to'lovi» maqsadidagi pul (≥ 0);
+    oylik o'rtacha — oxirgi oylarda shu maqsadga kelgan; necha oyda yopiladi (yuqoriga); maqsadli muddat
+    uchun oyiga kerak = round_half_up(qolgan / muddat)."""
+    if outstanding < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    if not 1 <= target_months <= 60:
+        raise OracleError("INVALID_MONTHS")
+    remaining = max(0, outstanding - max(0, available))
+    avg = round_half_up(Fraction(sum(monthly), len(monthly))) if monthly else None
+    out = {"remaining": _s(remaining), "avgMonthly": None if avg is None else _s(avg), "monthsToClear": None,
+           "clearOn": None, "requiredMonthly": _s(round_half_up(Fraction(remaining, target_months)))}
+    if remaining == 0:
+        out.update({"monthsToClear": 0, "clearOn": today.isoformat(), "status": "CLEARED"})
+    elif avg is None or avg <= 0:
+        out["status"] = "NO_PAYMENTS"
+    else:
+        n = ceil_div(remaining, avg)
+        out.update({"monthsToClear": n, "clearOn": add_months(today, n).isoformat(),
+                    "status": "ON_TRACK" if n <= target_months else "BEHIND"})
+    return out
+
+
+MF_DECISION_KINDS = ("LEND", "PARTNERSHIP", "INVEST", "PURCHASE", "OTHER")
+MF_COOLING_DAYS = 90
+MF_BIG_BP = 1000
+MF_LARGE_BP = 3000
+# Musofirga xos savollar (SPEC 6.3): javob → (bayroq, daraja); qolgan javoblar bayroqsiz.
+MF_EXTRA = (
+    ("approached", {"YES": ("FRESH_RETURN_APPROACH", "YELLOW")}),
+    ("upfront", {"YES": ("UPFRONT_BEFORE_DOCUMENTS", "RED"), "UNKNOWN": ("UPFRONT_UNKNOWN", "YELLOW")}),
+    ("abroadJobFee", {"YES": ("ABROAD_JOB_FEE", "RED")}),
+    ("repaymentDate", {"NO": ("NO_REPAYMENT_DATE", "YELLOW"), "UNKNOWN": ("REPAYMENT_DATE_UNKNOWN", "YELLOW")}),
+    ("familyDiscussed", {"NO": ("NOT_DISCUSSED", "YELLOW")}),
+)
+
+
+def mf_cooling(today, returned_on, brought, kind, amount, answers):
+    """Sovutish davri va kengaytirilgan taklif detektori (SPEC 6.3). Sheriklik va sarmoyada — U12 ning 6 savoli;
+    qarz berishda — qaytarish muddati; davr ichida summa olib kelinganning 10 %idan ko'p — sariq, 30 %idan ko'p —
+    qizil. Qaror taqiqlanmaydi: «kutish sanasi» — davr oxiri."""
+    if kind not in MF_DECISION_KINDS:
+        raise OracleError("INVALID_KIND")
+    if amount <= 0:
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    if brought is not None and brought < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    questions = []
+    if kind in ("PARTNERSHIP", "INVEST"):
+        questions += [(q, OFFER_TABLE[q]) for q in OFFER_QUESTIONS]
+    for q, table in MF_EXTRA:
+        if q == "repaymentDate" and kind != "LEND":
+            continue
+        questions.append((q, table))
+    flags = []
+    for q, table in questions:
+        a = answers.get(q)
+        if a is None:
+            raise OracleError("MISSING_ANSWER")
+        if a not in ("YES", "NO", "UNKNOWN"):
+            raise OracleError("INVALID_ANSWER")
+        hit = table.get(a)
+        if hit:
+            flags.append({"code": hit[0], "level": hit[1]})
+    ends = returned_on + timedelta(days=MF_COOLING_DAYS) if returned_on else None
+    in_cooling = ends is not None and returned_on <= today < ends
+    share = bp_of(amount, brought) if brought else None
+    if in_cooling:
+        if share is None:
+            flags.append({"code": "COOLING_PERIOD", "level": "YELLOW"})
+        elif share > MF_LARGE_BP:
+            flags.append({"code": "LARGE_SHARE", "level": "RED"})
+        elif share > MF_BIG_BP:
+            flags.append({"code": "COOLING_BIG_DECISION", "level": "YELLOW"})
+    levels = {f["level"] for f in flags}
+    verdict = "RED" if "RED" in levels else "YELLOW" if levels else "GREEN"
+    return {"inCooling": in_cooling, "endsOn": ends.isoformat() if ends else None,
+            "daysLeft": (ends - today).days if in_cooling else 0, "shareBp": share, "flags": flags,
+            "verdict": verdict, "waitUntil": ends.isoformat() if in_cooling and verdict != "GREEN" else None}
+
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
     return str(v)
@@ -2671,6 +2752,55 @@ def build_suites():
     suites["mf_remittance"] = _suite("mf_remittance", "Musofir «Ikki qirg'oq»: qabul qilingan pulni maqsad ulushlariga bo'lish (largest remainder), maqsad bo'yicha sarflangan va qoldiq, yo'ldagi yuborishlar, maqsaddan ortiq sarf (musofir/SPEC 5)", [
         _case(cid, {"currency": U, "remittances": rs, "spends": ss}, lambda rs=rs, ss=ss: mf_remittance(rs, ss))
         for cid, rs, ss in rm])
+    td = [
+        # Yo'l qarzi 15 mln: maqsadda 3,27 mln, oyiga ~3 mln keladi → 4 oy, 6 oylik maqsadda.
+        ("td-001", 1500000000, 327000000, [327000000, 300000000, 280000000], 6, "2026-10-19"),
+        # Sekin: oyiga 1 mln — 12 oy, maqsad 6 oy (BEHIND), oyiga 2 mln kerak.
+        ("td-002", 1500000000, 300000000, [100000000, 100000000], 6, "2026-10-19"),
+        # Maqsaddagi pul qarzni yopadi.
+        ("td-003", 300000000, 327000000, [327000000], 6, "2026-10-19"),
+        # Hali to'lov yo'q.
+        ("td-004", 1500000000, 0, [], 6, "2026-10-19"),
+        # Maqsad ortiq sarflangan (manfiy qoldiq hisobga olinmaydi); 31-yanvar + 1 oy — fevral oxiri.
+        ("td-005", 1000000000, -50000000, [500000000], 3, "2027-01-31"),
+        # O'rtacha yaxlitlash (1 000 001 / 2) va oyiga kerak yaxlitlash (10 000 001 / 3).
+        ("td-006", 10000001, 0, [500001, 500000], 3, "2026-10-19"),
+        ("td-neg-001", -1, 0, [], 6, "2026-10-19"),
+        ("td-neg-002", 100, 0, [], 0, "2026-10-19"),
+    ]
+    suites["mf_travel_debt"] = _suite("mf_travel_debt", "Musofir yo'l qarzi: «Qarz to'lovi» maqsadidagi pul bilan qolgan, oylik o'rtacha, necha oyda yopiladi va qachon, maqsadli muddat uchun oyiga kerak (musofir/SPEC 6.1)", [
+        _case(cid, {"currency": U, "outstanding": _s(o), "available": _s(a), "monthly": [_s(x) for x in mo], "targetMonths": tm, "today": td_},
+              lambda o=o, a=a, mo=mo, tm=tm, td_=td_: mf_travel_debt(o, a, mo, tm, date.fromisoformat(td_)))
+        for cid, o, a, mo, tm, td_ in td])
+
+    no = {"guaranteed": "NO", "lossShared": "YES", "realActivity": "YES", "recruitment": "NO", "urgency": "NO", "written": "YES"}
+    calm = {"approached": "NO", "upfront": "NO", "abroadJobFee": "NO", "familyDiscussed": "YES"}
+    co = [
+        # Qaytgandan 20 kun keyin qarindosh 15 mln qarz so'radi (olib kelingan 120 mln, 12,5 %), muddatsiz.
+        ("co-001", "2026-11-08", "2026-10-19", 12000000000, "LEND", 1500000000, {**calm, "approached": "YES", "repaymentDate": "NO"}),
+        # Sheriklik 50 mln (41,67 %) — kafolatlangan foyda va'da qilinmoqda, avval pul.
+        ("co-002", "2026-11-08", "2026-10-19", 12000000000, "PARTNERSHIP", 5000000000,
+         {**no, **calm, "guaranteed": "YES", "upfront": "YES"}),
+        # Davrdan keyin, hammasi joyida — yashil.
+        ("co-003", "2027-02-01", "2026-10-19", 12000000000, "PURCHASE", 5000000000, calm),
+        # Davr ichida kichik xarid (5 %) — yashil, lekin davr ichida.
+        ("co-004", "2026-11-08", "2026-10-19", 12000000000, "PURCHASE", 600000000, calm),
+        # Chet elga qayta ish uchun pul so'rashdi — qizil (davrsiz ham).
+        ("co-005", "2026-10-19", None, None, "OTHER", 300000000, {**calm, "abroadJobFee": "YES", "familyDiscussed": "NO"}),
+        # Olib kelingan summa noma'lum — davr ichida har katta qaror sariq.
+        ("co-006", "2026-10-25", "2026-10-19", None, "INVEST", 1000000000, {**no, **calm, "urgency": "UNKNOWN"}),
+        # Davrning oxirgi kuni (89-kun) — hali ichida; 90-kun — tashqarida.
+        ("co-007", "2027-01-16", "2026-10-19", 12000000000, "PURCHASE", 2000000000, calm),
+        ("co-008", "2027-01-17", "2026-10-19", 12000000000, "PURCHASE", 2000000000, calm),
+        ("co-neg-001", "2026-10-19", None, None, "CAR", 100, calm),
+        ("co-neg-002", "2026-10-19", None, None, "LEND", 100, calm),
+        ("co-neg-003", "2026-10-19", None, None, "OTHER", 0, calm),
+        ("co-neg-004", "2026-10-19", None, None, "OTHER", 100, {**calm, "upfront": "MAYBE"}),
+    ]
+    suites["mf_cooling"] = _suite("mf_cooling", "Musofir sovutish davri (qaytgandan keyin 90 kun) va kengaytirilgan taklif detektori: U12 savollari, musofirga xos bayroqlar, olib kelingan summadan ulush, kutish sanasi (musofir/SPEC 6.3)", [
+        _case(cid, {"currency": U, "today": t_, "returnedOn": r_, "broughtHome": None if b is None else _s(b), "kind": k_, "amount": _s(a), "answers": an},
+              lambda t_=t_, r_=r_, b=b, k_=k_, a=a, an=an: mf_cooling(date.fromisoformat(t_), date.fromisoformat(r_) if r_ else None, b, k_, a, an))
+        for cid, t_, r_, b, k_, a, an in co])
     return suites
 
 
@@ -2680,7 +2810,8 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "partnership_rules", "buyout_schedule", "venture_period", "venture_idea", "offer_check", "review_protocol",
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
-                 "mf_month", "mf_return_fund", "mf_remittance")
+                 "mf_month", "mf_return_fund", "mf_remittance",
+                 "mf_travel_debt", "mf_cooling")
 
 
 def generate(directory: str) -> None:
@@ -2744,6 +2875,12 @@ def _expect_error(code, fn, *args):
 
 
 def selftest() -> None:
+    # M3 (musofir/SPEC 6): 15 mln yo'l qarzi, maqsadda 3,27 mln, oyiga ~3 mln → 4 oy; qarindosh 15 mln muddatsiz qarz.
+    tdr = mf_travel_debt(1500000000, 327000000, [327000000, 300000000, 280000000], 6, date(2026, 10, 19))
+    assert (tdr["remaining"], tdr["monthsToClear"], tdr["clearOn"], tdr["status"]) == ("1173000000", 4, "2027-02-19", "ON_TRACK")
+    cor = mf_cooling(date(2026, 11, 8), date(2026, 10, 19), 12000000000, "LEND", 1500000000,
+                     {"approached": "YES", "upfront": "NO", "abroadJobFee": "NO", "repaymentDate": "NO", "familyDiscussed": "YES"})
+    assert (cor["verdict"], cor["daysLeft"], cor["waitUntil"], cor["shareBp"]) == ("YELLOW", 70, "2027-01-17", 1250)
     # M2 (musofir/SPEC 5): 10 900 000 so'm 50/30/20 — uy 5 450 000, qarz 3 270 000, qurilish 2 180 000.
     rr2 = mf_remittance([{"received": "1090000000", "shares": [{"purpose": "HOUSEHOLD", "bp": 5000}, {"purpose": "DEBT", "bp": 3000},
                                                               {"purpose": "BUILD", "bp": 2000}]}], [])

@@ -158,6 +158,11 @@
 - **Savol:** «Ikki qirg'oq» kelishuviga guvoh (masalan, ota-ona) yoki chop etiladigan PDF kerakmi?
 - **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
 
+### OQ-MF8. Sovutish davri chegaralari va yo'l qarzi muddati
+- **Vaqtinchalik qaror (M3):** sovutish davri — qaytgandan keyin 90 kun; katta qaror — olib kelingan summaning 10 %idan ko'pi (sariq, «kuting»), 30 %idan ko'pi (qizil). Yo'l qarzi uchun «birinchi maoshlardan» maqsadli muddat — 6 oy.
+- **Savol:** 90 kun, 10 % va 30 % to'g'rimi? Olib kelingan summa kiritilmasa (masalan, pul hali Koreyada) — chegarani qaytish jamg'armasidan olaylikmi?
+- **To'sadi:** — . **Holat:** VAQTINCHA YECHILGAN — tasdiq kutilmoqda.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik

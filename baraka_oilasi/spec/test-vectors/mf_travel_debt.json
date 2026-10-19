@@ -1,0 +1,164 @@
+{
+  "suite": "mf_travel_debt",
+  "version": 1,
+  "description": "Musofir yo'l qarzi: «Qarz to'lovi» maqsadidagi pul bilan qolgan, oylik o'rtacha, necha oyda yopiladi va qachon, maqsadli muddat uchun oyiga kerak (musofir/SPEC 6.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "td-001",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "1500000000",
+        "available": "327000000",
+        "monthly": [
+          "327000000",
+          "300000000",
+          "280000000"
+        ],
+        "targetMonths": 6,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "remaining": "1173000000",
+        "avgMonthly": "302333333",
+        "monthsToClear": 4,
+        "clearOn": "2027-02-19",
+        "requiredMonthly": "195500000",
+        "status": "ON_TRACK"
+      }
+    },
+    {
+      "id": "td-002",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "1500000000",
+        "available": "300000000",
+        "monthly": [
+          "100000000",
+          "100000000"
+        ],
+        "targetMonths": 6,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "remaining": "1200000000",
+        "avgMonthly": "100000000",
+        "monthsToClear": 12,
+        "clearOn": "2027-10-19",
+        "requiredMonthly": "200000000",
+        "status": "BEHIND"
+      }
+    },
+    {
+      "id": "td-003",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "300000000",
+        "available": "327000000",
+        "monthly": [
+          "327000000"
+        ],
+        "targetMonths": 6,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "remaining": "0",
+        "avgMonthly": "327000000",
+        "monthsToClear": 0,
+        "clearOn": "2026-10-19",
+        "requiredMonthly": "0",
+        "status": "CLEARED"
+      }
+    },
+    {
+      "id": "td-004",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "1500000000",
+        "available": "0",
+        "monthly": [],
+        "targetMonths": 6,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "remaining": "1500000000",
+        "avgMonthly": null,
+        "monthsToClear": null,
+        "clearOn": null,
+        "requiredMonthly": "250000000",
+        "status": "NO_PAYMENTS"
+      }
+    },
+    {
+      "id": "td-005",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "1000000000",
+        "available": "-50000000",
+        "monthly": [
+          "500000000"
+        ],
+        "targetMonths": 3,
+        "today": "2027-01-31"
+      },
+      "expected": {
+        "remaining": "1000000000",
+        "avgMonthly": "500000000",
+        "monthsToClear": 2,
+        "clearOn": "2027-03-31",
+        "requiredMonthly": "333333333",
+        "status": "ON_TRACK"
+      }
+    },
+    {
+      "id": "td-006",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "10000001",
+        "available": "0",
+        "monthly": [
+          "500001",
+          "500000"
+        ],
+        "targetMonths": 3,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "remaining": "10000001",
+        "avgMonthly": "500001",
+        "monthsToClear": 20,
+        "clearOn": "2028-06-19",
+        "requiredMonthly": "3333334",
+        "status": "BEHIND"
+      }
+    },
+    {
+      "id": "td-neg-001",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "-1",
+        "available": "0",
+        "monthly": [],
+        "targetMonths": 6,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "td-neg-002",
+      "input": {
+        "currency": "UZS",
+        "outstanding": "100",
+        "available": "0",
+        "monthly": [],
+        "targetMonths": 0,
+        "today": "2026-10-19"
+      },
+      "expected": {
+        "error": "INVALID_MONTHS"
+      }
+    }
+  ]
+}

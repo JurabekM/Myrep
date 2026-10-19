@@ -14,9 +14,11 @@ use baraka_domain_kasbkor::shift::{shift_close, ShiftIn, ShiftInKind};
 use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
 use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
+use baraka_domain_musofir::cooling::{cooling_check, DecisionKind, Reply as MfReply};
 use baraka_domain_musofir::fund::return_fund;
 use baraka_domain_musofir::month::{month_report as mf_month_report, MfKind, MfMove};
 use baraka_domain_musofir::remittance::{remittance_book, Purpose, Remittance, Share};
+use baraka_domain_musofir::travel::travel_debt_plan;
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -162,6 +164,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "mf_month" => mf_month(input),
         "mf_return_fund" => mf_return_fund(input),
         "mf_remittance" => mf_remittance(input),
+        "mf_travel_debt" => mf_travel_debt(input),
+        "mf_cooling" => mf_cooling(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1799,5 +1803,64 @@ fn mf_remittance(v: &Value) -> R {
             "purpose": p.as_str(),
             "amount": m(*x),
         })).collect::<Vec<_>>())).collect::<Vec<_>>(),
+    }))
+}
+
+fn mf_travel_debt(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let p = travel_debt_plan(
+        money(v, "outstanding", c)?,
+        money(v, "available", c)?,
+        &moneys(v, "monthly", c)?,
+        i(v, "targetMonths")?,
+        date(&v["today"])?,
+    )?;
+    let m = |x: Money| x.minor().to_string();
+    Ok(json!({
+        "remaining": m(p.remaining),
+        "avgMonthly": p.avg_monthly.map(m),
+        "monthsToClear": p.months_to_clear,
+        "clearOn": p.clear_on.map(|d| d.format("%Y-%m-%d").to_string()),
+        "requiredMonthly": m(p.required_monthly),
+        "status": p.status.as_str(),
+    }))
+}
+
+fn mf_cooling(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let kind = DecisionKind::parse(s(v, "kind")?).ok_or_else(|| E("INVALID_KIND".into()))?;
+    let mut answers = Vec::new();
+    for (k, a) in v["answers"].as_object().ok_or_else(|| bad("answers"))? {
+        let reply = a
+            .as_str()
+            .and_then(MfReply::parse)
+            .ok_or_else(|| E("INVALID_ANSWER".into()))?;
+        answers.push((k.as_str(), reply));
+    }
+    let r = cooling_check(
+        date(&v["today"])?,
+        if v["returnedOn"].is_null() {
+            None
+        } else {
+            Some(date(&v["returnedOn"])?)
+        },
+        if v["broughtHome"].is_null() {
+            None
+        } else {
+            Some(money(v, "broughtHome", c)?)
+        },
+        kind,
+        money(v, "amount", c)?,
+        &answers,
+    )?;
+    let fmt = |d: chrono::NaiveDate| d.format("%Y-%m-%d").to_string();
+    Ok(json!({
+        "inCooling": r.in_cooling,
+        "endsOn": r.ends_on.map(fmt),
+        "daysLeft": r.days_left,
+        "shareBp": r.share_bp,
+        "flags": r.flags.iter().map(|f| json!({"code": f.code, "level": f.level.as_str()})).collect::<Vec<_>>(),
+        "verdict": r.verdict.as_str(),
+        "waitUntil": r.wait_until.map(fmt),
     }))
 }
