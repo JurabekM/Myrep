@@ -2170,6 +2170,80 @@ pub async fn mf_record_spend(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn mf_travel_debt(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<MfTravelDebtDto> {
+    state.session.app()?.mf_travel_debt(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_set_travel_debt(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfTravelDebtInput,
+) -> R<MfTravelDebtDto> {
+    state.session.app()?.mf_set_travel_debt(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_pay_debt(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfDebtPaymentInput,
+) -> R<MfTwoShoresDto> {
+    state.session.app()?.mf_pay_debt(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_set_return(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfReturnInput,
+) -> R<MfOverviewDto> {
+    state.session.app()?.mf_set_return(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_check_decision(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfDecisionInput,
+) -> R<MfDecisionCheckDto> {
+    state.session.app()?.mf_check_decision(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_record_decision(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfDecisionInput,
+) -> R<Vec<MfDecisionDto>> {
+    state.session.app()?.mf_record_decision(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_decisions(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<Vec<MfDecisionDto>> {
+    state.session.app()?.mf_decisions(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_decision_questions(state: State<'_, Desktop>, kind: String) -> R<Vec<String>> {
+    state.session.app()?.mf_decision_questions(&kind)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

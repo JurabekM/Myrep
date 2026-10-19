@@ -103,7 +103,7 @@ describe("Ikki qirg'oq — uy tomoni", () => {
           pending: 0,
           overspent: true,
           purposes: [row("HOUSEHOLD", "5 450 000", "6 000 000", "-550 000", true), row("DEBT", "3 270 000", "0", "3 270 000"), row("BUILD", "2 180 000", "0", "2 180 000")],
-          spends: [{ expenseId: "e1", purpose: "HOUSEHOLD", amount: u("6 000 000 soʻm"), categoryId: "c1", occurredOn: "2026-10-14", note: "Bozor" }],
+          spends: [{ id: "e1", kind: "EXPENSE", purpose: "HOUSEHOLD", amount: u("6 000 000 soʻm"), categoryId: "c1", debtId: null, creditor: null, occurredOn: "2026-10-14", note: "Bozor" }],
         }),
       ),
     );

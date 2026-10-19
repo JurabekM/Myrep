@@ -185,6 +185,28 @@ pub fn questions(kind: DecisionKind) -> Vec<&'static str> {
     out
 }
 
+/// Sovutish davri: qaytgandan keyin 90 kun (qaytish sanasi kuni ham ichida, 90-kun — tashqarida).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CoolingWindow {
+    pub in_cooling: bool,
+    pub ends_on: Option<NaiveDate>,
+    pub days_left: i64,
+}
+
+pub fn cooling_window(today: NaiveDate, returned_on: Option<NaiveDate>) -> CoolingWindow {
+    let ends_on = returned_on.and_then(|r| r.checked_add_days(Days::new(COOLING_DAYS)));
+    let in_cooling =
+        matches!((returned_on, ends_on), (Some(r), Some(e)) if r <= today && today < e);
+    CoolingWindow {
+        in_cooling,
+        ends_on,
+        days_left: match (in_cooling, ends_on) {
+            (true, Some(e)) => (e - today).num_days(),
+            _ => 0,
+        },
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CoolingCheck {
     pub in_cooling: bool,
@@ -231,9 +253,11 @@ pub fn cooling_check(
             });
         }
     }
-    let ends_on = returned_on.and_then(|r| r.checked_add_days(Days::new(COOLING_DAYS)));
-    let in_cooling =
-        matches!((returned_on, ends_on), (Some(r), Some(e)) if r <= today && today < e);
+    let CoolingWindow {
+        in_cooling,
+        ends_on,
+        days_left,
+    } = cooling_window(today, returned_on);
     let share_bp = match brought {
         Some(b) if b.is_positive() => {
             if b.currency() != amount.currency() {
@@ -258,10 +282,7 @@ pub fn cooling_check(
     Ok(CoolingCheck {
         in_cooling,
         ends_on,
-        days_left: match (in_cooling, ends_on) {
-            (true, Some(e)) => (e - today).num_days(),
-            _ => 0,
-        },
+        days_left,
         share_bp,
         wait_until: ends_on.filter(|_| in_cooling && verdict != Level::Green),
         flags,

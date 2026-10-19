@@ -1544,6 +1544,60 @@ impl BarakaCore {
         self.session.app()?.mf_record_spend(&space_id, input)
     }
 
+    // ---- M3: yo'l qarzi, «Qaytdim», katta qarorlar ----
+
+    pub fn mf_travel_debt(&self, space_id: String) -> Result<MfTravelDebtDto, AppError> {
+        self.session.app()?.mf_travel_debt(&space_id)
+    }
+
+    pub fn mf_set_travel_debt(
+        &self,
+        space_id: String,
+        input: MfTravelDebtInput,
+    ) -> Result<MfTravelDebtDto, AppError> {
+        self.session.app()?.mf_set_travel_debt(&space_id, input)
+    }
+
+    pub fn mf_pay_debt(
+        &self,
+        space_id: String,
+        input: MfDebtPaymentInput,
+    ) -> Result<MfTwoShoresDto, AppError> {
+        self.session.app()?.mf_pay_debt(&space_id, input)
+    }
+
+    pub fn mf_set_return(
+        &self,
+        space_id: String,
+        input: MfReturnInput,
+    ) -> Result<MfOverviewDto, AppError> {
+        self.session.app()?.mf_set_return(&space_id, input)
+    }
+
+    pub fn mf_check_decision(
+        &self,
+        space_id: String,
+        input: MfDecisionInput,
+    ) -> Result<MfDecisionCheckDto, AppError> {
+        self.session.app()?.mf_check_decision(&space_id, input)
+    }
+
+    pub fn mf_record_decision(
+        &self,
+        space_id: String,
+        input: MfDecisionInput,
+    ) -> Result<Vec<MfDecisionDto>, AppError> {
+        self.session.app()?.mf_record_decision(&space_id, input)
+    }
+
+    pub fn mf_decisions(&self, space_id: String) -> Result<Vec<MfDecisionDto>, AppError> {
+        self.session.app()?.mf_decisions(&space_id)
+    }
+
+    pub fn mf_decision_questions(&self, kind: String) -> Result<Vec<String>, AppError> {
+        self.session.app()?.mf_decision_questions(&kind)
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

@@ -3594,6 +3594,8 @@ pub struct MfOverviewDto {
     pub fund: Option<MfFundDto>,
     pub rate: Option<MfRateDto>,
     pub entries: Vec<MfEntryDto>,
+    /// «Qaytdim» belgilangan bo'lsa — sovutish davri (M3).
+    pub cooling: Option<MfCoolingDto>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -3702,10 +3704,17 @@ pub struct MfPurposeDto {
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct MfSpendDto {
-    pub expense_id: String,
+    /// Xarajat yoki U8 qarz to'lovining identifikatori.
+    pub id: String,
+    /// `EXPENSE` — Uy xarajati; `DEBT_PAYMENT` — «Qarz to'lovi» maqsadidan U8 to'lovi (M3).
+    pub kind: String,
     pub purpose: String,
     pub amount: MoneyDto,
-    pub category_id: String,
+    /// Faqat `EXPENSE` da.
+    pub category_id: Option<String>,
+    /// Faqat `DEBT_PAYMENT` da: qarz va kreditor.
+    pub debt_id: Option<String>,
+    pub creditor: Option<String>,
     pub occurred_on: String,
     pub note: Option<String>,
 }
@@ -3748,5 +3757,168 @@ pub struct MfSpendInput {
     pub category_id: String,
     pub channel: String,
     pub occurred_on: Option<String>,
+    pub note: Option<String>,
+}
+
+// ---- M3: yo'l qarzi, qaytish va katta qarorlar (docs/musofir/SPEC.md 6) ----
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfDebtRefDto {
+    pub id: String,
+    pub creditor: String,
+    pub reason: Option<String>,
+    pub status: String,
+    /// U8 qarz qoldig'i (uy valyutasida).
+    pub outstanding: MoneyDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTravelPlanDto {
+    /// Qarz qoldig'i − «Qarz to'lovi» maqsadidagi pul.
+    pub remaining: MoneyDto,
+    /// «Qarz to'lovi» maqsadi qoldig'i (uyda).
+    pub available: MoneyDto,
+    pub avg_monthly: Option<MoneyDto>,
+    /// O'rtacha nechta to'liq oydan (qabuli borlaridan) olindi.
+    pub months_used: u32,
+    pub months_to_clear: Option<i32>,
+    pub clear_on: Option<String>,
+    /// Maqsadli muddatda yopish uchun oyiga kerak.
+    pub required_monthly: MoneyDto,
+    /// `CLEARED`, `ON_TRACK`, `BEHIND`, `NO_PAYMENTS`.
+    pub status: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTravelDebtDto {
+    /// Belgilangan yo'l qarzi (o'chirilgan bo'lsa — `null`).
+    pub debt: Option<MfDebtRefDto>,
+    pub target_months: u32,
+    /// Uy makonidagi faol qarzlar (uy valyutasida) — tanlash uchun.
+    pub candidates: Vec<MfDebtRefDto>,
+    pub plan: Option<MfTravelPlanDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTravelDebtInput {
+    /// `null` — belgini olib tashlash.
+    pub debt_id: Option<String>,
+    /// 1–60 oy; bo'lmasa — 6 (OQ-MF8).
+    pub target_months: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfDebtPaymentInput {
+    /// Uy makonidagi U8 qarzi.
+    pub debt_id: String,
+    pub amount: String,
+    pub paid_on: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfReturnInput {
+    /// `null` — «Qaytdim» belgisini olib tashlash.
+    pub returned_on: Option<String>,
+    /// Olib kelingan summa (uy valyutasida).
+    pub brought_home: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfCoolingDto {
+    pub returned_on: String,
+    pub brought_home: Option<MoneyDto>,
+    pub in_cooling: bool,
+    pub ends_on: Option<String>,
+    pub days_left: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfAnswerInput {
+    pub key: String,
+    /// `YES`, `NO`, `UNKNOWN`.
+    pub reply: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfDecisionInput {
+    /// `LEND`, `PARTNERSHIP`, `INVEST`, `PURCHASE`, `OTHER`.
+    pub kind: String,
+    pub title: String,
+    /// Uy valyutasida.
+    pub amount: String,
+    pub answers: Vec<MfAnswerInput>,
+    /// Yozishda: `WAIT`, `PROCEED`, `DECLINE`; tekshiruvda e'tiborga olinmaydi.
+    pub choice: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfFlagDto {
+    pub code: String,
+    /// `YELLOW`, `RED`.
+    pub level: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfDecisionCheckDto {
+    /// Shu qaror turi uchun savollar (tartibi bilan).
+    pub questions: Vec<String>,
+    pub in_cooling: bool,
+    pub ends_on: Option<String>,
+    pub days_left: i32,
+    /// Summa olib kelinganning necha foizi.
+    pub share_percent: Option<String>,
+    pub flags: Vec<MfFlagDto>,
+    /// `GREEN`, `YELLOW`, `RED`.
+    pub verdict: String,
+    pub wait_until: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfAnswerDto {
+    pub key: String,
+    pub reply: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfDecisionDto {
+    pub id: String,
+    pub decided_on: String,
+    pub kind: String,
+    pub title: String,
+    pub amount: MoneyDto,
+    pub answers: Vec<MfAnswerDto>,
+    pub flags: Vec<MfFlagDto>,
+    pub verdict: String,
+    pub in_cooling: bool,
+    pub wait_until: Option<String>,
+    pub choice: String,
     pub note: Option<String>,
 }

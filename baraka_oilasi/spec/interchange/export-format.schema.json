@@ -269,7 +269,9 @@
             "mf_remittance_terms",
             "mf_remittance_parts",
             "mf_receipts",
-            "mf_spends"
+            "mf_spends",
+            "mf_debt_payments",
+            "mf_decisions"
           ]
         },
         "data": {
@@ -755,6 +757,18 @@
       },
       {
         "name": "mf_spends",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_debt_payments",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_decisions",
         "mode": "APPEND_ONLY",
         "primaryKey": "id",
         "blobColumns": []

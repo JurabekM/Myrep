@@ -2474,5 +2474,9 @@
   "mf.shores.confirm": "Принял(а)",
   "mf.shores.spendForm": "Расход по цели",
   "mf.shores.saveSpend": "Записать расход",
-  "mf.shores.spends": "Расходы по целям"
+  "mf.shores.spends": "Расходы по целям",
+  "error.INVALID_DECISION_KIND": "Выберите вид решения",
+  "error.INVALID_CHOICE": "Отметьте свой выбор: подожду, всё равно сделаю или откажусь",
+  "error.MISSING_ANSWER": "Ответьте на все вопросы",
+  "mf.shores.paidTo": "Платёж по долгу: {creditor}"
 }

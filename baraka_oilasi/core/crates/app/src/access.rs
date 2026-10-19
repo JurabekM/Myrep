@@ -56,9 +56,14 @@ pub(crate) struct Access {
 const SELLER_SPACE_TABLES: [&str; 3] = ["kk_customers", "kk_credit_sales", "kk_credit_events"];
 /// Uydagi oila qurilmasiga Musofir makonlaridan faqat shu jadvallar (ADR-0004); `mf_moves` dan —
 /// faqat `SENT_HOME`, komissiyasiz.
-const HOME_SHARED_TABLES: [&str; 3] = ["mf_remittance_parts", "mf_receipts", "mf_spends"];
+const HOME_SHARED_TABLES: [&str; 4] = [
+    "mf_remittance_parts",
+    "mf_receipts",
+    "mf_spends",
+    "mf_debt_payments",
+];
 /// Oila qurilmasi yaratishi mumkin bo'lgan Musofir yozuvlari (qabul va maqsad bo'yicha xarajat).
-const HOME_WRITE_TABLES: [&str; 2] = ["mf_receipts", "mf_spends"];
+const HOME_WRITE_TABLES: [&str; 3] = ["mf_receipts", "mf_spends", "mf_debt_payments"];
 
 /// Sotuvchiga yuborilmaydigan ustunlar (qiymati `null` bo'ladi): tannarx ma'lumoti.
 const SELLER_REDACTED: [(&str, &str); 1] = [("kk_items", "replacement_price_minor")];

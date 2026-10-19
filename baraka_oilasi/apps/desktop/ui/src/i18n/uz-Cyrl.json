@@ -2474,5 +2474,9 @@
   "mf.shores.confirm": "Қабул қилдим",
   "mf.shores.spendForm": "Мақсад бўйича харажат",
   "mf.shores.saveSpend": "Харажатни ёзиш",
-  "mf.shores.spends": "Мақсад бўйича харажатлар"
+  "mf.shores.spends": "Мақсад бўйича харажатлар",
+  "error.INVALID_DECISION_KIND": "Қарор турини танланг",
+  "error.INVALID_CHOICE": "Танловингизни белгиланг: кутаман, барибир қиламан ёки рад этаман",
+  "error.MISSING_ANSWER": "Барча саволларга жавоб беринг",
+  "mf.shores.paidTo": "Қарз тўлови: {creditor}"
 }

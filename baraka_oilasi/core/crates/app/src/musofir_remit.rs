@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use baraka_domain_musofir::remittance::{
-    check_shares, remittance_book, Purpose, Remittance, Share,
+    check_shares, remittance_book, Purpose, Remittance, RemittanceBook, Share,
 };
 use baraka_money::{format_percent_bp, Currency, Money};
 use baraka_storage::repo::{categories, expenses, household, incomes, mf};
@@ -53,6 +53,23 @@ pub(crate) fn shares_from_input(input: &[MfShareInput]) -> Result<Vec<Share>, Ap
     Ok(check_shares(&out)?)
 }
 
+pub(crate) fn money_of(minor: i64, code: &str) -> Result<Money, AppError> {
+    Ok(Money::new(
+        minor,
+        Currency::from_code(code).map_err(|_| AppError::new("CORRUPT_ROW"))?,
+    ))
+}
+
+/// Ikki qirg'oq hisobi (`mf_shores`): `moves`, `shares` va `book.allocations` bir xil tartibda.
+pub(crate) struct Shores {
+    pub moves: Vec<mf::MfMoveRow>,
+    pub receipts: Vec<mf::MfReceiptRow>,
+    pub shares: Vec<Vec<Share>>,
+    pub spends: Vec<mf::MfSpendRow>,
+    pub debt_payments: Vec<mf::MfDebtPaymentRow>,
+    pub book: RemittanceBook,
+}
+
 fn share_dtos(shares: &[Share]) -> Result<Vec<MfShareDto>, AppError> {
     shares
         .iter()
@@ -68,7 +85,7 @@ fn share_dtos(shares: &[Share]) -> Result<Vec<MfShareDto>, AppError> {
 
 impl App {
     /// Xonadondagi Uy makoni (qabul va xarajat shu yerga yoziladi).
-    fn uy_space(&self, ctx: &Ctx) -> Result<Option<SpaceScope>, AppError> {
+    pub(crate) fn uy_space(&self, ctx: &Ctx) -> Result<Option<SpaceScope>, AppError> {
         Ok(self
             .db
             .read(|c| household::list_spaces(c, &ctx.household_id))?
@@ -80,7 +97,7 @@ impl App {
             }))
     }
 
-    fn uy_required(&self, ctx: &Ctx) -> Result<SpaceScope, AppError> {
+    pub(crate) fn uy_required(&self, ctx: &Ctx) -> Result<SpaceScope, AppError> {
         self.uy_space(ctx)?
             .ok_or(AppError::new("UY_SPACE_REQUIRED"))
     }
@@ -192,25 +209,12 @@ impl App {
         self.mf_terms(space_id)
     }
 
-    /// Ikkala qirg'oq uchun umumiy ko'rinish: yuborishlar (qabul holati bilan), maqsadlar qoldig'i va
-    /// maqsad bo'yicha xarajatlar. Uydagi oila qurilmasida ham ochiq.
-    pub fn mf_two_shores(&self, space_id: &str) -> Result<MfTwoShoresDto, AppError> {
-        let ctx = self.ctx()?;
-        let scope = self.mf_space_check(&ctx, space_id)?;
+    /// Ikkala qirg'oq hisobi: yuborishlar, qabul, maqsad bo'yicha xarajat va qarz to'lovlari.
+    pub(crate) fn mf_shores(&self, ctx: &Ctx, scope: &SpaceScope) -> Result<Shores, AppError> {
         let home = ctx.currency;
-        let d = |m: Money| self.money_dto(&ctx, m);
-        let money_of = |minor: i64, code: &str| -> Result<Money, AppError> {
-            Ok(Money::new(
-                minor,
-                Currency::from_code(code).map_err(|_| AppError::new("CORRUPT_ROW"))?,
-            ))
-        };
-        let moves = self.db.read(|c| mf::sent_home(c, &scope))?;
-        let parts = self.db.read(|c| mf::parts(c, &scope))?;
-        let receipts = self.db.read(|c| mf::receipts(c, &scope))?;
-        let members = self
-            .db
-            .read(|c| household::list_members(c, &ctx.household_id))?;
+        let moves = self.db.read(|c| mf::sent_home(c, scope))?;
+        let parts = self.db.read(|c| mf::parts(c, scope))?;
+        let receipts = self.db.read(|c| mf::receipts(c, scope))?;
         let mut shares_of: HashMap<String, Vec<Share>> = HashMap::new();
         for p in &parts {
             shares_of.entry(p.move_id.clone()).or_default().push(Share {
@@ -219,22 +223,56 @@ impl App {
             });
         }
         let mut rems = Vec::new();
-        let mut dtos = Vec::new();
+        let mut shares = Vec::new();
         for m in &moves {
             // Maqsadlarsiz eski yuborish (M1) — uy xarajati 100 %.
-            let shares = match shares_of.get(&m.id) {
+            let s = match shares_of.get(&m.id) {
                 Some(s) => check_shares(s)?,
                 None => DEFAULT_SHARES.to_vec(),
             };
-            let receipt = receipts.iter().find(|r| r.move_id == m.id);
-            let received = match receipt {
+            let received = match receipts.iter().find(|r| r.move_id == m.id) {
                 Some(r) if r.currency == home.code() => Some(Money::new(r.received_minor, home)),
                 _ => None,
             };
             rems.push(Remittance {
                 received,
-                shares: shares.clone(),
+                shares: s.clone(),
             });
+            shares.push(s);
+        }
+        let spends = self.db.read(|c| mf::spends(c, scope))?;
+        let debt_payments = self.db.read(|c| mf::debt_payments(c, scope))?;
+        let mut spend_pairs = Vec::new();
+        for s in spends.iter().filter(|s| s.currency == home.code()) {
+            spend_pairs.push((purpose(&s.purpose)?, Money::new(s.amount_minor, home)));
+        }
+        for p in debt_payments.iter().filter(|p| p.currency == home.code()) {
+            spend_pairs.push((Purpose::Debt, Money::new(p.amount_minor, home)));
+        }
+        let book = remittance_book(home, &rems, &spend_pairs)?;
+        Ok(Shores {
+            moves,
+            receipts,
+            shares,
+            spends,
+            debt_payments,
+            book,
+        })
+    }
+
+    /// Ikkala qirg'oq uchun umumiy ko'rinish: yuborishlar (qabul holati bilan), maqsadlar qoldig'i va
+    /// maqsad bo'yicha xarajatlar (qarz to'lovlari bilan). Uydagi oila qurilmasida ham ochiq.
+    pub fn mf_two_shores(&self, space_id: &str) -> Result<MfTwoShoresDto, AppError> {
+        let ctx = self.ctx()?;
+        let scope = self.mf_space_check(&ctx, space_id)?;
+        let d = |m: Money| self.money_dto(&ctx, m);
+        let sh = self.mf_shores(&ctx, &scope)?;
+        let members = self
+            .db
+            .read(|c| household::list_members(c, &ctx.household_id))?;
+        let mut dtos = Vec::new();
+        for ((m, shares), alloc) in sh.moves.iter().zip(&sh.shares).zip(&sh.book.allocations) {
+            let receipt = sh.receipts.iter().find(|r| r.move_id == m.id);
             let expected = match (m.received_minor, m.received_currency.as_deref()) {
                 (Some(v), Some(c)) => Some(d(money_of(v, c)?)),
                 _ => None,
@@ -244,7 +282,7 @@ impl App {
                 sent: d(money_of(m.amount_minor, &m.currency)?),
                 sent_on: m.occurred_on.clone(),
                 note: m.note.clone(),
-                shares: share_dtos(&shares)?,
+                shares: share_dtos(shares)?,
                 expected,
                 receipt: receipt
                     .map(|r| -> Result<MfReceiptDto, AppError> {
@@ -261,27 +299,46 @@ impl App {
                         })
                     })
                     .transpose()?,
-                allocation: Vec::new(),
-            });
-        }
-        let spends = self.db.read(|c| mf::spends(c, &scope))?;
-        let spend_pairs = spends
-            .iter()
-            .filter(|s| s.currency == home.code())
-            .map(|s| Ok((purpose(&s.purpose)?, Money::new(s.amount_minor, home))))
-            .collect::<Result<Vec<_>, AppError>>()?;
-        let book = remittance_book(home, &rems, &spend_pairs)?;
-        for (dto, alloc) in dtos.iter_mut().zip(&book.allocations) {
-            if let Some(parts) = alloc {
-                dto.allocation = parts
+                allocation: alloc
                     .iter()
+                    .flatten()
                     .map(|(p, m)| MfPurposeAmountDto {
                         purpose: p.as_str().to_string(),
                         amount: d(*m),
                     })
-                    .collect();
-            }
+                    .collect(),
+            });
         }
+        let mut spends = Vec::new();
+        for s in sh.spends {
+            spends.push(MfSpendDto {
+                amount: d(money_of(s.amount_minor, &s.currency)?),
+                id: s.expense_id,
+                kind: "EXPENSE".into(),
+                purpose: s.purpose,
+                category_id: Some(s.category_id),
+                debt_id: None,
+                creditor: None,
+                occurred_on: s.occurred_on,
+                note: s.note,
+            });
+        }
+        for p in sh.debt_payments {
+            spends.push(MfSpendDto {
+                amount: d(money_of(p.amount_minor, &p.currency)?),
+                id: p.repayment_id,
+                kind: "DEBT_PAYMENT".into(),
+                purpose: Purpose::Debt.as_str().into(),
+                category_id: None,
+                debt_id: Some(p.debt_id),
+                creditor: Some(p.creditor),
+                occurred_on: p.paid_on,
+                note: p.note,
+            });
+        }
+        // Yangisi tepada (barqaror: bir kunda — xarajatlar, keyin to'lovlar).
+        spends.sort_by(|a, b| b.occurred_on.cmp(&a.occurred_on));
+        let book = sh.book;
         Ok(MfTwoShoresDto {
             uy_space_id: self.uy_space(&ctx)?.map(|u| u.space_id),
             remittances: dtos,
@@ -301,19 +358,7 @@ impl App {
             balance: d(book.balance),
             pending: u32::try_from(book.pending).unwrap_or(u32::MAX),
             overspent: book.overspent,
-            spends: spends
-                .into_iter()
-                .map(|s| {
-                    Ok(MfSpendDto {
-                        amount: d(money_of(s.amount_minor, &s.currency)?),
-                        expense_id: s.expense_id,
-                        purpose: s.purpose,
-                        category_id: s.category_id,
-                        occurred_on: s.occurred_on,
-                        note: s.note,
-                    })
-                })
-                .collect::<Result<_, AppError>>()?,
+            spends,
         })
     }
 

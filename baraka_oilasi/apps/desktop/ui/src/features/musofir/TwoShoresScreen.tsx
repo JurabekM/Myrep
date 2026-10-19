@@ -246,7 +246,7 @@ function SpendForm({ mfSpaceId, uySpaceId }: { mfSpaceId: string; uySpaceId: str
 function Spends({ uySpaceId, v }: { uySpaceId: string; v: MfTwoShoresDto }) {
   const { t } = useTranslation();
   const categories = useQuery({ queryKey: keys.categories(uySpaceId), queryFn: () => call(commands.categories(uySpaceId)) });
-  const category = (id: string) => {
+  const category = (id: string | null) => {
     const c = categories.data?.find((x) => x.id === id);
     return c ? (c.customName ?? t(c.nameKey)) : "";
   };
@@ -255,10 +255,13 @@ function Spends({ uySpaceId, v }: { uySpaceId: string; v: MfTwoShoresDto }) {
       <h2 className="text-lg font-semibold">{t("mf.shores.spends")}</h2>
       <ul>
         {v.spends.map((s) => (
-          <li key={s.expenseId} data-testid="mf-spend" className="flex flex-wrap justify-between gap-2 border-t border-line py-1 text-sm">
+          <li key={s.id} data-testid="mf-spend" className="flex flex-wrap justify-between gap-2 border-t border-line py-1 text-sm">
             <span>
               {showDate(s.occurredOn)} · {t(`mf.purpose.${s.purpose}`)}
-              <span className="text-ink-muted"> · {[category(s.categoryId), s.note].filter(Boolean).join(" · ")}</span>
+              <span className="text-ink-muted">
+                {" · "}
+                {[s.kind === "DEBT_PAYMENT" ? t("mf.shores.paidTo", { creditor: s.creditor ?? "" }) : category(s.categoryId), s.note].filter(Boolean).join(" · ")}
+              </span>
             </span>
             <span className="tabular-nums">{s.amount.formatted}</span>
           </li>

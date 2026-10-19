@@ -27,7 +27,7 @@ const END_OF_TIME: &str = "9999-12-31";
 /// Kurs shu kundan eski bo'lsa — «yangilang» (OQ-MF4).
 const STALE_RATE_DAYS: i64 = 30;
 /// Prognoz uchun oxirgi to'liq oylar (yozuvi borlari).
-const PROGNOSIS_MONTHS: usize = 3;
+pub(crate) const PROGNOSIS_MONTHS: usize = 3;
 /// Standart o'z ulushi — 20 % (OQ-MF1).
 const DEFAULT_SHARE_BP: i64 = 2_000;
 
@@ -347,6 +347,7 @@ impl App {
                 fund: None,
                 rate: None,
                 entries: Vec::new(),
+                cooling: None,
             });
         };
         let (r, book) = self.mf_month_of(&ctx, &scope, &setup, start, end)?;
@@ -426,6 +427,7 @@ impl App {
             fund: Some(fund),
             rate: rate.map(|(_, dto)| dto),
             entries: book.entries,
+            cooling: self.mf_cooling_dto(&ctx, &self.db.read(|c| mf::return_info(c, &scope))?)?,
         })
     }
 

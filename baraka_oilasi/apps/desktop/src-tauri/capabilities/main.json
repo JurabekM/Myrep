@@ -200,6 +200,14 @@
     "allow-mf-set-terms",
     "allow-mf-two-shores",
     "allow-mf-confirm-receipt",
-    "allow-mf-record-spend"
+    "allow-mf-record-spend",
+    "allow-mf-travel-debt",
+    "allow-mf-set-travel-debt",
+    "allow-mf-pay-debt",
+    "allow-mf-set-return",
+    "allow-mf-check-decision",
+    "allow-mf-record-decision",
+    "allow-mf-decisions",
+    "allow-mf-decision-questions"
   ]
 }

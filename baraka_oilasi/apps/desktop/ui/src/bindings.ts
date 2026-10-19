@@ -230,6 +230,14 @@ export const commands = {
 	mfTwoShores: (spaceId: string) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_two_shores", { spaceId })),
 	mfConfirmReceipt: (spaceId: string, moveId: string, input: MfReceiptInput) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_confirm_receipt", { spaceId, moveId, input })),
 	mfRecordSpend: (spaceId: string, input: MfSpendInput) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_record_spend", { spaceId, input })),
+	mfTravelDebt: (spaceId: string) => typedError<MfTravelDebtDto, AppError>(__TAURI_INVOKE("mf_travel_debt", { spaceId })),
+	mfSetTravelDebt: (spaceId: string, input: MfTravelDebtInput) => typedError<MfTravelDebtDto, AppError>(__TAURI_INVOKE("mf_set_travel_debt", { spaceId, input })),
+	mfPayDebt: (spaceId: string, input: MfDebtPaymentInput) => typedError<MfTwoShoresDto, AppError>(__TAURI_INVOKE("mf_pay_debt", { spaceId, input })),
+	mfSetReturn: (spaceId: string, input: MfReturnInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_set_return", { spaceId, input })),
+	mfCheckDecision: (spaceId: string, input: MfDecisionInput) => typedError<MfDecisionCheckDto, AppError>(__TAURI_INVOKE("mf_check_decision", { spaceId, input })),
+	mfRecordDecision: (spaceId: string, input: MfDecisionInput) => typedError<MfDecisionDto[], AppError>(__TAURI_INVOKE("mf_record_decision", { spaceId, input })),
+	mfDecisions: (spaceId: string) => typedError<MfDecisionDto[], AppError>(__TAURI_INVOKE("mf_decisions", { spaceId })),
+	mfDecisionQuestions: (kind: string) => typedError<string[], AppError>(__TAURI_INVOKE("mf_decision_questions", { kind })),
 };
 
 /** Events */
@@ -2140,6 +2148,83 @@ export type MemberDto = {
 	role: string,
 };
 
+export type MfAnswerDto = {
+	key: string,
+	reply: string,
+};
+
+export type MfAnswerInput = {
+	key: string,
+	/**  `YES`, `NO`, `UNKNOWN`. */
+	reply: string,
+};
+
+export type MfCoolingDto = {
+	returnedOn: string,
+	broughtHome: MoneyDto | null,
+	inCooling: boolean,
+	endsOn: string | null,
+	daysLeft: number,
+};
+
+export type MfDebtPaymentInput = {
+	/**  Uy makonidagi U8 qarzi. */
+	debtId: string,
+	amount: string,
+	paidOn: string | null,
+	note: string | null,
+};
+
+export type MfDebtRefDto = {
+	id: string,
+	creditor: string,
+	reason: string | null,
+	status: string,
+	/**  U8 qarz qoldig'i (uy valyutasida). */
+	outstanding: MoneyDto,
+};
+
+export type MfDecisionCheckDto = {
+	/**  Shu qaror turi uchun savollar (tartibi bilan). */
+	questions: string[],
+	inCooling: boolean,
+	endsOn: string | null,
+	daysLeft: number,
+	/**  Summa olib kelinganning necha foizi. */
+	sharePercent: string | null,
+	flags: MfFlagDto[],
+	/**  `GREEN`, `YELLOW`, `RED`. */
+	verdict: string,
+	waitUntil: string | null,
+};
+
+export type MfDecisionDto = {
+	id: string,
+	decidedOn: string,
+	kind: string,
+	title: string,
+	amount: MoneyDto,
+	answers: MfAnswerDto[],
+	flags: MfFlagDto[],
+	verdict: string,
+	inCooling: boolean,
+	waitUntil: string | null,
+	choice: string,
+	note: string | null,
+};
+
+export type MfDecisionInput = {
+	/**  `LEND`, `PARTNERSHIP`, `INVEST`, `PURCHASE`, `OTHER`. */
+	kind: string,
+	title: string,
+	/**  Uy valyutasida. */
+	amount: string,
+	answers: MfAnswerInput[],
+	/**  Yozishda: `WAIT`, `PROCEED`, `DECLINE`; tekshiruvda e'tiborga olinmaydi. */
+	choice: string | null,
+	note: string | null,
+};
+
 export type MfEntryDto = {
 	id: string,
 	/**  `SALARY`, `OTHER_INCOME`, `EXPENSE` yoki `mf_moves` turi. */
@@ -2159,6 +2244,12 @@ export type MfExpenseInput = {
 	channel: string,
 	occurredOn: string | null,
 	note: string | null,
+};
+
+export type MfFlagDto = {
+	code: string,
+	/**  `YELLOW`, `RED`. */
+	level: string,
 };
 
 export type MfFundDto = {
@@ -2242,6 +2333,8 @@ export type MfOverviewDto = {
 	fund: MfFundDto | null,
 	rate: MfRateDto | null,
 	entries: MfEntryDto[],
+	/**  «Qaytdim» belgilangan bo'lsa — sovutish davri (M3). */
+	cooling: MfCoolingDto | null,
 };
 
 export type MfPurposeAmountDto = {
@@ -2309,6 +2402,13 @@ export type MfRemittanceDto = {
 	allocation: MfPurposeAmountDto[],
 };
 
+export type MfReturnInput = {
+	/**  `null` — «Qaytdim» belgisini olib tashlash. */
+	returnedOn: string | null,
+	/**  Olib kelingan summa (uy valyutasida). */
+	broughtHome: string | null,
+};
+
 export type MfSettingsDto = {
 	country: string | null,
 	workCurrency: string,
@@ -2346,10 +2446,17 @@ export type MfShareInput = {
 };
 
 export type MfSpendDto = {
-	expenseId: string,
+	/**  Xarajat yoki U8 qarz to'lovining identifikatori. */
+	id: string,
+	/**  `EXPENSE` — Uy xarajati; `DEBT_PAYMENT` — «Qarz to'lovi» maqsadidan U8 to'lovi (M3). */
+	kind: string,
 	purpose: string,
 	amount: MoneyDto,
-	categoryId: string,
+	/**  Faqat `EXPENSE` da. */
+	categoryId: string | null,
+	/**  Faqat `DEBT_PAYMENT` da: qarz va kreditor. */
+	debtId: string | null,
+	creditor: string | null,
 	occurredOn: string,
 	note: string | null,
 };
@@ -2380,6 +2487,38 @@ export type MfTermsInput = {
 	/**  Oilaviy kelishuv matni (UI shartlardan taklif qiladi, foydalanuvchi o'zgartiradi). */
 	title: string,
 	items: string[],
+};
+
+export type MfTravelDebtDto = {
+	/**  Belgilangan yo'l qarzi (o'chirilgan bo'lsa — `null`). */
+	debt: MfDebtRefDto | null,
+	targetMonths: number,
+	/**  Uy makonidagi faol qarzlar (uy valyutasida) — tanlash uchun. */
+	candidates: MfDebtRefDto[],
+	plan: MfTravelPlanDto | null,
+};
+
+export type MfTravelDebtInput = {
+	/**  `null` — belgini olib tashlash. */
+	debtId: string | null,
+	/**  1–60 oy; bo'lmasa — 6 (OQ-MF8). */
+	targetMonths: number | null,
+};
+
+export type MfTravelPlanDto = {
+	/**  Qarz qoldig'i − «Qarz to'lovi» maqsadidagi pul. */
+	remaining: MoneyDto,
+	/**  «Qarz to'lovi» maqsadi qoldig'i (uyda). */
+	available: MoneyDto,
+	avgMonthly: MoneyDto | null,
+	/**  O'rtacha nechta to'liq oydan (qabuli borlaridan) olindi. */
+	monthsUsed: number,
+	monthsToClear: number | null,
+	clearOn: string | null,
+	/**  Maqsadli muddatda yopish uchun oyiga kerak. */
+	requiredMonthly: MoneyDto,
+	/**  `CLEARED`, `ON_TRACK`, `BEHIND`, `NO_PAYMENTS`. */
+	status: string,
 };
 
 export type MfTwoShoresDto = {

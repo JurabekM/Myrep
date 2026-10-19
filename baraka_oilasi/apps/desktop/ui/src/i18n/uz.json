@@ -2474,5 +2474,9 @@
   "mf.shores.confirm": "Qabul qildim",
   "mf.shores.spendForm": "Maqsad boʻyicha xarajat",
   "mf.shores.saveSpend": "Xarajatni yozish",
-  "mf.shores.spends": "Maqsad boʻyicha xarajatlar"
+  "mf.shores.spends": "Maqsad boʻyicha xarajatlar",
+  "error.INVALID_DECISION_KIND": "Qaror turini tanlang",
+  "error.INVALID_CHOICE": "Tanlovingizni belgilang: kutaman, baribir qilaman yoki rad etaman",
+  "error.MISSING_ANSWER": "Barcha savollarga javob bering",
+  "mf.shores.paidTo": "Qarz toʻlovi: {creditor}"
 }

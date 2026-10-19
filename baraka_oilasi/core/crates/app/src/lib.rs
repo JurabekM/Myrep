@@ -24,6 +24,7 @@ mod kasbkor_staff;
 mod kasbkor_stock;
 mod musofir;
 mod musofir_remit;
+mod musofir_return;
 mod partnership;
 mod receipt;
 mod recovery;

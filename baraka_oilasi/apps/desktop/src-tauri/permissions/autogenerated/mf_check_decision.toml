@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-check-decision"
+description = "Enables the mf_check_decision command without any pre-configured scope."
+commands.allow = ["mf_check_decision"]
+
+[[permission]]
+identifier = "deny-mf-check-decision"
+description = "Denies the mf_check_decision command without any pre-configured scope."
+commands.deny = ["mf_check_decision"]

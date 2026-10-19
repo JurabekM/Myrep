@@ -391,3 +391,194 @@ pub fn spends(c: &Connection, s: &SpaceScope) -> Result<Vec<MfSpendRow>, Storage
     })?;
     Ok(rows.collect::<Result<_, _>>()?)
 }
+
+// ---- M3: yo'l qarzi, qaytish, katta qarorlar ----
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct MfReturnRow {
+    pub travel_debt_id: Option<String>,
+    pub travel_target_months: Option<i64>,
+    pub returned_on: Option<String>,
+    pub brought_home_minor: Option<i64>,
+    pub brought_home_currency: Option<String>,
+}
+
+pub fn return_info(c: &Connection, s: &SpaceScope) -> Result<MfReturnRow, StorageError> {
+    Ok(c.query_row(
+        "SELECT travel_debt_id, travel_target_months, returned_on, brought_home_minor, brought_home_currency
+         FROM mf_settings WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id],
+        |r| {
+            Ok(MfReturnRow {
+                travel_debt_id: r.get(0)?,
+                travel_target_months: r.get(1)?,
+                returned_on: r.get(2)?,
+                brought_home_minor: r.get(3)?,
+                brought_home_currency: r.get(4)?,
+            })
+        },
+    )
+    .optional()?
+    .unwrap_or_default())
+}
+
+pub fn set_travel_debt(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    debt_id: Option<&str>,
+    target_months: Option<i64>,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        "UPDATE mf_settings SET travel_debt_id = ?3, travel_target_months = ?4, updated_at = ?5,
+            updated_by_device_id = ?6, version = version + 1
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
+        params![
+            s.household_id,
+            s.space_id,
+            debt_id,
+            target_months,
+            m.now,
+            m.device_id
+        ],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn set_return(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    returned_on: Option<&str>,
+    brought: Option<(i64, &str)>,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        "UPDATE mf_settings SET returned_on = ?3, brought_home_minor = ?4, brought_home_currency = ?5,
+            updated_at = ?6, updated_by_device_id = ?7, version = version + 1
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id, returned_on, brought.map(|b| b.0), brought.map(|b| b.1),
+            m.now, m.device_id],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn insert_debt_payment(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    repayment_id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_debt_payments (id, household_id, space_id, repayment_id, created_at, origin_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        params![id, s.household_id, s.space_id, repayment_id, m.now, m.device_id],
+    )?;
+    Ok(())
+}
+
+/// «Qarz to'lovi» maqsadidan qilingan to'lovlar (o'chirilmagan U8 to'lovlari, kreditor bilan).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfDebtPaymentRow {
+    pub repayment_id: String,
+    pub debt_id: String,
+    pub creditor: String,
+    pub amount_minor: i64,
+    pub currency: String,
+    pub paid_on: String,
+    pub note: Option<String>,
+}
+
+pub fn debt_payments(
+    c: &Connection,
+    s: &SpaceScope,
+) -> Result<Vec<MfDebtPaymentRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT r.id, r.owner_id, d.creditor, r.amount_minor, r.currency, r.paid_on, r.note
+         FROM mf_debt_payments p
+         JOIN repayments r ON r.id = p.repayment_id AND r.household_id = p.household_id
+         JOIN debts d ON d.id = r.owner_id AND d.household_id = r.household_id
+         WHERE p.household_id = ?1 AND p.space_id = ?2 AND r.deleted_at IS NULL AND r.owner_type = 'DEBT'
+         ORDER BY r.paid_on DESC, r.created_at DESC",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(MfDebtPaymentRow {
+            repayment_id: r.get(0)?,
+            debt_id: r.get(1)?,
+            creditor: r.get(2)?,
+            amount_minor: r.get(3)?,
+            currency: r.get(4)?,
+            paid_on: r.get(5)?,
+            note: r.get(6)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MfDecisionRow {
+    pub id: String,
+    pub decided_on: String,
+    pub kind: String,
+    pub title: String,
+    pub amount_minor: i64,
+    pub currency: String,
+    pub answers_json: String,
+    pub verdict: String,
+    pub flags_json: String,
+    pub in_cooling: bool,
+    pub wait_until: Option<String>,
+    pub choice: String,
+    pub note: Option<String>,
+}
+
+pub fn insert_decision(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    d: &MfDecisionRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO mf_decisions (id, household_id, space_id, decided_on, kind, title, amount_minor, currency,
+            answers_json, verdict, flags_json, in_cooling, wait_until, choice, note, created_at, origin_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+        params![d.id, s.household_id, s.space_id, d.decided_on, d.kind, d.title, d.amount_minor, d.currency,
+            d.answers_json, d.verdict, d.flags_json, d.in_cooling, d.wait_until, d.choice, d.note, m.now,
+            m.device_id],
+    )?;
+    Ok(())
+}
+
+pub fn decisions(c: &Connection, s: &SpaceScope) -> Result<Vec<MfDecisionRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, decided_on, kind, title, amount_minor, currency, answers_json, verdict, flags_json,
+            in_cooling, wait_until, choice, note FROM mf_decisions
+         WHERE household_id = ?1 AND space_id = ?2 ORDER BY decided_on DESC, created_at DESC",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(MfDecisionRow {
+            id: r.get(0)?,
+            decided_on: r.get(1)?,
+            kind: r.get(2)?,
+            title: r.get(3)?,
+            amount_minor: r.get(4)?,
+            currency: r.get(5)?,
+            answers_json: r.get(6)?,
+            verdict: r.get(7)?,
+            flags_json: r.get(8)?,
+            in_cooling: r.get(9)?,
+            wait_until: r.get(10)?,
+            choice: r.get(11)?,
+            note: r.get(12)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}

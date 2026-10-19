@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-decision-questions"
+description = "Enables the mf_decision_questions command without any pre-configured scope."
+commands.allow = ["mf_decision_questions"]
+
+[[permission]]
+identifier = "deny-mf-decision-questions"
+description = "Denies the mf_decision_questions command without any pre-configured scope."
+commands.deny = ["mf_decision_questions"]

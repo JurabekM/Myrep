@@ -194,6 +194,14 @@ const COMMANDS: &[&str] = &[
     "mf_two_shores",
     "mf_confirm_receipt",
     "mf_record_spend",
+    "mf_travel_debt",
+    "mf_set_travel_debt",
+    "mf_pay_debt",
+    "mf_set_return",
+    "mf_check_decision",
+    "mf_record_decision",
+    "mf_decisions",
+    "mf_decision_questions",
 ];
 
 fn main() {

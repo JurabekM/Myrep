@@ -223,6 +223,14 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::mf_two_shores,
             commands::mf_confirm_receipt,
             commands::mf_record_spend,
+            commands::mf_travel_debt,
+            commands::mf_set_travel_debt,
+            commands::mf_pay_debt,
+            commands::mf_set_return,
+            commands::mf_check_decision,
+            commands::mf_record_decision,
+            commands::mf_decisions,
+            commands::mf_decision_questions,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

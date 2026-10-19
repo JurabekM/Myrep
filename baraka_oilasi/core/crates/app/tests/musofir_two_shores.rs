@@ -578,3 +578,298 @@ fn shares_validation_and_overspend() {
     let ceremony = v.purposes.iter().find(|p| p.purpose == "CEREMONY").unwrap();
     assert_eq!(minor(&ceremony.balance), -100_000_000);
 }
+
+// ---- M3 (docs/musofir/SPEC.md 6): yo'l qarzi uyda to'lanadi, «Qaytdim», sovutish davri ----
+
+fn at(s: &str) -> DateTime<Utc> {
+    DateTime::parse_from_rfc3339(s).unwrap().with_timezone(&Utc)
+}
+
+fn answers(pairs: &[(&str, &str)]) -> Vec<MfAnswerInput> {
+    pairs
+        .iter()
+        .map(|(k, r)| MfAnswerInput {
+            key: (*k).into(),
+            reply: (*r).into(),
+        })
+        .collect()
+}
+
+fn decision(kind: &str, amount: &str, a: &[(&str, &str)], choice: Option<&str>) -> MfDecisionInput {
+    MfDecisionInput {
+        kind: kind.into(),
+        title: "Togʻamga qarz".into(),
+        amount: amount.into(),
+        answers: answers(a),
+        choice: choice.map(Into::into),
+        note: None,
+    }
+}
+
+/// Yo'l uchun tog'adan olingan qarz — Uy makonida, 6 oyda 2 500 000 dan.
+fn travel_debt(app: &App, uy: &str) -> String {
+    let lines = [
+        "15.11.2026",
+        "15.12.2026",
+        "15.01.2027",
+        "15.02.2027",
+        "15.03.2027",
+        "15.04.2027",
+    ]
+    .iter()
+    .map(|d| ScheduleLineInput {
+        date: (*d).into(),
+        amount: "2 500 000".into(),
+    })
+    .collect();
+    app.add_debt(
+        uy,
+        NewDebtInput {
+            creditor_type: "RELATIVE".into(),
+            creditor: "Togʻam".into(),
+            reason: Some("Koreyaga yoʻl va viza".into()),
+            currency: "UZS".into(),
+            principal: "15 000 000".into(),
+            original_principal: None,
+            paid_before: None,
+            plan_kind: "MANUAL".into(),
+            annual_bp: None,
+            markup: None,
+            months: None,
+            first_date: None,
+            schedule: lines,
+            early_repayment_terms: None,
+            prepayment_fee_bp: None,
+            is_new: false,
+            borrow_check: None,
+        },
+    )
+    .unwrap()
+    .id
+}
+
+#[test]
+fn travel_debt_is_paid_at_home_and_plan_stays_private() {
+    let dir = tempfile::tempdir().unwrap();
+    let owner_dev = Device::new(dir.path(), "rustam", 1);
+    let home_dev = Device::new(dir.path(), "uy", 2);
+    let o = owner_setup(&owner_dev);
+    let debt_id = travel_debt(&o.app, &o.uy);
+
+    // Belgilash: standart muddat 6 oy; hali qarz maqsadiga pul kelmagan.
+    let unknown = MfTravelDebtInput {
+        debt_id: Some("yoq".into()),
+        target_months: None,
+    };
+    assert_eq!(err(o.app.mf_set_travel_debt(&o.mf, unknown)), "NOT_FOUND");
+    let bad = MfTravelDebtInput {
+        debt_id: Some(debt_id.clone()),
+        target_months: Some(0),
+    };
+    assert_eq!(err(o.app.mf_set_travel_debt(&o.mf, bad)), "INVALID_MONTHS");
+    let t = o
+        .app
+        .mf_set_travel_debt(
+            &o.mf,
+            MfTravelDebtInput {
+                debt_id: Some(debt_id.clone()),
+                target_months: None,
+            },
+        )
+        .unwrap();
+    assert_eq!(t.target_months, 6);
+    assert_eq!(t.candidates.len(), 1);
+    assert_eq!(t.debt.as_ref().unwrap().creditor, "Togʻam");
+    let plan = t.plan.unwrap();
+    assert_eq!(minor(&plan.remaining), 1_500_000_000);
+    assert_eq!(plan.status, "NO_PAYMENTS");
+    assert_eq!(minor(&plan.required_monthly), 250_000_000);
+
+    // Uydagi oila: qabul (30 % — 3 270 000 qarz maqsadiga) va qarz maqsadidan to'lov.
+    let home = pair_home(&o, &home_dev);
+    import(&o.app, &export(&home, &owner_dev.id));
+    let move_id = home.mf_two_shores(&o.mf).unwrap().remittances[0]
+        .move_id
+        .clone();
+    home.mf_confirm_receipt(
+        &o.mf,
+        &move_id,
+        MfReceiptInput {
+            received: "10 900 000".into(),
+            channel: "CARD".into(),
+            member_id: Some(o.gulnora.clone()),
+            received_on: None,
+            note: None,
+        },
+    )
+    .unwrap();
+    let pay = |amount: &str| MfDebtPaymentInput {
+        debt_id: debt_id.clone(),
+        amount: amount.into(),
+        paid_on: None,
+        note: Some("Togʻamga".into()),
+    };
+    let v = home.mf_pay_debt(&o.mf, pay("3 270 000")).unwrap();
+    let debt_purpose = v.purposes.iter().find(|p| p.purpose == "DEBT").unwrap();
+    assert_eq!(minor(&debt_purpose.spent), 327_000_000);
+    assert_eq!(minor(&debt_purpose.balance), 0);
+    let s = &v.spends[0];
+    assert_eq!(
+        (s.kind.as_str(), s.purpose.as_str(), s.creditor.as_deref()),
+        ("DEBT_PAYMENT", "DEBT", Some("Togʻam"))
+    );
+    assert!(s.category_id.is_none());
+    let home_debt = home.debts_overview(&o.uy).unwrap().debts[0].clone();
+    assert_eq!(minor(&home_debt.balance), 1_173_000_000);
+    // Reja, qaytish va qarorlar — musofirning shaxsiy hisobi.
+    assert_eq!(err(home.mf_travel_debt(&o.mf)), "ROLE_FORBIDDEN");
+    let ret = MfReturnInput {
+        returned_on: Some("2026-10-01".into()),
+        brought_home: None,
+    };
+    assert_eq!(err(home.mf_set_return(&o.mf, ret)), "ROLE_FORBIDDEN");
+    assert_eq!(err(home.mf_decisions(&o.mf)), "ROLE_FORBIDDEN");
+
+    // Oila → musofir: to'lov qabul qilinadi; qarz kamaydi.
+    let file = export(&home, &owner_dev.id);
+    let preview = o.app.inspect_baraka(&file.bytes, PASSWORD).unwrap();
+    assert!(preview.rejected.is_empty(), "{:?}", preview.rejected);
+    import(&o.app, &file);
+    assert_eq!(o.app.mf_two_shores(&o.mf).unwrap().spends.len(), 1);
+
+    // Noyabr: oktyabrda qarz maqsadiga 3 270 000 kelgan → 4 oyda yopiladi (6 oylik maqsadda).
+    owner_dev.clock.set(at("2026-11-10T09:00:00+05:00"));
+    let plan = o.app.mf_travel_debt(&o.mf).unwrap().plan.unwrap();
+    assert_eq!(minor(&plan.remaining), 1_173_000_000);
+    assert_eq!(minor(plan.avg_monthly.as_ref().unwrap()), 327_000_000);
+    assert_eq!(plan.months_used, 1);
+    assert_eq!(plan.months_to_clear, Some(4));
+    assert_eq!(plan.clear_on.as_deref(), Some("2027-03-10"));
+    assert_eq!(minor(&plan.required_monthly), 195_500_000);
+    assert_eq!(plan.status, "ON_TRACK");
+
+    // «Qaytdim»: 1-noyabr, 120 000 000 so'm olib keldi → 90 kunlik sovutish davri.
+    let future = MfReturnInput {
+        returned_on: Some("2026-11-11".into()),
+        brought_home: None,
+    };
+    assert_eq!(err(o.app.mf_set_return(&o.mf, future)), "FUTURE_DATE");
+    let ov = o
+        .app
+        .mf_set_return(
+            &o.mf,
+            MfReturnInput {
+                returned_on: Some("2026-11-01".into()),
+                brought_home: Some("120 000 000".into()),
+            },
+        )
+        .unwrap();
+    let c = ov.cooling.unwrap();
+    assert!(c.in_cooling);
+    assert_eq!(c.ends_on.as_deref(), Some("2027-01-30"));
+    assert_eq!(c.days_left, 81);
+    assert_eq!(minor(c.brought_home.as_ref().unwrap()), 12_000_000_000);
+
+    // Katta qaror: tog'am 15 000 000 qarz so'radi (olib kelinganning 12,5 %i, muddatsiz).
+    assert_eq!(o.app.mf_decision_questions("LEND").unwrap().len(), 5);
+    assert_eq!(o.app.mf_decision_questions("INVEST").unwrap().len(), 10);
+    let lend = [
+        ("approached", "YES"),
+        ("upfront", "NO"),
+        ("abroadJobFee", "NO"),
+        ("repaymentDate", "NO"),
+        ("familyDiscussed", "YES"),
+    ];
+    let check = o
+        .app
+        .mf_check_decision(&o.mf, decision("LEND", "15 000 000", &lend, None))
+        .unwrap();
+    assert_eq!(check.verdict, "YELLOW");
+    assert_eq!(check.share_percent.as_deref(), Some("12,5"));
+    assert_eq!(check.wait_until.as_deref(), Some("2027-01-30"));
+    let codes: Vec<&str> = check.flags.iter().map(|f| f.code.as_str()).collect();
+    assert_eq!(
+        codes,
+        [
+            "FRESH_RETURN_APPROACH",
+            "NO_REPAYMENT_DATE",
+            "COOLING_BIG_DECISION"
+        ]
+    );
+    assert_eq!(
+        err(o
+            .app
+            .mf_check_decision(&o.mf, decision("LEND", "15 000 000", &lend[..4], None))),
+        "MISSING_ANSWER"
+    );
+    let mut wrong = lend.to_vec();
+    wrong.push(("guaranteed", "NO"));
+    assert_eq!(
+        err(o
+            .app
+            .mf_check_decision(&o.mf, decision("LEND", "15 000 000", &wrong, None))),
+        "INVALID_ANSWER"
+    );
+    assert_eq!(
+        err(o
+            .app
+            .mf_record_decision(&o.mf, decision("LEND", "15 000 000", &lend, None))),
+        "INVALID_CHOICE"
+    );
+    let log = o
+        .app
+        .mf_record_decision(&o.mf, decision("LEND", "15 000 000", &lend, Some("WAIT")))
+        .unwrap();
+    assert_eq!(log.len(), 1);
+    assert_eq!(
+        (log[0].choice.as_str(), log[0].verdict.as_str()),
+        ("WAIT", "YELLOW")
+    );
+    assert_eq!(log[0].answers.len(), 5);
+    assert_eq!(log[0].wait_until.as_deref(), Some("2027-01-30"));
+    // Sheriklik: 40 000 000 — olib kelinganning 30 %idan ko'pi → qizil.
+    let mut partner = vec![
+        ("guaranteed", "NO"),
+        ("lossShared", "YES"),
+        ("realActivity", "YES"),
+        ("recruitment", "NO"),
+        ("urgency", "NO"),
+        ("written", "YES"),
+    ];
+    partner.extend(lend.iter().filter(|(k, _)| *k != "repaymentDate"));
+    let mut big = decision("PARTNERSHIP", "40 000 000", &partner, Some("DECLINE"));
+    big.title = "Doʻst bilan doʻkon".into();
+    let log = o.app.mf_record_decision(&o.mf, big).unwrap();
+    assert_eq!(log.len(), 2);
+    assert!(log
+        .iter()
+        .any(|d| d.verdict == "RED" && d.flags.iter().any(|f| f.code == "LARGE_SHARE")));
+
+    // Musofir → oila: qarorlar, qaytish va reja sozlamalari oilaga bormaydi.
+    let res = import(&home, &export(&o.app, &home_dev.id));
+    assert_eq!(res.conflicts_local + res.conflicts_remote, 0);
+    assert_private(&home_dev, &o.mf);
+    assert!(home_dev.rows("mf_decisions").is_empty());
+    assert_eq!(home_dev.rows("mf_debt_payments").len(), 1);
+    // Jurnal o'zgarmas.
+    let db = owner_dev.db();
+    let r = db.write(|tx| {
+        tx.execute("UPDATE mf_decisions SET choice = 'PROCEED'", [])?;
+        Ok(())
+    });
+    assert!(r.is_err());
+    drop(db);
+
+    // Belgini olib tashlash — sovutish davri yo'q.
+    let ov = o
+        .app
+        .mf_set_return(
+            &o.mf,
+            MfReturnInput {
+                returned_on: None,
+                brought_home: None,
+            },
+        )
+        .unwrap();
+    assert!(ov.cooling.is_none());
+}

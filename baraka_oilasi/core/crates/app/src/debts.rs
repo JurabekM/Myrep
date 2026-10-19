@@ -434,7 +434,7 @@ impl App {
             .collect())
     }
 
-    fn debt_dto(
+    pub(crate) fn debt_dto(
         &self,
         ctx: &Ctx,
         scope: &SpaceScope,
