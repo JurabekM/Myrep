@@ -6,3 +6,6 @@ __pycache__/
 
 # Auditorga beriladigan paket (yig'iladi, repo'ga kirmaydi)
 /audit-package/
+
+# Yig'ilgan o'rnatuvchilar (repo'ga kirmaydi)
+/dist/
