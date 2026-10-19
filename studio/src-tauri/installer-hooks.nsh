@@ -41,6 +41,11 @@ Var TamgaPD
 
 !macro TAMGA_SERVICE_INSTALL
   ReadEnvStr $TamgaPD "ProgramData"
+  ; %ProgramData% da oddiy foydalanuvchi ham papka yarata oladi. Agar TAMGA papkasi oldindan bor va
+  ; uning egasi administratorlar yoki SYSTEM bo'lmasa — u bizniki emas (egasi ACL'ni qayta o'zgartira
+  ; olardi, ichiga oldindan fayl qo'yilgan bo'lishi mumkin). Uni chetga olib, yangisini yaratamiz.
+  nsExec::Exec `powershell -NoProfile -Command "$$p = Join-Path $$env:ProgramData 'TAMGA'; if (Test-Path $$p) { $$o = (Get-Acl $$p).GetOwner([Security.Principal.SecurityIdentifier]).Value; if ($$o -ne 'S-1-5-32-544' -and $$o -ne 'S-1-5-18') { Rename-Item $$p ('TAMGA.untrusted-' + (Get-Date -Format yyyyMMddHHmmss)) } }"`
+  Pop $TamgaRc
   CreateDirectory "$TamgaPD\TAMGA\logs"
   CreateDirectory "$TamgaPD\TAMGA\vault"
   CreateDirectory "$TamgaPD\TAMGA\secrets"
@@ -57,6 +62,9 @@ Var TamgaPD
   nsExec::Exec 'sc.exe failure tamgad reset= 86400 actions= restart/5000/restart/5000/restart/60000'
   Pop $TamgaRc
 
+  ; Egasi — administratorlar (ACL ni faqat ular o'zgartira oladi).
+  nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA" /setowner *S-1-5-32-544 /T /C /Q'
+  Pop $TamgaRc
   ; ACL (SID bilan — Windows tiliga bog'liq emas): SYSTEM va administratorlar — to'liq; xizmat —
   ; o'zgartirish; foydalanuvchilar (S-1-5-32-545) — faqat o'qish. Meros uzilib, eskisi almashtiriladi.
   nsExec::Exec 'icacls.exe "$TamgaPD\TAMGA" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F "NT SERVICE\tamgad:(OI)(CI)M" *S-1-5-32-545:(OI)(CI)RX /T /C /Q'
