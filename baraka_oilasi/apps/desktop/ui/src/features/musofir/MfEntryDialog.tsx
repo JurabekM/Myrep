@@ -10,7 +10,7 @@ import { keys } from "../../lib/queryClient";
 import { useDialog } from "../../lib/useDialog";
 import { draftFrom, PurposeShares, type SharesDraft, sharesInput } from "./PurposeShares";
 
-export type MfEntryMode = "SALARY" | "OTHER_INCOME" | "EXPENSE" | "SENT_HOME" | "FUND_IN" | "FUND_OUT" | "OPENING" | "FUND_OPENING";
+export type MfEntryMode = "SALARY" | "OTHER_INCOME" | "EXPENSE" | "SENT_HOME" | "FUND_IN" | "FUND_OUT" | "OPENING" | "FUND_OPENING" | "RESERVE_IN" | "RESERVE_OUT" | "RESERVE_OPENING";
 type Channel = "CASH" | "CARD";
 
 /**
@@ -38,6 +38,7 @@ export function MfEntryDialog({
   const dialog = useDialog<HTMLDivElement>(onClose);
   const income = mode === "SALARY" || mode === "OTHER_INCOME";
   const hasChannel = income || mode === "EXPENSE";
+  const withdrawal = mode === "FUND_OUT" || mode === "RESERVE_OUT";
   const categories = useQuery({ queryKey: keys.categories(spaceId), queryFn: () => call(commands.categories(spaceId)), enabled: mode === "EXPENSE" });
   const [amount, setAmount] = useState(initialAmount ?? "");
   const [channel, setChannel] = useState<Channel>("CARD");
@@ -140,8 +141,8 @@ export function MfEntryDialog({
             <input type="date" className="field" value={occurredOn} onChange={(e) => setOccurredOn(e.target.value)} />
           </label>
           <label>
-            <span className="label">{mode === "FUND_OUT" ? t("mf.reason") : t("kk.note")}</span>
-            <input className="field" value={note} onChange={(e) => setNote(e.target.value)} required={mode === "FUND_OUT"} />
+            <span className="label">{withdrawal ? t("mf.reason") : t("kk.note")}</span>
+            <input className="field" value={note} onChange={(e) => setNote(e.target.value)} required={withdrawal} />
           </label>
           <ErrorText error={save.error} />
           <div className="flex justify-end gap-2">

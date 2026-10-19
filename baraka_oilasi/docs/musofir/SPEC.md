@@ -1,7 +1,7 @@
 # «MUSOFIR» MAKONI — SPETSIFIKATSIYA
 ### Chet elda ishlaydigan migrant va uning uydagi oilasi uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (M0)**; M1 (2–4-bo'limlar) va M2 (5, 8-bo'limlar, ADR-0004) amalga oshirildi — farqlari 4.4 va 5.1 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-MF*).
+> Versiya: **v0.1 — QORALAMA (M0)**; M1 (2–4-bo'limlar) va M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-MF*).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-qonun ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar).
 
@@ -148,6 +148,15 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 ### 6.6. Ish boshlash summasi va qaror natijasi (M4)
 - **Ish boshlash summasi** (5-qonun, 6.2) — qaytish jamg'armasi maqsadining bir qismi, uy valyutasida; ixtiyoriy ravishda Uy makonidagi «Hunardan ishga» g'oyasiga bog'lanadi (summani g'oyaning boshlang'ich sarmoyasidan taklif qilish mumkin). Maqsad ikkiga bo'linib ko'rsatiladi: `yashash uchun = maqsad − ish boshlash` (ish boshlash summasi maqsaddan oshmaydi — `STARTUP_EXCEEDS_TARGET`). Bosh sahifadan «Hunardan ishga»ga havola.
 - **Qaror natijasi:** jurnaldagi qaror keyin bir marta belgilanadi — «qildim» (`DONE`) yoki «qilmadim» (`DROPPED`), sana va izoh bilan; o'zgarmas, shaxsiy.
+
+### 6.7. M4 da qanday qilindi (farqlar)
+- **Qorovul pul harakatlari** alohida jadvalda (`mf_reserve_moves`, ish valyutasida, tuzatiladigan); oy hisobida jamg'arma harakatlari bilan birga (qoldiqlar alohida). Qorovul puldan olish — sabab bilan va qoldiqdan oshmaydi (`RESERVE_INSUFFICIENT`).
+- **Maqsad tarixi** — qaytish jamg'armasi prognozi bilan bir xil oylar (oxirgi 3 to'liq oy, yozuvi borlari); o'sha oylarda xarajat bo'lmasa maqsad 0 (`FULL`).
+- **Maoshdan keyingi taklif** ikki qadam: avval «Qorovul pulga qo'yish», keyin qolgani «Jamg'armaga qo'yish» (summalar yadrodan).
+- **Ish boshlash summasi** — `mf_settings` da (uy valyutasida) va ixtiyoriy U12 g'oyasi; g'oya tanlansa, uning boshlang'ich sarmoyasi (uy valyutasida bo'lsa) taklif qilinadi. Maqsad keyin kamaytirilsa — summa saqlanadi, belgi bilan ko'rsatiladi (`exceeds_target`). «Hunardan ishga» — Uy makonida; Musofir bosh sahifasidagi tugma o'sha ekranni ochadi.
+- **Qaror natijasi** — `mf_decision_outcomes` (bir qarorga bir marta; sana qaror sanasidan oldin va kelajakda bo'lmaydi); shaxsiy.
+- Hammasi oilaga yuborilmaydi (ADR-0004; ikki qurilmali test).
+- Qilinmagan: qorovul pul uy valyutasida ko'rinishi (kurs bilan), Android UI.
 
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.

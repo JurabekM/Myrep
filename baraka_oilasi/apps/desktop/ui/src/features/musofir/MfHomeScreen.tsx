@@ -11,7 +11,9 @@ import { keys } from "../../lib/queryClient";
 import { useUi } from "../../state/ui";
 import { MfEntryDialog, type MfEntryMode } from "./MfEntryDialog";
 import { MfTermsCard } from "./MfTermsCard";
+import { ReserveCard } from "./ReserveCard";
 import { ReturnCard } from "./ReturnCard";
+import { StartupCard } from "./StartupCard";
 import { TravelDebtCard } from "./TravelDebtCard";
 import { PurposesTable } from "./TwoShoresScreen";
 
@@ -138,7 +140,8 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
   const mfEntry = useUi((x) => x.mfEntry);
   const openMfEntry = useUi((x) => x.openMfEntry);
   const closeMfEntry = useUi((x) => x.closeMfEntry);
-  const [offer, setOffer] = useState<MoneyDto | null>(null);
+  // Maoshdan keyingi taklif (M4): ulush avval qorovul pulga, qolgani jamg'armaga — summalar yadrodan.
+  const [offer, setOffer] = useState<{ share: MoneyDto; reserve: MoneyDto | null; fund: MoneyDto | null } | null>(null);
   const [fundAmount, setFundAmount] = useState<string | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const categories = useQuery({ queryKey: keys.categories(spaceId), queryFn: () => call(commands.categories(spaceId)) });
@@ -171,7 +174,7 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
         <div className="card">
           <p className="text-sm text-ink-muted">{t("mf.share.title", { percent: s.sharePercent })}</p>
           <p data-testid="mf-share" className="kpi text-accent">
-            {m?.fundNet.formatted ?? "…"}
+            {m?.savedNet.formatted ?? "…"}
           </p>
           {m && (
             <p className="text-sm text-ink-muted">
@@ -188,17 +191,23 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
 
       {offer && (
         <div role="status" data-testid="mf-offer" className="card flex flex-wrap items-center justify-between gap-3 border-accent/60 py-3">
-          <p>{t("mf.offer", { amount: offer.formatted })}</p>
+          <p>{offer.reserve ? t("mf.offerSplit", { share: offer.share.formatted, reserve: offer.reserve.formatted, fund: offer.fund?.formatted ?? "0" }) : t("mf.offer", { amount: (offer.fund ?? offer.share).formatted })}</p>
           <div className="flex gap-2">
             <button
               className="btn-primary"
               onClick={() => {
-                setFundAmount(offer.plain);
-                setOffer(null);
-                openMfEntry("FUND_IN");
+                if (offer.reserve) {
+                  setFundAmount(offer.reserve.plain);
+                  setOffer(offer.fund ? { ...offer, reserve: null } : null);
+                  openMfEntry("RESERVE_IN");
+                } else {
+                  setFundAmount((offer.fund ?? offer.share).plain);
+                  setOffer(null);
+                  openMfEntry("FUND_IN");
+                }
               }}
             >
-              {t("mf.offerAccept")}
+              {offer.reserve ? t("mf.offerReserve") : t("mf.offerAccept")}
             </button>
             <button className="btn-ghost" onClick={() => setOffer(null)}>
               {t("mf.offerLater")}
@@ -265,6 +274,8 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
               <Line label={t("mf.flow.sentHome")} value={`− ${m.sentHome.formatted}`} hint={pct(m.sentPercent)} testId="mf-sent" />
               {m.fees.minor !== "0" && <Line label={t("mf.flow.fees")} value={`− ${m.fees.formatted}`} />}
               <Line label={t("mf.flow.fund")} value={`− ${m.fundNet.formatted}`} hint={pct(m.fundPercent)} />
+              {m.reserveIn.minor !== "0" && <Line label={t("mf.flow.reserveIn")} value={`− ${m.reserveIn.formatted}`} hint={pct(m.reservePercent)} testId="mf-reserve-in" />}
+              {m.reserveOut.minor !== "0" && <Line label={t("mf.flow.reserveOut")} value={`+ ${m.reserveOut.formatted}`} />}
               <Line label={t("mf.flow.pocket")} value={m.pocket.formatted} testId="mf-pocket" strong />
             </tbody>
           </table>
@@ -275,6 +286,18 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
       <ShoresSummary spaceId={spaceId} />
       <MfTermsCard spaceId={spaceId} />
       <div className="grid gap-5 md:grid-cols-2">
+        {d.reserve && (
+          <ReserveCard
+            spaceId={spaceId}
+            d={d}
+            r={d.reserve}
+            onAction={(a) => {
+              setFundAmount(undefined);
+              openMfEntry(a);
+            }}
+          />
+        )}
+        <StartupCard spaceId={spaceId} d={d} homeCurrency={s.homeCurrency} />
         <TravelDebtCard spaceId={spaceId} />
         <ReturnCard spaceId={spaceId} d={d} homeCurrency={s.homeCurrency} />
       </div>
@@ -359,9 +382,19 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
           mode={mfEntry}
           workCurrency={s.workCurrency}
           homeCurrency={s.homeCurrency}
-          initialAmount={mfEntry === "FUND_IN" ? fundAmount : undefined}
+          initialAmount={mfEntry === "FUND_IN" || mfEntry === "RESERVE_IN" ? fundAmount : undefined}
           onClose={closeMfEntry}
-          onIncome={(r) => setOffer(r.suggestedShare.minor !== "0" ? r.suggestedShare : null)}
+          onIncome={(r) =>
+            setOffer(
+              r.suggestedShare.minor !== "0"
+                ? {
+                    share: r.suggestedShare,
+                    reserve: r.suggestedReserve && r.suggestedReserve.minor !== "0" ? r.suggestedReserve : null,
+                    fund: r.suggestedFund && r.suggestedFund.minor !== "0" ? r.suggestedFund : null,
+                  }
+                : null,
+            )
+          }
         />
       )}
     </>

@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { commands, type MfOverviewDto } from "../../bindings";
+import { commands, type MfOutcomeDto, type MfOverviewDto } from "../../bindings";
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
@@ -119,6 +119,7 @@ function DecisionsLog({ spaceId, onCheck }: { spaceId: string; onCheck: () => vo
                 {" · "}
                 {t(`mf.choice.${x.choice}`)}
               </span>
+              <Outcome spaceId={spaceId} id={x.id} outcome={x.outcome} />
             </li>
           ))}
         </ul>
@@ -127,5 +128,29 @@ function DecisionsLog({ spaceId, onCheck }: { spaceId: string; onCheck: () => vo
         {t("mf.decision.open")}
       </button>
     </div>
+  );
+}
+
+/** Qaror natijasi (M4): bir marta — «qildim» yoki «qilmadim»; o'zgarmas. */
+function Outcome({ spaceId, id, outcome }: { spaceId: string; id: string; outcome: MfOutcomeDto | null }) {
+  const { t } = useTranslation();
+  const set = useMutation({ mutationFn: (o: string) => call(commands.mfSetOutcome(spaceId, id, { outcome: o, outcomeOn: null, note: null })) });
+  if (outcome) {
+    return (
+      <span data-testid="mf-decision-outcome" className="w-full text-xs text-ink-muted">
+        {t(`mf.outcome.line.${outcome.outcome}`, { date: showDate(outcome.outcomeOn) })}
+      </span>
+    );
+  }
+  return (
+    <span role="group" aria-label={t("mf.outcome.ask")} className="flex w-full flex-wrap items-center gap-2 text-xs">
+      <span className="text-ink-muted">{t("mf.outcome.ask")}</span>
+      {(["DONE", "DROPPED"] as const).map((o) => (
+        <button key={o} className="btn-ghost px-2 py-0.5 text-xs" disabled={set.isPending} onClick={() => set.mutate(o)}>
+          {t(`mf.outcome.${o}`)}
+        </button>
+      ))}
+      <ErrorText error={set.error} />
+    </span>
   );
 }

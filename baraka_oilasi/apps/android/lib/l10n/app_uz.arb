@@ -4209,5 +4209,108 @@
   "error_RESERVE_INSUFFICIENT": "Qorovul pulda buncha pul yoʻq",
   "error_STARTUP_EXCEEDS_TARGET": "Ish boshlash summasi qaytish jamgʻarmasi maqsadidan katta boʻlmasin",
   "error_OUTCOME_ALREADY_SET": "Bu qarorning natijasi allaqachon belgilangan",
-  "error_BEFORE_DECISION": "Natija sanasi qaror sanasidan oldin boʻlmasin"
+  "error_BEFORE_DECISION": "Natija sanasi qaror sanasidan oldin boʻlmasin",
+  "mf_reserve_title": "Qorovul pul",
+  "mf_reserve_status_FULL": "Qorovul pul toʻla — {count} oylik xarajatga yetadi. Endi ulush jamgʻarmaga.",
+  "@mf_reserve_status_FULL": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_reserve_status_PARTIAL": "Yana {gap} — qorovul pul toʻladi.",
+  "@mf_reserve_status_PARTIAL": {
+    "placeholders": {
+      "gap": {}
+    }
+  },
+  "mf_reserve_status_EMPTY": "Qorovul pul boʻsh. Maoshdagi ulush avval shu yerga — {gap} kerak.",
+  "@mf_reserve_status_EMPTY": {
+    "placeholders": {
+      "gap": {}
+    }
+  },
+  "mf_reserve_status_NO_HISTORY": "Bir oy xarajatlarni yozing — qorovul pul maqsadini hisoblayman.",
+  "mf_reserve_progress": "Qorovul pul toʻlishi",
+  "mf_reserve_progressLine": "{percent} % · maqsad {target}",
+  "@mf_reserve_progressLine": {
+    "placeholders": {
+      "percent": {},
+      "target": {}
+    }
+  },
+  "mf_reserve_avg": "Oyiga oʻrtacha chet el xarajati: {amount} ({count} oy)",
+  "@mf_reserve_avg": {
+    "placeholders": {
+      "amount": {},
+      "count": {}
+    }
+  },
+  "mf_reserve_months": "Necha oylik xarajat",
+  "mf_reserve_actions": "Qorovul pul yozuvlari",
+  "mf_reserve_hint": "Kasal boʻlsangiz yoki ishsiz qolsangiz — qorovul puldan oling; qaytish jamgʻarmasi qaytish uchun qoladi.",
+  "mf_action_RESERVE_IN": "Qorovul pulga",
+  "mf_action_RESERVE_OUT": "Qorovul puldan",
+  "mf_action_RESERVE_OPENING": "Qorovul pul (boshlangʻich)",
+  "mf_hint_RESERVE_IN": "Kutilmagan xarajat uchun alohida pul. Ulush avval shu yerga, toʻlgach — jamgʻarmaga.",
+  "mf_hint_RESERVE_OUT": "Qorovul puldan olish. Sababini yozing — bu ayblov emas, u shuning uchun bor.",
+  "mf_hint_RESERVE_OPENING": "Hozir qorovul pulingizda qancha bor (bir marta).",
+  "mf_kind_RESERVE_IN": "Qorovul pulga",
+  "mf_kind_RESERVE_OUT": "Qorovul puldan",
+  "mf_kind_RESERVE_OPENING": "Qorovul pul (boshlangʻich)",
+  "mf_flow_reserveIn": "Qorovul pulga",
+  "mf_flow_reserveOut": "Qorovul puldan",
+  "mf_offerSplit": "Shu maoshdan oʻz ulushi {share}: {reserve} — qorovul pulga, {fund} — qaytish jamgʻarmasiga.",
+  "@mf_offerSplit": {
+    "placeholders": {
+      "fund": {},
+      "reserve": {},
+      "share": {}
+    }
+  },
+  "mf_offerReserve": "Qorovul pulga qoʻyish",
+  "mf_startup_title": "Qaytgandan keyin ish",
+  "mf_startup_intro": "Qaytgach oʻz ishingizni boshlamoqchimisiz? Kerakli summani qaytish jamgʻarmasi maqsadining bir qismi qilib belgilang.",
+  "mf_startup_amountLine": "Ish boshlash uchun: {amount}",
+  "@mf_startup_amountLine": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "mf_startup_livingLine": "Yashash uchun: {amount} (ish boshlash — maqsadning {percent} %i)",
+  "@mf_startup_livingLine": {
+    "placeholders": {
+      "amount": {},
+      "percent": {}
+    }
+  },
+  "mf_startup_exceeds": "Ish boshlash summasi maqsaddan katta — maqsadni yoki summani tuzating.",
+  "mf_startup_change": "Oʻzgartirish",
+  "mf_startup_set": "Ish boshlash summasini belgilash",
+  "mf_startup_openIdeas": "«Hunardan ishga»ni ochish",
+  "mf_startup_form": "Ish boshlash summasi",
+  "mf_startup_idea": "«Hunardan ishga» gʻoyasi",
+  "mf_startup_noIdea": "— gʻoyasiz —",
+  "mf_startup_amount": "Ish boshlash summasi ({currency})",
+  "@mf_startup_amount": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mf_startup_hint": "Gʻoya tanlansa, uning boshlangʻich sarmoyasi taklif qilinadi.",
+  "mf_startup_remove": "Olib tashlash",
+  "mf_outcome_ask": "Natija qanday boʻldi?",
+  "mf_outcome_DONE": "Qildim",
+  "mf_outcome_DROPPED": "Qilmadim",
+  "mf_outcome_line_DONE": "Natija: qildim ({date})",
+  "@mf_outcome_line_DONE": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "mf_outcome_line_DROPPED": "Natija: qilmadim ({date})",
+  "@mf_outcome_line_DROPPED": {
+    "placeholders": {
+      "date": {}
+    }
+  }
 }

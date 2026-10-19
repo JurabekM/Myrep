@@ -62,6 +62,8 @@ const overview = (over: Record<string, unknown> = {}) => ({
   settings,
   defaultSharePercent: "20",
   cooling: null,
+  reserve: null,
+  startup: null,
   periodStart: "2026-10-01",
   periodEnd: "2026-10-31",
   month: {
@@ -72,12 +74,16 @@ const overview = (over: Record<string, unknown> = {}) => ({
     fundIn: m("0 KRW", "0"),
     fundOut: m("0 KRW", "0"),
     fundNet: m("0 KRW", "0"),
+    reserveIn: m("0 KRW", "0"),
+    reserveOut: m("0 KRW", "0"),
+    savedNet: m("0 KRW", "0"),
     pocket: m("735 000 KRW"),
     shareTarget: m("520 000 KRW"),
     shareGap: m("520 000 KRW"),
     expensesPercent: "31,15",
     sentPercent: "46,35",
     fundPercent: "0",
+    reservePercent: "0",
     warnings: ["NO_SHARE"],
   },
   fund: {
@@ -182,7 +188,7 @@ describe("Musofir bosh sahifasi", () => {
 
   it("maosh → o'z ulushi taklifi → jamg'armaga (summa yadrodan)", async () => {
     mfOverview.mockResolvedValue(ok(overview()));
-    mfRecordIncome.mockResolvedValue(ok({ overview: overview(), suggestedShare: m("520 000 KRW", "520000") }));
+    mfRecordIncome.mockResolvedValue(ok({ overview: overview(), suggestedShare: m("520 000 KRW", "520000"), suggestedReserve: m("0 KRW", "0"), suggestedFund: m("520 000 KRW", "520000") }));
     mfRecordMove.mockResolvedValue(ok(overview()));
     const user = userEvent.setup();
     wrap(<MfHomeScreen spaceId="mf" />);
@@ -197,6 +203,42 @@ describe("Musofir bosh sahifasi", () => {
     expect(within(fund).getByLabelText("Summa (KRW)")).toHaveValue("520 000");
     await user.click(within(fund).getByRole("button", { name: "Saqlash" }));
     expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "FUND_IN", amount: "520 000", fee: null, received: null, occurredOn: null, note: null, purposes: null });
+  });
+
+  it("M4: ulush avval qorovul pulga, qolgani jamg'armaga; qorovul pul kartasi", async () => {
+    const reserve = {
+      balance: m("300 000 KRW", "300000"),
+      months: 1,
+      monthsUsed: 3,
+      avgMonthly: m("805 000 KRW", "805000"),
+      target: m("805 000 KRW", "805000"),
+      gap: m("505 000 KRW", "505000"),
+      progressBp: 3727,
+      progressPercent: "37,27",
+      status: "PARTIAL",
+    };
+    mfOverview.mockResolvedValue(ok(overview({ reserve })));
+    mfRecordIncome.mockResolvedValue(
+      ok({ overview: overview({ reserve }), suggestedShare: m("520 000 KRW", "520000"), suggestedReserve: m("505 000 KRW", "505000"), suggestedFund: m("15 000 KRW", "15000") }),
+    );
+    mfRecordMove.mockResolvedValue(ok(overview({ reserve })));
+    const user = userEvent.setup();
+    const { container } = wrap(<MfHomeScreen spaceId="mf" />);
+    expect(await screen.findByTestId("mf-reserve-status")).toHaveTextContent("Yana 505 000 KRW");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(screen.getByRole("button", { name: /^Maosh/ }));
+    const dialog = screen.getByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "2 600 000");
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(await screen.findByTestId("mf-offer")).toHaveTextContent("505 000 KRW — qorovul pulga, 15 000 KRW — qaytish jamgʻarmasiga");
+    await user.click(screen.getByRole("button", { name: "Qorovul pulga qoʻyish" }));
+    const r = screen.getByRole("dialog");
+    expect(within(r).getByLabelText("Summa (KRW)")).toHaveValue("505 000");
+    await user.click(within(r).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "RESERVE_IN", amount: "505 000", fee: null, received: null, occurredOn: null, note: null, purposes: null });
+    await user.click(await screen.findByRole("button", { name: "Jamgʻarmaga qoʻyish" }));
+    const f = screen.getByRole("dialog");
+    expect(within(f).getByLabelText("Summa (KRW)")).toHaveValue("15 000");
   });
 
   it("uyga yuborish: komissiya va uyda olingan summa", async () => {
