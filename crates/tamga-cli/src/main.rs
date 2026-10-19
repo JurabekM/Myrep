@@ -18,7 +18,7 @@ use std::time::Duration;
 use serde_json::{Value, json};
 use tamga_core::checkpoint::verify_all;
 use tamga_core::keys::PublicKeys;
-use tamga_store::home::{default_log_id, pipe_name};
+use tamga_store::home::default_log_id;
 use tamga_store::vault::Vault;
 use tamga_store::{Home, client, keystore, secrets};
 
@@ -40,19 +40,15 @@ fn daemon(op: &str) -> Result<Value, String> {
 }
 
 fn daemon_req(req: &Value) -> Result<Value, String> {
-    let mut pipe = client::connect(
-        &pipe_name(),
-        sibling("tamgad").as_deref(),
-        Duration::from_secs(3),
-    )
-    .map_err(|e| e.to_string())?;
+    let mut pipe = client::connect_auto(sibling("tamgad").as_deref(), Duration::from_secs(3))
+        .map_err(|e| e.to_string())?;
     client::request(&mut pipe, req).map_err(|e| e.to_string())
 }
 
 /// Daemon'ni to'xtatadi (yangisini ishga tushirmaydi): kutilayotgan so'rovlar rad etiladi, oxirgi
 /// checkpoint yoziladi. Jarayon haqiqatan chiqquncha kutadi — o'rnatuvchi fayllarni almashtira olsin.
 fn stop() -> Result<ExitCode, String> {
-    let Ok(mut pipe) = client::connect(&pipe_name(), None, Duration::from_millis(500)) else {
+    let Ok(mut pipe) = client::connect_auto(None, Duration::from_millis(500)) else {
         println!("daemon ishlamayapti");
         return Ok(ExitCode::SUCCESS);
     };
@@ -140,7 +136,7 @@ fn key(home: &Home, rest: &[&str]) -> Result<ExitCode, String> {
                 }
                 Err(e) => println!("jurnal o'qilmadi: {e}"),
             }
-            if let Ok(v) = client::connect(&pipe_name(), None, Duration::from_millis(500))
+            if let Ok(v) = client::connect_auto(None, Duration::from_millis(500))
                 .map_err(|e| e.to_string())
                 .and_then(|mut p| {
                     client::request(&mut p, &json!({"op": "status"})).map_err(|e| e.to_string())
@@ -195,7 +191,7 @@ fn key(home: &Home, rest: &[&str]) -> Result<ExitCode, String> {
                 ["--force"] => true,
                 _ => return Err("tamga key restore <fayl> [--force]".into()),
             };
-            if client::connect(&pipe_name(), None, Duration::from_millis(300)).is_ok() {
+            if client::connect_auto(None, Duration::from_millis(300)).is_ok() {
                 return Err("daemon ishlayapti — avval `tamga stop`".into());
             }
             let text = std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;

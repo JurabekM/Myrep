@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use serde_json::{Value, json};
-use tamga_store::home::{Mode, pipe_name};
+use tamga_store::home::Mode;
 use tamga_store::{Home, client, spool};
 
 pub struct Config {
@@ -111,29 +111,25 @@ impl Ctx {
             o.extend(e);
         }
         let req = json!({"op": "hook", "agent": self.cfg.agent, "input": input, "pid": std::process::id()});
-        client::connect(
-            &pipe_name(),
-            self.daemon_exe.as_deref(),
-            Duration::from_millis(1500),
-        )
-        .and_then(|mut p| client::request(&mut p, &req))
-        .map_err(|e| e.to_string())
-        .and_then(|r| {
-            if r.get("ok") == Some(&Value::Bool(true)) {
-                Ok(r)
-            } else {
-                Err(r
-                    .get("error")
-                    .and_then(Value::as_str)
-                    .unwrap_or("daemon xatosi")
-                    .to_owned())
-            }
-        })
-        .inspect_err(|_| {
-            // Hodisa yo'qolmasin: spool, daemon keyin oladi.
-            let home = Home::from_env();
-            let _ = spool::write(&home.spool(), &self.cfg.agent, &input, &Value::Null);
-        })
+        client::connect_auto(self.daemon_exe.as_deref(), Duration::from_millis(1500))
+            .and_then(|mut p| client::request(&mut p, &req))
+            .map_err(|e| e.to_string())
+            .and_then(|r| {
+                if r.get("ok") == Some(&Value::Bool(true)) {
+                    Ok(r)
+                } else {
+                    Err(r
+                        .get("error")
+                        .and_then(Value::as_str)
+                        .unwrap_or("daemon xatosi")
+                        .to_owned())
+                }
+            })
+            .inspect_err(|_| {
+                // Hodisa yo'qolmasin: spool, daemon keyin oladi.
+                let home = Home::from_env();
+                let _ = spool::write(&home.spool(), &self.cfg.agent, &input, &Value::Null);
+            })
     }
 
     /// `tools/call`: `Some(xabar)` — bloklandi (mijozga shu javob), `None` — serverga uzatish.

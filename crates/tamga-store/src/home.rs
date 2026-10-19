@@ -15,24 +15,108 @@ pub enum Mode {
     Dev,
 }
 
+/// O'rnatish turi (docs/SERVICE-DESIGN.md).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Deployment {
+    /// Oddiy rejim: daemon joriy foydalanuvchi sifatida, ma'lumotlar `%LOCALAPPDATA%\tamga`.
+    PerUser,
+    /// Himoyalangan rejim: daemon Windows xizmati (`NT SERVICE\tamgad`), ma'lumotlar `%ProgramData%\TAMGA`.
+    Service(ServiceInfo),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ServiceInfo {
+    /// Ma'lumotlar papkasi (`%ProgramData%\TAMGA`).
+    pub root: PathBuf,
+    /// Pipe'ning to'liq nomi (`\\.\pipe\…`).
+    pub pipe: String,
+    /// O'rnatish papkasi: mijozlar server exe'si `install_dir\tamgad.exe` ekanini tekshiradi.
+    pub install_dir: PathBuf,
+}
+
+/// Belgi fayli: o'rnatuvchi (administrator) yozadi, ACL tufayli oddiy foydalanuvchi uni o'zgartira
+/// olmaydi. Bor bo'lsa — mashina himoyalangan rejimda.
+pub const SERVICE_MARKER: &str = "service.json";
+
+/// `%ProgramData%\TAMGA`.
+pub fn service_root() -> Option<PathBuf> {
+    std::env::var_os("ProgramData").map(|p| PathBuf::from(p).join("TAMGA"))
+}
+
+/// Mashinadagi o'rnatish turi (belgi faylidan).
+pub fn deployment() -> Deployment {
+    service_root().map_or(Deployment::PerUser, |r| deployment_at(&r))
+}
+
+/// Berilgan papkadagi belgi bo'yicha o'rnatish turi (sinovlar uchun alohida).
+pub fn deployment_at(root: &Path) -> Deployment {
+    let Some(v) = std::fs::read_to_string(root.join(SERVICE_MARKER))
+        .ok()
+        .and_then(|t| serde_json::from_str::<Value>(t.trim_start_matches('\u{feff}')).ok())
+    else {
+        return Deployment::PerUser;
+    };
+    let pipe = v["pipe"]
+        .as_str()
+        .filter(|p| !p.is_empty())
+        .unwrap_or("tamga-service");
+    let Some(install_dir) = v["install_dir"].as_str().filter(|p| !p.is_empty()) else {
+        return Deployment::PerUser;
+    };
+    Deployment::Service(ServiceInfo {
+        root: root.to_owned(),
+        pipe: if pipe.starts_with(r"\\") {
+            pipe.to_owned()
+        } else {
+            format!(r"\\.\pipe\{pipe}")
+        },
+        install_dir: PathBuf::from(install_dir),
+    })
+}
+
 #[derive(Debug, Clone)]
 pub struct Home {
     root: PathBuf,
+    /// Xizmat konteksti (daemon `--service` rejimida): kalitlar DPAPI fayl omborida.
+    service: bool,
 }
 
 impl Home {
-    /// `TAMGA_HOME`, aks holda `%LOCALAPPDATA%\tamga` (yoki `~/.tamga`).
+    /// `TAMGA_HOME`; aks holda himoyalangan rejimda `%ProgramData%\TAMGA` (faqat o'qish uchun —
+    /// yozish xizmat orqali); aks holda `%LOCALAPPDATA%\tamga` (yoki `~/.tamga`).
     pub fn from_env() -> Self {
         let root = std::env::var_os("TAMGA_HOME")
             .map(PathBuf::from)
+            .or_else(|| match deployment() {
+                Deployment::Service(s) => Some(s.root),
+                Deployment::PerUser => None,
+            })
             .or_else(|| std::env::var_os("LOCALAPPDATA").map(|p| PathBuf::from(p).join("tamga")))
             .or_else(|| std::env::var_os("HOME").map(|p| PathBuf::from(p).join(".tamga")))
             .unwrap_or_else(|| PathBuf::from(".tamga"));
-        Self { root }
+        Self {
+            root,
+            service: false,
+        }
     }
 
     pub fn at(root: impl Into<PathBuf>) -> Self {
-        Self { root: root.into() }
+        Self {
+            root: root.into(),
+            service: false,
+        }
+    }
+
+    /// Xizmat konteksti uchun (faqat `tamgad --service`).
+    pub fn service(root: impl Into<PathBuf>) -> Self {
+        Self {
+            root: root.into(),
+            service: true,
+        }
+    }
+
+    pub fn is_service(&self) -> bool {
+        self.service
     }
 
     pub fn root(&self) -> &Path {
@@ -194,6 +278,11 @@ pub fn default_log_id() -> String {
 
 /// Joriy foydalanuvchiga xos named pipe nomi (boshqa foydalanuvchilar bilan to'qnashmaydi).
 pub fn pipe_name() -> String {
+    // Himoyalangan rejimda pipe faqat belgi faylidan: `TAMGA_PIPE` e'tiborga olinmaydi, aks holda
+    // muhit o'zgaruvchisi orqali mijozlarni soxta serverga yo'naltirish mumkin bo'lardi.
+    if let Deployment::Service(s) = deployment() {
+        return s.pipe;
+    }
     // `TAMGA_PIPE` — sinov uchun alohida pipe. Qisqa nom ham qabul qilinadi: ba'zi qobiqlar
     // (Git Bash) muhit o'zgaruvchisidagi `\\.\pipe\` prefiksini buzadi.
     if let Ok(p) = std::env::var("TAMGA_PIPE")
@@ -217,6 +306,34 @@ pub fn pipe_name() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn deployment_from_marker() {
+        let dir = std::env::temp_dir().join(format!("tamga-dep-{}", std::process::id()));
+        std::fs::remove_dir_all(&dir).ok();
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(deployment_at(&dir), Deployment::PerUser, "belgisiz");
+        std::fs::write(dir.join(SERVICE_MARKER), "{bu json emas").unwrap();
+        assert_eq!(deployment_at(&dir), Deployment::PerUser, "buzilgan belgi");
+        std::fs::write(dir.join(SERVICE_MARKER), r#"{"pipe":"tamga-service"}"#).unwrap();
+        assert_eq!(deployment_at(&dir), Deployment::PerUser, "install_dir yo'q");
+        // BOM bilan (PowerShell/NSIS yozgan bo'lishi mumkin).
+        std::fs::write(
+            dir.join(SERVICE_MARKER),
+            "\u{feff}{\"pipe\":\"tamga-service\",\"install_dir\":\"C:\\\\Program Files\\\\TAMGA Studio\"}",
+        )
+        .unwrap();
+        let Deployment::Service(s) = deployment_at(&dir) else {
+            panic!("xizmat rejimi kutilgan")
+        };
+        assert_eq!(s.pipe, r"\\.\pipe\tamga-service");
+        assert_eq!(
+            s.install_dir,
+            PathBuf::from(r"C:\Program Files\TAMGA Studio")
+        );
+        assert_eq!(s.root, dir);
+        std::fs::remove_dir_all(dir).ok();
+    }
 
     #[test]
     fn log_id_is_valid() {

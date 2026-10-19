@@ -11,7 +11,7 @@ use std::io::Read as _;
 use std::time::Duration;
 
 use serde_json::{Value, json};
-use tamga_store::home::{Mode, pipe_name};
+use tamga_store::home::{Deployment, Mode, deployment};
 use tamga_store::{Home, client, spool};
 
 const MAX_INPUT: u64 = 8 << 20;
@@ -47,7 +47,11 @@ fn main() {
         Ok(v) => v,
         Err(e) => {
             // Hodisa yo'qolmasin: xom matn spool'ga tushadi (daemon uni `.bad` deb ajratadi).
+            // Himoyalangan rejimda spool yo'q.
             eprintln!("tamga-hook: stdin JSON emas: {e}");
+            if matches!(deployment(), Deployment::Service(_)) {
+                return;
+            }
             let home = Home::from_env();
             let _ = spool::write(
                 &home.spool(),
@@ -79,8 +83,9 @@ fn main() {
             })
         })
         .filter(|p| p.exists());
-    let reply = client::connect(&pipe_name(), daemon.as_deref(), Duration::from_millis(1500))
+    let reply = client::connect_auto(daemon.as_deref(), Duration::from_millis(1500))
         .and_then(|mut pipe| client::request(&mut pipe, &req));
+    let protected = matches!(deployment(), Deployment::Service(_));
 
     match reply {
         Ok(resp) if resp.get("ok") == Some(&Value::Bool(true)) => {
@@ -106,15 +111,19 @@ fn main() {
                 Err(e) => e.to_string(),
             };
             let home = Home::from_env();
-            let strict = home.config().mode == Mode::Strict;
+            // Himoyalangan rejim: har doim fail-closed va spool'siz (spool foydalanuvchi yoza oladigan
+            // joy — K3). Oddiy rejim: config'dagi `mode`.
+            let strict = protected || home.config().mode == Mode::Strict;
             let decision = if strict {
                 json!({"verdict": "deny", "by": "default", "reason": "daemon ishlamadi (strict)"})
             } else {
                 json!({"verdict": "allow", "by": "default", "reason": "daemon ishlamadi (dev)"})
             };
-            let input = req.get("input").cloned().unwrap_or(Value::Null);
-            if let Err(e) = spool::write(&home.spool(), "claude-code", &input, &decision) {
-                eprintln!("tamga-hook: spool'ga yozilmadi: {e}");
+            if !protected {
+                let input = req.get("input").cloned().unwrap_or(Value::Null);
+                if let Err(e) = spool::write(&home.spool(), "claude-code", &input, &decision) {
+                    eprintln!("tamga-hook: spool'ga yozilmadi: {e}");
+                }
             }
             eprintln!("tamga-hook: {why}");
             if strict

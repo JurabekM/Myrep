@@ -26,6 +26,51 @@ pub enum ClientError {
     Io(std::io::Error),
     #[error("daemon javobi noto'g'ri: {0}")]
     Protocol(String),
+    #[error("pipe serveri ishonchli emas: {0}")]
+    Untrusted(String),
+}
+
+/// O'rnatish turiga qarab daemon'ga ulanadi:
+/// - oddiy rejim — `pipe_name()`, kerak bo'lsa `spawn` (yonidagi `tamgad`) ishga tushiriladi;
+/// - himoyalangan rejim — xizmat pipe'i, hech narsa ishga tushirilmaydi (xizmatni SCM boshqaradi) va
+///   server jarayoni `install_dir\tamgad.exe` ekani tekshiriladi: pipe nomini oldindan egallab olgan
+///   soxta server bilan gaplashilmaydi.
+pub fn connect_auto(spawn: Option<&Path>, wait: Duration) -> Result<std::fs::File, ClientError> {
+    use crate::home::{Deployment, deployment, pipe_name};
+    match deployment() {
+        Deployment::PerUser => connect(&pipe_name(), spawn, wait),
+        Deployment::Service(s) => {
+            let f = connect(&s.pipe, None, wait)?;
+            verify_server(&f, &s.install_dir.join("tamgad.exe"))?;
+            Ok(f)
+        }
+    }
+}
+
+#[cfg(windows)]
+fn verify_server(f: &std::fs::File, expected: &Path) -> Result<(), ClientError> {
+    let canon = |p: &Path| {
+        std::fs::canonicalize(p)
+            .unwrap_or_else(|_| p.to_path_buf())
+            .to_string_lossy()
+            .to_lowercase()
+    };
+    let got = tamga_win::service::pipe_server_image(f)
+        .ok_or_else(|| ClientError::Untrusted("server jarayoni aniqlanmadi".into()))?;
+    if canon(&got) == canon(expected) {
+        Ok(())
+    } else {
+        Err(ClientError::Untrusted(format!(
+            "{} (kutilgan {})",
+            got.display(),
+            expected.display()
+        )))
+    }
+}
+
+#[cfg(not(windows))]
+fn verify_server(_f: &std::fs::File, _expected: &Path) -> Result<(), ClientError> {
+    Ok(())
 }
 
 fn open(pipe: &str) -> std::io::Result<std::fs::File> {

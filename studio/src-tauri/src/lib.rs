@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use serde::Serialize;
 use serde_json::{Value, json};
-use tamga_store::home::{AskRoute, Mode, pipe_name};
+use tamga_store::home::{AskRoute, Mode};
 use tamga_store::{Home, client};
 
 #[derive(Debug, Serialize)]
@@ -43,7 +43,7 @@ fn daemon(req: Value) -> Value {
             })
         })
         .filter(|p| p.exists());
-    match client::connect(&pipe_name(), exe.as_deref(), Duration::from_secs(3))
+    match client::connect_auto(exe.as_deref(), Duration::from_secs(3))
         .and_then(|mut p| client::request(&mut p, &req))
     {
         Ok(v) => v,
