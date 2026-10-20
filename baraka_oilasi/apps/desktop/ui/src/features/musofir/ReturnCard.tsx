@@ -11,6 +11,7 @@ import { keys } from "../../lib/queryClient";
 import { DecisionDialog } from "./DecisionDialog";
 
 const VERDICT_TEXT: Record<string, string> = { GREEN: "text-accent-text", YELLOW: "text-warn", RED: "text-danger" };
+const CURRENCIES = ["UZS", "USD", "EUR", "RUB", "KRW", "KZT", "TRY", "GBP"] as const;
 
 /**
  * «Qaytdim» va sovutish davri (musofir/SPEC 6.3, 7-qonun): qaytgandan keyin 90 kun katta qarorlar
@@ -21,7 +22,7 @@ export function ReturnCard({ spaceId, d, homeCurrency }: { spaceId: string; d: M
   const [editing, setEditing] = useState(false);
   const [checking, setChecking] = useState(false);
   const c = d.cooling;
-  const clear = useMutation({ mutationFn: () => call(commands.mfSetReturn(spaceId, { returnedOn: null, broughtHome: null })) });
+  const clear = useMutation({ mutationFn: () => call(commands.mfSetReturn(spaceId, { returnedOn: null, broughtHome: null, broughtCurrency: null, broughtRate: null })) });
   return (
     <section className="card flex flex-col gap-3" aria-label={t("mf.return.title")}>
       <h2 className="text-lg font-semibold">{t("mf.return.title")}</h2>
@@ -35,7 +36,17 @@ export function ReturnCard({ spaceId, d, homeCurrency }: { spaceId: string; d: M
           <p className="text-ink-muted">
             {t("mf.return.returnedLine", { date: showDate(c.returnedOn) })}
             {c.broughtHome && ` · ${t("mf.return.broughtLine", { amount: c.broughtHome.formatted })}`}
+            {c.broughtRate && c.broughtValue && <span className="block">{t("mf.return.valueLine", { amount: c.broughtValue.formatted, rate: c.broughtRate })}</span>}
           </p>
+          {c.wall ? (
+            <div data-testid="mf-wall" className="flex flex-col gap-1">
+              <p>{t("mf.return.wallLine", { wall: c.wall.formatted })}</p>
+              {c.free && <p className="font-medium text-accent-text">{t("mf.return.freeLine", { free: c.free.formatted })}</p>}
+              {c.wallAvgMonthly && <p className="text-xs text-ink-muted">{t("mf.return.wallHint", { avg: c.wallAvgMonthly.formatted, count: c.wallMonthsUsed })}</p>}
+            </div>
+          ) : (
+            <p className="text-xs text-ink-muted">{t("mf.return.noWall")}</p>
+          )}
           {c.inCooling && <p className="text-xs text-ink-muted">{t("mf.return.rule")}</p>}
           <ErrorText error={clear.error} />
           <div className="flex flex-wrap gap-2">
@@ -65,8 +76,19 @@ function ReturnForm({ spaceId, d, homeCurrency, onDone }: { spaceId: string; d: 
   const { t } = useTranslation();
   const [on, setOn] = useState(d.cooling?.returnedOn ?? "");
   const [brought, setBrought] = useState(d.cooling?.broughtHome?.plain ?? "");
+  const [currency, setCurrency] = useState(d.cooling?.broughtHome?.currency ?? homeCurrency);
+  const [rate, setRate] = useState("");
+  const foreign = currency !== homeCurrency;
   const save = useMutation({
-    mutationFn: () => call(commands.mfSetReturn(spaceId, { returnedOn: on || null, broughtHome: brought.trim() || null })),
+    mutationFn: () =>
+      call(
+        commands.mfSetReturn(spaceId, {
+          returnedOn: on || null,
+          broughtHome: brought.trim() || null,
+          broughtCurrency: currency,
+          broughtRate: foreign ? rate.trim() || null : null,
+        }),
+      ),
     onSuccess: onDone,
   });
   const submit = (e: FormEvent) => {
@@ -79,10 +101,28 @@ function ReturnForm({ spaceId, d, homeCurrency, onDone }: { spaceId: string; d: 
         <span className="label">{t("mf.return.date")}</span>
         <input className="field w-48" type="date" value={on} onChange={(e) => setOn(e.target.value)} required />
       </label>
-      <label>
-        <span className="label">{t("mf.return.brought", { currency: homeCurrency })}</span>
-        <AmountInput value={brought} onChange={(e) => setBrought(e.target.value)} />
-      </label>
+      <div className="flex flex-wrap gap-3">
+        <label className="min-w-48 flex-1">
+          <span className="label">{t("mf.return.brought", { currency })}</span>
+          <AmountInput value={brought} onChange={(e) => setBrought(e.target.value)} />
+        </label>
+        <label>
+          <span className="label">{t("mf.return.currency")}</span>
+          <select className="field w-32" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        {foreign && (
+          <label>
+            <span className="label">{t("mf.return.rate", { currency, home: homeCurrency })}</span>
+            <input className="field w-40" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} required />
+          </label>
+        )}
+      </div>
       <p className="text-xs text-ink-muted">{t("mf.return.broughtHint")}</p>
       <ErrorText error={save.error} />
       <div className="flex gap-2">

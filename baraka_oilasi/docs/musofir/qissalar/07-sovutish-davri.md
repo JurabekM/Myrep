@@ -71,18 +71,18 @@ Qissa — 7-qonunning (SPEC 6.3) badiiy ko'rinishi. Sahnalar ilovadagi funksiyal
 
 | Sahna | Ilovada | Holat |
 |---|---|---|
-| Aeroport, 4 yil, «18 000 dollar», «uyoqqa boshqa qaytmayman» | «Qaytdim» + olib kelingan summa; 90 kunlik sovutish davri (M3) | ✅ Lekin summa faqat **uy valyutasida** kiritiladi — Rustam dollarda olib keldi (OQ-MF12) |
+| Aeroport, 4 yil, «18 000 dollar», «uyoqqa boshqa qaytmayman» | «Qaytdim» + olib kelingan summa; 90 kunlik sovutish davri (M3) | ✅ M5: summa istalgan valyutada, kurs bilan — 18 000 USD × 12 650 ≈ 227 700 000 so'm (OQ-MF12) |
 | Baxtiyor: «oyiga 35 % kafolatlangan foyda», «senga o'xshaganlarni qidirib yuribmiz» | Taklif detektori: `guaranteed` → qizil, `recruitment` → qizil; «qaytganingizdan keyin tanish orqali keldimi» → `FRESH_RETURN_APPROACH` | ✅ |
 | «Joylar cheklangan. Faqat shu hafta», «direktor band, joy qolmadi» | `urgency` → sariq | ✅ |
 | «Plyus» idorasi: ekranlar, qahva, konvert — ombor va mol yo'q | `realActivity` → qizil | ✅ |
 | «10 000 ini qo'yaman» — 18 000 ning 55,6 %i | Sovutish davrida olib kelinganning 30 %idan ko'pi — `LARGE_SHARE` (qizil), kutish sanasi | ✅ |
 | Nilufar: «kuyovingiz bilan bir maslahatlashing» | `familyDiscussed` → yo'q bo'lsa `NOT_DISCUSSED` | ✅ |
-| Anvar: «oyiga 35 % — bir yilda 5 barobar» | Va'da qilingan foydaning yillik hisobi yo'q | ➖ (ixtiyoriy, OQ-MF10) |
-| Hoji: «davlat ruxsati bormi?», «zarar ko'rilsa kim ko'taradi?», «shartnomani o'qidingizmi?» | `lossShared`, `written` bor; **ruxsat (litsenziya)** savoli yo'q | ➖ OQ-MF10 |
-| Qo'ng'iroq testi: «o'z ko'zim bilan ko'raman» → «tekshirishning hojati yo'q» | **«Tekshirishga ruxsat berishdimi?»** savoli yo'q | ➖ OQ-MF10 |
-| «Besh xavf belgisi»: 1 kafolat, 2 shoshirish, 3 yangi odam, 4 ish yo'q, 5 **kirish oson — chiqish qiyin**; «bittasi — hushyor, ikkitasi — qoching» | 1–4 bor; **5-belgi yo'q**; natija qoidasi boshqacha (har savolning o'z darajasi, sanash yo'q) | ➖ OQ-MF10 |
+| Anvar: «oyiga 35 % — bir yilda 5 barobar» | M5: «oyiga va'da qilingan foyda» → «bir yilda 420 %, pulingiz 5,2 barobar» | ✅ |
+| Hoji: «davlat ruxsati bormi?», «zarar ko'rilsa kim ko'taradi?», «shartnomani o'qidingizmi?» | `lossShared`, `written` va M5 da `licensed` (ruxsat yo'q → sariq) | ✅ |
+| Qo'ng'iroq testi: «o'z ko'zim bilan ko'raman» → «tekshirishning hojati yo'q» | M5: `inspection` — ruxsat berilmasa → qizil `INSPECTION_REFUSED` | ✅ |
+| «Besh xavf belgisi»: 1 kafolat, 2 shoshirish, 3 yangi odam, 4 ish yo'q, 5 **kirish oson — chiqish qiyin**; «bittasi — hushyor, ikkitasi — qoching» | M5: 5-belgi `exitEasy` (`EXIT_HARD`, qizil); belgilar sanaladi — ikki va undan ko'p → `TWO_SIGNS` (qizil); «Plyus» — 4 belgi | ✅ |
 | G'arar va qimor; «Kim bizni aldasa, bizdan emas» | Diniy izohlar detektorda yo'q (ulamo ko'rigi kerak) | ➖ OQ-MF10 |
-| «Olti oylik ro'zg'or — qal'a devori», savdoga ham, sheriklikka ham qo'shilmaydi | Qaytgandan keyin oilaning 6 oylik xarajati alohida qoldirilmaydi; katta qaror tekshiruvi buni hisobga olmaydi | ➖ OQ-MF11 |
+| «Olti oylik ro'zg'or — qal'a devori», savdoga ham, sheriklikka ham qo'shilmaydi | M5: «Qaytdim» kartasida qal'a devori (Uy makonining oylik o'rtacha xarajati × 6) va erkin pul; qaror erkin puldan oshsa — `FORTRESS_WALL` (qizil, davrdan tashqarida ham) | ✅ |
 | «Pulingiz hunaringizga ishlasin» — payvandchi, ustaxona (darvoza, panjara, mangal) | «Hunardan ishga» g'oyasi + ish boshlash summasi (M4) | ✅ |
 
 **Personajlar:** qissada Rustam — **Nilufarning akasi** (Anvarning qaynog'asi), Koreyada payvandchi, keyin usta boshi. SPEC 1.2 da Rustam akaning xotini Gulnora, oilasi Samarqandda — qissa bunga zid emas, lekin oila tarkibini aniqlash kerak (OQ-MF9).

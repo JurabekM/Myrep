@@ -14,7 +14,7 @@ const KINDS = ["LEND", "PARTNERSHIP", "INVEST", "PURCHASE", "OTHER"] as const;
 const REPLIES = ["YES", "NO", "UNKNOWN"] as const;
 const CHOICES = ["WAIT", "PROCEED", "DECLINE"] as const;
 /** U12 «Taklifni tekshirish» savollari — matnlari `offer.*` da (bir xil jadval). */
-const OFFER_KEYS = new Set(["guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written"]);
+const OFFER_KEYS = new Set(["guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written", "licensed", "inspection", "exitEasy"]);
 const MF_FLAGS = new Set([
   "FRESH_RETURN_APPROACH",
   "UPFRONT_BEFORE_DOCUMENTS",
@@ -26,6 +26,7 @@ const MF_FLAGS = new Set([
   "COOLING_PERIOD",
   "COOLING_BIG_DECISION",
   "LARGE_SHARE",
+  "FORTRESS_WALL",
 ]);
 const TONE: Record<string, string> = { GREEN: "border-accent", YELLOW: "border-warn", RED: "border-danger" };
 const TEXT: Record<string, string> = { GREEN: "text-accent-text", YELLOW: "text-warn", RED: "text-danger" };
@@ -41,6 +42,7 @@ export function DecisionDialog({ spaceId, homeCurrency, onClose }: { spaceId: st
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [promised, setPromised] = useState("");
   const [a, setA] = useState<Record<string, string>>({});
   const questions = useQuery({ queryKey: keys.mfQuestions(kind), queryFn: () => call(commands.mfDecisionQuestions(kind)) });
   const asked = questions.data ?? [];
@@ -51,6 +53,7 @@ export function DecisionDialog({ spaceId, homeCurrency, onClose }: { spaceId: st
     answers: asked.filter((q) => a[q]).map((q) => ({ key: q, reply: a[q] ?? "" })),
     choice,
     note: note.trim() || null,
+    promisedPercent: promised.trim() || null,
   });
   const check = useMutation({ mutationFn: () => call(commands.mfCheckDecision(spaceId, input(null))) });
   const record = useMutation({ mutationFn: (choice: string) => call(commands.mfRecordDecision(spaceId, input(choice))), onSuccess: onClose });
@@ -69,6 +72,7 @@ export function DecisionDialog({ spaceId, homeCurrency, onClose }: { spaceId: st
       percent: r?.sharePercent ?? "",
       date: r?.endsOn ? showDate(r.endsOn) : "",
       days: r?.daysLeft ?? 0,
+      free: r?.free?.formatted ?? "",
     });
   return (
     <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t("mf.decision.title")} className="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-4">
@@ -104,7 +108,19 @@ export function DecisionDialog({ spaceId, homeCurrency, onClose }: { spaceId: st
               required
             />
           </label>
-          <label className="md:col-span-2">
+          <label>
+            <span className="label">{t("mf.decision.promised")}</span>
+            <input
+              className="field"
+              inputMode="decimal"
+              value={promised}
+              onChange={(e) => {
+                setPromised(e.target.value);
+                changed();
+              }}
+            />
+          </label>
+          <label>
             <span className="label">{t("mf.decision.what")}</span>
             <input
               className="field"
@@ -145,6 +161,12 @@ export function DecisionDialog({ spaceId, homeCurrency, onClose }: { spaceId: st
         {r && (
           <div role="status" data-testid="mf-decision-result" className={`card flex flex-col gap-2 border-2 ${TONE[r.verdict] ?? ""}`}>
             <p className={`text-lg font-semibold ${TEXT[r.verdict] ?? ""}`}>{t(`mf.verdict.${r.verdict}`)}</p>
+            {r.signs > 0 && <p className="text-sm font-medium">{t("offer.signs", { count: r.signs })}</p>}
+            {r.promisedTimes && (
+              <p data-testid="mf-decision-promise" className="text-sm">
+                {t("mf.decision.promiseLine", { monthly: promised.trim(), yearly: r.promisedYearlyPercent, times: r.promisedTimes })}
+              </p>
+            )}
             {r.flags.map((f) => (
               <p key={f.code} className="text-sm">
                 <span className={TEXT[f.level] ?? ""}>●</span> {flagText(f.code)}

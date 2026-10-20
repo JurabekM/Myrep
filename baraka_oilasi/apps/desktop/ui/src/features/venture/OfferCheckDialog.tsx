@@ -7,7 +7,7 @@ import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
 import { useDialog } from "../../lib/useDialog";
 
-const QUESTIONS = ["guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written"] as const;
+const QUESTIONS = ["guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written", "licensed", "inspection", "exitEasy"] as const;
 const REPLIES = ["YES", "NO", "UNKNOWN"] as const;
 const TONE: Record<string, string> = { GREEN: "border-accent", YELLOW: "border-warn", RED: "border-danger" };
 const TEXT: Record<string, string> = { GREEN: "text-accent-text", YELLOW: "text-warn", RED: "text-danger" };
@@ -31,6 +31,9 @@ export function OfferCheckDialog({ onClose }: { onClose: () => void }) {
       recruitment: a.recruitment ?? "",
       urgency: a.urgency ?? "",
       written: a.written ?? "",
+      licensed: a.licensed ?? "",
+      inspection: a.inspection ?? "",
+      exitEasy: a.exitEasy ?? "",
     });
   };
   const r = check.data;
@@ -66,6 +69,7 @@ export function OfferCheckDialog({ onClose }: { onClose: () => void }) {
         {r && (
           <div role="status" className={`card flex flex-col gap-2 border-2 ${TONE[r.verdict] ?? ""}`}>
             <p className={`text-lg font-semibold ${TEXT[r.verdict] ?? ""}`}>{t(`offer.verdict.${r.verdict}`)}</p>
+            {r.signs > 0 && <p className="text-sm font-medium">{t("offer.signs", { count: r.signs })}</p>}
             {r.flags.map((f) => (
               <p key={f.code} className="text-sm">
                 <span className={TEXT[f.level] ?? ""}>●</span> {t(`offer.flag.${f.code}`)}

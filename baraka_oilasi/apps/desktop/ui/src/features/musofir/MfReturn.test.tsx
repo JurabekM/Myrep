@@ -106,7 +106,7 @@ describe("Qaytdim va sovutish davri", () => {
     await user.type(within(form).getByLabelText("Qaytgan sana"), "2026-11-01");
     await user.type(within(form).getByLabelText("Olib kelingan summa (UZS)"), "120 000 000");
     await user.click(within(form).getByRole("button", { name: "Saqlash" }));
-    expect(mfSetReturn).toHaveBeenCalledWith("mf", { returnedOn: "2026-11-01", broughtHome: "120 000 000" });
+    expect(mfSetReturn).toHaveBeenCalledWith("mf", { returnedOn: "2026-11-01", broughtHome: "120 000 000", broughtCurrency: "UZS", broughtRate: null });
   });
 
   it("katta qaror: savollar → sariq natija → «Kutaman» jurnalga", async () => {
@@ -160,6 +160,7 @@ describe("Qaytdim va sovutish davri", () => {
       ],
       choice: "WAIT",
       note: null,
+      promisedPercent: null,
     });
   });
 });

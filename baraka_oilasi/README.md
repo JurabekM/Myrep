@@ -52,6 +52,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | M2: Musofir «Ikki qirg'oq» — yuborishning maqsadlari, oila bilan kelishuv (kattalar tasdig'i), uyda qabul va maqsad bo'yicha xarajat; uydagi oila qurilmasi (ADR-0004) — musofirning shaxsiy hisobi unga yuborilmaydi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M3: Musofir — yo'l qarzidan chiqish («Qarz to'lovi» maqsadidan uyda to'lanadi, necha oyda yopilishi), «Qaytdim» va 90 kunlik sovutish davri, katta qaror oldidan tekshiruv va qarorlar jurnali | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M4: Musofir — qorovul pul (o'z ulushi avval qorovulga, keyin jamg'armaga), ish boshlash summasi («Hunardan ishga» g'oyasi bilan), qaror natijasi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
+| M5: Musofir — 7-qonun qissasidan: «besh xavf belgisi» (3 yangi savol, «ikki belgi — qoching»), qal'a devori (6 oylik ro'zg'or, erkin pul), valyutada olib kelingan summa, va'daning yillik hisobi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
 
 ## Ishga tushirish

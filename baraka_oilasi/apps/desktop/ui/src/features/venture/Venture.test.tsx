@@ -119,14 +119,25 @@ describe("LedgerView", () => {
 });
 
 describe("OfferCheckDialog", () => {
-  it("6 savolga javobsiz tekshirib bo'lmaydi; qizil natija bayroqlari bilan", async () => {
-    checkOffer.mockResolvedValue({ status: "ok", data: { verdict: "RED", flags: [{ code: "GUARANTEED_PROFIT", level: "RED" }, { code: "URGENCY", level: "YELLOW" }] } });
+  it("9 savolga javobsiz tekshirib bo'lmaydi; qizil natija bayroqlari va besh belgi bilan", async () => {
+    checkOffer.mockResolvedValue({
+      status: "ok",
+      data: {
+        verdict: "RED",
+        flags: [
+          { code: "GUARANTEED_PROFIT", level: "RED" },
+          { code: "URGENCY", level: "YELLOW" },
+          { code: "TWO_SIGNS", level: "RED" },
+        ],
+        signs: 2,
+      },
+    });
     const user = userEvent.setup();
     wrap(<OfferCheckDialog onClose={() => {}} />);
     const btn = screen.getByRole("button", { name: "Tekshirish" });
     expect(btn).toBeDisabled();
     const groups = screen.getAllByRole("radiogroup");
-    const pick = ["Ha", "Ha", "Ha", "Yoʻq", "Ha", "Yoʻq"];
+    const pick = ["Ha", "Ha", "Ha", "Yoʻq", "Ha", "Yoʻq", "Ha", "Ha", "Ha"];
     for (const [i, g] of groups.entries()) {
       const radio = Array.from(g.querySelectorAll("label")).find((l) => l.textContent === pick[i])?.querySelector("input");
       if (radio) await user.click(radio);
@@ -135,7 +146,19 @@ describe("OfferCheckDialog", () => {
     await user.click(btn);
     expect(await screen.findByText("Qizil: pul bermang")).toBeInTheDocument();
     expect(screen.getByText(/Kafolatlangan foyda vaʼda qilinmoqda/)).toBeInTheDocument();
-    expect(checkOffer).toHaveBeenCalledWith({ guaranteed: "YES", lossShared: "YES", realActivity: "YES", recruitment: "NO", urgency: "YES", written: "NO" });
+    expect(screen.getByText("Besh xavf belgisidan topildi: 2")).toBeInTheDocument();
+    expect(screen.getByText(/ikkinchisini koʻrsangiz — qoching/)).toBeInTheDocument();
+    expect(checkOffer).toHaveBeenCalledWith({
+      guaranteed: "YES",
+      lossShared: "YES",
+      realActivity: "YES",
+      recruitment: "NO",
+      urgency: "YES",
+      written: "NO",
+      licensed: "YES",
+      inspection: "YES",
+      exitEasy: "YES",
+    });
   });
 });
 

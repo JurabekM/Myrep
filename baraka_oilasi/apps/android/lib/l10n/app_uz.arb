@@ -4313,5 +4313,71 @@
       "date": {}
     }
   },
-  "error_RATE_REQUIRED": "Bu valyuta uchun kursni kiriting: 1 birlik necha soʻm"
+  "error_RATE_REQUIRED": "Bu valyuta uchun kursni kiriting: 1 birlik necha soʻm",
+  "offer_q_licensed": "Odamlardan pul yigʻishga davlat ruxsati (litsenziya) bormi?",
+  "offer_q_inspection": "Pul qoʻyishdan oldin ishni (ombor, mol, hujjat) oʻz koʻzingiz bilan koʻrishga ruxsat berishdimi?",
+  "offer_q_exitEasy": "Pulingizni istagan vaqtda qaytarib olish mumkinmi?",
+  "offer_flag_NO_LICENSE": "Davlat ruxsati yoʻq — odamlardan pul yigʻish noqonuniy boʻlishi mumkin.",
+  "offer_flag_LICENSE_UNKNOWN": "Davlat ruxsati bormi — aniq emas. Hujjatini soʻrang.",
+  "offer_flag_INSPECTION_REFUSED": "Ishni koʻrsatishmayapti. Halol odam «kel, koʻr» deydi; «tekshirishning hojati yoʻq» degan joyda — yolgʻon bor.",
+  "offer_flag_INSPECTION_UNKNOWN": "Hali soʻramadingiz: «pul qoʻyishdan oldin omboringni, molingni, hujjatingni koʻraman» deng.",
+  "offer_flag_EXIT_HARD": "Kirish oson, chiqish qiyin — pulni qaytarib soʻrasangiz «keyinroq» deyishadi. Qoching.",
+  "offer_flag_EXIT_UNKNOWN": "Pulni qaytarib olish shartlari aniq emas — yozma soʻrang.",
+  "offer_flag_TWO_SIGNS": "Besh xavf belgisidan ikkitasi va undan koʻpi bor. «Bittasini koʻrsangiz — hushyor torting, ikkinchisini koʻrsangiz — qoching».",
+  "offer_signs": "Besh xavf belgisidan topildi: {count}",
+  "@offer_signs": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mf_flag_FORTRESS_WALL": "Bu qaror qalʼa devoriga tegadi: oilaning 6 oylik roʻzgʻorini ajratgandan keyin erkin pul — {free}. Bu pul savdoga ham, sheriklikka ham qoʻshilmaydi.",
+  "@mf_flag_FORTRESS_WALL": {
+    "placeholders": {
+      "free": {}
+    }
+  },
+  "mf_decision_promised": "Oyiga vaʼda qilingan foyda, % (boʻlsa)",
+  "mf_decision_promiseLine": "Vaʼda: oyiga {monthly} % — bir yilda {yearly} %, pulingiz {times} barobar. Dunyodagi eng zoʻr savdogar ham bunday foyda topa olmaydi — ular qayerdan topyapti?",
+  "@mf_decision_promiseLine": {
+    "placeholders": {
+      "monthly": {},
+      "times": {},
+      "yearly": {}
+    }
+  },
+  "mf_return_currency": "Valyuta",
+  "mf_return_rate": "1 {currency} necha {home}",
+  "@mf_return_rate": {
+    "placeholders": {
+      "currency": {},
+      "home": {}
+    }
+  },
+  "mf_return_valueLine": "≈ {amount} ({rate} kurs bilan)",
+  "@mf_return_valueLine": {
+    "placeholders": {
+      "amount": {},
+      "rate": {}
+    }
+  },
+  "mf_return_wallLine": "Qalʼa devori — oilaning 6 oylik roʻzgʻori: {wall}",
+  "@mf_return_wallLine": {
+    "placeholders": {
+      "wall": {}
+    }
+  },
+  "mf_return_freeLine": "Erkin pul (savdo, sheriklik va xaridlar uchun): {free}",
+  "@mf_return_freeLine": {
+    "placeholders": {
+      "free": {}
+    }
+  },
+  "mf_return_wallHint": "Uy makonida oyiga oʻrtacha {avg} ({count} oy). Devor puli hech qayerga qoʻshilmaydi.",
+  "@mf_return_wallHint": {
+    "placeholders": {
+      "avg": {},
+      "count": {}
+    }
+  },
+  "mf_return_noWall": "Uy makonida xarajatlarni yozing — qalʼa devorini (6 oylik roʻzgʻor) hisoblayman."
 }
