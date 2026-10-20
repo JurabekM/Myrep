@@ -8,19 +8,21 @@ use baraka_domain_musofir::cooling::{
     cooling_check, cooling_window, questions, CoolingExtra, DecisionKind, Reply,
 };
 use baraka_domain_musofir::fund::startup_split;
+use baraka_domain_musofir::rate::{format_rate, parse_rate};
 use baraka_domain_musofir::remittance::Purpose;
 use baraka_domain_musofir::reserve::{reserve_plan, DEFAULT_MONTHS, MAX_MONTHS, MIN_MONTHS};
 use baraka_domain_musofir::travel::travel_debt_plan;
-use baraka_money::{format_percent_bp, Money};
+use baraka_domain_musofir::wall::{fortress_wall, Wall, WALL_MONTHS};
+use baraka_money::{convert, format_percent_bp, Currency, FxRate, Money};
 use baraka_storage::repo::debts::{self, Owner};
-use baraka_storage::repo::{mf, ventures};
+use baraka_storage::repo::{expenses, mf, ventures};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 use crate::app::Ctx;
 use crate::events::Topic;
-use crate::musofir::PROGNOSIS_MONTHS;
+use crate::musofir::{parse_percent_bp, PROGNOSIS_MONTHS};
 use crate::musofir_remit::money_of;
 use crate::receipt::{positive, ymd};
 use crate::text::{clean_opt, required};
@@ -53,6 +55,15 @@ fn kind_of(s: &str) -> Result<DecisionKind, AppError> {
 
 fn to_json<T: Serialize>(v: &T) -> Result<String, AppError> {
     serde_json::to_string(v).map_err(|_| AppError::new("CORRUPT_ROW"))
+}
+
+/// O'ndan birlar → `"5,2"` (butun bo'lsa `"5"`); faqat ko'rsatish uchun.
+fn tenths(t: i64) -> String {
+    if t % 10 == 0 {
+        (t / 10).to_string()
+    } else {
+        format!("{},{}", t / 10, t % 10)
+    }
 }
 
 fn small(v: i64) -> i32 {
@@ -270,6 +281,65 @@ impl App {
         self.mf_two_shores(space_id)
     }
 
+    /// Olib kelingan summa: o'z valyutasida va uy valyutasida (kurs bilan; uy valyutasida bo'lsa — o'zi).
+    fn mf_brought(
+        &self,
+        ctx: &Ctx,
+        info: &mf::MfReturnRow,
+    ) -> Result<(Option<Money>, Option<Money>), AppError> {
+        let original = match (
+            info.brought_home_minor,
+            info.brought_home_currency.as_deref(),
+        ) {
+            (Some(v), Some(c)) => money_of(v, c)?,
+            _ => return Ok((None, None)),
+        };
+        let value = if original.currency() == ctx.currency {
+            Some(original)
+        } else {
+            match info.brought_rate {
+                Some((num, den)) => Some(convert(
+                    original,
+                    &FxRate {
+                        from: original.currency(),
+                        to: ctx.currency,
+                        rate_num: num,
+                        rate_den: den,
+                    },
+                )?),
+                None => None,
+            }
+        };
+        Ok((Some(original), value))
+    }
+
+    /// «Qal'a devori»: Uy makonining oxirgi to'liq oylardagi (xarajati borlari) o'rtacha xarajati × 6.
+    fn mf_wall(&self, ctx: &Ctx) -> Result<(Option<Wall>, usize), AppError> {
+        let Some(uy) = self.uy_space(ctx)? else {
+            return Ok((None, 0));
+        };
+        let (mut cursor, _) = month_period(self.today(ctx), ctx.month_start_day)
+            .ok_or(AppError::new("INVALID_PERIOD"))?;
+        let mut monthly = Vec::new();
+        for _ in 0..PROGNOSIS_MONTHS {
+            let Some(prev) = cursor.pred_opt() else { break };
+            let (start, end) =
+                month_period(prev, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
+            let rows: Vec<Money> = self
+                .db
+                .read(|c| expenses::list_between(c, &uy, &ymd(start), &ymd(end)))?
+                .into_iter()
+                .filter(|r| r.currency == ctx.currency.code())
+                .map(|r| Money::new(r.amount_minor, ctx.currency))
+                .collect();
+            if !rows.is_empty() {
+                monthly.push(Money::sum(rows, ctx.currency)?);
+            }
+            cursor = start;
+        }
+        Ok((fortress_wall(&monthly, WALL_MONTHS)?, monthly.len()))
+    }
+
     pub(crate) fn mf_cooling_dto(
         &self,
         ctx: &Ctx,
@@ -279,16 +349,22 @@ impl App {
             return Ok(None);
         };
         let w = cooling_window(self.today(ctx), Some(date_of(on)?));
-        let brought = match (
-            info.brought_home_minor,
-            info.brought_home_currency.as_deref(),
-        ) {
-            (Some(v), Some(c)) => Some(self.money_dto(ctx, money_of(v, c)?)),
+        let (original, value) = self.mf_brought(ctx, info)?;
+        let (wall, used) = self.mf_wall(ctx)?;
+        let free = match (value, wall) {
+            (Some(v), Some(w)) => Some(v.checked_sub(w.wall)?.clamp_non_negative()),
             _ => None,
         };
+        let d = |m: Money| self.money_dto(ctx, m);
         Ok(Some(MfCoolingDto {
             returned_on: on.to_string(),
-            brought_home: brought,
+            brought_home: original.map(d),
+            brought_value: value.map(d),
+            brought_rate: info.brought_rate.map(|(n, r)| format_rate(n, r)),
+            wall: wall.map(|w| d(w.wall)),
+            wall_avg_monthly: wall.map(|w| d(w.avg_monthly)),
+            wall_months_used: u32::try_from(used).unwrap_or(0),
+            free: free.map(d),
             in_cooling: w.in_cooling,
             ends_on: w.ends_on.map(ymd),
             days_left: small(w.days_left),
@@ -312,21 +388,36 @@ impl App {
                 if on > self.today(&ctx) {
                     return Err(AppError::on("FUTURE_DATE", "returnedOn"));
                 }
+                let currency = match clean_opt(input.brought_currency.as_deref()) {
+                    None => ctx.currency,
+                    Some(c) => Currency::from_code(&c)
+                        .map_err(|_| AppError::on("INVALID_CURRENCY", "broughtCurrency"))?,
+                };
                 let brought = match clean_opt(input.brought_home.as_deref()) {
                     None => None,
-                    Some(b) => Some(positive(&b, ctx.currency, "broughtHome")?),
+                    Some(b) => Some(positive(&b, currency, "broughtHome")?),
                 };
-                (Some(ymd(on)), brought)
+                // Chet el valyutasida — kurs majburiy (uy valyutasidagi ulush va devor uchun).
+                let rate = match (brought, clean_opt(input.brought_rate.as_deref())) {
+                    (Some(_), _) if currency == ctx.currency => None,
+                    (Some(_), Some(r)) => Some(
+                        parse_rate(&r)
+                            .map_err(|_| AppError::on("INVALID_FX_RATE", "broughtRate"))?,
+                    ),
+                    (Some(_), None) => return Err(AppError::on("RATE_REQUIRED", "broughtRate")),
+                    (None, _) => None,
+                };
+                (Some(ymd(on)), brought.map(|b| (b, rate)))
             }
         };
-        let code = ctx.currency.code();
         let meta = self.meta();
         self.db.write(|tx| {
             mf::set_return(
                 tx,
                 &scope,
                 returned_on.as_deref(),
-                brought.map(|b| (b.minor(), code)),
+                brought.map(|(b, _)| (b.minor(), b.currency().code())),
+                brought.and_then(|(_, r)| r),
                 &meta,
             )
         })?;
@@ -369,12 +460,18 @@ impl App {
         answers.sort_by_key(|(k, _, _)| asked.iter().position(|q| q == k));
         let info = self.db.read(|c| mf::return_info(c, scope))?;
         let returned_on = info.returned_on.as_deref().map(date_of).transpose()?;
-        let brought = match (
-            info.brought_home_minor,
-            info.brought_home_currency.as_deref(),
-        ) {
-            (Some(v), Some(c)) if c == ctx.currency.code() => Some(Money::new(v, ctx.currency)),
-            _ => None,
+        let (_, brought) = self.mf_brought(ctx, &info)?;
+        let wall = if returned_on.is_some() {
+            self.mf_wall(ctx)?.0.map(|w| w.wall)
+        } else {
+            None
+        };
+        let promised_bp = match clean_opt(input.promised_percent.as_deref()) {
+            None => None,
+            Some(p) => match parse_percent_bp(&p) {
+                Ok(bp) if bp > 0 => Some(bp),
+                _ => return Err(AppError::on("INVALID_PERCENT", "promisedPercent")),
+            },
         };
         let pairs: Vec<(&str, Reply)> = answers.iter().map(|(k, r, _)| (*k, *r)).collect();
         let c = cooling_check(
@@ -384,7 +481,7 @@ impl App {
             kind,
             amount,
             &pairs,
-            CoolingExtra::default(),
+            CoolingExtra { wall, promised_bp },
         )?;
         let dto = MfDecisionCheckDto {
             questions: asked.iter().map(|q| (*q).to_string()).collect(),
@@ -402,6 +499,10 @@ impl App {
                 .collect(),
             verdict: c.verdict.as_str().to_string(),
             wait_until: c.wait_until.map(ymd),
+            signs: u32::from(c.signs),
+            free: c.free.map(|m| self.money_dto(ctx, m)),
+            promised_yearly_percent: c.promised_yearly_bp.map(format_percent_bp),
+            promised_times: c.promised_times_tenths.map(tenths),
         };
         Ok(Checked {
             kind,

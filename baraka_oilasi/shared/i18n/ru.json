@@ -2602,5 +2602,6 @@
   "mf.outcome.DONE": "Сделано",
   "mf.outcome.DROPPED": "Отказ",
   "mf.outcome.line.DONE": "Итог: сделано ({date})",
-  "mf.outcome.line.DROPPED": "Итог: отказ ({date})"
+  "mf.outcome.line.DROPPED": "Итог: отказ ({date})",
+  "error.RATE_REQUIRED": "Укажите курс для этой валюты: сколько сумов за 1 единицу"
 }

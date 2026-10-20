@@ -3851,8 +3851,12 @@ pub struct MfDebtPaymentInput {
 pub struct MfReturnInput {
     /// `null` — «Qaytdim» belgisini olib tashlash.
     pub returned_on: Option<String>,
-    /// Olib kelingan summa (uy valyutasida).
+    /// Olib kelingan summa (valyutasida).
     pub brought_home: Option<String>,
+    /// Summaning valyutasi (M5); bo'lmasa — uy valyutasi.
+    pub brought_currency: Option<String>,
+    /// Uy valyutasidan boshqa bo'lsa — kurs: 1 birlik necha uy valyutasi (`"12 650"`).
+    pub brought_rate: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -3860,7 +3864,17 @@ pub struct MfReturnInput {
 #[serde(rename_all = "camelCase")]
 pub struct MfCoolingDto {
     pub returned_on: String,
+    /// Olib kelingan summa — o'z valyutasida.
     pub brought_home: Option<MoneyDto>,
+    /// Uy valyutasida (kurs bilan); kurs bo'lmasa `null`.
+    pub brought_value: Option<MoneyDto>,
+    pub brought_rate: Option<String>,
+    /// «Qal'a devori» — oilaning 6 oylik ro'zg'ori (M5); Uy xarajati tarixi bo'lmasa `null`.
+    pub wall: Option<MoneyDto>,
+    pub wall_avg_monthly: Option<MoneyDto>,
+    pub wall_months_used: u32,
+    /// Olib kelingan − devor (≥ 0).
+    pub free: Option<MoneyDto>,
     pub in_cooling: bool,
     pub ends_on: Option<String>,
     pub days_left: i32,
@@ -3887,6 +3901,8 @@ pub struct MfDecisionInput {
     pub answers: Vec<MfAnswerInput>,
     /// Yozishda: `WAIT`, `PROCEED`, `DECLINE`; tekshiruvda e'tiborga olinmaydi.
     pub choice: Option<String>,
+    /// Oyiga va'da qilingan foyda, % (ixtiyoriy, M5): `"35"`.
+    pub promised_percent: Option<String>,
     pub note: Option<String>,
 }
 
@@ -3914,6 +3930,13 @@ pub struct MfDecisionCheckDto {
     /// `GREEN`, `YELLOW`, `RED`.
     pub verdict: String,
     pub wait_until: Option<String>,
+    /// «Besh xavf belgisi»dan nechtasi (M5).
+    pub signs: u32,
+    /// Olib kelingan − qal'a devori; bo'lmasa `null`.
+    pub free: Option<MoneyDto>,
+    /// Va'da qilingan foyda yiliga (`"420"`) va pul necha barobar (`"5,2"`).
+    pub promised_yearly_percent: Option<String>,
+    pub promised_times: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

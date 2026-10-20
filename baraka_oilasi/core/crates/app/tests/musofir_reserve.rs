@@ -282,6 +282,7 @@ fn startup_amount_and_decision_outcome() {
                 answers,
                 choice: Some("WAIT".into()),
                 note: None,
+                promised_percent: None,
             },
         )
         .unwrap();

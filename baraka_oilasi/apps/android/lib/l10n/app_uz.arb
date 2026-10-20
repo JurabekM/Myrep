@@ -4312,5 +4312,6 @@
     "placeholders": {
       "date": {}
     }
-  }
+  },
+  "error_RATE_REQUIRED": "Bu valyuta uchun kursni kiriting: 1 birlik necha soʻm"
 }

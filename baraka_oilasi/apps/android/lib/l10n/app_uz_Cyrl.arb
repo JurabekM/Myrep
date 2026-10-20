@@ -2603,5 +2603,6 @@
   "mf_outcome_DONE": "Қилдим",
   "mf_outcome_DROPPED": "Қилмадим",
   "mf_outcome_line_DONE": "Натижа: қилдим ({date})",
-  "mf_outcome_line_DROPPED": "Натижа: қилмадим ({date})"
+  "mf_outcome_line_DROPPED": "Натижа: қилмадим ({date})",
+  "error_RATE_REQUIRED": "Бу валюта учун курсни киритинг: 1 бирлик неча сўм"
 }

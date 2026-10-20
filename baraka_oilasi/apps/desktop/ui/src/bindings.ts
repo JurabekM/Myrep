@@ -2163,7 +2163,17 @@ export type MfAnswerInput = {
 
 export type MfCoolingDto = {
 	returnedOn: string,
+	/**  Olib kelingan summa — o'z valyutasida. */
 	broughtHome: MoneyDto | null,
+	/**  Uy valyutasida (kurs bilan); kurs bo'lmasa `null`. */
+	broughtValue: MoneyDto | null,
+	broughtRate: string | null,
+	/**  «Qal'a devori» — oilaning 6 oylik ro'zg'ori (M5); Uy xarajati tarixi bo'lmasa `null`. */
+	wall: MoneyDto | null,
+	wallAvgMonthly: MoneyDto | null,
+	wallMonthsUsed: number,
+	/**  Olib kelingan − devor (≥ 0). */
+	free: MoneyDto | null,
 	inCooling: boolean,
 	endsOn: string | null,
 	daysLeft: number,
@@ -2198,6 +2208,13 @@ export type MfDecisionCheckDto = {
 	/**  `GREEN`, `YELLOW`, `RED`. */
 	verdict: string,
 	waitUntil: string | null,
+	/**  «Besh xavf belgisi»dan nechtasi (M5). */
+	signs: number,
+	/**  Olib kelingan − qal'a devori; bo'lmasa `null`. */
+	free: MoneyDto | null,
+	/**  Va'da qilingan foyda yiliga (`"420"`) va pul necha barobar (`"5,2"`). */
+	promisedYearlyPercent: string | null,
+	promisedTimes: string | null,
 };
 
 export type MfDecisionDto = {
@@ -2226,6 +2243,8 @@ export type MfDecisionInput = {
 	answers: MfAnswerInput[],
 	/**  Yozishda: `WAIT`, `PROCEED`, `DECLINE`; tekshiruvda e'tiborga olinmaydi. */
 	choice: string | null,
+	/**  Oyiga va'da qilingan foyda, % (ixtiyoriy, M5): `"35"`. */
+	promisedPercent: string | null,
 	note: string | null,
 };
 
@@ -2462,8 +2481,12 @@ export type MfReserveDto = {
 export type MfReturnInput = {
 	/**  `null` — «Qaytdim» belgisini olib tashlash. */
 	returnedOn: string | null,
-	/**  Olib kelingan summa (uy valyutasida). */
+	/**  Olib kelingan summa (valyutasida). */
 	broughtHome: string | null,
+	/**  Summaning valyutasi (M5); bo'lmasa — uy valyutasi. */
+	broughtCurrency: string | null,
+	/**  Uy valyutasidan boshqa bo'lsa — kurs: 1 birlik necha uy valyutasi (`"12 650"`). */
+	broughtRate: string | null,
 };
 
 export type MfSettingsDto = {
@@ -2781,12 +2804,18 @@ export type OfferAnswersInput = {
 	recruitment: string,
 	urgency: string,
 	written: string,
+	/**  «Besh xavf belgisi» (musofir qissasi): davlat ruxsati, o'z ko'zi bilan tekshirish, pulni qaytarib olish. */
+	licensed: string,
+	inspection: string,
+	exitEasy: string,
 };
 
 export type OfferCheckDto = {
 	/**  `GREEN`, `YELLOW`, `RED`. */
 	verdict: string,
 	flags: OfferFlagDto[],
+	/**  «Besh xavf belgisi»dan nechtasi (2 va undan ko'p — `TWO_SIGNS`). */
+	signs: number,
 };
 
 export type OfferFlagDto = {

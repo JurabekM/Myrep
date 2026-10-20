@@ -603,6 +603,7 @@ fn decision(kind: &str, amount: &str, a: &[(&str, &str)], choice: Option<&str>) 
         answers: answers(a),
         choice: choice.map(Into::into),
         note: None,
+        promised_percent: None,
     }
 }
 
@@ -726,6 +727,8 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
     let ret = MfReturnInput {
         returned_on: Some("2026-10-01".into()),
         brought_home: None,
+        brought_currency: None,
+        brought_rate: None,
     };
     assert_eq!(err(home.mf_set_return(&o.mf, ret)), "ROLE_FORBIDDEN");
     assert_eq!(err(home.mf_decisions(&o.mf)), "ROLE_FORBIDDEN");
@@ -752,6 +755,8 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
     let future = MfReturnInput {
         returned_on: Some("2026-11-11".into()),
         brought_home: None,
+        brought_currency: None,
+        brought_rate: None,
     };
     assert_eq!(err(o.app.mf_set_return(&o.mf, future)), "FUTURE_DATE");
     let ov = o
@@ -761,6 +766,8 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
             MfReturnInput {
                 returned_on: Some("2026-11-01".into()),
                 brought_home: Some("120 000 000".into()),
+                brought_currency: None,
+                brought_rate: None,
             },
         )
         .unwrap();
@@ -871,6 +878,8 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
             MfReturnInput {
                 returned_on: None,
                 brought_home: None,
+                brought_currency: None,
+                brought_rate: None,
             },
         )
         .unwrap();

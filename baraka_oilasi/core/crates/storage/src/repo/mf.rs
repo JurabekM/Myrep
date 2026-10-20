@@ -403,11 +403,14 @@ pub struct MfReturnRow {
     pub returned_on: Option<String>,
     pub brought_home_minor: Option<i64>,
     pub brought_home_currency: Option<String>,
+    /// Uy valyutasiga kurs (M5): 1 birlik = num / den uy valyutasi.
+    pub brought_rate: Option<(i64, i64)>,
 }
 
 pub fn return_info(c: &Connection, s: &SpaceScope) -> Result<MfReturnRow, StorageError> {
     Ok(c.query_row(
-        "SELECT travel_debt_id, travel_target_months, returned_on, brought_home_minor, brought_home_currency
+        "SELECT travel_debt_id, travel_target_months, returned_on, brought_home_minor, brought_home_currency,
+            brought_rate_num, brought_rate_den
          FROM mf_settings WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
         params![s.household_id, s.space_id],
         |r| {
@@ -417,6 +420,10 @@ pub fn return_info(c: &Connection, s: &SpaceScope) -> Result<MfReturnRow, Storag
                 returned_on: r.get(2)?,
                 brought_home_minor: r.get(3)?,
                 brought_home_currency: r.get(4)?,
+                brought_rate: match (r.get::<_, Option<i64>>(5)?, r.get::<_, Option<i64>>(6)?) {
+                    (Some(n), Some(d)) => Some((n, d)),
+                    _ => None,
+                },
             })
         },
     )
@@ -456,14 +463,16 @@ pub fn set_return(
     s: &SpaceScope,
     returned_on: Option<&str>,
     brought: Option<(i64, &str)>,
+    rate: Option<(i64, i64)>,
     m: &Meta,
 ) -> Result<(), StorageError> {
     let n = tx.execute(
         "UPDATE mf_settings SET returned_on = ?3, brought_home_minor = ?4, brought_home_currency = ?5,
-            updated_at = ?6, updated_by_device_id = ?7, version = version + 1
+            brought_rate_num = ?6, brought_rate_den = ?7, updated_at = ?8, updated_by_device_id = ?9,
+            version = version + 1
          WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL",
         params![s.household_id, s.space_id, returned_on, brought.map(|b| b.0), brought.map(|b| b.1),
-            m.now, m.device_id],
+            rate.map(|r| r.0), rate.map(|r| r.1), m.now, m.device_id],
     )?;
     if n == 0 {
         Err(StorageError::NotFound)

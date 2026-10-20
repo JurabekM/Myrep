@@ -2602,5 +2602,6 @@
   "mf.outcome.DONE": "Qildim",
   "mf.outcome.DROPPED": "Qilmadim",
   "mf.outcome.line.DONE": "Natija: qildim ({date})",
-  "mf.outcome.line.DROPPED": "Natija: qilmadim ({date})"
+  "mf.outcome.line.DROPPED": "Natija: qilmadim ({date})",
+  "error.RATE_REQUIRED": "Bu valyuta uchun kursni kiriting: 1 birlik necha soʻm"
 }
