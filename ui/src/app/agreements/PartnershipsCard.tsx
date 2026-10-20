@@ -183,7 +183,7 @@ function PartnershipBlock({
         <p className="text-xs text-subtle">{t("partnerships.buyoutHint")}</p>
         {item.buyout === null ? (
           <form
-            className="grid gap-3 sm:grid-cols-4"
+            className="grid gap-3 sm:grid-cols-2"
             onSubmit={(event: SyntheticEvent<HTMLFormElement>) => {
               event.preventDefault();
               void run(() =>
@@ -233,7 +233,7 @@ function PartnershipBlock({
           </form>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Stat label={t("partnerships.buyoutTotal")} value={item.buyout.total.formatted} />
               <Stat label={t("partnerships.buyoutPaid")} value={item.buyout.paid.formatted} />
               <Stat
@@ -384,7 +384,7 @@ function CreateForm({
       onSubmit={(event) => void create(event)}
     >
       <h3 className="text-sm font-medium text-text">{t("partnerships.newTitle")}</h3>
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field
           id="partnership-title"
           label={t("partnerships.titleLabel")}

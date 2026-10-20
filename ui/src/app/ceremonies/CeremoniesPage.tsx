@@ -346,7 +346,7 @@ function ScenarioBlock({
           {t("ceremonies.sizeLine", { days: scenario.days, guests: scenario.guests })}
         </span>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Stat label={t("ceremonies.cmp.total")} value={scenario.total.formatted} />
         <Stat label={t("ceremonies.funding.SAVINGS")} value={scenario.savingsPart.formatted} />
         <Stat label={t("ceremonies.funding.DEBT")} value={scenario.debtPart.formatted} />
@@ -385,7 +385,10 @@ function ScenarioBlock({
         </ul>
       )}
       {editable ? (
-        <form className="grid gap-3 sm:grid-cols-5" onSubmit={(event) => void addLine(event)}>
+        <form
+          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
+          onSubmit={(event) => void addLine(event)}
+        >
           <Field
             id={`line-name-${scenario.id}`}
             label={t("ceremonies.lineName")}
@@ -488,7 +491,10 @@ function AddScenarioForm({ ceremonyId }: { ceremonyId: string }) {
 
   return (
     <FormRow title={t("ceremonies.newScenario")} error={error}>
-      <form className="grid gap-3 sm:grid-cols-4" onSubmit={(event) => void add(event)}>
+      <form
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        onSubmit={(event) => void add(event)}
+      >
         <Field
           id={`scenario-name-${ceremonyId}`}
           label={t("ceremonies.scenarioName")}
@@ -545,7 +551,7 @@ function GoalForm({ ceremony }: { ceremony: CeremonyDto }) {
         </p>
       ) : null}
       <form
-        className="grid gap-3 sm:grid-cols-3"
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
         onSubmit={(event: SyntheticEvent<HTMLFormElement>) => {
           event.preventDefault();
           void run(() =>
@@ -624,7 +630,10 @@ function CreateCeremonyCard() {
 
   return (
     <Card title={t("ceremonies.newTitle")}>
-      <form className="grid gap-4 sm:grid-cols-4" onSubmit={(event) => void create(event)}>
+      <form
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        onSubmit={(event) => void create(event)}
+      >
         <div className="flex flex-col gap-2">
           <label htmlFor="ceremony-kind" className="text-sm text-muted">
             {t("ceremonies.kindLabel")}

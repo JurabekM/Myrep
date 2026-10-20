@@ -30,7 +30,10 @@ export function PyramidCard() {
   return (
     <Card title={t("pyramid.title")}>
       <p className="text-sm text-muted">{t("pyramid.intro")}</p>
-      <form className="grid gap-3 sm:grid-cols-3" onSubmit={(event) => void calculate(event)}>
+      <form
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        onSubmit={(event) => void calculate(event)}
+      >
         <Field
           id="pyramid-k"
           label={t("pyramid.recruits")}
@@ -59,7 +62,7 @@ export function PyramidCard() {
       </form>
       {model !== null ? (
         <div className="flex flex-col gap-3" role="status">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Stat label={t("pyramid.levels")} value={String(model.levels)} />
             <Stat
               label={t("pyramid.lastLevel")}

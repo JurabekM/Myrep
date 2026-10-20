@@ -99,7 +99,10 @@ export function SellableCard({
       ) : (
         <p className="text-sm text-muted">{t("sellable.empty")}</p>
       )}
-      <form className="grid gap-3 sm:grid-cols-4" onSubmit={(event) => void add(event)}>
+      <form
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        onSubmit={(event) => void add(event)}
+      >
         <Field
           id="sellable-name"
           label={t("sellable.name")}

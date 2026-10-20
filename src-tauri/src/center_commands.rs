@@ -19,11 +19,7 @@ fn write_pdf(app: &tauri::AppHandle, prefix: &str, bytes: Vec<u8>) -> Result<Str
         .map_err(|_| ApiError::Internal)?
         .join("reports");
     std::fs::create_dir_all(&dir).map_err(|_| ApiError::Internal)?;
-    let stamp = OffsetDateTime::now_utc()
-        .format(&time::macros::format_description!(
-            "[year][month][day]-[hour][minute][second]"
-        ))
-        .unwrap_or_default();
+    let stamp = crate::commands::file_stamp(OffsetDateTime::now_utc());
     let path = dir.join(format!("{prefix}-{stamp}.pdf"));
     std::fs::write(&path, bytes).map_err(|_| ApiError::Internal)?;
     Ok(path.display().to_string())

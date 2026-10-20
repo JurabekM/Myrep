@@ -89,7 +89,7 @@ export function ExchangeCard() {
 
       <form className="flex flex-col gap-3" onSubmit={(event) => void doExport(event)}>
         <h3 className="text-sm font-medium text-text">{t("exchange.exportTitle")}</h3>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field
             id="export-path"
             label={t("exchange.exportPath")}

@@ -100,7 +100,10 @@ export function HustleCard({ onDraft }: { onDraft: (title: string) => void }) {
           ) : null}
         </div>
       ) : null}
-      <form className="grid gap-3 sm:grid-cols-5" onSubmit={(event) => void calculate(event)}>
+      <form
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
+        onSubmit={(event) => void calculate(event)}
+      >
         <Field
           id="hustle-skill"
           label={t("hustle.skill")}
@@ -145,7 +148,7 @@ export function HustleCard({ onDraft }: { onDraft: (title: string) => void }) {
             setShare(event.currentTarget.value);
           }}
         />
-        <div className="flex items-end sm:col-span-5">
+        <div className="flex items-end sm:col-span-2 xl:col-span-5">
           <PrimaryButton
             type="submit"
             disabled={capex.trim() === "" || income.trim() === "" || expense.trim() === ""}

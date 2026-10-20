@@ -4,6 +4,12 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 
 ## Qaror kutilmoqda
 
+### Reliz tekshiruvi (2026-10-20)
+
+- **Toifa o'zgarishi o'tgan xarajatlarga ta'sir qiladimi?** Hozir xarajat yozilgan paytdagi toifani saqlaydi: oila kengashida «Ijara» «Kerak»ka o'tkazilsa, shu oy yozilgan ijara baribir «Zarur»da qoladi (bayonnoma PDF'da ham). SPEC 2B faqat «tarix saqlanadi» deydi. Kengash oqimida foydalanuvchi oy xulosasi darhol o'zgarishini kutishi mumkin. Variantlar: (a) shunday qoladi va ekranda «keyingi xarajatlardan» deb yoziladi; (b) joriy oy xarajatlari ham qayta tasniflanadi.
+- **Ruscha bob sarlavhalarida «(заглушка)».** Umumiy `chapters.json` da 1–5-boblarning ruscha nomlari hali shu belgi bilan; o'zbekchada olib tashlangan (mobil OPEN 119). Mobil jamoa bilan bir xil qilib tozalash kerakmi?
+- **E2E muhiti.** `tauri-driver` va WebView2 versiyasiga mos `msedgedriver` o'rnatilmagan (yuklab olish kerak, ruxsat bilan). Hozircha E2E qo'lda o'tiladi va RELEASE_CHECKLIST da sana bilan qayd etiladi.
+
 ### 7-qonun (D16, 2026-10-20)
 
 - **Mobil bilan umumiy bandlar** (mobil OPEN_QUESTIONS 138–147): 7-qonun jumlasi qoralama (muallif tasdig'i), zakot qaysi qismda, «kafolat bitta o'zi qizil» (sc-006 — shunday qoldi), «to'xta, maslahatlash» summadan qat'i nazar, piramida modeli soddalashtirilgan, dollar alohida aktiv sifatida saqlanadimi, boshqa hunar shablonlari (desktopda 3 ta: temirchilik/payvand, tikuvchilik, ta'mir), homiy qatori ko'rsatilmaydi.

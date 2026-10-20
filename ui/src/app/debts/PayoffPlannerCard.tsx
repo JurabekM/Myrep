@@ -105,7 +105,7 @@ export function PayoffPlannerCard({ loans = [] }: { loans?: LoanDto[] }) {
             </select>
           </div>
         ) : null}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-2">
             <label htmlFor="payoff-type" className="text-sm text-muted">
               {t("payoff.typeLabel")}
@@ -189,6 +189,11 @@ export function PayoffPlannerCard({ loans = [] }: { loans?: LoanDto[] }) {
   );
 }
 
+/** Grafik o'qi uchun butun sonni uchlik guruhlab yozadi: 4000000 → «4 000 000». */
+function groupDigits(value: number): string {
+  return String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
 function PayoffResult({ result }: { result: PayoffDto }) {
   const { t } = useTranslation();
   const chartRef = useRef<HTMLDivElement>(null);
@@ -207,13 +212,19 @@ function PayoffResult({ result }: { result: PayoffDto }) {
       backgroundColor: "transparent",
       textStyle: { color: "#a8a29e" },
       legend: {
+        top: 0,
         data: [t("payoff.standard"), t("payoff.accelerated")],
         textStyle: { color: "#a8a29e" },
       },
       tooltip: { trigger: "axis" },
       grid: { left: 60, right: 16, top: 36, bottom: 28 },
       xAxis: { type: "category", data: axis, axisLine: { lineStyle: { color: "#57534e" } } },
-      yAxis: { type: "value", splitLine: { lineStyle: { color: "#292524" } } },
+      yAxis: {
+        type: "value",
+        splitLine: { lineStyle: { color: "#292524" } },
+        // O'q yorliqlari o'zbekcha guruhlash bilan (bo'linmas bo'sh joy), faqat ko'rsatish uchun.
+        axisLabel: { formatter: groupDigits },
+      },
       series: [
         {
           name: t("payoff.standard"),
@@ -245,7 +256,7 @@ function PayoffResult({ result }: { result: PayoffDto }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2">
         <Stat label={t("payoff.payment")} value={result.standard.payment.formatted} />
         <Stat
           label={t("payoff.debtFreeStandard")}
@@ -305,7 +316,7 @@ function ScheduleTable({ rows }: { rows: ScheduleRowDto[] }) {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id} className="border-t border-border">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-3 py-2 text-text">
+                <td key={cell.id} className="whitespace-nowrap px-3 py-2 text-text">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

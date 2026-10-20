@@ -123,7 +123,7 @@ export function VentureCard({ partnership }: { partnership: PartnershipDto }) {
     >
       <h4 className="text-sm font-medium text-text">{t("venture.title")}</h4>
       <p className="text-xs text-subtle">{t("venture.hint")}</p>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Stat label={t("venture.income")} value={data.open.income.formatted} />
         <Stat label={t("venture.expense")} value={data.open.expense.formatted} />
         <Stat
@@ -254,7 +254,10 @@ export function VentureCard({ partnership }: { partnership: PartnershipDto }) {
               </PrimaryButton>
             </div>
           </form>
-          <form className="grid gap-3 sm:grid-cols-3" onSubmit={(event) => void closePeriod(event)}>
+          <form
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            onSubmit={(event) => void closePeriod(event)}
+          >
             <Field
               id={`venture-end-${partnership.id}`}
               label={t("venture.endOn")}

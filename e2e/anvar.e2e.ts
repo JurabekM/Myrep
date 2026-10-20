@@ -28,15 +28,18 @@ describe("Anvar ssenariysi", () => {
   it("1. PIN o'rnatish va onboarding", async () => {
     await type("PIN (6 ta raqam)", PIN);
     await type("PIN ni qayta kiriting", PIN);
-    await click("PIN ni o'rnatish");
+    await click("Saqlash va boshlash");
     await see("Xush kelibsiz");
     await click("O'tkazib yuborish");
   });
 
   it("2. Daromad va Kelajagim ulushi", async () => {
     await click("Daromad");
+    await click("Yangi daromad");
     await type("Summa", "3 000 000");
     await click("Saqlash");
+    // Daromaddan keyin «Kelajagim»ga ulush taklifi chiqadi (2026-10-20 qo'lda o'tilgan ssenariy bo'yicha).
+    await click("Ajratish");
     await see("3 000 000 soʻm");
     await click("Kelajagim");
     await see("Kelajagim");

@@ -159,11 +159,7 @@ pub async fn create_ceremony_pdf(
     })
     .await?;
     std::fs::create_dir_all(&dir).map_err(|_| ApiError::Internal)?;
-    let stamp = OffsetDateTime::now_utc()
-        .format(&time::macros::format_description!(
-            "[year][month][day]-[hour][minute][second]"
-        ))
-        .unwrap_or_default();
+    let stamp = crate::commands::file_stamp(OffsetDateTime::now_utc());
     let path = dir.join(format!("smeta-{stamp}.pdf"));
     std::fs::write(&path, bytes).map_err(|_| ApiError::Internal)?;
     Ok(path.display().to_string())
@@ -186,11 +182,7 @@ pub async fn create_ceremony_minutes_pdf(
     })
     .await?;
     std::fs::create_dir_all(&dir).map_err(|_| ApiError::Internal)?;
-    let stamp = OffsetDateTime::now_utc()
-        .format(&time::macros::format_description!(
-            "[year][month][day]-[hour][minute][second]"
-        ))
-        .unwrap_or_default();
+    let stamp = crate::commands::file_stamp(OffsetDateTime::now_utc());
     let path = dir.join(format!("kengash-marosim-{stamp}.pdf"));
     std::fs::write(&path, bytes).map_err(|_| ApiError::Internal)?;
     Ok(path.display().to_string())

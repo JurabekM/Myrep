@@ -23,7 +23,7 @@ export function RecoveryCard() {
       <p className="text-sm text-muted">{t("recovery.intro")}</p>
       {recovery.isSuccess ? (
         <>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <Stat label={t("recovery.needs")} value={recovery.data.parts[0]?.formatted ?? "—"} />
             <Stat label={t("recovery.debt")} value={recovery.data.parts[1]?.formatted ?? "—"} />
             <Stat
@@ -83,7 +83,7 @@ function RecoveryForm({ initial }: { initial: RecoveryDto }) {
         />
         {t("recovery.modeToggle")}
       </label>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field
           id="recovery-needs"
           label={t("recovery.needsPercent")}

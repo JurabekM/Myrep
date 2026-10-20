@@ -95,9 +95,12 @@ export function Alert({ children }: { children: ReactNode }) {
 /** Ko'rsatkich (yorliq va katta qiymat). */
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       <span className="text-sm text-muted">{label}</span>
-      <span className="text-2xl font-semibold tracking-tight text-text">{value}</span>
+      {/* Tor ustunda summa qo'shni ustunga chiqmasin: sig'masa, qatorga o'tadi (200 % DPI, GUI sinovi 2026-10-20). */}
+      <span className="text-2xl font-semibold tracking-tight text-text [overflow-wrap:anywhere]">
+        {value}
+      </span>
       {hint !== undefined ? <span className="text-xs text-subtle">{hint}</span> : null}
     </div>
   );

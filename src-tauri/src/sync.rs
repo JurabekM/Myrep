@@ -78,11 +78,7 @@ pub fn export(
     let path = match input.path.as_deref().filter(|p| !p.trim().is_empty()) {
         Some(text) => PathBuf::from(text.trim()),
         None => {
-            let stamp = now
-                .format(&time::macros::format_description!(
-                    "[year][month][day]-[hour][minute][second]"
-                ))
-                .unwrap_or_default();
+            let stamp = crate::commands::file_stamp(now);
             default_dir.join(format!("baraka-{stamp}.{EXTENSION}"))
         }
     };

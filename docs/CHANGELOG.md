@@ -4,6 +4,51 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### Reliz tekshiruvi 0.1.0 — ichki sinov, imzolanmagan (2026-10-20)
+
+**O'rnatuvchi:** `Baraka Daftari_0.1.0_x64-setup.exe`, 17 898 989 bayt (17,07 MiB),
+SHA-256 `98851128BDDFC7A8C3A3741786A7A44EFDA18813AB307376386BACE8CB2608E1`. `/S` o'rnatish, `uninstall.exe /S`
+(fayllar va reestr yozuvi o'chadi) va qayta o'rnatish — exit 0. Sovuq start (jarayon → sarlavhali oyna) 50–69 ms.
+Kod imzosi yo'q — SmartScreen ogohlantiradi; reliz «ichki sinov» darajasida.
+
+**Qanday sinaldi.** Avtomatik: lint, typecheck, vitest 93, `cargo test` 368, clippy, format, vektor manifesti.
+O'rnatilgan build — buyruqlar bilan (ishga tushish, yopish, jarayon qoldig'i), chunki release oynasi
+`set_content_protected` sababli skrinshotga tushmaydi. Tugmalarni bosish — dev buildda toza profilda:
+PIN sozlash va kutish qoidasi, 11 menyu bandi, daromad + ulush, xarajat, oila kengashi (toifa, havas chegarasi,
+rozilik, bayonnoma PDF), byudjet (obuna, konvert, o'tkazma), qayta ishga tushirishda saqlanish, `Tab`/skip-link,
+RU tili, E2E ssenariysi qo'lda (6 qadam). DPI 200 % — 760 px oyna bilan taqlid.
+
+**Topilgan va tuzatilgan**
+
+- **Fon jarayon qolishi.** `Ctrl+Alt+B` mini oynasi bir marta ochilgan bo'lsa, asosiy oyna yopilgach jarayon
+  yashirin qolardi (mini oyna yopilganda faqat yashiriladi). Endi asosiy oyna yo'q qilinganda `app.exit(0)`.
+  Tuzatishsiz va tuzatish bilan qurilgan release exe'lar bir xil stsenariyda solishtirildi.
+- **Vektor qoplanish testi** D16 dan beri yiqilgan edi (4 yangi suite ro'yxatda yo'q edi) — D16 hisobotidagi
+  «`cargo test` yashil» noto'g'ri bo'lgan; tuzatildi.
+- **Tor oyna / yuqori DPI'da ustma-ust tushish:** «Hunardan ishga» formasi (5 ustun), sheriklik formalari (4),
+  narx daftari ko'rsatkichlari, eksport sana maydoni, payoff ko'rsatkichlari (kasrli summa qo'shni ustunga chiqardi).
+  Asosiy kontent `max-w-3xl` ichida bo'lgani uchun 4–5 ustun hech qachon sig'masdi: 3 ustunli to'rlar endi `lg` dan,
+  payoff va sheriklik formalari 2 ustun; `Stat` qiymati sig'masa qatorga o'tadi.
+- **Payoff grafigi:** o'q yorliqlari «4,000,000» → «4 000 000», legenda chiziqlar ustidan tepaga ko'chdi; jadvalda
+  sana bo'linmaydi.
+- **Hisobot fayl nomlari** UTC vaqtida edi (20:03 da yaratilgan fayl `…-150315`) — endi Toshkent vaqtida
+  (`commands::file_stamp`, test bilan).
+- `spec/content/content_schema.json` (mobildan) CRLF bilan kelgan — formatlandi.
+- E2E skeletida 2 eskirgan selektor («PIN ni o'rnatish», daromad oynasi/ulush taklifi) tuzatildi.
+
+**Ma'lum cheklovlar (foydalanuvchiga)**
+
+- Kod imzosi yo'q (SmartScreen); avtomatik yangilash yo'q.
+- Boblar matni va diniy matnlar — placeholder (litsenziya va ulamo tekshiruvi).
+- PIN unutilsa yoki `keys.bin` yo'qolsa — ma'lumotni tiklab bo'lmaydi.
+- Avto-qulflash Win+L va uyquni sezmaydi (faqat oyna fokusi va vaqt).
+- `.baraka` fayl yo'li qo'lda kiritiladi (fayl tanlash dialogi yo'q).
+- Qal'a devori taqsimotni hisoblaydi, zaxiraga o'tkazma tugmasi yo'q.
+- Toifa o'zgarishi oldin yozilgan xarajatlarga ta'sir qilmaydi.
+- Haqiqiy 150/200 % DPI va High Contrast rejimi qo'lda sinalmagan (tizim sozlamasi).
+- `%LOCALAPPDATA%/Baraka Daftari/export-bindings.exe` — 2026-10-12 dagi eski o'rnatishdan qolgan fayl;
+  uninstaller uni o'chirmaydi, qo'lda o'chirish mumkin.
+
 ### D16 — 7-qonun: «Ko'rmagan ishingga pul tikma — pulingni hunaringga ishlat» (2026-10-20)
 
 Manba: 7-qism (Rustam — chet eldan qaytgan vatandosh, «Plyus» piramidasi, Sobir hojining besh xavf belgisi va qal'a

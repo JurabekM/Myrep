@@ -27,9 +27,13 @@ const COVERED_SUITES: &[&str] = &[
     "percent_of",
     "personal_inflation",
     "profit_distribution",
+    "lump_sum_split",
     "profit_spike",
+    "promised_return",
+    "pyramid_levels",
     "readiness_gate",
     "savings_rescue",
+    "scam_signals",
     "streak",
     "unexplained_gap",
 ];

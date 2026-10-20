@@ -289,10 +289,14 @@ fn setup_security(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let focus_session = Arc::clone(&session);
-    window.on_window_event(move |event| {
-        if let WindowEvent::Focused(focused) = event {
-            focus_session.focus_changed(*focused);
-        }
+    let exit_handle = app.handle().clone();
+    window.on_window_event(move |event| match event {
+        WindowEvent::Focused(focused) => focus_session.focus_changed(*focused),
+        // Asosiy oyna yopilsa — ilova to'liq tugaydi. Aniq `exit` kerak: `Ctrl+Alt+B` mini oynasi yopilganda faqat
+        // yashiriladi, va u bir marta ochilgan bo'lsa, oxirgi oyna «yopilmagani» uchun jarayon fonda qolardi
+        // (RELEASE_CHECKLIST 3: «fon jarayon qolmaydi»).
+        WindowEvent::Destroyed => exit_handle.exit(0),
+        _ => {}
     });
 
     let tick_session = Arc::clone(&session);

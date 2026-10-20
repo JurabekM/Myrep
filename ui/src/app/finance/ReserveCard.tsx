@@ -46,7 +46,7 @@ export function ReserveCard() {
         <p className="text-sm text-muted">{t("reserve.noData", { months: data.dataMonths })}</p>
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <Stat
               label={t("reserve.monthlyAverage")}
               value={data.monthlyAverage?.formatted ?? "—"}

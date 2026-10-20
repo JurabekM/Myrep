@@ -83,7 +83,7 @@ export function PricesPage() {
         <>
           <Card title={t("prices.mouseTitle")}>
             <p className="text-sm text-muted">{t("prices.mouseIntro")}</p>
-            <div className="grid gap-6 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <Stat label={t("prices.nominal")} value={prices.data.balance.formatted} />
               <Stat
                 label={t("prices.index")}
@@ -138,7 +138,7 @@ export function PricesPage() {
                   setName(event.currentTarget.value);
                 }}
               />
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Field
                   id="price-base"
                   label={t("prices.basePrice")}

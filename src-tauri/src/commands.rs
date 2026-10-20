@@ -267,3 +267,33 @@ mod tests {
         );
     }
 }
+
+/// Hisobot va eksport fayllari nomidagi vaqt belgisi — foydalanuvchi soati bo'yicha (Toshkent, UTC+5), aks holda
+/// 20:03 da yaratilgan fayl «150315» deb nomlanardi (GUI sinovi, 2026-10-20).
+pub(crate) fn file_stamp(now: time::OffsetDateTime) -> String {
+    let local = now.to_offset(time::UtcOffset::UTC)
+        + time::Duration::hours(domain::calendar::TASHKENT_HOURS);
+    local
+        .format(&time::macros::format_description!(
+            "[year][month][day]-[hour][minute][second]"
+        ))
+        .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod file_stamp_tests {
+    use time::macros::datetime;
+
+    #[test]
+    fn fayl_nomi_toshkent_vaqtida() {
+        assert_eq!(
+            super::file_stamp(datetime!(2026-10-20 15:03:15 UTC)),
+            "20261020-200315"
+        );
+        // Yarim tundan keyin sana ham Toshkent bo'yicha almashadi.
+        assert_eq!(
+            super::file_stamp(datetime!(2026-10-20 19:30:00 UTC)),
+            "20261021-003000"
+        );
+    }
+}

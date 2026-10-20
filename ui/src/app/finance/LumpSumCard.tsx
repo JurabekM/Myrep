@@ -51,7 +51,10 @@ export function LumpSumCard() {
   return (
     <Card title={t("lumpSum.title")}>
       <p className="text-sm text-muted">{t("lumpSum.intro")}</p>
-      <form className="grid gap-3 sm:grid-cols-4" onSubmit={(event) => void calculate(event)}>
+      <form
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        onSubmit={(event) => void calculate(event)}
+      >
         <Field
           id="lump-amount"
           label={t("lumpSum.amount")}

@@ -100,7 +100,7 @@ export function CenterTable({ onOpen }: { onOpen: (id: string) => void }) {
 
   return (
     <Card title={t("center.title")}>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Field
           id="center-search"
           label={t("center.search")}
