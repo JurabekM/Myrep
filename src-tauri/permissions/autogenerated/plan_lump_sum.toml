@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-plan-lump-sum"
+description = "Enables the plan_lump_sum command without any pre-configured scope."
+commands.allow = ["plan_lump_sum"]
+
+[[permission]]
+identifier = "deny-plan-lump-sum"
+description = "Denies the plan_lump_sum command without any pre-configured scope."
+commands.deny = ["plan_lump_sum"]

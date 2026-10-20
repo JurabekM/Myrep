@@ -40,6 +40,8 @@ vi.mock("../../bindings/bindings", () => ({
     getPartnerships: vi.fn(),
     getAgreementsCenter: vi.fn(),
     listFamilyTemplates: vi.fn(),
+    listOfferChecks: vi.fn(),
+    listHustleTemplates: vi.fn(),
     createFamilyAgreement: vi.fn(),
     getAgreement: vi.fn(),
     getJournal: vi.fn(),
@@ -218,6 +220,8 @@ function setUp(): void {
     status: "ok",
     data: [{ id: "FAMILY_CHORES", title: "Uyda kim nima qiladi", description: "Uy ishlari." }],
   });
+  vi.mocked(commands.listOfferChecks).mockResolvedValue({ status: "ok", data: { items: [] } });
+  vi.mocked(commands.listHustleTemplates).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getAgreement).mockResolvedValue({ status: "ok", data: SIGNED });
   vi.mocked(commands.getJournal).mockResolvedValue({
     status: "ok",

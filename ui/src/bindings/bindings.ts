@@ -237,8 +237,20 @@ export const commands = {
 	closeVenturePeriod: (input: ClosePeriodInputDto) => typedError<VentureDto, ApiError>(__TAURI_INVOKE("close_venture_period", { input })),
 	/**  Davr hisoboti PDF'ini ilova papkasiga yozadi; yo'lini qaytaradi. */
 	createPeriodReportPdf: (periodId: string) => typedError<string, ApiError>(__TAURI_INVOKE("create_period_report_pdf", { periodId })),
-	/**  «Kafolatlangan foyda» detektori (saqlanmaydi). */
+	/**  Taklifni besh xavf belgisi bilan tekshiradi va yozadi. */
 	checkOffer: (input: OfferInputDto) => typedError<OfferCheckDto, ApiError>(__TAURI_INVOKE("check_offer", { input })),
+	/**  Tekshiruvlar tarixi. */
+	listOfferChecks: () => typedError<OffersDto, ApiError>(__TAURI_INVOKE("list_offer_checks")),
+	/**  «To'xta, maslahatlash» qarori. */
+	decideOffer: (input: DecideOfferInputDto) => typedError<OffersDto, ApiError>(__TAURI_INVOKE("decide_offer", { input })),
+	/**  Oylik va'da → yillik ko'paytma (faqat ogohlantirish). */
+	promisedReturn: (monthlyBp: number) => typedError<PromisedReturnDto, ApiError>(__TAURI_INVOKE("promised_return", { monthlyBp })),
+	/**  Piramida modeli (ta'limiy). */
+	pyramidModel: (recruitsPerPerson: number, population: number) => typedError<PyramidDto, ApiError>(__TAURI_INVOKE("pyramid_model", { recruitsPerPerson, population })),
+	/**  «Qal'a devori» taqsimoti. */
+	planLumpSum: (input: LumpSumInputDto) => typedError<LumpSumPlanDto, ApiError>(__TAURI_INVOKE("plan_lump_sum", { input })),
+	/**  Hunar shablonlari. */
+	listHustleTemplates: () => typedError<HustleTemplateDto[], ApiError>(__TAURI_INVOKE("list_hustle_templates")),
 	/**  «Hunardan ishga»: uch stsenariy (saqlanmaydi). */
 	hustlePlan: (input: HustleInputDto) => typedError<HustlePlanDto, ApiError>(__TAURI_INVOKE("hustle_plan", { input })),
 	/**  Markaz jadvali. */
@@ -1014,6 +1026,16 @@ export type DecideDisputeInputDto = {
 	newVersion: boolean,
 };
 
+/**  «To'xta, maslahatlash» qarori. */
+export type DecideOfferInputDto = {
+	/**  Tekshiruv. */
+	id: string,
+	/**  `DECLINED | POSTPONED | ACCEPTED`. */
+	decision: string,
+	/**  Maslahatchi (`ACCEPTED` uchun shart, avval yozilmagan bo'lsa). */
+	advisor: string | null,
+};
+
 /**  Kengash muhokamasi («Buni qarzsiz qanday o'tkazamiz?») holati. */
 export type DiscussionDto = {
 	/**  Identifikator. */
@@ -1318,6 +1340,20 @@ export type HustleScenarioDto = {
 	paybackMonths: number | null,
 };
 
+/**  Hunar shabloni (SPEC 2G.8): CAPEX nomlari oldindan, summalar yo'q. */
+export type HustleTemplateDto = {
+	/**  Kod. */
+	id: string,
+	/**  Nomi. */
+	name: string,
+	/**  Qisqa izoh. */
+	story: string,
+	/**  CAPEX qatorlari nomlari. */
+	capexLines: string[],
+	/**  «Talab bormi?» savoli. */
+	demandQuestion: string,
+};
+
 /**  Import kirishi. */
 export type ImportInputDto = {
 	/**  `.baraka` fayl yo'li. */
@@ -1586,6 +1622,42 @@ export type LocalizedDto = {
 	ru: string,
 };
 
+/**  «Qal'a devori» kirishi (SPEC 2G.5). */
+export type LumpSumInputDto = {
+	/**  Summa matni (kiritilgan valyutada). */
+	amount: string,
+	/**  Valyuta: `UZS | USD | EUR | RUB`. */
+	currency: string,
+	/**  Kurs: 1 birlik necha so'm (chet el valyutasi uchun shart). */
+	rate: string | null,
+	/**  Xarajat tarixi bo'lmasa — taxminiy oylik zarur xarajat (so'm). */
+	reserveEstimate: string | null,
+};
+
+/**  «Qal'a devori» taqsimoti. */
+export type LumpSumPlanDto = {
+	/**  Kiritilgan summa (o'z valyutasida). */
+	amountEntered: MoneyDto,
+	/**  Ishlatilgan kurs (1 birlik = so'm), chet el valyutasida bo'lsa. */
+	rateUsed: MoneyDto | null,
+	/**  Asosiy valyutadagi summa. */
+	amount: MoneyDto,
+	/**  6 oylik zaxira maqsadi. */
+	reserveTarget: MoneyDto,
+	/**  Maqsad manbai: `HISTORY` (xarajat tarixi) yoki `ESTIMATE` (taxmin). */
+	reserveTargetSource: string,
+	/**  «Kelajagim» balansi. */
+	reserveBalance: MoneyDto,
+	/**  Zaxira kamomadi. */
+	reserveMissing: MoneyDto,
+	/**  Avval zaxiraga. */
+	toReserve: MoneyDto,
+	/**  Qolgani sarmoyaga («Hunardan ishga»). */
+	toInvest: MoneyDto,
+	/**  Taqsimotdan keyin qal'a devori to'ladimi. */
+	reserveFilled: boolean,
+};
+
 /**  Belgi kirishi. */
 export type MarkReviewInputDto = {
 	/**  Ko'rik. */
@@ -1727,38 +1799,86 @@ export type OdatHabitDto = {
 	entriesThisYear: number,
 };
 
-/**  Taklif natijasi. */
+/**  Taklif tekshiruvi natijasi (saqlangan). */
 export type OfferCheckDto = {
-	/**  `GREEN | YELLOW | RED`. */
+	/**  Identifikator. */
+	id: string,
+	/**  Taklif nomi. */
+	title: string | null,
+	/**  Javoblar (`savol kodi → javob kodi`). */
+	answers: { [key in string]: string },
+	/**  `GREEN | YELLOW | RED` — bayroqlar va daraja bahosining eng og'iri. */
 	verdict: string,
-	/**  Bayroqlar. */
+	/**  Besh belgi darajasi: `NONE | CAUTION | FLEE`. */
+	level: string,
+	/**  Topilgan belgilar (tartib bilan), izohi bilan. */
+	signs: OfferSignDto[],
+	/**  Toifalar: `RIBO | GHARAR | QIMOR`. */
+	categories: string[],
+	/**  2E.5 bayroqlari (savol kodi bilan). */
 	flags: OfferFlagDto[],
+	/**  Taxminiy summa. */
+	amount: MoneyDto | null,
+	/**  Va'da qilingan foyda yillikka (bo'lsa). */
+	promised: PromisedReturnDto | null,
+	/**  Maslahatchi. */
+	advisor: string | null,
+	/**  Qaror: `DECLINED | POSTPONED | ACCEPTED` yoki `null`. */
+	decision: string | null,
+	/**  Tekshirilgan sana (`YYYY-MM-DD`). */
+	checkedOn: string,
+	/**  Qaror sanasi. */
+	decidedOn: string | null,
+	/**  «Pul qo'yaman» ochilishigacha qolgan soat (0 — vaqt o'tgan). */
+	coolingHoursLeft: number,
+	/**  «Pul qo'yaman» hozir mumkinmi (maslahatchi bor va 24 soat o'tgan, qaror yo'q). */
+	canAccept: boolean,
 };
 
-/**  Bayroq. */
+/**  Bayroq (2E.5). */
 export type OfferFlagDto = {
-	/**  Kod. */
+	/**  Kod (`UNKNOWN` — javob yo'q). */
 	code: string,
+	/**  Qaysi savoldan (savol kodi). */
+	question: string,
 	/**  Izoh (o'zbekcha). */
 	explanation: string,
 	/**  Qizilmi. */
 	red: boolean,
 };
 
-/**  Taklif tekshiruvi javoblari. */
+/**
+ *  Taklif tekshiruvi kirishi (SPEC 2E.5 + 2G.1): 9 savolga `YES | NO | UNKNOWN` (`savol kodi → javob`;
+ *  yo'q savol — `UNKNOWN`), taxminiy summa, va'da qilingan oylik foyda (bp) va maslahatchi (ixtiyoriy).
+ */
 export type OfferInputDto = {
-	/**  Foyda kafolatlanganmi. */
-	guaranteedProfit: boolean,
-	/**  Zarar bo'lishi mumkinmi. */
-	lossPossible: boolean,
-	/**  Real mol yoki ish bormi. */
-	realGoodsOrWork: boolean,
-	/**  Yangi a'zo jalb qilish talab qilinadimi. */
-	needsNewMembers: boolean,
-	/**  Shoshiltirish bormi. */
-	rushPressure: boolean,
-	/**  Yozma shartnoma bormi. */
-	writtenContract: boolean,
+	/**  Taklif nomi (kim, nima), ixtiyoriy. */
+	title: string | null,
+	/**
+	 *  Javoblar: `guaranteed, lossShared, realGoods, recruitment, pressure, writtenContract, exitEasy, license,
+	 *  verifiedInPerson` → `YES | NO | UNKNOWN`.
+	 */
+	answers: { [key in string]: string },
+	/**  Taxminiy summa matni (ixtiyoriy). */
+	amount: string | null,
+	/**  Va'da qilingan oylik foyda, bp (3500 = 35 %), ixtiyoriy. */
+	promisedMonthlyBp: number | null,
+	/**  Maslahatlashilgan odam (ixtiyoriy, keyin ham yozish mumkin). */
+	advisor: string | null,
+};
+
+/**  Besh xavf belgisidan biri. */
+export type OfferSignDto = {
+	/**  `GUARANTEED_HIGH_RETURN | URGENCY | RECRUITMENT_INCOME | NO_REAL_BUSINESS | HARD_EXIT`. */
+	code: string,
+	/**  Izoh (o'zbekcha, Sobir hoji ohangida). */
+	explanation: string,
+};
+
+/**  Tekshiruvlar tarixi. */
+export type OffersDto = {
+	/**  Eng yangisi avval. */
+	items: OfferCheckDto[],
 };
 
 /**  Ochiq davr. */
@@ -1997,6 +2117,36 @@ export type ProfitShareDto = {
 	partyId: string,
 	/**  Ulush, bp. */
 	shareBp: number,
+};
+
+/**  Va'da qilingan foyda yillikka (SPEC 2G.3) — faqat ogohlantirish. */
+export type PromisedReturnDto = {
+	/**  Oylik va'da, bp. */
+	monthlyBp: number,
+	/**  Oylar (12). */
+	months: number,
+	/**  Oddiy ko'paytma, bp (52 000 = 5,2 barobar). */
+	simpleMultipleBp: number,
+	/**  Murakkab ko'paytma, bp. */
+	compoundMultipleBp: number,
+};
+
+/**  Piramida modeli (SPEC 2G.4). */
+export type PyramidDto = {
+	/**  Har ishtirokchi nechta odam olib keladi. */
+	recruitsPerPerson: number,
+	/**  Aholi. */
+	population: number,
+	/**  Qavatlar. */
+	levels: number,
+	/**  Jami ishtirokchilar. */
+	participants: number,
+	/**  Oxirgi qavatdagi odamlar. */
+	lastLevel: number,
+	/**  Oxirgi qavat ulushi, bp. */
+	lastLevelShareBp: number,
+	/**  Oxirgi qavat to'liqmi. */
+	lastLevelFull: boolean,
 };
 
 /**  Byudjet rejimi va 70/20/10 taqsimoti. */

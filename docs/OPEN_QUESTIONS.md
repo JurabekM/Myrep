@@ -4,6 +4,14 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 
 ## Qaror kutilmoqda
 
+### 7-qonun (D16, 2026-10-20)
+
+- **Mobil bilan umumiy bandlar** (mobil OPEN_QUESTIONS 138–147): 7-qonun jumlasi qoralama (muallif tasdig'i), zakot qaysi qismda, «kafolat bitta o'zi qizil» (sc-006 — shunday qoldi), «to'xta, maslahatlash» summadan qat'i nazar, piramida modeli soddalashtirilgan, dollar alohida aktiv sifatida saqlanadimi, boshqa hunar shablonlari (desktopda 3 ta: temirchilik/payvand, tikuvchilik, ta'mir), homiy qatori ko'rsatilmaydi.
+- **Bitta keyring yozuvi — bir nechta profil (2026-10-20 da topildi).** Qurilma kaliti Credential Manager'da bitta nom bilan saqlanardi; yangi (bo'sh) profilni sozlash uni ustiga yozib, boshqa daftarlarni (dev profil, eski `%APPDATA%`) ochilmas qilib qo'yadi — «Qurilma kaliti topilmadi yoki bu daftarga mos emas». D16 da `BARAKA_DATA_DIR` profillari uchun alohida nom (papka yo'lidan) qo'shildi; standart profil nomi o'zgarmadi. Ishlab chiqarishda bir qurilma — bir daftar, lekin `.baraka` import va ko'p xonadon stsenariylari uchun kalitni daftar identifikatori bilan bog'lash kerakmi — qaror kutilmoqda.
+- **Qal'a devoriga o'tkazma.** Desktop taqsimotni hisoblaydi, lekin «qorovulga qo'yish» tugmasi yo'q: `VaultMovement` da katta summa uchun tur yo'q (`Initial` bir marta, `RescueDeposit` qutqarilgan pul uchun). Taklif: `LumpSum { source }` turi + sxema migratsiyasi (mobil bilan `.baraka` almashish sxemasi kelishilgach).
+- **«Uch sariq — qizil» qoidasi olib tashlandi.** D13 qarori umumiy `scam_signals` vektoriga (sc-007: hamma «bilmayman» → sariq) zid edi; vektor ustun (DESKTOP_PROMPT 5.4). «Hal qilingan» dagi D13 bandi shu bilan o'zgardi.
+- **Besh belgi va 2E.5 bayroqlari bir ekranda.** Belgilar (5) va bayroqlar (9 savol + «bilmayman») ikkalasi ko'rsatiladi; foydalanuvchi uchun ortiqcha bo'lsa, bayroqlarni yig'ma qilish mumkin.
+
 1. **Mobil (Flutter) MVP qayerda davom etadi?** Mobil loyiha alohida worktree'da (`mvp1-fintech-kickoff-56939a`) turibdi, 14A vazifasi boshlanishini kutmoqda. Bu repo — desktop. D2 mobil repo'siz bajarildi. Mobilni shu repo ichiga (`mobile/`) ko'chirish yoki alohida qoldirish kerakmi? _Kerak: D8A oldidan (mobil bilan birgalikda vektorlarni o'zgartirish boshlanganda)._
 2. **`spec/test-vectors/` ni sinxron saqlash usuli.** D2 da to'rtta suite (`allocate`, `percent_of`, `fx_convert`, `money_format`) mobil repo'dan bayt-bayt nusxa qilindi (sha256 mos). Mobil repo'da yana 10 ta suite bor; ularni desktop'ga qanday olib kelish kerak? Variantlar: (a) alohida `baraka-spec` repo + git submodule; (b) shu repo `spec/` ichida asosiy nusxa, mobil uni submodule qiladi; (c) qo'lda nusxa + sha256 tekshiruvi. _Kerak: D8 (amortizatsiya) boshlanishidan oldin._
 3. **CODEOWNERS.** Vektor o'zgarishi ikki platforma egasining ma'qulligini talab qiladi (DESKTOP_PROMPT.md 5.4). Egalar kim (GitHub username)? _Kerak: birinchi vektor o'zgarishidan oldin._

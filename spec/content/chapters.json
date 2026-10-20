@@ -350,6 +350,146 @@
           "autoComplete": "DAFTAR_PAGE_WRITTEN"
         }
       ]
+    },
+    {
+      "id": "ch06",
+      "order": 6,
+      "title": {
+        "uz": "6-bob. Sheriklik odobi",
+        "ru": "Глава 6. Этика партнёрства"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "[Placeholder] Bu yerda 6-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
+            "ru": "[Заглушка] Здесь будет текст 6-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
+            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 6,
+        "text": {
+          "uz": "Kelishuvni yozing: yozilgan soʻz esda qoladi, ishonch esa asraladi. Har oy birga koʻring, vazifani ovoz chiqarib ayting, kelishganni jim oʻzgartirmang.",
+          "ru": "Записывайте договорённость: написанное помнят, доверие сохраняется. Каждый месяц смотрите вместе, называйте обязанности вслух, не меняйте согласованное молча."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch06.t1",
+          "text": {
+            "uz": "Oilangizda bir uy ishini kelishib, yozib qoʻying.",
+            "ru": "Согласуйте в семье одну домашнюю обязанность и запишите её."
+          },
+          "autoComplete": "FAMILY_AGREEMENT_CREATED"
+        },
+        {
+          "id": "ch06.t2",
+          "text": {
+            "uz": "Oylik hisob koʻrigini birga oʻtkazing.",
+            "ru": "Проведите ежемесячную проверку счёта вместе."
+          },
+          "autoComplete": "ACCOUNT_REVIEW_COMPLETED"
+        },
+        {
+          "id": "ch06.t3",
+          "text": {
+            "uz": "Vazifani bajara olmasangiz, ayblamasdan xabar bering va yechim taklif qiling.",
+            "ru": "Если не получается выполнить обязанность, сообщите без упрёков и предложите решение."
+          },
+          "autoComplete": null
+        }
+      ]
+    },
+    {
+      "id": "ch07",
+      "order": 7,
+      "title": {
+        "uz": "7-bob. Qopqon va hunar",
+        "ru": "Глава 7. Ловушка и ремесло"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "[Placeholder] Bu yerda 7-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
+            "ru": "[Заглушка] Здесь будет текст 7-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
+            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 7,
+        "text": {
+          "uz": "Ishni oʻz koʻzing bilan koʻrmaguncha pul tikma: kafolatli katta foyda, shoshirish, yangi odam olib kelish, koʻrinmas ish va qiyin chiqish — firibgarlik belgisi. Avval oilangning olti oylik qalʼa devorini qur, keyin pulingni hunaringga ishlat.",
+          "ru": "Не вкладывай деньги, пока не увидишь дело своими глазами: гарантированная большая прибыль, спешка, привлечение новых людей, невидимое дело и трудный выход — признаки мошенничества. Сначала построй семье крепостную стену на полгода, потом вкладывай деньги в своё ремесло."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch07.t1",
+          "text": {
+            "uz": "Sizga kelgan bitta taklifni besh xavf belgisi bilan tekshiring.",
+            "ru": "Проверьте одно полученное предложение по пяти признакам опасности."
+          },
+          "autoComplete": "OFFER_CHECKED"
+        },
+        {
+          "id": "ch07.t2",
+          "text": {
+            "uz": "Oilangizning olti oylik qalʼa devori qancha ekanini hisoblang.",
+            "ru": "Посчитайте, сколько составляет семейная крепостная стена на полгода."
+          },
+          "autoComplete": "EMERGENCY_TARGET_SET"
+        },
+        {
+          "id": "ch07.t3",
+          "text": {
+            "uz": "Hunaringizdan bitta gʻoya va uning boshlangʻich xarajatini yozing.",
+            "ru": "Запишите одну идею из вашего ремесла и её стартовые затраты."
+          },
+          "autoComplete": "VENTURE_IDEA_CREATED"
+        }
+      ]
     }
   ]
 }

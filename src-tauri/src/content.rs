@@ -471,7 +471,7 @@ mod tests {
         let db = fresh();
         started(&db);
         let cards = list_chapters(&db, at(1)).expect("ro'yxat");
-        assert_eq!(cards.len(), 5);
+        assert_eq!(cards.len(), 7);
         assert!(cards[0].unlocked);
         assert!(cards[1..].iter().all(|card| !card.unlocked));
         assert_eq!(cards[1].tasks_remaining, 2);
@@ -543,10 +543,10 @@ mod tests {
     }
 
     #[test]
-    fn haqiqiy_kontentda_bes_bob_va_ucha_vazifa() {
+    fn haqiqiy_kontentda_yetti_bob_va_ucha_vazifa() {
         let result = catalog();
         assert!(result.errors.is_empty(), "xatolar: {:?}", result.errors);
-        assert_eq!(result.chapters.len(), 5);
+        assert_eq!(result.chapters.len(), 7);
         assert!(result.chapters.iter().all(|c| c.weekly_tasks.len() == 3));
     }
 

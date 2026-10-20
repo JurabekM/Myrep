@@ -1,0 +1,55 @@
+{
+ "suite": "lump_sum_split",
+ "version": 1,
+ "description": "Qal'a devori (SPEC 2G.5): toReserve = min(amount, reserveMissing); toInvest = amount - toReserve. Asosiy valyutada, minor birlikda.",
+ "cases": [
+  {
+   "id": "ls-001",
+   "input": {
+    "amount": "22500000000",
+    "reserveMissing": "1800000000",
+    "currency": "UZS"
+   },
+   "expected": {
+    "toReserve": "1800000000",
+    "toInvest": "20700000000"
+   }
+  },
+  {
+   "id": "ls-002",
+   "input": {
+    "amount": "500000000",
+    "reserveMissing": "1800000000",
+    "currency": "UZS"
+   },
+   "expected": {
+    "toReserve": "500000000",
+    "toInvest": "0"
+   }
+  },
+  {
+   "id": "ls-003",
+   "input": {
+    "amount": "900000000",
+    "reserveMissing": "0",
+    "currency": "UZS"
+   },
+   "expected": {
+    "toReserve": "0",
+    "toInvest": "900000000"
+   }
+  },
+  {
+   "id": "ls-004",
+   "input": {
+    "amount": "1800000000",
+    "reserveMissing": "1800000000",
+    "currency": "UZS"
+   },
+   "expected": {
+    "toReserve": "1800000000",
+    "toInvest": "0"
+   }
+  }
+ ]
+}

@@ -57,6 +57,10 @@ export const RULE_ERROR_KEYS = {
   OVERRIDE_REASON_REQUIRED: "errors.overrideReasonRequired",
   ATTACHMENT_INVALID: "errors.attachmentInvalid",
   DISCUSSION_NOTE_REQUIRED: "errors.discussionNoteRequired",
+  ADVISOR_REQUIRED: "errors.advisorRequired",
+  COOLING_PERIOD: "errors.coolingPeriod",
+  OFFER_ALREADY_DECIDED: "errors.offerAlreadyDecided",
+  RESERVE_ESTIMATE_REQUIRED: "errors.reserveEstimateRequired",
 } as const;
 
 /** Xato uchun tarjima kaliti. Ko'rsatiladigan matn `t()` orqali olinadi. */

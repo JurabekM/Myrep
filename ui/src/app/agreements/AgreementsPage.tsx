@@ -10,6 +10,7 @@ import { CenterTable } from "./CenterTable";
 import { FamilyTemplatesCard } from "./FamilyTemplatesCard";
 import { HustleCard } from "./HustleCard";
 import { OfferCheckCard } from "./OfferCheckCard";
+import { PyramidCard } from "./PyramidCard";
 import { PartnershipsCard } from "./PartnershipsCard";
 import { kindKey } from "./labels";
 import { agreementKeys, useApplyAgreement } from "./queries";
@@ -81,6 +82,8 @@ export function AgreementsPage() {
       />
 
       <OfferCheckCard />
+
+      <PyramidCard />
 
       <CenterTable
         onOpen={(id) => {

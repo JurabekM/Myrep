@@ -7,8 +7,8 @@ use time::OffsetDateTime;
 
 use crate::commands::{ApiError, run_blocking};
 use crate::dto::{
-    AttachReceiptInputDto, ClosePeriodInputDto, HustleInputDto, HustlePlanDto, OfferCheckDto,
-    OfferInputDto, VentureDto, VentureEntryInputDto,
+    AttachReceiptInputDto, ClosePeriodInputDto, HustleInputDto, HustlePlanDto, VentureDto,
+    VentureEntryInputDto,
 };
 use crate::session::Session;
 use crate::ventures;
@@ -81,13 +81,6 @@ pub async fn create_period_report_pdf(
     let path = dir.join(format!("davr-{stamp}.pdf"));
     std::fs::write(&path, bytes).map_err(|_| ApiError::Internal)?;
     Ok(path.display().to_string())
-}
-
-/// «Kafolatlangan foyda» detektori (saqlanmaydi).
-#[tauri::command]
-#[specta::specta]
-pub async fn check_offer(input: OfferInputDto) -> Result<OfferCheckDto, ApiError> {
-    Ok(ventures::check_offer(input))
 }
 
 /// «Hunardan ishga»: uch stsenariy (saqlanmaydi).

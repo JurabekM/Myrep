@@ -65,7 +65,9 @@
                   "OFFER_CHECKED",
                   "VENTURE_IDEA_CREATED",
                   "AGREEMENT_SIGNED",
-                  "ORAL_AGREEMENT_RECORDED"
+                  "ORAL_AGREEMENT_RECORDED",
+                  "ACCOUNT_REVIEW_COMPLETED",
+                  "FAMILY_AGREEMENT_CREATED"
                 ]
               }
             }

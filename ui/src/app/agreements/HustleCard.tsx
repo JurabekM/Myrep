@@ -1,6 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { type SyntheticEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type HustlePlanDto, commands } from "../../bindings/bindings";
+import { financeKeys } from "../finance/queries";
 import { unwrap } from "../finance/command-error";
 import { useErrorMessage } from "../finance/errors";
 import { Alert, Card, Field, PrimaryButton, SecondaryButton } from "../finance/ui";
@@ -30,6 +32,12 @@ export function HustleCard({ onDraft }: { onDraft: (title: string) => void }) {
   const [share, setShare] = useState("100");
   const [plan, setPlan] = useState<HustlePlanDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState("");
+  const templates = useQuery({
+    queryKey: financeKeys.hustleTemplates,
+    queryFn: () => commands.listHustleTemplates().then(unwrap),
+  });
+  const template = templates.data?.find((item) => item.id === templateId) ?? null;
 
   async function calculate(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,6 +61,45 @@ export function HustleCard({ onDraft }: { onDraft: (title: string) => void }) {
   return (
     <Card title={t("hustle.title")}>
       <p className="text-sm text-muted">{t("hustle.intro")}</p>
+      {templates.isSuccess ? (
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-raised px-4 py-3">
+          <label htmlFor="hustle-template" className="text-sm text-muted">
+            {t("hustle.template")}
+          </label>
+          <select
+            id="hustle-template"
+            className="h-10 rounded-lg border border-border bg-app px-3 text-text outline-none focus:border-accent"
+            value={templateId}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              setTemplateId(value);
+              const chosen = templates.data.find((item) => item.id === value);
+              if (chosen !== undefined && skill.trim() === "") {
+                setSkill(chosen.name);
+              }
+            }}
+          >
+            <option value="">{t("hustle.templateNone")}</option>
+            {templates.data.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          {template !== null ? (
+            <div className="flex flex-col gap-1 text-sm">
+              <p className="text-muted">{template.story}</p>
+              <p className="text-xs text-subtle">{t("hustle.templateHint")}</p>
+              <ul className="list-disc pl-5 text-text" aria-label={t("hustle.templateLines")}>
+                {template.capexLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <p className="text-warning">{template.demandQuestion}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <form className="grid gap-3 sm:grid-cols-5" onSubmit={(event) => void calculate(event)}>
         <Field
           id="hustle-skill"

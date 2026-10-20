@@ -24,6 +24,8 @@ pub use key::SecretKey;
 pub use lockout::{LOCKOUT_THRESHOLD, lockout_delay_secs, retry_after_secs};
 pub use member_pin::{VERIFIER_LEN, create_member_verifier, verify_member_pin};
 pub use pin::{PIN_LEN, validate_pin};
-pub use store::{KeyringSecretStore, MemorySecretStore, SecretStore};
+pub use store::{
+    KEYRING_ACCOUNT, KEYRING_SERVICE, KeyringSecretStore, MemorySecretStore, SecretStore,
+};
 pub use vault::{create_vault, open_vault};
 pub use wrap::{FILE_LEN, KeyFile};

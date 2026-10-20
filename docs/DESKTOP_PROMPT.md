@@ -1,8 +1,8 @@
 # «BARAKA DAFTARI DESKTOP» — UMUMIY LOYIHA PROMPTI
 ### Tauri 2 + Rust + React · Windows birinchi navbatda · Mobil ilova bilan test vektorlari orqali mos
 
-> Versiya: v1.1 (6-qonun qo'shildi) · AI-dasturchi (Claude Code va h.k.) uchun.
-> Funksional manba: `docs/SPEC.md` (= `FINTECH_PROMPT.md` v0.8, 1–6-qonunlar).
+> Versiya: v1.3 (7-qonun: desktop D16) · AI-dasturchi (Claude Code va h.k.) uchun.
+> Funksional manba: `docs/SPEC.md` (v0.9, 1–7-qonunlar; v0.8 = `FINTECH_PROMPT.md`).
 > Bu fayl desktop uchun **stek, arxitektura, farqlar va ish rejasi**ni belgilaydi. SPEC bilan zid kelgan joyda **texnik masalalarda shu fayl**, **mahsulot va diniy-moliyaviy qoidalarda SPEC** ustun turadi.
 
 ---
@@ -12,7 +12,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 
 ## 1. MAHSULOT VA DESKTOPNING O'RNI
 - **«Baraka daftari»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
-- U ta'lim va amaliyotni birlashtiradi: 12 ta qissa orqali **halol boylikning 7 qonuni** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–6-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2F bo'limlarida.
+- U ta'lim va amaliyotni birlashtiradi: 12 ta qissa orqali **halol boylikning 7 qonuni** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–7-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2G bo'limlarida.
 - Mobil ilova (Flutter + Kotlin) kundalik tez kiritish uchun mo'ljallangan. **Desktop esa uning nusxasi emas, «Oila kengashi va biznes stoli»**:
   - katta ekranda oylik audit va oila kengashi (havas chegarasi, marosim stsenariylari);
   - qarzdan chiqish rejasini chuqur tahlil qilish va amortizatsiya jadvallari;
@@ -21,7 +21,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
   - eksport va import orqali telefon bilan ma'lumot almashish.
 - **To'liq offline** ishlaydi. Server ham, akkaunt ham yo'q.
 
-### 1.1. 1–6-qonunlarning qisqa mazmuni (SPEC'ga havola bilan)
+### 1.1. 1–7-qonunlarning qisqa mazmuni (SPEC'ga havola bilan)
 | # | Qonun | Desktopdagi asosiy vositalar | SPEC |
 |---|---|---|---|
 | 1 | Avval o'zingga to'la | Daromad, avto-ulush, «Kelajagim», streak, oylik audit, «Kimning puli?» | 2 |
@@ -30,6 +30,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 | 4 | Ribodan qoch, reja bilan chiq | Qarz inventari, haqiqiy narx, 70/20/10, payoff planner, tilxat, marosim rejalovchisi | 2D |
 | 5 | Pulni halol ishga sol | Mudoraba/Musharaka, shartnoma, buyout, venture ledger, taklif detektori | 2E |
 | 6 | Sheriklik odobi — kelishuvni yozinglar | Umumiy kelishuv dvigateli (9 savol), vazifalar va hodisalar, oylik ochiq ko'rik va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozish, oilaviy kelishuvlar | 2F |
+| 7 | Ko'rmagan ishingga pul tikma — pulingni hunaringga ishlat | Besh xavf belgisi (taklif tekshiruvi), «o'z ko'zim bilan ko'raman» ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida hisobi, katta summa uchun «qal'a devori», «to'xta, maslahatlash» (24 soat + maslahatchi), hunar shablonlari | 2G |
 
 > **Desktop uchun eng muhim qonun — 6-qonun.** Kelishuvni 9 savol bo'yicha tuzish, oylik ko'rik o'tkazish, hakam papkasini yig'ish va hujjatlarni chop etish katta ekran va klaviaturada eng qulay bajariladi. Shu sababli bu bo'lim desktopning **asosiy ish oqimi** sifatida loyihalanadi.
 
@@ -232,6 +233,51 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 - `NOT_APPLICABLE` izohsiz → `NA_REASON_REQUIRED`;
 - `PARTNERSHIP` da qat'iy summa → `GUARANTEED_RETURN_FORBIDDEN`.
 
+**`scam_signals.json`** (7-qonun, SPEC 2G.1). Kirish: savol kodi → `YES | NO | UNKNOWN` (javob yo'q = `UNKNOWN`). Savollar: `guaranteed`, `lossShared`, `realGoods`, `recruitment`, `pressure`, `writtenContract`, `exitEasy`, `license`, `verifiedInPerson`.
+- **Belgilar** (tartib qat'iy): `GUARANTEED_HIGH_RETURN` — `guaranteed = YES`; `URGENCY` — `pressure = YES`; `RECRUITMENT_INCOME` — `recruitment = YES`; `NO_REAL_BUSINESS` — `realGoods`, `license` yoki `verifiedInPerson` dan biri `NO` (bir marta); `HARD_EXIT` — `exitEasy = NO`.
+- **Daraja:** 0 belgi — `NONE`, 1 — `CAUTION`, 2+ — `FLEE`.
+- **Baho:** 2E.5 bayroqlari (qizil: `guaranteed = YES`, `lossShared = NO`, `realGoods = NO`, `recruitment = YES`; sariq: `pressure = YES`, `writtenContract = NO`, `exitEasy = NO`, `license = NO`, `verifiedInPerson = NO`, har qanday `UNKNOWN`) va darajaning (`NONE → GREEN`, `CAUTION → YELLOW`, `FLEE → RED`) **eng og'iri**.
+- **Toifalar:** `RIBO` — `guaranteed = YES`; `GHARAR` — `NO_REAL_BUSINESS`; `QIMOR` — `RECRUITMENT_INCOME`.
+
+| id | holat | signs | level | verdict | categories |
+|---|---|---|---|---|---|
+| sc-001 | toza taklif | — | NONE | GREEN | — |
+| sc-002 | faqat shoshirish | URGENCY | CAUTION | YELLOW | — |
+| sc-003 | shoshirish + qiyin chiqish | URGENCY, HARD_EXIT | FLEE | RED | — |
+| sc-004 | «Plyus» | GUARANTEED_HIGH_RETURN, URGENCY, RECRUITMENT_INCOME, NO_REAL_BUSINESS | FLEE | RED | RIBO, GHARAR, QIMOR |
+| sc-005 | faqat ruxsat yo'q | NO_REAL_BUSINESS | CAUTION | YELLOW | GHARAR |
+| sc-006 | faqat kafolat | GUARANTEED_HIGH_RETURN | CAUTION | RED | RIBO |
+| sc-007 | javob yo'q | — | NONE | YELLOW | — |
+| sc-008 | mol yo'q + ko'rsatmadi | NO_REAL_BUSINESS | CAUTION | RED | GHARAR |
+
+**`promised_return.json`** (SPEC 2G.3). Natija bp, `10000` = 1 barobar. Oddiy: `10000 + months × monthlyBp`. Murakkab: `x = 10000`, har oy `x = half_up(x × (10000 + monthlyBp) / 10000)`.
+
+| id | monthlyBp | months | simpleMultipleBp | compoundMultipleBp |
+|---|---|---|---|---|
+| pr-001 | 3500 | 12 | 52000 | 366439 |
+| pr-002 | 1000 | 12 | 22000 | 31386 |
+| pr-003 | 200 | 12 | 12400 | 12682 |
+| pr-004 | 0 | 12 | 10000 | 10000 |
+| pr-005 | 3500 | 3 | 20500 | 24604 |
+
+**`pyramid_levels.json`** (SPEC 2G.4). `i`-qavatda `k^i` kishi (`i = 0` dan). Qavat to'liq sig'masa, qolgan aholi to'lmagan oxirgi qavat bo'ladi. `lastLevelShareBp = half_up(lastLevel × 10000 / participants)`.
+
+| id | k | N | levels | participants | lastLevel | lastLevelShareBp | lastLevelFull |
+|---|---|---|---|---|---|---|---|
+| py-001 | 5 | 1000000 | 10 | 1000000 | 511719 | 5117 | false |
+| py-002 | 2 | 7 | 3 | 7 | 4 | 5714 | true |
+| py-003 | 3 | 100 | 5 | 100 | 60 | 6000 | false |
+| py-004 | 10 | 36000000 | 9 | 36000000 | 24888889 | 6914 | false |
+
+**`lump_sum_split.json`** (SPEC 2G.5, asosiy valyutada, minor birlik): `toReserve = min(amount, reserveMissing)`, `toInvest = amount − toReserve`.
+
+| id | amount | reserveMissing | toReserve | toInvest |
+|---|---|---|---|---|
+| ls-001 | 22500000000 | 1800000000 | 1800000000 | 20700000000 |
+| ls-002 | 500000000 | 1800000000 | 500000000 | 0 |
+| ls-003 | 900000000 | 0 | 0 | 900000000 |
+| ls-004 | 1800000000 | 1800000000 | 1800000000 | 0 |
+
 ### 5.4. Vektorlar bilan ishlash tartibi
 1. Yangi pul funksiyasi **avval vektor bilan** yoziladi (TDD), keyin implementatsiya.
 2. Desktopda topilgan har qanday hisob xatosi vektorga aylantiriladi va mobil jamoaga xabar beriladi (`docs/OPEN_QUESTIONS.md`).
@@ -426,6 +472,14 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 - `docs/RELEASE_CHECKLIST.md`.
 - **Qabul mezonlari:** E2E yashil; imzolangan installer SmartScreen ogohlantirishisiz o'rnatiladi (sertifikat mavjud bo'lsa); sovuq start < 1,5 s.
 
+### F3. 7-qonun
+
+**D16 — «Ko'rmagan ishingga pul tikma» (SPEC 2G)**
+
+- **A (Rust, avval vektor):** `scam_signals`, `promised_return`, `pyramid_levels`, `lump_sum_split` umumiy vektorlari + runner; `domain::offer_check` tri-state (9 savol, besh belgi, daraja, toifalar; «uch sariq — qizil» qoidasi vektorga zid bo'lgani uchun olib tashlandi), `domain::scam_math`; sxema v18 `offer_checks`; xizmat `scam`: tekshiruv saqlanadi (`OFFER_CHECKED`), «to'xta, maslahatlash» (maslahatchi + 24 soat, qaror bir marta), qal'a devori (valyuta + kurs, zaxira tarixdan yoki taxmindan, `EMERGENCY_TARGET_SET`), piramida, hunar shablonlari. 7-bob kontenti (mobil bilan bitta fayl), 6-bob triggerlari.
+- **B (UI):** taklif tekshiruvi kartasi 9 savol (ha/yo'q/bilmayman), summa, va'da % → yillik ko'paytma, «o'z ko'zim bilan ko'raman» ro'yxati, belgilar va toifalar izohi, qaror tugmalari va tarix; piramida kartasi; «Qal'a devori» kartasi («Kelajagim»); «Hunardan ishga»da shablon tanlovi. GUI sinovi.
+- **Qabul mezonlari:** 4 vektor yashil; ikki belgi qizil; «pul qo'yaman» maslahatchisiz va 24 soatdan oldin rad (test); katta summa taqsimotida zaxira avval (test); migratsiya v17 → v18.
+
 ## 10. AI-DASTURCHI UCHUN QOIDALAR
 - Faqat berilgan vazifa ustida ishla. Keyingi vazifa funksiyalarini «qo'shimcha» sifatida yozma.
 - 2-bo'lim (ADR)ni ruxsatsiz o'zgartirma. Yangi dependency uchun sabab yoz.
@@ -440,7 +494,7 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 ## 11. DOIRADAN TASHQARIDA (v1 da qilinmaydi)
 - Server sinxronlashi, akkauntlar.
 - Bank va karta integratsiyalari (CSV importdan tashqari).
-- 7-qonun va undan keyingilar (keyingi qissalardan keyin qo'shiladi; `Asset` va `asset_snapshots` zakot uchun allaqachon tayyor).
+- 8-qonun va undan keyingilar (keyingi qissalardan keyin qo'shiladi; `Asset` va `asset_snapshots` zakot uchun zaxirada — 7-qism zakot haqida emas).
 - Hakam yoki ikkinchi tomonning o'z qurilmasidan masofadan tasdiqlashi (server kerak).
 - Real pul o'tkazmalari.
 - Sheriklar uchun platforma yoki marketplace.

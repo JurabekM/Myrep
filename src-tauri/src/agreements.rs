@@ -278,6 +278,14 @@ pub fn create(
         origin_device_id: DEVICE_ID.to_owned(),
     };
     AgreementRepo::new(db.connection()).insert(&row)?;
+    if row.kind == domain::agreement::AgreementType::Family {
+        // Oilaviy kelishuv yaratildi (6-bob vazifasi).
+        crate::content::record_event(
+            db,
+            now,
+            domain::content::TaskTrigger::FamilyAgreementCreated,
+        )?;
+    }
     build_dto(db, row)
 }
 

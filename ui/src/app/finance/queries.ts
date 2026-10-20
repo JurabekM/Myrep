@@ -20,6 +20,8 @@ export const financeKeys = {
   loans: ["finance", "loans"] as const,
   recovery: ["finance", "recovery"] as const,
   ceremonies: ["finance", "ceremonies"] as const,
+  offers: ["finance", "offers"] as const,
+  hustleTemplates: ["finance", "hustle-templates"] as const,
 };
 
 /** Moliyaviy yozuv o'zgarganda barcha moliya keshlarini qayta yuklaydi. */

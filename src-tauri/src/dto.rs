@@ -3,6 +3,8 @@
 
 use domain::{Channel, Income, ObligationKind, ShareRule, ShareTarget, habit::HabitStats};
 use money::{Locale, Money, format_money};
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -2003,44 +2005,194 @@ pub struct ClosePeriodInputDto {
     pub force_majeure_note: Option<String>,
 }
 
-/// Taklif tekshiruvi javoblari.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Type)]
+/// Taklif tekshiruvi kirishi (SPEC 2E.5 + 2G.1): 9 savolga `YES | NO | UNKNOWN` (`savol kodi → javob`;
+/// yo'q savol — `UNKNOWN`), taxminiy summa, va'da qilingan oylik foyda (bp) va maslahatchi (ixtiyoriy).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct OfferInputDto {
-    /// Foyda kafolatlanganmi.
-    pub guaranteed_profit: bool,
-    /// Zarar bo'lishi mumkinmi.
-    pub loss_possible: bool,
-    /// Real mol yoki ish bormi.
-    pub real_goods_or_work: bool,
-    /// Yangi a'zo jalb qilish talab qilinadimi.
-    pub needs_new_members: bool,
-    /// Shoshiltirish bormi.
-    pub rush_pressure: bool,
-    /// Yozma shartnoma bormi.
-    pub written_contract: bool,
+    /// Taklif nomi (kim, nima), ixtiyoriy.
+    pub title: Option<String>,
+    /// Javoblar: `guaranteed, lossShared, realGoods, recruitment, pressure, writtenContract, exitEasy, license,
+    /// verifiedInPerson` → `YES | NO | UNKNOWN`.
+    pub answers: BTreeMap<String, String>,
+    /// Taxminiy summa matni (ixtiyoriy).
+    pub amount: Option<String>,
+    /// Va'da qilingan oylik foyda, bp (3500 = 35 %), ixtiyoriy.
+    pub promised_monthly_bp: Option<u32>,
+    /// Maslahatlashilgan odam (ixtiyoriy, keyin ham yozish mumkin).
+    pub advisor: Option<String>,
 }
 
-/// Taklif natijasi.
+/// Taklif tekshiruvi natijasi (saqlangan).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct OfferCheckDto {
-    /// `GREEN | YELLOW | RED`.
+    /// Identifikator.
+    pub id: String,
+    /// Taklif nomi.
+    pub title: Option<String>,
+    /// Javoblar (`savol kodi → javob kodi`).
+    pub answers: BTreeMap<String, String>,
+    /// `GREEN | YELLOW | RED` — bayroqlar va daraja bahosining eng og'iri.
     pub verdict: String,
-    /// Bayroqlar.
+    /// Besh belgi darajasi: `NONE | CAUTION | FLEE`.
+    pub level: String,
+    /// Topilgan belgilar (tartib bilan), izohi bilan.
+    pub signs: Vec<OfferSignDto>,
+    /// Toifalar: `RIBO | GHARAR | QIMOR`.
+    pub categories: Vec<String>,
+    /// 2E.5 bayroqlari (savol kodi bilan).
     pub flags: Vec<OfferFlagDto>,
+    /// Taxminiy summa.
+    pub amount: Option<MoneyDto>,
+    /// Va'da qilingan foyda yillikka (bo'lsa).
+    pub promised: Option<PromisedReturnDto>,
+    /// Maslahatchi.
+    pub advisor: Option<String>,
+    /// Qaror: `DECLINED | POSTPONED | ACCEPTED` yoki `null`.
+    pub decision: Option<String>,
+    /// Tekshirilgan sana (`YYYY-MM-DD`).
+    pub checked_on: String,
+    /// Qaror sanasi.
+    pub decided_on: Option<String>,
+    /// «Pul qo'yaman» ochilishigacha qolgan soat (0 — vaqt o'tgan).
+    pub cooling_hours_left: u32,
+    /// «Pul qo'yaman» hozir mumkinmi (maslahatchi bor va 24 soat o'tgan, qaror yo'q).
+    pub can_accept: bool,
 }
 
-/// Bayroq.
+/// Besh xavf belgisidan biri.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OfferSignDto {
+    /// `GUARANTEED_HIGH_RETURN | URGENCY | RECRUITMENT_INCOME | NO_REAL_BUSINESS | HARD_EXIT`.
+    pub code: String,
+    /// Izoh (o'zbekcha, Sobir hoji ohangida).
+    pub explanation: String,
+}
+
+/// Bayroq (2E.5).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct OfferFlagDto {
-    /// Kod.
+    /// Kod (`UNKNOWN` — javob yo'q).
     pub code: String,
+    /// Qaysi savoldan (savol kodi).
+    pub question: String,
     /// Izoh (o'zbekcha).
     pub explanation: String,
     /// Qizilmi.
     pub red: bool,
+}
+
+/// Tekshiruvlar tarixi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct OffersDto {
+    /// Eng yangisi avval.
+    pub items: Vec<OfferCheckDto>,
+}
+
+/// «To'xta, maslahatlash» qarori.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DecideOfferInputDto {
+    /// Tekshiruv.
+    pub id: String,
+    /// `DECLINED | POSTPONED | ACCEPTED`.
+    pub decision: String,
+    /// Maslahatchi (`ACCEPTED` uchun shart, avval yozilmagan bo'lsa).
+    pub advisor: Option<String>,
+}
+
+/// Va'da qilingan foyda yillikka (SPEC 2G.3) — faqat ogohlantirish.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PromisedReturnDto {
+    /// Oylik va'da, bp.
+    pub monthly_bp: u32,
+    /// Oylar (12).
+    pub months: u32,
+    /// Oddiy ko'paytma, bp (52 000 = 5,2 barobar).
+    pub simple_multiple_bp: u32,
+    /// Murakkab ko'paytma, bp.
+    pub compound_multiple_bp: u32,
+}
+
+/// Piramida modeli (SPEC 2G.4).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PyramidDto {
+    /// Har ishtirokchi nechta odam olib keladi.
+    pub recruits_per_person: u32,
+    /// Aholi.
+    pub population: u32,
+    /// Qavatlar.
+    pub levels: u32,
+    /// Jami ishtirokchilar.
+    pub participants: u32,
+    /// Oxirgi qavatdagi odamlar.
+    pub last_level: u32,
+    /// Oxirgi qavat ulushi, bp.
+    pub last_level_share_bp: u32,
+    /// Oxirgi qavat to'liqmi.
+    pub last_level_full: bool,
+}
+
+/// «Qal'a devori» kirishi (SPEC 2G.5).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LumpSumInputDto {
+    /// Summa matni (kiritilgan valyutada).
+    pub amount: String,
+    /// Valyuta: `UZS | USD | EUR | RUB`.
+    pub currency: String,
+    /// Kurs: 1 birlik necha so'm (chet el valyutasi uchun shart).
+    pub rate: Option<String>,
+    /// Xarajat tarixi bo'lmasa — taxminiy oylik zarur xarajat (so'm).
+    pub reserve_estimate: Option<String>,
+}
+
+/// «Qal'a devori» taqsimoti.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LumpSumPlanDto {
+    /// Kiritilgan summa (o'z valyutasida).
+    pub amount_entered: MoneyDto,
+    /// Ishlatilgan kurs (1 birlik = so'm), chet el valyutasida bo'lsa.
+    pub rate_used: Option<MoneyDto>,
+    /// Asosiy valyutadagi summa.
+    pub amount: MoneyDto,
+    /// 6 oylik zaxira maqsadi.
+    pub reserve_target: MoneyDto,
+    /// Maqsad manbai: `HISTORY` (xarajat tarixi) yoki `ESTIMATE` (taxmin).
+    pub reserve_target_source: String,
+    /// «Kelajagim» balansi.
+    pub reserve_balance: MoneyDto,
+    /// Zaxira kamomadi.
+    pub reserve_missing: MoneyDto,
+    /// Avval zaxiraga.
+    pub to_reserve: MoneyDto,
+    /// Qolgani sarmoyaga («Hunardan ishga»).
+    pub to_invest: MoneyDto,
+    /// Taqsimotdan keyin qal'a devori to'ladimi.
+    pub reserve_filled: bool,
+}
+
+/// Hunar shabloni (SPEC 2G.8): CAPEX nomlari oldindan, summalar yo'q.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct HustleTemplateDto {
+    /// Kod.
+    pub id: String,
+    /// Nomi.
+    pub name: String,
+    /// Qisqa izoh.
+    pub story: String,
+    /// CAPEX qatorlari nomlari.
+    pub capex_lines: Vec<String>,
+    /// «Talab bormi?» savoli.
+    pub demand_question: String,
 }
 
 /// «Hunardan ishga» kirishi.

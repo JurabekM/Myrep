@@ -1,7 +1,7 @@
 # LOYIHA PROMPTI — «BARAKA DAFTARI»
 ### O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillaridagi) shaxsiy moliya Android ilovasi
 
-> Versiya: v0.8 · Qayta ishlangan manbalar: 1-qism («Nimaga qoladi?»), 2-qism («Xurjunning teshigini yama»), 3-qism («Pulning ko'rinmas dushmani va qarz balosi»), 4-qism («Kishanlarning eng qadimiysi va to'y isrofi»), 5-qism («Uxlagan pulni uyg'otish va halol sheriklik»), 6-qism («Sheriklik odobi va Chorsucha shartnomaning 9 savoli»)
+> Versiya: v0.9 · Qayta ishlangan manbalar: 1-qism («Nimaga qoladi?»), 2-qism («Xurjunning teshigini yama»), 3-qism («Pulning ko'rinmas dushmani va qarz balosi»), 4-qism («Kishanlarning eng qadimiysi va to'y isrofi»), 5-qism («Uxlagan pulni uyg'otish va halol sheriklik»), 6-qism («Sheriklik odobi va Chorsucha shartnomaning 9 savoli»), 7-qism (Rustam — piramida qopqoni va hunarga sarmoya; ishchi nomi)
 > Bu prompt AI-dasturchi (Claude Code va h.k.) uchun yozilgan. Har bir yangi matndan keyin yangilanadi.
 
 ---
@@ -438,6 +438,91 @@ Dasturchi uchun bobning asosiy saboqlari:
 ### 2F.11. Kontent eslatmasi
 - Bobda Qur'on oyati (Baqara 282, mazmunan tarjima) va hadis («Musulmonlar o'z shartlari ustida turadilar») keltirilgan. Ular `religiousReviewStatus` jarayonidan o'tadi: manba, tarjima matni va ulamo tasdig'i talab qilinadi.
 
+## 2G. 7-QONUN: «KO'RMAGAN ISHINGGA PUL TIKMA — PULINGNI HUNARINGGA ISHLAT» — FUNKSIONAL TALABLAR
+> Manba: 7-qism (Rustam — chet eldan qaytgan vatandosh, piramida qopqoni va hunarga sarmoya). Bob matnida qonun jumlasi alohida berilmagan; quyidagisi bob mazmunidan olingan **qoralama** — muallif tasdig'i kerak (OPEN_QUESTIONS).
+> **Qonun (qoralama):** «Ishni o'z ko'zing bilan ko'rmaguncha pul tikma. Kafolatli katta foyda, shoshirish, yangi odam olib kelish, ko'rinmas ish va qiyin chiqish — firibgarlik belgisi: bittasini ko'rsang hushyor tort, ikkitasini ko'rsang qoch. Avval oilangning olti oylik qal'a devorini qur, keyin pulingni hunaringga ishlat.»
+
+**Personajlar.** Rustam — to'rt yil chet elda (Koreya) zavodda ishlab qaytgan payvandchi va usta boshi, qo'lida dollardagi jamg'arma; endi qaytib ketmaslikka va pulni ishlatishga qaror qilgan, lekin yolg'iz qaror qabul qilishga o'rgangan, maslahat so'rashni zaiflik deb biladi. Uning sinfdoshi uni «oyiga kafolatli foyda» va'da qiladigan kompaniyaga jalb qilmoqchi bo'ladi; idoradagi ekranlar, birinchi kirganlarga ko'rsatiladigan to'lovlar va «joylar cheklangan» yozuvi uni shoshiradi. Anvar «bir soat vaqt bering» deb Sobir hojiga olib boradi; hoji savollar bilan uni o'zi tekshirishga undaydi.
+
+### 2G.1. «Besh xavf belgisi» (2E.5 detektorining kengaytmasi)
+- Taklif tekshiruvi besh belgini (`ScamSign`) aniqlaydi:
+  - `GUARANTEED_HIGH_RETURN` — katta foyda kafolatlab va'da qilinadi (halol foydaning kafolati bo'lmaydi, unda tavakkal bor);
+  - `URGENCY` — «faqat bugun», «joy kam», «tezroq» deb shoshiriladi (o'ylab olishdan qo'rqishadi);
+  - `RECRUITMENT_INCOME` — daromad moldan emas, yangi odam olib kelishdan;
+  - `NO_REAL_BUSINESS` — ishning o'zi ko'rinmaydi: ombor, mol, hujjat yoki ruxsat yo'q, faqat idora; yoki tekshirishga ruxsat berilmaydi;
+  - `HARD_EXIT` — kirish oson, chiqish qiyin: pulni qaytarib so'rasa «keyinroq» deyiladi.
+- 2E.5 savollariga uchta qo'shiladi: «pulni istagan vaqtda qaytarib olsa bo'ladimi?» (`exitEasy`), «odamlardan pul yig'ishga davlat ruxsati bormi?» (`license`), «ishni o'z ko'zingiz bilan ko'rdingizmi yoki ko'rsatishdimi?» (`verifiedInPerson`, 2G.2).
+- Belgilar javoblardan aniqlanadi:
+
+| Belgi | Qachon |
+|---|---|
+| `GUARANTEED_HIGH_RETURN` | foyda kafolatlangan — «ha» |
+| `URGENCY` | shoshiltirish — «ha» |
+| `RECRUITMENT_INCOME` | yangi a'zo jalb qilish — «ha» |
+| `NO_REAL_BUSINESS` | real mol / ish — «yo'q», **yoki** davlat ruxsati — «yo'q», **yoki** o'z ko'zi bilan tekshirish — «yo'q» (rad etishdi) |
+| `HARD_EXIT` | pulni istagan vaqtda qaytarish — «yo'q» |
+
+- **Baho qoidasi** (hojining qoidasi): 0 belgi — belgi yo'q; 1 belgi — «hushyor torting» (kamida **sariq**); 2 va undan ko'p — «qoching» (**qizil**). Umumiy baho = 2E.5 jadvalidagi baho va besh belgi bahosining **eng og'iri**. «Bilmayman» javobi belgi hisoblanmaydi, lekin 2E.5 dagidek sariq bayroq beradi.
+- Har belgi alohida izohlanadi (Sobir hoji ohangida, ayblamasdan).
+- Umumiy test vektori: `spec/test-vectors/scam_signals.json` (`DESKTOP_PROMPT.md` 5-bo'lim).
+
+### 2G.2. «Ishni o'z ko'zim bilan ko'raman» — tekshiruv ro'yxati
+- Pul qo'yishdan oldin ilova so'rash kerak bo'lgan narsalar ro'yxatini beradi:
+  - ombor va mol (nima sotiladi, qayerda turadi);
+  - hujjatlar: shartnomada pul nimaga ishlatilishi va zarar kim zimmasida ekani;
+  - odamlardan pul yig'ishga davlat ruxsati;
+  - to'lovlar qayerdan keladi: mol sotuvidanmi yoki yangi kirganlarning pulidanmi;
+  - pulni qaytarib olish tartibi.
+- Natija yoziladi: «ko'rsatishdi» / «rad etishdi yoki shoshirishdi» / «so'ramadim». **Rad etishning o'zi** `NO_REAL_BUSINESS` belgisi.
+- Ohang: «Ishi halol odam bu iltimosdan quvonadi — kel, ko'r, deydi».
+
+### 2G.3. «Va'da qilingan foyda — yiliga necha barobar?»
+- Oyiga r % va'dasi yillikka aylantiriladi: **oddiy** ko'paytma `1 + 12·r` va **murakkab** ko'paytma `(1 + r)^12`. Hisob butun bp'da: murakkabda har oy natija bp'da yarmidan yuqoriga yaxlitlanadi (`core/money` qoidasi).
+- Masalan, oyiga 35 % — yiliga oddiy hisobda ~5,2 barobar. Matn: «Dunyodagi eng katta savdo ham, eng katta zavod ham bunday foyda bermaydi».
+- Bu **faqat ogohlantirish**: natija muqobil daromad sifatida ko'rsatilmaydi va solishtirilmaydi (3-bo'lim).
+- Test vektori: `spec/test-vectors/promised_return.json`.
+
+### 2G.4. Piramida — ta'limiy hisob
+- Har ishtirokchi `k` ta yangi odam olib keladi; har qavat oldingisidan `k` marta katta. Aholi (yoki shahar) soni `N` tugaganda yangi qavat to'lmaydi va piramida cho'kadi.
+- Natija: qavatlar soni, jami ishtirokchilar va **oxirgi qavatdagi odamlar ulushi** (bp) — «cho'kkan kuni ko'pchilik eng pastki qavatda bo'ladi; siz qaysi qavatdasiz?».
+- Birinchi kirganlarga to'lov «baliqchining yemi» sifatida izohlanadi: ular yangi kirganlarning pulidan to'lanadi.
+- Test vektori: `spec/test-vectors/pyramid_levels.json`.
+
+### 2G.5. «Qal'a devori» — katta summa bilan qaytganda
+- Katta summa kiritilganda (chet eldan qaytish, meros, mulk sotuvi) **taqsimlash ustasi** ochiladi:
+  1. avval oilaning **6 oylik zaxira kamomadi** (2C.3 maqsad, qorovul jamg'arma) to'ldiriladi — «bu sizning qal'a devoringiz, uni savdoga ham, sheriklikka ham qo'shmaysiz»;
+  2. qolgani sarmoya uchun ko'rsatiladi va «Hunardan ishga» (2E.4, 2G.8) taklif qilinadi;
+  3. zaxira to'lmaguncha sarmoya tavsiya etilmaydi (2C.4 darvoza).
+- Summa chet el valyutasida bo'lishi mumkin: foydalanuvchi kiritgan kurs bilan asosiy valyutaga aylantiriladi (`FxRate`, `fx_convert`).
+- Test vektori: `spec/test-vectors/lump_sum_split.json`.
+
+### 2G.6. «To'xta, maslahatlash» — katta qaror oldidan
+- Taklif tekshiruvida taxminiy summa yoziladi. «Qaror: pul qo'yaman» faqat ikki shart bajarilgach ochiladi:
+  - maslahatlashilgan ishonchli odamning ismi yozilgan («Kim bilan maslahatlashdingiz?»);
+  - tekshiruvdan keyin kamida **24 soat** o'tgan («bir kecha uxlab ko'ring»).
+- «Rad etdim» va «keyinga qoldiraman» darhol mumkin. Qarorlar: `DECLINED | POSTPONED | ACCEPTED`, tarixda qoladi.
+- Ohang: «Maslahat so'rash — zaiflik emas. Bir soat vaqt ajratish to'rt yillik mehnatni asraydi».
+
+### 2G.7. G'arar va qimor
+- Taklif natijasi toifalar bilan izohlanadi:
+  - `RIBO` — zarar bo'lishilmaydigan kafolatli foyda (2E.5);
+  - `GHARAR` — noaniq bitim: nima sotilayotgani yoki pul qayerda ishlayotgani noma'lum (`NO_REAL_BUSINESS`);
+  - `QIMOR` — yutuq faqat boshqaning yutqazishidan: to'lov yangi kirganlarning pulidan (`RECRUITMENT_INCOME`).
+- Diniy iqtiboslar (oyat, hadis) faqat `religiousReviewStatus = APPROVED` bilan chiqadi (3-bo'lim).
+
+### 2G.8. «Pulingiz hunaringizga ishlasin»
+- 2E.4 ga hunar shablonlari qo'shiladi. Birinchisi: **temirchilik / payvand ustaxonasi** (darvoza, panjara, mangal). Shablon CAPEX nomlarini oldindan qo'yadi; summalarni foydalanuvchi yozadi (narx o'ylab topilmaydi).
+- «Talab bormi?» savoli: kim buyurtma beradi, atrofda qancha uy qurilmoqda yoki yangilanmoqda.
+- Qal'a devori (2G.5) to'lgandan keyin tavsiya etiladi.
+
+### 2G.9. Persona eslatmasi: chet eldan qaytgan vatandosh
+- Ohang: hurmat va iliqlik, uyaltirmaslik. Yolg'iz qaror qabul qilish odatini ayblamasdan, maslahatga undash.
+- Jamg'arma ko'pincha dollarda — summa kiritishda valyuta tanlovi bor.
+
+### 2G.10. Kontent eslatmasi
+- 7-bob (placeholder, litsenziyagacha). Haftalik vazifalar: kelgan bitta taklifni besh belgi bilan tekshirish (`OFFER_CHECKED`), oilaning qal'a devorini hisoblash (`EMERGENCY_TARGET_SET`), hunardan bitta g'oya yozish (`VENTURE_IDEA_CREATED`).
+- Bob boshidagi homiy qatori ilovaga kirmaydi (3-bo'lim).
+
 ## 3. MAHSULOT CHEKLOVLARI (qat'iy)
 - Ilovada foizli kredit, mikroqarz yoki «tez pul» reklamalari va integratsiyalari **bo'lmaydi**.
 - Kreditlar faqat qarzdan chiqish maqsadida kuzatiladi. Yangi qarz olish rag'batlantirilmaydi.
@@ -450,6 +535,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 - Kelishuv hujjatlarida ilova **yuridik kafolat bermaydi** va yuridik maslahat ko'rsatmaydi. Shablonlar yurist ko'rigidan o'tadi (`reviewStatus`).
 - Hisob jurnalidagi yozuvlar (2F.6) hech qanday holatda tahrirlanmaydi va o'chirilmaydi, faqat tuzatuvchi yozuv qo'shiladi.
 - Ilova baxillikka undamaydi. Tejash ko'rsatkichlari sadaqa yoki zarur xarajatlarni kamaytirishni hech qachon «yutuq» deb ko'rsatmaydi.
+- Ilova hech qanday investitsiya platformasi, kompaniya yoki loyihani reklama qilmaydi va tavsiya etmaydi. Kontent manbalaridagi homiy yozuvlari ilovada ko'rsatilmaydi (2G.10).
 
 ## 4. TEXNOLOGIK STEK — QAT'IY QARORLAR (0-bosqich, ADR)
 > Bu bo'limdagi qarorlar **o'zgarmaydi**. AI-dasturchi ularni o'z bilganicha almashtirmaydi. O'zgartirish zarur bo'lsa, avval sababini yozib, ruxsat so'raydi.
@@ -479,7 +565,8 @@ Dasturchi uchun bobning asosiy saboqlari:
 - Yaxlitlash qoidasi markazlashgan bo'ladi (`MoneyRounding`), kod bo'ylab tarqoq yaxlitlash taqiqlanadi.
 - **Desktop ilova bilan moslik:** pul algoritmlarining aniq ta'rifi va umumiy oltin test vektorlari `spec/test-vectors/` da (`DESKTOP_PROMPT.md` 4–5-bo'limlar). Ular mobil ilova uchun ham **majburiy**: largest remainder'da teng kasr bo'lsa kichik indeks ustun; `percentOf = allocate([bp, 10000−bp])[0]`; amortizatsiyada half-up. Mobil CI ham shu vektorlardan o'tishi shart. Eksport formati (`spec/interchange/`) ham umumiy.
 
-### 4.3. Aktivlar abstraksiyasi (`Asset`) — 7-qonun (zakot) uchun zaxira
+### 4.3. Aktivlar abstraksiyasi (`Asset`) — zakot uchun zaxira
+> v0.9: 7-qism zakot haqida emas (2G — firibgarlikdan himoya va hunarga sarmoya). Zakot keyingi qismlarda; bu abstraksiya zaxira sifatida qoladi.
 - Har bir qiymat saqlovchi narsa `Asset` hisoblanadi: `type` (`CASH | BANK_CARD | VAULT | GOLD | SILVER | FOREIGN_CURRENCY | RECEIVABLE | TRADE_GOODS | BUSINESS_SHARE`), `quantity` (integer, minor birlikda; oltin uchun milligramm), `unit`, `currency?`, `acquiredAt`.
 - MVP-1 da faqat `CASH` va `VAULT` ishlatiladi, lekin jadval va interfeys **boshidan** shu ko'rinishda quriladi. Keyingi bosqichlarda migratsiya kerak bo'lmasligi uchun.
 - Har bir `Asset` uchun «balans tarixi» (snapshotlar) saqlanadi. Bu zakotdagi hawl (1 yil) hisobi uchun kerak bo'ladi.
@@ -517,6 +604,8 @@ Dasturchi uchun bobning asosiy saboqlari:
 - 6-qonun bilan qo'shilganlar:
   `Agreement` (`type`: `PARTNERSHIP | LOAN | RENT | SERVICE | FAMILY | OTHER`; `effectiveFrom`, `term`, `reviewDate`, `status`: `DRAFT | SIGNED | ACTIVE | IN_DISPUTE | CLOSED`), `AgreementVersion`, `AgreementParty`, `Contribution`, `Duty` (`ownerPartyId` — yagona mas'ul, `breachClause`), `DutyIncident`, `CustodyRule` (`reviewEvery`), `ExitClause`, `Arbiter`, `Signature` (`role`: `PARTY | WITNESS | ARBITER`), `QuestionStatus` (9 savol bo'yicha: `ANSWERED | NOT_APPLICABLE + reason`), `OpeningBalance` (og'zaki kelishuvni yozish uchun), `AccountReview` + `ReviewAck` (`AGREE | OBJECT + note`, `chainHead`), `JournalEntry` (append-only, `prevHash`, `hash`), `ProfitSpikeAlert`, `Dispute`, `ArbiterDecision`.
 - **Refaktor:** `LoanReceipt` → `Agreement(type = LOAN)`, `PartnershipContract` → `Agreement(type = PARTNERSHIP)` + `Partnership` (2E.1 qoidalari). `VentureEntry` va `DebtPayment` `JournalEntry` orqali yoziladi.
+- 7-qonun bilan qo'shilganlar:
+  `ScamSign` (`GUARANTEED_HIGH_RETURN | URGENCY | RECRUITMENT_INCOME | NO_REAL_BUSINESS | HARD_EXIT`), `OfferCheck` kengaytmasi (yangi savollar `exitEasy`, `license`, `verifiedInPerson`; `amount?`, `promisedMonthlyBp?`, `advisor?`, `decision`: `DECLINED | POSTPONED | ACCEPTED`, `decidedAt?`), `OfferCategory` (`RIBO | GHARAR | QIMOR`), `LumpSumPlan` (hisoblanadi), `PyramidModel` (hisoblanadi, saqlanmaydi), hunar shablonlari (`IdeaTemplate`).
 - `Expense` qo'shimcha maydonlari: `necessity`, `paymentChannel` (`CASH | CARD`), `envelopeId?`, `isGift`, `isOstentation`, `fundedByDebt`, `memberId`.
 
 ## 6. XAVFSIZLIK TALABLARI

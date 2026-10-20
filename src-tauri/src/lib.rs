@@ -32,6 +32,8 @@ mod payoff_commands;
 mod report;
 mod reserve;
 mod reserve_commands;
+mod scam;
+mod scam_commands;
 mod session;
 mod sync;
 mod sync_commands;
@@ -40,7 +42,7 @@ mod ventures;
 
 use std::sync::Arc;
 
-use security::{KdfParams, KeyringSecretStore};
+use security::{KEYRING_ACCOUNT, KEYRING_SERVICE, KdfParams, KeyringSecretStore};
 use session::{AUTO_LOCK_TICK, Paths, Session};
 use tauri::{App, Manager, WindowEvent};
 use tauri_specta::{Builder, collect_commands};
@@ -170,7 +172,13 @@ fn specta_builder() -> Builder<tauri::Wry> {
         venture_commands::add_venture_entry,
         venture_commands::close_venture_period,
         venture_commands::create_period_report_pdf,
-        venture_commands::check_offer,
+        scam_commands::check_offer,
+        scam_commands::list_offer_checks,
+        scam_commands::decide_offer,
+        scam_commands::promised_return,
+        scam_commands::pyramid_model,
+        scam_commands::plan_lump_sum,
+        scam_commands::list_hustle_templates,
         venture_commands::hustle_plan,
         center_commands::get_agreements_center,
         center_commands::get_agreement_ops,
@@ -224,6 +232,30 @@ pub(crate) fn data_dir(app: &tauri::AppHandle) -> tauri::Result<std::path::PathB
     app.path().app_data_dir()
 }
 
+/// Qurilma kaliti saqlanadigan keyring yozuvi. Standart profil — loyiha nomi bilan (o'rnatilgan ilovalar uchun
+/// o'zgarmaydi). `BARAKA_DATA_DIR` profili — papka yo'lidan hosil qilingan alohida nom: aks holda yangi sinov
+/// profilini sozlash umumiy kalitni ustiga yozib, boshqa daftarlarni ochilmas qilib qo'yardi (2026-10-20 da shunday bo'ldi).
+fn device_key_store(data_dir: &std::path::Path) -> KeyringSecretStore {
+    if std::env::var_os("BARAKA_DATA_DIR")
+        .filter(|d| !d.is_empty())
+        .is_none()
+    {
+        return KeyringSecretStore::new();
+    }
+    let suffix: String = data_dir
+        .to_string_lossy()
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    KeyringSecretStore::with_names(KEYRING_SERVICE, &format!("{KEYRING_ACCOUNT}-{suffix}"))
+}
+
 /// Seansni yaratadi, oynani himoyalaydi va avto-qulflashni ulaydi.
 ///
 /// - Relizda oyna ekran suratiga va ekran yozuvga tushmaydi (`set_content_protected`).
@@ -235,7 +267,7 @@ fn setup_security(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
     let session = Arc::new(Session::new(
         Paths::in_dir(&data_dir),
-        Arc::new(KeyringSecretStore::new()),
+        Arc::new(device_key_store(&data_dir)),
         KdfParams::RECOMMENDED,
     ));
     app.manage(Arc::clone(&session));

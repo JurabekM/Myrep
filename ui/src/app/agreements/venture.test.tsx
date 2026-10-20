@@ -32,6 +32,8 @@ vi.mock("../../bindings/bindings", () => ({
     listAgreements: vi.fn(),
     getAgreementsCenter: vi.fn(),
     listFamilyTemplates: vi.fn(),
+    listOfferChecks: vi.fn(),
+    listHustleTemplates: vi.fn(),
     getAgreementOps: vi.fn(),
     getPartnerships: vi.fn(),
     createPartnership: vi.fn(),
@@ -40,7 +42,6 @@ vi.mock("../../bindings/bindings", () => ({
     attachReceipt: vi.fn(),
     closeVenturePeriod: vi.fn(),
     createPeriodReportPdf: vi.fn(),
-    checkOffer: vi.fn(),
     hustlePlan: vi.fn(),
   },
 }));
@@ -162,6 +163,8 @@ function setUp(): void {
   vi.mocked(commands.listAgreements).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getAgreementsCenter).mockResolvedValue({ status: "ok", data: { rows: [] } });
   vi.mocked(commands.listFamilyTemplates).mockResolvedValue({ status: "ok", data: [] });
+  vi.mocked(commands.listOfferChecks).mockResolvedValue({ status: "ok", data: { items: [] } });
+  vi.mocked(commands.listHustleTemplates).mockResolvedValue({ status: "ok", data: [] });
   vi.mocked(commands.getPartnerships).mockResolvedValue({ status: "ok", data: PARTNERSHIPS });
   vi.mocked(commands.getVenture).mockResolvedValue({ status: "ok", data: VENTURE });
 }
@@ -215,36 +218,6 @@ describe("kassa daftari, detektor va hunardan ishga", () => {
     await user.click(within(card).getByRole("button", { name: "Davr hisoboti PDF" }));
     expect(await within(card).findByText(/davr-1\.pdf/)).toBeInTheDocument();
     expect(commands.createPeriodReportPdf).toHaveBeenCalledWith("per-1");
-  });
-
-  it("taklif detektori qizil natija va bayroqni ko'rsatadi", async () => {
-    vi.mocked(commands.checkOffer).mockResolvedValue({
-      status: "ok",
-      data: {
-        verdict: "RED",
-        flags: [
-          {
-            code: "GUARANTEED_PROFIT",
-            explanation: "tavakkalsiz kafolatlangan foyda — ribo yoki firibgarlik belgisi",
-            red: true,
-          },
-        ],
-      },
-    });
-    render(<App />);
-    const user = userEvent.setup();
-    await user.click(await screen.findByLabelText("Foyda kafolatlangan deyishadi"));
-    await user.click(screen.getByRole("button", { name: "Tekshirish" }));
-    expect(await screen.findByRole("status")).toHaveTextContent(/Qizil/);
-    expect(screen.getByText(/kafolatlangan foyda — ribo/)).toBeInTheDocument();
-    expect(commands.checkOffer).toHaveBeenCalledWith({
-      guaranteedProfit: true,
-      lossPossible: true,
-      realGoodsOrWork: true,
-      needsNewMembers: false,
-      rushPressure: false,
-      writtenContract: true,
-    });
   });
 
   it("hunardan ishga: uch stsenariy jadvali va sheriklik qoralamasi", async () => {

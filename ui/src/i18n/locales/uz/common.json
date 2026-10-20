@@ -122,7 +122,11 @@
     "weakPassword": "Parol kamida 8 belgi bo'lishi kerak",
     "overrideReasonRequired": "Chetlab o'tish sababi kamida 20 belgi bo'lishi kerak",
     "attachmentInvalid": "Biriktirma rasm emas yoki juda katta (2 MB gacha)",
-    "discussionNoteRequired": "Kengash qarori matni kamida 20 belgi bo'lishi kerak"
+    "discussionNoteRequired": "Kengash qarori matni kamida 20 belgi bo'lishi kerak",
+    "advisorRequired": "«Pul qo'yaman» uchun avval maslahatlashgan odam ismini yozing",
+    "coolingPeriod": "Tekshiruvdan 24 soat o'tmagan — bir kecha uxlab ko'ring",
+    "offerAlreadyDecided": "Bu taklif bo'yicha qaror allaqachon berilgan",
+    "reserveEstimateRequired": "Xarajat tarixi yo'q: taxminiy oylik zarur xarajatni kiriting"
   },
   "home": {
     "greeting": "Assalomu alaykum!",
@@ -1063,23 +1067,78 @@
     "receiptAlt": "{{seq}}-yozuv cheki"
   },
   "offer": {
-    "title": "«Kafolatlangan foyda» detektori",
-    "intro": "Tavakkalsiz, kafolatlangan foyda va'da qilinsa — u yerda yo ribo, yo firibgarlik bor. Taklifni 6 savol bilan tekshiring.",
+    "title": "Taklif tekshiruvi — besh xavf belgisi",
+    "intro": "«Pulim ishlab bersin» deb kelgan har bir taklifni 9 savol bilan tekshiring. Bitta belgi — hushyor torting, ikkitasi — qoching. Natija saqlanadi, qaror esa maslahat va bir kechadan keyin.",
+    "titleLabel": "Taklif (kim, nima)",
+    "amount": "Taxminiy summa",
+    "promised": "Va'da: oyiga %",
+    "advisor": "Kim bilan maslahatlashdingiz?",
     "q": {
-      "guaranteedProfit": "Foyda kafolatlangan deyishadi",
-      "lossPossible": "Zarar bo'lishi mumkinligi tan olinadi",
-      "realGoodsOrWork": "Real mol yoki ish bor",
-      "needsNewMembers": "Yangi a'zo jalb qilish talab qilinadi",
-      "rushPressure": "Shoshiltirishadi («bugun qaror qiling»)",
-      "writtenContract": "Yozma shartnoma bor"
+      "guaranteed": "Foyda kafolatlangan deyishadimi?",
+      "lossShared": "Zarar bo'lsa, u ham bo'lishiladimi (tavakkal tan olinadimi)?",
+      "realGoods": "Real mol yoki ish bormi?",
+      "recruitment": "Daromad yangi odam olib kelishdan keladimi?",
+      "pressure": "Shoshirishadimi («faqat bugun», «joy kam»)?",
+      "writtenContract": "Yozma shartnoma bormi?",
+      "exitEasy": "Pulni istagan vaqtda qaytarib olsa bo'ladimi?",
+      "license": "Odamlardan pul yig'ishga davlat ruxsati bormi?",
+      "verifiedInPerson": "Ishni o'z ko'zingiz bilan ko'rdingizmi (ko'rsatishdimi)?"
+    },
+    "answer": {
+      "YES": "Ha",
+      "NO": "Yo'q",
+      "UNKNOWN": "Bilmayman"
     },
     "check": "Tekshirish",
     "verdict": {
       "GREEN": "Yashil: xavf belgilari topilmadi — baribir shartnomani o'qing",
       "YELLOW": "Sariq: ehtiyot bo'ling, savollar bor",
-      "RED": "Qizil: kafolatlangan foyda yoki piramida belgisi — chetlaning"
+      "RED": "Qizil: firibgarlik belgilari — chetlaning"
     },
-    "noFlags": "Bayroq yo'q."
+    "level": {
+      "NONE": "Besh belgidan birortasi yo'q",
+      "CAUTION": "Besh belgidan {{count}} tasi bor — hushyor torting",
+      "FLEE": "Besh belgidan {{count}} tasi bor — qoching"
+    },
+    "category": {
+      "RIBO": "ribo (zarar bo'lishilmaydigan kafolatli foyda)",
+      "GHARAR": "g'arar (noaniq bitim)",
+      "QIMOR": "qimor (yutuq boshqaning yutqazishidan)"
+    },
+    "signsTitle": "Topilgan belgilar",
+    "noFlags": "Bayroq yo'q.",
+    "promisedSimple": "Oyiga {{percent}} % — yiliga (oddiy)",
+    "promisedCompound": "Murakkab hisobda",
+    "multiple": "{{value}} barobar",
+    "promisedHint": "Dunyodagi eng katta savdo ham, eng katta zavod ham bunday foyda bermaydi. Bu raqam faqat ogohlantirish — taqqoslash uchun emas.",
+    "checklist": {
+      "title": "«Ishni o'z ko'zim bilan ko'raman» — pul qo'yishdan oldin so'rang",
+      "hint": "Ishi halol odam bu iltimosdan quvonadi: «kel, ko'r», deydi. Rad etishning o'zi — belgi.",
+      "goods": "Ombor va mol: nima sotiladi, qayerda turadi?",
+      "contract": "Shartnoma: pul nimaga ishlatiladi, zarar kim zimmasida?",
+      "license": "Odamlardan pul yig'ishga davlat ruxsati.",
+      "source": "To'lovlar qayerdan: mol sotuvidanmi yoki yangi kirganlarning pulidanmi?",
+      "exit": "Pulni qaytarib olish tartibi."
+    },
+    "stopTitle": "To'xta, maslahatlash",
+    "stopHint": "Maslahat so'rash — zaiflik emas. «Pul qo'yaman» faqat maslahatchi ismi yozilgach va tekshiruvdan 24 soat o'tgach ochiladi; rad etish va keyinga qoldirish — darhol.",
+    "advisorQuestion": "Kim bilan maslahatlashdingiz?",
+    "decline": "Rad etdim",
+    "postpone": "Keyinga qoldiraman",
+    "accept": "Pul qo'yaman",
+    "acceptNeedsAdvisor": "Avval maslahatchi ismini yozing.",
+    "acceptWait": "Bir kecha uxlab ko'ring: yana {{hours}} soat.",
+    "acceptReady": "24 soat o'tdi — qaror sizniki.",
+    "decidedLine": "Qaror: {{decision}} ({{date}})",
+    "advisorLine": "maslahatchi: {{name}}",
+    "decision": {
+      "DECLINED": "rad etildi",
+      "POSTPONED": "keyinga qoldirildi",
+      "ACCEPTED": "pul qo'yildi",
+      "pending": "qaror yo'q"
+    },
+    "historyTitle": "Tekshiruvlar tarixi",
+    "untitled": "nomsiz taklif"
   },
   "hustle": {
     "title": "«Hunardan ishga»",
@@ -1105,7 +1164,11 @@
     "months": "{{months}} oy",
     "noPayback": "qoplanmaydi",
     "toPartnership": "Sheriklik qoralamasini yaratish",
-    "defaultTitle": "Hunardan ishga"
+    "defaultTitle": "Hunardan ishga",
+    "template": "Hunar shabloni",
+    "templateNone": "— shablonsiz",
+    "templateHint": "Boshlang'ich xarajat qatorlari — faqat nomlar; summalarni o'zingiz yozing (narx o'ylab topilmaydi).",
+    "templateLines": "Shablon qatorlari"
   },
   "center": {
     "title": "Kelishuvlar markazi",
@@ -1277,5 +1340,39 @@
     "estimate": "Taxminiy qiymat",
     "note": "Izoh",
     "add": "Qo'shish"
+  },
+  "pyramid": {
+    "title": "Piramida — qaysi qavatda bo'lasiz?",
+    "intro": "Tepada uch-to'rt kishi turadi. Pastdagilarga to'lash uchun undan ham pastdagilarning puli kerak. Har qavat oldingisidan katta — shahardagi odam tugaganda piramida cho'kadi. Ta'limiy hisob.",
+    "recruits": "Har kishi nechta odam olib keladi?",
+    "population": "Aholi (shahar) soni",
+    "calculate": "Piramidani hisoblash",
+    "levels": "Qavatlar",
+    "lastLevel": "Oxirgi qavatda",
+    "lastLevelFull": "qavat to'lgan",
+    "lastLevelPartial": "aholi yetmay qoldi",
+    "lastShare": "Eng pastki qavat ulushi",
+    "percent": "{{value}} %",
+    "question": "Cho'kkan kuni siz qaysi qavatda bo'lasiz?",
+    "bait": "Birinchi kirganlarga to'lov — baliqchining yemi: u yangi kirganlarning pulidan beriladi."
+  },
+  "lumpSum": {
+    "title": "Qal'a devori — katta summa tushdimi?",
+    "intro": "Chet eldan qaytdingizmi, meros yoki mulk sotuvi bo'ldimi — avval oilaning olti oylik ro'zg'origa yetadiganini ajrating. Bu sizning qal'a devoringiz: uni savdoga ham, sheriklikka ham qo'shmaysiz. Qolgani — hunaringizga.",
+    "amount": "Katta summa",
+    "currency": "Valyuta",
+    "rate": "Kurs: 1 {{currency}} = … so'm",
+    "estimate": "Taxminiy oylik zarur xarajat (so'm)",
+    "calculate": "Taqsimlash",
+    "amountBase": "So'mda",
+    "rateLine": "{{entered}} × {{rate}}",
+    "target": "6 oylik qal'a devori",
+    "targetHistory": "xarajat tarixidan",
+    "targetEstimate": "taxminiy oylik xarajatdan",
+    "toReserve": "Avval zaxiraga",
+    "toInvest": "Qolgani hunarga",
+    "filled": "Qal'a devori to'ladi — endi «Hunardan ishga» (Sheriklik sahifasi) bilan davom eting.",
+    "notFilled": "Hammasi zaxiraga ketadi, devor hali to'lmadi — sarmoya hozircha tavsiya etilmaydi.",
+    "wall": "«Qadimda devori mustahkam shaharni dushman ololmagan.» Zaxira pulini qorovulga qo'ying; bu kartada o'tkazma qilinmaydi."
   }
 }

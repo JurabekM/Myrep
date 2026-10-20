@@ -555,6 +555,19 @@ pub fn mark_review(
         },
         now,
     )?;
+    // Hamma tomon belgilagach ko'rik yakunlangan hisoblanadi (6-bob vazifasi).
+    let marks = repo.marks(&review.id)?;
+    if answers
+        .parties
+        .iter()
+        .all(|p| marks.iter().any(|m| m.party_id == p.id))
+    {
+        crate::content::record_event(
+            db,
+            now,
+            domain::content::TaskTrigger::AccountReviewCompleted,
+        )?;
+    }
     ops(db, now, &row.id)
 }
 

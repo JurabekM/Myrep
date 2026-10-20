@@ -3,6 +3,7 @@ import { type SyntheticEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type ShareRuleDto, commands } from "../../bindings/bindings";
 import { unwrap } from "../finance/command-error";
+import { LumpSumCard } from "../finance/LumpSumCard";
 import { ReserveCard } from "../finance/ReserveCard";
 import { useErrorMessage } from "../finance/errors";
 import { fetchers, financeKeys, useInvalidateFinance } from "../finance/queries";
@@ -64,6 +65,8 @@ export function VaultPage() {
       </Card>
 
       <ReserveCard />
+
+      <LumpSumCard />
 
       {data.progressionOfferBp !== null ? <ProgressionCard bp={data.progressionOfferBp} /> : null}
       <RuleCard rule={data.rule} />

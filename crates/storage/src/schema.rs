@@ -860,6 +860,30 @@ CREATE TABLE ceremony_discussion_consents (
 ) STRICT;
 "#;
 
+/// v18 (7-qonun, D16): taklif tekshiruvlari — javoblar (JSON), baho, daraja, belgilar, toifalar, summa, va'da,
+/// maslahatchi va qaror (`DECLINED | POSTPONED | ACCEPTED`). Tekshiruv yozuvi o'zgarmaydi; qaror bir marta.
+pub const SCHEMA_V18: &str = r#"
+CREATE TABLE offer_checks (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households (id),
+    title TEXT,
+    answers TEXT NOT NULL,
+    verdict TEXT NOT NULL CHECK (verdict IN ('GREEN', 'YELLOW', 'RED')),
+    level TEXT NOT NULL CHECK (level IN ('NONE', 'CAUTION', 'FLEE')),
+    signs TEXT NOT NULL,
+    categories TEXT NOT NULL,
+    amount_minor INTEGER,
+    currency TEXT CHECK (currency IS NULL OR currency IN ('UZS', 'USD', 'EUR', 'RUB')),
+    promised_monthly_bp INTEGER CHECK (promised_monthly_bp IS NULL OR promised_monthly_bp >= 0),
+    advisor TEXT,
+    decision TEXT CHECK (decision IS NULL OR decision IN ('DECLINED', 'POSTPONED', 'ACCEPTED')),
+    checked_at TEXT NOT NULL,
+    decided_at TEXT,
+    origin_device_id TEXT NOT NULL
+) STRICT;
+CREATE INDEX offer_checks_by_household ON offer_checks (household_id, checked_at);
+"#;
+
 /// Barcha migratsiyalar, tartib bilan. Yangi sxema o'zgarishi — yangi `M::up` (eski migratsiyani o'zgartirmang).
 pub fn migrations() -> Migrations<'static> {
     Migrations::new(vec![
@@ -880,6 +904,7 @@ pub fn migrations() -> Migrations<'static> {
         M::up(SCHEMA_V15),
         M::up(SCHEMA_V16),
         M::up(SCHEMA_V17),
+        M::up(SCHEMA_V18),
     ])
 }
 
@@ -933,4 +958,5 @@ pub const TABLES: &[&str] = &[
     "venture_attachments",
     "ceremony_discussions",
     "ceremony_discussion_consents",
+    "offer_checks",
 ];

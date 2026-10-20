@@ -285,9 +285,9 @@ mod tests {
     fn haqiqiy_kontent_xatosiz_yuklanadi() {
         let result = parse(include_str!("../../../spec/content/chapters.json"));
         assert!(result.errors.is_empty(), "xatolar: {:?}", result.errors);
-        assert_eq!(result.chapters.len(), 5);
+        assert_eq!(result.chapters.len(), 7);
         let orders: Vec<u32> = result.chapters.iter().map(|c| c.order).collect();
-        assert_eq!(orders, vec![1, 2, 3, 4, 5]);
+        assert_eq!(orders, vec![1, 2, 3, 4, 5, 6, 7]);
         for chapter in &result.chapters {
             assert_eq!(chapter.weekly_tasks.len(), TASKS_PER_CHAPTER);
         }
@@ -305,7 +305,7 @@ mod tests {
                 _ => None,
             })
             .collect();
-        assert_eq!(religious.len(), 5);
+        assert_eq!(religious.len(), 7);
         assert!(
             religious
                 .iter()

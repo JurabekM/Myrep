@@ -13,6 +13,7 @@ mod family;
 mod finance;
 pub mod interchange;
 mod loans;
+mod offers;
 mod partnerships;
 mod prices;
 mod progress;
@@ -36,6 +37,7 @@ pub use finance::{
     StoredRule, VaultRepo,
 };
 pub use loans::{LoanDirection, LoanRepo, LoanRow, PaymentRow, SellableRepo, SellableRow};
+pub use offers::{OfferCheckRepo, OfferCheckRow};
 pub use partnerships::{BuyoutPaymentRow, GateOverrideRepo, PartnershipRepo, PartnershipRow};
 pub use prices::PriceRepo;
 pub use progress::{DaftarPageRepo, TaskCompletionRepo};

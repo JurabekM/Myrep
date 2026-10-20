@@ -4,6 +4,71 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### D16 — 7-qonun: «Ko'rmagan ishingga pul tikma — pulingni hunaringga ishlat» (2026-10-20)
+
+Manba: 7-qism (Rustam — chet eldan qaytgan vatandosh, «Plyus» piramidasi, Sobir hojining besh xavf belgisi va qal'a
+devori). Spetsifikatsiya mobil jamoadan ko'chirildi: `docs/SPEC.md` v0.9 (2G), `docs/DESKTOP_PROMPT.md` v1.3
+(1.1 jadval 7-qator, 5-bo'lim 4 vektor, 9-bo'lim D16), `docs/MVP_PLAN.md` (14B). Sxema **v18**.
+
+**Umumiy vektorlar (avval vektor, keyin kod):** `scam_signals` (8), `promised_return` (5), `pyramid_levels` (4),
+`lump_sum_split` (4) — mobil fayllari bitma-bit, `SHA256SUMS` ga qo'shildi, runner `crates/vectors/tests/scam_vectors.rs`.
+
+**Domen**
+
+- `domain::offer_check` qayta yozildi: 9 savol `HA | YO'Q | BILMAYMAN` (`Answer`, `Question`), 2E.5 bayroqlari
+  (har «bilmayman» — qaysi savol ekani bilan sariq), **besh xavf belgisi** (`ScamSign`, tartib qat'iy), daraja
+  (`NONE | CAUTION | FLEE` — «bittasini ko'rsang hushyor tort, ikkitasini ko'rsang qoch»), umumiy baho = eng og'iri,
+  toifalar `RIBO | GHARAR | QIMOR`. Avvalgi «uch sariq — qizil» qoidasi umumiy vektorga (sc-007) zid edi — olib tashlandi.
+- `domain::scam_math`: `promised_return` (oylik bp → oddiy va murakkab yillik ko'paytma, `checked` arifmetika, 24 oygacha),
+  `pyramid_levels` (k, aholi → qavatlar, oxirgi qavat ulushi), `lump_sum_split` (avval zaxira kamomadi).
+- `DomainError`: `ADVISOR_REQUIRED`, `COOLING_PERIOD`, `OFFER_ALREADY_DECIDED`, `RESERVE_ESTIMATE_REQUIRED`.
+
+**Saqlash va xizmat**
+
+- `offer_checks` (javoblar JSON, baho, daraja, belgilar, toifalar, summa, va'da bp, maslahatchi, qaror, vaqtlar);
+  `OfferCheckRepo`. Tekshiruv endi **saqlanadi** va `OFFER_CHECKED` hodisasini beradi (7-bob vazifasi).
+- `scam` xizmati: `check_offer`, `list_offers`, **«to'xta, maslahatlash»** `decide_offer` (`ACCEPTED` faqat maslahatchi
+  ismi bor va tekshiruvdan 24 soat o'tgan bo'lsa; `DECLINED`/`POSTPONED` darhol; qaror bir marta), `promised`,
+  `pyramid`, **«qal'a devori»** `plan_lump_sum` (valyuta + qo'lda kurs → so'm; 6 oylik maqsad xarajat tarixidan,
+  tarix bo'lmasa taxminiy oylik zarur xarajat × 6; `EMERGENCY_TARGET_SET`), hunar shablonlari (temirchilik/payvand,
+  tikuvchilik, ta'mir — CAPEX nomlari, summasiz).
+- Buyruqlar: `check_offer` (yangi imzo), `list_offer_checks`, `decide_offer`, `promised_return`, `pyramid_model`,
+  `plan_lump_sum`, `list_hustle_templates`.
+- Kontent: `spec/content/chapters.json` mobil bilan bitta fayl — 6-bob («Sheriklik odobi») va 7-bob («Qopqon va hunar»)
+  qo'shildi; `ACCOUNT_REVIEW_COMPLETED` (ko'rikda hamma tomon belgilagach) va `FAMILY_AGREEMENT_CREATED` triggerlari
+  endi desktopda ham ishlaydi.
+
+**UI**
+
+- Taklif tekshiruvi kartasi (Sheriklik sahifasi): nom, summa, «va'da: oyiga %», maslahatchi; 9 savol radio
+  (ha/yo'q/bilmayman); natija — baho, «besh belgidan n tasi», toifalar, belgilar izohi, bayroqlar, **«oyiga 35 % —
+  yiliga 5,2 / 36,6 barobar»** (faqat ogohlantirish), «o'z ko'zim bilan ko'raman» ro'yxati, «To'xta, maslahatlash»
+  bloki (rad / keyinga / pul qo'yaman — maslahatchisiz va 24 soatgacha o'chiq, sabab matni bilan), tekshiruvlar tarixi.
+- «Piramida — qaysi qavatda bo'lasiz?» kartasi (k, aholi → qavatlar, pastki qavat ulushi, «baliqchining yemi»).
+- «Qal'a devori» kartasi («Kelajagim» sahifasi): summa, valyuta, kurs, kerak bo'lsa taxminiy oylik xarajat;
+  taqsimot va holat matni. Qorovulga o'tkazma — keyingi qadam (OPEN_QUESTIONS).
+- «Hunardan ishga»: hunar shabloni tanlovi — CAPEX qatorlari nomlari, «talab bormi?» savoli, nom avto-to'ldiriladi.
+
+Testlar: Rust (domen 6 + `scam` xizmati 4 + 4 vektor suite + sxema v18 ×3 + kontent 7 bob), vitest 93
+(yangi `offer.test.tsx`: «Plyus» oqimi, 24 soatdan keyin qabul, piramida + shablon).
+
+**GUI sinovi (toza dev profil `baraka-dev-profile2`, haqiqiy oyna, 2026-10-20):** «Plyus» — Baxtiyor, 10 000 000,
+oyiga 35 %, javoblar kafolat ha / zarar yo'q / mol bilmayman / yangi odam ha / shoshirish ha / shartnoma ha /
+chiqish bilmayman / ruxsat bilmayman / ko'rmadim → **Qizil, 4 belgi, ribo · g'arar · qimor, 5,2 / 36,6 barobar**;
+«pul qo'yaman» maslahatchisiz o'chiq, ism yozilgach «yana 24 soat»; «Rad etdim» → qaror satri va tarix. Piramida
+5 × 1 000 000 → 10 qavat, pastda 511 719 (51,2 %). «Hunardan ishga» shablon → nom, 6 qator, «talab bormi?».
+Qal'a devori: 18 000 $ × 12 500 → 225 000 000; tarix yo'q → taxmin 3 000 000 so'raldi → 18 000 000 zaxiraga,
+207 000 000 hunarga, «devor to'ldi».
+
+**Sinovda topilgan va tuzatilgan**
+
+- Har «bilmayman» bayrog'i bir xil matn bilan chiqardi — endi savol nomi bilan (mobildagi kabi).
+- Qal'a devori ko'rsatkichlari 4 ustunda bir-biriga kirib ketardi — 2 ustun.
+- **Eski dev profil ochilmay qoldi** («Qurilma kaliti topilmadi yoki bu daftarga mos emas»): qurilma kaliti
+  Credential Manager'da bitta nom bilan saqlanar, boshqa (bo'sh) profilni sozlash uni ustiga yozgan. Tuzatish:
+  `BARAKA_DATA_DIR` profillari uchun papka yo'lidan hosil qilingan alohida keyring nomi (`device_key_store`);
+  standart profil nomi o'zgarmadi. Sinov yangi profilda qaytadan o'tkazildi (OPEN_QUESTIONS).
+
 ### D11+ — Oila kengashi rejimi: «Buni qarzsiz qanday o'tkazamiz?» (2026-10-17)
 
 2-toifa birinchi bandi. Avvalgi «muhokama o'tkazildi» tugmasi (bitta belgi) o'rniga to'liq ekranli kengash sessiyasi

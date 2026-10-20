@@ -1,6 +1,6 @@
 //! D13 xizmati: sheriklik kassa daftari (venture ledger) — davr yozuvlari D8A jurnalida, davr yopish va
 //! o'zgarmaslik, avtomatik taqsimot (`partnership::distribute`) va buyout ayirmasi, fors-major, sherik uchun
-//! davr hisoboti PDF; «Hunardan ishga» (3 stsenariy, payback); `OfferCheck` (yashil / sariq / qizil).
+//! davr hisoboti PDF; «Hunardan ishga» (3 stsenariy, payback). Taklif tekshiruvi — `scam` xizmatida (7-qonun).
 //!
 //! Biznes puli uy pulidan ajratilgan: ledger xonadon byudjetiga faqat taqsimot yozuvi orqali bog'lanadi.
 
@@ -8,7 +8,6 @@ use domain::DomainError;
 use domain::agreement::AgreementStatus;
 use domain::interchange;
 use domain::journal::{JournalEntry, JournalKind};
-use domain::offer_check::{OfferAnswers, OfferVerdict, offer_check};
 use domain::partnership::{PartnershipKind, distribute};
 use domain::profit_spike::{SpikeInput, profit_spike_alert};
 use domain::review::ensure_distribution_allowed;
@@ -24,8 +23,8 @@ use time::{Date, Duration, OffsetDateTime};
 
 use crate::dto::{
     AttachReceiptInputDto, AttachmentDto, ClosePeriodInputDto, ClosedPeriodDto, DistributionRowDto,
-    HustleInputDto, HustlePlanDto, HustleScenarioDto, JournalEntryDto, MoneyDto, OfferCheckDto,
-    OfferFlagDto, OfferInputDto, OpenPeriodDto, VentureDto, VentureEntryInputDto,
+    HustleInputDto, HustlePlanDto, HustleScenarioDto, JournalEntryDto, MoneyDto, OpenPeriodDto,
+    VentureDto, VentureEntryInputDto,
 };
 use crate::finance::{self, CURRENCY, DEVICE_ID, UuidV7, date_text, parse_money};
 use crate::partnerships;
@@ -524,34 +523,6 @@ pub fn period_pdf(
     Ok(pdf::render_period_report(&report)?)
 }
 
-/// «Kafolatlangan foyda» detektori (saqlanmaydi).
-pub fn check_offer(input: OfferInputDto) -> OfferCheckDto {
-    let (verdict, flags) = offer_check(&OfferAnswers {
-        guaranteed_profit: input.guaranteed_profit,
-        loss_possible: input.loss_possible,
-        real_goods_or_work: input.real_goods_or_work,
-        needs_new_members: input.needs_new_members,
-        rush_pressure: input.rush_pressure,
-        written_contract: input.written_contract,
-    });
-    OfferCheckDto {
-        verdict: match verdict {
-            OfferVerdict::Green => "GREEN",
-            OfferVerdict::Yellow => "YELLOW",
-            OfferVerdict::Red => "RED",
-        }
-        .to_owned(),
-        flags: flags
-            .iter()
-            .map(|flag| OfferFlagDto {
-                code: flag.code.to_owned(),
-                explanation: flag.explanation.to_owned(),
-                red: flag.red,
-            })
-            .collect(),
-    }
-}
-
 /// «Hunardan ishga»: uch stsenariy (saqlanmaydi).
 pub fn hustle(input: HustleInputDto) -> Result<HustlePlanDto, SessionError> {
     let scenarios = hustle_scenarios(&HustleInput {
@@ -888,30 +859,7 @@ mod tests {
     }
 
     #[test]
-    fn taklif_detektori_va_hunardan_ishga() {
-        let red = check_offer(OfferInputDto {
-            guaranteed_profit: true,
-            loss_possible: false,
-            real_goods_or_work: false,
-            needs_new_members: false,
-            rush_pressure: false,
-            written_contract: true,
-        });
-        assert_eq!(red.verdict, "RED");
-        assert!(
-            red.flags
-                .iter()
-                .any(|f| f.code == "GUARANTEED_PROFIT" && f.red)
-        );
-        let green = check_offer(OfferInputDto {
-            guaranteed_profit: false,
-            loss_possible: true,
-            real_goods_or_work: true,
-            needs_new_members: false,
-            rush_pressure: false,
-            written_contract: true,
-        });
-        assert_eq!(green.verdict, "GREEN");
+    fn hunardan_ishga_uch_stsenariy() {
         let plan = hustle(HustleInputDto {
             capex: "8 000 000".into(),
             monthly_income: "6 000 000".into(),

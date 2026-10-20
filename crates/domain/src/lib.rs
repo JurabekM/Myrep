@@ -36,6 +36,7 @@ pub mod recovery;
 pub mod report;
 pub mod rescue;
 pub mod review;
+pub mod scam_math;
 pub mod share;
 pub mod subscription;
 pub mod treat;
@@ -224,6 +225,18 @@ pub enum DomainError {
     /// Kengash muhokamasi qarori matni kamida 20 belgi bo'lishi kerak (D11).
     #[error("muhokama qarori matni juda qisqa")]
     DiscussionNoteRequired,
+    /// «Pul qo'yaman» uchun maslahatlashilgan odam ismi kerak (7-qonun, 2G.6).
+    #[error("maslahatchi ismi yozilmagan")]
+    AdvisorRequired,
+    /// Tekshiruvdan 24 soat o'tmagan — «bir kecha uxlab ko'ring» (7-qonun, 2G.6).
+    #[error("qaror uchun 24 soat o'tmagan")]
+    CoolingPeriod,
+    /// Taklif bo'yicha qaror allaqachon yozilgan.
+    #[error("taklif bo'yicha qaror allaqachon berilgan")]
+    OfferAlreadyDecided,
+    /// Zaxira maqsadi uchun xarajat tarixi yo'q — taxminiy oylik zarur xarajat kerak (2G.5).
+    #[error("zaxira maqsadi uchun taxminiy oylik xarajat kerak")]
+    ReserveEstimateRequired,
     /// Pul amalidagi xato (valyuta mosligi va boshqalar).
     #[error(transparent)]
     Money(#[from] money::MoneyError),
@@ -279,6 +292,10 @@ impl DomainError {
             Self::OverrideReasonRequired => "OVERRIDE_REASON_REQUIRED",
             Self::AttachmentInvalid => "ATTACHMENT_INVALID",
             Self::DiscussionNoteRequired => "DISCUSSION_NOTE_REQUIRED",
+            Self::AdvisorRequired => "ADVISOR_REQUIRED",
+            Self::CoolingPeriod => "COOLING_PERIOD",
+            Self::OfferAlreadyDecided => "OFFER_ALREADY_DECIDED",
+            Self::ReserveEstimateRequired => "RESERVE_ESTIMATE_REQUIRED",
             Self::Money(error) => error.code(),
         }
     }

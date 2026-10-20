@@ -86,11 +86,15 @@ pub enum TaskTrigger {
     AgreementSigned,
     /// Og'zaki kelishuv yozib olindi (keyingi modul).
     OralAgreementRecorded,
+    /// Oylik hisob ko'rigi yakunlandi (6-bob, D13A).
+    AccountReviewCompleted,
+    /// Oilaviy kelishuv yaratildi (6-bob, D13A).
+    FamilyAgreementCreated,
 }
 
 impl TaskTrigger {
     /// Barcha hodisalar (kontent tekshiruvi va testlar uchun).
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 19] = [
         Self::VaultOpened,
         Self::VaultFirstDeposit,
         Self::IncomeShared,
@@ -108,6 +112,8 @@ impl TaskTrigger {
         Self::VentureIdeaCreated,
         Self::AgreementSigned,
         Self::OralAgreementRecorded,
+        Self::AccountReviewCompleted,
+        Self::FamilyAgreementCreated,
     ];
 
     /// JSON'dagi barqaror kod.
@@ -130,6 +136,8 @@ impl TaskTrigger {
             Self::VentureIdeaCreated => "VENTURE_IDEA_CREATED",
             Self::AgreementSigned => "AGREEMENT_SIGNED",
             Self::OralAgreementRecorded => "ORAL_AGREEMENT_RECORDED",
+            Self::AccountReviewCompleted => "ACCOUNT_REVIEW_COMPLETED",
+            Self::FamilyAgreementCreated => "FAMILY_AGREEMENT_CREATED",
         }
     }
 

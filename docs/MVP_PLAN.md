@@ -1,7 +1,8 @@
-# «BARAKA DAFTARI» — TO'LIQ MVP (1–6-QONUNLAR) ISHGA TUSHIRISH PROMPTI
-> AI-dasturchi (Claude Code va h.k.) uchun. Spetsifikatsiya: `docs/SPEC.md` (= `FINTECH_PROMPT.md` v0.8).
+# «BARAKA DAFTARI» — TO'LIQ MVP (1–7-QONUNLAR) ISHGA TUSHIRISH PROMPTI
+> AI-dasturchi (Claude Code va h.k.) uchun. Spetsifikatsiya: `docs/SPEC.md` (v0.9; v0.8 = `FINTECH_PROMPT.md`).
 > Bu fayl `MVP1_KICKOFF.md` ni **o'rnini bosadi**: 1–3-vazifalar o'sha fayldagi bilan bir xil, qolganlari 2–6-qonunlarni qo'shadi.
 > **v0.8 o'zgarishi:** 6-qonun uchun ikkita vazifa qo'shildi. **9A** (kelishuv dvigateli va jurnal) qarz va sheriklik vazifalaridan **oldin** bajariladi. **14A** (ko'rik, nizo, oilaviy kelishuvlar) 14-vazifadan keyin bajariladi. 10- va 13-vazifalar endi 9A dvigatelidan foydalanadi.
+> **v0.9 o'zgarishi:** 7-qonun uchun **14B** vazifasi qo'shildi (besh xavf belgisi, «o'z ko'zim bilan ko'raman», piramida hisobi, qal'a devori, «to'xta, maslahatlash», hunar shablonlari). 14A dan keyin, 15 dan oldin.
 > **Umumiy test vektorlari:** `spec/test-vectors/` (`DESKTOP_PROMPT.md` 5-bo'lim). Mobil CI ham ulardan o'tishi **majburiy**.
 
 ---
@@ -17,6 +18,7 @@
 | **3. Pul ikki xil yashaydi** | Qorovul / O'sadigan jamg'arma, 6 oylik zaxira maqsadi, «Narx daftari», shaxsiy inflyatsiya indeksi, «Sichqon kemirgani», tayyorgarlik darvozasi, ribo filtri | Rasmiy CPI bilan taqqoslash |
 | **4. Ribodan qoch, reja bilan chiq** | Qarz inventari, bergan qarzlar, qarzning haqiqiy narxi, `DEBT_RECOVERY` 70/20/10, payoff planner, yangi qarz oldidan friction so'rovi, **qarz tilxati PDF** (shu qurilmada imzolanadi), sotiladigan buyumlar, marosim rejalovchisi, «Qarzsiz kun» | Tilxatni ikkinchi tomon o'z telefonida tasdiqlashi; to'lovchini (Sanjar) ilovaga taklif qilish |
 | **5. Pulni halol ishga sol** | Mudoraba/Musharaka domeni va validatsiyasi, shartnoma ustasi + PDF (shu qurilmada imzolanadi), buyout jadvali, venture ledger, foyda/zarar taqsimoti, fors-major, «Hunardan ishga», «Kafolatlangan foyda» detektori | Kapital egasi uchun real vaqtdagi read-only ko'rinish (MVP'da uning o'rniga **PDF hisobot** ulashiladi) |
+| **7. Ko'rmagan ishingga pul tikma** | Besh xavf belgisi va baho qoidasi, «o'z ko'zim bilan ko'raman» tekshiruv ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida ta'limiy hisobi, katta summa uchun «qal'a devori» taqsimoti, «to'xta, maslahatlash» (24 soat + maslahatchi), g'arar/qimor izohi, hunar shablonlari | Litsenziyalar reyestri bilan avtomatik tekshirish (davlat API) |
 | **6. Kelishuvni yozinglar** | Umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori; turlar: sheriklik, qarz, ijara, xizmat, oilaviy), vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish | Ikkinchi tomon va hakamning o'z qurilmasida masofadan tasdiqlashi va ko'rib chiqishi |
 
 **Qurilma ichidagi muqobillar:**
@@ -30,7 +32,7 @@
 1. Bo'sh repo yarating va `FINTECH_PROMPT.md` ni `docs/SPEC.md` nomi bilan joylang. Bu faylni esa `docs/MVP_PLAN.md` qilib qo'ying.
 2. Repo ildiziga `CLAUDE.md` faylini qo'shing va unga quyidagini yozing:
    «Har sessiya boshida `docs/SPEC.md` ning 3, 4, 5, 6, 12-bo'limlarini va `docs/MVP_PLAN.md` ning 0-bo'limini o'qi. SPEC 4-bo'lim (ADR) qat'iy.»
-3. **17 ta vazifani tartib bilan, har birini alohida sessiyada bering.** Har bir sessiyaga «Umumiy kirish» va bitta vazifa matnini nusxalang.
+3. **18 ta vazifani tartib bilan, har birini alohida sessiyada bering.** Har bir sessiyaga «Umumiy kirish» va bitta vazifa matnini nusxalang.
 4. Har bir vazifadan keyin qabul mezonlarini tekshiring, commit qiling, keyin keyingisiga o'ting.
 5. **Bosqichlar** (har bosqich oxirida ishlaydigan ilova chiqadi, uni test qurilmalariga berish mumkin):
    - **A. Poydevor:** 1–3
@@ -41,8 +43,9 @@
    - **E. 4-qonun:** 10–12
    - **F. 5-qonun:** 13–14
    - **F2. 6-qonun:** 14A
+   - **F3. 7-qonun:** 14B
    - **G. Reliz tayyorgarligi:** 15
-   Tartib: 1 → 2 → … → 9 → **9A** → 10 → 11 → 12 → 13 → 14 → **14A** → 15.
+   Tartib: 1 → 2 → … → 9 → **9A** → 10 → 11 → 12 → 13 → 14 → **14A** → **14B** → 15.
 6. **Agar 10- yoki 13-vazifa allaqachon bajarilgan bo'lsa:** 9A sessiyasida `LoanReceipt` va `PartnershipContract` ni `Agreement` ga ko'chiradigan **migratsiya** yoziladi (ma'lumotlar yo'qolmasligi test bilan tekshiriladi).
 
 ---
@@ -487,6 +490,28 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 - [ ] Bayonnomadagi `chainHead` keyingi `verifyChain` bilan mos keladi; o'zgartirilgan yozuv aniqlanadi.
 - [ ] Hakam papkasi PDF'ida barcha bo'limlar bor (snapshot test).
 - [ ] Yillik yangilash eslatmasi rejalashtiriladi va qurilma qayta yoqilgandan keyin ham ishlaydi.
+
+---
+
+# F3. 7-QONUN: «KO'RMAGAN ISHINGGA PUL TIKMA — PULINGNI HUNARINGGA ISHLAT»
+
+## VAZIFA 14B — Besh xavf belgisi, tekshiruv, piramida, qal'a devori, «to'xta, maslahatlash», hunar shablonlari (SPEC 2G)
+- **Besh xavf belgisi** (`ScamSign`, 2G.1): taklif tekshiruviga 3 ta savol qo'shiladi (`exitEasy`, `license`, `verifiedInPerson`); belgilar javoblardan aniqlanadi; baho: 1 belgi — kamida sariq, 2+ — qizil; umumiy baho 2E.5 bilan birlashtiriladi (eng og'iri). Har belgi izohlanadi.
+- **«O'z ko'zim bilan ko'raman»** (2G.2): tekshiruv ro'yxati ekrani (ombor, mol, hujjat, ruxsat, to'lov manbai, qaytarish tartibi); natija «ko'rsatishdi / rad etishdi / so'ramadim»; rad etish — `NO_REAL_BUSINESS`.
+- **Va'da qilingan foyda** (2G.3): oylik bp → yillik oddiy va murakkab ko'paytma; faqat ogohlantirish.
+- **Piramida** (2G.4): `k` va `N` bo'yicha qavatlar, jami, oxirgi qavat ulushi; ta'limiy ekran.
+- **Qal'a devori** (2G.5): katta summa (valyuta bilan) → avval 6 oylik zaxira kamomadi, qolgani sarmoyaga; qorovulga qo'yish va «Hunardan ishga»ga o'tish.
+- **«To'xta, maslahatlash»** (2G.6): taklifda summa va maslahatchi; «pul qo'yaman» faqat maslahatchi yozilgach va 24 soatdan keyin; qaror tarixda (`DECLINED | POSTPONED | ACCEPTED`). Sxema v16: `offer_checks` ga yangi ustunlar + migratsiya testi.
+- **G'arar / qimor** (2G.7): natijada `RIBO | GHARAR | QIMOR` toifalari.
+- **Hunar shablonlari** (2G.8): temirchilik / payvand ustaxonasi — CAPEX nomlari oldindan, summasiz.
+- 7-bob kontenti (placeholder) va haftalik vazifalar (mavjud triggerlar: `OFFER_CHECKED`, `EMERGENCY_TARGET_SET`, `VENTURE_IDEA_CREATED`).
+
+**Qabul mezonlari:**
+- [ ] `scam_signals.json`, `promised_return.json`, `pyramid_levels.json`, `lump_sum_split.json` vektorlari yashil.
+- [ ] Ikki belgi (masalan, shoshirish + qiyin chiqish) bahoni qizilga ko'taradi (test).
+- [ ] «Pul qo'yaman» maslahatchisiz va 24 soatdan oldin bloklanadi (test).
+- [ ] Katta summa taqsimotida zaxira to'lmaguncha sarmoya ulushi faqat ortgan qism (test).
+- [ ] Migratsiya v15 → v16: eski tekshiruvlar yo'qolmaydi (test).
 
 ---
 
