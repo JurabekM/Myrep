@@ -1654,6 +1654,9 @@ impl App {
             recruitment: q(&input.recruitment, "recruitment")?,
             urgency: q(&input.urgency, "urgency")?,
             written: q(&input.written, "written")?,
+            licensed: q(&input.licensed, "licensed")?,
+            inspection: q(&input.inspection, "inspection")?,
+            exit_easy: q(&input.exit_easy, "exitEasy")?,
         });
         Ok(OfferCheckDto {
             verdict: r.verdict.as_str().into(),
@@ -1665,6 +1668,7 @@ impl App {
                     level: f.level.as_str().into(),
                 })
                 .collect(),
+            signs: u32::from(r.signs),
         })
     }
 }

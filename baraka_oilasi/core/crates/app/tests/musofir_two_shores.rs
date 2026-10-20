@@ -772,7 +772,7 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
 
     // Katta qaror: tog'am 15 000 000 qarz so'radi (olib kelinganning 12,5 %i, muddatsiz).
     assert_eq!(o.app.mf_decision_questions("LEND").unwrap().len(), 5);
-    assert_eq!(o.app.mf_decision_questions("INVEST").unwrap().len(), 10);
+    assert_eq!(o.app.mf_decision_questions("INVEST").unwrap().len(), 13);
     let lend = [
         ("approached", "YES"),
         ("upfront", "NO"),
@@ -835,6 +835,9 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
         ("recruitment", "NO"),
         ("urgency", "NO"),
         ("written", "YES"),
+        ("licensed", "YES"),
+        ("inspection", "YES"),
+        ("exitEasy", "YES"),
     ];
     partner.extend(lend.iter().filter(|(k, _)| *k != "repaymentDate"));
     let mut big = decision("PARTNERSHIP", "40 000 000", &partner, Some("DECLINE"));

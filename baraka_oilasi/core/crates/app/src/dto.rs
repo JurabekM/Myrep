@@ -1595,6 +1595,10 @@ pub struct OfferAnswersInput {
     pub recruitment: String,
     pub urgency: String,
     pub written: String,
+    /// «Besh xavf belgisi» (musofir qissasi): davlat ruxsati, o'z ko'zi bilan tekshirish, pulni qaytarib olish.
+    pub licensed: String,
+    pub inspection: String,
+    pub exit_easy: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1613,6 +1617,8 @@ pub struct OfferCheckDto {
     /// `GREEN`, `YELLOW`, `RED`.
     pub verdict: String,
     pub flags: Vec<OfferFlagDto>,
+    /// «Besh xavf belgisi»dan nechtasi (2 va undan ko'p — `TWO_SIGNS`).
+    pub signs: u32,
 }
 
 // ---- U13: vazifa hodisalari, ochiq hisob ko'rigi, nizo va hakam, yangilash, oilaviy kelishuvlar ----

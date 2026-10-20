@@ -178,17 +178,21 @@
 ### OQ-MF10. «Besh xavf belgisi» va taklif detektori
 - **Masala:** qissada Sobir hoji 5 belgini aytadi: kafolatlangan katta foyda, shoshirish, daromad yangi odamdan, ishning o'zi yo'q (ombor, mol, hujjat, ruxsat), **kirish oson — chiqish qiyin** — va qoida: «bittasini ko'rsangiz hushyor torting, ikkitasini ko'rsangiz qoching». Detektorda (U12 2E.5 + M3) dastlabki to'rttasi bor; **5-belgi**, **davlat ruxsati (litsenziya)** va **«o'z ko'zim bilan tekshirishga ruxsat berishdimi»** savollari yo'q; natija qoidasi — har savolning o'z darajasi (sanash yo'q).
 - **Taklif:** uch savol qo'shish (`exitHard`, `licensed`, `inspectionAllowed`) va «ikki va undan ortiq belgi — qizil» qoidasi; ixtiyoriy: va'da qilingan oylik foydaning yillik hisobi («35 % oyiga — yiliga 5,2 barobar», `round_half_up`, vektor bilan). Diniy izohlar (g'arar, qimor) — ulamo ko'rigidan keyin.
-- **To'sadi:** — (Uy U12 detektori bilan umumiy jadval — ikkala makonga ta'sir qiladi). **Holat:** OCHIQ — mahsulot egasi qarori kerak.
+- **To'sadi:** — (Uy U12 detektori bilan umumiy jadval — ikkala makonga ta'sir qiladi).
+- **Qaror (mahsulot egasi, 2026-10-20):** taklif tasdiqlandi (uch savol, `TWO_SIGNS`, va'da hisobi) — M5, SPEC 6.8. Diniy izohlar (g'arar, qimor) — ulamo ko'rigidan keyin.
+- **Holat:** YECHILGAN.
 
 ### OQ-MF11. «Qal'a devori»: qaytgandan keyin 6 oylik ro'zg'or
 - **Masala:** qissada — olib kelingan puldan avval oilaning 6 oylik ro'zg'ori ajratiladi va u savdoga ham, sheriklikka ham qo'shilmaydi. Ilovada qaytgandan keyin bunday ajratish va katta qaror tekshiruvida uni hisobga olish yo'q.
 - **Taklif:** «Qaytdim»da Uy makonining oxirgi oylardagi o'rtacha xarajati × 6 — «qal'a devori» summasi; katta qaror shu devorga tegsa (olib kelingan − devor dan oshsa) — qizil bayroq. Yangi pul funksiyasi — avval vektor.
-- **To'sadi:** — . **Holat:** OCHIQ — mahsulot egasi qarori kerak.
+- **Qaror (mahsulot egasi, 2026-10-20):** taklif tasdiqlandi — devor 6 oy, `FORTRESS_WALL` qizil, davrdan tashqarida ham (M5, SPEC 6.8).
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF12. Olib kelingan summa — chet el valyutasida
 - **Masala:** Rustam «18 000 dollar» olib keldi; «Qaytdim»da summa hozir faqat uy valyutasida kiritiladi, katta qaror ham uy valyutasida.
 - **Taklif:** summa istalgan valyutada (USD, ish valyutasi), foiz hisobi uchun kurs bilan uy valyutasiga (kurssiz — foiz yo'q, `COOLING_PERIOD` qoidasi).
-- **To'sadi:** — . **Holat:** OCHIQ.
+- **Qaror (mahsulot egasi, 2026-10-20):** tasdiqlandi — summa valyutada va kurs bilan (M5, SPEC 6.8).
+- **To'sadi:** — . **Holat:** YECHILGAN.
 
 ## Oila va maxfiylik
 

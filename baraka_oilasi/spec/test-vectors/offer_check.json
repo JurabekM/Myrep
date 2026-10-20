@@ -1,7 +1,7 @@
 {
   "suite": "offer_check",
   "version": 1,
-  "description": "«Kafolatlangan foyda» detektori: 6 savol → bayroqlar; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL",
+  "description": "«Kafolatlangan foyda» detektori: 9 savol → bayroqlar; «besh xavf belgisi»dan ikkitasi — TWO_SIGNS; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL",
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {
@@ -13,12 +13,16 @@
           "realActivity": "YES",
           "recruitment": "NO",
           "urgency": "NO",
-          "written": "YES"
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
         "verdict": "GREEN",
-        "flags": []
+        "flags": [],
+        "signs": 0
       }
     },
     {
@@ -30,7 +34,10 @@
           "realActivity": "YES",
           "recruitment": "NO",
           "urgency": "NO",
-          "written": "YES"
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
@@ -40,7 +47,8 @@
             "code": "GUARANTEED_PROFIT",
             "level": "RED"
           }
-        ]
+        ],
+        "signs": 1
       }
     },
     {
@@ -52,7 +60,10 @@
           "realActivity": "NO",
           "recruitment": "YES",
           "urgency": "YES",
-          "written": "NO"
+          "written": "NO",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
@@ -81,8 +92,13 @@
           {
             "code": "NO_WRITTEN_CONTRACT",
             "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
           }
-        ]
+        ],
+        "signs": 4
       }
     },
     {
@@ -94,7 +110,10 @@
           "realActivity": "YES",
           "recruitment": "NO",
           "urgency": "YES",
-          "written": "YES"
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
@@ -104,7 +123,8 @@
             "code": "URGENCY",
             "level": "YELLOW"
           }
-        ]
+        ],
+        "signs": 1
       }
     },
     {
@@ -116,7 +136,10 @@
           "realActivity": "YES",
           "recruitment": "NO",
           "urgency": "NO",
-          "written": "UNKNOWN"
+          "written": "UNKNOWN",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
@@ -134,7 +157,8 @@
             "code": "WRITTEN_UNKNOWN",
             "level": "YELLOW"
           }
-        ]
+        ],
+        "signs": 0
       }
     },
     {
@@ -146,7 +170,10 @@
           "realActivity": "YES",
           "recruitment": "NO",
           "urgency": "NO",
-          "written": "NO"
+          "written": "NO",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
@@ -156,7 +183,8 @@
             "code": "NO_WRITTEN_CONTRACT",
             "level": "YELLOW"
           }
-        ]
+        ],
+        "signs": 0
       }
     },
     {
@@ -168,7 +196,10 @@
           "realActivity": "UNKNOWN",
           "recruitment": "NO",
           "urgency": "YES",
-          "written": "NO"
+          "written": "NO",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {
@@ -193,8 +224,165 @@
           {
             "code": "NO_WRITTEN_CONTRACT",
             "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
           }
-        ]
+        ],
+        "signs": 2
+      }
+    },
+    {
+      "id": "offer-008-plyus",
+      "input": {
+        "answers": {
+          "guaranteed": "YES",
+          "lossShared": "UNKNOWN",
+          "realActivity": "UNKNOWN",
+          "recruitment": "UNKNOWN",
+          "urgency": "YES",
+          "written": "YES",
+          "licensed": "UNKNOWN",
+          "inspection": "NO",
+          "exitEasy": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "GUARANTEED_PROFIT",
+            "level": "RED"
+          },
+          {
+            "code": "LOSS_SHARING_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "REAL_ACTIVITY_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "RECRUITMENT_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "LICENSE_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "INSPECTION_REFUSED",
+            "level": "RED"
+          },
+          {
+            "code": "EXIT_HARD",
+            "level": "RED"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
+          }
+        ],
+        "signs": 4
+      }
+    },
+    {
+      "id": "offer-009-one-sign",
+      "input": {
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "YES",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "offer-010-sign-four-once",
+      "input": {
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "NO",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES",
+          "licensed": "NO",
+          "inspection": "NO",
+          "exitEasy": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "NO_REAL_ACTIVITY",
+            "level": "RED"
+          },
+          {
+            "code": "NO_LICENSE",
+            "level": "YELLOW"
+          },
+          {
+            "code": "INSPECTION_REFUSED",
+            "level": "RED"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "offer-011-two-yellow-signs",
+      "input": {
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "YES",
+          "written": "YES",
+          "licensed": "NO",
+          "inspection": "YES",
+          "exitEasy": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NO_LICENSE",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
+          }
+        ],
+        "signs": 2
       }
     },
     {
@@ -217,7 +405,10 @@
           "realActivity": "YES",
           "recruitment": "NO",
           "urgency": "NO",
-          "written": "YES"
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
         }
       },
       "expected": {

@@ -1,0 +1,77 @@
+{
+  "suite": "mf_wall",
+  "version": 1,
+  "description": "Musofir «qal'a devori»: qaytgandan keyin oilaning 6 oylik ro'zg'ori — Uy makonining oxirgi oylardagi o'rtacha xarajati × 6 (musofir/SPEC 6.8)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "wl-001",
+      "input": {
+        "currency": "UZS",
+        "monthly": [
+          "800000000",
+          "780000000",
+          "820000000"
+        ],
+        "months": 6
+      },
+      "expected": {
+        "avgMonthly": "800000000",
+        "wall": "4800000000"
+      }
+    },
+    {
+      "id": "wl-002",
+      "input": {
+        "currency": "UZS",
+        "monthly": [
+          "1",
+          "2"
+        ],
+        "months": 6
+      },
+      "expected": {
+        "avgMonthly": "2",
+        "wall": "9"
+      }
+    },
+    {
+      "id": "wl-003",
+      "input": {
+        "currency": "UZS",
+        "monthly": [],
+        "months": 6
+      },
+      "expected": {
+        "avgMonthly": null,
+        "wall": null
+      }
+    },
+    {
+      "id": "wl-neg-001",
+      "input": {
+        "currency": "UZS",
+        "monthly": [
+          "100"
+        ],
+        "months": 0
+      },
+      "expected": {
+        "error": "INVALID_MONTHS"
+      }
+    },
+    {
+      "id": "wl-neg-002",
+      "input": {
+        "currency": "UZS",
+        "monthly": [
+          "-1"
+        ],
+        "months": 6
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    }
+  ]
+}

@@ -516,6 +516,9 @@ fn ideas_payback_draft_and_offer_check() {
         recruitment: rc.into(),
         urgency: u.into(),
         written: w.into(),
+        licensed: "YES".into(),
+        inspection: "YES".into(),
+        exit_easy: "YES".into(),
     };
     let ok = app
         .check_offer(ask("NO", "YES", "YES", "NO", "NO", "YES"))
@@ -526,6 +529,9 @@ fn ideas_payback_draft_and_offer_check() {
         .unwrap();
     assert_eq!(pyramid.verdict, "RED");
     assert_eq!(pyramid.flags[0].code, "GUARANTEED_PROFIT");
+    // «Besh xavf belgisi»: kafolat, yangi odam, ish yo'q, shoshirish — to'rt belgi.
+    assert_eq!(pyramid.signs, 4);
+    assert_eq!(pyramid.flags.last().unwrap().code, "TWO_SIGNS");
     let unsure = app
         .check_offer(ask("UNKNOWN", "YES", "YES", "NO", "NO", "YES"))
         .unwrap();

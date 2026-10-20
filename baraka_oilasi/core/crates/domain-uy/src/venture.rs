@@ -497,6 +497,12 @@ pub struct OfferAnswers {
     pub recruitment: Reply,
     pub urgency: Reply,
     pub written: Reply,
+    /// Davlat ruxsati (litsenziya) bormi.
+    pub licensed: Reply,
+    /// Ishni (ombor, mol, hujjat) o'z ko'zi bilan ko'rishga ruxsat berildimi.
+    pub inspection: Reply,
+    /// Pulni istagan vaqtda qaytarib olish mumkinmi.
+    pub exit_easy: Reply,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -526,13 +532,46 @@ pub struct OfferFlag {
 pub struct OfferVerdict {
     pub verdict: Level,
     pub flags: Vec<OfferFlag>,
+    /// «Besh xavf belgisi»dan nechtasi topildi.
+    pub signs: u8,
+}
+
+/// Sobir hojining «besh xavf belgisi» (musofir qissasi): 1 — kafolatlangan foyda, 2 — shoshirish,
+/// 3 — yangi odam olib kelish, 4 — ishning o'zi yo'q (mol, ruxsat, tekshirtirmaydi), 5 — kirish oson,
+/// chiqish qiyin. Ikki va undan ortiq belgi — `TWO_SIGNS` (qizil).
+pub const OFFER_SIGNS: [(&str, u8); 7] = [
+    ("GUARANTEED_PROFIT", 1),
+    ("URGENCY", 2),
+    ("RECRUITMENT_REQUIRED", 3),
+    ("NO_REAL_ACTIVITY", 4),
+    ("NO_LICENSE", 4),
+    ("INSPECTION_REFUSED", 4),
+    ("EXIT_HARD", 5),
+];
+
+/// Bayroqlardagi belgilar soni; ikkitadan ko'p bo'lsa `TWO_SIGNS` qo'shiladi.
+pub fn offer_signs(flags: &mut Vec<OfferFlag>) -> u8 {
+    let mut seen = [false; 6];
+    for f in flags.iter() {
+        if let Some((_, n)) = OFFER_SIGNS.iter().find(|(c, _)| *c == f.code) {
+            seen[usize::from(*n)] = true;
+        }
+    }
+    let n = u8::try_from(seen.iter().filter(|x| **x).count()).unwrap_or(u8::MAX);
+    if n >= 2 {
+        flags.push(OfferFlag {
+            code: "TWO_SIGNS",
+            level: Level::Red,
+        });
+    }
+    n
 }
 
 /// Qaror jadvali: (javob → bayroq) har savol uchun; xavfsiz javob bayroqsiz.
 pub fn offer_check(a: &OfferAnswers) -> OfferVerdict {
     use Level::{Red, Yellow};
     use Reply::{No, Unknown, Yes};
-    let table: [(Reply, Reply, &'static str, Level, &'static str); 6] = [
+    let table: [(Reply, Reply, &'static str, Level, &'static str); 9] = [
         (
             a.guaranteed,
             Yes,
@@ -569,6 +608,15 @@ pub fn offer_check(a: &OfferAnswers) -> OfferVerdict {
             Yellow,
             "WRITTEN_UNKNOWN",
         ),
+        (a.licensed, No, "NO_LICENSE", Yellow, "LICENSE_UNKNOWN"),
+        (
+            a.inspection,
+            No,
+            "INSPECTION_REFUSED",
+            Red,
+            "INSPECTION_UNKNOWN",
+        ),
+        (a.exit_easy, No, "EXIT_HARD", Red, "EXIT_UNKNOWN"),
     ];
     let mut flags = Vec::new();
     for (reply, bad, code, level, unknown) in table {
@@ -581,8 +629,13 @@ pub fn offer_check(a: &OfferAnswers) -> OfferVerdict {
             });
         }
     }
+    let signs = offer_signs(&mut flags);
     let verdict = flags.iter().map(|f| f.level).max().unwrap_or(Level::Green);
-    OfferVerdict { verdict, flags }
+    OfferVerdict {
+        verdict,
+        flags,
+        signs,
+    }
 }
 
 #[cfg(test)]
@@ -655,6 +708,9 @@ mod tests {
             recruitment: Reply::No,
             urgency: Reply::No,
             written: Reply::Yes,
+            licensed: Reply::Yes,
+            inspection: Reply::Yes,
+            exit_easy: Reply::Yes,
         };
         assert_eq!(offer_check(&safe).verdict, Level::Green);
         let urgent = OfferAnswers {
@@ -674,5 +730,13 @@ mod tests {
             ..safe
         };
         assert_eq!(offer_check(&unsure).verdict, Level::Yellow);
+        // Ikki sariq belgi — qoching.
+        let two = OfferAnswers {
+            licensed: Reply::No,
+            ..urgent
+        };
+        let v = offer_check(&two);
+        assert_eq!((v.verdict, v.signs), (Level::Red, 2));
+        assert_eq!(v.flags.last().map(|f| f.code), Some("TWO_SIGNS"));
     }
 }

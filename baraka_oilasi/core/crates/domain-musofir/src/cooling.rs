@@ -7,9 +7,12 @@
 //!   uchun pul, qarzni qaytarish muddati, oila bilan maslahat.
 //! * Sovutish qoidasi: qaytgandan keyin 90 kun ichida olib kelinganning 10 %idan ko'pi — sariq,
 //!   30 %idan ko'pi — qizil (OQ-MF8). Qaror taqiqlanmaydi.
+//! * M5 (7-qonun qissasi): «besh xavf belgisi»dan ikkitasi — `TWO_SIGNS` (qizil); «qal'a devori» — qaror
+//!   olib kelinganning devordan ortiq qismidan oshsa `FORTRESS_WALL` (qizil, davrdan tashqarida ham);
+//!   va'da qilingan oylik foydaning oddiy yillik hisobi.
 //!
 //! Vektorlar: `spec/test-vectors/mf_cooling.json`.
-use baraka_money::Money;
+use baraka_money::{round_half_up, Money};
 use chrono::{Days, NaiveDate};
 
 use crate::{bp_of, DomainError};
@@ -95,7 +98,7 @@ pub struct Flag {
 type Question = (&'static str, &'static [(Reply, &'static str, Level)]);
 
 /// U12 «Taklifni tekshirish» (2E.5) — sheriklik va sarmoyada.
-pub const OFFER_QUESTIONS: [Question; 6] = [
+pub const OFFER_QUESTIONS: [Question; 9] = [
     (
         "guaranteed",
         &[
@@ -138,6 +141,38 @@ pub const OFFER_QUESTIONS: [Question; 6] = [
             (Reply::Unknown, "WRITTEN_UNKNOWN", Level::Yellow),
         ],
     ),
+    (
+        "licensed",
+        &[
+            (Reply::No, "NO_LICENSE", Level::Yellow),
+            (Reply::Unknown, "LICENSE_UNKNOWN", Level::Yellow),
+        ],
+    ),
+    (
+        "inspection",
+        &[
+            (Reply::No, "INSPECTION_REFUSED", Level::Red),
+            (Reply::Unknown, "INSPECTION_UNKNOWN", Level::Yellow),
+        ],
+    ),
+    (
+        "exitEasy",
+        &[
+            (Reply::No, "EXIT_HARD", Level::Red),
+            (Reply::Unknown, "EXIT_UNKNOWN", Level::Yellow),
+        ],
+    ),
+];
+
+/// «Besh xavf belgisi» (`domain-uy::venture::OFFER_SIGNS` bilan bir xil): bayroq → belgi raqami.
+pub const OFFER_SIGNS: [(&str, u8); 7] = [
+    ("GUARANTEED_PROFIT", 1),
+    ("URGENCY", 2),
+    ("RECRUITMENT_REQUIRED", 3),
+    ("NO_REAL_ACTIVITY", 4),
+    ("NO_LICENSE", 4),
+    ("INSPECTION_REFUSED", 4),
+    ("EXIT_HARD", 5),
 ];
 
 /// Musofirga xos savollar; `repaymentDate` — faqat qarz berishda.
@@ -169,6 +204,24 @@ pub const EXTRA_QUESTIONS: [Question; 5] = [
         &[(Reply::No, "NOT_DISCUSSED", Level::Yellow)],
     ),
 ];
+
+/// Bayroqlardagi belgilar soni; ikkitadan ko'p bo'lsa `TWO_SIGNS` (qizil) qo'shiladi.
+fn offer_signs(flags: &mut Vec<Flag>) -> u8 {
+    let mut seen = [false; 6];
+    for f in flags.iter() {
+        if let Some((_, n)) = OFFER_SIGNS.iter().find(|(c, _)| *c == f.code) {
+            seen[usize::from(*n)] = true;
+        }
+    }
+    let n = u8::try_from(seen.iter().filter(|x| **x).count()).unwrap_or(u8::MAX);
+    if n >= 2 {
+        flags.push(Flag {
+            code: "TWO_SIGNS",
+            level: Level::Red,
+        });
+    }
+    n
+}
 
 /// Shu qaror turi uchun beriladigan savollar (tartibi — bayroqlar tartibi).
 pub fn questions(kind: DecisionKind) -> Vec<&'static str> {
@@ -209,6 +262,13 @@ pub fn cooling_window(today: NaiveDate, returned_on: Option<NaiveDate>) -> Cooli
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CoolingCheck {
+    /// «Besh xavf belgisi»dan nechtasi.
+    pub signs: u8,
+    /// Olib kelingan − qal'a devori (≥ 0); devor yoki summa noma'lum bo'lsa `None`.
+    pub free: Option<Money>,
+    /// Va'da qilingan oylik foyda bo'yicha: yiliga (bp) va pul necha barobar (o'ndan birlarda: 52 → 5,2).
+    pub promised_yearly_bp: Option<i64>,
+    pub promised_times_tenths: Option<i64>,
     pub in_cooling: bool,
     pub ends_on: Option<NaiveDate>,
     pub days_left: i64,
@@ -216,6 +276,14 @@ pub struct CoolingCheck {
     pub flags: Vec<Flag>,
     pub verdict: Level,
     pub wait_until: Option<NaiveDate>,
+}
+
+/// Qo'shimcha kirishlar (M5): `wall` — «qal'a devori» (uy valyutasida), `promised_bp` — va'da qilingan
+/// oylik foyda (bp).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CoolingExtra {
+    pub wall: Option<Money>,
+    pub promised_bp: Option<i64>,
 }
 
 /// `answers` — (savol kaliti, javob); `brought` — qaytishda olib kelingan summa (uy valyutasida).
@@ -226,12 +294,16 @@ pub fn cooling_check(
     kind: DecisionKind,
     amount: Money,
     answers: &[(&str, Reply)],
+    extra: CoolingExtra,
 ) -> Result<CoolingCheck, DomainError> {
     if !amount.is_positive() {
         return Err(DomainError::on("AMOUNT_NOT_POSITIVE", "amount"));
     }
-    if brought.is_some_and(|b| b.is_negative()) {
+    if brought.is_some_and(|b| b.is_negative()) || extra.wall.is_some_and(|w| w.is_negative()) {
         return Err(DomainError::on("AMOUNT_NEGATIVE", "broughtHome"));
+    }
+    if extra.promised_bp.is_some_and(|p| p <= 0) {
+        return Err(DomainError::on("INVALID_BP", "promisedPercent"));
     }
     let mut flags = Vec::new();
     for key in questions(kind) {
@@ -250,6 +322,25 @@ pub fn cooling_check(
             flags.push(Flag {
                 code,
                 level: *level,
+            });
+        }
+    }
+    let signs = offer_signs(&mut flags);
+    // Qal'a devori: olib kelingandan oilaning 6 oylik ro'zg'ori ajratiladi; qaror unga tegsa — qizil.
+    let free = match (brought, extra.wall) {
+        (Some(b), Some(w)) => {
+            if b.currency() != w.currency() {
+                return Err(DomainError::new("CURRENCY_MISMATCH"));
+            }
+            Some(b.checked_sub(w)?.clamp_non_negative())
+        }
+        _ => None,
+    };
+    if let Some(f) = free {
+        if amount.compare(&f)?.is_gt() {
+            flags.push(Flag {
+                code: "FORTRESS_WALL",
+                level: Level::Red,
             });
         }
     }
@@ -279,7 +370,22 @@ pub fn cooling_check(
         }
     }
     let verdict = flags.iter().map(|f| f.level).max().unwrap_or(Level::Green);
+    // Oddiy hisob: yiliga = oyiga × 12; pul (1 + yiliga) barobar, o'ndan birgacha yaxlitlanadi.
+    let promised_yearly_bp = extra
+        .promised_bp
+        .map(|p| p.checked_mul(12).ok_or(DomainError::new("OVERFLOW")))
+        .transpose()?;
+    let promised_times_tenths = promised_yearly_bp
+        .map(|y| -> Result<i64, DomainError> {
+            let v = round_half_up((i128::from(y) + 10_000) * 10, 10_000)?;
+            i64::try_from(v).map_err(|_| DomainError::new("OVERFLOW"))
+        })
+        .transpose()?;
     Ok(CoolingCheck {
+        signs,
+        free,
+        promised_yearly_bp,
+        promised_times_tenths,
         in_cooling,
         ends_on,
         days_left,
@@ -316,6 +422,7 @@ mod tests {
             DecisionKind::Lend,
             u(1_500_000_000),
             &answers,
+            CoolingExtra::default(),
         )
         .unwrap();
         assert_eq!(c.verdict, Level::Yellow);
@@ -328,6 +435,6 @@ mod tests {
     fn offer_questions_only_for_partnership_and_invest() {
         assert_eq!(questions(DecisionKind::Purchase).len(), 4);
         assert_eq!(questions(DecisionKind::Lend).len(), 5);
-        assert_eq!(questions(DecisionKind::Invest).len(), 10);
+        assert_eq!(questions(DecisionKind::Invest).len(), 13);
     }
 }

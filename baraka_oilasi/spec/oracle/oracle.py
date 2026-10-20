@@ -791,7 +791,8 @@ def venture_idea(capex_items, scenarios, worker_share_bp=None):
 
 
 # (savol, javob) → (bayroq, daraja); javobning qolgan qiymati xavfsiz.
-OFFER_QUESTIONS = ("guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written")
+OFFER_QUESTIONS = ("guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written",
+                   "licensed", "inspection", "exitEasy")
 OFFER_TABLE = {
     "guaranteed": {"YES": ("GUARANTEED_PROFIT", "RED"), "UNKNOWN": ("GUARANTEED_UNKNOWN", "YELLOW")},
     "lossShared": {"NO": ("LOSS_NOT_SHARED", "RED"), "UNKNOWN": ("LOSS_SHARING_UNKNOWN", "YELLOW")},
@@ -799,7 +800,24 @@ OFFER_TABLE = {
     "recruitment": {"YES": ("RECRUITMENT_REQUIRED", "RED"), "UNKNOWN": ("RECRUITMENT_UNKNOWN", "YELLOW")},
     "urgency": {"YES": ("URGENCY", "YELLOW"), "UNKNOWN": ("URGENCY_UNKNOWN", "YELLOW")},
     "written": {"NO": ("NO_WRITTEN_CONTRACT", "YELLOW"), "UNKNOWN": ("WRITTEN_UNKNOWN", "YELLOW")},
+    # M5 (musofir qissasi, «besh xavf belgisi»): davlat ruxsati, o'z ko'zi bilan tekshirish, pulni qaytarib olish.
+    "licensed": {"NO": ("NO_LICENSE", "YELLOW"), "UNKNOWN": ("LICENSE_UNKNOWN", "YELLOW")},
+    "inspection": {"NO": ("INSPECTION_REFUSED", "RED"), "UNKNOWN": ("INSPECTION_UNKNOWN", "YELLOW")},
+    "exitEasy": {"NO": ("EXIT_HARD", "RED"), "UNKNOWN": ("EXIT_UNKNOWN", "YELLOW")},
 }
+# Sobir hojining «besh xavf belgisi»: 1 — kafolatlangan foyda, 2 — shoshirish, 3 — yangi odam olib kelish,
+# 4 — ishning o'zi yo'q (mol, ruxsat, tekshirtirmaydi), 5 — kirish oson, chiqish qiyin. «Bittasini ko'rsangiz —
+# hushyor torting, ikkinchisini — qoching»: ikki va undan ortiq belgi — TWO_SIGNS (qizil).
+OFFER_SIGNS = {"GUARANTEED_PROFIT": 1, "URGENCY": 2, "RECRUITMENT_REQUIRED": 3, "NO_REAL_ACTIVITY": 4,
+               "NO_LICENSE": 4, "INSPECTION_REFUSED": 4, "EXIT_HARD": 5}
+
+
+def offer_signs(flags):
+    """Bayroqlar → topilgan belgilar soni va kerak bo'lsa TWO_SIGNS bayrog'i (ro'yxatga qo'shiladi)."""
+    n = len({OFFER_SIGNS[f["code"]] for f in flags if f["code"] in OFFER_SIGNS})
+    if n >= 2:
+        flags.append({"code": "TWO_SIGNS", "level": "RED"})
+    return n
 
 
 def offer_check(answers):
@@ -814,9 +832,10 @@ def offer_check(answers):
         hit = OFFER_TABLE[q].get(a)
         if hit:
             flags.append({"code": hit[0], "level": hit[1]})
+    signs = offer_signs(flags)
     levels = {f["level"] for f in flags}
     verdict = "RED" if "RED" in levels else "YELLOW" if levels else "GREEN"
-    return {"verdict": verdict, "flags": flags}
+    return {"verdict": verdict, "flags": flags, "signs": signs}
 
 
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
@@ -1705,7 +1724,23 @@ MF_EXTRA = (
 )
 
 
-def mf_cooling(today, returned_on, brought, kind, amount, answers):
+MF_WALL_MONTHS = 6
+
+
+def mf_wall(monthly, months=MF_WALL_MONTHS):
+    """«Qal'a devori» (SPEC 6.8): oilaning N oylik ro'zg'ori = round_half_up(Σ oylik Uy xarajati × N / oylar soni);
+    tarix yo'q — devor yo'q."""
+    if not 1 <= months <= 12:
+        raise OracleError("INVALID_MONTHS")
+    if any(x < 0 for x in monthly):
+        raise OracleError("AMOUNT_NEGATIVE")
+    if not monthly:
+        return {"avgMonthly": None, "wall": None}
+    return {"avgMonthly": _s(round_half_up(Fraction(sum(monthly), len(monthly)))),
+            "wall": _s(round_half_up(Fraction(sum(monthly) * months, len(monthly))))}
+
+
+def mf_cooling(today, returned_on, brought, kind, amount, answers, wall=None, promised_bp=None):
     """Sovutish davri va kengaytirilgan taklif detektori (SPEC 6.3). Sheriklik va sarmoyada — U12 ning 6 savoli;
     qarz berishda — qaytarish muddati; davr ichida summa olib kelinganning 10 %idan ko'p — sariq, 30 %idan ko'p —
     qizil. Qaror taqiqlanmaydi: «kutish sanasi» — davr oxiri."""
@@ -1713,8 +1748,10 @@ def mf_cooling(today, returned_on, brought, kind, amount, answers):
         raise OracleError("INVALID_KIND")
     if amount <= 0:
         raise OracleError("AMOUNT_NOT_POSITIVE")
-    if brought is not None and brought < 0:
+    if (brought is not None and brought < 0) or (wall is not None and wall < 0):
         raise OracleError("AMOUNT_NEGATIVE")
+    if promised_bp is not None and promised_bp <= 0:
+        raise OracleError("INVALID_BP")
     questions = []
     if kind in ("PARTNERSHIP", "INVEST"):
         questions += [(q, OFFER_TABLE[q]) for q in OFFER_QUESTIONS]
@@ -1732,6 +1769,12 @@ def mf_cooling(today, returned_on, brought, kind, amount, answers):
         hit = table.get(a)
         if hit:
             flags.append({"code": hit[0], "level": hit[1]})
+    signs = offer_signs(flags)
+    # «Qal'a devori» — olib kelingandan oilaning 6 oylik ro'zg'ori ajratiladi; qaror unga tegsa — qizil (davrdan
+    # tashqarida ham).
+    free = max(0, brought - wall) if brought is not None and wall is not None else None
+    if free is not None and amount > free:
+        flags.append({"code": "FORTRESS_WALL", "level": "RED"})
     ends = returned_on + timedelta(days=MF_COOLING_DAYS) if returned_on else None
     in_cooling = ends is not None and returned_on <= today < ends
     share = bp_of(amount, brought) if brought else None
@@ -1744,9 +1787,14 @@ def mf_cooling(today, returned_on, brought, kind, amount, answers):
             flags.append({"code": "COOLING_BIG_DECISION", "level": "YELLOW"})
     levels = {f["level"] for f in flags}
     verdict = "RED" if "RED" in levels else "YELLOW" if levels else "GREEN"
+    # Va'da qilingan oylik foyda — oddiy hisobda bir yilda: yiliga = oyiga × 12, pul = (1 + yiliga) barobar (o'ndan birgacha).
+    yearly = promised_bp * 12 if promised_bp is not None else None
+    times = round_half_up(Fraction((10000 + yearly) * 10, 10000)) if yearly is not None else None
     return {"inCooling": in_cooling, "endsOn": ends.isoformat() if ends else None,
             "daysLeft": (ends - today).days if in_cooling else 0, "shareBp": share, "flags": flags,
-            "verdict": verdict, "waitUntil": ends.isoformat() if in_cooling and verdict != "GREEN" else None}
+            "verdict": verdict, "waitUntil": ends.isoformat() if in_cooling and verdict != "GREEN" else None,
+            "signs": signs, "free": None if free is None else _s(free),
+            "promisedYearlyBp": yearly, "promisedTimesTenths": times}
 
 # --- vektor fayllarini generatsiya qilish (faqat oracle egalik qiladigan suite'lar) ------
 def _s(v):
@@ -2227,7 +2275,8 @@ def build_suites():
         idea_case("idea-neg-002-scenarios", tikuv, sc3[:2], None),
         idea_case("idea-neg-003-bp", tikuv, sc3, 10001),
     ])
-    A = lambda g, l, r, rc, u, w: {"guaranteed": g, "lossShared": l, "realActivity": r, "recruitment": rc, "urgency": u, "written": w}  # noqa: E731
+    A = lambda g, l, r, rc, u, w, lc="YES", ins="YES", ex="YES": {"guaranteed": g, "lossShared": l, "realActivity": r, "recruitment": rc,  # noqa: E731
+                                                              "urgency": u, "written": w, "licensed": lc, "inspection": ins, "exitEasy": ex}
     oc = [("offer-001-green", A("NO", "YES", "YES", "NO", "NO", "YES")),
           ("offer-002-guaranteed", A("YES", "YES", "YES", "NO", "NO", "YES")),
           ("offer-003-pyramid", A("YES", "NO", "NO", "YES", "YES", "NO")),
@@ -2235,9 +2284,16 @@ def build_suites():
           ("offer-005-unknowns", A("UNKNOWN", "UNKNOWN", "YES", "NO", "NO", "UNKNOWN")),
           ("offer-006-no-contract", A("NO", "YES", "YES", "NO", "NO", "NO")),
           ("offer-007-crypto-signals", A("YES", "NO", "UNKNOWN", "NO", "YES", "NO")),
+          # M5: «Plyus» — kafolat va shoshirish (ikki belgi), tekshirtirmaydi, chiqish qiyin.
+          ("offer-008-plyus", A("YES", "UNKNOWN", "UNKNOWN", "UNKNOWN", "YES", "YES", "UNKNOWN", "NO", "NO")),
+          # Faqat shoshirish (bitta belgi) — sariq; bitta 4-belgi ichidagi uch bayroq — bitta belgi.
+          ("offer-009-one-sign", A("NO", "YES", "YES", "NO", "YES", "YES")),
+          ("offer-010-sign-four-once", A("NO", "YES", "NO", "NO", "NO", "YES", "NO", "NO")),
+          # Ruxsat yo'q va shoshirish — ikki belgi, qizil.
+          ("offer-011-two-yellow-signs", A("NO", "YES", "YES", "NO", "YES", "YES", "NO")),
           ("offer-neg-001-missing", {"guaranteed": "NO"}),
           ("offer-neg-002-invalid", A("MAYBE", "YES", "YES", "NO", "NO", "YES"))]
-    suites["offer_check"] = _suite("offer_check", "«Kafolatlangan foyda» detektori: 6 savol → bayroqlar; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL", [
+    suites["offer_check"] = _suite("offer_check", "«Kafolatlangan foyda» detektori: 9 savol → bayroqlar; «besh xavf belgisi»dan ikkitasi — TWO_SIGNS; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL", [
         _case(cid, {"answers": a}, lambda a=a: offer_check(a)) for cid, a in oc])
     # U13 — ko'rik bayonnomasi yaxlitligi
     def tamper(i, minor):
@@ -2872,7 +2928,8 @@ def build_suites():
               lambda o=o, a=a, mo=mo, tm=tm, td_=td_: mf_travel_debt(o, a, mo, tm, date.fromisoformat(td_)))
         for cid, o, a, mo, tm, td_ in td])
 
-    no = {"guaranteed": "NO", "lossShared": "YES", "realActivity": "YES", "recruitment": "NO", "urgency": "NO", "written": "YES"}
+    no = {"guaranteed": "NO", "lossShared": "YES", "realActivity": "YES", "recruitment": "NO", "urgency": "NO", "written": "YES",
+          "licensed": "YES", "inspection": "YES", "exitEasy": "YES"}
     calm = {"approached": "NO", "upfront": "NO", "abroadJobFee": "NO", "familyDiscussed": "YES"}
     co = [
         # Qaytgandan 20 kun keyin qarindosh 15 mln qarz so'radi (olib kelingan 120 mln, 12,5 %), muddatsiz.
@@ -2891,15 +2948,42 @@ def build_suites():
         # Davrning oxirgi kuni (89-kun) — hali ichida; 90-kun — tashqarida.
         ("co-007", "2027-01-16", "2026-10-19", 12000000000, "PURCHASE", 2000000000, calm),
         ("co-008", "2027-01-17", "2026-10-19", 12000000000, "PURCHASE", 2000000000, calm),
+        # M5 — qissa: Rustam 18 000 $ (≈ 228 mln so'm) olib keldi, «Plyus»ga 10 000 $ (≈ 126,5 mln): kafolatli 35 % oyiga,
+        # shoshirish, tekshirtirmaydi, chiqish qiyin; oila bilan maslahatlashmadi; devor — 6 oy × 8 mln.
+        ("co-009", "2026-10-22", "2026-10-19", 22770000000, "INVEST", 12650000000,
+         {**no, "approached": "YES", "upfront": "NO", "abroadJobFee": "NO", "familyDiscussed": "NO",
+          "guaranteed": "YES", "urgency": "YES", "inspection": "NO", "exitEasy": "NO", "realActivity": "UNKNOWN"},
+         4800000000, 3500),
+        # Davrdan keyin kichik xarid, lekin qal'a devoriga tegadi — qizil.
+        ("co-010", "2027-03-01", "2026-10-19", 12000000000, "PURCHASE", 8000000000, calm, 6000000000, None),
+        # Devorgacha — yashil (100 mln − 60 mln = 40 mln erkin, xarid 40 mln).
+        ("co-011", "2027-03-01", "2026-10-19", 10000000000, "PURCHASE", 4000000000, calm, 6000000000, None),
+        # Va'da yaxlitlash: oyiga 3,33 % — yiliga 39,96 %, 1,3996 → 1,4 barobar.
+        ("co-012", "2027-03-01", None, None, "INVEST", 100000000, {**no, **calm}, None, 333),
+        ("co-neg-005", "2026-10-19", None, None, "INVEST", 100, {**no, **calm}, None, 0),
         ("co-neg-001", "2026-10-19", None, None, "CAR", 100, calm),
         ("co-neg-002", "2026-10-19", None, None, "LEND", 100, calm),
         ("co-neg-003", "2026-10-19", None, None, "OTHER", 0, calm),
         ("co-neg-004", "2026-10-19", None, None, "OTHER", 100, {**calm, "upfront": "MAYBE"}),
     ]
     suites["mf_cooling"] = _suite("mf_cooling", "Musofir sovutish davri (qaytgandan keyin 90 kun) va kengaytirilgan taklif detektori: U12 savollari, musofirga xos bayroqlar, olib kelingan summadan ulush, kutish sanasi (musofir/SPEC 6.3)", [
-        _case(cid, {"currency": U, "today": t_, "returnedOn": r_, "broughtHome": None if b is None else _s(b), "kind": k_, "amount": _s(a), "answers": an},
-              lambda t_=t_, r_=r_, b=b, k_=k_, a=a, an=an: mf_cooling(date.fromisoformat(t_), date.fromisoformat(r_) if r_ else None, b, k_, a, an))
-        for cid, t_, r_, b, k_, a, an in co])
+        _case(cid, {"currency": U, "today": t_, "returnedOn": r_, "broughtHome": None if b is None else _s(b), "kind": k_, "amount": _s(a),
+                    "answers": an, "wall": None if w is None else _s(w), "promisedBp": pb},
+              lambda t_=t_, r_=r_, b=b, k_=k_, a=a, an=an, w=w, pb=pb: mf_cooling(date.fromisoformat(t_), date.fromisoformat(r_) if r_ else None,
+                                                                                 b, k_, a, an, w, pb))
+        for cid, t_, r_, b, k_, a, an, w, pb in [c if len(c) == 9 else (*c, None, None) for c in co]])
+    wl = [
+        # Uyda oyiga ~8 mln — 6 oylik ro'zg'or 48 mln.
+        ("wl-001", [800000000, 780000000, 820000000], 6),
+        # Yaxlitlash: (1 + 2) × 6 / 2 = 9 (tiyin).
+        ("wl-002", [1, 2], 6),
+        ("wl-003", [], 6),
+        ("wl-neg-001", [100], 0),
+        ("wl-neg-002", [-1], 6),
+    ]
+    suites["mf_wall"] = _suite("mf_wall", "Musofir «qal'a devori»: qaytgandan keyin oilaning 6 oylik ro'zg'ori — Uy makonining oxirgi oylardagi o'rtacha xarajati × 6 (musofir/SPEC 6.8)", [
+        _case(cid, {"currency": U, "monthly": [_s(x) for x in mo], "months": n}, lambda mo=mo, n=n: mf_wall(mo, n))
+        for cid, mo, n in wl])
     return suites
 
 
@@ -2910,7 +2994,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
                  "mf_month", "mf_return_fund", "mf_remittance",
-                 "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup")
+                 "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup", "mf_wall")
 
 
 def generate(directory: str) -> None:
@@ -2982,6 +3066,14 @@ def selftest() -> None:
     assert (m4["savedNet"], m4["shareGap"], m4["reserveBalance"], m4["pocket"]) == ("520000", "0", "810000", "2230000"), m4
     assert mf_startup(12000000000, 3000000000)["living"] == "9000000000"
     _expect_error("STARTUP_EXCEEDS_TARGET", mf_startup, 100, 101)
+    plyus = offer_check({"guaranteed": "YES", "lossShared": "UNKNOWN", "realActivity": "UNKNOWN", "recruitment": "UNKNOWN",
+                         "urgency": "YES", "written": "YES", "licensed": "UNKNOWN", "inspection": "NO", "exitEasy": "NO"})
+    assert plyus["signs"] == 4 and plyus["flags"][-1]["code"] == "TWO_SIGNS", plyus
+    assert mf_wall([800000000, 780000000, 820000000])["wall"] == "4800000000"
+    pr = mf_cooling(date(2027, 3, 1), None, None, "INVEST", 100, {**{q: "NO" for q in ("guaranteed", "recruitment", "urgency")},
+                    **{q: "YES" for q in ("lossShared", "realActivity", "written", "licensed", "inspection", "exitEasy")},
+                    "approached": "NO", "upfront": "NO", "abroadJobFee": "NO", "familyDiscussed": "YES"}, None, 3500)
+    assert (pr["promisedYearlyBp"], pr["promisedTimesTenths"]) == (42000, 52), pr
     tdr = mf_travel_debt(1500000000, 327000000, [327000000, 300000000, 280000000], 6, date(2026, 10, 19))
     assert (tdr["remaining"], tdr["monthsToClear"], tdr["clearOn"], tdr["status"]) == ("1173000000", 4, "2027-02-19", "ON_TRACK")
     cor = mf_cooling(date(2026, 11, 8), date(2026, 10, 19), 12000000000, "LEND", 1500000000,
@@ -3142,7 +3234,8 @@ def selftest() -> None:
                                                          {"name": "OPTIMISTIC", "income": 800000000, "expense": 400000000}])
     assert [r["paybackMonths"] for r in i8["scenarios"]] == [8, 4, 2] and i8["capex"] == "800000000"
     assert offer_check({"guaranteed": "YES", "lossShared": "YES", "realActivity": "YES", "recruitment": "NO",
-                        "urgency": "NO", "written": "YES"})["verdict"] == "RED"
+                        "urgency": "NO", "written": "YES", "licensed": "YES", "inspection": "YES",
+                        "exitEasy": "YES"})["verdict"] == "RED"
     # U13: xeshlari qayta hisoblangan soxta yozuv faqat bayonnomadagi zanjir boshi bilan aniqlanadi.
     t1 = json.loads(json.dumps(CHAIN_ENTRIES))
     t1[0]["amount"]["minor"] = "1"

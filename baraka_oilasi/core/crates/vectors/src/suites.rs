@@ -14,12 +14,13 @@ use baraka_domain_kasbkor::shift::{shift_close, ShiftIn, ShiftInKind};
 use baraka_domain_kasbkor::stock::{replacement, validate_factor, CostMethod, Stock, StockMove};
 use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
-use baraka_domain_musofir::cooling::{cooling_check, DecisionKind, Reply as MfReply};
+use baraka_domain_musofir::cooling::{cooling_check, CoolingExtra, DecisionKind, Reply as MfReply};
 use baraka_domain_musofir::fund::{return_fund, startup_split};
 use baraka_domain_musofir::month::{month_report as mf_month_report, MfKind, MfMove};
 use baraka_domain_musofir::remittance::{remittance_book, Purpose, Remittance, Share};
 use baraka_domain_musofir::reserve::reserve_plan;
 use baraka_domain_musofir::travel::travel_debt_plan;
+use baraka_domain_musofir::wall::fortress_wall;
 use baraka_domain_uy::{
     amortization::{simulate, LoanTerms, ScheduleKind},
     audit::{unexplained_gap, GapInput},
@@ -169,6 +170,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "mf_cooling" => mf_cooling(input),
         "mf_reserve" => mf_reserve(input),
         "mf_startup" => mf_startup(input),
+        "mf_wall" => mf_wall(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1008,13 +1010,16 @@ fn offer(v: &Value) -> R {
         recruitment: q("recruitment")?,
         urgency: q("urgency")?,
         written: q("written")?,
+        licensed: q("licensed")?,
+        inspection: q("inspection")?,
+        exit_easy: q("exitEasy")?,
     });
     let flags: Vec<Value> = r
         .flags
         .iter()
         .map(|f| json!({ "code": f.code, "level": f.level.as_str() }))
         .collect();
-    Ok(json!({ "verdict": r.verdict.as_str(), "flags": flags }))
+    Ok(json!({ "verdict": r.verdict.as_str(), "flags": flags, "signs": r.signs }))
 }
 
 fn protocol(v: &Value) -> R {
@@ -1903,6 +1908,14 @@ fn mf_cooling(v: &Value) -> R {
         kind,
         money(v, "amount", c)?,
         &answers,
+        CoolingExtra {
+            wall: if v["wall"].is_null() {
+                None
+            } else {
+                Some(money(v, "wall", c)?)
+            },
+            promised_bp: v["promisedBp"].as_i64(),
+        },
     )?;
     let fmt = |d: chrono::NaiveDate| d.format("%Y-%m-%d").to_string();
     Ok(json!({
@@ -1913,5 +1926,18 @@ fn mf_cooling(v: &Value) -> R {
         "flags": r.flags.iter().map(|f| json!({"code": f.code, "level": f.level.as_str()})).collect::<Vec<_>>(),
         "verdict": r.verdict.as_str(),
         "waitUntil": r.wait_until.map(fmt),
+        "signs": r.signs,
+        "free": r.free.map(|x| x.minor().to_string()),
+        "promisedYearlyBp": r.promised_yearly_bp,
+        "promisedTimesTenths": r.promised_times_tenths,
+    }))
+}
+
+fn mf_wall(v: &Value) -> R {
+    let c = cur(v, "currency")?;
+    let w = fortress_wall(&moneys(v, "monthly", c)?, i(v, "months")?)?;
+    Ok(json!({
+        "avgMonthly": w.map(|x| x.avg_monthly.minor().to_string()),
+        "wall": w.map(|x| x.wall.minor().to_string()),
     }))
 }

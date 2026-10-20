@@ -1600,12 +1600,23 @@ impl BarakaCore {
 
     // ---- M4: qorovul pul, ish boshlash summasi, qaror natijasi ----
 
-    pub fn mf_set_plan(&self, space_id: String, input: MfPlanInput) -> Result<MfOverviewDto, AppError> {
+    pub fn mf_set_plan(
+        &self,
+        space_id: String,
+        input: MfPlanInput,
+    ) -> Result<MfOverviewDto, AppError> {
         self.session.app()?.mf_set_plan(&space_id, input)
     }
 
-    pub fn mf_set_outcome(&self, space_id: String, decision_id: String, input: MfOutcomeInput) -> Result<Vec<MfDecisionDto>, AppError> {
-        self.session.app()?.mf_set_outcome(&space_id, &decision_id, input)
+    pub fn mf_set_outcome(
+        &self,
+        space_id: String,
+        decision_id: String,
+        input: MfOutcomeInput,
+    ) -> Result<Vec<MfDecisionDto>, AppError> {
+        self.session
+            .app()?
+            .mf_set_outcome(&space_id, &decision_id, input)
     }
 
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----

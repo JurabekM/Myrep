@@ -9,6 +9,7 @@ pub mod rate;
 pub mod remittance;
 pub mod reserve;
 pub mod travel;
+pub mod wall;
 
 pub use baraka_domain_common::DomainError;
 

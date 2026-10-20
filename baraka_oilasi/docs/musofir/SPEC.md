@@ -158,6 +158,12 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - Hammasi oilaga yuborilmaydi (ADR-0004; ikki qurilmali test).
 - Qilinmagan: qorovul pul uy valyutasida ko'rinishi (kurs bilan), Android UI.
 
+### 6.8. 7-qonun qissasidan (M5; OQ-MF10…OQ-MF12 — mahsulot egasi qarori, 2026-10-20)
+- **«Besh xavf belgisi»** (Sobir hoji): 1 — katta foydani kafolatlash, 2 — shoshirish («faqat bugun, joy kam»), 3 — daromad yangi odam olib kelishdan, 4 — ishning o'zi yo'q (ombor, mol, hujjat, **ruxsat** yo'q; **o'z ko'zi bilan tekshirtirmaydi**), 5 — **kirish oson, chiqish qiyin**. Taklif detektoriga uch savol qo'shildi — `licensed` (yo'q — sariq), `inspection` (yo'q — qizil), `exitEasy` (yo'q — qizil); «bilmayman» — sariq. **Ikki va undan ortiq belgi — `TWO_SIGNS` (qizil)**: «bittasini ko'rsangiz — hushyor torting, ikkinchisini — qoching». Jadval Uy U12 «Taklifni tekshirish» bilan umumiy (vektorlar `offer_check`, `mf_cooling`; paritet testi).
+- **Va'da qilingan foyda:** katta qaror tekshiruvida ixtiyoriy «oyiga va'da qilingan foyda, %» — oddiy hisob: yiliga = oyiga × 12, pul (1 + yiliga) barobar («oyiga 35 % — yiliga 420 %, pul 5,2 barobar»). Bu taxmin emas — va'daning o'zi qanchalik g'ayrioddiyligini ko'rsatadi.
+- **«Qal'a devori»:** qaytgandan keyin olib kelingandan oilaning **6 oylik ro'zg'ori** ajratiladi = Uy makonining oxirgi to'liq oylardagi (yozuvi borlari, ko'pi bilan 3 ta) o'rtacha xarajati × 6 (`mf_wall`). Katta qaror «erkin pul»dan (olib kelingan − devor) oshsa — `FORTRESS_WALL` (qizil), **sovutish davridan tashqarida ham**. Uy xarajati tarixi bo'lmasa — devor yo'q.
+- **Olib kelingan summa valyutada:** «Qaytdim»da summa istalgan valyutada (masalan, 18 000 USD) va kurs bilan; foiz va devor — uy valyutasida (`convert`). Uy valyutasida bo'lsa kurs kerak emas.
+
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.
 - Kurs prognozi, «qachon ayirboshlash foydali», o'tkazma xizmatlarini reklama qilish yoki reytingi yo'q.
@@ -180,6 +186,7 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - `mf_remittance` (M2): bitta va bir nechta yuborish, largest remainder qoldiq birliklari, qabul qilinmagan («yo'lda»), maqsaddan ortiq sarflangan, ulushsiz maqsadga xarajat; xatolar — ulushlar yig'indisi ≠ 100 %, takroriy maqsad, nol ulush, noma'lum maqsad, summa ≤ 0.
 - `mf_travel_debt`, `mf_cooling` — M3.
 - `mf_reserve`, `mf_startup` (M4); `mf_month` qorovul pul harakatlari bilan kengayadi.
+- `mf_wall` (M5); `offer_check` va `mf_cooling` — «besh xavf belgisi», `TWO_SIGNS`, `FORTRESS_WALL`, va'da hisobi.
 
 ## 10. ISH REJASI
 | # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |
@@ -188,6 +195,7 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 | M2 | «Ikki qirg'oq»: maqsadlar, `REMITTANCE`, uyda maqsad bo'yicha xarajat | 5, 8 | maqsad bo'yicha qoldiq; kelishuv 9 savol; `.baraka` round-trip |
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori | 6 | 90 kunlik sovutish; detektor vektorlari |
 | M4 | Qorovul pul (OQ-MF3), ish boshlash summasi va «Hunardan ishga» havolasi, qaror natijasi | 6.4, 6.6 | `mf_month` (qorovul harakatlari), `mf_reserve`, `mf_startup` yashil; ulush avval qorovulga |
+| M5 | 7-qonun qissasidan: «besh xavf belgisi», qal'a devori, valyutada olib kelingan summa | 6.8 | `offer_check`, `mf_cooling`, `mf_wall` yashil; qissadagi «Plyus» taklifi — qizil |
 
 Har bir M-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar).
 

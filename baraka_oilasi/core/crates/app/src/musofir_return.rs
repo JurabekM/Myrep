@@ -5,7 +5,7 @@
 //! ham ochiq. Reja, qaytish va qarorlar jurnali — musofirning shaxsiy hisobi (ADR-0004).
 use baraka_domain_common::month_period;
 use baraka_domain_musofir::cooling::{
-    cooling_check, cooling_window, questions, DecisionKind, Reply,
+    cooling_check, cooling_window, questions, CoolingExtra, DecisionKind, Reply,
 };
 use baraka_domain_musofir::fund::startup_split;
 use baraka_domain_musofir::remittance::Purpose;
@@ -377,7 +377,15 @@ impl App {
             _ => None,
         };
         let pairs: Vec<(&str, Reply)> = answers.iter().map(|(k, r, _)| (*k, *r)).collect();
-        let c = cooling_check(self.today(ctx), returned_on, brought, kind, amount, &pairs)?;
+        let c = cooling_check(
+            self.today(ctx),
+            returned_on,
+            brought,
+            kind,
+            amount,
+            &pairs,
+            CoolingExtra::default(),
+        )?;
         let dto = MfDecisionCheckDto {
             questions: asked.iter().map(|q| (*q).to_string()).collect(),
             in_cooling: c.in_cooling,
