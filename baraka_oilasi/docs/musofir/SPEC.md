@@ -30,7 +30,7 @@
 **Bu makon nima EMAS:** pul o'tkazish xizmati, valyuta ayirboshlash yoki kurs prognozi, ish topib beruvchi agentlik, o'tkazma kompaniyalari reklamasi yoki solishtiruvchisi, viza/huquqiy maslahatchi.
 
 ### 1.1. Kontent
-- Musofir qissalari 7 qonunni ochadi (Uy makonidagi bob tuzilmasi, U3 dvigateli). Matnlar litsenziya hal bo'lguncha — placeholder (`BARAKA_OILASI.md` 18).
+- Musofir qissalari 7 qonunni ochadi (Uy makonidagi bob tuzilmasi, U3 dvigateli). Matnlar litsenziya hal bo'lguncha — placeholder (`BARAKA_OILASI.md` 18). Kelgan matnlar — `docs/musofir/qissalar/` (manba va mahsulot bilan solishtirish): 7-qonun — `07-sovutish-davri.md` (xom, oxiri kesilgan; OQ-MF9…OQ-MF12).
 - Har bir ta'limiy ekranda: «Ta'limiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas».
 
 ### 1.2. Personajlar

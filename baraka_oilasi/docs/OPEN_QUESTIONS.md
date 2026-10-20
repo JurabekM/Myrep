@@ -170,6 +170,26 @@
 - **Qaror (mahsulot egasi, 2026-10-19):** tasdiqlandi — 90 kun, 10 % (sariq) va 30 % (qizil), yo'l qarzi uchun 6 oy; summa kiritilmasa — sariq.
 - **To'sadi:** — . **Holat:** YECHILGAN.
 
+### OQ-MF9. 7-qonun qissasi: litsenziya, to'liq matn va personajlar
+- **Masala:** mahsulot egasi 7-qonun qissasini yubordi (`docs/musofir/qissalar/07-sovutish-davri.md`). Matn — og'zaki nutq transkripti, **oxiri kesilgan**; manba — «Asaxiy Invest» × Abdukarim Mirzayev (`BARAKA_OILASI.md` 18).
+- **Savollar:** (1) matnning davomi; (2) kontent litsenziyasi (kamida niyat shartnomasi) bormi; (3) ilovaga tahrirlangan (to'ldiruvchi so'zlarsiz) matn kiradimi yoki aynan transkript; (4) qissada Rustam — Nilufarning akasi, payvandchi; SPEC 1.2 dagi xotini Gulnora va oilasi Samarqandda — saqlanadimi?
+- **To'sadi:** qissani ilovada ko'rsatish (U3 kontent dvigateli ham kerak, OQ-P6). **Holat:** OCHIQ.
+
+### OQ-MF10. «Besh xavf belgisi» va taklif detektori
+- **Masala:** qissada Sobir hoji 5 belgini aytadi: kafolatlangan katta foyda, shoshirish, daromad yangi odamdan, ishning o'zi yo'q (ombor, mol, hujjat, ruxsat), **kirish oson — chiqish qiyin** — va qoida: «bittasini ko'rsangiz hushyor torting, ikkitasini ko'rsangiz qoching». Detektorda (U12 2E.5 + M3) dastlabki to'rttasi bor; **5-belgi**, **davlat ruxsati (litsenziya)** va **«o'z ko'zim bilan tekshirishga ruxsat berishdimi»** savollari yo'q; natija qoidasi — har savolning o'z darajasi (sanash yo'q).
+- **Taklif:** uch savol qo'shish (`exitHard`, `licensed`, `inspectionAllowed`) va «ikki va undan ortiq belgi — qizil» qoidasi; ixtiyoriy: va'da qilingan oylik foydaning yillik hisobi («35 % oyiga — yiliga 5,2 barobar», `round_half_up`, vektor bilan). Diniy izohlar (g'arar, qimor) — ulamo ko'rigidan keyin.
+- **To'sadi:** — (Uy U12 detektori bilan umumiy jadval — ikkala makonga ta'sir qiladi). **Holat:** OCHIQ — mahsulot egasi qarori kerak.
+
+### OQ-MF11. «Qal'a devori»: qaytgandan keyin 6 oylik ro'zg'or
+- **Masala:** qissada — olib kelingan puldan avval oilaning 6 oylik ro'zg'ori ajratiladi va u savdoga ham, sheriklikka ham qo'shilmaydi. Ilovada qaytgandan keyin bunday ajratish va katta qaror tekshiruvida uni hisobga olish yo'q.
+- **Taklif:** «Qaytdim»da Uy makonining oxirgi oylardagi o'rtacha xarajati × 6 — «qal'a devori» summasi; katta qaror shu devorga tegsa (olib kelingan − devor dan oshsa) — qizil bayroq. Yangi pul funksiyasi — avval vektor.
+- **To'sadi:** — . **Holat:** OCHIQ — mahsulot egasi qarori kerak.
+
+### OQ-MF12. Olib kelingan summa — chet el valyutasida
+- **Masala:** Rustam «18 000 dollar» olib keldi; «Qaytdim»da summa hozir faqat uy valyutasida kiritiladi, katta qaror ham uy valyutasida.
+- **Taklif:** summa istalgan valyutada (USD, ish valyutasi), foiz hisobi uchun kurs bilan uy valyutasiga (kurssiz — foiz yo'q, `COOLING_PERIOD` qoidasi).
+- **To'sadi:** — . **Holat:** OCHIQ.
+
 ## Oila va maxfiylik
 
 ### OQ-M1. Bitta qurilmada rozilik

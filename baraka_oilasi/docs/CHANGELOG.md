@@ -6,6 +6,10 @@
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
 - Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
 
+### Qo'shildi — Musofir: 7-qonun qissasi (manba, 2026-10-20)
+- `docs/musofir/qissalar/07-sovutish-davri.md` — mahsulot egasi yuborgan matn o'zgartirishsiz saqlandi («Asaxiy Invest» × Abdukarim Mirzayev; xom transkript, oxiri kesilgan) va ilovadagi funksiyalar bilan solishtirildi: «Qaytdim», sovutish davri, `LARGE_SHARE` (18 000 dan 10 000 — 55,6 %), taklif detektori va «Hunardan ishga» qissadagi sahnalarga mos.
+- Topilgan farqlar — yangi savollar: OQ-MF9 (litsenziya, matn davomi, personajlar), OQ-MF10 («besh xavf belgisi»: «kirish oson — chiqish qiyin», davlat ruxsati, tekshirishga ruxsat, «ikki belgi — qoching»), OQ-MF11 («qal'a devori» — 6 oylik ro'zg'or), OQ-MF12 (olib kelingan summa dollarda). Kod o'zgarmadi.
+
 ### O'zgardi — Musofir: mahsulot egasi qarorlari (2026-10-19)
 - `docs/musofir/SPEC.md` — **v1.0, tasdiqlandi**. OQ-MF1 (o'z ulushi 20 %), OQ-MF4 (kursni foydalanuvchi kiritadi, 30 kunlik eskirish), OQ-MF7 (oilaviy kelishuv shakli) va OQ-MF8 (90 kun, 10 % / 30 %, yo'l qarzi 6 oy) — tasdiqlandi, kod o'zgarmadi.
 - OQ-MF6 — **yechildi:** egalikni o'tkazish oqimi qilinmaydi; xonadon uydagi oila qurilmasida yaratilgan bo'lsa, o'sha qurilma oila bilan kelishilgan seyfda saqlanadi. «Uydagi oila qurilmasi» ulash xabari shunga yangilandi (SPEC 8).
