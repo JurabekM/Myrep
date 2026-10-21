@@ -2626,5 +2626,6 @@
   "mf.return.wallHint": "Uy makonida oyiga oʻrtacha {avg} ({count} oy). Devor puli hech qayerga qoʻshilmaydi.",
   "mf.return.noWall": "Uy makonida xarajatlarni yozing — qalʼa devorini (6 oylik roʻzgʻor) hisoblayman.",
   "common.copy": "Nusxa olish",
-  "common.clear": "Tozalash"
+  "common.clear": "Tozalash",
+  "agreements.sort": "Saralash"
 }

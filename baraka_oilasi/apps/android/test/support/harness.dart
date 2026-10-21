@@ -43,7 +43,9 @@ Future<void> loadFonts() async {
   // Qurilmadagi `sans-serif` (Roboto) o'rniga — testda tizimdagi DejaVu Sans (→, ✓ uchun).
   const dejavu = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
   if (File(dejavu).existsSync()) {
-    await (FontLoader('sans-serif')..addFont(Future.value(ByteData.sublistView(File(dejavu).readAsBytesSync())))).load();
+    await (FontLoader(
+      'sans-serif',
+    )..addFont(Future.value(ByteData.sublistView(File(dejavu).readAsBytesSync())))).load();
   }
   await (FontLoader('MaterialIcons')..addFont(
         Future.value(
@@ -91,11 +93,15 @@ class Device {
   /// Ulashilgan fayllar (PDF, `.baraka`): nomi va baytlari.
   final shared = <({String name, Uint8List bytes})>[];
 
+  /// Testga xos almashtirishlar (fayl tanlash va h.k.) — `app()` dan oldin qo'shiladi.
+  final overrides = <Override>[];
+
   ProviderContainer get container => _container ??= ProviderContainer(
     overrides: [
       servicesProvider.overrideWithValue(services),
       shareFileProvider.overrideWithValue((bytes, name, mime) async => shared.add((name: name, bytes: bytes))),
       localeProvider.overrideWith((ref) => services.prefs.read().locale ?? 'uz'),
+      ...overrides,
     ],
   );
 

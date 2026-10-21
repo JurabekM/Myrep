@@ -5,13 +5,18 @@ import '../core/core.dart';
 import '../features/audit/audit_screen.dart';
 import '../features/ceremony/ceremonies_screen.dart';
 import '../features/expenses/expenses_screen.dart';
+import '../features/governance/agreements_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/income/income_sheet.dart';
 import '../features/inventory/debts_screen.dart';
+import '../features/partnership/partnerships_screen.dart';
 import '../features/payoff/payoff_screen.dart';
 import '../features/receipt/receipt_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/sync/sync_screen.dart';
 import '../features/vault/vault_screen.dart';
+import '../features/venture/ideas_screen.dart';
+import '../features/venture/offer_check.dart';
 import 'i18n.dart';
 import 'shell_state.dart';
 
@@ -128,6 +133,10 @@ final Map<String, ScreenDef> screenDefs = {
   'debts': ScreenDef('debts', 'nav.debts', (c) => PayoffScreen(spaceId: c.spaceId)),
   'ceremonies': ScreenDef('ceremonies', 'nav.ceremonies', (c) => CeremoniesScreen(spaceId: c.spaceId)),
   'receipt': ScreenDef('receipt', 'nav.receipt', (c) => ReceiptScreen(spaceId: c.spaceId)),
+  'partnerships': ScreenDef('partnerships', 'nav.partnerships', (c) => PartnershipsScreen(spaceId: c.spaceId)),
+  'ideas': ScreenDef('ideas', 'nav.ideas', (c) => IdeasScreen(spaceId: c.spaceId)),
+  'agreements': ScreenDef('agreements', 'nav.agreements', (c) => AgreementsScreen(spaceId: c.spaceId)),
+  'sync': ScreenDef('sync', 'nav.sync', (_) => const SyncScreen(), needsSpace: false),
   'settings': ScreenDef('settings', 'nav.settings', (_) => const SettingsScreen(), needsSpace: false),
 };
 
@@ -148,4 +157,4 @@ Widget? quickAction(BuildContext context, WidgetRef ref, ShellContext ctx, Strin
 Widget _home(ShellContext ctx) => HomeScreen(spaceId: ctx.spaceId);
 
 /// «Taklifni tekshirish» (uy/SPEC 2E.5) — ilovaning istalgan joyidan; `null` — ekran hali yo'q.
-void Function(BuildContext context)? get offerCheckOpener => null;
+void Function(BuildContext context)? get offerCheckOpener => openOfferCheck;

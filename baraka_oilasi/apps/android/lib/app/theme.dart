@@ -192,8 +192,13 @@ ThemeData barakaTheme({required bool dark}) {
     chipTheme: ChipThemeData(
       backgroundColor: p.surface,
       selectedColor: p.accent,
-      labelStyle: TextStyle(color: p.ink),
-      secondaryLabelStyle: TextStyle(color: p.accentInk),
+      // Chip uslubi mavzu shriftini meros olmaydi — oilani aniq beramiz.
+      labelStyle: TextStyle(color: p.ink, fontFamily: 'NotoSans', fontFamilyFallback: const ['sans-serif']),
+      secondaryLabelStyle: TextStyle(
+        color: p.accentInk,
+        fontFamily: 'NotoSans',
+        fontFamilyFallback: const ['sans-serif'],
+      ),
       side: BorderSide(color: p.fieldLine),
       checkmarkColor: p.accentInk,
     ),
