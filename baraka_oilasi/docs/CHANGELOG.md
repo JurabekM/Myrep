@@ -10,6 +10,7 @@ Birinchi reliz: uchala makon (Uy, Kasb-kor, Musofir) — bitta Rust yadro, Windo
 - **APK hajmi (OQ-T1 — hal qilindi):** arm64 yuklab olish ≈ 30,8 MB (byudjet ≤ 40 MB). `--split-per-abi` bilan yig'ish tuzatildi (Gradle'dagi `abiFilters` endi faqat bo'linmagan build'da).
 - **`cargo xtask codegen`:** generatsiyadan keyin loyiha formatlash qoidasi (`dart format`, 120 belgi) qo'llanadi — `dart format lib` bilan natija bir xil, CI'dagi `git diff` tekshiruvi barqaror.
 - **Yakuniy tekshiruv:** `cargo fmt --check`, `cargo clippy --workspace --all-targets --all-features -D warnings`, `cargo test --workspace`, ikkala oracle (`--selftest`, `--check`), `cargo xtask all`, `cargo xtask codegen` + `git diff`, desktop `pnpm lint` va 108 test, Android `flutter analyze` va 61 test — hammasi yashil.
+- **Reliz imzosi:** Gradle `key.properties` yoki `BARAKA_KEYSTORE_*` muhit o'zgaruvchilaridan imzolaydi; `BARAKA_REQUIRE_RELEASE_SIGNING=1` bo'lsa, debug kalit bilan release yig'ilmaydi. CI'da `android-release` job (`baraka-v*` teg yoki qo'lda) — obfuskatsiyalangan, imzolangan AAB va APK'lar, imzo tekshiruvi, simvollar artefakti. Birinchi imzolangan build mahalliy yig'ildi (APK Signature Scheme v2, yuklash sertifikati SHA-256 `F6:10:7C:…:C9:51:CD`). Emulyator bu muhitda yo'q (KVM yo'q), shuning uchun qurilmada sinov — qo'lda, reja: reliz cheklisti 7.2.
 - **Hujjatlar:** README holat jadvali (barcha bo'limlar — yadro + desktop + Android), Android'ni ishga tushirish; Kasb-kor va Musofir SPEC'larida Android holati; reliz cheklistining Android bo'limi.
 
 
