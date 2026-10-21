@@ -4,6 +4,8 @@ name: baraka-oilasi
 on:
   push:
     paths: ["baraka_oilasi/**", ".github/workflows/baraka-oilasi.yml"]
+    # Reliz: `baraka-v1.0.0` kabi teg — imzolangan AAB/APK (`android-release`).
+    tags: ["baraka-v*"]
   pull_request:
     paths: ["baraka_oilasi/**", ".github/workflows/baraka-oilasi.yml"]
   # Tungi yakuniy E2E (haqiqiy ilova, tauri-driver) — `desktop-e2e`.
@@ -107,6 +109,63 @@ jobs:
         with:
           name: baraka-android-apk
           path: baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-release.apk
+
+  # Imzolangan reliz (Play uchun AAB va to'g'ridan-to'g'ri o'rnatish uchun APK). Kalit faqat
+  # secret'larda: BARAKA_UPLOAD_KEYSTORE_B64 (base64 .jks), BARAKA_KEYSTORE_PASSWORD,
+  # BARAKA_KEY_ALIAS, BARAKA_KEY_PASSWORD. Kalitsiz Gradle release'ni yig'maydi.
+  android-release:
+    if: startsWith(github.ref, 'refs/tags/baraka-v') || github.event_name == 'workflow_dispatch'
+    needs: android
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/android
+    env:
+      BARAKA_REQUIRE_RELEASE_SIGNING: "1"
+      BARAKA_KEYSTORE_PASSWORD: ${{ secrets.BARAKA_KEYSTORE_PASSWORD }}
+      BARAKA_KEY_ALIAS: ${{ secrets.BARAKA_KEY_ALIAS }}
+      BARAKA_KEY_PASSWORD: ${{ secrets.BARAKA_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+      - name: Asboblar (cargo-ndk)
+        run: |
+          cargo install --locked cargo-ndk --version 4.1.2
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+      - name: Yuklash kaliti (secret'dan, faqat runner'da)
+        env:
+          KEYSTORE_B64: ${{ secrets.BARAKA_UPLOAD_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "BARAKA_UPLOAD_KEYSTORE_B64 secret yo'q"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/baraka-upload.jks"
+          echo "BARAKA_KEYSTORE_FILE=$RUNNER_TEMP/baraka-upload.jks" >> "$GITHUB_ENV"
+      - run: flutter pub get
+      - name: AAB (Play) va APK (arm64, armv7)
+        run: |
+          flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
+          flutter build apk --release --split-per-abi --target-platform android-arm64,android-arm --obfuscate --split-debug-info=build/symbols
+      - name: Imzoni tekshirish
+        run: |
+          for f in build/app/outputs/flutter-apk/app-*-release.apk; do
+            "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --print-certs "$f" | head -3
+          done
+          jarsigner -verify build/app/outputs/bundle/release/app-release.aab | tail -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-release
+          path: |
+            baraka_oilasi/apps/android/build/app/outputs/bundle/release/app-release.aab
+            baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-*-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-symbols
+          path: baraka_oilasi/apps/android/build/symbols
 
   desktop-ui:
     runs-on: ubuntu-latest

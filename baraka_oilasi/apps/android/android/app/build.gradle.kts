@@ -1,10 +1,24 @@
 import java.io.File
+import java.util.Properties
 
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Reliz imzosi (RELEASE_CHECKLIST 7): kalit repodan tashqarida — `android/key.properties`
+// (gitignore) yoki CI muhit o'zgaruvchilari. Yo'q bo'lsa — debug kalit (faqat mahalliy sinov);
+// `BARAKA_REQUIRE_RELEASE_SIGNING=1` bo'lsa, kalitsiz release yig'ilmaydi.
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+fun signingValue(key: String, env: String): String? = keyProps.getProperty(key) ?: System.getenv(env)
+
+val releaseStoreFile = signingValue("storeFile", "BARAKA_KEYSTORE_FILE")
+val requireReleaseSigning = System.getenv("BARAKA_REQUIRE_RELEASE_SIGNING") == "1"
 
 android {
     namespace = "uz.baraka.oilasi"
@@ -31,11 +45,23 @@ android {
         }
     }
 
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile)
+                storePassword = signingValue("storePassword", "BARAKA_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "BARAKA_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "BARAKA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Imzolash konfiguratsiyasi repodan tashqarida (RELEASE_CHECKLIST 7): `key.properties`
-            // bo'lmasa — debug kalit bilan (faqat mahalliy sinov uchun).
-            signingConfig = signingConfigs.getByName("debug")
+            if (releaseStoreFile == null && requireReleaseSigning) {
+                throw GradleException("Reliz kaliti topilmadi: key.properties yoki BARAKA_KEYSTORE_FILE kerak.")
+            }
+            signingConfig = signingConfigs.getByName(if (releaseStoreFile != null) "release" else "debug")
             isMinifyEnabled = true
             isShrinkResources = true
         }

@@ -1,0 +1,6 @@
+# Reliz imzosi (namuna). Nusxa: `key.properties` (gitignore'da — hech qachon commit qilinmaydi).
+# Yo'llar `apps/android/android/` papkasiga nisbatan yoki mutlaq.
+storeFile=/xavfsiz/joy/baraka-upload.jks
+storePassword=PAROL
+keyAlias=upload
+keyPassword=PAROL
