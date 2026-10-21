@@ -2627,5 +2627,7 @@
   "mf.return.noWall": "Уй маконида харажатларни ёзинг — қалъа деворини (6 ойлик рўзғор) ҳисоблайман.",
   "common.copy": "Нусха олиш",
   "common.clear": "Тозалаш",
-  "agreements.sort": "Саралаш"
+  "agreements.sort": "Саралаш",
+  "error.PARSE_EMPTY": "Суммани киритинг",
+  "error.PARSE_MISPLACED_SEPARATOR": "Каср ажратувчиси нотўғри жойда"
 }

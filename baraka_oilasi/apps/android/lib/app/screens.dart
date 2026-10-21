@@ -9,6 +9,25 @@ import '../features/governance/agreements_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/income/income_sheet.dart';
 import '../features/inventory/debts_screen.dart';
+import '../features/kasbkor/kk_cash_screen.dart';
+import '../features/kasbkor/kk_close_screen.dart';
+import '../features/kasbkor/kk_credit_screen.dart';
+import '../features/kasbkor/kk_entry_sheet.dart';
+import '../features/kasbkor/kk_equipment_screen.dart';
+import '../features/kasbkor/kk_gate_screen.dart';
+import '../features/kasbkor/kk_home_screen.dart';
+import '../features/kasbkor/kk_labor_screen.dart';
+import '../features/kasbkor/kk_measure_screen.dart';
+import '../features/kasbkor/kk_quote_screen.dart';
+import '../features/kasbkor/kk_seller_screen.dart';
+import '../features/kasbkor/kk_shift_screen.dart';
+import '../features/kasbkor/kk_staff_screen.dart';
+import '../features/kasbkor/kk_stock_screen.dart';
+import '../features/kasbkor/kk_suppliers_screen.dart';
+import '../features/kasbkor/kk_zakat_screen.dart';
+import '../features/musofir/mf_entry_sheet.dart';
+import '../features/musofir/mf_home_screen.dart';
+import '../features/musofir/two_shores_screen.dart';
 import '../features/partnership/partnerships_screen.dart';
 import '../features/payoff/payoff_screen.dart';
 import '../features/receipt/receipt_screen.dart';
@@ -136,6 +155,25 @@ final Map<String, ScreenDef> screenDefs = {
   'partnerships': ScreenDef('partnerships', 'nav.partnerships', (c) => PartnershipsScreen(spaceId: c.spaceId)),
   'ideas': ScreenDef('ideas', 'nav.ideas', (c) => IdeasScreen(spaceId: c.spaceId)),
   'agreements': ScreenDef('agreements', 'nav.agreements', (c) => AgreementsScreen(spaceId: c.spaceId)),
+  'kkCash': ScreenDef('kkCash', 'nav.kkCash', (c) => KkCashScreen(spaceId: c.spaceId)),
+  'kkCredit': ScreenDef('kkCredit', 'nav.kkCredit', (c) => KkCreditScreen(spaceId: c.spaceId)),
+  'kkStock': ScreenDef('kkStock', 'nav.kkStock', (c) => KkStockScreen(spaceId: c.spaceId)),
+  'kkSuppliers': ScreenDef('kkSuppliers', 'nav.kkSuppliers', (c) => KkSuppliersScreen(spaceId: c.spaceId)),
+  'kkStaff': ScreenDef('kkStaff', 'nav.kkStaff', (c) => KkStaffScreen(spaceId: c.spaceId)),
+  'kkEquipment': ScreenDef('kkEquipment', 'nav.kkEquipment', (c) => KkEquipmentScreen(spaceId: c.spaceId)),
+  'kkLabor': ScreenDef('kkLabor', 'nav.kkLabor', (c) => KkLaborScreen(spaceId: c.spaceId)),
+  'kkQuote': ScreenDef('kkQuote', 'nav.kkQuote', (c) => KkQuoteScreen(spaceId: c.spaceId)),
+  'kkClose': ScreenDef('kkClose', 'nav.kkClose', (c) => KkCloseScreen(spaceId: c.spaceId)),
+  'kkGate': ScreenDef('kkGate', 'nav.kkGate', (c) => KkGateScreen(spaceId: c.spaceId)),
+  'kkZakat': ScreenDef('kkZakat', 'nav.kkZakat', (c) => KkZakatScreen(spaceId: c.spaceId)),
+  'kkMeasure': ScreenDef('kkMeasure', 'nav.kkMeasure', (c) => KkMeasureScreen(spaceId: c.spaceId)),
+  'kkSellerCredit': ScreenDef('kkSellerCredit', 'nav.kkSellerCredit', (c) => KkSellerCreditScreen(spaceId: c.spaceId)),
+  'kkShift': ScreenDef('kkShift', 'nav.kkShift', (c) => KkShiftScreen(spaceId: c.spaceId)),
+  'twoShores': ScreenDef(
+    'twoShores',
+    'nav.twoShores',
+    (c) => TwoShoresScreen(mfSpaceId: c.mfSpaceId!, uySpaceId: c.spaceId),
+  ),
   'sync': ScreenDef('sync', 'nav.sync', (_) => const SyncScreen(), needsSpace: false),
   'settings': ScreenDef('settings', 'nav.settings', (_) => const SettingsScreen(), needsSpace: false),
 };
@@ -151,10 +189,31 @@ Widget? quickAction(BuildContext context, WidgetRef ref, ShellContext ctx, Strin
       label: Text(context.t('home.quickIncome')),
     );
   }
+  if (ctx.musofir) {
+    return FloatingActionButton.extended(
+      onPressed: () => openMfEntry(context, ctx.spaceId, 'SALARY'),
+      icon: const Icon(Icons.add),
+      label: Text(context.t('mf.action.SALARY')),
+    );
+  }
+  if (ctx.kasbkor) {
+    return FloatingActionButton.extended(
+      onPressed: () => openKkEntry(context, ctx.spaceId, 'SALE'),
+      icon: const Icon(Icons.add),
+      label: Text(context.t('kk.action.SALE')),
+    );
+  }
   return null;
 }
 
-Widget _home(ShellContext ctx) => HomeScreen(spaceId: ctx.spaceId);
+/// Bosh sahifa makon va rolga qarab: sotuvchi — sotuv, Kasb-kor — biznes, Musofir — chet el, Uy — oila.
+Widget _home(ShellContext ctx) => ctx.seller
+    ? KkSellerScreen(spaceId: ctx.spaceId)
+    : ctx.kasbkor
+    ? KkHomeScreen(spaceId: ctx.spaceId)
+    : ctx.musofir
+    ? MfHomeScreen(spaceId: ctx.spaceId)
+    : HomeScreen(spaceId: ctx.spaceId);
 
 /// «Taklifni tekshirish» (uy/SPEC 2E.5) — ilovaning istalgan joyidan; `null` — ekran hali yo'q.
 void Function(BuildContext context)? get offerCheckOpener => openOfferCheck;

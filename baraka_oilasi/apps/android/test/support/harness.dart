@@ -81,6 +81,9 @@ class Device {
 
   static Future<Device> create([String? dir]) async {
     await initRust();
+    // Oldingi testning (tugagan zonadagi) kesh Future'lari yangi testda tugamaydi — tarjimalar
+    // qayta yuklansin.
+    rootBundle.clear();
     final d = dir ?? Directory.systemTemp.createTempSync('baraka-android-').path;
     final core = await BarakaCore.newInstance(dataDir: d);
     return Device._(d, CoreServices(core: core, secrets: MemorySecret(), window: NoopWindow(), prefs: PrefsStore(d)));
@@ -182,7 +185,14 @@ Future<void> tapText(WidgetTester tester, String text) async {
 Future<void> goTo(WidgetTester tester, String label) async {
   tester.state<ScaffoldState>(find.byType(Scaffold).first).openDrawer();
   await _animate(tester);
-  await tester.tap(find.descendant(of: find.byType(Drawer), matching: find.text(label)));
+  // Menyu ro'yxati dangasa quriladi — pastdagi bo'limlar uchun aylantiramiz.
+  final item = find.descendant(of: find.byType(Drawer), matching: find.text(label));
+  await tester.scrollUntilVisible(
+    item,
+    120,
+    scrollable: find.descendant(of: find.byType(Drawer), matching: find.byType(Scrollable)).last,
+  );
+  await tester.tap(item);
   await settle(tester, rounds: 10);
 }
 
@@ -224,3 +234,54 @@ Future<void> scrollTop(WidgetTester tester) async {
   }
   await tester.pump();
 }
+
+/// Kalendardan `months` oy keyingi (manfiy — oldingi) 28-kunni tanlash.
+Future<void> pickDate(WidgetTester tester, String label, int months) async {
+  await _animate(tester);
+  final f = find.ancestor(of: find.text(label), matching: find.byType(InputDecorator));
+  await tester.ensureVisible(f.first);
+  await tester.tap(f.first);
+  await _animate(tester);
+  for (var i = 0; i < months.abs(); i++) {
+    await tester.tap(find.byIcon(months > 0 ? Icons.chevron_right : Icons.chevron_left));
+    await _animate(tester);
+  }
+  await tester.tap(find.text('28').last);
+  await tester.pump(const Duration(milliseconds: 200));
+  await tester.tap(find.byType(TextButton).last);
+  await _animate(tester);
+}
+
+/// Tanlov chipi (bir xil matnli boshqa yozuvlardan farqlash uchun).
+Future<void> tapChip(WidgetTester tester, String label, {int index = 0}) async {
+  await _animate(tester);
+  final f = find.widgetWithText(ChoiceChip, label);
+  await tester.ensureVisible(f.at(index));
+  await tester.tap(f.at(index));
+  await settle(tester, rounds: 4);
+}
+
+/// Element yo'qolguncha kutish (oyna yopildi).
+Future<void> waitGone(WidgetTester tester, Finder finder) async {
+  for (var i = 0; i < 200 && finder.evaluate().isNotEmpty; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  expect(finder, findsNothing);
+}
+
+/// Ulashilgan PDF paydo bo'lguncha (typst — debug yadroda bir necha soniya).
+Future<void> waitShared(WidgetTester tester, Device device, bool Function(String name) match) async {
+  for (var i = 0; i < 2000 && !device.shared.any((f) => match(f.name)); i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  final f = device.shared.lastWhere((f) => match(f.name));
+  expect(String.fromCharCodes(f.bytes.take(4)), '%PDF');
+}
+
+/// Ro'yxat qatorlari: kaliti `ValueKey((nomi, element))` (har qator noyob).
+Finder findRows(String name) => find.byWidgetPredicate((w) {
+  final k = w.key;
+  return k is ValueKey && k.value is (String, Object?) && (k.value as (String, Object?)).$1 == name;
+});

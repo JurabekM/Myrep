@@ -2628,5 +2628,7 @@
   "mf_return_noWall": "Записывайте расходы в «Доме» — посчитаю крепостную стену (шесть месяцев на жизнь).",
   "common_copy": "Копировать",
   "common_clear": "Очистить",
-  "agreements_sort": "Сортировка"
+  "agreements_sort": "Сортировка",
+  "error_PARSE_EMPTY": "Введите сумму",
+  "error_PARSE_MISPLACED_SEPARATOR": "Разделитель дробной части стоит не на месте"
 }

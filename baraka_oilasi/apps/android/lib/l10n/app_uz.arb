@@ -4382,5 +4382,7 @@
   "mf_return_noWall": "Uy makonida xarajatlarni yozing — qalʼa devorini (6 oylik roʻzgʻor) hisoblayman.",
   "common_copy": "Nusxa olish",
   "common_clear": "Tozalash",
-  "agreements_sort": "Saralash"
+  "agreements_sort": "Saralash",
+  "error_PARSE_EMPTY": "Summani kiriting",
+  "error_PARSE_MISPLACED_SEPARATOR": "Kasr ajratuvchisi notoʻgʻri joyda"
 }

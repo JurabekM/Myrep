@@ -189,6 +189,15 @@ ThemeData barakaTheme({required bool dark}) {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: p.accentText, minimumSize: const Size(48, 48)),
     ),
+    // Dark fonda soya ko'rinmaydi — tekis aksent tugma (desktop uslubi bilan bir xil).
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: p.accent,
+      foregroundColor: p.accentInk,
+      elevation: 0,
+      focusElevation: 0,
+      hoverElevation: 0,
+      highlightElevation: 0,
+    ),
     chipTheme: ChipThemeData(
       backgroundColor: p.surface,
       selectedColor: p.accent,

@@ -22,31 +22,10 @@ final Uint8List _png = base64Decode(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
 );
 
-Future<void> _anim(WidgetTester tester) async {
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
-}
-
-/// Kalendardan `months` oy keyingi (manfiy — oldingi) 28-kunni tanlash.
-Future<void> _pickDate(WidgetTester tester, String label, int months) async {
-  await _anim(tester);
-  final f = find.ancestor(of: find.text(label), matching: find.byType(InputDecorator));
-  await tester.ensureVisible(f.first);
-  await tester.tap(f.first);
-  await _anim(tester);
-  for (var i = 0; i < months.abs(); i++) {
-    await tester.tap(find.byIcon(months > 0 ? Icons.chevron_right : Icons.chevron_left));
-    await _anim(tester);
-  }
-  await tester.tap(find.text('28').last);
-  await tester.pump(const Duration(milliseconds: 200));
-  await tester.tap(find.byType(TextButton).last);
-  await _anim(tester);
-}
-
 /// Sehrgar qadami (`○ 3. …` yoki `● 3. …`).
 Future<void> _step(WidgetTester tester, int n) async {
-  await _anim(tester);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
   final f = find.byWidgetPredicate(
     (w) => w is ChoiceChip && w.label is Text && RegExp('^(. )?$n\\. ').hasMatch((w.label as Text).data ?? ''),
   );
@@ -55,44 +34,17 @@ Future<void> _step(WidgetTester tester, int n) async {
   await settle(tester, rounds: 4);
 }
 
-/// Tanlov chipi (bir xil matnli boshqa yozuvlardan farqlash uchun).
-Future<void> _chip(WidgetTester tester, String label, {int index = 0}) async {
-  await _anim(tester);
-  final f = find.widgetWithText(ChoiceChip, label);
-  await tester.ensureVisible(f.at(index));
-  await tester.tap(f.at(index));
-  await settle(tester, rounds: 4);
-}
-
 /// Imzo maydoniga chiziq tortish va tasdiqlash.
 Future<void> _sign(WidgetTester tester, String name) async {
   await tapText(tester, '$name imzolaydi');
   await waitFor(tester, find.text('$name: imzo'));
-  await _anim(tester);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
   await tester.drag(find.byKey(const Key('signature-pad')), const Offset(120, 30));
   await tester.pump();
   await tapText(tester, 'Imzolash');
-  await _gone(tester, find.text('$name: imzo'));
-  await _gone(tester, find.text('$name imzolaydi'));
-}
-
-/// Element yo'qolguncha kutish (oyna yopildi).
-Future<void> _gone(WidgetTester tester, Finder finder) async {
-  for (var i = 0; i < 200 && finder.evaluate().isNotEmpty; i++) {
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
-    await tester.pump(const Duration(milliseconds: 16));
-  }
-  expect(finder, findsNothing);
-}
-
-/// Ulashilgan fayl paydo bo'lguncha (PDF typst bilan — debug yadroda bir necha soniya).
-Future<void> _shared(WidgetTester tester, Device device, String name) async {
-  for (var i = 0; i < 2000 && !device.shared.any((f) => f.name == name); i++) {
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
-    await tester.pump(const Duration(milliseconds: 16));
-  }
-  final f = device.shared.lastWhere((f) => f.name == name);
-  expect(String.fromCharCodes(f.bytes.take(4)), '%PDF');
+  await waitGone(tester, find.text('$name: imzo'));
+  await waitGone(tester, find.text('$name imzolaydi'));
 }
 
 void main() {
@@ -145,7 +97,7 @@ void main() {
 
     // 3. Vazifa (ma'sul va «bajarilmasa»).
     await _step(tester, 3);
-    await _chip(tester, 'Javob');
+    await tapChip(tester, 'Javob');
     await tapText(tester, '+ Vazifa qoʻshish');
     await enter(tester, 'Vazifa', 'Buyurtmalarni qabul qilish');
     await choose(tester, 'Masʼul', 'Anvar Karimov');
@@ -154,14 +106,14 @@ void main() {
     await waitFor(tester, find.text('4. Foyda qanday boʻlinadi?'));
     // 6. Pul va hisob.
     await _step(tester, 6);
-    await _chip(tester, 'Javob');
+    await tapChip(tester, 'Javob');
     await enter(tester, 'Pul qayerda turadi', 'Anvarning kartasida');
     await choose(tester, 'Hisobni kim yuritadi', 'Anvar Karimov');
     await enter(tester, 'Necha kunda bir koʻrib chiqiladi', '30');
     await tapText(tester, 'Saqlash va keyingisi');
     // 7. Ajralish.
     await waitFor(tester, find.text('7. Qanday ajralib chiqiladi?'));
-    await _chip(tester, 'Javob');
+    await tapChip(tester, 'Javob');
     await enter(tester, 'Oldindan ogohlantirish (kun)', '30');
     await enter(tester, 'Ulush qanday baholanadi', 'Bozor narxida');
     await enter(tester, 'Qachon va qanday toʻlanadi', '3 oy ichida, teng qismlarda');
@@ -169,18 +121,18 @@ void main() {
     await tapText(tester, 'Saqlash va keyingisi');
     // 8. Hakam va guvoh.
     await waitFor(tester, find.text('8. Kelisha olmasak, kim hakam?'));
-    await _chip(tester, 'Javob');
+    await tapChip(tester, 'Javob');
     await enter(tester, 'Hakam (toʻliq ism)', 'Hasan Yusupov');
     await enter(tester, 'Tomonlarga aloqasi', 'mahalla oqsoqoli');
     await enter(tester, '1-guvoh', 'Jamshid Aliyev');
     await tapText(tester, 'Saqlash va keyingisi');
     // 9. Muddat.
     await waitFor(tester, find.text('9. Qachon yangilanadi?'));
-    await _chip(tester, 'Javob');
+    await tapChip(tester, 'Javob');
     // O'tgan oydan boshlangan — bugungi yozuvlar muddat ichida.
-    await _pickDate(tester, 'Boshlanish sanasi', -1);
+    await pickDate(tester, 'Boshlanish sanasi', -1);
     await enter(tester, 'Muddat (oy)', '12');
-    await _pickDate(tester, 'Qayta koʻrib chiqish sanasi', 6);
+    await pickDate(tester, 'Qayta koʻrib chiqish sanasi', 6);
     await tapText(tester, 'Saqlash');
     await waitFor(tester, find.text('9 / 9 — shartnomani imzolash mumkin.'));
     await scrollTop(tester);
@@ -215,7 +167,7 @@ void main() {
     await tapText(tester, 'Yozish');
     // Saqlangach forma tozalanadi — yozuv faqat ro'yxatda qoladi.
     await waitFor(tester, find.text('Yozuvlar'));
-    await _chip(tester, 'Xarajat');
+    await tapChip(tester, 'Xarajat');
     await enter(tester, 'Summa', '2 200 000');
     await enter(tester, 'Izoh', 'Mato va iplar');
     await tapText(tester, 'Yozish');
@@ -232,7 +184,7 @@ void main() {
     await tapText(tester, 'Davrni yopish');
     await waitFor(tester, find.textContaining('1-davr: '));
     await tapText(tester, 'Sherik uchun hisobot (PDF)');
-    await _shared(tester, device, 'davr-1.pdf');
+    await waitShared(tester, device, (n) => n == 'davr-1.pdf');
 
     // Ko'rik va nizo: vazifa hodisasi → «bajarilmasa» bandi eslatiladi.
     await tapText(tester, 'Koʻrik va nizo');
@@ -248,14 +200,14 @@ void main() {
     // Ochiq hisob ko'rigi: zanjir butun, ikki tomon rozi → bayonnoma va PDF.
     await tapText(tester, 'Koʻrikni boshlash');
     await waitFor(tester, find.text('Zanjir tekshiruvi: barcha yozuvlar butun.'));
-    await _chip(tester, 'Koʻrdim, roziman');
-    await _chip(tester, 'Koʻrdim, roziman', index: 1);
+    await tapChip(tester, 'Koʻrdim, roziman');
+    await tapChip(tester, 'Koʻrdim, roziman', index: 1);
     await scrollTop(tester);
     await shot(tester, 'android-25-review');
     await tapText(tester, 'Bayonnomani yozish');
     await waitFor(tester, find.text('Butun'));
     await tapText(tester, 'Bayonnoma PDF');
-    await _shared(tester, device, 'korik-1.pdf');
+    await waitShared(tester, device, (n) => n == 'korik-1.pdf');
 
     // Nizo: ochiladi → taqsimot to'xtaydi → hakam qarori bilan yopiladi.
     await tapText(tester, 'Nizo ochish');
@@ -277,7 +229,7 @@ void main() {
     await enter(tester, 'Qidirish', 'yoʻq narsa');
     await waitFor(tester, find.text('Kelishuv topilmadi.'));
     await enter(tester, 'Qidirish', '');
-    await _chip(tester, 'Oilaviy kelishuvlar');
+    await tapChip(tester, 'Oilaviy kelishuvlar');
     await tapText(tester, 'Uyda kim nima qiladi');
     await tapText(tester, 'Saqlash');
     await waitFor(tester, find.text('Anvar tasdiqlaydi'));
@@ -290,12 +242,14 @@ void main() {
 
     // Taklif tekshiruvi (menyudan): «kafolatli foyda» → qizil.
     tester.state<ScaffoldState>(find.byType(Scaffold).first).openDrawer();
-    await _anim(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.descendant(of: find.byType(Drawer), matching: find.text('Taklifni tekshirish')));
-    await _anim(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     for (final (i, reply) in ['Ha', 'Yoʻq', 'Yoʻq', 'Ha', 'Ha', 'Yoʻq', 'Yoʻq', 'Yoʻq', 'Yoʻq'].indexed) {
       // Har savolda «Ha / Yoʻq / Bilmayman»: `i`-savolning chipi — `i`-o'rinda.
-      await _chip(tester, reply, index: i);
+      await tapChip(tester, reply, index: i);
     }
     await tapText(tester, 'Tekshirish');
     await waitFor(tester, find.text('Qizil: pul bermang'));
@@ -313,7 +267,8 @@ void main() {
     picked = (name: backup.name, bytes: backup.bytes);
     await tapText(tester, 'Fayl tanlash');
     await waitFor(tester, find.text(backup.name));
-    await _anim(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     final pw = find.widgetWithText(TextField, 'Fayl paroli').last;
     await tester.ensureVisible(pw);
     await tester.enterText(pw, 'Anvar-2026!');
