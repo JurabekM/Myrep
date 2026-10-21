@@ -20,6 +20,12 @@ pub struct CaseFailure {
     pub actual: Value,
 }
 
+/// Bitta case: `suite` va `input` → yadro natijasi (FFI runner'lari uchun — Dart testlari
+/// natijani o'zi `expected` bilan solishtiradi).
+pub fn run_case(suite: &str, input: &Value) -> Value {
+    suites::run(suite, input)
+}
+
 /// Repo ildizidagi `spec/test-vectors` papkasi.
 pub fn default_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../spec/test-vectors")

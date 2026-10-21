@@ -53,7 +53,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | M3: Musofir — yo'l qarzidan chiqish («Qarz to'lovi» maqsadidan uyda to'lanadi, necha oyda yopilishi), «Qaytdim» va 90 kunlik sovutish davri, katta qaror oldidan tekshiruv va qarorlar jurnali | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M4: Musofir — qorovul pul (o'z ulushi avval qorovulga, keyin jamg'armaga), ish boshlash summasi («Hunardan ishga» g'oyasi bilan), qaror natijasi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
 | M5: Musofir — 7-qonun qissasidan: «besh xavf belgisi» (3 yangi savol, «ikki belgi — qoching»), qal'a devori (6 oylik ro'zg'or, erkin pul), valyutada olib kelingan summa, va'daning yillik hisobi | ✅ yadro + desktop + Linux E2E; Android UI — keyingi sessiya |
-| Android: FRB API sirti (`core/bindings/flutter`) | ✅; Flutter ilovasi — keyingi sessiya |
+| Android (A0): Flutter ilova — FRB (DTO'lar yadrodan), Keystore platforma siri, `FLAG_SECURE`, onboarding, qulf va avto-qulf, sozlamalar, Uy bosh sahifasi; testlar haqiqiy yadro bilan, vektorlar Dart'dan | ✅ poydevor; ekranlar — A1–A4 |
 
 ## Ishga tushirish
 ```bash

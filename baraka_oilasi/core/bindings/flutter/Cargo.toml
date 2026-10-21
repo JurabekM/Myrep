@@ -10,15 +10,34 @@ publish.workspace = true
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
 
+[features]
+# Faqat host testlari uchun (`flutter test` oltin vektorlarni FFI orqali tekshiradi, 12.1).
+# Android release build'ida yo'q.
+vectors = ["dep:baraka-vectors"]
+
 [dependencies]
+baraka-vectors = { path = "../../crates/vectors", optional = true }
 baraka-app.workspace = true
 baraka-agreements.workspace = true
 baraka-security.workspace = true
 chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+flutter_rust_bridge = "=2.13.0"
 zeroize.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
 
-[lints]
-workspace = true
+# FRB generatsiya qilgan `frb_generated.rs` FFI uchun `unsafe` ishlatadi: workspace'dagi `forbid`
+# o'rniga `deny` — shu modulgagina `allow` beriladi.
+[lints.rust]
+unsafe_code = "deny"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+dbg_macro = "deny"
+todo = "deny"

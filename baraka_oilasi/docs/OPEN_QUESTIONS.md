@@ -310,7 +310,7 @@
 
 ### OQ-T4. Android platforma siri va avto-qulf
 - **Masala:** `BarakaCore` (FRB) platforma sirini Dart orqali bayt sifatida oladi. Kotlin `PlatformSecretApi` uni Keystore bilan wrap qilib saqlashi va har chaqiruvdan keyin xotiradan tozalashi kerak; Rust tomoni baytlarni `zeroize` qiladi.
-- **Qaror qachon:** Android Y4(b). **Holat:** OCHIQ.
+- **Qaror (A0):** `PlatformSecretStore` (Kotlin) — 32 bayt `SecureRandom`, Keystore'dagi AES-256-GCM kalit bilan o'ralib `noBackupFilesDir` da (StrongBox bo'lsa — StrongBox); Pigeon orqali Dart'ga, u yerdan FRB bilan Rust'ga — Rust `zeroize` qiladi. Avto-qulf: ilova fonga o'tgandan 2 daqiqa keyin (`AppLifecycleListener`). **Holat:** HAL QILINDI (biometriya — OQ-T10).
 
 ### OQ-T5. Desktop E2E (tauri-driver)
 - **Masala:** hozircha haqiqiy ilova Xvfb + xdotool bilan qo'lda tekshirildi (sozlash → daromad → ulush → qulf). Windows'da `tauri-driver` + WebdriverIO bilan avtomatlashtirish kerak.
@@ -332,3 +332,16 @@
 - **Variantlar:** (a) updater yo'q — yangi o'rnatuvchi qo'lda yuklanadi (hozir shunday); (b) GitHub Releases'dagi statik `latest.json` + minisign, tekshirish faqat foydalanuvchi «Yangilanishni tekshirish» bosganda; (c) avtomatik fon tekshiruvi.
 - **Taklif:** (b). Qaror chiqmaguncha updater qo'shilmadi (`RELEASE_CHECKLIST.md` 3).
 - **Kimga:** mahsulot egasi. **Holat:** OCHIQ.
+
+### OQ-T9. Riverpod: generator yoki qo'lda provider'lar
+- **Masala:** `BARAKA_OILASI.md` 3.2 — «Riverpod 2 (`riverpod_generator`)». `riverpod_generator` 2.x eski analyzer'ga (7.x) bog'langan va Flutter 3.47 SDK manbalaridagi yangi Dart sintaksisini (dot-shorthand) o'qiy olmaydi — `build_runner` yiqiladi. Generatorning yangi versiyasi (4.x) faqat Riverpod 3 bilan ishlaydi.
+- **Hozir (A0):** Riverpod 2.6 runtime'da, generatorsiz: barcha yadro so'rovlari bitta qo'lda yozilgan `coreQueryProvider` (family) orqali — desktop'dagi TanStack Query kalitlari bilan bir xil ma'noda; yadro hodisasi kelganda hammasi qayta o'qiladi.
+- **Variantlar:** (a) shunday qoldirish (ADR 3.2 dagi «`riverpod_generator`» so'zini olib tashlash); (b) Riverpod 3 + `riverpod_generator` 4 ga o'tish (3.2 dagi «Riverpod 2» o'zgaradi).
+- **Taklif:** (a) — provider'lar soni kam, generator foyda bermaydi. ADR o'zgarishi — mahsulot egasi ruxsati bilan.
+- **Kimga:** mahsulot egasi. **Holat:** OCHIQ.
+
+### OQ-T10. Android biometriya (BIO sloti)
+- **Masala:** 7.3 — `BiometricPrompt` + `CryptoObject` bilan BIO sloti. Yadroda slot bor (`KeyFile::enable_bio`), lekin `Session` va FRB API'da yoqish/ochish yo'q (desktop'da Windows Hello ham qilinmagan).
+- **Taklif:** `Session::enable_bio / unlock_with_bio` (yadro) → Kotlin `BiometricApi` (Pigeon) → sozlamalarda «Barmoq izi bilan ochish». Biometriya ixtiyoriy, PIN doim bor.
+- **To'sadi:** — (PIN bilan ishlaydi). **Holat:** OCHIQ.
+

@@ -20,7 +20,11 @@
 | rusqlite | 0.40 (`bundled-sqlcipher-vendored-openssl`), `rusqlite_migration` 2.6 | `Cargo.toml` |
 | Kripto | `argon2` 0.6, `chacha20poly1305` 0.11, `hkdf` 0.13, `sha2` 0.11, `getrandom` 0.4, `zeroize` 1.9 | `Cargo.toml` |
 | Sana-vaqt | `chrono` 0.4 + `chrono-tz` 0.10 (OQ-T3 yopildi) | `Cargo.toml` |
-| Flutter / flutter_rust_bridge | Android vazifasida qotiriladi (bu muhitda Flutter SDK yo'q) | `.fvmrc` (keyin) |
+| Flutter / Dart | **3.47.6** / 3.13 (A0) | `.fvmrc`, `apps/android/pubspec.yaml` |
+| flutter_rust_bridge | **=2.13.0** (Rust crate, Dart paket va `flutter_rust_bridge_codegen` bir xil) | `core/bindings/flutter/Cargo.toml`, `pubspec.yaml` |
+| Android | compileSdk / targetSdk 36, minSdk 26, NDK 28.2, AGP 9.1, Kotlin 2.4, Gradle 9.3 | `apps/android/android/` |
+| cargo-ndk | 4.1.2 (Gradle `buildRustCore` vazifasi) | `apps/android/README.md`, CI |
+| Riverpod / go_router / Pigeon | `flutter_riverpod` 2.6 (generatorsiz — OQ-T9), `go_router` 18, `pigeon` 26 | `pubspec.yaml` |
 
 ## Yangi bog'liqliklar va sabablari
 | Bog'liqlik | Nima uchun | Muqobil | Litsenziya |
@@ -30,6 +34,13 @@
 | `data-encoding` | Tiklash kodi uchun base32 | qo'lda base32 | MIT |
 | `keyring` 4.2 | Desktop platforma siri: Credential Manager / Keychain / Secret Service | `windows` crate bilan to'g'ridan-to'g'ri DPAPI | MIT/Apache-2.0 |
 | `@fontsource/noto-sans` | Shrift ilova ichida (CSP `font-src 'self'`), `unicode-range` bilan, U+02BB/U+02BC ni qamraydi | qo'lda woff2 fayllari | OFL-1.1 |
+
+## Android (A0) — qo'shimcha
+- **FRB tashqi crate'larni o'qiydi:** `rust_input: crate::api, baraka-app::dto, baraka-app::error, baraka-app::events` — DTO'lar Dart'da oddiy klass bo'ladi (opaque emas), qo'lda «mirror» yozilmaydi.
+- **Generik `Answer<T>` va imzo chiziqlari** (`[u16; 2]`) FRB'da tarjima qilinmaydi: sheriklik shartnomasi (`PartnershipInput/Dto`, `SignInput`) va kelishuv tekshiruvi adapterda **JSON** (serde, desktop TS bilan bir xil shakl) orqali o'tadi. Adapterda faqat (de)serializatsiya.
+- **`hash_code` maydoni** Dart'dagi `Object.hashCode` bilan to'qnashadi: Rust'da `chain_code`, serde nomi `hashCode` (desktop TS o'zgarmaydi).
+- **`unsafe`:** FRB generatsiya qilgan `frb_generated.rs` uchun bindings crate'ida `unsafe_code = "deny"` va faqat shu modulga `allow`; qolgan workspace'da `forbid` saqlanadi.
+- **Oltin vektorlar Dart'dan (12.1):** `run_vector` — faqat `vectors` feature bilan (host testlari), release APK'da yo'q.
 
 ## Qo'shimcha qarorlar
 - **Desktop alohida Cargo workspace** (`apps/desktop/src-tauri`): Linux'da webkit tizim kutubxonalarini talab qiladi; yadro CI'si unga bog'liq bo'lmasligi kerak.

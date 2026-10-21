@@ -1,0 +1,27 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - lib/bindings/**
+    - lib/platform/*.g.dart
+    - lib/**/*.g.dart
+    - pigeons/**
+  language:
+    strict-casts: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    # Hujjatlar o'zbekcha izohlarda; har ochiq a'zo uchun dartdoc talab qilinmaydi.
+    public_member_api_docs: false
+    # Ilova ichida nisbiy importlar (desktop UI bilan bir xil uslub).
+    always_use_package_imports: false
+    prefer_relative_imports: true
+    # Yadro so'rovi kaliti `parts` bo'yicha teng — o'zgarmas ro'yxat.
+    avoid_equals_and_hash_code_on_mutable_classes: false
+    lines_longer_than_80_chars: false
+
+formatter:
+  page_width: 120

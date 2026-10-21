@@ -633,7 +633,7 @@ impl App {
                     size_bytes: u32::try_from(a.size_bytes).unwrap_or(u32::MAX),
                 })
                 .collect(),
-            hash_code: l
+            chain_code: l
                 .hashes
                 .get(&e.journal_entry_id)
                 .map(|h| short_code(h))

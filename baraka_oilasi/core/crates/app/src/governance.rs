@@ -336,7 +336,7 @@ impl App {
             proposed_solution: i.proposed_solution.clone(),
             resolved_on: i.resolved_on.clone(),
             resolution_note: i.resolution_note.clone(),
-            hash_code: l
+            chain_code: l
                 .hashes
                 .get(&i.journal_entry_id)
                 .map(|h| short_code(h))
@@ -1498,7 +1498,7 @@ impl App {
             review_date: p.review_date.clone(),
             status: row.status.clone(),
             adults,
-            hash_code: short_code(&hash),
+            chain_code: short_code(&hash),
         })
     }
 

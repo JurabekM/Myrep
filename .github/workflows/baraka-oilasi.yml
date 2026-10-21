@@ -71,6 +71,43 @@ jobs:
       - name: Generatsiya qilingan fayllar commit qilingan
         run: git diff --exit-code
 
+  # Android (A0+): FRB/Pigeon generatsiyasi commit qilingan, analyze, widget testlar haqiqiy Rust
+  # yadro bilan (host `.so`) va oltin vektorlar Dart'dan (12.1); APK — cargo-ndk.
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+      - name: Asboblar (flutter_rust_bridge_codegen, cargo-ndk)
+        run: |
+          cargo install --locked flutter_rust_bridge_codegen --version 2.13.0
+          cargo install --locked cargo-ndk --version 4.1.2
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+      - run: flutter pub get
+      - name: FRB va Pigeon generatsiyasi commit qilingan
+        run: |
+          cargo xtask codegen
+          git diff --exit-code
+      - run: flutter analyze
+      - name: Host yadro (vektorlar bilan)
+        run: cargo build -p baraka-bindings-flutter --features vectors
+      - run: flutter test
+      - name: APK (arm64-v8a, armeabi-v7a)
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-apk
+          path: baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-release.apk
+
   desktop-ui:
     runs-on: ubuntu-latest
     defaults:

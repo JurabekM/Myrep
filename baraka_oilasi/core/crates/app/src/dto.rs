@@ -1325,7 +1325,8 @@ pub struct VentureEntryDto {
     pub period_no: Option<u32>,
     pub attachments: Vec<AttachmentMetaDto>,
     /// Jurnal yozuvi xeshining qisqa kodi.
-    pub hash_code: String,
+    #[serde(rename = "hashCode")]
+    pub chain_code: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1661,7 +1662,8 @@ pub struct IncidentDto {
     pub proposed_solution: Option<String>,
     pub resolved_on: Option<String>,
     pub resolution_note: Option<String>,
-    pub hash_code: String,
+    #[serde(rename = "hashCode")]
+    pub chain_code: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1879,7 +1881,8 @@ pub struct FamilyAgreementDto {
     /// `DRAFT` — kattalar hali tasdiqlamagan, `ACTIVE` — hamma tasdiqlagan.
     pub status: String,
     pub adults: Vec<SignoffDto>,
-    pub hash_code: String,
+    #[serde(rename = "hashCode")]
+    pub chain_code: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

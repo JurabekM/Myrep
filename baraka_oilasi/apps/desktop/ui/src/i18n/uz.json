@@ -2624,5 +2624,6 @@
   "mf.return.wallLine": "Qalʼa devori — oilaning 6 oylik roʻzgʻori: {wall}",
   "mf.return.freeLine": "Erkin pul (savdo, sheriklik va xaridlar uchun): {free}",
   "mf.return.wallHint": "Uy makonida oyiga oʻrtacha {avg} ({count} oy). Devor puli hech qayerga qoʻshilmaydi.",
-  "mf.return.noWall": "Uy makonida xarajatlarni yozing — qalʼa devorini (6 oylik roʻzgʻor) hisoblayman."
+  "mf.return.noWall": "Uy makonida xarajatlarni yozing — qalʼa devorini (6 oylik roʻzgʻor) hisoblayman.",
+  "common.copy": "Nusxa olish"
 }

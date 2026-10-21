@@ -316,7 +316,7 @@ fn incidents_review_protocol_and_tamper_detection() {
         i.breach_clause.as_deref(),
         Some("1 kun ichida xabar beradi va oʻrniga yechim topadi")
     );
-    assert!(!i.hash_code.is_empty() && i.resolved_on.is_none());
+    assert!(!i.chain_code.is_empty() && i.resolved_on.is_none());
     let journal = app.journal(uy, &p.agreement_id).unwrap();
     assert!(journal.iter().any(|j| j.kind == "DUTY_INCIDENT"));
 

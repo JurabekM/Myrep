@@ -1,15 +1,34 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use baraka_agreements::{AgreementDraft, Completeness};
+use baraka_agreements::AgreementDraft;
 use baraka_app::*;
+use serde::{de::DeserializeOwned, Serialize};
 use zeroize::Zeroize;
+
+use crate::frb_generated::StreamSink;
 
 /// Android avto-qulf vaqti (7.4): fonga o'tgandan 2 daqiqa.
 const IDLE_LOCK_MINUTES: i64 = 2;
 
 pub fn core_version() -> String {
     baraka_app::core_version().to_string()
+}
+
+/// Oltin vektor case'i (12.1: vektorlar Dart'dan ham — DTO va string-pul o'tkazishdagi xatolarni
+/// ushlaydi). `input_json` → yadro natijasi (JSON). Faqat `vectors` feature bilan (host testlari);
+/// aks holda `VECTORS_DISABLED`.
+pub fn run_vector(suite: String, input_json: String) -> Result<String, AppError> {
+    #[cfg(feature = "vectors")]
+    {
+        let input: serde_json::Value = from_json(&input_json)?;
+        to_json(&baraka_vectors::run_case(&suite, &input))
+    }
+    #[cfg(not(feature = "vectors"))]
+    {
+        let _ = (suite, input_json);
+        Err(AppError::new("VECTORS_DISABLED"))
+    }
 }
 
 /// Dart tomonida opaque obyekt. Platforma siri Kotlin `PlatformSecretApi` (Keystore) dan keladi.
@@ -22,6 +41,17 @@ fn take_secret(mut bytes: Vec<u8>) -> Result<PlatformSecret, AppError> {
     let secret = PlatformSecret::from_slice(&bytes).map_err(AppError::from);
     bytes.zeroize();
     secret
+}
+
+/// `Answer<T>` (generik) va imzo chiziqlarini FRB Dart'ga tarjima qila olmaydi: sheriklik
+/// shartnomasi va kelishuv tekshiruvi JSON orqali o'tadi. Shakl — serde (camelCase), desktop TS
+/// turlari bilan aynan bir xil. Bu yerda faqat (de)serializatsiya — mantiq yo'q.
+fn from_json<T: DeserializeOwned>(json: &str) -> Result<T, AppError> {
+    serde_json::from_str(json).map_err(|_| AppError::new("INVALID_INPUT"))
+}
+
+fn to_json<T: Serialize>(value: &T) -> Result<String, AppError> {
+    serde_json::to_string(value).map_err(|_| AppError::new("GENERIC"))
 }
 
 impl BarakaCore {
@@ -174,12 +204,19 @@ impl BarakaCore {
         self.session.app()?.simulate_loan(input)
     }
 
+    /// `draft_json` — `AgreementDraft`; natija — `Completeness` (JSON).
     pub fn check_agreement(
         &self,
         agreement_type: String,
-        draft: AgreementDraft,
-    ) -> Result<Completeness, AppError> {
-        self.session.app()?.check_agreement(&agreement_type, draft)
+        draft_json: String,
+    ) -> Result<String, AppError> {
+        let draft: AgreementDraft = from_json(&draft_json)?;
+        to_json(
+            &self
+                .session
+                .app()?
+                .check_agreement(&agreement_type, draft)?,
+        )
     }
 
     /// Qarz tilxati PDF baytlari (Dart tomonida `share_plus` / `printing` bilan ulashiladi).
@@ -484,8 +521,13 @@ impl BarakaCore {
         &self,
         space_id: String,
         partnership_id: String,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session.app()?.partnership(&space_id, &partnership_id)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .partnership(&space_id, &partnership_id)?,
+        )
     }
 
     pub fn readiness_gate(&self, space_id: String) -> Result<GateDto, AppError> {
@@ -495,20 +537,25 @@ impl BarakaCore {
     pub fn create_partnership(
         &self,
         space_id: String,
-        input: PartnershipInput,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session.app()?.create_partnership(&space_id, input)
+        input_json: String,
+    ) -> Result<String, AppError> {
+        let input: PartnershipInput = from_json(&input_json)?;
+        to_json(&self.session.app()?.create_partnership(&space_id, input)?)
     }
 
     pub fn update_partnership(
         &self,
         space_id: String,
         partnership_id: String,
-        input: PartnershipInput,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .update_partnership(&space_id, &partnership_id, input)
+        input_json: String,
+    ) -> Result<String, AppError> {
+        let input: PartnershipInput = from_json(&input_json)?;
+        to_json(
+            &self
+                .session
+                .app()?
+                .update_partnership(&space_id, &partnership_id, input)?,
+        )
     }
 
     /// Imzo shu qurilmada chiziladi: nuqtalar 0..=1000 × 0..=400 maydonda.
@@ -516,21 +563,28 @@ impl BarakaCore {
         &self,
         space_id: String,
         partnership_id: String,
-        input: SignInput,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .sign_partnership(&space_id, &partnership_id, input)
+        input_json: String,
+    ) -> Result<String, AppError> {
+        let input: SignInput = from_json(&input_json)?;
+        to_json(
+            &self
+                .session
+                .app()?
+                .sign_partnership(&space_id, &partnership_id, input)?,
+        )
     }
 
     pub fn acknowledge_not_debt(
         &self,
         space_id: String,
         partnership_id: String,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .acknowledge_not_debt(&space_id, &partnership_id)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .acknowledge_not_debt(&space_id, &partnership_id)?,
+        )
     }
 
     pub fn consent_partnership(
@@ -538,30 +592,39 @@ impl BarakaCore {
         space_id: String,
         partnership_id: String,
         member_id: String,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .consent_partnership(&space_id, &partnership_id, &member_id)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .consent_partnership(&space_id, &partnership_id, &member_id)?,
+        )
     }
 
     pub fn activate_partnership(
         &self,
         space_id: String,
         partnership_id: String,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .activate_partnership(&space_id, &partnership_id)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .activate_partnership(&space_id, &partnership_id)?,
+        )
     }
 
     pub fn close_partnership(
         &self,
         space_id: String,
         partnership_id: String,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .close_partnership(&space_id, &partnership_id)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .close_partnership(&space_id, &partnership_id)?,
+        )
     }
 
     pub fn delete_partnership(
@@ -705,10 +768,13 @@ impl BarakaCore {
         space_id: String,
         idea_id: String,
         input: IdeaDraftInput,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .draft_partnership_from_idea(&space_id, &idea_id, input)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .draft_partnership_from_idea(&space_id, &idea_id, input)?,
+        )
     }
 
     /// «Kafolatlangan foyda» detektori — ilovaning istalgan joyidan.
@@ -845,10 +911,13 @@ impl BarakaCore {
         &self,
         space_id: String,
         partnership_id: String,
-    ) -> Result<PartnershipDto, AppError> {
-        self.session
-            .app()?
-            .renew_partnership(&space_id, &partnership_id)
+    ) -> Result<String, AppError> {
+        to_json(
+            &self
+                .session
+                .app()?
+                .renew_partnership(&space_id, &partnership_id)?,
+        )
     }
 
     pub fn family_agreements(&self, space_id: String) -> Result<Vec<FamilyAgreementDto>, AppError> {
@@ -1666,11 +1735,19 @@ impl BarakaCore {
         self.session.app()?.pairing_offer(input)
     }
 
-    /// O'zgarish hodisalari: Android vazifasida FRB `StreamSink<ChangeEvent>` bilan ulanadi.
-    /// Hozircha bloklovchi o'qish — keyingi hodisani kutadi (`None` — sessiya yopildi).
-    pub fn next_change(&self) -> Result<Option<ChangeEvent>, AppError> {
+    /// O'zgarish hodisalari: ochilgan ilovaning hodisalari Dart `Stream` iga uzatiladi
+    /// (Riverpod provider'lari invalidatsiya qilinadi). Har `setup` / `unlock` dan keyin
+    /// chaqiriladi; qulflanganda ilova yopiladi va oqim tugaydi.
+    pub fn watch_changes(&self, sink: StreamSink<ChangeEvent>) -> Result<(), AppError> {
         let rx = self.session.app()?.subscribe();
-        Ok(rx.recv().ok())
+        std::thread::spawn(move || {
+            for ev in rx {
+                if sink.add(ev).is_err() {
+                    break;
+                }
+            }
+        });
+        Ok(())
     }
 }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Standart mavzu — dark (Claude Code dark theme uslubi): ishga tushishda ham fon #262624. -->
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:statusBarColor">@color/baraka_paper</item>
+        <item name="android:navigationBarColor">@color/baraka_paper</item>
+    </style>
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@color/baraka_paper</item>
+    </style>
+</resources>
