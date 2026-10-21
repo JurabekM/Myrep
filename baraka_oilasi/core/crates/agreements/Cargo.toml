@@ -1,0 +1,22 @@
+[package]
+name = "baraka-agreements"
+description = "Kelishuv dvigateli: «Chorsucha shartnomaning 9 savoli», turlar va validatsiyalar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+specta = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[features]
+# TypeScript tiplarini generatsiya qilish uchun (faqat desktop adapteri yoqadi).
+specta = ["dep:specta"]
+
+[lints]
+workspace = true

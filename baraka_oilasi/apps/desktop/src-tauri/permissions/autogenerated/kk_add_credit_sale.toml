@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-add-credit-sale"
+description = "Enables the kk_add_credit_sale command without any pre-configured scope."
+commands.allow = ["kk_add_credit_sale"]
+
+[[permission]]
+identifier = "deny-kk-add-credit-sale"
+description = "Denies the kk_add_credit_sale command without any pre-configured scope."
+commands.deny = ["kk_add_credit_sale"]

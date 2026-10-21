@@ -1,0 +1,23 @@
+{
+  "suite": "emergency_target",
+  "version": 1,
+  "description": "round_half_up(Σ(ZARUR+KERAK, k oy) × N / k)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "emerg-001",
+      "input": {
+        "currency": "UZS",
+        "monthlyEssentials": [
+          "520000000",
+          "500000000",
+          "530000000"
+        ],
+        "months": 6
+      },
+      "expected": {
+        "target": "3100000000"
+      }
+    }
+  ]
+}

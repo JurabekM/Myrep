@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-family-labor"
+description = "Enables the kk_family_labor command without any pre-configured scope."
+commands.allow = ["kk_family_labor"]
+
+[[permission]]
+identifier = "deny-kk-family-labor"
+description = "Denies the kk_family_labor command without any pre-configured scope."
+commands.deny = ["kk_family_labor"]

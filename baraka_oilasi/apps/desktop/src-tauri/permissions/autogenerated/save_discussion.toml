@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-discussion"
+description = "Enables the save_discussion command without any pre-configured scope."
+commands.allow = ["save_discussion"]
+
+[[permission]]
+identifier = "deny-save-discussion"
+description = "Denies the save_discussion command without any pre-configured scope."
+commands.deny = ["save_discussion"]

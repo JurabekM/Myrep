@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-loan-receipt"
+description = "Enables the export_loan_receipt command without any pre-configured scope."
+commands.allow = ["export_loan_receipt"]
+
+[[permission]]
+identifier = "deny-export-loan-receipt"
+description = "Denies the export_loan_receipt command without any pre-configured scope."
+commands.deny = ["export_loan_receipt"]

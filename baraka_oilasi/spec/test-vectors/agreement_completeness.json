@@ -1,0 +1,1090 @@
+{
+  "suite": "agreement_completeness",
+  "version": 1,
+  "description": "9 savol to'liqligi va validatsiya kodlari (uy/SPEC 2F.2)",
+  "generatedBy": "qo'lda",
+  "cases": [
+    {
+      "id": "agr-001",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": true,
+        "missing": [],
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-002",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Hamma hamma narsani qiladi",
+                "ownerPartyId": "hamma",
+                "breachClause": "x"
+              },
+              {
+                "id": "d2",
+                "title": "Hisob",
+                "breachClause": "x"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": false,
+        "missing": [],
+        "errors": [
+          "DUTY_WITHOUT_OWNER"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-003",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Dilshod Rahimov"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": false,
+        "missing": [],
+        "errors": [
+          "ARBITER_IS_PARTY"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-004",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "NOT_APPLICABLE",
+            "reason": ""
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 8,
+        "complete": false,
+        "canSign": false,
+        "missing": [
+          8
+        ],
+        "errors": [
+          "NA_REASON_REQUIRED"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-005",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [],
+              "fixedAmountMinor": "50000000"
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": false,
+        "missing": [],
+        "errors": [
+          "GUARANTEED_RETURN_FORBIDDEN"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-006",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "UNANSWERED"
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "UNANSWERED"
+          }
+        }
+      },
+      "expected": {
+        "answered": 7,
+        "complete": false,
+        "canSign": false,
+        "missing": [
+          7,
+          9
+        ],
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-007",
+      "input": {
+        "type": "LOAN",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "UNANSWERED"
+          },
+          "lossRule": {
+            "status": "UNANSWERED"
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": true,
+        "missing": [],
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-008",
+      "input": {
+        "type": "FAMILY",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "uy",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 90
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "UNANSWERED"
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": true,
+        "missing": [],
+        "errors": [],
+        "warnings": [
+          "REVIEW_TOO_RARE"
+        ]
+      }
+    },
+    {
+      "id": "agr-009",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              },
+              {
+                "id": "P2",
+                "fullName": "Dilshod Rahimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Hisob",
+                "ownerPartyId": "P1"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": false,
+        "missing": [],
+        "errors": [
+          "BREACH_CLAUSE_REQUIRED"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "agr-010",
+      "input": {
+        "type": "PARTNERSHIP",
+        "draft": {
+          "parties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "P1",
+                "fullName": "Anvar Karimov"
+              }
+            ]
+          },
+          "contributions": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "partyId": "P1",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              },
+              {
+                "partyId": "P2",
+                "kind": "MONEY",
+                "description": "naqd",
+                "amountMinor": "300000000",
+                "currency": "UZS"
+              }
+            ]
+          },
+          "duties": {
+            "status": "ANSWERED",
+            "value": [
+              {
+                "id": "d1",
+                "title": "Yetkazib berish botini yuritish",
+                "ownerPartyId": "P2",
+                "breachClause": "1 kun ichida xabar beradi va o'rniga yechim topadi"
+              }
+            ]
+          },
+          "profitRule": {
+            "status": "ANSWERED",
+            "value": {
+              "shares": [
+                {
+                  "partyId": "P1",
+                  "shareBp": 5000
+                },
+                {
+                  "partyId": "P2",
+                  "shareBp": 5000
+                }
+              ]
+            }
+          },
+          "lossRule": {
+            "status": "ANSWERED",
+            "value": {
+              "kind": "PROPORTIONAL_TO_CAPITAL"
+            }
+          },
+          "custody": {
+            "status": "ANSWERED",
+            "value": {
+              "location": "Anvarning kartasi",
+              "keeperPartyId": "P1",
+              "reviewEveryDays": 30
+            }
+          },
+          "exitClause": {
+            "status": "ANSWERED",
+            "value": {
+              "noticeDays": 30,
+              "valuationMethod": "Oxirgi ko'rikdagi kitob qiymati",
+              "payoutTerms": "3 oy ichida teng bo'lib"
+            }
+          },
+          "arbiter": {
+            "status": "ANSWERED",
+            "value": {
+              "fullName": "Sobir hoji"
+            }
+          },
+          "term": {
+            "status": "ANSWERED",
+            "value": {
+              "effectiveFrom": "2026-10-01",
+              "durationMonths": 12,
+              "reviewDate": "2027-10-01"
+            }
+          }
+        }
+      },
+      "expected": {
+        "answered": 9,
+        "complete": true,
+        "canSign": false,
+        "missing": [],
+        "errors": [
+          "MIN_TWO_PARTIES",
+          "UNKNOWN_PARTY"
+        ],
+        "warnings": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-order-quote"
+description = "Enables the kk_order_quote command without any pre-configured scope."
+commands.allow = ["kk_order_quote"]
+
+[[permission]]
+identifier = "deny-kk-order-quote"
+description = "Denies the kk_order_quote command without any pre-configured scope."
+commands.deny = ["kk_order_quote"]

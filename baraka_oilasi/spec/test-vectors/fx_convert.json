@@ -1,0 +1,67 @@
+{
+  "suite": "fx_convert",
+  "version": 1,
+  "description": "1 major from = rateNum/rateDen major to; exponent hisobga olinadi",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "fx-001",
+      "input": {
+        "amount": "10000",
+        "currency": "USD",
+        "rateFrom": "USD",
+        "rateTo": "UZS",
+        "rateNum": "12650",
+        "rateDen": "1"
+      },
+      "expected": {
+        "result": "126500000",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-002",
+      "input": {
+        "amount": "1000000",
+        "currency": "KRW",
+        "rateFrom": "KRW",
+        "rateTo": "UZS",
+        "rateNum": "91",
+        "rateDen": "10"
+      },
+      "expected": {
+        "result": "910000000",
+        "currency": "UZS"
+      }
+    },
+    {
+      "id": "fx-003",
+      "input": {
+        "amount": "910000",
+        "currency": "UZS",
+        "rateFrom": "UZS",
+        "rateTo": "KRW",
+        "rateNum": "10",
+        "rateDen": "91"
+      },
+      "expected": {
+        "result": "1000",
+        "currency": "KRW"
+      }
+    },
+    {
+      "id": "fx-err-001",
+      "input": {
+        "amount": "10000",
+        "currency": "USD",
+        "rateFrom": "EUR",
+        "rateTo": "UZS",
+        "rateNum": "14000",
+        "rateDen": "1"
+      },
+      "expected": {
+        "error": "CURRENCY_MISMATCH"
+      }
+    }
+  ]
+}

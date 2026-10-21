@@ -1,0 +1,52 @@
+{
+  "suite": "debt_load",
+  "version": 1,
+  "description": "Oylik qarz yuki = shu davrdagi reja to'lovlari / oylik daromad, bp (round_half_up)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "load-001",
+      "input": {
+        "currency": "UZS",
+        "payments": "322147684",
+        "income": "1200000000"
+      },
+      "expected": {
+        "loadBp": 2685
+      }
+    },
+    {
+      "id": "load-002",
+      "input": {
+        "currency": "UZS",
+        "payments": "0",
+        "income": "800000000"
+      },
+      "expected": {
+        "loadBp": 0
+      }
+    },
+    {
+      "id": "load-003",
+      "input": {
+        "currency": "UZS",
+        "payments": "150000000",
+        "income": "0"
+      },
+      "expected": {
+        "loadBp": null
+      }
+    },
+    {
+      "id": "load-004",
+      "input": {
+        "currency": "UZS",
+        "payments": "100000000",
+        "income": "300000000"
+      },
+      "expected": {
+        "loadBp": 3333
+      }
+    }
+  ]
+}

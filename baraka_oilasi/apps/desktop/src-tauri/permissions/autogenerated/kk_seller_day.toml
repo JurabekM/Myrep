@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-seller-day"
+description = "Enables the kk_seller_day command without any pre-configured scope."
+commands.allow = ["kk_seller_day"]
+
+[[permission]]
+identifier = "deny-kk-seller-day"
+description = "Denies the kk_seller_day command without any pre-configured scope."
+commands.deny = ["kk_seller_day"]

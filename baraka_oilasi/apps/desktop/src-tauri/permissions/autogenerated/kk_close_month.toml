@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-close-month"
+description = "Enables the kk_close_month command without any pre-configured scope."
+commands.allow = ["kk_close_month"]
+
+[[permission]]
+identifier = "deny-kk-close-month"
+description = "Denies the kk_close_month command without any pre-configured scope."
+commands.deny = ["kk_close_month"]

@@ -1,0 +1,13 @@
+{
+  "app.name": "Барака",
+  "space.KASBKOR": "Касб-кор",
+  "income.channel.CARD": "Карта",
+  "category.cafe": "Кафе",
+  "lock.pin": "PIN",
+  "setup.pin": "6 хонали PIN",
+  "setup.pinRepeat": "PINʼни такрорланг",
+  "lock.forgot": "PINʼни унутдим",
+  "mentor.name": "Собир ҳожи",
+  "locale.uz": "Oʻzbekcha (lotin)",
+  "settings.highContrast": "Windows'да «Юқори контраст» ёқилган бўлса, илова тизим рангларига ўтади."
+}

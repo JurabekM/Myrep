@@ -1,0 +1,681 @@
+{
+  "suite": "kk_expansion_gate",
+  "version": 1,
+  "description": "Kasb-kor kengayish darvozasi: zaxira ≥ N oylik xarajat, oxirgi 3 «Hisob kuni»da foyda, 90+ nasiya ulushi, foizli qarz va reja, kengayish rejasi — har biri alohida va birga (kasbkor/SPEC 6.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "gt-001",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "800000000",
+          "900000000",
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "258000000",
+          "190000000",
+          "310000000"
+        ],
+        "receivables": "1000000000",
+        "receivables90": "50000000",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": true,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 500
+      }
+    },
+    {
+      "id": "gt-002",
+      "input": {
+        "currency": "UZS",
+        "reserve": "2000000000",
+        "opexMonths": [
+          "800000000",
+          "900000000",
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "258000000",
+          "190000000",
+          "310000000"
+        ],
+        "receivables": "1000000000",
+        "receivables90": "50000000",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": false
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [
+          "RESERVE"
+        ],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 235,
+        "badDebtBp": 500
+      }
+    },
+    {
+      "id": "gt-003",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "258000000",
+          "-40000000",
+          "310000000"
+        ],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": false
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [
+          "PROFIT"
+        ],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 0
+      }
+    },
+    {
+      "id": "gt-004",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "258000000",
+          "310000000"
+        ],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": false
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [
+          "PROFIT"
+        ],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 0
+      }
+    },
+    {
+      "id": "gt-005",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "100",
+          "100",
+          "100"
+        ],
+        "receivables": "1000000000",
+        "receivables90": "150000000",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": false
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [
+          "RECEIVABLES"
+        ],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 1500
+      }
+    },
+    {
+      "id": "gt-006",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "100",
+          "100",
+          "100"
+        ],
+        "receivables": "1000000000",
+        "receivables90": "100000000",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": true,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 1000
+      }
+    },
+    {
+      "id": "gt-007",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "100",
+          "100",
+          "100"
+        ],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": false
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [
+          "INTEREST_DEBT"
+        ],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 0
+      }
+    },
+    {
+      "id": "gt-008",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "100",
+          "100",
+          "100"
+        ],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": true,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": true,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 0
+      }
+    },
+    {
+      "id": "gt-009",
+      "input": {
+        "currency": "UZS",
+        "reserve": "3000000000",
+        "opexMonths": [
+          "850000000"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [
+          "100",
+          "100",
+          "100"
+        ],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": false
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": false
+          }
+        ],
+        "reasons": [
+          "PLAN"
+        ],
+        "averageOpex": "850000000",
+        "requiredReserve": "2550000000",
+        "coverageCentiMonths": 353,
+        "badDebtBp": 0
+      }
+    },
+    {
+      "id": "gt-010",
+      "input": {
+        "currency": "UZS",
+        "reserve": "0",
+        "opexMonths": [],
+        "requiredMonths": 3,
+        "trueProfits": [],
+        "receivables": "100000000",
+        "receivables90": "100000000",
+        "maxBadBp": 1000,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": false,
+        "hasPlan": false
+      },
+      "expected": {
+        "open": false,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": false
+          },
+          {
+            "code": "PROFIT",
+            "ok": false
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": false
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": false
+          },
+          {
+            "code": "PLAN",
+            "ok": false
+          }
+        ],
+        "reasons": [
+          "RESERVE",
+          "PROFIT",
+          "RECEIVABLES",
+          "INTEREST_DEBT",
+          "PLAN"
+        ],
+        "averageOpex": null,
+        "requiredReserve": null,
+        "coverageCentiMonths": null,
+        "badDebtBp": 10000
+      }
+    },
+    {
+      "id": "gt-011",
+      "input": {
+        "currency": "UZS",
+        "reserve": "0",
+        "opexMonths": [
+          "0",
+          "0",
+          "0"
+        ],
+        "requiredMonths": 6,
+        "trueProfits": [
+          "100",
+          "100",
+          "100"
+        ],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "open": true,
+        "conditions": [
+          {
+            "code": "RESERVE",
+            "ok": true
+          },
+          {
+            "code": "PROFIT",
+            "ok": true
+          },
+          {
+            "code": "RECEIVABLES",
+            "ok": true
+          },
+          {
+            "code": "INTEREST_DEBT",
+            "ok": true
+          },
+          {
+            "code": "PLAN",
+            "ok": true
+          }
+        ],
+        "reasons": [],
+        "averageOpex": "0",
+        "requiredReserve": "0",
+        "coverageCentiMonths": null,
+        "badDebtBp": 0
+      }
+    },
+    {
+      "id": "gt-neg-001",
+      "input": {
+        "currency": "UZS",
+        "reserve": "-100",
+        "opexMonths": [
+          "100"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "gt-neg-002",
+      "input": {
+        "currency": "UZS",
+        "reserve": "0",
+        "opexMonths": [
+          "100"
+        ],
+        "requiredMonths": 0,
+        "trueProfits": [],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "error": "INVALID_MONTHS"
+      }
+    },
+    {
+      "id": "gt-neg-003",
+      "input": {
+        "currency": "UZS",
+        "reserve": "0",
+        "opexMonths": [
+          "100"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [],
+        "receivables": "10000",
+        "receivables90": "20000",
+        "maxBadBp": 1000,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "error": "INVALID_RECEIVABLES"
+      }
+    },
+    {
+      "id": "gt-neg-004",
+      "input": {
+        "currency": "UZS",
+        "reserve": "0",
+        "opexMonths": [
+          "100"
+        ],
+        "requiredMonths": 3,
+        "trueProfits": [],
+        "receivables": "0",
+        "receivables90": "0",
+        "maxBadBp": 10001,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "hasPlan": true
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    }
+  ]
+}

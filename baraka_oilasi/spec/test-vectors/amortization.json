@@ -1,0 +1,276 @@
+{
+  "suite": "amortization",
+  "version": 1,
+  "description": "Annuitet, muddatni qisqartirish rejimi (Anvar avtokrediti, 24% illyustrativ)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "amort-001",
+      "input": {
+        "principal": "3900000000",
+        "currency": "UZS",
+        "annualBp": 2400,
+        "months": 14,
+        "extraPerMonth": "0"
+      },
+      "expected": {
+        "payment": "322147684",
+        "months": 14,
+        "totalInterest": "610067573",
+        "schedule": [
+          {
+            "month": 1,
+            "interest": "78000000",
+            "principal": "244147684",
+            "extra": "0",
+            "balance": "3655852316"
+          },
+          {
+            "month": 2,
+            "interest": "73117046",
+            "principal": "249030638",
+            "extra": "0",
+            "balance": "3406821678"
+          },
+          {
+            "month": 3,
+            "interest": "68136434",
+            "principal": "254011250",
+            "extra": "0",
+            "balance": "3152810428"
+          },
+          {
+            "month": 4,
+            "interest": "63056209",
+            "principal": "259091475",
+            "extra": "0",
+            "balance": "2893718953"
+          },
+          {
+            "month": 5,
+            "interest": "57874379",
+            "principal": "264273305",
+            "extra": "0",
+            "balance": "2629445648"
+          },
+          {
+            "month": 6,
+            "interest": "52588913",
+            "principal": "269558771",
+            "extra": "0",
+            "balance": "2359886877"
+          },
+          {
+            "month": 7,
+            "interest": "47197738",
+            "principal": "274949946",
+            "extra": "0",
+            "balance": "2084936931"
+          },
+          {
+            "month": 8,
+            "interest": "41698739",
+            "principal": "280448945",
+            "extra": "0",
+            "balance": "1804487986"
+          },
+          {
+            "month": 9,
+            "interest": "36089760",
+            "principal": "286057924",
+            "extra": "0",
+            "balance": "1518430062"
+          },
+          {
+            "month": 10,
+            "interest": "30368601",
+            "principal": "291779083",
+            "extra": "0",
+            "balance": "1226650979"
+          },
+          {
+            "month": 11,
+            "interest": "24533020",
+            "principal": "297614664",
+            "extra": "0",
+            "balance": "929036315"
+          },
+          {
+            "month": 12,
+            "interest": "18580726",
+            "principal": "303566958",
+            "extra": "0",
+            "balance": "625469357"
+          },
+          {
+            "month": 13,
+            "interest": "12509387",
+            "principal": "309638297",
+            "extra": "0",
+            "balance": "315831060"
+          },
+          {
+            "month": 14,
+            "interest": "6316621",
+            "principal": "315831060",
+            "extra": "0",
+            "balance": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "amort-002",
+      "input": {
+        "principal": "3900000000",
+        "currency": "UZS",
+        "annualBp": 2400,
+        "months": 14,
+        "extraPerMonth": "160000000"
+      },
+      "expected": {
+        "payment": "322147684",
+        "months": 9,
+        "totalInterest": "397018667",
+        "schedule": [
+          {
+            "month": 1,
+            "interest": "78000000",
+            "principal": "244147684",
+            "extra": "160000000",
+            "balance": "3495852316"
+          },
+          {
+            "month": 2,
+            "interest": "69917046",
+            "principal": "252230638",
+            "extra": "160000000",
+            "balance": "3083621678"
+          },
+          {
+            "month": 3,
+            "interest": "61672434",
+            "principal": "260475250",
+            "extra": "160000000",
+            "balance": "2663146428"
+          },
+          {
+            "month": 4,
+            "interest": "53262929",
+            "principal": "268884755",
+            "extra": "160000000",
+            "balance": "2234261673"
+          },
+          {
+            "month": 5,
+            "interest": "44685233",
+            "principal": "277462451",
+            "extra": "160000000",
+            "balance": "1796799222"
+          },
+          {
+            "month": 6,
+            "interest": "35935984",
+            "principal": "286211700",
+            "extra": "160000000",
+            "balance": "1350587522"
+          },
+          {
+            "month": 7,
+            "interest": "27011750",
+            "principal": "295135934",
+            "extra": "160000000",
+            "balance": "895451588"
+          },
+          {
+            "month": 8,
+            "interest": "17909032",
+            "principal": "304238652",
+            "extra": "160000000",
+            "balance": "431212936"
+          },
+          {
+            "month": 9,
+            "interest": "8624259",
+            "principal": "313523425",
+            "extra": "117689511",
+            "balance": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "amort-003",
+      "input": {
+        "principal": "3900000000",
+        "currency": "UZS",
+        "annualBp": 2400,
+        "months": 14,
+        "extraPerMonth": "240000000"
+      },
+      "expected": {
+        "payment": "322147684",
+        "months": 8,
+        "totalInterest": "341756885",
+        "schedule": [
+          {
+            "month": 1,
+            "interest": "78000000",
+            "principal": "244147684",
+            "extra": "240000000",
+            "balance": "3415852316"
+          },
+          {
+            "month": 2,
+            "interest": "68317046",
+            "principal": "253830638",
+            "extra": "240000000",
+            "balance": "2922021678"
+          },
+          {
+            "month": 3,
+            "interest": "58440434",
+            "principal": "263707250",
+            "extra": "240000000",
+            "balance": "2418314428"
+          },
+          {
+            "month": 4,
+            "interest": "48366289",
+            "principal": "273781395",
+            "extra": "240000000",
+            "balance": "1904533033"
+          },
+          {
+            "month": 5,
+            "interest": "38090661",
+            "principal": "284057023",
+            "extra": "240000000",
+            "balance": "1380476010"
+          },
+          {
+            "month": 6,
+            "interest": "27609520",
+            "principal": "294538164",
+            "extra": "240000000",
+            "balance": "845937846"
+          },
+          {
+            "month": 7,
+            "interest": "16918757",
+            "principal": "305228927",
+            "extra": "240000000",
+            "balance": "300708919"
+          },
+          {
+            "month": 8,
+            "interest": "6014178",
+            "principal": "300708919",
+            "extra": "0",
+            "balance": "0"
+          }
+        ]
+      }
+    }
+  ]
+}

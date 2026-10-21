@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-two-shores"
+description = "Enables the mf_two_shores command without any pre-configured scope."
+commands.allow = ["mf_two_shores"]
+
+[[permission]]
+identifier = "deny-mf-two-shores"
+description = "Denies the mf_two_shores command without any pre-configured scope."
+commands.deny = ["mf_two_shores"]

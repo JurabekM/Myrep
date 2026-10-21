@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-confirm-family-agreement"
+description = "Enables the confirm_family_agreement command without any pre-configured scope."
+commands.allow = ["confirm_family_agreement"]
+
+[[permission]]
+identifier = "deny-confirm-family-agreement"
+description = "Denies the confirm_family_agreement command without any pre-configured scope."
+commands.deny = ["confirm_family_agreement"]

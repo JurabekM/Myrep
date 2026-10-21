@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-record-income"
+description = "Enables the record_income command without any pre-configured scope."
+commands.allow = ["record_income"]
+
+[[permission]]
+identifier = "deny-record-income"
+description = "Denies the record_income command without any pre-configured scope."
+commands.deny = ["record_income"]

@@ -1,0 +1,320 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
+
+import { axeViolations } from "../../test/axe";
+import { useUi } from "../../state/ui";
+import { MfHomeScreen } from "./MfHomeScreen";
+
+const mfOverview = vi.fn();
+const mfSetSettings = vi.fn();
+const mfSetRate = vi.fn();
+const mfRecordIncome = vi.fn();
+const mfRecordMove = vi.fn();
+const categories = vi.fn();
+const mfTerms = vi.fn();
+const mfSetTerms = vi.fn();
+const mfTwoShores = vi.fn();
+const mfConfirmReceipt = vi.fn();
+const mfRecordSpend = vi.fn();
+const household = vi.fn();
+
+vi.mock("../../bindings", () => ({
+  commands: {
+    mfOverview: (...a: unknown[]) => mfOverview(...a),
+    mfSetSettings: (...a: unknown[]) => mfSetSettings(...a),
+    mfSetRate: (...a: unknown[]) => mfSetRate(...a),
+    mfRecordIncome: (...a: unknown[]) => mfRecordIncome(...a),
+    mfRecordMove: (...a: unknown[]) => mfRecordMove(...a),
+    mfRecordExpense: vi.fn(),
+    categories: (...a: unknown[]) => categories(...a),
+    mfTerms: (...a: unknown[]) => mfTerms(...a),
+    mfSetTerms: (...a: unknown[]) => mfSetTerms(...a),
+    mfTwoShores: (...a: unknown[]) => mfTwoShores(...a),
+    mfConfirmReceipt: (...a: unknown[]) => mfConfirmReceipt(...a),
+    mfRecordSpend: (...a: unknown[]) => mfRecordSpend(...a),
+    household: (...a: unknown[]) => household(...a),
+    mfTravelDebt: () => Promise.resolve({ status: "ok", data: { debt: null, targetMonths: 6, candidates: [], plan: null } }),
+    mfDecisions: () => Promise.resolve({ status: "ok", data: [] }),
+  },
+}));
+
+const m = (formatted: string, minor = "1", currency = "KRW") => ({ minor, currency, formatted, plain: formatted.replace(/ (soʻm|KRW)$/, "") });
+const ok = (data: unknown) => ({ status: "ok", data });
+
+function wrap(ui: ReactNode) {
+  return render(<QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>);
+}
+
+const settings = {
+  country: "Koreya",
+  workCurrency: "KRW",
+  homeCurrency: "UZS",
+  shareBp: 2000,
+  sharePercent: "20",
+  target: m("120 000 000 soʻm", "12000000000", "UZS"),
+  returnOn: "2027-12-01",
+  currencyLocked: true,
+};
+
+const overview = (over: Record<string, unknown> = {}) => ({
+  settings,
+  defaultSharePercent: "20",
+  cooling: null,
+  reserve: null,
+  startup: null,
+  periodStart: "2026-10-01",
+  periodEnd: "2026-10-31",
+  month: {
+    income: m("2 600 000 KRW"),
+    expenses: m("810 000 KRW"),
+    sentHome: m("1 200 000 KRW"),
+    fees: m("5 000 KRW"),
+    fundIn: m("0 KRW", "0"),
+    fundOut: m("0 KRW", "0"),
+    fundNet: m("0 KRW", "0"),
+    reserveIn: m("0 KRW", "0"),
+    reserveOut: m("0 KRW", "0"),
+    savedNet: m("0 KRW", "0"),
+    pocket: m("735 000 KRW"),
+    shareTarget: m("520 000 KRW"),
+    shareGap: m("520 000 KRW"),
+    expensesPercent: "31,15",
+    sentPercent: "46,35",
+    fundPercent: "0",
+    reservePercent: "0",
+    warnings: ["NO_SHARE"],
+  },
+  fund: {
+    balance: m("6 000 000 KRW"),
+    avgMonthly: m("520 000 KRW"),
+    monthsUsed: 3,
+    monthsUntilReturn: 13,
+    balanceHome: m("54 600 000 soʻm", "5460000000", "UZS"),
+    avgMonthlyHome: m("4 732 000 soʻm", "473200000", "UZS"),
+    target: m("120 000 000 soʻm", "12000000000", "UZS"),
+    remainingHome: m("65 400 000 soʻm", "6540000000", "UZS"),
+    progressBp: 4550,
+    progressPercent: "45,5",
+    monthsToTarget: 14,
+    projectedHome: m("116 116 000 soʻm", "11611600000", "UZS"),
+    shortfallAtReturn: m("3 884 000 soʻm", "388400000", "UZS"),
+    status: "BEHIND",
+  },
+  rate: { fromCurrency: "KRW", toCurrency: "UZS", rate: "9,1", rateOn: "2026-10-15", source: "Bank", stale: false, identity: false },
+  entries: [{ id: "e1", kind: "SENT_HOME", amount: m("1 200 000 KRW"), fee: m("5 000 KRW"), received: m("10 900 000 soʻm", "1090000000", "UZS"), channel: null, categoryId: null, occurredOn: "2026-10-12", note: null }],
+  ...over,
+});
+
+const u = (formatted: string, minor = "1") => m(formatted, minor, "UZS");
+const share = (purpose: string, bp: number) => ({ purpose, bp, percent: String(bp / 100) });
+const shores = (over: Record<string, unknown> = {}) => ({
+  uySpaceId: "uy",
+  remittances: [
+    {
+      moveId: "mv1",
+      sent: m("1 200 000 KRW"),
+      sentOn: "2026-10-12",
+      note: null,
+      shares: [share("HOUSEHOLD", 5000), share("DEBT", 3000), share("BUILD", 2000)],
+      expected: u("10 900 000 soʻm", "1090000000"),
+      receipt: null,
+      allocation: [],
+    },
+  ],
+  purposes: [
+    { purpose: "HOUSEHOLD", received: u("0 soʻm", "0"), spent: u("0 soʻm", "0"), balance: u("0 soʻm", "0"), overspent: false },
+  ],
+  received: u("0 soʻm", "0"),
+  spent: u("0 soʻm", "0"),
+  balance: u("0 soʻm", "0"),
+  pending: 1,
+  overspent: false,
+  spends: [],
+  ...over,
+});
+const members = [
+  { id: "m1", displayName: "Rustam", role: "ADULT" },
+  { id: "m2", displayName: "Gulnora", role: "ADULT" },
+];
+
+beforeEach(() => {
+  [mfOverview, mfSetSettings, mfSetRate, mfRecordIncome, mfRecordMove, categories, mfTerms, mfSetTerms, mfTwoShores, mfConfirmReceipt, mfRecordSpend, household].forEach((f) => f.mockReset());
+  categories.mockResolvedValue(ok([{ id: "c1", nameKey: "category.food", customName: null, defaultNecessity: null, isSystem: true }]));
+  mfTerms.mockResolvedValue(ok({ shares: [share("HOUSEHOLD", 5000), share("DEBT", 3000), share("BUILD", 2000)], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
+  mfTwoShores.mockResolvedValue(ok(shores({ remittances: [] })));
+  household.mockResolvedValue(ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, members, spaces: [] }));
+  useUi.setState({ mfEntry: null });
+});
+
+describe("Musofir bosh sahifasi", () => {
+  it("sozlanmagan: usta — valyuta, ulush (standart yadrodan), maqsad", async () => {
+    mfOverview.mockResolvedValue(ok(overview({ settings: null, month: null, fund: null, rate: null, entries: [] })));
+    mfSetSettings.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    const { container } = wrap(<MfHomeScreen spaceId="mf" />);
+    const form = await screen.findByRole("form", { name: "Musofir makonini sozlash" });
+    expect(within(form).getByLabelText("Oʻz ulushi (%)")).toHaveValue("20");
+    await user.selectOptions(within(form).getByLabelText("Ish valyutasi"), "RUB");
+    await user.type(within(form).getByLabelText("Qaytish jamgʻarmasi maqsadi (soʻmda)"), "120 000 000");
+    await user.click(within(form).getByRole("button", { name: "Saqlash" }));
+    expect(mfSetSettings).toHaveBeenCalledWith("mf", { country: null, workCurrency: "RUB", sharePercent: "20", target: "120 000 000", returnOn: null });
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("ikki raqam, kurs bilan so'mdagi qiymat, prognoz va ogohlantirish", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    const { container } = wrap(<MfHomeScreen spaceId="mf" />);
+    expect(await screen.findByTestId("mf-fund")).toHaveTextContent("6 000 000 KRW");
+    expect(screen.getByTestId("mf-fund-home")).toHaveTextContent("54 600 000 soʻm");
+    expect(screen.getByTestId("mf-fund-home")).toHaveTextContent("1 KRW = 9,1 UZS");
+    expect(screen.getByTestId("mf-share-gap")).toHaveTextContent("520 000 KRW");
+    expect(screen.getByTestId("mf-warning-NO_SHARE")).toHaveTextContent("avval oʻzingizga");
+    expect(screen.getByTestId("mf-fund-status")).toHaveTextContent("3 884 000 soʻm yetmaydi");
+    expect(screen.getByTestId("mf-sent")).toHaveTextContent("1 200 000 KRW");
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "45");
+    expect(screen.getByTestId("mf-entry")).toHaveTextContent("uyda 10 900 000 soʻm");
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("kurssiz — so'mdagi qiymat taxmin qilinmaydi", async () => {
+    mfOverview.mockResolvedValue(ok(overview({ rate: null, fund: { ...overview().fund, balanceHome: null, status: "NO_RATE", projectedHome: null, shortfallAtReturn: null, remainingHome: null, progressBp: null } })));
+    wrap(<MfHomeScreen spaceId="mf" />);
+    expect(await screen.findByText(/Kurs kiritilmagan/)).toBeInTheDocument();
+    expect(screen.queryByTestId("mf-fund-home")).not.toBeInTheDocument();
+    expect(screen.getByTestId("mf-fund-status")).toHaveTextContent("kursni kiriting");
+  });
+
+  it("maosh → o'z ulushi taklifi → jamg'armaga (summa yadrodan)", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    mfRecordIncome.mockResolvedValue(ok({ overview: overview(), suggestedShare: m("520 000 KRW", "520000"), suggestedReserve: m("0 KRW", "0"), suggestedFund: m("520 000 KRW", "520000") }));
+    mfRecordMove.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    wrap(<MfHomeScreen spaceId="mf" />);
+    await user.click(await screen.findByRole("button", { name: /^Maosh/ }));
+    const dialog = screen.getByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "2 600 000");
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordIncome).toHaveBeenCalledWith("mf", { kind: "SALARY", amount: "2 600 000", channel: "CARD", occurredOn: null, note: null });
+    expect(await screen.findByTestId("mf-offer")).toHaveTextContent("520 000 KRW");
+    await user.click(screen.getByRole("button", { name: "Jamgʻarmaga qoʻyish" }));
+    const fund = screen.getByRole("dialog");
+    expect(within(fund).getByLabelText("Summa (KRW)")).toHaveValue("520 000");
+    await user.click(within(fund).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "FUND_IN", amount: "520 000", fee: null, received: null, occurredOn: null, note: null, purposes: null });
+  });
+
+  it("M4: ulush avval qorovul pulga, qolgani jamg'armaga; qorovul pul kartasi", async () => {
+    const reserve = {
+      balance: m("300 000 KRW", "300000"),
+      months: 1,
+      monthsUsed: 3,
+      avgMonthly: m("805 000 KRW", "805000"),
+      target: m("805 000 KRW", "805000"),
+      gap: m("505 000 KRW", "505000"),
+      progressBp: 3727,
+      progressPercent: "37,27",
+      status: "PARTIAL",
+    };
+    mfOverview.mockResolvedValue(ok(overview({ reserve })));
+    mfRecordIncome.mockResolvedValue(
+      ok({ overview: overview({ reserve }), suggestedShare: m("520 000 KRW", "520000"), suggestedReserve: m("505 000 KRW", "505000"), suggestedFund: m("15 000 KRW", "15000") }),
+    );
+    mfRecordMove.mockResolvedValue(ok(overview({ reserve })));
+    const user = userEvent.setup();
+    const { container } = wrap(<MfHomeScreen spaceId="mf" />);
+    expect(await screen.findByTestId("mf-reserve-status")).toHaveTextContent("Yana 505 000 KRW");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(screen.getByRole("button", { name: /^Maosh/ }));
+    const dialog = screen.getByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "2 600 000");
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(await screen.findByTestId("mf-offer")).toHaveTextContent("505 000 KRW — qorovul pulga, 15 000 KRW — qaytish jamgʻarmasiga");
+    await user.click(screen.getByRole("button", { name: "Qorovul pulga qoʻyish" }));
+    const r = screen.getByRole("dialog");
+    expect(within(r).getByLabelText("Summa (KRW)")).toHaveValue("505 000");
+    await user.click(within(r).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "RESERVE_IN", amount: "505 000", fee: null, received: null, occurredOn: null, note: null, purposes: null });
+    await user.click(await screen.findByRole("button", { name: "Jamgʻarmaga qoʻyish" }));
+    const f = screen.getByRole("dialog");
+    expect(within(f).getByLabelText("Summa (KRW)")).toHaveValue("15 000");
+  });
+
+  it("uyga yuborish: komissiya va uyda olingan summa", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    mfRecordMove.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    wrap(<MfHomeScreen spaceId="mf" />);
+    await user.click(await screen.findByRole("button", { name: "Uyga yuborish" }));
+    const dialog = screen.getByRole("dialog");
+    expect(await axeViolations(dialog)).toEqual([]);
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "1 200 000");
+    await user.type(within(dialog).getByLabelText("Komissiya (KRW)"), "5 000");
+    await user.type(within(dialog).getByLabelText("Uyda olingan summa (UZS)"), "10 900 000");
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "SENT_HOME", amount: "1 200 000", fee: "5 000", received: "10 900 000", occurredOn: null, note: null, purposes: [{ purpose: "HOUSEHOLD", percent: "50" }, { purpose: "DEBT", percent: "30" }, { purpose: "BUILD", percent: "20" }] });
+  });
+
+  it("kurs: «1 KRW necha UZS»", async () => {
+    mfOverview.mockResolvedValue(ok(overview({ rate: null })));
+    mfSetRate.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    wrap(<MfHomeScreen spaceId="mf" />);
+    const form = await screen.findByRole("form", { name: "Valyuta kursi" });
+    await user.type(within(form).getByLabelText("1 KRW necha UZS"), "9,1");
+    await user.click(within(form).getByRole("button", { name: "Kursni saqlash" }));
+    expect(mfSetRate).toHaveBeenCalledWith("mf", { rate: "9,1", rateOn: null, source: null });
+  });
+
+  it("M2: uyga yuborishda maqsadlar — shartlardan, o'zgartirish mumkin", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    mfRecordMove.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    wrap(<MfHomeScreen spaceId="mf" />);
+    await user.click(await screen.findByRole("button", { name: "Uyga yuborish" }));
+    const dialog = screen.getByRole("dialog");
+    const household = await within(dialog).findByLabelText("Uy xarajati, foiz");
+    await waitForValue(household, "50");
+    await user.clear(household);
+    await user.type(household, "40");
+    await user.type(within(dialog).getByLabelText("Oʻqish, foiz"), "10");
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "500 000");
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordMove.mock.calls[0]?.[1].purposes).toEqual([
+      { purpose: "HOUSEHOLD", percent: "40" },
+      { purpose: "DEBT", percent: "30" },
+      { purpose: "BUILD", percent: "20" },
+      { purpose: "EDUCATION", percent: "10" },
+    ]);
+  });
+
+  it("M2: shartlar — ulushlar, qabul qiluvchi va kelishuv matni", async () => {
+    mfOverview.mockResolvedValue(ok(overview()));
+    mfTerms.mockResolvedValue(ok({ shares: [], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
+    mfSetTerms.mockResolvedValue(ok({ shares: [], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
+    const user = userEvent.setup();
+    const { container } = wrap(<MfHomeScreen spaceId="mf" />);
+    await user.click(await screen.findByRole("button", { name: "Shartlarni belgilash" }));
+    const form = screen.getByRole("form", { name: "Ikki qirgʻoq shartlari" });
+    const hh = within(form).getByLabelText("Uy xarajati, foiz");
+    await user.clear(hh);
+    await user.type(hh, "70");
+    await user.type(within(form).getByLabelText("Qarz toʻlovi, foiz"), "30");
+    await user.selectOptions(within(form).getByLabelText("Uyda kim qabul qiladi"), "m2");
+    expect((within(form).getByLabelText(/Kelishuv matni/) as HTMLTextAreaElement).value).toContain("70 % — uy xarajati, 30 % — qarz toʻlovi");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(within(form).getByRole("button", { name: "Saqlash" }));
+    const input = mfSetTerms.mock.calls[0]?.[1];
+    expect(input.shares).toEqual([
+      { purpose: "HOUSEHOLD", percent: "70" },
+      { purpose: "DEBT", percent: "30" },
+    ]);
+    expect(input.receiverMemberId).toBe("m2");
+    expect(input.items[1]).toBe("Pulni uyda Gulnora qabul qiladi va ilovaga yozadi.");
+  });
+});
+
+async function waitForValue(el: HTMLElement, value: string) {
+  await vi.waitFor(() => expect(el).toHaveValue(value));
+}

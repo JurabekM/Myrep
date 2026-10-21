@@ -1,0 +1,1216 @@
+{
+  "suite": "venture_period",
+  "version": 1,
+  "description": "Davrni yopish: natija, o'tgan zararni avval tiklash (OQ-D1), foyda/zarar taqsimoti, beparvolik, buyout to'lovini xaridor ulushidan ayirish, kapital qoldiqlari",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "vp-001-mudaraba-profit",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "1500000000",
+        "expense": "700000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "800000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "800000000",
+        "shares": [
+          "400000000",
+          "400000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "400000000",
+          "400000000"
+        ],
+        "capitalAfter": [
+          "3000000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-002-mudaraba-loss",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "400000000"
+          },
+          {
+            "kind": "FORCE_MAJEURE",
+            "amount": "100000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "300000000",
+        "expense": "400000000",
+        "forceMajeure": "100000000",
+        "corrections": "0",
+        "result": "-200000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "0",
+        "shares": [
+          "-200000000",
+          "0"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "200000000",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "0",
+          "0"
+        ],
+        "capitalAfter": [
+          "2800000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-003-loss-recovered-first",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "2800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "200000000",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "500000000",
+        "expense": "200000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "300000000",
+        "recovered": [
+          "200000000",
+          "0"
+        ],
+        "distributable": "100000000",
+        "shares": [
+          "50000000",
+          "50000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "50000000",
+          "50000000"
+        ],
+        "capitalAfter": [
+          "3000000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-004-per-period",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "2800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "PER_PERIOD",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "500000000",
+        "expense": "200000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "300000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "300000000",
+        "shares": [
+          "150000000",
+          "150000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "150000000",
+          "150000000"
+        ],
+        "capitalAfter": [
+          "2800000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-005-musharaka-loss",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 6000,
+            "capital": "600000000"
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 4000,
+            "capital": "200000000"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "EXPENSE",
+            "amount": "300000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "0",
+        "expense": "300000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "-300000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "0",
+        "shares": [
+          "-225000000",
+          "-75000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "225000000",
+          "75000000"
+        ],
+        "buyout": null,
+        "payouts": [
+          "0",
+          "0"
+        ],
+        "capitalAfter": [
+          "375000000",
+          "125000000"
+        ]
+      }
+    },
+    {
+      "id": "vp-006-buyout-from-profit",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 4000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 6000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": {
+          "sellerId": "P1",
+          "buyerId": "P2",
+          "due": [
+            {
+              "no": 1,
+              "units": 1,
+              "capital": "150000000",
+              "price": "150000000"
+            },
+            {
+              "no": 2,
+              "units": 1,
+              "capital": "150000000",
+              "price": "150000000"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "income": "1500000000",
+        "expense": "700000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "800000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "800000000",
+        "shares": [
+          "320000000",
+          "480000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": {
+          "paid": [
+            1,
+            2
+          ],
+          "amount": "300000000",
+          "capital": "300000000",
+          "unpaid": []
+        },
+        "payouts": [
+          "620000000",
+          "180000000"
+        ],
+        "capitalAfter": [
+          "2700000000",
+          "300000000"
+        ]
+      }
+    },
+    {
+      "id": "vp-007-buyout-shortfall",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": {
+          "sellerId": "P1",
+          "buyerId": "P2",
+          "due": [
+            {
+              "no": 1,
+              "units": 1,
+              "capital": "150000000",
+              "price": "100000000"
+            },
+            {
+              "no": 2,
+              "units": 1,
+              "capital": "150000000",
+              "price": "100000000"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "income": "300000000",
+        "expense": "0",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "300000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "300000000",
+        "shares": [
+          "150000000",
+          "150000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": {
+          "paid": [
+            1
+          ],
+          "amount": "100000000",
+          "capital": "150000000",
+          "unpaid": [
+            2
+          ]
+        },
+        "payouts": [
+          "250000000",
+          "50000000"
+        ],
+        "capitalAfter": [
+          "2850000000",
+          "150000000"
+        ]
+      }
+    },
+    {
+      "id": "vp-008-buyout-loss",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "2850000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "150000000"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "EXPENSE",
+            "amount": "100000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": {
+          "sellerId": "P1",
+          "buyerId": "P2",
+          "due": [
+            {
+              "no": 2,
+              "units": 1,
+              "capital": "150000000",
+              "price": "150000000"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "income": "0",
+        "expense": "100000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "-100000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "0",
+        "shares": [
+          "-95000000",
+          "-5000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "95000000",
+          "5000000"
+        ],
+        "buyout": {
+          "paid": [],
+          "amount": "0",
+          "capital": "0",
+          "unpaid": [
+            2
+          ]
+        },
+        "payouts": [
+          "0",
+          "0"
+        ],
+        "capitalAfter": [
+          "2755000000",
+          "145000000"
+        ]
+      }
+    },
+    {
+      "id": "vp-009-negligence",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "100000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "300000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": {
+          "partnerId": "P2",
+          "note": "mato boshqa ishga ishlatildi"
+        },
+        "buyout": null
+      },
+      "expected": {
+        "income": "100000000",
+        "expense": "300000000",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "-200000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "0",
+        "shares": [
+          "0",
+          "-200000000"
+        ],
+        "liability": [
+          "0",
+          "200000000"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "0",
+          "0"
+        ],
+        "capitalAfter": [
+          "3000000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-010-correction",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "100000000"
+          },
+          {
+            "kind": "CORRECTION",
+            "amount": "-50000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "500000000",
+        "expense": "100000000",
+        "forceMajeure": "0",
+        "corrections": "-50000000",
+        "result": "350000000",
+        "recovered": [
+          "0",
+          "0"
+        ],
+        "distributable": "350000000",
+        "shares": [
+          "175000000",
+          "175000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "175000000",
+          "175000000"
+        ],
+        "capitalAfter": [
+          "3000000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-011-musharaka-recovery",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 6000,
+            "capital": "375000000"
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 4000,
+            "capital": "125000000"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "400000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "225000000",
+          "75000000"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "400000000",
+        "expense": "0",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "400000000",
+        "recovered": [
+          "225000000",
+          "75000000"
+        ],
+        "distributable": "100000000",
+        "shares": [
+          "60000000",
+          "40000000"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "0",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "60000000",
+          "40000000"
+        ],
+        "capitalAfter": [
+          "600000000",
+          "200000000"
+        ]
+      }
+    },
+    {
+      "id": "vp-012-partial-recovery",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "2800000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "150000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "200000000",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "income": "150000000",
+        "expense": "0",
+        "forceMajeure": "0",
+        "corrections": "0",
+        "result": "150000000",
+        "recovered": [
+          "150000000",
+          "0"
+        ],
+        "distributable": "0",
+        "shares": [
+          "0",
+          "0"
+        ],
+        "liability": [
+          "0",
+          "0"
+        ],
+        "carriedAfter": [
+          "50000000",
+          "0"
+        ],
+        "buyout": null,
+        "payouts": [
+          "0",
+          "0"
+        ],
+        "capitalAfter": [
+          "2950000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "vp-neg-001-shares",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 6000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "error": "PROFIT_SHARES_NOT_100"
+      }
+    },
+    {
+      "id": "vp-neg-002-amount",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "EXPENSE",
+            "amount": "0"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "vp-neg-003-negligence-profit",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": {
+          "partnerId": "P2",
+          "note": "mato boshqa ishga ishlatildi"
+        },
+        "buyout": null
+      },
+      "expected": {
+        "error": "NEGLIGENCE_WITHOUT_LOSS"
+      }
+    },
+    {
+      "id": "vp-neg-004-buyout-same",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": {
+          "sellerId": "P1",
+          "buyerId": "P1",
+          "due": []
+        }
+      },
+      "expected": {
+        "error": "BUYOUT_SAME_PARTY"
+      }
+    },
+    {
+      "id": "vp-neg-005-carried-per-period",
+      "input": {
+        "kind": "MUDARABA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "CAPITAL_PROVIDER",
+            "profitShareBp": 5000,
+            "capital": "3000000000"
+          },
+          {
+            "id": "P2",
+            "role": "WORKER",
+            "profitShareBp": 5000,
+            "capital": "0"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "INCOME",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "INCOME",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "200000000"
+          }
+        ],
+        "lossPolicy": "PER_PERIOD",
+        "carriedLoss": [
+          "100",
+          "0"
+        ],
+        "negligence": null,
+        "buyout": null
+      },
+      "expected": {
+        "error": "INVALID_CARRIED"
+      }
+    },
+    {
+      "id": "vp-neg-006-negligence-musharaka",
+      "input": {
+        "kind": "MUSHARAKA",
+        "currency": "UZS",
+        "partners": [
+          {
+            "id": "P1",
+            "role": "BOTH",
+            "profitShareBp": 6000,
+            "capital": "600000000"
+          },
+          {
+            "id": "P2",
+            "role": "BOTH",
+            "profitShareBp": 4000,
+            "capital": "200000000"
+          }
+        ],
+        "entries": [
+          {
+            "kind": "EXPENSE",
+            "amount": "100"
+          }
+        ],
+        "lossPolicy": "CAPITAL_FIRST",
+        "carriedLoss": [
+          "0",
+          "0"
+        ],
+        "negligence": {
+          "partnerId": "P2",
+          "note": "mato boshqa ishga ishlatildi"
+        },
+        "buyout": null
+      },
+      "expected": {
+        "error": "NEGLIGENCE_NOT_APPLICABLE"
+      }
+    }
+  ]
+}

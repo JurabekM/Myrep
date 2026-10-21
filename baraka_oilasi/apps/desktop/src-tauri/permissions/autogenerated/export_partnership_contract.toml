@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-partnership-contract"
+description = "Enables the export_partnership_contract command without any pre-configured scope."
+commands.allow = ["export_partnership_contract"]
+
+[[permission]]
+identifier = "deny-export-partnership-contract"
+description = "Denies the export_partnership_contract command without any pre-configured scope."
+commands.deny = ["export_partnership_contract"]

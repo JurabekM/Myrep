@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-close-partnership"
+description = "Enables the close_partnership command without any pre-configured scope."
+commands.allow = ["close_partnership"]
+
+[[permission]]
+identifier = "deny-close-partnership"
+description = "Denies the close_partnership command without any pre-configured scope."
+commands.deny = ["close_partnership"]

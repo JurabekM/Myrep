@@ -1,0 +1,82 @@
+{
+  "suite": "mf_startup",
+  "version": 1,
+  "description": "Musofir ish boshlash summasi: qaytish jamg'armasi maqsadining bir qismi, yashash uchun qolgani (musofir/SPEC 6.6)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "su-001",
+      "input": {
+        "currency": "UZS",
+        "target": "12000000000",
+        "startup": "3000000000"
+      },
+      "expected": {
+        "startup": "3000000000",
+        "living": "9000000000",
+        "startupBp": 2500
+      }
+    },
+    {
+      "id": "su-002",
+      "input": {
+        "currency": "UZS",
+        "target": "12000000000",
+        "startup": "12000000000"
+      },
+      "expected": {
+        "startup": "12000000000",
+        "living": "0",
+        "startupBp": 10000
+      }
+    },
+    {
+      "id": "su-003",
+      "input": {
+        "currency": "UZS",
+        "target": null,
+        "startup": "3000000000"
+      },
+      "expected": {
+        "startup": "3000000000",
+        "living": null,
+        "startupBp": null
+      }
+    },
+    {
+      "id": "su-004",
+      "input": {
+        "currency": "UZS",
+        "target": "300",
+        "startup": "100"
+      },
+      "expected": {
+        "startup": "100",
+        "living": "200",
+        "startupBp": 3333
+      }
+    },
+    {
+      "id": "su-neg-001",
+      "input": {
+        "currency": "UZS",
+        "target": "12000000000",
+        "startup": "12000000001"
+      },
+      "expected": {
+        "error": "STARTUP_EXCEEDS_TARGET"
+      }
+    },
+    {
+      "id": "su-neg-002",
+      "input": {
+        "currency": "UZS",
+        "target": "12000000000",
+        "startup": "0"
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "suite": "buyout_schedule",
+  "version": 1,
+  "description": "Kamayib boruvchi musharaka: ulush teng birliklarga bo'linadi (largest remainder), har davrda N birlik; sotuvchi va xaridor ulushi (bp, half-up); to'lov xaridor foyda ulushidan oshsa — belgi",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "buy-001-nilufar",
+      "input": {
+        "currency": "UZS",
+        "stake": "3000000000",
+        "totalCapital": "3000000000",
+        "buyerCapital": "0",
+        "units": 10,
+        "unitsPerPeriod": 1,
+        "start": "2026-11-30",
+        "periodMonths": 1,
+        "expectedProfit": "800000000",
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "periods": 10,
+        "endDate": "2027-08-30",
+        "buyerProfit": "400000000",
+        "rows": [
+          {
+            "period": 1,
+            "date": "2026-11-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "2700000000",
+            "sellerBp": 9000,
+            "buyerBp": 1000,
+            "exceedsShare": false
+          },
+          {
+            "period": 2,
+            "date": "2026-12-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "2400000000",
+            "sellerBp": 8000,
+            "buyerBp": 2000,
+            "exceedsShare": false
+          },
+          {
+            "period": 3,
+            "date": "2027-01-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "2100000000",
+            "sellerBp": 7000,
+            "buyerBp": 3000,
+            "exceedsShare": false
+          },
+          {
+            "period": 4,
+            "date": "2027-02-28",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "1800000000",
+            "sellerBp": 6000,
+            "buyerBp": 4000,
+            "exceedsShare": false
+          },
+          {
+            "period": 5,
+            "date": "2027-03-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "1500000000",
+            "sellerBp": 5000,
+            "buyerBp": 5000,
+            "exceedsShare": false
+          },
+          {
+            "period": 6,
+            "date": "2027-04-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "1200000000",
+            "sellerBp": 4000,
+            "buyerBp": 6000,
+            "exceedsShare": false
+          },
+          {
+            "period": 7,
+            "date": "2027-05-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "900000000",
+            "sellerBp": 3000,
+            "buyerBp": 7000,
+            "exceedsShare": false
+          },
+          {
+            "period": 8,
+            "date": "2027-06-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "600000000",
+            "sellerBp": 2000,
+            "buyerBp": 8000,
+            "exceedsShare": false
+          },
+          {
+            "period": 9,
+            "date": "2027-07-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "300000000",
+            "sellerBp": 1000,
+            "buyerBp": 9000,
+            "exceedsShare": false
+          },
+          {
+            "period": 10,
+            "date": "2027-08-30",
+            "units": 1,
+            "payment": "300000000",
+            "remainingStake": "0",
+            "sellerBp": 0,
+            "buyerBp": 10000,
+            "exceedsShare": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "buy-002-uneven-quarterly",
+      "input": {
+        "currency": "UZS",
+        "stake": "100000001",
+        "totalCapital": "300000001",
+        "buyerCapital": "200000000",
+        "units": 3,
+        "unitsPerPeriod": 2,
+        "start": "2027-01-31",
+        "periodMonths": 3,
+        "expectedProfit": "50000000",
+        "buyerShareBp": 6000
+      },
+      "expected": {
+        "periods": 2,
+        "endDate": "2027-04-30",
+        "buyerProfit": "30000000",
+        "rows": [
+          {
+            "period": 1,
+            "date": "2027-01-31",
+            "units": 2,
+            "payment": "66666668",
+            "remainingStake": "33333333",
+            "sellerBp": 1111,
+            "buyerBp": 8889,
+            "exceedsShare": true
+          },
+          {
+            "period": 2,
+            "date": "2027-04-30",
+            "units": 1,
+            "payment": "33333333",
+            "remainingStake": "0",
+            "sellerBp": 0,
+            "buyerBp": 10000,
+            "exceedsShare": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "buy-003-no-profit-estimate",
+      "input": {
+        "currency": "UZS",
+        "stake": "1200000000",
+        "totalCapital": "2000000000",
+        "buyerCapital": "800000000",
+        "units": 4,
+        "unitsPerPeriod": 4,
+        "start": "2027-03-15",
+        "periodMonths": 1,
+        "expectedProfit": null,
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "periods": 1,
+        "endDate": "2027-03-15",
+        "buyerProfit": null,
+        "rows": [
+          {
+            "period": 1,
+            "date": "2027-03-15",
+            "units": 4,
+            "payment": "1200000000",
+            "remainingStake": "0",
+            "sellerBp": 0,
+            "buyerBp": 10000,
+            "exceedsShare": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "buy-neg-001-stake",
+      "input": {
+        "currency": "UZS",
+        "stake": "0",
+        "totalCapital": "100",
+        "buyerCapital": "0",
+        "units": 1,
+        "unitsPerPeriod": 1,
+        "start": "2027-01-01",
+        "periodMonths": 1,
+        "expectedProfit": null,
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "error": "STAKE_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "buy-neg-002-exceeds",
+      "input": {
+        "currency": "UZS",
+        "stake": "200",
+        "totalCapital": "300",
+        "buyerCapital": "200",
+        "units": 2,
+        "unitsPerPeriod": 1,
+        "start": "2027-01-01",
+        "periodMonths": 1,
+        "expectedProfit": null,
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "error": "STAKE_EXCEEDS_CAPITAL"
+      }
+    },
+    {
+      "id": "buy-neg-003-per-period",
+      "input": {
+        "currency": "UZS",
+        "stake": "100",
+        "totalCapital": "100",
+        "buyerCapital": "0",
+        "units": 2,
+        "unitsPerPeriod": 3,
+        "start": "2027-01-01",
+        "periodMonths": 1,
+        "expectedProfit": null,
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "error": "INVALID_UNITS_PER_PERIOD"
+      }
+    },
+    {
+      "id": "buy-neg-004-period",
+      "input": {
+        "currency": "UZS",
+        "stake": "100",
+        "totalCapital": "100",
+        "buyerCapital": "0",
+        "units": 2,
+        "unitsPerPeriod": 1,
+        "start": "2027-01-01",
+        "periodMonths": 13,
+        "expectedProfit": null,
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "error": "INVALID_PERIOD"
+      }
+    },
+    {
+      "id": "buy-neg-005-units",
+      "input": {
+        "currency": "UZS",
+        "stake": "100",
+        "totalCapital": "100",
+        "buyerCapital": "0",
+        "units": 0,
+        "unitsPerPeriod": 1,
+        "start": "2027-01-01",
+        "periodMonths": 1,
+        "expectedProfit": null,
+        "buyerShareBp": 5000
+      },
+      "expected": {
+        "error": "INVALID_UNITS"
+      }
+    }
+  ]
+}

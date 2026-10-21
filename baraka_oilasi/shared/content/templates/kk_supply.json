@@ -1,0 +1,20 @@
+{
+  "id": "kk_supply",
+  "agreementType": "SUPPLY",
+  "version": 1,
+  "reviewStatus": "PENDING",
+  "reviewers": ["yurist", "ulamo"],
+  "openQuestions": ["OQ-Y6", "OQ-D5"],
+  "clauses": [
+    { "n": 1, "label": "pdf.tpl.q.parties", "text": "pdf.tpl.supply.parties" },
+    { "n": 2, "label": "pdf.tpl.q.goods", "text": "pdf.tpl.supply.goods" },
+    { "n": 3, "label": "pdf.tpl.q.delivery", "text": "pdf.tpl.supply.delivery" },
+    { "n": 4, "label": "pdf.tpl.q.payment", "text": "pdf.tpl.supply.payment" },
+    { "n": 5, "label": "pdf.tpl.q.returns", "text": "pdf.tpl.supply.returns" },
+    { "n": 6, "label": "pdf.tpl.q.records", "text": "pdf.tpl.supply.records" },
+    { "n": 7, "label": "pdf.tpl.q.exit", "text": "pdf.tpl.supply.exit" },
+    { "n": 8, "label": "pdf.tpl.q.arbiter", "text": "pdf.tpl.common.arbiter" },
+    { "n": 9, "label": "pdf.tpl.q.term", "text": "pdf.tpl.common.term" }
+  ],
+  "disclaimer": "pdf.tpl.supply.disclaimer"
+}

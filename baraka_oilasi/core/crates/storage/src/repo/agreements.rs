@@ -1,0 +1,148 @@
+use rusqlite::{params, Connection, OptionalExtension, Transaction};
+
+use super::SpaceScope;
+use crate::{Meta, StorageError};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AgreementRow {
+    pub id: String,
+    pub agreement_type: String,
+    pub status: String,
+    pub title: String,
+    pub keeper_device_id: String,
+}
+
+pub fn insert(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    a: &AgreementRow,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    tx.execute(
+        "INSERT INTO agreements (id, household_id, space_id, type, status, title, keeper_device_id,
+            created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8, ?9, ?9)",
+        params![
+            a.id,
+            s.household_id,
+            s.space_id,
+            a.agreement_type,
+            a.status,
+            a.title,
+            a.keeper_device_id,
+            m.now,
+            m.device_id
+        ],
+    )?;
+    Ok(())
+}
+
+/// Kelishuv ma'lumotlarini (tilxat: tomonlar, joy, guvohlar) JSON sifatida saqlaydi.
+pub fn set_payload(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    payload_json: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "payload_json", payload_json, m)
+}
+
+pub fn set_status(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    status: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "status", status, m)
+}
+
+fn update(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    column: &str,
+    value: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    let n = tx.execute(
+        &format!(
+            "UPDATE agreements SET {column} = ?4, updated_at = ?5, updated_by_device_id = ?6, version = version + 1
+             WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL"
+        ),
+        params![s.household_id, s.space_id, id, value, m.now, m.device_id],
+    )?;
+    if n == 0 {
+        Err(StorageError::NotFound)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn payload(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<String>, StorageError> {
+    Ok(c.query_row(
+        "SELECT payload_json FROM agreements
+         WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id, id],
+        |r| r.get(0),
+    )
+    .optional()?
+    .flatten())
+}
+
+pub fn get(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<AgreementRow>, StorageError> {
+    Ok(c.query_row(
+        "SELECT id, type, status, title, keeper_device_id FROM agreements
+         WHERE household_id = ?1 AND space_id = ?2 AND id = ?3 AND deleted_at IS NULL",
+        params![s.household_id, s.space_id, id],
+        |r| {
+            Ok(AgreementRow {
+                id: r.get(0)?,
+                agreement_type: r.get(1)?,
+                status: r.get(2)?,
+                title: r.get(3)?,
+                keeper_device_id: r.get(4)?,
+            })
+        },
+    )
+    .optional()?)
+}
+
+/// Makondagi barcha kelishuvlar (kelishuvlar markazi uchun), yaratilish tartibida.
+pub fn list(c: &Connection, s: &SpaceScope) -> Result<Vec<AgreementRow>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT id, type, status, title, keeper_device_id FROM agreements
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL ORDER BY created_at, rowid",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id], |r| {
+        Ok(AgreementRow {
+            id: r.get(0)?,
+            agreement_type: r.get(1)?,
+            status: r.get(2)?,
+            title: r.get(3)?,
+            keeper_device_id: r.get(4)?,
+        })
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+pub fn set_title(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    title: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "title", title, m)
+}
+
+/// Yumshoq o'chirish (faqat jurnali yo'q kelishuvlar uchun — chaqiruvchi tekshiradi).
+pub fn delete(
+    tx: &Transaction<'_>,
+    s: &SpaceScope,
+    id: &str,
+    m: &Meta,
+) -> Result<(), StorageError> {
+    update(tx, s, id, "deleted_at", &m.now, m)
+}

@@ -1,0 +1,39 @@
+[package]
+name = "baraka-app"
+description = "Use-case qatlami: domen va saqlashni boshqaradi, adapterlar uchun DTO qaytaradi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+baraka-money.workspace = true
+baraka-journal.workspace = true
+sha2.workspace = true
+baraka-domain-common.workspace = true
+baraka-domain-uy.workspace = true
+baraka-domain-kasbkor.workspace = true
+baraka-domain-musofir.workspace = true
+baraka-agreements.workspace = true
+baraka-security.workspace = true
+baraka-storage.workspace = true
+baraka-pdf = { path = "../pdf" }
+baraka-interchange = { path = "../interchange" }
+zeroize.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+serde.workspace = true
+specta = { workspace = true, optional = true }
+serde_json.workspace = true
+unicode-normalization.workspace = true
+
+[features]
+# TypeScript tiplarini generatsiya qilish uchun (faqat desktop adapteri yoqadi).
+specta = ["dep:specta", "baraka-agreements/specta"]
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tempfile = "3"

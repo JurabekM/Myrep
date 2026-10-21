@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-agreement-reminders"
+description = "Enables the agreement_reminders command without any pre-configured scope."
+commands.allow = ["agreement_reminders"]
+
+[[permission]]
+identifier = "deny-agreement-reminders"
+description = "Denies the agreement_reminders command without any pre-configured scope."
+commands.deny = ["agreement_reminders"]

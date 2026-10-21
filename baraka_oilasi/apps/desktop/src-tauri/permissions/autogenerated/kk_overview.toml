@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-overview"
+description = "Enables the kk_overview command without any pre-configured scope."
+commands.allow = ["kk_overview"]
+
+[[permission]]
+identifier = "deny-kk-overview"
+description = "Denies the kk_overview command without any pre-configured scope."
+commands.deny = ["kk_overview"]

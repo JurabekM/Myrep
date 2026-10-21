@@ -1,0 +1,22 @@
+[package]
+name = "baraka-vectors"
+description = "Oltin test vektorlari runner'i: spec/test-vectors/*.json ni yadro funksiyalari bilan tekshiradi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+baraka-money.workspace = true
+baraka-journal.workspace = true
+baraka-domain-common.workspace = true
+baraka-domain-uy.workspace = true
+baraka-domain-kasbkor.workspace = true
+baraka-domain-musofir.workspace = true
+baraka-agreements.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+
+[lints]
+workspace = true

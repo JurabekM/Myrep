@@ -1,0 +1,792 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://barakaoilasi.uz/schema/export-format/1",
+  "title": ".baraka almashish formati (formatVersion 1)",
+  "description": "Yagona sxema: Android (Dart) va desktop bir xil `interchange` qoidalaridan foydalanadi. Fayl: `BARAKA-EXPORT\\n` + sarlavha (bir qator JSON) + `\\n` + XChaCha20-Poly1305 bilan shifrlangan tarkib. Kalit = Argon2id(NFC(parol), salt). AAD = birinchi ikki qator baytlari. Tarkib — JSON Lines: birinchi qator `meta`, keyin `row` qatorlari; har qator kanonik JSON (kalitlar saralangan, bo'shliqsiz, UTF-8). Yozuv xeshi: sha256(canonical({\"r\": data, \"t\": table})). Vektorlar: `vectors.json` (`oracle.py`).",
+  "$defs": {
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formatVersion",
+        "aead",
+        "kdf",
+        "salt",
+        "nonce"
+      ],
+      "properties": {
+        "formatVersion": {
+          "const": 1
+        },
+        "aead": {
+          "const": "xchacha20poly1305"
+        },
+        "kdf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "mKib",
+            "tCost",
+            "pCost"
+          ],
+          "properties": {
+            "alg": {
+              "const": "argon2id"
+            },
+            "mKib": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 262144
+            },
+            "tCost": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "pCost": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            }
+          }
+        },
+        "salt": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "nonce": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{48}$"
+        }
+      },
+      "x-field-order": [
+        "formatVersion",
+        "aead",
+        "kdf",
+        "salt",
+        "nonce"
+      ]
+    },
+    "metaLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "formatVersion",
+        "schemaVersion",
+        "householdId",
+        "sourceDeviceId",
+        "sourceDeviceName",
+        "exportId",
+        "ackExportId",
+        "mode",
+        "exportedAt",
+        "rowCount"
+      ],
+      "properties": {
+        "kind": {
+          "const": "meta"
+        },
+        "formatVersion": {
+          "const": 1
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "description": "Manba bazasining `PRAGMA user_version`; qabul qiluvchida bir xil bo'lishi shart."
+        },
+        "householdId": {
+          "type": "string"
+        },
+        "sourceDeviceId": {
+          "type": "string"
+        },
+        "sourceDeviceName": {
+          "type": "string"
+        },
+        "exportId": {
+          "type": "string",
+          "description": "Shu eksport identifikatori (UUIDv7)."
+        },
+        "ackExportId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Manba qurilma oxirgi qabul qilgan, qabul qiluvchining eksporti: shu orqali ikki tomon kelishgan holat (base) tasdiqlanadi."
+        },
+        "mode": {
+          "enum": [
+            "FULL",
+            "INCREMENTAL",
+            "PAIRING"
+          ]
+        },
+        "exportedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rowCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "audience": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "spaceId"
+          ],
+          "description": "Rolli qurilma uchun kamaytirilgan fayl (ADR-0003): yangi qurilma rolini shundan biladi.",
+          "properties": {
+            "role": {
+              "enum": [
+                "SELLER",
+                "ACCOUNTANT"
+              ]
+            },
+            "spaceId": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "value": {
+      "description": "Ustun qiymati: null, butun son (kasr yo'q), satr yoki BLOB.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "b64"
+          ],
+          "properties": {
+            "b64": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      ]
+    },
+    "rowLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "table",
+        "data"
+      ],
+      "properties": {
+        "kind": {
+          "const": "row"
+        },
+        "table": {
+          "enum": [
+            "households",
+            "devices",
+            "spaces",
+            "members",
+            "space_members",
+            "categories",
+            "incomes",
+            "obligations",
+            "expenses",
+            "assets",
+            "asset_snapshots",
+            "vault_transactions",
+            "allocation_rules",
+            "fx_rates",
+            "agreements",
+            "journal_entries",
+            "debts",
+            "receivables",
+            "repayment_plan_lines",
+            "repayments",
+            "goals",
+            "debt_contributors",
+            "budget_settings",
+            "sellable_items",
+            "ceremonies",
+            "ceremony_scenarios",
+            "ceremony_lines",
+            "ceremony_signoffs",
+            "goal_contributions",
+            "partnerships",
+            "agreement_versions",
+            "agreement_signatures",
+            "partnership_consents",
+            "venture_entries",
+            "venture_attachments",
+            "venture_periods",
+            "skills",
+            "venture_ideas",
+            "duty_incidents",
+            "incident_resolutions",
+            "account_reviews",
+            "review_acks",
+            "spike_rereads",
+            "disputes",
+            "dispute_claims",
+            "arbiter_decisions",
+            "family_signoffs",
+            "kk_settings",
+            "kk_moves",
+            "kk_equipment",
+            "kk_family_labor",
+            "kk_month_closes",
+            "kk_cash_days",
+            "kk_customers",
+            "kk_credit_sales",
+            "kk_credit_events",
+            "kk_items",
+            "kk_stock_moves",
+            "kk_agreements",
+            "kk_agreement_versions",
+            "kk_staff_events",
+            "kk_supply_deliveries",
+            "kk_supply_payments",
+            "kk_growth_settings",
+            "kk_fund_uses",
+            "kk_scale_checks",
+            "kk_zakat_calcs",
+            "kk_stock_counts",
+            "kk_shifts",
+            "mf_settings",
+            "mf_rates",
+            "mf_moves",
+            "device_access",
+            "mf_remittance_terms",
+            "mf_remittance_parts",
+            "mf_receipts",
+            "mf_spends",
+            "mf_debt_payments",
+            "mf_decisions",
+            "mf_reserve_moves",
+            "mf_decision_outcomes"
+          ]
+        },
+        "data": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9_]{1,64}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/value"
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/metaLine"
+    },
+    {
+      "$ref": "#/$defs/rowLine"
+    }
+  ],
+  "x-baraka-tables": {
+    "description": "Sinxronlanadigan jadvallar — import tartibi (ota yozuvlar oldin). MUTABLE: uch tomonlama birlashtirish (ziddiyat — foydalanuvchi tanlaydi). APPEND_ONLY: faqat qo'shiladi; mavjud yozuv boshqacha kelsa — rad etiladi (ogohlantirish). `journal_entries` qo'shimcha ravishda zanjir bo'yicha tekshiriladi (fork — import to'xtaydi).",
+    "items": [
+      {
+        "name": "households",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "devices",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "spaces",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "members",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "space_members",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "categories",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "incomes",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "obligations",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "expenses",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "assets",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "asset_snapshots",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "vault_transactions",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "allocation_rules",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "fx_rates",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "agreements",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "journal_entries",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "debts",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "receivables",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "repayment_plan_lines",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "repayments",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "goals",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "debt_contributors",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "budget_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "sellable_items",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "ceremonies",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "ceremony_scenarios",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "ceremony_lines",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "ceremony_signoffs",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "goal_contributions",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "partnerships",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "agreement_versions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "agreement_signatures",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "partnership_consents",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "venture_entries",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "venture_attachments",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": [
+          "bytes"
+        ]
+      },
+      {
+        "name": "venture_periods",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "skills",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "venture_ideas",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "duty_incidents",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "incident_resolutions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "incident_id",
+        "blobColumns": []
+      },
+      {
+        "name": "account_reviews",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "review_acks",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "spike_rereads",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "disputes",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "dispute_claims",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "arbiter_decisions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "dispute_id",
+        "blobColumns": []
+      },
+      {
+        "name": "family_signoffs",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_moves",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_equipment",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_family_labor",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_month_closes",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_cash_days",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_customers",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_credit_sales",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_credit_events",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_items",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_stock_moves",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_agreements",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_agreement_versions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_staff_events",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_supply_deliveries",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_supply_payments",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_growth_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_fund_uses",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_scale_checks",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_zakat_calcs",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_stock_counts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_shifts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_settings",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_rates",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_moves",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "device_access",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_remittance_terms",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_remittance_parts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_receipts",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_spends",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_debt_payments",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_decisions",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_reserve_moves",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_decision_outcomes",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      }
+    ]
+  }
+}

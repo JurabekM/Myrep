@@ -1,0 +1,272 @@
+# «Baraka oilasi» CI (docs/BARAKA_OILASI.md 13). Faqat baraka_oilasi/ o'zgarganda ishlaydi.
+name: baraka-oilasi
+
+on:
+  push:
+    paths: ["baraka_oilasi/**", ".github/workflows/baraka-oilasi.yml"]
+    # Reliz: `baraka-v1.0.0` kabi teg — imzolangan AAB/APK (`android-release`).
+    tags: ["baraka-v*"]
+  pull_request:
+    paths: ["baraka_oilasi/**", ".github/workflows/baraka-oilasi.yml"]
+  # Tungi yakuniy E2E (haqiqiy ilova, tauri-driver) — `desktop-e2e`.
+  schedule:
+    - cron: "17 21 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: baraka-oilasi-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: baraka_oilasi
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  core:
+    name: core (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Windows — OpenSSL uchun Strawberry Perl (Git Bash perl'ida modullar yo'q)"
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl.exe" >> "$GITHUB_ENV"
+      - name: Rust toolchain (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace
+      - name: no_std (RP2350 nishoni)
+        run: cargo build -p baraka-money -p baraka-journal --target thumbv8m.main-none-eabihf
+
+  vectors-and-codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - name: Oracle (mustaqil Python implementatsiya)
+        run: |
+          python3 -I spec/oracle/oracle.py --selftest
+          python3 -I spec/oracle/oracle.py --check spec/test-vectors
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: .baraka formati oracle'i (Argon2id, XChaCha20-Poly1305)
+        run: |
+          python3 -m pip install "cryptography>=44,<51"
+          python3 -I spec/interchange/oracle.py --selftest
+          python3 -I spec/interchange/oracle.py --check spec/interchange/vectors.json
+      - name: i18n, tokens, taqiqlangan iboralar
+        run: cargo xtask all
+      - name: Generatsiya qilingan fayllar commit qilingan
+        run: git diff --exit-code
+
+  # Android (A0+): FRB/Pigeon generatsiyasi commit qilingan, analyze, widget testlar haqiqiy Rust
+  # yadro bilan (host `.so`) va oltin vektorlar Dart'dan (12.1); APK — cargo-ndk.
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+      - name: Asboblar (flutter_rust_bridge_codegen, cargo-ndk)
+        run: |
+          cargo install --locked flutter_rust_bridge_codegen --version 2.13.0
+          cargo install --locked cargo-ndk --version 4.1.2
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+      - run: flutter pub get
+      - name: FRB va Pigeon generatsiyasi commit qilingan
+        run: |
+          cargo xtask codegen
+          git diff --exit-code
+      - run: flutter analyze
+      - name: Host yadro (vektorlar bilan)
+        run: cargo build -p baraka-bindings-flutter --features vectors
+      - run: flutter test
+      - name: APK (arm64-v8a, armeabi-v7a)
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-apk
+          path: baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-release.apk
+
+  # Imzolangan reliz (Play uchun AAB va to'g'ridan-to'g'ri o'rnatish uchun APK). Kalit faqat
+  # secret'larda: BARAKA_UPLOAD_KEYSTORE_B64 (base64 .jks), BARAKA_KEYSTORE_PASSWORD,
+  # BARAKA_KEY_ALIAS, BARAKA_KEY_PASSWORD. Kalitsiz Gradle release'ni yig'maydi.
+  android-release:
+    if: startsWith(github.ref, 'refs/tags/baraka-v') || github.event_name == 'workflow_dispatch'
+    needs: android
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/android
+    env:
+      BARAKA_REQUIRE_RELEASE_SIGNING: "1"
+      BARAKA_KEYSTORE_PASSWORD: ${{ secrets.BARAKA_KEYSTORE_PASSWORD }}
+      BARAKA_KEY_ALIAS: ${{ secrets.BARAKA_KEY_ALIAS }}
+      BARAKA_KEY_PASSWORD: ${{ secrets.BARAKA_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+      - name: Asboblar (cargo-ndk)
+        run: |
+          cargo install --locked cargo-ndk --version 4.1.2
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+      - name: Yuklash kaliti (secret'dan, faqat runner'da)
+        env:
+          KEYSTORE_B64: ${{ secrets.BARAKA_UPLOAD_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "BARAKA_UPLOAD_KEYSTORE_B64 secret yo'q"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/baraka-upload.jks"
+          echo "BARAKA_KEYSTORE_FILE=$RUNNER_TEMP/baraka-upload.jks" >> "$GITHUB_ENV"
+      - run: flutter pub get
+      - name: AAB (Play) va APK (arm64, armv7)
+        run: |
+          flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
+          flutter build apk --release --split-per-abi --target-platform android-arm64,android-arm --obfuscate --split-debug-info=build/symbols
+      - name: Imzoni tekshirish
+        run: |
+          for f in build/app/outputs/flutter-apk/app-*-release.apk; do
+            "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --print-certs "$f" | head -3
+          done
+          jarsigner -verify build/app/outputs/bundle/release/app-release.aab | tail -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-release
+          path: |
+            baraka_oilasi/apps/android/build/app/outputs/bundle/release/app-release.aab
+            baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-*-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-symbols
+          path: baraka_oilasi/apps/android/build/symbols
+
+  desktop-ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/desktop/ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: baraka_oilasi/apps/desktop/ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  desktop-tauri:
+    name: desktop tauri (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/desktop
+        # Job darajasidagi `defaults` umumiy `shell: bash` ni almashtiradi; Windows'da aks holda
+        # PowerShell ko'p qatorli skriptda faqat oxirgi buyruq kodini tekshiradi (xato yashirinadi).
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Windows — OpenSSL uchun Strawberry Perl (Git Bash perl'ida modullar yo'q)"
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl.exe" >> "$GITHUB_ENV"
+      - name: Linux tizim kutubxonalari
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi/apps/desktop/src-tauri -> ../../../target
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: baraka_oilasi/apps/desktop/ui/pnpm-lock.yaml
+      - run: pnpm --dir ui install --frozen-lockfile
+      - name: clippy va bindings.ts (tauri-specta)
+        working-directory: baraka_oilasi/apps/desktop/src-tauri
+        run: |
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+          git diff --exit-code -- ../ui/src/bindings.ts
+      - name: NSIS o'rnatuvchi (Windows)
+        if: runner.os == 'Windows'
+        run: ui/node_modules/.bin/tauri build --bundles nsis
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: baraka-windows-nsis
+          path: baraka_oilasi/target/release/bundle/nsis/*.exe
+
+  # Haqiqiy desktop ilova ustida yakuniy E2E (D15): onboarding, Anvar ssenariysi, zaxiradan
+  # tiklash, har ekranda axe. Faqat tunda yoki qo'lda — uzoq ishlaydi.
+  desktop-e2e:
+    name: desktop e2e (ubuntu, tauri-driver)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux tizim kutubxonalari va WebKitWebDriver
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev webkit2gtk-driver xvfb
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi/apps/desktop/src-tauri -> ../../../target
+      - run: cargo install tauri-driver --locked
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm --dir ui install --frozen-lockfile && pnpm --dir ui build
+      - name: Debug build (BARAKA_DEV_SHIFT_DAYS va BARAKA_E2E_FILES faqat debug'da)
+        working-directory: baraka_oilasi/apps/desktop/src-tauri
+        run: cargo build --features tauri/custom-protocol
+      - run: pnpm --dir e2e install --frozen-lockfile
+      - run: xvfb-run -a -s "-screen 0 1440x900x24" pnpm --dir e2e e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baraka-e2e-screenshots
+          path: baraka_oilasi/apps/desktop/e2e/.out/

@@ -1,0 +1,189 @@
+{
+  "suite": "kk_order_quote",
+  "version": 1,
+  "description": "Kasb-kor: buyurtma kalkulyatori — tannarx, zaxira, narx tannarxdan pastligi, o'z mehnatiga qoladigan pul, avans va material (kasbkor/SPEC 3.2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "oq-001",
+      "input": {
+        "currency": "UZS",
+        "material": "45000000",
+        "hours100": 600,
+        "hourlyRate": "4000000",
+        "travel": "5000000",
+        "depreciation": "2000000",
+        "reserveBp": 500,
+        "price": "70000000",
+        "advance": "30000000"
+      },
+      "expected": {
+        "labor": "24000000",
+        "subtotal": "76000000",
+        "reserve": "3800000",
+        "cost": "79800000",
+        "margin": "-9800000",
+        "laborPaid": "14200000",
+        "belowCost": true,
+        "effectiveHourlyRate": "2366667",
+        "materialShortfall": "15000000",
+        "advanceAfterMaterial": "0"
+      }
+    },
+    {
+      "id": "oq-002",
+      "input": {
+        "currency": "UZS",
+        "material": "120000000",
+        "hours100": 1000,
+        "hourlyRate": "5000000",
+        "travel": "10000000",
+        "depreciation": "3000000",
+        "reserveBp": 300,
+        "price": "250000000",
+        "advance": "150000000"
+      },
+      "expected": {
+        "labor": "50000000",
+        "subtotal": "183000000",
+        "reserve": "5490000",
+        "cost": "188490000",
+        "margin": "61510000",
+        "laborPaid": "111510000",
+        "belowCost": false,
+        "effectiveHourlyRate": "11151000",
+        "materialShortfall": "0",
+        "advanceAfterMaterial": "30000000"
+      }
+    },
+    {
+      "id": "oq-003",
+      "input": {
+        "currency": "UZS",
+        "material": "8000000",
+        "hours100": 350,
+        "hourlyRate": "3500000",
+        "travel": "0",
+        "depreciation": "0",
+        "reserveBp": 0,
+        "price": null,
+        "advance": null
+      },
+      "expected": {
+        "labor": "12250000",
+        "subtotal": "20250000",
+        "reserve": "0",
+        "cost": "20250000",
+        "margin": null,
+        "laborPaid": null,
+        "belowCost": null,
+        "effectiveHourlyRate": null,
+        "materialShortfall": null,
+        "advanceAfterMaterial": null
+      }
+    },
+    {
+      "id": "oq-004",
+      "input": {
+        "currency": "UZS",
+        "material": "12345",
+        "hours100": 100,
+        "hourlyRate": "6789",
+        "travel": "0",
+        "depreciation": "0",
+        "reserveBp": 333,
+        "price": null,
+        "advance": null
+      },
+      "expected": {
+        "labor": "6789",
+        "subtotal": "19134",
+        "reserve": "637",
+        "cost": "19771",
+        "margin": null,
+        "laborPaid": null,
+        "belowCost": null,
+        "effectiveHourlyRate": null,
+        "materialShortfall": null,
+        "advanceAfterMaterial": null
+      }
+    },
+    {
+      "id": "oq-005",
+      "input": {
+        "currency": "UZS",
+        "material": "30000000",
+        "hours100": 0,
+        "hourlyRate": "0",
+        "travel": "0",
+        "depreciation": "0",
+        "reserveBp": 1000,
+        "price": "33000000",
+        "advance": null
+      },
+      "expected": {
+        "labor": "0",
+        "subtotal": "30000000",
+        "reserve": "3000000",
+        "cost": "33000000",
+        "margin": "0",
+        "laborPaid": "0",
+        "belowCost": false,
+        "effectiveHourlyRate": null,
+        "materialShortfall": null,
+        "advanceAfterMaterial": null
+      }
+    },
+    {
+      "id": "oq-neg-001",
+      "input": {
+        "currency": "UZS",
+        "material": "-100",
+        "hours100": 0,
+        "hourlyRate": "0",
+        "travel": "0",
+        "depreciation": "0",
+        "reserveBp": 0,
+        "price": null,
+        "advance": null
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "oq-neg-002",
+      "input": {
+        "currency": "UZS",
+        "material": "10000",
+        "hours100": 100,
+        "hourlyRate": "10000",
+        "travel": "0",
+        "depreciation": "0",
+        "reserveBp": 10001,
+        "price": null,
+        "advance": null
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    },
+    {
+      "id": "oq-neg-003",
+      "input": {
+        "currency": "UZS",
+        "material": "10000",
+        "hours100": -50,
+        "hourlyRate": "10000",
+        "travel": "0",
+        "depreciation": "0",
+        "reserveBp": 0,
+        "price": null,
+        "advance": null
+      },
+      "expected": {
+        "error": "INVALID_HOURS"
+      }
+    }
+  ]
+}

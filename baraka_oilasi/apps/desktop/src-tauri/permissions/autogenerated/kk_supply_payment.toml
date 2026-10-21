@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-supply-payment"
+description = "Enables the kk_supply_payment command without any pre-configured scope."
+commands.allow = ["kk_supply_payment"]
+
+[[permission]]
+identifier = "deny-kk-supply-payment"
+description = "Denies the kk_supply_payment command without any pre-configured scope."
+commands.deny = ["kk_supply_payment"]

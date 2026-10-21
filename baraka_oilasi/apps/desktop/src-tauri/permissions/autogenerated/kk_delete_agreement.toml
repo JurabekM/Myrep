@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-delete-agreement"
+description = "Enables the kk_delete_agreement command without any pre-configured scope."
+commands.allow = ["kk_delete_agreement"]
+
+[[permission]]
+identifier = "deny-kk-delete-agreement"
+description = "Denies the kk_delete_agreement command without any pre-configured scope."
+commands.deny = ["kk_delete_agreement"]

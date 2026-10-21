@@ -1,0 +1,76 @@
+{
+  "suite": "profit_spike",
+  "version": 1,
+  "description": "A: actual ≥ 150% reja; B: actual ≥ 200% oxirgi 3 davr o'rtachasi",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "ps-001",
+      "input": {
+        "currency": "UZS",
+        "plan": "100000000",
+        "lastThree": null,
+        "actual": "150000000"
+      },
+      "expected": {
+        "alert": true
+      }
+    },
+    {
+      "id": "ps-002",
+      "input": {
+        "currency": "UZS",
+        "plan": "100000000",
+        "lastThree": null,
+        "actual": "149999999"
+      },
+      "expected": {
+        "alert": false
+      }
+    },
+    {
+      "id": "ps-003",
+      "input": {
+        "currency": "UZS",
+        "plan": null,
+        "lastThree": [
+          "100000000",
+          "120000000",
+          "110000000"
+        ],
+        "actual": "220000000"
+      },
+      "expected": {
+        "alert": true
+      }
+    },
+    {
+      "id": "ps-004",
+      "input": {
+        "currency": "UZS",
+        "plan": null,
+        "lastThree": [
+          "100000000",
+          "120000000",
+          "110000000"
+        ],
+        "actual": "219999999"
+      },
+      "expected": {
+        "alert": false
+      }
+    },
+    {
+      "id": "ps-005",
+      "input": {
+        "currency": "UZS",
+        "plan": "100000000",
+        "lastThree": null,
+        "actual": "-50000000"
+      },
+      "expected": {
+        "alert": false
+      }
+    }
+  ]
+}

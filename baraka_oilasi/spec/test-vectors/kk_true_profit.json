@@ -1,0 +1,245 @@
+{
+  "suite": "kk_true_profit",
+  "version": 1,
+  "description": "Kasb-kor: ko'rinadigan va haqiqiy foyda — o'z mehnati, to'lanmagan oilaviy mehnat, eskirish (kasbkor/SPEC 3.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "tp-001",
+      "input": {
+        "currency": "UZS",
+        "revenue": "1800000000",
+        "cogs": "600000000",
+        "operatingExpenses": "250000000",
+        "ownerLabor": "500000000",
+        "familyLabor": [
+          {
+            "hours100": 8000,
+            "hourlyRate": "1500000",
+            "paid": false
+          }
+        ],
+        "depreciation": "20000000",
+        "disposal": "0",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "visibleProfit": "950000000",
+        "stockLosses": "0",
+        "ownerLabor": "500000000",
+        "familyLabor": "120000000",
+        "familyLaborPaid": "0",
+        "depreciation": "20000000",
+        "disposal": "0",
+        "trueProfit": "310000000"
+      }
+    },
+    {
+      "id": "tp-002",
+      "input": {
+        "currency": "UZS",
+        "revenue": "1800000000",
+        "cogs": "600000000",
+        "operatingExpenses": "300000000",
+        "ownerLabor": "500000000",
+        "familyLabor": [
+          {
+            "hours100": 4000,
+            "hourlyRate": "1250000",
+            "paid": true
+          },
+          {
+            "hours100": 2000,
+            "hourlyRate": "1500000",
+            "paid": false
+          }
+        ],
+        "depreciation": "20000000",
+        "disposal": "0",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "visibleProfit": "900000000",
+        "stockLosses": "0",
+        "ownerLabor": "500000000",
+        "familyLabor": "30000000",
+        "familyLaborPaid": "50000000",
+        "depreciation": "20000000",
+        "disposal": "0",
+        "trueProfit": "350000000"
+      }
+    },
+    {
+      "id": "tp-003",
+      "input": {
+        "currency": "UZS",
+        "revenue": "600000000",
+        "cogs": "200000000",
+        "operatingExpenses": "150000000",
+        "ownerLabor": "400000000",
+        "familyLabor": [
+          {
+            "hours100": 6000,
+            "hourlyRate": "1000000",
+            "paid": false
+          }
+        ],
+        "depreciation": "15000000",
+        "disposal": "0",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "visibleProfit": "250000000",
+        "stockLosses": "0",
+        "ownerLabor": "400000000",
+        "familyLabor": "60000000",
+        "familyLaborPaid": "0",
+        "depreciation": "15000000",
+        "disposal": "0",
+        "trueProfit": "-225000000"
+      }
+    },
+    {
+      "id": "tp-004",
+      "input": {
+        "currency": "UZS",
+        "revenue": "350000000",
+        "cogs": "200000000",
+        "operatingExpenses": "30000000",
+        "ownerLabor": "0",
+        "familyLabor": [],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "visibleProfit": "120000000",
+        "stockLosses": "0",
+        "ownerLabor": "0",
+        "familyLabor": "0",
+        "familyLaborPaid": "0",
+        "depreciation": "0",
+        "disposal": "0",
+        "trueProfit": "120000000"
+      }
+    },
+    {
+      "id": "tp-005",
+      "input": {
+        "currency": "UZS",
+        "revenue": "100000000",
+        "cogs": "0",
+        "operatingExpenses": "0",
+        "ownerLabor": "0",
+        "familyLabor": [
+          {
+            "hours100": 250,
+            "hourlyRate": "1333333",
+            "paid": false
+          }
+        ],
+        "depreciation": "0",
+        "disposal": "-25000000",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "visibleProfit": "100000000",
+        "stockLosses": "0",
+        "ownerLabor": "0",
+        "familyLabor": "3333333",
+        "familyLaborPaid": "0",
+        "depreciation": "0",
+        "disposal": "-25000000",
+        "trueProfit": "121666667"
+      }
+    },
+    {
+      "id": "tp-neg-001",
+      "input": {
+        "currency": "UZS",
+        "revenue": "-100",
+        "cogs": "0",
+        "operatingExpenses": "0",
+        "ownerLabor": "0",
+        "familyLabor": [],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "tp-neg-002",
+      "input": {
+        "currency": "UZS",
+        "revenue": "100000000",
+        "cogs": "0",
+        "operatingExpenses": "0",
+        "ownerLabor": "0",
+        "familyLabor": [
+          {
+            "hours100": -100,
+            "hourlyRate": "1000000",
+            "paid": false
+          }
+        ],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "0"
+      },
+      "expected": {
+        "error": "INVALID_HOURS"
+      }
+    },
+    {
+      "id": "tp-006",
+      "input": {
+        "currency": "UZS",
+        "revenue": "500000000",
+        "cogs": "300000000",
+        "operatingExpenses": "50000000",
+        "ownerLabor": "0",
+        "familyLabor": [],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "12000000"
+      },
+      "expected": {
+        "visibleProfit": "138000000",
+        "stockLosses": "12000000",
+        "ownerLabor": "0",
+        "familyLabor": "0",
+        "familyLaborPaid": "0",
+        "depreciation": "0",
+        "disposal": "0",
+        "trueProfit": "138000000"
+      }
+    },
+    {
+      "id": "tp-007",
+      "input": {
+        "currency": "UZS",
+        "revenue": "500000000",
+        "cogs": "300000000",
+        "operatingExpenses": "50000000",
+        "ownerLabor": "0",
+        "familyLabor": [],
+        "depreciation": "0",
+        "disposal": "0",
+        "stockLosses": "-3000000"
+      },
+      "expected": {
+        "visibleProfit": "153000000",
+        "stockLosses": "-3000000",
+        "ownerLabor": "0",
+        "familyLabor": "0",
+        "familyLaborPaid": "0",
+        "depreciation": "0",
+        "disposal": "0",
+        "trueProfit": "153000000"
+      }
+    }
+  ]
+}

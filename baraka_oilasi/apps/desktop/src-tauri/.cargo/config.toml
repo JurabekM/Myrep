@@ -1,0 +1,4 @@
+# Desktop alohida Cargo workspace, lekin build artefaktlari yadro bilan umumiy papkada:
+# yadro crate'lari ikki marta qurilmaydi (disk va CI vaqti tejaladi).
+[build]
+target-dir = "../../../target"

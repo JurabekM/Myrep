@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-allocate-to-vault"
+description = "Enables the allocate_to_vault command without any pre-configured scope."
+commands.allow = ["allocate_to_vault"]
+
+[[permission]]
+identifier = "deny-allocate-to-vault"
+description = "Denies the allocate_to_vault command without any pre-configured scope."
+commands.deny = ["allocate_to_vault"]

@@ -1,0 +1,176 @@
+{
+  "suite": "kk_zakat",
+  "version": 1,
+  "description": "Kasb-kor savdo mollari zakoti hisobi: baza, nisob (oltin × gramm), 2,5% — baza ≥ nisob va hawl to'lganda; hisob, fatvo emas (kasbkor/SPEC 8.3, OQ-D5, OQ-D7)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "zk-001",
+      "input": {
+        "currency": "UZS",
+        "stock": "9000000000",
+        "cash": "1200000000",
+        "receivables": "800000000",
+        "debts": "1000000000",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "base": "10000000000",
+        "nisab": "9350000000",
+        "due": true,
+        "zakat": "250000000",
+        "reason": null
+      }
+    },
+    {
+      "id": "zk-002",
+      "input": {
+        "currency": "UZS",
+        "stock": "6000000000",
+        "cash": "1200000000",
+        "receivables": "800000000",
+        "debts": "1000000000",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "base": "7000000000",
+        "nisab": "9350000000",
+        "due": false,
+        "zakat": "0",
+        "reason": "BELOW_NISAB"
+      }
+    },
+    {
+      "id": "zk-003",
+      "input": {
+        "currency": "UZS",
+        "stock": "9000000000",
+        "cash": "1200000000",
+        "receivables": "800000000",
+        "debts": "1000000000",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": false
+      },
+      "expected": {
+        "base": "10000000000",
+        "nisab": "9350000000",
+        "due": false,
+        "zakat": "0",
+        "reason": "HAWL_NOT_COMPLETE"
+      }
+    },
+    {
+      "id": "zk-004",
+      "input": {
+        "currency": "UZS",
+        "stock": "500000000",
+        "cash": "100000000",
+        "receivables": "0",
+        "debts": "1000000000",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "base": "-400000000",
+        "nisab": "9350000000",
+        "due": false,
+        "zakat": "0",
+        "reason": "BASE_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "zk-005",
+      "input": {
+        "currency": "UZS",
+        "stock": "9350000000",
+        "cash": "0",
+        "receivables": "0",
+        "debts": "0",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "base": "9350000000",
+        "nisab": "9350000000",
+        "due": true,
+        "zakat": "233750000",
+        "reason": null
+      }
+    },
+    {
+      "id": "zk-006",
+      "input": {
+        "currency": "UZS",
+        "stock": "9350000033",
+        "cash": "0",
+        "receivables": "0",
+        "debts": "0",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "base": "9350000033",
+        "nisab": "9350000000",
+        "due": true,
+        "zakat": "233750001",
+        "reason": null
+      }
+    },
+    {
+      "id": "zk-neg-001",
+      "input": {
+        "currency": "UZS",
+        "stock": "-100",
+        "cash": "0",
+        "receivables": "0",
+        "debts": "0",
+        "goldPrice": "110000000",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "zk-neg-002",
+      "input": {
+        "currency": "UZS",
+        "stock": "100",
+        "cash": "0",
+        "receivables": "0",
+        "debts": "0",
+        "goldPrice": "0",
+        "nisabGrams": 85,
+        "hawlComplete": true
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "zk-neg-003",
+      "input": {
+        "currency": "UZS",
+        "stock": "100",
+        "cash": "0",
+        "receivables": "0",
+        "debts": "0",
+        "goldPrice": "110000000",
+        "nisabGrams": 0,
+        "hawlComplete": true
+      },
+      "expected": {
+        "error": "INVALID_NISAB"
+      }
+    }
+  ]
+}

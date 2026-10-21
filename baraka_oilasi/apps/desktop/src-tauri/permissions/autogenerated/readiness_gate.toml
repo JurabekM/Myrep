@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-readiness-gate"
+description = "Enables the readiness_gate command without any pre-configured scope."
+commands.allow = ["readiness_gate"]
+
+[[permission]]
+identifier = "deny-readiness-gate"
+description = "Denies the readiness_gate command without any pre-configured scope."
+commands.deny = ["readiness_gate"]

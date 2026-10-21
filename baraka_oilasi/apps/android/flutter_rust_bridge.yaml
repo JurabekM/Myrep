@@ -1,0 +1,6 @@
+rust_input: crate::api,baraka-app::dto,baraka-app::error,baraka-app::events
+rust_root: ../../core/bindings/flutter
+dart_output: lib/bindings
+dart_entrypoint_class_name: RustLib
+full_dep: false
+web: false

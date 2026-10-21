@@ -1,0 +1,86 @@
+/* @generated cargo xtask tokens — qo'lda tahrirlamang. Manba: shared/design-tokens/tokens.json */
+:root {
+  color-scheme: dark;
+  --bk-paper: #262624;
+  --bk-sidebar: #1F1E1D;
+  --bk-surface: #30302E;
+  --bk-ink: #FAF9F5;
+  --bk-ink-muted: #A6A39A;
+  --bk-line: #4A4945;
+  --bk-field-line: #7D7B74;
+  --bk-accent: #D97757;
+  --bk-accent-ink: #1F1E1D;
+  --bk-accent-text: #E8957A;
+  --bk-zarur: #7FA9D6;
+  --bk-kerak: #D4B86A;
+  --bk-havas: #A6A39A;
+  --bk-warn: #E0A458;
+  --bk-danger: #E5786D;
+  --bk-focus: #D97757;
+  --bk-chart1: #3987E5;
+  --bk-chart2: #D95926;
+  --bk-radius-sm: 6px;
+  --bk-radius-md: 10px;
+  --bk-radius-lg: 16px;
+  --bk-space-xs: 4px;
+  --bk-space-sm: 8px;
+  --bk-space-md: 12px;
+  --bk-space-lg: 16px;
+  --bk-space-xl: 24px;
+  --bk-space-xxl: 32px;
+  --bk-font-family: "Noto Sans";
+  --bk-font-family-serif: "Noto Serif";
+  --bk-font-size-sm: 13px;
+  --bk-font-size-md: 15px;
+  --bk-font-size-lg: 18px;
+  --bk-font-size-xl: 24px;
+  --bk-font-size-kpi: 32px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bk-paper: #FAF9F5;
+  --bk-sidebar: #F0EEE6;
+  --bk-surface: #FFFFFF;
+  --bk-ink: #141413;
+  --bk-ink-muted: #5E5D59;
+  --bk-line: #DAD8CE;
+  --bk-field-line: #86847C;
+  --bk-accent: #A9502F;
+  --bk-accent-ink: #FFFFFF;
+  --bk-accent-text: #953F21;
+  --bk-zarur: #2E5E8C;
+  --bk-kerak: #7A6A1F;
+  --bk-havas: #5E5D59;
+  --bk-warn: #9A5B13;
+  --bk-danger: #A23B3B;
+  --bk-focus: #A9502F;
+  --bk-chart1: #2A78D6;
+  --bk-chart2: #EB6834;
+}
+
+@theme inline {
+  --color-paper: var(--bk-paper);
+  --color-sidebar: var(--bk-sidebar);
+  --color-surface: var(--bk-surface);
+  --color-ink: var(--bk-ink);
+  --color-ink-muted: var(--bk-ink-muted);
+  --color-line: var(--bk-line);
+  --color-field-line: var(--bk-field-line);
+  --color-accent: var(--bk-accent);
+  --color-accent-ink: var(--bk-accent-ink);
+  --color-accent-text: var(--bk-accent-text);
+  --color-zarur: var(--bk-zarur);
+  --color-kerak: var(--bk-kerak);
+  --color-havas: var(--bk-havas);
+  --color-warn: var(--bk-warn);
+  --color-danger: var(--bk-danger);
+  --color-focus: var(--bk-focus);
+  --color-chart1: var(--bk-chart1);
+  --color-chart2: var(--bk-chart2);
+  --radius-sm: var(--bk-radius-sm);
+  --radius-md: var(--bk-radius-md);
+  --radius-lg: var(--bk-radius-lg);
+  --font-sans: var(--bk-font-family), system-ui, sans-serif;
+  --font-serif: var(--bk-font-family-serif), Georgia, serif;
+}

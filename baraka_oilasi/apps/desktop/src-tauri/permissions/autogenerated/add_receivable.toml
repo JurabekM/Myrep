@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-receivable"
+description = "Enables the add_receivable command without any pre-configured scope."
+commands.allow = ["add_receivable"]
+
+[[permission]]
+identifier = "deny-add-receivable"
+description = "Denies the add_receivable command without any pre-configured scope."
+commands.deny = ["add_receivable"]

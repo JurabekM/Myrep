@@ -1,0 +1,240 @@
+{
+  "suite": "debt_status",
+  "version": 1,
+  "description": "To'lovlar rejaga ketma-ket yoziladi: keyingi to'lov, kechikkan, qoldiq, eslatma (≤ 3 kun)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "status-001-fresh",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "0",
+        "today": "2026-10-15"
+      },
+      "expected": {
+        "remaining": "900000000",
+        "nextDate": "2026-11-15",
+        "nextAmount": "300000000",
+        "overdue": "0",
+        "payoffDate": "2027-01-15",
+        "reminder": null
+      }
+    },
+    {
+      "id": "status-002-due-soon",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "0",
+        "today": "2026-11-12"
+      },
+      "expected": {
+        "remaining": "900000000",
+        "nextDate": "2026-11-15",
+        "nextAmount": "300000000",
+        "overdue": "0",
+        "payoffDate": "2027-01-15",
+        "reminder": "DUE_SOON"
+      }
+    },
+    {
+      "id": "status-003-partial-overdue",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "100000000",
+        "today": "2026-12-20"
+      },
+      "expected": {
+        "remaining": "800000000",
+        "nextDate": "2026-11-15",
+        "nextAmount": "200000000",
+        "overdue": "500000000",
+        "payoffDate": "2027-01-15",
+        "reminder": "OVERDUE"
+      }
+    },
+    {
+      "id": "status-004-ahead",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "450000000",
+        "today": "2026-11-20"
+      },
+      "expected": {
+        "remaining": "450000000",
+        "nextDate": "2026-12-15",
+        "nextAmount": "150000000",
+        "overdue": "0",
+        "payoffDate": "2027-01-15",
+        "reminder": null
+      }
+    },
+    {
+      "id": "status-005-closed",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "900000000",
+        "today": "2027-03-01"
+      },
+      "expected": {
+        "remaining": "0",
+        "nextDate": null,
+        "nextAmount": null,
+        "overdue": "0",
+        "payoffDate": null,
+        "reminder": null
+      }
+    },
+    {
+      "id": "status-neg-001",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "900000001",
+        "today": "2026-10-15"
+      },
+      "expected": {
+        "error": "PAYMENT_EXCEEDS_REMAINING"
+      }
+    },
+    {
+      "id": "status-006-prepaid-from-end",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "300000000",
+        "today": "2026-11-20",
+        "prepaid": "400000000"
+      },
+      "expected": {
+        "remaining": "200000000",
+        "nextDate": "2026-12-15",
+        "nextAmount": "200000000",
+        "overdue": "0",
+        "payoffDate": "2026-12-15",
+        "reminder": null
+      }
+    },
+    {
+      "id": "status-neg-002-prepaid",
+      "input": {
+        "currency": "UZS",
+        "lines": [
+          {
+            "date": "2026-11-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2026-12-15",
+            "amount": "300000000"
+          },
+          {
+            "date": "2027-01-15",
+            "amount": "300000000"
+          }
+        ],
+        "paid": "300000000",
+        "today": "2026-11-20",
+        "prepaid": "600000001"
+      },
+      "expected": {
+        "error": "PAYMENT_EXCEEDS_REMAINING"
+      }
+    }
+  ]
+}

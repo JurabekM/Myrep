@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-cash-days"
+description = "Enables the kk_cash_days command without any pre-configured scope."
+commands.allow = ["kk_cash_days"]
+
+[[permission]]
+identifier = "deny-kk-cash-days"
+description = "Denies the kk_cash_days command without any pre-configured scope."
+commands.deny = ["kk_cash_days"]

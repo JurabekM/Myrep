@@ -1,0 +1,511 @@
+{
+  "suite": "kk_owner_pay",
+  "version": 1,
+  "description": "Kasb-kor: tushum, chiqim, pul oqimi, egasiga to'langan, maosh qoldig'i, naqd va karta qoldiqlari (kasbkor/SPEC 2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "kk-001",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "300000000",
+        "ownerSalary": "500000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CARD",
+            "amount": "1000000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "800000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CARD",
+            "amount": "850000000"
+          },
+          {
+            "kind": "OWNER_DRAW",
+            "wallet": "CASH",
+            "amount": "120000000"
+          },
+          {
+            "kind": "OWNER_SALARY",
+            "wallet": "CARD",
+            "amount": "380000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "1800000000",
+        "expenses": "850000000",
+        "cashFlow": "950000000",
+        "ownerDraws": "120000000",
+        "ownerSalaryTransferred": "380000000",
+        "contributions": "0",
+        "ownerPaid": "500000000",
+        "salaryRemaining": "0",
+        "overdrawn": "0",
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "680000000",
+        "card": "70000000",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-002",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "200000000",
+        "openingCard": "0",
+        "ownerSalary": "400000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "600000000"
+          },
+          {
+            "kind": "OWNER_DRAW",
+            "wallet": "CASH",
+            "amount": "300000000"
+          },
+          {
+            "kind": "OWNER_DRAW",
+            "wallet": "CASH",
+            "amount": "150000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "600000000",
+        "expenses": "0",
+        "cashFlow": "600000000",
+        "ownerDraws": "450000000",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "450000000",
+        "salaryRemaining": "0",
+        "overdrawn": "50000000",
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "350000000",
+        "card": "0",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-003",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "0",
+        "ownerSalary": "300000000",
+        "moves": [
+          {
+            "kind": "OWNER_CONTRIBUTION",
+            "wallet": "CARD",
+            "amount": "500000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CARD",
+            "amount": "420000000"
+          },
+          {
+            "kind": "OWNER_SALARY",
+            "wallet": "CARD",
+            "amount": "80000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "0",
+        "expenses": "420000000",
+        "cashFlow": "-420000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "80000000",
+        "contributions": "500000000",
+        "ownerPaid": "80000000",
+        "salaryRemaining": "220000000",
+        "overdrawn": "0",
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "0",
+        "card": "0",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-004",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "50000000",
+        "openingCard": "200000000",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "320000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CASH",
+            "amount": "40000000"
+          },
+          {
+            "kind": "OWNER_DRAW",
+            "wallet": "CASH",
+            "amount": "30000000"
+          },
+          {
+            "kind": "TRANSFER",
+            "wallet": "CASH",
+            "amount": "150000000",
+            "toWallet": "CARD"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "320000000",
+        "expenses": "40000000",
+        "cashFlow": "280000000",
+        "ownerDraws": "30000000",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "30000000",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "150000000",
+        "card": "350000000",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-005",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "10000000",
+        "openingCard": "0",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "EXPENSE",
+            "wallet": "CASH",
+            "amount": "25000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CARD",
+            "amount": "5000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "5000000",
+        "expenses": "25000000",
+        "cashFlow": "-20000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "-15000000",
+        "card": "5000000",
+        "negativeWallets": [
+          "CASH"
+        ]
+      }
+    },
+    {
+      "id": "kk-006",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "1000000000",
+        "ownerSalary": "200000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CARD",
+            "amount": "300000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CARD",
+            "amount": "450000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "300000000",
+        "expenses": "450000000",
+        "cashFlow": "-150000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": "200000000",
+        "overdrawn": "0",
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "0",
+        "card": "850000000",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-007",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "75000000",
+        "openingCard": "0",
+        "ownerSalary": "250000000",
+        "moves": []
+      },
+      "expected": {
+        "revenue": "0",
+        "expenses": "0",
+        "cashFlow": "0",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": "250000000",
+        "overdrawn": "0",
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "75000000",
+        "card": "0",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-008",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "100000000",
+        "openingCard": "1500000000",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CARD",
+            "amount": "400000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "wallet": "CARD",
+            "amount": "100000000"
+          },
+          {
+            "kind": "EQUIPMENT_PURCHASE",
+            "wallet": "CARD",
+            "amount": "1200000000"
+          },
+          {
+            "kind": "EQUIPMENT_SALE",
+            "wallet": "CASH",
+            "amount": "80000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "400000000",
+        "expenses": "100000000",
+        "cashFlow": "300000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "1200000000",
+        "equipmentSales": "80000000",
+        "cashDifference": "0",
+        "stockPurchases": "0",
+        "cash": "180000000",
+        "card": "600000000",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-009",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "50000000",
+        "openingCard": "0",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "320000000"
+          },
+          {
+            "kind": "CASH_SHORT",
+            "wallet": "CASH",
+            "amount": "5000000"
+          },
+          {
+            "kind": "CASH_OVER",
+            "wallet": "CASH",
+            "amount": "2000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "320000000",
+        "expenses": "0",
+        "cashFlow": "320000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "-3000000",
+        "stockPurchases": "0",
+        "cash": "367000000",
+        "card": "0",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-010",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "200000000",
+        "openingCard": "0",
+        "ownerSalary": "0",
+        "moves": [
+          {
+            "kind": "STOCK_PURCHASE",
+            "wallet": "CASH",
+            "amount": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "112000000"
+          }
+        ]
+      },
+      "expected": {
+        "revenue": "112000000",
+        "expenses": "0",
+        "cashFlow": "112000000",
+        "ownerDraws": "0",
+        "ownerSalaryTransferred": "0",
+        "contributions": "0",
+        "ownerPaid": "0",
+        "salaryRemaining": null,
+        "overdrawn": null,
+        "equipmentPurchases": "0",
+        "equipmentSales": "0",
+        "cashDifference": "0",
+        "stockPurchases": "125000000",
+        "cash": "187000000",
+        "card": "0",
+        "negativeWallets": []
+      }
+    },
+    {
+      "id": "kk-neg-001",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "0",
+        "ownerSalary": "100000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "CASH",
+            "amount": "0"
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "kk-neg-002",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "0",
+        "ownerSalary": "100000000",
+        "moves": [
+          {
+            "kind": "TRANSFER",
+            "wallet": "CASH",
+            "toWallet": "CASH",
+            "amount": "100"
+          }
+        ]
+      },
+      "expected": {
+        "error": "SAME_WALLET"
+      }
+    },
+    {
+      "id": "kk-neg-003",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "0",
+        "ownerSalary": "100000000",
+        "moves": [
+          {
+            "kind": "SALE",
+            "wallet": "SAFE",
+            "amount": "100"
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_WALLET"
+      }
+    },
+    {
+      "id": "kk-neg-004",
+      "input": {
+        "currency": "UZS",
+        "openingCash": "0",
+        "openingCard": "0",
+        "ownerSalary": "-1",
+        "moves": []
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "description": "Taqiqlangan iboralar (BARAKA_OILASI 10.3): foizni muqobil daromad sifatida koʻrsatish, vaʼdalar, uyaltirish. Kichik harflarda qism-satr sifatida qidiriladi.",
+  "phrases": [
+    "bankda tursa",
+    "foiz olardingiz",
+    "% olardingiz",
+    "oyda mashina",
+    "tez boyi",
+    "boyib ketasiz",
+    "uyat",
+    "isrofgar",
+    "в банке вы бы",
+    "получили бы проценты",
+    "быстро разбогате",
+    "гарантированн"
+  ],
+  "allowKeyPrefixes": [
+    "offer."
+  ]
+}

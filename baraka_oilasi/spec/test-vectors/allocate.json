@@ -1,0 +1,157 @@
+{
+  "suite": "allocate",
+  "version": 1,
+  "description": "Largest remainder; teng kasrda kichik indeks; manfiy summa simmetrik",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "alloc-001",
+      "input": {
+        "total": "100",
+        "currency": "UZS",
+        "ratios": [
+          1,
+          1,
+          1
+        ]
+      },
+      "expected": {
+        "parts": [
+          "34",
+          "33",
+          "33"
+        ]
+      }
+    },
+    {
+      "id": "alloc-002",
+      "input": {
+        "total": "800000000",
+        "currency": "UZS",
+        "ratios": [
+          70,
+          20,
+          10
+        ]
+      },
+      "expected": {
+        "parts": [
+          "560000000",
+          "160000000",
+          "80000000"
+        ]
+      }
+    },
+    {
+      "id": "alloc-003",
+      "input": {
+        "total": "12345",
+        "currency": "UZS",
+        "ratios": [
+          1000,
+          9000
+        ]
+      },
+      "expected": {
+        "parts": [
+          "1235",
+          "11110"
+        ]
+      }
+    },
+    {
+      "id": "alloc-004",
+      "input": {
+        "total": "100",
+        "currency": "UZS",
+        "ratios": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "expected": {
+        "parts": [
+          "15",
+          "15",
+          "14",
+          "14",
+          "14",
+          "14",
+          "14"
+        ]
+      }
+    },
+    {
+      "id": "alloc-005",
+      "input": {
+        "total": "0",
+        "currency": "UZS",
+        "ratios": [
+          1,
+          2
+        ]
+      },
+      "expected": {
+        "parts": [
+          "0",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "alloc-neg-001",
+      "input": {
+        "total": "-100",
+        "currency": "UZS",
+        "ratios": [
+          1,
+          1,
+          1
+        ]
+      },
+      "expected": {
+        "parts": [
+          "-34",
+          "-33",
+          "-33"
+        ]
+      }
+    },
+    {
+      "id": "alloc-neg-002",
+      "input": {
+        "total": "-200000000",
+        "currency": "UZS",
+        "ratios": [
+          1,
+          0
+        ]
+      },
+      "expected": {
+        "parts": [
+          "-200000000",
+          "0"
+        ]
+      }
+    },
+    {
+      "id": "alloc-err-001",
+      "input": {
+        "total": "100",
+        "currency": "UZS",
+        "ratios": [
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "error": "INVALID_RATIOS"
+      }
+    }
+  ]
+}

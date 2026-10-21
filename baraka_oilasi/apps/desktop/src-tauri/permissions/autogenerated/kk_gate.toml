@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-gate"
+description = "Enables the kk_gate command without any pre-configured scope."
+commands.allow = ["kk_gate"]
+
+[[permission]]
+identifier = "deny-kk-gate"
+description = "Denies the kk_gate command without any pre-configured scope."
+commands.deny = ["kk_gate"]

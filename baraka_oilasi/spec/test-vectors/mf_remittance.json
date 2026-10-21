@@ -1,0 +1,646 @@
+{
+  "suite": "mf_remittance",
+  "version": 1,
+  "description": "Musofir «Ikki qirg'oq»: qabul qilingan pulni maqsad ulushlariga bo'lish (largest remainder), maqsad bo'yicha sarflangan va qoldiq, yo'ldagi yuborishlar, maqsaddan ortiq sarf (musofir/SPEC 5)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "rm-001",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "1090000000",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": [
+          {
+            "purpose": "HOUSEHOLD",
+            "amount": "200000000"
+          },
+          {
+            "purpose": "DEBT",
+            "amount": "327000000"
+          }
+        ]
+      },
+      "expected": {
+        "purposes": [
+          {
+            "purpose": "HOUSEHOLD",
+            "received": "545000000",
+            "spent": "200000000",
+            "balance": "345000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "DEBT",
+            "received": "327000000",
+            "spent": "327000000",
+            "balance": "0",
+            "status": "OK"
+          },
+          {
+            "purpose": "BUILD",
+            "received": "218000000",
+            "spent": "0",
+            "balance": "218000000",
+            "status": "OK"
+          }
+        ],
+        "received": "1090000000",
+        "spent": "527000000",
+        "balance": "563000000",
+        "pending": 0,
+        "overspent": false,
+        "allocations": [
+          [
+            {
+              "purpose": "HOUSEHOLD",
+              "amount": "545000000"
+            },
+            {
+              "purpose": "DEBT",
+              "amount": "327000000"
+            },
+            {
+              "purpose": "BUILD",
+              "amount": "218000000"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rm-002",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "10000001",
+            "shares": [
+              {
+                "purpose": "BUILD",
+                "bp": 3334
+              },
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 3333
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3333
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "purposes": [
+          {
+            "purpose": "HOUSEHOLD",
+            "received": "3333000",
+            "spent": "0",
+            "balance": "3333000",
+            "status": "OK"
+          },
+          {
+            "purpose": "DEBT",
+            "received": "3333000",
+            "spent": "0",
+            "balance": "3333000",
+            "status": "OK"
+          },
+          {
+            "purpose": "BUILD",
+            "received": "3334001",
+            "spent": "0",
+            "balance": "3334001",
+            "status": "OK"
+          }
+        ],
+        "received": "10000001",
+        "spent": "0",
+        "balance": "10000001",
+        "pending": 0,
+        "overspent": false,
+        "allocations": [
+          [
+            {
+              "purpose": "HOUSEHOLD",
+              "amount": "3333000"
+            },
+            {
+              "purpose": "DEBT",
+              "amount": "3333000"
+            },
+            {
+              "purpose": "BUILD",
+              "amount": "3334001"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rm-003",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "1090000000",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          },
+          {
+            "received": "500000000",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 10000
+              }
+            ]
+          },
+          {
+            "received": null,
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": [
+          {
+            "purpose": "HOUSEHOLD",
+            "amount": "600000000"
+          }
+        ]
+      },
+      "expected": {
+        "purposes": [
+          {
+            "purpose": "HOUSEHOLD",
+            "received": "1045000000",
+            "spent": "600000000",
+            "balance": "445000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "DEBT",
+            "received": "327000000",
+            "spent": "0",
+            "balance": "327000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "BUILD",
+            "received": "218000000",
+            "spent": "0",
+            "balance": "218000000",
+            "status": "OK"
+          }
+        ],
+        "received": "1590000000",
+        "spent": "600000000",
+        "balance": "990000000",
+        "pending": 1,
+        "overspent": false,
+        "allocations": [
+          [
+            {
+              "purpose": "HOUSEHOLD",
+              "amount": "545000000"
+            },
+            {
+              "purpose": "DEBT",
+              "amount": "327000000"
+            },
+            {
+              "purpose": "BUILD",
+              "amount": "218000000"
+            }
+          ],
+          [
+            {
+              "purpose": "HOUSEHOLD",
+              "amount": "500000000"
+            }
+          ],
+          null
+        ]
+      }
+    },
+    {
+      "id": "rm-004",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "1090000000",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": [
+          {
+            "purpose": "HOUSEHOLD",
+            "amount": "600000000"
+          }
+        ]
+      },
+      "expected": {
+        "purposes": [
+          {
+            "purpose": "HOUSEHOLD",
+            "received": "545000000",
+            "spent": "600000000",
+            "balance": "-55000000",
+            "status": "OVERSPENT"
+          },
+          {
+            "purpose": "DEBT",
+            "received": "327000000",
+            "spent": "0",
+            "balance": "327000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "BUILD",
+            "received": "218000000",
+            "spent": "0",
+            "balance": "218000000",
+            "status": "OK"
+          }
+        ],
+        "received": "1090000000",
+        "spent": "600000000",
+        "balance": "490000000",
+        "pending": 0,
+        "overspent": true,
+        "allocations": [
+          [
+            {
+              "purpose": "HOUSEHOLD",
+              "amount": "545000000"
+            },
+            {
+              "purpose": "DEBT",
+              "amount": "327000000"
+            },
+            {
+              "purpose": "BUILD",
+              "amount": "218000000"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rm-005",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "1090000000",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": [
+          {
+            "purpose": "CEREMONY",
+            "amount": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "purposes": [
+          {
+            "purpose": "HOUSEHOLD",
+            "received": "545000000",
+            "spent": "0",
+            "balance": "545000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "DEBT",
+            "received": "327000000",
+            "spent": "0",
+            "balance": "327000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "BUILD",
+            "received": "218000000",
+            "spent": "0",
+            "balance": "218000000",
+            "status": "OK"
+          },
+          {
+            "purpose": "CEREMONY",
+            "received": "0",
+            "spent": "100000000",
+            "balance": "-100000000",
+            "status": "OVERSPENT"
+          }
+        ],
+        "received": "1090000000",
+        "spent": "100000000",
+        "balance": "990000000",
+        "pending": 0,
+        "overspent": true,
+        "allocations": [
+          [
+            {
+              "purpose": "HOUSEHOLD",
+              "amount": "545000000"
+            },
+            {
+              "purpose": "DEBT",
+              "amount": "327000000"
+            },
+            {
+              "purpose": "BUILD",
+              "amount": "218000000"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "rm-006",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": null,
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "purposes": [
+          {
+            "purpose": "HOUSEHOLD",
+            "received": "0",
+            "spent": "0",
+            "balance": "0",
+            "status": "OK"
+          },
+          {
+            "purpose": "DEBT",
+            "received": "0",
+            "spent": "0",
+            "balance": "0",
+            "status": "OK"
+          },
+          {
+            "purpose": "BUILD",
+            "received": "0",
+            "spent": "0",
+            "balance": "0",
+            "status": "OK"
+          }
+        ],
+        "received": "0",
+        "spent": "0",
+        "balance": "0",
+        "pending": 1,
+        "overspent": false,
+        "allocations": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "rm-neg-001",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "100",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 9000
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "error": "SHARES_NOT_FULL"
+      }
+    },
+    {
+      "id": "rm-neg-002",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "100",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "error": "DUPLICATE_PURPOSE"
+      }
+    },
+    {
+      "id": "rm-neg-003",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "100",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 10000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 0
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    },
+    {
+      "id": "rm-neg-004",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "100",
+            "shares": [
+              {
+                "purpose": "CAR",
+                "bp": 10000
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "error": "INVALID_PURPOSE"
+      }
+    },
+    {
+      "id": "rm-neg-005",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "0",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": []
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "rm-neg-006",
+      "input": {
+        "currency": "UZS",
+        "remittances": [
+          {
+            "received": "100",
+            "shares": [
+              {
+                "purpose": "HOUSEHOLD",
+                "bp": 5000
+              },
+              {
+                "purpose": "DEBT",
+                "bp": 3000
+              },
+              {
+                "purpose": "BUILD",
+                "bp": 2000
+              }
+            ]
+          }
+        ],
+        "spends": [
+          {
+            "purpose": "DEBT",
+            "amount": "0"
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    }
+  ]
+}

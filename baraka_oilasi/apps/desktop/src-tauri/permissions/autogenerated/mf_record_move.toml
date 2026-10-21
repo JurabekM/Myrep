@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-record-move"
+description = "Enables the mf_record_move command without any pre-configured scope."
+commands.allow = ["mf_record_move"]
+
+[[permission]]
+identifier = "deny-mf-record-move"
+description = "Denies the mf_record_move command without any pre-configured scope."
+commands.deny = ["mf_record_move"]

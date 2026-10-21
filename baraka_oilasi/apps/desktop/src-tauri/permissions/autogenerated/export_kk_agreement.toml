@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-kk-agreement"
+description = "Enables the export_kk_agreement command without any pre-configured scope."
+commands.allow = ["export_kk_agreement"]
+
+[[permission]]
+identifier = "deny-export-kk-agreement"
+description = "Denies the export_kk_agreement command without any pre-configured scope."
+commands.deny = ["export_kk_agreement"]

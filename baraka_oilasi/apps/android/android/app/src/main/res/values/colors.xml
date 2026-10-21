@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dizayn tokenlari: `paper` (dark, standart mavzu) — oyna oq bo'lib chaqnamasligi uchun. -->
+<resources>
+    <color name="baraka_paper">#FF262624</color>
+</resources>

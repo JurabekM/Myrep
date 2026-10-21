@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-issue-loan-receipt"
+description = "Enables the issue_loan_receipt command without any pre-configured scope."
+commands.allow = ["issue_loan_receipt"]
+
+[[permission]]
+identifier = "deny-issue-loan-receipt"
+description = "Denies the issue_loan_receipt command without any pre-configured scope."
+commands.deny = ["issue_loan_receipt"]

@@ -1,0 +1,198 @@
+{
+  "suite": "kk_funds",
+  "version": 1,
+  "description": "Kasb-kor «Hisob kuni» konvertlari: soliq zaxirasi, zaxira, aylanma, kengayish, sadaqa — qo'shilgan, ishlatilgan, qoldiq; qoldiqdan ko'p ishlatib bo'lmaydi (kasbkor/SPEC 4.5, 8.2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "fd-001",
+      "input": {
+        "currency": "UZS",
+        "events": [
+          {
+            "kind": "CLOSE",
+            "tax": "72000000",
+            "reserve": "77400000",
+            "working": "129000000",
+            "expansion": "51600000"
+          },
+          {
+            "kind": "CLOSE",
+            "tax": "68000000",
+            "reserve": "60000000",
+            "working": "100000000",
+            "expansion": "40000000",
+            "sadaqa": "10000000"
+          },
+          {
+            "kind": "USE",
+            "fund": "TAX",
+            "amount": "72000000"
+          },
+          {
+            "kind": "USE",
+            "fund": "RESERVE",
+            "amount": "30000000"
+          }
+        ]
+      },
+      "expected": {
+        "funds": [
+          {
+            "fund": "TAX",
+            "added": "140000000",
+            "used": "72000000",
+            "balance": "68000000"
+          },
+          {
+            "fund": "RESERVE",
+            "added": "137400000",
+            "used": "30000000",
+            "balance": "107400000"
+          },
+          {
+            "fund": "WORKING",
+            "added": "229000000",
+            "used": "0",
+            "balance": "229000000"
+          },
+          {
+            "fund": "EXPANSION",
+            "added": "91600000",
+            "used": "0",
+            "balance": "91600000"
+          },
+          {
+            "fund": "SADAQA",
+            "added": "10000000",
+            "used": "0",
+            "balance": "10000000"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fd-002",
+      "input": {
+        "currency": "UZS",
+        "events": [
+          {
+            "kind": "CLOSE",
+            "working": "100000000"
+          },
+          {
+            "kind": "USE",
+            "fund": "WORKING",
+            "amount": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "funds": [
+          {
+            "fund": "TAX",
+            "added": "0",
+            "used": "0",
+            "balance": "0"
+          },
+          {
+            "fund": "RESERVE",
+            "added": "0",
+            "used": "0",
+            "balance": "0"
+          },
+          {
+            "fund": "WORKING",
+            "added": "100000000",
+            "used": "100000000",
+            "balance": "0"
+          },
+          {
+            "fund": "EXPANSION",
+            "added": "0",
+            "used": "0",
+            "balance": "0"
+          },
+          {
+            "fund": "SADAQA",
+            "added": "0",
+            "used": "0",
+            "balance": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fd-neg-001",
+      "input": {
+        "currency": "UZS",
+        "events": [
+          {
+            "kind": "CLOSE",
+            "reserve": "10000000"
+          },
+          {
+            "kind": "USE",
+            "fund": "RESERVE",
+            "amount": "10000100"
+          }
+        ]
+      },
+      "expected": {
+        "error": "FUND_INSUFFICIENT"
+      }
+    },
+    {
+      "id": "fd-neg-002",
+      "input": {
+        "currency": "UZS",
+        "events": [
+          {
+            "kind": "USE",
+            "fund": "SADAQA",
+            "amount": "100"
+          }
+        ]
+      },
+      "expected": {
+        "error": "FUND_INSUFFICIENT"
+      }
+    },
+    {
+      "id": "fd-neg-003",
+      "input": {
+        "currency": "UZS",
+        "events": [
+          {
+            "kind": "CLOSE",
+            "reserve": "10000000"
+          },
+          {
+            "kind": "USE",
+            "fund": "RESERVE",
+            "amount": "0"
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "fd-neg-004",
+      "input": {
+        "currency": "UZS",
+        "events": [
+          {
+            "kind": "USE",
+            "fund": "BONUS",
+            "amount": "100"
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_FUND"
+      }
+    }
+  ]
+}

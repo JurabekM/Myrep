@@ -1,0 +1,35 @@
+{
+  "suite": "personal_inflation",
+  "version": 1,
+  "description": "Mahsulot o'zgarishi va og'irlikli indeks, bp",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "infl-001",
+      "input": {
+        "currency": "UZS",
+        "items": [
+          {
+            "name": "goʻsht",
+            "weightBp": 5000,
+            "oldPrice": "8000000",
+            "newPrice": "13000000"
+          },
+          {
+            "name": "non",
+            "weightBp": 5000,
+            "oldPrice": "200000",
+            "newPrice": "300000"
+          }
+        ]
+      },
+      "expected": {
+        "changesBp": [
+          6250,
+          5000
+        ],
+        "indexBp": 5625
+      }
+    }
+  ]
+}

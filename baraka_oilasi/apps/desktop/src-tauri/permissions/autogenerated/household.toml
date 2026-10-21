@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-household"
+description = "Enables the household command without any pre-configured scope."
+commands.allow = ["household"]
+
+[[permission]]
+identifier = "deny-household"
+description = "Denies the household command without any pre-configured scope."
+commands.deny = ["household"]

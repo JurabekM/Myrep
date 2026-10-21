@@ -1,0 +1,241 @@
+{
+  "suite": "readiness_gate",
+  "version": 1,
+  "description": "Tayyorgarlik darvozasi: to'liq kombinatsiya matritsasi. Standart siyosat — ALLOW_WITH_PLAN (uy/SPEC 2C.4); BLOCK_UNTIL_PAID — OQ-D4 taklifi",
+  "generatedBy": "qo'lda",
+  "cases": [
+    {
+      "id": "gate-001",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-002",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": true,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-003",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": false,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET",
+          "INTEREST_DEBT_WITHOUT_PLAN"
+        ]
+      }
+    },
+    {
+      "id": "gate-004",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": true,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-005",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-006",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": true,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-007",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": false,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "INTEREST_DEBT_WITHOUT_PLAN"
+        ]
+      }
+    },
+    {
+      "id": "gate-008",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": true,
+        "policy": "ALLOW_WITH_PLAN"
+      },
+      "expected": {
+        "open": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-009",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-010",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": true,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "gate-011",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": false,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET",
+          "INTEREST_DEBT_ACTIVE"
+        ]
+      }
+    },
+    {
+      "id": "gate-012",
+      "input": {
+        "coverageCentiMonths": 599,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": true,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "EMERGENCY_FUND_BELOW_TARGET",
+          "INTEREST_DEBT_ACTIVE"
+        ]
+      }
+    },
+    {
+      "id": "gate-013",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": false,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-014",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": false,
+        "hasPayoffPlan": true,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "gate-015",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": false,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "INTEREST_DEBT_ACTIVE"
+        ]
+      }
+    },
+    {
+      "id": "gate-016",
+      "input": {
+        "coverageCentiMonths": 600,
+        "hasInterestDebt": true,
+        "hasPayoffPlan": true,
+        "policy": "BLOCK_UNTIL_PAID"
+      },
+      "expected": {
+        "open": false,
+        "reasons": [
+          "INTEREST_DEBT_ACTIVE"
+        ]
+      }
+    }
+  ]
+}

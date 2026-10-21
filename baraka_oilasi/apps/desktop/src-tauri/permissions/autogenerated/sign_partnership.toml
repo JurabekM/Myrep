@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sign-partnership"
+description = "Enables the sign_partnership command without any pre-configured scope."
+commands.allow = ["sign_partnership"]
+
+[[permission]]
+identifier = "deny-sign-partnership"
+description = "Denies the sign_partnership command without any pre-configured scope."
+commands.deny = ["sign_partnership"]

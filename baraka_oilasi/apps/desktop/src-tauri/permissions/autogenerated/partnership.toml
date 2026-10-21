@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-partnership"
+description = "Enables the partnership command without any pre-configured scope."
+commands.allow = ["partnership"]
+
+[[permission]]
+identifier = "deny-partnership"
+description = "Denies the partnership command without any pre-configured scope."
+commands.deny = ["partnership"]

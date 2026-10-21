@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reset-debt-order"
+description = "Enables the reset_debt_order command without any pre-configured scope."
+commands.allow = ["reset_debt_order"]
+
+[[permission]]
+identifier = "deny-reset-debt-order"
+description = "Denies the reset_debt_order command without any pre-configured scope."
+commands.deny = ["reset_debt_order"]

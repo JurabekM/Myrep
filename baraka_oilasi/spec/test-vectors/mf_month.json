@@ -1,0 +1,759 @@
+{
+  "suite": "mf_month",
+  "version": 1,
+  "description": "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi va qorovul pul, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3, 6.4)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "mf-001",
+      "input": {
+        "currency": "KRW",
+        "opening": "150000",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "400000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "350000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "60000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "1200000",
+            "fee": "5000"
+          },
+          {
+            "kind": "FUND_IN",
+            "amount": "520000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "810000",
+        "sentHome": "1200000",
+        "fees": "5000",
+        "fundIn": "520000",
+        "fundOut": "0",
+        "fundNet": "520000",
+        "fundBalance": "520000",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "520000",
+        "pocket": "215000",
+        "shareTarget": "520000",
+        "shareGap": "0",
+        "expensesBp": 3115,
+        "sentBp": 4635,
+        "fundBp": 2000,
+        "reserveBp": 0,
+        "warnings": []
+      }
+    },
+    {
+      "id": "mf-002",
+      "input": {
+        "currency": "KRW",
+        "opening": "150000",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "400000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "350000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "60000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "1200000",
+            "fee": "5000"
+          },
+          {
+            "kind": "FUND_IN",
+            "amount": "320000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "810000",
+        "sentHome": "1200000",
+        "fees": "5000",
+        "fundIn": "320000",
+        "fundOut": "0",
+        "fundNet": "320000",
+        "fundBalance": "320000",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "320000",
+        "pocket": "415000",
+        "shareTarget": "520000",
+        "shareGap": "200000",
+        "expensesBp": 3115,
+        "sentBp": 4635,
+        "fundBp": 1231,
+        "reserveBp": 0,
+        "warnings": [
+          "SHARE_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "mf-003",
+      "input": {
+        "currency": "KRW",
+        "opening": "150000",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "400000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "350000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "60000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "1700000",
+            "fee": "5000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "810000",
+        "sentHome": "1700000",
+        "fees": "5000",
+        "fundIn": "0",
+        "fundOut": "0",
+        "fundNet": "0",
+        "fundBalance": "0",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "0",
+        "pocket": "235000",
+        "shareTarget": "520000",
+        "shareGap": "520000",
+        "expensesBp": 3115,
+        "sentBp": 6558,
+        "fundBp": 0,
+        "reserveBp": 0,
+        "warnings": [
+          "NO_SHARE"
+        ]
+      }
+    },
+    {
+      "id": "mf-004",
+      "input": {
+        "currency": "KRW",
+        "opening": "150000",
+        "fundOpening": "3000000",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "400000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "350000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "60000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "1200000",
+            "fee": "5000"
+          },
+          {
+            "kind": "FUND_IN",
+            "amount": "520000"
+          },
+          {
+            "kind": "FUND_OUT",
+            "amount": "800000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "810000",
+        "sentHome": "1200000",
+        "fees": "5000",
+        "fundIn": "520000",
+        "fundOut": "800000",
+        "fundNet": "-280000",
+        "fundBalance": "2720000",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "-280000",
+        "pocket": "1015000",
+        "shareTarget": "520000",
+        "shareGap": "800000",
+        "expensesBp": 3115,
+        "sentBp": 4635,
+        "fundBp": -1077,
+        "reserveBp": 0,
+        "warnings": [
+          "NO_SHARE",
+          "FUND_WITHDRAWN"
+        ]
+      }
+    },
+    {
+      "id": "mf-005",
+      "input": {
+        "currency": "RUB",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "8000000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "3500000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "2500000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "600000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "2000000",
+            "fee": "30000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "8000000",
+        "expenses": "6600000",
+        "sentHome": "2000000",
+        "fees": "30000",
+        "fundIn": "0",
+        "fundOut": "0",
+        "fundNet": "0",
+        "fundBalance": "0",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "0",
+        "pocket": "-630000",
+        "shareTarget": "1600000",
+        "shareGap": "1600000",
+        "expensesBp": 8250,
+        "sentBp": 2538,
+        "fundBp": 0,
+        "reserveBp": 0,
+        "warnings": [
+          "POCKET_NEGATIVE",
+          "NO_SHARE"
+        ]
+      }
+    },
+    {
+      "id": "mf-006",
+      "input": {
+        "currency": "KRW",
+        "opening": "500000",
+        "fundOpening": "1000000",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "EXPENSE",
+            "amount": "300000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "0",
+        "expenses": "300000",
+        "sentHome": "0",
+        "fees": "0",
+        "fundIn": "0",
+        "fundOut": "0",
+        "fundNet": "0",
+        "fundBalance": "1000000",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "0",
+        "pocket": "200000",
+        "shareTarget": "0",
+        "shareGap": "0",
+        "expensesBp": null,
+        "sentBp": null,
+        "fundBp": null,
+        "reserveBp": null,
+        "warnings": []
+      }
+    },
+    {
+      "id": "mf-007",
+      "input": {
+        "currency": "USD",
+        "opening": "10000",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "123457"
+          },
+          {
+            "kind": "OTHER_INCOME",
+            "amount": "5000"
+          },
+          {
+            "kind": "FUND_IN",
+            "amount": "24691"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "33333"
+          }
+        ]
+      },
+      "expected": {
+        "income": "128457",
+        "expenses": "33333",
+        "sentHome": "0",
+        "fees": "0",
+        "fundIn": "24691",
+        "fundOut": "0",
+        "fundNet": "24691",
+        "fundBalance": "24691",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "24691",
+        "pocket": "80433",
+        "shareTarget": "25691",
+        "shareGap": "1000",
+        "expensesBp": 2595,
+        "sentBp": 0,
+        "fundBp": 1922,
+        "reserveBp": 0,
+        "warnings": [
+          "SHARE_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "mf-008",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 0,
+        "moves": [
+          {
+            "kind": "OPENING",
+            "amount": "100000"
+          },
+          {
+            "kind": "FUND_OPENING",
+            "amount": "2000000"
+          },
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "2000000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "0",
+        "sentHome": "2000000",
+        "fees": "0",
+        "fundIn": "0",
+        "fundOut": "0",
+        "fundNet": "0",
+        "fundBalance": "2000000",
+        "reserveIn": "0",
+        "reserveOut": "0",
+        "reserveNet": "0",
+        "reserveBalance": "0",
+        "savedNet": "0",
+        "pocket": "700000",
+        "shareTarget": "0",
+        "shareGap": "0",
+        "expensesBp": 0,
+        "sentBp": 7692,
+        "fundBp": 0,
+        "reserveBp": 0,
+        "warnings": []
+      }
+    },
+    {
+      "id": "mf-neg-001",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "0"
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "mf-neg-002",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "1000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "500",
+            "fee": "-1"
+          }
+        ]
+      },
+      "expected": {
+        "error": "FEE_NEGATIVE"
+      }
+    },
+    {
+      "id": "mf-neg-003",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "LOAN",
+            "amount": "1000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_KIND"
+      }
+    },
+    {
+      "id": "mf-neg-004",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 10001,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "1000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    },
+    {
+      "id": "mf-neg-005",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "100",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "FUND_IN",
+            "amount": "50"
+          },
+          {
+            "kind": "FUND_OUT",
+            "amount": "151"
+          }
+        ]
+      },
+      "expected": {
+        "error": "FUND_INSUFFICIENT"
+      }
+    },
+    {
+      "id": "mf-009",
+      "input": {
+        "currency": "KRW",
+        "opening": "150000",
+        "fundOpening": "6000000",
+        "reserveOpening": "510000",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "810000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "1200000",
+            "fee": "5000"
+          },
+          {
+            "kind": "RESERVE_IN",
+            "amount": "300000"
+          },
+          {
+            "kind": "FUND_IN",
+            "amount": "220000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "810000",
+        "sentHome": "1200000",
+        "fees": "5000",
+        "fundIn": "220000",
+        "fundOut": "0",
+        "fundNet": "220000",
+        "fundBalance": "6220000",
+        "reserveIn": "300000",
+        "reserveOut": "0",
+        "reserveNet": "300000",
+        "reserveBalance": "810000",
+        "savedNet": "520000",
+        "pocket": "215000",
+        "shareTarget": "520000",
+        "shareGap": "0",
+        "expensesBp": 3115,
+        "sentBp": 4635,
+        "fundBp": 846,
+        "reserveBp": 1154,
+        "warnings": []
+      }
+    },
+    {
+      "id": "mf-010",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "6000000",
+        "reserveOpening": "810000",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "EXPENSE",
+            "amount": "1210000"
+          },
+          {
+            "kind": "RESERVE_OUT",
+            "amount": "400000"
+          },
+          {
+            "kind": "SENT_HOME",
+            "amount": "1200000"
+          },
+          {
+            "kind": "FUND_IN",
+            "amount": "520000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "1210000",
+        "sentHome": "1200000",
+        "fees": "0",
+        "fundIn": "520000",
+        "fundOut": "0",
+        "fundNet": "520000",
+        "fundBalance": "6520000",
+        "reserveIn": "0",
+        "reserveOut": "400000",
+        "reserveNet": "-400000",
+        "reserveBalance": "410000",
+        "savedNet": "520000",
+        "pocket": "70000",
+        "shareTarget": "520000",
+        "shareGap": "0",
+        "expensesBp": 4654,
+        "sentBp": 4615,
+        "fundBp": 2000,
+        "reserveBp": 0,
+        "warnings": []
+      }
+    },
+    {
+      "id": "mf-011",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "0",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "RESERVE_OPENING",
+            "amount": "500000"
+          },
+          {
+            "kind": "SALARY",
+            "amount": "2600000"
+          },
+          {
+            "kind": "RESERVE_IN",
+            "amount": "200000"
+          }
+        ]
+      },
+      "expected": {
+        "income": "2600000",
+        "expenses": "0",
+        "sentHome": "0",
+        "fees": "0",
+        "fundIn": "0",
+        "fundOut": "0",
+        "fundNet": "0",
+        "fundBalance": "0",
+        "reserveIn": "200000",
+        "reserveOut": "0",
+        "reserveNet": "200000",
+        "reserveBalance": "700000",
+        "savedNet": "200000",
+        "pocket": "2400000",
+        "shareTarget": "520000",
+        "shareGap": "320000",
+        "expensesBp": 0,
+        "sentBp": 0,
+        "fundBp": 0,
+        "reserveBp": 769,
+        "warnings": [
+          "SHARE_BELOW_TARGET"
+        ]
+      }
+    },
+    {
+      "id": "mf-neg-006",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "100",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "RESERVE_OUT",
+            "amount": "101"
+          }
+        ]
+      },
+      "expected": {
+        "error": "RESERVE_INSUFFICIENT"
+      }
+    },
+    {
+      "id": "mf-neg-007",
+      "input": {
+        "currency": "KRW",
+        "opening": "0",
+        "fundOpening": "0",
+        "reserveOpening": "-1",
+        "shareBp": 2000,
+        "moves": [
+          {
+            "kind": "SALARY",
+            "amount": "1000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    }
+  ]
+}

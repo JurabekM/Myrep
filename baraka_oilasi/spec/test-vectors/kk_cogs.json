@@ -1,0 +1,476 @@
+{
+  "suite": "kk_cogs",
+  "version": 1,
+  "description": "Kasb-kor tovar qoldig'i va tannarx: o'rtacha tortilgan va FIFO, driftsiz (oxirgi birlik — qiymat aniq 0), hisobdan chiqarish, inventarizatsiya (kasbkor/SPEC 4.1–4.2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "cg-001",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 50000,
+            "amount": "55000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "qty": 100000,
+            "amount": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 80000
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "55000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "cost": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "cost": "96000000"
+          }
+        ],
+        "qty": 70000,
+        "value": "84000000",
+        "unitCost": "1200000",
+        "layers": null
+      }
+    },
+    {
+      "id": "cg-002",
+      "input": {
+        "currency": "UZS",
+        "method": "FIFO",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 50000,
+            "amount": "55000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "qty": 100000,
+            "amount": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 80000
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "55000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "cost": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "cost": "92500000"
+          }
+        ],
+        "qty": 70000,
+        "value": "87500000",
+        "unitCost": "1250000",
+        "layers": [
+          {
+            "qty": 70000,
+            "value": "87500000"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cg-003",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 3,
+            "amount": "100000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 1
+          },
+          {
+            "kind": "SALE",
+            "qty": 1
+          },
+          {
+            "kind": "SALE",
+            "qty": 1
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "100000"
+          },
+          {
+            "kind": "SALE",
+            "cost": "33333"
+          },
+          {
+            "kind": "SALE",
+            "cost": "33334"
+          },
+          {
+            "kind": "SALE",
+            "cost": "33333"
+          }
+        ],
+        "qty": 0,
+        "value": "0",
+        "unitCost": null,
+        "layers": null
+      }
+    },
+    {
+      "id": "cg-004",
+      "input": {
+        "currency": "UZS",
+        "method": "FIFO",
+        "factor": 1,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 3,
+            "amount": "100000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 1
+          },
+          {
+            "kind": "SALE",
+            "qty": 1
+          },
+          {
+            "kind": "SALE",
+            "qty": 1
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "100000"
+          },
+          {
+            "kind": "SALE",
+            "cost": "33333"
+          },
+          {
+            "kind": "SALE",
+            "cost": "33334"
+          },
+          {
+            "kind": "SALE",
+            "cost": "33333"
+          }
+        ],
+        "qty": 0,
+        "value": "0",
+        "unitCost": null,
+        "layers": []
+      }
+    },
+    {
+      "id": "cg-005",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 50000,
+            "amount": "55000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "qty": 100000,
+            "amount": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 80000
+          },
+          {
+            "kind": "WRITE_OFF",
+            "qty": 2000
+          },
+          {
+            "kind": "ADJUST",
+            "qty": -500
+          },
+          {
+            "kind": "ADJUST",
+            "qty": 1000,
+            "amount": "1200000"
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "55000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "cost": "125000000"
+          },
+          {
+            "kind": "SALE",
+            "cost": "96000000"
+          },
+          {
+            "kind": "WRITE_OFF",
+            "cost": "2400000"
+          },
+          {
+            "kind": "ADJUST",
+            "cost": "600000"
+          },
+          {
+            "kind": "ADJUST",
+            "cost": "-1200000"
+          }
+        ],
+        "qty": 68500,
+        "value": "82200000",
+        "unitCost": "1200000",
+        "layers": null
+      }
+    },
+    {
+      "id": "cg-006",
+      "input": {
+        "currency": "UZS",
+        "method": "FIFO",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 10000,
+            "amount": "11000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "qty": 10000,
+            "amount": "12500000"
+          },
+          {
+            "kind": "WRITE_OFF",
+            "qty": 12000
+          },
+          {
+            "kind": "ADJUST",
+            "qty": 300,
+            "amount": "375000"
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "11000000"
+          },
+          {
+            "kind": "PURCHASE",
+            "cost": "12500000"
+          },
+          {
+            "kind": "WRITE_OFF",
+            "cost": "13500000"
+          },
+          {
+            "kind": "ADJUST",
+            "cost": "-375000"
+          }
+        ],
+        "qty": 8300,
+        "value": "10375000",
+        "unitCost": "1250000",
+        "layers": [
+          {
+            "qty": 8000,
+            "value": "10000000"
+          },
+          {
+            "qty": 300,
+            "value": "375000"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cg-007",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 7,
+            "amount": "100000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 3
+          },
+          {
+            "kind": "SALE",
+            "qty": 2
+          }
+        ]
+      },
+      "expected": {
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "cost": "100000"
+          },
+          {
+            "kind": "SALE",
+            "cost": "42857"
+          },
+          {
+            "kind": "SALE",
+            "cost": "28572"
+          }
+        ],
+        "qty": 2,
+        "value": "28571",
+        "unitCost": "14286",
+        "layers": null
+      }
+    },
+    {
+      "id": "cg-neg-001",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 1000,
+            "amount": "1000000"
+          },
+          {
+            "kind": "SALE",
+            "qty": 1001
+          }
+        ]
+      },
+      "expected": {
+        "error": "INSUFFICIENT_STOCK"
+      }
+    },
+    {
+      "id": "cg-neg-002",
+      "input": {
+        "currency": "UZS",
+        "method": "FIFO",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "SALE",
+            "qty": 1
+          }
+        ]
+      },
+      "expected": {
+        "error": "INSUFFICIENT_STOCK"
+      }
+    },
+    {
+      "id": "cg-neg-003",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 0,
+            "amount": "1000000"
+          }
+        ]
+      },
+      "expected": {
+        "error": "INVALID_QTY"
+      }
+    },
+    {
+      "id": "cg-neg-004",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 1000,
+        "moves": [
+          {
+            "kind": "PURCHASE",
+            "qty": 10,
+            "amount": "0"
+          }
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "cg-neg-005",
+      "input": {
+        "currency": "UZS",
+        "method": "LIFO",
+        "factor": 1000,
+        "moves": []
+      },
+      "expected": {
+        "error": "INVALID_METHOD"
+      }
+    },
+    {
+      "id": "cg-neg-006",
+      "input": {
+        "currency": "UZS",
+        "method": "AVERAGE",
+        "factor": 12,
+        "moves": []
+      },
+      "expected": {
+        "error": "INVALID_UNIT"
+      }
+    }
+  ]
+}

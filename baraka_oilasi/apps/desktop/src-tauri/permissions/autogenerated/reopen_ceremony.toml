@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reopen-ceremony"
+description = "Enables the reopen_ceremony command without any pre-configured scope."
+commands.allow = ["reopen_ceremony"]
+
+[[permission]]
+identifier = "deny-reopen-ceremony"
+description = "Denies the reopen_ceremony command without any pre-configured scope."
+commands.deny = ["reopen_ceremony"]

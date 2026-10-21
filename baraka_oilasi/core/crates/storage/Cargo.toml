@@ -1,0 +1,25 @@
+[package]
+name = "baraka-storage"
+description = "SQLCipher saqlash qatlami, migratsiyalar va makon bo'yicha majburiy repository'lar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+baraka-money.workspace = true
+baraka-journal.workspace = true
+baraka-domain-common.workspace = true
+baraka-security.workspace = true
+rusqlite.workspace = true
+rusqlite_migration.workspace = true
+thiserror.workspace = true
+serde_json.workspace = true
+baraka-interchange = { path = "../interchange" }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

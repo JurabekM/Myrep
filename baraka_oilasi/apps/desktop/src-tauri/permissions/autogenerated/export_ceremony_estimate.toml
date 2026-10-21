@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-ceremony-estimate"
+description = "Enables the export_ceremony_estimate command without any pre-configured scope."
+commands.allow = ["export_ceremony_estimate"]
+
+[[permission]]
+identifier = "deny-export-ceremony-estimate"
+description = "Denies the export_ceremony_estimate command without any pre-configured scope."
+commands.deny = ["export_ceremony_estimate"]

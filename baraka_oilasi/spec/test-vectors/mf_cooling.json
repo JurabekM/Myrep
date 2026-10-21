@@ -1,0 +1,639 @@
+{
+  "suite": "mf_cooling",
+  "version": 1,
+  "description": "Musofir sovutish davri (qaytgandan keyin 90 kun) va kengaytirilgan taklif detektori: U12 savollari, musofirga xos bayroqlar, olib kelingan summadan ulush, kutish sanasi (musofir/SPEC 6.3)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "co-001",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-11-08",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "LEND",
+        "amount": "1500000000",
+        "answers": {
+          "approached": "YES",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES",
+          "repaymentDate": "NO"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": true,
+        "endsOn": "2027-01-17",
+        "daysLeft": 70,
+        "shareBp": 1250,
+        "flags": [
+          {
+            "code": "FRESH_RETURN_APPROACH",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NO_REPAYMENT_DATE",
+            "level": "YELLOW"
+          },
+          {
+            "code": "COOLING_BIG_DECISION",
+            "level": "YELLOW"
+          }
+        ],
+        "verdict": "YELLOW",
+        "waitUntil": "2027-01-17",
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-002",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-11-08",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "PARTNERSHIP",
+        "amount": "5000000000",
+        "answers": {
+          "guaranteed": "YES",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES",
+          "approached": "NO",
+          "upfront": "YES",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": true,
+        "endsOn": "2027-01-17",
+        "daysLeft": 70,
+        "shareBp": 4167,
+        "flags": [
+          {
+            "code": "GUARANTEED_PROFIT",
+            "level": "RED"
+          },
+          {
+            "code": "UPFRONT_BEFORE_DOCUMENTS",
+            "level": "RED"
+          },
+          {
+            "code": "LARGE_SHARE",
+            "level": "RED"
+          }
+        ],
+        "verdict": "RED",
+        "waitUntil": "2027-01-17",
+        "signs": 1,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-003",
+      "input": {
+        "currency": "UZS",
+        "today": "2027-02-01",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "PURCHASE",
+        "amount": "5000000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": false,
+        "endsOn": "2027-01-17",
+        "daysLeft": 0,
+        "shareBp": 4167,
+        "flags": [],
+        "verdict": "GREEN",
+        "waitUntil": null,
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-004",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-11-08",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "PURCHASE",
+        "amount": "600000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": true,
+        "endsOn": "2027-01-17",
+        "daysLeft": 70,
+        "shareBp": 500,
+        "flags": [],
+        "verdict": "GREEN",
+        "waitUntil": null,
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-005",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-19",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "OTHER",
+        "amount": "300000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "YES",
+          "familyDiscussed": "NO"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": false,
+        "endsOn": null,
+        "daysLeft": 0,
+        "shareBp": null,
+        "flags": [
+          {
+            "code": "ABROAD_JOB_FEE",
+            "level": "RED"
+          },
+          {
+            "code": "NOT_DISCUSSED",
+            "level": "YELLOW"
+          }
+        ],
+        "verdict": "RED",
+        "waitUntil": null,
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-006",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-25",
+        "returnedOn": "2026-10-19",
+        "broughtHome": null,
+        "kind": "INVEST",
+        "amount": "1000000000",
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "UNKNOWN",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES",
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": true,
+        "endsOn": "2027-01-17",
+        "daysLeft": 84,
+        "shareBp": null,
+        "flags": [
+          {
+            "code": "URGENCY_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "COOLING_PERIOD",
+            "level": "YELLOW"
+          }
+        ],
+        "verdict": "YELLOW",
+        "waitUntil": "2027-01-17",
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-007",
+      "input": {
+        "currency": "UZS",
+        "today": "2027-01-16",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "PURCHASE",
+        "amount": "2000000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": true,
+        "endsOn": "2027-01-17",
+        "daysLeft": 1,
+        "shareBp": 1667,
+        "flags": [
+          {
+            "code": "COOLING_BIG_DECISION",
+            "level": "YELLOW"
+          }
+        ],
+        "verdict": "YELLOW",
+        "waitUntil": "2027-01-17",
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-008",
+      "input": {
+        "currency": "UZS",
+        "today": "2027-01-17",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "PURCHASE",
+        "amount": "2000000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": false,
+        "endsOn": "2027-01-17",
+        "daysLeft": 0,
+        "shareBp": 1667,
+        "flags": [],
+        "verdict": "GREEN",
+        "waitUntil": null,
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-009",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-22",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "22770000000",
+        "kind": "INVEST",
+        "amount": "12650000000",
+        "answers": {
+          "guaranteed": "YES",
+          "lossShared": "YES",
+          "realActivity": "UNKNOWN",
+          "recruitment": "NO",
+          "urgency": "YES",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "NO",
+          "exitEasy": "NO",
+          "approached": "YES",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "NO"
+        },
+        "wall": "4800000000",
+        "promisedBp": 3500
+      },
+      "expected": {
+        "inCooling": true,
+        "endsOn": "2027-01-17",
+        "daysLeft": 87,
+        "shareBp": 5556,
+        "flags": [
+          {
+            "code": "GUARANTEED_PROFIT",
+            "level": "RED"
+          },
+          {
+            "code": "REAL_ACTIVITY_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "INSPECTION_REFUSED",
+            "level": "RED"
+          },
+          {
+            "code": "EXIT_HARD",
+            "level": "RED"
+          },
+          {
+            "code": "FRESH_RETURN_APPROACH",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NOT_DISCUSSED",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
+          },
+          {
+            "code": "LARGE_SHARE",
+            "level": "RED"
+          }
+        ],
+        "verdict": "RED",
+        "waitUntil": "2027-01-17",
+        "signs": 4,
+        "free": "17970000000",
+        "promisedYearlyBp": 42000,
+        "promisedTimesTenths": 52
+      }
+    },
+    {
+      "id": "co-010",
+      "input": {
+        "currency": "UZS",
+        "today": "2027-03-01",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "12000000000",
+        "kind": "PURCHASE",
+        "amount": "8000000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": "6000000000",
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": false,
+        "endsOn": "2027-01-17",
+        "daysLeft": 0,
+        "shareBp": 6667,
+        "flags": [
+          {
+            "code": "FORTRESS_WALL",
+            "level": "RED"
+          }
+        ],
+        "verdict": "RED",
+        "waitUntil": null,
+        "signs": 0,
+        "free": "6000000000",
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-011",
+      "input": {
+        "currency": "UZS",
+        "today": "2027-03-01",
+        "returnedOn": "2026-10-19",
+        "broughtHome": "10000000000",
+        "kind": "PURCHASE",
+        "amount": "4000000000",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": "6000000000",
+        "promisedBp": null
+      },
+      "expected": {
+        "inCooling": false,
+        "endsOn": "2027-01-17",
+        "daysLeft": 0,
+        "shareBp": 4000,
+        "flags": [],
+        "verdict": "GREEN",
+        "waitUntil": null,
+        "signs": 0,
+        "free": "4000000000",
+        "promisedYearlyBp": null,
+        "promisedTimesTenths": null
+      }
+    },
+    {
+      "id": "co-012",
+      "input": {
+        "currency": "UZS",
+        "today": "2027-03-01",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "INVEST",
+        "amount": "100000000",
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES",
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": 333
+      },
+      "expected": {
+        "inCooling": false,
+        "endsOn": null,
+        "daysLeft": 0,
+        "shareBp": null,
+        "flags": [],
+        "verdict": "GREEN",
+        "waitUntil": null,
+        "signs": 0,
+        "free": null,
+        "promisedYearlyBp": 3996,
+        "promisedTimesTenths": 14
+      }
+    },
+    {
+      "id": "co-neg-005",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-19",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "INVEST",
+        "amount": "100",
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES",
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": 0
+      },
+      "expected": {
+        "error": "INVALID_BP"
+      }
+    },
+    {
+      "id": "co-neg-001",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-19",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "CAR",
+        "amount": "100",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "error": "INVALID_KIND"
+      }
+    },
+    {
+      "id": "co-neg-002",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-19",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "LEND",
+        "amount": "100",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "error": "MISSING_ANSWER"
+      }
+    },
+    {
+      "id": "co-neg-003",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-19",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "OTHER",
+        "amount": "0",
+        "answers": {
+          "approached": "NO",
+          "upfront": "NO",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "co-neg-004",
+      "input": {
+        "currency": "UZS",
+        "today": "2026-10-19",
+        "returnedOn": null,
+        "broughtHome": null,
+        "kind": "OTHER",
+        "amount": "100",
+        "answers": {
+          "approached": "NO",
+          "upfront": "MAYBE",
+          "abroadJobFee": "NO",
+          "familyDiscussed": "YES"
+        },
+        "wall": null,
+        "promisedBp": null
+      },
+      "expected": {
+        "error": "INVALID_ANSWER"
+      }
+    }
+  ]
+}

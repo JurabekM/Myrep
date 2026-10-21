@@ -1,0 +1,48 @@
+[package]
+name = "baraka-desktop"
+description = "Baraka oilasi — desktop ilova (Tauri 2). Yupqa adapter: faqat baraka-app ni chaqiradi"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.97"
+license = "UNLICENSED"
+publish = false
+
+# Desktop alohida Cargo workspace: Linux'da webkit tizim kutubxonalarini talab qiladi,
+# shuning uchun yadro CI'si (`cargo test --workspace`) unga bog'liq emas.
+[workspace]
+
+[lib]
+name = "baraka_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+baraka-app = { path = "../../../core/crates/app", features = ["specta"] }
+baraka-security = { path = "../../../core/crates/security" }
+baraka-agreements = { path = "../../../core/crates/agreements" }
+tauri = { version = "2.12", features = [] }
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+specta-typescript = "0.0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+keyring = "4.2"
+tauri-plugin-dialog = "2.8"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+# Debug build'da ham Argon2id (64 MiB) tez ishlashi uchun: aks holda PIN bilan ochish o'nlab soniya.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-budget-mode"
+description = "Enables the budget_mode command without any pre-configured scope."
+commands.allow = ["budget_mode"]
+
+[[permission]]
+identifier = "deny-budget-mode"
+description = "Denies the budget_mode command without any pre-configured scope."
+commands.deny = ["budget_mode"]

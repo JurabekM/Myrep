@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-contributor"
+description = "Enables the add_contributor command without any pre-configured scope."
+commands.allow = ["add_contributor"]
+
+[[permission]]
+identifier = "deny-add-contributor"
+description = "Denies the add_contributor command without any pre-configured scope."
+commands.deny = ["add_contributor"]

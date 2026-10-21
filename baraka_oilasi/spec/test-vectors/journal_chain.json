@@ -1,0 +1,164 @@
+{
+  "suite": "journal_chain",
+  "version": 1,
+  "description": "JCS + SHA-256 zanjiri; whitelist v1; genesis = 64 ta 0",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "chain-001-003",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ]
+      },
+      "expected": {
+        "hashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
+          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
+          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+        ]
+      }
+    },
+    {
+      "id": "chain-neg-001",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000001",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "300000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Anvar hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000002",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "CONTRIBUTION",
+            "partyId": "P2",
+            "amount": {
+              "minor": "300000001",
+              "currency": "UZS"
+            },
+            "date": "2026-10-01",
+            "note": "Dilshod hissasi"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000003",
+            "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+            "kind": "PROFIT_DISTRIBUTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "140000000",
+              "currency": "UZS"
+            },
+            "date": "2026-10-31",
+            "note": "1-oy foyda ulushi"
+          }
+        ],
+        "storedHashes": [
+          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
+          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
+          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+        ]
+      },
+      "expected": {
+        "firstBroken": 2
+      }
+    },
+    {
+      "id": "chain-utf8-opt-corr-001",
+      "input": {
+        "entries": [
+          {
+            "id": "0192a000-0000-7000-8000-000000000011",
+            "agreementId": "0192a000-0000-7000-8000-0000000000b1",
+            "kind": "OPENING_BALANCE",
+            "partyId": "P1",
+            "amount": {
+              "minor": "50000000",
+              "currency": "UZS"
+            },
+            "date": "2026-09-01",
+            "note": "Gʻayrat va Oʻgʻiloyning qarzi — boshlangʻich holat; маъно ʼ"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000012",
+            "agreementId": "0192a000-0000-7000-8000-0000000000b1",
+            "kind": "DUTY_INCIDENT",
+            "partyId": "P2",
+            "date": "2026-09-15",
+            "note": "Kasal boʻldi, \"bot\" toʻxtadi\n1 kun"
+          },
+          {
+            "id": "0192a000-0000-7000-8000-000000000013",
+            "agreementId": "0192a000-0000-7000-8000-0000000000b1",
+            "kind": "CORRECTION",
+            "partyId": "P1",
+            "amount": {
+              "minor": "-1000000",
+              "currency": "UZS"
+            },
+            "date": "2026-09-20",
+            "correctsEntryId": "0192a000-0000-7000-8000-000000000011",
+            "refs": [
+              "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+            ]
+          }
+        ],
+        "withShortCodes": true
+      },
+      "expected": {
+        "hashes": [
+          "ce7101ad943debd72664d6308a5867dd82d1dfc5464ba0f44b03743e857e59a0",
+          "5dab5ae492e1f95a5e042bb78bc26a95b2a289aedaa49b8551883a95f26d691b",
+          "7655f08d9337da13013ac7816b3ca5ec0bc275cc17be8f91accbf61553015485"
+        ],
+        "shortCodes": [
+          "CE71-01AD-943D-EBD7",
+          "5DAB-5AE4-92E1-F95A",
+          "7655-F08D-9337-DA13"
+        ]
+      }
+    }
+  ]
+}

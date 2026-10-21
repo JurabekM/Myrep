@@ -1,0 +1,15 @@
+{
+  "name": "baraka-desktop-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Haqiqiy desktop ilova ustida yakuniy E2E (tauri-driver + WebdriverIO).",
+  "scripts": {
+    "e2e": "node --test --test-concurrency=1 \"specs/*.test.mjs\""
+  },
+  "packageManager": "pnpm@10.0.0",
+  "devDependencies": {
+    "axe-core": "4.10.3",
+    "webdriverio": "9.4.1"
+  }
+}

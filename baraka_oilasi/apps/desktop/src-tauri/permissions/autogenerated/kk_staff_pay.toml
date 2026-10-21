@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-staff-pay"
+description = "Enables the kk_staff_pay command without any pre-configured scope."
+commands.allow = ["kk_staff_pay"]
+
+[[permission]]
+identifier = "deny-kk-staff-pay"
+description = "Denies the kk_staff_pay command without any pre-configured scope."
+commands.deny = ["kk_staff_pay"]

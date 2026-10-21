@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-add-employee"
+description = "Enables the kk_add_employee command without any pre-configured scope."
+commands.allow = ["kk_add_employee"]
+
+[[permission]]
+identifier = "deny-kk-add-employee"
+description = "Denies the kk_add_employee command without any pre-configured scope."
+commands.deny = ["kk_add_employee"]

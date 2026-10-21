@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-record-income"
+description = "Enables the mf_record_income command without any pre-configured scope."
+commands.allow = ["mf_record_income"]
+
+[[permission]]
+identifier = "deny-mf-record-income"
+description = "Denies the mf_record_income command without any pre-configured scope."
+commands.deny = ["mf_record_income"]

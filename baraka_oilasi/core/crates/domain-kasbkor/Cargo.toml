@@ -1,0 +1,16 @@
+[package]
+name = "baraka-domain-kasbkor"
+description = "Kasb-kor makoni domen qoidalari (K-vazifalarda to'ldiriladi)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+baraka-money.workspace = true
+baraka-domain-common.workspace = true
+chrono.workspace = true
+
+[lints]
+workspace = true

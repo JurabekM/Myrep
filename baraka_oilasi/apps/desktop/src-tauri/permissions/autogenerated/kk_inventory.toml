@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-inventory"
+description = "Enables the kk_inventory command without any pre-configured scope."
+commands.allow = ["kk_inventory"]
+
+[[permission]]
+identifier = "deny-kk-inventory"
+description = "Denies the kk_inventory command without any pre-configured scope."
+commands.deny = ["kk_inventory"]

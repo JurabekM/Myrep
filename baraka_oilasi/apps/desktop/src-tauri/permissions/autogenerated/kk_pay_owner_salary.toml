@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-pay-owner-salary"
+description = "Enables the kk_pay_owner_salary command without any pre-configured scope."
+commands.allow = ["kk_pay_owner_salary"]
+
+[[permission]]
+identifier = "deny-kk-pay-owner-salary"
+description = "Denies the kk_pay_owner_salary command without any pre-configured scope."
+commands.deny = ["kk_pay_owner_salary"]

@@ -1,0 +1,184 @@
+{
+  "suite": "mf_reserve",
+  "version": 1,
+  "description": "Musofir qorovul pul: chet eldagi o'rtacha oylik xarajat × N oy maqsad, yetmagani, holat va o'z ulushini qorovul pul va jamg'arma orasida bo'lish (musofir/SPEC 6.4)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "rs-001",
+      "input": {
+        "currency": "KRW",
+        "balance": "300000",
+        "monthly": [
+          "810000",
+          "790000",
+          "815000"
+        ],
+        "months": 1,
+        "share": "520000"
+      },
+      "expected": {
+        "avgMonthly": "805000",
+        "target": "805000",
+        "gap": "505000",
+        "progressBp": 3727,
+        "status": "PARTIAL",
+        "toReserve": "505000",
+        "toFund": "15000"
+      }
+    },
+    {
+      "id": "rs-002",
+      "input": {
+        "currency": "KRW",
+        "balance": "900000",
+        "monthly": [
+          "810000",
+          "790000",
+          "815000"
+        ],
+        "months": 1,
+        "share": "520000"
+      },
+      "expected": {
+        "avgMonthly": "805000",
+        "target": "805000",
+        "gap": "0",
+        "progressBp": 10000,
+        "status": "FULL",
+        "toReserve": "0",
+        "toFund": "520000"
+      }
+    },
+    {
+      "id": "rs-003",
+      "input": {
+        "currency": "KRW",
+        "balance": "0",
+        "monthly": [
+          "810000",
+          "790000"
+        ],
+        "months": 2,
+        "share": "520000"
+      },
+      "expected": {
+        "avgMonthly": "800000",
+        "target": "1600000",
+        "gap": "1600000",
+        "progressBp": 0,
+        "status": "EMPTY",
+        "toReserve": "520000",
+        "toFund": "0"
+      }
+    },
+    {
+      "id": "rs-004",
+      "input": {
+        "currency": "KRW",
+        "balance": "0",
+        "monthly": [],
+        "months": 1,
+        "share": "520000"
+      },
+      "expected": {
+        "avgMonthly": null,
+        "target": null,
+        "gap": null,
+        "progressBp": null,
+        "status": "NO_HISTORY",
+        "toReserve": "0",
+        "toFund": "520000"
+      }
+    },
+    {
+      "id": "rs-005",
+      "input": {
+        "currency": "USD",
+        "balance": "150000",
+        "monthly": [
+          "100001",
+          "100000"
+        ],
+        "months": 3,
+        "share": null
+      },
+      "expected": {
+        "avgMonthly": "100001",
+        "target": "300002",
+        "gap": "150002",
+        "progressBp": 5000,
+        "status": "PARTIAL",
+        "toReserve": null,
+        "toFund": null
+      }
+    },
+    {
+      "id": "rs-006",
+      "input": {
+        "currency": "KRW",
+        "balance": "0",
+        "monthly": [
+          "0",
+          "0"
+        ],
+        "months": 1,
+        "share": "100000"
+      },
+      "expected": {
+        "avgMonthly": "0",
+        "target": "0",
+        "gap": "0",
+        "progressBp": 10000,
+        "status": "FULL",
+        "toReserve": "0",
+        "toFund": "100000"
+      }
+    },
+    {
+      "id": "rs-neg-001",
+      "input": {
+        "currency": "KRW",
+        "balance": "0",
+        "monthly": [
+          "800000"
+        ],
+        "months": 4,
+        "share": null
+      },
+      "expected": {
+        "error": "INVALID_MONTHS"
+      }
+    },
+    {
+      "id": "rs-neg-002",
+      "input": {
+        "currency": "KRW",
+        "balance": "-1",
+        "monthly": [
+          "800000"
+        ],
+        "months": 1,
+        "share": null
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "rs-neg-003",
+      "input": {
+        "currency": "KRW",
+        "balance": "0",
+        "monthly": [
+          "800000"
+        ],
+        "months": 1,
+        "share": "-5"
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    }
+  ]
+}

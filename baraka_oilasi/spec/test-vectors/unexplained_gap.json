@@ -1,0 +1,36 @@
+{
+  "suite": "unexplained_gap",
+  "version": 1,
+  "description": "income − obligations − expenses − vaultNet − Δ(naqd + karta)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "gap-001",
+      "input": {
+        "currency": "UZS",
+        "income": "800000000",
+        "obligations": "535000000",
+        "expenses": "165000000",
+        "vaultNet": "0",
+        "balanceDelta": "0"
+      },
+      "expected": {
+        "gap": "100000000"
+      }
+    },
+    {
+      "id": "gap-002",
+      "input": {
+        "currency": "UZS",
+        "income": "800000000",
+        "obligations": "535000000",
+        "expenses": "165000000",
+        "vaultNet": "0",
+        "balanceDelta": "60000000"
+      },
+      "expected": {
+        "gap": "40000000"
+      }
+    }
+  ]
+}
