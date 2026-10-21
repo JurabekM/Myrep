@@ -197,6 +197,22 @@ impl App {
         income_id: Option<String>,
         note: Option<String>,
     ) -> Result<VaultTxDto, AppError> {
+        self.vault_insert_capped(ctx, space_id, amount, reason, income_id, note, None)
+    }
+
+    /// `cap` — daromad summasi: shu daromaddan oldingi ajratmalar bilan birga oshmasin. Tekshiruv
+    /// va yozuv bitta tranzaksiyada (ikki marta bosilsa ham ikkinchisi o'tmaydi).
+    #[allow(clippy::too_many_arguments)]
+    fn vault_insert_capped(
+        &self,
+        ctx: &Ctx,
+        space_id: &str,
+        amount: Money,
+        reason: VaultReason,
+        income_id: Option<String>,
+        note: Option<String>,
+        cap: Option<i64>,
+    ) -> Result<VaultTxDto, AppError> {
         let scope = self.scope(ctx, space_id)?;
         let vault_asset = self.vault_asset(&scope)?;
         let row = vault::VaultTxRow {
@@ -210,7 +226,19 @@ impl App {
             occurred_on: ymd(self.today(ctx)),
         };
         let meta = self.meta();
-        self.db.write(|tx| vault::insert(tx, &scope, &row, &meta))?;
+        let within_cap = self.db.write(|tx| {
+            if let (Some(cap), Some(income_id)) = (cap, row.income_id.as_deref()) {
+                let used = vault::allocated_from_income(tx, &scope, income_id)?;
+                if used.checked_add(row.amount_minor).is_none_or(|t| t > cap) {
+                    return Ok(false);
+                }
+            }
+            vault::insert(tx, &scope, &row, &meta)?;
+            Ok(true)
+        })?;
+        if !within_cap {
+            return Err(AppError::on("SHARE_EXCEEDS_INCOME", "amount"));
+        }
         self.publish(Some(space_id), &[Topic::Vault]);
         Ok(VaultTxDto {
             id: row.id,
@@ -235,16 +263,14 @@ impl App {
             .read(|c| incomes::get(c, &scope, income_id))?
             .ok_or(AppError::on("NOT_FOUND", "incomeId"))?;
         let amount = positive(&ctx, amount, "amount")?;
-        if amount.minor() > income.amount_minor {
-            return Err(AppError::on("SHARE_EXCEEDS_INCOME", "amount"));
-        }
-        self.vault_insert(
+        self.vault_insert_capped(
             &ctx,
             space_id,
             amount,
             VaultReason::Allocation,
             Some(income.id),
             None,
+            Some(income.amount_minor),
         )
     }
 

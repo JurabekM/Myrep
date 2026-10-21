@@ -47,6 +47,26 @@ pub fn balance(c: &Connection, s: &SpaceScope, asset_id: &str) -> Result<i64, St
     Ok(total)
 }
 
+/// Bitta daromaddan «Kelajagim»ga ajratilgan jami (minor birlikda) — ulush daromaddan oshmasin.
+pub fn allocated_from_income(
+    c: &Connection,
+    s: &SpaceScope,
+    income_id: &str,
+) -> Result<i64, StorageError> {
+    let mut st = c.prepare(
+        "SELECT amount_minor FROM vault_transactions
+         WHERE household_id = ?1 AND space_id = ?2 AND income_id = ?3 AND deleted_at IS NULL",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id, income_id], |r| {
+        r.get::<_, i64>(0)
+    })?;
+    let mut total: i64 = 0;
+    for v in rows {
+        total = total.checked_add(v?).ok_or(StorageError::CorruptRow)?;
+    }
+    Ok(total)
+}
+
 /// Odat ko'rsatkichi uchun: jamg'armaga qo'shilgan (musbat) yozuvlar sanalari.
 pub fn deposit_dates(
     c: &Connection,

@@ -131,6 +131,25 @@ fn income_share_vault_and_friction() {
     );
     app.allocate_to_vault(&uy, &rec.income.id, "40 000")
         .unwrap();
+    // Bir daromaddan ajratmalar yig'indisi daromaddan oshmaydi (masalan, «Ajratish» ikki marta
+    // bosilsa): 40 000 + 760 000 = 800 000 — mumkin, yana 1 so'm — yo'q.
+    assert_eq!(
+        app.allocate_to_vault(&uy, &rec.income.id, "760 001")
+            .unwrap_err()
+            .code,
+        "SHARE_EXCEEDS_INCOME"
+    );
+    let rest = app.record_income(&uy, income("100 000")).unwrap();
+    app.allocate_to_vault(&uy, &rest.income.id, "100 000")
+        .unwrap();
+    assert_eq!(
+        app.allocate_to_vault(&uy, &rest.income.id, "100 000")
+            .unwrap_err()
+            .code,
+        "SHARE_EXCEEDS_INCOME"
+    );
+    app.withdraw_from_vault(&uy, "100 000", "Qaytarish")
+        .unwrap();
     app.record_initial_balance(&uy, "1 500 000").unwrap();
     let v = app.vault(&uy).unwrap();
     assert_eq!(v.balance.minor, "154000000");
