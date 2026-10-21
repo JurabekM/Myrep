@@ -207,8 +207,22 @@ const COMMANDS: &[&str] = &[
 ];
 
 fn main() {
-    let attrs = tauri_build::Attributes::new()
+    let mut attrs = tauri_build::Attributes::new()
         .app_manifest(tauri_build::AppManifest::new().commands(COMMANDS));
+    // Windows (MSVC): tauri-build Common Controls v6 manifestini faqat ilova binariga resurs
+    // sifatida qo'shadi — `cargo test` binarlari `STATUS_ENTRYPOINT_NOT_FOUND` bilan ochilmaydi.
+    // Manifest linker orqali hamma binarlarga (ilova va testlar) qo'shiladi.
+    let windows_msvc = std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows")
+        && std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc");
+    if windows_msvc {
+        let manifest =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("windows-app-manifest.xml");
+        println!("cargo:rerun-if-changed={}", manifest.display());
+        println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
+        println!("cargo:rustc-link-arg=/MANIFESTINPUT:{}", manifest.display());
+        attrs =
+            attrs.windows_attributes(tauri_build::WindowsAttributes::new_without_app_manifest());
+    }
     if let Err(e) = tauri_build::try_build(attrs) {
         eprintln!("tauri-build: {e}");
         std::process::exit(1);

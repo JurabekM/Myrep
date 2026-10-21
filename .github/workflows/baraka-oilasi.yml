@@ -198,6 +198,9 @@ jobs:
     defaults:
       run:
         working-directory: baraka_oilasi/apps/desktop
+        # Job darajasidagi `defaults` umumiy `shell: bash` ni almashtiradi; Windows'da aks holda
+        # PowerShell ko'p qatorli skriptda faqat oxirgi buyruq kodini tekshiradi (xato yashirinadi).
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - name: "Windows — OpenSSL uchun Strawberry Perl (Git Bash perl'ida modullar yo'q)"

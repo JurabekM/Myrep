@@ -29,6 +29,7 @@ Future<void> _step(WidgetTester tester, int n) async {
   final f = find.byWidgetPredicate(
     (w) => w is ChoiceChip && w.label is Text && RegExp('^(. )?$n\\. ').hasMatch((w.label as Text).data ?? ''),
   );
+  await waitFor(tester, f);
   await tester.ensureVisible(f);
   await tester.tap(f);
   await settle(tester, rounds: 4);
@@ -93,7 +94,9 @@ void main() {
     await enter(tester, 'Bizning toʻliq ismimiz', 'Anvar Karimov');
     await tapText(tester, 'Qoralama yaratish');
     await waitFor(tester, find.text('Tikuv ustaxonasi'));
-    await waitFor(tester, find.text('4 / 9 savolga javob berildi'));
+    // Shartnoma oynasi ochilsin: «4 / 9» matni sheriklik ro'yxatida ham bor (CI'da poyga bo'lgan).
+    await waitFor(tester, find.textContaining('1. Kim bilan kim? '));
+    expect(find.text('4 / 9 savolga javob berildi'), findsWidgets);
 
     // 3. Vazifa (ma'sul va «bajarilmasa»).
     await _step(tester, 3);
