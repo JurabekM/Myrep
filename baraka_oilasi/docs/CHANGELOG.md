@@ -8,6 +8,8 @@ Birinchi reliz: uchala makon (Uy, Kasb-kor, Musofir) — bitta Rust yadro, Windo
 - **Versiyalar:** yadro, desktop (`tauri.conf.json`, `Cargo.toml`, `package.json`) va Android (`pubspec.yaml`, `1.0.0+1`) — 1.0.0.
 - **Android ikonkasi:** adaptiv vektor ikonka (desktop ikonkasi bilan bir xil: daftar va aksent xatcho'p, `#262624` fon, monoxrom varianti bilan) va eski PNG'lar; Flutter logotipi olib tashlandi.
 - **APK hajmi (OQ-T1 — hal qilindi):** arm64 yuklab olish ≈ 30,8 MB (byudjet ≤ 40 MB). `--split-per-abi` bilan yig'ish tuzatildi (Gradle'dagi `abiFilters` endi faqat bo'linmagan build'da).
+- **`cargo xtask codegen`:** generatsiyadan keyin loyiha formatlash qoidasi (`dart format`, 120 belgi) qo'llanadi — `dart format lib` bilan natija bir xil, CI'dagi `git diff` tekshiruvi barqaror.
+- **Yakuniy tekshiruv:** `cargo fmt --check`, `cargo clippy --workspace --all-targets --all-features -D warnings`, `cargo test --workspace`, ikkala oracle (`--selftest`, `--check`), `cargo xtask all`, `cargo xtask codegen` + `git diff`, desktop `pnpm lint` va 108 test, Android `flutter analyze` va 61 test — hammasi yashil.
 - **Hujjatlar:** README holat jadvali (barcha bo'limlar — yadro + desktop + Android), Android'ni ishga tushirish; Kasb-kor va Musofir SPEC'larida Android holati; reliz cheklistining Android bo'limi.
 
 

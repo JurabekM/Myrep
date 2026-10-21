@@ -75,6 +75,13 @@ fn codegen(root: &Path) -> Result<(), String> {
         "dart",
         &["run", "pigeon", "--input", "pigeons/platform.dart"],
     )?;
+    // Loyiha formatlash qoidasi (`analysis_options.yaml`, 120 belgi): `dart format lib` bilan
+    // generatsiya natijasi farq qilmasin.
+    run(
+        &android,
+        "dart",
+        &["format", "lib/bindings", "lib/platform/platform_api.g.dart"],
+    )?;
     run(root, "cargo", &["fmt", "-p", "baraka-bindings-flutter"])
 }
 
