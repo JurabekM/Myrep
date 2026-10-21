@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/core.dart';
+import '../features/audit/audit_screen.dart';
+import '../features/ceremony/ceremonies_screen.dart';
+import '../features/expenses/expenses_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/income/income_sheet.dart';
+import '../features/inventory/debts_screen.dart';
+import '../features/payoff/payoff_screen.dart';
+import '../features/receipt/receipt_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/vault/vault_screen.dart';
 import 'i18n.dart';
 import 'shell_state.dart';
 
@@ -114,6 +121,13 @@ const _sellerNav = ['home', 'kkSellerCredit', 'kkShift', 'sync', 'settings'];
 /// Bo'limlar ro'yxati. Har bir makon ekrani o'z bosqichida qo'shiladi (A1–A4).
 final Map<String, ScreenDef> screenDefs = {
   'home': const ScreenDef('home', 'nav.home', _home),
+  'vault': ScreenDef('vault', 'nav.vault', (c) => VaultScreen(spaceId: c.spaceId)),
+  'expenses': ScreenDef('expenses', 'nav.expenses', (c) => ExpensesScreen(spaceId: c.spaceId)),
+  'audit': ScreenDef('audit', 'nav.audit', (c) => AuditScreen(spaceId: c.spaceId)),
+  'inventory': ScreenDef('inventory', 'nav.inventory', (c) => DebtsScreen(spaceId: c.spaceId)),
+  'debts': ScreenDef('debts', 'nav.debts', (c) => PayoffScreen(spaceId: c.spaceId)),
+  'ceremonies': ScreenDef('ceremonies', 'nav.ceremonies', (c) => CeremoniesScreen(spaceId: c.spaceId)),
+  'receipt': ScreenDef('receipt', 'nav.receipt', (c) => ReceiptScreen(spaceId: c.spaceId)),
   'settings': ScreenDef('settings', 'nav.settings', (_) => const SettingsScreen(), needsSpace: false),
 };
 

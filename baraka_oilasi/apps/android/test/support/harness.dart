@@ -7,6 +7,7 @@ import 'package:baraka/bindings/frb_generated.dart';
 import 'package:baraka/core/core.dart';
 import 'package:baraka/core/platform.dart';
 import 'package:baraka/core/prefs.dart';
+import 'package:baraka/shared/files.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,11 @@ Future<void> loadFonts() async {
       loader.addFont(Future.value(ByteData.sublistView(File('../../shared/fonts/$f').readAsBytesSync())));
     }
     await loader.load();
+  }
+  // Qurilmadagi `sans-serif` (Roboto) o'rniga — testda tizimdagi DejaVu Sans (→, ✓ uchun).
+  const dejavu = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+  if (File(dejavu).existsSync()) {
+    await (FontLoader('sans-serif')..addFont(Future.value(ByteData.sublistView(File(dejavu).readAsBytesSync())))).load();
   }
   await (FontLoader('MaterialIcons')..addFont(
         Future.value(
@@ -82,9 +88,13 @@ class Device {
   final CoreServices services;
   ProviderContainer? _container;
 
+  /// Ulashilgan fayllar (PDF, `.baraka`): nomi va baytlari.
+  final shared = <({String name, Uint8List bytes})>[];
+
   ProviderContainer get container => _container ??= ProviderContainer(
     overrides: [
       servicesProvider.overrideWithValue(services),
+      shareFileProvider.overrideWithValue((bytes, name, mime) async => shared.add((name: name, bytes: bytes))),
       localeProvider.overrideWith((ref) => services.prefs.read().locale ?? 'uz'),
     ],
   );
@@ -95,21 +105,23 @@ class Device {
 
   /// Onboarding'siz tayyor xonadon (ochiq sessiya): `spaces` — `UY`, `KASBKOR`, `MUSOFIR`.
   Future<SetupResult> bootstrap({List<String> spaces = const ['UY'], String name = 'Anvar'}) async {
-    final r = await container.read(sessionActionsProvider).setup(
-      '135790',
-      BootstrapInput(
-        householdName: '$name oilasi',
-        deviceName: 'Telefon',
-        platform: 'android',
-        locale: 'uz',
-        baseCurrency: 'UZS',
-        monthStartDay: 1,
-        spaces: spaces,
-        members: [NewMemberInput(displayName: name, role: 'ADULT')],
-        incomeRhythm: 'MONTHLY',
-        debtsDeclared: false,
-      ),
-    );
+    final r = await container
+        .read(sessionActionsProvider)
+        .setup(
+          '135790',
+          BootstrapInput(
+            householdName: '$name oilasi',
+            deviceName: 'Telefon',
+            platform: 'android',
+            locale: 'uz',
+            baseCurrency: 'UZS',
+            monthStartDay: 1,
+            spaces: spaces,
+            members: [NewMemberInput(displayName: name, role: 'ADULT')],
+            incomeRhythm: 'MONTHLY',
+            debtsDeclared: false,
+          ),
+        );
     container.read(sessionActionsProvider).finishSetup();
     return r;
   }
@@ -140,21 +152,48 @@ Future<void> waitFor(WidgetTester tester, Finder finder, {int rounds = 200}) asy
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
     await tester.pump(const Duration(milliseconds: 16));
   }
-  throw TestFailure('kutilgan element chiqmadi: $finder');
+  // Tahlil uchun: ekrandagi matnlar (xato matni shu yerda ko'rinadi).
+  final texts = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data ?? t.textSpan?.toPlainText()).toList();
+  throw TestFailure('kutilgan element chiqmadi: $finder\nEkranda: $texts');
+}
+
+/// Animatsiyalar tugasin: birinchi kadr tikerni ishga tushiradi, keyingisi oxiriga yetkazadi.
+Future<void> _animate(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
 }
 
 Future<void> tapText(WidgetTester tester, String text) async {
   // Oyna/sheet animatsiyalari tugasin (aks holda element hali ekrandan tashqarida).
-  await tester.pump(const Duration(milliseconds: 400));
+  await _animate(tester);
   final f = find.text(text);
   await tester.ensureVisible(f.last);
   await tester.tap(f.last);
   await settle(tester, rounds: 4);
 }
 
+/// Yon menyudan bo'limga o'tish.
+Future<void> goTo(WidgetTester tester, String label) async {
+  tester.state<ScaffoldState>(find.byType(Scaffold).first).openDrawer();
+  await _animate(tester);
+  await tester.tap(find.descendant(of: find.byType(Drawer), matching: find.text(label)));
+  await settle(tester, rounds: 10);
+}
+
+/// Ochiladigan ro'yxatdan tanlash (yorliq bo'yicha).
+Future<void> choose(WidgetTester tester, String label, String option) async {
+  await _animate(tester);
+  final f = find.ancestor(of: find.text(label), matching: find.byWidgetPredicate((w) => w is DropdownButtonFormField));
+  await tester.ensureVisible(f.first);
+  await tester.tap(f.first);
+  await _animate(tester);
+  await tester.tap(find.text(option).last);
+  await _animate(tester);
+}
+
 /// Yorliq bo'yicha matn maydoniga yozish.
 Future<void> enter(WidgetTester tester, String label, String value) async {
-  await tester.pump(const Duration(milliseconds: 400));
+  await _animate(tester);
   final f = find.widgetWithText(TextField, label);
   await tester.ensureVisible(f.first);
   await tester.enterText(f.first, value);
@@ -170,4 +209,12 @@ Future<void> shot(WidgetTester tester, String name) async {
     await tester.pump(const Duration(milliseconds: 50));
   }
   await expectLater(find.byType(MaterialApp), matchesGoldenFile('../../../docs/screenshots/$name.png'));
+}
+
+/// Ekranni boshiga aylantirish (skrinshotdan oldin).
+Future<void> scrollTop(WidgetTester tester) async {
+  for (final s in tester.stateList<ScrollableState>(find.byType(Scrollable))) {
+    s.position.jumpTo(s.position.minScrollExtent);
+  }
+  await tester.pump();
 }

@@ -6,6 +6,12 @@
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.
 - Qoida Myrep ildizidagi `CLAUDE.md` ga yozildi — keyingi barcha loyihalar uchun.
 
+### Qo'shildi — A1: Android — Uy makoni (1-qism)
+- **Ekranlar (desktop bilan bir xil use-case'lar):** «Kelajagim» (odat avval, PIN va sabab bilan pul olish, boshlang'ich balans), xarajatlar (kategoriya, zarur/kerak/havas, naqd/karta, toifa yig'indilari), oylik audit (izohsiz summa), qarzlar inventari (haqiqiy narx, oylik yuk, ribo belgisi, reja va to'lovlar, to'lovchilar, «to'xta va o'yla», maqsadlar, tilxat PDF), «Qarzdan chiqish» (70/20/10 rejimi, prognoz va grafik, yopish tartibi, sotiladigan buyumlar, qarz yopilganda nishonlash), marosimlar (stsenariylar, manbalar, muhokama, tasdiqlash, smeta PDF, to'yona o'rniga maqsad), qarz tilxati (saqlash → PDF ulashish oynasi).
+- **Umumiy:** PDF va fayllar `share_plus` orqali (saqlash yoki yuborish), sana tanlash kalendari, `Select`/`ValueRow`/`DateField` vidjetlari, batafsil sahifalar (orqaga tugmasi bilan; qulflanganda yopiladi).
+- **Tuzatildi:** yadro hodisasidan keyin so'rov qayta o'qilganda oldingi qiymat saqlanadi (`whenData` uni tashlab yuborardi — forma va natija yo'qolardi); ekran tanasi `ListView` emas — ekrandan chiqqan formalar holatini yo'qotmaydi.
+- **Testlar:** Uy oqimi haqiqiy yadro bilan — xarajat → qarz (kalendardan reja) → to'lov → rejim → marosim (kishi boshiga qator, 10 mln) → tilxat (PDF `%PDF`) → «Kelajagim»dan PIN bilan pul olish. Skrinshotlar `android-12…15`.
+
 ### Qo'shildi — A0: Android ilovasi poydevori (Flutter + bitta Rust yadro)
 - **Asboblar (ADR-0002 da qotirildi):** Flutter 3.47.6 (`.fvmrc`), flutter_rust_bridge =2.13.0, Android SDK 36 / minSdk 26 / NDK 28.2, cargo-ndk 4.1.2. `cargo xtask codegen` — FRB va Pigeon generatsiyasi (idempotent, CI `git diff` bilan tekshiradi).
 - **FRB:** DTO'lar `baraka-app` dan to'g'ridan-to'g'ri Dart klasslariga (qo'lda nusxa yo'q). Generik `Answer<T>` va imzo chiziqlari (sheriklik shartnomasi, kelishuv tekshiruvi) adapterda JSON orqali — desktop TS bilan bir xil shakl. `hash_code` → `chain_code` (serde nomi `hashCode`, desktop `bindings.ts` o'zgarmadi). Yadro hodisalari — `watch_changes` (Dart `Stream`).

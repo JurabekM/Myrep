@@ -124,6 +124,8 @@ ThemeData barakaTheme({required bool dark}) {
     useMaterial3: true,
     colorScheme: scheme,
     fontFamily: 'NotoSans',
+    // Noto Sans'da yo'q belgilar (→, ✓) — tizim shriftidan (Android: Roboto).
+    fontFamilyFallback: const ['sans-serif'],
     scaffoldBackgroundColor: p.paper,
     canvasColor: p.paper,
     dividerColor: p.line,

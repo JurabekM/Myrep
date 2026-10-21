@@ -28,6 +28,9 @@ void main() {
     expect(find.textContaining('150\u00a0000\u00a0soʻm'), findsWidgets);
     await shot(tester, 'android-11-income-share');
     await tapText(tester, 'Ajratish');
-    await waitFor(tester, find.descendant(of: find.byKey(const Key('kpi-paid-to-self')), matching: find.textContaining('150\u00a0000')));
+    await waitFor(
+      tester,
+      find.descendant(of: find.byKey(const Key('kpi-paid-to-self')), matching: find.textContaining('150\u00a0000')),
+    );
   });
 }

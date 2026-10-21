@@ -36,4 +36,19 @@ final AutoDisposeFutureProviderFamily<Object?, QueryKey> coreQueryProvider = Fut
 
 /// Tipli so'rov: `ref.watch(query(['vault', id], (c) => c.vault(spaceId: id)))`.
 ProviderListenable<AsyncValue<T>> query<T>(List<Object?> key, Future<T> Function(BarakaCore core) run) =>
-    coreQueryProvider(QueryKey(key, run)).select((v) => v.whenData((d) => d as T));
+    coreQueryProvider(QueryKey(key, run)).select(_typed<T>);
+
+/// `whenData` qayta o'qish paytida (`AsyncLoading`) oldingi qiymatni tashlab yuboradi — ekran bir
+/// lahza «yuklanmoqda» bo'lib, forma holati yo'qoladi. Shu sababli oldingi qiymat saqlanadi.
+AsyncValue<T> _typed<T>(AsyncValue<Object?> v) {
+  final previous = v.hasValue ? AsyncData<T>(v.value as T) : null;
+  if (v.isLoading) {
+    final loading = AsyncLoading<T>();
+    return previous == null ? loading : loading.copyWithPrevious(previous);
+  }
+  if (v.hasError) {
+    final err = AsyncError<T>(v.error!, v.stackTrace ?? StackTrace.empty);
+    return previous == null ? err : err.copyWithPrevious(previous);
+  }
+  return previous ?? AsyncLoading<T>();
+}

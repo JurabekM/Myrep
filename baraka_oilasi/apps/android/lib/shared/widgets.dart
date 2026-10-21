@@ -169,7 +169,7 @@ class Field extends StatelessWidget {
     textAlign: textAlign,
     style: style,
     maxLines: obscure ? 1 : maxLines,
-    decoration: InputDecoration(labelText: label, helperText: hint, counterText: ''),
+    decoration: InputDecoration(labelText: label, hintText: hint, counterText: ''),
   );
 }
 
@@ -368,7 +368,8 @@ mixin ActionState<W extends StatefulWidget> on State<W> {
   }
 }
 
-/// Ekran tanasi: aylanadigan ustun, 16 dp chekka.
+/// Ekran tanasi: aylanadigan ustun, 16 dp chekka. `ListView` emas — ekrandan chiqqan kartalar
+/// (va ulardagi to'ldirilayotgan formalar) yo'q qilinmasin.
 class ScreenBody extends StatelessWidget {
   const ScreenBody({required this.children, this.mentorKey, super.key});
 
@@ -376,12 +377,15 @@ class ScreenBody extends StatelessWidget {
   final String? mentorKey;
 
   @override
-  Widget build(BuildContext context) => ListView(
+  Widget build(BuildContext context) => SingleChildScrollView(
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-    children: [
-      for (final c in children) Padding(padding: const EdgeInsets.only(bottom: 12), child: c),
-      if (mentorKey != null) MentorCard(mentorKey!),
-    ],
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final c in children) Padding(padding: const EdgeInsets.only(bottom: 12), child: c),
+        if (mentorKey != null) MentorCard(mentorKey!),
+      ],
+    ),
   );
 }
 
@@ -401,5 +405,143 @@ Future<T?> showSheet<T>(BuildContext context, WidgetBuilder builder) => showModa
   builder: (ctx) => Padding(
     padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
     child: builder(ctx),
+  ),
+);
+
+/// Ochiladigan ro'yxat (yorliq bilan). `value == null` — hali tanlanmagan.
+class Select<T> extends StatelessWidget {
+  const Select({required this.label, required this.items, required this.value, required this.onChanged, super.key});
+
+  final String label;
+  final List<(T, String)> items;
+  final T? value;
+  final ValueChanged<T?>? onChanged;
+
+  @override
+  Widget build(BuildContext context) => DropdownButtonFormField<T>(
+    // Qiymat ro'yxatda bo'lmasa (masalan, yangilanayotganda) — tanlanmagan holat.
+    initialValue: items.any((i) => i.$1 == value) ? value : null,
+    key: ValueKey('$label:$value:${items.length}'),
+    isExpanded: true,
+    decoration: InputDecoration(labelText: label),
+    items: [
+      for (final (v, text) in items)
+        DropdownMenuItem(
+          value: v,
+          child: Text(text, overflow: TextOverflow.ellipsis),
+        ),
+    ],
+    onChanged: onChanged,
+  );
+}
+
+/// Yorliq — qiymat qatori (hisobot jadvallari uchun).
+class ValueRow extends StatelessWidget {
+  const ValueRow(this.label, this.value, {this.strong = false, this.valueColor, super.key});
+
+  final String label;
+  final String value;
+  final bool strong;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: Text(label)),
+        const SizedBox(width: 12),
+        Text(
+          value,
+          textAlign: TextAlign.end,
+          style: TextStyle(
+            fontWeight: strong ? FontWeight.w700 : null,
+            color: valueColor,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Ikkinchi darajali (muted) izoh matni.
+class Hint extends StatelessWidget {
+  const Hint(this.text, {this.color, super.key});
+
+  final String text;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(text, style: TextStyle(color: color ?? context.palette.inkMuted, fontSize: 14, height: 1.35));
+}
+
+/// Sana maydoni (`YYYY-MM-DD`): kalendar orqali tanlanadi, bo'sh bo'lishi mumkin.
+class DateField extends StatelessWidget {
+  const DateField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.allowClear = true,
+    super.key,
+  });
+
+  final String label;
+  final String? value;
+  final ValueChanged<String?> onChanged;
+  final bool allowClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = value == null ? '' : _show(value!);
+    return InkWell(
+      onTap: () async {
+        final now = DateTime.now();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.tryParse(value ?? '') ?? now,
+          firstDate: DateTime(now.year - 30),
+          lastDate: DateTime(now.year + 30),
+          barrierColor: barrier,
+        );
+        if (picked != null) {
+          onChanged(
+            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}',
+          );
+        }
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: value != null && allowClear
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  tooltip: context.t('common.clear'),
+                  onPressed: () => onChanged(null),
+                )
+              : const Icon(Icons.calendar_today_outlined),
+        ),
+        isEmpty: shown.isEmpty,
+        child: Text(shown),
+      ),
+    );
+  }
+
+  static String _show(String iso) {
+    final p = iso.split('-');
+    return p.length == 3 ? '${p[2]}.${p[1]}.${p[0]}' : iso;
+  }
+}
+
+/// Batafsil ekran (sheriklik, marosim va h.k.): o'z sarlavhasi va «orqaga» tugmasi bilan.
+/// Qulflanganda yo'nalish o'zgaradi va bu sahifa ham yopiladi.
+Future<void> pushScreen(BuildContext context, String title, WidgetBuilder builder) => Navigator.of(context).push(
+  MaterialPageRoute<void>(
+    builder: (ctx) => Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: builder(ctx),
+    ),
   ),
 );
