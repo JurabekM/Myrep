@@ -1,7 +1,7 @@
 {
   "name": "baraka-desktop-e2e",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Haqiqiy desktop ilova ustida yakuniy E2E (tauri-driver + WebdriverIO).",
   "scripts": {

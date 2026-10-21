@@ -298,7 +298,8 @@
 ### OQ-T1. APK hajm byudjeti
 - **Masala:** typst, SQLCipher va shriftlar bilan arm64 yuklanadigan hajm ≤ 40 MB bo'ladimi?
 - **Qaror qachon:** Y6 dan keyin o'lchanadi; oshsa — shriftlarni qisqartirish yoki typst'ni alohida yuklanadigan modul qilish (ADR).
-- **Holat:** OCHIQ.
+- **O'lchov (1.0.0, 2026-10-21):** `flutter build apk --release --split-per-abi` — yuklab olinadigan (siqilgan) hajm **arm64 ≈ 30,8 MB**, armeabi-v7a ≈ 29,1 MB. Eng kattasi — Rust yadro (`libbaraka_bindings_flutter.so`: 47,9 MB, siqilgani 19,6 MB; LTO, `codegen-units = 1`, `strip`). O'rnatilgandan keyin ≈ 71 MB — Android `.so` larni siqmasdan saqlaydi (tez yuklanish uchun). Play'ga AAB bilan har ABI alohida yetkaziladi.
+- **Holat:** HAL QILINDI — byudjet (≤ 40 MB) bajarildi; typst'ni ajratish shart emas.
 
 ### OQ-T2. `tauri-specta` barqaror versiyasi
 - **Masala:** barqaror versiya bo'lmasa, RC'ni qotirib ishlatish ADR bilan qilinadi.

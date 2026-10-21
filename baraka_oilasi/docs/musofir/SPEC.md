@@ -1,7 +1,7 @@
 # «MUSOFIR» MAKONI — SPETSIFIKATSIYA
 ### Chet elda ishlaydigan migrant va uning uydagi oilasi uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v1.0 — mahsulot egasi tasdiqladi (2026-10-19)**; M1 (2–4-bo'limlar), M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Mahsulot savollari OQ-MF1…OQ-MF8 yopildi (OQ-MF5 — relay keyinga qoldirildi); ulamo savoli — OQ-D3 (`docs/OPEN_QUESTIONS.md`). Android UI — keyingi bosqichda.
+> Versiya: **v1.0 — mahsulot egasi tasdiqladi (2026-10-19)**; M1 (2–4-bo'limlar), M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Mahsulot savollari OQ-MF1…OQ-MF8 yopildi (OQ-MF5 — relay keyinga qoldirildi); ulamo savoli — OQ-D3 (`docs/OPEN_QUESTIONS.md`). Android UI — A4 da qilindi (1.0.0).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-qonun ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar).
 

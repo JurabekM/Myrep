@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim), K7 (6, 8-bo'limlar) va K8 (12-bo'lim, ADR-0003) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3, 8.5 va 12.1 da. Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim), K7 (6, 8-bo'limlar) va K8 (12-bo'lim, ADR-0003) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3, 8.5 va 12.1 da. Android UI — A3 da qilindi (1.0.0). Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 

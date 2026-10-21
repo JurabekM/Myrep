@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## [Unreleased] — 2-sessiya
+## [1.0.0] — 2026-10-21
+
+Birinchi reliz: uchala makon (Uy, Kasb-kor, Musofir) — bitta Rust yadro, Windows/Linux desktop va Android.
+
+### Qo'shildi — A5: Reliz 1.0
+- **Versiyalar:** yadro, desktop (`tauri.conf.json`, `Cargo.toml`, `package.json`) va Android (`pubspec.yaml`, `1.0.0+1`) — 1.0.0.
+- **Android ikonkasi:** adaptiv vektor ikonka (desktop ikonkasi bilan bir xil: daftar va aksent xatcho'p, `#262624` fon, monoxrom varianti bilan) va eski PNG'lar; Flutter logotipi olib tashlandi.
+- **APK hajmi (OQ-T1 — hal qilindi):** arm64 yuklab olish ≈ 30,8 MB (byudjet ≤ 40 MB). `--split-per-abi` bilan yig'ish tuzatildi (Gradle'dagi `abiFilters` endi faqat bo'linmagan build'da).
+- **Hujjatlar:** README holat jadvali (barcha bo'limlar — yadro + desktop + Android), Android'ni ishga tushirish; Kasb-kor va Musofir SPEC'larida Android holati; reliz cheklistining Android bo'limi.
+
 
 ### O'zgardi
 - **Dizayn:** standart mavzu — Claude Code dark theme uslubi (foydalanuvchi qarori): `tokens.json` da `defaultTheme: "dark"`, yangi `sidebar` va `accentText` tokenlari, barcha juftliklar WCAG AA bo'yicha hisoblangan; light — `data-theme="light"`. Tauri oynasi `theme: Dark` va `#262624` fon (oq chaqnashsiz), ikonka to'q rangda.

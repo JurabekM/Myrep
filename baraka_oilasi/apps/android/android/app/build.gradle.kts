@@ -23,8 +23,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        // `--split-per-abi` o'z ABI filtrini qo'yadi — ikkalasi birga bo'lolmaydi.
+        if (!project.hasProperty("split-per-abi")) {
+            ndk {
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            }
         }
     }
 

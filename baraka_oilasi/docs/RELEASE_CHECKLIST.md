@@ -1,4 +1,4 @@
-# Reliz cheklisti — «Baraka» (Uy makoni, 1-reliz)
+# Reliz cheklisti — «Baraka oilasi» (1.0.0: Uy, Kasb-kor, Musofir)
 
 Har bir reliz oldidan ketma-ket bajariladi. Belgilanmagan band — reliz yo'q.
 Avtomatik tekshiruvlar CI'da; qo'lda tekshiriladiganlar `(qo'lda)` deb belgilangan.
@@ -42,10 +42,14 @@ Avtomatik tekshiruvlar CI'da; qo'lda tekshiriladiganlar `(qo'lda)` deb belgilang
 - [ ] Oldingi relizning bazasi yangi versiyada ochiladi (migratsiyalar), jurnal zanjiri butun. (qo'lda: eski profil nusxasi bilan)
 - [ ] Tiklash kodi bilan ochish va PIN almashtirish ishlaydi. (qo'lda)
 
-## 7. Android (Flutter UI tayyor bo'lganda)
-- [ ] `flutter analyze`, `flutter test` (FFI vektorlari), `integration_test` (Anvar ssenariysi) yashil.
-- [ ] Release APK/AAB: R8, `--obfuscate --split-debug-info`, imzolash konfiguratsiyasi repodan tashqarida; hajm byudjeti (OQ-T1).
-- [ ] `FLAG_SECURE`, avto-qulf 2 daqiqa, Keystore platforma siri.
+## 7. Android
+- [ ] `cargo xtask codegen && git diff --exit-code` — FRB va Pigeon generatsiyasi yangi.
+- [ ] `flutter analyze` — 0 ta izoh; `flutter test` (host'da yig'ilgan haqiqiy yadro bilan: 51 vektor suite FFI orqali, Uy / sheriklik / Kasb-kor / sotuvchi qurilmasi / Musofir va «Ikki qirg'oq» oqimlari) yashil. CI'dagi `android` job.
+- [ ] Skrinshotlar (`BARAKA_SHOTS=1 flutter test --update-goldens`) ko'rib chiqildi: dark mavzu, matn kesilmaydi, gorizontal aylantirish yo'q.
+- [ ] Release: `flutter build appbundle --release --obfuscate --split-debug-info=build/symbols` (R8 yoqilgan); `key.properties` va keystore repodan tashqarida, imzo `apksigner verify` bilan; simvollar arxivlangan.
+- [ ] Hajm byudjeti (OQ-T1): arm64 yuklab olish ≤ 40 MB (1.0.0: ≈ 30,8 MB — `--split-per-abi` APK'ni siqib o'lchash).
+- [ ] Haqiqiy qurilmada (qo'lda, Android 8 va eng yangi versiya): adaptiv ikonka, ishga tushishda oq chaqnash yo'q, `FLAG_SECURE` (skrinshot qora), fonga o'tgandan 2 daqiqa keyin qulf, Keystore platforma siri (ilova qayta o'rnatilganda eski baza ochilmaydi — kutilgan), PDF va `.baraka` ulashish oynasi, fayl tanlash (chek rasmi, `.baraka`), TalkBack bilan onboarding.
+- [ ] Ikki qurilma (qo'lda): desktop ↔ telefon `.baraka` almashish; sotuvchi va uydagi oila qurilmasini ulash (kod bilan).
 
 ## 8. Koddan tashqari (`BARAKA_OILASI.md` 18)
 - [ ] Kontent va brend litsenziyasi; qissa matnlari placeholder emas yoki placeholder ekani aniq.
