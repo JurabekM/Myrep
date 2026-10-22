@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Tuzatildi
+- **Tungi desktop E2E osilib qolardi:** 79 test o'tgandan keyin ham `node --test` chiqmasdi — `tauri-driver` o'ldirilganda WebKitWebDriver va ilova tirik qolib, test runner'ning stderr quvurini ushlab turardi (CI 6 soatda bekor qildi). Endi driver o'z jarayon guruhida ishga tushadi va `stop()` butun guruhni o'ldiradi; job'ga `timeout-minutes: 60`.
+
 ## [1.0.0] — 2026-10-21
 
 Birinchi reliz: uchala makon (Uy, Kasb-kor, Musofir) — bitta Rust yadro, Windows/Linux desktop va Android.
