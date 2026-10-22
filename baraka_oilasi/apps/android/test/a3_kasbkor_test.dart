@@ -80,7 +80,9 @@ void main() {
     await enter(tester, 'Vazifalar', 'Buyurtmalarni tikish');
     await enter(tester, 'Oylik haq', '3 000 000');
     await tapText(tester, 'Xodimni qoʻshish');
-    await waitFor(tester, find.textContaining('Sardor', findRichText: true));
+    // Xodim kartasi chizilguncha (ism forma maydonida ham bor).
+    await waitFor(tester, find.text('Imzolash'));
+    expect(find.textContaining('Sardor', findRichText: true), findsWidgets);
     await tapText(tester, 'Imzolash');
     await tapText(tester, 'Imzolandi deb yozish');
     await waitFor(tester, find.text('Avans'));
