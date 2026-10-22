@@ -156,7 +156,8 @@ void main() {
     await tapText(tester, 'Tushundim, bu qarz emas');
     await waitFor(tester, find.text('Anvar rozi'));
     await tapText(tester, 'Anvar rozi');
-    await waitFor(tester, find.text('Sheriklikni boshlash'));
+    // «Boshlash» tugmasi rozilikdan oldin ham bor — rozilik yozilganini kutamiz.
+    await waitFor(tester, find.textContaining('✓ rozi,'));
     await tapText(tester, 'Sheriklikni boshlash');
     await waitFor(tester, find.textContaining('Sheriklik faol'));
 

@@ -59,7 +59,9 @@ void main() {
     await pickDay(tester, 'Sana 1');
     await enter(tester, 'Summa 1', '15 000 000');
     await tapText(tester, 'Saqlash');
-    await waitFor(tester, find.text('Togʻam'));
+    // Karta chizilguncha: «Togʻam» matni forma maydonida ham bor (CI'da poyga bo'lgan).
+    await waitFor(tester, find.text('Toʻlov yozish'));
+    expect(find.text('Togʻam'), findsWidgets);
     expect(find.text('15${nb}000${nb}000${nb}soʻm'), findsWidgets);
     await scrollTop(tester);
     await shot(tester, 'android-13-debts');

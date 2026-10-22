@@ -41,7 +41,14 @@ export async function startApp({ shiftDays = 0, profile } = {}) {
   };
   const myPort = port++;
   const nativePort = myPort + 100;
-  const driver = spawn("tauri-driver", ["--port", String(myPort), "--native-port", String(nativePort)], { env, stdio: ["ignore", "ignore", "inherit"] });
+  // O'z jarayon guruhida (Linux/macOS): to'xtatishda tauri-driver bilan birga WebKitWebDriver va
+  // ilovaning o'zi ham o'ladi — aks holda ular test runner'ning stderr quvurini ochiq ushlab,
+  // `node --test` testlar tugagach ham chiqmaydi (tungi CI 6 soat osilib qoldi).
+  const driver = spawn("tauri-driver", ["--port", String(myPort), "--native-port", String(nativePort)], {
+    env,
+    stdio: ["ignore", "ignore", "inherit"],
+    detached: process.platform !== "win32",
+  });
   await waitPort(myPort);
   const started = Date.now();
   const browser = await remote({
@@ -59,10 +66,19 @@ export async function startApp({ shiftDays = 0, profile } = {}) {
     try {
       await browser.deleteSession();
     } finally {
-      driver.kill();
+      killTree(driver);
     }
   };
   return app;
+}
+
+function killTree(child) {
+  try {
+    if (process.platform !== "win32") process.kill(-child.pid, "SIGKILL");
+    else child.kill();
+  } catch {
+    child.kill("SIGKILL");
+  }
 }
 
 async function waitPort(p) {
