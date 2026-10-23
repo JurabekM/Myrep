@@ -1,0 +1,107 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/mpay-common",
+    "crates/mpay-crypto",
+    "crates/mpay-pqlink",
+    "crates/mpay-vault",
+    "crates/mpay-shield",
+    "crates/mpay-issuer",
+    "crates/mpay-terminal-sim",
+    "crates/mpay-server",
+    "tests/e2e",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.97"
+license = "LicenseRef-MPay-Proprietary"
+publish = false
+repository = "https://github.com/JurabekM/Myrep"
+
+[workspace.dependencies]
+# ichki crate'lar
+mpay-common = { path = "crates/mpay-common" }
+mpay-crypto = { path = "crates/mpay-crypto" }
+mpay-pqlink = { path = "crates/mpay-pqlink" }
+mpay-vault = { path = "crates/mpay-vault" }
+mpay-shield = { path = "crates/mpay-shield" }
+mpay-issuer = { path = "crates/mpay-issuer" }
+mpay-terminal-sim = { path = "crates/mpay-terminal-sim" }
+mpay-server = { path = "crates/mpay-server" }
+
+# async va tarmoq
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio", "query"] }
+tower = { version = "0.5.3", features = ["util"] }
+hyper = { version = "1.12", features = ["server", "http1"] }
+hyper-util = { version = "0.1.21", features = ["tokio", "server", "server-auto", "service"] }
+http-body-util = "0.1.5"
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls-no-provider"] }
+async-trait = "0.1.92"
+
+# ma'lumotlar
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+toml = "1.1.8"
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros"] }
+time = { version = "0.3.55", features = ["serde", "formatting", "parsing", "macros"] }
+hex = "0.4.3"
+base64 = "0.23.1"
+
+# kriptografiya
+aes = "0.9.3"
+aes-gcm = { version = "0.11.1", features = ["zeroize"] }
+cmac = "0.8.0"
+hkdf = "0.13.0"
+hmac = "0.13.0"
+sha2 = "0.11.1"
+x25519-dalek = { version = "3.0.0", features = ["static_secrets", "zeroize"] }
+ed25519-dalek = { version = "3.0.0", features = ["zeroize"] }
+ml-kem = { version = "0.3.3", features = ["zeroize"] }
+ml-dsa = { version = "0.1.1", features = ["zeroize"] }
+chacha20poly1305 = "0.11.0"
+p256 = { version = "0.14.0", features = ["ecdsa"] }
+x509-cert = "0.3.0"
+der = "0.8.2"
+spki = "0.8.1"
+const-oid = "0.10.2"
+zeroize = { version = "1.9.1", features = ["zeroize_derive"] }
+subtle = "2.6.1"
+getrandom = "0.4.3"
+rand_core = "0.10.1"
+cryptoki = "0.12.1"
+rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "ring", "pem"] }
+
+# kuzatuv, xatolar, CLI
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json", "fmt"] }
+thiserror = "2.0.21"
+clap = { version = "4.6.7", features = ["derive", "env"] }
+
+# testlar
+proptest = "1.12.0"
+hex-literal = "1.1.0"
+tempfile = "3.27.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "allow"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "warn"
+unwrap_used = "warn"
+print_stdout = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+[profile.dev.package."*"]
+opt-level = 2

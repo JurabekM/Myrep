@@ -1,0 +1,13 @@
+/target/
+**/target/
+/fuzz/corpus/
+/fuzz/artifacts/
+# lokal sandbox holati: kalitlar, DB, generatsiya qilingan konfiguratsiya
+/.mpay/
+*.db
+*.db-shm
+*.db-wal
+.env
+# Python
+__pycache__/
+.venv/

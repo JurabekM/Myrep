@@ -1,0 +1,18 @@
+[package]
+name = "mpay-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mpay-common.workspace = true
+mpay-crypto.workspace = true
+mpay-pqlink.workspace = true
+mpay-vault.workspace = true
+mpay-shield.workspace = true
+mpay-issuer.workspace = true

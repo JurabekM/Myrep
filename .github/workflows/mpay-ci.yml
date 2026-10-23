@@ -1,0 +1,74 @@
+# M-Pay Pay Sandbox CI: fmt, clippy, test, deny, audit va SoftHSM2 integratsion testi.
+name: mpay-ci
+
+on:
+  push:
+    paths: ["m-pay/**", ".github/workflows/mpay-ci.yml"]
+  pull_request:
+    paths: ["m-pay/**", ".github/workflows/mpay-ci.yml"]
+
+defaults:
+  run:
+    working-directory: m-pay
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  check:
+    name: fmt + clippy + test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.1
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: m-pay
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+  softhsm:
+    name: SoftHSM2 (PKCS#11) integratsion testi
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: m-pay
+      - run: sudo apt-get update && sudo apt-get install -y softhsm2
+      - name: SoftHSM token tayyorlash
+        run: |
+          mkdir -p "$RUNNER_TEMP/softhsm/tokens"
+          echo "directories.tokendir = $RUNNER_TEMP/softhsm/tokens" > "$RUNNER_TEMP/softhsm/softhsm2.conf"
+          echo "SOFTHSM2_CONF=$RUNNER_TEMP/softhsm/softhsm2.conf" >> "$GITHUB_ENV"
+          export SOFTHSM2_CONF="$RUNNER_TEMP/softhsm/softhsm2.conf"
+          PIN=$(openssl rand -hex 8)
+          echo "::add-mask::$PIN"
+          echo "MPAY_PKCS11_PIN=$PIN" >> "$GITHUB_ENV"
+          softhsm2-util --init-token --free --label mpay-ci --so-pin "$(openssl rand -hex 8)" --pin "$PIN"
+      - name: PKCS#11 testlari
+        env:
+          MPAY_PKCS11_LIB: /usr/lib/softhsm/libsofthsm2.so
+          MPAY_PKCS11_TOKEN_LABEL: mpay-ci
+        run: cargo test -p mpay-crypto --features pkcs11 -- --include-ignored pkcs11
+
+  supply-chain:
+    name: cargo deny + cargo audit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: m-pay/Cargo.toml
+      - uses: dtolnay/rust-toolchain@1.97.1
+      - run: cargo install cargo-audit --locked
+      - run: cargo audit
