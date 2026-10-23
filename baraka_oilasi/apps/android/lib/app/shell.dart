@@ -13,7 +13,7 @@ import 'theme.dart';
 /// Android avto-qulf (7.4): fonga o'tgandan 2 daqiqa keyin.
 const backgroundLockAfter = Duration(minutes: 2);
 
-/// Asosiy oyna: yon menyuda makonlar va bo'limlar, markazda ekran, pastda Sobir hoji.
+/// Asosiy oyna: yon menyuda makonlar va bo'limlar, markazda ekran, pastda moliyaviy maslahatchi.
 class Shell extends ConsumerStatefulWidget {
   const Shell({super.key});
 

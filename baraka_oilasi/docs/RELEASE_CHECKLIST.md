@@ -73,7 +73,7 @@ O'rnatish: `adb install -r app-arm64-v8a-release.apk` (yoki faylni telefonga yub
 Topilgan xato: qurilma modeli, Android versiyasi, qadam va skrinshot (agar ruxsat bo'lsa) bilan yoziladi.
 
 ## 8. Koddan tashqari (`BARAKA_OILASI.md` 18)
-- [ ] Kontent va brend litsenziyasi; qissa matnlari placeholder emas yoki placeholder ekani aniq.
+- [x] Boshqa mualliflarning matni, personajlari va brendi ishlatilmaydi; ilova nomi — «Baraka Dastur» (`BARAKA_OILASI.md` 2.1).
 - [ ] Ulamo ko'rigi: diniy matnlar va sheriklik shablonlari `APPROVED`; aks holda release'da ko'rsatilmaydi.
 - [ ] Yurist ko'rigi: tilxat va shartnoma shablonlari.
 - [ ] Maxfiylik siyosati (shaxsga doir ma'lumotlar to'g'risidagi qonun).

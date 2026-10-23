@@ -55,7 +55,7 @@ class BarakaApp extends ConsumerWidget {
       return ColoredBox(color: (display.dark ? BarakaPalette.dark : BarakaPalette.light).paper);
     }
     return MaterialApp.router(
-      title: 'Baraka',
+      title: 'Baraka Dastur',
       debugShowCheckedModeBanner: false,
       theme: barakaTheme(dark: display.dark),
       locale: tr.flutterLocale,

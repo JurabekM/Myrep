@@ -7,7 +7,7 @@
 //!   uchun pul, qarzni qaytarish muddati, oila bilan maslahat.
 //! * Sovutish qoidasi: qaytgandan keyin 90 kun ichida olib kelinganning 10 %idan ko'pi — sariq,
 //!   30 %idan ko'pi — qizil (OQ-MF8). Qaror taqiqlanmaydi.
-//! * M5 (7-qonun qissasi): «besh xavf belgisi»dan ikkitasi — `TWO_SIGNS` (qizil); «qal'a devori» — qaror
+//! * M5 (SPEC 6.8): «besh xavf belgisi»dan ikkitasi — `TWO_SIGNS` (qizil); «qal'a devori» — qaror
 //!   olib kelinganning devordan ortiq qismidan oshsa `FORTRESS_WALL` (qizil, davrdan tashqarida ham);
 //!   va'da qilingan oylik foydaning oddiy yillik hisobi.
 //!

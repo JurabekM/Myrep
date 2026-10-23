@@ -404,7 +404,7 @@ fn loan_receipt_rules_and_pdf() {
         issued_on: None,
         place: "Toshkent".into(),
         schedule: vec![],
-        witnesses: vec!["Sobir hoji".into(), " ".into()],
+        witnesses: vec!["Hasan Yusupov".into(), " ".into()],
         note: None,
     };
     assert_eq!(

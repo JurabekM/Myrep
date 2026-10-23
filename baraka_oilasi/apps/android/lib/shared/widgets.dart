@@ -311,7 +311,7 @@ class SegmentedChoice<T> extends StatelessWidget {
   );
 }
 
-/// Sobir hoji maslahati (desktop'dagi o'ng panel): ekran pastida yig'iladigan karta.
+/// Moliyaviy maslahatchi kartasi (desktop'dagi o'ng panel): ekran pastida yig'iladigan karta.
 class MentorCard extends StatelessWidget {
   const MentorCard(this.tipKey, {super.key});
 

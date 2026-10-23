@@ -13,7 +13,7 @@
 | Fayl | Nima uchun | Holat |
 |---|---|---|
 | `docs/BARAKA_OILASI.md` | **Shu fayl.** Stek, arxitektura, pul algoritmlari, xavfsizlik, ish rejasi | asosiy |
-| `docs/uy/SPEC.md` | «Baraka daftari» (Uy makoni) mahsulot spetsifikatsiyasi, 1–6-qonunlar (= `FINTECH_PROMPT.md` v0.8) | amalda, 4-bo'limdan tashqari |
+| `docs/uy/SPEC.md` | Uy makoni mahsulot spetsifikatsiyasi, 1–6-tamoyillar (= `FINTECH_PROMPT.md` v0.8) | amalda, 4-bo'limdan tashqari |
 | `docs/uy/MVP_PLAN.md` | Uy makoni vazifalarining **funksional** mazmuni va qabul mezonlari | amalda, texnik qismlaridan tashqari |
 | `docs/uy/DESKTOP_PROMPT.md` | Desktop UX (7-bo'lim), test vektorlari (5-bo'lim), desktop vazifalari | qisman amalda (Ilova A) |
 | `docs/kasbkor/SPEC.md` | Kasb-kor makoni spetsifikatsiyasi | **K0 vazifasida yoziladi** |
@@ -40,28 +40,35 @@ Sen — senior Rust dasturchisan, Flutter (Dart) va React (TypeScript) bilan ham
 ### 2.1. Bitta g'oya
 > **Odamni pulini, qarzini va kelishuvlarini yozishga o'rgatib, halol (ribosiz) moliyaviy odatlar orqali o'z hayotini o'zi boshqaradigan qilish.**
 
-Yadro so'z — **«yoz»**: yozilgan narsa ko'rinadi, ko'ringan narsa boshqariladi, yozilgan kelishuv ishonchni asraydi. Tamoyil: «Ilm o'qiganniki emas, amal qilganniki». Murabbiy — **Sobir hoji**: iliq, ayblamaydi, savol beradi.
+Yadro so'z — **«yoz»**: yozilgan narsa ko'rinadi, ko'ringan narsa boshqariladi, yozilgan kelishuv ishonchni asraydi. Tamoyil: «Ilm o'qiganniki emas, amal qilganniki». Yo'l ko'rsatuvchi ovoz — **Moliyaviy maslahatchi** (ismsiz, personaj emas): iliq, ayblamaydi, savol beradi.
 
 Har bir funksiya ikki savol bilan tekshiriladi: **(1) odamni amalga undayaptimi? (2) ishonchni asrayaptimi?**
 
+#### Ilova nomi, ilhom manbasi va mustaqillik (mahsulot egasi qarori, 2026-10-23)
+- Android va desktop ilovalarining nomi — **«Baraka Dastur»**. Google Play'da «Baraka» nomli boshqa ilova bor; «Baraka daftari» nomi ham ishlatilmaydi. Loyiha va repozitoriy ichki nomi — «Baraka oilasi».
+- G'oya halol boylik haqidagi «7 qonun» suhbatlarining **ma'no-mazmunidan ilhomlangan** (muallif — Abdukarim Mirzayev, «Asaxiy Invest»). Ilova ularning moslashuvi yoki rasmiy davomi **emas**: qissa matnlari, personajlar (jumladan, Sobir hoji) va brend ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
+- Ilova mualliflar va «Asaxiy Invest» bilan **bog'liq emas**, ular tomonidan tasdiqlanmagan va ularning nomidan gapirmaydi. Mualliflar bilan aloqaga chiqishga urinildi, javob bo'lmadi — shuning uchun litsenziyaga tayanilmaydi.
+- Hujjatlarda «qonun» o'rniga **«tamoyil»** ishlatiladi: 7 tamoyil — ribosiz moliyaning keng ma'lum asoslari (o'zingizga avval to'lash, xarajatni yozish, qarzdan reja bilan chiqish, halol sheriklik, kelishuvni yozish va h.k.).
+- Ilova ichidagi yo'l ko'rsatuvchi ovoz — **«Moliyaviy maslahatchi»**: ismsiz, personaj emas. Segment personalari (taksichi, tikuvchi, migrant va h.k.) — o'zimizning mahsulot tahlilimiz.
+
 ### 2.2. Uchta makon (bitta ilova ichida)
-Android va desktopda **bitta «Baraka» ilovasi** bo'ladi. Ilova ichida uchta **makon** (`SpaceKind`) bor. Foydalanuvchi onboarding'da o'ziga keraklisini yoqadi. Makonlar orasidagi chegara — 1-qonunning («ikki cho'ntak») o'zi.
+Android va desktopda **bitta «Baraka Dastur» ilovasi** bo'ladi. Ilova ichida uchta **makon** (`SpaceKind`) bor. Foydalanuvchi onboarding'da o'ziga keraklisini yoqadi. Makonlar orasidagi chegara — 1-tamoyilning («ikki cho'ntak») o'zi.
 
 | Makon | `SpaceKind` | Kim uchun | Asosiy tashxis | Spetsifikatsiya |
 |---|---|---|---|---|
-| **Uy** («Baraka daftari») | `UY` | O'rta qatlam oila | «Ko'p ishlaydi, oy oxirida pul qolmaydi» | `docs/uy/SPEC.md` ✅ |
+| **Uy** | `UY` | O'rta qatlam oila | «Ko'p ishlaydi, oy oxirida pul qolmaydi» | `docs/uy/SPEC.md` ✅ |
 | **Kasb-kor** | `KASBKOR` | O'zini o'zi band qilganlar, kichik va o'rta biznes | «Aylanma bor, egasi boyimaydi»: cho'ntak bitta, foyda aslida maosh, kapitalni inflyatsiya yeydi, nasiya yig'ilmaydi | `docs/kasbkor/SPEC.md` (K0) |
 | **Musofir** | `MUSOFIR` | Chet elda ishlaydigan migrant va uning uydagi oilasi | «Yillar ishlaydi, qaytganda qo'lida hech narsa yo'q»: hammasi uyga ketadi, kelishuv og'zaki, qaytishda «kalxatlar» | `docs/musofir/SPEC.md` (M0) |
 
 #### Kasb-kor — qisqa karta (K0 uchun manba)
-- **7 qonun:** (1) Ikki cho'ntak — biznes puli omonat, egasiga qat'iy maosh; (2) Haqiqiy foydani bil — o'z mehnati, eskirish va oilaviy mehnat tannarxda; (3) Tovar ham pul, u ham yotadi — taqsimot qoidasi, qayta tiklash narxi, muzlagan tovar; (4) Nasiyani adolat bilan yurit — narx kelishuvda qotiriladi, kechikish uchun ustama yo'q; (5) Kengayishga reja bilan chiq — kengayish darvozasi, foizli kreditga halol muqobil; (6) Kelishuvni yozing — sherik, xodim, yetkazib beruvchi, mijoz; (7) Tarozingni to'g'ri tut — halol o'lchov, soliq zaxirasi, savdo mollari zakoti.
+- **7 tamoyil:** (1) Ikki cho'ntak — biznes puli omonat, egasiga qat'iy maosh; (2) Haqiqiy foydani bil — o'z mehnati, eskirish va oilaviy mehnat tannarxda; (3) Tovar ham pul, u ham yotadi — taqsimot qoidasi, qayta tiklash narxi, muzlagan tovar; (4) Nasiyani adolat bilan yurit — narx kelishuvda qotiriladi, kechikish uchun ustama yo'q; (5) Kengayishga reja bilan chiq — kengayish darvozasi, foizli kreditga halol muqobil; (6) Kelishuvni yozing — sherik, xodim, yetkazib beruvchi, mijoz; (7) Tarozingni to'g'ri tut — halol o'lchov, soliq zaxirasi, savdo mollari zakoti.
 - **Odat ritmi:** har kuni kassa yopish (5 daqiqa) → har hafta nasiya ko'rigi → har oy «Hisob kuni» → har yil inventarizatsiya va zakot.
 - **Bosh ekrandagi 1-raqam:** «Haqiqiy foyda (shu oy)», 2-raqam: «Egasiga to'langan maosh».
-- **Personajlar:** Nilufar (atelye), Bahodir aka (mahalla do'koni), Jasur (usta), Malika (Instagram do'kon), aka-uka choyxonasi. Mentor — Sobir hoji.
+- **Personajlar:** Zarina (atelye), Bahodir aka (mahalla do'koni), Jasur (usta), Malika (Instagram do'kon), aka-uka choyxonasi. Maslahat ovozi — moliyaviy maslahatchi.
 - **EMAS:** ERP, buxgalteriya yoki 1C o'rnini bosuvchi, onlayn kassa (fiskal), soliq hisobotini topshiruvchi, «ikkinchi daftar» (daromadni yashirish vositasi), kredit yoki investor bozori.
 
 #### Musofir — qisqa karta (M0 uchun manba)
-- **Qonunlar:** o'z ulushi (uyga yuborilmaydigan «qaytish jamg'armasi»); chet eldagi xarajatlar; valyutada saqlanish va qorovul pul; yo'l qarzidan chiqish; qaytgandan keyingi ish rejasi; **oila bilan pul kelishuvi** («Ikki qirg'oq»: har bir o'tkazmaning maqsadi, uyda shu maqsad bo'yicha xarajat yoziladi); **sovutish davri** (katta pul bilan qaytgandan keyin 90 kun katta qarorlar uchun tekshiruv) — bu `docs/uy/SPEC.md` 10-bo'limdagi 7-qonun ishorasining amaliy ko'rinishi.
+- **Tamoyillar:** o'z ulushi (uyga yuborilmaydigan «qaytish jamg'armasi»); chet eldagi xarajatlar; valyutada saqlanish va qorovul pul; yo'l qarzidan chiqish; qaytgandan keyingi ish rejasi; **oila bilan pul kelishuvi** («Ikki qirg'oq»: har bir o'tkazmaning maqsadi, uyda shu maqsad bo'yicha xarajat yoziladi); **sovutish davri** (katta pul bilan qaytgandan keyin 90 kun katta qarorlar uchun tekshiruv) — bu `docs/uy/SPEC.md` 10-bo'limdagi 7-tamoyil ishorasining amaliy ko'rinishi.
 - **EMAS:** pul o'tkazish xizmati, valyuta ayirboshlash, ish topib beruvchi agentlik, o'tkazma kompaniyalari reklamasi.
 
 ### 2.3. Butun oila uchun qat'iy mahsulot cheklovlari
@@ -151,7 +158,7 @@ baraka-oilasi/
       money/            no_std: Money, Currency, allocate, percent_of, round, FxRate, format
       journal/          no_std + alloc: JCS, SHA-256, chain, verify
       agreements/       9 savol dvigateli, turlar, validatsiyalar
-      domain-uy/        Uy makoni: 1–6-qonunlar (sof funksiyalar)
+      domain-uy/        Uy makoni: 1–6-tamoyillar (sof funksiyalar)
       domain-kasbkor/   Kasb-kor makoni (K-vazifalarda)
       domain-musofir/   Musofir makoni (M-vazifalarda)
       domain-common/    Household, Member, Space, Category, Asset, Clock, IdGen traitlari
@@ -479,7 +486,7 @@ PLATFORM_SECRET (32 bayt):
 
 ### 10.5. Kontent
 - Boblar JSON shaklida `shared/content/<makon>/` da: `Chapter`, `Law`, `WeeklyTask[3]`, `religiousReviewStatus`.
-- `PENDING` diniy bloklar release build'da ko'rsatilmaydi (test). Qissa matnlari litsenziya hal bo'lguncha **placeholder**.
+- `PENDING` diniy bloklar release build'da ko'rsatilmaydi (test). Ta'limiy matnlar — faqat o'zimiz yozganlari (boshqa mualliflarning qissa matnlari ishlatilmaydi, 2.1).
 
 ---
 
@@ -513,7 +520,7 @@ PLATFORM_SECRET (32 bayt):
 | FFI | Dart test (FRB orqali) | **barcha vektorlar Dart'dan ham ishga tushiriladi** — DTO va string-pul konvertatsiyasidagi xatolarni ushlaydi |
 | Storage | `cargo test` (vaqtinchalik shifrlangan baza) | CRUD, soft delete, triggerlar, migratsiyalar |
 | UI | Flutter widget testlar; `vitest` + Testing Library | ekran xulqi |
-| E2E | Flutter `integration_test` (emulator, tungi); `tauri-driver` (Windows, tungi) | Anvar ssenariysi |
+| E2E | Flutter `integration_test` (emulator, tungi); `tauri-driver` (Windows, tungi) | Bekzod ssenariysi |
 
 ### 12.2. Mustaqil oracle
 - `spec/oracle/oracle.py` — algoritmlarning **Python'dagi mustaqil** implementatsiyasi (`fractions.Fraction`, standart kutubxona, tashqi paketlarsiz).
@@ -624,7 +631,7 @@ K6 → K7 → K8, R1, G0 → G1                        (kengaytmalar)
 - Android: preview va ulashish; Desktop: preview va chop etish.
 - **Qabul mezonlari:** namunaviy hujjatning PNG snapshot va bayt-xesh testlari yashil; `oʻ gʻ ʼ` va `ўқғҳ` to'g'ri chiqadi; APK hajm byudjeti saqlanadi.
 
-### U. UY MAKONI («Baraka daftari»)
+### U. UY MAKONI
 Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan MVP vazifasi **va** desktop vazifasining birlashmasi. Qo'shimcha talablar oxirgi ustunda.
 
 | # | MVP_PLAN | DESKTOP | Mavzu | Qo'shimcha talablar (shu hujjatdan) |
@@ -646,7 +653,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | U15 | V15 | D15 | Onboarding, accessibility, reliz | onboarding'da makon tanlash va tiklash kodi; yakuniy E2E ikkala platformada |
 
 ### K. KASB-KOR MAKONI
-**K0 — `docs/kasbkor/SPEC.md` yozish (kod yo'q).** 2.2 dagi karta asosida, `docs/uy/SPEC.md` formatida: personajlar, 7 qonunning funksional talablari, domen modeli, vektor suite'lari (tannarx — FIFO yoki o'rtacha tortilgan, kassa farqi, nasiya muddatlari, qayta tiklash narxi, zakot), cheklovlar, mijozlarning shaxsiy ma'lumotlari (operator sifatida rozilik). **Qabul:** mahsulot egasi tasdiqlagan; ulamo va yurist savollari `OPEN_QUESTIONS.md` da.
+**K0 — `docs/kasbkor/SPEC.md` yozish (kod yo'q).** 2.2 dagi karta asosida, `docs/uy/SPEC.md` formatida: personajlar, 7 tamoyilning funksional talablari, domen modeli, vektor suite'lari (tannarx — FIFO yoki o'rtacha tortilgan, kassa farqi, nasiya muddatlari, qayta tiklash narxi, zakot), cheklovlar, mijozlarning shaxsiy ma'lumotlari (operator sifatida rozilik). **Qabul:** mahsulot egasi tasdiqlagan; ulamo va yurist savollari `OPEN_QUESTIONS.md` da.
 
 | # | Mavzu |
 |---|---|
@@ -723,10 +730,10 @@ VAZIFA: <masalan, Y2 — money crate va vektorlar>
 - Ikkinchi tomon, hakam yoki sherikning o'z qurilmasidan masofadan tasdiqlashi.
 - Real pul o'tkazmalari, sheriklar yoki investorlar uchun platforma/marketplace.
 - iOS (arxitektura to'sqinlik qilmaydi, lekin rejada yo'q).
-- Asl qissa matnlari.
+- Boshqa mualliflarning qissa matnlari — ishlatilmaydi (2.1).
 
 ## 18. RELIZDAN OLDIN KODDAN TASHQARIDA HAL QILINADIGAN MASALALAR
-- «Asaxiy Invest» × Abdukarim Mirzayev bilan kontent va brend litsenziyasi (**U3 dan oldin** hech bo'lmaganda niyat shartnomasi).
+- ~~Kontent va brend litsenziyasi~~ — kerak emas: ilova boshqa mualliflarning matni, personajlari va brendini ishlatmaydi (2.1, 2026-10-23).
 - Diniy matnlar, sheriklik, nasiya va zakot qoidalarining ulamo tekshiruvi.
 - Tilxat, shartnoma va xodim kelishuvi shablonlarining yurist ko'rigi.
 - Windows kod imzolash sertifikati (OV/EV), keyinroq macOS Developer ID; Play Console hisobi.
@@ -754,4 +761,4 @@ VAZIFA: <masalan, Y2 — money crate va vektorlar>
 | `DESKTOP` 6.2 | Windows Hello — `UserConsentVerifier` | `KeyCredentialManager` (7.3) |
 | `DESKTOP` 6.3 | `version` kattasi yutadi | 8.4 (ikki tomonda o'zgargan = ziddiyat) |
 | `DESKTOP` 9 (D1–D15) | Alohida desktop vazifalari | U1–U15 ning (c) qismlari |
-| `DESKTOP` «D2. 6-qonun poydevori» sarlavhasi | D2 vazifasi bilan nomi to'qnashadi | ahamiyatsiz — U7 ga birlashtirildi |
+| `DESKTOP` «D2. 6-tamoyil poydevori» sarlavhasi | D2 vazifasi bilan nomi to'qnashadi | ahamiyatsiz — U7 ga birlashtirildi |

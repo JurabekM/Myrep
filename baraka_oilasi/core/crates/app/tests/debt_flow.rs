@@ -294,7 +294,7 @@ fn receipt(direction: &str) -> IssueLoanReceiptInput {
                 line("15.11.2026", "1 200 000"),
                 line("15.12.2026", "800 000"),
             ],
-            witnesses: vec!["Sobir hoji".into()],
+            witnesses: vec!["Hasan Yusupov".into()],
             note: None,
         },
         is_new: true,

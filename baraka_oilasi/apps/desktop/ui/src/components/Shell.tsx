@@ -123,7 +123,7 @@ const MENTOR: Record<Screen, string> = {
   settings: "mentor.settings",
 };
 
-/** Asosiy oyna: chapda navigatsiya va makonlar, markazda ish maydoni, oʻngda Sobir hoji. */
+/** Asosiy oyna: chapda navigatsiya va makonlar, markazda ish maydoni, oʻngda moliyaviy maslahatchi. */
 export function Shell() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();

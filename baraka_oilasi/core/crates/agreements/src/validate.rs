@@ -300,7 +300,7 @@ mod tests {
                 asset_split: None,
             }),
             arbiter: answered(Arbiter {
-                full_name: "Sobir hoji".into(),
+                full_name: "Hasan Yusupov".into(),
                 role: None,
                 party_id: None,
             }),
@@ -398,7 +398,7 @@ mod tests {
     fn serde_shape() {
         let json = serde_json::to_value(&musharaka().arbiter).unwrap();
         assert_eq!(json["status"], "ANSWERED");
-        assert_eq!(json["value"]["fullName"], "Sobir hoji");
+        assert_eq!(json["value"]["fullName"], "Hasan Yusupov");
         let na: Answer<Arbiter> =
             serde_json::from_str(r#"{"status":"NOT_APPLICABLE","reason":"oilaviy"}"#).unwrap();
         assert_eq!(

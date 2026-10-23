@@ -800,14 +800,14 @@ OFFER_TABLE = {
     "recruitment": {"YES": ("RECRUITMENT_REQUIRED", "RED"), "UNKNOWN": ("RECRUITMENT_UNKNOWN", "YELLOW")},
     "urgency": {"YES": ("URGENCY", "YELLOW"), "UNKNOWN": ("URGENCY_UNKNOWN", "YELLOW")},
     "written": {"NO": ("NO_WRITTEN_CONTRACT", "YELLOW"), "UNKNOWN": ("WRITTEN_UNKNOWN", "YELLOW")},
-    # M5 (musofir qissasi, «besh xavf belgisi»): davlat ruxsati, o'z ko'zi bilan tekshirish, pulni qaytarib olish.
+    # M5 («besh xavf belgisi», musofir/SPEC 6.8): davlat ruxsati, o'z ko'zi bilan tekshirish, pulni qaytarib olish.
     "licensed": {"NO": ("NO_LICENSE", "YELLOW"), "UNKNOWN": ("LICENSE_UNKNOWN", "YELLOW")},
     "inspection": {"NO": ("INSPECTION_REFUSED", "RED"), "UNKNOWN": ("INSPECTION_UNKNOWN", "YELLOW")},
     "exitEasy": {"NO": ("EXIT_HARD", "RED"), "UNKNOWN": ("EXIT_UNKNOWN", "YELLOW")},
 }
-# Sobir hojining «besh xavf belgisi»: 1 — kafolatlangan foyda, 2 — shoshirish, 3 — yangi odam olib kelish,
-# 4 — ishning o'zi yo'q (mol, ruxsat, tekshirtirmaydi), 5 — kirish oson, chiqish qiyin. «Bittasini ko'rsangiz —
-# hushyor torting, ikkinchisini — qoching»: ikki va undan ortiq belgi — TWO_SIGNS (qizil).
+# «Besh xavf belgisi»: 1 — kafolatlangan foyda, 2 — shoshirish, 3 — yangi odam olib kelish,
+# 4 — ishning o'zi yo'q (mol, ruxsat, tekshirtirmaydi), 5 — kirish oson, chiqish qiyin. Bitta belgi — ehtiyot
+# bo'lishga, ikkitasi — voz kechishga sabab: ikki va undan ortiq belgi — TWO_SIGNS (qizil).
 OFFER_SIGNS = {"GUARANTEED_PROFIT": 1, "URGENCY": 2, "RECRUITMENT_REQUIRED": 3, "NO_REAL_ACTIVITY": 4,
                "NO_LICENSE": 4, "INSPECTION_REFUSED": 4, "EXIT_HARD": 5}
 
@@ -2284,8 +2284,8 @@ def build_suites():
           ("offer-005-unknowns", A("UNKNOWN", "UNKNOWN", "YES", "NO", "NO", "UNKNOWN")),
           ("offer-006-no-contract", A("NO", "YES", "YES", "NO", "NO", "NO")),
           ("offer-007-crypto-signals", A("YES", "NO", "UNKNOWN", "NO", "YES", "NO")),
-          # M5: «Plyus» — kafolat va shoshirish (ikki belgi), tekshirtirmaydi, chiqish qiyin.
-          ("offer-008-plyus", A("YES", "UNKNOWN", "UNKNOWN", "UNKNOWN", "YES", "YES", "UNKNOWN", "NO", "NO")),
+          # M5: «Oltin foyda» — kafolat va shoshirish (ikki belgi), tekshirtirmaydi, chiqish qiyin.
+          ("offer-008-guaranteed-scam", A("YES", "UNKNOWN", "UNKNOWN", "UNKNOWN", "YES", "YES", "UNKNOWN", "NO", "NO")),
           # Faqat shoshirish (bitta belgi) — sariq; bitta 4-belgi ichidagi uch bayroq — bitta belgi.
           ("offer-009-one-sign", A("NO", "YES", "YES", "NO", "YES", "YES")),
           ("offer-010-sign-four-once", A("NO", "YES", "NO", "NO", "NO", "YES", "NO", "NO")),
@@ -2948,7 +2948,7 @@ def build_suites():
         # Davrning oxirgi kuni (89-kun) — hali ichida; 90-kun — tashqarida.
         ("co-007", "2027-01-16", "2026-10-19", 12000000000, "PURCHASE", 2000000000, calm),
         ("co-008", "2027-01-17", "2026-10-19", 12000000000, "PURCHASE", 2000000000, calm),
-        # M5 — qissa: Rustam 18 000 $ (≈ 228 mln so'm) olib keldi, «Plyus»ga 10 000 $ (≈ 126,5 mln): kafolatli 35 % oyiga,
+        # M5 — misol: migrant 18 000 $ (≈ 228 mln so'm) olib keldi, «Oltin foyda»ga 10 000 $ (≈ 126,5 mln): kafolatli 35 % oyiga,
         # shoshirish, tekshirtirmaydi, chiqish qiyin; oila bilan maslahatlashmadi; devor — 6 oy × 8 mln.
         ("co-009", "2026-10-22", "2026-10-19", 22770000000, "INVEST", 12650000000,
          {**no, "approached": "YES", "upfront": "NO", "abroadJobFee": "NO", "familyDiscussed": "NO",
@@ -3066,9 +3066,9 @@ def selftest() -> None:
     assert (m4["savedNet"], m4["shareGap"], m4["reserveBalance"], m4["pocket"]) == ("520000", "0", "810000", "2230000"), m4
     assert mf_startup(12000000000, 3000000000)["living"] == "9000000000"
     _expect_error("STARTUP_EXCEEDS_TARGET", mf_startup, 100, 101)
-    plyus = offer_check({"guaranteed": "YES", "lossShared": "UNKNOWN", "realActivity": "UNKNOWN", "recruitment": "UNKNOWN",
+    scam = offer_check({"guaranteed": "YES", "lossShared": "UNKNOWN", "realActivity": "UNKNOWN", "recruitment": "UNKNOWN",
                          "urgency": "YES", "written": "YES", "licensed": "UNKNOWN", "inspection": "NO", "exitEasy": "NO"})
-    assert plyus["signs"] == 4 and plyus["flags"][-1]["code"] == "TWO_SIGNS", plyus
+    assert scam["signs"] == 4 and scam["flags"][-1]["code"] == "TWO_SIGNS", scam
     assert mf_wall([800000000, 780000000, 820000000])["wall"] == "4800000000"
     pr = mf_cooling(date(2027, 3, 1), None, None, "INVEST", 100, {**{q: "NO" for q in ("guaranteed", "recruitment", "urgency")},
                     **{q: "YES" for q in ("lossShared", "realActivity", "written", "licensed", "inspection", "exitEasy")},
@@ -3211,7 +3211,7 @@ def selftest() -> None:
     # U10: 20 mln qarz oyiga 2,4 mln bilan: 9 oy (8×2,4 = 19,2 mln), oxirgi oy 0,8 mln
     assert informal_debt_payoff(2000000000, date(2027, 5, 20), 240000000) == (9, date(2028, 1, 1))
     assert informal_debt_payoff(0, date(2027, 5, 20), 0) == (0, None)
-    # U11: Nilufar Sobir hojining 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
+    # U11: Nilufar Sobir Qodirovning 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
     b = buyout_schedule(3000000000, 3000000000, 0, 10, 1, date(2026, 11, 30), 1, 800000000, 5000)
     assert (b["periods"], b["endDate"], b["rows"][1]["date"], b["rows"][-1]["buyerBp"]) == (10, "2027-08-30", "2026-12-30", 10000)
     assert [r["payment"] for r in buyout_schedule(100000001, 300000001, 200000000, 3, 2, date(2027, 1, 31), 3, None, 0)["rows"]] == ["66666668", "33333333"]

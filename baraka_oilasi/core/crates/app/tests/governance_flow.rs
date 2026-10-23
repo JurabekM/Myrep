@@ -94,7 +94,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Sobir hoji tikuv uskunasi va mato puli beradi, Nilufar (shu oila) tikadi — mudoraba 50/50.
+/// Sobir Qodirov tikuv uskunasi va mato puli beradi, Nilufar (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),

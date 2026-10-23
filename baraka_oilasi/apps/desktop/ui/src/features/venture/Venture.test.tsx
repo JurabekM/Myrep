@@ -147,7 +147,7 @@ describe("OfferCheckDialog", () => {
     expect(await screen.findByText("Qizil: pul bermang")).toBeInTheDocument();
     expect(screen.getByText(/Kafolatlangan foyda vaʼda qilinmoqda/)).toBeInTheDocument();
     expect(screen.getByText("Besh xavf belgisidan topildi: 2")).toBeInTheDocument();
-    expect(screen.getByText(/ikkinchisini koʻrsangiz — qoching/)).toBeInTheDocument();
+    expect(screen.getByText(/ikkitasi — bu taklifdan voz kechishga yetarli sabab/)).toBeInTheDocument();
     expect(checkOffer).toHaveBeenCalledWith({
       guaranteed: "YES",
       lossShared: "YES",

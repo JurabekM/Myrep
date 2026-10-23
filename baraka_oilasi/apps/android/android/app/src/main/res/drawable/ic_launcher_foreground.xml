@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ilova ikonkasi (desktop `icons/icon.png` bilan bir xil): daftar, chiziqlar va aksent xatcho'p.
-     Adaptiv ikonka maydoni 108 dp, xavfsiz zona — markazdagi 66 dp. -->
+<!-- «Baraka Dastur» ikonkasi (`xtask/assets/logo.svg` bilan bir xil geometriya): krem «B» va sarg'ish barg.
+     Adaptiv ikonka maydoni 108 dp, xavfsiz zona — markazdagi 66 dp doira; belgi 1024 birlikdan 0.078
+     masshtabda shu doira ichiga joylangan. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Daftar (surface) -->
-    <path android:fillColor="#FF30302E"
-        android:pathData="M30,22 H78 A6,6 0 0 1 84,28 V80 A6,6 0 0 1 78,86 H30 A6,6 0 0 1 24,80 V28 A6,6 0 0 1 30,22 Z" />
-    <!-- Muqova qirrasi (sidebar) -->
-    <path android:fillColor="#FF1F1E1D"
-        android:pathData="M30,22 H34 V86 H30 A6,6 0 0 1 24,80 V28 A6,6 0 0 1 30,22 Z" />
-    <!-- Chiziqlar (inkMuted) -->
-    <path android:fillColor="#FFA6A39A" android:pathData="M39,42.7 H79 V44.3 H39 Z" />
-    <path android:fillColor="#FFA6A39A" android:pathData="M39,51.7 H79 V53.3 H39 Z" />
-    <path android:fillColor="#FFA6A39A" android:pathData="M39,60.7 H79 V62.3 H39 Z" />
-    <path android:fillColor="#FFA6A39A" android:pathData="M39,69.7 H79 V71.3 H39 Z" />
-    <!-- Xatcho'p (accent) -->
-    <path android:fillColor="#FFD97757" android:pathData="M68,22 H74.5 V54 L71.25,50.5 L68,54 Z" />
+    <group
+        android:scaleX="0.078"
+        android:scaleY="0.078"
+        android:translateX="11.412"
+        android:translateY="17.418">
+        <group
+            android:translateX="-26"
+            android:translateY="-14">
+            <!-- «B» (ink) -->
+            <path
+                android:pathData="M360,330 V760 H585 A115,115 0 0,0 585,530 H360"
+                android:strokeColor="#FFFAF9F5"
+                android:strokeWidth="92"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round" />
+            <path
+                android:pathData="M360,330 H555 A100,100 0 0,1 555,530"
+                android:strokeColor="#FFFAF9F5"
+                android:strokeWidth="92"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round" />
+            <!-- Barg (accent) va tomiri (paper) -->
+            <path
+                android:fillColor="#FFD97757"
+                android:pathData="M640,330 C650,230 720,170 830,160 C826,270 760,330 640,330 Z" />
+            <path
+                android:pathData="M650,320 C700,270 750,220 800,190"
+                android:strokeColor="#FF262624"
+                android:strokeWidth="12"
+                android:strokeLineCap="round" />
+        </group>
+    </group>
 </vector>

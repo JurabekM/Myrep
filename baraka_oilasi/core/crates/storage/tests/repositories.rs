@@ -223,7 +223,7 @@ fn agreement_versions_and_signatures_are_immutable() {
                 version_id: "v1".into(),
                 signer_key: "arbiter".into(),
                 signer_role: "ARBITER".into(),
-                signer_name: "Sobir hoji".into(),
+                signer_name: "Hasan Yusupov".into(),
                 strokes_json: "[]".into(),
                 signed_at: m.now.clone(),
             },

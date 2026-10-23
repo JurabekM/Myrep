@@ -1,10 +1,12 @@
 # Baraka oilasi
 
-Halol (ribosiz) moliyaviy odatlar uchun bitta ilova, uchta makon:
+Ilovalar nomi — **Baraka Dastur** (Android va desktop). Halol (ribosiz) moliyaviy odatlar uchun bitta ilova, uchta makon:
 
-- **Uy** («Baraka daftari») — oila moliyasi;
+- **Uy** — oila moliyasi;
 - **Kasb-kor** — o'zini o'zi band qilganlar va kichik biznes;
 - **Musofir** — chet elda ishlaydiganlar va ularning oilasi.
+
+G'oya halol boylik haqidagi «7 qonun» suhbatlarining ma'nosidan ilhomlangan, lekin ilova mustaqil: boshqa mualliflarning matni, personajlari va brendi ishlatilmaydi ([BARAKA_OILASI.md 2.1](docs/BARAKA_OILASI.md)).
 
 Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, desktop ilovasi Tauri 2 va React'da yoziladi.
 
@@ -15,7 +17,7 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 | [docs/adr/0003-kop-qurilma-va-rollar.md](docs/adr/0003-kop-qurilma-va-rollar.md) | Kasb-kor: ko'p qurilma va rollar (K8) |
 | [docs/adr/0004-musofir-uy-qurilmasi.md](docs/adr/0004-musofir-uy-qurilmasi.md) | Musofir: uydagi oila qurilmasi (M2) |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Mahsulot egasi, ulamo va yurist uchun ochiq savollar |
-| [docs/uy/](docs/uy/) | «Baraka daftari» spetsifikatsiyasi va dastlabki rejalar |
+| [docs/uy/](docs/uy/) | Uy makoni spetsifikatsiyasi va dastlabki rejalar |
 | [docs/kasbkor/SPEC.md](docs/kasbkor/SPEC.md) | Kasb-kor makoni spetsifikatsiyasi (K0, qoralama) |
 | [docs/musofir/SPEC.md](docs/musofir/SPEC.md) | Musofir makoni spetsifikatsiyasi (v1.0, tasdiqlangan) |
 | [CLAUDE.md](CLAUDE.md) | AI-dasturchi uchun sessiya qoidalari |
@@ -52,7 +54,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | M2: Musofir «Ikki qirg'oq» — yuborishning maqsadlari, oila bilan kelishuv (kattalar tasdig'i), uyda qabul va maqsad bo'yicha xarajat; uydagi oila qurilmasi (ADR-0004) — musofirning shaxsiy hisobi unga yuborilmaydi | ✅ yadro + desktop + Linux E2E + Android |
 | M3: Musofir — yo'l qarzidan chiqish («Qarz to'lovi» maqsadidan uyda to'lanadi, necha oyda yopilishi), «Qaytdim» va 90 kunlik sovutish davri, katta qaror oldidan tekshiruv va qarorlar jurnali | ✅ yadro + desktop + Linux E2E + Android |
 | M4: Musofir — qorovul pul (o'z ulushi avval qorovulga, keyin jamg'armaga), ish boshlash summasi («Hunardan ishga» g'oyasi bilan), qaror natijasi | ✅ yadro + desktop + Linux E2E + Android |
-| M5: Musofir — 7-qonun qissasidan: «besh xavf belgisi» (3 yangi savol, «ikki belgi — qoching»), qal'a devori (6 oylik ro'zg'or, erkin pul), valyutada olib kelingan summa, va'daning yillik hisobi | ✅ yadro + desktop + Linux E2E + Android |
+| M5: Musofir — firibgarlik belgilari va qaytish xavfsizligi: «besh xavf belgisi» (3 yangi savol, «ikki belgi — qoching»), qal'a devori (6 oylik ro'zg'or, erkin pul), valyutada olib kelingan summa, va'daning yillik hisobi | ✅ yadro + desktop + Linux E2E + Android |
 | Android (A0–A4): Flutter ilova — FRB (DTO'lar yadrodan), Keystore platforma siri, `FLAG_SECURE`, onboarding, qulf va avto-qulf; uchala makonning barcha ekranlari desktop bilan bir xil (Uy, Kasb-kor va sotuvchi qurilmasi, Musofir va «Ikki qirg'oq»); oqim testlari haqiqiy yadro bilan, vektorlar Dart'dan; release APK arm64 ≈ 31 MB yuklab olish | ✅ |
 
 ## Ishga tushirish

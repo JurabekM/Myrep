@@ -50,7 +50,7 @@ beforeEach(() => {
   mfDecisions.mockResolvedValue(ok([]));
 });
 
-describe("7-qonun qissasi: dollar, qal'a devori", () => {
+describe("Qaytish xavfsizligi: dollar, qal'a devori", () => {
   it("«Qaytdim» dollarda — kurs so'raladi", async () => {
     mfSetReturn.mockResolvedValue(ok(overview(null)));
     const user = userEvent.setup();
@@ -87,7 +87,7 @@ describe("7-qonun qissasi: dollar, qal'a devori", () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 
-  it("«Plyus»: va'da hisobi, besh belgidan to'rttasi, qal'a devori bayrog'i", async () => {
+  it("«Oltin foyda»: va'da hisobi, besh belgidan to'rttasi, qal'a devori bayrog'i", async () => {
     mfDecisionQuestions.mockResolvedValue(ok(["guaranteed", "exitEasy"]));
     mfCheckDecision.mockResolvedValue(
       ok({
@@ -116,14 +116,14 @@ describe("7-qonun qissasi: dollar, qal'a devori", () => {
     await user.selectOptions(within(dialog).getByLabelText("Qaror turi"), "INVEST");
     await user.type(within(dialog).getByLabelText("Summa (UZS)"), "126 500 000");
     await user.type(within(dialog).getByLabelText("Oyiga vaʼda qilingan foyda, % (boʻlsa)"), "35");
-    await user.type(within(dialog).getByLabelText("Nima haqida"), "Plyus");
+    await user.type(within(dialog).getByLabelText("Nima haqida"), "Oltin foyda");
     await user.click(within(await within(dialog).findByRole("radiogroup", { name: /kafolatlanyaptimi/ })).getByRole("radio", { name: "Ha" }));
     await user.click(within(within(dialog).getByRole("radiogroup", { name: /qaytarib olish/ })).getByRole("radio", { name: "Yoʻq" }));
     await user.click(within(dialog).getByRole("button", { name: "Tekshirish" }));
     expect(mfCheckDecision).toHaveBeenCalledWith("mf", expect.objectContaining({ kind: "INVEST", promisedPercent: "35" }));
     const result = await within(dialog).findByTestId("mf-decision-result");
     expect(result).toHaveTextContent("Besh xavf belgisidan topildi: 4");
-    expect(result).toHaveTextContent("ikkinchisini koʻrsangiz — qoching");
+    expect(result).toHaveTextContent("ikkitasi — bu taklifdan voz kechishga yetarli sabab");
     expect(result).toHaveTextContent("Kirish oson, chiqish qiyin");
     expect(result).toHaveTextContent("erkin pul — 179 700 000 soʻm");
     expect(screen.getByTestId("mf-decision-promise")).toHaveTextContent("oyiga 35 % — bir yilda 420 %, pulingiz 5,2 barobar");
