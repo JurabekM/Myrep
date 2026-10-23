@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-/** O'ng panel: Sobir hoji maslahati (placeholder) va disklеymer. `tipKey` — i18n kaliti. */
+/** O'ng panel: moliyaviy maslahatchi maslahati va disklеymer. `tipKey` — i18n kaliti. */
 export function Mentor({ tipKey }: { tipKey: string }) {
   const { t } = useTranslation();
   return (

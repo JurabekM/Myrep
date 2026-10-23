@@ -33,18 +33,18 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
         title: "Tikuvchilik ustaxonasi".into(),
         kind: "MUDARABA".into(),
         version: Some("v2".into()),
-        hash_code: "E6AE-98E5-45C7-438C".into(),
+        hash_code: "F8B2-EF8C-8E72-218F".into(),
         review_pending: true,
         parties: vec![
             ContractParty {
-                name: "Sobir Qodirov".into(),
+                name: "Otabek Qodirov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 capital: "30 000 000 soʻm".into(),
                 profit_share: "50%".into(),
                 loss_share: Some("100%".into()),
             },
             ContractParty {
-                name: "Nilufar Karimova".into(),
+                name: "Feruza Karimova".into(),
                 role: "WORKER".into(),
                 capital: "0 soʻm".into(),
                 profit_share: "50%".into(),
@@ -52,7 +52,7 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
             },
         ],
         capital: vec![ContractCapital {
-            party: "Sobir Qodirov".into(),
+            party: "Otabek Qodirov".into(),
             kind: "EQUIPMENT".into(),
             description: "Tikuv mashinasi (2 ta)".into(),
             amount: "24 000 000 soʻm".into(),
@@ -60,24 +60,24 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
         duties: answered(&[]),
         duty_rows: vec![ContractDuty {
             title: "Buyurtmalarni tikish".into(),
-            owner: "Nilufar Karimova".into(),
+            owner: "Feruza Karimova".into(),
             breach: "1 kun ichida xabar beradi. Ўзбекча: ў қ ғ ҳ".into(),
         }],
         negligence: Some("Uskunani boshqa ishga berish".into()),
         custody: answered(&[
             ("contract.custody.location", "Alohida karta"),
-            ("contract.custody.keeper", "Nilufar Karimova"),
+            ("contract.custody.keeper", "Feruza Karimova"),
             ("contract.custody.review", "30"),
         ]),
         exit: answered(&[
             ("contract.exit.notice", "30"),
             ("contract.exit.valuation", "Bozor narxi"),
             ("contract.exit.payout", "3 oy ichida"),
-            ("contract.exit.assets", "Uskuna Sobir akaga qaytadi"),
+            ("contract.exit.assets", "Uskuna Otabek akaga qaytadi"),
         ]),
         buyout: Some(ContractBuyout {
-            seller: "Sobir Qodirov".into(),
-            buyer: "Nilufar Karimova".into(),
+            seller: "Otabek Qodirov".into(),
+            buyer: "Feruza Karimova".into(),
             rows: (1..=10)
                 .map(|i| ContractBuyoutRow {
                     period: i.to_string(),
@@ -102,13 +102,13 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
         signers: vec![
             ContractSigner {
                 role: "PARTY".into(),
-                name: "Sobir Qodirov".into(),
+                name: "Otabek Qodirov".into(),
                 signed_at: Some("15.10.2026".into()),
                 svg: Some(svg.clone()),
             },
             ContractSigner {
                 role: "PARTY".into(),
-                name: "Nilufar Karimova".into(),
+                name: "Feruza Karimova".into(),
                 signed_at: None,
                 svg: None,
             },

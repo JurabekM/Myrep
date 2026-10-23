@@ -471,7 +471,7 @@ impl App {
         })
     }
 
-    /// Tayyorgarlik darvozasi: qorovul pul (Kelajagim balansi) / oxirgi to'liq davrlardagi
+    /// Tayyorgarlik darvozasi: zaxira pul (Kelajagim balansi) / oxirgi to'liq davrlardagi
     /// o'rtacha zarur xarajat (ZARUR + KERAK), foizli qarz va «Qarzdan chiqish» rejimi.
     fn gate(&self, ctx: &Ctx, scope: &SpaceScope) -> Result<GateDto, AppError> {
         let cur = ctx.currency;

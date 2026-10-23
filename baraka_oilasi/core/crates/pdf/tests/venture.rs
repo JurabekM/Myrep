@@ -72,7 +72,7 @@ fn report(locale: PdfLocale) -> VentureReport {
         ],
         parties: vec![
             ReportParty {
-                name: "Sobir Qodirov".into(),
+                name: "Otabek Qodirov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 share: "3 200 000 soʻm".into(),
                 recovered: "0 soʻm".into(),
@@ -81,7 +81,7 @@ fn report(locale: PdfLocale) -> VentureReport {
                 capital_after: "27 000 000 soʻm".into(),
             },
             ReportParty {
-                name: "Nilufar Karimova".into(),
+                name: "Feruza Karimova".into(),
                 role: "WORKER".into(),
                 share: "4 800 000 soʻm".into(),
                 recovered: "0 soʻm".into(),
@@ -91,16 +91,16 @@ fn report(locale: PdfLocale) -> VentureReport {
             },
         ],
         buyout: Some(ReportBuyout {
-            seller: "Sobir Qodirov".into(),
-            buyer: "Nilufar Karimova".into(),
+            seller: "Otabek Qodirov".into(),
+            buyer: "Feruza Karimova".into(),
             paid: "1, 2".into(),
             unpaid: "—".into(),
             amount: "3 000 000 soʻm".into(),
             progress: "2 / 20".into(),
         }),
         negligence: None,
-        chain_head: "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903".into(),
-        chain_short_code: "BA06-AD59-D6C2-70A5".into(),
+        chain_head: "982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a".into(),
+        chain_short_code: "982A-1D53-4565-F0F8".into(),
     }
 }
 

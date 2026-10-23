@@ -1629,7 +1629,7 @@ class GateDto {
   /// `EMERGENCY_FUND_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`, `INTEREST_DEBT_ACTIVE`.
   final List<String> reasons;
 
-  /// Necha oylik qorovul pul: `1,4`; xarajat tarixi bo'lmasa — `None`.
+  /// Necha oylik zaxira pul: `1,4`; xarajat tarixi bo'lmasa — `None`.
   final String? coverageMonths;
   final int requiredMonths;
   final MoneyDto balance;
@@ -7061,7 +7061,7 @@ class MfIncomeInput {
 class MfIncomeRecordedDto {
   final MfOverviewDto overview;
 
-  /// O'z ulushi taklifi: shu daromaddan (M4: avval qorovul pulga, qolgani jamg'armaga).
+  /// O'z ulushi taklifi: shu daromaddan (M4: avval zaxira pulga, qolgani jamg'armaga).
   final MoneyDto suggestedShare;
   final MoneyDto suggestedReserve;
   final MoneyDto suggestedFund;
@@ -7096,11 +7096,11 @@ class MfMonthDto {
   final MoneyDto fundOut;
   final MoneyDto fundNet;
 
-  /// Qorovul pulga / undan (M4).
+  /// Zaxira pulga / undan (M4).
   final MoneyDto reserveIn;
   final MoneyDto reserveOut;
 
-  /// O'z ulushi: jamg'armaga sof + qorovul pulga qo'yilgan.
+  /// O'z ulushi: jamg'armaga sof + zaxira pulga qo'yilgan.
   final MoneyDto savedNet;
   final MoneyDto pocket;
   final MoneyDto shareTarget;
@@ -7300,7 +7300,7 @@ class MfOverviewDto {
   /// «Qaytdim» belgilangan bo'lsa — sovutish davri (M3).
   final MfCoolingDto? cooling;
 
-  /// Qorovul pul (M4); sozlanmagan makonda `null`.
+  /// Zaxira pul (M4); sozlanmagan makonda `null`.
   final MfReserveDto? reserve;
 
   /// Ish boshlash summasi (M4); belgilanmagan bo'lsa `null`.

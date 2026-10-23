@@ -3,13 +3,13 @@
 //! ```text
 //! Daromad        = maosh + boshqa daromad
 //! Jamg'armaga    = qo'yilgan − olingan                       (sof)
-//! Qorovul pulga  = qo'yilgan − olingan                       (sof, M4 — SPEC 6.4)
+//! Zaxira pulga  = qo'yilgan − olingan                       (sof, M4 — SPEC 6.4)
 //! Qo'ldagi pul   = boshlang'ich + daromad − xarajat − uyga yuborilgan − komissiya − jamg'armaga
-//!                  − qorovul pulga
-//! O'z ulushi     = jamg'armaga sof + qorovul pulga qo'yilgan (qorovul puldan olish ulushni kamaytirmaydi)
+//!                  − zaxira pulga
+//! O'z ulushi     = jamg'armaga sof + zaxira pulga qo'yilgan (zaxira puldan olish ulushni kamaytirmaydi)
 //! Ulush maqsadi  = percent_of(daromad, share_bp);  yetmagani = max(0, maqsad − o'z ulushi)
 //! ```
-//! Jamg'arma va qorovul puldan olish qoldiqdan oshmaydi (yozuvlar tartibida).
+//! Jamg'arma va zaxira puldan olish qoldiqdan oshmaydi (yozuvlar tartibida).
 //!
 //! Vektorlar: `spec/test-vectors/mf_month.json`.
 use baraka_money::{percent_of, Money};
@@ -107,9 +107,9 @@ pub struct MfMonth {
     pub reserve_in: Money,
     pub reserve_out: Money,
     pub reserve_net: Money,
-    /// Oy oxiridagi qorovul pul qoldig'i.
+    /// Oy oxiridagi zaxira pul qoldig'i.
     pub reserve_balance: Money,
-    /// O'z ulushi: jamg'armaga sof + qorovul pulga qo'yilgan.
+    /// O'z ulushi: jamg'armaga sof + zaxira pulga qo'yilgan.
     pub saved_net: Money,
     /// Oy oxiridagi qo'ldagi pul.
     pub pocket: Money,
@@ -123,7 +123,7 @@ pub struct MfMonth {
     pub warnings: Vec<MfWarning>,
 }
 
-/// `opening` — oy boshidagi qo'ldagi pul, `fund_opening` — jamg'arma, `reserve_opening` — qorovul pul
+/// `opening` — oy boshidagi qo'ldagi pul, `fund_opening` — jamg'arma, `reserve_opening` — zaxira pul
 /// qoldig'i.
 pub fn month_report(
     opening: Money,
@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn rustam_share_met() {
+    fn bobur_share_met() {
         let moves = [
             mv(MfKind::Salary, 2_600_000),
             mv(MfKind::Expense, 810_000),

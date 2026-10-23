@@ -1,4 +1,4 @@
-// Musofir (M1, musofir/SPEC 2–4): Rustam aka, Koreya. Onboarding'da Musofir → sozlash (KRW, o'z ulushi
+// Musofir (M1, musofir/SPEC 2–4): Bobur aka, Koreya. Onboarding'da Musofir → sozlash (KRW, o'z ulushi
 // 20 %, maqsad 120 mln so'm, qaytish 13 oydan keyin) → o'tgan 3 oy (maosh 2 600 000 von, jamg'armaga
 // 520/500/540 ming, qolgani uyga) → shu oy: maosh (Ctrl+N) va ulush taklifi, xarajatlar, uyga 1 200 000 +
 // komissiya → kurssiz so'mdagi qiymat yo'q → kurs 9,1: 54,6 mln, qaytishda 3 884 000 kam → ulush qo'yildi:
@@ -63,7 +63,7 @@ describe("Musofir: o'z ulushi va qaytish jamg'armasi", () => {
   });
 
   it("M1. onboarding: Musofir makoni va sozlash ustasi", async () => {
-    await onboard(app, { household: "Rustam akaning oilasi", name: "Rustam", spaces: ["Musofir"], rhythm: "Oylik maosh" });
+    await onboard(app, { household: "Bobur akaning oilasi", name: "Bobur", spaces: ["Musofir"], rhythm: "Oylik maosh" });
     await app.click("Musofir", await app.region("Makonlar"));
     const form = await app.region("Musofir makonini sozlash", "form");
     const nav = await (await app.b.$("nav")).getText();

@@ -35,14 +35,14 @@ function wrap(ui: ReactNode) {
 
 const devices = [
   { id: "dev-desktop", name: "Kompyuter", platform: "linux", pairedAt: "2026-10-15", isThis: true, lastImportAt: null, lastExportAt: null, role: null, spaceId: null, revoked: false },
-  { id: "dev-phone", name: "Nilufarning telefoni", platform: "android", pairedAt: "2026-12-02", isThis: false, lastImportAt: "2026-12-02T09:10:00.000Z", lastExportAt: null, role: null, spaceId: null, revoked: false },
+  { id: "dev-phone", name: "Feruzaning telefoni", platform: "android", pairedAt: "2026-12-02", isThis: false, lastImportAt: "2026-12-02T09:10:00.000Z", lastExportAt: null, role: null, spaceId: null, revoked: false },
 ];
 
 const shop = { id: "dev-shop", name: "Do'kon telefoni", platform: "android", pairedAt: "2026-12-02", isThis: false, lastImportAt: null, lastExportAt: null, role: "SELLER", spaceId: "kk", revoked: false };
 
 const preview = (over: Record<string, unknown> = {}) => ({
   sourceDeviceId: "dev-phone",
-  sourceDeviceName: "Nilufarning telefoni",
+  sourceDeviceName: "Feruzaning telefoni",
   mode: "INCREMENTAL",
   exportedAt: "2026-12-02T09:00:00.000Z",
   rows: 3,
@@ -85,7 +85,7 @@ describe("SyncScreen", () => {
     fns.exportBaraka.mockResolvedValue(ok(4));
     const user = userEvent.setup();
     wrap(<SyncScreen />);
-    expect(await screen.findByText("Nilufarning telefoni")).toBeInTheDocument();
+    expect(await screen.findByText("Feruzaning telefoni")).toBeInTheDocument();
     const form = screen.getByRole("form", { name: "Eksport" });
     await user.click(within(form).getByLabelText(/Qurilma uchun/));
     const pw = within(form).getByLabelText("Fayl paroli");

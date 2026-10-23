@@ -186,7 +186,7 @@ impl PdfEngine {
         .map(Timestamp::new_utc);
         let options = PdfOptions {
             ident: Smart::Custom(ident.to_string()),
-            creator: Smart::Custom(Some("Baraka".to_string())),
+            creator: Smart::Custom(Some("Baraka Dastur".to_string())),
             timestamp,
             ..PdfOptions::default()
         };

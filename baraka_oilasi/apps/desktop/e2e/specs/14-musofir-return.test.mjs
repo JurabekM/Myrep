@@ -1,4 +1,4 @@
-// Yo'l qarzi, «Qaytdim» va sovutish davri (M3, musofir/SPEC 6). Rustam aka: onboarding'da «qarzim bor» →
+// Yo'l qarzi, «Qaytdim» va sovutish davri (M3, musofir/SPEC 6). Bobur aka: onboarding'da «qarzim bor» →
 // Uy makonida tog'asidan yo'l qarzi 15 000 000 → Musofir: KRW, shartlar 50/30/20 → uyga 1 200 000 von
 // (uyda 10 900 000) → «Ikki qirg'oq»: qabul, «Qarz to'lovi» maqsadidan tog'aga 3 270 000 → Musofir bosh
 // sahifasi: yo'l qarzi belgilanadi, 6 oyda yopish uchun oyiga 1 955 000 → «Qaytdim» (9 kun oldin,
@@ -49,7 +49,7 @@ describe("Musofir: yo'l qarzi va sovutish davri", () => {
   });
 
   it("R1. Uy makonida yo'l qarzi: tog'adan 15 000 000", async () => {
-    await onboard(app, { household: "Rustam akaning oilasi", name: "Rustam", members: [{ name: "Gulnora" }], spaces: ["Musofir"], rhythm: "Oylik maosh", debts: true });
+    await onboard(app, { household: "Bobur akaning oilasi", name: "Bobur", members: [{ name: "Mohira" }], spaces: ["Musofir"], rhythm: "Oylik maosh", debts: true });
     await app.click("Qarz qoʻshish");
     const form = await app.region("Qarz qoʻshish", "form");
     await app.type("Kreditor (ism yoki bank)", "Togʻam", form);

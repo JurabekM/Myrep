@@ -5,7 +5,7 @@
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {
-      "id": "buy-001-nilufar",
+      "id": "buy-001-feruza",
       "input": {
         "currency": "UZS",
         "stake": "3000000000",

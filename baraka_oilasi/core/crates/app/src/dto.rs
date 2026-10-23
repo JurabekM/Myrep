@@ -1169,7 +1169,7 @@ pub struct GateDto {
     pub open: bool,
     /// `EMERGENCY_FUND_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`, `INTEREST_DEBT_ACTIVE`.
     pub reasons: Vec<String>,
-    /// Necha oylik qorovul pul: `1,4`; xarajat tarixi bo'lmasa — `None`.
+    /// Necha oylik zaxira pul: `1,4`; xarajat tarixi bo'lmasa — `None`.
     pub coverage_months: Option<String>,
     pub required_months: u32,
     pub balance: MoneyDto,
@@ -3555,10 +3555,10 @@ pub struct MfMonthDto {
     pub fund_in: MoneyDto,
     pub fund_out: MoneyDto,
     pub fund_net: MoneyDto,
-    /// Qorovul pulga / undan (M4).
+    /// Zaxira pulga / undan (M4).
     pub reserve_in: MoneyDto,
     pub reserve_out: MoneyDto,
-    /// O'z ulushi: jamg'armaga sof + qorovul pulga qo'yilgan.
+    /// O'z ulushi: jamg'armaga sof + zaxira pulga qo'yilgan.
     pub saved_net: MoneyDto,
     pub pocket: MoneyDto,
     pub share_target: MoneyDto,
@@ -3612,7 +3612,7 @@ pub struct MfOverviewDto {
     pub entries: Vec<MfEntryDto>,
     /// «Qaytdim» belgilangan bo'lsa — sovutish davri (M3).
     pub cooling: Option<MfCoolingDto>,
-    /// Qorovul pul (M4); sozlanmagan makonda `null`.
+    /// Zaxira pul (M4); sozlanmagan makonda `null`.
     pub reserve: Option<MfReserveDto>,
     /// Ish boshlash summasi (M4); belgilanmagan bo'lsa `null`.
     pub startup: Option<MfStartupDto>,
@@ -3623,7 +3623,7 @@ pub struct MfOverviewDto {
 #[serde(rename_all = "camelCase")]
 pub struct MfIncomeRecordedDto {
     pub overview: MfOverviewDto,
-    /// O'z ulushi taklifi: shu daromaddan (M4: avval qorovul pulga, qolgani jamg'armaga).
+    /// O'z ulushi taklifi: shu daromaddan (M4: avval zaxira pulga, qolgani jamg'armaga).
     pub suggested_share: MoneyDto,
     pub suggested_reserve: MoneyDto,
     pub suggested_fund: MoneyDto,
@@ -3970,7 +3970,7 @@ pub struct MfDecisionDto {
     pub outcome: Option<MfOutcomeDto>,
 }
 
-// ---- M4: qorovul pul, ish boshlash summasi, qaror natijasi (docs/musofir/SPEC.md 6.4, 6.6) ----
+// ---- M4: zaxira pul, ish boshlash summasi, qaror natijasi (docs/musofir/SPEC.md 6.4, 6.6) ----
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]

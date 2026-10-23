@@ -165,7 +165,7 @@ class BorrowCheckFields extends StatelessWidget {
   }
 }
 
-/// «To'xta va o'yla» natijasi: Sobir hoji ogohlantirishlari, yuk va haqiqiy narx.
+/// «To'xta va o'yla» natijasi: maslahatchi ogohlantirishlari, yuk va haqiqiy narx.
 class FrictionResult extends StatelessWidget {
   const FrictionResult(this.preview, {super.key});
 

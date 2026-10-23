@@ -5,7 +5,7 @@
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {
-      "id": "payoff-001-anvar-base",
+      "id": "payoff-001-bekzod-base",
       "input": {
         "currency": "UZS",
         "debt": {
@@ -147,7 +147,7 @@
       }
     },
     {
-      "id": "payoff-002-anvar-1.6m",
+      "id": "payoff-002-bekzod-1.6m",
       "input": {
         "currency": "UZS",
         "debt": {
@@ -249,7 +249,7 @@
       }
     },
     {
-      "id": "payoff-003-anvar-2.4m-fee",
+      "id": "payoff-003-bekzod-2.4m-fee",
       "input": {
         "currency": "UZS",
         "debt": {
@@ -343,7 +343,7 @@
       }
     },
     {
-      "id": "payoff-004-anvar-replay",
+      "id": "payoff-004-bekzod-replay",
       "input": {
         "currency": "UZS",
         "debt": {

@@ -307,7 +307,7 @@ mod tests {
         BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Nilufarlar".into(),
+            household_name: "Feruzalar".into(),
             device_name: "Noutbuk".into(),
             platform: "windows".into(),
             locale: "uz".into(),
@@ -315,7 +315,7 @@ mod tests {
             month_start_day: 1,
             spaces: vec!["UY".into()],
             members: vec![NewMemberInput {
-                display_name: "Nilufar".into(),
+                display_name: "Feruza".into(),
                 role: "ADULT".into(),
             }],
         }
@@ -363,7 +363,7 @@ mod tests {
             "WRONG_SECRET"
         );
         let h = s.unlock(&platform, "112233").unwrap();
-        assert_eq!(h.name, "Nilufarlar");
+        assert_eq!(h.name, "Feruzalar");
 
         // PIN unutildi → tiklash kodi.
         s.lock().unwrap();

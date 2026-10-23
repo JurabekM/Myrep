@@ -25,8 +25,8 @@ const detail = {
   status: "SIGNED",
   currency: "UZS",
   parties: [
-    { id: "P1", fullName: "Sobir Qodirov", role: "CAPITAL_PROVIDER", profitShareBp: 5000, profitShare: "50%", isMe: true, capitalItems: [{ kind: "MONEY", description: "naqd", amount: money("30 000 000 soʻm", "3000000000") }], capital: money("30 000 000 soʻm", "3000000000"), lossShare: "100%" },
-    { id: "P2", fullName: "Nilufar Karimova", role: "WORKER", profitShareBp: 5000, profitShare: "50%", isMe: false, capitalItems: [], capital: money("0 soʻm", "0"), lossShare: "0%" },
+    { id: "P1", fullName: "Otabek Qodirov", role: "CAPITAL_PROVIDER", profitShareBp: 5000, profitShare: "50%", isMe: true, capitalItems: [{ kind: "MONEY", description: "naqd", amount: money("30 000 000 soʻm", "3000000000") }], capital: money("30 000 000 soʻm", "3000000000"), lossShare: "100%" },
+    { id: "P2", fullName: "Feruza Karimova", role: "WORKER", profitShareBp: 5000, profitShare: "50%", isMe: false, capitalItems: [], capital: money("0 soʻm", "0"), lossShare: "0%" },
   ],
   capitalTotal: money("30 000 000 soʻm", "3000000000"),
   duties: answered([{ id: "d1", title: "Tikish", ownerPartyId: "P2", breachClause: "xabar beradi" }]),
@@ -41,7 +41,7 @@ const detail = {
   version: 1,
   signedVersion: 1,
   amendmentPending: false,
-  signers: [{ key: "party:P1", role: "PARTY", name: "Sobir Qodirov", signedAt: "15.10.2026", svg: null }],
+  signers: [{ key: "party:P1", role: "PARTY", name: "Otabek Qodirov", signedAt: "15.10.2026", svg: null }],
   allSigned: true,
   meProvidesCapital: true,
   meReceivesCapital: false,
@@ -60,7 +60,7 @@ const detail = {
   activateBlocker: "GATE_CLOSED",
   history: [{ no: 1, createdOn: "15.10.2026", signed: 4, required: 4, inForce: true }],
   templateReview: "PENDING",
-  hashCode: "E6AE-98E5-45C7-438C",
+  hashCode: "F8B2-EF8C-8E72-218F",
 };
 
 function mount() {
@@ -95,7 +95,7 @@ describe("PartnershipsScreen", () => {
     await user.click(await screen.findByText("Tikuvchilik ustaxonasi"));
     await user.click(await screen.findByRole("button", { name: "Boshlash" }));
     expect(screen.getByText("Tayyorgarlik darvozasi hali yopiq")).toBeInTheDocument();
-    expect(screen.getByText("• Qorovul pul 6 oylik zarur xarajatga yetmagan.")).toBeInTheDocument();
+    expect(screen.getByText("• Zaxira pul 6 oylik zarur xarajatga yetmagan.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sheriklikni boshlash" })).toBeDisabled();
     expect(screen.queryByText("Bu qarz emas")).not.toBeInTheDocument();
   });

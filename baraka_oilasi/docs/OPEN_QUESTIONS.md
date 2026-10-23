@@ -27,8 +27,8 @@
 - **Taklif:** har 4 haftada 1 ta «dam haftasi» streakni uzmaydi.
 - **To'sadi:** U1. **Holat:** OCHIQ.
 
-### OQ-P5. Qorovul pul maqsadi va qiziqishni yo'qotish xavfi
-- **Masala:** 6 oylik zaxira o'rta segment uchun ~3 yil yig'iladi. Shu davrda 5-qonun qulflangan turadi.
+### OQ-P5. Zaxira pul maqsadi va qiziqishni yo'qotish xavfi
+- **Masala:** 6 oylik zaxira o'rta segment uchun ~3 yil yig'iladi. Shu davrda 5-tamoyil qulflangan turadi.
 - **Taklif:** 3 oylik milestone'da «Hunardan ishga» rejalovchisi (pul kiritmasdan, faqat reja) ochiladi; kapital kiritish 6 oyda.
 - **To'sadi:** U6. **Holat:** OCHIQ.
 
@@ -65,8 +65,8 @@
 - **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.
 
 ### OQ-P12. U3–U7 bajarilmagan; yakuniy E2E qisqartirilgan
-- **Masala:** ish rejasida U3 (kontent dvigateli), U4 (havas chegarasi, vidjet, oila kengashi), U5 (obunalar, konvertlar, «Qutqarilgan pul», CSV), U6 (qorovul pul, narx daftari, darvoza, ribo filtri) va U7 ning UI qismi hali qilinmagan — ishlar U8 dan boshlangan. Shuning uchun D15 / V15 dagi Anvar ssenariysining «havas chegarasi → obuna bekor qilish → qutqarilgan pul → darvoza ochilishi» qismlari E2E'da yo'q (mahsulot egasi qarori, 2026-10-16: U15 mavjud funksiyalar bilan).
-- **Taklif:** keyingi sessiyalarda U3–U7 (har biri a/b/c), keyin `02-anvar` E2E to'liq ssenariyga kengaytiriladi.
+- **Masala:** ish rejasida U3 (kontent dvigateli), U4 (havas chegarasi, vidjet, oila kengashi), U5 (obunalar, konvertlar, «Qutqarilgan pul», CSV), U6 (zaxira pul, narx daftari, darvoza, ribo filtri) va U7 ning UI qismi hali qilinmagan — ishlar U8 dan boshlangan. Shuning uchun D15 / V15 dagi Bekzod ssenariysining «havas chegarasi → obuna bekor qilish → qutqarilgan pul → darvoza ochilishi» qismlari E2E'da yo'q (mahsulot egasi qarori, 2026-10-16: U15 mavjud funksiyalar bilan).
+- **Taklif:** keyingi sessiyalarda U3–U7 (har biri a/b/c), keyin `02-bekzod` E2E to'liq ssenariyga kengaytiriladi.
 - **To'sadi:** 1-reliz. **Holat:** OCHIQ.
 
 ### OQ-P13. Bosh sahifa eslatmalari: chegaralar
@@ -134,9 +134,9 @@
 - **Qaror (mahsulot egasi, M2):** oila **ko'rmaydi** — musofirning maoshi, chet eldagi xarajatlari, qaytish jamg'armasi, sozlamalari va kurslari uydagi qurilmaga yuborilmaydi; faqat uyga yuborilgan pul (komissiyasiz), maqsadlar, qabul va xarajatlar. Texnik yechim — `HOME` roli (ADR-0004).
 - **Holat:** YECHILGAN.
 
-### OQ-MF3. Chet eldagi qorovul pul
-- **Savol:** qorovul pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
-- **Qaror (mahsulot egasi, 2026-10-19):** qaytish jamg'armasidan **alohida**; maqsad — chet eldagi o'rtacha oylik xarajat × 1 oy (sozlamada 1–3 oy); o'z ulushi avval qorovul pulga, keyin jamg'armaga. Amalga oshirildi — M4 (musofir/SPEC 6.4).
+### OQ-MF3. Chet eldagi zaxira pul
+- **Savol:** zaxira pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
+- **Qaror (mahsulot egasi, 2026-10-19):** qaytish jamg'armasidan **alohida**; maqsad — chet eldagi o'rtacha oylik xarajat × 1 oy (sozlamada 1–3 oy); o'z ulushi avval zaxira pulga, keyin jamg'armaga. Amalga oshirildi — M4 (musofir/SPEC 6.4).
 - **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF4. Kurs manbai va eskirishi
@@ -170,26 +170,26 @@
 - **Qaror (mahsulot egasi, 2026-10-19):** tasdiqlandi — 90 kun, 10 % (sariq) va 30 % (qizil), yo'l qarzi uchun 6 oy; summa kiritilmasa — sariq.
 - **To'sadi:** — . **Holat:** YECHILGAN.
 
-### OQ-MF9. 7-qonun qissasi: litsenziya, to'liq matn va personajlar
-- **Masala:** mahsulot egasi 7-qonun qissasini yubordi (`docs/musofir/qissalar/07-sovutish-davri.md`). Matn — og'zaki nutq transkripti, **oxiri kesilgan**; manba — «Asaxiy Invest» × Abdukarim Mirzayev (`BARAKA_OILASI.md` 18).
-- **Savollar:** (1) matnning davomi; (2) kontent litsenziyasi (kamida niyat shartnomasi) bormi; (3) ilovaga tahrirlangan (to'ldiruvchi so'zlarsiz) matn kiradimi yoki aynan transkript; (4) qissada Rustam — Nilufarning akasi, payvandchi; SPEC 1.2 dagi xotini Gulnora va oilasi Samarqandda — saqlanadimi?
-- **To'sadi:** qissani ilovada ko'rsatish (U3 kontent dvigateli ham kerak, OQ-P6). **Holat:** OCHIQ.
+### OQ-MF9. 7-tamoyil uchun ta'limiy matn
+- **Masala:** mahsulot egasi 7-mavzu bo'yicha boshqa muallifning og'zaki nutq transkriptini yuborgan edi (repoda saqlangan edi).
+- **Qaror (mahsulot egasi, 2026-10-23):** mualliflar bilan aloqa bo'lmadi — transkript repodan olib tashlandi; boshqa mualliflarning qissa matnlari va personajlari ishlatilmaydi. Ta'limiy matnlarni o'zimiz yozamiz (`BARAKA_OILASI.md` 2.1).
+- **Holat:** YOPILDI.
 
 ### OQ-MF10. «Besh xavf belgisi» va taklif detektori
-- **Masala:** qissada Sobir hoji 5 belgini aytadi: kafolatlangan katta foyda, shoshirish, daromad yangi odamdan, ishning o'zi yo'q (ombor, mol, hujjat, ruxsat), **kirish oson — chiqish qiyin** — va qoida: «bittasini ko'rsangiz hushyor torting, ikkitasini ko'rsangiz qoching». Detektorda (U12 2E.5 + M3) dastlabki to'rttasi bor; **5-belgi**, **davlat ruxsati (litsenziya)** va **«o'z ko'zim bilan tekshirishga ruxsat berishdimi»** savollari yo'q; natija qoidasi — har savolning o'z darajasi (sanash yo'q).
+- **Masala:** firibgarlikning keng ma'lum 5 belgisi: kafolatlangan katta foyda, shoshirish, daromad yangi odamdan, ishning o'zi yo'q (ombor, mol, hujjat, ruxsat), **kirish oson — chiqish qiyin** — va qoida: bitta belgi — ehtiyot bo'lishga, ikkitasi — voz kechishga sabab. Detektorda (U12 2E.5 + M3) dastlabki to'rttasi bor; **5-belgi**, **davlat ruxsati (litsenziya)** va **«o'z ko'zim bilan tekshirishga ruxsat berishdimi»** savollari yo'q; natija qoidasi — har savolning o'z darajasi (sanash yo'q).
 - **Taklif:** uch savol qo'shish (`exitHard`, `licensed`, `inspectionAllowed`) va «ikki va undan ortiq belgi — qizil» qoidasi; ixtiyoriy: va'da qilingan oylik foydaning yillik hisobi («35 % oyiga — yiliga 5,2 barobar», `round_half_up`, vektor bilan). Diniy izohlar (g'arar, qimor) — ulamo ko'rigidan keyin.
 - **To'sadi:** — (Uy U12 detektori bilan umumiy jadval — ikkala makonga ta'sir qiladi).
 - **Qaror (mahsulot egasi, 2026-10-20):** taklif tasdiqlandi (uch savol, `TWO_SIGNS`, va'da hisobi) — M5, SPEC 6.8. Diniy izohlar (g'arar, qimor) — ulamo ko'rigidan keyin.
 - **Holat:** YECHILGAN.
 
 ### OQ-MF11. «Qal'a devori»: qaytgandan keyin 6 oylik ro'zg'or
-- **Masala:** qissada — olib kelingan puldan avval oilaning 6 oylik ro'zg'ori ajratiladi va u savdoga ham, sheriklikka ham qo'shilmaydi. Ilovada qaytgandan keyin bunday ajratish va katta qaror tekshiruvida uni hisobga olish yo'q.
+- **Masala:** g'oya — olib kelingan puldan avval oilaning 6 oylik ro'zg'ori ajratiladi va u savdoga ham, sheriklikka ham qo'shilmaydi. Ilovada qaytgandan keyin bunday ajratish va katta qaror tekshiruvida uni hisobga olish yo'q.
 - **Taklif:** «Qaytdim»da Uy makonining oxirgi oylardagi o'rtacha xarajati × 6 — «qal'a devori» summasi; katta qaror shu devorga tegsa (olib kelingan − devor dan oshsa) — qizil bayroq. Yangi pul funksiyasi — avval vektor.
 - **Qaror (mahsulot egasi, 2026-10-20):** taklif tasdiqlandi — devor 6 oy, `FORTRESS_WALL` qizil, davrdan tashqarida ham (M5, SPEC 6.8).
 - **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF12. Olib kelingan summa — chet el valyutasida
-- **Masala:** Rustam «18 000 dollar» olib keldi; «Qaytdim»da summa hozir faqat uy valyutasida kiritiladi, katta qaror ham uy valyutasida.
+- **Masala:** migrant ko'pincha pulni dollarda olib keladi (masalan, 18 000 USD); «Qaytdim»da summa hozir faqat uy valyutasida kiritiladi, katta qaror ham uy valyutasida.
 - **Taklif:** summa istalgan valyutada (USD, ish valyutasi), foiz hisobi uchun kurs bilan uy valyutasiga (kurssiz — foiz yo'q, `COOLING_PERIOD` qoidasi).
 - **Qaror (mahsulot egasi, 2026-10-20):** tasdiqlandi — summa valyutada va kurs bilan (M5, SPEC 6.8).
 - **To'sadi:** — . **Holat:** YECHILGAN.
@@ -202,7 +202,7 @@
 - **To'sadi:** U4, U10. **Holat:** OCHIQ.
 
 ### OQ-M2. Shaxsiy jamg'arma
-- **Masala:** Nilufarning «qora kun» uchun yashirin zaxirasi. Oilaviy shaffoflik moliyaviy zo'ravonlik sharoitida ayolning xavfsizlik zaxirasini yo'q qilishi mumkin.
+- **Masala:** Feruzaning «qora kun» uchun yashirin zaxirasi. Oilaviy shaffoflik moliyaviy zo'ravonlik sharoitida ayolning xavfsizlik zaxirasini yo'q qilishi mumkin.
 - **Taklif:** a'zoning shaxsiy PIN bilan himoyalangan, boshqalarga ko'rinmaydigan jamg'armasi (`visibility = PRIVATE`). Sxemada maydon hozirdan bor.
 - **To'sadi:** U1 (UI), U4. **Holat:** OCHIQ.
 
@@ -233,7 +233,7 @@
 - **Savol:** foizli qarzi bor, lekin chiqish rejasi bor foydalanuvchi sheriklikka kapital bera oladimi? (`DEBT_RECOVERY` dagi 20% qarzga ketishi kerak.)
 - **Taklif:** foizli qarz bor ekan, kapital kiritish yopiq; foizsiz qarz va reja bo'lsa — ochiq.
 - **To'sadi:** U6. **Holat:** OCHIQ.
-- **U11 da:** darvoza SPEC dagi standart siyosat bilan ishlaydi (`AllowWithPlan`: foizli qarz bo'lsa ham, «Qarzdan chiqish» rejimi yoqilgan bo'lsa ochiq). Qorovul pul hozircha «Kelajagim» balansi (U6 da QOROVUL alohida bo'ladi), o'rtacha zarur xarajat — oxirgi 3 to'liq davrdagi ZARUR + KERAK (xarajat yozilmagan davrlar hisobga olinmaydi).
+- **U11 da:** darvoza SPEC dagi standart siyosat bilan ishlaydi (`AllowWithPlan`: foizli qarz bo'lsa ham, «Qarzdan chiqish» rejimi yoqilgan bo'lsa ochiq). Zaxira pul hozircha «Kelajagim» balansi (U6 da QOROVUL alohida bo'ladi), o'rtacha zarur xarajat — oxirgi 3 to'liq davrdagi ZARUR + KERAK (xarajat yozilmagan davrlar hisobga olinmaydi).
 
 ### OQ-D5. Muzoraa, nasiya narxi, savdo mollari zakoti
 - **Savollar:** (1) nasiyada narxni oldindan qotirib sotish (bay' muajjal) va kechikish uchun ustama taqiqi; (2) savdo mollari zakotini bozor narxida baholash; (3) xodim bilan foyda ulushi asosidagi kelishuv; (4) konsignatsiya.

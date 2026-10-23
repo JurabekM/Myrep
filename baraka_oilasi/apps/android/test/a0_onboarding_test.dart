@@ -21,8 +21,8 @@ void main() {
 
     await tapText(tester, 'Davom etish');
     expect(find.text('Oilangiz'), findsOneWidget);
-    await enter(tester, 'Oila nomi', 'Anvarning oilasi');
-    await enter(tester, 'Ismingiz', 'Anvar');
+    await enter(tester, 'Oila nomi', 'Bekzodning oilasi');
+    await enter(tester, 'Ismingiz', 'Bekzod');
     await tapText(tester, 'Davom etish');
     await tapText(tester, 'Oylik maosh');
     await tapText(tester, 'Davom etish');

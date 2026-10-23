@@ -113,7 +113,7 @@ class Device {
   BarakaCore get core => services.core;
 
   /// Onboarding'siz tayyor xonadon (ochiq sessiya): `spaces` — `UY`, `KASBKOR`, `MUSOFIR`.
-  Future<SetupResult> bootstrap({List<String> spaces = const ['UY'], String name = 'Anvar'}) async {
+  Future<SetupResult> bootstrap({List<String> spaces = const ['UY'], String name = 'Bekzod'}) async {
     final r = await container
         .read(sessionActionsProvider)
         .setup(

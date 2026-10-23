@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<!-- «Baraka Dastur» logotipi: krem «B» va sarg'ish barg (baraka — o'sish). Ikonkalar: make_icons.py; Android vektor: res/drawable/ic_launcher_foreground.xml. -->
+  <rect width="1024" height="1024" rx="228" fill="#262624"/>
+  <g transform="translate(-26 -14)">
+    <g fill="none" stroke="#FAF9F5" stroke-width="92" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M360 330 V760 H585 A115 115 0 0 0 585 530 H360"/>
+      <path d="M360 330 H555 A100 100 0 0 1 555 530"/>
+    </g>
+    <path d="M640 330 C650 230 720 170 830 160 C826 270 760 330 640 330 Z" fill="#D97757"/>
+    <path d="M650 320 C700 270 750 220 800 190" fill="none" stroke="#262624" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

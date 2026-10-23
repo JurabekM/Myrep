@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn rustam_behind_until_december() {
+    fn bobur_behind_until_december() {
         let k = |m| Money::new(m, Currency::Krw);
         let rate = FxRate {
             from: Currency::Krw,

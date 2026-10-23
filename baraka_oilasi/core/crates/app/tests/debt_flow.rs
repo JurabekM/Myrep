@@ -23,7 +23,7 @@ fn app_at(at: &str) -> (App, String) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Karim akaning oilasi".into(),
+            household_name: "Ravshan akaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
@@ -294,7 +294,7 @@ fn receipt(direction: &str) -> IssueLoanReceiptInput {
                 line("15.11.2026", "1 200 000"),
                 line("15.12.2026", "800 000"),
             ],
-            witnesses: vec!["Sobir hoji".into()],
+            witnesses: vec!["Hasan Yusupov".into()],
             note: None,
         },
         is_new: true,

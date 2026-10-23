@@ -1,6 +1,6 @@
 [package]
 name = "baraka-agreements"
-description = "Kelishuv dvigateli: «Chorsucha shartnomaning 9 savoli», turlar va validatsiyalar"
+description = "Kelishuv dvigateli: «9 savollik kelishuv», turlar va validatsiyalar"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-//! Uy makoni use-case'lari: Anvar ssenariysining birinchi qismi (daromad → ulush → audit → jurnal).
+//! Uy makoni use-case'lari: Bekzod ssenariysining birinchi qismi (daromad → ulush → audit → jurnal).
 
 use std::sync::Arc;
 
@@ -30,8 +30,8 @@ fn bootstrap(app: &App) -> (String, String) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Anvarlar oilasi".into(),
-            device_name: "Anvarning telefoni".into(),
+            household_name: "Bekzodlar oilasi".into(),
+            device_name: "Bekzodning telefoni".into(),
             platform: "android".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
@@ -39,11 +39,11 @@ fn bootstrap(app: &App) -> (String, String) {
             spaces: vec!["UY".into(), "KASBKOR".into()],
             members: vec![
                 NewMemberInput {
-                    display_name: "Anvar".into(),
+                    display_name: "Bekzod".into(),
                     role: "ADULT".into(),
                 },
                 NewMemberInput {
-                    display_name: "Gulnora".into(),
+                    display_name: "Mohira".into(),
                     role: "ADULT".into(),
                 },
             ],
@@ -248,7 +248,7 @@ fn journal_append_verify_and_keeper_rule() {
     let app = app_at(clock("2026-10-15T09:00:00Z"));
     let (uy, _) = bootstrap(&app);
     let agr = app
-        .create_agreement(&uy, "PARTNERSHIP", "Dilshod bilan yetkazib berish")
+        .create_agreement(&uy, "PARTNERSHIP", "Sherzod bilan yetkazib berish")
         .unwrap();
     let e = |kind: &str, amount: Option<&str>, note: &str| NewJournalEntryInput {
         kind: kind.into(),
@@ -264,7 +264,7 @@ fn journal_append_verify_and_keeper_rule() {
         .append_journal(
             &uy,
             &agr.id,
-            e("CONTRIBUTION", Some("3 000 000"), "Anvar hissasi"),
+            e("CONTRIBUTION", Some("3 000 000"), "Bekzod hissasi"),
         )
         .unwrap();
     assert_eq!(first.seq, 1);
@@ -404,7 +404,7 @@ fn loan_receipt_rules_and_pdf() {
         issued_on: None,
         place: "Toshkent".into(),
         schedule: vec![],
-        witnesses: vec!["Sobir hoji".into(), " ".into()],
+        witnesses: vec!["Hasan Yusupov".into(), " ".into()],
         note: None,
     };
     assert_eq!(

@@ -140,7 +140,7 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
   const mfEntry = useUi((x) => x.mfEntry);
   const openMfEntry = useUi((x) => x.openMfEntry);
   const closeMfEntry = useUi((x) => x.closeMfEntry);
-  // Maoshdan keyingi taklif (M4): ulush avval qorovul pulga, qolgani jamg'armaga — summalar yadrodan.
+  // Maoshdan keyingi taklif (M4): ulush avval zaxira pulga, qolgani jamg'armaga — summalar yadrodan.
   const [offer, setOffer] = useState<{ share: MoneyDto; reserve: MoneyDto | null; fund: MoneyDto | null } | null>(null);
   const [fundAmount, setFundAmount] = useState<string | undefined>(undefined);
   const [editing, setEditing] = useState(false);

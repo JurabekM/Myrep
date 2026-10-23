@@ -23,7 +23,7 @@ fn app_at(at: &str) -> (App, String) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Anvarlar".into(),
+            household_name: "Bekzodlar".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
@@ -31,7 +31,7 @@ fn app_at(at: &str) -> (App, String) {
             month_start_day: 1,
             spaces: vec!["UY".into()],
             members: vec![NewMemberInput {
-                display_name: "Anvar".into(),
+                display_name: "Bekzod".into(),
                 role: "ADULT".into(),
             }],
         })

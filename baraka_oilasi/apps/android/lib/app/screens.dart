@@ -39,7 +39,7 @@ import '../features/venture/offer_check.dart';
 import 'i18n.dart';
 import 'shell_state.dart';
 
-/// Bo'lim: menyu yorlig'i, Sobir hoji maslahati va ekran quruvchisi.
+/// Bo'lim: menyu yorlig'i, moliyaviy maslahatchi maslahati va ekran quruvchisi.
 class ScreenDef {
   const ScreenDef(this.id, this.label, this.build, {this.needsSpace = true});
 

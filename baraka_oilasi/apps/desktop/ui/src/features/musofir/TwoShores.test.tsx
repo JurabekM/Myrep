@@ -68,7 +68,7 @@ const view = (over: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   [mfTwoShores, mfConfirmReceipt, mfRecordSpend, household, categories, debtsOverview, mfPayDebt].forEach((f) => f.mockReset());
-  household.mockResolvedValue(ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, spaces: [], members: [{ id: "m2", displayName: "Gulnora", role: "ADULT" }] }));
+  household.mockResolvedValue(ok({ id: "h", name: "Oila", locale: "uz", baseCurrency: "UZS", monthStartDay: 1, spaces: [], members: [{ id: "m2", displayName: "Mohira", role: "ADULT" }] }));
   categories.mockResolvedValue(ok([{ id: "c1", nameKey: "category.food", customName: "Bozor", defaultNecessity: null, isSystem: false }]));
 });
 
@@ -84,7 +84,7 @@ describe("Ikki qirg'oq — uy tomoni", () => {
     expect(r).toHaveTextContent("Uy xarajati 50 % · Qarz toʻlovi 30 % · Qurilish va taʼmir 20 %");
     const form = within(r).getByRole("form", { name: "Qabul qilish" });
     expect(within(form).getByLabelText("Olingan summa (soʻmda)")).toHaveValue("10 900 000");
-    await user.selectOptions(await within(form).findByLabelText("Kim oldi"), await within(form).findByRole("option", { name: "Gulnora" }));
+    await user.selectOptions(await within(form).findByLabelText("Kim oldi"), await within(form).findByRole("option", { name: "Mohira" }));
     expect(await axeViolations(container)).toEqual([]);
     await user.click(within(form).getByRole("button", { name: "Qabul qildim" }));
     expect(mfConfirmReceipt).toHaveBeenCalledWith("mf", "mv1", { received: "10 900 000", channel: "CARD", memberId: "m2", receivedOn: null, note: null });
@@ -93,7 +93,7 @@ describe("Ikki qirg'oq — uy tomoni", () => {
   it("maqsad bo'yicha xarajat va ortiq sarf — ayblovsiz savol", async () => {
     const received = {
       ...pending,
-      receipt: { received: u("10 900 000 soʻm"), receivedOn: "2026-10-13", memberId: "m2", memberName: "Gulnora", note: null },
+      receipt: { received: u("10 900 000 soʻm"), receivedOn: "2026-10-13", memberId: "m2", memberName: "Mohira", note: null },
       allocation: [
         { purpose: "HOUSEHOLD", amount: u("5 450 000 soʻm") },
         { purpose: "DEBT", amount: u("3 270 000 soʻm") },

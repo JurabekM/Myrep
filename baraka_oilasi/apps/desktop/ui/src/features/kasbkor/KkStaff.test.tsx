@@ -103,7 +103,7 @@ const sardor = {
 const draft = {
   ...sardor,
   id: "e2",
-  name: "Dilshod",
+  name: "Sherzod",
   agreement: { ...signed, status: "DRAFT", signedVersions: 0, signedOn: null, effectiveFrom: null, unsignedChanges: true, missing: ["duties"], canSign: false },
   terms: { ...sardor.terms, duties: null, role: "Shogird" },
   balance: zero,
@@ -132,7 +132,7 @@ describe("Kasb-kor: xodimlar (K6)", () => {
     const card = screen.getByTestId("kk-employee-Sardor");
     expect(within(card).getByTestId("kk-employee-due")).toHaveTextContent("3 000 000 soʻm");
     expect(within(card).getByTestId("kk-employee-status")).toHaveTextContent("Imzolangan: 1-versiya, 01.11.2026");
-    const dil = screen.getByTestId("kk-employee-Dilshod");
+    const dil = screen.getByTestId("kk-employee-Sherzod");
     expect(within(dil).getByRole("note")).toHaveTextContent("Imzolashdan oldin toʻldiring: vazifalar");
     expect(within(dil).queryByRole("button", { name: "Avans" })).toBeNull();
     expect(await axeViolations(container)).toEqual([]);

@@ -594,9 +594,9 @@ pub fn decisions(c: &Connection, s: &SpaceScope) -> Result<Vec<MfDecisionRow>, S
     Ok(rows.collect::<Result<_, _>>()?)
 }
 
-// ---- M4: qorovul pul, ish boshlash summasi, qaror natijasi ----
+// ---- M4: zaxira pul, ish boshlash summasi, qaror natijasi ----
 
-/// Qorovul pul harakati — `MfMoveRow` shaklida (komissiya 0, uyda olingan yo'q).
+/// Zaxira pul harakati — `MfMoveRow` shaklida (komissiya 0, uyda olingan yo'q).
 pub fn insert_reserve_move(
     tx: &Transaction<'_>,
     s: &SpaceScope,
@@ -613,7 +613,7 @@ pub fn insert_reserve_move(
     Ok(())
 }
 
-/// `[from, to)` oralig'idagi qorovul pul harakatlari.
+/// `[from, to)` oralig'idagi zaxira pul harakatlari.
 pub fn reserve_moves_between(
     c: &Connection,
     s: &SpaceScope,

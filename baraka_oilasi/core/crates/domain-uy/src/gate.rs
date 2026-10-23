@@ -13,7 +13,7 @@ pub enum InterestDebtPolicy {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GatePolicy {
-    /// Talab qilinadigan qorovul pul, yuzdan bir oyda (600 = 6 oy).
+    /// Talab qilinadigan zaxira pul, yuzdan bir oyda (600 = 6 oy).
     pub required_centi_months: i64,
     pub interest_debt: InterestDebtPolicy,
 }

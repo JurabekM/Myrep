@@ -1,4 +1,4 @@
-//! 3-qonun: qorovul pul maqsadi va qamrov (uy/SPEC 2C.3).
+//! 3-qonun: zaxira pul maqsadi va qamrov (uy/SPEC 2C.3).
 use baraka_money::{round_half_up, Money};
 
 use crate::DomainError;

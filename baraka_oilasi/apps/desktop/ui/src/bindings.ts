@@ -825,7 +825,7 @@ export type GateDto = {
 	open: boolean,
 	/**  `EMERGENCY_FUND_BELOW_TARGET`, `INTEREST_DEBT_WITHOUT_PLAN`, `INTEREST_DEBT_ACTIVE`. */
 	reasons: string[],
-	/**  Necha oylik qorovul pul: `1,4`; xarajat tarixi bo'lmasa — `None`. */
+	/**  Necha oylik zaxira pul: `1,4`; xarajat tarixi bo'lmasa — `None`. */
 	coverageMonths: string | null,
 	requiredMonths: number,
 	balance: MoneyDto,
@@ -2307,7 +2307,7 @@ export type MfIncomeInput = {
 
 export type MfIncomeRecordedDto = {
 	overview: MfOverviewDto,
-	/**  O'z ulushi taklifi: shu daromaddan (M4: avval qorovul pulga, qolgani jamg'armaga). */
+	/**  O'z ulushi taklifi: shu daromaddan (M4: avval zaxira pulga, qolgani jamg'armaga). */
 	suggestedShare: MoneyDto,
 	suggestedReserve: MoneyDto,
 	suggestedFund: MoneyDto,
@@ -2321,10 +2321,10 @@ export type MfMonthDto = {
 	fundIn: MoneyDto,
 	fundOut: MoneyDto,
 	fundNet: MoneyDto,
-	/**  Qorovul pulga / undan (M4). */
+	/**  Zaxira pulga / undan (M4). */
 	reserveIn: MoneyDto,
 	reserveOut: MoneyDto,
-	/**  O'z ulushi: jamg'armaga sof + qorovul pulga qo'yilgan. */
+	/**  O'z ulushi: jamg'armaga sof + zaxira pulga qo'yilgan. */
 	savedNet: MoneyDto,
 	pocket: MoneyDto,
 	shareTarget: MoneyDto,
@@ -2382,7 +2382,7 @@ export type MfOverviewDto = {
 	entries: MfEntryDto[],
 	/**  «Qaytdim» belgilangan bo'lsa — sovutish davri (M3). */
 	cooling: MfCoolingDto | null,
-	/**  Qorovul pul (M4); sozlanmagan makonda `null`. */
+	/**  Zaxira pul (M4); sozlanmagan makonda `null`. */
 	reserve: MfReserveDto | null,
 	/**  Ish boshlash summasi (M4); belgilanmagan bo'lsa `null`. */
 	startup: MfStartupDto | null,

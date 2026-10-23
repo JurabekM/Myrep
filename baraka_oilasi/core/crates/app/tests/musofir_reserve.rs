@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-//! M4 — qorovul pul, ish boshlash summasi va qaror natijasi (docs/musofir/SPEC.md 6.4, 6.6).
+//! M4 — zaxira pul, ish boshlash summasi va qaror natijasi (docs/musofir/SPEC.md 6.4, 6.6).
 
 use std::sync::Arc;
 
@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 fn setup() -> (App, String, String) {
     let app = App::open_in_memory(
         &DbKey::from_bytes([7; 32]),
-        "dev-rustam",
+        "dev-bobur",
         Arc::new(FixedClock::new(
             DateTime::parse_from_rfc3339("2026-10-18T09:00:00+05:00")
                 .unwrap()
@@ -20,15 +20,15 @@ fn setup() -> (App, String, String) {
     .unwrap();
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Rustam akaning oilasi".into(),
-            device_name: "Rustamning telefoni".into(),
+            household_name: "Bobur akaning oilasi".into(),
+            device_name: "Boburning telefoni".into(),
             platform: "android".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
             month_start_day: 1,
             spaces: vec!["UY".into(), "MUSOFIR".into()],
             members: vec![NewMemberInput {
-                display_name: "Rustam".into(),
+                display_name: "Bobur".into(),
                 role: "ADULT".into(),
             }],
             income_rhythm: None,
@@ -119,12 +119,12 @@ fn share_fills_reserve_first_then_fund() {
     expense(&app, &mf, "810 000", "2026-07-26");
     app.mf_record_move(&mf, mv("FUND_IN", "520 000", "2026-07-25", None))
         .unwrap();
-    // Avgust: maqsad 810 000, qorovul bo'sh — ulush hammasi qorovulga.
+    // Avgust: maqsad 810 000, zaxira bo'sh — ulush hammasi zaxiraga.
     assert_eq!(salary(&app, &mf, "2026-08-25"), (520_000, 0));
     app.mf_record_move(&mf, mv("RESERVE_IN", "520 000", "2026-08-25", None))
         .unwrap();
     expense(&app, &mf, "790 000", "2026-08-26");
-    // Sentyabr: maqsad 800 000, qoldiq 520 000 — 280 000 qorovulga, 240 000 jamg'armaga.
+    // Sentyabr: maqsad 800 000, qoldiq 520 000 — 280 000 zaxiraga, 240 000 jamg'armaga.
     assert_eq!(salary(&app, &mf, "2026-09-25"), (280_000, 240_000));
     app.mf_record_move(&mf, mv("RESERVE_IN", "280 000", "2026-09-25", None))
         .unwrap();
@@ -158,7 +158,7 @@ fn share_fills_reserve_first_then_fund() {
     assert_eq!(minor(&m.share_gap), 0);
     assert_eq!(o.reserve.unwrap().status, "FULL");
 
-    // Kasal bo'ldi: qorovul puldan — sabab bilan, qoldiqdan oshmaydi; ulush kamaymaydi.
+    // Kasal bo'ldi: zaxira puldan — sabab bilan, qoldiqdan oshmaydi; ulush kamaymaydi.
     assert_eq!(
         err(app.mf_record_move(&mf, mv("RESERVE_OUT", "300 000", "2026-10-15", None))),
         "REASON_REQUIRED"

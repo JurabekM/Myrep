@@ -18,7 +18,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Anvar hissasi"
+            "note": "Bekzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000002",
@@ -30,7 +30,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Dilshod hissasi"
+            "note": "Sherzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000003",
@@ -46,12 +46,12 @@
           }
         ],
         "storedHashes": [
-          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
-          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
-          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+          "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a",
+          "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707",
+          "982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a"
         ],
         "protocolSeq": 2,
-        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+        "protocolHead": "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707"
       },
       "expected": {
         "status": "INTACT",
@@ -73,7 +73,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Anvar hissasi"
+            "note": "Bekzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000002",
@@ -85,7 +85,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Dilshod hissasi"
+            "note": "Sherzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000003",
@@ -101,12 +101,12 @@
           }
         ],
         "storedHashes": [
-          "ead164e84ae0e8b4a6653bd3b00c6063cd2fe2c529fb557efb5db7ab68456e27",
-          "9410e95bfe8b430dff409452bc6f4a602ee3214a7754a59fa20b5affac278ea3",
-          "f05c139f2584df53d3c590bfa74841610bb9afba5889d683f280216e1d6f6f29"
+          "e505d80f027e2876c97750c4fe2c8d8a664e41c8164114778c6acfa6ceecc1ab",
+          "65f1406f3c50cb15a1cd6d3b797af073770bcead6ffb39c14d782e261f9bae30",
+          "aefaceb90d747a5b53252a3c098b7326cd6e25504b6ba7048e16d1f57dbf34c8"
         ],
         "protocolSeq": 2,
-        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+        "protocolHead": "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707"
       },
       "expected": {
         "status": "HEAD_MISMATCH",
@@ -128,7 +128,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Anvar hissasi"
+            "note": "Bekzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000002",
@@ -140,7 +140,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Dilshod hissasi"
+            "note": "Sherzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000003",
@@ -156,12 +156,12 @@
           }
         ],
         "storedHashes": [
-          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
-          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
-          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+          "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a",
+          "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707",
+          "982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a"
         ],
         "protocolSeq": 2,
-        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+        "protocolHead": "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707"
       },
       "expected": {
         "status": "CHAIN_BROKEN",
@@ -183,14 +183,14 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Anvar hissasi"
+            "note": "Bekzod hissasi"
           }
         ],
         "storedHashes": [
-          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e"
+          "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a"
         ],
         "protocolSeq": 2,
-        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+        "protocolHead": "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707"
       },
       "expected": {
         "status": "TRUNCATED",
@@ -212,7 +212,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Anvar hissasi"
+            "note": "Bekzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000002",
@@ -224,7 +224,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Dilshod hissasi"
+            "note": "Sherzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000003",
@@ -240,9 +240,9 @@
           }
         ],
         "storedHashes": [
-          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
-          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
-          "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903"
+          "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a",
+          "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707",
+          "982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a"
         ],
         "protocolSeq": 0,
         "protocolHead": "0000000000000000000000000000000000000000000000000000000000000000"
@@ -267,7 +267,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Anvar hissasi"
+            "note": "Bekzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000002",
@@ -279,7 +279,7 @@
               "currency": "UZS"
             },
             "date": "2026-10-01",
-            "note": "Dilshod hissasi"
+            "note": "Sherzod hissasi"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000003",
@@ -295,12 +295,12 @@
           }
         ],
         "storedHashes": [
-          "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
-          "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
-          "49d5549b0a37807837c66ca17db58b2802bd8522a239d70ab449bf5ed39b5c14"
+          "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a",
+          "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707",
+          "ae3a3c866ca4579ae3f47d3be2ba3c5430561ff26f6fd16f68948955b4e5dd0d"
         ],
         "protocolSeq": 2,
-        "protocolHead": "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53"
+        "protocolHead": "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707"
       },
       "expected": {
         "status": "INTACT",

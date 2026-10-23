@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-10-23
+
+Yangi nom va brend: «Baraka Dastur». Ma'lumotlar formati va identifikatorlar o'zgarmadi — 1.0.0 ustidan yangilanadi.
+
+### O'zgardi
+- **«Qorovul pul» → «Zaxira pul»** barcha ilova matnlari va hujjatlarda (uz, uz-Cyrl; ruschada allaqachon «Резервный фонд»/«Резерв»). Kod identifikatorlari va bazadagi `QOROVUL` qiymati o'zgarmadi.
+- **Test ma'lumotlaridagi ismlar** (Rust, Dart, React, E2E, oracle, vektorlar): qissa personajlari o'rniga boshqa ismlar — Bekzod, Feruza, Sherzod, Ravshan aka, Bobur, Mohira, Otabek. Ismlar ichida bo'lgan oltin xeshlar (`journal_chain`, `review_protocol`, `.baraka` vektorlari, qisqa kod `F8B2-EF8C-8E72-218F`) oracle bilan qayta hisoblandi va Rust bilan mos keldi.
+- **Ilova nomi — «Baraka Dastur»** (Android va desktop): Google Play'da «Baraka» nomli boshqa ilova bor. Yangilandi: oyna sarlavhasi va o'rnatuvchi nomi (`productName`), Android yorlig'i, i18n `app.name` (uz, uz-Cyrl, ru), PDF muallifi, `.baraka` fayl dialogi. Identifikatorlar (`uz.barakaoilasi.desktop`, Android `uz.baraka.oilasi`) o'zgarmadi — o'rnatilgan ilovadagi ma'lumotlar saqlanadi.
+- **Yangi logotip:** to'q fonda krem «B» va undan o'sib chiqqan sarg'ish barg (baraka — o'sish). Manba — `xtask/assets/logo.svg`; `make_icons.py` desktop ikonkalari va Android zaxira PNG'larini chizadi; Android adaptiv ikonkasi — vektor (xavfsiz zona ichida).
+- **Personajlarsiz:** ilovadagi «Sobir hoji» o'rniga ismsiz **«Moliyaviy maslahatchi»**. Boshqa muallif qissasidan kelgan misol va iqtiboslar (to'y qarzi misolidagi ism, «besh xavf belgisi» qoidasi, «ot bilan omoch», «kishan», «somsa») o'z so'zlarimiz bilan qayta yozildi; test ma'lumotlaridagi «Sobir hoji» ham almashtirildi.
+- **Hujjatlar:** ilhom manbasi va mustaqillik bayonoti (`BARAKA_OILASI.md` 2.1): g'oya «7 qonun» suhbatlarining ma'nosidan ilhomlangan, lekin matn, personaj va brend ishlatilmaydi, mualliflar bilan bog'liqlik yo'q. «Qonun» o'rniga «tamoyil», bob sarlavhalari o'z so'zlarimiz bilan; persona nomlari almashtirildi; boshqa muallifning qissa transkripti (`docs/musofir/qissalar/07-sovutish-davri.md`) olib tashlandi; kontent litsenziyasi talabi bekor qilindi (OQ-MF9 yopildi).
+
 ### Tuzatildi
 - **Tungi desktop E2E osilib qolardi:** 79 test o'tgandan keyin ham `node --test` chiqmasdi — `tauri-driver` o'ldirilganda WebKitWebDriver va ilova tirik qolib, test runner'ning stderr quvurini ushlab turardi (CI 6 soatda bekor qildi). Endi driver o'z jarayon guruhida ishga tushadi va `stop()` butun guruhni o'ldiradi; job'ga `timeout-minutes: 60`.
 - **Android testlari CI'da goh-goh yiqilardi:** testlar formada hali turgan matnni yoki rozilikdan oldin ham ko'rinadigan «Sheriklikni boshlash» tugmasini kutib, yadro yozuvni saqlamasdan oldin keyingi qadamga o'tardi. Endi saqlangan karta yoki «✓ rozi» belgisi kutiladi.

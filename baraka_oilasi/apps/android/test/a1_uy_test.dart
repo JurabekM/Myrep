@@ -97,7 +97,7 @@ void main() {
     // Qarz tilxati: saqlanadi, PDF ulashiladi, qisqa kod ko'rsatiladi.
     await goTo(tester, 'Qarz tilxati');
     await enter(tester, 'Qarz beruvchi', 'Karim');
-    await enter(tester, 'Qarz oluvchi', 'Anvar');
+    await enter(tester, 'Qarz oluvchi', 'Bekzod');
     await enter(tester, 'Qarz summasi', '2 000 000');
     await enter(tester, 'Joy (shahar, mahalla)', 'Toshkent');
     await pickDay(tester, 'Sana 1');

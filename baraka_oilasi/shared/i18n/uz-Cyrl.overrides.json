@@ -1,5 +1,5 @@
 {
-  "app.name": "Барака",
+  "app.name": "Барака Дастур",
   "space.KASBKOR": "Касб-кор",
   "income.channel.CARD": "Карта",
   "category.cafe": "Кафе",
@@ -7,7 +7,7 @@
   "setup.pin": "6 хонали PIN",
   "setup.pinRepeat": "PINʼни такрорланг",
   "lock.forgot": "PINʼни унутдим",
-  "mentor.name": "Собир ҳожи",
+  "mentor.name": "Молиявий маслаҳатчи",
   "locale.uz": "Oʻzbekcha (lotin)",
   "settings.highContrast": "Windows'да «Юқори контраст» ёқилган бўлса, илова тизим рангларига ўтади."
 }

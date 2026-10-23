@@ -27,7 +27,7 @@ fn app() -> (App, String, Vec<MemberDto>) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Karim akaning oilasi".into(),
+            household_name: "Ravshan akaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
@@ -36,7 +36,7 @@ fn app() -> (App, String, Vec<MemberDto>) {
             spaces: vec!["UY".into()],
             members: vec![
                 member("Karim", "ADULT"),
-                member("Gulnora", "ADULT"),
+                member("Mohira", "ADULT"),
                 member("Sanjar", "CHILD"),
             ],
         })
@@ -173,7 +173,7 @@ fn debt_scenario_cannot_be_confirmed_without_family_discussion() {
     let (app, uy, members) = app();
     let c = karim(&app, &uy);
     let id = c.id.clone();
-    let (karim_id, gulnora_id, sanjar_id) = (
+    let (karim_id, mohira_id, sanjar_id) = (
         members[0].id.clone(),
         members[1].id.clone(),
         members[2].id.clone(),
@@ -203,7 +203,7 @@ fn debt_scenario_cannot_be_confirmed_without_family_discussion() {
         app.agree_discussion(&uy, &id, &sanjar_id).unwrap_err().code,
         "NOT_ADULT_MEMBER"
     );
-    let c = app.agree_discussion(&uy, &id, &gulnora_id).unwrap();
+    let c = app.agree_discussion(&uy, &id, &mohira_id).unwrap();
     assert_eq!(c.status, "DISCUSSED");
     assert!(c.can_confirm);
 
@@ -225,7 +225,7 @@ fn debt_scenario_cannot_be_confirmed_without_family_discussion() {
     );
 
     app.agree_discussion(&uy, &id, &karim_id).unwrap();
-    app.agree_discussion(&uy, &id, &gulnora_id).unwrap();
+    app.agree_discussion(&uy, &id, &mohira_id).unwrap();
     let c = app.confirm_ceremony(&uy, &id).unwrap();
     assert_eq!(c.status, "CONFIRMED");
     assert_eq!(

@@ -1,6 +1,6 @@
-// 7-qonun qissasi (M5, musofir/SPEC 6.8; docs/musofir/qissalar/07-sovutish-davri.md). Uyda oyiga 8 mln so'm
-// xarajat → 35 kundan keyin Rustam Koreyadan qaytdi: 18 000 $ (1 $ = 12 650 so'm ≈ 227,7 mln) — qal'a devori
-// 48 mln, erkin pul 179,7 mln → «Plyus»ga 10 000 $ (126,5 mln): «oyiga 35 % kafolat», «joy kam», tekshirtirmaydi,
+// Qaytish xavfsizligi (M5, musofir/SPEC 6.8). Uyda oyiga 8 mln so'm
+// xarajat → 35 kundan keyin Bobur Koreyadan qaytdi: 18 000 $ (1 $ = 12 650 so'm ≈ 227,7 mln) — qal'a devori
+// 48 mln, erkin pul 179,7 mln → «Oltin foyda»ga 10 000 $ (126,5 mln): «oyiga 35 % kafolat», «joy kam», tekshirtirmaydi,
 // pulni qaytarib olish qiyin, oila bilan maslahatlashmadi → qizil: besh belgidan to'rttasi, «5,2 barobar» → rad
 // etdi. Uy makonida «Taklifni tekshirish» ham shu besh belgini so'raydi.
 import assert from "node:assert/strict";
@@ -34,7 +34,7 @@ async function answer(app, dialog, question, reply) {
   await app.choose(reply, group);
 }
 
-describe("Musofir: 7-qonun qissasi", () => {
+describe("Musofir: qaytish xavfsizligi", () => {
   let app;
   let profile;
   after(async () => app?.stop());
@@ -45,7 +45,7 @@ describe("Musofir: 7-qonun qissasi", () => {
   it("S1. uyda oyiga 8 mln so'm xarajat", async () => {
     app = await startApp();
     profile = app.dir;
-    await onboard(app, { household: "Rustamning oilasi", name: "Rustam", spaces: ["Musofir"], rhythm: "Oylik maosh" });
+    await onboard(app, { household: "Boburning oilasi", name: "Bobur", spaces: ["Musofir"], rhythm: "Oylik maosh" });
     await app.nav("Xarajatlar");
     await app.type("Summa", "8 000 000");
     await app.selectText("Kategoriya", "Oziq-ovqat");
@@ -80,13 +80,13 @@ describe("Musofir: 7-qonun qissasi", () => {
     await app.shot("desktop-102-mf-fortress-wall");
   });
 
-  it("S3. «Plyus»: oyiga 35 % kafolat — besh belgidan to'rttasi, qizil", async () => {
+  it("S3. «Oltin foyda»: oyiga 35 % kafolat — besh belgidan to'rttasi, qizil", async () => {
     await app.click("Katta qarorni tekshirish", await app.region("Qaytish va sovutish davri", "section"));
     const dialog = await app.x("//div[@role='dialog']");
     await app.selectText("Qaror turi", "Sarmoya", dialog);
     await app.type("Summa (UZS)", "126 500 000", dialog);
     await app.type("Oyiga vaʼda qilingan foyda, % (boʻlsa)", "35", dialog);
-    await app.type("Nima haqida", "«Plyus» — Baxtiyorning taklifi", dialog);
+    await app.type("Nima haqida", "«Oltin foyda» — sinfdoshning taklifi", dialog);
     for (const [q, r] of [
       ["kafolatlanyaptimi", "Ha"],
       ["Zarar boʻlsa", "Bilmayman"],
@@ -110,12 +110,12 @@ describe("Musofir: 7-qonun qissasi", () => {
     const text = await result.getText();
     assert.match(text, /Qizil: katta xavf/);
     assert.match(text, /Besh xavf belgisidan topildi: 4/);
-    assert.match(text, /ikkinchisini koʻrsangiz — qoching/);
+    assert.match(text, /ikkitasi — bu taklifdan voz kechishga yetarli sabab/);
     assert.match(text, /55,56 %i/);
     assert.match(await app.text("mf-decision-promise"), /420 %, pulingiz 5,2 barobar/);
-    await noAxe(app, "mf-plyus");
+    await noAxe(app, "mf-scam-offer");
     await app.b.execute(() => document.querySelector('[data-testid="mf-decision-result"]')?.scrollIntoView({ block: "end" }));
-    await app.shot("desktop-103-mf-plyus-red");
+    await app.shot("desktop-103-mf-scam-offer-red");
     await app.click("Rad etaman", result);
     await dialog.waitForExist({ reverse: true });
     await waitValue(app, "mf-decision", "Rad etaman");

@@ -1,4 +1,4 @@
-//! Uy makoni («Baraka daftari») domen qoidalari. Sof funksiyalar: IO, tizim vaqti va
+//! Uy makoni domen qoidalari. Sof funksiyalar: IO, tizim vaqti va
 //! tasodifiylik yo'q. Spetsifikatsiya: `docs/uy/SPEC.md`, algoritmlar: `docs/BARAKA_OILASI.md` 5.
 #![deny(clippy::float_arithmetic)]
 

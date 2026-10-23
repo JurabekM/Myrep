@@ -11,8 +11,8 @@ sleep 10
 import -window root $SP/e2e/1-setup.png
 WIN=$(xdotool search --name Baraka | head -1); xdotool windowactivate $WIN 2>/dev/null; sleep 1
 # Tab tartibi: uz, uz-Cyrl, ru, oila nomi, ism, PIN, PIN takror, 3 ta katakcha, Boshlash
-xdotool key Tab Tab Tab Tab; xdotool type --delay 30 "Anvarlar"
-xdotool key Tab; xdotool type --delay 30 "Anvar"
+xdotool key Tab Tab Tab Tab; xdotool type --delay 30 "Bekzodlar"
+xdotool key Tab; xdotool type --delay 30 "Bekzod"
 xdotool key Tab; xdotool type --delay 30 "246810"
 xdotool key Tab; xdotool type --delay 30 "246810"
 xdotool key Tab Tab space; xdotool key Return

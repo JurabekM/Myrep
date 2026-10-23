@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-//! M5 — 7-qonun qissasi (docs/musofir/qissalar/07-sovutish-davri.md, SPEC 6.8): Rustam Koreyadan
-//! 18 000 dollar bilan qaytdi; sinfdoshi «Plyus»ga 10 000 ni qo'yishga undaydi — «oyiga 35 % kafolatli»,
+//! M5 — qaytish xavfsizligi (SPEC 6.8): Bobur Koreyadan
+//! 18 000 dollar bilan qaytdi; sinfdoshi «Oltin foyda»ga 10 000 ni qo'yishga undaydi — «oyiga 35 % kafolatli»,
 //! «joy kam», tekshirtirmaydi, pulni qaytarib olish qiyin. Oilaning 6 oylik ro'zg'ori — «qal'a devori».
 
 use std::sync::Arc;
@@ -11,7 +11,7 @@ use chrono::{DateTime, Utc};
 fn setup() -> (App, String, String) {
     let app = App::open_in_memory(
         &DbKey::from_bytes([7; 32]),
-        "dev-rustam",
+        "dev-bobur",
         Arc::new(FixedClock::new(
             DateTime::parse_from_rfc3339("2026-10-20T09:00:00+05:00")
                 .unwrap()
@@ -22,15 +22,15 @@ fn setup() -> (App, String, String) {
     .unwrap();
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Rustamning oilasi".into(),
-            device_name: "Rustamning telefoni".into(),
+            household_name: "Boburning oilasi".into(),
+            device_name: "Boburning telefoni".into(),
             platform: "android".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
             month_start_day: 1,
             spaces: vec!["UY".into(), "MUSOFIR".into()],
             members: vec![NewMemberInput {
-                display_name: "Rustam".into(),
+                display_name: "Bobur".into(),
                 role: "ADULT".into(),
             }],
             income_rhythm: None,
@@ -99,7 +99,7 @@ fn decision(
 ) -> MfDecisionInput {
     MfDecisionInput {
         kind: kind.into(),
-        title: "«Plyus»ga sarmoya".into(),
+        title: "«Oltin foyda»ga sarmoya".into(),
         amount: amount.into(),
         answers: a
             .iter()
@@ -115,7 +115,7 @@ fn decision(
 }
 
 #[test]
-fn rustam_brings_dollars_and_meets_plyus() {
+fn migrant_brings_dollars_and_meets_scam_offer() {
     let (app, mf, uy) = setup();
     // Uyda oyiga ~8 mln so'm (wl-001): qal'a devori — 48 mln.
     for (amount, on) in [
@@ -154,9 +154,9 @@ fn rustam_brings_dollars_and_meets_plyus() {
     assert_eq!(minor(c.free.as_ref().unwrap()), 17_970_000_000);
     assert_eq!(c.days_left, 87);
 
-    // «Plyus» (co-009): 10 000 $ ≈ 126,5 mln — kafolat, shoshirish, tekshirtirmaydi, chiqish qiyin,
+    // «Oltin foyda» (co-009): 10 000 $ ≈ 126,5 mln — kafolat, shoshirish, tekshirtirmaydi, chiqish qiyin,
     // oila bilan maslahatlashmadi; va'da — oyiga 35 %.
-    let plyus = [
+    let scam = [
         ("guaranteed", "YES"),
         ("lossShared", "YES"),
         ("realActivity", "UNKNOWN"),
@@ -172,11 +172,11 @@ fn rustam_brings_dollars_and_meets_plyus() {
         ("familyDiscussed", "NO"),
     ];
     assert_eq!(
-        err(app.mf_check_decision(&mf, decision("INVEST", "126 500 000", &plyus, Some("0")))),
+        err(app.mf_check_decision(&mf, decision("INVEST", "126 500 000", &scam, Some("0")))),
         "INVALID_PERCENT"
     );
     let r = app
-        .mf_check_decision(&mf, decision("INVEST", "126 500 000", &plyus, Some("35")))
+        .mf_check_decision(&mf, decision("INVEST", "126 500 000", &scam, Some("35")))
         .unwrap();
     assert_eq!((r.verdict.as_str(), r.signs), ("RED", 4));
     let codes: Vec<&str> = r.flags.iter().map(|f| f.code.as_str()).collect();

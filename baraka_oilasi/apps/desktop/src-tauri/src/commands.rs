@@ -1310,7 +1310,7 @@ pub struct PairingView {
 }
 
 fn save_baraka(handle: &AppHandle, bytes: &[u8], file_name: &str) -> R<Option<String>> {
-    let Some(path) = save_path(handle, ("Baraka", "baraka"), file_name)? else {
+    let Some(path) = save_path(handle, ("Baraka Dastur", "baraka"), file_name)? else {
         return Ok(None);
     };
     let path = with_extension(path, "baraka");
@@ -2308,7 +2308,7 @@ pub async fn pick_baraka_file(handle: AppHandle) -> R<Option<PickedFile>> {
         handle
             .dialog()
             .file()
-            .add_filter("Baraka", &["baraka"])
+            .add_filter("Baraka Dastur", &["baraka"])
             .blocking_pick_file()
             .map(|f| {
                 f.into_path()

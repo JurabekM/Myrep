@@ -1,9 +1,9 @@
-//! M4 — qorovul pul (musofir/SPEC 6.4, OQ-MF3), ish valyutasida.
+//! M4 — zaxira pul (musofir/SPEC 6.4, OQ-MF3), ish valyutasida.
 //!
 //! ```text
 //! Maqsad        = round_half_up(Σ oylik chet el xarajati × N / oylar soni)   (N = 1–3)
 //! Yetmagani     = max(0, maqsad − qoldiq)
-//! Ulushdan      qorovulga = min(ulush, yetmagani);  jamg'armaga = ulush − qorovulga
+//! Ulushdan      zaxiraga = min(ulush, yetmagani);  jamg'armaga = ulush − zaxiraga
 //! ```
 //! Tarix (yozuvi bor to'liq oy) bo'lmasa — maqsad yo'q (`NO_HISTORY`), ulush jamg'armaga.
 //!
@@ -42,7 +42,7 @@ pub struct Reserve {
     pub gap: Option<Money>,
     pub progress_bp: Option<i64>,
     pub status: ReserveStatus,
-    /// O'z ulushi berilgan bo'lsa: qorovul pulga va jamg'armaga.
+    /// O'z ulushi berilgan bo'lsa: zaxira pulga va jamg'armaga.
     pub to_reserve: Option<Money>,
     pub to_fund: Option<Money>,
 }

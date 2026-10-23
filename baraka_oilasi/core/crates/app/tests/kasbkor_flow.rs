@@ -18,14 +18,14 @@ fn clock(at: &str) -> Arc<FixedClock> {
 fn app_with(c: Arc<FixedClock>, spaces: &[&str]) -> (App, Option<String>, String) {
     let app = App::open_in_memory(
         &DbKey::from_bytes([7; 32]),
-        "dev-nilufar",
+        "dev-feruza",
         c,
         Arc::new(SequentialIdGen::default()),
     )
     .unwrap();
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Nilufarlar".into(),
+            household_name: "Feruzalar".into(),
             device_name: "Atelye kompyuteri".into(),
             platform: "windows".into(),
             locale: "uz".into(),
@@ -33,7 +33,7 @@ fn app_with(c: Arc<FixedClock>, spaces: &[&str]) -> (App, Option<String>, String
             month_start_day: 1,
             spaces: spaces.iter().map(|s| s.to_string()).collect(),
             members: vec![NewMemberInput {
-                display_name: "Nilufar".into(),
+                display_name: "Feruza".into(),
                 role: "ADULT".into(),
             }],
             income_rhythm: None,
@@ -318,9 +318,9 @@ fn machine(cost: &str, months: u32, wallet: Option<&str>) -> KkEquipmentInput {
     }
 }
 
-/// SPEC 3.1 Nilufar: ko'rinadigan foyda 9 500 000, haqiqiy foyda 3 100 000.
+/// SPEC 3.1 Feruza: ko'rinadigan foyda 9 500 000, haqiqiy foyda 3 100 000.
 #[test]
-fn true_profit_nilufar_and_equipment_lifecycle() {
+fn true_profit_feruza_and_equipment_lifecycle() {
     let c = clock("2026-11-20T10:00:00+05:00");
     let (app, _, kk) = app_with(c.clone(), &["UY", "KASBKOR"]);
     app.kk_record_sale(&kk, sale("18 000 000", "CARD")).unwrap();
@@ -569,10 +569,10 @@ fn rules(tax_base: &str, tax: Option<&str>, split: [&str; 4]) -> KkCloseRulesInp
     }
 }
 
-/// SPEC 4.5 Nilufar: qolgan 2 580 000 → 774 000 / 1 290 000 / 516 000; bayonnoma o'zgarmas, yopilgan
+/// SPEC 4.5 Feruza: qolgan 2 580 000 → 774 000 / 1 290 000 / 516 000; bayonnoma o'zgarmas, yopilgan
 /// oyga yozib bo'lmaydi.
 #[test]
-fn month_close_nilufar_and_closed_period_guard() {
+fn month_close_feruza_and_closed_period_guard() {
     let c = clock("2026-11-20T10:00:00+05:00");
     let (app, _, kk) = app_with(c.clone(), &["UY", "KASBKOR"]);
     app.kk_record_sale(&kk, sale("18 000 000", "CARD")).unwrap();
@@ -729,7 +729,7 @@ fn month_close_negative_needs_explanation_and_overdraw_carries() {
     assert_eq!(minor(o.owner_salary.as_ref().unwrap()), 150_000_000);
     assert_eq!(minor(o.salary_carry.as_ref().unwrap()), 150_000_000);
     assert_eq!(minor(o.salary_remaining.as_ref().unwrap()), 150_000_000);
-    // Yanvarda ushlash tugaydi.
+    // Ybekzodda ushlash tugaydi.
     at(&c, "2027-01-05T10:00:00+05:00");
     let o = app.kk_overview(&kk, None).unwrap();
     assert_eq!(minor(o.owner_salary.as_ref().unwrap()), 300_000_000);

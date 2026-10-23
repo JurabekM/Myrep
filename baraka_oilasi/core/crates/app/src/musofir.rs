@@ -181,7 +181,7 @@ impl App {
                 note: r.note,
             });
         }
-        // Jamg'arma va qorovul pul alohida qoldiqlar: har biri o'z jadvalida sana tartibida.
+        // Jamg'arma va zaxira pul alohida qoldiqlar: har biri o'z jadvalida sana tartibida.
         let mut rows = self.db.read(|c| mf::moves_between(c, scope, from, to))?;
         rows.extend(
             self.db
@@ -570,7 +570,7 @@ impl App {
             .write(|tx| incomes::insert(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Incomes, Topic::Musofir]);
         let share = percent_of(amount, setup.share_bp)?;
-        // M4: ulush avval qorovul pulga (yetmaganicha), qolgani jamg'armaga.
+        // M4: ulush avval zaxira pulga (yetmaganicha), qolgani jamg'armaga.
         let (start, end) =
             month_period(date, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
         let (month, _) = self.mf_month_of(&ctx, &scope, &setup, start, end)?;
@@ -701,7 +701,7 @@ impl App {
             fee: fee.is_positive().then_some(fee),
         };
         if matches!(kind, MfKind::FundOut | MfKind::ReserveOut) {
-            // Jamg'arma va qorovul puldan olish — butun qoldiqdan oshmaydi (domen tekshiradi).
+            // Jamg'arma va zaxira puldan olish — butun qoldiqdan oshmaydi (domen tekshiradi).
             let mut all = self
                 .mf_book(&ctx, &scope, setup.work, BEGINNING, END_OF_TIME)?
                 .moves;

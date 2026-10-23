@@ -47,7 +47,7 @@ const detail = {
   discussion: {
     required: true,
     answers: [{ key: "guests", note: "150 ga tushiramiz" }, { key: "days", note: "" }, { key: "cut", note: "" }, { key: "sources", note: "" }],
-    adults: [{ memberId: "m1", name: "Karim", agreedOn: null }, { memberId: "m2", name: "Gulnora", agreedOn: "2026-10-15" }],
+    adults: [{ memberId: "m1", name: "Karim", agreedOn: null }, { memberId: "m2", name: "Mohira", agreedOn: "2026-10-15" }],
     complete: false,
   },
   canConfirm: false,

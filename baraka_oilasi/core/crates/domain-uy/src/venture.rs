@@ -536,7 +536,7 @@ pub struct OfferVerdict {
     pub signs: u8,
 }
 
-/// Sobir hojining «besh xavf belgisi» (musofir qissasi): 1 — kafolatlangan foyda, 2 — shoshirish,
+/// «Besh xavf belgisi» (Musofir SPEC): 1 — kafolatlangan foyda, 2 — shoshirish,
 /// 3 — yangi odam olib kelish, 4 — ishning o'zi yo'q (mol, ruxsat, tekshirtirmaydi), 5 — kirish oson,
 /// chiqish qiyin. Ikki va undan ortiq belgi — `TWO_SIGNS` (qizil).
 pub const OFFER_SIGNS: [(&str, u8); 7] = [
@@ -730,7 +730,7 @@ mod tests {
             ..safe
         };
         assert_eq!(offer_check(&unsure).verdict, Level::Yellow);
-        // Ikki sariq belgi — qoching.
+        // Ikki sariq belgi — voz kechish.
         let two = OfferAnswers {
             licensed: Reply::No,
             ..urgent

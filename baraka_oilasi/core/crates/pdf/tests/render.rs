@@ -33,10 +33,10 @@ fn receipt(locale: PdfLocale) -> LoanReceipt {
                 amount: "600 000 soʻm".into(),
             },
         ],
-        witnesses: vec!["Sobir hoji".into(), "Ҳасан Қодиров".into()],
+        witnesses: vec!["Hasan Yusupov".into(), "Ҳасан Қодиров".into()],
         note: Some("Taʼmirlash uchun. Ўзбекча кирилл: ў қ ғ ҳ".into()),
-        chain_head: Some("e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e".into()),
-        chain_short_code: Some("E6AE-98E5-45C7-438C".into()),
+        chain_head: Some("f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a".into()),
+        chain_short_code: Some("F8B2-EF8C-8E72-218F".into()),
     }
 }
 

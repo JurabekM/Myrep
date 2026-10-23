@@ -162,7 +162,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-agreements"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -171,7 +171,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-app"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
@@ -197,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-bindings-flutter"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-agreements",
  "baraka-app",
@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-common"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-money",
  "chrono",
@@ -224,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-kasbkor"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-money",
@@ -233,7 +233,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-musofir"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-money",
@@ -242,7 +242,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-uy"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-journal",
@@ -255,7 +255,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-interchange"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "argon2",
  "baraka-journal",
@@ -272,21 +272,21 @@ dependencies = [
 
 [[package]]
 name = "baraka-journal"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "sha2",
 ]
 
 [[package]]
 name = "baraka-money"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "proptest",
 ]
 
 [[package]]
 name = "baraka-pdf"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-agreements",
  "chrono",
@@ -302,7 +302,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-security"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -318,7 +318,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-storage"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-interchange",
@@ -334,7 +334,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-vectors"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
@@ -4354,7 +4354,7 @@ checksum = "9440ea3e5aeabb0ac63af70daf835274065238cdd0cec83418f417eae38bacee"
 
 [[package]]
 name = "xtask"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "serde_json",
 ]

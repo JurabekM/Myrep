@@ -644,7 +644,7 @@ impl App {
             .unwrap_or(DEFAULT_MONTHS))
     }
 
-    /// Qorovul pul kartasi: qoldiq va oxirgi oylardagi chet el xarajatidan maqsad (SPEC 6.4).
+    /// Zaxira pul kartasi: qoldiq va oxirgi oylardagi chet el xarajatidan maqsad (SPEC 6.4).
     pub(crate) fn mf_reserve_dto(
         &self,
         ctx: &Ctx,
@@ -706,7 +706,7 @@ impl App {
         }))
     }
 
-    /// Qorovul pul muddati va ish boshlash summasi (ixtiyoriy «Hunardan ishga» g'oyasi bilan).
+    /// Zaxira pul muddati va ish boshlash summasi (ixtiyoriy «Hunardan ishga» g'oyasi bilan).
     pub fn mf_set_plan(
         &self,
         space_id: &str,

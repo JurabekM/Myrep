@@ -72,7 +72,7 @@ fn estimate(locale: PdfLocale) -> CeremonyEstimate {
             name: "Karim".into(),
             date: "15.10.2026".into(),
         }],
-        adults: vec!["Karim".into(), "Gulnora".into()],
+        adults: vec!["Karim".into(), "Mohira".into()],
     }
 }
 

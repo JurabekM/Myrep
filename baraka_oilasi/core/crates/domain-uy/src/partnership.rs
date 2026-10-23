@@ -488,13 +488,13 @@ mod tests {
             result: uzs(result),
             partners: vec![
                 Partner {
-                    id: "sobir".into(),
+                    id: "otabek".into(),
                     role: PartnerRole::CapitalProvider,
                     profit_share_bp: 5000,
                     capital: uzs(800_000_000),
                 },
                 Partner {
-                    id: "nilufar".into(),
+                    id: "feruza".into(),
                     role: PartnerRole::Worker,
                     profit_share_bp: 5000,
                     capital: uzs(0),
@@ -551,7 +551,7 @@ mod tests {
     fn negligence_rules() {
         let mut i = mudaraba(-200_000_000);
         i.negligence = Some(Negligence {
-            partner_id: "nilufar".into(),
+            partner_id: "feruza".into(),
             note: " ".into(),
         });
         assert_eq!(
@@ -559,12 +559,12 @@ mod tests {
             Err("NEGLIGENCE_NOTE_REQUIRED")
         );
         i.negligence = Some(Negligence {
-            partner_id: "nilufar".into(),
+            partner_id: "feruza".into(),
             note: "shart buzildi".into(),
         });
         assert_eq!(distribute(&i), Ok(vec![uzs(0), uzs(-200_000_000)]));
         i.negligence = Some(Negligence {
-            partner_id: "sobir".into(),
+            partner_id: "otabek".into(),
             note: "x".into(),
         });
         assert_eq!(

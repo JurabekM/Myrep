@@ -33,7 +33,7 @@ Future<void> openMfEntry(BuildContext context, String spaceId, String kind, {Str
     showSheet<void>(context, (_) => MfEntrySheet(spaceId: spaceId, kind: kind, initialAmount: initialAmount));
 
 /// Musofir yozuvi (musofir/SPEC 2–3): maosh, boshqa daromad, xarajat, uyga yuborish, jamg'armaga /
-/// jamg'armadan, qorovul pul, boshlang'ich qoldiqlar. Summalar ish valyutasida, matn ko'rinishida
+/// jamg'armadan, zaxira pul, boshlang'ich qoldiqlar. Summalar ish valyutasida, matn ko'rinishida
 /// yadroga beriladi.
 class MfEntrySheet extends ConsumerStatefulWidget {
   const MfEntrySheet({required this.spaceId, required this.kind, this.initialAmount, super.key});

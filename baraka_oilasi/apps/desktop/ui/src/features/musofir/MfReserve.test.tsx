@@ -66,7 +66,7 @@ beforeEach(() => {
   mfDecisions.mockResolvedValue(ok([]));
 });
 
-describe("Qorovul pul", () => {
+describe("Zaxira pul", () => {
   it("holat, to'lishi va oylar soni (ish boshlash summasi saqlanadi)", async () => {
     mfSetPlan.mockResolvedValue(ok(overview()));
     const onAction = vi.fn();
@@ -80,7 +80,7 @@ describe("Qorovul pul", () => {
     expect(await axeViolations(container)).toEqual([]);
     await user.selectOptions(screen.getByLabelText("Necha oylik xarajat"), "2");
     expect(mfSetPlan).toHaveBeenCalledWith("mf", { reserveMonths: 2, startup: "30000000", startupIdeaId: "i1" });
-    await user.click(screen.getByRole("button", { name: "Qorovul puldan" }));
+    await user.click(screen.getByRole("button", { name: "Zaxira puldan" }));
     expect(onAction).toHaveBeenCalledWith("RESERVE_OUT");
   });
 });

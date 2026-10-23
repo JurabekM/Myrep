@@ -125,7 +125,7 @@ META = {
     "schemaVersion": 8,
     "householdId": "0192a000-0000-7000-8000-000000000001",
     "sourceDeviceId": "0192a000-0000-7000-8000-0000000000d1",
-    "sourceDeviceName": "Nilufarning telefoni",
+    "sourceDeviceName": "Feruzaning telefoni",
     "exportId": "0192a000-0000-7000-8000-0000000000e1",
     "ackExportId": None,
     "mode": "FULL",

@@ -1,4 +1,4 @@
-//! M5 — «qal'a devori» (musofir/SPEC 6.8; 7-qonun qissasi): qaytgandan keyin olib kelingan puldan avval
+//! M5 — «qal'a devori» (musofir/SPEC 6.8): qaytgandan keyin olib kelingan puldan avval
 //! oilaning olti oylik ro'zg'ori ajratiladi — u savdoga ham, sheriklikka ham qo'shilmaydi.
 //!
 //! ```text

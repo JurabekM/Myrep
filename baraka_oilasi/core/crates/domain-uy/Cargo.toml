@@ -1,6 +1,6 @@
 [package]
 name = "baraka-domain-uy"
-description = "Uy makoni (Baraka daftari) domen qoidalari: 1–6-qonunlar"
+description = "Uy makoni domen qoidalari: 1–6-tamoyillar"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

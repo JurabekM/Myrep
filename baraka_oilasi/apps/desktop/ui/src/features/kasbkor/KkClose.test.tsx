@@ -28,7 +28,7 @@ const m = (formatted: string, minor = "1") => ({ minor, currency: "UZS", formatt
 const ok = (data: unknown) => ({ status: "ok", data });
 
 const rules = { taxBase: "REVENUE", taxPercent: "4", taxFixed: null, reservePercent: "30", workingPercent: "50", expansionPercent: "20", sadaqaPercent: "0" };
-// kasbkor/SPEC 4.5 Nilufar.
+// kasbkor/SPEC 4.5 Feruza.
 const draft = {
   periodStart: "2026-11-01",
   periodEnd: "2026-11-30",

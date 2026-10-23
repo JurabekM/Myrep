@@ -1667,7 +1667,7 @@ impl BarakaCore {
         self.session.app()?.mf_decision_questions(&kind)
     }
 
-    // ---- M4: qorovul pul, ish boshlash summasi, qaror natijasi ----
+    // ---- M4: zaxira pul, ish boshlash summasi, qaror natijasi ----
 
     pub fn mf_set_plan(
         &self,
@@ -1768,7 +1768,7 @@ mod tests {
                 BootstrapInput {
                     income_rhythm: None,
                     debts_declared: false,
-                    household_name: "Karim akaning oilasi".into(),
+                    household_name: "Ravshan akaning oilasi".into(),
                     device_name: "Telefon".into(),
                     platform: "android".into(),
                     locale: "uz-Cyrl".into(),

@@ -135,8 +135,8 @@ const shores = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 const members = [
-  { id: "m1", displayName: "Rustam", role: "ADULT" },
-  { id: "m2", displayName: "Gulnora", role: "ADULT" },
+  { id: "m1", displayName: "Bobur", role: "ADULT" },
+  { id: "m2", displayName: "Mohira", role: "ADULT" },
 ];
 
 beforeEach(() => {
@@ -205,7 +205,7 @@ describe("Musofir bosh sahifasi", () => {
     expect(mfRecordMove).toHaveBeenCalledWith("mf", { kind: "FUND_IN", amount: "520 000", fee: null, received: null, occurredOn: null, note: null, purposes: null });
   });
 
-  it("M4: ulush avval qorovul pulga, qolgani jamg'armaga; qorovul pul kartasi", async () => {
+  it("M4: ulush avval zaxira pulga, qolgani jamg'armaga; zaxira pul kartasi", async () => {
     const reserve = {
       balance: m("300 000 KRW", "300000"),
       months: 1,
@@ -230,8 +230,8 @@ describe("Musofir bosh sahifasi", () => {
     const dialog = screen.getByRole("dialog");
     await user.type(within(dialog).getByLabelText("Summa (KRW)"), "2 600 000");
     await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
-    expect(await screen.findByTestId("mf-offer")).toHaveTextContent("505 000 KRW — qorovul pulga, 15 000 KRW — qaytish jamgʻarmasiga");
-    await user.click(screen.getByRole("button", { name: "Qorovul pulga qoʻyish" }));
+    expect(await screen.findByTestId("mf-offer")).toHaveTextContent("505 000 KRW — zaxira pulga, 15 000 KRW — qaytish jamgʻarmasiga");
+    await user.click(screen.getByRole("button", { name: "Zaxira pulga qoʻyish" }));
     const r = screen.getByRole("dialog");
     expect(within(r).getByLabelText("Summa (KRW)")).toHaveValue("505 000");
     await user.click(within(r).getByRole("button", { name: "Saqlash" }));
@@ -311,7 +311,7 @@ describe("Musofir bosh sahifasi", () => {
       { purpose: "DEBT", percent: "30" },
     ]);
     expect(input.receiverMemberId).toBe("m2");
-    expect(input.items[1]).toBe("Pulni uyda Gulnora qabul qiladi va ilovaga yozadi.");
+    expect(input.items[1]).toBe("Pulni uyda Mohira qabul qiladi va ilovaga yozadi.");
   });
 });
 

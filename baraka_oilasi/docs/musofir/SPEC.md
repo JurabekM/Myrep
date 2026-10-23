@@ -2,7 +2,7 @@
 ### Chet elda ishlaydigan migrant va uning uydagi oilasi uchun ribosiz hisob va odatlar daftari
 
 > Versiya: **v1.0 — mahsulot egasi tasdiqladi (2026-10-19)**; M1 (2–4-bo'limlar), M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Mahsulot savollari OQ-MF1…OQ-MF8 yopildi (OQ-MF5 — relay keyinga qoldirildi); ulamo savoli — OQ-D3 (`docs/OPEN_QUESTIONS.md`). Android UI — A4 da qilindi (1.0.0).
-> Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-qonun ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
+> Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-tamoyil ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar).
 
 ---
@@ -30,21 +30,21 @@
 **Bu makon nima EMAS:** pul o'tkazish xizmati, valyuta ayirboshlash yoki kurs prognozi, ish topib beruvchi agentlik, o'tkazma kompaniyalari reklamasi yoki solishtiruvchisi, viza/huquqiy maslahatchi.
 
 ### 1.1. Kontent
-- Musofir qissalari 7 qonunni ochadi (Uy makonidagi bob tuzilmasi, U3 dvigateli). Matnlar litsenziya hal bo'lguncha — placeholder (`BARAKA_OILASI.md` 18). Kelgan matnlar — `docs/musofir/qissalar/` (manba va mahsulot bilan solishtirish): 7-qonun — `07-sovutish-davri.md` (xom, oxiri kesilgan; OQ-MF9…OQ-MF12).
+- Musofir darslari 7 tamoyilni ochadi (Uy makonidagi bob tuzilmasi, U3 dvigateli). Matnlar — faqat o'zimiz yozganlari; boshqa mualliflarning qissalari, personajlari va brendi ishlatilmaydi (`BARAKA_OILASI.md` 2.1).
 - Har bir ta'limiy ekranda: «Ta'limiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas».
 
 ### 1.2. Personajlar
 | Personaj | Segment | Moliyaviy xulq | Ilova nimani yechishi kerak |
 |---|---|---|---|
-| **Rustam aka** — Koreya, zavod (E-9), 4-yil | Barqaror maosh vonda, oila Samarqandda | Maoshning deyarli hammasini xotiniga yuboradi; 4 yilda o'zida jamg'arma yo'q | O'z ulushi, qaytish jamg'armasi va qaytish sanasigacha prognoz (M1); yuborishning maqsadi (M2); qaytishdagi «kalxatlar» (M3) |
+| **Bobur aka** — Koreya, zavod (E-9), 4-yil | Barqaror maosh vonda, oila Samarqandda | Maoshning deyarli hammasini xotiniga yuboradi; 4 yilda o'zida jamg'arma yo'q | O'z ulushi, qaytish jamg'armasi va qaytish sanasigacha prognoz (M1); yuborishning maqsadi (M2); qaytishdagi «kalxatlar» (M3) |
 | **Dilnoza** — Rossiya, oshxona | Maosh rublda, naqd; ijara qimmat | Xarajatini yozmaydi, oy oxirida qarz oladi | Chet eldagi xarajatlar, qo'ldagi pul manfiy bo'lsa — ogohlantirish (M1) |
 | **Jahongir** — Turkiya, to'qimachilik, 1-yil | Yo'l uchun 15 mln qarz olgan | Avval qarzni yopishni bilmaydi, lira tushadi | Yo'l qarzidan chiqish rejasi (M3), valyutada saqlash (M1 — jamg'arma ish valyutasida) |
 | **Farrux** — Qozog'iston, mavsumiy qurilish | 6 oy ishlaydi, 6 oy uyda | Kuzda katta pul bilan qaytadi, qishda tugaydi | Qaytish sanasi va jamg'arma maqsadi «uyda necha oy» bilan (M1), sovutish davri (M3) |
-| **Gulnora** — Rustam akaning xotini (uyda) | Uy makonini yuritadi | «Qancha kelishini» bilmaydi, rejalashtira olmaydi | «Ikki qirg'oq»: kelgan pulning maqsadi va uydagi xarajat (M2) |
+| **Mohira** — Bobur akaning xotini (uyda) | Uy makonini yuritadi | «Qancha kelishini» bilmaydi, rejalashtira olmaydi | «Ikki qirg'oq»: kelgan pulning maqsadi va uydagi xarajat (M2) |
 
-Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ikki marta ishlanadi — biri ishda, biri hisobda».
+Maslahat ovozi — moliyaviy maslahatchi (Uy va Kasb-kor bilan bir xil, ismsiz): «Musofirning puli ikki marta ishlanadi — biri ishda, biri hisobda».
 
-## 2. 1-QONUN: «O'Z ULUSHI» — QAYTISH JAMG'ARMASI (M1)
+## 2. 1-TAMOYIL: «O'Z ULUSHI» — QAYTISH JAMG'ARMASI (M1)
 ### 2.1. Talablar
 - Makon sozlamasida **o'z ulushi** — maoshning foizi (`share_bp`, standart 20 %, 0–100 %). Har bir maosh yozilganda yadro ulushni taklif qiladi: «Shu maoshdan 600 000 KRW — qaytish jamg'armangizga».
 - **Qaytish jamg'armasi** — uyga yuborilmaydigan pul (alohida hisob yoki konvert). Ilova unga faqat yozuv bilan qaraydi: «jamg'armaga qo'ydim» (`FUND_IN`), «jamg'armadan oldim» (`FUND_OUT`, **sabab majburiy**), boshlang'ich qoldiq (`FUND_OPENING`).
@@ -61,9 +61,9 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 ### 2.3. Valyutada saqlash
 - Jamg'arma ish valyutasida turadi; ilova «hammasini so'mga aylantiring» yoki aksincha maslahat bermaydi va kurs prognozi qilmaydi.
 - Kurs — foydalanuvchi kiritadi (sana, «1 KRW = 9,1 so'm», ixtiyoriy manba: bank, o'tkazma ilovasi). Oxirgi kurs 30 kundan eski bo'lsa — «kursni yangilang» eslatmasi (M1 da — ko'rsatkich).
-- **Qorovul pul** (chet eldagi kutilmagan xarajat uchun, masalan, 1 oylik xarajat) — M3 (OQ-MF3).
+- **Zaxira pul** (chet eldagi kutilmagan xarajat uchun, masalan, 1 oylik xarajat) — M3 (OQ-MF3).
 
-## 3. 2-QONUN: «CHET ELDAGI XARAJATNI BIL» (M1)
+## 3. 2-TAMOYIL: «CHET ELDAGI XARAJATNI BIL» (M1)
 - Maosh va boshqa daromad — `incomes` (makon = Musofir, valyuta = ish valyutasi, kanal naqd/karta).
 - Xarajatlar — `expenses` (`category.mf.*`: ijara, ovqat, yo'l, telefon, komissiya, boshqa).
 - **Uyga yuborilgan** (`SENT_HOME`) — summa ish valyutasida, ixtiyoriy komissiya va ixtiyoriy «uyda olingan» summa uy valyutasida (haqiqiy kurs ko'rinadi). Maqsad va kelishuv — M2.
@@ -94,9 +94,9 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - **Kurs** — `mf_rates` (o'zgarmas, sinxronlanadi); amaldagisi — bugungacha eng so'nggi sanali; 30 kundan eski bo'lsa belgisi. Ish valyutasi uy valyutasi bilan bir xil bo'lsa — kurs 1, kiritish kerak emas (`RATE_NOT_NEEDED`). Kurs yo'q — uy valyutasidagi ko'rsatkichlar umuman ko'rsatilmaydi, holat `NO_RATE`.
 - **Ish valyutasi** — makonda yozuv paydo bo'lgach o'zgarmaydi (`WORK_CURRENCY_LOCKED`); ulush, maqsad, sana va mamlakat o'zgaradi.
 - **Jamg'armadan olish** — sabab majburiy (DB CHECK ham), butun qoldiqdan oshmaydi.
-- Qilinmagan: yozuvni tuzatish va o'chirish, qorovul pul (OQ-MF3), uydagi oila bilan bog'lanish (M2), Android UI.
+- Qilinmagan: yozuvni tuzatish va o'chirish, zaxira pul (OQ-MF3), uydagi oila bilan bog'lanish (M2), Android UI.
 
-## 5. 6-QONUN: «IKKI QIRG'OQ» — OILA BILAN PUL KELISHUVI (M2)
+## 5. 6-TAMOYIL: «IKKI QIRG'OQ» — OILA BILAN PUL KELISHUVI (M2)
 - Har bir yuborishning **maqsadlari** — ulushlar bilan (bp, yig'indisi 100 %): uy xarajati, qarz to'lovi, qurilish va ta'mir, o'qish, marosim, uydagi jamg'arma, boshqa. Standart bo'linish — kelishuv shartlaridan, har yuborishda o'zgartirish mumkin.
 - Oila bilan **«Ikki qirg'oq» kelishuvi** (`REMITTANCE`): shartlar (maqsadlar va ulushlar, kim qabul qiladi) va ulardan yasalgan matn — Uy makonidagi **oilaviy kelishuv** (U13): har bir katta a'zo PIN bilan tasdiqlaydi, matn o'zgarsa hamma qayta tasdiqlaydi.
 - **Uy tomoni:** kelgan pulni qabul qilish — haqiqatda olingan summa uy valyutasida va kim oldi; qabul **Uy makonida daromad** bo'lib tushadi (bitta tranzaksiyada). Xarajatni maqsadga bog'lab yozish — Uy makonidagi oddiy xarajat + maqsad belgisi.
@@ -112,17 +112,17 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - **Maxfiylik** (ADR-0004): `HOME` roli; filtr xonadondagi **barcha** Musofir makonlariga qo'llanadi; oila qurilmasida Musofir makoni tugmasi ko'rsatilmaydi, `mf_*` shaxsiy use-case'lari `ROLE_FORBIDDEN`. Oila qurilmasi Uy makonida hamma narsani yozadi va jurnal yozuvlari ham qabul qilinadi.
 - Qilinmagan: qabulni yoki maqsad belgisini tuzatish, maqsadlar orasida ko'chirish, qabul bo'yicha eslatma (masalan, 3 kun qabul qilinmasa), relay (R1), Android UI.
 
-## 6. 4, 5, 7-QONUNLAR (M3)
-### 6.1. Yo'l qarzidan chiqish (4-qonun)
+## 6. 4, 5, 7-TAMOYILLAR (M3)
+### 6.1. Yo'l qarzidan chiqish (4-tamoyil)
 - Yo'l qarzi — U8 qarz inventaridagi oddiy **Uy qarzi** (kreditor, summa, reja; odatda qarindoshdan, foizsiz). Musofir uni Musofir makonida «yo'l qarzi» deb belgilaydi.
 - Qarz uyda to'lanadi: «Ikki qirg'oq»dagi **«Qarz to'lovi»** maqsadidan oila (yoki musofir) U8 to'lovini yozadi — to'lov maqsad belgisi bilan (`DEBT`), maqsad qoldig'i kamayadi, qarz qoldig'i kamayadi.
 - **Reja** (`mf_travel_debt`): qarz qoldig'i − «Qarz to'lovi» maqsadida turgan pul = qolgan; oxirgi to'liq oylarda shu maqsadga kelgan o'rtacha → necha oyda yopiladi; «birinchi maoshlardan» maqsadli muddat (standart 6 oy, OQ-MF8) uchun oyiga qancha kerak. Holatlar: `CLEARED`, `ON_TRACK`, `BEHIND`, `NO_PAYMENTS`.
 - Ayblovsiz: «Qarz ulushini oshirsak, N oyda yopiladi» — kelishuv shartlarini o'zgartirishga havola.
 
-### 6.2. Qaytgandan keyingi ish rejasi (5-qonun)
+### 6.2. Qaytgandan keyingi ish rejasi (5-tamoyil)
 - «Hunardan ishga» (U12) — Uy makonida; Musofir bosh sahifasidan havola. Ish boshlash summasi qaytish jamg'armasi maqsadining bir qismi sifatida rejalashtiriladi.
 
-### 6.3. Sovutish davri va «kalxatlar» (7-qonun)
+### 6.3. Sovutish davri va «kalxatlar» (7-tamoyil)
 - Musofir **«Qaytdim»** deb belgilaydi: sana va olib kelingan summa (uy valyutasida). Keyingi **90 kun** — sovutish davri; bosh sahifada qolgan kunlar.
 - Har bir **katta qaror** (qarz berish, sheriklik, sarmoya, katta xarid, boshqa) oldidan tekshiruv (`mf_cooling`):
   - U12 dagi «Taklifni tekshirish» 6 savoli — sheriklik va sarmoyada;
@@ -130,12 +130,12 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
   - sovutish qoidasi: davr ichida summa olib kelinganining 10 %idan ko'p bo'lsa — «kuting» (sariq), 30 %idan ko'p bo'lsa — qizil (OQ-MF8).
 - Natija: yashil / sariq / qizil, har bir bayroq izohi bilan va «kutish sanasi». Qaror **taqiqlanmaydi** — musofir tanlaydi: «kutaman», «baribir qilaman», «rad etaman»; tanlov o'zgarmas qarorlar jurnaliga yoziladi (musofirning shaxsiy hisobi — oilaga yuborilmaydi, ADR-0004).
 
-### 6.4. Qorovul pul (M4, OQ-MF3 — mahsulot egasi qarori)
-- **Qorovul pul** — chet eldagi kutilmagan xarajat (kasallik, ishsiz qolish) uchun **qaytish jamg'armasidan alohida** pul, ish valyutasida. Harakatlar: «Qorovul pulga», «Qorovul puldan» (sabab majburiy, qoldiqdan oshmaydi), «Qorovul pul (boshlang'ich)».
+### 6.4. Zaxira pul (M4, OQ-MF3 — mahsulot egasi qarori)
+- **Zaxira pul** — chet eldagi kutilmagan xarajat (kasallik, ishsiz qolish) uchun **qaytish jamg'armasidan alohida** pul, ish valyutasida. Harakatlar: «Zaxira pulga», «Zaxira puldan» (sabab majburiy, qoldiqdan oshmaydi), «Zaxira pul (boshlang'ich)».
 - **Maqsad** = oxirgi to'liq oylardagi (yozuvi borlari, ko'pi bilan 3 ta) **chet eldagi o'rtacha oylik xarajat × N oy**; N — sozlamada, 1–3, standart **1**. Tarix bo'lmasa — maqsad yo'q (`NO_HISTORY`), qo'lda kiritilmaydi.
-- **Navbat:** o'z ulushi avval qorovul pulga, to'lgach — qaytish jamg'armasiga. Maoshdan keyingi taklif ikkiga bo'linadi: `qorovulga = min(ulush, yetmagani)`, `jamg'armaga = ulush − qorovulga`.
-- **Oy hisobi:** qo'ldagi pul qorovul pulga sof qo'yilgancha kamayadi; **o'z ulushi** = jamg'armaga sof + qorovul pulga qo'yilgan (qorovul puldan olish ulushni kamaytirmaydi; ogohlantirishlar shunga qarab). Qorovul puldan olish — ayblovsiz, ogohlantirish yo'q (u shuning uchun bor).
-- Holatlar: `FULL`, `PARTIAL`, `EMPTY`, `NO_HISTORY`. Qorovul pul — musofirning shaxsiy hisobi (oilaga yuborilmaydi).
+- **Navbat:** o'z ulushi avval zaxira pulga, to'lgach — qaytish jamg'armasiga. Maoshdan keyingi taklif ikkiga bo'linadi: `zaxiraga = min(ulush, yetmagani)`, `jamg'armaga = ulush − zaxiraga`.
+- **Oy hisobi:** qo'ldagi pul zaxira pulga sof qo'yilgancha kamayadi; **o'z ulushi** = jamg'armaga sof + zaxira pulga qo'yilgan (zaxira puldan olish ulushni kamaytirmaydi; ogohlantirishlar shunga qarab). Zaxira puldan olish — ayblovsiz, ogohlantirish yo'q (u shuning uchun bor).
+- Holatlar: `FULL`, `PARTIAL`, `EMPTY`, `NO_HISTORY`. Zaxira pul — musofirning shaxsiy hisobi (oilaga yuborilmaydi).
 
 ### 6.5. M3 da qanday qilindi (farqlar)
 - **Yo'l qarzi** faqat uy valyutasidagi faol Uy qarzi bo'la oladi (`CURRENCY_MISMATCH`); belgi, maqsadli muddat (1–60 oy), qaytish sanasi va olib kelingan summa — `mf_settings` da (musofirning shaxsiy hisobi, oilaga yuborilmaydi). Reja — faqat musofirda.
@@ -143,23 +143,23 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 - **Oylik o'rtacha** — oxirgi 3 to'liq oyda (qabuli borlari) uyda qabul qilingan yuborishlarning «Qarz to'lovi» bo'lagi; qabul sanasi bo'yicha. Joriy oy hisobga olinmaydi (`NO_PAYMENTS` matni shunga mos).
 - **«Qaytdim»** — kelajakdagi sana bo'lmaydi (`FUTURE_DATE`); belgini olib tashlash mumkin. Sovutish davri bosh sahifada (qolgan kunlar).
 - **Katta qaror tekshiruvi** sovutish davridan tashqarida ham ishlaydi (taklif detektori). Savollar yadrodan (`mf_decision_questions`); javoblar to'liq bo'lmasa `MISSING_ANSWER`, ortiqcha yoki noma'lum kalit — `INVALID_ANSWER`. Yozishda tanlov majburiy (`WAIT`, `PROCEED`, `DECLINE`); `mf_decisions` — o'zgarmas, oilaga yuborilmaydi.
-- Qilinmagan: qorovul pul (OQ-MF3), «Hunardan ishga» havolasi (6.2), qarorni keyin «bajarildi/bekor» deb belgilash, Android UI.
+- Qilinmagan: zaxira pul (OQ-MF3), «Hunardan ishga» havolasi (6.2), qarorni keyin «bajarildi/bekor» deb belgilash, Android UI.
 
 ### 6.6. Ish boshlash summasi va qaror natijasi (M4)
-- **Ish boshlash summasi** (5-qonun, 6.2) — qaytish jamg'armasi maqsadining bir qismi, uy valyutasida; ixtiyoriy ravishda Uy makonidagi «Hunardan ishga» g'oyasiga bog'lanadi (summani g'oyaning boshlang'ich sarmoyasidan taklif qilish mumkin). Maqsad ikkiga bo'linib ko'rsatiladi: `yashash uchun = maqsad − ish boshlash` (ish boshlash summasi maqsaddan oshmaydi — `STARTUP_EXCEEDS_TARGET`). Bosh sahifadan «Hunardan ishga»ga havola.
+- **Ish boshlash summasi** (5-tamoyil, 6.2) — qaytish jamg'armasi maqsadining bir qismi, uy valyutasida; ixtiyoriy ravishda Uy makonidagi «Hunardan ishga» g'oyasiga bog'lanadi (summani g'oyaning boshlang'ich sarmoyasidan taklif qilish mumkin). Maqsad ikkiga bo'linib ko'rsatiladi: `yashash uchun = maqsad − ish boshlash` (ish boshlash summasi maqsaddan oshmaydi — `STARTUP_EXCEEDS_TARGET`). Bosh sahifadan «Hunardan ishga»ga havola.
 - **Qaror natijasi:** jurnaldagi qaror keyin bir marta belgilanadi — «qildim» (`DONE`) yoki «qilmadim» (`DROPPED`), sana va izoh bilan; o'zgarmas, shaxsiy.
 
 ### 6.7. M4 da qanday qilindi (farqlar)
-- **Qorovul pul harakatlari** alohida jadvalda (`mf_reserve_moves`, ish valyutasida, tuzatiladigan); oy hisobida jamg'arma harakatlari bilan birga (qoldiqlar alohida). Qorovul puldan olish — sabab bilan va qoldiqdan oshmaydi (`RESERVE_INSUFFICIENT`).
+- **Zaxira pul harakatlari** alohida jadvalda (`mf_reserve_moves`, ish valyutasida, tuzatiladigan); oy hisobida jamg'arma harakatlari bilan birga (qoldiqlar alohida). Zaxira puldan olish — sabab bilan va qoldiqdan oshmaydi (`RESERVE_INSUFFICIENT`).
 - **Maqsad tarixi** — qaytish jamg'armasi prognozi bilan bir xil oylar (oxirgi 3 to'liq oy, yozuvi borlari); o'sha oylarda xarajat bo'lmasa maqsad 0 (`FULL`).
-- **Maoshdan keyingi taklif** ikki qadam: avval «Qorovul pulga qo'yish», keyin qolgani «Jamg'armaga qo'yish» (summalar yadrodan).
+- **Maoshdan keyingi taklif** ikki qadam: avval «Zaxira pulga qo'yish», keyin qolgani «Jamg'armaga qo'yish» (summalar yadrodan).
 - **Ish boshlash summasi** — `mf_settings` da (uy valyutasida) va ixtiyoriy U12 g'oyasi; g'oya tanlansa, uning boshlang'ich sarmoyasi (uy valyutasida bo'lsa) taklif qilinadi. Maqsad keyin kamaytirilsa — summa saqlanadi, belgi bilan ko'rsatiladi (`exceeds_target`). «Hunardan ishga» — Uy makonida; Musofir bosh sahifasidagi tugma o'sha ekranni ochadi.
 - **Qaror natijasi** — `mf_decision_outcomes` (bir qarorga bir marta; sana qaror sanasidan oldin va kelajakda bo'lmaydi); shaxsiy.
 - Hammasi oilaga yuborilmaydi (ADR-0004; ikki qurilmali test).
-- Qilinmagan: qorovul pul uy valyutasida ko'rinishi (kurs bilan), Android UI.
+- Qilinmagan: zaxira pul uy valyutasida ko'rinishi (kurs bilan), Android UI.
 
-### 6.8. 7-qonun qissasidan (M5; OQ-MF10…OQ-MF12 — mahsulot egasi qarori, 2026-10-20)
-- **«Besh xavf belgisi»** (Sobir hoji): 1 — katta foydani kafolatlash, 2 — shoshirish («faqat bugun, joy kam»), 3 — daromad yangi odam olib kelishdan, 4 — ishning o'zi yo'q (ombor, mol, hujjat, **ruxsat** yo'q; **o'z ko'zi bilan tekshirtirmaydi**), 5 — **kirish oson, chiqish qiyin**. Taklif detektoriga uch savol qo'shildi — `licensed` (yo'q — sariq), `inspection` (yo'q — qizil), `exitEasy` (yo'q — qizil); «bilmayman» — sariq. **Ikki va undan ortiq belgi — `TWO_SIGNS` (qizil)**: «bittasini ko'rsangiz — hushyor torting, ikkinchisini — qoching». Jadval Uy U12 «Taklifni tekshirish» bilan umumiy (vektorlar `offer_check`, `mf_cooling`; paritet testi).
+### 6.8. Firibgarlik belgilari va qaytish xavfsizligi (M5; OQ-MF10…OQ-MF12 — mahsulot egasi qarori, 2026-10-20)
+- **«Besh xavf belgisi»** (firibgarlikning keng ma'lum belgilari): 1 — katta foydani kafolatlash, 2 — shoshirish («faqat bugun, joy kam»), 3 — daromad yangi odam olib kelishdan, 4 — ishning o'zi yo'q (ombor, mol, hujjat, **ruxsat** yo'q; **o'z ko'zi bilan tekshirtirmaydi**), 5 — **kirish oson, chiqish qiyin**. Taklif detektoriga uch savol qo'shildi — `licensed` (yo'q — sariq), `inspection` (yo'q — qizil), `exitEasy` (yo'q — qizil); «bilmayman» — sariq. **Ikki va undan ortiq belgi — `TWO_SIGNS` (qizil)**: bitta belgi — ehtiyot bo'lishga, ikkitasi — taklifdan voz kechishga sabab. Jadval Uy U12 «Taklifni tekshirish» bilan umumiy (vektorlar `offer_check`, `mf_cooling`; paritet testi).
 - **Va'da qilingan foyda:** katta qaror tekshiruvida ixtiyoriy «oyiga va'da qilingan foyda, %» — oddiy hisob: yiliga = oyiga × 12, pul (1 + yiliga) barobar («oyiga 35 % — yiliga 420 %, pul 5,2 barobar»). Bu taxmin emas — va'daning o'zi qanchalik g'ayrioddiyligini ko'rsatadi.
 - **«Qal'a devori»:** qaytgandan keyin olib kelingandan oilaning **6 oylik ro'zg'ori** ajratiladi = Uy makonining oxirgi to'liq oylardagi (yozuvi borlari, ko'pi bilan 3 ta) o'rtacha xarajati × 6 (`mf_wall`). Katta qaror «erkin pul»dan (olib kelingan − devor) oshsa — `FORTRESS_WALL` (qizil), **sovutish davridan tashqarida ham**. Uy xarajati tarixi bo'lmasa — devor yo'q.
 - **Olib kelingan summa valyutada:** «Qaytdim»da summa istalgan valyutada (masalan, 18 000 USD) va kurs bilan; foiz va devor — uy valyutasida (`convert`). Uy valyutasida bo'lsa kurs kerak emas.
@@ -179,13 +179,13 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 ### 9.1. M1
 | Suite | Case'lar (kamida) |
 |---|---|
-| `mf_month` | Rustam aka (KRW, 0 kasr): maosh, xarajat, uyga + komissiya, jamg'arma — ulush bajarildi; ulush yetmadi; jamg'arma yo'q; jamg'armadan olindi; qo'ldagi pul manfiy; daromadsiz oy (ulushlar `null`); USD (2 kasr) bp yaxlitlash; xatolar — summa ≤ 0, manfiy komissiya, noma'lum tur, bp > 10000 |
+| `mf_month` | Bobur aka (KRW, 0 kasr): maosh, xarajat, uyga + komissiya, jamg'arma — ulush bajarildi; ulush yetmadi; jamg'arma yo'q; jamg'armadan olindi; qo'ldagi pul manfiy; daromadsiz oy (ulushlar `null`); USD (2 kasr) bp yaxlitlash; xatolar — summa ≤ 0, manfiy komissiya, noma'lum tur, bp > 10000 |
 | `mf_return_fund` | maqsadga yetgan; shu sur'atda N oy (yuqoriga yaxlitlash); qaytish sanasigacha yetmaydi (`BEHIND`); jamg'arish yo'q (`NO_SAVING`); maqsadsiz; o'rtacha qoldiq yaxlitlash; qaytish sanasi o'tib ketgan (0 oy); xatolar — noto'g'ri kurs |
 
 ### 9.2. M2, M3
 - `mf_remittance` (M2): bitta va bir nechta yuborish, largest remainder qoldiq birliklari, qabul qilinmagan («yo'lda»), maqsaddan ortiq sarflangan, ulushsiz maqsadga xarajat; xatolar — ulushlar yig'indisi ≠ 100 %, takroriy maqsad, nol ulush, noma'lum maqsad, summa ≤ 0.
 - `mf_travel_debt`, `mf_cooling` — M3.
-- `mf_reserve`, `mf_startup` (M4); `mf_month` qorovul pul harakatlari bilan kengayadi.
+- `mf_reserve`, `mf_startup` (M4); `mf_month` zaxira pul harakatlari bilan kengayadi.
 - `mf_wall` (M5); `offer_check` va `mf_cooling` — «besh xavf belgisi», `TWO_SIGNS`, `FORTRESS_WALL`, va'da hisobi.
 
 ## 10. ISH REJASI
@@ -194,8 +194,8 @@ Mentor — Sobir hoji (Uy va Kasb-kor bilan bir xil ovoz): «Musofirning puli ik
 | M1 | Ko'p valyuta, chet eldagi maosh va xarajat, o'z ulushi, qaytish jamg'armasi | 2–4 | `mf_month`, `mf_return_fund` yashil; uy valyutasidagi har ko'rsatkich kursi bilan; kurssiz — taxmin yo'q; bosh ekran 1 va 2-raqami |
 | M2 | «Ikki qirg'oq»: maqsadlar, `REMITTANCE`, uyda maqsad bo'yicha xarajat | 5, 8 | maqsad bo'yicha qoldiq; kelishuv 9 savol; `.baraka` round-trip |
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori | 6 | 90 kunlik sovutish; detektor vektorlari |
-| M4 | Qorovul pul (OQ-MF3), ish boshlash summasi va «Hunardan ishga» havolasi, qaror natijasi | 6.4, 6.6 | `mf_month` (qorovul harakatlari), `mf_reserve`, `mf_startup` yashil; ulush avval qorovulga |
-| M5 | 7-qonun qissasidan: «besh xavf belgisi», qal'a devori, valyutada olib kelingan summa | 6.8 | `offer_check`, `mf_cooling`, `mf_wall` yashil; qissadagi «Plyus» taklifi — qizil |
+| M4 | Zaxira pul (OQ-MF3), ish boshlash summasi va «Hunardan ishga» havolasi, qaror natijasi | 6.4, 6.6 | `mf_month` (zaxira harakatlari), `mf_reserve`, `mf_startup` yashil; ulush avval zaxiraga |
+| M5 | Firibgarlik belgilari va qaytish xavfsizligi: «besh xavf belgisi», qal'a devori, valyutada olib kelingan summa | 6.8 | `offer_check`, `mf_cooling`, `mf_wall` yashil; namunaviy «kafolatli foyda» taklifi — qizil |
 
 Har bir M-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar).
 

@@ -14,11 +14,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -76,7 +76,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -92,7 +92,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {
@@ -124,11 +124,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -191,7 +191,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -207,7 +207,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {
@@ -241,11 +241,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -303,7 +303,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -319,7 +319,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Dilshod Rahimov"
+              "fullName": "Sherzod Rahimov"
             }
           },
           "term": {
@@ -353,11 +353,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -415,7 +415,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -465,11 +465,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -519,7 +519,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -535,7 +535,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {
@@ -569,11 +569,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -631,7 +631,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -642,7 +642,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {
@@ -672,11 +672,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -719,7 +719,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -735,7 +735,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {
@@ -767,11 +767,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -876,11 +876,11 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               },
               {
                 "id": "P2",
-                "fullName": "Dilshod Rahimov"
+                "fullName": "Sherzod Rahimov"
               }
             ]
           },
@@ -937,7 +937,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -953,7 +953,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {
@@ -987,7 +987,7 @@
             "value": [
               {
                 "id": "P1",
-                "fullName": "Anvar Karimov"
+                "fullName": "Bekzod Karimov"
               }
             ]
           },
@@ -1045,7 +1045,7 @@
           "custody": {
             "status": "ANSWERED",
             "value": {
-              "location": "Anvarning kartasi",
+              "location": "Bekzodning kartasi",
               "keeperPartyId": "P1",
               "reviewEveryDays": 30
             }
@@ -1061,7 +1061,7 @@
           "arbiter": {
             "status": "ANSWERED",
             "value": {
-              "fullName": "Sobir hoji"
+              "fullName": "Hasan Yusupov"
             }
           },
           "term": {

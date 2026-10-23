@@ -1,6 +1,6 @@
-// Qorovul pul, ish boshlash summasi va qaror natijasi (M4, musofir/SPEC 6.4, 6.6). Rustam aka: Musofir (KRW,
-// maqsad 120 mln so'm) → o'tgan 2 oy: maosh va 800 000 von xarajat → qorovul pul boshlang'ich 500 000 →
-// shu oy maosh: ulush 520 000 = 300 000 qorovul pulga + 220 000 jamg'armaga → qorovul pul to'la → kasalxona
+// Zaxira pul, ish boshlash summasi va qaror natijasi (M4, musofir/SPEC 6.4, 6.6). Bobur aka: Musofir (KRW,
+// maqsad 120 mln so'm) → o'tgan 2 oy: maosh va 800 000 von xarajat → zaxira pul boshlang'ich 500 000 →
+// shu oy maosh: ulush 520 000 = 300 000 zaxira pulga + 220 000 jamg'armaga → zaxira pul to'la → kasalxona
 // uchun 200 000 olindi (ulush kamaymaydi) → «Hunardan ishga»da «Tikuv sexi» (30 mln) → ish boshlash summasi:
 // yashash uchun 90 mln → qarz so'rovi rad etildi va natijasi «qilmadim».
 import assert from "node:assert/strict";
@@ -36,12 +36,12 @@ async function entry(app, action, within, { amount, date, note }) {
   const dialog = await app.x("//div[@role='dialog']");
   if (amount) await app.type("Summa (KRW)", amount, dialog);
   if (date) await app.setDate("Sana (boʻsh — bugun)", date, dialog);
-  if (note) await app.type(action === "Qorovul puldan" ? "Sabab" : "Izoh", note, dialog);
+  if (note) await app.type(action === "Zaxira puldan" ? "Sabab" : "Izoh", note, dialog);
   await app.click("Saqlash", dialog);
   await dialog.waitForExist({ reverse: true });
 }
 
-describe("Musofir: qorovul pul va ish boshlash summasi", () => {
+describe("Musofir: zaxira pul va ish boshlash summasi", () => {
   let app;
   before(async () => {
     app = await startApp();
@@ -51,8 +51,8 @@ describe("Musofir: qorovul pul va ish boshlash summasi", () => {
     await app?.shot(`mfq-last-${t.name.slice(0, 2)}`).catch(() => {});
   });
 
-  it("Q1. sozlash va o'tgan 2 oy: maosh va xarajat — qorovul pul maqsadi", async () => {
-    await onboard(app, { household: "Rustam akaning oilasi", name: "Rustam", spaces: ["Musofir"], rhythm: "Oylik maosh" });
+  it("Q1. sozlash va o'tgan 2 oy: maosh va xarajat — zaxira pul maqsadi", async () => {
+    await onboard(app, { household: "Bobur akaning oilasi", name: "Bobur", spaces: ["Musofir"], rhythm: "Oylik maosh" });
     await app.click("Musofir", await app.region("Makonlar"));
     const form = await app.region("Musofir makonini sozlash", "form");
     await app.selectText("Ish valyutasi", "Koreya voni (KRW)", form);
@@ -66,20 +66,20 @@ describe("Musofir: qorovul pul va ish boshlash summasi", () => {
       await app.click("Keyinroq");
       await entry(app, "Xarajat", null, { amount: "800 000", date: monthsAgo(k) });
     }
-    // Ikki oy o'rtachasi 800 000 — 1 oylik maqsad; qorovul pul bo'sh.
-    await waitValue(app, "mf-reserve-status", "Qorovul pul boʻsh");
+    // Ikki oy o'rtachasi 800 000 — 1 oylik maqsad; zaxira pul bo'sh.
+    await waitValue(app, "mf-reserve-status", "Zaxira pul boʻsh");
     assert.match(await app.text("mf-reserve-status"), /800 000 KRW kerak/);
   });
 
-  it("Q2. ulush avval qorovul pulga, qolgani jamg'armaga", async () => {
-    await entry(app, "Qorovul pul (boshlangʻich)", await app.region("Qorovul pul yozuvlari"), { amount: "500 000" });
+  it("Q2. ulush avval zaxira pulga, qolgani jamg'armaga", async () => {
+    await entry(app, "Zaxira pul (boshlangʻich)", await app.region("Zaxira pul yozuvlari"), { amount: "500 000" });
     await waitValue(app, "mf-reserve-status", "Yana 300 000 KRW");
     await app.b.keys(["Control", "n"]);
     await entry(app, null, null, { amount: "2 600 000" });
-    await waitValue(app, "mf-offer", "300 000 KRW — qorovul pulga, 220 000 KRW — qaytish jamgʻarmasiga");
+    await waitValue(app, "mf-offer", "300 000 KRW — zaxira pulga, 220 000 KRW — qaytish jamgʻarmasiga");
     await noAxe(app, "mf-offer-split");
     await app.shot("desktop-99-mf-offer-split");
-    await app.click("Qorovul pulga qoʻyish");
+    await app.click("Zaxira pulga qoʻyish");
     let dialog = await app.x("//div[@role='dialog']");
     assert.equal(await (await app.field("Summa (KRW)", dialog)).getValue(), "300000");
     await app.click("Saqlash", dialog);
@@ -90,17 +90,17 @@ describe("Musofir: qorovul pul va ish boshlash summasi", () => {
     await app.click("Saqlash", dialog);
     await dialog.waitForExist({ reverse: true });
     await waitValue(app, "mf-reserve", "800 000 KRW");
-    await waitValue(app, "mf-reserve-status", "Qorovul pul toʻla");
+    await waitValue(app, "mf-reserve-status", "Zaxira pul toʻla");
     await waitValue(app, "mf-share", "520 000");
   });
 
-  it("Q3. kasalxona: qorovul puldan 200 000 — ulush kamaymaydi", async () => {
-    await entry(app, "Qorovul puldan", await app.region("Qorovul pul yozuvlari"), { amount: "200 000", note: "Kasalxona" });
+  it("Q3. kasalxona: zaxira puldan 200 000 — ulush kamaymaydi", async () => {
+    await entry(app, "Zaxira puldan", await app.region("Zaxira pul yozuvlari"), { amount: "200 000", note: "Kasalxona" });
     await waitValue(app, "mf-reserve-status", "Yana 200 000 KRW");
     await waitValue(app, "mf-share", "520 000");
     assert.equal(await (await app.testId("mf-share-gap")).isExisting(), false);
     await noAxe(app, "mf-reserve");
-    await scrollTo(app, "Qorovul pul");
+    await scrollTo(app, "Zaxira pul");
     await app.shot("desktop-100-mf-reserve");
   });
 

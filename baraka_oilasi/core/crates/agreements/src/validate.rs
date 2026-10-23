@@ -245,8 +245,8 @@ mod tests {
     fn musharaka() -> AgreementDraft {
         AgreementDraft {
             parties: answered(vec![
-                party("P1", "Anvar Karimov"),
-                party("P2", "Dilshod Rahimov"),
+                party("P1", "Bekzod Karimov"),
+                party("P2", "Sherzod Rahimov"),
             ]),
             contributions: answered(vec![
                 Contribution {
@@ -300,7 +300,7 @@ mod tests {
                 asset_split: None,
             }),
             arbiter: answered(Arbiter {
-                full_name: "Sobir hoji".into(),
+                full_name: "Hasan Yusupov".into(),
                 role: None,
                 party_id: None,
             }),
@@ -329,7 +329,7 @@ mod tests {
             breach_clause: None,
         }]);
         d.arbiter = answered(Arbiter {
-            full_name: "anvar karimov".into(),
+            full_name: "bekzod karimov".into(),
             role: None,
             party_id: None,
         });
@@ -398,7 +398,7 @@ mod tests {
     fn serde_shape() {
         let json = serde_json::to_value(&musharaka().arbiter).unwrap();
         assert_eq!(json["status"], "ANSWERED");
-        assert_eq!(json["value"]["fullName"], "Sobir hoji");
+        assert_eq!(json["value"]["fullName"], "Hasan Yusupov");
         let na: Answer<Arbiter> =
             serde_json::from_str(r#"{"status":"NOT_APPLICABLE","reason":"oilaviy"}"#).unwrap();
         assert_eq!(

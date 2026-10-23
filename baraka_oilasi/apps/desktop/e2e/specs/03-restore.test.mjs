@@ -18,7 +18,7 @@ describe("Zaxira nusxadan tiklash", () => {
   it("eksport → yangi profil → qo'shilish: ma'lumotlar 1:1", async () => {
     const a = await startApp();
     apps.push(a);
-    await onboard(a, { household: "Karim akaning oilasi", name: "Karim", members: [{ name: "Malika" }] });
+    await onboard(a, { household: "Ravshan akaning oilasi", name: "Karim", members: [{ name: "Malika" }] });
     await a.b.keys(["Control", "n"]);
     await a.type("Summa", "1 250 000");
     await a.type("Manba", "Bozor");

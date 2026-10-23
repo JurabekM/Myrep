@@ -1,4 +1,4 @@
-# Baraka — Android ilovasi (Flutter)
+# Baraka Dastur — Android ilovasi (Flutter)
 
 Desktop bilan **bitta Rust yadro** (`core/`): pul, jurnal, xavfsizlik va barcha qoidalar yadroda;
 Flutter faqat ko'rsatadi va yadroni `flutter_rust_bridge` (FRB) orqali chaqiradi

@@ -90,8 +90,8 @@ void main() {
     await scrollTop(tester);
     await shot(tester, 'android-20-idea');
     await tapText(tester, 'Sheriklik shartnomasiga oʻtish');
-    await enter(tester, 'Kapital beruvchining toʻliq ismi', 'Dilshod Rahimov');
-    await enter(tester, 'Bizning toʻliq ismimiz', 'Anvar Karimov');
+    await enter(tester, 'Kapital beruvchining toʻliq ismi', 'Sherzod Rahimov');
+    await enter(tester, 'Bizning toʻliq ismimiz', 'Bekzod Karimov');
     await tapText(tester, 'Qoralama yaratish');
     await waitFor(tester, find.text('Tikuv ustaxonasi'));
     // Shartnoma oynasi ochilsin: «4 / 9» matni sheriklik ro'yxatida ham bor (CI'da poyga bo'lgan).
@@ -103,15 +103,15 @@ void main() {
     await tapChip(tester, 'Javob');
     await tapText(tester, '+ Vazifa qoʻshish');
     await enter(tester, 'Vazifa', 'Buyurtmalarni qabul qilish');
-    await choose(tester, 'Masʼul', 'Anvar Karimov');
+    await choose(tester, 'Masʼul', 'Bekzod Karimov');
     await enter(tester, 'Bajarilmasa nima boʻladi', '1 kun ichida xabar beradi');
     await tapText(tester, 'Saqlash va keyingisi');
     await waitFor(tester, find.text('4. Foyda qanday boʻlinadi?'));
     // 6. Pul va hisob.
     await _step(tester, 6);
     await tapChip(tester, 'Javob');
-    await enter(tester, 'Pul qayerda turadi', 'Anvarning kartasida');
-    await choose(tester, 'Hisobni kim yuritadi', 'Anvar Karimov');
+    await enter(tester, 'Pul qayerda turadi', 'Bekzodning kartasida');
+    await choose(tester, 'Hisobni kim yuritadi', 'Bekzod Karimov');
     await enter(tester, 'Necha kunda bir koʻrib chiqiladi', '30');
     await tapText(tester, 'Saqlash va keyingisi');
     // 7. Ajralish.
@@ -143,7 +143,7 @@ void main() {
 
     // 10. Imzolar: tomonlar, guvoh va hakam shu telefonda.
     await _step(tester, 10);
-    for (final name in ['Dilshod Rahimov', 'Anvar Karimov', 'Jamshid Aliyev', 'Hasan Yusupov']) {
+    for (final name in ['Sherzod Rahimov', 'Bekzod Karimov', 'Jamshid Aliyev', 'Hasan Yusupov']) {
       await _sign(tester, name);
     }
     await waitFor(tester, find.text('1-versiyani hamma imzoladi.'));
@@ -154,8 +154,8 @@ void main() {
     // 11. Boshlash: «bu qarz emas», oila roziligi → faol.
     await _step(tester, 11);
     await tapText(tester, 'Tushundim, bu qarz emas');
-    await waitFor(tester, find.text('Anvar rozi'));
-    await tapText(tester, 'Anvar rozi');
+    await waitFor(tester, find.text('Bekzod rozi'));
+    await tapText(tester, 'Bekzod rozi');
     // «Boshlash» tugmasi rozilikdan oldin ham bor — rozilik yozilganini kutamiz.
     await waitFor(tester, find.textContaining('✓ rozi,'));
     await tapText(tester, 'Sheriklikni boshlash');
@@ -195,7 +195,7 @@ void main() {
     await waitFor(tester, find.text('Bajara olmayapman'));
     await tapText(tester, 'Bajara olmayapman');
     await enter(tester, 'Sabab', 'Telefon buzildi');
-    await enter(tester, 'Taklif qilingan yechim', 'Buyurtmalarni Gulnora qabul qiladi');
+    await enter(tester, 'Taklif qilingan yechim', 'Buyurtmalarni Mohira qabul qiladi');
     await tapText(tester, 'Xabar berish');
     await waitFor(tester, find.textContaining('Xabar jurnalga yozildi'));
     expect(find.textContaining('1 kun ichida xabar beradi', findRichText: true), findsWidgets);
@@ -236,9 +236,9 @@ void main() {
     await tapChip(tester, 'Oilaviy kelishuvlar');
     await tapText(tester, 'Uyda kim nima qiladi');
     await tapText(tester, 'Saqlash');
-    await waitFor(tester, find.text('Anvar tasdiqlaydi'));
-    await tapText(tester, 'Anvar tasdiqlaydi');
-    await enter(tester, 'Anvar: PIN bilan tasdiqlang', '135790');
+    await waitFor(tester, find.text('Bekzod tasdiqlaydi'));
+    await tapText(tester, 'Bekzod tasdiqlaydi');
+    await enter(tester, 'Bekzod: PIN bilan tasdiqlang', '135790');
     await tapText(tester, 'Tasdiqlash');
     await waitFor(tester, find.text('Hamma tasdiqlagan'));
     await scrollTop(tester);
@@ -262,8 +262,8 @@ void main() {
 
     // Zaxira nusxa: eksport → shu faylni import oynasida ochish.
     await goTo(tester, 'Sinxronlash');
-    await enter(tester, 'Fayl paroli', 'Anvar-2026!');
-    await enter(tester, 'Parolni takrorlang', 'Anvar-2026!');
+    await enter(tester, 'Fayl paroli', 'Bekzod-2026!');
+    await enter(tester, 'Parolni takrorlang', 'Bekzod-2026!');
     await tapText(tester, 'Faylni saqlash');
     await waitFor(tester, find.textContaining('Fayl saqlandi'));
     final backup = device.shared.last;
@@ -275,7 +275,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     final pw = find.widgetWithText(TextField, 'Fayl paroli').last;
     await tester.ensureVisible(pw);
-    await tester.enterText(pw, 'Anvar-2026!');
+    await tester.enterText(pw, 'Bekzod-2026!');
     await tester.pump();
     // O'z faylini qayta qabul qilish — yadro rad etadi (yozuvlar ikki marta tushmasin).
     await tapText(tester, 'Koʻrib chiqish');

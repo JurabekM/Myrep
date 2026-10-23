@@ -8,7 +8,7 @@
 
 #let setup(doc, data) = {
   let lang = if data.locale == "ru" { "ru" } else { "uz" }
-  set document(title: data.title, author: "Baraka")
+  set document(title: data.title, author: "Baraka Dastur")
   set page(
     paper: "a4",
     margin: (x: 2cm, top: 2cm, bottom: 2.4cm),

@@ -1,6 +1,6 @@
 {
   "@@locale": "uz",
-  "app_name": "Baraka",
+  "app_name": "Baraka Dastur",
   "app_disclaimer": "Taʼlimiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas.",
   "setup_title": "Xush kelibsiz! Daftarni birga ochamiz",
   "setup_household": "Oila nomi",
@@ -129,10 +129,10 @@
   "error_REQUIRED": "Bu maydonni toʻldiring",
   "error_PLATFORM_SECRET_UNAVAILABLE": "Tizimning kalitlar omboriga kirib boʻlmadi",
   "error_GENERIC": "Nimadir xato ketdi. Qayta urinib koʻring.",
-  "mentor_name": "Sobir hoji",
+  "mentor_name": "Moliyaviy maslahatchi",
   "mentor_home": "Bugun oʻzingizga qancha toʻladingiz? Kichik boʻlsa ham — odat muhim.",
   "mentor_vault": "Bu pul — kelajakdagi oʻzingizniki. Har hafta ozgina boʻlsa ham ajrating.",
-  "mentor_expenses": "Yozilmagan xarajatni boshqarib boʻlmaydi. Somsa ham yoziladi.",
+  "mentor_expenses": "Yozilmagan xarajatni boshqarib boʻlmaydi. Eng mayda xarajat ham yoziladi.",
   "mentor_audit": "Izohsiz summa — ayb emas, topshiriq. Keling, qayerga ketganini birga eslaymiz.",
   "mentor_debts": "Qarz — yara. Reja bilan, oz-ozdan, lekin toʻxtamasdan chiqamiz.",
   "loan_col_month": "Oy",
@@ -288,7 +288,7 @@
   "friction_need_NECESSITY": "Zarurat",
   "friction_need_LUXURY": "Hashamat",
   "friction_alternatives": "Foizsiz muqobil bormi?",
-  "friction_alt_QOROVUL": "Qorovul pul",
+  "friction_alt_QOROVUL": "Zaxira pul",
   "friction_alt_RELATIVE": "Qarindoshdan foizsiz",
   "friction_alt_SELL_ITEM": "Buyum sotish",
   "friction_warn_RIBO": "Bu qarz foizli (ribo). Foizsiz yoʻlini yana bir bor qidirib koʻring.",
@@ -455,10 +455,10 @@
   "items_noDebt": "Qarzga emas",
   "celebrate_closed": "Qarz yopildi!",
   "celebrate_debtFree": "Qarzsiz kun keldi!",
-  "celebrate_closedText": "Yana bir kishan yechildi. Reja bilan, oz-ozdan — mana natijasi.",
+  "celebrate_closedText": "Yana bitta qarz yopildi. Reja bilan, oz-ozdan — mana natijasi.",
   "celebrate_debtFreeText": "Barcha qarzlar yopildi. Bu kunni oila bilan nishonlang.",
   "celebrate_modeReturned": "«Qarzdan chiqish» rejimi oddiy rejimga qaytdi.",
-  "celebrate_freed": "Har oy {amount} boʻshadi. Uni «Kelajagim»ga yoʻnaltiring — qorovul pul va oʻsadigan pul uchun.",
+  "celebrate_freed": "Har oy {amount} boʻshadi. Uni «Kelajagim»ga yoʻnaltiring — zaxira pul va oʻsadigan pul uchun.",
   "@celebrate_freed": {
     "placeholders": {
       "amount": {}
@@ -709,7 +709,7 @@
   "ceremony_pdf": "Smeta PDF",
   "ceremony_pressure_0": "El uch kun gapiradi, toʻrtinchi kuni oʻz dardi bilan ovora boʻladi. Qarz esa yillar davomida qoladi.",
   "ceremony_pressure_1": "Toʻyning barakasi dasturxonning uzunligida emas, oilaning xotirjamligida.",
-  "ceremony_pressure_2": "Karim aka 40 mln lik toʻy uchun 60 mln dan ortiq toʻladi va hali qarzi bor. Hisob-kitob oldindan qilinsa, bu takrorlanmaydi.",
+  "ceremony_pressure_2": "Qarzga qilingan 40 mln lik toʻy yillar oʻtib 60 mln dan ortiqqa tushishi mumkin — va qarz hali ham qoladi. Hisob-kitobni oldindan qilsangiz, bunday boʻlmaydi.",
   "ceremony_pressure_3": "Ixcham toʻydan tejalgan pul yosh oilaga uy, oʻqish yoki ish boshlash uchun poydevor boʻladi.",
   "ceremony_pressure_next": "Yana bir fikr",
   "ceremony_giftGoal": "Toʻyona oʻrniga jamgʻarma",
@@ -737,7 +737,7 @@
   "error_INVALID_GUESTS": "Mehmonlar sonini butun son bilan yozing",
   "error_AMOUNT_NEGATIVE": "Summa manfiy boʻlmaydi",
   "nav_partnerships": "Sheriklik",
-  "mentor_partnerships": "Ot bilan omoch — ikkalasi birga yer haydaydi. Sheriklik qarz ham, sadaqa ham emas: teng huquqli ish. Avval yozamiz, keyin boshlaymiz.",
+  "mentor_partnerships": "Sheriklik qarz ham, sadaqa ham emas: foydada ham, zararda ham kelishilgan ulushga ega teng huquqli ish. Avval yozamiz, keyin boshlaymiz.",
   "partnership_title": "Sheriklik",
   "partnership_new": "Yangi sheriklik",
   "partnership_intro": "Bir odamning puli bekor yotadi, boshqasining hunari pulsizlikdan bekor turadi. Mudoraba yoki musharaka bilan ular birga ishlaydi: foyda ulush boʻyicha, tavakkal birga. Shartnomani 9 savol boʻyicha yozamiz va shu yerda imzolaymiz.",
@@ -958,7 +958,7 @@
   "partnership_gateHint": "Siz kapital kiritasiz. Avval oilaning oʻzi mustahkam boʻlsin: jangga yarador askar yuborilmaydi.",
   "partnership_gate_open": "Tayyorgarlik darvozasi ochiq",
   "partnership_gate_closed": "Tayyorgarlik darvozasi hali yopiq",
-  "partnership_gate_coverage": "Qorovul pul {months} oylik (kerak — {required} oy): {balance}, oylik zarur xarajat {essentials}.",
+  "partnership_gate_coverage": "Zaxira pul {months} oylik (kerak — {required} oy): {balance}, oylik zarur xarajat {essentials}.",
   "@partnership_gate_coverage": {
     "placeholders": {
       "balance": {},
@@ -967,13 +967,13 @@
       "required": {}
     }
   },
-  "partnership_gate_noHistory": "Qorovul pul: {balance}. Oylik zarur xarajatni bilish uchun xarajatlar tarixi kerak.",
+  "partnership_gate_noHistory": "Zaxira pul: {balance}. Oylik zarur xarajatni bilish uchun xarajatlar tarixi kerak.",
   "@partnership_gate_noHistory": {
     "placeholders": {
       "balance": {}
     }
   },
-  "partnership_gate_reason_EMERGENCY_FUND_BELOW_TARGET": "Qorovul pul 6 oylik zarur xarajatga yetmagan.",
+  "partnership_gate_reason_EMERGENCY_FUND_BELOW_TARGET": "Zaxira pul 6 oylik zarur xarajatga yetmagan.",
   "partnership_gate_reason_INTEREST_DEBT_WITHOUT_PLAN": "Foizli qarz bor, lekin «Qarzdan chiqish» rejasi yoqilmagan.",
   "partnership_gate_reason_INTEREST_DEBT_ACTIVE": "Foizli qarz toʻliq yopilmagan.",
   "partnership_notDebt_title": "Bu qarz emas",
@@ -4206,31 +4206,31 @@
   "mf_shores_debt": "Qaysi qarz",
   "mf_shores_noDebts": "Uy makonida faol qarz yoʻq — avval «Qarzlar»da yozing.",
   "mf_shores_payDebt": "Qarzni toʻlash",
-  "error_RESERVE_INSUFFICIENT": "Qorovul pulda buncha pul yoʻq",
+  "error_RESERVE_INSUFFICIENT": "Zaxira pulda buncha pul yoʻq",
   "error_STARTUP_EXCEEDS_TARGET": "Ish boshlash summasi qaytish jamgʻarmasi maqsadidan katta boʻlmasin",
   "error_OUTCOME_ALREADY_SET": "Bu qarorning natijasi allaqachon belgilangan",
   "error_BEFORE_DECISION": "Natija sanasi qaror sanasidan oldin boʻlmasin",
-  "mf_reserve_title": "Qorovul pul",
-  "mf_reserve_status_FULL": "Qorovul pul toʻla — {count} oylik xarajatga yetadi. Endi ulush jamgʻarmaga.",
+  "mf_reserve_title": "Zaxira pul",
+  "mf_reserve_status_FULL": "Zaxira pul toʻla — {count} oylik xarajatga yetadi. Endi ulush jamgʻarmaga.",
   "@mf_reserve_status_FULL": {
     "placeholders": {
       "count": {}
     }
   },
-  "mf_reserve_status_PARTIAL": "Yana {gap} — qorovul pul toʻladi.",
+  "mf_reserve_status_PARTIAL": "Yana {gap} — zaxira pul toʻladi.",
   "@mf_reserve_status_PARTIAL": {
     "placeholders": {
       "gap": {}
     }
   },
-  "mf_reserve_status_EMPTY": "Qorovul pul boʻsh. Maoshdagi ulush avval shu yerga — {gap} kerak.",
+  "mf_reserve_status_EMPTY": "Zaxira pul boʻsh. Maoshdagi ulush avval shu yerga — {gap} kerak.",
   "@mf_reserve_status_EMPTY": {
     "placeholders": {
       "gap": {}
     }
   },
-  "mf_reserve_status_NO_HISTORY": "Bir oy xarajatlarni yozing — qorovul pul maqsadini hisoblayman.",
-  "mf_reserve_progress": "Qorovul pul toʻlishi",
+  "mf_reserve_status_NO_HISTORY": "Bir oy xarajatlarni yozing — zaxira pul maqsadini hisoblayman.",
+  "mf_reserve_progress": "Zaxira pul toʻlishi",
   "mf_reserve_progressLine": "{percent} % · maqsad {target}",
   "@mf_reserve_progressLine": {
     "placeholders": {
@@ -4246,20 +4246,20 @@
     }
   },
   "mf_reserve_months": "Necha oylik xarajat",
-  "mf_reserve_actions": "Qorovul pul yozuvlari",
-  "mf_reserve_hint": "Kasal boʻlsangiz yoki ishsiz qolsangiz — qorovul puldan oling; qaytish jamgʻarmasi qaytish uchun qoladi.",
-  "mf_action_RESERVE_IN": "Qorovul pulga",
-  "mf_action_RESERVE_OUT": "Qorovul puldan",
-  "mf_action_RESERVE_OPENING": "Qorovul pul (boshlangʻich)",
+  "mf_reserve_actions": "Zaxira pul yozuvlari",
+  "mf_reserve_hint": "Kasal boʻlsangiz yoki ishsiz qolsangiz — zaxira puldan oling; qaytish jamgʻarmasi qaytish uchun qoladi.",
+  "mf_action_RESERVE_IN": "Zaxira pulga",
+  "mf_action_RESERVE_OUT": "Zaxira puldan",
+  "mf_action_RESERVE_OPENING": "Zaxira pul (boshlangʻich)",
   "mf_hint_RESERVE_IN": "Kutilmagan xarajat uchun alohida pul. Ulush avval shu yerga, toʻlgach — jamgʻarmaga.",
-  "mf_hint_RESERVE_OUT": "Qorovul puldan olish. Sababini yozing — bu ayblov emas, u shuning uchun bor.",
-  "mf_hint_RESERVE_OPENING": "Hozir qorovul pulingizda qancha bor (bir marta).",
-  "mf_kind_RESERVE_IN": "Qorovul pulga",
-  "mf_kind_RESERVE_OUT": "Qorovul puldan",
-  "mf_kind_RESERVE_OPENING": "Qorovul pul (boshlangʻich)",
-  "mf_flow_reserveIn": "Qorovul pulga",
-  "mf_flow_reserveOut": "Qorovul puldan",
-  "mf_offerSplit": "Shu maoshdan oʻz ulushi {share}: {reserve} — qorovul pulga, {fund} — qaytish jamgʻarmasiga.",
+  "mf_hint_RESERVE_OUT": "Zaxira puldan olish. Sababini yozing — bu ayblov emas, u shuning uchun bor.",
+  "mf_hint_RESERVE_OPENING": "Hozir zaxira pulingizda qancha bor (bir marta).",
+  "mf_kind_RESERVE_IN": "Zaxira pulga",
+  "mf_kind_RESERVE_OUT": "Zaxira puldan",
+  "mf_kind_RESERVE_OPENING": "Zaxira pul (boshlangʻich)",
+  "mf_flow_reserveIn": "Zaxira pulga",
+  "mf_flow_reserveOut": "Zaxira puldan",
+  "mf_offerSplit": "Shu maoshdan oʻz ulushi {share}: {reserve} — zaxira pulga, {fund} — qaytish jamgʻarmasiga.",
   "@mf_offerSplit": {
     "placeholders": {
       "fund": {},
@@ -4267,7 +4267,7 @@
       "share": {}
     }
   },
-  "mf_offerReserve": "Qorovul pulga qoʻyish",
+  "mf_offerReserve": "Zaxira pulga qoʻyish",
   "mf_startup_title": "Qaytgandan keyin ish",
   "mf_startup_intro": "Qaytgach oʻz ishingizni boshlamoqchimisiz? Kerakli summani qaytish jamgʻarmasi maqsadining bir qismi qilib belgilang.",
   "mf_startup_amountLine": "Ish boshlash uchun: {amount}",
@@ -4321,9 +4321,9 @@
   "offer_flag_LICENSE_UNKNOWN": "Davlat ruxsati bormi — aniq emas. Hujjatini soʻrang.",
   "offer_flag_INSPECTION_REFUSED": "Ishni koʻrsatishmayapti. Halol odam «kel, koʻr» deydi; «tekshirishning hojati yoʻq» degan joyda — yolgʻon bor.",
   "offer_flag_INSPECTION_UNKNOWN": "Hali soʻramadingiz: «pul qoʻyishdan oldin omboringni, molingni, hujjatingni koʻraman» deng.",
-  "offer_flag_EXIT_HARD": "Kirish oson, chiqish qiyin — pulni qaytarib soʻrasangiz «keyinroq» deyishadi. Qoching.",
+  "offer_flag_EXIT_HARD": "Kirish oson, chiqish qiyin — pulni qaytarib soʻrasangiz, «keyinroq» deyishlari mumkin. Bunday taklifdan uzoq turing.",
   "offer_flag_EXIT_UNKNOWN": "Pulni qaytarib olish shartlari aniq emas — yozma soʻrang.",
-  "offer_flag_TWO_SIGNS": "Besh xavf belgisidan ikkitasi va undan koʻpi bor. «Bittasini koʻrsangiz — hushyor torting, ikkinchisini koʻrsangiz — qoching».",
+  "offer_flag_TWO_SIGNS": "Besh xavf belgisidan ikkitasi va undan koʻpi bor. Bitta belgi — ehtiyot boʻlishga, ikkitasi — bu taklifdan voz kechishga yetarli sabab.",
   "offer_signs": "Besh xavf belgisidan topildi: {count}",
   "@offer_signs": {
     "placeholders": {
