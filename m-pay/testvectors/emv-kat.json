@@ -1,0 +1,90 @@
+{
+  "scheme": "MPAY-AES128-CMAC-V1",
+  "generator": "scripts/gen_emv_kat.py (Python cryptography, Rust'dan mustaqil)",
+  "cases": [
+    {
+      "name": "basic",
+      "imk": "000102030405060708090a0b0c0d0e0f",
+      "dpan": "9900770000001230",
+      "psn": 0,
+      "mk_context": "103939303037373030303030303132333000",
+      "token_master_key": "c0d8d37caf79397b6f8a5823829b8a49",
+      "luk_seq": 1,
+      "luk": "d599af4982970b8d972fa30d63b509f0",
+      "atc": 1,
+      "session_key": "d617cfcb552b5ee29ecdc856eb737c3c",
+      "terminal": {
+        "amount_minor": 1250000,
+        "other_amount_minor": 0,
+        "country": 860,
+        "tvr": "0000000000",
+        "currency": 860,
+        "date_yymmdd": "261023",
+        "txn_type": 0,
+        "un": "a1b2c3d4"
+      },
+      "pdol_data": "00000125000000000000000008600000000000086026102300a1b2c3d4",
+      "iad": "0101000000018000",
+      "cdol": "00000125000000000000000008600000000000086026102300a1b2c3d4008000010101000000018000",
+      "arqc": "d2cb7091eac8b1a4",
+      "arc": "00",
+      "arpc": "b1a08680"
+    },
+    {
+      "name": "decline-arc",
+      "imk": "000102030405060708090a0b0c0d0e0f",
+      "dpan": "9900770000001230",
+      "psn": 0,
+      "mk_context": "103939303037373030303030303132333000",
+      "token_master_key": "c0d8d37caf79397b6f8a5823829b8a49",
+      "luk_seq": 1,
+      "luk": "d599af4982970b8d972fa30d63b509f0",
+      "atc": 2,
+      "session_key": "b1ac1347d2b32a75bcdd23238e4b247f",
+      "terminal": {
+        "amount_minor": 99,
+        "other_amount_minor": 0,
+        "country": 860,
+        "tvr": "0000008000",
+        "currency": 860,
+        "date_yymmdd": "261023",
+        "txn_type": 0,
+        "un": "00000001"
+      },
+      "pdol_data": "0000000000990000000000000860000000800008602610230000000001",
+      "iad": "0101000000018000",
+      "cdol": "0000000000990000000000000860000000800008602610230000000001008000020101000000018000",
+      "arqc": "07ed9a8c42cdf53a",
+      "arc": "05",
+      "arpc": "f03814b0"
+    },
+    {
+      "name": "max-values",
+      "imk": "fedcba9876543210f0e1d2c3b4a59687",
+      "dpan": "9900999999999993",
+      "psn": 1,
+      "mk_context": "103939303039393939393939393939393301",
+      "token_master_key": "8933b13329e2a71cf2ae1239e3af1a89",
+      "luk_seq": 4294967295,
+      "luk": "42917f304113aec6da175d7a13ff5f51",
+      "atc": 65535,
+      "session_key": "3f1a32ea7959d08488bfca75e43e89a5",
+      "terminal": {
+        "amount_minor": 999999999999,
+        "other_amount_minor": 5000,
+        "country": 860,
+        "tvr": "0000000000",
+        "currency": 860,
+        "date_yymmdd": "280229",
+        "txn_type": 0,
+        "un": "ffffffff"
+      },
+      "pdol_data": "99999999999900000000500008600000000000086028022900ffffffff",
+      "iad": "0101ffffffff0000",
+      "cdol": "99999999999900000000500008600000000000086028022900ffffffff0080ffff0101ffffffff0000",
+      "arqc": "1ee769f40e6c1fd5",
+      "arc": "Q1",
+      "arpc": "b8fe3b20"
+    }
+  ]
+}

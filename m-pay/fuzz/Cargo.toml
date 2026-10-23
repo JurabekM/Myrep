@@ -1,0 +1,33 @@
+[package]
+name = "mpay-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+mpay-common = { path = "../crates/mpay-common" }
+
+[[bin]]
+name = "tlv_parse"
+path = "fuzz_targets/tlv_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "iso8583_unpack"
+path = "fuzz_targets/iso8583_unpack.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "emv_parse"
+path = "fuzz_targets/emv_parse.rs"
+test = false
+doc = false
+bench = false

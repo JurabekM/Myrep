@@ -10,3 +10,16 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+subtle.workspace = true
+time.workspace = true
+async-trait.workspace = true
+hex.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+hex-literal.workspace = true

@@ -12,3 +12,11 @@ workspace = true
 [dependencies]
 mpay-common.workspace = true
 mpay-crypto.workspace = true
+ml-kem.workspace = true
+ml-dsa.workspace = true
+x25519-dalek.workspace = true
+chacha20poly1305.workspace = true
+p256.workspace = true
+x509-cert.workspace = true
+der.workspace = true
+rand_core.workspace = true

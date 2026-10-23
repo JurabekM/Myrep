@@ -166,7 +166,34 @@ CDOL ma'lumoti (41 bayt) — quyidagi qiymatlarning ketma-ket ulanishi (teglarsi
 
 ## 9. KAT vektorlari
 
-`TODO(M1):` `testvectors/emv-kat.json` dan generatsiya qilingan jadval shu yerga qo'shiladi.
+To'liq to'plam (3 holat: `basic`, `decline-arc`, `max-values`) — `testvectors/emv-kat.json`.
+Vektorlarni `scripts/gen_emv_kat.py` **Rust'dan mustaqil** Python implementatsiyasi (Python
+`cryptography` AES-CMAC) faqat shu hujjat asosida generatsiya qiladi; Rust testi
+`crates/mpay-crypto/tests/emv_kat.rs` har bir oraliq qiymatni solishtiradi. Kotlin SDK (M6) ham
+shu fayldan foydalanadi.
+
+`basic` holati (barcha kalitlar fiktiv):
+
+| Qiymat | Hex |
+|---|---|
+| IMK-AC | `000102030405060708090a0b0c0d0e0f` |
+| DPAN / PSN | `9900770000001230` / `00` |
+| MK kontekst | `103939303037373030303030303132333000` |
+| MK_tok | `c0d8d37caf79397b6f8a5823829b8a49` |
+| LUK (i = 1) | `d599af4982970b8d972fa30d63b509f0` |
+| SK (ATC = 1) | `d617cfcb552b5ee29ecdc856eb737c3c` |
+| PDOL ma'lumoti | `00000125000000000000000008600000000000086026102300a1b2c3d4` |
+| IAD | `0101000000018000` |
+| CDOL | `00000125000000000000000008600000000000086026102300a1b2c3d4008000010101000000018000` |
+| ARQC | `d2cb7091eac8b1a4` |
+| ARC / ARPC | `"00"` (`3030`) / `b1a08680` |
+
+Terminal ma'lumoti: summa 1 250 000 tiyin (12 500,00 UZS), mamlakat va valyuta 860, TVR nol,
+sana 2026-10-23, xarid (`00`), UN `a1b2c3d4`.
+
+Primitivlar uchun ochiq standart vektorlar (`crates/mpay-crypto/src/keystore/conformance.rs`,
+har bir KeyStore backend'ida — memory va SoftHSM2 — bajariladi): RFC 4493 (AES-CMAC),
+RFC 4231 #6–#7 (HMAC-SHA256), GCM test case 13/14, RFC 8032 #1–#2 (Ed25519).
 
 ## 10. Ochiq savollar
 
