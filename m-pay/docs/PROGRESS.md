@@ -69,3 +69,42 @@ SoftHSM2 integratsion testi Docker'da.
 **Keyingi bosqich (M2)**: `mpay-pqlink` — gibrid handshake (X25519 + ML-KEM-768, Ed25519 + ML-DSA-65),
 attestatsiya zanjiri tekshiruvi, ChaCha20-Poly1305 yozuvlar, replay himoyasi, NIST ACVP
 vektorlari (ML-KEM/ML-DSA), `pqlink.md` yakuniy versiyasi.
+
+## M2 — mpay-pqlink (2026-10-23)
+
+**Nima qilindi**
+
+* `mpay-pqlink`: PQ Link v1 server va client holat mashinalari — X25519 + ML-KEM-768 gibrid KEM,
+  `HKDF-SHA256(ss_x25519 ‖ ss_mlkem, salt = th1)`, gibrid server imzosi Ed25519 (HSM) + ML-DSA-65
+  (KEK bilan o'ralgan urug'), `s_finished`/`c_finished`, Android Key Attestation zanjiri tekshiruvi
+  (KeyDescription, xavfsizlik darajasi siyosati), ChaCha20-Poly1305 yozuvlar (yo'nalish bo'yicha kalit,
+  monoton `seq`, replay rad, AEAD xatosida sessiya yopiladi), sessiya TTL va limit.
+* `sandbox-attestation` feature: sandbox attestatsiya CA (`rcgen`) va `SoftDeviceKey` (soft-wallet uchun).
+* NIST ACVP: `scripts/trim_acvp.py` usnistgov/ACVP-Server'dan ML-KEM-768 va ML-DSA-65 qismini
+  `testvectors/acvp/` ga ajratadi (1,5 MB).
+* `docs/specs/pqlink.md` — **v1 yakunlangan**: maydonlar va hajmlar, tekshirish tartibi, cheklovlar,
+  xatolar, tekshiruv qamrovi.
+* Fuzz maqsadi `pqlink_decode`.
+
+**Qanday tekshirildi**
+
+* `cargo test --workspace` — 93 test o'tdi.
+* ACVP: 110 NIST vektori — ML-KEM-768 keyGen 10, encaps 10, decaps 10, ek/dk tekshiruvi 20;
+  ML-DSA-65 keyGen 10, sigGen 20 (tashqi/ichki × deterministik/hedged), sigVer 30 (to'g'ri va noto'g'ri).
+  FIPS 204 Algorithm 2 dagi `M' = 0 ‖ |ctx| ‖ ctx ‖ M` qurilishimiz hedged vektorlar bilan tasdiqlandi.
+* Handshake testlari (13): to'liq oqim; replay va tartibsiz yozuv (sessiya saqlanadi); buzilgan yozuv
+  (sessiya yopiladi); buzilgan Ed25519 / ML-DSA / `s_finished`; pinlanmagan server; faqat Ed25519 to'g'ri
+  bo'lgan aralash identifikator; begona CA; TEE < StrongBox; ko'chirilgan attestatsiya zanjiri;
+  ClientFinished buzilishi va takrori; sessiya/handshake muddati; sessiya limiti; tasodifiy kirishlar.
+* Fuzz `pqlink_decode` 60 s — 746 544 yugurish, crash yo'q.
+* clippy `-D warnings` (barcha feature'lar bilan), fmt, `cargo deny` (faqat `syn`, `getrandom`
+  dublikat ogohlantirishlari), `cargo audit` — toza.
+
+**Ochiq savollar** (M2 ni bloklamaydi, `pqlink.md` §9 da):
+
+* attestatsiya challenge'ini enrollment bilan bog'lash, Google ildizlari (RSA/P-384), server kalit
+  rotatsiyasi, Kotlin uchun deterministik handshake vektori — M6.
+
+**Keyingi bosqich (M3)**: `mpay-vault` (SQLite, envelope-shifrlangan PAN/DPAN, provisioning
+GREEN/YELLOW/RED, LUK berish va to'ldirish, lifecycle, xesh-zanjirli audit) va `mpay-server` API
+(axum, PQ Link endpointlari, operator/terminal autentifikatsiyasi), Shield stub.

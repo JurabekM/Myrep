@@ -7,7 +7,6 @@
 //! cargo test -p mpay-crypto --features pkcs11 -- --include-ignored pkcs11
 //! ```
 #![allow(clippy::unwrap_used, clippy::expect_used)]
-
 #![cfg(feature = "pkcs11")]
 
 use mpay_common::Pan;

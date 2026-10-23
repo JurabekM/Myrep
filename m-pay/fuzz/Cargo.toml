@@ -10,6 +10,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4.13"
 mpay-common = { path = "../crates/mpay-common" }
+mpay-pqlink = { path = "../crates/mpay-pqlink" }
 
 [[bin]]
 name = "tlv_parse"
@@ -28,6 +29,13 @@ bench = false
 [[bin]]
 name = "emv_parse"
 path = "fuzz_targets/emv_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pqlink_decode"
+path = "fuzz_targets/pqlink_decode.rs"
 test = false
 doc = false
 bench = false
