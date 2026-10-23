@@ -34,11 +34,30 @@ Pay Sandbox — haqiqiy pulsiz, to'liq ishlaydigan demo.
 ## Tez boshlash
 
 ```bash
-cargo build --workspace
-```
-
-```bash
 cargo test --workspace
 ```
 
-Batafsil: `docs/PROGRESS.md` va har crate'ning `README.md` fayli.
+Telefonsiz namoyish (sandbox, TLS):
+
+```bash
+cargo run -p mpay-server -- init --dir .mpay --tls
+```
+
+```bash
+cargo run -p mpay-server -- serve --config .mpay/mpay.toml
+```
+
+Boshqa terminalda (`.mpay/mpay.toml` dagi `[[issuer.accounts]]` PAN'laridan biri bilan):
+
+```bash
+cargo run -p mpay-terminal-sim --bin mpay-tsim -- --server https://localhost:8080 provision --pan <FPAN> --expiry 3112
+```
+
+```bash
+cargo run -p mpay-terminal-sim --bin mpay-tsim -- --server https://localhost:8080 tap --amount 12500.00
+```
+
+To'liq avtomatik smoke (haqiqiy binarlar): `bash scripts/smoke-e2e.sh`.
+SoftHSM2 testlari (Docker): `bash scripts/softhsm-test.sh` va `bash scripts/softhsm-test.sh e2e`.
+
+Batafsil: `docs/PROGRESS.md`, `docs/specs/`, har crate'ning `README.md` fayli.

@@ -6,10 +6,11 @@ use std::sync::Arc;
 use mpay_common::clock::{Clock, SystemClock};
 use mpay_crypto::keystore::{ensure_standard_keys, KeyLabel, KeyStore, MemoryKeyStore};
 use mpay_crypto::scheme::{CryptogramScheme, MpayAes128CmacV1};
+use mpay_issuer::Issuer;
 use mpay_pqlink::attestation::{AttestationPolicy, TrustAnchors};
 use mpay_pqlink::{KeyStoreServerSigner, MlDsaSeedBlob, PqLinkServer, ServerConfig};
 use mpay_shield::StubShield;
-use mpay_vault::Vault;
+use mpay_vault::{Vault, VaultDetokenizer};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
@@ -28,6 +29,8 @@ pub enum BootError {
     PqLink(#[from] mpay_pqlink::PqLinkError),
     #[error("Vault: {0}")]
     Vault(#[from] mpay_vault::VaultError),
+    #[error("Issuer: {0}")]
+    Issuer(#[from] mpay_issuer::IssuerError),
 }
 
 fn read(path: &Path) -> Result<Vec<u8>, BootError> {
@@ -40,6 +43,7 @@ fn read(path: &Path) -> Result<Vec<u8>, BootError> {
 /// Ilova holati.
 pub struct AppState {
     pub vault: Arc<Vault>,
+    pub issuer: Arc<Issuer>,
     pub pqlink: Arc<PqLinkServer>,
     pub keystore: Arc<dyn KeyStore>,
     pub scheme: Arc<dyn CryptogramScheme>,
@@ -181,12 +185,26 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let shield = Arc::new(StubShield::new(cfg.shield_stub.clone()));
     let vault = Arc::new(
         Vault::open(
+            pool.clone(),
+            ks.clone(),
+            scheme.clone(),
+            shield.clone(),
+            clock.clone(),
+            cfg.vault.clone(),
+        )
+        .await?,
+    );
+    // Detokenizatsiya porti faqat emitentga beriladi (ADR-0002).
+    let detok = Arc::new(VaultDetokenizer::new(vault.clone(), "issuer"));
+    let issuer = Arc::new(
+        Issuer::open(
             pool,
             ks.clone(),
             scheme.clone(),
+            detok,
             shield,
             clock.clone(),
-            cfg.vault.clone(),
+            cfg.issuer.clone(),
         )
         .await?,
     );
@@ -198,6 +216,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     );
     Ok(AppState {
         vault,
+        issuer,
         pqlink,
         keystore: ks,
         scheme,

@@ -1,6 +1,7 @@
 # M-Pay Pay Sandbox — tahdid modeli (STRIDE)
 
-> Holat: **M0 qoralama**. Har bosqichda nazoratlar holati yangilanadi.
+> Holat: **M4**. "Holat" ustunidagi M1–M4 nazoratlari amalga oshirilgan va testlangan
+> (`docs/PROGRESS.md`); M6/M7 belgilari — ochiq.
 
 ## 1. Qamrov
 

@@ -4,6 +4,7 @@
 //! ishga tushiradi.
 #![forbid(unsafe_code)]
 
+pub mod acquirer;
 pub mod auth;
 pub mod config;
 pub mod error;

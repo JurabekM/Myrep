@@ -59,7 +59,20 @@ jobs:
         env:
           MPAY_PKCS11_LIB: /usr/lib/softhsm/libsofthsm2.so
           MPAY_PKCS11_TOKEN_LABEL: mpay-ci
-        run: cargo test -p mpay-crypto --features pkcs11 -- --include-ignored pkcs11
+        run: |
+          cargo test -p mpay-crypto --features pkcs11 -- --include-ignored pkcs11
+          cargo test -p mpay-e2e --features pkcs11 --test pkcs11_e2e -- --include-ignored
+
+  smoke:
+    name: Haqiqiy binarlar bilan smoke (init → serve → mpay-tsim)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: m-pay
+      - run: bash scripts/smoke-e2e.sh
 
   supply-chain:
     name: cargo deny + cargo audit

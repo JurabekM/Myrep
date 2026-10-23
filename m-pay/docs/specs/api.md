@@ -1,6 +1,6 @@
 # M-Pay Pay Sandbox — HTTP API
 
-> Holat: **M3 — token API'lari yakunlangan**; `/v1/authorizations` — M4.
+> Holat: **M4 — barcha sandbox endpointlari amalga oshirilgan**.
 > DTO'lar: `crates/mpay-common/src/api.rs`, marshrutlar: `crates/mpay-server/src/routes.rs`.
 
 ## 1. Umumiy qoidalar
@@ -43,7 +43,8 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | DELETE | `/v1/tokens/{token_id}` | operator | — | → DELETED (LUK'lar bekor qilinadi, qaytarib bo'lmaydi) |
 | GET | `/v1/audit/verify` | operator | — | audit xesh-zanjirini tekshirish |
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
-| POST | `/v1/authorizations` | terminal | JSON | M4: tap natijasi → ISO 8583 `0100` → `0110` |
+| POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
+| GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
 
 ## 3. Sxemalar
 
@@ -116,6 +117,43 @@ LUK'lar `2 × batch_size` dan ko'p bo'lsa `TOO_MANY_LUKS`.
 ### 3.7 `GET /v1/sandbox/otp/{challenge_id}`
 
 `{"challenge_id": "chl_…", "otp": "123456"}` — faqat `sandbox = true` va `sandbox_api.expose_otp = true`.
+
+### 3.8 `POST /v1/authorizations` (terminal)
+
+Acquirer shlyuzi: terminal JSON → ISO 8583 `0100` (ikkilik, `crates/mpay-common/src/iso8583.rs`) →
+emitent emulyatori → `0110` → JSON.
+
+So'rov:
+
+```json
+{ "terminal_id": "TERM0001", "merchant_id": "SHOP0000000001", "stan": 1,
+  "icc_data": "<BER-TLV hex: GPO javobi (82, 57, 5F34, 5F24, 9F36, 9F26, 9F27, 9F10) + PDOL teglari>" }
+```
+
+`0100` maydonlari: 2 = DPAN (`57` dan), 3 = `000000`, 4 = `9F02`, 7 = UTC `MMDDhhmmss`, 11 = STAN,
+14 = token muddati, 22 = `071`, 35 = Track 2 (`=`), 37 = RRN (`yDDDhh` + STAN), 41/42 = probel bilan
+to'ldirilgan, 49 = `5F2A`, 55 = ARQC, CID, IAD, UN, ATC, TVR, sana, tur, summa, valyuta, AIP,
+mamlakat, boshqa summa.
+
+Javob:
+
+```json
+{ "approved": true, "response_code": "00", "reason": "APPROVED", "stan": 1, "rrn": "629612000001",
+  "dpan_masked": "990077******1234", "amount_minor": 1250000, "currency": 860,
+  "issuer_auth_data": "<ARPC(4) ‖ ARC(2), hex>", "risk_score": 50 }
+```
+
+`response_code`: `00`, `05`, `51`, `59`, `91`, `Q1` (ADR-0007). `reason`: `APPROVED`,
+`APPROVED_AFTER_REVIEW`, `UNKNOWN_TOKEN`, `TOKEN_NOT_ACTIVE`, `LUK_UNKNOWN`, `LUK_EXPIRED`,
+`LUK_EXHAUSTED`, `ARQC_MISMATCH`, `ATC_REPLAY`, `FIELD_MISMATCH`, `ICC_DATA_MISSING`,
+`UNSUPPORTED_SCHEME`, `ISSUER_OFFLINE`, `RISK_DECLINE`, `RISK_REVIEW`, `ACCOUNT_NOT_FOUND`,
+`CURRENCY_MISMATCH`, `INSUFFICIENT_FUNDS`. `issuer_auth_data` faqat ARQC to'g'ri bo'lganda
+(replay'da — yo'q). Xatolar: `BAD_REQUEST` (ICC hex/TLV, Track 2, maydon uzunliklari),
+`ISSUER_ERROR` / `ISSUER_FORMAT` (502).
+
+### 3.9 `GET /v1/sandbox/accounts` (operator, faqat sandbox)
+
+Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "balance_minor"}]`.
 
 ## 4. Xato kodlari
 

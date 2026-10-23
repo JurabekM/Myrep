@@ -17,6 +17,15 @@ use mpay_crypto::keystore::{
 };
 use mpay_crypto::scheme::{CryptogramScheme, MpayAes128CmacV1};
 
+/// SoftHSM2 bir nechta sessiyadan bir vaqtda token obyektlari yaratilganda ba'zan
+/// `CKR_GENERAL_ERROR` qaytaradi (2026-10-23 da kuzatilgan). Server bitta sessiyani `Mutex`
+/// ostida ishlatadi, shuning uchun testlar ham ketma-ket bajariladi.
+static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn serial() -> std::sync::MutexGuard<'static, ()> {
+    SERIAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 fn open() -> Pkcs11KeyStore {
     Pkcs11KeyStore::open(&Pkcs11Config::from_env().expect("MPAY_PKCS11_* muhit o'zgaruvchilari"))
         .unwrap()
@@ -29,6 +38,7 @@ fn unique() -> String {
 #[test]
 #[ignore = "SoftHSM2 kerak"]
 fn pkcs11_conformance_kat() {
+    let _g = serial();
     let ks = open();
     check_conformance(&ks, &unique()).unwrap();
 }
@@ -36,6 +46,7 @@ fn pkcs11_conformance_kat() {
 #[test]
 #[ignore = "SoftHSM2 kerak"]
 fn pkcs11_keys_are_non_extractable_and_persist() {
+    let _g = serial();
     let ks = open();
     let p = unique();
     let imk = KeyLabel::new(format!("{p}.imk"));
@@ -51,6 +62,7 @@ fn pkcs11_keys_are_non_extractable_and_persist() {
 #[test]
 #[ignore = "SoftHSM2 kerak"]
 fn pkcs11_matches_memory_for_emv_chain_and_envelope() {
+    let _g = serial();
     let ks = open();
     let p = unique();
     let imk_bytes = [0x2Bu8; 16];
@@ -79,6 +91,7 @@ fn pkcs11_matches_memory_for_emv_chain_and_envelope() {
 #[test]
 #[ignore = "SoftHSM2 kerak"]
 fn pkcs11_standard_keys() {
+    let _g = serial();
     let ks = open();
     ensure_standard_keys(&ks).unwrap();
     ensure_standard_keys(&ks).unwrap();

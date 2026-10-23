@@ -12,8 +12,9 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use mpay_common::api::{
-    Empty, Envelope, LukDto, LuksResponse, OtpVerifyRequest, ProvisionRequest as ProvisionDto,
-    ProvisionResponse, SandboxOtp, ServerIdentityDto, TokenProfileDto,
+    AuthorizationRequest, Empty, Envelope, LukDto, LuksResponse, OtpVerifyRequest,
+    ProvisionRequest as ProvisionDto, ProvisionResponse, SandboxOtp, ServerIdentityDto,
+    TokenProfileDto,
 };
 use mpay_common::{CardExpiry, Pan, PanKind, TokenId};
 use mpay_pqlink::SessionInfo;
@@ -46,6 +47,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens/{id}/resume", post(resume))
         .route("/v1/audit/verify", get(audit_verify))
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
+        .route("/v1/sandbox/accounts", get(sandbox_accounts))
+        .route("/v1/authorizations", post(authorize))
         .route_layer(middleware::from_fn(log_requests))
         .layer(DefaultBodyLimit::max(256 * 1024))
         .with_state(state)
@@ -335,4 +338,52 @@ async fn sandbox_otp(
         otp: Zeroizing::new(otp),
     })
     .into_response())
+}
+
+async fn sandbox_accounts(State(s): St, headers: HeaderMap) -> Result<Response, ApiError> {
+    if !s.sandbox {
+        return Err(ApiError::not_found());
+    }
+    s.auth.authorize(&headers, Role::Operator)?;
+    let accts = s.issuer.accounts().await.map_err(|e| {
+        tracing::error!(error = %e, "issuer hisoblari");
+        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+    })?;
+    Ok(Json(accts).into_response())
+}
+
+// ---------------------------------------------------------------- terminal
+
+async fn authorize(
+    State(s): St,
+    headers: HeaderMap,
+    Json(req): Json<AuthorizationRequest>,
+) -> Result<Response, ApiError> {
+    let caller = s.auth.authorize(&headers, Role::Terminal)?;
+    let built = crate::acquirer::build_0100(&req, s.clock.now())?;
+    let bytes = built.msg.pack();
+    let (resp, outcome) = s.issuer.process_bytes(&bytes).await.map_err(|e| {
+        tracing::warn!(error = %e, "issuer 0100 ni qayta ishlay olmadi");
+        ApiError::new(
+            StatusCode::BAD_GATEWAY,
+            "ISSUER_ERROR",
+            "emitent so'rovni qayta ishlay olmadi",
+        )
+    })?;
+    let out = crate::acquirer::parse_0110(
+        &resp,
+        &built,
+        req.stan,
+        outcome.reason.as_str(),
+        outcome.risk_score,
+    )?;
+    tracing::info!(
+        terminal = %caller.id,
+        dpan = %out.dpan_masked,
+        code = %out.response_code,
+        reason = %out.reason,
+        stan = out.stan,
+        "acquirer: avtorizatsiya"
+    );
+    Ok(Json(out).into_response())
 }

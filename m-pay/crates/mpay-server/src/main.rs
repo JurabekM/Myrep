@@ -33,6 +33,9 @@ enum Cmd {
         tls: bool,
         #[arg(long)]
         force: bool,
+        /// `memory` yoki `pkcs11`.
+        #[arg(long, default_value = "memory")]
+        keystore: String,
     },
     /// Serverni ishga tushiradi.
     Serve {
@@ -72,12 +75,19 @@ async fn run(cli: Cli) -> Result<(), String> {
             listen,
             tls,
             force,
+            keystore,
         } => {
+            let keystore = match keystore.as_str() {
+                "memory" => mpay_server::config::KeyStoreBackend::Memory,
+                "pkcs11" => mpay_server::config::KeyStoreBackend::Pkcs11,
+                _ => return Err("--keystore: memory yoki pkcs11".into()),
+            };
             let out = mpay_server::init::run(&mpay_server::init::InitOptions {
                 dir,
                 listen,
                 tls,
                 force,
+                keystore,
             })?;
             println!("Sandbox tayyor: {}", out.config_path.display());
             println!("PQ Link server barmoq izi: {}", out.server_fingerprint);

@@ -1,6 +1,7 @@
 # M-Pay Test Scheme — kontaktsiz EMV-ga o'xshash profil (v1)
 
-> Holat: **M0 qoralama**. KAT vektorlari M1 da qo'shiladi (§9).
+> Holat: **v1 (M4)** — soft-karta (`crates/mpay-terminal-sim/src/card.rs`), terminal yadrosi va
+> emitent emulyatori shu profil bo'yicha amalga oshirilgan; KAT — §9.
 >
 > Bu **o'zimizning fiktiv** sxemamiz. Humo, Uzcard, Visa, Mastercard spetsifikatsiyalariga
 > asoslanmagan va ularni takrorlamaydi. Tuzilma umumiy ochiq EMV tamoyillariga (ISO 7816-4 APDU,
@@ -162,7 +163,15 @@ CDOL ma'lumoti (41 bayt) — quyidagi qiymatlarning ketma-ket ulanishi (teglarsi
 * Har LUK: `max_uses` (standart 10) va `ttl` (standart 24 soat) — konfiguratsiya qilinadi.
 * Muddati o'tgan, limiti tugagan yoki noma'lum LUK bilan kriptogramma — har doim rad (`Q1`).
 * LUK foydalanishi faqat ARQC muvaffaqiyatli tekshirilgandan keyin hisoblanadi (D1 tahdidi).
-* ATC token bo'yicha qat'iy o'sishi shart (replay → `Q1`).
+* ATC token bo'yicha qat'iy o'sishi shart (replay → `Q1`, ARPC berilmaydi).
+
+## 8.1 CDCVM (karta tomoni)
+
+* Summa karta siyosatidagi limitdan (sandbox: 1 000 000,00 UZS) yuqori va CDCVM bajarilmagan bo'lsa,
+  GPO `6986` ("telefonga qarang") qaytaradi.
+* CDCVM bir martalik: muvaffaqiyatli GPO'dan keyin bayroq tushiriladi. IAD CVR: `80` bajarildi,
+  `40` talab qilingan edi.
+* `TODO(spec):` issuer tomonidagi CVM siyosati (M6, `BiometricPrompt` bilan).
 
 ## 9. KAT vektorlari
 

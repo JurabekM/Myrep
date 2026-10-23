@@ -156,3 +156,68 @@ GREEN/YELLOW/RED, LUK berish va to'ldirish, lifecycle, xesh-zanjirli audit) va `
 javob kodlari), `mpay-terminal-sim` (APDU transport trait, loopback soft-karta, terminal yadrosi,
 `mpay-tsim` CLI), `/v1/authorizations`, telefonsiz e2e: provisioning → tap → `0110` (tasdiq va har
 bir rad kodi).
+
+## M4 — mpay-issuer + mpay-terminal-sim (2026-10-23)
+
+**Nima qilindi**
+
+* `mpay-issuer`: ISO 8583 `0100` → `0110` (ikkilik packer orqali), qaror zanjiri: format va
+  CDOL ↔ maydon 4/49 → detokenizatsiya → LUK holati → ARQC (constant-time) → token holati →
+  atomar LUK/ATC qaydi → emitent mavjudligi → Shield → hisob/qoldiq (atomar debet);
+  ARPC (`91` = ARPC ‖ ARC, `8A`) faqat ARQC to'g'ri bo'lganda (replay'da yo'q); javob kodlari
+  `00`/`05`/`51`/`59`/`91`/`Q1` (ADR-0007) va ichki sabab kodlari; UZS test hisoblari (PAN barmoq izi
+  bo'yicha, PAN saqlanmaydi); avtorizatsiya qaydnomasi.
+* `mpay-terminal-sim`: `ApduTransport` trait + `Loopback`; `SoftCard` (SELECT PPSE/AID, GPO,
+  LUK tanlash, CDCVM `6986`, ARPC tekshiruvi); terminal yadrosi (PPSE → AID → PDOL → GPO);
+  `mpay-tsim` CLI (`provision` — YELLOW'da sandbox OTP avtomatik, `tap`, `replenish`, `status`;
+  hamyon fayli, monoton STAN).
+* `mpay-server`: acquirer shlyuzi `POST /v1/authorizations` (terminal roli), `GET /v1/sandbox/accounts`;
+  `init` demo test hisoblarini yozadi va `--keystore pkcs11` ni qo'llaydi.
+* Skriptlar: `scripts/smoke-e2e.sh` (haqiqiy binarlar), `scripts/softhsm-test.sh e2e`.
+  CI: SoftHSM to'liq oqim va smoke job'lari qo'shildi.
+* Hujjatlar: `api.md` (yakuniy), `emv-profile.md` v1 (CDCVM §8.1), README'lar.
+
+**Qanday tekshirildi**
+
+* `cargo test --workspace` — 119 test o'tdi.
+* **Telefonsiz e2e** (`tests/e2e/tests/m4_tap_to_pay.rs`, haqiqiy TCP/HTTP): provisioning → loopback
+  tap → `0110`:
+  * `00` — qoldiq aniq summaga kamaydi, ARPC karta tomonida tasdiqlandi (soxta ARPC rad);
+  * `59` (RISKY merchant), REVIEW → `00 APPROVED_AFTER_REVIEW`;
+  * `Q1` — buzilgan ARQC, o'zgartirilgan summa, ATC replay, LUK limiti tugagan, LUK muddati o'tgan
+    (karta lokal limitlari o'chirilgan holda — server himoyasi alohida sinaldi);
+  * `05` — to'xtatilgan token (resume'dan keyin yana `00`), noma'lum token;
+  * `51` — qoldiq o'zgarmaydi; `91` — offline emitent BIN;
+  * CDCVM: limitdan yuqori summa biometriyasiz `6986`, bir martalik;
+  * terminal roli, noto'g'ri ICC; loglarda PAN/DPAN/LUK/ARQC yo'q.
+* Emitent ISO testlari: maydon 4/49 va Track 2 nomuvofiqligi, ICC yo'qligi, noma'lum sxema,
+  noto'g'ri MTI, tasodifiy baytlar (proptest).
+* **Haqiqiy binarlar smoke** (`scripts/smoke-e2e.sh`, TLS): `init` → `serve` → `mpay-tsim`:
+  GREEN/YELLOW/RED, `00`/`59`/`51`/`91`, `6986` → `--cdcvm` bilan `00`, LUK to'ldirish, `audit-verify`
+  (23 yozuv), server logida ochiq PAN/DPAN yo'q — **SMOKE OK**.
+* **SoftHSM2 (Docker)**: crypto 4/4 (3 marta ketma-ket barqaror) va to'liq oqim
+  `pkcs11_provisioning_and_tap` — IMK, KEK, PAN-IDX, Ed25519 HSM'da; tap `00`, ARPC to'g'ri.
+* clippy `-D warnings` (shu jumladan `mpay-server --features pkcs11`), fmt, `cargo deny`, `cargo audit` — toza.
+
+**Topilgan va tuzatilgan muammolar**
+
+* Smoke: bir soniya ichidagi taplarda STAN/RRN takrorlanardi (vaqtdan olingan) → hamyonda monoton STAN.
+* SoftHSM2: parallel sessiyalardan bir vaqtda `C_GenerateKey` ba'zan `CKR_GENERAL_ERROR` → PKCS#11
+  testlari ketma-ket (server bitta sessiyani `Mutex` ostida ishlatadi — bu holat unda yuzaga kelmaydi).
+* `init` faqat `memory` KeyStore'ni qo'llardi → `--keystore pkcs11` (ML-DSA urug'i HSM KEK bilan o'raladi).
+
+**Ochiq savollar**
+
+* `TODO(spec):` issuer tomonidagi CVM siyosati (CDCVM bo'lmagan yuqori summalar) — M6.
+* `TODO(spec):` takroriy STAN/RRN ni acquirer darajasida rad etish (hozir faqat ATC replay himoyasi).
+* `TODO(spec):` REVIEW uchun standart siyosat (hozir `approve`, konfiguratsiyada `decline`).
+
+## M0–M4 yakuni
+
+Telefonsiz to'liq demo ishlaydi: qurilma PQ Link (X25519 + ML-KEM-768, Ed25519 + ML-DSA-65,
+Android Key Attestation simulyatsiyasi) orqali tokenlashtiradi, soft-karta EMV-ga o'xshash APDU
+oqimida ARQC hisoblaydi, emitent emulyatori ISO 8583 orqali tekshirib `0110` va ARPC qaytaradi;
+barcha javob kodlari e2e va haqiqiy binarlar bilan sinalgan, PAN DB'da faqat shifrlangan va loglarda yo'q.
+
+**Keyingi bosqich (M5)**: `mpay-shield` v0 (TOML qoidalar, tezlik va graf belgilari, `tract` ONNX skor,
+p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM → ONNX). Tasdig'ingizni kutaman.

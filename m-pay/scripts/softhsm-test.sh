@@ -2,7 +2,8 @@
 # SoftHSM2 (PKCS#11) integratsion testlarini Docker konteynerida ishga tushiradi.
 # Windows'da SoftHSM2 yo'q (ADR-0003) — shuning uchun Linux konteyner.
 #
-#   bash scripts/softhsm-test.sh
+#   bash scripts/softhsm-test.sh          # mpay-crypto PKCS#11 testlari
+#   bash scripts/softhsm-test.sh e2e      # to'liq oqim (server + vault + issuer) SoftHSM bilan
 #
 # Token har safar yangidan yaratiladi, PIN tasodifiy va hech qayerga yozilmaydi.
 # Cargo registry va target keshlari Docker volume'larida saqlanadi.
@@ -10,6 +11,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE="${MPAY_RUST_IMAGE:-rust:1.97.1-bookworm}"
+case "${1:-crypto}" in
+  crypto) TEST_CMD="cargo test --locked -p mpay-crypto --features pkcs11 -- --include-ignored pkcs11" ;;
+  e2e)    TEST_CMD="cargo test --locked -p mpay-e2e --features pkcs11 --test pkcs11_e2e -- --include-ignored" ;;
+  *) echo "foydalanish: $0 [crypto|e2e]"; exit 2 ;;
+esac
 
 # Git Bash yo'llarini Docker uchun o'zgartirishiga yo'l qo'ymaymiz.
 export MSYS_NO_PATHCONV=1
@@ -20,6 +26,7 @@ docker run --rm \
   -v mpay-softhsm-target:/target \
   -e CARGO_TARGET_DIR=/target \
   -e MPAY_TEST_ARGS="${MPAY_TEST_ARGS:-}" \
+  -e TEST_CMD="$TEST_CMD" \
   -w /src \
   "$IMAGE" bash -euo pipefail -c '
     export DEBIAN_FRONTEND=noninteractive
@@ -34,5 +41,5 @@ docker run --rm \
       --so-pin "$(openssl rand -hex 8)" --pin "$MPAY_PKCS11_PIN" >/dev/null
     export MPAY_PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so
     export MPAY_PKCS11_TOKEN_LABEL=mpay-docker
-    cargo test --locked -p mpay-crypto --features pkcs11 -- --include-ignored pkcs11 ${MPAY_TEST_ARGS:-}
+    $TEST_CMD ${MPAY_TEST_ARGS:-}
   '

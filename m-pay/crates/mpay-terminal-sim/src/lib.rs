@@ -1,10 +1,17 @@
 //! `mpay-terminal-sim` — telefonsiz e2e uchun dasturiy komponentlar:
 //!
+//! * [`apdu`] — APDU tiplari va `ApduTransport` trait (loopback; keyin PC/SC — ACR122U);
+//! * [`card`] — loopback soft-karta (M-Pay Test Scheme applet'i, HCE o'rinbosari);
+//! * [`terminal`] — terminal yadrosi (PPSE → AID → GPO);
 //! * [`http`] — `mpay-server` HTTP client;
 //! * [`wallet`] — soft-wallet (PQ Link, provisioning, OTP, LUK to'ldirish).
 #![forbid(unsafe_code)]
 
+pub mod apdu;
+pub mod card;
 pub mod http;
+pub mod state;
+pub mod terminal;
 pub mod wallet;
 
 use thiserror::Error;

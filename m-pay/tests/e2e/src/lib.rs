@@ -8,14 +8,19 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
 
+use mpay_common::api::{AuthorizationRequest, AuthorizationResponse, ProvisionResponse};
 use mpay_common::ports::SecurityLevel;
 use mpay_pqlink::sandbox::{SandboxAttestationCa, SoftDeviceKey};
 use mpay_pqlink::ServerIdentity;
 use mpay_server::config::Config;
 use mpay_server::init::{self, InitOptions};
 use mpay_server::RunningServer;
+use mpay_terminal_sim::apdu::Loopback;
+use mpay_terminal_sim::card::{CardPolicy, CardProfile, SoftCard};
 use mpay_terminal_sim::http::ServerClient;
+use mpay_terminal_sim::terminal::{self, TapResult, TerminalError, TxnParams};
 use mpay_terminal_sim::wallet::SoftWallet;
+use mpay_terminal_sim::WalletError;
 
 /// Barcha testlar loglarini yig'uvchi bufer (jarayon bo'yicha bitta global subscriber).
 #[derive(Clone, Default)]
@@ -72,6 +77,11 @@ impl Sandbox {
 
     /// Konfiguratsiyani o'zgartirib ishga tushiradi.
     pub async fn start_with(tweak: impl FnOnce(&mut Config)) -> Self {
+        Self::start_backend(mpay_server::config::KeyStoreBackend::Memory, tweak).await
+    }
+
+    /// Berilgan KeyStore backend'i bilan.
+    pub async fn start_backend(keystore: mpay_server::config::KeyStoreBackend, tweak: impl FnOnce(&mut Config)) -> Self {
         let _ = logs();
         let dir = tempfile::tempdir().unwrap();
         let out = init::run(&InitOptions {
@@ -79,6 +89,7 @@ impl Sandbox {
             listen: "127.0.0.1:0".parse().unwrap(),
             tls: false,
             force: false,
+            keystore,
         })
         .unwrap();
         let mut cfg = Config::load(&out.config_path).unwrap();
@@ -149,6 +160,78 @@ impl Sandbox {
             }
         }
         raw
+    }
+}
+
+impl Sandbox {
+    /// GREEN FPAN uchun token oladi va soft-kartani qaytaradi.
+    pub async fn provision_card(
+        &self,
+        w: &mut SoftWallet,
+        fpan: &str,
+        policy: CardPolicy,
+    ) -> SoftCard {
+        match w.provision(fpan, "3112").await.unwrap() {
+            ProvisionResponse::Active { profile, .. } => {
+                SoftCard::new(CardProfile::from_dto(&profile).unwrap(), policy)
+            }
+            other => panic!("ACTIVE kutilgan: {other:?}"),
+        }
+    }
+
+    /// Loopback tap.
+    pub fn tap(card: &mut SoftCard, amount_minor: u64) -> Result<TapResult, TerminalError> {
+        let mut lb = Loopback::new(card);
+        terminal::tap(&mut lb, &TxnParams::purchase(amount_minor))
+    }
+
+    /// Terminal kaliti bilan `/v1/authorizations`.
+    pub async fn authorize(
+        &self,
+        icc_hex: String,
+        merchant: &str,
+        stan: u32,
+    ) -> Result<AuthorizationResponse, WalletError> {
+        let req = AuthorizationRequest {
+            terminal_id: "TERM0001".into(),
+            merchant_id: merchant.into(),
+            stan,
+            icc_data: icc_hex,
+        };
+        self.client()
+            .post_json("/v1/authorizations", Some(&self.terminal_key), &req)
+            .await
+    }
+
+    /// Tap + avtorizatsiya.
+    pub async fn pay(
+        &self,
+        card: &mut SoftCard,
+        amount_minor: u64,
+        merchant: &str,
+        stan: u32,
+    ) -> AuthorizationResponse {
+        let tap = Self::tap(card, amount_minor).unwrap();
+        self.authorize(tap.icc_hex(), merchant, stan).await.unwrap()
+    }
+
+    /// Sandbox hisob qoldig'i (maskalangan PAN'ning oxirgi 4 raqami bo'yicha).
+    pub async fn balance(&self, fpan: &str) -> i64 {
+        let accts: serde_json::Value = self
+            .client()
+            .get_json("/v1/sandbox/accounts", Some(&self.operator_key))
+            .await
+            .unwrap();
+        accts
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|a| {
+                a["pan_masked"].as_str().unwrap().ends_with(&fpan[12..])
+                    && a["pan_masked"].as_str().unwrap().starts_with(&fpan[..6])
+            })
+            .map(|a| a["balance_minor"].as_i64().unwrap())
+            .expect("hisob topilmadi")
     }
 }
 

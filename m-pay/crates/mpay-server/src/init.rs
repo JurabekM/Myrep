@@ -13,6 +13,7 @@ use mpay_pqlink::MlDsaSeedBlob;
 use zeroize::Zeroizing;
 
 use crate::auth::hash_key;
+use crate::config::KeyStoreBackend;
 
 /// `init` parametrlari.
 #[derive(Debug, Clone)]
@@ -21,6 +22,8 @@ pub struct InitOptions {
     pub listen: SocketAddr,
     pub tls: bool,
     pub force: bool,
+    /// `memory` (dev-urug') yoki `pkcs11` (`MPAY_PKCS11_*` muhit o'zgaruvchilari, `pkcs11` feature).
+    pub keystore: KeyStoreBackend,
 }
 
 /// `init` natijasi (kalitlar faqat bir marta ko'rsatiladi va `dev-credentials.env` ga yoziladi).
@@ -60,6 +63,43 @@ fn api_key() -> Result<Zeroizing<String>, String> {
     ))
 }
 
+/// Namoyish uchun test hisoblar: `(stsenariy prefiksi, balans tiyinda, yorliq)`.
+pub const DEMO_ACCOUNTS: &[(&str, i64, &str)] = &[
+    ("990012100001001", 500_000_000, "GREEN, 5 000 000 UZS"),
+    (
+        "990012200002002",
+        1_000_000,
+        "GREEN, 10 000 UZS (51 namoyishi)",
+    ),
+    ("990012850003003", 200_000_000, "YELLOW (OTP)"),
+    ("990012950004004", 100_000_000, "RED (ID&V rad)"),
+    ("990013100005005", 100_000_000, "offline emitent (91)"),
+];
+
+fn demo_accounts() -> Result<String, String> {
+    let mut out = String::new();
+    for (prefix, balance, label) in DEMO_ACCOUNTS {
+        let pan = mpay_common::Pan::from_prefix(prefix).map_err(|e| e.to_string())?;
+        out.push_str(&format!(
+            "\n[[issuer.accounts]]\npan = \"{}\"\nbalance_minor = {balance}\nlabel = \"{label}\"\n",
+            pan.expose_digits()
+        ));
+    }
+    Ok(out)
+}
+
+#[cfg(feature = "pkcs11")]
+fn open_pkcs11() -> Result<std::sync::Arc<dyn mpay_crypto::KeyStore>, String> {
+    use mpay_crypto::keystore::{Pkcs11Config, Pkcs11KeyStore};
+    let c = Pkcs11Config::from_env().map_err(|e| e.to_string())?;
+    Ok(std::sync::Arc::new(Pkcs11KeyStore::open(&c).map_err(|e| e.to_string())?))
+}
+
+#[cfg(not(feature = "pkcs11"))]
+fn open_pkcs11() -> Result<std::sync::Arc<dyn mpay_crypto::KeyStore>, String> {
+    Err("mpay-server `pkcs11` feature'siz yig'ilgan".into())
+}
+
 /// Sandbox katalogini yaratadi.
 pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
     let dir = &opts.dir;
@@ -72,23 +112,20 @@ pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
     }
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
 
-    let seed = rng::secret_array::<32>().map_err(|e| e.to_string())?;
-    write(
-        dir,
-        SEED_FILE,
-        Zeroizing::new(hex::encode(&seed[..])).as_bytes(),
-    )?;
-    let ks = MemoryKeyStore::from_seed(*seed);
-    ensure_standard_keys(&ks).map_err(|e| e.to_string())?;
-    let blob =
-        MlDsaSeedBlob::generate(&ks, &KeyLabel::new(KeyLabel::KEK)).map_err(|e| e.to_string())?;
+    let ks: std::sync::Arc<dyn mpay_crypto::KeyStore> = match opts.keystore {
+        KeyStoreBackend::Memory => {
+            let seed = rng::secret_array::<32>().map_err(|e| e.to_string())?;
+            write(dir, SEED_FILE, Zeroizing::new(hex::encode(&seed[..])).as_bytes())?;
+            std::sync::Arc::new(MemoryKeyStore::from_seed(*seed))
+        }
+        KeyStoreBackend::Pkcs11 => open_pkcs11()?,
+    };
+    ensure_standard_keys(ks.as_ref()).map_err(|e| e.to_string())?;
+    // ML-DSA-65 urug'i shu KeyStore'ning KEK'i bilan o'raladi (HSM'da — HSM KEK).
+    let blob = MlDsaSeedBlob::generate(ks.as_ref(), &KeyLabel::new(KeyLabel::KEK)).map_err(|e| e.to_string())?;
     write(dir, MLDSA_FILE, &blob.to_bytes())?;
-    let signer = mpay_pqlink::KeyStoreServerSigner::new(
-        std::sync::Arc::new(ks),
-        KeyLabel::new(KeyLabel::SERVER_ED25519),
-        blob,
-    )
-    .map_err(|e| e.to_string())?;
+    let signer = mpay_pqlink::KeyStoreServerSigner::new(ks, KeyLabel::new(KeyLabel::SERVER_ED25519), blob)
+        .map_err(|e| e.to_string())?;
     let fp = hex::encode(mpay_pqlink::ServerSigner::identity(&signer).fingerprint());
 
     let ca = SandboxAttestationCa::generate().map_err(|e| e.to_string())?;
@@ -138,8 +175,7 @@ listen = "{listen}"
 path = "mpay.db"
 
 [keystore]
-backend = "memory"
-seed_file = "{SEED_FILE}"
+{keystore}
 
 [pqlink]
 mldsa_blob = "{MLDSA_FILE}"
@@ -165,6 +201,11 @@ review_amount_minor = 5000000000
 [sandbox_api]
 expose_otp = true
 
+# Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
+[issuer]
+offline_bins = ["990013"]
+review_action = "approve"
+{accounts}
 [[auth.keys]]
 id = "operator-1"
 role = "operator"
@@ -178,6 +219,13 @@ sha256 = "{term_hash}"
         listen = opts.listen,
         op_hash = hash_key(&op),
         term_hash = hash_key(&term),
+        accounts = demo_accounts()?,
+        keystore = match opts.keystore {
+            KeyStoreBackend::Memory => format!("backend = \"memory\"
+seed_file = \"{SEED_FILE}\""),
+            KeyStoreBackend::Pkcs11 => "# MPAY_PKCS11_LIB, MPAY_PKCS11_TOKEN_LABEL, MPAY_PKCS11_PIN muhit o'zgaruvchilaridan
+backend = \"pkcs11\"".to_owned(),
+        },
     );
     write(dir, CONFIG_FILE, config.as_bytes())?;
     Ok(InitOutput {

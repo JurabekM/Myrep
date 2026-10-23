@@ -25,6 +25,8 @@ pub struct Config {
     #[serde(default)]
     pub shield_stub: StubShieldConfig,
     #[serde(default)]
+    pub issuer: mpay_issuer::IssuerConfig,
+    #[serde(default)]
     pub auth: AuthConfig,
     #[serde(default)]
     pub sandbox_api: SandboxApiConfig,

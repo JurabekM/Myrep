@@ -180,6 +180,38 @@ impl fmt::Debug for SandboxOtp {
     }
 }
 
+/// `POST /v1/authorizations` so'rovi (terminal → acquirer shlyuzi).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthorizationRequest {
+    /// ISO 8583 maydon 41 (≤ 8 belgi).
+    pub terminal_id: String,
+    /// ISO 8583 maydon 42 (≤ 15 belgi).
+    pub merchant_id: String,
+    /// System Trace Audit Number (0–999999).
+    pub stan: u32,
+    /// Karta va terminal ICC teglari (BER-TLV, hex): GPO javobi (`82`, `57`, `5F34`, `5F24`,
+    /// `9F36`, `9F26`, `9F27`, `9F10`) + PDOL ma'lumotlari.
+    pub icc_data: String,
+}
+
+/// `POST /v1/authorizations` javobi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuthorizationResponse {
+    pub approved: bool,
+    /// ISO 8583 maydon 39 (`00`, `05`, `51`, `59`, `91`, `Q1`).
+    pub response_code: String,
+    /// Ichki sabab kodi (`APPROVED`, `ARQC_MISMATCH`, ...).
+    pub reason: String,
+    pub stan: u32,
+    pub rrn: String,
+    pub dpan_masked: String,
+    pub amount_minor: u64,
+    pub currency: u16,
+    /// Emitent autentifikatsiya ma'lumoti `91` = ARPC ‖ ARC (hex) — ARQC to'g'ri bo'lganda.
+    pub issuer_auth_data: Option<String>,
+    pub risk_score: Option<u16>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
