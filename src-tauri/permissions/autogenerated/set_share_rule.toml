@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-share-rule"
+description = "Enables the set_share_rule command without any pre-configured scope."
+commands.allow = ["set_share_rule"]
+
+[[permission]]
+identifier = "deny-set-share-rule"
+description = "Denies the set_share_rule command without any pre-configured scope."
+commands.deny = ["set_share_rule"]

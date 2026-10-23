@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-havas-limit"
+description = "Enables the get_havas_limit command without any pre-configured scope."
+commands.allow = ["get_havas_limit"]
+
+[[permission]]
+identifier = "deny-get-havas-limit"
+description = "Denies the get_havas_limit command without any pre-configured scope."
+commands.deny = ["get_havas_limit"]

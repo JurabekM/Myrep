@@ -1,0 +1,37 @@
+[package]
+name = "baraka-storage"
+description = "Baraka Dastur — shifrlangan baza: SQLCipher, migratsiyalar (sxema v1), repository'lar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kod ichida import nomi: `storage`.
+[lib]
+name = "storage"
+
+[dependencies]
+domain = { package = "baraka-domain", path = "../domain" }
+# Pul qiymatlari (minor birlik + valyuta) bazadan o'qiladi va yoziladi.
+money = { package = "baraka-money", path = "../money" }
+# Bazani ochish kaliti (SecretKey). Kalit baytlari bu crate'da tashqariga chiqarilmaydi.
+security = { package = "baraka-security", path = "../security" }
+# SQLite + SQLCipher, OpenSSL manbadan (ADR: bundled-sqlcipher-vendored-openssl).
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+# Migratsiyalar, user_version orqali (ADR: rusqlite_migration).
+rusqlite_migration = "2.6"
+# D14: `.baraka` almashish JSON'i (eksport/import). Workspace'da allaqachon bor (ADR: serde_json).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+time = { version = "0.3", features = ["formatting", "parsing"] }
+# PRAGMA key satrini tozalash (Zeroizing). Versiya `security` bilan bir xil.
+zeroize = "1.9"
+thiserror = "2"
+tracing = "0.1"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+# Testlarda aniq sana va vaqt konstantalari (`date!`, `datetime!`).
+time = { version = "0.3", features = ["macros"] }

@@ -1,0 +1,24 @@
+{
+  "name": "baraka-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Baraka Dastur — Windows uchun ribosiz shaxsiy moliya daftari (Tauri 2 + React)",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "lint": "pnpm -C ui lint",
+    "typecheck": "pnpm -C ui typecheck",
+    "test": "pnpm -C ui test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "~2.12.2",
+    "prettier": "^3.9.10"
+  }
+}

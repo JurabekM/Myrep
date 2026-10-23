@@ -1,0 +1,30 @@
+[package]
+name = "baraka-security"
+description = "Baraka Dastur — kalit boshqaruvi: PIN, Argon2id, ikki qatlamli wrap, keyring, lockout, avto-qulflash"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kod ichida import nomi: `security`.
+[lib]
+name = "security"
+
+[dependencies]
+# PIN'dan kalit hosil qilish (ADR: Argon2id).
+argon2 = "0.6"
+# Kalitlarni o'rash: XChaCha20-Poly1305 (ADR: chacha20poly1305), zeroize bilan.
+chacha20poly1305 = { version = "0.11", features = ["zeroize"] }
+# OS keyring: Windows Credential Manager / DPAPI (ADR: keyring).
+keyring = "4.2"
+# Tasodifiy kalitlar: OS CSPRNG (ADR: rand, OsRng).
+rand = "0.10"
+# Xatolar (ADR: thiserror).
+thiserror = "2"
+# Xotiradagi kalit va PIN'ni tozalash (ADR: zeroize).
+zeroize = { version = "1.9", features = ["derive"] }
+# Loglarga kalit yoki PIN yozilmaydi; faqat holat o'zgarishlari (ADR: tracing).
+tracing = "0.1"
+
+[lints]
+workspace = true

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mark-unexplained-as-daily"
+description = "Enables the mark_unexplained_as_daily command without any pre-configured scope."
+commands.allow = ["mark_unexplained_as_daily"]
+
+[[permission]]
+identifier = "deny-mark-unexplained-as-daily"
+description = "Denies the mark_unexplained_as_daily command without any pre-configured scope."
+commands.deny = ["mark_unexplained_as_daily"]

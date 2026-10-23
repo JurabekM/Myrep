@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-whose-money"
+description = "Enables the get_whose_money command without any pre-configured scope."
+commands.allow = ["get_whose_money"]
+
+[[permission]]
+identifier = "deny-get-whose-money"
+description = "Denies the get_whose_money command without any pre-configured scope."
+commands.deny = ["get_whose_money"]

@@ -1,0 +1,24 @@
+[package]
+name = "baraka-money"
+description = "Baraka Dastur — pul hisobi: Money, allocate, percent_of, FxRate va formatlash (DESKTOP_PROMPT.md 4-bo'lim)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kod ichida import nomi: `money` (`use money::...`).
+[lib]
+name = "money"
+
+[dependencies]
+# Xatolar (ADR: thiserror). MoneyError uchun Display va Error.
+thiserror = "2"
+# FxRate.date — kurs snapshot sanasi (ADR: time).
+time = "0.3"
+
+[dev-dependencies]
+# Xususiyat testlari (ADR: proptest) — taqsimot invariantlari.
+proptest = "1"
+
+[lints]
+workspace = true

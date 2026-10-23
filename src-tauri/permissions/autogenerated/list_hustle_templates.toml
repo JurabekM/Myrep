@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-hustle-templates"
+description = "Enables the list_hustle_templates command without any pre-configured scope."
+commands.allow = ["list_hustle_templates"]
+
+[[permission]]
+identifier = "deny-list-hustle-templates"
+description = "Denies the list_hustle_templates command without any pre-configured scope."
+commands.deny = ["list_hustle_templates"]

@@ -1,0 +1,26 @@
+diff --git a/dist/echarts.esm.js b/dist/echarts.esm.js
+index 1f312a7b38d89cad98b0595750f3aa1f9db3937b..db7f117c63c70e3c260e306a8e7ad11e5e7b6416 100644
+--- a/dist/echarts.esm.js
++++ b/dist/echarts.esm.js
+@@ -26018,6 +26018,8 @@ function mockMethods(target, Clz) {
+   /* eslint-disable */
+   for (var name_1 in Clz.prototype) {
+     // Do not use hasOwnProperty
++    // Patch (Baraka Daftari): frozen Object.prototype (Tauri freezePrototype) makes `constructor` read-only.
++    if (name_1 === 'constructor') continue;
+     target[name_1] = noop;
+   }
+   /* eslint-enable */
+diff --git a/lib/core/Scheduler.js b/lib/core/Scheduler.js
+index 1b70d94393f48c8b27ac711d9afcf5a4b8931bea..43ce668a4407c30c7aa57f8e1bf0dd00217cc91d 100644
+--- a/lib/core/Scheduler.js
++++ b/lib/core/Scheduler.js
+@@ -465,6 +465,8 @@ function mockMethods(target, Clz) {
+   /* eslint-disable */
+   for (var name_1 in Clz.prototype) {
+     // Do not use hasOwnProperty
++    // Patch (Baraka Daftari): frozen Object.prototype (Tauri freezePrototype) makes `constructor` read-only.
++    if (name_1 === 'constructor') continue;
+     target[name_1] = noop;
+   }
+   /* eslint-enable */

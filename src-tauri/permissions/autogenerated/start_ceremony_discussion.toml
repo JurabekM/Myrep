@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-start-ceremony-discussion"
+description = "Enables the start_ceremony_discussion command without any pre-configured scope."
+commands.allow = ["start_ceremony_discussion"]
+
+[[permission]]
+identifier = "deny-start-ceremony-discussion"
+description = "Denies the start_ceremony_discussion command without any pre-configured scope."
+commands.deny = ["start_ceremony_discussion"]

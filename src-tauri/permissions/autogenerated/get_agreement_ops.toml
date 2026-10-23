@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-agreement-ops"
+description = "Enables the get_agreement_ops command without any pre-configured scope."
+commands.allow = ["get_agreement_ops"]
+
+[[permission]]
+identifier = "deny-get-agreement-ops"
+description = "Denies the get_agreement_ops command without any pre-configured scope."
+commands.deny = ["get_agreement_ops"]

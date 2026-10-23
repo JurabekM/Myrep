@@ -1,0 +1,50 @@
+[package]
+name = "baraka-daftari"
+description = "Baraka Dastur — ribosiz shaxsiy moliya daftari (Tauri ilovasi)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kutubxona nomi bin nomi bilan to'qnashmasligi uchun alohida beriladi.
+[lib]
+name = "baraka_daftari_lib"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# default-features = false: "common-controls-v6" o'chirilgan. Sabab: u menyu/dialog kutubxonalariga
+# comctl32 v6 funksiyalarini (TaskDialogIndirect) ulaydi, shu sababli `cargo test` test binary'larida
+# STATUS_ENTRYPOINT_NOT_FOUND (0xc0000139) bilan yiqiladi (test binary'da v6 manifest yo'q).
+# Biz native dialog/menyu ishlatmaymiz; oyna WebView2 da chiziladi. Qachon dialog plugin kerak bo'lsa, qaror
+# docs/OPEN_QUESTIONS.md da qayd etiladi.
+tauri = { version = "2.12", default-features = false, features = ["wry", "compression", "dynamic-acl", "x11", "dbus", "tray-icon"] }
+# TS bindinglari: Rust commandlaridan TypeScript tiplarini avtomatik yaratadi (ADR: qo'lda invoke taqiq).
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+specta-typescript = "0.0.12"
+serde = { version = "1", features = ["derive"] }
+# Xavfsizlik (PIN, kalit, lockout, keyring) va shifrlangan baza (SQLCipher). Ichki crate'lar.
+security = { package = "baraka-security", path = "../crates/security" }
+storage = { package = "baraka-storage", path = "../crates/storage" }
+domain = { package = "baraka-domain", path = "../crates/domain" }
+money = { package = "baraka-money", path = "../crates/money" }
+# Identifikator: UUIDv7 (ADR: uuid v7). fast-rng — tasodifiy qism OS manbasidan.
+uuid = { version = "1", features = ["v7", "fast-rng"] }
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# D8A: kelishuv javoblari (`AgreementAnswersDto`) bazada JSON sifatida saqlanadi. Workspace'da allaqachon bor.
+serde_json = "1"
+tauri-plugin-notification = "2"
+# D7: Ctrl+Alt+B global tugmasi — ADR 7-bo'limda nomlangan plugin.
+tauri-plugin-global-shortcut = "2"
+# Oila kengashi bayonnomasi PDF (typst; DESKTOP_PROMPT.md 2 va 7-bo'lim).
+baraka-pdf = { path = "../crates/pdf" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

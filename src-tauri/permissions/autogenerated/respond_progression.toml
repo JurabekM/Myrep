@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-respond-progression"
+description = "Enables the respond_progression command without any pre-configured scope."
+commands.allow = ["respond_progression"]
+
+[[permission]]
+identifier = "deny-respond-progression"
+description = "Denies the respond_progression command without any pre-configured scope."
+commands.deny = ["respond_progression"]
