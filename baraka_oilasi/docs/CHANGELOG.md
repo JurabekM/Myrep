@@ -5,6 +5,7 @@
 ### Tuzatildi
 - **Tungi desktop E2E osilib qolardi:** 79 test o'tgandan keyin ham `node --test` chiqmasdi — `tauri-driver` o'ldirilganda WebKitWebDriver va ilova tirik qolib, test runner'ning stderr quvurini ushlab turardi (CI 6 soatda bekor qildi). Endi driver o'z jarayon guruhida ishga tushadi va `stop()` butun guruhni o'ldiradi; job'ga `timeout-minutes: 60`.
 - **Android testlari CI'da goh-goh yiqilardi:** testlar formada hali turgan matnni yoki rozilikdan oldin ham ko'rinadigan «Sheriklikni boshlash» tugmasini kutib, yadro yozuvni saqlamasdan oldin keyingi qadamga o'tardi. Endi saqlangan karta yoki «✓ rozi» belgisi kutiladi.
+- **Tungi desktop E2E Ubuntu 26.04 da boshlanmay yiqildi:** `webkit2gtk-driver` paketi yangi obrazda `webkitgtk-webdriver` deb nomlangan. CI endi mavjud nomni tanlaydi va `WebKitWebDriver` PATH'da ekanini tekshiradi.
 
 ## [1.0.0] — 2026-10-21
 

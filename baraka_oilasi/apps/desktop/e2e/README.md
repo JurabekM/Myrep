@@ -26,7 +26,7 @@ va yorliqlar bo'yicha. Har bir ko'rilgan ekran haqiqiy webview'da **axe-core** b
 
 ## Ishga tushirish (Linux)
 ```bash
-sudo apt-get install webkit2gtk-driver xvfb
+sudo apt-get install webkitgtk-webdriver xvfb   # Ubuntu 24.04 va eskisida: webkit2gtk-driver
 cargo install tauri-driver --locked
 pnpm --dir ../ui build
 (cd ../src-tauri && cargo build --features tauri/custom-protocol)   # debug build
