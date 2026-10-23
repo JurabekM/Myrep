@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://baraka.uz/spec/interchange/export-format.schema.json",
-  "title": "Baraka daftari almashish fayli (.baraka ichidagi JSON)",
+  "title": "Baraka Dastur almashish fayli (.baraka ichidagi JSON)",
   "description": "Shifrlangan konteyner (Argon2id + XChaCha20-Poly1305) ichidagi ochiq matn. Mobil va desktop uchun umumiy. Jadval qatorlari bazadagi ustun nomlari bilan beriladi; pul — minor birlikda butun son; sanalar — YYYY-MM-DD; vaqtlar — ISO 8601 (UTC).",
   "type": "object",
   "required": ["format", "schemaVersion", "exportedAt", "deviceId", "householdId", "tables"],

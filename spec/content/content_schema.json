@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://barakadaftari.uz/schemas/chapters-v1.json",
-  "title": "Baraka daftari — boblar kontenti (v1)",
+  "title": "Baraka Dastur — boblar kontenti (v1)",
   "description": "assets/content/chapters.json sxemasi. Ilovada ContentParser (lib/features/content/domain/content_parser.dart) aynan shu qoidalarni tekshiradi; qo'shimcha qoidalar: id/order/vazifa id takrorlanmaydi, vazifa id bob id bilan boshlanadi. Buzuq bob ilovada o'tkazib yuboriladi.",
   "type": "object",
   "required": ["schemaVersion", "chapters"],

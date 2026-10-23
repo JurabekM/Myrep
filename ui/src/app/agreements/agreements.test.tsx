@@ -95,7 +95,7 @@ const SUMMARY: AgreementSummaryDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -193,14 +193,14 @@ describe("kelishuv ustasi", () => {
     if (firstName === undefined || secondName === undefined) {
       throw new Error("ikki tomon maydoni kutilgan");
     }
-    await user.type(firstName, "Anvar Karimov");
-    await user.type(secondName, "Dilshod Rahimov");
+    await user.type(firstName, "Akmal Karimov");
+    await user.type(secondName, "Jasur Rahimov");
     await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
 
     expect(await within(dialog).findByText("1 / 9 savolga javob berildi")).toBeInTheDocument();
     const call = vi.mocked(commands.saveAgreementAnswers).mock.calls[0]?.[0];
     expect(call?.version).toBe(1);
-    expect(call?.answers.parties.map((p) => p.name)).toEqual(["Anvar Karimov", "Dilshod Rahimov"]);
+    expect(call?.answers.parties.map((p) => p.name)).toEqual(["Akmal Karimov", "Jasur Rahimov"]);
     expect(call?.answers.parties[0]?.isMe).toBe(true);
   });
 
@@ -210,8 +210,8 @@ describe("kelishuv ustasi", () => {
       answers: {
         ...EMPTY_ANSWERS,
         parties: [
-          { id: "P1", name: "Anvar Karimov", role: "sherik", relation: "", isMe: true },
-          { id: "P2", name: "Dilshod Rahimov", role: "sherik", relation: "", isMe: false },
+          { id: "P1", name: "Akmal Karimov", role: "sherik", relation: "", isMe: true },
+          { id: "P2", name: "Jasur Rahimov", role: "sherik", relation: "", isMe: false },
         ],
       },
       completeness: { complete: true, missing: [], errors: [] },
@@ -252,7 +252,7 @@ describe("kelishuv ustasi", () => {
     const dialog = await openWizard();
     const user = userEvent.setup();
     await user.click(within(dialog).getByRole("button", { name: "Imzolash" }));
-    const pad = within(dialog).getByRole("img", { name: "Anvar Karimov (tomon)" });
+    const pad = within(dialog).getByRole("img", { name: "Akmal Karimov (tomon)" });
     await user.pointer([
       { keys: "[MouseLeft>]", target: pad, coords: { x: 10, y: 10 } },
       { target: pad, coords: { x: 40, y: 30 } },
@@ -270,7 +270,7 @@ describe("kelishuv ustasi", () => {
       image: "data:image/png;base64,QUJD",
     });
     expect(
-      await within(dialog).findByText(/Anvar Karimov \(tomon\) — imzolangan/),
+      await within(dialog).findByText(/Akmal Karimov \(tomon\) — imzolangan/),
     ).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "Imzolashni yakunlash" })).toBeDisabled();
     expect(money(0, "0").minor).toBe("0");

@@ -5,23 +5,23 @@
       "id": "ch01",
       "order": 1,
       "title": {
-        "uz": "1-bob. Nimaga qoladi?",
-        "ru": "Глава 1. Что остаётся? (заглушка)"
+        "uz": "1-bob. Avval oʻzingizga",
+        "ru": "Глава 1. Сначала себе"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 1-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст первой истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Koʻpchilik oy oxirida nima ortib qolsa, oʻshani jamgʻaradi — va koʻpincha hech narsa ortmaydi. Bu bob tartibni teskari qilishni taklif qiladi: daromad tushishi bilan uning kichik bir ulushi kelajak uchun ajratiladi, qolgani bilan roʻzgʻor yuritiladi. Summa emas, odat muhim: oʻndan bir boshlash uchun yetarli, keyin sekin oshiriladi.",
+            "ru": "Большинство откладывает то, что осталось в конце месяца, — и часто не остаётся ничего. Эта глава предлагает обратный порядок: как только приходит доход, небольшая его доля сразу откладывается на будущее, а на остальное ведётся хозяйство. Важна не сумма, а привычка: для начала достаточно десятой части, потом её можно постепенно увеличивать."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining savoli: «Oy oxirida qoʻlingizda nima qoladi?»",
-            "ru": "[Заглушка] Вопрос Собир-хаджи: «Что остаётся у вас в конце месяца?»"
+            "uz": "Maslahatchi savoli: «Oʻtgan oy daromadingizning qancha qismi kelajagingizga qoldi?»",
+            "ru": "Вопрос консультанта: «Какая часть прошлого дохода осталась вашему будущему?»"
           }
         },
         {
@@ -40,8 +40,8 @@
       "law": {
         "number": 1,
         "text": {
-          "uz": "Avval oʻzingga toʻla: har bir halol daromadning kamida oʻndan biri kelajakdagi oʻzingniki.",
-          "ru": "Сначала заплати себе: не менее десятой части каждого честного дохода — твоему будущему."
+          "uz": "Avval oʻzingizga ajrating: har bir halol daromadning kamida oʻndan bir qismini kelajak jamgʻarmasiga qoʻying.",
+          "ru": "Сначала откладывайте себе: не менее десятой части каждого честного дохода — в накопления на будущее."
         }
       },
       "weeklyTasks": [
@@ -75,23 +75,23 @@
       "id": "ch02",
       "order": 2,
       "title": {
-        "uz": "2-bob. Xurjunning teshigi",
-        "ru": "Глава 2. Дыра в хурджуне (заглушка)"
+        "uz": "2-bob. Xarajatni koʻring",
+        "ru": "Глава 2. Видеть расходы"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 2-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст 2-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Yozilmagan xarajat koʻzga koʻrinmaydi, koʻrinmagan narsani esa boshqarib boʻlmaydi. Xarajatlarni zarur, kerak va havas toifalariga ajratish pulning qayerga ketayotganini oydinlashtiradi. Maqsad tejamkorlik nomidan oʻzini qiynash emas: isrofdan ham, baxillikdan ham uzoq, oila bilan kelishilgan muvozanat.",
+            "ru": "Незаписанный расход не виден, а невидимым нельзя управлять. Деление расходов на необходимые, нужные и желаемые показывает, куда уходят деньги. Цель — не мучить себя экономией, а найти согласованный с семьёй баланс: без расточительства и без скупости."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
-            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+            "uz": "Maslahatchi savoli: «Shu oy eng koʻp pul qaysi toifaga ketdi va bu sizni ajablantirdimi?»",
+            "ru": "Вопрос консультанта: «На какую категорию в этом месяце ушло больше всего и удивило ли это вас?»"
           }
         },
         {
@@ -110,8 +110,8 @@
       "law": {
         "number": 2,
         "text": {
-          "uz": "Xurjunning teshigini yama: xarajatni yozmaguningcha uni boshqara olmaysan. Isrof ham, baxillik ham emas — iqtisod.",
-          "ru": "Залатай дыру в хурджуне: пока не записываешь расходы, ты ими не управляешь. Ни расточительство, ни скупость — бережливость."
+          "uz": "Xarajatni yozing va toifalang: koʻrilmagan xarajatni boshqarib boʻlmaydi. Isrofdan ham, baxillikdan ham saqlaning.",
+          "ru": "Записывайте и распределяйте расходы: невидимыми тратами не управлять. Избегайте и расточительства, и скупости."
         }
       },
       "weeklyTasks": [
@@ -145,23 +145,23 @@
       "id": "ch03",
       "order": 3,
       "title": {
-        "uz": "3-bob. Pul ikki xil yashaydi",
-        "ru": "Глава 3. Деньги живут двояко (заглушка)"
+        "uz": "3-bob. Zaxira va oʻsish",
+        "ru": "Глава 3. Резерв и рост"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 3-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст 3-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Kutilmagan kasallik, ishsiz qolish yoki uy taʼmiri oilani qarzga itarishi mumkin. Shuning uchun birinchi navbatda bir necha oylik zarur xarajatga yetadigan favqulodda zaxira tuziladi. Zaxira tayyor boʻlgach, ortiqcha mablagʻ narx-navo oʻsishidan himoyalanishi uchun halol mehnat, savdo yoki sheriklikka yoʻnaltiriladi.",
+            "ru": "Неожиданная болезнь, потеря работы или ремонт могут подтолкнуть семью к долгам. Поэтому сначала создаётся резерв на несколько месяцев необходимых расходов. Когда резерв готов, свободные средства направляются в честный труд, торговлю или партнёрство, чтобы их не съедал рост цен."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
-            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+            "uz": "Maslahatchi savoli: «Bugun daromadingiz toʻxtasa, oilangiz necha oy bemalol yashaydi?»",
+            "ru": "Вопрос консультанта: «Если доход сегодня прекратится, сколько месяцев семья проживёт спокойно?»"
           }
         },
         {
@@ -180,8 +180,8 @@
       "law": {
         "number": 3,
         "text": {
-          "uz": "Pul ikki xil yashaydi: yotgan pulni narx-navo yeydi, ishlayotgan pul oʻzini koʻpaytiradi. Pul puldan tugʻilmasin — mehnat, savdo va sheriklikdan tugʻilsin.",
-          "ru": "Деньги живут двояко: лежащие съедает инфляция, работающие умножаются. Деньги не должны рождаться из денег — только из труда, торговли и партнёрства."
+          "uz": "Avval favqulodda zaxira, keyin oʻsish: yotgan pulni narx-navo kamaytiradi — mablagʻni halol mehnat, savdo va sheriklik orqali koʻpaytiring.",
+          "ru": "Сначала резерв, потом рост: лежащие деньги съедает рост цен — приумножайте средства честным трудом, торговлей и партнёрством."
         }
       },
       "weeklyTasks": [
@@ -215,23 +215,23 @@
       "id": "ch04",
       "order": 4,
       "title": {
-        "uz": "4-bob. Qogʻoz kishan",
-        "ru": "Глава 4. Бумажные кандалы (заглушка)"
+        "uz": "4-bob. Qarzsiz yashash",
+        "ru": "Глава 4. Жизнь без долгов"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 4-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст 4-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Foizli qarz oylik byudjetning bir qismini oldindan band qilib qoʻyadi va tanlov erkinligini kamaytiradi. Qarz olishdan oldin uning haqiqiy narxini, oylik yukini va muqobil yoʻllarni koʻrib chiqish kerak. Mavjud qarzlar esa roʻyxatga yoziladi va aniq reja bilan, birin-ketin yopiladi.",
+            "ru": "Процентный долг заранее занимает часть ежемесячного бюджета и сужает свободу выбора. Перед тем как взять долг, стоит оценить его настоящую цену, ежемесячную нагрузку и альтернативы. Существующие долги записываются в список и закрываются по чёткому плану, один за другим."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
-            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+            "uz": "Maslahatchi savoli: «Bu xaridni qarzsiz amalga oshirish uchun nima qilish mumkin edi?»",
+            "ru": "Вопрос консультанта: «Что можно было бы сделать, чтобы обойтись без долга?»"
           }
         },
         {
@@ -250,8 +250,8 @@
       "law": {
         "number": 4,
         "text": {
-          "uz": "Ribodan qoch! Foizli qarz olinmaydi va berilmaydi. Zarurat boʻlsa — foizsiz, yozma va toʻlash niyati bilan. Qarzga tushsang — reja bilan chiq.",
-          "ru": "Беги от рибы! Процентный долг не берут и не дают. При нужде — без процентов, письменно и с намерением вернуть. Попал в долги — выходи по плану."
+          "uz": "Foizli qarzdan saqlaning. Zarurat boʻlsa — foizsiz, yozma va toʻlov rejasi bilan; mavjud qarzdan reja asosida chiqing.",
+          "ru": "Избегайте процентного долга. При необходимости — без процентов, письменно и с планом погашения; из текущих долгов выходите по плану."
         }
       },
       "weeklyTasks": [
@@ -285,23 +285,23 @@
       "id": "ch05",
       "order": 5,
       "title": {
-        "uz": "5-bob. Bekor yotgan pul",
-        "ru": "Глава 5. Праздные деньги (заглушка)"
+        "uz": "5-bob. Halol sarmoya",
+        "ru": "Глава 5. Честные вложения"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 5-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст 5-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Ishlatilmayotgan mablagʻ vaqt oʻtishi bilan qadrsizlanadi, ishga solingan mablagʻ esa daromad keltirishi mumkin. Halol sarmoyada foyda kafolatlanmaydi: savdo va sheriklikda foyda ham, zarar ham kelishilgan ulushda boʻlishiladi. Boshlashdan oldin gʻoya, xarajatlar va bir necha stsenariy hisoblab chiqiladi.",
+            "ru": "Неиспользуемые средства со временем обесцениваются, а вложенные могут приносить доход. В честных вложениях прибыль не гарантирована: в торговле и партнёрстве делятся и прибыль, и убыток в согласованных долях. Перед стартом просчитываются идея, расходы и несколько сценариев."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
-            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+            "uz": "Maslahatchi savoli: «Qoʻlingizdagi hunar yoki bilim qanday ishga aylanishi mumkin?»",
+            "ru": "Вопрос консультанта: «Как ваше ремесло или знание может стать делом?»"
           }
         },
         {
@@ -320,8 +320,8 @@
       "law": {
         "number": 5,
         "text": {
-          "uz": "Pulni halol ishga sol: yotgan pul kamayadi, ishlagan pul egasini boqadi. Yoʻli — savdo va sheriklik; sheriklikda tavakkal ham boʻlishiladi.",
-          "ru": "Пусти деньги в честное дело: лежащие тают, работающие кормят хозяина. Путь — торговля и партнёрство; в партнёрстве делят и риск."
+          "uz": "Pulni halol ishga soling: savdo va sheriklikda foyda ham, zarar ham boʻlishiladi.",
+          "ru": "Вкладывайте деньги честно: в торговле и партнёрстве делятся и прибыль, и убыток."
         }
       },
       "weeklyTasks": [
@@ -355,23 +355,23 @@
       "id": "ch06",
       "order": 6,
       "title": {
-        "uz": "6-bob. Sheriklik odobi",
-        "ru": "Глава 6. Этика партнёрства"
+        "uz": "6-bob. Yozma kelishuv",
+        "ru": "Глава 6. Письменный договор"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 6-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст 6-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Ogʻzaki kelishuv vaqt oʻtishi bilan turlicha eslanadi va yaqin munosabatlarga ham soya soladi. Yozma kelishuvda tomonlar, hissalar, vazifalar, foyda-zarar taqsimoti va chiqish shartlari aniq koʻrsatiladi. Hisob muntazam birga koʻrib chiqiladi, oʻzgarish esa faqat hamma rozi boʻlib, yangi versiya sifatida yoziladi.",
+            "ru": "Устную договорённость со временем помнят по-разному, и это бросает тень даже на близкие отношения. В письменном договоре чётко указаны стороны, вклады, обязанности, раздел прибыли и убытка и условия выхода. Отчётность регулярно просматривается вместе, а изменения вносятся только с общего согласия, новой версией."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
-            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+            "uz": "Maslahatchi savoli: «Kelishuvingizdan chiqmoqchi boʻlgan tomon qanday tartibda chiqadi?»",
+            "ru": "Вопрос консультанта: «В каком порядке выйдет сторона, которая захочет выйти из договора?»"
           }
         },
         {
@@ -390,8 +390,8 @@
       "law": {
         "number": 6,
         "text": {
-          "uz": "Kelishuvni yozing: yozilgan soʻz esda qoladi, ishonch esa asraladi. Har oy birga koʻring, vazifani ovoz chiqarib ayting, kelishganni jim oʻzgartirmang.",
-          "ru": "Записывайте договорённость: написанное помнят, доверие сохраняется. Каждый месяц смотрите вместе, называйте обязанности вслух, не меняйте согласованное молча."
+          "uz": "Kelishuvni yozma tuzing: tomonlar, hissalar, vazifalar va chiqish shartlari aniq boʻlsin; hisobni muntazam birga koʻring.",
+          "ru": "Оформляйте договор письменно: стороны, вклады, обязанности и условия выхода должны быть ясны; регулярно сверяйте отчётность вместе."
         }
       },
       "weeklyTasks": [
@@ -425,23 +425,23 @@
       "id": "ch07",
       "order": 7,
       "title": {
-        "uz": "7-bob. Qopqon va hunar",
-        "ru": "Глава 7. Ловушка и ремесло"
+        "uz": "7-bob. Tekshirib, keyin ishoning",
+        "ru": "Глава 7. Сначала проверь"
       },
       "audioUrl": null,
       "blocks": [
         {
           "type": "paragraph",
           "text": {
-            "uz": "[Placeholder] Bu yerda 7-qissa matni boʻladi. Asl matn mualliflik litsenziyasi hal boʻlgach qoʻshiladi.",
-            "ru": "[Заглушка] Здесь будет текст 7-й истории. Оригинальный текст будет добавлен после решения вопроса лицензии."
+            "uz": "Kafolatli yuqori daromad va «faqat bugun» degan shoshirish — firibgarlikning eng keng tarqalgan belgilari. Pul qoʻyishdan oldin ishning oʻzi, hujjatlar, ruxsatnoma va daromad manbai tekshiriladi, katta qaror esa ishonchli odam bilan maslahatlashib, shoshilmasdan qabul qilinadi. Katta summa tushganda avval oila zaxirasi toʻldiriladi, qolgani oʻz hunaringizga yoʻnaltiriladi.",
+            "ru": "Гарантированный высокий доход и спешка «только сегодня» — самые распространённые признаки мошенничества. Перед вложением проверяются само дело, документы, разрешения и источник дохода, а крупное решение принимается без спешки, после совета с надёжным человеком. Если пришла крупная сумма, сначала пополняется семейный резерв, остальное направляется в собственное ремесло."
           }
         },
         {
           "type": "quote",
           "text": {
-            "uz": "[Placeholder] Sobir hojining soʻzi shu yerda boʻladi.",
-            "ru": "[Заглушка] Здесь будут слова Собир-ходжи."
+            "uz": "Maslahatchi savoli: «Bu taklifdagi daromad aniq qayerdan keladi — mahsulotdanmi yoki yangi qatnashchilardanmi?»",
+            "ru": "Вопрос консультанта: «Откуда именно берётся доход в этом предложении — от товара или от новых участников?»"
           }
         },
         {
@@ -460,8 +460,8 @@
       "law": {
         "number": 7,
         "text": {
-          "uz": "Ishni oʻz koʻzing bilan koʻrmaguncha pul tikma: kafolatli katta foyda, shoshirish, yangi odam olib kelish, koʻrinmas ish va qiyin chiqish — firibgarlik belgisi. Avval oilangning olti oylik qalʼa devorini qur, keyin pulingni hunaringga ishlat.",
-          "ru": "Не вкладывай деньги, пока не увидишь дело своими глазами: гарантированная большая прибыль, спешка, привлечение новых людей, невидимое дело и трудный выход — признаки мошенничества. Сначала построй семье крепостную стену на полгода, потом вкладывай деньги в своё ремесло."
+          "uz": "Tekshirmagan ishga pul tikmang: kafolatli katta foyda, shoshirish, yangi aʼzo jalb qilishdan daromad, koʻrinmas ish va qiyin chiqish — firibgarlik belgilari. Katta summani avval oila zaxirasiga, keyin oʻz hunaringizga yoʻnaltiring.",
+          "ru": "Не вкладывайте в непроверенное: гарантированная большая прибыль, спешка, доход от привлечения новых участников, невидимое дело и трудный выход — признаки мошенничества. Крупную сумму сначала — в семейный резерв, затем — в своё ремесло."
         }
       },
       "weeklyTasks": [
@@ -476,8 +476,8 @@
         {
           "id": "ch07.t2",
           "text": {
-            "uz": "Oilangizning olti oylik qalʼa devori qancha ekanini hisoblang.",
-            "ru": "Посчитайте, сколько составляет семейная крепостная стена на полгода."
+            "uz": "Oilangizning olti oylik zaxirasi qancha boʻlishi kerakligini hisoblang.",
+            "ru": "Посчитайте, каким должен быть семейный резерв на полгода."
           },
           "autoComplete": "EMERGENCY_TARGET_SET"
         },

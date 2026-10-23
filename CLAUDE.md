@@ -1,4 +1,4 @@
-# Baraka Daftari Desktop — AI-dasturchi uchun yo'riqnoma
+# Baraka Dastur Desktop — AI-dasturchi uchun yo'riqnoma
 
 Har sessiya boshida quyidagilarni o'qi:
 

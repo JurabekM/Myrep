@@ -1,6 +1,6 @@
 [package]
 name = "baraka-domain"
-description = "Baraka Daftari — domen modeli: entitylar, Clock va IdGen traitlari (IO va tasodifiylik yo'q)"
+description = "Baraka Dastur — domen modeli: entitylar, Clock va IdGen traitlari (IO va tasodifiylik yo'q)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

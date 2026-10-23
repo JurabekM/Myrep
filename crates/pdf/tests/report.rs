@@ -30,7 +30,7 @@ fn sample() -> CouncilReport {
         limit_status: "Chegara faol: 1 000 000 soʻm (kattalar roziligi bor)".to_owned(),
         adults: vec![
             ("O'zim".to_owned(), "rozi".to_owned()),
-            ("Dilshod".to_owned(), "rozi".to_owned()),
+            ("Jasur".to_owned(), "rozi".to_owned()),
         ],
         disclaimer: "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas.".to_owned(),
     }
@@ -90,42 +90,42 @@ fn agreement_sample() -> pdf::AgreementDocument {
         subtitle: "Sheriklik (musharaka) · 1-versiya".to_owned(),
         status_line: "Imzolangan · amal qiladi 01.10.2026 dan · tuzilgan 15.10.2026".to_owned(),
         parties: vec![
-            ("Anvar Karimov".to_owned(), "sherik (men)".to_owned()),
-            ("Dilshod Rahimov".to_owned(), "sherik".to_owned()),
+            ("Akmal Karimov".to_owned(), "sherik (men)".to_owned()),
+            ("Jasur Rahimov".to_owned(), "sherik".to_owned()),
         ],
         contributions: vec![
             (
-                "Anvar Karimov".to_owned(),
+                "Akmal Karimov".to_owned(),
                 "pul: 3 000 000 soʻm — naqd".to_owned(),
             ),
             (
-                "Dilshod Rahimov".to_owned(),
+                "Jasur Rahimov".to_owned(),
                 "mehnat: yetkazib berish".to_owned(),
             ),
         ],
         duties: vec![(
-            "Buyurtmalarni yetkazish — Dilshod Rahimov".to_owned(),
+            "Buyurtmalarni yetkazish — Jasur Rahimov".to_owned(),
             "Bajarilmasa: 1 kun ichida xabar beradi va oʻrniga yechim topadi".to_owned(),
         )],
-        profit: "Foyda ulush bo'yicha: Anvar Karimov 50 %, Dilshod Rahimov 50 %.".to_owned(),
+        profit: "Foyda ulush bo'yicha: Akmal Karimov 50 %, Jasur Rahimov 50 %.".to_owned(),
         loss: "Zarar kapitalga mutanosib (musharaka).".to_owned(),
         custody:
-            "Pul: umumiy karta. Hisobni yuritadi: Anvar Karimov. Ko'rib chiqish: har 30 kunda."
+            "Pul: umumiy karta. Hisobni yuritadi: Akmal Karimov. Ko'rib chiqish: har 30 kunda."
                 .to_owned(),
         exit: "Ogohlantirish: 30 kun. Baholash: oxirgi koʻrik boʻyicha. To'lash: 3 oy ichida."
             .to_owned(),
-        arbiter: "Sobir hoji (mahalla oqsoqoli).".to_owned(),
+        arbiter: "Shavkat aka (mahalla oqsoqoli).".to_owned(),
         term: "Muddat: 12 oy. Keyingi ko'rib chiqish: 01.10.2027.".to_owned(),
         signatures: vec![
             (
-                "Anvar Karimov (tomon)".to_owned(),
+                "Akmal Karimov (tomon)".to_owned(),
                 "imzolangan 15.10.2026".to_owned(),
             ),
             (
-                "Dilshod Rahimov (tomon)".to_owned(),
+                "Jasur Rahimov (tomon)".to_owned(),
                 "imzolangan 15.10.2026".to_owned(),
             ),
-            ("Sobir hoji (hakam)".to_owned(), "imzo yoʻq".to_owned()),
+            ("Shavkat aka (hakam)".to_owned(), "imzo yoʻq".to_owned()),
         ],
         disclaimer: "Shaxsiy hisob uchun yozuv. Yuridik maslahat emas.".to_owned(),
     }

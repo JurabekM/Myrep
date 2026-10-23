@@ -1,7 +1,8 @@
-# LOYIHA PROMPTI — «BARAKA DAFTARI»
+# LOYIHA PROMPTI — «BARAKA DASTUR»
 ### O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillaridagi) shaxsiy moliya Android ilovasi
 
-> Versiya: v0.9 · Qayta ishlangan manbalar: 1-qism («Nimaga qoladi?»), 2-qism («Xurjunning teshigini yama»), 3-qism («Pulning ko'rinmas dushmani va qarz balosi»), 4-qism («Kishanlarning eng qadimiysi va to'y isrofi»), 5-qism («Uxlagan pulni uyg'otish va halol sheriklik»), 6-qism («Sheriklik odobi va Chorsucha shartnomaning 9 savoli»), 7-qism (Rustam — piramida qopqoni va hunarga sarmoya; ishchi nomi)
+> Versiya: v1.0 (2026-10-23) · Mustaqil kontent (pastdagi qarorga qarang).
+> **Mustaqillik qarori (2026-10-23).** «Baraka Dastur» ilovalari halol moliyaning yetti tamoyili ma'no-mazmunidan ilhomlangan mustaqil asar. Tashqi mualliflarning qissalari, personajlari, iqtiboslari va bob nomlari ilovalarda ishlatilmaydi; barcha kontent va matnlarni loyiha jamoasi yozadi. Ilovadagi murabbiy obrazi — nomsiz «Maslahatchi». Hujjatdagi foydalanuvchi segmentlari va misollar shartli ismlar bilan berilgan.
 > Bu prompt AI-dasturchi (Claude Code va h.k.) uchun yozilgan. Har bir yangi matndan keyin yangilanadi.
 
 ---
@@ -10,7 +11,7 @@
 Sen — senior mobil va backend dasturchisan, FinTech, xavfsizlik va Android platformasi bo'yicha chuqur tajribaga egasan. Kodni production-sifatda, testlar bilan, xavfsizlikni birinchi o'ringa qo'ygan holda yozasan.
 
 ## 1. MAHSULOT MOHIYATI
-**«Baraka daftari»** — bu ta'lim va amaliyotni birlashtirgan ilova. Foydalanuvchi qissalar orqali **halol boylikning 7 qonuni**ni o'rganadi va har birini shu haftaning o'zida ilovadagi vositalar bilan amalda bajaradi.
+**«Baraka Dastur»** — bu ta'lim va amaliyotni birlashtirgan ilova. Foydalanuvchi qisqa boblar orqali **halol moliyaning 7 tamoyili**ni («qonun») o'rganadi va har birini shu haftaning o'zida ilovadagi vositalar bilan amalda bajaradi.
 
 - **Asosiy muammo:** odamlar halol va ko'p ishlaydi, lekin oy oxirida pul qolmaydi. Sababi daromad kamligida emas. Xarajatlar hisobi yuritilmaydi va «o'zingga to'lash» odati yo'q.
 - **Falsafa:** ribo (foiz) yo'q. Boylik jamg'arish, xarajatni jilovlash, qarzdan qochish, sherikchilik (mudoraba/mushoraka) va zakot orqali keladi.
@@ -18,22 +19,21 @@ Sen — senior mobil va backend dasturchisan, FinTech, xavfsizlik va Android pla
 - **Asosiy tamoyil:** «Ilm o'qiganniki emas, amal qilganniki». Har bir bob ichida bajariladigan amallar bor. Miqdordan ko'ra odat muhimroq.
 
 ### 1.1. Kontent tuzilmasi
-- 12 ta qissa (bob) bor va ular 7 ta qonunni ochib beradi.
+- 7 ta bob bor; har bob bitta tamoyilni (qonunni) ochib beradi.
 - Har bir bob ichida quyidagilar bo'ladi:
   - hikoya (matn va ixtiyoriy audio);
   - «Daftar sahifasi», ya'ni foydalanuvchi qonunni o'z qo'li bilan yozadigan raqamli sahifa;
   - shu haftalik 3 ta amaliy vazifa.
 - Ritm haftalik, juma kunlari. Har juma yangi bob ochiladi va o'tgan haftadagi vazifalar tekshiriladi.
-- Kontent manbasi: «Asaxiy Invest» × Abdukarim Mirzayev.
 
 ### 1.2. Personajlar (persona = foydalanuvchi segmenti)
 | Personaj | Segment | Moliyaviy xulq | Ilova nimani yechishi kerak |
 |---|---|---|---|
-| **Anvar** — taksichi | Kunlik naqd daromad oladi, daromadi notekis | Avtokredit, ijara va nasiya daftari bor. Mayda xarajatlari hisobsiz | Kunlik daromadni tez kiritish, majburiyatlarni ko'rsatish, «oqib ketayotgan» pullarni topish |
-| **Nilufar** — tikuvchi | Har buyurtma uchun daromad oladi | Tejamkor, yashirincha «qora kun»ga pul yig'adi | Har buyurtmadan avtomatik ulush ajratish va oilaviy byudjet |
-| **Dilshod** — dasturchi | Daromadi yuqori | Puli tez «erib ketadi», kripto/treyding signallariga aldanadi | Impulsiv xarajat nazorati va firibgarlik/«tez boyish» ogohlantirishlari |
+| **Akmal** — taksichi | Kunlik naqd daromad oladi, daromadi notekis | Avtokredit, ijara va nasiya daftari bor. Mayda xarajatlari hisobsiz | Kunlik daromadni tez kiritish, majburiyatlarni ko'rsatish, «oqib ketayotgan» pullarni topish |
+| **Gulnora** — tikuvchi | Har buyurtma uchun daromad oladi | Tejamkor, yashirincha «qora kun»ga pul yig'adi | Har buyurtmadan avtomatik ulush ajratish va oilaviy byudjet |
+| **Jasur** — dasturchi | Daromadi yuqori | Puli tez «erib ketadi», kripto/treyding signallariga aldanadi | Impulsiv xarajat nazorati va firibgarlik/«tez boyish» ogohlantirishlari |
 | **Karim aka** — 52 yosh, mahalla faoli | Ijtimoiy majburiyatlar qarzidagi oila boshlig'i | O'g'lining to'yidan qolgan qarzni 6 yildan beri to'lay olmayapti, qo'shnilardan mayda qarz oladi | Qarzlar xaritasi, qarzdan chiqish rejasi, to'y va marosim xarajatlarini oldindan rejalash |
-| **Sobir hoji** — tadbirkor | Ilovadagi **murabbiy (mentor)** obrazi | 30 yil davomida foizsiz qarz olmagan, sabr va sherikchilik bilan ish yuritgan | Ilova ichida yo'l ko'rsatuvchi ovoz: savol beradi, hisoblatadi, ayblamaydi |
+| **Maslahatchi** — tadbirkor | Ilovadagi **murabbiy (mentor)** obrazi | 30 yil davomida foizsiz qarz olmagan, sabr va sherikchilik bilan ish yuritgan | Ilova ichida yo'l ko'rsatuvchi ovoz: savol beradi, hisoblatadi, ayblamaydi |
 
 ## 2. 1-QONUN: «AVVAL O'ZINGGA TO'LA» — FUNKSIONAL TALABLAR
 Qonunning mazmuni: har bir halol daromadning kamida 1/10 qismi «kelajakdagi o'zingniki» bo'ladi va unga tegilmaydi.
@@ -66,7 +66,7 @@ Qonunning mazmuni: har bir halol daromadning kamida 1/10 qismi «kelajakdagi o'z
 - **Nasiya daftari:** do'kondagi qarzlar alohida modul bo'lib, kimga va qancha qarzdorligi ko'rinadi.
 - To'lov sanalari uchun eslatmalar bo'ladi.
 
-## 2B. 2-QONUN: «XURJUNNING TESHIGINI YAMA» — FUNKSIONAL TALABLAR
+## 2B. 2-QONUN: «XARAJATNI KO'R VA BOSHQAR» — FUNKSIONAL TALABLAR
 Qonunning mazmuni: xarajatni yozmaguningcha uni boshqara olmaysan. Ilova ikki chekkani ajratib ko'rsatadi: isrof (teshik) va baxillik (bo'g'ilgan buloq). Maqsad ular o'rtasidagi iqtisod, ya'ni pulga egalik.
 Muammoning mohiyati: pul katta xarajatlarga emas, **ko'plab mayda va «arzimagan» xarajatlarga** ketadi. Bu xarajatlar alohida ko'rinmaydi, faqat jamlanganda ko'zga tashlanadi.
 
@@ -127,10 +127,10 @@ Har bir xarajat (va kategoriya) majburiy ravishda 3 ta `Necessity` darajasidan b
 - Majburlash, ayblash yoki uyaltirish yo'q. Kamaytirish rejasi faqat foydalanuvchi so'rasa taklif qilinadi.
 
 ### 2B.10. Persona bo'yicha eslatmalar
-- **Anvar:** naqd va mayda xarajatlar, yo'l-yo'lakay xaridlar. Shablonlar va vidjet unga eng muhim vositalar.
-- **Dilshod:** obunalar, kafe va qahva, taksi. Obunalar auditi va yillik jami summa uni «uyg'otadi» (uning sanamaydigan mayda xarajatlari oyiga 3 mln+ bo'lgan).
+- **Akmal:** naqd va mayda xarajatlar, yo'l-yo'lakay xaridlar. Shablonlar va vidjet unga eng muhim vositalar.
+- **Jasur:** obunalar, kafe va qahva, taksi. Obunalar auditi va yillik jami summa uni «uyg'otadi» (uning sanamaydigan mayda xarajatlari oyiga 3 mln+ bo'lgan).
 
-## 2C. 3-QONUN: «PUL IKKI XIL YASHAYDI» — FUNKSIONAL TALABLAR
+## 2C. 3-QONUN: «AVVAL ZAXIRA, KEYIN O'SISH» — FUNKSIONAL TALABLAR
 Qonunning mazmuni:
 - **Yotgan pul**ni inflyatsiya (narx-navo, «omborga kirmay donni yeydigan sichqon») sezdirmasdan yeydi.
 - **Ishlayotgan pul** o'zini o'zi ko'paytiradi.
@@ -138,32 +138,32 @@ Qonunning mazmuni:
 - **Halol foyda testi:** foydaning tagida uchtadan biri bo'lishi shart: **ter (mehnat), mol yoki tavakkal**. Uchalasi ham bo'lmasa, u ribo hisoblanadi.
 
 ### 2C.1. «Narx daftari» — shaxsiy inflyatsiya kuzatuvi
-- Foydalanuvchi o'zi uchun muhim mahsulotlar savatini tuzadi: go'sht, non, un, benzin va hokazo. So'ng ularning narxini vaqti-vaqti bilan kiritadi (Sobir hojining 30 yillik narx daftarlari kabi).
+- Foydalanuvchi o'zi uchun muhim mahsulotlar savatini tuzadi: go'sht, non, un, benzin va hokazo. So'ng ularning narxini vaqti-vaqti bilan kiritadi (Maslahatchining 30 yillik narx daftarlari kabi).
 - `PricePoint`: mahsulot, narx (tiyinda), sana, joy (ixtiyoriy).
 - Tarixiy taqqoslash ko'rsatiladi: «3 yil oldin → bugun». Masalan, go'sht 80 000 → 130 000 (+62,5%), non 2 000 → 3 000 (+50%).
 - Bu ma'lumotlardan **shaxsiy inflyatsiya indeksi** hisoblanadi (savatdagi og'irliklar bo'yicha). Rasmiy statistika bilan taqqoslash ixtiyoriy.
 - Narx kiritish odati uchun haftalik eslatma va streak bo'ladi.
 - ⚠️ Rasmiy CPI ma'lumotlarining manbasi va litsenziyasi aniqlanadi (Statistika agentligi). MVP faqat foydalanuvchi kiritgan narxlar bilan ishlaydi.
 
-### 2C.2. «Sichqon kemirgani» — xarid qobiliyati kalkulyatori
+### 2C.2. «Inflyatsiya ta'siri» — xarid qobiliyati kalkulyatori
 - Yotgan jamg'armaning real qiymati ko'rsatiladi: nominal balans va «bugungi narxlarda u nimaga teng».
 - «N yildan keyin shu pulga nechta kilo go'sht olish mumkin bo'ladi» kabi aniq va tushunarli misollar keltiriladi.
-- Bu ekranning maqsadi qo'rqitish emas, tushuntirish. Shu sababli har doim keyingi qadam (qorovul pul / o'sadigan pul) bilan yakunlanadi.
+- Bu ekranning maqsadi qo'rqitish emas, tushuntirish. Shu sababli har doim keyingi qadam (favqulodda zaxira / o'sadigan pul) bilan yakunlanadi.
 
 ### 2C.3. Jamg'armani ikkiga bo'lish
 «Kelajagim» jamg'armasi endi `VaultType` bo'yicha ikkiga bo'linadi:
 
 | Turi | Vazifasi | Qoidalar |
 |---|---|---|
-| `QOROVUL` (qorovul pul / favqulodda zaxira) | Qora kunda qarz eshigiga yugurmaslik | **Maqsadli summa avtomatik hisoblanadi:** oylik `ZARUR` + `KERAK` xarajatlarining o'rtachasi × N oy. Bosqichlar: 3 oy (birinchi milestone) va **6 oy (to'liq maqsad, standart)**. Bu summa hech qayerga sarflanmaydi, qarzga ham, sheriklikka ham. Pul tez olinadigan (likvid) joyda turadi. «O'smadi» deb baholanmaydi |
+| `QOROVUL` (favqulodda zaxira / favqulodda zaxira) | Qora kunda qarz eshigiga yugurmaslik | **Maqsadli summa avtomatik hisoblanadi:** oylik `ZARUR` + `KERAK` xarajatlarining o'rtachasi × N oy. Bosqichlar: 3 oy (birinchi milestone) va **6 oy (to'liq maqsad, standart)**. Bu summa hech qayerga sarflanmaydi, qarzga ham, sheriklikka ham. Pul tez olinadigan (likvid) joyda turadi. «O'smadi» deb baholanmaydi |
 | `OSADIGAN` (ishlayotgan pul) | Inflyatsiyadan oldinda yurish | Faqat halol (ribosiz) yo'nalishlar uchun. Funksiyalar keyingi boblarda ochiladi |
 
-- **Taqsimot ustuvorligi:** avval qorovul pul maqsadiga yetkaziladi, keyin o'sadigan qismga o'tiladi. Progress bar «necha oylik zaxira bor» ko'rinishida bo'ladi (masalan, «1,4 / 3 oy»).
-- Qorovul puldan pul olishda «bu haqiqatan favqulodda holatmi?» degan tasdiq so'raladi va ishlatilgan summani qayta to'ldirish rejasi taklif qilinadi.
+- **Taqsimot ustuvorligi:** avval favqulodda zaxira maqsadiga yetkaziladi, keyin o'sadigan qismga o'tiladi. Progress bar «necha oylik zaxira bor» ko'rinishida bo'ladi (masalan, «1,4 / 3 oy»).
+- Favqulodda zaxiradan pul olishda «bu haqiqatan favqulodda holatmi?» degan tasdiq so'raladi va ishlatilgan summani qayta to'ldirish rejasi taklif qilinadi.
 
 ### 2C.4. «Jangga yarador askar yuborilmaydi» — tayyorgarlik darvozasi (readiness gate)
 - O'sadigan pul, sherikchilik va investitsiya bo'limlari **qulflangan** holda turadi. Ular ikki shart bajarilganda ochiladi:
-  1. qorovul pul ≥ 6 oylik zaxira (5-bobda 3 oydan 6 oyga oshirildi);
+  1. favqulodda zaxira ≥ 6 oylik zaxira (5-bobda 3 oydan 6 oyga oshirildi);
   2. yuqori xavfli qarzlar yopilgan yoki faol qarzdan chiqish rejasi bor (4-qonun).
 - Qulflangan ekranda shartlar va har biri bo'yicha progress ko'rsatiladi. Taqiq yo'q, tushuntirish bor.
 - Foydalanuvchi qulfni ongli ravishda chetlab o'tishi mumkin, lekin ogohlantirish va tasdiq bilan. Bu holat analitikada qayd etiladi.
@@ -206,7 +206,7 @@ Qonunning mazmuni:
 - 10% ulushning mantig'i UI'da tushuntiriladi: «Qarz — o'tmishga to'lov, jamg'arma — kelajakka to'lov». Jamg'armasiz qarzdan chiqqan odam birinchi tashvishda yana qarz oladi.
 - Majburiy oylik qarz to'lovlari 70% ichida `ZARUR` sifatida hisoblanadi. 20% — sof qo'shimcha to'lov.
 - Foizlarni oila sozlay oladi, lekin standart qiymat 70/20/10. Jamg'arma ulushi 0 bo'lsa, ilova ogohlantiradi.
-- Barcha qarzlar yopilganda rejim avtomatik `STANDARD` ga qaytadi. Bo'shagan 20% ni qorovul pul va o'sadigan pulga yo'naltirish taklif qilinadi.
+- Barcha qarzlar yopilganda rejim avtomatik `STANDARD` ga qaytadi. Bo'shagan 20% ni favqulodda zaxira va o'sadigan pulga yo'naltirish taklif qilinadi.
 
 ### 2D.2. Qarzdan chiqish rejalovchisi (payoff planner)
 - Har bir qarz uchun ikki jadval yonma-yon ko'rsatiladi: **odatiy grafik** va **qo'shimcha to'lovli grafik**.
@@ -223,7 +223,7 @@ Qonunning mazmuni:
 - **Imkoniyat narxi:** ortiqcha to'langan summa foydalanuvchining o'z maqsadlari bilan taqqoslanadi. Masalan: «bu summa qizingizning N yillik kontraktiga teng». Maqsadlar ro'yxati foydalanuvchidan olinadi.
 
 ### 2D.4. Qarzni bir necha kishi to'lashi (oilaviy yelkadoshlik)
-- Bitta qarzga bir nechta to'lovchi (`DebtContributor`) biriktiriladi: boshqa oila a'zosi yoki alohida xonadondagi farzand (masalan, o'g'il Sanjar).
+- Bitta qarzga bir nechta to'lovchi (`DebtContributor`) biriktiriladi: boshqa oila a'zosi yoki alohida xonadondagi farzand (masalan, o'g'il Sardor).
 - Har bir to'lovchining oylik ulushi va to'lov tarixi yuritiladi. Ishtirokchi taklif havolasi orqali ilovaga qo'shiladi va unga faqat o'sha qarz ko'rinadi.
 
 ### 2D.5. Halol qarz qoidalari: raqamli «qarz tilxati»
@@ -237,7 +237,7 @@ Qarz olish yoki berishda (`Debt` / `Receivable`) uchta shart UI darajasida qo'll
 ### 2D.6. Yangi qarz oldidan «to'xta va o'yla» (friction)
 - Yangi qarz qo'shilayotganda qisqa tekshiruv so'rovi chiqadi:
   - zaruratmi yoki hashamatmi;
-  - foizsiz muqobil bormi (qorovul pul, qarindosh, buyum sotish);
+  - foizsiz muqobil bormi (favqulodda zaxira, qarindosh, buyum sotish);
   - oylik yuk daromadning necha foiziga yetadi.
 - So'rov maqsadi qarz olishni taqiqlash emas, ongli qaror qabul qilishga yordam berish. Natija qarz yozuvida saqlanadi.
 
@@ -262,7 +262,7 @@ Qarz olish yoki berishda (`Debt` / `Receivable`) uchta shart UI darajasida qo'll
 Qonunning mazmuni:
 - Yotgan pul kamayib boradi, ishlagan pul egasini boqadi.
 - Pulni halol ishlatishning yo'li **savdo va sheriklik**.
-- Bob tezisi: bir odamning puli bekor yotadi, boshqasining hunari pulsizlikdan bekor turadi. Ular ko'pincha bir mahallada yashaydi.
+- Bob g'oyasi: bekor turgan mablag' va bekor turgan hunar bir-birini to'ldirishi mumkin — sheriklik shuning uchun kerak.
 - Sheriklik **sadaqa ham, qarz ham emas**. Bu teng huquqli kelishuv bo'lib, unda tavakkal (risk) bo'lishiladi.
 
 ### 2E.1. Sheriklik turlari (domen qoidalari)
@@ -321,10 +321,10 @@ Qonunning mazmuni:
   - shoshiltirish bormi;
   - yozma shartnoma bormi.
 - Natija «yashil / sariq / qizil» ko'rinishida chiqadi va har bir bayroq izohlanadi.
-- Dilshod segmenti (kripto/treyding signallari) uchun asosiy himoya vositasi shu. Batafsil kengaytmasi keyingi boblarda bo'lishi mumkin.
+- Jasur segmenti (kripto/treyding signallari) uchun asosiy himoya vositasi shu. Batafsil kengaytmasi keyingi boblarda bo'lishi mumkin.
 
 ### 2E.6. Gate va ruxsatlar bilan bog'liqlik
-- **Kapital kiritish** (o'z pulini sheriklikka berish) 2C.4 tayyorgarlik darvozasiga bo'ysunadi: ≥6 oylik qorovul pul va faol qarz rejasi bo'lishi kerak.
+- **Kapital kiritish** (o'z pulini sheriklikka berish) 2C.4 tayyorgarlik darvozasiga bo'ysunadi: ≥6 oylik favqulodda zaxira va faol qarz rejasi bo'lishi kerak.
 - **Kapital qabul qilish** (mehnat egasi sifatida) darvozaga bo'ysunmaydi. Sababi: mudarabada kapital qarz emas, uni qaytarish majburiyati yo'q (beparvolik bundan mustasno). Lekin ilova buni foydalanuvchiga aniq tushuntiradi va oilaviy rozilikni (er va xotin) so'raydi.
 
 ### 2E.7. Regulyativ chegara
@@ -336,7 +336,7 @@ Qonunning mazmuni:
 - Sheriklik sadaqa yoki minnat sifatida ko'rsatilmaydi. U teng huquqli ish sifatida ko'rsatiladi: «Ot bilan omoch — ikkalasi birga yer haydaydi».
 - «El nima deydi» qo'rquviga qarshi kontent bo'ladi. Erkak yoki oila boshlig'i rozilik bosqichida g'ururni hurmat qiladigan matnlar ishlatiladi.
 
-## 2F. 6-QONUN: «SHERIKLIK ODOBI — KELISHUVNI YOZINGLAR!» — FUNKSIONAL TALABLAR
+## 2F. 6-QONUN: «KELISHUVNI YOZMA TUZ» — FUNKSIONAL TALABLAR
 Qonunning mazmuni:
 - **Og'zaki kelishuv — qumga qurilgan uy.** Havo ochiq paytda turadi, birinchi sinovda qulaydi.
 - Yozish ishonchsizlik belgisi emas. U **ishonchni asrash vositasi** va diniy ko'rsatma (Baqara 282).
@@ -346,7 +346,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 1. Har bir tomon og'zaki kelishuvni **o'z foydasiga moslab eslaydi**. Bu yolg'on emas, xotiraning xususiyati. Bunga yechim — yozilgan shartlar va **o'zgarmas hisob yozuvlari**.
 2. Sheriklikning eng xavfli payti **zarar emas, katta foyda** kelgan payt.
 3. Nizoni **daftar**, ya'ni tiklanadigan aniq raqamlar to'xtatadi.
-4. Yozilgan band nizo chiqqanda emas, **muammo chiqqan kuni** ishlaydi. Misol: Dilshod kasal bo'lib, bot ishdan chiqdi → 3-band bo'yicha harakat qilindi → janjal chiqmadi.
+4. Yozilgan band nizo chiqqanda emas, **muammo chiqqan kuni** ishlaydi. Misol: Jasur kasal bo'lib, bot ishdan chiqdi → 3-band bo'yicha harakat qilindi → janjal chiqmadi.
 
 ### 2F.1. Umumiy «Kelishuv» dvigateli (Agreement engine)
 - 2D.5 dagi qarz tilxati va 2E.2 dagi sheriklik shartnomasi endi **bitta umumiy `Agreement` modelining turlari** bo'ladi (refaktor):
@@ -369,7 +369,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 
 - **To'liqlik indikatori:** «9 / 9 savolga javob berildi». Barcha 9 bo'lim to'ldirilmaguncha yoki asosli ravishda «tegishli emas» deb belgilanmaguncha **imzolash bosqichi ochilmaydi**. «Tegishli emas» belgisi qo'yish uchun izoh yozish majburiy.
 - Turga qarab ba'zi savollar soddalashtiriladi. Masalan, `LOAN` uchun 3-savol = «qaytarish jadvali», 4–5-savollar = «foiz yo'q» (avtomatik qo'yiladi). Biroq savollar ro'yxati hamma turda bir xil qoladi.
-- «Noqulay» bandlarni ham yozish rag'batlantiriladi. Masalan, «Agar X o'z vazifasini bir hafta bajarmasa...». UI'da Sobir hoji maslahati chiqadi: «Qog'ozda qattiq bo'lsa, keyin bir-biringizga qattiq gapirmaysiz».
+- «Noqulay» bandlarni ham yozish rag'batlantiriladi. Masalan, «Agar X o'z vazifasini bir hafta bajarmasa...». UI'da Maslahatchi maslahati chiqadi: «Qog'ozda qattiq bo'lsa, keyin bir-biringizga qattiq gapirmaysiz».
 
 ### 2F.3. Imzolash, guvohlar va versiyalar
 - Imzolash, guvohlar va versiyalash 2D.5 va 2E.2 dagi tartib bilan bir xil. MVP'da tomonlar shu qurilmada imzo chizadi.
@@ -438,11 +438,9 @@ Dasturchi uchun bobning asosiy saboqlari:
 ### 2F.11. Kontent eslatmasi
 - Bobda Qur'on oyati (Baqara 282, mazmunan tarjima) va hadis («Musulmonlar o'z shartlari ustida turadilar») keltirilgan. Ular `religiousReviewStatus` jarayonidan o'tadi: manba, tarjima matni va ulamo tasdig'i talab qilinadi.
 
-## 2G. 7-QONUN: «KO'RMAGAN ISHINGGA PUL TIKMA — PULINGNI HUNARINGGA ISHLAT» — FUNKSIONAL TALABLAR
-> Manba: 7-qism (Rustam — chet eldan qaytgan vatandosh, piramida qopqoni va hunarga sarmoya). Bob matnida qonun jumlasi alohida berilmagan; quyidagisi bob mazmunidan olingan **qoralama** — muallif tasdig'i kerak (OPEN_QUESTIONS).
-> **Qonun (qoralama):** «Ishni o'z ko'zing bilan ko'rmaguncha pul tikma. Kafolatli katta foyda, shoshirish, yangi odam olib kelish, ko'rinmas ish va qiyin chiqish — firibgarlik belgisi: bittasini ko'rsang hushyor tort, ikkitasini ko'rsang qoch. Avval oilangning olti oylik qal'a devorini qur, keyin pulingni hunaringga ishlat.»
+## 2G. 7-QONUN: «TEKSHIRMAGAN ISHGA PUL TIKMA» — FUNKSIONAL TALABLAR
+> **Qonun (qoralama):** «Ishni o'z ko'zing bilan ko'rmaguncha pul tikma. Kafolatli katta foyda, shoshirish, yangi odam olib kelish, ko'rinmas ish va qiyin chiqish — firibgarlik belgisi: bittasini ko'rsang hushyor tort, ikkitasini ko'rsang qoch. Avval oilangning olti oylik himoya zaxirasini qur, keyin pulingni hunaringga ishlat.»
 
-**Personajlar.** Rustam — to'rt yil chet elda (Koreya) zavodda ishlab qaytgan payvandchi va usta boshi, qo'lida dollardagi jamg'arma; endi qaytib ketmaslikka va pulni ishlatishga qaror qilgan, lekin yolg'iz qaror qabul qilishga o'rgangan, maslahat so'rashni zaiflik deb biladi. Uning sinfdoshi uni «oyiga kafolatli foyda» va'da qiladigan kompaniyaga jalb qilmoqchi bo'ladi; idoradagi ekranlar, birinchi kirganlarga ko'rsatiladigan to'lovlar va «joylar cheklangan» yozuvi uni shoshiradi. Anvar «bir soat vaqt bering» deb Sobir hojiga olib boradi; hoji savollar bilan uni o'zi tekshirishga undaydi.
 
 ### 2G.1. «Besh xavf belgisi» (2E.5 detektorining kengaytmasi)
 - Taklif tekshiruvi besh belgini (`ScamSign`) aniqlaydi:
@@ -462,8 +460,8 @@ Dasturchi uchun bobning asosiy saboqlari:
 | `NO_REAL_BUSINESS` | real mol / ish — «yo'q», **yoki** davlat ruxsati — «yo'q», **yoki** o'z ko'zi bilan tekshirish — «yo'q» (rad etishdi) |
 | `HARD_EXIT` | pulni istagan vaqtda qaytarish — «yo'q» |
 
-- **Baho qoidasi** (hojining qoidasi): 0 belgi — belgi yo'q; 1 belgi — «hushyor torting» (kamida **sariq**); 2 va undan ko'p — «qoching» (**qizil**). Umumiy baho = 2E.5 jadvalidagi baho va besh belgi bahosining **eng og'iri**. «Bilmayman» javobi belgi hisoblanmaydi, lekin 2E.5 dagidek sariq bayroq beradi.
-- Har belgi alohida izohlanadi (Sobir hoji ohangida, ayblamasdan).
+- **Baho qoidasi** (xavf belgilari qoidasi): 0 belgi — belgi yo'q; 1 belgi — «hushyor torting» (kamida **sariq**); 2 va undan ko'p — «qoching» (**qizil**). Umumiy baho = 2E.5 jadvalidagi baho va besh belgi bahosining **eng og'iri**. «Bilmayman» javobi belgi hisoblanmaydi, lekin 2E.5 dagidek sariq bayroq beradi.
+- Har belgi alohida izohlanadi (Maslahatchi ohangida, ayblamasdan).
 - Umumiy test vektori: `spec/test-vectors/scam_signals.json` (`DESKTOP_PROMPT.md` 5-bo'lim).
 
 ### 2G.2. «Ishni o'z ko'zim bilan ko'raman» — tekshiruv ro'yxati
@@ -488,9 +486,9 @@ Dasturchi uchun bobning asosiy saboqlari:
 - Birinchi kirganlarga to'lov «baliqchining yemi» sifatida izohlanadi: ular yangi kirganlarning pulidan to'lanadi.
 - Test vektori: `spec/test-vectors/pyramid_levels.json`.
 
-### 2G.5. «Qal'a devori» — katta summa bilan qaytganda
+### 2G.5. «Himoya zaxirasi» — katta summa bilan qaytganda
 - Katta summa kiritilganda (chet eldan qaytish, meros, mulk sotuvi) **taqsimlash ustasi** ochiladi:
-  1. avval oilaning **6 oylik zaxira kamomadi** (2C.3 maqsad, qorovul jamg'arma) to'ldiriladi — «bu sizning qal'a devoringiz, uni savdoga ham, sheriklikka ham qo'shmaysiz»;
+  1. avval oilaning **6 oylik zaxira kamomadi** (2C.3 maqsad, favqulodda zaxira) to'ldiriladi — «bu sizning himoya zaxirasingiz, uni savdoga ham, sheriklikka ham qo'shmaysiz»;
   2. qolgani sarmoya uchun ko'rsatiladi va «Hunardan ishga» (2E.4, 2G.8) taklif qilinadi;
   3. zaxira to'lmaguncha sarmoya tavsiya etilmaydi (2C.4 darvoza).
 - Summa chet el valyutasida bo'lishi mumkin: foydalanuvchi kiritgan kurs bilan asosiy valyutaga aylantiriladi (`FxRate`, `fx_convert`).
@@ -513,20 +511,19 @@ Dasturchi uchun bobning asosiy saboqlari:
 ### 2G.8. «Pulingiz hunaringizga ishlasin»
 - 2E.4 ga hunar shablonlari qo'shiladi. Birinchisi: **temirchilik / payvand ustaxonasi** (darvoza, panjara, mangal). Shablon CAPEX nomlarini oldindan qo'yadi; summalarni foydalanuvchi yozadi (narx o'ylab topilmaydi).
 - «Talab bormi?» savoli: kim buyurtma beradi, atrofda qancha uy qurilmoqda yoki yangilanmoqda.
-- Qal'a devori (2G.5) to'lgandan keyin tavsiya etiladi.
+- Himoya zaxirasi (2G.5) to'lgandan keyin tavsiya etiladi.
 
 ### 2G.9. Persona eslatmasi: chet eldan qaytgan vatandosh
 - Ohang: hurmat va iliqlik, uyaltirmaslik. Yolg'iz qaror qabul qilish odatini ayblamasdan, maslahatga undash.
 - Jamg'arma ko'pincha dollarda — summa kiritishda valyuta tanlovi bor.
 
 ### 2G.10. Kontent eslatmasi
-- 7-bob (placeholder, litsenziyagacha). Haftalik vazifalar: kelgan bitta taklifni besh belgi bilan tekshirish (`OFFER_CHECKED`), oilaning qal'a devorini hisoblash (`EMERGENCY_TARGET_SET`), hunardan bitta g'oya yozish (`VENTURE_IDEA_CREATED`).
-- Bob boshidagi homiy qatori ilovaga kirmaydi (3-bo'lim).
+- 7-bob (o'z matnimiz). Haftalik vazifalar: kelgan bitta taklifni besh belgi bilan tekshirish (`OFFER_CHECKED`), oilaning himoya zaxirasini hisoblash (`EMERGENCY_TARGET_SET`), hunardan bitta g'oya yozish (`VENTURE_IDEA_CREATED`).
 
 ## 3. MAHSULOT CHEKLOVLARI (qat'iy)
 - Ilovada foizli kredit, mikroqarz yoki «tez pul» reklamalari va integratsiyalari **bo'lmaydi**.
 - Kreditlar faqat qarzdan chiqish maqsadida kuzatiladi. Yangi qarz olish rag'batlantirilmaydi.
-- Tone of voice — Sobir hoji uslubida: iliq, ayblamaydigan, savol orqali o'ylashga undaydigan. Uyaltirish yoki qo'rqitish taqiqlanadi.
+- Tone of voice — Maslahatchi uslubida: iliq, ayblamaydigan, savol orqali o'ylashga undaydigan. Uyaltirish yoki qo'rqitish taqiqlanadi.
 - Har bir ta'limiy ekranda disklеymer bo'ladi: «Ta'limiy material. Fatvo yoki moliyaviy maslahat emas».
 - Va'da yo'q: «X oyda mashina» kabi gaplar taqiqlanadi.
 - Ilovadagi hech bir hisob-kitob, prognoz yoki taqqoslash foiz stavkasini «muqobil daromad» sifatida ishlatmaydi. «Bankda tursa X% olardingiz» kabi matnlar taqiqlanadi.
@@ -535,7 +532,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 - Kelishuv hujjatlarida ilova **yuridik kafolat bermaydi** va yuridik maslahat ko'rsatmaydi. Shablonlar yurist ko'rigidan o'tadi (`reviewStatus`).
 - Hisob jurnalidagi yozuvlar (2F.6) hech qanday holatda tahrirlanmaydi va o'chirilmaydi, faqat tuzatuvchi yozuv qo'shiladi.
 - Ilova baxillikka undamaydi. Tejash ko'rsatkichlari sadaqa yoki zarur xarajatlarni kamaytirishni hech qachon «yutuq» deb ko'rsatmaydi.
-- Ilova hech qanday investitsiya platformasi, kompaniya yoki loyihani reklama qilmaydi va tavsiya etmaydi. Kontent manbalaridagi homiy yozuvlari ilovada ko'rsatilmaydi (2G.10).
+- Ilova hech qanday investitsiya platformasi, kompaniya yoki loyihani reklama qilmaydi va tavsiya etmaydi.
 
 ## 4. TEXNOLOGIK STEK — QAT'IY QARORLAR (0-bosqich, ADR)
 > Bu bo'limdagi qarorlar **o'zgarmaydi**. AI-dasturchi ularni o'z bilganicha almashtirmaydi. O'zgartirish zarur bo'lsa, avval sababini yozib, ruxsat so'raydi.
@@ -566,7 +563,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 - **Desktop ilova bilan moslik:** pul algoritmlarining aniq ta'rifi va umumiy oltin test vektorlari `spec/test-vectors/` da (`DESKTOP_PROMPT.md` 4–5-bo'limlar). Ular mobil ilova uchun ham **majburiy**: largest remainder'da teng kasr bo'lsa kichik indeks ustun; `percentOf = allocate([bp, 10000−bp])[0]`; amortizatsiyada half-up. Mobil CI ham shu vektorlardan o'tishi shart. Eksport formati (`spec/interchange/`) ham umumiy.
 
 ### 4.3. Aktivlar abstraksiyasi (`Asset`) — zakot uchun zaxira
-> v0.9: 7-qism zakot haqida emas (2G — firibgarlikdan himoya va hunarga sarmoya). Zakot keyingi qismlarda; bu abstraksiya zaxira sifatida qoladi.
+> v0.9: 7-tamoyil zakot haqida emas (2G — firibgarlikdan himoya va hunarga sarmoya); bu abstraksiya zaxira sifatida qoladi.
 - Har bir qiymat saqlovchi narsa `Asset` hisoblanadi: `type` (`CASH | BANK_CARD | VAULT | GOLD | SILVER | FOREIGN_CURRENCY | RECEIVABLE | TRADE_GOODS | BUSINESS_SHARE`), `quantity` (integer, minor birlikda; oltin uchun milligramm), `unit`, `currency?`, `acquiredAt`.
 - MVP-1 da faqat `CASH` va `VAULT` ishlatiladi, lekin jadval va interfeys **boshidan** shu ko'rinishda quriladi. Keyingi bosqichlarda migratsiya kerak bo'lmasligi uchun.
 - Har bir `Asset` uchun «balans tarixi» (snapshotlar) saqlanadi. Bu zakotdagi hawl (1 yil) hisobi uchun kerak bo'ladi.
@@ -621,7 +618,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 ## 7. REGULYATIV CHEKLOVLAR (O'zbekiston)
 - Shaxsiy ma'lumotlar O'zbekiston hududidagi serverlarda saqlanadi.
 - MVP **haqiqiy pulni saqlamaydi va o'tkazmaydi**: «Kelajagim» virtual jamg'arma sifatida ishlaydi. Shu sababli Markaziy bank litsenziyasi kerak emas. Haqiqiy alohida karta yoki hamyon keyinchalik faqat litsenziyali bank yoki to'lov tashkiloti bilan hamkorlikda qo'shiladi.
-- Kontent va «Baraka daftari» brendi «Asaxiy Invest» × Abdukarim Mirzayevga tegishli. Ulardan foydalanish uchun litsenziya yoki hamkorlik shartnomasi kerak.
+- Kontent, matnlar va «Baraka Dastur» brendi loyihaga tegishli; tashqi muallif matnlari ishlatilmaydi (mustaqillik qarori, 2026-10-23).
 
 ## 8. INTEGRATSIYALAR
 _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik ajratish (hamkor bank), UzCard/HUMO tranzaksiya importi.
@@ -630,7 +627,7 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 - Til: o'zbek (lotin) asosiy, rus ikkinchi.
 - Metafora — **daftar**: qog'oz teksturasi, qo'lda yozilgan qonunlar, «daftar sahifasi».
 - Bosh ekranda: «O'zingizga to'langan» summa, «Kelajagim» balansi, streak, shu haftaning 3 vazifasi va juma bobi.
-- Murabbiy (Sobir hoji) maslahatlari kontekstga mos holda chiqadi.
+- Murabbiy (Maslahatchi) maslahatlari kontekstga mos holda chiqadi.
 - Xarajatlar Zarur / Kerak / Havas ranglari bilan ajratiladi. Havas uchun qizil emas, neytral rang ishlatiladi (havas «gunoh» emas).
 - Oila kengashi ekrani: kategoriyalarni toifalarga ajratish va havas chegarasini birgalikda tasdiqlash.
 
@@ -638,19 +635,19 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 | # | Qonun | Holat |
 |---|---|---|
 | 1 | Avval o'zingga to'la | ✅ Spetsifikatsiya yozildi |
-| 2 | Xurjunning teshigini yama | ✅ Spetsifikatsiya yozildi |
-| 3 | Pul ikki xil yashaydi (Pul puldan tug'ilmasin) | ✅ Spetsifikatsiya yozildi |
+| 2 | Xarajatni ko'r va boshqar | ✅ Spetsifikatsiya yozildi |
+| 3 | Avval zaxira, keyin o'sish | ✅ Spetsifikatsiya yozildi |
 | 4 | Ribodan qoch! Qarzga tushsang — reja bilan chiq! | ✅ Spetsifikatsiya yozildi |
 | 5 | Pulni halol ishga sol (savdo va sheriklik) | ✅ Spetsifikatsiya yozildi |
-| 6 | Sheriklik odobi — kelishuvni yozinglar! (Chorsucha shartnomaning 9 savoli) | ✅ Spetsifikatsiya yozildi |
-| 7 | _[taxmin: firibgarlar va «kalxatlar» — katta pul bilan qaytgan migrant (Rustam aka, Koreya) uchun qopqonlar]_ | ⏳ Ishora: «Aeroportning o'zidayoq ovchilar kutib turadi». Ehtimoliy funksiyalar: katta tushum rejimi, firibgarlik detektorini kengaytirish (2E.5). Zakot keyingi qissalarda bo'lishi mumkin |
+| 6 | Kelishuvni yozma tuz (9 savolli kelishuv) | ✅ Spetsifikatsiya yozildi |
+| 7 | Tekshirmagan ishga pul tikma | ✅ Spetsifikatsiya yozildi |
 
 ## 11. ISHLAB CHIQISH BOSQICHLARI
 - **MVP-1:** daromad va xarajatni kiritish, «Kelajagim» virtual jamg'armasi va avto-ulush, «Kimning puli?», oylik audit, 1-bob kontenti va haftalik vazifalar.
 - **MVP-2:** Zarur/Kerak/Havas tasnifi, xarajat shablonlari va vidjet, havas chegarasi (oilaviy kelishuv bilan), konvertlar, obunalar ro'yxati (qo'lda kiritiladi), «Qutqarilgan pul» metrikasi va uni «Kelajagim»ga o'tkazish, «Juma shirinligi», 2-bob kontenti.
-- **MVP-3:** «Narx daftari» va shaxsiy inflyatsiya indeksi, «Sichqon kemirgani» kalkulyatori, qorovul pul / o'sadigan pul ajratmasi va avtomatik zaxira maqsadi, tayyorgarlik darvozasi, to'liq qarz inventari va bergan qarzlar ro'yxati, 3-bob kontenti, odat asosida bob ochilishi.
+- **MVP-3:** «Narx daftari» va shaxsiy inflyatsiya indeksi, «Inflyatsiya ta'siri» kalkulyatori, favqulodda zaxira / o'sadigan pul ajratmasi va avtomatik zaxira maqsadi, tayyorgarlik darvozasi, to'liq qarz inventari va bergan qarzlar ro'yxati, 3-bob kontenti, odat asosida bob ochilishi.
 - **MVP-4:** `DEBT_RECOVERY` rejimi (70/20/10), payoff planner (odatiy va tezlashtirilgan grafik), qarzning haqiqiy narxi, qarz tilxati (PDF va ikki tomonlama tasdiq), yangi qarz oldidan friction so'rovi, sotiladigan buyumlar, marosim rejalovchisi va stsenariylarni taqqoslash, «qarzsiz kun», 4-bob kontenti.
-- **MVP-5:** sheriklik moduli (mudoraba / musharaka validatsiyasi bilan), shartnoma ustasi (PDF va ko'p tomonlama tasdiq), venture ledger va avtomatik foyda/zarar taqsimoti, buyout jadvali, «Hunardan ishga» rejalovchisi, «kafolatlangan foyda» detektori, qorovul pul maqsadi 6 oyga oshirildi, 5-bob kontenti.
+- **MVP-5:** sheriklik moduli (mudoraba / musharaka validatsiyasi bilan), shartnoma ustasi (PDF va ko'p tomonlama tasdiq), venture ledger va avtomatik foyda/zarar taqsimoti, buyout jadvali, «Hunardan ishga» rejalovchisi, «kafolatlangan foyda» detektori, favqulodda zaxira maqsadi 6 oyga oshirildi, 5-bob kontenti.
 - **MVP-6:** umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori, turlar), tilxat va sheriklik shartnomasini shu dvigatelga ko'chirish, vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnomalar, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish, oilaviy kelishuvlar, 6-bob kontenti.
 - **Keyinroq:** bank tranzaksiyalaridan obunalarni avtomatik aniqlash, rasmiy CPI bilan taqqoslash, sertifikatlangan islomiy moliya hamkorlari, yosh oila jamg'armasiga real pul o'tkazmalari (hamkor bank), e'lon saytlariga eksport.
 - **Keyingi bosqichlar:** keyingi qonunlar bo'yicha qo'shiladi.
@@ -662,5 +659,5 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 - Noaniq joy bo'lsa, taxmin qilishdan oldin so'ra.
 - 4-bo'lim (ADR) qarorlarini ruxsatsiz o'zgartirma. Yangi paket qo'shishdan oldin uning sababini yoz.
 - Har bir sessiyada faqat berilgan bosqich yoki vazifa ustida ishla. Keyingi bosqich funksiyalarini «qo'shimcha» sifatida yozma.
-- Kontent matnlari (qissalar) litsenziya hal bo'lguncha **placeholder** bo'lib turadi. Asl matnlarni repoga ko'chirma.
+- Bob matnlarini loyiha jamoasi yozadi. Tashqi qissa matnlari, personajlar va iqtiboslar repoga ko'chirilmaydi.
 - Kod, identifikatorlar va buyruqlar inglizcha. Izohlar, hujjatlar va UI matnlari o'zbekcha.

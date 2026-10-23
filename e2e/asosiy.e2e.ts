@@ -1,4 +1,4 @@
-// Yakuniy E2E — Anvar ssenariysi (DESKTOP_PROMPT D15). WebdriverIO + tauri-driver (Windows, WebView2).
+// Yakuniy E2E — Oila ssenariysi (DESKTOP_PROMPT D15). WebdriverIO + tauri-driver (Windows, WebView2).
 // Ishga tushirish tartibi: e2e/README.md. Bu fayl loyiha lint/typecheck doirasiga kirmaydi (alohida papka).
 // Selektorlar — faqat ko'rinadigan matn va rollar (accessible name): data-testid yo'q, UI testlari bilan bir xil.
 
@@ -24,7 +24,7 @@ async function see(text: string) {
   await element.waitForDisplayed({ timeout: 10_000 });
 }
 
-describe("Anvar ssenariysi", () => {
+describe("Oila ssenariysi", () => {
   it("1. PIN o'rnatish va onboarding", async () => {
     await type("PIN (6 ta raqam)", PIN);
     await type("PIN ni qayta kiriting", PIN);
@@ -66,7 +66,7 @@ describe("Anvar ssenariysi", () => {
     await click("Sheriklik yaratish");
     await see("Kim bilan kim?");
     // 9 savol va imzolar — AgreementWizard; canvas imzo WebDriver `actions` bilan chiziladi.
-    // Davr yopilgach: Dilshod 40 % → 1 400 000 soʻm.
+    // Davr yopilgach: Jasur 40 % → 1 400 000 soʻm.
   });
 
   it("6. .baraka eksport", async () => {

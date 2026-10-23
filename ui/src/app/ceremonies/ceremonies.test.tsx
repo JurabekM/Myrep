@@ -107,7 +107,7 @@ const DATA: CeremoniesDto = { items: [CEREMONY] };
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -154,9 +154,9 @@ describe("marosimlar", () => {
   });
 
   it("oila kengashi: qaror yoziladi, kattalar PIN bilan rozi bo'ladi, bayonnoma PDF", async () => {
-    const anvar = { memberId: "m-1", name: "Anvar", consented: false, hasPin: true };
-    const nodira = { memberId: "m-2", name: "Nodira", consented: false, hasPin: true };
-    const adults = [anvar, nodira];
+    const akmal = { memberId: "m-1", name: "Akmal", consented: false, hasPin: true };
+    const zarina = { memberId: "m-2", name: "Zarina", consented: false, hasPin: true };
+    const adults = [akmal, zarina];
     const started: CeremoniesDto = {
       items: [
         {
@@ -183,7 +183,7 @@ describe("marosimlar", () => {
       items: [
         {
           ...CEREMONY,
-          discussion: { ...base, adults: [{ ...anvar, consented: true }, nodira] },
+          discussion: { ...base, adults: [{ ...akmal, consented: true }, zarina] },
         },
       ],
     };
@@ -234,24 +234,24 @@ describe("marosimlar", () => {
     });
     // 2-qadam: noto'g'ri PIN rad, so'ng ikkala katta rozi.
     expect(await within(dialog).findByText("Tanlangan stsenariy: Ixcham")).toBeInTheDocument();
-    const anvarRow = within(dialog).getByLabelText("Anvar — PIN").closest("li");
-    if (anvarRow === null) {
+    const akmalRow = within(dialog).getByLabelText("Akmal — PIN").closest("li");
+    if (akmalRow === null) {
       throw new Error("qator topilmadi");
     }
-    await user.type(within(anvarRow).getByLabelText("Anvar — PIN"), "000000");
-    await user.click(within(anvarRow).getByRole("button", { name: "Rozilik berish" }));
+    await user.type(within(akmalRow).getByLabelText("Akmal — PIN"), "000000");
+    await user.click(within(akmalRow).getByRole("button", { name: "Rozilik berish" }));
     expect(
-      await within(anvarRow).findByText("PIN notoʻgʻri. Qayta urinib koʻring."),
+      await within(akmalRow).findByText("PIN notoʻgʻri. Qayta urinib koʻring."),
     ).toBeInTheDocument();
-    await user.type(within(anvarRow).getByLabelText("Anvar — PIN"), "111111");
-    await user.click(within(anvarRow).getByRole("button", { name: "Rozilik berish" }));
+    await user.type(within(akmalRow).getByLabelText("Akmal — PIN"), "111111");
+    await user.click(within(akmalRow).getByRole("button", { name: "Rozilik berish" }));
     expect(commands.consentCeremonyDiscussion).toHaveBeenLastCalledWith({
       ceremonyId: "c-1",
       memberId: "m-1",
       pin: "111111",
     });
     expect(await within(dialog).findByText(/Rozi: 1 \/ 2/)).toBeInTheDocument();
-    await user.type(within(dialog).getByLabelText("Nodira — PIN"), "222222");
+    await user.type(within(dialog).getByLabelText("Zarina — PIN"), "222222");
     await user.click(within(dialog).getByRole("button", { name: "Rozilik berish" }));
     expect(
       await within(dialog).findByText(

@@ -49,7 +49,7 @@ fn database_with_household() -> Database {
     let member = domain::Member::create(
         MEMBER,
         HOUSEHOLD,
-        "Dilshod",
+        "Jasur",
         domain::MemberRole::Adult,
         NOW,
         DEVICE,
@@ -329,7 +329,7 @@ fn nasiya_va_tolovlar_qoldiqni_beradi() {
     let debt = ShopDebt::create(
         "0192a000-0000-7000-8000-000000000011",
         HOUSEHOLD,
-        "Do'kon Anvar",
+        "Do'kon Akmal",
         uzs(500_000),
         date!(2026 - 10 - 10),
         NOW,

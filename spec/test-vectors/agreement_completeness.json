@@ -13,14 +13,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -82,7 +82,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -108,14 +108,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -177,7 +177,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -207,14 +207,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -276,7 +276,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -306,14 +306,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -375,7 +375,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "dilshod rahimov",
+      "name": "jasur rahimov",
       "role": ""
      },
      "term": {
@@ -410,14 +410,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -479,7 +479,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -509,14 +509,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -578,7 +578,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -608,14 +608,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -677,7 +677,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -707,7 +707,7 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
@@ -753,7 +753,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -783,14 +783,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -843,7 +843,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -896,14 +896,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -949,7 +949,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -976,14 +976,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -1029,7 +1029,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -1066,14 +1066,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -1160,14 +1160,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -1229,7 +1229,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {
@@ -1257,14 +1257,14 @@
      "parties": [
       {
        "id": "P1",
-       "name": "Anvar Karimov",
+       "name": "Akmal Karimov",
        "role": "sherik",
        "relation": "",
        "isMe": true
       },
       {
        "id": "P2",
-       "name": "Dilshod Rahimov",
+       "name": "Jasur Rahimov",
        "role": "sherik",
        "relation": "",
        "isMe": false
@@ -1326,7 +1326,7 @@
       "assets": ""
      },
      "arbiter": {
-      "name": "Sobir hoji",
+      "name": "Shavkat aka",
       "role": "mahalla oqsoqoli"
      },
      "term": {

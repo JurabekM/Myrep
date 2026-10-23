@@ -46,7 +46,7 @@ function completenessKey(code: string) {
 
 /**
  * 9 savol ustasi (SPEC 2F.2, DESKTOP_PROMPT D8A): chapda progress «N / 9», o'rtada forma,
- * o'ngda Sobir hoji maslahati va jonli ko'rinish. 9/9 bo'lmasa «Imzolash» bosqichi ochilmaydi.
+ * o'ngda maslahatchi fikri va jonli ko'rinish. 9/9 bo'lmasa «Imzolash» bosqichi ochilmaydi.
  * To'liqlik Rustda hisoblanadi; forma faqat qiymatlarni yig'adi.
  */
 export function AgreementWizard({ id, onClose }: { id: string; onClose: () => void }) {

@@ -46,7 +46,7 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 
     TrayIconBuilder::with_id("main-tray")
         .icon(icon)
-        .tooltip("Baraka Daftari")
+        .tooltip("Baraka Dastur")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -99,7 +99,7 @@ fn open_quick(app: &AppHandle) {
         return;
     }
     let built = WebviewWindowBuilder::new(app, QUICK_WINDOW, WebviewUrl::App("index.html".into()))
-        .title("Tez xarajat — Baraka Daftari")
+        .title("Tez xarajat — Baraka Dastur")
         .inner_size(440.0, 420.0)
         .resizable(false)
         .always_on_top(true)

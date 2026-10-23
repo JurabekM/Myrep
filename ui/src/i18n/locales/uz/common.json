@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Baraka daftari",
-    "tagline": "Ribosiz shaxsiy moliya daftari"
+    "name": "Baraka Dastur",
+    "tagline": "Ribosiz shaxsiy moliya dasturi"
   },
   "nav": {
     "label": "Asosiy navigatsiya",
@@ -573,7 +573,7 @@
     "openMain": "Asosiy oynani ochish"
   },
   "reserve": {
-    "title": "Qorovul pul — favqulodda zaxira",
+    "title": "Favqulodda zaxira",
     "intro": "Qora kunda qarz eshigiga yugurmaslik uchun. Maqsad oylik Zarur + Kerak xarajatlaringizdan avtomatik hisoblanadi: avval 3 oy, keyin 6 oy.",
     "noData": "Maqsadni hisoblash uchun kamida 3 ta xarajatli oy kerak (hozir: {{months}}). Xarajatlarni yozib boring — raqam o'zi paydo bo'ladi.",
     "monthlyAverage": "Oylik Zarur + Kerak",
@@ -583,22 +583,22 @@
     "progressLabel": "Necha oylik zaxira bor",
     "progressValue": "{{have}} / {{target}} oy",
     "gateOpen": "Darvoza ochiq: sheriklik va o'sadigan pul bo'limlari uchun tayyorsiz.",
-    "gateLocked": "Darvoza hozircha yopiq — «jangga yarador askar yuborilmaydi».",
-    "reasonReserve": "Qorovul zaxirasi 6 oydan kam.",
+    "gateLocked": "Darvoza hozircha yopiq — avval o'z zaxirangizni mustahkamlang, keyin sarmoya kiriting.",
+    "reasonReserve": "Favqulodda zaxira 6 oydan kam.",
     "reasonDebt": "Foizli qarz bor, lekin chiqish rejasi yo'q.",
     "gateHint": "Bu taqiq emas, tushuntirish. Shartlar bajarilganda bo'limlar o'zi ochiladi."
   },
   "prices": {
     "subtitle": "Narxlar qanday o'zgaryapti va yotgan pul nimaga teng",
-    "mouseTitle": "«Sichqon kemirgani»",
-    "mouseIntro": "Omborga kirmay donni yeydigan sichqon — inflyatsiya. Yotgan pulning nominal balansi va bugungi narxlarda u nimaga tengligi.",
+    "mouseTitle": "Inflyatsiya ta'siri",
+    "mouseIntro": "Narxlar o'sgani sari yotgan pulning xarid quvvati kamayadi. Bu yerda balansning nominal qiymati va bugungi narxlardagi qiymati ko'rsatiladi.",
     "nominal": "Nominal balans",
     "index": "Shaxsiy indeks",
     "indexHint": "Narx daftaringiz bo'yicha, ulushlar bilan",
     "realValue": "Bugungi narxlarda",
     "realValueHint": "Balans ÷ (1 + indeks)",
     "example": "{{name}}: avval {{before}} dona olish mumkin edi, hozir — {{now}} dona.",
-    "nextStep": "Keyingi qadam: qorovul pulni to'ldiring, so'ng o'sadigan pul (halol yo'nalishlar) bobida davom eting.",
+    "nextStep": "Keyingi qadam: favqulodda zaxirani to'ldiring, so'ng halol sarmoya bobida davom eting.",
     "itemsTitle": "Narx daftari",
     "empty": "Hali yozuv yo'q. Oilangiz uchun muhim 3–5 mahsulotni kiriting: go'sht, un, yog', yo'lkira.",
     "name": "Mahsulot (masalan, go'sht, 1 kg)",
@@ -648,7 +648,7 @@
     "save": "Saqlash",
     "formInvalid": "Formada noto'g'ri qiymatlar bor — belgilangan maydonlarni tekshiring.",
     "errorsTitle": "Tekshiruv xatolari",
-    "adviceTitle": "Sobir hoji maslahati",
+    "adviceTitle": "Maslahatchi fikri",
     "previewTitle": "Hujjat ko'rinishi",
     "days": "kun",
     "months": "oy",
@@ -832,7 +832,7 @@
     "frictionTitle": "To'xta va o'yla",
     "frictionHint": "Qarz olishni taqiqlash emas — ongli qaror uchun. Javoblar qarz yozuvida qoladi.",
     "frictionNecessity": "Bu zarurat (hashamat emas)",
-    "frictionAlternative": "Foizsiz muqobilni tekshirdim: qorovul pul, qarindosh, buyum sotish",
+    "frictionAlternative": "Foizsiz muqobilni tekshirdim: zaxira, qarindosh, buyum sotish",
     "hasMarkupLabel": "Bu mavjud ustamali (foizli) qarz — faqat chiqish uchun kuzataman",
     "checkBurden": "Oylik yukni hisoblash",
     "burdenLine": "oylik yuk {{burden}} — daromadning {{percent}}",
@@ -892,7 +892,7 @@
   },
   "ceremonies": {
     "subtitle": "To'y va marosimlar — byudjet qatorlari, manbalar, stsenariylarni taqqoslash. Qarzsiz o'tkazish yo'li avval muhokama qilinadi.",
-    "quote": "«El uch kun gapiradi, to'rtinchi kuni o'z dardi bilan ovora bo'ladi.»",
+    "quote": "Marosim bir kun o'tadi, uning qarzi esa oylar davomida qoladi.",
     "empty": "Hali marosim rejasi yo'q. Birinchisini quyida yarating.",
     "noDate": "sana belgilanmagan",
     "kind": {
@@ -989,7 +989,7 @@
   },
   "partnerships": {
     "title": "Sheriklik",
-    "intro": "Sheriklik — sadaqa ham, qarz ham emas: teng huquqli ish, tavakkal bo'lishiladi. «Ot bilan omoch — ikkalasi birga yer haydaydi». Shartnomasiz sheriklik yaratilmaydi.",
+    "intro": "Sheriklik — sadaqa ham, qarz ham emas: teng huquqli ish, foyda ham, zarar ham bo'lishiladi. Shartnomasiz sheriklik yaratilmaydi.",
     "gateOpen": "Tayyorgarlik darvozasi ochiq: kapital kiritish mumkin.",
     "gateLocked": "Darvoza yopiq (6 oylik zaxira yoki qarz rejasi yetishmaydi): kapital kiritib bo'lmaydi; mehnat bilan kirish mumkin.",
     "empty": "Hali sheriklik yo'q. Quyida yarating — shartnoma ustasi ochiladi.",
@@ -1028,7 +1028,7 @@
     "kindLabel": "Turi",
     "roleLabel": "Mening rolim",
     "create": "Sheriklik yaratish",
-    "roleCapitalHint": "Kapital kiritish uchun tayyorgarlik darvozasi ochiq bo'lishi kerak: ≥ 6 oylik qorovul zaxirasi va faol qarz rejasi.",
+    "roleCapitalHint": "Kapital kiritish uchun tayyorgarlik darvozasi ochiq bo'lishi kerak: ≥ 6 oylik favqulodda zaxira va faol qarz rejasi.",
     "roleWorkerHint": "Mehnat bilan kirish darvozaga bo'ysunmaydi; imzolashdan oldin oilaviy rozilik so'raladi.",
     "overrideTitle": "Darvoza yopiq — ongli chetlab o'tish",
     "overrideHint": "Qoida: bitta amal uchun, sabab kamida 20 belgi, katta a'zo PIN'i bilan. Yozuv saqlanadi va sheriklik kartasida ko'rinadi.",
@@ -1068,7 +1068,7 @@
   },
   "offer": {
     "title": "Taklif tekshiruvi — besh xavf belgisi",
-    "intro": "«Pulim ishlab bersin» deb kelgan har bir taklifni 9 savol bilan tekshiring. Bitta belgi — hushyor torting, ikkitasi — qoching. Natija saqlanadi, qaror esa maslahat va bir kechadan keyin.",
+    "intro": "Sizga kelgan har bir sarmoya taklifini 9 savol bilan tekshiring. Bitta xavf belgisi — ehtiyot bo'ling, ikki va undan ko'p — bu taklifdan voz kechgan ma'qul. Natija saqlanadi, qaror esa maslahat va bir kechadan keyin.",
     "titleLabel": "Taklif (kim, nima)",
     "amount": "Taxminiy summa",
     "promised": "Va'da: oyiga %",
@@ -1097,8 +1097,8 @@
     },
     "level": {
       "NONE": "Besh belgidan birortasi yo'q",
-      "CAUTION": "Besh belgidan {{count}} tasi bor — hushyor torting",
-      "FLEE": "Besh belgidan {{count}} tasi bor — qoching"
+      "CAUTION": "Besh belgidan {{count}} tasi bor — ehtiyot bo'ling",
+      "FLEE": "Besh belgidan {{count}} tasi bor — voz kechgan ma'qul"
     },
     "category": {
       "RIBO": "ribo (zarar bo'lishilmaydigan kafolatli foyda)",
@@ -1110,10 +1110,10 @@
     "promisedSimple": "Oyiga {{percent}} % — yiliga (oddiy)",
     "promisedCompound": "Murakkab hisobda",
     "multiple": "{{value}} barobar",
-    "promisedHint": "Dunyodagi eng katta savdo ham, eng katta zavod ham bunday foyda bermaydi. Bu raqam faqat ogohlantirish — taqqoslash uchun emas.",
+    "promisedHint": "Bunday daromadni hech bir real biznes barqaror bera olmaydi. Bu raqam faqat ogohlantirish — taqqoslash uchun emas.",
     "checklist": {
-      "title": "«Ishni o'z ko'zim bilan ko'raman» — pul qo'yishdan oldin so'rang",
-      "hint": "Ishi halol odam bu iltimosdan quvonadi: «kel, ko'r», deydi. Rad etishning o'zi — belgi.",
+      "title": "Pul qo'yishdan oldin o'zingiz tekshiring",
+      "hint": "Halol ish egasi tekshiruvga qarshi bo'lmaydi. Ko'rsatishdan bosh tortishning o'zi — xavf belgisi.",
       "goods": "Ombor va mol: nima sotiladi, qayerda turadi?",
       "contract": "Shartnoma: pul nimaga ishlatiladi, zarar kim zimmasida?",
       "license": "Odamlardan pul yig'ishga davlat ruxsati.",
@@ -1121,7 +1121,7 @@
       "exit": "Pulni qaytarib olish tartibi."
     },
     "stopTitle": "To'xta, maslahatlash",
-    "stopHint": "Maslahat so'rash — zaiflik emas. «Pul qo'yaman» faqat maslahatchi ismi yozilgach va tekshiruvdan 24 soat o'tgach ochiladi; rad etish va keyinga qoldirish — darhol.",
+    "stopHint": "Katta qarordan oldin ishonchli odam bilan maslahatlashing. «Pul qo'yaman» faqat maslahatchi ismi yozilgach va tekshiruvdan 24 soat o'tgach ochiladi; rad etish va keyinga qoldirish — darhol.",
     "advisorQuestion": "Kim bilan maslahatlashdingiz?",
     "decline": "Rad etdim",
     "postpone": "Keyinga qoldiraman",
@@ -1142,7 +1142,7 @@
   },
   "hustle": {
     "title": "«Hunardan ishga»",
-    "intro": "Bekor yotgan hunar — bekor yotgan pul kabi. Boshlang'ich xarajat, oylik kirim va xarajatni kiriting: uch stsenariy va qoplanish muddati chiqadi («hisob-kitobni uch marta qildim»).",
+    "intro": "Hunaringizni ishga solish rejasini tuzing. Boshlang'ich xarajat, oylik kirim va xarajatni kiriting: uch stsenariy va qoplanish muddati chiqadi.",
     "skill": "Hunar / g'oya",
     "capex": "Boshlang'ich xarajat (CAPEX)",
     "income": "Oylik kirim",
@@ -1286,7 +1286,7 @@
     "finish": "Boshlash",
     "welcome": {
       "title": "Xush kelibsiz",
-      "body": "Baraka daftari — ribosiz shaxsiy va oilaviy moliya daftari. Ma'lumotlar faqat shu kompyuterda, server va akkaunt yo'q. Yetti qonun bo'yicha boblar «Boblar» bo'limida."
+      "body": "Baraka Dastur — ribosiz shaxsiy va oilaviy moliya dasturi. Ma'lumotlar faqat shu kompyuterda, server va akkaunt yo'q. Yetti qonun bo'yicha boblar «Boblar» bo'limida."
     },
     "income": {
       "title": "Avval daromad",
@@ -1295,7 +1295,7 @@
     },
     "future": {
       "title": "«Kelajagim» ulushi",
-      "body": "Har daromaddan avval o'zingizga ulush ajrating — «Kelajagim» ga. Qorovul zaxirasi 6 oylik zarur xarajatga yetguncha qarz va sheriklik darvozasi yopiq turadi.",
+      "body": "Har daromaddan avval o'zingizga ulush ajrating — «Kelajagim» ga. Favqulodda zaxira 6 oylik zarur xarajatga yetguncha qarz va sheriklik darvozasi yopiq turadi.",
       "action": "Kelajagimni ochish"
     },
     "expenses": {
@@ -1343,7 +1343,7 @@
   },
   "pyramid": {
     "title": "Piramida — qaysi qavatda bo'lasiz?",
-    "intro": "Tepada uch-to'rt kishi turadi. Pastdagilarga to'lash uchun undan ham pastdagilarning puli kerak. Har qavat oldingisidan katta — shahardagi odam tugaganda piramida cho'kadi. Ta'limiy hisob.",
+    "intro": "Piramida sxemasida avvalgi qatnashchilarga to'lov yangi qatnashchilarning pulidan beriladi. Har qavat oldingisidan katta bo'lishi kerak, shuning uchun yangi odamlar tugaganda sxema to'xtaydi. Ta'limiy hisob.",
     "recruits": "Har kishi nechta odam olib keladi?",
     "population": "Aholi (shahar) soni",
     "calculate": "Piramidani hisoblash",
@@ -1353,12 +1353,12 @@
     "lastLevelPartial": "aholi yetmay qoldi",
     "lastShare": "Eng pastki qavat ulushi",
     "percent": "{{value}} %",
-    "question": "Cho'kkan kuni siz qaysi qavatda bo'lasiz?",
-    "bait": "Birinchi kirganlarga to'lov — baliqchining yemi: u yangi kirganlarning pulidan beriladi."
+    "question": "Sxema to'xtaganda qatnashchilarning ko'pchiligi eng pastki qavatda — pulini qaytara olmagan holda qoladi.",
+    "bait": "Birinchi qatnashchilarga to'lov ishonch uyg'otish uchun qilinadi va yangi kirganlarning pulidan beriladi."
   },
   "lumpSum": {
-    "title": "Qal'a devori — katta summa tushdimi?",
-    "intro": "Chet eldan qaytdingizmi, meros yoki mulk sotuvi bo'ldimi — avval oilaning olti oylik ro'zg'origa yetadiganini ajrating. Bu sizning qal'a devoringiz: uni savdoga ham, sheriklikka ham qo'shmaysiz. Qolgani — hunaringizga.",
+    "title": "Himoya zaxirasi — katta summa tushdimi?",
+    "intro": "Meros, mulk sotuvi yoki chet eldagi ish jamg'armasi kabi katta summa tushganda avval oilaning olti oylik zarur xarajati zaxiraga ajratiladi. Bu zaxira savdoga ham, sheriklikka ham qo'shilmaydi. Qolgani — hunaringizga.",
     "amount": "Katta summa",
     "currency": "Valyuta",
     "rate": "Kurs: 1 {{currency}} = … so'm",
@@ -1366,13 +1366,13 @@
     "calculate": "Taqsimlash",
     "amountBase": "So'mda",
     "rateLine": "{{entered}} × {{rate}}",
-    "target": "6 oylik qal'a devori",
+    "target": "6 oylik himoya zaxirasi",
     "targetHistory": "xarajat tarixidan",
     "targetEstimate": "taxminiy oylik xarajatdan",
     "toReserve": "Avval zaxiraga",
     "toInvest": "Qolgani hunarga",
-    "filled": "Qal'a devori to'ladi — endi «Hunardan ishga» (Sheriklik sahifasi) bilan davom eting.",
+    "filled": "Himoya zaxirasi to'ldi — endi «Hunardan ishga» (Sheriklik sahifasi) bilan davom eting.",
     "notFilled": "Hammasi zaxiraga ketadi, devor hali to'lmadi — sarmoya hozircha tavsiya etilmaydi.",
-    "wall": "«Qadimda devori mustahkam shaharni dushman ololmagan.» Zaxira pulini qorovulga qo'ying; bu kartada o'tkazma qilinmaydi."
+    "wall": "Zaxira pulini favqulodda jamg'armaga qo'ying; bu kartada o'tkazma qilinmaydi."
   }
 }

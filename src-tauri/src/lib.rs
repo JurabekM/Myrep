@@ -1,4 +1,4 @@
-//! Baraka Daftari — Tauri ilovasining yadro qatlami.
+//! Baraka Dastur — Tauri ilovasining yadro qatlami.
 //!
 //! Oyna va commandlar shu yerda yig'iladi. Biznes mantiq bu yerda emas:
 //! commandlar yupqa bo'ladi (DESKTOP_PROMPT.md 3.2).

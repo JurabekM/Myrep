@@ -672,7 +672,7 @@ mod tests {
             db,
             thursday(),
             MemberInputDto {
-                name: "Dilshod".to_owned(),
+                name: "Jasur".to_owned(),
                 role: "ADULT".to_owned(),
                 pin: Some(SPOUSE_PIN.to_owned()),
             },

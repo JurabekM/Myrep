@@ -18,6 +18,10 @@
   --color-subtle: #8c897f; /* yorliqlar, izohlar */
   --color-accent: #d97757; /* urg'u rangi (clay) */
   --color-danger: #e8897f; /* xato xabarlari (matn uchun yetarli kontrast) */
+  /* Logotip ranglari (scripts/baraka_logo.py bilan bir xil). */
+  --color-brand: #2a6448; /* «Baraka Dastur» fon yashili */
+  --color-brand-letter: #f8f3e6; /* krem «B» */
+  --color-brand-star: #deb148; /* oltin yulduz */
 }
 
 @layer base {

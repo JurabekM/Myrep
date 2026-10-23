@@ -498,7 +498,7 @@ mod tests {
 
     #[test]
     fn nom_tekshiriladi_va_tozalanadi() {
-        assert_eq!(validate_name("  Anvar oila  "), Ok("Anvar oila".to_owned()));
+        assert_eq!(validate_name("  Akmal oila  "), Ok("Akmal oila".to_owned()));
         assert_eq!(validate_name("   "), Err(DomainError::InvalidName));
         let long = "a".repeat(NAME_MAX_CHARS + 1);
         assert_eq!(validate_name(&long), Err(DomainError::InvalidName));
@@ -523,7 +523,7 @@ mod tests {
         assert_eq!(household.meta.deleted_at, None);
 
         let member =
-            Member::create(ID, ID, "Dilshod", MemberRole::Adult, now, "device-1").expect("to'g'ri");
+            Member::create(ID, ID, "Jasur", MemberRole::Adult, now, "device-1").expect("to'g'ri");
         assert_eq!(member.household_id, ID);
         assert_eq!(member.role, MemberRole::Adult);
 

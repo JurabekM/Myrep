@@ -49,7 +49,7 @@ vi.mock("../../bindings/bindings", () => ({
 }));
 
 const APP_INFO = {
-  name: "Baraka Daftari",
+  name: "Baraka Dastur",
   version: "0.1.0",
   platform: "windows",
   arch: "x86_64",
@@ -81,13 +81,13 @@ const LIMIT_INACTIVE: HavasLimitDto = {
   active: false,
   adults: [
     { memberId: OWNER, name: "O'zim", consented: false, hasPin: true },
-    { memberId: SPOUSE, name: "Dilshod", consented: false, hasPin: true },
+    { memberId: SPOUSE, name: "Jasur", consented: false, hasPin: true },
   ],
 };
 
 const MEMBERS: MemberDto[] = [
   { id: OWNER, name: "O'zim", role: "ADULT", hasPin: true },
-  { id: SPOUSE, name: "Dilshod", role: "ADULT", hasPin: true },
+  { id: SPOUSE, name: "Jasur", role: "ADULT", hasPin: true },
 ];
 
 const TREAT: TreatDto = {

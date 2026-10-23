@@ -415,7 +415,7 @@ mod tests {
             profit_not_applicable: None,
             loss_not_applicable: None,
             exit_not_applicable: None,
-            parties: vec![party("P1", "Anvar Karimov"), party("P2", "Dilshod Rahimov")],
+            parties: vec![party("P1", "Akmal Karimov"), party("P2", "Jasur Rahimov")],
             contributions: vec![contribution("P1"), contribution("P2")],
             duties: vec![Duty {
                 id: "d1".to_owned(),
@@ -442,7 +442,7 @@ mod tests {
                 assets: String::new(),
             },
             arbiter: Some(Arbiter {
-                name: "Sobir hoji".to_owned(),
+                name: "Shavkat aka".to_owned(),
                 role: "mahalla oqsoqoli".to_owned(),
             }),
             term: Term {

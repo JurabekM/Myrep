@@ -4,6 +4,45 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+### «Baraka Dastur»: yangi nom, logotip va mustaqil kontent (2026-10-23)
+
+**Sabab.** Google Play'da «Baraka» nomli boshqa ilova bor; kontent mualliflari bilan aloqa o'rnatilmadi. Ilovalar halol
+moliyaning yetti tamoyili ma'no-mazmunidan ilhomlangan mustaqil asar sifatida davom etadi (SPEC boshidagi
+«Mustaqillik qarori»).
+
+**Nom.** Ko'rinadigan hamma joyda «Baraka Dastur»: oyna sarlavhasi, yon panel, tray, mini oyna, o'rnatuvchi
+(`Baraka Dastur_0.1.0_x64-setup.exe`, 17 908 642 bayt, SHA-256 `AB49CBF9…952A`), o'rnatish papkasi
+`%LOCALAPPDATA%\Baraka Dastur`, exe `baraka-dastur.exe` (`mainBinaryName`), Start menyusi, reestr, ilova ma'lumoti.
+Ichki identifikatorlar o'zgarmadi (`uz.barakadaftari.desktop`, keyring `BarakaDaftari`, crate nomlari, `.baraka`) —
+mavjud ma'lumotlar papkasi va kalit saqlanadi (OPEN_QUESTIONS).
+
+**Logotip.** Yangi belgi: yashil fonda krem geometrik «B» va oltin sakkiz burchakli yulduz. Shriftsiz chiziladi
+(`scripts/baraka_logo.py` — desktop va Android uchun bitta manba), < 48 px da yulduz tushiriladi. Ikonkalar
+(`src-tauri/icons`, ICO 16–256) va ilova ichidagi `BrandMark` SVG yangilandi; ranglar `globals.css` tokenlarida
+(`--color-brand*`).
+
+**Personajlar va matnlar.**
+- «Sobir hoji maslahati» → «Maslahatchi fikri»; kod izohlari va test ma'lumotlaridagi qissa personajlari shartli
+  ismlarga almashtirildi (Akmal, Jasur, Zarina, Gulnora, Bekzod, Sardor, Shavkat aka; «Plyus» → «Tez Foyda»).
+- Boblar (`spec/content/chapters.json`, mobil bilan bitta fayl): o'z nomlari («Avval o'zingizga», «Xarajatni
+  ko'ring», «Zaxira va o'sish», «Qarzsiz yashash», «Halol sarmoya», «Yozma kelishuv», «Tekshirib, keyin
+  ishoning»), o'z matni (uz/ru) va «Maslahatchi savoli»; qonun jumlalari qayta yozildi. Diniy bloklar PENDING.
+- Qissadan olingan iboralar o'z so'zimiz bilan almashtirildi: «jangga yarador askar…», «El uch kun gapiradi…»,
+  «Ot bilan omoch…», «Sichqon kemirgani» → «Inflyatsiya ta'siri», «Qorovul pul» → «Favqulodda zaxira», «Qal'a
+  devori» → «Himoya zaxirasi», «baliqchining yemi», piramida matnlari, besh xavf belgisi izohlari («Ekran mol
+  emas», «Siz xaridor emas, molsiz» va boshq.), «Dunyodagi eng katta savdo…», «hisob-kitobni uch marta qildim»,
+  hunar shablonidagi personaj hikoyasi.
+- Umumiy vektorlardagi ismlar almashtirildi (`agreement_completeness`, `amortization`, `journal_chain`);
+  `journal_chain` xeshlari Rust bilan qayta hisoblandi, `SHA256SUMS` yangilandi (mobil bilan bir xil fayllar).
+- Hujjatlar: SPEC v1.0 (mustaqillik qarori, personajlar jadvali shartli ismlar bilan, «Manba: N-qism» va homiy
+  satrlari olib tashlandi, qonun nomlari o'z so'zimiz bilan), DESKTOP_PROMPT, MVP_PLAN, README, CLAUDE.md;
+  litsenziya kutilayotgan bandlar «hal qilindi». Tarixiy CHANGELOG yozuvlari o'zgartirilmadi.
+
+Tekshiruv: `cargo test` 368, clippy, vitest 93, typecheck/lint/format yashil; PDF snapshot'lari test ismlari
+almashgani uchun qayta yaratildi. GUI (dev build): nom, logotip, 7 bob, bob matni, «Maslahatchi fikri», taklif
+tekshiruvi, Kelajagim, Narx daftari, Marosimlar. O'rnatilgan build: eski o'rnatma olib tashlandi, yangisi `/S`
+bilan o'rnatildi, sovuq start 64 ms, yopilish to'g'ri.
+
 ### Reliz tekshiruvi 0.1.0 — ichki sinov, imzolanmagan (2026-10-20)
 
 **O'rnatuvchi:** `Baraka Daftari_0.1.0_x64-setup.exe`, 17 898 989 bayt (17,07 MiB),

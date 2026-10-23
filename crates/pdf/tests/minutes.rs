@@ -13,7 +13,7 @@ fn minutes() -> ReviewMinutes {
         entries: vec![[
             "05.11.2026".to_owned(),
             "Kirim".to_owned(),
-            "Anvar Karimov".to_owned(),
+            "Akmal Karimov".to_owned(),
             "6 000 000 soʻm".to_owned(),
         ]],
         summary: vec![("Kirim".to_owned(), "6 000 000 soʻm".to_owned())],
@@ -22,9 +22,9 @@ fn minutes() -> ReviewMinutes {
             "mashina buzildi — o'rniga: kuryer".to_owned(),
         )],
         marks: vec![
-            ("Anvar Karimov".to_owned(), "ko'rdim, roziman".to_owned()),
+            ("Akmal Karimov".to_owned(), "ko'rdim, roziman".to_owned()),
             (
-                "Dilshod Rahimov".to_owned(),
+                "Jasur Rahimov".to_owned(),
                 "e'tirozim bor: xarajat cheki yo'q".to_owned(),
             ),
         ],
@@ -41,7 +41,7 @@ fn folder() -> ArbiterFolder {
         contract: vec![
             (
                 "1. Tomonlar".to_owned(),
-                "Anvar Karimov (mehnat); Dilshod Rahimov (kapital)".to_owned(),
+                "Akmal Karimov (mehnat); Jasur Rahimov (kapital)".to_owned(),
             ),
             ("4. Foyda".to_owned(), "60 % / 40 %".to_owned()),
         ],
@@ -52,7 +52,7 @@ fn folder() -> ArbiterFolder {
         entries: vec![[
             "05.11.2026".to_owned(),
             "Kirim".to_owned(),
-            "Anvar Karimov".to_owned(),
+            "Akmal Karimov".to_owned(),
             "6 000 000 soʻm".to_owned(),
         ]],
         chain_line: "Zanjir to'g'ri (1 yozuv).".to_owned(),
@@ -65,7 +65,7 @@ fn folder() -> ArbiterFolder {
             "mashina buzildi · ochiq".to_owned(),
         )],
         disputes: vec![(
-            "Xarajat cheki · Dilshod Rahimov".to_owned(),
+            "Xarajat cheki · Jasur Rahimov".to_owned(),
             "Talab: cheklar taqdim etilsin · qaror: yo'q".to_owned(),
         )],
         disclaimer: "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas.".to_owned(),

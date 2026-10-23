@@ -220,11 +220,11 @@ mod tests {
 
     #[test]
     fn app_info_camel_case_json_qaytaradi() {
-        let info = build_app_info("Baraka Daftari", "0.1.0", "windows", "x86_64", "release");
+        let info = build_app_info("Baraka Dastur", "0.1.0", "windows", "x86_64", "release");
         let json = serde_json::to_value(&info).expect("AppInfo JSON ga o'tkazilishi kerak");
 
         assert_eq!(json["buildProfile"], "release");
-        assert_eq!(json["name"], "Baraka Daftari");
+        assert_eq!(json["name"], "Baraka Dastur");
         assert_eq!(json["version"], "0.1.0");
     }
 

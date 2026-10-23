@@ -3,7 +3,7 @@
 //! Kirish — 9 savolga `HA | YO'Q | BILMAYMAN` javoblar. Natija:
 //! * **bayroqlar** (2E.5): qizil — kafolat, zarar bo'lishilmaydi, real mol yo'q, yangi a'zo talabi; sariq —
 //!   shoshirish, yozma shartnoma yo'q, chiqish qiyin, ruxsat yo'q, o'z ko'zi bilan ko'rmagan, har qanday «bilmayman»;
-//! * **besh belgi** (`ScamSign`) va **daraja** (hojining qoidasi): 0 — belgi yo'q, 1 — «hushyor torting» (kamida sariq),
+//! * **besh belgi** (`ScamSign`) va **daraja** (xavf belgilari qoidasi): 0 — belgi yo'q, 1 — «hushyor torting» (kamida sariq),
 //!   2+ — «qoching» (qizil);
 //! * **umumiy baho** = bayroqlar bahosi va daraja bahosining eng og'iri;
 //! * **toifalar** (2G.7): `RIBO` — kafolat; `GHARAR` — ko'rinmas ish; `QIMOR` — daromad yangi odamlardan.
@@ -209,29 +209,29 @@ impl ScamSign {
         Self::ALL.into_iter().find(|s| s.code() == code)
     }
 
-    /// Izoh — Sobir hoji ohangida, ayblamasdan.
+    /// Izoh — maslahatchi ohangida, ayblamasdan.
     pub const fn explanation(self) -> &'static str {
         match self {
             Self::GuaranteedHighReturn => {
-                "Katta foyda kafolatlab va'da qilinmoqda. Halol foydaning kafolati bo'lmaydi — u yerda tavakkal bor."
+                "Yuqori foyda kafolatlanmoqda. Real biznesda daromad kafolatlanmaydi: foyda bilan birga zarar xavfi ham bo'ladi."
             }
             Self::Urgency => {
-                "«Faqat bugun», «joy kam», «tezroq» — shoshirishmoqda. O'ylab olishingizdan qo'rqishadi."
+                "«Faqat bugun», «joy kam», «tezroq» — qaror uchun vaqt berilmayapti. Shoshirish puxta tekshiruvga to'sqinlik qiladi."
             }
             Self::RecruitmentIncome => {
-                "Daromad moldan emas, yangi odam olib kelishdan. Siz xaridor emas, molsiz."
+                "Daromad mahsulot yoki xizmatdan emas, yangi qatnashchilar jalb qilishdan keladi — bu piramida belgisi."
             }
             Self::NoRealBusiness => {
-                "Ishning o'zi ko'rinmaydi: ombor, mol, hujjat yoki ruxsat yo'q, yoki ko'rsatishmadi. Ekran mol emas."
+                "Ishning o'zini tekshirib bo'lmaydi: mahsulot, hujjat yoki ruxsatnoma yo'q, yoki ko'rsatishdan bosh tortishdi."
             }
             Self::HardExit => {
-                "Kirish oson, chiqish qiyin: pulni qaytarib so'rasangiz «keyinroq» deyishadi."
+                "Pul qo'yish oson, qaytarib olish qiyin: qaytarish tartibi aniq emas yoki kechiktiriladi."
             }
         }
     }
 }
 
-/// Daraja: hojining qoidasi.
+/// Daraja: xavf belgilari qoidasi.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScamLevel {
     /// Belgi yo'q.
@@ -565,7 +565,7 @@ mod tests {
     }
 
     #[test]
-    fn plyus_taklifi_tort_belgi_uch_toifa() {
+    fn tez_foyda_taklifi_tort_belgi_uch_toifa() {
         let a = OfferAnswers {
             guaranteed: Answer::Yes,
             loss_shared: Answer::No,

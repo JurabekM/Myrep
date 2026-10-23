@@ -14,13 +14,13 @@ fn sample() -> PeriodReport {
             [
                 "05.11.2026".to_owned(),
                 "Kirim".to_owned(),
-                "Anvar Karimov".to_owned(),
+                "Akmal Karimov".to_owned(),
                 "6 000 000 soʻm".to_owned(),
             ],
             [
                 "12.11.2026".to_owned(),
                 "Xarajat".to_owned(),
-                "Anvar Karimov".to_owned(),
+                "Akmal Karimov".to_owned(),
                 "2 500 000 soʻm".to_owned(),
             ],
         ],
@@ -31,11 +31,11 @@ fn sample() -> PeriodReport {
         ],
         distribution: vec![
             (
-                "Anvar Karimov (60 %)".to_owned(),
+                "Akmal Karimov (60 %)".to_owned(),
                 "2 100 000 soʻm · buyout ayirmasi 1 000 000 soʻm".to_owned(),
             ),
             (
-                "Dilshod Rahimov (40 %)".to_owned(),
+                "Jasur Rahimov (40 %)".to_owned(),
                 "1 400 000 soʻm".to_owned(),
             ),
         ],

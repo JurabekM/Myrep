@@ -1,6 +1,6 @@
 [package]
 name = "baraka-money"
-description = "Baraka Daftari — pul hisobi: Money, allocate, percent_of, FxRate va formatlash (DESKTOP_PROMPT.md 4-bo'lim)"
+description = "Baraka Dastur — pul hisobi: Money, allocate, percent_of, FxRate va formatlash (DESKTOP_PROMPT.md 4-bo'lim)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -937,7 +937,7 @@ mod tests {
             &db,
             NOW,
             MemberInputDto {
-                name: "Nodira".into(),
+                name: "Zarina".into(),
                 role: "ADULT".into(),
                 pin: Some(SPOUSE_PIN.into()),
             },

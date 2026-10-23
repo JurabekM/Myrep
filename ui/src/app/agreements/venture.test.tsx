@@ -57,7 +57,7 @@ const ITEM: PartnershipDto = {
   parties: [
     {
       partyId: "P1",
-      name: "Anvar Karimov",
+      name: "Akmal Karimov",
       role: "mehnat",
       capital: money(0, "0 soʻm"),
       shareBp: 6000,
@@ -65,7 +65,7 @@ const ITEM: PartnershipDto = {
     },
     {
       partyId: "P2",
-      name: "Dilshod Rahimov",
+      name: "Jasur Rahimov",
       role: "kapital",
       capital: money(500_000_000, "5 000 000 soʻm"),
       shareBp: 4000,
@@ -76,7 +76,7 @@ const ITEM: PartnershipDto = {
   issues: [],
   gate: "LOCKED",
   gateReasons: [],
-  consentMember: "Nodira",
+  consentMember: "Zarina",
   consentAt: "2026-10-15",
   buyout: null,
   gateOverrideReason: null,
@@ -130,14 +130,14 @@ const CLOSED: VentureDto = {
       distribution: [
         {
           partyId: "P1",
-          name: "Anvar Karimov",
+          name: "Akmal Karimov",
           shareBp: 6000,
           amount: money(210_000_000, "2 100 000 soʻm"),
           buyoutDeduction: money(100_000_000, "1 000 000 soʻm"),
         },
         {
           partyId: "P2",
-          name: "Dilshod Rahimov",
+          name: "Jasur Rahimov",
           shareBp: 4000,
           amount: money(140_000_000, "1 400 000 soʻm"),
           buyoutDeduction: null,
@@ -149,7 +149,7 @@ const CLOSED: VentureDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",

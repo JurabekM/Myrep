@@ -746,14 +746,14 @@ mod tests {
         a.parties = vec![
             PartyDto {
                 id: "P1".into(),
-                name: "Anvar Karimov".into(),
+                name: "Akmal Karimov".into(),
                 role: "sherik".into(),
                 relation: String::new(),
                 is_me: true,
             },
             PartyDto {
                 id: "P2".into(),
-                name: "Dilshod Rahimov".into(),
+                name: "Jasur Rahimov".into(),
                 role: "sherik".into(),
                 relation: String::new(),
                 is_me: false,
@@ -794,7 +794,7 @@ mod tests {
         a.keeper_party_id = Some("P1".into());
         a.exit_valuation = "Oxirgi ko'rik bo'yicha".into();
         a.exit_payout = "3 oy ichida".into();
-        a.arbiter_name = "Sobir hoji".into();
+        a.arbiter_name = "Shavkat aka".into();
         a.arbiter_role = "mahalla oqsoqoli".into();
         a.review_date = "2027-10-01".into();
         a

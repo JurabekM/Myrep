@@ -1,6 +1,6 @@
 [package]
 name = "baraka-daftari"
-description = "Baraka Daftari — ribosiz shaxsiy moliya daftari (Tauri ilovasi)"
+description = "Baraka Dastur — ribosiz shaxsiy moliya daftari (Tauri ilovasi)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

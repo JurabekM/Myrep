@@ -2067,7 +2067,7 @@ pub struct OfferCheckDto {
 pub struct OfferSignDto {
     /// `GUARANTEED_HIGH_RETURN | URGENCY | RECRUITMENT_INCOME | NO_REAL_BUSINESS | HARD_EXIT`.
     pub code: String,
-    /// Izoh (o'zbekcha, Sobir hoji ohangida).
+    /// Izoh (o'zbekcha, maslahatchi ohangida).
     pub explanation: String,
 }
 

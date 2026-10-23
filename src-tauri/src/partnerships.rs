@@ -421,14 +421,14 @@ mod tests {
         a.parties = vec![
             PartyDto {
                 id: "P1".into(),
-                name: "Anvar Karimov".into(),
+                name: "Akmal Karimov".into(),
                 role: "mehnat".into(),
                 relation: String::new(),
                 is_me: true,
             },
             PartyDto {
                 id: "P2".into(),
-                name: "Dilshod Rahimov".into(),
+                name: "Jasur Rahimov".into(),
                 role: "kapital".into(),
                 relation: String::new(),
                 is_me: false,
@@ -497,11 +497,11 @@ mod tests {
             NOW,
             ConsentInputDto {
                 id: item.id.clone(),
-                member_name: "Nodira".into(),
+                member_name: "Zarina".into(),
             },
         )
         .expect("rozilik");
-        assert_eq!(view.items[0].consent_member.as_deref(), Some("Nodira"));
+        assert_eq!(view.items[0].consent_member.as_deref(), Some("Zarina"));
         assert!(check_before_sign(&db, &agreement, &answers("5 000 000")).is_ok());
         // Mudarabada ikkala tomon kapital kiritsa — tuzilma noto'g'ri.
         let mut both = answers("5 000 000");

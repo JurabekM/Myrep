@@ -4,6 +4,13 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 
 ## Qaror kutilmoqda
 
+### Nom va mustaqil kontent (2026-10-23)
+
+- **Ichki identifikatorlar eski nomda qoldi.** Ko'rinadigan nom «Baraka Dastur» (oyna, o'rnatuvchi, exe, ikonka, ilova nomi). O'zgarmaganlar: Android `applicationId`/`namespace` `uz.barakadaftari.app`, Dart paketi `baraka_daftari`, Tauri `identifier` `uz.barakadaftari.desktop` (ma'lumotlar papkasi), keyring `BarakaDaftari`, `.baraka` kengaytmasi, crate nomlari. Sabab: o'zgartirish o'rnatilgan ilovalarni boshqa ilova deb hisoblatadi va mavjud ma'lumotlar topilmaydi. **Google Play'ga birinchi chiqarishdan oldin** `applicationId` ni (masalan, `uz.barakadastur.app`) almashtirish kerakmi — qaror kutilmoqda; chiqarilgandan keyin uni o'zgartirib bo'lmaydi.
+- **Qolgan mahsulot atamalari.** «Kelajagim», «Kimning puli?», «Juma shirinligi», «Hunardan ishga», «Narx daftari», «Daftar sahifasi», 9 savolli kelishuv, besh xavf belgisi, 70/20/10 — umumiy so'zlar va g'oyalar sifatida qoldi. Qissa matnlari bilan solishtirib, yana qaysi biri aynan qissadan ekanini muallif matnlarini bilgan odam ko'rib chiqishi kerak.
+- **Kelishuv ustasidagi maslahat matnlari** (9 savol bo'yicha) «Maslahatchi fikri» sarlavhasi bilan qoldi; matnlar umumiy maslahat ohangida, lekin ular ham yuqoridagi ko'rikdan o'tishi kerak.
+- **«Maslahatchi» va disklеymer.** Ilova «Moliyaviy maslahat emas» deydi; «Maslahatchi» obrazi ta'limiy savollar beradi, shaxsiy tavsiya bermaydi. Nomini «Murabbiy» ga almashtirish kerakmi — qaror kutilmoqda.
+
 ### Reliz tekshiruvi (2026-10-20)
 
 - **Toifa o'zgarishi o'tgan xarajatlarga ta'sir qiladimi?** Hozir xarajat yozilgan paytdagi toifani saqlaydi: oila kengashida «Ijara» «Kerak»ka o'tkazilsa, shu oy yozilgan ijara baribir «Zarur»da qoladi (bayonnoma PDF'da ham). SPEC 2B faqat «tarix saqlanadi» deydi. Kengash oqimida foydalanuvchi oy xulosasi darhol o'zgarishini kutishi mumkin. Variantlar: (a) shunday qoladi va ekranda «keyingi xarajatlardan» deb yoziladi; (b) joriy oy xarajatlari ham qayta tasniflanadi.
@@ -14,7 +21,7 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 
 - **Mobil bilan umumiy bandlar** (mobil OPEN_QUESTIONS 138–147): 7-qonun jumlasi qoralama (muallif tasdig'i), zakot qaysi qismda, «kafolat bitta o'zi qizil» (sc-006 — shunday qoldi), «to'xta, maslahatlash» summadan qat'i nazar, piramida modeli soddalashtirilgan, dollar alohida aktiv sifatida saqlanadimi, boshqa hunar shablonlari (desktopda 3 ta: temirchilik/payvand, tikuvchilik, ta'mir), homiy qatori ko'rsatilmaydi.
 - **Bitta keyring yozuvi — bir nechta profil (2026-10-20 da topildi).** Qurilma kaliti Credential Manager'da bitta nom bilan saqlanardi; yangi (bo'sh) profilni sozlash uni ustiga yozib, boshqa daftarlarni (dev profil, eski `%APPDATA%`) ochilmas qilib qo'yadi — «Qurilma kaliti topilmadi yoki bu daftarga mos emas». D16 da `BARAKA_DATA_DIR` profillari uchun alohida nom (papka yo'lidan) qo'shildi; standart profil nomi o'zgarmadi. Ishlab chiqarishda bir qurilma — bir daftar, lekin `.baraka` import va ko'p xonadon stsenariylari uchun kalitni daftar identifikatori bilan bog'lash kerakmi — qaror kutilmoqda.
-- **Qal'a devoriga o'tkazma.** Desktop taqsimotni hisoblaydi, lekin «qorovulga qo'yish» tugmasi yo'q: `VaultMovement` da katta summa uchun tur yo'q (`Initial` bir marta, `RescueDeposit` qutqarilgan pul uchun). Taklif: `LumpSum { source }` turi + sxema migratsiyasi (mobil bilan `.baraka` almashish sxemasi kelishilgach).
+- **Himoya zaxirasiga o'tkazma.** Desktop taqsimotni hisoblaydi, lekin «qorovulga qo'yish» tugmasi yo'q: `VaultMovement` da katta summa uchun tur yo'q (`Initial` bir marta, `RescueDeposit` qutqarilgan pul uchun). Taklif: `LumpSum { source }` turi + sxema migratsiyasi (mobil bilan `.baraka` almashish sxemasi kelishilgach).
 - **«Uch sariq — qizil» qoidasi olib tashlandi.** D13 qarori umumiy `scam_signals` vektoriga (sc-007: hamma «bilmayman» → sariq) zid edi; vektor ustun (DESKTOP_PROMPT 5.4). «Hal qilingan» dagi D13 bandi shu bilan o'zgardi.
 - **Besh belgi va 2E.5 bayroqlari bir ekranda.** Belgilar (5) va bayroqlar (9 savol + «bilmayman») ikkalasi ko'rsatiladi; foydalanuvchi uchun ortiqcha bo'lsa, bayroqlarni yig'ma qilish mumkin.
 
@@ -48,7 +55,7 @@ Har bir savol: nima kerak, kim hal qiladi, qachon kerak bo'ladi. Hal bo'lgach, �
 27. **Nasiya — minimal (D4).** Faqat asl summa, qoldiq va qisman to'lov. Foiz, qarz tilxati va friction — D9 da. _Kerak: D9._
 28. **«Oy yakuni» ta'rifi (D4).** Mobil ta'rifi bo'yicha «Oy yakuni» = `daromad − (yozilmagan majburiyat + xarajat + sof jamg'arma)` — bu izohsiz summa bilan bir xil formula. Ikki ko'rsatkich bir xil bo'lishi to'g'rimi yoki «Oy yakuni» boshqacha (masalan, to'liq majburiyat bilan) hisoblansinmi? _Kerak: D4 ni ko'rib chiqish._
 
-29. **Qissa matnlari placeholder (D5).** Barcha 5 bobning qissa va qonun matnlari `[Placeholder]` bilan turibdi. Litsenziya hal bo'lmaguncha asl matn kelmaydi (kontent egasi — «Asaxiy Invest» × Abdukarim Mirzayev). Asl matn kelganda `spec/content/chapters.json` almashtiriladi va mobil bilan birga sinxronlanadi. _Kerak: kontent litsenziyasi tasdiqlanganda._
+29. **Qissa matnlari placeholder (D5).** Barcha 5 bobning qissa va qonun matnlari `[Placeholder]` bilan turibdi. Litsenziya hal bo'lmaguncha asl matn kelmaydi (kontent egasi — «Asaxiy Invest» × Abdukarim Mirzayev). Asl matn kelganda `spec/content/chapters.json` almashtiriladi va mobil bilan birga sinxronlanadi. _Kerak: kontent litsenziyasi tasdiqlanganda._ **Hal qilindi (2026-10-23):** tashqi kontent ishlatilmaydi — boblar loyihaning o'z matni bilan yozildi, personajlar olib tashlandi, murabbiy — nomsiz «Maslahatchi» (SPEC boshidagi mustaqillik qarori).
 30. **Diniy matnlar ulamo tekshiruvida (D5).** 5 ta `religiousReviewStatus: PENDING` bloki bor. Release'da yashirin (test bor); debug buildda «ulamo tekshiruvida» belgisi bilan ko'rinadi. Tasdiqlanganda JSON'da `APPROVED` ga o'tkaziladi. _Kerak: ulamo tasdig'i._
 31. **Audio (D5).** `audioUrl` hozir hech bir bobda yo'q, pleyer UI ham yo'q. _Kerak: audio tayyor bo'lganda._
 32. **Ochilish parametrlari (D5).** Standart — 2 vazifa va 7 kun (mobil bilan bir xil). Foydalanuvchi sozlashi kerakmi, yoki qat'iy qoladimi? _Kerak: D6 (sozlamalar) oldidan._

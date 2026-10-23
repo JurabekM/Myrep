@@ -1,6 +1,6 @@
 [package]
 name = "baraka-pdf"
-description = "Baraka Daftari — PDF bayonnoma: typst shabloni va renderer (DESKTOP_PROMPT.md 2 va 7-bo'lim)"
+description = "Baraka Dastur — PDF bayonnoma: typst shabloni va renderer (DESKTOP_PROMPT.md 2 va 7-bo'lim)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

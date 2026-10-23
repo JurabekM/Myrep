@@ -1,4 +1,4 @@
-# Baraka Daftari — Desktop
+# Baraka Dastur — Desktop
 
 Ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya daftari. Windows 10/11 uchun
 **Tauri 2 + Rust + React (TypeScript)** ilovasi. Ma'lumotlar faqat shu kompyuterda saqlanadi: server, akkaunt
@@ -75,7 +75,7 @@ commandlari bilan frontend o'rtasida nomuvofiqlik bor degani — `git diff ui/sr
 pnpm build
 ```
 
-Natija: `target/release/bundle/nsis/` papkasida `Baraka Daftari_<versiya>_x64-setup.exe` (yoki
+Natija: `target/release/bundle/nsis/` papkasida `Baraka Dastur_<versiya>_x64-setup.exe` (yoki
 `CARGO_TARGET_DIR` ichida). O'rnatish joriy foydalanuvchi uchun bo'ladi, administrator huquqi shart emas.
 Kod imzolash hali sozlanmagan (docs/OPEN_QUESTIONS.md).
 

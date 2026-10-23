@@ -53,7 +53,7 @@ const ITEM: PartnershipDto = {
   parties: [
     {
       partyId: "P1",
-      name: "Anvar Karimov",
+      name: "Akmal Karimov",
       role: "mehnat",
       capital: money(0, "0 soʻm"),
       shareBp: 6000,
@@ -61,7 +61,7 @@ const ITEM: PartnershipDto = {
     },
     {
       partyId: "P2",
-      name: "Dilshod Rahimov",
+      name: "Jasur Rahimov",
       role: "kapital",
       capital: money(500_000_000, "5 000 000 soʻm"),
       shareBp: 4000,
@@ -116,7 +116,7 @@ const DATA: PartnershipsDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -136,7 +136,7 @@ function setUp(): void {
   vi.mocked(commands.listMembers).mockResolvedValue({
     status: "ok",
     data: [
-      { id: "m-1", name: "Anvar", role: "ADULT", hasPin: true },
+      { id: "m-1", name: "Akmal", role: "ADULT", hasPin: true },
       { id: "m-2", name: "Bola", role: "CHILD", hasPin: false },
     ],
   });
@@ -163,7 +163,7 @@ describe("sheriklik", () => {
       status: "ok",
       data: {
         ...DATA,
-        items: [{ ...ITEM, issues: [], consentMember: "Nodira", consentAt: "2026-10-15" }],
+        items: [{ ...ITEM, issues: [], consentMember: "Zarina", consentAt: "2026-10-15" }],
       },
     });
     render(<App />);
@@ -175,10 +175,10 @@ describe("sheriklik", () => {
     expect(screen.getByText(/Darvoza yopiq/)).toBeInTheDocument();
 
     const user = userEvent.setup();
-    await user.type(within(block).getByLabelText("Rozilik bergan a'zo"), "Nodira");
+    await user.type(within(block).getByLabelText("Rozilik bergan a'zo"), "Zarina");
     await user.click(within(block).getByRole("button", { name: "Rozilikni yozish" }));
-    expect(await within(block).findByText(/Nodira/)).toBeInTheDocument();
-    expect(commands.consentPartnership).toHaveBeenCalledWith({ id: "p-1", memberName: "Nodira" });
+    expect(await within(block).findByText(/Zarina/)).toBeInTheDocument();
+    expect(commands.consentPartnership).toHaveBeenCalledWith({ id: "p-1", memberName: "Zarina" });
   });
 
   it("darvoza yopiq bo'lsa kapital kirituvchi ongli chetlab o'tish bilan yaratadi", async () => {
@@ -204,7 +204,7 @@ describe("sheriklik", () => {
     await user.type(screen.getByLabelText("A'zo PIN'i"), "123456");
     expect(create).toBeEnabled();
     // Faqat katta a'zolar ro'yxatda.
-    expect(screen.getByRole("option", { name: "Anvar" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Akmal" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Bola" })).not.toBeInTheDocument();
     await user.click(create);
     expect(

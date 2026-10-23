@@ -1,6 +1,6 @@
 [package]
 name = "baraka-storage"
-description = "Baraka Daftari — shifrlangan baza: SQLCipher, migratsiyalar (sxema v1), repository'lar"
+description = "Baraka Dastur — shifrlangan baza: SQLCipher, migratsiyalar (sxema v1), repository'lar"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

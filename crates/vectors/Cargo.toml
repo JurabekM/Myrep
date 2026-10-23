@@ -1,6 +1,6 @@
 [package]
 name = "baraka-vectors"
-description = "Baraka Daftari — umumiy oltin test vektorlari: yuklovchi va runner'lar (DESKTOP_PROMPT.md 5-bo'lim)"
+description = "Baraka Dastur — umumiy oltin test vektorlari: yuklovchi va runner'lar (DESKTOP_PROMPT.md 5-bo'lim)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

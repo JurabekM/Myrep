@@ -152,7 +152,7 @@ impl TaskTrigger {
 pub enum ContentBlock {
     /// Oddiy abzats (qissa matni).
     Paragraph(LocalizedText),
-    /// Murabbiy (Sobir hoji) so'zi yoki ajratilgan iqtibos.
+    /// Maslahatchi savoli yoki ajratilgan iqtibos.
     Quote(LocalizedText),
     /// Oyat, hadis yoki rivoyat. Manba va ulamo tekshiruvi majburiy.
     Religious {

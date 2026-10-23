@@ -41,7 +41,7 @@ vi.mock("../../bindings/bindings", () => ({
 const LOAN: LoanDto = {
   id: "0192e000-0000-7000-8000-0000000000d1",
   direction: "TAKEN",
-  counterparty: "Dilshod",
+  counterparty: "Jasur",
   counterpartyType: "FRIEND",
   reason: "ta'mir",
   principal: money(120_000_000, "1 200 000 soʻm"),
@@ -89,7 +89,7 @@ const WITH_LOAN: LoansDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -135,7 +135,7 @@ describe("qarzlar", () => {
     expect(await screen.findByText("Olingan qarz yo'q.")).toBeInTheDocument();
 
     const user = userEvent.setup();
-    await user.type(screen.getByLabelText("Kimdan"), "Dilshod");
+    await user.type(screen.getByLabelText("Kimdan"), "Jasur");
     await user.type(screen.getByLabelText("Summa", { selector: "#loan-principal" }), "1 200 000");
     await user.clear(screen.getByLabelText(/To'lovlar soni/));
     await user.type(screen.getByLabelText(/To'lovlar soni/), "12");
@@ -218,7 +218,7 @@ describe("qarzlar", () => {
         steps: [
           {
             loanId: LOAN.id,
-            counterparty: "Dilshod",
+            counterparty: "Jasur",
             outstanding: LOAN.outstanding,
             hasMarkup: false,
             monthsToClear: 4,
@@ -254,7 +254,7 @@ describe("qarzlar", () => {
     render(<App />);
     const order = await screen.findByRole("list", { name: "Yopish tartibi" });
     const rows = within(order).getAllByRole("listitem");
-    expect(rows[0]).toHaveTextContent("1. Dilshod · fokus");
+    expect(rows[0]).toHaveTextContent("1. Jasur · fokus");
     expect(rows[1]).toHaveTextContent(/2\. Bank · ustamali/);
     expect(screen.getByText("2027-07-15")).toBeInTheDocument();
     expect(screen.getByText("10 oy")).toBeInTheDocument();
@@ -332,7 +332,7 @@ describe("qarzlar", () => {
     vi.mocked(commands.listMembers).mockResolvedValue({
       status: "ok",
       data: [
-        { id: "m-1", name: "Anvar", role: "ADULT", hasPin: true },
+        { id: "m-1", name: "Akmal", role: "ADULT", hasPin: true },
         { id: "m-2", name: "Malika", role: "ADULT", hasPin: true },
       ],
     });

@@ -33,7 +33,7 @@ fn database() -> Database {
         .insert(&household)
         .expect("qo'shilsin");
     let adult =
-        Member::create(ADULT, HOUSEHOLD, "Dilshod", MemberRole::Adult, NOW, DEVICE).expect("a'zo");
+        Member::create(ADULT, HOUSEHOLD, "Jasur", MemberRole::Adult, NOW, DEVICE).expect("a'zo");
     MemberRepo::new(db.connection())
         .insert(&adult)
         .expect("a'zo qo'shilsin");

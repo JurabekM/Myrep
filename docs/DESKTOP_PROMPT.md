@@ -1,4 +1,4 @@
-# «BARAKA DAFTARI DESKTOP» — UMUMIY LOYIHA PROMPTI
+# «BARAKA DASTUR DESKTOP» — UMUMIY LOYIHA PROMPTI
 ### Tauri 2 + Rust + React · Windows birinchi navbatda · Mobil ilova bilan test vektorlari orqali mos
 
 > Versiya: v1.3 (7-qonun: desktop D16) · AI-dasturchi (Claude Code va h.k.) uchun.
@@ -11,8 +11,8 @@
 Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptografiya va moliyaviy dasturiy ta'minot bo'yicha tajribang bor. Kodni production-sifatda, testlar bilan yozasan, xavfsizlik va **pul hisobining aniqligi** birinchi o'rinda turadi.
 
 ## 1. MAHSULOT VA DESKTOPNING O'RNI
-- **«Baraka daftari»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
-- U ta'lim va amaliyotni birlashtiradi: 12 ta qissa orqali **halol boylikning 7 qonuni** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–7-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2G bo'limlarida.
+- **«Baraka Dastur»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
+- U ta'lim va amaliyotni birlashtiradi: 7 ta bob orqali **halol moliyaning 7 tamoyili** («qonun») o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–7-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2G bo'limlarida.
 - Mobil ilova (Flutter + Kotlin) kundalik tez kiritish uchun mo'ljallangan. **Desktop esa uning nusxasi emas, «Oila kengashi va biznes stoli»**:
   - katta ekranda oylik audit va oila kengashi (havas chegarasi, marosim stsenariylari);
   - qarzdan chiqish rejasini chuqur tahlil qilish va amortizatsiya jadvallari;
@@ -25,12 +25,12 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 | # | Qonun | Desktopdagi asosiy vositalar | SPEC |
 |---|---|---|---|
 | 1 | Avval o'zingga to'la | Daromad, avto-ulush, «Kelajagim», streak, oylik audit, «Kimning puli?» | 2 |
-| 2 | Xurjunning teshigini yama | Zarur/Kerak/Havas, havas chegarasi (oila roziligi bilan), obunalar, konvertlar, «Qutqarilgan pul», sadaqa ajratmasi | 2B |
-| 3 | Pul ikki xil yashaydi | Qorovul/O'sadigan jamg'arma (6 oy), «Narx daftari», shaxsiy inflyatsiya, tayyorgarlik darvozasi, ribo filtri | 2C |
+| 2 | Xarajatni ko'r va boshqar | Zarur/Kerak/Havas, havas chegarasi (oila roziligi bilan), obunalar, konvertlar, «Qutqarilgan pul», sadaqa ajratmasi | 2B |
+| 3 | Avval zaxira, keyin o'sish | Qorovul/O'sadigan jamg'arma (6 oy), «Narx daftari», shaxsiy inflyatsiya, tayyorgarlik darvozasi, ribo filtri | 2C |
 | 4 | Ribodan qoch, reja bilan chiq | Qarz inventari, haqiqiy narx, 70/20/10, payoff planner, tilxat, marosim rejalovchisi | 2D |
 | 5 | Pulni halol ishga sol | Mudoraba/Musharaka, shartnoma, buyout, venture ledger, taklif detektori | 2E |
-| 6 | Sheriklik odobi — kelishuvni yozinglar | Umumiy kelishuv dvigateli (9 savol), vazifalar va hodisalar, oylik ochiq ko'rik va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozish, oilaviy kelishuvlar | 2F |
-| 7 | Ko'rmagan ishingga pul tikma — pulingni hunaringga ishlat | Besh xavf belgisi (taklif tekshiruvi), «o'z ko'zim bilan ko'raman» ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida hisobi, katta summa uchun «qal'a devori», «to'xta, maslahatlash» (24 soat + maslahatchi), hunar shablonlari | 2G |
+| 6 | Kelishuvni yozma tuz | Umumiy kelishuv dvigateli (9 savol), vazifalar va hodisalar, oylik ochiq ko'rik va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozish, oilaviy kelishuvlar | 2F |
+| 7 | Tekshirmagan ishga pul tikma | Besh xavf belgisi (taklif tekshiruvi), «o'z ko'zim bilan ko'raman» ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida hisobi, katta summa uchun «himoya zaxirasi», «to'xta, maslahatlash» (24 soat + maslahatchi), hunar shablonlari | 2G |
 
 > **Desktop uchun eng muhim qonun — 6-qonun.** Kelishuvni 9 savol bo'yicha tuzish, oylik ko'rik o'tkazish, hakam papkasini yig'ish va hujjatlarni chop etish katta ekran va klaviaturada eng qulay bajariladi. Shu sababli bu bo'lim desktopning **asosiy ish oqimi** sifatida loyihalanadi.
 
@@ -166,9 +166,9 @@ Algoritm:
 
 | id | Ssenariy | P (tiyin) | annualBp | n | extra/oy | expected payment | expected months | expected totalInterest |
 |---|---|---|---|---|---|---|---|---|
-| amort-001 | Anvar, odatiy grafik | 3900000000 | 2400 | 14 | 0 | 322147684 | 14 | 610067573 |
-| amort-002 | Anvar + 20% (1,6 mln) | 3900000000 | 2400 | 14 | 160000000 | 322147684 | **9** | 397018667 |
-| amort-003 | Anvar + 20% + qutqarilgan pul (2,4 mln) | 3900000000 | 2400 | 14 | 240000000 | 322147684 | **8** | 341756885 |
+| amort-001 | Akmal, odatiy grafik | 3900000000 | 2400 | 14 | 0 | 322147684 | 14 | 610067573 |
+| amort-002 | Akmal + 20% (1,6 mln) | 3900000000 | 2400 | 14 | 160000000 | 322147684 | **9** | 397018667 |
+| amort-003 | Akmal + 20% + qutqarilgan pul (2,4 mln) | 3900000000 | 2400 | 14 | 240000000 | 322147684 | **8** | 341756885 |
 
 *(Stavka 24% illyustrativ. Bu vektorlar algoritmni tekshiradi, real bank shartlarini emas. Hikoyadagi «14 oy → 8–9 oy» natijasi shu yerda tasdiqlanadi.)*
 Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, extra, balance`). Masalan, amort-002 ning 9-oyi: `interest 8624259, principal 313523425, extra 117689511, balance 0`. Runner jadvalni ham to'liq solishtiradi.
@@ -199,11 +199,11 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
   - `canonical` = RFC 8785 (JCS) JSON: kalitlar tartiblangan, bo'sh joy yo'q, UTF-8; barcha pul va son qiymatlari **string**;
   - `hash_n = hex(SHA256(prevHash + "\n" + canonical(entry_n)))`, kichik harflarda;
   - genesis `prevHash` = `"0000…0000"` (64 ta belgi); har bir kelishuvning o'z zanjiri.
-- **Kirish** (kelishuv `0192a000-0000-7000-8000-0000000000a1` — Anvar va Dilshodning yetkazib berish musharakasi):
+- **Kirish** (kelishuv `0192a000-0000-7000-8000-0000000000a1` — Akmal va Jasurning yetkazib berish musharakasi):
 ```json
 [
- {"id":"0192a000-0000-7000-8000-000000000001","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"CONTRIBUTION","partyId":"P1","amount":{"minor":"300000000","currency":"UZS"},"date":"2026-10-01","note":"Anvar hissasi"},
- {"id":"0192a000-0000-7000-8000-000000000002","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"CONTRIBUTION","partyId":"P2","amount":{"minor":"300000000","currency":"UZS"},"date":"2026-10-01","note":"Dilshod hissasi"},
+ {"id":"0192a000-0000-7000-8000-000000000001","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"CONTRIBUTION","partyId":"P1","amount":{"minor":"300000000","currency":"UZS"},"date":"2026-10-01","note":"Akmal hissasi"},
+ {"id":"0192a000-0000-7000-8000-000000000002","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"CONTRIBUTION","partyId":"P2","amount":{"minor":"300000000","currency":"UZS"},"date":"2026-10-01","note":"Jasur hissasi"},
  {"id":"0192a000-0000-7000-8000-000000000003","agreementId":"0192a000-0000-7000-8000-0000000000a1","kind":"PROFIT_DISTRIBUTION","partyId":"P1","amount":{"minor":"140000000","currency":"UZS"},"date":"2026-10-31","note":"1-oy foyda ulushi"}
 ]
 ```
@@ -244,7 +244,7 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 | sc-001 | toza taklif | — | NONE | GREEN | — |
 | sc-002 | faqat shoshirish | URGENCY | CAUTION | YELLOW | — |
 | sc-003 | shoshirish + qiyin chiqish | URGENCY, HARD_EXIT | FLEE | RED | — |
-| sc-004 | «Plyus» | GUARANTEED_HIGH_RETURN, URGENCY, RECRUITMENT_INCOME, NO_REAL_BUSINESS | FLEE | RED | RIBO, GHARAR, QIMOR |
+| sc-004 | «Tez Foyda» | GUARANTEED_HIGH_RETURN, URGENCY, RECRUITMENT_INCOME, NO_REAL_BUSINESS | FLEE | RED | RIBO, GHARAR, QIMOR |
 | sc-005 | faqat ruxsat yo'q | NO_REAL_BUSINESS | CAUTION | YELLOW | GHARAR |
 | sc-006 | faqat kafolat | GUARANTEED_HIGH_RETURN | CAUTION | RED | RIBO |
 | sc-007 | javob yo'q | — | NONE | YELLOW | — |
@@ -311,7 +311,7 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 - Kelajakda server sinxronlashiga (Ktor + PostgreSQL) shu maydonlar asosida o'tiladi.
 
 ## 7. DESKTOPGA XOS FUNKSIYALAR VA UX
-- **Oyna tuzilmasi:** chap tomonda navigatsiya (Bosh sahifa, Daromad, Xarajatlar, Kelajagim, Byudjet, Qarzlar, Marosimlar, Sheriklik, Narx daftari, Boblar, Sozlamalar), markazda ish maydoni, o'ng tomonda kontekst paneli (Sobir hoji maslahati yoki tafsilotlar).
+- **Oyna tuzilmasi:** chap tomonda navigatsiya (Bosh sahifa, Daromad, Xarajatlar, Kelajagim, Byudjet, Qarzlar, Marosimlar, Sheriklik, Narx daftari, Boblar, Sozlamalar), markazda ish maydoni, o'ng tomonda kontekst paneli (Maslahatchi maslahati yoki tafsilotlar).
 - **Klaviatura:**
   - `Ctrl+N` — tez kiritish (daromad yoki xarajat), `Ctrl+K` — buyruq palitrasi, `Ctrl+P` — chop etish, `Ctrl+L` — qulflash;
   - jadvallarda Excel uslubida tahrirlash: `Tab`, `Enter`, strelkalar.
@@ -326,17 +326,17 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 ## 8. MAHSULOT CHEKLOVLARI (SPEC 3-bo'limdan, desktopda ham qat'iy)
 - Foizli kredit, mikroqarz yoki «tez pul» reklama va integratsiyalari yo'q. Foiz stavkasi hech qachon «muqobil daromad» sifatida ko'rsatilmaydi (i18n matnlarida taqiqlangan iboralar testi bo'ladi).
 - `Receivable` da foiz maydoni yo'q. Sheriklikda kafolatli daromad kiritib bo'lmaydi.
-- Ohang Sobir hoji uslubida: iliq, ayblamaydigan. Uyaltirish, qo'rqitish va va'dalar yo'q. Sadaqa havas hisobiga kirmaydi va uni kamaytirish «yutuq» deb ko'rsatilmaydi.
+- Ohang Maslahatchi uslubida: iliq, ayblamaydigan. Uyaltirish, qo'rqitish va va'dalar yo'q. Sadaqa havas hisobiga kirmaydi va uni kamaytirish «yutuq» deb ko'rsatilmaydi.
 - Har bir ta'limiy ekranda disklеymer: «Ta'limiy material. Fatvo yoki moliyaviy maslahat emas».
 - Diniy matnlar va shartnoma shablonlari `review_status = APPROVED` bo'lmasa, release'da ko'rsatilmaydi (shablonlar ogohlantirish bilan ko'rsatiladi).
-- Qissa matnlari litsenziya hal bo'lguncha **placeholder** bo'lib turadi (kontent egasi — «Asaxiy Invest» × Abdukarim Mirzayev).
+- Bob matnlari loyiha jamoasi tomonidan yoziladi (mustaqillik qarori, SPEC boshida); tashqi qissalar ishlatilmaydi.
 - Ilova pulni saqlamaydi va o'tkazmaydi. Sheriklarni bir-biriga tanishtirmaydi va pul yig'maydi (P2P yoki kraudfanding emas).
 
 ## 9. ISH REJASI (har bir vazifa alohida sessiyada)
 
 ### Umumiy kirish (har bir sessiya boshiga qo'yiladi)
 ```
-Sen «Baraka daftari Desktop» loyihasining senior Rust + TypeScript dasturchisisan.
+Sen «Baraka Dastur Desktop» loyihasining senior Rust + TypeScript dasturchisisan.
 Avval docs/DESKTOP_PROMPT.md (2–6, 8, 10-bo'limlar) va docs/SPEC.md dagi tegishli bo'limni o'qi.
 2-bo'lim (ADR) qat'iy. Pul hisobi faqat Rust `money`/`domain` crate'larida; frontend hisoblamaydi.
 Yangi pul funksiyasi — avval spec/test-vectors ga vektor, keyin kod.
@@ -395,7 +395,7 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 
 ### D. 3-qonun
 **D8 — Qorovul/O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri**
-- SPEC 2C: VAULT → QOROVUL migratsiyasi, 6 oylik maqsad (vektor), «Narx daftari» va shaxsiy indeks (vektor), «Sichqon kemirgani», `ReadinessGate` (vektor matritsasi), ongli chetlab o'tish, `IncomeSourceType`, taqiqlangan iboralar i18n testi.
+- SPEC 2C: VAULT → QOROVUL migratsiyasi, 6 oylik maqsad (vektor), «Narx daftari» va shaxsiy indeks (vektor), «Inflyatsiya ta'siri», `ReadinessGate` (vektor matritsasi), ongli chetlab o'tish, `IncomeSourceType`, taqiqlangan iboralar i18n testi.
 - **Qabul mezonlari:** `emergency_target`, `personal_inflation` va `readiness_gate` vektorlari yashil; migratsiyada balans yo'qolmaydi.
 
 ### D2. 6-qonun poydevori
@@ -408,7 +408,7 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
   - `JournalEntry`, JCS kanonizatsiya (`serde_jcs` yoki o'zimizning implementatsiya — vektorga qarab tanlanadi), SHA-256 (`sha2`), `verify_chain`;
   - DB darajasida `UPDATE` va `DELETE` uchun `BEFORE` triggerlar `RAISE(ABORT)`; tuzatish faqat `CORRECTION` yozuvi bilan.
 - **9 savol ustasi** (desktop UX):
-  - chap tomonda 9 qadamli progress («N / 9»), o'rtada forma, o'ngda Sobir hoji maslahati va **PDF jonli preview**;
+  - chap tomonda 9 qadamli progress («N / 9»), o'rtada forma, o'ngda Maslahatchi maslahati va **PDF jonli preview**;
   - 9/9 bo'lmasa, «Imzolash» tugmasi faol emas.
 - **Imzolar:** tomonlar, guvohlar va hakam. Imzo sichqoncha yoki pero bilan chiziladi, yoki «chop etib qo'lda imzolash → skan biriktirish» rejimi ishlatiladi. Versiya o'zgarsa, imzolar qayta so'raladi.
 - **Og'zaki kelishuvni yozib olish:** `effective_from` o'tmishda va `OpeningBalance` yozuvi bilan.
@@ -468,7 +468,7 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 
 **D15 — Reliz tayyorgarligi**
 - Onboarding (≤ 5 qadam), accessibility tekshiruvi, kod imzolash (Windows), imzolangan updater manifesti, DPI va High Contrast testi.
-- **Yakuniy E2E** (Windows, `tauri-driver`): Anvar ssenariysi boshidan oxirigacha (daromad → audit → havas chegarasi → obuna bekor qilish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → Dilshod bilan musharaka (9/9 savol, imzolar) → vazifa hodisasi → oylik ko'rik va bayonnoma → taqsimot (1,4 mln) → eksport).
+- **Yakuniy E2E** (Windows, `tauri-driver`): Akmal ssenariysi boshidan oxirigacha (daromad → audit → havas chegarasi → obuna bekor qilish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → Jasur bilan musharaka (9/9 savol, imzolar) → vazifa hodisasi → oylik ko'rik va bayonnoma → taqsimot (1,4 mln) → eksport).
 - `docs/RELEASE_CHECKLIST.md`.
 - **Qabul mezonlari:** E2E yashil; imzolangan installer SmartScreen ogohlantirishisiz o'rnatiladi (sertifikat mavjud bo'lsa); sovuq start < 1,5 s.
 
@@ -476,8 +476,8 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 
 **D16 — «Ko'rmagan ishingga pul tikma» (SPEC 2G)**
 
-- **A (Rust, avval vektor):** `scam_signals`, `promised_return`, `pyramid_levels`, `lump_sum_split` umumiy vektorlari + runner; `domain::offer_check` tri-state (9 savol, besh belgi, daraja, toifalar; «uch sariq — qizil» qoidasi vektorga zid bo'lgani uchun olib tashlandi), `domain::scam_math`; sxema v18 `offer_checks`; xizmat `scam`: tekshiruv saqlanadi (`OFFER_CHECKED`), «to'xta, maslahatlash» (maslahatchi + 24 soat, qaror bir marta), qal'a devori (valyuta + kurs, zaxira tarixdan yoki taxmindan, `EMERGENCY_TARGET_SET`), piramida, hunar shablonlari. 7-bob kontenti (mobil bilan bitta fayl), 6-bob triggerlari.
-- **B (UI):** taklif tekshiruvi kartasi 9 savol (ha/yo'q/bilmayman), summa, va'da % → yillik ko'paytma, «o'z ko'zim bilan ko'raman» ro'yxati, belgilar va toifalar izohi, qaror tugmalari va tarix; piramida kartasi; «Qal'a devori» kartasi («Kelajagim»); «Hunardan ishga»da shablon tanlovi. GUI sinovi.
+- **A (Rust, avval vektor):** `scam_signals`, `promised_return`, `pyramid_levels`, `lump_sum_split` umumiy vektorlari + runner; `domain::offer_check` tri-state (9 savol, besh belgi, daraja, toifalar; «uch sariq — qizil» qoidasi vektorga zid bo'lgani uchun olib tashlandi), `domain::scam_math`; sxema v18 `offer_checks`; xizmat `scam`: tekshiruv saqlanadi (`OFFER_CHECKED`), «to'xta, maslahatlash» (maslahatchi + 24 soat, qaror bir marta), himoya zaxirasi (valyuta + kurs, zaxira tarixdan yoki taxmindan, `EMERGENCY_TARGET_SET`), piramida, hunar shablonlari. 7-bob kontenti (mobil bilan bitta fayl), 6-bob triggerlari.
+- **B (UI):** taklif tekshiruvi kartasi 9 savol (ha/yo'q/bilmayman), summa, va'da % → yillik ko'paytma, «o'z ko'zim bilan ko'raman» ro'yxati, belgilar va toifalar izohi, qaror tugmalari va tarix; piramida kartasi; «Himoya zaxirasi» kartasi («Kelajagim»); «Hunardan ishga»da shablon tanlovi. GUI sinovi.
 - **Qabul mezonlari:** 4 vektor yashil; ikki belgi qizil; «pul qo'yaman» maslahatchisiz va 24 soatdan oldin rad (test); katta summa taqsimotida zaxira avval (test); migratsiya v17 → v18.
 
 ## 10. AI-DASTURCHI UCHUN QOIDALAR
@@ -494,14 +494,14 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 ## 11. DOIRADAN TASHQARIDA (v1 da qilinmaydi)
 - Server sinxronlashi, akkauntlar.
 - Bank va karta integratsiyalari (CSV importdan tashqari).
-- 8-qonun va undan keyingilar (keyingi qissalardan keyin qo'shiladi; `Asset` va `asset_snapshots` zakot uchun zaxirada — 7-qism zakot haqida emas).
+- 8-qonun va undan keyingilar (keyinroq qo'shiladi; `Asset` va `asset_snapshots` zakot uchun zaxirada ).
 - Hakam yoki ikkinchi tomonning o'z qurilmasidan masofadan tasdiqlashi (server kerak).
 - Real pul o'tkazmalari.
 - Sheriklar uchun platforma yoki marketplace.
-- Asl qissa matnlari.
+- Tashqi muallif matnlari (ishlatilmaydi — mustaqillik qarori).
 
 ## 12. RELIZDAN OLDIN KODDAN TASHQARIDA HAL QILINADIGAN MASALALAR
-- Kontent va brend litsenziyasi («Asaxiy Invest» × Abdukarim Mirzayev).
+- Diniy matnlarning ulamo tekshiruvi.
 - Diniy matnlar va sheriklik shablonlarining ulamo tekshiruvi; tilxat va shartnoma shablonlarining yurist ko'rigi.
 - Windows kod imzolash sertifikati (OV yoki EV) va macOS Developer ID.
 - Maxfiylik siyosati (O'zbekistonning shaxsiy ma'lumotlar to'g'risidagi qonuni).

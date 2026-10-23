@@ -1,4 +1,4 @@
-# Baraka Daftari Desktop — Cargo workspace.
+# Baraka Dastur Desktop — Cargo workspace.
 # Yangi crate qo'shishdan oldin sababini docs/CHANGELOG.md da yozing (DESKTOP_PROMPT.md 2-bo'lim).
 [workspace]
 members = [

@@ -340,7 +340,7 @@ pub fn hustle_templates() -> Vec<HustleTemplateDto> {
         HustleTemplateDto {
             id: "FORGE_WELD".to_owned(),
             name: "Temirchilik / payvand ustaxonasi".to_owned(),
-            story: "Rustam: to'rt yil payvandchi va usta boshi bo'lgan — pul hunariga ishlasin: darvoza, panjara, mangal."
+            story: "Metall bilan ishlay oladigan usta uchun: darvoza, panjara, mangal kabi buyurtmalar."
                 .to_owned(),
             capex_lines: vec![
                 "Payvand apparati va niqob".to_owned(),
@@ -402,7 +402,7 @@ mod tests {
             .collect()
     }
 
-    fn plyus() -> BTreeMap<String, String> {
+    fn tez_foyda() -> BTreeMap<String, String> {
         answers(&[
             ("guaranteed", "YES"),
             ("lossShared", "NO"),
@@ -417,14 +417,14 @@ mod tests {
     }
 
     #[test]
-    fn plyus_taklifi_qizil_saqlanadi_va_tarixda_korinadi() {
+    fn tez_foyda_taklifi_qizil_saqlanadi_va_tarixda_korinadi() {
         let db = database();
         let dto = check_offer(
             &db,
             NOW,
             OfferInputDto {
-                title: Some("«Plyus» — Baxtiyor".into()),
-                answers: plyus(),
+                title: Some("«Tez Foyda» — tanish taklifi".into()),
+                answers: tez_foyda(),
                 amount: Some("10 000".into()),
                 promised_monthly_bp: Some(3_500),
                 advisor: None,
@@ -489,7 +489,7 @@ mod tests {
             DecideOfferInputDto {
                 id: dto.id.clone(),
                 decision: "ACCEPTED".into(),
-                advisor: Some("Sobir hoji".into()),
+                advisor: Some("Shavkat aka".into()),
             },
         );
         assert!(matches!(
@@ -503,12 +503,12 @@ mod tests {
             DecideOfferInputDto {
                 id: dto.id.clone(),
                 decision: "ACCEPTED".into(),
-                advisor: Some("Sobir hoji".into()),
+                advisor: Some("Shavkat aka".into()),
             },
         )
         .expect("qaror");
         assert_eq!(list.items[0].decision.as_deref(), Some("ACCEPTED"));
-        assert_eq!(list.items[0].advisor.as_deref(), Some("Sobir hoji"));
+        assert_eq!(list.items[0].advisor.as_deref(), Some("Shavkat aka"));
         // Qaror bir marta.
         assert!(matches!(
             decide_offer(
@@ -528,7 +528,7 @@ mod tests {
             NOW,
             OfferInputDto {
                 title: None,
-                answers: plyus(),
+                answers: tez_foyda(),
                 amount: None,
                 promised_monthly_bp: None,
                 advisor: None,

@@ -40,7 +40,7 @@ vi.mock("../../bindings/bindings", () => ({
 
 const RED: OfferCheckDto = {
   id: "o-1",
-  title: "«Plyus» — Baxtiyor",
+  title: "«Tez Foyda» — tanish taklifi",
   answers: {
     guaranteed: "YES",
     lossShared: "NO",
@@ -57,11 +57,14 @@ const RED: OfferCheckDto = {
   signs: [
     {
       code: "GUARANTEED_HIGH_RETURN",
-      explanation: "Katta foyda kafolatlab va'da qilinmoqda. Halol foydaning kafolati bo'lmaydi.",
+      explanation: "Yuqori foyda kafolatlanmoqda.",
     },
-    { code: "URGENCY", explanation: "«Faqat bugun», «joy kam» — shoshirishmoqda." },
-    { code: "RECRUITMENT_INCOME", explanation: "Daromad moldan emas, yangi odam olib kelishdan." },
-    { code: "NO_REAL_BUSINESS", explanation: "Ishning o'zi ko'rinmaydi. Ekran mol emas." },
+    { code: "URGENCY", explanation: "«Faqat bugun», «joy kam» — qaror uchun vaqt berilmayapti." },
+    {
+      code: "RECRUITMENT_INCOME",
+      explanation: "Daromad yangi qatnashchilar jalb qilishdan keladi.",
+    },
+    { code: "NO_REAL_BUSINESS", explanation: "Ishning o'zini tekshirib bo'lmaydi." },
   ],
   categories: ["RIBO", "GHARAR", "QIMOR"],
   flags: [
@@ -84,7 +87,7 @@ const RED: OfferCheckDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -109,7 +112,7 @@ function setUp(): void {
       {
         id: "FORGE_WELD",
         name: "Temirchilik / payvand ustaxonasi",
-        story: "Rustam: pul hunariga ishlasin.",
+        story: "Bekzod: pul hunariga ishlasin.",
         capexLines: ["Payvand apparati va niqob", "Bolgarka, drel"],
         demandQuestion: "Talab bormi? Atrofda qancha uy qurilmoqda?",
       },
@@ -128,7 +131,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
     await setAppLanguage("uz");
   });
 
-  it("«Plyus» taklifi: to'rt belgi, uch toifa, va'da yillikka, maslahatsiz «pul qo'yaman» yopiq, rad etish", async () => {
+  it("«Tez Foyda» taklifi: to'rt belgi, uch toifa, va'da yillikka, maslahatsiz «pul qo'yaman» yopiq, rad etish", async () => {
     vi.mocked(commands.checkOffer).mockResolvedValue({ status: "ok", data: RED });
     vi.mocked(commands.decideOffer).mockResolvedValue({
       status: "ok",
@@ -143,7 +146,10 @@ describe("7-qonun: taklif tekshiruvi", () => {
     if (card === null) {
       throw new Error("karta topilmadi");
     }
-    await user.type(within(card).getByLabelText("Taklif (kim, nima)"), "«Plyus» — Baxtiyor");
+    await user.type(
+      within(card).getByLabelText("Taklif (kim, nima)"),
+      "«Tez Foyda» — tanish taklifi",
+    );
     await user.type(within(card).getByLabelText("Taxminiy summa"), "10 000");
     await user.type(within(card).getByLabelText("Va'da: oyiga %"), "35");
     await user.click(within(card).getByLabelText("Foyda kafolatlangan deyishadimi?: Ha"));
@@ -164,7 +170,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
     );
     await user.click(within(card).getByRole("button", { name: "Tekshirish" }));
     expect(commands.checkOffer).toHaveBeenCalledWith({
-      title: "«Plyus» — Baxtiyor",
+      title: "«Tez Foyda» — tanish taklifi",
       answers: RED.answers,
       amount: "10 000",
       promisedMonthlyBp: 3500,
@@ -172,7 +178,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
     });
     const status = await within(card).findByRole("status");
     expect(status).toHaveTextContent(/Qizil/);
-    expect(status).toHaveTextContent("Besh belgidan 4 tasi bor — qoching");
+    expect(status).toHaveTextContent("Besh belgidan 4 tasi bor — voz kechgan ma'qul");
     expect(status).toHaveTextContent(/ribo .* g'arar .* qimor/);
     expect(within(status).getByRole("list", { name: "Topilgan belgilar" }).children).toHaveLength(
       4,
@@ -182,7 +188,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
     // Maslahatchisiz «pul qo'yaman» yopiq; sabab matni.
     expect(within(status).getByRole("button", { name: "Pul qo'yaman" })).toBeDisabled();
     expect(status).toHaveTextContent("Avval maslahatchi ismini yozing.");
-    await user.type(within(status).getByLabelText("Kim bilan maslahatlashdingiz?"), "Sobir hoji");
+    await user.type(within(status).getByLabelText("Kim bilan maslahatlashdingiz?"), "Shavkat aka");
     expect(within(status).getByRole("button", { name: "Pul qo'yaman" })).toBeDisabled();
     expect(status).toHaveTextContent("yana 24 soat");
     // Rad etish darhol.
@@ -190,11 +196,11 @@ describe("7-qonun: taklif tekshiruvi", () => {
     expect(commands.decideOffer).toHaveBeenCalledWith({
       id: "o-1",
       decision: "DECLINED",
-      advisor: "Sobir hoji",
+      advisor: "Shavkat aka",
     });
     expect(await within(card).findByText(/Qaror: rad etildi \(2026-10-20\)/)).toBeInTheDocument();
     expect(within(card).getByRole("list", { name: "Tekshiruvlar tarixi" })).toHaveTextContent(
-      "«Plyus» — Baxtiyor",
+      "«Tez Foyda» — tanish taklifi",
     );
   });
 
@@ -206,7 +212,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
       level: "CAUTION",
       signs: [RED.signs[1] ?? { code: "URGENCY", explanation: "shoshirish" }],
       categories: [],
-      advisor: "Anvar",
+      advisor: "Akmal",
       coolingHoursLeft: 0,
       canAccept: true,
       promised: null,
@@ -229,7 +235,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
     expect(commands.decideOffer).toHaveBeenCalledWith({
       id: "o-2",
       decision: "ACCEPTED",
-      advisor: "Anvar",
+      advisor: "Akmal",
     });
     expect(await screen.findByText(/Qaror: pul qo'yildi/)).toBeInTheDocument();
   });
@@ -261,7 +267,9 @@ describe("7-qonun: taklif tekshiruvi", () => {
     const status = await within(card).findByRole("status");
     expect(status).toHaveTextContent("10");
     expect(status).toHaveTextContent("51.2 %");
-    expect(status).toHaveTextContent("Cho'kkan kuni siz qaysi qavatda bo'lasiz?");
+    expect(status).toHaveTextContent(
+      "Sxema to'xtaganda qatnashchilarning ko'pchiligi eng pastki qavatda — pulini qaytara olmagan holda qoladi.",
+    );
 
     const hustle = screen.getByRole("heading", { name: "«Hunardan ishga»" });
     const hustleCard = hustle.closest("section") ?? hustle.parentElement;

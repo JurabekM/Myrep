@@ -5,7 +5,7 @@
  "cases": [
   {
    "id": "amort-001",
-   "description": "Anvar, odatiy grafik",
+   "description": "Akmal, odatiy grafik",
    "input": {
     "principal": "3900000000",
     "currency": "UZS",
@@ -121,7 +121,7 @@
   },
   {
    "id": "amort-002",
-   "description": "Anvar + 20% (1,6 mln)",
+   "description": "Akmal + 20% (1,6 mln)",
    "input": {
     "principal": "3900000000",
     "currency": "UZS",
@@ -202,7 +202,7 @@
   },
   {
    "id": "amort-003",
-   "description": "Anvar + 20% + qutqarilgan pul (2,4 mln)",
+   "description": "Akmal + 20% + qutqarilgan pul (2,4 mln)",
    "input": {
     "principal": "3900000000",
     "currency": "UZS",

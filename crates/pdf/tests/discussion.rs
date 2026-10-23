@@ -53,8 +53,8 @@ fn sample() -> DiscussionMinutes {
             ("Yakunlangan".to_owned(), "17.10.2026".to_owned()),
         ],
         adults: vec![
-            ("Anvar Karimov".to_owned(), "rozi".to_owned()),
-            ("Nodira Karimova".to_owned(), "rozi".to_owned()),
+            ("Akmal Karimov".to_owned(), "rozi".to_owned()),
+            ("Zarina Karimova".to_owned(), "rozi".to_owned()),
         ],
         disclaimer: "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas.".to_owned(),
     }

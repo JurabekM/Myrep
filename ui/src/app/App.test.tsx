@@ -31,7 +31,7 @@ vi.mock("../bindings/bindings", () => ({
 }));
 
 const APP_INFO = {
-  name: "Baraka Daftari",
+  name: "Baraka Dastur",
   version: "0.1.0",
   platform: "windows",
   arch: "x86_64",
@@ -40,7 +40,7 @@ const APP_INFO = {
 
 const UZ_GREETING = "Assalomu alaykum!";
 
-describe("Baraka daftari ilova qobig'i", () => {
+describe("Baraka Dastur ilova qobig'i", () => {
   beforeEach(() => {
     vi.mocked(commands.getAppInfo).mockResolvedValue(APP_INFO);
     // PIN o'rnatilgan va baza ochiq: asosiy ilova ko'rinadi.

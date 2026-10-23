@@ -1,6 +1,6 @@
 [package]
 name = "baraka-security"
-description = "Baraka Daftari — kalit boshqaruvi: PIN, Argon2id, ikki qatlamli wrap, keyring, lockout, avto-qulflash"
+description = "Baraka Dastur — kalit boshqaruvi: PIN, Argon2id, ikki qatlamli wrap, keyring, lockout, avto-qulflash"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

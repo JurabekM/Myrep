@@ -162,15 +162,8 @@ fn xonadon_hayot_sikli_versiya_bilan() {
 #[test]
 fn azo_faqat_mavjud_xonadonda_bolishi_mumkin() {
     let db = Database::open_in_memory(&key(1)).expect("ochilsin");
-    let member = Member::create(
-        MEMBER,
-        HOUSEHOLD,
-        "Dilshod",
-        MemberRole::Adult,
-        at(0),
-        DEVICE,
-    )
-    .expect("to'g'ri a'zo");
+    let member = Member::create(MEMBER, HOUSEHOLD, "Jasur", MemberRole::Adult, at(0), DEVICE)
+        .expect("to'g'ri a'zo");
     // Xonadon yo'q: tashqi kalit buziladi.
     assert!(matches!(
         MemberRepo::new(db.connection()).insert(&member),

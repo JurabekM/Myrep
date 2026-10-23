@@ -71,8 +71,8 @@ const SIGNED: AgreementDto = {
   effectiveFrom: "2026-11-01",
   answers: {
     parties: [
-      { id: "P1", name: "Anvar Karimov", role: "sherik", relation: "", isMe: true },
-      { id: "P2", name: "Dilshod Rahimov", role: "sherik", relation: "", isMe: false },
+      { id: "P1", name: "Akmal Karimov", role: "sherik", relation: "", isMe: true },
+      { id: "P2", name: "Jasur Rahimov", role: "sherik", relation: "", isMe: false },
     ],
     contributions: [],
     duties: [
@@ -100,7 +100,7 @@ const SIGNED: AgreementDto = {
     exitPayout: "3 oy ichida",
     exitAssets: "",
     exitNotApplicable: null,
-    arbiterName: "Sobir hoji",
+    arbiterName: "Shavkat aka",
     arbiterRole: "mahalla oqsoqoli",
     termMonths: 12,
     reviewDate: "2026-12-20",
@@ -132,7 +132,7 @@ const INCIDENT = {
   dutyTitle: "Yetkazish",
   breachClause: "1 kun ichida xabar beradi",
   partyId: "P2",
-  partyName: "Dilshod Rahimov",
+  partyName: "Jasur Rahimov",
   reason: "mashina buzildi",
   proposedFix: "kuryer",
   occurredOn: "2026-12-01",
@@ -160,8 +160,8 @@ const REVIEW = {
   chainOk: true,
   chainHead: "a".repeat(64),
   marks: [
-    { partyId: "P1", name: "Anvar Karimov", decision: null, comment: null },
-    { partyId: "P2", name: "Dilshod Rahimov", decision: null, comment: null },
+    { partyId: "P1", name: "Akmal Karimov", decision: null, comment: null },
+    { partyId: "P2", name: "Jasur Rahimov", decision: null, comment: null },
   ],
   complete: false,
   createdOn: "2026-12-01",
@@ -200,7 +200,7 @@ const CENTER: CenterDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -296,8 +296,8 @@ describe("kelishuvlar markazi", () => {
           {
             ...REVIEW,
             marks: [
-              { partyId: "P1", name: "Anvar Karimov", decision: "AGREE", comment: null },
-              { partyId: "P2", name: "Dilshod Rahimov", decision: null, comment: null },
+              { partyId: "P1", name: "Akmal Karimov", decision: "AGREE", comment: null },
+              { partyId: "P2", name: "Jasur Rahimov", decision: null, comment: null },
             ],
           },
         ],
@@ -317,7 +317,7 @@ describe("kelishuvlar markazi", () => {
             id: "dsp-1",
             agreementId: ID,
             openedByPartyId: "P2",
-            openedByName: "Dilshod Rahimov",
+            openedByName: "Jasur Rahimov",
             subject: "Xarajat cheki",
             clauses: "6-band",
             claim: "cheklar taqdim etilsin",
@@ -345,7 +345,7 @@ describe("kelishuvlar markazi", () => {
       decision: "AGREE",
       comment: null,
     });
-    expect(await within(dialog).findByText(/Anvar Karimov — ko'rdim, roziman/)).toBeInTheDocument();
+    expect(await within(dialog).findByText(/Akmal Karimov — ko'rdim, roziman/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Bayonnoma PDF" }));
     expect(await within(dialog).findByText(/korik-1\.pdf/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Yopish" }));

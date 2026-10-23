@@ -67,7 +67,7 @@ const PRICES: PricesDto = {
 
 function setUp(): void {
   vi.mocked(commands.getAppInfo).mockResolvedValue({
-    name: "Baraka Daftari",
+    name: "Baraka Dastur",
     version: "0.1.0",
     platform: "windows",
     arch: "x86_64",
@@ -106,7 +106,7 @@ describe("zaxira va narx daftari", () => {
     render(<App />);
     expect(await screen.findByText("1,3 / 6 oy")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "22");
-    expect(screen.getByText("Qorovul zaxirasi 6 oydan kam.")).toBeInTheDocument();
+    expect(screen.getByText("Favqulodda zaxira 6 oydan kam.")).toBeInTheDocument();
     expect(screen.getByText("18 000 000 soʻm")).toBeInTheDocument();
   });
 

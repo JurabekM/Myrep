@@ -622,7 +622,7 @@ mod tests {
     fn loan_input(direction: &str, principal: &str, installments: u32) -> LoanInputDto {
         LoanInputDto {
             direction: direction.into(),
-            counterparty: "Dilshod".into(),
+            counterparty: "Jasur".into(),
             counterparty_type: "FRIEND".into(),
             reason: Some("ta'mir".into()),
             principal: principal.into(),

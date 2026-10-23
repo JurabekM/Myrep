@@ -1871,7 +1871,7 @@ export type OfferInputDto = {
 export type OfferSignDto = {
 	/**  `GUARANTEED_HIGH_RETURN | URGENCY | RECRUITMENT_INCOME | NO_REAL_BUSINESS | HARD_EXIT`. */
 	code: string,
-	/**  Izoh (o'zbekcha, Sobir hoji ohangida). */
+	/**  Izoh (o'zbekcha, maslahatchi ohangida). */
 	explanation: string,
 };
 

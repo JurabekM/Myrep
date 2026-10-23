@@ -54,7 +54,7 @@ const TEXT = "Sana;Summa;Izoh\n10.10.2026;-15 000;Non\n11.10.2026;250 000;Maosh"
 describe("CSV import ustasi", () => {
   beforeEach(() => {
     vi.mocked(commands.getAppInfo).mockResolvedValue({
-      name: "Baraka Daftari",
+      name: "Baraka Dastur",
       version: "0.1.0",
       platform: "windows",
       arch: "x86_64",

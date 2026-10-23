@@ -31,7 +31,7 @@ vi.mock("../../bindings/bindings", () => ({
 }));
 
 const APP_INFO = {
-  name: "Baraka Daftari",
+  name: "Baraka Dastur",
   version: "0.1.0",
   platform: "windows",
   arch: "x86_64",

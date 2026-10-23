@@ -1,4 +1,4 @@
-# Reliz tekshiruvi (Baraka Daftari desktop)
+# Reliz tekshiruvi (Baraka Dastur desktop)
 
 Bu ro'yxat har reliz oldidan bajariladi. Avtomatik qismlar CI va mahalliy buyruqlar bilan; qo'lda qismlar
 o'rnatuvchini haqiqiy Windows mashinasida sinashni talab qiladi.
@@ -13,9 +13,9 @@ o'rnatuvchini haqiqiy Windows mashinasida sinashni talab qiladi.
 
 ## 2. O'rnatuvchi
 
-- [x] `pnpm build` — NSIS o'rnatuvchisi `<CARGO_TARGET_DIR>/release/bundle/nsis/` da chiqadi (2026-10-16: `Baraka Daftari_0.1.0_x64-setup.exe`, 16,9 MiB).
-- [x] Silent o'rnatish (`/S`) ishlaydi (2026-10-16, exit 0, `%LOCALAPPDATA%\Baraka Daftari`, reestr `Uninstall\Baraka Daftari` 0.1.0); `uninstall.exe /S` ham. **Eslatma:** `displayLanguageSelector` yoqiq bo'lsa `/S` til dialogida qotadi — o'chirilgan.
-- [x] O'rnatuvchi hajmi va versiyasi `CHANGELOG` dagi raqamga mos (2026-10-20: `Baraka Daftari_0.1.0_x64-setup.exe`, 17 898 989 bayt, SHA-256 `98851128…08E1`; `/S` o'rnatish, `uninstall.exe /S` va qayta o'rnatish exit 0).
+- [x] `pnpm build` — NSIS o'rnatuvchisi `<CARGO_TARGET_DIR>/release/bundle/nsis/` da chiqadi (2026-10-16: `Baraka Dastur_0.1.0_x64-setup.exe`, 16,9 MiB).
+- [x] Silent o'rnatish (`/S`) ishlaydi (2026-10-16, exit 0, `%LOCALAPPDATA%\Baraka Dastur`, reestr `Uninstall\Baraka Dastur` 0.1.0); `uninstall.exe /S` ham. **Eslatma:** `displayLanguageSelector` yoqiq bo'lsa `/S` til dialogida qotadi — o'chirilgan.
+- [x] O'rnatuvchi hajmi va versiyasi `CHANGELOG` dagi raqamga mos (2026-10-20: `Baraka Dastur_0.1.0_x64-setup.exe`, 17 898 989 bayt, SHA-256 `98851128…08E1`; `/S` o'rnatish, `uninstall.exe /S` va qayta o'rnatish exit 0).
 
 ## 3. Qo'lda sinov (haqiqiy Windows, o'rnatilgan ilova)
 

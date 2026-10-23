@@ -1,8 +1,8 @@
-# «BARAKA DAFTARI» — TO'LIQ MVP (1–7-QONUNLAR) ISHGA TUSHIRISH PROMPTI
+# «BARAKA DASTUR» — TO'LIQ MVP (1–7-QONUNLAR) ISHGA TUSHIRISH PROMPTI
 > AI-dasturchi (Claude Code va h.k.) uchun. Spetsifikatsiya: `docs/SPEC.md` (v0.9; v0.8 = `FINTECH_PROMPT.md`).
 > Bu fayl `MVP1_KICKOFF.md` ni **o'rnini bosadi**: 1–3-vazifalar o'sha fayldagi bilan bir xil, qolganlari 2–6-qonunlarni qo'shadi.
 > **v0.8 o'zgarishi:** 6-qonun uchun ikkita vazifa qo'shildi. **9A** (kelishuv dvigateli va jurnal) qarz va sheriklik vazifalaridan **oldin** bajariladi. **14A** (ko'rik, nizo, oilaviy kelishuvlar) 14-vazifadan keyin bajariladi. 10- va 13-vazifalar endi 9A dvigatelidan foydalanadi.
-> **v0.9 o'zgarishi:** 7-qonun uchun **14B** vazifasi qo'shildi (besh xavf belgisi, «o'z ko'zim bilan ko'raman», piramida hisobi, qal'a devori, «to'xta, maslahatlash», hunar shablonlari). 14A dan keyin, 15 dan oldin.
+> **v0.9 o'zgarishi:** 7-qonun uchun **14B** vazifasi qo'shildi (besh xavf belgisi, «o'z ko'zim bilan ko'raman», piramida hisobi, himoya zaxirasi, «to'xta, maslahatlash», hunar shablonlari). 14A dan keyin, 15 dan oldin.
 > **Umumiy test vektorlari:** `spec/test-vectors/` (`DESKTOP_PROMPT.md` 5-bo'lim). Mobil CI ham ulardan o'tishi **majburiy**.
 
 ---
@@ -15,10 +15,10 @@
 |---|---|---|
 | **1. Avval o'zingga to'la** | Tez daromad kiritish, avto-ulush, «Kelajagim», progressiv ulush, streak, oylik audit, «Kimning puli?», majburiyatlar, eslatmalar | Real alohida karta (hamkor bank) |
 | **2. Xurjunni yama** | Zarur/Kerak/Havas, shablonlar, **bosh ekran vidjeti**, havas chegarasi (oila a'zolari rozilik beradi), konvertlar, obunalar (qo'lda kiritiladi), «Qutqarilgan pul», «Juma shirinligi», sadaqa va obro' xarajatlari | Bankdan obunalarni avtomatik aniqlash |
-| **3. Pul ikki xil yashaydi** | Qorovul / O'sadigan jamg'arma, 6 oylik zaxira maqsadi, «Narx daftari», shaxsiy inflyatsiya indeksi, «Sichqon kemirgani», tayyorgarlik darvozasi, ribo filtri | Rasmiy CPI bilan taqqoslash |
-| **4. Ribodan qoch, reja bilan chiq** | Qarz inventari, bergan qarzlar, qarzning haqiqiy narxi, `DEBT_RECOVERY` 70/20/10, payoff planner, yangi qarz oldidan friction so'rovi, **qarz tilxati PDF** (shu qurilmada imzolanadi), sotiladigan buyumlar, marosim rejalovchisi, «Qarzsiz kun» | Tilxatni ikkinchi tomon o'z telefonida tasdiqlashi; to'lovchini (Sanjar) ilovaga taklif qilish |
+| **3. Avval zaxira, keyin o'sish** | Qorovul / O'sadigan jamg'arma, 6 oylik zaxira maqsadi, «Narx daftari», shaxsiy inflyatsiya indeksi, «Inflyatsiya ta'siri», tayyorgarlik darvozasi, ribo filtri | Rasmiy CPI bilan taqqoslash |
+| **4. Ribodan qoch, reja bilan chiq** | Qarz inventari, bergan qarzlar, qarzning haqiqiy narxi, `DEBT_RECOVERY` 70/20/10, payoff planner, yangi qarz oldidan friction so'rovi, **qarz tilxati PDF** (shu qurilmada imzolanadi), sotiladigan buyumlar, marosim rejalovchisi, «Qarzsiz kun» | Tilxatni ikkinchi tomon o'z telefonida tasdiqlashi; to'lovchini (Sardor) ilovaga taklif qilish |
 | **5. Pulni halol ishga sol** | Mudoraba/Musharaka domeni va validatsiyasi, shartnoma ustasi + PDF (shu qurilmada imzolanadi), buyout jadvali, venture ledger, foyda/zarar taqsimoti, fors-major, «Hunardan ishga», «Kafolatlangan foyda» detektori | Kapital egasi uchun real vaqtdagi read-only ko'rinish (MVP'da uning o'rniga **PDF hisobot** ulashiladi) |
-| **7. Ko'rmagan ishingga pul tikma** | Besh xavf belgisi va baho qoidasi, «o'z ko'zim bilan ko'raman» tekshiruv ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida ta'limiy hisobi, katta summa uchun «qal'a devori» taqsimoti, «to'xta, maslahatlash» (24 soat + maslahatchi), g'arar/qimor izohi, hunar shablonlari | Litsenziyalar reyestri bilan avtomatik tekshirish (davlat API) |
+| **7. Ko'rmagan ishingga pul tikma** | Besh xavf belgisi va baho qoidasi, «o'z ko'zim bilan ko'raman» tekshiruv ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida ta'limiy hisobi, katta summa uchun «himoya zaxirasi» taqsimoti, «to'xta, maslahatlash» (24 soat + maslahatchi), g'arar/qimor izohi, hunar shablonlari | Litsenziyalar reyestri bilan avtomatik tekshirish (davlat API) |
 | **6. Kelishuvni yozinglar** | Umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori; turlar: sheriklik, qarz, ijara, xizmat, oilaviy), vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish | Ikkinchi tomon va hakamning o'z qurilmasida masofadan tasdiqlashi va ko'rib chiqishi |
 
 **Qurilma ichidagi muqobillar:**
@@ -52,7 +52,7 @@
 
 ## 2. UMUMIY KIRISH (har bir sessiya boshiga qo'yiladi)
 ```
-Sen «Baraka daftari» loyihasining senior Flutter + Kotlin dasturchisisan.
+Sen «Baraka Dastur» loyihasining senior Flutter + Kotlin dasturchisisan.
 Avval docs/SPEC.md va docs/MVP_PLAN.md (0-bo'lim) ni o'qi. SPEC 4-bo'lim (texnik qarorlar) qat'iy.
 Bu sessiyada FAQAT quyidagi vazifani bajar. Boshqa vazifalarning funksiyalarini qo'shma.
 Yangi jadval kerak bo'lsa — Drift sxema versiyasini oshir va migratsiya testini yoz.
@@ -208,7 +208,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 
 ---
 
-# C. 2-QONUN: «XURJUNNING TESHIGINI YAMA»
+# C. 2-QONUN: «XARAJATNI KO'R VA BOSHQAR»
 
 ## VAZIFA 7 — Uch toifa, shablonlar, vidjet, havas chegarasi (SPEC 2B.1–2B.4, 2B.8)
 - `Necessity` (`ZARUR | KERAK | HAVAS`):
@@ -254,23 +254,23 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 
 ---
 
-# D. 3-QONUN: «PUL IKKI XIL YASHAYDI»
+# D. 3-QONUN: «AVVAL ZAXIRA, KEYIN O'SISH»
 
 ## VAZIFA 9 — Qorovul / O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri (SPEC 2C)
 - **Jamg'armani ikkiga bo'lish:**
   - mavjud `VAULT` `QOROVUL` va `OSADIGAN` turiga ajratiladi; migratsiyada eski balans to'liq `QOROVUL` ga o'tadi;
-  - avto-ulush avval qorovul pulni to'ldiradi.
+  - avto-ulush avval favqulodda zaxirani to'ldiradi.
 - **Zaxira maqsadi:** oxirgi 3 oydagi (`ZARUR` + `KERAK`) o'rtachasi × 6 oy. Milestone'lar: 3 oy va 6 oy. Progress «1,4 / 6 oy» ko'rinishida ko'rsatiladi. Ma'lumot 3 oydan kam bo'lsa, foydalanuvchidan taxminiy summa so'raladi.
-- **Qorovul puldan pul olish:** «favqulodda holatmi?» tasdig'i va qayta to'ldirish rejasi taklifi.
+- **Favqulodda zaxiradan pul olish:** «favqulodda holatmi?» tasdig'i va qayta to'ldirish rejasi taklifi.
 - **«Narx daftari»** (`PriceBasket`, `BasketItem`, `PricePoint`):
   - foydalanuvchi o'z savatini tuzadi;
   - narx tarixi va «N yil oldin → bugun» taqqoslash;
   - **shaxsiy inflyatsiya indeksi** savatdagi og'irliklar bo'yicha hisoblanadi;
   - haftalik eslatma.
   - Hisoblash qoidasi: foizlar `basisPoints` (int) bilan hisoblanadi, ko'rsatish uchungina formatlanadi.
-- **«Sichqon kemirgani»:** yotgan jamg'armaning real qiymati shaxsiy indeks asosida, «necha kg go'sht» ko'rinishida. Ekran har doim keyingi qadam bilan tugaydi.
+- **«Inflyatsiya ta'siri»:** yotgan jamg'armaning real qiymati shaxsiy indeks asosida, «necha kg go'sht» ko'rinishida. Ekran har doim keyingi qadam bilan tugaydi.
 - **Tayyorgarlik darvozasi** (`ReadinessGate`):
-  - shartlar: qorovul pul ≥ 6 oy **va** (faol foizli qarz yo'q **yoki** faol qarzdan chiqish rejasi bor);
+  - shartlar: favqulodda zaxira ≥ 6 oy **va** (faol foizli qarz yo'q **yoki** faol qarzdan chiqish rejasi bor);
   - darvoza qo'riydigan funksiyalar: `OSADIGAN` ga kapital kiritish va sheriklikka kapital berish (Vazifa 13);
   - qulflangan ekranda shartlar va progress ko'rsatiladi;
   - ongli chetlab o'tish: ogohlantirish va tasdiq, hodisa lokal logga yoziladi.
@@ -373,7 +373,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 - Bosh ekranga «Qarzsiz kun» kartasi qo'shiladi.
 
 **Qabul mezonlari:**
-- [ ] Amortizatsiya simulyatori `amortization.json` vektorlaridan (amort-001…003, to'liq jadvallar bilan) o'tadi: Anvar — 39 mln, 14 oy → 1,6 mln qo'shimcha to'lov bilan 9 oy, 2,4 mln bilan 8 oy.
+- [ ] Amortizatsiya simulyatori `amortization.json` vektorlaridan (amort-001…003, to'liq jadvallar bilan) o'tadi: Akmal — 39 mln, 14 oy → 1,6 mln qo'shimcha to'lov bilan 9 oy, 2,4 mln bilan 8 oy.
 - [ ] Simulyatsiya oxirida qoldiq aniq 0 bo'ladi (tiyin farqisiz).
 - [ ] Rejimning avtomatik `STANDARD` ga qaytishi testlangan.
 - [ ] Jamg'arma ulushini 0 qilishga urinish to'xtatiladi.
@@ -456,7 +456,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 
 ---
 
-# F2. 6-QONUN: «SHERIKLIK ODOBI — KELISHUVNI YOZINGLAR!»
+# F2. 6-QONUN: «KELISHUVNI YOZMA TUZ»
 
 ## VAZIFA 14A — Vazifalar, oylik ko'rik, «katta foyda», nizo va hakam, oilaviy kelishuvlar (SPEC 2F.4, 2F.5, 2F.7, 2F.8, 2F.10)
 - **Vazifalar va «bajarilmadi» oqimi** (`DutyIncident`):
@@ -493,14 +493,14 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 
 ---
 
-# F3. 7-QONUN: «KO'RMAGAN ISHINGGA PUL TIKMA — PULINGNI HUNARINGGA ISHLAT»
+# F3. 7-QONUN: «TEKSHIRMAGAN ISHGA PUL TIKMA»
 
-## VAZIFA 14B — Besh xavf belgisi, tekshiruv, piramida, qal'a devori, «to'xta, maslahatlash», hunar shablonlari (SPEC 2G)
+## VAZIFA 14B — Besh xavf belgisi, tekshiruv, piramida, himoya zaxirasi, «to'xta, maslahatlash», hunar shablonlari (SPEC 2G)
 - **Besh xavf belgisi** (`ScamSign`, 2G.1): taklif tekshiruviga 3 ta savol qo'shiladi (`exitEasy`, `license`, `verifiedInPerson`); belgilar javoblardan aniqlanadi; baho: 1 belgi — kamida sariq, 2+ — qizil; umumiy baho 2E.5 bilan birlashtiriladi (eng og'iri). Har belgi izohlanadi.
 - **«O'z ko'zim bilan ko'raman»** (2G.2): tekshiruv ro'yxati ekrani (ombor, mol, hujjat, ruxsat, to'lov manbai, qaytarish tartibi); natija «ko'rsatishdi / rad etishdi / so'ramadim»; rad etish — `NO_REAL_BUSINESS`.
 - **Va'da qilingan foyda** (2G.3): oylik bp → yillik oddiy va murakkab ko'paytma; faqat ogohlantirish.
 - **Piramida** (2G.4): `k` va `N` bo'yicha qavatlar, jami, oxirgi qavat ulushi; ta'limiy ekran.
-- **Qal'a devori** (2G.5): katta summa (valyuta bilan) → avval 6 oylik zaxira kamomadi, qolgani sarmoyaga; qorovulga qo'yish va «Hunardan ishga»ga o'tish.
+- **Himoya zaxirasi** (2G.5): katta summa (valyuta bilan) → avval 6 oylik zaxira kamomadi, qolgani sarmoyaga; qorovulga qo'yish va «Hunardan ishga»ga o'tish.
 - **«To'xta, maslahatlash»** (2G.6): taklifda summa va maslahatchi; «pul qo'yaman» faqat maslahatchi yozilgach va 24 soatdan keyin; qaror tarixda (`DECLINED | POSTPONED | ACCEPTED`). Sxema v16: `offer_checks` ga yangi ustunlar + migratsiya testi.
 - **G'arar / qimor** (2G.7): natijada `RIBO | GHARAR | QIMOR` toifalari.
 - **Hunar shablonlari** (2G.8): temirchilik / payvand ustaxonasi — CAPEX nomlari oldindan, summasiz.
@@ -526,8 +526,8 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 - **Accessibility:** katta shrift, TalkBack yorliqlari, kontrast. Kam tajribali foydalanuvchi uchun 48dp+ tugmalar.
 - **Ishlash ko'rsatkichlari:** sovuq start < 2 s (o'rta segment telefon), ro'yxatlar paginatsiyasi.
 - **Release hardening:** R8/ProGuard, Dart `--obfuscate --split-debug-info`, imzolash konfiguratsiyasi repodan tashqarida saqlanadi.
-- **Yakuniy E2E test** (`integration_test`): Anvar ssenariysi boshidan oxirigacha:
-  - daromad → ulush → audit → havas chegarasi → obuna bekor qilish → qutqarilgan pulni ko'chirish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → Dilshod bilan musharaka (9/9 savol, imzolar) → vazifa hodisasi («bot ishdan chiqdi») → oylik ko'rik → davr taqsimoti (1,4 mln ulush).
+- **Yakuniy E2E test** (`integration_test`): Akmal ssenariysi boshidan oxirigacha:
+  - daromad → ulush → audit → havas chegarasi → obuna bekor qilish → qutqarilgan pulni ko'chirish → qarz → 70/20/10 → payoff → qarz yopilishi → darvoza ochilishi → Jasur bilan musharaka (9/9 savol, imzolar) → vazifa hodisasi («bot ishdan chiqdi») → oylik ko'rik → davr taqsimoti (1,4 mln ulush).
 - `docs/RELEASE_CHECKLIST.md`.
 
 **Qabul mezonlari:**
@@ -546,7 +546,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 - `docs/CHANGELOG.md` va `docs/OPEN_QUESTIONS.md` yangilangan.
 
 ## RELIZDAN OLDIN KODDAN TASHQARIDA HAL QILINADIGAN MASALALAR
-- «Asaxiy Invest» × Abdukarim Mirzayev bilan kontent va brend litsenziyasi.
+- Diniy matnlarning ulamo tekshiruvi (kontent va brend — loyihaniki, mustaqillik qarori).
 - Diniy matnlar va sheriklik shablonlarining ulamo tomonidan tekshiruvi (`religiousReviewStatus` / `reviewStatus` → `APPROVED`).
 - Tilxat va shartnoma shablonlarining yuristga ko'rsatilishi.
 - Maxfiylik siyosati (shaxsiy ma'lumotlar to'g'risidagi qonun) va Play Market moliyaviy ilovalar talablari.
