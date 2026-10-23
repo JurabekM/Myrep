@@ -4,6 +4,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/uz/1.1.0/) ruhida. Versiya
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-10-23
+
+Birinchi raqamlangan reliz: D1–D16, reliz tekshiruvi va «Baraka Dastur» nomi bilan mustaqil kontent (pastdagi
+yozuvlar). Versiya mobil ilova bilan bir xil qilindi (mobil `1.0.0+2`). Kod o'zgarishsiz — faqat versiya maydonlari
+(`Cargo.toml` workspace, `package.json`, `ui/package.json`, `tauri.conf.json`). Oldingi `0.1.0` pre-release'i
+(`baraka-dastur-desktop-v0.1.0`) tarix sifatida qoladi. Natijalar — `RELEASE_CHECKLIST.md` 9-bo'lim.
+
 ### «Baraka Dastur»: yangi nom, logotip va mustaqil kontent (2026-10-23)
 
 **Sabab.** Google Play'da «Baraka» nomli boshqa ilova bor; kontent mualliflari bilan aloqa o'rnatilmadi. Ilovalar halol

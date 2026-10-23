@@ -77,3 +77,16 @@ o'rnatuvchini haqiqiy Windows mashinasida sinashni talab qiladi.
       «Oilaviy zaxira» kartasi — «Taqsimlash» to'g'ri hisobladi (1 000 $ × 12 650).
 - [ ] Kod imzolash — sertifikat yo'q (5-bo'lim). SmartScreen ogohlantirishi chiqadi.
 - [ ] Haqiqiy 150/200 % DPI va High Contrast — **foydalanuvchi** (3- va 7-bo'lim).
+
+## 9. Reliz 1.0.0 (2026-10-23, imzolanmagan)
+
+Versiya mobil ilova bilan bir xil qilindi (mobil `1.0.0+2`). Kod 0.1.0 bilan bir xil, faqat versiya maydonlari.
+
+- [x] Avtomatik: `cargo test` 368, clippy toza, vitest 23 fayl / 93 test, typecheck, lint (0 xato), prettier.
+- [x] O'rnatuvchi: `Baraka Dastur_1.0.0_x64-setup.exe`, 17 920 604 bayt,
+      SHA-256 `44A868DE32E0AE4D12C33C00C41D639DC6B19537CC7C0E0C3272488B8DC79CF1`.
+- [x] 0.1.0 ustidan `/S` yangilash: exit 0, reestr va exe versiyasi 1.0.0; ma'lumotlar papkalari (`%APPDATA%`
+      profili va sinov profili) fayl ro'yxati, hajmi va vaqti o'zgarmadi.
+- [x] Ishga tushirish va `WM_CLOSE` bilan yopish 3 marta (asosiy oyna 39–140 ms, fon jarayon 0); `uninstall.exe /S`
+      (exe va yorliq qolmadi) va qayta o'rnatish exit 0; exe ikonkasi yangi belgi.
+- [ ] Kod imzolash — sertifikat yo'q (5-bo'lim).

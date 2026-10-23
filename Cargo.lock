@@ -301,7 +301,7 @@ checksum = "be5eb007b7cacc6c660343e96f650fedf4b5a77512399eb952ca6642cf8d13f7"
 
 [[package]]
 name = "baraka-daftari"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "baraka-domain",
  "baraka-money",
@@ -326,7 +326,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "baraka-money",
  "serde_json",
@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-money"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "proptest",
  "thiserror 2.0.21",
@@ -346,7 +346,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-pdf"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "thiserror 2.0.21",
  "typst",
@@ -356,7 +356,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-security"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -369,7 +369,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-storage"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "baraka-domain",
  "baraka-money",
@@ -386,7 +386,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-vectors"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "baraka-domain",
  "baraka-money",
