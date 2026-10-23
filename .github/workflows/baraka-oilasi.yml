@@ -250,7 +250,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Linux tizim kutubxonalari va WebKitWebDriver
-        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev webkit2gtk-driver xvfb
+        # Ubuntu 26.04 da paket nomi `webkitgtk-webdriver` (eski: `webkit2gtk-driver`). Ikkalasi
+        # ham bo'lmasa — aniq xato; binar PATH'da bo'lmasa, paketdagi joyiga havola.
+        run: |
+          sudo apt-get update
+          driver=webkit2gtk-driver
+          apt-cache show webkitgtk-webdriver >/dev/null 2>&1 && driver=webkitgtk-webdriver
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev "$driver" xvfb
+          if ! command -v WebKitWebDriver >/dev/null; then
+            bin=$(dpkg -L "$driver" | grep '/WebKitWebDriver$' | head -1)
+            test -n "$bin" || { echo "$driver paketida WebKitWebDriver yo'q"; exit 1; }
+            sudo ln -s "$bin" /usr/local/bin/WebKitWebDriver
+          fi
+          command -v WebKitWebDriver
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: baraka_oilasi/apps/desktop/src-tauri -> ../../../target
