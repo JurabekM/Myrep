@@ -22,6 +22,7 @@ mavjud ma'lumotlar papkasi va kalit saqlanadi (OPEN_QUESTIONS).
 (`--color-brand*`).
 
 **Personajlar va matnlar.**
+
 - «Sobir hoji maslahati» → «Maslahatchi fikri»; kod izohlari va test ma'lumotlaridagi qissa personajlari shartli
   ismlarga almashtirildi (Akmal, Jasur, Zarina, Gulnora, Bekzod, Sardor, Shavkat aka; «Plyus» → «Tez Foyda»).
 - Boblar (`spec/content/chapters.json`, mobil bilan bitta fayl): o'z nomlari («Avval o'zingizga», «Xarajatni
