@@ -16,28 +16,39 @@ moliyaning yetti tamoyili ma'no-mazmunidan ilhomlangan mustaqil asar sifatida da
 Ichki identifikatorlar o'zgarmadi (`uz.barakadaftari.desktop`, keyring `BarakaDaftari`, crate nomlari, `.baraka`) —
 mavjud ma'lumotlar papkasi va kalit saqlanadi (OPEN_QUESTIONS).
 
-**Logotip.** Yangi belgi: yashil fonda krem geometrik «B» va oltin sakkiz burchakli yulduz. Shriftsiz chiziladi
-(`scripts/baraka_logo.py` — desktop va Android uchun bitta manba), < 48 px da yulduz tushiriladi. Ikonkalar
-(`src-tauri/icons`, ICO 16–256) va ilova ichidagi `BrandMark` SVG yangilandi; ranglar `globals.css` tokenlarida
-(`--color-brand*`).
+**Logotip.** Mobil ilova bilan bitta belgi: yashil gradient fonda krem «B» (Noto Sans Bold, OFL —
+`scripts/fonts/`, mobil `assets/fonts` dagi fayl bilan bayt-bir xil) va tilla bug'doy boshog'i (to'kinlik ramzi).
+Chizma `scripts/baraka_logo.py` — mobil `tools/make_icon.py` bilan piksel-bir xil (48 va 192 px solishtirildi);
+≤ 48 px da boshoq soddalashadi. Ikonkalar (`src-tauri/icons`, ICO 16–256) va ilova ichidagi `BrandMark`
+(`brand-mark.png`, 96 px) shu skriptdan. Avvalgi yulduzli variant va `--color-brand*` tokenlari olib tashlandi.
 
 **Personajlar va matnlar.**
 
 - «Sobir hoji maslahati» → «Maslahatchi fikri»; kod izohlari va test ma'lumotlaridagi qissa personajlari shartli
   ismlarga almashtirildi (Akmal, Jasur, Zarina, Gulnora, Bekzod, Sardor, Shavkat aka; «Plyus» → «Tez Foyda»).
-- Boblar (`spec/content/chapters.json`, mobil bilan bitta fayl): o'z nomlari («Avval o'zingizga», «Xarajatni
-  ko'ring», «Zaxira va o'sish», «Qarzsiz yashash», «Halol sarmoya», «Yozma kelishuv», «Tekshirib, keyin
-  ishoning»), o'z matni (uz/ru) va «Maslahatchi savoli»; qonun jumlalari qayta yozildi. Diniy bloklar PENDING.
+- Boblar (`spec/content/chapters.json`, mobil bilan bayt-bir xil fayl, yakuniy matnni mobil sessiya yozdi):
+  sarlavhalar qonun nomlaridan («1-bob. Avval o'zingga to'la» … «7-bob. Tekshirmagan ishga pul tikma»), o'z matni
+  (uz/ru), maslahat bloki va qonun jumlalari. Diniy bloklar PENDING (relizda ko'rinmaydi).
 - Qissadan olingan iboralar o'z so'zimiz bilan almashtirildi: «jangga yarador askar…», «El uch kun gapiradi…»,
   «Ot bilan omoch…», «Sichqon kemirgani» → «Inflyatsiya ta'siri», «Qorovul pul» → «Favqulodda zaxira», «Qal'a
-  devori» → «Himoya zaxirasi», «baliqchining yemi», piramida matnlari, besh xavf belgisi izohlari («Ekran mol
-  emas», «Siz xaridor emas, molsiz» va boshq.), «Dunyodagi eng katta savdo…», «hisob-kitobni uch marta qildim»,
-  hunar shablonidagi personaj hikoyasi.
+  devori» → «Oilaviy zaxira» (ru «Семейный запас», mobil bilan bir xil), «baliqchining yemi», piramida matnlari,
+  besh xavf belgisi izohlari («Ekran mol emas», «Siz xaridor emas, molsiz» va boshq.), «Dunyodagi eng katta
+  savdo…», «hisob-kitobni uch marta qildim», hunar shablonidagi personaj hikoyasi. Mobil bilan kelishilgan ikkinchi
+  o'tish: «ro'molcha» → «avval yig'ilgan pul», «Hamma hamma narsani qilsa…» → «Umumiy qoldirilgan ish ko'pincha
+  hech kimning ishi bo'lmay qoladi», «Temirchilik / payvand ustaxonasi» → «Payvandlash ustaxonasi»; SPEC'da
+  «Jangga yarador askar…» → «Avval tayyorgarlik, keyin sarmoya», «qog'oz kishan», «Chorsucha shartnomaning 9
+  savoli» → «9 savolli kelishuv», «baliqchining yemi» va «30 yillik narx daftarlari» olib tashlandi. Kod
+  izohlari va `bindings.ts` dagi eski atamalar ham almashtirildi.
 - Umumiy vektorlardagi ismlar almashtirildi (`agreement_completeness`, `amortization`, `journal_chain`);
   `journal_chain` xeshlari Rust bilan qayta hisoblandi, `SHA256SUMS` yangilandi (mobil bilan bir xil fayllar).
 - Hujjatlar: SPEC v1.0 (mustaqillik qarori, personajlar jadvali shartli ismlar bilan, «Manba: N-qism» va homiy
   satrlari olib tashlandi, qonun nomlari o'z so'zimiz bilan), DESKTOP_PROMPT, MVP_PLAN, README, CLAUDE.md;
   litsenziya kutilayotgan bandlar «hal qilindi». Tarixiy CHANGELOG yozuvlari o'zgartirilmadi.
+
+**Reliz 0.1.0 o'rnatuvchisi (yakuniy):** `Baraka Dastur_0.1.0_x64-setup.exe`, 17 919 938 bayt, SHA-256
+`C1401D80D40461153DC50BEF4BDDF2765567DCAA1EFE91089C4E60376697899C` (imzolanmagan). Yuqoridagi `AB49CBF9…` va
+oraliq build'lar eskirgan: ulardan birida exe ichida eski ikonka qolgan edi. Tekshiruv natijalari —
+`RELEASE_CHECKLIST.md` 8-bo'lim.
 
 Tekshiruv: `cargo test` 368, clippy, vitest 93, typecheck/lint/format yashil; PDF snapshot'lari test ismlari
 almashgani uchun qayta yaratildi. GUI (dev build): nom, logotip, 7 bob, bob matni, «Maslahatchi fikri», taklif

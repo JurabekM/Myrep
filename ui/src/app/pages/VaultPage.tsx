@@ -21,7 +21,7 @@ import { isValidPin, sanitizePin } from "../security/pin";
 /** Pul olishdan oldin kutiladigan vaqt (soniyalarda): «o'ylash pauzasi» (SPEC 2.2). */
 const WITHDRAW_PAUSE_SECONDS = 5;
 
-/** «Kelajagim» ekrani: balans, odat, progressiv taklif, ulush qoidasi, ro'molcha, pul olish va tarix. */
+/** «Kelajagim» ekrani: balans, odat, progressiv taklif, ulush qoidasi, avval yig'ilgan pul, pul olish va tarix. */
 export function VaultPage() {
   const { t } = useTranslation();
   const vault = useQuery({ queryKey: financeKeys.vault, queryFn: fetchers.vault });
@@ -272,7 +272,7 @@ function RadioOption({
   );
 }
 
-/** Boshlang'ich balans (ro'molcha): ilovadan oldin yig'ilgan jamg'arma. Bir marta. */
+/** Boshlang'ich balans (avval yig'ilgan pul): ilovadan oldin yig'ilgan jamg'arma. Bir marta. */
 function InitialCard() {
   const { t } = useTranslation();
   const invalidate = useInvalidateFinance();

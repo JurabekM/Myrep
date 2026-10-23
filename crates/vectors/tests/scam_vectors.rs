@@ -1,5 +1,5 @@
 //! 7-qonun vektorlari (SPEC 2G, DESKTOP_PROMPT 5-bo'lim): besh xavf belgisi, va'da qilingan foyda, piramida,
-//! «qal'a devori». Mobil bilan umumiy fayllar — `SHA256SUMS` manifestida.
+//! «oilaviy zaxira». Mobil bilan umumiy fayllar — `SHA256SUMS` manifestida.
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 
 use domain::offer_check::{Answer, OfferAnswers, Question, offer_check};

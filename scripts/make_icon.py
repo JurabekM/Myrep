@@ -3,7 +3,8 @@
 Ishga tushirish (repo ildizidan):
     python scripts/make_icon.py
 
-Natija: src-tauri/icons/ papkasida PNG (32, 128, 256, 512), icon.ico (16–256) va icon.icns.
+Natija: src-tauri/icons/ papkasida PNG (32, 128, 256, 512), icon.ico (16–256) va icon.icns; ilova ichidagi
+belgi `ui/src/app/components/brand-mark.png` (yon panel va qulf ekrani, 32–40 px da ko'rsatiladi).
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from baraka_logo import render  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "src-tauri" / "icons"
+UI_MARK = ROOT / "ui" / "src" / "app" / "components" / "brand-mark.png"
 ICO_SIZES = (16, 24, 32, 48, 64, 128, 256)
 
 
@@ -37,6 +39,8 @@ def main() -> None:
     )
 
     render(1024).save(OUT_DIR / "icon.icns", format="ICNS")
+    # 32–40 px da (2× DPI gacha) ko'rinadi: soddalashtirilgan boshoq aniqroq.
+    render(96, simple=True).save(UI_MARK, format="PNG", optimize=True)
     print(f"Ikonkalar yozildi: {OUT_DIR}")
 
 

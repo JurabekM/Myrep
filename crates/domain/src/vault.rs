@@ -1,4 +1,4 @@
-//! «Kelajagim» jamg'armasi (SPEC 2.2): kirim (ulush, ro'molcha) va chiqim (friction bilan pul olish).
+//! «Kelajagim» jamg'armasi (SPEC 2.2): kirim (ulush, avval yig'ilgan pul) va chiqim (friction bilan pul olish).
 //!
 //! Balans — barcha yozuvlar yig'indisi: boshlang'ich balans va ulushlar qo'shiladi, pul olish ayiriladi.
 //! Odatga (streak) faqat daromad ulushi kiradi: boshlang'ich balans va pul olish — odat emas.
@@ -12,7 +12,7 @@ use crate::{DomainError, Meta};
 /// Yozuv turi.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VaultMovement {
-    /// Boshlang'ich balans («ro'molcha»): ilovadan oldin yig'ilgan jamg'arma, bir marta.
+    /// Boshlang'ich balans («avval yig'ilgan pul»): ilovadan oldin yig'ilgan jamg'arma, bir marta.
     Initial,
     /// Daromaddan ajratilgan ulush.
     IncomeShare {

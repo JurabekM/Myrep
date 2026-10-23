@@ -139,7 +139,7 @@ fn daromad_ulushi_kelajagimga_boglanadi() {
                 meta: meta(),
             },
         )
-        .expect("ro'molcha");
+        .expect("avval yig'ilgan pul");
     vault
         .insert_entry(
             &asset,

@@ -23,7 +23,7 @@ export function bpText(bp: number): string {
 }
 
 /**
- * «Narx daftari» (SPEC 2C.2): mahsulot narxlari, shaxsiy inflyatsiya indeksi va «Sichqon kemirgani» —
+ * «Narx daftari» (SPEC 2C.2): mahsulot narxlari, shaxsiy inflyatsiya indeksi va «Inflyatsiya ta'siri» —
  * yotgan pulning bugungi narxlardagi qiymati. Maqsad qo'rqitish emas, tushuntirish.
  */
 export function PricesPage() {

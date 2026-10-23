@@ -21,7 +21,7 @@ pub async fn get_reserve(session: State<'_, Arc<Session>>) -> Result<ReserveDto,
     .await
 }
 
-/// Narx daftari: yozuvlar, indeks, «Sichqon kemirgani».
+/// Narx daftari: yozuvlar, indeks, «Inflyatsiya ta'siri».
 #[tauri::command]
 #[specta::specta]
 pub async fn get_prices(session: State<'_, Arc<Session>>) -> Result<PricesDto, ApiError> {

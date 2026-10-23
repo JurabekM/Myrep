@@ -1,4 +1,4 @@
-//! 7-qonun IPC commandlari: taklif tekshiruvi, qaror, va'da hisobi, piramida, qal'a devori, hunar shablonlari.
+//! 7-qonun IPC commandlari: taklif tekshiruvi, qaror, va'da hisobi, piramida, oilaviy zaxira, hunar shablonlari.
 //! Qoidalar — [`scam`] xizmatida.
 
 use std::sync::Arc;
@@ -70,7 +70,7 @@ pub async fn pyramid_model(
     scam::pyramid(recruits_per_person, population).map_err(ApiError::from)
 }
 
-/// «Qal'a devori» taqsimoti.
+/// «Oilaviy zaxira» taqsimoti.
 #[tauri::command]
 #[specta::specta]
 pub async fn plan_lump_sum(

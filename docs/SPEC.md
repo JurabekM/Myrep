@@ -48,7 +48,7 @@ Qonunning mazmuni: har bir halol daromadning kamida 1/10 qismi «kelajakdagi o'z
 - Ulushni sozlash mumkin: 5% (boshlang'ich), 10% (maqsad) yoki aniq summa (masalan, oyiga 300 000 so'm).
 - **Progressiv rejim:** kichik ulushdan boshlanadi va ilova vaqti-vaqti bilan uni oshirishni taklif qiladi.
 - Miqdordan ko'ra **odatni kuzatish** muhim: ketma-ketlik (streak), «ajratilgan kunlar soni» va haftalik bajarilish.
-- «Ro'molcha» stsenariysi: ilovadan oldin yig'ilgan naqd jamg'armani boshlang'ich balans sifatida kiritish imkoni bo'lsin.
+- «Avval yig'ilgan pul» stsenariysi: ilovadan oldin yig'ilgan naqd jamg'armani boshlang'ich balans sifatida kiritish imkoni bo'lsin.
 
 ### 2.3. «Pul qayerga ketdi?» — xarajat auditi
 - O'tgan oy uchun yo'naltirilgan audit ustasi (wizard): foydalanuvchi xarajatlarni kategoriyalar bo'yicha bosqichma-bosqich kiritadi.
@@ -138,7 +138,7 @@ Qonunning mazmuni:
 - **Halol foyda testi:** foydaning tagida uchtadan biri bo'lishi shart: **ter (mehnat), mol yoki tavakkal**. Uchalasi ham bo'lmasa, u ribo hisoblanadi.
 
 ### 2C.1. «Narx daftari» — shaxsiy inflyatsiya kuzatuvi
-- Foydalanuvchi o'zi uchun muhim mahsulotlar savatini tuzadi: go'sht, non, un, benzin va hokazo. So'ng ularning narxini vaqti-vaqti bilan kiritadi (Maslahatchining 30 yillik narx daftarlari kabi).
+- Foydalanuvchi o'zi uchun muhim mahsulotlar savatini tuzadi: go'sht, non, un, benzin va hokazo. So'ng ularning narxini vaqti-vaqti bilan kiritadi.
 - `PricePoint`: mahsulot, narx (tiyinda), sana, joy (ixtiyoriy).
 - Tarixiy taqqoslash ko'rsatiladi: «3 yil oldin → bugun». Masalan, go'sht 80 000 → 130 000 (+62,5%), non 2 000 → 3 000 (+50%).
 - Bu ma'lumotlardan **shaxsiy inflyatsiya indeksi** hisoblanadi (savatdagi og'irliklar bo'yicha). Rasmiy statistika bilan taqqoslash ixtiyoriy.
@@ -161,7 +161,7 @@ Qonunning mazmuni:
 - **Taqsimot ustuvorligi:** avval favqulodda zaxira maqsadiga yetkaziladi, keyin o'sadigan qismga o'tiladi. Progress bar «necha oylik zaxira bor» ko'rinishida bo'ladi (masalan, «1,4 / 3 oy»).
 - Favqulodda zaxiradan pul olishda «bu haqiqatan favqulodda holatmi?» degan tasdiq so'raladi va ishlatilgan summani qayta to'ldirish rejasi taklif qilinadi.
 
-### 2C.4. «Jangga yarador askar yuborilmaydi» — tayyorgarlik darvozasi (readiness gate)
+### 2C.4. «Avval tayyorgarlik, keyin sarmoya» — tayyorgarlik darvozasi (readiness gate)
 - O'sadigan pul, sherikchilik va investitsiya bo'limlari **qulflangan** holda turadi. Ular ikki shart bajarilganda ochiladi:
   1. favqulodda zaxira ≥ 6 oylik zaxira (5-bobda 3 oydan 6 oyga oshirildi);
   2. yuqori xavfli qarzlar yopilgan yoki faol qarzdan chiqish rejasi bor (4-qonun).
@@ -194,7 +194,7 @@ Qonunning mazmuni:
 - Zarurat uchun qarz olinsa, u **foizsiz, yozma va to'lash niyati bilan** olinadi.
 - Qarzga botgan odam undan **reja bilan** chiqadi.
 - Bobning asosiy saboqlari:
-  - qarz — o'z qo'li bilan taqilgan «qog'oz kishan»;
+  - qarz — o'z ixtiyori bilan olingan og'ir majburiyat;
   - «El nima deydi» bosimi bilan qilinadigan dabdaba (to'y) qarzning eng katta manbai;
   - qarzning **haqiqiy narxi** asosiy summadan ancha katta bo'ladi. Karim aka misoli: 40 mln lik to'y uchun 60+ mln to'langan va hali 9 mln qolgan.
 
@@ -351,7 +351,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 ### 2F.1. Umumiy «Kelishuv» dvigateli (Agreement engine)
 - 2D.5 dagi qarz tilxati va 2E.2 dagi sheriklik shartnomasi endi **bitta umumiy `Agreement` modelining turlari** bo'ladi (refaktor):
   `AgreementType`: `PARTNERSHIP | LOAN | RENT (ijara) | SERVICE (xizmat yoki ish) | FAMILY (oilaviy kelishuv) | OTHER`.
-- Har bir tur uchun **«Chorsucha shartnomaning 9 savoli»** asosiy struktura bo'ladi. Tur faqat qo'shimcha maxsus maydonlar va validatsiyalarni beradi (masalan, `PARTNERSHIP` → 2E.1 qoidalari).
+- Har bir tur uchun **«9 savolli kelishuv»** asosiy struktura bo'ladi. Tur faqat qo'shimcha maxsus maydonlar va validatsiyalarni beradi (masalan, `PARTNERSHIP` → 2E.1 qoidalari).
 - Hujjat oddiy tilda yoziladi, rasmiy yuridik til shart emas. «Asosiysi — mag'zi.»
 
 ### 2F.2. 9 savol → majburiy bo'limlar
@@ -359,7 +359,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 |---|---|---|---|
 | 1 | Kim bilan kim? | `parties[]`: to'liq ism-sharif, roli, aloqasi | Kamida 2 tomon |
 | 2 | Kim nima qo'shyapti? | `contributions[]`: pul, mol, mehnat, tanish-bilish — miqdori yoki tavsifi bilan | Har bir tomonda kamida bitta hissa |
-| 3 | Kim nima qiladi? | `duties[]`: vazifa → **yagona mas'ul** tomon. Har bir vazifa uchun **«bajarilmasa»** bandi (masalan: «1 kun ichida xabar beradi va o'rniga yechim topadi») | Egasiz yoki «hamma» ga yozilgan vazifa **qabul qilinmaydi** («hamma hamma narsani qilsa — hech kim hech narsa qilmaydi») |
+| 3 | Kim nima qiladi? | `duties[]`: vazifa → **yagona mas'ul** tomon. Har bir vazifa uchun **«bajarilmasa»** bandi (masalan: «1 kun ichida xabar beradi va o'rniga yechim topadi») | Egasiz yoki «hamma» ga yozilgan vazifa **qabul qilinmaydi** («umumiy qoldirilgan ish ko'pincha hech kimning ishi bo'lmay qoladi») |
 | 4 | Foyda qanday bo'linadi? | `profitRule`: faqat **foiz (bp)** | So'mdagi qat'iy summa taqiqlanadi (2E.1) |
 | 5 | Zarar ko'rilsa nima bo'ladi? | `lossRule`: tur bo'yicha avtomatik taklif qilinadi (mudoraba / musharaka) | 2E.1 bilan mos |
 | 6 | Pul qayerda, hisobni kim yuritadi, ikkinchi tomon qachon ko'radi? | `custody`: pul turgan joy, hisob yurituvchi, **ko'rib chiqish davriyligi** (standart — oyiga 1 marta) | Davriylik oyiga 1 martadan siyrak bo'lsa, ogohlantirish chiqadi |
@@ -439,7 +439,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 - Bobda Qur'on oyati (Baqara 282, mazmunan tarjima) va hadis («Musulmonlar o'z shartlari ustida turadilar») keltirilgan. Ular `religiousReviewStatus` jarayonidan o'tadi: manba, tarjima matni va ulamo tasdig'i talab qilinadi.
 
 ## 2G. 7-QONUN: «TEKSHIRMAGAN ISHGA PUL TIKMA» — FUNKSIONAL TALABLAR
-> **Qonun (qoralama):** «Ishni o'z ko'zing bilan ko'rmaguncha pul tikma. Kafolatli katta foyda, shoshirish, yangi odam olib kelish, ko'rinmas ish va qiyin chiqish — firibgarlik belgisi: bittasini ko'rsang hushyor tort, ikkitasini ko'rsang qoch. Avval oilangning olti oylik himoya zaxirasini qur, keyin pulingni hunaringga ishlat.»
+> **Qonun (qoralama):** «Ishni o'z ko'zing bilan ko'rmaguncha pul tikma. Kafolatli katta foyda, shoshirish, yangi odam olib kelish, ko'rinmas ish va qiyin chiqish — firibgarlik belgisi: bittasini ko'rsang hushyor tort, ikkitasini ko'rsang qoch. Avval oilangning olti oylik oilaviy zaxirani qur, keyin pulingni hunaringga ishlat.»
 
 
 ### 2G.1. «Besh xavf belgisi» (2E.5 detektorining kengaytmasi)
@@ -483,12 +483,12 @@ Dasturchi uchun bobning asosiy saboqlari:
 ### 2G.4. Piramida — ta'limiy hisob
 - Har ishtirokchi `k` ta yangi odam olib keladi; har qavat oldingisidan `k` marta katta. Aholi (yoki shahar) soni `N` tugaganda yangi qavat to'lmaydi va piramida cho'kadi.
 - Natija: qavatlar soni, jami ishtirokchilar va **oxirgi qavatdagi odamlar ulushi** (bp) — «cho'kkan kuni ko'pchilik eng pastki qavatda bo'ladi; siz qaysi qavatdasiz?».
-- Birinchi kirganlarga to'lov «baliqchining yemi» sifatida izohlanadi: ular yangi kirganlarning pulidan to'lanadi.
+- Birinchi kirganlarga to'lov alohida izohlanadi: u yangi qatnashchilarni jalb qilish uchun beriladi va yangi kirganlarning pulidan to'lanadi.
 - Test vektori: `spec/test-vectors/pyramid_levels.json`.
 
-### 2G.5. «Himoya zaxirasi» — katta summa bilan qaytganda
+### 2G.5. «Oilaviy zaxira» — katta summa bilan qaytganda
 - Katta summa kiritilganda (chet eldan qaytish, meros, mulk sotuvi) **taqsimlash ustasi** ochiladi:
-  1. avval oilaning **6 oylik zaxira kamomadi** (2C.3 maqsad, favqulodda zaxira) to'ldiriladi — «bu sizning himoya zaxirasingiz, uni savdoga ham, sheriklikka ham qo'shmaysiz»;
+  1. avval oilaning **6 oylik zaxira kamomadi** (2C.3 maqsad, favqulodda zaxira) to'ldiriladi — «bu sizning oilaviy zaxirangiz, uni savdoga ham, sheriklikka ham qo'shmaysiz»;
   2. qolgani sarmoya uchun ko'rsatiladi va «Hunardan ishga» (2E.4, 2G.8) taklif qilinadi;
   3. zaxira to'lmaguncha sarmoya tavsiya etilmaydi (2C.4 darvoza).
 - Summa chet el valyutasida bo'lishi mumkin: foydalanuvchi kiritgan kurs bilan asosiy valyutaga aylantiriladi (`FxRate`, `fx_convert`).
@@ -509,16 +509,16 @@ Dasturchi uchun bobning asosiy saboqlari:
 - Diniy iqtiboslar (oyat, hadis) faqat `religiousReviewStatus = APPROVED` bilan chiqadi (3-bo'lim).
 
 ### 2G.8. «Pulingiz hunaringizga ishlasin»
-- 2E.4 ga hunar shablonlari qo'shiladi. Birinchisi: **temirchilik / payvand ustaxonasi** (darvoza, panjara, mangal). Shablon CAPEX nomlarini oldindan qo'yadi; summalarni foydalanuvchi yozadi (narx o'ylab topilmaydi).
+- 2E.4 ga hunar shablonlari qo'shiladi. Birinchisi: **payvandlash ustaxonasi** (darvoza, panjara, mangal). Shablon CAPEX nomlarini oldindan qo'yadi; summalarni foydalanuvchi yozadi (narx o'ylab topilmaydi).
 - «Talab bormi?» savoli: kim buyurtma beradi, atrofda qancha uy qurilmoqda yoki yangilanmoqda.
-- Himoya zaxirasi (2G.5) to'lgandan keyin tavsiya etiladi.
+- Oilaviy zaxira (2G.5) to'lgandan keyin tavsiya etiladi.
 
 ### 2G.9. Persona eslatmasi: chet eldan qaytgan vatandosh
 - Ohang: hurmat va iliqlik, uyaltirmaslik. Yolg'iz qaror qabul qilish odatini ayblamasdan, maslahatga undash.
 - Jamg'arma ko'pincha dollarda — summa kiritishda valyuta tanlovi bor.
 
 ### 2G.10. Kontent eslatmasi
-- 7-bob (o'z matnimiz). Haftalik vazifalar: kelgan bitta taklifni besh belgi bilan tekshirish (`OFFER_CHECKED`), oilaning himoya zaxirasini hisoblash (`EMERGENCY_TARGET_SET`), hunardan bitta g'oya yozish (`VENTURE_IDEA_CREATED`).
+- 7-bob (o'z matnimiz). Haftalik vazifalar: kelgan bitta taklifni besh belgi bilan tekshirish (`OFFER_CHECKED`), oilaviy zaxirani hisoblash (`EMERGENCY_TARGET_SET`), hunardan bitta g'oya yozish (`VENTURE_IDEA_CREATED`).
 
 ## 3. MAHSULOT CHEKLOVLARI (qat'iy)
 - Ilovada foizli kredit, mikroqarz yoki «tez pul» reklamalari va integratsiyalari **bo'lmaydi**.

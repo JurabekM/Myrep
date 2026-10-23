@@ -1,5 +1,5 @@
 //! 7-qonun xizmati (SPEC 2G, D16): taklif tekshiruvi «besh xavf belgisi» bilan (saqlanadi), «to'xta, maslahatlash»
-//! qarori (maslahatchi + 24 soat), va'da qilingan foyda yillikka, piramida modeli, «qal'a devori» taqsimoti,
+//! qarori (maslahatchi + 24 soat), va'da qilingan foyda yillikka, piramida modeli, «oilaviy zaxira» taqsimoti,
 //! hunar shablonlari. Hisoblar `domain::offer_check` va `domain::scam_math` da; bu yerda faqat yig'iladi.
 
 use std::collections::BTreeMap;
@@ -242,7 +242,7 @@ pub fn pyramid(recruits_per_person: u32, population: u32) -> Result<PyramidDto, 
     })
 }
 
-/// «Qal'a devori»: katta summa (chet el valyutasida bo'lsa — kurs bilan) avval 6 oylik zaxira kamomadiga,
+/// «Oilaviy zaxira»: katta summa (chet el valyutasida bo'lsa — kurs bilan) avval 6 oylik zaxira kamomadiga,
 /// qolgani sarmoyaga. Zaxira maqsadi xarajat tarixidan; tarix bo'lmasa — foydalanuvchining taxminiy oylik
 /// zarur xarajati (`reserve_estimate`) × 6. `EMERGENCY_TARGET_SET` hodisasi (7-bob vazifasi).
 pub fn plan_lump_sum(
@@ -339,7 +339,7 @@ pub fn hustle_templates() -> Vec<HustleTemplateDto> {
     vec![
         HustleTemplateDto {
             id: "FORGE_WELD".to_owned(),
-            name: "Temirchilik / payvand ustaxonasi".to_owned(),
+            name: "Payvandlash ustaxonasi".to_owned(),
             story: "Metall bilan ishlay oladigan usta uchun: darvoza, panjara, mangal kabi buyurtmalar."
                 .to_owned(),
             capex_lines: vec![

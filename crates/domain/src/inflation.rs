@@ -101,7 +101,7 @@ impl PriceItem {
     }
 }
 
-/// «Sichqon kemirgani»: yotgan pulning bugungi narxlardagi real qiymati —
+/// «Inflyatsiya ta'siri»: yotgan pulning bugungi narxlardagi real qiymati —
 /// `balance × 10 000 / (10 000 + index_bp)`, yarim tiyin yuqoriga. Indeks −100% dan past bo'lmaydi.
 pub fn real_value(balance: Money, index_bp: i64) -> Result<Money, DomainError> {
     let denominator = FULL_BP + i128::from(index_bp);

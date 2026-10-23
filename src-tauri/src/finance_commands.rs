@@ -121,7 +121,7 @@ pub async fn set_share_rule(
     .await
 }
 
-/// Boshlang'ich balans (ro'molcha) — bir marta.
+/// Boshlang'ich balans (avval yig'ilgan pul) — bir marta.
 #[tauri::command]
 #[specta::specta]
 pub async fn set_initial_balance(

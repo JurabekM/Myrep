@@ -1,5 +1,5 @@
 //! D8 xizmati: «Qorovul» zaxirasi — maqsad (3 va 6 oy), necha oylik zaxira bor, tayyorgarlik darvozasi,
-//! «Narx daftari» va shaxsiy inflyatsiya, «Sichqon kemirgani». Hisob domen'da; bu yerda faqat yig'iladi.
+//! «Narx daftari» va shaxsiy inflyatsiya, «Inflyatsiya ta'siri». Hisob domen'da; bu yerda faqat yig'iladi.
 
 use domain::calendar::month_of;
 use domain::emergency::{AVERAGE_MONTHS, emergency_target};
@@ -92,7 +92,7 @@ fn item_dto(item: &PriceItem, change_bp: Option<i64>) -> PriceItemDto {
     }
 }
 
-/// «Narx daftari»: yozuvlar, shaxsiy indeks, «Sichqon kemirgani» (balansning real qiymati va misol).
+/// «Narx daftari»: yozuvlar, shaxsiy indeks, «Inflyatsiya ta'siri» (balansning real qiymati va misol).
 pub fn prices(db: &Database, now: OffsetDateTime) -> Result<PricesDto, SessionError> {
     let ctx = finance::context(db, now)?;
     let items = PriceRepo::new(db.connection()).list(&ctx.household.id)?;

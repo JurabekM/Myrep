@@ -1,4 +1,4 @@
-//! 7-qonun hisoblari (SPEC 2G.3–2G.5): va'da qilingan foyda yillikka, piramida qavatlari, «qal'a devori» taqsimoti.
+//! 7-qonun hisoblari (SPEC 2G.3–2G.5): va'da qilingan foyda yillikka, piramida qavatlari, «oilaviy zaxira» taqsimoti.
 //!
 //! Hammasi butun sonlarda (`bp` — bazis punkt, `10 000 = 1 barobar`); yaxlitlash — yarmi yuqoriga
 //! (`money::round_half_up_div`). Vektorlar: `promised_return.json`, `pyramid_levels.json`, `lump_sum_split.json`.
@@ -104,7 +104,7 @@ pub fn pyramid_levels(
     })
 }
 
-/// «Qal'a devori» taqsimoti (SPEC 2G.5).
+/// «Oilaviy zaxira» taqsimoti (SPEC 2G.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LumpSumSplit {
     /// Avval zaxira kamomadiga.

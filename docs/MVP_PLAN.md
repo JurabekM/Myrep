@@ -2,7 +2,7 @@
 > AI-dasturchi (Claude Code va h.k.) uchun. Spetsifikatsiya: `docs/SPEC.md` (v0.9; v0.8 = `FINTECH_PROMPT.md`).
 > Bu fayl `MVP1_KICKOFF.md` ni **o'rnini bosadi**: 1–3-vazifalar o'sha fayldagi bilan bir xil, qolganlari 2–6-qonunlarni qo'shadi.
 > **v0.8 o'zgarishi:** 6-qonun uchun ikkita vazifa qo'shildi. **9A** (kelishuv dvigateli va jurnal) qarz va sheriklik vazifalaridan **oldin** bajariladi. **14A** (ko'rik, nizo, oilaviy kelishuvlar) 14-vazifadan keyin bajariladi. 10- va 13-vazifalar endi 9A dvigatelidan foydalanadi.
-> **v0.9 o'zgarishi:** 7-qonun uchun **14B** vazifasi qo'shildi (besh xavf belgisi, «o'z ko'zim bilan ko'raman», piramida hisobi, himoya zaxirasi, «to'xta, maslahatlash», hunar shablonlari). 14A dan keyin, 15 dan oldin.
+> **v0.9 o'zgarishi:** 7-qonun uchun **14B** vazifasi qo'shildi (besh xavf belgisi, «o'z ko'zim bilan ko'raman», piramida hisobi, oilaviy zaxira, «to'xta, maslahatlash», hunar shablonlari). 14A dan keyin, 15 dan oldin.
 > **Umumiy test vektorlari:** `spec/test-vectors/` (`DESKTOP_PROMPT.md` 5-bo'lim). Mobil CI ham ulardan o'tishi **majburiy**.
 
 ---
@@ -18,7 +18,7 @@
 | **3. Avval zaxira, keyin o'sish** | Qorovul / O'sadigan jamg'arma, 6 oylik zaxira maqsadi, «Narx daftari», shaxsiy inflyatsiya indeksi, «Inflyatsiya ta'siri», tayyorgarlik darvozasi, ribo filtri | Rasmiy CPI bilan taqqoslash |
 | **4. Ribodan qoch, reja bilan chiq** | Qarz inventari, bergan qarzlar, qarzning haqiqiy narxi, `DEBT_RECOVERY` 70/20/10, payoff planner, yangi qarz oldidan friction so'rovi, **qarz tilxati PDF** (shu qurilmada imzolanadi), sotiladigan buyumlar, marosim rejalovchisi, «Qarzsiz kun» | Tilxatni ikkinchi tomon o'z telefonida tasdiqlashi; to'lovchini (Sardor) ilovaga taklif qilish |
 | **5. Pulni halol ishga sol** | Mudoraba/Musharaka domeni va validatsiyasi, shartnoma ustasi + PDF (shu qurilmada imzolanadi), buyout jadvali, venture ledger, foyda/zarar taqsimoti, fors-major, «Hunardan ishga», «Kafolatlangan foyda» detektori | Kapital egasi uchun real vaqtdagi read-only ko'rinish (MVP'da uning o'rniga **PDF hisobot** ulashiladi) |
-| **7. Ko'rmagan ishingga pul tikma** | Besh xavf belgisi va baho qoidasi, «o'z ko'zim bilan ko'raman» tekshiruv ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida ta'limiy hisobi, katta summa uchun «himoya zaxirasi» taqsimoti, «to'xta, maslahatlash» (24 soat + maslahatchi), g'arar/qimor izohi, hunar shablonlari | Litsenziyalar reyestri bilan avtomatik tekshirish (davlat API) |
+| **7. Ko'rmagan ishingga pul tikma** | Besh xavf belgisi va baho qoidasi, «o'z ko'zim bilan ko'raman» tekshiruv ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida ta'limiy hisobi, katta summa uchun «Oilaviy zaxira» taqsimoti, «to'xta, maslahatlash» (24 soat + maslahatchi), g'arar/qimor izohi, hunar shablonlari | Litsenziyalar reyestri bilan avtomatik tekshirish (davlat API) |
 | **6. Kelishuvni yozinglar** | Umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori; turlar: sheriklik, qarz, ijara, xizmat, oilaviy), vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish | Ikkinchi tomon va hakamning o'z qurilmasida masofadan tasdiqlashi va ko'rib chiqishi |
 
 **Qurilma ichidagi muqobillar:**
@@ -158,7 +158,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
   - **Progressiv rejim:** 4 hafta ketma-ket ajratilsa, +1% taklif qilinadi.
 - **«Kelajagim» ekrani:** balans, tarix va **streak** (ajratilgan haftalar). Odat ko'rsatkichi summadan oldinda turadi.
 - **Pul olish uchun friction:** tasdiqlash, sabab (majburiy) va PIN.
-- **Boshlang'ich balans («ro'molcha»):** `reason = INITIAL`.
+- **Boshlang'ich balans («avval yig'ilgan pul»):** `reason = INITIAL`.
 - Bu bosqichda bitta umumiy `VAULT` asset bo'ladi. Uni 2 turga bo'lish Vazifa 9 da qilinadi.
 
 **Qabul mezonlari:**
@@ -495,15 +495,15 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 
 # F3. 7-QONUN: «TEKSHIRMAGAN ISHGA PUL TIKMA»
 
-## VAZIFA 14B — Besh xavf belgisi, tekshiruv, piramida, himoya zaxirasi, «to'xta, maslahatlash», hunar shablonlari (SPEC 2G)
+## VAZIFA 14B — Besh xavf belgisi, tekshiruv, piramida, oilaviy zaxira, «to'xta, maslahatlash», hunar shablonlari (SPEC 2G)
 - **Besh xavf belgisi** (`ScamSign`, 2G.1): taklif tekshiruviga 3 ta savol qo'shiladi (`exitEasy`, `license`, `verifiedInPerson`); belgilar javoblardan aniqlanadi; baho: 1 belgi — kamida sariq, 2+ — qizil; umumiy baho 2E.5 bilan birlashtiriladi (eng og'iri). Har belgi izohlanadi.
 - **«O'z ko'zim bilan ko'raman»** (2G.2): tekshiruv ro'yxati ekrani (ombor, mol, hujjat, ruxsat, to'lov manbai, qaytarish tartibi); natija «ko'rsatishdi / rad etishdi / so'ramadim»; rad etish — `NO_REAL_BUSINESS`.
 - **Va'da qilingan foyda** (2G.3): oylik bp → yillik oddiy va murakkab ko'paytma; faqat ogohlantirish.
 - **Piramida** (2G.4): `k` va `N` bo'yicha qavatlar, jami, oxirgi qavat ulushi; ta'limiy ekran.
-- **Himoya zaxirasi** (2G.5): katta summa (valyuta bilan) → avval 6 oylik zaxira kamomadi, qolgani sarmoyaga; qorovulga qo'yish va «Hunardan ishga»ga o'tish.
+- **Oilaviy zaxira** (2G.5): katta summa (valyuta bilan) → avval 6 oylik zaxira kamomadi, qolgani sarmoyaga; qorovulga qo'yish va «Hunardan ishga»ga o'tish.
 - **«To'xta, maslahatlash»** (2G.6): taklifda summa va maslahatchi; «pul qo'yaman» faqat maslahatchi yozilgach va 24 soatdan keyin; qaror tarixda (`DECLINED | POSTPONED | ACCEPTED`). Sxema v16: `offer_checks` ga yangi ustunlar + migratsiya testi.
 - **G'arar / qimor** (2G.7): natijada `RIBO | GHARAR | QIMOR` toifalari.
-- **Hunar shablonlari** (2G.8): temirchilik / payvand ustaxonasi — CAPEX nomlari oldindan, summasiz.
+- **Hunar shablonlari** (2G.8): payvandlash ustaxonasi — CAPEX nomlari oldindan, summasiz.
 - 7-bob kontenti (placeholder) va haftalik vazifalar (mavjud triggerlar: `OFFER_CHECKED`, `EMERGENCY_TARGET_SET`, `VENTURE_IDEA_CREATED`).
 
 **Qabul mezonlari:**

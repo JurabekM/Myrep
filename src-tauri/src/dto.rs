@@ -872,7 +872,7 @@ pub struct PriceItemDto {
     pub change_bp: Option<i32>,
 }
 
-/// Narx daftari: yozuvlar, indeks va «Sichqon kemirgani».
+/// Narx daftari: yozuvlar, indeks va «Inflyatsiya ta'siri».
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PricesDto {
@@ -2139,7 +2139,7 @@ pub struct PyramidDto {
     pub last_level_full: bool,
 }
 
-/// «Qal'a devori» kirishi (SPEC 2G.5).
+/// «Oilaviy zaxira» kirishi (SPEC 2G.5).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct LumpSumInputDto {
@@ -2153,7 +2153,7 @@ pub struct LumpSumInputDto {
     pub reserve_estimate: Option<String>,
 }
 
-/// «Qal'a devori» taqsimoti.
+/// «Oilaviy zaxira» taqsimoti.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct LumpSumPlanDto {
@@ -2175,7 +2175,7 @@ pub struct LumpSumPlanDto {
     pub to_reserve: MoneyDto,
     /// Qolgani sarmoyaga («Hunardan ishga»).
     pub to_invest: MoneyDto,
-    /// Taqsimotdan keyin qal'a devori to'ladimi.
+    /// Taqsimotdan keyin oilaviy zaxira to'ladimi.
     pub reserve_filled: bool,
 }
 

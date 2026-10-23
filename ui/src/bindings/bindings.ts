@@ -31,7 +31,7 @@ export const commands = {
 	respondProgression: (accept: boolean) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("respond_progression", { accept })),
 	/**  Ulush qoidasini o'zgartiradi. */
 	setShareRule: (input: ShareRuleInputDto) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("set_share_rule", { input })),
-	/**  Boshlang'ich balans (ro'molcha) — bir marta. */
+	/**  Boshlang'ich balans (avval yig'ilgan pul) — bir marta. */
 	setInitialBalance: (amount: string) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("set_initial_balance", { amount })),
 	/**  Pul olish. PIN qayta tekshiriladi (noto'g'ri urinish hisoblanadi), so'ng yozuv yoziladi. */
 	withdraw: (pin: string, input: WithdrawInputDto) => typedError<VaultDto, ApiError>(__TAURI_INVOKE("withdraw", { pin, input })),
@@ -145,7 +145,7 @@ export const commands = {
 	hideQuickWindow: () => typedError<null, ApiError>(__TAURI_INVOKE("hide_quick_window")),
 	/**  Qorovul zaxirasi: maqsad, necha oylik zaxira, darvoza. */
 	getReserve: () => typedError<ReserveDto, ApiError>(__TAURI_INVOKE("get_reserve")),
-	/**  Narx daftari: yozuvlar, indeks, «Sichqon kemirgani». */
+	/**  Narx daftari: yozuvlar, indeks, «Inflyatsiya ta'siri». */
 	getPrices: () => typedError<PricesDto, ApiError>(__TAURI_INVOKE("get_prices")),
 	/**  Narx yozuvi qo'shadi. */
 	addPriceItem: (input: PriceItemInputDto) => typedError<PricesDto, ApiError>(__TAURI_INVOKE("add_price_item", { input })),
@@ -247,7 +247,7 @@ export const commands = {
 	promisedReturn: (monthlyBp: number) => typedError<PromisedReturnDto, ApiError>(__TAURI_INVOKE("promised_return", { monthlyBp })),
 	/**  Piramida modeli (ta'limiy). */
 	pyramidModel: (recruitsPerPerson: number, population: number) => typedError<PyramidDto, ApiError>(__TAURI_INVOKE("pyramid_model", { recruitsPerPerson, population })),
-	/**  «Qal'a devori» taqsimoti. */
+	/**  «Oilaviy zaxira» taqsimoti. */
 	planLumpSum: (input: LumpSumInputDto) => typedError<LumpSumPlanDto, ApiError>(__TAURI_INVOKE("plan_lump_sum", { input })),
 	/**  Hunar shablonlari. */
 	listHustleTemplates: () => typedError<HustleTemplateDto[], ApiError>(__TAURI_INVOKE("list_hustle_templates")),
@@ -1622,7 +1622,7 @@ export type LocalizedDto = {
 	ru: string,
 };
 
-/**  «Qal'a devori» kirishi (SPEC 2G.5). */
+/**  «Oilaviy zaxira» kirishi (SPEC 2G.5). */
 export type LumpSumInputDto = {
 	/**  Summa matni (kiritilgan valyutada). */
 	amount: string,
@@ -1634,7 +1634,7 @@ export type LumpSumInputDto = {
 	reserveEstimate: string | null,
 };
 
-/**  «Qal'a devori» taqsimoti. */
+/**  «Oilaviy zaxira» taqsimoti. */
 export type LumpSumPlanDto = {
 	/**  Kiritilgan summa (o'z valyutasida). */
 	amountEntered: MoneyDto,
@@ -1654,7 +1654,7 @@ export type LumpSumPlanDto = {
 	toReserve: MoneyDto,
 	/**  Qolgani sarmoyaga («Hunardan ishga»). */
 	toInvest: MoneyDto,
-	/**  Taqsimotdan keyin qal'a devori to'ladimi. */
+	/**  Taqsimotdan keyin oilaviy zaxira to'ladimi. */
 	reserveFilled: boolean,
 };
 
@@ -2093,7 +2093,7 @@ export type PriceItemInputDto = {
 	weightBp: number,
 };
 
-/**  Narx daftari: yozuvlar, indeks va «Sichqon kemirgani». */
+/**  Narx daftari: yozuvlar, indeks va «Inflyatsiya ta'siri». */
 export type PricesDto = {
 	/**  Yozuvlar. */
 	items: PriceItemDto[],

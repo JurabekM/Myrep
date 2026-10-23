@@ -491,7 +491,7 @@ pub fn set_share_rule(
     vault_overview(db, &ctx, now)
 }
 
-/// Boshlang'ich balans (ro'molcha): bir marta.
+/// Boshlang'ich balans (avval yig'ilgan pul): bir marta.
 pub fn set_initial_balance(
     db: &Database,
     now: OffsetDateTime,
@@ -974,7 +974,7 @@ mod tests {
     #[test]
     fn pul_olish_sabab_va_balans_qoidasi() {
         let db = fresh();
-        set_initial_balance(&db, now(), "100 000").expect("ro'molcha");
+        set_initial_balance(&db, now(), "100 000").expect("avval yig'ilgan pul");
         let missing = withdraw(&db, now(), "200 000", "Dori").expect_err("balansdan ko'p");
         assert_eq!(rule_code(missing), "INSUFFICIENT_BALANCE");
         let no_reason = withdraw(&db, now(), "1 000", "   ").expect_err("sababsiz");
@@ -999,7 +999,7 @@ mod tests {
         assert_eq!(rule_code(again), "INITIAL_ALREADY_SET");
         let vault = vault(&db, now()).expect("kelajagim");
         assert!(vault.has_initial);
-        assert_eq!(vault.habit.total_weeks, 0, "ro'molcha odat emas");
+        assert_eq!(vault.habit.total_weeks, 0, "avval yig'ilgan pul odat emas");
     }
 
     #[test]

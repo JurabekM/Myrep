@@ -55,5 +55,25 @@ o'rnatuvchini haqiqiy Windows mashinasida sinashni talab qiladi.
 - [x] Kelishuvlar markazi: jadval filtri, hodisa bandi, ko'rik sessiyasi va bayonnoma PDF (`chain_head`), nizo → taqsimot bloklanadi, hakam papkasi PDF (mundarija bor), oilaviy shablon PIN bilan.
 - [x] `.baraka`: eksport → fayl bor; boshqa profilga import → ko'rik → qo'llash; noto'g'ri parol aniq xabar; jurnal fork ssenariysi (ikki qurilmada farqli yozuv) bloklanadi.
 - [x] Sovuq start < 1,5 s (release): 2026-10-16, o'rnatilgan `baraka-daftari.exe`, jarayon boshlanishidan asosiy oyna dastagigacha **216 ms** (`Start-Process` + `MainWindowHandle` kutish; SSD, Windows 10). Oyna mazmuni (WebView2) bundan bir oz keyin chiziladi.
-- [x] E2E (`e2e/anvar.e2e.ts`, tauri-driver): yashil — yoki qo'lda o'tilgani sana bilan qayd etilgan: **2026-10-20, qo'lda, dev build, 6 qadam** (PIN → daromad+ulush → xarajat/byudjet → payoff → sheriklik ustasi → `.baraka` eksport). tauri-driver o'rnatilmagan (yuklab olish kerak); skeletdagi 2 eskirgan selektor tuzatildi.
+- [x] E2E (`e2e/asosiy.e2e.ts`, 2026-10-23 gacha `anvar.e2e.ts`; tauri-driver): yashil — yoki qo'lda o'tilgani sana bilan qayd etilgan: **2026-10-20, qo'lda, dev build, 6 qadam** (PIN → daromad+ulush → xarajat/byudjet → payoff → sheriklik ustasi → `.baraka` eksport). tauri-driver o'rnatilmagan (yuklab olish kerak); skeletdagi 2 eskirgan selektor tuzatildi.
 - [ ] Kod imzolash: sertifikat bo'lsa `bundle.windows.certificateThumbprint` (yoki `signCommand`) `tauri.conf.json` da; `signtool verify /pa` yashil; updater manifesti (`tauri-plugin-updater` kiritilganda) imzolangan. **Sertifikat yo'q — bu band to'xtab turibdi.**
+
+## 8. Reliz 0.1.0 «Baraka Dastur» (2026-10-23, imzolanmagan)
+
+- [x] Avtomatik: `cargo test` 368, clippy toza, vitest 23 fayl / 93 test, typecheck, lint (0 xato, 2 ta ma'lum
+      `react-hooks/incompatible-library` ogohlantirishi), prettier; `git diff ui/src/bindings` — faqat izohlardagi
+      atamalar (qo'lda kiritilgan bilan bir xil).
+- [x] Kontent: `spec/content/chapters.json` mobil `assets/content/chapters.json` bilan bayt-bir xil (`cmp`).
+- [x] Logotip: `scripts/baraka_logo.py` mobil launcher ikonkasi bilan piksel-bir xil (48 va 192 px). O'rnatilgan
+      exe ikonkasi yangi belgi ekani `ExtractAssociatedIcon` bilan tekshirildi. **Topilgan xato:** ikonka
+      o'zgargandan keyingi birinchi build exe ichiga eski ikonkani qo'ydi (`tauri-build` qayta yurmadi) —
+      `touch src-tauri/build.rs` bilan qayta qurildi.
+- [x] O'rnatuvchi: `Baraka Dastur_0.1.0_x64-setup.exe`, 17 919 938 bayt,
+      SHA-256 `C1401D80D40461153DC50BEF4BDDF2765567DCAA1EFE91089C4E60376697899C`.
+- [x] `/S` o'rnatish (eski 0.1.0 ustidan), `uninstall.exe /S` (exe va Start menyu yorlig'i qolmadi), qayta
+      o'rnatish — hammasi exit 0. Ishga tushirish 3 marta: asosiy oyna 52–88 ms, `WM_CLOSE` dan keyin jarayon
+      to'liq tugadi (fon jarayon 0).
+- [x] GUI (dev build): yangi belgi yon panel va qulf ekranida, 7 bob yangi sarlavhalar bilan, 1-bob matni,
+      «Oilaviy zaxira» kartasi — «Taqsimlash» to'g'ri hisobladi (1 000 $ × 12 650).
+- [ ] Kod imzolash — sertifikat yo'q (5-bo'lim). SmartScreen ogohlantirishi chiqadi.
+- [ ] Haqiqiy 150/200 % DPI va High Contrast — **foydalanuvchi** (3- va 7-bo'lim).

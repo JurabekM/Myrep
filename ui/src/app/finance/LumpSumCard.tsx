@@ -10,7 +10,7 @@ const SELECT_CLASS =
   "h-10 rounded-lg border border-border bg-app px-3 text-text outline-none focus:border-accent";
 
 /**
- * «Qal'a devori» (SPEC 2G.5, 7-qonun): katta summa (chet eldan qaytish, meros, mulk sotuvi) avval oilaning
+ * «Oilaviy zaxira» (SPEC 2G.5, 7-qonun): katta summa (chet eldan qaytish, meros, mulk sotuvi) avval oilaning
  * 6 oylik zaxira kamomadiga, qolgani sarmoyaga. Chet el valyutasi — foydalanuvchi kiritgan kurs bilan.
  * Xarajat tarixi bo'lmasa — taxminiy oylik zarur xarajat so'raladi. Hisob Rustda.
  */

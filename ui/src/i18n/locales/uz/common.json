@@ -217,7 +217,7 @@
       "saved": "Qoida saqlandi."
     },
     "initial": {
-      "title": "Boshlangʻich balans (ro'molcha)",
+      "title": "Boshlangʻich balans (avval yigʻilgan pul)",
       "text": "Ilovadan oldin yigʻgan naqd jamgʻarmangizni kiriting. Bu bir marta qilinadi va odatga kirmaydi.",
       "amount": "Jamgʻarma summasi"
     },
@@ -665,7 +665,7 @@
     "q3": {
       "title": "Kim nima qiladi?",
       "hint": "Har vazifaga bitta mas'ul va «bajarilmasa» bandi. Egasiz vazifa qabul qilinmaydi.",
-      "advice": "Hamma hamma narsani qilsa — hech kim hech narsa qilmaydi. Har ishga bitta ism."
+      "advice": "Umumiy qoldirilgan ish ko'pincha hech kimning ishi bo'lmay qoladi. Har ishga bitta ism."
     },
     "q4": {
       "title": "Foyda qanday bo'linadi?",
@@ -1357,7 +1357,7 @@
     "bait": "Birinchi qatnashchilarga to'lov ishonch uyg'otish uchun qilinadi va yangi kirganlarning pulidan beriladi."
   },
   "lumpSum": {
-    "title": "Himoya zaxirasi — katta summa tushdimi?",
+    "title": "Oilaviy zaxira — katta summa tushdimi?",
     "intro": "Meros, mulk sotuvi yoki chet eldagi ish jamg'armasi kabi katta summa tushganda avval oilaning olti oylik zarur xarajati zaxiraga ajratiladi. Bu zaxira savdoga ham, sheriklikka ham qo'shilmaydi. Qolgani — hunaringizga.",
     "amount": "Katta summa",
     "currency": "Valyuta",
@@ -1366,12 +1366,12 @@
     "calculate": "Taqsimlash",
     "amountBase": "So'mda",
     "rateLine": "{{entered}} × {{rate}}",
-    "target": "6 oylik himoya zaxirasi",
+    "target": "6 oylik oilaviy zaxira",
     "targetHistory": "xarajat tarixidan",
     "targetEstimate": "taxminiy oylik xarajatdan",
     "toReserve": "Avval zaxiraga",
     "toInvest": "Qolgani hunarga",
-    "filled": "Himoya zaxirasi to'ldi — endi «Hunardan ishga» (Sheriklik sahifasi) bilan davom eting.",
+    "filled": "Oilaviy zaxira to'ldi — endi «Hunardan ishga» (Sheriklik sahifasi) bilan davom eting.",
     "notFilled": "Hammasi zaxiraga ketadi, devor hali to'lmadi — sarmoya hozircha tavsiya etilmaydi.",
     "wall": "Zaxira pulini favqulodda jamg'armaga qo'ying; bu kartada o'tkazma qilinmaydi."
   }

@@ -30,7 +30,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 | 4 | Ribodan qoch, reja bilan chiq | Qarz inventari, haqiqiy narx, 70/20/10, payoff planner, tilxat, marosim rejalovchisi | 2D |
 | 5 | Pulni halol ishga sol | Mudoraba/Musharaka, shartnoma, buyout, venture ledger, taklif detektori | 2E |
 | 6 | Kelishuvni yozma tuz | Umumiy kelishuv dvigateli (9 savol), vazifalar va hodisalar, oylik ochiq ko'rik va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozish, oilaviy kelishuvlar | 2F |
-| 7 | Tekshirmagan ishga pul tikma | Besh xavf belgisi (taklif tekshiruvi), «o'z ko'zim bilan ko'raman» ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida hisobi, katta summa uchun «himoya zaxirasi», «to'xta, maslahatlash» (24 soat + maslahatchi), hunar shablonlari | 2G |
+| 7 | Tekshirmagan ishga pul tikma | Besh xavf belgisi (taklif tekshiruvi), «o'z ko'zim bilan ko'raman» ro'yxati, va'da qilingan foydani yillikka aylantirish, piramida hisobi, katta summa uchun «Oilaviy zaxira», «to'xta, maslahatlash» (24 soat + maslahatchi), hunar shablonlari | 2G |
 
 > **Desktop uchun eng muhim qonun — 6-qonun.** Kelishuvni 9 savol bo'yicha tuzish, oylik ko'rik o'tkazish, hakam papkasini yig'ish va hujjatlarni chop etish katta ekran va klaviaturada eng qulay bajariladi. Shu sababli bu bo'lim desktopning **asosiy ish oqimi** sifatida loyihalanadi.
 
@@ -476,8 +476,8 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 
 **D16 — «Ko'rmagan ishingga pul tikma» (SPEC 2G)**
 
-- **A (Rust, avval vektor):** `scam_signals`, `promised_return`, `pyramid_levels`, `lump_sum_split` umumiy vektorlari + runner; `domain::offer_check` tri-state (9 savol, besh belgi, daraja, toifalar; «uch sariq — qizil» qoidasi vektorga zid bo'lgani uchun olib tashlandi), `domain::scam_math`; sxema v18 `offer_checks`; xizmat `scam`: tekshiruv saqlanadi (`OFFER_CHECKED`), «to'xta, maslahatlash» (maslahatchi + 24 soat, qaror bir marta), himoya zaxirasi (valyuta + kurs, zaxira tarixdan yoki taxmindan, `EMERGENCY_TARGET_SET`), piramida, hunar shablonlari. 7-bob kontenti (mobil bilan bitta fayl), 6-bob triggerlari.
-- **B (UI):** taklif tekshiruvi kartasi 9 savol (ha/yo'q/bilmayman), summa, va'da % → yillik ko'paytma, «o'z ko'zim bilan ko'raman» ro'yxati, belgilar va toifalar izohi, qaror tugmalari va tarix; piramida kartasi; «Himoya zaxirasi» kartasi («Kelajagim»); «Hunardan ishga»da shablon tanlovi. GUI sinovi.
+- **A (Rust, avval vektor):** `scam_signals`, `promised_return`, `pyramid_levels`, `lump_sum_split` umumiy vektorlari + runner; `domain::offer_check` tri-state (9 savol, besh belgi, daraja, toifalar; «uch sariq — qizil» qoidasi vektorga zid bo'lgani uchun olib tashlandi), `domain::scam_math`; sxema v18 `offer_checks`; xizmat `scam`: tekshiruv saqlanadi (`OFFER_CHECKED`), «to'xta, maslahatlash» (maslahatchi + 24 soat, qaror bir marta), oilaviy zaxira (valyuta + kurs, zaxira tarixdan yoki taxmindan, `EMERGENCY_TARGET_SET`), piramida, hunar shablonlari. 7-bob kontenti (mobil bilan bitta fayl), 6-bob triggerlari.
+- **B (UI):** taklif tekshiruvi kartasi 9 savol (ha/yo'q/bilmayman), summa, va'da % → yillik ko'paytma, «o'z ko'zim bilan ko'raman» ro'yxati, belgilar va toifalar izohi, qaror tugmalari va tarix; piramida kartasi; «Oilaviy zaxira» kartasi («Kelajagim»); «Hunardan ishga»da shablon tanlovi. GUI sinovi.
 - **Qabul mezonlari:** 4 vektor yashil; ikki belgi qizil; «pul qo'yaman» maslahatchisiz va 24 soatdan oldin rad (test); katta summa taqsimotida zaxira avval (test); migratsiya v17 → v18.
 
 ## 10. AI-DASTURCHI UCHUN QOIDALAR

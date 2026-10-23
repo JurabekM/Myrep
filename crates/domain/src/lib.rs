@@ -105,7 +105,7 @@ pub enum DomainError {
     /// «Kelajagim» balansidan ko'p olib bo'lmaydi.
     #[error("balansda mablag' yetarli emas")]
     InsufficientBalance,
-    /// Boshlang'ich balans (ro'molcha) allaqachon kiritilgan.
+    /// Boshlang'ich balans (avval yig'ilgan pul) allaqachon kiritilgan.
     #[error("boshlang'ich balans allaqachon kiritilgan")]
     InitialAlreadySet,
     /// Shu daromaddan ulush allaqachon ajratilgan.

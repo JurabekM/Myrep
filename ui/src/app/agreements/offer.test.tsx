@@ -111,7 +111,7 @@ function setUp(): void {
     data: [
       {
         id: "FORGE_WELD",
-        name: "Temirchilik / payvand ustaxonasi",
+        name: "Payvandlash ustaxonasi",
         story: "Bekzod: pul hunariga ishlasin.",
         capexLines: ["Payvand apparati va niqob", "Bolgarka, drel"],
         demandQuestion: "Talab bormi? Atrofda qancha uy qurilmoqda?",
@@ -281,7 +281,7 @@ describe("7-qonun: taklif tekshiruvi", () => {
       "Payvand apparati va niqob",
     );
     expect(within(hustleCard).getByLabelText("Hunar / g'oya")).toHaveValue(
-      "Temirchilik / payvand ustaxonasi",
+      "Payvandlash ustaxonasi",
     );
     expect(hustleCard).toHaveTextContent("Talab bormi?");
   });
