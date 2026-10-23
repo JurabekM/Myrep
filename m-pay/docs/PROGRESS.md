@@ -108,3 +108,51 @@ vektorlari (ML-KEM/ML-DSA), `pqlink.md` yakuniy versiyasi.
 **Keyingi bosqich (M3)**: `mpay-vault` (SQLite, envelope-shifrlangan PAN/DPAN, provisioning
 GREEN/YELLOW/RED, LUK berish va to'ldirish, lifecycle, xesh-zanjirli audit) va `mpay-server` API
 (axum, PQ Link endpointlari, operator/terminal autentifikatsiyasi), Shield stub.
+
+## M3 — mpay-vault + mpay-server API (2026-10-23)
+
+**Nima qilindi**
+
+* `mpay-vault`: SQLite sxemasi (`1001_vault_init.sql`); PAN/DPAN faqat envelope-shifrlangan
+  (KEK → DEK, kontekst AAD), HMAC barmoq izi bo'yicha qidiruv; provisioning GREEN/YELLOW/RED
+  (`IdvDecider` porti), OTP-simulyatsiya (saqlanmaydi, HMAC'dan hosil qilinadi; 5 daqiqa, 3 urinish),
+  LUK partiyalari va to'ldirish, lifecycle (`PENDING_IDV/ACTIVE/SUSPENDED/DELETED`), ichki
+  `VaultDetokenizer` (lookup + atomar consume: LUK hisoblagichi, ATC monotonligi), append-only
+  xesh-zanjirli audit (trigger'lar + `verify`).
+* `mpay-shield::stub` — deterministik ID&V va risk (`docs/test-data.md`).
+* `mpay-common::api` — yagona JSON DTO'lar (maxfiy maydonlar `Zeroizing`, `Debug` yashirilgan).
+* `mpay-server`: axum router (PQ Link handshake, sealed qurilma endpointlari, operator API,
+  audit, sandbox OTP), Bearer rollar (SHA-256 xesh, constant-time), TLS (rustls/ring), so'rov logi
+  (tanasiz), `init` (dev-urug', ML-DSA blob, sandbox CA, TLS, API kalitlari, `mpay.toml`), `serve`,
+  `audit-verify`, `identity`.
+* `mpay-terminal-sim`: HTTP client (rustls) va soft-wallet (PQ Link sessiyasi, provisioning, OTP, LUK).
+* Hujjatlar: `specs/api.md` (M3 qismi yakunlangan), `test-data.md`, crate README'lari, architecture grafi.
+
+**Qanday tekshirildi**
+
+* `cargo test --workspace` — 109 test o'tdi.
+* Vault integratsion testlari (10): har bir provisioning shoxobchasi, OTP lockout/muddat, holat
+  o'tishlari, detokenizatsiya qoidalari, **DB fayli (asosiy + WAL) baytlarida ochiq FPAN/DPAN
+  (ASCII va BCD) va LUK yo'q**, audit buzilishi aniqlanadi, dev-urug' bilan qayta ochish.
+* E2E (`tests/e2e/tests/m3_provisioning.rs`, server jarayon ichida, **haqiqiy TCP/HTTP**):
+  provisioning → LUK → to'ldirish → suspend/resume/delete; YELLOW OTP (rol tekshiruvi bilan), RED;
+  HTTP darajasida replay (`PQLINK_REPLAY`); begona CA va TEE qurilma rad; boshqa qurilma LUK ololmaydi;
+  operator API kalitlari; server qayta ishga tushganda tokenlar o'qiladi; **debug darajasidagi
+  loglarda FPAN, DPAN va LUK yo'q**.
+* Haqiqiy binar smoke: `mpay-server init --tls` → `serve` → curl TLS orqali `/healthz`,
+  `/v1/pqlink/identity`, operator `/v1/audit/verify` (kalitsiz 401, kalit bilan 200); TLS portiga oddiy
+  HTTP ulanmaydi.
+* clippy `-D warnings`, fmt, `cargo deny` (ok; `sha2`/`digest` 0.10 dublikati `sqlx-core` migratsiya
+  checksum'idan — bizning kripto yo'lida ishlatilmaydi), `cargo audit` — zaiflik yo'q.
+
+**Ochiq savollar**
+
+* `TODO(spec):` token muddati: hozir `min(karta muddati, hozir + 36 oy)`; real sxema qoidasi kerak.
+* `TODO(spec):` bir karta bir nechta qurilmada — hozir cheklanmagan (Shield M5 da `existing_tokens_for_pan`
+  bo'yicha qaror qiladi).
+* `TODO(spec):` OTP kanali (SMS/push/bank ilovasi) — sandbox'da faqat operator endpointi.
+
+**Keyingi bosqich (M4)**: `mpay-issuer` (ISO 8583 `0100`/`0110`, ARQC/ARPC, UZS test hisoblar,
+javob kodlari), `mpay-terminal-sim` (APDU transport trait, loopback soft-karta, terminal yadrosi,
+`mpay-tsim` CLI), `/v1/authorizations`, telefonsiz e2e: provisioning → tap → `0110` (tasdiq va har
+bir rad kodi).

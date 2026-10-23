@@ -12,4 +12,18 @@ workspace = true
 [dependencies]
 mpay-common.workspace = true
 mpay-crypto.workspace = true
-mpay-pqlink.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+async-trait.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+time.workspace = true
+sha2.workspace = true
+hex.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+mpay-shield.workspace = true
+tempfile.workspace = true

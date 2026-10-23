@@ -11,3 +11,10 @@ workspace = true
 
 [dependencies]
 mpay-common.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+time.workspace = true

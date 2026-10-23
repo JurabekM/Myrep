@@ -9,10 +9,42 @@ publish.workspace = true
 [lints]
 workspace = true
 
+[[bin]]
+name = "mpay-server"
+path = "src/main.rs"
+
 [dependencies]
 mpay-common.workspace = true
 mpay-crypto.workspace = true
-mpay-pqlink.workspace = true
+mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
 mpay-vault.workspace = true
 mpay-shield.workspace = true
 mpay-issuer.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+hyper.workspace = true
+hyper-util.workspace = true
+rustls.workspace = true
+tokio-rustls.workspace = true
+rcgen.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror.workspace = true
+time.workspace = true
+sha2.workspace = true
+hex.workspace = true
+base64.workspace = true
+zeroize.workspace = true
+sqlx.workspace = true
+
+[features]
+default = []
+pkcs11 = ["mpay-crypto/pkcs11"]
+
+[dev-dependencies]
+tempfile.workspace = true

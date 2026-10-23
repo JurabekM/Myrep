@@ -1,15 +1,13 @@
-//! `mpay-shield` — M-Pay Pay Sandbox moduli.
+//! `mpay-shield` — risk engine va ID&V.
 //!
-//! Batafsil tavsif: crate'ning `README.md` fayli.
+//! M5 gacha faqat [`stub::StubShield`]: deterministik, test PAN va merchant ID bo'yicha
+//! boshqariladigan qarorlar (`docs/test-data.md`). Haqiqiy qoidalar, graf belgilar va ML skor —
+//! M5 da shu port trait'lari (`IdvDecider`, `RiskScorer`) ortida.
 #![forbid(unsafe_code)]
 
-/// Crate versiyasi (diagnostika va `/healthz` uchun).
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub mod stub;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn version_is_set() {
-        assert!(!super::VERSION.is_empty());
-    }
-}
+pub use stub::{StubShield, StubShieldConfig};
+
+/// Crate versiyasi.
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");

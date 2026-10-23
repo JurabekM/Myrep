@@ -12,3 +12,11 @@ workspace = true
 [dependencies]
 mpay-server.workspace = true
 mpay-terminal-sim.workspace = true
+mpay-common.workspace = true
+mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
+tokio.workspace = true
+tempfile.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde_json.workspace = true
+zeroize.workspace = true

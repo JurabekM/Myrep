@@ -8,6 +8,7 @@
 //! * [`ids`], [`clock`], [`config`] — identifikatorlar, vaqt manbai, konfiguratsiya.
 #![forbid(unsafe_code)]
 
+pub mod api;
 pub mod clock;
 pub mod config;
 pub mod emv;

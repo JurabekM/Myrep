@@ -1,0 +1,209 @@
+//! Ilova holati va komponentlarni konfiguratsiyadan yig'ish (port'larni ulash — ADR-0002).
+
+use std::path::Path;
+use std::sync::Arc;
+
+use mpay_common::clock::{Clock, SystemClock};
+use mpay_crypto::keystore::{ensure_standard_keys, KeyLabel, KeyStore, MemoryKeyStore};
+use mpay_crypto::scheme::{CryptogramScheme, MpayAes128CmacV1};
+use mpay_pqlink::attestation::{AttestationPolicy, TrustAnchors};
+use mpay_pqlink::{KeyStoreServerSigner, MlDsaSeedBlob, PqLinkServer, ServerConfig};
+use mpay_shield::StubShield;
+use mpay_vault::Vault;
+use thiserror::Error;
+use zeroize::Zeroizing;
+
+use crate::auth::Authenticator;
+use crate::config::{Config, KeyStoreBackend};
+
+#[derive(Debug, Error)]
+pub enum BootError {
+    #[error("konfiguratsiya: {0}")]
+    Config(String),
+    #[error("fayl {path}: {msg}")]
+    File { path: String, msg: String },
+    #[error("KeyStore: {0}")]
+    KeyStore(String),
+    #[error("PQ Link: {0}")]
+    PqLink(#[from] mpay_pqlink::PqLinkError),
+    #[error("Vault: {0}")]
+    Vault(#[from] mpay_vault::VaultError),
+}
+
+fn read(path: &Path) -> Result<Vec<u8>, BootError> {
+    std::fs::read(path).map_err(|e| BootError::File {
+        path: path.display().to_string(),
+        msg: e.to_string(),
+    })
+}
+
+/// Ilova holati.
+pub struct AppState {
+    pub vault: Arc<Vault>,
+    pub pqlink: Arc<PqLinkServer>,
+    pub keystore: Arc<dyn KeyStore>,
+    pub scheme: Arc<dyn CryptogramScheme>,
+    pub clock: Arc<dyn Clock>,
+    pub auth: Authenticator,
+    pub sandbox: bool,
+    pub expose_otp: bool,
+}
+
+impl std::fmt::Debug for AppState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AppState")
+            .field("keystore", &self.keystore.backend_name())
+            .field("sandbox", &self.sandbox)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Dev-urug'ni o'qiydi: `MPAY_DEV_MASTER_SEED` yoki `keystore.seed_file`.
+fn dev_seed(cfg: &Config) -> Result<Zeroizing<[u8; 32]>, BootError> {
+    let text = match std::env::var("MPAY_DEV_MASTER_SEED") {
+        Ok(v) => Zeroizing::new(v),
+        Err(_) => {
+            let p = cfg.keystore.seed_file.as_ref().ok_or_else(|| {
+                BootError::KeyStore("MPAY_DEV_MASTER_SEED yoki keystore.seed_file kerak".into())
+            })?;
+            let raw = Zeroizing::new(read(&cfg.resolve(p))?);
+            Zeroizing::new(String::from_utf8_lossy(&raw).trim().to_owned())
+        }
+    };
+    let mut seed = Zeroizing::new([0u8; 32]);
+    hex::decode_to_slice(text.trim(), &mut seed[..])
+        .map_err(|_| BootError::KeyStore("dev-urug' 64 hex belgi bo'lishi kerak".into()))?;
+    Ok(seed)
+}
+
+/// KeyStore'ni ochadi.
+pub fn open_keystore(cfg: &Config) -> Result<Arc<dyn KeyStore>, BootError> {
+    let ks: Arc<dyn KeyStore> = match cfg.keystore.backend {
+        KeyStoreBackend::Memory => {
+            if !cfg.sandbox {
+                return Err(BootError::Config(
+                    "memory KeyStore faqat sandbox rejimida".into(),
+                ));
+            }
+            tracing::warn!("KeyStore: memory (dev-urug') — FAQAT SANDBOX");
+            Arc::new(MemoryKeyStore::from_seed(*dev_seed(cfg)?))
+        }
+        KeyStoreBackend::Pkcs11 => open_pkcs11()?,
+    };
+    ensure_standard_keys(ks.as_ref()).map_err(|e| BootError::KeyStore(e.to_string()))?;
+    Ok(ks)
+}
+
+#[cfg(feature = "pkcs11")]
+fn open_pkcs11() -> Result<Arc<dyn KeyStore>, BootError> {
+    use mpay_crypto::keystore::{Pkcs11Config, Pkcs11KeyStore};
+    let c = Pkcs11Config::from_env().map_err(|e| BootError::KeyStore(e.to_string()))?;
+    Ok(Arc::new(
+        Pkcs11KeyStore::open(&c).map_err(|e| BootError::KeyStore(e.to_string()))?,
+    ))
+}
+
+#[cfg(not(feature = "pkcs11"))]
+fn open_pkcs11() -> Result<Arc<dyn KeyStore>, BootError> {
+    Err(BootError::KeyStore(
+        "mpay-server `pkcs11` feature'siz yig'ilgan".into(),
+    ))
+}
+
+/// Ishonchli attestatsiya ildizlarini o'qiydi (PEM yoki DER).
+pub fn load_anchors(cfg: &Config) -> Result<TrustAnchors, BootError> {
+    let mut ders = Vec::new();
+    for p in &cfg.pqlink.attestation_roots {
+        let path = cfg.resolve(p);
+        let raw = read(&path)?;
+        if raw.starts_with(b"-----BEGIN") {
+            let certs = pem_to_der(&String::from_utf8_lossy(&raw));
+            if certs.is_empty() {
+                return Err(BootError::Config(format!(
+                    "{} da sertifikat yo'q",
+                    path.display()
+                )));
+            }
+            ders.extend(certs);
+        } else {
+            ders.push(raw);
+        }
+    }
+    Ok(TrustAnchors::from_der(&ders)?)
+}
+
+fn pem_to_der(pem: &str) -> Vec<Vec<u8>> {
+    use base64::Engine;
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let mut inside = false;
+    for line in pem.lines() {
+        let l = line.trim();
+        if l.starts_with("-----BEGIN CERTIFICATE") {
+            inside = true;
+            cur.clear();
+        } else if l.starts_with("-----END CERTIFICATE") {
+            inside = false;
+            if let Ok(d) = base64::engine::general_purpose::STANDARD.decode(&cur) {
+                out.push(d);
+            }
+        } else if inside {
+            cur.push_str(l);
+        }
+    }
+    out
+}
+
+/// Barcha komponentlarni yig'adi.
+pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let ks = open_keystore(cfg)?;
+    let scheme: Arc<dyn CryptogramScheme> = Arc::new(MpayAes128CmacV1);
+
+    let blob = MlDsaSeedBlob::from_bytes(&read(&cfg.resolve(&cfg.pqlink.mldsa_blob))?)?;
+    let signer = Arc::new(KeyStoreServerSigner::new(
+        ks.clone(),
+        KeyLabel::new(KeyLabel::SERVER_ED25519),
+        blob,
+    )?);
+    let anchors = load_anchors(cfg)?;
+    let pq_cfg = ServerConfig {
+        session_ttl_secs: cfg.pqlink.session_ttl_secs,
+        attestation: AttestationPolicy {
+            min_security_level: cfg.pqlink.min_security_level,
+        },
+        ..ServerConfig::default()
+    };
+    let pqlink = Arc::new(PqLinkServer::new(signer, anchors, pq_cfg, clock.clone()));
+
+    let db_path = cfg.resolve(&cfg.database.path);
+    let pool = mpay_vault::db::open_pool(&format!("sqlite://{}", db_path.display())).await?;
+    let shield = Arc::new(StubShield::new(cfg.shield_stub.clone()));
+    let vault = Arc::new(
+        Vault::open(
+            pool,
+            ks.clone(),
+            scheme.clone(),
+            shield,
+            clock.clone(),
+            cfg.vault.clone(),
+        )
+        .await?,
+    );
+
+    tracing::info!(
+        keystore = ks.backend_name(),
+        server_fp = %hex::encode(pqlink.identity().fingerprint()),
+        "mpay-server komponentlari tayyor"
+    );
+    Ok(AppState {
+        vault,
+        pqlink,
+        keystore: ks,
+        scheme,
+        clock,
+        auth: Authenticator::new(&cfg.auth.keys),
+        sandbox: cfg.sandbox,
+        expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
+    })
+}

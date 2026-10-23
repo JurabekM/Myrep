@@ -1,6 +1,6 @@
 # M-Pay Pay Sandbox — arxitektura
 
-> Holat: **M0 qoralama**, har bosqichda yangilanadi. Oxirgi yangilanish: 2026-10-23.
+> Holat: **M3**, har bosqichda yangilanadi. Oxirgi yangilanish: 2026-10-23.
 
 ## 1. Maqsad va chegaralar
 
@@ -38,13 +38,13 @@ Qat'iy chegaralar (qisqacha, to'liq ro'yxat: bosh `README.md`):
 ### Crate'lar va bog'liqliklar
 
 ```
-mpay-common   ◄── hamma
+mpay-common   ◄── hamma (TLV, ISO 8583, PAN, EMV profil, port trait'lari, API DTO'lari)
 mpay-crypto   ◄── pqlink, vault, issuer, terminal-sim, server
-mpay-pqlink   ◄── vault, terminal-sim, server
+mpay-pqlink   ◄── terminal-sim (client), server (server)
 mpay-shield   ◄── server            (faqat common'ga bog'liq)
-mpay-vault    ◄── server
+mpay-vault    ◄── server            (common + crypto; PQ Link'ni bilmaydi — server ochilgan so'rovni beradi)
 mpay-issuer   ◄── server            (vault/shield'ni port trait'lari orqali ko'radi)
-mpay-terminal-sim ◄── e2e testlar   (loopback soft-karta + terminal yadrosi + soft-wallet)
+mpay-terminal-sim ◄── e2e testlar   (soft-wallet, loopback soft-karta, terminal yadrosi, mpay-tsim CLI)
 mpay-server   ◄── e2e testlar
 ```
 
