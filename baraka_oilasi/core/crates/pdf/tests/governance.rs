@@ -52,7 +52,7 @@ fn incident() -> IncidentLine {
     IncidentLine {
         date: "10.12.2026".into(),
         duty: "Buyurtmalarni tikish va topshirish".into(),
-        party: "Nilufar Karimova".into(),
+        party: "Feruza Karimova".into(),
         reason: "Kasal bo'ldim, 3 kun ishlay olmayman".into(),
         solution: "Zamira o'rnimga tikadi".into(),
         status: "OPEN".into(),
@@ -91,12 +91,12 @@ fn protocol(locale: PdfLocale) -> ReviewProtocol {
         incidents: vec![incident()],
         acks: vec![
             AckLine {
-                party: "Sobir Qodirov".into(),
+                party: "Otabek Qodirov".into(),
                 verdict: "AGREE".into(),
                 note: String::new(),
             },
             AckLine {
-                party: "Nilufar Karimova".into(),
+                party: "Feruza Karimova".into(),
                 verdict: "OBJECT".into(),
                 note: "Mato narxi chekdan ko'ra yuqori yozilgan".into(),
             },
@@ -115,23 +115,23 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
         kind: "MUDARABA".into(),
         arbiter: "Hamid Yusupov".into(),
         opened_on: "03.01.2027".into(),
-        opened_by: "Sobir Qodirov".into(),
+        opened_by: "Otabek Qodirov".into(),
         subject: "Dekabr foydasi taqsimoti".into(),
         clauses: "4, 5".into(),
         claims: vec![
             FolderClaim {
-                party: "Sobir Qodirov".into(),
+                party: "Otabek Qodirov".into(),
                 claim: "Fors-major zarari mehnat egasining beparvoligidan".into(),
             },
             FolderClaim {
-                party: "Nilufar Karimova".into(),
+                party: "Feruza Karimova".into(),
                 claim: "Ombor kaliti kapital egasida edi".into(),
             },
         ],
         terms: vec![
             (
                 "folder.term.parties".into(),
-                "Sobir Qodirov 40%, Nilufar Karimova 60%".into(),
+                "Otabek Qodirov 40%, Feruza Karimova 60%".into(),
             ),
             ("folder.term.capital".into(), "30 000 000 soʻm".into()),
         ],
@@ -174,12 +174,12 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
             held_on: "02.01.2027".into(),
             acks: vec![
                 AckLine {
-                    party: "Sobir Qodirov".into(),
+                    party: "Otabek Qodirov".into(),
                     verdict: "AGREE".into(),
                     note: String::new(),
                 },
                 AckLine {
-                    party: "Nilufar Karimova".into(),
+                    party: "Feruza Karimova".into(),
                     verdict: "OBJECT".into(),
                     note: "Mato narxi".into(),
                 },

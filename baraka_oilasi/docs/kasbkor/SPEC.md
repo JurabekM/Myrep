@@ -36,7 +36,7 @@
 ### 1.2. Personajlar
 | Personaj | Segment | Moliyaviy xulq | Ilova nimani yechishi kerak |
 |---|---|---|---|
-| **Zarina** — atelye (3 tikuvchi) | Buyurtma bo'yicha xizmat, mato va furnitura xaridi | Uy daftarini yuritadi, lekin atelye puli bilan aralashib ketadi; qizi bepul yordam beradi | Ikki cho'ntak, egasi maoshi, o'z mehnati va oilaviy mehnat tannarxda, buyurtma bo'yicha haqiqiy foyda |
+| **Feruza** — atelye (3 tikuvchi) | Buyurtma bo'yicha xizmat, mato va furnitura xaridi | Uy daftarini yuritadi, lekin atelye puli bilan aralashib ketadi; qizi bepul yordam beradi | Ikki cho'ntak, egasi maoshi, o'z mehnati va oilaviy mehnat tannarxda, buyurtma bo'yicha haqiqiy foyda |
 | **Bahodir aka** — mahalla do'koni | Kundalik savdo, ko'p tovar, naqd va karta | Kassadan kerak bo'lganda oladi, nasiya daftari qog'ozda, tovar «turibdi» | Kunlik kassa yopish, «egasi oldi», nasiya daftari va haftalik ko'rik, tovar qoldig'i va qayta tiklash narxi |
 | **Jasur** — usta (santexnik) | Xizmat + material, buyurtmalar notekis | Avansni olib, materialga yetmay qoladi; asboblari eskiradi | Buyurtma kalkulyatori (mehnat, material, yo'l, eskirish), avans va material puli ajratilishi |
 | **Malika** — Instagram do'kon | Onlayn savdo, yetkazib berish, qaytarishlar | Reklama va yetkazishni hisoblamaydi, nasiyaga (bo'lib to'lash) sotadi | Kanal xarajatlari, qaytarishlar, nasiya narxini qotirish va jadval |
@@ -81,7 +81,7 @@ Haqiqiy foyda      = Ko'rinadigan foyda − O'z mehnati bahosi − Oilaviy mehna
 - **Oilaviy mehnat** — a'zo, soat, soat bahosi; pul to'lanmasa ham tannarxga kiradi («qizingizning 80 soati ham xarajat»). To'langan bo'lsa — operatsion xarajat (ikki marta hisoblanmaydi).
 - **Eskirish** — uskuna narxi (minus qoldiq qiymati) foydali muddat oylariga `allocate` bilan teng bo'linadi (qoldiq tiyinlar birinchi oylarga); yig'indi aniq narxga teng.
 
-**Misol (Zarina, oy):** tushum 18 000 000; mato va furnitura 6 000 000; ijara 2 000 000; kommunal 500 000 → ko'rinadigan foyda **9 500 000**. O'z mehnati 5 000 000; qizining yordami 80 soat × 15 000 = 1 200 000; 2 ta tikuv mashinasi 12 000 000, 60 oy → eskirish 200 000. **Haqiqiy foyda = 3 100 000 so'm.**
+**Misol (Feruza, oy):** tushum 18 000 000; mato va furnitura 6 000 000; ijara 2 000 000; kommunal 500 000 → ko'rinadigan foyda **9 500 000**. O'z mehnati 5 000 000; qizining yordami 80 soat × 15 000 = 1 200 000; 2 ta tikuv mashinasi 12 000 000, 60 oy → eskirish 200 000. **Haqiqiy foyda = 3 100 000 so'm.**
 
 **Eskirish yaxlitlash misoli:** 7 000 000 so'm, 36 oy → 700 000 000 tiyin / 36 = 19 444 444, qoldiq 16 → 16 oy 194 444,45 so'm, 20 oy 194 444,44 so'm; jami 7 000 000,00.
 
@@ -133,7 +133,7 @@ Tamoyilning mazmuni: javondagi tovar — muzlagan pul. Uni eski narxda hisoblash
 - Tartib: (1) **soliq zaxirasi** — egasi kiritgan qoida bo'yicha (tushumdan yoki foydadan, foiz yoki summa; OQ-K3); (2) **egasi maoshi** (2.2); (3) qolgan pul **taqsimot qoidasi** bo'yicha: zaxira, aylanma (tovar), kengayish, (ixtiyoriy) sadaqa — bp bilan, `allocate` (largest remainder). Eskirish summasidan kam bo'lmagan qismi zaxiraga tavsiya qilinadi («uskunani almashtirish puli»).
 - Qolgan pul manfiy bo'lsa — taqsimot yo'q; «nima bo'ldi?» audit qadami (Uy'dagi «izohsiz summa» analogi).
 
-**Misol (Zarina, oy):** tushum 18 000 000; soliq zaxirasi (foydalanuvchi kiritgan 4% tushumdan — misol, soliq maslahati emas) 720 000; to'langan xarajatlar 8 500 000; qizining yordami uchun to'langan 1 200 000; egasi maoshi 5 000 000 → qolgan **2 580 000**. Qoida 30/50/20 → zaxira 774 000, aylanma 1 290 000, kengayish 516 000.
+**Misol (Feruza, oy):** tushum 18 000 000; soliq zaxirasi (foydalanuvchi kiritgan 4% tushumdan — misol, soliq maslahati emas) 720 000; to'langan xarajatlar 8 500 000; qizining yordami uchun to'langan 1 200 000; egasi maoshi 5 000 000 → qolgan **2 580 000**. Qoida 30/50/20 → zaxira 774 000, aylanma 1 290 000, kengayish 516 000.
 
 ### 4.6. K3 da qanday qilindi (farqlar)
 - «Qolgan pul» — naqd asosida: tushum − soliq zaxirasi − chiqimlar − egasi maoshi (haqiqiy foyda bayonnomada ma'lumot uchun). Uskuna xaridi ayirilmaydi.

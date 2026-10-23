@@ -1,7 +1,7 @@
 {
   "suite": "mf_reserve",
   "version": 1,
-  "description": "Musofir qorovul pul: chet eldagi o'rtacha oylik xarajat × N oy maqsad, yetmagani, holat va o'z ulushini qorovul pul va jamg'arma orasida bo'lish (musofir/SPEC 6.4)",
+  "description": "Musofir zaxira pul: chet eldagi o'rtacha oylik xarajat × N oy maqsad, yetmagani, holat va o'z ulushini zaxira pul va jamg'arma orasida bo'lish (musofir/SPEC 6.4)",
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {

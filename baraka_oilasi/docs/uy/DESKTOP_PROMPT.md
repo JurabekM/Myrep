@@ -26,7 +26,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 |---|---|---|---|
 | 1 | Avval o'zingga to'la | Daromad, avto-ulush, «Kelajagim», streak, oylik audit, «Kimning puli?» | 2 |
 | 2 | Xarajatni yozing | Zarur/Kerak/Havas, havas chegarasi (oila roziligi bilan), obunalar, konvertlar, «Qutqarilgan pul», sadaqa ajratmasi | 2B |
-| 3 | Pulni ishlating | Qorovul/O'sadigan jamg'arma (6 oy), «Narx daftari», shaxsiy inflyatsiya, tayyorgarlik darvozasi, ribo filtri | 2C |
+| 3 | Pulni ishlating | Zaxira/O'sadigan jamg'arma (6 oy), «Narx daftari», shaxsiy inflyatsiya, tayyorgarlik darvozasi, ribo filtri | 2C |
 | 4 | Ribodan saqlaning, qarzdan reja bilan chiqing | Qarz inventari, haqiqiy narx, 70/20/10, payoff planner, tilxat, marosim rejalovchisi | 2D |
 | 5 | Pulni halol ishga sol | Mudoraba/Musharaka, shartnoma, buyout, venture ledger, taklif detektori | 2E |
 | 6 | Kelishuvni yozing | Umumiy kelishuv dvigateli (9 savol), vazifalar va hodisalar, oylik ochiq ko'rik va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozish, oilaviy kelishuvlar | 2F |
@@ -189,7 +189,7 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
   - kutilgan natija: go'sht 6250 bp, non 5000 bp, indeks **5625 bp**.
 - `unexplained_gap.json`:
   - daromad 800000000, majburiyatlar 535000000, xarajatlar 165000000, jamg'arma 0 → **100000000** (1 mln so'm «izohsiz»).
-- `readiness_gate.json`: {qorovul oylari, foizli qarz bormi, qarz rejasi bormi} → `OPEN / LOCKED` + sabablar ro'yxati (to'liq kombinatsiya matritsasi).
+- `readiness_gate.json`: {zaxira oylari, foizli qarz bormi, qarz rejasi bormi} → `OPEN / LOCKED` + sabablar ro'yxati (to'liq kombinatsiya matritsasi).
 - `fx_convert.json`, `money_format.json` (`"8 000 000 so'm"`, manfiy qiymatlar, `ru` lokali).
 - `debt_recovery_split.json`: 70/20/10 va jamg'arma ulushi minimal 1% bo'lishi.
 
@@ -207,9 +207,9 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 ]
 ```
 - **Kutilgan xeshlar:**
-  - `chain-001`: `e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e`
-  - `chain-002`: `fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53`
-  - `chain-003`: `ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903`
+  - `chain-001`: `f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a`
+  - `chain-002`: `475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707`
+  - `chain-003`: `982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a`
 - **Salbiy case:** 2-yozuvning `minor` qiymati `"300000001"` ga o'zgartirilsa, `verifyChain` **2-yozuvni** birinchi buzilgan joy sifatida qaytarishi kerak.
 - **Eslatma:** vektorda kirill yoki maxsus belgilar yo'q. Ular uchun alohida case (`oʻ`, `gʻ` bilan) D8A vazifasida qo'shiladi va JCS'ning UTF-16 tartiblash qoidasi tekshiriladi.
 
@@ -348,7 +348,7 @@ Kod va identifikatorlar inglizcha; izohlar, hujjatlar va UI matnlari o'zbekcha.
 - **Qabul mezonlari:** qutqarilgan pul vektorlari (manfiy holat → 0) yashil; qulf holatida tray oynasi summa ko'rsatmaydi.
 
 ### D. 3-tamoyil
-**D8 — Qorovul/O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri**
+**D8 — Zaxira/O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri**
 - SPEC 2C: VAULT → QOROVUL migratsiyasi, 6 oylik maqsad (vektor), «Narx daftari» va shaxsiy indeks (vektor), «Sichqon kemirgani», `ReadinessGate` (vektor matritsasi), ongli chetlab o'tish, `IncomeSourceType`, taqiqlangan iboralar i18n testi.
 - **Qabul mezonlari:** `emergency_target`, `personal_inflation` va `readiness_gate` vektorlari yashil; migratsiyada balans yo'qolmaydi.
 

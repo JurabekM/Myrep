@@ -60,10 +60,10 @@ describe("Onboarding (≤ 5 qadam)", () => {
     );
     const next = screen.getByRole("button", { name: "Davom etish" });
     expect(next).toBeDisabled();
-    await user.type(screen.getByLabelText("Oila nomi"), "Anvarlar oilasi");
-    await user.type(screen.getByLabelText("Ismingiz"), "Anvar");
+    await user.type(screen.getByLabelText("Oila nomi"), "Bekzodlar oilasi");
+    await user.type(screen.getByLabelText("Ismingiz"), "Bekzod");
     await user.click(screen.getByRole("button", { name: "+ Aʼzo qoʻshish" }));
-    await user.type(screen.getByLabelText("2-aʼzo ismi"), "Gulnora");
+    await user.type(screen.getByLabelText("2-aʼzo ismi"), "Mohira");
     await user.click(screen.getByRole("button", { name: "+ Aʼzo qoʻshish" }));
     await user.type(screen.getByLabelText("3-aʼzo ismi"), "Jasur");
     await user.selectOptions(
@@ -103,7 +103,7 @@ describe("Onboarding (≤ 5 qadam)", () => {
     await user.click(screen.getByRole("button", { name: "Boshlash" }));
 
     expect(fns.setup).toHaveBeenCalledWith("246810", {
-      householdName: "Anvarlar oilasi",
+      householdName: "Bekzodlar oilasi",
       deviceName: "Desktop",
       platform: "desktop",
       locale: "uz",
@@ -111,8 +111,8 @@ describe("Onboarding (≤ 5 qadam)", () => {
       monthStartDay: 10,
       spaces: ["UY"],
       members: [
-        { displayName: "Anvar", role: "ADULT" },
-        { displayName: "Gulnora", role: "ADULT" },
+        { displayName: "Bekzod", role: "ADULT" },
+        { displayName: "Mohira", role: "ADULT" },
         { displayName: "Jasur", role: "CHILD" },
       ],
       incomeRhythm: "MONTHLY",
@@ -131,7 +131,7 @@ describe("Onboarding (≤ 5 qadam)", () => {
     wrap(<SetupScreen />);
     await user.click(screen.getByRole("button", { name: "Davom etish" }));
     await user.type(screen.getByLabelText("Oila nomi"), "Oila");
-    await user.type(screen.getByLabelText("Ismingiz"), "Nilufar");
+    await user.type(screen.getByLabelText("Ismingiz"), "Feruza");
     await user.click(screen.getByRole("button", { name: "Davom etish" }));
     await user.click(screen.getByLabelText(/Har kuni naqd/));
     await user.click(screen.getByRole("button", { name: "Orqaga" }));

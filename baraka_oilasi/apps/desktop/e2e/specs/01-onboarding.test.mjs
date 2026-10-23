@@ -19,10 +19,10 @@ describe("Onboarding va sozlamalar", () => {
     await app.shot("onboarding-1-language");
     await app.click("Davom etish");
 
-    await app.type("Oila nomi", "Anvarlar oilasi");
-    await app.type("Ismingiz", "Anvar");
+    await app.type("Oila nomi", "Bekzodlar oilasi");
+    await app.type("Ismingiz", "Bekzod");
     await app.click("+ Aʼzo qoʻshish");
-    await app.type("2-aʼzo ismi", "Gulnora");
+    await app.type("2-aʼzo ismi", "Mohira");
     await app.click("+ Aʼzo qoʻshish");
     await app.type("3-aʼzo ismi", "Jasur");
     await app.select("3-aʼzo: katta yoki bola", "CHILD");

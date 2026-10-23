@@ -192,7 +192,7 @@ mod tests {
         Money::new(v, Currency::Uzs)
     }
 
-    fn anvar() -> LoanTerms {
+    fn bekzod() -> LoanTerms {
         LoanTerms {
             principal: uzs(3_900_000_000),
             annual_bp: 2400,
@@ -208,13 +208,13 @@ mod tests {
             (160_000_000, 9, 397_018_667),
             (240_000_000, 8, 341_756_885),
         ] {
-            let s = simulate(&anvar(), uzs(extra)).unwrap();
+            let s = simulate(&bekzod(), uzs(extra)).unwrap();
             assert_eq!(s.payment, uzs(322_147_684));
             assert_eq!(s.months(), months);
             assert_eq!(s.total_interest, uzs(interest));
             assert_eq!(s.rows.last().map(|r| r.balance), Some(uzs(0)));
         }
-        let s = simulate(&anvar(), uzs(160_000_000)).unwrap();
+        let s = simulate(&bekzod(), uzs(160_000_000)).unwrap();
         assert_eq!(
             s.rows[8],
             ScheduleRow {
@@ -229,8 +229,8 @@ mod tests {
 
     #[test]
     fn acceleration() {
-        let base = simulate(&anvar(), uzs(0)).unwrap();
-        let fast = simulate(&anvar(), uzs(160_000_000)).unwrap();
+        let base = simulate(&bekzod(), uzs(0)).unwrap();
+        let fast = simulate(&bekzod(), uzs(160_000_000)).unwrap();
         let a = compare(&base, &fast).unwrap();
         assert_eq!(a.months_saved, 5);
         assert_eq!(a.interest_saved, uzs(213_048_906));
@@ -284,10 +284,10 @@ mod tests {
 
     #[test]
     fn validation() {
-        let mut t = anvar();
+        let mut t = bekzod();
         t.months = 0;
         assert!(simulate(&t, uzs(0)).is_err());
-        assert!(simulate(&anvar(), uzs(-1)).is_err());
-        assert!(simulate(&anvar(), Money::new(1, Currency::Usd)).is_err());
+        assert!(simulate(&bekzod(), uzs(-1)).is_err());
+        assert!(simulate(&bekzod(), Money::new(1, Currency::Usd)).is_err());
     }
 }

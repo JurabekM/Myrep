@@ -1,4 +1,4 @@
-// Kasb-kor «Haqiqiy foydani bil» (K2, kasbkor/SPEC 3.1–3.3), haqiqiy ilovada: Nilufar atelyesi —
+// Kasb-kor «Haqiqiy foydani bil» (K2, kasbkor/SPEC 3.1–3.3), haqiqiy ilovada: Feruza atelyesi —
 // tushum 18 mln, chiqim 8,5 mln → ko'rinadigan foyda 9,5 mln; o'z mehnati 5 mln, qizining 80 soati
 // (15 000), 2 ta tikuv mashinasi 12 mln / 60 oy → haqiqiy foyda 3 100 000. Jasur buyurtmasi —
 // tannarxdan past narx ogohlantirishi. Uskuna sotilsa — balans bir martalik xarajat. Har ekran axe bilan.
@@ -39,8 +39,8 @@ describe("Kasb-kor: haqiqiy foyda", () => {
     await app?.shot(`kkp-last-${t.name.slice(0, 2)}`).catch(() => {});
   });
 
-  it("P1. Nilufar: tushum va chiqimlar → ko'rinadigan foyda", async () => {
-    await onboard(app, { household: "Nilufarlar oilasi", name: "Nilufar", spaces: ["Kasb-kor"], rhythm: "Buyurtma boʻyicha" });
+  it("P1. Feruza: tushum va chiqimlar → ko'rinadigan foyda", async () => {
+    await onboard(app, { household: "Feruzalar oilasi", name: "Feruza", spaces: ["Kasb-kor"], rhythm: "Buyurtma boʻyicha" });
     await app.click("Kasb-kor", await app.region("Makonlar"));
     await app.waitText("Haqiqiy foyda (shu oy)");
     await entry(app, "Tushum", { amount: "18 000 000", wallet: "Karta" });

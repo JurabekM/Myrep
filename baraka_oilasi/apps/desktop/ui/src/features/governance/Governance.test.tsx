@@ -55,14 +55,14 @@ const ledger = (inDispute: boolean) => ({
   currency: "UZS",
   writable: true,
   readOnlyReason: null,
-  keeperName: "Nilufar Karimova",
+  keeperName: "Feruza Karimova",
   startOn: "2026-11-01",
   open: { no: 1, from: "2026-11-01", entries: 2, income: money("20 000 000 soʻm", "2000000000"), expense: money("2 000 000 soʻm", "200000000"), forceMajeure: zero, corrections: zero, result: money("18 000 000 soʻm", "1800000000") },
   entries: [],
   periods: [],
   balances: [
-    { partyId: "P1", name: "Sobir Qodirov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
-    { partyId: "P2", name: "Nilufar Karimova", role: "WORKER", isMe: true, capital: zero, carriedLoss: zero },
+    { partyId: "P1", name: "Otabek Qodirov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
+    { partyId: "P2", name: "Feruza Karimova", role: "WORKER", isMe: true, capital: zero, carriedLoss: zero },
   ],
   buyout: null,
   chainCode: "AB12-CD34-EF56-7890",
@@ -101,8 +101,8 @@ describe("LedgerView: «katta foyda» va nizo", () => {
     fns.partnership.mockResolvedValue(
       ok({
         parties: [
-          { id: "P1", fullName: "Sobir Qodirov", profitShare: "50%", lossShare: "100%" },
-          { id: "P2", fullName: "Nilufar Karimova", profitShare: "50%", lossShare: "0%" },
+          { id: "P1", fullName: "Otabek Qodirov", profitShare: "50%", lossShare: "100%" },
+          { id: "P2", fullName: "Feruza Karimova", profitShare: "50%", lossShare: "0%" },
         ],
         negligenceClause: "Uskunani boshqa ishga berish",
       }),
@@ -119,9 +119,9 @@ describe("LedgerView: «katta foyda» va nizo", () => {
     const alert = await screen.findByRole("alert");
     expect(within(alert).getByText("Katta foyda: 18 000 000 soʻm")).toBeInTheDocument();
     expect(await within(alert).findByText("Uskunani boshqa ishga berish")).toBeInTheDocument();
-    expect(within(alert).getByText("✓ Sobir Qodirov qayta oʻqidi")).toBeInTheDocument();
+    expect(within(alert).getByText("✓ Otabek Qodirov qayta oʻqidi")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Davrni yopish" })).toBeDisabled();
-    await user.click(within(alert).getByRole("button", { name: "Nilufar Karimova 4–5-bandlarni qayta oʻqidi" }));
+    await user.click(within(alert).getByRole("button", { name: "Feruza Karimova 4–5-bandlarni qayta oʻqidi" }));
     expect(fns.acknowledgeSpikeReread).toHaveBeenCalledWith("uy", "p1", "P2");
   });
 
@@ -146,8 +146,8 @@ const review = (integrity: string) => ({
   totals: { entries: 2, periodsClosed: 0, income: zero, expense: zero, forceMajeure: zero, corrections: zero, result: zero },
   openIncidents: 1,
   acks: [
-    { partyId: "P1", partyName: "Sobir Qodirov", verdict: "AGREE", note: null },
-    { partyId: "P2", partyName: "Nilufar Karimova", verdict: "OBJECT", note: "Mato narxi" },
+    { partyId: "P1", partyName: "Otabek Qodirov", verdict: "AGREE", note: null },
+    { partyId: "P2", partyName: "Feruza Karimova", verdict: "OBJECT", note: "Mato narxi" },
   ],
   chainCode: "A765-1DD8-4DAD-994D",
   integrity,
@@ -162,10 +162,10 @@ const gov = {
   writable: true,
   readOnlyReason: null,
   parties: [
-    { partyId: "P1", name: "Sobir Qodirov" },
-    { partyId: "P2", name: "Nilufar Karimova" },
+    { partyId: "P1", name: "Otabek Qodirov" },
+    { partyId: "P2", name: "Feruza Karimova" },
   ],
-  duties: [{ id: "d1", title: "Buyurtmalarni tikish", ownerPartyId: "P2", ownerName: "Nilufar Karimova", breachClause: "1 kun ichida xabar beradi va oʻrniga yechim topadi" }],
+  duties: [{ id: "d1", title: "Buyurtmalarni tikish", ownerPartyId: "P2", ownerName: "Feruza Karimova", breachClause: "1 kun ichida xabar beradi va oʻrniga yechim topadi" }],
   incidents: [],
   reviews: [review("HEAD_MISMATCH")],
   disputes: [],
@@ -190,7 +190,7 @@ describe("GovernanceView", () => {
             dutyTitle: "Buyurtmalarni tikish",
             breachClause: "1 kun ichida xabar beradi va oʻrniga yechim topadi",
             partyId: "P2",
-            partyName: "Nilufar Karimova",
+            partyName: "Feruza Karimova",
             reason: "Kasal",
             occurredOn: "2026-12-01",
             proposedSolution: null,
@@ -239,10 +239,10 @@ describe("GovernanceView", () => {
     expect(fns.reviewDraft).toHaveBeenCalledWith("uy", "p1", "");
     const hold = within(dialog).getByRole("button", { name: "Bayonnomani yozish" });
     expect(hold).toBeDisabled();
-    await user.click(within(within(dialog).getByRole("radiogroup", { name: "Sobir Qodirov" })).getByLabelText("Koʻrdim, roziman"));
-    await user.click(within(within(dialog).getByRole("radiogroup", { name: "Nilufar Karimova" })).getByLabelText("Eʼtirozim bor"));
+    await user.click(within(within(dialog).getByRole("radiogroup", { name: "Otabek Qodirov" })).getByLabelText("Koʻrdim, roziman"));
+    await user.click(within(within(dialog).getByRole("radiogroup", { name: "Feruza Karimova" })).getByLabelText("Eʼtirozim bor"));
     expect(hold).toBeDisabled();
-    await user.type(within(dialog).getByLabelText("Nilufar Karimova: eʼtiroz mazmuni"), "Mato narxi");
+    await user.type(within(dialog).getByLabelText("Feruza Karimova: eʼtiroz mazmuni"), "Mato narxi");
     expect(hold).toBeEnabled();
     await user.click(hold);
     expect(fns.holdReview).toHaveBeenCalledWith(
@@ -294,8 +294,8 @@ describe("AgreementsScreen", () => {
           reviewDate: null,
           status: "DRAFT",
           adults: [
-            { memberId: "m1", name: "Nilufar", agreedOn: "2026-12-02" },
-            { memberId: "m2", name: "Rustam", agreedOn: null },
+            { memberId: "m1", name: "Feruza", agreedOn: "2026-12-02" },
+            { memberId: "m2", name: "Bobur", agreedOn: null },
           ],
           hashCode: "AAAA-BBBB-CCCC-DDDD",
         },
@@ -307,8 +307,8 @@ describe("AgreementsScreen", () => {
     wrap(<AgreementsScreen spaceId="uy" />);
     await user.click(screen.getByRole("tab", { name: "Oilaviy kelishuvlar" }));
     expect(await screen.findByText("Tasdiq kutilmoqda")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Rustam tasdiqlaydi" }));
-    await user.type(screen.getByLabelText("Rustam: PIN bilan tasdiqlang"), "123456");
+    await user.click(screen.getByRole("button", { name: "Bobur tasdiqlaydi" }));
+    await user.type(screen.getByLabelText("Bobur: PIN bilan tasdiqlang"), "123456");
     await user.click(screen.getByRole("button", { name: "Tasdiqlash" }));
     expect(fns.confirmFamilyAgreement).toHaveBeenCalledWith("uy", "123456", "f1", "m2");
 

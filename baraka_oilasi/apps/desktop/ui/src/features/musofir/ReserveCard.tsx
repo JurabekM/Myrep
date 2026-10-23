@@ -10,7 +10,7 @@ const TONE: Record<string, string> = { FULL: "text-accent-text", PARTIAL: "text-
 const ACTIONS: MfEntryMode[] = ["RESERVE_IN", "RESERVE_OUT", "RESERVE_OPENING"];
 
 /**
- * Qorovul pul (musofir/SPEC 6.4): chet eldagi kutilmagan xarajat uchun alohida pul. Maqsad — oxirgi
+ * Zaxira pul (musofir/SPEC 6.4): chet eldagi kutilmagan xarajat uchun alohida pul. Maqsad — oxirgi
  * oylardagi o'rtacha xarajat × N oy; hammasi yadrodan. O'z ulushi avval shu yerga, keyin jamg'armaga.
  */
 export function ReserveCard({ spaceId, d, r, onAction }: { spaceId: string; d: MfOverviewDto; r: MfReserveDto; onAction: (mode: MfEntryMode) => void }) {

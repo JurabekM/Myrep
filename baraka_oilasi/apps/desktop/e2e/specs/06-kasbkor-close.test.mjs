@@ -1,4 +1,4 @@
-// Kasb-kor «Hisob kuni» (K3, kasbkor/SPEC 4.5), haqiqiy ilovada. A — joriy oyda Nilufar atelyesi:
+// Kasb-kor «Hisob kuni» (K3, kasbkor/SPEC 4.5), haqiqiy ilovada. A — joriy oyda Feruza atelyesi:
 // tushum 18 mln, chiqimlar 9,7 mln (shu jumladan qiziga to'langan 1,2 mln), maosh 5 mln «egasi oldi».
 // B — ilova keyingi oyning 5-kuniga siljitilgan yadro soati bilan qayta ochiladi: bosh sahifada
 // eslatma → soliq zaxirasi 4 % tushumdan → qolgan 2 580 000 → 774 000 / 1 290 000 / 516 000 →
@@ -49,7 +49,7 @@ describe("Kasb-kor: Hisob kuni", () => {
   });
 
   it("C1. joriy oy: tushum, chiqimlar, maosh va «egasi oldi»", async () => {
-    await onboard(app, { household: "Nilufarlar oilasi", name: "Nilufar", spaces: ["Kasb-kor"], rhythm: "Buyurtma boʻyicha" });
+    await onboard(app, { household: "Feruzalar oilasi", name: "Feruza", spaces: ["Kasb-kor"], rhythm: "Buyurtma boʻyicha" });
     await app.click("Kasb-kor", await app.region("Makonlar"));
     await app.waitText("Haqiqiy foyda (shu oy)");
     await entry(app, "Tushum", { amount: "18 000 000", wallet: "Karta" });

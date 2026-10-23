@@ -1,5 +1,5 @@
 // Qaytish xavfsizligi (M5, musofir/SPEC 6.8). Uyda oyiga 8 mln so'm
-// xarajat → 35 kundan keyin Rustam Koreyadan qaytdi: 18 000 $ (1 $ = 12 650 so'm ≈ 227,7 mln) — qal'a devori
+// xarajat → 35 kundan keyin Bobur Koreyadan qaytdi: 18 000 $ (1 $ = 12 650 so'm ≈ 227,7 mln) — qal'a devori
 // 48 mln, erkin pul 179,7 mln → «Oltin foyda»ga 10 000 $ (126,5 mln): «oyiga 35 % kafolat», «joy kam», tekshirtirmaydi,
 // pulni qaytarib olish qiyin, oila bilan maslahatlashmadi → qizil: besh belgidan to'rttasi, «5,2 barobar» → rad
 // etdi. Uy makonida «Taklifni tekshirish» ham shu besh belgini so'raydi.
@@ -45,7 +45,7 @@ describe("Musofir: qaytish xavfsizligi", () => {
   it("S1. uyda oyiga 8 mln so'm xarajat", async () => {
     app = await startApp();
     profile = app.dir;
-    await onboard(app, { household: "Rustamning oilasi", name: "Rustam", spaces: ["Musofir"], rhythm: "Oylik maosh" });
+    await onboard(app, { household: "Boburning oilasi", name: "Bobur", spaces: ["Musofir"], rhythm: "Oylik maosh" });
     await app.nav("Xarajatlar");
     await app.type("Summa", "8 000 000");
     await app.selectText("Kategoriya", "Oziq-ovqat");

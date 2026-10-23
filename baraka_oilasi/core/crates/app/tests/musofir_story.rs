@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-//! M5 — qaytish xavfsizligi (SPEC 6.8): Rustam Koreyadan
+//! M5 — qaytish xavfsizligi (SPEC 6.8): Bobur Koreyadan
 //! 18 000 dollar bilan qaytdi; sinfdoshi «Oltin foyda»ga 10 000 ni qo'yishga undaydi — «oyiga 35 % kafolatli»,
 //! «joy kam», tekshirtirmaydi, pulni qaytarib olish qiyin. Oilaning 6 oylik ro'zg'ori — «qal'a devori».
 
@@ -11,7 +11,7 @@ use chrono::{DateTime, Utc};
 fn setup() -> (App, String, String) {
     let app = App::open_in_memory(
         &DbKey::from_bytes([7; 32]),
-        "dev-rustam",
+        "dev-bobur",
         Arc::new(FixedClock::new(
             DateTime::parse_from_rfc3339("2026-10-20T09:00:00+05:00")
                 .unwrap()
@@ -22,15 +22,15 @@ fn setup() -> (App, String, String) {
     .unwrap();
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Rustamning oilasi".into(),
-            device_name: "Rustamning telefoni".into(),
+            household_name: "Boburning oilasi".into(),
+            device_name: "Boburning telefoni".into(),
             platform: "android".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
             month_start_day: 1,
             spaces: vec!["UY".into(), "MUSOFIR".into()],
             members: vec![NewMemberInput {
-                display_name: "Rustam".into(),
+                display_name: "Bobur".into(),
                 role: "ADULT".into(),
             }],
             income_rhythm: None,

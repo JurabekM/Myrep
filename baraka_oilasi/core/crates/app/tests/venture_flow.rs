@@ -32,14 +32,14 @@ fn app() -> (App, Arc<FixedClock>, String, Vec<MemberDto>) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Nilufarning oilasi".into(),
+            household_name: "Feruzaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
             month_start_day: 1,
             spaces: vec!["UY".into()],
-            members: vec![member("Nilufar", "ADULT"), member("Rustam", "ADULT")],
+            members: vec![member("Feruza", "ADULT"), member("Bobur", "ADULT")],
         })
         .unwrap();
     let uy = h.spaces[0].id.clone();
@@ -58,7 +58,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Sobir Qodirov tikuv uskunasi va mato puli beradi, Nilufar (shu oila) tikadi — mudoraba 50/50.
+/// Otabek Qodirov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -66,7 +66,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Sobir Qodirov".into(),
+                full_name: "Otabek Qodirov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -77,7 +77,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
             },
             PartnerInput {
                 id: "P2".into(),
-                full_name: "Nilufar Karimova".into(),
+                full_name: "Feruza Karimova".into(),
                 role: "WORKER".into(),
                 profit_share_bp: 5000,
                 is_me: me_is_worker,
@@ -148,7 +148,7 @@ fn sign_all(app: &App, uy: &str, p: &PartnershipDto) -> PartnershipDto {
     last
 }
 
-/// Nilufar (shu oila) — mehnat egasi va hisob yurituvchi; shartnoma imzolanib, faollashtirilgan.
+/// Feruza (shu oila) — mehnat egasi va hisob yurituvchi; shartnoma imzolanib, faollashtirilgan.
 fn active(app: &App, uy: &str, members: &[MemberDto], input: PartnershipInput) -> PartnershipDto {
     let p = app.create_partnership(uy, input).unwrap();
     let p = sign_all(app, uy, &p);
@@ -203,7 +203,7 @@ fn ledger_close_buyout_and_immutability() {
         ("2026-11-01", "2026-11-01")
     );
     assert_eq!(l.balances[0].capital.minor, "3000000000");
-    assert_eq!(l.keeper_name.as_deref(), Some("Nilufar Karimova"));
+    assert_eq!(l.keeper_name.as_deref(), Some("Feruza Karimova"));
 
     let mut order = entry(
         "INCOME",
@@ -435,7 +435,7 @@ fn ideas_payback_draft_and_offer_check() {
             },
         )
         .unwrap();
-    assert_eq!(skills[0].member_name.as_deref(), Some("Nilufar"));
+    assert_eq!(skills[0].member_name.as_deref(), Some("Feruza"));
     let line = |t: &str, a: &str| CapexLineInput {
         title: t.into(),
         amount: a.into(),
@@ -484,8 +484,8 @@ fn ideas_payback_draft_and_offer_check() {
             &uy,
             &idea.id,
             IdeaDraftInput {
-                capital_provider_name: "Sobir Qodirov".into(),
-                my_name: "Nilufar Karimova".into(),
+                capital_provider_name: "Otabek Qodirov".into(),
+                my_name: "Feruza Karimova".into(),
             },
         )
         .unwrap();

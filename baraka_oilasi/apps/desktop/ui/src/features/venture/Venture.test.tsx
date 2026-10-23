@@ -48,7 +48,7 @@ const ledger = (writable: boolean) => ({
   currency: "UZS",
   writable,
   readOnlyReason: writable ? null : "NOT_KEEPER",
-  keeperName: "Nilufar Karimova",
+  keeperName: "Feruza Karimova",
   startOn: "2026-11-01",
   open: { no: 1, from: "2026-11-01", entries: 2, income: money("15 000 000 soʻm", "1500000000"), expense: money("7 000 000 soʻm", "700000000"), forceMajeure: zero, corrections: zero, result: money("8 000 000 soʻm", "800000000") },
   entries: [
@@ -56,8 +56,8 @@ const ledger = (writable: boolean) => ({
   ],
   periods: [],
   balances: [
-    { partyId: "P1", name: "Sobir Qodirov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
-    { partyId: "P2", name: "Nilufar Karimova", role: "WORKER", isMe: true, capital: zero, carriedLoss: zero },
+    { partyId: "P1", name: "Otabek Qodirov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
+    { partyId: "P2", name: "Feruza Karimova", role: "WORKER", isMe: true, capital: zero, carriedLoss: zero },
   ],
   buyout: null,
   chainCode: "AB12-CD34-EF56-7890",
@@ -74,7 +74,7 @@ describe("LedgerView", () => {
   it("hisob yurituvchi emas — faqat o'qish, yozish formasi yo'q", async () => {
     ventureLedger.mockResolvedValue({ status: "ok", data: ledger(false) });
     wrap(<LedgerView spaceId="uy" partnershipId="p1" />);
-    expect(await screen.findByText(/Hisobni Nilufar Karimova yuritadi/)).toBeInTheDocument();
+    expect(await screen.findByText(/Hisobni Feruza Karimova yuritadi/)).toBeInTheDocument();
     expect(screen.queryByRole("form", { name: "Daftarga yozish" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Tuzatish" })).not.toBeInTheDocument();
   });
@@ -97,7 +97,7 @@ describe("LedgerView", () => {
         result: money("8 000 000 soʻm", "800000000"),
         recovered: zero,
         distributable: money("8 000 000 soʻm", "800000000"),
-        parties: [party("P1", "Sobir Qodirov", "CAPITAL_PROVIDER", false, "4 000 000 soʻm", "7 000 000 soʻm", "27 000 000 soʻm"), party("P2", "Nilufar Karimova", "WORKER", true, "4 000 000 soʻm", "1 000 000 soʻm", "3 000 000 soʻm")],
+        parties: [party("P1", "Otabek Qodirov", "CAPITAL_PROVIDER", false, "4 000 000 soʻm", "7 000 000 soʻm", "27 000 000 soʻm"), party("P2", "Feruza Karimova", "WORKER", true, "4 000 000 soʻm", "1 000 000 soʻm", "3 000 000 soʻm")],
         buyout: { paid: [1], unpaid: [], amount: money("3 000 000 soʻm", "300000000"), capital: money("3 000 000 soʻm", "300000000") },
         lossPolicy: "CAPITAL_FIRST",
         negligentParty: null,

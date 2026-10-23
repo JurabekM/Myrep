@@ -1,8 +1,8 @@
 // «Ikki qirg'oq» (M2, musofir/SPEC 5, ADR-0004), ikki haqiqiy ilova bilan.
-// Musofir (Rustam aka, xonadon egasi): sozlash → shartlar 50/30/20, Gulnora qabul qiladi → uyga 1 200 000 von
+// Musofir (Bobur aka, xonadon egasi): sozlash → shartlar 50/30/20, Mohira qabul qiladi → uyga 1 200 000 von
 // (uyda 10 900 000 so'm) → «Uydagi oila qurilmasi» ulash fayli. Oila qurilmasi: Musofir makoni ko'rinmaydi,
-// «Ikki qirg'oq»da yo'ldagi pul → qabul (Gulnora) → uy xarajati 5 450 000 dan 2 000 000 sarflandi →
-// kelishuvni Gulnora tasdiqlaydi → fayl musofirga. Musofir: uyda maqsadlar qoldig'i, Gulnora tasdiqlagan.
+// «Ikki qirg'oq»da yo'ldagi pul → qabul (Mohira) → uy xarajati 5 450 000 dan 2 000 000 sarflandi →
+// kelishuvni Mohira tasdiqlaydi → fayl musofirga. Musofir: uyda maqsadlar qoldig'i, Mohira tasdiqlagan.
 import assert from "node:assert/strict";
 import { copyFileSync } from "node:fs";
 import { join } from "node:path";
@@ -52,7 +52,7 @@ describe("Musofir: ikki qirg'oq", () => {
 
   it("T1. musofir: sozlash, shartlar 50/30/20 va uyga yuborish", async () => {
     mf = await startApp();
-    await onboard(mf, { household: "Rustam akaning oilasi", name: "Rustam", members: [{ name: "Gulnora" }], spaces: ["Musofir"], rhythm: "Oylik maosh" });
+    await onboard(mf, { household: "Bobur akaning oilasi", name: "Bobur", members: [{ name: "Mohira" }], spaces: ["Musofir"], rhythm: "Oylik maosh" });
     await mf.click("Musofir", await mf.region("Makonlar"));
     const setup = await mf.region("Musofir makonini sozlash", "form");
     await mf.selectText("Ish valyutasi", "Koreya voni (KRW)", setup);
@@ -65,7 +65,7 @@ describe("Musofir: ikki qirg'oq", () => {
     await mf.type("Uy xarajati, foiz", "50", form);
     await mf.type("Qarz toʻlovi, foiz", "30", form);
     await mf.type("Qurilish va taʼmir, foiz", "20", form);
-    await mf.selectText("Uyda kim qabul qiladi", "Gulnora", form);
+    await mf.selectText("Uyda kim qabul qiladi", "Mohira", form);
     await noAxe(mf, "mf-terms");
     await mf.shot("desktop-91-mf-terms");
     await mf.click("Saqlash", form);
@@ -113,7 +113,7 @@ describe("Musofir: ikki qirg'oq", () => {
     assert.match(await r.getText(), /Yoʻlda/);
     const confirm = await home.region("Qabul qilish", "form");
     assert.equal(await (await home.field("Olingan summa (soʻmda)", confirm)).getValue(), "10900000");
-    await home.selectText("Kim oldi", "Gulnora", confirm);
+    await home.selectText("Kim oldi", "Mohira", confirm);
     await noAxe(home, "home-incoming");
     await top(home);
     await home.shot("desktop-92-home-incoming");
@@ -134,8 +134,8 @@ describe("Musofir: ikki qirg'oq", () => {
     await home.nav("Kelishuvlar");
     await home.click("Oilaviy kelishuvlar");
     await (await home.testId("family-remittance-note")).waitForDisplayed();
-    await home.click("Gulnora tasdiqlaydi");
-    await home.type("Gulnora: PIN bilan tasdiqlang", HOME_PIN);
+    await home.click("Mohira tasdiqlaydi");
+    await home.type("Mohira: PIN bilan tasdiqlang", HOME_PIN);
     await home.click("Tasdiqlash");
     await home.waitText("✓");
 
@@ -148,7 +148,7 @@ describe("Musofir: ikki qirg'oq", () => {
     await home.waitText("Fayl saqlandi");
   });
 
-  it("T3. musofir: uydagi qabul va qoldiq, Gulnora tasdiqlagan", async () => {
+  it("T3. musofir: uydagi qabul va qoldiq, Mohira tasdiqlagan", async () => {
     carry(home, mf, "incremental");
     const imp = await mf.region("Import");
     await mf.click("Fayl tanlash", imp);
@@ -161,7 +161,7 @@ describe("Musofir: ikki qirg'oq", () => {
     await mf.nav("Bosh sahifa");
     await waitIn(await mf.testId("mf-purpose-HOUSEHOLD"), "3 450 000", "musofirda qoldiq");
     const agreement = await mf.testId("mf-terms-agreement");
-    await waitIn(agreement, "Gulnora: ✓", "Gulnora tasdig'i");
+    await waitIn(agreement, "Mohira: ✓", "Mohira tasdig'i");
     await noAxe(mf, "mf-shores");
     await mf.b.execute(() => document.querySelector('[aria-label="Uyda: maqsadlar boʻyicha"]')?.scrollIntoView());
     await mf.shot("desktop-94-mf-shores-summary");

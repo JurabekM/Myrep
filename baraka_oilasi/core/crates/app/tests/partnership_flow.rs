@@ -29,7 +29,7 @@ fn app() -> (App, String, Vec<MemberDto>) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Nilufarning oilasi".into(),
+            household_name: "Feruzaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
@@ -37,8 +37,8 @@ fn app() -> (App, String, Vec<MemberDto>) {
             month_start_day: 1,
             spaces: vec!["UY".into()],
             members: vec![
-                member("Nilufar", "ADULT"),
-                member("Rustam", "ADULT"),
+                member("Feruza", "ADULT"),
+                member("Bobur", "ADULT"),
                 member("Zarina", "CHILD"),
             ],
         })
@@ -59,7 +59,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Sobir Qodirov tikuv uskunasi va mato puli beradi, Nilufar (shu oila) tikadi — mudoraba 50/50.
+/// Otabek Qodirov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -67,7 +67,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Sobir Qodirov".into(),
+                full_name: "Otabek Qodirov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -78,7 +78,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
             },
             PartnerInput {
                 id: "P2".into(),
-                full_name: "Nilufar Karimova".into(),
+                full_name: "Feruza Karimova".into(),
                 role: "WORKER".into(),
                 profit_share_bp: 5000,
                 is_me: me_is_worker,
@@ -159,7 +159,7 @@ fn contract_rules_buyout_and_guaranteed_return() {
     assert_eq!(p.capital_total.minor, "3000000000");
     assert_eq!(p.parties[0].loss_share.as_deref(), Some("100%"));
     assert_eq!(p.parties[1].loss_share.as_deref(), Some("0%"));
-    // Buyout — vektor `buy-001-nilufar` bilan bir xil.
+    // Buyout — vektor `buy-001-feruza` bilan bir xil.
     let b = p.buyout.as_ref().unwrap();
     assert_eq!(b.rows.len(), 10);
     assert_eq!(b.end_date.as_deref(), Some("30.08.2027"));
@@ -357,7 +357,7 @@ fn receiving_capital_needs_family_consent_not_gate() {
 
     // Faol sheriklikka o'zgartirish: yangi versiya imzolanmaguncha eski versiya kuchda.
     let mut amend = mudaraba(true);
-    amend.witnesses.push("Gulnora opa".into());
+    amend.witnesses.push("Mohira opa".into());
     let a = app.update_partnership(&uy, &p.id, amend).unwrap();
     assert_eq!((a.status.as_str(), a.signed_version), ("ACTIVE", Some(1)));
     assert!(a.amendment_pending);
@@ -390,7 +390,7 @@ fn gate_applies_only_to_capital_provider() {
         "GATE_CLOSED"
     );
 
-    // Uch oy zarur xarajat 5 mln dan, qorovul pul 20 mln — 4 oy, hali yopiq.
+    // Uch oy zarur xarajat 5 mln dan, zaxira pul 20 mln — 4 oy, hali yopiq.
     let cat = app.categories(&uy).unwrap()[0].id.clone();
     for d in ["2026-07-10", "2026-08-10", "2026-09-10"] {
         app.record_expense(

@@ -71,14 +71,14 @@ fn bootstrap(app: &App) -> (String, Vec<MemberDto>) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Nilufarning oilasi".into(),
+            household_name: "Feruzaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
             month_start_day: 1,
             spaces: vec!["UY".into()],
-            members: vec![member("Nilufar", "ADULT"), member("Rustam", "ADULT")],
+            members: vec![member("Feruza", "ADULT"), member("Bobur", "ADULT")],
         })
         .unwrap();
     (h.spaces[0].id.clone(), h.members)
@@ -133,7 +133,7 @@ fn pair(desktop: &App, phone_dev: &Device) -> App {
             JoinInput {
                 // QR'siz, qo'lda: kichik harf va bo'shliqlar bilan ham ishlaydi.
                 secret: offer.code.to_lowercase().replace('-', " "),
-                device_name: "Nilufarning telefoni".into(),
+                device_name: "Feruzaning telefoni".into(),
                 platform: "android".into(),
             },
         )
@@ -177,7 +177,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Sobir Qodirov tikuv uskunasi va mato puli beradi, Nilufar (shu oila) tikadi — mudoraba 50/50.
+/// Otabek Qodirov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -185,7 +185,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Sobir Qodirov".into(),
+                full_name: "Otabek Qodirov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -196,7 +196,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
             },
             PartnerInput {
                 id: "P2".into(),
-                full_name: "Nilufar Karimova".into(),
+                full_name: "Feruza Karimova".into(),
                 role: "WORKER".into(),
                 profit_share_bp: 5000,
                 is_me: me_is_worker,
@@ -267,7 +267,7 @@ fn sign_all(app: &App, uy: &str, p: &PartnershipDto) -> PartnershipDto {
     last
 }
 
-/// Nilufar (shu oila) — mehnat egasi va hisob yurituvchi; shartnoma imzolanib, faollashtirilgan.
+/// Feruza (shu oila) — mehnat egasi va hisob yurituvchi; shartnoma imzolanib, faollashtirilgan.
 fn active(app: &App, uy: &str, members: &[MemberDto], input: PartnershipInput) -> PartnershipDto {
     let p = app.create_partnership(uy, input).unwrap();
     let p = sign_all(app, uy, &p);
@@ -418,7 +418,7 @@ fn pairing_round_trip_is_one_to_one() {
     assert_eq!(devices.len(), 2);
     assert!(devices
         .iter()
-        .any(|d| d.is_this && d.name == "Nilufarning telefoni"));
+        .any(|d| d.is_this && d.name == "Feruzaning telefoni"));
 
     // 1:1 — barcha jadvallar aynan bir xil (faqat telefonning o'z qurilma yozuvi qo'shimcha).
     drop((desktop, phone, stranger));
@@ -452,7 +452,7 @@ fn incremental_sync_merges_one_sided_changes_and_asks_on_conflicts() {
     let f = incremental(&phone, &desktop_dev.id);
     let pv = desktop.inspect_baraka(&f.bytes, PASSWORD).unwrap();
     assert!(pv.can_apply && pv.conflicts.is_empty() && pv.forks.is_empty());
-    assert_eq!(pv.source_device_name, "Nilufarning telefoni");
+    assert_eq!(pv.source_device_name, "Feruzaning telefoni");
     assert_eq!(pv.inserts, 2, "daromad va telefon qurilmasi");
     assert_eq!(pv.updates, 0);
     let r = desktop

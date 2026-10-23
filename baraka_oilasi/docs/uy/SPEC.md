@@ -30,9 +30,9 @@ Sen — senior mobil va backend dasturchisan, FinTech, xavfsizlik va Android pla
 | Personaj | Segment | Moliyaviy xulq | Ilova nimani yechishi kerak |
 |---|---|---|---|
 | **Bekzod** — taksichi | Kunlik naqd daromad oladi, daromadi notekis | Avtokredit, ijara va nasiya daftari bor. Mayda xarajatlari hisobsiz | Kunlik daromadni tez kiritish, majburiyatlarni ko'rsatish, «oqib ketayotgan» pullarni topish |
-| **Zarina** — tikuvchi | Har buyurtma uchun daromad oladi | Tejamkor, yashirincha «qora kun»ga pul yig'adi | Har buyurtmadan avtomatik ulush ajratish va oilaviy byudjet |
+| **Feruza** — tikuvchi | Har buyurtma uchun daromad oladi | Tejamkor, yashirincha «qora kun»ga pul yig'adi | Har buyurtmadan avtomatik ulush ajratish va oilaviy byudjet |
 | **Sherzod** — dasturchi | Daromadi yuqori | Puli tez «erib ketadi», kripto/treyding signallariga aldanadi | Impulsiv xarajat nazorati va firibgarlik/«tez boyish» ogohlantirishlari |
-| **Hamid aka** — 52 yosh, mahalla faoli | Ijtimoiy majburiyatlar qarzidagi oila boshlig'i | O'g'lining to'yidan qolgan qarzni 6 yildan beri to'lay olmayapti, qo'shnilardan mayda qarz oladi | Qarzlar xaritasi, qarzdan chiqish rejasi, to'y va marosim xarajatlarini oldindan rejalash |
+| **Ravshan aka** — 52 yosh, mahalla faoli | Ijtimoiy majburiyatlar qarzidagi oila boshlig'i | O'g'lining to'yidan qolgan qarzni 6 yildan beri to'lay olmayapti, qo'shnilardan mayda qarz oladi | Qarzlar xaritasi, qarzdan chiqish rejasi, to'y va marosim xarajatlarini oldindan rejalash |
 | **Moliyaviy maslahatchi** | Ilovadagi yo'l ko'rsatuvchi ovoz (ismsiz, personaj emas) | — | Savol beradi, hisoblatadi, ayblamaydi |
 
 ## 2. 1-TAMOYIL: «AVVAL O'ZINGGA TO'LA» — FUNKSIONAL TALABLAR
@@ -148,22 +148,22 @@ Tamoyilning mazmuni:
 ### 2C.2. «Sichqon kemirgani» — xarid qobiliyati kalkulyatori
 - Yotgan jamg'armaning real qiymati ko'rsatiladi: nominal balans va «bugungi narxlarda u nimaga teng».
 - «N yildan keyin shu pulga nechta kilo go'sht olish mumkin bo'ladi» kabi aniq va tushunarli misollar keltiriladi.
-- Bu ekranning maqsadi qo'rqitish emas, tushuntirish. Shu sababli har doim keyingi qadam (qorovul pul / o'sadigan pul) bilan yakunlanadi.
+- Bu ekranning maqsadi qo'rqitish emas, tushuntirish. Shu sababli har doim keyingi qadam (zaxira pul / o'sadigan pul) bilan yakunlanadi.
 
 ### 2C.3. Jamg'armani ikkiga bo'lish
 «Kelajagim» jamg'armasi endi `VaultType` bo'yicha ikkiga bo'linadi:
 
 | Turi | Vazifasi | Qoidalar |
 |---|---|---|
-| `QOROVUL` (qorovul pul / favqulodda zaxira) | Qora kunda qarz eshigiga yugurmaslik | **Maqsadli summa avtomatik hisoblanadi:** oylik `ZARUR` + `KERAK` xarajatlarining o'rtachasi × N oy. Bosqichlar: 3 oy (birinchi milestone) va **6 oy (to'liq maqsad, standart)**. Bu summa hech qayerga sarflanmaydi, qarzga ham, sheriklikka ham. Pul tez olinadigan (likvid) joyda turadi. «O'smadi» deb baholanmaydi |
+| `QOROVUL` (zaxira pul / favqulodda zaxira) | Qora kunda qarz eshigiga yugurmaslik | **Maqsadli summa avtomatik hisoblanadi:** oylik `ZARUR` + `KERAK` xarajatlarining o'rtachasi × N oy. Bosqichlar: 3 oy (birinchi milestone) va **6 oy (to'liq maqsad, standart)**. Bu summa hech qayerga sarflanmaydi, qarzga ham, sheriklikka ham. Pul tez olinadigan (likvid) joyda turadi. «O'smadi» deb baholanmaydi |
 | `OSADIGAN` (ishlayotgan pul) | Inflyatsiyadan oldinda yurish | Faqat halol (ribosiz) yo'nalishlar uchun. Funksiyalar keyingi boblarda ochiladi |
 
-- **Taqsimot ustuvorligi:** avval qorovul pul maqsadiga yetkaziladi, keyin o'sadigan qismga o'tiladi. Progress bar «necha oylik zaxira bor» ko'rinishida bo'ladi (masalan, «1,4 / 3 oy»).
-- Qorovul puldan pul olishda «bu haqiqatan favqulodda holatmi?» degan tasdiq so'raladi va ishlatilgan summani qayta to'ldirish rejasi taklif qilinadi.
+- **Taqsimot ustuvorligi:** avval zaxira pul maqsadiga yetkaziladi, keyin o'sadigan qismga o'tiladi. Progress bar «necha oylik zaxira bor» ko'rinishida bo'ladi (masalan, «1,4 / 3 oy»).
+- Zaxira puldan pul olishda «bu haqiqatan favqulodda holatmi?» degan tasdiq so'raladi va ishlatilgan summani qayta to'ldirish rejasi taklif qilinadi.
 
 ### 2C.4. «Jangga yarador askar yuborilmaydi» — tayyorgarlik darvozasi (readiness gate)
 - O'sadigan pul, sherikchilik va investitsiya bo'limlari **qulflangan** holda turadi. Ular ikki shart bajarilganda ochiladi:
-  1. qorovul pul ≥ 6 oylik zaxira (5-bobda 3 oydan 6 oyga oshirildi);
+  1. zaxira pul ≥ 6 oylik zaxira (5-bobda 3 oydan 6 oyga oshirildi);
   2. yuqori xavfli qarzlar yopilgan yoki faol qarzdan chiqish rejasi bor (4-tamoyil).
 - Qulflangan ekranda shartlar va har biri bo'yicha progress ko'rsatiladi. Taqiq yo'q, tushuntirish bor.
 - Foydalanuvchi qulfni ongli ravishda chetlab o'tishi mumkin, lekin ogohlantirish va tasdiq bilan. Bu holat analitikada qayd etiladi.
@@ -206,7 +206,7 @@ Tamoyilning mazmuni:
 - 10% ulushning mantig'i UI'da tushuntiriladi: «Qarz — o'tmishga to'lov, jamg'arma — kelajakka to'lov». Jamg'armasiz qarzdan chiqqan odam birinchi tashvishda yana qarz oladi.
 - Majburiy oylik qarz to'lovlari 70% ichida `ZARUR` sifatida hisoblanadi. 20% — sof qo'shimcha to'lov.
 - Foizlarni oila sozlay oladi, lekin standart qiymat 70/20/10. Jamg'arma ulushi 0 bo'lsa, ilova ogohlantiradi.
-- Barcha qarzlar yopilganda rejim avtomatik `STANDARD` ga qaytadi. Bo'shagan 20% ni qorovul pul va o'sadigan pulga yo'naltirish taklif qilinadi.
+- Barcha qarzlar yopilganda rejim avtomatik `STANDARD` ga qaytadi. Bo'shagan 20% ni zaxira pul va o'sadigan pulga yo'naltirish taklif qilinadi.
 
 ### 2D.2. Qarzdan chiqish rejalovchisi (payoff planner)
 - Har bir qarz uchun ikki jadval yonma-yon ko'rsatiladi: **odatiy grafik** va **qo'shimcha to'lovli grafik**.
@@ -237,7 +237,7 @@ Qarz olish yoki berishda (`Debt` / `Receivable`) uchta shart UI darajasida qo'll
 ### 2D.6. Yangi qarz oldidan «to'xta va o'yla» (friction)
 - Yangi qarz qo'shilayotganda qisqa tekshiruv so'rovi chiqadi:
   - zaruratmi yoki hashamatmi;
-  - foizsiz muqobil bormi (qorovul pul, qarindosh, buyum sotish);
+  - foizsiz muqobil bormi (zaxira pul, qarindosh, buyum sotish);
   - oylik yuk daromadning necha foiziga yetadi.
 - So'rov maqsadi qarz olishni taqiqlash emas, ongli qaror qabul qilishga yordam berish. Natija qarz yozuvida saqlanadi.
 
@@ -324,7 +324,7 @@ Tamoyilning mazmuni:
 - Sherzod segmenti (kripto/treyding signallari) uchun asosiy himoya vositasi shu. Batafsil kengaytmasi keyingi boblarda bo'lishi mumkin.
 
 ### 2E.6. Gate va ruxsatlar bilan bog'liqlik
-- **Kapital kiritish** (o'z pulini sheriklikka berish) 2C.4 tayyorgarlik darvozasiga bo'ysunadi: ≥6 oylik qorovul pul va faol qarz rejasi bo'lishi kerak.
+- **Kapital kiritish** (o'z pulini sheriklikka berish) 2C.4 tayyorgarlik darvozasiga bo'ysunadi: ≥6 oylik zaxira pul va faol qarz rejasi bo'lishi kerak.
 - **Kapital qabul qilish** (mehnat egasi sifatida) darvozaga bo'ysunmaydi. Sababi: mudarabada kapital qarz emas, uni qaytarish majburiyati yo'q (beparvolik bundan mustasno). Lekin ilova buni foydalanuvchiga aniq tushuntiradi va oilaviy rozilikni (er va xotin) so'raydi.
 
 ### 2E.7. Regulyativ chegara
@@ -559,9 +559,9 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 ## 11. ISHLAB CHIQISH BOSQICHLARI
 - **MVP-1:** daromad va xarajatni kiritish, «Kelajagim» virtual jamg'armasi va avto-ulush, «Kimning puli?», oylik audit, 1-bob kontenti va haftalik vazifalar.
 - **MVP-2:** Zarur/Kerak/Havas tasnifi, xarajat shablonlari va vidjet, havas chegarasi (oilaviy kelishuv bilan), konvertlar, obunalar ro'yxati (qo'lda kiritiladi), «Qutqarilgan pul» metrikasi va uni «Kelajagim»ga o'tkazish, «Juma shirinligi», 2-bob kontenti.
-- **MVP-3:** «Narx daftari» va shaxsiy inflyatsiya indeksi, «Sichqon kemirgani» kalkulyatori, qorovul pul / o'sadigan pul ajratmasi va avtomatik zaxira maqsadi, tayyorgarlik darvozasi, to'liq qarz inventari va bergan qarzlar ro'yxati, 3-bob kontenti, odat asosida bob ochilishi.
+- **MVP-3:** «Narx daftari» va shaxsiy inflyatsiya indeksi, «Sichqon kemirgani» kalkulyatori, zaxira pul / o'sadigan pul ajratmasi va avtomatik zaxira maqsadi, tayyorgarlik darvozasi, to'liq qarz inventari va bergan qarzlar ro'yxati, 3-bob kontenti, odat asosida bob ochilishi.
 - **MVP-4:** `DEBT_RECOVERY` rejimi (70/20/10), payoff planner (odatiy va tezlashtirilgan grafik), qarzning haqiqiy narxi, qarz tilxati (PDF va ikki tomonlama tasdiq), yangi qarz oldidan friction so'rovi, sotiladigan buyumlar, marosim rejalovchisi va stsenariylarni taqqoslash, «qarzsiz kun», 4-bob kontenti.
-- **MVP-5:** sheriklik moduli (mudoraba / musharaka validatsiyasi bilan), shartnoma ustasi (PDF va ko'p tomonlama tasdiq), venture ledger va avtomatik foyda/zarar taqsimoti, buyout jadvali, «Hunardan ishga» rejalovchisi, «kafolatlangan foyda» detektori, qorovul pul maqsadi 6 oyga oshirildi, 5-bob kontenti.
+- **MVP-5:** sheriklik moduli (mudoraba / musharaka validatsiyasi bilan), shartnoma ustasi (PDF va ko'p tomonlama tasdiq), venture ledger va avtomatik foyda/zarar taqsimoti, buyout jadvali, «Hunardan ishga» rejalovchisi, «kafolatlangan foyda» detektori, zaxira pul maqsadi 6 oyga oshirildi, 5-bob kontenti.
 - **MVP-6:** umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori, turlar), tilxat va sheriklik shartnomasini shu dvigatelga ko'chirish, vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnomalar, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish, oilaviy kelishuvlar, 6-bob kontenti.
 - **Keyinroq:** bank tranzaksiyalaridan obunalarni avtomatik aniqlash, rasmiy CPI bilan taqqoslash, sertifikatlangan islomiy moliya hamkorlari, yosh oila jamg'armasiga real pul o'tkazmalari (hamkor bank), e'lon saytlariga eksport.
 - **Keyingi bosqichlar:** keyingi tamoyillar bo'yicha qo'shiladi.

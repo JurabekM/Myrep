@@ -46,7 +46,7 @@ Har bir funksiya ikki savol bilan tekshiriladi: **(1) odamni amalga undayaptimi?
 
 #### Ilova nomi, ilhom manbasi va mustaqillik (mahsulot egasi qarori, 2026-10-23)
 - Android va desktop ilovalarining nomi — **«Baraka Dastur»**. Google Play'da «Baraka» nomli boshqa ilova bor; «Baraka daftari» nomi ham ishlatilmaydi. Loyiha va repozitoriy ichki nomi — «Baraka oilasi».
-- G'oya halol boylik haqidagi «7 qonun» suhbatlarining **ma'no-mazmunidan ilhomlangan** (muallif — Abdukarim Mirzayev, «Asaxiy Invest»). Ilova ularning moslashuvi yoki rasmiy davomi **emas**: qissa matnlari, personajlar (jumladan, Sobir hoji) va brend ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
+- G'oya halol boylik haqidagi «7 qonun» suhbatlarining **ma'no-mazmunidan ilhomlangan** (muallif — Abdukarim Mirzayev, «Asaxiy Invest»). Ilova ularning moslashuvi yoki rasmiy davomi **emas**: qissa matnlari, personajlar (jumladan, Otabek hoji) va brend ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
 - Ilova mualliflar va «Asaxiy Invest» bilan **bog'liq emas**, ular tomonidan tasdiqlanmagan va ularning nomidan gapirmaydi. Mualliflar bilan aloqaga chiqishga urinildi, javob bo'lmadi — shuning uchun litsenziyaga tayanilmaydi.
 - Hujjatlarda «qonun» o'rniga **«tamoyil»** ishlatiladi: 7 tamoyil — ribosiz moliyaning keng ma'lum asoslari (o'zingizga avval to'lash, xarajatni yozish, qarzdan reja bilan chiqish, halol sheriklik, kelishuvni yozish va h.k.).
 - Ilova ichidagi yo'l ko'rsatuvchi ovoz — **«Moliyaviy maslahatchi»**: ismsiz, personaj emas. Segment personalari (taksichi, tikuvchi, migrant va h.k.) — o'zimizning mahsulot tahlilimiz.
@@ -64,11 +64,11 @@ Android va desktopda **bitta «Baraka Dastur» ilovasi** bo'ladi. Ilova ichida u
 - **7 tamoyil:** (1) Ikki cho'ntak — biznes puli omonat, egasiga qat'iy maosh; (2) Haqiqiy foydani bil — o'z mehnati, eskirish va oilaviy mehnat tannarxda; (3) Tovar ham pul, u ham yotadi — taqsimot qoidasi, qayta tiklash narxi, muzlagan tovar; (4) Nasiyani adolat bilan yurit — narx kelishuvda qotiriladi, kechikish uchun ustama yo'q; (5) Kengayishga reja bilan chiq — kengayish darvozasi, foizli kreditga halol muqobil; (6) Kelishuvni yozing — sherik, xodim, yetkazib beruvchi, mijoz; (7) Tarozingni to'g'ri tut — halol o'lchov, soliq zaxirasi, savdo mollari zakoti.
 - **Odat ritmi:** har kuni kassa yopish (5 daqiqa) → har hafta nasiya ko'rigi → har oy «Hisob kuni» → har yil inventarizatsiya va zakot.
 - **Bosh ekrandagi 1-raqam:** «Haqiqiy foyda (shu oy)», 2-raqam: «Egasiga to'langan maosh».
-- **Personajlar:** Zarina (atelye), Bahodir aka (mahalla do'koni), Jasur (usta), Malika (Instagram do'kon), aka-uka choyxonasi. Maslahat ovozi — moliyaviy maslahatchi.
+- **Personajlar:** Feruza (atelye), Bahodir aka (mahalla do'koni), Jasur (usta), Malika (Instagram do'kon), aka-uka choyxonasi. Maslahat ovozi — moliyaviy maslahatchi.
 - **EMAS:** ERP, buxgalteriya yoki 1C o'rnini bosuvchi, onlayn kassa (fiskal), soliq hisobotini topshiruvchi, «ikkinchi daftar» (daromadni yashirish vositasi), kredit yoki investor bozori.
 
 #### Musofir — qisqa karta (M0 uchun manba)
-- **Tamoyillar:** o'z ulushi (uyga yuborilmaydigan «qaytish jamg'armasi»); chet eldagi xarajatlar; valyutada saqlanish va qorovul pul; yo'l qarzidan chiqish; qaytgandan keyingi ish rejasi; **oila bilan pul kelishuvi** («Ikki qirg'oq»: har bir o'tkazmaning maqsadi, uyda shu maqsad bo'yicha xarajat yoziladi); **sovutish davri** (katta pul bilan qaytgandan keyin 90 kun katta qarorlar uchun tekshiruv) — bu `docs/uy/SPEC.md` 10-bo'limdagi 7-tamoyil ishorasining amaliy ko'rinishi.
+- **Tamoyillar:** o'z ulushi (uyga yuborilmaydigan «qaytish jamg'armasi»); chet eldagi xarajatlar; valyutada saqlanish va zaxira pul; yo'l qarzidan chiqish; qaytgandan keyingi ish rejasi; **oila bilan pul kelishuvi** («Ikki qirg'oq»: har bir o'tkazmaning maqsadi, uyda shu maqsad bo'yicha xarajat yoziladi); **sovutish davri** (katta pul bilan qaytgandan keyin 90 kun katta qarorlar uchun tekshiruv) — bu `docs/uy/SPEC.md` 10-bo'limdagi 7-tamoyil ishorasining amaliy ko'rinishi.
 - **EMAS:** pul o'tkazish xizmati, valyuta ayirboshlash, ish topib beruvchi agentlik, o'tkazma kompaniyalari reklamasi.
 
 ### 2.3. Butun oila uchun qat'iy mahsulot cheklovlari
@@ -352,7 +352,7 @@ gap = income − obligations_paid − expenses − vault_net − Δ(CASH + BANK_
 ### 6.5. chainHead — dalil faqat tashqarida saqlansa ishlaydi
 - Jurnalni bitta qurilma (keeper) yuritadi va u nazariy jihatdan butun zanjirni qayta hisoblay oladi. Shu sababli zanjirning dalil kuchi **chainHead ikkinchi tomonda saqlanganida** paydo bo'ladi.
 - Har bir ko'rik bayonnomasi, tilxat va shartnoma PDF'ida:
-  - chainHead **qisqa kodi** — birinchi 16 hex belgi, 4 ta guruhda: `E6AE-98E5-45C7-438C`;
+  - chainHead **qisqa kodi** — birinchi 16 hex belgi, 4 ta guruhda: `F8B2-EF8C-8E72-218F`;
   - to'liq chainHead QR-kod sifatida;
   - matn: «Bu kodni o'zingizda saqlang. Keyinchalik yozuvlar o'zgartirilmaganini shu kod bilan tekshirish mumkin».
 - Ilovada «Kodni tekshirish» funksiyasi: kiritilgan qisqa kod yoki skanerlangan QR joriy zanjirdagi tegishli joy bilan solishtiriladi.
@@ -641,7 +641,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | U3 | V6 | D5 | Kontent dvigateli, `TaskTrigger`, unlock policy | unlock qoidasi — OQ-P6 qaroriga ko'ra |
 | U4 | V7 | D6 | Zarur/Kerak/Havas, havas chegarasi, vidjet, oila kengashi, «Hafta varag'i» | **7.5** (vidjet yoza oladi, o'qiy olmaydi) |
 | U5 | V8 | D7 | Obunalar, konvertlar, «Qutqarilgan pul», tray, CSV import | bazaviy davr — OQ-P3 qaroriga ko'ra; tray — 7.5 |
-| U6 | V9 | D8 | Qorovul/O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri | darvoza sharti — OQ-D4 qaroriga ko'ra |
+| U6 | V9 | D8 | Zaxira/O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri | darvoza sharti — OQ-D4 qaroriga ko'ra |
 | U7 | V9A | D8A | Kelishuv dvigateli, jurnal integratsiyasi, imzolar, og'zaki kelishuv | **6.5** (chainHead kodi va QR); `agreement_completeness.json` |
 | U8 | V10 | D9 | Qarz inventari, haqiqiy narx, friction, tilxat | tilxatda «foizsiz» bandi va qaytarish valyutasi = qarz valyutasi (OQ-D3, OQ-Y1) |
 | U9 | V11 | D10 | `DEBT_RECOVERY` 70/20/10, payoff planner, «Qarzsiz kun» | amort vektorlari Dart'dan ham |

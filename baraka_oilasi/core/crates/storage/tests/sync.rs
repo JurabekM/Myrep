@@ -95,7 +95,7 @@ fn rows_copy_verbatim_between_databases() {
         .read(|c| sync::get(c, "h1", "devices", "dev-1"))
         .unwrap()
         .unwrap();
-    dev.insert("name".into(), json!("Nilufarning telefoni"));
+    dev.insert("name".into(), json!("Feruzaning telefoni"));
     dev.insert("version".into(), json!(2));
     b.write(|tx| sync::write(tx, "devices", &dev)).unwrap();
     assert_eq!(

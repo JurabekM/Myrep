@@ -245,8 +245,8 @@ mod tests {
     fn musharaka() -> AgreementDraft {
         AgreementDraft {
             parties: answered(vec![
-                party("P1", "Anvar Karimov"),
-                party("P2", "Dilshod Rahimov"),
+                party("P1", "Bekzod Karimov"),
+                party("P2", "Sherzod Rahimov"),
             ]),
             contributions: answered(vec![
                 Contribution {
@@ -329,7 +329,7 @@ mod tests {
             breach_clause: None,
         }]);
         d.arbiter = answered(Arbiter {
-            full_name: "anvar karimov".into(),
+            full_name: "bekzod karimov".into(),
             role: None,
             party_id: None,
         });

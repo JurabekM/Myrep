@@ -18,7 +18,7 @@ fn clock(at: &str) -> Arc<FixedClock> {
 fn app_at(c: Arc<FixedClock>) -> App {
     let app = App::open_in_memory(
         &DbKey::from_bytes([5; 32]),
-        "dev-anvar",
+        "dev-bekzod",
         c,
         Arc::new(SequentialIdGen::default()),
     )
@@ -30,7 +30,7 @@ fn app_at(c: Arc<FixedClock>) -> App {
 fn bootstrap(app: &App, rhythm: Option<&str>, debts: bool, month_start_day: u32) -> String {
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Anvarlar oilasi".into(),
+            household_name: "Bekzodlar oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "windows".into(),
             locale: "uz".into(),
@@ -39,11 +39,11 @@ fn bootstrap(app: &App, rhythm: Option<&str>, debts: bool, month_start_day: u32)
             spaces: vec!["UY".into()],
             members: vec![
                 NewMemberInput {
-                    display_name: "Anvar".into(),
+                    display_name: "Bekzod".into(),
                     role: "ADULT".into(),
                 },
                 NewMemberInput {
-                    display_name: "Gulnora".into(),
+                    display_name: "Mohira".into(),
                     role: "ADULT".into(),
                 },
                 NewMemberInput {

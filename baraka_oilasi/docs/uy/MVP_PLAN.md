@@ -14,7 +14,7 @@
 |---|---|---|
 | **1. Avval o'zingga to'la** | Tez daromad kiritish, avto-ulush, «Kelajagim», progressiv ulush, streak, oylik audit, «Kimning puli?», majburiyatlar, eslatmalar | Real alohida karta (hamkor bank) |
 | **2. Xarajatni yozing** | Zarur/Kerak/Havas, shablonlar, **bosh ekran vidjeti**, havas chegarasi (oila a'zolari rozilik beradi), konvertlar, obunalar (qo'lda kiritiladi), «Qutqarilgan pul», «Juma shirinligi», sadaqa va obro' xarajatlari | Bankdan obunalarni avtomatik aniqlash |
-| **3. Pulni ishlating** | Qorovul / O'sadigan jamg'arma, 6 oylik zaxira maqsadi, «Narx daftari», shaxsiy inflyatsiya indeksi, «Sichqon kemirgani», tayyorgarlik darvozasi, ribo filtri | Rasmiy CPI bilan taqqoslash |
+| **3. Pulni ishlating** | Zaxira / O'sadigan jamg'arma, 6 oylik zaxira maqsadi, «Narx daftari», shaxsiy inflyatsiya indeksi, «Sichqon kemirgani», tayyorgarlik darvozasi, ribo filtri | Rasmiy CPI bilan taqqoslash |
 | **4. Ribodan saqlaning, qarzdan reja bilan chiqing** | Qarz inventari, bergan qarzlar, qarzning haqiqiy narxi, `DEBT_RECOVERY` 70/20/10, payoff planner, yangi qarz oldidan friction so'rovi, **qarz tilxati PDF** (shu qurilmada imzolanadi), sotiladigan buyumlar, marosim rejalovchisi, «Qarzsiz kun» | Tilxatni ikkinchi tomon o'z telefonida tasdiqlashi; to'lovchini (Sanjar) ilovaga taklif qilish |
 | **5. Pulni halol ishga sol** | Mudoraba/Musharaka domeni va validatsiyasi, shartnoma ustasi + PDF (shu qurilmada imzolanadi), buyout jadvali, venture ledger, foyda/zarar taqsimoti, fors-major, «Hunardan ishga», «Kafolatlangan foyda» detektori | Kapital egasi uchun real vaqtdagi read-only ko'rinish (MVP'da uning o'rniga **PDF hisobot** ulashiladi) |
 | **6. Kelishuvni yozing** | Umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori; turlar: sheriklik, qarz, ijara, xizmat, oilaviy), vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnoma, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish | Ikkinchi tomon va hakamning o'z qurilmasida masofadan tasdiqlashi va ko'rib chiqishi |
@@ -253,12 +253,12 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 
 # D. 3-TAMOYIL: «PULNI ISHLATING»
 
-## VAZIFA 9 — Qorovul / O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri (SPEC 2C)
+## VAZIFA 9 — Zaxira / O'sadigan, narx daftari, inflyatsiya, darvoza, ribo filtri (SPEC 2C)
 - **Jamg'armani ikkiga bo'lish:**
   - mavjud `VAULT` `QOROVUL` va `OSADIGAN` turiga ajratiladi; migratsiyada eski balans to'liq `QOROVUL` ga o'tadi;
-  - avto-ulush avval qorovul pulni to'ldiradi.
+  - avto-ulush avval zaxira pulni to'ldiradi.
 - **Zaxira maqsadi:** oxirgi 3 oydagi (`ZARUR` + `KERAK`) o'rtachasi × 6 oy. Milestone'lar: 3 oy va 6 oy. Progress «1,4 / 6 oy» ko'rinishida ko'rsatiladi. Ma'lumot 3 oydan kam bo'lsa, foydalanuvchidan taxminiy summa so'raladi.
-- **Qorovul puldan pul olish:** «favqulodda holatmi?» tasdig'i va qayta to'ldirish rejasi taklifi.
+- **Zaxira puldan pul olish:** «favqulodda holatmi?» tasdig'i va qayta to'ldirish rejasi taklifi.
 - **«Narx daftari»** (`PriceBasket`, `BasketItem`, `PricePoint`):
   - foydalanuvchi o'z savatini tuzadi;
   - narx tarixi va «N yil oldin → bugun» taqqoslash;
@@ -267,7 +267,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
   - Hisoblash qoidasi: foizlar `basisPoints` (int) bilan hisoblanadi, ko'rsatish uchungina formatlanadi.
 - **«Sichqon kemirgani»:** yotgan jamg'armaning real qiymati shaxsiy indeks asosida, «necha kg go'sht» ko'rinishida. Ekran har doim keyingi qadam bilan tugaydi.
 - **Tayyorgarlik darvozasi** (`ReadinessGate`):
-  - shartlar: qorovul pul ≥ 6 oy **va** (faol foizli qarz yo'q **yoki** faol qarzdan chiqish rejasi bor);
+  - shartlar: zaxira pul ≥ 6 oy **va** (faol foizli qarz yo'q **yoki** faol qarzdan chiqish rejasi bor);
   - darvoza qo'riydigan funksiyalar: `OSADIGAN` ga kapital kiritish va sheriklikka kapital berish (Vazifa 13);
   - qulflangan ekranda shartlar va progress ko'rsatiladi;
   - ongli chetlab o'tish: ogohlantirish va tasdiq, hodisa lokal logga yoziladi.

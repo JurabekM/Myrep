@@ -160,7 +160,7 @@ class _Dashboard extends ConsumerStatefulWidget {
 class _DashboardState extends ConsumerState<_Dashboard> {
   bool _editing = false;
 
-  /// Taklifning qorovul pul qismi qabul qilingan (shu natija uchun) — endi faqat jamg'arma qismi.
+  /// Taklifning zaxira pul qismi qabul qilingan (shu natija uchun) — endi faqat jamg'arma qismi.
   MfIncomeRecordedDto? _reserveTaken;
 
   void _entry(String kind, {String? amount}) => openMfEntry(context, widget.spaceId, kind, initialAmount: amount);
@@ -413,7 +413,7 @@ class _Prognosis extends StatelessWidget {
   }
 }
 
-/// Oylik oqim: daromad → xarajat → uyga → jamg'arma → qorovul pul → cho'ntakda.
+/// Oylik oqim: daromad → xarajat → uyga → jamg'arma → zaxira pul → cho'ntakda.
 class _Flow extends StatelessWidget {
   const _Flow({required this.d, required this.m, required this.pct});
 

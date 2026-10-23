@@ -142,7 +142,7 @@ mod tests {
                 "P1",
                 300_000_000,
                 "2026-10-01",
-                "Anvar hissasi",
+                "Bekzod hissasi",
             ),
             entry(
                 2,
@@ -150,7 +150,7 @@ mod tests {
                 "P2",
                 300_000_000,
                 "2026-10-01",
-                "Dilshod hissasi",
+                "Sherzod hissasi",
             ),
             entry(
                 3,
@@ -169,12 +169,12 @@ mod tests {
         assert_eq!(
             hashes,
             vec![
-                "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
-                "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
-                "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903",
+                "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a",
+                "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707",
+                "982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a",
             ]
         );
-        assert_eq!(short_code(&hashes[0]), "E6AE-98E5-45C7-438C");
+        assert_eq!(short_code(&hashes[0]), "F8B2-EF8C-8E72-218F");
         assert_eq!(verify_chain(&documented(), &hashes), Ok(hashes[2].clone()));
     }
 

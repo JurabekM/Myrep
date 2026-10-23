@@ -60,7 +60,7 @@ describe("ReceiptScreen", () => {
   it("bergan qarzda «toʻxta va oʻyla» soʻralmaydi; saqlangach tekshirish kodi koʻrinadi", async () => {
     issueLoanReceipt.mockResolvedValue({
       status: "ok",
-      data: { agreementId: "a1", recordType: "RECEIVABLE", recordId: "r1", shortCode: "E6AE-98E5-45C7-438C" },
+      data: { agreementId: "a1", recordType: "RECEIVABLE", recordId: "r1", shortCode: "F8B2-EF8C-8E72-218F" },
     });
     exportAgreementReceipt.mockResolvedValue({ status: "ok", data: true });
     const user = userEvent.setup();
@@ -72,6 +72,6 @@ describe("ReceiptScreen", () => {
 
     expect(issueLoanReceipt).toHaveBeenCalledWith("uy", expect.objectContaining({ direction: "LENT", isNew: false, borrowCheck: null, creditorType: null }));
     expect(exportAgreementReceipt).toHaveBeenCalledWith("uy", "a1");
-    expect(await screen.findByText("E6AE-98E5-45C7-438C")).toBeInTheDocument();
+    expect(await screen.findByText("F8B2-EF8C-8E72-218F")).toBeInTheDocument();
   });
 });

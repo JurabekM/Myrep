@@ -81,8 +81,8 @@ struct Owner {
     app: App,
     mf: String,
     uy: String,
-    rustam: String,
-    gulnora: String,
+    bobur: String,
+    mohira: String,
 }
 
 fn share(purpose: &str, percent: &str) -> MfShareInput {
@@ -110,8 +110,8 @@ fn owner_setup(dev: &Device) -> Owner {
     let app = dev.app();
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Rustam akaning oilasi".into(),
-            device_name: "Rustamning telefoni".into(),
+            household_name: "Bobur akaning oilasi".into(),
+            device_name: "Boburning telefoni".into(),
             platform: "android".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
@@ -119,11 +119,11 @@ fn owner_setup(dev: &Device) -> Owner {
             spaces: vec!["UY".into(), "MUSOFIR".into()],
             members: vec![
                 NewMemberInput {
-                    display_name: "Rustam".into(),
+                    display_name: "Bobur".into(),
                     role: "ADULT".into(),
                 },
                 NewMemberInput {
-                    display_name: "Gulnora".into(),
+                    display_name: "Mohira".into(),
                     role: "ADULT".into(),
                 },
             ],
@@ -185,7 +185,7 @@ fn owner_setup(dev: &Device) -> Owner {
     )
     .unwrap();
     app.mf_record_move(&mf, mv("FUND_IN", "520 000")).unwrap();
-    let gulnora = member("Gulnora");
+    let mohira = member("Mohira");
     let terms = app
         .mf_set_terms(
             &mf,
@@ -195,12 +195,12 @@ fn owner_setup(dev: &Device) -> Owner {
                     share("DEBT", "30"),
                     share("BUILD", "20"),
                 ],
-                receiver_member_id: Some(gulnora.clone()),
+                receiver_member_id: Some(mohira.clone()),
                 title: "Ikki qirgʻoq".into(),
                 items: vec![
                     "Har yuborilgan pulning 50 % — uy xarajati, 30 % — qarz, 20 % — qurilish"
                         .into(),
-                    "Pulni Gulnora qabul qiladi va ilovaga yozadi".into(),
+                    "Pulni Mohira qabul qiladi va ilovaga yozadi".into(),
                 ],
             },
         )
@@ -215,8 +215,8 @@ fn owner_setup(dev: &Device) -> Owner {
         app,
         mf,
         uy,
-        rustam: member("Rustam"),
-        gulnora,
+        bobur: member("Bobur"),
+        mohira,
     }
 }
 
@@ -281,7 +281,7 @@ fn assert_private(dev: &Device, mf: &str) {
 #[test]
 fn home_device_receives_and_spends_without_seeing_private_data() {
     let dir = tempfile::tempdir().unwrap();
-    let owner_dev = Device::new(dir.path(), "rustam", 1);
+    let owner_dev = Device::new(dir.path(), "bobur", 1);
     let home_dev = Device::new(dir.path(), "uy", 2);
     let o = owner_setup(&owner_dev);
     let home = pair_home(&o, &home_dev);
@@ -329,14 +329,14 @@ fn home_device_receives_and_spends_without_seeing_private_data() {
         .find(|a| a.template_key == "REMITTANCE")
         .unwrap();
     assert_eq!(a.status, "DRAFT");
-    home.confirm_family_agreement(&o.uy, &a.id, &o.gulnora)
+    home.confirm_family_agreement(&o.uy, &a.id, &o.mohira)
         .unwrap();
 
     // Qabul: 10 900 000 so'm — Uy daromadi; maqsadlarga bo'linish (mf_remittance rm-001).
     let receipt = |amount: &str| MfReceiptInput {
         received: amount.into(),
         channel: "CARD".into(),
-        member_id: Some(o.gulnora.clone()),
+        member_id: Some(o.mohira.clone()),
         received_on: None,
         note: None,
     };
@@ -352,7 +352,7 @@ fn home_device_receives_and_spends_without_seeing_private_data() {
             .unwrap()
             .member_name
             .as_deref(),
-        Some("Gulnora")
+        Some("Mohira")
     );
     let alloc: Vec<i64> = v.remittances[0]
         .allocation
@@ -446,7 +446,7 @@ fn home_device_receives_and_spends_without_seeing_private_data() {
     // Musofir ham tasdiqlaydi — kelishuv kuchga kiradi.
     let a = o
         .app
-        .confirm_family_agreement(&o.uy, &a.id, &o.rustam)
+        .confirm_family_agreement(&o.uy, &a.id, &o.bobur)
         .unwrap();
     assert_eq!(a.status, "ACTIVE");
 
@@ -484,7 +484,7 @@ fn home_device_receives_and_spends_without_seeing_private_data() {
 #[test]
 fn owner_rejects_private_rows_forged_on_home_device() {
     let dir = tempfile::tempdir().unwrap();
-    let owner_dev = Device::new(dir.path(), "rustam", 1);
+    let owner_dev = Device::new(dir.path(), "bobur", 1);
     let home_dev = Device::new(dir.path(), "uy", 2);
     let o = owner_setup(&owner_dev);
     let home = pair_home(&o, &home_dev);
@@ -534,7 +534,7 @@ fn owner_rejects_private_rows_forged_on_home_device() {
 #[test]
 fn shares_validation_and_overspend() {
     let dir = tempfile::tempdir().unwrap();
-    let owner_dev = Device::new(dir.path(), "rustam", 1);
+    let owner_dev = Device::new(dir.path(), "bobur", 1);
     let o = owner_setup(&owner_dev);
     let mut send = mv("SENT_HOME", "100 000");
     send.purposes = Some(vec![share("HOUSEHOLD", "60"), share("DEBT", "30")]);
@@ -652,7 +652,7 @@ fn travel_debt(app: &App, uy: &str) -> String {
 #[test]
 fn travel_debt_is_paid_at_home_and_plan_stays_private() {
     let dir = tempfile::tempdir().unwrap();
-    let owner_dev = Device::new(dir.path(), "rustam", 1);
+    let owner_dev = Device::new(dir.path(), "bobur", 1);
     let home_dev = Device::new(dir.path(), "uy", 2);
     let o = owner_setup(&owner_dev);
     let debt_id = travel_debt(&o.app, &o.uy);
@@ -698,7 +698,7 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
         MfReceiptInput {
             received: "10 900 000".into(),
             channel: "CARD".into(),
-            member_id: Some(o.gulnora.clone()),
+            member_id: Some(o.mohira.clone()),
             received_on: None,
             note: None,
         },
@@ -885,7 +885,7 @@ fn travel_debt_is_paid_at_home_and_plan_stays_private() {
         .unwrap();
     assert!(ov.cooling.is_none());
 
-    // M4: qorovul pul va qaror natijasi ham oilaga bormaydi.
+    // M4: zaxira pul va qaror natijasi ham oilaga bormaydi.
     let mut opening = mv("RESERVE_OPENING", "800 000");
     opening.occurred_on = Some("2026-11-01".into());
     o.app.mf_record_move(&o.mf, opening).unwrap();

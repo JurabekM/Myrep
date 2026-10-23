@@ -37,7 +37,7 @@ Color _tone(BuildContext context, String status) => switch (status) {
   _ => context.palette.inkMuted,
 };
 
-/// Qorovul pul (musofir/SPEC 6.4): chet eldagi kutilmagan xarajat uchun alohida pul. Maqsad — oxirgi
+/// Zaxira pul (musofir/SPEC 6.4): chet eldagi kutilmagan xarajat uchun alohida pul. Maqsad — oxirgi
 /// oylardagi o'rtacha xarajat × N oy; hammasi yadrodan. O'z ulushi avval shu yerga, keyin jamg'armaga.
 class ReserveCard extends ConsumerStatefulWidget {
   const ReserveCard({required this.spaceId, required this.d, required this.r, required this.onAction, super.key});

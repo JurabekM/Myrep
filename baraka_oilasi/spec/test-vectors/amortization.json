@@ -1,7 +1,7 @@
 {
   "suite": "amortization",
   "version": 1,
-  "description": "Annuitet, muddatni qisqartirish rejimi (Anvar avtokrediti, 24% illyustrativ)",
+  "description": "Annuitet, muddatni qisqartirish rejimi (Bekzod avtokrediti, 24% illyustrativ)",
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {

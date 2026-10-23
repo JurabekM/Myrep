@@ -97,14 +97,14 @@ void main() {
     await goTo(tester, 'Nasiya daftari');
     await tapText(tester, 'Yangi nasiya');
     // Mijoz hali yo'q — yangi mijoz formasi darhol ochiladi.
-    await enter(tester, 'Ism', 'Karim aka');
+    await enter(tester, 'Ism', 'Ravshan aka');
     await tapText(tester, 'Mijozni saqlash');
-    await waitFor(tester, find.text('Karim aka'));
+    await waitFor(tester, find.text('Ravshan aka'));
     await enter(tester, 'Tovar yoki xizmat', 'Muzlatkich');
     await enter(tester, 'Nasiya narxi (qotiriladi)', '6 000 000');
     await enter(tester, 'Toʻlovlar soni (oylik)', '6');
     await tapText(tester, 'Saqlash');
-    await waitFor(tester, find.byKey(const Key('kk-credit-sale-Karim aka')));
+    await waitFor(tester, find.byKey(const Key('kk-credit-sale-Ravshan aka')));
     await tapText(tester, 'Toʻlov');
     await enter(tester, 'Summa', '1 000 000');
     await tapText(tester, 'Saqlash');
@@ -140,7 +140,7 @@ void main() {
     await tapText(tester, 'Qoʻshish');
     await waitFor(tester, find.byKey(const Key('kk-eq-dep-Tikuv mashinasi')));
     await goTo(tester, 'Oilaviy mehnat');
-    await enter(tester, 'Kim', 'Gulnora');
+    await enter(tester, 'Kim', 'Mohira');
     await enter(tester, 'Soat', '20');
     await enter(tester, 'Soat bahosi', '20 000');
     await tapText(tester, 'Yozish');

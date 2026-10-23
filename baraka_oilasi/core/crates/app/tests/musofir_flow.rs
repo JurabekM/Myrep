@@ -18,22 +18,22 @@ fn clock(at: &str) -> Arc<FixedClock> {
 fn setup() -> (App, String, String) {
     let app = App::open_in_memory(
         &DbKey::from_bytes([7; 32]),
-        "dev-rustam",
+        "dev-bobur",
         clock("2026-10-18T09:00:00+05:00"),
         Arc::new(SequentialIdGen::default()),
     )
     .unwrap();
     let h = app
         .bootstrap(BootstrapInput {
-            household_name: "Rustam akaning oilasi".into(),
-            device_name: "Rustamning telefoni".into(),
+            household_name: "Bobur akaning oilasi".into(),
+            device_name: "Boburning telefoni".into(),
             platform: "android".into(),
             locale: "uz".into(),
             base_currency: "UZS".into(),
             month_start_day: 1,
             spaces: vec!["UY".into(), "MUSOFIR".into()],
             members: vec![NewMemberInput {
-                display_name: "Rustam".into(),
+                display_name: "Bobur".into(),
                 role: "ADULT".into(),
             }],
             income_rhythm: None,
@@ -89,7 +89,7 @@ fn mv(kind: &str, amount: &str, on: &str) -> MfMoveInput {
 }
 
 #[test]
-fn rustam_share_and_return_fund() {
+fn bobur_share_and_return_fund() {
     let (app, mf, uy) = setup();
 
     // Sozlanmagan: usta ochiladi, yozuv yo'q.
@@ -311,7 +311,7 @@ fn musofir_data_travels_to_paired_device() {
     let a = open("phone", 1);
     let h = a
         .bootstrap(BootstrapInput {
-            household_name: "Rustam akaning oilasi".into(),
+            household_name: "Bobur akaning oilasi".into(),
             device_name: "Telefon".into(),
             platform: "android".into(),
             locale: "uz".into(),
@@ -319,7 +319,7 @@ fn musofir_data_travels_to_paired_device() {
             month_start_day: 1,
             spaces: vec!["MUSOFIR".into()],
             members: vec![NewMemberInput {
-                display_name: "Rustam".into(),
+                display_name: "Bobur".into(),
                 role: "ADULT".into(),
             }],
             income_rhythm: None,

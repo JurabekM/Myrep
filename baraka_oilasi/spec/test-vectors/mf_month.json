@@ -1,7 +1,7 @@
 {
   "suite": "mf_month",
   "version": 1,
-  "description": "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi va qorovul pul, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3, 6.4)",
+  "description": "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi va zaxira pul, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3, 6.4)",
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {

@@ -41,7 +41,7 @@ const m = (formatted: string, minor = "1") => ({ minor, currency: "UZS", formatt
 const zero = m("0 soʻm", "0");
 const ok = (data: unknown) => ({ status: "ok", data });
 
-// kasbkor/SPEC 3.1 Nilufar: ko'rinadigan 9 500 000, haqiqiy 3 100 000.
+// kasbkor/SPEC 3.1 Feruza: ko'rinadigan 9 500 000, haqiqiy 3 100 000.
 const overview = {
   periodStart: "2026-11-01",
   periodEnd: "2026-11-30",

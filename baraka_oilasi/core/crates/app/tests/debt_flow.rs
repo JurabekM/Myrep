@@ -23,7 +23,7 @@ fn app_at(at: &str) -> (App, String) {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Karim akaning oilasi".into(),
+            household_name: "Ravshan akaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),

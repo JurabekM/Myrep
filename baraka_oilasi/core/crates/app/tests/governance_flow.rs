@@ -51,7 +51,7 @@ fn env(path: Option<&Path>) -> Env {
         .bootstrap(BootstrapInput {
             income_rhythm: None,
             debts_declared: false,
-            household_name: "Nilufarning oilasi".into(),
+            household_name: "Feruzaning oilasi".into(),
             device_name: "Kompyuter".into(),
             platform: "linux".into(),
             locale: "uz".into(),
@@ -59,8 +59,8 @@ fn env(path: Option<&Path>) -> Env {
             month_start_day: 1,
             spaces: vec!["UY".into()],
             members: vec![
-                member("Nilufar", "ADULT"),
-                member("Rustam", "ADULT"),
+                member("Feruza", "ADULT"),
+                member("Bobur", "ADULT"),
                 member("Madina", "CHILD"),
             ],
         })
@@ -94,7 +94,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Sobir Qodirov tikuv uskunasi va mato puli beradi, Nilufar (shu oila) tikadi — mudoraba 50/50.
+/// Otabek Qodirov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -102,7 +102,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Sobir Qodirov".into(),
+                full_name: "Otabek Qodirov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -113,7 +113,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
             },
             PartnerInput {
                 id: "P2".into(),
-                full_name: "Nilufar Karimova".into(),
+                full_name: "Feruza Karimova".into(),
                 role: "WORKER".into(),
                 profit_share_bp: 5000,
                 is_me: me_is_worker,
@@ -184,7 +184,7 @@ fn sign_all(app: &App, uy: &str, p: &PartnershipDto) -> PartnershipDto {
     last
 }
 
-/// Nilufar (shu oila) — mehnat egasi va hisob yurituvchi; shartnoma imzolanib, faollashtirilgan.
+/// Feruza (shu oila) — mehnat egasi va hisob yurituvchi; shartnoma imzolanib, faollashtirilgan.
 fn active(app: &App, uy: &str, members: &[MemberDto], input: PartnershipInput) -> PartnershipDto {
     let p = app.create_partnership(uy, input).unwrap();
     let p = sign_all(app, uy, &p);
@@ -285,7 +285,7 @@ fn incidents_review_protocol_and_tamper_detection() {
     let g = app.governance(uy, &p.id).unwrap();
     assert!(g.writable && !g.in_dispute);
     assert_eq!(g.duties.len(), 1);
-    assert_eq!(g.duties[0].owner_name.as_deref(), Some("Nilufar Karimova"));
+    assert_eq!(g.duties[0].owner_name.as_deref(), Some("Feruza Karimova"));
     assert_eq!(g.review_every_days, 30);
     // 01.11 + 30 kun = 01.12; bugun 02.12 — ko'rik muddati o'tgan.
     assert_eq!(g.next_review_due.as_deref(), Some("2026-12-01"));

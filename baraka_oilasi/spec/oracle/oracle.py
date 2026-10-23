@@ -1485,9 +1485,9 @@ def bp_of(part: int, whole: int) -> int:
 
 def mf_month(opening, fund_opening, share_bp, moves, reserve_opening=0):
     """Musofir oy hisoboti (SPEC 2.1, 3, 6.4), ish valyutasida. Qo'ldagi pul = boshlang'ich + daromad − xarajat −
-    uyga yuborilgan − komissiya − jamg'armaga sof − qorovul pulga sof. O'z ulushi = jamg'armaga sof + qorovul pulga
-    qo'yilgan (qorovul puldan olish ulushni kamaytirmaydi — u shuning uchun bor); maqsad = percent_of(daromad,
-    share_bp); yetmagani = max(0, maqsad − o'z ulushi). Jamg'arma va qorovul puldan olish qoldiqdan oshmaydi."""
+    uyga yuborilgan − komissiya − jamg'armaga sof − zaxira pulga sof. O'z ulushi = jamg'armaga sof + zaxira pulga
+    qo'yilgan (zaxira puldan olish ulushni kamaytirmaydi — u shuning uchun bor); maqsad = percent_of(daromad,
+    share_bp); yetmagani = max(0, maqsad − o'z ulushi). Jamg'arma va zaxira puldan olish qoldiqdan oshmaydi."""
     if not 0 <= share_bp <= 10000:
         raise OracleError("INVALID_BP")
     if fund_opening < 0 or reserve_opening < 0:
@@ -1545,9 +1545,9 @@ def mf_month(opening, fund_opening, share_bp, moves, reserve_opening=0):
 
 
 def mf_reserve(balance, monthly, months, share):
-    """Qorovul pul (SPEC 6.4, OQ-MF3), ish valyutasida. Maqsad = round_half_up(Σ oylik xarajat × N / oylar soni)
-    (oxirgi to'liq oylar, yozuvi borlari); N — 1–3. Tarix yo'q — maqsad yo'q. O'z ulushi avval qorovul pulga:
-    qorovulga = min(ulush, yetmagani), jamg'armaga = qolgani."""
+    """Zaxira pul (SPEC 6.4, OQ-MF3), ish valyutasida. Maqsad = round_half_up(Σ oylik xarajat × N / oylar soni)
+    (oxirgi to'liq oylar, yozuvi borlari); N — 1–3. Tarix yo'q — maqsad yo'q. O'z ulushi avval zaxira pulga:
+    zaxiraga = min(ulush, yetmagani), jamg'armaga = qolgani."""
     if not 1 <= months <= 3:
         raise OracleError("INVALID_MONTHS")
     if balance < 0 or (share is not None and share < 0) or any(x < 0 for x in monthly):
@@ -1870,7 +1870,7 @@ def build_suites():
         return {"payment": _s(pay), "months": months, "totalInterest": _s(ti),
                 "schedule": [{"month": r["month"], "interest": _s(r["interest"]), "principal": _s(r["principal"]),
                               "extra": _s(r["extra"]), "balance": _s(r["balance"])} for r in sched]}
-    suites["amortization"] = _suite("amortization", "Annuitet, muddatni qisqartirish rejimi (Anvar avtokrediti, 24% illyustrativ)", [
+    suites["amortization"] = _suite("amortization", "Annuitet, muddatni qisqartirish rejimi (Bekzod avtokrediti, 24% illyustrativ)", [
         _case(cid, {"principal": "3900000000", "currency": U, "annualBp": 2400, "months": 14, "extraPerMonth": _s(ex)},
               lambda ex=ex: amort(ex))
         for cid, ex in (("amort-001", 0), ("amort-002", 160000000), ("amort-003", 240000000))])
@@ -2047,17 +2047,17 @@ def build_suites():
                     "totalInterest": _s(r["interest"]), "totalFees": _s(r["fees"]), "totalPaid": _s(r["paid"])}
         return _case(cid, inp, run)
 
-    anvar = {"kind": "ANNUITY", "principal": "3900000000", "annualBp": 2400, "months": 14, "firstDate": "2026-11-05"}
+    bekzod = {"kind": "ANNUITY", "principal": "3900000000", "annualBp": 2400, "months": 14, "firstDate": "2026-11-05"}
     karim = {"kind": "MANUAL", "lines": three}
     shop = {"kind": "FIXED_MARKUP", "lines": tuple((add_months(D("2026-10-20"), k).isoformat(), "60000000") for k in range(12))}
     suites["payoff_projection"] = _suite("payoff_projection", "Holat to'lovlar tarixidan; kalendar oylari bo'yicha prognoz: avval odatiy to'lov, keyin qo'shimcha; bankda asosiy qarz kamayadi, ustamali/foizsiz rejada oxiridan yopiladi", [
-        proj_case("payoff-001-anvar-base", anvar, [], "2026-11-01", "0"),
-        proj_case("payoff-002-anvar-1.6m", anvar, [], "2026-11-01", "160000000"),
-        proj_case("payoff-003-anvar-2.4m-fee", anvar, [], "2026-11-01", "240000000", 100),
-        proj_case("payoff-004-anvar-replay", anvar,
+        proj_case("payoff-001-bekzod-base", bekzod, [], "2026-11-01", "0"),
+        proj_case("payoff-002-bekzod-1.6m", bekzod, [], "2026-11-01", "160000000"),
+        proj_case("payoff-003-bekzod-2.4m-fee", bekzod, [], "2026-11-01", "240000000", 100),
+        proj_case("payoff-004-bekzod-replay", bekzod,
                   [("2026-11-05", "322147684", False), ("2026-12-05", "322147684", False),
                    ("2026-12-20", "500000000", True)], "2027-01-10", "0"),
-        proj_case("payoff-005-overdue", anvar, [], "2027-01-20", "0"),
+        proj_case("payoff-005-overdue", bekzod, [], "2027-01-20", "0"),
         proj_case("payoff-006-differentiated", {"kind": "DIFFERENTIATED", "principal": "1200000000", "annualBp": 2400,
                                                 "months": 6, "firstDate": "2027-01-31"}, [], "2027-01-01", "100000000"),
         proj_case("payoff-007-karim", karim, [("2026-11-15", "300000000", False), ("2026-11-18", "100000000", True)],
@@ -2100,11 +2100,11 @@ def build_suites():
                     "netSaved": _s(base["interest"] - acc["interest"] - acc["fees"])}
         return _case(cid, inp, run)
 
-    trio = [("avto", anvar, [], 100, True, 2400, None), ("toy", karim, [], 0, False, 0, None),
+    trio = [("avto", bekzod, [], 100, True, 2400, None), ("toy", karim, [], 0, False, 0, None),
             ("nasiya", shop, [], 0, True, 1667, None)]
     suites["payoff_plan"] = _suite("payoff_plan", "Bir nechta qarz: tartib (qo'lda → foizli eng qimmati → foizsiz muddati yaqini), qo'shimcha to'lov tartib bo'yicha birinchi ochiq qarzga; «Qarzsiz kun»", [
         plan_case("plan-all-001-default-order", trio, "2026-11-01", "240000000"),
-        plan_case("plan-all-002-manual-order", [("avto", anvar, [], 100, True, 2400, 2), ("toy", karim, [], 0, False, 0, 1),
+        plan_case("plan-all-002-manual-order", [("avto", bekzod, [], 100, True, 2400, 2), ("toy", karim, [], 0, False, 0, 1),
                                                 ("nasiya", shop, [], 0, True, 1667, None)], "2026-11-01", "240000000"),
         plan_case("plan-all-003-no-extra", trio, "2026-11-01", "0"),
     ])
@@ -2160,31 +2160,31 @@ def build_suites():
                             for p in partners]}
         return _case(cid, inp, lambda: partnership_rules(kind, partners, fixed, loss, months))
 
-    sobir = partner("P1", "CAPITAL_PROVIDER", 5000, ("EQUIPMENT", "Tikuv mashinasi (2 ta)", 2400000000),
+    otabek = partner("P1", "CAPITAL_PROVIDER", 5000, ("EQUIPMENT", "Tikuv mashinasi (2 ta)", 2400000000),
                     ("MONEY", "Mato uchun", 600000000))
-    nilufar = partner("P2", "WORKER", 5000)
-    anvar = partner("P1", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
-    dilshod = partner("P2", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
+    feruza = partner("P2", "WORKER", 5000)
+    bekzod = partner("P1", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
+    sherzod = partner("P2", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
     silent = partner("P1", "CAPITAL_PROVIDER", 7000, ("MONEY", "naqd", 4000000000))
     working = partner("P2", "BOTH", 3000, ("MONEY", "naqd", 6000000000))
     suites["partnership_rules"] = _suite("partnership_rules", "Sheriklik shartlari: mudoraba/musharaka rollari, kapital, ulushlar 100%, kafolatli daromad taqiqi, zarar qoidasi, muddat; zarar ulushlari (bp)", [
-        rules_case("rules-001-mudaraba-ok", "MUDARABA", [sobir, nilufar]),
-        rules_case("rules-002-musharaka-ok", "MUSHARAKA", [anvar, dilshod]),
-        rules_case("rules-003-guaranteed-return", "MUDARABA", [sobir, nilufar], fixed=50000000),
-        rules_case("rules-004-shares-not-100", "MUDARABA", [dict(sobir, profitShareBp=6000), nilufar]),
-        rules_case("rules-005-one-partner", "MUSHARAKA", [dict(anvar, profitShareBp=10000)]),
-        rules_case("rules-006-mudaraba-no-worker", "MUDARABA", [sobir, dict(sobir, id="P2", capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
-        rules_case("rules-007-mudaraba-both-and-worker-capital", "MUDARABA", [dict(sobir, role="BOTH"), dict(nilufar, capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
-        rules_case("rules-008-provider-without-capital", "MUDARABA", [partner("P1", "CAPITAL_PROVIDER", 5000), nilufar]),
-        rules_case("rules-009-musharaka-one-capital", "MUSHARAKA", [anvar, partner("P2", "WORKER", 5000)]),
-        rules_case("rules-010-loss-mismatch", "MUSHARAKA", [anvar, dilshod], loss="CAPITAL_PROVIDER_BEARS"),
-        rules_case("rules-011-no-term", "MUSHARAKA", [anvar, dilshod], months=0),
-        rules_case("rules-012-item-not-positive", "MUSHARAKA", [anvar, partner("P2", "BOTH", 5000, ("MONEY", "naqd", 0))]),
+        rules_case("rules-001-mudaraba-ok", "MUDARABA", [otabek, feruza]),
+        rules_case("rules-002-musharaka-ok", "MUSHARAKA", [bekzod, sherzod]),
+        rules_case("rules-003-guaranteed-return", "MUDARABA", [otabek, feruza], fixed=50000000),
+        rules_case("rules-004-shares-not-100", "MUDARABA", [dict(otabek, profitShareBp=6000), feruza]),
+        rules_case("rules-005-one-partner", "MUSHARAKA", [dict(bekzod, profitShareBp=10000)]),
+        rules_case("rules-006-mudaraba-no-worker", "MUDARABA", [otabek, dict(otabek, id="P2", capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
+        rules_case("rules-007-mudaraba-both-and-worker-capital", "MUDARABA", [dict(otabek, role="BOTH"), dict(feruza, capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
+        rules_case("rules-008-provider-without-capital", "MUDARABA", [partner("P1", "CAPITAL_PROVIDER", 5000), feruza]),
+        rules_case("rules-009-musharaka-one-capital", "MUSHARAKA", [bekzod, partner("P2", "WORKER", 5000)]),
+        rules_case("rules-010-loss-mismatch", "MUSHARAKA", [bekzod, sherzod], loss="CAPITAL_PROVIDER_BEARS"),
+        rules_case("rules-011-no-term", "MUSHARAKA", [bekzod, sherzod], months=0),
+        rules_case("rules-012-item-not-positive", "MUSHARAKA", [bekzod, partner("P2", "BOTH", 5000, ("MONEY", "naqd", 0))]),
         rules_case("rules-013-silent-partner-warning", "MUSHARAKA", [silent, working]),
         rules_case("rules-014-uneven-loss-bp", "MUSHARAKA", [partner("P1", "BOTH", 5000, ("MONEY", "a", 100000000)),
                                                             partner("P2", "BOTH", 2500, ("MONEY", "b", 100000000)),
                                                             partner("P3", "BOTH", 2500, ("MONEY", "c", 100000000))]),
-        rules_case("rules-neg-001-kind", "IJARA", [anvar, dilshod]),
+        rules_case("rules-neg-001-kind", "IJARA", [bekzod, sherzod]),
     ])
 
     def buy_case(cid, stake, total, buyer, units, per, start, months, profit, share):
@@ -2195,7 +2195,7 @@ def build_suites():
                                                        profit, share))
 
     suites["buyout_schedule"] = _suite("buyout_schedule", "Kamayib boruvchi musharaka: ulush teng birliklarga bo'linadi (largest remainder), har davrda N birlik; sotuvchi va xaridor ulushi (bp, half-up); to'lov xaridor foyda ulushidan oshsa — belgi", [
-        buy_case("buy-001-nilufar", 3000000000, 3000000000, 0, 10, 1, "2026-11-30", 1, 800000000, 5000),
+        buy_case("buy-001-feruza", 3000000000, 3000000000, 0, 10, 1, "2026-11-30", 1, 800000000, 5000),
         buy_case("buy-002-uneven-quarterly", 100000001, 300000001, 200000000, 3, 2, "2027-01-31", 3, 50000000, 6000),
         buy_case("buy-003-no-profit-estimate", 1200000000, 2000000000, 800000000, 4, 4, "2027-03-15", 1, None, 5000),
         buy_case("buy-neg-001-stake", 0, 100, 0, 1, 1, "2027-01-01", 1, None, 5000),
@@ -2319,7 +2319,7 @@ def build_suites():
             m["toWallet"] = to
         return m
     kk = [
-        # Nilufar (SPEC 2.2): maosh 5 mln; 1,2 mln «egasi oldi», 3,8 mln o'tkazildi — qoldiq 0.
+        # Feruza (SPEC 2.2): maosh 5 mln; 1,2 mln «egasi oldi», 3,8 mln o'tkazildi — qoldiq 0.
         ("kk-001", 0, 3000000, 5000000, [mv("SALE", "CARD", 10000000), mv("SALE", "CASH", 8000000), mv("EXPENSE", "CARD", 8500000),
                                    mv("OWNER_DRAW", "CASH", 1200000), mv("OWNER_SALARY", "CARD", 3800000)]),
         # Ortiqcha olingan: maosh 4 mln, «egasi oldi» 3 + 1,5 mln.
@@ -2390,7 +2390,7 @@ def build_suites():
     def fl(hours100, rate, paid=False):
         return {"hours100": hours100, "hourlyRate": _s(rate * 100), "paid": paid}
     tp = [
-        # SPEC 3.1 Nilufar: ko'rinadigan 9 500 000, haqiqiy 3 100 000.
+        # SPEC 3.1 Feruza: ko'rinadigan 9 500 000, haqiqiy 3 100 000.
         ("tp-001", 18000000, 6000000, 2500000, 5000000, [fl(8000, 15000)], 200000, 0),
         # Qizining yordami to'langan (500 000 operatsion xarajatda) — ikki marta hisoblanmaydi.
         ("tp-002", 18000000, 6000000, 3000000, 5000000, [fl(4000, 12500, True), fl(2000, 15000)], 200000, 0),
@@ -2445,7 +2445,7 @@ def build_suites():
     def tax(base, bp=0, amount=0):
         return {"base": base, "bp": bp, "amount": _s(t(amount))}
     mc = [
-        # SPEC 4.5 Nilufar: 18 mln − soliq 4 % (720 000) − chiqim 8,5 mln − to'langan yordam 1,2 mln − maosh 5 mln
+        # SPEC 4.5 Feruza: 18 mln − soliq 4 % (720 000) − chiqim 8,5 mln − to'langan yordam 1,2 mln − maosh 5 mln
         # = 2 580 000 → 30/50/20: 774 000 / 1 290 000 / 516 000.
         ("mc-001", 18000000, 9700000, 200000, 5000000, 5000000, tax("REVENUE", 400), rule(3000, 5000, 2000), False),
         # Qolgan pul manfiy — taqsimot yo'q, izoh so'raladi.
@@ -2713,7 +2713,7 @@ def build_suites():
     def use(fund, amount):
         return {"kind": "USE", "fund": fund, "amount": _s(t(amount))}
     fd = [
-        # Nilufar: oktyabr va noyabr «Hisob kuni»; soliq to'landi, zaxiradan uskuna tuzatildi.
+        # Feruza: oktyabr va noyabr «Hisob kuni»; soliq to'landi, zaxiradan uskuna tuzatildi.
         ("fd-001", [close(tax=720000, reserve=774000, working=1290000, expansion=516000),
                     close(tax=680000, reserve=600000, working=1000000, expansion=400000, sadaqa=100000),
                     use("TAX", 720000), use("RESERVE", 300000)]),
@@ -2766,17 +2766,17 @@ def build_suites():
         if fee is not None:
             m["fee"] = _s(fee)
         return m
-    # Rustam aka (KRW, kasrsiz): maosh 2 600 000, ijara 400 000, ovqat 350 000, telefon 60 000, uyga 1 200 000 + 5 000.
-    rustam = [mv("SALARY", 2600000), mv("EXPENSE", 400000), mv("EXPENSE", 350000), mv("EXPENSE", 60000), mv("SENT_HOME", 1200000, 5000)]
+    # Bobur aka (KRW, kasrsiz): maosh 2 600 000, ijara 400 000, ovqat 350 000, telefon 60 000, uyga 1 200 000 + 5 000.
+    bobur = [mv("SALARY", 2600000), mv("EXPENSE", 400000), mv("EXPENSE", 350000), mv("EXPENSE", 60000), mv("SENT_HOME", 1200000, 5000)]
     mm = [
         # O'z ulushi 20 % = 520 000 jamg'armaga qo'yildi; qo'lda 215 000 qoldi.
-        ("mf-001", "KRW", 150000, 0, 2000, rustam + [mv("FUND_IN", 520000)]),
+        ("mf-001", "KRW", 150000, 0, 2000, bobur + [mv("FUND_IN", 520000)]),
         # Ulush yetmadi: 320 000 — 200 000 kam.
-        ("mf-002", "KRW", 150000, 0, 2000, rustam + [mv("FUND_IN", 320000)]),
+        ("mf-002", "KRW", 150000, 0, 2000, bobur + [mv("FUND_IN", 320000)]),
         # Hammasi uyga: jamg'arma yo'q.
-        ("mf-003", "KRW", 150000, 0, 2000, rustam[:4] + [mv("SENT_HOME", 1700000, 5000)]),
+        ("mf-003", "KRW", 150000, 0, 2000, bobur[:4] + [mv("SENT_HOME", 1700000, 5000)]),
         # Jamg'armadan olindi (sof manfiy).
-        ("mf-004", "KRW", 150000, 3000000, 2000, rustam + [mv("FUND_IN", 520000), mv("FUND_OUT", 800000)]),
+        ("mf-004", "KRW", 150000, 3000000, 2000, bobur + [mv("FUND_IN", 520000), mv("FUND_OUT", 800000)]),
         # Dilnoza (RUB): qo'ldagi pul manfiy.
         ("mf-005", "RUB", 0, 0, 2000, [mv("SALARY", 8000000), mv("EXPENSE", 3500000), mv("EXPENSE", 2500000), mv("EXPENSE", 600000),
                                        mv("SENT_HOME", 2000000, 30000)]),
@@ -2793,27 +2793,27 @@ def build_suites():
         ("mf-neg-005", "KRW", 0, 100, 2000, [mv("FUND_IN", 50), mv("FUND_OUT", 151)]),
     ]
     mm = [(cid, c, o, fo, 0, bp, ms) for cid, c, o, fo, bp, ms in mm] + [
-        # M4: ulush avval qorovul pulga (300 000), qolgani jamg'armaga (220 000) — ulush bajarildi.
+        # M4: ulush avval zaxira pulga (300 000), qolgani jamg'armaga (220 000) — ulush bajarildi.
         ("mf-009", "KRW", 150000, 6000000, 510000, 2000, [mv("SALARY", 2600000), mv("EXPENSE", 810000),
                                                       mv("SENT_HOME", 1200000, 5000), mv("RESERVE_IN", 300000), mv("FUND_IN", 220000)]),
-        # Kasal bo'ldi: qorovul puldan 400 000 — ulush kamaymaydi, ogohlantirish yo'q.
+        # Kasal bo'ldi: zaxira puldan 400 000 — ulush kamaymaydi, ogohlantirish yo'q.
         ("mf-010", "KRW", 0, 6000000, 810000, 2000, [mv("SALARY", 2600000), mv("EXPENSE", 1210000), mv("RESERVE_OUT", 400000),
                                                    mv("SENT_HOME", 1200000), mv("FUND_IN", 520000)]),
-        # Boshlang'ich qorovul pul yozuv sifatida; faqat qorovulga — ulush yetmadi.
+        # Boshlang'ich zaxira pul yozuv sifatida; faqat zaxiraga — ulush yetmadi.
         ("mf-011", "KRW", 0, 0, 0, 2000, [mv("RESERVE_OPENING", 500000), mv("SALARY", 2600000), mv("RESERVE_IN", 200000)]),
         ("mf-neg-006", "KRW", 0, 0, 100, 2000, [mv("RESERVE_OUT", 101)]),
         ("mf-neg-007", "KRW", 0, 0, -1, 2000, [mv("SALARY", 1000)]),
     ]
-    suites["mf_month"] = _suite("mf_month", "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi va qorovul pul, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3, 6.4)", [
+    suites["mf_month"] = _suite("mf_month", "Musofir oy hisoboti: maosh, chet eldagi xarajat, uyga yuborilgan va komissiya, qaytish jamg'armasi va zaxira pul, qo'ldagi pul, o'z ulushi maqsadi va yetmagani, daromaddan ulushlar (musofir/SPEC 2–3, 6.4)", [
         _case(cid, {"currency": c, "opening": _s(o), "fundOpening": _s(fo), "reserveOpening": _s(ro), "shareBp": bp, "moves": ms},
               lambda o=o, fo=fo, ro=ro, bp=bp, ms=ms: mf_month(o, fo, bp, ms, ro))
         for cid, c, o, fo, ro, bp, ms in mm])
     rs_ = [
-        # Rustam aka: oyiga ~800 000 von xarajat, 1 oy — maqsad 805 000; qoldiq 300 000; ulush 520 000 → 505 000 qorovulga.
+        # Bobur aka: oyiga ~800 000 von xarajat, 1 oy — maqsad 805 000; qoldiq 300 000; ulush 520 000 → 505 000 zaxiraga.
         ("rs-001", "KRW", 300000, [810000, 790000, 815000], 1, 520000),
         # To'la — ulush to'liq jamg'armaga.
         ("rs-002", "KRW", 900000, [810000, 790000, 815000], 1, 520000),
-        # 2 oy, bo'sh; ulush hammasi qorovulga.
+        # 2 oy, bo'sh; ulush hammasi zaxiraga.
         ("rs-003", "KRW", 0, [810000, 790000], 2, 520000),
         # Tarix yo'q — maqsad yo'q, ulush jamg'armaga.
         ("rs-004", "KRW", 0, [], 1, 520000),
@@ -2825,7 +2825,7 @@ def build_suites():
         ("rs-neg-002", "KRW", -1, [800000], 1, None),
         ("rs-neg-003", "KRW", 0, [800000], 1, -5),
     ]
-    suites["mf_reserve"] = _suite("mf_reserve", "Musofir qorovul pul: chet eldagi o'rtacha oylik xarajat × N oy maqsad, yetmagani, holat va o'z ulushini qorovul pul va jamg'arma orasida bo'lish (musofir/SPEC 6.4)", [
+    suites["mf_reserve"] = _suite("mf_reserve", "Musofir zaxira pul: chet eldagi o'rtacha oylik xarajat × N oy maqsad, yetmagani, holat va o'z ulushini zaxira pul va jamg'arma orasida bo'lish (musofir/SPEC 6.4)", [
         _case(cid, {"currency": c, "balance": _s(b), "monthly": [_s(x) for x in mo], "months": n, "share": None if sh_ is None else _s(sh_)},
               lambda b=b, mo=mo, n=n, sh_=sh_: mf_reserve(b, mo, n, sh_))
         for cid, c, b, mo, n, sh_ in rs_])
@@ -2848,7 +2848,7 @@ def build_suites():
 
     krw = (91, 10)
     rf = [
-        # Rustam aka: 6 mln von (54,6 mln so'm), maqsad 120 mln so'm, oyiga ~520 000 von; 2027-12-01 gacha 13 oy — yetmaydi.
+        # Bobur aka: 6 mln von (54,6 mln so'm), maqsad 120 mln so'm, oyiga ~520 000 von; 2027-12-01 gacha 13 oy — yetmaydi.
         ("rf-001", "KRW", 6000000, krw, 12000000000, [520000, 500000, 540000], "2026-10-18", "2027-12-01"),
         # Qaytish 2028-03-01 — shu sur'atda yetadi.
         ("rf-002", "KRW", 6000000, krw, 12000000000, [520000, 500000, 540000], "2026-10-18", "2028-03-01"),
@@ -2883,7 +2883,7 @@ def build_suites():
         return {"purpose": p, "amount": _s(a)}
     gul = sh(("HOUSEHOLD", 5000), ("DEBT", 3000), ("BUILD", 2000))
     rm = [
-        # Gulnora: 10 900 000 so'm qabul qilindi — 50/30/20; uy xarajati 2 mln, qarz to'liq.
+        # Mohira: 10 900 000 so'm qabul qilindi — 50/30/20; uy xarajati 2 mln, qarz to'liq.
         ("rm-001", [{"received": _s(1090000000), "shares": gul}], [sp("HOUSEHOLD", 200000000), sp("DEBT", 327000000)]),
         # Largest remainder: 100 000,01 so'm uchga (ulushlar tartibsiz berilgan).
         ("rm-002", [{"received": _s(10000001), "shares": sh(("BUILD", 3334), ("HOUSEHOLD", 3333), ("DEBT", 3333))}], []),
@@ -2916,7 +2916,7 @@ def build_suites():
         ("td-003", 300000000, 327000000, [327000000], 6, "2026-10-19"),
         # Hali to'lov yo'q.
         ("td-004", 1500000000, 0, [], 6, "2026-10-19"),
-        # Maqsad ortiq sarflangan (manfiy qoldiq hisobga olinmaydi); 31-yanvar + 1 oy — fevral oxiri.
+        # Maqsad ortiq sarflangan (manfiy qoldiq hisobga olinmaydi); 31-ybekzod + 1 oy — fevral oxiri.
         ("td-005", 1000000000, -50000000, [500000000], 3, "2027-01-31"),
         # O'rtacha yaxlitlash (1 000 001 / 2) va oyiga kerak yaxlitlash (10 000 001 / 3).
         ("td-006", 10000001, 0, [500001, 500000], 3, "2026-10-19"),
@@ -3035,16 +3035,16 @@ def check(directory: str) -> int:
 AGR = "0192a000-0000-7000-8000-0000000000a1"
 CHAIN_ENTRIES = [
     {"id": "0192a000-0000-7000-8000-000000000001", "agreementId": AGR, "kind": "CONTRIBUTION", "partyId": "P1",
-     "amount": {"minor": "300000000", "currency": "UZS"}, "date": "2026-10-01", "note": "Anvar hissasi"},
+     "amount": {"minor": "300000000", "currency": "UZS"}, "date": "2026-10-01", "note": "Bekzod hissasi"},
     {"id": "0192a000-0000-7000-8000-000000000002", "agreementId": AGR, "kind": "CONTRIBUTION", "partyId": "P2",
-     "amount": {"minor": "300000000", "currency": "UZS"}, "date": "2026-10-01", "note": "Dilshod hissasi"},
+     "amount": {"minor": "300000000", "currency": "UZS"}, "date": "2026-10-01", "note": "Sherzod hissasi"},
     {"id": "0192a000-0000-7000-8000-000000000003", "agreementId": AGR, "kind": "PROFIT_DISTRIBUTION", "partyId": "P1",
      "amount": {"minor": "140000000", "currency": "UZS"}, "date": "2026-10-31", "note": "1-oy foyda ulushi"},
 ]
 CHAIN_HASHES = [
-    "e6ae98e545c7438c7de424286aa8f624493748c85a7f8cd79f2c576eb4f25b9e",
-    "fa5d38ce32acd7beb4128a85231bbba0f2d7fc8081bc27024c1f1c4904257b53",
-    "ba06ad59d6c270a58182a304bd376535d814dd210520f8359a4969f870b26903",
+    "f8b2ef8c8e72218faa742a2a997ed401e71c6a4ab251080ca78ef5a5ee3bd89a",
+    "475c79b752e387f042a9f61e32bb4708602c66b8926153a0b9f60664cd484707",
+    "982a1d534565f0f8c76336bbe57c9b87f48036469525d616b5c9020ed29b403a",
 ]
 
 
@@ -3083,7 +3083,7 @@ def selftest() -> None:
     rr2 = mf_remittance([{"received": "1090000000", "shares": [{"purpose": "HOUSEHOLD", "bp": 5000}, {"purpose": "DEBT", "bp": 3000},
                                                               {"purpose": "BUILD", "bp": 2000}]}], [])
     assert [p["received"] for p in rr2["purposes"]] == ["545000000", "327000000", "218000000"]
-    # M1 (musofir/SPEC 2.1): Rustam aka — ulush 520 000 von bajarildi, qo'lda 215 000; 13 oyda 116,1 mln — 3,9 mln kam.
+    # M1 (musofir/SPEC 2.1): Bobur aka — ulush 520 000 von bajarildi, qo'lda 215 000; 13 oyda 116,1 mln — 3,9 mln kam.
     rm = mf_month(150000, 0, 2000, [{"kind": "SALARY", "amount": "2600000"}, {"kind": "EXPENSE", "amount": "810000"},
                                     {"kind": "SENT_HOME", "amount": "1200000", "fee": "5000"}, {"kind": "FUND_IN", "amount": "520000"}])
     assert (rm["pocket"], rm["shareGap"], rm["sentBp"], rm["warnings"]) == ("215000", "0", 4635, [])
@@ -3094,7 +3094,7 @@ def selftest() -> None:
                                     {"kind": "CREDIT_PAYMENT", "wallet": "CASH", "amount": "15000000"},
                                     {"kind": "SALE", "wallet": "CARD", "amount": "30000000"}], 120000000, 100000000, None, [])
     assert (shf["expected"], shf["difference"], shf["left"], shf["cardIn"]) == ("120000000", "0", "20000000", "30000000")
-    # K2 (kasbkor/SPEC 3.1): Nilufar — haqiqiy foyda 3 100 000; 7 mln / 36 oy → 16 × 194 444,45 + 20 × 194 444,44.
+    # K2 (kasbkor/SPEC 3.1): Feruza — haqiqiy foyda 3 100 000; 7 mln / 36 oy → 16 × 194 444,45 + 20 × 194 444,44.
     assert kk_true_profit(1800000000, 600000000, 250000000, 500000000, [{"hours100": 8000, "hourlyRate": "1500000", "paid": False}],
                           20000000, 0)["trueProfit"] == "310000000"
     sched = kk_depreciation(700000000, 0, 36, [])["schedule"]
@@ -3190,7 +3190,7 @@ def selftest() -> None:
     extra_field = [dict(e, householdId="h", createdAt="2026-10-01T00:00:00Z") for e in CHAIN_ENTRIES]
     assert chain(extra_field) == CHAIN_HASHES  # whitelist'dan tashqari maydonlar xeshlanmaydi
     _expect_error("JOURNAL_NON_STRING_VALUE", canonical, dict(CHAIN_ENTRIES[0], note=None))
-    assert short_code(CHAIN_HASHES[0]) == "E6AE-98E5-45C7-438C"
+    assert short_code(CHAIN_HASHES[0]) == "F8B2-EF8C-8E72-218F"
     # 4-qonun: qarz
     assert add_months(date(2027, 1, 31), 1) == date(2027, 2, 28) and add_months(date(2026, 11, 5), 13) == date(2027, 12, 5)
     anv = debt_plan("ANNUITY", 3900000000, annual_bp=2400, months=14, first=date(2026, 11, 5))
@@ -3211,7 +3211,7 @@ def selftest() -> None:
     # U10: 20 mln qarz oyiga 2,4 mln bilan: 9 oy (8×2,4 = 19,2 mln), oxirgi oy 0,8 mln
     assert informal_debt_payoff(2000000000, date(2027, 5, 20), 240000000) == (9, date(2028, 1, 1))
     assert informal_debt_payoff(0, date(2027, 5, 20), 0) == (0, None)
-    # U11: Nilufar Sobir Qodirovning 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
+    # U11: Feruza Otabek Qodirovning 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
     b = buyout_schedule(3000000000, 3000000000, 0, 10, 1, date(2026, 11, 30), 1, 800000000, 5000)
     assert (b["periods"], b["endDate"], b["rows"][1]["date"], b["rows"][-1]["buyerBp"]) == (10, "2027-08-30", "2026-12-30", 10000)
     assert [r["payment"] for r in buyout_schedule(100000001, 300000001, 200000000, 3, 2, date(2027, 1, 31), 3, None, 0)["rows"]] == ["66666668", "33333333"]

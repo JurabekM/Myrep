@@ -194,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn gulnora_split_and_balance() {
+    fn mohira_split_and_balance() {
         let u = |m| Money::new(m, Currency::Uzs);
         let shares = vec![
             s(Purpose::Build, 2_000),

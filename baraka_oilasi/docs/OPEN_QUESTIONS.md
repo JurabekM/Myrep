@@ -27,7 +27,7 @@
 - **Taklif:** har 4 haftada 1 ta «dam haftasi» streakni uzmaydi.
 - **To'sadi:** U1. **Holat:** OCHIQ.
 
-### OQ-P5. Qorovul pul maqsadi va qiziqishni yo'qotish xavfi
+### OQ-P5. Zaxira pul maqsadi va qiziqishni yo'qotish xavfi
 - **Masala:** 6 oylik zaxira o'rta segment uchun ~3 yil yig'iladi. Shu davrda 5-tamoyil qulflangan turadi.
 - **Taklif:** 3 oylik milestone'da «Hunardan ishga» rejalovchisi (pul kiritmasdan, faqat reja) ochiladi; kapital kiritish 6 oyda.
 - **To'sadi:** U6. **Holat:** OCHIQ.
@@ -65,8 +65,8 @@
 - **To'sadi:** — (ishlaydi). **Holat:** OCHIQ.
 
 ### OQ-P12. U3–U7 bajarilmagan; yakuniy E2E qisqartirilgan
-- **Masala:** ish rejasida U3 (kontent dvigateli), U4 (havas chegarasi, vidjet, oila kengashi), U5 (obunalar, konvertlar, «Qutqarilgan pul», CSV), U6 (qorovul pul, narx daftari, darvoza, ribo filtri) va U7 ning UI qismi hali qilinmagan — ishlar U8 dan boshlangan. Shuning uchun D15 / V15 dagi Bekzod ssenariysining «havas chegarasi → obuna bekor qilish → qutqarilgan pul → darvoza ochilishi» qismlari E2E'da yo'q (mahsulot egasi qarori, 2026-10-16: U15 mavjud funksiyalar bilan).
-- **Taklif:** keyingi sessiyalarda U3–U7 (har biri a/b/c), keyin `02-anvar` E2E to'liq ssenariyga kengaytiriladi.
+- **Masala:** ish rejasida U3 (kontent dvigateli), U4 (havas chegarasi, vidjet, oila kengashi), U5 (obunalar, konvertlar, «Qutqarilgan pul», CSV), U6 (zaxira pul, narx daftari, darvoza, ribo filtri) va U7 ning UI qismi hali qilinmagan — ishlar U8 dan boshlangan. Shuning uchun D15 / V15 dagi Bekzod ssenariysining «havas chegarasi → obuna bekor qilish → qutqarilgan pul → darvoza ochilishi» qismlari E2E'da yo'q (mahsulot egasi qarori, 2026-10-16: U15 mavjud funksiyalar bilan).
+- **Taklif:** keyingi sessiyalarda U3–U7 (har biri a/b/c), keyin `02-bekzod` E2E to'liq ssenariyga kengaytiriladi.
 - **To'sadi:** 1-reliz. **Holat:** OCHIQ.
 
 ### OQ-P13. Bosh sahifa eslatmalari: chegaralar
@@ -134,9 +134,9 @@
 - **Qaror (mahsulot egasi, M2):** oila **ko'rmaydi** — musofirning maoshi, chet eldagi xarajatlari, qaytish jamg'armasi, sozlamalari va kurslari uydagi qurilmaga yuborilmaydi; faqat uyga yuborilgan pul (komissiyasiz), maqsadlar, qabul va xarajatlar. Texnik yechim — `HOME` roli (ADR-0004).
 - **Holat:** YECHILGAN.
 
-### OQ-MF3. Chet eldagi qorovul pul
-- **Savol:** qorovul pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
-- **Qaror (mahsulot egasi, 2026-10-19):** qaytish jamg'armasidan **alohida**; maqsad — chet eldagi o'rtacha oylik xarajat × 1 oy (sozlamada 1–3 oy); o'z ulushi avval qorovul pulga, keyin jamg'armaga. Amalga oshirildi — M4 (musofir/SPEC 6.4).
+### OQ-MF3. Chet eldagi zaxira pul
+- **Savol:** zaxira pul (kutilmagan xarajat — kasallik, ishsiz qolish) qaytish jamg'armasidan alohidami? Maqsad — 1 oylik chet el xarajatimi yoki qaytish chiptasi narxi?
+- **Qaror (mahsulot egasi, 2026-10-19):** qaytish jamg'armasidan **alohida**; maqsad — chet eldagi o'rtacha oylik xarajat × 1 oy (sozlamada 1–3 oy); o'z ulushi avval zaxira pulga, keyin jamg'armaga. Amalga oshirildi — M4 (musofir/SPEC 6.4).
 - **To'sadi:** — . **Holat:** YECHILGAN.
 
 ### OQ-MF4. Kurs manbai va eskirishi
@@ -202,7 +202,7 @@
 - **To'sadi:** U4, U10. **Holat:** OCHIQ.
 
 ### OQ-M2. Shaxsiy jamg'arma
-- **Masala:** Zarinaning «qora kun» uchun yashirin zaxirasi. Oilaviy shaffoflik moliyaviy zo'ravonlik sharoitida ayolning xavfsizlik zaxirasini yo'q qilishi mumkin.
+- **Masala:** Feruzaning «qora kun» uchun yashirin zaxirasi. Oilaviy shaffoflik moliyaviy zo'ravonlik sharoitida ayolning xavfsizlik zaxirasini yo'q qilishi mumkin.
 - **Taklif:** a'zoning shaxsiy PIN bilan himoyalangan, boshqalarga ko'rinmaydigan jamg'armasi (`visibility = PRIVATE`). Sxemada maydon hozirdan bor.
 - **To'sadi:** U1 (UI), U4. **Holat:** OCHIQ.
 
@@ -233,7 +233,7 @@
 - **Savol:** foizli qarzi bor, lekin chiqish rejasi bor foydalanuvchi sheriklikka kapital bera oladimi? (`DEBT_RECOVERY` dagi 20% qarzga ketishi kerak.)
 - **Taklif:** foizli qarz bor ekan, kapital kiritish yopiq; foizsiz qarz va reja bo'lsa — ochiq.
 - **To'sadi:** U6. **Holat:** OCHIQ.
-- **U11 da:** darvoza SPEC dagi standart siyosat bilan ishlaydi (`AllowWithPlan`: foizli qarz bo'lsa ham, «Qarzdan chiqish» rejimi yoqilgan bo'lsa ochiq). Qorovul pul hozircha «Kelajagim» balansi (U6 da QOROVUL alohida bo'ladi), o'rtacha zarur xarajat — oxirgi 3 to'liq davrdagi ZARUR + KERAK (xarajat yozilmagan davrlar hisobga olinmaydi).
+- **U11 da:** darvoza SPEC dagi standart siyosat bilan ishlaydi (`AllowWithPlan`: foizli qarz bo'lsa ham, «Qarzdan chiqish» rejimi yoqilgan bo'lsa ochiq). Zaxira pul hozircha «Kelajagim» balansi (U6 da QOROVUL alohida bo'ladi), o'rtacha zarur xarajat — oxirgi 3 to'liq davrdagi ZARUR + KERAK (xarajat yozilmagan davrlar hisobga olinmaydi).
 
 ### OQ-D5. Muzoraa, nasiya narxi, savdo mollari zakoti
 - **Savollar:** (1) nasiyada narxni oldindan qotirib sotish (bay' muajjal) va kechikish uchun ustama taqiqi; (2) savdo mollari zakotini bozor narxida baholash; (3) xodim bilan foyda ulushi asosidagi kelishuv; (4) konsignatsiya.

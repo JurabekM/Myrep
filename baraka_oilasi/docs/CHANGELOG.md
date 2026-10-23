@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-10-23
+
+Yangi nom va brend: «Baraka Dastur». Ma'lumotlar formati va identifikatorlar o'zgarmadi — 1.0.0 ustidan yangilanadi.
+
 ### O'zgardi
+- **«Qorovul pul» → «Zaxira pul»** barcha ilova matnlari va hujjatlarda (uz, uz-Cyrl; ruschada allaqachon «Резервный фонд»/«Резерв»). Kod identifikatorlari va bazadagi `QOROVUL` qiymati o'zgarmadi.
+- **Test ma'lumotlaridagi ismlar** (Rust, Dart, React, E2E, oracle, vektorlar): qissa personajlari o'rniga boshqa ismlar — Bekzod, Feruza, Sherzod, Ravshan aka, Bobur, Mohira, Otabek. Ismlar ichida bo'lgan oltin xeshlar (`journal_chain`, `review_protocol`, `.baraka` vektorlari, qisqa kod `F8B2-EF8C-8E72-218F`) oracle bilan qayta hisoblandi va Rust bilan mos keldi.
 - **Ilova nomi — «Baraka Dastur»** (Android va desktop): Google Play'da «Baraka» nomli boshqa ilova bor. Yangilandi: oyna sarlavhasi va o'rnatuvchi nomi (`productName`), Android yorlig'i, i18n `app.name` (uz, uz-Cyrl, ru), PDF muallifi, `.baraka` fayl dialogi. Identifikatorlar (`uz.barakaoilasi.desktop`, Android `uz.baraka.oilasi`) o'zgarmadi — o'rnatilgan ilovadagi ma'lumotlar saqlanadi.
 - **Yangi logotip:** to'q fonda krem «B» va undan o'sib chiqqan sarg'ish barg (baraka — o'sish). Manba — `xtask/assets/logo.svg`; `make_icons.py` desktop ikonkalari va Android zaxira PNG'larini chizadi; Android adaptiv ikonkasi — vektor (xavfsiz zona ichida).
 - **Personajlarsiz:** ilovadagi «Sobir hoji» o'rniga ismsiz **«Moliyaviy maslahatchi»**. Boshqa muallif qissasidan kelgan misol va iqtiboslar (to'y qarzi misolidagi ism, «besh xavf belgisi» qoidasi, «ot bilan omoch», «kishan», «somsa») o'z so'zlarimiz bilan qayta yozildi; test ma'lumotlaridagi «Sobir hoji» ham almashtirildi.

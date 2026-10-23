@@ -157,7 +157,7 @@ fn journal_is_append_only_and_verifiable() {
                 "e1",
                 EntryKind::Contribution,
                 Some(300_000_000),
-                "Anvar hissasi",
+                "Bekzod hissasi",
             ),
             &m,
         )?;
