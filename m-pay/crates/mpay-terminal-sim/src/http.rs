@@ -106,6 +106,17 @@ impl ServerClient {
         Ok((id, dto.fingerprint))
     }
 
+    /// Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kaliti shu challenge bilan yaratiladi.
+    pub async fn enroll_nonce(&self) -> Result<[u8; 32], WalletError> {
+        let v: serde_json::Value = self
+            .post_json("/v1/pqlink/enroll", None, &serde_json::json!({}))
+            .await?;
+        let mut n = [0u8; 32];
+        hex::decode_to_slice(v["nonce"].as_str().unwrap_or_default(), &mut n)
+            .map_err(|_| WalletError::Decode("enroll nonce"))?;
+        Ok(n)
+    }
+
     /// PQ Link tanasini yuboradi.
     pub async fn post_pqlink(&self, path: &str, body: Vec<u8>) -> Result<RawResponse, WalletError> {
         let r = self

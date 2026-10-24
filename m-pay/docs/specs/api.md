@@ -44,6 +44,7 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | GET | `/v1/audit/verify` | operator | — | audit xesh-zanjirini tekshirish |
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
+| POST | `/v1/pqlink/enroll` | — (IP chegarasi) | `{}` | yangi qurilma uchun bir martalik nonce: `{nonce, expires_at}` (P1.7) |
 | GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
 
@@ -169,7 +170,7 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `UNSUPPORTED_MEDIA_TYPE` | 415 |
 | `IDV_UNAVAILABLE`, `PQLINK_BUSY` | 503 |
 | `PQLINK_MALFORMED`, `PQLINK_HANDSHAKE` | 400 |
-| `PQLINK_ATTESTATION`, `PQLINK_AUTH` | 403 |
+| `PQLINK_ATTESTATION`, `PQLINK_AUTH`, `PQLINK_ENROLLMENT` | 403 |
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |
 | `DB_ERROR`, `CRYPTO_ERROR`, `AUDIT_BROKEN`, `PQLINK_INTERNAL` | 500 |
 | `MTLS_REQUIRED` (`require_mtls`: sertifikat yo'q yoki CN ≠ kalit id) | 403 |

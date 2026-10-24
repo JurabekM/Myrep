@@ -22,6 +22,8 @@ pub enum PqLinkError {
     Attestation(String),
     #[error("qurilma imzosi noto'g'ri")]
     BadDeviceSignature,
+    #[error("qurilma ro'yxatdan o'tmagan: {0}")]
+    Enrollment(&'static str),
     #[error("sessiya topilmadi yoki muddati o'tgan")]
     UnknownSession,
     #[error("takroriy yoki tartibsiz yozuv (kutilgan seq {expected}, olingan {got})")]

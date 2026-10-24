@@ -165,7 +165,10 @@ async fn provision_one(
     i: u32,
 ) -> Result<(SoftCard, String), String> {
     let device = ca
-        .issue_device(SecurityLevel::StrongBox, format!("load-{i}").as_bytes())
+        .issue_device(
+            SecurityLevel::StrongBox,
+            &client.enroll_nonce().await.map_err(|e| e.to_string())?,
+        )
         .map_err(|e| e.to_string())?;
     let (identity, _) = client.identity().await.map_err(|e| e.to_string())?;
     let mut w = SoftWallet::new(client.clone(), identity, device);

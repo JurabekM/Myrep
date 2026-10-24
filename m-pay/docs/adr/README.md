@@ -14,5 +14,6 @@
 | [0010](0010-takroriy-stan.md) | Takroriy avtorizatsiya so'rovlari: idempotentlik va `94` | qabul qilingan |
 | [0011](0011-mtls.md) | Ichki API uchun mTLS: sertifikat API kalitiga bog'langan | qabul qilingan |
 | [0012](0012-kalit-almashtirish.md) | PQ Link server kalitini almashtirish (rotation) | qabul qilingan |
+| [0013](0013-qurilma-royxati.md) | Qurilmani ro'yxatdan o'tkazish: challenge = server nonce'i | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

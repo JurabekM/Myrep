@@ -129,6 +129,7 @@ impl From<PqLinkError> for ApiError {
             }
             E::Attestation(_) => (StatusCode::FORBIDDEN, "PQLINK_ATTESTATION"),
             E::BadDeviceSignature | E::BadFinished => (StatusCode::FORBIDDEN, "PQLINK_AUTH"),
+            E::Enrollment(_) => (StatusCode::FORBIDDEN, "PQLINK_ENROLLMENT"),
             E::UnknownSession | E::Decrypt => (StatusCode::UNAUTHORIZED, "PQLINK_SESSION"),
             E::Replay { .. } => (StatusCode::CONFLICT, "PQLINK_REPLAY"),
             E::TooManySessions => (StatusCode::SERVICE_UNAVAILABLE, "PQLINK_BUSY"),

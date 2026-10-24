@@ -34,7 +34,7 @@ class InteropTest {
     private val sandbox = System.getenv("MPAY_SANDBOX_DIR")?.let(::File)
 
     /** Sandbox attestatsiya CA bilan imzolangan test qurilma (Android Keystore o'rnida). */
-    private class SoftDevice(dir: File, level: Int = 2) : DeviceKey {
+    private class SoftDevice(dir: File, level: Int = 2, challenge: ByteArray = "kotlin-interop".toByteArray()) : DeviceKey {
         private val kp = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
         private val chain: List<ByteArray>
 
@@ -48,7 +48,7 @@ class InteropTest {
                 0x30,
                 Tlv.primitive(0x02, byteArrayOf(0x01, 0x2C)), Tlv.primitive(0x0A, byteArrayOf(level.toByte())),
                 Tlv.primitive(0x02, byteArrayOf(0x01, 0x2C)), Tlv.primitive(0x0A, byteArrayOf(level.toByte())),
-                Tlv.primitive(0x04, "kotlin-interop".toByteArray()), Tlv.primitive(0x04, ByteArray(0)),
+                Tlv.primitive(0x04, challenge), Tlv.primitive(0x04, ByteArray(0)),
                 Tlv.constructed(0x30), Tlv.constructed(0x30),
             ).encode()
             val now = System.currentTimeMillis()
@@ -85,7 +85,14 @@ class InteropTest {
         println("server fp $fp")
 
         // 1) PQ Link handshake (Kotlin) → Rust server; provisioning.
-        val s = api.connect(identity, SoftDevice(dir))
+        // P1.7: ro'yxatdan o'tmagan qurilma (nonce'siz challenge) — rad.
+        try {
+            MpayClient(url).connect(identity, SoftDevice(dir))
+            throw AssertionError("PQLINK_ENROLLMENT kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("PQLINK_ENROLLMENT", e.code)
+        }
+        val s = api.connect(identity, SoftDevice(dir, challenge = api.enrollNonce()))
         println("PQ Link sessiyasi: $s")
         val pan = demoPan(0)
         val r = api.provision(pan, "3112")
@@ -127,7 +134,7 @@ class InteropTest {
 
         // 6) O'sha kartani ikkinchi qurilmaga — YELLOW → OTP (Shield dvigateli).
         val api2 = MpayClient(url)
-        api2.connect(identity, SoftDevice(dir))
+        api2.connect(identity, SoftDevice(dir, challenge = api2.enrollNonce()))
         val y = api2.provision(pan, "3112")
         assertTrue("PENDING_IDV kutilgan: $y", y is ProvisionResult.PendingIdv)
         y as ProvisionResult.PendingIdv
@@ -186,7 +193,7 @@ class InteropTest {
         // To'liq oqim TLS ustida: hamyon (sertifikatsiz, pinlangan) → token; terminal (mTLS) → 00.
         val wallet = MpayClient(tlsUrl, tls = pinOnly)
         val (identity, _) = wallet.identity()
-        wallet.connect(identity, SoftDevice(dir!!))
+        wallet.connect(identity, SoftDevice(dir!!, challenge = wallet.enrollNonce()))
         val pan = File(dir, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[0].substringAfter("\"").substringBefore("\"")
         val r = wallet.provision(pan, "3112")
         assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)

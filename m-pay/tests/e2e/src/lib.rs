@@ -183,8 +183,15 @@ impl Sandbox {
         id
     }
 
+    /// Ro'yxatdan o'tmagan qurilma (ixtiyoriy challenge) — rad etilish stsenariylari uchun.
     pub fn device(&self, level: SecurityLevel) -> SoftDeviceKey {
-        self.ca.issue_device(level, b"e2e-enroll").unwrap()
+        self.ca.issue_device(level, b"e2e-unenrolled").unwrap()
+    }
+
+    /// Server nonce'i bilan yaratilgan qurilma (P1.7) — birinchi handshake'da ro'yxatga olinadi.
+    pub async fn enrolled_device(&self, level: SecurityLevel) -> SoftDeviceKey {
+        let nonce = self.client().enroll_nonce().await.unwrap();
+        self.ca.issue_device(level, &nonce).unwrap()
     }
 
     /// Ulangan soft-wallet (StrongBox qurilma).
@@ -192,7 +199,7 @@ impl Sandbox {
         let mut w = SoftWallet::new(
             self.client(),
             self.pinned_identity().await,
-            self.device(SecurityLevel::StrongBox),
+            self.enrolled_device(SecurityLevel::StrongBox).await,
         );
         w.connect().await.unwrap();
         w

@@ -87,7 +87,11 @@ async fn announce_endorse_and_switch_identity() {
     assert_eq!(served, next);
 
     // Yangi pin (o'rganilgan v2) bilan hamyon ulanadi va token oladi.
-    let device = sb.device(SecurityLevel::StrongBox);
+    let nonce = client2.enroll_nonce().await.unwrap();
+    let device = sb
+        .ca
+        .issue_device(SecurityLevel::StrongBox, &nonce)
+        .unwrap();
     let mut w = SoftWallet::new(client2.clone(), next.clone(), device);
     w.connect().await.unwrap();
     w.provision(&test_fpan(10, 9301), "3112").await.unwrap();

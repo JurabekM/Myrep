@@ -40,7 +40,7 @@ TB4: server ↔ DB (DB ishonchsiz deb qaraladi — faqat shifrmatn).
 | ID | Kategoriya | Tahdid | Nazorat | Holat |
 |---|---|---|---|---|
 | S1 | Spoofing | Soxta server qurilmaga LUK beradi | Gibrid imzo Ed25519 **va** ML-DSA-65, server kaliti build vaqtida pinlangan (P1.5); kalit almashtirish faqat joriy kalit tasdig'i bilan (P1.6, ADR-0012) | M2/P1.5/P1.6 |
-| S2 | Spoofing | Emulyator/rootlangan qurilma o'zini haqiqiy deb ko'rsatadi | Android Key Attestation zanjiri, xavfsizlik darajasi siyosati; Play Integrity (stub, M6) | M2/M6 |
+| S2 | Spoofing | Emulyator/rootlangan qurilma o'zini haqiqiy deb ko'rsatadi; eski (root'dan oldingi) attestatsiyani qayta ishlatadi | Android Key Attestation zanjiri, xavfsizlik darajasi siyosati; yangi qurilma challenge'i — server nonce'i, qurilmalar reyestri (P1.7, ADR-0013); Play Integrity (stub) | M2/M6/P1.7 |
 | S3 | Spoofing | Soxta terminal yoki operator API'ga murojaat (o'g'irlangan kalit) | Rol bo'yicha Bearer kalitlari (SHA-256 xesh, constant-time solishtirish) + mTLS: sertifikat CN'i kalit ID'siga teng (ADR-0011) | M3/P1.3 |
 | S4 | Spoofing | Ko'chirilgan token boshqa qurilmada ishlatiladi | Token qurilmaga bog'langan; LUK faqat bog'langan qurilma sessiyasida to'ldiriladi | M3 |
 | T1 | Tampering | Summa/valyuta APDU yoki ISO 8583 da o'zgartiriladi | ARQC CDOL ichida summa/valyuta/UN; issuer maydon 4/49 ni 9F02/5F2A bilan solishtiradi | M4 |

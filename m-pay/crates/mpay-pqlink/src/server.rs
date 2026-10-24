@@ -92,6 +92,7 @@ pub struct PqLinkServer {
     cfg: ServerConfig,
     clock: Arc<dyn Clock>,
     sessions: Mutex<HashMap<SessionId, Slot>>,
+    enrollment: Option<Arc<dyn crate::EnrollmentGate>>,
 }
 
 impl std::fmt::Debug for PqLinkServer {
@@ -116,7 +117,14 @@ impl PqLinkServer {
             cfg,
             clock,
             sessions: Mutex::new(HashMap::new()),
+            enrollment: None,
         }
+    }
+
+    /// Qurilmani ro'yxatdan o'tkazish talabi (P1.7). Bo'lmasa — har qanday attestatsiyali qurilma.
+    pub fn with_enrollment(mut self, gate: Arc<dyn crate::EnrollmentGate>) -> Self {
+        self.enrollment = Some(gate);
+        self
     }
 
     pub fn identity(&self) -> &ServerIdentity {
@@ -209,6 +217,9 @@ impl PqLinkServer {
         let device = verify_chain(&cf.cert_chain, &self.anchors, &self.cfg.attestation, now)?;
         let msg = [DEVICE_SIG_LABEL, &pending.th2[..]].concat();
         device.verify_signature(&msg, &cf.device_sig)?;
+        if let Some(gate) = &self.enrollment {
+            gate.admit(&device)?;
+        }
 
         let expires = now + self.cfg.session_ttl_secs;
         let accept = ServerAcceptInner {

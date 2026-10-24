@@ -39,6 +39,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   `operator-1`/`terminal-1` sertifikatlarini yaratadi.
 * **Kalit almashtirish** (ADR-0012): `identity-next --version N` → `[pqlink.next]`; identifikator
   javobida `next` va joriy kalitlar tasdig'i; o'tish — `[pqlink] mldsa_blob`/`ed25519_label` almashtirish.
+* **Qurilmalar reyestri** (`enroll.rs`, migratsiya `3002`, ADR-0013): `POST /v1/pqlink/enroll` nonce;
+  yangi qurilma attestatsiyasi shu nonce bilan; `[pqlink] enrollment = "required" | "off"` (off — faqat sandbox).
 * **So'rovlar chegarasi** (`ratelimit.rs`, `[rate_limit]`): IP / API kaliti / qurilma bo'yicha token
   bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`).
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):

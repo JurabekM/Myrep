@@ -178,10 +178,18 @@ identifikatorning gibrid imzosi: Ed25519 va ML-DSA-65 (kontekst `mpay-pqlink-v1`
 Qurilma tasdiqqa faqat joriy identifikator pin bo'yicha qabul qilingandan keyin tayanadi va keyingi
 barmoq izini pin to'plamiga qo'shadi. Handshake'ning o'zi o'zgarmaydi (server faqat joriy kalit bilan imzolaydi).
 
+## 8b. Qurilmani ro'yxatdan o'tkazish (1-faza P1.7, ADR-0013)
+
+Yangi qurilma `POST /v1/pqlink/enroll` dan 32 baytli nonce oladi va P-256 kalitini
+`attestationChallenge = nonce` bilan yaratadi. Server handshake'da (attestatsiya va qurilma imzosidan
+keyin) qurilmani reyestrdan qidiradi; yo'q bo'lsa KeyDescription `attestationChallenge` haqiqiy,
+ishlatilmagan va muddati o'tmagan nonce bo'lishi shart (iste'mol qilinadi), aks holda
+`PQLINK_ENROLLMENT`. Ro'yxatdagi qurilma keyin nonce'siz ulanadi.
+
 ## 9. Ochiq savollar
 
-* `TODO(spec):` KeyDescription `attestationChallenge` ni qurilmani ro'yxatdan o'tkazish (enrollment)
-  bosqichida server nonce'i bilan bog'lash (M6).
+* KeyDescription `attestationChallenge` — qurilmani ro'yxatdan o'tkazish nonce'i (§8b, P1.7).
+  `TODO(spec):` davriy qayta attestatsiya.
 * `TODO(spec):` Google'ning haqiqiy attestatsiya ildizlari (RSA-4096, ECDSA P-384) va
   `rootOfTrust`/`verifiedBootState` tekshiruvi — M6; hozir faqat P-256/ECDSA-SHA256 zanjirlari.
 * Server kalitini almashtirish va bir nechta pinlangan identifikator — 1-faza P1.5/P1.6 (§8a).

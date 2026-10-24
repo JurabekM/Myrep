@@ -40,6 +40,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(health))
         .route("/v1/pqlink/identity", get(identity))
+        .route("/v1/pqlink/enroll", post(pq_enroll))
         .route("/v1/pqlink/hello", post(pq_hello))
         .route("/v1/pqlink/finish", post(pq_finish))
         .route("/v1/tokens", post(provision))
@@ -141,6 +142,27 @@ fn handshake_guard(
         tracing::warn!("rate-limit: handshake navbati to'la");
         ApiError::rate_limited(l, true)
     })
+}
+
+/// Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kalitini `attestationChallenge = nonce`
+/// bilan yaratadi. IP chegarasi handshake bilan umumiy.
+async fn pq_enroll(
+    State(s): St,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+) -> Result<Response, ApiError> {
+    let Some(e) = &s.enrollment else {
+        return Err(ApiError::not_found());
+    };
+    s.limits.ip(&peer.ip().to_string()).map_err(|l| {
+        tracing::warn!(ip = %peer.ip(), "rate-limit: enroll IP");
+        ApiError::rate_limited(l, false)
+    })?;
+    let (nonce, expires_at) = e.issue()?;
+    Ok(Json(serde_json::json!({
+        "nonce": hex::encode(nonce),
+        "expires_at": expires_at,
+    }))
+    .into_response())
 }
 
 async fn pq_hello(

@@ -12,6 +12,7 @@ pub mod attestation;
 pub mod client;
 pub mod crypto;
 pub mod device;
+pub mod enrollment;
 pub mod error;
 pub mod identity;
 #[cfg(feature = "sandbox-attestation")]
@@ -21,6 +22,7 @@ pub mod wire;
 
 pub use client::{ClientHandshake, ClientSession};
 pub use device::DeviceSigner;
+pub use enrollment::EnrollmentGate;
 pub use error::PqLinkError;
 pub use identity::{KeyStoreServerSigner, MlDsaSeedBlob, ServerIdentity, ServerSigner};
 pub use server::{PqLinkServer, ServerConfig, SessionId, SessionInfo};

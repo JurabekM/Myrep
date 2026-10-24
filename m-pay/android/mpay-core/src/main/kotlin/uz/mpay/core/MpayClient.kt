@@ -126,6 +126,9 @@ class MpayClient(
         return r.body
     }
 
+    /** Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kaliti `attestationChallenge = nonce` bilan. */
+    fun enrollNonce(): ByteArray = Hex.decode(json("POST", "/v1/pqlink/enroll", JSONObject(), null).getString("nonce"))
+
     /** PQ Link handshake. */
     fun connect(pinned: ServerIdentity, device: DeviceKey): ClientSession {
         val hs = ClientHandshake.start(pinned)

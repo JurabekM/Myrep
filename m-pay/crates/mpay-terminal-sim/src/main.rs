@@ -166,7 +166,9 @@ async fn load_or_create(cli: &Cli, c: &ServerClient) -> Result<WalletState, Wall
     let der = std::fs::read(cli.sandbox.join("sandbox-attestation-root.der"))
         .map_err(|e| WalletError::Config(format!("sandbox CA: {e}")))?;
     let ca = SandboxAttestationCa::from_parts(&key, der)?;
-    let dev = ca.issue_device(SecurityLevel::StrongBox, b"mpay-tsim")?;
+    // P1.7: yangi qurilma kaliti server nonce'i bilan (attestationChallenge) yaratiladi.
+    let nonce = c.enroll_nonce().await?;
+    let dev = ca.issue_device(SecurityLevel::StrongBox, &nonce)?;
     let (pk, chain) = dev.to_parts()?;
     let (_, fp) = c.identity().await?;
     println!("Yangi soft-wallet. Server pinlandi (TOFU): {fp}");

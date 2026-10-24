@@ -2,6 +2,7 @@ package uz.mpay.wallet.sdk
 
 import android.content.Context
 import android.util.Log
+import uz.mpay.core.ApiException
 import uz.mpay.core.CardApplet
 import uz.mpay.core.CardLuk
 import uz.mpay.core.CardProfile
@@ -64,7 +65,25 @@ class MpayWallet private constructor(context: Context) {
         listeners.forEach { it(event) }
     }
 
-    fun deviceKey(): AndroidDeviceKey = AndroidDeviceKey.getOrCreate("mpay-enroll".toByteArray())
+    /** Mavjud qurilma kaliti (bo'lmasa — lokal; serverga ulanishda nonce bilan qayta yaratiladi). */
+    fun deviceKey(): AndroidDeviceKey = AndroidDeviceKey.getOrCreate("mpay-local".toByteArray())
+
+    /**
+     * P1.7: yangi qurilma kaliti server nonce'i bilan yaratiladi (attestatsiya yangiligi). Server
+     * qurilmani tanimasa (`PQLINK_ENROLLMENT`) — kalit bir marta qayta yaratiladi; eski tokenlar yangi
+     * qurilmaga o'tmaydi.
+     */
+    private fun connectEnrolled(c: MpayClient, identity: ServerIdentity) {
+        val key = if (AndroidDeviceKey.exists()) deviceKey() else AndroidDeviceKey.getOrCreate(c.enrollNonce())
+        try {
+            c.connect(identity, key)
+        } catch (e: ApiException) {
+            if (e.code != "PQLINK_ENROLLMENT") throw e
+            emit("Qurilma serverda ro'yxatdan o'tmagan — kalit yangi nonce bilan qayta yaratilmoqda")
+            AndroidDeviceKey.delete()
+            c.connect(identity, AndroidDeviceKey.getOrCreate(c.enrollNonce()))
+        }
+    }
 
     /**
      * Serverga ulanadi. Server identifikatori [WalletConfig] bo'yicha tekshiriladi ([ServerPinPolicy]):
@@ -95,7 +114,7 @@ class MpayWallet private constructor(context: Context) {
             prefs.edit().putStringSet("pins_learned", rolled).apply()
             emit("Server keyingi kaliti tasdiqlandi va pinlandi (${Hex.encode(info.next!!.fingerprint()).take(16)}…)")
         }
-        c.connect(identity, deviceKey())
+        connectEnrolled(c, identity)
         client = c
         pinnedFingerprint = fp
         emit("PQ Link ulandi (server ${fp.take(16)}…)")

@@ -232,6 +232,9 @@ mldsa_blob = "{MLDSA_FILE}"
 attestation_roots = ["{CA_CERT_FILE}"]
 min_security_level = "STRONG_BOX"
 session_ttl_secs = 900
+# Yangi qurilma attestatsiyasi server nonce'i bilan (POST /v1/pqlink/enroll); "off" — faqat sandbox/test.
+enrollment = "required"
+enrollment_nonce_ttl_secs = 300
 
 [vault]
 token_bin = "990077"

@@ -102,6 +102,24 @@ pub struct PqLinkConfig {
     pub min_security_level: SecurityLevel,
     #[serde(default = "default_session_ttl")]
     pub session_ttl_secs: i64,
+    /// Qurilmani ro'yxatdan o'tkazish (P1.7): `required` — yangi qurilma attestatsiyasi server
+    /// nonce'i bilan bo'lishi shart; `off` — talab yo'q (faqat sandbox/test).
+    #[serde(default)]
+    pub enrollment: EnrollmentMode,
+    #[serde(default = "default_nonce_ttl")]
+    pub enrollment_nonce_ttl_secs: i64,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EnrollmentMode {
+    #[default]
+    Required,
+    Off,
+}
+
+fn default_nonce_ttl() -> i64 {
+    300
 }
 
 /// `[pqlink.next]`.
@@ -245,6 +263,11 @@ impl Config {
                     k.id
                 )));
             }
+        }
+        if self.pqlink.enrollment == EnrollmentMode::Off && !self.sandbox {
+            return Err(ConfigError::Invalid(
+                "pqlink.enrollment = off faqat sandbox rejimida".into(),
+            ));
         }
         if let Some(n) = &self.pqlink.next {
             if n.ed25519_label == self.pqlink.ed25519_label

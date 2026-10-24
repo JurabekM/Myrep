@@ -66,6 +66,8 @@ pub struct AppState {
     pub require_mtls: bool,
     /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
     pub next_identity: Option<NextIdentity>,
+    /// Qurilmani ro'yxatdan o'tkazish (P1.7); `None` — `enrollment = off`.
+    pub enrollment: Option<Arc<crate::enroll::Enrollment>>,
     pub sandbox: bool,
     pub expose_otp: bool,
 }
@@ -288,8 +290,6 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         },
         ..ServerConfig::default()
     };
-    let pqlink = Arc::new(PqLinkServer::new(signer, anchors, pq_cfg, clock.clone()));
-
     let db_path = cfg.resolve(&cfg.database.path);
     let pool = mpay_vault::db::open_pool_with(
         &format!("sqlite://{}", db_path.display()),
@@ -298,6 +298,22 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     )
     .await?;
     crate::dedup::migrate(&pool).await?;
+    let enrollment = match cfg.pqlink.enrollment {
+        crate::config::EnrollmentMode::Required => Some(Arc::new(crate::enroll::Enrollment::new(
+            pool.clone(),
+            clock.clone(),
+            cfg.pqlink.enrollment_nonce_ttl_secs,
+        ))),
+        crate::config::EnrollmentMode::Off => {
+            tracing::warn!("PQ Link: qurilmani ro'yxatdan o'tkazish o'chiq — FAQAT SANDBOX");
+            None
+        }
+    };
+    let mut pq = PqLinkServer::new(signer, anchors, pq_cfg, clock.clone());
+    if let Some(e) = &enrollment {
+        pq = pq.with_enrollment(e.clone());
+    }
+    let pqlink = Arc::new(pq);
     let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(
@@ -341,6 +357,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
         require_mtls: cfg.auth.require_mtls,
         next_identity,
+        enrollment,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
     })

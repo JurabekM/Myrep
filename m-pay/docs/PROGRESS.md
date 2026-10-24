@@ -507,3 +507,27 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
   faqat standart yorliqni tayyorlardi; endi joriy yorliq ham `ensure_key`.
 * TOFU rejimida o'rganilgan pin joriy TOFU barmoq izini siqib chiqarishi mumkin edi — saqlangan TOFU
   barmoq izi ham pin to'plamiga qo'shiladi.
+
+### P1.7 — qurilmani ro'yxatdan o'tkazish: challenge = server nonce'i (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-pqlink`: `EnrollmentGate` (attestatsiya va qurilma imzosidan keyin), `PqLinkServer::with_enrollment`,
+  `PqLinkError::Enrollment` → `403 PQLINK_ENROLLMENT`.
+* Server: `enroll.rs` — bir martalik nonce'lar (TTL, xotira chegarasi) va `pqlink_devices` reyestri
+  (migratsiya `3002`); `POST /v1/pqlink/enroll` (IP chegarasi); `[pqlink] enrollment`,
+  `enrollment_nonce_ttl_secs`; `off` faqat sandbox.
+* Mijozlar: `ServerClient::enroll_nonce`, `mpay-tsim`, `mpay-load`, e2e `enrolled_device`; Kotlin
+  `MpayClient.enrollNonce`, hamyon yangi kalitni nonce bilan yaratadi, `PQLINK_ENROLLMENT` da bir marta
+  qayta ro'yxatdan o'tadi.
+* Hujjatlar: ADR-0013, `specs/pqlink.md` §8b, `api.md`, tahdid modeli S2, server README.
+
+**Qanday tekshirildi**
+
+* `tests/e2e/tests/p1_enrollment.rs` (3): nonce'siz qurilma rad; nonce bilan ro'yxat va o'sha kalit nonce'siz
+  qayta ulanadi; nonce bir martalik; reyestr qayta ishga tushgan serverda saqlanadi; muddati o'tgan nonce rad;
+  `off` — `/enroll` 404, production konfiguratsiyada `off` rad.
+* Kotlin interop: ro'yxatsiz qurilma → `PQLINK_ENROLLMENT`, nonce bilan → to'liq oqim (HTTP va TLS+mTLS).
+* Emulyator (haqiqiy Android Keystore): toza hamyon `/enroll` → `finish` 200 ("qurilma ro'yxatga olindi");
+  ikkinchi ulanish nonce'siz; reyestr tozalangach `finish` 403 → hamyon avtomatik yangi nonce bilan
+  kalitni qayta yaratdi va ulandi (ekranda voqea).
