@@ -1,7 +1,7 @@
 //! Android Key Attestation zanjirini tekshirish (`docs/specs/pqlink.md` §4.3).
 //!
-//! M2 qamrovi: ECDSA P-256 / SHA-256 bilan imzolangan zanjirlar (sandbox attestatsiya CA).
-//! `TODO(spec):` Google'ning haqiqiy ildizlari (RSA-4096, ECDSA P-384) M6 da qo'shiladi.
+//! Imzolovchilar: ECDSA P-256/P-384 (SHA-256/384) va RSA (SHA-256) — Google RSA-4096 va
+//! "Key Attestation CA1" (P-384) ildizlari; qurilma (leaf) kaliti faqat P-256.
 
 use der::{Decode, Encode};
 use mpay_common::ports::SecurityLevel;
@@ -17,6 +17,14 @@ use crate::PqLinkError;
 
 /// `ecdsa-with-SHA256` (1.2.840.10045.4.3.2).
 const OID_ECDSA_SHA256: &str = "1.2.840.10045.4.3.2";
+/// `ecdsa-with-SHA384` (1.2.840.10045.4.3.3) — Google "Key Attestation CA1" (P-384).
+const OID_ECDSA_SHA384: &str = "1.2.840.10045.4.3.3";
+/// `sha256WithRSAEncryption` (1.2.840.113549.1.1.11) — Google RSA-4096 ildizi.
+const OID_RSA_SHA256: &str = "1.2.840.113549.1.1.11";
+/// `rsaEncryption` (1.2.840.113549.1.1.1).
+const OID_RSA: &str = "1.2.840.113549.1.1.1";
+/// `secp384r1` (1.3.132.0.34).
+const OID_P384: &str = "1.3.132.0.34";
 /// `id-ecPublicKey` (1.2.840.10045.2.1).
 const OID_EC_PUBLIC_KEY: &str = "1.2.840.10045.2.1";
 /// `prime256v1` (1.2.840.10045.3.1.7).
@@ -167,31 +175,74 @@ pub fn parse_key_description(der: &[u8]) -> Result<KeyDescription, PqLinkError> 
     })
 }
 
-fn p256_key(cert: &Certificate) -> Result<VerifyingKey, PqLinkError> {
-    let spki = cert.tbs_certificate().subject_public_key_info();
-    if spki.algorithm.oid.to_string() != OID_EC_PUBLIC_KEY {
-        return Err(att("ochiq kalit EC emas"));
-    }
-    let curve = spki
+/// Zanjirdagi imzolovchi (issuer) kaliti.
+enum IssuerKey {
+    P256(VerifyingKey),
+    P384(p384::ecdsa::VerifyingKey),
+    Rsa(rsa::RsaPublicKey),
+}
+
+fn spki_bits(cert: &Certificate) -> Result<&[u8], PqLinkError> {
+    cert.tbs_certificate()
+        .subject_public_key_info()
+        .subject_public_key
+        .as_bytes()
+        .ok_or_else(|| att("ochiq kalit bitlari"))
+}
+
+fn ec_curve(cert: &Certificate) -> Option<String> {
+    cert.tbs_certificate()
+        .subject_public_key_info()
         .algorithm
         .parameters
         .as_ref()
         .and_then(|p| p.decode_as::<der::asn1::ObjectIdentifier>().ok())
-        .map(|o| o.to_string());
-    if curve.as_deref() != Some(OID_P256) {
-        return Err(att("egri chiziq P-256 emas (TODO(spec): P-384, RSA — M6)"));
-    }
-    let bits = spki
-        .subject_public_key
-        .as_bytes()
-        .ok_or_else(|| att("ochiq kalit bitlari"))?;
-    VerifyingKey::from_sec1_bytes(bits).map_err(|_| att("P-256 nuqtasi yaroqsiz"))
+        .map(|o| o.to_string())
 }
 
-fn verify_signed_by(cert: &Certificate, issuer_key: &VerifyingKey) -> Result<(), PqLinkError> {
-    if cert.signature_algorithm().oid.to_string() != OID_ECDSA_SHA256 {
-        return Err(att("imzo algoritmi ecdsa-with-SHA256 emas"));
+/// Qurilma (leaf) kaliti — faqat P-256 (StrongBox ECDSA).
+fn p256_key(cert: &Certificate) -> Result<VerifyingKey, PqLinkError> {
+    let spki = cert.tbs_certificate().subject_public_key_info();
+    if spki.algorithm.oid.to_string() != OID_EC_PUBLIC_KEY
+        || ec_curve(cert).as_deref() != Some(OID_P256)
+    {
+        return Err(att("qurilma kaliti EC P-256 emas"));
     }
+    VerifyingKey::from_sec1_bytes(spki_bits(cert)?).map_err(|_| att("P-256 nuqtasi yaroqsiz"))
+}
+
+/// Oraliq va ildiz sertifikatlar kaliti: P-256, P-384 yoki RSA.
+fn issuer_key(cert: &Certificate) -> Result<IssuerKey, PqLinkError> {
+    let alg = cert
+        .tbs_certificate()
+        .subject_public_key_info()
+        .algorithm
+        .oid
+        .to_string();
+    match (alg.as_str(), ec_curve(cert).as_deref()) {
+        (OID_EC_PUBLIC_KEY, Some(OID_P256)) => Ok(IssuerKey::P256(p256_key(cert)?)),
+        (OID_EC_PUBLIC_KEY, Some(OID_P384)) => {
+            p384::ecdsa::VerifyingKey::from_sec1_bytes(spki_bits(cert)?)
+                .map(IssuerKey::P384)
+                .map_err(|_| att("P-384 nuqtasi yaroqsiz"))
+        }
+        (OID_RSA, _) => {
+            use rsa::pkcs1::DecodeRsaPublicKey;
+            let k = rsa::RsaPublicKey::from_pkcs1_der(spki_bits(cert)?)
+                .map_err(|_| att("RSA ochiq kaliti"))?;
+            if rsa::traits::PublicKeyParts::size(&k) < 256 {
+                return Err(att("RSA kaliti 2048 bitdan qisqa"));
+            }
+            Ok(IssuerKey::Rsa(k))
+        }
+        _ => Err(att(
+            "qo'llab-quvvatlanmaydigan imzolovchi kaliti (P-256, P-384, RSA kutilgan)",
+        )),
+    }
+}
+
+fn verify_signed_by(cert: &Certificate, issuer: &IssuerKey) -> Result<(), PqLinkError> {
+    use p256::ecdsa::signature::hazmat::PrehashVerifier;
     let tbs = cert
         .tbs_certificate()
         .to_der()
@@ -200,10 +251,31 @@ fn verify_signed_by(cert: &Certificate, issuer_key: &VerifyingKey) -> Result<(),
         .signature()
         .as_bytes()
         .ok_or_else(|| att("imzo bitlari"))?;
-    let sig = DerSignature::try_from(sig).map_err(|_| att("imzo DER"))?;
-    issuer_key
-        .verify(&tbs, &sig)
-        .map_err(|_| att("sertifikat imzosi noto'g'ri"))
+    let alg = cert.signature_algorithm().oid.to_string();
+    let bad = || att("sertifikat imzosi noto'g'ri");
+    let digest: Vec<u8> = match alg.as_str() {
+        OID_ECDSA_SHA256 | OID_RSA_SHA256 => Sha256::digest(&tbs).to_vec(),
+        OID_ECDSA_SHA384 => sha2::Sha384::digest(&tbs).to_vec(),
+        _ => {
+            return Err(att(
+                "imzo algoritmi qo'llab-quvvatlanmaydi (ECDSA-SHA256/384, RSA-SHA256)",
+            ))
+        }
+    };
+    match (issuer, alg.as_str()) {
+        (IssuerKey::P256(k), OID_ECDSA_SHA256 | OID_ECDSA_SHA384) => {
+            let s = p256::ecdsa::Signature::from_der(sig).map_err(|_| att("imzo DER"))?;
+            k.verify_prehash(&digest, &s).map_err(|_| bad())
+        }
+        (IssuerKey::P384(k), OID_ECDSA_SHA256 | OID_ECDSA_SHA384) => {
+            let s = p384::ecdsa::Signature::from_der(sig).map_err(|_| att("imzo DER"))?;
+            k.verify_prehash(&digest, &s).map_err(|_| bad())
+        }
+        (IssuerKey::Rsa(k), OID_RSA_SHA256) => k
+            .verify(rsa::Pkcs1v15Sign::new::<sha2_010::Sha256>(), &digest, sig)
+            .map_err(|_| bad()),
+        _ => Err(att("imzo algoritmi va kalit turi mos emas")),
+    }
 }
 
 fn check_validity(cert: &Certificate, now_unix: i64) -> Result<(), PqLinkError> {
@@ -246,7 +318,7 @@ pub fn verify_chain(
         if pair[0].tbs_certificate().issuer() != pair[1].tbs_certificate().subject() {
             return Err(att("issuer/subject mos emas"));
         }
-        verify_signed_by(&pair[0], &p256_key(&pair[1])?)?;
+        verify_signed_by(&pair[0], &issuer_key(&pair[1])?)?;
     }
 
     // Oxirgi sertifikat — ishonchli ildizning o'zi yoki u tomonidan imzolangan.
@@ -257,7 +329,7 @@ pub fn verify_chain(
         }
         root.tbs_certificate().subject() == last.tbs_certificate().issuer()
             && check_validity(root, now_unix).is_ok()
-            && p256_key(root)
+            && issuer_key(root)
                 .and_then(|k| verify_signed_by(last, &k))
                 .is_ok()
     });

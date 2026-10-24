@@ -24,11 +24,13 @@ Pay Sandbox — haqiqiy pulsiz, to'liq ishlaydigan demo.
 | `crates/mpay-crypto` | KeyStore (memory + PKCS#11), kalit ierarxiyasi, ARQC/ARPC, envelope |
 | `crates/mpay-pqlink` | PQ Link gibrid handshake (server + client) |
 | `crates/mpay-vault` | Token Vault: provisioning, lifecycle, LUK, detokenizatsiya, audit |
-| `crates/mpay-shield` | risk engine (M5; hozir deterministik stub) |
+| `crates/mpay-shield` | risk engine: feature store, qurilma–karta grafi, TOML qoidalar, ONNX (tract) |
+| `shield-ml/` | sintetik fraud ma'lumotlari, LightGBM → ONNX (Python, uv) |
 | `crates/mpay-issuer` | emitent emulyatori (ISO 8583 subset, UZS test hisoblar) |
 | `crates/mpay-terminal-sim` | dasturiy terminal + loopback soft-karta + soft-wallet, `mpay-tsim` CLI |
 | `crates/mpay-server` | monolit binar, axum API |
 | `tests/e2e` | to'liq stsenariylar |
+| `android/` | `mpay-core` (Kotlin yadro), `wallet-sdk`, `wallet-demo`, `terminal-app` |
 | `docs/` | arxitektura, tahdid modeli, spetsifikatsiyalar, ADR, PROGRESS |
 
 ## Tez boshlash
@@ -59,5 +61,7 @@ cargo run -p mpay-terminal-sim --bin mpay-tsim -- --server https://localhost:808
 
 To'liq avtomatik smoke (haqiqiy binarlar): `bash scripts/smoke-e2e.sh`.
 SoftHSM2 testlari (Docker): `bash scripts/softhsm-test.sh` va `bash scripts/softhsm-test.sh e2e`.
+
+Android ilovalari va telefonda sinash: `android/README.md`, `docs/android-testing.md`.
 
 Batafsil: `docs/PROGRESS.md`, `docs/specs/`, har crate'ning `README.md` fayli.

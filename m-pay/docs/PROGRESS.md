@@ -268,3 +268,55 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 * `TODO(spec):` taqsimlangan feature store/graf (ko'p instansiya), MCC va terminal geo-koordinatalari.
 
 **Keyingi bosqich (M6)**: Android `wallet-sdk`, `wallet-demo`, `terminal-app`.
+
+## M6 — Android: wallet-sdk, wallet-demo, terminal-app (2026-10-24)
+
+**Nima qilindi**
+
+* `android/` Gradle loyihasi (AGP 8.13, Kotlin 2.2, Compose, minSdk 26) — ADR-0008.
+* `mpay-core` (Kotlin/JVM): TLV, EMV profili, `MpayScheme` (KDF, ARQC/ARPC), `CardApplet`
+  (HCE applet: PPSE/AID/GPO, LUK tanlash, CDCVM `6986`, ARPC), `TerminalKernel`, PQ Link v1
+  client (BouncyCastle 1.86: ML-KEM-768, ML-DSA-65, X25519, Ed25519), `MpayClient`.
+* `wallet-sdk`: `MpayWallet` fasadi (TOFU pinlash, provisioning, OTP, LUK to'ldirish),
+  `MpayHceService` (payment kategoriyasi, PPSE + AID), `AndroidDeviceKey` (Keystore/StrongBox
+  + attestatsiya challenge), `WalletStore` (Keystore AES-GCM), `CdcvmState` + `BiometricGate`
+  (60 s oyna, ekran yoniq, bir martalik), `IntegrityProvider` stub.
+* `wallet-demo` ("M-Pay Hamyon") va `terminal-app` ("M-Pay Terminal": NFC reader mode →
+  `IsoDep` → `TerminalKernel.tap` → `/v1/authorizations`, STAN hisoblagichi) — qorong'i Compose UI.
+* Rust: attestatsiya zanjirida P-384 va RSA oraliq/ildiz sertifikatlari (Google "Key Attestation CA1"
+  va RSA-4096 ildizlari, `config/google-attestation-roots.pem`); TLV umumiy test vektorlari
+  (`testvectors/tlv-vectors.json`) Rust va Kotlin'da.
+* Hujjatlar: `android/README.md`, `docs/android-testing.md`, ADR-0008; ADR-0005 RAM ma'lumoti tuzatildi.
+
+**Qanday tekshirildi**
+
+* `./gradlew assembleDebug` — uchala ilova/kutubxona yig'iladi; `:mpay-core:test` — 5 test
+  (TLV vektorlari, EMV KAT Rust/Python bilan bir xil, applet ARQC va CDCVM).
+* `scripts/android-interop.sh` — Kotlin client ↔ haqiqiy Rust `mpay-server`: PQ Link handshake,
+  GREEN provisioning, Kotlin ARQC → Rust emitent `00`, ARPC kartada tasdiqlandi, CDCVM `6986` → `00`,
+  replay `Q1`, LUK to'ldirish, YELLOW/OTP, TEE darajali qurilma `PQLINK_ATTESTATION` — **INTEROP OK**.
+* Emulyator (Medium Phone API 36), `wallet-demo` ↔ xostdagi `mpay-server`:
+  standart siyosatda emulyator attestatsiyasi rad etildi (ishonchsiz ildiz, so'ng `SOFTWARE` < talab);
+  emulyator test ildizi bilan: ulanish, provisioning → YELLOW → sandbox OTP → token faol
+  (`990077******2765`, 5 LUK), LUK to'ldirish (10), barmoq izi → "To'lovga tayyor: 55 s".
+  Server logida 7 marshrut 200, ochiq PAN 0. `terminal-app`: NFC'siz qurilmada to'g'ri xato,
+  terminal kaliti maskalangan.
+* `cargo test --workspace` — 138 test; clippy `-D warnings`, fmt — toza.
+
+**Topilgan va tuzatilgan muammolar**
+
+* targetSdk 36 da edge-to-edge majburiy — sarlavha status bar ostida qolardi → `safeDrawing` insets.
+* Karta komponentining qat'iy balandligi CDCVM qatorini kesardi → `heightIn(min)`.
+* Provisioningdan keyin FPAN maydonda qolardi → server javobidan so'ng tozalanadi.
+* BouncyCastle 1.86 da PQ klasslari paketi o'zgargan; emulyator attestatsiya ildizi
+  "Droid Unregistered Device CA" (Google Test LLC), xavfsizlik darajasi `SOFTWARE`.
+
+**Ochiq / bajarilmagan**
+
+* **Qabul mezoni — ikki haqiqiy telefon o'rtasida NFC tap — hali bajarilmagan**: ishlab chiqish
+  muhitida NFC'li telefonlar yo'q, emulyator HCE'ni qo'llamaydi. Tap mantiqi JVM'da loopback orqali
+  Rust emitentiga qarshi sinalgan; `IsoDep`/`HostApduService` qatlami sinalmagan.
+  Qo'lda sinov tartibi: `docs/android-testing.md` §3.
+* `terminal-app` `/v1/authorizations` ni sandbox'da ochiq HTTP orqali yuboradi (terminal kaliti
+  tarmoqda ko'rinadi). `TODO(spec):` TLS + pinlash, terminal kalitini Keystore'da saqlash.
+* `TODO(spec):` Play Integrity, bank ilovasida build vaqtida pinlangan server barmoq izi (TOFU o'rniga).

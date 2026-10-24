@@ -1,0 +1,221 @@
+{
+ "description": "BER-TLV umumiy test vektorlari — Rust (mpay-common) va Kotlin (mpay-core) bir xil natija berishi shart. `tree`: tugunlar ro'yxati; primitiv — {tag, value}, konstruktiv — {tag, children}. `canonical`: minimal qayta kodlash (berilmasa — `hex` ning o'zi).",
+ "valid": [
+  {
+   "name": "primitive-short",
+   "hex": "9F2608D2CB7091EAC8B1A4",
+   "tree": [
+    {
+     "tag": "9F26",
+     "value": "D2CB7091EAC8B1A4"
+    }
+   ]
+  },
+  {
+   "name": "empty-value",
+   "hex": "8400",
+   "tree": [
+    {
+     "tag": "84",
+     "value": ""
+    }
+   ]
+  },
+  {
+   "name": "two-objects",
+   "hex": "9F360200015F340100",
+   "tree": [
+    {
+     "tag": "9F36",
+     "value": "0001"
+    },
+    {
+     "tag": "5F34",
+     "value": "00"
+    }
+   ]
+  },
+  {
+   "name": "three-byte-tag",
+   "hex": "DF810102ABCD",
+   "tree": [
+    {
+     "tag": "DF8101",
+     "value": "ABCD"
+    }
+   ]
+  },
+  {
+   "name": "long-form-81",
+   "hex": "5A81021234",
+   "tree": [
+    {
+     "tag": "5A",
+     "value": "1234"
+    }
+   ],
+   "canonical": "5A021234"
+  },
+  {
+   "name": "long-form-82-noncanonical",
+   "hex": "5A8200021234",
+   "tree": [
+    {
+     "tag": "5A",
+     "value": "1234"
+    }
+   ],
+   "canonical": "5A021234"
+  },
+  {
+   "name": "padding-between",
+   "hex": "005A01110000840100",
+   "tree": [
+    {
+     "tag": "5A",
+     "value": "11"
+    },
+    {
+     "tag": "84",
+     "value": "00"
+    }
+   ],
+   "canonical": "5A0111840100"
+  },
+  {
+   "name": "ppse-fci-full",
+   "hex": "6F2E840E325041592E5359532E4444463031A51CBF0C1961174F06F04D50415901500A4D2D5041592054455354870101",
+   "tree": [
+    {
+     "tag": "6F",
+     "children": [
+      {
+       "tag": "84",
+       "value": "325041592E5359532E4444463031"
+      },
+      {
+       "tag": "A5",
+       "children": [
+        {
+         "tag": "BF0C",
+         "children": [
+          {
+           "tag": "61",
+           "children": [
+            {
+             "tag": "4F",
+             "value": "F04D50415901"
+            },
+            {
+             "tag": "50",
+             "value": "4D2D5041592054455354"
+            },
+            {
+             "tag": "87",
+             "value": "01"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "constructed-empty",
+   "hex": "7000",
+   "tree": [
+    {
+     "tag": "70",
+     "children": []
+    }
+   ]
+  },
+  {
+   "name": "value-300-bytes",
+   "hex_repeat": {
+    "prefix": "9F1082012C",
+    "byte": "AB",
+    "count": 300
+   },
+   "tree_repeat": {
+    "tag": "9F10",
+    "byte": "AB",
+    "count": 300
+   }
+  }
+ ],
+ "invalid": [
+  {
+   "name": "truncated-tag",
+   "hex": "9F"
+  },
+  {
+   "name": "truncated-value",
+   "hex": "5A051234"
+  },
+  {
+   "name": "indefinite-length",
+   "hex": "5A80"
+  },
+  {
+   "name": "length-5-bytes",
+   "hex": "5A85000000000100"
+  },
+  {
+   "name": "tag-too-long",
+   "hex": "1F818283840100"
+  },
+  {
+   "name": "child-overflows-parent",
+   "hex": "70035A051122334455"
+  },
+  {
+   "name": "missing-length",
+   "hex": "5A"
+  }
+ ],
+ "dol": [
+  {
+   "name": "mpay-pdol",
+   "hex": "9F02069F03069F1A0295055F2A029A039C019F3704",
+   "entries": [
+    [
+     "9F02",
+     6
+    ],
+    [
+     "9F03",
+     6
+    ],
+    [
+     "9F1A",
+     2
+    ],
+    [
+     "95",
+     5
+    ],
+    [
+     "5F2A",
+     2
+    ],
+    [
+     "9A",
+     3
+    ],
+    [
+     "9C",
+     1
+    ],
+    [
+     "9F37",
+     4
+    ]
+   ]
+  }
+ ]
+}

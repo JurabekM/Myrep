@@ -66,6 +66,10 @@ ml-kem = { version = "0.3.3", features = ["zeroize"] }
 ml-dsa = { version = "0.1.1", features = ["zeroize"] }
 chacha20poly1305 = "0.11.0"
 p256 = { version = "0.14.0", features = ["ecdsa"] }
+p384 = { version = "0.14.0", features = ["ecdsa"] }
+# Faqat attestatsiya zanjiridagi RSA imzolarini TEKSHIRISH (Google RSA-4096 ildizi). 0.10 hali RC.
+rsa = { version = "0.9.10", default-features = false, features = ["std"] }
+sha2-010 = { package = "sha2", version = "0.10", features = ["oid"] }
 x509-cert = "0.3.0"
 der = "0.8.2"
 spki = "0.8.1"

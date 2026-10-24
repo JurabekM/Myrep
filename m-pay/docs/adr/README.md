@@ -9,5 +9,6 @@
 | [0005](0005-onnx-runtime.md) | ONNX runtime: tract default, ort feature | qabul qilingan |
 | [0006](0006-pqlink-http.md) | PQ Link HTTP ustida xabar darajasida | qabul qilingan |
 | [0007](0007-javob-kodlari.md) | Javob kodlari xaritasi | qabul qilingan |
+| [0008](0008-android-kotlin-yadro.md) | Android: umumiy Kotlin yadrosi va BouncyCastle | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

@@ -25,5 +25,5 @@ operatorlari). `ort` — ixtiyoriy `ort` feature.
 * p99 = 1,94 ms (belgilar + qoidalar + ONNX) — talabdan 25× tez. Shu sababli `ort` backend
   **qo'shilmadi**: native onnxruntime bog'liqligini oqlaydigan ehtiyoj yo'q. `MlScorer` trait
   saqlanadi — kerak bo'lsa `ort` feature mahalliy o'zgarish bilan qo'shiladi.
-* Yig'ish narxi: tract debug profilda xotiraga og'ir (16 GB mashinada parallel yig'ishda rustc OOM) —
+* Yig'ish narxi: tract debug profilda xotiraga og'ir (24 GB mashinada, boshqa og'ir jarayonlar bilan parallel yig'ishda rustc OOM) —
   `[profile.dev.package."*"] debug = false`.
