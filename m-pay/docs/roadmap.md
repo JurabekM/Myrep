@@ -29,7 +29,7 @@ Maqsad: tashqi qarorlarsiz yopiladigan xavfsizlik bo'shliqlarini yopish.
 |---|---|---|
 | P1.1 ✅ | Rate-limit: PQ Link handshake (IP bo'yicha) va API kalitlari bo'yicha so'rovlar | tahdid modeli D2 |
 | P1.2 ✅ | Takroriy STAN/RRN ni acquirer darajasida rad etish (terminal + STAN + sana oynasi) | PROGRESS M4 |
-| P1.3 | Ichki API uchun mTLS (operator va terminal mijoz sertifikatlari, sandbox CA) | `architecture.md` |
+| P1.3 ✅ | Ichki API uchun mTLS (operator va terminal mijoz sertifikatlari, sandbox CA) | `architecture.md` |
 | P1.4 | `terminal-app`: TLS (sandbox CA joylangan) + server pinlash, terminal kaliti Keystore'da shifrlangan | M6 ochiq bandi |
 | P1.5 | Hamyon: server barmoq izi build vaqtida joylanadi (TOFU faqat sandbox opsiyasi); bir nechta pinlangan identifikator | ADR-0008 |
 | P1.6 | PQ Link server kalitini almashtirish (rotation): yangi identifikatorni e'lon qilish, o'tish davri | `specs/pqlink.md` |

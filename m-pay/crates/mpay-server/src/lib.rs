@@ -51,7 +51,15 @@ impl RunningServer {
 pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
     let state = Arc::new(state::build(cfg).await.map_err(|e| e.to_string())?);
     let tls = match (&cfg.http.tls_cert, &cfg.http.tls_key) {
-        (Some(c), Some(k)) => Some(serve::load_tls(&cfg.resolve(c), &cfg.resolve(k))?),
+        (Some(c), Some(k)) => Some(serve::load_tls(
+            &cfg.resolve(c),
+            &cfg.resolve(k),
+            cfg.http
+                .client_ca
+                .as_ref()
+                .map(|p| cfg.resolve(p))
+                .as_deref(),
+        )?),
         _ => {
             tracing::warn!("TLS o'chiq — oddiy HTTP (faqat sandbox)");
             None

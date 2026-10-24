@@ -171,6 +171,7 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `PQLINK_ATTESTATION`, `PQLINK_AUTH` | 403 |
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |
 | `DB_ERROR`, `CRYPTO_ERROR`, `AUDIT_BROKEN`, `PQLINK_INTERNAL` | 500 |
+| `MTLS_REQUIRED` (`require_mtls`: sertifikat yo'q yoki CN ≠ kalit id) | 403 |
 | `RATE_LIMITED` | 429 (+ `Retry-After`) |
 | `BUSY` (handshake navbati to'la) | 503 (+ `Retry-After`) |
 | `REQUEST_IN_PROGRESS` (shu avtorizatsiya hali ishlanmoqda) | 409 (+ `Retry-After`) |

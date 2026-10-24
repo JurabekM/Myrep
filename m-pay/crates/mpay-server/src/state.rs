@@ -55,6 +55,7 @@ pub struct AppState {
     pub clock: Arc<dyn Clock>,
     pub auth: Authenticator,
     pub limits: crate::ratelimit::RateLimits,
+    pub require_mtls: bool,
     pub sandbox: bool,
     pub expose_otp: bool,
 }
@@ -73,9 +74,19 @@ impl AppState {
     pub fn caller(
         &self,
         headers: &axum::http::HeaderMap,
+        mtls: &crate::auth::Mtls,
         role: crate::config::Role,
     ) -> Result<crate::auth::Caller, crate::error::ApiError> {
         let c = self.auth.authorize(headers, role)?;
+        // mTLS: Bearer kalitning o'zi yetarli emas — sertifikat CN'i kalit ID'siga teng bo'lishi shart.
+        if self.require_mtls && mtls.0.as_deref() != Some(c.id.as_str()) {
+            tracing::warn!(key = %c.id, cert = ?mtls.0, "mTLS: sertifikat yo'q yoki kalitga mos emas");
+            return Err(crate::error::ApiError::new(
+                axum::http::StatusCode::FORBIDDEN,
+                "MTLS_REQUIRED",
+                "mijoz sertifikati kerak (CN = API kaliti ID)",
+            ));
+        }
         self.limits.api_key(&c.id).map_err(|l| {
             tracing::warn!(key = %c.id, "rate-limit: API kaliti");
             crate::error::ApiError::rate_limited(l, false)
@@ -299,6 +310,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         clock,
         auth: Authenticator::new(&cfg.auth.keys),
         limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
+        require_mtls: cfg.auth.require_mtls,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
     })

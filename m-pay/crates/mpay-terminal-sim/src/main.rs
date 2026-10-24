@@ -102,15 +102,32 @@ fn creds(dir: &Path, key: &str) -> Result<Zeroizing<String>, WalletError> {
 }
 
 fn client(cli: &Cli) -> Result<ServerClient, WalletError> {
-    let pem = if cli.server.starts_with("https://") {
-        Some(
-            std::fs::read(cli.sandbox.join("tls-cert.pem"))
-                .map_err(|e| WalletError::Config(format!("tls-cert.pem: {e}")))?,
-        )
-    } else {
-        None
+    client_as(cli, None)
+}
+
+/// `id` — API kaliti ID'si (`operator-1`, `terminal-1`): TLS'da sandbox katalogidagi
+/// `<id>.crt.pem` / `<id>.key.pem` mTLS sertifikati sifatida ko'rsatiladi (bo'lsa).
+fn client_as(cli: &Cli, id: Option<&str>) -> Result<ServerClient, WalletError> {
+    if !cli.server.starts_with("https://") {
+        return ServerClient::new(&cli.server, None);
+    }
+    let read = |name: &str| {
+        std::fs::read(cli.sandbox.join(name))
+            .map_err(|e| WalletError::Config(format!("{name}: {e}")))
     };
-    ServerClient::new(&cli.server, pem.as_deref())
+    let pem = read("tls-cert.pem")?;
+    let identity = match id {
+        Some(id) if cli.sandbox.join(format!("{id}.crt.pem")).exists() => Some((
+            read(&format!("{id}.crt.pem"))?,
+            Zeroizing::new(read(&format!("{id}.key.pem"))?),
+        )),
+        _ => None,
+    };
+    ServerClient::with_identity(
+        &cli.server,
+        Some(&pem),
+        identity.as_ref().map(|(c, k)| (c.as_slice(), k.as_slice())),
+    )
 }
 
 fn parse_amount(s: &str) -> Result<u64, WalletError> {
@@ -210,7 +227,7 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                         idv.decision
                     );
                     let op = creds(&cli.sandbox, "MPAY_OPERATOR_KEY")?;
-                    let otp: SandboxOtp = c
+                    let otp: SandboxOtp = client_as(&cli, Some("operator-1"))?
                         .get_json(&format!("/v1/sandbox/otp/{challenge_id}"), Some(&op))
                         .await?;
                     w.verify_otp(&token_id, &challenge_id, &otp.otp).await?
@@ -270,8 +287,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                 stan,
                 icc_data: tap.icc_hex(),
             };
-            let r: AuthorizationResponse =
-                c.post_json("/v1/authorizations", Some(&key), &req).await?;
+            let r: AuthorizationResponse = client_as(&cli, Some("terminal-1"))?
+                .post_json("/v1/authorizations", Some(&key), &req)
+                .await?;
             let arpc_ok = r
                 .issuer_auth_data
                 .as_deref()

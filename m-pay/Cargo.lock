@@ -1946,6 +1946,7 @@ dependencies = [
  "axum",
  "base64 0.23.1",
  "clap",
+ "der 0.8.2",
  "hex",
  "hyper",
  "hyper-util",
@@ -1970,6 +1971,7 @@ dependencies = [
  "tower",
  "tracing",
  "tracing-subscriber",
+ "x509-cert",
  "zeroize",
 ]
 

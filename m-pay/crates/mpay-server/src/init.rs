@@ -50,6 +50,47 @@ pub const CA_KEY_FILE: &str = "sandbox-attestation-ca.key.pem";
 pub const TLS_CERT_FILE: &str = "tls-cert.pem";
 pub const TLS_KEY_FILE: &str = "tls-key.pem";
 pub const CREDENTIALS_FILE: &str = "dev-credentials.env";
+/// mTLS mijoz sertifikatlari CA'si (sandbox; production'da bankning PKI'si).
+pub const CLIENT_CA_FILE: &str = "mtls-client-ca.pem";
+/// Standart API kalitlari ID'lari — mTLS sertifikati CN'i shularga teng.
+pub const OPERATOR_ID: &str = "operator-1";
+pub const TERMINAL_ID: &str = "terminal-1";
+
+/// Mijoz sertifikati fayllari: `<id>.crt.pem`, `<id>.key.pem`.
+pub fn client_cert_files(id: &str) -> (String, String) {
+    (format!("{id}.crt.pem"), format!("{id}.key.pem"))
+}
+
+/// mTLS: mijoz CA'si va operator/terminal sertifikatlari (CN = API kaliti ID, EKU clientAuth).
+fn issue_client_certs(dir: &Path) -> Result<(), String> {
+    use rcgen::{
+        BasicConstraints, CertificateParams, DnType, ExtendedKeyUsagePurpose, IsCa, Issuer,
+        KeyPair, KeyUsagePurpose,
+    };
+    let err = |e: rcgen::Error| e.to_string();
+    let ca_key = KeyPair::generate().map_err(err)?;
+    let mut ca = CertificateParams::new(Vec::<String>::new()).map_err(err)?;
+    ca.distinguished_name
+        .push(DnType::CommonName, "M-Pay Sandbox mTLS Client CA");
+    ca.is_ca = IsCa::Ca(BasicConstraints::Constrained(0));
+    ca.key_usages = vec![KeyUsagePurpose::KeyCertSign, KeyUsagePurpose::CrlSign];
+    let ca_cert = ca.self_signed(&ca_key).map_err(err)?;
+    write(dir, CLIENT_CA_FILE, ca_cert.pem().as_bytes())?;
+    // CA kaliti saqlanmaydi: sandbox'da yangi mijoz kerak bo'lsa `init --force`.
+    let issuer = Issuer::new(ca, ca_key);
+    for id in [OPERATOR_ID, TERMINAL_ID] {
+        let key = KeyPair::generate().map_err(err)?;
+        let mut p = CertificateParams::new(Vec::<String>::new()).map_err(err)?;
+        p.distinguished_name.push(DnType::CommonName, id);
+        p.key_usages = vec![KeyUsagePurpose::DigitalSignature];
+        p.extended_key_usages = vec![ExtendedKeyUsagePurpose::ClientAuth];
+        let cert = p.signed_by(&key, &issuer).map_err(err)?;
+        let (crt, k) = client_cert_files(id);
+        write(dir, &crt, cert.pem().as_bytes())?;
+        write(dir, &k, Zeroizing::new(key.serialize_pem()).as_bytes())?;
+    }
+    Ok(())
+}
 
 fn write(dir: &Path, name: &str, data: &[u8]) -> Result<(), String> {
     let p = dir.join(name);
@@ -154,9 +195,10 @@ pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
             TLS_KEY_FILE,
             Zeroizing::new(key.serialize_pem()).as_bytes(),
         )?;
+        issue_client_certs(dir)?;
         (
             format!("tls_cert = \"{TLS_CERT_FILE}\"\n"),
-            format!("tls_key = \"{TLS_KEY_FILE}\"\n"),
+            format!("tls_key = \"{TLS_KEY_FILE}\"\nclient_ca = \"{CLIENT_CA_FILE}\"\n"),
         )
     } else {
         (String::new(), String::new())
@@ -231,6 +273,10 @@ device_burst = 30
 offline_bins = ["990013"]
 review_action = "approve"
 {accounts}
+[auth]
+# TLS bilan: operator/terminal so'rovlari mTLS sertifikatini talab qiladi (CN = kalit id).
+require_mtls = {require_mtls}
+
 [[auth.keys]]
 id = "operator-1"
 role = "operator"
@@ -242,6 +288,7 @@ role = "terminal"
 sha256 = "{term_hash}"
 "#,
         listen = opts.listen,
+        require_mtls = opts.tls,
         op_hash = hash_key(&op),
         term_hash = hash_key(&term),
         accounts = demo_accounts()?,

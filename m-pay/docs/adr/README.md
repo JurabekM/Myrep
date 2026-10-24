@@ -12,5 +12,6 @@
 | [0008](0008-android-kotlin-yadro.md) | Android: umumiy Kotlin yadrosi va BouncyCastle | qabul qilingan |
 | [0009](0009-sqlite-yozuvchi.md) | SQLite: `BEGIN IMMEDIATE` va bitta ulanishli hovuz | qabul qilingan |
 | [0010](0010-takroriy-stan.md) | Takroriy avtorizatsiya so'rovlari: idempotentlik va `94` | qabul qilingan |
+| [0011](0011-mtls.md) | Ichki API uchun mTLS: sertifikat API kalitiga bog'langan | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

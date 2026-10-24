@@ -47,6 +47,10 @@ pub struct HttpConfig {
     /// TLS sertifikati (PEM). Berilmasa — oddiy HTTP (faqat sandbox).
     pub tls_cert: Option<PathBuf>,
     pub tls_key: Option<PathBuf>,
+    /// mTLS: mijoz sertifikatlari CA'si (PEM). Berilsa, server mijoz sertifikatini so'raydi
+    /// (majburiy emas — hamyonlar PQ Link bilan ulanadi); talab `[auth] require_mtls` da.
+    #[serde(default)]
+    pub client_ca: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,6 +152,9 @@ pub struct ApiKey {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AuthConfig {
+    /// Operator va terminal endpointlari mTLS sertifikatini talab qiladi: CN = API kaliti `id`.
+    #[serde(default)]
+    pub require_mtls: bool,
     #[serde(default)]
     pub keys: Vec<ApiKey>,
 }
@@ -200,6 +207,17 @@ impl Config {
         if self.http.tls_cert.is_none() && !self.sandbox {
             return Err(ConfigError::Invalid(
                 "production rejimida TLS majburiy".into(),
+            ));
+        }
+        if self.auth.require_mtls && (self.http.tls_cert.is_none() || self.http.client_ca.is_none())
+        {
+            return Err(ConfigError::Invalid(
+                "auth.require_mtls uchun http.tls_cert va http.client_ca kerak".into(),
+            ));
+        }
+        if self.http.client_ca.is_some() && self.http.tls_cert.is_none() {
+            return Err(ConfigError::Invalid(
+                "http.client_ca faqat TLS bilan".into(),
             ));
         }
         for k in &self.auth.keys {

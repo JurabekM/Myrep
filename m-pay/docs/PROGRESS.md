@@ -404,3 +404,28 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
 
 * `TODO(spec):` teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati.
 * O'tkazuvchanlik −27 % — 2-fazada (bitta tranzaksiya / PostgreSQL).
+
+### P1.3 — ichki API uchun mTLS (2026-10-24)
+
+**Nima qilindi**
+
+* Server: `[http] client_ca` (mijoz sertifikati so'raladi, majburiy emas — hamyonlar PQ Link bilan),
+  sertifikat CN'i `PeerCert` sifatida so'rovga; `[auth] require_mtls` — operator/terminal endpointlarida
+  `CN == API kaliti id`, aks holda `403 MTLS_REQUIRED`; konfiguratsiya tekshiruvi.
+* `init --tls`: mijoz CA'si (`mtls-client-ca.pem`, kaliti saqlanmaydi), `operator-1` va `terminal-1`
+  sertifikatlari (EKU clientAuth), `require_mtls = true`.
+* `ServerClient::with_identity`; `mpay-tsim` sandbox'dagi `<id>.crt.pem` ni avtomatik ko'rsatadi
+  (operator OTP so'rovi — `operator-1`, avtorizatsiya — `terminal-1`).
+* Hujjatlar: ADR-0011, tahdid modeli S3, `api.md` (`MTLS_REQUIRED`), server README.
+
+**Qanday tekshirildi**
+
+* `tests/e2e/tests/p1_mtls.rs` (3): sertifikatsiz → 403; boshqa CN → 403; to'g'ri juftlik → 200;
+  Bearer'siz → 401; hamyon sertifikatsiz TLS ichida provisioning; terminal sertifikati bilan `00`;
+  begona CA sertifikati TLS handshake'da rad.
+* `cargo test --workspace` — 148 test; smoke va demo (`--tls`, endi mTLS bilan) — OK; interop — OK.
+
+**Ochiq**
+
+* `TODO(spec):` sertifikat bekor qilish (CRL/OCSP) — bank PKI'si (2-faza).
+* Android `terminal-app` hali mTLS'siz — P1.4.

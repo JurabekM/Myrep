@@ -25,6 +25,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use zeroize::Zeroizing;
 
+use crate::auth::Mtls;
 use crate::config::Role;
 use crate::error::ApiError;
 use crate::state::AppState;
@@ -324,8 +325,9 @@ async fn get_token(
     State(s): St,
     Path(id): Path<String>,
     headers: HeaderMap,
+    mtls: Mtls,
 ) -> Result<Response, ApiError> {
-    s.caller(&headers, Role::Operator)?;
+    s.caller(&headers, &mtls, Role::Operator)?;
     Ok(Json(s.vault.summary(&parse_token_id(&id)?).await?).into_response())
 }
 
@@ -333,8 +335,9 @@ async fn suspend(
     State(s): St,
     Path(id): Path<String>,
     headers: HeaderMap,
+    mtls: Mtls,
 ) -> Result<Response, ApiError> {
-    let c = s.caller(&headers, Role::Operator)?;
+    let c = s.caller(&headers, &mtls, Role::Operator)?;
     Ok(Json(s.vault.suspend(&parse_token_id(&id)?, &c.actor()).await?).into_response())
 }
 
@@ -342,8 +345,9 @@ async fn resume(
     State(s): St,
     Path(id): Path<String>,
     headers: HeaderMap,
+    mtls: Mtls,
 ) -> Result<Response, ApiError> {
-    let c = s.caller(&headers, Role::Operator)?;
+    let c = s.caller(&headers, &mtls, Role::Operator)?;
     Ok(Json(s.vault.resume(&parse_token_id(&id)?, &c.actor()).await?).into_response())
 }
 
@@ -351,13 +355,14 @@ async fn delete_token(
     State(s): St,
     Path(id): Path<String>,
     headers: HeaderMap,
+    mtls: Mtls,
 ) -> Result<Response, ApiError> {
-    let c = s.caller(&headers, Role::Operator)?;
+    let c = s.caller(&headers, &mtls, Role::Operator)?;
     Ok(Json(s.vault.delete(&parse_token_id(&id)?, &c.actor()).await?).into_response())
 }
 
-async fn audit_verify(State(s): St, headers: HeaderMap) -> Result<Response, ApiError> {
-    s.caller(&headers, Role::Operator)?;
+async fn audit_verify(State(s): St, headers: HeaderMap, mtls: Mtls) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
     Ok(Json(s.vault.verify_audit().await?).into_response())
 }
 
@@ -365,11 +370,12 @@ async fn sandbox_otp(
     State(s): St,
     Path(challenge_id): Path<String>,
     headers: HeaderMap,
+    mtls: Mtls,
 ) -> Result<Response, ApiError> {
     if !s.expose_otp {
         return Err(ApiError::not_found());
     }
-    s.caller(&headers, Role::Operator)?;
+    s.caller(&headers, &mtls, Role::Operator)?;
     let otp = s.vault.sandbox_otp(&challenge_id).await?;
     Ok(Json(SandboxOtp {
         challenge_id,
@@ -378,11 +384,15 @@ async fn sandbox_otp(
     .into_response())
 }
 
-async fn sandbox_accounts(State(s): St, headers: HeaderMap) -> Result<Response, ApiError> {
+async fn sandbox_accounts(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+) -> Result<Response, ApiError> {
     if !s.sandbox {
         return Err(ApiError::not_found());
     }
-    s.caller(&headers, Role::Operator)?;
+    s.caller(&headers, &mtls, Role::Operator)?;
     let accts = s.issuer.accounts().await.map_err(|e| {
         tracing::error!(error = %e, "issuer hisoblari");
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
@@ -395,10 +405,11 @@ async fn sandbox_accounts(State(s): St, headers: HeaderMap) -> Result<Response, 
 async fn authorize(
     State(s): St,
     headers: HeaderMap,
+    mtls: Mtls,
     Json(req): Json<AuthorizationRequest>,
 ) -> Result<Response, ApiError> {
     use crate::dedup::{self, Begin};
-    let caller = s.caller(&headers, Role::Terminal)?;
+    let caller = s.caller(&headers, &mtls, Role::Terminal)?;
     let now = s.clock.now();
     let built = crate::acquirer::build_0100(&req, now)?;
     let pool = s.vault.pool();
