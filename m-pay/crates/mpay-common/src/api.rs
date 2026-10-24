@@ -66,6 +66,20 @@ pub struct ServerIdentityDto {
     pub mldsa65: String,
     /// `SHA-256(ed25519 ‖ mldsa65)`, hex.
     pub fingerprint: String,
+    /// Kalit almashtirish (P1.6): e'lon qilingan keyingi identifikator va joriy kalitlar tasdig'i.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next: Option<NextIdentityDto>,
+}
+
+/// Keyingi server identifikatori: `endorsement_*` — joriy identifikatorning
+/// `ROTATION_LABEL ‖ fingerprint` ustidan gibrid imzosi (hex).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NextIdentityDto {
+    pub ed25519: String,
+    pub mldsa65: String,
+    pub fingerprint: String,
+    pub endorsement_ed25519: String,
+    pub endorsement_mldsa65: String,
 }
 
 /// `POST /v1/tokens` so'rovi.

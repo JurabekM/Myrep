@@ -7,6 +7,7 @@ import uz.mpay.core.CardLuk
 import uz.mpay.core.CardProfile
 import uz.mpay.core.MpayClient
 import uz.mpay.core.ProvisionResult
+import uz.mpay.core.Hex
 import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.TlsConfig
 import uz.mpay.core.maskPan
@@ -78,10 +79,22 @@ class MpayWallet private constructor(context: Context) {
             null
         }
         val c = MpayClient(serverUrl, tls = tls)
-        val (identity, fp) = c.identity()
+        val info = c.identityInfo()
+        val identity = info.identity
+        val fp = info.fingerprint
         val prefs = app.getSharedPreferences("mpay", Context.MODE_PRIVATE)
-        val decision = ServerPinPolicy(cfg.pinnedFingerprints, cfg.allowTofu).check(fp, prefs.getString("server_fp", null))
+        // Build pinlari + kalit almashtirishda o'rganilgan (joriy pin tasdiqlagan) pinlar.
+        val learned = prefs.getStringSet("pins_learned", emptySet())!!.toSet()
+        // TOFU (sandbox): avval saqlangan barmoq izi ham to'plamda — o'rganilgan pin uni siqib chiqarmasin.
+        val tofu = if (cfg.allowTofu) listOfNotNull(prefs.getString("server_fp", null)) else emptyList()
+        val decision = ServerPinPolicy(cfg.pinnedFingerprints + learned + tofu, cfg.allowTofu)
+            .check(fp, prefs.getString("server_fp", null))
         if (decision.storeTofu) prefs.edit().putString("server_fp", fp).apply()
+        val rolled = ServerPinPolicy.rollForward(learned, info)
+        if (rolled != learned) {
+            prefs.edit().putStringSet("pins_learned", rolled).apply()
+            emit("Server keyingi kaliti tasdiqlandi va pinlandi (${Hex.encode(info.next!!.fingerprint()).take(16)}…)")
+        }
         c.connect(identity, deviceKey())
         client = c
         pinnedFingerprint = fp

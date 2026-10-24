@@ -36,6 +36,13 @@ done
 # 1-faza P1.4: TLS + mTLS sandbox va terminal paketi.
 TLS_PORT=$((PORT + 1))
 "$SRV" init --dir "$WORK/tls" --listen "127.0.0.1:$TLS_PORT" --tls > /dev/null
+# P1.6: keyingi PQ Link identifikatori e'lon qilinadi (Kotlin tasdiqni tekshiradi).
+"$SRV" identity-next --config "$WORK/tls/mpay.toml" --version 2 > /dev/null
+printf '
+[pqlink.next]
+mldsa_blob = "pqlink-mldsa65.v2.blob"
+ed25519_label = "mpay.srv-ed25519.v2"
+' >> "$WORK/tls/mpay.toml"
 "$SRV" terminal-bundle --config "$WORK/tls/mpay.toml" --url "https://127.0.0.1:$TLS_PORT" \
   --out "$WORK/terminal-bundle.json" > /dev/null
 "$SRV" serve --config "$WORK/tls/mpay.toml" 2> "$WORK/server-tls.log" &
@@ -51,7 +58,7 @@ export MPAY_TERMINAL_BUNDLE="$WORK/terminal-bundle.json"
 export MPAY_INTEROP_URL="http://127.0.0.1:$PORT"
 export MPAY_SANDBOX_DIR="$WORK/sb"
 (cd android && ./gradlew :mpay-core:test --tests 'uz.mpay.core.InteropTest' --rerun-tasks --no-daemon --console=plain) \
-  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|Exception|BUILD"
+  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|Exception|BUILD"
 
 echo "== Server logida ochiq PAN yo'q"
 for p in $(grep -E '^pan = ' "$WORK/sb/mpay.toml" | sed -E 's/pan = "([0-9]+)"/\1/'); do

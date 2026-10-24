@@ -40,6 +40,16 @@ class ServerPinPolicy(pinned: Collection<String>, val allowTofu: Boolean) {
     companion object {
         /** `BuildConfig` qatori: vergul bilan ajratilgan hex barmoq izlari. */
         fun parseList(s: String): List<String> = s.split(',', ';', ' ').map { it.trim() }.filter { it.isNotEmpty() }
+
+        /**
+         * Kalit almashtirish (P1.6): joriy identifikator pin bo'yicha qabul qilingandan keyin, u tasdiqlagan
+         * keyingi barmoq izi o'rganilgan pinlarga qo'shiladi. Tasdiqsiz yoki noma'lum — o'zgarmaydi.
+         */
+        fun rollForward(learned: Set<String>, info: MpayClient.IdentityInfo): Set<String> {
+            val next = info.next ?: return learned
+            if (!info.nextEndorsed) return learned
+            return learned + Hex.encode(next.fingerprint()).lowercase()
+        }
     }
 }
 

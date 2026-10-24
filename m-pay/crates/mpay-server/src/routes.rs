@@ -89,6 +89,16 @@ async fn identity(State(s): St) -> Json<ServerIdentityDto> {
         ed25519: hex::encode(id.ed25519),
         mldsa65: hex::encode(&id.mldsa65),
         fingerprint: hex::encode(id.fingerprint()),
+        next: s
+            .next_identity
+            .as_ref()
+            .map(|n| mpay_common::api::NextIdentityDto {
+                ed25519: hex::encode(n.identity.ed25519),
+                mldsa65: hex::encode(&n.identity.mldsa65),
+                fingerprint: hex::encode(n.identity.fingerprint()),
+                endorsement_ed25519: hex::encode(n.sig_ed25519),
+                endorsement_mldsa65: hex::encode(&n.sig_mldsa65),
+            }),
     })
 }
 

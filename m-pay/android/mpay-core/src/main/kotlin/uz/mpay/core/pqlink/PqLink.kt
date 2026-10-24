@@ -39,6 +39,22 @@ class ServerIdentity(val ed25519: ByteArray, val mldsa65: ByteArray) {
     }
 
     fun fingerprint(): ByteArray = sha256(ed25519, mldsa65)
+
+    /** Gibrid imzo: Ed25519 **va** ML-DSA-65 (kontekst `mpay-pqlink-v1`) ikkalasi ham to'g'ri bo'lishi shart. */
+    internal fun verifyHybrid(msg: ByteArray, sigEd: ByteArray, sigMl: ByteArray): Boolean {
+        if (sigEd.size != 64 || sigMl.size != PqLink.MLDSA65_SIG_LEN) return false
+        val ed = Ed25519Signer().apply { init(false, Ed25519PublicKeyParameters(ed25519, 0)); update(msg, 0, msg.size) }
+        if (!ed.verifySignature(sigEd)) return false
+        val ml = MLDSASigner().apply {
+            init(false, ParametersWithContext(MLDSAPublicKeyParameters(MLDSAParameters.ml_dsa_65, mldsa65), PqLink.MLDSA_CTX))
+            update(msg, 0, msg.size)
+        }
+        return ml.verifySignature(sigMl)
+    }
+
+    /** Kalit almashtirish (P1.6): shu identifikator `nextFingerprint` ni tasdiqlaganmi. */
+    fun verifyEndorsement(nextFingerprint: ByteArray, sigEd: ByteArray, sigMl: ByteArray): Boolean =
+        nextFingerprint.size == 32 && verifyHybrid(PqLink.ROTATION + nextFingerprint, sigEd, sigMl)
 }
 
 /** Qurilma kaliti: StrongBox P-256 (Android) yoki test kaliti. */
@@ -80,6 +96,7 @@ object PqLink {
     internal val SERVER_SIG = "MPAY-PQLINK-V1 server-sig".toByteArray(Charsets.US_ASCII)
     internal val DEVICE_SIG = "MPAY-PQLINK-V1 device-sig".toByteArray(Charsets.US_ASCII)
     internal val MLDSA_CTX = "mpay-pqlink-v1".toByteArray(Charsets.US_ASCII)
+    internal val ROTATION = "MPAY-PQLINK-V1 identity-rotation".toByteArray(Charsets.US_ASCII)
 
     fun header(type: Int): ByteArray = MAGIC + byteArrayOf(VERSION.toByte(), type.toByte())
 

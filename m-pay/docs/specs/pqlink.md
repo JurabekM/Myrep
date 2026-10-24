@@ -165,12 +165,26 @@ AAD   = hdr(tur bilan) ‖ session_id ‖ seq ‖ direction   (0x01 = c2s, 0x02 
   begona CA, past xavfsizlik darajasi, ko'chirilgan zanjir, ClientFinished takrori, muddatlar, limit.
 * `fuzz/fuzz_targets/pqlink_decode.rs` — dekoderlar va KeyDescription.
 
+## 8a. Kalit almashtirish (1-faza P1.6, ADR-0012)
+
+`GET /v1/pqlink/identity` ixtiyoriy `next` maydoni:
+`{ed25519, mldsa65, fingerprint, endorsement_ed25519, endorsement_mldsa65}`. Tasdiq — joriy
+identifikatorning gibrid imzosi: Ed25519 va ML-DSA-65 (kontekst `mpay-pqlink-v1`) xabar ustidan
+
+```
+"MPAY-PQLINK-V1 identity-rotation" ‖ next_fingerprint (32 bayt)
+```
+
+Qurilma tasdiqqa faqat joriy identifikator pin bo'yicha qabul qilingandan keyin tayanadi va keyingi
+barmoq izini pin to'plamiga qo'shadi. Handshake'ning o'zi o'zgarmaydi (server faqat joriy kalit bilan imzolaydi).
+
 ## 9. Ochiq savollar
 
 * `TODO(spec):` KeyDescription `attestationChallenge` ni qurilmani ro'yxatdan o'tkazish (enrollment)
   bosqichida server nonce'i bilan bog'lash (M6).
 * `TODO(spec):` Google'ning haqiqiy attestatsiya ildizlari (RSA-4096, ECDSA P-384) va
   `rootOfTrust`/`verifiedBootState` tekshiruvi — M6; hozir faqat P-256/ECDSA-SHA256 zanjirlari.
-* `TODO(spec):` Server kalitini almashtirish (rotation) va bir nechta pinlangan identifikator.
+* Server kalitini almashtirish va bir nechta pinlangan identifikator — 1-faza P1.5/P1.6 (§8a).
+  `TODO(spec):` bekor qilingan identifikatorlar ro'yxati (joriy kalit oshkor bo'lgan holat).
 * `TODO(spec):` Kotlin client uchun deterministik handshake test vektori (M6 da, tasodifiylikni
   in'ektsiya qiladigan test rejimi bilan).

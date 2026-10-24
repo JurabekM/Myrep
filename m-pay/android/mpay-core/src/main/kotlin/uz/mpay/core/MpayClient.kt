@@ -88,6 +88,29 @@ class MpayClient(
         return JSONObject(String(r.body, Charsets.UTF_8))
     }
 
+    /**
+     * Identifikator + e'lon qilingan keyingisi (P1.6). `nextEndorsed` — joriy identifikator tasdiqlagan
+     * (bunga faqat joriysi pin bo'yicha qabul qilingandan keyin tayaniladi).
+     */
+    class IdentityInfo(
+        val identity: ServerIdentity,
+        val fingerprint: String,
+        val next: ServerIdentity?,
+        val nextEndorsed: Boolean,
+    )
+
+    fun identityInfo(): IdentityInfo {
+        val j = json("GET", "/v1/pqlink/identity", null, null)
+        val id = ServerIdentity(Hex.decode(j.getString("ed25519")), Hex.decode(j.getString("mldsa65")))
+        val fp = j.getString("fingerprint")
+        if (!Hex.encode(id.fingerprint()).equals(fp, ignoreCase = true)) throw ApiException(0, "FINGERPRINT", "barmoq izi mos emas")
+        val n = j.optJSONObject("next") ?: return IdentityInfo(id, fp, null, false)
+        val next = ServerIdentity(Hex.decode(n.getString("ed25519")), Hex.decode(n.getString("mldsa65")))
+        val endorsed = Hex.encode(next.fingerprint()).equals(n.getString("fingerprint"), ignoreCase = true) &&
+            id.verifyEndorsement(next.fingerprint(), Hex.decode(n.getString("endorsement_ed25519")), Hex.decode(n.getString("endorsement_mldsa65")))
+        return IdentityInfo(id, fp, next, endorsed)
+    }
+
     /** Server identifikatori va barmoq izi (hex). Sandbox'da TOFU; production'da pinlanadi. */
     fun identity(): Pair<ServerIdentity, String> {
         val j = json("GET", "/v1/pqlink/identity", null, null)

@@ -37,6 +37,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
 * **mTLS** (ADR-0011): `[http] client_ca` + `[auth] require_mtls` — operator/terminal sertifikati
   CN = API kaliti `id`; hamyonlar sertifikatsiz (PQ Link). `init --tls` sandbox mijoz CA'si va
   `operator-1`/`terminal-1` sertifikatlarini yaratadi.
+* **Kalit almashtirish** (ADR-0012): `identity-next --version N` → `[pqlink.next]`; identifikator
+  javobida `next` va joriy kalitlar tasdig'i; o'tish — `[pqlink] mldsa_blob`/`ed25519_label` almashtirish.
 * **So'rovlar chegarasi** (`ratelimit.rs`, `[rate_limit]`): IP / API kaliti / qurilma bo'yicha token
   bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`).
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):

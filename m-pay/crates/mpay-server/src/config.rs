@@ -90,12 +90,30 @@ pub struct KeyStoreConfig {
 pub struct PqLinkConfig {
     /// KEK bilan o'ralgan ML-DSA-65 urug'i.
     pub mldsa_blob: PathBuf,
+    /// Ed25519 server kaliti yorlig'i (KeyStore/HSM).
+    #[serde(default = "default_ed_label")]
+    pub ed25519_label: String,
+    /// Kalit almashtirish (P1.6): e'lon qilingan keyingi identifikator (`mpay-server identity-next`).
+    #[serde(default)]
+    pub next: Option<NextIdentityConfig>,
     /// Ishonchli attestatsiya ildizlari (DER yoki PEM).
     pub attestation_roots: Vec<PathBuf>,
     #[serde(default = "default_level")]
     pub min_security_level: SecurityLevel,
     #[serde(default = "default_session_ttl")]
     pub session_ttl_secs: i64,
+}
+
+/// `[pqlink.next]`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NextIdentityConfig {
+    pub mldsa_blob: PathBuf,
+    pub ed25519_label: String,
+}
+
+fn default_ed_label() -> String {
+    mpay_crypto::keystore::KeyLabel::SERVER_ED25519.to_owned()
 }
 
 fn default_level() -> SecurityLevel {
@@ -226,6 +244,15 @@ impl Config {
                     "auth.keys[{}].sha256 64 hex bo'lishi kerak",
                     k.id
                 )));
+            }
+        }
+        if let Some(n) = &self.pqlink.next {
+            if n.ed25519_label == self.pqlink.ed25519_label
+                || n.mldsa_blob == self.pqlink.mldsa_blob
+            {
+                return Err(ConfigError::Invalid(
+                    "pqlink.next joriy identifikatordan farq qilishi kerak".into(),
+                ));
             }
         }
         if self.pqlink.attestation_roots.is_empty() {

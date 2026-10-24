@@ -45,6 +45,14 @@ fn read(path: &Path) -> Result<Vec<u8>, BootError> {
     })
 }
 
+/// E'lon qilingan keyingi server identifikatori.
+#[derive(Debug, Clone)]
+pub struct NextIdentity {
+    pub identity: mpay_pqlink::ServerIdentity,
+    pub sig_ed25519: [u8; 64],
+    pub sig_mldsa65: Vec<u8>,
+}
+
 /// Ilova holati.
 pub struct AppState {
     pub vault: Arc<Vault>,
@@ -56,6 +64,8 @@ pub struct AppState {
     pub auth: Authenticator,
     pub limits: crate::ratelimit::RateLimits,
     pub require_mtls: bool,
+    /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
+    pub next_identity: Option<NextIdentity>,
     pub sandbox: bool,
     pub expose_otp: bool,
 }
@@ -246,11 +256,30 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let scheme: Arc<dyn CryptogramScheme> = Arc::new(MpayAes128CmacV1);
 
     let blob = MlDsaSeedBlob::from_bytes(&read(&cfg.resolve(&cfg.pqlink.mldsa_blob))?)?;
-    let signer = Arc::new(KeyStoreServerSigner::new(
-        ks.clone(),
-        KeyLabel::new(KeyLabel::SERVER_ED25519),
-        blob,
-    )?);
+    // Joriy yorliq standart bo'lmasligi mumkin (kalit almashtirishdan keyin) — kalit tayyor bo'lsin.
+    let ed_label = KeyLabel::new(cfg.pqlink.ed25519_label.as_str());
+    ks.ensure_key(&ed_label, mpay_crypto::keystore::KeyKind::Ed25519)
+        .map_err(|e| BootError::KeyStore(e.to_string()))?;
+    let signer = Arc::new(KeyStoreServerSigner::new(ks.clone(), ed_label, blob)?);
+    let next_identity = match &cfg.pqlink.next {
+        Some(n) => {
+            let label = KeyLabel::new(n.ed25519_label.as_str());
+            ks.ensure_key(&label, mpay_crypto::keystore::KeyKind::Ed25519)
+                .map_err(|e| BootError::KeyStore(e.to_string()))?;
+            let nb = MlDsaSeedBlob::from_bytes(&read(&cfg.resolve(&n.mldsa_blob))?)?;
+            let next = KeyStoreServerSigner::new(ks.clone(), label, nb)?;
+            let id = mpay_pqlink::ServerSigner::identity(&next).clone();
+            let (sig_ed25519, sig_mldsa65) =
+                mpay_pqlink::ServerSigner::endorse(signer.as_ref(), &id.fingerprint())?;
+            tracing::info!(next_fp = %hex::encode(id.fingerprint()), "PQ Link: keyingi identifikator e'lon qilingan");
+            Some(NextIdentity {
+                identity: id,
+                sig_ed25519,
+                sig_mldsa65,
+            })
+        }
+        None => None,
+    };
     let anchors = load_anchors(cfg)?;
     let pq_cfg = ServerConfig {
         session_ttl_secs: cfg.pqlink.session_ttl_secs,
@@ -311,6 +340,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         auth: Authenticator::new(&cfg.auth.keys),
         limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
         require_mtls: cfg.auth.require_mtls,
+        next_identity,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
     })

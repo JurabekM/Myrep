@@ -15,7 +15,7 @@ use mpay_crypto::keystore::{KeyLabel, KeyStore};
 use mpay_crypto::rng;
 use zeroize::Zeroizing;
 
-use crate::crypto::{server_fingerprint, MLDSA_CTX, SERVER_SIG_LABEL};
+use crate::crypto::{server_fingerprint, MLDSA_CTX, ROTATION_LABEL, SERVER_SIG_LABEL};
 use crate::wire::{MLDSA65_PK_LEN, MLDSA65_SIG_LEN};
 use crate::PqLinkError;
 
@@ -56,11 +56,32 @@ impl ServerIdentity {
         sig_ed25519: &[u8; 64],
         sig_mldsa65: &[u8],
     ) -> Result<(), PqLinkError> {
-        let msg = [SERVER_SIG_LABEL, th1].concat();
+        self.verify_msg(&[SERVER_SIG_LABEL, th1].concat(), sig_ed25519, sig_mldsa65)
+    }
 
+    /// Kalit almashtirish (P1.6): shu identifikator `next_fp` ni tasdiqlaganini tekshiradi.
+    pub fn verify_endorsement(
+        &self,
+        next_fp: &[u8; 32],
+        sig_ed25519: &[u8; 64],
+        sig_mldsa65: &[u8],
+    ) -> Result<(), PqLinkError> {
+        self.verify_msg(
+            &[ROTATION_LABEL, next_fp].concat(),
+            sig_ed25519,
+            sig_mldsa65,
+        )
+    }
+
+    fn verify_msg(
+        &self,
+        msg: &[u8],
+        sig_ed25519: &[u8; 64],
+        sig_mldsa65: &[u8],
+    ) -> Result<(), PqLinkError> {
         let ed = EdVerifyingKey::from_bytes(&self.ed25519)
             .map_err(|_| PqLinkError::BadServerSignature("Ed25519 kaliti"))?;
-        ed.verify_strict(&msg, &EdSignature::from_bytes(sig_ed25519))
+        ed.verify_strict(msg, &EdSignature::from_bytes(sig_ed25519))
             .map_err(|_| PqLinkError::BadServerSignature("Ed25519"))?;
 
         let vk_enc = EncodedVerifyingKey::<MlDsa65>::try_from(self.mldsa65.as_slice())
@@ -70,7 +91,7 @@ impl ServerIdentity {
             .map_err(|_| PqLinkError::BadServerSignature("ML-DSA uzunligi"))?;
         let sig = MlSignature::<MlDsa65>::decode(&sig_enc)
             .ok_or(PqLinkError::BadServerSignature("ML-DSA kodlash"))?;
-        if !vk.verify_with_context(&msg, MLDSA_CTX, &sig) {
+        if !vk.verify_with_context(msg, MLDSA_CTX, &sig) {
             return Err(PqLinkError::BadServerSignature("ML-DSA-65"));
         }
         Ok(())
@@ -82,6 +103,8 @@ pub trait ServerSigner: Send + Sync + std::fmt::Debug {
     fn identity(&self) -> &ServerIdentity;
     /// `(Ed25519 imzo, ML-DSA-65 imzo)` — `SERVER_SIG_LABEL ‖ th1` ustidan.
     fn sign(&self, th1: &[u8; 32]) -> Result<([u8; 64], Vec<u8>), PqLinkError>;
+    /// Kalit almashtirish: `ROTATION_LABEL ‖ next_fp` ustidan gibrid imzo.
+    fn endorse(&self, next_fp: &[u8; 32]) -> Result<([u8; 64], Vec<u8>), PqLinkError>;
 }
 
 /// KEK bilan o'ralgan ML-DSA-65 urug'i.
@@ -209,13 +232,22 @@ impl ServerSigner for KeyStoreServerSigner {
     }
 
     fn sign(&self, th1: &[u8; 32]) -> Result<([u8; 64], Vec<u8>), PqLinkError> {
-        let msg = [SERVER_SIG_LABEL, th1].concat();
-        let ed = self.ks.ed25519_sign(&self.ed_label, &msg)?;
+        self.sign_msg(&[SERVER_SIG_LABEL, th1].concat())
+    }
+
+    fn endorse(&self, next_fp: &[u8; 32]) -> Result<([u8; 64], Vec<u8>), PqLinkError> {
+        self.sign_msg(&[ROTATION_LABEL, next_fp].concat())
+    }
+}
+
+impl KeyStoreServerSigner {
+    fn sign_msg(&self, msg: &[u8]) -> Result<([u8; 64], Vec<u8>), PqLinkError> {
+        let ed = self.ks.ed25519_sign(&self.ed_label, msg)?;
         // ML-DSA kaliti faqat shu blok ichida ochiq; `SigningKey` — ZeroizeOnDrop.
         let sk = self.mldsa.unwrap_key(self.ks.as_ref())?;
         let sig = sk
             .expanded_key()
-            .sign_randomized(&msg, MLDSA_CTX, &mut getrandom::SysRng)
+            .sign_randomized(msg, MLDSA_CTX, &mut getrandom::SysRng)
             .map_err(|_| PqLinkError::Crypto("ML-DSA imzo".into()))?;
         let enc = sig.encode().to_vec();
         debug_assert_eq!(enc.len(), MLDSA65_SIG_LEN);
@@ -255,6 +287,28 @@ mod tests {
         bad_ml[100] ^= 1;
         assert!(s.identity().verify(&th, &ed, &bad_ml).is_err());
         assert!(s.identity().verify(&[4u8; 32], &ed, &ml).is_err());
+    }
+
+    #[test]
+    fn endorsement_is_domain_separated() {
+        let cur = signer();
+        let next = signer();
+        let fp = next.identity().fingerprint();
+        let (ed, ml) = cur.endorse(&fp).unwrap();
+        cur.identity().verify_endorsement(&fp, &ed, &ml).unwrap();
+        // Boshqa barmoq izi yoki boshqa imzolovchi — rad.
+        assert!(cur
+            .identity()
+            .verify_endorsement(&[0u8; 32], &ed, &ml)
+            .is_err());
+        assert!(next.identity().verify_endorsement(&fp, &ed, &ml).is_err());
+        // Tasdiq handshake imzosi sifatida o'tmaydi va aksincha (domen ajratish).
+        assert!(cur.identity().verify(&fp, &ed, &ml).is_err());
+        let (hs_ed, hs_ml) = cur.sign(&fp).unwrap();
+        assert!(cur
+            .identity()
+            .verify_endorsement(&fp, &hs_ed, &hs_ml)
+            .is_err());
     }
 
     #[test]

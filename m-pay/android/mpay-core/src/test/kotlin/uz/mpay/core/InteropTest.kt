@@ -178,6 +178,11 @@ class InteropTest {
         val term = MpayClient(tlsUrl, tls = mtls)
         assertEquals("terminal-1" to true, term.terminalPing(bundle.terminalKey))
 
+        // P1.6: Rust `identity-next` e'lon qilgan keyingi identifikator — tasdiq Kotlin'da tekshiriladi.
+        val info = MpayClient(tlsUrl, tls = pinOnly).identityInfo()
+        println("keyingi identifikator: ${info.next?.let { Hex.encode(it.fingerprint()).take(16) }} tasdiq=${info.nextEndorsed}")
+        assertTrue("next e'lon qilingan va tasdiqlangan bo'lishi kerak", info.next != null && info.nextEndorsed)
+
         // To'liq oqim TLS ustida: hamyon (sertifikatsiz, pinlangan) → token; terminal (mTLS) → 00.
         val wallet = MpayClient(tlsUrl, tls = pinOnly)
         val (identity, _) = wallet.identity()

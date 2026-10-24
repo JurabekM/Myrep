@@ -481,3 +481,29 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
   o'zgargan TOFU rad, `BuildConfig` qatorini ajratish va hex tekshiruvi. Android build — OK.
 * Hamyonning TLS ustidan ulanishi JVM interop'da (`TlsConfig` pin) sinalgan; emulyatorda pinlangan
   build bilan sinov P1.6 bilan birga.
+
+### P1.6 — PQ Link server kalitini almashtirish (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-pqlink`: `ServerSigner::endorse`, `ServerIdentity::verify_endorsement`, `ROTATION_LABEL`
+  (handshake yorlig'idan ajratilgan).
+* Server: `[pqlink] ed25519_label`, `[pqlink.next]`; boot'da joriy kalit keyingisini tasdiqlaydi;
+  `/v1/pqlink/identity` → `next`; `mpay-server identity-next --version N`. Joriy yorliq KeyStore'da
+  har doim tayyorlanadi (o'tishdan keyin topilgan xato).
+* Kotlin: `ServerIdentity.verifyEndorsement`, `MpayClient.identityInfo`, `ServerPinPolicy.rollForward`;
+  hamyon tasdiqlangan keyingi barmoq izini o'rganadi (TOFU barmoq izi ham saqlanib qoladi).
+* Hujjatlar: ADR-0012, `specs/pqlink.md` §8a, tahdid modeli S1, server README.
+
+**Qanday tekshirildi**
+
+* Rust: `identity` unit (domen ajratish), `tests/e2e/tests/p1_rotation.rs` — e'lon va tasdiq, soxta
+  barmoq izi rad, o'sha DB/KeyStore bilan v2 ga o'tish, o'rganilgan pinli hamyon token oladi, eski pinli rad.
+* Kotlin: `RotationTest` (2); interop — Rust `identity-next` e'loni Kotlin'da `tasdiq=true`.
+
+**Topilgan va tuzatilgan muammolar**
+
+* O'tishdan keyin server ishga tushmasdi: "kalit topilmadi: mpay.srv-ed25519.v2" — `open_keystore`
+  faqat standart yorliqni tayyorlardi; endi joriy yorliq ham `ensure_key`.
+* TOFU rejimida o'rganilgan pin joriy TOFU barmoq izini siqib chiqarishi mumkin edi — saqlangan TOFU
+  barmoq izi ham pin to'plamiga qo'shiladi.

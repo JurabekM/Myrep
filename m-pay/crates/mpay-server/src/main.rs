@@ -61,6 +61,15 @@ enum Cmd {
         #[arg(long, default_value = "terminal-bundle.json")]
         out: PathBuf,
     },
+    /// Kalit almashtirish (P1.6): keyingi PQ Link identifikatorini yaratadi (Ed25519 — KeyStore'da,
+    /// ML-DSA-65 — KEK bilan o'ralgan blob) va `[pqlink.next]` qatorlarini chiqaradi.
+    IdentityNext {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Versiya raqami: yorliq `mpay.srv-ed25519.v<N>`, blob `pqlink-mldsa65.v<N>.blob`.
+        #[arg(long)]
+        version: u32,
+    },
     /// PQ Link server identifikatorini chiqaradi (qurilmalarda pinlash uchun).
     Identity {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -146,6 +155,38 @@ async fn run(cli: Cli) -> Result<(), String> {
                 "Terminal paketi: {} (SIRLAR BOR — import qilingach o'chiring)",
                 out.display()
             );
+            Ok(())
+        }
+        Cmd::IdentityNext { config, version } => {
+            use mpay_crypto::keystore::{KeyKind, KeyLabel};
+            if version < 2 {
+                return Err("--version 2 yoki undan katta".into());
+            }
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let ks = mpay_server::state::open_keystore(&cfg).map_err(|e| e.to_string())?;
+            let label = format!("mpay.srv-ed25519.v{version}");
+            let blob_name = format!("pqlink-mldsa65.v{version}.blob");
+            let blob_path = cfg.base_dir.join(&blob_name);
+            if blob_path.exists() {
+                return Err(format!("{} allaqachon mavjud", blob_path.display()));
+            }
+            ks.ensure_key(&KeyLabel::new(label.as_str()), KeyKind::Ed25519)
+                .map_err(|e| e.to_string())?;
+            let blob =
+                mpay_pqlink::MlDsaSeedBlob::generate(ks.as_ref(), &KeyLabel::new(KeyLabel::KEK))
+                    .map_err(|e| e.to_string())?;
+            std::fs::write(&blob_path, blob.to_bytes())
+                .map_err(|e| format!("{}: {e}", blob_path.display()))?;
+            let signer =
+                mpay_pqlink::KeyStoreServerSigner::new(ks, KeyLabel::new(label.as_str()), blob)
+                    .map_err(|e| e.to_string())?;
+            let fp = hex::encode(mpay_pqlink::ServerSigner::identity(&signer).fingerprint());
+            println!("Keyingi identifikator: fingerprint {fp}");
+            println!(
+                "1) mpay.toml ga qo'shing va qayta ishga tushiring (qurilmalar tasdiqni oladi):\n"
+            );
+            println!("[pqlink.next]\nmldsa_blob = \"{blob_name}\"\ned25519_label = \"{label}\"\n");
+            println!("2) O'tish: [pqlink] mldsa_blob/ed25519_label ni shu qiymatlarga almashtiring, [pqlink.next] ni o'chiring.");
             Ok(())
         }
         Cmd::Identity { config } => {

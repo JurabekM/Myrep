@@ -23,6 +23,9 @@ pub const SERVER_SIG_LABEL: &[u8] = b"MPAY-PQLINK-V1 server-sig";
 pub const DEVICE_SIG_LABEL: &[u8] = b"MPAY-PQLINK-V1 device-sig";
 /// ML-DSA kontekst satri.
 pub const MLDSA_CTX: &[u8] = b"mpay-pqlink-v1";
+/// Kalit almashtirish (P1.6): joriy identifikator keyingisining barmoq izini tasdiqlaydi.
+/// Handshake imzosidan (`SERVER_SIG_LABEL`) boshqa yorliq — domen ajratish.
+pub const ROTATION_LABEL: &[u8] = b"MPAY-PQLINK-V1 identity-rotation";
 
 /// Mijozning efemer KEM holati. `Drop` da ikkala sir ham tozalanadi
 /// (`StaticSecret` va `DecapsulationKey` — `ZeroizeOnDrop`).
