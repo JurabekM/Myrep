@@ -463,3 +463,21 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
 * Hamyon (`wallet-demo`) hali TLS pinlashsiz — `--tls` server bilan ulanmaydi; P1.5 da (build vaqtida
   pinlangan PQ Link barmoq izi + TLS pin).
 * NFC tap orqali to'liq to'lov TLS ustida faqat JVM interop'da sinalgan (emulyatorda NFC yo'q) — P1.8.
+
+### P1.5 — hamyon: server ishonchi build vaqtida (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-core`: `ServerPinPolicy` — build pinlari to'plami (bir nechtasi: rotation uchun), TOFU faqat
+  ruxsat berilsa; hex tekshiruvi.
+* `wallet-sdk`: `WalletConfig(pinnedFingerprints, tlsCertSha256, allowTofu)`; `connect` siyosat bo'yicha
+  tekshiradi, `https://` uchun TLS pini majburiy. Standart konfiguratsiya xavfsiz: pin yo'q + TOFU o'chiq → rad.
+* `wallet-demo`: `-Pmpay.serverFingerprints`, `-Pmpay.tlsPin` → `BuildConfig`; ekranda pin rejimi.
+* `mpay-server identity` TLS pinini ham chiqaradi.
+
+**Qanday tekshirildi**
+
+* `ServerPinPolicyTest` (3): pin to'plami (katta-kichik harf), begona barmoq izi rad, TOFU faqat ruxsat bilan,
+  o'zgargan TOFU rad, `BuildConfig` qatorini ajratish va hex tekshiruvi. Android build — OK.
+* Hamyonning TLS ustidan ulanishi JVM interop'da (`TlsConfig` pin) sinalgan; emulyatorda pinlangan
+  build bilan sinov P1.6 bilan birga.

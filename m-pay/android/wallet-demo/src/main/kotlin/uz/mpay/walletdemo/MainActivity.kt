@@ -51,11 +51,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import uz.mpay.core.Hex
 import uz.mpay.core.ProvisionResult
+import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.maskPan
 import uz.mpay.wallet.sdk.BiometricGate
 import uz.mpay.wallet.sdk.MpayHceService
 import uz.mpay.wallet.sdk.MpayWallet
+import uz.mpay.wallet.sdk.WalletConfig
 import java.io.File
 
 /** Wallet SDK namoyish ilovasi (sandbox). */
@@ -83,6 +86,13 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         wallet = MpayWallet.get(this)
+        // Server ishonchi build vaqtida (P1.5); pin berilmagan sandbox build'ida — TOFU.
+        val pins = ServerPinPolicy.parseList(BuildConfig.SERVER_FINGERPRINTS)
+        wallet.config = WalletConfig(
+            pinnedFingerprints = pins,
+            tlsCertSha256 = BuildConfig.TLS_PIN.takeIf { it.isNotEmpty() }?.let(Hex::decode),
+            allowTofu = pins.isEmpty(),
+        )
         wallet.addListener(listener)
         setContent { App() }
     }
@@ -175,6 +185,12 @@ class MainActivity : FragmentActivity() {
             ) {
                 Text("M-Pay Hamyon", color = scheme.primary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text("Sandbox · PQ Link (X25519+ML-KEM-768)", color = Color.Gray, fontSize = 12.sp)
+                val pinCount = wallet.config.pinnedFingerprints.size
+                if (pinCount > 0) {
+                    Text("Server pinlangan: $pinCount ta barmoq izi (build)", color = Color(0xFF7CE0B5), fontSize = 12.sp, modifier = Modifier.testTag("pin_mode"))
+                } else {
+                    Text("Server pinlanmagan — TOFU (faqat sandbox)", color = Color(0xFFFFB74D), fontSize = 12.sp, modifier = Modifier.testTag("pin_mode"))
+                }
                 val nfc = NfcAdapter.getDefaultAdapter(this@MainActivity)
                 if (nfc == null) Text("Bu qurilmada NFC yo'q — tap ishlamaydi (provisioning ishlaydi)", color = Color(0xFFFFB74D), fontSize = 12.sp)
 

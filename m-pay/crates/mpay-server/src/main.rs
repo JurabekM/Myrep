@@ -156,6 +156,17 @@ async fn run(cli: Cli) -> Result<(), String> {
             let id = st.pqlink.identity();
             println!("fingerprint: {}", hex::encode(id.fingerprint()));
             println!("ed25519:     {}", hex::encode(id.ed25519));
+            // Hamyon build'i uchun TLS pini (`-Pmpay.tlsPin=`), TLS yoqilgan bo'lsa.
+            if let Some(cert) = &cfg.http.tls_cert {
+                use rustls::pki_types::pem::PemObject;
+                use sha2::Digest;
+                let der = rustls::pki_types::CertificateDer::from_pem_file(cfg.resolve(cert))
+                    .map_err(|e| e.to_string())?;
+                println!(
+                    "tls_pin:     {}",
+                    hex::encode(sha2::Sha256::digest(der.as_ref()))
+                );
+            }
             Ok(())
         }
     }

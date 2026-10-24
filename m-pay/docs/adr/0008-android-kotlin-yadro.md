@@ -24,9 +24,10 @@ Rust tomonida bu mantiq allaqachon bor (`mpay-common`, `mpay-pqlink`, `mpay-term
    (ATC, LUK, CDCVM oynasi) ko'radi. Profil Keystore AES-GCM kaliti bilan shifrlangan faylda.
 5. **CDCVM**: `BiometricPrompt` (`BIOMETRIC_STRONG`) → 60 s oyna, ekran yoniq bo'lishi shart,
    bir martalik (muvaffaqiyatli GPO'dan keyin tushadi).
-6. **Server ishonchi — TOFU pinlash**: birinchi ulanishda PQ Link server barmoq izi saqlanadi;
-   keyin o'zgarsa ulanish rad etiladi. `TODO(spec):` bank ilovasida barmoq izi build vaqtida
-   joylanishi kerak (TOFU — faqat sandbox).
+6. **Server ishonchi** (1-faza P1.5 bilan yangilangan): `WalletConfig` — PQ Link barmoq izlari
+   to'plami va TLS sertifikati pini build vaqtida beriladi (`ServerPinPolicy`); TOFU faqat pin
+   berilmagan sandbox build'ida (`allowTofu`), ekranda ogohlantiriladi. Standart — pin yo'q va
+   TOFU o'chiq: ulanish rad etiladi.
 
 ## Oqibatlar
 

@@ -7,9 +7,23 @@ import uz.mpay.core.CardLuk
 import uz.mpay.core.CardProfile
 import uz.mpay.core.MpayClient
 import uz.mpay.core.ProvisionResult
+import uz.mpay.core.ServerPinPolicy
+import uz.mpay.core.TlsConfig
 import uz.mpay.core.maskPan
 import uz.mpay.core.pqlink.ServerIdentity
 import java.util.concurrent.CopyOnWriteArrayList
+
+/**
+ * Server ishonchi (1-faza, P1.5): bank ilovasi build vaqtida beradi.
+ * * `pinnedFingerprints` — PQ Link server barmoq izlari (rotation davrida joriy + keyingi);
+ * * `tlsCertSha256` — `https://` server TLS sertifikati pini;
+ * * `allowTofu` — faqat sandbox: pin yo'q bo'lsa birinchi ulanishda eslab qolish.
+ */
+class WalletConfig(
+    val pinnedFingerprints: List<String> = emptyList(),
+    val tlsCertSha256: ByteArray? = null,
+    val allowTofu: Boolean = false,
+)
 
 /**
  * Wallet SDK fasadi: PQ Link ulanish, provisioning, OTP, LUK to'ldirish, HCE applet va CDCVM.
@@ -20,6 +34,9 @@ class MpayWallet private constructor(context: Context) {
     val store = WalletStore(app)
     val cdcvm = CdcvmState(app)
     var integrity: IntegrityProvider = StubIntegrityProvider
+
+    /** Ulanishdan oldin o'rnatiladi; standart — pin yo'q va TOFU o'chiq (xavfsiz rad). */
+    var config: WalletConfig = WalletConfig()
     private var client: MpayClient? = null
     private var pinnedFingerprint: String? = null
     private val listeners = CopyOnWriteArrayList<(String) -> Unit>()
@@ -48,16 +65,23 @@ class MpayWallet private constructor(context: Context) {
 
     fun deviceKey(): AndroidDeviceKey = AndroidDeviceKey.getOrCreate("mpay-enroll".toByteArray())
 
-    /** Serverga ulanadi (TOFU pinlash: birinchi ulanishda barmoq izi saqlanadi). */
+    /**
+     * Serverga ulanadi. Server identifikatori [WalletConfig] bo'yicha tekshiriladi ([ServerPinPolicy]):
+     * build pinlari bo'lsa — faqat ular; bo'lmasa va sandbox'da ruxsat bo'lsa — TOFU.
+     * `https://` uchun TLS sertifikati ham pinlanadi.
+     */
     fun connect(serverUrl: String): String {
-        val c = MpayClient(serverUrl)
+        val cfg = config
+        val tls = if (serverUrl.startsWith("https://")) {
+            TlsConfig(cfg.tlsCertSha256 ?: throw IllegalStateException("https uchun TLS pini kerak (WalletConfig.tlsCertSha256)"))
+        } else {
+            null
+        }
+        val c = MpayClient(serverUrl, tls = tls)
         val (identity, fp) = c.identity()
         val prefs = app.getSharedPreferences("mpay", Context.MODE_PRIVATE)
-        val pinned = prefs.getString("server_fp", null)
-        if (pinned != null && !pinned.equals(fp, ignoreCase = true)) {
-            throw IllegalStateException("server barmoq izi o'zgargan — pinlangan: ${pinned.take(16)}…")
-        }
-        prefs.edit().putString("server_fp", fp).apply()
+        val decision = ServerPinPolicy(cfg.pinnedFingerprints, cfg.allowTofu).check(fp, prefs.getString("server_fp", null))
+        if (decision.storeTofu) prefs.edit().putString("server_fp", fp).apply()
         c.connect(identity, deviceKey())
         client = c
         pinnedFingerprint = fp
