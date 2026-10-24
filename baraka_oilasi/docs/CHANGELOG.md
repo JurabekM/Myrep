@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Tuzatildi
+- **Tungi desktop E2E: «sozlamalar qayta ochilganda saqlanadi» testi CI'da yiqildi** — `stop()` ilovani darhol `SIGKILL` qilgani uchun WebKit `localStorage`ni (til, shrift) diskka yozib ulgurmasdi. Endi to'xtatishdan oldin 1,5 s kutiladi, keyin `SIGTERM`, 3 s ichida chiqmasa — butun guruhga `SIGKILL` (osilib qolmaslik saqlanadi).
+
 ## [1.1.0] — 2026-10-23
 
 Yangi nom va brend: «Baraka Dastur». Ma'lumotlar formati va identifikatorlar o'zgarmadi — 1.0.0 ustidan yangilanadi.
