@@ -64,21 +64,33 @@ export async function startApp({ shiftDays = 0, profile } = {}) {
   app.startupMs = startupMs;
   app.stop = async () => {
     try {
+      // WebKit localStorage'ni (til, shrift) diskka ~1 s kechikish bilan yozadi — darhol o'ldirilsa,
+      // qayta ochilganda sozlama yo'qoladi (sekin CI runner'da).
+      await sleep(1500);
       await browser.deleteSession();
     } finally {
-      killTree(driver);
+      await stopTree(driver);
     }
   };
   return app;
 }
 
-function killTree(child) {
-  try {
-    if (process.platform !== "win32") process.kill(-child.pid, "SIGKILL");
-    else child.kill();
-  } catch {
-    child.kill("SIGKILL");
-  }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Avval SIGTERM (ilova va WebKit o'zini yopib ulgursin), 3 s ichida chiqmasa — butun guruhga SIGKILL. */
+async function stopTree(child) {
+  const signal = (sig) => {
+    try {
+      if (process.platform !== "win32") process.kill(-child.pid, sig);
+      else child.kill();
+    } catch {
+      child.kill(sig);
+    }
+  };
+  const exited = new Promise((r) => (child.exitCode !== null || child.signalCode !== null ? r() : child.once("exit", r)));
+  signal("SIGTERM");
+  await Promise.race([exited, sleep(3000)]);
+  if (process.platform !== "win32") signal("SIGKILL");
 }
 
 async function waitPort(p) {
