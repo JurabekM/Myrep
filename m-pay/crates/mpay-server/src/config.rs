@@ -32,6 +32,8 @@ pub struct Config {
     pub auth: AuthConfig,
     #[serde(default)]
     pub sandbox_api: SandboxApiConfig,
+    #[serde(default)]
+    pub rate_limit: crate::ratelimit::RateLimitConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]

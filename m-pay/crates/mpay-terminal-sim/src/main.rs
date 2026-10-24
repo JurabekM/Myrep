@@ -23,7 +23,7 @@ use mpay_pqlink::DeviceSigner;
 use mpay_terminal_sim::apdu::Loopback;
 use mpay_terminal_sim::card::{CardPolicy, CardProfile, SoftCard};
 use mpay_terminal_sim::http::ServerClient;
-use mpay_terminal_sim::state::{StoredToken, WalletState};
+use mpay_terminal_sim::state::{next_terminal_stan, StoredToken, WalletState};
 use mpay_terminal_sim::terminal::{self, TxnParams};
 use mpay_terminal_sim::wallet::SoftWallet;
 use mpay_terminal_sim::WalletError;
@@ -158,7 +158,6 @@ async fn load_or_create(cli: &Cli, c: &ServerClient) -> Result<WalletState, Wall
         device_key_pkcs8: Zeroizing::new(hex::encode(&pk[..])),
         device_chain: chain.iter().map(hex::encode).collect(),
         tokens: vec![],
-        stan: 0,
     })
 }
 
@@ -259,10 +258,10 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                     }
                 })?
             };
-            // ATC, LUK foydalanishi va STAN o'zgardi — natijadan qat'i nazar saqlaymiz.
+            // ATC va LUK foydalanishi o'zgardi — natijadan qat'i nazar saqlaymiz.
             st.upsert(StoredToken::from_profile(card.profile()));
-            let stan = st.next_stan();
             st.save(&cli.wallet)?;
+            let stan = next_terminal_stan(&cli.sandbox, tid)?;
             println!("Tap: {} ATC={}", tap.dpan_masked, tap.atc);
             let key = creds(&cli.sandbox, "MPAY_TERMINAL_KEY")?;
             let req = AuthorizationRequest {

@@ -7,8 +7,10 @@
 pub mod acquirer;
 pub mod auth;
 pub mod config;
+pub mod dedup;
 pub mod error;
 pub mod init;
+pub mod ratelimit;
 pub mod routes;
 pub mod serve;
 pub mod state;

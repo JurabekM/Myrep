@@ -11,6 +11,7 @@
 | `51` | mablag' yetarli emas |
 | `59` | Shield: fraud gumoni (DECLINE) |
 | `91` | emitent mavjud emas / ishlamayapti |
+| `94` | takroriy uzatish: shu terminal + STAN + sana boshqa mazmun bilan ishlatilgan; emitentga yuborilmaydi (1-faza, ADR-0010) |
 | `Q1` | kriptogramma noto'g'ri; LUK noma'lum, muddati o'tgan yoki limiti tugagan; ATC replay; CDOL ↔ ISO 8583 nomuvofiqligi |
 
 `55` ishlatilmaydi (ISO 8583 da "PIN noto'g'ri" ma'nosida keng tarqalgan). Aniq sabab ichki

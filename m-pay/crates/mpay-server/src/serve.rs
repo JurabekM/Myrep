@@ -1,9 +1,11 @@
 //! HTTP(S) server tsikli. TLS: rustls (ring provider), sertifikat va kalit PEM fayllaridan.
 
 use std::future::Future;
+use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
 
+use axum::extract::ConnectInfo;
 use axum::Router;
 use hyper_util::rt::{TokioExecutor, TokioIo};
 use hyper_util::server::conn::auto::Builder;
@@ -39,9 +41,12 @@ pub async fn serve(
     shutdown: impl Future<Output = ()> + Send + 'static,
 ) -> std::io::Result<()> {
     let Some(tls) = tls else {
-        return axum::serve(listener, app)
-            .with_graceful_shutdown(shutdown)
-            .await;
+        return axum::serve(
+            listener,
+            app.into_make_service_with_connect_info::<SocketAddr>(),
+        )
+        .with_graceful_shutdown(shutdown)
+        .await;
     };
     let acceptor = TlsAcceptor::from(tls);
     tokio::pin!(shutdown);
@@ -51,7 +56,14 @@ pub async fn serve(
             () = &mut shutdown => return Ok(()),
         };
         let acceptor = acceptor.clone();
-        let svc = TowerToHyperService::new(app.clone());
+        // Mijoz manzili — IP bo'yicha cheklash uchun (`ConnectInfo`, oddiy HTTP yo'li bilan bir xil).
+        let svc = TowerToHyperService::new(tower::ServiceExt::map_request(
+            app.clone(),
+            move |mut r: axum::http::Request<hyper::body::Incoming>| {
+                r.extensions_mut().insert(ConnectInfo(peer));
+                r
+            },
+        ));
         tokio::spawn(async move {
             let tls = match acceptor.accept(tcp).await {
                 Ok(s) => s,

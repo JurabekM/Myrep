@@ -34,6 +34,8 @@ pub enum BootError {
     Vault(#[from] mpay_vault::VaultError),
     #[error("Issuer: {0}")]
     Issuer(#[from] mpay_issuer::IssuerError),
+    #[error("server migratsiyasi: {0}")]
+    Migrate(#[from] sqlx::migrate::MigrateError),
 }
 
 fn read(path: &Path) -> Result<Vec<u8>, BootError> {
@@ -52,6 +54,7 @@ pub struct AppState {
     pub scheme: Arc<dyn CryptogramScheme>,
     pub clock: Arc<dyn Clock>,
     pub auth: Authenticator,
+    pub limits: crate::ratelimit::RateLimits,
     pub sandbox: bool,
     pub expose_otp: bool,
 }
@@ -62,6 +65,22 @@ impl std::fmt::Debug for AppState {
             .field("keystore", &self.keystore.backend_name())
             .field("sandbox", &self.sandbox)
             .finish_non_exhaustive()
+    }
+}
+
+impl AppState {
+    /// API kalitini tekshiradi (rol) va kalit bo'yicha so'rovlar chegarasini qo'llaydi.
+    pub fn caller(
+        &self,
+        headers: &axum::http::HeaderMap,
+        role: crate::config::Role,
+    ) -> Result<crate::auth::Caller, crate::error::ApiError> {
+        let c = self.auth.authorize(headers, role)?;
+        self.limits.api_key(&c.id).map_err(|l| {
+            tracing::warn!(key = %c.id, "rate-limit: API kaliti");
+            crate::error::ApiError::rate_limited(l, false)
+        })?;
+        Ok(c)
     }
 }
 
@@ -238,6 +257,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         cfg.database.max_connections,
     )
     .await?;
+    crate::dedup::migrate(&pool).await?;
     let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(
@@ -278,6 +298,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         scheme,
         clock,
         auth: Authenticator::new(&cfg.auth.keys),
+        limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
     })

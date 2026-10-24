@@ -213,6 +213,19 @@ review_amount_minor = 5000000000
 [sandbox_api]
 expose_otp = true
 
+# So'rovlar chegarasi (tahdid modeli D2). Oshganda 429 + Retry-After; handshake navbati to'la — 503.
+# Mobil operatorlar CGNAT ortida ko'p foydalanuvchini bitta IP'ga yig'adi — IP chegarasi yumshoq,
+# asosiy CPU himoyasi — bir vaqtdagi handshake'lar soni.
+[rate_limit]
+enabled = true
+max_concurrent_handshakes = 0   # 0 — CPU soni × 2
+ip_handshake_per_minute = 300   # /v1/pqlink/hello va /finish, IP bo'yicha
+ip_handshake_burst = 60
+api_key_per_second = 500        # operator/terminal kaliti bo'yicha
+api_key_burst = 1000
+device_per_minute = 60          # muhrlangan so'rovlar, qurilma bo'yicha
+device_burst = 30
+
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]
 offline_bins = ["990013"]

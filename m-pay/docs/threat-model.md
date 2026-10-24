@@ -54,10 +54,11 @@ TB4: server ↔ DB (DB ishonchsiz deb qaraladi — faqat shifrmatn).
 | I4 | Info disclosure | Vaqt bo'yicha yon kanal (kriptogramma/kalit solishtirish) | `subtle` constant-time solishtirish | M1 |
 | I5 | Info disclosure | Xotirada qolgan sirlar | `Zeroizing<>`, ML-KEM kalitlari efemer va ishlatilgach tozalanadi | M1/M2 |
 | D1 | DoS | Noto'g'ri kriptogramma bilan LUK hisoblagichini "yoqish" | LUK foydalanishi faqat ARQC muvaffaqiyatli tekshirilgandan keyin hisoblanadi | M4 |
-| D2 | DoS | Handshake toshqini (ML-KEM/ML-DSA qimmat) | Sessiyalar soni va TTL cheklovi; `TODO(spec):` rate-limit M7 da | M2/M7 |
+| D2 | DoS | Handshake toshqini (ML-KEM/ML-DSA qimmat) | Sessiyalar soni va TTL; bir vaqtdagi handshake'lar semafori (503), IP / API kaliti / qurilma bo'yicha token bucket (429 + Retry-After) | M2/P1.1 |
 | E1 | Elevation | Terminal kaliti bilan detokenizatsiya | Detokenizatsiya HTTP'da ochilmagan; faqat issuer moduliga beriladigan port | M3 |
 | E2 | Elevation | Muddati o'tgan/to'xtatilgan token bilan to'lov | Issuer token holatini va LUK TTL/limitini har tranzaksiyada tekshiradi | M4 |
 | E3 | Elevation | Takroriy (replay) tranzaksiya | ATC token bo'yicha qat'iy o'sishi shart; UN terminal tomonidan tasodifiy | M4 |
+| E4 | Tampering | Terminal STAN'ini boshqa tranzaksiya uchun qayta ishlatish; timeout'dan keyingi qayta yuborish noto'g'ri `Q1` beradi | Acquirer `(terminal, STAN, sana)` jadvali: bir xil so'rov — avvalgi javob, boshqa mazmun — `94` (ADR-0010) | P1.2 |
 
 ## 5. Qoldiq risklar (sandbox uchun qabul qilingan)
 

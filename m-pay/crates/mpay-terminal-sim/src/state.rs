@@ -36,9 +36,6 @@ pub struct WalletState {
     pub device_key_pkcs8: Zeroizing<String>,
     pub device_chain: Vec<String>,
     pub tokens: Vec<StoredToken>,
-    /// Terminal STAN hisoblagichi (har tranzaksiyada oshadi, 999999 dan keyin 1).
-    #[serde(default)]
-    pub stan: u32,
 }
 
 impl std::fmt::Debug for WalletState {
@@ -71,16 +68,6 @@ impl WalletState {
             None => self.tokens.last(),
         }
         .ok_or(WalletError::Config("hamyonda bunday token yo'q".into()))
-    }
-
-    /// Keyingi STAN.
-    pub fn next_stan(&mut self) -> u32 {
-        self.stan = if self.stan >= 999_999 {
-            1
-        } else {
-            self.stan + 1
-        };
-        self.stan
     }
 
     pub fn upsert(&mut self, t: StoredToken) {
@@ -148,4 +135,23 @@ impl StoredToken {
             });
         }
     }
+}
+
+/// Terminal STAN hisoblagichi: STAN terminalga tegishli (hamyonga emas) — bir terminalda bir nechta
+/// "telefon" to'lov qilsa ham takrorlanmaydi (server takroriy STAN'ni `94` bilan rad etadi).
+/// Fayl: `<sandbox>/tsim-terminal-<terminal_id>.stan`.
+pub fn next_terminal_stan(sandbox: &Path, terminal_id: &str) -> Result<u32, WalletError> {
+    let safe: String = terminal_id
+        .chars()
+        .filter(char::is_ascii_alphanumeric)
+        .collect();
+    let path = sandbox.join(format!("tsim-terminal-{safe}.stan"));
+    let prev: u32 = std::fs::read_to_string(&path)
+        .ok()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(0);
+    let next = if prev >= 999_999 { 1 } else { prev + 1 };
+    std::fs::write(&path, next.to_string())
+        .map_err(|e| WalletError::Config(format!("{}: {e}", path.display())))?;
+    Ok(next)
 }

@@ -171,3 +171,31 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `PQLINK_ATTESTATION`, `PQLINK_AUTH` | 403 |
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |
 | `DB_ERROR`, `CRYPTO_ERROR`, `AUDIT_BROKEN`, `PQLINK_INTERNAL` | 500 |
+| `RATE_LIMITED` | 429 (+ `Retry-After`) |
+| `BUSY` (handshake navbati to'la) | 503 (+ `Retry-After`) |
+| `REQUEST_IN_PROGRESS` (shu avtorizatsiya hali ishlanmoqda) | 409 (+ `Retry-After`) |
+
+## 5. So'rovlar chegarasi (1-faza, P1.1)
+
+`[rate_limit]` (standart qiymatlar `mpay-server init` yozadi):
+
+| Chegara | Kalit | Standart | Oshganda |
+|---|---|---|---|
+| `/v1/pqlink/hello`, `/finish` | mijoz IP | 300/daqiqa, burst 60 | 429 |
+| Bir vaqtdagi handshake hisoblashlari | global | CPU × 2 | 503 `BUSY` |
+| Operator/terminal endpointlari | API kaliti | 500/s, burst 1000 | 429 |
+| Muhrlangan endpointlar | qurilma | 60/daqiqa, burst 30 | 429 (javob muhrlangan — sessiya buzilmaydi) |
+
+Mijoz `Retry-After` dan keyin qayta urinadi. Teskari proksi ortida mijoz IP'si `X-Forwarded-For` dan
+olinmaydi — `TODO(spec):` ishonchli proksi ro'yxati.
+
+## 6. Takroriy avtorizatsiya so'rovlari (1-faza, P1.2)
+
+`POST /v1/authorizations` `(terminal_id, stan, UTC sana)` bo'yicha eslab qolinadi (3 kun):
+
+* aynan bir xil so'rov (merchant va `icc_data` ham) — birinchi javob qaytariladi (timeout'dan keyin
+  xavfsiz qayta yuborish; emitentga ikkinchi marta bormaydi);
+* shu STAN boshqa mazmun bilan — `200`, `response_code = "94"`, `reason = "DUPLICATE_TRANSMISSION"`,
+  `rrn` bo'sh;
+* birinchisi hali ishlanmoqda — `409 REQUEST_IN_PROGRESS`.
+

@@ -374,3 +374,33 @@ PQ Link (gibrid post-kvant) orqali tokenizatsiya, Vault (envelope shifrlash, aud
 EMV-ga o'xshash tap-to-pay (LUK, ARQC/ARPC, CDCVM), Shield (qoidalar + ONNX, p99 < 2 ms),
 emitent emulyatori (ISO 8583), Android SDK va ikki ilova (emulyatorda provisioning/OTP/LUK/biometriya
 sinalgan). Haqiqiy NFC tap — yagona sinalmagan qabul mezoni.
+
+## 1-faza — xavfsizlikni kuchaytirish (boshlandi 2026-10-24)
+
+Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
+
+### P1.1 + P1.2 (2026-10-24)
+
+**Nima qilindi**
+
+* **P1.1 rate-limit** (`crates/mpay-server/src/ratelimit.rs`, `[rate_limit]`): IP bo'yicha handshake
+  (300/daqiqa, burst 60 — CGNAT uchun yumshoq), bir vaqtdagi handshake hisoblashlari semafori
+  (CPU × 2, oshsa 503 `BUSY`), API kaliti bo'yicha (500/s), qurilma bo'yicha muhrlangan so'rovlar
+  (60/daqiqa). 429/503 javoblarda `Retry-After`. Qurilma chegarasi javobi muhrlanadi — sessiya ketma-ketligi
+  buzilmaydi. Mijoz IP'si TLS va oddiy HTTP yo'lida `ConnectInfo` orqali.
+* **P1.2 takroriy STAN** (`dedup.rs`, migratsiya `3001`, ADR-0010): bir xil so'rov — avvalgi javob
+  (timeout'dan keyingi qayta yuborish endi noto'g'ri `Q1` bermaydi), shu STAN boshqa mazmun bilan — `94`,
+  ishlanayotgan — `409 REQUEST_IN_PROGRESS`. `mpay-tsim` STAN'i terminal fayliga ko'chirildi.
+* Hujjatlar: ADR-0010, ADR-0007 (`94`), `specs/api.md` §4–6, tahdid modeli D2 va E4, yuk hisoboti §6.
+
+**Qanday tekshirildi**
+
+* `cargo test --workspace` — 145 test (yangi: `ratelimit` 3 unit, `p1_rate_limit.rs` 3, `p1_duplicate_stan.rs` 1:
+  qayta yuborishda bir xil javob va bitta yechim, `94` balansni o'zgartirmaydi, o'sha tap yangi STAN bilan `00`).
+* Smoke, demo (`DEMO OK`), Kotlin↔Rust interop — o'tdi; clippy, fmt — toza.
+* Yuk: 171–175 so'rov/s, p99 ~200 ms (32 parallel), xato 0 — `docs/load-report.md` §6.
+
+**Ochiq**
+
+* `TODO(spec):` teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati.
+* O'tkazuvchanlik −27 % — 2-fazada (bitta tranzaksiya / PostgreSQL).

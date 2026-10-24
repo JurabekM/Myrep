@@ -5,7 +5,9 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use axum::body::Bytes;
-use axum::extract::{DefaultBodyLimit, MatchedPath, Path, Request, State};
+use std::net::SocketAddr;
+
+use axum::extract::{ConnectInfo, DefaultBodyLimit, MatchedPath, Path, Request, State};
 use axum::http::{header, HeaderMap, HeaderValue, StatusCode};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
@@ -114,8 +116,29 @@ fn pqlink_body(status: StatusCode, body: Vec<u8>) -> Response {
         .into_response()
 }
 
-async fn pq_hello(State(s): St, headers: HeaderMap, body: Bytes) -> Result<Response, ApiError> {
+/// Handshake oldidan: IP chegarasi va global parallellik ruxsati (tahdid modeli D2).
+fn handshake_guard(
+    s: &AppState,
+    peer: SocketAddr,
+) -> Result<Option<tokio::sync::OwnedSemaphorePermit>, ApiError> {
+    s.limits.ip(&peer.ip().to_string()).map_err(|l| {
+        tracing::warn!(ip = %peer.ip(), "rate-limit: handshake IP");
+        ApiError::rate_limited(l, false)
+    })?;
+    s.limits.handshake_permit().map_err(|l| {
+        tracing::warn!("rate-limit: handshake navbati to'la");
+        ApiError::rate_limited(l, true)
+    })
+}
+
+async fn pq_hello(
+    State(s): St,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
+    let _permit = handshake_guard(&s, peer)?;
     let pq = s.pqlink.clone();
     // ML-KEM/ML-DSA hisoblashlari bloklovchi CPU ishi — async ishchilardan tashqarida.
     let sh = tokio::task::spawn_blocking(move || pq.handle_hello(&body))
@@ -126,8 +149,14 @@ async fn pq_hello(State(s): St, headers: HeaderMap, body: Bytes) -> Result<Respo
     Ok(pqlink_body(StatusCode::OK, sh))
 }
 
-async fn pq_finish(State(s): St, headers: HeaderMap, body: Bytes) -> Result<Response, ApiError> {
+async fn pq_finish(
+    State(s): St,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
+    let _permit = handshake_guard(&s, peer)?;
     let pq = s.pqlink.clone();
     let (_info, sa) = tokio::task::spawn_blocking(move || pq.handle_finish(&body))
         .await
@@ -152,7 +181,16 @@ where
         Ok(x) => x,
         Err(e) => return ApiError::from(e).into_response(),
     };
+    // Qurilma chegarasi: javob baribir muhrlanadi — sessiya ketma-ketligi buzilmaydi.
+    let limited = s.limits.device(&info.device_id.to_string()).err();
     let (status, env) = match serde_json::from_slice::<Req>(&plaintext) {
+        _ if limited.is_some() => {
+            tracing::warn!(device = %info.device_id, "rate-limit: qurilma");
+            (
+                StatusCode::TOO_MANY_REQUESTS,
+                Envelope::<Resp>::err("RATE_LIMITED", "so'rovlar chegarasidan oshdi"),
+            )
+        }
         Err(_) => (
             StatusCode::BAD_REQUEST,
             Envelope::<Resp>::err("BAD_REQUEST", "JSON so'rov formati noto'g'ri"),
@@ -287,7 +325,7 @@ async fn get_token(
     Path(id): Path<String>,
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
-    s.auth.authorize(&headers, Role::Operator)?;
+    s.caller(&headers, Role::Operator)?;
     Ok(Json(s.vault.summary(&parse_token_id(&id)?).await?).into_response())
 }
 
@@ -296,7 +334,7 @@ async fn suspend(
     Path(id): Path<String>,
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
-    let c = s.auth.authorize(&headers, Role::Operator)?;
+    let c = s.caller(&headers, Role::Operator)?;
     Ok(Json(s.vault.suspend(&parse_token_id(&id)?, &c.actor()).await?).into_response())
 }
 
@@ -305,7 +343,7 @@ async fn resume(
     Path(id): Path<String>,
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
-    let c = s.auth.authorize(&headers, Role::Operator)?;
+    let c = s.caller(&headers, Role::Operator)?;
     Ok(Json(s.vault.resume(&parse_token_id(&id)?, &c.actor()).await?).into_response())
 }
 
@@ -314,12 +352,12 @@ async fn delete_token(
     Path(id): Path<String>,
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
-    let c = s.auth.authorize(&headers, Role::Operator)?;
+    let c = s.caller(&headers, Role::Operator)?;
     Ok(Json(s.vault.delete(&parse_token_id(&id)?, &c.actor()).await?).into_response())
 }
 
 async fn audit_verify(State(s): St, headers: HeaderMap) -> Result<Response, ApiError> {
-    s.auth.authorize(&headers, Role::Operator)?;
+    s.caller(&headers, Role::Operator)?;
     Ok(Json(s.vault.verify_audit().await?).into_response())
 }
 
@@ -331,7 +369,7 @@ async fn sandbox_otp(
     if !s.expose_otp {
         return Err(ApiError::not_found());
     }
-    s.auth.authorize(&headers, Role::Operator)?;
+    s.caller(&headers, Role::Operator)?;
     let otp = s.vault.sandbox_otp(&challenge_id).await?;
     Ok(Json(SandboxOtp {
         challenge_id,
@@ -344,7 +382,7 @@ async fn sandbox_accounts(State(s): St, headers: HeaderMap) -> Result<Response, 
     if !s.sandbox {
         return Err(ApiError::not_found());
     }
-    s.auth.authorize(&headers, Role::Operator)?;
+    s.caller(&headers, Role::Operator)?;
     let accts = s.issuer.accounts().await.map_err(|e| {
         tracing::error!(error = %e, "issuer hisoblari");
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
@@ -359,24 +397,71 @@ async fn authorize(
     headers: HeaderMap,
     Json(req): Json<AuthorizationRequest>,
 ) -> Result<Response, ApiError> {
-    let caller = s.auth.authorize(&headers, Role::Terminal)?;
-    let built = crate::acquirer::build_0100(&req, s.clock.now())?;
+    use crate::dedup::{self, Begin};
+    let caller = s.caller(&headers, Role::Terminal)?;
+    let now = s.clock.now();
+    let built = crate::acquirer::build_0100(&req, now)?;
+    let pool = s.vault.pool();
+    let db_err = |e: sqlx::Error| {
+        tracing::error!(error = %e, "acquirer: takroriy so'rovlar jadvali");
+        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+    };
+    let key = dedup::RequestKey::new(&req, now);
+    match dedup::begin(pool, &key, now.unix_timestamp())
+        .await
+        .map_err(db_err)?
+    {
+        Begin::New => {}
+        Begin::Replay(r) => {
+            tracing::info!(terminal = %caller.id, stan = req.stan, rrn = %r.rrn, "acquirer: takroriy so'rov — avvalgi javob");
+            return Ok(Json(r).into_response());
+        }
+        Begin::Duplicate => {
+            tracing::warn!(terminal = %caller.id, stan = req.stan, "acquirer: STAN boshqa mazmun bilan takrorlandi (94)");
+            let r = dedup::duplicate_response(
+                &req,
+                built.dpan_masked.clone(),
+                built.amount_minor,
+                built.currency,
+            );
+            return Ok(Json(r).into_response());
+        }
+        Begin::InProgress => {
+            let mut e = ApiError::new(
+                StatusCode::CONFLICT,
+                "REQUEST_IN_PROGRESS",
+                "shu so'rov hali ishlanmoqda",
+            );
+            e.retry_after = Some(1);
+            return Err(e);
+        }
+    }
     let bytes = built.msg.pack();
-    let (resp, outcome) = s.issuer.process_bytes(&bytes).await.map_err(|e| {
-        tracing::warn!(error = %e, "issuer 0100 ni qayta ishlay olmadi");
-        ApiError::new(
-            StatusCode::BAD_GATEWAY,
-            "ISSUER_ERROR",
-            "emitent so'rovni qayta ishlay olmadi",
-        )
-    })?;
-    let out = crate::acquirer::parse_0110(
-        &resp,
-        &built,
-        req.stan,
-        outcome.reason.as_str(),
-        outcome.risk_score,
-    )?;
+    let processed = match s.issuer.process_bytes(&bytes).await {
+        Ok((resp, outcome)) => crate::acquirer::parse_0110(
+            &resp,
+            &built,
+            req.stan,
+            outcome.reason.as_str(),
+            outcome.risk_score,
+        ),
+        Err(e) => {
+            tracing::warn!(error = %e, "issuer 0100 ni qayta ishlay olmadi");
+            Err(ApiError::new(
+                StatusCode::BAD_GATEWAY,
+                "ISSUER_ERROR",
+                "emitent so'rovni qayta ishlay olmadi",
+            ))
+        }
+    };
+    let out = match processed {
+        Ok(o) => o,
+        Err(e) => {
+            dedup::abort(pool, &key).await.map_err(db_err)?;
+            return Err(e);
+        }
+    };
+    dedup::finish(pool, &key, &out).await.map_err(db_err)?;
     tracing::info!(
         terminal = %caller.id,
         dpan = %out.dpan_masked,
