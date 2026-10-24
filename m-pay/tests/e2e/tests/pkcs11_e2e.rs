@@ -24,7 +24,9 @@ async fn pkcs11_provisioning_and_tap() {
     let h: serde_json::Value = sb.client().get_json("/healthz", None).await.unwrap();
     assert_eq!(h["keystore"], "pkcs11");
     let mut w = sb.wallet().await;
-    let mut card = sb.provision_card(&mut w, &fpan, CardPolicy::default()).await;
+    let mut card = sb
+        .provision_card(&mut w, &fpan, CardPolicy::default())
+        .await;
     let r = sb.pay(&mut card, 1_000_000, "SHOP0000000001", 1).await;
     assert_eq!(r.response_code, "00", "{r:?}");
     assert!(card.verify_issuer_auth(&hex::decode(r.issuer_auth_data.unwrap()).unwrap()));

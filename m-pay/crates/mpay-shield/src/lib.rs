@@ -5,8 +5,15 @@
 //! M5 da shu port trait'lari (`IdvDecider`, `RiskScorer`) ortida.
 #![forbid(unsafe_code)]
 
+pub mod engine;
+pub mod features;
+pub mod graph;
+pub mod model;
+pub mod replay;
+pub mod rules;
 pub mod stub;
 
+pub use engine::Shield;
 pub use stub::{StubShield, StubShieldConfig};
 
 /// Crate versiyasi.

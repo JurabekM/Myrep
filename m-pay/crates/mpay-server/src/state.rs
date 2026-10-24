@@ -4,12 +4,15 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mpay_common::clock::{Clock, SystemClock};
+use mpay_common::ports::{IdvDecider, RiskScorer};
 use mpay_crypto::keystore::{ensure_standard_keys, KeyLabel, KeyStore, MemoryKeyStore};
 use mpay_crypto::scheme::{CryptogramScheme, MpayAes128CmacV1};
 use mpay_issuer::Issuer;
 use mpay_pqlink::attestation::{AttestationPolicy, TrustAnchors};
 use mpay_pqlink::{KeyStoreServerSigner, MlDsaSeedBlob, PqLinkServer, ServerConfig};
-use mpay_shield::StubShield;
+use mpay_shield::model::{MlScorer, TractScorer};
+use mpay_shield::rules::RuleSet;
+use mpay_shield::{Shield, StubShield};
 use mpay_vault::{Vault, VaultDetokenizer};
 use thiserror::Error;
 use zeroize::Zeroizing;
@@ -158,6 +161,54 @@ fn pem_to_der(pem: &str) -> Vec<Vec<u8>> {
     out
 }
 
+/// Shield port'lari: `(ID&V, risk)`.
+pub type ShieldPorts = (Arc<dyn IdvDecider>, Arc<dyn RiskScorer>);
+
+/// Shield port'lari (ID&V va risk) — konfiguratsiya bo'yicha dvigatel yoki stub.
+pub fn build_shield(cfg: &Config) -> Result<ShieldPorts, BootError> {
+    use crate::config::ShieldEngine;
+    let sc = &cfg.shield;
+    match sc.engine {
+        ShieldEngine::Stub => {
+            tracing::warn!("Shield: deterministik STUB (faqat testlar)");
+            let s = Arc::new(StubShield::new(cfg.shield_stub.clone()));
+            Ok((s.clone(), s))
+        }
+        ShieldEngine::Engine => {
+            let rules = match &sc.rules_file {
+                Some(p) => RuleSet::parse(&String::from_utf8_lossy(&read(&cfg.resolve(p))?)),
+                None => RuleSet::default_rules(),
+            }
+            .map_err(BootError::Config)?;
+            let ml: Option<Arc<dyn MlScorer>> = if sc.disable_ml {
+                None
+            } else {
+                let m = match (&sc.model_file, &sc.model_meta_file) {
+                    (Some(m), Some(j)) => TractScorer::load(
+                        &read(&cfg.resolve(m))?,
+                        &String::from_utf8_lossy(&read(&cfg.resolve(j))?),
+                    ),
+                    (None, None) => TractScorer::default_model(),
+                    _ => {
+                        return Err(BootError::Config(
+                            "shield.model_file va model_meta_file birga".into(),
+                        ))
+                    }
+                }
+                .map_err(BootError::Config)?;
+                tracing::info!(
+                    model = m.meta().version,
+                    "Shield: ONNX model yuklandi (tract)"
+                );
+                Some(Arc::new(m))
+            };
+            tracing::info!(rules = %rules.version, txn_rules = rules.txn_rule.len(), idv_rules = rules.idv_rule.len(), "Shield: dvigatel");
+            let s = Arc::new(Shield::new(rules, ml));
+            Ok((s.clone(), s))
+        }
+    }
+}
+
 /// Barcha komponentlarni yig'adi.
 pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let clock: Arc<dyn Clock> = Arc::new(SystemClock);
@@ -182,13 +233,13 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
 
     let db_path = cfg.resolve(&cfg.database.path);
     let pool = mpay_vault::db::open_pool(&format!("sqlite://{}", db_path.display())).await?;
-    let shield = Arc::new(StubShield::new(cfg.shield_stub.clone()));
+    let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(
             pool.clone(),
             ks.clone(),
             scheme.clone(),
-            shield.clone(),
+            idv,
             clock.clone(),
             cfg.vault.clone(),
         )
@@ -202,7 +253,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
             ks.clone(),
             scheme.clone(),
             detok,
-            shield,
+            risk,
             clock.clone(),
             cfg.issuer.clone(),
         )

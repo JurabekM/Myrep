@@ -221,3 +221,50 @@ barcha javob kodlari e2e va haqiqiy binarlar bilan sinalgan, PAN DB'da faqat shi
 
 **Keyingi bosqich (M5)**: `mpay-shield` v0 (TOML qoidalar, tezlik va graf belgilari, `tract` ONNX skor,
 p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM → ONNX). Tasdig'ingizni kutaman.
+
+## M5 — mpay-shield v0 + shield-ml (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-shield`: feature store (karta/qurilma/merchant/global P2P sirpanuvchi oynalari, summa z-skori,
+  soat noyobligi), qurilma–karta grafi (union-find komponentlar, darajalar, yangi qirralar);
+  27 tranzaksiya va 9 ID&V belgisi; deklarativ TOML qoidalar (8 + 8, belgi nomlari yuklashda tekshiriladi);
+  `MlScorer` + `TractScorer` (sof Rust ONNX, model binarga joylangan); `Shield` dvigateli
+  (`RiskScorer` va `IdvDecider` port'lari, skor 0–1000, APPROVE/REVIEW/DECLINE, GREEN/YELLOW/RED,
+  sabab kodlari); `shield-replay` (featurize / evaluate / bench / parity).
+* `shield-ml/` (uv, Python 3.13): `generate.py` — 5 fraud stsenariysi (ATO, card testing, mule tarmog'i,
+  qurilma fermasi, P2P to'lqini) va 4 qiyin legit holat; `train.py` — LightGBM → ONNX, onnxruntime
+  tekshiruvi, parity vektorlari. **Train/serve parity**: belgilarni faqat Rust hisoblaydi.
+* Server: `[shield] engine = "engine" | "stub"`, ixtiyoriy qoidalar/model fayllari; `init` standarti — `engine`.
+  ID&V provisioningga, risk skori emitentga port'lar orqali ulangan.
+* Hujjatlar: `docs/shield-report.md`, `shield-ml/README.md`, `test-data.md` §3, ADR-0005 yangilandi.
+
+**Qanday tekshirildi**
+
+* `cargo test --workspace` — 134 test o'tdi (`tests/e2e/tests/m5_shield.rs`: real HTTP orqali qurilma
+  fermasi GREEN×3 → YELLOW → RED, ikkinchi qurilma → YELLOW → OTP, tezkor taplar → `59`).
+* Sintetik test to'plami (mustaqil seed): tranzaksiya fraud'i 97,2–100 % REVIEW+, legit 0,0 %
+  (qiyin legit 0–4,1 %); ID&V: ATO 100 %, ferma 93 %, mule 71 % YELLOW+; legit RED 0 % — `docs/shield-report.md`.
+* Model: tract ↔ onnxruntime farqi 1,5·10⁻⁷ (500 qator, crate testida ham); ONNX ↔ LightGBM 8,7·10⁻⁶.
+* **Benchmark** (release, 45 390 hodisa bilan qizdirilgan, 41 694 tranzaksiya): p50 1,04 ms,
+  p95 1,66 ms, **p99 1,94 ms**, max 8,58 ms — talab < 50 ms.
+* Haqiqiy binarlar smoke (Shield dvigateli bilan): `00`, CDCVM, `59` (skor 957), `51`, YELLOW/OTP,
+  RED (`IDV_DEVICE_FARM`), `91`, audit 37 yozuv — **SMOKE OK**.
+* clippy `-D warnings`, fmt, `cargo deny`, `cargo audit` — toza.
+
+**Topilgan va tuzatilgan muammolar**
+
+* Yangi advisory RUSTSEC-2026-0387 (`crypto-bigint` 0.7.5, constant-time buzilishi; p256 orqali) →
+  0.7.6 ga yangilandi.
+* Bo'sh xotira yetmay rustc `tract-core` ni yig'ishda yiqildi (LLVM OOM) → bog'liqliklarda debuginfo
+  o'chirildi, SoftHSM uchun ishga tushirilgan Docker to'xtatildi.
+* ID&V'da ATO faqat 28 % aniqlanardi → "mavjud karta + yangi qurilma" qoidasi YELLOW (step-up OTP) ga
+  ko'tarildi: ATO 100 %, legit'da kartani ikkinchi qurilmaga qo'shish ham OTP so'raydi (kutilgan xatti-harakat).
+
+**Ochiq savollar**
+
+* `TODO(spec):` real ma'lumotlar bilan qayta o'qitish va chegaralarni kalibrlash; sintetik natijalar
+  optimistik (`shield-report.md` §3).
+* `TODO(spec):` taqsimlangan feature store/graf (ko'p instansiya), MCC va terminal geo-koordinatalari.
+
+**Keyingi bosqich (M6)**: Android `wallet-sdk`, `wallet-demo`, `terminal-app`.

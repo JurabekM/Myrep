@@ -71,8 +71,8 @@ pub const DEMO_ACCOUNTS: &[(&str, i64, &str)] = &[
         1_000_000,
         "GREEN, 10 000 UZS (51 namoyishi)",
     ),
-    ("990012850003003", 200_000_000, "YELLOW (OTP)"),
-    ("990012950004004", 100_000_000, "RED (ID&V rad)"),
+    ("990012850003003", 200_000_000, "demo hisob (200 000 UZS)"),
+    ("990012950004004", 100_000_000, "demo hisob (100 000 UZS)"),
     ("990013100005005", 100_000_000, "offline emitent (91)"),
 ];
 
@@ -92,7 +92,9 @@ fn demo_accounts() -> Result<String, String> {
 fn open_pkcs11() -> Result<std::sync::Arc<dyn mpay_crypto::KeyStore>, String> {
     use mpay_crypto::keystore::{Pkcs11Config, Pkcs11KeyStore};
     let c = Pkcs11Config::from_env().map_err(|e| e.to_string())?;
-    Ok(std::sync::Arc::new(Pkcs11KeyStore::open(&c).map_err(|e| e.to_string())?))
+    Ok(std::sync::Arc::new(
+        Pkcs11KeyStore::open(&c).map_err(|e| e.to_string())?,
+    ))
 }
 
 #[cfg(not(feature = "pkcs11"))]
@@ -115,17 +117,23 @@ pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
     let ks: std::sync::Arc<dyn mpay_crypto::KeyStore> = match opts.keystore {
         KeyStoreBackend::Memory => {
             let seed = rng::secret_array::<32>().map_err(|e| e.to_string())?;
-            write(dir, SEED_FILE, Zeroizing::new(hex::encode(&seed[..])).as_bytes())?;
+            write(
+                dir,
+                SEED_FILE,
+                Zeroizing::new(hex::encode(&seed[..])).as_bytes(),
+            )?;
             std::sync::Arc::new(MemoryKeyStore::from_seed(*seed))
         }
         KeyStoreBackend::Pkcs11 => open_pkcs11()?,
     };
     ensure_standard_keys(ks.as_ref()).map_err(|e| e.to_string())?;
     // ML-DSA-65 urug'i shu KeyStore'ning KEK'i bilan o'raladi (HSM'da — HSM KEK).
-    let blob = MlDsaSeedBlob::generate(ks.as_ref(), &KeyLabel::new(KeyLabel::KEK)).map_err(|e| e.to_string())?;
-    write(dir, MLDSA_FILE, &blob.to_bytes())?;
-    let signer = mpay_pqlink::KeyStoreServerSigner::new(ks, KeyLabel::new(KeyLabel::SERVER_ED25519), blob)
+    let blob = MlDsaSeedBlob::generate(ks.as_ref(), &KeyLabel::new(KeyLabel::KEK))
         .map_err(|e| e.to_string())?;
+    write(dir, MLDSA_FILE, &blob.to_bytes())?;
+    let signer =
+        mpay_pqlink::KeyStoreServerSigner::new(ks, KeyLabel::new(KeyLabel::SERVER_ED25519), blob)
+            .map_err(|e| e.to_string())?;
     let fp = hex::encode(mpay_pqlink::ServerSigner::identity(&signer).fingerprint());
 
     let ca = SandboxAttestationCa::generate().map_err(|e| e.to_string())?;
@@ -194,6 +202,10 @@ otp_max_attempts = 3
 max_uses = 10
 ttl_secs = 86400
 batch_size = 5
+
+[shield]
+# "engine" — qoidalar + graf/tezlik belgilari + ONNX ML; "stub" — deterministik test rejimi.
+engine = "engine"
 
 [shield_stub]
 review_amount_minor = 5000000000

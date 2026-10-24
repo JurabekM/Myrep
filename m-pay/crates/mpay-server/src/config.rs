@@ -23,6 +23,8 @@ pub struct Config {
     #[serde(default)]
     pub vault: VaultConfig,
     #[serde(default)]
+    pub shield: ShieldConfig,
+    #[serde(default)]
     pub shield_stub: StubShieldConfig,
     #[serde(default)]
     pub issuer: mpay_issuer::IssuerConfig,
@@ -86,6 +88,33 @@ fn default_level() -> SecurityLevel {
 
 fn default_session_ttl() -> i64 {
     900
+}
+
+/// Shield rejimi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ShieldEngine {
+    /// Qoidalar + graf/tezlik belgilari + ONNX ML (M5).
+    #[default]
+    Engine,
+    /// Deterministik test stub (`docs/test-data.md` §2).
+    Stub,
+}
+
+/// `[shield]` bo'limi.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ShieldConfig {
+    #[serde(default)]
+    pub engine: ShieldEngine,
+    /// Qoidalar TOML (berilmasa — binarga joylangan standart).
+    pub rules_file: Option<PathBuf>,
+    /// ONNX model va metadata (berilmasa — joylangan `shield_v0`).
+    pub model_file: Option<PathBuf>,
+    pub model_meta_file: Option<PathBuf>,
+    /// `true` — ML o'chiq, faqat qoidalar.
+    #[serde(default)]
+    pub disable_ml: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

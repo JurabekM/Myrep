@@ -11,3 +11,7 @@
 # Python
 __pycache__/
 .venv/
+
+# shield-ml: generatsiya qilingan ma'lumotlar va venv
+/shield-ml/data/
+/shield-ml/.venv/

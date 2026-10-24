@@ -81,7 +81,10 @@ impl Sandbox {
     }
 
     /// Berilgan KeyStore backend'i bilan.
-    pub async fn start_backend(keystore: mpay_server::config::KeyStoreBackend, tweak: impl FnOnce(&mut Config)) -> Self {
+    pub async fn start_backend(
+        keystore: mpay_server::config::KeyStoreBackend,
+        tweak: impl FnOnce(&mut Config),
+    ) -> Self {
         let _ = logs();
         let dir = tempfile::tempdir().unwrap();
         let out = init::run(&InitOptions {
@@ -93,6 +96,8 @@ impl Sandbox {
         })
         .unwrap();
         let mut cfg = Config::load(&out.config_path).unwrap();
+        // M3/M4 testlari deterministik stub'ga tayanadi; M5 testlari `engine` ni o'zi yoqadi.
+        cfg.shield.engine = mpay_server::config::ShieldEngine::Stub;
         tweak(&mut cfg);
         cfg.validate().unwrap();
         let server = mpay_server::start(&cfg).await.unwrap();

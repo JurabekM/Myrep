@@ -77,6 +77,9 @@ rand_core = "0.10.1"
 cryptoki = "0.12.1"
 rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "ring", "pem"] }
 
+# ML (Shield): sof Rust ONNX runtime (ADR-0005)
+tract-onnx = { version = "0.23.9", default-features = false }
+
 # kuzatuv, xatolar, CLI
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json", "fmt"] }
@@ -106,3 +109,5 @@ panic = "abort"
 
 [profile.dev.package."*"]
 opt-level = 2
+# Bog'liqliklarda debuginfo yo'q: tract kabi katta crate'lar kam xotira bilan yig'iladi.
+debug = false
