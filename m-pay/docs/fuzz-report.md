@@ -35,7 +35,11 @@ Mashina: Intel i5-10300H, Windows 10, MSVC ASan; 3 maqsad parallel.
 | `tlv_parse` | 300 | 2 300 937 | 7 644 | 262 | 844 | toza |
 | **Jami** | | **≈ 24,1 mln** | | | | **crash yo'q** |
 
-`pqlink_session` uchun qo'shimcha 1800 s yugurish davom etmoqda — natija keyingi commit'da qo'shiladi.
+Qo'shimcha uzun yugurish (alohida, 1 maqsad):
+
+| Maqsad | Vaqt, s | Yugurishlar | exec/s | Qamrov (cov) | Korpus | Natija |
+|---|---|---|---|---|---|---|
+| `pqlink_session` | 1 800 | 81 291 | 45 | 5 649 | 296 | toza |
 
 `pqlink_session` sekin: har rad etilgan yozuvdan keyin yangi handshake (ML-KEM-768, ML-DSA-65,
 attestatsiya zanjiri) — bu maqsad uzunroq yugurtirildi (yuqoridagi qo'shimcha qator).

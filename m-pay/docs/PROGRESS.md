@@ -342,7 +342,7 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 
 **Qanday tekshirildi**
 
-* Fuzz (ASan, Windows): 7 maqsad × 300 s — jami ≈ 24,1 mln yugurish, crash yo'q (`pqlink_session` 1800 s qo'shimcha yugurishi davom etmoqda);
+* Fuzz (ASan, Windows): 7 maqsad × 300 s — jami ≈ 24,1 mln yugurish, crash yo'q; `pqlink_session` qo'shimcha 1 800 s — 81 291 yugurish, crash yo'q.
   `apdu_card` seed'lari GPO `9000`, CDCVM `6986`, LUK limiti `6985` ga yetishi kuzatildi.
 * Yuk (`docs/load-report.md`): 32 parallel — 238 avtorizatsiya/s, p99 155 ms; 8 parallel — p99 46 ms;
   provisioning 630+ karta/s; xato 0; server logida ochiq PAN yo'q.
