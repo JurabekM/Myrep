@@ -14,6 +14,9 @@ Token Vault: provisioning, ID&V, LUK, lifecycle, detokenizatsiya va audit.
 * **Detokenizatsiya**: faqat [`VaultDetokenizer`] porti (issuer'ga beriladi, HTTP'da yo'q):
   `lookup` (o'zgartirmaydi) va `consume` (ARQC'dan keyin: LUK hisoblagichi + ATC monotonligi, atomar).
 * **Audit**: har o'zgarish va detokenizatsiya — append-only (trigger'lar), xesh-zanjirli; `verify`.
+* **Tranzaksiyalar** (`db.rs`, ADR-0009): yozuvchilar `begin_write` (`BEGIN IMMEDIATE`); hovuz
+  standarti 1 ulanish. Tranzaksiya ochiq turganda hovuzdan boshqa so'rov qilinmaydi — tayyorgarlik
+  (DEK, DPAN, shifrlash) undan oldin, ichida faqat `&mut tx`.
 
 ## Testlar
 

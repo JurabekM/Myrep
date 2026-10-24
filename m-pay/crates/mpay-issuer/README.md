@@ -32,6 +32,9 @@ balance_minor = 500000000   # tiyin
 label = "GREEN, 5 000 000 UZS"
 ```
 
+`validate_request(&IsoMessage)` — `0100` ni DB va kalitlarsiz tahlil qiladi (majburiy maydonlar,
+Track 2 ↔ maydon 2/14, ICC teglari, PDOL ↔ maydon 4/49); `fuzz/fuzz_targets/issuer_parse.rs` ishlatadi.
+
 ## Testlar
 
 ```bash

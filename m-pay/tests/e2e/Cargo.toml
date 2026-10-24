@@ -23,6 +23,11 @@ zeroize.workspace = true
 mpay-issuer.workspace = true
 mpay-crypto.workspace = true
 hex.workspace = true
+clap.workspace = true
+
+[[bin]]
+name = "mpay-load"
+path = "src/bin/mpay_load.rs"
 
 [features]
 pkcs11 = ["mpay-server/pkcs11"]

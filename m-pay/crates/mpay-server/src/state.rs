@@ -232,7 +232,12 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let pqlink = Arc::new(PqLinkServer::new(signer, anchors, pq_cfg, clock.clone()));
 
     let db_path = cfg.resolve(&cfg.database.path);
-    let pool = mpay_vault::db::open_pool(&format!("sqlite://{}", db_path.display())).await?;
+    let pool = mpay_vault::db::open_pool_with(
+        &format!("sqlite://{}", db_path.display()),
+        cfg.database.synchronous,
+        cfg.database.max_connections,
+    )
+    .await?;
     let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(

@@ -73,6 +73,25 @@ jobs:
         with:
           workspaces: m-pay
       - run: bash scripts/smoke-e2e.sh
+      - name: 10 daqiqalik bank namoyishi (avtomatik rejim)
+        run: DEMO_AUTO=1 bash scripts/demo.sh
+
+  fuzz:
+    name: Fuzz (har maqsad 60 s)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: m-pay/fuzz
+      - run: cargo install cargo-fuzz --locked
+      - run: bash scripts/fuzz-campaign.sh 60
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts
+          path: m-pay/fuzz/artifacts
 
   supply-chain:
     name: cargo deny + cargo audit

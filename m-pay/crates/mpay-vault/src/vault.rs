@@ -135,7 +135,7 @@ impl Vault {
         let dek = Dek::generate(new_id("dek_")?)?;
         let w = dek.wrap(self.ks.as_ref(), &self.kek)?;
         let _g = self.write.lock().await;
-        let mut tx = self.db.begin().await?;
+        let mut tx = crate::db::begin_write(&self.db).await?;
         sqlx::query("INSERT INTO vault_deks (dek_id, kek_label, nonce, wrapped, created_at, active) VALUES (?, ?, ?, ?, ?, 1)")
             .bind(&w.dek_id)
             .bind(&w.kek_label)
@@ -293,7 +293,7 @@ impl Vault {
 
         if idv.decision == IdvDecision::Red {
             let _g = self.write.lock().await;
-            let mut tx = self.db.begin().await?;
+            let mut tx = crate::db::begin_write(&self.db).await?;
             audit::append(
                 &mut tx,
                 now.unix_timestamp(),
@@ -326,7 +326,7 @@ impl Vault {
         let ts = now.unix_timestamp();
 
         let _g = self.write.lock().await;
-        let mut tx = self.db.begin().await?;
+        let mut tx = crate::db::begin_write(&self.db).await?;
         let card_id = self.upsert_card(&mut tx, &req, &pan_fp, ts).await?;
         sqlx::query(
             "INSERT INTO vault_tokens (token_id, card_id, device_id, dpan_fp, dpan_dek, dpan_nonce, dpan_ct, dpan_masked, \
@@ -591,7 +591,7 @@ impl Vault {
         let ts = self.clock.unix();
 
         let _g = self.write.lock().await;
-        let mut tx = self.db.begin().await?;
+        let mut tx = crate::db::begin_write(&self.db).await?;
         let ch = sqlx::query(
             "SELECT * FROM vault_idv_challenges WHERE challenge_id = ? AND token_id = ?",
         )
@@ -684,7 +684,7 @@ impl Vault {
         let psn = row.try_get::<i64, _>("psn")? as u8;
         let ts = self.clock.unix();
         let _g = self.write.lock().await;
-        let mut tx = self.db.begin().await?;
+        let mut tx = crate::db::begin_write(&self.db).await?;
         let active: i64 = sqlx::query(
             "SELECT COUNT(*) AS n FROM vault_luks WHERE token_id = ? AND revoked = 0 AND expires_at > ? AND used < max_uses",
         )
@@ -771,7 +771,7 @@ impl Vault {
         let ts = self.clock.unix();
         {
             let _g = self.write.lock().await;
-            let mut tx = self.db.begin().await?;
+            let mut tx = crate::db::begin_write(&self.db).await?;
             self.set_state_tx(&mut tx, token_id, to, actor, action, ts)
                 .await?;
             tx.commit().await?;
@@ -923,7 +923,7 @@ impl Vault {
             luk,
         };
         let _g = self.write.lock().await;
-        let mut tx = self.db.begin().await?;
+        let mut tx = crate::db::begin_write(&self.db).await?;
         audit::append(
             &mut tx,
             now,
@@ -948,7 +948,7 @@ impl Vault {
     ) -> Result<ConsumeOutcome, VaultError> {
         let now = self.clock.unix();
         let _g = self.write.lock().await;
-        let mut tx = self.db.begin().await?;
+        let mut tx = crate::db::begin_write(&self.db).await?;
         let Some(t) = sqlx::query("SELECT state, last_atc FROM vault_tokens WHERE token_id = ?")
             .bind(token_id.as_str())
             .fetch_optional(&mut *tx)

@@ -52,6 +52,16 @@ pub struct HttpConfig {
 pub struct DatabaseConfig {
     /// SQLite fayli.
     pub path: PathBuf,
+    /// `full` (standart) yoki `normal` — `mpay_vault::db::Durability`.
+    #[serde(default)]
+    pub synchronous: mpay_vault::db::Durability,
+    /// Ulanishlar hovuzi hajmi (standart 1 — `mpay_vault::db::DEFAULT_MAX_CONNECTIONS`).
+    #[serde(default = "default_db_connections")]
+    pub max_connections: u32,
+}
+
+fn default_db_connections() -> u32 {
+    mpay_vault::db::DEFAULT_MAX_CONNECTIONS
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

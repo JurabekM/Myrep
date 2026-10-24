@@ -10,7 +10,9 @@ pub mod issuer;
 use thiserror::Error;
 
 pub use codes::{Reason, ResponseCode};
-pub use issuer::{AccountView, AuthOutcome, Issuer, IssuerConfig, ReviewAction, TestAccount};
+pub use issuer::{
+    validate_request, AccountView, AuthOutcome, Issuer, IssuerConfig, ReviewAction, TestAccount,
+};
 
 /// Emitent xatolari (faqat xabarni umuman qayta ishlab bo'lmaydigan holatlar; biznes rad etishlar
 /// `0110` javob kodi bilan qaytadi).

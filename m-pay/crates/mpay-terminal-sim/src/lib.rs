@@ -35,6 +35,9 @@ pub enum WalletError {
     Decode(&'static str),
     #[error("PQ Link sessiyasi yo'q (avval connect)")]
     NotConnected,
+    /// Karta/terminal APDU darajasida rad etdi (masalan `6986` — CDCVM kerak).
+    #[error("karta: {0}")]
+    Card(String),
 }
 
 impl WalletError {

@@ -18,6 +18,8 @@ trap cleanup EXIT
 
 EXE=""
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) EXE=".exe" ;; esac
+# Windows'da `python3` — Store "stub" bo'lishi mumkin, shuning uchun avval `python`.
+PY="$(command -v python || command -v python3)"
 
 cargo build -q -p mpay-server -p mpay-terminal-sim
 SRV="target/debug/mpay-server$EXE"
@@ -46,7 +48,7 @@ expect() { # expect <naqsh> <buyruq...>
   if ! echo "$out" | grep -q -- "$pat"; then echo "XATO: '$pat' kutilgan edi"; exit 1; fi
 }
 luhn_pan() { # 15 raqamli prefiksga Luhn raqamini qo'shadi
-  python -c "import sys
+  "$PY" -c "import sys
 p=sys.argv[1]; s=0
 for i,ch in enumerate(reversed(p)):
     d=int(ch)

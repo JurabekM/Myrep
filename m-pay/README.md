@@ -60,6 +60,10 @@ cargo run -p mpay-terminal-sim --bin mpay-tsim -- --server https://localhost:808
 ```
 
 To'liq avtomatik smoke (haqiqiy binarlar): `bash scripts/smoke-e2e.sh`.
+10 daqiqalik bank namoyishi: `bash scripts/demo.sh` (ssenariy — `docs/demo-script.md`;
+`DEMO_AUTO=1` — avtomatik tekshiruv bilan).
+Yuk sinovi: `bash scripts/load-test.sh` (`docs/load-report.md`); fuzz kampaniyasi:
+`bash scripts/fuzz-campaign.sh [soniya]` (`docs/fuzz-report.md`).
 SoftHSM2 testlari (Docker): `bash scripts/softhsm-test.sh` va `bash scripts/softhsm-test.sh e2e`.
 
 Android ilovalari va telefonda sinash: `android/README.md`, `docs/android-testing.md`.

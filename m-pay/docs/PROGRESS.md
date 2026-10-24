@@ -320,3 +320,57 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 * `terminal-app` `/v1/authorizations` ni sandbox'da ochiq HTTP orqali yuboradi (terminal kaliti
   tarmoqda ko'rinadi). `TODO(spec):` TLS + pinlash, terminal kalitini Keystore'da saqlash.
 * `TODO(spec):` Play Integrity, bank ilovasida build vaqtida pinlangan server barmoq izi (TOFU o'rniga).
+
+## M7 — fuzz kampaniyasi, yuk sinovi, bank namoyishi (2026-10-24)
+
+**Nima qilindi**
+
+* Fuzz: 3 yangi maqsad — `apdu_card` (soft-karta applet'iga ixtiyoriy APDU ketma-ketligi),
+  `issuer_parse` (emitent `0100` tahlilchisi; buning uchun `mpay_issuer::validate_request`),
+  `pqlink_session` (o'rnatilgan sessiya yozuviga bit-flip/kesish). EMV lug'ati `fuzz/emv.dict`,
+  boshlang'ich kirishlar `fuzz/seeds/`, `scripts/fuzz-campaign.sh` (jadval bilan), CI `fuzz` job'i.
+* Yuk: `mpay-load` (`tests/e2e/src/bin/mpay_load.rs`) va `scripts/load-test.sh` — release server
+  alohida jarayonda, 200 karta PQ Link provisioning, haqiqiy ARQC bilan avtorizatsiyalar, keep-alive.
+* Namoyish: `docs/demo-script.md` (10 daqiqa, vaqt jadvali, savollar) va `scripts/demo.sh`
+  (interaktiv / `DEMO_AUTO=1` tekshiruvli); CI smoke job'iga qo'shildi.
+* SQLite: yozuvchi tranzaksiyalar `BEGIN IMMEDIATE`, hovuz standarti 1 ulanish,
+  `[database] synchronous` / `max_connections` sozlamalari — ADR-0009.
+* `mpay-tsim`: `6986` endi "karta: … telefonda tasdiqlang" (avval noto'g'ri "konfiguratsiya" turkumi).
+* Skriptlar `python`/`python3` ni avtomatik tanlaydi (Ubuntu CI).
+* Hujjatlar: `docs/fuzz-report.md`, `docs/load-report.md`, `docs/demo-script.md`, ADR-0009,
+  `tests/e2e/README.md`; vault/issuer README'lari.
+
+**Qanday tekshirildi**
+
+* Fuzz (ASan, Windows): 7 maqsad × 300 s — jami ≈ 24,1 mln yugurish, crash yo'q (`pqlink_session` 1800 s qo'shimcha yugurishi davom etmoqda);
+  `apdu_card` seed'lari GPO `9000`, CDCVM `6986`, LUK limiti `6985` ga yetishi kuzatildi.
+* Yuk (`docs/load-report.md`): 32 parallel — 238 avtorizatsiya/s, p99 155 ms; 8 parallel — p99 46 ms;
+  provisioning 630+ karta/s; xato 0; server logida ochiq PAN yo'q.
+* `DEMO_AUTO=1 bash scripts/demo.sh` — **DEMO OK** (TLS, Shield dvigateli: `00`+ARPC, `6986`→CDCVM `00`,
+  `59`, YELLOW/OTP, RED ferma, `51`, `91`, DB'da ochiq PAN yo'q, audit trigger rad etadi,
+  buzilgan yozuv `seq 2` aniqlanadi). `smoke-e2e.sh` — SMOKE OK; `android-interop.sh` — INTEROP OK.
+* `cargo test --workspace` — 138 test; clippy `-D warnings`, fmt, `cargo deny`, `cargo audit` — toza.
+
+**Topilgan va tuzatilgan muammolar**
+
+* **Yuk ostida `91 ISSUER_OFFLINE` (7 %)** — aslida SQLite `SQLITE_BUSY` (deferred tranzaksiya
+  o'qishdan yozishga o'tganda `busy_timeout` ishlamaydi) → `BEGIN IMMEDIATE`.
+* Shundan keyin p99 ~1 s: 8 ulanish yozish qulfini SQLite busy-handler'ida uxlab kutardi → hovuz
+  1 ulanish: p99 1 046 → 155 ms, 83 → 238 so'rov/s.
+* Python bilan skript tahririda `\n` haqiqiy qatorga aylandi (`load-test.sh` sed) — Edit bilan tuzatildi.
+
+**Ochiq / bajarilmagan**
+
+* **M6 qabul mezoni — ikki telefon orasida haqiqiy NFC tap — sinalmagan** (qurilmalar yo'q);
+  namoyishning telefon qismi ixtiyoriy va oldindan repetitsiya talab qiladi.
+* CI'dagi yangi `fuzz` job'i va demo qadami hali GitHub'da yugurtirilmagan (branch push qilinmagan).
+* `TODO(spec):` production DB va TPS/SLA talablari; HSM kechikishi bilan yuk sinovi;
+  HTTP API fuzzing; Kotlin tomoni uchun Jazzer.
+
+## Phase 0 (M0–M7) yakuni
+
+Pay Sandbox telefonsiz to'liq ishlaydi va 10 daqiqalik namoyish skripti avtomatik tekshiriladi:
+PQ Link (gibrid post-kvant) orqali tokenizatsiya, Vault (envelope shifrlash, audit zanjiri),
+EMV-ga o'xshash tap-to-pay (LUK, ARQC/ARPC, CDCVM), Shield (qoidalar + ONNX, p99 < 2 ms),
+emitent emulyatori (ISO 8583), Android SDK va ikki ilova (emulyatorda provisioning/OTP/LUK/biometriya
+sinalgan). Haqiqiy NFC tap — yagona sinalmagan qabul mezoni.

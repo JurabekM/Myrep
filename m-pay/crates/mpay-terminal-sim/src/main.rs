@@ -249,8 +249,15 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
             let amount = parse_amount(amount)?;
             let tap = {
                 let mut lb = Loopback::new(&mut card);
-                terminal::tap(&mut lb, &TxnParams::purchase(amount))
-                    .map_err(|e| WalletError::Config(format!("tap: {e}")))?
+                terminal::tap(&mut lb, &TxnParams::purchase(amount)).map_err(|e| {
+                    if e.is_see_phone() {
+                        WalletError::Card(format!(
+                            "{e} — telefonda tasdiqlang (biometriya: --cdcvm)"
+                        ))
+                    } else {
+                        WalletError::Card(e.to_string())
+                    }
+                })?
             };
             // ATC, LUK foydalanishi va STAN o'zgardi — natijadan qat'i nazar saqlaymiz.
             st.upsert(StoredToken::from_profile(card.profile()));

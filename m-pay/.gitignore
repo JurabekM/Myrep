@@ -21,3 +21,5 @@ __pycache__/
 /android/.gradle/
 /android/local.properties
 /android/.kotlin/
+/fuzz/logs/
+/fuzz/logs-*.txt

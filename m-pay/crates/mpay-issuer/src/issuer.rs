@@ -492,6 +492,12 @@ impl Issuer {
     }
 }
 
+/// `0100` ni faqat tahlil qiladi (DB va kalitlarsiz): majburiy maydonlar, Track 2 ↔ maydon 2/14,
+/// ICC teglari va PDOL ↔ maydon 4/49 muvofiqligi. Fuzzing va diagnostika uchun.
+pub fn validate_request(req: &IsoMessage) -> Result<(), Reason> {
+    parse_request(req).map(|_| ())
+}
+
 /// `0100` ni tahlil qiladi; muammo bo'lsa sabab.
 fn parse_request(req: &IsoMessage) -> Result<Parsed, Reason> {
     let fmt = |_| Reason::IccDataMissing;
