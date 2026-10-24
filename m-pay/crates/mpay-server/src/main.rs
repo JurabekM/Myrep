@@ -47,6 +47,20 @@ enum Cmd {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
         config: PathBuf,
     },
+    /// Android `terminal-app` uchun paket (JSON): server pini, mTLS sertifikati va terminal kaliti.
+    /// Faqat `init --tls` sandbox'i uchun; faylda sirlar bor.
+    TerminalBundle {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Terminal API kaliti ID'si (mTLS sertifikati CN'i).
+        #[arg(long, default_value = "terminal-1")]
+        id: String,
+        /// Terminal ulanadigan manzil, masalan `https://192.168.1.10:8443`.
+        #[arg(long)]
+        url: String,
+        #[arg(long, default_value = "terminal-bundle.json")]
+        out: PathBuf,
+    },
     /// PQ Link server identifikatorini chiqaradi (qurilmalarda pinlash uchun).
     Identity {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -116,6 +130,21 @@ async fn run(cli: Cli) -> Result<(), String> {
             println!(
                 "audit zanjiri to'g'ri: {} yozuv, bosh xesh {}",
                 r.entries, r.head_hash
+            );
+            Ok(())
+        }
+        Cmd::TerminalBundle {
+            config,
+            id,
+            url,
+            out,
+        } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let json = mpay_server::init::terminal_bundle(&cfg.base_dir, &id, &url)?;
+            std::fs::write(&out, json.as_bytes()).map_err(|e| format!("{}: {e}", out.display()))?;
+            println!(
+                "Terminal paketi: {} (SIRLAR BOR — import qilingach o'chiring)",
+                out.display()
             );
             Ok(())
         }

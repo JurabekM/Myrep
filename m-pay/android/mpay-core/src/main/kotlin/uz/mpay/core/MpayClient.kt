@@ -9,6 +9,7 @@ import uz.mpay.core.pqlink.PqLink
 import uz.mpay.core.pqlink.ServerIdentity
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 
 /** Server xatosi (`{"error": {...}}` yoki muhrlangan konvert). */
 class ApiException(val status: Int, val code: String, message: String) : Exception("$status $code: $message")
@@ -38,7 +39,12 @@ data class AuthResult(
  * `mpay-server` HTTP client (`docs/specs/api.md`). Platformadan mustaqil: Android'da ham, JVM
  * testlarida ham ishlaydi. Qurilma endpointlari PQ Link bilan muhrlanadi.
  */
-class MpayClient(baseUrl: String, private val timeoutMs: Int = 20_000) {
+class MpayClient(
+    baseUrl: String,
+    private val timeoutMs: Int = 20_000,
+    /** HTTPS: server pini va ixtiyoriy mTLS ([TlsConfig]); `null` — oddiy HTTP (faqat sandbox). */
+    private val tls: TlsConfig? = null,
+) {
     private val base = baseUrl.trimEnd('/')
     private var session: ClientSession? = null
 
@@ -46,6 +52,10 @@ class MpayClient(baseUrl: String, private val timeoutMs: Int = 20_000) {
 
     private fun request(method: String, path: String, body: ByteArray?, contentType: String?, bearer: String? = null): Resp {
         val c = URL(base + path).openConnection() as HttpURLConnection
+        if (c is HttpsURLConnection && tls != null) {
+            c.sslSocketFactory = tls.socketFactory
+            c.hostnameVerifier = tls.hostnameVerifier
+        }
         try {
             c.requestMethod = method
             c.connectTimeout = timeoutMs
@@ -156,6 +166,12 @@ class MpayClient(baseUrl: String, private val timeoutMs: Int = 20_000) {
     /** Sandbox: OTP'ni operator kaliti bilan oladi (haqiqiy tizimda SMS/push). */
     fun sandboxOtp(challengeId: String, operatorKey: String): String =
         json("GET", "/v1/sandbox/otp/$challengeId", null, operatorKey).getString("otp")
+
+    /** Terminal diagnostikasi: `(key_id, mtls)` — kalit, mTLS va chegaralardan o'tganini tasdiqlaydi. */
+    fun terminalPing(terminalKey: String): Pair<String, Boolean> {
+        val j = json("GET", "/v1/terminal/ping", null, terminalKey)
+        return j.getString("key_id") to j.getBoolean("mtls")
+    }
 
     /** Terminal: tap natijasini avtorizatsiyaga yuboradi. */
     fun authorize(terminalKey: String, terminalId: String, merchantId: String, stan: Int, iccHex: String): AuthResult {

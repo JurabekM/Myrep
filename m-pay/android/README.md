@@ -30,11 +30,12 @@ Qurilmada sinash tartibi: `docs/android-testing.md`.
 * Loglarda faqat maskalangan PAN (`maskPan`) va token ID; LUK, kalit, kriptogramma yozilmaydi.
 * Qurilma kaliti Android Keystore'dan chiqmaydi; profil (LUK'lar) Keystore AES-GCM kaliti bilan
   shifrlangan, `allowBackup=false`.
-* **Sandbox:** `network_security_config` barcha manzillarga cleartext HTTP'ga ruxsat beradi
-  (LAN/emulyator uchun). Hamyon so'rovlari PQ Link bilan muhrlangan, lekin `terminal-app`
-  `/v1/authorizations` ni **ochiq** yuboradi: terminal kaliti (Bearer) va ICC teglari (DPAN,
-  ARQC) tarmoqda ko'rinadi. Ishonchsiz tarmoqda sinamang. `TODO(spec):` production — faqat
-  TLS (sandbox CA ni ilovaga joylash) va build vaqtida pinlangan server barmoq izi.
+* **Terminal (1-faza P1.4):** `mpay-server terminal-bundle` paketi import qilinadi — server TLS
+  sertifikati SHA-256 bo'yicha pinlanadi (`TlsConfig`), mTLS mijoz kaliti Android Keystore'ga
+  o'tkaziladi (imzo Keystore'da), terminal API kaliti Keystore AES-GCM bilan shifrlangan; paket fayli
+  o'chiriladi. "Ulanishni tekshirish" — `GET /v1/terminal/ping`. Paketsiz qo'lda rejim — oddiy HTTP,
+  faqat sandbox (kalit saqlanmaydi).
+* **Sandbox:** `network_security_config` cleartext HTTP'ga ruxsat beradi (emulyator va qo'lda rejim
+  uchun). Hamyon so'rovlari PQ Link bilan muhrlangan; hamyon uchun TLS pinlash — P1.5.
 * Release ham debug kaliti bilan imzolanadi (sandbox) — haqiqiy imzo kaliti repoga tushmaydi.
-* `TODO(spec):` Play Integrity (`IntegrityProvider` hozircha stub), terminal kalitini
-  Keystore bilan shifrlash (hozir `SharedPreferences`, sandbox).
+* `TODO(spec):` Play Integrity (`IntegrityProvider` hozircha stub) — 2-faza.

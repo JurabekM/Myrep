@@ -12,6 +12,7 @@ WORK="$(mktemp -d)"
 SERVER_PID=""
 cleanup() {
   if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi
+  if [ -n "${TLS_PID:-}" ]; then kill "$TLS_PID" 2>/dev/null || true; wait "$TLS_PID" 2>/dev/null || true; fi
   rm -rf "$WORK"
 }
 trap cleanup EXIT
@@ -32,10 +33,25 @@ for _ in $(seq 1 100); do
   sleep 0.2
 done
 
+# 1-faza P1.4: TLS + mTLS sandbox va terminal paketi.
+TLS_PORT=$((PORT + 1))
+"$SRV" init --dir "$WORK/tls" --listen "127.0.0.1:$TLS_PORT" --tls > /dev/null
+"$SRV" terminal-bundle --config "$WORK/tls/mpay.toml" --url "https://127.0.0.1:$TLS_PORT" \
+  --out "$WORK/terminal-bundle.json" > /dev/null
+"$SRV" serve --config "$WORK/tls/mpay.toml" 2> "$WORK/server-tls.log" &
+TLS_PID=$!
+for _ in $(seq 1 100); do
+  curl -sfk "https://127.0.0.1:$TLS_PORT/healthz" > /dev/null && break
+  sleep 0.2
+done
+export MPAY_INTEROP_TLS_URL="https://127.0.0.1:$TLS_PORT"
+export MPAY_TLS_SANDBOX_DIR="$WORK/tls"
+export MPAY_TERMINAL_BUNDLE="$WORK/terminal-bundle.json"
+
 export MPAY_INTEROP_URL="http://127.0.0.1:$PORT"
 export MPAY_SANDBOX_DIR="$WORK/sb"
 (cd android && ./gradlew :mpay-core:test --tests 'uz.mpay.core.InteropTest' --rerun-tasks --no-daemon --console=plain) \
-  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|Exception|BUILD"
+  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|Exception|BUILD"
 
 echo "== Server logida ochiq PAN yo'q"
 for p in $(grep -E '^pan = ' "$WORK/sb/mpay.toml" | sed -E 's/pan = "([0-9]+)"/\1/'); do

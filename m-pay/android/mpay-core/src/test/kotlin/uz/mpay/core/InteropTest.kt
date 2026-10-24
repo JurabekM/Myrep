@@ -143,4 +143,58 @@ class InteropTest {
             assertEquals("PQLINK_ATTESTATION", e.code)
         }
     }
+
+    /**
+     * 1-faza P1.4: TLS (server pinlangan) + mTLS (`terminal-bundle`) — Rust server `init --tls`.
+     * `MPAY_INTEROP_TLS_URL`, `MPAY_TLS_SANDBOX_DIR`, `MPAY_TERMINAL_BUNDLE`.
+     */
+    @Test
+    fun pinnedTlsAndMtlsAgainstRustServer() {
+        val tlsUrl = System.getenv("MPAY_INTEROP_TLS_URL")
+        val dir = System.getenv("MPAY_TLS_SANDBOX_DIR")?.let(::File)
+        val bundlePath = System.getenv("MPAY_TERMINAL_BUNDLE")
+        assumeTrue("MPAY_INTEROP_TLS_URL o'rnatilmagan — o'tkazib yuborildi", tlsUrl != null && dir != null && bundlePath != null)
+        val bundle = TerminalBundle.parse(File(bundlePath!!).readText())
+        assertEquals("terminal-1", bundle.keyId)
+        val pinOnly = TlsConfig(bundle.serverCertSha256)
+        val mtls = TlsConfig(bundle.serverCertSha256, Pem.keyManager(bundle.clientCertPem, bundle.clientKeyPem))
+
+        // Noto'g'ri pin — TLS ulanishning o'zi rad etiladi.
+        val wrong = bundle.serverCertSha256.copyOf().also { it[0] = (it[0].toInt() xor 1).toByte() }
+        try {
+            MpayClient(tlsUrl!!, tls = TlsConfig(wrong)).terminalPing(bundle.terminalKey)
+            throw AssertionError("pin xatosi kutilgan")
+        } catch (e: javax.net.ssl.SSLException) {
+            println("noto'g'ri pin rad etildi: ${e.javaClass.simpleName}")
+        }
+
+        // Sertifikatsiz — 403 MTLS_REQUIRED; sertifikat bilan — ping o'tadi.
+        try {
+            MpayClient(tlsUrl, tls = pinOnly).terminalPing(bundle.terminalKey)
+            throw AssertionError("MTLS_REQUIRED kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("MTLS_REQUIRED", e.code)
+        }
+        val term = MpayClient(tlsUrl, tls = mtls)
+        assertEquals("terminal-1" to true, term.terminalPing(bundle.terminalKey))
+
+        // To'liq oqim TLS ustida: hamyon (sertifikatsiz, pinlangan) → token; terminal (mTLS) → 00.
+        val wallet = MpayClient(tlsUrl, tls = pinOnly)
+        val (identity, _) = wallet.identity()
+        wallet.connect(identity, SoftDevice(dir!!))
+        val pan = File(dir, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[0].substringAfter("\"").substringBefore("\"")
+        val r = wallet.provision(pan, "3112")
+        assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
+        val profile = (r as ProvisionResult.Active).profile
+        val applet = CardApplet({ profile }, Gate())
+        val date = java.time.LocalDate.now()
+        val tap = TerminalKernel.tap({ applet.process(it) }, 1_250_000, TerminalData.dateBcd(date.year, date.monthValue, date.dayOfMonth))
+        val a = term.authorize(bundle.terminalKey, "TERMKT01", "SHOP0000000001", 1, tap.iccHex())
+        println("TLS+mTLS avtorizatsiya: ${a.responseCode} ${a.reason}")
+        assertEquals("00", a.responseCode)
+        assertTrue(applet.verifyIssuerAuth(Hex.decode(a.issuerAuthData!!)))
+
+        // Takroriy yuborish (P1.2) — aynan o'sha javob.
+        assertEquals(a, term.authorize(bundle.terminalKey, "TERMKT01", "SHOP0000000001", 1, tap.iccHex()))
+    }
 }

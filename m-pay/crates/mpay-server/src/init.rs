@@ -307,3 +307,47 @@ backend = \"pkcs11\"".to_owned(),
         server_fingerprint: fp,
     })
 }
+
+/// Terminal paketi (JSON): server URL, server TLS sertifikati va uning SHA-256 pini, mTLS mijoz
+/// sertifikati va kaliti, terminal API kaliti. **Sirlar bor** — faqat sandbox; terminal ilovasi
+/// import qilgach kalitni Android Keystore'ga o'tkazadi va faylni o'chirish kerak.
+pub fn terminal_bundle(
+    dir: &Path,
+    id: &str,
+    server_url: &str,
+) -> Result<Zeroizing<String>, String> {
+    use rustls::pki_types::pem::PemObject;
+    use sha2::{Digest, Sha256};
+    let read = |name: &str| {
+        let p = dir.join(name);
+        std::fs::read_to_string(&p).map_err(|e| format!("{}: {e}", p.display()))
+    };
+    if !server_url.starts_with("https://") {
+        return Err("terminal paketi faqat https:// manzil uchun (TLS + mTLS)".into());
+    }
+    let server_pem = read(TLS_CERT_FILE)?;
+    let der = rustls::pki_types::CertificateDer::from_pem_slice(server_pem.as_bytes())
+        .map_err(|e| format!("{TLS_CERT_FILE}: {e}"))?;
+    let (crt, key) = client_cert_files(id);
+    let client_pem = read(&crt)?;
+    let client_key = Zeroizing::new(read(&key)?);
+    let creds = Zeroizing::new(read(CREDENTIALS_FILE)?);
+    let terminal_key = creds
+        .lines()
+        .find_map(|l| l.strip_prefix("MPAY_TERMINAL_KEY="))
+        .map(|v| Zeroizing::new(v.trim().to_owned()))
+        .ok_or("MPAY_TERMINAL_KEY topilmadi")?;
+    let json = serde_json::json!({
+        "format": "mpay-terminal-bundle/1",
+        "server_url": server_url,
+        "server_cert_pem": server_pem,
+        "server_cert_sha256": hex::encode(Sha256::digest(der.as_ref())),
+        "key_id": id,
+        "client_cert_pem": client_pem,
+        "client_key_pem": client_key.as_str(),
+        "terminal_key": terminal_key.as_str(),
+    });
+    serde_json::to_string_pretty(&json)
+        .map(Zeroizing::new)
+        .map_err(|e| e.to_string())
+}

@@ -52,6 +52,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
         .route("/v1/authorizations", post(authorize))
+        .route("/v1/terminal/ping", get(terminal_ping))
         .route_layer(middleware::from_fn(log_requests))
         .layer(DefaultBodyLimit::max(256 * 1024))
         .with_state(state)
@@ -401,6 +402,17 @@ async fn sandbox_accounts(
 }
 
 // ---------------------------------------------------------------- terminal
+
+/// Terminal diagnostikasi: kalit, mTLS va rate-limit tekshiruvidan o'tganini tasdiqlaydi.
+async fn terminal_ping(State(s): St, headers: HeaderMap, mtls: Mtls) -> Result<Response, ApiError> {
+    let c = s.caller(&headers, &mtls, Role::Terminal)?;
+    Ok(Json(serde_json::json!({
+        "key_id": c.id,
+        "mtls": mtls.0.is_some(),
+        "server_time": s.clock.now().unix_timestamp(),
+    }))
+    .into_response())
+}
 
 async fn authorize(
     State(s): St,

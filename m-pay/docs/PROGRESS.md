@@ -429,3 +429,37 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
 
 * `TODO(spec):` sertifikat bekor qilish (CRL/OCSP) — bank PKI'si (2-faza).
 * Android `terminal-app` hali mTLS'siz — P1.4.
+
+### P1.4 — terminal-app: TLS + mTLS, kalitlar Keystore'da (2026-10-24)
+
+**Nima qilindi**
+
+* Server: `mpay-server terminal-bundle --url https://…` — paket (`mpay-terminal-bundle/1`): server TLS
+  sertifikati va SHA-256 pini, mTLS mijoz sertifikati/kaliti, terminal API kaliti; `GET /v1/terminal/ping`
+  (kalit + mTLS + chegaralar diagnostikasi).
+* `mpay-core`: `TlsConfig` (server sertifikati pinlanadi — tizim CA'lariga ishonilmaydi, xost nomi
+  tekshiruvi ham pin bilan), `Pem` yordamchilari, `TerminalBundle.parse` (pin sertifikatga mosligini
+  tekshiradi), `MpayClient(tls = …)`, `terminalPing`.
+* `terminal-app`: `TerminalVault` — mTLS kaliti Android Keystore'ga import (imzo Keystore'da,
+  `X509ExtendedKeyManager`), terminal kaliti/URL/pin Keystore AES-256-GCM bilan shifrlangan; paket
+  ilova papkasidan (adb push) yoki fayl tanlash oynasidan import qilinadi va **o'chiriladi**;
+  "Ulanishni tekshirish", "Paketni o'chirish". Qo'lda rejim (HTTP) kalitni endi saqlamaydi; 0-fazadagi
+  ochiq saqlangan kalit ishga tushishda o'chiriladi.
+
+**Qanday tekshirildi**
+
+* JVM interop (`InteropTest.pinnedTlsAndMtlsAgainstRustServer`, haqiqiy Rust server `--tls`):
+  noto'g'ri pin → `SSLHandshakeException`; sertifikatsiz → `MTLS_REQUIRED`; mTLS bilan ping →
+  `terminal-1`, mTLS; TLS ustida hamyon provisioning + terminal avtorizatsiyasi `00`, ARPC tasdiqlandi;
+  takroriy yuborish → aynan o'sha javob. **INTEROP OK**.
+* Emulyator (API 36) ↔ `mpay-server --tls` (`https://10.0.2.2:8443`): paket import qilindi va fayl
+  o'chirildi; "Ulanish ishlaydi — TLS: server pinlangan, mTLS sertifikati qabul qilindi" (server logida
+  `/v1/terminal/ping` 200); ilova qayta ishga tushgach ham ishlaydi (Keystore'dan ochildi); paketsiz
+  qo'lda `https` → `SSLHandshakeException` (serverga yetmaydi).
+* `cargo test --workspace` — 148; smoke, demo — OK; clippy, fmt — toza.
+
+**Ochiq**
+
+* Hamyon (`wallet-demo`) hali TLS pinlashsiz — `--tls` server bilan ulanmaydi; P1.5 da (build vaqtida
+  pinlangan PQ Link barmoq izi + TLS pin).
+* NFC tap orqali to'liq to'lov TLS ustida faqat JVM interop'da sinalgan (emulyatorda NFC yo'q) — P1.8.

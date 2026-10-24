@@ -64,8 +64,13 @@ barmoq izi; ikkalasi server bilan bir tarmoqda (yoki `adb reverse tcp:8080 tcp:8
 2. **Hamyon telefoni** (`wallet-demo`): server manzili `http://<kompyuter IP>:8080` →
    "Ulanish" → test FPAN bilan "Kartani qo'shish" (kerak bo'lsa OTP) →
    "Standart to'lov ilovasi" (Sozlamalar → Kontaktsiz to'lovlar → M-Pay Hamyon).
-3. **Terminal telefoni** (`terminal-app`): "Sozlamalar" ga server manzili va `init` bergan
-   **terminal** kaliti; summa (masalan 25 000) → "To'lov qabul qilish".
+3. **Terminal telefoni** (`terminal-app`, 1-faza P1.4 — TLS + mTLS):
+   `mpay-server init --tls` sandbox'idan paket yarating:
+   `mpay-server terminal-bundle --config sb/mpay.toml --url https://<kompyuter IP>:8443`,
+   faylni telefonga `adb push terminal-bundle.json /sdcard/Android/data/uz.mpay.terminalapp/files/`
+   (yoki fayl tanlash oynasi), ilovada "Terminal paketini import qilish" → "Ulanishni tekshirish"
+   ("Ulanish ishlaydi … mTLS sertifikati qabul qilindi"). So'ng summa (masalan 25 000) →
+   "To'lov qabul qilish". Paketsiz qo'lda rejim (oddiy HTTP) faqat `--tls` siz sandbox uchun.
 4. Hamyon telefonida "To'lovga tayyorlash" → barmoq izi → 60 s ichida telefonlarni orqa
    tomonlari bilan tekkizing.
 5. Kutilgan natija: terminalda **MA'QULLANDI**, kod `00`, maskalangan DPAN, RRN, Shield bali;
@@ -82,3 +87,15 @@ barmoq izi; ikkalasi server bilan bir tarmoqda (yoki `adb reverse tcp:8080 tcp:8
 **Holat:** bu bo'lim hali haqiqiy qurilmalarda bajarilmagan — ishlab chiqish muhitida NFC'li
 ikki telefon yo'q. Tap yo'li (applet ↔ terminal yadrosi ↔ Rust emitent) JVM interop testida
 loopback orqali sinalgan (`InteropTest`); `IsoDep`/`HostApduService` qatlami sinalmagan.
+
+## 4. Terminal TLS + mTLS (emulyatorda, 1-faza P1.4)
+
+1. `mpay-server init --dir emu-tls --listen 127.0.0.1:8443 --tls` (emulyator xostni `10.0.2.2` orqali ko'radi).
+2. `mpay-server terminal-bundle --config emu-tls/mpay.toml --url https://10.0.2.2:8443 --out terminal-bundle.json`.
+3. `mpay-server serve --config emu-tls/mpay.toml`.
+4. `adb push terminal-bundle.json /sdcard/Android/data/uz.mpay.terminalapp/files/terminal-bundle.json`.
+5. Ilovada "Terminal paketini import qilish" → paket o'qiladi va **o'chiriladi** → "Ulanishni tekshirish".
+
+Kutilgan: "Ulanish ishlaydi — Kalit: terminal-1 — TLS: server pinlangan, mTLS sertifikati qabul qilindi".
+Salbiy: paketni o'chirib, qo'lda rejimda xuddi shu `https://` manzilga — tizim CA'si sandbox sertifikatini
+tanimaydi (TLS xatosi); `http://` bilan TLS serverga ulanib bo'lmaydi.
