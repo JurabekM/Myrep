@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Faqat tizim darajasidagi yorliqlar (vidjet tanlash ro'yxati). Ilova
+     matnlari ARB'da. -->
+<resources>
+    <string name="widget_label">Baraka: быстрая запись</string>
+    <string name="widget_description">Кнопка шаблона — расход записывается в одно касание</string>
+</resources>

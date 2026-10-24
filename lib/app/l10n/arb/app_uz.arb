@@ -1,0 +1,6505 @@
+{
+  "@@locale": "uz",
+  "appTitle": "Baraka Dastur",
+  "@appTitle": {
+    "description": "Ilova nomi"
+  },
+  "languageName": "Oʻzbekcha",
+  "@languageName": {
+    "description": "Joriy tilning o'z nomi"
+  },
+  "switchLanguageTooltip": "Tilni almashtirish",
+  "@switchLanguageTooltip": {
+    "description": "Til almashtirish tugmasi maslahati"
+  },
+  "switchThemeTooltip": "Mavzuni almashtirish",
+  "@switchThemeTooltip": {
+    "description": "Yorug'/qorong'i mavzu tugmasi maslahati"
+  },
+  "placeholderNotice": "Bu ekran keyingi vazifalarda toʻldiriladi.",
+  "@placeholderNotice": {
+    "description": "Placeholder ekranlardagi izoh"
+  },
+  "homeTitle": "Bosh sahifa",
+  "@homeTitle": {
+    "description": "Bosh ekran sarlavhasi"
+  },
+  "homeDescription": "Bu yerda «Oʻzingizga toʻlangan» summa, «Kelajagim» balansi va haftalik vazifalar boʻladi.",
+  "@homeDescription": {
+    "description": "Bosh ekran tavsifi"
+  },
+  "homeSectionsHeader": "Boʻlimlar",
+  "@homeSectionsHeader": {
+    "description": "Bosh ekrandagi bo'limlar ro'yxati sarlavhasi"
+  },
+  "incomeNewTitle": "Yangi daromad",
+  "@incomeNewTitle": {
+    "description": "Daromad kiritish ekrani sarlavhasi"
+  },
+  "incomeNewDescription": "Bu yerda daromad bir necha bosishda kiritiladi.",
+  "@incomeNewDescription": {
+    "description": "Daromad kiritish ekrani tavsifi"
+  },
+  "vaultTitle": "Kelajagim",
+  "@vaultTitle": {
+    "description": "«Kelajagim» jamg'armasi ekrani sarlavhasi"
+  },
+  "vaultDescription": "Bu yerda «Kelajagim» jamgʻarmasi balansi va odat ketma-ketligi boʻladi.",
+  "@vaultDescription": {
+    "description": "«Kelajagim» ekrani tavsifi"
+  },
+  "auditTitle": "Oylik audit",
+  "@auditTitle": {
+    "description": "Oylik audit ekrani sarlavhasi"
+  },
+  "auditDescription": "Bu yerda «Pul qayerga ketdi?» degan savolga javob topiladi.",
+  "@auditDescription": {
+    "description": "Oylik audit ekrani tavsifi"
+  },
+  "contentTitle": "Boblar",
+  "@contentTitle": {
+    "description": "Kontent (boblar) ekrani sarlavhasi"
+  },
+  "nativeBridgeTitle": "Xavfsizlik koʻprigi",
+  "@nativeBridgeTitle": {
+    "description": "Pigeon orqali Kotlin bilan aloqa holati kartasi"
+  },
+  "nativeBridgeChecking": "Tekshirilmoqda…",
+  "@nativeBridgeChecking": {
+    "description": "Native ko'prik tekshirilayotgan holat"
+  },
+  "nativeBridgeOk": "Ishlayapti · API v{apiVersion} · Android SDK {sdkInt}",
+  "@nativeBridgeOk": {
+    "description": "Native ko'prik javob qaytargan holat",
+    "placeholders": {
+      "apiVersion": {
+        "type": "int"
+      },
+      "sdkInt": {
+        "type": "int"
+      }
+    }
+  },
+  "nativeBridgeUnavailable": "Native qatlam bilan aloqa yoʻq",
+  "@nativeBridgeUnavailable": {
+    "description": "Native ko'prik javob bermagan holat"
+  },
+  "lockEnterPin": "PIN kodni kiriting",
+  "@lockEnterPin": {
+    "description": "Qulf ekranidagi asosiy ko'rsatma"
+  },
+  "lockGreeting": "Daftaringiz qulflangan",
+  "@lockGreeting": {
+    "description": "Qulf ekrani sarlavhasi ostidagi iliq izoh"
+  },
+  "pinWrong": "Kod mos kelmadi. Kutish vaqtigacha yana {attempts} ta urinish bor.",
+  "@pinWrong": {
+    "description": "Noto'g'ri PIN, lockout'gacha qolgan urinishlar",
+    "placeholders": {
+      "attempts": {
+        "type": "int"
+      }
+    }
+  },
+  "pinLockedOut": "Juda koʻp notoʻgʻri urinish boʻldi. {time} dan keyin qayta urinib koʻring.",
+  "@pinLockedOut": {
+    "description": "Lockout holati; time — mm:ss",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pinVerifying": "Tekshirilmoqda…",
+  "@pinVerifying": {
+    "description": "PIN hosilasi hisoblanayotganda"
+  },
+  "pinErrorGeneric": "Nimadir xato ketdi. Qaytadan urinib koʻring.",
+  "@pinErrorGeneric": {
+    "description": "Kutilmagan xato"
+  },
+  "pinKeyDelete": "Oxirgi raqamni oʻchirish",
+  "@pinKeyDelete": {
+    "description": "PIN klaviaturasidagi o'chirish tugmasi (ekran o'quvchi uchun)"
+  },
+  "pinKeyBiometric": "Barmoq izi bilan kirish",
+  "@pinKeyBiometric": {
+    "description": "PIN klaviaturasidagi biometriya tugmasi (ekran o'quvchi uchun)"
+  },
+  "pinDigitsEntered": "{count} / 6 raqam kiritildi",
+  "@pinDigitsEntered": {
+    "description": "PIN nuqtalari (ekran o'quvchi uchun)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinSetupTitle": "PIN kod oʻrnatish",
+  "@pinSetupTitle": {
+    "description": "PIN o'rnatish ekrani sarlavhasi"
+  },
+  "pinSetupEnter": "Daftaringizni himoyalash uchun 6 xonali kod oʻylab toping",
+  "@pinSetupEnter": {
+    "description": "PIN o'rnatish — 1-qadam"
+  },
+  "pinSetupConfirm": "Kodni yana bir marta kiriting",
+  "@pinSetupConfirm": {
+    "description": "PIN o'rnatish — tasdiqlash qadami"
+  },
+  "pinSetupMismatch": "Kodlar mos kelmadi. Keling, qaytadan boshlaymiz.",
+  "@pinSetupMismatch": {
+    "description": "Tasdiqlash kodi birinchisiga mos emas"
+  },
+  "pinTooSimple": "Bu kodni topish oson. Boshqa raqamlarni tanlang.",
+  "@pinTooSimple": {
+    "description": "111111 yoki 123456 kabi oddiy PIN"
+  },
+  "pinSetupNote": "Kodning oʻzi hech qayerda saqlanmaydi. Uni unutmang — tiklash imkoni yoʻq.",
+  "@pinSetupNote": {
+    "description": "PIN o'rnatish ekranidagi izoh"
+  },
+  "pinSetupSaving": "Saqlanmoqda…",
+  "@pinSetupSaving": {
+    "description": "PIN hosilasi hisoblanib saqlanayotganda"
+  },
+  "biometricOfferTitle": "Barmoq izi bilan kirish",
+  "@biometricOfferTitle": {
+    "description": "Biometriyani yoqish taklifi sarlavhasi"
+  },
+  "biometricOfferBody": "Har safar kod kiritmasdan, barmoq izi yoki qurilma qulfi bilan kirishingiz mumkin. Buni istalgan vaqtda oʻchirsa boʻladi.",
+  "@biometricOfferBody": {
+    "description": "Biometriyani yoqish taklifi matni"
+  },
+  "biometricEnable": "Yoqish",
+  "@biometricEnable": {
+    "description": "Biometriyani yoqish tugmasi"
+  },
+  "biometricLater": "Hozircha kerak emas",
+  "@biometricLater": {
+    "description": "Biometriyani yoqmaslik tugmasi"
+  },
+  "biometricPromptTitle": "Baraka Dastur",
+  "@biometricPromptTitle": {
+    "description": "Tizim BiometricPrompt oynasi sarlavhasi"
+  },
+  "biometricPromptSubtitle": "Daftaringizni ochish uchun tasdiqlang",
+  "@biometricPromptSubtitle": {
+    "description": "Tizim BiometricPrompt oynasi izohi"
+  },
+  "biometricPromptCancel": "Kod bilan kirish",
+  "@biometricPromptCancel": {
+    "description": "BiometricPrompt'dagi bekor qilish tugmasi"
+  },
+  "biometricLockedOut": "Barmoq izi vaqtincha bloklangan. Kod bilan kiring.",
+  "@biometricLockedOut": {
+    "description": "Biometriya tizim tomonidan bloklangan"
+  },
+  "integrityTitle": "Qurilmada xavf belgilari bor",
+  "@integrityTitle": {
+    "description": "Integrity ogohlantirishi sarlavhasi"
+  },
+  "integrityBody": "Ilova ishlayveradi, lekin bunday qurilmada maʼlumotlaringiz xavfsizligini toʻliq kafolatlab boʻlmaydi. Aniqlangan: {risks}.",
+  "@integrityBody": {
+    "description": "Integrity ogohlantirishi matni",
+    "placeholders": {
+      "risks": {
+        "type": "String"
+      }
+    }
+  },
+  "integrityRiskRooted": "root huquqlari",
+  "@integrityRiskRooted": {
+    "description": "Xavf nomi"
+  },
+  "integrityRiskEmulator": "emulyator",
+  "@integrityRiskEmulator": {
+    "description": "Xavf nomi"
+  },
+  "integrityRiskDebugger": "ulangan debugger",
+  "@integrityRiskDebugger": {
+    "description": "Xavf nomi"
+  },
+  "integrityRiskSignature": "ilova imzosi mos emas",
+  "@integrityRiskSignature": {
+    "description": "Xavf nomi"
+  },
+  "integrityRiskDebuggable": "ilova oʻzgartirilgan boʻlishi mumkin",
+  "@integrityRiskDebuggable": {
+    "description": "Xavf nomi"
+  },
+  "integrityDismiss": "Tushunarli",
+  "@integrityDismiss": {
+    "description": "Ogohlantirishni yopish tugmasi"
+  },
+  "homeAddIncome": "Daromad",
+  "@homeAddIncome": {
+    "description": "Bosh sahifadagi daromad qo'shish tugmasi"
+  },
+  "incomeAmountHint": "Summani kiriting",
+  "@incomeAmountHint": {
+    "description": "Daromad summasi bo'sh holatda"
+  },
+  "incomeRecentAmounts": "Oxirgi summalar",
+  "@incomeRecentAmounts": {
+    "description": "Oxirgi summalar chip'lari sarlavhasi"
+  },
+  "incomeSourceLabel": "Manba",
+  "@incomeSourceLabel": {
+    "description": "Daromad manbai tanlovi"
+  },
+  "incomeSourceDailyWork": "Kunlik ish",
+  "@incomeSourceDailyWork": {
+    "description": "Manba"
+  },
+  "incomeSourceOrder": "Buyurtma",
+  "@incomeSourceOrder": {
+    "description": "Manba"
+  },
+  "incomeSourceSalary": "Oylik",
+  "@incomeSourceSalary": {
+    "description": "Manba"
+  },
+  "incomeSourceOther": "Boshqa",
+  "@incomeSourceOther": {
+    "description": "Manba"
+  },
+  "channelLabel": "Toʻlov turi",
+  "@channelLabel": {
+    "description": "Kanal tanlovi"
+  },
+  "channelCash": "Naqd",
+  "@channelCash": {
+    "description": "Kanal"
+  },
+  "channelCard": "Karta",
+  "@channelCard": {
+    "description": "Kanal"
+  },
+  "incomeSave": "Saqlash",
+  "@incomeSave": {
+    "description": "Daromadni saqlash tugmasi"
+  },
+  "incomeSaved": "Daromad yozildi. Barakali boʻlsin!",
+  "@incomeSaved": {
+    "description": "Daromad saqlangach xabar"
+  },
+  "keypadDelete": "Oxirgi raqamni oʻchirish",
+  "@keypadDelete": {
+    "description": "Summa klaviaturasidagi o'chirish"
+  },
+  "shareOfferTitle": "Avval oʻzingizga",
+  "@shareOfferTitle": {
+    "description": "Ulush taklifi sarlavhasi"
+  },
+  "shareOfferBody": "Shundan {amount} — kelajagingiz uchun.",
+  "@shareOfferBody": {
+    "description": "Ulush taklifi; amount — formatlangan summa",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shareOfferHint": "Oz boʻlsa ham har gal ajratsangiz, odatga aylanadi.",
+  "@shareOfferHint": {
+    "description": "Maslahatchi maslahati"
+  },
+  "shareAllocate": "Ajratish",
+  "@shareAllocate": {
+    "description": "Ulushni ajratish tugmasi"
+  },
+  "shareOtherAmount": "Boshqa summa",
+  "@shareOtherAmount": {
+    "description": "Boshqa summa tugmasi"
+  },
+  "shareSkip": "Bu safar emas",
+  "@shareSkip": {
+    "description": "Ajratmaslik tugmasi"
+  },
+  "shareSkipped": "Mayli, keyingi safar. Daftar sizni kutadi.",
+  "@shareSkipped": {
+    "description": "Ajratmaslik tanlanganda"
+  },
+  "shareDone": "Kelajagingizga {amount} qoʻshildi.",
+  "@shareDone": {
+    "description": "Ajratilgach",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "vaultHabitWeeks": "{count} hafta",
+  "@vaultHabitWeeks": {
+    "description": "Streak soni",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vaultHabitCaption": "ketma-ket oʻzingizga toʻladingiz",
+  "@vaultHabitCaption": {
+    "description": "Streak izohi"
+  },
+  "vaultHabitTotal": "Jami {count} hafta ajratilgan",
+  "@vaultHabitTotal": {
+    "description": "Jami haftalar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vaultThisWeekDone": "Bu hafta ajratildi — barakalla!",
+  "@vaultThisWeekDone": {
+    "description": "Joriy hafta bajarilgan"
+  },
+  "vaultThisWeekPending": "Bu hafta hali ajratilmadi. Oz summa ham hisobga oʻtadi.",
+  "@vaultThisWeekPending": {
+    "description": "Joriy hafta bajarilmagan"
+  },
+  "vaultBalanceLabel": "Kelajagim jamgʻarmasida",
+  "@vaultBalanceLabel": {
+    "description": "Balans yorlig'i"
+  },
+  "vaultRuleSummaryPercent": "Ulush: har daromaddan {percent} %",
+  "@vaultRuleSummaryPercent": {
+    "description": "Qoida qisqacha (foiz)",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "vaultRuleSummaryFixed": "Ulush: oyiga {amount}",
+  "@vaultRuleSummaryFixed": {
+    "description": "Qoida qisqacha (qat'iy)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "vaultRuleProgressiveTag": "progressiv",
+  "@vaultRuleProgressiveTag": {
+    "description": "Progressiv rejim belgisi"
+  },
+  "vaultRuleEdit": "Ulushni sozlash",
+  "@vaultRuleEdit": {
+    "description": "Qoidani o'zgartirish tugmasi"
+  },
+  "vaultWithdraw": "Pul olish",
+  "@vaultWithdraw": {
+    "description": "Pul olish tugmasi"
+  },
+  "vaultHistory": "Tarix",
+  "@vaultHistory": {
+    "description": "Tarix sarlavhasi"
+  },
+  "vaultHistoryEmpty": "Hali yozuv yoʻq. Birinchi daromaddan boshlaymiz.",
+  "@vaultHistoryEmpty": {
+    "description": "Bo'sh tarix"
+  },
+  "vaultReasonIncomeShare": "Daromad ulushi",
+  "@vaultReasonIncomeShare": {
+    "description": "Tarix: sabab"
+  },
+  "vaultReasonInitial": "Boshlangʻich jamgʻarma",
+  "@vaultReasonInitial": {
+    "description": "Tarix: sabab"
+  },
+  "vaultReasonManual": "Qoʻshildi",
+  "@vaultReasonManual": {
+    "description": "Tarix: sabab"
+  },
+  "vaultReasonWithdrawal": "Olindi: {note}",
+  "@vaultReasonWithdrawal": {
+    "description": "Tarix: pul olish",
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "vaultInitialTitle": "Avval yigʻilgan pul",
+  "@vaultInitialTitle": {
+    "description": "Boshlang'ich balans kartasi sarlavhasi"
+  },
+  "vaultInitialBody": "Ilovadan oldin yigʻib qoʻygan pulingiz bormi? Uni bir marta kiritib qoʻying — hisob toʻliq boʻladi.",
+  "@vaultInitialBody": {
+    "description": "Boshlang'ich balans kartasi matni"
+  },
+  "vaultInitialAction": "Kiritish",
+  "@vaultInitialAction": {
+    "description": "Boshlang'ich balansni kiritish"
+  },
+  "vaultInitialSaved": "Boshlangʻich jamgʻarma yozildi.",
+  "@vaultInitialSaved": {
+    "description": "Boshlang'ich balans saqlangach"
+  },
+  "vaultProgressionTitle": "Barakalla!",
+  "@vaultProgressionTitle": {
+    "description": "Progressiv taklif sarlavhasi"
+  },
+  "vaultProgressionBody": "{weeks} hafta ketma-ket oʻzingizga toʻladingiz. Ulushni {percent} % ga oshirasizmi?",
+  "@vaultProgressionBody": {
+    "description": "Progressiv taklif",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "vaultProgressionAccept": "Oshirish",
+  "@vaultProgressionAccept": {
+    "description": "Progressiv taklifni qabul qilish"
+  },
+  "vaultProgressionDecline": "Hozircha yoʻq",
+  "@vaultProgressionDecline": {
+    "description": "Progressiv taklifni rad etish"
+  },
+  "ruleTitle": "Ulush sozlamalari",
+  "@ruleTitle": {
+    "description": "Qoida ekrani sarlavhasi"
+  },
+  "rulePercent5": "5 % — boshlangʻich",
+  "@rulePercent5": {
+    "description": "Qoida varianti"
+  },
+  "rulePercent10": "10 % — maqsad (daromadning oʻndan biri)",
+  "@rulePercent10": {
+    "description": "Qoida varianti"
+  },
+  "ruleFixed": "Qatʼiy summa — oyiga",
+  "@ruleFixed": {
+    "description": "Qoida varianti"
+  },
+  "ruleFixedAmount": "Oylik summa: {amount}",
+  "@ruleFixedAmount": {
+    "description": "Qat'iy summa qiymati",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleFixedChoose": "Summani tanlang",
+  "@ruleFixedChoose": {
+    "description": "Qat'iy summa hali kiritilmagan"
+  },
+  "ruleProgressive": "Progressiv rejim",
+  "@ruleProgressive": {
+    "description": "Progressiv rejim kaliti"
+  },
+  "ruleProgressiveHint": "4 hafta ketma-ket ajratsangiz, ulushni 1 % ga oshirishni taklif qilamiz (10 % gacha).",
+  "@ruleProgressiveHint": {
+    "description": "Progressiv rejim izohi"
+  },
+  "ruleSave": "Saqlash",
+  "@ruleSave": {
+    "description": "Qoidani saqlash"
+  },
+  "ruleSaved": "Ulush yangilandi.",
+  "@ruleSaved": {
+    "description": "Qoida saqlangach"
+  },
+  "withdrawTitle": "Kelajagimdan pul olish",
+  "@withdrawTitle": {
+    "description": "Pul olish ekrani sarlavhasi"
+  },
+  "withdrawReminder": "Bu pul — kelajakdagi oʻzingizniki. Uni faqat chinakam zarurat uchun oling.",
+  "@withdrawReminder": {
+    "description": "Pul olish eslatmasi"
+  },
+  "withdrawAvailable": "Mavjud: {amount}",
+  "@withdrawAvailable": {
+    "description": "Pul olish — balans",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "withdrawAmountLabel": "Qancha olasiz? (soʻm)",
+  "@withdrawAmountLabel": {
+    "description": "Pul olish summasi maydoni"
+  },
+  "withdrawReasonLabel": "Nima uchun? (majburiy)",
+  "@withdrawReasonLabel": {
+    "description": "Pul olish sababi maydoni"
+  },
+  "withdrawReasonHint": "Masalan: davolanish, uy taʼmiri",
+  "@withdrawReasonHint": {
+    "description": "Pul olish sababi misoli"
+  },
+  "withdrawContinue": "Davom etish",
+  "@withdrawContinue": {
+    "description": "Pul olish — davom etish"
+  },
+  "withdrawPauseTitle": "Bir oz oʻylab koʻraylik",
+  "@withdrawPauseTitle": {
+    "description": "Pul olish pauzasi sarlavhasi"
+  },
+  "withdrawPauseBody": "{amount} kelajagingizdan olinadi. Bu haqiqatan zarurmi?",
+  "@withdrawPauseBody": {
+    "description": "Pul olish pauzasi matni",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "withdrawPauseWait": "Ha, olaman ({seconds})",
+  "@withdrawPauseWait": {
+    "description": "Pauza davomida tasdiqlash tugmasi",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "withdrawPauseConfirm": "Ha, olaman",
+  "@withdrawPauseConfirm": {
+    "description": "Pauzadan keyin tasdiqlash tugmasi"
+  },
+  "withdrawPauseCancel": "Fikrimdan qaytdim",
+  "@withdrawPauseCancel": {
+    "description": "Pul olishdan voz kechish"
+  },
+  "withdrawDone": "{amount} olindi. Imkon boʻlganda oʻrnini toʻldiramiz.",
+  "@withdrawDone": {
+    "description": "Pul olingach",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "withdrawErrorAmount": "Summa mavjud balansdan oshmasin.",
+  "@withdrawErrorAmount": {
+    "description": "Pul olish — summa xatosi"
+  },
+  "pinConfirmTitle": "PIN kodni qayta kiriting",
+  "@pinConfirmTitle": {
+    "description": "PIN qayta so'rash sarlavhasi"
+  },
+  "cancel": "Bekor qilish",
+  "@cancel": {
+    "description": "Umumiy bekor qilish"
+  },
+  "amountDialogTitle": "Summa",
+  "@amountDialogTitle": {
+    "description": "Summa kiritish oynasi sarlavhasi"
+  },
+  "amountDialogDone": "Tayyor",
+  "@amountDialogDone": {
+    "description": "Summa kiritish tasdig'i"
+  },
+  "genericError": "Nimadir xato ketdi. Qaytadan urinib koʻring.",
+  "@genericError": {
+    "description": "Umumiy xato"
+  },
+  "homePaidToSelf": "Oʻzingizga toʻlangan (shu oy)",
+  "@homePaidToSelf": {
+    "description": "Bosh ekran 1-KPI"
+  },
+  "homeVaultBalance": "Kelajagim",
+  "@homeVaultBalance": {
+    "description": "Bosh ekran: jamg'arma"
+  },
+  "homeStreak": "{count} hafta ketma-ket",
+  "@homeStreak": {
+    "description": "Bosh ekran: streak",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeMonthResult": "Oy yakuni",
+  "@homeMonthResult": {
+    "description": "Bosh ekran: oy yakuni"
+  },
+  "homeMonthResultPlus": "Qoʻlingizda qolishi kerak",
+  "@homeMonthResultPlus": {
+    "description": "Musbat oy yakuni izohi"
+  },
+  "homeMonthResultMinus": "Chiqim kirimdan koʻp yozilgan",
+  "@homeMonthResultMinus": {
+    "description": "Manfiy oy yakuni izohi"
+  },
+  "homeWeeklyTasks": "Shu haftaning vazifalari",
+  "@homeWeeklyTasks": {
+    "description": "Haftalik vazifalar kartasi"
+  },
+  "homeAddExpense": "Xarajat",
+  "@homeAddExpense": {
+    "description": "Bosh ekran: xarajat tugmasi"
+  },
+  "homeAuditDue": "{month} uchun oylik audit — «Pul qayerga ketdi?»",
+  "@homeAuditDue": {
+    "description": "Audit eslatmasi",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAuditDone": "Oxirgi audit: {month}",
+  "@homeAuditDone": {
+    "description": "Audit bajarilgan",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "sectionExpenses": "Xarajatlar",
+  "@sectionExpenses": {
+    "description": "Bo'lim"
+  },
+  "sectionObligations": "Majburiyatlar",
+  "@sectionObligations": {
+    "description": "Bo'lim"
+  },
+  "sectionNasiya": "Nasiya daftari",
+  "@sectionNasiya": {
+    "description": "Bo'lim"
+  },
+  "sectionWhoseMoney": "Kimning puli?",
+  "@sectionWhoseMoney": {
+    "description": "Bo'lim"
+  },
+  "sectionMembers": "Oila aʼzolari",
+  "@sectionMembers": {
+    "description": "Bo'lim"
+  },
+  "sectionSettings": "Sozlamalar",
+  "@sectionSettings": {
+    "description": "Bo'lim"
+  },
+  "catRent": "Ijara",
+  "@catRent": {
+    "description": "Kategoriya"
+  },
+  "catCredit": "Kredit",
+  "@catCredit": {
+    "description": "Kategoriya"
+  },
+  "catGroceries": "Oziq-ovqat",
+  "@catGroceries": {
+    "description": "Kategoriya"
+  },
+  "catUtilities": "Kommunal",
+  "@catUtilities": {
+    "description": "Kategoriya"
+  },
+  "catPhone": "Telefon",
+  "@catPhone": {
+    "description": "Kategoriya"
+  },
+  "catFuel": "Benzin",
+  "@catFuel": {
+    "description": "Kategoriya"
+  },
+  "catTransport": "Yoʻlkira",
+  "@catTransport": {
+    "description": "Kategoriya"
+  },
+  "catDailySmall": "Mayda kundalik xarajatlar",
+  "@catDailySmall": {
+    "description": "Kategoriya"
+  },
+  "catChildren": "Bola",
+  "@catChildren": {
+    "description": "Kategoriya"
+  },
+  "catSadaqa": "Sadaqa",
+  "@catSadaqa": {
+    "description": "Kategoriya"
+  },
+  "catOther": "Boshqa",
+  "@catOther": {
+    "description": "Kategoriya"
+  },
+  "expenseNewTitle": "Yangi xarajat",
+  "@expenseNewTitle": {
+    "description": "Xarajat ekrani"
+  },
+  "expenseCategory": "Kategoriya",
+  "@expenseCategory": {
+    "description": "Xarajat kategoriyasi"
+  },
+  "expenseSaved": "Xarajat yozildi. Har bir soʻmni yozish — pulga egalikning boshi.",
+  "@expenseSaved": {
+    "description": "Xarajat saqlandi"
+  },
+  "expensesTitle": "Shu oyning xarajatlari",
+  "@expensesTitle": {
+    "description": "Xarajatlar ro'yxati"
+  },
+  "expensesEmpty": "Bu oy hali xarajat yozilmagan.",
+  "@expensesEmpty": {
+    "description": "Bo'sh ro'yxat"
+  },
+  "expensesTotal": "Jami: {amount}",
+  "@expensesTotal": {
+    "description": "Jami xarajat",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "memberLabel": "Kim",
+  "@memberLabel": {
+    "description": "Oila a'zosi tanlovi"
+  },
+  "delete": "Oʻchirish",
+  "@delete": {
+    "description": "O'chirish tugmasi"
+  },
+  "save": "Saqlash",
+  "@save": {
+    "description": "Saqlash tugmasi"
+  },
+  "obligationsEmpty": "Doimiy toʻlovlarni kiriting: ijara, kredit, kommunal. Toʻlovdan bir kun oldin eslatamiz.",
+  "@obligationsEmpty": {
+    "description": "Bo'sh majburiyatlar"
+  },
+  "obligationAdd": "Majburiyat qoʻshish",
+  "@obligationAdd": {
+    "description": "Qo'shish tugmasi"
+  },
+  "obligationEdit": "Majburiyatni tahrirlash",
+  "@obligationEdit": {
+    "description": "Tahrirlash sarlavhasi"
+  },
+  "obligationTitleLabel": "Nomi",
+  "@obligationTitleLabel": {
+    "description": "Majburiyat nomi"
+  },
+  "obligationKindLabel": "Turi",
+  "@obligationKindLabel": {
+    "description": "Majburiyat turi"
+  },
+  "obligationDayLabel": "Har oy nechanchi kuni?",
+  "@obligationDayLabel": {
+    "description": "To'lov kuni"
+  },
+  "obligationDay": "Har oy {day}-sana",
+  "@obligationDay": {
+    "description": "To'lov kuni ko'rinishi",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "obligationsMonthly": "Oyiga jami: {amount}",
+  "@obligationsMonthly": {
+    "description": "Majburiyatlar jami",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kindRent": "Ijara",
+  "@kindRent": {
+    "description": "Majburiyat turi"
+  },
+  "kindCredit": "Kredit",
+  "@kindCredit": {
+    "description": "Majburiyat turi"
+  },
+  "kindUtility": "Kommunal",
+  "@kindUtility": {
+    "description": "Majburiyat turi"
+  },
+  "kindPhone": "Telefon",
+  "@kindPhone": {
+    "description": "Majburiyat turi"
+  },
+  "kindFuel": "Benzin",
+  "@kindFuel": {
+    "description": "Majburiyat turi"
+  },
+  "kindOther": "Boshqa",
+  "@kindOther": {
+    "description": "Majburiyat turi"
+  },
+  "reminderChannel": "Toʻlov eslatmalari",
+  "@reminderChannel": {
+    "description": "Bildirishnoma kanali"
+  },
+  "reminderTitle": "Ertaga toʻlov: {title}",
+  "@reminderTitle": {
+    "description": "Eslatma sarlavhasi",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderBody": "Eslatma: ertaga «{title}» toʻlov kuni. Oldindan tayyorlab qoʻysangiz, koʻngil xotirjam boʻladi.",
+  "@reminderBody": {
+    "description": "Eslatma matni (summasiz)",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsOff": "Bildirishnomalar oʻchirilgan — eslatmalar kelmaydi.",
+  "@notificationsOff": {
+    "description": "Bildirishnoma ruxsati yo'q"
+  },
+  "notificationsEnable": "Yoqish",
+  "@notificationsEnable": {
+    "description": "Bildirishnoma ruxsatini so'rash"
+  },
+  "nasiyaEmpty": "Doʻkondan nasiyaga olgan narsalaringizni shu yerga yozing — kimga qancha qarzingiz borligi koʻrinib turadi.",
+  "@nasiyaEmpty": {
+    "description": "Bo'sh nasiya"
+  },
+  "nasiyaAdd": "Nasiya qoʻshish",
+  "@nasiyaAdd": {
+    "description": "Qo'shish"
+  },
+  "nasiyaShopLabel": "Doʻkon yoki kimga",
+  "@nasiyaShopLabel": {
+    "description": "Kreditor nomi"
+  },
+  "nasiyaTotal": "Jami nasiya: {amount}",
+  "@nasiyaTotal": {
+    "description": "Jami nasiya",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "nasiyaRemaining": "Qoldiq: {amount}",
+  "@nasiyaRemaining": {
+    "description": "Qoldiq",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "nasiyaDue": "Muddati: {date}",
+  "@nasiyaDue": {
+    "description": "Muddat",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "nasiyaPay": "Toʻlov",
+  "@nasiyaPay": {
+    "description": "To'lov tugmasi"
+  },
+  "nasiyaPaid": "Yopildi — barakalla!",
+  "@nasiyaPaid": {
+    "description": "Nasiya yopilgan"
+  },
+  "nasiyaDueLabel": "Qachongacha (ixtiyoriy)",
+  "@nasiyaDueLabel": {
+    "description": "Muddat maydoni"
+  },
+  "nasiyaAmountLabel": "Summa",
+  "@nasiyaAmountLabel": {
+    "description": "Nasiya summasi"
+  },
+  "auditPeriod": "Davr: {start} — {end}",
+  "@auditPeriod": {
+    "description": "Audit davri",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "auditStepIncome": "Daromad",
+  "@auditStepIncome": {
+    "description": "Audit 1-qadam"
+  },
+  "auditStepObligations": "Majburiyatlar",
+  "@auditStepObligations": {
+    "description": "Audit 2-qadam"
+  },
+  "auditStepExpenses": "Xarajatlar",
+  "@auditStepExpenses": {
+    "description": "Audit 3-qadam"
+  },
+  "auditStepResult": "Natija",
+  "@auditStepResult": {
+    "description": "Audit 4-qadam"
+  },
+  "auditIncomeHint": "Oʻtgan oyda qancha daromad boʻldi? Yozilmaganini qoʻshing.",
+  "@auditIncomeHint": {
+    "description": "Audit daromad izohi"
+  },
+  "auditAddIncome": "Yozilmagan daromad qoʻshish",
+  "@auditAddIncome": {
+    "description": "Audit: daromad qo'shish"
+  },
+  "auditObligationsHint": "Bu toʻlovlar oyida toʻlangan deb hisoblanadi. Xarajat sifatida yozilgan qismi ikki marta sanalmaydi.",
+  "@auditObligationsHint": {
+    "description": "Audit majburiyatlar izohi"
+  },
+  "auditObligationLine": "{title}: {amount} (yozilgan: {recorded})",
+  "@auditObligationLine": {
+    "description": "Audit majburiyat qatori",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "recorded": {
+        "type": "String"
+      }
+    }
+  },
+  "auditExpensesHint": "Har bir kategoriya boʻyicha esingizda qolganini qoʻshing.",
+  "@auditExpensesHint": {
+    "description": "Audit xarajatlar izohi"
+  },
+  "auditAddTo": "{category}ga qoʻshish",
+  "@auditAddTo": {
+    "description": "Kategoriyaga qo'shish",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "auditIncome": "Daromad",
+  "@auditIncome": {
+    "description": "Natija qatori"
+  },
+  "auditObligations": "Majburiyatlar",
+  "@auditObligations": {
+    "description": "Natija qatori"
+  },
+  "auditExpenses": "Kiritilgan xarajatlar",
+  "@auditExpenses": {
+    "description": "Natija qatori"
+  },
+  "auditSavings": "Jamgʻarma",
+  "@auditSavings": {
+    "description": "Natija qatori"
+  },
+  "auditUnexplained": "Izohsiz qolgan summa",
+  "@auditUnexplained": {
+    "description": "Natija: izohsiz"
+  },
+  "auditUnexplainedHint": "Bu pul qayerga ketgani nomaʼlum. Koʻpincha u mayda kundalik xarajatlar — somsa, ichimlik, yoʻl-yoʻlakay xaridlar.",
+  "@auditUnexplainedHint": {
+    "description": "Izohsiz summa izohi"
+  },
+  "auditNegativeHint": "Chiqim kirimdan koʻp yozilgan. Ehtimol, daromadning bir qismi kiritilmagan.",
+  "@auditNegativeHint": {
+    "description": "Manfiy izohsiz"
+  },
+  "auditMarkSmall": "Mayda kundalik xarajat deb belgilash",
+  "@auditMarkSmall": {
+    "description": "Izohsizni belgilash"
+  },
+  "auditDistribute": "Kategoriyalarga taqsimlash",
+  "@auditDistribute": {
+    "description": "Izohsizni taqsimlash"
+  },
+  "auditFinish": "Auditni yakunlash",
+  "@auditFinish": {
+    "description": "Yakunlash"
+  },
+  "auditFinished": "Audit yakunlandi. Pul qayerga ketganini bilish — uni boshqarishning boshi.",
+  "@auditFinished": {
+    "description": "Audit yakunlandi"
+  },
+  "next": "Keyingi",
+  "@next": {
+    "description": "Keyingi qadam"
+  },
+  "back": "Orqaga",
+  "@back": {
+    "description": "Oldingi qadam"
+  },
+  "whoseIntro": "{month}: daromadingiz kimlarga ketdi",
+  "@whoseIntro": {
+    "description": "Kimning puli sarlavhasi",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "whoseEmpty": "Bu oy uchun hali maʼlumot yoʻq.",
+  "@whoseEmpty": {
+    "description": "Bo'sh"
+  },
+  "ownerLandlord": "Uy egasiniki",
+  "@ownerLandlord": {
+    "description": "Ega"
+  },
+  "ownerBank": "Bankniki",
+  "@ownerBank": {
+    "description": "Ega"
+  },
+  "ownerShop": "Doʻkondorniki",
+  "@ownerShop": {
+    "description": "Ega"
+  },
+  "ownerUtilities": "Davlatniki (kommunal)",
+  "@ownerUtilities": {
+    "description": "Ega"
+  },
+  "ownerFuel": "Yoqilgʻiniki",
+  "@ownerFuel": {
+    "description": "Ega"
+  },
+  "ownerSelf": "Oʻzingizniki",
+  "@ownerSelf": {
+    "description": "Ega"
+  },
+  "ownerSadaqa": "Sadaqa",
+  "@ownerSadaqa": {
+    "description": "Ega"
+  },
+  "ownerOther": "Boshqalar",
+  "@ownerOther": {
+    "description": "Ega"
+  },
+  "ownerUnexplained": "Izohsiz",
+  "@ownerUnexplained": {
+    "description": "Ega"
+  },
+  "whosePercent": "{percent} %",
+  "@whosePercent": {
+    "description": "Ulush foizi",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "memberOwnerDefault": "Men",
+  "@memberOwnerDefault": {
+    "description": "Egasining standart nomi"
+  },
+  "memberOwnerTag": "egasi",
+  "@memberOwnerTag": {
+    "description": "Ega belgisi"
+  },
+  "memberChildTag": "bola",
+  "@memberChildTag": {
+    "description": "Bola belgisi"
+  },
+  "memberAdd": "Aʼzo qoʻshish",
+  "@memberAdd": {
+    "description": "Qo'shish"
+  },
+  "memberName": "Ismi",
+  "@memberName": {
+    "description": "Ism maydoni"
+  },
+  "memberIsChild": "Bola",
+  "@memberIsChild": {
+    "description": "Bola belgisi tanlovi"
+  },
+  "membersHint": "Byudjetni birga toʻldiring — «Yolgʻiz yozmang». Har yozuvda kim kiritgani koʻrinadi.",
+  "@membersHint": {
+    "description": "A'zolar izohi"
+  },
+  "settingsMonthStart": "Oylik kuni",
+  "@settingsMonthStart": {
+    "description": "Oylik kuni sozlamasi"
+  },
+  "settingsMonthStartHint": "Oylik davr shu kundan boshlanadi: {day}-sana",
+  "@settingsMonthStartHint": {
+    "description": "Oylik kuni izohi",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "contentDisclaimer": "Taʼlimiy material. Fatvo yoki moliyaviy maslahat emas.",
+  "@contentDisclaimer": {
+    "description": "Har ta'limiy ekrandagi disklеymer (SPEC 3)"
+  },
+  "contentAdvisor": "Maslahatchi",
+  "@contentAdvisor": {
+    "description": "Dars ichidagi maslahat bloki belgisi (umumiy taʼlimiy maslahat, shaxsiy moliyaviy maslahat emas)"
+  },
+  "contentLoadError": "Boblarni yuklab boʻlmadi. Ilovaning keyingi yangilanishida tuzatiladi.",
+  "@contentLoadError": {
+    "description": "Kontent buzuq/yo'q"
+  },
+  "chapterLocked": "{date} kuni ochiladi",
+  "@chapterLocked": {
+    "description": "Yopiq bob",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterLockedTasks": "Oldingi bobdan yana {count} ta vazifa bajarilsa ochiladi",
+  "@chapterLockedTasks": {
+    "description": "Odat qoidasi bilan yopiq bob",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterOpen": "Ochiq",
+  "@chapterOpen": {
+    "description": "Ochiq bob"
+  },
+  "lawLabel": "{number}-qonun",
+  "@lawLabel": {
+    "description": "Qonun raqami",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "daftarPageTitle": "Daftar sahifasi",
+  "@daftarPageTitle": {
+    "description": "Daftar sahifasi"
+  },
+  "daftarPageHint": "Qonunni oʻz qoʻlingiz bilan, oʻz soʻzlaringiz bilan yozing. Qoʻl bilan yozilgan narsa esda qoladi.",
+  "@daftarPageHint": {
+    "description": "Daftar sahifasi izohi"
+  },
+  "daftarPageSaved": "Daftaringizga yozildi.",
+  "@daftarPageSaved": {
+    "description": "Saqlandi"
+  },
+  "daftarPageWritten": "Yozilgan",
+  "@daftarPageWritten": {
+    "description": "Daftar sahifasi to'ldirilgan"
+  },
+  "weeklyTasksTitle": "Shu haftaning vazifalari",
+  "@weeklyTasksTitle": {
+    "description": "Haftalik vazifalar"
+  },
+  "weeklyTasksProgress": "{done} / 3 bajarildi",
+  "@weeklyTasksProgress": {
+    "description": "Vazifalar holati",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "taskAuto": "ilova oʻzi belgiladi",
+  "@taskAuto": {
+    "description": "Avto belgilangan vazifa"
+  },
+  "religiousPending": "Ulamo tekshiruvida — faqat test rejimida koʻrinadi",
+  "@religiousPending": {
+    "description": "PENDING diniy blok belgisi"
+  },
+  "religiousSource": "Manba: {source}",
+  "@religiousSource": {
+    "description": "Diniy matn manbasi",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklyChannel": "Haftalik bob",
+  "@weeklyChannel": {
+    "description": "Juma bildirishnoma kanali"
+  },
+  "weeklyNotificationTitle": "Bugun juma — haftalik yakun",
+  "@weeklyNotificationTitle": {
+    "description": "Juma bildirishnomasi sarlavhasi"
+  },
+  "weeklyNotificationBody": "Yangi bob ochilgan boʻlishi mumkin. Oʻtgan haftaning vazifalarini birga koʻrib chiqaylik.",
+  "@weeklyNotificationBody": {
+    "description": "Juma bildirishnomasi matni"
+  },
+  "catSnacks": "Ichimlik va gazak",
+  "@catSnacks": {
+    "description": "Kategoriya"
+  },
+  "catCafe": "Choyxona va kafe",
+  "@catCafe": {
+    "description": "Kategoriya"
+  },
+  "necessityLabel": "Toifa",
+  "@necessityLabel": {
+    "description": "Zarur/Kerak/Havas sarlavhasi"
+  },
+  "necessityZarur": "Zarur",
+  "@necessityZarur": {
+    "description": "Toifa: usiz yashab bo'lmaydi"
+  },
+  "necessityKerak": "Kerak",
+  "@necessityKerak": {
+    "description": "Toifa: usiz qiyin"
+  },
+  "necessityHavas": "Havas",
+  "@necessityHavas": {
+    "description": "Toifa: usiz bemalol yashasa bo'ladi"
+  },
+  "necessityNone": "Toifadan tashqari",
+  "@necessityNone": {
+    "description": "Sadaqa toifasi"
+  },
+  "necessitySadaqaNote": "Sadaqa havas emas va «oqib ketish» hisobiga kirmaydi.",
+  "@necessitySadaqaNote": {
+    "description": "Sadaqa izohi"
+  },
+  "expenseFlagsLabel": "Belgilar",
+  "@expenseFlagsLabel": {
+    "description": "Xarajat belgilari sarlavhasi"
+  },
+  "flagGift": "Sovgʻa — hisobga kirmaydi",
+  "@flagGift": {
+    "description": "isGift belgisi"
+  },
+  "flagOstentation": "Obroʻ uchun",
+  "@flagOstentation": {
+    "description": "isOstentation belgisi"
+  },
+  "flagDebt": "Qarzga olingan pul bilan",
+  "@flagDebt": {
+    "description": "fundedByDebt belgisi"
+  },
+  "debtHavasFlag": "Qarz bilan qilingan havas",
+  "@debtHavasFlag": {
+    "description": "Qizil bayroq izohi"
+  },
+  "habitLabel": "Odat",
+  "@habitLabel": {
+    "description": "Xarajatni odatga bog'lash"
+  },
+  "habitNone": "Yoʻq",
+  "@habitNone": {
+    "description": "Odat tanlanmagan"
+  },
+  "quickTitle": "Tez yozish",
+  "@quickTitle": {
+    "description": "Shablonlar kartasi"
+  },
+  "quickEmpty": "Tez-tez qiladigan xarajatingizni (somsa, choy, benzin) shablon qiling — keyin bir bosishda yoziladi.",
+  "@quickEmpty": {
+    "description": "Shablon yo'q"
+  },
+  "repeatLast": "Oxirgisini takrorlash",
+  "@repeatLast": {
+    "description": "Tugma"
+  },
+  "repeatLastDone": "Takrorlandi: {amount}",
+  "@repeatLastDone": {
+    "description": "Snackbar",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "templateRecorded": "{title} yozildi — {amount}",
+  "@templateRecorded": {
+    "description": "Snackbar",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "undo": "Bekor qilish",
+  "@undo": {
+    "description": "Snackbar amali"
+  },
+  "templatesTitle": "Shablonlar",
+  "@templatesTitle": {
+    "description": "Ekran sarlavhasi"
+  },
+  "templateAdd": "Shablon qoʻshish",
+  "@templateAdd": {
+    "description": "Tugma"
+  },
+  "templateTitleLabel": "Nomi (masalan, Somsa)",
+  "@templateTitleLabel": {
+    "description": "Maydon"
+  },
+  "templateFromForm": "Shablon sifatida ham saqlash",
+  "@templateFromForm": {
+    "description": "Xarajat ekranida belgi"
+  },
+  "categoriesTitle": "Kategoriyalar va toifalar",
+  "@categoriesTitle": {
+    "description": "Ekran sarlavhasi"
+  },
+  "categoriesHint": "Har kategoriyaning standart toifasi bor. Oʻzgartirsangiz, yangi xarajatlarga qoʻllanadi; kim va qachon oʻzgartirgani saqlanadi.",
+  "@categoriesHint": {
+    "description": "Izoh"
+  },
+  "categoryHistory": "Oʻzgarishlar tarixi",
+  "@categoryHistory": {
+    "description": "Sarlavha"
+  },
+  "categoryHistoryEmpty": "Hali oʻzgartirilmagan",
+  "@categoryHistoryEmpty": {
+    "description": "Bo'sh tarix"
+  },
+  "categoryHistoryItem": "{date} · {from} → {to} · {who}",
+  "@categoryHistoryItem": {
+    "description": "Tarix qatori",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "whoChanges": "Kim oʻzgartiryapti?",
+  "@whoChanges": {
+    "description": "Dialog"
+  },
+  "rollupTitle": "Mayda xarajatlar jamlanganda",
+  "@rollupTitle": {
+    "description": "Jamlash kartasi"
+  },
+  "rollupWindow": "Oxirgi 30 kun boʻyicha prognoz",
+  "@rollupWindow": {
+    "description": "Izoh"
+  },
+  "rollupLine": "haftasiga {week} · oyiga {month} · yiliga {year}",
+  "@rollupLine": {
+    "description": "Jamlash qatori",
+    "placeholders": {
+      "week": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "rollupShare": "Oyiga — «{obligation}»ning {percent}%i",
+  "@rollupShare": {
+    "description": "Taqqoslash",
+    "placeholders": {
+      "obligation": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "havasTitle": "Havas va odatlar",
+  "@havasTitle": {
+    "description": "Ekran sarlavhasi"
+  },
+  "havasRule": "Havasni oʻldirma, navbatga qoʻy. Chegara oiladagi barcha kattalar rozi boʻlgandagina faol boʻladi; bloklash yoʻq.",
+  "@havasRule": {
+    "description": "Qoida"
+  },
+  "havasNoLimit": "Havas uchun oylik chegara hali kelishilmagan.",
+  "@havasNoLimit": {
+    "description": "Holat"
+  },
+  "havasSpent": "Shu oy havasga: {amount}",
+  "@havasSpent": {
+    "description": "Holat",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "havasOfLimit": "{spent} / {limit}",
+  "@havasOfLimit": {
+    "description": "Progress",
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "havasOk": "Yana {amount} qoldi",
+  "@havasOk": {
+    "description": "Holat",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "havasNear": "Chegaraga yaqinlashdingiz ({percent}%).",
+  "@havasNear": {
+    "description": "80% ogohlantirish",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "havasOver": "Chegaradan {amount} oshdi. Taqiq yoʻq — keyingi oyni birga rejalashtiring.",
+  "@havasOver": {
+    "description": "100% ogohlantirish",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "havasPropose": "Chegara taklif qilish",
+  "@havasPropose": {
+    "description": "Tugma"
+  },
+  "havasProposeTitle": "Havas uchun oylik chegara",
+  "@havasProposeTitle": {
+    "description": "Summa varag'i"
+  },
+  "havasPending": "Taklif: {amount} — barcha kattalar roziligi kutilmoqda",
+  "@havasPending": {
+    "description": "Holat",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "havasConsent": "Rozi boʻlish",
+  "@havasConsent": {
+    "description": "Tugma"
+  },
+  "havasConsented": "Rozi",
+  "@havasConsented": {
+    "description": "Holat"
+  },
+  "havasAgreed": "Chegara kelishildi — endi faol.",
+  "@havasAgreed": {
+    "description": "Snackbar"
+  },
+  "havasConsentSaved": "{name} rozi boʻldi",
+  "@havasConsentSaved": {
+    "description": "Snackbar",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "havasWithdraw": "Taklifni bekor qilish",
+  "@havasWithdraw": {
+    "description": "Tugma"
+  },
+  "memberPinPrompt": "{name}, shaxsiy PINʼingiz",
+  "@memberPinPrompt": {
+    "description": "PIN dialogi",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisTitle": "Isrof va saxovat (shu oy)",
+  "@analysisTitle": {
+    "description": "Tahlil"
+  },
+  "analysisOstentation": "Obroʻ xarajatlari",
+  "@analysisOstentation": {
+    "description": "Tahlil qatori"
+  },
+  "analysisDebtHavas": "Qarz bilan qilingan havas",
+  "@analysisDebtHavas": {
+    "description": "Tahlil qatori"
+  },
+  "analysisSadaqa": "Sadaqa — isrof emas",
+  "@analysisSadaqa": {
+    "description": "Tahlil qatori"
+  },
+  "analysisGifts": "Sovgʻalar — hisobga kirmadi",
+  "@analysisGifts": {
+    "description": "Tahlil qatori"
+  },
+  "treatsTitle": "Juma shirinligi",
+  "@treatsTitle": {
+    "description": "Bo'lim"
+  },
+  "treatsHint": "Har kungi mayda havasni haftalik oilaviy quvonchga aylantiring.",
+  "@treatsHint": {
+    "description": "Izoh"
+  },
+  "treatAdd": "Ritual qoʻshish",
+  "@treatAdd": {
+    "description": "Tugma"
+  },
+  "treatTitleDefault": "Juma shirinligi",
+  "@treatTitleDefault": {
+    "description": "Standart nom"
+  },
+  "treatLine": "{weekday} · {amount}",
+  "@treatLine": {
+    "description": "Qator",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "treatChannel": "Shirinlik kuni",
+  "@treatChannel": {
+    "description": "Bildirishnoma kanali"
+  },
+  "treatNotifTitle": "Bugun — {title}",
+  "@treatNotifTitle": {
+    "description": "Bildirishnoma",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "treatNotifBody": "Rejadagi quvonch kuni. Oila bilan baham koʻring!",
+  "@treatNotifBody": {
+    "description": "Bildirishnoma"
+  },
+  "titleLabel": "Nomi",
+  "@titleLabel": {
+    "description": "Maydon"
+  },
+  "habitsTitle": "Odatlar",
+  "@habitsTitle": {
+    "description": "Bo'lim"
+  },
+  "habitsHint": "Faqat statistika: qancha ketayotganini koʻrasiz, xolos.",
+  "@habitsHint": {
+    "description": "Izoh"
+  },
+  "habitAdd": "Odat qoʻshish",
+  "@habitAdd": {
+    "description": "Tugma"
+  },
+  "habitLine": "oyiga {month} · yiliga {year}",
+  "@habitLine": {
+    "description": "Qator",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "habitArchive": "Kuzatishni toʻxtatish",
+  "@habitArchive": {
+    "description": "Amal"
+  },
+  "widgetTitle": "Tez yozish",
+  "@widgetTitle": {
+    "description": "Vidjet sarlavhasi"
+  },
+  "widgetLocked": "Summalar ilova ochiq paytda koʻrinadi",
+  "@widgetLocked": {
+    "description": "Vidjet: qulf"
+  },
+  "widgetEmpty": "Ilovada shablon qoʻshing",
+  "@widgetEmpty": {
+    "description": "Vidjet: shablon yo'q"
+  },
+  "widgetRecorded": "Vidjetdan {count} ta xarajat yozildi",
+  "@widgetRecorded": {
+    "description": "Snackbar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vaultReasonRescue": "Qutqarilgan pul",
+  "@vaultReasonRescue": {
+    "description": "Kelajagim tarixi"
+  },
+  "subscriptionsTitle": "Obunalar va avtotoʻlovlar",
+  "@subscriptionsTitle": {
+    "description": "Ekran"
+  },
+  "subscriptionsHint": "Har biri yiliga qancha turishini koʻring va soʻrang: kerakmi?",
+  "@subscriptionsHint": {
+    "description": "Izoh"
+  },
+  "subscriptionsEmpty": "Hali obuna yoʻq. Telefon tarifi, kino, musiqa, ilova obunalarini qoʻshing.",
+  "@subscriptionsEmpty": {
+    "description": "Bo'sh"
+  },
+  "subscriptionAdd": "Obuna qoʻshish",
+  "@subscriptionAdd": {
+    "description": "Tugma"
+  },
+  "cycleMonthly": "Har oy",
+  "@cycleMonthly": {
+    "description": "Davr"
+  },
+  "cycleYearly": "Har yil",
+  "@cycleYearly": {
+    "description": "Davr"
+  },
+  "subscriptionLine": "{price} · yiliga {yearly}",
+  "@subscriptionLine": {
+    "description": "Qator",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "yearly": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionLastUsed": "Oxirgi marta ishlatilgan: {date}",
+  "@subscriptionLastUsed": {
+    "description": "Qator",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionForgotten": "{days} kundan beri «ishlatdim» belgilanmagan — kerakmi?",
+  "@subscriptionForgotten": {
+    "description": "Unutilgan obuna",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "subscriptionUsed": "Ishlatdim",
+  "@subscriptionUsed": {
+    "description": "Tugma"
+  },
+  "subscriptionCancel": "Bekor qildim",
+  "@subscriptionCancel": {
+    "description": "Tugma"
+  },
+  "subscriptionCancelConfirm": "«{title}» bekor qilindimi? Yiliga {yearly} qutqariladi.",
+  "@subscriptionCancelConfirm": {
+    "description": "Dialog",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "yearly": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionCancelledLine": "Bekor qilingan · yiliga {yearly} tejaladi",
+  "@subscriptionCancelledLine": {
+    "description": "Qator",
+    "placeholders": {
+      "yearly": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionsCancelledHeader": "Bekor qilinganlar",
+  "@subscriptionsCancelledHeader": {
+    "description": "Sarlavha"
+  },
+  "subscriptionsAnnualTotal": "Faol obunalar yiliga: {amount}",
+  "@subscriptionsAnnualTotal": {
+    "description": "Jami",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionUsedSaved": "Belgilandi",
+  "@subscriptionUsedSaved": {
+    "description": "Snackbar"
+  },
+  "envelopesTitle": "Konvertlar",
+  "@envelopesTitle": {
+    "description": "Ekran"
+  },
+  "envelopesHint": "Haftalik konvert: naqd pulni konvertga soling. Karta bilan toʻlangan xarajat ham shu konvertdan ayiriladi.",
+  "@envelopesHint": {
+    "description": "Izoh"
+  },
+  "envelopesEmpty": "Konvert yoʻq. «Bozor», «Yoʻlkira», «Havas» kabi haftalik konvert oching.",
+  "@envelopesEmpty": {
+    "description": "Bo'sh"
+  },
+  "envelopeAdd": "Konvert ochish",
+  "@envelopeAdd": {
+    "description": "Tugma"
+  },
+  "envelopeCashMode": "Naqd konvert",
+  "@envelopeCashMode": {
+    "description": "Belgi"
+  },
+  "envelopeCategories": "Qaysi xarajatlar shu konvertdan?",
+  "@envelopeCategories": {
+    "description": "Sarlavha"
+  },
+  "envelopeLimitTitle": "Haftalik limit",
+  "@envelopeLimitTitle": {
+    "description": "Summa varag'i"
+  },
+  "envelopeLine": "{spent} / {limit} · qoldi {left}",
+  "@envelopeLine": {
+    "description": "Qator",
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "envelopePutCash": "Bu hafta konvertga {amount} soling",
+  "@envelopePutCash": {
+    "description": "Naqd rejim",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "envelopeOver": "Konvertdan {amount} oshdi",
+  "@envelopeOver": {
+    "description": "Holat",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "envelopeCloseTitle": "«{title}»: oʻtgan hafta ({week}) yakuni",
+  "@envelopeCloseTitle": {
+    "description": "Yopish",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "envelopeClosePrompt": "Konvertda qancha naqd qoldi?",
+  "@envelopeClosePrompt": {
+    "description": "Summa varag'i"
+  },
+  "envelopeCloseAction": "Qoldiqni kiritish",
+  "@envelopeCloseAction": {
+    "description": "Tugma"
+  },
+  "envelopeClosed": "Qoldiq {amount} — «Qutqarilgan pul»ga qoʻshildi",
+  "@envelopeClosed": {
+    "description": "Snackbar",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rescueTitle": "Qutqarilgan pul",
+  "@rescueTitle": {
+    "description": "Ekran"
+  },
+  "rescueThisWeek": "Bu hafta qutqarildi",
+  "@rescueThisWeek": {
+    "description": "Karta"
+  },
+  "rescueThisMonth": "Shu oy qutqarildi",
+  "@rescueThisMonth": {
+    "description": "Karta"
+  },
+  "rescueQuestion": "Bu hafta qancha qutqardingiz?",
+  "@rescueQuestion": {
+    "description": "Maslahatchi savoli"
+  },
+  "rescueHavas": "Havas kamaydi (bazaviy oyga nisbatan)",
+  "@rescueHavas": {
+    "description": "Qator"
+  },
+  "rescueSubscriptions": "Bekor qilingan obunalar",
+  "@rescueSubscriptions": {
+    "description": "Qator"
+  },
+  "rescueEnvelopes": "Konvert qoldiqlari",
+  "@rescueEnvelopes": {
+    "description": "Qator"
+  },
+  "rescueTransferredLine": "Kelajagimga oʻtkazilgan",
+  "@rescueTransferredLine": {
+    "description": "Qator"
+  },
+  "rescueNoBaseline": "Havasni taqqoslash uchun bazaviy oy yoʻq — birinchi oylik auditdan keyin hisoblanadi.",
+  "@rescueNoBaseline": {
+    "description": "Izoh"
+  },
+  "rescueBaseline": "Bazaviy oy: {month}",
+  "@rescueBaseline": {
+    "description": "Qator",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "rescueBaselinePick": "Bazaviy oyni tanlash",
+  "@rescueBaselinePick": {
+    "description": "Tugma"
+  },
+  "rescueSpentMore": "Bu davrda havasga bazaviy oydan koʻproq ketdi. Hechqisi yoʻq — har hafta yangi imkoniyat.",
+  "@rescueSpentMore": {
+    "description": "Manfiy holat (ayblamaydi)"
+  },
+  "rescueTransfer": "Kelajagimga oʻtkazish — {amount}",
+  "@rescueTransfer": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rescueTransferDone": "{amount} Kelajagimga oʻtkazildi",
+  "@rescueTransferDone": {
+    "description": "Snackbar",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rescueFormula": "Qutqarilgan = havas kamayishi + bekor qilingan obunalar + konvert qoldiqlari. Koʻproq sarflangan boʻlsa — 0.",
+  "@rescueFormula": {
+    "description": "Formula izohi"
+  },
+  "notNow": "Hali yoʻq",
+  "@notNow": {
+    "description": "Tasdiq oynasida rad etish (\"Bekor qilish\" bilan adashmasin)"
+  },
+  "reserveTitle": "Favqulodda zaxira",
+  "@reserveTitle": {
+    "description": "Favqulodda zaxira"
+  },
+  "reserveHint": "Qora kunda qarz eshigiga yugurmaslik uchun. Hech qayerga sarflanmaydi va «oʻsmadi» deb baholanmaydi.",
+  "@reserveHint": {
+    "description": "Izoh"
+  },
+  "reserveMonths": "{months} / 6 oy",
+  "@reserveMonths": {
+    "description": "Progress",
+    "placeholders": {
+      "months": {
+        "type": "String"
+      }
+    }
+  },
+  "reserveTarget": "Maqsad: {target} (oylik zarur + kerak {monthly} × 6)",
+  "@reserveTarget": {
+    "description": "Maqsad",
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "monthly": {
+        "type": "String"
+      }
+    }
+  },
+  "reserveFromEstimate": "Siz kiritgan taxminiy summa boʻyicha",
+  "@reserveFromEstimate": {
+    "description": "Izoh"
+  },
+  "reserveMilestone3": "Birinchi bosqich — 3 oy bajarildi",
+  "@reserveMilestone3": {
+    "description": "Milestone"
+  },
+  "reserveFull": "Toʻliq zaxira — 6 oy. Barakalla!",
+  "@reserveFull": {
+    "description": "Milestone"
+  },
+  "reserveNeedsEstimate": "Maqsadni hisoblash uchun 3 oylik maʼlumot yetarli emas. Bir oyda zarur va kerak xarajatlarga taxminan qancha ketadi?",
+  "@reserveNeedsEstimate": {
+    "description": "Taxminiy summa so'rovi"
+  },
+  "reserveEstimateAction": "Taxminiy summani kiritish",
+  "@reserveEstimateAction": {
+    "description": "Tugma"
+  },
+  "reserveEstimateTitle": "Oylik zarur + kerak (taxminan)",
+  "@reserveEstimateTitle": {
+    "description": "Summa varag'i"
+  },
+  "growthTitle": "Oʻsadigan pul",
+  "@growthTitle": {
+    "description": "Jamg'arma turi"
+  },
+  "growthHint": "Inflyatsiyadan oldinda yurish uchun — faqat halol (ribosiz) yoʻnalishlarda.",
+  "@growthHint": {
+    "description": "Izoh"
+  },
+  "growthDeposit": "Kapital kiritish",
+  "@growthDeposit": {
+    "description": "Tugma"
+  },
+  "growthDepositTitle": "Oʻsadigan pulga",
+  "@growthDepositTitle": {
+    "description": "Summa varag'i"
+  },
+  "gateTitle": "Avval tayyorgarlik, keyin sarmoya",
+  "@gateTitle": {
+    "description": "Darvoza sarlavhasi"
+  },
+  "gateHint": "Oʻsadigan pul va sheriklik ikki shart bajarilganda ochiladi. Taqiq yoʻq — tushuntirish bor.",
+  "@gateHint": {
+    "description": "Izoh"
+  },
+  "gateReserve": "Favqulodda zaxira — 6 oylik ({months} / 6)",
+  "@gateReserve": {
+    "description": "Shart",
+    "placeholders": {
+      "months": {
+        "type": "String"
+      }
+    }
+  },
+  "gateDebt": "Foizli qarz yoʻq yoki qarzdan chiqish rejasi bor",
+  "@gateDebt": {
+    "description": "Shart"
+  },
+  "gateOpen": "Darvoza ochiq",
+  "@gateOpen": {
+    "description": "Holat"
+  },
+  "gateBypass": "Baribir kiritish",
+  "@gateBypass": {
+    "description": "Tugma"
+  },
+  "gateBypassTitle": "Ongli qaror",
+  "@gateBypassTitle": {
+    "description": "Dialog"
+  },
+  "gateBypassWarning": "Zaxirangiz hali toʻliq emas. Qora kun kelsa, oʻsadigan puldagi mablagʻ tez qaytmasligi mumkin va qarzga yugurishga toʻgʻri keladi. Baribir davom etasizmi?",
+  "@gateBypassWarning": {
+    "description": "Ogohlantirish"
+  },
+  "gateBypassConfirm": "Ha, tushunaman",
+  "@gateBypassConfirm": {
+    "description": "Tugma"
+  },
+  "gateBypassed": "Darvoza ongli ravishda chetlab oʻtilgan",
+  "@gateBypassed": {
+    "description": "Holat"
+  },
+  "withdrawFrom": "Qayerdan?",
+  "@withdrawFrom": {
+    "description": "Sarlavha"
+  },
+  "withdrawEmergency": "Bu haqiqatan favqulodda holat",
+  "@withdrawEmergency": {
+    "description": "Tasdiq"
+  },
+  "withdrawEmergencyHint": "Favqulodda zaxira faqat qora kun uchun.",
+  "@withdrawEmergencyHint": {
+    "description": "Izoh"
+  },
+  "refillTitle": "Qayta toʻldirish rejasi",
+  "@refillTitle": {
+    "description": "Dialog"
+  },
+  "refillPlan": "Har oy {monthly} — {months} oyda favqulodda zaxira tiklanadi.",
+  "@refillPlan": {
+    "description": "Reja",
+    "placeholders": {
+      "monthly": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "ok": "Tushunarli",
+  "@ok": {
+    "description": "Tugma"
+  },
+  "pricesTitle": "Narx daftari",
+  "@pricesTitle": {
+    "description": "Ekran"
+  },
+  "pricesHint": "Narxni yillar davomida yozib borgan odam narx-navo qanchalik oʻzgarganini aniq koʻradi. Oʻzingiz uchun muhim mahsulotlar narxini vaqti-vaqti bilan yozing — shaxsiy inflyatsiyangizni koʻrasiz.",
+  "@pricesHint": {
+    "description": "Izoh"
+  },
+  "pricesEmpty": "Savat boʻsh. Goʻsht, non, un, benzin kabi mahsulot qoʻshing.",
+  "@pricesEmpty": {
+    "description": "Bo'sh"
+  },
+  "priceItemAdd": "Mahsulot qoʻshish",
+  "@priceItemAdd": {
+    "description": "Tugma"
+  },
+  "priceUnitLabel": "Birlik (kg, dona, litr)",
+  "@priceUnitLabel": {
+    "description": "Maydon"
+  },
+  "priceQuantityLabel": "Oyiga qancha (masalan, 4 yoki 1,5)",
+  "@priceQuantityLabel": {
+    "description": "Maydon"
+  },
+  "priceAdd": "Narx yozish",
+  "@priceAdd": {
+    "description": "Tugma"
+  },
+  "priceAddTitle": "{name} — bugungi narx (1 {unit})",
+  "@priceAddTitle": {
+    "description": "Summa varag'i",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "priceSaved": "Narx yozildi",
+  "@priceSaved": {
+    "description": "Snackbar"
+  },
+  "priceLast": "{price} · {date}",
+  "@priceLast": {
+    "description": "Qator",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "priceChange": "{fromDate}: {from} → bugun {to} ({change})",
+  "@priceChange": {
+    "description": "Taqqoslash",
+    "placeholders": {
+      "fromDate": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "inflationYear": "Shaxsiy inflyatsiya (1 yil): {change}",
+  "@inflationYear": {
+    "description": "Indeks",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "inflationSince": "{date} dan beri: {change}",
+  "@inflationSince": {
+    "description": "Indeks",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "inflationUnknown": "Indeks uchun bir xil mahsulotning ikki xil vaqtdagi narxi kerak.",
+  "@inflationUnknown": {
+    "description": "Izoh"
+  },
+  "priceStreak": "{weeks} hafta ketma-ket narx yozildi",
+  "@priceStreak": {
+    "description": "Streak",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "priceReminderTitle": "Narx daftari",
+  "@priceReminderTitle": {
+    "description": "Bildirishnoma"
+  },
+  "priceReminderBody": "Bu hafta bozordagi narxlarni yozing — shaxsiy inflyatsiyangizni bilib borasiz.",
+  "@priceReminderBody": {
+    "description": "Bildirishnoma"
+  },
+  "mouseTitle": "Inflyatsiya taʼsiri",
+  "@mouseTitle": {
+    "description": "Ekran"
+  },
+  "mouseHint": "Yotgan pulning qadrini narx-navo sezdirmasdan kamaytiradi. Bu qoʻrqitish emas, tushuntirish.",
+  "@mouseHint": {
+    "description": "Izoh"
+  },
+  "mouseNoPrices": "Hisoblash uchun «Narx daftari»ga kamida bitta mahsulot narxini yozing.",
+  "@mouseNoPrices": {
+    "description": "Bo'sh"
+  },
+  "mouseBalance": "Favqulodda zaxirangiz: {amount}",
+  "@mouseBalance": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "mouseToday": "Bugungi narxda: {qty} {unit} {name}",
+  "@mouseToday": {
+    "description": "Qator",
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mouseYearAgo": "Bir yil oldingi narxda edi: {qty} {unit}",
+  "@mouseYearAgo": {
+    "description": "Qator",
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "mouseFuture": "Narx yiliga {rate} oshsa, {years} yildan keyin: {qty} {unit}",
+  "@mouseFuture": {
+    "description": "Qator",
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      },
+      "years": {
+        "type": "int"
+      },
+      "qty": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "mouseNextReserve": "Keyingi qadam: favqulodda zaxirani 6 oylik miqdorga yetkazing — u yotgan boʻlsa ham, qora kunda sizni qarzdan asraydi.",
+  "@mouseNextReserve": {
+    "description": "Keyingi qadam"
+  },
+  "mouseNextGrowth": "Keyingi qadam: zaxira toʻliq. Ortiqcha pulni oʻsadigan qismga — halol savdo va sheriklikka yoʻnaltiring.",
+  "@mouseNextGrowth": {
+    "description": "Keyingi qadam"
+  },
+  "mouseOpenVault": "Kelajagimga oʻtish",
+  "@mouseOpenVault": {
+    "description": "Tugma"
+  },
+  "incomeSourceTypeLabel": "Foyda qayerdan? (ixtiyoriy)",
+  "@incomeSourceTypeLabel": {
+    "description": "Ter/mol/tavakkal"
+  },
+  "incomeTypeTer": "Ter — mehnat",
+  "@incomeTypeTer": {
+    "description": "IncomeSourceType"
+  },
+  "incomeTypeMol": "Mol — savdo",
+  "@incomeTypeMol": {
+    "description": "IncomeSourceType"
+  },
+  "incomeTypeTavakkal": "Tavakkal — sheriklik",
+  "@incomeTypeTavakkal": {
+    "description": "IncomeSourceType"
+  },
+  "incomeTypeRibo": "Foiz (ribo)",
+  "@incomeTypeRibo": {
+    "description": "IncomeSourceType"
+  },
+  "incomeRiboNote": "Uchalasidan biri (ter, mol, tavakkal) boʻlmasa — bu ribo. Bunday daromad alohida koʻrsatiladi.",
+  "@incomeRiboNote": {
+    "description": "Izoh"
+  },
+  "auditRiboIncome": "Foizli daromad (alohida): {amount}",
+  "@auditRiboIncome": {
+    "description": "Audit",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "debtsTitle": "Qarzlar",
+  "@debtsTitle": {
+    "description": "Ekran"
+  },
+  "debtsHint": "Qarz — teshik emas, yara. Hech bir qarz tashlab ketilmaydi: bank, doʻkon, qarindosh, doʻst.",
+  "@debtsHint": {
+    "description": "Izoh"
+  },
+  "debtsTotal": "Jami qarz: {amount}",
+  "@debtsTotal": {
+    "description": "Jami",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "debtsLoad": "Oylik qarz yuki: {payments} — daromadning {percent}%i",
+  "@debtsLoad": {
+    "description": "Yuk",
+    "placeholders": {
+      "payments": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "debtsLoadUnknown": "Oylik qarz yuki: {payments} (daromad hali yozilmagan)",
+  "@debtsLoadUnknown": {
+    "description": "Yuk",
+    "placeholders": {
+      "payments": {
+        "type": "String"
+      }
+    }
+  },
+  "debtsEmpty": "Qarz yoʻq. Alhamdulillah!",
+  "@debtsEmpty": {
+    "description": "Bo'sh"
+  },
+  "debtsBorrowed": "Olgan qarzlarim",
+  "@debtsBorrowed": {
+    "description": "Bo'lim"
+  },
+  "debtsLent": "Bergan qarzlarim",
+  "@debtsLent": {
+    "description": "Bo'lim"
+  },
+  "debtsLentTotal": "Menga qaytishi kerak: {amount}",
+  "@debtsLentTotal": {
+    "description": "Jami",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "debtsGoals": "Maqsadlarimiz",
+  "@debtsGoals": {
+    "description": "Bo'lim"
+  },
+  "debtAdd": "Qarz qoʻshish",
+  "@debtAdd": {
+    "description": "Tugma"
+  },
+  "debtLend": "Qarz berdim",
+  "@debtLend": {
+    "description": "Tugma"
+  },
+  "goalAdd": "Maqsad qoʻshish",
+  "@goalAdd": {
+    "description": "Tugma"
+  },
+  "goalTargetTitle": "Maqsad summasi",
+  "@goalTargetTitle": {
+    "description": "Summa varag'i"
+  },
+  "creditorBank": "Bank",
+  "@creditorBank": {
+    "description": "Kreditor"
+  },
+  "creditorShop": "Doʻkon (nasiya)",
+  "@creditorShop": {
+    "description": "Kreditor"
+  },
+  "creditorRelative": "Qarindosh",
+  "@creditorRelative": {
+    "description": "Kreditor"
+  },
+  "creditorFriend": "Doʻst",
+  "@creditorFriend": {
+    "description": "Kreditor"
+  },
+  "creditorOther": "Boshqa",
+  "@creditorOther": {
+    "description": "Kreditor"
+  },
+  "debtInterestFlag": "Foizli (ribo)",
+  "@debtInterestFlag": {
+    "description": "Belgi"
+  },
+  "debtNext": "Navbatdagi: {amount} · {date}",
+  "@debtNext": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "debtRemaining": "Qoldi: {amount}",
+  "@debtRemaining": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "checkTitle": "Toʻxta va oʻyla",
+  "@checkTitle": {
+    "description": "Friction"
+  },
+  "checkHint": "Bu taqiq emas — ongli qaror uchun uchta savol.",
+  "@checkHint": {
+    "description": "Izoh"
+  },
+  "checkNecessity": "Bu zaruratmi yoki hashamatmi?",
+  "@checkNecessity": {
+    "description": "Savol"
+  },
+  "checkNeed": "Zarurat",
+  "@checkNeed": {
+    "description": "Javob"
+  },
+  "checkLuxury": "Hashamat",
+  "@checkLuxury": {
+    "description": "Javob"
+  },
+  "checkAlternative": "Foizsiz muqobil bormi?",
+  "@checkAlternative": {
+    "description": "Savol"
+  },
+  "altReserve": "Favqulodda zaxira",
+  "@altReserve": {
+    "description": "Javob"
+  },
+  "altRelative": "Qarindoshdan foizsiz",
+  "@altRelative": {
+    "description": "Javob"
+  },
+  "altSell": "Buyum sotish",
+  "@altSell": {
+    "description": "Javob"
+  },
+  "altNone": "Yoʻq",
+  "@altNone": {
+    "description": "Javob"
+  },
+  "checkLoad": "Shu qarz bilan oylik qarz yuki daromadning {percent}%iga yetadi",
+  "@checkLoad": {
+    "description": "Yuk",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "debtCreditorLabel": "Kimdan?",
+  "@debtCreditorLabel": {
+    "description": "Maydon"
+  },
+  "debtCreditorName": "Ismi yoki nomi",
+  "@debtCreditorName": {
+    "description": "Maydon"
+  },
+  "debtAmountLabel": "Asosiy summa",
+  "@debtAmountLabel": {
+    "description": "Maydon"
+  },
+  "debtReasonLabel": "Sababi (toʻy, mashina, roʻzgʻor…)",
+  "@debtReasonLabel": {
+    "description": "Maydon"
+  },
+  "debtScheduleLabel": "Toʻlov rejasi",
+  "@debtScheduleLabel": {
+    "description": "Sarlavha"
+  },
+  "scheduleManual": "Oʻzim yozaman",
+  "@scheduleManual": {
+    "description": "Jadval turi"
+  },
+  "scheduleAnnuity": "Teng toʻlov (bank)",
+  "@scheduleAnnuity": {
+    "description": "Jadval turi"
+  },
+  "scheduleDifferentiated": "Kamayib boruvchi (bank)",
+  "@scheduleDifferentiated": {
+    "description": "Jadval turi"
+  },
+  "scheduleFixedMarkup": "Qatʼiy ustama",
+  "@scheduleFixedMarkup": {
+    "description": "Jadval turi"
+  },
+  "debtTermLabel": "Muddat (oy)",
+  "@debtTermLabel": {
+    "description": "Maydon"
+  },
+  "debtRateLabel": "Yillik stavka, %",
+  "@debtRateLabel": {
+    "description": "Maydon (bank krediti hisob-kitobi)"
+  },
+  "debtMarkupLabel": "Ustama summasi",
+  "@debtMarkupLabel": {
+    "description": "Maydon"
+  },
+  "debtEarlyTerms": "Muddatidan oldin toʻlash shartlari (jarima, komissiya)",
+  "@debtEarlyTerms": {
+    "description": "Maydon"
+  },
+  "debtRibaWarning": "Bu qarzda foiz yoki ustama bor — bu ribo. Foizsiz muqobil topishga harakat qiling. Kalkulyator faqat taxminiy natija beradi.",
+  "@debtRibaWarning": {
+    "description": "Qizil ogohlantirish"
+  },
+  "manualRowAdd": "Qator qoʻshish",
+  "@manualRowAdd": {
+    "description": "Tugma"
+  },
+  "manualRowAmount": "Toʻlov summasi",
+  "@manualRowAmount": {
+    "description": "Summa varag'i"
+  },
+  "planMustCover": "Reja jami asosiy summaga teng boʻlishi kerak: {planned} / {principal}",
+  "@planMustCover": {
+    "description": "Xato",
+    "placeholders": {
+      "planned": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleRequired": "Toʻlash niyati — rejasiz qarzni saqlab boʻlmaydi.",
+  "@scheduleRequired": {
+    "description": "Xato"
+  },
+  "costTitle": "Qarzning haqiqiy narxi",
+  "@costTitle": {
+    "description": "Karta"
+  },
+  "costPrincipal": "Asosiy summa",
+  "@costPrincipal": {
+    "description": "Qator"
+  },
+  "costTotal": "Jami toʻlanadi",
+  "@costTotal": {
+    "description": "Qator"
+  },
+  "costOver": "Ortiqcha toʻlov",
+  "@costOver": {
+    "description": "Qator"
+  },
+  "costOpportunity": "Bu ortiqcha toʻlov «{goal}»ning {percent}%i",
+  "@costOpportunity": {
+    "description": "Imkoniyat narxi",
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "debtSaveAction": "Qarzni saqlash",
+  "@debtSaveAction": {
+    "description": "Tugma"
+  },
+  "debtPay": "Toʻlov qildim",
+  "@debtPay": {
+    "description": "Tugma"
+  },
+  "debtPayTitle": "Toʻlov summasi",
+  "@debtPayTitle": {
+    "description": "Summa varag'i"
+  },
+  "debtPrepayment": "Qoʻshimcha (muddatidan oldin) toʻlov",
+  "@debtPrepayment": {
+    "description": "Belgi"
+  },
+  "debtPaymentsHeader": "Toʻlovlar tarixi",
+  "@debtPaymentsHeader": {
+    "description": "Sarlavha"
+  },
+  "debtPlanPaid": "toʻlangan",
+  "@debtPlanPaid": {
+    "description": "Holat"
+  },
+  "debtReceipt": "Qarz tilxati",
+  "@debtReceipt": {
+    "description": "Tugma va sarlavha"
+  },
+  "receiptHint": "Ikkinchi tomon va guvohlar shu telefonda ismini yozib, imzo chizadi. Bu shaxsiy hisob uchun yozuv, yuridik kafolat emas.",
+  "@receiptHint": {
+    "description": "Izoh"
+  },
+  "roleLender": "Qarz beruvchi",
+  "@roleLender": {
+    "description": "Rol"
+  },
+  "roleBorrower": "Qarz oluvchi",
+  "@roleBorrower": {
+    "description": "Rol"
+  },
+  "roleWitness": "Guvoh",
+  "@roleWitness": {
+    "description": "Rol"
+  },
+  "witnessAdd": "Guvoh qoʻshish",
+  "@witnessAdd": {
+    "description": "Tugma"
+  },
+  "signAction": "Imzolash",
+  "@signAction": {
+    "description": "Tugma"
+  },
+  "signed": "Imzolangan",
+  "@signed": {
+    "description": "Holat"
+  },
+  "signTitle": "{role}: ismingiz va imzongiz",
+  "@signTitle": {
+    "description": "Imzo ekrani",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "signHere": "Shu yerga barmoq bilan imzo chizing",
+  "@signHere": {
+    "description": "Izoh"
+  },
+  "signClear": "Tozalash",
+  "@signClear": {
+    "description": "Tugma"
+  },
+  "receiptShare": "PDF yaratish va ulashish",
+  "@receiptShare": {
+    "description": "Tugma"
+  },
+  "receiptPdfTitle": "Qarz tilxati",
+  "@receiptPdfTitle": {
+    "description": "PDF"
+  },
+  "receiptPdfParties": "Tomonlar va shartlar",
+  "@receiptPdfParties": {
+    "description": "PDF"
+  },
+  "receiptPdfAmount": "Summa",
+  "@receiptPdfAmount": {
+    "description": "PDF"
+  },
+  "receiptPdfDate": "Sana",
+  "@receiptPdfDate": {
+    "description": "PDF"
+  },
+  "receiptPdfReason": "Sabab",
+  "@receiptPdfReason": {
+    "description": "PDF"
+  },
+  "receiptPdfMarkup": "Foiz / ustama",
+  "@receiptPdfMarkup": {
+    "description": "PDF"
+  },
+  "receiptPdfNoMarkup": "Yoʻq — qarzi hasana",
+  "@receiptPdfNoMarkup": {
+    "description": "PDF"
+  },
+  "receiptPdfPayment": "Toʻlov",
+  "@receiptPdfPayment": {
+    "description": "PDF"
+  },
+  "receiptPdfSignatures": "Imzolar",
+  "@receiptPdfSignatures": {
+    "description": "PDF"
+  },
+  "receiptPdfNote": "Bu hujjat shaxsiy hisob uchun yozuv, yuridik kafolat emas.",
+  "@receiptPdfNote": {
+    "description": "PDF"
+  },
+  "lendTitle": "Qarz berdim (qarzi hasana)",
+  "@lendTitle": {
+    "description": "Dialog"
+  },
+  "lendHint": "Bergan qarzda foiz boʻlmaydi.",
+  "@lendHint": {
+    "description": "Izoh"
+  },
+  "lendDebtor": "Kimga?",
+  "@lendDebtor": {
+    "description": "Maydon"
+  },
+  "lendDue": "Qaytarish muddati: {date}",
+  "@lendDue": {
+    "description": "Maydon",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "lendReceive": "Qaytardi",
+  "@lendReceive": {
+    "description": "Tugma"
+  },
+  "dueTitle": "Muddati yaqin",
+  "@dueTitle": {
+    "description": "Bosh ekran kartasi"
+  },
+  "dueReceivable": "{name} — {amount}, muddat {date}. Xushmuomalalik bilan eslatib qoʻysangiz boʻladi.",
+  "@dueReceivable": {
+    "description": "Eslatma",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dueDebt": "{name}ga toʻlov: {amount} · {date}",
+  "@dueDebt": {
+    "description": "Eslatma",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryTitle": "Qarzdan chiqish rejimi",
+  "@recoveryTitle": {
+    "description": "Ekran"
+  },
+  "recoveryOfferBody": "Daromadni 70 / 20 / 10 ga boʻling: roʻzgʻor, qarzni tezroq uzish va baribir «Kelajagim». Qarzdan reja bilan chiqiladi.",
+  "@recoveryOfferBody": {
+    "description": "Taklif"
+  },
+  "recoveryEnable": "Rejimni yoqish",
+  "@recoveryEnable": {
+    "description": "Tugma"
+  },
+  "recoveryActive": "Yoqilgan: roʻzgʻor {needs} % · qarz {debt} % · «Kelajagim» {savings} %",
+  "@recoveryActive": {
+    "description": "Holat",
+    "placeholders": {
+      "needs": {
+        "type": "String"
+      },
+      "debt": {
+        "type": "String"
+      },
+      "savings": {
+        "type": "String"
+      }
+    }
+  },
+  "recoverySettings": "Sozlash",
+  "@recoverySettings": {
+    "description": "Tugma"
+  },
+  "recoveryExplain": "Qarz — oʻtmishga toʻlov, jamgʻarma — kelajakka toʻlov. Jamgʻarmasiz qarzdan chiqqan odam birinchi tashvishda yana qarz oladi.",
+  "@recoveryExplain": {
+    "description": "Izoh"
+  },
+  "recoveryNeeds": "Roʻzgʻor, % (majburiy qarz toʻlovlari shu ichida)",
+  "@recoveryNeeds": {
+    "description": "Maydon"
+  },
+  "recoveryDebt": "Qarzni tezroq uzish, %",
+  "@recoveryDebt": {
+    "description": "Maydon"
+  },
+  "recoverySavings": "«Kelajagim», %",
+  "@recoverySavings": {
+    "description": "Maydon"
+  },
+  "recoverySavingsZero": "Jamgʻarma ulushi 0 boʻlmaydi — kamida 1 %.",
+  "@recoverySavingsZero": {
+    "description": "Xato"
+  },
+  "recoveryTotalError": "Jami 100 % boʻlishi kerak (hozir {total} %).",
+  "@recoveryTotalError": {
+    "description": "Xato",
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "recoveryBudgetTitle": "Oylik taqsimot (oʻrtacha daromad {income})",
+  "@recoveryBudgetTitle": {
+    "description": "Sarlavha",
+    "placeholders": {
+      "income": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryBudgetNeeds": "Roʻzgʻor: {amount}",
+  "@recoveryBudgetNeeds": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryBudgetMandatory": "shundan majburiy qarz toʻlovlari: {amount}",
+  "@recoveryBudgetMandatory": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryBudgetHousehold": "roʻzgʻorga qoladi: {amount}",
+  "@recoveryBudgetHousehold": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryBudgetDebt": "Qoʻshimcha qarz toʻlovi: {amount}",
+  "@recoveryBudgetDebt": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryBudgetSavings": "«Kelajagim»: {amount}",
+  "@recoveryBudgetSavings": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryMandatoryOver": "Majburiy toʻlovlar roʻzgʻor ulushidan oshib ketdi — ulushlarni qayta koʻrib chiqing.",
+  "@recoveryMandatoryOver": {
+    "description": "Ogohlantirish"
+  },
+  "recoveryNoIncome": "Daromad hali yozilmagan — summalar daromad kiritilgach chiqadi.",
+  "@recoveryNoIncome": {
+    "description": "Izoh"
+  },
+  "recoverySaveEnable": "Saqlash va yoqish",
+  "@recoverySaveEnable": {
+    "description": "Tugma"
+  },
+  "recoveryDisable": "Rejimdan chiqish",
+  "@recoveryDisable": {
+    "description": "Tugma"
+  },
+  "recoveryStandard": "Standart 70 / 20 / 10",
+  "@recoveryStandard": {
+    "description": "Tugma"
+  },
+  "freedShareTitle": "Alhamdulillah, qarzsiz!",
+  "@freedShareTitle": {
+    "description": "Sarlavha"
+  },
+  "freedShareBody": "Hamma qarz yopildi — rejim odatiyga qaytdi. Boʻshagan {percent} % ni favqulodda zaxira va oʻsadigan pulga yoʻnaltiramizmi?",
+  "@freedShareBody": {
+    "description": "Taklif",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "freedShareAccept": "Ha, «Kelajagim»ga",
+  "@freedShareAccept": {
+    "description": "Tugma"
+  },
+  "payoffTitle": "Qarzdan chiqish rejasi",
+  "@payoffTitle": {
+    "description": "Ekran"
+  },
+  "payoffEstimate": "Taxminiy hisob: bank grafigi, jarima va komissiya shartnomaga bogʻliq.",
+  "@payoffEstimate": {
+    "description": "Izoh"
+  },
+  "payoffMonthly": "Har oy qoʻshimcha: {amount}",
+  "@payoffMonthly": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffLump": "Bir martalik: {amount}",
+  "@payoffLump": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffMonthlyTitle": "Har oy qoʻshimcha toʻlov",
+  "@payoffMonthlyTitle": {
+    "description": "Oyna"
+  },
+  "payoffLumpTitle": "Bir martalik qoʻshimcha toʻlov",
+  "@payoffLumpTitle": {
+    "description": "Oyna"
+  },
+  "payoffSources": "Qoʻshimcha toʻlov manbalari",
+  "@payoffSources": {
+    "description": "Sarlavha"
+  },
+  "payoffSourceShare": "Ulush ({percent} %): oyiga {amount}",
+  "@payoffSourceShare": {
+    "description": "Qator",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffSourceShareOff": "Ulush: «Qarzdan chiqish» rejimi yoqilganda daromadning 20 %i",
+  "@payoffSourceShareOff": {
+    "description": "Qator"
+  },
+  "payoffSourceRescue": "Qutqarilgan pul (bu hafta): {amount}",
+  "@payoffSourceRescue": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffSourceSold": "Sotilgan buyumlar: {amount}",
+  "@payoffSourceSold": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffApply": "Qarzga",
+  "@payoffApply": {
+    "description": "Tugma"
+  },
+  "payoffApplied": "{amount} «{name}» qarziga qoʻshimcha toʻlov qilindi.",
+  "@payoffApplied": {
+    "description": "Xabar",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffOrder": "Yopish tartibi",
+  "@payoffOrder": {
+    "description": "Sarlavha"
+  },
+  "payoffOrderHint": "Avval foizli (eng qimmati), keyin foizsiz — muddati yaqini. Tartibni oʻzgartirish mumkin.",
+  "@payoffOrderHint": {
+    "description": "Izoh"
+  },
+  "payoffOrderReset": "Standart tartib",
+  "@payoffOrderReset": {
+    "description": "Tugma"
+  },
+  "payoffUp": "Yuqoriga",
+  "@payoffUp": {
+    "description": "Tugma"
+  },
+  "payoffDown": "Pastga",
+  "@payoffDown": {
+    "description": "Tugma"
+  },
+  "payoffDebtFree": "Qarzsiz kun: {base} → {plan}",
+  "@payoffDebtFree": {
+    "description": "Natija",
+    "placeholders": {
+      "base": {
+        "type": "String"
+      },
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffEarly": "{months} oy erta",
+  "@payoffEarly": {
+    "description": "Natija",
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "payoffSaved": "{amount} tejaladi",
+  "@payoffSaved": {
+    "description": "Natija",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffSameEnd": "Muddat oʻzgarmaydi",
+  "@payoffSameEnd": {
+    "description": "Natija"
+  },
+  "payoffFees": "Jarima / komissiya: {amount}",
+  "@payoffFees": {
+    "description": "Natija",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffBaseline": "Odatiy",
+  "@payoffBaseline": {
+    "description": "Ustun"
+  },
+  "payoffAccelerated": "Qoʻshimcha bilan",
+  "@payoffAccelerated": {
+    "description": "Ustun"
+  },
+  "payoffShowTable": "Grafiklarni koʻrish",
+  "@payoffShowTable": {
+    "description": "Tugma"
+  },
+  "payoffMonths": "{months} oy",
+  "@payoffMonths": {
+    "description": "Natija",
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "payoffFeeLabel": "Muddatidan oldin toʻlash jarimasi, %",
+  "@payoffFeeLabel": {
+    "description": "Maydon"
+  },
+  "payoffFeeValue": "Jarima: {percent} %",
+  "@payoffFeeValue": {
+    "description": "Qator",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "payoffNoFee": "Jarima yoʻq",
+  "@payoffNoFee": {
+    "description": "Qator"
+  },
+  "debtFreeOn": "Qarzsiz kun: {date}",
+  "@debtFreeOn": {
+    "description": "Qator",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "contributorsTitle": "Yelkadoshlar",
+  "@contributorsTitle": {
+    "description": "Sarlavha"
+  },
+  "contributorsHint": "Qarzni oila bilan birga toʻlash: kim qancha toʻlayotganini yozib boring.",
+  "@contributorsHint": {
+    "description": "Izoh"
+  },
+  "contributorAdd": "Yelkadosh qoʻshish",
+  "@contributorAdd": {
+    "description": "Tugma"
+  },
+  "contributorShareTitle": "Oylik ulushi (ixtiyoriy)",
+  "@contributorShareTitle": {
+    "description": "Oyna"
+  },
+  "contributorLine": "Oyiga {share} · toʻlagan {paid}",
+  "@contributorLine": {
+    "description": "Qator",
+    "placeholders": {
+      "share": {
+        "type": "String"
+      },
+      "paid": {
+        "type": "String"
+      }
+    }
+  },
+  "contributorPaid": "Toʻlagan: {paid}",
+  "@contributorPaid": {
+    "description": "Qator",
+    "placeholders": {
+      "paid": {
+        "type": "String"
+      }
+    }
+  },
+  "whoPaid": "Kim toʻladi?",
+  "@whoPaid": {
+    "description": "Oyna"
+  },
+  "whoPaidFamily": "Oilaning oʻzi",
+  "@whoPaidFamily": {
+    "description": "Variant"
+  },
+  "debtFeeNote": "jarima {amount}",
+  "@debtFeeNote": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "debtClosedTitle": "Alhamdulillah! Qarz yopildi",
+  "@debtClosedTitle": {
+    "description": "Sarlavha"
+  },
+  "debtClosedBody": "«{name}» qarzi toʻliq uzildi. Bitta majburiyatdan ozod boʻldingiz.",
+  "@debtClosedBody": {
+    "description": "Matn",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "debtClosedFreed": "Endi har oy {amount} boʻshaydi. Uni «Kelajagim»ga yoʻnaltiramizmi?",
+  "@debtClosedFreed": {
+    "description": "Taklif",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "debtClosedRedirected": "«Kelajagim» ulushi oshirildi.",
+  "@debtClosedRedirected": {
+    "description": "Xabar"
+  },
+  "debtClosedNoIncome": "Daromad yozilmagani uchun ulush avtomatik oshirilmaydi — «Kelajagim» sozlamasida oʻzingiz oshiring.",
+  "@debtClosedNoIncome": {
+    "description": "Xabar"
+  },
+  "debtClosedDone": "Rahmat",
+  "@debtClosedDone": {
+    "description": "Tugma"
+  },
+  "modeReturned": "Barcha qarzlar yopildi — «Qarzdan chiqish» rejimi odatiyga qaytdi.",
+  "@modeReturned": {
+    "description": "Xabar"
+  },
+  "sellablesTitle": "Sotiladigan buyumlar",
+  "@sellablesTitle": {
+    "description": "Ekran"
+  },
+  "sellablesHint": "Uyda 6 oydan beri ishlatilmayotgan qimmatbaho buyumlar. Sotilgan puli bir bosishda qarzga yoʻnaltiriladi.",
+  "@sellablesHint": {
+    "description": "Izoh"
+  },
+  "sellableAdd": "Buyum qoʻshish",
+  "@sellableAdd": {
+    "description": "Tugma"
+  },
+  "sellableName": "Buyum nomi",
+  "@sellableName": {
+    "description": "Maydon"
+  },
+  "sellableEstimate": "Taxminiy narxi",
+  "@sellableEstimate": {
+    "description": "Oyna"
+  },
+  "sellableListed": "Sotuvda · taxminan {amount}",
+  "@sellableListed": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "sellableSold": "Sotildi: {amount}",
+  "@sellableSold": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "sellableAppliedTo": "Sotildi: {amount} · «{name}» qarziga",
+  "@sellableAppliedTo": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sellableMarkSold": "Sotildi",
+  "@sellableMarkSold": {
+    "description": "Tugma"
+  },
+  "sellableSoldPrice": "Sotilgan narxi",
+  "@sellableSoldPrice": {
+    "description": "Oyna"
+  },
+  "sellableChooseDebt": "Qaysi qarzga?",
+  "@sellableChooseDebt": {
+    "description": "Oyna"
+  },
+  "sellablesEmpty": "Hali buyum yoʻq.",
+  "@sellablesEmpty": {
+    "description": "Bo'sh"
+  },
+  "homeDebtFree": "Qarzsiz kun: {date}",
+  "@homeDebtFree": {
+    "description": "Karta",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "homeDebtFreeBody": "Qolgan qarz: {amount} · {months} oy",
+  "@homeDebtFreeBody": {
+    "description": "Karta",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDebtFreePlan": "Reja boʻyicha: {date}",
+  "@homeDebtFreePlan": {
+    "description": "Karta",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecoveryOffer": "«Qarzdan chiqish» rejimini yoqing — 70 / 20 / 10",
+  "@homeRecoveryOffer": {
+    "description": "Karta"
+  },
+  "ceremoniesTitle": "Marosimlar",
+  "@ceremoniesTitle": {
+    "description": "Ekran"
+  },
+  "ceremoniesHint": "Toʻy va marosimni oldindan, qarzsiz rejalash: stsenariylarni taqqoslang, oila bilan maslahatlashing.",
+  "@ceremoniesHint": {
+    "description": "Izoh"
+  },
+  "ceremoniesEmpty": "Hali reja yoʻq.",
+  "@ceremoniesEmpty": {
+    "description": "Bo'sh"
+  },
+  "ceremonyAdd": "Reja tuzish",
+  "@ceremonyAdd": {
+    "description": "Tugma"
+  },
+  "ceremonyNameLabel": "Nomi (masalan, oʻgʻlimning toʻyi)",
+  "@ceremonyNameLabel": {
+    "description": "Maydon"
+  },
+  "ceremonyTypeTitle": "Marosim turi",
+  "@ceremonyTypeTitle": {
+    "description": "Oyna"
+  },
+  "ceremonyTypeToy": "Toʻy",
+  "@ceremonyTypeToy": {
+    "description": "Tur"
+  },
+  "ceremonyTypeBeshik": "Beshik toʻy",
+  "@ceremonyTypeBeshik": {
+    "description": "Tur"
+  },
+  "ceremonyTypeSunnat": "Sunnat toʻy",
+  "@ceremonyTypeSunnat": {
+    "description": "Tur"
+  },
+  "ceremonyTypeMaraka": "Maʼraka",
+  "@ceremonyTypeMaraka": {
+    "description": "Tur"
+  },
+  "ceremonyTypeOther": "Boshqa",
+  "@ceremonyTypeOther": {
+    "description": "Tur"
+  },
+  "ceremonyStatusDraft": "Qoralama",
+  "@ceremonyStatusDraft": {
+    "description": "Holat"
+  },
+  "ceremonyStatusDiscussed": "Oilada muhokama qilindi",
+  "@ceremonyStatusDiscussed": {
+    "description": "Holat"
+  },
+  "ceremonyStatusConfirmed": "Tasdiqlandi",
+  "@ceremonyStatusConfirmed": {
+    "description": "Holat"
+  },
+  "ceremonyFirstScenario": "Asosiy",
+  "@ceremonyFirstScenario": {
+    "description": "Standart stsenariy nomi"
+  },
+  "ceremonyDate": "Sana: {date}",
+  "@ceremonyDate": {
+    "description": "Qator",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ceremonyDateNone": "Sanasi belgilanmagan",
+  "@ceremonyDateNone": {
+    "description": "Qator"
+  },
+  "ceremonyGuests": "{count} kishi",
+  "@ceremonyGuests": {
+    "description": "Qator",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ceremonyGuestsTitle": "Mehmonlar soni",
+  "@ceremonyGuestsTitle": {
+    "description": "Oyna"
+  },
+  "scenarioAdd": "Stsenariy qoʻshish",
+  "@scenarioAdd": {
+    "description": "Tugma"
+  },
+  "scenarioName": "Stsenariy nomi (masalan, 1 kunlik, 100 kishi, ixcham)",
+  "@scenarioName": {
+    "description": "Maydon"
+  },
+  "scenarioCompare": "Stsenariylar taqqoslashi",
+  "@scenarioCompare": {
+    "description": "Sarlavha"
+  },
+  "scenarioSelect": "Tanlash",
+  "@scenarioSelect": {
+    "description": "Tugma"
+  },
+  "scenarioSelected": "Tanlangan",
+  "@scenarioSelected": {
+    "description": "Belgi"
+  },
+  "scenarioRemove": "Oʻchirish",
+  "@scenarioRemove": {
+    "description": "Tugma"
+  },
+  "scenarioTotal": "Jami: {amount}",
+  "@scenarioTotal": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "scenarioDebt": "Qarz: {amount}",
+  "@scenarioDebt": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "scenarioNoDebt": "Qarzsiz",
+  "@scenarioNoDebt": {
+    "description": "Qator"
+  },
+  "scenarioPayoff": "Qarz {months} oyda uziladi ({date} gacha)",
+  "@scenarioPayoff": {
+    "description": "Qator",
+    "placeholders": {
+      "months": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "scenarioPayoffInterest": "ortiqcha toʻlov {amount}",
+  "@scenarioPayoffInterest": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "scenarioPayoffNever": "Bu toʻlov bilan qarz hech qachon tugamaydi",
+  "@scenarioPayoffNever": {
+    "description": "Ogohlantirish"
+  },
+  "scenarioPayoffUnknown": "Toʻlash muddati uchun «qarzni oyiga» summasini kiriting",
+  "@scenarioPayoffUnknown": {
+    "description": "Izoh"
+  },
+  "scenarioGoal": "Bu pulga: «{goal}» — {percent} %",
+  "@scenarioGoal": {
+    "description": "Qator",
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "lineAdd": "Qator qoʻshish",
+  "@lineAdd": {
+    "description": "Tugma"
+  },
+  "lineTitle": "Nomi (osh, xonanda, sarpo…)",
+  "@lineTitle": {
+    "description": "Maydon"
+  },
+  "lineOneTime": "Bir martalik",
+  "@lineOneTime": {
+    "description": "Variant"
+  },
+  "linePerGuest": "Kishi boshiga",
+  "@linePerGuest": {
+    "description": "Variant"
+  },
+  "linePerGuestValue": "{price} × {guests} = {total}",
+  "@linePerGuestValue": {
+    "description": "Qator",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "guests": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "lineAmountTitle": "Summa",
+  "@lineAmountTitle": {
+    "description": "Oyna"
+  },
+  "linePriceTitle": "Kishi boshiga narx",
+  "@linePriceTitle": {
+    "description": "Oyna"
+  },
+  "lineSourceTitle": "Qayerdan moliyalanadi?",
+  "@lineSourceTitle": {
+    "description": "Sarlavha"
+  },
+  "fundingSavings": "Jamgʻarma",
+  "@fundingSavings": {
+    "description": "Manba"
+  },
+  "fundingFamily": "Oila hissasi",
+  "@fundingFamily": {
+    "description": "Manba"
+  },
+  "fundingGifts": "Kutilayotgan toʻyona",
+  "@fundingGifts": {
+    "description": "Manba"
+  },
+  "fundingDebt": "Qarz",
+  "@fundingDebt": {
+    "description": "Manba"
+  },
+  "ceremonyDebtTerms": "Qarzni oyiga: {amount}",
+  "@ceremonyDebtTerms": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ceremonyDebtTermsUnset": "Qarzni oyiga qancha toʻlay olasiz?",
+  "@ceremonyDebtTermsUnset": {
+    "description": "Tugma"
+  },
+  "ceremonyDebtMonthlyTitle": "Qarzni oyiga toʻlash",
+  "@ceremonyDebtMonthlyTitle": {
+    "description": "Oyna"
+  },
+  "discussionTitle": "Buni qarzsiz qanday oʻtkazamiz?",
+  "@discussionTitle": {
+    "description": "Sarlavha"
+  },
+  "discussionHint": "Rejada qarz bor. Tasdiqlashdan oldin oila birga oʻtirib, shu savollarni muhokama qiladi va har bir katta aʼzo belgi qoʻyadi.",
+  "@discussionHint": {
+    "description": "Izoh"
+  },
+  "discussionQ1": "Mehmonlar sonini kamaytirsak boʻladimi?",
+  "@discussionQ1": {
+    "description": "Savol"
+  },
+  "discussionQ2": "Bir kunlik, ixcham marosim yetarli emasmi?",
+  "@discussionQ2": {
+    "description": "Savol"
+  },
+  "discussionQ3": "Qaysi xarajatni jamgʻarma yoki oila hissasidan qoplay olamiz?",
+  "@discussionQ3": {
+    "description": "Savol"
+  },
+  "discussionQ4": "Qarzni kim, qachon va qanday toʻlaydi?",
+  "@discussionQ4": {
+    "description": "Savol"
+  },
+  "discussionQ5": "Shu pulga yosh oila uchun nima qilish mumkin edi?",
+  "@discussionQ5": {
+    "description": "Savol"
+  },
+  "discussionMark": "Muhokama qildim",
+  "@discussionMark": {
+    "description": "Tugma"
+  },
+  "discussionMarked": "Belgilandi",
+  "@discussionMarked": {
+    "description": "Belgi"
+  },
+  "discussionDone": "Oila muhokama qildi — endi tasdiqlash mumkin.",
+  "@discussionDone": {
+    "description": "Xabar"
+  },
+  "discussionMarkedSnack": "{name} belgi qoʻydi.",
+  "@discussionMarkedSnack": {
+    "description": "Xabar",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ceremonyConfirm": "Rejani tasdiqlash",
+  "@ceremonyConfirm": {
+    "description": "Tugma"
+  },
+  "ceremonyConfirmedSnack": "Reja tasdiqlandi.",
+  "@ceremonyConfirmedSnack": {
+    "description": "Xabar"
+  },
+  "ceremonyConfirmBlocked": "Rejada qarz bor — avval oilaviy muhokama.",
+  "@ceremonyConfirmBlocked": {
+    "description": "Izoh"
+  },
+  "ceremonyReopen": "Qayta ochish",
+  "@ceremonyReopen": {
+    "description": "Tugma"
+  },
+  "ceremonyLocked": "Reja tasdiqlangan. Oʻzgartirish uchun qayta oching.",
+  "@ceremonyLocked": {
+    "description": "Izoh"
+  },
+  "giftTitle": "Toʻyona oʻrniga jamgʻarma",
+  "@giftTitle": {
+    "description": "Sarlavha"
+  },
+  "giftHint": "Yosh oila uchun maqsad: mehmonlar dabdaba oʻrniga shu jamgʻarmaga hissa qoʻshadi. Hissalar qoʻlda yoziladi.",
+  "@giftHint": {
+    "description": "Izoh"
+  },
+  "giftCreate": "Maqsad ochish",
+  "@giftCreate": {
+    "description": "Tugma"
+  },
+  "giftGoalName": "Maqsad nomi (masalan, yosh oilaga uy)",
+  "@giftGoalName": {
+    "description": "Maydon"
+  },
+  "giftTargetTitle": "Maqsad summasi",
+  "@giftTargetTitle": {
+    "description": "Oyna"
+  },
+  "giftProgress": "Yigʻildi: {collected} / {target}",
+  "@giftProgress": {
+    "description": "Qator",
+    "placeholders": {
+      "collected": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "giftAddContribution": "Hissa yozish",
+  "@giftAddContribution": {
+    "description": "Tugma"
+  },
+  "giftContributorName": "Kim qoʻshdi?",
+  "@giftContributorName": {
+    "description": "Maydon"
+  },
+  "giftShare": "Ulashish",
+  "@giftShare": {
+    "description": "Tugma"
+  },
+  "giftShareText": "{title}: toʻyona oʻrniga yosh oilaning «{goal}» maqsadiga hissa qoʻshing. Maqsad: {target}, yigʻildi: {collected}.",
+  "@giftShareText": {
+    "description": "Ulashish matni",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      },
+      "collected": {
+        "type": "String"
+      }
+    }
+  },
+  "pressure1": "El uch kun gapiradi, toʻrtinchi kuni oʻz dardi bilan ovora boʻladi.",
+  "@pressure1": {
+    "description": "Kartochka"
+  },
+  "pressure2": "Yosh oilaga eng katta sovgʻa — qarzsiz boshlangan hayot.",
+  "@pressure2": {
+    "description": "Kartochka"
+  },
+  "pressure3": "Bir kunlik dabdaba uchun yillab qarz toʻlash — oʻzingiz zimmangizga olgan ogʻir yuk.",
+  "@pressure3": {
+    "description": "Kartochka"
+  },
+  "roleParty": "Sherik",
+  "@roleParty": {
+    "description": "Imzolovchi roli"
+  },
+  "pnTitle": "Sheriklik",
+  "@pnTitle": {
+    "description": "Ekran"
+  },
+  "pnHint": "Bir odamning puli bekor yotadi, boshqasining hunari pulsizlikdan bekor turadi. Sheriklik — sadaqa ham, qarz ham emas: tavakkal boʻlishiladi.",
+  "@pnHint": {
+    "description": "Izoh"
+  },
+  "pnEmpty": "Hali sheriklik yoʻq.",
+  "@pnEmpty": {
+    "description": "Bo'sh"
+  },
+  "pnNew": "Shartnoma tuzish",
+  "@pnNew": {
+    "description": "Tugma"
+  },
+  "pnTypeMudaraba": "Mudoraba",
+  "@pnTypeMudaraba": {
+    "description": "Tur"
+  },
+  "pnTypeMusharaka": "Musharaka",
+  "@pnTypeMusharaka": {
+    "description": "Tur"
+  },
+  "pnTypeMudarabaHint": "Kapital bir tomondan, mehnat ikkinchi tomondan. Moliyaviy zarar kapital egasida, mehnat egasi mehnatidan ayriladi.",
+  "@pnTypeMudarabaHint": {
+    "description": "Izoh"
+  },
+  "pnTypeMusharakaHint": "Har ikki tomon kapital kiritadi. Zarar kiritilgan kapitalga mutanosib boʻlinadi.",
+  "@pnTypeMusharakaHint": {
+    "description": "Izoh"
+  },
+  "pnStatusDraft": "Imzolanmagan",
+  "@pnStatusDraft": {
+    "description": "Holat"
+  },
+  "pnStatusSigned": "Imzolangan",
+  "@pnStatusSigned": {
+    "description": "Holat"
+  },
+  "pnStatusActive": "Faol",
+  "@pnStatusActive": {
+    "description": "Holat"
+  },
+  "pnStatusClosed": "Yopilgan",
+  "@pnStatusClosed": {
+    "description": "Holat"
+  },
+  "pnRoleProvider": "Kapital egasi",
+  "@pnRoleProvider": {
+    "description": "Rol"
+  },
+  "pnRoleWorker": "Mehnat egasi",
+  "@pnRoleWorker": {
+    "description": "Rol"
+  },
+  "pnRoleBoth": "Kapital va mehnat",
+  "@pnRoleBoth": {
+    "description": "Rol"
+  },
+  "pnPeriodMonthly": "Har oy",
+  "@pnPeriodMonthly": {
+    "description": "Davr"
+  },
+  "pnPeriodQuarterly": "Har chorak",
+  "@pnPeriodQuarterly": {
+    "description": "Davr"
+  },
+  "pnPeriodYearly": "Har yil",
+  "@pnPeriodYearly": {
+    "description": "Davr"
+  },
+  "pnCapitalCash": "Pul",
+  "@pnCapitalCash": {
+    "description": "Kapital"
+  },
+  "pnCapitalEquipment": "Uskuna",
+  "@pnCapitalEquipment": {
+    "description": "Kapital"
+  },
+  "pnStepType": "Tur",
+  "@pnStepType": {
+    "description": "Qadam"
+  },
+  "pnStepParties": "Tomonlar",
+  "@pnStepParties": {
+    "description": "Qadam"
+  },
+  "pnStepCapital": "Kapital",
+  "@pnStepCapital": {
+    "description": "Qadam"
+  },
+  "pnStepProfit": "Foyda va zarar",
+  "@pnStepProfit": {
+    "description": "Qadam"
+  },
+  "pnStepTerms": "Shartlar",
+  "@pnStepTerms": {
+    "description": "Qadam"
+  },
+  "pnStepReview": "Koʻrib chiqish",
+  "@pnStepReview": {
+    "description": "Qadam"
+  },
+  "pnName": "Nomi (masalan, tikuvchilik sexi)",
+  "@pnName": {
+    "description": "Maydon"
+  },
+  "pnMyRole": "Mening rolim",
+  "@pnMyRole": {
+    "description": "Sarlavha"
+  },
+  "pnMyName": "Mening ismim",
+  "@pnMyName": {
+    "description": "Maydon"
+  },
+  "pnPartnerName": "Sherigim ismi",
+  "@pnPartnerName": {
+    "description": "Maydon"
+  },
+  "pnPartnerRole": "Sherigim roli",
+  "@pnPartnerRole": {
+    "description": "Sarlavha"
+  },
+  "pnCapitalOf": "{name}: {amount}",
+  "@pnCapitalOf": {
+    "description": "Qator",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "pnCapitalAdd": "Kapital qoʻshish",
+  "@pnCapitalAdd": {
+    "description": "Tugma"
+  },
+  "pnCapitalTitle": "Nomi (masalan, tikuv mashinasi)",
+  "@pnCapitalTitle": {
+    "description": "Maydon"
+  },
+  "pnCapitalAmount": "Narxi yoki summasi",
+  "@pnCapitalAmount": {
+    "description": "Oyna"
+  },
+  "pnCapitalNone": "Kapital kiritmaydi (mehnat)",
+  "@pnCapitalNone": {
+    "description": "Qator"
+  },
+  "pnProfitMethod": "Foyda qanday boʻlinadi?",
+  "@pnProfitMethod": {
+    "description": "Sarlavha"
+  },
+  "pnProfitPercent": "Sof foydaning foizi",
+  "@pnProfitPercent": {
+    "description": "Variant"
+  },
+  "pnProfitFixed": "Qatʼiy summa (oyiga …)",
+  "@pnProfitFixed": {
+    "description": "Variant"
+  },
+  "pnProfitGuaranteed": "Zarar boʻlsa ham vaʼda qilingan foyda",
+  "@pnProfitGuaranteed": {
+    "description": "Variant"
+  },
+  "pnNotPartnership": "Bu sheriklik emas — ribo yoki qarz. Sheriklikda foyda faqat sof foydaning foizi boʻladi: foyda boʻlmasa — hech kim olmaydi, zarar boʻlsa — qoidaga koʻra boʻlinadi.",
+  "@pnNotPartnership": {
+    "description": "Tushuntirish"
+  },
+  "pnMyShare": "Mening ulushim, %",
+  "@pnMyShare": {
+    "description": "Maydon"
+  },
+  "pnPartnerShare": "Sherigim ulushi: {percent} %",
+  "@pnPartnerShare": {
+    "description": "Qator",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "pnLossRuleMudaraba": "Zarar: moliyaviy zarar kapital egasida; mehnat egasi mehnatidan ayriladi. Istisno — beparvolik yoki shart buzilishi (izoh bilan).",
+  "@pnLossRuleMudaraba": {
+    "description": "Qoida"
+  },
+  "pnLossRuleMusharaka": "Zarar kapitalga mutanosib: {shares}.",
+  "@pnLossRuleMusharaka": {
+    "description": "Qoida",
+    "placeholders": {
+      "shares": {
+        "type": "String"
+      }
+    }
+  },
+  "pnTermMonths": "Muddat (oy)",
+  "@pnTermMonths": {
+    "description": "Maydon"
+  },
+  "pnReportPeriod": "Hisobot davriyligi",
+  "@pnReportPeriod": {
+    "description": "Sarlavha"
+  },
+  "pnEndTerms": "Muddat tugaganda nima boʻladi?",
+  "@pnEndTerms": {
+    "description": "Maydon"
+  },
+  "pnEndTermsDefault": "Hisob-kitob qilinadi: kapital va uskunalar egasiga qaytadi, oxirgi foyda ulushlar boʻyicha boʻlinadi.",
+  "@pnEndTermsDefault": {
+    "description": "Standart"
+  },
+  "pnDisputeTerms": "Nizolar qanday hal qilinadi?",
+  "@pnDisputeTerms": {
+    "description": "Maydon"
+  },
+  "pnDisputeTermsDefault": "Avval oʻzaro maslahat, soʻng guvohlar va ishonchli oqsoqol ishtirokida.",
+  "@pnDisputeTermsDefault": {
+    "description": "Standart"
+  },
+  "pnWitnesses": "Guvohlar",
+  "@pnWitnesses": {
+    "description": "Sarlavha"
+  },
+  "pnWitnessAdd": "Guvoh qoʻshish",
+  "@pnWitnessAdd": {
+    "description": "Tugma"
+  },
+  "pnNext": "Keyingi",
+  "@pnNext": {
+    "description": "Tugma"
+  },
+  "pnBack": "Orqaga",
+  "@pnBack": {
+    "description": "Tugma"
+  },
+  "pnCreate": "Shartnomani yaratish",
+  "@pnCreate": {
+    "description": "Tugma"
+  },
+  "pnTemplatePending": "Shablon yurist va ulamo tomonidan hali tekshirilmagan — shaxsiy hisob uchun yozuv, yuridik kafolat emas.",
+  "@pnTemplatePending": {
+    "description": "Ogohlantirish"
+  },
+  "pnContractVersion": "Shartnoma, {version}-versiya",
+  "@pnContractVersion": {
+    "description": "Sarlavha",
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pnResign": "Shartnoma oʻzgardi — hamma qayta imzolashi kerak.",
+  "@pnResign": {
+    "description": "Ogohlantirish"
+  },
+  "pnAmend": "Shartnomani oʻzgartirish",
+  "@pnAmend": {
+    "description": "Tugma"
+  },
+  "pnAmendTerm": "Yangi muddat (oy)",
+  "@pnAmendTerm": {
+    "description": "Maydon"
+  },
+  "pnPdf": "PDF yaratish va ulashish",
+  "@pnPdf": {
+    "description": "Tugma"
+  },
+  "pnPdfTitle": "Sheriklik shartnomasi",
+  "@pnPdfTitle": {
+    "description": "PDF"
+  },
+  "pnPdfParties": "Tomonlar va kapital",
+  "@pnPdfParties": {
+    "description": "PDF"
+  },
+  "pnPdfTerms": "Shartlar",
+  "@pnPdfTerms": {
+    "description": "PDF"
+  },
+  "pnPdfShare": "Foyda ulushi",
+  "@pnPdfShare": {
+    "description": "PDF"
+  },
+  "pnPdfCapital": "Kapital",
+  "@pnPdfCapital": {
+    "description": "PDF"
+  },
+  "pnPdfRole": "Rol",
+  "@pnPdfRole": {
+    "description": "PDF"
+  },
+  "pnPdfName": "Ism",
+  "@pnPdfName": {
+    "description": "PDF"
+  },
+  "pnPdfType": "Turi",
+  "@pnPdfType": {
+    "description": "PDF"
+  },
+  "pnPdfLoss": "Zarar qoidasi",
+  "@pnPdfLoss": {
+    "description": "PDF"
+  },
+  "pnPdfNote": "Sheriklik — sadaqa ham, qarz ham emas: foyda faqat sof foydaning foizi, oldindan vaʼda qilingan daromad yoʻq. Shaxsiy hisob uchun yozuv, yuridik kafolat emas.",
+  "@pnPdfNote": {
+    "description": "PDF"
+  },
+  "pnPdfVersion": "Versiya",
+  "@pnPdfVersion": {
+    "description": "PDF"
+  },
+  "pnLossCalc": "Zarar boʻlsa kim koʻtaradi?",
+  "@pnLossCalc": {
+    "description": "Sarlavha"
+  },
+  "pnLossAmount": "Zarar summasi: {amount}",
+  "@pnLossAmount": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "pnNegligence": "Mehnat egasining beparvoligi yoki shart buzilishi",
+  "@pnNegligence": {
+    "description": "Belgi"
+  },
+  "pnNegligenceNote": "Izoh (nima boʻldi?)",
+  "@pnNegligenceNote": {
+    "description": "Maydon"
+  },
+  "pnNegligenceNoteRequired": "Beparvolik izohsiz qabul qilinmaydi.",
+  "@pnNegligenceNoteRequired": {
+    "description": "Xato"
+  },
+  "pnActivate": "Sheriklikni boshlash",
+  "@pnActivate": {
+    "description": "Tugma"
+  },
+  "pnActivated": "Sheriklik faol.",
+  "@pnActivated": {
+    "description": "Xabar"
+  },
+  "pnSignFirst": "Boshlashdan oldin shartnomani hamma imzolaydi.",
+  "@pnSignFirst": {
+    "description": "Izoh"
+  },
+  "pnGateTitle": "Kapital kiritish — tayyorgarlik darvozasi",
+  "@pnGateTitle": {
+    "description": "Sarlavha"
+  },
+  "pnGateClosed": "Darvoza yopiq: avval 6 oylik favqulodda zaxira va qarz rejasi. Baribir kiritsangiz — bu ongli qaror sifatida yoziladi.",
+  "@pnGateClosed": {
+    "description": "Ogohlantirish"
+  },
+  "pnGateOpen": "Darvoza ochiq — kapital kiritishga tayyorsiz.",
+  "@pnGateOpen": {
+    "description": "Xabar"
+  },
+  "pnGateBypass": "Baribir boshlash",
+  "@pnGateBypass": {
+    "description": "Tugma"
+  },
+  "pnNotDebtTitle": "Bu qarz emas",
+  "@pnNotDebtTitle": {
+    "description": "Sarlavha"
+  },
+  "pnNotDebtBody": "Mudorabada siz olgan kapital qarz emas: uni qaytarish majburiyati yoʻq, zarar kapital egasida (beparvolik bundan mustasno). Foyda kelishilgan ulushda boʻlinadi. Buni oila bilan maslahatlashing.",
+  "@pnNotDebtBody": {
+    "description": "Tushuntirish"
+  },
+  "pnNotDebtAck": "Tushundim",
+  "@pnNotDebtAck": {
+    "description": "Tugma"
+  },
+  "pnConsentTitle": "Oilaviy rozilik",
+  "@pnConsentTitle": {
+    "description": "Sarlavha"
+  },
+  "pnConsent": "Roziman",
+  "@pnConsent": {
+    "description": "Tugma"
+  },
+  "pnConsented": "Rozi",
+  "@pnConsented": {
+    "description": "Belgi"
+  },
+  "pnBuyoutTitle": "Ulushni bosqichma-bosqich sotib olish",
+  "@pnBuyoutTitle": {
+    "description": "Sarlavha"
+  },
+  "pnBuyoutHint": "Mehnat egasi foyda ulushidan oz-ozdan toʻlab, kapital egasining ulushini sotib oladi va oxirida mustaqil boʻladi.",
+  "@pnBuyoutHint": {
+    "description": "Izoh"
+  },
+  "pnBuyoutMonthly": "Oyiga: {amount}",
+  "@pnBuyoutMonthly": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "pnBuyoutSet": "Oylik toʻlovni belgilash",
+  "@pnBuyoutSet": {
+    "description": "Tugma"
+  },
+  "pnBuyoutRemaining": "Kapital egasining qolgan ulushi: {amount} ({percent} %)",
+  "@pnBuyoutRemaining": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "pnBuyoutEnd": "Toʻliq sotib olinadi: {date} ({months} oy)",
+  "@pnBuyoutEnd": {
+    "description": "Qator",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "pnBuyoutPay": "Toʻlov yozish",
+  "@pnBuyoutPay": {
+    "description": "Tugma"
+  },
+  "pnBuyoutHistory": "Buyout toʻlovlari",
+  "@pnBuyoutHistory": {
+    "description": "Buyout to'lovlari kartasi sarlavhasi (kassa daftaridan alohida)"
+  },
+  "pnBuyoutNone": "Hali toʻlov yoʻq.",
+  "@pnBuyoutNone": {
+    "description": "Buyout to'lovlari yo'q bo'lganda"
+  },
+  "pnBuyoutPaidRow": "{amount} — {date}",
+  "@pnBuyoutPaidRow": {
+    "description": "Bitta buyout to'lovi qatori",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pnClose": "Sheriklikni yopish",
+  "@pnClose": {
+    "description": "Tugma"
+  },
+  "pnErrorShares": "Ulushlar yigʻindisi 100 % boʻlishi kerak.",
+  "@pnErrorShares": {
+    "description": "Xato"
+  },
+  "agAlreadySigned": "Bu tomon allaqachon imzolagan.",
+  "@agAlreadySigned": {
+    "description": "Imzolagan tomon qayta imzolashga urinsa"
+  },
+  "expenseDeleted": "Xarajat oʻchirildi.",
+  "@expenseDeleted": {
+    "description": "Xarajat suring bilan oʻchirilgandan keyingi xabar"
+  },
+  "pnAlreadySigned": "Bu tomon allaqachon imzolagan.",
+  "@pnAlreadySigned": {
+    "description": "Xato"
+  },
+  "pnErrorCapital": "Musharakada har ikki tomon kapital kiritadi.",
+  "@pnErrorCapital": {
+    "description": "Xato"
+  },
+  "pnErrorRoles": "Mudorabada kapital bir tomondan, mehnat ikkinchi tomondan boʻladi.",
+  "@pnErrorRoles": {
+    "description": "Xato"
+  },
+  "pnErrorNoCapital": "Kapital egasi kiritadigan pul yoki uskunani qoʻshing.",
+  "@pnErrorNoCapital": {
+    "description": "Xato"
+  },
+  "ledgerTitle": "Kassa daftari",
+  "@ledgerTitle": {
+    "description": "Ekran"
+  },
+  "ledgerHint": "Biznes puli uy pulidan alohida: uy byudjetiga faqat taqsimlangan ulushingiz tushadi.",
+  "@ledgerHint": {
+    "description": "Izoh"
+  },
+  "ledgerReadOnly": "Daftarni mehnat egasi yuritadi; siz uni faqat koʻrasiz va davr hisobotini olasiz.",
+  "@ledgerReadOnly": {
+    "description": "Izoh"
+  },
+  "ledgerOpenPeriod": "Ochiq davr: {start} — bugun",
+  "@ledgerOpenPeriod": {
+    "description": "Sarlavha",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerIncome": "Kirim: {amount}",
+  "@ledgerIncome": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerExpense": "Xarajat: {amount}",
+  "@ledgerExpense": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerNet": "Sof foyda: {amount}",
+  "@ledgerNet": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerLoss": "Zarar: {amount}",
+  "@ledgerLoss": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerAdd": "Yozuv qoʻshish",
+  "@ledgerAdd": {
+    "description": "Tugma"
+  },
+  "ledgerKindIncome": "Kirim (buyurtma)",
+  "@ledgerKindIncome": {
+    "description": "Tur"
+  },
+  "ledgerKindExpense": "Xarajat",
+  "@ledgerKindExpense": {
+    "description": "Tur"
+  },
+  "ledgerKindForce": "Fors-major",
+  "@ledgerKindForce": {
+    "description": "Tur"
+  },
+  "ledgerKindCorrection": "Tuzatish",
+  "@ledgerKindCorrection": {
+    "description": "Tur"
+  },
+  "ledgerEntryTitle": "Nima uchun? (buyurtma, mato, ish haqi…)",
+  "@ledgerEntryTitle": {
+    "description": "Maydon"
+  },
+  "ledgerNote": "Izoh (dalil, tafsilot)",
+  "@ledgerNote": {
+    "description": "Maydon"
+  },
+  "ledgerAttach": "Chek rasmi",
+  "@ledgerAttach": {
+    "description": "Tugma"
+  },
+  "ledgerAttached": "Rasm biriktirildi",
+  "@ledgerAttached": {
+    "description": "Belgi"
+  },
+  "ledgerCorrectionMinus": "Foydani kamaytiradi",
+  "@ledgerCorrectionMinus": {
+    "description": "Belgi"
+  },
+  "ledgerLocked": "Yopilgan davr — oʻzgarmaydi",
+  "@ledgerLocked": {
+    "description": "Belgi"
+  },
+  "ledgerClose": "Davrni yopish va taqsimlash",
+  "@ledgerClose": {
+    "description": "Tugma"
+  },
+  "ledgerCloseConfirm": "Davr yopilgach yozuvlar oʻzgarmaydi; tuzatish faqat keyingi davrda yangi yozuv bilan. Yopamizmi?",
+  "@ledgerCloseConfirm": {
+    "description": "Tasdiq"
+  },
+  "ledgerClosedTitle": "Yopilgan davrlar",
+  "@ledgerClosedTitle": {
+    "description": "Sarlavha"
+  },
+  "ledgerPeriod": "{start} — {end}",
+  "@ledgerPeriod": {
+    "description": "Qator",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerShareLine": "{name}: {amount}",
+  "@ledgerShareLine": {
+    "description": "Qator",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerBuyoutLine": "Buyout: {amount}",
+  "@ledgerBuyoutLine": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerReport": "Hisobot PDF",
+  "@ledgerReport": {
+    "description": "Tugma"
+  },
+  "ledgerEmpty": "Hali yozuv yoʻq.",
+  "@ledgerEmpty": {
+    "description": "Bo'sh"
+  },
+  "ledgerClosedSnack": "Davr yopildi. Ulushingiz uy daromadiga yozildi: {amount}",
+  "@ledgerClosedSnack": {
+    "description": "Xabar",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerClosedPlain": "Davr yopildi.",
+  "@ledgerClosedPlain": {
+    "description": "Xabar"
+  },
+  "ledgerReportTitle": "Sheriklik davr hisoboti",
+  "@ledgerReportTitle": {
+    "description": "PDF"
+  },
+  "ledgerReportDistribution": "Taqsimot",
+  "@ledgerReportDistribution": {
+    "description": "PDF"
+  },
+  "ledgerReportEntries": "Yozuvlar",
+  "@ledgerReportEntries": {
+    "description": "PDF"
+  },
+  "ledgerReportBuyout": "Kapital egasining qolgan ulushi",
+  "@ledgerReportBuyout": {
+    "description": "PDF"
+  },
+  "ledgerReportNote": "Hisobot sherikka shaffoflik uchun: kirim, xarajat, foyda va taqsimot shu daftar yozuvlaridan.",
+  "@ledgerReportNote": {
+    "description": "PDF"
+  },
+  "ledgerOpenButton": "Kassa daftari",
+  "@ledgerOpenButton": {
+    "description": "Tugma"
+  },
+  "ideasTitle": "Hunardan ishga",
+  "@ideasTitle": {
+    "description": "Ekran"
+  },
+  "ideasHint": "Oiladagi bekor yotgan hunarlar — tikuvchilik, pazandachilik, taʼmirlash, til bilish… Hisob-kitobni uch marta qiling.",
+  "@ideasHint": {
+    "description": "Izoh"
+  },
+  "skillsTitle": "Hunarlar",
+  "@skillsTitle": {
+    "description": "Sarlavha"
+  },
+  "skillAdd": "Hunar qoʻshish",
+  "@skillAdd": {
+    "description": "Tugma"
+  },
+  "skillName": "Hunar (masalan, tikuvchilik)",
+  "@skillName": {
+    "description": "Maydon"
+  },
+  "ideasList": "Gʻoyalar",
+  "@ideasList": {
+    "description": "Sarlavha"
+  },
+  "ideaAdd": "Gʻoya hisobi",
+  "@ideaAdd": {
+    "description": "Tugma"
+  },
+  "ideaName": "Gʻoya (masalan, uyda tikuv sexi)",
+  "@ideaName": {
+    "description": "Maydon"
+  },
+  "ideaCapex": "Boshlangʻich xarajat (CAPEX)",
+  "@ideaCapex": {
+    "description": "Sarlavha"
+  },
+  "ideaCapexAdd": "Band qoʻshish",
+  "@ideaCapexAdd": {
+    "description": "Tugma"
+  },
+  "ideaCapexTitle": "Nima? (overlok, bichish stoli, mato…)",
+  "@ideaCapexTitle": {
+    "description": "Maydon"
+  },
+  "ideaCapexTotal": "Jami: {amount}",
+  "@ideaCapexTotal": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ideaIncome": "Oylik kirim (oʻrtacha): {amount}",
+  "@ideaIncome": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ideaExpense": "Oylik xarajat: {amount}",
+  "@ideaExpense": {
+    "description": "Tugma",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ideaIncomeTitle": "Oʻrtacha oylik kirim",
+  "@ideaIncomeTitle": {
+    "description": "Oyna"
+  },
+  "ideaExpenseTitle": "Oylik xarajat",
+  "@ideaExpenseTitle": {
+    "description": "Oyna"
+  },
+  "ideaShare": "Sheriklikda mening ulushim, %",
+  "@ideaShare": {
+    "description": "Maydon"
+  },
+  "ideaSave": "Hisoblash va saqlash",
+  "@ideaSave": {
+    "description": "Tugma"
+  },
+  "scenarioPessimistic": "Pessimistik",
+  "@scenarioPessimistic": {
+    "description": "Stsenariy"
+  },
+  "scenarioBase": "Oʻrtacha",
+  "@scenarioBase": {
+    "description": "Stsenariy"
+  },
+  "scenarioOptimistic": "Optimistik",
+  "@scenarioOptimistic": {
+    "description": "Stsenariy"
+  },
+  "ideaScenarioLine": "Kirim {income} · xarajat {expense} · foyda {net}",
+  "@ideaScenarioLine": {
+    "description": "Qator",
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "expense": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "ideaMyNet": "Ulushdan keyin: {amount}",
+  "@ideaMyNet": {
+    "description": "Qator",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ideaPayback": "Qoplanadi: {months} oyda",
+  "@ideaPayback": {
+    "description": "Qator",
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "ideaNoPayback": "Qoplanmaydi — xarajat yoki narxni qayta koʻring",
+  "@ideaNoPayback": {
+    "description": "Qator"
+  },
+  "ideaToContract": "Shartnoma qoralamasi",
+  "@ideaToContract": {
+    "description": "Tugma"
+  },
+  "offerTitle": "Taklifni tekshirish",
+  "@offerTitle": {
+    "description": "Ekran"
+  },
+  "offerHint": "Tavakkalsiz foyda vaʼda qilinsa — u yerda yo ribo, yo firibgarlik bor.",
+  "@offerHint": {
+    "description": "Izoh"
+  },
+  "offerName": "Taklif (masalan, «signal guruhi»)",
+  "@offerName": {
+    "description": "Maydon"
+  },
+  "offerQGuaranteed": "Foyda oldindan vaʼda qilinganmi (zarar boʻlsa ham)?",
+  "@offerQGuaranteed": {
+    "description": "Savol"
+  },
+  "offerQLoss": "Zarar boʻlsa, u boʻlishiladimi?",
+  "@offerQLoss": {
+    "description": "Savol"
+  },
+  "offerQReal": "Orqasida real mol yoki ish bormi?",
+  "@offerQReal": {
+    "description": "Savol"
+  },
+  "offerQRecruit": "Yangi odam jalb qilish talab qilinadimi?",
+  "@offerQRecruit": {
+    "description": "Savol"
+  },
+  "offerQPressure": "«Hozir qaror qiling» deb shoshiltirishyaptimi?",
+  "@offerQPressure": {
+    "description": "Savol"
+  },
+  "offerQContract": "Yozma shartnoma bormi?",
+  "@offerQContract": {
+    "description": "Savol"
+  },
+  "offerYes": "Ha",
+  "@offerYes": {
+    "description": "Javob"
+  },
+  "offerNo": "Yoʻq",
+  "@offerNo": {
+    "description": "Javob"
+  },
+  "offerUnknown": "Bilmayman",
+  "@offerUnknown": {
+    "description": "Javob"
+  },
+  "offerCheck": "Baholash",
+  "@offerCheck": {
+    "description": "Tugma"
+  },
+  "offerGreen": "Yashil: jiddiy xavf belgisi topilmadi. Baribir shartnomani oʻqing va maslahatlashing.",
+  "@offerGreen": {
+    "description": "Natija"
+  },
+  "offerYellow": "Sariq: aniqlashtiring — quyidagi belgilar shubhali.",
+  "@offerYellow": {
+    "description": "Natija"
+  },
+  "offerRed": "Qizil: bu yo ribo, yo firibgarlik belgisi. Pul bermang.",
+  "@offerRed": {
+    "description": "Natija"
+  },
+  "offerFlagGuaranteed": "Tavakkalsiz foyda vaʼdasi — sheriklik emas: yo ribo, yo firibgarlik.",
+  "@offerFlagGuaranteed": {
+    "description": "Bayroq"
+  },
+  "offerFlagLoss": "Zarar boʻlishilmasa — bu sheriklik emas, qarz yoki ribo.",
+  "@offerFlagLoss": {
+    "description": "Bayroq"
+  },
+  "offerFlagReal": "Real mol yoki ish boʻlmasa, «foyda» yangi kelganlar pulidan toʻlanadi.",
+  "@offerFlagReal": {
+    "description": "Bayroq"
+  },
+  "offerFlagRecruit": "Yangi aʼzo jalb qilish talabi — piramida belgisi.",
+  "@offerFlagRecruit": {
+    "description": "Bayroq"
+  },
+  "offerFlagPressure": "Shoshiltirish — oʻylashga vaqt bermaslik usuli.",
+  "@offerFlagPressure": {
+    "description": "Bayroq"
+  },
+  "offerFlagContract": "Yozma shartnomasiz kelishuvni himoya qilib boʻlmaydi.",
+  "@offerFlagContract": {
+    "description": "Bayroq"
+  },
+  "offerFlagUnknown": "Javobini bilmaysiz — avval aniqlashtiring: {question}",
+  "@offerFlagUnknown": {
+    "description": "Bayroq: nomaʼlum javob; question — savol matni",
+    "placeholders": {
+      "question": {
+        "type": "String"
+      }
+    }
+  },
+  "offerHistory": "Avvalgi tekshiruvlar",
+  "@offerHistory": {
+    "description": "Sarlavha"
+  },
+  "offerVerdictGreen": "Yashil",
+  "@offerVerdictGreen": {
+    "description": "Baho"
+  },
+  "offerVerdictYellow": "Sariq",
+  "@offerVerdictYellow": {
+    "description": "Baho"
+  },
+  "offerVerdictRed": "Qizil",
+  "@offerVerdictRed": {
+    "description": "Baho"
+  },
+  "homeOfferCheckBody": "Kimdir tavakkalsiz foyda vaʼda qildimi? Bir daqiqada tekshiring.",
+  "@homeOfferCheckBody": {
+    "description": "Karta"
+  },
+  "ledgerNetLabel": "Sof foyda",
+  "@ledgerNetLabel": {
+    "description": "PDF"
+  },
+  "ledgerLossLabel": "Zarar",
+  "@ledgerLossLabel": {
+    "description": "PDF"
+  },
+  "ledgerBuyoutLabel": "Buyout toʻlovi",
+  "@ledgerBuyoutLabel": {
+    "description": "PDF"
+  },
+  "ledgerNextPeriod": "Keyingi davr: {start} dan",
+  "@ledgerNextPeriod": {
+    "description": "Sarlavha",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      }
+    }
+  },
+  "obWelcome": "Assalomu alaykum! Baraka Dasturga xush kelibsiz",
+  "@obWelcome": {
+    "description": "Sarlavha"
+  },
+  "obLanguage": "Til",
+  "@obLanguage": {
+    "description": "Sarlavha"
+  },
+  "obLanguageHint": "Keyin sozlamalarda ham oʻzgartirish mumkin.",
+  "@obLanguageHint": {
+    "description": "Izoh"
+  },
+  "obRestore": "Zaxira nusxadan tiklash",
+  "@obRestore": {
+    "description": "Tugma"
+  },
+  "obFamily": "Oila aʼzolari",
+  "@obFamily": {
+    "description": "Sarlavha"
+  },
+  "obFamilyHint": "Har yozuvda «kim?» belgisi boʻladi. Yolgʻiz yuritsangiz — faqat ismingizni yozing.",
+  "@obFamilyHint": {
+    "description": "Izoh"
+  },
+  "obOwnerName": "Ismingiz",
+  "@obOwnerName": {
+    "description": "Maydon"
+  },
+  "obAddMember": "Aʼzo qoʻshish",
+  "@obAddMember": {
+    "description": "Tugma"
+  },
+  "obMemberAdult": "Katta",
+  "@obMemberAdult": {
+    "description": "Rol"
+  },
+  "obMemberChild": "Bola",
+  "@obMemberChild": {
+    "description": "Rol"
+  },
+  "obIncome": "Daromadingiz qanday keladi?",
+  "@obIncome": {
+    "description": "Sarlavha"
+  },
+  "obIncomeHint": "Shunga qarab bosh ekran va eslatmalar moslashadi.",
+  "@obIncomeHint": {
+    "description": "Izoh"
+  },
+  "obIncomeDaily": "Kunlik naqd",
+  "@obIncomeDaily": {
+    "description": "Variant"
+  },
+  "obIncomeDailyHint": "Taksi, bozor, usta — har kuni kechqurun «bugun qancha?» deb eslatamiz.",
+  "@obIncomeDailyHint": {
+    "description": "Izoh"
+  },
+  "obIncomeOrders": "Buyurtma boʻyicha",
+  "@obIncomeOrders": {
+    "description": "Variant"
+  },
+  "obIncomeOrdersHint": "Tikuv, pazandachilik, taʼmirlash — har shanba haftalik eslatma.",
+  "@obIncomeOrdersHint": {
+    "description": "Izoh"
+  },
+  "obIncomeSalary": "Oylik maosh",
+  "@obIncomeSalary": {
+    "description": "Variant"
+  },
+  "obIncomeSalaryHint": "Maosh kuni eslatamiz va oylik davr shu kundan boshlanadi.",
+  "@obIncomeSalaryHint": {
+    "description": "Izoh"
+  },
+  "obSalaryDay": "Maosh kuni",
+  "@obSalaryDay": {
+    "description": "Maydon"
+  },
+  "obDebt": "Hozir qarzingiz bormi?",
+  "@obDebt": {
+    "description": "Sarlavha"
+  },
+  "obDebtHint": "Bank, doʻkon nasiyasi, qarindosh yoki doʻst — hammasi hisobga olinadi. Bu sir ilovadan chiqmaydi.",
+  "@obDebtHint": {
+    "description": "Izoh"
+  },
+  "obDebtYes": "Ha, bor",
+  "@obDebtYes": {
+    "description": "Variant"
+  },
+  "obDebtNo": "Yoʻq",
+  "@obDebtNo": {
+    "description": "Variant"
+  },
+  "obDebtRecovery": "Qarzlarni yozgach, «Qarzdan chiqish» rejimini taklif qilamiz: daromadning 70 % i roʻzgʻorga, 20 % i qarzni tezroq uzishga, 10 % i baribir «Kelajagim»ga.",
+  "@obDebtRecovery": {
+    "description": "Izoh"
+  },
+  "obNext": "Davom etish",
+  "@obNext": {
+    "description": "Tugma"
+  },
+  "obFinish": "Boshlash",
+  "@obFinish": {
+    "description": "Tugma"
+  },
+  "obStep": "{step} / {total}",
+  "@obStep": {
+    "description": "Qadam",
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderIncomeTitle": "Daromadni yozdingizmi?",
+  "@reminderIncomeTitle": {
+    "description": "Bildirishnoma"
+  },
+  "reminderIncomeDaily": "Bugun qancha topdingiz? Bir daqiqada yozing — ulush ham ajraladi.",
+  "@reminderIncomeDaily": {
+    "description": "Bildirishnoma"
+  },
+  "reminderIncomeWeekly": "Bu haftadagi buyurtmalar puli yozildimi?",
+  "@reminderIncomeWeekly": {
+    "description": "Bildirishnoma"
+  },
+  "reminderIncomeMonthly": "Bugun maosh kuni. Avval oʻzingizga toʻlang — «Kelajagim» ulushini ajrating.",
+  "@reminderIncomeMonthly": {
+    "description": "Bildirishnoma"
+  },
+  "settingsIncomeKind": "Daromad turi",
+  "@settingsIncomeKind": {
+    "description": "Sozlama"
+  },
+  "backupTitle": "Zaxira nusxa",
+  "@backupTitle": {
+    "description": "Ekran"
+  },
+  "backupHint": "Butun daftar siz tanlagan parol bilan shifrlangan faylga yoziladi. Telefon almashsa yoki ilova oʻchirilsa — shu fayl va parol bilan tiklaysiz. Parolni unutmang: uni hech kim tiklay olmaydi.",
+  "@backupHint": {
+    "description": "Izoh"
+  },
+  "backupPassword": "Parol (kamida 8 belgi)",
+  "@backupPassword": {
+    "description": "Maydon"
+  },
+  "backupPasswordRepeat": "Parolni takrorlang",
+  "@backupPasswordRepeat": {
+    "description": "Maydon"
+  },
+  "backupPasswordMismatch": "Parollar mos emas.",
+  "@backupPasswordMismatch": {
+    "description": "Xato"
+  },
+  "backupExport": "Nusxa yaratish va saqlash",
+  "@backupExport": {
+    "description": "Tugma"
+  },
+  "backupImport": "Fayldan tiklash",
+  "@backupImport": {
+    "description": "Tugma"
+  },
+  "backupImportConfirm": "Hozirgi maʼlumotlar toʻliq nusxadagisi bilan almashtiriladi. Davom etamizmi?",
+  "@backupImportConfirm": {
+    "description": "Tasdiq"
+  },
+  "backupImportPassword": "Nusxa paroli",
+  "@backupImportPassword": {
+    "description": "Oyna"
+  },
+  "backupRestored": "Tiklandi: {count} ta yozuv.",
+  "@backupRestored": {
+    "description": "Xabar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupBadPassword": "Parol notoʻgʻri yoki fayl buzilgan.",
+  "@backupBadPassword": {
+    "description": "Xato"
+  },
+  "backupBadFormat": "Bu Baraka Dastur zaxira nusxasi emas.",
+  "@backupBadFormat": {
+    "description": "Xato"
+  },
+  "backupVersion": "Nusxa ilovaning boshqa versiyasida yaratilgan — ilovani yangilang.",
+  "@backupVersion": {
+    "description": "Xato"
+  },
+  "backupWorking": "Shifrlanmoqda…",
+  "@backupWorking": {
+    "description": "Holat"
+  },
+  "homeAddIncomeDaily": "Bugungi tushum",
+  "@homeAddIncomeDaily": {
+    "description": "Tugma"
+  },
+  "homeAddIncomeOrders": "Buyurtma puli",
+  "@homeAddIncomeOrders": {
+    "description": "Tugma"
+  },
+  "homeAddIncomeSalary": "Maosh",
+  "@homeAddIncomeSalary": {
+    "description": "Tugma"
+  },
+  "reminderIncomeChannel": "Daromad eslatmalari",
+  "@reminderIncomeChannel": {
+    "description": "Kanal"
+  },
+  "settingsBackupHint": "Parol bilan shifrlangan fayl: saqlash va tiklash",
+  "@settingsBackupHint": {
+    "description": "Sozlama"
+  },
+  "backupRestoring": "Tiklanmoqda…",
+  "@backupRestoring": {
+    "description": "Holat"
+  },
+  "backupExportTitle": "Nusxa yaratish",
+  "@backupExportTitle": {
+    "description": "Sarlavha"
+  },
+  "backupImportTitle": "Nusxadan tiklash",
+  "@backupImportTitle": {
+    "description": "Sarlavha"
+  },
+  "backupImportHint": "Faylni tanlang va nusxa yaratilgandagi parolni kiriting.",
+  "@backupImportHint": {
+    "description": "Izoh"
+  },
+  "obMemberRemove": "Olib tashlash",
+  "@obMemberRemove": {
+    "description": "Tugma"
+  },
+  "showMore": "Yana koʻrsatish ({count})",
+  "@showMore": {
+    "description": "Tugma",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsIncomeKindUnset": "Tanlang",
+  "@settingsIncomeKindUnset": {
+    "description": "Sozlama"
+  },
+  "roleArbiter": "Hakam",
+  "@roleArbiter": {
+    "description": "Rol"
+  },
+  "receiptErrName": "Ismni yozing.",
+  "@receiptErrName": {
+    "description": "Xato"
+  },
+  "receiptErrSignature": "Imzo chizilmagan.",
+  "@receiptErrSignature": {
+    "description": "Xato"
+  },
+  "agTitle": "Kelishuvlar",
+  "@agTitle": {
+    "description": "Bo'lim"
+  },
+  "agScreenTitle": "Kelishuv",
+  "@agScreenTitle": {
+    "description": "Ekran"
+  },
+  "agIntro": "Ogʻzaki kelishuv — qumga qurilgan uy. Yozish ishonchsizlik emas, ishonchni asrash vositasi.",
+  "@agIntro": {
+    "description": "Izoh"
+  },
+  "agEmpty": "Hali kelishuv yoʻq. Ijara, xizmat, oilaviy kelishuv yoki hozir ogʻzaki davom etayotganini yozib qoʻying.",
+  "@agEmpty": {
+    "description": "Bo'sh"
+  },
+  "agNew": "Yangi kelishuv",
+  "@agNew": {
+    "description": "Tugma"
+  },
+  "agTypePartnership": "Sheriklik",
+  "@agTypePartnership": {
+    "description": "Tur"
+  },
+  "agTypeLoan": "Qarz tilxati",
+  "@agTypeLoan": {
+    "description": "Tur"
+  },
+  "agTypeRent": "Ijara",
+  "@agTypeRent": {
+    "description": "Tur"
+  },
+  "agTypeService": "Xizmat yoki ish",
+  "@agTypeService": {
+    "description": "Tur"
+  },
+  "agTypeFamily": "Oilaviy kelishuv",
+  "@agTypeFamily": {
+    "description": "Tur"
+  },
+  "agTypeOther": "Boshqa",
+  "@agTypeOther": {
+    "description": "Tur"
+  },
+  "agStatusDraft": "Qoralama",
+  "@agStatusDraft": {
+    "description": "Holat"
+  },
+  "agStatusSigned": "Imzolangan",
+  "@agStatusSigned": {
+    "description": "Holat"
+  },
+  "agStatusActive": "Amalda",
+  "@agStatusActive": {
+    "description": "Holat"
+  },
+  "agStatusDispute": "Nizoda",
+  "@agStatusDispute": {
+    "description": "Holat"
+  },
+  "agStatusClosed": "Yopilgan",
+  "@agStatusClosed": {
+    "description": "Holat"
+  },
+  "agVersion": "{n}-versiya",
+  "@agVersion": {
+    "description": "Versiya",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agOralBadge": "ogʻzakidan yozilgan",
+  "@agOralBadge": {
+    "description": "Belgi"
+  },
+  "agEffectiveFrom": "Kuchga kirgan sana: {date}",
+  "@agEffectiveFrom": {
+    "description": "Sana",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "agLegacyHint": "Bu hujjat 9 savolli tartibdan oldin imzolangan — imzolar oʻz kuchida. Keyingi versiyada savollarni toʻldiring.",
+  "@agLegacyHint": {
+    "description": "Izoh"
+  },
+  "agProgress": "{n} / 9 savolga javob berildi",
+  "@agProgress": {
+    "description": "To'liqlik",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agReadyHint": "9 savol tayyor — imzolash mumkin.",
+  "@agReadyHint": {
+    "description": "Izoh"
+  },
+  "agSignLocked": "Imzolash 9 savolning hammasiga javob berilgach (yoki izoh bilan «tegishli emas» deb belgilangach) ochiladi.",
+  "@agSignLocked": {
+    "description": "Izoh"
+  },
+  "agAdvisorTip": "Maslahat: noqulay bandlarni ham oldindan yozing — masalan, kimdir vazifasini bir hafta bajara olmasa nima boʻladi. Aniq yozilgan qoida keyingi tortishuvning oldini oladi.",
+  "@agAdvisorTip": {
+    "description": "Kelishuv ekranidagi maslahatchi maslahati"
+  },
+  "agNeedsAnswer": "Javob kerak",
+  "@agNeedsAnswer": {
+    "description": "Holat"
+  },
+  "agAutoBadge": "Hujjatdan avtomatik",
+  "@agAutoBadge": {
+    "description": "Belgi"
+  },
+  "agAutoHint": "Bu savol asl hujjatdan olinadi — oʻzgartirish uchun shartnoma yoki qarz yozuvini tahrirlang.",
+  "@agAutoHint": {
+    "description": "Izoh"
+  },
+  "agErrSigned": "Imzolangan versiya oʻzgarmaydi — yangi versiya yarating.",
+  "@agErrSigned": {
+    "description": "Xato"
+  },
+  "agQ1": "Kim bilan kim?",
+  "@agQ1": {
+    "description": "Savol"
+  },
+  "agQ2": "Kim nima qoʻshyapti?",
+  "@agQ2": {
+    "description": "Savol"
+  },
+  "agQ3": "Kim nima qiladi?",
+  "@agQ3": {
+    "description": "Savol"
+  },
+  "agQ4": "Foyda qanday boʻlinadi?",
+  "@agQ4": {
+    "description": "Savol"
+  },
+  "agQ5": "Zarar koʻrilsa nima boʻladi?",
+  "@agQ5": {
+    "description": "Savol"
+  },
+  "agQ6": "Pul qayerda, hisobni kim yuritadi, ikkinchi tomon qachon koʻradi?",
+  "@agQ6": {
+    "description": "Savol"
+  },
+  "agQ7": "Qanday ajralib chiqiladi?",
+  "@agQ7": {
+    "description": "Savol"
+  },
+  "agQ8": "Kelisha olmasangiz, kim hakam?",
+  "@agQ8": {
+    "description": "Savol"
+  },
+  "agQ9": "Qachon yangilanadi?",
+  "@agQ9": {
+    "description": "Savol"
+  },
+  "agQ1Hint": "Toʻliq ism-sharif, roli va aloqasi. Kamida ikki tomon.",
+  "@agQ1Hint": {
+    "description": "Izoh"
+  },
+  "agQ2Hint": "Pul, mol, mehnat yoki tanish-bilish — har bir tomonda kamida bitta hissa.",
+  "@agQ2Hint": {
+    "description": "Izoh"
+  },
+  "agQ3Hint": "Har vazifaga yagona masʼul va «bajarilmasa» bandi. Umumiy qoldirilgan ish koʻpincha hech kimning ishi boʻlmay qoladi.",
+  "@agQ3Hint": {
+    "description": "Izoh"
+  },
+  "agQ4Hint": "Faqat foizda. Soʻmdagi qatʼiy summa sheriklikda taqiqlangan.",
+  "@agQ4Hint": {
+    "description": "Izoh"
+  },
+  "agQ5Hint": "Mudarabada zarar kapital egasida, musharakada — kapitalga mutanosib.",
+  "@agQ5Hint": {
+    "description": "Izoh"
+  },
+  "agQ6Hint": "Standart — oyiga bir marta ochiq hisob koʻrigi.",
+  "@agQ6Hint": {
+    "description": "Izoh"
+  },
+  "agQ7Hint": "Oldindan ogohlantirish, ulushni baholash, toʻlash muddati va mol-mulkni boʻlish.",
+  "@agQ7Hint": {
+    "description": "Izoh"
+  },
+  "agQ8Hint": "Ikkala tomon ishonadigan, tomonlardan biri boʻlmagan odam. Hakam ham roziligini imzolaydi.",
+  "@agQ8Hint": {
+    "description": "Izoh"
+  },
+  "agQ9Hint": "Muddat va yillik yangilash sanasi; 30 kun oldin eslatamiz.",
+  "@agQ9Hint": {
+    "description": "Izoh"
+  },
+  "agQuestionTitle": "{n}. {title}",
+  "@agQuestionTitle": {
+    "description": "Sarlavha",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "agNotApplicable": "Tegishli emas",
+  "@agNotApplicable": {
+    "description": "Kalit"
+  },
+  "agNaReason": "Nega tegishli emas (izoh majburiy)",
+  "@agNaReason": {
+    "description": "Maydon"
+  },
+  "agNaSummary": "Tegishli emas: {reason}",
+  "@agNaSummary": {
+    "description": "Mazmun",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "agPartyName": "Toʻliq ism-sharif",
+  "@agPartyName": {
+    "description": "Maydon"
+  },
+  "agPartyRole": "Roli",
+  "@agPartyRole": {
+    "description": "Maydon"
+  },
+  "agPartyRelation": "Aloqasi (qarindosh, qoʻshni…)",
+  "@agPartyRelation": {
+    "description": "Maydon"
+  },
+  "agPartyAdd": "Tomon qoʻshish",
+  "@agPartyAdd": {
+    "description": "Tugma"
+  },
+  "agWho": "Kim",
+  "@agWho": {
+    "description": "Maydon"
+  },
+  "agContribKind": "Hissa turi",
+  "@agContribKind": {
+    "description": "Maydon"
+  },
+  "agContribMoney": "Pul",
+  "@agContribMoney": {
+    "description": "Tur"
+  },
+  "agContribGoods": "Mol yoki uskuna",
+  "@agContribGoods": {
+    "description": "Tur"
+  },
+  "agContribLabor": "Mehnat",
+  "@agContribLabor": {
+    "description": "Tur"
+  },
+  "agContribNetwork": "Tanish-bilish",
+  "@agContribNetwork": {
+    "description": "Tur"
+  },
+  "agAmountSom": "Summa (soʻm)",
+  "@agAmountSom": {
+    "description": "Maydon"
+  },
+  "agDescription": "Tavsif",
+  "@agDescription": {
+    "description": "Maydon"
+  },
+  "agContribAdd": "Hissa qoʻshish",
+  "@agContribAdd": {
+    "description": "Tugma"
+  },
+  "agDutyHint": "Masʼul — bitta tomon. «Hamma» tanlab boʻlmaydi.",
+  "@agDutyHint": {
+    "description": "Izoh"
+  },
+  "agDutyTitle": "Vazifa",
+  "@agDutyTitle": {
+    "description": "Maydon"
+  },
+  "agDutyOwner": "Yagona masʼul",
+  "@agDutyOwner": {
+    "description": "Maydon"
+  },
+  "agDutyBreach": "Bajarilmasa (masalan, 1 kun ichida xabar beradi va oʻrniga yechim topadi)",
+  "@agDutyBreach": {
+    "description": "Maydon"
+  },
+  "agDutyAdd": "Vazifa qoʻshish",
+  "@agDutyAdd": {
+    "description": "Tugma"
+  },
+  "agProfitHint": "Ulushlar foizda, yigʻindisi 100 %.",
+  "@agProfitHint": {
+    "description": "Izoh"
+  },
+  "agProfitShare": "{name} ulushi, %",
+  "@agProfitShare": {
+    "description": "Maydon",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "agProfitText": "Yoki soʻz bilan (masalan, ijara haqi oyiga …)",
+  "@agProfitText": {
+    "description": "Maydon"
+  },
+  "agLossText": "Zarar qanday taqsimlanadi",
+  "@agLossText": {
+    "description": "Maydon"
+  },
+  "agLossMusharaka": "Zarar kapitalga mutanosib taqsimlanadi.",
+  "@agLossMusharaka": {
+    "description": "Matn"
+  },
+  "agLossLoan": "Qarzda foyda va zarar boʻlishilmaydi — faqat asosiy summa qaytariladi (foiz yoʻq).",
+  "@agLossLoan": {
+    "description": "Matn"
+  },
+  "agLoanSchedule": "Qaytarish jadvali (qarz yozuvidan)",
+  "@agLoanSchedule": {
+    "description": "Matn"
+  },
+  "agLoanNoInterest": "Foiz yoʻq",
+  "@agLoanNoInterest": {
+    "description": "Matn"
+  },
+  "agCustodyWhere": "Pul qayerda turadi",
+  "@agCustodyWhere": {
+    "description": "Maydon"
+  },
+  "agCustodyKeeper": "Hisobni kim yuritadi",
+  "@agCustodyKeeper": {
+    "description": "Maydon"
+  },
+  "agCustodyEvery": "Ochiq hisob koʻrigi",
+  "@agCustodyEvery": {
+    "description": "Maydon"
+  },
+  "agEveryWeek": "Har hafta",
+  "@agEveryWeek": {
+    "description": "Davr"
+  },
+  "agEvery2Weeks": "Ikki haftada bir",
+  "@agEvery2Weeks": {
+    "description": "Davr"
+  },
+  "agEveryMonth": "Oyiga bir marta",
+  "@agEveryMonth": {
+    "description": "Davr"
+  },
+  "agEveryQuarter": "Uch oyda bir",
+  "@agEveryQuarter": {
+    "description": "Davr"
+  },
+  "agEveryYear": "Yiliga bir marta",
+  "@agEveryYear": {
+    "description": "Davr"
+  },
+  "agEveryDays": "Har {days} kunda",
+  "@agEveryDays": {
+    "description": "Davr",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "agReviewTooRare": "Koʻrik oyiga bir martadan siyrak — kelishmovchilik yigʻilib qolmasin, tez-tez koʻring.",
+  "@agReviewTooRare": {
+    "description": "Ogohlantirish"
+  },
+  "agExitNotice": "Oldindan ogohlantirish (kun)",
+  "@agExitNotice": {
+    "description": "Maydon"
+  },
+  "agExitValuation": "Ulush qanday baholanadi",
+  "@agExitValuation": {
+    "description": "Maydon"
+  },
+  "agExitPayout": "Qachon va qanday toʻlanadi",
+  "@agExitPayout": {
+    "description": "Maydon"
+  },
+  "agExitAssets": "Mol-mulk qanday boʻlinadi",
+  "@agExitAssets": {
+    "description": "Maydon"
+  },
+  "agArbiterHint": "Hakam tomonlardan biri boʻla olmaydi.",
+  "@agArbiterHint": {
+    "description": "Izoh"
+  },
+  "agArbiterName": "Hakamning ism-sharifi",
+  "@agArbiterName": {
+    "description": "Maydon"
+  },
+  "agArbiterRole": "Kim (masalan, mahalla oqsoqoli)",
+  "@agArbiterRole": {
+    "description": "Maydon"
+  },
+  "agWitnesses": "Guvohlar (vergul bilan)",
+  "@agWitnesses": {
+    "description": "Maydon"
+  },
+  "agTermMonths": "Muddat (oy)",
+  "@agTermMonths": {
+    "description": "Maydon"
+  },
+  "agReviewDate": "Yillik yangilash sanasi",
+  "@agReviewDate": {
+    "description": "Maydon"
+  },
+  "agReviewOn": "Yangilash: {date}",
+  "@agReviewOn": {
+    "description": "Mazmun",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "agErrPartiesMin2": "Kamida ikki tomon (ismi bilan) kerak.",
+  "@agErrPartiesMin2": {
+    "description": "Xato"
+  },
+  "agErrContribution": "Har bir tomonning hissasi yozilsin.",
+  "@agErrContribution": {
+    "description": "Xato"
+  },
+  "agErrDutyOwner": "Har vazifaga bitta masʼul tanlang.",
+  "@agErrDutyOwner": {
+    "description": "Xato"
+  },
+  "agErrDutyBreach": "Har vazifaga «bajarilmasa» bandini yozing.",
+  "@agErrDutyBreach": {
+    "description": "Xato"
+  },
+  "agErrShares": "Ulushlar yigʻindisi 100 % boʻlsin.",
+  "@agErrShares": {
+    "description": "Xato"
+  },
+  "agErrGuaranteed": "Bu sheriklik emas — qatʼiy summa ribo yoki qarz boʻladi. Foyda faqat foizda.",
+  "@agErrGuaranteed": {
+    "description": "Xato"
+  },
+  "agErrArbiterParty": "Hakam tomonlardan biri boʻla olmaydi.",
+  "@agErrArbiterParty": {
+    "description": "Xato"
+  },
+  "agErrNaReason": "«Tegishli emas» uchun izoh yozing.",
+  "@agErrNaReason": {
+    "description": "Xato"
+  },
+  "agErrTitle": "Nomini yozing.",
+  "@agErrTitle": {
+    "description": "Xato"
+  },
+  "agErrIncomplete": "Avval 9 savolning hammasiga javob bering.",
+  "@agErrIncomplete": {
+    "description": "Xato"
+  },
+  "agErrFuture": "Ogʻzaki kelishuv oʻtgan sanadan boshlanadi.",
+  "@agErrFuture": {
+    "description": "Xato"
+  },
+  "agErrNotSigned": "Avval hamma imzolasin.",
+  "@agErrNotSigned": {
+    "description": "Xato"
+  },
+  "agSignatures": "Imzolar",
+  "@agSignatures": {
+    "description": "Sarlavha"
+  },
+  "agPrepareSign": "Imzolashga oʻtish",
+  "@agPrepareSign": {
+    "description": "Tugma"
+  },
+  "agSignInPartnership": "Imzolar sheriklik shartnomasi ekranida",
+  "@agSignInPartnership": {
+    "description": "Havola"
+  },
+  "agActivate": "Kuchga kiritish",
+  "@agActivate": {
+    "description": "Tugma"
+  },
+  "agRenewUnchanged": "Yillik yangilash: oʻzgarishsiz tasdiqlash",
+  "@agRenewUnchanged": {
+    "description": "Tugma"
+  },
+  "agUnchangedNote": "Oʻzgarishsiz tasdiqlandi",
+  "@agUnchangedNote": {
+    "description": "Versiya izohi"
+  },
+  "agNewVersion": "Yangi versiya (oʻzgartirish)",
+  "@agNewVersion": {
+    "description": "Tugma"
+  },
+  "agJournal": "Hisob jurnali",
+  "@agJournal": {
+    "description": "Sarlavha"
+  },
+  "agChainOk": "{n} ta yozuv · zanjir butun, hech biri oʻzgartirilmagan",
+  "@agChainOk": {
+    "description": "Holat",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agChainBroken": "Diqqat: {n}-yozuvdan boshlab zanjir buzilgan — yozuv oʻzgartirilgan boʻlishi mumkin",
+  "@agChainBroken": {
+    "description": "Holat",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agChainHead": "Zanjir boshi",
+  "@agChainHead": {
+    "description": "PDF"
+  },
+  "agJContribution": "Hissa",
+  "@agJContribution": {
+    "description": "Jurnal"
+  },
+  "agJProfit": "Foyda ulushi",
+  "@agJProfit": {
+    "description": "Jurnal"
+  },
+  "agJLoss": "Zarar ulushi",
+  "@agJLoss": {
+    "description": "Jurnal"
+  },
+  "agJLoanPayment": "Qarz toʻlovi",
+  "@agJLoanPayment": {
+    "description": "Jurnal"
+  },
+  "agJIncome": "Kirim",
+  "@agJIncome": {
+    "description": "Jurnal"
+  },
+  "agJExpense": "Xarajat",
+  "@agJExpense": {
+    "description": "Jurnal"
+  },
+  "agJForceMajeure": "Fors-major",
+  "@agJForceMajeure": {
+    "description": "Jurnal"
+  },
+  "agJBuyout": "Ulush sotib olish",
+  "@agJBuyout": {
+    "description": "Jurnal"
+  },
+  "agJOpening": "Boshlangʻich holat",
+  "@agJOpening": {
+    "description": "Jurnal"
+  },
+  "agJCorrection": "Tuzatish",
+  "@agJCorrection": {
+    "description": "Jurnal"
+  },
+  "agPdfShare": "Kelishuv PDF",
+  "@agPdfShare": {
+    "description": "Tugma"
+  },
+  "agPdfSubtitle": "{version}-versiya · {date} dan",
+  "@agPdfSubtitle": {
+    "description": "PDF",
+    "placeholders": {
+      "version": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "agPdfIntro": "9 ta asosiy savol boʻyicha oddiy tilda yozilgan kelishuv.",
+  "@agPdfIntro": {
+    "description": "PDF"
+  },
+  "agPdfNote": "Shaxsiy hisob uchun yozuv, yuridik kafolat yoki maslahat emas.",
+  "@agPdfNote": {
+    "description": "PDF"
+  },
+  "agFieldTitle": "Nomi (masalan, doʻkon ijarasi)",
+  "@agFieldTitle": {
+    "description": "Maydon"
+  },
+  "agFieldMe": "Sizning ismingiz",
+  "@agFieldMe": {
+    "description": "Maydon"
+  },
+  "agFieldOther": "Ikkinchi tomon",
+  "@agFieldOther": {
+    "description": "Maydon"
+  },
+  "agFieldType": "Turi",
+  "@agFieldType": {
+    "description": "Maydon"
+  },
+  "agOralTitle": "Ogʻzaki kelishuvni yozib olish",
+  "@agOralTitle": {
+    "description": "Ekran"
+  },
+  "agOralHint": "Hozir ogʻzaki davom etayotgan sheriklik, ijara yoki qarz",
+  "@agOralHint": {
+    "description": "Izoh"
+  },
+  "agOralIntro": "Kelishuv oʻtgan sanadan boshlangan boʻlishi mumkin. Shu kungacha holatni bitta yozuv qilib kiriting — tomonlar uni ham imzolab tasdiqlaydi.",
+  "@agOralIntro": {
+    "description": "Izoh"
+  },
+  "agOralSince": "Qachondan beri",
+  "@agOralSince": {
+    "description": "Maydon"
+  },
+  "agOralOpening": "Shu kungacha holat",
+  "@agOralOpening": {
+    "description": "Sarlavha"
+  },
+  "agOralOpeningHint": "Kim qancha qoʻshgan, qancha boʻlingan, qancha qarz qolgan.",
+  "@agOralOpeningHint": {
+    "description": "Izoh"
+  },
+  "agOralMine": "Siz qoʻshgan",
+  "@agOralMine": {
+    "description": "Maydon"
+  },
+  "agOralTheirs": "Ikkinchi tomon qoʻshgan",
+  "@agOralTheirs": {
+    "description": "Maydon"
+  },
+  "agOralNote": "Izoh (masalan, 3 oyda 2 marta foyda boʻlingan)",
+  "@agOralNote": {
+    "description": "Maydon"
+  },
+  "agOralSave": "Yozib olish va 9 savolga oʻtish",
+  "@agOralSave": {
+    "description": "Tugma"
+  },
+  "acDutiesTitle": "Vazifalar",
+  "@acDutiesTitle": {
+    "description": "Kelishuv vazifalari bo'limi"
+  },
+  "acDutyReport": "Bajara olmayapman",
+  "@acDutyReport": {
+    "description": "Vazifa bo'yicha xabar tugmasi"
+  },
+  "acDutyReportTitle": "Vazifani bajara olmayapman",
+  "@acDutyReportTitle": {
+    "description": "Xabar dialogi sarlavhasi"
+  },
+  "acDutyReason": "Sabab",
+  "@acDutyReason": {
+    "description": "Xabar: sabab maydoni"
+  },
+  "acDutyFix": "Oʻrniga yechim (ixtiyoriy)",
+  "@acDutyFix": {
+    "description": "Xabar: yechim maydoni"
+  },
+  "acDutyWho": "Kim xabar bermoqda",
+  "@acDutyWho": {
+    "description": "Xabar: tomon tanlash"
+  },
+  "acDutyClauseTitle": "Shartnoma bandi",
+  "@acDutyClauseTitle": {
+    "description": "Bandni ko'rsatish dialogi sarlavhasi"
+  },
+  "acDutyClauseBody": "{clause}\n\nBu ayb emas — kelishilgan qoidaga qaytamiz.",
+  "@acDutyClauseBody": {
+    "description": "Band matni va ohang",
+    "placeholders": {
+      "clause": {}
+    }
+  },
+  "acIncidentsTitle": "Oxirgi koʻrikdan keyingi hodisalar",
+  "@acIncidentsTitle": {
+    "description": "Hodisalar ro'yxati sarlavhasi"
+  },
+  "acIncidentLine": "{reason} — {fix}",
+  "@acIncidentLine": {
+    "description": "Hodisa qatori",
+    "placeholders": {
+      "reason": {},
+      "fix": {}
+    }
+  },
+  "acIncidentNoFix": "{reason}",
+  "@acIncidentNoFix": {
+    "description": "Hodisa qatori (yechimsiz)",
+    "placeholders": {
+      "reason": {}
+    }
+  },
+  "acReviewTitle": "Oylik ochiq hisob koʻrigi",
+  "@acReviewTitle": {
+    "description": "Ko'rik bo'limi sarlavhasi"
+  },
+  "acReviewNext": "Keyingi koʻrik: {date}",
+  "@acReviewNext": {
+    "description": "Keyingi ko'rik sanasi",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "acReviewDue": "Koʻrik vaqti keldi",
+  "@acReviewDue": {
+    "description": "Ko'rik muddati o'tgan yoki keldi"
+  },
+  "acReviewOpenInfo": "Koʻrik ochiq. Kesim sanasi: {date}",
+  "@acReviewOpenInfo": {
+    "description": "Ochiq ko'rik holati",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "acReviewStart": "Koʻrikni boshlash",
+  "@acReviewStart": {
+    "description": "Yangi ko'rik tugmasi"
+  },
+  "acReviewContinue": "Koʻrikka oʻtish",
+  "@acReviewContinue": {
+    "description": "Ochiq ko'rikka o'tish"
+  },
+  "acReviewMinutesCount": "Bayonnomalar: {count}",
+  "@acReviewMinutesCount": {
+    "description": "Bayonnomalar soni",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acReviewScreenTitle": "Koʻrik",
+  "@acReviewScreenTitle": {
+    "description": "Ko'rik ekrani sarlavhasi"
+  },
+  "acReviewCutoff": "Kesim sanasi: {date}",
+  "@acReviewCutoff": {
+    "description": "Ko'rik kesimi",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "acReviewPeriodTitle": "Davr yozuvlari",
+  "@acReviewPeriodTitle": {
+    "description": "Ko'rik davr yozuvlari"
+  },
+  "acReviewPeriodEmpty": "Bu davrda yozuv yoʻq.",
+  "@acReviewPeriodEmpty": {
+    "description": "Bo'sh davr"
+  },
+  "acReviewTotals": "Kirim: {income} · Chiqim: {expense}",
+  "@acReviewTotals": {
+    "description": "Ko'rik jami",
+    "placeholders": {
+      "income": {},
+      "expense": {}
+    }
+  },
+  "acReviewChainOk": "Zanjir butun ({count} ta yozuv)",
+  "@acReviewChainOk": {
+    "description": "Zanjir tekshiruvi — toza",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acReviewChainBroken": "Zanjir buzilgan: #{seq}",
+  "@acReviewChainBroken": {
+    "description": "Zanjir tekshiruvi — buzilgan",
+    "placeholders": {
+      "seq": {
+        "type": "int"
+      }
+    }
+  },
+  "acReviewIncidents": "Hodisalar",
+  "@acReviewIncidents": {
+    "description": "Ko'rikdagi hodisalar"
+  },
+  "acReviewAgree": "Koʻrdim, roziman",
+  "@acReviewAgree": {
+    "description": "Ko'rik: roziman tugmasi"
+  },
+  "acReviewObject": "Eʼtirozim bor",
+  "@acReviewObject": {
+    "description": "Ko'rik: e'tiroz tugmasi"
+  },
+  "acReviewObjectTitle": "Eʼtiroz",
+  "@acReviewObjectTitle": {
+    "description": "E'tiroz dialogi"
+  },
+  "acReviewObjectHint": "Nimaga rozi emassiz?",
+  "@acReviewObjectHint": {
+    "description": "E'tiroz izohi maydoni"
+  },
+  "acReviewVerdictAgree": "{party}: roziman",
+  "@acReviewVerdictAgree": {
+    "description": "Tomon javobi — roziman",
+    "placeholders": {
+      "party": {}
+    }
+  },
+  "acReviewVerdictObject": "{party}: eʼtiroz — {note}",
+  "@acReviewVerdictObject": {
+    "description": "Tomon javobi — e'tiroz",
+    "placeholders": {
+      "party": {},
+      "note": {}
+    }
+  },
+  "acReviewWaiting": "Hamma tomon javob bergach, bayonnomani yakunlang.",
+  "@acReviewWaiting": {
+    "description": "Ko'rik yakuniga tayyorgarlik"
+  },
+  "acReviewComplete": "Bayonnomani yakunlash",
+  "@acReviewComplete": {
+    "description": "Ko'rikni yakunlash tugmasi"
+  },
+  "acReviewDone": "Koʻrik yakunlandi. Bayonnoma saqlandi.",
+  "@acReviewDone": {
+    "description": "Ko'rik yakunlandi xabari"
+  },
+  "acReviewLockedNote": "Bu sanagacha boʻlgan moliyaviy yozuvlar muzlatiladi; faqat tuzatuvchi yozuv qoʻshiladi.",
+  "@acReviewLockedNote": {
+    "description": "Davr qulfi haqida izoh"
+  },
+  "acReviewMinutesShare": "Bayonnomani ulashish (PDF)",
+  "@acReviewMinutesShare": {
+    "description": "Bayonnoma PDF tugmasi"
+  },
+  "acReviewLedgerTitle": "Hisob yozuvlari",
+  "@acReviewLedgerTitle": {
+    "description": "Ko'rik davr yozuvlari bo'limi"
+  },
+  "acDisputesTitle": "Nizolar",
+  "@acDisputesTitle": {
+    "description": "Nizolar bo'limi sarlavhasi"
+  },
+  "acDisputeNone": "Ochiq nizo yoʻq.",
+  "@acDisputeNone": {
+    "description": "Nizo yo'q"
+  },
+  "acDisputeOpen": "Nizo ochish",
+  "@acDisputeOpen": {
+    "description": "Nizo ochish tugmasi"
+  },
+  "acDisputeTopic": "Mavzu",
+  "@acDisputeTopic": {
+    "description": "Nizo mavzusi"
+  },
+  "acDisputeClause": "Tegishli band (ixtiyoriy)",
+  "@acDisputeClause": {
+    "description": "Nizo tegishli bandi"
+  },
+  "acDisputeClaim": "Sizning talabingiz",
+  "@acDisputeClaim": {
+    "description": "Nizo talabi"
+  },
+  "acDisputeAddClaim": "Talab qoʻshish",
+  "@acDisputeAddClaim": {
+    "description": "Boshqa tomon talabi"
+  },
+  "acDisputeStatusOpen": "Ochiq",
+  "@acDisputeStatusOpen": {
+    "description": "Nizo holati — ochiq"
+  },
+  "acDisputeStatusDecided": "Hal qilingan",
+  "@acDisputeStatusDecided": {
+    "description": "Nizo holati — hal qilingan"
+  },
+  "acDisputeScreenTitle": "Nizo",
+  "@acDisputeScreenTitle": {
+    "description": "Nizo ekrani sarlavhasi"
+  },
+  "acDisputeClaimsTitle": "Tomonlar talablari",
+  "@acDisputeClaimsTitle": {
+    "description": "Talablar ro'yxati"
+  },
+  "acDisputeDecisionTitle": "Hakam qarori",
+  "@acDisputeDecisionTitle": {
+    "description": "Qaror bo'limi"
+  },
+  "acDisputeDecisionHint": "Qaror matni",
+  "@acDisputeDecisionHint": {
+    "description": "Qaror maydoni"
+  },
+  "acDisputeDecide": "Qarorni yozish",
+  "@acDisputeDecide": {
+    "description": "Qarorni saqlash tugmasi"
+  },
+  "acDisputePdf": "Hakam uchun ish papkasi (PDF)",
+  "@acDisputePdf": {
+    "description": "Hakam papkasi PDF tugmasi"
+  },
+  "acDisputeInDispute": "Kelishuv nizoda: taqsimot toʻxtatilgan.",
+  "@acDisputeInDispute": {
+    "description": "Nizo holati banneri"
+  },
+  "acDisputeDecidedNote": "Qaror yozildi. Kelishuv yana faol.",
+  "@acDisputeDecidedNote": {
+    "description": "Qaror yozildi xabari"
+  },
+  "acRenewalTitle": "Yillik yangilash",
+  "@acRenewalTitle": {
+    "description": "Yangilash bo'limi"
+  },
+  "acRenewalDue": "Yangilash sanasi: {date}. Eslatma 30 kun oldin keladi.",
+  "@acRenewalDue": {
+    "description": "Yangilash sanasi",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "acRenewalUnchanged": "Oʻzgarishsiz tasdiqlash",
+  "@acRenewalUnchanged": {
+    "description": "O'zgarishsiz tasdiqlash tugmasi"
+  },
+  "acRenewalNeedsSign": "Yangi versiyani hamma qayta imzolashi kerak.",
+  "@acRenewalNeedsSign": {
+    "description": "Qayta imzo haqida izoh"
+  },
+  "acRenewalNotifTitle": "Kelishuvni yangilash vaqti",
+  "@acRenewalNotifTitle": {
+    "description": "Yangilash bildirishnomasi sarlavhasi"
+  },
+  "acRenewalNotifBody": "«{title}» 30 kundan keyin yangilanadi. Birga qayta oʻqing.",
+  "@acRenewalNotifBody": {
+    "description": "Yangilash bildirishnomasi matni",
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "acRenewalChannel": "Kelishuv eslatmalari",
+  "@acRenewalChannel": {
+    "description": "Bildirishnoma kanali"
+  },
+  "acSpikeTitle": "Katta foyda",
+  "@acSpikeTitle": {
+    "description": "Katta foyda dialogi"
+  },
+  "acSpikeMessage": "Barakali foyda — tabriklaymiz! Endi kelishuvni birga qayta oʻqib chiqaylik.",
+  "@acSpikeMessage": {
+    "description": "Katta foyda tabrigi (SPEC 2F.7)"
+  },
+  "acSpikeAmount": "Davr foydasi: {amount}",
+  "@acSpikeAmount": {
+    "description": "Katta foyda summasi",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "acSpikeRead": "{party} 4–5-bandni qayta oʻqidi",
+  "@acSpikeRead": {
+    "description": "Tomon tasdiqlashi",
+    "placeholders": {
+      "party": {}
+    }
+  },
+  "acSpikeReviewOffer": "Navbatdan tashqari koʻrik",
+  "@acSpikeReviewOffer": {
+    "description": "Navbatdan tashqari ko'rik taklifi"
+  },
+  "acSpikeDistribute": "Taqsimlash",
+  "@acSpikeDistribute": {
+    "description": "Taqsimot tugmasi (tasdiqdan keyin)"
+  },
+  "acSpikeCancel": "Hozircha emas",
+  "@acSpikeCancel": {
+    "description": "Katta foyda dialogini yopish"
+  },
+  "acHomeTitle": "Yaqinlashayotgan koʻrik / yangilash",
+  "@acHomeTitle": {
+    "description": "Bosh ekran kartasi"
+  },
+  "acHomeBody": "{count} ta kelishuvda koʻrik yoki yangilash vaqti yaqin.",
+  "@acHomeBody": {
+    "description": "Bosh ekran kartasi matni",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acHomeDisputes": "Ochiq nizo: {count}",
+  "@acHomeDisputes": {
+    "description": "Kartada nizolar soni",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acCenterNextReview": "Keyingi koʻrik: {date}",
+  "@acCenterNextReview": {
+    "description": "Markaz — keyingi ko'rik",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "acCenterOpenIncidents": "Ochiq hodisa: {count}",
+  "@acCenterOpenIncidents": {
+    "description": "Markaz — hodisalar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acCenterDisputes": "Nizo: {count}",
+  "@acCenterDisputes": {
+    "description": "Markaz — nizolar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acCenterEmptyHint": "Koʻrik va yangilash sanalari bu yerda koʻrinadi.",
+  "@acCenterEmptyHint": {
+    "description": "Markaz bo'sh holati"
+  },
+  "agFamilyTemplate": "Shablon",
+  "@agFamilyTemplate": {
+    "description": "Oilaviy shablon tanlash sarlavhasi"
+  },
+  "agFamilyHint": "Oilaviy kelishuv buyruq emas — birga kelishuv. Guvoh va hakam shart emas; kattalarning tasdigʻi yetarli.",
+  "@agFamilyHint": {
+    "description": "Oilaviy kelishuv izohi"
+  },
+  "agTplChores": "Uyda kim nima qiladi",
+  "@agTplChores": {
+    "description": "Oilaviy shablon: uy ishi"
+  },
+  "agTplChoresHint": "Har kimning uy ishi aniq; bajarilmasa — ayblamasdan xabar bering.",
+  "@agTplChoresHint": {
+    "description": "Uy ishi shabloni izohi"
+  },
+  "agTplMoney": "Pul qayerda turadi va kim yuritadi",
+  "@agTplMoney": {
+    "description": "Oilaviy shablon: pul"
+  },
+  "agTplMoneyHint": "Umumiy pul qayerda, kim yuritadi va qanday koʻrinadi.",
+  "@agTplMoneyHint": {
+    "description": "Pul shabloni izohi"
+  },
+  "agTplHavas": "Havas chegarasi",
+  "@agTplHavas": {
+    "description": "Oilaviy shablon: havas"
+  },
+  "agTplHavasHint": "Oilada havas xarajatlari chegarasi (Havas boʻlimi bilan bogʻlanadi).",
+  "@agTplHavasHint": {
+    "description": "Havas shabloni izohi"
+  },
+  "agTplCouncil": "Oila kengashi qachon oʻtadi",
+  "@agTplCouncil": {
+    "description": "Oilaviy shablon: kengash"
+  },
+  "agTplCouncilHint": "Oylik kengash kuni va qanday qarorlar qabul qilinadi.",
+  "@agTplCouncilHint": {
+    "description": "Kengash shabloni izohi"
+  },
+  "agJDutyIncident": "Vazifa bajarilmadi",
+  "@agJDutyIncident": {
+    "description": "Jurnal: vazifa hodisasi"
+  },
+  "agJReviewOpened": "Koʻrik ochildi",
+  "@agJReviewOpened": {
+    "description": "Jurnal: ko'rik ochildi"
+  },
+  "agJReviewAck": "Koʻrik javobi",
+  "@agJReviewAck": {
+    "description": "Jurnal: ko'rik javobi"
+  },
+  "agJAccountReview": "Koʻrik bayonnomasi",
+  "@agJAccountReview": {
+    "description": "Jurnal: bayonnoma"
+  },
+  "agJProfitSpikeAck": "«Katta foyda» tasdigʻi",
+  "@agJProfitSpikeAck": {
+    "description": "Jurnal: katta foyda tasdig'i"
+  },
+  "agJDisputeOpened": "Nizo",
+  "@agJDisputeOpened": {
+    "description": "Jurnal: nizo"
+  },
+  "agJArbiterDecision": "Hakam qarori",
+  "@agJArbiterDecision": {
+    "description": "Jurnal: hakam qarori"
+  },
+  "agErrReviewLocked": "Bu sanagacha yozuvlar koʻrik bayonnomasi bilan qulflangan.",
+  "@agErrReviewLocked": {
+    "description": "Xato: davr qulflangan"
+  },
+  "agErrReviewOpen": "Koʻrik ochiq. Avval uni yakunlang.",
+  "@agErrReviewOpen": {
+    "description": "Xato: ko'rik ochiq"
+  },
+  "agErrNoReview": "Bu koʻrik ochiq emas.",
+  "@agErrNoReview": {
+    "description": "Xato: ko'rik ochiq emas"
+  },
+  "agErrReviewIncomplete": "Hamma tomon javob bersin.",
+  "@agErrReviewIncomplete": {
+    "description": "Xato: javoblar to'liq emas"
+  },
+  "agErrReviewAcked": "Bu tomon allaqachon javob bergan.",
+  "@agErrReviewAcked": {
+    "description": "Xato: qayta javob"
+  },
+  "agErrObjection": "Eʼtiroz uchun izoh yozing.",
+  "@agErrObjection": {
+    "description": "Xato: e'tiroz izohi yo'q"
+  },
+  "agErrReasonRequired": "Sababni yozing.",
+  "@agErrReasonRequired": {
+    "description": "Xato: sabab yo'q"
+  },
+  "agErrDutyNotFound": "Vazifa topilmadi.",
+  "@agErrDutyNotFound": {
+    "description": "Xato: vazifa topilmadi"
+  },
+  "agErrPartyNotFound": "Tomon topilmadi.",
+  "@agErrPartyNotFound": {
+    "description": "Xato: tomon topilmadi"
+  },
+  "agErrInDispute": "Kelishuv nizoda — avval hakam qarori kerak.",
+  "@agErrInDispute": {
+    "description": "Xato: nizo ochiq"
+  },
+  "agErrDisputeNotFound": "Nizo topilmadi.",
+  "@agErrDisputeNotFound": {
+    "description": "Xato: nizo topilmadi"
+  },
+  "agErrDisputeDecided": "Bu nizo allaqachon hal qilingan.",
+  "@agErrDisputeDecided": {
+    "description": "Xato: nizo hal qilingan"
+  },
+  "agErrClaimRequired": "Mavzu va talabni yozing.",
+  "@agErrClaimRequired": {
+    "description": "Xato: nizo maydonlari"
+  },
+  "agErrDecisionRequired": "Qaror matnini yozing.",
+  "@agErrDecisionRequired": {
+    "description": "Xato: qaror matni yo'q"
+  },
+  "agErrSpikeAck": "Katta foyda: ikkala tomon 4–5-bandni qayta oʻqib tasdiqlasin.",
+  "@agErrSpikeAck": {
+    "description": "Xato: katta foyda tasdig'i kerak"
+  },
+  "agErrAcked": "Bu tomon allaqachon tasdiqlagan.",
+  "@agErrAcked": {
+    "description": "Xato: qayta tasdiq"
+  },
+  "acPdfColDate": "Sana",
+  "@acPdfColDate": {
+    "description": "PDF: sana ustuni"
+  },
+  "acPdfColKind": "Tur",
+  "@acPdfColKind": {
+    "description": "PDF: tur ustuni"
+  },
+  "acPdfColParty": "Tomon",
+  "@acPdfColParty": {
+    "description": "PDF: tomon ustuni"
+  },
+  "acPdfColAmount": "Summa",
+  "@acPdfColAmount": {
+    "description": "PDF: summa ustuni"
+  },
+  "acPdfColNote": "Izoh",
+  "@acPdfColNote": {
+    "description": "PDF: izoh ustuni"
+  },
+  "acReviewAcksTitle": "Tomonlar javobi",
+  "@acReviewAcksTitle": {
+    "description": "Koʻrik: tomonlar javobi boʻlimi"
+  },
+  "acPdfFolderAgreement": "Kelishuv",
+  "@acPdfFolderAgreement": {
+    "description": "Hakam papkasi: kelishuv boʻlimi"
+  },
+  "acPdfFolderVersions": "Versiyalar tarixi",
+  "@acPdfFolderVersions": {
+    "description": "Hakam papkasi: versiyalar"
+  },
+  "acPdfFolderParties": "Tomonlar",
+  "@acPdfFolderParties": {
+    "description": "Hakam papkasi: tomonlar"
+  },
+  "acPdfFolderLedger": "Davr yozuvlari va zanjir tekshiruvi",
+  "@acPdfFolderLedger": {
+    "description": "Hakam papkasi: hisob yozuvlari"
+  },
+  "acPdfFolderMinutes": "Koʻrik bayonnomalari",
+  "@acPdfFolderMinutes": {
+    "description": "Hakam papkasi: bayonnomalar"
+  },
+  "acPdfFolderIncidents": "Vazifa hodisalari",
+  "@acPdfFolderIncidents": {
+    "description": "Hakam papkasi: hodisalar"
+  },
+  "acPdfFolderClaims": "Tomonlarning talablari",
+  "@acPdfFolderClaims": {
+    "description": "Hakam papkasi: talablar"
+  },
+  "acPdfFolderDecision": "Hakam qarorlari",
+  "@acPdfFolderDecision": {
+    "description": "Hakam papkasi: qarorlar"
+  },
+  "acPdfFolderIntegrity": "Zanjir yaxlitligi",
+  "@acPdfFolderIntegrity": {
+    "description": "Hakam papkasi: yaxlitlik"
+  },
+  "acPdfNoDecision": "Hakam qarori hali yoʻq.",
+  "@acPdfNoDecision": {
+    "description": "Hakam qarori yo'q"
+  },
+  "acPdfNone": "Yoʻq",
+  "@acPdfNone": {
+    "description": "Ro'yxat boʻsh"
+  },
+  "acPdfMinutesLine": "{date} · {id} · zanjir boshi {head}",
+  "@acPdfMinutesLine": {
+    "description": "Bayonnoma qatori",
+    "placeholders": {
+      "date": {},
+      "id": {},
+      "head": {}
+    }
+  },
+  "acPdfObjection": "Eʼtiroz: {note}",
+  "@acPdfObjection": {
+    "description": "Bayonnomadagi e'tiroz",
+    "placeholders": {
+      "note": {}
+    }
+  },
+  "acPdfClaimLine": "{party}: {claim}",
+  "@acPdfClaimLine": {
+    "description": "Talab qatori",
+    "placeholders": {
+      "party": {},
+      "claim": {}
+    }
+  },
+  "acPdfDecisionLine": "{date} · {decision}",
+  "@acPdfDecisionLine": {
+    "description": "Qaror qatori",
+    "placeholders": {
+      "date": {},
+      "decision": {}
+    }
+  },
+  "acPdfCutoffLine": "Kesim: {date}",
+  "@acPdfCutoffLine": {
+    "description": "PDF: kesim sanasi",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "acPdfIncidentLine": "{date} · {party}: {reason}",
+  "@acPdfIncidentLine": {
+    "description": "PDF: hodisa qatori",
+    "placeholders": {
+      "date": {},
+      "party": {},
+      "reason": {}
+    }
+  },
+  "offerQExit": "Pulni istagan vaqtda qaytarib olsa boʻladimi?",
+  "@offerQExit": {
+    "description": "Taklif savoli: chiqish"
+  },
+  "offerQLicense": "Odamlardan pul yigʻishga davlat ruxsati bormi?",
+  "@offerQLicense": {
+    "description": "Taklif savoli: ruxsat"
+  },
+  "offerQVerified": "Ishni oʻz koʻzingiz bilan koʻrdingizmi (ombor, mol, hujjat)?",
+  "@offerQVerified": {
+    "description": "Taklif savoli: o'z ko'zi bilan"
+  },
+  "offerFlagExit": "Pulni qaytarib olish qiyin — kirish oson, chiqish qiyin boʻlsa, qoching.",
+  "@offerFlagExit": {
+    "description": "Bayroq: chiqish qiyin"
+  },
+  "offerFlagLicense": "Davlat ruxsati yoʻq — odamlardan pul yigʻish qonuniy boʻlmasligi mumkin.",
+  "@offerFlagLicense": {
+    "description": "Bayroq: ruxsat yo'q"
+  },
+  "offerFlagVerified": "Ishni koʻrsatishmadi. Halol taklif egasi ishini koʻrsatishdan qochmaydi.",
+  "@offerFlagVerified": {
+    "description": "Bayroq: tekshirishga ruxsat yo'q"
+  },
+  "offerVerifyTitle": "Pul qoʻyishdan oldin oʻz koʻzingiz bilan koʻring",
+  "@offerVerifyTitle": {
+    "description": "Tekshiruv ro'yxati sarlavhasi"
+  },
+  "offerVerifyGoods": "Ombor va mol: nima sotiladi, qayerda turadi?",
+  "@offerVerifyGoods": {
+    "description": "Tekshiruv: mol"
+  },
+  "offerVerifyDocs": "Shartnoma: pul nimaga ishlatiladi, zarar kim zimmasida?",
+  "@offerVerifyDocs": {
+    "description": "Tekshiruv: shartnoma"
+  },
+  "offerVerifyLicense": "Odamlardan pul yigʻishga davlat ruxsati",
+  "@offerVerifyLicense": {
+    "description": "Tekshiruv: ruxsat"
+  },
+  "offerVerifySource": "Toʻlovlar qayerdan: mol sotuvidanmi yoki yangi kirganlarning pulidanmi?",
+  "@offerVerifySource": {
+    "description": "Tekshiruv: to'lov manbai"
+  },
+  "offerVerifyExit": "Pulni qaytarib olish tartibi",
+  "@offerVerifyExit": {
+    "description": "Tekshiruv: qaytarish"
+  },
+  "offerVerifyHint": "Ishi halol odam bu iltimosdan quvonadi. Rad etish yoki shoshirishning oʻzi xavf belgisi.",
+  "@offerVerifyHint": {
+    "description": "Tekshiruv izohi"
+  },
+  "offerRate": "Vaʼda qilingan foyda, oyiga % (ixtiyoriy)",
+  "@offerRate": {
+    "description": "Oylik stavka maydoni"
+  },
+  "offerRateYearly": "Oyiga {rate} % — yiliga oddiy hisobda {simple} barobar, murakkab hisobda {compound} barobar. Bunday daromadni halol savdo yoki ishlab chiqarish barqaror bera olmaydi.",
+  "@offerRateYearly": {
+    "description": "Yillik ko'paytma ogohlantirishi",
+    "placeholders": {
+      "rate": {},
+      "simple": {},
+      "compound": {}
+    }
+  },
+  "offerAmount": "Qancha pul qoʻymoqchisiz? (ixtiyoriy)",
+  "@offerAmount": {
+    "description": "Summa maydoni"
+  },
+  "offerSignsTitle": "Besh xavf belgisi",
+  "@offerSignsTitle": {
+    "description": "Belgilar bo'limi"
+  },
+  "offerSignsNone": "Xavf belgisi topilmadi. Baribir ishni oʻz koʻzingiz bilan koʻring.",
+  "@offerSignsNone": {
+    "description": "Belgi yo'q"
+  },
+  "offerSignsCaution": "Bitta belgi bor — hushyor torting.",
+  "@offerSignsCaution": {
+    "description": "Bitta belgi"
+  },
+  "offerSignsFlee": "Ikki va undan koʻp belgi — qoching.",
+  "@offerSignsFlee": {
+    "description": "Ikki va ko'p belgi"
+  },
+  "offerSignGuaranteed": "Katta foyda kafolatlanmoqda: halol foydaning kafolati boʻlmaydi, unda tavakkal bor.",
+  "@offerSignGuaranteed": {
+    "description": "Belgi 1"
+  },
+  "offerSignUrgency": "Shoshirishmoqda: oʻylab olishingizdan qoʻrqishadi.",
+  "@offerSignUrgency": {
+    "description": "Belgi 2"
+  },
+  "offerSignRecruit": "Daromad moldan emas, yangi odam olib kelishdan.",
+  "@offerSignRecruit": {
+    "description": "Belgi 3"
+  },
+  "offerSignNoBusiness": "Ishning oʻzi koʻrinmaydi: mol, hujjat yoki ruxsat yoʻq, faqat idora.",
+  "@offerSignNoBusiness": {
+    "description": "Belgi 4"
+  },
+  "offerSignHardExit": "Kirish oson, chiqish qiyin.",
+  "@offerSignHardExit": {
+    "description": "Belgi 5"
+  },
+  "offerCatRibo": "Ribo: zarar boʻlishilmaydigan kafolatli foyda.",
+  "@offerCatRibo": {
+    "description": "Toifa: ribo"
+  },
+  "offerCatGharar": "Gʻarar: noaniq bitim — nima sotilayotgani, pul qayerda ishlayotgani nomaʼlum.",
+  "@offerCatGharar": {
+    "description": "Toifa: g'arar"
+  },
+  "offerCatQimor": "Qimor: yutuq faqat boshqaning yutqazishidan — toʻlov yangi kirganlarning pulidan.",
+  "@offerCatQimor": {
+    "description": "Toifa: qimor"
+  },
+  "offerPyramidTitle": "Piramida qanday choʻkadi?",
+  "@offerPyramidTitle": {
+    "description": "Piramida bo'limi"
+  },
+  "offerPyramidRecruits": "Har kishi necha odam olib keladi",
+  "@offerPyramidRecruits": {
+    "description": "Piramida: k"
+  },
+  "offerPyramidPopulation": "Shahar aholisi",
+  "@offerPyramidPopulation": {
+    "description": "Piramida: N"
+  },
+  "offerPyramidResult": "{levels}-qavatda odam tugaydi. Eng pastki qavatda {share} % odam boʻladi — choʻkkan kuni ular pulini yoʻqotadi. Siz qaysi qavatda boʻlasiz?",
+  "@offerPyramidResult": {
+    "description": "Piramida natijasi",
+    "placeholders": {
+      "levels": {
+        "type": "int"
+      },
+      "share": {}
+    }
+  },
+  "offerPyramidBait": "Birinchi kirganlarga toʻlov — boshqalarni jalb qilish uchun: u yangi kirganlarning pulidan toʻlanadi.",
+  "@offerPyramidBait": {
+    "description": "Piramida: yem"
+  },
+  "offerDecisionTitle": "Qaror",
+  "@offerDecisionTitle": {
+    "description": "Qaror bo'limi"
+  },
+  "offerAdvisor": "Kim bilan maslahatlashdingiz?",
+  "@offerAdvisor": {
+    "description": "Maslahatchi maydoni"
+  },
+  "offerAdviceNote": "Maslahat soʻrash — zaiflik emas. Bir kecha uxlab koʻring: bir soat vaqt ajratish yillik mehnatni asraydi.",
+  "@offerAdviceNote": {
+    "description": "Maslahat izohi"
+  },
+  "offerDecline": "Rad etdim",
+  "@offerDecline": {
+    "description": "Qaror: rad"
+  },
+  "offerPostpone": "Keyinga qoldiraman",
+  "@offerPostpone": {
+    "description": "Qaror: keyinga"
+  },
+  "offerAccept": "Pul qoʻyaman",
+  "@offerAccept": {
+    "description": "Qaror: qabul"
+  },
+  "offerAcceptOpensAt": "«Pul qoʻyaman» {time} dan keyin ochiladi.",
+  "@offerAcceptOpensAt": {
+    "description": "24 soat cheklovi",
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "offerDecisionDeclined": "Rad etildi",
+  "@offerDecisionDeclined": {
+    "description": "Tarix: rad"
+  },
+  "offerDecisionPostponed": "Keyinga qoldirildi",
+  "@offerDecisionPostponed": {
+    "description": "Tarix: keyinga"
+  },
+  "offerDecisionAccepted": "Pul qoʻyildi",
+  "@offerDecisionAccepted": {
+    "description": "Tarix: qabul"
+  },
+  "offerDecisionSaved": "Qaror yozildi.",
+  "@offerDecisionSaved": {
+    "description": "Qaror saqlandi"
+  },
+  "offerErrAdvisor": "Avval kim bilan maslahatlashganingizni yozing.",
+  "@offerErrAdvisor": {
+    "description": "Xato: maslahatchi"
+  },
+  "offerErrCoolingOff": "Tekshiruvdan keyin 24 soat oʻtmaguncha bu qaror ochilmaydi.",
+  "@offerErrCoolingOff": {
+    "description": "Xato: 24 soat"
+  },
+  "offerErrDecided": "Bu taklif boʻyicha qaror allaqachon qabul qilingan.",
+  "@offerErrDecided": {
+    "description": "Xato: qaror bor"
+  },
+  "offerErrRate": "Foizni toʻgʻri yozing (masalan, 35 yoki 2,5).",
+  "@offerErrRate": {
+    "description": "Xato: foiz"
+  },
+  "lumpTitle": "Katta summa tushdi",
+  "@lumpTitle": {
+    "description": "Katta summa ekrani"
+  },
+  "lumpHint": "Katta summa qoʻlga kirdimi (yillar davomidagi jamgʻarma, meros yoki mulk sotuvi)? Avval oilaning olti oylik zaxirasini toʻldiring, qolganini hunarga ishlating.",
+  "@lumpHint": {
+    "description": "Katta summa izohi"
+  },
+  "lumpAmount": "Summa",
+  "@lumpAmount": {
+    "description": "Summa"
+  },
+  "lumpRate": "Kurs: 1 {currency} necha soʻm",
+  "@lumpRate": {
+    "description": "Kurs maydoni",
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "lumpReserve": "Oilaviy zaxiraga (6 oy): {amount}",
+  "@lumpReserve": {
+    "description": "Zaxiraga",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "lumpInvest": "Hunarga ishlatish mumkin: {amount}",
+  "@lumpInvest": {
+    "description": "Sarmoyaga",
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "lumpWallNote": "Bu pulni savdoga ham, sheriklikka ham qoʻshmaysiz.",
+  "@lumpWallNote": {
+    "description": "Zaxira izohi"
+  },
+  "lumpReserveFull": "Oilaviy zaxira allaqachon toʻla — hammasini hunarga ishlatsa boʻladi.",
+  "@lumpReserveFull": {
+    "description": "Zaxira to'la"
+  },
+  "lumpNoTarget": "Avval 6 oylik zarur xarajatni belgilang — shunda zaxira qancha boʻlishi kerakligi maʼlum boʻladi.",
+  "@lumpNoTarget": {
+    "description": "Maqsad yo'q"
+  },
+  "lumpDeposit": "Zaxiraga qoʻyish",
+  "@lumpDeposit": {
+    "description": "Qorovulga qo'yish tugmasi"
+  },
+  "lumpDeposited": "Zaxiraga qoʻyildi.",
+  "@lumpDeposited": {
+    "description": "Qo'yildi"
+  },
+  "lumpIdeas": "Hunardan ishga oʻtish",
+  "@lumpIdeas": {
+    "description": "G'oyalarga o'tish"
+  },
+  "lumpOpen": "Katta summa tushdimi?",
+  "@lumpOpen": {
+    "description": "Kelajagim ekranidagi tugma"
+  },
+  "ideaTplWorkshop": "Shablon: payvandlash ustaxonasi",
+  "@ideaTplWorkshop": {
+    "description": "G'oya shabloni"
+  },
+  "ideaTplWelder": "Payvand apparati",
+  "@ideaTplWelder": {
+    "description": "CAPEX: payvand"
+  },
+  "ideaTplGrinder": "Kesish asbobi (bolgarka)",
+  "@ideaTplGrinder": {
+    "description": "CAPEX: kesish"
+  },
+  "ideaTplRent": "Ustaxona ijarasi (birinchi oy)",
+  "@ideaTplRent": {
+    "description": "CAPEX: ijara"
+  },
+  "ideaTplMetal": "Metall (birinchi buyurtmalar uchun)",
+  "@ideaTplMetal": {
+    "description": "CAPEX: metall"
+  },
+  "ideaTplSafety": "Himoya kiyimi va niqob",
+  "@ideaTplSafety": {
+    "description": "CAPEX: himoya"
+  },
+  "ideaDemandQ": "Talab bormi? Kim buyurtma beradi, atrofda qancha uy qurilmoqda yoki yangilanmoqda?",
+  "@ideaDemandQ": {
+    "description": "Talab savoli"
+  },
+  "ideaTplSuggest": "Kerak boʻladiganlar — bosing va narxini yozing:",
+  "@ideaTplSuggest": {
+    "description": "Shablon tavsiyalari"
+  }
+}

@@ -1,0 +1,22 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+    strict-inference: true
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.pigeon.dart"
+    - "lib/app/l10n/gen/**"
+    - "test/drift/**/generated/**"
+    - "build/**"
+  errors:
+    # Generatsiya qilingan kod uchun ogohlantirishlar analizdan chiqarilgan.
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    # Ilova (paket emas) — ommaviy API hujjatlari majburiy emas.
+    public_member_api_docs: false

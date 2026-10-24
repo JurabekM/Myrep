@@ -1,0 +1,72 @@
+{
+ "suite": "journal_chain",
+ "version": 1,
+ "description": "hash_n = hex(SHA256(prevHash + \"\\n\" + JCS(entry_n))), genesis = 64 ta '0'",
+ "cases": [
+  {
+   "id": "chain-001",
+   "input": {
+    "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+    "entries": [
+     {
+      "id": "0192a000-0000-7000-8000-000000000001",
+      "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+      "kind": "CONTRIBUTION",
+      "partyId": "P1",
+      "amount": {
+       "minor": "300000000",
+       "currency": "UZS"
+      },
+      "date": "2026-10-01",
+      "note": "Akmal hissasi"
+     },
+     {
+      "id": "0192a000-0000-7000-8000-000000000002",
+      "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+      "kind": "CONTRIBUTION",
+      "partyId": "P2",
+      "amount": {
+       "minor": "300000000",
+       "currency": "UZS"
+      },
+      "date": "2026-10-01",
+      "note": "Jasur hissasi"
+     },
+     {
+      "id": "0192a000-0000-7000-8000-000000000003",
+      "agreementId": "0192a000-0000-7000-8000-0000000000a1",
+      "kind": "PROFIT_DISTRIBUTION",
+      "partyId": "P1",
+      "amount": {
+       "minor": "140000000",
+       "currency": "UZS"
+      },
+      "date": "2026-10-31",
+      "note": "1-oy foyda ulushi"
+     }
+    ]
+   },
+   "expected": {
+    "hashes": [
+     "78d0afb130d7837652ef741ffd73657c30f9fe463ce2f987313b78439f7ff6a9",
+     "7634e42f15a5622cea9cf287db93849a902bf26b498419b5a44049bb64153741",
+     "248110cd869c3418f4dcafb2f7e2a973bee044ab3e0e6d140287d340c3e94ef0"
+    ]
+   }
+  },
+  {
+   "id": "chain-002-tamper",
+   "description": "2-yozuv minor 300000001 ga o'zgartirilgan",
+   "input": {
+    "base": "chain-001",
+    "tamper": {
+     "index": 1,
+     "amountMinor": "300000001"
+    }
+   },
+   "expected": {
+    "firstBroken": 2
+   }
+  }
+ ]
+}

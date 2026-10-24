@@ -1,0 +1,221 @@
+{
+ "suite": "readiness_gate",
+ "version": 1,
+ "description": "Darvoza: qorovul >= 6 oy VA (foizli qarz yo'q YOKI chiqish rejasi bor). reserveMonthsTenths: 60 = 6,0 oy",
+ "cases": [
+  {
+   "id": "gate-001",
+   "input": {
+    "reserveMonthsTenths": 0,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET"
+    ]
+   }
+  },
+  {
+   "id": "gate-002",
+   "input": {
+    "reserveMonthsTenths": 0,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET"
+    ]
+   }
+  },
+  {
+   "id": "gate-003",
+   "input": {
+    "reserveMonthsTenths": 0,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET",
+     "INTEREST_DEBT_WITHOUT_PLAN"
+    ]
+   }
+  },
+  {
+   "id": "gate-004",
+   "input": {
+    "reserveMonthsTenths": 0,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET"
+    ]
+   }
+  },
+  {
+   "id": "gate-005",
+   "input": {
+    "reserveMonthsTenths": 59,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET"
+    ]
+   }
+  },
+  {
+   "id": "gate-006",
+   "input": {
+    "reserveMonthsTenths": 59,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET"
+    ]
+   }
+  },
+  {
+   "id": "gate-007",
+   "input": {
+    "reserveMonthsTenths": 59,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET",
+     "INTEREST_DEBT_WITHOUT_PLAN"
+    ]
+   }
+  },
+  {
+   "id": "gate-008",
+   "input": {
+    "reserveMonthsTenths": 59,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "RESERVE_BELOW_TARGET"
+    ]
+   }
+  },
+  {
+   "id": "gate-009",
+   "input": {
+    "reserveMonthsTenths": 60,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "OPEN",
+    "reasons": []
+   }
+  },
+  {
+   "id": "gate-010",
+   "input": {
+    "reserveMonthsTenths": 60,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "OPEN",
+    "reasons": []
+   }
+  },
+  {
+   "id": "gate-011",
+   "input": {
+    "reserveMonthsTenths": 60,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "INTEREST_DEBT_WITHOUT_PLAN"
+    ]
+   }
+  },
+  {
+   "id": "gate-012",
+   "input": {
+    "reserveMonthsTenths": 60,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "OPEN",
+    "reasons": []
+   }
+  },
+  {
+   "id": "gate-013",
+   "input": {
+    "reserveMonthsTenths": 72,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "OPEN",
+    "reasons": []
+   }
+  },
+  {
+   "id": "gate-014",
+   "input": {
+    "reserveMonthsTenths": 72,
+    "hasInterestDebt": false,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "OPEN",
+    "reasons": []
+   }
+  },
+  {
+   "id": "gate-015",
+   "input": {
+    "reserveMonthsTenths": 72,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": false
+   },
+   "expected": {
+    "state": "LOCKED",
+    "reasons": [
+     "INTEREST_DEBT_WITHOUT_PLAN"
+    ]
+   }
+  },
+  {
+   "id": "gate-016",
+   "input": {
+    "reserveMonthsTenths": 72,
+    "hasInterestDebt": true,
+    "hasRecoveryPlan": true
+   },
+   "expected": {
+    "state": "OPEN",
+    "reasons": []
+   }
+  }
+ ]
+}
