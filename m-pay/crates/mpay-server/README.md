@@ -36,7 +36,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
 
 * **mTLS** (ADR-0011): `[http] client_ca` + `[auth] require_mtls` — operator/terminal sertifikati
   CN = API kaliti `id`; hamyonlar sertifikatsiz (PQ Link). `init --tls` sandbox mijoz CA'si va
-  `operator-1`/`terminal-1` sertifikatlarini yaratadi.
+  `operator-1`/`terminal-1` sertifikatlarini yaratadi. Bekor qilish: `[auth] revoked_client_certs`
+  (`mpay-server cert-fingerprint --cert <pem>`).
 * **Kalit almashtirish** (ADR-0012): `identity-next --version N` → `[pqlink.next]`; identifikator
   javobida `next` va joriy kalitlar tasdig'i; o'tish — `[pqlink] mldsa_blob`/`ed25519_label` almashtirish.
 * **Qurilmalar reyestri** (`enroll.rs`, migratsiya `3002`, ADR-0013): `POST /v1/pqlink/enroll` nonce;

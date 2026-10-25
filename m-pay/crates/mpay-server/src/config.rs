@@ -194,6 +194,10 @@ pub struct AuthConfig {
     /// Operator va terminal endpointlari mTLS sertifikatini talab qiladi: CN = API kaliti `id`.
     #[serde(default)]
     pub require_mtls: bool,
+    /// Bekor qilingan mTLS mijoz sertifikatlari: DER'ning SHA-256 (hex, `mpay-server cert-fingerprint`).
+    /// Bunday sertifikat bilan ulanish sertifikatsiz hisoblanadi (`MTLS_REQUIRED`).
+    #[serde(default)]
+    pub revoked_client_certs: Vec<String>,
     #[serde(default)]
     pub keys: Vec<ApiKey>,
 }
@@ -253,6 +257,16 @@ impl Config {
             return Err(ConfigError::Invalid(
                 "auth.require_mtls uchun http.tls_cert va http.client_ca kerak".into(),
             ));
+        }
+        if let Some(bad) = self
+            .auth
+            .revoked_client_certs
+            .iter()
+            .find(|f| f.len() != 64 || hex::decode(f).is_err())
+        {
+            return Err(ConfigError::Invalid(format!(
+                "auth.revoked_client_certs: 64 hex kutilgan ({bad})"
+            )));
         }
         if self.http.client_ca.is_some() && self.http.tls_cert.is_none() {
             return Err(ConfigError::Invalid(

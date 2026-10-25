@@ -92,6 +92,19 @@ impl<S: Send + Sync> axum::extract::FromRequestParts<S> for Mtls {
     }
 }
 
+/// Sertifikat barmoq izi: DER'ning SHA-256.
+pub fn cert_fingerprint(der: &[u8]) -> [u8; 32] {
+    Sha256::digest(der).into()
+}
+
+/// PEM fayldagi birinchi sertifikat barmoq izi (hex) — `revoked_client_certs` uchun.
+pub fn cert_fingerprint_pem(path: &std::path::Path) -> Result<String, String> {
+    use rustls::pki_types::pem::PemObject;
+    let der = rustls::pki_types::CertificateDer::from_pem_file(path)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(hex::encode(cert_fingerprint(der.as_ref())))
+}
+
 /// DER sertifikatdan subject CN.
 pub fn cert_cn(der: &[u8]) -> Option<String> {
     use der::Decode;

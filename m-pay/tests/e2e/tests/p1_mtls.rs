@@ -111,3 +111,27 @@ async fn foreign_client_cert_rejected_at_tls() {
         .unwrap_err();
     assert!(matches!(e, WalletError::Http(_)), "{e:?}");
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn revoked_client_cert_treated_as_missing() {
+    let sb = Sandbox::start_tls(|c| {
+        let (crt, _) = mpay_server::init::client_cert_files("terminal-1");
+        let fp = mpay_server::auth::cert_fingerprint_pem(&c.base_dir.join(crt)).unwrap();
+        c.auth.revoked_client_certs = vec![fp];
+    })
+    .await;
+    // Bekor qilingan terminal sertifikati — 403, kalit to'g'ri bo'lsa ham.
+    let e = sb
+        .client_as(Some("terminal-1"))
+        .get_json::<serde_json::Value>("/v1/terminal/ping", Some(&sb.terminal_key))
+        .await
+        .unwrap_err();
+    assert_eq!(code(&e), (403, "MTLS_REQUIRED"));
+    // Boshqa sertifikatlar ishlaydi.
+    let v: serde_json::Value = sb
+        .client_as(Some("operator-1"))
+        .get_json("/v1/sandbox/accounts", Some(&sb.operator_key))
+        .await
+        .unwrap();
+    assert!(v.as_array().is_some());
+}

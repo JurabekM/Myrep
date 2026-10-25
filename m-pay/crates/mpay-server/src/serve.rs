@@ -65,6 +65,7 @@ pub async fn serve(
     listener: TcpListener,
     app: Router,
     tls: Option<Arc<rustls::ServerConfig>>,
+    revoked: Arc<std::collections::HashSet<[u8; 32]>>,
     shutdown: impl Future<Output = ()> + Send + 'static,
 ) -> std::io::Result<()> {
     let Some(tls) = tls else {
@@ -83,6 +84,7 @@ pub async fn serve(
             () = &mut shutdown => return Ok(()),
         };
         let acceptor = acceptor.clone();
+        let revoked = revoked.clone();
         // Mijoz manzili (IP chegarasi) va mTLS sertifikat CN'i so'rov kengaytmalariga qo'yiladi.
         let app = app.clone();
         tokio::spawn(async move {
@@ -93,12 +95,21 @@ pub async fn serve(
                     return;
                 }
             };
+            // Bekor qilingan sertifikat — mijoz sertifikatsiz hisoblanadi (operator/terminal: 403).
             let cn = tls
                 .get_ref()
                 .1
                 .peer_certificates()
                 .and_then(|c| c.first())
-                .and_then(|c| crate::auth::cert_cn(c.as_ref()));
+                .and_then(|c| {
+                    let fp = crate::auth::cert_fingerprint(c.as_ref());
+                    if revoked.contains(&fp) {
+                        tracing::warn!(%peer, cert = %hex::encode(&fp[..8]), "mTLS: bekor qilingan sertifikat");
+                        None
+                    } else {
+                        crate::auth::cert_cn(c.as_ref())
+                    }
+                });
             let svc = TowerToHyperService::new(tower::ServiceExt::map_request(
                 app,
                 move |mut r: axum::http::Request<hyper::body::Incoming>| {

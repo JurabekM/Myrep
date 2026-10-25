@@ -73,7 +73,17 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
     let addr = listener.local_addr().map_err(|e| e.to_string())?;
     let app = routes::router(state.clone());
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
-    let handle = tokio::spawn(serve::serve(listener, app, tls, async move {
+    let revoked = Arc::new(
+        cfg.auth
+            .revoked_client_certs
+            .iter()
+            .filter_map(|h| {
+                let mut b = [0u8; 32];
+                hex::decode_to_slice(h, &mut b).ok().map(|()| b)
+            })
+            .collect::<std::collections::HashSet<_>>(),
+    );
+    let handle = tokio::spawn(serve::serve(listener, app, tls, revoked, async move {
         let _ = rx.await;
     }));
     tracing::info!(%addr, "mpay-server tinglayapti");

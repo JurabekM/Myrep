@@ -539,3 +539,8 @@ kelsa mijoz IP'si `X-Forwarded-For` dan o'ngdan chapga olinadi (IPv4-mapped IPv6
 boshqa ulanishlarda sarlavha e'tiborsiz. Handshake va `/enroll` IP chegaralari shundan foydalanadi.
 Tekshiruv: unit (2) va e2e `forwarded_for_used_only_behind_trusted_proxy` — proksi ortida mijozlar
 alohida chelaklarda, proksisiz soxta sarlavha chegarani chetlab o'tmaydi.
+
+**mTLS sertifikatini bekor qilish.** `[auth] revoked_client_certs` (DER SHA-256, hex; konfiguratsiyada
+tekshiriladi) va `mpay-server cert-fingerprint`. TLS qabul qilinganda bekor qilingan sertifikat CN'i
+olinmaydi → operator/terminal `403 MTLS_REQUIRED`. Tekshiruv: e2e `revoked_client_cert_treated_as_missing`
+(bekor qilingan terminal sertifikati rad, operator ishlaydi).

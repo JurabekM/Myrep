@@ -70,6 +70,11 @@ enum Cmd {
         #[arg(long)]
         version: u32,
     },
+    /// mTLS mijoz sertifikati barmoq izi (SHA-256, hex) — `[auth] revoked_client_certs` uchun.
+    CertFingerprint {
+        #[arg(long)]
+        cert: PathBuf,
+    },
     /// PQ Link server identifikatorini chiqaradi (qurilmalarda pinlash uchun).
     Identity {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -187,6 +192,10 @@ async fn run(cli: Cli) -> Result<(), String> {
             );
             println!("[pqlink.next]\nmldsa_blob = \"{blob_name}\"\ned25519_label = \"{label}\"\n");
             println!("2) O'tish: [pqlink] mldsa_blob/ed25519_label ni shu qiymatlarga almashtiring, [pqlink.next] ni o'chiring.");
+            Ok(())
+        }
+        Cmd::CertFingerprint { cert } => {
+            println!("{}", mpay_server::auth::cert_fingerprint_pem(&cert)?);
             Ok(())
         }
         Cmd::Identity { config } => {
