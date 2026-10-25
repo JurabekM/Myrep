@@ -180,10 +180,24 @@ pub enum ProvisionResponse {
         challenge_id: String,
         otp_expires_at: i64,
         idv: IdvAssessment,
+        /// OTP SMS yuborilgan telefon (maskalangan); sandbox kanalida yoki yuborilmasa yo'q.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        otp_sent_to: Option<String>,
     },
     Declined {
         idv: IdvAssessment,
     },
+}
+
+/// `POST /v1/tokens/{id}/idv/resend` (sealed) so'rovi va javobi (2-faza P2.1).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OtpResendRequest {
+    pub challenge_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OtpResendResponse {
+    pub otp_sent_to: String,
 }
 
 /// `POST /v1/tokens/{id}/idv/verify` so'rovi.

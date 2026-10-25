@@ -65,6 +65,8 @@ pub struct AppState {
     pub limits: crate::ratelimit::RateLimits,
     pub require_mtls: bool,
     pub trusted_proxies: Vec<crate::clientip::Cidr>,
+    /// OTP yetkazish kanali.
+    pub otp: crate::otp::OtpChannel,
     /// Davriy qayta attestatsiya muddati (soniya); 0 — o'chiq.
     pub reattest_after_secs: i64,
     /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
@@ -434,6 +436,8 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
         require_mtls: cfg.auth.require_mtls,
         trusted_proxies: cfg.http.trusted_proxies.clone(),
+        otp: crate::otp::OtpChannel::from_config(&cfg.otp, |p| cfg.resolve(p))
+            .map_err(BootError::Config)?,
         reattest_after_secs: i64::from(cfg.pqlink.reattest_after_days) * 86_400,
         next_identity,
         revocations,

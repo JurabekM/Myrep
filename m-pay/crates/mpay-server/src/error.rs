@@ -105,6 +105,7 @@ impl From<VaultError> for ApiError {
             VaultError::OtpInvalid => StatusCode::UNPROCESSABLE_ENTITY,
             VaultError::OtpExpired => StatusCode::GONE,
             VaultError::OtpLocked => StatusCode::LOCKED,
+            VaultError::OtpResendLimit => StatusCode::TOO_MANY_REQUESTS,
             VaultError::IdvUnavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
             VaultError::AuditBroken(_) | VaultError::Crypto(_) | VaultError::Db(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR

@@ -155,6 +155,19 @@ impl SoftWallet {
             .await
     }
 
+    /// OTP SMS'ni qayta yuborishni so'raydi (2-faza P2.1); javobda maskalangan telefon.
+    pub async fn resend_otp(
+        &mut self,
+        token_id: &TokenId,
+        challenge_id: &str,
+    ) -> Result<mpay_common::api::OtpResendResponse, WalletError> {
+        let req = mpay_common::api::OtpResendRequest {
+            challenge_id: challenge_id.to_owned(),
+        };
+        self.call(&format!("/v1/tokens/{token_id}/idv/resend"), &req)
+            .await
+    }
+
     /// Qurilma kalitini almashtirish (ADR-0015): `new` — `/v1/pqlink/enroll` nonce'i bilan yaratilgan
     /// kalit. Yangi kalit `REKEY_LABEL ‖ session_id ‖ eski device_id` ni imzolaydi; muvaffaqiyatda
     /// hamyon yangi kalitga o'tadi va keyingi so'rovdan oldin qayta ulanish kerak.

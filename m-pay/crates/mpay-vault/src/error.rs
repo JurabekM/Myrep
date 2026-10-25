@@ -32,6 +32,8 @@ pub enum VaultError {
     OtpExpired,
     #[error("OTP urinishlari tugadi")]
     OtpLocked,
+    #[error("OTP qayta yuborish chegarasi tugadi")]
+    OtpResendLimit,
     #[error("audit zanjiri buzilgan: seq {0}")]
     AuditBroken(i64),
     #[error("kriptografiya xatosi: {0}")]
@@ -56,6 +58,7 @@ impl VaultError {
             Self::OtpInvalid => "OTP_INVALID",
             Self::OtpExpired => "OTP_EXPIRED",
             Self::OtpLocked => "OTP_LOCKED",
+            Self::OtpResendLimit => "OTP_RESEND_LIMIT",
             Self::AuditBroken(_) => "AUDIT_BROKEN",
             Self::Crypto(_) => "CRYPTO_ERROR",
             Self::Db(_) => "DB_ERROR",

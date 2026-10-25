@@ -18,6 +18,7 @@ async fn pkcs11_provisioning_and_tap() {
             pan: f,
             balance_minor: 100_000_000,
             label: "hsm".into(),
+            phone: None,
         }];
     })
     .await;

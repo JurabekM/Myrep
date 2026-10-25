@@ -12,6 +12,7 @@ pub mod dedup;
 pub mod enroll;
 pub mod error;
 pub mod init;
+pub mod otp;
 pub mod ratelimit;
 pub mod revocations;
 pub mod routes;

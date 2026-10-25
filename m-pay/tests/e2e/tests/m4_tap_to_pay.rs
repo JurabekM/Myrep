@@ -17,6 +17,7 @@ fn acct(pan: &str, balance_minor: i64) -> TestAccount {
         pan: pan.into(),
         balance_minor,
         label: "e2e".into(),
+        phone: None,
     }
 }
 

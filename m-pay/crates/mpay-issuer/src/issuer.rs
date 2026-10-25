@@ -40,6 +40,9 @@ pub struct TestAccount {
     pub balance_minor: i64,
     #[serde(default = "default_label")]
     pub label: String,
+    /// Karta egasining telefoni (E.164, sandbox'da fiktiv) — OTP SMS uchun (2-faza P2.1).
+    #[serde(default)]
+    pub phone: Option<String>,
 }
 
 fn default_label() -> String {
@@ -162,12 +165,43 @@ impl Issuer {
             issuer
                 .ensure_account(&pan, a.balance_minor, &a.label)
                 .await?;
+            if let Some(phone) = &a.phone {
+                issuer.set_phone(&pan, phone).await?;
+            }
         }
         Ok(issuer)
     }
 
     fn fp(&self, pan: &Pan) -> Result<PanFingerprint, IssuerError> {
         Ok(pan_fingerprint(self.ks.as_ref(), &self.pan_idx, pan)?)
+    }
+
+    /// Karta egasining telefonini yozadi (E.164: `+` va 7–15 raqam).
+    pub async fn set_phone(&self, pan: &Pan, phone: &str) -> Result<(), IssuerError> {
+        if !mpay_common::phone::is_e164(phone) {
+            return Err(IssuerError::Config(
+                "issuer.accounts.phone: E.164 (+998…) kutilgan",
+            ));
+        }
+        sqlx::query("UPDATE issuer_accounts SET phone = ?, updated_at = ? WHERE pan_fp = ?")
+            .bind(phone)
+            .bind(self.clock.unix())
+            .bind(self.fp(pan)?.0.as_slice())
+            .execute(&self.db)
+            .await?;
+        Ok(())
+    }
+
+    /// OTP yuborish uchun karta egasining telefoni (bo'lmasa `None`). Faqat emitent biladi.
+    pub async fn contact_phone(&self, pan: &Pan) -> Result<Option<String>, IssuerError> {
+        use sqlx::Row;
+        Ok(
+            sqlx::query("SELECT phone FROM issuer_accounts WHERE pan_fp = ?")
+                .bind(self.fp(pan)?.0.as_slice())
+                .fetch_optional(&self.db)
+                .await?
+                .and_then(|r| r.try_get::<Option<String>, _>("phone").ok().flatten()),
+        )
     }
 
     /// Test hisobini yaratadi (mavjud bo'lsa o'zgartirmaydi) va uning ko'rinishini qaytaradi.

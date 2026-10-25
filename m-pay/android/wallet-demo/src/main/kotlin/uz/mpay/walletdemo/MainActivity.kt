@@ -127,7 +127,8 @@ class MainActivity : FragmentActivity() {
             is ProvisionResult.Active -> "Token faol (${r.idv.decision}): ${maskPan(r.profile.dpan)}"
             is ProvisionResult.PendingIdv -> {
                 withContext(Dispatchers.Main) { pending = r }
-                "Qo'shimcha tasdiq kerak (${r.idv.decision}): OTP kiriting"
+                val sms = r.otpSentTo?.let { "kod SMS bilan $it raqamiga yuborildi" } ?: "OTP kiriting"
+                "Qo'shimcha tasdiq kerak (${r.idv.decision}): $sms"
             }
             is ProvisionResult.Declined -> "Rad etildi: ${r.idv.decision} ${r.idv.reasons}"
         }
@@ -140,6 +141,11 @@ class MainActivity : FragmentActivity() {
             withContext(Dispatchers.Main) { pending = null; otp = "" }
             "Token faol: ${maskPan(prof.dpan)}"
         }
+    }
+
+    private fun resendOtp() {
+        val p = pending ?: return
+        work("SMS qayta yuborilmoqda") { "Kod qayta yuborildi: ${wallet.resendOtp(p.tokenId, p.challengeId)}" }
     }
 
     private fun fetchOtp() {
@@ -215,11 +221,17 @@ class MainActivity : FragmentActivity() {
                 OutlinedTextField(expiry, { expiry = it.filter(Char::isDigit).take(4) }, label = { Text("Amal qilish (YYMM)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("expiry"))
                 Button({ provision() }, enabled = !busy && pan.length == 16, modifier = Modifier.fillMaxWidth().testTag("provision")) { Text("Kartani qo'shish") }
 
-                pending?.let {
+                pending?.let { p ->
                     OutlinedTextField(otp, { otp = it.filter(Char::isDigit).take(6) }, label = { Text("OTP") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("otp"))
-                    OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (faqat sandbox OTP uchun)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
+                    // SMS kanali bo'lmasa (sandbox) — kodni operator kaliti bilan olish.
+                    if (p.otpSentTo == null) {
+                        OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (faqat sandbox OTP uchun)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton({ fetchOtp() }, enabled = !busy && operatorKey.isNotEmpty(), modifier = Modifier.testTag("fetch_otp")) { Text("OTP olish") }
+                        if (p.otpSentTo == null) {
+                            OutlinedButton({ fetchOtp() }, enabled = !busy && operatorKey.isNotEmpty(), modifier = Modifier.testTag("fetch_otp")) { Text("OTP olish") }
+                        }
+                        OutlinedButton({ resendOtp() }, enabled = !busy, modifier = Modifier.testTag("resend_otp")) { Text("Qayta yuborish") }
                         Button({ verify() }, enabled = !busy && otp.length == 6, modifier = Modifier.testTag("verify")) { Text("Tasdiqlash") }
                     }
                 }

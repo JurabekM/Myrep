@@ -1874,6 +1874,7 @@ dependencies = [
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-server",
+ "mpay-smsgw",
  "mpay-terminal-sim",
  "serde_json",
  "sqlx",
@@ -1958,7 +1959,9 @@ dependencies = [
  "mpay-shield",
  "mpay-vault",
  "rcgen",
+ "reqwest",
  "rustls",
+ "rustls-native-certs",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -1990,6 +1993,22 @@ dependencies = [
  "toml",
  "tracing",
  "tract-onnx",
+]
+
+[[package]]
+name = "mpay-smsgw"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "clap",
+ "mpay-common",
+ "serde",
+ "serde_json",
+ "subtle",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
 ]
 
 [[package]]

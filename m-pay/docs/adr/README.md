@@ -17,5 +17,6 @@
 | [0013](0013-qurilma-royxati.md) | Qurilmani ro'yxatdan o'tkazish: challenge = server nonce'i | qabul qilingan |
 | [0014](0014-bekor-qilish-royxati.md) | Bekor qilingan server identifikatorlari: oflayn ildiz imzosi | qabul qilingan |
 | [0015](0015-qayta-attestatsiya.md) | Davriy qayta attestatsiya: qurilma kalitini almashtirish | qabul qilingan |
+| [0016](0016-otp-kanali.md) | OTP kanali: emitentdagi telefonga SMS (webhook) | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

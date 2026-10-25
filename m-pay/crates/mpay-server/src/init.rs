@@ -119,11 +119,13 @@ pub const DEMO_ACCOUNTS: &[(&str, i64, &str)] = &[
 
 fn demo_accounts() -> Result<String, String> {
     let mut out = String::new();
-    for (prefix, balance, label) in DEMO_ACCOUNTS {
+    for (i, (prefix, balance, label)) in DEMO_ACCOUNTS.iter().enumerate() {
         let pan = mpay_common::Pan::from_prefix(prefix).map_err(|e| e.to_string())?;
+        // Telefon — fiktiv (`+998 00` operator kodi mavjud emas), faqat virtual SMS shlyuzi uchun.
         out.push_str(&format!(
-            "\n[[issuer.accounts]]\npan = \"{}\"\nbalance_minor = {balance}\nlabel = \"{label}\"\n",
-            pan.expose_digits()
+            "\n[[issuer.accounts]]\npan = \"{}\"\nbalance_minor = {balance}\nlabel = \"{label}\"\nphone = \"+9980000000{:02}\"\n",
+            pan.expose_digits(),
+            i + 1
         ));
     }
     Ok(out)
@@ -274,6 +276,14 @@ api_key_per_second = 500        # operator/terminal kaliti bo'yicha
 api_key_burst = 1000
 device_per_minute = 60          # muhrlangan so'rovlar, qurilma bo'yicha
 device_burst = 30
+
+# OTP yetkazish (2-faza P2.1, ADR-0016): "sandbox" — SMS yuborilmaydi (kod /v1/sandbox/otp orqali);
+# "webhook" — bankning SMS shlyuzi (sinovda virtual shlyuz `mpay-smsgw`). Token faqat muhit o'zgaruvchisida.
+[otp]
+channel = "sandbox"
+# [otp.webhook]
+# url = "http://127.0.0.1:47700/send"
+# token_env = "MPAY_SMS_TOKEN"
 
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]

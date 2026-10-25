@@ -581,3 +581,36 @@ Haqiqiy telefonlar hozircha yo'q, shuning uchun tap emulyatorda virtual NFC ko'p
 **Qanday tekshirildi** (emulyator, TLS + mTLS server, hamyon build pinlari bilan): 25 000 so'm → `00`;
 2 000 000 so'm → "Telefonda tasdiqlang" → barmoq izi → `00`; CDCVM bir martalik; server logida ochiq PAN 0.
 Batafsil: `docs/android-testing.md` §5. Haqiqiy NFC radiosi (§3) — ochiq.
+
+## 2-faza — pilot tayyorgarligi (virtual muhitda)
+
+Qarorlar (2026-10-25): SLA faraz — 200 TPS, p99 < 300 ms (`TODO(spec)`); umumiy ombor — PostgreSQL;
+tartib — avval OTP kanali va HSM. Jadval: `docs/roadmap.md`.
+
+### P2.1 — OTP kanali: emitentdagi telefonga SMS (2026-10-25)
+
+**Nima qilindi**
+
+* Emitent: `issuer_accounts.phone` (migratsiya 2002, E.164), `contact_phone(FPAN)`; `init` demo
+  hisoblariga fiktiv `+99800000000N` raqamlar (`+998 00` operator kodi mavjud emas).
+* Server `[otp]`: `sandbox` (default) yoki `webhook` (Bearer token muhit o'zgaruvchisida, TLS — tizim
+  ildizlari + `ca_file`, bitta qayta urinish). `PENDING_IDV` javobida `otp_sent_to` (maskalangan).
+* `POST /v1/tokens/{id}/idv/resend` — o'sha kod, challenge uchun 3 marta (`OTP_RESEND_LIMIT`, Vault
+  migratsiyasi 1002), qurilma tekshiruvi.
+* `mpay-common::phone` — E.164 tekshiruvi va maskalash.
+* Yangi crate `mpay-smsgw` — virtual SMS shlyuzi (sinov vositasi): `POST /send`, `GET /messages`,
+  nosozlik simulyatsiyasi.
+* Kotlin: `PendingIdv.otpSentTo`, `resendOtp` (mpay-core, wallet-sdk); demo ilovada "Qayta yuborish",
+  SMS kanalida operator kaliti maydoni yashiriladi.
+* ADR-0016, `specs/api.md` §3.3a.
+
+**Qanday tekshirildi**
+
+* e2e `p2_otp.rs` (3): ikkinchi qurilma → YELLOW → SMS emitentdagi raqamga keldi (kod sandbox OTP bilan
+  bir xil), boshqa qurilma resend → 403, 3 marta resend → 4-si 429, SMS'dagi kod bilan tasdiqlash →
+  5 LUK, iste'moldan keyin resend → 404; telefonsiz hisob → `NO_CONTACT`; operator 2 × 503 →
+  `otp_sent_to` yo'q, keyin resend (503 + qayta urinish) o'tadi; shlyuz o'chgan → 502; sandbox kanali →
+  409. Loglarda OTP, to'liq telefon va PAN yo'q.
+* Kotlin ↔ Rust interop: haqiqiy `mpay-server` + `mpay-smsgw`; Kotlin mijoz `otpSentTo` ni oladi, resend
+  qiladi, kodni shlyuz qutisidan o'qib tasdiqlaydi; server va shlyuz loglarida OTP/to'liq telefon yo'q.
+* `cargo test --workspace`: 171 test o'tdi; clippy `-D warnings` toza.

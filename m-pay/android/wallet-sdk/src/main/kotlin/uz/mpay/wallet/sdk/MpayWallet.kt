@@ -189,6 +189,9 @@ class MpayWallet private constructor(context: Context) {
     fun verifyOtp(tokenId: String, challengeId: String, otp: String): CardProfile =
         withReattest { c().verifyOtp(tokenId, challengeId, otp) }.also { save(it) }
 
+    /** OTP SMS'ni karta egasining telefoniga qayta yuboradi; qaytaradi: maskalangan telefon. */
+    fun resendOtp(tokenId: String, challengeId: String): String = withReattest { c().resendOtp(tokenId, challengeId) }
+
     fun sandboxOtp(challengeId: String, operatorKey: String): String = c().sandboxOtp(challengeId, operatorKey)
 
     fun replenish(): Int {

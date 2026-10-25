@@ -88,6 +88,7 @@ async fn transaction_scoring_end_to_end() {
             pan: f,
             balance_minor: 1_000_000_000,
             label: "m5".into(),
+            phone: None,
         }];
     })
     .await;

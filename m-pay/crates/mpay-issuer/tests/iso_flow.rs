@@ -77,6 +77,7 @@ async fn env() -> Env {
                 pan: fpan.expose_digits().into(),
                 balance_minor: 1_000_000,
                 label: "t".into(),
+                phone: None,
             }],
             ..IssuerConfig::default()
         },

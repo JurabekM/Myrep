@@ -47,6 +47,9 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   ro'yxatda bo'lsa server ishga tushmaydi.
 * **Qayta attestatsiya** (ADR-0015): `[pqlink] reattest_after_days`; eskirgan qurilma — `REATTEST_REQUIRED`;
   `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`.
+* **OTP kanali** (`otp.rs`, `[otp]`, ADR-0016): `sandbox` yoki `webhook` — kod karta egasining
+  emitentdagi telefoniga SMS; `PENDING_IDV` da `otp_sent_to` (maskalangan), `POST /v1/tokens/{id}/idv/resend`
+  (3 marta). Sinov shlyuzi — `mpay-smsgw`.
 * **So'rovlar chegarasi** (`ratelimit.rs`, `[rate_limit]`): IP / API kaliti / qurilma bo'yicha token
   bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`).
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):

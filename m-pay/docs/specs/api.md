@@ -36,6 +36,7 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | POST | `/v1/pqlink/finish` | qurilma | PQ Link | ClientFinished → ServerAccept |
 | POST | `/v1/tokens` | qurilma | sealed | provisioning |
 | POST | `/v1/tokens/{token_id}/idv/verify` | qurilma | sealed | YELLOW: OTP |
+| POST | `/v1/tokens/{token_id}/idv/resend` | qurilma | sealed | OTP SMS'ni qayta yuborish (ADR-0016) |
 | POST | `/v1/tokens/{token_id}/luks` | qurilma | sealed | LUK to'ldirish |
 | GET | `/v1/tokens/{token_id}` | operator | — | token holati (maskalangan) |
 | POST | `/v1/tokens/{token_id}/suspend` | operator | — | ACTIVE → SUSPENDED |
@@ -84,10 +85,14 @@ Javob (`data`) — `status` bo'yicha:
   "idv": { "decision": "GREEN", "score": 100, "reasons": ["STUB_SCENARIO_10"] } }
 
 { "status": "PENDING_IDV", "token_id": "tok_…", "challenge_id": "chl_<32 hex>",
-  "otp_expires_at": 1792, "idv": { "decision": "YELLOW", … } }
+  "otp_expires_at": 1792, "idv": { "decision": "YELLOW", … },
+  "otp_sent_to": "+998*******01" }
 
 { "status": "DECLINED", "idv": { "decision": "RED", … } }
 ```
+
+`otp_sent_to` — `[otp] channel = "webhook"` da kod yuborilgan emitentdagi telefon (maskalangan);
+sandbox kanalida, emitentda raqam bo'lmasa yoki shlyuz xatosida maydon yo'q (ADR-0016).
 
 Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `IDV_UNAVAILABLE`.
 
@@ -97,6 +102,14 @@ So'rov: `{"challenge_id": "chl_…", "otp": "123456"}`. Javob: token profili (`A
 `token_id … luks` maydonlari, `status` va `idv` siz).
 Xatolar: `OTP_INVALID` (422), `OTP_EXPIRED` (410), `OTP_LOCKED` (423, 3 urinish),
 `CHALLENGE_NOT_FOUND`, `DEVICE_MISMATCH` (403), `INVALID_STATE` (409).
+
+### 3.3a `POST /v1/tokens/{token_id}/idv/resend` (sealed)
+
+So'rov: `{"challenge_id": "chl_…"}`. Javob: `{"otp_sent_to": "+998*******01"}` — o'sha kod
+karta egasining emitentdagi raqamiga qayta yuborildi (ADR-0016).
+Xatolar: `OTP_RESEND_LIMIT` (429, challenge uchun 3 marta), `OTP_EXPIRED` (410), `CHALLENGE_NOT_FOUND`
+(404, iste'mol qilingan ham), `DEVICE_MISMATCH` (403), `NO_CONTACT` (409, emitentda raqam yo'q),
+`OTP_CHANNEL_DISABLED` (409, sandbox kanali), `OTP_DELIVERY_FAILED` (502, shlyuz javob bermadi).
 
 ### 3.4 `POST /v1/tokens/{token_id}/luks` (sealed)
 

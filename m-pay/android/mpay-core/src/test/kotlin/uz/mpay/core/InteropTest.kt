@@ -73,6 +73,14 @@ class InteropTest {
     private fun cred(key: String): String =
         File(sandbox, "dev-credentials.env").readLines().first { it.startsWith("$key=") }.substringAfter("=").trim()
 
+    /** Virtual SMS shlyuzidagi xabarlar matni (`GET /messages?to=`). */
+    private fun smsInbox(gw: String, to: String): List<String> {
+        val c = java.net.URL("$gw/messages?to=" + java.net.URLEncoder.encode(to, "UTF-8")).openConnection() as java.net.HttpURLConnection
+        c.setRequestProperty("Authorization", "Bearer " + System.getenv("MPAY_SMS_TOKEN"))
+        val arr = org.json.JSONArray(c.inputStream.bufferedReader().readText())
+        return (0 until arr.length()).map { arr.getJSONObject(it).getString("text") }
+    }
+
     private fun demoPan(i: Int): String =
         File(sandbox, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[i].substringAfter("\"").substringBefore("\"")
 
@@ -152,7 +160,20 @@ class InteropTest {
         val y = api2.provision(pan, "3112")
         assertTrue("PENDING_IDV kutilgan: $y", y is ProvisionResult.PendingIdv)
         y as ProvisionResult.PendingIdv
-        val otp = api2.sandboxOtp(y.challengeId, cred("MPAY_OPERATOR_KEY"))
+        val gw = System.getenv("MPAY_SMSGW")
+        val otp = if (gw != null) {
+            // 2-faza P2.1: kod emitentdagi (fiktiv) telefonga virtual SMS shlyuzi orqali keldi.
+            assertEquals("+998*******01", y.otpSentTo)
+            assertEquals("+998*******01", api2.resendOtp(y.tokenId, y.challengeId))
+            val inbox = smsInbox(gw, "+998000000001")
+            assertEquals(2, inbox.size)
+            val codes = inbox.map { Regex("""\b(\d{6})\b""").find(it)!!.groupValues[1] }.toSet()
+            assertEquals(1, codes.size)
+            println("SMS keldi: ${y.otpSentTo} (2 ta, bir xil kod)")
+            codes.first()
+        } else {
+            api2.sandboxOtp(y.challengeId, cred("MPAY_OPERATOR_KEY"))
+        }
         val p2 = api2.verifyOtp(y.tokenId, y.challengeId, otp)
         assertEquals(5, p2.luks.size)
 

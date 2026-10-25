@@ -19,7 +19,8 @@ data class Idv(val decision: String, val score: Int, val reasons: List<String>)
 
 sealed class ProvisionResult {
     class Active(val profile: CardProfile, val idv: Idv) : ProvisionResult()
-    class PendingIdv(val tokenId: String, val challengeId: String, val idv: Idv) : ProvisionResult()
+    /** `otpSentTo` — OTP SMS yuborilgan telefon (maskalangan); sandbox kanalida yoki yuborilmasa `null`. */
+    class PendingIdv(val tokenId: String, val challengeId: String, val idv: Idv, val otpSentTo: String? = null) : ProvisionResult()
     class Declined(val idv: Idv) : ProvisionResult()
 }
 
@@ -203,13 +204,22 @@ class MpayClient(
         val d = sealed("/v1/tokens", JSONObject().put("pan", pan).put("expiry", expiryYymm))
         return when (d.getString("status")) {
             "ACTIVE" -> ProvisionResult.Active(profile(d), idv(d.getJSONObject("idv")))
-            "PENDING_IDV" -> ProvisionResult.PendingIdv(d.getString("token_id"), d.getString("challenge_id"), idv(d.getJSONObject("idv")))
+            "PENDING_IDV" -> ProvisionResult.PendingIdv(
+                d.getString("token_id"),
+                d.getString("challenge_id"),
+                idv(d.getJSONObject("idv")),
+                if (d.has("otp_sent_to")) d.getString("otp_sent_to") else null,
+            )
             else -> ProvisionResult.Declined(idv(d.getJSONObject("idv")))
         }
     }
 
     fun verifyOtp(tokenId: String, challengeId: String, otp: String): CardProfile =
         profile(sealed("/v1/tokens/$tokenId/idv/verify", JSONObject().put("challenge_id", challengeId).put("otp", otp)))
+
+    /** OTP SMS'ni qayta yuborish (2-faza P2.1); qaytaradi: maskalangan telefon. Chegara — 3 marta (`429 OTP_RESEND_LIMIT`). */
+    fun resendOtp(tokenId: String, challengeId: String): String =
+        sealed("/v1/tokens/$tokenId/idv/resend", JSONObject().put("challenge_id", challengeId)).getString("otp_sent_to")
 
     fun replenish(tokenId: String): List<CardLuk> = luks(sealed("/v1/tokens/$tokenId/luks", JSONObject()).getJSONArray("luks"))
 

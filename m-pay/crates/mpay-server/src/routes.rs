@@ -47,6 +47,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens", post(provision))
         .route("/v1/tokens/{id}", get(get_token).delete(delete_token))
         .route("/v1/tokens/{id}/idv/verify", post(idv_verify))
+        .route("/v1/tokens/{id}/idv/resend", post(idv_resend))
         .route("/v1/tokens/{id}/luks", post(replenish))
         .route("/v1/devices/rekey", post(rekey))
         .route("/v1/tokens/{id}/suspend", post(suspend))
@@ -388,13 +389,16 @@ fn profile_dto(p: &TokenProfile) -> TokenProfileDto {
 }
 
 async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
-    let vault = s.vault.clone();
+    let st = s.clone();
     sealed(&s, &headers, &body, |info, req: ProvisionDto| async move {
         let fpan = Pan::parse_kind(&req.pan, PanKind::Funding)
             .map_err(|e| ApiError::bad_request(e.to_string()))?;
         let expiry = CardExpiry::parse_yymm(&req.expiry)
             .ok_or_else(|| ApiError::bad_request("expiry YYMM bo'lishi kerak"))?;
-        let out = vault
+        // OTP SMS uchun emitentdan telefonni topishga (nusxa `Drop` da tozalanadi).
+        let fpan_for_otp = fpan.clone();
+        let out = st
+            .vault
             .provision(ProvisionRequest { fpan, expiry }, device_ctx(&info))
             .await?;
         Ok(match out {
@@ -407,13 +411,92 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
                 challenge_id,
                 otp_expires_at,
                 idv,
-            } => ProvisionResponse::PendingIdv {
-                token_id,
-                challenge_id,
-                otp_expires_at,
-                idv,
-            },
+            } => {
+                let ttl = otp_expires_at - st.clock.unix();
+                let otp_sent_to = deliver_otp(&st, &fpan_for_otp, &challenge_id, ttl).await;
+                ProvisionResponse::PendingIdv {
+                    token_id,
+                    challenge_id,
+                    otp_expires_at,
+                    idv,
+                    otp_sent_to,
+                }
+            }
             ProvisionOutcome::Declined { idv } => ProvisionResponse::Declined { idv },
+        })
+    })
+    .await
+}
+
+/// OTP'ni karta egasining emitentdagi telefoniga yuboradi (2-faza P2.1). Xato so'rovni to'xtatmaydi —
+/// qurilma `/idv/resend` bilan qayta so'raydi. Qaytaradi: maskalangan telefon (yuborilgan bo'lsa).
+async fn deliver_otp(s: &AppState, fpan: &Pan, challenge_id: &str, ttl: i64) -> Option<String> {
+    if !s.otp.sends() {
+        return None;
+    }
+    let phone = match s.issuer.contact_phone(fpan).await {
+        Ok(Some(p)) => p,
+        Ok(None) => {
+            tracing::warn!(pan = %fpan.masked(), "otp: emitentda telefon yo'q — SMS yuborilmadi");
+            return None;
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "otp: emitentdan telefon olinmadi");
+            return None;
+        }
+    };
+    let otp = match s.vault.sandbox_otp(challenge_id).await {
+        Ok(o) => Zeroizing::new(o),
+        Err(e) => {
+            tracing::error!(error = %e, "otp: kod hosil qilinmadi");
+            return None;
+        }
+    };
+    match s.otp.deliver(&phone, &otp, ttl, challenge_id).await {
+        Ok(()) => Some(crate::otp::mask_phone(&phone)),
+        Err(e) => {
+            tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: SMS yuborilmadi");
+            None
+        }
+    }
+}
+
+/// OTP'ni qayta yuborish (sealed; qurilma chegarasi amal qiladi).
+async fn idv_resend(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    let st = s.clone();
+    sealed(&s, &headers, &body, |info, req: mpay_common::api::OtpResendRequest| async move {
+        let token_id = parse_token_id(&id)?;
+        if !st.otp.sends() {
+            return Err(ApiError::new(
+                StatusCode::CONFLICT,
+                "OTP_CHANNEL_DISABLED",
+                "OTP kanali sozlanmagan (sandbox)",
+            ));
+        }
+        let (fpan, otp, ttl) = st
+            .vault
+            .otp_resend_material(&token_id, &req.challenge_id, &device_ctx(&info))
+            .await?;
+        let phone = st
+            .issuer
+            .contact_phone(&fpan)
+            .await
+            .map_err(|_| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato"))?
+            .ok_or_else(|| ApiError::new(StatusCode::CONFLICT, "NO_CONTACT", "emitentda telefon raqami yo'q"))?;
+        st.otp
+            .deliver(&phone, &otp, ttl, &req.challenge_id)
+            .await
+            .map_err(|e| {
+                tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: qayta yuborilmadi");
+                ApiError::new(StatusCode::BAD_GATEWAY, "OTP_DELIVERY_FAILED", "SMS yuborilmadi, keyinroq urinib ko'ring")
+            })?;
+        Ok(mpay_common::api::OtpResendResponse {
+            otp_sent_to: crate::otp::mask_phone(&phone),
         })
     })
     .await

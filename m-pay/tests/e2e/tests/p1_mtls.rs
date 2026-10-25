@@ -61,6 +61,7 @@ async fn wallet_without_cert_and_terminal_with_cert_pay_over_tls() {
             pan: f,
             balance_minor: 1_000_000 * 100,
             label: "mtls".into(),
+            phone: None,
         }]
     })
     .await;

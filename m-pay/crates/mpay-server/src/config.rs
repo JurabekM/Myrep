@@ -34,6 +34,9 @@ pub struct Config {
     pub sandbox_api: SandboxApiConfig,
     #[serde(default)]
     pub rate_limit: crate::ratelimit::RateLimitConfig,
+    /// OTP yetkazish kanali (2-faza P2.1).
+    #[serde(default)]
+    pub otp: crate::otp::OtpConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]

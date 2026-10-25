@@ -18,6 +18,7 @@ use serde_json::json;
 use sqlx::sqlite::SqliteRow;
 use sqlx::{Row, Sqlite, SqlitePool, Transaction};
 use time::OffsetDateTime;
+use zeroize::Zeroizing;
 
 use crate::audit::{self, AuditEntry, AuditReport};
 use crate::model::{
@@ -27,6 +28,10 @@ use crate::model::{
 use crate::VaultError;
 
 const ACTOR_DEVICE: &str = "device";
+
+/// Bitta OTP challenge uchun SMS qayta yuborishlar chegarasi.
+/// TODO(spec): pilot bank bilan kelishiladi (SMS narxi va foydalanuvchi tajribasi).
+pub const MAX_OTP_RESENDS: i64 = 3;
 
 /// Token Vault.
 pub struct Vault {
@@ -566,6 +571,63 @@ impl Vault {
         Ok(())
     }
 
+    /// OTP'ni qayta yuborish uchun (2-faza P2.1): challenge shu token va qurilmaga tegishli,
+    /// iste'mol qilinmagan, muddati o'tmagan va [`MAX_OTP_RESENDS`] chegarasi tugamagan bo'lsa —
+    /// hisoblagichni oshiradi va `(FPAN, OTP, qolgan soniyalar)` qaytaradi. Kod o'zgarmaydi
+    /// (challenge'dan HMAC), urinishlar hisoblagichi ham — qayta yuborish tekshiruvni yangilamaydi.
+    /// FPAN faqat emitentdan telefonni topish uchun (Vault'dan tashqariga chiqmaydi, logga yozilmaydi).
+    pub async fn otp_resend_material(
+        &self,
+        token_id: &TokenId,
+        challenge_id: &str,
+        dev: &DeviceContext,
+    ) -> Result<(Pan, Zeroizing<String>, i64), VaultError> {
+        let row = self.token_row(token_id).await?;
+        Self::check_device(&row, dev)?;
+        let ch = sqlx::query(
+            "SELECT expires_at, consumed FROM vault_idv_challenges WHERE challenge_id = ? AND token_id = ?",
+        )
+        .bind(challenge_id)
+        .bind(token_id.as_str())
+        .fetch_optional(&self.db)
+        .await?
+        .ok_or(VaultError::ChallengeNotFound)?;
+        if ch.try_get::<i64, _>("consumed")? != 0 {
+            return Err(VaultError::ChallengeNotFound);
+        }
+        let left = ch.try_get::<i64, _>("expires_at")? - self.clock.unix();
+        if left <= 0 {
+            return Err(VaultError::OtpExpired);
+        }
+        {
+            let _g = self.write.lock().await;
+            let mut tx = crate::db::begin_write(&self.db).await?;
+            let n = sqlx::query(
+                "UPDATE vault_idv_challenges SET resends = resends + 1 \
+                 WHERE challenge_id = ? AND consumed = 0 AND resends < ?",
+            )
+            .bind(challenge_id)
+            .bind(MAX_OTP_RESENDS)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+            tx.commit().await?;
+            if n == 0 {
+                return Err(VaultError::OtpResendLimit);
+            }
+        }
+        let card_id: String = row.try_get("card_id")?;
+        let fpan = self
+            .open_pan(
+                row.try_get("pan_dek")?,
+                row.try_get("pan_nonce")?,
+                row.try_get("pan_ct")?,
+                &format!("card:{card_id}:pan"),
+            )
+            .await?;
+        Ok((fpan, Zeroizing::new(self.otp_for(challenge_id)?), left))
+    }
+
     /// YELLOW: OTP'ni tekshiradi va tokenni faollashtiradi.
     pub async fn verify_otp(
         &self,
@@ -665,7 +727,6 @@ impl Vault {
         self.otp_for(challenge_id)
     }
 
-    /// Qurilma so'rovi bilan LUK to'ldirish.
     /// Qurilma kalitini almashtirish (ADR-0015): eski qurilmaga bog'langan tokenlar yangisiga o'tadi.
     pub async fn rebind_device(&self, old: &DeviceId, new: &DeviceId) -> Result<u64, VaultError> {
         let ts = self.clock.unix();
@@ -693,6 +754,7 @@ impl Vault {
         Ok(n)
     }
 
+    /// Qurilma so'rovi bilan LUK to'ldirish.
     pub async fn replenish_luks(
         &self,
         token_id: &TokenId,
