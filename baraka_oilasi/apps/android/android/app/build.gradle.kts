@@ -20,6 +20,11 @@ fun signingValue(key: String, env: String): String? = keyProps.getProperty(key) 
 val releaseStoreFile = signingValue("storeFile", "BARAKA_KEYSTORE_FILE")
 val requireReleaseSigning = System.getenv("BARAKA_REQUIRE_RELEASE_SIGNING") == "1"
 
+// Demo (`flutter build apk -P baraka.demo=true --dart-define=BARAKA_DEMO=true ...`): boshqa paket nomi
+// (asl ilova sifatida Play'ga yuklab bo'lmaydi va telefondagi asl ilova bilan aralashmaydi) va har
+// doim debug kalit — reliz (upload) kaliti demoga hech qachon qo'yilmaydi.
+val demo = project.findProperty("baraka.demo") == "true"
+
 android {
     namespace = "uz.baraka.oilasi"
     compileSdk = flutter.compileSdkVersion
@@ -37,6 +42,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        if (demo) {
+            applicationIdSuffix = ".demo"
+            versionNameSuffix = "-demo"
+        }
+        manifestPlaceholders["appLabel"] = if (demo) "Baraka Dastur DEMO" else "Baraka Dastur"
         // `--split-per-abi` o'z ABI filtrini qo'yadi — ikkalasi birga bo'lolmaydi.
         if (!project.hasProperty("split-per-abi")) {
             ndk {
@@ -58,10 +68,10 @@ android {
 
     buildTypes {
         release {
-            if (releaseStoreFile == null && requireReleaseSigning) {
+            if (releaseStoreFile == null && requireReleaseSigning && !demo) {
                 throw GradleException("Reliz kaliti topilmadi: key.properties yoki BARAKA_KEYSTORE_FILE kerak.")
             }
-            signingConfig = signingConfigs.getByName(if (releaseStoreFile != null) "release" else "debug")
+            signingConfig = signingConfigs.getByName(if (releaseStoreFile != null && !demo) "release" else "debug")
             isMinifyEnabled = true
             isShrinkResources = true
         }

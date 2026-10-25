@@ -94,6 +94,8 @@
   "category_other": "Другое",
   "error_WRONG_SECRET": "Неверный PIN",
   "error_LOCKED_OUT": "Слишком много попыток, подождите",
+  "error_DEMO_DISABLED": "В демо-версии сохранение и отправка файлов отключены.",
+  "demo_expired": "Срок демо-версии Барака Дастур истёк. За полной версией обратитесь к автору.",
   "error_PIN_FORMAT": "PIN должен состоять из 6 цифр",
   "error_AMOUNT_NOT_POSITIVE": "Сумма должна быть больше нуля",
   "error_PARSE_INVALID_CHARACTER": "В сумме допустимы только цифры",

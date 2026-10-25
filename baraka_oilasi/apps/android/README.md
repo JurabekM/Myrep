@@ -34,6 +34,19 @@ BARAKA_SHOTS=1 flutter test --update-goldens               # docs/screenshots/an
 flutter build apk --release                                # Rust yadro cargo-ndk bilan avtomatik yig'iladi
 ```
 
+## Demo versiya (o'rtadagi odamga ko'rsatish uchun)
+
+```sh
+flutter build apk --release --split-per-abi --target-platform android-arm64 \
+  -P baraka.demo=true --dart-define=BARAKA_DEMO=true --dart-define=BARAKA_DEMO_EXPIRES=2026-11-25
+```
+
+- Paket nomi `uz.baraka.oilasi.demo`, nomi «Baraka Dastur DEMO» — asl ilova sifatida Play'ga yuklab bo'lmaydi va
+  telefondagi asl ilova bilan aralashmaydi.
+- Har doim **debug kalit** bilan imzolanadi (reliz kaliti demoga qo'yilmaydi).
+- Har ekranda «DEMO» belgisi; `BARAKA_DEMO_EXPIRES` kunidan keyin ilova ochilmaydi (qurilma soati bo'yicha).
+- PDF va `.baraka` fayllarni saqlash yoki yuborish o'chirilgan (`error.DEMO_DISABLED`).
+
 Testlar emulyatorsiz: `flutter test` Dart VM'da haqiqiy Rust yadroni (`target/debug/libbaraka_bindings_flutter.so`,
 yoki `BARAKA_CORE_LIB`) yuklaydi — onboarding, qulf, yozuvlar desktop E2E'dagidek to'liq yo'ldan o'tadi.
 Platforma siri testda xotirada (`MemorySecret`), qurilmada — Keystore.

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Qo'shildi
+- **Android demo versiya** (`-P baraka.demo=true --dart-define=BARAKA_DEMO=true`): alohida paket nomi `uz.baraka.oilasi.demo` va «Baraka Dastur DEMO» nomi, har doim debug kalit bilan imzolanadi, har ekranda «DEMO» belgisi, `BARAKA_DEMO_EXPIRES` kunidan keyin ochilmaydi, PDF va `.baraka` fayllarni saqlash/yuborish o'chirilgan. Buyruq — `apps/android/README.md`.
+
 ### Tuzatildi
 - **Tungi testlar UTC 19:00–24:00 oralig'ida yiqilardi:** yadro «bugun»ni xonadon mintaqasida (Asia/Tashkent) hisoblaydi, testlar esa runner vaqtida (UTC) — tungi run 23:14 UTC da boshlanganda sanalar bir kunga farq qildi (desktop E2E: 4 ta Musofir testi, Android: `a2`). E2E kutubxonasi endi `TZ`ni `Asia/Tashkent` qiladi (`BARAKA_E2E_TZ` bilan o'zgartiriladi), Android CI'da `flutter test` ham `TZ=Asia/Tashkent` bilan.
 - **Tungi desktop E2E: «sozlamalar qayta ochilganda saqlanadi» testi CI'da yiqildi** — `stop()` ilovani darhol `SIGKILL` qilgani uchun WebKit `localStorage`ni (til, shrift) diskka yozib ulgurmasdi. Endi to'xtatishdan oldin 1,5 s kutiladi, keyin `SIGTERM`, 3 s ichida chiqmasa — butun guruhga `SIGKILL` (osilib qolmaslik saqlanadi).
