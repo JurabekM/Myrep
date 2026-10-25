@@ -165,7 +165,13 @@ class InteropTest {
             // 2-faza P2.1: kod emitentdagi (fiktiv) telefonga virtual SMS shlyuzi orqali keldi.
             assertEquals("+998*******01", y.otpSentTo)
             assertEquals("+998*******01", api2.resendOtp(y.tokenId, y.challengeId))
-            val inbox = smsInbox(gw, "+998000000001")
+            // Provisioning SMS'i fonda yuboriladi (ADR-0016) — qutida 2 ta xabarni kutamiz.
+            var inbox = smsInbox(gw, "+998000000001")
+            for (i in 0 until 30) {
+                if (inbox.size >= 2) break
+                Thread.sleep(100)
+                inbox = smsInbox(gw, "+998000000001")
+            }
             assertEquals(2, inbox.size)
             val codes = inbox.map { Regex("""\b(\d{6})\b""").find(it)!!.groupValues[1] }.toSet()
             assertEquals(1, codes.size)

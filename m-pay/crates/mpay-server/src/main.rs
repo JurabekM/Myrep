@@ -155,7 +155,7 @@ async fn run(cli: Cli) -> Result<(), String> {
         }
         Cmd::AuditVerify { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
-            let st = mpay_server::state::build(&cfg)
+            let st = mpay_server::state::build_offline(&cfg)
                 .await
                 .map_err(|e| e.to_string())?;
             let r = st.vault.verify_audit().await.map_err(|e| e.to_string())?;
@@ -291,7 +291,7 @@ async fn run(cli: Cli) -> Result<(), String> {
         }
         Cmd::Identity { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
-            let st = mpay_server::state::build(&cfg)
+            let st = mpay_server::state::build_offline(&cfg)
                 .await
                 .map_err(|e| e.to_string())?;
             let id = st.pqlink.identity();

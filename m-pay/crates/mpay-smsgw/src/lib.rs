@@ -9,6 +9,7 @@
 //! (SMS matni — ichida OTP — logga tushmaydi). Ishlab chiqarishda bu o'rinda bank shlyuzi turadi.
 #![forbid(unsafe_code)]
 
+use std::collections::VecDeque;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
@@ -48,7 +49,7 @@ struct Filter {
 
 #[derive(Default)]
 struct Inner {
-    messages: Vec<Sms>,
+    messages: VecDeque<Sms>,
     next_id: u64,
 }
 
@@ -147,9 +148,9 @@ async fn send(State(g): State<Gateway>, h: HeaderMap, Json(req): Json<SendReq>) 
         i.next_id += 1;
         let id = i.next_id;
         if i.messages.len() >= MAX_MESSAGES {
-            i.messages.remove(0);
+            i.messages.pop_front();
         }
-        i.messages.push(Sms {
+        i.messages.push_back(Sms {
             id,
             to: req.to.clone(),
             text: req.text,
@@ -186,6 +187,7 @@ pub struct RunningGateway {
     pub addr: SocketAddr,
     pub gateway: Gateway,
     stop: Option<tokio::sync::oneshot::Sender<()>>,
+    task: tokio::task::JoinHandle<()>,
 }
 
 impl RunningGateway {
@@ -193,11 +195,14 @@ impl RunningGateway {
         format!("http://{}/send", self.addr)
     }
 
-    /// Shlyuzni to'xtatadi (port yopiladi — "shlyuz ishlamayapti" stsenariysi).
+    /// Shlyuzni to'xtatadi: ochiq ulanishlarga yopilish signali va tinglovchi darhol yopiladi —
+    /// yangi ulanish rad etiladi ("shlyuz ishlamayapti" stsenariysi; graceful shutdown'ning o'zi
+    /// tinglovchini ulanishlar tugaguncha ushlab turadi va mijoz javobsiz kutib qoladi).
     pub fn shutdown(&mut self) {
         if let Some(s) = self.stop.take() {
             let _ = s.send(());
         }
+        self.task.abort();
     }
 }
 
@@ -213,7 +218,7 @@ pub async fn spawn(addr: SocketAddr, gateway: Gateway) -> std::io::Result<Runnin
     let addr = listener.local_addr()?;
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
     let app = gateway.router();
-    tokio::spawn(async move {
+    let task = tokio::spawn(async move {
         let _ = axum::serve(listener, app)
             .with_graceful_shutdown(async {
                 let _ = rx.await;
@@ -224,6 +229,7 @@ pub async fn spawn(addr: SocketAddr, gateway: Gateway) -> std::io::Result<Runnin
         addr,
         gateway,
         stop: Some(tx),
+        task,
     })
 }
 

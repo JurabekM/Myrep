@@ -91,8 +91,9 @@ Javob (`data`) — `status` bo'yicha:
 { "status": "DECLINED", "idv": { "decision": "RED", … } }
 ```
 
-`otp_sent_to` — `[otp] channel = "webhook"` da kod yuborilgan emitentdagi telefon (maskalangan);
-sandbox kanalida, emitentda raqam bo'lmasa yoki shlyuz xatosida maydon yo'q (ADR-0016).
+`otp_sent_to` — `[otp] channel = "webhook"` da kod yuborishga qo'yilgan emitentdagi telefon
+(maskalangan). SMS fonda yuboriladi — shlyuz sekin bo'lsa ham javob kechikmaydi; yetib kelmasa
+qurilma `/idv/resend` qiladi. Sandbox kanalida yoki emitentda raqam bo'lmasa maydon yo'q (ADR-0016).
 
 Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `IDV_UNAVAILABLE`.
 
@@ -107,9 +108,10 @@ Xatolar: `OTP_INVALID` (422), `OTP_EXPIRED` (410), `OTP_LOCKED` (423, 3 urinish)
 
 So'rov: `{"challenge_id": "chl_…"}`. Javob: `{"otp_sent_to": "+998*******01"}` — o'sha kod
 karta egasining emitentdagi raqamiga qayta yuborildi (ADR-0016).
-Xatolar: `OTP_RESEND_LIMIT` (429, challenge uchun 3 marta), `OTP_EXPIRED` (410), `CHALLENGE_NOT_FOUND`
-(404, iste'mol qilingan ham), `DEVICE_MISMATCH` (403), `NO_CONTACT` (409, emitentda raqam yo'q),
-`OTP_CHANNEL_DISABLED` (409, sandbox kanali), `OTP_DELIVERY_FAILED` (502, shlyuz javob bermadi).
+Xatolar: `OTP_RESEND_LIMIT` (429, challenge uchun 3 marta; SMS aniq ketmagan urinishlar hisoblanmaydi),
+`OTP_LOCKED` (423, 3 noto'g'ri kod — SMS yuborilmaydi), `OTP_EXPIRED` (410), `CHALLENGE_NOT_FOUND` (404),
+`INVALID_STATE` (409, token `PENDING_IDV` emas), `DEVICE_MISMATCH` (403), `NO_CONTACT` (409, emitentda
+raqam yo'q), `OTP_CHANNEL_DISABLED` (409, sandbox kanali), `OTP_DELIVERY_FAILED` (502, shlyuz javob bermadi).
 
 ### 3.4 `POST /v1/tokens/{token_id}/luks` (sealed)
 

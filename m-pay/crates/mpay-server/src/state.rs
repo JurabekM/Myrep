@@ -329,6 +329,14 @@ fn load_revocations(
     Ok(Some(dto))
 }
 
+/// CLI buyruqlari (`identity`, `audit-verify`, …) uchun: tarmoqqa chiqmaydigan komponentlar —
+/// OTP kanali `sandbox` (SMS shlyuzi tokeni talab qilinmaydi).
+pub async fn build_offline(cfg: &Config) -> Result<AppState, BootError> {
+    let mut cfg = cfg.clone();
+    cfg.otp = crate::otp::OtpConfig::default();
+    build(&cfg).await
+}
+
 /// Barcha komponentlarni yig'adi.
 pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let clock: Arc<dyn Clock> = Arc::new(SystemClock);

@@ -3,7 +3,7 @@
 //! bo'lmasligi kerak). Kanal: `sandbox` (yuborilmaydi; faqat operator endpointi) yoki `webhook`
 //! (bankning SMS shlyuzi; sinovda — virtual shlyuz `mpay-smsgw`).
 //!
-//! OTP hech qachon logga yozilmaydi; telefon logda maskalanadi (`+998******12`).
+//! OTP hech qachon logga yozilmaydi; telefon logda maskalanadi (`+998*******12`).
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -36,15 +36,39 @@ pub enum OtpChannelKind {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WebhookConfig {
+    /// `https://…`. `http://` faqat loopback (`127.0.0.1`, `localhost`, `[::1]`) yoki
+    /// `insecure_http = true` bilan — aks holda OTP va telefon tarmoqda ochiq ketadi.
     pub url: String,
     /// Shlyuz tokeni saqlanadigan muhit o'zgaruvchisi (sir faylda emas).
     #[serde(default)]
     pub token_env: Option<String>,
+    /// Token qiymati dasturiy (testlar, embedding) — fayldan o'qilmaydi va yozilmaydi.
+    #[serde(skip)]
+    pub token: Option<SecretToken>,
     #[serde(default = "default_timeout")]
     pub timeout_ms: u64,
     /// Qo'shimcha ishonchli CA (PEM) — ichki shlyuz o'z CA'si bilan bo'lsa.
     #[serde(default)]
     pub ca_file: Option<PathBuf>,
+    /// Loopback bo'lmagan `http://` ga ruxsat (masalan, docker-compose ichki tarmog'idagi virtual shlyuz).
+    #[serde(default)]
+    pub insecure_http: bool,
+}
+
+/// Sir qatori: `Debug` da ko'rinmaydi, `Drop` da tozalanadi.
+#[derive(Clone)]
+pub struct SecretToken(pub Arc<Zeroizing<String>>);
+
+impl SecretToken {
+    pub fn new(s: impl Into<String>) -> Self {
+        Self(Arc::new(Zeroizing::new(s.into())))
+    }
+}
+
+impl std::fmt::Debug for SecretToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("SecretToken(***)")
+    }
 }
 
 fn default_timeout() -> u64 {
@@ -61,6 +85,20 @@ fn sms_text(otp: &str, ttl_secs: i64) -> Zeroizing<String> {
     ))
 }
 
+/// Yetkazish xatosi. `not_sent` — SMS aniq yuborilmagan (ulanib bo'lmadi, shlyuz rad etdi yoki
+/// xato qaytardi); `false` — natija noma'lum (javob kutish vaqti tugadi), SMS ketgan bo'lishi mumkin.
+#[derive(Debug)]
+pub struct DeliveryError {
+    pub message: String,
+    pub not_sent: bool,
+}
+
+impl std::fmt::Display for DeliveryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
 /// Yetkazish kanali.
 #[derive(Clone)]
 pub enum OtpChannel {
@@ -68,7 +106,7 @@ pub enum OtpChannel {
     Webhook {
         http: reqwest::Client,
         url: String,
-        token: Option<Arc<Zeroizing<String>>>,
+        token: Option<SecretToken>,
     },
 }
 
@@ -79,6 +117,26 @@ impl std::fmt::Debug for OtpChannel {
             Self::Webhook { url, .. } => write!(f, "OtpChannel::Webhook({url})"),
         }
     }
+}
+
+/// `http://` URL loopback xostga qaraydimi.
+fn is_loopback_http(url: &str) -> bool {
+    let Some(rest) = url.strip_prefix("http://") else {
+        return false;
+    };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
+    let host = host.rsplit_once('@').map_or(host, |(_, h)| h);
+    let host = if host.starts_with('[') {
+        host.split_once(']')
+            .map_or(host, |(h, _)| h)
+            .trim_start_matches('[')
+    } else {
+        host.split(':').next().unwrap_or("")
+    };
+    host.eq_ignore_ascii_case("localhost")
+        || host
+            .parse::<std::net::IpAddr>()
+            .is_ok_and(|ip| ip.is_loopback())
 }
 
 impl OtpChannel {
@@ -93,15 +151,27 @@ impl OtpChannel {
                     .webhook
                     .as_ref()
                     .ok_or("otp.channel = webhook uchun [otp.webhook] kerak")?;
-                if !(w.url.starts_with("https://") || w.url.starts_with("http://")) {
+                if w.url.starts_with("http://") {
+                    if !is_loopback_http(&w.url) && !w.insecure_http {
+                        return Err(
+                            "otp.webhook.url: http:// faqat loopback uchun (aks holda https:// yoki insecure_http = true)"
+                                .into(),
+                        );
+                    }
+                    if !is_loopback_http(&w.url) {
+                        tracing::warn!("otp.webhook: shifrsiz http:// (insecure_http) — faqat izolyatsiyalangan sinov tarmog'i uchun");
+                    }
+                } else if !w.url.starts_with("https://") {
                     return Err("otp.webhook.url http(s):// bo'lishi kerak".into());
                 }
-                let token = match &w.token_env {
-                    Some(var) => Some(Arc::new(Zeroizing::new(
-                        std::env::var(var)
-                            .map_err(|_| format!("otp.webhook: {var} muhit o'zgaruvchisi yo'q"))?,
-                    ))),
-                    None => None,
+                let token = match (&w.token, &w.token_env) {
+                    (Some(t), _) => Some(t.clone()),
+                    (None, Some(var)) => {
+                        Some(SecretToken::new(std::env::var(var).map_err(|_| {
+                            format!("otp.webhook: {var} muhit o'zgaruvchisi yo'q")
+                        })?))
+                    }
+                    (None, None) => None,
                 };
                 Ok(Self::Webhook {
                     http: http_client(w, resolve)?,
@@ -124,19 +194,22 @@ impl OtpChannel {
         otp: &str,
         ttl_secs: i64,
         reference: &str,
-    ) -> Result<(), String> {
+    ) -> Result<(), DeliveryError> {
         let Self::Webhook { http, url, token } = self else {
             return Ok(());
         };
         let text = sms_text(otp, ttl_secs);
         let body =
             serde_json::json!({ "to": phone, "text": text.as_str(), "reference": reference });
-        let mut last = String::new();
-        // Bitta qayta urinish (tarmoq uzilishi); 4xx — qayta urinilmaydi.
+        let mut last = DeliveryError {
+            message: String::new(),
+            not_sent: true,
+        };
+        // Bitta qayta urinish (tarmoq uzilishi, 5xx); 4xx — qayta urinilmaydi.
         for attempt in 0..2 {
             let mut rb = http.post(url).json(&body);
             if let Some(t) = token {
-                rb = rb.bearer_auth(t.as_str());
+                rb = rb.bearer_auth(t.0.as_str());
             }
             match rb.send().await {
                 Ok(r) if r.status().is_success() => {
@@ -144,10 +217,19 @@ impl OtpChannel {
                     return Ok(());
                 }
                 Ok(r) if r.status().is_client_error() => {
-                    return Err(format!("SMS shlyuzi rad etdi: {}", r.status()));
+                    return Err(DeliveryError {
+                        message: format!("SMS shlyuzi rad etdi: {}", r.status()),
+                        not_sent: last.not_sent,
+                    });
                 }
-                Ok(r) => last = format!("SMS shlyuzi: {}", r.status()),
-                Err(e) => last = format!("SMS shlyuzi: {}", e.without_url()),
+                Ok(r) => {
+                    last.message = format!("SMS shlyuzi: {}", r.status());
+                }
+                Err(e) => {
+                    // Ulanib bo'lmagan bo'lsa SMS aniq ketmagan; vaqt tugasa — noma'lum.
+                    last.not_sent &= e.is_connect();
+                    last.message = format!("SMS shlyuzi: {}", e.without_url());
+                }
             }
             if attempt == 0 {
                 tokio::time::sleep(Duration::from_millis(300)).await;
@@ -184,6 +266,9 @@ fn http_client(
     reqwest::Client::builder()
         .use_preconfigured_tls(tls)
         .timeout(Duration::from_millis(w.timeout_ms))
+        // Ulanish bosqichi alohida chegaralanadi: shu yerda vaqt tugasa so'rov aniq yuborilmagan
+        // (`is_connect`) — `DeliveryError::not_sent` to'g'ri bo'lsin (Windows yopiq portni ~2 s rad etadi).
+        .connect_timeout(Duration::from_millis((w.timeout_ms / 2).clamp(100, 2000)))
         .build()
         .map_err(|e| e.to_string())
 }
@@ -191,6 +276,27 @@ fn http_client(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn webhook(url: &str) -> WebhookConfig {
+        WebhookConfig {
+            url: url.into(),
+            token_env: None,
+            token: None,
+            timeout_ms: 100,
+            ca_file: None,
+            insecure_http: false,
+        }
+    }
+
+    fn channel(w: WebhookConfig) -> Result<OtpChannel, String> {
+        OtpChannel::from_config(
+            &OtpConfig {
+                channel: OtpChannelKind::Webhook,
+                webhook: Some(w),
+            },
+            |p| p.clone(),
+        )
+    }
 
     #[test]
     fn sms_text_has_code_and_minutes() {
@@ -205,17 +311,38 @@ mod tests {
             webhook: None,
         };
         assert!(OtpChannel::from_config(&cfg, |p| p.clone()).is_err());
-        let cfg = OtpConfig {
-            channel: OtpChannelKind::Webhook,
-            webhook: Some(WebhookConfig {
-                url: "http://127.0.0.1:1/send".into(),
-                token_env: Some("MPAY_TEST_SMS_TOKEN_YOQ".into()),
-                timeout_ms: 100,
-                ca_file: None,
-            }),
-        };
-        assert!(OtpChannel::from_config(&cfg, |p| p.clone())
+        let mut w = webhook("http://127.0.0.1:1/send");
+        w.token_env = Some("MPAY_TEST_SMS_TOKEN_YOQ".into());
+        assert!(channel(w.clone())
             .unwrap_err()
             .contains("MPAY_TEST_SMS_TOKEN_YOQ"));
+        // Dasturiy token muhitdan ustun.
+        w.token = Some(SecretToken::new("t"));
+        assert!(channel(w).is_ok());
+        assert_eq!(format!("{:?}", SecretToken::new("sir")), "SecretToken(***)");
+    }
+
+    #[test]
+    fn plain_http_only_for_loopback() {
+        for ok in [
+            "http://127.0.0.1:47700/send",
+            "http://localhost/send",
+            "http://[::1]:80/send",
+            "https://sms.bank.example/send",
+        ] {
+            assert!(channel(webhook(ok)).is_ok(), "{ok}");
+        }
+        for bad in [
+            "http://sms.bank.example/send",
+            "http://10.0.0.5/send",
+            "http://127.0.0.1.evil.example/send",
+            "http://user@sms.bank.example/send",
+            "ftp://127.0.0.1/send",
+        ] {
+            assert!(channel(webhook(bad)).is_err(), "{bad}");
+        }
+        let mut w = webhook("http://smsgw:47700/send");
+        w.insecure_http = true;
+        assert!(channel(w).is_ok());
     }
 }

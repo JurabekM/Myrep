@@ -618,3 +618,21 @@ tartib — avval OTP kanali va HSM. Jadval: `docs/roadmap.md`.
   "Qayta yuborish" → SMS'dagi kod → "Token faol", 5 LUK; loglarda OTP va to'liq telefon 0
   (`docs/android-testing.md` §6). Shu sinovda demo ilovadagi tugmalar qatori tor ekranda "Attestatsiya"
   matnini harflab uzayotgani ko'rindi — `FlowRow` ga o'tkazildi (ko'z bilan tekshirildi).
+
+### P2.1 — kod ko'rib chiqish tuzatishlari (2026-10-25)
+
+Codex limiti tugagani uchun PR #19 ni Claude ko'rib chiqdi (10 topilma) va tuzatildi:
+
+* Bloklangan (3 noto'g'ri kod) yoki `PENDING_IDV` bo'lmagan token uchun resend endi SMS yubormaydi
+  (`423 OTP_LOCKED` / `409 INVALID_STATE`).
+* Provisioning SMS'i fonda yuboriladi — osilgan shlyuz javobni ~10 s ushlab turmaydi.
+* `otp.webhook.url`: `http://` faqat loopback yoki `insecure_http = true` bilan.
+* Konfiguratsiyadan olib tashlangan telefon bazadan ham o'chadi (`set_phone(None)`).
+* Testlar `std::env::set_var` o'rniga dasturiy token (`WebhookConfig.token`, faylga yozilmaydi).
+* `identity`, `audit-verify` CLI buyruqlari SMS tokenisiz ishlaydi (`state::build_offline`).
+* SMS aniq ketmagan resend urinishi chegarani yemaydi (`otp_resend_refund`, `connect_timeout`).
+* Maskalash: ma'lum bo'lmagan mamlakat kodida faqat `+` va oxirgi 2 raqam.
+* `mpay-smsgw`: `VecDeque`; `shutdown` tinglovchini darhol yopadi. FPAN nusxasi faqat SMS kanalida.
+
+Tekshiruv: `p2_otp.rs` 4 test (yangi: `locked_challenge_gets_no_sms`, hisoblagich qaytishi, javob < 5 s
+osilgan shlyuzda), `iso_flow::phone_follows_config_and_can_be_cleared`, `otp` unit (loopback qoidasi).

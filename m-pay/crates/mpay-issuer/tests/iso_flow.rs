@@ -250,3 +250,26 @@ proptest! {
         });
     }
 }
+
+/// 2-faza P2.1: telefon konfiguratsiyaga ergashadi — `None` bazadagi eski raqamni o'chiradi.
+#[tokio::test]
+async fn phone_follows_config_and_can_be_cleared() {
+    let e = env().await;
+    let fpan = Pan::from_prefix("990012100001234").unwrap();
+    assert_eq!(e.issuer.contact_phone(&fpan).await.unwrap(), None);
+    e.issuer
+        .set_phone(&fpan, Some("+998000001234"))
+        .await
+        .unwrap();
+    assert_eq!(
+        e.issuer.contact_phone(&fpan).await.unwrap().as_deref(),
+        Some("+998000001234")
+    );
+    assert!(e
+        .issuer
+        .set_phone(&fpan, Some("998000001234"))
+        .await
+        .is_err());
+    e.issuer.set_phone(&fpan, None).await.unwrap();
+    assert_eq!(e.issuer.contact_phone(&fpan).await.unwrap(), None);
+}

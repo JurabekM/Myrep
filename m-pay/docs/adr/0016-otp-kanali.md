@@ -20,14 +20,20 @@ raqamiga yuborilishi kerak.
 2. Kanal `[otp] channel`: `sandbox` (default — yuborilmaydi) yoki `webhook`:
    `POST url` `{"to","text","reference"}`, `Authorization: Bearer <token>`. Token faqat muhit
    o'zgaruvchisida (`token_env`), TLS — tizim ildizlari + ixtiyoriy `ca_file`.
-3. Provisioning `PENDING_IDV` qaytarganda server kodni yuboradi; javobda `otp_sent_to` — maskalangan
-   raqam (`+998*******01`). Yetkazish xatosi provisioningni to'xtatmaydi (maydon yo'q bo'ladi).
-4. `POST /v1/tokens/{id}/idv/resend` (sealed, qurilma tekshiruvi): o'sha kodni qayta yuboradi.
-   Chegara — challenge uchun 3 marta (`429 OTP_RESEND_LIMIT`; SMS bombardimoni va xarajatga qarshi),
-   yetkazilmagan urinish ham hisoblanadi. Kod va tekshirish urinishlari hisoblagichi o'zgarmaydi.
+3. Provisioning `PENDING_IDV` qaytarganda server telefon va kodni oladi, SMS'ni **fonda** yuboradi;
+   javobda `otp_sent_to` — maskalangan raqam (`+998*******01`). Sekin yoki osilgan shlyuz javobni
+   ushlab turmaydi (aks holda mijoz `challenge_id` ni olmay, token "yetim" qolardi).
+4. `POST /v1/tokens/{id}/idv/resend` (sealed, qurilma tekshiruvi): o'sha kodni qayta yuboradi. Faqat
+   token `PENDING_IDV` da va challenge bloklanmagan bo'lsa (3 noto'g'ri koddan keyin `423 OTP_LOCKED` —
+   ishlatib bo'lmaydigan kod uchun SMS yuborilmaydi). Chegara — 3 marta (`429 OTP_RESEND_LIMIT`).
+   SMS **aniq ketmagan** urinish (emitentda raqam yo'q, ulanib bo'lmadi, shlyuz 4xx/5xx) hisoblagichni
+   qaytaradi; natija noma'lum bo'lsa (javob kutish vaqti tugadi) — hisoblanadi.
 5. Shlyuzga yuborish: 5xx yoki tarmoq xatosida bitta qayta urinish, 4xx da qayta urinilmaydi.
-   `reference = challenge_id` — shlyuz tomonida idempotentlik uchun.
-6. Logga OTP va SMS matni yozilmaydi; telefon faqat maskalangan holda.
+   Ulanish vaqti alohida chegaralanadi (`timeout_ms / 2`, ≤ 2 s). `reference = challenge_id` —
+   shlyuz tomonida idempotentlik uchun. `http://` faqat loopback yoki `insecure_http = true` bilan.
+   Token muhit o'zgaruvchisida; CLI buyruqlari (`identity`, `audit-verify`) OTP kanalisiz yig'iladi.
+6. Logga OTP va SMS matni yozilmaydi; telefon faqat maskalangan holda. Mamlakat kodi faqat ma'lum
+   ro'yxatda (`+998`) ochiq qoladi — boshqa kodlarda `+` va oxirgi 2 raqam.
 7. Sinov uchun virtual shlyuz `mpay-smsgw` (alohida test vositasi, server binariga kirmaydi).
 
 ## Oqibatlar
@@ -39,8 +45,9 @@ raqamiga yuborilishi kerak.
 * `TODO(spec):` haqiqiy shlyuz formati (SMPP/HTTP), SMS matni, yuboruvchi nomi, qayta yuborish chegarasi
   va narx — pilot bank bilan kelishiladi; webhook adapteri shu nuqtada almashtiriladi.
 * SIM-swap hujumi bu qarorda yopilmaydi. `TODO(spec):` emitent/operator SIM-swap belgisi Shield'ga.
-* Tekshirilgan: e2e `p2_otp.rs` (3 test: yetkazish, qayta yuborish, chegara, boshqa qurilma rad,
-  telefonsiz hisob, operator nosozligi, shlyuz o'chgan, sandbox kanali, loglarda OTP/telefon yo'q),
+* Tekshirilgan: e2e `p2_otp.rs` (4 test: yetkazish, qayta yuborish, chegara, boshqa qurilma rad,
+  telefonsiz hisob, operator nosozligi va hisoblagich qaytishi, shlyuz o'chgan, bloklangan kodga SMS
+  yo'q, sandbox kanali, loglarda OTP/telefon yo'q),
   Kotlin interop (haqiqiy `mpay-server` + `mpay-smsgw`, kod SMS'dan o'qiladi).
 
 ## Ko'rib chiqilgan muqobillar

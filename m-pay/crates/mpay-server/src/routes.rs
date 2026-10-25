@@ -395,8 +395,8 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
             .map_err(|e| ApiError::bad_request(e.to_string()))?;
         let expiry = CardExpiry::parse_yymm(&req.expiry)
             .ok_or_else(|| ApiError::bad_request("expiry YYMM bo'lishi kerak"))?;
-        // OTP SMS uchun emitentdan telefonni topishga (nusxa `Drop` da tozalanadi).
-        let fpan_for_otp = fpan.clone();
+        // OTP SMS uchun emitentdan telefonni topishga — faqat kanal SMS yuborsa (nusxa `Drop` da tozalanadi).
+        let fpan_for_otp = st.otp.sends().then(|| fpan.clone());
         let out = st
             .vault
             .provision(ProvisionRequest { fpan, expiry }, device_ctx(&info))
@@ -413,7 +413,10 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
                 idv,
             } => {
                 let ttl = otp_expires_at - st.clock.unix();
-                let otp_sent_to = deliver_otp(&st, &fpan_for_otp, &challenge_id, ttl).await;
+                let otp_sent_to = match &fpan_for_otp {
+                    Some(fpan) => queue_otp(&st, fpan, &challenge_id, ttl).await,
+                    None => None,
+                };
                 ProvisionResponse::PendingIdv {
                     token_id,
                     challenge_id,
@@ -428,12 +431,11 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
     .await
 }
 
-/// OTP'ni karta egasining emitentdagi telefoniga yuboradi (2-faza P2.1). Xato so'rovni to'xtatmaydi —
-/// qurilma `/idv/resend` bilan qayta so'raydi. Qaytaradi: maskalangan telefon (yuborilgan bo'lsa).
-async fn deliver_otp(s: &AppState, fpan: &Pan, challenge_id: &str, ttl: i64) -> Option<String> {
-    if !s.otp.sends() {
-        return None;
-    }
+/// OTP'ni karta egasining emitentdagi telefoniga yuborishga qo'yadi (2-faza P2.1, ADR-0016).
+/// Telefon va kod shu yerda olinadi, SMS esa fonda yuboriladi — sekin yoki osilgan shlyuz provisioning
+/// javobini ushlab turmasin (aks holda mijoz `challenge_id` ni olmay qolishi mumkin). Yetkazilmasa
+/// qurilma `/idv/resend` qiladi. Qaytaradi: maskalangan telefon (yuborishga qo'yilgan bo'lsa).
+async fn queue_otp(s: &Arc<AppState>, fpan: &Pan, challenge_id: &str, ttl: i64) -> Option<String> {
     let phone = match s.issuer.contact_phone(fpan).await {
         Ok(Some(p)) => p,
         Ok(None) => {
@@ -452,13 +454,14 @@ async fn deliver_otp(s: &AppState, fpan: &Pan, challenge_id: &str, ttl: i64) -> 
             return None;
         }
     };
-    match s.otp.deliver(&phone, &otp, ttl, challenge_id).await {
-        Ok(()) => Some(crate::otp::mask_phone(&phone)),
-        Err(e) => {
+    let masked = crate::otp::mask_phone(&phone);
+    let (st, reference) = (s.clone(), challenge_id.to_owned());
+    tokio::spawn(async move {
+        if let Err(e) = st.otp.deliver(&phone, &otp, ttl, &reference).await {
             tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: SMS yuborilmadi");
-            None
         }
-    }
+    });
+    Some(masked)
 }
 
 /// OTP'ni qayta yuborish (sealed; qurilma chegarasi amal qiladi).
@@ -482,19 +485,42 @@ async fn idv_resend(
             .vault
             .otp_resend_material(&token_id, &req.challenge_id, &device_ctx(&info))
             .await?;
-        let phone = st
-            .issuer
-            .contact_phone(&fpan)
-            .await
-            .map_err(|_| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato"))?
-            .ok_or_else(|| ApiError::new(StatusCode::CONFLICT, "NO_CONTACT", "emitentda telefon raqami yo'q"))?;
-        st.otp
-            .deliver(&phone, &otp, ttl, &req.challenge_id)
-            .await
-            .map_err(|e| {
-                tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: qayta yuborilmadi");
-                ApiError::new(StatusCode::BAD_GATEWAY, "OTP_DELIVERY_FAILED", "SMS yuborilmadi, keyinroq urinib ko'ring")
-            })?;
+        // SMS aniq ketmagan holatlarda hisoblagich qaytariladi (ADR-0016).
+        let refund = |e: ApiError| async {
+            if let Err(r) = st.vault.otp_resend_refund(&req.challenge_id).await {
+                tracing::error!(error = %r, "otp: qayta yuborish hisoblagichi qaytarilmadi");
+            }
+            e
+        };
+        let phone = match st.issuer.contact_phone(&fpan).await {
+            Ok(Some(p)) => p,
+            Ok(None) => {
+                return Err(refund(ApiError::new(
+                    StatusCode::CONFLICT,
+                    "NO_CONTACT",
+                    "emitentda telefon raqami yo'q",
+                ))
+                .await)
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "otp: emitentdan telefon olinmadi");
+                return Err(refund(ApiError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "INTERNAL",
+                    "ichki xato",
+                ))
+                .await);
+            }
+        };
+        if let Err(e) = st.otp.deliver(&phone, &otp, ttl, &req.challenge_id).await {
+            tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: qayta yuborilmadi");
+            let err = ApiError::new(
+                StatusCode::BAD_GATEWAY,
+                "OTP_DELIVERY_FAILED",
+                "SMS yuborilmadi, keyinroq urinib ko'ring",
+            );
+            return Err(if e.not_sent { refund(err).await } else { err });
+        }
         Ok(mpay_common::api::OtpResendResponse {
             otp_sent_to: crate::otp::mask_phone(&phone),
         })

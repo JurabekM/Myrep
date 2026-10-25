@@ -7,15 +7,14 @@ use mpay_common::TokenId;
 use mpay_e2e::{logs, test_fpan, Sandbox};
 use mpay_issuer::TestAccount;
 use mpay_server::config::ShieldEngine;
-use mpay_server::otp::{OtpChannelKind, WebhookConfig};
+use mpay_server::otp::{OtpChannelKind, SecretToken, WebhookConfig};
 use mpay_smsgw::{Gateway, RunningGateway};
 use mpay_terminal_sim::wallet::SoftWallet;
 use mpay_terminal_sim::WalletError;
 
-/// Shlyuz + webhook kanalli server. `env` — shu test uchun alohida token o'zgaruvchisi.
-async fn setup(env: &str, accounts: Vec<TestAccount>) -> (Sandbox, RunningGateway, String) {
-    let token = format!("sinov-{env}");
-    std::env::set_var(env, &token);
+/// Shlyuz + webhook kanalli server. Token dasturiy beriladi (`set_var` ko'p oqimli testlarda xavfli).
+async fn setup(name: &str, accounts: Vec<TestAccount>) -> (Sandbox, RunningGateway, String) {
+    let token = format!("sinov-{name}");
     let gw = mpay_smsgw::spawn(
         "127.0.0.1:0".parse().unwrap(),
         Gateway::new(Some(token.clone())),
@@ -23,16 +22,18 @@ async fn setup(env: &str, accounts: Vec<TestAccount>) -> (Sandbox, RunningGatewa
     .await
     .unwrap();
     let url = gw.url();
-    let env = env.to_owned();
+    let secret = SecretToken::new(token.clone());
     let sb = Sandbox::start_with(move |c| {
         c.shield.engine = ShieldEngine::Engine;
         c.issuer.accounts = accounts;
         c.otp.channel = OtpChannelKind::Webhook;
         c.otp.webhook = Some(WebhookConfig {
             url,
-            token_env: Some(env),
+            token_env: None,
+            token: Some(secret),
             timeout_ms: 2000,
             ca_file: None,
+            insecure_http: false,
         });
     })
     .await;
@@ -78,6 +79,18 @@ fn api_code(e: &WalletError) -> (u16, String) {
     }
 }
 
+/// Provisioning SMS'ni fonda yuboradi — qutida `n` ta xabar paydo bo'lishini kutadi (3 s gacha).
+async fn wait_inbox(gw: &RunningGateway, phone: &str, n: usize) -> Vec<mpay_smsgw::Sms> {
+    for _ in 0..60 {
+        let m = gw.gateway.messages(Some(phone));
+        if m.len() >= n {
+            return m;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+    gw.gateway.messages(Some(phone))
+}
+
 /// SMS matnidan 6 xonali kodni oladi (foydalanuvchi telefondan o'qigandek).
 fn code_from_sms(text: &str) -> String {
     text.split(|c: char| !c.is_ascii_digit())
@@ -90,13 +103,13 @@ fn code_from_sms(text: &str) -> String {
 async fn otp_sms_delivered_resent_and_verified() {
     let card = test_fpan(10, 4101);
     let phone = "+998000004101";
-    let (sb, gw, _) = setup("MPAY_E2E_SMS_TOKEN_A", vec![account(&card, Some(phone))]).await;
+    let (sb, gw, _) = setup("a", vec![account(&card, Some(phone))]).await;
     let (mut phone1, mut phone2, token_id, challenge_id, sent_to) =
         second_device_pending(&sb, &card).await;
     assert_eq!(sent_to.as_deref(), Some("+998*******01"));
 
     // SMS karta egasining emitentdagi raqamiga keldi; kod sandbox OTP bilan bir xil.
-    let inbox = gw.gateway.messages(Some(phone));
+    let inbox = wait_inbox(&gw, phone, 1).await;
     assert_eq!(inbox.len(), 1, "{inbox:?}");
     assert_eq!(inbox[0].reference, challenge_id);
     let otp: SandboxOtp = sb
@@ -143,7 +156,8 @@ async fn otp_sms_delivered_resent_and_verified() {
         .resend_otp(&token_id, &challenge_id)
         .await
         .unwrap_err();
-    assert_eq!(api_code(&e), (404, "CHALLENGE_NOT_FOUND".into()));
+    // Token endi faol — qayta yuborish holat bo'yicha rad etiladi.
+    assert_eq!(api_code(&e), (409, "INVALID_STATE".into()));
 
     // Server logida OTP ham, to'liq telefon ham yo'q (faqat maskalangan).
     let log = logs().text();
@@ -161,24 +175,41 @@ async fn otp_without_phone_and_gateway_failures() {
     let no_phone = test_fpan(10, 4201);
     let flaky = test_fpan(10, 4202);
     let phone = "+998000004202";
+    let down = test_fpan(10, 4203);
+    let down_phone = "+998000004203";
     let (sb, mut gw, token) = setup(
-        "MPAY_E2E_SMS_TOKEN_B",
-        vec![account(&no_phone, None), account(&flaky, Some(phone))],
+        "b",
+        vec![
+            account(&no_phone, None),
+            account(&flaky, Some(phone)),
+            account(&down, Some(down_phone)),
+        ],
     )
     .await;
 
     // Emitentda telefon yo'q: provisioning to'xtamaydi, SMS yuborilmaydi, resend — NO_CONTACT.
+    // SMS aniq ketmagani uchun chegara yeyilmaydi: 4-urinish ham NO_CONTACT (429 emas).
     let (_p1, mut p2, tok, ch, sent_to) = second_device_pending(&sb, &no_phone).await;
     assert_eq!(sent_to, None);
-    let e = p2.resend_otp(&tok, &ch).await.unwrap_err();
-    assert_eq!(api_code(&e), (409, "NO_CONTACT".into()));
+    for _ in 0..4 {
+        let e = p2.resend_otp(&tok, &ch).await.unwrap_err();
+        assert_eq!(api_code(&e), (409, "NO_CONTACT".into()));
+    }
 
-    // Operator nosoz (2 × 503 — server bir marta qayta urinadi): javobda `otp_sent_to` yo'q,
-    // qurilma keyin `resend` qiladi.
+    // Operator nosoz (2 × 503 — server bir marta qayta urinadi). SMS fonda yuboriladi, shuning uchun
+    // javob kechikmaydi va raqam ko'rsatiladi; SMS kelmaydi — qurilma keyin `resend` qiladi.
     gw.gateway.fail_next(2);
+    let t0 = std::time::Instant::now();
     let (_q1, mut q2, tok, ch, sent_to) = second_device_pending(&sb, &flaky).await;
-    assert_eq!(sent_to, None);
+    assert!(t0.elapsed() < std::time::Duration::from_secs(5));
+    assert_eq!(sent_to.as_deref(), Some("+998*******02"));
+    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
     assert!(gw.gateway.messages(Some(phone)).is_empty());
+
+    // Resend paytida ham 2 × 503 → 502, lekin SMS aniq ketmagan — hisoblagich qaytariladi.
+    gw.gateway.fail_next(2);
+    let e = q2.resend_otp(&tok, &ch).await.unwrap_err();
+    assert_eq!(api_code(&e), (502, "OTP_DELIVERY_FAILED".into()));
     // Bitta 503 dan keyin qayta urinish muvaffaqiyatli.
     gw.gateway.fail_next(1);
     assert_eq!(
@@ -186,17 +217,48 @@ async fn otp_without_phone_and_gateway_failures() {
         "+998*******02"
     );
     assert_eq!(gw.gateway.messages(Some(phone)).len(), 1);
+    // Muvaffaqiyatsiz urinish chegarani yemagan: yana 2 ta, keyin 429.
+    for _ in 0..2 {
+        q2.resend_otp(&tok, &ch).await.unwrap();
+    }
+    let e = q2.resend_otp(&tok, &ch).await.unwrap_err();
+    assert_eq!(api_code(&e), (429, "OTP_RESEND_LIMIT".into()));
 
     // Shlyuz tokeni noto'g'ri bo'lsa 401 → qayta urinilmaydi; to'g'ri tokenli so'rov o'tadi.
     let http = raw_post(gw.addr, "noto'g'ri").await;
     assert_eq!(http, 401);
     assert_eq!(raw_post(gw.addr, &token).await, 202);
 
-    // Shlyuz butunlay o'chgan → 502 OTP_DELIVERY_FAILED.
+    // Shlyuz butunlay o'chgan → 502 OTP_DELIVERY_FAILED (yangi challenge'da; ulanib bo'lmaydi —
+    // SMS aniq ketmagan, shuning uchun bu ham chegarani yemaydi).
+    let (_r1, mut r2, tok, ch, _) = second_device_pending(&sb, &down).await;
+    assert_eq!(wait_inbox(&gw, down_phone, 1).await.len(), 1);
     gw.shutdown();
     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-    let e = q2.resend_otp(&tok, &ch).await.unwrap_err();
-    assert_eq!(api_code(&e), (502, "OTP_DELIVERY_FAILED".into()));
+    for _ in 0..4 {
+        let e = r2.resend_otp(&tok, &ch).await.unwrap_err();
+        assert_eq!(api_code(&e), (502, "OTP_DELIVERY_FAILED".into()));
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn locked_challenge_gets_no_sms() {
+    let card = test_fpan(10, 4401);
+    let phone = "+998000004401";
+    let (sb, gw, _) = setup("c", vec![account(&card, Some(phone))]).await;
+    let (_p1, mut p2, tok, ch, _) = second_device_pending(&sb, &card).await;
+    let code = code_from_sms(&wait_inbox(&gw, phone, 1).await[0].text);
+    let wrong = format!("{:06}", (code.parse::<u32>().unwrap() + 1) % 1_000_000);
+    // 3 ta noto'g'ri urinish → challenge bloklanadi.
+    let mut last = String::new();
+    for _ in 0..4 {
+        last = api_code(&p2.verify_otp(&tok, &ch, &wrong).await.unwrap_err()).1;
+    }
+    assert_eq!(last, "OTP_LOCKED");
+    // Bloklangan kod uchun SMS yuborilmaydi.
+    let e = p2.resend_otp(&tok, &ch).await.unwrap_err();
+    assert_eq!(api_code(&e), (423, "OTP_LOCKED".into()));
+    assert_eq!(gw.gateway.messages(Some(phone)).len(), 1);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]

@@ -165,9 +165,8 @@ impl Issuer {
             issuer
                 .ensure_account(&pan, a.balance_minor, &a.label)
                 .await?;
-            if let Some(phone) = &a.phone {
-                issuer.set_phone(&pan, phone).await?;
-            }
+            // Konfiguratsiya — manba: raqam olib tashlansa bazadagi eskisi ham o'chadi (kod eski egaga ketmasin).
+            issuer.set_phone(&pan, a.phone.as_deref()).await?;
         }
         Ok(issuer)
     }
@@ -177,8 +176,9 @@ impl Issuer {
     }
 
     /// Karta egasining telefonini yozadi (E.164: `+` va 7–15 raqam).
-    pub async fn set_phone(&self, pan: &Pan, phone: &str) -> Result<(), IssuerError> {
-        if !mpay_common::phone::is_e164(phone) {
+    /// `None` — raqamni o'chiradi.
+    pub async fn set_phone(&self, pan: &Pan, phone: Option<&str>) -> Result<(), IssuerError> {
+        if phone.is_some_and(|p| !mpay_common::phone::is_e164(p)) {
             return Err(IssuerError::Config(
                 "issuer.accounts.phone: E.164 (+998…) kutilgan",
             ));

@@ -572,7 +572,8 @@ impl Vault {
     }
 
     /// OTP'ni qayta yuborish uchun (2-faza P2.1): challenge shu token va qurilmaga tegishli,
-    /// iste'mol qilinmagan, muddati o'tmagan va [`MAX_OTP_RESENDS`] chegarasi tugamagan bo'lsa —
+    /// token `PENDING_IDV` da, challenge iste'mol qilinmagan, bloklanmagan (`otp_max_attempts`), muddati
+    /// o'tmagan va [`MAX_OTP_RESENDS`] chegarasi tugamagan bo'lsa —
     /// hisoblagichni oshiradi va `(FPAN, OTP, qolgan soniyalar)` qaytaradi. Kod o'zgarmaydi
     /// (challenge'dan HMAC), urinishlar hisoblagichi ham — qayta yuborish tekshiruvni yangilamaydi.
     /// FPAN faqat emitentdan telefonni topish uchun (Vault'dan tashqariga chiqmaydi, logga yozilmaydi).
@@ -584,8 +585,15 @@ impl Vault {
     ) -> Result<(Pan, Zeroizing<String>, i64), VaultError> {
         let row = self.token_row(token_id).await?;
         Self::check_device(&row, dev)?;
+        let st = state_of(&row)?;
+        if st != TokenState::PendingIdv {
+            return Err(VaultError::InvalidState {
+                from: st.as_str(),
+                to: TokenState::Active.as_str(),
+            });
+        }
         let ch = sqlx::query(
-            "SELECT expires_at, consumed FROM vault_idv_challenges WHERE challenge_id = ? AND token_id = ?",
+            "SELECT expires_at, consumed, attempts FROM vault_idv_challenges WHERE challenge_id = ? AND token_id = ?",
         )
         .bind(challenge_id)
         .bind(token_id.as_str())
@@ -594,6 +602,10 @@ impl Vault {
         .ok_or(VaultError::ChallengeNotFound)?;
         if ch.try_get::<i64, _>("consumed")? != 0 {
             return Err(VaultError::ChallengeNotFound);
+        }
+        // Bloklangan challenge uchun kod endi qabul qilinmaydi — SMS yuborish ma'nosiz (va xarajat).
+        if ch.try_get::<i64, _>("attempts")? >= self.cfg.otp_max_attempts {
+            return Err(VaultError::OtpLocked);
         }
         let left = ch.try_get::<i64, _>("expires_at")? - self.clock.unix();
         if left <= 0 {
@@ -604,10 +616,11 @@ impl Vault {
             let mut tx = crate::db::begin_write(&self.db).await?;
             let n = sqlx::query(
                 "UPDATE vault_idv_challenges SET resends = resends + 1 \
-                 WHERE challenge_id = ? AND consumed = 0 AND resends < ?",
+                 WHERE challenge_id = ? AND consumed = 0 AND resends < ? AND attempts < ?",
             )
             .bind(challenge_id)
             .bind(MAX_OTP_RESENDS)
+            .bind(self.cfg.otp_max_attempts)
             .execute(&mut *tx)
             .await?
             .rows_affected();
@@ -626,6 +639,21 @@ impl Vault {
             )
             .await?;
         Ok((fpan, Zeroizing::new(self.otp_for(challenge_id)?), left))
+    }
+
+    /// SMS aniq yuborilmagan bo'lsa (emitentda raqam yo'q, shlyuz ulanmadi yoki rad etdi) qayta yuborish
+    /// hisoblagichini qaytaradi — shlyuz nosozligi foydalanuvchining chegarasini yemasin.
+    pub async fn otp_resend_refund(&self, challenge_id: &str) -> Result<(), VaultError> {
+        let _g = self.write.lock().await;
+        let mut tx = crate::db::begin_write(&self.db).await?;
+        sqlx::query(
+            "UPDATE vault_idv_challenges SET resends = resends - 1 WHERE challenge_id = ? AND resends > 0",
+        )
+        .bind(challenge_id)
+        .execute(&mut *tx)
+        .await?;
+        tx.commit().await?;
+        Ok(())
     }
 
     /// YELLOW: OTP'ni tekshiradi va tokenni faollashtiradi.
