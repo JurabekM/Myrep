@@ -7,6 +7,7 @@ import '../core/core.dart';
 import '../core/prefs.dart';
 import '../features/lock/lock_screen.dart';
 import '../features/setup/setup_screen.dart';
+import 'demo.dart';
 import 'i18n.dart';
 import 'shell.dart';
 import 'theme.dart';
@@ -54,8 +55,22 @@ class BarakaApp extends ConsumerWidget {
     if (tr == null || !session.hasValue) {
       return ColoredBox(color: (display.dark ? BarakaPalette.dark : BarakaPalette.light).paper);
     }
+    if (demoExpired(DateTime.now())) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: barakaTheme(dark: display.dark),
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(tr('demo.expired'), textAlign: TextAlign.center),
+            ),
+          ),
+        ),
+      );
+    }
     return MaterialApp.router(
-      title: 'Baraka Dastur',
+      title: kDemo ? 'Baraka Dastur DEMO' : 'Baraka Dastur',
       debugShowCheckedModeBanner: false,
       theme: barakaTheme(dark: display.dark),
       locale: tr.flutterLocale,
@@ -72,7 +87,12 @@ class BarakaApp extends ConsumerWidget {
         final scale = mq.textScaler.scale(1) * display.fontScale / 100;
         return MediaQuery(
           data: mq.copyWith(textScaler: TextScaler.linear(scale)),
-          child: TrScope(tr: tr, child: child ?? const SizedBox.shrink()),
+          child: TrScope(
+            tr: tr,
+            child: kDemo
+                ? Banner(message: 'DEMO', location: BannerLocation.topEnd, child: child ?? const SizedBox.shrink())
+                : child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

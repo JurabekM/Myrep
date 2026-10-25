@@ -103,12 +103,26 @@ jobs:
       - name: Host yadro (vektorlar bilan)
         run: cargo build -p baraka-bindings-flutter --features vectors
       - run: flutter test
+        # Testlardagi sanalar (DateTime.now) yadro bilan bir mintaqada: xonadon standarti Asia/Tashkent.
+        env:
+          TZ: Asia/Tashkent
       - name: APK (arm64-v8a, armeabi-v7a)
         run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
           name: baraka-android-apk
           path: baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-release.apk
+      # Demo (o'rtadagi odamga ko'rsatish): `.demo` paket, debug kalit, «DEMO» belgisi, 30 kun muddat,
+      # fayl ulashish o'chiq (apps/android/README.md).
+      - name: Demo APK (arm64, 30 kun)
+        run: |
+          flutter build apk --release --split-per-abi --target-platform android-arm64 \
+            -P baraka.demo=true --dart-define=BARAKA_DEMO=true \
+            --dart-define=BARAKA_DEMO_EXPIRES=$(date -u -d '+30 days' +%F)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baraka-android-demo
+          path: baraka_oilasi/apps/android/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
   # Imzolangan reliz (Play uchun AAB va to'g'ridan-to'g'ri o'rnatish uchun APK). Kalit faqat
   # secret'larda: BARAKA_UPLOAD_KEYSTORE_B64 (base64 .jks), BARAKA_KEYSTORE_PASSWORD,

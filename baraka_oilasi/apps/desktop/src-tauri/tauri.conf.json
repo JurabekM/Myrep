@@ -45,6 +45,8 @@
       "icons/icon.ico"
     ],
     "category": "Finance",
+    "publisher": "Joʻrabek Mashgʻulatov",
+    "copyright": "© 2026 Joʻrabek Mashgʻulatov. Barcha huquqlar himoyalangan.",
     "shortDescription": "Halol moliyaviy odatlar daftari",
     "windows": {
       "webviewInstallMode": {

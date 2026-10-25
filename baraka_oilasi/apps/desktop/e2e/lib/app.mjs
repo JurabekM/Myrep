@@ -12,6 +12,11 @@ import { fileURLToPath } from "node:url";
 
 import { remote } from "webdriverio";
 
+// Yadro «bugun»ni xonadon vaqt mintaqasida (standart Asia/Tashkent) hisoblaydi. Testdagi sanalar
+// (`new Date()`) va ilova ham shu mintaqada bo'lsin — aks holda UTC 19:00–24:00 oralig'ida (tungi CI)
+// sanalar bir kunga farq qiladi. Bu import'dan keyin yaratilgan barcha `Date` lar uchun amal qiladi.
+process.env.TZ = process.env.BARAKA_E2E_TZ ?? "Asia/Tashkent";
+
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../../..");
 const exe = process.platform === "win32" ? "baraka-desktop.exe" : "baraka-desktop";

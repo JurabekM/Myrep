@@ -119,6 +119,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with ActionStat
               ),
             ],
           ),
+          SectionCard(
+            title: context.t('settings.about'),
+            children: [
+              Text(context.t('app.name'), style: Theme.of(context).textTheme.titleMedium),
+              Text(context.t('app.copyright')),
+              Text(context.t('app.disclaimer')),
+            ],
+          ),
         ],
       ),
     );

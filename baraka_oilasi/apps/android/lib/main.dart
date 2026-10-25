@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
+import 'app/demo.dart';
 import 'app/i18n.dart';
 import 'bindings/frb_generated.dart';
 import 'core/core.dart';
 import 'core/platform.dart';
 import 'core/prefs.dart';
+import 'shared/files.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,7 @@ Future<void> main() async {
       overrides: [
         servicesProvider.overrideWithValue(services),
         localeProvider.overrideWith((ref) => services.prefs.read().locale ?? 'uz'),
+        if (kDemo) shareFileProvider.overrideWithValue(demoShareDisabled),
       ],
       child: const BarakaApp(),
     ),

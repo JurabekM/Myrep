@@ -1,6 +1,8 @@
 {
   "app.name": "Baraka Dastur",
   "app.disclaimer": "Taʼlimiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas.",
+  "app.copyright": "© 2026 Joʻrabek Mashgʻulatov. Barcha huquqlar himoyalangan.",
+  "settings.about": "Ilova haqida",
   "setup.title": "Xush kelibsiz! Daftarni birga ochamiz",
   "setup.household": "Oila nomi",
   "setup.yourName": "Ismingiz",
@@ -93,6 +95,8 @@
   "category.other": "Boshqa",
   "error.WRONG_SECRET": "PIN notoʻgʻri",
   "error.LOCKED_OUT": "Koʻp urinish boʻldi, biroz kuting",
+  "error.DEMO_DISABLED": "Demo versiyada fayl saqlash va yuborish oʻchirilgan.",
+  "demo.expired": "Baraka Dastur demo versiyasining muddati tugadi. Toʻliq versiya uchun muallifga murojaat qiling.",
   "error.PIN_FORMAT": "PIN 6 ta raqamdan iborat boʻlishi kerak",
   "error.AMOUNT_NOT_POSITIVE": "Summa noldan katta boʻlishi kerak",
   "error.PARSE_INVALID_CHARACTER": "Summada faqat raqamlar boʻlsin",
