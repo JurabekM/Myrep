@@ -29,7 +29,7 @@ cargo xtask codegen                                        # FRB + Pigeon (git d
 cargo build -p baraka-bindings-flutter --features vectors  # testlar uchun host yadro
 cd apps/android
 flutter analyze
-flutter test                                               # widget + oqim testlari, vektorlar
+TZ=Asia/Tashkent flutter test                              # widget + oqim testlari, vektorlar (yadro mintaqasida)
 BARAKA_SHOTS=1 flutter test --update-goldens               # docs/screenshots/android-*.png
 flutter build apk --release                                # Rust yadro cargo-ndk bilan avtomatik yig'iladi
 ```

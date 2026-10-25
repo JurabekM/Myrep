@@ -19,5 +19,5 @@ Tekshiruv buyruqlari (Y1 dan keyin):
 - `cargo fmt --check && cargo clippy --workspace -- -D warnings && cargo test --workspace`
 - `python3 -I spec/oracle/oracle.py --selftest`
 - `cargo xtask codegen && cargo xtask i18n --lint && git diff --exit-code`
-- `cd apps/android && flutter analyze && flutter test`
+- `cd apps/android && flutter analyze && TZ=Asia/Tashkent flutter test` (testlardagi sanalar yadro mintaqasida)
 - `cd apps/desktop/ui && pnpm lint && pnpm test`

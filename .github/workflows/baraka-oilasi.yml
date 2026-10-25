@@ -103,6 +103,9 @@ jobs:
       - name: Host yadro (vektorlar bilan)
         run: cargo build -p baraka-bindings-flutter --features vectors
       - run: flutter test
+        # Testlardagi sanalar (DateTime.now) yadro bilan bir mintaqada: xonadon standarti Asia/Tashkent.
+        env:
+          TZ: Asia/Tashkent
       - name: APK (arm64-v8a, armeabi-v7a)
         run: flutter build apk --release
       - uses: actions/upload-artifact@v4
