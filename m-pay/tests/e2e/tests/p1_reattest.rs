@@ -61,8 +61,10 @@ async fn stale_device_rekeys_and_keeps_tokens() {
         CardPolicy::default(),
     );
 
-    // Muddat o'tdi: muhrlangan so'rovlar REATTEST_REQUIRED (sessiya buzilmaydi).
+    // Muddat o'tdi: muhrlangan so'rovlar REATTEST_REQUIRED (sessiya buzilmaydi). Attestatsiya vaqti
+    // handshake'da sessiyaga yoziladi — reyestr o'zgargach qayta ulanish (haqiqiy hayotda vaqt o'tadi).
     age_all(&sb).await;
+    w.connect().await.unwrap();
     let e = w.replenish(&token).await.unwrap_err();
     assert_eq!(code(&e), (403, "REATTEST_REQUIRED"));
     let e = w.replenish(&token).await.unwrap_err();

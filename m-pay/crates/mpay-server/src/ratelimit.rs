@@ -96,6 +96,19 @@ impl KeyedLimiter {
             map.retain(|_, b| {
                 b.tokens + now.saturating_duration_since(b.last).as_secs_f64() * rate < burst
             });
+            // Hammasi faol bo'lsa ham (ko'p manzil, CGNAT) xarita cheksiz o'smasin va har yangi kalit
+            // to'liq skanerlashni chaqirmasin: eng eskilari yarmigacha chiqariladi — keyingi skanerlash
+            // kamida PRUNE_AT/2 yangi kalitdan keyin (amortizatsiyalangan O(1)). Chiqarilgan kalit
+            // keyingi so'rovda to'la chelak oladi — xotira/CPU himoyasi uchun ongli yumshoqlik.
+            if map.len() > PRUNE_AT / 2 {
+                let mut ages: Vec<(Instant, String)> =
+                    map.iter().map(|(k, b)| (b.last, k.clone())).collect();
+                let cut = ages.len() - PRUNE_AT / 2;
+                ages.select_nth_unstable_by_key(cut, |(last, _)| *last);
+                for (_, k) in &ages[..cut] {
+                    map.remove(k);
+                }
+            }
         }
         let b = map.entry(key.to_owned()).or_insert(Bucket {
             tokens: self.burst,
@@ -231,6 +244,21 @@ mod tests {
         // 1 s keyin hammasi to'lgan — yangi kalit qo'shilganda tozalanadi.
         let _ = l.check_at("new", t0 + Duration::from_secs(1));
         assert_eq!(l.tracked(), 1);
+    }
+
+    #[test]
+    fn active_keys_bounded_by_evicting_oldest() {
+        // Sekin to'ladigan chelak: hamma kalit faol (to'lmagan) qoladi — retain hech narsani o'chirmaydi.
+        let l = KeyedLimiter::new(0.001, 1);
+        let t0 = Instant::now();
+        for i in 0..PRUNE_AT {
+            let _ = l.check_at(&i.to_string(), t0 + Duration::from_micros(i as u64));
+        }
+        let later = t0 + Duration::from_secs(1);
+        let _ = l.check_at("new", later);
+        // Eskilarning yarmi chiqarildi, yangi kalit qo'shildi; eng yangi faol kalit saqlangan.
+        assert_eq!(l.tracked(), PRUNE_AT / 2 + 1);
+        assert!(l.check_at(&(PRUNE_AT - 1).to_string(), later).is_err());
     }
 
     #[test]

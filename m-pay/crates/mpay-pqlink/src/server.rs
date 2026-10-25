@@ -61,6 +61,7 @@ struct Established {
     c2s: SecretKey32,
     s2c: SecretKey32,
     device: VerifiedDevice,
+    attested_at: Option<i64>,
     recv_seq: u64,
     send_seq: u64,
     expires: i64,
@@ -87,6 +88,8 @@ pub struct SessionInfo {
     pub device_id: DeviceId,
     pub security_level: SecurityLevel,
     pub expires_at: i64,
+    /// Qurilma attestatsiyadan o'tgan vaqt (ro'yxatga olish darvozasi bo'lsa; ADR-0015).
+    pub attested_at: Option<i64>,
 }
 
 /// PQ Link server.
@@ -277,9 +280,10 @@ impl PqLinkServer {
         let device = verify_chain(&cf.cert_chain, &self.anchors, &self.cfg.attestation, now)?;
         let msg = [DEVICE_SIG_LABEL, &pending.th2[..]].concat();
         device.verify_signature(&msg, &cf.device_sig)?;
-        if let Some(gate) = &self.enrollment {
-            gate.admit(&device)?;
-        }
+        let attested_at = match &self.enrollment {
+            Some(gate) => Some(gate.admit(&device)?),
+            None => None,
+        };
 
         let expires = now + self.cfg.session_ttl_secs;
         let accept = ServerAcceptInner {
@@ -299,6 +303,7 @@ impl PqLinkServer {
             device_id: device.device_id,
             security_level: device.security_level,
             expires_at: expires,
+            attested_at,
         };
         let SessionKeys { c2s, s2c, .. } = pending.keys;
         self.lock()?.insert(
@@ -307,6 +312,7 @@ impl PqLinkServer {
                 c2s,
                 s2c,
                 device,
+                attested_at,
                 recv_seq: 1,
                 send_seq: 1,
                 expires,
@@ -343,6 +349,7 @@ impl PqLinkServer {
                     device_id: s.device.device_id,
                     security_level: s.device.security_level,
                     expires_at: s.expires,
+                    attested_at: s.attested_at,
                 };
                 Ok((info, pt))
             }

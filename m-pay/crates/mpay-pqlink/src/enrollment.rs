@@ -15,5 +15,7 @@ use crate::PqLinkError;
 pub trait EnrollmentGate: Send + Sync + std::fmt::Debug {
     /// Qurilma ro'yxatda bo'lsa — ruxsat; bo'lmasa `attestation_challenge` haqiqiy, ishlatilmagan va
     /// muddati o'tmagan nonce bo'lishi shart (u iste'mol qilinadi va qurilma ro'yxatga olinadi).
-    fn admit(&self, device: &VerifiedDevice) -> Result<(), PqLinkError>;
+    /// Qaytaradi: qurilma oxirgi marta attestatsiyadan o'tgan vaqt (unix) — sessiyaga yoziladi,
+    /// davriy qayta attestatsiya har so'rovda reyestrga murojaatsiz tekshiriladi (ADR-0015).
+    fn admit(&self, device: &VerifiedDevice) -> Result<i64, PqLinkError>;
 }

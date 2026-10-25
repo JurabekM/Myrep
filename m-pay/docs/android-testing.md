@@ -40,6 +40,7 @@ bash scripts/android-interop.sh
    [pqlink]
    attestation_roots = ["sandbox-attestation-root.der", "android-emulator-test-root.pem"]
    min_security_level = "SOFTWARE"   # FAQAT emulyator; production — STRONG_BOX
+   require_verified_boot = false     # FAQAT emulyator: apparat rootOfTrust yo'q; production — true
    ```
 
 4. `mpay-server serve --config emu-sb/mpay.toml`, ilovada "Ulanish" → "Kartani qo'shish"
@@ -114,7 +115,8 @@ bo'lmasin). Tekshiruv: `bash scripts/check-release-apk.sh` (debug'da bor, releas
 Tartib (2026-10-25 da shu tartibda bajarildi):
 
 1. `mpay-server init --dir emu-tls --listen 127.0.0.1:8443 --tls`; `config/android-emulator-test-root.pem` ni
-   nusxalab `attestation_roots` ga qo'shing, `min_security_level = "SOFTWARE"`.
+   nusxalab `attestation_roots` ga qo'shing, `min_security_level = "SOFTWARE"`,
+   `require_verified_boot = false` (emulyatorda apparat `rootOfTrust` yo'q).
 2. `mpay-server identity --config emu-tls/mpay.toml` → `fingerprint` va `tls_pin`; hamyonni pinlar bilan yig'ing:
    `./gradlew :wallet-demo:assembleDebug -Pmpay.serverFingerprints=<fp> -Pmpay.tlsPin=<pin>`.
 3. `mpay-server terminal-bundle --config emu-tls/mpay.toml --url https://10.0.2.2:8443`; `serve`.

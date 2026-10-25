@@ -602,3 +602,26 @@ PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da 
 * PKCS#11 sessiya pool'i va qayta login — 2-faza P2.2 (SoftHSM yuk sinovi) bilan birga.
 
 Tekshiruv: `cargo test --workspace` 143, clippy toza, Kotlin interop, smoke.
+
+### 1-faza xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
+
+PR #17 topilmalari:
+
+* **Takroriy so'rovlar (ADR-0010):** ishlov `tokio::spawn` da — terminal ulanishni uzsa ham emitent
+  javobi saqlanadi (avval yozuv `PENDING` da qotib qolardi). Kalit — autentifikatsiya qilingan terminal
+  kaliti + `terminal_id` va **kartadagi** sana (ICC `9A`; qayta urinish yarim tundan o'tsa ham o'sha
+  kalit). Emitent ishlagandan keyingi xatoda yozuv o'chirilmaydi — `96` saqlanadi (qayta yuborish ATC
+  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. `TODO(spec):` avtomatik reversal.
+* **Rate-limit:** IPv6 kaliti `/64`; faol kalitlar ko'p bo'lsa eng eskilari yarmigacha chiqariladi
+  (xarita chegaralangan, skanerlash amortizatsiyalangan).
+* **Ro'yxatdan o'tish nonce'lari** holatsiz (HMAC, muddat ichida): `/v1/pqlink/enroll` ni ko'p chaqirib
+  xotira yoki umumiy chegarani to'ldirib bo'lmaydi; faqat ishlatilganlari eslab qolinadi.
+* **Qayta attestatsiya:** attestatsiya vaqti handshake'da sessiyaga yoziladi — har muhrlangan so'rovda
+  DB'ga murojaat yo'q, DB xatosi so'rovni o'tkazib yubormaydi.
+* **Rekey:** yangi qurilma reyestrga → tokenlar ko'chadi → eskisi o'chadi; ko'chirish yiqilsa yangi
+  yozuv qaytariladi (tokenlar reyestrda yo'q qurilmada qolmaydi).
+* **Kotlin `ServerPinPolicy`:** barcha pinlar bekor qilinsa TOFU'ga tushmaydi.
+* Emulyator konfiguratsiyasi: `require_verified_boot = false` (`android-testing.md`).
+
+Tekshiruv: 174 Rust test (yangi: dedup ×2, nonce ×2, IPv6 kaliti, limiter chegarasi), clippy toza,
+Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
