@@ -66,7 +66,7 @@ export MPAY_TERMINAL_BUNDLE="$WORK/terminal-bundle.json"
 export MPAY_INTEROP_URL="http://127.0.0.1:$PORT"
 export MPAY_SANDBOX_DIR="$WORK/sb"
 (cd android && ./gradlew :mpay-core:test --tests 'uz.mpay.core.InteropTest' --rerun-tasks --no-daemon --console=plain) \
-  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|bekor|Exception|BUILD"
+  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|bekor|almashtirildi|Exception|BUILD"
 
 echo "== Server logida ochiq PAN yo'q"
 for p in $(grep -E '^pan = ' "$WORK/sb/mpay.toml" | sed -E 's/pan = "([0-9]+)"/\1/'); do

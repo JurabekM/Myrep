@@ -65,6 +65,8 @@ pub struct AppState {
     pub limits: crate::ratelimit::RateLimits,
     pub require_mtls: bool,
     pub trusted_proxies: Vec<crate::clientip::Cidr>,
+    /// Davriy qayta attestatsiya muddati (soniya); 0 — o'chiq.
+    pub reattest_after_secs: i64,
     /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
     pub next_identity: Option<NextIdentity>,
     /// Bekor qilingan identifikatorlar ro'yxati (tarqatish uchun).
@@ -85,6 +87,22 @@ impl std::fmt::Debug for AppState {
 }
 
 impl AppState {
+    /// Qurilma attestatsiyasi eskirganmi (ADR-0015). Reyestr yo'q yoki DB xatosi — `false`
+    /// (xato logga yoziladi; so'rovni bloklamaydi).
+    pub async fn reattest_due(&self, device: &mpay_common::DeviceId) -> bool {
+        let (Some(e), true) = (&self.enrollment, self.reattest_after_secs > 0) else {
+            return false;
+        };
+        match e.attested_at(&device.to_hex()).await {
+            Ok(Some(at)) => self.clock.unix() - at > self.reattest_after_secs,
+            Ok(None) => false,
+            Err(err) => {
+                tracing::error!(error = %err, "pqlink_devices: attestatsiya vaqti");
+                false
+            }
+        }
+    }
+
     /// IP chegaralari uchun mijoz manzili (ishonchli proksi ortida — `X-Forwarded-For`).
     pub fn client_ip(
         &self,
@@ -415,6 +433,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
         require_mtls: cfg.auth.require_mtls,
         trusted_proxies: cfg.http.trusted_proxies.clone(),
+        reattest_after_secs: i64::from(cfg.pqlink.reattest_after_days) * 86_400,
         next_identity,
         revocations,
         enrollment,

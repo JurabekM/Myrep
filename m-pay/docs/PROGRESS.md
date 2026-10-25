@@ -551,3 +551,15 @@ va o'z identifikatori ro'yxatda bo'lsa ishga tushmaydi; Kotlin `Revocations.veri
 qilinganlarni rad etadi, hamyon faqat kattaroq versiyani saqlaydi (`-Pmpay.rootFingerprint`).
 Tekshiruv: Rust unit, e2e `p1_revocations.rs` (2), Kotlin `RevocationsTest` (2), interop — Rust `revoke`
 ro'yxati Kotlin'da tekshirildi (versiya 3).
+
+**Davriy qayta attestatsiya (ADR-0015).** `[pqlink] reattest_after_days` (init: 90): eskirgan qurilmaning
+muhrlangan so'rovlari `REATTEST_REQUIRED`; `POST /v1/devices/rekey` — yangi kalit (enroll nonce'i bilan)
+`device-rekey ‖ session_id ‖ eski device_id` ni imzolaydi, Vault tokenlarni ko'chiradi (`DEVICE_REKEY`
+audit), reyestr yangilanadi. Hamyon ikki alias bilan avtomatik almashtiradi va so'rovni takrorlaydi.
+Tekshiruv: e2e `p1_reattest.rs` (2), Kotlin interop (Kotlin imzosi → Rust, token ko'chdi), emulyatorda
+haqiqiy Keystore: eskirtirilgan qurilmada "LUK to'ldirish" → 403 → avtomatik rekey 200 → "Yangi LUK: 5",
+auditda `DEVICE_REKEY`. Emulyator test ildizi `config/android-emulator-test-root.pem` ga qo'shildi.
+
+**1-faza qo'shimcha ishlari yakuni:** ishonchli proksilar, mTLS sertifikatini bekor qilish, bekor
+qilingan server identifikatorlari (ADR-0014), davriy qayta attestatsiya (ADR-0015) — bajarildi.
+Qolgan: P1.8 (ikki telefonli NFC tap) va 2-faza (tashqi javoblar kerak, `docs/roadmap.md`).

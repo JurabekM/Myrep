@@ -48,6 +48,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens/{id}", get(get_token).delete(delete_token))
         .route("/v1/tokens/{id}/idv/verify", post(idv_verify))
         .route("/v1/tokens/{id}/luks", post(replenish))
+        .route("/v1/devices/rekey", post(rekey))
         .route("/v1/tokens/{id}/suspend", post(suspend))
         .route("/v1/tokens/{id}/resume", post(resume))
         .route("/v1/audit/verify", get(audit_verify))
@@ -147,6 +148,73 @@ fn handshake_guard(
     })
 }
 
+/// Qurilma kalitini almashtirish (ADR-0015): yangi kalit (nonce bilan attestatsiya) sessiya va eski
+/// qurilmaga bog'langan xabarni imzolaydi; tokenlar yangi qurilmaga ko'chadi, eski qurilma reyestrdan
+/// o'chadi. Muddati o'tgan attestatsiyali qurilma uchun ham ruxsat.
+async fn rekey(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
+    let st = s.clone();
+    sealed_with(
+        &s,
+        &headers,
+        &body,
+        true,
+        |info, req: mpay_common::api::RekeyRequest| async move {
+            let Some(enroll) = &st.enrollment else {
+                return Err(ApiError::not_found());
+            };
+            let bad = |m: &str| ApiError::bad_request(m.to_owned());
+            let chain = req
+                .cert_chain
+                .iter()
+                .map(|h| hex::decode(h).map_err(|_| bad("cert_chain hex emas")))
+                .collect::<Result<Vec<_>, _>>()?;
+            let sig = hex::decode(&req.signature).map_err(|_| bad("signature hex emas"))?;
+            let pq = st.pqlink.clone();
+            let new = tokio::task::spawn_blocking(move || pq.verify_device_chain(&chain))
+                .await
+                .map_err(|_| {
+                    ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+                })??;
+            if new.device_id == info.device_id {
+                return Err(bad("yangi kalit eskisidan farq qilishi kerak"));
+            }
+            let msg = [
+                mpay_pqlink::crypto::REKEY_LABEL,
+                &info.session_id[..],
+                &info.device_id.0[..],
+            ]
+            .concat();
+            new.verify_signature(&msg, &sig)?;
+            enroll.consume(&new.attestation_challenge)?;
+            let db = |e: sqlx::Error| {
+                tracing::error!(error = %e, "pqlink_devices");
+                ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+            };
+            if enroll
+                .attested_at(&new.device_id.to_hex())
+                .await
+                .map_err(db)?
+                .is_some()
+            {
+                return Err(bad("yangi kalit allaqachon ro'yxatda"));
+            }
+            let moved = st
+                .vault
+                .rebind_device(&info.device_id, &new.device_id)
+                .await?;
+            enroll
+                .replace(&info.device_id.to_hex(), &new)
+                .await
+                .map_err(db)?;
+            Ok(mpay_common::api::RekeyResponse {
+                device_id: new.device_id.to_hex(),
+                tokens_moved: moved,
+            })
+        },
+    )
+    .await
+}
+
 /// Oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014); sozlanmagan bo'lsa 404.
 async fn pq_revocations(State(s): St) -> Result<Response, ApiError> {
     s.revocations
@@ -221,6 +289,23 @@ where
     F: FnOnce(SessionInfo, Req) -> Fut,
     Fut: Future<Output = Result<Resp, ApiError>>,
 {
+    sealed_with(s, headers, body, false, f).await
+}
+
+/// `stale_ok` — muddati o'tgan attestatsiyali qurilmaga ham ruxsat (faqat `/v1/devices/rekey`).
+async fn sealed_with<Req, Resp, F, Fut>(
+    s: &AppState,
+    headers: &HeaderMap,
+    body: &[u8],
+    stale_ok: bool,
+    f: F,
+) -> Response
+where
+    Req: DeserializeOwned,
+    Resp: Serialize,
+    F: FnOnce(SessionInfo, Req) -> Fut,
+    Fut: Future<Output = Result<Resp, ApiError>>,
+{
     if let Err(e) = require_pqlink_ct(headers) {
         return e.into_response();
     }
@@ -230,7 +315,15 @@ where
     };
     // Qurilma chegarasi: javob baribir muhrlanadi — sessiya ketma-ketligi buzilmaydi.
     let limited = s.limits.device(&info.device_id.to_string()).err();
+    let stale = !stale_ok && s.reattest_due(&info.device_id).await;
     let (status, env) = match serde_json::from_slice::<Req>(&plaintext) {
+        _ if stale => (
+            StatusCode::FORBIDDEN,
+            Envelope::<Resp>::err(
+                "REATTEST_REQUIRED",
+                "qurilma attestatsiyasi eskirgan — kalitni almashtiring (/v1/devices/rekey)",
+            ),
+        ),
         _ if limited.is_some() => {
             tracing::warn!(device = %info.device_id, "rate-limit: qurilma");
             (

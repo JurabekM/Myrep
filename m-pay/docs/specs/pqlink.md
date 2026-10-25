@@ -199,10 +199,21 @@ gibrid imzosi (kontekst `mpay-pqlink-v1`) xabar ustidan:
 Qurilma ildiz barmoq izini pinlangan qiymat bilan solishtiradi, faqat kattaroq versiyani qabul qiladi
 va bekor qilingan barmoq izlarini rad etadi.
 
+## 8d. Qurilma kalitini almashtirish (ADR-0015)
+
+Attestatsiyasi eskirgan qurilma (`REATTEST_REQUIRED`) sessiya ichida yangi kalit yaratadi
+(challenge = enroll nonce'i) va `POST /v1/devices/rekey` ga zanjir va imzoni yuboradi:
+
+```
+ECDSA-P256-SHA256(new_key, "MPAY-PQLINK-V1 device-rekey" ‖ session_id ‖ old_device_id)
+```
+
+Server tokenlarni yangi qurilmaga ko'chiradi; keyingi handshake yangi kalit bilan.
+
 ## 9. Ochiq savollar
 
 * KeyDescription `attestationChallenge` — qurilmani ro'yxatdan o'tkazish nonce'i (§8b, P1.7).
-  `TODO(spec):` davriy qayta attestatsiya.
+  Davriy qayta attestatsiya — §8d (ADR-0015).
 * `TODO(spec):` Google'ning haqiqiy attestatsiya ildizlari (RSA-4096, ECDSA P-384) va
   `rootOfTrust`/`verifiedBootState` tekshiruvi — M6; hozir faqat P-256/ECDSA-SHA256 zanjirlari.
 * Server kalitini almashtirish va bir nechta pinlangan identifikator — 1-faza P1.5/P1.6 (§8a).

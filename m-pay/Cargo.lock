@@ -1876,6 +1876,7 @@ dependencies = [
  "mpay-server",
  "mpay-terminal-sim",
  "serde_json",
+ "sqlx",
  "tempfile",
  "tokio",
  "tracing",

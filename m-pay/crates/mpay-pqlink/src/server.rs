@@ -121,6 +121,20 @@ impl PqLinkServer {
         }
     }
 
+    /// Attestatsiya zanjirini server ildizlari va siyosati bo'yicha tekshiradi (qurilma kalitini
+    /// almashtirishda — handshake'dan tashqari, ADR-0015).
+    pub fn verify_device_chain(
+        &self,
+        chain: &[Vec<u8>],
+    ) -> Result<crate::attestation::VerifiedDevice, PqLinkError> {
+        verify_chain(
+            chain,
+            &self.anchors,
+            &self.cfg.attestation,
+            self.clock.unix(),
+        )
+    }
+
     /// Qurilmani ro'yxatdan o'tkazish talabi (P1.7). Bo'lmasa — har qanday attestatsiyali qurilma.
     pub fn with_enrollment(mut self, gate: Arc<dyn crate::EnrollmentGate>) -> Self {
         self.enrollment = Some(gate);

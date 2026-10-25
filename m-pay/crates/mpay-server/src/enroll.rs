@@ -59,7 +59,8 @@ impl Enrollment {
         Ok((n, exp))
     }
 
-    fn consume(&self, challenge: &[u8]) -> Result<(), PqLinkError> {
+    /// Nonce'ni iste'mol qiladi (bir martalik).
+    pub fn consume(&self, challenge: &[u8]) -> Result<(), PqLinkError> {
         let key: [u8; 32] = challenge
             .try_into()
             .map_err(|_| PqLinkError::Enrollment("attestatsiya challenge'i server nonce'i emas"))?;
@@ -83,6 +84,27 @@ impl Enrollment {
                 .await?
                 .is_some(),
         )
+    }
+
+    /// Qurilma oxirgi marta attestatsiyadan o'tgan vaqt (ro'yxatda bo'lmasa `None`).
+    pub async fn attested_at(&self, device_hex: &str) -> Result<Option<i64>, sqlx::Error> {
+        use sqlx::Row;
+        sqlx::query("SELECT enrolled_at FROM pqlink_devices WHERE device_id = ?")
+            .bind(device_hex)
+            .fetch_optional(&self.pool)
+            .await?
+            .map(|r| r.try_get::<i64, _>("enrolled_at"))
+            .transpose()
+    }
+
+    /// Kalit almashtirish: yangi qurilma ro'yxatga olinadi, eskisi o'chiriladi.
+    pub async fn replace(&self, old_hex: &str, new: &VerifiedDevice) -> Result<(), sqlx::Error> {
+        self.register(new, self.clock.unix()).await?;
+        sqlx::query("DELETE FROM pqlink_devices WHERE device_id = ?")
+            .bind(old_hex)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
     }
 
     async fn register(&self, d: &VerifiedDevice, now: i64) -> Result<(), sqlx::Error> {

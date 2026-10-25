@@ -45,6 +45,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
 * **Bekor qilish ro'yxati** (ADR-0014): `root-keygen` (oflayn), `revoke --version N --fp …`;
   `[pqlink] revocations`, `root_fingerprint`; `GET /v1/pqlink/revocations`. O'z identifikatori
   ro'yxatda bo'lsa server ishga tushmaydi.
+* **Qayta attestatsiya** (ADR-0015): `[pqlink] reattest_after_days`; eskirgan qurilma — `REATTEST_REQUIRED`;
+  `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`.
 * **So'rovlar chegarasi** (`ratelimit.rs`, `[rate_limit]`): IP / API kaliti / qurilma bo'yicha token
   bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`).
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):

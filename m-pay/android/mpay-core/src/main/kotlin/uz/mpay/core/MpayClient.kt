@@ -134,6 +134,22 @@ class MpayClient(
         return String(r.body, Charsets.UTF_8)
     }
 
+    /**
+     * Qurilma kalitini almashtirish (ADR-0015): `newKey` — [enrollNonce] bilan yaratilgan kalit. U
+     * `"MPAY-PQLINK-V1 device-rekey" ‖ session_id ‖ eski device_id` ni imzolaydi. Muvaffaqiyatda sessiya
+     * yopiladi — yangi kalit bilan qayta [connect] qiling. Qaytaradi: yangi device_id (hex).
+     */
+    fun rekey(newKey: DeviceKey): String {
+        val s = session ?: throw ApiException(0, "NOT_CONNECTED", "PQ Link sessiyasi yo'q")
+        val msg = "MPAY-PQLINK-V1 device-rekey".toByteArray(Charsets.US_ASCII) + s.sessionId + s.deviceId
+        val req = JSONObject()
+            .put("cert_chain", JSONArray(newKey.certChain().map(Hex::encode)))
+            .put("signature", Hex.encode(newKey.sign(msg)))
+        val d = sealed("/v1/devices/rekey", req)
+        session = null
+        return d.getString("device_id")
+    }
+
     /** Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kaliti `attestationChallenge = nonce` bilan. */
     fun enrollNonce(): ByteArray = Hex.decode(json("POST", "/v1/pqlink/enroll", JSONObject(), null).getString("nonce"))
 

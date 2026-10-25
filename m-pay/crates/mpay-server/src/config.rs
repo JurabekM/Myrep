@@ -117,6 +117,10 @@ pub struct PqLinkConfig {
     pub enrollment: EnrollmentMode,
     #[serde(default = "default_nonce_ttl")]
     pub enrollment_nonce_ttl_secs: i64,
+    /// Davriy qayta attestatsiya (ADR-0015): shuncha kundan keyin qurilma kalitni almashtirishi shart
+    /// (muhrlangan so'rovlar `REATTEST_REQUIRED`); 0 — o'chiq.
+    #[serde(default)]
+    pub reattest_after_days: u32,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

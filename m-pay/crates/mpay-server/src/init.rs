@@ -237,6 +237,8 @@ session_ttl_secs = 900
 # Yangi qurilma attestatsiyasi server nonce'i bilan (POST /v1/pqlink/enroll); "off" — faqat sandbox/test.
 enrollment = "required"
 enrollment_nonce_ttl_secs = 300
+# Davriy qayta attestatsiya: shuncha kundan keyin qurilma kalitni almashtiradi (0 — o'chiq).
+reattest_after_days = 90
 
 [vault]
 token_bin = "990077"

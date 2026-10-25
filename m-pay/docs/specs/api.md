@@ -45,6 +45,7 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
 | GET | `/v1/pqlink/revocations` | — | — | oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014; sozlanmagan — 404) |
+| POST | `/v1/devices/rekey` | qurilma (sealed) | `{cert_chain[], signature}` | qurilma kalitini almashtirish, tokenlar ko'chadi (ADR-0015) |
 | POST | `/v1/pqlink/enroll` | — (IP chegarasi) | `{}` | yangi qurilma uchun bir martalik nonce: `{nonce, expires_at}` (P1.7) |
 | GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
@@ -175,6 +176,7 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |
 | `DB_ERROR`, `CRYPTO_ERROR`, `AUDIT_BROKEN`, `PQLINK_INTERNAL` | 500 |
 | `MTLS_REQUIRED` (`require_mtls`: sertifikat yo'q yoki CN ≠ kalit id) | 403 |
+| `REATTEST_REQUIRED` (muhrlangan; attestatsiya `reattest_after_days` dan eski — `/v1/devices/rekey`) | 403 |
 | `RATE_LIMITED` | 429 (+ `Retry-After`) |
 | `BUSY` (handshake navbati to'la) | 503 (+ `Retry-After`) |
 | `REQUEST_IN_PROGRESS` (shu avtorizatsiya hali ishlanmoqda) | 409 (+ `Retry-After`) |

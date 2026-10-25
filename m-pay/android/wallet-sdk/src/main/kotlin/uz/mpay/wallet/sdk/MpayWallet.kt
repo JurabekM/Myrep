@@ -68,8 +68,15 @@ class MpayWallet private constructor(context: Context) {
         listeners.forEach { it(event) }
     }
 
+    private val prefs get() = app.getSharedPreferences("mpay", Context.MODE_PRIVATE)
+
+    /** Joriy kalit aliasi: kalit almashtirishda (ADR-0015) ikki alias navbatma-navbat ishlatiladi. */
+    private val alias: String get() = prefs.getString("device_alias", AndroidDeviceKey.DEFAULT_ALIAS)!!
+
+    private var identity: ServerIdentity? = null
+
     /** Mavjud qurilma kaliti (bo'lmasa — lokal; serverga ulanishda nonce bilan qayta yaratiladi). */
-    fun deviceKey(): AndroidDeviceKey = AndroidDeviceKey.getOrCreate("mpay-local".toByteArray())
+    fun deviceKey(): AndroidDeviceKey = AndroidDeviceKey.getOrCreate("mpay-local".toByteArray(), alias)
 
     /**
      * P1.7: yangi qurilma kaliti server nonce'i bilan yaratiladi (attestatsiya yangiligi). Server
@@ -77,15 +84,17 @@ class MpayWallet private constructor(context: Context) {
      * qurilmaga o'tmaydi.
      */
     private fun connectEnrolled(c: MpayClient, identity: ServerIdentity) {
-        val key = if (AndroidDeviceKey.exists()) deviceKey() else AndroidDeviceKey.getOrCreate(c.enrollNonce())
+        val a = alias
+        val key = if (AndroidDeviceKey.exists(a)) deviceKey() else AndroidDeviceKey.getOrCreate(c.enrollNonce(), a)
         try {
             c.connect(identity, key)
         } catch (e: ApiException) {
             if (e.code != "PQLINK_ENROLLMENT") throw e
             emit("Qurilma serverda ro'yxatdan o'tmagan — kalit yangi nonce bilan qayta yaratilmoqda")
-            AndroidDeviceKey.delete()
-            c.connect(identity, AndroidDeviceKey.getOrCreate(c.enrollNonce()))
+            AndroidDeviceKey.delete(a)
+            c.connect(identity, AndroidDeviceKey.getOrCreate(c.enrollNonce(), a))
         }
+        this.identity = identity
     }
 
     /**
@@ -143,20 +152,48 @@ class MpayWallet private constructor(context: Context) {
 
     private fun c(): MpayClient = client ?: throw IllegalStateException("avval serverga ulaning")
 
-    fun provision(pan: String, expiryYymm: String): ProvisionResult {
+    /**
+     * Davriy qayta attestatsiya (ADR-0015): server `REATTEST_REQUIRED` desa — yangi alias ostida nonce
+     * bilan kalit yaratiladi, `rekey` (tokenlar ko'chadi), eski kalit o'chiriladi, qayta ulanib so'rov
+     * bir marta takrorlanadi.
+     */
+    private fun <T> withReattest(block: () -> T): T = try {
+        block()
+    } catch (e: ApiException) {
+        if (e.code != "REATTEST_REQUIRED") throw e
+        rekeyDevice()
+        block()
+    }
+
+    private fun rekeyDevice() {
+        val c = c()
+        val old = alias
+        val next = if (old == AndroidDeviceKey.DEFAULT_ALIAS) "${AndroidDeviceKey.DEFAULT_ALIAS}-b" else AndroidDeviceKey.DEFAULT_ALIAS
+        AndroidDeviceKey.delete(next) // avvalgi tugallanmagan urinish qoldig'i
+        val key = AndroidDeviceKey.getOrCreate(c.enrollNonce(), next)
+        val id = c.rekey(key)
+        prefs.edit().putString("device_alias", next).apply()
+        AndroidDeviceKey.delete(old)
+        c.connect(identity ?: throw IllegalStateException("server identifikatori yo'q"), key)
+        emit("Qurilma attestatsiyasi yangilandi: yangi kalit ${id.take(16)}…")
+    }
+
+    fun provision(pan: String, expiryYymm: String): ProvisionResult = withReattest { provisionOnce(pan, expiryYymm) }
+
+    private fun provisionOnce(pan: String, expiryYymm: String): ProvisionResult {
         val r = c().provision(pan, expiryYymm)
         if (r is ProvisionResult.Active) save(r.profile)
         return r
     }
 
     fun verifyOtp(tokenId: String, challengeId: String, otp: String): CardProfile =
-        c().verifyOtp(tokenId, challengeId, otp).also { save(it) }
+        withReattest { c().verifyOtp(tokenId, challengeId, otp) }.also { save(it) }
 
     fun sandboxOtp(challengeId: String, operatorKey: String): String = c().sandboxOtp(challengeId, operatorKey)
 
     fun replenish(): Int {
         val p = store.load() ?: throw IllegalStateException("token yo'q")
-        val luks: List<CardLuk> = c().replenish(p.tokenId)
+        val luks: List<CardLuk> = withReattest { c().replenish(p.tokenId) }
         p.luks.removeAll { it.usesLeft <= 0 || it.expiresAt <= System.currentTimeMillis() / 1000 }
         p.luks.addAll(luks)
         store.save(p)

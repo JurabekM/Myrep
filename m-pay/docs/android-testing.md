@@ -32,7 +32,7 @@ bash scripts/android-interop.sh
 2. Emulyator attestatsiyasi `SOFTWARE` darajali va ildizi "Droid Unregistered Device CA"
    (Google Test LLC). Standart siyosat (`STRONG_BOX`, sandbox CA) uni **rad etadi** —
    `403 PQLINK_ATTESTATION` (bu ham sinov: ishonchsiz ildiz o'tmaydi).
-3. Faqat emulyator sinovi uchun: ilovada "Attestatsiya" tugmasi zanjirni
+3. Faqat emulyator sinovi uchun: ildiz repoda — `config/android-emulator-test-root.pem` (yoki ilovada "Attestatsiya" tugmasi zanjirni
    `/sdcard/Android/data/uz.mpay.walletdemo/files/attestation-chain.pem` ga yozadi; oxirgi
    sertifikatni `emu-sb/android-emulator-test-root.pem` ga saqlab, `mpay.toml` da:
 

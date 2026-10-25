@@ -36,6 +36,9 @@ Maqsad: tashqi qarorlarsiz yopiladigan xavfsizlik bo'shliqlarini yopish.
 | P1.7 ✅ | Attestatsiya challenge'ini qurilmani ro'yxatdan o'tkazish (enrollment nonce) bilan bog'lash | `specs/pqlink.md` |
 | P1.8 | Ikki telefon orasida haqiqiy NFC tap (`docs/android-testing.md` §3) | M6 qabul mezoni |
 
+Qo'shimcha (2026-10-25, bajarildi): ishonchli proksilar, mTLS sertifikatini bekor qilish, bekor qilingan
+server identifikatorlari (ADR-0014), davriy qayta attestatsiya (ADR-0015).
+
 Qabul mezoni: har band testlar bilan, tahdid modeli yangilangan, `scripts/demo.sh` va smoke CI'da yashil.
 P1.8 qurilmalar mavjud bo'lganda bajariladi.
 

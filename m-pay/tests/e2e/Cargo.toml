@@ -24,6 +24,7 @@ mpay-issuer.workspace = true
 mpay-crypto.workspace = true
 hex.workspace = true
 clap.workspace = true
+sqlx.workspace = true
 
 [[bin]]
 name = "mpay-load"

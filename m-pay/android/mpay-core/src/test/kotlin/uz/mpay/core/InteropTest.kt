@@ -132,6 +132,20 @@ class InteropTest {
         // 5) LUK to'ldirish.
         assertEquals(5, api.replenish(profile.tokenId).size)
 
+        // 5a) ADR-0015: qurilma kalitini almashtirish (Kotlin imzosi → Rust tekshiradi), token ko'chadi.
+        val newKey = SoftDevice(dir, challenge = api.enrollNonce())
+        val newId = api.rekey(newKey)
+        println("kalit almashtirildi: yangi qurilma ${newId.take(16)}")
+        api.connect(identity, newKey)
+        // Token yangi qurilmaga bog'langan: qurilma tekshiruvidan o'tadi (eskisida — DEVICE_MISMATCH),
+        // keyin faol LUK limiti (2 × partiya) to'lgani uchun TOO_MANY_LUKS.
+        try {
+            api.replenish(profile.tokenId)
+            throw AssertionError("TOO_MANY_LUKS kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("TOO_MANY_LUKS", e.code)
+        }
+
         // 6) O'sha kartani ikkinchi qurilmaga — YELLOW → OTP (Shield dvigateli).
         val api2 = MpayClient(url)
         api2.connect(identity, SoftDevice(dir, challenge = api2.enrollNonce()))

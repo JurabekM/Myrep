@@ -27,7 +27,7 @@ ko'rsataverardi; attestatsiya yangiligini server tekshira olmasdi.
 
 * Yangi qurilma attestatsiyasi yangi ekani isbotlanadi; nonce qayta ishlatilmaydi.
 * Ro'yxatdagi qurilmaning **keyingi** holat o'zgarishi (root) faqat qayta ro'yxatdan o'tishda ko'rinadi.
-  `TODO(spec):` davriy qayta attestatsiya (masalan, N kunda bir) va Play Integrity (2-faza).
+  Davriy qayta attestatsiya — ADR-0015; Play Integrity — 2-faza.
 * Nonce'lar xotirada — ko'p instansiyada umumiy saqlash kerak (2-faza, ADR-0006 sessiyalari bilan birga).
 * Tekshirilgan: Rust e2e `p1_enrollment.rs` (rad, ro'yxat, reyestr, bir martalik, muddat, qayta ishga
   tushish, `off` faqat sandbox), Kotlin interop, emulyatorda haqiqiy Android Keystore (yangi ro'yxat,
