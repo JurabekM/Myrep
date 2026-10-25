@@ -2,6 +2,8 @@
   "@@locale": "uz",
   "app_name": "Baraka Dastur",
   "app_disclaimer": "Taʼlimiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas.",
+  "app_copyright": "© 2026 Joʻrabek Mashgʻulatov. Barcha huquqlar himoyalangan.",
+  "settings_about": "Ilova haqida",
   "setup_title": "Xush kelibsiz! Daftarni birga ochamiz",
   "setup_household": "Oila nomi",
   "setup_yourName": "Ismingiz",

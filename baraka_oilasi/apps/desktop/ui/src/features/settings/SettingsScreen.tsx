@@ -99,6 +99,11 @@ export function SettingsScreen() {
           ))}
         </dl>
       </Card>
+      <Card title={t("settings.about")}>
+        <p className="font-semibold">{t("app.name")}</p>
+        <p>{t("app.copyright")}</p>
+        <p className="text-sm text-ink-muted">{t("app.disclaimer")}</p>
+      </Card>
     </section>
   );
 }

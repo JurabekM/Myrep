@@ -1,5 +1,7 @@
 # Baraka oilasi
 
+**© 2026 Joʻrabek Mashgʻulatov. Barcha huquqlar himoyalangan** — muallifning yozma ruxsatisiz nusxalash, tarqatish va nashr qilish taqiqlanadi ([LICENSE](LICENSE)).
+
 Ilovalar nomi — **Baraka Dastur** (Android va desktop). Halol (ribosiz) moliyaviy odatlar uchun bitta ilova, uchta makon:
 
 - **Uy** — oila moliyasi;

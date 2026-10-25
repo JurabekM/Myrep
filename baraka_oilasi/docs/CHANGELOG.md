@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Qo'shildi
+- **Mualliflik:** `LICENSE` (© 2026 Joʻrabek Mashgʻulatov, barcha huquqlar himoyalangan, uz/en); README'da eslatma; Android va desktop Sozlamalarida «Ilova haqida» bo'limi (nom, © yozuvi, disklеymer); Windows o'rnatuvchisida `publisher` va `copyright`.
 - **Android demo versiya** (`-P baraka.demo=true --dart-define=BARAKA_DEMO=true`): alohida paket nomi `uz.baraka.oilasi.demo` va «Baraka Dastur DEMO» nomi, har doim debug kalit bilan imzolanadi, har ekranda «DEMO» belgisi, `BARAKA_DEMO_EXPIRES` kunidan keyin ochilmaydi, PDF va `.baraka` fayllarni saqlash/yuborish o'chirilgan. Buyruq — `apps/android/README.md`; CI'ning `android` job'i har push'da `baraka-android-demo` artefaktini (arm64, 30 kun) ham yig'adi.
 
 ### Tuzatildi
