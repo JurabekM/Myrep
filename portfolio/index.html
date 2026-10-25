@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Jurabek — Portfolio</title>
+<meta name="description" content="Dasturiy ta'minot muhandisi: Rust, Python, Android, desktop ilovalar va mikrokontrollerlar. Tanlangan loyihalar.">
+<meta property="og:title" content="Jurabek — Portfolio">
+<meta property="og:description" content="Rust, Python, Android, desktop va mikrokontroller loyihalari.">
+<meta property="og:image" content="assets/img/desktop-12-payoff-chart.webp">
+<style>
+@font-face{font-family:"Noto Sans";src:url("assets/fonts/NotoSans-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Noto Sans";src:url("assets/fonts/NotoSans-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+:root{
+  --paper:#262624;--sidebar:#1F1E1D;--surface:#30302E;--line:#4A4945;
+  --ink:#FAF9F5;--muted:#A6A39A;--accent:#D97757;--accent-ink:#1F1E1D;--accent-text:#E8957A;
+  --warn:#E0A458;--ok:#8FBF7F;--blue:#7FA9D6;
+  --r:16px;--max:1120px;
+}
+*{box-sizing:border-box}
+html{background:var(--paper);scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-text);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
+@media(min-width:720px){.wrap{padding:0 32px}}
+
+/* nav */
+header.top{position:sticky;top:0;z-index:20;background:rgba(31,30,29,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.logo{font-weight:700;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.logo span.dot{width:10px;height:10px;border-radius:3px;background:var(--accent);display:inline-block}
+nav.links{display:flex;gap:22px;font-size:14px}
+nav.links a{color:var(--muted)}
+nav.links a:hover{color:var(--ink);text-decoration:none}
+@media(max-width:640px){nav.links a:not(.cta-link){display:none}}
+.cta-link{color:var(--accent-text)!important}
+
+/* hero */
+.hero{padding:72px 0 56px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--surface)}
+.eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+h1{font-size:clamp(34px,6vw,60px);line-height:1.08;letter-spacing:-.03em;margin:22px 0 18px;font-weight:700}
+h1 em{font-style:normal;color:var(--accent-text)}
+.lead{font-size:clamp(17px,2vw,20px);color:var(--muted);max-width:760px;margin:0}
+.lead b{color:var(--ink);font-weight:400}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.btn:hover{text-decoration:none;border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.06)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:48px}
+@media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.stat b{display:block;font-size:30px;letter-spacing:-.02em;color:var(--accent-text);line-height:1.2}
+.stat span{font-size:14px;color:var(--muted)}
+
+/* sections */
+section{padding:56px 0;border-top:1px solid var(--line)}
+.sec-head{margin-bottom:28px;max-width:760px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
+h2{font-size:clamp(26px,3.6vw,38px);line-height:1.15;letter-spacing:-.02em;margin:8px 0 10px}
+.sec-head p{color:var(--muted);margin:0}
+h3{font-size:21px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em}
+
+/* flagship */
+.flag{background:var(--sidebar);border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.flag-top{display:grid;gap:28px;padding:28px}
+@media(min-width:900px){.flag-top{grid-template-columns:1.05fr 1fr;padding:40px}}
+.flag h3{font-size:30px;letter-spacing:-.02em}
+.flag .sub{color:var(--muted);margin:0 0 18px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0;padding:0;list-style:none}
+.tags li{font-size:12.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.points{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.points li{position:relative;padding-left:22px;color:var(--muted)}
+.points li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;border-radius:2px;background:var(--accent)}
+.points li b{color:var(--ink);font-weight:700}
+.shot-main{border-radius:14px;border:1px solid var(--line);overflow:hidden;background:var(--paper);cursor:zoom-in}
+.gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 28px 28px}
+@media(min-width:900px){.gallery{grid-template-columns:repeat(3,1fr) .55fr .55fr;padding:0 40px 40px}}
+.gallery button{all:unset;cursor:zoom-in;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--paper);display:block}
+.gallery button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.gallery img{width:100%;height:100%;object-fit:cover;object-position:left top;aspect-ratio:16/10.25;transition:transform .3s}
+.gallery .tall img{aspect-ratio:auto;height:100%;max-height:330px}
+.gallery button:hover img{transform:scale(1.03)}
+.caption{font-size:13px;color:var(--muted);padding:0 28px 28px;margin-top:-14px}
+@media(min-width:900px){.caption{padding:0 40px 32px}}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:22px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.metric b{display:block;font-size:20px;color:var(--ink)}
+.metric span{font-size:13px;color:var(--muted)}
+
+/* cards */
+.grid{display:grid;gap:16px}
+@media(min-width:760px){.grid.two{grid-template-columns:repeat(2,1fr)}.grid.three{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1040px){.grid.three{grid-template-columns:repeat(3,1fr)}}
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:#6a6862;transform:translateY(-2px)}
+.card .meta{font-size:13px;color:var(--muted)}
+.card p{margin:0;color:var(--muted)}
+.card p b{color:var(--ink);font-weight:400}
+.card .tags{margin-top:auto;padding-top:8px}
+.card.wide{gap:14px}
+.label{align-self:flex-start;font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent-text);border-radius:6px;padding:2px 8px}
+.label.blue{background:var(--blue)}
+.label.warn{background:var(--warn)}
+
+pre.term{margin:6px 0 0;background:var(--sidebar);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink);overflow-x:auto}
+pre.term .b{color:#E5786D}.term .s{color:var(--ok)}.term .m{color:var(--muted)}
+
+/* diagram */
+.diagram{background:var(--sidebar);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:4px}
+.diagram svg{width:100%;height:auto;display:block}
+
+/* skills */
+.skills{display:grid;gap:14px}
+@media(min-width:760px){.skills{grid-template-columns:repeat(2,1fr)}}
+.skill{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}
+.skill h3{font-size:16px;margin-bottom:10px}
+
+/* principles */
+.princ{counter-reset:p;display:grid;gap:14px}
+@media(min-width:760px){.princ{grid-template-columns:repeat(2,1fr)}}
+.princ div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px 20px 64px;position:relative}
+.princ div::before{counter-increment:p;content:"0" counter(p);position:absolute;left:20px;top:19px;font-weight:700;color:var(--accent-text)}
+.princ b{display:block;margin-bottom:4px}
+.princ p{margin:0;color:var(--muted)}
+
+/* contact */
+.contact{background:var(--sidebar);border:1px solid var(--line);border-radius:24px;padding:36px 28px;text-align:center}
+.contact h2{margin-top:0}
+.contact p{color:var(--muted);max-width:620px;margin:0 auto}
+.contact .btns{justify-content:center}
+footer{padding:36px 0 48px;color:var(--muted);font-size:13px;text-align:center}
+
+/* lightbox */
+dialog.lb{border:0;padding:0;background:transparent;max-width:min(1280px,96vw);max-height:94vh}
+dialog.lb::backdrop{background:rgba(0,0,0,.8)}
+dialog.lb img{max-height:88vh;width:auto;margin:0 auto;border-radius:12px;border:1px solid var(--line)}
+dialog.lb p{color:var(--ink);text-align:center;margin:10px 0 0;font-size:14px}
+dialog.lb button{position:fixed;top:14px;right:16px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#"><span class="dot"></span>Jurabek</a>
+    <nav class="links" aria-label="Bo'limlar">
+      <a href="#baraka">Asosiy loyiha</a>
+      <a href="#security">Xavfsizlik</a>
+      <a href="#hardware">Elektronika</a>
+      <a href="#apps">Biznes ilovalar</a>
+      <a href="#skills">Ko'nikmalar</a>
+      <a class="cta-link" href="#contact">Aloqa</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <div class="hero">
+    <span class="eyebrow"><i></i>Yangi loyiha va jamoaga ochiqman</span>
+    <h1>Real muammolarni hal qiladigan <em>ishlaydigan</em> dasturlar yarataman</h1>
+    <p class="lead">Men — Jurabek, dasturiy ta'minot muhandisi. <b>Rust, Python, Kotlin va Flutter</b>da desktop, Android va server tizimlarini, <b>MicroPython</b>da mikrokontroller qurilmalarini yozaman. Asosiy yo'nalishlarim: o'zbek foydalanuvchisi uchun moliya ilovalari, kriptografiya va offline-first arxitektura.</p>
+    <div class="btns">
+      <a class="btn primary" href="#baraka">Loyihalarni ko'rish ↓</a>
+      <a class="btn" href="#contact">Bog'lanish</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>20+</b><span>yakunlangan loyiha</span></div>
+      <div class="stat"><b>300k+</b><span>qator kod</span></div>
+      <div class="stat"><b>900+</b><span>avtomatik test</span></div>
+      <div class="stat"><b>5</b><span>platforma: Windows, Linux, Android, Web, MCU</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ FLAGSHIP ============ -->
+<section id="baraka">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Asosiy loyiha</div>
+      <h2>Baraka Dastur — halol moliyaviy odatlar uchun ilova</h2>
+      <p>Oila, kichik biznes va chet elda ishlaydiganlar uchun bitta ilova, uchta makon. Desktop va Android versiyalari bitta Rust yadroda ishlaydi.</p>
+    </div>
+
+    <div class="flag">
+      <div class="flag-top">
+        <div>
+          <h3>Uy · Kasb-kor · Musofir</h3>
+          <p class="sub">Daromadni taqsimlash, qarzdan chiqish rejasi, marosim smetasi, mudoraba/musharaka sheriklik shartnomasi, kassa daftari, zakot hisobi, chet eldan yuborilgan pullarni maqsad bo'yicha kuzatish.</p>
+          <ul class="points">
+            <li><b>Bitta yadro — ikki ilova.</b> Barcha pul va biznes mantiq Rust'da; Tauri 2 + React desktop va Flutter Android uni flutter_rust_bridge orqali chaqiradi. UI hech qachon pul hisoblamaydi.</li>
+            <li><b>Pul — faqat butun sonlarda.</b> float yo'q. Har yangi formula avval mustaqil Python oracle bilan hisoblangan «oltin vektor»ga yoziladi: 28 to'plam, 191 holat.</li>
+            <li><b>Shifrlangan sinxronlash.</b> <code>.baraka</code> formati, uch tomonlama birlashtirish, ziddiyatni tanlash, QR orqali yangi qurilmani ulash, o'zgarmas jurnal.</li>
+            <li><b>Hujjatlar.</b> Typst bilan PDF: qarz tilxati, sheriklik shartnomasi (chizilgan imzolar bilan), oylik hisobot — o'zbek (lotin/kirill) va rus tillarida.</li>
+            <li><b>Sifat.</b> WCAG AA kontrast build vaqtida tekshiriladi, tauri-driver E2E testlar, Windows NSIS va Android release CI'da yig'iladi.</li>
+          </ul>
+          <ul class="tags">
+            <li>Rust</li><li>Tauri 2</li><li>React + TypeScript</li><li>Flutter / Dart</li><li>Kotlin</li><li>SQLite</li><li>Typst</li><li>GitHub Actions</li>
+          </ul>
+        </div>
+        <div>
+          <button class="shot-main" data-full="assets/img/desktop-12-payoff-chart.webp" data-cap="«Qarzdan chiqish»: qo'shimcha to'lov bilan qarzsiz kun 6 oy erta keladi" style="all:unset;cursor:zoom-in;display:block;border-radius:14px;border:1px solid var(--line);overflow:hidden">
+            <img src="assets/img/desktop-12-payoff-chart.webp" width="1280" height="820" alt="Qarzdan chiqish rejasi: ikki grafik va tejalgan summa">
+          </button>
+          <div class="metrics">
+            <div class="metric"><b>260+</b><span>Rust unit va integratsiya testi</span></div>
+            <div class="metric"><b>3 til</b><span>uz · uz-Cyrl · ru</span></div>
+            <div class="metric"><b>191</b><span>oltin test holati</span></div>
+            <div class="metric"><b>≈31 MB</b><span>Android release APK</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gallery" aria-label="Baraka Dastur skrinshotlari">
+        <button data-full="assets/img/desktop-65-kk-true-profit.webp" data-cap="Kasb-kor: ko'rinadigan foyda va haqiqiy foyda (o'z mehnati, oilaviy mehnat, eskirish)"><img loading="lazy" src="assets/img/desktop-65-kk-true-profit.webp" alt="Kasb-kor haqiqiy foyda hisobi"></button>
+        <button data-full="assets/img/desktop-17-ceremony-compare.webp" data-cap="Marosim rejalovchisi: stsenariylarni solishtirish, qarzli qator oilaviy muhokamani talab qiladi"><img loading="lazy" src="assets/img/desktop-17-ceremony-compare.webp" alt="Marosim stsenariylarini solishtirish"></button>
+        <button data-full="assets/img/pdf-partnership-contract.webp" data-cap="Typst'da yaratilgan sheriklik shartnomasi (mudoraba)"><img loading="lazy" src="assets/img/pdf-partnership-contract.webp" alt="Sheriklik shartnomasi PDF"></button>
+        <button class="tall" data-full="assets/img/android-10-home.webp" data-cap="Android: Uy makoni bosh sahifasi"><img loading="lazy" src="assets/img/android-10-home.webp" alt="Android bosh sahifa"></button>
+        <button class="tall" data-full="assets/img/android-42-two-shores.webp" data-cap="Android: «Ikki qirg'oq» — musofirdan kelgan pullar maqsadlar bo'yicha"><img loading="lazy" src="assets/img/android-42-two-shores.webp" alt="Android Ikki qirg'oq ekrani"></button>
+      </div>
+      <p class="caption">Rasmni kattalashtirish uchun bosing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECURITY ============ -->
+<section id="security">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Kriptografiya va xavfsizlik</div>
+      <h2>Post-kvant shifrlash va firibgarlikka qarshi protokol</h2>
+      <p>Spetsifikatsiyadan boshlab, test vektorlari bilan isbotlab, keyin ilovaga olib chiqaman.</p>
+    </div>
+    <div class="grid two">
+      <article class="card wide">
+        <span class="label">Rust · SDK</span>
+        <h3>AETHER-Q — kross-platforma kripto-SDK</h3>
+        <p>Gibrid post-kvant KEM protokolining <b>reference implementatsiyasi</b>: X25519 + ML-KEM-768 (X-Wing), Triple-Hybrid HQC-192 profili, ML-DSA-65/Ed25519 imzolar, Double Ratchet va ChaCha20-Poly1305 / AES-256-GCM record layer. Uch crate: primitivlar, protokol yadrosi, FFI.</p>
+        <p>UniFFI orqali <b>Python, Kotlin va Swift</b> binding'lari avtomatik generatsiya qilinadi. 30+ test (unit, KAT, interop), <code>clippy -D warnings</code> toza.</p>
+        <ul class="tags"><li>Rust</li><li>ML-KEM-768</li><li>UniFFI</li><li>KAT vektorlar</li></ul>
+      </article>
+      <article class="card wide">
+        <span class="label">Android · E2E</span>
+        <h3>Aether Messenger — post-kvant chat</h3>
+        <p>AETHER-Q yadrosi ustida Signal uslubidagi Android messenger. Transport — <b>ishonchsiz ommaviy MQTT broker</b>: butun xavfsizlik mijoz tomonidagi E2E shifrlashda. Har xabar — yangi ratchet qadami.</p>
+        <p>Kontakt QR orqali almashinadi (markaziy katalog yo'q), kalitlar Android Keystore'da, tarix Room + SQLCipher'da. Rust kutubxonasi NDK bilan arm64/x86_64 uchun yig'iladi.</p>
+        <ul class="tags"><li>Kotlin</li><li>Rust NDK</li><li>MQTT</li><li>SQLCipher</li></ul>
+      </article>
+      <article class="card wide" style="grid-column:1/-1">
+        <span class="label warn">Protokol · Simulyatsiya</span>
+        <h3>ROSTOR-1 — O'zbekistondagi kiberfiribgarlikka qarshi ishonch protokoli</h3>
+        <p>Spetsifikatsiya va uning to'liq ishlaydigan implementatsiyasi: tashkilotlar uchun ishonch sertifikatlari, shaffoflik jurnali (Sparse Merkle Tree + witness imzosi), tranzaksiyani tasdiqlash (anti-vishing), akkountni tiklash, APK obro'si. Tashqi ko'rikdan keyin 11 ta topilma tuzatildi. Mahalliy 6 ta real hujum ssenariysi laboratoriyada himoyasiz va himoyalangan holatda ijro etiladi:</p>
+<pre class="term"><span class="m">tahdid  nom                                    himoyasiz   himoyalangan</span>
+T1      Telegram Android SMS-stealer/dropper   <span class="b">BROKEN</span>      <span class="s">SAFE</span>
+T2      Bank fishing + vishing (OTP aytdirish) <span class="b">BROKEN</span>      <span class="s">SAFE</span>
+T3      Davlat/sud nomidan qo'rqitish          <span class="b">BROKEN</span>      <span class="s">SAFE</span>
+T4      SIM swap orqali akkount egallash       <span class="b">BROKEN</span>      <span class="s">SAFE</span>
+T5      Classiscam bozor firibgarligi          <span class="b">BROKEN</span>      <span class="s">SAFE</span>
+T6      Soxta investitsiya/ish e'lonlari       <span class="b">BROKEN</span>      <span class="s">SAFE</span></pre>
+        <ul class="tags"><li>Python</li><li>Merkle tree</li><li>Threat modeling</li><li>PyQt GUI lab</li><li>51/51 test</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HARDWARE ============ -->
+<section id="hardware">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Mikrokontroller va elektronika</div>
+      <h2>Temir bilan ishlaydigan dasturlar</h2>
+      <p>Sensor, modem va kameralardan ma'lumot olib, uni ishonchli va kam resurs bilan qayta ishlash.</p>
+    </div>
+    <div class="grid three">
+      <article class="card">
+        <span class="label blue">RP2040 · MicroPython</span>
+        <h3>Pico W IoT sensor tuguni</h3>
+        <p>BME280 (I2C) → Wi-Fi → MQTT. <b>Home Assistant</b> qurilmani o'zi topadi (MQTT Discovery). Tarmoq uzilsa o'lchovlar flash'ga JSONL bo'lib yoziladi va keyin yuboriladi — <b>bitta ham o'lchov yo'qolmaydi</b>.</p>
+        <div class="diagram" aria-label="Ulanish sxemasi: BME280 Pico W ga I2C orqali ulangan">
+          <svg viewBox="0 0 320 120" role="img" aria-label="BME280: VCC→3V3, GND→GND, SDA→GP4, SCL→GP5">
+            <rect x="8" y="14" width="88" height="92" rx="8" fill="#30302E" stroke="#4A4945"/>
+            <text x="52" y="34" fill="#FAF9F5" font-size="12" font-weight="700" text-anchor="middle" font-family="Noto Sans, sans-serif">BME280</text>
+            <rect x="224" y="14" width="88" height="92" rx="8" fill="#30302E" stroke="#4A4945"/>
+            <text x="268" y="34" fill="#FAF9F5" font-size="12" font-weight="700" text-anchor="middle" font-family="Noto Sans, sans-serif">Pico W</text>
+            <g font-size="10" font-family="ui-monospace, monospace" fill="#A6A39A">
+              <text x="16" y="54">VCC</text><text x="16" y="70">GND</text><text x="16" y="86">SDA</text><text x="16" y="102">SCL</text>
+              <text x="304" y="54" text-anchor="end">3V3</text><text x="304" y="70" text-anchor="end">GND</text><text x="304" y="86" text-anchor="end">GP4</text><text x="304" y="102" text-anchor="end">GP5</text>
+            </g>
+            <g stroke-width="2" fill="none">
+              <path d="M96 51H224" stroke="#E5786D"/><path d="M96 67H224" stroke="#A6A39A"/>
+              <path d="M96 83H224" stroke="#7FA9D6"/><path d="M96 99H224" stroke="#E0A458"/>
+            </g>
+          </svg>
+        </div>
+        <p>Bitta <code>asyncio</code> loop'da 5 mustaqil vazifa, watchdog, xavfsiz rejim tugmasi, LED orqali holat, dark-tema web panel va JSON API.</p>
+        <ul class="tags"><li>MicroPython</li><li>I2C</li><li>MQTT</li><li>Home Assistant</li></ul>
+      </article>
+      <article class="card">
+        <span class="label blue">Computer vision · Edge</span>
+        <h3>IP kamera uchun real-time deteksiya</h3>
+        <p>RTSP/HTTP/ONVIF oqimidan kadr olib, YOLOv8n/YOLO11n (ONNX yoki OpenVINO) bilan obyekt aniqlaydi. <b>PyTorch'siz</b>, kuchsiz kompyuterda ham ishlaydi.</p>
+        <p>Producer–consumer: o'qish va inference alohida thread'da, oraliqda <code>deque(maxlen=1)</code> — navbat o'smaydi, kechikish bir kadrdan oshmaydi. Iste'molchi band bo'lsa eng qimmat YUV→BGR konvertatsiya umuman bajarilmaydi. Oraliq kadrlarda tracker ishlaydi.</p>
+        <ul class="tags"><li>Python</li><li>ONNX Runtime</li><li>OpenVINO</li><li>PyAV</li><li>ONVIF</li></ul>
+      </article>
+      <article class="card">
+        <span class="label blue">4G/5G · Telemetriya</span>
+        <h3>LTE modem signal monitori</h3>
+        <p>Router'ning LuCI panelidan RSSI/RSRP/RSRQ/SINR, band, PCC va SCC'larni davriy o'qiydigan logger va uni jonli tahlil qiladigan desktop dashboard.</p>
+        <p><b>Carrier aggregation</b> konfiguratsiyalari (masalan B1+B3+B20) va ularning signal sifati, handover (CID/PCID almashinuvi), uzilishlar va band almashinuvi avtomatik aniqlanadi; ko'rsatkichlar korrelyatsiyasi va gistogrammalar.</p>
+        <ul class="tags"><li>PyQt6</li><li>pyqtgraph</li><li>pandas</li><li>Inno Setup</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APPS ============ -->
+<section id="apps">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Biznes uchun ilovalar</div>
+      <h2>Desktop va mobil tizimlar</h2>
+      <p>Internetsiz ishlaydigan, rollar va audit jurnali bor, PDF/Excel hisobot beradigan to'liq ilovalar.</p>
+    </div>
+    <div class="grid three">
+      <article class="card">
+        <div class="meta">Qurilish · Desktop + Android</div>
+        <h3>BuildControl</h3>
+        <p>Smeta, xarid, ombor, pudratchi, Gantt va real xarajat nazorati. Har kompyuter va telefonda <b>lokal baza</b>, umumiy jurnal orqali sinxronlash (MQTT, Supabase yoki tarmoq papkasi), LWW ziddiyat yechimi, ixtiyoriy AES-256-GCM. 5 rol, 11 hisobot.</p>
+        <ul class="tags"><li>PySide6</li><li>Kotlin / Compose</li><li>Room</li><li>Offline-first</li></ul>
+      </article>
+      <article class="card">
+        <div class="meta">Sotuv · Desktop CRM</div>
+        <h3>LeadPilot</h3>
+        <p>Telegram, Instagram, WhatsApp va qo'ng'iroqlardan kelgan leadlar bitta inbox'da. uz/ru avtomatik aniqlash, 11 bosqichli holat mashinasi, lead scoring, bronlar, reklama ROI (CPL/ROAS) va operator sifati. 90 test.</p>
+        <ul class="tags"><li>PySide6</li><li>SQLAlchemy</li><li>LLM integratsiya</li><li>keyring</li></ul>
+      </article>
+      <article class="card">
+        <div class="meta">Eksport · Desktop</div>
+        <h3>ExportFlow</h3>
+        <p>O'zbek ishlab chiqaruvchilari uchun eksport savdo dasturi: ko'p tilli katalog, xorijiy xaridorlar CRM'i, RFQ va quotation, sertifikatlar, logistika, shartnomalar. Interfeys uz/ru/en tillarida.</p>
+        <ul class="tags"><li>PySide6</li><li>pydantic</li><li>ReportLab</li><li>PyInstaller</li></ul>
+      </article>
+      <article class="card">
+        <div class="meta">Buxgalteriya · Desktop + Web + Android</div>
+        <h3>UzERP</h3>
+        <p>Kichik va o'rta biznes uchun ERP: savdo, ombor, xarid, CRM, HR va ish haqi. <b>NAS-21</b> hisoblar rejasi, ikki tomonlama yozuv, avto-provodkalar, QQS hisoboti. Android versiyasida INTERNET ruxsati umuman yo'q — ma'lumot qurilmadan chiqmaydi.</p>
+        <ul class="tags"><li>Python</li><li>Flask</li><li>PyQt6</li><li>Kotlin</li></ul>
+      </article>
+      <article class="card">
+        <div class="meta">Qishloq xo'jaligi · Desktop + Android</div>
+        <h3>AgroVision</h3>
+        <p>Fermer, xo'jalik va dalalar bo'yicha analitika: GIS xarita (GeoJSON poligonlar), hosil va kasallik xavfi ML modellari, Open-Meteo ob-havo, NDVI, bozor narxlari, moliya. Android versiyasi Jetpack Compose'da, xarita va ML qurilma ichida.</p>
+        <ul class="tags"><li>NiceGUI</li><li>scikit-learn</li><li>folium</li><li>Compose</li></ul>
+      </article>
+      <article class="card">
+        <div class="meta">Ma'lumot tahlili · Desktop</div>
+        <h3>DataForge Pro</h3>
+        <p>Istalgan manbadan (CSV, Excel, Parquet, SQLite, API, log fayllar) ma'lumot o'qiydi; Nginx/Syslog/logfmt formatini o'zi aniqlaydi. 30+ tahrir amali undo/redo bilan, 25 xil grafik, anomaliya va prognoz. 160+ test.</p>
+        <ul class="tags"><li>PySide6</li><li>pandas</li><li>scikit-learn</li><li>matplotlib</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRINCIPLES ============ -->
+<section id="approach">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Qanday ishlayman</div>
+      <h2>Tamoyillarim</h2>
+    </div>
+    <div class="princ">
+      <div><b>Avval spetsifikatsiya, keyin kod</b><p>Katta ish hujjat, arxitektura qarori (ADR) va qabul mezonlaridan boshlanadi. Ochiq savollar alohida yoziladi — taxmin bilan kod yozilmaydi.</p></div>
+      <div><b>Hisob-kitob testdan boshlanadi</b><p>Pul formulasi avval mustaqil oracle bilan tekshirilgan vektorga tushadi, keyin ilovaga. Natijada desktop, Android va server bir xil javob beradi.</p></div>
+      <div><b>Internet — bonus, shart emas</b><p>Ilovalarim lokal bazada to'liq ishlaydi, sinxronlash esa shifrlangan va ziddiyatlarni tushunadigan bo'ladi.</p></div>
+      <div><b>Foydalanuvchining tilida</b><p>O'zbek (lotin va kirill) va rus tillari, mahalliy hisob standartlari, WCAG kontrast va klaviatura bilan boshqaruv — boshidanoq.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SKILLS ============ -->
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Ko'nikmalar</div>
+      <h2>Texnologiyalar</h2>
+    </div>
+    <div class="skills">
+      <div class="skill"><h3>Tillar</h3><ul class="tags"><li>Rust</li><li>Python</li><li>Kotlin</li><li>Dart</li><li>TypeScript</li><li>MicroPython</li><li>SQL</li></ul></div>
+      <div class="skill"><h3>Ilova va UI</h3><ul class="tags"><li>Tauri 2</li><li>React</li><li>Flutter</li><li>Jetpack Compose</li><li>PySide6 / PyQt6</li><li>NiceGUI</li></ul></div>
+      <div class="skill"><h3>Backend va ma'lumot</h3><ul class="tags"><li>FastAPI</li><li>Flask</li><li>SQLAlchemy</li><li>SQLite / SQLCipher</li><li>PostgreSQL</li><li>Room</li><li>MQTT</li><li>pandas</li></ul></div>
+      <div class="skill"><h3>Elektronika va tarmoq</h3><ul class="tags"><li>RP2040 / Pico W</li><li>I2C sensorlar</li><li>LTE modemlar</li><li>RTSP / ONVIF</li><li>ONNX / OpenVINO</li><li>Home Assistant</li></ul></div>
+      <div class="skill"><h3>Xavfsizlik</h3><ul class="tags"><li>Post-kvant KEM</li><li>AEAD</li><li>Double Ratchet</li><li>Android Keystore</li><li>bcrypt / PBKDF2</li><li>Threat modeling</li></ul></div>
+      <div class="skill"><h3>Sifat va yetkazib berish</h3><ul class="tags"><li>GitHub Actions</li><li>cargo test / clippy</li><li>pytest</li><li>E2E (WebDriver)</li><li>Gradle release</li><li>PyInstaller / NSIS</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section id="contact">
+  <div class="wrap">
+    <div class="contact">
+      <div class="kicker">Aloqa</div>
+      <h2>Birga ishlaymizmi?</h2>
+      <p>Murakkab, chegarasi noaniq vazifalarni yoqtiraman: g'oyadan spetsifikatsiyagacha, spetsifikatsiyadan ishlaydigan ilovagacha. Istalgan loyiha bo'yicha jonli demo ko'rsatishim va kodini tushuntirib berishim mumkin.</p>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/JurabekM" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="#baraka">Yuqoriga qaytish ↑</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>© 2026 Jurabek</footer>
+
+<dialog class="lb" id="lb" aria-label="Rasm">
+  <button type="button" aria-label="Yopish" id="lbClose">×</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+</dialog>
+
+<script>
+(function(){
+  var lb=document.getElementById('lb'),img=document.getElementById('lbImg'),cap=document.getElementById('lbCap');
+  if(!lb.showModal)return;
+  document.querySelectorAll('[data-full]').forEach(function(b){
+    b.addEventListener('click',function(){
+      img.src=b.getAttribute('data-full');
+      img.alt=cap.textContent=b.getAttribute('data-cap')||'';
+      lb.showModal();
+    });
+  });
+  document.getElementById('lbClose').addEventListener('click',function(){lb.close()});
+  lb.addEventListener('click',function(e){if(e.target===lb)lb.close()});
+})();
+</script>
+</body>
+</html>
