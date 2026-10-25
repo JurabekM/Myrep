@@ -9,6 +9,7 @@ import uz.mpay.core.CardProfile
 import uz.mpay.core.MpayClient
 import uz.mpay.core.ProvisionResult
 import uz.mpay.core.Hex
+import uz.mpay.core.Revocations
 import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.TlsConfig
 import uz.mpay.core.maskPan
@@ -25,6 +26,8 @@ class WalletConfig(
     val pinnedFingerprints: List<String> = emptyList(),
     val tlsCertSha256: ByteArray? = null,
     val allowTofu: Boolean = false,
+    /** Oflayn ildiz barmoq izi (ADR-0014): berilsa, serverdan bekor qilish ro'yxati olinib tekshiriladi. */
+    val rootFingerprint: String? = null,
 )
 
 /**
@@ -102,14 +105,15 @@ class MpayWallet private constructor(context: Context) {
         val identity = info.identity
         val fp = info.fingerprint
         val prefs = app.getSharedPreferences("mpay", Context.MODE_PRIVATE)
-        // Build pinlari + kalit almashtirishda o'rganilgan (joriy pin tasdiqlagan) pinlar.
-        val learned = prefs.getStringSet("pins_learned", emptySet())!!.toSet()
+        val revoked = refreshRevocations(c, cfg, prefs)
+        // Build pinlari + kalit almashtirishda o'rganilgan (joriy pin tasdiqlagan) pinlar, bekor qilinganlarsiz.
+        val learned = prefs.getStringSet("pins_learned", emptySet())!!.toSet() - revoked
         // TOFU (sandbox): avval saqlangan barmoq izi ham to'plamda — o'rganilgan pin uni siqib chiqarmasin.
         val tofu = if (cfg.allowTofu) listOfNotNull(prefs.getString("server_fp", null)) else emptyList()
-        val decision = ServerPinPolicy(cfg.pinnedFingerprints + learned + tofu, cfg.allowTofu)
+        val decision = ServerPinPolicy(cfg.pinnedFingerprints + learned + tofu, cfg.allowTofu, revoked)
             .check(fp, prefs.getString("server_fp", null))
         if (decision.storeTofu) prefs.edit().putString("server_fp", fp).apply()
-        val rolled = ServerPinPolicy.rollForward(learned, info)
+        val rolled = ServerPinPolicy.rollForward(learned, info, revoked)
         if (rolled != learned) {
             prefs.edit().putStringSet("pins_learned", rolled).apply()
             emit("Server keyingi kaliti tasdiqlandi va pinlandi (${Hex.encode(info.next!!.fingerprint()).take(16)}…)")
@@ -119,6 +123,22 @@ class MpayWallet private constructor(context: Context) {
         pinnedFingerprint = fp
         emit("PQ Link ulandi (server ${fp.take(16)}…)")
         return fp
+    }
+
+    /**
+     * Bekor qilish ro'yxati: ildiz pinlangan bo'lsa olinadi va tekshiriladi; faqat kattaroq versiya
+     * saqlanadi (orqaga qaytarib bo'lmaydi). Tarmoq yoki imzo xatosida saqlangan ro'yxat ishlatiladi.
+     */
+    private fun refreshRevocations(c: MpayClient, cfg: WalletConfig, prefs: android.content.SharedPreferences): Set<String> {
+        val stored = prefs.getStringSet("revoked", emptySet())!!.toSet()
+        val root = cfg.rootFingerprint ?: return stored
+        val fresh = runCatching { c.revocationsJson()?.let { Revocations.verify(it, root) } }
+            .onFailure { emit("Bekor qilish ro'yxati rad etildi: ${it.message}") }
+            .getOrNull() ?: return stored
+        if (fresh.version <= prefs.getLong("revoked_version", -1)) return stored
+        prefs.edit().putStringSet("revoked", fresh.revoked).putLong("revoked_version", fresh.version).apply()
+        emit("Bekor qilish ro'yxati yangilandi: versiya ${fresh.version}, ${fresh.revoked.size} ta")
+        return fresh.revoked
     }
 
     private fun c(): MpayClient = client ?: throw IllegalStateException("avval serverga ulaning")

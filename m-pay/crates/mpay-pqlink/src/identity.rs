@@ -73,7 +73,7 @@ impl ServerIdentity {
         )
     }
 
-    fn verify_msg(
+    pub(crate) fn verify_msg(
         &self,
         msg: &[u8],
         sig_ed25519: &[u8; 64],

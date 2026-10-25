@@ -8,8 +8,14 @@ package uz.mpay.core
  * * `allowTofu` — pin berilmagan sandbox build'ida birinchi ulanishda barmoq izini eslab qolish
  *   (Trust On First Use). Production build'da `false`.
  */
-class ServerPinPolicy(pinned: Collection<String>, val allowTofu: Boolean) {
-    val pinned: Set<String> = pinned.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+class ServerPinPolicy(
+    pinned: Collection<String>,
+    val allowTofu: Boolean,
+    /** Oflayn ildiz imzolagan bekor qilingan barmoq izlari (ADR-0014) — pinlangan bo'lsa ham rad. */
+    revoked: Collection<String> = emptyList(),
+) {
+    val revoked: Set<String> = revoked.map { it.trim().lowercase() }.toSet()
+    val pinned: Set<String> = pinned.map { it.trim().lowercase() }.filter { it.isNotEmpty() && it !in this.revoked }.toSet()
 
     init {
         require(this.pinned.all { it.length == 64 && it.all { ch -> ch in '0'..'9' || ch in 'a'..'f' } }) {
@@ -26,6 +32,7 @@ class ServerPinPolicy(pinned: Collection<String>, val allowTofu: Boolean) {
      */
     fun check(fingerprint: String, tofuStored: String?): Accept {
         val fp = fingerprint.lowercase()
+        if (fp in revoked) throw PinException("server identifikatori bekor qilingan: ${fp.take(16)}…")
         if (pinned.isNotEmpty()) {
             if (fp !in pinned) throw PinException("server barmoq izi pinlanmagan: ${fp.take(16)}…")
             return Accept(storeTofu = false)
@@ -45,10 +52,11 @@ class ServerPinPolicy(pinned: Collection<String>, val allowTofu: Boolean) {
          * Kalit almashtirish (P1.6): joriy identifikator pin bo'yicha qabul qilingandan keyin, u tasdiqlagan
          * keyingi barmoq izi o'rganilgan pinlarga qo'shiladi. Tasdiqsiz yoki noma'lum — o'zgarmaydi.
          */
-        fun rollForward(learned: Set<String>, info: MpayClient.IdentityInfo): Set<String> {
+        fun rollForward(learned: Set<String>, info: MpayClient.IdentityInfo, revoked: Set<String> = emptySet()): Set<String> {
             val next = info.next ?: return learned
             if (!info.nextEndorsed) return learned
-            return learned + Hex.encode(next.fingerprint()).lowercase()
+            val fp = Hex.encode(next.fingerprint()).lowercase()
+            return if (fp in revoked) learned else learned + fp
         }
     }
 }

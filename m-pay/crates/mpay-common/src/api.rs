@@ -71,6 +71,20 @@ pub struct ServerIdentityDto {
     pub next: Option<NextIdentityDto>,
 }
 
+/// `GET /v1/pqlink/revocations` — oflayn ildiz kaliti imzolagan bekor qilingan identifikatorlar
+/// (ADR-0014). Hamma qiymatlar hex.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RevocationsDto {
+    /// `mpay-pqlink-revocations/1`.
+    pub format: String,
+    pub version: u64,
+    pub revoked: Vec<String>,
+    pub root_ed25519: String,
+    pub root_mldsa65: String,
+    pub sig_ed25519: String,
+    pub sig_mldsa65: String,
+}
+
 /// Keyingi server identifikatori: `endorsement_*` — joriy identifikatorning
 /// `ROTATION_LABEL ‖ fingerprint` ustidan gibrid imzosi (hex).
 #[derive(Debug, Clone, Serialize, Deserialize)]

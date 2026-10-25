@@ -13,6 +13,7 @@ pub mod enroll;
 pub mod error;
 pub mod init;
 pub mod ratelimit;
+pub mod revocations;
 pub mod routes;
 pub mod serve;
 pub mod state;

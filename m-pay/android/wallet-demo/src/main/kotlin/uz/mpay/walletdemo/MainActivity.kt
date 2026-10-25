@@ -92,6 +92,7 @@ class MainActivity : FragmentActivity() {
             pinnedFingerprints = pins,
             tlsCertSha256 = BuildConfig.TLS_PIN.takeIf { it.isNotEmpty() }?.let(Hex::decode),
             allowTofu = pins.isEmpty(),
+            rootFingerprint = BuildConfig.ROOT_FINGERPRINT.takeIf { it.isNotEmpty() },
         )
         wallet.addListener(listener)
         setContent { App() }

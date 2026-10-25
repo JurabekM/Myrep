@@ -99,6 +99,12 @@ pub struct PqLinkConfig {
     /// Kalit almashtirish (P1.6): e'lon qilingan keyingi identifikator (`mpay-server identity-next`).
     #[serde(default)]
     pub next: Option<NextIdentityConfig>,
+    /// Oflayn ildiz imzolagan bekor qilingan identifikatorlar ro'yxati (`mpay-server revoke`, ADR-0014).
+    #[serde(default)]
+    pub revocations: Option<PathBuf>,
+    /// Ildiz barmoq izi (hex): berilsa, ro'yxat imzosi ishga tushishda tekshiriladi.
+    #[serde(default)]
+    pub root_fingerprint: Option<String>,
     /// Ishonchli attestatsiya ildizlari (DER yoki PEM).
     pub attestation_roots: Vec<PathBuf>,
     #[serde(default = "default_level")]

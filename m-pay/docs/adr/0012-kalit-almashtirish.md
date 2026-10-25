@@ -30,7 +30,7 @@ qayta chiqarmasdan va qurilmalarni uzib qo'ymasdan.
   qo'yish mumkin.
 * Tasdiq faqat joriy kalitlar ishonchli bo'lsa ma'noli: joriy kalit **oshkor bo'lgan** holatda hujumchi
   o'z "keyingi" kalitini tasdiqlashi mumkin — bunday holatda roll-forward emas, ilova yangilanishi
-  (build pinlarini almashtirish) kerak. `TODO(spec):` bekor qilingan identifikatorlar ro'yxati.
+  (build pinlarini almashtirish) kerak — yoki oflayn ildiz imzolagan bekor qilish ro'yxati (ADR-0014).
 * Tekshirilgan: Rust e2e (`p1_rotation.rs` — e'lon, tasdiq, soxta barmoq izi rad, o'tish, eski pin rad),
   Kotlin `RotationTest`, tillararo interop (Rust `identity-next` → Kotlin tasdiqni tekshiradi).
 

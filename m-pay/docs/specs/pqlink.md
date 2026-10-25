@@ -186,6 +186,19 @@ keyin) qurilmani reyestrdan qidiradi; yo'q bo'lsa KeyDescription `attestationCha
 ishlatilmagan va muddati o'tmagan nonce bo'lishi shart (iste'mol qilinadi), aks holda
 `PQLINK_ENROLLMENT`. Ro'yxatdagi qurilma keyin nonce'siz ulanadi.
 
+## 8c. Bekor qilingan identifikatorlar (ADR-0014)
+
+`GET /v1/pqlink/revocations` (sozlanmagan — 404): `{format: "mpay-pqlink-revocations/1", version,
+revoked[], root_ed25519, root_mldsa65, sig_ed25519, sig_mldsa65}`. Imzo — oflayn ildiz kalitining
+gibrid imzosi (kontekst `mpay-pqlink-v1`) xabar ustidan:
+
+```
+"MPAY-PQLINK-V1 revocations" ‖ version (u64 BE) ‖ count (u32 BE) ‖ fp_1 ‖ … ‖ fp_n   (tartiblangan, takrorsiz)
+```
+
+Qurilma ildiz barmoq izini pinlangan qiymat bilan solishtiradi, faqat kattaroq versiyani qabul qiladi
+va bekor qilingan barmoq izlarini rad etadi.
+
 ## 9. Ochiq savollar
 
 * KeyDescription `attestationChallenge` — qurilmani ro'yxatdan o'tkazish nonce'i (§8b, P1.7).
@@ -193,6 +206,6 @@ ishlatilmagan va muddati o'tmagan nonce bo'lishi shart (iste'mol qilinadi), aks 
 * `TODO(spec):` Google'ning haqiqiy attestatsiya ildizlari (RSA-4096, ECDSA P-384) va
   `rootOfTrust`/`verifiedBootState` tekshiruvi — M6; hozir faqat P-256/ECDSA-SHA256 zanjirlari.
 * Server kalitini almashtirish va bir nechta pinlangan identifikator — 1-faza P1.5/P1.6 (§8a).
-  `TODO(spec):` bekor qilingan identifikatorlar ro'yxati (joriy kalit oshkor bo'lgan holat).
+  Bekor qilingan identifikatorlar — §8c (ADR-0014).
 * `TODO(spec):` Kotlin client uchun deterministik handshake test vektori (M6 da, tasodifiylikni
   in'ektsiya qiladigan test rejimi bilan).

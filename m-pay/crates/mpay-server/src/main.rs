@@ -70,6 +70,24 @@ enum Cmd {
         #[arg(long)]
         version: u32,
     },
+    /// Oflayn ildiz kaliti (ADR-0014): faqat imzolash stansiyasida yarating va saqlang.
+    RootKeygen {
+        #[arg(long)]
+        out: PathBuf,
+    },
+    /// Bekor qilingan server identifikatorlari ro'yxatini ildiz kaliti bilan imzolaydi.
+    Revoke {
+        #[arg(long)]
+        root_key: PathBuf,
+        /// Ro'yxat versiyasi — har safar oldingisidan katta bo'lishi shart.
+        #[arg(long)]
+        version: u64,
+        /// Bekor qilinadigan barmoq izi (hex); bir necha marta.
+        #[arg(long = "fp")]
+        fps: Vec<String>,
+        #[arg(long, default_value = "revocations.json")]
+        out: PathBuf,
+    },
     /// mTLS mijoz sertifikati barmoq izi (SHA-256, hex) — `[auth] revoked_client_certs` uchun.
     CertFingerprint {
         #[arg(long)]
@@ -192,6 +210,79 @@ async fn run(cli: Cli) -> Result<(), String> {
             );
             println!("[pqlink.next]\nmldsa_blob = \"{blob_name}\"\ned25519_label = \"{label}\"\n");
             println!("2) O'tish: [pqlink] mldsa_blob/ed25519_label ni shu qiymatlarga almashtiring, [pqlink.next] ni o'chiring.");
+            Ok(())
+        }
+        Cmd::RootKeygen { out } => {
+            if out.exists() {
+                return Err(format!("{} allaqachon mavjud", out.display()));
+            }
+            let root = mpay_pqlink::revocation::RootKey::generate().map_err(|e| e.to_string())?;
+            let (e, m) = root.seeds();
+            let json = zeroize::Zeroizing::new(
+                serde_json::json!({
+                    "format": "mpay-root-key/1",
+                    "ed25519_seed": hex::encode(&e[..]),
+                    "mldsa65_seed": hex::encode(&m[..]),
+                })
+                .to_string(),
+            );
+            std::fs::write(&out, json.as_bytes()).map_err(|e| format!("{}: {e}", out.display()))?;
+            let fp = hex::encode(root.identity().map_err(|e| e.to_string())?.fingerprint());
+            println!(
+                "Ildiz kaliti: {} (MAXFIY — oflayn saqlang, serverga qo'ymang)",
+                out.display()
+            );
+            println!("root_fingerprint: {fp}");
+            Ok(())
+        }
+        Cmd::Revoke {
+            root_key,
+            version,
+            fps,
+            out,
+        } => {
+            let raw = zeroize::Zeroizing::new(
+                std::fs::read_to_string(&root_key)
+                    .map_err(|e| format!("{}: {e}", root_key.display()))?,
+            );
+            let j: serde_json::Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+            let seed = |k: &str| -> Result<zeroize::Zeroizing<[u8; 32]>, String> {
+                let mut b = zeroize::Zeroizing::new([0u8; 32]);
+                hex::decode_to_slice(j[k].as_str().unwrap_or_default(), &mut b[..])
+                    .map_err(|_| format!("{k}: 64 hex"))?;
+                Ok(b)
+            };
+            let root = mpay_pqlink::revocation::RootKey::from_seeds(
+                &*seed("ed25519_seed")?,
+                &*seed("mldsa65_seed")?,
+            );
+            let list = fps
+                .iter()
+                .map(|f| {
+                    let mut b = [0u8; 32];
+                    hex::decode_to_slice(f, &mut b)
+                        .map(|()| b)
+                        .map_err(|_| format!("--fp 64 hex: {f}"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let signed = root
+                .sign_revocations(version, &list)
+                .map_err(|e| e.to_string())?;
+            let dto = mpay_server::revocations::to_dto(&signed);
+            std::fs::write(
+                &out,
+                serde_json::to_vec_pretty(&dto).map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| format!("{}: {e}", out.display()))?;
+            println!(
+                "Imzolandi: {} (versiya {}, {} ta). Serverda: [pqlink] revocations = \"{}\"",
+                out.display(),
+                signed.version,
+                signed.revoked.len(),
+                out.file_name()
+                    .map(|f| f.to_string_lossy())
+                    .unwrap_or_default()
+            );
             Ok(())
         }
         Cmd::CertFingerprint { cert } => {

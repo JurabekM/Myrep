@@ -24,6 +24,10 @@ android {
         }
         buildConfigField("String", "SERVER_FINGERPRINTS", "\"$fingerprints\"")
         buildConfigField("String", "TLS_PIN", "\"$tlsPin\"")
+        // ADR-0014: oflayn ildiz barmoq izi (`mpay-server root-keygen`); bo'sh — ro'yxat tekshirilmaydi.
+        val rootFp = (project.findProperty("mpay.rootFingerprint") as String?).orEmpty()
+        require(Regex("([0-9a-fA-F]{64})?").matches(rootFp)) { "mpay.rootFingerprint 64 hex bo'lishi kerak" }
+        buildConfigField("String", "ROOT_FINGERPRINT", "\"$rootFp\"")
     }
 
     buildTypes {

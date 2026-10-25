@@ -15,6 +15,7 @@ pub mod device;
 pub mod enrollment;
 pub mod error;
 pub mod identity;
+pub mod revocation;
 #[cfg(feature = "sandbox-attestation")]
 pub mod sandbox;
 pub mod server;

@@ -126,6 +126,14 @@ class MpayClient(
         return r.body
     }
 
+    /** Bekor qilish ro'yxati JSON (ADR-0014); server sozlamagan bo'lsa `null`. Tekshiruv — [Revocations.verify]. */
+    fun revocationsJson(): String? {
+        val r = request("GET", "/v1/pqlink/revocations", null, null)
+        if (r.status == 404) return null
+        if (r.status !in 200..299) throw plainError(r)
+        return String(r.body, Charsets.UTF_8)
+    }
+
     /** Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kaliti `attestationChallenge = nonce` bilan. */
     fun enrollNonce(): ByteArray = Hex.decode(json("POST", "/v1/pqlink/enroll", JSONObject(), null).getString("nonce"))
 

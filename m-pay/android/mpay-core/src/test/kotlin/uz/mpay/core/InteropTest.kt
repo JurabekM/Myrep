@@ -190,6 +190,15 @@ class InteropTest {
         println("keyingi identifikator: ${info.next?.let { Hex.encode(it.fingerprint()).take(16) }} tasdiq=${info.nextEndorsed}")
         assertTrue("next e'lon qilingan va tasdiqlangan bo'lishi kerak", info.next != null && info.nextEndorsed)
 
+        // ADR-0014: Rust `revoke` imzolagan ro'yxat Kotlin'da ildiz bo'yicha tekshiriladi.
+        val rootFp = System.getenv("MPAY_ROOT_FP")
+        if (rootFp != null) {
+            val rev = Revocations.verify(MpayClient(tlsUrl, tls = pinOnly).revocationsJson()!!, rootFp)
+            println("bekor qilish ro'yxati: versiya ${rev.version}, ${rev.revoked.size} ta")
+            assertEquals(3L, rev.version)
+            assertTrue("cd".repeat(32) in rev.revoked)
+        }
+
         // To'liq oqim TLS ustida: hamyon (sertifikatsiz, pinlangan) → token; terminal (mTLS) → 00.
         val wallet = MpayClient(tlsUrl, tls = pinOnly)
         val (identity, _) = wallet.identity()

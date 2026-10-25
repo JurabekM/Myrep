@@ -67,6 +67,8 @@ pub struct AppState {
     pub trusted_proxies: Vec<crate::clientip::Cidr>,
     /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
     pub next_identity: Option<NextIdentity>,
+    /// Bekor qilingan identifikatorlar ro'yxati (tarqatish uchun).
+    pub revocations: Option<mpay_common::api::RevocationsDto>,
     /// Qurilmani ro'yxatdan o'tkazish (P1.7); `None` — `enrollment = off`.
     pub enrollment: Option<Arc<crate::enroll::Enrollment>>,
     pub sandbox: bool,
@@ -266,6 +268,46 @@ pub fn build_shield(cfg: &Config) -> Result<ShieldPorts, BootError> {
     }
 }
 
+/// Bekor qilish ro'yxatini o'qiydi; joriy yoki keyingi identifikator ro'yxatda bo'lsa — ishga tushmaydi.
+fn load_revocations(
+    cfg: &Config,
+    signer: &KeyStoreServerSigner,
+    next: Option<&NextIdentity>,
+) -> Result<Option<mpay_common::api::RevocationsDto>, BootError> {
+    let Some(p) = &cfg.pqlink.revocations else {
+        return Ok(None);
+    };
+    let raw = read(&cfg.resolve(p))?;
+    let dto: mpay_common::api::RevocationsDto = serde_json::from_slice(&raw)
+        .map_err(|e| BootError::Config(format!("pqlink.revocations: {e}")))?;
+    let signed = crate::revocations::from_dto(&dto).map_err(BootError::Config)?;
+    if let Some(rf) = &cfg.pqlink.root_fingerprint {
+        let mut fp = [0u8; 32];
+        hex::decode_to_slice(rf, &mut fp)
+            .map_err(|_| BootError::Config("pqlink.root_fingerprint 64 hex".into()))?;
+        signed
+            .verify(&fp)
+            .map_err(|e| BootError::Config(format!("bekor qilish ro'yxati imzosi: {e}")))?;
+    }
+    let own = mpay_pqlink::ServerSigner::identity(signer).fingerprint();
+    if signed.is_revoked(&own) {
+        return Err(BootError::Config(
+            "joriy PQ Link identifikatori bekor qilingan — kalitni almashtiring".into(),
+        ));
+    }
+    if next.is_some_and(|n| signed.is_revoked(&n.identity.fingerprint())) {
+        return Err(BootError::Config(
+            "pqlink.next identifikatori bekor qilingan".into(),
+        ));
+    }
+    tracing::info!(
+        version = signed.version,
+        count = signed.revoked.len(),
+        "PQ Link: bekor qilish ro'yxati"
+    );
+    Ok(Some(dto))
+}
+
 /// Barcha komponentlarni yig'adi.
 pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let clock: Arc<dyn Clock> = Arc::new(SystemClock);
@@ -297,6 +339,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         }
         None => None,
     };
+    let revocations = load_revocations(cfg, signer.as_ref(), next_identity.as_ref())?;
     let anchors = load_anchors(cfg)?;
     let pq_cfg = ServerConfig {
         session_ttl_secs: cfg.pqlink.session_ttl_secs,
@@ -373,6 +416,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         require_mtls: cfg.auth.require_mtls,
         trusted_proxies: cfg.http.trusted_proxies.clone(),
         next_identity,
+        revocations,
         enrollment,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,

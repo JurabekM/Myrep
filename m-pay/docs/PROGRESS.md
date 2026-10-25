@@ -544,3 +544,10 @@ alohida chelaklarda, proksisiz soxta sarlavha chegarani chetlab o'tmaydi.
 tekshiriladi) va `mpay-server cert-fingerprint`. TLS qabul qilinganda bekor qilingan sertifikat CN'i
 olinmaydi → operator/terminal `403 MTLS_REQUIRED`. Tekshiruv: e2e `revoked_client_cert_treated_as_missing`
 (bekor qilingan terminal sertifikati rad, operator ishlaydi).
+
+**Bekor qilingan server identifikatorlari (ADR-0014).** Oflayn ildiz kaliti (Ed25519 + ML-DSA-65,
+`root-keygen`) imzolagan versiyali ro'yxat (`revoke`), server faqat tarqatadi (`/v1/pqlink/revocations`)
+va o'z identifikatori ro'yxatda bo'lsa ishga tushmaydi; Kotlin `Revocations.verify`, pin siyosati bekor
+qilinganlarni rad etadi, hamyon faqat kattaroq versiyani saqlaydi (`-Pmpay.rootFingerprint`).
+Tekshiruv: Rust unit, e2e `p1_revocations.rs` (2), Kotlin `RevocationsTest` (2), interop — Rust `revoke`
+ro'yxati Kotlin'da tekshirildi (versiya 3).

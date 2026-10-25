@@ -41,6 +41,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/healthz", get(health))
         .route("/v1/pqlink/identity", get(identity))
         .route("/v1/pqlink/enroll", post(pq_enroll))
+        .route("/v1/pqlink/revocations", get(pq_revocations))
         .route("/v1/pqlink/hello", post(pq_hello))
         .route("/v1/pqlink/finish", post(pq_finish))
         .route("/v1/tokens", post(provision))
@@ -144,6 +145,14 @@ fn handshake_guard(
         tracing::warn!("rate-limit: handshake navbati to'la");
         ApiError::rate_limited(l, true)
     })
+}
+
+/// Oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014); sozlanmagan bo'lsa 404.
+async fn pq_revocations(State(s): St) -> Result<Response, ApiError> {
+    s.revocations
+        .as_ref()
+        .map(|r| Json(r.clone()).into_response())
+        .ok_or_else(ApiError::not_found)
 }
 
 /// Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kalitini `attestationChallenge = nonce`

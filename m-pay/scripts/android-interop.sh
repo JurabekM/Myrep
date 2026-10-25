@@ -43,6 +43,14 @@ printf '
 mldsa_blob = "pqlink-mldsa65.v2.blob"
 ed25519_label = "mpay.srv-ed25519.v2"
 ' >> "$WORK/tls/mpay.toml"
+# ADR-0014: oflayn ildiz imzolagan bekor qilish ro'yxati (Kotlin tekshiradi).
+ROOT_FP=$("$SRV" root-keygen --out "$WORK/root-key.json" | sed -n 's/^root_fingerprint: //p')
+"$SRV" revoke --root-key "$WORK/root-key.json" --version 3 --fp "$(printf 'cd%.0s' $(seq 1 32))" \
+  --out "$WORK/tls/revocations.json" > /dev/null
+# [pqlink] jadvaliga (enrollment qatoridan keyin) qo'shiladi.
+sed -i "/^enrollment_nonce_ttl_secs = /a root_fingerprint = \"$ROOT_FP\"" "$WORK/tls/mpay.toml"
+sed -i "/^enrollment_nonce_ttl_secs = /a revocations = \"revocations.json\"" "$WORK/tls/mpay.toml"
+export MPAY_ROOT_FP="$ROOT_FP"
 "$SRV" terminal-bundle --config "$WORK/tls/mpay.toml" --url "https://127.0.0.1:$TLS_PORT" \
   --out "$WORK/terminal-bundle.json" > /dev/null
 "$SRV" serve --config "$WORK/tls/mpay.toml" 2> "$WORK/server-tls.log" &
@@ -58,7 +66,7 @@ export MPAY_TERMINAL_BUNDLE="$WORK/terminal-bundle.json"
 export MPAY_INTEROP_URL="http://127.0.0.1:$PORT"
 export MPAY_SANDBOX_DIR="$WORK/sb"
 (cd android && ./gradlew :mpay-core:test --tests 'uz.mpay.core.InteropTest' --rerun-tasks --no-daemon --console=plain) \
-  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|Exception|BUILD"
+  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|bekor|Exception|BUILD"
 
 echo "== Server logida ochiq PAN yo'q"
 for p in $(grep -E '^pan = ' "$WORK/sb/mpay.toml" | sed -E 's/pan = "([0-9]+)"/\1/'); do

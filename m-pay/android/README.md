@@ -37,7 +37,8 @@ Qurilmada sinash tartibi: `docs/android-testing.md`.
   faqat sandbox (kalit saqlanmaydi).
 * **Hamyon (1-faza P1.5):** server ishonchi build vaqtida — `-Pmpay.serverFingerprints=<hex,…>` va
   `-Pmpay.tlsPin=<hex>` (`mpay-server identity` chiqishi). Pin berilmasa — TOFU, faqat sandbox
-  (ekranda "Server pinlanmagan"). `https://` server faqat TLS pini bilan.
+  (ekranda "Server pinlanmagan"). `https://` server faqat TLS pini bilan. `-Pmpay.rootFingerprint` —
+  oflayn ildiz (ADR-0014): bekor qilish ro'yxati tekshiriladi, faqat kattaroq versiya saqlanadi.
 * **Sandbox:** `network_security_config` cleartext HTTP'ga ruxsat beradi (emulyator va qo'lda rejim uchun).
 * Release ham debug kaliti bilan imzolanadi (sandbox) — haqiqiy imzo kaliti repoga tushmaydi.
 * `TODO(spec):` Play Integrity (`IntegrityProvider` hozircha stub) — 2-faza.
