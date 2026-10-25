@@ -64,6 +64,7 @@ pub struct AppState {
     pub auth: Authenticator,
     pub limits: crate::ratelimit::RateLimits,
     pub require_mtls: bool,
+    pub trusted_proxies: Vec<crate::clientip::Cidr>,
     /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
     pub next_identity: Option<NextIdentity>,
     /// Qurilmani ro'yxatdan o'tkazish (P1.7); `None` — `enrollment = off`.
@@ -82,6 +83,20 @@ impl std::fmt::Debug for AppState {
 }
 
 impl AppState {
+    /// IP chegaralari uchun mijoz manzili (ishonchli proksi ortida — `X-Forwarded-For`).
+    pub fn client_ip(
+        &self,
+        peer: std::net::SocketAddr,
+        headers: &axum::http::HeaderMap,
+    ) -> std::net::IpAddr {
+        let xff: Vec<&str> = headers
+            .get_all("x-forwarded-for")
+            .iter()
+            .filter_map(|v| v.to_str().ok())
+            .collect();
+        crate::clientip::client_ip(peer.ip(), &xff, &self.trusted_proxies)
+    }
+
     /// API kalitini tekshiradi (rol) va kalit bo'yicha so'rovlar chegarasini qo'llaydi.
     pub fn caller(
         &self,
@@ -356,6 +371,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         auth: Authenticator::new(&cfg.auth.keys),
         limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
         require_mtls: cfg.auth.require_mtls,
+        trusted_proxies: cfg.http.trusted_proxies.clone(),
         next_identity,
         enrollment,
         sandbox: cfg.sandbox,

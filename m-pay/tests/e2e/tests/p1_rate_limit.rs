@@ -94,3 +94,39 @@ async fn device_limited_and_session_stays_in_sync() {
         );
     }
 }
+
+/// `X-Forwarded-For` bilan xom so'rov — status kodi.
+async fn hello_from(sb: &Sandbox, xff: &str) -> u16 {
+    let mut s = tokio::net::TcpStream::connect(sb.addr()).await.unwrap();
+    let req = format!(
+        "POST /v1/pqlink/hello HTTP/1.1\r\nHost: t\r\nX-Forwarded-For: {xff}\r\n\
+         Content-Type: application/x-mpay-pqlink\r\nContent-Length: 3\r\nConnection: close\r\n\r\nabc"
+    );
+    s.write_all(req.as_bytes()).await.unwrap();
+    let mut buf = Vec::new();
+    s.read_to_end(&mut buf).await.unwrap();
+    String::from_utf8_lossy(&buf)[9..12].parse().unwrap()
+}
+
+#[tokio::test]
+async fn forwarded_for_used_only_behind_trusted_proxy() {
+    // Proksi ortida (127.0.0.1 ishonchli): har mijoz o'z chelagiga ega.
+    let sb = Sandbox::start_with(|c| {
+        c.http.trusted_proxies = vec!["127.0.0.1/32".parse().unwrap()];
+        c.rate_limit.ip_handshake_burst = 1;
+        c.rate_limit.ip_handshake_per_minute = 1;
+    })
+    .await;
+    assert_eq!(hello_from(&sb, "203.0.113.1").await, 400);
+    assert_eq!(hello_from(&sb, "203.0.113.2").await, 400);
+    assert_eq!(hello_from(&sb, "203.0.113.1").await, 429);
+
+    // Ishonchli proksi yo'q: sarlavha soxtalashtirilsa ham chegara TCP manzil bo'yicha.
+    let direct = Sandbox::start_with(|c| {
+        c.rate_limit.ip_handshake_burst = 1;
+        c.rate_limit.ip_handshake_per_minute = 1;
+    })
+    .await;
+    assert_eq!(hello_from(&direct, "203.0.113.1").await, 400);
+    assert_eq!(hello_from(&direct, "203.0.113.2").await, 429);
+}

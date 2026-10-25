@@ -189,8 +189,9 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | Operator/terminal endpointlari | API kaliti | 500/s, burst 1000 | 429 |
 | Muhrlangan endpointlar | qurilma | 60/daqiqa, burst 30 | 429 (javob muhrlangan — sessiya buzilmaydi) |
 
-Mijoz `Retry-After` dan keyin qayta urinadi. Teskari proksi ortida mijoz IP'si `X-Forwarded-For` dan
-olinmaydi — `TODO(spec):` ishonchli proksi ro'yxati.
+Mijoz `Retry-After` dan keyin qayta urinadi. Teskari proksi ortida: `[http] trusted_proxies = ["10.0.0.0/8"]`
+— ulanish shu tarmoqlardan kelsa mijoz IP'si `X-Forwarded-For` dan o'ngdan chapga (birinchi ishonchsiz
+manzil) olinadi; boshqa ulanishlarda sarlavha e'tiborsiz (soxtalashtirib bo'lmaydi).
 
 ## 6. Takroriy avtorizatsiya so'rovlari (1-faza, P1.2)
 

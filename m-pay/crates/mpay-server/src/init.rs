@@ -220,6 +220,8 @@ sandbox = true
 
 [http]
 listen = "{listen}"
+# Teskari proksi ortida: ishonchli proksilar (CIDR) — mijoz IP'si X-Forwarded-For dan.
+trusted_proxies = []
 {tls_cert}{tls_key}
 [database]
 path = "mpay.db"

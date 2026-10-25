@@ -51,6 +51,9 @@ pub struct HttpConfig {
     /// (majburiy emas — hamyonlar PQ Link bilan ulanadi); talab `[auth] require_mtls` da.
     #[serde(default)]
     pub client_ca: Option<PathBuf>,
+    /// Teskari proksilar (CIDR): ulanish shulardan kelsa mijoz IP'si `X-Forwarded-For` dan olinadi.
+    #[serde(default)]
+    pub trusted_proxies: Vec<crate::clientip::Cidr>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

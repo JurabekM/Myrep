@@ -133,9 +133,11 @@ fn pqlink_body(status: StatusCode, body: Vec<u8>) -> Response {
 fn handshake_guard(
     s: &AppState,
     peer: SocketAddr,
+    headers: &HeaderMap,
 ) -> Result<Option<tokio::sync::OwnedSemaphorePermit>, ApiError> {
-    s.limits.ip(&peer.ip().to_string()).map_err(|l| {
-        tracing::warn!(ip = %peer.ip(), "rate-limit: handshake IP");
+    let ip = s.client_ip(peer, headers);
+    s.limits.ip(&ip.to_string()).map_err(|l| {
+        tracing::warn!(%ip, "rate-limit: handshake IP");
         ApiError::rate_limited(l, false)
     })?;
     s.limits.handshake_permit().map_err(|l| {
@@ -149,12 +151,14 @@ fn handshake_guard(
 async fn pq_enroll(
     State(s): St,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let Some(e) = &s.enrollment else {
         return Err(ApiError::not_found());
     };
-    s.limits.ip(&peer.ip().to_string()).map_err(|l| {
-        tracing::warn!(ip = %peer.ip(), "rate-limit: enroll IP");
+    let ip = s.client_ip(peer, &headers);
+    s.limits.ip(&ip.to_string()).map_err(|l| {
+        tracing::warn!(%ip, "rate-limit: enroll IP");
         ApiError::rate_limited(l, false)
     })?;
     let (nonce, expires_at) = e.issue()?;
@@ -172,7 +176,7 @@ async fn pq_hello(
     body: Bytes,
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
-    let _permit = handshake_guard(&s, peer)?;
+    let _permit = handshake_guard(&s, peer, &headers)?;
     let pq = s.pqlink.clone();
     // ML-KEM/ML-DSA hisoblashlari bloklovchi CPU ishi — async ishchilardan tashqarida.
     let sh = tokio::task::spawn_blocking(move || pq.handle_hello(&body))
@@ -190,7 +194,7 @@ async fn pq_finish(
     body: Bytes,
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
-    let _permit = handshake_guard(&s, peer)?;
+    let _permit = handshake_guard(&s, peer, &headers)?;
     let pq = s.pqlink.clone();
     let (_info, sa) = tokio::task::spawn_blocking(move || pq.handle_finish(&body))
         .await

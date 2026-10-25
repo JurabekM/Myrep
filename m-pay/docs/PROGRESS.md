@@ -531,3 +531,11 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
 * Emulyator (haqiqiy Android Keystore): toza hamyon `/enroll` → `finish` 200 ("qurilma ro'yxatga olindi");
   ikkinchi ulanish nonce'siz; reyestr tozalangach `finish` 403 → hamyon avtomatik yangi nonce bilan
   kalitni qayta yaratdi va ulandi (ekranda voqea).
+
+### 1-faza qo'shimcha ishlari (2026-10-25)
+
+**Ishonchli proksilar.** `[http] trusted_proxies` (CIDR, `clientip.rs`): ulanish ishonchli proksidan
+kelsa mijoz IP'si `X-Forwarded-For` dan o'ngdan chapga olinadi (IPv4-mapped IPv6 hisobga olingan);
+boshqa ulanishlarda sarlavha e'tiborsiz. Handshake va `/enroll` IP chegaralari shundan foydalanadi.
+Tekshiruv: unit (2) va e2e `forwarded_for_used_only_behind_trusted_proxy` — proksi ortida mijozlar
+alohida chelaklarda, proksisiz soxta sarlavha chegarani chetlab o'tmaydi.
