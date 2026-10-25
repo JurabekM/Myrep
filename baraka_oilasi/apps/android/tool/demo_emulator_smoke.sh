@@ -25,8 +25,12 @@ launch() { # $1 — skrinshot nomi
   done
   grep -q "mCurrentFocus=.*$PKG" "$OUT/window.txt" || fail "$1: ilova oynasi ochilmadi"
   sleep 10
-  # `exec-out screencap` headless emulyatorda bo'sh fayl berdi — qurilmada saqlab, keyin olinadi.
-  adb shell screencap -p /sdcard/shot.png && adb pull /sdcard/shot.png "$OUT/$1.png" > /dev/null
+  # Qurilma ichidagi `screencap` swiftshader'li headless emulyatorda bo'sh fayl beradi — kadr
+  # emulyatorning o'zidan (konsol buyrug'i, hostga yoziladi); bo'lmasa — qurilmadagi screencap.
+  adb emu screenrecord screenshot "$OUT/$1.png" > /dev/null || true
+  if [ ! -s "$OUT/$1.png" ]; then
+    adb shell screencap -p /sdcard/shot.png && adb pull /sdcard/shot.png "$OUT/$1.png" > /dev/null || true
+  fi
   [ -s "$OUT/$1.png" ] || echo "::warning::$1: skrinshot bo'sh"
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 && adb shell cat /sdcard/ui.xml > "$OUT/$1.xml" || : > "$OUT/$1.xml"
   adb logcat -d > "$OUT/$1-logcat.txt"
