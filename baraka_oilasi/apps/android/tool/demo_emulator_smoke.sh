@@ -25,7 +25,9 @@ launch() { # $1 — skrinshot nomi
   done
   grep -q "mCurrentFocus=.*$PKG" "$OUT/window.txt" || fail "$1: ilova oynasi ochilmadi"
   sleep 10
-  adb exec-out screencap -p > "$OUT/$1.png"
+  # `exec-out screencap` headless emulyatorda bo'sh fayl berdi — qurilmada saqlab, keyin olinadi.
+  adb shell screencap -p /sdcard/shot.png && adb pull /sdcard/shot.png "$OUT/$1.png" > /dev/null
+  [ -s "$OUT/$1.png" ] || echo "::warning::$1: skrinshot bo'sh"
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 && adb shell cat /sdcard/ui.xml > "$OUT/$1.xml" || : > "$OUT/$1.xml"
   adb logcat -d > "$OUT/$1-logcat.txt"
   # Faqat shu ilovaning yiqilishi (Java: «Process: <pkg>», native: «>>> <pkg> <<<»).
