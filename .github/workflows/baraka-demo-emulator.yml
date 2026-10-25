@@ -1,0 +1,81 @@
+# «Baraka Dastur» demo APK'ni Android emulyatorida tekshiradi (x86_64, KVM): o'rnatish, ochish,
+# «DEMO» belgisi va muddat tugagan ekran (skrinshotlar artefaktda). Faqat Android o'zgarganda.
+name: baraka-demo-emulator
+
+on:
+  pull_request:
+    paths:
+      - "baraka_oilasi/apps/android/**"
+      - "baraka_oilasi/core/**"
+      - "baraka_oilasi/shared/i18n/**"
+      - ".github/workflows/baraka-demo-emulator.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: baraka-demo-emulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: baraka_oilasi/apps/android
+    steps:
+      - uses: actions/checkout@v4
+      - name: KVM
+        working-directory: .
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: baraka_oilasi
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+      - name: Asboblar (cargo-ndk, x86_64 target)
+        run: |
+          cargo install --locked cargo-ndk --version 4.1.2
+          rustup target add x86_64-linux-android
+      - run: flutter pub get
+      # Ikki demo: amaldagi (30 kun) va muddati kecha tugagan. Emulyator uchun faqat x86_64.
+      - name: Demo APK'lar (x86_64)
+        run: |
+          build() {
+            flutter build apk --release --target-platform android-x64 \
+              -P baraka.demo=true -P baraka.abis=x86_64 \
+              --dart-define=BARAKA_DEMO=true --dart-define=BARAKA_DEMO_EXPIRES=$1
+          }
+          mkdir -p "$RUNNER_TEMP/apk"
+          build "$(date -u -d '+30 days' +%F)"
+          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/apk/demo.apk"
+          build "$(date -u -d '-2 days' +%F)"
+          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/apk/demo-expired.apk"
+      - name: Paket nomi, yorliq, imzo (o'rnatishdan oldin)
+        run: |
+          AAPT=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          "$AAPT/aapt" dump badging "$RUNNER_TEMP/apk/demo.apk" | grep -E "^package:|^application-label:" | tee badging.txt
+          grep -q "package: name='uz.baraka.oilasi.demo'" badging.txt
+          grep -q "application-label:'Baraka Dastur DEMO'" badging.txt
+          # Demo hech qachon upload kaliti bilan imzolanmaydi (F6:10:7C:24…).
+          "$AAPT/apksigner" verify --print-certs "$RUNNER_TEMP/apk/demo.apk" | tee certs.txt
+          ! grep -qi "f6107c24" certs.txt
+      - name: Emulyatorda tekshiruv
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          working-directory: baraka_oilasi/apps/android
+          script: bash tool/demo_emulator_smoke.sh "$RUNNER_TEMP/apk/demo.apk" "$RUNNER_TEMP/apk/demo-expired.apk" "$RUNNER_TEMP/emulator-out"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baraka-demo-emulator
+          path: ${{ runner.temp }}/emulator-out
