@@ -614,3 +614,7 @@ tartib — avval OTP kanali va HSM. Jadval: `docs/roadmap.md`.
 * Kotlin ↔ Rust interop: haqiqiy `mpay-server` + `mpay-smsgw`; Kotlin mijoz `otpSentTo` ni oladi, resend
   qiladi, kodni shlyuz qutisidan o'qib tasdiqlaydi; server va shlyuz loglarida OTP/to'liq telefon yo'q.
 * `cargo test --workspace`: 171 test o'tdi; clippy `-D warnings` toza.
+* Emulyator (Medium Phone API 36, TLS + pin, haqiqiy Keystore): YELLOW → SMS `+998*******03` →
+  "Qayta yuborish" → SMS'dagi kod → "Token faol", 5 LUK; loglarda OTP va to'liq telefon 0
+  (`docs/android-testing.md` §6). Shu sinovda demo ilovadagi tugmalar qatori tor ekranda "Attestatsiya"
+  matnini harflab uzayotgani ko'rindi — `FlowRow` ga o'tkazildi (ko'z bilan tekshirildi).

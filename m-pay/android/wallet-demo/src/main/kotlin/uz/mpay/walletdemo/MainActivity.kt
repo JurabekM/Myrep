@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -240,7 +241,8 @@ class MainActivity : FragmentActivity() {
                     Button({ prepareToPay() }, enabled = wallet.profile() != null && BiometricGate.available(this@MainActivity), modifier = Modifier.testTag("pay")) { Text("To'lovga tayyorlash") }
                     OutlinedButton({ work("LUK") { "Yangi LUK: ${wallet.replenish()}" } }, enabled = !busy && wallet.profile() != null, modifier = Modifier.testTag("replenish")) { Text("LUK to'ldirish") }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Tugmalar sig'masa keyingi qatorga o'tadi (tor ekranda matn harflab uzilmasin).
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton({ makeDefault() }, modifier = Modifier.testTag("default")) { Text("Standart to'lov ilovasi") }
                     if (BuildConfig.DEBUG) {
                         OutlinedButton({ startVirtualNfc() }, modifier = Modifier.testTag("virtual_nfc")) { Text("Virtual NFC") }

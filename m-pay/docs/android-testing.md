@@ -135,3 +135,23 @@ Natija (Medium Phone API 36):
 
 Haqiqiy NFC radiosi (antenna, maydon uzilishi, `IsoDep` vaqtlari, Android HCE marshrutlash va "standart
 to'lov ilovasi") faqat §3 da — ikki haqiqiy telefonda sinaladi.
+
+## 6. OTP SMS — emulyatorda virtual SMS shlyuzi bilan (2-faza P2.1)
+
+Bank SMS shlyuzi o'rnida `mpay-smsgw` (ADR-0016). Tartib (2026-10-25 da bajarildi):
+
+1. §5 dagi 1–3-qadamlar; `mpay.toml` da `[otp] channel = "webhook"` va `[otp.webhook]` qatorlarini yoqing
+   (`init` izohda yozib qo'yadi). `MPAY_SMS_TOKEN` muhitda bo'lishi kerak — server uni ishga tushishda
+   tekshiradi (`identity`, `terminal-bundle` buyruqlari uchun ham).
+2. `MPAY_SMS_TOKEN=… mpay-smsgw --listen 127.0.0.1:47700`, keyin `mpay-server serve`.
+3. Hamyonda yangi karta qo'shish. Emulyator kaliti `SOFTWARE` darajasida, shuning uchun boshqa qurilmada
+   faol karta emulyatorda **RED** (`IDV_WEAK_ATTESTATION` + `IDV_NEW_DEVICE_EXISTING_CARD`) — bu to'g'ri;
+   YELLOW uchun hali tokenlanmagan demo karta olinadi.
+4. Kod "virtual telefon" qutisidan: `curl -H "Authorization: Bearer …" "http://127.0.0.1:47700/messages?to=%2B998000000003"`.
+
+| Qadam | Natija |
+|---|---|
+| Karta qo'shish (`…0037`) | "Qo'shimcha tasdiq kerak (YELLOW): kod SMS bilan +998*******03 raqamiga yuborildi"; operator kaliti maydoni yo'q |
+| "Qayta yuborish" | shlyuzda 2 ta SMS, bir xil kod; server `idv/resend` 200 |
+| SMS'dagi kodni kiritib "Tasdiqlash" | "Token faol: 990077******8375", 5 ta LUK |
+| Server va shlyuz loglari | OTP 0 marta, to'liq telefon 0 marta (faqat `+998*******03`) |
