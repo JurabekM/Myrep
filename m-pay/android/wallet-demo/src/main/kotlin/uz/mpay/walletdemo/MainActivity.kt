@@ -158,6 +158,17 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    /**
+     * Faqat debug: emulyatorda NFC yo'q — terminal ilovasi APDU'larni loopback ko'prik orqali yuboradi
+     * (`src/debug/.../VirtualNfcService`; release'da sinf yo'q, tugma ko'rinmaydi).
+     */
+    private fun startVirtualNfc() {
+        val i = Intent().setClassName(packageName, "uz.mpay.walletdemo.VirtualNfcService")
+        runCatching { startForegroundService(i) }
+            .onSuccess { status = "Virtual NFC yoqildi: 127.0.0.1:47661 (faqat emulyator sinovi)" }
+            .onFailure { status = "Virtual NFC: ${it.message}" }
+    }
+
     private fun makeDefault() {
         val i = Intent(CardEmulation.ACTION_CHANGE_DEFAULT)
             .putExtra(CardEmulation.EXTRA_CATEGORY, CardEmulation.CATEGORY_PAYMENT)
@@ -219,6 +230,9 @@ class MainActivity : FragmentActivity() {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton({ makeDefault() }, modifier = Modifier.testTag("default")) { Text("Standart to'lov ilovasi") }
+                    if (BuildConfig.DEBUG) {
+                        OutlinedButton({ startVirtualNfc() }, modifier = Modifier.testTag("virtual_nfc")) { Text("Virtual NFC") }
+                    }
                     OutlinedButton({ exportChain() }, modifier = Modifier.testTag("export")) { Text("Attestatsiya") }
                 }
                 Text(status, color = Color.White, modifier = Modifier.testTag("status"))

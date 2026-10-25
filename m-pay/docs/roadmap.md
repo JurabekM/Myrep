@@ -34,7 +34,7 @@ Maqsad: tashqi qarorlarsiz yopiladigan xavfsizlik bo'shliqlarini yopish.
 | P1.5 ✅ | Hamyon: server barmoq izi build vaqtida joylanadi (TOFU faqat sandbox opsiyasi); bir nechta pinlangan identifikator | ADR-0008 |
 | P1.6 ✅ | PQ Link server kalitini almashtirish (rotation): yangi identifikatorni e'lon qilish, o'tish davri | `specs/pqlink.md` |
 | P1.7 ✅ | Attestatsiya challenge'ini qurilmani ro'yxatdan o'tkazish (enrollment nonce) bilan bog'lash | `specs/pqlink.md` |
-| P1.8 | Ikki telefon orasida haqiqiy NFC tap (`docs/android-testing.md` §3) | M6 qabul mezoni |
+| P1.8 ◐ | Ikki telefon orasida haqiqiy NFC tap (`docs/android-testing.md` §3). Emulyatorda virtual NFC bilan to'liq tap ✅ (§5); haqiqiy radio — qurilmalar kerak | M6 qabul mezoni |
 
 Qo'shimcha (2026-10-25, bajarildi): ishonchli proksilar, mTLS sertifikatini bekor qilish, bekor qilingan
 server identifikatorlari (ADR-0014), davriy qayta attestatsiya (ADR-0015).

@@ -40,5 +40,8 @@ Qurilmada sinash tartibi: `docs/android-testing.md`.
   (ekranda "Server pinlanmagan"). `https://` server faqat TLS pini bilan. `-Pmpay.rootFingerprint` —
   oflayn ildiz (ADR-0014): bekor qilish ro'yxati tekshiriladi, faqat kattaroq versiya saqlanadi.
 * **Sandbox:** `network_security_config` cleartext HTTP'ga ruxsat beradi (emulyator va qo'lda rejim uchun).
+* **Virtual NFC (faqat debug):** `wallet-demo/src/debug` — emulyator uchun loopback APDU ko'prigi,
+  `terminal-app` "Virtual tap" (`docs/android-testing.md` §5). Release'da yo'qligi —
+  `scripts/check-release-apk.sh`.
 * Release ham debug kaliti bilan imzolanadi (sandbox) — haqiqiy imzo kaliti repoga tushmaydi.
 * `TODO(spec):` Play Integrity (`IntegrityProvider` hozircha stub) — 2-faza.

@@ -108,3 +108,21 @@ async fn enrollment_off_only_in_sandbox() {
     prod.pqlink.enrollment = EnrollmentMode::Required;
     prod.validate().unwrap();
 }
+
+/// Regressiya: izoh qatorlari bilan boshlanadigan PEM ildiz (`config/android-emulator-test-root.pem`)
+/// DER deb o'qilib server ishga tushmay qolardi (emulyator sinovida topilgan).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn commented_pem_attestation_root_loads() {
+    let root = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../config/android-emulator-test-root.pem"
+    );
+    assert!(std::fs::read_to_string(root).unwrap().starts_with('#'));
+    let sb = Sandbox::start_with(|c| {
+        std::fs::copy(root, c.base_dir.join("emu-root.pem")).unwrap();
+        c.pqlink.attestation_roots.push("emu-root.pem".into());
+    })
+    .await;
+    // Ishga tushdi va oddiy qurilma hamon ulanadi.
+    let _w = sb.wallet().await;
+}

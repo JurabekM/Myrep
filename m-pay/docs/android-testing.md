@@ -99,3 +99,39 @@ loopback orqali sinalgan (`InteropTest`); `IsoDep`/`HostApduService` qatlami sin
 Kutilgan: "Ulanish ishlaydi — Kalit: terminal-1 — TLS: server pinlangan, mTLS sertifikati qabul qilindi".
 Salbiy: paketni o'chirib, qo'lda rejimda xuddi shu `https://` manzilga — tizim CA'si sandbox sertifikatini
 tanimaydi (TLS xatosi); `http://` bilan TLS serverga ulanib bo'lmaydi.
+
+## 5. Virtual NFC — to'liq tap emulyatorda (P1.8 o'rnini bosuvchi sinov)
+
+Emulyatorda NFC/HCE apparati yo'q. Debug build'larda **virtual NFC ko'prigi** bor: hamyon
+(`wallet-demo`) `127.0.0.1:47661` da APDU qabul qiladi va ularni haqiqiy HCE servisi bilan bir xil yo'ldan
+(`HceDispatcher` → applet, CDCVM, LUK, ATC) o'tkazadi; terminal (`terminal-app`) "Virtual tap" bilan
+`IsoDep` o'rniga shu socket'dan foydalanadi. Ikkala ilova bitta emulyatorda. Radiodan boshqa hamma
+qatlam haqiqiy: Android Keystore, BiometricPrompt, terminal yadrosi, TLS + mTLS, server, Shield, emitent.
+
+**Xavfsizlik:** ko'prik faqat `src/debug` da — release APK'ga kirmaydi (relay hujumi uchun eshik
+bo'lmasin). Tekshiruv: `bash scripts/check-release-apk.sh` (debug'da bor, release'da yo'q).
+
+Tartib (2026-10-25 da shu tartibda bajarildi):
+
+1. `mpay-server init --dir emu-tls --listen 127.0.0.1:8443 --tls`; `config/android-emulator-test-root.pem` ni
+   nusxalab `attestation_roots` ga qo'shing, `min_security_level = "SOFTWARE"`.
+2. `mpay-server identity --config emu-tls/mpay.toml` → `fingerprint` va `tls_pin`; hamyonni pinlar bilan yig'ing:
+   `./gradlew :wallet-demo:assembleDebug -Pmpay.serverFingerprints=<fp> -Pmpay.tlsPin=<pin>`.
+3. `mpay-server terminal-bundle --config emu-tls/mpay.toml --url https://10.0.2.2:8443`; `serve`.
+4. Hamyon: server `https://10.0.2.2:8443` → "Ulanish" → karta qo'shish (YELLOW bo'lsa OTP'ni xostdan operator
+   mTLS sertifikati bilan oling — Windows `curl` (Schannel) PEM mijoz sertifikatini qabul qilmaydi, Python
+   `ssl` ishlaydi) → "Virtual NFC".
+5. Terminal: paketni `adb push` → "Terminal paketini import qilish" → "Ulanishni tekshirish" → summa → "Virtual tap".
+
+Natija (Medium Phone API 36):
+
+| Qadam | Natija |
+|---|---|
+| 25 000 so'm | **MA'QULLANDI**, `00 APPROVED`, Shield 17 |
+| 2 000 000 so'm biometriyasiz | "Telefonda tasdiqlang" (`6986`) |
+| Hamyonda barmoq izi → 60 s ichida qayta tap | **MA'QULLANDI**, `00 APPROVED_AFTER_REVIEW`, Shield 646 |
+| Yana 2 000 000 so'm | "Telefonda tasdiqlang" — CDCVM bir martalik |
+| Server logi | `/v1/authorizations` 2 × 200, ochiq PAN 0 |
+
+Haqiqiy NFC radiosi (antenna, maydon uzilishi, `IsoDep` vaqtlari, Android HCE marshrutlash va "standart
+to'lov ilovasi") faqat §3 da — ikki haqiqiy telefonda sinaladi.

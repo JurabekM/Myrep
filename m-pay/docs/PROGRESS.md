@@ -563,3 +563,21 @@ auditda `DEVICE_REKEY`. Emulyator test ildizi `config/android-emulator-test-root
 **1-faza qo'shimcha ishlari yakuni:** ishonchli proksilar, mTLS sertifikatini bekor qilish, bekor
 qilingan server identifikatorlari (ADR-0014), davriy qayta attestatsiya (ADR-0015) — bajarildi.
 Qolgan: P1.8 (ikki telefonli NFC tap) va 2-faza (tashqi javoblar kerak, `docs/roadmap.md`).
+
+### P1.8 — emulyatorda virtual NFC bilan to'liq tap (2026-10-25)
+
+Haqiqiy telefonlar hozircha yo'q, shuning uchun tap emulyatorda virtual NFC ko'prigi orqali sinaldi.
+
+**Nima qilindi**
+
+* `wallet-sdk`: `HceDispatcher` — HCE servisi va sinov ko'prigi bir xil kod yo'li.
+* `wallet-demo` (faqat `src/debug`): `VirtualNfcService` — oldingi plan servis, `127.0.0.1:47661`,
+  kadr `u16 ‖ APDU`; "Virtual NFC" tugmasi faqat `BuildConfig.DEBUG` da.
+* `terminal-app`: tap mantiqi umumiylashtirildi (`completeTap`), debug'da "Virtual tap".
+* `scripts/check-release-apk.sh` — release APK'da ko'prik yo'qligini (va debug'da borligini) tekshiradi.
+* Server: attestatsiya ildizi PEM'i boshida izoh qatorlari bo'lsa DER deb o'qilardi — tuzatildi
+  (regressiya testi `commented_pem_attestation_root_loads`). `config/android-emulator-test-root.pem` UTF-8 ga o'tkazildi.
+
+**Qanday tekshirildi** (emulyator, TLS + mTLS server, hamyon build pinlari bilan): 25 000 so'm → `00`;
+2 000 000 so'm → "Telefonda tasdiqlang" → barmoq izi → `00`; CDCVM bir martalik; server logida ochiq PAN 0.
+Batafsil: `docs/android-testing.md` §5. Haqiqiy NFC radiosi (§3) — ochiq.

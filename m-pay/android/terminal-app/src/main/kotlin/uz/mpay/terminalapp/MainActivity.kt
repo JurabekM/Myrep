@@ -53,7 +53,13 @@ import uz.mpay.core.MpayClient
 import uz.mpay.core.TerminalData
 import uz.mpay.core.TerminalException
 import uz.mpay.core.TerminalKernel
+import uz.mpay.core.ApduTransceiver
+import uz.mpay.core.TapResult
+import java.io.DataInputStream
+import java.io.DataOutputStream
 import java.io.File
+import java.net.InetAddress
+import java.net.Socket
 import java.time.LocalDate
 
 /**
@@ -203,15 +209,53 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
         val dep = IsoDep.get(tag) ?: return
         val amountMinor = armedAmountMinor
         if (amountMinor <= 0) return
-        runOnUiThread { screen = Screen.Processing }
-        val next: Screen = try {
-            val tap = dep.use {
+        completeTap(amountMinor) {
+            dep.use {
                 it.connect()
                 it.timeout = 3000
-                val d = LocalDate.now()
-                TerminalKernel.tap({ c -> it.transceive(c) }, amountMinor, TerminalData.dateBcd(d.year, d.monthValue, d.dayOfMonth))
+                kernelTap({ c -> it.transceive(c) }, amountMinor)
             }
-            Log.i(TAG, "tap: dpan=${tap.dpanMasked} atc=${tap.atc}")
+        }
+    }
+
+    private fun kernelTap(t: ApduTransceiver, amountMinor: Long): TapResult {
+        val d = LocalDate.now()
+        return TerminalKernel.tap(t, amountMinor, TerminalData.dateBcd(d.year, d.monthValue, d.dayOfMonth))
+    }
+
+    /**
+     * Faqat debug (emulyator): NFC o'rniga hamyon ilovasining virtual NFC ko'prigi (`127.0.0.1:47661`,
+     * kadr `u16 uzunlik ‖ APDU`). Terminal yadrosi, avtorizatsiya va natija ekrani — haqiqiy tap bilan bir xil.
+     */
+    private fun virtualTap() {
+        val som = amount.toLongOrNull()
+        if (som == null || som <= 0) { screen = Screen.Error("Summa noto'g'ri"); return }
+        if (key().isBlank()) { screen = Screen.Error("Terminal paketini import qiling yoki kalitni kiriting"); return }
+        saveSettings()
+        val amountMinor = som * 100
+        Thread {
+            completeTap(amountMinor) {
+                Socket(InetAddress.getLoopbackAddress(), 47661).use { s ->
+                    s.soTimeout = 5000
+                    val input = DataInputStream(s.getInputStream())
+                    val output = DataOutputStream(s.getOutputStream())
+                    kernelTap({ c ->
+                        output.writeShort(c.size)
+                        output.write(c)
+                        output.flush()
+                        ByteArray(input.readUnsignedShort()).also(input::readFully)
+                    }, amountMinor)
+                }
+            }
+        }.start()
+    }
+
+    /** Tap → avtorizatsiya → natija (NFC va virtual yo'l uchun umumiy; UI oqimidan tashqarida). */
+    private fun completeTap(amountMinor: Long, tapFn: () -> TapResult) {
+        runOnUiThread { screen = Screen.Processing }
+        val next: Screen = try {
+            val tap = tapFn()
+            Log.i(TAG, "tap: dpan=${tap.dpanMasked} atc=${tap.atc} summa=$amountMinor")
             val r = client().authorize(key(), terminalId.trim(), merchantId.trim(), nextStan(), tap.iccHex())
             Log.i(TAG, "auth: rc=${r.responseCode} rrn=${r.rrn} dpan=${r.dpanMasked}")
             armedAmountMinor = 0
@@ -242,6 +286,11 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
                 if (nfc == null) Text("Bu qurilmada NFC yo'q — tap qabul qilinmaydi", color = Color(0xFFFFB74D), fontSize = 12.sp)
 
                 OutlinedTextField(amount, { amount = it.filter(Char::isDigit).take(9) }, label = { Text("Summa (so'm)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("amount"))
+                if (BuildConfig.DEBUG) {
+                    OutlinedButton({ virtualTap() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("virtual_tap")) {
+                        Text("Virtual tap (emulyator, faqat debug)")
+                    }
+                }
                 Button({ arm() }, enabled = screen !is Screen.Waiting && screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("charge")) {
                     Text("To'lov qabul qilish")
                 }

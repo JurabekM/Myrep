@@ -200,7 +200,8 @@ pub fn load_anchors(cfg: &Config) -> Result<TrustAnchors, BootError> {
     for p in &cfg.pqlink.attestation_roots {
         let path = cfg.resolve(p);
         let raw = read(&path)?;
-        if raw.starts_with(b"-----BEGIN") {
+        // PEM (boshida izoh qatorlari bo'lishi mumkin) yoki DER.
+        if raw.windows(11).any(|w| w == b"-----BEGIN ") {
             let certs = pem_to_der(&String::from_utf8_lossy(&raw));
             if certs.is_empty() {
                 return Err(BootError::Config(format!(
