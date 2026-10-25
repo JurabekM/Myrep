@@ -30,6 +30,14 @@ class ServerPinPolicyTest {
     }
 
     @Test
+    fun allPinsRevokedNeverFallsBackToTofu() {
+        // TOFU yoqilgan build'da ham: pin berilgan, lekin hammasi bekor qilingan — hech qaysi server qabul qilinmaydi.
+        val p = ServerPinPolicy(listOf(a), allowTofu = true, revoked = listOf(a))
+        assertThrows(PinException::class.java) { p.check(c, null) }
+        assertThrows(PinException::class.java) { p.check(a, null) }
+    }
+
+    @Test
     fun buildConfigListParsingAndValidation() {
         assertEquals(listOf(a, b), ServerPinPolicy.parseList(" $a, $b ,"))
         assertEquals(emptyList<String>(), ServerPinPolicy.parseList(""))

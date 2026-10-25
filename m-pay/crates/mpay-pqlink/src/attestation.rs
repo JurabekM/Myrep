@@ -31,6 +31,8 @@ const OID_EC_PUBLIC_KEY: &str = "1.2.840.10045.2.1";
 const OID_P256: &str = "1.2.840.10045.3.1.7";
 /// Android Key Attestation `KeyDescription` kengaytmasi.
 pub const OID_KEY_DESCRIPTION: &str = "1.3.6.1.4.1.11129.2.1.17";
+/// `basicConstraints` (2.5.29.19).
+const OID_BASIC_CONSTRAINTS: &str = "2.5.29.19";
 
 fn att(msg: impl Into<String>) -> PqLinkError {
     PqLinkError::Attestation(msg.into())
@@ -79,15 +81,51 @@ impl TrustAnchors {
 pub struct AttestationPolicy {
     /// Minimal xavfsizlik darajasi (production: StrongBox).
     pub min_security_level: SecurityLevel,
+    /// Apparat kafolatlagan `rootOfTrust` talab qilinadi: `verifiedBootState = Verified` va
+    /// `deviceLocked = true` (bootloader ochilgan yoki o'zgartirilgan proshivkali qurilma rad etiladi).
+    /// Faqat emulyator sinovida `false` (emulyatorda apparat RoT yo'q).
+    pub require_verified_boot: bool,
 }
 
 impl Default for AttestationPolicy {
     fn default() -> Self {
         Self {
             min_security_level: SecurityLevel::StrongBox,
+            require_verified_boot: true,
         }
     }
 }
+
+/// `RootOfTrust.verifiedBootState`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VerifiedBootState {
+    Verified,
+    SelfSigned,
+    Unverified,
+    Failed,
+}
+
+impl VerifiedBootState {
+    fn from_raw(v: u32) -> Option<Self> {
+        Some(match v {
+            0 => Self::Verified,
+            1 => Self::SelfSigned,
+            2 => Self::Unverified,
+            3 => Self::Failed,
+            _ => return None,
+        })
+    }
+}
+
+/// Apparat (`hardwareEnforced`) ro'yxatidagi `RootOfTrust` (`[704]`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RootOfTrust {
+    pub device_locked: bool,
+    pub verified_boot_state: VerifiedBootState,
+}
+
+/// `AuthorizationList` dagi `rootOfTrust [704] EXPLICIT` tegi (BER: `BF 85 40`).
+const TAG_ROOT_OF_TRUST: u32 = 0xBF_85_40;
 
 /// Tekshirilgan qurilma.
 #[derive(Clone)]
@@ -124,6 +162,38 @@ pub struct KeyDescription {
     pub attestation_security_level: SecurityLevel,
     pub keymint_security_level: SecurityLevel,
     pub attestation_challenge: Vec<u8>,
+    /// `hardwareEnforced.rootOfTrust` (bo'lmasa `None` — masalan, dasturiy Keystore).
+    pub root_of_trust: Option<RootOfTrust>,
+}
+
+/// `hardwareEnforced` AuthorizationList'dan `rootOfTrust` ni o'qiydi.
+fn parse_root_of_trust(list: &tlv::Tlv) -> Result<Option<RootOfTrust>, PqLinkError> {
+    let Some(rot) = list
+        .children()
+        .iter()
+        .find(|t| t.tag.0 == TAG_ROOT_OF_TRUST)
+    else {
+        return Ok(None);
+    };
+    let [seq] = rot.children() else {
+        return Err(att("rootOfTrust: SEQUENCE kutilgan"));
+    };
+    let f = seq.children();
+    if seq.tag.0 != 0x30 || f.len() < 3 || f[1].tag.0 != 0x01 || f[2].tag.0 != 0x0A {
+        return Err(att("rootOfTrust: maydonlar"));
+    }
+    let locked = f[1]
+        .bytes()
+        .ok_or_else(|| att("rootOfTrust: deviceLocked"))?;
+    let state = f[2]
+        .bytes()
+        .and_then(small_uint)
+        .and_then(VerifiedBootState::from_raw)
+        .ok_or_else(|| att("rootOfTrust: verifiedBootState"))?;
+    Ok(Some(RootOfTrust {
+        device_locked: matches!(locked, [b] if *b != 0),
+        verified_boot_state: state,
+    }))
 }
 
 fn small_uint(b: &[u8]) -> Option<u32> {
@@ -172,6 +242,31 @@ pub fn parse_key_description(der: &[u8]) -> Result<KeyDescription, PqLinkError> 
         attestation_security_level: level(want(1, 0x0A)?)?,
         keymint_security_level: level(want(3, 0x0A)?)?,
         attestation_challenge: want(4, 0x04)?.to_vec(),
+        root_of_trust: if c[7].tag.0 == 0x30 {
+            parse_root_of_trust(&c[7])?
+        } else {
+            return Err(att("KeyDescription: hardwareEnforced SEQUENCE emas"));
+        },
+    })
+}
+
+/// `basicConstraints` (2.5.29.19) `cA = true` bormi.
+fn is_ca(cert: &Certificate) -> bool {
+    use x509_cert::ext::pkix::BasicConstraints;
+    cert.tbs_certificate()
+        .extensions()
+        .and_then(|exts| {
+            exts.iter()
+                .find(|e| e.extn_id.to_string() == OID_BASIC_CONSTRAINTS)
+        })
+        .and_then(|e| BasicConstraints::from_der(e.extn_value.as_bytes()).ok())
+        .is_some_and(|bc| bc.ca)
+}
+
+fn has_key_description(cert: &Certificate) -> bool {
+    cert.tbs_certificate().extensions().is_some_and(|exts| {
+        exts.iter()
+            .any(|e| e.extn_id.to_string() == OID_KEY_DESCRIPTION)
     })
 }
 
@@ -314,6 +409,17 @@ pub fn verify_chain(
     for c in &certs {
         check_validity(c, now_unix)?;
     }
+    // Zanjirni "uzaytirish" hujumiga qarshi: haqiqiy attestatsiya qilingan kalit (u istalgan baytni
+    // imzolay oladi) o'z ostida soxta leaf (soxta KeyDescription — StrongBox, istalgan challenge) chiqara
+    // olmasin. Har bir imzolovchi CA bo'lishi va KeyDescription faqat leaf'da bo'lishi shart.
+    for c in &certs[1..] {
+        if !is_ca(c) {
+            return Err(att("zanjirdagi imzolovchi CA emas (basicConstraints)"));
+        }
+        if has_key_description(c) {
+            return Err(att("KeyDescription leaf'dan boshqa sertifikatda"));
+        }
+    }
     for pair in certs.windows(2) {
         if pair[0].tbs_certificate().issuer() != pair[1].tbs_certificate().subject() {
             return Err(att("issuer/subject mos emas"));
@@ -353,6 +459,23 @@ pub fn verify_chain(
             "xavfsizlik darajasi {level:?} < {:?}",
             policy.min_security_level
         )));
+    }
+    if policy.require_verified_boot {
+        match kd.root_of_trust {
+            Some(RootOfTrust {
+                device_locked: true,
+                verified_boot_state: VerifiedBootState::Verified,
+            }) => {}
+            // TODO(spec): `SelfSigned` (foydalanuvchi kaliti bilan qulflangan maxsus proshivka) —
+            // pilot bank siyosati bo'yicha `verifiedBootKey` ruxsat ro'yxati bilan.
+            Some(r) => {
+                return Err(att(format!(
+                    "qurilma ishonchli emas: verifiedBootState {:?}, deviceLocked {}",
+                    r.verified_boot_state, r.device_locked
+                )))
+            }
+            None => return Err(att("apparat rootOfTrust yo'q")),
+        }
     }
 
     let spki_der = leaf

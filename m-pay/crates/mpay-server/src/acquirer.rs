@@ -46,6 +46,9 @@ pub struct Built {
     pub dpan_masked: String,
     pub amount_minor: u64,
     pub currency: u16,
+    /// Tranzaksiya sanasi `YYMMDD` — kartadan (ICC `9A`), bo'lmasa server sanasi. Takroriy so'rov
+    /// kaliti uchun: qayta urinish yarim tundan o'tsa ham o'zgarmaydi.
+    pub txn_date: String,
 }
 
 /// Terminal so'rovidan `0100` yig'adi.
@@ -75,6 +78,12 @@ pub fn build_0100(req: &AuthorizationRequest, now: OffsetDateTime) -> Result<Bui
         .ok()
         .and_then(|b| emv::from_bcd(b).ok())
         .ok_or_else(|| ApiError::bad_request("valyuta (5F2A) yo'q"))? as u16;
+
+    let txn_date = tlv::require(&icc, tag::TXN_DATE)
+        .ok()
+        .filter(|d| d.len() == 3)
+        .map(hex::encode)
+        .unwrap_or_else(|| crate::dedup::server_date(now));
 
     let field55: Vec<Tlv> = FIELD55_TAGS
         .iter()
@@ -119,6 +128,7 @@ pub fn build_0100(req: &AuthorizationRequest, now: OffsetDateTime) -> Result<Bui
         dpan_masked: t2.pan.masked(),
         amount_minor: amount,
         currency,
+        txn_date,
     })
 }
 

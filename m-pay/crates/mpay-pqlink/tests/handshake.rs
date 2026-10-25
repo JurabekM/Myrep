@@ -111,17 +111,18 @@ fn replayed_and_reordered_records_rejected() {
 }
 
 #[test]
-fn tampered_record_closes_session() {
+fn tampered_record_rejected_but_session_survives() {
     let f = fixture();
     let mut c = connect(&f, &f.device).unwrap();
-    let mut r = c.seal(b"pan").unwrap();
-    let n = r.len();
-    r[n - 1] ^= 0x80;
-    assert_eq!(f.server.open(&r).unwrap_err(), PqLinkError::Decrypt);
-    // Sessiya yopilgan: keyingi to'g'ri yozuv ham rad.
-    let r2 = c.seal(b"pan").unwrap();
-    assert_eq!(f.server.open(&r2).unwrap_err(), PqLinkError::UnknownSession);
-    assert_eq!(f.server.session_count(), 0);
+    let r = c.seal(b"pan").unwrap();
+    // `session_id` va `seq` ochiq sarlavhada: begona tomon soxta yozuv yuborsa ham sessiya yopilmasin.
+    let mut forged = r.clone();
+    let n = forged.len();
+    forged[n - 1] ^= 0x80;
+    assert_eq!(f.server.open(&forged).unwrap_err(), PqLinkError::Decrypt);
+    assert_eq!(f.server.session_count(), 1);
+    // Haqiqiy yozuv (o'sha seq) baribir qabul qilinadi.
+    assert_eq!(&*f.server.open(&r).unwrap().1, b"pan");
 }
 
 /// ServerHello'dagi imzoni buzib client'ga beradi.
@@ -230,6 +231,7 @@ fn untrusted_or_weak_device_rejected() {
     let relaxed = fixture_with(ServerConfig {
         attestation: AttestationPolicy {
             min_security_level: SecurityLevel::TrustedEnvironment,
+            ..AttestationPolicy::default()
         },
         ..ServerConfig::default()
     });
@@ -339,6 +341,27 @@ fn session_limit_enforced() {
     // Muddati o'tganlar tozalanadi.
     f.clock.advance(Duration::minutes(20));
     assert!(connect(&f, &f.device).is_ok());
+}
+
+#[test]
+fn pending_handshake_flood_is_capped() {
+    let f = fixture_with(ServerConfig {
+        max_pending: 2,
+        ..ServerConfig::default()
+    });
+    // Faqat hello (finish'siz) — yakunlanmagan handshake'lar chegarasi.
+    for _ in 0..2 {
+        let (_hs, ch) = ClientHandshake::start(f.signer.identity().clone()).unwrap();
+        f.server.handle_hello(&ch).unwrap();
+    }
+    let (_hs, ch) = ClientHandshake::start(f.signer.identity().clone()).unwrap();
+    assert_eq!(
+        f.server.handle_hello(&ch).unwrap_err(),
+        PqLinkError::TooManySessions
+    );
+    // Yakunlanmaganlar muddati o'tgach joy bo'shaydi; to'liq handshake ishlaydi.
+    f.clock.advance(Duration::minutes(2));
+    connect(&f, &f.device).unwrap();
 }
 
 #[test]

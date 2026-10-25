@@ -89,20 +89,14 @@ impl std::fmt::Debug for AppState {
 }
 
 impl AppState {
-    /// Qurilma attestatsiyasi eskirganmi (ADR-0015). Reyestr yo'q yoki DB xatosi — `false`
-    /// (xato logga yoziladi; so'rovni bloklamaydi).
-    pub async fn reattest_due(&self, device: &mpay_common::DeviceId) -> bool {
-        let (Some(e), true) = (&self.enrollment, self.reattest_after_secs > 0) else {
-            return false;
-        };
-        match e.attested_at(&device.to_hex()).await {
-            Ok(Some(at)) => self.clock.unix() - at > self.reattest_after_secs,
-            Ok(None) => false,
-            Err(err) => {
-                tracing::error!(error = %err, "pqlink_devices: attestatsiya vaqti");
-                false
-            }
-        }
+    /// Qurilma attestatsiyasi eskirganmi (ADR-0015). Attestatsiya vaqti handshake'da reyestrdan
+    /// olinib sessiyaga yozilgan — har muhrlangan so'rovda DB'ga murojaat yo'q (yagona SQLite
+    /// ulanishida navbat bo'lmasin) va DB xatosi so'rovni o'tkazib yubormaydi (handshake rad etiladi).
+    pub fn reattest_due(&self, info: &mpay_pqlink::SessionInfo) -> bool {
+        self.reattest_after_secs > 0
+            && info
+                .attested_at
+                .is_some_and(|at| self.clock.unix() - at > self.reattest_after_secs)
     }
 
     /// IP chegaralari uchun mijoz manzili (ishonchli proksi ortida — `X-Forwarded-For`).
@@ -374,6 +368,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         session_ttl_secs: cfg.pqlink.session_ttl_secs,
         attestation: AttestationPolicy {
             min_security_level: cfg.pqlink.min_security_level,
+            require_verified_boot: cfg.pqlink.require_verified_boot,
         },
         ..ServerConfig::default()
     };
@@ -386,11 +381,14 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     .await?;
     crate::dedup::migrate(&pool).await?;
     let enrollment = match cfg.pqlink.enrollment {
-        crate::config::EnrollmentMode::Required => Some(Arc::new(crate::enroll::Enrollment::new(
-            pool.clone(),
-            clock.clone(),
-            cfg.pqlink.enrollment_nonce_ttl_secs,
-        ))),
+        crate::config::EnrollmentMode::Required => Some(Arc::new(
+            crate::enroll::Enrollment::new(
+                pool.clone(),
+                clock.clone(),
+                cfg.pqlink.enrollment_nonce_ttl_secs,
+            )
+            .map_err(|e| BootError::KeyStore(e.to_string()))?,
+        )),
         crate::config::EnrollmentMode::Off => {
             tracing::warn!("PQ Link: qurilmani ro'yxatdan o'tkazish o'chiq — FAQAT SANDBOX");
             None

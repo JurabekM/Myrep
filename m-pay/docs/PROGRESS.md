@@ -636,3 +636,47 @@ Codex limiti tugagani uchun PR #19 ni Claude ko'rib chiqdi (10 topilma) va tuzat
 
 Tekshiruv: `p2_otp.rs` 4 test (yangi: `locked_challenge_gets_no_sms`, hisoblagich qaytishi, javob < 5 s
 osilgan shlyuzda), `iso_flow::phone_follows_config_and_can_be_cleared`, `otp` unit (loopback qoidasi).
+### Xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
+
+PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da tuzatildi:
+
+* **Attestatsiya zanjirini uzaytirish (kritik):** leaf'dan boshqa har bir sertifikat `cA = true` va
+  KeyDescription'siz bo'lishi shart. Test `chain_extension_by_device_key_rejected`.
+* **rootOfTrust:** `verifiedBootState = Verified` va `deviceLocked` talab qilinadi
+  (`[pqlink] require_verified_boot`, emulyatorda `false`). Sandbox CA, Kotlin interop qurilmasi va
+  RSA/P-384 fiksturasi RoT bilan; test `unlocked_or_unverified_boot_rejected`.
+* **PQ Link DoS:** AEAD xatosi sessiyani yopmaydi; `hello` joy tekshiruvi ML-KEM/ML-DSA'dan oldin,
+  yakunlanmagan handshake'lar alohida chegara (2 500). Testlar
+  `tampered_record_rejected_but_session_survives`, `pending_handshake_flood_is_capped`.
+* **Vault provisioning TOCTOU:** hisoblar yozish qulfi ostida qayta tekshiriladi (o'zgargan bo'lsa ID&V
+  qaytadan). Tashlab ketilgan `PENDING_IDV` (challenge muddati o'tgan/bloklangan) limitlarni egallamaydi.
+  Testlar `concurrent_provisioning_respects_device_limit`, `abandoned_pending_tokens_do_not_count`.
+* **Emitent:** pul yechish va avtorizatsiya yozuvi bitta tranzaksiyada (`BEGIN IMMEDIATE`).
+  `TODO(spec):` LUK/ATC iste'moli (Vault) bilan umumiy tranzaksiya — 2-faza P2.3 (PostgreSQL).
+* **Detokenizatsiya auditi:** alohida commit o'rniga iste'mol tranzaksiyasida (`DETOKENIZED_LUK_USED`).
+* PKCS#11 sessiya pool'i va qayta login — 2-faza P2.2 (SoftHSM yuk sinovi) bilan birga.
+
+Tekshiruv: `cargo test --workspace` 143, clippy toza, Kotlin interop, smoke.
+
+### 1-faza xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
+
+PR #17 topilmalari:
+
+* **Takroriy so'rovlar (ADR-0010):** ishlov `tokio::spawn` da — terminal ulanishni uzsa ham emitent
+  javobi saqlanadi (avval yozuv `PENDING` da qotib qolardi). Kalit — autentifikatsiya qilingan terminal
+  kaliti + `terminal_id` va **kartadagi** sana (ICC `9A`; qayta urinish yarim tundan o'tsa ham o'sha
+  kalit). Emitent ishlagandan keyingi xatoda yozuv o'chirilmaydi — `96` saqlanadi (qayta yuborish ATC
+  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. `TODO(spec):` avtomatik reversal.
+* **Rate-limit:** IPv6 kaliti `/64`; faol kalitlar ko'p bo'lsa eng eskilari yarmigacha chiqariladi
+  (xarita chegaralangan, skanerlash amortizatsiyalangan).
+* **Ro'yxatdan o'tish nonce'lari** holatsiz (HMAC, muddat ichida): `/v1/pqlink/enroll` ni ko'p chaqirib
+  xotira yoki umumiy chegarani to'ldirib bo'lmaydi; faqat ishlatilganlari eslab qolinadi.
+* **Qayta attestatsiya:** attestatsiya vaqti handshake'da sessiyaga yoziladi — har muhrlangan so'rovda
+  DB'ga murojaat yo'q, DB xatosi so'rovni o'tkazib yubormaydi.
+* **Rekey:** yangi qurilma reyestrga → tokenlar ko'chadi → eskisi o'chadi; ko'chirish yiqilsa yangi
+  yozuv qaytariladi (tokenlar reyestrda yo'q qurilmada qolmaydi).
+* **Kotlin `ServerPinPolicy`:** barcha pinlar bekor qilinsa TOFU'ga tushmaydi.
+* Emulyator konfiguratsiyasi: `require_verified_boot = false` (`android-testing.md`).
+
+Tekshiruv: 174 Rust test (yangi: dedup ×2, nonce ×2, IPv6 kaliti, limiter chegarasi), clippy toza,
+Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).

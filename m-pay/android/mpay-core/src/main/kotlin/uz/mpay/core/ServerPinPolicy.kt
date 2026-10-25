@@ -17,6 +17,9 @@ class ServerPinPolicy(
     val revoked: Set<String> = revoked.map { it.trim().lowercase() }.toSet()
     val pinned: Set<String> = pinned.map { it.trim().lowercase() }.filter { it.isNotEmpty() && it !in this.revoked }.toSet()
 
+    /** Pin berilgan edi (bekor qilinganlar bilan birga). Hammasi bekor qilingan bo'lsa TOFU'ga tushmaydi. */
+    private val pinsConfigured: Boolean = pinned.any { it.isNotBlank() }
+
     init {
         require(this.pinned.all { it.length == 64 && it.all { ch -> ch in '0'..'9' || ch in 'a'..'f' } }) {
             "barmoq izi 64 hex belgi bo'lishi kerak"
@@ -33,7 +36,9 @@ class ServerPinPolicy(
     fun check(fingerprint: String, tofuStored: String?): Accept {
         val fp = fingerprint.lowercase()
         if (fp in revoked) throw PinException("server identifikatori bekor qilingan: ${fp.take(16)}…")
-        if (pinned.isNotEmpty()) {
+        if (pinsConfigured) {
+            // Barcha pinlar bekor qilingan bo'lsa ham shu yerda rad: aks holda siyosat jim TOFU'ga
+            // o'tib, birinchi uchragan (hujumchi) serverni qabul qilardi.
             if (fp !in pinned) throw PinException("server barmoq izi pinlanmagan: ${fp.take(16)}…")
             return Accept(storeTofu = false)
         }

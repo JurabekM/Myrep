@@ -1950,6 +1950,7 @@ dependencies = [
  "clap",
  "der 0.8.2",
  "hex",
+ "hmac",
  "hyper",
  "hyper-util",
  "mpay-common",

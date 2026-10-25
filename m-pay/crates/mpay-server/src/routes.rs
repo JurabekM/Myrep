@@ -139,7 +139,7 @@ fn handshake_guard(
     headers: &HeaderMap,
 ) -> Result<Option<tokio::sync::OwnedSemaphorePermit>, ApiError> {
     let ip = s.client_ip(peer, headers);
-    s.limits.ip(&ip.to_string()).map_err(|l| {
+    s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
         tracing::warn!(%ip, "rate-limit: handshake IP");
         ApiError::rate_limited(l, false)
     })?;
@@ -199,14 +199,28 @@ async fn rekey(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
             {
                 return Err(bad("yangi kalit allaqachon ro'yxatda"));
             }
-            let moved = st
+            // Tartib: yangi qurilma reyestrga → tokenlar ko'chadi (bitta Vault tranzaksiyasi) → eskisi
+            // o'chadi. Tokenlar hech qachon reyestrda yo'q qurilmaga bog'lanib qolmaydi: ko'chirish
+            // yiqilsa yangi yozuv qaytariladi, eski kalit esa ishlayveradi (qayta urinish mumkin).
+            let new_hex = new.device_id.to_hex();
+            enroll.register_new(&new).await.map_err(db)?;
+            let moved = match st
                 .vault
                 .rebind_device(&info.device_id, &new.device_id)
-                .await?;
-            enroll
-                .replace(&info.device_id.to_hex(), &new)
                 .await
-                .map_err(db)?;
+            {
+                Ok(n) => n,
+                Err(e) => {
+                    if let Err(r) = enroll.remove(&new_hex).await {
+                        tracing::error!(error = %r, "rekey: yangi qurilma reyestrdan qaytarilmadi");
+                    }
+                    return Err(e.into());
+                }
+            };
+            // Eski yozuvni o'chirib bo'lmasa — xavfsiz (eski kalitda endi token yo'q), faqat log.
+            if let Err(e) = enroll.remove(&info.device_id.to_hex()).await {
+                tracing::error!(error = %e, "rekey: eski qurilma reyestrdan o'chirilmadi");
+            }
             Ok(mpay_common::api::RekeyResponse {
                 device_id: new.device_id.to_hex(),
                 tokens_moved: moved,
@@ -235,7 +249,7 @@ async fn pq_enroll(
         return Err(ApiError::not_found());
     };
     let ip = s.client_ip(peer, &headers);
-    s.limits.ip(&ip.to_string()).map_err(|l| {
+    s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
         tracing::warn!(%ip, "rate-limit: enroll IP");
         ApiError::rate_limited(l, false)
     })?;
@@ -316,7 +330,7 @@ where
     };
     // Qurilma chegarasi: javob baribir muhrlanadi — sessiya ketma-ketligi buzilmaydi.
     let limited = s.limits.device(&info.device_id.to_string()).err();
-    let stale = !stale_ok && s.reattest_due(&info.device_id).await;
+    let stale = !stale_ok && s.reattest_due(&info);
     let (status, env) = match serde_json::from_slice::<Req>(&plaintext) {
         _ if stale => (
             StatusCode::FORBIDDEN,
@@ -667,34 +681,62 @@ async fn authorize(
     mtls: Mtls,
     Json(req): Json<AuthorizationRequest>,
 ) -> Result<Response, ApiError> {
-    use crate::dedup::{self, Begin};
     let caller = s.caller(&headers, &mtls, Role::Terminal)?;
-    let now = s.clock.now();
-    let built = crate::acquirer::build_0100(&req, now)?;
+    let built = crate::acquirer::build_0100(&req, s.clock.now())?;
+    // Ishlov alohida vazifada: terminal javobni kutmay ulanishni uzsa (timeout), hyper handler'ni
+    // bekor qiladi — emitent ishlagan bo'lishi mumkin, yozuv esa `PENDING` da qotib qolardi.
+    // `spawn` qilingan vazifa mijozdan qat'i nazar oxirigacha bajariladi va javobni saqlaydi.
+    let st = s.clone();
+    let key_id = caller.id.clone();
+    let out = tokio::spawn(async move { process_authorization(&st, &key_id, &req, &built).await })
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "acquirer: avtorizatsiya vazifasi");
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+        })??;
+    Ok(Json(out).into_response())
+}
+
+/// Takroriy so'rov tekshiruvi → emitent → javobni saqlash (ADR-0010).
+async fn process_authorization(
+    s: &AppState,
+    key_id: &str,
+    req: &AuthorizationRequest,
+    built: &crate::acquirer::Built,
+) -> Result<mpay_common::api::AuthorizationResponse, ApiError> {
+    use crate::dedup::{self, Begin};
     let pool = s.vault.pool();
     let db_err = |e: sqlx::Error| {
         tracing::error!(error = %e, "acquirer: takroriy so'rovlar jadvali");
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
     };
-    let key = dedup::RequestKey::new(&req, now);
-    match dedup::begin(pool, &key, now.unix_timestamp())
+    let key = dedup::RequestKey::new(req, key_id, built.txn_date.clone());
+    let sys_err = |reason: &str| {
+        dedup::system_error_response(
+            req,
+            built.dpan_masked.clone(),
+            built.amount_minor,
+            built.currency,
+            reason,
+        )
+    };
+    match dedup::begin(pool, &key, s.clock.unix())
         .await
         .map_err(db_err)?
     {
         Begin::New => {}
         Begin::Replay(r) => {
-            tracing::info!(terminal = %caller.id, stan = req.stan, rrn = %r.rrn, "acquirer: takroriy so'rov — avvalgi javob");
-            return Ok(Json(r).into_response());
+            tracing::info!(terminal = %key_id, stan = req.stan, rrn = %r.rrn, "acquirer: takroriy so'rov — avvalgi javob");
+            return Ok(r);
         }
         Begin::Duplicate => {
-            tracing::warn!(terminal = %caller.id, stan = req.stan, "acquirer: STAN boshqa mazmun bilan takrorlandi (94)");
-            let r = dedup::duplicate_response(
-                &req,
+            tracing::warn!(terminal = %key_id, stan = req.stan, "acquirer: STAN boshqa mazmun bilan takrorlandi (94)");
+            return Ok(dedup::duplicate_response(
+                req,
                 built.dpan_masked.clone(),
                 built.amount_minor,
                 built.currency,
-            );
-            return Ok(Json(r).into_response());
+            ));
         }
         Begin::InProgress => {
             let mut e = ApiError::new(
@@ -705,40 +747,51 @@ async fn authorize(
             e.retry_after = Some(1);
             return Err(e);
         }
+        Begin::Stale => {
+            // Avvalgi ishlov tugamagan: emitent pul yechgan bo'lishi mumkin — qayta yuborilmaydi.
+            tracing::error!(terminal = %key_id, stan = req.stan, "acquirer: natija noma'lum (qotib qolgan PENDING) — 96");
+            let r = sys_err("OUTCOME_UNKNOWN");
+            dedup::finish(pool, &key, &r).await.map_err(db_err)?;
+            return Ok(r);
+        }
     }
     let bytes = built.msg.pack();
-    let processed = match s.issuer.process_bytes(&bytes).await {
-        Ok((resp, outcome)) => crate::acquirer::parse_0110(
-            &resp,
-            &built,
-            req.stan,
-            outcome.reason.as_str(),
-            outcome.risk_score,
-        ),
+    let (resp, outcome) = match s.issuer.process_bytes(&bytes).await {
+        Ok(x) => x,
         Err(e) => {
+            // Emitent so'rovni qayta ishlamadi — yozuv o'chiriladi, terminal qayta urinishi mumkin.
             tracing::warn!(error = %e, "issuer 0100 ni qayta ishlay olmadi");
-            Err(ApiError::new(
+            dedup::abort(pool, &key).await.map_err(db_err)?;
+            return Err(ApiError::new(
                 StatusCode::BAD_GATEWAY,
                 "ISSUER_ERROR",
                 "emitent so'rovni qayta ishlay olmadi",
-            ))
+            ));
         }
     };
-    let out = match processed {
+    // Emitent ishladi (pul yechilgan bo'lishi mumkin): javobni o'qib bo'lmasa ham yozuv o'chirilmaydi —
+    // qayta urinish ATC replay (Q1) bo'lardi. `96` saqlanadi va qaytariladi.
+    let out = match crate::acquirer::parse_0110(
+        &resp,
+        built,
+        req.stan,
+        outcome.reason.as_str(),
+        outcome.risk_score,
+    ) {
         Ok(o) => o,
         Err(e) => {
-            dedup::abort(pool, &key).await.map_err(db_err)?;
-            return Err(e);
+            tracing::error!(code = e.code, error = %e.message, stan = req.stan, "acquirer: emitent javobini o'qib bo'lmadi — 96");
+            sys_err("ISSUER_RESPONSE_UNREADABLE")
         }
     };
     dedup::finish(pool, &key, &out).await.map_err(db_err)?;
     tracing::info!(
-        terminal = %caller.id,
+        terminal = %key_id,
         dpan = %out.dpan_masked,
         code = %out.response_code,
         reason = %out.reason,
         stan = out.stan,
         "acquirer: avtorizatsiya"
     );
-    Ok(Json(out).into_response())
+    Ok(out)
 }

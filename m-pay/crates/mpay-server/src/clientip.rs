@@ -105,6 +105,19 @@ pub fn client_ip(peer: IpAddr, xff: &[&str], trusted: &[Cidr]) -> IpAddr {
     last
 }
 
+/// IP chegarasi kaliti: IPv4 — manzil, IPv6 — `/64` tarmoq. Bitta abonentga odatda butun `/64`
+/// beriladi: manzil bo'yicha kalit bo'lsa, mijoz har so'rovni yangi manzildan yuborib (2^64 ta)
+/// chegarani chetlab o'tardi.
+pub fn rate_key(ip: IpAddr) -> String {
+    match ip.to_canonical() {
+        IpAddr::V4(v) => v.to_string(),
+        IpAddr::V6(v) => {
+            let s = v.segments();
+            format!("{:x}:{:x}:{:x}:{:x}::/64", s[0], s[1], s[2], s[3])
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -128,6 +141,16 @@ mod tests {
         assert!("bad".parse::<Cidr>().is_err());
         let any: Cidr = "0.0.0.0/0".parse().unwrap();
         assert!(any.contains(ip("8.8.8.8")));
+    }
+
+    #[test]
+    fn ipv6_rate_key_is_slash64() {
+        assert_eq!(rate_key(ip("1.2.3.4")), "1.2.3.4");
+        assert_eq!(rate_key(ip("::ffff:1.2.3.4")), "1.2.3.4");
+        let a = rate_key(ip("2001:db8:1:2::1"));
+        assert_eq!(a, "2001:db8:1:2::/64");
+        assert_eq!(a, rate_key(ip("2001:db8:1:2:ffff:eeee:dddd:cccc")));
+        assert_ne!(a, rate_key(ip("2001:db8:1:3::1")));
     }
 
     #[test]

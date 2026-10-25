@@ -4,6 +4,7 @@
 //! qabul qilinadigan `seq` qat'iy `kutilgan` ga teng.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use mpay_common::clock::Clock;
@@ -33,6 +34,8 @@ pub struct ServerConfig {
     pub handshake_ttl_secs: i64,
     /// Bir vaqtdagi sessiyalar (pending + established) chegarasi.
     pub max_sessions: usize,
+    /// Yakunlanmagan handshake'lar chegarasi (`hello` toshqini o'rnatilgan sessiyalar joyini egallamasin).
+    pub max_pending: usize,
     pub attestation: AttestationPolicy,
 }
 
@@ -42,6 +45,7 @@ impl Default for ServerConfig {
             session_ttl_secs: 15 * 60,
             handshake_ttl_secs: 60,
             max_sessions: 10_000,
+            max_pending: 2_500,
             attestation: AttestationPolicy::default(),
         }
     }
@@ -57,6 +61,7 @@ struct Established {
     c2s: SecretKey32,
     s2c: SecretKey32,
     device: VerifiedDevice,
+    attested_at: Option<i64>,
     recv_seq: u64,
     send_seq: u64,
     expires: i64,
@@ -83,6 +88,8 @@ pub struct SessionInfo {
     pub device_id: DeviceId,
     pub security_level: SecurityLevel,
     pub expires_at: i64,
+    /// Qurilma attestatsiyadan o'tgan vaqt (ro'yxatga olish darvozasi bo'lsa; ADR-0015).
+    pub attested_at: Option<i64>,
 }
 
 /// PQ Link server.
@@ -93,6 +100,8 @@ pub struct PqLinkServer {
     clock: Arc<dyn Clock>,
     sessions: Mutex<HashMap<SessionId, Slot>>,
     enrollment: Option<Arc<dyn crate::EnrollmentGate>>,
+    /// `sessions` dagi `Pending` soni — faqat `sessions` qulfi ostida o'zgartiriladi.
+    pending: AtomicUsize,
 }
 
 impl std::fmt::Debug for PqLinkServer {
@@ -118,6 +127,36 @@ impl PqLinkServer {
             clock,
             sessions: Mutex::new(HashMap::new()),
             enrollment: None,
+            pending: AtomicUsize::new(0),
+        }
+    }
+
+    /// Muddati o'tganlarni tozalaydi (qulf ostida) va `pending` ni qayta sanaydi.
+    fn purge(&self, map: &mut HashMap<SessionId, Slot>, now: i64) {
+        map.retain(|_, s| s.expires() > now);
+        let n = map
+            .values()
+            .filter(|s| matches!(s, Slot::Pending(_)))
+            .count();
+        self.pending.store(n, Ordering::Relaxed);
+    }
+
+    /// Yangi handshake uchun joy bormi (qulf ostida). To'la bo'lsa avval eskilar tozalanadi —
+    /// har `hello` da emas (O(n)), faqat chegaraga yetganda.
+    fn has_room(&self, map: &mut HashMap<SessionId, Slot>, now: i64) -> bool {
+        let full = |s: &Self, m: &HashMap<SessionId, Slot>| {
+            m.len() >= s.cfg.max_sessions || s.pending.load(Ordering::Relaxed) >= s.cfg.max_pending
+        };
+        if full(self, map) {
+            self.purge(map, now);
+        }
+        !full(self, map)
+    }
+
+    /// Slot o'chirildi — `Pending` bo'lsa hisoblagich kamayadi (qulf ostida).
+    fn removed(&self, slot: &Slot) {
+        if matches!(slot, Slot::Pending(_)) {
+            self.pending.fetch_sub(1, Ordering::Relaxed);
         }
     }
 
@@ -161,6 +200,10 @@ impl PqLinkServer {
         if !ch.suites.contains(&SUITE_V1) {
             return Err(PqLinkError::UnsupportedSuite);
         }
+        // Joy yo'q bo'lsa qimmat ML-KEM/ML-DSA hisoblashdan OLDIN rad (CPU kuchaytirish hujumi).
+        if !self.has_room(&mut *self.lock()?, self.clock.unix()) {
+            return Err(PqLinkError::TooManySessions);
+        }
         let (x_pub, mlkem_ct, ss) = crypto::server_encapsulate(&ch.x25519, &ch.mlkem_ek)?;
         let session_id: SessionId = rng::array()?;
         let mut sh = ServerHello {
@@ -186,10 +229,10 @@ impl PqLinkServer {
 
         let now = self.clock.unix();
         let mut map = self.lock()?;
-        map.retain(|_, s| s.expires() > now);
-        if map.len() >= self.cfg.max_sessions {
+        if !self.has_room(&mut map, now) {
             return Err(PqLinkError::TooManySessions);
         }
+        self.pending.fetch_add(1, Ordering::Relaxed);
         map.insert(
             session_id,
             Slot::Pending(Pending {
@@ -208,13 +251,19 @@ impl PqLinkServer {
         let pending = {
             let mut map = self.lock()?;
             match map.remove(&rec.session_id) {
-                Some(Slot::Pending(p)) if p.expires > now => p,
+                Some(Slot::Pending(p)) => {
+                    self.pending.fetch_sub(1, Ordering::Relaxed);
+                    if p.expires <= now {
+                        return Err(PqLinkError::UnknownSession);
+                    }
+                    p
+                }
                 Some(other @ Slot::Established(_)) => {
                     // Takroriy ClientFinished o'rnatilgan sessiyani buzmaydi.
                     map.insert(rec.session_id, other);
                     return Err(PqLinkError::UnexpectedMessage);
                 }
-                _ => return Err(PqLinkError::UnknownSession),
+                None => return Err(PqLinkError::UnknownSession),
             }
         };
         if rec.seq != 0 {
@@ -231,9 +280,10 @@ impl PqLinkServer {
         let device = verify_chain(&cf.cert_chain, &self.anchors, &self.cfg.attestation, now)?;
         let msg = [DEVICE_SIG_LABEL, &pending.th2[..]].concat();
         device.verify_signature(&msg, &cf.device_sig)?;
-        if let Some(gate) = &self.enrollment {
-            gate.admit(&device)?;
-        }
+        let attested_at = match &self.enrollment {
+            Some(gate) => Some(gate.admit(&device)?),
+            None => None,
+        };
 
         let expires = now + self.cfg.session_ttl_secs;
         let accept = ServerAcceptInner {
@@ -253,6 +303,7 @@ impl PqLinkServer {
             device_id: device.device_id,
             security_level: device.security_level,
             expires_at: expires,
+            attested_at,
         };
         let SessionKeys { c2s, s2c, .. } = pending.keys;
         self.lock()?.insert(
@@ -261,6 +312,7 @@ impl PqLinkServer {
                 c2s,
                 s2c,
                 device,
+                attested_at,
                 recv_seq: 1,
                 send_seq: 1,
                 expires,
@@ -297,12 +349,14 @@ impl PqLinkServer {
                     device_id: s.device.device_id,
                     security_level: s.device.security_level,
                     expires_at: s.expires,
+                    attested_at: s.attested_at,
                 };
                 Ok((info, pt))
             }
+            // Sessiya o'chirilmaydi: `session_id` va `seq` ochiq sarlavhada — kim ko'rsa, soxta yozuv
+            // bilan begona sessiyani yopib qo'yardi (DoS). `recv_seq` oshmaydi, haqiqiy yozuv o'tadi.
             Err(e) => {
-                map.remove(&rec.session_id);
-                tracing::warn!("pqlink: buzilgan yozuv — sessiya yopildi");
+                tracing::warn!("pqlink: yozuvni ochib bo'lmadi — rad etildi");
                 Err(e)
             }
         }
@@ -322,7 +376,9 @@ impl PqLinkServer {
     /// Sessiyani yopadi.
     pub fn close(&self, session_id: &SessionId) {
         if let Ok(mut m) = self.sessions.lock() {
-            m.remove(session_id);
+            if let Some(s) = m.remove(session_id) {
+                self.removed(&s);
+            }
         }
     }
 }
