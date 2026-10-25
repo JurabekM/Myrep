@@ -233,6 +233,8 @@ path = "mpay.db"
 mldsa_blob = "{MLDSA_FILE}"
 attestation_roots = ["{CA_CERT_FILE}"]
 min_security_level = "STRONG_BOX"
+# Bootloader qulflangan va yuklash tekshirilgan (rootOfTrust) bo'lishi shart; emulyator sinovida false.
+require_verified_boot = true
 session_ttl_secs = 900
 # Yangi qurilma attestatsiyasi server nonce'i bilan (POST /v1/pqlink/enroll); "off" — faqat sandbox/test.
 enrollment = "required"

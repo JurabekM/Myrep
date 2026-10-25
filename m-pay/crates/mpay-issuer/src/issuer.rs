@@ -287,15 +287,38 @@ impl Issuer {
             Err(reason) => {
                 out.reason = reason;
                 out.code = reason.code();
-                self.finish(&mut resp, &out, None).await?;
+                let mut tx = self.db.begin_with("BEGIN IMMEDIATE").await?;
+                self.finish(&mut tx, &mut resp, &out, None).await?;
+                tx.commit().await?;
                 return Ok((resp, out));
             }
         };
         out.dpan_masked = Some(parsed.dpan.masked());
 
         let mut sk: Option<SecretKey16> = None;
-        let result = self.decide(&parsed, &mut out, &mut sk).await;
-        let reason = result.unwrap_or_else(|r| r);
+        let mut debit: Option<(String, i64)> = None;
+        let result = self.decide(&parsed, &mut out, &mut sk, &mut debit).await;
+        let mut reason = result.unwrap_or_else(|r| r);
+        // Pul yechish va avtorizatsiya yozuvi — bitta tranzaksiya: biri yozilib, ikkinchisi yozilmay
+        // qolmasin (aks holda pul yechilgan-u, yozuv yo'q yoki aksincha). `BEGIN IMMEDIATE` — SQLite'da
+        // o'qishdan yozishga o'tishdagi `SQLITE_BUSY` bo'lmasin.
+        let mut tx = self.db.begin_with("BEGIN IMMEDIATE").await?;
+        if let Some((account_id, amount)) = &debit {
+            let n = sqlx::query(
+                "UPDATE issuer_accounts SET balance_minor = balance_minor - ?, updated_at = ? \
+                 WHERE account_id = ? AND balance_minor >= ?",
+            )
+            .bind(amount)
+            .bind(self.clock.unix())
+            .bind(account_id)
+            .bind(amount)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+            if n != 1 {
+                reason = Reason::InsufficientFunds;
+            }
+        }
         out.reason = reason;
         out.code = reason.code();
         if let Some(sk) = &sk {
@@ -304,7 +327,8 @@ impl Issuer {
             iad91.extend_from_slice(&out.code.arc());
             out.issuer_auth_data = Some(hex::encode(&iad91));
         }
-        self.finish(&mut resp, &out, Some(&parsed)).await?;
+        self.finish(&mut tx, &mut resp, &out, Some(&parsed)).await?;
+        tx.commit().await?;
         tracing::info!(
             token_id = ?out.token_id.as_ref().map(TokenId::as_str),
             dpan = ?out.dpan_masked,
@@ -317,11 +341,13 @@ impl Issuer {
     }
 
     /// Qaror zanjiri. `Err(reason)` — rad; `Ok(reason)` — tasdiq. `sk` faqat ARQC to'g'ri bo'lsa to'ldiriladi.
+    /// Tasdiqda yechiladigan summa `debit` ga yoziladi — yechish va yozuv `authorize` da bitta tranzaksiyada.
     async fn decide(
         &self,
         p: &Parsed,
         out: &mut AuthOutcome,
         sk_out: &mut Option<SecretKey16>,
+        debit: &mut Option<(String, i64)>,
     ) -> Result<Reason, Reason> {
         if p.iad.scheme_id != self.scheme.scheme_id() {
             reject(Reason::UnsupportedScheme)?;
@@ -429,20 +455,10 @@ impl Issuer {
             reject(Reason::CurrencyMismatch)?;
         }
         let amount = i64::try_from(p.amount).map_err(|_| Reason::InsufficientFunds)?;
-        let debited = sqlx::query(
-            "UPDATE issuer_accounts SET balance_minor = balance_minor - ?, updated_at = ? \
-             WHERE account_id = ? AND balance_minor >= ?",
-        )
-        .bind(amount)
-        .bind(self.clock.unix())
-        .bind(&acct.account_id)
-        .bind(amount)
-        .execute(&self.db)
-        .await
-        .map_err(|_| Reason::IssuerOffline)?;
-        if debited.rows_affected() != 1 {
+        if acct.balance_minor < amount {
             reject(Reason::InsufficientFunds)?;
         }
+        *debit = Some((acct.account_id, amount));
         Ok(if reviewed {
             Reason::ApprovedAfterReview
         } else {
@@ -452,6 +468,7 @@ impl Issuer {
 
     async fn finish(
         &self,
+        tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
         resp: &mut IsoMessage,
         out: &AuthOutcome,
         p: Option<&Parsed>,
@@ -486,7 +503,7 @@ impl Issuer {
         .bind(out.code.as_str())
         .bind(out.reason.as_str())
         .bind(out.risk_score.map(i64::from))
-        .execute(&self.db)
+        .execute(&mut **tx)
         .await?;
         Ok(())
     }

@@ -244,6 +244,57 @@ impl Vault {
         req: ProvisionRequest,
         dev: DeviceContext,
     ) -> Result<ProvisionOutcome, VaultError> {
+        // ID&V hisoblari yozish qulfidan tashqarida o'qiladi (Shield sekin bo'lishi mumkin) va qulf
+        // ostida qayta tekshiriladi; bir vaqtdagi so'rov ularni o'zgartirgan bo'lsa — qaror qaytadan.
+        for _ in 0..3 {
+            if let Some(out) = self.provision_attempt(&req, &dev).await? {
+                return Ok(out);
+            }
+        }
+        Err(VaultError::IdvUnavailable(
+            "bir vaqtdagi provisioning so'rovlari — qayta urinib ko'ring".into(),
+        ))
+    }
+
+    /// Kartaning va qurilmaning "tirik" tokenlari: `DELETED` va tashlab ketilgan `PENDING_IDV`
+    /// (challenge'i muddati o'tgan, bloklangan yoki ishlatilgan) hisoblanmaydi.
+    async fn token_counts<'e, E>(
+        &self,
+        exec: E,
+        pan_fp: &PanFingerprint,
+        dev_hex: &str,
+        now: i64,
+    ) -> Result<(i64, i64), VaultError>
+    where
+        E: sqlx::Executor<'e, Database = Sqlite>,
+    {
+        let r = sqlx::query(
+            "SELECT \
+               COALESCE(SUM(CASE WHEN c.pan_fp = ? THEN 1 ELSE 0 END), 0) AS for_pan, \
+               COALESCE(SUM(CASE WHEN t.device_id = ? THEN 1 ELSE 0 END), 0) AS for_dev \
+             FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id \
+             WHERE (c.pan_fp = ? OR t.device_id = ?) AND t.state != 'DELETED' \
+               AND NOT (t.state = 'PENDING_IDV' AND NOT EXISTS ( \
+                 SELECT 1 FROM vault_idv_challenges ch WHERE ch.token_id = t.token_id \
+                   AND ch.consumed = 0 AND ch.expires_at > ? AND ch.attempts < ?))",
+        )
+        .bind(pan_fp.0.as_slice())
+        .bind(dev_hex)
+        .bind(pan_fp.0.as_slice())
+        .bind(dev_hex)
+        .bind(now)
+        .bind(self.cfg.otp_max_attempts)
+        .fetch_one(exec)
+        .await?;
+        Ok((r.try_get("for_pan")?, r.try_get("for_dev")?))
+    }
+
+    /// Bitta urinish; `None` — hisoblar ID&V'dan keyin o'zgardi (qayta urinish kerak).
+    async fn provision_attempt(
+        &self,
+        req: &ProvisionRequest,
+        dev: &DeviceContext,
+    ) -> Result<Option<ProvisionOutcome>, VaultError> {
         if req.fpan.kind() != PanKind::Funding {
             return Err(VaultError::BadRequest("FPAN kutilgan (990000–990049)"));
         }
@@ -257,21 +308,9 @@ impl Vault {
         let pan_fp = self.fingerprint(&req.fpan)?;
         let dev_hex = dev.device_id.to_hex();
 
-        let existing_for_pan: i64 = sqlx::query(
-            "SELECT COUNT(*) AS n FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id \
-             WHERE c.pan_fp = ? AND t.state != 'DELETED'",
-        )
-        .bind(pan_fp.0.as_slice())
-        .fetch_one(&self.db)
-        .await?
-        .try_get("n")?;
-        let existing_for_device: i64 = sqlx::query(
-            "SELECT COUNT(*) AS n FROM vault_tokens WHERE device_id = ? AND state != 'DELETED'",
-        )
-        .bind(&dev_hex)
-        .fetch_one(&self.db)
-        .await?
-        .try_get("n")?;
+        let (existing_for_pan, existing_for_device) = self
+            .token_counts(&self.db, &pan_fp, &dev_hex, now.unix_timestamp())
+            .await?;
         if existing_for_device >= i64::from(self.cfg.max_tokens_per_device) {
             return Err(VaultError::TooManyTokens);
         }
@@ -306,7 +345,7 @@ impl Vault {
             )
             .await?;
             tx.commit().await?;
-            return Ok(ProvisionOutcome::Declined { idv });
+            return Ok(Some(ProvisionOutcome::Declined { idv }));
         }
 
         // Kriptografik tayyorgarlik yozish qulfidan tashqarida.
@@ -327,7 +366,14 @@ impl Vault {
 
         let _g = self.write.lock().await;
         let mut tx = crate::db::begin_write(&self.db).await?;
-        let card_id = self.upsert_card(&mut tx, &req, &pan_fp, ts).await?;
+        // Qulf ostida qayta sanash: ID&V ko'rgan holat o'zgargan bo'lsa (bir vaqtdagi so'rov) — qaytadan.
+        if self.token_counts(&mut *tx, &pan_fp, &dev_hex, ts).await?
+            != (existing_for_pan, existing_for_device)
+        {
+            tracing::info!(fpan = %req.fpan.masked(), "vault: bir vaqtdagi provisioning — ID&V qaytadan");
+            return Ok(None);
+        }
+        let card_id = self.upsert_card(&mut tx, req, &pan_fp, ts).await?;
         sqlx::query(
             "INSERT INTO vault_tokens (token_id, card_id, device_id, dpan_fp, dpan_dek, dpan_nonce, dpan_ct, dpan_masked, \
              dpan_expiry, psn, state, idv_decision, idv_score, last_atc, next_luk_seq, created_at, updated_at) \
@@ -402,7 +448,7 @@ impl Vault {
         };
         tx.commit().await?;
         tracing::info!(token_id = %token_id, dpan = %dpan.masked(), state = state.as_str(), "vault: token yaratildi");
-        Ok(outcome)
+        Ok(Some(outcome))
     }
 
     async fn upsert_card(
@@ -949,20 +995,10 @@ impl Vault {
             last_atc: row.try_get::<Option<i64>, _>("last_atc")?.map(|v| v as u16),
             luk,
         };
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
-        audit::append(
-            &mut tx,
-            now,
-            &AuditEntry {
-                actor,
-                action: "DETOKENIZED",
-                token_id: Some(token_id.as_str()),
-                details: json!({ "dpan": dpan.masked(), "luk_seq": luk_seq }),
-            },
-        )
-        .await?;
-        tx.commit().await?;
+        // Audit yozuvi alohida yozish tranzaksiyasida emas: muvaffaqiyatli detokenizatsiya `detok_consume`
+        // tranzaksiyasida (`DETOKENIZED` + LUK ishlatildi) qayd etiladi — har avtorizatsiya bitta commit.
+        // Rad etilgan so'rovlar (noma'lum LUK, ARQC mos emas) emitentning `issuer_authorizations` jadvalida.
+        tracing::debug!(actor, token_id = %token_id, dpan = %dpan.masked(), luk_seq, "vault: detokenizatsiya");
         Ok(Some(view))
     }
 
@@ -1021,7 +1057,8 @@ impl Vault {
             now,
             &AuditEntry {
                 actor,
-                action: "LUK_USED",
+                // Detokenizatsiya va LUK ishlatilishi bitta yozuvda (avval ikki alohida commit edi).
+                action: "DETOKENIZED_LUK_USED",
                 token_id: Some(token_id.as_str()),
                 details: json!({ "luk_seq": luk_seq, "atc": atc }),
             },

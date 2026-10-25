@@ -547,3 +547,54 @@ async fn reopen_with_same_seed_reads_existing_data() {
     // Boshqa urug' (boshqa KEK) bilan ochib bo'lmaydi.
     assert!(mk([2; 32]).await.is_err());
 }
+
+/// Tashlab ketilgan `PENDING_IDV` (challenge muddati o'tgan) qurilma limitini egallamaydi.
+#[tokio::test]
+async fn abandoned_pending_tokens_do_not_count() {
+    let e = env_with(VaultConfig {
+        max_tokens_per_device: 1,
+        ..VaultConfig::default()
+    })
+    .await;
+    assert!(matches!(
+        e.vault.provision(req(&fpan(85, 11)), dev(4)).await.unwrap(),
+        ProvisionOutcome::PendingIdv { .. }
+    ));
+    // Tirik challenge — limit band.
+    assert!(matches!(
+        e.vault.provision(req(&fpan(85, 12)), dev(4)).await,
+        Err(VaultError::TooManyTokens)
+    ));
+    // OTP muddati o'tdi — eski PENDING endi hisoblanmaydi.
+    e.clock.advance(Duration::minutes(6));
+    assert!(matches!(
+        e.vault.provision(req(&fpan(85, 12)), dev(4)).await.unwrap(),
+        ProvisionOutcome::PendingIdv { .. }
+    ));
+}
+
+/// Bir vaqtdagi provisioning qurilma limitidan oshmaydi (hisoblar yozish qulfi ostida qayta tekshiriladi).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn concurrent_provisioning_respects_device_limit() {
+    let e = env_with(VaultConfig {
+        max_tokens_per_device: 2,
+        ..VaultConfig::default()
+    })
+    .await;
+    let tasks: Vec<_> = (0..8)
+        .map(|i| {
+            let v = e.vault.clone();
+            tokio::spawn(async move { v.provision(req(&fpan(10, 100 + i)), dev(9)).await })
+        })
+        .collect();
+    let mut ok = 0;
+    for t in tasks {
+        match t.await.unwrap() {
+            Ok(ProvisionOutcome::Active { .. }) => ok += 1,
+            Ok(other) => panic!("ACTIVE yoki rad kutilgan: {other:?}"),
+            Err(VaultError::TooManyTokens | VaultError::IdvUnavailable(_)) => {}
+            Err(other) => panic!("{other:?}"),
+        }
+    }
+    assert_eq!(ok, 2, "limit 2 — aynan 2 ta token");
+}
