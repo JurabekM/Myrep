@@ -28,6 +28,7 @@ val demo = project.findProperty("baraka.demo") == "true"
 // Yadro va APK ABI'lari: standart — telefonlar (arm64, armv7); emulyator testi `-P baraka.abis=x86_64`.
 val abis: List<String> = (project.findProperty("baraka.abis") as String? ?: "arm64-v8a,armeabi-v7a")
     .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+require(abis.isNotEmpty()) { "baraka.abis bo'sh: masalan -P baraka.abis=x86_64" }
 
 android {
     namespace = "uz.baraka.oilasi"

@@ -1,5 +1,5 @@
 # «Baraka Dastur» demo APK'ni Android emulyatorida tekshiradi (x86_64, KVM): o'rnatish, ochish,
-# «DEMO» belgisi va muddat tugagan ekran (skrinshotlar artefaktda). Faqat Android o'zgarganda.
+# yiqilmaslik va muddat tugagan ekran. «DEMO» belgisi — artefaktdagi skrinshotlarda.
 name: baraka-demo-emulator
 
 on:
@@ -7,6 +7,9 @@ on:
     paths:
       - "baraka_oilasi/apps/android/**"
       - "baraka_oilasi/core/**"
+      - "baraka_oilasi/Cargo.toml"
+      - "baraka_oilasi/Cargo.lock"
+      - "baraka_oilasi/rust-toolchain.toml"
       - "baraka_oilasi/shared/i18n/**"
       - ".github/workflows/baraka-demo-emulator.yml"
   workflow_dispatch:
@@ -61,9 +64,9 @@ jobs:
           "$AAPT/aapt" dump badging "$RUNNER_TEMP/apk/demo.apk" | grep -E "^package:|^application-label:" | tee badging.txt
           grep -q "package: name='uz.baraka.oilasi.demo'" badging.txt
           grep -q "application-label:'Baraka Dastur DEMO'" badging.txt
-          # Demo hech qachon upload kaliti bilan imzolanmaydi (F6:10:7C:24…).
+          # Demo hech qachon upload kaliti bilan imzolanmaydi: faqat Android debug kaliti.
           "$AAPT/apksigner" verify --print-certs "$RUNNER_TEMP/apk/demo.apk" | tee certs.txt
-          ! grep -qi "f6107c24" certs.txt
+          grep -q "DN: C=US, O=Android, CN=Android Debug" certs.txt
       - name: Emulyatorda tekshiruv
         uses: reactivecircus/android-emulator-runner@v2
         with:
