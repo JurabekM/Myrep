@@ -27,7 +27,12 @@ launch() { # $1 — skrinshot nomi
   sleep 10
   # Qurilma ichidagi `screencap` swiftshader'li headless emulyatorda bo'sh fayl beradi — kadr
   # emulyatorning o'zidan (konsol buyrug'i, hostga yoziladi); bo'lmasa — qurilmadagi screencap.
-  adb emu screenrecord screenshot "$OUT/$1.png" > /dev/null || true
+  # `screenrecord screenshot` papka oladi va fayl nomini o'zi qo'yadi.
+  shots=$(mktemp -d)
+  adb emu screenrecord screenshot "$shots" > /dev/null || true
+  sleep 2
+  f=$(ls "$shots"/*.png 2>/dev/null | head -1 || true)
+  [ -n "$f" ] && mv "$f" "$OUT/$1.png"
   if [ ! -s "$OUT/$1.png" ]; then
     adb shell screencap -p /sdcard/shot.png && adb pull /sdcard/shot.png "$OUT/$1.png" > /dev/null || true
   fi
