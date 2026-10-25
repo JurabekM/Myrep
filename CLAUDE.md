@@ -5,6 +5,7 @@ Bu fayl Myrep ichidagi **barcha** loyihalarga tegishli. Loyiha papkasidagi o'z `
 ## Foydalanuvchi afzalliklari
 - Muloqot tili: o'zbekcha (lotin). Kod, identifikatorlar, commit xabarlari — inglizcha; izohlar, hujjatlar va UI matnlari — o'zbekcha.
 - Yo'nalish: vibe coding va mikrokontroller elektronikasi.
+- Har PR ochilgach Claude o'zi code review qiladi (Codex o'rniga, foydalanuvchi qarori 2026-10-25): haqiqiy xatolar shu PR'da tuzatiladi, qolganlari foydalanuvchiga aytiladi.
 
 ## UI dizayn qoidasi (foydalanuvchi qarori, 2026-10-15) — har bir yangi ilova uchun
 Barcha ilovalar (desktop, mobil, web, dashboard) **standart holda Claude Code dark theme uslubida** bo'ladi.

@@ -46,6 +46,8 @@ flutter build apk --release --split-per-abi --target-platform android-arm64 \
 - Har doim **debug kalit** bilan imzolanadi (reliz kaliti demoga qo'yilmaydi).
 - Har ekranda «DEMO» belgisi; `BARAKA_DEMO_EXPIRES` kunidan keyin ilova ochilmaydi (qurilma soati bo'yicha).
 - PDF va `.baraka` fayllarni saqlash yoki yuborish o'chirilgan (`error.DEMO_DISABLED`).
+- Emulyator tekshiruvi: `.github/workflows/baraka-demo-emulator.yml` (x86_64 uchun `-P baraka.abis=x86_64
+  --target-platform android-x64`, skript — `tool/demo_emulator_smoke.sh`).
 
 Testlar emulyatorsiz: `flutter test` Dart VM'da haqiqiy Rust yadroni (`target/debug/libbaraka_bindings_flutter.so`,
 yoki `BARAKA_CORE_LIB`) yuklaydi — onboarding, qulf, yozuvlar desktop E2E'dagidek to'liq yo'ldan o'tadi.

@@ -25,6 +25,11 @@ val requireReleaseSigning = System.getenv("BARAKA_REQUIRE_RELEASE_SIGNING") == "
 // doim debug kalit — reliz (upload) kaliti demoga hech qachon qo'yilmaydi.
 val demo = project.findProperty("baraka.demo") == "true"
 
+// Yadro va APK ABI'lari: standart — telefonlar (arm64, armv7); emulyator testi `-P baraka.abis=x86_64`.
+val abis: List<String> = (project.findProperty("baraka.abis") as String? ?: "arm64-v8a,armeabi-v7a")
+    .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+require(abis.isNotEmpty()) { "baraka.abis bo'sh: masalan -P baraka.abis=x86_64" }
+
 android {
     namespace = "uz.baraka.oilasi"
     compileSdk = flutter.compileSdkVersion
@@ -50,7 +55,7 @@ android {
         // `--split-per-abi` o'z ABI filtrini qo'yadi — ikkalasi birga bo'lolmaydi.
         if (!project.hasProperty("split-per-abi")) {
             ndk {
-                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+                abiFilters += abis
             }
         }
     }
@@ -99,11 +104,11 @@ val buildRustCore by tasks.registering(Exec::class) {
     workingDir = repoRoot
     environment("ANDROID_NDK_HOME", android.ndkDirectory.absolutePath)
     commandLine(
-        "cargo", "ndk",
-        "-t", "arm64-v8a", "-t", "armeabi-v7a",
-        "-P", "26",
-        "-o", rustJniLibs.absolutePath,
-        "build", "--release", "-p", "baraka-bindings-flutter",
+        listOf("cargo", "ndk") + abis.flatMap { listOf("-t", it) } + listOf(
+            "-P", "26",
+            "-o", rustJniLibs.absolutePath,
+            "build", "--release", "-p", "baraka-bindings-flutter",
+        ),
     )
 }
 
