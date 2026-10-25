@@ -41,9 +41,39 @@ fn ca_params() -> CertificateParams {
     p
 }
 
-/// Android KeyMint `KeyDescription` (soddalashtirilgan, bo'sh AuthorizationList'lar bilan).
+/// Sandbox `rootOfTrust`: `(deviceLocked, verifiedBootState)`; `None` — kengaytmada yo'q.
+pub type SandboxRootOfTrust = Option<(bool, u8)>;
+
+/// Haqiqiy qulflangan, tekshirilgan yuklashli qurilma (`Verified`, `deviceLocked = true`).
+pub const ROT_VERIFIED: SandboxRootOfTrust = Some((true, 0));
+
+/// Android KeyMint `KeyDescription` (soddalashtirilgan): `hardwareEnforced` da faqat `rootOfTrust`.
 pub fn key_description_der(level: SecurityLevel, challenge: &[u8]) -> Vec<u8> {
+    key_description_der_with(level, challenge, ROT_VERIFIED)
+}
+
+/// `rootOfTrust` ni tanlab (testlar: ochiq bootloader, RoT'siz).
+pub fn key_description_der_with(
+    level: SecurityLevel,
+    challenge: &[u8],
+    rot: SandboxRootOfTrust,
+) -> Vec<u8> {
     let lvl = level as u8;
+    let hw = match rot {
+        Some((locked, state)) => vec![Tlv::constructed(
+            0xBF_85_40,
+            vec![Tlv::constructed(
+                0x30,
+                vec![
+                    Tlv::primitive(0x04, vec![0; 32]), // verifiedBootKey
+                    Tlv::primitive(0x01, vec![if locked { 0xFF } else { 0x00 }]),
+                    Tlv::primitive(0x0A, vec![state]),
+                    Tlv::primitive(0x04, vec![0; 32]), // verifiedBootHash
+                ],
+            )],
+        )],
+        None => vec![],
+    };
     Tlv::constructed(
         0x30,
         vec![
@@ -54,7 +84,7 @@ pub fn key_description_der(level: SecurityLevel, challenge: &[u8]) -> Vec<u8> {
             Tlv::primitive(0x04, challenge.to_vec()),
             Tlv::primitive(0x04, vec![]),
             Tlv::constructed(0x30, vec![]),
-            Tlv::constructed(0x30, vec![]),
+            Tlv::constructed(0x30, hw),
         ],
     )
     .to_bytes()
@@ -108,6 +138,16 @@ impl SandboxAttestationCa {
         level: SecurityLevel,
         challenge: &[u8],
     ) -> Result<SoftDeviceKey, PqLinkError> {
+        self.issue_device_with(level, challenge, ROT_VERIFIED)
+    }
+
+    /// `rootOfTrust` ni tanlab (testlar).
+    pub fn issue_device_with(
+        &self,
+        level: SecurityLevel,
+        challenge: &[u8],
+        rot: SandboxRootOfTrust,
+    ) -> Result<SoftDeviceKey, PqLinkError> {
         let leaf_key = KeyPair::generate_for(&PKCS_ECDSA_P256_SHA256).map_err(err)?;
         let mut p = CertificateParams::default();
         let mut dn = DistinguishedName::new();
@@ -118,7 +158,7 @@ impl SandboxAttestationCa {
         p.key_usages = vec![KeyUsagePurpose::DigitalSignature];
         p.custom_extensions = vec![CustomExtension::from_oid_content(
             KEY_DESCRIPTION_OID,
-            key_description_der(level, challenge),
+            key_description_der_with(level, challenge, rot),
         )];
         let issuer = Issuer::new(ca_params(), &self.key);
         let leaf = p.signed_by(&leaf_key, &issuer).map_err(err)?;
@@ -223,6 +263,7 @@ mod tests {
         assert!(verify_chain(&tee.cert_chain(), &ca.anchors().unwrap(), &pol, now()).is_err());
         let relaxed = AttestationPolicy {
             min_security_level: SecurityLevel::TrustedEnvironment,
+            ..AttestationPolicy::default()
         };
         assert!(verify_chain(&tee.cert_chain(), &ca.anchors().unwrap(), &relaxed, now()).is_ok());
         // Boshqa CA bergan zanjir.
@@ -237,6 +278,71 @@ mod tests {
             now() + 400 * 86_400 * 30
         )
         .is_err());
+    }
+
+    #[test]
+    fn unlocked_or_unverified_boot_rejected() {
+        let ca = SandboxAttestationCa::generate().unwrap();
+        let anchors = ca.anchors().unwrap();
+        let pol = AttestationPolicy::default();
+        for rot in [
+            Some((false, 0)),
+            Some((true, 2)),
+            Some((true, 1)),
+            Some((true, 3)),
+            None,
+        ] {
+            let d = ca
+                .issue_device_with(SecurityLevel::StrongBox, b"", rot)
+                .unwrap();
+            let e = verify_chain(&d.cert_chain(), &anchors, &pol, now()).unwrap_err();
+            assert!(matches!(e, PqLinkError::Attestation(_)), "{rot:?}: {e:?}");
+            // Emulyator sinovi siyosati (RoT talab qilinmaydi).
+            let emu = AttestationPolicy {
+                require_verified_boot: false,
+                ..AttestationPolicy::default()
+            };
+            assert!(verify_chain(&d.cert_chain(), &anchors, &emu, now()).is_ok());
+        }
+    }
+
+    /// Zanjirni uzaytirish: haqiqiy attestatsiyali kalit (TEE, ochiq bootloader) o'zi imzolagan soxta
+    /// leaf (StrongBox, Verified, boshqa challenge) bilan — rad etilishi shart.
+    #[test]
+    fn chain_extension_by_device_key_rejected() {
+        let ca = SandboxAttestationCa::generate().unwrap();
+        let anchors = ca.anchors().unwrap();
+        let real = ca
+            .issue_device_with(SecurityLevel::TrustedEnvironment, b"real", Some((false, 2)))
+            .unwrap();
+        let (pkcs8, chain) = real.to_parts().unwrap();
+        let real_kp = KeyPair::try_from(pkcs8.as_slice()).unwrap();
+        // Haqiqiy leaf'ning subject'i soxta leaf'ning issuer'i bo'ladi.
+        let mut real_params = CertificateParams::default();
+        let mut dn = DistinguishedName::new();
+        dn.push(DnType::CommonName, "Android Keystore Key");
+        real_params.distinguished_name = dn;
+        let fake_kp = KeyPair::generate_for(&PKCS_ECDSA_P256_SHA256).unwrap();
+        let mut p = CertificateParams::default();
+        let mut dn = DistinguishedName::new();
+        dn.push(DnType::CommonName, "Android Keystore Key (fake)");
+        p.distinguished_name = dn;
+        p.not_before = OffsetDateTime::now_utc() - Duration::days(1);
+        p.not_after = OffsetDateTime::now_utc() + Duration::days(30);
+        p.custom_extensions = vec![CustomExtension::from_oid_content(
+            KEY_DESCRIPTION_OID,
+            key_description_der(SecurityLevel::StrongBox, b"forged-nonce"),
+        )];
+        let fake = p
+            .signed_by(&fake_kp, &Issuer::new(real_params, &real_kp))
+            .unwrap();
+        let forged = [vec![fake.der().to_vec()], chain].concat();
+        let lax = AttestationPolicy {
+            min_security_level: SecurityLevel::Software,
+            require_verified_boot: false,
+        };
+        let e = verify_chain(&forged, &anchors, &lax, now()).unwrap_err();
+        assert!(format!("{e:?}").contains("CA emas"), "{e:?}");
     }
 
     #[test]

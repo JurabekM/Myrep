@@ -39,9 +39,16 @@ def key_description(level: int, challenge: bytes) -> bytes:
         + tlv(0x04, challenge)
         + tlv(0x04, b"")
         + tlv(0x30, b"")
-        + tlv(0x30, b"")
+        + tlv(0x30, root_of_trust())
     )
     return tlv(0x30, body)
+
+
+def root_of_trust() -> bytes:
+    """hardwareEnforced.rootOfTrust [704]: Verified, deviceLocked = true (BER teg BF 85 40)."""
+    rot = tlv(0x04, bytes(32)) + tlv(0x01, bytes([0xFF])) + tlv(0x0A, bytes([0x00])) + tlv(0x04, bytes(32))
+    seq = tlv(0x30, rot)
+    return bytes([0xBF, 0x85, 0x40, len(seq)]) + seq
 
 
 def name(cn: str) -> x509.Name:

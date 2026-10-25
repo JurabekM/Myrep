@@ -49,7 +49,19 @@ class InteropTest {
                 Tlv.primitive(0x02, byteArrayOf(0x01, 0x2C)), Tlv.primitive(0x0A, byteArrayOf(level.toByte())),
                 Tlv.primitive(0x02, byteArrayOf(0x01, 0x2C)), Tlv.primitive(0x0A, byteArrayOf(level.toByte())),
                 Tlv.primitive(0x04, "kotlin-interop".toByteArray()), Tlv.primitive(0x04, ByteArray(0)),
-                Tlv.constructed(0x30), Tlv.constructed(0x30),
+                Tlv.constructed(0x30),
+                // hardwareEnforced.rootOfTrust [704]: Verified, deviceLocked = true (server buni talab qiladi).
+                Tlv.constructed(
+                    0x30,
+                    Tlv.constructed(
+                        0xBF8540,
+                        Tlv.constructed(
+                            0x30,
+                            Tlv.primitive(0x04, ByteArray(32)), Tlv.primitive(0x01, byteArrayOf(0xFF.toByte())),
+                            Tlv.primitive(0x0A, byteArrayOf(0)), Tlv.primitive(0x04, ByteArray(32)),
+                        ),
+                    ),
+                ),
             ).encode()
             val now = System.currentTimeMillis()
             val b = X509v3CertificateBuilder(

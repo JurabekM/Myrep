@@ -110,8 +110,13 @@ Server tekshirish tartibi:
 2. AEAD ochiladi (`k_c2s`); `c_finished`;
 3. zanjir: har sertifikat muddati, `issuer == keyingi.subject`, ECDSA-P256-SHA256 imzolari;
    oxirgisi ishonchli ildizning o'zi yoki u imzolagan;
+   **leaf'dan boshqa har bir sertifikat `basicConstraints cA = true` va KeyDescription'siz** —
+   aks holda haqiqiy attestatsiya qilingan kalit (u istalgan baytni imzolay oladi) o'z ostida soxta
+   leaf (soxta daraja, soxta challenge) chiqarib, zanjirni "uzaytirardi";
 4. leaf'da KeyDescription (`1.3.6.1.4.1.11129.2.1.17`): `min(attestationSecurityLevel,
    keyMintSecurityLevel) ≥ siyosat` (production: StrongBox; sandbox sozlanadi);
+   `hardwareEnforced.rootOfTrust` (`[704]`): `verifiedBootState = Verified` va `deviceLocked = true`
+   (`[pqlink] require_verified_boot`, standart `true`; faqat emulyator sinovida `false`);
 5. `device_sig` leaf ochiq kaliti bilan.
 
 `device_id = SHA-256(leaf SubjectPublicKeyInfo DER)`. Har qanday xatoda pending sessiya o'chiriladi.
@@ -133,7 +138,8 @@ AAD   = hdr(tur bilan) ‖ session_id ‖ seq ‖ direction   (0x01 = c2s, 0x02 
   ilova yozuvlari `seq = 1` dan.
 * Qabul qiluvchi faqat `seq == kutilgan` ni qabul qiladi. Takror yoki tartibsiz yozuv —
   `Replay` xatosi, sessiya holati o'zgarmaydi.
-* AEAD xatosi — sessiya darhol yopiladi.
+* AEAD xatosi — yozuv rad etiladi, sessiya **yopilmaydi** va `seq` oshmaydi: `session_id` va `seq`
+  ochiq sarlavhada, ularni ko'rgan begona tomon soxta yozuv bilan sessiyani yopib qo'ymasin.
 * Bir sessiyada so'rovlar ketma-ket (HTTP so'rov → javob).
 
 ## 6. Cheklovlar (server standartlari)
@@ -142,7 +148,8 @@ AAD   = hdr(tur bilan) ‖ session_id ‖ seq ‖ direction   (0x01 = c2s, 0x02 
 |---|---|
 | O'rnatilgan sessiya umri | 15 daqiqa |
 | Yakunlanmagan handshake umri | 60 soniya |
-| Sessiyalar soni chegarasi | 10 000 (muddati o'tganlar har yangi handshake'da tozalanadi) |
+| Sessiyalar soni chegarasi | 10 000 (to'lganda muddati o'tganlar tozalanadi) |
+| Yakunlanmagan handshake'lar | 2 500 — joy yo'q bo'lsa `hello` ML-KEM/ML-DSA hisoblashdan **oldin** rad |
 | Yozuv shifrmatni | ≤ 64 KiB + 16 |
 | Zanjir | ≤ 6 sertifikat, har biri ≤ 8 KiB |
 
@@ -169,8 +176,8 @@ AAD   = hdr(tur bilan) ‖ session_id ‖ seq ‖ direction   (0x01 = c2s, 0x02 
 
 * `TODO(spec):` KeyDescription `attestationChallenge` ni qurilmani ro'yxatdan o'tkazish (enrollment)
   bosqichida server nonce'i bilan bog'lash (M6).
-* `TODO(spec):` Google'ning haqiqiy attestatsiya ildizlari (RSA-4096, ECDSA P-384) va
-  `rootOfTrust`/`verifiedBootState` tekshiruvi — M6; hozir faqat P-256/ECDSA-SHA256 zanjirlari.
+* `TODO(spec):` `verifiedBootState = SelfSigned` (foydalanuvchi kaliti bilan qulflangan maxsus
+  proshivka) — pilot bank siyosati bo'yicha `verifiedBootKey` ruxsat ro'yxati bilan.
 * `TODO(spec):` Server kalitini almashtirish (rotation) va bir nechta pinlangan identifikator.
 * `TODO(spec):` Kotlin client uchun deterministik handshake test vektori (M6 da, tasodifiylikni
   in'ektsiya qiladigan test rejimi bilan).

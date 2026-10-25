@@ -226,6 +226,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         session_ttl_secs: cfg.pqlink.session_ttl_secs,
         attestation: AttestationPolicy {
             min_security_level: cfg.pqlink.min_security_level,
+            require_verified_boot: cfg.pqlink.require_verified_boot,
         },
         ..ServerConfig::default()
     };

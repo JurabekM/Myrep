@@ -374,3 +374,25 @@ PQ Link (gibrid post-kvant) orqali tokenizatsiya, Vault (envelope shifrlash, aud
 EMV-ga o'xshash tap-to-pay (LUK, ARQC/ARPC, CDCVM), Shield (qoidalar + ONNX, p99 < 2 ms),
 emitent emulyatori (ISO 8583), Android SDK va ikki ilova (emulyatorda provisioning/OTP/LUK/biometriya
 sinalgan). Haqiqiy NFC tap — yagona sinalmagan qabul mezoni.
+
+### Xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
+
+PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da tuzatildi:
+
+* **Attestatsiya zanjirini uzaytirish (kritik):** leaf'dan boshqa har bir sertifikat `cA = true` va
+  KeyDescription'siz bo'lishi shart. Test `chain_extension_by_device_key_rejected`.
+* **rootOfTrust:** `verifiedBootState = Verified` va `deviceLocked` talab qilinadi
+  (`[pqlink] require_verified_boot`, emulyatorda `false`). Sandbox CA, Kotlin interop qurilmasi va
+  RSA/P-384 fiksturasi RoT bilan; test `unlocked_or_unverified_boot_rejected`.
+* **PQ Link DoS:** AEAD xatosi sessiyani yopmaydi; `hello` joy tekshiruvi ML-KEM/ML-DSA'dan oldin,
+  yakunlanmagan handshake'lar alohida chegara (2 500). Testlar
+  `tampered_record_rejected_but_session_survives`, `pending_handshake_flood_is_capped`.
+* **Vault provisioning TOCTOU:** hisoblar yozish qulfi ostida qayta tekshiriladi (o'zgargan bo'lsa ID&V
+  qaytadan). Tashlab ketilgan `PENDING_IDV` (challenge muddati o'tgan/bloklangan) limitlarni egallamaydi.
+  Testlar `concurrent_provisioning_respects_device_limit`, `abandoned_pending_tokens_do_not_count`.
+* **Emitent:** pul yechish va avtorizatsiya yozuvi bitta tranzaksiyada (`BEGIN IMMEDIATE`).
+  `TODO(spec):` LUK/ATC iste'moli (Vault) bilan umumiy tranzaksiya — 2-faza P2.3 (PostgreSQL).
+* **Detokenizatsiya auditi:** alohida commit o'rniga iste'mol tranzaksiyasida (`DETOKENIZED_LUK_USED`).
+* PKCS#11 sessiya pool'i va qayta login — 2-faza P2.2 (SoftHSM yuk sinovi) bilan birga.
+
+Tekshiruv: `cargo test --workspace` 143, clippy toza, Kotlin interop, smoke.

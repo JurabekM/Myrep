@@ -88,8 +88,15 @@ pub struct PqLinkConfig {
     pub attestation_roots: Vec<PathBuf>,
     #[serde(default = "default_level")]
     pub min_security_level: SecurityLevel,
+    /// Apparat `rootOfTrust` (Verified + deviceLocked) talab qilinadi. `false` — faqat emulyator sinovi.
+    #[serde(default = "default_true")]
+    pub require_verified_boot: bool,
     #[serde(default = "default_session_ttl")]
     pub session_ttl_secs: i64,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 fn default_level() -> SecurityLevel {
