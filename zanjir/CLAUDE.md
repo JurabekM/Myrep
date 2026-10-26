@@ -38,12 +38,14 @@ zanjir/
   docs/                 # PROMPT, SPEC, PROGRESS, DECISIONS, DEPLOY, RUNBOOK, SECURITY, NORMS_REVIEW
 ```
 
-## Buyruqlar (0-fazada aniqlashtiriladi)
-- Yadro: `cd packages/zanjir_core && dart format --set-exit-if-changed . && dart analyze --fatal-infos && dart test`
-- Coverage: `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage`
-- Ilova: `cd app && flutter analyze && flutter test`
-- Server: `cd server && ruff check . && ruff format --check . && mypy . && pytest`
-- Normalar: `python3 -I tools/check_norms.py norms/` (schema + release gate)
+## Buyruqlar
+Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qayta o'rnatiladi, ADR-0003), Python 3.12 + `uv`.
+- Yadro: `cd packages/zanjir_core && dart format --output=none --set-exit-if-changed . && dart analyze --fatal-infos && dart test`
+- Coverage (1-fazadan): `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage`
+- Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
+- Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest`
+- Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
+- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi.
 
 ## O'zgarmas qoidalar (hech qachon buzilmaydi)
 1. Ilova hech qachon "ishlash xavfsiz" demaydi — faqat **tavsiya**; javobgarlik naryad beruvchi va ish rahbarida. Bu matn UI'da va PDF'da ko'rinadi.

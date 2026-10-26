@@ -1,0 +1,19 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+pubspec_overrides.yaml
+coverage/
+*.iml
+.idea/
+
+# Python
+.ruff_cache/
+
+# Maxfiy ma'lumotlar — hech qachon commit qilinmaydi
+.env
+.env.*
+!.env.example
+key.properties
+*.jks
+*.keystore
+*.pem

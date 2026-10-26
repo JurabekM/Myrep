@@ -1,0 +1,11 @@
+{
+  "@@locale": "uz",
+  "appTitle": "ZANJIR",
+  "@appTitle": { "description": "Ilova nomi" },
+  "homeTitle": "Obyektlar",
+  "@homeTitle": { "description": "Bosh ekran sarlavhasi" },
+  "homeEmpty": "Hozircha obyekt yo'q",
+  "@homeEmpty": { "description": "Obyektlar ro'yxati bo'sh" },
+  "disclaimer": "Ilova faqat tavsiya beradi. Ishga ruxsat va xavfsizlik uchun javobgarlik naryad beruvchi va ish rahbari zimmasida.",
+  "@disclaimer": { "description": "O'zgarmas qoida 1: har doim ko'rinadigan ogohlantirish" }
+}

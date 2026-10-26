@@ -1,0 +1,103 @@
+# ZANJIR CI (zanjir/docs/DECISIONS.md, ADR-0001/0003/0004). Faqat zanjir/ o'zgarganda ishlaydi.
+name: zanjir
+
+on:
+  push:
+    paths: ["zanjir/**", ".github/workflows/zanjir.yml"]
+    # Release: `zanjir-v1.0.0` kabi teg — normalar darvozasi (--release) majburiy.
+    tags: ["zanjir-v*"]
+  pull_request:
+    paths: ["zanjir/**", ".github/workflows/zanjir.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: zanjir-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  FLUTTER_VERSION: "3.47.8"
+
+jobs:
+  core:
+    name: zanjir_core (dart)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/packages/zanjir_core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - run: dart test
+
+  app:
+    name: app (flutter)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze --fatal-infos
+      - run: flutter test
+
+  server:
+    name: server (python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install uv
+      - run: uv sync --locked --python 3.12
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest
+
+  norms:
+    name: norms (schema + release darvozasi)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/tools/norms
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install uv
+      - run: uv sync --locked --python 3.12
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest
+      - name: Normalarni schema bo'yicha tekshirish
+        run: uv run python -I check_norms.py ../../norms
+      - name: Release darvozasi — reviewed_by/reviewed_at bo'sh bo'lsa yiqiladi
+        if: startsWith(github.ref, 'refs/tags/zanjir-v')
+        run: uv run python -I check_norms.py --release ../../norms
