@@ -207,3 +207,17 @@ endi demo ilova tokenni qurilma yo'li orqali oladi (§7) — `required = true` b
 | Merchant `REVIEW00000001`, 25 000 so'm, biometriyasiz | "Telefonda tasdiqlang — Bank karta egasini tasdiqlashni so'radi (REVIEW_STEP_UP)", "Bekor qilish" ko'rinadi (to'lov kutishda) |
 | Hamyon: "To'lovga tayyorlash" → `adb emu finger touch 1` → terminal: qayta tap | MA'QULLANDI, `00 APPROVED_AFTER_REVIEW`, Shield 600 |
 | Server logi | `Q2 REVIEW_STEP_UP` → `00 APPROVED_AFTER_REVIEW`; ochiq PAN 0 |
+
+## 9. Terminal ilovasi: klaviatura (3-faza tayyorgarligi)
+
+Avval ilova ochilishi bilan "Summa" maydoni fokus olib, to'liq QWERTY klaviatura pastdagi holat
+kartasi va sozlamalarni yopardi. Endi:
+
+| Harakat | Kutilgan (`adb shell dumpsys input_method \| grep mInputShown`) |
+|---|---|
+| Ilovani ochish | `mInputShown=false` (boshlang'ich fokus maydonda emas; manifest `stateHidden`) |
+| "Summa" ga teginish | raqamli klaviatura (`inputType=0x2`), "✓" — `ImeAction.Done` |
+| "✓", bo'sh joyga teginish yoki istalgan tugma | klaviatura yopiladi; tugma bitta bosishda ishlaydi |
+| Pastdagi maydon (Merchant ID) | klaviatura ustiga aylanadi, ko'rinib turadi |
+
+Tekshirilgan: Medium_Phone_API_36.0 emulyatori (1080×2400).

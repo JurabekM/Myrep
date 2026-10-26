@@ -926,3 +926,14 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   `WalletStore` saqlaydi, `MpayWallet.renewIfDue` LUK to'ldirishdan oldin.
 * Tekshirildi: unit/vault/e2e (yuqorida, ADR-0022), SQLite va PostgreSQL; `cargo test --workspace` — 236;
   Kotlin ↔ Rust interop (renew bosqichi) o'tdi; wallet-sdk va demo kompilyatsiyasi.
+
+### Terminal ilovasi: klaviatura o'zi ochilmaydi (2026-10-26)
+
+* Muammo (emulyatorda qayta ko'rsatildi): ilova ochilishi bilan "Summa" maydoni fokus olib, to'liq QWERTY
+  klaviatura (`mInputShown=true`) holat kartasi va sozlamalarni yopardi.
+* Tuzatish: manifest `adjustResize|stateHidden`; boshlang'ich fokus ildizga (`focusable`), bo'sh joyga
+  teginish va har tugma klaviaturani yopadi; "Summa" — raqamli klaviatura, barcha maydonlarda
+  `ImeAction.Done`.
+* Tekshirildi (emulyator, `android-testing.md` §9): ochilishda `mInputShown=false`; teginishda raqamli
+  klaviatura (`inputType=0x2`); "✓", bo'sh joy va tugma bosilganda yopiladi, "To'lov qabul qilish" bitta
+  bosishda ishlaydi; pastdagi maydon klaviatura ustiga aylanadi. Hamyon demo'da muammo yo'q edi.
