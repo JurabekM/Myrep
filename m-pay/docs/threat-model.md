@@ -56,7 +56,8 @@ TB4: server ↔ DB (DB ishonchsiz deb qaraladi — faqat shifrmatn).
 | D1 | DoS | Noto'g'ri kriptogramma bilan LUK hisoblagichini "yoqish" | LUK foydalanishi faqat ARQC muvaffaqiyatli tekshirilgandan keyin hisoblanadi | M4 |
 | D2 | DoS | Handshake toshqini (ML-KEM/ML-DSA qimmat) | Sessiyalar soni va TTL; bir vaqtdagi handshake'lar semafori (503), IP / API kaliti / qurilma bo'yicha token bucket (429 + Retry-After) | M2/P1.1 |
 | E1 | Elevation | Terminal kaliti bilan detokenizatsiya | Detokenizatsiya HTTP'da ochilmagan; faqat issuer moduliga beriladigan port | M3 |
-| E2 | Elevation | Muddati o'tgan/to'xtatilgan token bilan to'lov | Issuer token holatini va LUK TTL/limitini har tranzaksiyada tekshiradi | M4 |
+| E2 | Elevation | Muddati o'tgan/to'xtatilgan token bilan to'lov | Issuer token holatini, DPAN muddatini (`54`) va LUK TTL/limitini har tranzaksiyada tekshiradi; LUK token muddatidan oshmaydi (ADR-0022) | M4/P2.7 |
+| E4 | Elevation | O'zgartirilgan hamyon CDCVM'siz katta summa o'tkazadi; o'g'irlangan (qulfi ochiq) telefondan REVIEW to'lov | Emitent CVM chegarasini CVR bo'yicha o'zi tekshiradi (`Q2`; CVR ARQC bilan himoyalangan); REVIEW `step_up` — CDCVM'siz `Q2` (ADR-0022) | P2.7 |
 | E3 | Elevation | Takroriy (replay) tranzaksiya | ATC token bo'yicha qat'iy o'sishi shart; UN terminal tomonidan tasodifiy | M4 |
 | E4 | Tampering | Terminal STAN'ini boshqa tranzaksiya uchun qayta ishlatish; timeout'dan keyingi qayta yuborish noto'g'ri `Q1` beradi | Acquirer `(terminal, STAN, sana)` jadvali: bir xil so'rov — avvalgi javob, boshqa mazmun — `94` (ADR-0010) | P1.2 |
 

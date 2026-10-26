@@ -163,6 +163,10 @@ pub struct TokenProfileDto {
     pub aid: String,
     pub scheme: String,
     pub luks: Vec<LukDto>,
+    /// Shu summadan (tiyin) yuqori tap'da qurilma karta egasini tasdiqlaydi (CDCVM; 2-faza P2.7,
+    /// ADR-0022). Emitent ham tekshiradi (`Q2`). Eski server javobida yo'q — qurilma standartini oladi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cvm_limit_minor: Option<u64>,
 }
 
 impl fmt::Debug for TokenProfileDto {
@@ -244,6 +248,9 @@ impl fmt::Debug for OtpVerifyRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LuksResponse {
     pub luks: Vec<LukDto>,
+    /// Joriy CVM chegarasi — bank siyosatni o'zgartirsa qurilma LUK to'ldirishda yangilaydi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cvm_limit_minor: Option<u64>,
 }
 
 /// Bo'sh so'rov tanasi.
@@ -317,6 +324,7 @@ mod tests {
                     expires_at: 2,
                     max_uses: 10,
                 }],
+                cvm_limit_minor: Some(100_000_000),
             },
             idv: IdvAssessment {
                 decision: IdvDecision::Green,

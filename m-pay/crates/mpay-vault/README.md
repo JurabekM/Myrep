@@ -28,6 +28,7 @@ Token Vault: provisioning, ID&V, LUK, lifecycle, detokenizatsiya va audit.
 cargo test -p mpay-vault
 ```
 
-`tests/vault_flow.rs`: GREEN/YELLOW/RED, OTP lockout/muddat, lifecycle, detokenizatsiya qoidalari
+`tests/vault_flow.rs`: GREEN/YELLOW/RED, OTP lockout/muddat, lifecycle, mahsulot siyosati (karta
+qurilmalari chegarasi `max_devices_per_card`, takroriy karta, LUK token muddatigacha; ADR-0022), detokenizatsiya qoidalari
 (ATC replay, LUK limiti/muddati/noma'lum), DB faylida ochiq PAN/DPAN/LUK yo'qligi, audit
 zanjiri va trigger'lar, qayta ochish (dev-urug').

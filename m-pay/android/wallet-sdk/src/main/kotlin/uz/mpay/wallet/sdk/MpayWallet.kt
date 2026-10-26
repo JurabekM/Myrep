@@ -207,9 +207,11 @@ class MpayWallet private constructor(context: Context) {
 
     fun replenish(): Int {
         val p = store.load() ?: throw IllegalStateException("token yo'q")
-        val luks: List<CardLuk> = withReattest { c().replenish(p.tokenId) }
+        val batch = withReattest { c().replenishBatch(p.tokenId) }
+        val luks: List<CardLuk> = batch.luks
         p.luks.removeAll { it.usesLeft <= 0 || it.expiresAt <= System.currentTimeMillis() / 1000 }
         p.luks.addAll(luks)
+        batch.cvmLimitMinor?.let { p.cvmLimitMinor = it }
         store.save(p)
         emit("LUK to'ldirildi: +${luks.size}")
         return luks.size

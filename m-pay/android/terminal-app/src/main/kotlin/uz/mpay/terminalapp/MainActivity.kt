@@ -258,8 +258,13 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
             Log.i(TAG, "tap: dpan=${tap.dpanMasked} atc=${tap.atc} summa=$amountMinor")
             val r = client().authorize(key(), terminalId.trim(), merchantId.trim(), nextStan(), tap.iccHex())
             Log.i(TAG, "auth: rc=${r.responseCode} rrn=${r.rrn} dpan=${r.dpanMasked}")
-            armedAmountMinor = 0
-            Screen.Result(r)
+            // Q2 (ADR-0022): bank karta egasini tasdiqlashni so'radi — telefonda biometriya, o'sha summa bilan qayta tap.
+            if (r.responseCode == "Q2") {
+                Screen.SeePhone(r.reason)
+            } else {
+                armedAmountMinor = 0
+                Screen.Result(r)
+            }
         } catch (e: TerminalException) {
             if (e.seePhone) Screen.SeePhone(null) else Screen.Error("Karta: ${e.message}")
         } catch (e: Exception) {
@@ -329,7 +334,15 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
             Screen.Idle -> Triple(Color(0xFF1F2633), "Tayyor", listOf("Summani kiriting va \"To'lov qabul qilish\" ni bosing"))
             Screen.Waiting -> Triple(Color(0xFF1C3A5E), "Telefonni yaqinlashtiring", listOf("${amount} so'm"))
             Screen.Processing -> Triple(Color(0xFF1C3A5E), "Ishlanmoqda…", listOf("Server qarori kutilmoqda"))
-            is Screen.SeePhone -> Triple(Color(0xFF5E4A1C), "Telefonda tasdiqlang", listOf("Summa CDCVM chegarasidan yuqori:", "biometriyadan so'ng qayta tekkizing"))
+            is Screen.SeePhone -> Triple(
+                Color(0xFF5E4A1C),
+                "Telefonda tasdiqlang",
+                if (s.masked == null) {
+                    listOf("Summa CDCVM chegarasidan yuqori:", "biometriyadan so'ng qayta tekkizing")
+                } else {
+                    listOf("Bank karta egasini tasdiqlashni so'radi (${s.masked}):", "biometriyadan so'ng qayta tekkizing")
+                },
+            )
             is Screen.Result -> {
                 val r = s.r
                 Triple(

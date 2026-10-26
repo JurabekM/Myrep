@@ -701,3 +701,78 @@ async fn concurrent_same_atc_consumed_once() {
         assert_eq!(consumed, 1, "ATC {atc} faqat bir marta");
     }
 }
+
+fn token_of(out: ProvisionOutcome) -> mpay_vault::TokenProfile {
+    match out {
+        ProvisionOutcome::Active { profile, .. } => profile,
+        _ => panic!("ACTIVE kutilgan"),
+    }
+}
+
+/// 2-faza P2.7 (ADR-0022): karta qurilmalari chegarasi va shu qurilmada takroriy karta.
+#[tokio::test]
+async fn card_device_policy() {
+    let e = env_with(VaultConfig {
+        max_devices_per_card: 2,
+        ..VaultConfig::default()
+    })
+    .await;
+    let p = fpan(10, 7101);
+    let a = token_of(e.vault.provision(req(&p), dev(1)).await.unwrap());
+    // Shu karta shu qurilmada yana — rad (ikki token ma'nosiz, LUK'lar ikkilanadi).
+    assert!(matches!(
+        e.vault.provision(req(&p), dev(1)).await,
+        Err(VaultError::CardAlreadyOnDevice)
+    ));
+    token_of(e.vault.provision(req(&p), dev(2)).await.unwrap());
+    assert!(matches!(
+        e.vault.provision(req(&p), dev(3)).await,
+        Err(VaultError::TooManyDevices)
+    ));
+    // Boshqa karta 3-qurilmada — chegara karta bo'yicha.
+    token_of(
+        e.vault
+            .provision(req(&fpan(10, 7102)), dev(3))
+            .await
+            .unwrap(),
+    );
+    // 1-qurilmadagi token o'chirilsa joy bo'shaydi.
+    e.vault.delete(&a.token_id, "operator:test").await.unwrap();
+    token_of(e.vault.provision(req(&p), dev(3)).await.unwrap());
+
+    // 0 — cheklanmagan.
+    let e = env_with(VaultConfig {
+        max_devices_per_card: 0,
+        ..VaultConfig::default()
+    })
+    .await;
+    for d in 1..=5 {
+        token_of(e.vault.provision(req(&p), dev(d)).await.unwrap());
+    }
+}
+
+/// ADR-0022: LUK token muddatidan keyin yashamaydi; muddati o'tgan tokenga LUK berilmaydi.
+#[tokio::test]
+async fn token_expiry_caps_luks_and_blocks_replenish() {
+    let e = env().await;
+    // Karta shu oy oxirida tugaydi — token muddati ham (karta muddatidan oshmaydi).
+    let now = e.clock.now();
+    let card = CardExpiry::new(now.year() as u16, now.month() as u8).unwrap();
+    // LUK umri 24 soat: oy oxiriga 24 soatdan kam qolgan lahzaga suramiz.
+    e.clock
+        .set(OffsetDateTime::from_unix_timestamp(card.end_unix() - 3_600).unwrap());
+    let r = ProvisionRequest {
+        fpan: fpan(10, 7201),
+        expiry: card,
+        integrity: None,
+    };
+    let prof = token_of(e.vault.provision(r, dev(1)).await.unwrap());
+    assert_eq!(prof.dpan_expiry, card.to_yymm());
+    assert!(prof.luks.iter().all(|l| l.expires_at == card.end_unix()));
+
+    e.clock.advance(Duration::hours(2));
+    assert!(matches!(
+        e.vault.replenish_luks(&prof.token_id, dev(1)).await,
+        Err(VaultError::TokenExpired)
+    ));
+}

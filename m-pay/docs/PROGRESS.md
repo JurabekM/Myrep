@@ -800,3 +800,33 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   attestatsiya tufayli) → OTP → token faol, `no_integrity` → RED.
 * compose (`scripts/compose-test.sh`): 200 provisioning mock token + SoftHSM bilan, xato 0; sinov endi
   yaxlitlik tekshiruvlari sonini Prometheus'dan tasdiqlaydi.
+
+### P2.7 — Mahsulot siyosatlari (2026-10-26)
+
+**Nima qilindi** (ADR-0022; standart qiymatlar — bank tasdiqlashi kerak, `TODO(spec)`)
+
+* **CVM:** `[issuer] cvm_limit_minor` (1 000 000 so'm) — token profilida va LUK to'ldirish javobida
+  qurilmaga beriladi (Rust `mpay-tsim`, Kotlin `CardProfile.cvmLimitMinor` va `WalletStore`); emitent
+  CVR bo'yicha o'zi tekshiradi → `Q2 CVM_REQUIRED` (avval chegara faqat qurilmada edi).
+* **REVIEW:** `review_action = "step_up"` (yangi standart) — CDCVM bo'lsa `00 APPROVED_AFTER_REVIEW`,
+  aks holda `Q2 REVIEW_STEP_UP`; terminal-app `Q2` da "Telefonda tasdiqlang" va qayta tap kutadi.
+* **Token muddati:** avtorizatsiyada DPAN muddati tekshiriladi → `54 TOKEN_EXPIRED` (avval
+  tekshirilmasdi), LUK muddati token muddatidan oshmaydi, muddati o'tgan tokenga LUK yo'q (410);
+  `CardExpiry::end_unix`.
+* **Karta–qurilma:** `[vault] max_devices_per_card` (3) → `409 TOO_MANY_DEVICES`; shu qurilmada
+  takroriy karta → `409 CARD_ALREADY_ON_DEVICE`; qulf ostida qayta sanash (PostgreSQL'da ham).
+* Javob kodlari `54` va `Q2` (ADR-0007), API spetsifikatsiyasi, tahdid modeli (E2, yangi E4).
+
+**Qanday tekshirildi**
+
+* Emitent `iso_flow::product_policies`: chegarada `00`, chegaradan 1 tiyin yuqori `Q2`, CDCVM bilan
+  `00`; REVIEW `step_up`/`approve`/`decline`; muddati o'tgan token `54` (LUK holatidan oldin).
+* Vault: qurilmalar chegarasi, takroriy karta, o'chirilgandan keyin joy bo'shashi, `0` — cheklanmagan;
+  LUK muddati token tugashiga teng, keyin to'ldirish `TokenExpired`.
+* e2e `p2_policy` (2): profil va LUK javobida chegara; "o'zgartirilgan hamyon" (chegarani e'tiborsiz
+  qoldiradi) → emitent `Q2` (ARPC bilan), CDCVM bilan `00`; halol karta o'zi `6986`; HTTP 409 kodlari.
+  `m4_tap_to_pay` REVIEW yangi siyosatga moslandi.
+* `cargo test --workspace` — 216 o'tdi; PostgreSQL (vault + e2e) — 61; clippy, fmt, deny; smoke, demo,
+  Kotlin ↔ Rust interop; Kotlin `AppletTest` (profil chegarasi).
+* Emulyator (TLS + mTLS, virtual NFC, `android-testing.md` §8): `REVIEW…` savdo nuqtasi → terminal
+  "Telefonda tasdiqlang (REVIEW_STEP_UP)" → hamyonda barmoq izi → qayta tap → `00 APPROVED_AFTER_REVIEW`.

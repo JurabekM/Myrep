@@ -16,6 +16,9 @@ pub struct VaultConfig {
     pub token_validity_months: u32,
     /// Bitta qurilmadagi o'chirilmagan tokenlar chegarasi.
     pub max_tokens_per_device: u32,
+    /// Bitta karta tokenlashtirilishi mumkin bo'lgan qurilmalar soni (2-faza P2.7, ADR-0022);
+    /// 0 — cheklanmagan. `TODO(spec):` bank mahsulot siyosati.
+    pub max_devices_per_card: u32,
     pub luk: LukPolicy,
     /// OTP challenge umri (sekund).
     pub otp_ttl_secs: i64,
@@ -29,6 +32,7 @@ impl Default for VaultConfig {
             token_bin: "990077".into(),
             token_validity_months: 36,
             max_tokens_per_device: 10,
+            max_devices_per_card: 3,
             luk: LukPolicy::default(),
             otp_ttl_secs: 300,
             otp_max_attempts: 3,

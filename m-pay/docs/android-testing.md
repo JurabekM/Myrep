@@ -179,3 +179,19 @@ Tartib (2026-10-26 da bajarildi, Medium Phone API 36, HTTP):
 
 Haqiqiy telefonda Play Integrity (`StandardIntegrityManager`) — `TODO(spec)`: bank Play Console va Cloud
 loyihasini bergach (`wallet-sdk` `IntegrityTokenProvider` izohiga qarang).
+
+## 8. REVIEW `step_up` — terminalda `Q2` (2-faza P2.7)
+
+Bank siyosati (ADR-0022): Shield REVIEW'da karta egasi telefonda tasdiqlamagan bo'lsa emitent `Q2`
+qaytaradi, terminal "Telefonda tasdiqlang" holatiga o'tadi va o'sha summa bilan qayta tap kutadi.
+Tartib (2026-10-26 da bajarildi, Medium Phone API 36): §5 dagi TLS + mTLS sandbox, virtual NFC.
+REVIEW'ni barqaror chaqirish uchun server `[shield] engine = "stub"` bilan (`REVIEW…` savdo nuqtasi).
+`[integrity] required = false`: TLS sandbox'da operator endpointlari mTLS talab qiladi, demo ilova esa
+operator sertifikatiga ega emas (OTP §5 dagidek xostdan olinadi).
+
+| Qadam | Natija |
+|---|---|
+| Oddiy tap, 25 000 so'm (`SHOP…`) | MA'QULLANDI, `00 APPROVED` |
+| Merchant `REVIEW00000001`, 25 000 so'm, biometriyasiz | "Telefonda tasdiqlang — Bank karta egasini tasdiqlashni so'radi (REVIEW_STEP_UP)", "Bekor qilish" ko'rinadi (to'lov kutishda) |
+| Hamyon: "To'lovga tayyorlash" → `adb emu finger touch 1` → terminal: qayta tap | MA'QULLANDI, `00 APPROVED_AFTER_REVIEW`, Shield 600 |
+| Server logi | `Q2 REVIEW_STEP_UP` → `00 APPROVED_AFTER_REVIEW`; ochiq PAN 0 |

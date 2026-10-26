@@ -12,6 +12,7 @@ use thiserror::Error;
 pub use codes::{Reason, ResponseCode};
 pub use issuer::{
     validate_request, AccountView, AuthOutcome, Issuer, IssuerConfig, ReviewAction, TestAccount,
+    DEFAULT_CVM_LIMIT_MINOR,
 };
 
 /// Emitent xatolari (faqat xabarni umuman qayta ishlab bo'lmaydigan holatlar; biznes rad etishlar

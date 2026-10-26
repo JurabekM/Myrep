@@ -69,6 +69,17 @@ fn state_of(row: &AnyRow) -> Result<TokenState, VaultError> {
 }
 
 /// Joriy sanaga `months` qo'shadi va karta muddati bilan cheklaydi.
+/// Provisioning paytidagi tokenlar soni (karta va qurilma bo'yicha).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Counts {
+    for_pan: i64,
+    for_device: i64,
+    /// Shu karta shu qurilmada (o'chirilmagan token).
+    same_device: i64,
+    /// Shu karta tokenlashtirilgan boshqa qurilmalar.
+    other_devices: i64,
+}
+
 fn token_expiry(now: OffsetDateTime, months: u32, card: CardExpiry) -> CardExpiry {
     let total = u32::from(now.month() as u8) - 1 + months;
     let year = (now.year() as u32 + total / 12).min(2099) as u16;
@@ -289,20 +300,26 @@ impl Vault {
         pan_fp: &PanFingerprint,
         dev_hex: &str,
         now: i64,
-    ) -> Result<(i64, i64), VaultError>
+    ) -> Result<Counts, VaultError>
     where
         E: sqlx::Executor<'e, Database = Any>,
     {
         let r = sqlx::query(
             "SELECT \
                COALESCE(SUM(CASE WHEN c.pan_fp = $1 THEN 1 ELSE 0 END), 0) AS for_pan, \
-               COALESCE(SUM(CASE WHEN t.device_id = $2 THEN 1 ELSE 0 END), 0) AS for_dev \
+               COALESCE(SUM(CASE WHEN t.device_id = $2 THEN 1 ELSE 0 END), 0) AS for_dev, \
+               COALESCE(SUM(CASE WHEN c.pan_fp = $3 AND t.device_id = $4 THEN 1 ELSE 0 END), 0) AS same_dev, \
+               COUNT(DISTINCT CASE WHEN c.pan_fp = $5 AND t.device_id != $6 THEN t.device_id END) AS other_devices \
              FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id \
-             WHERE (c.pan_fp = $3 OR t.device_id = $4) AND t.state != 'DELETED' \
+             WHERE (c.pan_fp = $7 OR t.device_id = $8) AND t.state != 'DELETED' \
                AND NOT (t.state = 'PENDING_IDV' AND NOT EXISTS ( \
                  SELECT 1 FROM vault_idv_challenges ch WHERE ch.token_id = t.token_id \
-                   AND ch.consumed = 0 AND ch.expires_at > $5 AND ch.attempts < $6))",
+                   AND ch.consumed = 0 AND ch.expires_at > $9 AND ch.attempts < $10))",
         )
+        .bind(pan_fp.0.as_slice())
+        .bind(dev_hex)
+        .bind(pan_fp.0.as_slice())
+        .bind(dev_hex)
         .bind(pan_fp.0.as_slice())
         .bind(dev_hex)
         .bind(pan_fp.0.as_slice())
@@ -311,7 +328,27 @@ impl Vault {
         .bind(self.cfg.otp_max_attempts)
         .fetch_one(exec)
         .await?;
-        Ok((r.try_get("for_pan")?, r.try_get("for_dev")?))
+        Ok(Counts {
+            for_pan: r.try_get("for_pan")?,
+            for_device: r.try_get("for_dev")?,
+            same_device: r.try_get("same_dev")?,
+            other_devices: r.try_get("other_devices")?,
+        })
+    }
+
+    /// Mahsulot siyosati (ADR-0022): qurilmadagi tokenlar, karta qurilmalari, takroriy karta.
+    fn check_limits(&self, c: &Counts) -> Result<(), VaultError> {
+        if c.same_device > 0 {
+            return Err(VaultError::CardAlreadyOnDevice);
+        }
+        if c.for_device >= i64::from(self.cfg.max_tokens_per_device) {
+            return Err(VaultError::TooManyTokens);
+        }
+        let max = self.cfg.max_devices_per_card;
+        if max > 0 && c.other_devices >= i64::from(max) {
+            return Err(VaultError::TooManyDevices);
+        }
+        Ok(())
     }
 
     /// Bitta urinish; `None` — hisoblar ID&V'dan keyin o'zgardi (qayta urinish kerak).
@@ -333,12 +370,11 @@ impl Vault {
         let pan_fp = self.fingerprint(&req.fpan)?;
         let dev_hex = dev.device_id.to_hex();
 
-        let (existing_for_pan, existing_for_device) = self
+        let counts = self
             .token_counts(self.db.pool(), &pan_fp, &dev_hex, now.unix_timestamp())
             .await?;
-        if existing_for_device >= i64::from(self.cfg.max_tokens_per_device) {
-            return Err(VaultError::TooManyTokens);
-        }
+        self.check_limits(&counts)?;
+        let (existing_for_pan, existing_for_device) = (counts.for_pan, counts.for_device);
 
         let idv = self
             .idv
@@ -400,9 +436,7 @@ impl Vault {
                 ],
             )
             .await?;
-        if self.token_counts(&mut *tx, &pan_fp, &dev_hex, ts).await?
-            != (existing_for_pan, existing_for_device)
-        {
+        if self.token_counts(&mut *tx, &pan_fp, &dev_hex, ts).await? != counts {
             tracing::info!(fpan = %req.fpan.masked(), "vault: bir vaqtdagi provisioning — ID&V qaytadan");
             return Ok(None);
         }
@@ -565,17 +599,25 @@ impl Vault {
         count: u32,
         ts: i64,
     ) -> Result<Vec<LukGrant>, VaultError> {
-        let next: i64 = sqlx::query("SELECT next_luk_seq FROM vault_tokens WHERE token_id = $1")
-            .bind(token_id.as_str())
-            .fetch_one(&mut *tx)
-            .await?
-            .try_get("next_luk_seq")?;
+        let row =
+            sqlx::query("SELECT next_luk_seq, dpan_expiry FROM vault_tokens WHERE token_id = $1")
+                .bind(token_id.as_str())
+                .fetch_one(&mut *tx)
+                .await?;
+        let next: i64 = row.try_get("next_luk_seq")?;
+        // ADR-0022: LUK token muddatidan keyin yashamaydi; muddati o'tgan tokenga LUK berilmaydi.
+        let token_end = CardExpiry::parse_yymm(&row.try_get::<String, _>("dpan_expiry")?)
+            .ok_or(VaultError::Db("muddat".into()))?
+            .end_unix();
+        if token_end <= ts {
+            return Err(VaultError::TokenExpired);
+        }
         let first = u32::try_from(next).map_err(|_| VaultError::Db("LUK seq".into()))?;
         let last = first.checked_add(count).ok_or(VaultError::TooManyLuks)?;
         let mk = self
             .scheme
             .token_master_key(self.ks.as_ref(), &self.imk, dpan, psn)?;
-        let expires = ts + self.cfg.luk.ttl_secs as i64;
+        let expires = (ts + self.cfg.luk.ttl_secs as i64).min(token_end);
         let mut out = Vec::with_capacity(count as usize);
         for seq in first..last {
             sqlx::query("INSERT INTO vault_luks (token_id, seq, issued_at, expires_at, max_uses) VALUES ($1, $2, $3, $4, $5)")

@@ -7,6 +7,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import uz.mpay.core.CardLuk
 import uz.mpay.core.CardProfile
+import uz.mpay.core.DEFAULT_CVM_LIMIT_MINOR
 import uz.mpay.core.Hex
 import java.io.File
 import java.security.KeyStore
@@ -39,6 +40,7 @@ class WalletStore(context: Context) {
     fun save(p: CardProfile) {
         val j = JSONObject()
             .put("token_id", p.tokenId).put("dpan", p.dpan).put("expiry", p.expiryYymm).put("psn", p.psn).put("atc", p.atc)
+            .put("cvm", p.cvmLimitMinor)
             .put("luks", JSONArray().apply {
                 p.luks.forEach { put(JSONObject().put("seq", it.seq).put("key", Hex.encode(it.key)).put("exp", it.expiresAt).put("uses", it.usesLeft)) }
             })
@@ -68,6 +70,7 @@ class WalletStore(context: Context) {
                 CardLuk(l.getLong("seq"), Hex.decode(l.getString("key")), l.getLong("exp"), l.getInt("uses"))
             },
             j.getInt("atc"),
+            j.optLong("cvm", DEFAULT_CVM_LIMIT_MINOR),
         )
         cache = p
         return p

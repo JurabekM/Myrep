@@ -8,11 +8,14 @@ trait'lari (`Detokenizer`, `RiskScorer`) orqali ko'radi.
 1. Format: majburiy maydonlar (2, 3, 4, 7, 11, 14, 22, 35, 37, 41, 42, 49, 55), Track 2 ↔ maydon 2/14,
    CID = ARQC, CDOL (`9F02`, `5F2A`) ↔ maydon 4/49.
 2. `Detokenizer::lookup(DPAN, LUK seq)` — noma'lum token `05`.
+2a. Token (DPAN) muddati o'tgan — `54` (oyning oxirigacha amal qiladi; ADR-0022).
 3. LUK noma'lum / muddati o'tgan / limiti tugagan — `Q1`.
 4. ARQC: `IMK → MK_tok → LUK → SK`, constant-time — `Q1` (ARPC berilmaydi).
 5. Token holati ≠ ACTIVE — `05`; `Detokenizer::consume` (ATC replay — `Q1`, ARPC berilmaydi).
 6. FPAN BIN `offline_bins` da — `91`.
-7. Shield: DECLINE — `59`; REVIEW — `review_action` (standart: tasdiq).
+6a. Summa `cvm_limit_minor` dan katta va CVR'da CDCVM bajarilmagan — `Q2` (`CVM_REQUIRED`).
+7. Shield: DECLINE — `59`; REVIEW — `review_action`: `step_up` (standart) — CDCVM bo'lsa tasdiq,
+   aks holda `Q2` (`REVIEW_STEP_UP`); `approve`; `decline` — `05`.
 8. Hisob (PAN barmoq izi bo'yicha) yo'q — `05`; qoldiq yetarli emas — `51` (atomar `UPDATE … WHERE balance >= amount`).
 9. Aks holda `00`.
 
@@ -24,7 +27,8 @@ ARQC to'g'ri bo'lsa javobda `55`: `91` = ARPC ‖ ARC, `8A` = ARC. Har avtorizat
 ```toml
 [issuer]
 offline_bins = ["990013"]
-review_action = "approve"   # yoki "decline" (05)
+review_action = "step_up"   # "approve" yoki "decline" (05)
+cvm_limit_minor = 100000000 # 1 000 000,00 UZS — CDCVM'siz eng katta summa (tokenga ham beriladi)
 
 [[issuer.accounts]]
 pan = "9900121000010014"

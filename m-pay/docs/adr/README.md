@@ -23,5 +23,6 @@
 | [0019](0019-kop-instansiya.md) | Ko'p instansiya: umumiy sessiyalar, nonce'lar, Shield roli | qabul qilingan |
 | [0020](0020-deployment.md) | Deployment: docker-compose, L4 balancer + PROXY protocol, metrikalar, zaxira | qabul qilingan |
 | [0021](0021-play-integrity.md) | Play Integrity: provisioning'da ilova/qurilma yaxlitligi, sessiyaga bog'langan token | qabul qilingan |
+| [0022](0022-mahsulot-siyosatlari.md) | Mahsulot siyosatlari: REVIEW `step_up`, CVM chegarasi (`Q2`), token muddati (`54`), karta–qurilma | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

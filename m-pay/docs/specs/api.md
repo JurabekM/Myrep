@@ -89,6 +89,7 @@ Javob (`data`) — `status` bo'yicha:
   "token_id": "tok_<32 hex>", "dpan": "990077…", "dpan_expiry": "2910", "psn": 0,
   "aid": "F04D50415901", "scheme": "MPAY-AES128-CMAC-V1",
   "luks": [ { "seq": 1, "key": "<32 hex>", "issued_at": 1792, "expires_at": 1793, "max_uses": 10 } ],
+  "cvm_limit_minor": 100000000,
   "idv": { "decision": "GREEN", "score": 100, "reasons": ["STUB_SCENARIO_10"] } }
 
 { "status": "PENDING_IDV", "token_id": "tok_…", "challenge_id": "chl_<32 hex>",
@@ -102,7 +103,11 @@ Javob (`data`) — `status` bo'yicha:
 (maskalangan). SMS fonda yuboriladi — shlyuz sekin bo'lsa ham javob kechikmaydi; yetib kelmasa
 qurilma `/idv/resend` qiladi. Sandbox kanalida yoki emitentda raqam bo'lmasa maydon yo'q (ADR-0016).
 
-Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `IDV_UNAVAILABLE`,
+`cvm_limit_minor` (P2.7, ADR-0022) — shu summadan (tiyin) yuqori tap'da qurilma CDCVM so'raydi; emitent
+ham tekshiradi (`Q2`). LUK to'ldirish javobida (`{"luks": [...], "cvm_limit_minor": …}`) joriy qiymat keladi.
+
+Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `TOO_MANY_DEVICES`,
+`CARD_ALREADY_ON_DEVICE`, `IDV_UNAVAILABLE`,
 `INTEGRITY_REQUIRED` (403), `INTEGRITY_INVALID` (403: imzo, paket, sertifikat, boshqa sessiya, eskirgan —
 sabab faqat server logida), `INTEGRITY_UNAVAILABLE` (503 + `Retry-After`: Google javob bermadi).
 
@@ -181,11 +186,13 @@ Javob:
   "issuer_auth_data": "<ARPC(4) ‖ ARC(2), hex>", "risk_score": 50 }
 ```
 
-`response_code`: `00`, `05`, `51`, `59`, `91`, `Q1` (ADR-0007). `reason`: `APPROVED`,
+`response_code`: `00`, `05`, `51`, `54`, `59`, `91`, `Q1`, `Q2` (ADR-0007, ADR-0022). `Q2` — terminal
+"telefonda tasdiqlang" ko'rsatadi va o'sha summa bilan qayta tap kutadi. `reason`: `APPROVED`,
 `APPROVED_AFTER_REVIEW`, `UNKNOWN_TOKEN`, `TOKEN_NOT_ACTIVE`, `LUK_UNKNOWN`, `LUK_EXPIRED`,
 `LUK_EXHAUSTED`, `ARQC_MISMATCH`, `ATC_REPLAY`, `FIELD_MISMATCH`, `ICC_DATA_MISSING`,
 `UNSUPPORTED_SCHEME`, `ISSUER_OFFLINE`, `RISK_DECLINE`, `RISK_REVIEW`, `ACCOUNT_NOT_FOUND`,
-`CURRENCY_MISMATCH`, `INSUFFICIENT_FUNDS`. `issuer_auth_data` faqat ARQC to'g'ri bo'lganda
+`CURRENCY_MISMATCH`, `INSUFFICIENT_FUNDS`, `TOKEN_EXPIRED` (54), `CVM_REQUIRED` va `REVIEW_STEP_UP`
+(Q2). `issuer_auth_data` faqat ARQC to'g'ri bo'lganda
 (replay'da — yo'q). Xatolar: `BAD_REQUEST` (ICC hex/TLV, Track 2, maydon uzunliklari),
 `ISSUER_ERROR` / `ISSUER_FORMAT` (502).
 
@@ -201,6 +208,8 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `UNAUTHORIZED` / `FORBIDDEN` | 401 / 403 |
 | `TOKEN_NOT_FOUND`, `CHALLENGE_NOT_FOUND`, `NOT_FOUND` | 404 |
 | `INVALID_STATE`, `TOO_MANY_TOKENS`, `TOO_MANY_LUKS` | 409 |
+| `TOO_MANY_DEVICES` (karta `max_devices_per_card` qurilmada), `CARD_ALREADY_ON_DEVICE` (ADR-0022) | 409 |
+| `TOKEN_EXPIRED` (LUK to'ldirish; token muddati o'tgan) | 410 |
 | `DEVICE_MISMATCH` | 403 |
 | `OTP_INVALID` / `OTP_EXPIRED` / `OTP_LOCKED` | 422 / 410 / 423 |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 |

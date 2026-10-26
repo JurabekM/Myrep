@@ -388,7 +388,7 @@ fn luk_dto(g: &LukGrant) -> LukDto {
     }
 }
 
-fn profile_dto(p: &TokenProfile) -> TokenProfileDto {
+fn profile_dto(p: &TokenProfile, cvm_limit_minor: u64) -> TokenProfileDto {
     TokenProfileDto {
         token_id: p.token_id.clone(),
         dpan: Zeroizing::new(p.dpan.expose_digits().to_owned()),
@@ -397,6 +397,7 @@ fn profile_dto(p: &TokenProfile) -> TokenProfileDto {
         aid: p.aid.clone(),
         scheme: p.scheme.clone(),
         luks: p.luks.iter().map(luk_dto).collect(),
+        cvm_limit_minor: Some(cvm_limit_minor),
     }
 }
 
@@ -423,7 +424,7 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
             .await?;
         Ok(match out {
             ProvisionOutcome::Active { profile, idv } => ProvisionResponse::Active {
-                profile: profile_dto(&profile),
+                profile: profile_dto(&profile, st.cvm_limit_minor),
                 idv,
             },
             ProvisionOutcome::PendingIdv {
@@ -623,6 +624,7 @@ async fn idv_verify(
     body: Bytes,
 ) -> Response {
     let vault = s.vault.clone();
+    let cvm_limit = s.cvm_limit_minor;
     sealed(
         &s,
         &headers,
@@ -632,7 +634,7 @@ async fn idv_verify(
             let p = vault
                 .verify_otp(&token_id, &req.challenge_id, &req.otp, device_ctx(&info))
                 .await?;
-            Ok(profile_dto(&p))
+            Ok(profile_dto(&p, cvm_limit))
         },
     )
     .await
@@ -645,11 +647,13 @@ async fn replenish(
     body: Bytes,
 ) -> Response {
     let vault = s.vault.clone();
+    let cvm_limit = s.cvm_limit_minor;
     sealed(&s, &headers, &body, |info, _req: Empty| async move {
         let token_id = parse_token_id(&id)?;
         let luks = vault.replenish_luks(&token_id, device_ctx(&info)).await?;
         Ok(LuksResponse {
             luks: luks.iter().map(luk_dto).collect(),
+            cvm_limit_minor: Some(cvm_limit),
         })
     })
     .await

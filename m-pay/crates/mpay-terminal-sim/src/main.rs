@@ -273,7 +273,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                 card.dpan.masked(),
                 card.luks.len()
             );
-            st.upsert(StoredToken::from_profile(&card));
+            let mut stored = StoredToken::from_profile(&card);
+            stored.cvm_limit_minor = profile.cvm_limit_minor;
+            st.upsert(stored);
             st.save(&cli.wallet)?;
         }
         Cmd::Tap {
@@ -285,7 +287,12 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
         } => {
             let mut st = WalletState::load(&cli.wallet)?;
             let stored = st.token(token_arg(token)?.as_ref())?.clone();
-            let mut card = SoftCard::new(stored.to_profile()?, CardPolicy::default());
+            // CVM chegarasi — bank siyosati (server bergan), bo'lmasa karta standarti.
+            let mut policy = CardPolicy::default();
+            if let Some(l) = stored.cvm_limit_minor {
+                policy.cdcvm_limit_minor = l;
+            }
+            let mut card = SoftCard::new(stored.to_profile()?, policy);
             card.set_cdcvm_verified(*cdcvm);
             let amount = parse_amount(amount)?;
             let tap = {
@@ -301,7 +308,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                 })?
             };
             // ATC va LUK foydalanishi o'zgardi — natijadan qat'i nazar saqlaymiz.
-            st.upsert(StoredToken::from_profile(card.profile()));
+            let mut updated = StoredToken::from_profile(card.profile());
+            updated.cvm_limit_minor = stored.cvm_limit_minor;
+            st.upsert(updated);
             st.save(&cli.wallet)?;
             let stan = next_terminal_stan(&cli.sandbox, tid)?;
             println!("Tap: {} ATC={}", tap.dpan_masked, tap.atc);
@@ -346,6 +355,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
             let mut w = connected_wallet(&c, &st).await?;
             let r = w.replenish(&stored.token_id).await?;
             stored.add_luks(&r.luks);
+            if r.cvm_limit_minor.is_some() {
+                stored.cvm_limit_minor = r.cvm_limit_minor;
+            }
             println!("{} ta yangi LUK", r.luks.len());
             st.upsert(stored);
             st.save(&cli.wallet)?;

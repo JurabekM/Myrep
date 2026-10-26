@@ -24,6 +24,9 @@ sealed class ProvisionResult {
     class Declined(val idv: Idv) : ProvisionResult()
 }
 
+/** `POST /v1/tokens/{id}/luks` javobi. */
+class LukBatch(val luks: List<CardLuk>, val cvmLimitMinor: Long?)
+
 /** Terminal avtorizatsiyasi natijasi. */
 data class AuthResult(
     val approved: Boolean,
@@ -198,6 +201,7 @@ class MpayClient(
         psn = d.getInt("psn"),
         luks = luks(d.getJSONArray("luks")),
         atc = 0,
+        cvmLimitMinor = d.optLong("cvm_limit_minor", DEFAULT_CVM_LIMIT_MINOR),
     )
 
     /** P2.6: provisioning `requestHash` — joriy PQ Link sessiyasiga bog'langan ([Integrity]). */
@@ -230,7 +234,13 @@ class MpayClient(
     fun resendOtp(tokenId: String, challengeId: String): String =
         sealed("/v1/tokens/$tokenId/idv/resend", JSONObject().put("challenge_id", challengeId)).getString("otp_sent_to")
 
-    fun replenish(tokenId: String): List<CardLuk> = luks(sealed("/v1/tokens/$tokenId/luks", JSONObject()).getJSONArray("luks"))
+    fun replenish(tokenId: String): List<CardLuk> = replenishBatch(tokenId).luks
+
+    /** LUK to'ldirish + joriy CVM chegarasi (bank siyosatni o'zgartirsa qurilma yangilaydi; ADR-0022). */
+    fun replenishBatch(tokenId: String): LukBatch {
+        val d = sealed("/v1/tokens/$tokenId/luks", JSONObject())
+        return LukBatch(luks(d.getJSONArray("luks")), if (d.has("cvm_limit_minor")) d.getLong("cvm_limit_minor") else null)
+    }
 
     /**
      * Sandbox: Play Integrity o'rnida mock token (`[integrity] mode = "mock"`, operator kaliti).

@@ -20,6 +20,12 @@ pub enum VaultError {
     TooManyTokens,
     #[error("faol LUK'lar limiti to'ldi")]
     TooManyLuks,
+    #[error("karta ruxsat etilgan sondagi qurilmada tokenlashtirilgan")]
+    TooManyDevices,
+    #[error("bu karta shu qurilmada allaqachon tokenlashtirilgan")]
+    CardAlreadyOnDevice,
+    #[error("token muddati o'tgan")]
+    TokenExpired,
     #[error("ID&V rad etdi")]
     IdvDeclined,
     #[error("ID&V xizmati javob bermadi: {0}")]
@@ -52,6 +58,9 @@ impl VaultError {
             Self::DeviceMismatch => "DEVICE_MISMATCH",
             Self::TooManyTokens => "TOO_MANY_TOKENS",
             Self::TooManyLuks => "TOO_MANY_LUKS",
+            Self::TooManyDevices => "TOO_MANY_DEVICES",
+            Self::CardAlreadyOnDevice => "CARD_ALREADY_ON_DEVICE",
+            Self::TokenExpired => "TOKEN_EXPIRED",
             Self::IdvDeclined => "IDV_DECLINED",
             Self::IdvUnavailable(_) => "IDV_UNAVAILABLE",
             Self::ChallengeNotFound => "CHALLENGE_NOT_FOUND",

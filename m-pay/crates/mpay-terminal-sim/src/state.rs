@@ -28,6 +28,9 @@ pub struct StoredToken {
     pub psn: u8,
     pub atc: u16,
     pub luks: Vec<StoredLuk>,
+    /// Server bergan CVM chegarasi (ADR-0022); eski fayllarda yo'q — karta standarti.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cvm_limit_minor: Option<u64>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -112,6 +115,7 @@ impl StoredToken {
             dpan_expiry: p.expiry.to_yymm(),
             psn: p.psn,
             atc: p.atc,
+            cvm_limit_minor: None,
             luks: p
                 .luks
                 .iter()

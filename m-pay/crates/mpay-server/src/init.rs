@@ -266,6 +266,8 @@ reattest_after_days = 90
 token_bin = "990077"
 token_validity_months = 36
 max_tokens_per_device = 10
+# Bitta karta nechta qurilmada tokenlashtirilishi mumkin (0 — cheklanmagan); shu qurilmada takror — 409.
+max_devices_per_card = 3
 otp_ttl_secs = 300
 otp_max_attempts = 3
 
@@ -325,7 +327,12 @@ mock_key = "{INTEGRITY_MOCK_KEY_FILE}"
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]
 offline_bins = ["990013"]
-review_action = "approve"
+# Mahsulot siyosati (2-faza P2.7, ADR-0022). `TODO(spec):` qiymatlarni bank tasdiqlaydi.
+# Shield REVIEW: "step_up" — CDCVM (biometriya) bo'lsa tasdiq, bo'lmasa Q2 (telefonda tasdiqlab qayta tap);
+# "approve" — tasdiq; "decline" — 05.
+review_action = "step_up"
+# Shu summadan (tiyin) yuqori tap faqat CDCVM bilan (aks holda Q2); qiymat tokenga ham beriladi.
+cvm_limit_minor = 100000000      # 1 000 000,00 UZS
 {accounts}
 [auth]
 # TLS bilan: operator/terminal so'rovlari mTLS sertifikatini talab qiladi (CN = kalit id).

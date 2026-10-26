@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use mpay_common::clock::SystemClock;
+use mpay_common::clock::{Clock, ManualClock};
 use mpay_common::emv::{self, tag, EmvDate, Iad, TerminalData, Track2};
 use mpay_common::iso8583::{IsoMessage, Mti};
 use mpay_common::ports::SecurityLevel;
@@ -27,6 +27,15 @@ struct Env {
 }
 
 async fn env() -> Env {
+    env_with(
+        IssuerConfig::default(),
+        Arc::new(ManualClock::new(time::OffsetDateTime::now_utc())),
+    )
+    .await
+}
+
+/// `cfg` — emitent siyosati (hisoblar qo'shiladi), `clock` — vault va emitent uchun umumiy soat.
+async fn env_with(cfg: IssuerConfig, clock: Arc<ManualClock>) -> Env {
     let dir = tempfile::tempdir().unwrap();
     let db = mpay_vault::db::Db::open_sqlite(&dir.path().join("i.db"))
         .await
@@ -42,7 +51,7 @@ async fn env() -> Env {
             ks.clone(),
             scheme.clone(),
             shield.clone(),
-            Arc::new(SystemClock),
+            clock.clone(),
             VaultConfig::default(),
         )
         .await
@@ -72,15 +81,15 @@ async fn env() -> Env {
         scheme,
         Arc::new(VaultDetokenizer::new(vault, "issuer")),
         shield,
-        Arc::new(SystemClock),
+        clock,
         IssuerConfig {
             accounts: vec![TestAccount {
                 pan: fpan.expose_digits().into(),
-                balance_minor: 1_000_000,
+                balance_minor: 1_000_000_000,
                 label: "t".into(),
                 phone: None,
             }],
-            ..IssuerConfig::default()
+            ..cfg
         },
     )
     .await
@@ -96,6 +105,11 @@ async fn env() -> Env {
 
 /// To'g'ri `0100` (ARQC haqiqiy LUK bilan hisoblangan).
 fn valid_0100(e: &Env, atc: u16, amount: u64) -> IsoMessage {
+    valid_0100_with(e, atc, amount, 0, "SHOP0000000001 ")
+}
+
+/// `cvr` — IAD ichidagi CVR (CDCVM bitlari, ARQC bilan himoyalangan), `merchant` — 15 belgi.
+fn valid_0100_with(e: &Env, atc: u16, amount: u64, cvr: u8, merchant: &str) -> IsoMessage {
     let s = MpayAes128CmacV1;
     let luk = s
         .luk_from_imk(
@@ -120,7 +134,7 @@ fn valid_0100(e: &Env, atc: u16, amount: u64) -> IsoMessage {
     let iad = Iad {
         scheme_id: 1,
         luk_seq: 1,
-        cvr: 0,
+        cvr,
     };
     let arqc = s.arqc(
         &s.session_key(&luk, atc),
@@ -151,7 +165,7 @@ fn valid_0100(e: &Env, atc: u16, amount: u64) -> IsoMessage {
         .unwrap();
     m.set_str(37, "629612000001").unwrap();
     m.set_str(41, "TERM0001").unwrap();
-    m.set_str(42, "SHOP0000000001 ").unwrap();
+    m.set_str(42, merchant).unwrap();
     m.set_num(49, 860).unwrap();
     m.set(55, tlv::encode_all(&icc)).unwrap();
     m
@@ -273,4 +287,77 @@ async fn phone_follows_config_and_can_be_cleared() {
         .is_err());
     e.issuer.set_phone(&fpan, None).await.unwrap();
     assert_eq!(e.issuer.contact_phone(&fpan).await.unwrap(), None);
+}
+
+/// 2-faza P2.7 (ADR-0022): CVM chegarasi emitentda — o'zgartirilgan hamyon biometriyasiz katta summa
+/// o'tkazolmaydi; Shield REVIEW + `step_up`; muddati o'tgan token — `54`.
+#[tokio::test]
+async fn product_policies() {
+    let clock = Arc::new(ManualClock::new(time::OffsetDateTime::now_utc()));
+    let e = env_with(
+        IssuerConfig {
+            cvm_limit_minor: 50_000,
+            ..IssuerConfig::default()
+        },
+        clock.clone(),
+    )
+    .await;
+    let cdcvm = emv::cvr::CDCVM_PERFORMED;
+    let shop = "SHOP0000000001 ";
+    assert_eq!(
+        code(&e, &valid_0100_with(&e, 1, 50_000, 0, shop)).await,
+        ("00".into(), "APPROVED".into()),
+        "chegarada — CDCVM shart emas"
+    );
+    assert_eq!(
+        code(&e, &valid_0100_with(&e, 2, 50_001, 0, shop)).await,
+        ("Q2".into(), "CVM_REQUIRED".into())
+    );
+    assert_eq!(
+        code(&e, &valid_0100_with(&e, 3, 50_001, cdcvm, shop)).await,
+        ("00".into(), "APPROVED".into())
+    );
+    // Stub Shield: `REVIEW…` savdo nuqtasi — REVIEW; standart siyosat `step_up`.
+    let review = "REVIEW000000001";
+    assert_eq!(
+        code(&e, &valid_0100_with(&e, 4, 1_000, 0, review)).await,
+        ("Q2".into(), "REVIEW_STEP_UP".into())
+    );
+    assert_eq!(
+        code(&e, &valid_0100_with(&e, 5, 1_000, cdcvm, review)).await,
+        ("00".into(), "APPROVED_AFTER_REVIEW".into())
+    );
+
+    // Token muddati (karta 2031-12, token ≤ 36 oy) o'tgach — `54`, LUK holatidan oldin.
+    clock.set(
+        time::OffsetDateTime::from_unix_timestamp(
+            CardExpiry::new(2031, 12).unwrap().end_unix() + 1,
+        )
+        .unwrap(),
+    );
+    assert!(clock.now().year() >= 2029);
+    assert_eq!(
+        code(&e, &valid_0100_with(&e, 6, 1_000, cdcvm, shop)).await,
+        ("54".into(), "TOKEN_EXPIRED".into())
+    );
+
+    // `approve` va `decline` siyosatlari.
+    for (action, want) in [
+        (
+            mpay_issuer::ReviewAction::Approve,
+            ("00", "APPROVED_AFTER_REVIEW"),
+        ),
+        (mpay_issuer::ReviewAction::Decline, ("05", "RISK_REVIEW")),
+    ] {
+        let e = env_with(
+            IssuerConfig {
+                review_action: action,
+                ..IssuerConfig::default()
+            },
+            Arc::new(ManualClock::new(time::OffsetDateTime::now_utc())),
+        )
+        .await;
+        let (c, r) = code(&e, &valid_0100_with(&e, 1, 1_000, 0, review)).await;
+        assert_eq!((c.as_str(), r.as_str()), want, "{action:?}");
+    }
 }

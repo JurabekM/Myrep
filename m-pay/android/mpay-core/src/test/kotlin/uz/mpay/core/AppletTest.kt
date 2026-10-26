@@ -70,4 +70,21 @@ class AppletTest {
         val noProfile = CardApplet({ null }, gate)
         assertArrayEquals(CardApplet.sw(CardApplet.SW_FILE_NOT_FOUND), noProfile.process(byteArrayOf(0, 0xA4.toByte(), 4, 0, 6) + Emv.AID + byteArrayOf(0)))
     }
+
+    /** P2.7 (ADR-0022): CDCVM chegarasi — server bergan profil qiymati (bank siyosati). */
+    @Test
+    fun cvmLimitComesFromProfile() {
+        val date = TerminalData.dateBcd(2026, 10, 24)
+        val p = profile().also { it.cvmLimitMinor = 50_000 }
+        val applet = CardApplet({ p }, Gate())
+        TerminalKernel.tap({ applet.process(it) }, 50_000, date)
+        try {
+            TerminalKernel.tap({ applet.process(it) }, 50_001, date)
+            throw AssertionError("6986 kutilgan")
+        } catch (e: TerminalException) {
+            assertTrue(e.seePhone)
+        }
+        // Profilda maydon bo'lmasa (eski saqlangan profil) — standart 1 000 000 so'm.
+        assertEquals(DEFAULT_CVM_LIMIT_MINOR, profile().cvmLimitMinor)
+    }
 }

@@ -100,7 +100,10 @@ impl From<VaultError> for ApiError {
             VaultError::TokenNotFound | VaultError::ChallengeNotFound => StatusCode::NOT_FOUND,
             VaultError::InvalidState { .. }
             | VaultError::TooManyTokens
-            | VaultError::TooManyLuks => StatusCode::CONFLICT,
+            | VaultError::TooManyLuks
+            | VaultError::TooManyDevices
+            | VaultError::CardAlreadyOnDevice => StatusCode::CONFLICT,
+            VaultError::TokenExpired => StatusCode::GONE,
             VaultError::DeviceMismatch | VaultError::IdvDeclined => StatusCode::FORBIDDEN,
             VaultError::OtpInvalid => StatusCode::UNPROCESSABLE_ENTITY,
             VaultError::OtpExpired => StatusCode::GONE,

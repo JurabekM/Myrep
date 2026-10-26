@@ -50,24 +50,47 @@ fn default_label() -> String {
     "Sandbox hisob".into()
 }
 
-/// REVIEW qarorida nima qilish.
+/// Shield REVIEW qarorida nima qilish (ADR-0022).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum ReviewAction {
-    #[default]
+    /// Tasdiqlanadi (`APPROVED_AFTER_REVIEW`).
     Approve,
+    /// Rad (`05 RISK_REVIEW`).
     Decline,
+    /// Karta egasi qurilmada tasdiqlagan (CDCVM) bo'lsa — tasdiq, aks holda `Q2`: telefonda tasdiqlab
+    /// qayta tap qiladi. Firibgar o'g'irlangan/bloklanmagan telefondan biometriyasiz o'tolmaydi.
+    #[default]
+    StepUp,
 }
 
+/// Qurilmada tasdiqlashsiz (CDCVM'siz) ruxsat etilgan eng katta summa (tiyin): 1 000 000,00 UZS.
+/// `TODO(spec):` bank mahsulot siyosati.
+pub const DEFAULT_CVM_LIMIT_MINOR: u64 = 100_000_000;
+
 /// Emitent sozlamalari.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct IssuerConfig {
     /// Shu BIN'lar "ishlamayotgan emitent" (javob `91`).
     pub offline_bins: Vec<String>,
     pub review_action: ReviewAction,
+    /// Shu summadan yuqori to'lov faqat CDCVM bilan (aks holda `Q2`). Chegara tokenga ham beriladi —
+    /// qurilma o'zi so'raydi; emitent tekshiruvi o'zgartirilgan hamyonga qarshi. 0 — har doim CDCVM.
+    pub cvm_limit_minor: u64,
     /// Ishga tushganda yaratiladigan test hisoblar (mavjudlari o'zgartirilmaydi).
     pub accounts: Vec<TestAccount>,
+}
+
+impl Default for IssuerConfig {
+    fn default() -> Self {
+        Self {
+            offline_bins: Vec::new(),
+            review_action: ReviewAction::default(),
+            cvm_limit_minor: DEFAULT_CVM_LIMIT_MINOR,
+            accounts: Vec::new(),
+        }
+    }
 }
 
 /// Avtorizatsiya natijasi (terminal javobi va audit uchun).
@@ -398,6 +421,16 @@ impl Issuer {
             }
         };
         out.token_id = Some(view.token_id.clone());
+        // ADR-0022: muddati o'tgan token (DPAN muddati oyning oxirigacha amal qiladi) — LUK holatidan
+        // oldin: LUK muddati token muddatidan oshmaydi, aks holda mijoz `Q1` ko'rardi, `54` emas.
+        // DPAN muddati sir emas (track2'da bor), ARQC tekshiruvisiz aytish xavfsiz.
+        let now = self.clock.now();
+        if view
+            .dpan_expiry
+            .is_expired_at(now.year() as u16, now.month() as u8)
+        {
+            return Err(Reason::TokenExpired);
+        }
         match view.luk {
             LukStatus::Valid { .. } => {}
             LukStatus::Unknown => reject(Reason::LukUnknown)?,
@@ -455,6 +488,12 @@ impl Issuer {
             reject(Reason::IssuerOffline)?;
         }
 
+        // CVM siyosati: katta summa faqat qurilmada tasdiqlangan bo'lsa (CVR ARQC bilan himoyalangan).
+        let cdcvm = p.iad.cvr & emv::cvr::CDCVM_PERFORMED != 0;
+        if p.amount > self.cfg.cvm_limit_minor && !cdcvm {
+            reject(Reason::CvmRequired)?;
+        }
+
         let risk = self
             .risk
             .score(&RiskRequest {
@@ -467,7 +506,7 @@ impl Issuer {
                 terminal_id: p.terminal_id.clone(),
                 country: p.td.country,
                 atc: p.atc,
-                cdcvm_performed: p.iad.cvr & emv::cvr::CDCVM_PERFORMED != 0,
+                cdcvm_performed: cdcvm,
                 at: self.clock.now(),
             })
             .await
@@ -480,6 +519,8 @@ impl Issuer {
             RiskDecision::Review => match self.cfg.review_action {
                 ReviewAction::Approve => reviewed = true,
                 ReviewAction::Decline => reject(Reason::RiskReview)?,
+                ReviewAction::StepUp if cdcvm => reviewed = true,
+                ReviewAction::StepUp => reject(Reason::ReviewStepUp)?,
             },
         }
 

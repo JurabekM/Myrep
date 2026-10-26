@@ -81,6 +81,8 @@ pub struct AppState {
     pub integrity: Option<Arc<mpay_integrity::Integrity>>,
     /// Sandbox mock tokenlari chiqaruvchisi (`mode = "mock"`).
     pub integrity_mock: Option<Arc<crate::integrity::SandboxIssuer>>,
+    /// CVM chegarasi (`[issuer] cvm_limit_minor`) — token profilida qurilmaga beriladi (ADR-0022).
+    pub cvm_limit_minor: u64,
 }
 
 impl std::fmt::Debug for AppState {
@@ -495,5 +497,6 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
         integrity,
         integrity_mock,
+        cvm_limit_minor: cfg.issuer.cvm_limit_minor,
     })
 }

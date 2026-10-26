@@ -58,7 +58,7 @@ Pilot bank hali tanlanmagan — 2-faza **virtual muhitda** sinaladi (2026-10-25 
 | P2.4 | Ko'p instansiya: sessiyalar, nonce'lar, Shield ombori umumiy | 2 server + PostgreSQL + Shield roli | ✅ (ADR-0019) |
 | P2.5 | Deployment: docker-compose, monitoring, zaxira nusxa | Docker Desktop | ✅ (ADR-0020; nginx orqali 332 /s, p99 164 ms, API to'xtatilganda xato 0) |
 | P2.6 | Play Integrity | mock tekshiruvchi | ✅ (ADR-0021; Google bilan integratsiya `TODO(spec)`) |
-| P2.7 | Mahsulot siyosatlari: REVIEW, CVM, token muddati, karta–qurilma | konfiguratsiya | reja |
+| P2.7 | Mahsulot siyosatlari: REVIEW, CVM, token muddati, karta–qurilma | konfiguratsiya | ✅ (ADR-0022; qiymatlar bank bilan `TODO(spec)`) |
 
 ## 3-faza — Pilot
 

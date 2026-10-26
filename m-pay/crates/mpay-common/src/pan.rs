@@ -228,6 +228,23 @@ impl CardExpiry {
         }
     }
 
+    /// Muddat tugaydigan lahza (unix, UTC): keyingi oyning 1-kuni 00:00. `TODO(spec):` sxema vaqt
+    /// mintaqasi (hozir UTC; O'zbekiston UTC+5 — mahalliy yarim tunda 5 soat farq).
+    pub fn end_unix(&self) -> i64 {
+        let (y, m) = if self.month == 12 {
+            (i64::from(self.year) + 1, 1)
+        } else {
+            (i64::from(self.year), i64::from(self.month) + 1)
+        };
+        // Kunlar soni (fuqarolik kalendari, Howard Hinnant algoritmi), 1970-01-01 dan.
+        let (yy, mm) = if m <= 2 { (y - 1, m + 9) } else { (y, m - 3) };
+        let era = yy.div_euclid(400);
+        let yoe = yy - era * 400;
+        let doy = (153 * mm + 2) / 5;
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        (era * 146_097 + doe - 719_468) * 86_400
+    }
+
     /// Berilgan sanada (yil, oy) muddat o'tganmi. Karta muddatining oxirgi oyi ichida haliyam amal qiladi.
     pub fn is_expired_at(&self, year: u16, month: u8) -> bool {
         (year, month) > (self.year, self.month)
@@ -238,6 +255,15 @@ impl CardExpiry {
 mod tests {
     use super::*;
     use proptest::prelude::*;
+
+    #[test]
+    fn expiry_end_unix() {
+        // 2029-10 → 2029-11-01T00:00Z; 2029-12 → 2030-01-01; kabisa fevrali → 2028-03-01.
+        assert_eq!(CardExpiry::new(2029, 10).unwrap().end_unix(), 1_888_185_600);
+        assert_eq!(CardExpiry::new(2029, 12).unwrap().end_unix(), 1_893_456_000);
+        assert_eq!(CardExpiry::new(2028, 2).unwrap().end_unix(), 1_835_481_600);
+        assert_eq!(CardExpiry::new(2000, 1).unwrap().end_unix(), 949_363_200);
+    }
 
     #[test]
     fn luhn_known_values() {
