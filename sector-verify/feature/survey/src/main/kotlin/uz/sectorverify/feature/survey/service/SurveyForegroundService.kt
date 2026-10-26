@@ -34,6 +34,7 @@ import uz.sectorverify.location.GnssCollector
 import uz.sectorverify.model.SessionStatus
 import uz.sectorverify.telephony.CellCollector
 import uz.sectorverify.telephony.TrafficGenerator
+import uz.sectorverify.ui.util.LocaleStore
 
 /**
  * §7 SurveyForegroundService: type "location", partial WakeLock, ongoing notification with sample count and
@@ -55,6 +56,11 @@ class SurveyForegroundService : LifecycleService() {
     private var pipeline: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var readyShown = false
+
+    /** Notifications follow the app language, not the system one. */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleStore.wrap(newBase))
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)

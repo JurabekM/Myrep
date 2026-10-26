@@ -40,6 +40,7 @@ import uz.sectorverify.ui.components.PrimaryButton
 import uz.sectorverify.ui.components.SecondaryButton
 import uz.sectorverify.ui.components.SectionTitle
 import uz.sectorverify.ui.theme.LocalSvPalette
+import uz.sectorverify.ui.util.LocaleStore
 
 /** Screen 7 — settings (§8.1). [onLanguageChanged] recreates the activity. */
 @Composable

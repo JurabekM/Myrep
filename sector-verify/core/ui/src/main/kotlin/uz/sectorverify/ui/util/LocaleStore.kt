@@ -1,16 +1,14 @@
-package uz.sectorverify.feature.settings
+package uz.sectorverify.ui.util
 
 import android.content.Context
 import android.content.res.Configuration
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
-import javax.inject.Inject
 
 /**
  * App language (uz/ru/en). DataStore is async, so the chosen tag is mirrored in SharedPreferences that
  * MainActivity reads synchronously in attachBaseContext.
  */
-class LocaleStore @Inject constructor(@ApplicationContext private val context: Context) {
+class LocaleStore(private val context: Context) {
     fun get(): String = prefs(context).getString(KEY, DEFAULT) ?: DEFAULT
 
     fun set(tag: String) {

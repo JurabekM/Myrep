@@ -21,6 +21,7 @@ import uz.sectorverify.model.AnalysisPreset
 import uz.sectorverify.telephony.DeviceCapabilityProbe
 import uz.sectorverify.telephony.SubscriptionSelector
 import uz.sectorverify.telephony.TrafficGenerator
+import uz.sectorverify.ui.util.LocaleStore
 
 /** Editable subset of [AnalysisConfig] shown as text fields. */
 data class Thresholds(
@@ -75,8 +76,8 @@ sealed interface SettingsEvent {
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repo: SettingsRepository,
-    private val localeStore: LocaleStore,
 ) : ViewModel() {
+    private val localeStore = LocaleStore(context)
     val settings: StateFlow<Settings> = repo.settings.stateIn(viewModelScope, SharingStarted.Eagerly, Settings())
     private val _event = MutableStateFlow<SettingsEvent?>(null)
     val event: StateFlow<SettingsEvent?> = _event.asStateFlow()

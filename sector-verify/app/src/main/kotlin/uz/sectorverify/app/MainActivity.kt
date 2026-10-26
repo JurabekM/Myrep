@@ -16,9 +16,9 @@ import javax.inject.Inject
 import uz.sectorverify.data.settings.AppTheme
 import uz.sectorverify.data.settings.Settings
 import uz.sectorverify.data.settings.SettingsRepository
-import uz.sectorverify.feature.settings.LocaleStore
 import uz.sectorverify.ui.theme.SectorVerifyTheme
 import uz.sectorverify.ui.theme.ThemeMode
+import uz.sectorverify.ui.util.LocaleStore
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
