@@ -25,9 +25,12 @@ run() {
   # Repodagi boshlang'ich kirishlar (seeds/<maqsad>) — chuqur holatlarga tez yetish uchun.
   local seeds=()
   [ -d "seeds/$t" ] && seeds=("seeds/$t")
+  # Maqsadga xos lug'at (`<maqsad>.dict`, masalan http_api — JSON), bo'lmasa EMV lug'ati.
+  local dict=emv.dict
+  [ -f "$t.dict" ] && dict="$t.dict"
   # -rss_limit_mb: PQ maqsadlari (ML-KEM/ML-DSA) uchun yetarli, xotira oqishini ushlaydi.
   cargo +nightly fuzz run -O "$t" "corpus/$t" "${seeds[@]}" -- \
-    -max_total_time="$SECS" -dict=emv.dict -rss_limit_mb=2048 -print_final_stats=1 \
+    -max_total_time="$SECS" -dict="$dict" -rss_limit_mb=2048 -print_final_stats=1 \
     > "logs/$t.log" 2>&1 && echo "OK $t" || echo "CRASH $t"
 }
 

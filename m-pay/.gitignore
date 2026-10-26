@@ -27,3 +27,7 @@ __pycache__/
 # compose muhiti (2-faza P2.5): sirlar va zaxiralar
 /deploy/secrets/
 /deploy/backups/
+
+# Jazzer: lokal korpus va crash fayllari (regressiya kirishlari — src/test/resources)
+/android/mpay-core/.cifuzz-corpus/
+/android/mpay-core/crash-*

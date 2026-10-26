@@ -109,6 +109,28 @@ jobs:
       # Yuk nginx orqali, api-1 o'rtada to'xtatiladi, ogohlantirish, zaxira → tiklash → audit.
       - run: bash scripts/compose-test.sh 60 16
 
+  kotlin:
+    name: Kotlin (mpay-core testlari + Jazzer fuzzing)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: mpay-core testlari (Jazzer regressiya rejimi bilan)
+        working-directory: m-pay/android
+        run: ./gradlew --no-daemon :mpay-core:test
+      - name: Jazzer fuzzing (har test o'z maxDuration'i)
+        run: bash scripts/android-fuzz.sh
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazzer-findings
+          path: |
+            m-pay/android/mpay-core/crash-*
+            m-pay/android/mpay-core/build/fuzz-logs
+
   fuzz:
     name: Fuzz (har maqsad 60 s)
     runs-on: ubuntu-24.04

@@ -14,6 +14,7 @@ mpay-pqlink = { path = "../crates/mpay-pqlink", features = ["sandbox-attestation
 mpay-crypto = { path = "../crates/mpay-crypto" }
 mpay-issuer = { path = "../crates/mpay-issuer" }
 mpay-terminal-sim = { path = "../crates/mpay-terminal-sim" }
+mpay-e2e = { path = "../tests/e2e" }
 
 [[bin]]
 name = "tlv_parse"
@@ -60,6 +61,13 @@ bench = false
 [[bin]]
 name = "pqlink_session"
 path = "fuzz_targets/pqlink_session.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "http_api"
+path = "fuzz_targets/http_api.rs"
 test = false
 doc = false
 bench = false

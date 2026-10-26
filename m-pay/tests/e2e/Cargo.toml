@@ -30,6 +30,9 @@ sha2.workspace = true
 clap.workspace = true
 sqlx.workspace = true
 rcgen.workspace = true
+proptest.workspace = true
+axum.workspace = true
+tower.workspace = true
 
 [[bin]]
 name = "mpay-load"

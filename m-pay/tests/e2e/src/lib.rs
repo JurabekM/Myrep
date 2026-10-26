@@ -3,6 +3,8 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
+pub mod apifuzz;
+
 use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;

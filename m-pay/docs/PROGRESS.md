@@ -844,3 +844,18 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   karta qo'shiladi, begona hash — 400, `mode = off` — 404) SQLite va PostgreSQL'da; Kotlin ↔ Rust interop
   TLS qismi shu yo'l bilan; emulyatorda TLS + mTLS, `required = true`, operator kaliti bo'sh: `strong` —
   qabul, `no_integrity` — RED (`android-testing.md` §7); `cargo test --workspace` — 217.
+
+## 3-faza tayyorgarligi (bank kerak bo'lmagan ishlar)
+
+### HTTP API fuzzing va Kotlin Jazzer (2026-10-26)
+
+* `tests/e2e/src/apifuzz.rs` — router jarayon ichida; ochiq so'rovlar va haqiqiy PQ Link sessiyasi bilan
+  muhrlangan ixtiyoriy JSON. Uni ishlatadi: cargo-fuzz maqsadi `http_api` (lug'at, seed'lar) va
+  `tests/api_robustness.rs` (proptest, 400 holat + qamrovni tasdiqlovchi aniq test — har `cargo test`).
+* Kotlin: Jazzer 0.30 (JUnit 5, JUnit 4 testlari vintage orqali), 7 ta `@FuzzTest`
+  (`FuzzTests.kt`), `scripts/android-fuzz.sh`; CI'ga `kotlin` job'i (avval Kotlin CI'da umuman yo'q edi,
+  `gradlew` bajariladigan qilindi).
+* **Topilma:** Kotlin `Hex.decode` `+`/`-` belgili satrlarni qabul qilardi (`"-1"` → `0xFF`) — qat'iy hex'ga
+  o'tkazildi, kirishlar regressiya korpusida.
+* Natija (`docs/fuzz-report.md` §5): `http_api` 300 s, ~196 ming yugurish, crash yo'q; Kotlin 7 test,
+  ~26 mln yugurish, tuzatishdan keyin toza. `cargo test --workspace` — 219; interop o'tdi.
