@@ -30,6 +30,7 @@ fun DebugScreen(vm: DebugViewModel = hiltViewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val sites by vm.sites.collectAsStateWithLifecycle()
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+    val pickCsv = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> uri?.let(vm::importPlan) }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -63,6 +64,7 @@ fun DebugScreen(vm: DebugViewModel = hiltViewModel()) {
             },
             modifier = big,
         ) { Text(stringResource(R.string.debug_permissions)) }
+        OutlinedButton(onClick = { pickCsv.launch("*/*") }, modifier = big) { Text(stringResource(R.string.debug_import)) }
         OutlinedButton(onClick = vm::probe, enabled = !ui.probing, modifier = big) { Text(stringResource(R.string.debug_probe)) }
         for (site in sites) {
             Button(onClick = {

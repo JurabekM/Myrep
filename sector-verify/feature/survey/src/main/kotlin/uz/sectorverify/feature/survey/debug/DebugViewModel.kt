@@ -83,6 +83,23 @@ class DebugViewModel @Inject constructor(
         }
     }
 
+    fun importPlan(uri: android.net.Uri) {
+        viewModelScope.launch {
+            val text = context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } ?: return@launch
+            val r = planRepo.importCsv(text)
+            _ui.value = if (r.ok) {
+                _ui.value.copy(messageRes = R.string.debug_imported, messageArg = r.sites.size.toString())
+            } else {
+                _ui.value.copy(
+                    messageRes = R.string.debug_import_errors,
+                    messageArg = r.errors.take(MAX_ERRORS).joinToString("\n") {
+                        it.messageUz()
+                    },
+                )
+            }
+        }
+    }
+
     fun stop() = starter.stop()
 
     fun exportZip() {
@@ -93,6 +110,10 @@ class DebugViewModel @Inject constructor(
             _ui.value = _ui.value.copy(lastZip = zip)
             Share.send(context, zip, "application/zip", "ZIP")
         }
+    }
+
+    private companion object {
+        const val MAX_ERRORS = 5
     }
 
     private fun appVersion(): String = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"

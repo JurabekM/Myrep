@@ -20,4 +20,7 @@
     <string name="debug_export">Export ZIP</string>
     <string name="debug_no_sim">No SIM card</string>
     <string name="debug_no_matching_sim">No SIM matches %1$s</string>
+    <string name="debug_import">Import plan CSV</string>
+    <string name="debug_imported">Imported sites: %1$s</string>
+    <string name="debug_import_errors">CSV errors:\n%1$s</string>
 </resources>

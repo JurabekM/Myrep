@@ -20,4 +20,7 @@
     <string name="debug_export">Экспорт ZIP</string>
     <string name="debug_no_sim">Нет SIM-карты</string>
     <string name="debug_no_matching_sim">Нет SIM для %1$s</string>
+    <string name="debug_import">Импорт плана CSV</string>
+    <string name="debug_imported">Импортировано сайтов: %1$s</string>
+    <string name="debug_import_errors">Ошибки CSV:\n%1$s</string>
 </resources>

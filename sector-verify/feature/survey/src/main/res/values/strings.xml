@@ -20,4 +20,7 @@
     <string name="debug_export">ZIP eksport</string>
     <string name="debug_no_sim">SIM karta yo\'q</string>
     <string name="debug_no_matching_sim">%1$s uchun mos SIM topilmadi</string>
+    <string name="debug_import">Reja CSV import</string>
+    <string name="debug_imported">Import qilindi: %1$s ta sayt</string>
+    <string name="debug_import_errors">CSV xatolari:\n%1$s</string>
 </resources>
