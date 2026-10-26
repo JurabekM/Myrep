@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="survey_channel_name">Измерение</string>
+    <string name="survey_channel_ready">Результат готов</string>
+    <string name="survey_notification_title">Идёт измерение</string>
+    <string name="survey_notification_text">%1$d замеров · покрытие %2$d%%</string>
+    <string name="survey_notification_ready_title">Результат готов</string>
+    <string name="survey_notification_ready_text">Покрытие достаточное — измерение можно завершить</string>
+    <string name="survey_notification_stop">Завершить</string>
+    <string name="debug_title">Отладка: сбор</string>
+    <string name="debug_rate">Частота: %1$.2f Гц</string>
+    <string name="debug_counts">Замеры: %1$d · GNSS: %2$d</string>
+    <string name="debug_visible">Видимые: %1$s</string>
+    <string name="debug_coverage">Покрытие: %1$d%%</string>
+    <string name="debug_caps">Проверка: %1$.2f Гц · RSRP соседей: %2$s · TA: %3$s</string>
+    <string name="debug_permissions">Запросить разрешения</string>
+    <string name="debug_probe">Проверка устройства (60 с)</string>
+    <string name="debug_start">Начать: %1$s</string>
+    <string name="debug_stop">Завершить</string>
+    <string name="debug_export">Экспорт ZIP</string>
+    <string name="debug_no_sim">Нет SIM-карты</string>
+    <string name="debug_no_matching_sim">Нет SIM для %1$s</string>
+</resources>

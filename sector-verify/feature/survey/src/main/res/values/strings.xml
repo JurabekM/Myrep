@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="survey_channel_name">O\'lchov</string>
+    <string name="survey_channel_ready">Natija tayyor</string>
+    <string name="survey_notification_title">O\'lchov davom etmoqda</string>
+    <string name="survey_notification_text">%1$d namuna · qamrov %2$d%%</string>
+    <string name="survey_notification_ready_title">Natija tayyor</string>
+    <string name="survey_notification_ready_text">Qamrov yetarli — o\'lchovni tugatish mumkin</string>
+    <string name="survey_notification_stop">Tugatish</string>
+    <string name="debug_title">Debug: yig\'ish</string>
+    <string name="debug_rate">Chastota: %1$.2f Hz</string>
+    <string name="debug_counts">Namunalar: %1$d · GNSS: %2$d</string>
+    <string name="debug_visible">Ko\'rinayotgan: %1$s</string>
+    <string name="debug_coverage">Qamrov: %1$d%%</string>
+    <string name="debug_caps">Probe: %1$.2f Hz · qo\'shni RSRP: %2$s · TA: %3$s</string>
+    <string name="debug_permissions">Ruxsatlarni so\'rash</string>
+    <string name="debug_probe">Qurilma probe (60 s)</string>
+    <string name="debug_start">Boshlash: %1$s</string>
+    <string name="debug_stop">Tugatish</string>
+    <string name="debug_export">ZIP eksport</string>
+    <string name="debug_no_sim">SIM karta yo\'q</string>
+    <string name="debug_no_matching_sim">%1$s uchun mos SIM topilmadi</string>
+</resources>

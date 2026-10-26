@@ -125,4 +125,18 @@ class RoomRepositoryTest {
         sessions.observeForSite(site.id).first() shouldHaveSize 1
         sessions.observe(id).first()!!.status shouldBe SessionStatus.DONE
     }
+
+    @Test
+    fun exportsSessionZip() = runTest {
+        plans.importCsv(csv)
+        val id = sessions.create(newSession(plans.siteByCode("NAV-1")!!.id))
+        sessions.sink(id).write(listOf(CellSample(1, Rat.LTE, 1300, 141, true, -90.0)), listOf(GnssFix(1, 2, 40.1, 65.3, 4.0)))
+        val dir = java.nio.file.Files.createTempDirectory("sv").toFile()
+        val zip = uz.sectorverify.data.repo.SessionExporter(sessions, plans).export(id, dir, "Ali", null, "{}", byteArrayOf(1))
+        val back = zip.inputStream().use { uz.sectorverify.format.SessionZip.read(it) }
+        back.plan.code shouldBe "NAV-1"
+        back.samples.size shouldBe 1
+        back.meta.engineer shouldBe "Ali"
+        back.reportJson shouldBe "{}"
+    }
 }

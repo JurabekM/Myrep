@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="survey_channel_name">Survey</string>
+    <string name="survey_channel_ready">Result ready</string>
+    <string name="survey_notification_title">Survey in progress</string>
+    <string name="survey_notification_text">%1$d samples · coverage %2$d%%</string>
+    <string name="survey_notification_ready_title">Result ready</string>
+    <string name="survey_notification_ready_text">Coverage is sufficient — you can finish the survey</string>
+    <string name="survey_notification_stop">Finish</string>
+    <string name="debug_title">Debug: collection</string>
+    <string name="debug_rate">Rate: %1$.2f Hz</string>
+    <string name="debug_counts">Samples: %1$d · GNSS: %2$d</string>
+    <string name="debug_visible">Visible: %1$s</string>
+    <string name="debug_coverage">Coverage: %1$d%%</string>
+    <string name="debug_caps">Probe: %1$.2f Hz · neighbour RSRP: %2$s · TA: %3$s</string>
+    <string name="debug_permissions">Request permissions</string>
+    <string name="debug_probe">Device probe (60 s)</string>
+    <string name="debug_start">Start: %1$s</string>
+    <string name="debug_stop">Finish</string>
+    <string name="debug_export">Export ZIP</string>
+    <string name="debug_no_sim">No SIM card</string>
+    <string name="debug_no_matching_sim">No SIM matches %1$s</string>
+</resources>

@@ -15,5 +15,7 @@ dependencies {
     implementation(project(":core:telephony"))
     implementation(project(":core:location"))
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
 }
