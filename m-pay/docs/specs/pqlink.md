@@ -172,12 +172,58 @@ AAD   = hdr(tur bilan) ‖ session_id ‖ seq ‖ direction   (0x01 = c2s, 0x02 
   begona CA, past xavfsizlik darajasi, ko'chirilgan zanjir, ClientFinished takrori, muddatlar, limit.
 * `fuzz/fuzz_targets/pqlink_decode.rs` — dekoderlar va KeyDescription.
 
+## 8a. Kalit almashtirish (1-faza P1.6, ADR-0012)
+
+`GET /v1/pqlink/identity` ixtiyoriy `next` maydoni:
+`{ed25519, mldsa65, fingerprint, endorsement_ed25519, endorsement_mldsa65}`. Tasdiq — joriy
+identifikatorning gibrid imzosi: Ed25519 va ML-DSA-65 (kontekst `mpay-pqlink-v1`) xabar ustidan
+
+```
+"MPAY-PQLINK-V1 identity-rotation" ‖ next_fingerprint (32 bayt)
+```
+
+Qurilma tasdiqqa faqat joriy identifikator pin bo'yicha qabul qilingandan keyin tayanadi va keyingi
+barmoq izini pin to'plamiga qo'shadi. Handshake'ning o'zi o'zgarmaydi (server faqat joriy kalit bilan imzolaydi).
+
+## 8b. Qurilmani ro'yxatdan o'tkazish (1-faza P1.7, ADR-0013)
+
+Yangi qurilma `POST /v1/pqlink/enroll` dan 32 baytli nonce oladi va P-256 kalitini
+`attestationChallenge = nonce` bilan yaratadi. Server handshake'da (attestatsiya va qurilma imzosidan
+keyin) qurilmani reyestrdan qidiradi; yo'q bo'lsa KeyDescription `attestationChallenge` haqiqiy,
+ishlatilmagan va muddati o'tmagan nonce bo'lishi shart (iste'mol qilinadi), aks holda
+`PQLINK_ENROLLMENT`. Ro'yxatdagi qurilma keyin nonce'siz ulanadi.
+
+## 8c. Bekor qilingan identifikatorlar (ADR-0014)
+
+`GET /v1/pqlink/revocations` (sozlanmagan — 404): `{format: "mpay-pqlink-revocations/1", version,
+revoked[], root_ed25519, root_mldsa65, sig_ed25519, sig_mldsa65}`. Imzo — oflayn ildiz kalitining
+gibrid imzosi (kontekst `mpay-pqlink-v1`) xabar ustidan:
+
+```
+"MPAY-PQLINK-V1 revocations" ‖ version (u64 BE) ‖ count (u32 BE) ‖ fp_1 ‖ … ‖ fp_n   (tartiblangan, takrorsiz)
+```
+
+Qurilma ildiz barmoq izini pinlangan qiymat bilan solishtiradi, faqat kattaroq versiyani qabul qiladi
+va bekor qilingan barmoq izlarini rad etadi.
+
+## 8d. Qurilma kalitini almashtirish (ADR-0015)
+
+Attestatsiyasi eskirgan qurilma (`REATTEST_REQUIRED`) sessiya ichida yangi kalit yaratadi
+(challenge = enroll nonce'i) va `POST /v1/devices/rekey` ga zanjir va imzoni yuboradi:
+
+```
+ECDSA-P256-SHA256(new_key, "MPAY-PQLINK-V1 device-rekey" ‖ session_id ‖ old_device_id)
+```
+
+Server tokenlarni yangi qurilmaga ko'chiradi; keyingi handshake yangi kalit bilan.
+
 ## 9. Ochiq savollar
 
-* `TODO(spec):` KeyDescription `attestationChallenge` ni qurilmani ro'yxatdan o'tkazish (enrollment)
-  bosqichida server nonce'i bilan bog'lash (M6).
+* KeyDescription `attestationChallenge` — qurilmani ro'yxatdan o'tkazish nonce'i (§8b, P1.7).
+  Davriy qayta attestatsiya — §8d (ADR-0015).
 * `TODO(spec):` `verifiedBootState = SelfSigned` (foydalanuvchi kaliti bilan qulflangan maxsus
   proshivka) — pilot bank siyosati bo'yicha `verifiedBootKey` ruxsat ro'yxati bilan.
-* `TODO(spec):` Server kalitini almashtirish (rotation) va bir nechta pinlangan identifikator.
+* Server kalitini almashtirish va bir nechta pinlangan identifikator — 1-faza P1.5/P1.6 (§8a).
+  Bekor qilingan identifikatorlar — §8c (ADR-0014).
 * `TODO(spec):` Kotlin client uchun deterministik handshake test vektori (M6 da, tasodifiylikni
   in'ektsiya qiladigan test rejimi bilan).

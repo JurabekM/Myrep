@@ -13,6 +13,8 @@ pub struct ApiError {
     pub status: StatusCode,
     pub code: &'static str,
     pub message: String,
+    /// `Retry-After` (soniya) — faqat 429/503 uchun.
+    pub retry_after: Option<u64>,
 }
 
 impl ApiError {
@@ -21,6 +23,7 @@ impl ApiError {
             status,
             code,
             message: message.into(),
+            retry_after: None,
         }
     }
 
@@ -44,6 +47,26 @@ impl ApiError {
         Self::new(StatusCode::BAD_REQUEST, "BAD_REQUEST", msg)
     }
 
+    /// So'rovlar chegarasi (429) yoki handshake navbati to'la (503).
+    pub fn rate_limited(l: crate::ratelimit::Limited, busy: bool) -> Self {
+        let (status, code, msg) = if busy {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "BUSY",
+                "server band, keyinroq urinib ko'ring",
+            )
+        } else {
+            (
+                StatusCode::TOO_MANY_REQUESTS,
+                "RATE_LIMITED",
+                "so'rovlar chegarasidan oshdi",
+            )
+        };
+        let mut e = Self::new(status, code, msg);
+        e.retry_after = Some(l.retry_after.as_secs_f64().ceil().max(1.0) as u64);
+        e
+    }
+
     pub fn not_found() -> Self {
         Self::new(StatusCode::NOT_FOUND, "NOT_FOUND", "topilmadi")
     }
@@ -59,7 +82,14 @@ impl ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let body = ErrorResponse { error: self.body() };
-        (self.status, Json(body)).into_response()
+        let mut r = (self.status, Json(body)).into_response();
+        if let Some(s) = self.retry_after {
+            r.headers_mut().insert(
+                axum::http::header::RETRY_AFTER,
+                axum::http::HeaderValue::from(s),
+            );
+        }
+        r
     }
 }
 
@@ -86,11 +116,7 @@ impl From<VaultError> for ApiError {
         } else {
             e.to_string()
         };
-        Self {
-            status,
-            code: e.code(),
-            message,
-        }
+        Self::new(status, e.code(), message)
     }
 }
 
@@ -103,6 +129,7 @@ impl From<PqLinkError> for ApiError {
             }
             E::Attestation(_) => (StatusCode::FORBIDDEN, "PQLINK_ATTESTATION"),
             E::BadDeviceSignature | E::BadFinished => (StatusCode::FORBIDDEN, "PQLINK_AUTH"),
+            E::Enrollment(_) => (StatusCode::FORBIDDEN, "PQLINK_ENROLLMENT"),
             E::UnknownSession | E::Decrypt => (StatusCode::UNAUTHORIZED, "PQLINK_SESSION"),
             E::Replay { .. } => (StatusCode::CONFLICT, "PQLINK_REPLAY"),
             E::TooManySessions => (StatusCode::SERVICE_UNAVAILABLE, "PQLINK_BUSY"),
@@ -117,10 +144,6 @@ impl From<PqLinkError> for ApiError {
         } else {
             e.to_string()
         };
-        Self {
-            status,
-            code,
-            message,
-        }
+        Self::new(status, code, message)
     }
 }

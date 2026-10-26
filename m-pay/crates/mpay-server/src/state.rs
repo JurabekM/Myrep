@@ -34,6 +34,8 @@ pub enum BootError {
     Vault(#[from] mpay_vault::VaultError),
     #[error("Issuer: {0}")]
     Issuer(#[from] mpay_issuer::IssuerError),
+    #[error("server migratsiyasi: {0}")]
+    Migrate(#[from] sqlx::migrate::MigrateError),
 }
 
 fn read(path: &Path) -> Result<Vec<u8>, BootError> {
@@ -41,6 +43,14 @@ fn read(path: &Path) -> Result<Vec<u8>, BootError> {
         path: path.display().to_string(),
         msg: e.to_string(),
     })
+}
+
+/// E'lon qilingan keyingi server identifikatori.
+#[derive(Debug, Clone)]
+pub struct NextIdentity {
+    pub identity: mpay_pqlink::ServerIdentity,
+    pub sig_ed25519: [u8; 64],
+    pub sig_mldsa65: Vec<u8>,
 }
 
 /// Ilova holati.
@@ -52,6 +62,17 @@ pub struct AppState {
     pub scheme: Arc<dyn CryptogramScheme>,
     pub clock: Arc<dyn Clock>,
     pub auth: Authenticator,
+    pub limits: crate::ratelimit::RateLimits,
+    pub require_mtls: bool,
+    pub trusted_proxies: Vec<crate::clientip::Cidr>,
+    /// Davriy qayta attestatsiya muddati (soniya); 0 — o'chiq.
+    pub reattest_after_secs: i64,
+    /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
+    pub next_identity: Option<NextIdentity>,
+    /// Bekor qilingan identifikatorlar ro'yxati (tarqatish uchun).
+    pub revocations: Option<mpay_common::api::RevocationsDto>,
+    /// Qurilmani ro'yxatdan o'tkazish (P1.7); `None` — `enrollment = off`.
+    pub enrollment: Option<Arc<crate::enroll::Enrollment>>,
     pub sandbox: bool,
     pub expose_otp: bool,
 }
@@ -62,6 +83,56 @@ impl std::fmt::Debug for AppState {
             .field("keystore", &self.keystore.backend_name())
             .field("sandbox", &self.sandbox)
             .finish_non_exhaustive()
+    }
+}
+
+impl AppState {
+    /// Qurilma attestatsiyasi eskirganmi (ADR-0015). Attestatsiya vaqti handshake'da reyestrdan
+    /// olinib sessiyaga yozilgan — har muhrlangan so'rovda DB'ga murojaat yo'q (yagona SQLite
+    /// ulanishida navbat bo'lmasin) va DB xatosi so'rovni o'tkazib yubormaydi (handshake rad etiladi).
+    pub fn reattest_due(&self, info: &mpay_pqlink::SessionInfo) -> bool {
+        self.reattest_after_secs > 0
+            && info
+                .attested_at
+                .is_some_and(|at| self.clock.unix() - at > self.reattest_after_secs)
+    }
+
+    /// IP chegaralari uchun mijoz manzili (ishonchli proksi ortida — `X-Forwarded-For`).
+    pub fn client_ip(
+        &self,
+        peer: std::net::SocketAddr,
+        headers: &axum::http::HeaderMap,
+    ) -> std::net::IpAddr {
+        let xff: Vec<&str> = headers
+            .get_all("x-forwarded-for")
+            .iter()
+            .filter_map(|v| v.to_str().ok())
+            .collect();
+        crate::clientip::client_ip(peer.ip(), &xff, &self.trusted_proxies)
+    }
+
+    /// API kalitini tekshiradi (rol) va kalit bo'yicha so'rovlar chegarasini qo'llaydi.
+    pub fn caller(
+        &self,
+        headers: &axum::http::HeaderMap,
+        mtls: &crate::auth::Mtls,
+        role: crate::config::Role,
+    ) -> Result<crate::auth::Caller, crate::error::ApiError> {
+        let c = self.auth.authorize(headers, role)?;
+        // mTLS: Bearer kalitning o'zi yetarli emas — sertifikat CN'i kalit ID'siga teng bo'lishi shart.
+        if self.require_mtls && mtls.0.as_deref() != Some(c.id.as_str()) {
+            tracing::warn!(key = %c.id, cert = ?mtls.0, "mTLS: sertifikat yo'q yoki kalitga mos emas");
+            return Err(crate::error::ApiError::new(
+                axum::http::StatusCode::FORBIDDEN,
+                "MTLS_REQUIRED",
+                "mijoz sertifikati kerak (CN = API kaliti ID)",
+            ));
+        }
+        self.limits.api_key(&c.id).map_err(|l| {
+            tracing::warn!(key = %c.id, "rate-limit: API kaliti");
+            crate::error::ApiError::rate_limited(l, false)
+        })?;
+        Ok(c)
     }
 }
 
@@ -123,7 +194,8 @@ pub fn load_anchors(cfg: &Config) -> Result<TrustAnchors, BootError> {
     for p in &cfg.pqlink.attestation_roots {
         let path = cfg.resolve(p);
         let raw = read(&path)?;
-        if raw.starts_with(b"-----BEGIN") {
+        // PEM (boshida izoh qatorlari bo'lishi mumkin) yoki DER.
+        if raw.windows(11).any(|w| w == b"-----BEGIN ") {
             let certs = pem_to_der(&String::from_utf8_lossy(&raw));
             if certs.is_empty() {
                 return Err(BootError::Config(format!(
@@ -209,6 +281,46 @@ pub fn build_shield(cfg: &Config) -> Result<ShieldPorts, BootError> {
     }
 }
 
+/// Bekor qilish ro'yxatini o'qiydi; joriy yoki keyingi identifikator ro'yxatda bo'lsa — ishga tushmaydi.
+fn load_revocations(
+    cfg: &Config,
+    signer: &KeyStoreServerSigner,
+    next: Option<&NextIdentity>,
+) -> Result<Option<mpay_common::api::RevocationsDto>, BootError> {
+    let Some(p) = &cfg.pqlink.revocations else {
+        return Ok(None);
+    };
+    let raw = read(&cfg.resolve(p))?;
+    let dto: mpay_common::api::RevocationsDto = serde_json::from_slice(&raw)
+        .map_err(|e| BootError::Config(format!("pqlink.revocations: {e}")))?;
+    let signed = crate::revocations::from_dto(&dto).map_err(BootError::Config)?;
+    if let Some(rf) = &cfg.pqlink.root_fingerprint {
+        let mut fp = [0u8; 32];
+        hex::decode_to_slice(rf, &mut fp)
+            .map_err(|_| BootError::Config("pqlink.root_fingerprint 64 hex".into()))?;
+        signed
+            .verify(&fp)
+            .map_err(|e| BootError::Config(format!("bekor qilish ro'yxati imzosi: {e}")))?;
+    }
+    let own = mpay_pqlink::ServerSigner::identity(signer).fingerprint();
+    if signed.is_revoked(&own) {
+        return Err(BootError::Config(
+            "joriy PQ Link identifikatori bekor qilingan — kalitni almashtiring".into(),
+        ));
+    }
+    if next.is_some_and(|n| signed.is_revoked(&n.identity.fingerprint())) {
+        return Err(BootError::Config(
+            "pqlink.next identifikatori bekor qilingan".into(),
+        ));
+    }
+    tracing::info!(
+        version = signed.version,
+        count = signed.revoked.len(),
+        "PQ Link: bekor qilish ro'yxati"
+    );
+    Ok(Some(dto))
+}
+
 /// Barcha komponentlarni yig'adi.
 pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let clock: Arc<dyn Clock> = Arc::new(SystemClock);
@@ -216,11 +328,31 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let scheme: Arc<dyn CryptogramScheme> = Arc::new(MpayAes128CmacV1);
 
     let blob = MlDsaSeedBlob::from_bytes(&read(&cfg.resolve(&cfg.pqlink.mldsa_blob))?)?;
-    let signer = Arc::new(KeyStoreServerSigner::new(
-        ks.clone(),
-        KeyLabel::new(KeyLabel::SERVER_ED25519),
-        blob,
-    )?);
+    // Joriy yorliq standart bo'lmasligi mumkin (kalit almashtirishdan keyin) — kalit tayyor bo'lsin.
+    let ed_label = KeyLabel::new(cfg.pqlink.ed25519_label.as_str());
+    ks.ensure_key(&ed_label, mpay_crypto::keystore::KeyKind::Ed25519)
+        .map_err(|e| BootError::KeyStore(e.to_string()))?;
+    let signer = Arc::new(KeyStoreServerSigner::new(ks.clone(), ed_label, blob)?);
+    let next_identity = match &cfg.pqlink.next {
+        Some(n) => {
+            let label = KeyLabel::new(n.ed25519_label.as_str());
+            ks.ensure_key(&label, mpay_crypto::keystore::KeyKind::Ed25519)
+                .map_err(|e| BootError::KeyStore(e.to_string()))?;
+            let nb = MlDsaSeedBlob::from_bytes(&read(&cfg.resolve(&n.mldsa_blob))?)?;
+            let next = KeyStoreServerSigner::new(ks.clone(), label, nb)?;
+            let id = mpay_pqlink::ServerSigner::identity(&next).clone();
+            let (sig_ed25519, sig_mldsa65) =
+                mpay_pqlink::ServerSigner::endorse(signer.as_ref(), &id.fingerprint())?;
+            tracing::info!(next_fp = %hex::encode(id.fingerprint()), "PQ Link: keyingi identifikator e'lon qilingan");
+            Some(NextIdentity {
+                identity: id,
+                sig_ed25519,
+                sig_mldsa65,
+            })
+        }
+        None => None,
+    };
+    let revocations = load_revocations(cfg, signer.as_ref(), next_identity.as_ref())?;
     let anchors = load_anchors(cfg)?;
     let pq_cfg = ServerConfig {
         session_ttl_secs: cfg.pqlink.session_ttl_secs,
@@ -230,8 +362,6 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         },
         ..ServerConfig::default()
     };
-    let pqlink = Arc::new(PqLinkServer::new(signer, anchors, pq_cfg, clock.clone()));
-
     let db_path = cfg.resolve(&cfg.database.path);
     let pool = mpay_vault::db::open_pool_with(
         &format!("sqlite://{}", db_path.display()),
@@ -239,6 +369,26 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         cfg.database.max_connections,
     )
     .await?;
+    crate::dedup::migrate(&pool).await?;
+    let enrollment = match cfg.pqlink.enrollment {
+        crate::config::EnrollmentMode::Required => Some(Arc::new(
+            crate::enroll::Enrollment::new(
+                pool.clone(),
+                clock.clone(),
+                cfg.pqlink.enrollment_nonce_ttl_secs,
+            )
+            .map_err(|e| BootError::KeyStore(e.to_string()))?,
+        )),
+        crate::config::EnrollmentMode::Off => {
+            tracing::warn!("PQ Link: qurilmani ro'yxatdan o'tkazish o'chiq — FAQAT SANDBOX");
+            None
+        }
+    };
+    let mut pq = PqLinkServer::new(signer, anchors, pq_cfg, clock.clone());
+    if let Some(e) = &enrollment {
+        pq = pq.with_enrollment(e.clone());
+    }
+    let pqlink = Arc::new(pq);
     let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(
@@ -279,6 +429,13 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         scheme,
         clock,
         auth: Authenticator::new(&cfg.auth.keys),
+        limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
+        require_mtls: cfg.auth.require_mtls,
+        trusted_proxies: cfg.http.trusted_proxies.clone(),
+        reattest_after_secs: i64::from(cfg.pqlink.reattest_after_days) * 86_400,
+        next_identity,
+        revocations,
+        enrollment,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
     })

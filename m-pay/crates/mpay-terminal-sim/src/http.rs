@@ -38,6 +38,15 @@ impl std::fmt::Debug for ServerClient {
 impl ServerClient {
     /// `base` — masalan `http://127.0.0.1:8080`; `tls_root_pem` — sandbox o'z-o'zini imzolagan sertifikati.
     pub fn new(base: &str, tls_root_pem: Option<&[u8]>) -> Result<Self, WalletError> {
+        Self::with_identity(base, tls_root_pem, None)
+    }
+
+    /// mTLS: `identity` — mijoz sertifikati va kaliti (PEM), operator/terminal uchun.
+    pub fn with_identity(
+        base: &str,
+        tls_root_pem: Option<&[u8]>,
+        identity: Option<(&[u8], &[u8])>,
+    ) -> Result<Self, WalletError> {
         use rustls::pki_types::pem::PemObject;
         use rustls::pki_types::CertificateDer;
         let mut roots = rustls::RootCertStore::empty();
@@ -53,8 +62,20 @@ impl ServerClient {
         let tls = rustls::ClientConfig::builder_with_provider(provider)
             .with_safe_default_protocol_versions()
             .map_err(|e| WalletError::Config(e.to_string()))?
-            .with_root_certificates(roots)
-            .with_no_client_auth();
+            .with_root_certificates(roots);
+        let tls = match identity {
+            Some((cert_pem, key_pem)) => {
+                use rustls::pki_types::PrivateKeyDer;
+                let certs = CertificateDer::pem_slice_iter(cert_pem)
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|e| WalletError::Config(format!("mijoz sertifikati: {e}")))?;
+                let key = PrivateKeyDer::from_pem_slice(key_pem)
+                    .map_err(|e| WalletError::Config(format!("mijoz kaliti: {e}")))?;
+                tls.with_client_auth_cert(certs, key)
+                    .map_err(|e| WalletError::Config(format!("mTLS: {e}")))?
+            }
+            None => tls.with_no_client_auth(),
+        };
         let http = reqwest::Client::builder()
             .use_preconfigured_tls(tls)
             .timeout(std::time::Duration::from_secs(30))
@@ -83,6 +104,17 @@ impl ServerClient {
             return Err(WalletError::Decode("fingerprint mos emas"));
         }
         Ok((id, dto.fingerprint))
+    }
+
+    /// Yangi qurilma uchun bir martalik nonce (P1.7): qurilma kaliti shu challenge bilan yaratiladi.
+    pub async fn enroll_nonce(&self) -> Result<[u8; 32], WalletError> {
+        let v: serde_json::Value = self
+            .post_json("/v1/pqlink/enroll", None, &serde_json::json!({}))
+            .await?;
+        let mut n = [0u8; 32];
+        hex::decode_to_slice(v["nonce"].as_str().unwrap_or_default(), &mut n)
+            .map_err(|_| WalletError::Decode("enroll nonce"))?;
+        Ok(n)
     }
 
     /// PQ Link tanasini yuboradi.

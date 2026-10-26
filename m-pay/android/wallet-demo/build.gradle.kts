@@ -15,6 +15,19 @@ android {
         versionCode = 1
         versionName = "0.1.0-m6"
         buildConfigField("String", "DEFAULT_SERVER", "\"http://10.0.2.2:8080\"")
+        // 1-faza P1.5: server ishonchi build vaqtida (`-Pmpay.serverFingerprints=…`, `-Pmpay.tlsPin=…`,
+        // qiymatlar `mpay-server identity` chiqishidan). Bo'sh bo'lsa — TOFU, faqat sandbox.
+        val fingerprints = (project.findProperty("mpay.serverFingerprints") as String?).orEmpty()
+        val tlsPin = (project.findProperty("mpay.tlsPin") as String?).orEmpty()
+        require(Regex("[0-9a-fA-F,; ]*").matches(fingerprints) && Regex("[0-9a-fA-F]*").matches(tlsPin)) {
+            "mpay.serverFingerprints / mpay.tlsPin faqat hex bo'lishi kerak"
+        }
+        buildConfigField("String", "SERVER_FINGERPRINTS", "\"$fingerprints\"")
+        buildConfigField("String", "TLS_PIN", "\"$tlsPin\"")
+        // ADR-0014: oflayn ildiz barmoq izi (`mpay-server root-keygen`); bo'sh — ro'yxat tekshirilmaydi.
+        val rootFp = (project.findProperty("mpay.rootFingerprint") as String?).orEmpty()
+        require(Regex("([0-9a-fA-F]{64})?").matches(rootFp)) { "mpay.rootFingerprint 64 hex bo'lishi kerak" }
+        buildConfigField("String", "ROOT_FINGERPRINT", "\"$rootFp\"")
     }
 
     buildTypes {

@@ -47,6 +47,52 @@ enum Cmd {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
         config: PathBuf,
     },
+    /// Android `terminal-app` uchun paket (JSON): server pini, mTLS sertifikati va terminal kaliti.
+    /// Faqat `init --tls` sandbox'i uchun; faylda sirlar bor.
+    TerminalBundle {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Terminal API kaliti ID'si (mTLS sertifikati CN'i).
+        #[arg(long, default_value = "terminal-1")]
+        id: String,
+        /// Terminal ulanadigan manzil, masalan `https://192.168.1.10:8443`.
+        #[arg(long)]
+        url: String,
+        #[arg(long, default_value = "terminal-bundle.json")]
+        out: PathBuf,
+    },
+    /// Kalit almashtirish (P1.6): keyingi PQ Link identifikatorini yaratadi (Ed25519 — KeyStore'da,
+    /// ML-DSA-65 — KEK bilan o'ralgan blob) va `[pqlink.next]` qatorlarini chiqaradi.
+    IdentityNext {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Versiya raqami: yorliq `mpay.srv-ed25519.v<N>`, blob `pqlink-mldsa65.v<N>.blob`.
+        #[arg(long)]
+        version: u32,
+    },
+    /// Oflayn ildiz kaliti (ADR-0014): faqat imzolash stansiyasida yarating va saqlang.
+    RootKeygen {
+        #[arg(long)]
+        out: PathBuf,
+    },
+    /// Bekor qilingan server identifikatorlari ro'yxatini ildiz kaliti bilan imzolaydi.
+    Revoke {
+        #[arg(long)]
+        root_key: PathBuf,
+        /// Ro'yxat versiyasi — har safar oldingisidan katta bo'lishi shart.
+        #[arg(long)]
+        version: u64,
+        /// Bekor qilinadigan barmoq izi (hex); bir necha marta.
+        #[arg(long = "fp")]
+        fps: Vec<String>,
+        #[arg(long, default_value = "revocations.json")]
+        out: PathBuf,
+    },
+    /// mTLS mijoz sertifikati barmoq izi (SHA-256, hex) — `[auth] revoked_client_certs` uchun.
+    CertFingerprint {
+        #[arg(long)]
+        cert: PathBuf,
+    },
     /// PQ Link server identifikatorini chiqaradi (qurilmalarda pinlash uchun).
     Identity {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -119,6 +165,130 @@ async fn run(cli: Cli) -> Result<(), String> {
             );
             Ok(())
         }
+        Cmd::TerminalBundle {
+            config,
+            id,
+            url,
+            out,
+        } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let json = mpay_server::init::terminal_bundle(&cfg.base_dir, &id, &url)?;
+            std::fs::write(&out, json.as_bytes()).map_err(|e| format!("{}: {e}", out.display()))?;
+            println!(
+                "Terminal paketi: {} (SIRLAR BOR — import qilingach o'chiring)",
+                out.display()
+            );
+            Ok(())
+        }
+        Cmd::IdentityNext { config, version } => {
+            use mpay_crypto::keystore::{KeyKind, KeyLabel};
+            if version < 2 {
+                return Err("--version 2 yoki undan katta".into());
+            }
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let ks = mpay_server::state::open_keystore(&cfg).map_err(|e| e.to_string())?;
+            let label = format!("mpay.srv-ed25519.v{version}");
+            let blob_name = format!("pqlink-mldsa65.v{version}.blob");
+            let blob_path = cfg.base_dir.join(&blob_name);
+            if blob_path.exists() {
+                return Err(format!("{} allaqachon mavjud", blob_path.display()));
+            }
+            ks.ensure_key(&KeyLabel::new(label.as_str()), KeyKind::Ed25519)
+                .map_err(|e| e.to_string())?;
+            let blob =
+                mpay_pqlink::MlDsaSeedBlob::generate(ks.as_ref(), &KeyLabel::new(KeyLabel::KEK))
+                    .map_err(|e| e.to_string())?;
+            std::fs::write(&blob_path, blob.to_bytes())
+                .map_err(|e| format!("{}: {e}", blob_path.display()))?;
+            let signer =
+                mpay_pqlink::KeyStoreServerSigner::new(ks, KeyLabel::new(label.as_str()), blob)
+                    .map_err(|e| e.to_string())?;
+            let fp = hex::encode(mpay_pqlink::ServerSigner::identity(&signer).fingerprint());
+            println!("Keyingi identifikator: fingerprint {fp}");
+            println!(
+                "1) mpay.toml ga qo'shing va qayta ishga tushiring (qurilmalar tasdiqni oladi):\n"
+            );
+            println!("[pqlink.next]\nmldsa_blob = \"{blob_name}\"\ned25519_label = \"{label}\"\n");
+            println!("2) O'tish: [pqlink] mldsa_blob/ed25519_label ni shu qiymatlarga almashtiring, [pqlink.next] ni o'chiring.");
+            Ok(())
+        }
+        Cmd::RootKeygen { out } => {
+            if out.exists() {
+                return Err(format!("{} allaqachon mavjud", out.display()));
+            }
+            let root = mpay_pqlink::revocation::RootKey::generate().map_err(|e| e.to_string())?;
+            let (e, m) = root.seeds();
+            let json = zeroize::Zeroizing::new(
+                serde_json::json!({
+                    "format": "mpay-root-key/1",
+                    "ed25519_seed": hex::encode(&e[..]),
+                    "mldsa65_seed": hex::encode(&m[..]),
+                })
+                .to_string(),
+            );
+            std::fs::write(&out, json.as_bytes()).map_err(|e| format!("{}: {e}", out.display()))?;
+            let fp = hex::encode(root.identity().map_err(|e| e.to_string())?.fingerprint());
+            println!(
+                "Ildiz kaliti: {} (MAXFIY — oflayn saqlang, serverga qo'ymang)",
+                out.display()
+            );
+            println!("root_fingerprint: {fp}");
+            Ok(())
+        }
+        Cmd::Revoke {
+            root_key,
+            version,
+            fps,
+            out,
+        } => {
+            let raw = zeroize::Zeroizing::new(
+                std::fs::read_to_string(&root_key)
+                    .map_err(|e| format!("{}: {e}", root_key.display()))?,
+            );
+            let j: serde_json::Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+            let seed = |k: &str| -> Result<zeroize::Zeroizing<[u8; 32]>, String> {
+                let mut b = zeroize::Zeroizing::new([0u8; 32]);
+                hex::decode_to_slice(j[k].as_str().unwrap_or_default(), &mut b[..])
+                    .map_err(|_| format!("{k}: 64 hex"))?;
+                Ok(b)
+            };
+            let root = mpay_pqlink::revocation::RootKey::from_seeds(
+                &*seed("ed25519_seed")?,
+                &*seed("mldsa65_seed")?,
+            );
+            let list = fps
+                .iter()
+                .map(|f| {
+                    let mut b = [0u8; 32];
+                    hex::decode_to_slice(f, &mut b)
+                        .map(|()| b)
+                        .map_err(|_| format!("--fp 64 hex: {f}"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let signed = root
+                .sign_revocations(version, &list)
+                .map_err(|e| e.to_string())?;
+            let dto = mpay_server::revocations::to_dto(&signed);
+            std::fs::write(
+                &out,
+                serde_json::to_vec_pretty(&dto).map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| format!("{}: {e}", out.display()))?;
+            println!(
+                "Imzolandi: {} (versiya {}, {} ta). Serverda: [pqlink] revocations = \"{}\"",
+                out.display(),
+                signed.version,
+                signed.revoked.len(),
+                out.file_name()
+                    .map(|f| f.to_string_lossy())
+                    .unwrap_or_default()
+            );
+            Ok(())
+        }
+        Cmd::CertFingerprint { cert } => {
+            println!("{}", mpay_server::auth::cert_fingerprint_pem(&cert)?);
+            Ok(())
+        }
         Cmd::Identity { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
             let st = mpay_server::state::build(&cfg)
@@ -127,6 +297,17 @@ async fn run(cli: Cli) -> Result<(), String> {
             let id = st.pqlink.identity();
             println!("fingerprint: {}", hex::encode(id.fingerprint()));
             println!("ed25519:     {}", hex::encode(id.ed25519));
+            // Hamyon build'i uchun TLS pini (`-Pmpay.tlsPin=`), TLS yoqilgan bo'lsa.
+            if let Some(cert) = &cfg.http.tls_cert {
+                use rustls::pki_types::pem::PemObject;
+                use sha2::Digest;
+                let der = rustls::pki_types::CertificateDer::from_pem_file(cfg.resolve(cert))
+                    .map_err(|e| e.to_string())?;
+                println!(
+                    "tls_pin:     {}",
+                    hex::encode(sha2::Sha256::digest(der.as_ref()))
+                );
+            }
             Ok(())
         }
     }

@@ -34,7 +34,7 @@ class InteropTest {
     private val sandbox = System.getenv("MPAY_SANDBOX_DIR")?.let(::File)
 
     /** Sandbox attestatsiya CA bilan imzolangan test qurilma (Android Keystore o'rnida). */
-    private class SoftDevice(dir: File, level: Int = 2) : DeviceKey {
+    private class SoftDevice(dir: File, level: Int = 2, challenge: ByteArray = "kotlin-interop".toByteArray()) : DeviceKey {
         private val kp = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
         private val chain: List<ByteArray>
 
@@ -48,7 +48,7 @@ class InteropTest {
                 0x30,
                 Tlv.primitive(0x02, byteArrayOf(0x01, 0x2C)), Tlv.primitive(0x0A, byteArrayOf(level.toByte())),
                 Tlv.primitive(0x02, byteArrayOf(0x01, 0x2C)), Tlv.primitive(0x0A, byteArrayOf(level.toByte())),
-                Tlv.primitive(0x04, "kotlin-interop".toByteArray()), Tlv.primitive(0x04, ByteArray(0)),
+                Tlv.primitive(0x04, challenge), Tlv.primitive(0x04, ByteArray(0)),
                 Tlv.constructed(0x30),
                 // hardwareEnforced.rootOfTrust [704]: Verified, deviceLocked = true (server buni talab qiladi).
                 Tlv.constructed(
@@ -97,7 +97,14 @@ class InteropTest {
         println("server fp $fp")
 
         // 1) PQ Link handshake (Kotlin) → Rust server; provisioning.
-        val s = api.connect(identity, SoftDevice(dir))
+        // P1.7: ro'yxatdan o'tmagan qurilma (nonce'siz challenge) — rad.
+        try {
+            MpayClient(url).connect(identity, SoftDevice(dir))
+            throw AssertionError("PQLINK_ENROLLMENT kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("PQLINK_ENROLLMENT", e.code)
+        }
+        val s = api.connect(identity, SoftDevice(dir, challenge = api.enrollNonce()))
         println("PQ Link sessiyasi: $s")
         val pan = demoPan(0)
         val r = api.provision(pan, "3112")
@@ -137,9 +144,23 @@ class InteropTest {
         // 5) LUK to'ldirish.
         assertEquals(5, api.replenish(profile.tokenId).size)
 
+        // 5a) ADR-0015: qurilma kalitini almashtirish (Kotlin imzosi → Rust tekshiradi), token ko'chadi.
+        val newKey = SoftDevice(dir, challenge = api.enrollNonce())
+        val newId = api.rekey(newKey)
+        println("kalit almashtirildi: yangi qurilma ${newId.take(16)}")
+        api.connect(identity, newKey)
+        // Token yangi qurilmaga bog'langan: qurilma tekshiruvidan o'tadi (eskisida — DEVICE_MISMATCH),
+        // keyin faol LUK limiti (2 × partiya) to'lgani uchun TOO_MANY_LUKS.
+        try {
+            api.replenish(profile.tokenId)
+            throw AssertionError("TOO_MANY_LUKS kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("TOO_MANY_LUKS", e.code)
+        }
+
         // 6) O'sha kartani ikkinchi qurilmaga — YELLOW → OTP (Shield dvigateli).
         val api2 = MpayClient(url)
-        api2.connect(identity, SoftDevice(dir))
+        api2.connect(identity, SoftDevice(dir, challenge = api2.enrollNonce()))
         val y = api2.provision(pan, "3112")
         assertTrue("PENDING_IDV kutilgan: $y", y is ProvisionResult.PendingIdv)
         y as ProvisionResult.PendingIdv
@@ -154,5 +175,73 @@ class InteropTest {
         } catch (e: ApiException) {
             assertEquals("PQLINK_ATTESTATION", e.code)
         }
+    }
+
+    /**
+     * 1-faza P1.4: TLS (server pinlangan) + mTLS (`terminal-bundle`) — Rust server `init --tls`.
+     * `MPAY_INTEROP_TLS_URL`, `MPAY_TLS_SANDBOX_DIR`, `MPAY_TERMINAL_BUNDLE`.
+     */
+    @Test
+    fun pinnedTlsAndMtlsAgainstRustServer() {
+        val tlsUrl = System.getenv("MPAY_INTEROP_TLS_URL")
+        val dir = System.getenv("MPAY_TLS_SANDBOX_DIR")?.let(::File)
+        val bundlePath = System.getenv("MPAY_TERMINAL_BUNDLE")
+        assumeTrue("MPAY_INTEROP_TLS_URL o'rnatilmagan — o'tkazib yuborildi", tlsUrl != null && dir != null && bundlePath != null)
+        val bundle = TerminalBundle.parse(File(bundlePath!!).readText())
+        assertEquals("terminal-1", bundle.keyId)
+        val pinOnly = TlsConfig(bundle.serverCertSha256)
+        val mtls = TlsConfig(bundle.serverCertSha256, Pem.keyManager(bundle.clientCertPem, bundle.clientKeyPem))
+
+        // Noto'g'ri pin — TLS ulanishning o'zi rad etiladi.
+        val wrong = bundle.serverCertSha256.copyOf().also { it[0] = (it[0].toInt() xor 1).toByte() }
+        try {
+            MpayClient(tlsUrl!!, tls = TlsConfig(wrong)).terminalPing(bundle.terminalKey)
+            throw AssertionError("pin xatosi kutilgan")
+        } catch (e: javax.net.ssl.SSLException) {
+            println("noto'g'ri pin rad etildi: ${e.javaClass.simpleName}")
+        }
+
+        // Sertifikatsiz — 403 MTLS_REQUIRED; sertifikat bilan — ping o'tadi.
+        try {
+            MpayClient(tlsUrl, tls = pinOnly).terminalPing(bundle.terminalKey)
+            throw AssertionError("MTLS_REQUIRED kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("MTLS_REQUIRED", e.code)
+        }
+        val term = MpayClient(tlsUrl, tls = mtls)
+        assertEquals("terminal-1" to true, term.terminalPing(bundle.terminalKey))
+
+        // P1.6: Rust `identity-next` e'lon qilgan keyingi identifikator — tasdiq Kotlin'da tekshiriladi.
+        val info = MpayClient(tlsUrl, tls = pinOnly).identityInfo()
+        println("keyingi identifikator: ${info.next?.let { Hex.encode(it.fingerprint()).take(16) }} tasdiq=${info.nextEndorsed}")
+        assertTrue("next e'lon qilingan va tasdiqlangan bo'lishi kerak", info.next != null && info.nextEndorsed)
+
+        // ADR-0014: Rust `revoke` imzolagan ro'yxat Kotlin'da ildiz bo'yicha tekshiriladi.
+        val rootFp = System.getenv("MPAY_ROOT_FP")
+        if (rootFp != null) {
+            val rev = Revocations.verify(MpayClient(tlsUrl, tls = pinOnly).revocationsJson()!!, rootFp)
+            println("bekor qilish ro'yxati: versiya ${rev.version}, ${rev.revoked.size} ta")
+            assertEquals(3L, rev.version)
+            assertTrue("cd".repeat(32) in rev.revoked)
+        }
+
+        // To'liq oqim TLS ustida: hamyon (sertifikatsiz, pinlangan) → token; terminal (mTLS) → 00.
+        val wallet = MpayClient(tlsUrl, tls = pinOnly)
+        val (identity, _) = wallet.identity()
+        wallet.connect(identity, SoftDevice(dir!!, challenge = wallet.enrollNonce()))
+        val pan = File(dir, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[0].substringAfter("\"").substringBefore("\"")
+        val r = wallet.provision(pan, "3112")
+        assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
+        val profile = (r as ProvisionResult.Active).profile
+        val applet = CardApplet({ profile }, Gate())
+        val date = java.time.LocalDate.now()
+        val tap = TerminalKernel.tap({ applet.process(it) }, 1_250_000, TerminalData.dateBcd(date.year, date.monthValue, date.dayOfMonth))
+        val a = term.authorize(bundle.terminalKey, "TERMKT01", "SHOP0000000001", 1, tap.iccHex())
+        println("TLS+mTLS avtorizatsiya: ${a.responseCode} ${a.reason}")
+        assertEquals("00", a.responseCode)
+        assertTrue(applet.verifyIssuerAuth(Hex.decode(a.issuerAuthData!!)))
+
+        // Takroriy yuborish (P1.2) — aynan o'sha javob.
+        assertEquals(a, term.authorize(bundle.terminalKey, "TERMKT01", "SHOP0000000001", 1, tap.iccHex()))
     }
 }

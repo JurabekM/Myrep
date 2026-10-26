@@ -23,7 +23,7 @@ use mpay_pqlink::DeviceSigner;
 use mpay_terminal_sim::apdu::Loopback;
 use mpay_terminal_sim::card::{CardPolicy, CardProfile, SoftCard};
 use mpay_terminal_sim::http::ServerClient;
-use mpay_terminal_sim::state::{StoredToken, WalletState};
+use mpay_terminal_sim::state::{next_terminal_stan, StoredToken, WalletState};
 use mpay_terminal_sim::terminal::{self, TxnParams};
 use mpay_terminal_sim::wallet::SoftWallet;
 use mpay_terminal_sim::WalletError;
@@ -102,15 +102,32 @@ fn creds(dir: &Path, key: &str) -> Result<Zeroizing<String>, WalletError> {
 }
 
 fn client(cli: &Cli) -> Result<ServerClient, WalletError> {
-    let pem = if cli.server.starts_with("https://") {
-        Some(
-            std::fs::read(cli.sandbox.join("tls-cert.pem"))
-                .map_err(|e| WalletError::Config(format!("tls-cert.pem: {e}")))?,
-        )
-    } else {
-        None
+    client_as(cli, None)
+}
+
+/// `id` — API kaliti ID'si (`operator-1`, `terminal-1`): TLS'da sandbox katalogidagi
+/// `<id>.crt.pem` / `<id>.key.pem` mTLS sertifikati sifatida ko'rsatiladi (bo'lsa).
+fn client_as(cli: &Cli, id: Option<&str>) -> Result<ServerClient, WalletError> {
+    if !cli.server.starts_with("https://") {
+        return ServerClient::new(&cli.server, None);
+    }
+    let read = |name: &str| {
+        std::fs::read(cli.sandbox.join(name))
+            .map_err(|e| WalletError::Config(format!("{name}: {e}")))
     };
-    ServerClient::new(&cli.server, pem.as_deref())
+    let pem = read("tls-cert.pem")?;
+    let identity = match id {
+        Some(id) if cli.sandbox.join(format!("{id}.crt.pem")).exists() => Some((
+            read(&format!("{id}.crt.pem"))?,
+            Zeroizing::new(read(&format!("{id}.key.pem"))?),
+        )),
+        _ => None,
+    };
+    ServerClient::with_identity(
+        &cli.server,
+        Some(&pem),
+        identity.as_ref().map(|(c, k)| (c.as_slice(), k.as_slice())),
+    )
 }
 
 fn parse_amount(s: &str) -> Result<u64, WalletError> {
@@ -149,7 +166,9 @@ async fn load_or_create(cli: &Cli, c: &ServerClient) -> Result<WalletState, Wall
     let der = std::fs::read(cli.sandbox.join("sandbox-attestation-root.der"))
         .map_err(|e| WalletError::Config(format!("sandbox CA: {e}")))?;
     let ca = SandboxAttestationCa::from_parts(&key, der)?;
-    let dev = ca.issue_device(SecurityLevel::StrongBox, b"mpay-tsim")?;
+    // P1.7: yangi qurilma kaliti server nonce'i bilan (attestationChallenge) yaratiladi.
+    let nonce = c.enroll_nonce().await?;
+    let dev = ca.issue_device(SecurityLevel::StrongBox, &nonce)?;
     let (pk, chain) = dev.to_parts()?;
     let (_, fp) = c.identity().await?;
     println!("Yangi soft-wallet. Server pinlandi (TOFU): {fp}");
@@ -158,7 +177,6 @@ async fn load_or_create(cli: &Cli, c: &ServerClient) -> Result<WalletState, Wall
         device_key_pkcs8: Zeroizing::new(hex::encode(&pk[..])),
         device_chain: chain.iter().map(hex::encode).collect(),
         tokens: vec![],
-        stan: 0,
     })
 }
 
@@ -211,7 +229,7 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                         idv.decision
                     );
                     let op = creds(&cli.sandbox, "MPAY_OPERATOR_KEY")?;
-                    let otp: SandboxOtp = c
+                    let otp: SandboxOtp = client_as(&cli, Some("operator-1"))?
                         .get_json(&format!("/v1/sandbox/otp/{challenge_id}"), Some(&op))
                         .await?;
                     w.verify_otp(&token_id, &challenge_id, &otp.otp).await?
@@ -259,10 +277,10 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                     }
                 })?
             };
-            // ATC, LUK foydalanishi va STAN o'zgardi — natijadan qat'i nazar saqlaymiz.
+            // ATC va LUK foydalanishi o'zgardi — natijadan qat'i nazar saqlaymiz.
             st.upsert(StoredToken::from_profile(card.profile()));
-            let stan = st.next_stan();
             st.save(&cli.wallet)?;
+            let stan = next_terminal_stan(&cli.sandbox, tid)?;
             println!("Tap: {} ATC={}", tap.dpan_masked, tap.atc);
             let key = creds(&cli.sandbox, "MPAY_TERMINAL_KEY")?;
             let req = AuthorizationRequest {
@@ -271,8 +289,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                 stan,
                 icc_data: tap.icc_hex(),
             };
-            let r: AuthorizationResponse =
-                c.post_json("/v1/authorizations", Some(&key), &req).await?;
+            let r: AuthorizationResponse = client_as(&cli, Some("terminal-1"))?
+                .post_json("/v1/authorizations", Some(&key), &req)
+                .await?;
             let arpc_ok = r
                 .issuer_auth_data
                 .as_deref()

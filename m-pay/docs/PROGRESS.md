@@ -375,6 +375,212 @@ EMV-ga o'xshash tap-to-pay (LUK, ARQC/ARPC, CDCVM), Shield (qoidalar + ONNX, p99
 emitent emulyatori (ISO 8583), Android SDK va ikki ilova (emulyatorda provisioning/OTP/LUK/biometriya
 sinalgan). Haqiqiy NFC tap — yagona sinalmagan qabul mezoni.
 
+## 1-faza — xavfsizlikni kuchaytirish (boshlandi 2026-10-24)
+
+Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
+
+### P1.1 + P1.2 (2026-10-24)
+
+**Nima qilindi**
+
+* **P1.1 rate-limit** (`crates/mpay-server/src/ratelimit.rs`, `[rate_limit]`): IP bo'yicha handshake
+  (300/daqiqa, burst 60 — CGNAT uchun yumshoq), bir vaqtdagi handshake hisoblashlari semafori
+  (CPU × 2, oshsa 503 `BUSY`), API kaliti bo'yicha (500/s), qurilma bo'yicha muhrlangan so'rovlar
+  (60/daqiqa). 429/503 javoblarda `Retry-After`. Qurilma chegarasi javobi muhrlanadi — sessiya ketma-ketligi
+  buzilmaydi. Mijoz IP'si TLS va oddiy HTTP yo'lida `ConnectInfo` orqali.
+* **P1.2 takroriy STAN** (`dedup.rs`, migratsiya `3001`, ADR-0010): bir xil so'rov — avvalgi javob
+  (timeout'dan keyingi qayta yuborish endi noto'g'ri `Q1` bermaydi), shu STAN boshqa mazmun bilan — `94`,
+  ishlanayotgan — `409 REQUEST_IN_PROGRESS`. `mpay-tsim` STAN'i terminal fayliga ko'chirildi.
+* Hujjatlar: ADR-0010, ADR-0007 (`94`), `specs/api.md` §4–6, tahdid modeli D2 va E4, yuk hisoboti §6.
+
+**Qanday tekshirildi**
+
+* `cargo test --workspace` — 145 test (yangi: `ratelimit` 3 unit, `p1_rate_limit.rs` 3, `p1_duplicate_stan.rs` 1:
+  qayta yuborishda bir xil javob va bitta yechim, `94` balansni o'zgartirmaydi, o'sha tap yangi STAN bilan `00`).
+* Smoke, demo (`DEMO OK`), Kotlin↔Rust interop — o'tdi; clippy, fmt — toza.
+* Yuk: 171–175 so'rov/s, p99 ~200 ms (32 parallel), xato 0 — `docs/load-report.md` §6.
+
+**Ochiq**
+
+* `TODO(spec):` teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati.
+* O'tkazuvchanlik −27 % — 2-fazada (bitta tranzaksiya / PostgreSQL).
+
+### P1.3 — ichki API uchun mTLS (2026-10-24)
+
+**Nima qilindi**
+
+* Server: `[http] client_ca` (mijoz sertifikati so'raladi, majburiy emas — hamyonlar PQ Link bilan),
+  sertifikat CN'i `PeerCert` sifatida so'rovga; `[auth] require_mtls` — operator/terminal endpointlarida
+  `CN == API kaliti id`, aks holda `403 MTLS_REQUIRED`; konfiguratsiya tekshiruvi.
+* `init --tls`: mijoz CA'si (`mtls-client-ca.pem`, kaliti saqlanmaydi), `operator-1` va `terminal-1`
+  sertifikatlari (EKU clientAuth), `require_mtls = true`.
+* `ServerClient::with_identity`; `mpay-tsim` sandbox'dagi `<id>.crt.pem` ni avtomatik ko'rsatadi
+  (operator OTP so'rovi — `operator-1`, avtorizatsiya — `terminal-1`).
+* Hujjatlar: ADR-0011, tahdid modeli S3, `api.md` (`MTLS_REQUIRED`), server README.
+
+**Qanday tekshirildi**
+
+* `tests/e2e/tests/p1_mtls.rs` (3): sertifikatsiz → 403; boshqa CN → 403; to'g'ri juftlik → 200;
+  Bearer'siz → 401; hamyon sertifikatsiz TLS ichida provisioning; terminal sertifikati bilan `00`;
+  begona CA sertifikati TLS handshake'da rad.
+* `cargo test --workspace` — 148 test; smoke va demo (`--tls`, endi mTLS bilan) — OK; interop — OK.
+
+**Ochiq**
+
+* `TODO(spec):` sertifikat bekor qilish (CRL/OCSP) — bank PKI'si (2-faza).
+* Android `terminal-app` hali mTLS'siz — P1.4.
+
+### P1.4 — terminal-app: TLS + mTLS, kalitlar Keystore'da (2026-10-24)
+
+**Nima qilindi**
+
+* Server: `mpay-server terminal-bundle --url https://…` — paket (`mpay-terminal-bundle/1`): server TLS
+  sertifikati va SHA-256 pini, mTLS mijoz sertifikati/kaliti, terminal API kaliti; `GET /v1/terminal/ping`
+  (kalit + mTLS + chegaralar diagnostikasi).
+* `mpay-core`: `TlsConfig` (server sertifikati pinlanadi — tizim CA'lariga ishonilmaydi, xost nomi
+  tekshiruvi ham pin bilan), `Pem` yordamchilari, `TerminalBundle.parse` (pin sertifikatga mosligini
+  tekshiradi), `MpayClient(tls = …)`, `terminalPing`.
+* `terminal-app`: `TerminalVault` — mTLS kaliti Android Keystore'ga import (imzo Keystore'da,
+  `X509ExtendedKeyManager`), terminal kaliti/URL/pin Keystore AES-256-GCM bilan shifrlangan; paket
+  ilova papkasidan (adb push) yoki fayl tanlash oynasidan import qilinadi va **o'chiriladi**;
+  "Ulanishni tekshirish", "Paketni o'chirish". Qo'lda rejim (HTTP) kalitni endi saqlamaydi; 0-fazadagi
+  ochiq saqlangan kalit ishga tushishda o'chiriladi.
+
+**Qanday tekshirildi**
+
+* JVM interop (`InteropTest.pinnedTlsAndMtlsAgainstRustServer`, haqiqiy Rust server `--tls`):
+  noto'g'ri pin → `SSLHandshakeException`; sertifikatsiz → `MTLS_REQUIRED`; mTLS bilan ping →
+  `terminal-1`, mTLS; TLS ustida hamyon provisioning + terminal avtorizatsiyasi `00`, ARPC tasdiqlandi;
+  takroriy yuborish → aynan o'sha javob. **INTEROP OK**.
+* Emulyator (API 36) ↔ `mpay-server --tls` (`https://10.0.2.2:8443`): paket import qilindi va fayl
+  o'chirildi; "Ulanish ishlaydi — TLS: server pinlangan, mTLS sertifikati qabul qilindi" (server logida
+  `/v1/terminal/ping` 200); ilova qayta ishga tushgach ham ishlaydi (Keystore'dan ochildi); paketsiz
+  qo'lda `https` → `SSLHandshakeException` (serverga yetmaydi).
+* `cargo test --workspace` — 148; smoke, demo — OK; clippy, fmt — toza.
+
+**Ochiq**
+
+* Hamyon (`wallet-demo`) hali TLS pinlashsiz — `--tls` server bilan ulanmaydi; P1.5 da (build vaqtida
+  pinlangan PQ Link barmoq izi + TLS pin).
+* NFC tap orqali to'liq to'lov TLS ustida faqat JVM interop'da sinalgan (emulyatorda NFC yo'q) — P1.8.
+
+### P1.5 — hamyon: server ishonchi build vaqtida (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-core`: `ServerPinPolicy` — build pinlari to'plami (bir nechtasi: rotation uchun), TOFU faqat
+  ruxsat berilsa; hex tekshiruvi.
+* `wallet-sdk`: `WalletConfig(pinnedFingerprints, tlsCertSha256, allowTofu)`; `connect` siyosat bo'yicha
+  tekshiradi, `https://` uchun TLS pini majburiy. Standart konfiguratsiya xavfsiz: pin yo'q + TOFU o'chiq → rad.
+* `wallet-demo`: `-Pmpay.serverFingerprints`, `-Pmpay.tlsPin` → `BuildConfig`; ekranda pin rejimi.
+* `mpay-server identity` TLS pinini ham chiqaradi.
+
+**Qanday tekshirildi**
+
+* `ServerPinPolicyTest` (3): pin to'plami (katta-kichik harf), begona barmoq izi rad, TOFU faqat ruxsat bilan,
+  o'zgargan TOFU rad, `BuildConfig` qatorini ajratish va hex tekshiruvi. Android build — OK.
+* Hamyonning TLS ustidan ulanishi JVM interop'da (`TlsConfig` pin) sinalgan; emulyatorda pinlangan
+  build bilan sinov P1.6 bilan birga.
+
+### P1.6 — PQ Link server kalitini almashtirish (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-pqlink`: `ServerSigner::endorse`, `ServerIdentity::verify_endorsement`, `ROTATION_LABEL`
+  (handshake yorlig'idan ajratilgan).
+* Server: `[pqlink] ed25519_label`, `[pqlink.next]`; boot'da joriy kalit keyingisini tasdiqlaydi;
+  `/v1/pqlink/identity` → `next`; `mpay-server identity-next --version N`. Joriy yorliq KeyStore'da
+  har doim tayyorlanadi (o'tishdan keyin topilgan xato).
+* Kotlin: `ServerIdentity.verifyEndorsement`, `MpayClient.identityInfo`, `ServerPinPolicy.rollForward`;
+  hamyon tasdiqlangan keyingi barmoq izini o'rganadi (TOFU barmoq izi ham saqlanib qoladi).
+* Hujjatlar: ADR-0012, `specs/pqlink.md` §8a, tahdid modeli S1, server README.
+
+**Qanday tekshirildi**
+
+* Rust: `identity` unit (domen ajratish), `tests/e2e/tests/p1_rotation.rs` — e'lon va tasdiq, soxta
+  barmoq izi rad, o'sha DB/KeyStore bilan v2 ga o'tish, o'rganilgan pinli hamyon token oladi, eski pinli rad.
+* Kotlin: `RotationTest` (2); interop — Rust `identity-next` e'loni Kotlin'da `tasdiq=true`.
+
+**Topilgan va tuzatilgan muammolar**
+
+* O'tishdan keyin server ishga tushmasdi: "kalit topilmadi: mpay.srv-ed25519.v2" — `open_keystore`
+  faqat standart yorliqni tayyorlardi; endi joriy yorliq ham `ensure_key`.
+* TOFU rejimida o'rganilgan pin joriy TOFU barmoq izini siqib chiqarishi mumkin edi — saqlangan TOFU
+  barmoq izi ham pin to'plamiga qo'shiladi.
+
+### P1.7 — qurilmani ro'yxatdan o'tkazish: challenge = server nonce'i (2026-10-24)
+
+**Nima qilindi**
+
+* `mpay-pqlink`: `EnrollmentGate` (attestatsiya va qurilma imzosidan keyin), `PqLinkServer::with_enrollment`,
+  `PqLinkError::Enrollment` → `403 PQLINK_ENROLLMENT`.
+* Server: `enroll.rs` — bir martalik nonce'lar (TTL, xotira chegarasi) va `pqlink_devices` reyestri
+  (migratsiya `3002`); `POST /v1/pqlink/enroll` (IP chegarasi); `[pqlink] enrollment`,
+  `enrollment_nonce_ttl_secs`; `off` faqat sandbox.
+* Mijozlar: `ServerClient::enroll_nonce`, `mpay-tsim`, `mpay-load`, e2e `enrolled_device`; Kotlin
+  `MpayClient.enrollNonce`, hamyon yangi kalitni nonce bilan yaratadi, `PQLINK_ENROLLMENT` da bir marta
+  qayta ro'yxatdan o'tadi.
+* Hujjatlar: ADR-0013, `specs/pqlink.md` §8b, `api.md`, tahdid modeli S2, server README.
+
+**Qanday tekshirildi**
+
+* `tests/e2e/tests/p1_enrollment.rs` (3): nonce'siz qurilma rad; nonce bilan ro'yxat va o'sha kalit nonce'siz
+  qayta ulanadi; nonce bir martalik; reyestr qayta ishga tushgan serverda saqlanadi; muddati o'tgan nonce rad;
+  `off` — `/enroll` 404, production konfiguratsiyada `off` rad.
+* Kotlin interop: ro'yxatsiz qurilma → `PQLINK_ENROLLMENT`, nonce bilan → to'liq oqim (HTTP va TLS+mTLS).
+* Emulyator (haqiqiy Android Keystore): toza hamyon `/enroll` → `finish` 200 ("qurilma ro'yxatga olindi");
+  ikkinchi ulanish nonce'siz; reyestr tozalangach `finish` 403 → hamyon avtomatik yangi nonce bilan
+  kalitni qayta yaratdi va ulandi (ekranda voqea).
+
+### 1-faza qo'shimcha ishlari (2026-10-25)
+
+**Ishonchli proksilar.** `[http] trusted_proxies` (CIDR, `clientip.rs`): ulanish ishonchli proksidan
+kelsa mijoz IP'si `X-Forwarded-For` dan o'ngdan chapga olinadi (IPv4-mapped IPv6 hisobga olingan);
+boshqa ulanishlarda sarlavha e'tiborsiz. Handshake va `/enroll` IP chegaralari shundan foydalanadi.
+Tekshiruv: unit (2) va e2e `forwarded_for_used_only_behind_trusted_proxy` — proksi ortida mijozlar
+alohida chelaklarda, proksisiz soxta sarlavha chegarani chetlab o'tmaydi.
+
+**mTLS sertifikatini bekor qilish.** `[auth] revoked_client_certs` (DER SHA-256, hex; konfiguratsiyada
+tekshiriladi) va `mpay-server cert-fingerprint`. TLS qabul qilinganda bekor qilingan sertifikat CN'i
+olinmaydi → operator/terminal `403 MTLS_REQUIRED`. Tekshiruv: e2e `revoked_client_cert_treated_as_missing`
+(bekor qilingan terminal sertifikati rad, operator ishlaydi).
+
+**Bekor qilingan server identifikatorlari (ADR-0014).** Oflayn ildiz kaliti (Ed25519 + ML-DSA-65,
+`root-keygen`) imzolagan versiyali ro'yxat (`revoke`), server faqat tarqatadi (`/v1/pqlink/revocations`)
+va o'z identifikatori ro'yxatda bo'lsa ishga tushmaydi; Kotlin `Revocations.verify`, pin siyosati bekor
+qilinganlarni rad etadi, hamyon faqat kattaroq versiyani saqlaydi (`-Pmpay.rootFingerprint`).
+Tekshiruv: Rust unit, e2e `p1_revocations.rs` (2), Kotlin `RevocationsTest` (2), interop — Rust `revoke`
+ro'yxati Kotlin'da tekshirildi (versiya 3).
+
+**Davriy qayta attestatsiya (ADR-0015).** `[pqlink] reattest_after_days` (init: 90): eskirgan qurilmaning
+muhrlangan so'rovlari `REATTEST_REQUIRED`; `POST /v1/devices/rekey` — yangi kalit (enroll nonce'i bilan)
+`device-rekey ‖ session_id ‖ eski device_id` ni imzolaydi, Vault tokenlarni ko'chiradi (`DEVICE_REKEY`
+audit), reyestr yangilanadi. Hamyon ikki alias bilan avtomatik almashtiradi va so'rovni takrorlaydi.
+Tekshiruv: e2e `p1_reattest.rs` (2), Kotlin interop (Kotlin imzosi → Rust, token ko'chdi), emulyatorda
+haqiqiy Keystore: eskirtirilgan qurilmada "LUK to'ldirish" → 403 → avtomatik rekey 200 → "Yangi LUK: 5",
+auditda `DEVICE_REKEY`. Emulyator test ildizi `config/android-emulator-test-root.pem` ga qo'shildi.
+
+**1-faza qo'shimcha ishlari yakuni:** ishonchli proksilar, mTLS sertifikatini bekor qilish, bekor
+qilingan server identifikatorlari (ADR-0014), davriy qayta attestatsiya (ADR-0015) — bajarildi.
+Qolgan: P1.8 (ikki telefonli NFC tap) va 2-faza (tashqi javoblar kerak, `docs/roadmap.md`).
+
+### P1.8 — emulyatorda virtual NFC bilan to'liq tap (2026-10-25)
+
+Haqiqiy telefonlar hozircha yo'q, shuning uchun tap emulyatorda virtual NFC ko'prigi orqali sinaldi.
+
+**Nima qilindi**
+
+* `wallet-sdk`: `HceDispatcher` — HCE servisi va sinov ko'prigi bir xil kod yo'li.
+* `wallet-demo` (faqat `src/debug`): `VirtualNfcService` — oldingi plan servis, `127.0.0.1:47661`,
+  kadr `u16 ‖ APDU`; "Virtual NFC" tugmasi faqat `BuildConfig.DEBUG` da.
+* `terminal-app`: tap mantiqi umumiylashtirildi (`completeTap`), debug'da "Virtual tap".
+* `scripts/check-release-apk.sh` — release APK'da ko'prik yo'qligini (va debug'da borligini) tekshiradi.
+* Server: attestatsiya ildizi PEM'i boshida izoh qatorlari bo'lsa DER deb o'qilardi — tuzatildi
+  (regressiya testi `commented_pem_attestation_root_loads`). `config/android-emulator-test-root.pem` UTF-8 ga o'tkazildi.
+
+**Qanday tekshirildi** (emulyator, TLS + mTLS server, hamyon build pinlari bilan): 25 000 so'm → `00`;
+2 000 000 so'm → "Telefonda tasdiqlang" → barmoq izi → `00`; CDCVM bir martalik; server logida ochiq PAN 0.
+Batafsil: `docs/android-testing.md` §5. Haqiqiy NFC radiosi (§3) — ochiq.
 ### Xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
 
 PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da tuzatildi:
@@ -396,3 +602,26 @@ PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da 
 * PKCS#11 sessiya pool'i va qayta login — 2-faza P2.2 (SoftHSM yuk sinovi) bilan birga.
 
 Tekshiruv: `cargo test --workspace` 143, clippy toza, Kotlin interop, smoke.
+
+### 1-faza xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
+
+PR #17 topilmalari:
+
+* **Takroriy so'rovlar (ADR-0010):** ishlov `tokio::spawn` da — terminal ulanishni uzsa ham emitent
+  javobi saqlanadi (avval yozuv `PENDING` da qotib qolardi). Kalit — autentifikatsiya qilingan terminal
+  kaliti + `terminal_id` va **kartadagi** sana (ICC `9A`; qayta urinish yarim tundan o'tsa ham o'sha
+  kalit). Emitent ishlagandan keyingi xatoda yozuv o'chirilmaydi — `96` saqlanadi (qayta yuborish ATC
+  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. `TODO(spec):` avtomatik reversal.
+* **Rate-limit:** IPv6 kaliti `/64`; faol kalitlar ko'p bo'lsa eng eskilari yarmigacha chiqariladi
+  (xarita chegaralangan, skanerlash amortizatsiyalangan).
+* **Ro'yxatdan o'tish nonce'lari** holatsiz (HMAC, muddat ichida): `/v1/pqlink/enroll` ni ko'p chaqirib
+  xotira yoki umumiy chegarani to'ldirib bo'lmaydi; faqat ishlatilganlari eslab qolinadi.
+* **Qayta attestatsiya:** attestatsiya vaqti handshake'da sessiyaga yoziladi — har muhrlangan so'rovda
+  DB'ga murojaat yo'q, DB xatosi so'rovni o'tkazib yubormaydi.
+* **Rekey:** yangi qurilma reyestrga → tokenlar ko'chadi → eskisi o'chadi; ko'chirish yiqilsa yangi
+  yozuv qaytariladi (tokenlar reyestrda yo'q qurilmada qolmaydi).
+* **Kotlin `ServerPinPolicy`:** barcha pinlar bekor qilinsa TOFU'ga tushmaydi.
+* Emulyator konfiguratsiyasi: `require_verified_boot = false` (`android-testing.md`).
+
+Tekshiruv: 174 Rust test (yangi: dedup ×2, nonce ×2, IPv6 kaliti, limiter chegarasi), clippy toza,
+Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).

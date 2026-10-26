@@ -32,7 +32,7 @@ bash scripts/android-interop.sh
 2. Emulyator attestatsiyasi `SOFTWARE` darajali va ildizi "Droid Unregistered Device CA"
    (Google Test LLC). Standart siyosat (`STRONG_BOX`, sandbox CA) uni **rad etadi** —
    `403 PQLINK_ATTESTATION` (bu ham sinov: ishonchsiz ildiz o'tmaydi).
-3. Faqat emulyator sinovi uchun: ilovada "Attestatsiya" tugmasi zanjirni
+3. Faqat emulyator sinovi uchun: ildiz repoda — `config/android-emulator-test-root.pem` (yoki ilovada "Attestatsiya" tugmasi zanjirni
    `/sdcard/Android/data/uz.mpay.walletdemo/files/attestation-chain.pem` ga yozadi; oxirgi
    sertifikatni `emu-sb/android-emulator-test-root.pem` ga saqlab, `mpay.toml` da:
 
@@ -40,6 +40,7 @@ bash scripts/android-interop.sh
    [pqlink]
    attestation_roots = ["sandbox-attestation-root.der", "android-emulator-test-root.pem"]
    min_security_level = "SOFTWARE"   # FAQAT emulyator; production — STRONG_BOX
+   require_verified_boot = false     # FAQAT emulyator: apparat rootOfTrust yo'q; production — true
    ```
 
 4. `mpay-server serve --config emu-sb/mpay.toml`, ilovada "Ulanish" → "Kartani qo'shish"
@@ -64,8 +65,13 @@ barmoq izi; ikkalasi server bilan bir tarmoqda (yoki `adb reverse tcp:8080 tcp:8
 2. **Hamyon telefoni** (`wallet-demo`): server manzili `http://<kompyuter IP>:8080` →
    "Ulanish" → test FPAN bilan "Kartani qo'shish" (kerak bo'lsa OTP) →
    "Standart to'lov ilovasi" (Sozlamalar → Kontaktsiz to'lovlar → M-Pay Hamyon).
-3. **Terminal telefoni** (`terminal-app`): "Sozlamalar" ga server manzili va `init` bergan
-   **terminal** kaliti; summa (masalan 25 000) → "To'lov qabul qilish".
+3. **Terminal telefoni** (`terminal-app`, 1-faza P1.4 — TLS + mTLS):
+   `mpay-server init --tls` sandbox'idan paket yarating:
+   `mpay-server terminal-bundle --config sb/mpay.toml --url https://<kompyuter IP>:8443`,
+   faylni telefonga `adb push terminal-bundle.json /sdcard/Android/data/uz.mpay.terminalapp/files/`
+   (yoki fayl tanlash oynasi), ilovada "Terminal paketini import qilish" → "Ulanishni tekshirish"
+   ("Ulanish ishlaydi … mTLS sertifikati qabul qilindi"). So'ng summa (masalan 25 000) →
+   "To'lov qabul qilish". Paketsiz qo'lda rejim (oddiy HTTP) faqat `--tls` siz sandbox uchun.
 4. Hamyon telefonida "To'lovga tayyorlash" → barmoq izi → 60 s ichida telefonlarni orqa
    tomonlari bilan tekkizing.
 5. Kutilgan natija: terminalda **MA'QULLANDI**, kod `00`, maskalangan DPAN, RRN, Shield bali;
@@ -82,3 +88,52 @@ barmoq izi; ikkalasi server bilan bir tarmoqda (yoki `adb reverse tcp:8080 tcp:8
 **Holat:** bu bo'lim hali haqiqiy qurilmalarda bajarilmagan — ishlab chiqish muhitida NFC'li
 ikki telefon yo'q. Tap yo'li (applet ↔ terminal yadrosi ↔ Rust emitent) JVM interop testida
 loopback orqali sinalgan (`InteropTest`); `IsoDep`/`HostApduService` qatlami sinalmagan.
+
+## 4. Terminal TLS + mTLS (emulyatorda, 1-faza P1.4)
+
+1. `mpay-server init --dir emu-tls --listen 127.0.0.1:8443 --tls` (emulyator xostni `10.0.2.2` orqali ko'radi).
+2. `mpay-server terminal-bundle --config emu-tls/mpay.toml --url https://10.0.2.2:8443 --out terminal-bundle.json`.
+3. `mpay-server serve --config emu-tls/mpay.toml`.
+4. `adb push terminal-bundle.json /sdcard/Android/data/uz.mpay.terminalapp/files/terminal-bundle.json`.
+5. Ilovada "Terminal paketini import qilish" → paket o'qiladi va **o'chiriladi** → "Ulanishni tekshirish".
+
+Kutilgan: "Ulanish ishlaydi — Kalit: terminal-1 — TLS: server pinlangan, mTLS sertifikati qabul qilindi".
+Salbiy: paketni o'chirib, qo'lda rejimda xuddi shu `https://` manzilga — tizim CA'si sandbox sertifikatini
+tanimaydi (TLS xatosi); `http://` bilan TLS serverga ulanib bo'lmaydi.
+
+## 5. Virtual NFC — to'liq tap emulyatorda (P1.8 o'rnini bosuvchi sinov)
+
+Emulyatorda NFC/HCE apparati yo'q. Debug build'larda **virtual NFC ko'prigi** bor: hamyon
+(`wallet-demo`) `127.0.0.1:47661` da APDU qabul qiladi va ularni haqiqiy HCE servisi bilan bir xil yo'ldan
+(`HceDispatcher` → applet, CDCVM, LUK, ATC) o'tkazadi; terminal (`terminal-app`) "Virtual tap" bilan
+`IsoDep` o'rniga shu socket'dan foydalanadi. Ikkala ilova bitta emulyatorda. Radiodan boshqa hamma
+qatlam haqiqiy: Android Keystore, BiometricPrompt, terminal yadrosi, TLS + mTLS, server, Shield, emitent.
+
+**Xavfsizlik:** ko'prik faqat `src/debug` da — release APK'ga kirmaydi (relay hujumi uchun eshik
+bo'lmasin). Tekshiruv: `bash scripts/check-release-apk.sh` (debug'da bor, release'da yo'q).
+
+Tartib (2026-10-25 da shu tartibda bajarildi):
+
+1. `mpay-server init --dir emu-tls --listen 127.0.0.1:8443 --tls`; `config/android-emulator-test-root.pem` ni
+   nusxalab `attestation_roots` ga qo'shing, `min_security_level = "SOFTWARE"`,
+   `require_verified_boot = false` (emulyatorda apparat `rootOfTrust` yo'q).
+2. `mpay-server identity --config emu-tls/mpay.toml` → `fingerprint` va `tls_pin`; hamyonni pinlar bilan yig'ing:
+   `./gradlew :wallet-demo:assembleDebug -Pmpay.serverFingerprints=<fp> -Pmpay.tlsPin=<pin>`.
+3. `mpay-server terminal-bundle --config emu-tls/mpay.toml --url https://10.0.2.2:8443`; `serve`.
+4. Hamyon: server `https://10.0.2.2:8443` → "Ulanish" → karta qo'shish (YELLOW bo'lsa OTP'ni xostdan operator
+   mTLS sertifikati bilan oling — Windows `curl` (Schannel) PEM mijoz sertifikatini qabul qilmaydi, Python
+   `ssl` ishlaydi) → "Virtual NFC".
+5. Terminal: paketni `adb push` → "Terminal paketini import qilish" → "Ulanishni tekshirish" → summa → "Virtual tap".
+
+Natija (Medium Phone API 36):
+
+| Qadam | Natija |
+|---|---|
+| 25 000 so'm | **MA'QULLANDI**, `00 APPROVED`, Shield 17 |
+| 2 000 000 so'm biometriyasiz | "Telefonda tasdiqlang" (`6986`) |
+| Hamyonda barmoq izi → 60 s ichida qayta tap | **MA'QULLANDI**, `00 APPROVED_AFTER_REVIEW`, Shield 646 |
+| Yana 2 000 000 so'm | "Telefonda tasdiqlang" — CDCVM bir martalik |
+| Server logi | `/v1/authorizations` 2 × 200, ochiq PAN 0 |
+
+Haqiqiy NFC radiosi (antenna, maydon uzilishi, `IsoDep` vaqtlari, Android HCE marshrutlash va "standart
+to'lov ilovasi") faqat §3 da — ikki haqiqiy telefonda sinaladi.

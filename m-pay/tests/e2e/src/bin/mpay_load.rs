@@ -25,6 +25,7 @@ use mpay_terminal_sim::card::{CardPolicy, CardProfile, SoftCard};
 use mpay_terminal_sim::http::ServerClient;
 use mpay_terminal_sim::terminal::{tap, TxnParams};
 use mpay_terminal_sim::wallet::SoftWallet;
+use mpay_terminal_sim::WalletError;
 
 #[derive(Parser)]
 #[command(name = "mpay-load", about = "mpay-server yuk sinovi (sandbox)")]
@@ -80,6 +81,16 @@ fn prepare(dir: &std::path::Path, cards: u32) -> Result<(), String> {
     }
     // Bir kartada uzoq yuklama: LUK limiti va partiyasi oshiriladi (FAQAT yuk sinovi).
     cfg = cfg.replace("max_uses = 10\n", "max_uses = 1000000\n");
+    // Barcha soxta qurilmalar bitta IP'dan (127.0.0.1) — IP chegarasi yuk sinovida ko'tariladi.
+    // Handshake parallelligi chegarasi (503 BUSY) o'zgarmaydi: generator Retry-After bilan qayta urinadi.
+    cfg = cfg.replace(
+        "ip_handshake_per_minute = 300 ",
+        "ip_handshake_per_minute = 10000000 ",
+    );
+    cfg = cfg.replace(
+        "ip_handshake_burst = 60\n",
+        "ip_handshake_burst = 1000000\n",
+    );
     cfg.push_str("\n# mpay-load: yuk sinovi hisoblari (fiktiv FPAN)\n");
     for i in 0..cards {
         cfg.push_str(&format!(
@@ -154,11 +165,27 @@ async fn provision_one(
     i: u32,
 ) -> Result<(SoftCard, String), String> {
     let device = ca
-        .issue_device(SecurityLevel::StrongBox, format!("load-{i}").as_bytes())
+        .issue_device(
+            SecurityLevel::StrongBox,
+            &client.enroll_nonce().await.map_err(|e| e.to_string())?,
+        )
         .map_err(|e| e.to_string())?;
     let (identity, _) = client.identity().await.map_err(|e| e.to_string())?;
     let mut w = SoftWallet::new(client.clone(), identity, device);
-    w.connect().await.map_err(|e| e.to_string())?;
+    // Server band (503) yoki chegara (429) — real hamyon kabi kutib, qayta urinadi.
+    let mut attempt: u64 = 0;
+    loop {
+        match w.connect().await {
+            Ok(_) => break,
+            Err(WalletError::Api {
+                status: 503 | 429, ..
+            }) if attempt < 30 => {
+                attempt += 1;
+                tokio::time::sleep(Duration::from_millis(100 * attempt.min(5))).await;
+            }
+            Err(e) => return Err(e.to_string()),
+        }
+    }
     let (profile, decision) = match w
         .provision(&load_fpan(i), "3112")
         .await

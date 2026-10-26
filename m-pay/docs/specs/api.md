@@ -44,6 +44,10 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | GET | `/v1/audit/verify` | operator | — | audit xesh-zanjirini tekshirish |
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
+| GET | `/v1/pqlink/revocations` | — | — | oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014; sozlanmagan — 404) |
+| POST | `/v1/devices/rekey` | qurilma (sealed) | `{cert_chain[], signature}` | qurilma kalitini almashtirish, tokenlar ko'chadi (ADR-0015) |
+| POST | `/v1/pqlink/enroll` | — (IP chegarasi) | `{}` | yangi qurilma uchun bir martalik nonce: `{nonce, expires_at}` (P1.7) |
+| GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
 
 ## 3. Sxemalar
@@ -168,6 +172,37 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `UNSUPPORTED_MEDIA_TYPE` | 415 |
 | `IDV_UNAVAILABLE`, `PQLINK_BUSY` | 503 |
 | `PQLINK_MALFORMED`, `PQLINK_HANDSHAKE` | 400 |
-| `PQLINK_ATTESTATION`, `PQLINK_AUTH` | 403 |
+| `PQLINK_ATTESTATION`, `PQLINK_AUTH`, `PQLINK_ENROLLMENT` | 403 |
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |
 | `DB_ERROR`, `CRYPTO_ERROR`, `AUDIT_BROKEN`, `PQLINK_INTERNAL` | 500 |
+| `MTLS_REQUIRED` (`require_mtls`: sertifikat yo'q yoki CN ≠ kalit id) | 403 |
+| `REATTEST_REQUIRED` (muhrlangan; attestatsiya `reattest_after_days` dan eski — `/v1/devices/rekey`) | 403 |
+| `RATE_LIMITED` | 429 (+ `Retry-After`) |
+| `BUSY` (handshake navbati to'la) | 503 (+ `Retry-After`) |
+| `REQUEST_IN_PROGRESS` (shu avtorizatsiya hali ishlanmoqda) | 409 (+ `Retry-After`) |
+
+## 5. So'rovlar chegarasi (1-faza, P1.1)
+
+`[rate_limit]` (standart qiymatlar `mpay-server init` yozadi):
+
+| Chegara | Kalit | Standart | Oshganda |
+|---|---|---|---|
+| `/v1/pqlink/hello`, `/finish` | mijoz IP | 300/daqiqa, burst 60 | 429 |
+| Bir vaqtdagi handshake hisoblashlari | global | CPU × 2 | 503 `BUSY` |
+| Operator/terminal endpointlari | API kaliti | 500/s, burst 1000 | 429 |
+| Muhrlangan endpointlar | qurilma | 60/daqiqa, burst 30 | 429 (javob muhrlangan — sessiya buzilmaydi) |
+
+Mijoz `Retry-After` dan keyin qayta urinadi. Teskari proksi ortida: `[http] trusted_proxies = ["10.0.0.0/8"]`
+— ulanish shu tarmoqlardan kelsa mijoz IP'si `X-Forwarded-For` dan o'ngdan chapga (birinchi ishonchsiz
+manzil) olinadi; boshqa ulanishlarda sarlavha e'tiborsiz (soxtalashtirib bo'lmaydi).
+
+## 6. Takroriy avtorizatsiya so'rovlari (1-faza, P1.2)
+
+`POST /v1/authorizations` `(terminal_id, stan, UTC sana)` bo'yicha eslab qolinadi (3 kun):
+
+* aynan bir xil so'rov (merchant va `icc_data` ham) — birinchi javob qaytariladi (timeout'dan keyin
+  xavfsiz qayta yuborish; emitentga ikkinchi marta bormaydi);
+* shu STAN boshqa mazmun bilan — `200`, `response_code = "94"`, `reason = "DUPLICATE_TRANSMISSION"`,
+  `rrn` bo'sh;
+* birinchisi hali ishlanmoqda — `409 REQUEST_IN_PROGRESS`.
+

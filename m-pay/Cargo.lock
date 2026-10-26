@@ -1876,6 +1876,7 @@ dependencies = [
  "mpay-server",
  "mpay-terminal-sim",
  "serde_json",
+ "sqlx",
  "tempfile",
  "tokio",
  "tracing",
@@ -1946,7 +1947,9 @@ dependencies = [
  "axum",
  "base64 0.23.1",
  "clap",
+ "der 0.8.2",
  "hex",
+ "hmac",
  "hyper",
  "hyper-util",
  "mpay-common",
@@ -1970,6 +1973,7 @@ dependencies = [
  "tower",
  "tracing",
  "tracing-subscriber",
+ "x509-cert",
  "zeroize",
 ]
 

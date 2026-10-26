@@ -32,6 +32,8 @@ pub struct Config {
     pub auth: AuthConfig,
     #[serde(default)]
     pub sandbox_api: SandboxApiConfig,
+    #[serde(default)]
+    pub rate_limit: crate::ratelimit::RateLimitConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]
@@ -45,6 +47,13 @@ pub struct HttpConfig {
     /// TLS sertifikati (PEM). Berilmasa — oddiy HTTP (faqat sandbox).
     pub tls_cert: Option<PathBuf>,
     pub tls_key: Option<PathBuf>,
+    /// mTLS: mijoz sertifikatlari CA'si (PEM). Berilsa, server mijoz sertifikatini so'raydi
+    /// (majburiy emas — hamyonlar PQ Link bilan ulanadi); talab `[auth] require_mtls` da.
+    #[serde(default)]
+    pub client_ca: Option<PathBuf>,
+    /// Teskari proksilar (CIDR): ulanish shulardan kelsa mijoz IP'si `X-Forwarded-For` dan olinadi.
+    #[serde(default)]
+    pub trusted_proxies: Vec<crate::clientip::Cidr>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,6 +93,18 @@ pub struct KeyStoreConfig {
 pub struct PqLinkConfig {
     /// KEK bilan o'ralgan ML-DSA-65 urug'i.
     pub mldsa_blob: PathBuf,
+    /// Ed25519 server kaliti yorlig'i (KeyStore/HSM).
+    #[serde(default = "default_ed_label")]
+    pub ed25519_label: String,
+    /// Kalit almashtirish (P1.6): e'lon qilingan keyingi identifikator (`mpay-server identity-next`).
+    #[serde(default)]
+    pub next: Option<NextIdentityConfig>,
+    /// Oflayn ildiz imzolagan bekor qilingan identifikatorlar ro'yxati (`mpay-server revoke`, ADR-0014).
+    #[serde(default)]
+    pub revocations: Option<PathBuf>,
+    /// Ildiz barmoq izi (hex): berilsa, ro'yxat imzosi ishga tushishda tekshiriladi.
+    #[serde(default)]
+    pub root_fingerprint: Option<String>,
     /// Ishonchli attestatsiya ildizlari (DER yoki PEM).
     pub attestation_roots: Vec<PathBuf>,
     #[serde(default = "default_level")]
@@ -93,6 +114,40 @@ pub struct PqLinkConfig {
     pub require_verified_boot: bool,
     #[serde(default = "default_session_ttl")]
     pub session_ttl_secs: i64,
+    /// Qurilmani ro'yxatdan o'tkazish (P1.7): `required` — yangi qurilma attestatsiyasi server
+    /// nonce'i bilan bo'lishi shart; `off` — talab yo'q (faqat sandbox/test).
+    #[serde(default)]
+    pub enrollment: EnrollmentMode,
+    #[serde(default = "default_nonce_ttl")]
+    pub enrollment_nonce_ttl_secs: i64,
+    /// Davriy qayta attestatsiya (ADR-0015): shuncha kundan keyin qurilma kalitni almashtirishi shart
+    /// (muhrlangan so'rovlar `REATTEST_REQUIRED`); 0 — o'chiq.
+    #[serde(default)]
+    pub reattest_after_days: u32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EnrollmentMode {
+    #[default]
+    Required,
+    Off,
+}
+
+fn default_nonce_ttl() -> i64 {
+    300
+}
+
+/// `[pqlink.next]`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NextIdentityConfig {
+    pub mldsa_blob: PathBuf,
+    pub ed25519_label: String,
+}
+
+fn default_ed_label() -> String {
+    mpay_crypto::keystore::KeyLabel::SERVER_ED25519.to_owned()
 }
 
 fn default_true() -> bool {
@@ -153,6 +208,13 @@ pub struct ApiKey {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AuthConfig {
+    /// Operator va terminal endpointlari mTLS sertifikatini talab qiladi: CN = API kaliti `id`.
+    #[serde(default)]
+    pub require_mtls: bool,
+    /// Bekor qilingan mTLS mijoz sertifikatlari: DER'ning SHA-256 (hex, `mpay-server cert-fingerprint`).
+    /// Bunday sertifikat bilan ulanish sertifikatsiz hisoblanadi (`MTLS_REQUIRED`).
+    #[serde(default)]
+    pub revoked_client_certs: Vec<String>,
     #[serde(default)]
     pub keys: Vec<ApiKey>,
 }
@@ -207,12 +269,47 @@ impl Config {
                 "production rejimida TLS majburiy".into(),
             ));
         }
+        if self.auth.require_mtls && (self.http.tls_cert.is_none() || self.http.client_ca.is_none())
+        {
+            return Err(ConfigError::Invalid(
+                "auth.require_mtls uchun http.tls_cert va http.client_ca kerak".into(),
+            ));
+        }
+        if let Some(bad) = self
+            .auth
+            .revoked_client_certs
+            .iter()
+            .find(|f| f.len() != 64 || hex::decode(f).is_err())
+        {
+            return Err(ConfigError::Invalid(format!(
+                "auth.revoked_client_certs: 64 hex kutilgan ({bad})"
+            )));
+        }
+        if self.http.client_ca.is_some() && self.http.tls_cert.is_none() {
+            return Err(ConfigError::Invalid(
+                "http.client_ca faqat TLS bilan".into(),
+            ));
+        }
         for k in &self.auth.keys {
             if k.sha256.len() != 64 || hex::decode(&k.sha256).is_err() {
                 return Err(ConfigError::Invalid(format!(
                     "auth.keys[{}].sha256 64 hex bo'lishi kerak",
                     k.id
                 )));
+            }
+        }
+        if self.pqlink.enrollment == EnrollmentMode::Off && !self.sandbox {
+            return Err(ConfigError::Invalid(
+                "pqlink.enrollment = off faqat sandbox rejimida".into(),
+            ));
+        }
+        if let Some(n) = &self.pqlink.next {
+            if n.ed25519_label == self.pqlink.ed25519_label
+                || n.mldsa_blob == self.pqlink.mldsa_blob
+            {
+                return Err(ConfigError::Invalid(
+                    "pqlink.next joriy identifikatordan farq qilishi kerak".into(),
+                ));
             }
         }
         if self.pqlink.attestation_roots.is_empty() {

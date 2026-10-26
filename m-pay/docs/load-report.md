@@ -71,3 +71,17 @@ uchun teng og'irlikda. Faqat tasdiq yo'li (balans yechish bilan) — stub qatori
   (har avtorizatsiyada KDF/CMAC chaqiruvlari).
 * TLS o'chiq (sandbox HTTP); TLS handshake keep-alive tufayli faqat ulanish boshida.
 * Generator server bilan bir mashinada — natija pastki chegara sifatida qaralsin.
+
+## 6. 1-faza ta'siri (2026-10-24)
+
+P1.1 (rate-limit) va P1.2 (takroriy STAN jadvali, ADR-0010) qo'shilgandan keyin, o'sha usul
+(200 karta, 60 s, Shield dvigateli, `synchronous = FULL`):
+
+| Stsenariy | O'tkazuvchanlik | p50 | p99 | Xato |
+|---|---|---|---|---|
+| 32 parallel | 171–175 /s | 183–191 ms | 201–212 ms | 0 |
+| 8 parallel | 171 /s | 45 ms | 58 ms | 0 |
+
+Pasayish (238 → ~172, −27 %) — har avtorizatsiyaga ikkita qo'shimcha commit (PENDING va DONE).
+Yuk generatori bitta IP'dan ishlagani uchun IP chegarasini ko'taradi va handshake `503 BUSY` da
+`Retry-After` bilan qayta urinadi (provisioning xatosiz). 2-fazada qaytariladi (ADR-0009, ADR-0010).

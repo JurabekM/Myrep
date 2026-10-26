@@ -51,11 +51,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import uz.mpay.core.Hex
 import uz.mpay.core.ProvisionResult
+import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.maskPan
 import uz.mpay.wallet.sdk.BiometricGate
 import uz.mpay.wallet.sdk.MpayHceService
 import uz.mpay.wallet.sdk.MpayWallet
+import uz.mpay.wallet.sdk.WalletConfig
 import java.io.File
 
 /** Wallet SDK namoyish ilovasi (sandbox). */
@@ -83,6 +86,14 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         wallet = MpayWallet.get(this)
+        // Server ishonchi build vaqtida (P1.5); pin berilmagan sandbox build'ida — TOFU.
+        val pins = ServerPinPolicy.parseList(BuildConfig.SERVER_FINGERPRINTS)
+        wallet.config = WalletConfig(
+            pinnedFingerprints = pins,
+            tlsCertSha256 = BuildConfig.TLS_PIN.takeIf { it.isNotEmpty() }?.let(Hex::decode),
+            allowTofu = pins.isEmpty(),
+            rootFingerprint = BuildConfig.ROOT_FINGERPRINT.takeIf { it.isNotEmpty() },
+        )
         wallet.addListener(listener)
         setContent { App() }
     }
@@ -147,6 +158,17 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    /**
+     * Faqat debug: emulyatorda NFC yo'q — terminal ilovasi APDU'larni loopback ko'prik orqali yuboradi
+     * (`src/debug/.../VirtualNfcService`; release'da sinf yo'q, tugma ko'rinmaydi).
+     */
+    private fun startVirtualNfc() {
+        val i = Intent().setClassName(packageName, "uz.mpay.walletdemo.VirtualNfcService")
+        runCatching { startForegroundService(i) }
+            .onSuccess { status = "Virtual NFC yoqildi: 127.0.0.1:47661 (faqat emulyator sinovi)" }
+            .onFailure { status = "Virtual NFC: ${it.message}" }
+    }
+
     private fun makeDefault() {
         val i = Intent(CardEmulation.ACTION_CHANGE_DEFAULT)
             .putExtra(CardEmulation.EXTRA_CATEGORY, CardEmulation.CATEGORY_PAYMENT)
@@ -175,6 +197,12 @@ class MainActivity : FragmentActivity() {
             ) {
                 Text("M-Pay Hamyon", color = scheme.primary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text("Sandbox · PQ Link (X25519+ML-KEM-768)", color = Color.Gray, fontSize = 12.sp)
+                val pinCount = wallet.config.pinnedFingerprints.size
+                if (pinCount > 0) {
+                    Text("Server pinlangan: $pinCount ta barmoq izi (build)", color = Color(0xFF7CE0B5), fontSize = 12.sp, modifier = Modifier.testTag("pin_mode"))
+                } else {
+                    Text("Server pinlanmagan — TOFU (faqat sandbox)", color = Color(0xFFFFB74D), fontSize = 12.sp, modifier = Modifier.testTag("pin_mode"))
+                }
                 val nfc = NfcAdapter.getDefaultAdapter(this@MainActivity)
                 if (nfc == null) Text("Bu qurilmada NFC yo'q — tap ishlamaydi (provisioning ishlaydi)", color = Color(0xFFFFB74D), fontSize = 12.sp)
 
@@ -202,6 +230,9 @@ class MainActivity : FragmentActivity() {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton({ makeDefault() }, modifier = Modifier.testTag("default")) { Text("Standart to'lov ilovasi") }
+                    if (BuildConfig.DEBUG) {
+                        OutlinedButton({ startVirtualNfc() }, modifier = Modifier.testTag("virtual_nfc")) { Text("Virtual NFC") }
+                    }
                     OutlinedButton({ exportChain() }, modifier = Modifier.testTag("export")) { Text("Attestatsiya") }
                 }
                 Text(status, color = Color.White, modifier = Modifier.testTag("status"))

@@ -70,6 +70,49 @@ impl Authenticator {
     }
 }
 
+/// TLS ulanishida mijoz ko'rsatgan sertifikatning CN'i (`serve.rs` qo'yadi; sertifikat
+/// `[http] client_ca` bilan rustls tomonidan allaqachon tekshirilgan).
+#[derive(Debug, Clone)]
+pub struct PeerCert(pub Option<String>);
+
+/// Handler extractor: mTLS mijoz identifikatori (bo'lmasa `None`).
+#[derive(Debug, Clone, Default)]
+pub struct Mtls(pub Option<String>);
+
+impl<S: Send + Sync> axum::extract::FromRequestParts<S> for Mtls {
+    type Rejection = std::convert::Infallible;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        Ok(Self(
+            parts.extensions.get::<PeerCert>().and_then(|p| p.0.clone()),
+        ))
+    }
+}
+
+/// Sertifikat barmoq izi: DER'ning SHA-256.
+pub fn cert_fingerprint(der: &[u8]) -> [u8; 32] {
+    Sha256::digest(der).into()
+}
+
+/// PEM fayldagi birinchi sertifikat barmoq izi (hex) — `revoked_client_certs` uchun.
+pub fn cert_fingerprint_pem(path: &std::path::Path) -> Result<String, String> {
+    use rustls::pki_types::pem::PemObject;
+    let der = rustls::pki_types::CertificateDer::from_pem_file(path)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(hex::encode(cert_fingerprint(der.as_ref())))
+}
+
+/// DER sertifikatdan subject CN.
+pub fn cert_cn(der: &[u8]) -> Option<String> {
+    use der::Decode;
+    let c = x509_cert::Certificate::from_der(der).ok()?;
+    let cn = c.tbs_certificate().subject().common_name().ok()??;
+    Some(cn.value().into_owned())
+}
+
 /// Kalit uchun konfiguratsiyaga yoziladigan xesh.
 pub fn hash_key(key: &str) -> String {
     hex::encode(Sha256::digest(key.as_bytes()))

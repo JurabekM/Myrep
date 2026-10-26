@@ -6,9 +6,14 @@
 
 pub mod acquirer;
 pub mod auth;
+pub mod clientip;
 pub mod config;
+pub mod dedup;
+pub mod enroll;
 pub mod error;
 pub mod init;
+pub mod ratelimit;
+pub mod revocations;
 pub mod routes;
 pub mod serve;
 pub mod state;
@@ -49,7 +54,15 @@ impl RunningServer {
 pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
     let state = Arc::new(state::build(cfg).await.map_err(|e| e.to_string())?);
     let tls = match (&cfg.http.tls_cert, &cfg.http.tls_key) {
-        (Some(c), Some(k)) => Some(serve::load_tls(&cfg.resolve(c), &cfg.resolve(k))?),
+        (Some(c), Some(k)) => Some(serve::load_tls(
+            &cfg.resolve(c),
+            &cfg.resolve(k),
+            cfg.http
+                .client_ca
+                .as_ref()
+                .map(|p| cfg.resolve(p))
+                .as_deref(),
+        )?),
         _ => {
             tracing::warn!("TLS o'chiq — oddiy HTTP (faqat sandbox)");
             None
@@ -61,7 +74,17 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
     let addr = listener.local_addr().map_err(|e| e.to_string())?;
     let app = routes::router(state.clone());
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
-    let handle = tokio::spawn(serve::serve(listener, app, tls, async move {
+    let revoked = Arc::new(
+        cfg.auth
+            .revoked_client_certs
+            .iter()
+            .filter_map(|h| {
+                let mut b = [0u8; 32];
+                hex::decode_to_slice(h, &mut b).ok().map(|()| b)
+            })
+            .collect::<std::collections::HashSet<_>>(),
+    );
+    let handle = tokio::spawn(serve::serve(listener, app, tls, revoked, async move {
         let _ = rx.await;
     }));
     tracing::info!(%addr, "mpay-server tinglayapti");

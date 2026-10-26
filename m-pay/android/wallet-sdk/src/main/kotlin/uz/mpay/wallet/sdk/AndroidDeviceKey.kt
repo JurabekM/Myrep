@@ -53,6 +53,9 @@ class AndroidDeviceKey private constructor(private val alias: String, val strong
             return AndroidDeviceKey(alias, strongBox)
         }
 
+        fun exists(alias: String = DEFAULT_ALIAS): Boolean =
+            KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.containsAlias(alias)
+
         fun delete(alias: String = DEFAULT_ALIAS) {
             KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(alias)
         }

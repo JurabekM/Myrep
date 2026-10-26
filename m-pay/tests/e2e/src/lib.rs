@@ -67,6 +67,8 @@ pub struct Sandbox {
     pub terminal_key: String,
     pub fingerprint: String,
     pub ca: SandboxAttestationCa,
+    /// TLS (+ mTLS) bilan ishga tushirilgan.
+    pub tls: bool,
 }
 
 impl Sandbox {
@@ -85,12 +87,26 @@ impl Sandbox {
         keystore: mpay_server::config::KeyStoreBackend,
         tweak: impl FnOnce(&mut Config),
     ) -> Self {
+        Self::start_full(keystore, false, tweak).await
+    }
+
+    /// TLS va mTLS bilan (`init --tls`: mijoz CA'si, `operator-1`/`terminal-1` sertifikatlari,
+    /// `require_mtls = true`).
+    pub async fn start_tls(tweak: impl FnOnce(&mut Config)) -> Self {
+        Self::start_full(mpay_server::config::KeyStoreBackend::Memory, true, tweak).await
+    }
+
+    async fn start_full(
+        keystore: mpay_server::config::KeyStoreBackend,
+        tls: bool,
+        tweak: impl FnOnce(&mut Config),
+    ) -> Self {
         let _ = logs();
         let dir = tempfile::tempdir().unwrap();
         let out = init::run(&InitOptions {
             dir: dir.path().to_path_buf(),
             listen: "127.0.0.1:0".parse().unwrap(),
-            tls: false,
+            tls,
             force: false,
             keystore,
         })
@@ -112,6 +128,7 @@ impl Sandbox {
             terminal_key: out.terminal_key.to_string(),
             fingerprint: out.server_fingerprint,
             ca,
+            tls,
         }
     }
 
@@ -120,11 +137,36 @@ impl Sandbox {
     }
 
     pub fn base_url(&self) -> String {
-        format!("http://{}", self.addr())
+        if self.tls {
+            format!("https://localhost:{}", self.addr().port())
+        } else {
+            format!("http://{}", self.addr())
+        }
     }
 
     pub fn client(&self) -> ServerClient {
-        ServerClient::new(&self.base_url(), None).unwrap()
+        self.client_as(None)
+    }
+
+    /// `id` — mTLS sertifikati (`operator-1`, `terminal-1`); `None` — sertifikatsiz.
+    pub fn client_as(&self, id: Option<&str>) -> ServerClient {
+        if !self.tls {
+            return ServerClient::new(&self.base_url(), None).unwrap();
+        }
+        let root = std::fs::read(self.dir.path().join(init::TLS_CERT_FILE)).unwrap();
+        let ident = id.map(|id| {
+            let (c, k) = init::client_cert_files(id);
+            (
+                std::fs::read(self.dir.path().join(c)).unwrap(),
+                std::fs::read(self.dir.path().join(k)).unwrap(),
+            )
+        });
+        ServerClient::with_identity(
+            &self.base_url(),
+            Some(&root),
+            ident.as_ref().map(|(c, k)| (c.as_slice(), k.as_slice())),
+        )
+        .unwrap()
     }
 
     pub fn db_path(&self) -> PathBuf {
@@ -141,8 +183,15 @@ impl Sandbox {
         id
     }
 
+    /// Ro'yxatdan o'tmagan qurilma (ixtiyoriy challenge) — rad etilish stsenariylari uchun.
     pub fn device(&self, level: SecurityLevel) -> SoftDeviceKey {
-        self.ca.issue_device(level, b"e2e-enroll").unwrap()
+        self.ca.issue_device(level, b"e2e-unenrolled").unwrap()
+    }
+
+    /// Server nonce'i bilan yaratilgan qurilma (P1.7) — birinchi handshake'da ro'yxatga olinadi.
+    pub async fn enrolled_device(&self, level: SecurityLevel) -> SoftDeviceKey {
+        let nonce = self.client().enroll_nonce().await.unwrap();
+        self.ca.issue_device(level, &nonce).unwrap()
     }
 
     /// Ulangan soft-wallet (StrongBox qurilma).
@@ -150,7 +199,7 @@ impl Sandbox {
         let mut w = SoftWallet::new(
             self.client(),
             self.pinned_identity().await,
-            self.device(SecurityLevel::StrongBox),
+            self.enrolled_device(SecurityLevel::StrongBox).await,
         );
         w.connect().await.unwrap();
         w

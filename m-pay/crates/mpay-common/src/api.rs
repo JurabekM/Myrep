@@ -66,6 +66,50 @@ pub struct ServerIdentityDto {
     pub mldsa65: String,
     /// `SHA-256(ed25519 ‖ mldsa65)`, hex.
     pub fingerprint: String,
+    /// Kalit almashtirish (P1.6): e'lon qilingan keyingi identifikator va joriy kalitlar tasdig'i.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next: Option<NextIdentityDto>,
+}
+
+/// `POST /v1/devices/rekey` (sealed, ADR-0015): yangi qurilma kaliti attestatsiya zanjiri (DER, hex;
+/// challenge = `/v1/pqlink/enroll` nonce'i) va yangi kalit imzosi
+/// `"MPAY-PQLINK-V1 device-rekey" ‖ session_id ‖ eski device_id` ustidan (ECDSA P-256, DER, hex).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RekeyRequest {
+    pub cert_chain: Vec<String>,
+    pub signature: String,
+}
+
+/// `POST /v1/devices/rekey` javobi.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RekeyResponse {
+    pub device_id: String,
+    pub tokens_moved: u64,
+}
+
+/// `GET /v1/pqlink/revocations` — oflayn ildiz kaliti imzolagan bekor qilingan identifikatorlar
+/// (ADR-0014). Hamma qiymatlar hex.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RevocationsDto {
+    /// `mpay-pqlink-revocations/1`.
+    pub format: String,
+    pub version: u64,
+    pub revoked: Vec<String>,
+    pub root_ed25519: String,
+    pub root_mldsa65: String,
+    pub sig_ed25519: String,
+    pub sig_mldsa65: String,
+}
+
+/// Keyingi server identifikatori: `endorsement_*` — joriy identifikatorning
+/// `ROTATION_LABEL ‖ fingerprint` ustidan gibrid imzosi (hex).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NextIdentityDto {
+    pub ed25519: String,
+    pub mldsa65: String,
+    pub fingerprint: String,
+    pub endorsement_ed25519: String,
+    pub endorsement_mldsa65: String,
 }
 
 /// `POST /v1/tokens` so'rovi.

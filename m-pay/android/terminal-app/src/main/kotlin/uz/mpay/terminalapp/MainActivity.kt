@@ -7,6 +7,7 @@ import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,11 +44,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import uz.mpay.core.AuthResult
 import uz.mpay.core.MpayClient
 import uz.mpay.core.TerminalData
 import uz.mpay.core.TerminalException
 import uz.mpay.core.TerminalKernel
+import uz.mpay.core.ApduTransceiver
+import uz.mpay.core.TapResult
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.File
+import java.net.InetAddress
+import java.net.Socket
 import java.time.LocalDate
 
 /**
@@ -62,6 +74,7 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
         data class SeePhone(val masked: String?) : Screen()
         data class Result(val r: AuthResult) : Screen()
         data class Error(val msg: String) : Screen()
+        data class Info(val title: String, val lines: List<String>) : Screen()
     }
 
     private val prefs by lazy { getSharedPreferences("terminal", Context.MODE_PRIVATE) }
@@ -76,11 +89,24 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
 
     @Volatile private var armedAmountMinor: Long = 0
 
+    private val vault by lazy { TerminalVault(this) }
+
+    /** Import qilingan TLS + mTLS sozlamasi; `null` — qo'lda kiritilgan HTTP (faqat sandbox). */
+    private var profile by mutableStateOf<TerminalVault.Profile?>(null)
+
+    private val openBundle = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            importBundle { contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) } }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfc = NfcAdapter.getDefaultAdapter(this)
         server = prefs.getString("server", BuildConfig.DEFAULT_SERVER)!!
-        terminalKey = prefs.getString("terminal_key", "")!!
+        // 0-fazadagi ochiq saqlangan kalit o'chiriladi: endi faqat Keystore bilan shifrlangan paket.
+        prefs.edit().remove("terminal_key").apply()
+        profile = runCatching { vault.load() }.getOrNull()
         terminalId = prefs.getString("terminal_id", terminalId)!!
         merchantId = prefs.getString("merchant_id", merchantId)!!
         setContent { App() }
@@ -101,9 +127,8 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
     private fun arm() {
         val som = amount.toLongOrNull()
         if (som == null || som <= 0) { screen = Screen.Error("Summa noto'g'ri"); return }
-        if (terminalKey.isBlank()) { screen = Screen.Error("Terminal kaliti kiritilmagan (mpay-server init chiqishi)"); return }
-        prefs.edit().putString("server", server.trim()).putString("terminal_key", terminalKey.trim())
-            .putString("terminal_id", terminalId.trim()).putString("merchant_id", merchantId.trim()).apply()
+        if (key().isBlank()) { screen = Screen.Error("Terminal paketini import qiling yoki kalitni kiriting"); return }
+        saveSettings()
         val adapter = nfc
         if (adapter == null || !adapter.isEnabled) { screen = Screen.Error("NFC yo'q yoki o'chirilgan"); return }
         armedAmountMinor = som * 100
@@ -115,6 +140,66 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
         )
     }
 
+    private fun saveSettings() {
+        prefs.edit().putString("server", server.trim())
+            .putString("terminal_id", terminalId.trim()).putString("merchant_id", merchantId.trim()).apply()
+    }
+
+    private fun client(): MpayClient = profile?.let { MpayClient(it.serverUrl, tls = it.tls) } ?: MpayClient(server.trim())
+
+    private fun key(): String = profile?.terminalKey ?: terminalKey.trim()
+
+    /**
+     * Paket: avval ilova papkasidagi `terminal-bundle.json` (adb push), bo'lmasa fayl tanlash oynasi.
+     * Import qilingach fayl o'chiriladi (ichida sirlar bor).
+     */
+    private fun importClicked() {
+        val f = File(getExternalFilesDir(null), "terminal-bundle.json")
+        if (f.exists()) {
+            importBundle { f.readText().also { f.delete() } }
+        } else {
+            openBundle.launch(arrayOf("application/json", "*/*"))
+        }
+    }
+
+    private fun importBundle(read: () -> String) {
+        screen = Screen.Processing
+        lifecycleScope.launch(Dispatchers.IO) {
+            val next = runCatching { vault.import(read()) }.fold(
+                onSuccess = { p ->
+                    withContext(Dispatchers.Main) { profile = p }
+                    Screen.Info("Paket import qilindi", listOf("Server: ${p.serverUrl}", "mTLS kaliti: ${p.keyId} (Android Keystore)", "Endi \"Ulanishni tekshirish\" ni bosing"))
+                },
+                onFailure = { Screen.Error("Paket: ${it.message}") },
+            )
+            withContext(Dispatchers.Main) { screen = next }
+        }
+    }
+
+    /** `GET /v1/terminal/ping`: kalit, TLS pin va mTLS'ni tekshiradi. */
+    private fun ping() {
+        saveSettings()
+        screen = Screen.Processing
+        lifecycleScope.launch(Dispatchers.IO) {
+            val next = runCatching { client().terminalPing(key()) }.fold(
+                onSuccess = { (id, mtls) ->
+                    Screen.Info("Ulanish ishlaydi", listOfNotNull(
+                        "Kalit: $id",
+                        if (mtls) "TLS: server pinlangan, mTLS sertifikati qabul qilindi" else "Oddiy HTTP (faqat sandbox)",
+                    ))
+                },
+                onFailure = { Screen.Error("Ulanish: ${it.javaClass.simpleName}: ${it.message}") },
+            )
+            withContext(Dispatchers.Main) { screen = next }
+        }
+    }
+
+    private fun forget() {
+        vault.clear()
+        profile = null
+        screen = Screen.Info("Paket o'chirildi", listOf("Kalitlar Keystore'dan o'chirildi"))
+    }
+
     private fun disarm() {
         runCatching { nfc?.disableReaderMode(this) }
     }
@@ -124,16 +209,54 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
         val dep = IsoDep.get(tag) ?: return
         val amountMinor = armedAmountMinor
         if (amountMinor <= 0) return
-        runOnUiThread { screen = Screen.Processing }
-        val next: Screen = try {
-            val tap = dep.use {
+        completeTap(amountMinor) {
+            dep.use {
                 it.connect()
                 it.timeout = 3000
-                val d = LocalDate.now()
-                TerminalKernel.tap({ c -> it.transceive(c) }, amountMinor, TerminalData.dateBcd(d.year, d.monthValue, d.dayOfMonth))
+                kernelTap({ c -> it.transceive(c) }, amountMinor)
             }
-            Log.i(TAG, "tap: dpan=${tap.dpanMasked} atc=${tap.atc}")
-            val r = MpayClient(server.trim()).authorize(terminalKey.trim(), terminalId.trim(), merchantId.trim(), nextStan(), tap.iccHex())
+        }
+    }
+
+    private fun kernelTap(t: ApduTransceiver, amountMinor: Long): TapResult {
+        val d = LocalDate.now()
+        return TerminalKernel.tap(t, amountMinor, TerminalData.dateBcd(d.year, d.monthValue, d.dayOfMonth))
+    }
+
+    /**
+     * Faqat debug (emulyator): NFC o'rniga hamyon ilovasining virtual NFC ko'prigi (`127.0.0.1:47661`,
+     * kadr `u16 uzunlik ‖ APDU`). Terminal yadrosi, avtorizatsiya va natija ekrani — haqiqiy tap bilan bir xil.
+     */
+    private fun virtualTap() {
+        val som = amount.toLongOrNull()
+        if (som == null || som <= 0) { screen = Screen.Error("Summa noto'g'ri"); return }
+        if (key().isBlank()) { screen = Screen.Error("Terminal paketini import qiling yoki kalitni kiriting"); return }
+        saveSettings()
+        val amountMinor = som * 100
+        Thread {
+            completeTap(amountMinor) {
+                Socket(InetAddress.getLoopbackAddress(), 47661).use { s ->
+                    s.soTimeout = 5000
+                    val input = DataInputStream(s.getInputStream())
+                    val output = DataOutputStream(s.getOutputStream())
+                    kernelTap({ c ->
+                        output.writeShort(c.size)
+                        output.write(c)
+                        output.flush()
+                        ByteArray(input.readUnsignedShort()).also(input::readFully)
+                    }, amountMinor)
+                }
+            }
+        }.start()
+    }
+
+    /** Tap → avtorizatsiya → natija (NFC va virtual yo'l uchun umumiy; UI oqimidan tashqarida). */
+    private fun completeTap(amountMinor: Long, tapFn: () -> TapResult) {
+        runOnUiThread { screen = Screen.Processing }
+        val next: Screen = try {
+            val tap = tapFn()
+            Log.i(TAG, "tap: dpan=${tap.dpanMasked} atc=${tap.atc} summa=$amountMinor")
+            val r = client().authorize(key(), terminalId.trim(), merchantId.trim(), nextStan(), tap.iccHex())
             Log.i(TAG, "auth: rc=${r.responseCode} rrn=${r.rrn} dpan=${r.dpanMasked}")
             armedAmountMinor = 0
             Screen.Result(r)
@@ -163,6 +286,11 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
                 if (nfc == null) Text("Bu qurilmada NFC yo'q — tap qabul qilinmaydi", color = Color(0xFFFFB74D), fontSize = 12.sp)
 
                 OutlinedTextField(amount, { amount = it.filter(Char::isDigit).take(9) }, label = { Text("Summa (so'm)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("amount"))
+                if (BuildConfig.DEBUG) {
+                    OutlinedButton({ virtualTap() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("virtual_tap")) {
+                        Text("Virtual tap (emulyator, faqat debug)")
+                    }
+                }
                 Button({ arm() }, enabled = screen !is Screen.Waiting && screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("charge")) {
                     Text("To'lov qabul qilish")
                 }
@@ -174,8 +302,21 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
 
                 Spacer(Modifier.height(12.dp))
                 Text("Sozlamalar", color = Color.Gray, fontSize = 14.sp)
-                OutlinedTextField(server, { server = it }, label = { Text("Server") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("server"))
-                OutlinedTextField(terminalKey, { terminalKey = it }, label = { Text("Terminal kaliti") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth().testTag("terminal_key"))
+                val p = profile
+                if (p != null) {
+                    Text("TLS + mTLS: ${p.serverUrl}", color = Color(0xFF7CE0B5), fontSize = 13.sp, modifier = Modifier.testTag("tls_profile"))
+                    Text("Kalit ${p.keyId} · mijoz kaliti Android Keystore'da", color = Color.Gray, fontSize = 12.sp)
+                } else {
+                    Text("Qo'lda (oddiy HTTP, faqat sandbox). Ishlab chiqarishda — terminal paketi.", color = Color(0xFFFFB74D), fontSize = 12.sp)
+                    OutlinedTextField(server, { server = it }, label = { Text("Server") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("server"))
+                    OutlinedTextField(terminalKey, { terminalKey = it }, label = { Text("Terminal kaliti (saqlanmaydi)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth().testTag("terminal_key"))
+                }
+                Button({ ping() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("ping")) { Text("Ulanishni tekshirish") }
+                if (p == null) {
+                    OutlinedButton({ importClicked() }, modifier = Modifier.fillMaxWidth().testTag("import")) { Text("Terminal paketini import qilish") }
+                } else {
+                    OutlinedButton({ forget() }, modifier = Modifier.fillMaxWidth().testTag("forget")) { Text("Paketni o'chirish") }
+                }
                 OutlinedTextField(terminalId, { terminalId = it.take(8) }, label = { Text("Terminal ID (8)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("terminal_id"))
                 OutlinedTextField(merchantId, { merchantId = it.take(15) }, label = { Text("Merchant ID (≤15)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("merchant_id"))
             }
@@ -203,6 +344,7 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
                 )
             }
             is Screen.Error -> Triple(Color(0xFF6B1F24), "Xato", listOf(s.msg))
+            is Screen.Info -> Triple(Color(0xFF1C3A5E), s.title, s.lines)
         }
         Card(
             shape = RoundedCornerShape(16.dp),

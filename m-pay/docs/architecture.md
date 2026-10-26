@@ -118,4 +118,4 @@ Batafsil KDF ta'rifi va KAT vektorlari: `docs/specs/emv-profile.md`.
 ## 7. Ochiq savollar
 
 * `TODO(spec):` PostgreSQL'ga o'tish fazasi va migratsiya strategiyasi.
-* `TODO(spec):` Ichki API uchun mTLS (operator/terminal kalitlari hozircha Bearer).
+* Ichki API uchun mTLS — 1-faza P1.3 (ADR-0011). `TODO(spec):` sertifikat bekor qilish (CRL/OCSP), bank PKI'si.

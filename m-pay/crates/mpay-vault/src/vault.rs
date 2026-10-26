@@ -712,6 +712,33 @@ impl Vault {
     }
 
     /// Qurilma so'rovi bilan LUK to'ldirish.
+    /// Qurilma kalitini almashtirish (ADR-0015): eski qurilmaga bog'langan tokenlar yangisiga o'tadi.
+    pub async fn rebind_device(&self, old: &DeviceId, new: &DeviceId) -> Result<u64, VaultError> {
+        let ts = self.clock.unix();
+        let _g = self.write.lock().await;
+        let mut tx = crate::db::begin_write(&self.db).await?;
+        let n = sqlx::query("UPDATE vault_tokens SET device_id = ? WHERE device_id = ?")
+            .bind(new.to_hex())
+            .bind(old.to_hex())
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+        audit::append(
+            &mut tx,
+            ts,
+            &AuditEntry {
+                actor: ACTOR_DEVICE,
+                action: "DEVICE_REKEY",
+                token_id: None,
+                details: json!({ "old_device": old.to_hex(), "new_device": new.to_hex(), "tokens": n }),
+            },
+        )
+        .await?;
+        tx.commit().await?;
+        tracing::info!(old = %old, new = %new, tokens = n, "vault: qurilma kaliti almashtirildi");
+        Ok(n)
+    }
+
     pub async fn replenish_luks(
         &self,
         token_id: &TokenId,

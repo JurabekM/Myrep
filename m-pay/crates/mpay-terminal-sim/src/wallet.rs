@@ -155,6 +155,31 @@ impl SoftWallet {
             .await
     }
 
+    /// Qurilma kalitini almashtirish (ADR-0015): `new` — `/v1/pqlink/enroll` nonce'i bilan yaratilgan
+    /// kalit. Yangi kalit `REKEY_LABEL ‖ session_id ‖ eski device_id` ni imzolaydi; muvaffaqiyatda
+    /// hamyon yangi kalitga o'tadi va keyingi so'rovdan oldin qayta ulanish kerak.
+    pub async fn rekey(
+        &mut self,
+        new: SoftDeviceKey,
+    ) -> Result<mpay_common::api::RekeyResponse, WalletError> {
+        use mpay_pqlink::DeviceSigner;
+        let s = self.session.as_ref().ok_or(WalletError::NotConnected)?;
+        let msg = [
+            mpay_pqlink::crypto::REKEY_LABEL,
+            &s.session_id()[..],
+            &s.device_id().0[..],
+        ]
+        .concat();
+        let req = mpay_common::api::RekeyRequest {
+            cert_chain: new.cert_chain().iter().map(hex::encode).collect(),
+            signature: hex::encode(new.sign(&msg)?),
+        };
+        let r = self.call("/v1/devices/rekey", &req).await?;
+        self.device = new;
+        self.session = None;
+        Ok(r)
+    }
+
     pub async fn replenish(&mut self, token_id: &TokenId) -> Result<LuksResponse, WalletError> {
         self.call(&format!("/v1/tokens/{token_id}/luks"), &Empty {})
             .await

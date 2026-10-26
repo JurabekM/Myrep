@@ -61,6 +61,7 @@ struct Established {
     c2s: SecretKey32,
     s2c: SecretKey32,
     device: VerifiedDevice,
+    attested_at: Option<i64>,
     recv_seq: u64,
     send_seq: u64,
     expires: i64,
@@ -87,6 +88,8 @@ pub struct SessionInfo {
     pub device_id: DeviceId,
     pub security_level: SecurityLevel,
     pub expires_at: i64,
+    /// Qurilma attestatsiyadan o'tgan vaqt (ro'yxatga olish darvozasi bo'lsa; ADR-0015).
+    pub attested_at: Option<i64>,
 }
 
 /// PQ Link server.
@@ -96,6 +99,7 @@ pub struct PqLinkServer {
     cfg: ServerConfig,
     clock: Arc<dyn Clock>,
     sessions: Mutex<HashMap<SessionId, Slot>>,
+    enrollment: Option<Arc<dyn crate::EnrollmentGate>>,
     /// `sessions` dagi `Pending` soni — faqat `sessions` qulfi ostida o'zgartiriladi.
     pending: AtomicUsize,
 }
@@ -122,6 +126,7 @@ impl PqLinkServer {
             cfg,
             clock,
             sessions: Mutex::new(HashMap::new()),
+            enrollment: None,
             pending: AtomicUsize::new(0),
         }
     }
@@ -153,6 +158,26 @@ impl PqLinkServer {
         if matches!(slot, Slot::Pending(_)) {
             self.pending.fetch_sub(1, Ordering::Relaxed);
         }
+    }
+
+    /// Attestatsiya zanjirini server ildizlari va siyosati bo'yicha tekshiradi (qurilma kalitini
+    /// almashtirishda — handshake'dan tashqari, ADR-0015).
+    pub fn verify_device_chain(
+        &self,
+        chain: &[Vec<u8>],
+    ) -> Result<crate::attestation::VerifiedDevice, PqLinkError> {
+        verify_chain(
+            chain,
+            &self.anchors,
+            &self.cfg.attestation,
+            self.clock.unix(),
+        )
+    }
+
+    /// Qurilmani ro'yxatdan o'tkazish talabi (P1.7). Bo'lmasa — har qanday attestatsiyali qurilma.
+    pub fn with_enrollment(mut self, gate: Arc<dyn crate::EnrollmentGate>) -> Self {
+        self.enrollment = Some(gate);
+        self
     }
 
     pub fn identity(&self) -> &ServerIdentity {
@@ -255,6 +280,10 @@ impl PqLinkServer {
         let device = verify_chain(&cf.cert_chain, &self.anchors, &self.cfg.attestation, now)?;
         let msg = [DEVICE_SIG_LABEL, &pending.th2[..]].concat();
         device.verify_signature(&msg, &cf.device_sig)?;
+        let attested_at = match &self.enrollment {
+            Some(gate) => Some(gate.admit(&device)?),
+            None => None,
+        };
 
         let expires = now + self.cfg.session_ttl_secs;
         let accept = ServerAcceptInner {
@@ -274,6 +303,7 @@ impl PqLinkServer {
             device_id: device.device_id,
             security_level: device.security_level,
             expires_at: expires,
+            attested_at,
         };
         let SessionKeys { c2s, s2c, .. } = pending.keys;
         self.lock()?.insert(
@@ -282,6 +312,7 @@ impl PqLinkServer {
                 c2s,
                 s2c,
                 device,
+                attested_at,
                 recv_seq: 1,
                 send_seq: 1,
                 expires,
@@ -318,6 +349,7 @@ impl PqLinkServer {
                     device_id: s.device.device_id,
                     security_level: s.device.security_level,
                     expires_at: s.expires,
+                    attested_at: s.attested_at,
                 };
                 Ok((info, pt))
             }
