@@ -56,3 +56,12 @@ Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyz
 - **AC-03:** xato yo'q, qamrov 70–100%; |α̂ − haqiqiy α| medianasi (haqiqiy α = reja + o'rnatish xatosi σ = 3°).
 - **AC-04:** qamrov 30–60% (yarmi almashinuvli); sayt va barcha rejadagi sektorlar INCONCLUSIVE.
 - Tasodifiy parametrlar: 3–6 sektor, 1–3 ARFCN, halqa/to'rtburchak, radius 150–400 m, 80% piyoda (1.4 m/s) / 20% 5 m/s, soya σ 6–8 dB, `pNeighbor` 0.5–1.0, bootstrap 50.
+
+## ADR-010 — Room sxemasiga qo'shimcha ustunlar (2-bosqich, 2026-10-26)
+- **Kontekst:** 5.2 jadvali saytlar ro'yxatidagi "oxirgi verdikt", natija ekranidagi CI yarim kengligi/qamrov/yetishmayotgan binlar va tiklashda SIM'ni bilish uchun yetarli emas.
+- **Qaror:** `cell_sample.rx_nanos` (ADR-008.1), `session.verdict`, `session.coverage_pct`, `session.subscription_id`, `sector_result.detail_json` (to'liq `SectorResult`). `sector_result` dagi baholash ustunlari INCONCLUSIVE uchun nullable. `sector_result.sector_id` — `ON DELETE SET NULL` (reja qayta import qilinganda natija saqlanadi).
+- **Sabab:** Xom jadvallar o'zgarmaydi; qo'shimchalar faqat hosila ma'lumot.
+
+## ADR-011 — Survey arxitekturasi (2-bosqich, 2026-10-26)
+- **Qaror:** Android'siz `SurveyEngine` (oqimlar → `BufferedSampleWriter` + xotiradagi nusxa → har 5 s `LiveAnalyzer`), `SurveyForegroundService` faqat "yelim" kod. Holat UI'ga `SurveyController` (singleton StateFlow) orqali. Servis `START_NOT_STICKY`: jarayon o'ldirilsa, keyingi ishga tushishda RUNNING sessiya topilib davom ettirish taklif qilinadi (§7), avtomatik qayta boshlanmaydi.
+- **Sabab:** Engine'ni virtual vaqt bilan testlash mumkin; foydalanuvchi bilmagan holda fon yig'ish bo'lmaydi.

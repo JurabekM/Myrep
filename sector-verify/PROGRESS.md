@@ -1,8 +1,8 @@
 # PROGRESS — Sector Verify
 
 ## Joriy holat
-- **Bosqich:** 1 — tugadi (tag `sector-verify/phase-1-done`)
-- **Keyingi:** 2-bosqich — Android yig'ish va ma'lumot
+- **Bosqich:** 2 — tugadi (tag `sector-verify/phase-2-done`); **H1 kutilmoqda** (`docs/HUMAN_TASKS.md`)
+- **Keyingi:** 3-bosqich — UI, jonli tahlil, hisobot (H1 bilan parallel)
 
 ## Bajarilgan
 ### 0-bosqich
@@ -30,6 +30,16 @@ To'liq jadval: `docs/reports/montecarlo-200.md`, `docs/reports/montecarlo-1000.m
 **Ma'lumot uchun (AC emas):** umumiy qamrov yetarli bo'lgan xatosiz simulyatsiyalarda sektor PASS ≈ 81%, sayt PASS ≈ 38–41%
 (sayt PASS uchun 3–18 ta cell'ning hammasi PASS bo'lishi kerak; qolganlari asosan INCONCLUSIVE — sektor oynasida qamrov < 60% yoki A/B farqi > 30°).
 Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak.
+
+### 2-bosqich
+- ✅ `:core:telephony` — CellCollector (requestCellInfoUpdate 1 s + API 31+ CellInfoListener, dedup), CellNormalizer, SubscriptionSelector (dual-SIM), TrafficGenerator (HTTPS HEAD, 2 s), DeviceCapabilityProbe (60 s).
+- ✅ `:core:location` — GnssCollector (GPS_PROVIDER, 1 s, 0 m, Play Services'siz).
+- ✅ `:core:format` — reja CSV (validatsiya, o'zbekcha xatolar), sessiya CSV/ZIP, `session.json`, `report.json` v1, kanonik JSON, imzo/tekshiruv.
+- ✅ `:core:data` — Room v1 (5.2 + `rx_nanos`, `verdict`, `coverage_pct`, `subscription_id`, `detail_json` — ADR-010), SQLCipher (32 bayt parol, Keystore AES-GCM bilan o'ralgan, `noBackupFilesDir`), DataStore sozlamalari, 1 s buferli yozuvchi, ZIP eksport.
+- ✅ `:feature:survey` — SurveyForegroundService (location FGS, partial WakeLock, bildirishnoma: namunalar soni, qamrov %, "Natija tayyor"), SurveyEngine (jonli tahlil har 5 s), yakuniy tahlil, RUNNING sessiyani tiklash API, oldindan tekshiruv mantiqi.
+- ✅ Debug ekran (faqat debug build): chastota, namunalar, ko'rinayotgan PCI'lar, probe, CSV import, boshlash/tugatish, ZIP eksport.
+- ✅ Testlar: normalizer (Robolectric CellInfo builder'lari bilan), DAO/repozitoriy (Robolectric), AC-07 (virtual vaqt: o'ldirilganda ≤ 2 s yo'qotish), engine, pre-check, saqlangan sessiyadan yakuniy tahlil.
+- ✅ Instrumental testlar (`core/data/src/androidTest`): SQLCipher fayli shifrlangan, Keystore wrapper, sxema v1 (MigrationTestHelper), AC-07 haqiqiy DB'da. Bu muhitda emulyator yo'q → CI `instrumented` job'ida (GitHub, KVM).
 
 ## Oxirgi test natijalari
 - 2026-10-26: `./gradlew check` — BUILD SUCCESSFUL (1-bosqich: model 5 test, analysis 34 test, koverVerify 99.7%).
