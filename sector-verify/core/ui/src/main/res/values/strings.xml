@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="verdict_pass">PASS — mos</string>
+    <string name="verdict_warn">WARN — ogohlantirish</string>
+    <string name="verdict_fail">FAIL — xato</string>
+    <string name="verdict_inconclusive">INCONCLUSIVE — aniqlanmadi</string>
+    <string name="cause_none">Sabab yo\'q</string>
+    <string name="cause_band_port_swap">Bitta bandda port almashgan</string>
+    <string name="cause_cell_config_swap">Sektor almashinuvi (konfiguratsiya/CPRI)</string>
+    <string name="cause_antenna_rotated">Antenna burilgan</string>
+    <string name="cause_pci_missing">PCI eshitilmadi</string>
+    <string name="cause_pci_unexpected">Rejada yo\'q PCI</string>
+    <string name="cause_low_coverage">Qamrov yetarli emas</string>
+    <string name="action_ok">Muammo topilmadi.</string>
+    <string name="action_cell_config_swap">PCI %1$s haqiqatda %2$s sektori yo\'nalishida nurlanmoqda. Bazaviy stansiyada cell → sektor konfiguratsiyasini va CPRI/optika ulanishlarini tekshiring.</string>
+    <string name="action_band_port_swap">PCI %1$s faqat shu bandda %2$s sektoriga nurlanmoqda. Shu band uchun RRU–antenna feeder/jamperlarini tekshiring.</string>
+    <string name="action_antenna_rotated">Antenna %1$s° ga burilgan. Azimutni kompas bilan tekshirib, rejadagi %2$s° ga to\'g\'rilang.</string>
+    <string name="action_pci_missing">Sektor eshitilmadi. Cell holati (o\'chiq/bloklangan), RRU, feeder va konfiguratsiyani tekshiring.</string>
+    <string name="action_pci_unexpected">Rejada yo\'q PCI sayt yaqinida serving bo\'ldi. Rejani yoki qo\'shni sayt PCI\'sini tekshiring (verdiktga ta\'sir qilmaydi).</string>
+    <string name="action_low_coverage">Qamrov yetarli emas. Ko\'rsatilgan yo\'nalishlarda qo\'shimcha yuring va qayta tekshiring.</string>
+    <string name="action_large_error">Azimut xatosi katta (%1$s°). Antenna yo\'nalishini va rejani tekshiring.</string>
+    <string name="action_unreliable">Baholash ishonchsiz (A va B usullari farqli). Qayta tekshiruv tavsiya etiladi.</string>
+    <string name="common_back">Orqaga</string>
+    <string name="common_cancel">Bekor qilish</string>
+    <string name="common_ok">OK</string>
+    <string name="common_north">Shimol</string>
+    <string name="polar_plan">Reja</string>
+    <string name="polar_measured">O\'lchov (95% oraliq)</string>
+    <string name="radar_title">Qamrov radari</string>
+    <string name="radar_description">Qamrov %1$d%%, yetishmayotgan yo\'nalishlar: %2$s</string>
+    <string name="polar_description">Polar diagramma: %1$s</string>
+</resources>

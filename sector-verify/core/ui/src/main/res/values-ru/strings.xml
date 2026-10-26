@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="verdict_pass">PASS — соответствует</string>
+    <string name="verdict_warn">WARN — предупреждение</string>
+    <string name="verdict_fail">FAIL — ошибка</string>
+    <string name="verdict_inconclusive">INCONCLUSIVE — не определено</string>
+    <string name="cause_none">Нет причины</string>
+    <string name="cause_band_port_swap">Перепутаны порты в одном диапазоне</string>
+    <string name="cause_cell_config_swap">Перепутаны сектора (конфигурация/CPRI)</string>
+    <string name="cause_antenna_rotated">Антенна повёрнута</string>
+    <string name="cause_pci_missing">PCI не обнаружен</string>
+    <string name="cause_pci_unexpected">PCI не из плана</string>
+    <string name="cause_low_coverage">Недостаточное покрытие</string>
+    <string name="action_ok">Проблем не найдено.</string>
+    <string name="action_cell_config_swap">PCI %1$s фактически излучает в направлении сектора %2$s. Проверьте конфигурацию cell → сектор и подключения CPRI/оптики.</string>
+    <string name="action_band_port_swap">PCI %1$s только в этом диапазоне излучает в сектор %2$s. Проверьте фидеры/джамперы RRU–антенна этого диапазона.</string>
+    <string name="action_antenna_rotated">Антенна повёрнута на %1$s°. Проверьте азимут компасом и выставьте плановые %2$s°.</string>
+    <string name="action_pci_missing">Сектор не слышен. Проверьте состояние cell (выключен/заблокирован), RRU, фидер и конфигурацию.</string>
+    <string name="action_pci_unexpected">PCI не из плана был обслуживающим у сайта. Проверьте план или PCI соседнего сайта (на вердикт не влияет).</string>
+    <string name="action_low_coverage">Недостаточное покрытие. Пройдите в указанных направлениях и повторите проверку.</string>
+    <string name="action_large_error">Большая ошибка азимута (%1$s°). Проверьте направление антенны и план.</string>
+    <string name="action_unreliable">Оценка ненадёжна (методы A и B расходятся). Рекомендуется повторная проверка.</string>
+    <string name="common_back">Назад</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="common_ok">OK</string>
+    <string name="common_north">Север</string>
+    <string name="polar_plan">План</string>
+    <string name="polar_measured">Измерение (95% интервал)</string>
+    <string name="radar_title">Радар покрытия</string>
+    <string name="radar_description">Покрытие %1$d%%, не хватает направлений: %2$s</string>
+    <string name="polar_description">Полярная диаграмма: %1$s</string>
+</resources>
