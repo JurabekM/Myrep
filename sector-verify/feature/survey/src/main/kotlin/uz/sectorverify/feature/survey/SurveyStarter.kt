@@ -23,14 +23,25 @@ sealed interface StartResult {
     data object UnknownSite : StartResult
 }
 
+/** Starts, resumes and stops surveys; faked in UI tests. */
+interface SurveyLauncher {
+    suspend fun start(siteId: Long, mode: SessionMode, sim: SimInfo?, appVersion: String): StartResult
+
+    fun resume(sessionId: String)
+
+    suspend fun abandon(sessionId: String)
+
+    fun stop()
+}
+
 /** Creates the session row (with a full copy of the effective config) and starts the foreground service. */
 class SurveyStarter @Inject constructor(
     @ApplicationContext private val context: Context,
     private val plans: PlanRepository,
     private val sessions: SessionRepository,
     private val settings: SettingsRepository,
-) {
-    suspend fun start(siteId: Long, mode: SessionMode, sim: SimInfo?, appVersion: String): StartResult {
+) : SurveyLauncher {
+    override suspend fun start(siteId: Long, mode: SessionMode, sim: SimInfo?, appVersion: String): StartResult {
         val site = plans.site(siteId) ?: return StartResult.UnknownSite
         if (sim == null) return StartResult.NoMatchingSim(site.plan.mccMnc)
         val s = settings.current()
@@ -52,9 +63,13 @@ class SurveyStarter @Inject constructor(
     }
 
     /** §7: a RUNNING session left by a killed process can be resumed (same id, data kept). */
-    fun resume(sessionId: String) = SurveyForegroundService.start(context, sessionId)
+    override fun resume(sessionId: String) {
+        SurveyForegroundService.start(context, sessionId)
+    }
 
-    suspend fun abandon(sessionId: String) = sessions.finish(sessionId, SessionStatus.ABORTED)
+    override suspend fun abandon(sessionId: String) = sessions.finish(sessionId, SessionStatus.ABORTED)
 
-    fun stop() = SurveyForegroundService.stop(context)
+    override fun stop() {
+        SurveyForegroundService.stop(context)
+    }
 }

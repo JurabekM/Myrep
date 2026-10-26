@@ -22,7 +22,7 @@ import uz.sectorverify.data.settings.SettingsRepository
 import uz.sectorverify.feature.survey.R
 import uz.sectorverify.feature.survey.StartResult
 import uz.sectorverify.feature.survey.SurveyController
-import uz.sectorverify.feature.survey.SurveyStarter
+import uz.sectorverify.feature.survey.SurveyLauncher
 import uz.sectorverify.feature.survey.SurveyState
 import uz.sectorverify.model.DeviceCapabilities
 import uz.sectorverify.model.SessionMode
@@ -44,7 +44,7 @@ data class DebugUi(
 class DebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     plans: PlanRepository,
-    private val starter: SurveyStarter,
+    private val starter: SurveyLauncher,
     private val exporter: SessionExporter,
     private val settings: SettingsRepository,
     private val planRepo: PlanRepository,

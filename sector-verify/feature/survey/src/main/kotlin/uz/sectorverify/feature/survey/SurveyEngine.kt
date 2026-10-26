@@ -25,6 +25,9 @@ import uz.sectorverify.model.GnssFix
 import uz.sectorverify.model.SitePlan
 import uz.sectorverify.telephony.TrafficStatus
 
+/** One map point: position and the serving PCI at that moment (track colour). */
+data class TrackPoint(val lat: Double, val lon: Double, val servingPci: Int?)
+
 data class SurveyState(
     val sessionId: String? = null,
     val siteCode: String? = null,
@@ -34,6 +37,7 @@ data class SurveyState(
     /** Measured CellInfo update rate of the serving cell (distinct timestamps per second). */
     val rateHz: Double = 0.0,
     val lastFix: GnssFix? = null,
+    val track: List<TrackPoint> = emptyList(),
     val visibleCells: List<CellKey> = emptyList(),
     val live: LiveSnapshot? = null,
     val traffic: TrafficStatus? = null,
@@ -58,6 +62,8 @@ class SurveyEngine(
     private val samples = ArrayList<CellSample>()
     private val fixes = ArrayList<GnssFix>()
     private val servingTimes = sortedSetOf<Long>()
+    private val track = ArrayList<TrackPoint>()
+    private var servingPci: Int? = null
     private val _state = MutableStateFlow(SurveyState(sessionId = sessionId, siteCode = plan.code, running = true))
     val state: StateFlow<SurveyState> = _state.asStateFlow()
 
@@ -74,6 +80,8 @@ class SurveyEngine(
             samples += restoredSamples
             fixes += restoredFixes
             restoredSamples.filter { it.registered }.forEach { servingTimes += it.tNanos }
+            servingPci = restoredSamples.lastOrNull { it.registered }?.pci
+            restoredFixes.forEach { track += TrackPoint(it.lat, it.lon, null) }
         }
         writer.start(this)
         launch { cells.collect { onCells(it) } }
@@ -92,6 +100,7 @@ class SurveyEngine(
         val (count, rate) = lock.withLock {
             samples += batch
             batch.filter { it.registered }.forEach { servingTimes += it.tNanos }
+            batch.lastOrNull { it.registered }?.let { servingPci = it.pci }
             samples.size to rate()
         }
         val visible = batch.map { it.key }.distinct().sorted()
@@ -100,11 +109,12 @@ class SurveyEngine(
 
     private suspend fun onFix(fix: GnssFix) {
         writer.addFix(fix)
-        val count = lock.withLock {
+        val (count, points) = lock.withLock {
             fixes += fix
-            fixes.size
+            track += TrackPoint(fix.lat, fix.lon, servingPci)
+            fixes.size to track.toList()
         }
-        _state.update { it.copy(fixes = count, lastFix = fix) }
+        _state.update { it.copy(fixes = count, lastFix = fix, track = points) }
     }
 
     private fun rate(): Double {
