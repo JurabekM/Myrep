@@ -709,6 +709,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7c1832837b905bbfb5101e07cc24c8deddf52f93225eee6ead5f4d63d53ddcb"
 dependencies = [
  "const-oid 0.9.6",
+ "pem-rfc7468 0.7.0",
  "zeroize",
 ]
 
@@ -721,7 +722,7 @@ dependencies = [
  "const-oid 0.10.2",
  "der_derive",
  "flagset",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0",
  "zeroize",
 ]
 
@@ -887,7 +888,7 @@ dependencies = [
  "ff",
  "group",
  "hybrid-array",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0",
  "pkcs8 0.11.0",
  "rand_core 0.10.1",
  "sec1",
@@ -1878,6 +1879,7 @@ name = "mpay-e2e"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "base64 0.23.1",
  "clap",
  "hex",
  "mpay-common",
@@ -1890,7 +1892,10 @@ dependencies = [
  "mpay-smsgw",
  "mpay-terminal-sim",
  "proptest",
+ "rand_core 0.6.4",
  "rcgen",
+ "ring",
+ "rsa",
  "serde_json",
  "sha2 0.11.1",
  "sqlx",
@@ -1911,8 +1916,11 @@ dependencies = [
  "base64 0.23.1",
  "mpay-common",
  "p256",
+ "rand_core 0.6.4",
  "rcgen",
  "reqwest",
+ "ring",
+ "rsa",
  "rustls",
  "serde",
  "serde_json",
@@ -2331,6 +2339,15 @@ checksum = "d354a98a3d1251555de99e8fdd8afda05573c31b82f59063a7b0a29b5527f120"
 dependencies = [
  "base64 0.23.1",
  "serde_core",
+]
+
+[[package]]
+name = "pem-rfc7468"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88b39c9bfcfc231068454382784bb460aae594343fb030d46e9f50a645418412"
+dependencies = [
+ "base64ct",
 ]
 
 [[package]]

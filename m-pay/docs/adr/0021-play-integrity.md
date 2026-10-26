@@ -49,7 +49,8 @@ loyihasi va Play Console'dagi ilovani talab qiladi — sandbox'da ular yo'q.
      `requestHash` i uchun — operator kaliti va mTLS'siz, TLS sandbox'ida ham), `mpay-tsim` — operator
      endpointidan (`/v1/sandbox/integrity-token`), soft-hamyon va yuk generatori — kalitdan oladi. 7 ta stsenariy (`strong`, `device`, `basic`, `no_integrity`,
      `unrecognized`, `play_protect_risk`, `remote_control`).
-   * `google` — `decodeIntegrityToken` (OAuth2 access token fayl/muhitdan).
+   * `google` — `decodeIntegrityToken`; OAuth2 access token — Google xizmat akkaunti kalitidan (RS256
+     JWT `ring` bilan, RFC 7523, kesh; 2026-10-26) yoki tashqaridan (fayl/muhit).
    Production'da `mock` taqiqlangan va `certificate_sha256` majburiy (`validate`).
 5. **Hamyon:** Kotlin `Integrity.requestHash` (Rust bilan umumiy test vektori), `MpayClient.provision(…,
    integrityToken)`, wallet-sdk `IntegrityTokenProvider` (production — Play Integrity standart
@@ -66,8 +67,9 @@ loyihasi va Play Console'dagi ilovani talab qiladi — sandbox'da ular yo'q.
   `INTEGRITY_INVALID`, TLS+mTLS orqali), smoke (haqiqiy binarlar, 10 provisioning — 10 verdict),
   emulyatorda demo ilova (`docs/android-testing.md` §7).
 * `TODO(spec):`
-  * Google bilan haqiqiy integratsiya: Cloud loyiha raqami, Play Console, xizmat akkaunti → access
-    token oqimi, Android'da `com.google.android.play:integrity` va `StandardIntegrityManager`.
+  * Google bilan haqiqiy integratsiya: Cloud loyiha raqami, Play Console, xizmat akkaunti kaliti
+    (oqim tayyor, emulyatorda sinalgan), Android'da `com.google.android.play:integrity` va
+    `StandardIntegrityManager`.
     Verdict maydonlari Google'ning ochiq hujjatiga muvofiq; integratsiyada joriy hujjat bilan
     qayta solishtiriladi.
   * Kvota va keshlash siyosati (standart so'rov provayderini oldindan tayyorlash).

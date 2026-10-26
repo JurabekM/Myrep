@@ -110,6 +110,7 @@ async fn enrollment_off_only_in_sandbox() {
         base_url: "https://playintegrity.googleapis.com".into(),
         access_token_env: Some("MPAY_PLAY_INTEGRITY_TOKEN".into()),
         access_token_file: None,
+        service_account_file: None,
         timeout_ms: 2000,
     });
     let err = prod.validate().unwrap_err().to_string();

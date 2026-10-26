@@ -31,6 +31,10 @@ clap.workspace = true
 sqlx.workspace = true
 rcgen.workspace = true
 proptest.workspace = true
+rsa = { workspace = true, features = ["std", "pem"] }
+rand_core06 = { package = "rand_core", version = "0.6.4", features = ["getrandom"] }
+ring = "0.17.14"
+base64.workspace = true
 axum.workspace = true
 tower.workspace = true
 

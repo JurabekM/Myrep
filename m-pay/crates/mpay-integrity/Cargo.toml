@@ -22,8 +22,14 @@ reqwest.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 zeroize.workspace = true
+# Xizmat akkaunti JWT (RS256) imzosi — doimiy vaqtli (rustls bilan bir xil versiya).
+ring = "0.17.14"
+tokio = { workspace = true, features = ["sync"] }
 
 [dev-dependencies]
+# Faqat testda RSA kalit yaratish (imzolash ishlab chiqarishda — ring).
+rsa = { workspace = true, features = ["std", "pem"] }
+rand_core06 = { package = "rand_core", version = "0.6.4", features = ["getrandom"] }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 axum.workspace = true
 rcgen.workspace = true

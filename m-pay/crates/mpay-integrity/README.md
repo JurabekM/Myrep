@@ -9,7 +9,8 @@ Ilova va qurilma yaxlitligi — Google Play Integrity tokenini server tomonida t
 |---|---|
 | `lib.rs` | `request_hash` (PQ Link sessiyasiga bog'lanish), verdict tuzilmasi (`TokenPayload`), `check` (paket, imzo sertifikati, `requestHash`, yangilik → `IntegritySignals`), `IntegrityVerifier` trait, `Integrity` (verifier + siyosat + `required`) |
 | `mock.rs` | Sandbox: ES256 kompakt JWS, mazmuni Play Integrity verdict tuzilmasida; `MockIssuer` (sinov stsenariylari — `Preset`), `MockVerifier` |
-| `google.rs` | `decodeIntegrityToken` mijozi (`POST /v1/{paket}:decodeIntegrityToken`, Bearer OAuth2 token tashqaridan) |
+| `google.rs` | `decodeIntegrityToken` mijozi (`POST /v1/{paket}:decodeIntegrityToken`, Bearer OAuth2 token) |
+| `service_account.rs` | Google xizmat akkaunti JSON kaliti → RS256 JWT (`ring`) → OAuth2 access token (RFC 7523), kesh va muddatidan 60 s oldin yangilash |
 
 ## Qoidalar
 
@@ -24,8 +25,9 @@ Ilova va qurilma yaxlitligi — Google Play Integrity tokenini server tomonida t
 
 ## Cheklovlar
 
-* `TODO(spec):` Google xizmat akkaunti → OAuth2 access token oqimi yo'q (token fayl/muhitdan); haqiqiy
-  Google bilan sinalmagan — testlar protokol shaklidagi emulyatorga qarshi. Verdict maydonlari Google'ning
+* Access token: xizmat akkaunti kaliti (`service_account_file`) yoki tashqaridan (`access_token_env` /
+  `access_token_file`). `TODO(spec):` haqiqiy Google bilan sinalmagan — testlar protokol shaklidagi
+  emulyatorga qarshi (JWT imzosi ochiq kalit bilan tekshiriladi); Workload Identity — bank infratuzilmasiga ko'ra. Verdict maydonlari Google'ning
   ochiq hujjatiga muvofiq yozilgan, integratsiyada joriy hujjat bilan qayta solishtirish kerak.
 * Klassik so'rov (`nonce`) qo'llab-quvvatlanmaydi — faqat standart so'rov (`requestHash`).
 

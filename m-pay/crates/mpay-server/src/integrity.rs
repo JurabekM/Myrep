@@ -81,10 +81,27 @@ pub fn build(cfg: &Config) -> Result<Built, String> {
         IntegrityMode::Google => {
             use mpay_integrity::google::{AccessToken, GoogleDecoder};
             let g = pi.google.as_ref().ok_or("[integrity.google] kerak")?;
-            let token = match (&g.access_token_env, &g.access_token_file) {
-                (Some(v), _) => AccessToken::Env(v.clone()),
-                (None, Some(f)) => AccessToken::File(cfg.resolve(f)),
-                (None, None) => return Err("integrity.google: access token manbai kerak".into()),
+            let token = match (
+                &g.service_account_file,
+                &g.access_token_env,
+                &g.access_token_file,
+            ) {
+                (Some(f), _, _) => {
+                    let path = cfg.resolve(f);
+                    let json = zeroize::Zeroizing::new(
+                        std::fs::read_to_string(&path)
+                            .map_err(|e| format!("{}: {e}", path.display()))?,
+                    );
+                    let sa = mpay_integrity::service_account::ServiceAccount::from_json(&json)
+                        .map_err(|e| format!("integrity.google.service_account_file: {e}"))?;
+                    tracing::info!(account = ?sa, "integrity: Google xizmat akkaunti (OAuth JWT)");
+                    AccessToken::ServiceAccount(std::sync::Arc::new(sa))
+                }
+                (None, Some(v), _) => AccessToken::Env(v.clone()),
+                (None, None, Some(f)) => AccessToken::File(cfg.resolve(f)),
+                (None, None, None) => {
+                    return Err("integrity.google: access token manbai kerak".into())
+                }
             };
             let decoder = GoogleDecoder::new(
                 http_client(g.timeout_ms)?,

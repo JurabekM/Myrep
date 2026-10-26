@@ -18,6 +18,7 @@
 
 pub mod google;
 pub mod mock;
+pub mod service_account;
 
 use std::sync::Arc;
 

@@ -4,12 +4,13 @@
 //! `{"tokenPayloadExternal": {…}}`; `Authorization: Bearer <OAuth2 access token>`
 //! (`https://www.googleapis.com/auth/playintegrity` scope'i bilan xizmat akkaunti).
 //!
-//! `TODO(spec):` access token olish (xizmat akkaunti JWT → token almashuvi) bu crate'da yo'q —
-//! token tashqaridan beriladi ([`AccessToken`]: muhit o'zgaruvchisi yoki fayl, masalan
-//! sidecar/workload identity yangilab turadi). Haqiqiy Google bilan sinalmagan; testlar shu
-//! protokol shaklidagi emulyatorga qarshi.
+//! Access token manbai ([`AccessToken`]): xizmat akkaunti kaliti (JWT → token almashuvi, kesh —
+//! [`crate::service_account`]) yoki tashqaridan (muhit o'zgaruvchisi / fayl — sidecar yoki workload
+//! identity yangilab turadi). `TODO(spec):` haqiqiy Google bilan sinalmagan; testlar shu protokol
+//! shaklidagi emulyatorga qarshi.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -20,20 +21,23 @@ use crate::{IntegrityError, IntegrityVerifier, TokenPayload};
 /// Standart manzil.
 pub const DEFAULT_BASE: &str = "https://playintegrity.googleapis.com";
 
-/// OAuth2 access token manbai (har so'rovda o'qiladi — tashqi jarayon yangilashi mumkin).
+/// OAuth2 access token manbai. `Env`/`File` — har so'rovda o'qiladi (tashqi jarayon yangilaydi);
+/// `ServiceAccount` — o'zimiz almashtiramiz va keshlaymiz.
 #[derive(Debug, Clone)]
 pub enum AccessToken {
     Env(String),
     File(PathBuf),
+    ServiceAccount(Arc<crate::service_account::ServiceAccount>),
 }
 
 impl AccessToken {
-    fn read(&self) -> Result<Zeroizing<String>, IntegrityError> {
+    async fn read(&self, http: &reqwest::Client) -> Result<Zeroizing<String>, IntegrityError> {
         let v = match self {
             Self::Env(var) => std::env::var(var)
                 .map_err(|_| IntegrityError::Unavailable(format!("{var} yo'q")))?,
             Self::File(p) => std::fs::read_to_string(p)
                 .map_err(|e| IntegrityError::Unavailable(format!("{}: {e}", p.display())))?,
+            Self::ServiceAccount(sa) => return sa.token(http).await,
         };
         Ok(Zeroizing::new(v.trim().to_owned()))
     }
@@ -81,7 +85,7 @@ impl IntegrityVerifier for GoogleDecoder {
     }
 
     async fn decode(&self, token: &str) -> Result<TokenPayload, IntegrityError> {
-        let bearer = self.token.read()?;
+        let bearer = self.token.read(&self.http).await?;
         let resp = self
             .http
             .post(&self.url)
@@ -160,6 +164,89 @@ mod tests {
         let a = l.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(l, app).await.unwrap() });
         format!("http://{a}")
+    }
+
+    /// Xizmat akkaunti: emulyatorning `/token` i JWT'ni ochiq kalit bilan tekshiradi va access token
+    /// beradi; decode shu token bilan; ikkinchi decode keshdan (token almashuvi bitta).
+    #[tokio::test]
+    async fn service_account_flow() {
+        use std::sync::atomic::{AtomicU32, Ordering};
+        let (pem, public) = crate::service_account::tests::test_key();
+        let hits = Arc::new(AtomicU32::new(0));
+        let h2 = hits.clone();
+        let token = axum::Router::new().route(
+            "/token",
+            post(move |body: String| {
+                let (public, hits) = (public.clone(), h2.clone());
+                async move {
+                    hits.fetch_add(1, Ordering::SeqCst);
+                    let jwt = body
+                        .split('&')
+                        .find_map(|kv| kv.strip_prefix("assertion="))
+                        .unwrap_or("");
+                    assert!(body.contains(
+                        "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer"
+                    ));
+                    let p: Vec<&str> = jwt.split('.').collect();
+                    use base64::Engine as _;
+                    let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
+                    let ok = p.len() == 3
+                        && ring::signature::UnparsedPublicKey::new(
+                            &ring::signature::RSA_PKCS1_2048_8192_SHA256,
+                            &public,
+                        )
+                        .verify(
+                            format!("{}.{}", p[0], p[1]).as_bytes(),
+                            &b64.decode(p[2]).unwrap_or_default(),
+                        )
+                        .is_ok();
+                    if !ok {
+                        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "invalid_grant"})));
+                    }
+                    (
+                        StatusCode::OK,
+                        Json(serde_json::json!({"access_token": "at-123", "expires_in": 3599, "token_type": "Bearer"})),
+                    )
+                }
+            }),
+        );
+        let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let a = l.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(l, token).await.unwrap() });
+        let sa = crate::service_account::ServiceAccount::from_json(
+            &crate::service_account::tests::key_json(&pem, &format!("http://{a}/token")),
+        )
+        .unwrap();
+        let d = GoogleDecoder::new(
+            client(),
+            &emulator().await,
+            "uz.mpay.walletdemo",
+            AccessToken::ServiceAccount(Arc::new(sa)),
+        );
+        d.decode("good").await.unwrap();
+        d.decode("good").await.unwrap();
+        assert_eq!(
+            hits.load(Ordering::SeqCst),
+            1,
+            "access token keshlanishi kerak"
+        );
+
+        // Begona kalit bilan imzolangan JWT — token berilmaydi → Unavailable.
+        let (other, _) = crate::service_account::tests::test_key();
+        let bad = crate::service_account::ServiceAccount::from_json(
+            &crate::service_account::tests::key_json(&other, &format!("http://{a}/token")),
+        )
+        .unwrap();
+        let d = GoogleDecoder::new(
+            client(),
+            &emulator().await,
+            "uz.mpay.walletdemo",
+            AccessToken::ServiceAccount(Arc::new(bad)),
+        );
+        assert!(matches!(
+            d.decode("good").await,
+            Err(IntegrityError::Unavailable(_))
+        ));
     }
 
     #[tokio::test]

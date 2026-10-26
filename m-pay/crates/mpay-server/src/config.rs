@@ -296,8 +296,9 @@ pub enum IntegrityMode {
     Google,
 }
 
-/// `[integrity.google]`: server tomonida dekodlash. OAuth2 access token faylda yoki muhitda
-/// (tashqi jarayon yangilaydi; `TODO(spec)` — xizmat akkaunti oqimi).
+/// `[integrity.google]`: server tomonida dekodlash. OAuth2 access token manbai — bittasi:
+/// `service_account_file` (Google xizmat akkaunti JSON kaliti: JWT → token, kesh) yoki tashqaridan
+/// yangilanadigan `access_token_env` / `access_token_file`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GoogleIntegrityConfig {
@@ -307,6 +308,9 @@ pub struct GoogleIntegrityConfig {
     pub access_token_env: Option<String>,
     #[serde(default)]
     pub access_token_file: Option<PathBuf>,
+    /// Xizmat akkaunti kaliti (maxfiy; Docker secret sifatida).
+    #[serde(default)]
+    pub service_account_file: Option<PathBuf>,
     #[serde(default = "default_google_timeout")]
     pub timeout_ms: u64,
 }
@@ -521,9 +525,14 @@ impl Config {
                         "integrity.mode = google uchun [integrity.google] kerak".into(),
                     )
                 })?;
-                if g.access_token_env.is_some() == g.access_token_file.is_some() {
+                let sources = [
+                    g.access_token_env.is_some(),
+                    g.access_token_file.is_some(),
+                    g.service_account_file.is_some(),
+                ];
+                if sources.iter().filter(|s| **s).count() != 1 {
                     return Err(ConfigError::Invalid(
-                        "integrity.google: access_token_env yoki access_token_file (bittasi)"
+                        "integrity.google: service_account_file, access_token_env yoki access_token_file (bittasi)"
                             .into(),
                     ));
                 }

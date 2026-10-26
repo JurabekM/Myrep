@@ -322,7 +322,7 @@ certificate_sha256 = ["{SANDBOX_WALLET_CERT}"]
 max_age_secs = 120
 mock_key = "{INTEGRITY_MOCK_KEY_FILE}"
 # [integrity.google]
-# access_token_file = "/run/secrets/play_integrity_access_token"
+# service_account_file = "/run/secrets/play_integrity_sa.json"   # yoki access_token_env / access_token_file
 
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]

@@ -878,3 +878,13 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   faollik (23 057) → shifrlangan B2 (dump'da `PGDMP` sarlavhasi yo'q) → `restore.sh --verify` (23 057,
   zanjir to'g'ri) → **PITR B1 + B2 WAL → T: aynan 21 568 yozuv**, zanjir to'g'ri; `MpayInstanceDown`
   navbatchi kanaliga yetdi; loglarda PAN va sir yo'q. `promtool` (13 qoida) va `amtool` tekshiruvi.
+
+### Play Integrity: Google xizmat akkaunti → OAuth token (2026-10-26)
+
+* `mpay-integrity::service_account`: Google kalit fayli (JSON) → RS256 JWT (`ring`, doimiy vaqtli) →
+  `token_uri` (RFC 7523) → access token; kesh, muddatidan 60 s oldin yangilash, bir vaqtdagi so'rovlar
+  bitta almashuvga; `token_uri` faqat https (loopback — sinov); kalit, JWT va token logga yozilmaydi.
+* `[integrity.google] service_account_file` (yoki `access_token_env` / `access_token_file`, aynan bittasi).
+* Tekshirildi: unit (JWT imzosi ochiq kalit bilan, claim'lar, yomon fayllar rad, kesh — bitta almashuv,
+  begona kalit → Unavailable); e2e `google_mode_with_service_account`: server JWT → token → decode
+  emulyatori → provisioning GREEN, ikki provisioning — bitta token almashuvi, rad etilgan token — 403.
