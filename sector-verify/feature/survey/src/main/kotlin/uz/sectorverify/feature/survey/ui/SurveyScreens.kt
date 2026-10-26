@@ -1,6 +1,5 @@
 package uz.sectorverify.feature.survey.ui
 
-import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -41,6 +40,7 @@ import uz.sectorverify.feature.survey.CheckItem
 import uz.sectorverify.feature.survey.CheckStatus
 import uz.sectorverify.feature.survey.R
 import uz.sectorverify.feature.survey.SurveyState
+import uz.sectorverify.feature.survey.runtimePermissions
 import uz.sectorverify.model.SitePlan
 import uz.sectorverify.telephony.TrafficStatus
 import uz.sectorverify.ui.components.Card
@@ -74,14 +74,7 @@ fun PreCheckRoute(onStarted: (String) -> Unit, vm: PreCheckViewModel = hiltViewM
         items = ui.result?.items.orEmpty(),
         canStart = ui.result?.canStart == true,
         onPermissions = {
-            permissions.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.POST_NOTIFICATIONS,
-                ),
-            )
+            permissions.launch(runtimePermissions())
         },
         onStart = { vm.start(version) },
         showOpenSettings = askedOnce && ui.result?.items?.any { it.id == CheckId.PERMISSIONS && it.status == CheckStatus.BLOCK } == true,

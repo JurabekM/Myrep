@@ -3,7 +3,6 @@
     <string name="survey_channel_name">Survey</string>
     <string name="survey_channel_ready">Result ready</string>
     <string name="survey_notification_title">Survey in progress</string>
-    <string name="survey_notification_text">%1$d samples · coverage %2$d%%</string>
     <string name="survey_notification_ready_title">Result ready</string>
     <string name="survey_notification_ready_text">Coverage is sufficient — you can finish the survey</string>
     <string name="survey_notification_stop">Finish</string>
@@ -55,7 +54,6 @@
     <string name="check_traffic">Traffic URL</string>
     <string name="check_traffic_ok">HTTPS URL set (TA will be reported)</string>
     <string name="check_traffic_bad">URL empty — traffic off, TA may be missing</string>
-    <string name="live_stats">%1$d samples · %2$d GNSS · %3$.2f Hz</string>
     <string name="live_gps">GPS accuracy: %1$d m</string>
     <string name="live_ready">Result ready — you can finish</string>
     <string name="live_finish">Finish</string>
@@ -63,14 +61,16 @@
     <string name="live_unplanned">unplanned</string>
     <string name="live_rsrp">RSRP %1$s dBm</string>
     <string name="live_azimuth">azimuth %1$s° (plan %2$s°)</string>
-    <string name="live_samples">%1$d samples · %2$d bins</string>
     <string name="live_traffic_off">Traffic generator off</string>
     <string name="live_traffic_ok">Traffic: %1$d ms</string>
     <string name="live_traffic_error">Traffic error: %1$s</string>
-    <string name="live_map_description">Route map, %1$d points</string>
     <string name="perm_why_location">Precise location: GPS and CellInfo (RSRP, PCI) are only available with this permission. Background location is not needed.</string>
     <string name="perm_why_phone">Phone state: to pick the SIM matching the plan MCC/MNC (dual-SIM).</string>
     <string name="perm_why_notifications">Notifications: survey progress and “Result ready”.</string>
     <string name="perm_denied">Permission denied. Enable it in the app settings.</string>
     <string name="perm_open_settings">Open app settings</string>
+    <string name="survey_notification_text">Samples: %1$d · coverage %2$d%%</string>
+    <string name="live_stats">Samples: %1$d · GNSS: %2$d · %3$.2f Hz</string>
+    <string name="live_samples">Samples: %1$d · bins: %2$d</string>
+    <string name="live_map_description">Route map, points: %1$d</string>
 </resources>

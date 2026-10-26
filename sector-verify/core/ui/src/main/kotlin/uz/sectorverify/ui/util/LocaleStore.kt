@@ -1,5 +1,6 @@
 package uz.sectorverify.ui.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import java.util.Locale
@@ -24,6 +25,7 @@ class LocaleStore(private val context: Context) {
         private fun prefs(c: Context) = c.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
         /** Wraps [base] so that resources resolve in the stored language. */
+        @SuppressLint("AppBundleLocaleChanges") // :app disables bundle language splits (all languages ship).
         fun wrap(base: Context): Context {
             val tag = prefs(base).getString(KEY, DEFAULT) ?: DEFAULT
             val config = Configuration(base.resources.configuration).apply { setLocale(Locale.forLanguageTag(tag)) }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- §7: ACCESS_BACKGROUND_LOCATION is not needed — the survey runs as a foreground service started from the UI. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -11,8 +12,9 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-feature android:name="android.hardware.location.gps" android:required="true" />
-    <uses-feature android:name="android.hardware.telephony" android:required="true" />
+    <!-- The app cannot work without GPS and a cellular modem: keep it off tablets/Wi-Fi-only devices. -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="true" tools:ignore="UnnecessaryRequiredFeature" />
+    <uses-feature android:name="android.hardware.telephony" android:required="true" tools:ignore="UnnecessaryRequiredFeature" />
 
     <application>
         <service

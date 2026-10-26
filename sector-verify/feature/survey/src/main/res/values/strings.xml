@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="uz">
     <string name="survey_channel_name">O\'lchov</string>
     <string name="survey_channel_ready">Natija tayyor</string>
     <string name="survey_notification_title">O\'lchov davom etmoqda</string>
-    <string name="survey_notification_text">%1$d namuna · qamrov %2$d%%</string>
     <string name="survey_notification_ready_title">Natija tayyor</string>
     <string name="survey_notification_ready_text">Qamrov yetarli — o\'lchovni tugatish mumkin</string>
     <string name="survey_notification_stop">Tugatish</string>
@@ -55,7 +54,6 @@
     <string name="check_traffic">Trafik URL</string>
     <string name="check_traffic_ok">HTTPS URL sozlangan (TA keladi)</string>
     <string name="check_traffic_bad">URL bo\'sh — trafik o\'chiq, TA kelmasligi mumkin</string>
-    <string name="live_stats">%1$d namuna · %2$d GNSS · %3$.2f Hz</string>
     <string name="live_gps">GPS aniqligi: %1$d m</string>
     <string name="live_ready">Natija tayyor — tugatish mumkin</string>
     <string name="live_finish">Tugatish</string>
@@ -63,14 +61,16 @@
     <string name="live_unplanned">rejada yo\'q</string>
     <string name="live_rsrp">RSRP %1$s dBm</string>
     <string name="live_azimuth">azimut %1$s° (reja %2$s°)</string>
-    <string name="live_samples">%1$d namuna · %2$d bin</string>
     <string name="live_traffic_off">Trafik generatori o\'chiq</string>
     <string name="live_traffic_ok">Trafik: %1$d ms</string>
     <string name="live_traffic_error">Trafik xatosi: %1$s</string>
-    <string name="live_map_description">Marshrut xaritasi, %1$d nuqta</string>
     <string name="perm_why_location">Aniq joylashuv: GPS nuqtasi va CellInfo (RSRP, PCI) faqat shu ruxsat bilan beriladi. Fon rejimidagi joylashuv kerak emas.</string>
     <string name="perm_why_phone">Telefon holati: rejadagi MCC/MNC ga mos SIM\'ni tanlash uchun (dual-SIM).</string>
     <string name="perm_why_notifications">Bildirishnomalar: o\'lchov jarayoni va «Natija tayyor» xabari.</string>
     <string name="perm_denied">Ruxsat rad etilgan. Uni ilova sozlamalarida yoqing.</string>
     <string name="perm_open_settings">Ilova sozlamalarini ochish</string>
+    <string name="survey_notification_text">Namunalar: %1$d · qamrov %2$d%%</string>
+    <string name="live_stats">Namunalar: %1$d · GNSS: %2$d · %3$.2f Hz</string>
+    <string name="live_samples">Namunalar: %1$d · binlar: %2$d</string>
+    <string name="live_map_description">Marshrut xaritasi, nuqtalar: %1$d</string>
 </resources>

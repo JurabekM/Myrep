@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="uz">
     <string name="verdict_pass">PASS — mos</string>
     <string name="verdict_warn">WARN — ogohlantirish</string>
     <string name="verdict_fail">FAIL — xato</string>
@@ -24,8 +24,6 @@
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">OK</string>
     <string name="common_north">Shimol</string>
-    <string name="polar_plan">Reja</string>
-    <string name="polar_measured">O\'lchov (95% oraliq)</string>
     <string name="radar_title">Qamrov radari</string>
     <string name="radar_description">Qamrov %1$d%%, yetishmayotgan yo\'nalishlar: %2$s</string>
     <string name="polar_description">Polar diagramma: %1$s</string>

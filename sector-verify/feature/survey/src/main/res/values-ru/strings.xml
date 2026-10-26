@@ -3,7 +3,6 @@
     <string name="survey_channel_name">Измерение</string>
     <string name="survey_channel_ready">Результат готов</string>
     <string name="survey_notification_title">Идёт измерение</string>
-    <string name="survey_notification_text">%1$d замеров · покрытие %2$d%%</string>
     <string name="survey_notification_ready_title">Результат готов</string>
     <string name="survey_notification_ready_text">Покрытие достаточное — измерение можно завершить</string>
     <string name="survey_notification_stop">Завершить</string>
@@ -55,7 +54,6 @@
     <string name="check_traffic">URL трафика</string>
     <string name="check_traffic_ok">HTTPS URL задан (будет TA)</string>
     <string name="check_traffic_bad">URL пуст — трафик выключен, TA может не приходить</string>
-    <string name="live_stats">%1$d замеров · %2$d GNSS · %3$.2f Гц</string>
     <string name="live_gps">Точность GPS: %1$d м</string>
     <string name="live_ready">Результат готов — можно завершать</string>
     <string name="live_finish">Завершить</string>
@@ -63,14 +61,16 @@
     <string name="live_unplanned">не в плане</string>
     <string name="live_rsrp">RSRP %1$s дБм</string>
     <string name="live_azimuth">азимут %1$s° (план %2$s°)</string>
-    <string name="live_samples">%1$d замеров · %2$d бинов</string>
     <string name="live_traffic_off">Генератор трафика выключен</string>
     <string name="live_traffic_ok">Трафик: %1$d мс</string>
     <string name="live_traffic_error">Ошибка трафика: %1$s</string>
-    <string name="live_map_description">Карта маршрута, точек: %1$d</string>
     <string name="perm_why_location">Точное местоположение: GPS и CellInfo (RSRP, PCI) доступны только с этим разрешением. Фоновое местоположение не нужно.</string>
     <string name="perm_why_phone">Состояние телефона: выбрать SIM с MCC/MNC из плана (dual-SIM).</string>
     <string name="perm_why_notifications">Уведомления: ход измерения и «Результат готов».</string>
     <string name="perm_denied">Разрешение отклонено. Включите его в настройках приложения.</string>
     <string name="perm_open_settings">Открыть настройки приложения</string>
+    <string name="survey_notification_text">Замеров: %1$d · покрытие %2$d%%</string>
+    <string name="live_stats">Замеров: %1$d · GNSS: %2$d · %3$.2f Гц</string>
+    <string name="live_samples">Замеров: %1$d · бинов: %2$d</string>
+    <string name="live_map_description">Карта маршрута, точек: %1$d</string>
 </resources>

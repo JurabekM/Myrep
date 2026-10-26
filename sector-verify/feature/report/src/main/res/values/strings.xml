@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="uz">
     <string name="result_title">Natija · %1$s</string>
     <string name="result_overall">Umumiy verdikt</string>
     <string name="result_coverage">Umumiy qamrov: %1$d%%</string>

@@ -1,6 +1,5 @@
 package uz.sectorverify.feature.survey.debug
 
-import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import uz.sectorverify.feature.survey.R
+import uz.sectorverify.feature.survey.runtimePermissions
 
 @Composable
 fun DebugScreen(vm: DebugViewModel = hiltViewModel()) {
@@ -54,13 +54,7 @@ fun DebugScreen(vm: DebugViewModel = hiltViewModel()) {
         val big = Modifier.fillMaxWidth().heightIn(min = 56.dp)
         OutlinedButton(
             onClick = {
-                permissions.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.READ_PHONE_STATE,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ),
-                )
+                permissions.launch(runtimePermissions())
             },
             modifier = big,
         ) { Text(stringResource(R.string.debug_permissions)) }

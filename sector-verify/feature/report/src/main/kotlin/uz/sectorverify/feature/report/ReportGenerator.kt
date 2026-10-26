@@ -1,5 +1,6 @@
 package uz.sectorverify.feature.report
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,6 +36,7 @@ class ReportGenerator @Inject constructor(
     private val signer: ReportSigner,
     private val clock: Clock,
 ) {
+    @SuppressLint("AppBundleLocaleChanges") // :app disables bundle language splits (all languages ship).
     suspend fun generate(sessionId: String): GeneratedReport = withContext(Dispatchers.Default) {
         val s = settings.current()
         val stored = requireNotNull(sessions.result(sessionId)) { "no session $sessionId" }

@@ -2,7 +2,6 @@ package uz.sectorverify.data.security
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.security.keystore.StrongBoxUnavailableException
@@ -43,8 +42,7 @@ class KeystoreReportSigner(private val context: Context, private val alias: Stri
     private fun key(): PrivateKey {
         (ks.getKey(alias, null) as? PrivateKey)?.let { return it }
         val challenge = InstallId.of(context).get().toByteArray()
-        val strongBox = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
-            context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
+        val strongBox = context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
         try {
             generate(challenge, strongBox)
         } catch (expected: StrongBoxUnavailableException) {

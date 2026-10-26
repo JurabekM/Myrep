@@ -24,8 +24,6 @@
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">OK</string>
     <string name="common_north">Север</string>
-    <string name="polar_plan">План</string>
-    <string name="polar_measured">Измерение (95% интервал)</string>
     <string name="radar_title">Радар покрытия</string>
     <string name="radar_description">Покрытие %1$d%%, не хватает направлений: %2$s</string>
     <string name="polar_description">Полярная диаграмма: %1$s</string>

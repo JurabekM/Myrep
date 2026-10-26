@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="uz">
     <string name="sites_title">Saytlar</string>
     <string name="sites_search">Qidirish (kod yoki nom)</string>
     <string name="sites_import">CSV reja import</string>
     <string name="sites_empty">Hali sayt yo\'q. RF reja CSV faylini import qiling.</string>
-    <string name="sites_sectors">%1$d sektor</string>
     <string name="sites_imported">Import qilindi: %1$d ta sayt</string>
-    <string name="sites_import_failed">Import qilinmadi — %1$d ta xato:</string>
     <string name="sites_settings">Sozlamalar</string>
     <string name="resume_title">Tugallanmagan o\'lchov</string>
-    <string name="resume_text">%1$s saytida o\'lchov to\'xtab qolgan (%2$d namuna saqlangan). Davom ettirasizmi?</string>
     <string name="resume_continue">Davom ettirish</string>
     <string name="resume_abandon">To\'xtatish</string>
     <string name="card_plan">RF reja</string>
@@ -26,13 +23,16 @@
     <string name="plan_err_wrong_column_count">ustunlar soni sarlavhaga mos emas</string>
     <string name="plan_err_empty_value">“%1$s” bo\'sh</string>
     <string name="plan_err_not_a_number">“%1$s” son emas (%2$s)</string>
-    <string name="plan_err_lat_range">kenglik −90..90 oralig\'ida bo\'lishi kerak (%2$s)</string>
-    <string name="plan_err_lon_range">uzunlik −180..180 oralig\'ida bo\'lishi kerak (%2$s)</string>
-    <string name="plan_err_bad_rat">rat LTE yoki NR bo\'lishi kerak (%2$s)</string>
-    <string name="plan_err_pci_range">PCI chegaradan tashqarida: LTE 0..503, NR 0..1007 (%2$s)</string>
-    <string name="plan_err_azimuth_range">azimut 0..359.9 oralig\'ida bo\'lishi kerak (%2$s)</string>
-    <string name="plan_err_hpbw_range">HPBW 20..120 oralig\'ida bo\'lishi kerak (%2$s)</string>
-    <string name="plan_err_arfcn_range">ARFCN manfiy bo\'lmasligi kerak (%2$s)</string>
-    <string name="plan_err_duplicate_cell">saytda (rat, arfcn, pci) takrorlanmoqda (%2$s)</string>
-    <string name="plan_err_site_coords_mismatch">sayt koordinatasi boshqa qatorlardagidan farq qiladi (%2$s)</string>
+    <string name="plan_err_lat_range">kenglik −90..90 oralig\'ida bo\'lishi kerak (%1$s)</string>
+    <string name="plan_err_lon_range">uzunlik −180..180 oralig\'ida bo\'lishi kerak (%1$s)</string>
+    <string name="plan_err_bad_rat">rat LTE yoki NR bo\'lishi kerak (%1$s)</string>
+    <string name="plan_err_pci_range">PCI chegaradan tashqarida: LTE 0..503, NR 0..1007 (%1$s)</string>
+    <string name="plan_err_azimuth_range">azimut 0..359.9 oralig\'ida bo\'lishi kerak (%1$s)</string>
+    <string name="plan_err_hpbw_range">HPBW 20..120 oralig\'ida bo\'lishi kerak (%1$s)</string>
+    <string name="plan_err_arfcn_range">ARFCN manfiy bo\'lmasligi kerak (%1$s)</string>
+    <string name="plan_err_duplicate_cell">saytda (rat, arfcn, pci) takrorlanmoqda (%1$s)</string>
+    <string name="plan_err_site_coords_mismatch">sayt koordinatasi boshqa qatorlardagidan farq qiladi (%1$s)</string>
+    <string name="sites_sectors">Sektorlar: %1$d</string>
+    <string name="sites_import_failed">Import qilinmadi. Xatolar: %1$d</string>
+    <string name="resume_text">%1$s saytida o\'lchov to\'xtab qolgan (saqlangan namunalar: %2$d). Davom ettirasizmi?</string>
 </resources>

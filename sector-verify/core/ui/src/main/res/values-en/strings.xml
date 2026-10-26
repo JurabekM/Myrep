@@ -24,8 +24,6 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>
     <string name="common_north">North</string>
-    <string name="polar_plan">Plan</string>
-    <string name="polar_measured">Measured (95% interval)</string>
     <string name="radar_title">Coverage radar</string>
     <string name="radar_description">Coverage %1$d%%, missing directions: %2$s</string>
     <string name="polar_description">Polar diagram: %1$s</string>
