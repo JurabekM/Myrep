@@ -1,0 +1,48 @@
+# Sector Verify (Android/Kotlin): ./gradlew check, Kover hisoboti, test hisobotlari artefakt sifatida.
+name: sector-verify
+
+on:
+  push:
+    paths:
+      - "sector-verify/**"
+      - ".github/workflows/sector-verify.yml"
+  pull_request:
+    paths:
+      - "sector-verify/**"
+      - ".github/workflows/sector-verify.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sector-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: sector-verify
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # versionCode = commit soni, versionName = git tag
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: check
+        run: ./gradlew check --continue
+      - name: Kover hisoboti
+        if: always()
+        run: ./gradlew koverXmlReport koverHtmlReport :core:analysis:koverHtmlReport
+      - name: Test va sifat hisobotlari
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sector-verify-reports
+          path: |
+            sector-verify/**/build/reports/
+            sector-verify/**/build/test-results/
+          if-no-files-found: ignore

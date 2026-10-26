@@ -1,0 +1,61 @@
+# Built upon detekt defaults (buildUponDefaultConfig = true); only deviations are listed.
+config:
+  validation: true
+
+complexity:
+  LongParameterList:
+    functionThreshold: 8
+    constructorThreshold: 12
+    ignoreDataClasses: true
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    threshold: 80
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    threshold: 18
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    thresholdInFiles: 25
+    thresholdInClasses: 25
+    thresholdInInterfaces: 20
+    thresholdInObjects: 25
+    ignorePrivate: true
+  NestedBlockDepth:
+    threshold: 5
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable', 'Test', 'ParameterizedTest']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+  MatchingDeclarationName:
+    active: false
+
+style:
+  MagicNumber:
+    ignoreNumbers: ['-1', '0', '1', '2', '3', '4', '10', '100', '1000', '1_000', '0.5', '90', '180', '360', '1e6', '1e9', '1_000_000', '1_000_000_000']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreNamedArgument: true
+    ignoreEnums: true
+    ignoreAnnotated: ['Composable', 'Preview']
+    excludes: ['**/test/**', '**/androidTest/**', '**/sim/**']
+  ReturnCount:
+    max: 4
+    excludeGuardClauses: true
+  ThrowsCount:
+    max: 4
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
+  WildcardImport:
+    excludes: ['**/test/**', '**/androidTest/**']
+  ForbiddenComment:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames: ['Error', 'Throwable']
+  SwallowedException:
+    allowedExceptionNameRegex: '_|(ignore|expected).*'
