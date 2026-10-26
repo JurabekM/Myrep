@@ -21,8 +21,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             SectorVerifyTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
+                    if (DebugRoutes.ENABLED) {
+                        DebugRoutes.Screen()
+                    } else {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
+                        }
                     }
                 }
             }
