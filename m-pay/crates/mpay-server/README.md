@@ -47,7 +47,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   `[pqlink] revocations`, `root_fingerprint`; `GET /v1/pqlink/revocations`. O'z identifikatori
   ro'yxatda bo'lsa server ishga tushmaydi.
 * **Qayta attestatsiya** (ADR-0015): `[pqlink] reattest_after_days`; eskirgan qurilma — `REATTEST_REQUIRED`;
-  `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`.
+  `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`;
+  Shield grafida yangi kalit eski qurilmaning davomi (`/internal/shield/rekey`).
 * **Ko'p instansiya** (ADR-0019): `sessions.rs` — PQ Link sessiyalari DB'da (KEK bilan shifrlangan,
   `[pqlink] session_store`), ro'yxatdan o'tish nonce'lari umumiy; `shield_role.rs` — `mpay-server shield`
   (yagona belgilar ombori, ichki API), `shield_client.rs` — `[shield] mode = "remote"` (zaxira bilan).

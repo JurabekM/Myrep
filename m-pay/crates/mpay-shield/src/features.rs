@@ -179,7 +179,8 @@ impl FeatureStore {
     pub fn txn(&mut self, e: &TxnEvent) -> [f32; TXN_FEATURES.len()] {
         let now = e.at;
         let amount_uzs = e.amount_minor as f64 / 100.0;
-        let edge = self.graph.touch(e.device, e.card, now);
+        let device = self.graph.canonical(e.device);
+        let edge = self.graph.touch(device, e.card, now);
         let mkey = h64(&e.merchant);
 
         let card = self.cards.entry(e.card).or_default();
@@ -191,7 +192,7 @@ impl FeatureStore {
         {
             card.merchants.pop_front();
         }
-        let dev = self.devices.entry(e.device).or_default();
+        let dev = self.devices.entry(device).or_default();
         dev.win.prune(now, DAY);
         let dev_first = *dev.first_seen.get_or_insert(now);
         let merch = self.merchants.entry(mkey).or_default();
@@ -297,8 +298,9 @@ impl FeatureStore {
     /// Provisioning belgilarini hisoblaydi va qurilma–karta qirrasini qo'shadi.
     pub fn provision(&mut self, e: &ProvisionEvent) -> [f32; IDV_FEATURES.len()] {
         let now = e.at;
-        let edge = self.graph.touch(e.device, e.card, now);
-        let dev = self.devices.entry(e.device).or_default();
+        let device = self.graph.canonical(e.device);
+        let edge = self.graph.touch(device, e.card, now);
+        let dev = self.devices.entry(device).or_default();
         let dev_first = *dev.first_seen.get_or_insert(now);
         while dev.prov.front().is_some_and(|t| *t <= now - DAY) {
             dev.prov.pop_front();
@@ -328,6 +330,15 @@ impl FeatureStore {
             f32::from(e.integrity.map_or(0, |i| i.licensed)),
             f32::from(e.integrity.map_or(0, |i| i.env_risk)),
         ]
+    }
+
+    /// Qurilma kaliti almashtirildi: `new` — `old` ning davomi (graf, qurilma oynalari va yoshi
+    /// umumiy). `false` — `new` allaqachon o'z tarixiga ega (bog'lanmadi).
+    pub fn device_rekeyed(&mut self, old: [u8; 32], new: [u8; 32]) -> bool {
+        if self.devices.contains_key(&new) {
+            return false;
+        }
+        self.graph.link_device(old, new)
     }
 
     /// Har 10 000 hodisada 7 kundan beri harakatsiz kalitlarni (graf'dan tashqari) tozalaydi.

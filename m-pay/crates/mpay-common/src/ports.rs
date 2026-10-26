@@ -100,6 +100,18 @@ pub struct IdvAssessment {
 #[async_trait]
 pub trait IdvDecider: Send + Sync {
     async fn decide(&self, req: &IdvRequest) -> Result<IdvAssessment, PortError>;
+
+    /// Qurilma kaliti almashtirildi (ADR-0015): `new` — `old` ning davomi (o'sha hamyon, attestatsiya
+    /// va eski kalit imzosi bilan tasdiqlangan). Shield yangi ID'ni eski qurilma tuguniga bog'laydi —
+    /// kartalar, qurilma yoshi va tarixi (yomoni ham) saqlanadi. Standart — hech narsa qilmaydi.
+    async fn device_rekeyed(
+        &self,
+        _old: &DeviceId,
+        _new: &DeviceId,
+        _at: OffsetDateTime,
+    ) -> Result<(), PortError> {
+        Ok(())
+    }
 }
 
 // ---------------------------------------------------------------- risk (avtorizatsiya)

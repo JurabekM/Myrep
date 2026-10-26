@@ -35,7 +35,8 @@ jarayon xotirasida edi:
    * Ishlatilganlari `pqlink_used_nonces` jadvalida saqlanadi (`INSERT … ON CONFLICT DO NOTHING`).
    * Nonce o'zi holatsizligicha qoladi (ADR-0013).
 3. **Shield roli.** O'sha binar: `mpay-server shield --config …`.
-   * Ichki API: `POST /internal/shield/idv` va `/internal/shield/txn`. Kirish uchun `shield` rolidagi
+   * Ichki API: `POST /internal/shield/idv`, `/internal/shield/txn` va `/internal/shield/rekey`
+     (ADR-0015). Kirish uchun `shield` rolidagi
      API kaliti kerak, `require_mtls` bo'lsa mTLS ham. Autentifikatsiya tanani tahlil qilishdan oldin
      tekshiriladi.
    * DTO'larda ochiq PAN yo'q: faqat karta barmoq izi, qurilma ID, savdo nuqtasi, summa va vaqt.

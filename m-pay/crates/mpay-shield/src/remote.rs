@@ -38,6 +38,27 @@ pub struct TxnEventDto {
     pub cdcvm: bool,
 }
 
+/// `POST /internal/shield/rekey` (ADR-0015): `new` — `old` qurilmaning davomi.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RekeyEventDto {
+    pub at: i64,
+    pub old: String,
+    pub new: String,
+}
+
+/// `/internal/shield/rekey` javobi.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct RekeyResult {
+    /// `false` — yangi ID allaqachon o'z tarixiga ega (bog'lanmadi).
+    pub linked: bool,
+}
+
+impl RekeyEventDto {
+    pub fn ids(&self) -> Result<([u8; 32], [u8; 32]), String> {
+        Ok((hex32(&self.old)?, hex32(&self.new)?))
+    }
+}
+
 fn hex32(s: &str) -> Result<[u8; 32], String> {
     let mut b = [0u8; 32];
     hex::decode_to_slice(s, &mut b).map_err(|_| "32 baytli hex kutilgan".to_string())?;

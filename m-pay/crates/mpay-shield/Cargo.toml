@@ -19,6 +19,7 @@ async-trait.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 hex.workspace = true
+time.workspace = true
 toml.workspace = true
 tracing.workspace = true
 sha2.workspace = true
@@ -27,4 +28,3 @@ tract-onnx.workspace = true
 [dev-dependencies]
 tokio.workspace = true
 mpay-common.workspace = true
-time.workspace = true

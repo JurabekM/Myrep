@@ -893,6 +893,11 @@ impl Vault {
         .await?;
         tx.commit().await?;
         tracing::info!(old = %old, new = %new, tokens = n, "vault: qurilma kaliti almashtirildi");
+        // Shield grafida yangi kalit eski qurilmaning davomi (ADR-0015). Yetkazilmasa — faqat log:
+        // tokenlar allaqachon ko'chgan, oqibat esa xavfsiz tomonga (ortiqcha step-up).
+        if let Err(e) = self.idv.device_rekeyed(old, new, self.clock.now()).await {
+            tracing::warn!(error = %e, "vault: rekey Shield'ga yetkazilmadi");
+        }
         Ok(n)
     }
 

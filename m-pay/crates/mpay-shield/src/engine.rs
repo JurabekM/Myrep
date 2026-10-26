@@ -12,6 +12,7 @@ use mpay_common::ports::{
     IdvAssessment, IdvDecider, IdvDecision, IdvRequest, PortError, RiskAssessment, RiskDecision,
     RiskRequest, RiskScorer,
 };
+use mpay_common::DeviceId;
 
 use crate::features::{FeatureStore, ProvisionEvent, TxnEvent, IDV_FEATURES, TXN_FEATURES};
 use crate::model::MlScorer;
@@ -149,6 +150,11 @@ impl Shield {
         }
     }
 
+    /// Qurilma kaliti almashtirildi (ADR-0015): yangi ID eski qurilma tuguniga bog'lanadi.
+    pub fn link_rekeyed_device(&self, old: [u8; 32], new: [u8; 32]) -> bool {
+        self.store().device_rekeyed(old, new)
+    }
+
     /// Port so'rovini hodisaga aylantiradi.
     pub fn txn_event(&self, r: &RiskRequest) -> TxnEvent {
         TxnEvent {
@@ -197,6 +203,17 @@ impl IdvDecider for Shield {
         });
         tracing::info!(score = d.assessment.score, decision = ?d.assessment.decision, reasons = ?d.assessment.reasons, "shield: ID&V");
         Ok(d.assessment)
+    }
+
+    async fn device_rekeyed(
+        &self,
+        old: &DeviceId,
+        new: &DeviceId,
+        _at: time::OffsetDateTime,
+    ) -> Result<(), PortError> {
+        let linked = self.link_rekeyed_device(old.0, new.0);
+        tracing::info!(old = %old, new = %new, linked, "shield: qurilma kaliti almashtirildi");
+        Ok(())
     }
 }
 

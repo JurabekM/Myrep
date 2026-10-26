@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use mpay_common::ports::{
     IdvAssessment, IdvDecider, IdvRequest, PortError, RiskAssessment, RiskRequest, RiskScorer,
 };
-use mpay_shield::remote::{IdvEventDto, TxnEventDto};
+use mpay_shield::remote::{IdvEventDto, RekeyEventDto, RekeyResult, TxnEventDto};
 use mpay_shield::Shield;
 use zeroize::Zeroizing;
 
@@ -152,6 +152,36 @@ impl IdvDecider for RemoteShield {
                 a.reasons.push(DEGRADED.into());
                 crate::metrics::shield_degraded();
                 Ok(a)
+            }
+        }
+    }
+
+    async fn device_rekeyed(
+        &self,
+        old: &mpay_common::DeviceId,
+        new: &mpay_common::DeviceId,
+        at: time::OffsetDateTime,
+    ) -> Result<(), PortError> {
+        // Mahalliy zaxira ombori ham bog'lanadi — Shield roli yiqilganda ham izchil.
+        self.local.link_rekeyed_device(old.0, new.0);
+        let dto = RekeyEventDto {
+            at: at.unix_timestamp(),
+            old: old.to_hex(),
+            new: new.to_hex(),
+        };
+        match self
+            .post::<_, RekeyResult>("/internal/shield/rekey", &dto)
+            .await
+        {
+            Ok(r) => {
+                tracing::info!(old = %old, new = %new, linked = r.linked, "Shield: qurilma kaliti almashtirildi");
+                Ok(())
+            }
+            Err(e) => {
+                // Hodisa yo'qolsa xavfsiz tomonga: yangi qurilma "yosh" ko'rinadi (ortiqcha step-up).
+                tracing::warn!(error = %e, "Shield roli javob bermadi — rekey hodisasi yetkazilmadi");
+                crate::metrics::shield_degraded();
+                Err(PortError::Unavailable(e))
             }
         }
     }

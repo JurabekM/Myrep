@@ -4,6 +4,7 @@
 //!
 //! * `POST /internal/shield/idv` — `IdvEventDto` → `IdvAssessment`
 //! * `POST /internal/shield/txn` — `TxnEventDto` → `RiskAssessment`
+//! * `POST /internal/shield/rekey` — `RekeyEventDto` → `RekeyResult` (ADR-0015)
 //! * `GET /healthz`
 //!
 //! Kirish: `shield` rolidagi API kaliti (`[[auth.keys]] role = "shield"`); `require_mtls` bo'lsa
@@ -19,7 +20,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use mpay_common::ports::RiskAssessment;
-use mpay_shield::remote::{IdvEventDto, TxnEventDto};
+use mpay_shield::remote::{IdvEventDto, RekeyEventDto, RekeyResult, TxnEventDto};
 use mpay_shield::Shield;
 use tokio::net::TcpListener;
 
@@ -87,6 +88,20 @@ async fn txn(
     .into_response())
 }
 
+async fn rekey(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    body: Bytes,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls)?;
+    let dto: RekeyEventDto = parse(&body)?;
+    let (old, new) = dto.ids().map_err(ApiError::bad_request)?;
+    let linked = s.shield.link_rekeyed_device(old, new);
+    tracing::info!(old = %dto.old, new = %dto.new, linked, "shield-role: qurilma kaliti almashtirildi");
+    Ok(Json(RekeyResult { linked }).into_response())
+}
+
 async fn health(State(s): St) -> Json<serde_json::Value> {
     let (cards, devices, merchants, graph_nodes) = s.shield.stats();
     Json(serde_json::json!({
@@ -136,6 +151,7 @@ pub async fn start(cfg: &Config) -> Result<RunningShield, String> {
     let app = Router::new()
         .route("/internal/shield/idv", post(idv))
         .route("/internal/shield/txn", post(txn))
+        .route("/internal/shield/rekey", post(rekey))
         .route("/healthz", get(health))
         .route_layer(axum::middleware::from_fn(crate::metrics::track))
         .with_state(st.clone());

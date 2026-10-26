@@ -10,7 +10,7 @@ skor = min(1000, p_ml × 1000 × ml_weight + Σ qoida ballari)
 | Modul | Vazifasi |
 |---|---|
 | `features` | Sirpanuvchi oynalar (karta/qurilma/merchant/global P2P), summa z-skori, soat noyobligi, graf belgilar; 27 tranzaksiya va 9 ID&V belgisi |
-| `graph` | Qurilma–karta bipartit grafi: union-find komponentlar, darajalar, yangi qirralar |
+| `graph` | Qurilma–karta bipartit grafi: union-find komponentlar, darajalar, yangi qirralar; kalit almashtirilgan qurilma — asl tugunning taxallusi (ADR-0015) |
 | `rules` | Deklarativ TOML qoidalar (`rules/default.toml`), belgi nomlari yuklashda tekshiriladi |
 | `model` | `MlScorer` trait, `TractScorer` (sof Rust ONNX, `models/shield_v0.onnx` binarga joylangan) |
 | `engine` | `Shield` — port'lar implementatsiyasi; qaror: max(qoida harakati, chegara) |

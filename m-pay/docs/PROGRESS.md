@@ -901,3 +901,15 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 * Tekshirildi: unit (to'ldirish, burst, qarz chegarasi, xeshlangan kalit, fail-open); e2e
   `p3_shared_limits` (IP va qurilma chegarasi A/B bo'yicha global, `shared = false` — mahalliy) SQLite va
   PostgreSQL'da; `p1_rate_limit`, `p2_multi_instance` o'zgarishsiz o'tdi; `promtool` — 14 qoida, `nginx -t`.
+
+### Rekey → Shield hodisasi (2026-10-26, ADR-0015)
+
+* Muammo: kalit almashtirilgach Shield grafida eski qurilma qolardi; kartani o'chirib yangi kalit bilan
+  qayta qo'shish `IDV_NEW_DEVICE_EXISTING_CARD` (karta 2 qurilmada + qurilma 1 soatdan yosh) → YELLOW.
+* `IdvDecider::device_rekeyed` (standart — hech narsa); Vault tokenlarni ko'chirgach chaqiradi (xato —
+  faqat log). Shield: yangi ID asl qurilma tugunining taxallusi (graf va qurilma oynalari umumiy,
+  yomon tarix ham meros); `new` o'z tarixiga ega bo'lsa bog'lanmaydi. Shield roli
+  `POST /internal/shield/rekey`, `RemoteShield` mahalliy zaxirani ham bog'laydi.
+* Tekshirildi: graf unit testi; e2e `rekeyed_device_keeps_shield_history_locally` va
+  `rekey_event_reaches_shield_role` — qayta qo'shish GREEN, nazorat (boshqa qurilma)
+  `IDV_NEW_DEVICE_EXISTING_CARD`; tuzatish vaqtincha o'chirilganda ikkala test aynan shu sabab bilan yiqildi.

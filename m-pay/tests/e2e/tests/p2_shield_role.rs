@@ -139,3 +139,81 @@ async fn reqwest_post_status(url: &str, key: Option<&str>) -> u16 {
         other => panic!("{other:?}"),
     }
 }
+
+/// Kartani qo'shadi, qurilma kalitini almashtiradi, tokenni o'chiradi va kartani yangi kalit bilan
+/// qayta qo'shadi (ADR-0015 `TODO` stsenariysi). Qaytaradi: qayta qo'shish qarori va nazorat — o'sha
+/// kartani haqiqatan yangi (boshqa) qurilmaga qo'shish qarori.
+async fn rekey_then_readd(
+    sb: &Sandbox,
+) -> ((IdvDecision, Vec<String>), (IdvDecision, Vec<String>)) {
+    let c = sb.client();
+    let op = Some(sb.operator_key.as_str());
+    let pan = test_fpan(10, 5401);
+    let mut w = sb.wallet().await;
+    let ProvisionResponse::Active { profile, idv, .. } = w.provision(&pan, "3112").await.unwrap()
+    else {
+        panic!("ACTIVE kutilgan");
+    };
+    assert_eq!(idv.decision, IdvDecision::Green, "{:?}", idv.reasons);
+    let new_dev = sb
+        .ca
+        .issue_device(SecurityLevel::StrongBox, &c.enroll_nonce().await.unwrap())
+        .unwrap();
+    assert_eq!(w.rekey(new_dev).await.unwrap().tokens_moved, 1);
+    w.connect().await.unwrap();
+    let _: serde_json::Value = c
+        .delete_json(&format!("/v1/tokens/{}", profile.token_id), op)
+        .await
+        .unwrap();
+    let readd = decision(&mut w, &pan).await;
+    // Nazorat: boshqa (yangi, 1 soatdan yosh) qurilma — qoida haqiqatan ishlaydi.
+    let mut other = sb.wallet().await;
+    let control = decision(&mut other, &pan).await;
+    (readd, control)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rekeyed_device_keeps_shield_history_locally() {
+    let sb = Sandbox::start_with(|c| c.shield.engine = ShieldEngine::Engine).await;
+    let ((d, reasons), (cd, creasons)) = rekey_then_readd(&sb).await;
+    // Rekey'dan keyin — o'sha qurilma: karta bitta qurilmada, qurilma "yosh" emas.
+    assert_eq!(d, IdvDecision::Green, "{reasons:?}");
+    assert!(cd != IdvDecision::Green, "{creasons:?}");
+    assert!(
+        creasons.iter().any(|r| r == "IDV_NEW_DEVICE_EXISTING_CARD"),
+        "{creasons:?}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn rekey_event_reaches_shield_role() {
+    let (_sd, mut shield) = start_shield().await;
+    let url = format!("http://{}", shield.addr);
+    let u = url.clone();
+    let sb = Sandbox::start_with(move |c| {
+        c.shield.engine = ShieldEngine::Engine;
+        c.shield.mode = ShieldMode::Remote;
+        c.shield.remote = Some(remote(u));
+    })
+    .await;
+    let ((d, reasons), (cd, creasons)) = rekey_then_readd(&sb).await;
+    assert_eq!(d, IdvDecision::Green, "{reasons:?}");
+    assert!(
+        !reasons.iter().any(|r| r == "SHIELD_DEGRADED"),
+        "{reasons:?}"
+    );
+    assert!(
+        creasons.iter().any(|r| r == "IDV_NEW_DEVICE_EXISTING_CARD"),
+        "{creasons:?} {cd:?}"
+    );
+    // Shield'da: 2 qurilma (asl + nazorat), 1 karta; yangi kalit alohida tugun emas.
+    let h: serde_json::Value = reqwest_get(&format!("{url}/healthz")).await;
+    assert_eq!(h["devices"], 2, "{h}");
+    assert_eq!(h["graph_nodes"], 3, "{h}");
+    // Kalitsiz rekey hodisasi — 401.
+    assert_eq!(
+        reqwest_post_status(&format!("{url}/internal/shield/rekey"), None).await,
+        401
+    );
+    shield.shutdown();
+}
