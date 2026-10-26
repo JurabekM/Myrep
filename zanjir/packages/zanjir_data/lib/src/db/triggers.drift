@@ -1,0 +1,24 @@
+import 'tables.dart';
+
+-- Append-only jadvallar (CLAUDE.md, 5-qoida): UPDATE va DELETE taqiqlangan.
+-- Ilovada asosiy himoya — repozitoriy darajasi (o'zgartirish metodlari yo'q); trigger — ikkinchi qatlam.
+
+CREATE TRIGGER measurement_append_only_update BEFORE UPDATE ON measurement
+BEGIN SELECT RAISE(ABORT, 'append_only: measurement'); END;
+CREATE TRIGGER measurement_append_only_delete BEFORE DELETE ON measurement
+BEGIN SELECT RAISE(ABORT, 'append_only: measurement'); END;
+
+CREATE TRIGGER protocol_append_only_update BEFORE UPDATE ON protocol
+BEGIN SELECT RAISE(ABORT, 'append_only: protocol'); END;
+CREATE TRIGGER protocol_append_only_delete BEFORE DELETE ON protocol
+BEGIN SELECT RAISE(ABORT, 'append_only: protocol'); END;
+
+CREATE TRIGGER audit_event_append_only_update BEFORE UPDATE ON audit_event
+BEGIN SELECT RAISE(ABORT, 'append_only: audit_event'); END;
+CREATE TRIGGER audit_event_append_only_delete BEFORE DELETE ON audit_event
+BEGIN SELECT RAISE(ABORT, 'append_only: audit_event'); END;
+
+CREATE INDEX node_site_idx ON node (site_id);
+CREATE INDEX edge_site_idx ON edge (site_id);
+CREATE INDEX measurement_session_idx ON measurement (session_id);
+CREATE INDEX audit_event_entity_idx ON audit_event (entity_id);

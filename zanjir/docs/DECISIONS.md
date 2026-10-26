@@ -125,3 +125,34 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   6. **Kalitlar:** `Signer` interfeysi; ilovada maxfiy kalit Android Keystore himoyasida (4/6-faza). Serverda maxfiy kalit yo'q —
      Python `Ed25519Signer` faqat testlar va generator uchun. Dart kutubxonasi (`cryptography`) — sof Dart, API asinxron.
 - **Oqibat:** Format o'zgarishi — yangi ADR va vektorlarni ikkala tomonda bir vaqtda yangilash.
+
+## ADR-0008: Ilova ma'lumot qatlami — `packages/zanjir_data` (Drift)
+
+- **Sana:** 2026-10-26 · **Holat:** qabul qilingan (4-faza).
+- **Kontekst:** Lokal baza — qurilmadagi asosiy manba (offline-first). Testlar tez va Flutter'siz bo'lishi kerak.
+- **Qaror:**
+  1. **Alohida sof Dart paket** `packages/zanjir_data` (Drift 2.35 + `sqlite3` 3.x — SQLite build hook orqali olinadi;
+     `sqlite3_flutter_libs` EOL). Ilova 5-fazada shu paketga ulanadi. Repo tuzilmasiga qo'shimcha (stek o'zgarmagan).
+  2. **Sxema** — prompt 4-bo'lim. Qo'shimchalar: `audit_event.sig_alg` va `event_at` (hash hisoblanadigan kanonik vaqt satri);
+     `app_user` da `password_hash` **yo'q** (faqat serverda); CHECK: `role`, `safety_group`, `isolation_plan.status`;
+     UNIQUE: `protocol (org_id, number)`, `protocol.qr_token`, `audit_event (device_id, seq)`, `audit_event.event_hash`,
+     `norm_set (org_id, version)`, `measurement.supersedes_id` (o'lchov ko'pi bilan bir marta almashtiriladi). `PRAGMA foreign_keys = ON`.
+     Vaqtlar ISO matn, doim UTC; JSON ustunlari kanonik JSON (RFC 8785).
+  3. **Append-only** (`measurement`, `protocol`, `audit_event`): repozitoriylarda UPDATE/DELETE metodlari yo'q (asosiy himoya)
+     + SQLite triggerlari `RAISE(ABORT, 'append_only: …')` (ikkinchi qatlam). `rev` qo'shilganda 1; server reviziyasi bu
+     jadvallarni o'zgartirmaslik uchun 8-fazada alohida jadvalda saqlanadi.
+  4. **Migratsiyalar:** `drift_dev make-migrations`, eksport — `drift_schemas/`. Testlar: `schemaVersion` = oxirgi eksport;
+     yangi baza eksport qilingan sxemaga (jadval, trigger, indeks) aynan mos; har bir eksport versiyasidan joriygacha migratsiya;
+     yangiroq versiyadagi bazani ochish (pastga tushirish) rad etiladi. Sxema o'zgarsa: `schemaVersion` + `make-migrations` + qadam.
+  5. **Tashkilotlar ajratilgan:** `DataContext.orgId` — har bir so'rovda filtr; boshqa tashkilot yozuvi "topilmadi" (farq ko'rsatilmaydi).
+  6. **Repozitoriy qoidalari:** o'lchov yozish = `evaluate()` + `measurement` + `MEASUREMENT_ADDED` audit — bitta tranzaksiya;
+     yopilgan sessiyaga yozilmaydi; tugun sessiya obyektida bo'lishi shart; almashtirish faqat shu sessiya, tugun va turdagi
+     o'lchov uchun va bir marta. Protokol bekor qilinishi — faqat `PROTOCOL_REVOKED` hodisasi. Audit: bekor qilingan qurilma
+     yoki ro'yxatdagi kalitga mos kelmaydigan imzolovchi yozolmaydi.
+  7. **Ajratish rejasi:** DRAFT → APPROVED (faqat LEAD/ADMIN) → EXECUTED, DRAFT/APPROVED → CANCELLED. Saqlash, tasdiqlash va
+     bajarishdan oldin graf hash'i (yerga ulash tizimi bilan) tekshiriladi — farq bo'lsa STALE va xato. Apparat holati hash'ga kirmaydi.
+  8. **Normalar to'plami:** YAML o'zgarishsiz saqlanadi, `sha256` bilan; yuklashda hash mos kelmasa `norm_set_tampered`;
+     bir xil versiya boshqa mazmun bilan — `norm_set_version_conflict`.
+  9. **Nusxalangan apparat** (QF1 → QF2) `verified = false` — dalada tekshirilmaguncha solver ogohlantiradi.
+- **Oqibat:** `k_corr` hozircha `EvalSettings` parametri; laboratoriya sozlamalarini saqlash — 5-fazada. Muddati o'tgan asbob bilan
+  o'lchov yoziladi, lekin imzolash 6-fazada bloklanadi (CLAUDE.md, 6-qoida; `InstrumentRepository.isVerificationValid`).

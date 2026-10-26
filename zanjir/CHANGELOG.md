@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 4-faza — `packages/zanjir_data` (ADR-0008): Drift sxemasi (13 jadval), append-only triggerlar, eksport qilingan sxema va
+  migratsiya testlari, org bo'yicha filtrlangan repozitoriylar (obyekt, graf, asbob, sessiya, o'lchov + baholash + audit,
+  normalar to'plami, protokol, ajratish rejasi holatlari va STALE), apparatni nusxalash (QF1 → QF2).
 - 3-faza — kanonik JSON (RFC 8785), audit hash-zanjiri va Ed25519 imzo Dart va Python'da (ADR-0007):
   `tools/vectors/` umumiy vektorlari (RFC 8785 va RFC 8032 rasmiy natijalari bilan tekshirilgan generator, CI `--check`),
   zanjirni davom ettirish (anchor), 12 ta buzish holati, PDF/imzoning har bir bayti o'zgarishi aniqlanadi.

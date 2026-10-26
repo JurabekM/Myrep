@@ -46,6 +46,31 @@ jobs:
       - name: Evaluator, solver, crypto — 100% qator va branch coverage
         run: dart run tool/check_coverage.dart
 
+  data:
+    name: zanjir_data (drift)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/packages/zanjir_data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - name: Generatsiya qilingan kod eskirmaganmi (*.g.dart, drift_schemas)
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          dart run drift_dev schema generate drift_schemas/zanjir/ test/drift/zanjir/generated/
+          dart format lib/src/db/database.g.dart test/drift > /dev/null
+          git diff --exit-code -- .
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - name: Testlar (migratsiya, repozitoriylar, append-only, tashkilotlar ajratilganligi)
+        run: dart test
+
   app:
     name: app (flutter)
     runs-on: ubuntu-latest

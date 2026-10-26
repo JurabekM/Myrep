@@ -31,6 +31,7 @@ Ildizdagi `../CLAUDE.md` (Myrep umumiy qoidalari) ham amal qiladi.
 zanjir/
   app/                  # Flutter ilova
   packages/zanjir_core/ # graf, baholash, solver, kanonik JSON, hash-zanjir
+  packages/zanjir_data/ # lokal baza (Drift), repozitoriylar, migratsiyalar
   server/               # FastAPI
   norms/                # normalar YAML + JSON Schema
   tools/vectors/        # Dart va Python uchun umumiy kripto test vektorlari
@@ -42,6 +43,8 @@ zanjir/
 Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qayta o'rnatiladi, ADR-0003), Python 3.12 + `uv`.
 - Yadro: `cd packages/zanjir_core && dart format --output=none --set-exit-if-changed . && dart analyze --fatal-infos && dart test`
 - Coverage: `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage && dart run tool/check_coverage.dart` (eval/solver/crypto — 100% qator va branch)
+- Ma'lumot qatlami: `cd packages/zanjir_data && dart run build_runner build && dart analyze --fatal-infos && dart test`
+  (sxema o'zgarsa: `schemaVersion` + `dart run drift_dev make-migrations`, ADR-0008)
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
 - Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest`
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
