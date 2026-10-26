@@ -39,3 +39,52 @@ Natija: `app\build\outputs\apk\debug\app-debug.apk`. Telefonga o'rnating (`adb i
 ### Men ZIP'lar kelgach nima qilaman
 ZIP'larni `:tools:replay` bilan tahlil qilaman, haqiqiy chastota va maydonlarni tekshiraman, `docs/DEVICES.md`
 (qo'llab-quvvatlanadigan qurilmalar) ni yarataman va kerak bo'lsa yig'ishni tuzataman.
+
+---
+
+## H2 — 20 saytlik pilot (4-bosqichdan keyin) — KUTILMOQDA
+
+**Maqsad:** AC-08 (pilotda tasdiqlangan almashinuvlarni aniqlash — 100%), AC-09 (bitta sessiya ≤ 25 daqiqa),
+AC-06 (30 daqiqada batareya ≤ 15%), standart configni haqiqiy ma'lumot bilan kalibrlash.
+Bu vaqtda men 5-bosqichni (release, xavfsizlik, hujjatlar) davom ettiraman.
+
+### 1. Saytlarni tanlash (20 ta)
+- **Aralash muhit:** ~8 ta shahar (zich bino, rMax 600 m preset), ~6 ta shahar atrofi, ~6 ta qishloq.
+- **Turli konfiguratsiya:** 3 va undan ko'p sektorli; kamida 5 ta saytda 2–3 band (ARFCN).
+- **Ataylab "xato" reja — kamida 3 sayt:** RF reja CSV'sida ikkita sektorning PCI yoki azimutini almashtiring
+  (masalan, S1 ↔ S2 qatorlaridagi `pci` qiymatlarini almashtirish). Bu sinov "almashinuv"ni haqiqiy saytda tekshiradi.
+  Qaysi saytda nima o'zgartirilganini **faqat ground truth faylga** yozing — muhandis bilmasin (ko'r sinov).
+- Imkon bo'lsa, haqiqatan almashinuv/burilish topilgan (tuzatishdan oldingi) saytlar — eng qimmatli ma'lumot.
+
+### 2. Ground truth olish
+Har bir rejadagi cell uchun bitta qator, fayl: **`field-data/pilot/ground_truth.csv`**
+```
+site_code,rat,arfcn,pci,true_azimuth_deg,has_fault,fault_type
+NAV-0123,LTE,1300,141,0,0,NONE
+NAV-0123,LTE,1300,142,240,1,CELL_CONFIG_SWAP
+```
+- `true_azimuth_deg` — haqiqiy azimut: antenna oldida **kompas/azimut o'lchagich** (yoki dron foto) bilan o'lchanadi,
+  magnit og'ishi tuzatilgan (geografik shimol). Noma'lum bo'lsa bo'sh qoldiring.
+- `has_fault` — 1/0. `fault_type`: `NONE`, `CELL_CONFIG_SWAP` (barcha bandlarda almashgan), `BAND_PORT_SWAP`
+  (bitta bandda), `SWAP` (turi noma'lum), `ANTENNA_ROTATED`, `PCI_MISSING`.
+- Ataylab buzilgan rejada: haqiqiy holat to'g'ri bo'lsa ham, ilova uchun bu almashinuv — `has_fault=1`, `fault_type=CELL_CONFIG_SWAP`.
+
+### 3. Har bir saytda
+1. Release-kandidat yoki debug APK, **Sozlamalar → Qurilma probe** (bir marta har telefon uchun).
+2. Sayt kartasi → **Oldindan tekshiruv** → hammasi yashil/sariq bo'lsa **Boshlash**.
+3. Halqa bo'ylab yuring, **"Natija tayyor"** chiqqach **Tugatish**. Boshlash va tugatish vaqtini yozib boring (AC-09).
+4. **Hisobot (PDF, ZIP)** → **ZIP eksport** → ZIP'ni oling.
+5. Kamida 2 ta saytda: sessiya boshida va 30 daqiqadan keyin batareya % ni yozing (AC-06, `docs/BATTERY_TEST.md`).
+
+### 4. Qaytarish
+- Barcha ZIP'lar → **`field-data/pilot/`** (nomi: `<sayt>_<sana>.zip`).
+- `field-data/pilot/ground_truth.csv` (yuqoridagi format).
+- `field-data/pilot/log.csv`: `site_code,start_time,end_time,battery_start,battery_end,device,notes`.
+
+### Men ma'lumot kelgach nima qilaman
+```
+sv-replay calibrate field-data/pilot field-data/pilot/ground_truth.csv --out field-data/pilot/calibration
+```
+Natija: `recommended-config.json` va `calibration-report.md`. Agar shart (noto'g'ri FAIL ≤ 3%) bajarilsa — standart
+`AnalysisConfig` ni yangilayman (ADR bilan), AC-08/AC-09 hisobotini `docs/PILOT_REPORT.md` ga yozaman.
+Tavsiya etilgan configni ilovaga **Sozlamalar → Config JSON import** orqali ham yuklash mumkin.

@@ -75,3 +75,9 @@ Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyz
 - **Hisobot tili** ilovadan mustaqil: PDF `createConfigurationContext(locale)` bilan chiziladi.
 - **PDF ranglari:** qog'ozga chop etish uchun Myrep light tokenlari (oq fon); ilova UI esa standart dark.
 - **Testda til:** Robolectric tizim tili inglizcha bo'lgani uchun UI testlari `qualifiers = "b+uz"` yoki MainActivity orqali ishlaydi.
+
+## ADR-014 — Kalibrlash vositasi (4-bosqich, 2026-10-26)
+- **Grid:** `n` ∈ {3.0, 3.5, 4.0}, PASS |δ| ∈ {15, 20, 25}, WARN |δ| ∈ {40, 45, 50}, `swapMaxErrDeg` ∈ {25, 30, 35}, `minSectorCoverage` ∈ {0.5, 0.6} → 162 (PASS < WARN). Grid bootstrap 50, tanlangan config yakunda standart bootstrap (200) bilan qayta baholanadi.
+- **Tanlash:** shart — noto'g'ri FAIL ≤ 3%; so'ng AC-08 aniqlash ↑, noto'g'ri FAIL ↓, sog' cell'lar PASS ↑, standartdan eng kam o'zgarish.
+- **"Aniqlandi"** ta'rifi AC-01 bilan bir xil: cell o'z ARFCN'idagi SWAP topilmasida bor (yoki sektor sababi swap).
+- **Simulyatsiya ma'lumoti standartni o'zgartirish uchun asos emas** (§11): `docs/reports/calibration-sim-demo.md` faqat vosita ishlashini ko'rsatadi. Standart config faqat pilot (H2) ma'lumoti bilan yangilanadi.

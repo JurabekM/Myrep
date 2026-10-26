@@ -1,8 +1,8 @@
 # PROGRESS — Sector Verify
 
 ## Joriy holat
-- **Bosqich:** 2 — tugadi (tag `sector-verify/phase-2-done`); **H1 kutilmoqda** (`docs/HUMAN_TASKS.md`)
-- **Keyingi:** 3-bosqich — UI, jonli tahlil, hisobot (H1 bilan parallel)
+- **Bosqich:** 4 — tugadi (tag `sector-verify/phase-4-done`); **H1 va H2 kutilmoqda** (`docs/HUMAN_TASKS.md`)
+- **Keyingi:** 5-bosqich — production'ga tayyorlash (H1/H2 bilan parallel)
 
 ## Bajarilgan
 ### 0-bosqich
@@ -41,9 +41,23 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 - ✅ Testlar: normalizer (Robolectric CellInfo builder'lari bilan), DAO/repozitoriy (Robolectric), AC-07 (virtual vaqt: o'ldirilganda ≤ 2 s yo'qotish), engine, pre-check, saqlangan sessiyadan yakuniy tahlil.
 - ✅ Instrumental testlar (`core/data/src/androidTest`): SQLCipher fayli shifrlangan, Keystore wrapper, sxema v1 (MigrationTestHelper), AC-07 haqiqiy DB'da. Bu muhitda emulyator yo'q → CI `instrumented` job'ida (GitHub, KVM).
 
+### 3-bosqich (G3)
+- ✅ 7 ekran: Saytlar (qidiruv, oxirgi verdikt, CSV import, tugallanmagan sessiyani tiklash), Sayt kartasi (reja + polar), Oldindan tekshiruv (9 tekshiruv, to'sqinlik/ogohlantirish), Jonli o'lchov (xarita canvas, 36 binli radar, PCI kartalari, "Natija tayyor"), Natija (ARFCN bo'yicha polar + 95% yoy, jadval, topilmalar va tavsiyalar, qayta tekshiruv), Hisobot (PDF ko'rish/ulashish, ZIP), Sozlamalar.
+- ✅ `report.json` v1 + Keystore EC P-256 imzo (StrongBox bo'lsa, attestation challenge = install UUID), PDF (PdfDocument, hisobot tili ilovadan mustaqil), ZIP (FileProvider orqali).
+- ✅ 3 til (uz standart, ru, en) — barcha satrlar `strings.xml` da; dark/light/quyosh mavzulari; tugmalar ≥ 56 dp; ikonlarda contentDescription.
+- ✅ Debug ekran faqat debug build'da (`app/src/debug`).
+- ✅ Testlar: ViewModel (Turbine), Compose oqim testi (reja → oldindan tekshiruv → sessiya → natija FAIL, Hilt + Robolectric), Sites ekrani, PDF (3 tilda, PdfRenderer bilan sahifalar soni), imzo round-trip (Keystore), hisobot → ZIP → verify (emulyatorda).
+
+### 4-bosqich
+- ✅ `:tools:replay` CLI: `analyze`, `calibrate` (162 konfiguratsiyali grid, ADR-014), `verify`, `simulate` (ZIP + ground truth).
+- ✅ Simulyator ZIP'larida `calibrate` ishlaydi va testlangan (`ReplayCliTest`); namoyish: `docs/reports/calibration-sim-demo.md` (20 sessiya, 30 s).
+- ✅ Ilovada Sozlamalar → Config JSON import (kalibrlash natijasi).
+
 ## Oxirgi test natijalari
 - 2026-10-26: `./gradlew check` — BUILD SUCCESSFUL (1-bosqich: model 5 test, analysis 34 test, koverVerify 99.7%).
 - 2026-10-26: `./gradlew :core:analysis:test -Pslow` — Monte-Karlo 1000: barcha AC ✅.
+- 2026-10-26: CI run #5 (`20209e6`): `check` ✅, `instrumented` (emulyator API 34) ✅ — EncryptedDatabase (4), KeystoreSigner, PdfReportWriter, ReportGenerator.
+- 2026-10-26: `./gradlew check` lokal ✅ (barcha modullar, Robolectric UI testlari bilan).
 
 ## Ochiq savollar
 1. **targetSdk:** prompt 35 ni talab qiladi. Google Play 2026-08-31 dan yangi ilova va yangilanishlar uchun targetSdk 36 ni talab qiladi. Play orqali tarqatilsa 36 ga ko'tarish kerak (APK orqali tarqatishga ta'sir qilmaydi). Hozircha 35.
@@ -51,4 +65,5 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 3. **Instrumental testlar:** bu muhitda emulyator yo'q (KVM yo'q) — CI'dagi emulyator job'ida yoki H1 da ishga tushiriladi.
 
 ## Kutilayotgan inson darvozasi
-- yo'q
+- **H1** — 3 chipsetli telefonda probe + 10–15 daqiqalik sessiya → `field-data/h1/` (AC-05).
+- **H2** — 20 saytlik pilot + ground truth → `field-data/pilot/` (AC-06, AC-08, AC-09, kalibrlash).
