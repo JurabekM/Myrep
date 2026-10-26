@@ -85,5 +85,7 @@ internal fun Project.configureQuality() {
         maxHeapSize = "2g"
         testLogging { events("failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
         systemProperty("sv.reportsDir", project.layout.buildDirectory.dir("reports").get().asFile.absolutePath)
+        // Optional mirror for Robolectric's android-all jars (e.g. when Maven Central rate-limits).
+        project.findProperty("sv.robolectricRepoUrl")?.let { systemProperty("robolectric.dependency.repo.url", it) }
     }
 }
