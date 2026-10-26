@@ -3,7 +3,9 @@
 //!
 //! * `POST /send` `{"to","text","reference"}` + `Authorization: Bearer <token>` → `202 {"id"}`;
 //! * `GET /messages[?to=+998…]` (shu token bilan) — "virtual telefonlar" qutisi, test va demo uchun;
-//! * `DELETE /messages` — qutini tozalash.
+//! * `DELETE /messages` — qutini tozalash;
+//! * `POST /alerts` — Alertmanager webhook'i (virtual navbatchi kanali, 2026-10-26), `GET /alerts` —
+//!   qabul qilingan ogohlantirishlar (nomi, holati, darajasi, instansiya).
 //!
 //! Faqat sinov vositasi: xabarlar xotirada, logga faqat maskalangan telefon va `reference` yoziladi
 //! (SMS matni — ichida OTP — logga tushmaydi). Ishlab chiqarishda bu o'rinda bank shlyuzi turadi.
@@ -47,9 +49,36 @@ struct Filter {
     to: Option<String>,
 }
 
+/// Qabul qilingan ogohlantirish (Alertmanager webhook'idan, faqat yorliqlar).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Alert {
+    pub alertname: String,
+    /// `firing` yoki `resolved`.
+    pub status: String,
+    pub severity: String,
+    pub instance: String,
+    pub received_at: i64,
+}
+
+/// Alertmanager webhook tanasi (`version: "4"`), bizga kerakli qismi.
+#[derive(Deserialize)]
+struct AlertmanagerPayload {
+    #[serde(default)]
+    alerts: Vec<AlertmanagerAlert>,
+}
+
+#[derive(Deserialize)]
+struct AlertmanagerAlert {
+    #[serde(default)]
+    status: String,
+    #[serde(default)]
+    labels: std::collections::BTreeMap<String, String>,
+}
+
 #[derive(Default)]
 struct Inner {
     messages: VecDeque<Sms>,
+    alerts: VecDeque<Alert>,
     next_id: u64,
 }
 
@@ -94,8 +123,15 @@ impl Gateway {
         Router::new()
             .route("/send", post(send))
             .route("/messages", axum::routing::get(list).delete(clear))
+            .route("/alerts", post(alert_webhook).get(list_alerts))
             .route("/healthz", axum::routing::get(|| async { "ok" }))
             .with_state(self.clone())
+    }
+
+    /// Qabul qilingan ogohlantirishlar.
+    pub fn alerts(&self) -> Vec<Alert> {
+        let g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        g.alerts.iter().cloned().collect()
     }
 
     fn authorized(&self, h: &HeaderMap) -> bool {
@@ -182,6 +218,40 @@ async fn clear(State(g): State<Gateway>, h: HeaderMap) -> Response {
     StatusCode::NO_CONTENT.into_response()
 }
 
+async fn alert_webhook(
+    State(g): State<Gateway>,
+    h: HeaderMap,
+    Json(p): Json<AlertmanagerPayload>,
+) -> Response {
+    if !g.authorized(&h) {
+        return err(StatusCode::UNAUTHORIZED, "token noto'g'ri");
+    }
+    let label = |a: &AlertmanagerAlert, k: &str| a.labels.get(k).cloned().unwrap_or_default();
+    let mut i = g.inner.lock().unwrap_or_else(|e| e.into_inner());
+    for a in &p.alerts {
+        let alert = Alert {
+            alertname: label(a, "alertname"),
+            status: a.status.clone(),
+            severity: label(a, "severity"),
+            instance: label(a, "instance"),
+            received_at: now(),
+        };
+        tracing::warn!(alert = %alert.alertname, status = %alert.status, severity = %alert.severity, instance = %alert.instance, "navbatchi: ogohlantirish");
+        if i.alerts.len() >= MAX_MESSAGES {
+            i.alerts.pop_front();
+        }
+        i.alerts.push_back(alert);
+    }
+    StatusCode::OK.into_response()
+}
+
+async fn list_alerts(State(g): State<Gateway>, h: HeaderMap) -> Response {
+    if !g.authorized(&h) {
+        return err(StatusCode::UNAUTHORIZED, "token noto'g'ri");
+    }
+    Json(g.alerts()).into_response()
+}
+
 /// Fonda ishlayotgan shlyuz (testlar uchun).
 pub struct RunningGateway {
     pub addr: SocketAddr,
@@ -247,6 +317,55 @@ mod tests {
         h.insert("authorization", "Bearer abc".parse().unwrap());
         assert!(g.authorized(&h));
         assert!(Gateway::new(None).authorized(&HeaderMap::new()));
+    }
+
+    #[tokio::test]
+    async fn alertmanager_webhook() {
+        let mut gw = spawn(
+            "127.0.0.1:0".parse().unwrap(),
+            Gateway::new(Some("tk".into())),
+        )
+        .await
+        .unwrap();
+        let url = format!("http://{}/alerts", gw.addr);
+        let body = r#"{"version":"4","status":"firing","receiver":"navbatchi","alerts":[
+            {"status":"firing","labels":{"alertname":"MpayInstanceDown","severity":"critical","instance":"api-1:9464","job":"mpay-api"},
+             "annotations":{"summary":"x"},"startsAt":"2026-10-26T10:00:00Z"}]}"#;
+        let post = |auth: &'static str| {
+            let url = url.clone();
+            async move {
+                let mut s = tokio::net::TcpStream::connect(gw_addr(&url)).await.unwrap();
+                use tokio::io::{AsyncReadExt, AsyncWriteExt};
+                let req = format!(
+                    "POST /alerts HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer {auth}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                s.write_all(req.as_bytes()).await.unwrap();
+                let mut out = String::new();
+                s.read_to_string(&mut out).await.unwrap();
+                out
+            }
+        };
+        assert!(post("wrong").await.starts_with("HTTP/1.1 401"));
+        assert!(post("tk").await.starts_with("HTTP/1.1 200"));
+        let a = gw.gateway.alerts();
+        assert_eq!(a.len(), 1);
+        assert_eq!(
+            (
+                a[0].alertname.as_str(),
+                a[0].status.as_str(),
+                a[0].severity.as_str(),
+                a[0].instance.as_str()
+            ),
+            ("MpayInstanceDown", "firing", "critical", "api-1:9464")
+        );
+        gw.shutdown();
+    }
+
+    fn gw_addr(url: &str) -> String {
+        url.trim_start_matches("http://")
+            .trim_end_matches("/alerts")
+            .to_owned()
     }
 
     #[test]

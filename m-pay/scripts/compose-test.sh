@@ -7,7 +7,10 @@
 # 2. TLS end-to-end: nginx orqali kelgan sertifikat = API sertifikati (L4, TLS ochilmaydi).
 # 3. Yuk nginx orqali (TLS + mTLS, PROXY protocol); o'rtada api-1 to'xtatiladi (SIGTERM, graceful),
 #    Prometheus'da MpayInstanceDown ogohlantirishi kutiladi, so'ng api-1 qayta ishga tushadi.
-# 4. Zaxira → alohida bazaga tiklash → audit xesh-zanjiri tekshiruvi.
+#    Ogohlantirish Alertmanager orqali navbatchi kanaliga (virtual — smsgw `/alerts`) yetib boradi.
+# 4. Shifrlangan zaxira (age): yukdan oldin asosiy nusxa (B1), keyin T lahza, yana faollik, ikkinchi
+#    zaxira (B2) → alohida bazaga tiklash + audit; PITR: B1 + B2 WAL → T lahza — audit yozuvlari soni
+#    T dagidek (keyingi faollik yo'q), audit xesh-zanjiri to'g'ri.
 # 5. Loglarda ochiq PAN va sirlar yo'qligi.
 # Natija: docs/load/p2.5-compose.json. MPAY_KEEP=1 — oxirida muhit o'chirilmaydi.
 set -euo pipefail
@@ -29,6 +32,8 @@ mkdir -p "$ROOT/docs/load"
 cleanup() {
   if [ "${MPAY_KEEP:-}" != 1 ]; then
     "${DC[@]}" --profile test down -v --remove-orphans >/dev/null 2>&1 || true
+    # Faqat shu yugurish yaratgan vaqtinchalik zaxira papkalari (shifrlangan, ~200 MB).
+    rm -rf "${BK1:-}" "${BK2:-}"
   fi
 }
 trap cleanup EXIT
@@ -48,6 +53,19 @@ docker build -q --target runtime -t mpay-server:local "$ROOT" >/dev/null
 docker build -q --target loadgen -t mpay-loadgen:local "$ROOT" >/dev/null
 docker run --rm --entrypoint promtool -v "$D/prometheus:/etc/prometheus:ro" prom/prometheus:v3.5.0 \
   check config /etc/prometheus/prometheus.yml
+docker run --rm --entrypoint amtool -v "$D/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.34.1 \
+  check-config /etc/alertmanager/alertmanager.yml
+bash "$D/backup-keygen.sh"
+sql() {   # $1 SQL → qiymat (asosiy PostgreSQL)
+  "${DC[@]}" exec -T postgres psql -U mpay -d mpay -qAtc "$1" | tr -d '\r'
+}
+navbatchi() {   # virtual navbatchi kanalidagi ogohlantirishlar: nomi=holati
+  "${DC[@]}" exec -T smsgw sh -c \
+    'curl -s -H "Authorization: Bearer $(cat /run/secrets/sms_token)" http://localhost:47700/alerts' \
+    | "$PY" -c 'import json,sys; print(" ".join(sorted({a["alertname"]+"="+a["status"] for a in json.load(sys.stdin)})))'
+}
+BK1="$(mktemp -d)"
+BK2="$(mktemp -d)"
 
 echo "== muhit ishga tushmoqda"
 "${DC[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
@@ -64,6 +82,9 @@ echo "== TLS end-to-end (nginx sertifikatni almashtirmaydi)"
   a=$(echo | openssl s_client -connect lb:8443 -servername lb 2>/dev/null | openssl x509 -noout -fingerprint -sha256)
   b=$(openssl x509 -in /var/lib/mpay/state/tls-cert.pem -noout -fingerprint -sha256)
   echo "lb:  $a"; echo "api: $b"; [ "$a" = "$b" ]'
+
+echo "== asosiy zaxira (B1, PITR boshlang'ich nuqtasi)"
+bash "$D/backup.sh" "$BK1" | tail -1
 
 echo "== yuk: $SECS s, $CONC ishchi, nginx orqali; api-1 o'rtada to'xtatiladi"
 # Natija JSON — stdout'da (host papkasini konteynerga ulamasdan: Linux'da uid 10001 unga yoza olmaydi),
@@ -92,6 +113,14 @@ wait $LOAD || { cat "$LOADLOG"; exit 1; }
 grep -v "^ Container" "$LOADLOG"
 rm -f "$LOADLOG"
 [ -n "$FIRED" ] || { echo "XATO: MpayInstanceDown ishlamadi"; exit 1; }
+NB=""
+for _ in $(seq 1 24); do
+  nb="$(navbatchi)"
+  if echo "$nb" | grep -q "MpayInstanceDown=firing"; then NB=1; break; fi
+  sleep 5
+done
+echo "   navbatchi kanali (Alertmanager → smsgw): $nb"
+[ -n "$NB" ] || { echo "XATO: ogohlantirish navbatchiga yetmadi"; exit 1; }
 
 echo "== Prometheus"
 sleep 12
@@ -114,11 +143,31 @@ pi="$(prom_q 'sum(max_over_time(mpay_integrity_checks_total{result="ok"}[10m]))'
 echo "   yaxlitlik tekshiruvlari (ok): $pi"
 [ -n "$pi" ] && [ "${pi%.*}" -ge "${MPAY_LOAD_CARDS:-200}" ] || { echo "XATO: yaxlitlik tokeni tekshirilmagan"; exit 1; }
 
-echo "== zaxira va tiklash"
-BK="$(mktemp -d)"
-bash "$D/backup.sh" "$BK"
-bash "$D/restore.sh" "$BK"/* --verify
-rm -rf "$BK"
+echo "== T lahza, keyin qo'shimcha faollik"
+# Vaqt va soni bitta so'rovda (PostgreSQL soati — tiklash ham shu soat bo'yicha).
+TC="$(sql "SELECT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS.US') || '+00|' || count(*) FROM vault_audit")"
+T="${TC%%|*}"
+C1="${TC##*|}"
+echo "   T=$T audit=$C1"
+sleep 2
+"${DC[@]}" run --rm --no-deps -T --entrypoint sh loadgen -c \
+  "mpay-load run --dir /var/lib/mpay/state --server https://lb:8443 --cards 20 --concurrency 4 --duration 5 >/dev/null" \
+  2>/dev/null
+C2="$(sql "SELECT count(*) FROM vault_audit")"
+echo "   keyin audit=$C2"
+[ "$C2" -gt "$C1" ] || { echo "XATO: qo'shimcha faollik audit'ga tushmadi"; exit 1; }
+
+echo "== shifrlangan zaxira (B2) va tiklash"
+bash "$D/backup.sh" "$BK2" | tail -1
+if head -c 512 "$BK2"/*/mpay.dump.age | grep -qa "PGDMP"; then echo "XATO: dump shifrlanmagan"; exit 1; fi
+bash "$D/restore.sh" "$BK2"/* --verify
+
+echo "== PITR: B1 + B2 WAL → T"
+PITR="$(bash "$D/pitr-restore.sh" "$BK1"/* "$BK2"/* "$T")"
+echo "$PITR" | sed 's/^/   /'
+rows="$(echo "$PITR" | sed -n 's/^pitr_audit_rows=//p')"
+[ "$rows" = "$C1" ] || { echo "XATO: PITR audit=$rows, kutilgan $C1 (T lahzadagi)"; exit 1; }
+echo "$PITR" | grep -q "audit zanjiri to'g'ri" || { echo "XATO: PITR audit zanjiri"; exit 1; }
 
 echo "== loglar: ochiq PAN va sirlar"
 LOGS="$(mktemp)"

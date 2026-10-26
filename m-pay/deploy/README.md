@@ -12,6 +12,7 @@ Dashboard yo'q — interfeys HTTP API, CLI va ogohlantirish qoidalari.
                                                                   ├─▶ smsgw (virtual SMS)
                                                                   └─▶ SoftHSM tokeni (hajm)
  Prometheus (127.0.0.1:9090) ◀── /metrics :9464 (api-1, api-2, shield) + alerts.yml
+     └─▶ Alertmanager ─▶ navbatchi kanali (sandbox: smsgw /alerts)
 ```
 
 ## Ishga tushirish
@@ -74,10 +75,21 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 Qoidalar — [`prometheus/alerts.yml`](prometheus/alerts.yml): instansiya yo'q, sig'im kamaydi, DB
 yo'q, avtorizatsiya p99 > 300 ms, 5xx > 1 %, `96` javoblari, Shield zaxirada, Play Integrity javob
 bermayapti yoki yaroqsiz tokenlar ko'paydi, OTP yetkazilmayapti,
-DB hovuzi to'la, chegara portlashi, PROXY sarlavhasi rad etildi. `TODO(spec):` Alertmanager
-marshruti (bankning navbatchilik kanali).
+DB hovuzi to'la, chegara portlashi, PROXY sarlavhasi rad etildi. Ogohlantirishlar Alertmanager
+([`alertmanager/alertmanager.yml`](alertmanager/alertmanager.yml)) orqali navbatchiga yuboriladi —
+sandbox'da virtual kanal `mpay-smsgw` `POST /alerts`. `TODO(spec):` bankning haqiqiy navbatchilik
+kanali (SMS, Telegram, e-pochta) va eskalatsiya.
 
-## Zaxira va tiklash
+## Zaxira va tiklash ([ADR-0023](../docs/adr/0023-zaxira-pitr-ogohlantirish.md))
+
+Bir marta — shifrlash kalitlari (age, X25519):
+
+```bash
+bash deploy/backup-keygen.sh
+```
+
+`secrets/backup_recipient` (ochiq kalit) serverda qoladi; `secrets/backup_identity` — **maxfiy**: oflayn
+saqlang va serverdan o'chiring (tiklash paytida `MPAY_BACKUP_IDENTITY` bilan olib kelinadi).
 
 ```bash
 bash deploy/backup.sh
@@ -87,13 +99,23 @@ bash deploy/backup.sh
 bash deploy/restore.sh deploy/backups/<UTC-vaqt> --verify
 ```
 
-* `backup.sh` — ishlab turgan muhitdan: `pg_dump -Fc` (bitta izchil snapshot), `state` + SoftHSM
-  tokeni arxivi, `SHA256SUMS`. Zaxira papkasi git'ga tushmaydi.
+```bash
+bash deploy/pitr-restore.sh deploy/backups/<asosiy> deploy/backups/<keyingi> "2026-10-26 12:30:00+00"
+```
+
+* `backup.sh` — ishlab turgan muhitdan, hammasi **age bilan shifrlangan** (ochiq ma'lumot diskka
+  tushmaydi): `mpay.dump.age` (`pg_dump -Fc`), `base.tar.age` (`pg_basebackup`), `wal.tar.age`
+  (WAL arxivi), `state-hsm.tar.gz.age`, `SHA256SUMS`, `MANIFEST`. Zaxira papkasi git'ga tushmaydi.
+* PostgreSQL har to'lgan WAL segmentini `walarchive` hajmiga arxivlaydi (`archive_command`,
+  `archive_timeout = 300`) — asosiy nusxadan keyingi istalgan lahzaga tiklash mumkin.
 * `restore.sh --verify` — alohida bazaga tiklaydi va audit xesh-zanjirini HSM kaliti bilan
-  tekshiradi (ishlayotgan muhitga tegmaydi) — davriy tiklash mashqi.
-* `restore.sh --replace` — API'larni to'xtatib `mpay` bazasini almashtiradi, tekshiradi, ishga tushiradi.
-* DB'dagi karta ma'lumoti faqat KEK/DEK bilan shifrlangan: HSM kalitlarisiz zaxira foydasiz.
-  `TODO(spec):` zaxirani oflayn kalit bilan shifrlash va bank HSM'ining o'z zaxira tartibi.
+  tekshiradi (ishlayotgan muhitga tegmaydi) — davriy tiklash mashqi; `--replace` — API'larni
+  to'xtatib `mpay` bazasini almashtiradi.
+* `pitr-restore.sh` — asosiy nusxa + WAL → vaqtinchalik PostgreSQL'da maqsad lahzagacha qayta o'ynaladi,
+  audit zanjiri tekshiriladi; ishlayotgan muhitga tegmaydi.
+* DB'dagi karta ma'lumoti baribir KEK/DEK bilan shifrlangan: HSM kalitlarisiz zaxira foydasiz.
+  `TODO(spec):` zaxirani boshqa joyga (offsite) yuborish, saqlash muddati, bank HSM'ining o'z zaxira
+  tartibi, WAL arxivini ham uzluksiz offsite'ga (hozir faqat `backup.sh` paytida).
 
 ## To'xtatish va yangilash
 

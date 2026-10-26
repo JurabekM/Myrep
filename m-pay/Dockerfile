@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update \
- && apt-get install -y --no-install-recommends softhsm2 ca-certificates curl openssl \
+ && apt-get install -y --no-install-recommends softhsm2 ca-certificates curl openssl age \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10001 --home-dir /var/lib/mpay --shell /usr/sbin/nologin mpay \
  && mkdir -p /var/lib/mpay/state /var/lib/mpay/hsm \

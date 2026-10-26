@@ -62,8 +62,9 @@ P2.4 dan keyin `mpay-server` ko'p instansiyada ishlay oladi, lekin uni ishga tus
   (testlar) hisoblagichlari qo'shiladi.
 * SoftHSM tokeni hajm orqali instansiyalar orasida bo'linadi — faqat sandbox; production'da
   tarmoq HSM'i (PKCS#11 kutubxonasi, `MPAY_PKCS11_*`).
-* `TODO(spec):` Alertmanager marshruti, zaxirani shifrlash (oflayn kalit), PostgreSQL replikatsiyasi
-  va PITR (WAL arxivi), nginx zaxirasi (keepalived/VIP) — pilot SLA va bank infratuzilmasi bo'yicha.
+* Zaxirani shifrlash (oflayn kalit), PITR (WAL arxivi) va Alertmanager — ADR-0023 (2026-10-26).
+  `TODO(spec):` PostgreSQL replikatsiyasi, nginx zaxirasi (keepalived/VIP), bankning navbatchilik
+  kanali — pilot SLA va bank infratuzilmasi bo'yicha.
 
 ## Ko'rib chiqilgan muqobillar
 

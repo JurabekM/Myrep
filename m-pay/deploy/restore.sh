@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Zaxiradan tiklash (2-faza P2.5, ADR-0020).
+# Shifrlangan zaxiradan tiklash (P2.5 + 3-faza tayyorgarligi).
 #
 #   bash deploy/restore.sh <ZAXIRA_PAPKASI> --verify    # alohida bazaga (mpay_restore_check) tiklaydi,
 #                                                       # audit xesh-zanjirini tekshiradi; ishlayotgan
@@ -7,19 +7,29 @@
 #   bash deploy/restore.sh <ZAXIRA_PAPKASI> --replace   # API'larni to'xtatadi, `mpay` bazasini
 #                                                       # almashtiradi, qayta ishga tushiradi
 #
-# Ikkala holatda ham SHA256SUMS tekshiriladi va tiklangandan keyin `mpay-server audit-verify` ishlaydi
-# (zanjir HSM'dagi kalit bilan tekshiriladi — tiklangan DB shu muhit HSM'iga mos bo'lishi shart).
-# `state-hsm.tar.gz` avtomatik tiklanmaydi: HSM/holat yo'qolgan bo'lsa, uni bo'sh hajmlarga qo'lda oching.
+# Maxfiy kalit: MPAY_BACKUP_IDENTITY (standart: secrets/backup_identity) — oflayn saqlanadigan fayl,
+# faqat tiklash paytida olib kelinadi. SHA256SUMS shifrlangan fayllar bo'yicha tekshiriladi; tiklangach
+# `mpay-server audit-verify` (zanjir HSM'dagi kalit bilan — DB shu muhit HSM'iga mos bo'lishi shart).
+# Muayyan lahzaga tiklash — `pitr-restore.sh`. `state-hsm.tar.gz.age` avtomatik tiklanmaydi.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && (pwd -W 2>/dev/null || pwd))"
 SRC="${1:?zaxira papkasi kerak}"
 MODE="${2:---verify}"
 DC=(docker compose -f "$HERE/docker-compose.yml")
+IMG="${MPAY_IMAGE:-mpay-server:local}"
+IDENTITY="${MPAY_BACKUP_IDENTITY:-$HERE/secrets/backup_identity}"
 export MSYS_NO_PATHCONV=1
+[ -f "$IDENTITY" ] || { echo "XATO: maxfiy kalit yo'q: $IDENTITY (MPAY_BACKUP_IDENTITY)" >&2; exit 1; }
 
 (cd "$SRC" && sha256sum -c --quiet SHA256SUMS)
 echo "== SHA256SUMS to'g'ri"
+
+# Maxfiy kalit konteynerga faqat o'qish uchun ulanadi, ochiq ma'lumot oqimda (diskka yozilmaydi).
+dec() {   # $1 (.age) → stdout
+  docker run --rm -i -v "$IDENTITY:/run/backup_identity:ro" --entrypoint age "$IMG" \
+    -d -i /run/backup_identity < "$1"
+}
 
 case "$MODE" in
   --verify) DB=mpay_restore_check ;;
@@ -34,7 +44,7 @@ fi
 
 echo "== $DB bazasiga tiklanmoqda"
 "${DC[@]}" exec -T postgres sh -c "dropdb -U mpay --if-exists --force $DB && createdb -U mpay $DB"
-"${DC[@]}" exec -T postgres pg_restore -U mpay -d "$DB" --no-owner --exit-on-error < "$SRC/mpay.dump"
+dec "$SRC/mpay.dump.age" | "${DC[@]}" exec -T postgres pg_restore -U mpay -d "$DB" --no-owner --exit-on-error
 
 echo "== audit xesh-zanjiri ($DB)"
 # Parolli URL host'da ko'rinmaydi: konteyner ichida secret'dan, faqat baza nomi almashtiriladi.

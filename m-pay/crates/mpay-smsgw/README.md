@@ -9,6 +9,8 @@ Virtual SMS shlyuzi — 2-faza P2.1 (ADR-0016). Bankning SMS shlyuzi o'rnida tur
 | `POST /send` | `{"to":"+998…","text":"…","reference":"<challenge_id>"}`, `Authorization: Bearer <token>` → `202 {"id"}`; telefon E.164 bo'lmasa `422`, token noto'g'ri bo'lsa `401` |
 | `GET /messages?to=+998…` | "virtual telefonlar" qutisi (shu token bilan) |
 | `DELETE /messages` | qutini tozalash |
+| `POST /alerts` | Alertmanager webhook'i (virtual navbatchi kanali, compose'da) |
+| `GET /alerts` | qabul qilingan ogohlantirishlar: nomi, holati, darajasi, instansiya |
 | `GET /healthz` | `ok` |
 
 Logga faqat maskalangan telefon (`+998*******01`) va `reference` yoziladi — SMS matni (ichida OTP) yo'q.

@@ -859,3 +859,22 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   o'tkazildi, kirishlar regressiya korpusida.
 * Natija (`docs/fuzz-report.md` §5): `http_api` 300 s, ~196 ming yugurish, crash yo'q; Kotlin 7 test,
   ~26 mln yugurish, tuzatishdan keyin toza. `cargo test --workspace` — 219; interop o'tdi.
+
+### Shifrlangan zaxira, PITR va Alertmanager (2026-10-26, ADR-0023)
+
+* **Shifrlash:** `deploy/backup-keygen.sh` — age (X25519) kalit jufti; ochiq kalit serverda, maxfiy
+  kalit oflayn (`MPAY_BACKUP_IDENTITY`). `backup.sh` hamma qismni oqimda shifrlaydi (`*.age`, ochiq
+  ma'lumot diskka tushmaydi), ochiq kalitsiz ishlamaydi; `restore.sh` maxfiy kalit bilan ochadi.
+* **PITR:** PostgreSQL WAL arxivi (`archive_mode`, `walarchive` hajmi, `archive_timeout = 300`);
+  `backup.sh` asosiy nusxa (`pg_basebackup`) va WAL arxivini ham oladi; `deploy/pitr-restore.sh` —
+  vaqtinchalik PostgreSQL'da `recovery_target_time` gacha tiklash + audit zanjiri.
+* **Alertmanager:** Prometheus → Alertmanager → webhook; sandbox'da virtual navbatchi kanali
+  `mpay-smsgw` `POST /alerts` (token bilan, unit test).
+* Yo'l-yo'lakay tuzatilgan: oxirgi WAL almashtirishdan keyin yozuv bo'lmasa `pg_switch_wal()` joriy
+  segmentni ko'rsatardi (zaxira kutib qolardi) — kichik WAL yozuvi + `switch_lsn - 1`; tiklanuvchi
+  server `max_connections` asosiydan kam bo'lsa tiklash to'xtaydi — skript sozlaydi va konteyner
+  yiqilsa kutmaydi.
+* Tekshirildi (`scripts/compose-test.sh`): yukdan oldin B1 → yuk → T (audit 21 568) → qo'shimcha
+  faollik (23 057) → shifrlangan B2 (dump'da `PGDMP` sarlavhasi yo'q) → `restore.sh --verify` (23 057,
+  zanjir to'g'ri) → **PITR B1 + B2 WAL → T: aynan 21 568 yozuv**, zanjir to'g'ri; `MpayInstanceDown`
+  navbatchi kanaliga yetdi; loglarda PAN va sir yo'q. `promtool` (13 qoida) va `amtool` tekshiruvi.
