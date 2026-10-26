@@ -21,6 +21,7 @@ impl Caller {
         let r = match self.role {
             Role::Operator => "operator",
             Role::Terminal => "terminal",
+            Role::Shield => "shield",
         };
         format!("{r}:{}", self.id)
     }

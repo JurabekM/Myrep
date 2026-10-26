@@ -159,11 +159,15 @@ impl Stats {
 
 /// Bitta kartani tokenlashtiradi (har biri alohida qurilma — haqiqiy hamyon kabi).
 async fn provision_one(
-    client: ServerClient,
+    clients: Arc<Vec<ServerClient>>,
     ca: Arc<SandboxAttestationCa>,
     operator: Arc<String>,
     i: u32,
 ) -> Result<(SoftCard, String), String> {
+    // Ko'p instansiya (P2.4): nonce, hello, finish va provisioning — har biri boshqa instansiyada.
+    let n = clients.len();
+    let pick = |k: u32| clients[(i as usize + k as usize) % n].clone();
+    let client = pick(0);
     let device = ca
         .issue_device(
             SecurityLevel::StrongBox,
@@ -175,7 +179,12 @@ async fn provision_one(
     // Server band (503) yoki chegara (429) — real hamyon kabi kutib, qayta urinadi.
     let mut attempt: u64 = 0;
     loop {
-        match w.connect().await {
+        let r = if n > 1 {
+            w.connect_split(&pick(1)).await
+        } else {
+            w.connect().await
+        };
+        match r {
             Ok(_) => break,
             Err(WalletError::Api {
                 status: 503 | 429, ..
@@ -185,6 +194,9 @@ async fn provision_one(
             }
             Err(e) => return Err(e.to_string()),
         }
+    }
+    if n > 1 {
+        w.set_client(pick(2));
     }
     let (profile, decision) = match w
         .provision(&load_fpan(i), "3112")
@@ -234,7 +246,14 @@ async fn run(
         .map_err(|e| e.to_string())?;
     let der = std::fs::read(dir.join("sandbox-attestation-root.der")).map_err(|e| e.to_string())?;
     let ca = Arc::new(SandboxAttestationCa::from_parts(&key, der).map_err(|e| e.to_string())?);
-    let client = ServerClient::new(&server, None).map_err(|e| e.to_string())?;
+    // `--server` — vergul bilan bir nechta instansiya (round-robin: load balancer simulyatsiyasi).
+    let clients: Arc<Vec<ServerClient>> = Arc::new(
+        server
+            .split(',')
+            .map(|s| ServerClient::new(s.trim(), None).map_err(|e| e.to_string()))
+            .collect::<Result<_, _>>()?,
+    );
+    println!("Instansiyalar: {}", clients.len());
 
     // 1) Provisioning: concurrency ta parallel hamyon.
     println!("Provisioning: {cards} karta, {concurrency} parallel…");
@@ -242,11 +261,11 @@ async fn run(
     let t0 = Instant::now();
     let mut set = tokio::task::JoinSet::new();
     for i in 0..cards {
-        let (client, ca, op, sem) = (client.clone(), ca.clone(), operator.clone(), sem.clone());
+        let (clients, ca, op, sem) = (clients.clone(), ca.clone(), operator.clone(), sem.clone());
         set.spawn(async move {
             let _p = sem.acquire_owned().await;
             let s = Instant::now();
-            let r = provision_one(client, ca, op, i).await;
+            let r = provision_one(clients, ca, op, i).await;
             (r, s.elapsed())
         });
     }
@@ -288,7 +307,7 @@ async fn run(
     let t1 = Instant::now();
     let mut set = tokio::task::JoinSet::new();
     for (w, mut cards) in buckets.into_iter().enumerate() {
-        let (client, terminal, stan) = (client.clone(), terminal.clone(), stan.clone());
+        let (clients, terminal, stan) = (clients.clone(), terminal.clone(), stan.clone());
         set.spawn(async move {
             let mut st = Stats::default();
             let merchant = format!("LOADSHOP{w:07}");
@@ -312,6 +331,7 @@ async fn run(
                     icc_data: icc,
                 };
                 let s = Instant::now();
+                let client = &clients[(w + k) % clients.len()];
                 let r: Result<AuthorizationResponse, _> = client
                     .post_json("/v1/authorizations", Some(terminal.as_str()), &req)
                     .await;

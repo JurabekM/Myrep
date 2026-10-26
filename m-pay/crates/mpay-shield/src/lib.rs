@@ -9,6 +9,7 @@ pub mod engine;
 pub mod features;
 pub mod graph;
 pub mod model;
+pub mod remote;
 pub mod replay;
 pub mod rules;
 pub mod stub;

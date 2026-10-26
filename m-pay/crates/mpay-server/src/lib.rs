@@ -18,6 +18,8 @@ pub mod revocations;
 pub mod routes;
 pub mod serve;
 pub mod sessions;
+pub mod shield_client;
+pub mod shield_role;
 pub mod state;
 
 use std::sync::Arc;

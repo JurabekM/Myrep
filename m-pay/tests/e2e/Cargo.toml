@@ -25,6 +25,7 @@ mpay-issuer.workspace = true
 mpay-smsgw.workspace = true
 mpay-crypto.workspace = true
 hex.workspace = true
+sha2.workspace = true
 clap.workspace = true
 sqlx.workspace = true
 

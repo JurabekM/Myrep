@@ -120,7 +120,7 @@ impl std::fmt::Debug for OtpChannel {
 }
 
 /// `http://` URL loopback xostga qaraydimi.
-fn is_loopback_http(url: &str) -> bool {
+pub(crate) fn is_loopback_http(url: &str) -> bool {
     let Some(rest) = url.strip_prefix("http://") else {
         return false;
     };

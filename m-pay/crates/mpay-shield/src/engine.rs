@@ -70,6 +70,11 @@ impl Shield {
         &self.rules
     }
 
+    /// Belgilar ombori hajmi: `(kartalar, qurilmalar, savdo nuqtalari, graf tugunlari)`.
+    pub fn stats(&self) -> (usize, usize, usize, usize) {
+        self.store.lock().map(|s| s.stats()).unwrap_or_default()
+    }
+
     fn store(&self) -> std::sync::MutexGuard<'_, FeatureStore> {
         self.store
             .lock()

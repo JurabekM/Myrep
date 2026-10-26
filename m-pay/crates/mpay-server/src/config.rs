@@ -239,6 +239,60 @@ pub struct ShieldConfig {
     /// `true` — ML o'chiq, faqat qoidalar.
     #[serde(default)]
     pub disable_ml: bool,
+    /// 2-faza P2.4 (ADR-0019): `local` — dvigatel shu jarayonda (bitta instansiya); `remote` —
+    /// belgilar ombori yagona Shield instansiyasida (`mpay-server shield`), bu yerda faqat zaxira.
+    #[serde(default)]
+    pub mode: ShieldMode,
+    #[serde(default)]
+    pub remote: Option<ShieldRemoteConfig>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ShieldMode {
+    #[default]
+    Local,
+    Remote,
+}
+
+/// `[shield.remote]`: Shield roli manzili va kirish ma'lumotlari.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ShieldRemoteConfig {
+    /// `https://shield.internal:8445` (`http://` — faqat loopback sinov).
+    pub url: String,
+    /// `shield` rolidagi API kaliti turgan muhit o'zgaruvchisi.
+    #[serde(default)]
+    pub key_env: Option<String>,
+    /// Dasturiy kalit (testlar) — fayldan o'qilmaydi.
+    #[serde(skip)]
+    pub key: Option<String>,
+    /// Shield server sertifikatining ishonchli ildizi (PEM).
+    #[serde(default)]
+    pub ca_file: Option<PathBuf>,
+    /// mTLS mijoz sertifikati va kaliti (PEM; CN = API kaliti ID).
+    #[serde(default)]
+    pub client_cert: Option<PathBuf>,
+    #[serde(default)]
+    pub client_key: Option<PathBuf>,
+    /// So'rov vaqti chegarasi; oshsa — mahalliy zaxira dvigatel.
+    #[serde(default = "default_shield_timeout")]
+    pub timeout_ms: u64,
+}
+
+fn default_shield_timeout() -> u64 {
+    300
+}
+
+impl std::fmt::Debug for ShieldRemoteConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ShieldRemoteConfig")
+            .field("url", &self.url)
+            .field("key_env", &self.key_env)
+            .field("key", &self.key.as_ref().map(|_| "<maxfiy>"))
+            .field("timeout_ms", &self.timeout_ms)
+            .finish_non_exhaustive()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -246,6 +300,8 @@ pub struct ShieldConfig {
 pub enum Role {
     Operator,
     Terminal,
+    /// Shield roliga murojaat qiluvchi API instansiyasi (ADR-0019).
+    Shield,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

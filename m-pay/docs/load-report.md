@@ -151,3 +151,32 @@ parallel va PostgreSQL ularning fsync'ini guruhlaydi. Yagona ketma-ket qism — 
 ostidagi Vault commit'i (ADR-0018). Bu raqamlar bitta mashinadagi Docker'da (server, generator va
 PostgreSQL bir xil 8 yadroni bo'lishadi); `TODO(spec):` pilot muhitida (alohida DB serveri, tarmoq HSM)
 qayta o'lchash.
+
+## 9. Ko'p instansiya — 2-faza P2.4 (2026-10-26)
+
+Qayta yugurish: `bash scripts/multi-load.sh [KARTA] [PARALLEL] [SONIYA] [INSTANSIYALAR]`.
+Natijalar `docs/load/p2.4-*.json`.
+
+**Usul.** §8 dagidek (Docker, 8 yadro, PostgreSQL 17 standart sozlamada, 200 karta, 32 parallel, 60 s,
+memory KeyStore, so'rovlar chegarasi o'chiq). Ikki stsenariy bitta konteynerda:
+
+* **1 instansiya** — mahalliy Shield (taqqoslash).
+* **2 instansiya + Shield roli** — `mpay-server shield` (yagona belgilar ombori) va ikkita
+  `mpay-server serve` (`[shield] mode = "remote"`), bitta PostgreSQL va umumiy PQ Link sessiyalari.
+  Generator har so'rovni navbatdagi instansiyaga yuboradi (round-robin). Har kartada nonce, hello va
+  finish turli instansiyada, provisioning esa uchinchisida — sticky routing'dan qattiqroq sinov.
+
+| Stsenariy | Avtorizatsiya | p50 | p95 | p99 | Provisioning (p99) | Xato | Zaxira (`SHIELD_DEGRADED`) |
+|---|---|---|---|---|---|---|---|
+| 1 instansiya | 421 /s | 76 ms | 87 ms | 94 ms | 220 /s (262 ms) | 0 | — |
+| 2 instansiya + Shield roli | 384 /s | 82 ms | 93 ms | **113 ms** | 187 /s (283 ms) | 0 | **0** |
+
+Shield roli oxirida: 200 karta, 200 qurilma, 32 savdo nuqtasi, 400 graf tuguni. Ikkala instansiya
+hodisalari bitta omborda, qaror taqsimoti esa bitta instansiyadagidek: `00` 1 200, qolgani `59`
+(tezlik qoidasi). Loglarda ochiq PAN, DB paroli va Shield kaliti yo'q (skript tekshiradi).
+
+**Xulosa.** Ko'p instansiya to'g'ri ishlaydi: xato yo'q, sessiyalar instansiyalar orasida o'tadi,
+Shield belgilari umumiy. SLA (200 /s, p99 < 300 ms) zaxira bilan bajariladi. Bitta mashinada ikki
+instansiya bittadan biroz sekin: Shield'ga qo'shimcha ichki HTTP so'rov (~5 ms p50) bor va 8 yadroni
+5 jarayon bo'lishadi. Gorizontal masshtabni (instansiyalar alohida mashinalarda) bu sinov o'lchamaydi —
+`TODO(spec):` pilot muhitida.

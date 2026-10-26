@@ -719,3 +719,21 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   isbotlandi.
 * Yuk sinovi (`load-report.md` §8): PostgreSQL + SoftHSM **368 /s, p99 118 ms** (SQLite + SoftHSM:
   101 /s, p99 368 ms) — SLA (200 /s, p99 < 300 ms) to'liq chidamlilik bilan bajarildi.
+
+### P2.4 — Ko'p instansiya (2026-10-26)
+
+**Nima qilindi** (ADR-0019)
+
+* PQ Link sessiyalari: `SessionStore` (async) — xotira yoki DB (`pqlink_sessions`, kalitlar KEK bilan
+  shifrlangan, `seq` atomar); handshake ikki bosqichli; `[pqlink] session_store`.
+* Ro'yxatdan o'tish nonce'lari: MAC kaliti KeyStore'da (`mpay.enroll-nonce.v1`), ishlatilganlar DB'da.
+* Shield roli: `mpay-server shield` (ichki API, `shield` rolidagi kalit, autentifikatsiya tahlildan
+  oldin), API instansiyalarida `[shield] mode = "remote"` va mahalliy zaxira (`SHIELD_DEGRADED`);
+  ichki protokolda ochiq PAN yo'q.
+* `mpay-load --server a,b` (round-robin), `scripts/multi-load.sh`.
+* CI fuzz job'i (P2.4 dan keyin async API) tuzatildi.
+
+**Qanday tekshirildi**
+
+* e2e `p2_multi_instance` (2) va `p2_shield_role` — SQLite va PostgreSQL'da; `enroll` unit (nonce A→B).
+* Yuk sinovi (`load-report.md` §9): 2 instansiya + Shield roli 384 /s, p99 113 ms, xato 0, zaxira 0.

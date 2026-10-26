@@ -238,49 +238,69 @@ fn pem_to_der(pem: &str) -> Vec<Vec<u8>> {
 /// Shield port'lari: `(ID&V, risk)`.
 pub type ShieldPorts = (Arc<dyn IdvDecider>, Arc<dyn RiskScorer>);
 
-/// Shield port'lari (ID&V va risk) — konfiguratsiya bo'yicha dvigatel yoki stub.
+/// Shield port'lari (ID&V va risk) — konfiguratsiya bo'yicha dvigatel, Shield roli (masofaviy,
+/// mahalliy zaxira bilan) yoki stub.
 pub fn build_shield(cfg: &Config) -> Result<ShieldPorts, BootError> {
-    use crate::config::ShieldEngine;
-    let sc = &cfg.shield;
-    match sc.engine {
-        ShieldEngine::Stub => {
+    use crate::config::{ShieldEngine, ShieldMode};
+    match (cfg.shield.engine, cfg.shield.mode) {
+        (ShieldEngine::Stub, _) => {
             tracing::warn!("Shield: deterministik STUB (faqat testlar)");
             let s = Arc::new(StubShield::new(cfg.shield_stub.clone()));
             Ok((s.clone(), s))
         }
-        ShieldEngine::Engine => {
-            let rules = match &sc.rules_file {
-                Some(p) => RuleSet::parse(&String::from_utf8_lossy(&read(&cfg.resolve(p))?)),
-                None => RuleSet::default_rules(),
-            }
-            .map_err(BootError::Config)?;
-            let ml: Option<Arc<dyn MlScorer>> = if sc.disable_ml {
-                None
-            } else {
-                let m = match (&sc.model_file, &sc.model_meta_file) {
-                    (Some(m), Some(j)) => TractScorer::load(
-                        &read(&cfg.resolve(m))?,
-                        &String::from_utf8_lossy(&read(&cfg.resolve(j))?),
-                    ),
-                    (None, None) => TractScorer::default_model(),
-                    _ => {
-                        return Err(BootError::Config(
-                            "shield.model_file va model_meta_file birga".into(),
-                        ))
-                    }
-                }
-                .map_err(BootError::Config)?;
-                tracing::info!(
-                    model = m.meta().version,
-                    "Shield: ONNX model yuklandi (tract)"
-                );
-                Some(Arc::new(m))
-            };
-            tracing::info!(rules = %rules.version, txn_rules = rules.txn_rule.len(), idv_rules = rules.idv_rule.len(), "Shield: dvigatel");
-            let s = Arc::new(Shield::new(rules, ml));
+        (ShieldEngine::Engine, ShieldMode::Local) => {
+            let s = build_engine(cfg)?;
             Ok((s.clone(), s))
         }
+        (ShieldEngine::Engine, ShieldMode::Remote) => {
+            let rc = cfg.shield.remote.as_ref().ok_or_else(|| {
+                BootError::Config("shield.mode = remote uchun [shield.remote] kerak".into())
+            })?;
+            // Zaxira: Shield roli javob bermasa — shu instansiyaning o'z dvigateli (belgilar faqat
+            // shu instansiya ko'rgan hodisalardan — tezlik qoidalari yumshoqroq, `SHIELD_DEGRADED`).
+            let local = build_engine(cfg)?;
+            let r = Arc::new(
+                crate::shield_client::RemoteShield::new(rc, |p| cfg.resolve(p), local)
+                    .map_err(BootError::Config)?,
+            );
+            tracing::info!(url = %rc.url, "Shield: masofaviy rol (mahalliy zaxira bilan)");
+            Ok((r.clone(), r))
+        }
     }
+}
+
+/// Shield dvigateli (qoidalar + ixtiyoriy ML) — `local` rejim, zaxira va Shield rolining o'zi.
+pub fn build_engine(cfg: &Config) -> Result<Arc<Shield>, BootError> {
+    let sc = &cfg.shield;
+    let rules = match &sc.rules_file {
+        Some(p) => RuleSet::parse(&String::from_utf8_lossy(&read(&cfg.resolve(p))?)),
+        None => RuleSet::default_rules(),
+    }
+    .map_err(BootError::Config)?;
+    let ml: Option<Arc<dyn MlScorer>> = if sc.disable_ml {
+        None
+    } else {
+        let m = match (&sc.model_file, &sc.model_meta_file) {
+            (Some(m), Some(j)) => TractScorer::load(
+                &read(&cfg.resolve(m))?,
+                &String::from_utf8_lossy(&read(&cfg.resolve(j))?),
+            ),
+            (None, None) => TractScorer::default_model(),
+            _ => {
+                return Err(BootError::Config(
+                    "shield.model_file va model_meta_file birga".into(),
+                ))
+            }
+        }
+        .map_err(BootError::Config)?;
+        tracing::info!(
+            model = m.meta().version,
+            "Shield: ONNX model yuklandi (tract)"
+        );
+        Some(Arc::new(m))
+    };
+    tracing::info!(rules = %rules.version, txn_rules = rules.txn_rule.len(), idv_rules = rules.idv_rule.len(), "Shield: dvigatel");
+    Ok(Arc::new(Shield::new(rules, ml)))
 }
 
 /// Bekor qilish ro'yxatini o'qiydi; joriy yoki keyingi identifikator ro'yxatda bo'lsa — ishga tushmaydi.

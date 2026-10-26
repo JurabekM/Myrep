@@ -42,6 +42,12 @@ enum Cmd {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
         config: PathBuf,
     },
+    /// Shield rolini ishga tushiradi (2-faza P2.4, ADR-0019): belgilar ombori yagona instansiyada,
+    /// API instansiyalari `[shield] mode = "remote"` bilan murojaat qiladi. Faqat ichki API.
+    Shield {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/shield.toml")]
+        config: PathBuf,
+    },
     /// Audit log xesh-zanjirini tekshiradi.
     AuditVerify {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -151,6 +157,14 @@ async fn run(cli: Cli) -> Result<(), String> {
             tracing::info!("to'xtatilmoqda");
             srv.shutdown();
             let _ = srv.handle.await;
+            Ok(())
+        }
+        Cmd::Shield { config } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let mut srv = mpay_server::shield_role::start(&cfg).await?;
+            tokio::signal::ctrl_c().await.map_err(|e| e.to_string())?;
+            tracing::info!("to'xtatilmoqda");
+            srv.shutdown();
             Ok(())
         }
         Cmd::AuditVerify { config } => {
