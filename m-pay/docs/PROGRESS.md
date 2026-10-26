@@ -680,3 +680,20 @@ PR #17 topilmalari:
 
 Tekshiruv: 174 Rust test (yangi: dedup ×2, nonce ×2, IPv6 kaliti, limiter chegarasi), clippy toza,
 Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
+
+### P2.2 — HSM bilan yuk sinovi (2026-10-26)
+
+**Nima qilindi**
+
+* `Pkcs11KeyStore`: sessiyalar pool'i (`MPAY_PKCS11_SESSIONS`, standart 4), sessiya yoki login
+  yo'qolsa qayta ochish va bir marta takrorlash, kalit handle'lari keshi (ADR-0017).
+* `scripts/softhsm-load.sh` — Docker'da memory / SoftHSM 1 sessiya / SoftHSM N sessiya yuk sinovi,
+  natijalar `docs/load/p2.2-*.json`; `docs/load-report.md` §7.
+
+**Natija**
+
+* Kesh: SoftHSM CMAC 1 264 → 17 941 op/s (1 sessiya), 32 591 op/s (4 sessiya).
+* Yuk sinovi (FULL fsync): memory 105 /s, SoftHSM 101 /s (HSM xarajati −3%, avval −21%), p99 ~360 ms.
+  fsync'siz: SoftHSM 4 sessiya **492 /s, p99 89 ms**. SLA (200 /s, p99 < 300 ms) HSM tufayli emas,
+  SQLite commit'lari tufayli bajarilmaydi — P2.3 (PostgreSQL, bitta tranzaksiya).
+* Testlar (SoftHSM, Docker): 6 ta PKCS#11 testi, yangi — sessiyalar pool'i va logout'dan tiklanish.

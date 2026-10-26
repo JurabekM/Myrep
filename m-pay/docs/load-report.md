@@ -85,3 +85,45 @@ P1.1 (rate-limit) va P1.2 (takroriy STAN jadvali, ADR-0010) qo'shilgandan keyin,
 Pasayish (238 → ~172, −27 %) — har avtorizatsiyaga ikkita qo'shimcha commit (PENDING va DONE).
 Yuk generatori bitta IP'dan ishlagani uchun IP chegarasini ko'taradi va handshake `503 BUSY` da
 `Retry-After` bilan qayta urinadi (provisioning xatosiz). 2-fazada qaytariladi (ADR-0009, ADR-0010).
+
+## 7. HSM bilan yuk sinovi — 2-faza P2.2 (2026-10-26)
+
+Qayta yugurish: `bash scripts/softhsm-load.sh [KARTA] [PARALLEL] [SONIYA] [SESSIYALAR]`
+(`MPAY_LOAD_ONLY=memory|hsm`, `MPAY_LOAD_SYNC=full|normal`). Natijalar `docs/load/p2.2-*.json`.
+
+**Usul.** Hammasi bitta Docker konteynerida (Linux, 8 yadro, `rust:1.97.1-bookworm`), server va
+generator birga; release `mpay-server --features pkcs11`, SoftHSM 2.6.1, token har yugurishda yangi.
+KeyStore `pkcs11` da barcha kalit operatsiyalari HSM ichida: LUK hosil qilish (CMAC), ARQC, envelope
+(GCM), PAN indeksi (HMAC), PQ Link handshake imzosi (Ed25519). So'rovlar chegarasi o'chirilgan
+(generator bitta terminal kaliti bilan ishlaydi — 500/s kalit chegarasi production'dagi ko'p
+terminallarni aks ettirmaydi). 200 karta, 32 parallel, 60 s, Shield dvigateli.
+
+| Stsenariy | SQLite | Avtorizatsiya | p50 | p95 | p99 | Provisioning | Xato |
+|---|---|---|---|---|---|---|---|
+| memory | FULL | 105 /s | 304 ms | 324 ms | 351 ms | 161 /s | 0 |
+| SoftHSM, 1 sessiya | FULL | 102 /s | 313 ms | 333 ms | 364 ms | 136 /s | 0 |
+| SoftHSM, 4 sessiya | FULL | 101 /s | 315 ms | 335 ms | 368 ms | 135 /s | 0 |
+| memory | NORMAL | **524 /s** | 57 ms | 72 ms | **88 ms** | 391 /s | 0 |
+| SoftHSM, 1 sessiya | NORMAL | 483 /s | 61 ms | 80 ms | 87 ms | 355 /s | 0 |
+| SoftHSM, 4 sessiya | NORMAL | **492 /s** | 60 ms | 77 ms | **89 ms** | 368 /s | 0 |
+
+Server loglarida ochiq PAN yo'q (skript tekshiradi).
+
+**Topilgan va tuzatilgan (ADR-0017).**
+
+1. **Har HSM operatsiyasida kalit qidiruvi.** Bitta CMAC = 5 ta PKCS#11 chaqiruvi (`C_FindObjects` ×3,
+   `C_GetAttributeValue`, `C_Sign`). Kalit handle'lari keshlandi: SoftHSM'da 8 oqim CMAC **1 264 →
+   17 941 op/s** (1 sessiya), yuk sinovida HSM qo'shimcha xarajati −21% → −3% (FULL).
+2. **Bitta sessiya.** Pool (4 sessiya) kesh bilan CMAC'ni **32 591 op/s** ga yetkazdi (×1,8). Keshsiz
+   pool SoftHSM'da hatto sekinroq edi (862 op/s) — SoftHSM ichida ketma-ket, sessiyalar raqobat
+   qo'shadi. Tarmoq HSM'ida (round-trip) foyda kattaroq bo'lishi kutiladi — `TODO(spec):` pilot HSM'da.
+3. **Uzilishdan tiklanmaslik.** Sessiya/login yo'qolsa qayta ochiladi va operatsiya takrorlanadi
+   (`pkcs11_recovers_after_logout`).
+
+**Tahlil — SLA (200 TPS, p99 < 300 ms).** HSM bilan SLA **hozir bajarilmaydi** (101 /s, p99 368 ms),
+lekin to'siq HSM emas: `synchronous = NORMAL` (fsync'siz) da o'sha HSM yo'li 492 /s, p99 89 ms. Har
+avtorizatsiya SQLite'ning yagona yozuvchisida bir nechta fsync'li commit qiladi (takroriy so'rov yozuvi,
+LUK/ATC iste'moli, emitent yechimi + yozuvi, takroriy so'rov javobi). Bu 2-faza **P2.3** ning vazifasi:
+PostgreSQL va avtorizatsiya bitta tranzaksiyada (bitta commit). Docker'dagi FULL raqamlari Windows'dagi
+mahalliy o'lchovdan (§2, §6) past — konteyner fayl tizimida fsync qimmatroq; solishtirish faqat jadval
+ichida.

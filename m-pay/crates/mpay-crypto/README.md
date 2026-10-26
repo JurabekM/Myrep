@@ -23,7 +23,8 @@ cargo test -p mpay-crypto
 * `tests/memory_kat.rs` — `MemoryKeyStore` muvofiqligi;
 * `tests/emv_kat.rs` — `testvectors/emv-kat.json` (mustaqil Python implementatsiyasi
   `scripts/gen_emv_kat.py`) bilan barcha oraliq qiymatlar;
-* `tests/pkcs11.rs` — SoftHSM2 integratsion testi (`#[ignore]`).
+* `tests/pkcs11.rs` — SoftHSM2 integratsion testi (`#[ignore]`): KAT, saqlanish, sessiyalar pool'i,
+  login tushib qolgandan keyin tiklanish (ADR-0017).
 
 SoftHSM2 testi (Windows'da Docker orqali):
 

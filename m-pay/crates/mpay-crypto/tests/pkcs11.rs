@@ -102,3 +102,59 @@ fn pkcs11_standard_keys() {
         .unwrap();
     assert_ne!(pk, [0u8; 32]);
 }
+
+/// 2-faza P2.2: sessiyalar pool'i — parallel operatsiyalar to'g'ri va bir xil natija beradi;
+/// 1 va 4 sessiya o'tkazuvchanligi chop etiladi (`--nocapture`).
+#[test]
+#[ignore = "SoftHSM2 kerak"]
+fn pkcs11_session_pool_parallel_ops() {
+    let _g = serial();
+    let imk = KeyLabel::new(format!("{}.pool", unique()));
+    for sessions in [1, 4] {
+        let mut cfg = Pkcs11Config::from_env().unwrap();
+        cfg.sessions = sessions;
+        let ks = std::sync::Arc::new(Pkcs11KeyStore::open(&cfg).unwrap());
+        assert_eq!(ks.session_count(), sessions);
+        ks.ensure_key(&imk, KeyKind::Aes128).unwrap();
+        let want = ks.aes_cmac(&imk, b"pool").unwrap();
+        let t0 = std::time::Instant::now();
+        let handles: Vec<_> = (0..8)
+            .map(|_| {
+                let ks = ks.clone();
+                let imk = imk.clone();
+                std::thread::spawn(move || {
+                    for _ in 0..500 {
+                        assert_eq!(ks.aes_cmac(&imk, b"pool").unwrap(), want);
+                    }
+                })
+            })
+            .collect();
+        for h in handles {
+            h.join().unwrap();
+        }
+        let dt = t0.elapsed().as_secs_f64();
+        println!(
+            "pkcs11 pool: {sessions} sessiya, 8 oqim, 4000 CMAC: {:.0} op/s",
+            4000.0 / dt
+        );
+    }
+}
+
+/// 2-faza P2.2: login tushib qolsa (HSM qayta ishga tushishi) sessiya qayta ochiladi va operatsiya
+/// muvaffaqiyatli takrorlanadi — server qayta ishga tushirilmaydi.
+#[test]
+#[ignore = "SoftHSM2 kerak"]
+fn pkcs11_recovers_after_logout() {
+    let _g = serial();
+    let mut cfg = Pkcs11Config::from_env().unwrap();
+    cfg.sessions = 1;
+    let ks = Pkcs11KeyStore::open(&cfg).unwrap();
+    let imk = KeyLabel::new(format!("{}.relogin", unique()));
+    ks.ensure_key(&imk, KeyKind::Aes128).unwrap();
+    let before = ks.aes_cmac(&imk, b"relogin").unwrap();
+    ks.simulate_logout().unwrap();
+    assert_eq!(ks.aes_cmac(&imk, b"relogin").unwrap(), before);
+    // Ikkinchi marta ham (yangi sessiya bilan) ishlaydi.
+    ks.simulate_logout().unwrap();
+    assert_eq!(ks.key_kind(&imk).unwrap(), Some(KeyKind::Aes128));
+}
