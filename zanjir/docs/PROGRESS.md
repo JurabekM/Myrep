@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | — | Reja va boshlang'ich hujjatlar (`PROMPT.md`, `CLAUDE.md`, `PROGRESS.md`) | ✅ Tasdiqlangan | 2026-10-26 | e342364 |
 | 0 | Skelet: monorepo, docs, CI | ✅ Tayyor | 2026-10-26 | d7fefe8 |
-| 1 | `zanjir_core`: modellar, normalar, `evaluate()` | ✅ Tayyor (golden: 147, evaluator coverage 100% qator/branch) | 2026-10-26 | _shu commit_ |
+| 1 | `zanjir_core`: modellar, normalar, `evaluate()` | ✅ Tayyor (golden: 147, evaluator coverage 100% qator/branch) | 2026-10-26 | ba44045 |
 | 2 | Ajratish solveri | ⏳ | | |
 | 3 | Kanonik JSON + hash-zanjir + imzo (Dart + Python) | ⏳ | | |
 | 4 | Ilova ma'lumot qatlami (Drift) | ⏳ | | |
