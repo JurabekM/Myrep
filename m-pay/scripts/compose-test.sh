@@ -107,20 +107,28 @@ for _ in $(seq 1 12); do
   if echo "$a" | grep -q "MpayInstanceDown=firing"; then FIRED=1; break; fi
 done
 echo "   ogohlantirishlar: $a"
+# api-1 navbatchiga xabar yetguncha o'chiq qoladi: Alertmanager birinchi xabarni `group_wait` dan keyin
+# yuboradi, undan oldin yopilgan ogohlantirish umuman yuborilmaydi (tez mashinada poyga).
+NB=""
+if [ -n "$FIRED" ]; then
+  for _ in $(seq 1 24); do
+    nb="$(navbatchi)"
+    if echo "$nb" | grep -q "MpayInstanceDown=firing"; then NB=1; break; fi
+    sleep 5
+  done
+  echo "   navbatchi kanali (Alertmanager → smsgw): $nb"
+fi
 echo "-- api-1 qayta ishga tushirilmoqda"
 "${DC[@]}" start api-1
 wait $LOAD || { cat "$LOADLOG"; exit 1; }
 grep -v "^ Container" "$LOADLOG"
 rm -f "$LOADLOG"
 [ -n "$FIRED" ] || { echo "XATO: MpayInstanceDown ishlamadi"; exit 1; }
-NB=""
-for _ in $(seq 1 24); do
-  nb="$(navbatchi)"
-  if echo "$nb" | grep -q "MpayInstanceDown=firing"; then NB=1; break; fi
-  sleep 5
-done
-echo "   navbatchi kanali (Alertmanager → smsgw): $nb"
-[ -n "$NB" ] || { echo "XATO: ogohlantirish navbatchiga yetmadi"; exit 1; }
+if [ -z "$NB" ]; then
+  echo "XATO: ogohlantirish navbatchiga yetmadi"
+  "${DC[@]}" logs --no-color --tail 40 alertmanager prometheus smsgw 2>&1 | grep -iE "error|warn|alert|notif" | tail -30
+  exit 1
+fi
 
 echo "== Prometheus"
 sleep 12
