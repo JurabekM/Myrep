@@ -51,6 +51,7 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
 | POST | `/v1/sandbox/integrity-token` | operator, faqat `[integrity] mode = "mock"` | `{request_hash, preset?}` | Play Integrity o'rnida mock token (§3.10, ADR-0021) |
+| POST | `/v1/sandbox/integrity-token/device` | qurilma (sealed), faqat `mode = "mock"` | `{request_hash, preset?}` | o'sha mock token o'z PQ Link sessiyasi uchun — operator kaliti/mTLS'siz (§3.10) |
 
 ## 3. Sxemalar
 
@@ -159,7 +160,11 @@ LUK'lar `2 × batch_size` dan ko'p bo'lsa `TOO_MANY_LUKS`.
 
 → `{"integrity_token": "<JWS>"}`. Stsenariylar: `strong` (standart), `device`, `basic`, `no_integrity`,
 `unrecognized`, `play_protect_risk`, `remote_control`. Faqat `[integrity] mode = "mock"` (u faqat
-`sandbox = true` bilan ruxsat); aks holda 404. Emulyatordagi demo ilova va `mpay-tsim` shu yerdan oladi.
+`sandbox = true` bilan ruxsat); aks holda 404. `mpay-tsim` shu yerdan oladi.
+
+`POST /v1/sandbox/integrity-token/device` — o'sha so'rov, lekin **muhrlangan** (PQ Link): kalit va mTLS
+sertifikati kerak emas, `request_hash` **shu sessiyaniki** bo'lishi shart (aks holda 400). Emulyatordagi
+demo ilova shundan foydalanadi — TLS + mTLS sandbox'ida ham (operator yo'li u yerda `403 MTLS_REQUIRED`).
 
 ### 3.8 `POST /v1/authorizations` (terminal)
 

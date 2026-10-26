@@ -201,7 +201,10 @@ class MpayWallet private constructor(context: Context) {
 
     fun sandboxOtp(challengeId: String, operatorKey: String): String = c().sandboxOtp(challengeId, operatorKey)
 
-    /** Sandbox: Play Integrity o'rnida server mock tokeni (`preset` — sinov stsenariysi). */
+    /** Sandbox: mock token o'z PQ Link sessiyasi orqali (operator kaliti va mTLS'siz). */
+    fun sandboxDeviceIntegrityToken(preset: String? = null): String? = c().sandboxDeviceIntegrityToken(preset)
+
+    /** Sandbox: Play Integrity o'rnida server mock tokeni operator kaliti bilan (`preset` — sinov stsenariysi). */
     fun sandboxIntegrityToken(requestHash: String, operatorKey: String, preset: String? = null): String? =
         c().sandboxIntegrityToken(requestHash, operatorKey, preset)
 

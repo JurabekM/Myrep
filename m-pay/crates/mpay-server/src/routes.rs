@@ -55,6 +55,10 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
         .route("/v1/sandbox/integrity-token", post(sandbox_integrity))
+        .route(
+            "/v1/sandbox/integrity-token/device",
+            post(sandbox_integrity_device),
+        )
         .route("/v1/authorizations", post(authorize))
         .route("/v1/terminal/ping", get(terminal_ping))
         .route_layer(middleware::from_fn(crate::metrics::track))
@@ -501,21 +505,55 @@ async fn sandbox_integrity(
         return Err(ApiError::not_found());
     };
     s.caller(&headers, &mtls, Role::Operator)?;
-    let preset = match req.preset.as_deref() {
-        None => mpay_integrity::mock::Preset::Strong,
-        Some(p) => mpay_integrity::mock::Preset::parse(p)
-            .ok_or_else(|| ApiError::bad_request("preset noma'lum"))?,
-    };
     if req.request_hash.len() != 43 {
         return Err(ApiError::bad_request(
             "request_hash: base64url SHA-256 (43 belgi)",
         ));
     }
+    Ok(Json(issue_mock_integrity(&s, issuer, &req)?).into_response())
+}
+
+/// Sandbox, qurilma yo'li (muhrlangan, PQ Link sessiyasi): demo ilova operator kaliti va mTLS
+/// sertifikatisiz oladi — TLS (`require_mtls`) sandbox'ida ham. Token faqat **shu sessiya**
+/// `requestHash` i uchun: qurilma boshqa sessiya uchun token yasay olmaydi (haqiqiy Play Integrity
+/// tokeni ham qurilmaning o'z so'roviga beriladi).
+async fn sandbox_integrity_device(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
+    let st = s.clone();
+    sealed(
+        &s,
+        &headers,
+        &body,
+        |info, req: mpay_common::api::SandboxIntegrityRequest| async move {
+            let Some(issuer) = st.integrity_mock.as_ref().filter(|_| st.sandbox) else {
+                return Err(ApiError::not_found());
+            };
+            let own =
+                mpay_integrity::request_hash(mpay_integrity::Purpose::Provision, &info.session_id);
+            if req.request_hash != own {
+                return Err(ApiError::bad_request(
+                    "request_hash shu PQ Link sessiyasiniki emas",
+                ));
+            }
+            issue_mock_integrity(&st, issuer, &req)
+        },
+    )
+    .await
+}
+
+fn issue_mock_integrity(
+    s: &AppState,
+    issuer: &crate::integrity::SandboxIssuer,
+    req: &mpay_common::api::SandboxIntegrityRequest,
+) -> Result<mpay_common::api::SandboxIntegrityResponse, ApiError> {
+    let preset = match req.preset.as_deref() {
+        None => mpay_integrity::mock::Preset::Strong,
+        Some(p) => mpay_integrity::mock::Preset::parse(p)
+            .ok_or_else(|| ApiError::bad_request("preset noma'lum"))?,
+    };
     let now_ms = s.clock.now().unix_timestamp() * 1000;
-    Ok(Json(mpay_common::api::SandboxIntegrityResponse {
+    Ok(mpay_common::api::SandboxIntegrityResponse {
         integrity_token: issuer.issue(preset, &req.request_hash, now_ms),
     })
-    .into_response())
 }
 
 /// OTP'ni karta egasining emitentdagi telefoniga yuborishga qo'yadi (2-faza P2.1, ADR-0016).

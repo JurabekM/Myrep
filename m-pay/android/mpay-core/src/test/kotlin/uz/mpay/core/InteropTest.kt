@@ -274,13 +274,10 @@ class InteropTest {
         val (identity, _) = wallet.identity()
         wallet.connect(identity, SoftDevice(dir!!, challenge = wallet.enrollNonce()))
         val pan = File(dir, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[0].substringAfter("\"").substringBefore("\"")
-        // P2.6: mock yaxlitlik tokeni operator (mTLS) endpointidan.
-        val opKey = File(dir, "dev-credentials.env").readLines().first { it.startsWith("MPAY_OPERATOR_KEY=") }.substringAfter("=").trim()
-        val operator = MpayClient(
-            tlsUrl,
-            tls = TlsConfig(bundle.serverCertSha256, Pem.keyManager(File(dir, "operator-1.crt.pem").readText(), File(dir, "operator-1.key.pem").readText())),
-        )
-        val token = operator.sandboxIntegrityToken(wallet.integrityRequestHash(), opKey)
+        // P2.6: mock yaxlitlik tokeni hamyonning o'z PQ Link sessiyasi orqali — demo ilova kabi
+        // operator kaliti va mTLS sertifikatisiz (TLS sandbox'ida operator yo'li 403 MTLS_REQUIRED).
+        val token = wallet.sandboxDeviceIntegrityToken()
+        assertTrue("mock token kutilgan", token != null)
         val r = wallet.provision(pan, "3112", token)
         assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
         val profile = (r as ProvisionResult.Active).profile

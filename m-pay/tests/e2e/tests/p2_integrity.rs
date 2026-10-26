@@ -245,3 +245,62 @@ async fn config_guards() {
         .to_string()
         .contains("integrity.google"));
 }
+
+/// TLS + mTLS sandbox: demo ilova operator sertifikatisiz — mock tokenni o'z PQ Link sessiyasi orqali
+/// oladi (`/v1/sandbox/integrity-token/device`); boshqa sessiya uchun token yasab bo'lmaydi.
+#[tokio::test]
+async fn device_endpoint_over_tls() {
+    let sb = Sandbox::start_tls(|c| c.integrity.required = true).await;
+    let mut w = bare_wallet(&sb).await;
+
+    // Operator yo'li: kalit bor, lekin mijoz sertifikati yo'q — 403 (demo ilova muammosi shu edi).
+    let req = SandboxIntegrityRequest {
+        request_hash: w.integrity_request_hash().unwrap(),
+        preset: None,
+    };
+    let e = sb
+        .client()
+        .post_json::<_, SandboxIntegrityResponse>(
+            "/v1/sandbox/integrity-token",
+            Some(&sb.operator_key),
+            &req,
+        )
+        .await
+        .unwrap_err();
+    assert!(
+        matches!(&e, WalletError::Api { code, .. } if code == "MTLS_REQUIRED"),
+        "{e:?}"
+    );
+
+    // Qurilma yo'li — muhrlangan, kalitsiz.
+    let token = w.sandbox_integrity_token(None).await.unwrap();
+    let r = w
+        .provision_with(&test_fpan(10, 6301), "3112", Some(token))
+        .await
+        .unwrap();
+    assert_eq!(idv(r).decision, IdvDecision::Green);
+
+    // Boshqa sessiya hash'i — rad.
+    let mut other = bare_wallet(&sb).await;
+    let foreign = SandboxIntegrityRequest {
+        request_hash: other.integrity_request_hash().unwrap(),
+        preset: None,
+    };
+    let e = w
+        .call::<_, SandboxIntegrityResponse>("/v1/sandbox/integrity-token/device", &foreign)
+        .await
+        .unwrap_err();
+    assert!(matches!(&e, WalletError::Api { status: 400, .. }), "{e:?}");
+    // Stsenariy ham o'tadi (Shield stub — verdict qoidalari dvigatelda; bu yerda faqat qabul).
+    let t = other.sandbox_integrity_token(Some("basic")).await.unwrap();
+    other
+        .provision_with(&test_fpan(10, 6302), "3112", Some(t))
+        .await
+        .unwrap();
+
+    // `mode = off` — 404 (muhrlangan konvert ichida).
+    let off = Sandbox::start_tls(|c| c.integrity.mode = IntegrityMode::Off).await;
+    let mut w = bare_wallet(&off).await;
+    let e = w.sandbox_integrity_token(None).await.unwrap_err();
+    assert!(matches!(&e, WalletError::Api { status: 404, .. }), "{e:?}");
+}

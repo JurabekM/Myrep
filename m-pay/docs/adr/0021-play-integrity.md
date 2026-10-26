@@ -44,9 +44,10 @@ loyihasi va Play Console'dagi ilovani talab qiladi — sandbox'da ular yo'q.
      Chegaralar konfiguratsiyadagi qoidalar faylida — bank o'zi o'zgartiradi.
 4. **Almashtiriladigan tekshiruvchi** (`mpay-integrity`, `IntegrityVerifier`):
    * `mock` — sandbox: ES256 JWS, mazmuni Play Integrity verdict tuzilmasida; kalit `init` da
-     (`sandbox-integrity-mock.key.pem`). Faqat `sandbox = true` bilan. Emulyatordagi demo ilova va
-     `mpay-tsim` tokenni `POST /v1/sandbox/integrity-token` (operator kaliti) dan, soft-hamyon va yuk
-     generatori — kalitdan oladi. 7 ta stsenariy (`strong`, `device`, `basic`, `no_integrity`,
+     (`sandbox-integrity-mock.key.pem`). Faqat `sandbox = true` bilan. Emulyatordagi demo ilova tokenni
+     o'z PQ Link sessiyasi orqali (`POST /v1/sandbox/integrity-token/device`, muhrlangan, faqat shu sessiya
+     `requestHash` i uchun — operator kaliti va mTLS'siz, TLS sandbox'ida ham), `mpay-tsim` — operator
+     endpointidan (`/v1/sandbox/integrity-token`), soft-hamyon va yuk generatori — kalitdan oladi. 7 ta stsenariy (`strong`, `device`, `basic`, `no_integrity`,
      `unrecognized`, `play_protect_risk`, `remote_control`).
    * `google` — `decodeIntegrityToken` (OAuth2 access token fayl/muhitdan).
    Production'da `mock` taqiqlangan va `certificate_sha256` majburiy (`validate`).

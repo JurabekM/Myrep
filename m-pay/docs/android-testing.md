@@ -162,8 +162,10 @@ Bank SMS shlyuzi o'rnida `mpay-smsgw` (ADR-0016). Tartib (2026-10-25 da bajarild
 
 Emulyatorda Google Play Integrity API ishlamaydi (Play Console'da ro'yxatdan o'tgan ilova va Cloud
 loyiha kerak). Sandbox'da server mock'i (ADR-0021): demo ilova Kotlin'da `requestHash` ni hisoblaydi va
-tokenni `POST /v1/sandbox/integrity-token` dan oladi (operator kaliti — "Operator kaliti" maydoni, OTP
-uchun ham shu). "Ilova yaxlitligi" tugmalari stsenariyni tanlaydi.
+tokenni o'z PQ Link sessiyasi orqali oladi (`POST /v1/sandbox/integrity-token/device`, muhrlangan) —
+operator kaliti va mTLS sertifikati kerak emas, TLS + mTLS sandbox'ida ham ishlaydi. "Ilova yaxlitligi"
+tugmalari stsenariyni tanlaydi. (2026-10-26 dagi birinchi sinovda token operator endpointidan olingan;
+TLS sandbox'ida u `403 MTLS_REQUIRED` berardi — shuning uchun qurilma yo'li qo'shildi.)
 
 Tartib (2026-10-26 da bajarildi, Medium Phone API 36, HTTP):
 
@@ -172,10 +174,19 @@ Tartib (2026-10-26 da bajarildi, Medium Phone API 36, HTTP):
 
 | Qadam | Natija |
 |---|---|
-| Operator kalitisiz "Kartani qo'shish" (`…0013`) | "Xato: 403 INTEGRITY_REQUIRED"; server logi: `integrity: token rad etildi` |
+| (birinchi sinov, operator yo'li) Operator kalitisiz "Kartani qo'shish" (`…0013`) | "Xato: 403 INTEGRITY_REQUIRED"; server logi: `integrity: token rad etildi` |
 | Operator kaliti, `strong` | token qabul qilindi (`app=2 level=3`); **YELLOW** — faqat `IDV_WEAK_ATTESTATION` (emulyator kaliti SOFTWARE); "OTP olish" → "Tasdiqlash" → "Token faol: 990077******6701", 5 ta LUK |
 | Boshqa karta (`…0028`), `no_integrity` | "Rad etildi: RED [IDV_WEAK_ATTESTATION, IDV_INTEGRITY_APP_UNRECOGNIZED, IDV_INTEGRITY_DEVICE_NONE]" |
 | Server logi | ochiq PAN 0, token (JWS) 0; `/v1/sandbox/integrity-token` 2 × 200 |
+
+Qurilma yo'li bilan qayta sinov (TLS + mTLS, `required = true`, Shield dvigateli, operator kaliti
+maydoni **bo'sh**):
+
+| Qadam | Natija |
+|---|---|
+| `strong`, karta `…0028` | `/v1/sandbox/integrity-token/device` 200, verdict `app=2 level=3`; YELLOW (faqat `IDV_WEAK_ATTESTATION`) |
+| `no_integrity`, karta `…0037` | "Rad etildi: RED [IDV_WEAK_ATTESTATION, IDV_INTEGRITY_APP_UNRECOGNIZED, IDV_INTEGRITY_DEVICE_NONE]" |
+| Server logi | ochiq PAN 0, token (JWS) 0 |
 
 Haqiqiy telefonda Play Integrity (`StandardIntegrityManager`) — `TODO(spec)`: bank Play Console va Cloud
 loyihasini bergach (`wallet-sdk` `IntegrityTokenProvider` izohiga qarang).
@@ -186,8 +197,9 @@ Bank siyosati (ADR-0022): Shield REVIEW'da karta egasi telefonda tasdiqlamagan b
 qaytaradi, terminal "Telefonda tasdiqlang" holatiga o'tadi va o'sha summa bilan qayta tap kutadi.
 Tartib (2026-10-26 da bajarildi, Medium Phone API 36): §5 dagi TLS + mTLS sandbox, virtual NFC.
 REVIEW'ni barqaror chaqirish uchun server `[shield] engine = "stub"` bilan (`REVIEW…` savdo nuqtasi).
-`[integrity] required = false`: TLS sandbox'da operator endpointlari mTLS talab qiladi, demo ilova esa
-operator sertifikatiga ega emas (OTP §5 dagidek xostdan olinadi).
+O'sha sinovda `[integrity] required = false` edi (mock token o'shanda faqat operator mTLS yo'lida edi);
+endi demo ilova tokenni qurilma yo'li orqali oladi (§7) — `required = true` bilan ham ishlaydi. OTP
+§5 dagidek xostdan operator mTLS sertifikati bilan olinadi.
 
 | Qadam | Natija |
 |---|---|

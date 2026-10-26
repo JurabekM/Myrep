@@ -182,6 +182,22 @@ impl SoftWallet {
         self.provision_with(fpan, expiry_yymm, token).await
     }
 
+    /// Sandbox: mock yaxlitlik tokeni o'z PQ Link sessiyasi orqali (`/v1/sandbox/integrity-token/device`,
+    /// operator kaliti va mTLS'siz). `preset` — sinov stsenariysi (`None` — `strong`).
+    pub async fn sandbox_integrity_token(
+        &mut self,
+        preset: Option<&str>,
+    ) -> Result<String, WalletError> {
+        let req = mpay_common::api::SandboxIntegrityRequest {
+            request_hash: self.integrity_request_hash()?,
+            preset: preset.map(str::to_owned),
+        };
+        let r: mpay_common::api::SandboxIntegrityResponse = self
+            .call("/v1/sandbox/integrity-token/device", &req)
+            .await?;
+        Ok(r.integrity_token)
+    }
+
     /// Aniq yaxlitlik tokeni bilan (sinovlar: yaroqsiz, boshqa sessiyaniki va h.k.).
     pub async fn provision_with(
         &mut self,

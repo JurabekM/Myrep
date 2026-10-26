@@ -99,10 +99,9 @@ class MainActivity : FragmentActivity() {
             rootFingerprint = BuildConfig.ROOT_FINGERPRINT.takeIf { it.isNotEmpty() },
         )
         wallet.addListener(listener)
-        // P2.6: sandbox'da yaxlitlik tokeni server mock'idan (operator kaliti bilan).
-        wallet.integrityProvider = IntegrityTokenProvider { hash ->
-            operatorKey.trim().takeIf { it.isNotEmpty() }?.let { wallet.sandboxIntegrityToken(hash, it, integrityPreset) }
-        }
+        // P2.6: sandbox'da yaxlitlik tokeni server mock'idan — o'z PQ Link sessiyasi orqali (operator kaliti
+        // va mTLS'siz, TLS sandbox'ida ham). `hash` server tomonida shu sessiyaniki ekani tekshiriladi.
+        wallet.integrityProvider = IntegrityTokenProvider { _ -> wallet.sandboxDeviceIntegrityToken(integrityPreset) }
         setContent { App() }
     }
 
@@ -227,7 +226,7 @@ class MainActivity : FragmentActivity() {
 
                 OutlinedTextField(pan, { pan = it.filter(Char::isDigit) }, label = { Text("Karta raqami (test FPAN)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("pan"))
                 OutlinedTextField(expiry, { expiry = it.filter(Char::isDigit).take(4) }, label = { Text("Amal qilish (YYMM)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("expiry"))
-                OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (sandbox: OTP va yaxlitlik mock'i)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
+                OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (faqat sandbox OTP uchun)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
                 Text("Ilova yaxlitligi (sandbox mock):", color = Color.Gray, fontSize = 12.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("strong", "basic", "no_integrity", "remote_control").forEach { p ->

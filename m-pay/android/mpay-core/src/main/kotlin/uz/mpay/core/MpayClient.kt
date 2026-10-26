@@ -257,6 +257,21 @@ class MpayClient(
         }
     }
 
+    /**
+     * Sandbox: mock yaxlitlik tokeni qurilmaning o'z PQ Link sessiyasi orqali — operator kaliti va mTLS
+     * kerak emas (TLS sandbox'ida ham ishlaydi). Token shu sessiyaning [integrityRequestHash] i uchun.
+     * Rejim `off` bo'lsa — `null` (404).
+     */
+    fun sandboxDeviceIntegrityToken(preset: String? = null): String? {
+        val body = JSONObject().put("request_hash", integrityRequestHash())
+        if (preset != null) body.put("preset", preset)
+        return try {
+            sealed("/v1/sandbox/integrity-token/device", body).getString("integrity_token")
+        } catch (e: ApiException) {
+            if (e.status == 404 || e.code == "NOT_FOUND") null else throw e
+        }
+    }
+
     /** Sandbox: OTP'ni operator kaliti bilan oladi (haqiqiy tizimda SMS/push). */
     fun sandboxOtp(challengeId: String, operatorKey: String): String =
         json("GET", "/v1/sandbox/otp/$challengeId", null, operatorKey).getString("otp")

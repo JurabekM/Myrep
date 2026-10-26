@@ -830,3 +830,17 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   Kotlin ↔ Rust interop; Kotlin `AppletTest` (profil chegarasi).
 * Emulyator (TLS + mTLS, virtual NFC, `android-testing.md` §8): `REVIEW…` savdo nuqtasi → terminal
   "Telefonda tasdiqlang (REVIEW_STEP_UP)" → hamyonda barmoq izi → qayta tap → `00 APPROVED_AFTER_REVIEW`.
+
+### P2.6 tuzatish — TLS sandbox'ida demo ilova uchun mock token (2026-10-26)
+
+* Muammo: TLS + mTLS sandbox'ida (`require_mtls`) `POST /v1/sandbox/integrity-token` operator mijoz
+  sertifikatini talab qiladi, demo ilovada esa u yo'q — `[integrity] required = true` bilan karta qo'shib
+  bo'lmasdi (P2.7 emulyator sinovida `required = false` qilishga to'g'ri kelgan edi).
+* Yechim: `POST /v1/sandbox/integrity-token/device` — muhrlangan (PQ Link) so'rov, kalit va mTLS'siz;
+  `request_hash` shu sessiyaniki bo'lishi shart (boshqa sessiya uchun token yasab bo'lmaydi). Rust
+  `SoftWallet::sandbox_integrity_token`, Kotlin `MpayClient.sandboxDeviceIntegrityToken`; demo ilova shu
+  yo'ldan foydalanadi, operator kaliti faqat OTP uchun qoldi.
+* Tekshirildi: e2e `device_endpoint_over_tls` (operator yo'li `403 MTLS_REQUIRED`, qurilma yo'li bilan
+  karta qo'shiladi, begona hash — 400, `mode = off` — 404) SQLite va PostgreSQL'da; Kotlin ↔ Rust interop
+  TLS qismi shu yo'l bilan; emulyatorda TLS + mTLS, `required = true`, operator kaliti bo'sh: `strong` —
+  qabul, `no_integrity` — RED (`android-testing.md` §7); `cargo test --workspace` — 217.

@@ -6,7 +6,8 @@ package uz.mpay.wallet.sdk
  * `requestHash` — joriy PQ Link sessiyasiga bog'langan ([uz.mpay.core.Integrity]); token shu
  * qiymat bilan olinishi shart, aks holda server `INTEGRITY_INVALID` qaytaradi.
  *
- * * Sandbox / emulyator: [MpayWallet.sandboxIntegrityToken] (server mock'i, operator kaliti bilan).
+ * * Sandbox / emulyator: [MpayWallet.sandboxDeviceIntegrityToken] (server mock'i, o'z PQ Link sessiyasi
+ *   orqali — operator kaliti va mTLS'siz) yoki [MpayWallet.sandboxIntegrityToken] (operator kaliti).
  * * Production: Google Play Integrity API standart so'rovi —
  *   `StandardIntegrityManager.prepareIntegrityToken(cloudProjectNumber)` (ilova ishga tushganda bir
  *   marta), so'ng `provider.request(StandardIntegrityTokenRequest.builder().setRequestHash(requestHash))`.
