@@ -154,6 +154,19 @@ fn now() -> i64 {
         .unwrap_or(0)
 }
 
+/// Hisoblagich > 0 bo'lsa bittaga kamaytiradi (`true`). `fetch_update` nightly'da eskirgan
+/// (`try_update`), stable'da esa yangisi yo'q — ikkalasida bir xil ishlaydigan CAS tsikli.
+fn take_one(a: &AtomicU32) -> bool {
+    let mut cur = a.load(Ordering::SeqCst);
+    while cur > 0 {
+        match a.compare_exchange(cur, cur - 1, Ordering::SeqCst, Ordering::SeqCst) {
+            Ok(_) => return true,
+            Err(now) => cur = now,
+        }
+    }
+    false
+}
+
 fn err(code: StatusCode, msg: &'static str) -> Response {
     (code, Json(serde_json::json!({ "error": msg }))).into_response()
 }
@@ -162,10 +175,7 @@ async fn send(State(g): State<Gateway>, h: HeaderMap, Json(req): Json<SendReq>) 
     if !g.authorized(&h) {
         return err(StatusCode::UNAUTHORIZED, "token noto'g'ri");
     }
-    let failing = g
-        .fail_next
-        .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
-        .is_ok();
+    let failing = take_one(&g.fail_next);
     if failing {
         tracing::warn!(to = %mask_phone(&req.to), "smsgw: nosozlik simulyatsiyasi (503)");
         return err(
@@ -372,11 +382,7 @@ mod tests {
     fn fail_next_counts_down() {
         let g = Gateway::new(None);
         g.fail_next(2);
-        let take = || {
-            g.fail_next
-                .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
-                .is_ok()
-        };
+        let take = || take_one(&g.fail_next);
         assert!(take() && take() && !take());
     }
 }

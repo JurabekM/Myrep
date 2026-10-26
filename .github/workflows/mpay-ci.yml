@@ -141,7 +141,11 @@ jobs:
         with:
           workspaces: m-pay/fuzz
       - run: cargo install cargo-fuzz --locked
+      # Nightly'ning yangi lint/deprecation'lari fuzzing'ni to'xtatmasin: lint'lar stable
+      # `check` job'ida (clippy -D warnings) tekshiriladi.
       - run: bash scripts/fuzz-campaign.sh 60
+        env:
+          RUSTFLAGS: ""
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
