@@ -34,7 +34,8 @@ for d in "$BASE" "$WAL"; do (cd "$d" && sha256sum -c --quiet SHA256SUMS); done
 echo "== SHA256SUMS to'g'ri"
 
 dec() {
-  docker run --rm -i -v "$IDENTITY:/run/backup_identity:ro" --entrypoint age "$IMG" \
+  # Kalit fayli 600 (faqat egasi o'qiydi): age konteyneri host foydalanuvchisi uid'i bilan ishlaydi.
+  docker run --rm -i --user "$(id -u):$(id -g)" -v "$IDENTITY:/run/backup_identity:ro" --entrypoint age "$IMG" \
     -d -i /run/backup_identity < "$1"
 }
 cleanup() {

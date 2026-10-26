@@ -27,7 +27,8 @@ echo "== SHA256SUMS to'g'ri"
 
 # Maxfiy kalit konteynerga faqat o'qish uchun ulanadi, ochiq ma'lumot oqimda (diskka yozilmaydi).
 dec() {   # $1 (.age) → stdout
-  docker run --rm -i -v "$IDENTITY:/run/backup_identity:ro" --entrypoint age "$IMG" \
+  # Kalit fayli 600 (faqat egasi o'qiydi): age konteyneri host foydalanuvchisi uid'i bilan ishlaydi.
+  docker run --rm -i --user "$(id -u):$(id -g)" -v "$IDENTITY:/run/backup_identity:ro" --entrypoint age "$IMG" \
     -d -i /run/backup_identity < "$1"
 }
 
