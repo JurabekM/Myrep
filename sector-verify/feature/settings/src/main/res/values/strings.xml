@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Sozlamalar</string>
+    <string name="settings_preset">Tahlil preseti</string>
+    <string name="preset_urban">Shahar (rMax 600 m)</string>
+    <string name="preset_suburban">Shahar atrofi (standart)</string>
+    <string name="preset_rural">Qishloq (n = 3.0)</string>
+    <string name="settings_thresholds">Qo\'lda chegaralar</string>
+    <string name="settings_override_active">Qo\'lda/import qilingan config ishlatilmoqda</string>
+    <string name="settings_reset">Presetga qaytarish</string>
+    <string name="th_rmax">rMax, m</string>
+    <string name="th_n">Yo\'qotish ko\'rsatkichi n</string>
+    <string name="th_cov">Umumiy qamrov, min</string>
+    <string name="th_sector_cov">Sektor qamrovi, min</string>
+    <string name="th_pass">PASS: |δ| ≤, °</string>
+    <string name="th_warn">WARN: |δ| ≤, °</string>
+    <string name="th_apply">Chegaralarni qo\'llash</string>
+    <string name="th_invalid">Noto\'g\'ri qiymat: %1$s</string>
+    <string name="settings_import_config">Config JSON import (kalibrlash)</string>
+    <string name="settings_config_imported">Config import qilindi</string>
+    <string name="settings_config_error">Config xato: %1$s</string>
+    <string name="settings_traffic">Trafik URL (HTTPS, ixtiyoriy)</string>
+    <string name="settings_traffic_invalid">Faqat https:// manzil, so\'rov parametrlarisiz</string>
+    <string name="settings_engineer">Muhandis ismi (hisobotda)</string>
+    <string name="settings_app_language">Ilova tili</string>
+    <string name="settings_report_language">Hisobot tili</string>
+    <string name="lang_uz">O\'zbekcha</string>
+    <string name="lang_ru">Ruscha</string>
+    <string name="lang_en">Inglizcha</string>
+    <string name="settings_theme">Mavzu</string>
+    <string name="theme_dark">Qorong\'i (standart)</string>
+    <string name="theme_light">Yorug\'</string>
+    <string name="theme_sun">Quyosh (yuqori kontrast)</string>
+    <string name="settings_probe">Qurilma probe (60 s)</string>
+    <string name="settings_probe_running">Probe ishlamoqda…</string>
+    <string name="settings_probe_result">%1$s · %2$s Hz · qo\'shni RSRP: %3$s · TA: %4$s · NR SA: %5$s</string>
+    <string name="settings_probe_no_sim">SIM topilmadi yoki ruxsat yo\'q</string>
+    <string name="settings_save">Saqlash</string>
+    <string name="settings_saved">Saqlandi</string>
+    <string name="yes">ha</string>
+    <string name="no">yo\'q</string>
+</resources>
