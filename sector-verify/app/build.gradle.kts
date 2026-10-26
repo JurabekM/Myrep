@@ -25,3 +25,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
 }
+
+dependencies {
+    testImplementation(project(":core:analysis"))
+    testImplementation(project(":core:telephony"))
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.compiler)
+}
