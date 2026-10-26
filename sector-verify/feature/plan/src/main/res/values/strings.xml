@@ -35,4 +35,5 @@
     <string name="sites_sectors">Sektorlar: %1$d</string>
     <string name="sites_import_failed">Import qilinmadi. Xatolar: %1$d</string>
     <string name="resume_text">%1$s saytida o\'lchov to\'xtab qolgan (saqlangan namunalar: %2$d). Davom ettirasizmi?</string>
+    <string name="resume_no_permission">Joylashuv ruxsati yo\'q — avval saytni oching va oldindan tekshiruvdan o\'ting.</string>
 </resources>

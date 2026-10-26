@@ -10,7 +10,7 @@ import uz.sectorverify.feature.survey.SurveyLauncher
 
 /** Lets :feature:plan resume a session without depending on :feature:survey. */
 class LauncherResumer @Inject constructor(private val launcher: SurveyLauncher) : SessionResumer {
-    override fun resume(sessionId: String) = launcher.resume(sessionId)
+    override fun resume(sessionId: String): Boolean = launcher.resume(sessionId)
 
     override suspend fun abandon(sessionId: String) = launcher.abandon(sessionId)
 }

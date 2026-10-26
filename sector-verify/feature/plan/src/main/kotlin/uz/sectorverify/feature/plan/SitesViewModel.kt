@@ -24,7 +24,8 @@ data class ResumeOffer(val sessionId: String, val siteCode: String, val samples:
 
 /** Resumes or abandons a RUNNING session; implemented by :feature:survey, bound in :app. */
 interface SessionResumer {
-    fun resume(sessionId: String)
+    /** False when the survey cannot start (location permission missing). */
+    fun resume(sessionId: String): Boolean
 
     suspend fun abandon(sessionId: String)
 }
@@ -67,9 +68,19 @@ class SitesViewModel @Inject constructor(
 
     fun dismissImport() = _import.update { null }
 
-    fun resume() {
-        _resume.value?.let { resumer.resume(it.sessionId) }
+    private val _resumeBlocked = MutableStateFlow(false)
+    val resumeBlocked: StateFlow<Boolean> = _resumeBlocked.asStateFlow()
+
+    /** Returns the resumed session id, or null when it could not start (the offer stays visible). */
+    fun resume(): String? {
+        val offer = _resume.value ?: return null
+        if (!resumer.resume(offer.sessionId)) {
+            _resumeBlocked.value = true
+            return null
+        }
         _resume.value = null
+        _resumeBlocked.value = false
+        return offer.sessionId
     }
 
     fun abandon() {

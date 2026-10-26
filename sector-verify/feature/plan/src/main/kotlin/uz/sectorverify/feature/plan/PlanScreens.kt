@@ -56,6 +56,7 @@ fun SitesRoute(onOpenSite: (Long) -> Unit, onSettings: () -> Unit, onResumed: (S
     val query by vm.query.collectAsStateWithLifecycle()
     val import by vm.import.collectAsStateWithLifecycle()
     val resume by vm.resume.collectAsStateWithLifecycle()
+    val resumeBlocked by vm.resumeBlocked.collectAsStateWithLifecycle()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { u -> context.contentResolver.openInputStream(u)?.use { vm.importCsv(it.readBytes().toString(Charsets.UTF_8)) } }
     }
@@ -65,12 +66,14 @@ fun SitesRoute(onOpenSite: (Long) -> Unit, onSettings: () -> Unit, onResumed: (S
         AlertDialog(
             onDismissRequest = {},
             title = { Text(stringResource(R.string.resume_title)) },
-            text = { Text(stringResource(R.string.resume_text, r.siteCode, r.samples)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.resume_text, r.siteCode, r.samples))
+                    if (resumeBlocked) Text(stringResource(R.string.resume_no_permission), color = LocalSvPalette.current.danger)
+                }
+            },
             confirmButton = {
-                TextButton(onClick = {
-                    vm.resume()
-                    onResumed(r.sessionId)
-                }) { Text(stringResource(R.string.resume_continue)) }
+                TextButton(onClick = { vm.resume()?.let(onResumed) }) { Text(stringResource(R.string.resume_continue)) }
             },
             dismissButton = { TextButton(onClick = vm::abandon) { Text(stringResource(R.string.resume_abandon)) } },
         )

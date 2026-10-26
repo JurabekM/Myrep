@@ -1,7 +1,10 @@
 package uz.sectorverify.feature.survey
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import uz.sectorverify.analysis.ALGO_VERSION
@@ -27,7 +30,8 @@ sealed interface StartResult {
 interface SurveyLauncher {
     suspend fun start(siteId: Long, mode: SessionMode, sim: SimInfo?, appVersion: String): StartResult
 
-    fun resume(sessionId: String)
+    /** False (nothing started) when location permission is missing — the user must pass the pre-check again. */
+    fun resume(sessionId: String): Boolean
 
     suspend fun abandon(sessionId: String)
 
@@ -63,8 +67,11 @@ class SurveyStarter @Inject constructor(
     }
 
     /** §7: a RUNNING session left by a killed process can be resumed (same id, data kept). */
-    override fun resume(sessionId: String) {
-        SurveyForegroundService.start(context, sessionId)
+    override fun resume(sessionId: String): Boolean {
+        val granted =
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (granted) SurveyForegroundService.start(context, sessionId)
+        return granted
     }
 
     override suspend fun abandon(sessionId: String) = sessions.finish(sessionId, SessionStatus.ABORTED)

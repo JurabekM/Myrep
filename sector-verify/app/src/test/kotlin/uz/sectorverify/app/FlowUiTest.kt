@@ -138,7 +138,7 @@ class FlowUiTest {
             controller.finished(id)
             return StartResult.Started(id)
         }
-        override fun resume(sessionId: String) = Unit
+        override fun resume(sessionId: String) = true
         override suspend fun abandon(sessionId: String) = Unit
         override fun stop() = Unit
     }

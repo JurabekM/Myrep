@@ -36,11 +36,12 @@ class SitesViewModelTest {
     private val sessions = RoomSessionRepository(db.sessionDao(), db.rawDao(), db.resultDao(), db.siteDao(), Clock.SYSTEM)
     private val header = PlanCsv.HEADER.joinToString(",")
 
-    private class FakeResumer : SessionResumer {
+    private class FakeResumer(var allowed: Boolean = true) : SessionResumer {
         val resumed = ArrayList<String>()
         val abandoned = ArrayList<String>()
-        override fun resume(sessionId: String) {
-            resumed += sessionId
+        override fun resume(sessionId: String): Boolean {
+            if (allowed) resumed += sessionId
+            return allowed
         }
         override suspend fun abandon(sessionId: String) {
             abandoned += sessionId
@@ -78,10 +79,14 @@ class SitesViewModelTest {
     fun runningSessionIsOfferedForResume() = runTest {
         plans.importCsv("$header\nNAV-2,N,40.1,65.3,43405,S1,LTE,B3,1300,141,0,65,,,\n")
         val id = sessions.create(NewSession(plans.siteByCode("NAV-2")!!.id, SessionMode.FULL, "t", 35, null, "1", "1", AnalysisConfig(), 1))
-        val resumer = FakeResumer()
+        val resumer = FakeResumer(allowed = false)
         val vm = SitesViewModel(plans, sessions, resumer)
         vm.resume.first { it != null }!!.siteCode shouldBe "NAV-2"
-        vm.resume()
+        vm.resume() shouldBe null // permission missing: offer stays, warning shown
+        vm.resumeBlocked.value shouldBe true
+        vm.resume.value!!.sessionId shouldBe id
+        resumer.allowed = true
+        vm.resume() shouldBe id
         resumer.resumed shouldBe listOf(id)
         vm.resume.value shouldBe null
         vm.checkRunning()

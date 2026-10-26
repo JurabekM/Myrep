@@ -74,7 +74,13 @@ class SurveyForegroundService : LifecycleService() {
     private fun begin(sessionId: String) {
         if (engine != null) return
         createChannels()
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, progressNotification(0, 0), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        try {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, progressNotification(0, 0), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } catch (expected: SecurityException) {
+            // Location permission revoked since the pre-check: the session stays RUNNING and can be resumed later.
+            stopSelf()
+            return
+        }
         wakeLock = getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SectorVerify:survey")
             .apply { acquire(MAX_WAKE_MS) }
