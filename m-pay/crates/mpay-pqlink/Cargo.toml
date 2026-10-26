@@ -30,6 +30,7 @@ subtle.workspace = true
 zeroize.workspace = true
 getrandom = { workspace = true, features = ["sys_rng"] }
 thiserror.workspace = true
+async-trait.workspace = true
 time.workspace = true
 tracing.workspace = true
 hex.workspace = true
@@ -42,6 +43,7 @@ sandbox-attestation = ["dep:rcgen"]
 
 [dev-dependencies]
 proptest.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 serde_json.workspace = true
 hex-literal.workspace = true
 mpay-pqlink = { path = ".", features = ["sandbox-attestation"] }

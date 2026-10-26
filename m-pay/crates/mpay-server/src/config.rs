@@ -163,6 +163,19 @@ pub struct PqLinkConfig {
     /// (muhrlangan so'rovlar `REATTEST_REQUIRED`); 0 — o'chiq.
     #[serde(default)]
     pub reattest_after_days: u32,
+    /// PQ Link sessiyalari ombori (2-faza P2.4): `auto` — PostgreSQL'da DB (ko'p instansiya),
+    /// SQLite'da xotira; `memory` / `database` — majburiy.
+    #[serde(default)]
+    pub session_store: SessionStoreKind,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SessionStoreKind {
+    #[default]
+    Auto,
+    Memory,
+    Database,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

@@ -10,12 +10,12 @@ use crate::PqLinkError;
 
 /// Handshake'da attestatsiya va qurilma imzosi tekshirilgandan keyin chaqiriladi.
 ///
-/// Amalga oshirish bloklovchi bo'lishi mumkin (masalan DB): `PqLinkServer::handle_finish` async
-/// kontekstdan emas, bloklovchi oqimdan (`spawn_blocking`) chaqirilishi kerak.
+/// Async (masalan DB'ga murojaat): `PqLinkServer::commit_finish` dan chaqiriladi.
+#[async_trait::async_trait]
 pub trait EnrollmentGate: Send + Sync + std::fmt::Debug {
     /// Qurilma ro'yxatda bo'lsa — ruxsat; bo'lmasa `attestation_challenge` haqiqiy, ishlatilmagan va
     /// muddati o'tmagan nonce bo'lishi shart (u iste'mol qilinadi va qurilma ro'yxatga olinadi).
     /// Qaytaradi: qurilma oxirgi marta attestatsiyadan o'tgan vaqt (unix) — sessiyaga yoziladi,
     /// davriy qayta attestatsiya har so'rovda reyestrga murojaatsiz tekshiriladi (ADR-0015).
-    fn admit(&self, device: &VerifiedDevice) -> Result<i64, PqLinkError>;
+    async fn admit(&self, device: &VerifiedDevice) -> Result<i64, PqLinkError>;
 }

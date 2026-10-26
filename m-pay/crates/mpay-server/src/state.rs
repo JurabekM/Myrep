@@ -386,6 +386,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         crate::config::EnrollmentMode::Required => Some(Arc::new(
             crate::enroll::Enrollment::new(
                 pool.clone(),
+                ks.clone(),
                 clock.clone(),
                 cfg.pqlink.enrollment_nonce_ttl_secs,
             )
@@ -397,6 +398,20 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         }
     };
     let mut pq = PqLinkServer::new(signer, anchors, pq_cfg, clock.clone());
+    let shared_sessions = match cfg.pqlink.session_store {
+        crate::config::SessionStoreKind::Auto => db.dialect() == mpay_vault::db::Dialect::Postgres,
+        crate::config::SessionStoreKind::Memory => false,
+        crate::config::SessionStoreKind::Database => true,
+    };
+    if shared_sessions {
+        // Ko'p instansiya: sessiyalar DB'da (kalitlar KEK bilan shifrlangan).
+        pq = pq.with_store(Arc::new(crate::sessions::DbSessionStore::new(
+            pool.clone(),
+            ks.clone(),
+            clock.clone(),
+        )));
+    }
+    tracing::info!(shared = shared_sessions, "PQ Link sessiyalari ombori");
     if let Some(e) = &enrollment {
         pq = pq.with_enrollment(e.clone());
     }

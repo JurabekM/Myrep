@@ -82,7 +82,7 @@ async fn health(State(s): St) -> impl IntoResponse {
         "version": crate::VERSION,
         "keystore": s.keystore.backend_name(),
         "sandbox": s.sandbox,
-        "pqlink_sessions": s.pqlink.session_count(),
+        "pqlink_sessions": s.pqlink.session_count().await,
     }))
 }
 
@@ -186,7 +186,7 @@ async fn rekey(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
             ]
             .concat();
             new.verify_signature(&msg, &sig)?;
-            enroll.consume(&new.attestation_challenge)?;
+            enroll.consume(&new.attestation_challenge).await?;
             let db = |e: sqlx::Error| {
                 tracing::error!(error = %e, "pqlink_devices");
                 ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
@@ -269,13 +269,18 @@ async fn pq_hello(
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
     let _permit = handshake_guard(&s, peer, &headers)?;
+    // Joy yo'q bo'lsa qimmat hisoblashdan oldin rad (sessiyalar ombori umumiy bo'lishi mumkin).
+    if !s.pqlink.has_room().await? {
+        return Err(mpay_pqlink::PqLinkError::TooManySessions.into());
+    }
     let pq = s.pqlink.clone();
     // ML-KEM/ML-DSA hisoblashlari bloklovchi CPU ishi — async ishchilardan tashqarida.
-    let sh = tokio::task::spawn_blocking(move || pq.handle_hello(&body))
+    let prepared = tokio::task::spawn_blocking(move || pq.hello_crypto(&body))
         .await
         .map_err(|_| {
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
         })??;
+    let sh = s.pqlink.commit_hello(prepared).await?;
     Ok(pqlink_body(StatusCode::OK, sh))
 }
 
@@ -287,12 +292,15 @@ async fn pq_finish(
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
     let _permit = handshake_guard(&s, peer, &headers)?;
+    let start = s.pqlink.begin_finish(&body).await?;
     let pq = s.pqlink.clone();
-    let (_info, sa) = tokio::task::spawn_blocking(move || pq.handle_finish(&body))
+    // Attestatsiya zanjiri va imzolar — bloklovchi CPU ishi.
+    let verified = tokio::task::spawn_blocking(move || pq.finish_crypto(start))
         .await
         .map_err(|_| {
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
         })??;
+    let (_info, sa) = s.pqlink.commit_finish(verified).await?;
     Ok(pqlink_body(StatusCode::OK, sa))
 }
 
@@ -324,7 +332,7 @@ where
     if let Err(e) = require_pqlink_ct(headers) {
         return e.into_response();
     }
-    let (info, plaintext) = match s.pqlink.open(body) {
+    let (info, plaintext) = match s.pqlink.open(body).await {
         Ok(x) => x,
         Err(e) => return ApiError::from(e).into_response(),
     };
@@ -363,7 +371,7 @@ where
                 .into_response()
         }
     };
-    match s.pqlink.seal(&info.session_id, &json) {
+    match s.pqlink.seal(&info.session_id, &json).await {
         Ok(b) => pqlink_body(status, b),
         Err(e) => ApiError::from(e).into_response(),
     }

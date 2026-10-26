@@ -4,31 +4,34 @@
 //! Nonce **holatsiz**: `muddat(8) ‖ tasodif(8) ‖ HMAC-SHA256(k, yorliq ‖ muddat ‖ tasodif)[..16]`.
 //! Server berilgan nonce'larni saqlamaydi — `/v1/pqlink/enroll` ni ko'p chaqirib xotirani yoki umumiy
 //! chegarani to'ldirib bo'lmaydi (DoS). Faqat **ishlatilgan** nonce'lar muddati tugaguncha eslab
-//! qolinadi (bu esa haqiqiy attestatsiya zanjiri talab qiladi). `TODO(spec):` ko'p instansiyada (P2.4)
-//! `k` umumiy (KeyStore'dan) va ishlatilganlar ro'yxati umumiy omborda.
+//! qolinadi (bu esa haqiqiy attestatsiya zanjiri talab qiladi).
+//!
+//! Ko'p instansiya (2-faza P2.4): `k` — KeyStore'dagi `mpay.enroll-nonce.v1` (HSM'da, barcha
+//! instansiyalarda bir xil), ishlatilgan nonce'lar — umumiy DB'da (`pqlink_used_nonces`): bir
+//! instansiya bergan nonce boshqasida iste'mol qilinadi, ikki marta — hech qayerda.
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::Arc;
 
 use mpay_common::clock::Clock;
-use mpay_crypto::rng;
+use mpay_crypto::keystore::{KeyKind, KeyLabel};
+use mpay_crypto::{rng, KeyStore};
 use mpay_pqlink::attestation::VerifiedDevice;
 use mpay_pqlink::{EnrollmentGate, PqLinkError};
 use sqlx::AnyPool;
 
 const NONCE_LABEL: &[u8] = b"MPAY-PQLINK-V1 enroll-nonce";
-/// Ishlatilganlar ro'yxati shundan oshsa — muddati o'tganlari tozalanadi.
-const USED_PRUNE_AT: usize = 10_000;
+/// Muddati o'tgan ishlatilgan nonce'lar shuncha soniyada bir marta tozalanadi.
+const CLEANUP_EVERY_SECS: i64 = 60;
 
-/// Nonce do'koni va reyestr.
+/// Nonce'lar va reyestr.
 pub struct Enrollment {
-    mac_key: zeroize::Zeroizing<[u8; 32]>,
-    /// Ishlatilgan nonce → muddati (takroriy ishlatishni rad etish uchun).
-    used: Mutex<HashMap<[u8; 32], i64>>,
+    ks: Arc<dyn KeyStore>,
+    mac_key: KeyLabel,
     ttl_secs: i64,
     clock: Arc<dyn Clock>,
     pool: AnyPool,
-    rt: tokio::runtime::Handle,
+    last_cleanup: AtomicI64,
 }
 
 impl std::fmt::Debug for Enrollment {
@@ -39,31 +42,37 @@ impl std::fmt::Debug for Enrollment {
     }
 }
 
+fn store_err(e: sqlx::Error) -> PqLinkError {
+    tracing::error!(error = %e, "pqlink: ro'yxatdan o'tish ombori");
+    PqLinkError::Crypto("ro'yxatdan o'tish ombori".into())
+}
+
 impl Enrollment {
-    /// Async kontekstda yaratiladi (joriy tokio runtime saqlanadi).
+    /// MAC kaliti KeyStore'da yo'q bo'lsa yaratiladi (`ensure_key`).
     pub fn new(
         pool: AnyPool,
+        ks: Arc<dyn KeyStore>,
         clock: Arc<dyn Clock>,
         ttl_secs: i64,
     ) -> Result<Self, mpay_crypto::CryptoError> {
+        let mac_key = KeyLabel::new(KeyLabel::ENROLL_NONCE);
+        ks.ensure_key(&mac_key, KeyKind::HmacSha256)?;
         Ok(Self {
-            mac_key: rng::secret_array::<32>()?,
-            used: Mutex::new(HashMap::new()),
+            ks,
+            mac_key,
             ttl_secs: ttl_secs.max(1),
             clock,
             pool,
-            rt: tokio::runtime::Handle::current(),
+            last_cleanup: AtomicI64::new(0),
         })
     }
 
     fn tag(&self, exp: i64, rnd: &[u8]) -> Result<[u8; 16], PqLinkError> {
-        use hmac::{Hmac, KeyInit, Mac};
-        let mut mac = <Hmac<sha2::Sha256> as KeyInit>::new_from_slice(&self.mac_key[..])
-            .map_err(|_| PqLinkError::Crypto("nonce kaliti".into()))?;
-        mac.update(NONCE_LABEL);
-        mac.update(&exp.to_be_bytes());
-        mac.update(rnd);
-        let full: [u8; 32] = mac.finalize().into_bytes().into();
+        let msg = [NONCE_LABEL, &exp.to_be_bytes()[..], rnd].concat();
+        let full = self
+            .ks
+            .hmac_sha256(&self.mac_key, &msg)
+            .map_err(|e| PqLinkError::Crypto(e.to_string()))?;
         let mut out = [0u8; 16];
         out.copy_from_slice(&full[..16]);
         Ok(out)
@@ -80,8 +89,9 @@ impl Enrollment {
         Ok((n, exp))
     }
 
-    /// Nonce'ni iste'mol qiladi (bir martalik): HMAC, muddat va ishlatilmaganligi tekshiriladi.
-    pub fn consume(&self, challenge: &[u8]) -> Result<(), PqLinkError> {
+    /// Nonce'ni iste'mol qiladi (bir martalik): HMAC, muddat va ishlatilmaganligi (umumiy DB'da,
+    /// atomar `INSERT … ON CONFLICT DO NOTHING`) tekshiriladi.
+    pub async fn consume(&self, challenge: &[u8]) -> Result<(), PqLinkError> {
         let n: [u8; 32] = challenge
             .try_into()
             .map_err(|_| PqLinkError::Enrollment("attestatsiya challenge'i server nonce'i emas"))?;
@@ -95,17 +105,41 @@ impl Enrollment {
         if exp <= now {
             return Err(PqLinkError::Enrollment("nonce muddati o'tgan"));
         }
-        let mut used = self
-            .used
-            .lock()
-            .map_err(|_| PqLinkError::Crypto("nonce lock".into()))?;
-        if used.len() >= USED_PRUNE_AT {
-            used.retain(|_, e| *e > now);
-        }
-        if used.insert(n, exp).is_some() {
+        self.cleanup(now).await;
+        let fresh = sqlx::query(
+            "INSERT INTO pqlink_used_nonces (nonce, expires_at) VALUES ($1, $2) \
+             ON CONFLICT DO NOTHING",
+        )
+        .bind(&n[..])
+        .bind(exp)
+        .execute(&self.pool)
+        .await
+        .map_err(store_err)?
+        .rows_affected();
+        if fresh != 1 {
             return Err(PqLinkError::Enrollment("nonce noma'lum yoki ishlatilgan"));
         }
         Ok(())
+    }
+
+    /// Muddati o'tgan ishlatilgan nonce'larni tozalash — daqiqada bir marta (har instansiyada).
+    async fn cleanup(&self, now: i64) {
+        let last = self.last_cleanup.load(Ordering::Relaxed);
+        if now - last < CLEANUP_EVERY_SECS
+            || self
+                .last_cleanup
+                .compare_exchange(last, now, Ordering::Relaxed, Ordering::Relaxed)
+                .is_err()
+        {
+            return;
+        }
+        if let Err(e) = sqlx::query("DELETE FROM pqlink_used_nonces WHERE expires_at <= $1")
+            .bind(now)
+            .execute(&self.pool)
+            .await
+        {
+            tracing::warn!(error = %e, "pqlink: ishlatilgan nonce'lar tozalanmadi");
+        }
     }
 
     /// Qurilma oxirgi marta attestatsiyadan o'tgan vaqt (ro'yxatda bo'lmasa `None`).
@@ -147,23 +181,19 @@ impl Enrollment {
     }
 }
 
+#[async_trait::async_trait]
 impl EnrollmentGate for Enrollment {
-    fn admit(&self, d: &VerifiedDevice) -> Result<i64, PqLinkError> {
-        let db = |e: sqlx::Error| {
-            tracing::error!(error = %e, "pqlink_devices");
-            PqLinkError::Crypto("qurilmalar reyestri".into())
-        };
-        // `handle_finish` `spawn_blocking` ichida — runtime'ni bloklash xavfsiz.
+    async fn admit(&self, d: &VerifiedDevice) -> Result<i64, PqLinkError> {
         if let Some(at) = self
-            .rt
-            .block_on(self.attested_at(&d.device_id.to_hex()))
-            .map_err(db)?
+            .attested_at(&d.device_id.to_hex())
+            .await
+            .map_err(store_err)?
         {
             return Ok(at);
         }
-        self.consume(&d.attestation_challenge)?;
+        self.consume(&d.attestation_challenge).await?;
         let now = self.clock.unix();
-        self.rt.block_on(self.register(d, now)).map_err(db)?;
+        self.register(d, now).await.map_err(store_err)?;
         tracing::info!(device = %d.device_id.to_hex()[..16], level = ?d.security_level, "pqlink: qurilma ro'yxatga olindi");
         Ok(now)
     }
@@ -173,18 +203,24 @@ impl EnrollmentGate for Enrollment {
 mod tests {
     use super::*;
     use mpay_common::clock::ManualClock;
+    use mpay_crypto::keystore::MemoryKeyStore;
     use time::{Duration, OffsetDateTime};
 
-    async fn enrollment() -> (tempfile::TempDir, Arc<ManualClock>, Enrollment) {
+    async fn enrollment_with(
+        ks: Arc<dyn KeyStore>,
+    ) -> (tempfile::TempDir, Arc<ManualClock>, Enrollment) {
         let dir = tempfile::tempdir().unwrap();
-        let pool = mpay_vault::db::Db::open_sqlite(&dir.path().join("e.db"))
+        let db = mpay_vault::db::Db::open_sqlite(&dir.path().join("e.db"))
             .await
-            .unwrap()
-            .pool()
-            .clone();
+            .unwrap();
+        crate::dedup::migrate(&db).await.unwrap();
         let clock = Arc::new(ManualClock::new(OffsetDateTime::now_utc()));
-        let e = Enrollment::new(pool, clock.clone(), 300).unwrap();
+        let e = Enrollment::new(db.pool().clone(), ks, clock.clone(), 300).unwrap();
         (dir, clock, e)
+    }
+
+    async fn enrollment() -> (tempfile::TempDir, Arc<ManualClock>, Enrollment) {
+        enrollment_with(Arc::new(MemoryKeyStore::random())).await
     }
 
     #[tokio::test]
@@ -192,30 +228,47 @@ mod tests {
         let (_d, clock, e) = enrollment().await;
         let (n, exp) = e.issue().unwrap();
         assert_eq!(exp, clock.unix() + 300);
-        e.consume(&n).unwrap();
-        assert!(e.consume(&n).is_err(), "ikkinchi marta");
+        e.consume(&n).await.unwrap();
+        assert!(e.consume(&n).await.is_err(), "ikkinchi marta");
         // Soxta: muddatni uzaytirish yoki tasodifni o'zgartirish HMAC'ni buzadi.
         let (mut f, _) = e.issue().unwrap();
         f[7] ^= 0x01;
-        assert!(e.consume(&f).is_err());
-        assert!(e.consume(&[0u8; 32]).is_err());
-        assert!(e.consume(b"short").is_err());
+        assert!(e.consume(&f).await.is_err());
+        assert!(e.consume(&[0u8; 32]).await.is_err());
+        assert!(e.consume(b"short").await.is_err());
         // Muddati o'tgan.
         let (old, _) = e.issue().unwrap();
         clock.advance(Duration::seconds(301));
-        assert!(e.consume(&old).is_err());
-        // Boshqa server kaliti bilan berilgan nonce qabul qilinmaydi.
+        assert!(e.consume(&old).await.is_err());
+        // Boshqa KeyStore (boshqa server) bergan nonce qabul qilinmaydi.
         let (_d2, _c2, other) = enrollment().await;
         let (foreign, _) = other.issue().unwrap();
-        assert!(e.consume(&foreign).is_err());
+        assert!(e.consume(&foreign).await.is_err());
+    }
+
+    /// Ko'p instansiya: bir xil KeyStore va bitta DB — A bergan nonce B'da qabul qilinadi, lekin
+    /// bir marta (A'da ham, B'da ham qayta ishlatib bo'lmaydi).
+    #[tokio::test]
+    async fn nonce_from_one_instance_consumed_once_on_another() {
+        let ks: Arc<dyn KeyStore> = Arc::new(MemoryKeyStore::from_seed([9; 32]));
+        let (_d, clock, a) = enrollment_with(ks.clone()).await;
+        let b = Enrollment::new(a.pool.clone(), ks, clock.clone(), 300).unwrap();
+        let (n, _) = a.issue().unwrap();
+        b.consume(&n).await.unwrap();
+        assert!(a.consume(&n).await.is_err());
+        assert!(b.consume(&n).await.is_err());
     }
 
     #[tokio::test]
     async fn issuing_keeps_no_state() {
         let (_d, _c, e) = enrollment().await;
-        for _ in 0..200_000 {
+        for _ in 0..20_000 {
             e.issue().unwrap();
         }
-        assert_eq!(e.used.lock().unwrap().len(), 0);
+        let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM pqlink_used_nonces")
+            .fetch_one(&e.pool)
+            .await
+            .unwrap();
+        assert_eq!(n, 0);
     }
 }

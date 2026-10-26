@@ -17,6 +17,7 @@ pub mod ratelimit;
 pub mod revocations;
 pub mod routes;
 pub mod serve;
+pub mod sessions;
 pub mod state;
 
 use std::sync::Arc;

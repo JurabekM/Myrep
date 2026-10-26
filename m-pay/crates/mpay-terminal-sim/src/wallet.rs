@@ -59,6 +59,27 @@ impl SoftWallet {
         Ok(id)
     }
 
+    /// Keyingi so'rovlar boshqa serverga (ko'p instansiya / load balancer simulyatsiyasi).
+    pub fn set_client(&mut self, client: ServerClient) {
+        self.client = client;
+    }
+
+    /// Handshake ikki xil instansiyada: `hello` — joriy klientga, `finish` — `finish_via` ga
+    /// (sessiyalar ombori umumiy bo'lsagina muvaffaqiyatli; 2-faza P2.4).
+    pub async fn connect_split(
+        &mut self,
+        finish_via: &ServerClient,
+    ) -> Result<DeviceId, WalletError> {
+        let (hs, ch) = ClientHandshake::start(self.pinned.clone())?;
+        let sh = Self::expect_raw(self.client.post_pqlink("/v1/pqlink/hello", ch).await?)?;
+        let (pending, cf) = hs.on_server_hello(&sh, &self.device)?;
+        let sa = Self::expect_raw(finish_via.post_pqlink("/v1/pqlink/finish", cf).await?)?;
+        let s = pending.on_accept(&sa)?;
+        let id = s.device_id();
+        self.session = Some(s);
+        Ok(id)
+    }
+
     fn expect_raw(r: crate::http::RawResponse) -> Result<Vec<u8>, WalletError> {
         if r.status.is_success() && r.sealed {
             return Ok(r.body);

@@ -19,6 +19,7 @@ pub mod revocation;
 #[cfg(feature = "sandbox-attestation")]
 pub mod sandbox;
 pub mod server;
+pub mod store;
 pub mod wire;
 
 pub use client::{ClientHandshake, ClientSession};
@@ -27,6 +28,9 @@ pub use enrollment::EnrollmentGate;
 pub use error::PqLinkError;
 pub use identity::{KeyStoreServerSigner, MlDsaSeedBlob, ServerIdentity, ServerSigner};
 pub use server::{PqLinkServer, ServerConfig, SessionId, SessionInfo};
+pub use store::{
+    EstablishedSession, MemorySessionStore, PendingSession, SessionStore, TakePending,
+};
 
 /// Crate versiyasi.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
