@@ -39,4 +39,7 @@
     <string name="settings_saved">Сохранено</string>
     <string name="yes">да</string>
     <string name="no">нет</string>
+    <string name="settings_crash_export">Экспорт журналов сбоев (%1$d)</string>
+    <string name="settings_crash_none">Журналов сбоев нет</string>
+    <string name="settings_privacy">Данные не покидают устройство: нет телеметрии и аналитики. В сеть уходит только HEAD-запрос на необязательный URL трафика.</string>
 </resources>

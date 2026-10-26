@@ -40,7 +40,9 @@ import uz.sectorverify.ui.components.PrimaryButton
 import uz.sectorverify.ui.components.SecondaryButton
 import uz.sectorverify.ui.components.SectionTitle
 import uz.sectorverify.ui.theme.LocalSvPalette
+import uz.sectorverify.ui.util.CrashLog
 import uz.sectorverify.ui.util.LocaleStore
+import uz.sectorverify.ui.util.Share
 
 /** Screen 7 — settings (§8.1). [onLanguageChanged] recreates the activity. */
 @Composable
@@ -156,6 +158,17 @@ fun SettingsRoute(onLanguageChanged: () -> Unit, extra: @Composable () -> Unit =
                 color = p.inkMuted,
             )
         }
+        val crashes = remember { CrashLog.count(context) }
+        SecondaryButton(
+            if (crashes > 0) stringResource(R.string.settings_crash_export, crashes) else stringResource(R.string.settings_crash_none),
+            {
+                CrashLog.export(context, java.io.File(Share.exportsDir(context), "crash-logs.zip"))?.let {
+                    Share.send(context, it, "application/zip", "ZIP")
+                }
+            },
+            enabled = crashes > 0,
+        )
+        Text(stringResource(R.string.settings_privacy), color = p.inkMuted, style = MaterialTheme.typography.bodySmall)
         extra()
     }
 }

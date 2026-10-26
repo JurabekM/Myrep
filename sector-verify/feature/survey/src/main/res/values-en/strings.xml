@@ -68,4 +68,9 @@
     <string name="live_traffic_ok">Traffic: %1$d ms</string>
     <string name="live_traffic_error">Traffic error: %1$s</string>
     <string name="live_map_description">Route map, %1$d points</string>
+    <string name="perm_why_location">Precise location: GPS and CellInfo (RSRP, PCI) are only available with this permission. Background location is not needed.</string>
+    <string name="perm_why_phone">Phone state: to pick the SIM matching the plan MCC/MNC (dual-SIM).</string>
+    <string name="perm_why_notifications">Notifications: survey progress and “Result ready”.</string>
+    <string name="perm_denied">Permission denied. Enable it in the app settings.</string>
+    <string name="perm_open_settings">Open app settings</string>
 </resources>

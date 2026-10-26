@@ -39,4 +39,7 @@
     <string name="settings_saved">Saved</string>
     <string name="yes">yes</string>
     <string name="no">no</string>
+    <string name="settings_crash_export">Export crash logs (%1$d)</string>
+    <string name="settings_crash_none">No crash logs</string>
+    <string name="settings_privacy">Data never leaves the device: no telemetry or analytics. The only network request is a HEAD to the optional traffic URL.</string>
 </resources>

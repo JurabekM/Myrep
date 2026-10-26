@@ -18,7 +18,7 @@ import uz.sectorverify.ui.theme.SectorVerifyTheme
 
 /** Stateless sites screen: import button, search and opening a site (Uzbek default strings). */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34], qualifiers = "b+uz")
+@Config(sdk = [34], qualifiers = "b+uz", application = android.app.Application::class)
 class SitesScreenTest {
     @get:Rule
     val compose = createComposeRule()

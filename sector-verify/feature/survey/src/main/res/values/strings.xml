@@ -68,4 +68,9 @@
     <string name="live_traffic_ok">Trafik: %1$d ms</string>
     <string name="live_traffic_error">Trafik xatosi: %1$s</string>
     <string name="live_map_description">Marshrut xaritasi, %1$d nuqta</string>
+    <string name="perm_why_location">Aniq joylashuv: GPS nuqtasi va CellInfo (RSRP, PCI) faqat shu ruxsat bilan beriladi. Fon rejimidagi joylashuv kerak emas.</string>
+    <string name="perm_why_phone">Telefon holati: rejadagi MCC/MNC ga mos SIM\'ni tanlash uchun (dual-SIM).</string>
+    <string name="perm_why_notifications">Bildirishnomalar: o\'lchov jarayoni va «Natija tayyor» xabari.</string>
+    <string name="perm_denied">Ruxsat rad etilgan. Uni ilova sozlamalarida yoqing.</string>
+    <string name="perm_open_settings">Ilova sozlamalarini ochish</string>
 </resources>

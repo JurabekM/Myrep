@@ -1,6 +1,9 @@
 package uz.sectorverify.feature.survey.ui
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -19,6 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,7 +57,11 @@ import uz.sectorverify.ui.theme.LocalSvPalette
 fun PreCheckRoute(onStarted: (String) -> Unit, vm: PreCheckViewModel = hiltViewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.refresh() }
+    var askedOnce by rememberSaveable { mutableStateOf(false) }
+    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        askedOnce = true
+        vm.refresh()
+    }
     LaunchedEffect(ui.startedSessionId) {
         ui.startedSessionId?.let {
             vm.consumeStarted()
@@ -74,11 +84,26 @@ fun PreCheckRoute(onStarted: (String) -> Unit, vm: PreCheckViewModel = hiltViewM
             )
         },
         onStart = { vm.start(version) },
+        showOpenSettings = askedOnce && ui.result?.items?.any { it.id == CheckId.PERMISSIONS && it.status == CheckStatus.BLOCK } == true,
+        onOpenSettings = {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        },
     )
 }
 
 @Composable
-fun PreCheckScreen(plan: SitePlan?, items: List<CheckItem>, canStart: Boolean, onPermissions: () -> Unit, onStart: () -> Unit) {
+fun PreCheckScreen(
+    plan: SitePlan?,
+    items: List<CheckItem>,
+    canStart: Boolean,
+    onPermissions: () -> Unit,
+    onStart: () -> Unit,
+    showOpenSettings: Boolean = false,
+    onOpenSettings: () -> Unit = {},
+) {
     val p = LocalSvPalette.current
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Text(stringResource(R.string.precheck_title, plan?.code.orEmpty()), style = MaterialTheme.typography.headlineSmall) }
@@ -97,7 +122,21 @@ fun PreCheckScreen(plan: SitePlan?, items: List<CheckItem>, canStart: Boolean, o
                 }
             }
         }
-        item { SecondaryButton(stringResource(R.string.precheck_permissions), onPermissions) }
+        val needsPermissions = items.any { (it.id == CheckId.PERMISSIONS || it.id == CheckId.NOTIFICATIONS) && it.status != CheckStatus.OK }
+        if (needsPermissions) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.perm_why_location), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.perm_why_phone), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.perm_why_notifications), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            item { SecondaryButton(stringResource(R.string.precheck_permissions), onPermissions) }
+        }
+        if (showOpenSettings) {
+            item { Text(stringResource(R.string.perm_denied), color = p.danger) }
+            item { SecondaryButton(stringResource(R.string.perm_open_settings), onOpenSettings) }
+        }
         if (!canStart) item { Text(stringResource(R.string.precheck_blocked), color = p.danger) }
         item { PrimaryButton(stringResource(R.string.precheck_start), onStart, Modifier.testTag("start"), enabled = canStart) }
     }

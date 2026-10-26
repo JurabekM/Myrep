@@ -39,4 +39,7 @@
     <string name="settings_saved">Saqlandi</string>
     <string name="yes">ha</string>
     <string name="no">yo\'q</string>
+    <string name="settings_crash_export">Crash loglarini eksport (%1$d)</string>
+    <string name="settings_crash_none">Crash log yo\'q</string>
+    <string name="settings_privacy">Ma\'lumotlar qurilmadan chiqmaydi: telemetriya va analitika yo\'q. Tarmoqqa faqat ixtiyoriy trafik URL\'iga HEAD so\'rov yuboriladi.</string>
 </resources>

@@ -68,4 +68,9 @@
     <string name="live_traffic_ok">Трафик: %1$d мс</string>
     <string name="live_traffic_error">Ошибка трафика: %1$s</string>
     <string name="live_map_description">Карта маршрута, точек: %1$d</string>
+    <string name="perm_why_location">Точное местоположение: GPS и CellInfo (RSRP, PCI) доступны только с этим разрешением. Фоновое местоположение не нужно.</string>
+    <string name="perm_why_phone">Состояние телефона: выбрать SIM с MCC/MNC из плана (dual-SIM).</string>
+    <string name="perm_why_notifications">Уведомления: ход измерения и «Результат готов».</string>
+    <string name="perm_denied">Разрешение отклонено. Включите его в настройках приложения.</string>
+    <string name="perm_open_settings">Открыть настройки приложения</string>
 </resources>
