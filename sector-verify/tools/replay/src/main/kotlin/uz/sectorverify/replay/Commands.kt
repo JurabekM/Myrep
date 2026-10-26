@@ -69,6 +69,7 @@ object Verify {
         val json = export.reportJson ?: return false.also { print("report.json yo'q") }
         val r = ReportIntegrity.verify(json)
         print("${if (r.ok) "OK" else "XATO"}: ${r.message} (sertifikatlar: ${r.chainLength})")
+        r.keyFingerprint?.let { print("Kalit SHA-256: $it") }
         return r.ok
     }
 }

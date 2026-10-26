@@ -30,6 +30,10 @@ TrafficGenerator (HTTPS HEAD, 2 s) ─► holat                              └
 Keystore EC P-256, StrongBox bo'lsa, attestation challenge = install UUID) → `PdfReportWriter` (hisobot tilida) → `SessionZip`.
 Fayllar `cacheDir/exports` da va faqat `FileProvider` orqali ulashiladi.
 
+**Imzo nimani isbotlaydi:** `sv-replay verify` hisobot imzolangandan keyin o'zgarmaganini (xesh + imzo) va imzolovchi kalitning
+SHA-256 barmoq izini ko'rsatadi. Kalit qaysi telefonniki ekanini barmoq izini telefon ro'yxati bilan solishtirib bilish mumkin.
+Attestation zanjiri hisobotda saqlanadi, lekin v1.0 da Google ildiz sertifikatiga nisbatan tekshirilmaydi (v1.1 rejasi).
+
 ## Saqlash va xavfsizlik
 | Narsa | Qayerda | Himoya |
 |---|---|---|

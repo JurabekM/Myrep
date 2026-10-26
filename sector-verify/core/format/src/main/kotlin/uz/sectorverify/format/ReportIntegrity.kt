@@ -22,7 +22,18 @@ interface ReportSigner {
     fun certificateChain(): List<ByteArray>
 }
 
-data class VerifyResult(val hashOk: Boolean, val signatureOk: Boolean, val chainLength: Int, val message: String) {
+/**
+ * [keyFingerprint]: SHA-256 of the signing public key (hex). The signature proves the report was not changed after
+ * signing by this key; that the key belongs to a given phone is checked by comparing fingerprints (the attestation
+ * chain is kept in the report but not validated against Google's root in v1.0).
+ */
+data class VerifyResult(
+    val hashOk: Boolean,
+    val signatureOk: Boolean,
+    val chainLength: Int,
+    val message: String,
+    val keyFingerprint: String? = null,
+) {
     val ok: Boolean get() = hashOk && signatureOk
 }
 
@@ -51,19 +62,23 @@ object ReportIntegrity {
         val hashOk = integrity["sha256"]?.jsonPrimitive?.content == CanonicalJson.sha256Hex(bytes)
         val chain = integrity["attestationChain"]?.jsonArray?.map { Base64.getDecoder().decode(it.jsonPrimitive.content) }.orEmpty()
         if (chain.isEmpty()) return VerifyResult(hashOk, false, 0, "sertifikat zanjiri yo'q")
-        val sigOk = runCatching {
-            val cert = CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(chain.first())) as X509Certificate
-            Signature.getInstance("SHA256withECDSA").run {
-                initVerify(cert.publicKey)
-                update(bytes)
-                verify(Base64.getDecoder().decode(integrity["signature"]!!.jsonPrimitive.content))
-            }
-        }.getOrDefault(false)
+        val cert = runCatching {
+            CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(chain.first())) as X509Certificate
+        }.getOrNull()
+        val sigOk = cert != null &&
+            runCatching {
+                Signature.getInstance("SHA256withECDSA").run {
+                    initVerify(cert.publicKey)
+                    update(bytes)
+                    verify(Base64.getDecoder().decode(integrity["signature"]!!.jsonPrimitive.content))
+                }
+            }.getOrDefault(false)
+        val fingerprint = cert?.let { CanonicalJson.sha256Hex(it.publicKey.encoded) }
         val msg = when {
             hashOk && sigOk -> "imzo va xesh to'g'ri"
             !hashOk -> "xesh mos emas: hisobot o'zgartirilgan"
             else -> "imzo noto'g'ri"
         }
-        return VerifyResult(hashOk, sigOk, chain.size, msg)
+        return VerifyResult(hashOk, sigOk, chain.size, msg, fingerprint)
     }
 }

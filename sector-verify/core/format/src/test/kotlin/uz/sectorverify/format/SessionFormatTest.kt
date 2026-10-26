@@ -83,7 +83,10 @@ class SessionFormatTest {
         val sealed = ReportIntegrity.seal(report, TestSigner)
         val text = ReportJson.toText(sealed)
         text shouldContain ReportJson.KEY_ALG
-        ReportIntegrity.verify(text).ok shouldBe true
+        ReportIntegrity.verify(text).let {
+            it.ok shouldBe true
+            it.keyFingerprint!!.length shouldBe 64
+        }
 
         val tampered = text.replace("\"PASS\"", "\"FAIL\"")
         ReportIntegrity.verify(tampered).let {
