@@ -1,0 +1,30 @@
+[package]
+name = "mpay-integrity"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Ilova/qurilma yaxlitligi (Play Integrity) tekshiruvi: mock (sandbox) va Google decode"
+
+[lints]
+workspace = true
+
+[dependencies]
+mpay-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+sha2.workspace = true
+p256 = { workspace = true, features = ["ecdsa", "pkcs8", "pem"] }
+async-trait.workspace = true
+reqwest.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+axum.workspace = true
+rcgen.workspace = true
+rustls.workspace = true

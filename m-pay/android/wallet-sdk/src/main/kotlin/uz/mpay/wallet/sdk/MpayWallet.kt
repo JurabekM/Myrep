@@ -180,8 +180,15 @@ class MpayWallet private constructor(context: Context) {
 
     fun provision(pan: String, expiryYymm: String): ProvisionResult = withReattest { provisionOnce(pan, expiryYymm) }
 
+    /** Provisioning'ga yaxlitlik tokeni (P2.6); `null` — yuborilmaydi. */
+    @Volatile
+    var integrityProvider: IntegrityTokenProvider? = null
+
     private fun provisionOnce(pan: String, expiryYymm: String): ProvisionResult {
-        val r = c().provision(pan, expiryYymm)
+        val c = c()
+        // Qayta attestatsiyadan keyin sessiya yangi — hash ham har urinishda qayta hisoblanadi.
+        val token = integrityProvider?.token(c.integrityRequestHash())
+        val r = c.provision(pan, expiryYymm, token)
         if (r is ProvisionResult.Active) save(r.profile)
         return r
     }
@@ -193,6 +200,10 @@ class MpayWallet private constructor(context: Context) {
     fun resendOtp(tokenId: String, challengeId: String): String = withReattest { c().resendOtp(tokenId, challengeId) }
 
     fun sandboxOtp(challengeId: String, operatorKey: String): String = c().sandboxOtp(challengeId, operatorKey)
+
+    /** Sandbox: Play Integrity o'rnida server mock tokeni (`preset` — sinov stsenariysi). */
+    fun sandboxIntegrityToken(requestHash: String, operatorKey: String, preset: String? = null): String? =
+        c().sandboxIntegrityToken(requestHash, operatorKey, preset)
 
     fun replenish(): Int {
         val p = store.load() ?: throw IllegalStateException("token yo'q")

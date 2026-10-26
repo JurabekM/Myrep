@@ -54,6 +54,13 @@ pub const TLS_KEY_FILE: &str = "tls-key.pem";
 pub const CREDENTIALS_FILE: &str = "dev-credentials.env";
 /// mTLS mijoz sertifikatlari CA'si (sandbox; production'da bankning PKI'si).
 pub const CLIENT_CA_FILE: &str = "mtls-client-ca.pem";
+/// Play Integrity mock'i kaliti (P2.6, ADR-0021; faqat sandbox).
+pub const INTEGRITY_MOCK_KEY_FILE: &str = "sandbox-integrity-mock.key.pem";
+/// Sandbox demo hamyonining paketi (android/wallet-demo `applicationId`).
+pub const WALLET_PACKAGE: &str = "uz.mpay.walletdemo";
+/// Sandbox imzo sertifikati "barmoq izi" — fiktiv: base64url(SHA-256("mpay-sandbox-wallet-signing-cert")).
+/// Mock tokenlar shu qiymat bilan chiqariladi; production'da haqiqiy reliz sertifikatining SHA-256'i.
+pub const SANDBOX_WALLET_CERT: &str = "fMmw8T2CTuOqPSYqDr-Qahk2xJG_iX3wWh9BPE4bV4I";
 /// Standart API kalitlari ID'lari — mTLS sertifikati CN'i shularga teng.
 pub const OPERATOR_ID: &str = "operator-1";
 pub const TERMINAL_ID: &str = "terminal-1";
@@ -186,6 +193,12 @@ pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
     let ca = SandboxAttestationCa::generate().map_err(|e| e.to_string())?;
     write(dir, CA_CERT_FILE, ca.root_der())?;
     write(dir, CA_KEY_FILE, ca.key_pem().as_bytes())?;
+    let pi_key = rcgen::KeyPair::generate().map_err(|e| e.to_string())?;
+    write(
+        dir,
+        INTEGRITY_MOCK_KEY_FILE,
+        Zeroizing::new(pi_key.serialize_pem()).as_bytes(),
+    )?;
 
     let (tls_cert, tls_key) = if opts.tls {
         let key = rcgen::KeyPair::generate().map_err(|e| e.to_string())?;
@@ -295,6 +308,19 @@ channel = "sandbox"
 # Prometheus metrikalari (2-faza P2.5): alohida ichki port, kalitsiz — tashqariga ochilmaydi.
 [metrics]
 # listen = "127.0.0.1:9464"
+
+# Ilova yaxlitligi (2-faza P2.6, ADR-0021): provisioning'da Play Integrity tokeni, requestHash —
+# PQ Link sessiyasiga bog'langan. "mock" — sandbox kaliti (emulyator demo tokenni
+# POST /v1/sandbox/integrity-token dan oladi); "google" — decodeIntegrityToken ([integrity.google]).
+[integrity]
+mode = "mock"
+required = true
+package_name = "{WALLET_PACKAGE}"
+certificate_sha256 = ["{SANDBOX_WALLET_CERT}"]
+max_age_secs = 120
+mock_key = "{INTEGRITY_MOCK_KEY_FILE}"
+# [integrity.google]
+# access_token_file = "/run/secrets/play_integrity_access_token"
 
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]

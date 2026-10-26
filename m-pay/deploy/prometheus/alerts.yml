@@ -64,6 +64,18 @@ groups:
         annotations:
           summary: "Shield roli javob bermadi — qarorlar mahalliy zaxirada ({{ $value }} ta / 5 daqiqa)"
 
+      - alert: MpayIntegrityUnavailable
+        expr: sum(increase(mpay_integrity_checks_total{result="unavailable"}[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Play Integrity dekodlash javob bermayapti — provisioning to'xtagan ({{ $value }} ta / 5 daqiqa)"
+
+      - alert: MpayIntegrityInvalidSpike
+        expr: sum(increase(mpay_integrity_checks_total{result="invalid"}[10m])) > 20
+        labels: { severity: warning }
+        annotations:
+          summary: "Yaroqsiz yaxlitlik tokenlari ko'paydi ({{ $value }} ta / 10 daqiqa) — klon ilova yoki hujum"
+
       - alert: MpayOtpDeliveryFailing
         expr: sum(increase(mpay_otp_delivery_failures_total[10m])) > 5
         labels: { severity: warning }

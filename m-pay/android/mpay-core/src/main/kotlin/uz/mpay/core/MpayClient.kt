@@ -200,8 +200,17 @@ class MpayClient(
         atc = 0,
     )
 
-    fun provision(pan: String, expiryYymm: String): ProvisionResult {
-        val d = sealed("/v1/tokens", JSONObject().put("pan", pan).put("expiry", expiryYymm))
+    /** P2.6: provisioning `requestHash` — joriy PQ Link sessiyasiga bog'langan ([Integrity]). */
+    fun integrityRequestHash(): String {
+        val s = session ?: throw ApiException(0, "NOT_CONNECTED", "PQ Link sessiyasi yo'q")
+        return Integrity.requestHash(Integrity.PURPOSE_PROVISION, s.sessionId)
+    }
+
+    /** `integrityToken` — Play Integrity (sandbox: mock) tokeni, [integrityRequestHash] uchun olingan. */
+    fun provision(pan: String, expiryYymm: String, integrityToken: String? = null): ProvisionResult {
+        val body = JSONObject().put("pan", pan).put("expiry", expiryYymm)
+        if (integrityToken != null) body.put("integrity_token", integrityToken)
+        val d = sealed("/v1/tokens", body)
         return when (d.getString("status")) {
             "ACTIVE" -> ProvisionResult.Active(profile(d), idv(d.getJSONObject("idv")))
             "PENDING_IDV" -> ProvisionResult.PendingIdv(
@@ -222,6 +231,21 @@ class MpayClient(
         sealed("/v1/tokens/$tokenId/idv/resend", JSONObject().put("challenge_id", challengeId)).getString("otp_sent_to")
 
     fun replenish(tokenId: String): List<CardLuk> = luks(sealed("/v1/tokens/$tokenId/luks", JSONObject()).getJSONArray("luks"))
+
+    /**
+     * Sandbox: Play Integrity o'rnida mock token (`[integrity] mode = "mock"`, operator kaliti).
+     * `preset`: `strong` (standart), `device`, `basic`, `no_integrity`, `unrecognized`,
+     * `play_protect_risk`, `remote_control`. Rejim `off` bo'lsa — `null` (404).
+     */
+    fun sandboxIntegrityToken(requestHash: String, operatorKey: String, preset: String? = null): String? {
+        val body = JSONObject().put("request_hash", requestHash)
+        if (preset != null) body.put("preset", preset)
+        return try {
+            json("POST", "/v1/sandbox/integrity-token", body, operatorKey).getString("integrity_token")
+        } catch (e: ApiException) {
+            if (e.status == 404) null else throw e
+        }
+    }
 
     /** Sandbox: OTP'ni operator kaliti bilan oladi (haqiqiy tizimda SMS/push). */
     fun sandboxOtp(challengeId: String, operatorKey: String): String =

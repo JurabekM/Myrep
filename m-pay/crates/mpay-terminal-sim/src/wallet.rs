@@ -21,7 +21,12 @@ pub struct SoftWallet {
     pinned: ServerIdentity,
     device: SoftDeviceKey,
     session: Option<ClientSession>,
+    integrity: Option<IntegrityProvider>,
 }
+
+/// Yaxlitlik tokeni manbai (P2.6, ADR-0021): `requestHash` → token. Real ilovada — Play Integrity
+/// API; sinovda — sandbox mock chiqaruvchisi.
+pub type IntegrityProvider = std::sync::Arc<dyn Fn(&str) -> Option<String> + Send + Sync>;
 
 impl std::fmt::Debug for SoftWallet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -39,7 +44,22 @@ impl SoftWallet {
             pinned,
             device,
             session: None,
+            integrity: None,
         }
+    }
+
+    /// Provisioning'ga yaxlitlik tokenini qo'shadi (`None` — qo'shilmaydi).
+    pub fn set_integrity(&mut self, p: Option<IntegrityProvider>) {
+        self.integrity = p;
+    }
+
+    /// Joriy PQ Link sessiyasi uchun provisioning `requestHash` i.
+    pub fn integrity_request_hash(&self) -> Result<String, WalletError> {
+        let s = self.session.as_ref().ok_or(WalletError::NotConnected)?;
+        Ok(mpay_integrity::request_hash(
+            mpay_integrity::Purpose::Provision,
+            s.session_id(),
+        ))
     }
 
     pub fn client(&self) -> &ServerClient {
@@ -155,9 +175,24 @@ impl SoftWallet {
         fpan: &str,
         expiry_yymm: &str,
     ) -> Result<ProvisionResponse, WalletError> {
+        let token = match &self.integrity {
+            Some(p) => p(&self.integrity_request_hash()?),
+            None => None,
+        };
+        self.provision_with(fpan, expiry_yymm, token).await
+    }
+
+    /// Aniq yaxlitlik tokeni bilan (sinovlar: yaroqsiz, boshqa sessiyaniki va h.k.).
+    pub async fn provision_with(
+        &mut self,
+        fpan: &str,
+        expiry_yymm: &str,
+        integrity_token: Option<String>,
+    ) -> Result<ProvisionResponse, WalletError> {
         let req = ProvisionRequest {
             pan: Zeroizing::new(fpan.to_owned()),
             expiry: expiry_yymm.to_owned(),
+            integrity_token,
         };
         self.call("/v1/tokens", &req).await
     }

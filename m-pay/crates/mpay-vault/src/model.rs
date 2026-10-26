@@ -41,6 +41,8 @@ impl Default for VaultConfig {
 pub struct ProvisionRequest {
     pub fpan: Pan,
     pub expiry: CardExpiry,
+    /// Tekshirilgan yaxlitlik belgilari (P2.6, ADR-0021) — Shield'ga uzatiladi.
+    pub integrity: Option<mpay_common::ports::IntegritySignals>,
 }
 
 /// PQ Link sessiyasi tasdiqlagan qurilma.

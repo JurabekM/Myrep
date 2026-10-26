@@ -80,6 +80,7 @@ fn req(p: &Pan) -> ProvisionRequest {
     ProvisionRequest {
         fpan: p.clone(),
         expiry: CardExpiry::new(2031, 12).unwrap(),
+        integrity: None,
     }
 }
 
@@ -530,6 +531,7 @@ async fn validation_errors() {
     let expired = ProvisionRequest {
         fpan: fpan(1, 1),
         expiry: CardExpiry::new(2020, 1).unwrap(),
+        integrity: None,
     };
     assert!(matches!(
         e.vault.provision(expired, dev(1)).await,

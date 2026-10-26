@@ -193,6 +193,7 @@ impl IdvDecider for Shield {
             attestation_level: req.attestation_level as u8,
             existing_tokens_for_pan: req.existing_tokens_for_pan,
             existing_tokens_for_device: req.existing_tokens_for_device,
+            integrity: req.integrity,
         });
         tracing::info!(score = d.assessment.score, decision = ?d.assessment.decision, reasons = ?d.assessment.reasons, "shield: ID&V");
         Ok(d.assessment)
@@ -251,6 +252,7 @@ mod tests {
             attestation_level: lvl,
             existing_tokens_for_pan: 0,
             existing_tokens_for_device: u32::from(c),
+            integrity: None,
         };
         let d: Vec<_> = (0..6)
             .map(|c| s.assess_provision(&ev(c, 2)).assessment.decision)

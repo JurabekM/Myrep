@@ -1882,11 +1882,13 @@ dependencies = [
  "mpay-common",
  "mpay-crypto",
  "mpay-db",
+ "mpay-integrity",
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-server",
  "mpay-smsgw",
  "mpay-terminal-sim",
+ "rcgen",
  "serde_json",
  "sha2 0.11.1",
  "sqlx",
@@ -1894,6 +1896,27 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
+name = "mpay-integrity"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "base64 0.23.1",
+ "mpay-common",
+ "p256",
+ "rcgen",
+ "reqwest",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "thiserror",
+ "tokio",
+ "tracing",
  "zeroize",
 ]
 
@@ -1971,6 +1994,7 @@ dependencies = [
  "mpay-common",
  "mpay-crypto",
  "mpay-db",
+ "mpay-integrity",
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-shield",
@@ -2037,6 +2061,7 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-integrity",
  "mpay-pqlink",
  "proptest",
  "reqwest",

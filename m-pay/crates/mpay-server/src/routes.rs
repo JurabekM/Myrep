@@ -54,6 +54,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/audit/verify", get(audit_verify))
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
+        .route("/v1/sandbox/integrity-token", post(sandbox_integrity))
         .route("/v1/authorizations", post(authorize))
         .route("/v1/terminal/ping", get(terminal_ping))
         .route_layer(middleware::from_fn(crate::metrics::track))
@@ -406,11 +407,19 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
             .map_err(|e| ApiError::bad_request(e.to_string()))?;
         let expiry = CardExpiry::parse_yymm(&req.expiry)
             .ok_or_else(|| ApiError::bad_request("expiry YYMM bo'lishi kerak"))?;
+        let integrity = check_integrity(&st, &info, req.integrity_token.as_deref()).await?;
         // OTP SMS uchun emitentdan telefonni topishga — faqat kanal SMS yuborsa (nusxa `Drop` da tozalanadi).
         let fpan_for_otp = st.otp.sends().then(|| fpan.clone());
         let out = st
             .vault
-            .provision(ProvisionRequest { fpan, expiry }, device_ctx(&info))
+            .provision(
+                ProvisionRequest {
+                    fpan,
+                    expiry,
+                    integrity,
+                },
+                device_ctx(&info),
+            )
             .await?;
         Ok(match out {
             ProvisionOutcome::Active { profile, idv } => ProvisionResponse::Active {
@@ -440,6 +449,72 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
         })
     })
     .await
+}
+
+/// Play Integrity tokeni (ADR-0021): haqiqiylik va sessiyaga bog'lanish — shu yerda (buzilsa
+/// so'rov rad etiladi), verdict sifati — Shield'da. Token va verdict logga yozilmaydi.
+async fn check_integrity(
+    s: &AppState,
+    info: &SessionInfo,
+    token: Option<&str>,
+) -> Result<Option<mpay_common::ports::IntegritySignals>, ApiError> {
+    let Some(pi) = &s.integrity else {
+        return Ok(None);
+    };
+    let now_ms = s.clock.now().unix_timestamp() * 1000;
+    let r = pi
+        .verify(
+            token,
+            mpay_integrity::Purpose::Provision,
+            &info.session_id,
+            now_ms,
+        )
+        .await;
+    match &r {
+        Ok(Some(sig)) => {
+            crate::metrics::integrity_check("ok");
+            tracing::info!(device = %info.device_id, app = sig.app, level = sig.device, licensed = sig.licensed, env_risk = sig.env_risk, "integrity: verdict");
+        }
+        Ok(None) => crate::metrics::integrity_check("absent"),
+        Err(e) => {
+            crate::metrics::integrity_check(match e {
+                mpay_integrity::IntegrityError::Missing => "missing",
+                mpay_integrity::IntegrityError::Unavailable(_) => "unavailable",
+                _ => "invalid",
+            });
+            tracing::warn!(device = %info.device_id, error = %e, "integrity: token rad etildi");
+        }
+    }
+    r.map_err(|e| crate::integrity::api_error(&e))
+}
+
+/// Sandbox: emulyatordagi demo ilova uchun mock yaxlitlik tokeni (haqiqiy Play Integrity o'rnida).
+/// Faqat `[integrity] mode = "mock"` (u faqat `sandbox = true` bilan ruxsat) va operator kaliti.
+async fn sandbox_integrity(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    Json(req): Json<mpay_common::api::SandboxIntegrityRequest>,
+) -> Result<Response, ApiError> {
+    let Some(issuer) = s.integrity_mock.as_ref().filter(|_| s.sandbox) else {
+        return Err(ApiError::not_found());
+    };
+    s.caller(&headers, &mtls, Role::Operator)?;
+    let preset = match req.preset.as_deref() {
+        None => mpay_integrity::mock::Preset::Strong,
+        Some(p) => mpay_integrity::mock::Preset::parse(p)
+            .ok_or_else(|| ApiError::bad_request("preset noma'lum"))?,
+    };
+    if req.request_hash.len() != 43 {
+        return Err(ApiError::bad_request(
+            "request_hash: base64url SHA-256 (43 belgi)",
+        ));
+    }
+    let now_ms = s.clock.now().unix_timestamp() * 1000;
+    Ok(Json(mpay_common::api::SandboxIntegrityResponse {
+        integrity_token: issuer.issue(preset, &req.request_hash, now_ms),
+    })
+    .into_response())
 }
 
 /// OTP'ni karta egasining emitentdagi telefoniga yuborishga qo'yadi (2-faza P2.1, ADR-0016).

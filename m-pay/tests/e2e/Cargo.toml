@@ -24,10 +24,12 @@ zeroize.workspace = true
 mpay-issuer.workspace = true
 mpay-smsgw.workspace = true
 mpay-crypto.workspace = true
+mpay-integrity.workspace = true
 hex.workspace = true
 sha2.workspace = true
 clap.workspace = true
 sqlx.workspace = true
+rcgen.workspace = true
 
 [[bin]]
 name = "mpay-load"

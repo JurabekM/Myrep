@@ -21,6 +21,7 @@ mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
 mpay-vault.workspace = true
 mpay-shield.workspace = true
 mpay-issuer.workspace = true
+mpay-integrity.workspace = true
 tokio.workspace = true
 axum.workspace = true
 tower.workspace = true

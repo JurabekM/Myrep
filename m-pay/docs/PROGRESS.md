@@ -765,3 +765,38 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 * `scripts/compose-test.sh` (3 marta): nginx orqali 275–355 /s, p99 136–282 ms, `api-1` to'xtatilganda
   xato 0, `MpayInstanceDown` ishladi, zaxira → tiklash → audit to'g'ri, loglarda PAN va sir yo'q
   (`load-report.md` §10).
+
+### P2.6 — Play Integrity (mock tekshiruvchi) (2026-10-26)
+
+**Nima qilindi** (ADR-0021)
+
+* Yangi `mpay-integrity` crate'i: `requestHash` (PQ Link sessiyasiga bog'langan, PAN'siz), Play
+  Integrity verdict tuzilmasi, `check` (paket, imzo sertifikati, `requestHash`, yangilik →
+  `IntegritySignals`), almashtiriladigan `IntegrityVerifier`: `mock` (ES256 JWS, 7 stsenariy) va
+  `google` (`decodeIntegrityToken`, access token tashqaridan).
+* Server: `[integrity]` (`mode`, `required`, `package_name`, `certificate_sha256`, `max_age_secs`,
+  `mock_key`, `[integrity.google]`); provisioning'da tekshiruv (`INTEGRITY_REQUIRED` / `INTEGRITY_INVALID`
+  403, `INTEGRITY_UNAVAILABLE` 503); `POST /v1/sandbox/integrity-token`; metrika
+  `mpay_integrity_checks_total{result}`, 2 ta ogohlantirish; production'da `mock` taqiqlangan.
+* Shield: 5 ta yangi ID&V belgisi va 6 ta qoida (`IDV_INTEGRITY_*`), Shield roli DTO'sida belgilar.
+* `init`: mock kaliti va `[integrity] mode = "mock"`, `required = true`.
+* Hamyonlar: Rust soft-hamyon `IntegrityProvider`, `mpay-tsim` (sandbox endpoint), `mpay-load`;
+  Kotlin `Integrity.requestHash`, `MpayClient.provision(…, integrityToken)`, wallet-sdk
+  `IntegrityTokenProvider`, demo ilovada operator kaliti va stsenariy tugmalari.
+
+**Qanday tekshirildi**
+
+* Unit: `mpay-integrity` 5 (umumiy test vektori, bog'lanish, verdict xaritasi, JWS buzish, `alg: none`,
+  Google emulyatori), Shield remote DTO; Kotlin `IntegrityTest` (o'sha vektor).
+* e2e `p2_integrity` (4): tokensiz rad, boshqa sessiya / eskirgan / boshqa paket / qayta imzolangan /
+  begona kalit / buzilgan token rad (karta yaratilmaydi), verdict → Shield (device GREEN, basic va Play
+  Protect YELLOW, root / tanilmagan / masofaviy boshqaruv RED), sandbox endpoint, konfiguratsiya himoyasi.
+  `sb.wallet()` endi har doim mock token yuboradi — boshqa e2e testlar ham tekshiruv yo'lidan o'tadi.
+* `cargo test --workspace` — 210 o'tdi (SQLite); vault + e2e PostgreSQL'da — 57 o'tdi; clippy, fmt, deny.
+* Smoke (haqiqiy binarlar, `required = true`): 10 provisioning — 10 verdict, logda token yo'q.
+* Kotlin ↔ Rust interop: tokensiz → `INTEGRITY_REQUIRED`, boshqa sessiya tokeni → `INTEGRITY_INVALID`,
+  HTTP va TLS + mTLS orqali provisioning.
+* Emulyator (demo ilova, `android-testing.md` §7): tokensiz 403, `strong` → qabul (YELLOW faqat SOFTWARE
+  attestatsiya tufayli) → OTP → token faol, `no_integrity` → RED.
+* compose (`scripts/compose-test.sh`): 200 provisioning mock token + SoftHSM bilan, xato 0; sinov endi
+  yaxlitlik tekshiruvlari sonini Prometheus'dan tasdiqlaydi.

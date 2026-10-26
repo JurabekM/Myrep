@@ -105,6 +105,7 @@ async fn replay_rejected_across_instances() {
         .seal_request(&mpay_common::api::ProvisionRequest {
             pan: zeroize::Zeroizing::new(test_fpan(10, 5102)),
             expiry: "3112".into(),
+            integrity_token: None,
         })
         .unwrap();
     let ra = ca.post_pqlink("/v1/tokens", body.clone()).await.unwrap();

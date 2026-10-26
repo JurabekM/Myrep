@@ -77,6 +77,10 @@ pub struct AppState {
     pub enrollment: Option<Arc<crate::enroll::Enrollment>>,
     pub sandbox: bool,
     pub expose_otp: bool,
+    /// Play Integrity tekshiruvi (`[integrity] mode = "off"` — `None`; ADR-0021).
+    pub integrity: Option<Arc<mpay_integrity::Integrity>>,
+    /// Sandbox mock tokenlari chiqaruvchisi (`mode = "mock"`).
+    pub integrity_mock: Option<Arc<crate::integrity::SandboxIssuer>>,
 }
 
 impl std::fmt::Debug for AppState {
@@ -469,6 +473,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         server_fp = %hex::encode(pqlink.identity().fingerprint()),
         "mpay-server komponentlari tayyor"
     );
+    let (integrity, integrity_mock) = crate::integrity::build(cfg).map_err(BootError::Config)?;
     Ok(AppState {
         vault,
         issuer,
@@ -488,5 +493,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         enrollment,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
+        integrity,
+        integrity_mock,
     })
 }

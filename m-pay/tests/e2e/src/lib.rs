@@ -115,6 +115,10 @@ impl Sandbox {
         let mut cfg = Config::load(&out.config_path).unwrap();
         // M3/M4 testlari deterministik stub'ga tayanadi; M5 testlari `engine` ni o'zi yoqadi.
         cfg.shield.engine = mpay_server::config::ShieldEngine::Stub;
+        // P2.6: `init` yaxlitlik tokenini majburiy qiladi; eski testlar qo'lda yaratgan hamyonlar
+        // tokensiz qolishi uchun standart — ixtiyoriy. `wallet()` baribir mock token yuboradi
+        // (tekshiruv yo'li ishlaydi); `p2_integrity` majburiy rejimni o'zi yoqadi.
+        cfg.integrity.required = false;
         tweak(&mut cfg);
         // 2-faza P2.3: `MPAY_TEST_PG_URL` (PostgreSQL admin URL'i) bo'lsa — har sandbox o'z PG bazasida.
         if let Ok(admin) = std::env::var("MPAY_TEST_PG_URL") {
@@ -207,8 +211,20 @@ impl Sandbox {
             self.pinned_identity().await,
             self.enrolled_device(SecurityLevel::StrongBox).await,
         );
+        w.set_integrity(self.integrity_provider(mpay_integrity::mock::Preset::Strong));
         w.connect().await.unwrap();
         w
+    }
+
+    /// Sandbox mock yaxlitlik tokenlari manbai (`[integrity] mode = "mock"` bo'lsa).
+    pub fn integrity_provider(
+        &self,
+        preset: mpay_integrity::mock::Preset,
+    ) -> Option<mpay_terminal_sim::wallet::IntegrityProvider> {
+        let issuer = std::sync::Arc::new(mpay_server::integrity::sandbox_issuer(&self.cfg).ok()??);
+        Some(std::sync::Arc::new(move |hash: &str| {
+            Some(issuer.issue(preset, hash, now_ms()))
+        }))
     }
 
     /// DB fayllari (asosiy + WAL) baytlari.
@@ -341,4 +357,12 @@ pub fn test_fpan(scenario: u8, account: u32) -> String {
 /// `haystack` ichida `needle` bormi.
 pub fn contains(haystack: &[u8], needle: &[u8]) -> bool {
     !needle.is_empty() && haystack.windows(needle.len()).any(|w| w == needle)
+}
+
+/// Joriy vaqt, millisekund (mock yaxlitlik tokenlari uchun).
+pub fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
 }

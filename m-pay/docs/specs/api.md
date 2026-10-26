@@ -50,6 +50,7 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | POST | `/v1/pqlink/enroll` | — (IP chegarasi) | `{}` | yangi qurilma uchun bir martalik nonce: `{nonce, expires_at}` (P1.7) |
 | GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
+| POST | `/v1/sandbox/integrity-token` | operator, faqat `[integrity] mode = "mock"` | `{request_hash, preset?}` | Play Integrity o'rnida mock token (§3.10, ADR-0021) |
 
 ## 3. Sxemalar
 
@@ -72,8 +73,14 @@ bilan solishtiradi. Production'da barmoq izi ilovaga oldindan joylanadi.
 So'rov:
 
 ```json
-{ "pan": "9900121000010014", "expiry": "3112" }
+{ "pan": "9900121000010014", "expiry": "3112", "integrity_token": "<Play Integrity tokeni>" }
 ```
+
+`integrity_token` (2-faza P2.6, ADR-0021) — Play Integrity standart so'rovi tokeni,
+`requestHash = base64url(SHA-256("MPAY-PI-V1" ‖ 0x00 ‖ "provision" ‖ 0x00 ‖ PQ Link sessiya ID))`
+(paddingsiz; PAN kirmaydi). `[integrity] required = true` bo'lsa majburiy. Server: token haqiqiyligi
+(mock — ES256 imzo, google — `decodeIntegrityToken`), paket nomi, imzo sertifikati, `requestHash` va
+yangilik (`max_age_secs`); verdict sifati Shield ID&V qoidalarida (`IDV_INTEGRITY_*`).
 
 Javob (`data`) — `status` bo'yicha:
 
@@ -95,7 +102,9 @@ Javob (`data`) — `status` bo'yicha:
 (maskalangan). SMS fonda yuboriladi — shlyuz sekin bo'lsa ham javob kechikmaydi; yetib kelmasa
 qurilma `/idv/resend` qiladi. Sandbox kanalida yoki emitentda raqam bo'lmasa maydon yo'q (ADR-0016).
 
-Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `IDV_UNAVAILABLE`.
+Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `IDV_UNAVAILABLE`,
+`INTEGRITY_REQUIRED` (403), `INTEGRITY_INVALID` (403: imzo, paket, sertifikat, boshqa sessiya, eskirgan —
+sabab faqat server logida), `INTEGRITY_UNAVAILABLE` (503 + `Retry-After`: Google javob bermadi).
 
 ### 3.3 `POST /v1/tokens/{token_id}/idv/verify` (sealed)
 
@@ -136,6 +145,16 @@ LUK'lar `2 × batch_size` dan ko'p bo'lsa `TOO_MANY_LUKS`.
 ### 3.7 `GET /v1/sandbox/otp/{challenge_id}`
 
 `{"challenge_id": "chl_…", "otp": "123456"}` — faqat `sandbox = true` va `sandbox_api.expose_otp = true`.
+
+### 3.10 `POST /v1/sandbox/integrity-token` (operator, faqat sandbox)
+
+```json
+{ "request_hash": "<43 belgi base64url>", "preset": "strong" }
+```
+
+→ `{"integrity_token": "<JWS>"}`. Stsenariylar: `strong` (standart), `device`, `basic`, `no_integrity`,
+`unrecognized`, `play_protect_risk`, `remote_control`. Faqat `[integrity] mode = "mock"` (u faqat
+`sandbox = true` bilan ruxsat); aks holda 404. Emulyatordagi demo ilova va `mpay-tsim` shu yerdan oladi.
 
 ### 3.8 `POST /v1/authorizations` (terminal)
 
@@ -185,7 +204,8 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `DEVICE_MISMATCH` | 403 |
 | `OTP_INVALID` / `OTP_EXPIRED` / `OTP_LOCKED` | 422 / 410 / 423 |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 |
-| `IDV_UNAVAILABLE`, `PQLINK_BUSY` | 503 |
+| `IDV_UNAVAILABLE`, `PQLINK_BUSY`, `INTEGRITY_UNAVAILABLE` | 503 |
+| `INTEGRITY_REQUIRED`, `INTEGRITY_INVALID` (provisioning, ADR-0021) | 403 |
 | `PQLINK_MALFORMED`, `PQLINK_HANDSHAKE` | 400 |
 | `PQLINK_ATTESTATION`, `PQLINK_AUTH`, `PQLINK_ENROLLMENT` | 403 |
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |

@@ -12,6 +12,7 @@ members = [
     "crates/mpay-terminal-sim",
     "crates/mpay-server",
     "crates/mpay-smsgw",
+    "crates/mpay-integrity",
     "tests/e2e",
 ]
 
@@ -35,6 +36,7 @@ mpay-issuer = { path = "crates/mpay-issuer" }
 mpay-terminal-sim = { path = "crates/mpay-terminal-sim" }
 mpay-server = { path = "crates/mpay-server" }
 mpay-smsgw = { path = "crates/mpay-smsgw" }
+mpay-integrity = { path = "crates/mpay-integrity" }
 
 # async va tarmoq
 tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }

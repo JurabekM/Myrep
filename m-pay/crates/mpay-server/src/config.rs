@@ -40,6 +40,9 @@ pub struct Config {
     /// Prometheus metrikalari (2-faza P2.5).
     #[serde(default)]
     pub metrics: MetricsConfig,
+    /// Ilova/qurilma yaxlitligi — Play Integrity (2-faza P2.6, ADR-0021).
+    #[serde(default)]
+    pub integrity: IntegrityConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]
@@ -240,6 +243,82 @@ pub enum ShieldEngine {
     Stub,
 }
 
+/// `[integrity]`: provisioning'da Play Integrity tokeni (ADR-0021).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct IntegrityConfig {
+    /// `off` — tekshirilmaydi; `mock` — sandbox imzolagan tokenlar; `google` — `decodeIntegrityToken`.
+    #[serde(default)]
+    pub mode: IntegrityMode,
+    /// `true` — tokensiz provisioning rad etiladi (`INTEGRITY_REQUIRED`).
+    #[serde(default = "default_true")]
+    pub required: bool,
+    /// Hamyon ilovasi paketi (`requestPackageName`).
+    #[serde(default)]
+    pub package_name: String,
+    /// Ruxsat etilgan ilova imzo sertifikatlari (SHA-256, base64url). Production'da majburiy.
+    #[serde(default)]
+    pub certificate_sha256: Vec<String>,
+    /// Token yoshi chegarasi (soniya).
+    #[serde(default = "default_integrity_max_age")]
+    pub max_age_secs: i64,
+    /// `mock`: maxfiy kalit (PKCS#8 PEM) — `mpay-server init` yaratadi. Faqat sandbox.
+    #[serde(default)]
+    pub mock_key: Option<PathBuf>,
+    #[serde(default)]
+    pub google: Option<GoogleIntegrityConfig>,
+}
+
+impl Default for IntegrityConfig {
+    fn default() -> Self {
+        Self {
+            mode: IntegrityMode::Off,
+            required: true,
+            package_name: String::new(),
+            certificate_sha256: Vec::new(),
+            max_age_secs: default_integrity_max_age(),
+            mock_key: None,
+            google: None,
+        }
+    }
+}
+
+fn default_integrity_max_age() -> i64 {
+    120
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum IntegrityMode {
+    #[default]
+    Off,
+    Mock,
+    Google,
+}
+
+/// `[integrity.google]`: server tomonida dekodlash. OAuth2 access token faylda yoki muhitda
+/// (tashqi jarayon yangilaydi; `TODO(spec)` — xizmat akkaunti oqimi).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GoogleIntegrityConfig {
+    #[serde(default = "default_google_base")]
+    pub base_url: String,
+    #[serde(default)]
+    pub access_token_env: Option<String>,
+    #[serde(default)]
+    pub access_token_file: Option<PathBuf>,
+    #[serde(default = "default_google_timeout")]
+    pub timeout_ms: u64,
+}
+
+fn default_google_base() -> String {
+    "https://playintegrity.googleapis.com".into()
+}
+
+fn default_google_timeout() -> u64 {
+    2000
+}
+
 /// `[shield]` bo'limi.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -407,6 +486,54 @@ impl Config {
             return Err(ConfigError::Invalid(format!(
                 "auth.revoked_client_certs: 64 hex kutilgan ({bad})"
             )));
+        }
+        let pi = &self.integrity;
+        if pi.mode != IntegrityMode::Off {
+            if pi.package_name.is_empty() {
+                return Err(ConfigError::Invalid("integrity.package_name kerak".into()));
+            }
+            if !(10..=3600).contains(&pi.max_age_secs) {
+                return Err(ConfigError::Invalid(
+                    "integrity.max_age_secs 10..3600 oralig'ida".into(),
+                ));
+            }
+            if !self.sandbox && pi.certificate_sha256.is_empty() {
+                return Err(ConfigError::Invalid(
+                    "production'da integrity.certificate_sha256 (ilova imzo sertifikati) majburiy"
+                        .into(),
+                ));
+            }
+        }
+        match pi.mode {
+            IntegrityMode::Mock if !self.sandbox => {
+                return Err(ConfigError::Invalid(
+                    "integrity.mode = mock faqat sandbox = true bilan".into(),
+                ))
+            }
+            IntegrityMode::Mock if pi.mock_key.is_none() => {
+                return Err(ConfigError::Invalid(
+                    "integrity.mode = mock uchun integrity.mock_key kerak".into(),
+                ))
+            }
+            IntegrityMode::Google => {
+                let g = pi.google.as_ref().ok_or_else(|| {
+                    ConfigError::Invalid(
+                        "integrity.mode = google uchun [integrity.google] kerak".into(),
+                    )
+                })?;
+                if g.access_token_env.is_some() == g.access_token_file.is_some() {
+                    return Err(ConfigError::Invalid(
+                        "integrity.google: access_token_env yoki access_token_file (bittasi)"
+                            .into(),
+                    ));
+                }
+                if !g.base_url.starts_with("https://") && !self.sandbox {
+                    return Err(ConfigError::Invalid(
+                        "integrity.google.base_url https:// bo'lishi kerak".into(),
+                    ));
+                }
+            }
+            _ => {}
         }
         if self.http.proxy_protocol && self.http.trusted_proxies.is_empty() {
             return Err(ConfigError::Invalid(

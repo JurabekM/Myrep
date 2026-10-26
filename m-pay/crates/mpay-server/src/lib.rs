@@ -12,6 +12,7 @@ pub mod dedup;
 pub mod enroll;
 pub mod error;
 pub mod init;
+pub mod integrity;
 pub mod metrics;
 pub mod otp;
 pub mod proxyproto;

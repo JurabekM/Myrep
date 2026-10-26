@@ -115,7 +115,17 @@ class InteropTest {
         val s = api.connect(identity, SoftDevice(dir, challenge = api.enrollNonce()))
         println("PQ Link sessiyasi: $s")
         val pan = demoPan(0)
-        val r = api.provision(pan, "3112")
+        // 2-faza P2.6: yaxlitlik tokeni majburiy; requestHash Kotlin'da hisoblanadi (Rust bilan bir xil),
+        // token — server mock'idan (real ilovada Play Integrity API).
+        val op = cred("MPAY_OPERATOR_KEY")
+        try {
+            api.provision(pan, "3112")
+            throw AssertionError("INTEGRITY_REQUIRED kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("INTEGRITY_REQUIRED", e.code)
+        }
+        val staleHash = api.integrityRequestHash()
+        val r = api.provision(pan, "3112", api.sandboxIntegrityToken(staleHash, op))
         assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
         val profile = (r as ProvisionResult.Active).profile
         assertEquals(5, profile.luks.size)
@@ -169,7 +179,14 @@ class InteropTest {
         // 6) O'sha kartani ikkinchi qurilmaga — YELLOW → OTP (Shield dvigateli).
         val api2 = MpayClient(url)
         api2.connect(identity, SoftDevice(dir, challenge = api2.enrollNonce()))
-        val y = api2.provision(pan, "3112")
+        // Boshqa sessiya uchun olingan token — rad (sessiyaga bog'lanish).
+        try {
+            api2.provision(pan, "3112", api.sandboxIntegrityToken(staleHash, op))
+            throw AssertionError("INTEGRITY_INVALID kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("INTEGRITY_INVALID", e.code)
+        }
+        val y = api2.provision(pan, "3112", api2.sandboxIntegrityToken(api2.integrityRequestHash(), op))
         assertTrue("PENDING_IDV kutilgan: $y", y is ProvisionResult.PendingIdv)
         y as ProvisionResult.PendingIdv
         val gw = System.getenv("MPAY_SMSGW")
@@ -257,7 +274,14 @@ class InteropTest {
         val (identity, _) = wallet.identity()
         wallet.connect(identity, SoftDevice(dir!!, challenge = wallet.enrollNonce()))
         val pan = File(dir, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[0].substringAfter("\"").substringBefore("\"")
-        val r = wallet.provision(pan, "3112")
+        // P2.6: mock yaxlitlik tokeni operator (mTLS) endpointidan.
+        val opKey = File(dir, "dev-credentials.env").readLines().first { it.startsWith("MPAY_OPERATOR_KEY=") }.substringAfter("=").trim()
+        val operator = MpayClient(
+            tlsUrl,
+            tls = TlsConfig(bundle.serverCertSha256, Pem.keyManager(File(dir, "operator-1.crt.pem").readText(), File(dir, "operator-1.key.pem").readText())),
+        )
+        val token = operator.sandboxIntegrityToken(wallet.integrityRequestHash(), opKey)
+        val r = wallet.provision(pan, "3112", token)
         assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
         val profile = (r as ProvisionResult.Active).profile
         val applet = CardApplet({ profile }, Gate())

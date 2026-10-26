@@ -104,4 +104,10 @@ done
 cat "$WORK"/*.json | grep -o '"dpan": "[0-9]*"' | sed -E 's/.*"([0-9]+)"/\1/' | while read -r d; do
   if grep -q "$d" "$WORK/server.log"; then echo "XATO: logda ochiq DPAN"; exit 1; fi
 done
+
+echo "== Play Integrity (mock) har provisioning'da tekshirildi (P2.6)"
+n=$(grep -c "integrity: verdict" "$WORK/server.log" || true)
+echo "    $n ta verdict"
+[ "$n" -ge 1 ] || { echo "XATO: yaxlitlik tokeni tekshirilmadi"; exit 1; }
+if grep -q "eyJhbGciOiJFUzI1NiI" "$WORK/server.log"; then echo "XATO: logda yaxlitlik tokeni"; exit 1; fi
 echo "SMOKE OK"

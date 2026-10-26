@@ -62,6 +62,8 @@ struct Registry {
     /// ISO 8583 javob kodi → soni.
     authorizations: Mutex<BTreeMap<String, u64>>,
     rate_limited: Mutex<BTreeMap<&'static str, u64>>,
+    /// Yaxlitlik tekshiruvi natijasi → soni.
+    integrity: Mutex<BTreeMap<&'static str, u64>>,
     shield_degraded: AtomicU64,
     otp_failed: AtomicU64,
     proxy_rejected: AtomicU64,
@@ -118,6 +120,11 @@ pub fn observe_authorization(code: &str) {
 
 pub fn rate_limited(kind: Limit) {
     *lock(&REG.rate_limited).entry(kind.as_str()).or_default() += 1;
+}
+
+/// Yaxlitlik tekshiruvi (P2.6): `ok`, `missing`, `invalid`, `unavailable`, `absent` (ixtiyoriy, berilmagan).
+pub fn integrity_check(result: &'static str) {
+    *lock(&REG.integrity).entry(result).or_default() += 1;
 }
 
 /// Shield roli javob bermadi — mahalliy zaxira ishladi.
@@ -251,6 +258,18 @@ pub fn render_common(out: &mut Text, role: &str) {
         out.sample(
             "mpay_rate_limited_total",
             &format!("kind=\"{kind}\""),
+            *n as f64,
+        );
+    }
+    out.head(
+        "mpay_integrity_checks_total",
+        "counter",
+        "Provisioning yaxlitlik tekshiruvi natijalari",
+    );
+    for (r, n) in lock(&REG.integrity).iter() {
+        out.sample(
+            "mpay_integrity_checks_total",
+            &format!("result=\"{r}\""),
             *n as f64,
         );
     }

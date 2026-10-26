@@ -57,6 +57,7 @@ import uz.mpay.core.ProvisionResult
 import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.maskPan
 import uz.mpay.wallet.sdk.BiometricGate
+import uz.mpay.wallet.sdk.IntegrityTokenProvider
 import uz.mpay.wallet.sdk.MpayHceService
 import uz.mpay.wallet.sdk.MpayWallet
 import uz.mpay.wallet.sdk.WalletConfig
@@ -74,6 +75,8 @@ class MainActivity : FragmentActivity() {
     private var pending by mutableStateOf<ProvisionResult.PendingIdv?>(null)
     private var otp by mutableStateOf("")
     private var operatorKey by mutableStateOf("")
+    /** Sandbox Play Integrity stsenariysi (server mock'i; real ilovada — Play Integrity API). */
+    private var integrityPreset by mutableStateOf("strong")
     private var refresh by mutableIntStateOf(0)
     private val events = mutableStateOf(listOf<String>())
 
@@ -96,6 +99,10 @@ class MainActivity : FragmentActivity() {
             rootFingerprint = BuildConfig.ROOT_FINGERPRINT.takeIf { it.isNotEmpty() },
         )
         wallet.addListener(listener)
+        // P2.6: sandbox'da yaxlitlik tokeni server mock'idan (operator kaliti bilan).
+        wallet.integrityProvider = IntegrityTokenProvider { hash ->
+            operatorKey.trim().takeIf { it.isNotEmpty() }?.let { wallet.sandboxIntegrityToken(hash, it, integrityPreset) }
+        }
         setContent { App() }
     }
 
@@ -220,14 +227,21 @@ class MainActivity : FragmentActivity() {
 
                 OutlinedTextField(pan, { pan = it.filter(Char::isDigit) }, label = { Text("Karta raqami (test FPAN)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("pan"))
                 OutlinedTextField(expiry, { expiry = it.filter(Char::isDigit).take(4) }, label = { Text("Amal qilish (YYMM)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("expiry"))
+                OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (sandbox: OTP va yaxlitlik mock'i)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
+                Text("Ilova yaxlitligi (sandbox mock):", color = Color.Gray, fontSize = 12.sp)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("strong", "basic", "no_integrity", "remote_control").forEach { p ->
+                        if (p == integrityPreset) {
+                            Button({ integrityPreset = p }, modifier = Modifier.testTag("pi_$p")) { Text(p, fontSize = 12.sp) }
+                        } else {
+                            OutlinedButton({ integrityPreset = p }, modifier = Modifier.testTag("pi_$p")) { Text(p, fontSize = 12.sp) }
+                        }
+                    }
+                }
                 Button({ provision() }, enabled = !busy && pan.length == 16, modifier = Modifier.fillMaxWidth().testTag("provision")) { Text("Kartani qo'shish") }
 
                 pending?.let { p ->
                     OutlinedTextField(otp, { otp = it.filter(Char::isDigit).take(6) }, label = { Text("OTP") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("otp"))
-                    // SMS kanali bo'lmasa (sandbox) — kodni operator kaliti bilan olish.
-                    if (p.otpSentTo == null) {
-                        OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (faqat sandbox OTP uchun)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
-                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (p.otpSentTo == null) {
                             OutlinedButton({ fetchOtp() }, enabled = !busy && operatorKey.isNotEmpty(), modifier = Modifier.testTag("fetch_otp")) { Text("OTP olish") }

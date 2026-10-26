@@ -109,6 +109,10 @@ for i in api-1 api-2; do
   [ -n "$n" ] && [ "${n%.*}" -gt 0 ] || { echo "XATO: $i avtorizatsiya olmagan"; exit 1; }
 done
 [ "$(prom_q 'sum(mpay_proxy_protocol_rejected_total)')" = 0 ] || { echo "XATO: PROXY sarlavhasi rad etilgan"; exit 1; }
+# P2.6: har provisioning'da Play Integrity (mock) tokeni tekshirilgan.
+pi="$(prom_q 'sum(max_over_time(mpay_integrity_checks_total{result="ok"}[10m]))')"
+echo "   yaxlitlik tekshiruvlari (ok): $pi"
+[ -n "$pi" ] && [ "${pi%.*}" -ge "${MPAY_LOAD_CARDS:-200}" ] || { echo "XATO: yaxlitlik tokeni tekshirilmagan"; exit 1; }
 
 echo "== zaxira va tiklash"
 BK="$(mktemp -d)"

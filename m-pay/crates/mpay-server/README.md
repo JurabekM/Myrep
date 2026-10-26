@@ -56,6 +56,9 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   end-to-end); `metrics.rs` — Prometheus `/metrics` alohida portda (`[metrics] listen`, yorliqlarda
   PAN/ID yo'q); SIGTERM'da graceful to'xtatish; `mpay-server bootstrap` — migratsiyalar va HSM
   kalitlari bir marta (ko'p instansiyadan oldin); `init --tls-san <nom>`.
+* **Play Integrity** (ADR-0021, `integrity.rs`, `[integrity]`): provisioning'da token — haqiqiylik,
+  paket, imzo sertifikati, PQ Link sessiyasiga bog'langan `requestHash` va yangilik serverda; verdict
+  belgilari Shield'ga. `mock` (faqat sandbox, `POST /v1/sandbox/integrity-token`) yoki `google`.
 * **OTP kanali** (`otp.rs`, `[otp]`, ADR-0016): `sandbox` yoki `webhook` — kod karta egasining
   emitentdagi telefoniga SMS; `PENDING_IDV` da `otp_sent_to` (maskalangan), `POST /v1/tokens/{id}/idv/resend`
   (3 marta). Sinov shlyuzi — `mpay-smsgw`.

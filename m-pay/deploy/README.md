@@ -64,6 +64,7 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 | `mpay_rate_limited_total{kind}` | counter | `ip`, `api_key`, `device`, `handshake_queue` |
 | `mpay_shield_degraded_total` | counter | Shield roli javob bermadi (mahalliy zaxira) |
 | `mpay_otp_delivery_failures_total` | counter | SMS yetkazilmadi |
+| `mpay_integrity_checks_total{result}` | counter | Play Integrity: `ok`, `missing`, `invalid`, `unavailable`, `absent` (ADR-0021) |
 | `mpay_proxy_protocol_rejected_total` | counter | proksidan yaroqsiz PROXY sarlavhasi |
 | `mpay_db_up`, `mpay_db_pool_connections{state}`, `mpay_db_pool_max_connections` | gauge | baza |
 | `mpay_pqlink_sessions` | gauge | PQ Link sessiyalari (klaster bo'yicha) |
@@ -71,7 +72,8 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 | `mpay_build_info{version,role}`, `mpay_process_start_time_seconds` | gauge | versiya, ishga tushish |
 
 Qoidalar — [`prometheus/alerts.yml`](prometheus/alerts.yml): instansiya yo'q, sig'im kamaydi, DB
-yo'q, avtorizatsiya p99 > 300 ms, 5xx > 1 %, `96` javoblari, Shield zaxirada, OTP yetkazilmayapti,
+yo'q, avtorizatsiya p99 > 300 ms, 5xx > 1 %, `96` javoblari, Shield zaxirada, Play Integrity javob
+bermayapti yoki yaroqsiz tokenlar ko'paydi, OTP yetkazilmayapti,
 DB hovuzi to'la, chegara portlashi, PROXY sarlavhasi rad etildi. `TODO(spec):` Alertmanager
 marshruti (bankning navbatchilik kanali).
 

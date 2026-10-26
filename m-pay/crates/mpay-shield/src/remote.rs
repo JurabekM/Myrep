@@ -21,6 +21,9 @@ pub struct IdvEventDto {
     pub attestation_level: u8,
     pub existing_tokens_for_pan: u32,
     pub existing_tokens_for_device: u32,
+    /// Yaxlitlik belgilari (P2.6) — token va verdict JSON'i emas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub integrity: Option<mpay_common::ports::IntegritySignals>,
 }
 
 /// `POST /internal/shield/txn`.
@@ -50,6 +53,7 @@ impl IdvEventDto {
             attestation_level: r.attestation_level as u8,
             existing_tokens_for_pan: r.existing_tokens_for_pan,
             existing_tokens_for_device: r.existing_tokens_for_device,
+            integrity: r.integrity,
         }
     }
 
@@ -61,6 +65,7 @@ impl IdvEventDto {
             attestation_level: self.attestation_level,
             existing_tokens_for_pan: self.existing_tokens_for_pan,
             existing_tokens_for_device: self.existing_tokens_for_device,
+            integrity: self.integrity,
         })
     }
 }
@@ -90,5 +95,44 @@ impl TxnEventDto {
             cdcvm: self.cdcvm,
             is_p2p: shield.rules().is_p2p(&self.merchant),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mpay_common::ports::{IntegritySignals, SecurityLevel};
+    use mpay_common::{DeviceId, Pan, PanFingerprint};
+
+    #[test]
+    fn idv_dto_carries_integrity_without_pan() {
+        let sig = IntegritySignals {
+            app: 2,
+            device: 1,
+            licensed: 2,
+            env_risk: 0,
+        };
+        let r = IdvRequest {
+            fpan: Pan::from_prefix("990012100001001").unwrap(),
+            pan_fingerprint: PanFingerprint([3; 32]),
+            device_id: DeviceId([4; 32]),
+            attestation_level: SecurityLevel::StrongBox,
+            existing_tokens_for_pan: 0,
+            existing_tokens_for_device: 0,
+            integrity: Some(sig),
+            at: time::OffsetDateTime::from_unix_timestamp(1_800_000_000).unwrap(),
+        };
+        let json = serde_json::to_string(&IdvEventDto::from_request(&r)).unwrap();
+        assert!(!json.contains("990012100001001"));
+        let back: IdvEventDto = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.to_event().unwrap().integrity, Some(sig));
+        // Eski API instansiyasi (P2.5) maydonsiz yuboradi — `None`.
+        let old = json.replace(
+            r#","integrity":{"app":2,"device":1,"licensed":2,"env_risk":0}"#,
+            "",
+        );
+        assert_ne!(old, json);
+        let back: IdvEventDto = serde_json::from_str(&old).unwrap();
+        assert_eq!(back.integrity, None);
     }
 }

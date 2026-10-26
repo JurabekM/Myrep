@@ -67,6 +67,7 @@ async fn engine_with_model_ports() {
             attestation_level: SecurityLevel::StrongBox,
             existing_tokens_for_pan: 0,
             existing_tokens_for_device: 0,
+            integrity: None,
             at: OffsetDateTime::from_unix_timestamp(1_800_000_000).unwrap(),
         })
         .await

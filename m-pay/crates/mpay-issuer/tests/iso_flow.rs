@@ -54,6 +54,7 @@ async fn env() -> Env {
             ProvisionRequest {
                 fpan: fpan.clone(),
                 expiry: CardExpiry::new(2031, 12).unwrap(),
+                integrity: None,
             },
             DeviceContext {
                 device_id: DeviceId([1; 32]),

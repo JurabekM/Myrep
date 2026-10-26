@@ -41,7 +41,7 @@ pub const TXN_FEATURES: [&str; 27] = [
 ];
 
 /// ID&V (provisioning) belgilari.
-pub const IDV_FEATURES: [&str; 9] = [
+pub const IDV_FEATURES: [&str; 14] = [
     "device_card_count",
     "card_device_count",
     "component_size",
@@ -51,6 +51,12 @@ pub const IDV_FEATURES: [&str; 9] = [
     "device_age_secs_log",
     "existing_tokens_for_pan",
     "existing_tokens_for_device",
+    // Yaxlitlik (P2.6, ADR-0021): `integrity_present` = 0 bo'lsa qolganlari 0 va qoidalar ishlamaydi.
+    "integrity_present",
+    "integrity_app",
+    "integrity_device",
+    "integrity_licensed",
+    "integrity_env_risk",
 ];
 
 /// "Kichik" summa chegarasi (karta testlash): 1 000,00 UZS.
@@ -79,6 +85,7 @@ pub struct ProvisionEvent {
     pub attestation_level: u8,
     pub existing_tokens_for_pan: u32,
     pub existing_tokens_for_device: u32,
+    pub integrity: Option<mpay_common::ports::IntegritySignals>,
 }
 
 #[derive(Debug, Default)]
@@ -315,6 +322,11 @@ impl FeatureStore {
             log1p((now - dev_first) as f64),
             e.existing_tokens_for_pan as f32,
             e.existing_tokens_for_device as f32,
+            f32::from(u8::from(e.integrity.is_some())),
+            f32::from(e.integrity.map_or(0, |i| i.app)),
+            f32::from(e.integrity.map_or(0, |i| i.device)),
+            f32::from(e.integrity.map_or(0, |i| i.licensed)),
+            f32::from(e.integrity.map_or(0, |i| i.env_risk)),
         ]
     }
 
@@ -438,6 +450,7 @@ mod tests {
                 attestation_level: 2,
                 existing_tokens_for_pan: 0,
                 existing_tokens_for_device: u32::from(c),
+                integrity: None,
             });
         }
         assert_eq!(last[idv_index("device_card_count").unwrap()], 6.0);

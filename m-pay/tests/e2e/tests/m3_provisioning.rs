@@ -208,6 +208,7 @@ async fn pqlink_protections_over_http() {
     let req = mpay_common::api::ProvisionRequest {
         pan: zeroize::Zeroizing::new(test_fpan(1, 5005)),
         expiry: "3112".into(),
+        integrity_token: None,
     };
     let body = w.seal_request(&req).unwrap();
     let _: ProvisionResponse = w.send_sealed("/v1/tokens", body.clone()).await.unwrap();

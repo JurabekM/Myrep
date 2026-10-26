@@ -101,6 +101,28 @@ fn creds(dir: &Path, key: &str) -> Result<Zeroizing<String>, WalletError> {
         .ok_or_else(|| WalletError::Config(format!("{key} topilmadi")))
 }
 
+/// Sandbox: Play Integrity o'rnida mock token — emulyatordagi demo ilova kabi operator endpointidan
+/// (P2.6, ADR-0021). `[integrity] mode = "off"` bo'lsa (404) tokensiz.
+async fn sandbox_integrity_token(cli: &Cli, w: &SoftWallet) -> Result<Option<String>, WalletError> {
+    let op = creds(&cli.sandbox, "MPAY_OPERATOR_KEY")?;
+    let req = mpay_common::api::SandboxIntegrityRequest {
+        request_hash: w.integrity_request_hash()?,
+        preset: None,
+    };
+    match client_as(cli, Some("operator-1"))?
+        .post_json::<_, mpay_common::api::SandboxIntegrityResponse>(
+            "/v1/sandbox/integrity-token",
+            Some(&op),
+            &req,
+        )
+        .await
+    {
+        Ok(r) => Ok(Some(r.integrity_token)),
+        Err(WalletError::Api { status: 404, .. }) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
 fn client(cli: &Cli) -> Result<ServerClient, WalletError> {
     client_as(cli, None)
 }
@@ -210,7 +232,8 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
         Cmd::Provision { pan, expiry } => {
             let mut st = load_or_create(&cli, &c).await?;
             let mut w = connected_wallet(&c, &st).await?;
-            let profile = match w.provision(pan, expiry).await? {
+            let token = sandbox_integrity_token(&cli, &w).await?;
+            let profile = match w.provision_with(pan, expiry, token).await? {
                 ProvisionResponse::Active { profile, idv } => {
                     println!(
                         "ID&V: {:?} (skor {}) {:?}",

@@ -118,12 +118,20 @@ pub struct ProvisionRequest {
     pub pan: Zeroizing<String>,
     /// YYMM.
     pub expiry: String,
+    /// Play Integrity (yoki sandbox mock) tokeni, `requestHash` = PQ Link sessiyasiga bog'langan
+    /// (2-faza P2.6, ADR-0021). `[integrity] required` bo'lsa majburiy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub integrity_token: Option<String>,
 }
 
 impl fmt::Debug for ProvisionRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ProvisionRequest")
             .field("expiry", &self.expiry)
+            .field(
+                "integrity_token",
+                &self.integrity_token.as_ref().map(|_| "<token>"),
+            )
             .finish_non_exhaustive()
     }
 }
@@ -198,6 +206,23 @@ pub struct OtpResendRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OtpResendResponse {
     pub otp_sent_to: String,
+}
+
+/// `POST /v1/sandbox/integrity-token` (faqat sandbox, operator kaliti): emulyatordagi demo ilova
+/// uchun mock yaxlitlik tokeni (haqiqiy Play Integrity o'rniga; ADR-0021).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SandboxIntegrityRequest {
+    /// Hamyon hisoblagan `requestHash` (PQ Link sessiyasiga bog'langan).
+    pub request_hash: String,
+    /// Stsenariy: `strong` (standart), `device`, `basic`, `no_integrity`, `unrecognized`,
+    /// `play_protect_risk`, `remote_control`.
+    #[serde(default)]
+    pub preset: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SandboxIntegrityResponse {
+    pub integrity_token: String,
 }
 
 /// `POST /v1/tokens/{id}/idv/verify` so'rovi.

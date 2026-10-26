@@ -349,6 +349,7 @@ impl Vault {
                 attestation_level: dev.security_level,
                 existing_tokens_for_pan: existing_for_pan as u32,
                 existing_tokens_for_device: existing_for_device as u32,
+                integrity: req.integrity,
                 at: now,
             })
             .await

@@ -24,7 +24,7 @@ use mpay_terminal_sim::apdu::Loopback;
 use mpay_terminal_sim::card::{CardPolicy, CardProfile, SoftCard};
 use mpay_terminal_sim::http::ServerClient;
 use mpay_terminal_sim::terminal::{tap, TxnParams};
-use mpay_terminal_sim::wallet::SoftWallet;
+use mpay_terminal_sim::wallet::{IntegrityProvider, SoftWallet};
 use mpay_terminal_sim::WalletError;
 
 #[derive(Parser)]
@@ -128,6 +128,13 @@ fn client_for(dir: &std::path::Path, base: &str, id: &str) -> Result<ServerClien
     ServerClient::with_identity(base, Some(&root), Some((&c, &k))).map_err(|e| e.to_string())
 }
 
+fn unix_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
 fn pct(sorted: &[u32], p: f64) -> f64 {
     if sorted.is_empty() {
         return 0.0;
@@ -174,6 +181,7 @@ async fn provision_one(
     clients: Arc<Vec<ServerClient>>,
     ca: Arc<SandboxAttestationCa>,
     operator: Arc<String>,
+    integrity: Option<IntegrityProvider>,
     i: u32,
 ) -> Result<(SoftCard, String), String> {
     // Ko'p instansiya (P2.4): nonce, hello, finish va provisioning — har biri boshqa instansiyada.
@@ -188,6 +196,7 @@ async fn provision_one(
         .map_err(|e| e.to_string())?;
     let (identity, _) = client.identity().await.map_err(|e| e.to_string())?;
     let mut w = SoftWallet::new(client.clone(), identity, device);
+    w.set_integrity(integrity);
     // Server band (503) yoki chegara (429) — real hamyon kabi kutib, qayta urinadi.
     let mut attempt: u64 = 0;
     loop {
@@ -270,6 +279,16 @@ async fn run(
     let clients = clients_as(mpay_server::init::OPERATOR_ID)?;
     let term_clients = clients_as(mpay_server::init::TERMINAL_ID)?;
     println!("Instansiyalar: {}", clients.len());
+    // P2.6: `[integrity] mode = "mock"` — sandbox kaliti bilan token (real hamyonda Play Integrity).
+    let cfg =
+        mpay_server::config::Config::load(&dir.join("mpay.toml")).map_err(|e| e.to_string())?;
+    let integrity: Option<IntegrityProvider> =
+        mpay_server::integrity::sandbox_issuer(&cfg)?.map(|iss| {
+            let iss = Arc::new(iss);
+            Arc::new(move |h: &str| {
+                Some(iss.issue(mpay_integrity::mock::Preset::Strong, h, unix_ms()))
+            }) as IntegrityProvider
+        });
 
     // 1) Provisioning: concurrency ta parallel hamyon.
     println!("Provisioning: {cards} karta, {concurrency} parallel…");
@@ -277,11 +296,17 @@ async fn run(
     let t0 = Instant::now();
     let mut set = tokio::task::JoinSet::new();
     for i in 0..cards {
-        let (clients, ca, op, sem) = (clients.clone(), ca.clone(), operator.clone(), sem.clone());
+        let (clients, ca, op, sem, pi) = (
+            clients.clone(),
+            ca.clone(),
+            operator.clone(),
+            sem.clone(),
+            integrity.clone(),
+        );
         set.spawn(async move {
             let _p = sem.acquire_owned().await;
             let s = Instant::now();
-            let r = provision_one(clients, ca, op, i).await;
+            let r = provision_one(clients, ca, op, pi, i).await;
             (r, s.elapsed())
         });
     }
