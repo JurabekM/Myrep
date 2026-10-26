@@ -38,6 +38,10 @@ android {
         versionName = svVersionName
     }
     buildFeatures.buildConfig = true
+    // In-app language switch (uz/ru/en) needs every language in the base APK, not Play language splits.
+    bundle {
+        language { enableSplit = false }
+    }
     signingConfigs {
         if (hasReleaseKey) {
             create("release") {
