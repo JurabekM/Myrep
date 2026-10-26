@@ -100,6 +100,12 @@ groups:
         annotations:
           summary: "So'rovlar chegarasi ({{ $labels.kind }}) sekundiga {{ $value }} marta — hujum yoki chegara noto'g'ri"
 
+      - alert: MpayRateLimitStoreErrors
+        expr: sum(increase(mpay_rate_limit_store_errors_total[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Umumiy chegara ombori xatosi — instansiyalar faqat mahalliy chegara bilan ishlayapti (fail-open)"
+
       - alert: MpayProxyProtocolRejected
         expr: sum(increase(mpay_proxy_protocol_rejected_total[5m])) > 0
         labels: { severity: warning }

@@ -63,6 +63,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   emitentdagi telefoniga SMS; `PENDING_IDV` da `otp_sent_to` (maskalangan), `POST /v1/tokens/{id}/idv/resend`
   (3 marta). Sinov shlyuzi — `mpay-smsgw`.
 * **So'rovlar chegarasi** (`ratelimit.rs`, `[rate_limit]`): IP / API kaliti / qurilma bo'yicha token
-  bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`).
+  bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`). Ko'p
+  instansiyada IP va qurilma chelaklari DB'da umumiy (`shared_limits.rs`, `migrations/3004_rate_buckets.sql`,
+  ADR-0019 §4); ombor xatosida fail-open.
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):
   bir xil so'rov — avvalgi javob; shu STAN boshqa mazmun bilan — `94`.

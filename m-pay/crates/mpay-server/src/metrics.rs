@@ -67,6 +67,7 @@ struct Registry {
     shield_degraded: AtomicU64,
     otp_failed: AtomicU64,
     proxy_rejected: AtomicU64,
+    rate_limit_store_errors: AtomicU64,
 }
 
 static REG: LazyLock<Registry> = LazyLock::new(Registry::default);
@@ -130,6 +131,11 @@ pub fn integrity_check(result: &'static str) {
 /// Shield roli javob bermadi — mahalliy zaxira ishladi.
 pub fn shield_degraded() {
     REG.shield_degraded.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Umumiy chegara ombori xatosi (so'rov o'tkazildi — fail-open).
+pub fn rate_limit_store_error() {
+    REG.rate_limit_store_errors.fetch_add(1, Ordering::Relaxed);
 }
 
 /// OTP yetkazilmadi.
@@ -288,6 +294,11 @@ pub fn render_common(out: &mut Text, role: &str) {
             "mpay_proxy_protocol_rejected_total",
             "Yaroqsiz PROXY protocol sarlavhasi",
             &REG.proxy_rejected,
+        ),
+        (
+            "mpay_rate_limit_store_errors_total",
+            "Umumiy chegara ombori xatosi (so'rov o'tkazildi)",
+            &REG.rate_limit_store_errors,
         ),
     ] {
         out.head(name, "counter", help);

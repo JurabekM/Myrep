@@ -43,17 +43,32 @@ jarayon xotirasida edi:
      mTLS identifikatori, `timeout_ms`) beriladi.
    * Shield javob bermasa, mahalliy dvigatel ishlaydi. Qaror chiqadi, lekin sababga `SHIELD_DEGRADED`
      qo'shiladi va ogohlantirish yoziladi.
-4. **So'rovlar chegarasi.** Har instansiyada mahalliy qoladi. Handshake semafori CPU'ni himoya qiladi,
-   CPU esa instansiya resursi. IP, kalit va qurilma chegaralari amalda `N × qiymat` bo'ladi, shuning
-   uchun konfiguratsiyada jami chegara instansiyalar soniga bo'linadi. `TODO(spec):` load balancer
-   darajasidagi global chegara (P2.5).
+4. **So'rovlar chegarasi** (3-faza tayyorgarligida yangilandi). Uch qatlam:
+   * **Load balancer (nginx L4):** mijoz IP'si bo'yicha bir vaqtdagi ulanishlar (`limit_conn perip 200`).
+     TLS ochilmaydi, shuning uchun nginx so'rovlarni ko'rmaydi — faqat ulanishlarni cheklay oladi.
+   * **Umumiy chelak (DB):** handshake (IP) va muhrlangan so'rovlar (qurilma) chelaklari
+     `rate_buckets` jadvalida. Bitta atomar `INSERT … ON CONFLICT DO UPDATE … RETURNING` to'ldiradi va
+     kamaytiradi (PostgreSQL `GREATEST/LEAST`, SQLite `MAX/MIN`). Qarz -1 bilan cheklangan: rad
+     etilgan so'rovlar chelakni cheksiz chuqurlashtirmaydi. Kalit — `SHA-256(doira ‖ 0 ‖ kalit)`, IP
+     ochiq saqlanmaydi; 1 soat tegilmagan chelaklar o'chiriladi. Mahalliy chelak oldindan filtr
+     bo'lib qoladi: tez rad DB'ga bormaydi. `[rate_limit] shared` berilmasa sessiyalar ombori umumiy
+     bo'lganda yoqiladi.
+   * **Mahalliy:** handshake semafori (CPU — instansiya resursi) va terminal API kaliti. Avtorizatsiya
+     issiq yo'liga DB murojaati qo'shilmaydi, kalitlar esa mTLS bilan bog'langan hamkorlarniki.
+     Kalit chegarasi amalda `N × qiymat`.
+
+   Umumiy ombor xatosida so'rov **o'tkaziladi** (fail-open): chegara mavjudlik himoyasi, ombor
+   nosozligi to'lovlarni to'xtatmasligi kerak. Mahalliy chegara baribir ishlaydi; holat
+   `mpay_rate_limit_store_errors_total` metrikasi va `MpayRateLimitStoreErrors` ogohlantirishida
+   ko'rinadi.
 
 ## Oqibatlar
 
 * Istalgan instansiya istalgan so'rovni qabul qiladi: sticky routing kerak emas. Instansiya
   yiqilganda foydalanuvchi uzilmaydi va sessiya boshqa instansiyada davom etadi. Testda A to'xtatildi,
   B davom etdi.
-* Muhrlangan so'rovga 4 ta DB amali qo'shiladi (2 ta o'qish, 2 ta atomar yangilash). Avtorizatsiya —
+* Muhrlangan so'rovga 4 ta DB amali qo'shiladi (2 ta o'qish, 2 ta atomar yangilash), umumiy chegara
+  yoqilgan bo'lsa yana bitta UPSERT; handshake'ga ham bitta UPSERT. Avtorizatsiya —
   asosiy yuklama — muhrlanmagan (terminal), shuning uchun unga ta'sir qilmaydi.
 * Shield yagona nuqta. Uning yiqilishi to'lovni to'xtatmaydi, faqat aniqlashni zaiflashtiradi.
   `TODO(spec):` Shield holatini davriy saqlash va zaxira instansiya (pilot SLA bo'yicha).
@@ -64,6 +79,9 @@ jarayon xotirasida edi:
   * e2e `p2_shield_role`: qurilma fermasi qoidasi A/B orqali bitta instansiyadagidek ishlaydi,
     Shield'da bitta ombor (6 karta, 1 qurilma), kalitsiz kirish 401, Shield yiqilsa `SHIELD_DEGRADED`;
   * `enroll` unit: nonce A'da berilib B'da bir marta qabul qilinadi;
+  * e2e `p3_shared_limits`: IP burst 3 A/B/A ga bo'linadi va 4-so'rov ikkala instansiyada 429;
+    qurilma chegarasi ham shunday; `shared = false` bo'lsa har instansiya o'z burst'iga ega;
+  * `shared_limits` unit: to'ldirish, burst, qarz chegarasi, xeshlangan kalit, ombor xatosida ruxsat;
   * yuk sinovi: `docs/load-report.md` §9.
 
 ## Ko'rib chiqilgan muqobillar

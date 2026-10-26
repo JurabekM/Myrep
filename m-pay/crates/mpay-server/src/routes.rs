@@ -123,17 +123,20 @@ fn pqlink_body(status: StatusCode, body: Vec<u8>) -> Response {
 }
 
 /// Handshake oldidan: IP chegarasi va global parallellik ruxsati (tahdid modeli D2).
-fn handshake_guard(
+async fn handshake_guard(
     s: &AppState,
     peer: SocketAddr,
     headers: &HeaderMap,
 ) -> Result<Option<tokio::sync::OwnedSemaphorePermit>, ApiError> {
     let ip = s.client_ip(peer, headers);
-    s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
-        crate::metrics::rate_limited(crate::metrics::Limit::Ip);
-        tracing::warn!(%ip, "rate-limit: handshake IP");
-        ApiError::rate_limited(l, false)
-    })?;
+    s.limits
+        .ip(&crate::clientip::rate_key(ip))
+        .await
+        .map_err(|l| {
+            crate::metrics::rate_limited(crate::metrics::Limit::Ip);
+            tracing::warn!(%ip, "rate-limit: handshake IP");
+            ApiError::rate_limited(l, false)
+        })?;
     s.limits.handshake_permit().map_err(|l| {
         crate::metrics::rate_limited(crate::metrics::Limit::Handshake);
         tracing::warn!("rate-limit: handshake navbati to'la");
@@ -241,11 +244,14 @@ async fn pq_enroll(
         return Err(ApiError::not_found());
     };
     let ip = s.client_ip(peer, &headers);
-    s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
-        crate::metrics::rate_limited(crate::metrics::Limit::Ip);
-        tracing::warn!(%ip, "rate-limit: enroll IP");
-        ApiError::rate_limited(l, false)
-    })?;
+    s.limits
+        .ip(&crate::clientip::rate_key(ip))
+        .await
+        .map_err(|l| {
+            crate::metrics::rate_limited(crate::metrics::Limit::Ip);
+            tracing::warn!(%ip, "rate-limit: enroll IP");
+            ApiError::rate_limited(l, false)
+        })?;
     let (nonce, expires_at) = e.issue()?;
     Ok(Json(serde_json::json!({
         "nonce": hex::encode(nonce),
@@ -261,7 +267,7 @@ async fn pq_hello(
     body: Bytes,
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
-    let _permit = handshake_guard(&s, peer, &headers)?;
+    let _permit = handshake_guard(&s, peer, &headers).await?;
     // Joy yo'q bo'lsa qimmat hisoblashdan oldin rad (sessiyalar ombori umumiy bo'lishi mumkin).
     if !s.pqlink.has_room().await? {
         return Err(mpay_pqlink::PqLinkError::TooManySessions.into());
@@ -284,7 +290,7 @@ async fn pq_finish(
     body: Bytes,
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
-    let _permit = handshake_guard(&s, peer, &headers)?;
+    let _permit = handshake_guard(&s, peer, &headers).await?;
     let start = s.pqlink.begin_finish(&body).await?;
     let pq = s.pqlink.clone();
     // Attestatsiya zanjiri va imzolar — bloklovchi CPU ishi.
@@ -330,7 +336,7 @@ where
         Err(e) => return ApiError::from(e).into_response(),
     };
     // Qurilma chegarasi: javob baribir muhrlanadi — sessiya ketma-ketligi buzilmaydi.
-    let limited = s.limits.device(&info.device_id.to_string()).err();
+    let limited = s.limits.device(&info.device_id.to_string()).await.err();
     let stale = !stale_ok && s.reattest_due(&info);
     let (status, env) = match serde_json::from_slice::<Req>(&plaintext) {
         _ if stale => (

@@ -52,6 +52,16 @@ To'liq sinov (yuk nginx orqali, bitta API'ni to'xtatish, ogohlantirish, zaxira �
 bash scripts/compose-test.sh
 ```
 
+## So'rovlar chegarasi (ko'p instansiya)
+
+* nginx: mijoz IP'si bo'yicha bir vaqtdagi ulanishlar — `limit_conn perip 200` (CGNAT uchun yumshoq).
+* Server: handshake (IP) va muhrlangan so'rovlar (qurilma) chelaklari PostgreSQL'da umumiy
+  (`rate_buckets`, kalit — `SHA-256` xesh, IP ochiq yozilmaydi): balanser so'rovlarni taqsimlasa ham
+  chegara `N ×` ga ko'paymaydi. `[rate_limit] shared` berilmasa PostgreSQL'da avtomatik yoqiladi.
+  Ombor xatosida so'rov o'tkaziladi (mahalliy chegara ishlaydi), `MpayRateLimitStoreErrors` ogohlantiradi.
+* Terminal kalitlari (`api_key_*`) — har instansiyada mahalliy: avtorizatsiya yo'liga DB murojaati
+  qo'shilmaydi; jami chegara = qiymat × instansiyalar.
+
 ## Metrikalar va ogohlantirishlar
 
 `[metrics] listen` — alohida ichki port (`/metrics`, oddiy HTTP, host'ga ochilmaydi). Yorliqlarda
@@ -67,6 +77,7 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 | `mpay_otp_delivery_failures_total` | counter | SMS yetkazilmadi |
 | `mpay_integrity_checks_total{result}` | counter | Play Integrity: `ok`, `missing`, `invalid`, `unavailable`, `absent` (ADR-0021) |
 | `mpay_proxy_protocol_rejected_total` | counter | proksidan yaroqsiz PROXY sarlavhasi |
+| `mpay_rate_limit_store_errors_total` | counter | umumiy chegara ombori xatosi (so'rov o'tkazildi) |
 | `mpay_db_up`, `mpay_db_pool_connections{state}`, `mpay_db_pool_max_connections` | gauge | baza |
 | `mpay_pqlink_sessions` | gauge | PQ Link sessiyalari (klaster bo'yicha) |
 | `mpay_shield_{cards,devices,merchants,graph_nodes}` | gauge | Shield belgilar ombori |
@@ -75,7 +86,7 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 Qoidalar — [`prometheus/alerts.yml`](prometheus/alerts.yml): instansiya yo'q, sig'im kamaydi, DB
 yo'q, avtorizatsiya p99 > 300 ms, 5xx > 1 %, `96` javoblari, Shield zaxirada, Play Integrity javob
 bermayapti yoki yaroqsiz tokenlar ko'paydi, OTP yetkazilmayapti,
-DB hovuzi to'la, chegara portlashi, PROXY sarlavhasi rad etildi. Ogohlantirishlar Alertmanager
+DB hovuzi to'la, chegara portlashi, umumiy chegara ombori xatosi, PROXY sarlavhasi rad etildi. Ogohlantirishlar Alertmanager
 ([`alertmanager/alertmanager.yml`](alertmanager/alertmanager.yml)) orqali navbatchiga yuboriladi —
 sandbox'da virtual kanal `mpay-smsgw` `POST /alerts`. `TODO(spec):` bankning haqiqiy navbatchilik
 kanali (SMS, Telegram, e-pochta) va eskalatsiya.

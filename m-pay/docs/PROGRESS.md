@@ -888,3 +888,16 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 * Tekshirildi: unit (JWT imzosi ochiq kalit bilan, claim'lar, yomon fayllar rad, kesh — bitta almashuv,
   begona kalit → Unavailable); e2e `google_mode_with_service_account`: server JWT → token → decode
   emulyatori → provisioning GREEN, ikki provisioning — bitta token almashuvi, rad etilgan token — 403.
+
+### Ko'p instansiyada umumiy so'rovlar chegarasi (2026-10-26, ADR-0019 §4)
+
+* Muammo: har instansiyada mahalliy token bucket — balanser ortida amalda `N × chegara`.
+* nginx: `limit_conn perip 200` (IP bo'yicha bir vaqtdagi ulanishlar; TLS ochilmaydi, shuning uchun
+  so'rov tezligi nginx'da emas).
+* Server: `shared_limits.rs` — handshake (IP) va muhrlangan so'rovlar (qurilma) chelaklari `rate_buckets`
+  jadvalida (migratsiya `3004`), bitta atomar UPSERT; kalit SHA-256 xesh; mahalliy chelak oldindan filtr;
+  ombor xatosida fail-open + `mpay_rate_limit_store_errors_total` + `MpayRateLimitStoreErrors`.
+  `[rate_limit] shared` (berilmasa — sessiyalar ombori umumiy bo'lsa). Terminal kaliti mahalliy qoldi.
+* Tekshirildi: unit (to'ldirish, burst, qarz chegarasi, xeshlangan kalit, fail-open); e2e
+  `p3_shared_limits` (IP va qurilma chegarasi A/B bo'yicha global, `shared = false` — mahalliy) SQLite va
+  PostgreSQL'da; `p1_rate_limit`, `p2_multi_instance` o'zgarishsiz o'tdi; `promtool` — 14 qoida, `nginx -t`.

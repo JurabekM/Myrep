@@ -439,6 +439,15 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         )));
     }
     tracing::info!(shared = shared_sessions, "PQ Link sessiyalari ombori");
+    let mut limits = crate::ratelimit::RateLimits::new(&cfg.rate_limit);
+    if cfg.rate_limit.enabled && cfg.rate_limit.shared.unwrap_or(shared_sessions) {
+        // Ko'p instansiya: IP va qurilma chegaralari umumiy (ADR-0019).
+        limits = limits.with_shared(crate::shared_limits::SharedLimits::new(
+            db.clone(),
+            &cfg.rate_limit,
+        ));
+    }
+    tracing::info!(shared = limits.is_shared(), "so'rovlar chegarasi");
     if let Some(e) = &enrollment {
         pq = pq.with_enrollment(e.clone());
     }
@@ -484,7 +493,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         scheme,
         clock,
         auth: Authenticator::new(&cfg.auth.keys),
-        limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
+        limits,
         require_mtls: cfg.auth.require_mtls,
         trusted_proxies: cfg.http.trusted_proxies.clone(),
         otp: crate::otp::OtpChannel::from_config(&cfg.otp, |p| cfg.resolve(p))

@@ -298,6 +298,7 @@ api_key_per_second = 500        # operator/terminal kaliti bo'yicha
 api_key_burst = 1000
 device_per_minute = 60          # muhrlangan so'rovlar, qurilma bo'yicha
 device_burst = 30
+# shared = true                 # IP/qurilma chelaklari DB'da umumiy; berilmasa — PostgreSQL'da avtomatik
 
 # OTP yetkazish (2-faza P2.1, ADR-0016): "sandbox" — SMS yuborilmaydi (kod /v1/sandbox/otp orqali);
 # "webhook" — bankning SMS shlyuzi (sinovda virtual shlyuz `mpay-smsgw`). Token faqat muhit o'zgaruvchisida.
