@@ -95,8 +95,11 @@ interface SessionDao {
     @Query("UPDATE session SET measured_rate_hz = :rate WHERE id = :id")
     suspend fun setRate(id: String, rate: Double)
 
-    @Query("UPDATE session SET verdict = :verdict, coverage_pct = :coveragePct, config_json = :configJson WHERE id = :id")
-    suspend fun setResult(id: String, verdict: Verdict, coveragePct: Double, configJson: String)
+    @Query(
+        "UPDATE session SET verdict = :verdict, coverage_pct = :coveragePct, config_json = :configJson, " +
+            "result_json = :resultJson WHERE id = :id",
+    )
+    suspend fun setResult(id: String, verdict: Verdict, coveragePct: Double, configJson: String, resultJson: String)
 }
 
 /** Raw data: insert and read only (§5.2 — raw tables are never modified). */

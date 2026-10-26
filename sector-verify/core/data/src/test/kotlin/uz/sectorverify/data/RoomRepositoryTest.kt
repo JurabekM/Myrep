@@ -120,6 +120,7 @@ class RoomRepositoryTest {
         stored.findings.single().detail["pci.141"] shouldBe "S2"
         stored.session.verdict shouldBe Verdict.WARN
         stored.session.coveragePct shouldBe 80.0
+        stored.full shouldBe result
         db.resultDao().results(id).first { it.pci == 200 }.sectorId.shouldBeNull()
         plans.observeSites().first().single().lastVerdict shouldBe Verdict.WARN
         sessions.observeForSite(site.id).first() shouldHaveSize 1

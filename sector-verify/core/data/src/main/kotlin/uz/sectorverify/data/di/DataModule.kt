@@ -18,13 +18,17 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import uz.sectorverify.data.db.SectorVerifyDatabase
 import uz.sectorverify.data.repo.Clock
 import uz.sectorverify.data.repo.PlanRepository
+import uz.sectorverify.data.repo.ReportRepository
 import uz.sectorverify.data.repo.RoomPlanRepository
+import uz.sectorverify.data.repo.RoomReportRepository
 import uz.sectorverify.data.repo.RoomSessionRepository
 import uz.sectorverify.data.repo.SessionRepository
 import uz.sectorverify.data.security.DatabaseKeyStore
 import uz.sectorverify.data.security.KeystoreKeyWrapper
+import uz.sectorverify.data.security.KeystoreReportSigner
 import uz.sectorverify.data.settings.DataStoreSettingsRepository
 import uz.sectorverify.data.settings.SettingsRepository
+import uz.sectorverify.format.ReportSigner
 
 object DatabaseFactory {
     /** SQLCipher-encrypted Room database; the passphrase comes from [DatabaseKeyStore]. */
@@ -61,6 +65,10 @@ object DataProvidesModule {
         PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("settings") }
 
     @Provides fun clock(): Clock = Clock.SYSTEM
+
+    @Provides
+    @Singleton
+    fun reportSigner(@ApplicationContext context: Context): ReportSigner = KeystoreReportSigner(context)
 }
 
 @Module
@@ -71,4 +79,6 @@ abstract class DataBindsModule {
     @Binds abstract fun session(impl: RoomSessionRepository): SessionRepository
 
     @Binds abstract fun settings(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds abstract fun report(impl: RoomReportRepository): ReportRepository
 }

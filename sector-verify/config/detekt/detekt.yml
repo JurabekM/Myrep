@@ -43,7 +43,8 @@ style:
     ignoreNamedArgument: true
     ignoreEnums: true
     ignoreAnnotated: ['Composable', 'Preview']
-    excludes: ['**/test/**', '**/androidTest/**', '**/sim/**']
+    # Drawing code (Canvas/PDF layout geometry in px/pt) is exempt; algorithm code is not.
+    excludes: ['**/test/**', '**/androidTest/**', '**/sim/**', '**/PdfReportWriter.kt', '**/ui/components/**', '**/MapCanvas.kt']
   ReturnCount:
     max: 4
     excludeGuardClauses: true

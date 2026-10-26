@@ -34,7 +34,10 @@ data class NewSession(
     val subscriptionId: Int?,
 )
 
-data class StoredResult(val session: SessionEntity, val sectors: List<SectorResult>, val findings: List<Finding>)
+data class StoredResult(val session: SessionEntity, val sectors: List<SectorResult>, val findings: List<Finding>) {
+    /** Complete analysis output; null for sessions analysed before result_json existed. */
+    val full: SessionResult? get() = session.resultJson?.let { SvJson.compact.decodeFromString(SessionResult.serializer(), it) }
+}
 
 interface SessionRepository {
     suspend fun create(s: NewSession): String
@@ -125,7 +128,8 @@ class RoomSessionRepository @Inject constructor(
         val rows = result.sectors.map { it.toEntity(sessionId, sectorIds[Triple(it.key.rat, it.key.arfcn, it.key.pci)]) }
         results.replace(sessionId, rows, result.findings.map { it.toEntity(sessionId) })
         val configJson = SvJson.compact.encodeToString(AnalysisConfig.serializer(), config)
-        sessions.setResult(sessionId, result.verdict, result.overallCoverage * PERCENT, configJson)
+        val resultJson = SvJson.compact.encodeToString(SessionResult.serializer(), result)
+        sessions.setResult(sessionId, result.verdict, result.overallCoverage * PERCENT, configJson, resultJson)
     }
 
     override suspend fun result(sessionId: String): StoredResult? {
