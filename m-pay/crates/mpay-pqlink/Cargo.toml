@@ -1,0 +1,47 @@
+[package]
+name = "mpay-pqlink"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mpay-common.workspace = true
+mpay-crypto.workspace = true
+ml-kem.workspace = true
+ml-dsa.workspace = true
+x25519-dalek.workspace = true
+ed25519-dalek.workspace = true
+chacha20poly1305.workspace = true
+p256 = { workspace = true, features = ["ecdsa", "pkcs8"] }
+p384.workspace = true
+rsa.workspace = true
+sha2-010.workspace = true
+x509-cert.workspace = true
+der.workspace = true
+sha2.workspace = true
+hkdf.workspace = true
+hmac.workspace = true
+subtle.workspace = true
+zeroize.workspace = true
+getrandom = { workspace = true, features = ["sys_rng"] }
+thiserror.workspace = true
+time.workspace = true
+tracing.workspace = true
+hex.workspace = true
+rcgen = { workspace = true, optional = true }
+
+[features]
+default = []
+# Sandbox attestatsiya CA va dasturiy qurilma kaliti (soft-wallet, testlar). Production'da o'chiq.
+sandbox-attestation = ["dep:rcgen"]
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json.workspace = true
+hex-literal.workspace = true
+mpay-pqlink = { path = ".", features = ["sandbox-attestation"] }

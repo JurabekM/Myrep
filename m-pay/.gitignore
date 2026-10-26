@@ -1,0 +1,25 @@
+/target/
+**/target/
+/fuzz/corpus/
+/fuzz/artifacts/
+# lokal sandbox holati: kalitlar, DB, generatsiya qilingan konfiguratsiya
+/.mpay/
+*.db
+*.db-shm
+*.db-wal
+.env
+# Python
+__pycache__/
+.venv/
+
+# shield-ml: generatsiya qilingan ma'lumotlar va venv
+/shield-ml/data/
+/shield-ml/.venv/
+
+# Android
+/android/**/build/
+/android/.gradle/
+/android/local.properties
+/android/.kotlin/
+/fuzz/logs/
+/fuzz/logs-*.txt

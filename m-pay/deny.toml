@@ -1,0 +1,51 @@
+# cargo-deny konfiguratsiyasi: litsenziyalar, zaifliklar, taqiqlangan crate'lar, manbalar.
+# Ishga tushirish: cargo deny check
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = [
+    # Marvin (RSA shifr ochishdagi vaqt yon kanali). Biz `rsa` ni FAQAT attestatsiya zanjiridagi ochiq
+    # kalit bilan imzo tekshiruvi uchun ishlatamiz (Google RSA-4096 ildizi); maxfiy RSA kalit va
+    # shifr ochish yo'q — hujum qo'llanmaydi. `rsa` 0.10 barqaror bo'lganda qayta ko'riladi.
+    { id = "RUSTSEC-2023-0071", reason = "faqat RSA imzo tekshiruvi (ochiq kalit), maxfiy kalit yo'q" },
+]
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+unused-allowed-license = "allow"
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "CDLA-Permissive-2.0",
+    "MPL-2.0",
+]
+
+# Ichki crate'larimiz nashr qilinmaydi (publish = false).
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+deny = [
+    # OpenSSL'ga bog'liqlik — ataylab yo'q (rustls + ring).
+    { crate = "openssl-sys", reason = "rustls/ring ishlatiladi" },
+    { crate = "native-tls", reason = "rustls/ring ishlatiladi" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

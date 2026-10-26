@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mpay_hce_description">M-Pay tap-to-pay (sandbox)</string>
+    <string name="mpay_hce_aid_group">M-Pay Test Scheme</string>
+    <string name="mpay_biometric_title">To\'lovni tasdiqlash</string>
+    <string name="mpay_biometric_subtitle">Barmoq izi yoki yuz bilan tasdiqlang</string>
+    <string name="mpay_biometric_cancel">Bekor qilish</string>
+</resources>

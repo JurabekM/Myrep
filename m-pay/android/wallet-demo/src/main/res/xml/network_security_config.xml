@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SANDBOX: LAN/emulyatordagi mpay-server ga oddiy HTTP ruxsat (maxfiy ma'lumot PQ Link bilan shifrlangan).
+     Production'da faqat TLS va pinlangan sertifikat. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
