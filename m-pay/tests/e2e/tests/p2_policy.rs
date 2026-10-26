@@ -101,3 +101,90 @@ async fn card_device_limits_over_http() {
     // Boshqa karta o'sha qurilmada — mumkin.
     c.provision(&test_fpan(10, 7402), "3112").await.unwrap();
 }
+
+/// Token muddatiga `months` oy qo'shilgan YYMM (sxema vaqti, UTC+5) — sinov uchun muddatni surish.
+fn yymm_shift(months: i32) -> String {
+    use mpay_common::clock::Clock as _;
+    let c = mpay_common::CardExpiry::current(mpay_common::clock::SystemClock.now());
+    let total = i32::from(c.year) * 12 + i32::from(c.month) - 1 + months;
+    mpay_common::CardExpiry::new((total / 12) as u16, (total % 12 + 1) as u8)
+        .unwrap()
+        .to_yymm()
+}
+
+/// 3-faza tayyorgarligi (ADR-0022): token muddatini yangilash HTTP orqali — oynadan oldin o'zgarmaydi,
+/// muddati yaqinlashgan va hatto o'tgan token karta muddati doirasida uzaytiriladi, to'lov davom etadi.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn token_renewal_over_http() {
+    let pan = test_fpan(10, 7401);
+    let p2 = pan.clone();
+    let sb = Sandbox::start_with(move |c| {
+        c.issuer.accounts = vec![acct(&p2)];
+        c.vault.token_renew_before_days = 60;
+    })
+    .await;
+    let mut w = sb.wallet().await;
+    let ProvisionResponse::Active { profile, .. } = w.provision(&pan, "3112").await.unwrap() else {
+        panic!("ACTIVE kutilgan")
+    };
+    let t = profile.token_id.clone();
+    assert_eq!(profile.dpan_expiry, yymm_shift(36));
+    assert!(profile.renew_after.is_some());
+
+    // Hali erta — o'zgarishsiz.
+    let r = w.renew(&t).await.unwrap();
+    assert!(!r.renewed);
+    assert_eq!(r.profile.dpan_expiry, profile.dpan_expiry);
+
+    let set_expiry = |yymm: String| {
+        let pool = sb.server.state.vault.pool().clone();
+        let t = t.to_string();
+        async move {
+            sqlx::query("UPDATE vault_tokens SET dpan_expiry = $1 WHERE token_id = $2")
+                .bind(yymm)
+                .bind(t)
+                .execute(&pool)
+                .await
+                .unwrap();
+        }
+    };
+    let card_from = |p: &mpay_common::api::TokenProfileDto| {
+        let mut p = p.clone();
+        p.luks = profile.luks.clone();
+        SoftCard::new(CardProfile::from_dto(&p).unwrap(), CardPolicy::default())
+    };
+
+    // Muddati o'tgan token: to'lov `54`, LUK berilmaydi.
+    set_expiry(yymm_shift(-1)).await;
+    let mut old = card_from(&profile);
+    assert_eq!(
+        sb.pay(&mut old, 10_000 * UZS, "SHOP0000000001", 1)
+            .await
+            .response_code,
+        "54"
+    );
+    assert_eq!(
+        api_code(w.replenish(&t).await),
+        (410, "TOKEN_EXPIRED".into())
+    );
+
+    // Yangilash: karta (31/12) doirasida yana 36 oy; takroriy chaqiruv o'zgartirmaydi.
+    let r = w.renew(&t).await.unwrap();
+    assert!(r.renewed);
+    assert_eq!(r.profile.dpan_expiry, yymm_shift(36));
+    assert!(r.profile.luks.is_empty());
+    let again = w.renew(&t).await.unwrap();
+    assert!(!again.renewed);
+    assert_eq!(again.profile.dpan_expiry, r.profile.dpan_expiry);
+
+    // Yangi muddatli profil bilan to'lov va LUK to'ldirish yana ishlaydi.
+    let mut card = card_from(&r.profile);
+    assert_eq!(
+        sb.pay(&mut card, 10_000 * UZS, "SHOP0000000001", 2)
+            .await
+            .response_code,
+        "00"
+    );
+    assert!(!w.replenish(&t).await.unwrap().luks.is_empty());
+    sb.server.state.vault.verify_audit().await.unwrap();
+}

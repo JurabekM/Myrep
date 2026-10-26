@@ -12,12 +12,15 @@ const val DEFAULT_CVM_LIMIT_MINOR: Long = 100_000_000
 class CardProfile(
     val tokenId: String,
     val dpan: String,
-    val expiryYymm: String,
+    /** DPAN muddati (YYMM); token yangilansa o'zgaradi ([MpayClient.renew]). */
+    var expiryYymm: String,
     val psn: Int,
     val luks: MutableList<CardLuk>,
     var atc: Int,
     /** Shu summadan (tiyin) yuqori tap'da CDCVM (biometriya) — bank siyosati, server beradi (ADR-0022). */
     var cvmLimitMinor: Long = DEFAULT_CVM_LIMIT_MINOR,
+    /** Shu lahzadan (unix) muddatni yangilash mumkin; `null` — karta muddati tugaydi (ADR-0022). */
+    var renewAfter: Long? = null,
 ) {
     override fun toString() = "CardProfile($tokenId, ${maskPan(dpan)}, luks=${luks.size}, atc=$atc)"
 }

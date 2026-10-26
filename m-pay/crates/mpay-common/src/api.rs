@@ -167,6 +167,10 @@ pub struct TokenProfileDto {
     /// ADR-0022). Emitent ham tekshiradi (`Q2`). Eski server javobida yo'q — qurilma standartini oladi.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cvm_limit_minor: Option<u64>,
+    /// Shu lahzadan (unix) `POST /v1/tokens/{id}/renew` DPAN muddatini uzaytiradi. Yo'q — uzaytirib
+    /// bo'lmaydi (karta muddati tugaydi: yangi muddatli karta bilan qayta qo'shish kerak) yoki eski server.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renew_after: Option<i64>,
 }
 
 impl fmt::Debug for TokenProfileDto {
@@ -253,6 +257,15 @@ pub struct LuksResponse {
     pub cvm_limit_minor: Option<u64>,
 }
 
+/// `POST /v1/tokens/{id}/renew` javobi (muhrlangan). `luks` bo'sh — mavjud LUK'lar amal qiladi.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenewResponse {
+    /// `false` — hali erta yoki uzaytirib bo'lmaydi; profil o'zgarishsiz (takroriy chaqiruv xavfsiz).
+    pub renewed: bool,
+    #[serde(flatten)]
+    pub profile: TokenProfileDto,
+}
+
 /// Bo'sh so'rov tanasi.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Empty {}
@@ -325,6 +338,7 @@ mod tests {
                     max_uses: 10,
                 }],
                 cvm_limit_minor: Some(100_000_000),
+                renew_after: Some(1_900_000_000),
             },
             idv: IdvAssessment {
                 decision: IdvDecision::Green,

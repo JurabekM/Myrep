@@ -208,7 +208,26 @@ class MpayWallet private constructor(context: Context) {
     fun sandboxIntegrityToken(requestHash: String, operatorKey: String, preset: String? = null): String? =
         c().sandboxIntegrityToken(requestHash, operatorKey, preset)
 
+    /**
+     * Token muddati yaqinlashgan bo'lsa (`renewAfter` o'tgan) — serverda uzaytiradi va profilni yangilaydi
+     * (keyingi tap'larda yangi muddat). Qaytaradi: muddat o'zgardimi.
+     */
+    fun renewIfDue(nowUnix: Long = System.currentTimeMillis() / 1000): Boolean {
+        val p = store.load() ?: return false
+        val due = p.renewAfter ?: return false
+        if (nowUnix < due) return false
+        val r = withReattest { c().renew(p.tokenId) }
+        p.renewAfter = r.renewAfter
+        val changed = r.expiryYymm != p.expiryYymm
+        p.expiryYymm = r.expiryYymm
+        store.save(p)
+        if (changed) emit("Token muddati yangilandi: ${r.expiryYymm.take(2)}/${r.expiryYymm.drop(2)}")
+        return changed
+    }
+
     fun replenish(): Int {
+        // Muddati o'tgan tokenga LUK berilmaydi — avval yangilashga urinish (xato LUK to'ldirishni to'xtatmaydi).
+        runCatching { renewIfDue() }.onFailure { emit("Muddatni yangilab bo'lmadi: ${it.message}") }
         val p = store.load() ?: throw IllegalStateException("token yo'q")
         val batch = withReattest { c().replenishBatch(p.tokenId) }
         val luks: List<CardLuk> = batch.luks

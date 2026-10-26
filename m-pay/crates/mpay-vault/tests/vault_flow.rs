@@ -776,3 +776,109 @@ async fn token_expiry_caps_luks_and_blocks_replenish() {
         Err(VaultError::TokenExpired)
     ));
 }
+
+fn at(y: i32, m: u8, d: u8, h: u8) -> OffsetDateTime {
+    time::Date::from_calendar_date(y, time::Month::try_from(m).unwrap(), d)
+        .unwrap()
+        .with_hms(h, 0, 0)
+        .unwrap()
+        .assume_utc()
+}
+
+/// Token muddatini yangilash (ADR-0022): oynadan oldin o'zgarmaydi, oynada karta muddatigacha
+/// uzaytiriladi, takroriy chaqiruv xavfsiz, karta tugasa `renew_after` yo'q.
+#[tokio::test]
+async fn token_renewal_window_and_card_cap() {
+    let e = env_with(VaultConfig {
+        token_validity_months: 12,
+        ..VaultConfig::default()
+    })
+    .await;
+    e.clock.set(at(2026, 1, 15, 10));
+    let r = ProvisionRequest {
+        fpan: fpan(10, 7301),
+        expiry: CardExpiry::new(2027, 6).unwrap(),
+        integrity: None,
+    };
+    let prof = token_of(e.vault.provision(r, dev(1)).await.unwrap());
+    let t = prof.token_id.clone();
+    assert_eq!(prof.dpan_expiry, "2701");
+    let window = CardExpiry::new(2027, 1).unwrap().end_unix() - 30 * 86_400;
+    assert_eq!(prof.renew_after, Some(window));
+
+    // Hali erta — o'zgarishsiz.
+    let (renewed, p) = e.vault.renew_token(&t, dev(1)).await.unwrap();
+    assert!(!renewed);
+    assert_eq!(p.dpan_expiry, "2701");
+    assert!(p.luks.is_empty());
+    // Boshqa qurilma — rad.
+    assert!(matches!(
+        e.vault.renew_token(&t, dev(2)).await,
+        Err(VaultError::DeviceMismatch)
+    ));
+
+    // Oyna ochildi: hozir + 12 oy = 2028-01, karta 2027-06 — karta muddatigacha.
+    e.clock
+        .set(OffsetDateTime::from_unix_timestamp(window).unwrap());
+    let (renewed, p) = e.vault.renew_token(&t, dev(1)).await.unwrap();
+    assert!(renewed);
+    assert_eq!(p.dpan_expiry, "2706");
+    // Endi karta muddati = token muddati: uzaytirib bo'lmaydi.
+    assert_eq!(p.renew_after, None);
+    let (renewed, p) = e.vault.renew_token(&t, dev(1)).await.unwrap();
+    assert!(!renewed);
+    assert_eq!(p.dpan_expiry, "2706");
+
+    // Eski muddat o'tdi — LUK'lar yangi muddat bilan beriladi.
+    e.clock.set(at(2027, 3, 1, 0));
+    let luks = e.vault.replenish_luks(&t, dev(1)).await.unwrap();
+    let end = CardExpiry::new(2027, 6).unwrap().end_unix();
+    assert!(luks.iter().all(|l| l.expires_at <= end));
+    assert!(luks
+        .iter()
+        .any(|l| l.expires_at > at(2027, 2, 1, 0).unix_timestamp()));
+    e.vault.verify_audit().await.unwrap();
+}
+
+/// Muddati o'tgan token qayta qo'shishga xalaqit bermaydi (yangilangan karta); muddat UTC+5 bo'yicha.
+#[tokio::test]
+async fn expired_token_frees_card_and_device_uzbekistan_time() {
+    let e = env().await;
+    let card = CardExpiry::new(2027, 6).unwrap();
+    e.clock.set(at(2027, 6, 30, 10));
+    let r = |exp| ProvisionRequest {
+        fpan: fpan(10, 7302),
+        expiry: exp,
+        integrity: None,
+    };
+    let old = token_of(e.vault.provision(r(card), dev(1)).await.unwrap());
+    assert_eq!(old.dpan_expiry, "2706");
+    // 2027-06-30 18:59 UTC (Toshkentda 23:59) — token hali tirik: takroriy karta rad.
+    e.clock.set(at(2027, 6, 30, 18));
+    assert!(matches!(
+        e.vault
+            .provision(r(CardExpiry::new(2030, 6).unwrap()), dev(1))
+            .await,
+        Err(VaultError::CardAlreadyOnDevice)
+    ));
+    // 19:00 UTC = Toshkentda 1-iyul 00:00 — muddat tugadi (UTC bo'yicha hali iyun).
+    e.clock.set(at(2027, 6, 30, 19));
+    assert!(matches!(
+        e.vault.replenish_luks(&old.token_id, dev(1)).await,
+        Err(VaultError::TokenExpired)
+    ));
+    assert!(matches!(
+        e.vault.provision(r(card), dev(1)).await,
+        Err(VaultError::BadRequest(_))
+    ));
+    let new = token_of(
+        e.vault
+            .provision(r(CardExpiry::new(2032, 6).unwrap()), dev(1))
+            .await
+            .unwrap(),
+    );
+    assert_ne!(new.token_id, old.token_id);
+    // Toshkentda iyul: 2027-07 + 36 oy; keyin o'z karta muddati bilan uzaytiriladi (eskisiniki emas).
+    assert_eq!(new.dpan_expiry, "3007");
+    assert!(new.renew_after.is_some());
+}

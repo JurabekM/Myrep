@@ -7,6 +7,8 @@ import org.bouncycastle.cert.X509v3CertificateBuilder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -175,6 +177,13 @@ class InteropTest {
         } catch (e: ApiException) {
             assertEquals("TOO_MANY_LUKS", e.code)
         }
+
+        // 5b) ADR-0022: muddatni yangilash — oyna hali ochilmagan (36 oy), profil o'zgarmaydi (Kotlin ↔ Rust).
+        val rn = api.renew(profile.tokenId)
+        assertFalse(rn.renewed)
+        assertEquals(profile.expiryYymm, rn.expiryYymm)
+        assertEquals(profile.renewAfter, rn.renewAfter)
+        assertNotNull("karta 3112, token undan oldin tugaydi — renew_after bor", rn.renewAfter)
 
         // 6) O'sha kartani ikkinchi qurilmaga — YELLOW → OTP (Shield dvigateli).
         val api2 = MpayClient(url)

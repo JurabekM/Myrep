@@ -48,6 +48,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens/{id}/idv/verify", post(idv_verify))
         .route("/v1/tokens/{id}/idv/resend", post(idv_resend))
         .route("/v1/tokens/{id}/luks", post(replenish))
+        .route("/v1/tokens/{id}/renew", post(renew))
         .route("/v1/devices/rekey", post(rekey))
         .route("/v1/tokens/{id}/suspend", post(suspend))
         .route("/v1/tokens/{id}/resume", post(resume))
@@ -408,6 +409,7 @@ fn profile_dto(p: &TokenProfile, cvm_limit_minor: u64) -> TokenProfileDto {
         scheme: p.scheme.clone(),
         luks: p.luks.iter().map(luk_dto).collect(),
         cvm_limit_minor: Some(cvm_limit_minor),
+        renew_after: p.renew_after,
     }
 }
 
@@ -698,6 +700,22 @@ async fn replenish(
         Ok(LuksResponse {
             luks: luks.iter().map(luk_dto).collect(),
             cvm_limit_minor: Some(cvm_limit),
+        })
+    })
+    .await
+}
+
+/// Token muddatini yangilash (ADR-0022): qurilma `renew_after` dan keyin chaqiradi; takroriy chaqiruv
+/// xavfsiz (`renewed = false`, joriy profil).
+async fn renew(State(s): St, Path(id): Path<String>, headers: HeaderMap, body: Bytes) -> Response {
+    let vault = s.vault.clone();
+    let cvm_limit = s.cvm_limit_minor;
+    sealed(&s, &headers, &body, |info, _req: Empty| async move {
+        let token_id = parse_token_id(&id)?;
+        let (renewed, p) = vault.renew_token(&token_id, device_ctx(&info)).await?;
+        Ok(mpay_common::api::RenewResponse {
+            renewed,
+            profile: profile_dto(&p, cvm_limit),
         })
     })
     .await

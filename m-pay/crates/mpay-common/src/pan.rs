@@ -179,6 +179,16 @@ impl fmt::Display for Pan {
     }
 }
 
+/// M-Pay Test Scheme profili: karta va token muddati O'zbekiston vaqti bilan (UTC+5, yozgi vaqt
+/// yo'q) — `12/29` mahalliy 2030-01-01 00:00 gacha (2029-12-31 19:00 UTC) amal qiladi. Server va
+/// emitent qayerda ishlamasin, natija bir xil. `TODO(spec):` haqiqiy sxema qoidasi.
+pub const EXPIRY_UTC_OFFSET_SECS: i32 = 5 * 3600;
+
+/// [`EXPIRY_UTC_OFFSET_SECS`] — `time::UtcOffset` sifatida.
+pub fn expiry_offset() -> time::UtcOffset {
+    time::UtcOffset::from_whole_seconds(EXPIRY_UTC_OFFSET_SECS).unwrap_or(time::UtcOffset::UTC)
+}
+
 /// Karta amal qilish muddati (YYMM).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CardExpiry {
@@ -228,8 +238,8 @@ impl CardExpiry {
         }
     }
 
-    /// Muddat tugaydigan lahza (unix, UTC): keyingi oyning 1-kuni 00:00. `TODO(spec):` sxema vaqt
-    /// mintaqasi (hozir UTC; O'zbekiston UTC+5 — mahalliy yarim tunda 5 soat farq).
+    /// Muddat tugaydigan lahza (unix): keyingi oyning 1-kuni 00:00 sxema vaqti bilan
+    /// ([`EXPIRY_UTC_OFFSET_SECS`]).
     pub fn end_unix(&self) -> i64 {
         let (y, m) = if self.month == 12 {
             (i64::from(self.year) + 1, 1)
@@ -242,7 +252,21 @@ impl CardExpiry {
         let yoe = yy - era * 400;
         let doy = (153 * mm + 2) / 5;
         let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-        (era * 146_097 + doe - 719_468) * 86_400
+        (era * 146_097 + doe - 719_468) * 86_400 - i64::from(EXPIRY_UTC_OFFSET_SECS)
+    }
+
+    /// `now` paytida muddat o'tganmi (sxema vaqti bilan; oxirgi oy ichida hali amal qiladi).
+    pub fn is_expired(&self, now: time::OffsetDateTime) -> bool {
+        now.unix_timestamp() >= self.end_unix()
+    }
+
+    /// Sxema vaqti bo'yicha joriy oy (`now` dagi YYMM).
+    pub fn current(now: time::OffsetDateTime) -> Self {
+        let l = now.to_offset(expiry_offset());
+        Self {
+            year: l.year().clamp(2000, 2099) as u16,
+            month: l.month() as u8,
+        }
     }
 
     /// Berilgan sanada (yil, oy) muddat o'tganmi. Karta muddatining oxirgi oyi ichida haliyam amal qiladi.
@@ -258,11 +282,46 @@ mod tests {
 
     #[test]
     fn expiry_end_unix() {
-        // 2029-10 → 2029-11-01T00:00Z; 2029-12 → 2030-01-01; kabisa fevrali → 2028-03-01.
-        assert_eq!(CardExpiry::new(2029, 10).unwrap().end_unix(), 1_888_185_600);
-        assert_eq!(CardExpiry::new(2029, 12).unwrap().end_unix(), 1_893_456_000);
-        assert_eq!(CardExpiry::new(2028, 2).unwrap().end_unix(), 1_835_481_600);
-        assert_eq!(CardExpiry::new(2000, 1).unwrap().end_unix(), 949_363_200);
+        // Mahalliy (UTC+5) yarim tun: 2029-10 → 2029-11-01T00:00+05 = 2029-10-31T19:00Z;
+        // 2029-12 → 2030-01-01; kabisa fevrali → 2028-03-01.
+        const H5: i64 = 5 * 3600;
+        assert_eq!(
+            CardExpiry::new(2029, 10).unwrap().end_unix(),
+            1_888_185_600 - H5
+        );
+        assert_eq!(
+            CardExpiry::new(2029, 12).unwrap().end_unix(),
+            1_893_456_000 - H5
+        );
+        assert_eq!(
+            CardExpiry::new(2028, 2).unwrap().end_unix(),
+            1_835_481_600 - H5
+        );
+        assert_eq!(
+            CardExpiry::new(2000, 1).unwrap().end_unix(),
+            949_363_200 - H5
+        );
+    }
+
+    #[test]
+    fn expiry_in_uzbekistan_time() {
+        use time::macros::datetime;
+        let e = CardExpiry::new(2029, 10).unwrap();
+        // 31-oktabr 18:59:59 UTC = 23:59:59 Toshkent — hali amal qiladi; 19:00 UTC — tugadi.
+        assert!(!e.is_expired(datetime!(2029-10-31 18:59:59 UTC)));
+        assert!(e.is_expired(datetime!(2029-10-31 19:00 UTC)));
+        // UTC bo'yicha hali oktabr, Toshkentda esa noyabr.
+        assert_eq!(
+            CardExpiry::current(datetime!(2029-10-31 20:00 UTC)),
+            CardExpiry::new(2029, 11).unwrap()
+        );
+        assert_eq!(
+            CardExpiry::current(datetime!(2029-10-31 18:00 UTC)),
+            CardExpiry::new(2029, 10).unwrap()
+        );
+        // Mahalliy ko'rinish ham bir xil.
+        assert!(e.is_expired(datetime!(2029-11-01 00:00 +5)));
+        assert!(!e.is_expired(datetime!(2029-10-31 23:59:59 +5)));
     }
 
     #[test]

@@ -268,6 +268,8 @@ token_validity_months = 36
 max_tokens_per_device = 10
 # Bitta karta nechta qurilmada tokenlashtirilishi mumkin (0 — cheklanmagan); shu qurilmada takror — 409.
 max_devices_per_card = 3
+# Token muddati tugashiga shuncha kun qolganda qurilma uni uzaytira oladi (POST /v1/tokens/{{id}}/renew).
+token_renew_before_days = 30
 otp_ttl_secs = 300
 otp_max_attempts = 3
 

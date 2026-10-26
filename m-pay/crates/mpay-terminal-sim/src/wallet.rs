@@ -269,4 +269,13 @@ impl SoftWallet {
         self.call(&format!("/v1/tokens/{token_id}/luks"), &Empty {})
             .await
     }
+
+    /// Token muddatini yangilash (`renew_after` dan keyin; ADR-0022).
+    pub async fn renew(
+        &mut self,
+        token_id: &TokenId,
+    ) -> Result<mpay_common::api::RenewResponse, WalletError> {
+        self.call(&format!("/v1/tokens/{token_id}/renew"), &Empty {})
+            .await
+    }
 }

@@ -80,9 +80,11 @@ struct Counts {
     other_devices: i64,
 }
 
+/// Token muddati: sxema vaqti bo'yicha joriy oydan `months` keyin, karta muddatidan oshmaydi.
 fn token_expiry(now: OffsetDateTime, months: u32, card: CardExpiry) -> CardExpiry {
-    let total = u32::from(now.month() as u8) - 1 + months;
-    let year = (now.year() as u32 + total / 12).min(2099) as u16;
+    let cur = CardExpiry::current(now);
+    let total = u32::from(cur.month) - 1 + months;
+    let year = (u32::from(cur.year) + total / 12).min(2099) as u16;
     let month = (total % 12 + 1) as u8;
     let candidate = CardExpiry { year, month };
     candidate.min(card)
@@ -292,7 +294,7 @@ impl Vault {
         ))
     }
 
-    /// Kartaning va qurilmaning "tirik" tokenlari: `DELETED` va tashlab ketilgan `PENDING_IDV`
+    /// Kartaning va qurilmaning "tirik" tokenlari: `DELETED`, muddati o'tgan va tashlab ketilgan `PENDING_IDV`
     /// (challenge'i muddati o'tgan, bloklangan yoki ishlatilgan) hisoblanmaydi.
     async fn token_counts<'e, E>(
         &self,
@@ -314,7 +316,8 @@ impl Vault {
              WHERE (c.pan_fp = $7 OR t.device_id = $8) AND t.state != 'DELETED' \
                AND NOT (t.state = 'PENDING_IDV' AND NOT EXISTS ( \
                  SELECT 1 FROM vault_idv_challenges ch WHERE ch.token_id = t.token_id \
-                   AND ch.consumed = 0 AND ch.expires_at > $9 AND ch.attempts < $10))",
+                   AND ch.consumed = 0 AND ch.expires_at > $9 AND ch.attempts < $10)) \
+               AND t.dpan_expiry >= $11",
         )
         .bind(pan_fp.0.as_slice())
         .bind(dev_hex)
@@ -326,6 +329,14 @@ impl Vault {
         .bind(dev_hex)
         .bind(now)
         .bind(self.cfg.otp_max_attempts)
+        // Muddati o'tgan tokenlar hisoblanmaydi (YYMM satrlari 2000–2099 da tartib bo'yicha
+        // solishtiriladi): yangilangan karta bilan qayta qo'shish mumkin.
+        .bind(
+            CardExpiry::current(
+                OffsetDateTime::from_unix_timestamp(now).unwrap_or(OffsetDateTime::UNIX_EPOCH),
+            )
+            .to_yymm(),
+        )
         .fetch_one(exec)
         .await?;
         Ok(Counts {
@@ -361,10 +372,7 @@ impl Vault {
             return Err(VaultError::BadRequest("FPAN kutilgan (990000–990049)"));
         }
         let now = self.clock.now();
-        if req
-            .expiry
-            .is_expired_at(now.year() as u16, now.month() as u8)
-        {
+        if req.expiry.is_expired(now) {
             return Err(VaultError::BadRequest("karta muddati o'tgan"));
         }
         let pan_fp = self.fingerprint(&req.fpan)?;
@@ -443,8 +451,8 @@ impl Vault {
         let card_id = self.upsert_card(&mut tx, req, &pan_fp, ts).await?;
         sqlx::query(
             "INSERT INTO vault_tokens (token_id, card_id, device_id, dpan_fp, dpan_dek, dpan_nonce, dpan_ct, dpan_masked, \
-             dpan_expiry, psn, state, idv_decision, idv_score, last_atc, next_luk_seq, created_at, updated_at) \
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, 1, $14, $15)",
+             dpan_expiry, psn, state, idv_decision, idv_score, last_atc, next_luk_seq, created_at, updated_at, card_expiry) \
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, 1, $14, $15, $16)",
         )
         .bind(token_id.as_str())
         .bind(&card_id)
@@ -461,6 +469,7 @@ impl Vault {
         .bind(i64::from(idv.score))
         .bind(ts)
         .bind(ts)
+        .bind(req.expiry.to_yymm())
         .execute(&mut *tx)
         .await?;
         audit::append(&self.db, &mut tx,
@@ -482,7 +491,14 @@ impl Vault {
                 .issue_luks_tx(&mut tx, &token_id, &dpan, psn, self.cfg.luk.batch_size, ts)
                 .await?;
             ProvisionOutcome::Active {
-                profile: self.profile(token_id.clone(), dpan.clone(), dpan_exp, psn, luks),
+                profile: self.profile(
+                    token_id.clone(),
+                    dpan.clone(),
+                    dpan_exp,
+                    req.expiry,
+                    psn,
+                    luks,
+                ),
                 idv,
             }
         } else {
@@ -576,6 +592,7 @@ impl Vault {
         token_id: TokenId,
         dpan: Pan,
         exp: CardExpiry,
+        card: CardExpiry,
         psn: u8,
         luks: Vec<LukGrant>,
     ) -> TokenProfile {
@@ -587,7 +604,23 @@ impl Vault {
             aid: hex::encode_upper(emv::AID),
             scheme: self.scheme.name().to_owned(),
             luks,
+            renew_after: self.renew_after(exp, card),
         }
+    }
+
+    /// Uzaytirish oynasi boshlanishi; karta muddati token muddatidan keyin bo'lmasa — `None`.
+    fn renew_after(&self, exp: CardExpiry, card: CardExpiry) -> Option<i64> {
+        (card > exp).then(|| exp.end_unix() - i64::from(self.cfg.token_renew_before_days) * 86_400)
+    }
+
+    /// Token provisioning'ida tasdiqlangan karta muddati (eski yozuvlarda — karta yozuvidan).
+    fn card_expiry_of(row: &AnyRow) -> Result<CardExpiry, VaultError> {
+        let s: Option<String> = row.try_get("card_expiry")?;
+        let s = match s {
+            Some(s) => s,
+            None => row.try_get("card_expiry_fallback")?,
+        };
+        CardExpiry::parse_yymm(&s).ok_or(VaultError::Db("karta muddati".into()))
     }
 
     async fn issue_luks_tx(
@@ -660,7 +693,7 @@ impl Vault {
 
     async fn token_row(&self, token_id: &TokenId) -> Result<AnyRow, VaultError> {
         sqlx::query(
-            "SELECT t.*, c.pan_masked, c.expiry AS card_expiry, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct \
+            "SELECT t.*, c.pan_masked, c.expiry AS card_expiry_fallback, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct \
              FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id WHERE t.token_id = $1",
         )
         .bind(token_id.as_str())
@@ -858,7 +891,81 @@ impl Vault {
             .issue_luks_tx(&mut tx, token_id, &dpan, psn, self.cfg.luk.batch_size, ts)
             .await?;
         tx.commit().await?;
-        Ok(self.profile(token_id.clone(), dpan, exp, psn, luks))
+        let card = Self::card_expiry_of(&row)?;
+        Ok(self.profile(token_id.clone(), dpan, exp, card, psn, luks))
+    }
+
+    /// Token muddatini yangilash (ADR-0022): muddat tugashiga `token_renew_before_days` qolganda (yoki
+    /// o'tgach) DPAN muddati `min(hozir + token_validity_months, karta muddati)` gacha uzaytiriladi.
+    /// DPAN, PSN va LUK'lar o'zgarmaydi (LUK muddati eski chegara bilan qoladi). Hali erta yoki karta
+    /// muddati tugaydigan bo'lsa — o'zgarishsiz `(false, profil)`: takroriy chaqiruv xavfsiz, javob
+    /// yo'qolsa qurilma qayta so'raydi.
+    pub async fn renew_token(
+        &self,
+        token_id: &TokenId,
+        dev: DeviceContext,
+    ) -> Result<(bool, TokenProfile), VaultError> {
+        let row = self.token_row(token_id).await?;
+        Self::check_device(&row, &dev)?;
+        let st = state_of(&row)?;
+        if st != TokenState::Active {
+            return Err(VaultError::InvalidState {
+                from: st.as_str(),
+                to: "RENEW",
+            });
+        }
+        let dpan = self.dpan_of(&row).await?;
+        let psn = row.try_get::<i64, _>("psn")? as u8;
+        let cur_s: String = row.try_get("dpan_expiry")?;
+        let cur = CardExpiry::parse_yymm(&cur_s).ok_or(VaultError::Db("muddat".into()))?;
+        let card = Self::card_expiry_of(&row)?;
+        let now = self.clock.now();
+        let ts = now.unix_timestamp();
+        let next = token_expiry(now, self.cfg.token_validity_months, card);
+        let due = self.renew_after(cur, card).is_some_and(|t| ts >= t);
+        if !due || next <= cur {
+            return Ok((
+                false,
+                self.profile(token_id.clone(), dpan, cur, card, psn, vec![]),
+            ));
+        }
+        let mut tx = self.db.begin_write().await?;
+        // Optimistik: parallel yangilash bo'lsa — ikkinchisi o'zgartirmaydi.
+        let n = sqlx::query(
+            "UPDATE vault_tokens SET dpan_expiry = $1, updated_at = $2 \
+             WHERE token_id = $3 AND dpan_expiry = $4 AND state = 'ACTIVE'",
+        )
+        .bind(next.to_yymm())
+        .bind(ts)
+        .bind(token_id.as_str())
+        .bind(&cur_s)
+        .execute(&mut *tx)
+        .await?
+        .rows_affected();
+        if n == 0 {
+            return Err(VaultError::InvalidState {
+                from: "CHANGED",
+                to: "RENEW",
+            });
+        }
+        audit::append(
+            &self.db,
+            &mut tx,
+            ts,
+            &AuditEntry {
+                actor: ACTOR_DEVICE,
+                action: "TOKEN_RENEWED",
+                token_id: Some(token_id.as_str()),
+                details: json!({ "old_expiry": cur_s, "new_expiry": next.to_yymm() }),
+            },
+        )
+        .await?;
+        tx.commit().await?;
+        tracing::info!(token_id = %token_id, old = %cur_s, new = %next.to_yymm(), "vault: token muddati uzaytirildi");
+        Ok((
+            true,
+            self.profile(token_id.clone(), dpan, next, card, psn, vec![]),
+        ))
     }
 
     /// Sandbox: simulyatsiya qilingan OTP (haqiqiy tizimda SMS/push orqali yuboriladi).
@@ -1118,7 +1225,7 @@ impl Vault {
         }
         let fp = self.fingerprint(dpan)?;
         let Some(row) = sqlx::query(
-            "SELECT t.*, c.expiry AS card_expiry, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct, c.card_id AS cid \
+            "SELECT t.*, c.expiry AS card_expiry_fallback, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct, c.card_id AS cid \
              FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id WHERE t.dpan_fp = $1",
         )
         .bind(fp.0.as_slice())
@@ -1154,7 +1261,7 @@ impl Vault {
             token_id: token_id.clone(),
             state: state_of(&row)?,
             fpan,
-            fpan_expiry: parse_exp("card_expiry")?,
+            fpan_expiry: Self::card_expiry_of(&row)?,
             dpan_expiry: parse_exp("dpan_expiry")?,
             psn: row.try_get::<i64, _>("psn")? as u8,
             device_id: DeviceId::from_hex(&row.try_get::<String, _>("device_id")?)

@@ -913,3 +913,16 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 * Tekshirildi: graf unit testi; e2e `rekeyed_device_keeps_shield_history_locally` va
   `rekey_event_reaches_shield_role` — qayta qo'shish GREEN, nazorat (boshqa qurilma)
   `IDV_NEW_DEVICE_EXISTING_CARD`; tuzatish vaqtincha o'chirilganda ikkala test aynan shu sabab bilan yiqildi.
+
+### Token muddati: UTC+5 va yangilash (2026-10-26, ADR-0022 §4)
+
+* Muddat O'zbekiston vaqti bilan (UTC+5): `CardExpiry::end_unix` mahalliy yarim tun, `is_expired(now)`,
+  `current(now)`; Vault (provisioning, LUK chegarasi, token muddati) va emitent (`54`) bir xil qoidada.
+* `POST /v1/tokens/{id}/renew`: oxirgi `token_renew_before_days` (30) kunda yoki muddat o'tgach DPAN
+  muddati karta muddati doirasida uzaytiriladi; idempotent; audit `TOKEN_RENEWED`; profilda
+  `renew_after`. Har token o'z karta muddatini saqlaydi (migratsiya `1003`). Muddati o'tgan tokenlar
+  chegaralarda hisoblanmaydi.
+* Rust `SoftWallet::renew`; Kotlin `MpayClient.renew`, `CardProfile.expiryYymm/renewAfter` o'zgaruvchan,
+  `WalletStore` saqlaydi, `MpayWallet.renewIfDue` LUK to'ldirishdan oldin.
+* Tekshirildi: unit/vault/e2e (yuqorida, ADR-0022), SQLite va PostgreSQL; `cargo test --workspace` — 236;
+  Kotlin ↔ Rust interop (renew bosqichi) o'tdi; wallet-sdk va demo kompilyatsiyasi.

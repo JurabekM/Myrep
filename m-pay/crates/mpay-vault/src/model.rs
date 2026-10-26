@@ -24,6 +24,8 @@ pub struct VaultConfig {
     pub otp_ttl_secs: i64,
     /// OTP urinishlari chegarasi.
     pub otp_max_attempts: i64,
+    /// Token muddati tugashiga shuncha kun qolganda (yoki o'tgach) uzaytirish mumkin (ADR-0022).
+    pub token_renew_before_days: u32,
 }
 
 impl Default for VaultConfig {
@@ -36,6 +38,7 @@ impl Default for VaultConfig {
             luk: LukPolicy::default(),
             otp_ttl_secs: 300,
             otp_max_attempts: 3,
+            token_renew_before_days: 30,
         }
     }
 }
@@ -83,6 +86,8 @@ pub struct TokenProfile {
     pub aid: String,
     pub scheme: String,
     pub luks: Vec<LukGrant>,
+    /// Shu lahzadan uzaytirish mumkin; `None` — karta muddati tugaydi (uzaytirib bo'lmaydi).
+    pub renew_after: Option<i64>,
 }
 
 impl std::fmt::Debug for TokenProfile {

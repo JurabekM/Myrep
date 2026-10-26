@@ -49,6 +49,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
 * **Qayta attestatsiya** (ADR-0015): `[pqlink] reattest_after_days`; eskirgan qurilma — `REATTEST_REQUIRED`;
   `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`;
   Shield grafida yangi kalit eski qurilmaning davomi (`/internal/shield/rekey`).
+* **Token muddatini yangilash** (ADR-0022): `POST /v1/tokens/{id}/renew` (muhrlangan, bog'langan
+  qurilmadan) — profildagi `renew_after` dan keyin; javob `renewed` + profil (LUK'siz).
 * **Ko'p instansiya** (ADR-0019): `sessions.rs` — PQ Link sessiyalari DB'da (KEK bilan shifrlangan,
   `[pqlink] session_store`), ro'yxatdan o'tish nonce'lari umumiy; `shield_role.rs` — `mpay-server shield`
   (yagona belgilar ombori, ichki API), `shield_client.rs` — `[shield] mode = "remote"` (zaxira bilan).

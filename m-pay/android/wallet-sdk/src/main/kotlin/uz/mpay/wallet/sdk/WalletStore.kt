@@ -41,6 +41,7 @@ class WalletStore(context: Context) {
         val j = JSONObject()
             .put("token_id", p.tokenId).put("dpan", p.dpan).put("expiry", p.expiryYymm).put("psn", p.psn).put("atc", p.atc)
             .put("cvm", p.cvmLimitMinor)
+            .put("renew_after", p.renewAfter ?: JSONObject.NULL)
             .put("luks", JSONArray().apply {
                 p.luks.forEach { put(JSONObject().put("seq", it.seq).put("key", Hex.encode(it.key)).put("exp", it.expiresAt).put("uses", it.usesLeft)) }
             })
@@ -71,6 +72,7 @@ class WalletStore(context: Context) {
             },
             j.getInt("atc"),
             j.optLong("cvm", DEFAULT_CVM_LIMIT_MINOR),
+            if (j.isNull("renew_after")) null else j.getLong("renew_after"),
         )
         cache = p
         return p

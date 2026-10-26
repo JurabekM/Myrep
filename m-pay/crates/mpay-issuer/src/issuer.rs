@@ -425,10 +425,7 @@ impl Issuer {
         // oldin: LUK muddati token muddatidan oshmaydi, aks holda mijoz `Q1` ko'rardi, `54` emas.
         // DPAN muddati sir emas (track2'da bor), ARQC tekshiruvisiz aytish xavfsiz.
         let now = self.clock.now();
-        if view
-            .dpan_expiry
-            .is_expired_at(now.year() as u16, now.month() as u8)
-        {
+        if view.dpan_expiry.is_expired(now) {
             return Err(Reason::TokenExpired);
         }
         match view.luk {

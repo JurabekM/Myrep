@@ -27,6 +27,9 @@ sealed class ProvisionResult {
 /** `POST /v1/tokens/{id}/luks` javobi. */
 class LukBatch(val luks: List<CardLuk>, val cvmLimitMinor: Long?)
 
+/** Token muddatini yangilash natijasi: `renewed = false` — hali erta yoki uzaytirib bo'lmaydi. */
+class RenewResult(val renewed: Boolean, val expiryYymm: String, val renewAfter: Long?)
+
 /** Terminal avtorizatsiyasi natijasi. */
 data class AuthResult(
     val approved: Boolean,
@@ -202,7 +205,10 @@ class MpayClient(
         luks = luks(d.getJSONArray("luks")),
         atc = 0,
         cvmLimitMinor = d.optLong("cvm_limit_minor", DEFAULT_CVM_LIMIT_MINOR),
+        renewAfter = renewAfter(d),
     )
+
+    private fun renewAfter(d: JSONObject): Long? = if (d.has("renew_after")) d.getLong("renew_after") else null
 
     /** P2.6: provisioning `requestHash` — joriy PQ Link sessiyasiga bog'langan ([Integrity]). */
     fun integrityRequestHash(): String {
@@ -240,6 +246,12 @@ class MpayClient(
     fun replenishBatch(tokenId: String): LukBatch {
         val d = sealed("/v1/tokens/$tokenId/luks", JSONObject())
         return LukBatch(luks(d.getJSONArray("luks")), if (d.has("cvm_limit_minor")) d.getLong("cvm_limit_minor") else null)
+    }
+
+    /** Token muddatini yangilash (`renew_after` dan keyin; takroriy chaqiruv xavfsiz; ADR-0022). */
+    fun renew(tokenId: String): RenewResult {
+        val d = sealed("/v1/tokens/$tokenId/renew", JSONObject())
+        return RenewResult(d.getBoolean("renewed"), d.getString("dpan_expiry"), renewAfter(d))
     }
 
     /**

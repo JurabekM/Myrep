@@ -2,7 +2,7 @@
 
 Token Vault: provisioning, ID&V, LUK, lifecycle, detokenizatsiya va audit.
 
-* **Saqlash** (SQLite, `migrations/1001_vault_init.sql`): PAN va DPAN faqat AES-256-GCM shifrmatni
+* **Saqlash** (`migrations/1001_vault_init.sql` …): PAN va DPAN faqat AES-256-GCM shifrmatni
   (KEK → DEK envelope, kontekst AAD `card:{id}:pan` / `token:{id}:dpan`), qidiruv HMAC-SHA256
   barmoq izi bo'yicha. LUK'lar saqlanmaydi — faqat metama'lumot (seq, muddat, limit, foydalanish).
   OTP saqlanmaydi — `HMAC(PAN-IDX, challenge_id)` dan hosil qilinadi.
@@ -11,6 +11,11 @@ Token Vault: provisioning, ID&V, LUK, lifecycle, detokenizatsiya va audit.
 * **Lifecycle**: `PENDING_IDV → ACTIVE ⇄ SUSPENDED → DELETED`; o'chirishda LUK'lar bekor qilinadi.
 * **LUK**: partiya (standart 5), har biri 10 foydalanish / 24 soat; to'ldirish faqat bog'langan
   qurilmadan, faol LUK'lar ≤ 2 × partiya.
+* **Token muddati** (ADR-0022): `min(hozir + token_validity_months, karta muddati)`, sxema vaqti bilan
+  (UTC+5, `CardExpiry::end_unix`). `renew_token` — oxirgi `token_renew_before_days` kunda (yoki muddat
+  o'tgach) karta muddati doirasida uzaytiradi (DPAN, PSN, LUK'lar o'zgarmaydi; audit `TOKEN_RENEWED`;
+  takroriy chaqiruv o'zgartirmaydi). Har token o'z karta muddatini saqlaydi (migratsiya `1003`). Muddati
+  o'tgan tokenlar chegaralarda hisoblanmaydi — yangilangan karta bilan qayta qo'shish mumkin.
 * **Detokenizatsiya**: faqat [`VaultDetokenizer`] porti (issuer'ga beriladi, HTTP'da yo'q):
   `lookup` (o'zgartirmaydi) va `consume` (ARQC'dan keyin: LUK hisoblagichi + ATC monotonligi, atomar).
 * **Audit**: har o'zgarish va detokenizatsiya — append-only (trigger'lar), xesh-zanjirli; `verify`.

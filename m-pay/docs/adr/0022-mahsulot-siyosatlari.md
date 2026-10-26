@@ -38,9 +38,24 @@
      aks holda mijoz tushunarsiz `Q1` ko'rardi. DPAN muddati sir emas (track2'da bor);
    * LUK `expires_at` = `min(hozir + ttl, token muddati tugashi)`; muddati o'tgan tokenga LUK
      berilmaydi (`410 TOKEN_EXPIRED`);
-   * muddat oyning oxirigacha, UTC bo'yicha (`CardExpiry::end_unix`). `TODO(spec):` vaqt mintaqasi
-     (O'zbekiston UTC+5) va muddati yaqinlashgan tokenni yangilash (re-provisioning yoki DPAN
-     muddatini uzaytirish) — sxema qoidasi kerak.
+   * muddat oyning oxirigacha, **sxema vaqti bilan — O'zbekiston, UTC+5** (3-faza tayyorgarligida;
+     avval UTC edi): `12/29` 2030-01-01 00:00 Toshkent (2029-12-31 19:00 UTC) gacha amal qiladi.
+     `CardExpiry::end_unix`, `is_expired(now)`, `current(now)` — Vault, emitent va token muddatini
+     hisoblash bir xil qoidada; server qaysi mintaqada ishlamasin natija o'zgarmaydi.
+     `TODO(spec):` haqiqiy sxema qoidasi (M-Pay Test Scheme profilining tanlovi);
+   * **yangilash** (3-faza tayyorgarligi): `POST /v1/tokens/{id}/renew` — muhrlangan, bog'langan
+     qurilmadan. Oxirgi `[vault] token_renew_before_days` (standart 30) kunda yoki muddat o'tgach DPAN
+     muddati `min(hozir + token_validity_months, karta muddati)` gacha uzaytiriladi; DPAN, PSN va LUK'lar
+     o'zgarmaydi (LUK muddati eski chegara bilan qoladi), audit `TOKEN_RENEWED`. Hali erta yoki
+     uzaytirib bo'lmasa — `renewed = false` va joriy profil (takroriy chaqiruv xavfsiz: javob yo'qolsa
+     qurilma qayta so'raydi). Profilda `renew_after` (yo'q — karta muddati tugaydi). Hamyon (Kotlin
+     `MpayWallet.renewIfDue`) LUK to'ldirishdan oldin tekshiradi;
+   * uzaytirish chegarasi — tokenning **o'z** karta muddati (provisioning'da ID&V bilan tasdiqlangan,
+     `vault_tokens.card_expiry`): PAN'ni biladigan, lekin OTP'ni o'tmagan provisioning boshqa tokenlarning
+     chegarasini o'zgartira olmaydi;
+   * karta qayta chiqarilsa (yangi muddat) — kartani qayta qo'shish (ID&V bilan). Muddati o'tgan
+     tokenlar chegaralarda (`CARD_ALREADY_ON_DEVICE`, qurilma/karta soni) hisoblanmaydi.
+     `TODO(spec):` emitentdan karta yangilanishi xabari (token yangilanishi qayta qo'shishsiz).
 5. **Karta–qurilma** — `[vault]`:
    * `max_devices_per_card` (standart 3; 0 — cheklanmagan): boshqa qurilmalar soni chegaraga yetsa
      **`409 TOO_MANY_DEVICES`**; o'chirilgan (DELETED) va muddati o'tgan OTP'li PENDING tokenlar
@@ -56,6 +71,10 @@
   `[vault] max_devices_per_card`, `token_validity_months`, `max_tokens_per_device`.
 * `step_up` standart bo'lgani uchun REVIEW'dagi biometriyasiz to'lovlar endi `Q2` oladi (avval
   tasdiqlanardi). Demo va e2e testlar yangilandi.
+* Tekshirilgan (muddat va yangilash): `pan` unit (UTC+5 chegarasi: 18:59:59 UTC amal qiladi, 19:00 —
+  tugadi), vault `token_renewal_window_and_card_cap` va `expired_token_frees_card_and_device_uzbekistan_time`,
+  e2e `token_renewal_over_http` (muddati o'tgan token `54`/`410` → renew → to'lov `00`, LUK), Kotlin ↔ Rust
+  interop (`renew` javobi), SQLite va PostgreSQL.
 * Tekshirilgan: emitent (`iso_flow`: `Q2` chegara va REVIEW, `54` LUK'dan oldin, `approve`/`decline`),
   vault (qurilmalar chegarasi, takroriy karta, o'chirilgandan keyin joy bo'shashi, LUK muddati
   chegarasi, muddati o'tgan tokenga LUK yo'q), e2e `p2_policy` (profil va LUK javobida chegara,
