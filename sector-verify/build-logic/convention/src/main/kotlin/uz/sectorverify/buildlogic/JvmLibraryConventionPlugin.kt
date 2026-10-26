@@ -25,6 +25,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
             add("testImplementation", libs.lib("junit-jupiter"))
             add("testImplementation", libs.lib("kotest-assertions"))
             add("testImplementation", libs.lib("kotest-property"))
+            add("testImplementation", libs.lib("kotlinx-coroutines-test"))
             add("testRuntimeOnly", libs.lib("junit-platform-launcher"))
         }
     }

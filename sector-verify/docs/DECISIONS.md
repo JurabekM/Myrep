@@ -35,3 +35,24 @@ Har bir yozuv: kontekst → qaror → sabab. Promptdan chetga chiqishlar albatta
 - **Kontekst:** Myrep qoidasi: barcha ilovalar standart holda Claude Code dark theme uslubida; prompt "quyosh" yuqori kontrastli rejimni talab qiladi.
 - **Qaror:** `ThemeMode { DARK (standart), LIGHT, SUN }`. Tokenlar `baraka_oilasi/shared/design-tokens/tokens.json` dan; SUN — qora fon, oq matn (kontrast ≥ 15:1). Noto Sans ilova ichida (`core/ui/res/font`, OFL).
 - **Sabab:** Foydalanuvchi qarori 2026-10-15 + dala sharoiti talabi.
+
+## ADR-008 — Algoritm talqinlari (1-bosqich, 2026-10-26)
+Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyzer`/`AnalysisConfig` da):
+1. **Namuna yoshi (6.1.2):** `CellSample` ga `rxNanos` (ilova namunani olgan vaqt, `elapsedRealtimeNanos`) qo'shildi; yosh = `rxNanos − tNanos`. Room `cell_sample` jadvalida `rx_nanos` ustuni bo'ladi.
+2. **GNSS sifati (6.1.4):** `accM > 15` yoki `speedMps > 8` bo'lgan fix'lar interpolyatsiyadan **oldin** chiqariladi; natijada yaqin fix bo'lmagan namuna 6.1.3 bo'yicha tashlanadi.
+3. **Bin markazi:** `(i + 0.5)·binDeg`; sektor oynasi — reja azimutiga eng yaqin 18 bin.
+4. **Umumiy qamrov yetarli bo'lmasa** almashinuv qidirilmaydi va barcha sektorlar INCONCLUSIVE/LOW_COVERAGE ("qamrov yo'q bo'lsa FAIL berilmaydi").
+5. **Almashinuv (6.7) kirishi:** "bahosi bor" = bin ≥ 6 bo'lgan har qanday sektor (sektor qamrovidan qat'i nazar). Almashgan sektor qamrovi u **haqiqatda nurlanayotgan** sektorning reja oynasi bo'yicha tekshiriladi.
+6. **Sabab (6.8):** sektor label'ining boshqa ARFCN'lari bo'lmasa → `CELL_CONFIG_SWAP`; qolganlari almashmagan va PASS → `BAND_PORT_SWAP`; hammasi bir xil nishonga almashgan → `CELL_CONFIG_SWAP`; aralash holat → `BAND_PORT_SWAP`.
+7. **Burilish:** `20 < |δ| ≤ 45`, barcha baholangan ARFCN'larda bir xil ishora, farq ≤ 10° (bitta ARFCN ham yetarli).
+8. **PCI_MISSING** ustuvorligi bin < 6 dan yuqori (namuna < 20 bo'lsa bin ham kam bo'ladi), lekin faqat umumiy qamrov yetarli bo'lganda.
+9. **PCI_UNEXPECTED:** ≤ 300 m dagi namunalar soni ≥ `minSamplesPresent` (20) bo'lishi ham talab qilinadi (shovqindan himoya); natija `label = null`, INCONCLUSIVE, sayt verdiktiga ta'sir qilmaydi.
+10. **Sayt verdikti:** biror sektor FAIL yoki CRITICAL topilma → FAIL; aks holda INCONCLUSIVE bo'lsa → INCONCLUSIVE; WARN → WARN; aks holda PASS.
+11. **Bootstrap seed:** har bir cell uchun `Random(seed xor stableHash(key))` — natija xarita tartibiga bog'liq emas.
+
+## ADR-009 — Monte-Karlo AC ta'riflari (2026-10-26)
+- **AC-01:** xato = to'liq almashinuv (2/3 sektor aylanmasi, barcha ARFCN) yoki bitta band almashinuvi; qamrov 70–100%. "Aniqlandi" = har bir almashgan cell kutilgan nishon label'i bilan SWAP topilmasida bor.
+- **AC-02:** xato yo'q (20% holatda PCI'ni qayta ishlatuvchi qo'shni sayt), qamrov 50–100%; sayt verdikti FAIL → noto'g'ri FAIL.
+- **AC-03:** xato yo'q, qamrov 70–100%; |α̂ − haqiqiy α| medianasi (haqiqiy α = reja + o'rnatish xatosi σ = 3°).
+- **AC-04:** qamrov 30–60% (yarmi almashinuvli); sayt va barcha rejadagi sektorlar INCONCLUSIVE.
+- Tasodifiy parametrlar: 3–6 sektor, 1–3 ARFCN, halqa/to'rtburchak, radius 150–400 m, 80% piyoda (1.4 m/s) / 20% 5 m/s, soya σ 6–8 dB, `pNeighbor` 0.5–1.0, bootstrap 50.

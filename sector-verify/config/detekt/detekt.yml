@@ -33,6 +33,9 @@ naming:
     active: false
 
 style:
+  MaxLineLength:
+    maxLineLength: 140
+    excludeCommentStatements: true
   MagicNumber:
     ignoreNumbers: ['-1', '0', '1', '2', '3', '4', '10', '100', '1000', '1_000', '0.5', '90', '180', '360', '1e6', '1e9', '1_000_000', '1_000_000_000']
     ignorePropertyDeclaration: true
