@@ -80,7 +80,13 @@ internal fun Project.configureQuality() {
     }
     tasks.withType<Test>().configureEach {
         useJUnitPlatform {
-            if (!project.hasProperty("slow")) excludeTags("slow")
+            // "slow": 1000-iteration Monte-Carlo (-Pslow). "perf": timing budgets, run alone in CI (-Pperf), ADR-015.
+            if (project.hasProperty("perf")) {
+                includeTags("perf")
+            } else {
+                excludeTags("perf")
+                if (!project.hasProperty("slow")) excludeTags("slow")
+            }
         }
         maxHeapSize = "2g"
         testLogging { events("failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }

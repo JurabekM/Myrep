@@ -81,3 +81,8 @@ Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyz
 - **Tanlash:** shart — noto'g'ri FAIL ≤ 3%; so'ng AC-08 aniqlash ↑, noto'g'ri FAIL ↓, sog' cell'lar PASS ↑, standartdan eng kam o'zgarish.
 - **"Aniqlandi"** ta'rifi AC-01 bilan bir xil: cell o'z ARFCN'idagi SWAP topilmasida bor (yoki sektor sababi swap).
 - **Simulyatsiya ma'lumoti standartni o'zgartirish uchun asos emas** (§11): `docs/reports/calibration-sim-demo.md` faqat vosita ishlashini ko'rsatadi. Standart config faqat pilot (H2) ma'lumoti bilan yangilanadi.
+
+## ADR-015 — Jonli tahlil inkremental; ishlash testlari alohida (5-bosqich, 2026-10-26)
+- **Kontekst:** 18 cell'li eng og'ir holatda jonli yangilanish JVM'da 25–70 ms edi (tozalash ~60%); o'rta telefon ~5× sekin → 300 ms byudjetga yaqin/ortiq.
+- **Qaror:** `LiveAnalyzer` inkremental: GNSS oralig'i endi o'zgarmaydigan namunalar bir marta tozalanadi; natija to'liq qayta hisoblash bilan aynan teng (test). Natija: ~9 ms (JVM). Yakuniy tahlil ~0.5 s.
+- **Testlar:** `PerformanceTest` (`@Tag("perf")`) JVM'da byudjetning 1/5 qismini talab qiladi (telefon zaxirasi). Parallel `check` ichida vaqt shovqinli bo'lgani uchun u CI'da alohida qadamda (`-Pperf --no-parallel`) ishlaydi — o'chirilmagan, chegara yumshatilmagan. Haqiqiy telefondagi raqamlar H2 da tasdiqlanadi.
