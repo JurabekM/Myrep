@@ -7,6 +7,8 @@ plugins {
 application {
     mainClass.set("uz.sectorverify.replay.MainKt")
     applicationName = "sv-replay"
+    // Uzbek/Russian output on any console (Windows cp1251/cp866, POSIX C locale).
+    applicationDefaultJvmArgs = listOf("-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8")
 }
 
 dependencies {
