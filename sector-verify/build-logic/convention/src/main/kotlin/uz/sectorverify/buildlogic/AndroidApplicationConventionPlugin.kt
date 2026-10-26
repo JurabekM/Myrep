@@ -1,6 +1,7 @@
 package uz.sectorverify.buildlogic
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -14,6 +15,10 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
         extensions.configure<ApplicationExtension> {
             configureAndroidCommon(this)
             defaultConfig.targetSdk = Sdk.TARGET
+        }
+        // Compose test activity exists only in debug (ui-test-manifest), so host tests run on debug (ADR-012).
+        extensions.configure<ApplicationAndroidComponentsExtension> {
+            beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = false }
         }
         extensions.configure<KotlinAndroidProjectExtension> {
             compilerOptions { svDefaults() }

@@ -59,9 +59,19 @@ Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyz
 
 ## ADR-010 — Room sxemasiga qo'shimcha ustunlar (2-bosqich, 2026-10-26)
 - **Kontekst:** 5.2 jadvali saytlar ro'yxatidagi "oxirgi verdikt", natija ekranidagi CI yarim kengligi/qamrov/yetishmayotgan binlar va tiklashda SIM'ni bilish uchun yetarli emas.
-- **Qaror:** `cell_sample.rx_nanos` (ADR-008.1), `session.verdict`, `session.coverage_pct`, `session.subscription_id`, `sector_result.detail_json` (to'liq `SectorResult`). `sector_result` dagi baholash ustunlari INCONCLUSIVE uchun nullable. `sector_result.sector_id` — `ON DELETE SET NULL` (reja qayta import qilinganda natija saqlanadi).
+- **Qaror:** `cell_sample.rx_nanos` (ADR-008.1), `session.verdict`, `session.coverage_pct`, `session.subscription_id`, `session.result_json` (to'liq `SessionResult` — hisobot uchun), `sector_result.detail_json` (to'liq `SectorResult`). `sector_result` dagi baholash ustunlari INCONCLUSIVE uchun nullable. `sector_result.sector_id` — `ON DELETE SET NULL` (reja qayta import qilinganda natija saqlanadi).
 - **Sabab:** Xom jadvallar o'zgarmaydi; qo'shimchalar faqat hosila ma'lumot.
 
 ## ADR-011 — Survey arxitekturasi (2-bosqich, 2026-10-26)
 - **Qaror:** Android'siz `SurveyEngine` (oqimlar → `BufferedSampleWriter` + xotiradagi nusxa → har 5 s `LiveAnalyzer`), `SurveyForegroundService` faqat "yelim" kod. Holat UI'ga `SurveyController` (singleton StateFlow) orqali. Servis `START_NOT_STICKY`: jarayon o'ldirilsa, keyingi ishga tushishda RUNNING sessiya topilib davom ettirish taklif qilinadi (§7), avtomatik qayta boshlanmaydi.
 - **Sabab:** Engine'ni virtual vaqt bilan testlash mumkin; foydalanuvchi bilmagan holda fon yig'ish bo'lmaydi.
+
+## ADR-012 — Host testlar faqat debug variantida (3-bosqich, 2026-10-26)
+- **Kontekst:** Compose UI testlari `ui-test-manifest` (test activity) ni talab qiladi; u faqat `debugImplementation` — release APK'ga test activity kirmasligi kerak. `testReleaseUnitTest` shu sababli ishlamaydi va vaqtni ikki baravar oshiradi.
+- **Qaror:** Barcha Android modullarida release uchun `enableUnitTest = false`. Release build'ning to'g'riligi 5-bosqichda `assembleRelease`/`bundleRelease` va emulyatordagi smoke test bilan tekshiriladi.
+
+## ADR-013 — Til va hisobot (3-bosqich, 2026-10-26)
+- **Ilova tili:** `LocaleStore` (SharedPreferences ko'zgusi) + `attachBaseContext` da kontekstni o'rash (Activity va SurveyForegroundService). Standart — o'zbek, tizim tilidan qat'i nazar. Til o'zgarganda Activity qayta yaratiladi.
+- **Hisobot tili** ilovadan mustaqil: PDF `createConfigurationContext(locale)` bilan chiziladi.
+- **PDF ranglari:** qog'ozga chop etish uchun Myrep light tokenlari (oq fon); ilova UI esa standart dark.
+- **Testda til:** Robolectric tizim tili inglizcha bo'lgani uchun UI testlari `qualifiers = "b+uz"` yoki MainActivity orqali ishlaydi.
