@@ -54,7 +54,7 @@ class EncryptedDatabaseTest {
     }
 
     @Test
-    fun databaseFileIsEncrypted() = runBlocking {
+    fun databaseFileIsEncrypted(): Unit = runBlocking {
         context.deleteDatabase(SectorVerifyDatabase.NAME)
         val db = DatabaseFactory.encrypted(context)
         RoomPlanRepository(db.siteDao(), Clock.SYSTEM).importCsv(
@@ -77,7 +77,7 @@ class EncryptedDatabaseTest {
 
     /** AC-07: the process dies mid-session; on restart the RUNNING session is found with ≤ 2 s of data lost. */
     @Test
-    fun forcedStopLosesAtMostTwoSeconds() = runBlocking {
+    fun forcedStopLosesAtMostTwoSeconds(): Unit = runBlocking {
         System.loadLibrary("sqlcipher")
         val name = "ac07.db"
         context.deleteDatabase(name)
