@@ -1,8 +1,8 @@
-// Evaluator uchun 100% qator va branch coverage talabi (docs/PROMPT.md, 1-faza).
+// Xavfsizlik uchun muhim kod (evaluator, solver, kanonik JSON) — 100% qator va branch coverage.
 // Foydalanish: dart run coverage:test_with_coverage --branch-coverage && dart run tool/check_coverage.dart
 import 'dart:io';
 
-const _required = ['lib/src/eval/'];
+const _required = ['lib/src/eval/', 'lib/src/solver/', 'lib/src/crypto/'];
 
 void main(List<String> args) {
   final lcov = File(args.isEmpty ? 'coverage/lcov.info' : args.first);
@@ -32,7 +32,7 @@ void main(List<String> args) {
     }
   }
   if (seen.isEmpty || branchRecords == 0) {
-    stderr.writeln('Evaluator fayllari yoki branch ma\'lumotlari topilmadi (--branch-coverage?)');
+    stderr.writeln('Tekshiriladigan fayllar yoki branch ma\'lumotlari topilmadi (--branch-coverage?)');
     exit(2);
   }
   var ok = true;
@@ -44,5 +44,7 @@ void main(List<String> args) {
     stderr.writeln('$f: qoplanmagan qatorlar $l, branchlar (qator) $b');
   }
   if (!ok) exit(1);
-  stdout.writeln('Evaluator: ${seen.length} fayl, 100% qator va branch coverage ($branchRecords branch).');
+  stdout.writeln(
+    'Evaluator/solver/crypto: ${seen.length} fayl, 100% qator va branch coverage ($branchRecords branch).',
+  );
 }

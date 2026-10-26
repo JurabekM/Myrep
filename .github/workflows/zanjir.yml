@@ -43,7 +43,7 @@ jobs:
       - run: dart analyze --fatal-infos
       - name: Testlar + branch coverage
         run: dart run coverage:test_with_coverage --branch-coverage
-      - name: Evaluator — 100% qator va branch coverage
+      - name: Evaluator, solver, crypto — 100% qator va branch coverage
         run: dart run tool/check_coverage.dart
 
   app:

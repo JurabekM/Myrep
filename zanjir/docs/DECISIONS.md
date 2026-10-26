@@ -75,3 +75,31 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
       mumkin emas (asbob xatosi) → NEEDS_REVIEW (`invalid_value`), PASS emas. Bog'lanish 0,00 Ω va izolyatsiya 0 MΩ — haqiqiy natija.
 - **Oqibat:** `eval_detail` da `matched_norms`, `unknown_norms`, `checks[]` (formula, chegara, qiymat, zaxira), `strictest_norm_id`,
   `reason`, kirish qiymatlari, `norm_set_version`, `margin_pct`, `k_corr` saqlanadi. Sabab kodlari inglizcha, UI ularni l10n orqali ko'rsatadi.
+
+## ADR-0006: Ajratish solveri (`planIsolation`) tafsilotlari
+
+- **Sana:** 2026-10-26 · **Holat:** qabul qilingan (2-faza). Ochiq savollar — `docs/PROGRESS.md` (S11–S14).
+- **Kontekst:** Prompt 5.3 algoritmni beradi; chekka holatlar va natija formati aniqlashtirilishi kerak.
+- **Qaror:**
+  1. **Kesim:** tugun `v_in → v_out` (narx — `cut_costs.dart`, ro'yxatda yo'q tugun va zona — ∞), qirralar ∞, super-manba → S_r,
+     zona → super-oqim. Edmonds–Karp; ∞ = barcha chekli narxlar yig'indisi + 1. Teng narxli kesimlardan **zonaga eng yaqini**:
+     qoldiq tarmoqda super-oqimga yetadigan uchlar to'plami bo'yicha kesim (yagona, maksimal oqim tanloviga bog'liq emas).
+  2. **Determinizm:** qo'shnilar ID bo'yicha saralanadi — tugun/qirra tartibi natijaga ta'sir qilmaydi (property test tekshiradi).
+  3. **Zona ichidagi manba** (kondensatordan tashqari) → `Blocked(source_in_zone)`: reja avtomatik tuzilmaydi (S11).
+     Zona ichidagi kondensator manba hisoblanmaydi, `CAPACITOR_IN_ZONE` ogohlantirishi beriladi.
+  4. **S_r bo'sh** (graf bo'yicha zonaga hech qaysi manba yetmaydi) → kesimsiz reja + `NO_SOURCE_REACHABLE`; kuchlanish
+     yo'qligini tekshirish va yerga ulash har bir zona tugunida baribir majburiy.
+  5. **Kirish nuqtalari:** zonaga qo'shni va manbadan zonaga kirmasdan yetib boriladigan tugunlar (kesimdan oldingi graf bo'yicha).
+     Manbaga ulanmagan "pastki" qo'shnilar kirish hisoblanmaydi (S13). Har bir kirish uchun bitta tekshirish va bitta yerga ulash qadami.
+  6. **Teskari manbalar** (1-qadam): S_r dagi PV (AC, keyin DC), generator, UPS, akkumulyator. Tarmoq/transformator — kesim orqali.
+  7. **Ogohlantirishlar:** zona komponentidagi `verified = false` tugunlar; zonadagi **har bir** kabel (uzunlik chegarasi yo'q —
+     konservativ, `length_m` parametr sifatida, S12); S_r dagi PV — DC tomoni; TN-C yoki zonaga tegadigan PEN o'tkazgich;
+     kesimdagi CONTACTOR/ATS; yerga ulash tizimi noma'lum.
+  8. **Mustaqil tekshiruv:** kesimni olib tashlab BFS; yo'l topilsa `Blocked(verification_failed)` va `isolation_cut_verification_failed`
+     log hodisasi (faqat tugun ID'lari).
+  9. **`graph_snapshot_hash`:** kanonik graf (`zanjir.graph/1`: tugunlar — id, kind, label, attrs, verified, panel_id; qirralar —
+     id, tartiblangan uchlar, conductors; earthing_system) → RFC 8785 kanonik JSON → SHA-256. `state` kirmaydi: rejani bajarish
+     apparat holatini o'zgartiradi va reja STALE bo'lib qolmasligi kerak. Shu uchun kanonik JSON'ning Dart qismi 3-fazadan oldinroq qilindi.
+  10. Ilova "ishlash xavfsiz" demaydi: natija — **tavsiya** (`IsolationPlan`), tasdiqlash LEAD/ish rahbari zimmasida (9-faza).
+- **Oqibat:** `IsolationResult.toJson()` → `isolation_plan.steps` / `warnings` JSON. Qadam/ogohlantirish kodlari inglizcha,
+  matnlari l10n'da. Unumdorlik: 2000 tugun — desktop AOT'da ~22 ms (`benchmark/solver_bench.dart`).
