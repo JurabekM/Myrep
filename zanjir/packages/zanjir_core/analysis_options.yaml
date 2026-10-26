@@ -1,5 +1,8 @@
 include: package:lints/recommended.yaml
 
+formatter:
+  page_width: 120
+
 analyzer:
   language:
     strict-casts: true
@@ -8,8 +11,10 @@ analyzer:
 
 linter:
   rules:
-    - always_declare_return_types
-    - avoid_dynamic_calls
-    - prefer_final_locals
-    - prefer_single_quotes
-    - unawaited_futures
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    unawaited_futures: true
+    # Qisqa himoya shartlari bir qatorda: `if (x == null) return ...;`
+    curly_braces_in_flow_control_structures: false

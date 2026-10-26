@@ -1,0 +1,109 @@
+# Golden testlar uchun obyekt graflari. Holatlar (`*.cases.yaml`) shu graflarga tayanadi.
+tn:
+  site: { earthing_system: TN-C-S, u0_volts: 220 }
+  nodes:
+    GRID: { kind: SRC_GRID }
+    QF0: { kind: BREAKER, attrs: { in_a: 63, curve: C } }
+    CABD: { kind: CABLE, attrs: { circuit_role: distribution, circuit_class: power } }
+    SHR1: { kind: PANEL }
+    BUS1: { kind: BUSBAR }
+    # C16 → Ia = 160 A, Zs_max(220 V) = 1,375 Ω
+    QF1: { kind: BREAKER, attrs: { in_a: 16, curve: C } }
+    CAB1: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    SOCK1: { kind: SOCKET_GROUP, attrs: { circuit_role: final } }
+    # B16 → Ia = 80 A, Zs_max = 2,75 Ω
+    QF2: { kind: BREAKER, attrs: { in_a: 16, curve: B } }
+    CAB2: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    # D10 → Ia = 200 A, Zs_max = 1,1 Ω
+    QF3: { kind: BREAKER, attrs: { in_a: 10, curve: D } }
+    CAB3: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    # UZO → C16
+    QD4: { kind: RCD, attrs: { in_a: 40, idn_ma: 30, rcd_type: A, selective: false } }
+    QF4: { kind: BREAKER, attrs: { in_a: 16, curve: C } }
+    SOCK4: { kind: SOCKET_GROUP, attrs: { circuit_role: final } }
+    # RCBO C16 / 30 mA
+    QFD5: { kind: RCBO, attrs: { in_a: 16, curve: C, idn_ma: 30, selective: false } }
+    CAB5: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    FU6: { kind: FUSE, attrs: { in_a: 16 } }
+    CAB6: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    # Selektiv UZO 100 mA
+    QD7: { kind: RCD, attrs: { in_a: 63, idn_ma: 100, rcd_type: A, selective: true } }
+    CAB8: { kind: CABLE, attrs: { circuit_class: secondary } }
+    CABP: { kind: CABLE, attrs: { circuit_class: power, circuit_role: distribution } }
+    # Egri chiziq ko'rsatilmagan avtomat
+    QF9: { kind: BREAKER, attrs: { in_a: 16 } }
+    CAB9: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    # Himoya apparatisiz to'g'ridan-to'g'ri manbaga
+    CAB10: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    # Ikki kirish: C16 va B16
+    QF12A: { kind: BREAKER, attrs: { in_a: 16, curve: C } }
+    QF12B: { kind: BREAKER, attrs: { in_a: 16, curve: B } }
+    BUS12: { kind: BUSBAR }
+    CAB12: { kind: CABLE, attrs: { circuit_role: final, circuit_class: wiring } }
+    PE1: { kind: PE_BAR }
+    GZ1: { kind: EARTH_ELECTRODE, attrs: { role: neutral } }
+    GZ2: { kind: EARTH_ELECTRODE, attrs: { role: repeat } }
+    GZ3: { kind: EARTH_ELECTRODE, attrs: { role: tt } }
+  edges:
+    - [GRID, QF0]
+    - [QF0, CABD]
+    - [CABD, SHR1]
+    - [SHR1, BUS1]
+    - [BUS1, QF1]
+    - [QF1, CAB1]
+    - [CAB1, SOCK1]
+    - [BUS1, QF2]
+    - [QF2, CAB2]
+    - [BUS1, QF3]
+    - [QF3, CAB3]
+    - [BUS1, QD4]
+    - [QD4, QF4]
+    - [QF4, SOCK4]
+    - [BUS1, QFD5]
+    - [QFD5, CAB5]
+    - [BUS1, FU6]
+    - [FU6, CAB6]
+    - [BUS1, QD7]
+    - [SHR1, CAB8]
+    - [BUS1, CABP]
+    - [BUS1, QF9]
+    - [QF9, CAB9]
+    - [GRID, CAB10]
+    - [GRID, QF12A]
+    - [GRID, QF12B]
+    - [QF12A, BUS12]
+    - [QF12B, BUS12]
+    - [BUS12, CAB12]
+    - [SHR1, PE1]
+    - [PE1, GZ1]
+    - [PE1, GZ2]
+    - [PE1, GZ3]
+
+tt:
+  site: { earthing_system: TT, u0_volts: 220 }
+  nodes:
+    GRID: { kind: SRC_GRID }
+    # Eng katta IΔn = 100 mA → Ia = 0,1 A → Ra·ψ ≤ 500 Ω
+    QD_T: { kind: RCD, attrs: { in_a: 63, idn_ma: 100, selective: true } }
+    QD_T2: { kind: RCD, attrs: { in_a: 40, idn_ma: 30, selective: false } }
+    BUS_T: { kind: BUSBAR }
+    PE_T: { kind: PE_BAR }
+    GZ_T: { kind: EARTH_ELECTRODE, attrs: { role: tt } }
+  edges:
+    - [GRID, QD_T]
+    - [QD_T, BUS_T]
+    - [BUS_T, QD_T2]
+    - [BUS_T, PE_T]
+    - [PE_T, GZ_T]
+
+tt_norcd:
+  site: { earthing_system: TT, u0_volts: 220 }
+  nodes:
+    GRID: { kind: SRC_GRID }
+    QF: { kind: BREAKER, attrs: { in_a: 25, curve: C } }
+    PE_T: { kind: PE_BAR }
+    GZ_T: { kind: EARTH_ELECTRODE, attrs: { role: tt } }
+  edges:
+    - [GRID, QF]
+    - [QF, PE_T]
+    - [PE_T, GZ_T]

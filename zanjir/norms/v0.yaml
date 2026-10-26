@@ -24,7 +24,7 @@ norms:
     applies_to:
       node_kinds: [CABLE]
       u0_volts: { min: 0, max: 1000 }
-      attrs: { cable_use: [wiring] }
+      attrs: { circuit_class: [wiring] }
     test_voltage_v: 1000
     rule: { type: min, value: 0.5 }
     unit: MOhm
@@ -47,7 +47,7 @@ norms:
     title: "Ikkilamchi zanjirlar"
     measurement_type: INSULATION
     applies_to:
-      node_kinds: [CABLE, PANEL]
+      node_kinds: [CABLE]
       attrs: { circuit_class: [secondary] }
     test_voltage_v: 1000
     rule: { type: min, value: 1.0 }
@@ -61,7 +61,7 @@ norms:
     applies_to:
       node_kinds: [CABLE]
       u0_volts: { min: 0, max: 1000 }
-      attrs: { cable_use: [power] }
+      attrs: { circuit_class: [power] }
     test_voltage_v: 2500
     rule: { type: min, value: 0.5 }
     unit: MOhm

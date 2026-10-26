@@ -41,7 +41,7 @@ zanjir/
 ## Buyruqlar
 Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qayta o'rnatiladi, ADR-0003), Python 3.12 + `uv`.
 - Yadro: `cd packages/zanjir_core && dart format --output=none --set-exit-if-changed . && dart analyze --fatal-infos && dart test`
-- Coverage (1-fazadan): `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage`
+- Coverage: `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage && dart run tool/check_coverage.dart` (evaluator — 100% qator va branch)
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
 - Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest`
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
@@ -64,6 +64,13 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Izohlar, commit xabarlari (ushbu loyiha uchun foydalanuvchi talabi), README, `docs/*`, hisobotlar — o'zbekcha (lotin).
 - Kod, identifikatorlar, buyruqlar, log kalitlari — inglizcha.
 - UI: `uz` (standart) va `ru`, `gen-l10n` + ARB; qattiq yozilgan matn yo'q.
+
+## Yadro (`zanjir_core`) xaritasi
+- `lib/src/model/` — enumlar va entitylar; `lib/src/graph/` — graf, BFS, yuqoridagi himoya apparati.
+- `lib/src/norms/` — normalar modeli, qat'iy YAML yuklovchi, qo'llanish sharti.
+- `lib/src/eval/` — `evaluate()`, `rule_check.dart` (umumiy qoida tekshiruvi), `evaluators/*` (o'lchov turlari bo'yicha).
+- Golden testlar: `test/golden/*.cases.yaml` + `graphs.yaml`; har normaga ≥ 3 holat (meta-test tekshiradi).
+- Baholash semantikasi: ADR-0002, ADR-0005. Sabab kodlari (`reason`) — barqaror inglizcha kalitlar.
 
 ## UI
 - Standart mavzu — Myrep dark tokenlari (`../CLAUDE.md` jadvali), light — ixtiyoriy. Shrift: ilova ichidagi Noto Sans.

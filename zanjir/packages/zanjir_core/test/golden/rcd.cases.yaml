@@ -1,0 +1,278 @@
+# UZO (RCD). QD4: umumiy, IΔn 30 mA; QD7: selektiv, IΔn 100 mA; QFD5: RCBO, 30 mA.
+# IΔn da vaqt normasi va RCD-RAMP (o'chish toki) birga tekshiriladi.
+
+- name: RCD-1X — 24 ms, 21 mA
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 21, tripped: true }
+  expect: PASS
+  checks: { RCD-1X: PASS, RCD-RAMP: PASS }
+
+- name: RCD-1X — aynan 300 ms va aynan IΔn (30 mA)
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 300, trip_current_ma: 30, tripped: true }
+  expect: PASS
+  checks: { RCD-1X: PASS, RCD-RAMP: PASS }
+
+- name: RCD-1X — 310 ms → FAIL
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 310, trip_current_ma: 21, tripped: true }
+  expect: FAIL
+  norm: RCD-1X
+  checks: { RCD-1X: FAIL, RCD-RAMP: PASS }
+
+- name: RCD-RAMP — aynan 0,5·IΔn (15 mA) — qat'iy tengsizlik → FAIL
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 15, tripped: true }
+  expect: FAIL
+  norm: RCD-RAMP
+  checks: { RCD-1X: PASS, RCD-RAMP: FAIL }
+
+- name: RCD-RAMP — 31 mA > IΔn → FAIL
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 31, tripped: true }
+  expect: FAIL
+  norm: RCD-RAMP
+
+- name: RCD-RAMP — o'chish toki kiritilmagan → NEEDS_REVIEW
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 24, tripped: true }
+  expect: NEEDS_REVIEW
+  norm: RCD-RAMP
+  reason: value_missing
+  checks: { RCD-1X: PASS, RCD-RAMP: NEEDS_REVIEW }
+
+- name: RCD-RAMP — UZO'da idn_ma yo'q → NEEDS_REVIEW
+  node: QD4
+  type: RCD_TRIP
+  attrs: { QD4: { idn_ma: null } }
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 21, tripped: true }
+  expect: NEEDS_REVIEW
+  norm: RCD-RAMP
+  reason: device_attrs_missing
+
+- name: vaqt FAIL, tok yo'q — FAIL ustun
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 400, tripped: true }
+  expect: FAIL
+  norm: RCD-1X
+
+- name: vaqt kiritilmagan → NEEDS_REVIEW
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_current_ma: 21, tripped: true }
+  expect: NEEDS_REVIEW
+  norm: RCD-1X
+  reason: value_missing
+
+- name: o'chmadi (tripped=false) → FAIL
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, tripped: false }
+  expect: FAIL
+  reason: rcd_not_tripped
+
+- name: tripped kiritilmagan → NEEDS_REVIEW
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 21 }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: tripped mantiqiy emas → NEEDS_REVIEW
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 21, tripped: "ha" }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: 0,5·IΔn sinovi (o'chmasligi kerak) → NEEDS_REVIEW (ADR-0002 S4)
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 0.5, tripped: false }
+  expect: NEEDS_REVIEW
+  reason: rcd_multiplier_below_1
+
+- name: multiplier kiritilmagan → normani aniqlab bo'lmaydi
+  node: QD4
+  type: RCD_TRIP
+  values: { trip_time_ms: 24, tripped: true }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: multiplier 3 — normasi yo'q
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 3, trip_time_ms: 24, tripped: true }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: selective atributi yo'q → normani aniqlab bo'lmaydi
+  node: QD4
+  type: RCD_TRIP
+  attrs: { QD4: { selective: null } }
+  values: { multiplier: 1.0, trip_time_ms: 24, trip_current_ma: 21, tripped: true }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: RCD-2X — 100 ms
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 2, trip_time_ms: 100, tripped: true }
+  expect: PASS
+  norm: RCD-2X
+
+- name: RCD-2X — aynan 150 ms
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 2, trip_time_ms: 150, tripped: true }
+  expect: PASS
+  norm: RCD-2X
+
+- name: RCD-2X — 151 ms → FAIL
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 2, trip_time_ms: 151, tripped: true }
+  expect: FAIL
+  norm: RCD-2X
+
+- name: RCD-5X — 20 ms
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 20, tripped: true }
+  expect: PASS
+  norm: RCD-5X
+
+- name: RCD-5X — aynan 40 ms
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 40, tripped: true }
+  expect: PASS
+  norm: RCD-5X
+
+- name: RCD-5X — 45 ms → FAIL
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 45, tripped: true }
+  expect: FAIL
+  norm: RCD-5X
+
+- name: RCBO — 1·IΔn, 20 ms, 25 mA
+  node: QFD5
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 20, trip_current_ma: 25, tripped: true }
+  expect: PASS
+  checks: { RCD-1X: PASS, RCD-RAMP: PASS }
+
+- name: RCD-1X-S — 200 ms, 80 mA
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 200, trip_current_ma: 80, tripped: true }
+  expect: PASS
+  checks: { RCD-1X-S: PASS, RCD-RAMP: PASS }
+
+- name: RCD-1X-S — aynan 130 ms
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 130, trip_current_ma: 80, tripped: true }
+  expect: PASS
+  checks: { RCD-1X-S: PASS }
+
+- name: RCD-1X-S — aynan 500 ms
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 500, trip_current_ma: 80, tripped: true }
+  expect: PASS
+  checks: { RCD-1X-S: PASS }
+
+- name: RCD-1X-S — 120 ms (juda tez) → FAIL
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 120, trip_current_ma: 80, tripped: true }
+  expect: FAIL
+  norm: RCD-1X-S
+
+- name: RCD-1X-S — 510 ms → FAIL
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 510, trip_current_ma: 80, tripped: true }
+  expect: FAIL
+  norm: RCD-1X-S
+
+- name: RCD-2X-S — 60 ms
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 2, trip_time_ms: 60, tripped: true }
+  expect: PASS
+  norm: RCD-2X-S
+
+- name: RCD-2X-S — 200 ms
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 2, trip_time_ms: 200, tripped: true }
+  expect: PASS
+  norm: RCD-2X-S
+
+- name: RCD-2X-S — 50 ms → FAIL
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 2, trip_time_ms: 50, tripped: true }
+  expect: FAIL
+  norm: RCD-2X-S
+
+- name: RCD-5X-S — 100 ms
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 100, tripped: true }
+  expect: PASS
+  norm: RCD-5X-S
+
+- name: RCD-5X-S — aynan 150 ms
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 150, tripped: true }
+  expect: PASS
+  norm: RCD-5X-S
+
+- name: RCD-5X-S — 160 ms → FAIL
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 160, tripped: true }
+  expect: FAIL
+  norm: RCD-5X-S
+
+- name: RCD-5X-S — 40 ms → FAIL
+  node: QD7
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 40, tripped: true }
+  expect: FAIL
+  norm: RCD-5X-S
+
+- name: margin_pct 10 — RCD-1X chegarasi 270 ms
+  node: QD4
+  type: RCD_TRIP
+  norm_set: { margin_pct: 10 }
+  values: { multiplier: 1, trip_time_ms: 280, trip_current_ma: 21, tripped: true }
+  expect: FAIL
+  norm: RCD-1X
+
+- name: UZO o'lchovi avtomatda — normasi yo'q
+  node: QF1
+  type: RCD_TRIP
+  values: { multiplier: 1, trip_time_ms: 20, tripped: true }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: o'chish vaqti 0 ms → NEEDS_REVIEW, PASS emas
+  node: QD4
+  type: RCD_TRIP
+  values: { multiplier: 5, trip_time_ms: 0, tripped: true }
+  expect: NEEDS_REVIEW
+  norm: RCD-5X
+  reason: invalid_value

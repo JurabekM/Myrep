@@ -1,0 +1,59 @@
+# Metallik bog'lanish (ulanish qarshiligi).
+
+- name: BOND-CONTACT — 0,03 Ω
+  node: PE1
+  type: CONTINUITY_BONDING
+  values: { r_ohm: 0.03, from: PE shina SHR-1, to: Quvur korpusi }
+  expect: PASS
+  norm: BOND-CONTACT
+
+- name: BOND-CONTACT — aynan 0,05 Ω
+  node: PE1
+  type: CONTINUITY_BONDING
+  values: { r_ohm: 0.05, from: PE shina SHR-1, to: Quvur korpusi }
+  expect: PASS
+  norm: BOND-CONTACT
+
+- name: BOND-CONTACT — 0,06 Ω → FAIL
+  node: SHR1
+  type: CONTINUITY_BONDING
+  values: { r_ohm: 0.06, from: PE shina SHR-1, to: Shit korpusi }
+  expect: FAIL
+  norm: BOND-CONTACT
+  reason: out_of_limit
+
+- name: r_ohm kiritilmagan → NEEDS_REVIEW
+  node: PE1
+  type: CONTINUITY_BONDING
+  values: { from: PE shina, to: Quvur }
+  expect: NEEDS_REVIEW
+  norm: BOND-CONTACT
+  reason: value_missing
+
+- name: manfiy qarshilik → NEEDS_REVIEW
+  node: PE1
+  type: CONTINUITY_BONDING
+  values: { r_ohm: -0.01 }
+  expect: NEEDS_REVIEW
+  norm: BOND-CONTACT
+  reason: invalid_value
+
+- name: avtomatda bog'lanish — normasi yo'q
+  node: QF1
+  type: CONTINUITY_BONDING
+  values: { r_ohm: 0.01 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: qo'llanilmaydi deb belgilangan
+  node: PE1
+  type: CONTINUITY_BONDING
+  values: { not_applicable_reason: "Quvur plastik" }
+  expect: NOT_APPLICABLE
+
+- name: asbob 0,00 Ω ko'rsatdi → PASS (bog'lanishda mumkin)
+  node: PE1
+  type: CONTINUITY_BONDING
+  values: { r_ohm: 0.0 }
+  expect: PASS
+  norm: BOND-CONTACT
