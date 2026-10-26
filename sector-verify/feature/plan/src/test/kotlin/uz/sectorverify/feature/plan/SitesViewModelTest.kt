@@ -86,21 +86,21 @@ class SitesViewModelTest {
         val resumer = FakeResumer(allowed = false)
         val vm = SitesViewModel(plans, sessions, resumer)
         vm.resume.first { it != null }!!.siteCode shouldBe "NAV-2"
-        vm.resume() shouldBe null // permission missing: offer stays, warning shown
+        vm.resume() shouldBe null // ruxsat yo'q: taklif qoladi, ogohlantirish ko'rsatiladi
         vm.resumeBlocked.value shouldBe true
         vm.resume.value!!.sessionId shouldBe id
         resumer.allowed = true
         vm.resume() shouldBe id
         resumer.resumed shouldBe listOf(id)
         vm.resume.value shouldBe null
-        // A session the service is still recording is only opened, never abandoned.
+        // Servis hali yozayotgan sessiya faqat ochiladi, hech qachon tashlab ketilmaydi.
         resumer.recording = true
         vm.checkRunning()
         vm.resume.value!!.recording shouldBe true
         vm.abandon()
         resumer.abandoned shouldBe emptyList()
         vm.resume() shouldBe id
-        resumer.resumed shouldBe listOf(id) // not started a second time
+        resumer.resumed shouldBe listOf(id) // ikkinchi marta boshlanmagan
         resumer.recording = false
         vm.checkRunning()
         vm.abandon()

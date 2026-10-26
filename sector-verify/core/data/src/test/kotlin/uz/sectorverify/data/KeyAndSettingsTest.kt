@@ -18,7 +18,7 @@ import uz.sectorverify.model.AnalysisPreset
 import uz.sectorverify.model.DeviceCapabilities
 
 class KeyAndSettingsTest {
-    /** XOR stand-in for the Keystore (the real wrapper is covered by androidTest). */
+    /** Keystore o'rnini bosuvchi XOR (haqiqiy wrapper androidTest'da tekshiriladi). */
     private object FakeWrapper : KeyWrapper {
         override fun wrap(plain: ByteArray) = plain.map { (it.toInt() xor 0x5A).toByte() }.toByteArray()
 

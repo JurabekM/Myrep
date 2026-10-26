@@ -15,7 +15,7 @@ import uz.sectorverify.model.FindingType
 import uz.sectorverify.model.SessionResult
 import uz.sectorverify.model.Verdict
 
-/** Monte-Carlo evaluation of AC-01…AC-04 on simulated sessions (bootstrap 50 iterations for speed, §6.4). */
+/** Simulyatsiya sessiyalarida AC-01…AC-04 ning Monte-Carlo bahosi (tezlik uchun bootstrap 50 iteratsiya, §6.4). */
 object MonteCarlo {
     const val BOOTSTRAP = 50
     private val config = AnalysisConfig(bootstrapIterations = BOOTSTRAP)
@@ -65,7 +65,7 @@ object MonteCarlo {
         Fault.None
     }
 
-    /** Swap detected = every expected swapped cell is in a SWAP finding with the right target label. */
+    /** Swap aniqlandi = kutilgan har bir almashgan yacheyka to'g'ri maqsad yorlig'i bilan SWAP topilmasida bor. */
     fun detected(run: Run): Boolean {
         val found = run.result.findings.filter { it.type == FindingType.SWAP }
         return run.sim.expected.swapMapping.all { (key, label) ->

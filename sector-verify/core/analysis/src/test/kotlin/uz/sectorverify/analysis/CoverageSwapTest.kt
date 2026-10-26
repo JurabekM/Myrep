@@ -50,11 +50,11 @@ class CoverageSwapTest {
     fun `no swap when the plan already fits or the evidence is weak`() {
         val d = SwapDetector(config)
         d.detect(listOf(SwapEntry(key(1), "S1", 0.0, 5.0), SwapEntry(key(2), "S2", 120.0, 110.0))).shouldBeNull()
-        // Better under swap, but one error exceeds 30° → not a confident swap.
+        // Swap holatida yaxshiroq, lekin bitta xato 30° dan oshadi → ishonchli swap emas.
         d.detect(listOf(SwapEntry(key(1), "S1", 0.0, 80.0), SwapEntry(key(2), "S2", 120.0, 0.0))).shouldBeNull()
-        // Sectors 20° apart: cost(id) = 288 < 4 · cost(swap) + 1 = 513.
+        // Sektorlar orasi 20°: cost(id) = 288 < 4 · cost(swap) + 1 = 513.
         d.detect(listOf(SwapEntry(key(1), "S1", 0.0, 12.0), SwapEntry(key(2), "S2", 20.0, 8.0))).shouldBeNull()
-        // Same geometry with stronger evidence: 392 ≥ 4 · 72 + 1 → swap.
+        // Xuddi shu geometriya, kuchliroq dalil bilan: 392 ≥ 4 · 72 + 1 → swap.
         d.detect(listOf(SwapEntry(key(1), "S1", 0.0, 14.0), SwapEntry(key(2), "S2", 20.0, 6.0))).shouldNotBeNull()
         d.detect(listOf(SwapEntry(key(1), "S1", 0.0, 120.0))).shouldBeNull()
         d.detect((1..7).map { SwapEntry(key(it), "S$it", it * 50.0, it * 50.0) }).shouldBeNull()

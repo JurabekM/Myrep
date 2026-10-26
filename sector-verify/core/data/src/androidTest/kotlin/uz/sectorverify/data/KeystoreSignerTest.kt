@@ -12,7 +12,7 @@ import uz.sectorverify.data.security.KeystoreReportSigner
 import uz.sectorverify.format.ReportIntegrity
 import uz.sectorverify.format.ReportJson
 
-/** §8.3 signature round-trip with the real Android Keystore key. */
+/** §8.3 imzolash va tekshirish (round-trip) haqiqiy Android Keystore kaliti bilan. */
 @RunWith(AndroidJUnit4::class)
 class KeystoreSignerTest {
     @Test

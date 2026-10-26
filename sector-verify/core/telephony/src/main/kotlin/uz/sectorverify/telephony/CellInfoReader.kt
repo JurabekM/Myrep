@@ -8,7 +8,7 @@ import android.telephony.CellInfoNr
 import android.telephony.CellSignalStrengthNr
 import uz.sectorverify.model.Rat
 
-/** Copies the public CellInfo getters into [RawCell]; GSM/WCDMA and others are ignored (null). */
+/** Ochiq CellInfo getter'larini [RawCell] ga ko'chiradi; GSM/WCDMA va boshqalar e'tiborsiz qoldiriladi (null). */
 object CellInfoReader {
     private const val NANOS_PER_MS = 1_000_000L
 

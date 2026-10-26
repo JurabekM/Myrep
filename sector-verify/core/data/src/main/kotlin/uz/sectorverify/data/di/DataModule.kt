@@ -31,7 +31,7 @@ import uz.sectorverify.data.settings.SettingsRepository
 import uz.sectorverify.format.ReportSigner
 
 object DatabaseFactory {
-    /** SQLCipher-encrypted Room database; the passphrase comes from [DatabaseKeyStore]. */
+    /** SQLCipher bilan shifrlangan Room bazasi; passphrase [DatabaseKeyStore] dan olinadi. */
     fun encrypted(context: Context): SectorVerifyDatabase {
         System.loadLibrary("sqlcipher")
         val keyFile = File(context.noBackupFilesDir, DatabaseKeyStore.FILE_NAME)

@@ -4,7 +4,7 @@ import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
 
-/** EC P-256 test-only key from test resources. */
+/** Test resurslaridagi faqat testlar uchun EC P-256 kalit. */
 object TestSigner : ReportSigner {
     private fun res(name: String) = requireNotNull(TestSigner::class.java.getResourceAsStream("/$name")).readBytes()
     private val key = KeyFactory.getInstance("EC").generatePrivate(PKCS8EncodedKeySpec(res("test-key.pk8")))

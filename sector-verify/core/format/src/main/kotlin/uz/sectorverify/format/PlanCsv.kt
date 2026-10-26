@@ -21,9 +21,9 @@ enum class PlanErrorCode {
     SITE_COORDS_MISMATCH,
 }
 
-/** [line] is 1-based (the header is line 1). [column] is the CSV column name. */
+/** [line] 1 dan boshlanadi (sarlavha — 1-qator). [column] — CSV ustun nomi. */
 data class PlanError(val line: Int, val code: PlanErrorCode, val column: String? = null, val value: String? = null) {
-    /** Default Uzbek message (UI uses string resources keyed by [code]; CLI prints this). */
+    /** Standart o'zbekcha xabar (UI [code] bo'yicha string resurslardan foydalanadi; CLI shuni chiqaradi). */
     fun messageUz(): String {
         val v = value?.let { " (\"$it\")" }.orEmpty()
         val c = column ?: ""
@@ -51,7 +51,7 @@ data class PlanImport(val sites: List<SitePlan>, val errors: List<PlanError>) {
     val ok: Boolean get() = errors.isEmpty()
 }
 
-/** RF plan CSV (§5.3): parse with full validation, and write back (plan.csv in the session ZIP). */
+/** RF plan CSV (§5.3): to'liq validatsiya bilan parse qilish va qayta yozish (sessiya ZIP'idagi plan.csv). */
 object PlanCsv {
     val HEADER = listOf(
         "site_code", "site_name", "lat", "lon", "mcc_mnc", "sector", "rat", "band", "arfcn", "pci",
@@ -106,7 +106,7 @@ object PlanCsv {
         return PlanImport(sites, errors.sortedBy { it.line })
     }
 
-    /** Reads typed fields of one row and collects their errors. */
+    /** Bitta qatorning tiplangan maydonlarini o'qiydi va ularning xatolarini yig'adi. */
     private class Fields(private val line: Int, private val f: Map<String, String>, val errors: MutableList<PlanError>) {
         fun text(c: String): String = f[c].orEmpty().also { if (it.isEmpty()) errors += PlanError(line, PlanErrorCode.EMPTY_VALUE, c) }
 
@@ -160,7 +160,7 @@ object PlanCsv {
         r.check(arfcn, "arfcn", PlanErrorCode.ARFCN_RANGE) { it >= 0 && isWhole(it) }
         if (rat != null) r.check(pci, "pci", PlanErrorCode.PCI_RANGE) { isWhole(it) && it >= 0 && it <= rat.maxPci }
         if (errors.size != before) return null
-        // No new errors ⇒ every required value is present.
+        // Yangi xato yo'q ⇒ har bir majburiy qiymat mavjud.
         val sector = Sector(label, rat!!, band, arfcn!!.toInt(), pci!!.toInt(), az!!, hpbw ?: Sector.DEFAULT_HPBW_DEG, mech, elec, height)
         return Row(line, code, name, lat!!, lon!!, mccMnc, sector)
     }

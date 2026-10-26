@@ -8,7 +8,7 @@ enum class Rat {
     NR,
     ;
 
-    /** Maximum valid PCI (LTE 0..503, NR 0..1007). */
+    /** Maksimal yaroqli PCI (LTE 0..503, NR 0..1007). */
     val maxPci: Int get() = if (this == LTE) LTE_MAX_PCI else NR_MAX_PCI
 
     companion object {
@@ -17,7 +17,7 @@ enum class Rat {
     }
 }
 
-/** Identifies one radiated cell: (RAT, ARFCN, PCI). */
+/** Bitta nurlanadigan yacheykani aniqlaydi: (RAT, ARFCN, PCI). */
 @Serializable
 data class CellKey(val rat: Rat, val arfcn: Int, val pci: Int) : Comparable<CellKey> {
     override fun compareTo(other: CellKey): Int = compareValuesBy(this, other, { it.rat }, { it.arfcn }, { it.pci })
@@ -25,7 +25,7 @@ data class CellKey(val rat: Rat, val arfcn: Int, val pci: Int) : Comparable<Cell
     override fun toString(): String = "$rat/$arfcn/$pci"
 }
 
-/** One planned sector-carrier from the RF plan. */
+/** RF plandagi bitta rejalashtirilgan sektor-tashuvchi. */
 @Serializable
 data class Sector(
     val label: String,
@@ -61,8 +61,8 @@ data class SitePlan(
 }
 
 /**
- * One raw cell measurement. [tNanos] is the CellInfo timestamp and [rxNanos] the moment the app
- * received it, both on the elapsedRealtimeNanos clock (same clock as [GnssFix.tNanos]).
+ * Bitta xom yacheyka o'lchovi. [tNanos] — CellInfo vaqt belgisi, [rxNanos] — ilova uni qabul qilgan
+ * payt; ikkalasi ham elapsedRealtimeNanos soatida ([GnssFix.tNanos] bilan bir xil soat).
  */
 @Serializable
 data class CellSample(
@@ -93,7 +93,7 @@ data class GnssFix(
     val bearingDeg: Double? = null,
 )
 
-/** Result of DeviceCapabilityProbe (§7), stored in DataStore and exported as capabilities.json. */
+/** DeviceCapabilityProbe natijasi (§7), DataStore'da saqlanadi va capabilities.json sifatida eksport qilinadi. */
 @Serializable
 data class DeviceCapabilities(
     val deviceModel: String,

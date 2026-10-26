@@ -22,7 +22,7 @@ import uz.sectorverify.model.SessionMode
 import uz.sectorverify.model.SessionResult
 import uz.sectorverify.model.SessionStatus
 
-/** `analyze <session.zip> [--config cfg.json] [--out report.json]`: re-runs the analysis on a recorded session. */
+/** `analyze <session.zip> [--config cfg.json] [--out report.json]`: yozib olingan sessiyada tahlilni qayta bajaradi. */
 object Analyze {
     fun run(zip: File, config: AnalysisConfig?, out: File?, print: (String) -> Unit): SessionResult {
         val export = zip.inputStream().use { SessionZip.read(it) }
@@ -62,7 +62,7 @@ object Analyze {
     private const val PERCENT = 100
 }
 
-/** `verify <session.zip>`: report.json hash and signature. */
+/** `verify <session.zip>`: report.json xeshi va imzosi. */
 object Verify {
     fun run(zip: File, print: (String) -> Unit): Boolean {
         val export = zip.inputStream().use { SessionZip.read(it) }
@@ -74,7 +74,7 @@ object Verify {
     }
 }
 
-/** `simulate <out-dir> [--n N] [--seed S]`: simulator sessions as ZIPs plus ground_truth.csv (testing calibrate). */
+/** `simulate <out-dir> [--n N] [--seed S]`: simulyator sessiyalari ZIP ko'rinishida va ground_truth.csv (calibrate'ni sinash uchun). */
 object Simulate {
     fun run(dir: File, n: Int, seed: Long, print: (String) -> Unit): List<File> {
         dir.mkdirs()

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- §5 security: nothing leaves the device through cloud backup or device-to-device transfer. -->
+<!-- §5 xavfsizlik: bulutli zaxira yoki qurilmadan qurilmaga ko'chirish orqali hech narsa qurilmadan chiqmaydi. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" path="." />

@@ -68,14 +68,14 @@ class EncryptedDatabaseTest {
         reopened.close()
     }
 
-    /** Version 1 schema matches the exported JSON; every later version adds a migration test here. */
+    /** 1-versiya sxemasi eksport qilingan JSON bilan mos; har bir keyingi versiya bu yerga migratsiya testini qo'shadi. */
     @Test
     fun schemaVersion1() {
         migrations.createDatabase("migration-test", 1).close()
         migrations.runMigrationsAndValidate("migration-test", 1, true).close()
     }
 
-    /** AC-07: the process dies mid-session; on restart the RUNNING session is found with ≤ 2 s of data lost. */
+    /** AC-07: jarayon sessiya o'rtasida o'ladi; qayta ishga tushganda RUNNING sessiya topiladi, ≤ 2 s ma'lumot yo'qoladi. */
     @Test
     fun forcedStopLosesAtMostTwoSeconds(): Unit = runBlocking {
         System.loadLibrary("sqlcipher")
@@ -104,7 +104,7 @@ class EncryptedDatabaseTest {
             }
         }
         delay(6_300)
-        scope.cancel() // simulated kill: no stop(), no final flush
+        scope.cancel() // o'ldirish imitatsiyasi: stop() yo'q, yakuniy flush yo'q
         db.close()
 
         val restarted = open()

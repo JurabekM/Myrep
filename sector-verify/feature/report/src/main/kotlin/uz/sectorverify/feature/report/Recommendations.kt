@@ -10,7 +10,7 @@ import uz.sectorverify.model.SectorResult
 import uz.sectorverify.model.Verdict
 import uz.sectorverify.ui.R as UiR
 
-/** Recommended action per sector in the chosen language (§8.1 screen 5, §8.2). */
+/** Tanlangan tilda har bir sektor uchun tavsiya etilgan chora (§8.1 5-ekran, §8.2). */
 object Recommendations {
     fun forSector(res: Resources, s: SectorResult, findings: List<Finding>): String {
         val err = s.errorDeg?.let { abs(it).roundToInt().toString() } ?: "—"

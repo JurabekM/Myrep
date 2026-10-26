@@ -11,7 +11,7 @@ private const val USAGE = """sv-replay — Sector Verify sessiyalarini qayta tah
 
 private class UsageException : RuntimeException()
 
-/** Returns the process exit code: 0 ok, 1 verification/analysis failure, 2 usage error. */
+/** Jarayonning chiqish kodini qaytaradi: 0 — muvaffaqiyatli, 1 — tekshirish/tahlil xatosi, 2 — foydalanish xatosi. */
 fun runCli(args: List<String>, print: (String) -> Unit = ::println): Int = try {
     val (positional, options, flags) = parseArgs(args)
     fun arg(i: Int): File = File(positional.getOrNull(i) ?: throw UsageException())
@@ -45,7 +45,7 @@ fun runCli(args: List<String>, print: (String) -> Unit = ::println): Int = try {
 
 private val FLAGS = setOf("--quick")
 
-/** Splits arguments into positionals, `--name value` options and boolean flags. */
+/** Argumentlarni pozitsion argumentlarga, `--name value` opsiyalariga va mantiqiy flaglarga ajratadi. */
 internal fun parseArgs(args: List<String>): Triple<List<String>, Map<String, String>, Set<String>> {
     val positional = ArrayList<String>()
     val options = HashMap<String, String>()

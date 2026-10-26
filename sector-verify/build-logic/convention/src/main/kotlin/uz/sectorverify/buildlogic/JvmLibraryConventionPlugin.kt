@@ -12,7 +12,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("org.jetbrains.kotlin.jvm")
         extensions.configure<JavaPluginExtension> {
-            // No toolchain: CI runs JDK 17; newer local JDKs still emit Java 17 bytecode.
+            // Toolchain yo'q: CI JDK 17 da ishlaydi; yangiroq lokal JDK'lar ham Java 17 bytecode chiqaradi.
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
         }

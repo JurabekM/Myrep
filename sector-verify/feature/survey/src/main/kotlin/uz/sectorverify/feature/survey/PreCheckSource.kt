@@ -16,7 +16,7 @@ import uz.sectorverify.telephony.CellCollector
 import uz.sectorverify.telephony.SimInfo
 import uz.sectorverify.telephony.SubscriptionSelector
 
-/** Device state read by the pre-check screen; faked in tests. */
+/** Oldindan tekshiruv ekrani o'qiydigan qurilma holati; testlarda soxtalashtiriladi. */
 interface PreCheckSource {
     fun locationGranted(): Boolean
 
@@ -53,7 +53,7 @@ class AndroidPreCheckSource @Inject constructor(@ApplicationContext private val 
         if (locationGranted()) CellCollector(context, subscriptionId).samples() else emptyFlow()
 }
 
-/** Runtime permissions the survey asks for; POST_NOTIFICATIONS exists only on API 33+. */
+/** O'lchov so'raydigan runtime ruxsatlar; POST_NOTIFICATIONS faqat API 33+ da mavjud. */
 fun runtimePermissions(): Array<String> = buildList {
     add(Manifest.permission.ACCESS_FINE_LOCATION)
     add(Manifest.permission.ACCESS_COARSE_LOCATION)

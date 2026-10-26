@@ -16,7 +16,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             configureAndroidCommon(this)
             defaultConfig.targetSdk = Sdk.TARGET
         }
-        // Compose test activity exists only in debug (ui-test-manifest), so host tests run on debug (ADR-012).
+        // Compose test activity faqat debug'da bor (ui-test-manifest), shuning uchun host testlar debug'da ishlaydi (ADR-012).
         extensions.configure<ApplicationAndroidComponentsExtension> {
             beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = false }
         }

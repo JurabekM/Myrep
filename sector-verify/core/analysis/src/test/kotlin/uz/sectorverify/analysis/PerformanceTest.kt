@@ -8,16 +8,16 @@ import uz.sectorverify.analysis.sim.Simulator
 import uz.sectorverify.model.AnalysisConfig
 
 /**
- * §5 performance: final analysis < 10 s and one live update < 300 ms on a mid-range phone. On the JVM the
- * worst case (18 cells, 400 m ring, full bootstrap) must stay within 1/5 of those budgets, leaving room
- * for a phone CPU that is several times slower; the on-device numbers are confirmed in H2.
+ * §5 unumdorlik: o'rta toifali telefonda yakuniy tahlil < 10 s va bitta jonli yangilanish < 300 ms. JVM'da
+ * eng yomon holat (18 yacheyka, 400 m halqa, to'liq bootstrap) shu byudjetlarning 1/5 qismidan oshmasligi kerak — bu
+ * bir necha marta sekinroq telefon CPU'si uchun zaxira qoldiradi; qurilmadagi raqamlar H2 da tasdiqlanadi.
  */
 @Tag("perf")
 class PerformanceTest {
     private val sim = Simulator.run(SimScenario(seed = 9, nSectors = 6, nArfcn = 3, radiusM = 400.0))
 
     private fun timeMs(block: () -> Unit): Double {
-        repeat(WARMUP) { block() } // JIT warm-up
+        repeat(WARMUP) { block() } // JIT qizdirish
         val t0 = System.nanoTime()
         repeat(RUNS) { block() }
         return (System.nanoTime() - t0) / 1e6 / RUNS
@@ -33,7 +33,7 @@ class PerformanceTest {
 
     @Test
     fun `live update of the worst case fits the budget`() {
-        // Realistic call: the analyzer already holds the session minus the last 5 s (one live interval).
+        // Real chaqiruv: analizatorda sessiya oxirgi 5 s (bitta jonli interval) dan tashqari allaqachon bor.
         val cut = sim.samples.last().tNanos - LIVE_INTERVAL_NANOS
         val before = sim.samples.filter { it.tNanos <= cut }
         val fixesBefore = sim.fixes.filter { it.tNanos <= cut }

@@ -17,7 +17,7 @@ import uz.sectorverify.model.AzimuthEstimate
 
 data class PatternFit(val alphaDeg: Double, val p0: Double, val cost: Double, val rmseDb: Double)
 
-/** §6.3 method A: weighted least-squares fit of A(Δ) = −min(c·(Δ/θ)², Am) over a 1° grid of α. */
+/** §6.3 A usuli: A(Δ) = −min(c·(Δ/θ)², Am) ni α ning 1° li to'rida vaznli eng kichik kvadratlar usuli bilan moslash. */
 class PatternFitter(private val config: AnalysisConfig) {
     private val steps = (AnalysisConfig.FULL_CIRCLE / config.alphaStepDeg).roundToInt()
 
@@ -53,10 +53,10 @@ class PatternFitter(private val config: AnalysisConfig) {
     }
 }
 
-/** §6.5 method B: α_B = atan2(Σ p·sin φ, Σ p·cos φ), p = 10^(ȳ/10). */
+/** §6.5 B usuli: α_B = atan2(Σ p·sin φ, Σ p·cos φ), p = 10^(ȳ/10). */
 object CentroidEstimator {
     fun estimate(bins: List<Bin>): Double {
-        val ref = bins.maxOf { it.median } // scaling by 10^(-ref/10) leaves the angle unchanged, avoids underflow
+        val ref = bins.maxOf { it.median } // 10^(-ref/10) ga masshtablash burchakni o'zgartirmaydi, underflow'ning oldini oladi
         var sx = 0.0
         var sy = 0.0
         for (b in bins) {
@@ -73,7 +73,7 @@ data class BootstrapCi(val lowOffsetDeg: Double, val highOffsetDeg: Double) {
     val halfDeg: Double get() = max(abs(lowOffsetDeg), abs(highOffsetDeg))
 }
 
-/** §6.4: resample bins with replacement, refit, take percentiles of the offsets from α̂. */
+/** §6.4: binlar qaytariladigan tanlov bilan qayta tanlanadi, qayta moslanadi, α̂ dan og'ishlarning persentillari olinadi. */
 class Bootstrap(private val config: AnalysisConfig, private val fitter: PatternFitter) {
     fun ci(bins: List<Bin>, hpbwDeg: Double, alphaHat: Double, iterations: Int, random: Random): BootstrapCi {
         if (iterations <= 0) return BootstrapCi(0.0, 0.0)
@@ -86,7 +86,7 @@ class Bootstrap(private val config: AnalysisConfig, private val fitter: PatternF
     }
 
     companion object {
-        /** Linear interpolation between order statistics (R type 7). [sorted] must be ascending. */
+        /** Tartib statistikalari orasida chiziqli interpolyatsiya (R type 7). [sorted] o'sish tartibida bo'lishi shart. */
         fun percentile(sorted: DoubleArray, pct: Double): Double {
             require(sorted.isNotEmpty())
             val h = (sorted.size - 1) * pct / 100.0
@@ -97,12 +97,12 @@ class Bootstrap(private val config: AnalysisConfig, private val fitter: PatternF
     }
 }
 
-/** Combines methods A and B and the bootstrap into one [AzimuthEstimate]. */
+/** A va B usullarini hamda bootstrap'ni bitta [AzimuthEstimate] ga birlashtiradi. */
 class AzimuthEstimator(private val config: AnalysisConfig) {
     val fitter = PatternFitter(config)
     private val bootstrap = Bootstrap(config, fitter)
 
-    /** Null when there are fewer than minBinsForFit bins. */
+    /** Binlar minBinsForFit dan kam bo'lsa null. */
     fun estimate(bins: List<Bin>, hpbwDeg: Double, iterations: Int, random: Random): AzimuthEstimate? {
         if (bins.size < config.minBinsForFit) return null
         val fit = fitter.fit(bins, hpbwDeg)

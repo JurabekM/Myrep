@@ -34,7 +34,7 @@ fun SvPalette.verdictColor(v: Verdict?): Color = when (v) {
     Verdict.INCONCLUSIVE, null -> inkMuted
 }
 
-/** Stable colour per serving PCI for the track (chart palette, then hue rotation). */
+/** Trek uchun har bir serving PCI ga barqaror rang (avval chart palitrasi, keyin hue aylantirish). */
 fun SvPalette.pciColor(pci: Int): Color {
     val fixed = listOf(chart1, chart2, ok, warn, accentText, danger)
     return fixed[Math.floorMod(pci, fixed.size)]

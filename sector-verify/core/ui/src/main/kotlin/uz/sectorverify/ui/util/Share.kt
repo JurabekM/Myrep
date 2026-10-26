@@ -5,11 +5,11 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import java.io.File
 
-/** Exported files leave the app only through FileProvider (§5 security); authority = "<applicationId>.files". */
+/** Eksport fayllari ilovadan faqat FileProvider orqali chiqadi (§5 xavfsizlik); authority = "<applicationId>.files". */
 object Share {
     fun authority(context: Context) = "${context.packageName}.files"
 
-    /** Exports must be written under cacheDir/exports (see app res/xml/file_paths.xml). */
+    /** Eksportlar cacheDir/exports ostiga yozilishi kerak (qarang: app res/xml/file_paths.xml). */
     fun exportsDir(context: Context): File = File(context.cacheDir, "exports").apply { mkdirs() }
 
     fun send(context: Context, file: File, mime: String, chooserTitle: String) {

@@ -37,7 +37,7 @@ class SurveyEngineTest {
         }
     }
 
-    /** Replays the simulated walk at 1 Hz on virtual time. */
+    /** Simulyatsiya qilingan yurishni virtual vaqtda 1 Hz da qayta ijro etadi. */
     private fun cells(): Flow<List<CellSample>> = flow {
         for ((_, batch) in sim.samples.groupBy { it.tNanos }) {
             emit(batch)
@@ -83,7 +83,7 @@ class SurveyEngineTest {
         engine.start(scope, flowOf(), flowOf(), flowOf(TrafficStatus.Disabled), sim.samples, sim.fixes)
         runCurrent()
         engine.state.value.live.shouldNotBeNull().ready shouldBe true
-        (engine.state.value.rateHz == 0.0) shouldBe true // no new serving samples yet
+        (engine.state.value.rateHz == 0.0) shouldBe true // hali yangi serving namunalar yo'q
         scope.cancel()
     }
 

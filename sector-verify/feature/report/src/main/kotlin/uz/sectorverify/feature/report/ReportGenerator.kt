@@ -24,7 +24,7 @@ import uz.sectorverify.ui.util.Share
 
 data class GeneratedReport(val pdf: File, val json: File, val zip: File, val sha256: String, val pages: Int)
 
-/** report.json (signed) → PDF in the report language → session ZIP; stored as a `report` row (§5.4, §8.2, §8.3). */
+/** report.json (imzolangan) → hisobot tilidagi PDF → sessiya ZIP; `report` qatori sifatida saqlanadi (§5.4, §8.2, §8.3). */
 class ReportGenerator @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sessions: SessionRepository,
@@ -34,7 +34,7 @@ class ReportGenerator @Inject constructor(
     private val signer: ReportSigner,
     private val clock: Clock,
 ) {
-    @SuppressLint("AppBundleLocaleChanges") // :app disables bundle language splits (all languages ship).
+    @SuppressLint("AppBundleLocaleChanges") // :app bundle til bo'linishini o'chiradi (barcha tillar ilova bilan keladi).
     suspend fun generate(sessionId: String): GeneratedReport = withContext(Dispatchers.Default) {
         val s = settings.current()
         val stored = requireNotNull(sessions.result(sessionId)) { "no session $sessionId" }

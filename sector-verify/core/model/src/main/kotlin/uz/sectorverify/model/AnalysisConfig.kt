@@ -10,13 +10,13 @@ enum class AnalysisPreset {
 }
 
 /**
- * Every numeric threshold of the analysis (prompt §6). A full copy is stored with each session
- * (`session.config_json`) so a result can always be reproduced.
+ * Tahlilning barcha sonli chegaralari (prompt §6). Har sessiya bilan uning to'liq nusxasi saqlanadi
+ * (`session.config_json`), shuning uchun natijani doim qayta hosil qilish mumkin.
  */
 @Serializable
 data class AnalysisConfig(
     val preset: AnalysisPreset = AnalysisPreset.SUBURBAN,
-    // 6.1 cleaning
+    // 6.1 tozalash
     val maxSampleAgeMs: Long = 3000,
     val maxFixGapMs: Long = 2000,
     val maxAccuracyM: Double = 15.0,
@@ -25,12 +25,12 @@ data class AnalysisConfig(
     val rMaxM: Double = 1500.0,
     val taStepM: Double = 78.12,
     val taToleranceSteps: Double = 2.0,
-    // 6.2 normalisation and binning
+    // 6.2 normallashtirish va binlash
     val pathLossExponent: Double = 3.5,
     val dRefM: Double = 300.0,
     val binDeg: Int = 10,
     val minPerBin: Int = 3,
-    // 6.3 method A
+    // 6.3 A usuli
     val patternCoef: Double = 12.0,
     val patternMaxAttDb: Double = 30.0,
     val alphaStepDeg: Double = 1.0,
@@ -39,9 +39,9 @@ data class AnalysisConfig(
     val bootstrapIterations: Int = 200,
     val ciLowPercentile: Double = 2.5,
     val ciHighPercentile: Double = 97.5,
-    // 6.5 method B
+    // 6.5 B usuli
     val unreliableDiffDeg: Double = 30.0,
-    // 6.6 coverage
+    // 6.6 qamrov
     val minOverallCoverage: Double = 0.70,
     val minSectorCoverage: Double = 0.60,
     val sectorHalfWidthDeg: Double = 90.0,
@@ -51,28 +51,28 @@ data class AnalysisConfig(
     val swapGainFactor: Double = 4.0,
     val swapGainOffset: Double = 1.0,
     val swapMaxSectors: Int = 6,
-    // 6.8 causes
+    // 6.8 sabablar
     val rotationMinDeg: Double = 20.0,
     val rotationMaxDeg: Double = 45.0,
     val rotationMaxSpreadDeg: Double = 10.0,
     val minSamplesPresent: Int = 20,
     val unexpectedMaxDistM: Double = 300.0,
     val unexpectedMinRegisteredFrac: Double = 0.30,
-    // 6.9 verdict
+    // 6.9 xulosa
     val passMaxErrDeg: Double = 20.0,
     val passMaxCiHalfDeg: Double = 20.0,
     val warnMaxErrDeg: Double = 45.0,
     val warnMaxCiHalfDeg: Double = 35.0,
-    // 6.10 live
+    // 6.10 jonli rejim
     val liveIntervalMs: Long = 5000,
-    // pre-check (§8.1): minimal CellInfo update rate of the device (AC-05)
+    // dastlabki tekshiruv (§8.1): qurilma CellInfo yangilanishining minimal chastotasi (AC-05)
     val minDeviceRateHz: Double = 0.5,
-    // reproducibility
+    // takrorlanuvchanlik
     val seed: Long = DEFAULT_SEED,
 ) {
     val nBins: Int get() = FULL_CIRCLE / binDeg
 
-    /** Returns human-readable problems; empty when the config is usable. */
+    /** Odam o'qiy oladigan muammolarni qaytaradi; config yaroqli bo'lsa bo'sh. */
     fun validate(): List<String> = buildList {
         if (binDeg <= 0 || FULL_CIRCLE % binDeg != 0) add("binDeg must divide 360")
         if (alphaStepDeg <= 0.0) add("alphaStepDeg must be > 0")

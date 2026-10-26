@@ -36,8 +36,8 @@ import uz.sectorverify.telephony.TrafficGenerator
 import uz.sectorverify.ui.util.LocaleStore
 
 /**
- * §7 SurveyForegroundService: type "location", partial WakeLock, ongoing notification with sample count and
- * coverage. Both streams go through [BufferedSampleWriter] (1 s, one Room transaction).
+ * §7 SurveyForegroundService: "location" turi, partial WakeLock, namunalar soni va qamrov ko'rsatilgan doimiy
+ * bildirishnoma. Ikkala oqim [BufferedSampleWriter] orqali o'tadi (1 s, bitta Room tranzaksiyasi).
  */
 @AndroidEntryPoint
 class SurveyForegroundService : LifecycleService() {
@@ -61,7 +61,7 @@ class SurveyForegroundService : LifecycleService() {
     private var stopRequested = false
     private var finishing = false
 
-    /** Notifications follow the app language, not the system one. */
+    /** Bildirishnomalar tizim tiliga emas, ilova tiliga amal qiladi. */
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(LocaleStore.wrap(newBase))
     }
@@ -188,7 +188,7 @@ class SurveyForegroundService : LifecycleService() {
         .setAutoCancel(true)
         .build()
 
-    @Suppress("MissingPermission") // POST_NOTIFICATIONS denied → the system drops it silently; pre-check warns.
+    @Suppress("MissingPermission") // POST_NOTIFICATIONS rad etilgan → tizim uni jimgina tashlaydi; oldindan tekshiruv ogohlantiradi.
     private fun notify(id: Int, n: Notification) = getSystemService(NotificationManager::class.java).notify(id, n)
 
     companion object {

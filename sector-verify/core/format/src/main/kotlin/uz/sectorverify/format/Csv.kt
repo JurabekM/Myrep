@@ -1,8 +1,8 @@
 package uz.sectorverify.format
 
-/** Minimal RFC 4180 CSV: quoted fields, doubled quotes, comma or semicolon separator. */
+/** Minimal RFC 4180 CSV: qo'shtirnoqli maydonlar, ikkilangan qo'shtirnoqlar, vergul yoki nuqtali vergul ajratgich. */
 object Csv {
-    /** Picks ';' when the header has more semicolons than commas (Excel in uz/ru locales). */
+    /** Sarlavhada nuqtali vergul verguldan ko'p bo'lsa ';' ni tanlaydi (uz/ru lokallaridagi Excel). */
     fun detectSeparator(headerLine: String): Char = if (headerLine.count { it == ';' } > headerLine.count { it == ',' }) ';' else ','
 
     fun parseLine(line: String, sep: Char): List<String> {
@@ -37,6 +37,6 @@ object Csv {
 
     fun row(values: List<Any?>, sep: Char = ','): String = values.joinToString(sep.toString()) { escape(it?.toString() ?: "", sep) }
 
-    /** Splits text into lines (CRLF/LF), removing a UTF-8 BOM. */
+    /** Matnni qatorlarga ajratadi (CRLF/LF), UTF-8 BOM ni olib tashlaydi. */
     fun lines(text: String): List<String> = text.removePrefix("﻿").split("\r\n", "\n")
 }

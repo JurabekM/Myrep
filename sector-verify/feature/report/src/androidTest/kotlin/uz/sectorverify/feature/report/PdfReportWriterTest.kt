@@ -22,7 +22,7 @@ import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.SessionMode
 import uz.sectorverify.model.SessionStatus
 
-/** §9 phase 3: the PDF is created and has pages, in each report language. */
+/** §9 3-bosqich: har bir hisobot tilida PDF yaratiladi va sahifalari bor. */
 @RunWith(AndroidJUnit4::class)
 class PdfReportWriterTest {
     private val context: Context = ApplicationProvider.getApplicationContext()

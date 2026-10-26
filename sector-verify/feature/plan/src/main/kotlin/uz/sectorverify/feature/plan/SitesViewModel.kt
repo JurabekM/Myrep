@@ -23,9 +23,9 @@ data class ImportOutcome(val imported: Int, val errors: List<PlanError>)
 /** [recording]: foreground servis bu sessiyani hozir ham yozmoqda — faqat ochish taklif qilinadi, to'xtatish emas. */
 data class ResumeOffer(val sessionId: String, val siteCode: String, val samples: Int, val recording: Boolean = false)
 
-/** Resumes or abandons a RUNNING session; implemented by :feature:survey, bound in :app. */
+/** RUNNING sessiyani davom ettiradi yoki tashlab ketadi; :feature:survey amalga oshiradi, :app'da bog'lanadi. */
 interface SessionResumer {
-    /** False when the survey cannot start (location permission missing). */
+    /** O'lchov boshlana olmasa false (joylashuv ruxsati yo'q). */
     fun resume(sessionId: String): Boolean
 
     /** Servis shu jarayonda bu sessiyani yozayotgan bo'lsa true (uzilgan sessiya emas). */
@@ -54,7 +54,7 @@ class SitesViewModel @Inject constructor(
         viewModelScope.launch { checkRunning() }
     }
 
-    /** §7: a session left RUNNING by a killed process is offered for resumption. */
+    /** §7: o'ldirilgan jarayon RUNNING holatida qoldirgan sessiyani davom ettirish taklif qilinadi. */
     suspend fun checkRunning() {
         val s = sessions.running().firstOrNull() ?: return
         val code = plans.site(s.siteId)?.plan?.code ?: return
@@ -75,7 +75,7 @@ class SitesViewModel @Inject constructor(
     private val _resumeBlocked = MutableStateFlow(false)
     val resumeBlocked: StateFlow<Boolean> = _resumeBlocked.asStateFlow()
 
-    /** Returns the resumed session id, or null when it could not start (the offer stays visible). */
+    /** Davom ettirilgan sessiya id'sini qaytaradi, boshlanmasa null (taklif ko'rinib turadi). */
     fun resume(): String? {
         val offer = _resume.value ?: return null
         if (offer.recording) {

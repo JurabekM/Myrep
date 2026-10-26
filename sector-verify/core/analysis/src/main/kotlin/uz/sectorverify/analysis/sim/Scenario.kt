@@ -9,26 +9,26 @@ import uz.sectorverify.model.SitePlan
 
 enum class RouteShape { RING, SQUARE }
 
-/** Fault scenarios of §6.11. Sector and ARFCN arguments are indices into the generated plan. */
+/** §6.11 nosozlik ssenariylari. Sektor va ARFCN argumentlari — yaratilgan plandagi indekslar. */
 sealed interface Fault {
     data object None : Fault
 
-    /** Cyclic swap on every ARFCN: sector [sectors][m] radiates into sector [sectors][m+1]. Size 2 or 3. */
+    /** Har ARFCN'da siklik swap: [sectors][m] sektori [sectors][m+1] sektoriga nurlanadi. O'lchami 2 yoki 3. */
     data class FullSwap(val sectors: List<Int>) : Fault
 
-    /** Two sectors swapped on one ARFCN only. */
+    /** Faqat bitta ARFCN'da ikki sektor almashgan. */
     data class BandSwap(val arfcnIndex: Int, val a: Int, val b: Int) : Fault
 
-    /** Physical antenna of [sector] rotated by [deg] (all ARFCNs). */
+    /** [sector] ning fizik antennasi [deg] ga burilgan (barcha ARFCN'lar). */
     data class Rotation(val sector: Int, val deg: Double) : Fault
 
-    /** Cell of [sector] does not transmit on [arfcnIndex] (null = all ARFCNs). */
+    /** [sector] yacheykasi [arfcnIndex] da uzatmaydi (null = barcha ARFCN'lar). */
     data class SectorOff(val sector: Int, val arfcnIndex: Int? = null) : Fault
 
-    /** A neighbour site reuses the PCI of ([sector], [arfcnIndex]) and points at our site. */
+    /** Qo'shni sayt ([sector], [arfcnIndex]) ning PCI'sini qayta ishlatadi va bizning saytga qaragan. */
     data class NeighborPciReuse(val sector: Int, val arfcnIndex: Int, val distanceM: Double, val bearingDeg: Double) : Fault
 
-    /** The cell transmits but the RF plan omits it. */
+    /** Yacheyka uzatadi, lekin RF planda u yo'q. */
     data class UnplannedCell(val sector: Int, val arfcnIndex: Int) : Fault
 }
 
@@ -40,19 +40,19 @@ data class SimScenario(
     val nSectors: Int = 3,
     val nArfcn: Int = 1,
     val azimuthOffsetDeg: Double = 0.0,
-    /** σ of the random installation error of every antenna (truth − plan). */
+    /** Har bir antenna o'rnatilishidagi tasodifiy xatoning σ si (haqiqiy − plan). */
     val installErrorSigmaDeg: Double = 3.0,
     val hpbwDeg: Double = 65.0,
     val route: RouteShape = RouteShape.RING,
     val radiusM: Double = 275.0,
     val routeNoiseM: Double = 15.0,
-    /** Fraction of bearings walked (one contiguous arc is cut out). */
+    /** Yurilgan yo'nalishlar ulushi (bitta uzluksiz yoy kesib tashlanadi). */
     val coverage: Double = 1.0,
     val gapStartDeg: Double = 0.0,
     val speedMps: Double = 1.4,
     val shadowSigmaDb: Double = 7.0,
     val shadowDecorrM: Double = 50.0,
-    /** Share of the shadowing that is common to all cells of the site. */
+    /** Soyalanishning saytdagi barcha yacheykalar uchun umumiy bo'lgan ulushi. */
     val shadowSiteCorr: Double = 0.7,
     val gnssSigmaM: Double = 4.0,
     val pNeighbor: Double = 0.8,
@@ -76,9 +76,9 @@ data class SimScenario(
     }
 }
 
-/** What the analysis is expected to find for a scenario. */
+/** Ssenariy uchun tahlil nimani topishi kutiladi. */
 data class Expectation(
-    /** Swapped cells → label of the sector they really radiate into. */
+    /** Almashgan yacheykalar → ular haqiqatda nurlanadigan sektor yorlig'i. */
     val swapMapping: Map<CellKey, String> = emptyMap(),
     val causes: Map<CellKey, CauseCode> = emptyMap(),
     val missing: Set<CellKey> = emptySet(),
@@ -92,7 +92,7 @@ data class SimResult(
     val plan: SitePlan,
     val samples: List<CellSample>,
     val fixes: List<GnssFix>,
-    /** Direction each transmitting site cell actually radiates into. */
+    /** Uzatayotgan har bir sayt yacheykasi haqiqatda nurlanadigan yo'nalish. */
     val trueAzimuth: Map<CellKey, Double>,
     val expected: Expectation,
     val durationS: Double,

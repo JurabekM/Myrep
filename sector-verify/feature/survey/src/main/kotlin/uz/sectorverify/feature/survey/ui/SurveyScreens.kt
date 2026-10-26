@@ -52,7 +52,7 @@ import uz.sectorverify.ui.components.labelRes
 import uz.sectorverify.ui.components.verdictColor
 import uz.sectorverify.ui.theme.LocalSvPalette
 
-/** Screen 3 — pre-check (§8.1). */
+/** 3-ekran — oldindan tekshiruv (§8.1). */
 @Composable
 fun PreCheckRoute(onStarted: (String) -> Unit, vm: PreCheckViewModel = hiltViewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
@@ -169,7 +169,7 @@ private fun checkDetail(item: CheckItem): String {
     }
 }
 
-/** Screen 4 — live survey (§8.1). */
+/** 4-ekran — jonli o'lchov (§8.1). */
 @Composable
 fun LiveRoute(onFinished: (String) -> Unit, vm: LiveViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()

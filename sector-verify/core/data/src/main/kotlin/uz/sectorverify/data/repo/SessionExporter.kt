@@ -6,7 +6,7 @@ import uz.sectorverify.format.SessionExport
 import uz.sectorverify.format.SessionZip
 import uz.sectorverify.model.DeviceCapabilities
 
-/** Builds the session ZIP (§5.4) from stored data; [reportJson] and [reportPdf] are added once a report exists. */
+/** Saqlangan ma'lumotdan sessiya ZIP'ini (§5.4) yig'adi; [reportJson] va [reportPdf] hisobot paydo bo'lgach qo'shiladi. */
 class SessionExporter @Inject constructor(private val sessions: SessionRepository) {
     suspend fun export(
         sessionId: String,

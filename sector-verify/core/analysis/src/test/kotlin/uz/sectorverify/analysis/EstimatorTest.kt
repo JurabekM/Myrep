@@ -70,7 +70,7 @@ class EstimatorTest {
 
     @Test
     fun `A and B disagreeing by more than 30 degrees marks the estimate unreliable`() {
-        // Strong back-lobe bins pull the centroid (B) away while the curvature fit (A) keeps the main lobe.
+        // Kuchli orqa lepestok binlari markazni (B) chetga tortadi, egrilik moslashi (A) esa asosiy lepestokni saqlab qoladi.
         val bins = idealBins(90.0).map { if (it.index in 25..27) it.copy(median = -80.0) else it }
         val est = AzimuthEstimator(config).estimate(bins, 65.0, 0, Random(1)).shouldNotBeNull()
         est.unreliable shouldBe true

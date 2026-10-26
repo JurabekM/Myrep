@@ -22,12 +22,12 @@ class CleanerTest {
     @Test
     fun `each filter of 6_1 drops its sample`() {
         val samples = listOf(
-            sample(5 * SEC), // kept
-            sample(5 * SEC, rsrp = null), // 1. no rsrp
-            sample(5 * SEC, rx = 5 * SEC + 3_001_000_000L), // 2. stale
-            sample(60 * SEC), // 3. no fix nearby
-            sample(6 * SEC, ta = 4), // 7. TA 4·78 m = 312 m vs 300 m: kept
-            sample(6 * SEC, ta = 9), // 7. TA 703 m vs 300 m: other site
+            sample(5 * SEC), // saqlanadi
+            sample(5 * SEC, rsrp = null), // 1. rsrp yo'q
+            sample(5 * SEC, rx = 5 * SEC + 3_001_000_000L), // 2. eskirgan
+            sample(60 * SEC), // 3. yaqinda fix yo'q
+            sample(6 * SEC, ta = 4), // 7. TA 4·78 m = 312 m vs 300 m: saqlanadi
+            sample(6 * SEC, ta = 9), // 7. TA 703 m vs 300 m: boshqa sayt
         )
         val r = cleaner.clean(LAT, LON, samples, fixes)
         r.stats.total shouldBe 6
@@ -54,7 +54,7 @@ class CleanerTest {
     fun `bad fixes are excluded before interpolation`() {
         val bad = listOf(fix(0, 90.0, 300.0, acc = 20.0), fix(SEC, 90.0, 300.0, speed = 9.0), fix(2 * SEC, 90.0, 300.0, speed = null))
         val r = cleaner.clean(LAT, LON, listOf(sample(0), sample(SEC), sample(5 * SEC)), bad)
-        r.stats.kept shouldBe 2 // t=0 and t=1 s use the fix at 2 s (gap ≤ 2 s); t=5 s has no fix within 2 s
+        r.stats.kept shouldBe 2 // t=0 va t=1 s 2 s dagi fix'dan foydalanadi (oraliq ≤ 2 s); t=5 s da 2 s ichida fix yo'q
         r.stats.noFix shouldBe 1
     }
 
@@ -71,7 +71,7 @@ class CleanerTest {
         cleaner.interpolate(list, times, 4 * SEC)!!.lat shouldBe b.lat
         cleaner.interpolate(list, times, 4 * SEC + 1).shouldBeNull()
         cleaner.interpolate(emptyList(), LongArray(0), 0).shouldBeNull()
-        // GNSS outage: the far neighbour (60 s) is not used for interpolation.
+        // GNSS uzilishi: uzoqdagi qo'shni (60 s) interpolyatsiyada ishlatilmaydi.
         val far = fix(60 * SEC, 180.0, 300.0)
         cleaner.interpolate(listOf(a, far), longArrayOf(0, 60 * SEC), SEC)!!.lat shouldBe a.lat
     }

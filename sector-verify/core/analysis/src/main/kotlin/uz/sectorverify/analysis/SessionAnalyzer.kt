@@ -21,7 +21,7 @@ import uz.sectorverify.model.Verdict
 
 const val ALGO_VERSION = "1.0.0"
 
-/** Full post-session analysis (§6.1–6.9). Deterministic for a given input and [AnalysisConfig.seed]. */
+/** Sessiyadan keyingi to'liq tahlil (§6.1–6.9). Berilgan kirish va [AnalysisConfig.seed] uchun deterministik. */
 class SessionAnalyzer(private val config: AnalysisConfig) {
     private val cleaner = Cleaner(config)
     private val binner = Binner(config)
@@ -36,7 +36,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
         val nSamples: Int,
         val estimate: AzimuthEstimate?,
         val sectorCoverage: SectorCoverage,
-        /** Bins covered by any planned cell of the same ARFCN. */
+        /** Shu ARFCN dagi istalgan rejalashtirilgan yacheyka qamragan binlar. */
         val arfcnCovered: BooleanArray,
     ) {
         val errorDeg: Double? get() = estimate?.let { Angles.diff(it.alphaDeg, sector.azimuthDeg) }
@@ -69,7 +69,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
             )
         }
 
-        // No swap search without overall coverage: "qamrov yo'q bo'lsa FAIL berilmaydi".
+        // Umumiy qamrovsiz swap qidirilmaydi: "qamrov yo'q bo'lsa FAIL berilmaydi".
         val swaps = if (!overallOk) {
             emptyList()
         } else {
@@ -128,8 +128,8 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
     }
 
     /**
-     * §6.9 with priority INCONCLUSIVE > FAIL > WARN > PASS; PCI_MISSING only when overall coverage is sufficient.
-     * A swapped cell radiates into [swapTarget]'s sector, so its coverage is checked around that plan azimuth (ADR-008).
+     * §6.9, ustuvorlik INCONCLUSIVE > FAIL > WARN > PASS; PCI_MISSING faqat umumiy qamrov yetarli bo'lganda.
+     * Almashgan yacheyka [swapTarget] sektoriga nurlanadi, shu sabab uning qamrovi o'sha plan azimuti atrofida tekshiriladi (ADR-008).
      */
     private fun verdictOf(m: Measured, overallOk: Boolean, swapTarget: Measured?, cause: CauseCode): Pair<Verdict, CauseCode> {
         val est = m.estimate
@@ -151,7 +151,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
 
     private fun CauseCode?.orNone() = this ?: CauseCode.NONE
 
-    /** §6.8 swap cause, comparing the same sector label across ARFCNs. */
+    /** §6.8 swap sababi: bir xil sektor yorlig'i turli ARFCN'larda solishtiriladi. */
     private fun swapCause(
         m: Measured,
         all: List<Measured>,
@@ -168,7 +168,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
         }
     }
 
-    /** §6.8 antenna rotation: same-sign 20–45° offset on every estimated ARFCN of a label, spread ≤ 10°. */
+    /** §6.8 antenna burilishi: yorliqning baholangan har bir ARFCN'ida bir xil ishorali 20–45° og'ish, tarqoqlik ≤ 10°. */
     private fun rotatedKeys(all: List<Measured>, swapTarget: Map<CellKey, String>): Set<CellKey> =
         all.filter { it.estimate != null && it.sector.key !in swapTarget }
             .groupBy { it.sector.label }
@@ -184,7 +184,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
             .map { it.sector.key }
             .toSet()
 
-    /** §6.8 PCI_UNEXPECTED: an unplanned cell on a planned ARFCN, registered in ≥ 30 % of samples within 300 m. */
+    /** §6.8 PCI_UNEXPECTED: rejalashtirilgan ARFCN'dagi rejada yo'q yacheyka, 300 m ichidagi namunalarning ≥ 30 % ida qayd etilgan. */
     private fun unexpectedCells(plan: SitePlan, plannedKeys: Set<CellKey>, byKey: Map<CellKey, List<CleanSample>>): List<SectorResult> {
         val plannedArfcns = plan.arfcns.toSet()
         return byKey.filterKeys { it !in plannedKeys && (it.rat to it.arfcn) in plannedArfcns }
@@ -264,7 +264,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
 
     private fun missingBins(covered: BooleanArray) = covered.indices.filterNot { covered[it] }.joinToString(" ")
 
-    /** Stable per-cell random stream (independent of map iteration order). */
+    /** Har yacheyka uchun barqaror tasodifiy oqim (map iteratsiya tartibiga bog'liq emas). */
     private fun randomFor(key: CellKey): Random = Random(config.seed xor stableHash(key))
 
     companion object {

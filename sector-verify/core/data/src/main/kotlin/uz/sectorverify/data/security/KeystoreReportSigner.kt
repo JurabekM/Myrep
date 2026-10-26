@@ -14,7 +14,7 @@ import java.security.spec.ECGenParameterSpec
 import java.util.UUID
 import uz.sectorverify.format.ReportSigner
 
-/** Random per-installation id; used as the key attestation challenge (§8.3). Not backed up. */
+/** Har o'rnatish uchun tasodifiy id; kalit attestation challenge'i sifatida ishlatiladi (§8.3). Zaxiralanmaydi. */
 class InstallId(private val file: File) {
     @Synchronized
     fun get(): String {
@@ -33,8 +33,8 @@ class InstallId(private val file: File) {
 }
 
 /**
- * §8.3: one EC P-256 Keystore key per installation (StrongBox when present), created with attestation
- * challenge = install UUID. Signs with SHA256withECDSA; the certificate chain goes into report.json.
+ * §8.3: har o'rnatishga bitta EC P-256 Keystore kaliti (StrongBox bo'lsa, unda), attestation
+ * challenge = o'rnatish UUID bilan yaratiladi. SHA256withECDSA bilan imzolaydi; sertifikat zanjiri report.json ga yoziladi.
  */
 class KeystoreReportSigner(private val context: Context, private val alias: String = ALIAS) : ReportSigner {
     private val ks: KeyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
@@ -46,7 +46,7 @@ class KeystoreReportSigner(private val context: Context, private val alias: Stri
         try {
             generate(challenge, strongBox)
         } catch (expected: StrongBoxUnavailableException) {
-            // Advertised StrongBox may still refuse EC keys: fall back to the TEE.
+            // E'lon qilingan StrongBox baribir EC kalitni rad etishi mumkin: TEE'ga qaytamiz.
             generate(challenge, false)
         }
         return ks.getKey(alias, null) as PrivateKey

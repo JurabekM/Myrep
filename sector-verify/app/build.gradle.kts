@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.sv.android.hilt)
 }
 
-// §5 versioning: versionName from the latest `sector-verify/v*` tag, versionCode = number of commits.
+// §5 versiyalash: versionName — eng so'nggi `sector-verify/v*` tag'dan, versionCode = commitlar soni.
 fun git(vararg args: String): String? = runCatching {
     providers.exec {
         commandLine("git", *args)
@@ -17,7 +17,7 @@ fun git(vararg args: String): String? = runCatching {
 val svVersionCode = git("rev-list", "--count", "HEAD")?.toIntOrNull() ?: 1
 val svVersionName = git("describe", "--tags", "--match", "sector-verify/v*")?.removePrefix("sector-verify/v") ?: "0.0.0-dev"
 
-// §5 signing: keystore.properties (git-ignored) or SV_KEYSTORE_* environment variables. Nothing is committed.
+// §5 imzolash: keystore.properties (git-ignored) yoki SV_KEYSTORE_* muhit o'zgaruvchilari. Hech narsa commit qilinmaydi.
 val keystoreProps = rootProject.file("keystore.properties").takeIf {
     it.exists()
 }?.let { f -> Properties().apply { f.inputStream().use(::load) } }
@@ -38,7 +38,7 @@ android {
         versionName = svVersionName
     }
     buildFeatures.buildConfig = true
-    // In-app language switch (uz/ru/en) needs every language in the base APK, not Play language splits.
+    // Ilova ichida til almashtirish (uz/ru/en) uchun barcha tillar Play til split'larida emas, asosiy APK da bo'lishi kerak.
     bundle {
         language { enableSplit = false }
     }
@@ -61,7 +61,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = when {
                 hasReleaseKey -> signingConfigs.getByName("release")
-                // CI smoke test only: installable release build signed with the debug key.
+                // Faqat CI smoke testi uchun: debug kalit bilan imzolangan, o'rnatiladigan release build.
                 providers.gradleProperty("sv.signWithDebug").isPresent -> signingConfigs.getByName("debug")
                 else -> null
             }

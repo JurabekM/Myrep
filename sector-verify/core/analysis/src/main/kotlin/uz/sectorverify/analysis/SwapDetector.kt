@@ -3,13 +3,13 @@ package uz.sectorverify.analysis
 import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.CellKey
 
-/** One estimated sector on an ARFCN, input to swap detection. */
+/** ARFCN'dagi bitta baholangan sektor — swap aniqlashga kirish ma'lumoti. */
 data class SwapEntry(val key: CellKey, val label: String, val planAzimuthDeg: Double, val estimateDeg: Double)
 
-/** [mapping]: cell → label of the sector it actually radiates into (only cells whose label changed). */
+/** [mapping]: yacheyka → u haqiqatda nurlanadigan sektor yorlig'i (faqat yorlig'i o'zgargan yacheykalar). */
 data class SwapResult(val mapping: Map<CellKey, String>, val costIdentity: Double, val costBest: Double)
 
-/** §6.7: best assignment of estimates to planned azimuths over all permutations. */
+/** §6.7: barcha o'rin almashtirishlar orasidan baholarni rejadagi azimutlarga eng yaxshi moslash. */
 class SwapDetector(private val config: AnalysisConfig) {
 
     fun detect(entries: List<SwapEntry>): SwapResult? {
@@ -45,7 +45,7 @@ class SwapDetector(private val config: AnalysisConfig) {
         return c
     }
 
-    /** Heap's algorithm; [visit] receives a shared buffer. */
+    /** Heap algoritmi; [visit] umumiy buferni oladi. */
     private fun permutations(n: Int, visit: (IntArray) -> Unit) {
         val a = IntArray(n) { it }
         val c = IntArray(n)

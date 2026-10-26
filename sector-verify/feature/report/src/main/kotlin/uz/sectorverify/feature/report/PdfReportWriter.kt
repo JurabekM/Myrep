@@ -36,8 +36,8 @@ data class PdfInput(
 )
 
 /**
- * §8.2 PDF report drawn by hand on android.graphics.pdf.PdfDocument. [context] must already be localised to
- * the report language (independent of the app language). Paper-friendly light colours.
+ * §8.2 android.graphics.pdf.PdfDocument'da qo'lda chizilgan PDF hisobot. [context] oldindan hisobot tiliga
+ * lokalizatsiya qilingan bo'lishi shart (ilova tilidan qat'i nazar). Qog'ozga mos och ranglar.
  */
 class PdfReportWriter(private val context: Context, private val locale: Locale) {
     private val res = context.resources
@@ -319,7 +319,7 @@ class PdfReportWriter(private val context: Context, private val locale: Locale) 
     }
 
     private companion object {
-        const val PAGE_W = 595 // A4 in PostScript points
+        const val PAGE_W = 595 // PostScript nuqtalarida A4
         const val PAGE_H = 842
         const val MARGIN = 40f
         const val H1 = 18f
@@ -331,7 +331,7 @@ class PdfReportWriter(private val context: Context, private val locale: Locale) 
         const val ALPHA_ARC = 70
         const val ROUTE_MIN_EXTENT_M = 450.0
 
-        // Light (paper) tokens of the Myrep palette.
+        // Myrep palitrasining och (qog'oz) tokenlari.
         val INK = Color.parseColor("#141413")
         val MUTED = Color.parseColor("#5E5D59")
         val LINE = Color.parseColor("#DAD8CE")

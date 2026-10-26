@@ -31,7 +31,7 @@ import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.SessionMode
 import uz.sectorverify.model.SessionStatus
 
-/** Stored session → signed report.json + PDF + ZIP; the signature verifies (§8.3) and the ZIP re-reads (§5.4). */
+/** Saqlangan sessiya → imzolangan report.json + PDF + ZIP; imzo tasdiqlanadi (§8.3) va ZIP qayta o'qiladi (§5.4). */
 @RunWith(AndroidJUnit4::class)
 class ReportGeneratorTest {
     private val context: Context = ApplicationProvider.getApplicationContext()

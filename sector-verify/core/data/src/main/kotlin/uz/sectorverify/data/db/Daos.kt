@@ -56,7 +56,7 @@ interface SiteDao {
     )
     fun observeSummaries(query: String): Flow<List<SiteSummaryRow>>
 
-    /** Re-import replaces the sectors of an existing site (results keep their rows via sector_id SET NULL). */
+    /** Qayta import mavjud sayt sektorlarini almashtiradi (natija qatorlari sector_id SET NULL orqali saqlanadi). */
     @Transaction
     suspend fun upsertWithSectors(site: SiteEntity, sectors: List<SectorEntity>): Long {
         val existing = byCode(site.code)
@@ -102,7 +102,7 @@ interface SessionDao {
     suspend fun setResult(id: String, verdict: Verdict, coveragePct: Double, configJson: String, resultJson: String)
 }
 
-/** Raw data: insert and read only (§5.2 — raw tables are never modified). */
+/** Xom ma'lumot: faqat qo'shish va o'qish (§5.2 — xom jadvallar hech qachon o'zgartirilmaydi). */
 @Dao
 interface RawDao {
     @Insert
@@ -111,7 +111,7 @@ interface RawDao {
     @Insert
     suspend fun insertFixes(fixes: List<GnssFixEntity>)
 
-    /** One Room transaction per 1-second buffer (§7). */
+    /** Har 1 soniyalik bufer uchun bitta Room tranzaksiyasi (§7). */
     @Transaction
     suspend fun insertBatch(samples: List<CellSampleEntity>, fixes: List<GnssFixEntity>) {
         if (samples.isNotEmpty()) insertSamples(samples)
@@ -145,7 +145,7 @@ interface ResultDao {
     @Insert
     suspend fun insertFindings(findings: List<FindingEntity>)
 
-    /** Results are derived data: re-analysis replaces them as a whole. */
+    /** Natijalar hosila ma'lumot: qayta tahlil ularni butunlay almashtiradi. */
     @Transaction
     suspend fun replace(sessionId: String, results: List<SectorResultEntity>, findings: List<FindingEntity>) {
         deleteResults(sessionId)

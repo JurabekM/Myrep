@@ -17,7 +17,7 @@ import uz.sectorverify.model.SitePlan
 
 data class ResultUi(val loading: Boolean = true, val stored: StoredResult? = null, val plan: SitePlan? = null, val siteId: Long? = null)
 
-/** Screen 5 — result of the final analysis. */
+/** 5-ekran — yakuniy tahlil natijasi. */
 @HiltViewModel
 class ResultViewModel @Inject constructor(
     savedState: SavedStateHandle,
@@ -49,7 +49,7 @@ sealed interface ReportState {
     data class Failed(val reason: String) : ReportState
 }
 
-/** Screen 6 — report: generate, view, share PDF, export ZIP. */
+/** 6-ekran — hisobot: yaratish, ko'rish, PDF ulashish, ZIP eksport. */
 @HiltViewModel
 class ReportViewModel @Inject constructor(
     savedState: SavedStateHandle,

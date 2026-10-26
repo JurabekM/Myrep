@@ -12,14 +12,14 @@ import uz.sectorverify.analysis.sim.SimScenario
 import uz.sectorverify.analysis.sim.Simulator
 import uz.sectorverify.model.AnalysisConfig
 
-/** Property: rotating the whole world (plan azimuths and every GNSS position) by θ rotates every α̂ by θ. */
+/** Xossa: butun dunyoni (plan azimutlari va har bir GNSS pozitsiyasi) θ ga burish har bir α̂ ni θ ga buradi. */
 class InvarianceTest {
     private val analyzer = SessionAnalyzer(AnalysisConfig(bootstrapIterations = 20))
 
     @Test
     fun `estimates rotate with the site`() = runBlocking {
         checkAll(12, Arb.long(1L, 1_000_000L), Arb.int(1, 35)) { seed, steps ->
-            val theta = steps * 10.0 // multiple of binDeg keeps every sample in the same relative bin
+            val theta = steps * 10.0 // binDeg ga karrali qiymat har bir namunani o'sha nisbiy binda qoldiradi
             val sim = Simulator.run(SimScenario(seed = seed, nArfcn = 1, coverage = 0.9, gapStartDeg = (seed % 360).toDouble()))
             val plan = sim.plan
             val rotatedPlan = plan.copy(sectors = plan.sectors.map { it.copy(azimuthDeg = Angles.norm360(it.azimuthDeg + theta)) })

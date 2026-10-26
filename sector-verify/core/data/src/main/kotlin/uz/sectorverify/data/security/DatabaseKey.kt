@@ -10,14 +10,14 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/** Wraps/unwraps small secrets; Android Keystore in production, a fake in JVM tests. */
+/** Kichik sirlarni o'raydi/ochadi; production'da Android Keystore, JVM testlarda fake. */
 interface KeyWrapper {
     fun wrap(plain: ByteArray): ByteArray
 
     fun unwrap(wrapped: ByteArray): ByteArray
 }
 
-/** AES-256-GCM key that never leaves the Android Keystore. Output = 12-byte IV ‖ ciphertext+tag. */
+/** Android Keystore'dan hech qachon chiqmaydigan AES-256-GCM kaliti. Natija = 12 baytli IV ‖ ciphertext+tag. */
 class KeystoreKeyWrapper(private val alias: String = ALIAS) : KeyWrapper {
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
@@ -56,8 +56,8 @@ class KeystoreKeyWrapper(private val alias: String = ALIAS) : KeyWrapper {
 }
 
 /**
- * §5 security: SQLCipher passphrase = 32 random bytes, stored only wrapped by the Keystore key in
- * `noBackupFilesDir` (excluded from backups and device transfer).
+ * §5 xavfsizlik: SQLCipher passphrase = 32 tasodifiy bayt, faqat Keystore kaliti bilan o'ralgan holda
+ * `noBackupFilesDir` da saqlanadi (zaxira nusxa va qurilma ko'chirishga kirmaydi).
  */
 class DatabaseKeyStore(private val file: File, private val wrapper: KeyWrapper, private val random: SecureRandom = SecureRandom()) {
     @Synchronized

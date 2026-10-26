@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-# Release smoke test (§5): installs the R8-minified release APK (debug-signed for CI only), launches it and
-# checks that the process is alive and logcat has no fatal exception. Needs a running emulator/device.
+# Release smoke test (§5): R8 bilan minifikatsiya qilingan release APK'ni o'rnatadi (faqat CI uchun debug imzoli), ishga tushiradi va
+# jarayon tirikligini va logcat'da fatal exception yo'qligini tekshiradi. Ishlab turgan emulator/qurilma kerak.
 set -eu
 cd "$(dirname "$0")/.."
 ./gradlew :app:assembleRelease -Psv.signWithDebug=true

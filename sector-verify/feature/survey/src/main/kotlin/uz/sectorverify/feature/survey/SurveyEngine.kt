@@ -25,7 +25,7 @@ import uz.sectorverify.model.GnssFix
 import uz.sectorverify.model.SitePlan
 import uz.sectorverify.telephony.TrafficStatus
 
-/** One map point: position and the serving PCI at that moment (track colour). */
+/** Bitta xarita nuqtasi: joylashuv va shu paytdagi serving PCI (trek rangi). */
 data class TrackPoint(val lat: Double, val lon: Double, val servingPci: Int?)
 
 data class SurveyState(
@@ -34,21 +34,21 @@ data class SurveyState(
     val running: Boolean = false,
     val samples: Int = 0,
     val fixes: Int = 0,
-    /** Measured CellInfo update rate of the serving cell (distinct timestamps per second). */
+    /** Serving cell'ning o'lchangan CellInfo yangilanish chastotasi (soniyasiga turli timestamp'lar). */
     val rateHz: Double = 0.0,
     val lastFix: GnssFix? = null,
     val track: List<TrackPoint> = emptyList(),
     val visibleCells: List<CellKey> = emptyList(),
     val live: LiveSnapshot? = null,
     val traffic: TrafficStatus? = null,
-    /** Set once when the live analysis first becomes ready ("Natija tayyor"). */
+    /** Jonli tahlil birinchi marta tayyor bo'lganda bir marta o'rnatiladi ("Natija tayyor"). */
     val readyAtSamples: Int? = null,
     val finishedSessionId: String? = null,
 )
 
 /**
- * Survey pipeline without Android: collects both streams into the 1 s [writer] and an in-memory copy, and
- * re-runs the live analysis every `liveIntervalMs` (§6.10) off the main thread.
+ * Android'siz o'lchov pipeline'i: ikkala oqimni 1 s [writer]ga va xotiradagi nusxaga yig'adi hamda
+ * jonli tahlilni har `liveIntervalMs` (§6.10) da asosiy oqimdan tashqarida qayta ishga tushiradi.
  */
 class SurveyEngine(
     private val sessionId: String,
@@ -67,7 +67,7 @@ class SurveyEngine(
     private val _state = MutableStateFlow(SurveyState(sessionId = sessionId, siteCode = plan.code, running = true))
     val state: StateFlow<SurveyState> = _state.asStateFlow()
 
-    /** [restoredSamples]/[restoredFixes]: data already stored when a killed session is resumed. */
+    /** [restoredSamples]/[restoredFixes]: o'ldirilgan sessiya davom ettirilganda allaqachon saqlangan ma'lumotlar. */
     fun start(
         scope: CoroutineScope,
         cells: Flow<List<CellSample>>,
@@ -131,7 +131,7 @@ class SurveyEngine(
         }
     }
 
-    /** Flushes the last buffer; the caller then marks the session DONE and runs the final analysis. */
+    /** Oxirgi buferni yozib yuboradi; so'ng chaqiruvchi sessiyani DONE deb belgilaydi va yakuniy tahlilni bajaradi. */
     suspend fun stop() {
         writer.stop()
         _state.update { it.copy(running = false) }

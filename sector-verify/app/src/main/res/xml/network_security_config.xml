@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- §7/§11: HTTPS only (TrafficGenerator is the sole network client). -->
+<!-- §7/§11: faqat HTTPS (TrafficGenerator yagona tarmoq mijozi). -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>

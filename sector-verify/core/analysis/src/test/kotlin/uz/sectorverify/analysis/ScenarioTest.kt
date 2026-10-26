@@ -18,7 +18,7 @@ import uz.sectorverify.model.SessionResult
 import uz.sectorverify.model.Severity
 import uz.sectorverify.model.Verdict
 
-/** One deterministic simulated session per Verdict and per CauseCode (§9, phase 1). */
+/** Har bir Verdict va har bir CauseCode uchun bitta deterministik simulyatsiya sessiyasi (§9, 1-bosqich). */
 class ScenarioTest {
     private val analyzer = SessionAnalyzer(AnalysisConfig(bootstrapIterations = 100))
 
@@ -140,7 +140,7 @@ class ScenarioTest {
     fun `neighbour site reusing a PCI does not fail a healthy site`() {
         val (_, r) = analyse(SimScenario(seed = 909, nArfcn = 1, fault = Fault.NeighborPciReuse(0, 0, 1500.0, 0.0)))
         (r.verdict == Verdict.FAIL) shouldBe false
-        r.cleaning.taMismatch shouldBe r.cleaning.taMismatch // TA filter ran (count may be 0 if the neighbour never served)
+        r.cleaning.taMismatch shouldBe r.cleaning.taMismatch // TA filtri ishladi (qo'shni xizmat qilmagan bo'lsa, soni 0 bo'lishi mumkin)
     }
 
     @Test

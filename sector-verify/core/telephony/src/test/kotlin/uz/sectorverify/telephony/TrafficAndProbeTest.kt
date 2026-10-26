@@ -35,7 +35,7 @@ class TrafficAndProbeTest {
             TrafficGenerator("https://example.com", open = { u -> FakeConnection(u, 204, false).also { c -> method = c.requestMethod } })
         ok.ping().shouldBeInstanceOf<TrafficStatus.Ok>().httpCode shouldBe 204
         TrafficGenerator("https://example.com", open = { FakeConnection(it, 0, true) }).ping() shouldBe TrafficStatus.Error("IOException")
-        method shouldBe "GET" // default before ping() sets HEAD on the live connection
+        method shouldBe "GET" // ping() jonli ulanishda HEAD qo'yishidan oldingi standart qiymat
     }
 
     @Test

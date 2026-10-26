@@ -26,7 +26,7 @@ import uz.sectorverify.telephony.SubscriptionSelector
 import uz.sectorverify.telephony.TrafficGenerator
 import uz.sectorverify.ui.util.LocaleStore
 
-/** Editable subset of [AnalysisConfig] shown as text fields. */
+/** [AnalysisConfig]ning matn maydonlari sifatida ko'rsatiladigan tahrirlanadigan qismi. */
 data class Thresholds(
     val rMaxM: String,
     val pathLossExponent: String,
@@ -35,7 +35,7 @@ data class Thresholds(
     val passMaxErrDeg: String,
     val warnMaxErrDeg: String,
 ) {
-    /** Applies the fields to [base]; returns the invalid field name on error. */
+    /** Maydonlarni [base]ga qo'llaydi; xatoda noto'g'ri maydon nomini qaytaradi. */
     fun applyTo(base: AnalysisConfig): Result<AnalysisConfig> {
         fun d(name: String, v: String) = v.replace(',', '.').toDoubleOrNull() ?: throw IllegalArgumentException(name)
         return runCatching {
@@ -99,14 +99,14 @@ class SettingsViewModel @Inject constructor(
 
     fun resetToPreset() = update { it.copy(configOverride = null) }
 
-    /** Calibration output of `sv-replay calibrate` (recommended-config.json). */
+    /** `sv-replay calibrate` kalibrlash natijasi (recommended-config.json). */
     fun importConfig(text: String) {
         runCatching { SvJson.parseConfig(text).also { c -> require(c.validate().isEmpty()) { c.validate().joinToString() } } }
             .onSuccess { c -> update { it.copy(configOverride = c) }.also { _event.value = SettingsEvent.ConfigImported } }
             .onFailure { _event.value = SettingsEvent.Error(it.message ?: it.javaClass.simpleName) }
     }
 
-    /** Returns false (and keeps the old value) for a non-empty URL that is not plain https. */
+    /** Bo'sh bo'lmagan, oddiy https bo'lmagan URL uchun false qaytaradi (eski qiymat saqlanadi). */
     fun setTrafficUrl(url: String): Boolean {
         val ok = url.isBlank() || TrafficGenerator.isValidUrl(url.trim())
         if (ok) update { it.copy(trafficUrl = url.trim()) }

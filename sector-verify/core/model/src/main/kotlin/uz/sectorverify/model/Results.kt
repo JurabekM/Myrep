@@ -3,9 +3,9 @@ package uz.sectorverify.model
 import kotlinx.serialization.Serializable
 
 /**
- * Azimuth estimate of one cell. [alphaDeg] — method A (pattern fit), [alphaBDeg] — method B
- * (power-weighted centroid). [ciLowDeg]/[ciHighDeg] are absolute bearings (0..360) of the 95 % bootstrap
- * interval; [ciHalfDeg] = max(|lo|, |hi|) of the offsets from [alphaDeg].
+ * Bitta yacheykaning azimut bahosi. [alphaDeg] — A usuli (pattern moslash), [alphaBDeg] — B usuli
+ * (quvvat bo'yicha vaznlangan markaz). [ciLowDeg]/[ciHighDeg] — 95 % bootstrap intervalining absolyut yo'nalishlari
+ * (0..360); [ciHalfDeg] = [alphaDeg] dan og'ishlarning max(|lo|, |hi|) qiymati.
  */
 @Serializable
 data class AzimuthEstimate(
@@ -56,7 +56,7 @@ enum class FindingType {
     UNRELIABLE_ESTIMATE,
 }
 
-/** [detail] is a flat string map so it round-trips through `finding.detail_json` and report.json. */
+/** [detail] — tekis string map, shuning uchun `finding.detail_json` va report.json orqali o'zgarishsiz o'tadi. */
 @Serializable
 data class Finding(
     val type: FindingType,
@@ -67,16 +67,16 @@ data class Finding(
 @Serializable
 data class SectorResult(
     val key: CellKey,
-    /** Planned sector label; null for a cell that is not in the plan (PCI_UNEXPECTED). */
+    /** Rejadagi sektor yorlig'i; rejada yo'q yacheyka uchun null (PCI_UNEXPECTED). */
     val label: String?,
     val planAzimuthDeg: Double?,
     val estimate: AzimuthEstimate?,
-    /** Signed estimate − plan in [-180, 180). */
+    /** Ishorali baho − plan, [-180, 180) oralig'ida. */
     val errorDeg: Double?,
     val nSamples: Int,
-    /** Fraction of the 18 bins in plan ± 90° that have coverage on this ARFCN. */
+    /** plan ± 90° dagi 18 ta bindan shu ARFCN'da qamrovga ega bo'lganlari ulushi. */
     val sectorCoverage: Double,
-    /** Bin indices (0..35) in plan ± 90° without coverage — shown in UI as missing directions. */
+    /** plan ± 90° dagi qamrovsiz bin indekslari (0..35) — UI'da yetishmayotgan yo'nalishlar sifatida ko'rsatiladi. */
     val missingBins: List<Int>,
     val verdict: Verdict,
     val cause: CauseCode,
@@ -99,7 +99,7 @@ data class SessionResult(
     val verdict: Verdict,
     val sectors: List<SectorResult>,
     val findings: List<Finding>,
-    /** Fraction of 36 bins with ≥ 3 samples of any planned cell. */
+    /** 36 ta bindan istalgan rejalashtirilgan yacheykaning ≥ 3 ta namunasi bor binlar ulushi. */
     val overallCoverage: Double,
     val coveredBins: List<Boolean>,
     val cleaning: CleaningStats,

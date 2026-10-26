@@ -65,7 +65,7 @@ class PreCheckTest {
             CheckId.TRAFFIC,
         )
             .forEach { warn.status(it) shouldBe CheckStatus.WARN }
-        // Thresholds follow the config, not constants.
+        // Chegaralar konstantalarga emas, config'ga amal qiladi.
         PreCheck.evaluate(
             good.copy(gpsAccuracyM = 12.0, config = AnalysisConfig(maxAccuracyM = 10.0)),
         ).status(CheckId.GPS_ACCURACY) shouldBe

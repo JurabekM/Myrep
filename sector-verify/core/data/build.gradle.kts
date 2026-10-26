@@ -16,7 +16,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
-        // Room schemas are inputs of the migration tests.
+        // Room sxemalari migratsiya testlarining kirish ma'lumotlari.
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
         getByName("test").assets.srcDir("$projectDir/schemas")
     }

@@ -24,7 +24,7 @@ import uz.sectorverify.model.SitePlan
 
 data class PreCheckUi(val plan: SitePlan? = null, val result: PreCheckResult? = null, val startedSessionId: String? = null)
 
-/** Screen 3: re-evaluates the checks whenever a GNSS fix or a cell scan arrives. */
+/** 3-ekran: har safar GNSS fix yoki cell skani kelganda tekshiruvlarni qayta baholaydi. */
 @HiltViewModel
 class PreCheckViewModel @Inject constructor(
     savedState: SavedStateHandle,
@@ -46,7 +46,7 @@ class PreCheckViewModel @Inject constructor(
         refresh()
     }
 
-    /** Call again after the permission dialog returns. */
+    /** Ruxsat dialogi qaytgach yana chaqiring. */
     fun refresh() {
         viewModelScope.launch {
             val plan = plans.site(siteId)?.plan ?: return@launch

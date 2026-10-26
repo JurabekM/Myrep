@@ -20,17 +20,17 @@ import uz.sectorverify.telephony.SimInfo
 sealed interface StartResult {
     data class Started(val sessionId: String) : StartResult
 
-    /** No SIM matches the plan MCC/MNC — the survey must not start (§7 dual-SIM). */
+    /** Hech bir SIM reja MCC/MNC ga mos emas — o'lchov boshlanmasligi kerak (§7 dual-SIM). */
     data class NoMatchingSim(val planMccMnc: String) : StartResult
 
     data object UnknownSite : StartResult
 }
 
-/** Starts, resumes and stops surveys; faked in UI tests. */
+/** O'lchovlarni boshlaydi, davom ettiradi va to'xtatadi; UI testlarda soxtalashtiriladi. */
 interface SurveyLauncher {
     suspend fun start(siteId: Long, mode: SessionMode, sim: SimInfo?, appVersion: String): StartResult
 
-    /** False (nothing started) when location permission is missing — the user must pass the pre-check again. */
+    /** Joylashuv ruxsati bo'lmasa false (hech narsa boshlanmaydi) — foydalanuvchi oldindan tekshiruvdan qayta o'tishi kerak. */
     fun resume(sessionId: String): Boolean
 
     suspend fun abandon(sessionId: String)
@@ -38,7 +38,7 @@ interface SurveyLauncher {
     fun stop()
 }
 
-/** Creates the session row (with a full copy of the effective config) and starts the foreground service. */
+/** Sessiya qatorini (amaldagi config'ning to'liq nusxasi bilan) yaratadi va foreground service'ni ishga tushiradi. */
 class SurveyStarter @Inject constructor(
     @ApplicationContext private val context: Context,
     private val plans: PlanRepository,
@@ -66,7 +66,7 @@ class SurveyStarter @Inject constructor(
         return StartResult.Started(id)
     }
 
-    /** §7: a RUNNING session left by a killed process can be resumed (same id, data kept). */
+    /** §7: o'ldirilgan jarayon qoldirgan RUNNING sessiyani davom ettirish mumkin (o'sha id, ma'lumotlar saqlanadi). */
     override fun resume(sessionId: String): Boolean {
         val granted =
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED

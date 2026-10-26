@@ -17,7 +17,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             configureAndroidCommon(this)
             defaultConfig.consumerProguardFiles("consumer-rules.pro")
         }
-        // Host (unit) tests run on the debug variant only — release adds nothing but time (ADR-012).
+        // Host (unit) testlar faqat debug variantida ishlaydi — release faqat vaqt qo'shadi (ADR-012).
         extensions.configure<LibraryAndroidComponentsExtension> {
             beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = false }
         }
@@ -36,7 +36,7 @@ internal fun Project.configureAndroidTestDeps() {
         add("testImplementation", libs.lib("kotest-assertions"))
         add("testImplementation", libs.lib("kotlinx-coroutines-test"))
         add("testImplementation", libs.lib("turbine"))
-        // Robolectric tests are JUnit 4 and run on the vintage engine.
+        // Robolectric testlari JUnit 4 da, shuning uchun vintage engine'da ishlaydi.
         add("testImplementation", libs.lib("junit4"))
         add("testImplementation", libs.lib("robolectric"))
         add("testImplementation", libs.lib("androidx-test-core"))

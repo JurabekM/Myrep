@@ -9,7 +9,7 @@ import uz.sectorverify.model.CleaningStats
 import uz.sectorverify.model.GnssFix
 import uz.sectorverify.model.Rat
 
-/** A sample that survived cleaning (§6.1), located relative to the site and path-loss normalised (§6.2). */
+/** Tozalashdan (§6.1) o'tgan namuna: saytga nisbatan joylashtirilgan va path-loss bo'yicha normallashtirilgan (§6.2). */
 data class CleanSample(
     val key: CellKey,
     val tNanos: Long,
@@ -22,7 +22,7 @@ data class CleanSample(
 
 data class CleaningResult(val samples: List<CleanSample>, val stats: CleaningStats)
 
-/** §6.1 cleaning: rsrp, age, GNSS interpolation and quality, distance window and LTE TA filter. */
+/** §6.1 tozalash: rsrp, yosh, GNSS interpolyatsiyasi va sifati, masofa oynasi va LTE TA filtri. */
 class Cleaner(private val config: AnalysisConfig) {
 
     fun clean(siteLat: Double, siteLon: Double, samples: List<CellSample>, fixes: List<GnssFix>): CleaningResult {
@@ -52,7 +52,7 @@ class Cleaner(private val config: AnalysisConfig) {
 
     private enum class Reject { NO_RSRP, STALE, NO_FIX, OUT_OF_RANGE, TA_MISMATCH }
 
-    /** Returns the [CleanSample] or the first [Reject] reason, in the order of §6.1. */
+    /** [CleanSample] ni yoki §6.1 tartibidagi birinchi [Reject] sababini qaytaradi. */
     private fun classify(s: CellSample, siteLat: Double, siteLon: Double, fixes: List<GnssFix>, times: LongArray): Any {
         val rsrp = s.rsrp ?: return Reject.NO_RSRP
         val rx = s.rxNanos

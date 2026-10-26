@@ -36,7 +36,7 @@ data class NewSession(
 )
 
 data class StoredResult(val session: SessionEntity, val sectors: List<SectorResult>, val findings: List<Finding>) {
-    /** Complete analysis output; null for sessions analysed before result_json existed. */
+    /** To'liq tahlil natijasi; result_json paydo bo'lishidan oldin tahlil qilingan sessiyalar uchun null. */
     val full: SessionResult? get() = session.resultJson?.let { SvJson.compact.decodeFromString(SessionResult.serializer(), it) }
 }
 
@@ -49,7 +49,7 @@ interface SessionRepository {
 
     suspend fun setMeasuredRate(sessionId: String, rateHz: Double)
 
-    /** Sessions left RUNNING by a killed process (§7: offer to resume). */
+    /** O'ldirilgan jarayon RUNNING holatida qoldirgan sessiyalar (§7: davom ettirishni taklif qilish). */
     suspend fun running(): List<SessionEntity>
 
     suspend fun session(sessionId: String): SessionEntity?

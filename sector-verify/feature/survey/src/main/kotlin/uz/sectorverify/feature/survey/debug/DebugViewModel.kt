@@ -39,7 +39,7 @@ data class DebugUi(
     val lastSessionId: String? = null,
 )
 
-/** Phase 2 temporary debug screen (debug builds only). */
+/** 2-bosqich vaqtinchalik debug ekrani (faqat debug build'larda). */
 @HiltViewModel
 class DebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,

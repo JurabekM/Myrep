@@ -48,7 +48,7 @@ import uz.sectorverify.ui.components.VerdictChip
 import uz.sectorverify.ui.components.pciColor
 import uz.sectorverify.ui.theme.LocalSvPalette
 
-/** Screen 1 — sites (§8.1). */
+/** 1-ekran — saytlar (§8.1). */
 @Composable
 fun SitesRoute(onOpenSite: (Long) -> Unit, onSettings: () -> Unit, onResumed: (String) -> Unit, vm: SitesViewModel = hiltViewModel()) {
     val context = LocalContext.current
@@ -158,7 +158,7 @@ private fun ImportDialog(o: ImportOutcome, onDismiss: () -> Unit) {
     )
 }
 
-/** Screen 2 — site card: plan table and polar diagram of planned azimuths. */
+/** 2-ekran — sayt kartasi: reja jadvali va rejadagi azimutlarning qutb diagrammasi. */
 @Composable
 fun SiteCardRoute(onPreCheck: (Long) -> Unit, onOpenSession: (String) -> Unit, vm: SiteCardViewModel = hiltViewModel()) {
     val plan by vm.plan.collectAsStateWithLifecycle()

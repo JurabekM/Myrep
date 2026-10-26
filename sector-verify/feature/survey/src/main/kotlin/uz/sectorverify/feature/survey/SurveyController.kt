@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** Process-wide survey state shared by the foreground service (writer) and the UI (reader). */
+/** Foreground service (yozuvchi) va UI (o'quvchi) bo'lishadigan, jarayon miqyosidagi o'lchov holati. */
 @Singleton
 class SurveyController @Inject constructor() {
     private val _state = MutableStateFlow(SurveyState())

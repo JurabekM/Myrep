@@ -19,7 +19,7 @@ data class Metrics(
     val healthyPass: Int,
     val medianErrDeg: Double,
 ) {
-    /** AC-08: share of confirmed swaps detected (1.0 when the pilot has none). */
+    /** AC-08: aniqlangan tasdiqlangan swap'lar ulushi (pilotda swap bo'lmasa 1.0). */
     val detection: Double get() = if (swapCells == 0) 1.0 else swapDetected.toDouble() / swapCells
     val falseFailRate: Double get() = if (healthyCells == 0) 0.0 else falseFail.toDouble() / healthyCells
     val passRate: Double get() = if (healthyCells == 0) 0.0 else healthyPass.toDouble() / healthyCells
@@ -29,7 +29,7 @@ data class Candidate(val config: AnalysisConfig, val metrics: Metrics, val chang
 
 data class CalibrationOutcome(val best: Candidate, val ranked: List<Candidate>, val baseline: Candidate, val feasible: Boolean)
 
-/** `calibrate <dir-of-zips> <ground_truth.csv> [--out dir] [--quick]` (§9 phase 4). */
+/** `calibrate <dir-of-zips> <ground_truth.csv> [--out dir] [--quick]` (§9, 4-bosqich). */
 object Calibrate {
     const val MAX_FALSE_FAIL = 0.03
     private const val GRID_BOOTSTRAP = 50
@@ -37,7 +37,7 @@ object Calibrate {
 
     private val SWAP_CAUSES = setOf(CauseCode.CELL_CONFIG_SWAP, CauseCode.BAND_PORT_SWAP)
 
-    /** Searched values (§9 phase 4: thresholds and n). The quick grid keeps the base verdict thresholds. */
+    /** Qidiriladigan qiymatlar (§9, 4-bosqich: chegaralar va n). Tezkor grid asosiy xulosa chegaralarini saqlaydi. */
     private val GRID_N = listOf(3.0, 3.5, 4.0)
     private val QUICK_N = listOf(3.0, 3.5)
     private val GRID_PASS = listOf(15.0, 20.0, 25.0)
@@ -93,7 +93,7 @@ object Calibrate {
                 val t = byKey[e.plan.code to s.key] ?: continue
                 if (t.isSwap) {
                     swapCells++
-                    // Same definition as AC-01: the cell appears in a CRITICAL SWAP finding of its ARFCN.
+                    // AC-01 bilan bir xil ta'rif: yacheyka o'z ARFCN'idagi CRITICAL SWAP topilmasida uchraydi.
                     val found = r.findings.any {
                         it.type == FindingType.SWAP &&
                             it.detail["rat"] == s.key.rat.name &&
@@ -124,7 +124,7 @@ object Calibrate {
         c.minSectorCoverage != base.minSectorCoverage,
     ).count { it }
 
-    /** Feasible = false FAIL ≤ 3 %; then max detection, min false FAIL, max PASS, fewest changes from [base]. */
+    /** Maqbul = noto'g'ri FAIL ≤ 3 %; keyin maks. aniqlash, min. noto'g'ri FAIL, maks. PASS, [base] dan eng kam farq. */
     fun rank(cands: List<Candidate>): List<Candidate> = cands.sortedWith(
         compareByDescending<Candidate> { it.metrics.falseFailRate <= MAX_FALSE_FAIL }
             .thenByDescending { it.metrics.detection }
@@ -157,7 +157,7 @@ object Calibrate {
             .toList()
         val ranked = rank(cands)
         val chosen = ranked.first()
-        // Final numbers with the full bootstrap of the base config.
+        // Asosiy config'ning to'liq bootstrap'i bilan yakuniy raqamlar.
         val finalConfig = chosen.config.copy(bootstrapIterations = base.bootstrapIterations)
         val best = Candidate(finalConfig, evaluate(finalConfig, sessions, truth), chosen.changes)
         val baseline = Candidate(base, evaluate(base, sessions, truth), 0)

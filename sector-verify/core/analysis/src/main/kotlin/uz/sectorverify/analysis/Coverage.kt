@@ -7,12 +7,12 @@ import uz.sectorverify.model.CellKey
 
 data class SectorCoverage(val fraction: Double, val windowBins: List<Int>, val missingBins: List<Int>)
 
-/** §6.6 overall and per-sector coverage from per-cell bin counts. */
+/** §6.6 umumiy va sektorlar bo'yicha qamrov — har yacheyka bin sanoqlaridan. */
 class CoverageCalculator(private val config: AnalysisConfig) {
     private val binner = Binner(config)
     private val windowSize = (2 * config.sectorHalfWidthDeg / config.binDeg).roundToInt().coerceIn(1, config.nBins)
 
-    /** A bin is covered when any of [keys] has ≥ minSamplesPerCoverageBin samples in it. */
+    /** [keys] dan istalgan birining binda ≥ minSamplesPerCoverageBin namunasi bo'lsa, bin qamralgan hisoblanadi. */
     fun coveredBins(counts: Map<CellKey, IntArray>, keys: Collection<CellKey>): BooleanArray {
         val covered = BooleanArray(config.nBins)
         for (k in keys) {
@@ -24,7 +24,7 @@ class CoverageCalculator(private val config: AnalysisConfig) {
 
     fun fraction(covered: BooleanArray): Double = covered.count { it }.toDouble() / covered.size
 
-    /** The 18 bins whose centres are nearest to plan azimuth (plan ± 90°). */
+    /** Markazlari plan azimutiga eng yaqin 18 ta bin (plan ± 90°). */
     fun window(planAzimuthDeg: Double): List<Int> = (0 until config.nBins)
         .sortedWith(compareBy({ abs(Angles.diff(binner.center(it), planAzimuthDeg)) }, { it }))
         .take(windowSize)

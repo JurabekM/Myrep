@@ -30,7 +30,7 @@ class ReplayCliTest {
     private val out = ArrayList<String>()
     private val print: (String) -> Unit = { out += it }
 
-    /** EC P-256 test-only key from test resources. */
+    /** Test resurslaridagi faqat testlar uchun EC P-256 kalit. */
     private object Signer : ReportSigner {
         private fun res(n: String) = requireNotNull(Signer::class.java.getResourceAsStream("/$n")).readBytes()
         private val key = KeyFactory.getInstance("EC").generatePrivate(PKCS8EncodedKeySpec(res("test-key.pk8")))

@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import uz.sectorverify.model.GnssFix
 
 /**
- * §7 GnssCollector: LocationManager.GPS_PROVIDER, 1000 ms, 0 m. No Play Services (works offline, no fused/network location).
- * Requires ACCESS_FINE_LOCATION.
+ * §7 GnssCollector: LocationManager.GPS_PROVIDER, 1000 ms, 0 m. Play Services yo'q (oflayn ishlaydi, fused/network location yo'q).
+ * ACCESS_FINE_LOCATION talab qilinadi.
  */
 class GnssCollector(private val context: Context, private val intervalMs: Long = DEFAULT_INTERVAL_MS) {
     @SuppressLint("MissingPermission")
@@ -32,7 +32,7 @@ class GnssCollector(private val context: Context, private val intervalMs: Long =
 }
 
 object LocationMapper {
-    /** Accuracy reported when the provider gives none: always rejected by the cleaner (§6.1.4). */
+    /** Provider aniqlik bermaganda qo'yiladigan qiymat: tozalagich uni doim rad etadi (§6.1.4). */
     const val UNKNOWN_ACCURACY_M = 999.0
 
     fun toFix(l: Location): GnssFix = GnssFix(

@@ -15,7 +15,7 @@ import uz.sectorverify.feature.survey.SurveyLauncher
 import uz.sectorverify.feature.survey.SurveyState
 import uz.sectorverify.model.SitePlan
 
-/** Screen 4: reads the service state; "Tugatish" stops it, and the result screen opens when analysis is stored. */
+/** 4-ekran: servis holatini o'qiydi; "Tugatish" uni to'xtatadi, tahlil saqlangach natija ekrani ochiladi. */
 @HiltViewModel
 class LiveViewModel @Inject constructor(
     savedState: SavedStateHandle,

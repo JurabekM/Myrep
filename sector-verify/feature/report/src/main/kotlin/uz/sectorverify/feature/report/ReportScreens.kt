@@ -38,7 +38,7 @@ import uz.sectorverify.ui.components.pciColor
 import uz.sectorverify.ui.theme.LocalSvPalette
 import uz.sectorverify.ui.util.Share
 
-/** Screen 5 — result: polar per ARFCN, verdict table, findings and recommended actions, re-check. */
+/** 5-ekran — natija: har ARFCN uchun qutb diagramma, verdikt jadvali, topilmalar, tavsiya etilgan choralar, qayta tekshiruv. */
 @Composable
 fun ResultRoute(onRecheck: (Long) -> Unit, onReport: (String) -> Unit, vm: ResultViewModel = hiltViewModel()) {
     val ui by vm.ui.collectAsStateWithLifecycle()
@@ -138,7 +138,7 @@ private fun SectorRow(s: SectorResult) {
     }
 }
 
-/** Screen 6 — report. */
+/** 6-ekran — hisobot. */
 @Composable
 fun ReportRoute(vm: ReportViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()

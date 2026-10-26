@@ -76,17 +76,17 @@ data class SessionEntity(
     @ColumnInfo(name = "config_json") val configJson: String,
     @ColumnInfo(name = "measured_rate_hz") val measuredRateHz: Double?,
     val status: SessionStatus,
-    /** Session verdict after the final analysis (null while RUNNING). ADR-010. */
+    /** Yakuniy tahlildan keyingi sessiya xulosasi (RUNNING paytida null). ADR-010. */
     val verdict: Verdict? = null,
     @ColumnInfo(name = "coverage_pct") val coveragePct: Double? = null,
     @ColumnInfo(name = "subscription_id") val subscriptionId: Int? = null,
-    /** Full SessionResult of the final analysis (coverage bins, cleaning stats) for the report. */
+    /** Hisobot uchun yakuniy tahlilning to'liq SessionResult'i (qamrov bin'lari, tozalash statistikasi). */
     @ColumnInfo(name = "result_json") val resultJson: String? = null,
     /** Sessiya boshlangandagi RF reja nusxasi: keyingi qayta import eski natijani o'zgartirmaydi. */
     @ColumnInfo(name = "plan_json") val planJson: String? = null,
 )
 
-/** Raw table: rows are inserted once and never updated. */
+/** Xom jadval: qatorlar bir marta qo'shiladi va hech qachon yangilanmaydi. */
 @Entity(
     tableName = "gnss_fix",
     foreignKeys = [
@@ -111,7 +111,7 @@ data class GnssFixEntity(
     @ColumnInfo(name = "bearing_deg") val bearingDeg: Double?,
 )
 
-/** Raw table: rows are inserted once and never updated. */
+/** Xom jadval: qatorlar bir marta qo'shiladi va hech qachon yangilanmaydi. */
 @Entity(
     tableName = "cell_sample",
     foreignKeys = [
@@ -166,7 +166,7 @@ data class SectorResultEntity(
     @ColumnInfo(name = "rmse_db") val rmseDb: Double?,
     val verdict: Verdict,
     @ColumnInfo(name = "cause_code") val causeCode: CauseCode,
-    /** Full SectorResult as JSON (CI half-width, coverage, missing bins) for the result screen. */
+    /** Natija ekrani uchun to'liq SectorResult JSON ko'rinishida (CI yarim kengligi, qamrov, yetishmagan bin'lar). */
     @ColumnInfo(name = "detail_json") val detailJson: String,
 )
 

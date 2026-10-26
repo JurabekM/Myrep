@@ -24,8 +24,8 @@ import uz.sectorverify.model.Sector
 import uz.sectorverify.model.SitePlan
 
 /**
- * Deterministic drive-test simulator (§6.11). RSRP = ref − 10·n·log10(d/300) + A(φ − α) + S + F with
- * Gudmundson AR(1) shadowing S and Rayleigh fading F (mean of 4 exponentials, in dB).
+ * Deterministik drive-test simulyatori (§6.11). RSRP = ref − 10·n·log10(d/300) + A(φ − α) + S + F, bunda
+ * S — Gudmundson AR(1) soyalanishi, F — Rayleigh fadingi (4 ta eksponensialning o'rtachasi, dB da).
  */
 class Simulator(private val scenario: SimScenario) {
     private val rnd = Random(scenario.seed)
@@ -105,7 +105,7 @@ class Simulator(private val scenario: SimScenario) {
         var neighbor: TxCell? = null
     }
 
-    /** Applies [SimScenario.fault] to the true azimuths and records what the analysis should find. */
+    /** [SimScenario.fault] ni haqiqiy azimutlarga qo'llaydi va tahlil nimani topishi kerakligini yozib qo'yadi. */
     private fun applyFault(st: FaultState, l: Layout, trueAz: MutableMap<CellKey, Double>) {
         val sc = scenario
         fun swapInto(i: Int, j: Int, a: Int, cause: CauseCode) {
@@ -149,7 +149,7 @@ class Simulator(private val scenario: SimScenario) {
         }
     }
 
-    /** Walks the route at 1 Hz; returns cell samples and GNSS fixes on a shared elapsed-realtime clock. */
+    /** Marshrutni 1 Hz da yuradi; yacheyka namunalari va GNSS fix'larini umumiy elapsed-realtime soatida qaytaradi. */
     private fun walk(route: List<RoutePoint>, cells: List<TxCell>): Pair<List<CellSample>, List<GnssFix>> {
         val sc = scenario
         val samples = ArrayList<CellSample>(route.size * cells.size)
@@ -170,7 +170,7 @@ class Simulator(private val scenario: SimScenario) {
             }
             val tCell = T0_NANOS + k * NANOS_PER_S
 
-            // Slow (shadowed) level per cell, then strongest transmitter per key (PCI collision → stronger is decoded).
+            // Har yacheyka uchun sekin (soyalangan) daraja, so'ng har kalitga eng kuchli uzatkich (PCI to'qnashuvi → kuchlisi dekodlanadi).
             data class Level(val cell: TxCell, val slow: Double, val distM: Double)
             val levels = cells.mapIndexed { idx, c ->
                 val d = max(1.0, Geo.distanceM(c.towerLat, c.towerLon, p.pos.lat, p.pos.lon))
@@ -190,7 +190,7 @@ class Simulator(private val scenario: SimScenario) {
             for ((key, lv) in levels) {
                 val isServing = key == serving
                 val rsrp = lv.slow + fading()
-                // Below sensitivity nothing is decoded; neighbours are reported only with probability pNeighbor.
+                // Sezgirlikdan past bo'lsa hech narsa dekodlanmaydi; qo'shnilar faqat pNeighbor ehtimol bilan xabar qilinadi.
                 if (rsrp < sc.sensitivityDbm || (!isServing && rnd.nextDouble() >= sc.pNeighbor)) continue
                 samples += sampleOf(key, tCell, rsrp, isServing, lv.distM)
             }
@@ -229,7 +229,7 @@ class Simulator(private val scenario: SimScenario) {
         )
     }
 
-    /** Ring or square around the site, starting at the end of the cut-out arc, walked at [SimScenario.speedMps]. */
+    /** Sayt atrofidagi halqa yoki kvadrat: kesilgan yoyning oxiridan boshlanadi, [SimScenario.speedMps] tezlikda yuriladi. */
     private fun route(): List<RoutePoint> {
         val sc = scenario
         val sweep = sc.coverage * 360.0
@@ -261,7 +261,7 @@ class Simulator(private val scenario: SimScenario) {
         return -min(PATTERN_COEF * r * r, PATTERN_MAX_ATT_DB)
     }
 
-    /** Rayleigh fading averaged over 4 resource elements: 10·log10(mean of 4 Exp(1)). */
+    /** 4 ta resurs elementi bo'yicha o'rtachalangan Rayleigh fadingi: 10·log10(4 ta Exp(1) ning o'rtachasi). */
     private fun fading(): Double {
         var s = 0.0
         repeat(FADING_TERMS) { s += -ln(1.0 - rnd.nextDouble()) }
@@ -282,7 +282,7 @@ class Simulator(private val scenario: SimScenario) {
 
     private fun distinctPcis(rat: Rat, n: Int): List<Int> {
         val base = rnd.nextInt((rat.maxPci + 1) / 3 - n) * 3
-        return List(n) { base + it } // LTE convention: one PCI group per site, sector = PCI mod 3
+        return List(n) { base + it } // LTE odati: har saytga bitta PCI guruhi, sektor = PCI mod 3
     }
 
     companion object {

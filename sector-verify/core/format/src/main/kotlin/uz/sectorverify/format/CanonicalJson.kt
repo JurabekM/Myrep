@@ -7,8 +7,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Canonical form (§8.3): object keys sorted recursively, no whitespace, number literals kept verbatim.
- * Re-parsing a pretty-printed document yields the same canonical bytes.
+ * Kanonik shakl (§8.3): obyekt kalitlari rekursiv saralanadi, bo'shliqlar yo'q, son literallari o'zgarishsiz saqlanadi.
+ * Chiroyli formatlangan hujjatni qayta parse qilish o'sha kanonik baytlarni beradi.
  */
 object CanonicalJson {
     fun canonicalize(e: JsonElement): JsonElement = when (e) {

@@ -69,11 +69,16 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 - ✅ Topilib tuzatilgan: AAB til bo'linishi (ilova ichida ru/en ishlamasligi mumkin edi), servis bildirishnomalari tizim tilida chiqishi, tiklashda ruxsatsiz `startForeground` (API 34+ yiqilish), `plan_err_*` format argumentlari.
 - ✅ AC holati jadvali: `docs/RELEASE_CHECKLIST.md`.
 
+### PR #21 self-review (Claude, root CLAUDE.md qoidasi)
+- ✅ 1–9-topilmalar tuzatildi (`74ba232`, ADR-016): `BufferedSampleWriter` stop/flush poygasi, servisda takroriy START/erta STOP, sessiyaga plan snapshot'i (`plan_json`), sozlamalar probe ruxsat tekshiruvi, tiklash dialogi (yozilayotgan sessiya), swap qidiruvida RAT mosligi, Cleaner interpolatsiya chegarasi, `calibrate` sessiya config'idan, PreCheck chegaralari `AnalysisConfig` dan, `binDeg` hisobot/ekranda config'dan.
+- ✅ 10-topilma: barcha Kotlin/Gradle/XML/skript izohlari o'zbekchaga o'tkazildi (faqat izohlar; kod bayt-baayt o'zgarmagan).
+
 ## Oxirgi test natijalari
 - 2026-10-26: `./gradlew check` — BUILD SUCCESSFUL (1-bosqich: model 5 test, analysis 34 test, koverVerify 99.7%).
 - 2026-10-26: `./gradlew :core:analysis:test -Pslow` — Monte-Karlo 1000: barcha AC ✅.
 - 2026-10-26: CI run #5 (`20209e6`): `check` ✅, `instrumented` (emulyator API 34) ✅ — EncryptedDatabase (4), KeystoreSigner, PdfReportWriter, ReportGenerator.
 - 2026-10-26: `./gradlew check` lokal ✅ (barcha modullar, Robolectric UI testlari bilan).
+- 2026-10-26: CI run #8 (`046a49e`) to'liq yashil (release smoke: OK); self-review tuzatishlaridan keyin `./gradlew check` lokal ✅.
 
 ## Ochiq savollar
 1. **targetSdk:** prompt 35 ni talab qiladi. Google Play 2026-08-31 dan yangi ilova va yangilanishlar uchun targetSdk 36 ni talab qiladi. Play orqali tarqatilsa 36 ga ko'tarish kerak (APK orqali tarqatishga ta'sir qilmaydi). Hozircha 35.

@@ -19,7 +19,7 @@ data class LiveCell(
     val lastRsrp: Double?,
     val nSamples: Int,
     val nBins: Int,
-    /** Preliminary status from |δ| only: PASS ≤ 20°, WARN ≤ 45°, FAIL beyond, INCONCLUSIVE without estimate. */
+    /** Faqat |δ| bo'yicha dastlabki holat: PASS ≤ 20°, WARN ≤ 45°, undan katta — FAIL, baho bo'lmasa — INCONCLUSIVE. */
     val status: Verdict,
 )
 
@@ -28,17 +28,17 @@ data class LiveSnapshot(
     val overallCoverage: Double,
     val cells: List<LiveCell>,
     val samplesKept: Int,
-    /** Overall coverage reached and every planned cell has an estimate — "Natija tayyor". */
+    /** Umumiy qamrovga erishildi va har bir rejalashtirilgan yacheykaning bahosi bor — "Natija tayyor". */
     val ready: Boolean,
 )
 
 /**
- * §6.10: method B and method A without bootstrap on everything collected so far.
+ * §6.10: hozirgacha yig'ilgan hamma narsa bo'yicha B usuli va bootstrap'siz A usuli.
  *
- * Incremental: [snapshot] expects the sample list to grow append-only during a session (as the survey engine
- * provides it). A sample is cleaned once for good as soon as its GNSS bracket can no longer change; only the
- * last few seconds are re-cleaned on each call. Any other list (shorter, different session) resets the cache,
- * so the result always equals cleaning everything from scratch.
+ * Inkremental: [snapshot] sessiya davomida namunalar ro'yxati faqat oxiriga qo'shilib o'sishini kutadi (o'lchov dvigateli
+ * uni shunday beradi). Namunaning GNSS oralig'i endi o'zgara olmaydigan bo'lishi bilan u bir marta va butunlay tozalanadi;
+ * har chaqiruvda faqat oxirgi bir necha soniya qayta tozalanadi. Boshqa har qanday ro'yxat (qisqaroq, boshqa sessiya) keshni
+ * nolga qaytaradi, shuning uchun natija doim hammasini noldan tozalash natijasi bilan bir xil bo'ladi.
  */
 class LiveAnalyzer(private val config: AnalysisConfig) {
     private val cleaner = Cleaner(config)
@@ -58,7 +58,7 @@ class LiveAnalyzer(private val config: AnalysisConfig) {
         val good = fixes.filter { f -> f.accM <= config.maxAccuracyM && (f.speedMps?.let { it <= config.maxSpeedMps } ?: true) }
         val lastGoodFix = good.maxOfOrNull { it.tNanos } ?: Long.MIN_VALUE
         val latest = maxOf(fixes.maxOfOrNull { it.tNanos } ?: Long.MIN_VALUE, samples.lastOrNull()?.tNanos ?: Long.MIN_VALUE)
-        // Final once a later good fix exists, or once no future fix can be within maxFixGap of it.
+        // Keyinroq yaxshi fix paydo bo'lgach yoki kelajakdagi hech bir fix undan maxFixGap ichida bo'la olmaganda — yakuniy.
         var end = consumed
         while (end < samples.size && (samples[end].tNanos <= lastGoodFix || latest - samples[end].tNanos > maxGapNanos)) end++
         if (end > consumed) {
@@ -72,7 +72,7 @@ class LiveAnalyzer(private val config: AnalysisConfig) {
         return build(plan, byKey)
     }
 
-    /** True when [samples] extends the list seen by the previous call of the same site. */
+    /** [samples] shu saytning oldingi chaqiruvida ko'rilgan ro'yxatni davom ettirsa true. */
     private fun continues(plan: SitePlan, samples: List<CellSample>): Boolean =
         plan.code == siteCode && samples.size >= consumed && (consumed == 0 || samples.first() == firstSample)
 

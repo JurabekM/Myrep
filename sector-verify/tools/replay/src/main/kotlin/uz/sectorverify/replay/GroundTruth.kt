@@ -6,8 +6,8 @@ import uz.sectorverify.model.CellKey
 import uz.sectorverify.model.Rat
 
 /**
- * ground_truth.csv (§9 phase 4): `site_code,rat,arfcn,pci,true_azimuth_deg,has_fault,fault_type`.
- * fault_type: NONE, CELL_CONFIG_SWAP, BAND_PORT_SWAP, SWAP (either swap), ANTENNA_ROTATED, PCI_MISSING.
+ * ground_truth.csv (§9, 4-bosqich): `site_code,rat,arfcn,pci,true_azimuth_deg,has_fault,fault_type`.
+ * fault_type: NONE, CELL_CONFIG_SWAP, BAND_PORT_SWAP, SWAP (istalgan swap), ANTENNA_ROTATED, PCI_MISSING.
  */
 data class TruthRow(val siteCode: String, val key: CellKey, val trueAzimuthDeg: Double?, val hasFault: Boolean, val faultType: String) {
     val isSwap: Boolean get() = faultType in SWAP_TYPES

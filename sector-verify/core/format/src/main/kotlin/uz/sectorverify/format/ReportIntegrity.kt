@@ -14,18 +14,18 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-/** Signs canonical bytes; on Android backed by an Android Keystore EC P-256 key. */
+/** Kanonik baytlarni imzolaydi; Android'da Android Keystore EC P-256 kalitiga tayanadi. */
 interface ReportSigner {
     fun sign(data: ByteArray): ByteArray
 
-    /** DER-encoded certificates, leaf first (attestation chain when available). */
+    /** DER-kodlangan sertifikatlar, avval leaf (mavjud bo'lsa attestation zanjiri). */
     fun certificateChain(): List<ByteArray>
 }
 
 /**
- * [keyFingerprint]: SHA-256 of the signing public key (hex). The signature proves the report was not changed after
- * signing by this key; that the key belongs to a given phone is checked by comparing fingerprints (the attestation
- * chain is kept in the report but not validated against Google's root in v1.0).
+ * [keyFingerprint]: imzolovchi ochiq kalitning SHA-256'i (hex). Imzo hisobot shu kalit bilan imzolangandan keyin
+ * o'zgartirilmaganini isbotlaydi; kalit ma'lum telefonga tegishliligi fingerprint'larni solishtirib tekshiriladi (attestation
+ * zanjiri hisobotda saqlanadi, lekin v1.0 da Google root'iga nisbatan tekshirilmaydi).
  */
 data class VerifyResult(
     val hashOk: Boolean,
@@ -37,7 +37,7 @@ data class VerifyResult(
     val ok: Boolean get() = hashOk && signatureOk
 }
 
-/** §8.3: sha256 + SHA256withECDSA over the canonical report without `integrity`. */
+/** §8.3: `integrity`siz kanonik hisobot ustidan sha256 + SHA256withECDSA. */
 object ReportIntegrity {
     private val b64 = Base64.getEncoder()
 

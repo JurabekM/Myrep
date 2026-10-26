@@ -13,14 +13,14 @@ import kotlinx.coroutines.withContext
 import uz.sectorverify.model.CellSample
 import uz.sectorverify.model.GnssFix
 
-/** Persists one buffer of samples and fixes atomically. */
+/** Sample va fix'larning bitta buferini atomar saqlaydi. */
 fun interface BatchSink {
     suspend fun write(samples: List<CellSample>, fixes: List<GnssFix>)
 }
 
 /**
- * §7: both streams are buffered for [flushIntervalMs] (1 s) and written in one Room transaction.
- * If the process is killed, at most one unflushed buffer is lost (AC-07: ≤ 2 s).
+ * §7: ikkala oqim [flushIntervalMs] (1 s) davomida buferlanadi va bitta Room tranzaksiyasida yoziladi.
+ * Jarayon o'ldirilsa, ko'pi bilan bitta yozilmagan bufer yo'qoladi (AC-07: ≤ 2 s).
  */
 class BufferedSampleWriter(private val sink: BatchSink, private val flushIntervalMs: Long = FLUSH_INTERVAL_MS) {
     private val mutex = Mutex()

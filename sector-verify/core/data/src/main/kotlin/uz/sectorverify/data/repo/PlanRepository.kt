@@ -27,7 +27,7 @@ data class StoredSite(val id: Long, val plan: SitePlan, val sectorIds: Map<Secto
 }
 
 interface PlanRepository {
-    /** Parses and validates; stores all sites only when the whole file is valid. */
+    /** Parse qiladi va tekshiradi; barcha saytlarni faqat butun fayl to'g'ri bo'lsagina saqlaydi. */
     suspend fun importCsv(text: String): PlanImport
 
     fun observeSites(query: String = ""): Flow<List<SiteSummary>>

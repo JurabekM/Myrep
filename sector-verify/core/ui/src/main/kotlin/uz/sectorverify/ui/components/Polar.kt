@@ -26,7 +26,7 @@ import kotlin.math.sin
 import uz.sectorverify.ui.R
 import uz.sectorverify.ui.theme.LocalSvPalette
 
-/** One sector on a polar diagram: plan (dashed) and measurement with its 95 % arc. Angles are compass degrees. */
+/** Polar diagrammadagi bitta sektor: reja (punktir) va 95 % yoyi bilan o'lchov. Burchaklar — kompas gradusida. */
 data class PolarItem(
     val label: String,
     val planDeg: Double?,
@@ -36,7 +36,7 @@ data class PolarItem(
     val color: Color,
 )
 
-/** Compass bearing → canvas angle (0° = north/up, clockwise). */
+/** Kompas azimuti → canvas burchagi (0° = shimol/yuqori, soat yo'nalishi bo'yicha). */
 fun polarPoint(center: Offset, radius: Float, bearingDeg: Double): Offset {
     val r = Math.toRadians(bearingDeg)
     return Offset(center.x + radius * sin(r).toFloat(), center.y - radius * cos(r).toFloat())
@@ -90,7 +90,7 @@ internal fun DrawScope.drawLabel(measurer: TextMeasurer, s: String, at: Offset, 
     drawText(layout, topLeft = Offset(at.x - layout.size.width / 2f, at.y - layout.size.height / 2f))
 }
 
-/** 36-bin coverage radar (§8.1 screen 4): covered bins filled, missing ones outlined in warn colour. */
+/** 36 bin'li qamrov radari (§8.1, 4-ekran): qoplangan bin'lar to'ldiriladi, yetishmaganlari warn rangida chiziladi. */
 @Composable
 fun CoverageRadar(covered: List<Boolean>, modifier: Modifier = Modifier) {
     val p = LocalSvPalette.current

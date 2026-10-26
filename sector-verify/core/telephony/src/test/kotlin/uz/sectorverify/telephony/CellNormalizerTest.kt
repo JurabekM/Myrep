@@ -64,7 +64,7 @@ class CellNormalizerTest {
         val s = CellNormalizer.normalize(lte, 0)!!
         d.filter(listOf(s), 0).size shouldBe 1
         d.filter(listOf(s, s.copy(tNanos = 6_000)), 1).size shouldBe 1
-        d.filter(listOf(s), 100).size shouldBe 1 // window expired
+        d.filter(listOf(s), 100).size shouldBe 1 // oyna muddati tugadi
     }
 
     @Test

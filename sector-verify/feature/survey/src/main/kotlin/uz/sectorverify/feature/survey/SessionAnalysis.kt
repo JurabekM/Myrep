@@ -10,7 +10,7 @@ import uz.sectorverify.format.SvJson
 import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.SessionResult
 
-/** Final analysis (§6, full bootstrap) on Dispatchers.Default; the result and the config used are stored. */
+/** Dispatchers.Default'da yakuniy tahlil (§6, to'liq bootstrap); natija va ishlatilgan config saqlanadi. */
 class SessionAnalysis(
     private val sessions: SessionRepository,
     private val dispatcher: CoroutineDispatcher,

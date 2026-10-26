@@ -11,7 +11,7 @@ import uz.sectorverify.model.DeviceCapabilities
 import uz.sectorverify.model.GnssFix
 import uz.sectorverify.model.SitePlan
 
-/** Contents of a session export ZIP (§5.4); the same ZIP is the input of :tools:replay. */
+/** Sessiya eksport ZIP'ining tarkibi (§5.4); xuddi shu ZIP :tools:replay uchun kirish hisoblanadi. */
 data class SessionExport(
     val plan: SitePlan,
     val samples: List<CellSample>,

@@ -6,7 +6,7 @@ import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.SessionMode
 import uz.sectorverify.model.SessionStatus
 
-/** session.json: metadata plus the full [AnalysisConfig] used (reproducibility, §5.2). */
+/** session.json: metama'lumotlar hamda ishlatilgan to'liq [AnalysisConfig] (takrorlanuvchanlik, §5.2). */
 @Serializable
 data class SessionMeta(
     val schema: String = SCHEMA,
@@ -41,7 +41,7 @@ object SvJson {
         prettyPrint = true
     }
 
-    /** Parses a config JSON (calibration output); unknown keys ignored, missing keys take defaults. */
+    /** Config JSON'ni (kalibrlash natijasi) parse qiladi; noma'lum kalitlar e'tiborsiz, yo'q kalitlar standart qiymatni oladi. */
     fun parseConfig(text: String): AnalysisConfig = compact.decodeFromString(AnalysisConfig.serializer(), text)
 
     fun configToJson(config: AnalysisConfig): String = pretty.encodeToString(AnalysisConfig.serializer(), config)

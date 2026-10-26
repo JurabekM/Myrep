@@ -18,9 +18,9 @@ import kotlinx.coroutines.launch
 import uz.sectorverify.model.CellSample
 
 /**
- * §7 CellCollector: `requestCellInfoUpdate()` every [intervalMs] on the chosen subscription and, on API 31+,
- * `TelephonyCallback.CellInfoListener`. Both streams are merged and de-duplicated by (cell, timestamp).
- * Callers must hold ACCESS_FINE_LOCATION (checked by the pre-check screen before the service starts).
+ * §7 CellCollector: tanlangan subscription'da har [intervalMs] da `requestCellInfoUpdate()` va API 31+ da
+ * `TelephonyCallback.CellInfoListener`. Ikkala oqim birlashtiriladi va (cell, timestamp) bo'yicha takrorlar olib tashlanadi.
+ * Chaqiruvchida ACCESS_FINE_LOCATION bo'lishi shart (servis boshlanishidan oldin pre-check ekrani tekshiradi).
  */
 class CellCollector(
     private val context: Context,
@@ -72,7 +72,7 @@ class CellCollector(
     }
 }
 
-/** Drops samples already seen (same cell and CellInfo timestamp) — the poll and the listener often report the same scan. */
+/** Avval ko'rilgan sample'larni tashlaydi (bir xil cell va CellInfo timestamp) — poll va listener ko'pincha bir skanni beradi. */
 class Deduplicator(private val windowNanos: Long = WINDOW_NANOS) {
     private val seen = LinkedHashMap<Triple<Any, Int, Long>, Long>()
 

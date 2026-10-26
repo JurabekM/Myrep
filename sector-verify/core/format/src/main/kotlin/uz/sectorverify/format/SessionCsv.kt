@@ -4,7 +4,7 @@ import uz.sectorverify.model.CellSample
 import uz.sectorverify.model.GnssFix
 import uz.sectorverify.model.Rat
 
-/** cell_samples.csv and gnss_fixes.csv of the session ZIP (§5.4): raw rows, nothing derived. */
+/** Sessiya ZIP'idagi cell_samples.csv va gnss_fixes.csv (§5.4): xom qatorlar, hech narsa hisoblanmagan. */
 object SessionCsv {
     val SAMPLE_HEADER = listOf("t_nanos", "rx_nanos", "rat", "arfcn", "pci", "registered", "rsrp", "rsrq", "sinr", "ta", "ci", "tac")
     val FIX_HEADER = listOf("t_nanos", "utc_ms", "lat", "lon", "acc_m", "speed_mps", "bearing_deg")

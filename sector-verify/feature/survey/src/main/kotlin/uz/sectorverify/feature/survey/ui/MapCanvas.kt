@@ -26,8 +26,8 @@ import uz.sectorverify.ui.components.polarPoint
 import uz.sectorverify.ui.theme.LocalSvPalette
 
 /**
- * ADR-005: no base map. Site, 150/400 m rings, the track coloured by serving PCI, a north arrow and a scale bar
- * on a local azimuthal projection around the site.
+ * ADR-005: asosiy xarita yo'q. Sayt, 150/400 m halqalar, serving PCI bo'yicha bo'yalgan trek, shimol strelkasi va masshtab
+ * chizig'i — sayt atrofidagi lokal azimutal proyeksiyada.
  */
 @Composable
 fun MapCanvas(plan: SitePlan, track: List<TrackPoint>, modifier: Modifier = Modifier) {
@@ -52,7 +52,7 @@ fun MapCanvas(plan: SitePlan, track: List<TrackPoint>, modifier: Modifier = Modi
         }
         polar.lastOrNull()?.let { (d, b) -> drawCircle(p.ink, 10f, polarPoint(c, (d * pxPerM).toFloat(), b)) }
         drawCircle(p.accent, 14f, c)
-        // North arrow (top-right corner).
+        // Shimol strelkasi (yuqori o'ng burchak).
         val n = Offset(size.width - 40f, 70f)
         drawPath(
             Path().apply {
@@ -64,7 +64,7 @@ fun MapCanvas(plan: SitePlan, track: List<TrackPoint>, modifier: Modifier = Modi
             p.ink,
         )
         drawText(measurer.measure(north, TextStyle(color = p.ink, fontSize = 14.sp)), topLeft = Offset(n.x - 6f, n.y + 4f))
-        // Scale bar: 100 m.
+        // Masshtab chizig'i: 100 m.
         val bar = (SCALE_M * pxPerM).toFloat()
         val y = size.height - 30f
         drawLine(p.ink, Offset(30f, y), Offset(30f + bar, y), 4f)

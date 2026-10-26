@@ -11,18 +11,18 @@ import org.junit.jupiter.api.Test
 class GeoTest {
     @Test
     fun `distance and bearing of known coordinates`() {
-        // Land's End → John o'Groats (Movable Type reference: 968.9 km, 009°07′11″).
+        // Land's End → John o'Groats (Movable Type etalon qiymati: 968.9 km, 009°07′11″).
         Geo.distanceM(50.06639, -5.71472, 58.64389, -3.07) shouldBe (968_854.9 plusOrMinus 1.0)
         Geo.bearingDeg(50.06639, -5.71472, 58.64389, -3.07) shouldBe (9.1197 plusOrMinus 0.1)
-        // Tashkent → Samarkand.
+        // Toshkent → Samarqand.
         Geo.distanceM(41.2995, 69.2401, 39.6542, 66.9597) shouldBe (265_826.5 plusOrMinus 1.0)
         Geo.bearingDeg(41.2995, 69.2401, 39.6542, 66.9597) shouldBe (227.259 plusOrMinus 0.1)
-        // One degree of longitude on the equator.
+        // Ekvatorda bir gradus uzunlik.
         Geo.distanceM(0.0, 0.0, 0.0, 1.0) shouldBe (111_195.08 plusOrMinus 1.0)
         Geo.bearingDeg(0.0, 0.0, 0.0, 1.0) shouldBe (90.0 plusOrMinus 0.1)
         Geo.bearingDeg(0.0, 0.0, 1.0, 0.0) shouldBe (0.0 plusOrMinus 0.1)
         Geo.bearingDeg(0.0, 0.0, -1.0, 0.0) shouldBe (180.0 plusOrMinus 0.1)
-        // A survey-scale point near a site.
+        // Sayt yaqinidagi o'lchov masshtabidagi nuqta.
         Geo.distanceM(40.1032, 65.3685, 40.1059, 65.3712) shouldBe (377.979 plusOrMinus 1.0)
         Geo.bearingDeg(40.1032, 65.3685, 40.1059, 65.3712) shouldBe (37.4104 plusOrMinus 0.1)
     }

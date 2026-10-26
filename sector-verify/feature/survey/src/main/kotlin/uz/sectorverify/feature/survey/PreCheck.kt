@@ -31,11 +31,11 @@ data class PreCheckInput(
 )
 
 data class PreCheckResult(val items: List<CheckItem>, val subscription: SimInfo?) {
-    /** "Boshlash" is enabled only when nothing blocks. */
+    /** "Boshlash" faqat hech narsa to'smaganda yoqiladi. */
     val canStart: Boolean get() = items.none { it.status == CheckStatus.BLOCK }
 }
 
-/** §8.1 screen 3 logic: which problems block the survey and which only warn. */
+/** §8.1 3-ekran mantig'i: qaysi muammolar o'lchovni to'sadi, qaysilari faqat ogohlantiradi. */
 object PreCheck {
     fun evaluate(i: PreCheckInput): PreCheckResult {
         val sim = SubscriptionSelector.select(i.sims, i.plan.mccMnc)

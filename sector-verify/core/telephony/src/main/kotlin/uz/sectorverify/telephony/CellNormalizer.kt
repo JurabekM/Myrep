@@ -3,7 +3,7 @@ package uz.sectorverify.telephony
 import uz.sectorverify.model.CellSample
 import uz.sectorverify.model.Rat
 
-/** Platform-independent copy of one CellInfo; Int.MAX_VALUE / Long.MAX_VALUE mean CellInfo.UNAVAILABLE. */
+/** Bitta CellInfo'ning platformaga bog'liq bo'lmagan nusxasi; Int.MAX_VALUE / Long.MAX_VALUE = CellInfo.UNAVAILABLE. */
 data class RawCell(
     val rat: Rat,
     val registered: Boolean,
@@ -18,7 +18,7 @@ data class RawCell(
     val tac: Int,
 )
 
-/** §7 CellNormalizer: UNAVAILABLE → null, out-of-range values → null, invalid PCI/ARFCN → sample dropped. */
+/** §7 CellNormalizer: UNAVAILABLE → null, diapazondan tashqari qiymatlar → null, noto'g'ri PCI/ARFCN → sample tashlanadi. */
 object CellNormalizer {
     const val UNAVAILABLE = Int.MAX_VALUE
     const val UNAVAILABLE_LONG = Long.MAX_VALUE

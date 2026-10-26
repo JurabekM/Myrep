@@ -46,12 +46,12 @@ class BufferedSampleWriterTest {
         }
         advanceTimeBy(60_500)
         val killedAtMs = currentTime
-        worker.cancel() // process death: no final flush
+        worker.cancel() // jarayon o'limi: yakuniy flush yo'q
         producer.isCancelled shouldBe true
         val lastPersistedMs = sink.samples.maxOf { it.tNanos } / 1_000_000
         (killedAtMs - lastPersistedMs <= 2000) shouldBe true
         sink.fixes.size shouldBe sink.samples.size
-        // One transaction per second, not per sample.
+        // Har sample uchun emas, har soniyada bitta tranzaksiya.
         (sink.transactions in 59..61) shouldBe true
     }
 

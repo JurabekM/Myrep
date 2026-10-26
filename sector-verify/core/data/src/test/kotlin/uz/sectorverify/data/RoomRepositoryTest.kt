@@ -35,7 +35,7 @@ import uz.sectorverify.model.SessionStatus
 import uz.sectorverify.model.Severity
 import uz.sectorverify.model.Verdict
 
-/** Room DAOs and repositories on Robolectric's SQLite (SQLCipher itself is covered by androidTest). */
+/** Robolectric SQLite'ida Room DAO'lari va repository'lar (SQLCipher'ning o'zi androidTest'da tekshiriladi). */
 @RunWith(RobolectricTestRunner::class)
 class RoomRepositoryTest {
     private val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SectorVerifyDatabase::class.java)
@@ -90,7 +90,7 @@ class RoomRepositoryTest {
             it.config shouldBe AnalysisConfig()
         }
         sessions.meta("missing", null).shouldBeNull()
-        // Re-import after the survey must not change the session's plan (ADR-016).
+        // O'lchovdan keyingi qayta import sessiya rejasini o'zgartirmasligi kerak (ADR-016).
         plans.importCsv(csv.replace("142,120", "142,200"))
         sessions.plan(id)!!.sectors.first { it.pci == 142 }.azimuthDeg shouldBe 120.0
         plans.siteByCode("NAV-1")!!.plan.sectors.first { it.pci == 142 }.azimuthDeg shouldBe 200.0
@@ -118,7 +118,7 @@ class RoomRepositoryTest {
             "1.0.0",
         )
         sessions.saveResult(id, result, AnalysisConfig(seed = 9))
-        sessions.saveResult(id, result, AnalysisConfig(seed = 9)) // re-analysis replaces
+        sessions.saveResult(id, result, AnalysisConfig(seed = 9)) // qayta tahlil almashtiradi
         sessions.finish(id, SessionStatus.DONE)
         val stored = sessions.result(id)!!
         stored.sectors shouldBe listOf(sector, unexpected)

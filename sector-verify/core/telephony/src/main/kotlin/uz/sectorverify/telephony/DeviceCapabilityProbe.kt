@@ -7,12 +7,12 @@ import uz.sectorverify.model.CellSample
 import uz.sectorverify.model.DeviceCapabilities
 import uz.sectorverify.model.Rat
 
-/** Pure evaluation of what a device reports, from samples collected for [durationS] seconds. */
+/** Qurilma xabar qilgan maydonlarni [durationS] soniyada yig'ilgan sample'lar bo'yicha sof baholash. */
 object CapabilityEvaluator {
     private const val NANOS_PER_S = 1e9
 
     fun evaluate(samples: List<CellSample>, durationS: Int, device: DeviceInfo, nowUtcMs: Long): DeviceCapabilities {
-        // One distinct CellInfo timestamp of the serving cell = one real measurement update.
+        // Serving cell'ning har bir alohida CellInfo timestamp'i = bitta haqiqiy o'lchov yangilanishi.
         val serving = samples.filter { it.registered }.map { it.tNanos }.distinct().sorted()
         val rate = if (serving.size >= 2) {
             (serving.size - 1) / ((serving.last() - serving.first()) / NANOS_PER_S).coerceAtLeast(1.0)
@@ -49,7 +49,7 @@ data class DeviceInfo(val model: String, val manufacturer: String, val apiLevel:
     }
 }
 
-/** §7 DeviceCapabilityProbe: listens for [durationS] seconds (default 60) and evaluates the reported fields. */
+/** §7 DeviceCapabilityProbe: [durationS] soniya (standart 60) tinglaydi va xabar qilingan maydonlarni baholaydi. */
 class DeviceCapabilityProbe(
     private val context: Context,
     private val subscriptionId: Int,

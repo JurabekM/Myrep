@@ -18,8 +18,8 @@ sealed interface TrafficStatus {
 }
 
 /**
- * §7 TrafficGenerator: a HEAD request every [intervalMs] keeps the UE in connected mode so that TA is reported.
- * HTTPS only, no query, no body, no user data. This is the only network access in the app (§11).
+ * §7 TrafficGenerator: har [intervalMs] da HEAD so'rov UE'ni connected rejimda ushlab turadi, shunda TA xabar qilinadi.
+ * Faqat HTTPS, query, body va foydalanuvchi ma'lumoti yo'q. Bu ilovadagi yagona tarmoq murojaati (§11).
  */
 class TrafficGenerator(
     private val url: String,
@@ -64,7 +64,7 @@ class TrafficGenerator(
         private const val TIMEOUT_MS = 5000
         private const val NANOS_PER_MS = 1_000_000L
 
-        /** Empty → generator off; only https URLs with a host are accepted. */
+        /** Bo'sh → generator o'chiq; faqat host'i bor https URL'lar qabul qilinadi. */
         fun isValidUrl(url: String): Boolean {
             if (url.isBlank()) return false
             return runCatching { URL(url) }.getOrNull()?.let { it.protocol == "https" && it.host.isNotBlank() && it.query == null } == true

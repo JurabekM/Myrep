@@ -17,7 +17,7 @@ enum class AppTheme { DARK, LIGHT, SUN }
 
 data class Settings(
     val preset: AnalysisPreset = AnalysisPreset.SUBURBAN,
-    /** Manual or imported (calibration) config; overrides the preset when set. */
+    /** Qo'lda kiritilgan yoki import qilingan (kalibrlash) config; berilsa, preset o'rniga ishlatiladi. */
     val configOverride: AnalysisConfig? = null,
     val trafficUrl: String = "",
     val appLanguage: String = "uz",

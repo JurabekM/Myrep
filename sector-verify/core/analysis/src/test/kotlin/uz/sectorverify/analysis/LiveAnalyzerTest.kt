@@ -37,7 +37,7 @@ class LiveAnalyzerTest {
             last = inc.snapshot(sim.plan, s, f)
             last shouldBe LiveAnalyzer(AnalysisConfig()).snapshot(sim.plan, s, f)
         }
-        // A different (shorter) list resets the cache.
+        // Boshqa (qisqaroq) ro'yxat keshni nolga qaytaradi.
         inc.snapshot(sim.plan, sim.samples.take(100), sim.fixes.take(40)) shouldBe
             LiveAnalyzer(AnalysisConfig()).snapshot(sim.plan, sim.samples.take(100), sim.fixes.take(40))
         (last!!.samplesKept > 0) shouldBe true

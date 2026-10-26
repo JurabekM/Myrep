@@ -23,8 +23,8 @@ class SectorVerifyApp : Application() {
             StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build())
             StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().build())
         }
-        // Key unwrap (Keystore) and SQLCipher library load off the main thread (§5: no ANR).
-        // A failure here is not fatal: the first real query reports it on its own path.
+        // Kalitni ochish (Keystore) va SQLCipher kutubxonasini yuklash asosiy oqimdan tashqarida (§5: ANR yo'q).
+        // Bu yerdagi xato halokatli emas: birinchi haqiqiy so'rov uni o'z yo'lida xabar qiladi.
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { runCatching { database.get().openHelper.writableDatabase } }
     }
 }

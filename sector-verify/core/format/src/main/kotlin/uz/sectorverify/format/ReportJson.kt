@@ -16,13 +16,13 @@ import uz.sectorverify.model.SectorResult
 import uz.sectorverify.model.SessionResult
 import uz.sectorverify.model.SitePlan
 
-/** report.json, schema `sector-verify/report/v1` (§5.5). */
+/** report.json, sxema `sector-verify/report/v1` (§5.5). */
 object ReportJson {
     const val SCHEMA = "sector-verify/report/v1"
     const val KEY_ALG = "EC-P256/SHA256withECDSA"
     const val INTEGRITY = "integrity"
 
-    /** Builds the report without the integrity block; numbers rounded to 0.1 so literals are stable. */
+    /** Hisobotni integrity blokisiz quradi; literallar barqaror bo'lishi uchun sonlar 0.1 gacha yaxlitlanadi. */
     fun build(plan: SitePlan, meta: SessionMeta, result: SessionResult): JsonObject = buildJsonObject {
         put("schema", SCHEMA)
         putJsonObject("site") {

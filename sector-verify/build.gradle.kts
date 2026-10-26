@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.kover)
 }
 
-// Aggregated Kover report for the pure-JVM modules (root: ./gradlew koverHtmlReport).
+// Sof JVM modullar uchun umumlashtirilgan Kover hisoboti (ildizda: ./gradlew koverHtmlReport).
 dependencies {
     kover(project(":core:model"))
     kover(project(":core:analysis"))

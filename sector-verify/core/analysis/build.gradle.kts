@@ -6,7 +6,7 @@ dependencies {
     api(project(":core:model"))
 }
 
-// AC-10: :core:analysis line coverage >= 90 %.
+// AC-10: :core:analysis qator qamrovi >= 90 %.
 kover {
     reports {
         verify {

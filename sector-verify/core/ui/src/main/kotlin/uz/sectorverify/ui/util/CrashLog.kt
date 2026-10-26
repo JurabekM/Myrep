@@ -9,8 +9,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * §5 stability: uncaught exceptions are written to a local file (no network). Only the stack trace and device
- * model are stored — never coordinates, IMSI or cell data. Exported from Settings as a ZIP via FileProvider.
+ * §5 barqarorlik: ushlanmagan istisnolar lokal faylga yoziladi (tarmoqsiz). Faqat stack trace va qurilma
+ * modeli saqlanadi — koordinata, IMSI va cell ma'lumoti hech qachon. Sozlamalardan FileProvider orqali ZIP qilib eksport qilinadi.
  */
 object CrashLog {
     private const val DIR = "crash"
@@ -41,7 +41,7 @@ object CrashLog {
 
     fun count(context: Context): Int = dir(context).listFiles().orEmpty().size
 
-    /** Zips all crash files into [out]; null when there is nothing to export. */
+    /** Barcha crash fayllarini [out] ga ZIP qiladi; eksport qilinadigan narsa bo'lmasa null. */
     fun export(context: Context, out: File): File? {
         val files = dir(context).listFiles().orEmpty().sortedBy { it.name }
         if (files.isEmpty()) return null

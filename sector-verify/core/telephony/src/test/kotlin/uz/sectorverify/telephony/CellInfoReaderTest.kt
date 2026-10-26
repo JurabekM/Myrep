@@ -17,7 +17,7 @@ import org.robolectric.shadows.CellSignalStrengthNrBuilder
 import org.robolectric.util.ReflectionHelpers
 import uz.sectorverify.model.Rat
 
-/** Fake CellInfo objects built with Robolectric's builders (§9, phase 2). */
+/** Robolectric builder'lari bilan yasalgan soxta CellInfo obyektlari (§9, 2-bosqich). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class CellInfoReaderTest {

@@ -65,7 +65,7 @@ import uz.sectorverify.telephony.SimInfo
 
 private val SIM = Simulator.run(SimScenario(seed = 303, nArfcn = 1, fault = Fault.FullSwap(listOf(0, 1, 2))))
 
-/** UI flow on fake data (§9 phase 3): imported plan → pre-check → survey → result screen with a FAIL verdict. */
+/** Soxta ma'lumotlarda UI oqimi (§9 3-bosqich): import qilingan reja → oldindan tekshiruv → o'lchov → FAIL verdiktli natija ekrani. */
 @HiltAndroidTest
 @UninstallModules(DataProvidesModule::class, SurveyModule::class)
 @RunWith(RobolectricTestRunner::class)
@@ -111,7 +111,7 @@ class FlowUiTest {
         }
     }
 
-    /** Device that sees the planned cells with a good GPS fix. */
+    /** Rejadagi cell'larni yaxshi GPS fix bilan ko'radigan qurilma. */
     class FakeSource @Inject constructor() : PreCheckSource {
         override fun locationGranted() = true
         override fun phoneStateGranted() = true
@@ -122,7 +122,7 @@ class FlowUiTest {
         override fun cells(subscriptionId: Int): Flow<List<CellSample>> = flowOf(SIM.samples.take(20))
     }
 
-    /** Instead of the service: stores the simulated walk, finishes and analyses it. */
+    /** Servis o'rniga: simulyatsiya qilingan yurishni saqlaydi, tugatadi va tahlil qiladi. */
     class FakeLauncher @Inject constructor(
         private val sessions: SessionRepository,
         private val analysis: SessionAnalysis,

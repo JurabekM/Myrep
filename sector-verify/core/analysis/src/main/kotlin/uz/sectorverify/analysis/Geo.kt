@@ -9,11 +9,11 @@ import kotlin.math.sqrt
 
 data class LatLon(val lat: Double, val lon: Double)
 
-/** Spherical-earth geodesy; good to well below 1 m over the 0–2 km a survey covers. */
+/** Sferik Yer geodeziyasi; o'lchov qamraydigan 0–2 km da xatosi 1 m dan ancha kichik. */
 object Geo {
     const val EARTH_RADIUS_M = 6_371_008.8
 
-    /** Haversine distance in metres. */
+    /** Haversine masofasi, metrda. */
     fun distanceM(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val p1 = Math.toRadians(lat1)
         val p2 = Math.toRadians(lat2)
@@ -23,7 +23,7 @@ object Geo {
         return 2 * EARTH_RADIUS_M * asin(sqrt(h.coerceIn(0.0, 1.0)))
     }
 
-    /** Great-circle initial bearing from point 1 to point 2, degrees in [0, 360). */
+    /** 1-nuqtadan 2-nuqtaga katta doira bo'yicha boshlang'ich yo'nalish (bearing), gradusda, [0, 360) oralig'ida. */
     fun bearingDeg(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val p1 = Math.toRadians(lat1)
         val p2 = Math.toRadians(lat2)
@@ -33,7 +33,7 @@ object Geo {
         return Angles.norm360(Math.toDegrees(atan2(y, x)))
     }
 
-    /** Point reached from (lat, lon) after [distM] along initial [bearingDeg]. */
+    /** (lat, lon) dan boshlang'ich [bearingDeg] yo'nalishi bo'yicha [distM] yurilgandan keyin yetiladigan nuqta. */
     fun destination(lat: Double, lon: Double, bearingDeg: Double, distM: Double): LatLon {
         val d = distM / EARTH_RADIUS_M
         val b = Math.toRadians(bearingDeg)
@@ -46,15 +46,15 @@ object Geo {
 }
 
 object Angles {
-    /** Normalises to [0, 360). */
+    /** [0, 360) oralig'iga normallashtiradi. */
     fun norm360(deg: Double): Double {
         val r = deg - 360.0 * floor(deg / 360.0)
         return if (r >= 360.0) 0.0 else r
     }
 
-    /** Normalises to [-180, 180). */
+    /** [-180, 180) oralig'iga normallashtiradi. */
     fun wrap180(deg: Double): Double = norm360(deg + 180.0) - 180.0
 
-    /** Signed smallest difference a − b in [-180, 180). */
+    /** a − b ning [-180, 180) oralig'idagi ishorali eng kichik farqi. */
     fun diff(a: Double, b: Double): Double = wrap180(a - b)
 }

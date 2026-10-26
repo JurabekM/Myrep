@@ -2,7 +2,7 @@ package uz.sectorverify.app
 
 import androidx.compose.runtime.Composable
 
-/** Release builds: no debug screen. */
+/** Release build'lar: debug ekrani yo'q. */
 object DebugRoutes {
     const val ENABLED = false
 

@@ -23,7 +23,7 @@ import uz.sectorverify.model.SessionMode
 import uz.sectorverify.model.SessionStatus
 import uz.sectorverify.model.Verdict
 
-/** Stored raw data → final analysis → stored result (the service's finish path). */
+/** Saqlangan xom ma'lumotlar → yakuniy tahlil → saqlangan natija (servisning tugatish yo'li). */
 @RunWith(RobolectricTestRunner::class)
 class SessionAnalysisTest {
     private val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SectorVerifyDatabase::class.java)

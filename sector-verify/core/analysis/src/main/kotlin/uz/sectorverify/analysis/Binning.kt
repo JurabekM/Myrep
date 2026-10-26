@@ -3,10 +3,10 @@ package uz.sectorverify.analysis
 import kotlin.math.floor
 import uz.sectorverify.model.AnalysisConfig
 
-/** One azimuth bin of one cell: [centerDeg] = (index + 0.5)·binDeg, [median] of y, [count] samples. */
+/** Bitta yacheykaning bitta azimut bini: [centerDeg] = (index + 0.5)·binDeg, [median] — y medianasi, [count] — namunalar soni. */
 data class Bin(val index: Int, val centerDeg: Double, val median: Double, val count: Int)
 
-/** §6.2: per-cell 10° bins, bin value = median of y, bins with fewer than minPerBin samples dropped. */
+/** §6.2: har yacheyka uchun 10° li binlar, bin qiymati = y medianasi, namunalari minPerBin dan kam binlar tashlanadi. */
 class Binner(private val config: AnalysisConfig) {
     private val nBins = config.nBins
 

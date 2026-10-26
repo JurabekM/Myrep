@@ -4,7 +4,7 @@ import android.content.res.Resources
 import uz.sectorverify.format.PlanError
 import uz.sectorverify.format.PlanErrorCode
 
-/** Localised CSV error with its line number (§5.3). */
+/** Qator raqami bilan lokalizatsiya qilingan CSV xatosi (§5.3). */
 fun PlanError.localized(res: Resources): String {
     val id = code.messageRes()
     val c = column.orEmpty()

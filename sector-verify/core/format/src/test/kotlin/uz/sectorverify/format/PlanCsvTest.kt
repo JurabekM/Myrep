@@ -45,12 +45,12 @@ class PlanCsvTest {
             "A,A,40,65,43405,S4,GSM,B3,1300,4,0,65,,,", // 5 rat
             "A,A,40,65,43405,S5,LTE,B3,1300,5,360,65,,,", // 6 azimuth
             "A,A,40,65,43405,S6,LTE,B3,1300,6,0,10,,,", // 7 hpbw
-            "A,A,40,65,43405,S7,LTE,B3,x,7,0,65,,,", // 8 not a number
-            "A,A,40,65,43405,,LTE,B3,1300,8,0,65,,,", // 9 empty sector
-            "A,A,40,65,43405,S9,LTE,B3,1300", // 10 column count
-            "B,B,40,65,43405,S1,LTE,B3,1300,9,0,65,,,", // 11 ok
-            "B,B,40,65,43405,S2,LTE,B3,1300,9,0,65,,,", // 12 duplicate
-            "B,B,40.1,65,43405,S3,LTE,B3,1300,10,0,65,,,", // 13 coords mismatch
+            "A,A,40,65,43405,S7,LTE,B3,x,7,0,65,,,", // 8 son emas
+            "A,A,40,65,43405,,LTE,B3,1300,8,0,65,,,", // 9 bo'sh sektor
+            "A,A,40,65,43405,S9,LTE,B3,1300", // 10 ustunlar soni
+            "B,B,40,65,43405,S1,LTE,B3,1300,9,0,65,,,", // 11 to'g'ri
+            "B,B,40,65,43405,S2,LTE,B3,1300,9,0,65,,,", // 12 takror
+            "B,B,40.1,65,43405,S3,LTE,B3,1300,10,0,65,,,", // 13 koordinatalar mos emas
             "C,C,40,65,43405,S1,LTE,B3,-1,1,0,65,,,", // 14 arfcn
         )
         val r = PlanCsv.parse((listOf(header) + rows).joinToString("\n"))

@@ -8,11 +8,11 @@ data class SimInfo(val subscriptionId: Int, val mcc: String?, val mnc: String?, 
     val mccMnc: String? get() = if (mcc != null && mnc != null) mcc + mnc else null
 }
 
-/** §7 dual-SIM: the subscription whose MCC/MNC matches the plan; none → the survey must not start. */
+/** §7 dual-SIM: MCC/MNC rejaga mos keladigan subscription; topilmasa → o'lchov boshlanmasligi kerak. */
 object SubscriptionSelector {
     fun select(sims: List<SimInfo>, planMccMnc: String): SimInfo? = sims.firstOrNull { it.mccMnc == planMccMnc.trim() }
 
-    /** Needs READ_PHONE_STATE. */
+    /** READ_PHONE_STATE kerak. */
     @SuppressLint("MissingPermission")
     fun activeSims(context: Context): List<SimInfo> {
         val sm = context.getSystemService(SubscriptionManager::class.java) ?: return emptyList()

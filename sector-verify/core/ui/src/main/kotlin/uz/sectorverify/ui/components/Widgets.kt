@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import uz.sectorverify.model.Verdict
 import uz.sectorverify.ui.theme.LocalSvPalette
 
-/** Field rule §8: every action button is at least 56 dp high. */
+/** Dala qoidasi §8: har bir amal tugmasining balandligi kamida 56 dp. */
 val MinTouch = 56.dp
 
 @Composable

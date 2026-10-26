@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import uz.sectorverify.format.PlanError
 import uz.sectorverify.format.PlanErrorCode
 
-/** Every CSV error renders in uz/ru/en with its line, column/value and no stray format specifiers. */
+/** Har bir CSV xatosi uz/ru/en tillarida qatori, ustuni/qiymati bilan va ortiqcha format spetsifikatorlarisiz chiqadi. */
 @RunWith(RobolectricTestRunner::class)
 class PlanErrorsTest {
     @Test

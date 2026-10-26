@@ -44,7 +44,7 @@ import uz.sectorverify.ui.util.CrashLog
 import uz.sectorverify.ui.util.LocaleStore
 import uz.sectorverify.ui.util.Share
 
-/** Screen 7 — settings (§8.1). [onLanguageChanged] recreates the activity. */
+/** 7-ekran — sozlamalar (§8.1). [onLanguageChanged] activity'ni qayta yaratadi. */
 @Composable
 fun SettingsRoute(onLanguageChanged: () -> Unit, extra: @Composable () -> Unit = {}, vm: SettingsViewModel = hiltViewModel()) {
     val s by vm.settings.collectAsStateWithLifecycle()

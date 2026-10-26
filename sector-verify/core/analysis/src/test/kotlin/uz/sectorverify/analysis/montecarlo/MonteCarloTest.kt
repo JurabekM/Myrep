@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-/** AC-01…AC-04 on 200 simulated sessions each (CI). The 1000-iteration variant is tagged "slow". */
+/** Har biri 200 ta simulyatsiya sessiyasida AC-01…AC-04 (CI). 1000 iteratsiyali varianti "slow" tegi bilan belgilangan. */
 class MonteCarloTest {
     @Test
     fun `acceptance criteria hold on 200 simulated sessions`() = check(200, "montecarlo.md")

@@ -62,7 +62,7 @@ internal fun Project.configureAndroidCommon(ext: CommonExtension<*, *, *, *, *, 
     }
 }
 
-/** detekt + ktlint + Kover + JUnit 5 for every module. */
+/** Har bir modul uchun detekt + ktlint + Kover + JUnit 5. */
 internal fun Project.configureQuality() {
     pluginManager.apply("io.gitlab.arturbosch.detekt")
     pluginManager.apply("org.jlleitschuh.gradle.ktlint")
@@ -80,7 +80,7 @@ internal fun Project.configureQuality() {
     }
     tasks.withType<Test>().configureEach {
         useJUnitPlatform {
-            // "slow": 1000-iteration Monte-Carlo (-Pslow). "perf": timing budgets, run alone in CI (-Pperf), ADR-015.
+            // "slow": 1000 iteratsiyali Monte-Carlo (-Pslow). "perf": vaqt byudjetlari, CI'da alohida ishlaydi (-Pperf), ADR-015.
             if (project.hasProperty("perf")) {
                 includeTags("perf")
             } else {
@@ -91,7 +91,7 @@ internal fun Project.configureQuality() {
         maxHeapSize = "2g"
         testLogging { events("failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
         systemProperty("sv.reportsDir", project.layout.buildDirectory.dir("reports").get().asFile.absolutePath)
-        // Optional mirror for Robolectric's android-all jars (e.g. when Maven Central rate-limits).
+        // Robolectric'ning android-all jar'lari uchun ixtiyoriy mirror (masalan, Maven Central so'rovlarni cheklaganda).
         project.findProperty("sv.robolectricRepoUrl")?.let { systemProperty("robolectric.dependency.repo.url", it) }
     }
 }

@@ -6,8 +6,8 @@ import android.content.res.Configuration
 import java.util.Locale
 
 /**
- * App language (uz/ru/en). DataStore is async, so the chosen tag is mirrored in SharedPreferences that
- * MainActivity reads synchronously in attachBaseContext.
+ * Ilova tili (uz/ru/en). DataStore asinxron, shuning uchun tanlangan teg SharedPreferences'ga ham yoziladi,
+ * uni MainActivity attachBaseContext'da sinxron o'qiydi.
  */
 class LocaleStore(private val context: Context) {
     fun get(): String = prefs(context).getString(KEY, DEFAULT) ?: DEFAULT
@@ -24,8 +24,8 @@ class LocaleStore(private val context: Context) {
 
         private fun prefs(c: Context) = c.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
-        /** Wraps [base] so that resources resolve in the stored language. */
-        @SuppressLint("AppBundleLocaleChanges") // :app disables bundle language splits (all languages ship).
+        /** [base] ni o'raydi, shunda resurslar saqlangan tilda olinadi. */
+        @SuppressLint("AppBundleLocaleChanges") // :app bundle til split'larini o'chiradi (barcha tillar birga yetkaziladi).
         fun wrap(base: Context): Context {
             val tag = prefs(base).getString(KEY, DEFAULT) ?: DEFAULT
             val config = Configuration(base.resources.configuration).apply { setLocale(Locale.forLanguageTag(tag)) }
