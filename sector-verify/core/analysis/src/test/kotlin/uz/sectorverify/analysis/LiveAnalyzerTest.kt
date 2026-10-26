@@ -27,12 +27,19 @@ class LiveAnalyzerTest {
     }
 
     @Test
-    fun `one live update is fast`() {
-        val sim = Simulator.run(SimScenario(seed = 32, nSectors = 6, nArfcn = 3))
-        live.snapshot(sim.plan, sim.samples, sim.fixes) // warm-up
-        val t0 = System.nanoTime()
-        live.snapshot(sim.plan, sim.samples, sim.fixes)
-        val ms = (System.nanoTime() - t0) / 1e6
-        (ms < 300.0) shouldBe true
+    fun `incremental snapshots equal a fresh full computation`() {
+        val sim = Simulator.run(SimScenario(seed = 33, nArfcn = 2, fault = Fault.Rotation(1, 30.0)))
+        val inc = LiveAnalyzer(AnalysisConfig())
+        var last: LiveSnapshot? = null
+        for (secs in listOf(60, 300, 301, 700, Int.MAX_VALUE)) {
+            val s = sim.samples.filter { it.tNanos - Simulator.T0_NANOS < secs * 1_000_000_000L }
+            val f = sim.fixes.filter { it.tNanos - Simulator.T0_NANOS < secs * 1_000_000_000L }
+            last = inc.snapshot(sim.plan, s, f)
+            last shouldBe LiveAnalyzer(AnalysisConfig()).snapshot(sim.plan, s, f)
+        }
+        // A different (shorter) list resets the cache.
+        inc.snapshot(sim.plan, sim.samples.take(100), sim.fixes.take(40)) shouldBe
+            LiveAnalyzer(AnalysisConfig()).snapshot(sim.plan, sim.samples.take(100), sim.fixes.take(40))
+        (last!!.samplesKept > 0) shouldBe true
     }
 }

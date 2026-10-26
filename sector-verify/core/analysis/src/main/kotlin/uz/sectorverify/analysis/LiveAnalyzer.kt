@@ -32,16 +32,57 @@ data class LiveSnapshot(
     val ready: Boolean,
 )
 
-/** §6.10: method B and method A without bootstrap on everything collected so far. */
+/**
+ * §6.10: method B and method A without bootstrap on everything collected so far.
+ *
+ * Incremental: [snapshot] expects the sample list to grow append-only during a session (as the survey engine
+ * provides it). A sample is cleaned once for good as soon as its GNSS bracket can no longer change; only the
+ * last few seconds are re-cleaned on each call. Any other list (shorter, different session) resets the cache,
+ * so the result always equals cleaning everything from scratch.
+ */
 class LiveAnalyzer(private val config: AnalysisConfig) {
     private val cleaner = Cleaner(config)
     private val binner = Binner(config)
     private val estimator = AzimuthEstimator(config)
     private val coverage = CoverageCalculator(config)
+    private val maxGapNanos = config.maxFixGapMs * NANOS_PER_MS
+
+    private var siteCode: String? = null
+    private var firstSample: CellSample? = null
+    private var consumed = 0
+    private val final = HashMap<CellKey, MutableList<CleanSample>>()
 
     fun snapshot(plan: SitePlan, samples: List<CellSample>, fixes: List<GnssFix>): LiveSnapshot {
-        val cleaned = cleaner.clean(plan.lat, plan.lon, samples, fixes).samples
-        val byKey = cleaned.groupBy { it.key }
+        if (!continues(plan, samples)) reset(plan)
+        firstSample = samples.firstOrNull()
+        val good = fixes.filter { f -> f.accM <= config.maxAccuracyM && (f.speedMps?.let { it <= config.maxSpeedMps } ?: true) }
+        val lastGoodFix = good.maxOfOrNull { it.tNanos } ?: Long.MIN_VALUE
+        val latest = maxOf(fixes.maxOfOrNull { it.tNanos } ?: Long.MIN_VALUE, samples.lastOrNull()?.tNanos ?: Long.MIN_VALUE)
+        // Final once a later good fix exists, or once no future fix can be within maxFixGap of it.
+        var end = consumed
+        while (end < samples.size && (samples[end].tNanos <= lastGoodFix || latest - samples[end].tNanos > maxGapNanos)) end++
+        if (end > consumed) {
+            for (c in cleaner.clean(plan.lat, plan.lon, samples.subList(consumed, end), fixes).samples) {
+                final.getOrPut(c.key) { ArrayList() } += c
+            }
+            consumed = end
+        }
+        val pending = cleaner.clean(plan.lat, plan.lon, samples.subList(consumed, samples.size), fixes).samples.groupBy { it.key }
+        val byKey = (final.keys + pending.keys).associateWith { k -> final[k].orEmpty() + pending[k].orEmpty() }
+        return build(plan, byKey)
+    }
+
+    /** True when [samples] extends the list seen by the previous call of the same site. */
+    private fun continues(plan: SitePlan, samples: List<CellSample>): Boolean =
+        plan.code == siteCode && samples.size >= consumed && (consumed == 0 || samples.first() == firstSample)
+
+    private fun reset(plan: SitePlan) {
+        siteCode = plan.code
+        consumed = 0
+        final.clear()
+    }
+
+    private fun build(plan: SitePlan, byKey: Map<CellKey, List<CleanSample>>): LiveSnapshot {
         val planned = plan.sectors.associateBy { it.key }
         val counts = byKey.mapValues { binner.counts(it.value) }
         val covered = coverage.coveredBins(counts, planned.keys)
@@ -71,6 +112,10 @@ class LiveAnalyzer(private val config: AnalysisConfig) {
         }
         val fraction = coverage.fraction(covered)
         val ready = fraction >= config.minOverallCoverage && cells.filter { it.key in planned }.all { it.alphaDeg != null }
-        return LiveSnapshot(covered.toList(), fraction, cells, cleaned.size, ready)
+        return LiveSnapshot(covered.toList(), fraction, cells, byKey.values.sumOf { it.size }, ready)
+    }
+
+    private companion object {
+        const val NANOS_PER_MS = 1_000_000L
     }
 }
