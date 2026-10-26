@@ -127,3 +127,27 @@ LUK/ATC iste'moli, emitent yechimi + yozuvi, takroriy so'rov javobi). Bu 2-faza 
 PostgreSQL va avtorizatsiya bitta tranzaksiyada (bitta commit). Docker'dagi FULL raqamlari Windows'dagi
 mahalliy o'lchovdan (§2, §6) past — konteyner fayl tizimida fsync qimmatroq; solishtirish faqat jadval
 ichida.
+
+## 8. PostgreSQL bilan yuk sinovi — 2-faza P2.3 (2026-10-26)
+
+Qayta yugurish: `bash scripts/pg-load.sh [KARTA] [PARALLEL] [SONIYA] ["memory pkcs11"]`.
+Natijalar `docs/load/p2.3-pg-*.json`.
+
+**Usul.** §7 dagidek (Docker, 8 yadro, 200 karta, 32 parallel, 60 s, Shield dvigateli, so'rovlar
+chegarasi o'chiq). Qo'shimchasi: alohida PostgreSQL 17 konteyneri o'sha Docker tarmog'ida, standart
+sozlamada (fsync, `synchronous_commit = on` — to'liq chidamlilik). Server hovuzi 32 ulanish (ADR-0018).
+
+| Ombor | KeyStore | Avtorizatsiya | p50 | p95 | p99 | max | Provisioning | Xato |
+|---|---|---|---|---|---|---|---|---|
+| SQLite (FULL, §7) | SoftHSM, 4 sessiya | 101 /s | 315 ms | 335 ms | 368 ms | 410 ms | 135 /s | 0 |
+| **PostgreSQL** | memory | **377 /s** | 84 ms | 91 ms | **111 ms** | 139 ms | 234 /s | 0 |
+| **PostgreSQL** | SoftHSM, 4 sessiya | **368 /s** | 85 ms | 109 ms | **118 ms** | 444 ms | 228 /s | 0 |
+
+Server loglarida ochiq PAN va DB paroli yo'q (skript tekshiradi).
+
+**Xulosa — SLA (200 /s, p99 < 300 ms) HSM bilan va to'liq chidamlilik bilan bajarildi**: 368 /s
+(×1,8 zaxira), p99 118 ms. SQLite'ga nisbatan ×3,6: takroriy so'rov va emitent commit'lari endi
+parallel va PostgreSQL ularning fsync'ini guruhlaydi. Yagona ketma-ket qism — audit zanjiri qulfi
+ostidagi Vault commit'i (ADR-0018). Bu raqamlar bitta mashinadagi Docker'da (server, generator va
+PostgreSQL bir xil 8 yadroni bo'lishadi); `TODO(spec):` pilot muhitida (alohida DB serveri, tarmoq HSM)
+qayta o'lchash.

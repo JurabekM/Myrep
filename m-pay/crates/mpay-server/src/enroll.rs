@@ -14,7 +14,7 @@ use mpay_common::clock::Clock;
 use mpay_crypto::rng;
 use mpay_pqlink::attestation::VerifiedDevice;
 use mpay_pqlink::{EnrollmentGate, PqLinkError};
-use sqlx::SqlitePool;
+use sqlx::AnyPool;
 
 const NONCE_LABEL: &[u8] = b"MPAY-PQLINK-V1 enroll-nonce";
 /// Ishlatilganlar ro'yxati shundan oshsa — muddati o'tganlari tozalanadi.
@@ -27,7 +27,7 @@ pub struct Enrollment {
     used: Mutex<HashMap<[u8; 32], i64>>,
     ttl_secs: i64,
     clock: Arc<dyn Clock>,
-    pool: SqlitePool,
+    pool: AnyPool,
     rt: tokio::runtime::Handle,
 }
 
@@ -42,7 +42,7 @@ impl std::fmt::Debug for Enrollment {
 impl Enrollment {
     /// Async kontekstda yaratiladi (joriy tokio runtime saqlanadi).
     pub fn new(
-        pool: SqlitePool,
+        pool: AnyPool,
         clock: Arc<dyn Clock>,
         ttl_secs: i64,
     ) -> Result<Self, mpay_crypto::CryptoError> {
@@ -111,7 +111,7 @@ impl Enrollment {
     /// Qurilma oxirgi marta attestatsiyadan o'tgan vaqt (ro'yxatda bo'lmasa `None`).
     pub async fn attested_at(&self, device_hex: &str) -> Result<Option<i64>, sqlx::Error> {
         use sqlx::Row;
-        sqlx::query("SELECT enrolled_at FROM pqlink_devices WHERE device_id = ?")
+        sqlx::query("SELECT enrolled_at FROM pqlink_devices WHERE device_id = $1")
             .bind(device_hex)
             .fetch_optional(&self.pool)
             .await?
@@ -126,7 +126,7 @@ impl Enrollment {
 
     /// Qurilmani reyestrdan o'chiradi (rekey oxirida eskisi yoki xatoda yangisi).
     pub async fn remove(&self, device_hex: &str) -> Result<(), sqlx::Error> {
-        sqlx::query("DELETE FROM pqlink_devices WHERE device_id = ?")
+        sqlx::query("DELETE FROM pqlink_devices WHERE device_id = $1")
             .bind(device_hex)
             .execute(&self.pool)
             .await?;
@@ -135,7 +135,7 @@ impl Enrollment {
 
     async fn register(&self, d: &VerifiedDevice, now: i64) -> Result<(), sqlx::Error> {
         sqlx::query(
-            "INSERT INTO pqlink_devices (device_id, security_level, enrolled_at) VALUES (?, ?, ?) \
+            "INSERT INTO pqlink_devices (device_id, security_level, enrolled_at) VALUES ($1, $2, $3) \
              ON CONFLICT DO NOTHING",
         )
         .bind(d.device_id.to_hex())
@@ -177,10 +177,11 @@ mod tests {
 
     async fn enrollment() -> (tempfile::TempDir, Arc<ManualClock>, Enrollment) {
         let dir = tempfile::tempdir().unwrap();
-        let pool =
-            mpay_vault::db::open_pool(&format!("sqlite://{}", dir.path().join("e.db").display()))
-                .await
-                .unwrap();
+        let pool = mpay_vault::db::Db::open_sqlite(&dir.path().join("e.db"))
+            .await
+            .unwrap()
+            .pool()
+            .clone();
         let clock = Arc::new(ManualClock::new(OffsetDateTime::now_utc()));
         let e = Enrollment::new(pool, clock.clone(), 300).unwrap();
         (dir, clock, e)

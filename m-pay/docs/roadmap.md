@@ -53,8 +53,8 @@ Pilot bank hali tanlanmagan — 2-faza **virtual muhitda** sinaladi (2026-10-25 
 | # | Ish | Virtual o'rinbosar | Holat |
 |---|---|---|---|
 | P2.1 | OTP kanali: emitentdagi telefon raqamiga SMS | virtual SMS shlyuzi (webhook) | ✅ (ADR-0016) |
-| P2.2 | HSM bilan yuk sinovi (KDF/CMAC HSM ichida) | SoftHSM2 (Docker) | ✅ (ADR-0017; SLA — P2.3 dan keyin) |
-| P2.3 | PostgreSQL + avtorizatsiya bitta tranzaksiyada (TPS'ni qaytarish) | PostgreSQL (Docker) | reja |
+| P2.2 | HSM bilan yuk sinovi (KDF/CMAC HSM ichida) | SoftHSM2 (Docker) | ✅ (ADR-0017) |
+| P2.3 | PostgreSQL + avtorizatsiya bitta tranzaksiyada (TPS'ni qaytarish) | PostgreSQL (Docker) | ✅ (ADR-0018; HSM bilan 368 /s, p99 118 ms) |
 | P2.4 | Ko'p instansiya: sessiyalar, nonce'lar, Shield ombori umumiy | 2 server + PostgreSQL + teskari proksi | reja |
 | P2.5 | Deployment: docker-compose, monitoring, zaxira nusxa | Docker Desktop | reja |
 | P2.6 | Play Integrity | mock tekshiruvchi | reja |

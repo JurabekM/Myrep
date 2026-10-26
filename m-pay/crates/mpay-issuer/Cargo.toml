@@ -11,6 +11,7 @@ workspace = true
 
 [dependencies]
 mpay-common.workspace = true
+mpay-db.workspace = true
 mpay-crypto.workspace = true
 sqlx.workspace = true
 tokio.workspace = true

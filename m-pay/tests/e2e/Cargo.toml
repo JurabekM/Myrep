@@ -13,6 +13,7 @@ workspace = true
 mpay-server.workspace = true
 mpay-terminal-sim.workspace = true
 mpay-common.workspace = true
+mpay-db.workspace = true
 mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
 tokio = { workspace = true, features = ["io-util"] }
 tempfile.workspace = true

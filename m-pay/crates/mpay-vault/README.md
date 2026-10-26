@@ -14,9 +14,13 @@ Token Vault: provisioning, ID&V, LUK, lifecycle, detokenizatsiya va audit.
 * **Detokenizatsiya**: faqat [`VaultDetokenizer`] porti (issuer'ga beriladi, HTTP'da yo'q):
   `lookup` (o'zgartirmaydi) va `consume` (ARQC'dan keyin: LUK hisoblagichi + ATC monotonligi, atomar).
 * **Audit**: har o'zgarish va detokenizatsiya — append-only (trigger'lar), xesh-zanjirli; `verify`.
-* **Tranzaksiyalar** (`db.rs`, ADR-0009): yozuvchilar `begin_write` (`BEGIN IMMEDIATE`); hovuz
-  standarti 1 ulanish. Tranzaksiya ochiq turganda hovuzdan boshqa so'rov qilinmaydi — tayyorgarlik
-  (DEK, DPAN, shifrlash) undan oldin, ichida faqat `&mut tx`.
+* **Tranzaksiyalar** (`mpay-db`, ADR-0009, ADR-0018): SQLite yoki PostgreSQL (`sqlx::Any`).
+  Yozuvchilar `Db::begin_write`: SQLite'da jarayon qulfi + `BEGIN IMMEDIATE` (hovuz 1 ulanish),
+  PostgreSQL'da parallel; poygasi bor joylarda `FOR UPDATE` / advisory qulflar (ATC iste'moli, OTP,
+  holat o'tishlari, provisioning hisoblari, audit zanjiri). Tranzaksiya ochiq turganda hovuzdan boshqa
+  so'rov qilinmaydi — tayyorgarlik (DEK, DPAN, shifrlash) undan oldin, ichida faqat `&mut tx`.
+  Migratsiyalar: `migrations/sqlite` va `migrations/postgres`. PostgreSQL'da sinov:
+  `MPAY_TEST_PG_URL=postgres://… cargo test -p mpay-vault -p mpay-e2e`.
 
 ## Testlar
 

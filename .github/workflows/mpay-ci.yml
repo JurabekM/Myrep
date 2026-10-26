@@ -35,6 +35,31 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
 
+  postgres:
+    # 2-faza P2.3 (ADR-0018): Vault va butun e2e to'plami PostgreSQL'da (har test o'z bazasida).
+    name: PostgreSQL integratsion testi
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: mpay
+          POSTGRES_DB: mpay
+          # Faqat shu job ichidagi vaqtinchalik baza — parol yo'q (repoga sir tushmaydi).
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mpay" --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: m-pay
+      - run: cargo test -p mpay-vault -p mpay-e2e
+        env:
+          MPAY_TEST_PG_URL: postgres://mpay@127.0.0.1:5432/mpay
+
   softhsm:
     name: SoftHSM2 (PKCS#11) integratsion testi
     runs-on: ubuntu-24.04

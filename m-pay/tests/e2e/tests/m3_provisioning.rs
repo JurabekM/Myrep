@@ -90,7 +90,7 @@ async fn green_provisioning_lifecycle_over_http() {
     assert_eq!(a["entries"].as_i64().unwrap(), 7, "{a}");
 
     // PAN, DPAN va LUK'lar DB fayllarida ochiq ko'rinishda yo'q.
-    let raw = sb.db_bytes();
+    let raw = sb.db_bytes().await;
     for secret in [fpan.as_str(), profile.dpan.as_str()] {
         assert!(!contains(&raw, secret.as_bytes()), "DB'da ochiq PAN");
     }

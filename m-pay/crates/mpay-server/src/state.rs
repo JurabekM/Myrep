@@ -372,14 +372,16 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         },
         ..ServerConfig::default()
     };
-    let db_path = cfg.resolve(&cfg.database.path);
-    let pool = mpay_vault::db::open_pool_with(
-        &format!("sqlite://{}", db_path.display()),
-        cfg.database.synchronous,
-        cfg.database.max_connections,
-    )
-    .await?;
-    crate::dedup::migrate(&pool).await?;
+    let url = cfg
+        .database
+        .connect_url(|p| cfg.resolve(p))
+        .map_err(BootError::Config)?;
+    let db = mpay_vault::db::Db::open(&url, cfg.database.synchronous, cfg.database.max_connections)
+        .await
+        .map_err(|e| BootError::Config(format!("ma'lumotlar bazasi: {e}")))?;
+    tracing::info!(dialect = ?db.dialect(), "ma'lumotlar bazasi");
+    crate::dedup::migrate(&db).await?;
+    let pool = db.pool().clone();
     let enrollment = match cfg.pqlink.enrollment {
         crate::config::EnrollmentMode::Required => Some(Arc::new(
             crate::enroll::Enrollment::new(
@@ -402,7 +404,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(
-            pool.clone(),
+            db.clone(),
             ks.clone(),
             scheme.clone(),
             idv,
@@ -415,7 +417,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let detok = Arc::new(VaultDetokenizer::new(vault.clone(), "issuer"));
     let issuer = Arc::new(
         Issuer::open(
-            pool,
+            db,
             ks.clone(),
             scheme.clone(),
             detok,

@@ -23,22 +23,22 @@ struct Env {
     ks: Arc<dyn KeyStore>,
     dpan: Pan,
     _dir: tempfile::TempDir,
-    pool: sqlx::SqlitePool,
+    pool: sqlx::AnyPool,
 }
 
 async fn env() -> Env {
     let dir = tempfile::tempdir().unwrap();
-    let pool =
-        mpay_vault::db::open_pool(&format!("sqlite://{}", dir.path().join("i.db").display()))
-            .await
-            .unwrap();
+    let db = mpay_vault::db::Db::open_sqlite(&dir.path().join("i.db"))
+        .await
+        .unwrap();
+    let pool = db.pool().clone();
     let ks: Arc<dyn KeyStore> = Arc::new(MemoryKeyStore::random());
     ensure_standard_keys(ks.as_ref()).unwrap();
     let scheme: Arc<dyn CryptogramScheme> = Arc::new(MpayAes128CmacV1);
     let shield = Arc::new(StubShield::default());
     let vault = Arc::new(
         Vault::open(
-            pool.clone(),
+            db.clone(),
             ks.clone(),
             scheme.clone(),
             shield.clone(),
@@ -66,7 +66,7 @@ async fn env() -> Env {
         panic!()
     };
     let issuer = Issuer::open(
-        pool.clone(),
+        db,
         ks.clone(),
         scheme,
         Arc::new(VaultDetokenizer::new(vault, "issuer")),

@@ -1864,6 +1864,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpay-db"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.11.1",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "mpay-e2e"
 version = "0.1.0"
 dependencies = [
@@ -1871,6 +1881,7 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-server",
@@ -1893,6 +1904,7 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
  "mpay-shield",
  "mpay-vault",
  "proptest",
@@ -1955,6 +1967,7 @@ dependencies = [
  "hyper-util",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-shield",
@@ -2042,6 +2055,7 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
  "mpay-shield",
  "serde",
  "serde_json",
@@ -3287,6 +3301,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "sqlx-core",
+ "sqlx-postgres",
  "sqlx-sqlite",
  "syn 2.0.119",
  "thiserror",

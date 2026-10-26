@@ -115,6 +115,11 @@ impl Sandbox {
         // M3/M4 testlari deterministik stub'ga tayanadi; M5 testlari `engine` ni o'zi yoqadi.
         cfg.shield.engine = mpay_server::config::ShieldEngine::Stub;
         tweak(&mut cfg);
+        // 2-faza P2.3: `MPAY_TEST_PG_URL` (PostgreSQL admin URL'i) bo'lsa — har sandbox o'z PG bazasida.
+        if let Ok(admin) = std::env::var("MPAY_TEST_PG_URL") {
+            cfg.database.url = Some(mpay_db::fresh_test_database(&admin).await.unwrap());
+            cfg.database.path = None;
+        }
         cfg.validate().unwrap();
         let server = mpay_server::start(&cfg).await.unwrap();
         let ca_key = std::fs::read_to_string(dir.path().join(init::CA_KEY_FILE)).unwrap();
@@ -206,13 +211,44 @@ impl Sandbox {
     }
 
     /// DB fayllari (asosiy + WAL) baytlari.
-    pub fn db_bytes(&self) -> Vec<u8> {
-        let mut raw = std::fs::read(self.db_path()).unwrap_or_default();
-        for ext in ["mpay.db-wal", "mpay.db-shm"] {
-            if let Ok(b) = std::fs::read(self.dir.path().join(ext)) {
-                raw.extend_from_slice(&b);
+    /// SQLite — fayl, WAL va SHM baytlari; PostgreSQL — barcha jadval qatorlarining matn ko'rinishi
+    /// (`row::text`, BYTEA hex sifatida). Bo'sh bo'lmasligi tekshiriladi (aks holda "yo'q" tekshiruvlari
+    /// jim o'tib ketardi).
+    pub async fn db_bytes(&self) -> Vec<u8> {
+        let pool = self.server.state.vault.pool();
+        let raw = match self.server.state.vault.db().dialect() {
+            mpay_db::Dialect::Sqlite => {
+                let mut raw = std::fs::read(self.db_path()).unwrap_or_default();
+                for ext in ["mpay.db-wal", "mpay.db-shm"] {
+                    if let Ok(b) = std::fs::read(self.dir.path().join(ext)) {
+                        raw.extend_from_slice(&b);
+                    }
+                }
+                raw
             }
-        }
+            mpay_db::Dialect::Postgres => {
+                let tables: Vec<String> = sqlx::query_scalar(
+                    "SELECT tablename::text FROM pg_tables WHERE schemaname = 'public'",
+                )
+                .fetch_all(pool)
+                .await
+                .unwrap();
+                let mut raw = Vec::new();
+                for t in tables {
+                    let rows: Vec<String> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+                        "SELECT x::text FROM {t} x"
+                    )))
+                    .fetch_all(pool)
+                    .await
+                    .unwrap();
+                    for r in rows {
+                        raw.extend_from_slice(r.as_bytes());
+                    }
+                }
+                raw
+            }
+        };
+        assert!(raw.len() > 1024, "DB tarkibi o'qilmadi");
         raw
     }
 }

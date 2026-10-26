@@ -23,7 +23,8 @@ cargo run -p mpay-server -- audit-verify --config .mpay/mpay.toml
 
 ## Konfiguratsiya
 
-`mpay.toml` bo'limlari: `sandbox`, `[http]` (listen, TLS), `[database]`, `[keystore]`
+`mpay.toml` bo'limlari: `sandbox`, `[http]` (listen, TLS), `[database]` (`path` — SQLite yoki
+`url_env` — PostgreSQL URL'i turgan muhit o'zgaruvchisi, ADR-0018), `[keystore]`
 (`memory` — faqat sandbox; `pkcs11` — `--features pkcs11` va `MPAY_PKCS11_*` muhit o'zgaruvchilari),
 `[pqlink]` (ML-DSA blob, attestatsiya ildizlari, minimal xavfsizlik darajasi), `[vault]`,
 `[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[sandbox_api]`, `[rate_limit]`,

@@ -9,7 +9,10 @@
 
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use sqlx::{Row, Sqlite, Transaction};
+use sqlx::AnyConnection;
+use sqlx::Row;
+
+use crate::db::{Db, LockKey};
 
 use crate::VaultError;
 
@@ -43,14 +46,18 @@ fn hash_record(
     h.finalize().into()
 }
 
-/// Tranzaksiya ichida yozuv qo'shadi. Chaqiruvchi yozish qulfini ushlab turadi.
+/// Tranzaksiya ichida yozuv qo'shadi. Zanjir boshi global: PostgreSQL'da audit advisory qulfi
+/// olinadi (tranzaksiyadagi **oxirgi** qulf bo'lishi kerak — boshqa qulflar undan oldin), SQLite'da
+/// yozuvchi tranzaksiya baribir yagona.
 pub async fn append(
-    tx: &mut Transaction<'_, Sqlite>,
+    db: &Db,
+    tx: &mut AnyConnection,
     ts: i64,
     e: &AuditEntry<'_>,
 ) -> Result<i64, VaultError> {
+    db.lock(tx, LockKey::Audit).await?;
     let last = sqlx::query("SELECT seq, hash FROM vault_audit ORDER BY seq DESC LIMIT 1")
-        .fetch_optional(&mut **tx)
+        .fetch_optional(&mut *tx)
         .await?;
     let (seq, prev): (i64, Vec<u8>) = match last {
         Some(r) => (r.try_get::<i64, _>("seq")? + 1, r.try_get("hash")?),
@@ -60,7 +67,7 @@ pub async fn append(
     let hash = hash_record(&prev, seq, ts, e.actor, e.action, e.token_id, &details);
     sqlx::query(
         "INSERT INTO vault_audit (seq, ts, actor, action, token_id, details, prev_hash, hash) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
     )
     .bind(seq)
     .bind(ts)
@@ -70,7 +77,7 @@ pub async fn append(
     .bind(&details)
     .bind(&prev)
     .bind(hash.as_slice())
-    .execute(&mut **tx)
+    .execute(&mut *tx)
     .await?;
     Ok(seq)
 }
@@ -83,7 +90,7 @@ pub struct AuditReport {
 }
 
 /// Butun zanjirni boshidan tekshiradi.
-pub async fn verify(pool: &sqlx::SqlitePool) -> Result<AuditReport, VaultError> {
+pub async fn verify(pool: &sqlx::AnyPool) -> Result<AuditReport, VaultError> {
     let rows = sqlx::query("SELECT seq, ts, actor, action, token_id, details, prev_hash, hash FROM vault_audit ORDER BY seq")
         .fetch_all(pool)
         .await?;

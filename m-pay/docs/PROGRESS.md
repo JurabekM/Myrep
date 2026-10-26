@@ -697,3 +697,25 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   fsync'siz: SoftHSM 4 sessiya **492 /s, p99 89 ms**. SLA (200 /s, p99 < 300 ms) HSM tufayli emas,
   SQLite commit'lari tufayli bajarilmaydi — P2.3 (PostgreSQL, bitta tranzaksiya).
 * Testlar (SoftHSM, Docker): 6 ta PKCS#11 testi, yangi — sessiyalar pool'i va logout'dan tiklanish.
+
+### P2.3 — PostgreSQL va parallel tranzaksiyalar (2026-10-26)
+
+**Nima qilindi** (ADR-0018)
+
+* Yangi `mpay-db` crate'i: `sqlx::Any` orqali SQLite yoki PostgreSQL, bitta SQL (`$N`, `BIGINT`),
+  `Db::begin_write` (SQLite — jarayon qulfi + `BEGIN IMMEDIATE`; PostgreSQL — parallel).
+* Migratsiyalar `migrations/sqlite` (ko'chirildi, kontrolsummalar o'zgarmagan) va `migrations/postgres`.
+* PostgreSQL qulflari: ATC iste'moli, LUK to'ldirish va holat o'tishlarida token qatori `FOR UPDATE`;
+  OTP challenge'i `FOR UPDATE`; provisioning — karta/qurilma advisory qulflari; DEK va audit zanjiri —
+  advisory qulf (audit — oxirgi).
+* `[database] url_env` (PostgreSQL URL'i faqat muhitda), `MPAY_TEST_PG_URL` bilan testlar PG'da;
+  CI'ga PostgreSQL job'i; `scripts/pg-load.sh`.
+
+**Qanday tekshirildi**
+
+* SQLite: `cargo test --workspace` (yangi: `concurrent_same_atc_consumed_once`, DB unit testlari).
+* PostgreSQL 17 (Docker): Vault testlari 13/13, butun e2e to'plami. `concurrent_same_atc_consumed_once`
+  `FOR UPDATE` olib tashlansa PG'da yiqiladi (bir xil kriptogramma ikki marta o'tardi) — qulf zarurligi
+  isbotlandi.
+* Yuk sinovi (`load-report.md` §8): PostgreSQL + SoftHSM **368 /s, p99 118 ms** (SQLite + SoftHSM:
+  101 /s, p99 368 ms) — SLA (200 /s, p99 < 300 ms) to'liq chidamlilik bilan bajarildi.

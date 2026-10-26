@@ -28,9 +28,16 @@ struct Env {
 async fn env_with(cfg: VaultConfig) -> Env {
     let dir = tempfile::tempdir().unwrap();
     let db_path = dir.path().join("vault.db");
-    let pool = mpay_vault::db::open_pool(&format!("sqlite://{}", db_path.display()))
-        .await
-        .unwrap();
+    // 2-faza P2.3: `MPAY_TEST_PG_URL` bo'lsa — PostgreSQL (har test o'z bazasida).
+    let pool = match std::env::var("MPAY_TEST_PG_URL") {
+        Ok(admin) => {
+            let url = mpay_db::fresh_test_database(&admin).await.unwrap();
+            mpay_vault::db::Db::open(&url, mpay_vault::db::Durability::Full, None)
+                .await
+                .unwrap()
+        }
+        Err(_) => mpay_vault::db::Db::open_sqlite(&db_path).await.unwrap(),
+    };
     let ks: Arc<dyn KeyStore> = Arc::new(MemoryKeyStore::from_seed([7; 32]));
     ensure_standard_keys(ks.as_ref()).unwrap();
     let clock = Arc::new(ManualClock::new(OffsetDateTime::now_utc()));
@@ -396,30 +403,63 @@ async fn pan_is_only_stored_encrypted() {
         .unwrap();
     assert_eq!(cards, 1);
 
-    sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
-        .execute(e.vault.pool())
-        .await
-        .unwrap();
-    let mut raw = std::fs::read(&e.db_path).unwrap();
-    if let Ok(wal) = std::fs::read(e.db_path.with_extension("db-wal")) {
-        raw.extend_from_slice(&wal);
-    }
+    let raw = db_dump(&e).await;
+    let has = |needle: &[u8]| raw.windows(needle.len()).any(|w| w == needle);
     for secret in [p.expose_digits(), profile.dpan.expose_digits()] {
         let needle = secret.as_bytes();
-        assert!(
-            !raw.windows(needle.len()).any(|w| w == needle),
-            "DB faylida ochiq PAN topildi"
-        );
-        // Track 2 BCD ko'rinishi ham yo'q.
+        assert!(!has(needle), "DB'da ochiq PAN topildi");
+        // Track 2 BCD ko'rinishi ham yo'q (PostgreSQL dump'ida BYTEA hex sifatida).
         let bcd: Vec<u8> = needle
             .chunks(2)
             .map(|c| ((c[0] - b'0') << 4) | (c[1] - b'0'))
             .collect();
-        assert!(!raw.windows(bcd.len()).any(|w| w == bcd.as_slice()));
+        assert!(!has(&bcd));
+        assert!(!has(hex::encode(&bcd).as_bytes()));
     }
     // LUK kalitlari ham DB'da yo'q.
     let key = profile.luks[0].key.expose();
-    assert!(!raw.windows(16).any(|w| w == key));
+    assert!(!has(key));
+    assert!(!has(hex::encode(key).as_bytes()));
+}
+
+/// DB'dagi barcha ma'lumot baytlari: SQLite — fayl va WAL; PostgreSQL — har jadval qatorlarining
+/// matn ko'rinishi (`row::text`, BYTEA — hex).
+async fn db_dump(e: &Env) -> Vec<u8> {
+    use mpay_vault::db::Dialect;
+    match e.vault.db().dialect() {
+        Dialect::Sqlite => {
+            sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
+                .execute(e.vault.pool())
+                .await
+                .unwrap();
+            let mut raw = std::fs::read(&e.db_path).unwrap();
+            if let Ok(wal) = std::fs::read(e.db_path.with_extension("db-wal")) {
+                raw.extend_from_slice(&wal);
+            }
+            raw
+        }
+        Dialect::Postgres => {
+            let tables: Vec<String> = sqlx::query_scalar(
+                "SELECT tablename::text FROM pg_tables WHERE schemaname = 'public'",
+            )
+            .fetch_all(e.vault.pool())
+            .await
+            .unwrap();
+            assert!(tables.iter().any(|t| t == "vault_cards"));
+            let mut raw = Vec::new();
+            for t in tables {
+                let rows: Vec<String> =
+                    sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT x::text FROM {t} x")))
+                        .fetch_all(e.vault.pool())
+                        .await
+                        .unwrap();
+                for r in rows {
+                    raw.extend_from_slice(r.as_bytes());
+                }
+            }
+            raw
+        }
+    }
 }
 
 #[tokio::test]
@@ -454,10 +494,11 @@ async fn audit_chain_verifies_and_is_append_only() {
         .is_err());
 
     // Trigger'ni chetlab o'tgan hujumchi (DB fayliga to'g'ridan-to'g'ri yozish) — zanjir tekshiruvi aniqlaydi.
-    sqlx::query("DROP TRIGGER vault_audit_no_update")
-        .execute(e.vault.pool())
-        .await
-        .unwrap();
+    let drop = match e.vault.db().dialect() {
+        mpay_vault::db::Dialect::Sqlite => "DROP TRIGGER vault_audit_no_update",
+        mpay_vault::db::Dialect::Postgres => "DROP TRIGGER vault_audit_no_update ON vault_audit",
+    };
+    sqlx::query(drop).execute(e.vault.pool()).await.unwrap();
     sqlx::query("UPDATE vault_audit SET details = '{}' WHERE seq = 3")
         .execute(e.vault.pool())
         .await
@@ -514,14 +555,16 @@ async fn validation_errors() {
 #[tokio::test]
 async fn reopen_with_same_seed_reads_existing_data() {
     let dir = tempfile::tempdir().unwrap();
-    let url = format!("sqlite://{}", dir.path().join("v.db").display());
+    let url = mpay_vault::db::sqlite_url(&dir.path().join("v.db"));
     let mk = |seed: [u8; 32]| {
         let url = url.clone();
         async move {
             let ks: Arc<dyn KeyStore> = Arc::new(MemoryKeyStore::from_seed(seed));
             ensure_standard_keys(ks.as_ref()).unwrap();
             Vault::open(
-                mpay_vault::db::open_pool(&url).await.unwrap(),
+                mpay_vault::db::Db::open(&url, mpay_vault::db::Durability::Full, None)
+                    .await
+                    .unwrap(),
                 ks,
                 Arc::new(MpayAes128CmacV1),
                 Arc::new(StubShield::default()),
@@ -597,4 +640,62 @@ async fn concurrent_provisioning_respects_device_limit() {
         }
     }
     assert_eq!(ok, 2, "limit 2 — aynan 2 ta token");
+}
+
+/// 2-faza P2.3: bir xil kriptogramma (ATC) bilan parallel iste'mol — faqat bittasi o'tadi.
+/// PostgreSQL'da parallel tranzaksiyalar: token qatori `FOR UPDATE` bilan qulflanmasa ikkalasi ham
+/// `last_atc` ni eski holda o'qib, "yangi" deb o'tib ketardi (`MPAY_TEST_PG_URL` bilan sinaladi).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn concurrent_same_atc_consumed_once() {
+    let e = env_with(VaultConfig {
+        luk: mpay_common::config::LukPolicy {
+            max_uses: 100,
+            ttl_secs: 3600,
+            batch_size: 2,
+        },
+        ..VaultConfig::default()
+    })
+    .await;
+    let ProvisionOutcome::Active { profile, .. } =
+        e.vault.provision(req(&fpan(2, 77)), dev(11)).await.unwrap()
+    else {
+        panic!()
+    };
+    let det = Arc::new(VaultDetokenizer::new(e.vault.clone(), "issuer"));
+    // Hovuz ulanishlarini oldindan ochamiz — aks holda birinchi ulanish kechikishi vazifalarni
+    // amalda ketma-ket qilib, poygani yashirardi.
+    let warm: Vec<_> = (0..16)
+        .map(|_| {
+            let pool = e.vault.pool().clone();
+            tokio::spawn(async move {
+                sqlx::query("SELECT 1").execute(&pool).await.unwrap();
+            })
+        })
+        .collect();
+    for w in warm {
+        w.await.unwrap();
+    }
+    for atc in [7u16, 8, 9, 10, 11] {
+        let start = Arc::new(tokio::sync::Barrier::new(16));
+        let tasks: Vec<_> = (0..16)
+            .map(|_| {
+                let det = det.clone();
+                let t = profile.token_id.clone();
+                let start = start.clone();
+                tokio::spawn(async move {
+                    start.wait().await;
+                    det.consume(&t, 1, atc).await.unwrap()
+                })
+            })
+            .collect();
+        let mut consumed = 0;
+        for t in tasks {
+            match t.await.unwrap() {
+                ConsumeOutcome::Consumed => consumed += 1,
+                ConsumeOutcome::AtcReplay => {}
+                other => panic!("{other:?}"),
+            }
+        }
+        assert_eq!(consumed, 1, "ATC {atc} faqat bir marta");
+    }
 }

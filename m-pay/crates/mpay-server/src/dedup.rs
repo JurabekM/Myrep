@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use mpay_common::api::{AuthorizationRequest, AuthorizationResponse};
 use sha2::{Digest, Sha256};
-use sqlx::{Row, SqlitePool};
+use sqlx::{AnyPool, Row};
 use time::OffsetDateTime;
 
 /// Yozuvlar saqlanish muddati (STAN kun ichida noyob; 3 kun — sana chegarasidagi qayta urinishlar uchun zaxira).
@@ -85,7 +85,7 @@ pub enum Begin {
 }
 
 /// So'rovni qayd etadi yoki avvalgisini topadi.
-pub async fn begin(pool: &SqlitePool, k: &RequestKey, now_unix: i64) -> Result<Begin, sqlx::Error> {
+pub async fn begin(pool: &AnyPool, k: &RequestKey, now_unix: i64) -> Result<Begin, sqlx::Error> {
     // Eski yozuvlarni tozalash — har so'rovda emas (har commit — fsync), daqiqada bir marta.
     let last = LAST_CLEANUP.load(Ordering::Relaxed);
     if now_unix - last >= CLEANUP_EVERY_SECS
@@ -93,14 +93,14 @@ pub async fn begin(pool: &SqlitePool, k: &RequestKey, now_unix: i64) -> Result<B
             .compare_exchange(last, now_unix, Ordering::Relaxed, Ordering::Relaxed)
             .is_ok()
     {
-        sqlx::query("DELETE FROM acquirer_requests WHERE created_at < ?")
+        sqlx::query("DELETE FROM acquirer_requests WHERE created_at < $1")
             .bind(now_unix - RETENTION_SECS)
             .execute(pool)
             .await?;
     }
     let inserted = sqlx::query(
         "INSERT INTO acquirer_requests (terminal_id, stan, txn_date, request_hash, state, created_at) \
-         VALUES (?, ?, ?, ?, 'PENDING', ?) ON CONFLICT DO NOTHING",
+         VALUES ($1, $2, $3, $4, 'PENDING', $5) ON CONFLICT DO NOTHING",
     )
     .bind(&k.terminal_id)
     .bind(i64::from(k.stan))
@@ -115,7 +115,7 @@ pub async fn begin(pool: &SqlitePool, k: &RequestKey, now_unix: i64) -> Result<B
     }
     let row = sqlx::query(
         "SELECT request_hash, state, response, created_at FROM acquirer_requests \
-         WHERE terminal_id = ? AND stan = ? AND txn_date = ?",
+         WHERE terminal_id = $1 AND stan = $2 AND txn_date = $3",
     )
     .bind(&k.terminal_id)
     .bind(i64::from(k.stan))
@@ -140,14 +140,14 @@ pub async fn begin(pool: &SqlitePool, k: &RequestKey, now_unix: i64) -> Result<B
 
 /// Emitent javobini saqlaydi.
 pub async fn finish(
-    pool: &SqlitePool,
+    pool: &AnyPool,
     k: &RequestKey,
     resp: &AuthorizationResponse,
 ) -> Result<(), sqlx::Error> {
     let json = serde_json::to_string(resp).map_err(|e| sqlx::Error::Encode(Box::new(e)))?;
     sqlx::query(
-        "UPDATE acquirer_requests SET state = 'DONE', response = ? \
-         WHERE terminal_id = ? AND stan = ? AND txn_date = ?",
+        "UPDATE acquirer_requests SET state = 'DONE', response = $1 \
+         WHERE terminal_id = $2 AND stan = $3 AND txn_date = $4",
     )
     .bind(json)
     .bind(&k.terminal_id)
@@ -159,10 +159,10 @@ pub async fn finish(
 }
 
 /// Emitentga yetib bo'lmadi — yozuv o'chiriladi, terminal qayta urinishi mumkin.
-pub async fn abort(pool: &SqlitePool, k: &RequestKey) -> Result<(), sqlx::Error> {
+pub async fn abort(pool: &AnyPool, k: &RequestKey) -> Result<(), sqlx::Error> {
     sqlx::query(
         "DELETE FROM acquirer_requests \
-         WHERE terminal_id = ? AND stan = ? AND txn_date = ? AND state = 'PENDING'",
+         WHERE terminal_id = $1 AND stan = $2 AND txn_date = $3 AND state = 'PENDING'",
     )
     .bind(&k.terminal_id)
     .bind(i64::from(k.stan))
@@ -217,10 +217,12 @@ pub fn duplicate_response(
 }
 
 /// Server migratsiyalari (`migrations/3xxx`).
-pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::migrate::MigrateError> {
-    let mut m = sqlx::migrate!("./migrations");
-    m.set_ignore_missing(true);
-    m.run(pool).await
+pub async fn migrate(db: &mpay_vault::db::Db) -> Result<(), sqlx::migrate::MigrateError> {
+    db.migrate_with(
+        sqlx::migrate!("./migrations/sqlite"),
+        sqlx::migrate!("./migrations/postgres"),
+    )
+    .await
 }
 
 #[cfg(test)]
@@ -236,14 +238,13 @@ mod tests {
         }
     }
 
-    async fn pool() -> (tempfile::TempDir, SqlitePool) {
+    async fn pool() -> (tempfile::TempDir, AnyPool) {
         let dir = tempfile::tempdir().unwrap();
-        let p =
-            mpay_vault::db::open_pool(&format!("sqlite://{}", dir.path().join("d.db").display()))
-                .await
-                .unwrap();
-        migrate(&p).await.unwrap();
-        (dir, p)
+        let db = mpay_vault::db::Db::open_sqlite(&dir.path().join("d.db"))
+            .await
+            .unwrap();
+        migrate(&db).await.unwrap();
+        (dir, db.pool().clone())
     }
 
     #[tokio::test]

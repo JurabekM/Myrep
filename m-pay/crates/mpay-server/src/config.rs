@@ -59,21 +59,57 @@ pub struct HttpConfig {
     pub trusted_proxies: Vec<crate::clientip::Cidr>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// `[database]`: SQLite fayli (`path`, sandbox va bitta instansiya) **yoki** PostgreSQL (`url_env`,
+/// 2-faza P2.3, ADR-0018). PostgreSQL URL'ida parol bor — u faylga yozilmaydi, faqat muhit
+/// o'zgaruvchisida.
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DatabaseConfig {
     /// SQLite fayli.
-    pub path: PathBuf,
-    /// `full` (standart) yoki `normal` — `mpay_vault::db::Durability`.
+    #[serde(default)]
+    pub path: Option<PathBuf>,
+    /// PostgreSQL URL'i (`postgres://foydalanuvchi:parol@host:5432/db`) turgan muhit o'zgaruvchisi.
+    #[serde(default)]
+    pub url_env: Option<String>,
+    /// Dasturiy URL (testlar, embedding) — fayldan o'qilmaydi va yozilmaydi.
+    #[serde(skip)]
+    pub url: Option<String>,
+    /// SQLite: `full` (standart) yoki `normal` — `mpay_vault::db::Durability`.
     #[serde(default)]
     pub synchronous: mpay_vault::db::Durability,
-    /// Ulanishlar hovuzi hajmi (standart 1 — `mpay_vault::db::DEFAULT_MAX_CONNECTIONS`).
-    #[serde(default = "default_db_connections")]
-    pub max_connections: u32,
+    /// Ulanishlar hovuzi hajmi (standart: SQLite 1, PostgreSQL 32).
+    #[serde(default)]
+    pub max_connections: Option<u32>,
 }
 
-fn default_db_connections() -> u32 {
-    mpay_vault::db::DEFAULT_MAX_CONNECTIONS
+impl std::fmt::Debug for DatabaseConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DatabaseConfig")
+            .field("path", &self.path)
+            .field("url_env", &self.url_env)
+            .field("url", &self.url.as_ref().map(|_| "<maxfiy>"))
+            .field("synchronous", &self.synchronous)
+            .field("max_connections", &self.max_connections)
+            .finish()
+    }
+}
+
+impl DatabaseConfig {
+    /// Ulanish URL'i: dasturiy `url` > `url_env` > `path` (SQLite). `base` — nisbiy yo'llar uchun.
+    pub fn connect_url(&self, resolve: impl Fn(&Path) -> PathBuf) -> Result<String, String> {
+        if let Some(u) = &self.url {
+            return Ok(u.clone());
+        }
+        match (&self.url_env, &self.path) {
+            (Some(var), None) => std::env::var(var)
+                .map_err(|_| format!("database.url_env: {var} muhit o'zgaruvchisi yo'q")),
+            (None, Some(p)) => Ok(mpay_vault::db::sqlite_url(&resolve(p))),
+            (Some(_), Some(_)) => Err("database: `path` yoki `url_env` — faqat bittasi".into()),
+            (None, None) => {
+                Err("database: `path` (SQLite) yoki `url_env` (PostgreSQL) kerak".into())
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

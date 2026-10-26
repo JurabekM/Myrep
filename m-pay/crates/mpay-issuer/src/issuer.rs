@@ -25,8 +25,9 @@ use mpay_crypto::index::pan_fingerprint;
 use mpay_crypto::keystore::{KeyLabel, KeyStore};
 use mpay_crypto::scheme::CryptogramScheme;
 use mpay_crypto::{rng, SecretKey16};
+use mpay_db::Db;
 use serde::{Deserialize, Serialize};
-use sqlx::{Row, SqlitePool};
+use sqlx::Row;
 
 use crate::codes::{Reason, ResponseCode};
 use crate::IssuerError;
@@ -111,7 +112,7 @@ struct Parsed {
 
 /// Emitent emulyatori.
 pub struct Issuer {
-    db: SqlitePool,
+    db: Db,
     ks: Arc<dyn KeyStore>,
     scheme: Arc<dyn CryptogramScheme>,
     detok: Arc<dyn Detokenizer>,
@@ -137,7 +138,7 @@ fn reject(reason: Reason) -> Result<(), Reason> {
 impl Issuer {
     /// Migratsiyalar va test hisoblarini tayyorlaydi.
     pub async fn open(
-        db: SqlitePool,
+        db: Db,
         ks: Arc<dyn KeyStore>,
         scheme: Arc<dyn CryptogramScheme>,
         detok: Arc<dyn Detokenizer>,
@@ -145,9 +146,11 @@ impl Issuer {
         clock: Arc<dyn Clock>,
         cfg: IssuerConfig,
     ) -> Result<Self, IssuerError> {
-        let mut m = sqlx::migrate!("./migrations");
-        m.set_ignore_missing(true);
-        m.run(&db).await?;
+        db.migrate_with(
+            sqlx::migrate!("./migrations/sqlite"),
+            sqlx::migrate!("./migrations/postgres"),
+        )
+        .await?;
         let issuer = Self {
             db,
             ks,
@@ -183,11 +186,11 @@ impl Issuer {
                 "issuer.accounts.phone: E.164 (+998…) kutilgan",
             ));
         }
-        sqlx::query("UPDATE issuer_accounts SET phone = ?, updated_at = ? WHERE pan_fp = ?")
+        sqlx::query("UPDATE issuer_accounts SET phone = $1, updated_at = $2 WHERE pan_fp = $3")
             .bind(phone)
             .bind(self.clock.unix())
             .bind(self.fp(pan)?.0.as_slice())
-            .execute(&self.db)
+            .execute(self.db.pool())
             .await?;
         Ok(())
     }
@@ -196,9 +199,9 @@ impl Issuer {
     pub async fn contact_phone(&self, pan: &Pan) -> Result<Option<String>, IssuerError> {
         use sqlx::Row;
         Ok(
-            sqlx::query("SELECT phone FROM issuer_accounts WHERE pan_fp = ?")
+            sqlx::query("SELECT phone FROM issuer_accounts WHERE pan_fp = $1")
                 .bind(self.fp(pan)?.0.as_slice())
-                .fetch_optional(&self.db)
+                .fetch_optional(self.db.pool())
                 .await?
                 .and_then(|r| r.try_get::<Option<String>, _>("phone").ok().flatten()),
         )
@@ -219,7 +222,7 @@ impl Issuer {
         let id = format!("acc_{}", hex::encode(rng::array::<8>()?));
         sqlx::query(
             "INSERT INTO issuer_accounts (account_id, pan_fp, pan_masked, label, currency, balance_minor, created_at, updated_at) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(pan_fp) DO NOTHING",
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(pan_fp) DO NOTHING",
         )
         .bind(&id)
         .bind(fp.0.as_slice())
@@ -229,7 +232,7 @@ impl Issuer {
         .bind(balance_minor)
         .bind(ts)
         .bind(ts)
-        .execute(&self.db)
+        .execute(self.db.pool())
         .await?;
         self.account_by_fp(&fp)
             .await?
@@ -237,9 +240,9 @@ impl Issuer {
     }
 
     async fn account_by_fp(&self, fp: &PanFingerprint) -> Result<Option<AccountView>, IssuerError> {
-        let r = sqlx::query("SELECT * FROM issuer_accounts WHERE pan_fp = ?")
+        let r = sqlx::query("SELECT * FROM issuer_accounts WHERE pan_fp = $1")
             .bind(fp.0.as_slice())
-            .fetch_optional(&self.db)
+            .fetch_optional(self.db.pool())
             .await?;
         r.map(|r| -> Result<AccountView, IssuerError> {
             Ok(AccountView {
@@ -256,7 +259,7 @@ impl Issuer {
     /// Barcha hisoblar (sandbox operator ko'rinishi).
     pub async fn accounts(&self) -> Result<Vec<AccountView>, IssuerError> {
         let rows = sqlx::query("SELECT * FROM issuer_accounts ORDER BY created_at, account_id")
-            .fetch_all(&self.db)
+            .fetch_all(self.db.pool())
             .await?;
         rows.iter()
             .map(|r| {
@@ -321,7 +324,7 @@ impl Issuer {
             Err(reason) => {
                 out.reason = reason;
                 out.code = reason.code();
-                let mut tx = self.db.begin_with("BEGIN IMMEDIATE").await?;
+                let mut tx = self.db.begin_write().await?;
                 self.finish(&mut tx, &mut resp, &out, None).await?;
                 tx.commit().await?;
                 return Ok((resp, out));
@@ -336,11 +339,11 @@ impl Issuer {
         // Pul yechish va avtorizatsiya yozuvi — bitta tranzaksiya: biri yozilib, ikkinchisi yozilmay
         // qolmasin (aks holda pul yechilgan-u, yozuv yo'q yoki aksincha). `BEGIN IMMEDIATE` — SQLite'da
         // o'qishdan yozishga o'tishdagi `SQLITE_BUSY` bo'lmasin.
-        let mut tx = self.db.begin_with("BEGIN IMMEDIATE").await?;
+        let mut tx = self.db.begin_write().await?;
         if let Some((account_id, amount)) = &debit {
             let n = sqlx::query(
-                "UPDATE issuer_accounts SET balance_minor = balance_minor - ?, updated_at = ? \
-                 WHERE account_id = ? AND balance_minor >= ?",
+                "UPDATE issuer_accounts SET balance_minor = balance_minor - $1, updated_at = $2 \
+                 WHERE account_id = $3 AND balance_minor >= $4",
             )
             .bind(amount)
             .bind(self.clock.unix())
@@ -502,7 +505,7 @@ impl Issuer {
 
     async fn finish(
         &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        tx: &mut sqlx::AnyConnection,
         resp: &mut IsoMessage,
         out: &AuthOutcome,
         p: Option<&Parsed>,
@@ -520,7 +523,7 @@ impl Issuer {
         sqlx::query(
             "INSERT INTO issuer_authorizations (auth_id, ts, stan, rrn, token_id, account_id, dpan_masked, amount_minor, currency, \
              terminal_id, merchant_id, atc, luk_seq, response_code, reason, risk_score, risk_decision) \
-             VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+             VALUES ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NULL)",
         )
         .bind(&auth_id)
         .bind(self.clock.unix())
@@ -537,7 +540,7 @@ impl Issuer {
         .bind(out.code.as_str())
         .bind(out.reason.as_str())
         .bind(out.risk_score.map(i64::from))
-        .execute(&mut **tx)
+        .execute(&mut *tx)
         .await?;
         Ok(())
     }

@@ -15,6 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 mpay-common.workspace = true
+mpay-db.workspace = true
 mpay-crypto.workspace = true
 mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
 mpay-vault.workspace = true

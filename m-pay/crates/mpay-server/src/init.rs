@@ -226,6 +226,7 @@ listen = "{listen}"
 trusted_proxies = []
 {tls_cert}{tls_key}
 [database]
+# SQLite (sandbox, bitta instansiya). PostgreSQL uchun: `path` o'rniga `url_env = "MPAY_DATABASE_URL"`.
 path = "mpay.db"
 
 [keystore]
