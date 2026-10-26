@@ -1,0 +1,133 @@
+# M-Pay virtual pilot muhiti (2-faza P2.5, ADR-0020). Dashboard yo'q: HTTP API (nginx orqali),
+# CLI va Prometheus ogohlantirishlari.
+#
+#   bash deploy/init-secrets.sh          # bir marta: tasodifiy sirlar deploy/secrets/ ga (git'ga tushmaydi)
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#
+# Tarkib: PostgreSQL · bootstrap (bir martalik) · Shield roli · 2 ta API instansiyasi · nginx (L4,
+# TLS end-to-end, PROXY protocol) · virtual SMS shlyuzi · Prometheus (+ alerts.yml).
+# Host'ga faqat 127.0.0.1:8443 (API) va 127.0.0.1:9090 (Prometheus) ochiladi.
+
+name: mpay
+
+x-mpay: &mpay
+  image: ${MPAY_IMAGE:-mpay-server:local}
+  build:
+    context: ..
+    dockerfile: Dockerfile
+    target: runtime
+  restart: unless-stopped
+  stop_grace_period: 15s
+  networks: [mpay]
+  environment: &mpay-env
+    RUST_LOG: ${RUST_LOG:-info}
+    MPAY_PKCS11_PIN_FILE: /run/secrets/hsm_pin
+    MPAY_PKCS11_SESSIONS: "8"
+    MPAY_DATABASE_URL_FILE: /run/secrets/database_url
+    MPAY_SHIELD_KEY_FILE: /run/secrets/shield_key
+    MPAY_SMS_TOKEN_FILE: /run/secrets/sms_token
+  secrets: [hsm_pin, database_url, shield_key, sms_token]
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    networks: [mpay]
+    environment:
+      POSTGRES_USER: mpay
+      POSTGRES_DB: mpay
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+    command: ["postgres", "-c", "max_connections=200"]
+    secrets: [pg_password]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mpay", "-d", "mpay"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  bootstrap:
+    <<: *mpay
+    restart: "no"
+    command: ["mpay-bootstrap"]
+    environment:
+      <<: *mpay-env
+      MPAY_LB_IP: 10.88.0.10
+    volumes: [state:/var/lib/mpay/state, hsm:/var/lib/mpay/hsm]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  shield:
+    <<: *mpay
+    command: ["mpay-server", "shield", "--config", "/var/lib/mpay/state/shield.toml"]
+    volumes: [state:/var/lib/mpay/state:ro, hsm:/var/lib/mpay/hsm]
+    depends_on:
+      bootstrap: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "curl", "-sfk", "https://localhost:8600/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  api-1: &api
+    <<: *mpay
+    volumes: [state:/var/lib/mpay/state:ro, hsm:/var/lib/mpay/hsm]
+    depends_on:
+      bootstrap: { condition: service_completed_successfully }
+      shield: { condition: service_healthy }
+      smsgw: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "curl", "-sfk", "https://localhost:8443/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  api-2: *api
+
+  smsgw:
+    <<: *mpay
+    command: ["mpay-smsgw", "--listen", "0.0.0.0:47700"]
+    secrets: [sms_token]
+    environment:
+      MPAY_SMS_TOKEN_FILE: /run/secrets/sms_token
+
+  lb:
+    image: nginx:1.27.5-alpine
+    restart: unless-stopped
+    networks:
+      mpay: { ipv4_address: 10.88.0.10 }
+    ports: ["127.0.0.1:${MPAY_API_PORT:-8443}:8443"]
+    volumes: [./nginx/nginx.conf:/etc/nginx/nginx.conf:ro]
+    depends_on:
+      api-1: { condition: service_healthy }
+      api-2: { condition: service_healthy }
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    networks: [mpay]
+    ports: ["127.0.0.1:${MPAY_PROMETHEUS_PORT:-9090}:9090"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus:/prometheus
+
+networks:
+  mpay:
+    ipam:
+      config: [{ subnet: 10.88.0.0/24 }]
+
+volumes:
+  pgdata:
+  state:
+  hsm:
+  prometheus:
+
+secrets:
+  pg_password: { file: ./secrets/pg_password }
+  database_url: { file: ./secrets/database_url }
+  hsm_pin: { file: ./secrets/hsm_pin }
+  shield_key: { file: ./secrets/shield_key }
+  sms_token: { file: ./secrets/sms_token }

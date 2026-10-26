@@ -180,3 +180,46 @@ Shield belgilari umumiy. SLA (200 /s, p99 < 300 ms) zaxira bilan bajariladi. Bit
 instansiya bittadan biroz sekin: Shield'ga qo'shimcha ichki HTTP so'rov (~5 ms p50) bor va 8 yadroni
 5 jarayon bo'lishadi. Gorizontal masshtabni (instansiyalar alohida mashinalarda) bu sinov o'lchamaydi —
 `TODO(spec):` pilot muhitida.
+
+## 10. docker-compose muhiti — 2-faza P2.5 (2026-10-26)
+
+Qayta yugurish: `bash scripts/compose-test.sh [SONIYA] [PARALLEL]` (ADR-0020). Natija
+`docs/load/p2.5-compose.json` (oxirgi yugurish).
+
+**Usul.** Docker Desktop (Windows, 8 yadro), compose loyihasi `mpay-test`: PostgreSQL 17, SoftHSM
+(PKCS#11, 8 sessiya), Shield roli (TLS + mTLS), `api-1` va `api-2`, nginx `stream` (L4, `least_conn`,
+PROXY protocol), Prometheus. Yuk generatori alohida konteynerda va **faqat nginx orqali** ishlaydi:
+TLS (server sertifikati pinlangan) va terminal mTLS — §9 dagi oddiy HTTP emas. 200 karta, 32 ishchi,
+90 s, so'rovlar chegarasi o'chiq. 25-soniyada `docker compose stop api-1` (SIGTERM), keyin
+`MpayInstanceDown` kutiladi va `api-1` qayta ishga tushiriladi.
+
+| Yugurish | Avtorizatsiya | p50 | p95 | p99 | max | Provisioning (p99) | Xato |
+|---|---|---|---|---|---|---|---|
+| 1 | 275 /s | 105 ms | 174 ms | 282 ms | 1 641 ms | 65 /s (946 ms) | 0 |
+| 2 | 355 /s | 87 ms | 111 ms | 136 ms | 260 ms | 123 /s (532 ms) | 0 |
+| 3 | 332 /s | 91 ms | 127 ms | **164 ms** | 419 ms | 106 /s (741 ms) | **0** |
+
+Barcha yugurishlarda:
+
+* `api-1` to'xtatilganda **birorta so'rov yo'qolmadi** (xato 0): ochiq ulanishlar joriy so'rovni
+  tugatib yopildi, generator qayta ulandi va nginx qolgan instansiyaga yo'naltirdi. To'xtash < 1 s.
+* `MpayInstanceDown` 30 s dan keyin `firing`, `MpayApiCapacityReduced` `pending` holatiga o'tdi.
+* nginx orqali kelgan sertifikat barmoq izi = API sertifikati (TLS end-to-end).
+* `mpay_proxy_protocol_rejected_total` = 0, `mpay_shield_degraded_total` = 0, `mpay_db_up` = 1,
+  Shield omborida 200 karta.
+* Zaxira (`pg_dump` ~6 MB) → alohida bazaga tiklash → audit xesh-zanjiri to'g'ri (~30 000 yozuv).
+* ~120 000 qator logda ochiq PAN va sirlar (DB paroli, HSM PIN'i, Shield kaliti, SMS tokeni) yo'q.
+
+**Kuzatuvlar.**
+
+* 1-yugurish sekinroq va dumi uzunroq (max 1,6 s): to'xtatish paytida 32 ulanish birdan qayta
+  o'rnatildi (TLS + mTLS handshake). 2- va 3-yugurishlarda max 260–419 ms. Yugurishlar orasidagi farq
+  Docker Desktop VM'idagi shovqin; SLA (200 /s, p99 < 300 ms) uchala yugurishda bajarildi.
+* L4 balanslash **ulanish** bo'yicha: qayta ishga tushgan `api-1` keep-alive ulanishlar uzilmaguncha
+  yangi yuk olmaydi (to'xtatishdan keyin 25 684 / 1 620 taqsimot). Real mijozlar (ko'p qisqa
+  ulanishlar) uchun bu muammo emas; uzoq ulanishli terminal shlyuzlari uchun `TODO(spec):` ulanish
+  umri chegarasi (`max_requests` yoki vaqt bo'yicha).
+* Yuk ostida bitta instansiyada `MpayDbPoolExhausted` `pending` bo'ldi (32 ishchi, hovuz 32) — qoida
+  to'g'ri ishlaydi; pilotda hovuz hajmi instansiya va ishchilar soniga qarab sozlanadi.
+* §9 (384 /s, oddiy HTTP, bitta konteyner) bilan to'g'ridan-to'g'ri solishtirib bo'lmaydi: bu yerda
+  TLS, nginx, Docker tarmog'i va SoftHSM qo'shilgan.

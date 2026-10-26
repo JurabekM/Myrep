@@ -737,3 +737,31 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 
 * e2e `p2_multi_instance` (2) va `p2_shield_role` — SQLite va PostgreSQL'da; `enroll` unit (nonce A→B).
 * Yuk sinovi (`load-report.md` §9): 2 instansiya + Shield roli 384 /s, p99 113 ms, xato 0, zaxira 0.
+
+### P2.5 — Deployment: docker-compose, monitoring, zaxira (2026-10-26)
+
+**Nima qilindi** (ADR-0020)
+
+* `Dockerfile` (ko'p bosqichli, `pkcs11`, `debian:bookworm-slim` + SoftHSM2, uid 10001; `loadgen`
+  bosqichi), `.dockerignore`.
+* `deploy/`: `docker-compose.yml` (PostgreSQL, bootstrap, Shield roli, 2 API, virtual SMS shlyuzi,
+  nginx, Prometheus), sirlar Docker secrets'da (`init-secrets.sh`, `mpay-entrypoint`), nginx `stream`
+  (L4, TLS end-to-end), `prometheus.yml` + `alerts.yml` (11 qoida), `backup.sh`, `restore.sh`
+  (`--verify` / `--replace`), README.
+* Server: PROXY protocol v1 (`proxyproto.rs`, `[http] proxy_protocol`, faqat `trusted_proxies` dan),
+  Prometheus metrikalari (`metrics.rs`, `[metrics] listen`, cheklangan yorliqlar), SIGTERM'da graceful
+  to'xtatish (ochiq so'rovlar ≤ 8 s), TLS handshake timeout, `accept` xatosida to'xtamaslik.
+* CLI: `mpay-server bootstrap` (migratsiyalar va HSM kalitlari bir marta), `init --tls-san`;
+  `init --tls` `api-shield` mijoz sertifikatini ham chiqaradi. `mpay-load` — `https://` (TLS + mTLS).
+* CI: `deploy` job'i — to'liq compose sinovi.
+
+**Qanday tekshirildi**
+
+* e2e `p2_deploy` (4): bitta proksi ortidagi ikki mijozning IP chegarasi alohida, sarlavhasiz ulanish
+  rad etiladi, metrikalar (PAN'siz), `proxy_protocol` uchun `trusted_proxies` majburiy, keep-alive
+  ulanishlar to'xtatishda yopiladi. Unit: PROXY tahlili, metrika formati va yorliq chegarasi.
+* `cargo test --workspace` — 200 o'tdi (SQLite); vault + e2e PostgreSQL'da — 53 o'tdi; clippy
+  (`pkcs11` bilan ham), fmt, deny toza.
+* `scripts/compose-test.sh` (3 marta): nginx orqali 275–355 /s, p99 136–282 ms, `api-1` to'xtatilganda
+  xato 0, `MpayInstanceDown` ishladi, zaxira → tiklash → audit to'g'ri, loglarda PAN va sir yo'q
+  (`load-report.md` §10).

@@ -21,5 +21,6 @@
 | [0017](0017-hsm-sessiyalar.md) | PKCS#11 sessiyalar pool'i va uzilishdan tiklanish | qabul qilingan |
 | [0018](0018-postgresql.md) | PostgreSQL: umumiy ombor, `sqlx::Any`, parallel tranzaksiyalar | qabul qilingan |
 | [0019](0019-kop-instansiya.md) | Ko'p instansiya: umumiy sessiyalar, nonce'lar, Shield roli | qabul qilingan |
+| [0020](0020-deployment.md) | Deployment: docker-compose, L4 balancer + PROXY protocol, metrikalar, zaxira | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

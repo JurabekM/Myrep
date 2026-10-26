@@ -101,6 +101,14 @@ jobs:
       - name: 10 daqiqalik bank namoyishi (avtomatik rejim)
         run: DEMO_AUTO=1 bash scripts/demo.sh
 
+  deploy:
+    name: docker-compose muhiti (nginx + 2 API + Shield + PostgreSQL + SoftHSM + Prometheus)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # Yuk nginx orqali, api-1 o'rtada to'xtatiladi, ogohlantirish, zaxira → tiklash → audit.
+      - run: bash scripts/compose-test.sh 60 16
+
   fuzz:
     name: Fuzz (har maqsad 60 s)
     runs-on: ubuntu-24.04
