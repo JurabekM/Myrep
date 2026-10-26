@@ -1,8 +1,8 @@
 # PROGRESS — Sector Verify
 
 ## Joriy holat
-- **Bosqich:** 4 — tugadi (tag `sector-verify/phase-4-done`); **H1 va H2 kutilmoqda** (`docs/HUMAN_TASKS.md`)
-- **Keyingi:** 5-bosqich — production'ga tayyorlash (H1/H2 bilan parallel)
+- **Bosqich:** 6 — yakuniy audit tugadi; release-kandidat tag `sector-verify/v1.0.0-rc1`.
+- **Kutilmoqda:** **H1** (real telefonlar), **H2** (20 saytlik pilot), **H3** (imzolash va tarqatish) — `docs/HUMAN_TASKS.md`, `docs/RELEASE_CHECKLIST.md`.
 
 ## Bajarilgan
 ### 0-bosqich
@@ -52,6 +52,22 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 - ✅ `:tools:replay` CLI: `analyze`, `calibrate` (162 konfiguratsiyali grid, ADR-014), `verify`, `simulate` (ZIP + ground truth).
 - ✅ Simulyator ZIP'larida `calibrate` ishlaydi va testlangan (`ReplayCliTest`); namoyish: `docs/reports/calibration-sim-demo.md` (20 sessiya, 30 s).
 - ✅ Ilovada Sozlamalar → Config JSON import (kalibrlash natijasi).
+
+### 5-bosqich
+- ✅ Release: R8 minify + shrinkResources, ProGuard qoidalari; AAB til bo'linishi o'chirilgan (ilova ichida til almashtirish); 64-bit `.so` 16 KB tekislangan.
+- ✅ Imzolash: `keystore.properties` / `SV_KEYSTORE_*` (kalit repoda yo'q; yo'q bo'lsa imzosiz + ogohlantirish). Versiya git tag + commit sonidan. `CHANGELOG.md`.
+- ✅ Xavfsizlik: backup/transfer taqiqi, cleartext taqiqi, FileProvider, SQLCipher kaliti Keystore bilan o'ralgan, loglarsiz.
+- ✅ Barqarorlik: lokal crash log (Sozlamalardan eksport), StrictMode debug'da, DB fonda ochiladi, tiklashda ruxsat tekshiruvi.
+- ✅ Ruxsatlar UX: har ruxsat uchun izoh, rad etilganda tizim sozlamalariga o'tish; POST_NOTIFICATIONS faqat API 33+.
+- ✅ Ishlash: jonli tahlil inkremental (ADR-015): eng og'ir holat ~10–14 ms, yakuniy ~0.45 s (JVM); `docs/BATTERY_TEST.md`.
+- ✅ Hujjatlar: README, USER_GUIDE_uz/ru, ARCHITECTURE, ALGORITHM, PLAY_STORE (FGS deklaratsiyasi, Data safety), DISTRIBUTION_APK, privacy uz/ru/en, RELEASE_CHECKLIST.
+- ✅ CI: `check` + perf qadami, `instrumented` (emulyator + release smoke test), `release` (bundleRelease, assembleRelease, lintRelease, artefaktlar).
+
+### 6-bosqich (audit)
+- ✅ TODO/FIXME yo'q, `Log`/`println` yo'q, qattiq kodlangan UI matni yo'q, Lint 0 muammo (debug va release), detekt toza.
+- ✅ Ruxsatlar §7 ga aynan mos; tarmoqqa faqat `TrafficGenerator` chiqadi.
+- ✅ Topilib tuzatilgan: AAB til bo'linishi (ilova ichida ru/en ishlamasligi mumkin edi), servis bildirishnomalari tizim tilida chiqishi, tiklashda ruxsatsiz `startForeground` (API 34+ yiqilish), `plan_err_*` format argumentlari.
+- ✅ AC holati jadvali: `docs/RELEASE_CHECKLIST.md`.
 
 ## Oxirgi test natijalari
 - 2026-10-26: `./gradlew check` — BUILD SUCCESSFUL (1-bosqich: model 5 test, analysis 34 test, koverVerify 99.7%).
