@@ -121,6 +121,36 @@ void main() {
     });
   });
 
+  group('laboratoriya zaxirasi (EvalSettings.marginPct)', () {
+    final near = m('CAB1', MeasurementType.loopImpedance, {'pair': 'L1-PE', 'zs_ohm': 1.3});
+
+    test('normalar to\'plamidan qat\'iyroq bo\'lsa — qo\'llanadi', () {
+      expect(run(near).verdict, Verdict.pass);
+      final r = run(near, settings: const EvalSettings(marginPct: 10));
+      expect(r.verdict, Verdict.fail, reason: 'Zs_max = 1,375 · 0,9 = 1,2375');
+      expect(r.detail['margin_pct'], 10);
+      expect(r.detail['norm_set_margin_pct'], 0);
+      expect(r.detail['lab_margin_pct'], 10);
+    });
+
+    test('chegarani yumshata olmaydi: effektiv = max(to\'plam, laboratoriya)', () {
+      final strictSet = v0With((d) => d['margin_pct'] = 20);
+      final r = run(near, normSet: strictSet, settings: const EvalSettings(marginPct: 5));
+      expect(r.verdict, Verdict.fail);
+      expect(r.detail['margin_pct'], 20);
+    });
+
+    test('noto\'g\'ri qiymat — ArgumentError', () {
+      for (final bad in [-1.0, 50.5, double.nan]) {
+        expect(
+          () => run(near, settings: EvalSettings(marginPct: bad)),
+          throwsArgumentError,
+          reason: '$bad',
+        );
+      }
+    });
+  });
+
   group('eval_detail', () {
     test('formula, chegara, kirish qiymatlari, norma va versiya yoziladi', () {
       final r = run(loop);

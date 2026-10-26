@@ -61,12 +61,15 @@ class InstrumentRepository {
     await _db.update(_db.instruments).replace(old.copyWith(deleted: true, updatedAt: _ctx.now(), rev: old.rev + 1));
   }
 
-  /// Qiyoslash guvohnomasi `at` kuni amal qiladimi (oxirgi kun ham kiradi). Muddat kiritilmagan — yaroqsiz
-  /// (CLAUDE.md, 6-qoida: muddati o'tgan asbob bilan olingan o'lchov imzolanmaydi).
-  bool isVerificationValid(InstrumentRow instrument, DateTime at) {
-    final until = instrument.verifiedUntil?.toUtc();
-    if (until == null) return false;
-    final day = at.toUtc();
-    return !DateTime.utc(day.year, day.month, day.day).isAfter(DateTime.utc(until.year, until.month, until.day));
-  }
+  /// Qiyoslash guvohnomasi `at` kuni amal qiladimi — [instrumentVerificationValid].
+  bool isVerificationValid(InstrumentRow instrument, DateTime at) => instrumentVerificationValid(instrument, at);
+}
+
+/// Qiyoslash guvohnomasi `at` kuni amal qiladimi (oxirgi kun ham kiradi). Muddat kiritilmagan — yaroqsiz
+/// (CLAUDE.md, 6-qoida: muddati o'tgan asbob bilan olingan o'lchov imzolanmaydi).
+bool instrumentVerificationValid(InstrumentRow instrument, DateTime at) {
+  final until = instrument.verifiedUntil?.toUtc();
+  if (until == null) return false;
+  final day = at.toUtc();
+  return !DateTime.utc(day.year, day.month, day.day).isAfter(DateTime.utc(until.year, until.month, until.day));
 }

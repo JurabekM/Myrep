@@ -1,5 +1,8 @@
 include: package:flutter_lints/flutter.yaml
 
+formatter:
+  page_width: 120
+
 analyzer:
   exclude:
     - build/**
@@ -12,6 +15,8 @@ analyzer:
 
 linter:
   rules:
-    - prefer_single_quotes
-    - prefer_final_locals
-    - unawaited_futures
+    prefer_single_quotes: true
+    prefer_final_locals: true
+    unawaited_futures: true
+    # Qisqa himoya shartlari bir qatorda: `if (x == null) return ...;`
+    curly_braces_in_flow_control_structures: false

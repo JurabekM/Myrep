@@ -1,3 +1,6 @@
+// Drift CHECK cheklovlari ustunning o'ziga murojaat qiladi (masalan, `role.isIn(...)`) — hujjatlashtirilgan uslub.
+// ignore_for_file: recursive_getters
+
 import 'package:drift/drift.dart';
 
 import 'converters.dart';
@@ -42,9 +45,7 @@ class AppUsers extends Table with _Base, _OrgScoped, _SoftDelete {
   String get tableName => 'app_user';
   TextColumn get fullName => text()();
   TextColumn get phone => text()();
-  // ignore: recursive_getters — Drift CHECK cheklovi ustunning o'ziga murojaat qiladi.
   TextColumn get role => text().check(role.isIn(const ['ADMIN', 'LEAD', 'ENGINEER', 'VIEWER']))();
-  // ignore: recursive_getters — Drift CHECK cheklovi ustunning o'ziga murojaat qiladi.
   TextColumn get safetyGroup => text().nullable().check(safetyGroup.isIn(const ['I', 'II', 'III', 'IV', 'V']))();
 }
 
@@ -197,7 +198,6 @@ class IsolationPlans extends Table with _Base, _OrgScoped, _SoftDelete {
   TextColumn get graphSnapshotHash => text()();
   TextColumn get steps => text().map(const JsonListConverter())();
   TextColumn get warnings => text().map(const JsonListConverter())();
-  // ignore: recursive_getters — Drift CHECK cheklovi ustunning o'ziga murojaat qiladi.
   TextColumn get status => text().check(status.isIn(const ['DRAFT', 'APPROVED', 'EXECUTED', 'CANCELLED', 'STALE']))();
   TextColumn get approvedBy => text().nullable().references(AppUsers, #id)();
 }
@@ -216,4 +216,36 @@ class NormSets extends Table with _Base, _OrgScoped, _SoftDelete {
   List<Set<Column>> get uniqueKeys => [
     {orgId, version},
   ];
+}
+
+/// Laboratoriya (tashkilot) sozlamalari — faqat LEAD/ADMIN o'zgartiradi, har bir o'zgarish auditga yoziladi (ADR-0009).
+@DataClassName('OrgSettingRow')
+class OrgSettings extends Table with _Base, _OrgScoped {
+  @override
+  String get tableName => 'org_setting';
+
+  /// Sirtmoq koeffitsienti, (0; 1].
+  RealColumn get kCorr =>
+      real().withDefault(const Constant(1.0)).check(kCorr.isBiggerThanValue(0) & kCorr.isSmallerOrEqualValue(1))();
+
+  /// Laboratoriya zaxirasi, % [0; 50]; effektiv = max(normalar to'plami, laboratoriya).
+  RealColumn get marginPct => real().withDefault(const Constant(0.0)).check(marginPct.isBetweenValues(0, 50))();
+  TextColumn get activeNormSetVersion => text().nullable()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {orgId},
+  ];
+}
+
+/// Faqat shu qurilmaga tegishli sozlamalar (profil, til, katta shrift) — sinxronlanmaydi.
+@DataClassName('LocalPrefRow')
+class LocalPrefs extends Table {
+  @override
+  String get tableName => 'local_pref';
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
 }

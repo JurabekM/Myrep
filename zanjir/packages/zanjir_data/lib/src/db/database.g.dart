@@ -8037,6 +8037,617 @@ class NormSetsCompanion extends UpdateCompanion<NormSetRow> {
   }
 }
 
+class $OrgSettingsTable extends OrgSettings with TableInfo<$OrgSettingsTable, OrgSettingRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OrgSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revMeta = const VerificationMeta('rev');
+  @override
+  late final GeneratedColumn<int> rev = GeneratedColumn<int>(
+    'rev',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _orgIdMeta = const VerificationMeta('orgId');
+  @override
+  late final GeneratedColumn<String> orgId = GeneratedColumn<String>(
+    'org_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES organization (id)'),
+  );
+  static const VerificationMeta _kCorrMeta = const VerificationMeta('kCorr');
+  @override
+  late final GeneratedColumn<double> kCorr = GeneratedColumn<double>(
+    'k_corr',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(kCorr).isBiggerThanValue(0) & ComparableExpr(kCorr).isSmallerOrEqualValue(1),
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _marginPctMeta = const VerificationMeta('marginPct');
+  @override
+  late final GeneratedColumn<double> marginPct = GeneratedColumn<double>(
+    'margin_pct',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(marginPct).isBetweenValues(0, 50),
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _activeNormSetVersionMeta = const VerificationMeta('activeNormSetVersion');
+  @override
+  late final GeneratedColumn<String> activeNormSetVersion = GeneratedColumn<String>(
+    'active_norm_set_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, createdAt, updatedAt, rev, orgId, kCorr, marginPct, activeNormSetVersion];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'org_setting';
+  @override
+  VerificationContext validateIntegrity(Insertable<OrgSettingRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('rev')) {
+      context.handle(_revMeta, rev.isAcceptableOrUnknown(data['rev']!, _revMeta));
+    }
+    if (data.containsKey('org_id')) {
+      context.handle(_orgIdMeta, orgId.isAcceptableOrUnknown(data['org_id']!, _orgIdMeta));
+    } else if (isInserting) {
+      context.missing(_orgIdMeta);
+    }
+    if (data.containsKey('k_corr')) {
+      context.handle(_kCorrMeta, kCorr.isAcceptableOrUnknown(data['k_corr']!, _kCorrMeta));
+    }
+    if (data.containsKey('margin_pct')) {
+      context.handle(_marginPctMeta, marginPct.isAcceptableOrUnknown(data['margin_pct']!, _marginPctMeta));
+    }
+    if (data.containsKey('active_norm_set_version')) {
+      context.handle(
+        _activeNormSetVersionMeta,
+        activeNormSetVersion.isAcceptableOrUnknown(data['active_norm_set_version']!, _activeNormSetVersionMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {orgId},
+  ];
+  @override
+  OrgSettingRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OrgSettingRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      rev: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}rev'])!,
+      orgId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}org_id'])!,
+      kCorr: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}k_corr'])!,
+      marginPct: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}margin_pct'])!,
+      activeNormSetVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}active_norm_set_version'],
+      ),
+    );
+  }
+
+  @override
+  $OrgSettingsTable createAlias(String alias) {
+    return $OrgSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class OrgSettingRow extends DataClass implements Insertable<OrgSettingRow> {
+  final String id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  /// Mahalliy o'zgarish hisoblagichi (sinxronlash uchun; server reviziyasi alohida saqlanadi — 8-faza).
+  final int rev;
+  final String orgId;
+
+  /// Sirtmoq koeffitsienti, (0; 1].
+  final double kCorr;
+
+  /// Laboratoriya zaxirasi, % [0; 50]; effektiv = max(normalar to'plami, laboratoriya).
+  final double marginPct;
+  final String? activeNormSetVersion;
+  const OrgSettingRow({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.rev,
+    required this.orgId,
+    required this.kCorr,
+    required this.marginPct,
+    this.activeNormSetVersion,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['rev'] = Variable<int>(rev);
+    map['org_id'] = Variable<String>(orgId);
+    map['k_corr'] = Variable<double>(kCorr);
+    map['margin_pct'] = Variable<double>(marginPct);
+    if (!nullToAbsent || activeNormSetVersion != null) {
+      map['active_norm_set_version'] = Variable<String>(activeNormSetVersion);
+    }
+    return map;
+  }
+
+  OrgSettingsCompanion toCompanion(bool nullToAbsent) {
+    return OrgSettingsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      rev: Value(rev),
+      orgId: Value(orgId),
+      kCorr: Value(kCorr),
+      marginPct: Value(marginPct),
+      activeNormSetVersion: activeNormSetVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(activeNormSetVersion),
+    );
+  }
+
+  factory OrgSettingRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OrgSettingRow(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      rev: serializer.fromJson<int>(json['rev']),
+      orgId: serializer.fromJson<String>(json['orgId']),
+      kCorr: serializer.fromJson<double>(json['kCorr']),
+      marginPct: serializer.fromJson<double>(json['marginPct']),
+      activeNormSetVersion: serializer.fromJson<String?>(json['activeNormSetVersion']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'rev': serializer.toJson<int>(rev),
+      'orgId': serializer.toJson<String>(orgId),
+      'kCorr': serializer.toJson<double>(kCorr),
+      'marginPct': serializer.toJson<double>(marginPct),
+      'activeNormSetVersion': serializer.toJson<String?>(activeNormSetVersion),
+    };
+  }
+
+  OrgSettingRow copyWith({
+    String? id,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? rev,
+    String? orgId,
+    double? kCorr,
+    double? marginPct,
+    Value<String?> activeNormSetVersion = const Value.absent(),
+  }) => OrgSettingRow(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    rev: rev ?? this.rev,
+    orgId: orgId ?? this.orgId,
+    kCorr: kCorr ?? this.kCorr,
+    marginPct: marginPct ?? this.marginPct,
+    activeNormSetVersion: activeNormSetVersion.present ? activeNormSetVersion.value : this.activeNormSetVersion,
+  );
+  OrgSettingRow copyWithCompanion(OrgSettingsCompanion data) {
+    return OrgSettingRow(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      rev: data.rev.present ? data.rev.value : this.rev,
+      orgId: data.orgId.present ? data.orgId.value : this.orgId,
+      kCorr: data.kCorr.present ? data.kCorr.value : this.kCorr,
+      marginPct: data.marginPct.present ? data.marginPct.value : this.marginPct,
+      activeNormSetVersion: data.activeNormSetVersion.present
+          ? data.activeNormSetVersion.value
+          : this.activeNormSetVersion,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrgSettingRow(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rev: $rev, ')
+          ..write('orgId: $orgId, ')
+          ..write('kCorr: $kCorr, ')
+          ..write('marginPct: $marginPct, ')
+          ..write('activeNormSetVersion: $activeNormSetVersion')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, createdAt, updatedAt, rev, orgId, kCorr, marginPct, activeNormSetVersion);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OrgSettingRow &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.rev == this.rev &&
+          other.orgId == this.orgId &&
+          other.kCorr == this.kCorr &&
+          other.marginPct == this.marginPct &&
+          other.activeNormSetVersion == this.activeNormSetVersion);
+}
+
+class OrgSettingsCompanion extends UpdateCompanion<OrgSettingRow> {
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rev;
+  final Value<String> orgId;
+  final Value<double> kCorr;
+  final Value<double> marginPct;
+  final Value<String?> activeNormSetVersion;
+  final Value<int> rowid;
+  const OrgSettingsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rev = const Value.absent(),
+    this.orgId = const Value.absent(),
+    this.kCorr = const Value.absent(),
+    this.marginPct = const Value.absent(),
+    this.activeNormSetVersion = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OrgSettingsCompanion.insert({
+    required String id,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rev = const Value.absent(),
+    required String orgId,
+    this.kCorr = const Value.absent(),
+    this.marginPct = const Value.absent(),
+    this.activeNormSetVersion = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       orgId = Value(orgId);
+  static Insertable<OrgSettingRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rev,
+    Expression<String>? orgId,
+    Expression<double>? kCorr,
+    Expression<double>? marginPct,
+    Expression<String>? activeNormSetVersion,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rev != null) 'rev': rev,
+      if (orgId != null) 'org_id': orgId,
+      if (kCorr != null) 'k_corr': kCorr,
+      if (marginPct != null) 'margin_pct': marginPct,
+      if (activeNormSetVersion != null) 'active_norm_set_version': activeNormSetVersion,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OrgSettingsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rev,
+    Value<String>? orgId,
+    Value<double>? kCorr,
+    Value<double>? marginPct,
+    Value<String?>? activeNormSetVersion,
+    Value<int>? rowid,
+  }) {
+    return OrgSettingsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rev: rev ?? this.rev,
+      orgId: orgId ?? this.orgId,
+      kCorr: kCorr ?? this.kCorr,
+      marginPct: marginPct ?? this.marginPct,
+      activeNormSetVersion: activeNormSetVersion ?? this.activeNormSetVersion,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rev.present) {
+      map['rev'] = Variable<int>(rev.value);
+    }
+    if (orgId.present) {
+      map['org_id'] = Variable<String>(orgId.value);
+    }
+    if (kCorr.present) {
+      map['k_corr'] = Variable<double>(kCorr.value);
+    }
+    if (marginPct.present) {
+      map['margin_pct'] = Variable<double>(marginPct.value);
+    }
+    if (activeNormSetVersion.present) {
+      map['active_norm_set_version'] = Variable<String>(activeNormSetVersion.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrgSettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rev: $rev, ')
+          ..write('orgId: $orgId, ')
+          ..write('kCorr: $kCorr, ')
+          ..write('marginPct: $marginPct, ')
+          ..write('activeNormSetVersion: $activeNormSetVersion, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LocalPrefsTable extends LocalPrefs with TableInfo<$LocalPrefsTable, LocalPrefRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalPrefsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [key, value];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_pref';
+  @override
+  VerificationContext validateIntegrity(Insertable<LocalPrefRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  LocalPrefRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalPrefRow(
+      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      value: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value'])!,
+    );
+  }
+
+  @override
+  $LocalPrefsTable createAlias(String alias) {
+    return $LocalPrefsTable(attachedDatabase, alias);
+  }
+}
+
+class LocalPrefRow extends DataClass implements Insertable<LocalPrefRow> {
+  final String key;
+  final String value;
+  const LocalPrefRow({required this.key, required this.value});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['value'] = Variable<String>(value);
+    return map;
+  }
+
+  LocalPrefsCompanion toCompanion(bool nullToAbsent) {
+    return LocalPrefsCompanion(key: Value(key), value: Value(value));
+  }
+
+  factory LocalPrefRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalPrefRow(
+      key: serializer.fromJson<String>(json['key']),
+      value: serializer.fromJson<String>(json['value']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'key': serializer.toJson<String>(key), 'value': serializer.toJson<String>(value)};
+  }
+
+  LocalPrefRow copyWith({String? key, String? value}) => LocalPrefRow(key: key ?? this.key, value: value ?? this.value);
+  LocalPrefRow copyWithCompanion(LocalPrefsCompanion data) {
+    return LocalPrefRow(
+      key: data.key.present ? data.key.value : this.key,
+      value: data.value.present ? data.value.value : this.value,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalPrefRow(')
+          ..write('key: $key, ')
+          ..write('value: $value')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LocalPrefRow && other.key == this.key && other.value == this.value);
+}
+
+class LocalPrefsCompanion extends UpdateCompanion<LocalPrefRow> {
+  final Value<String> key;
+  final Value<String> value;
+  final Value<int> rowid;
+  const LocalPrefsCompanion({
+    this.key = const Value.absent(),
+    this.value = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalPrefsCompanion.insert({required String key, required String value, this.rowid = const Value.absent()})
+    : key = Value(key),
+      value = Value(value);
+  static Insertable<LocalPrefRow> custom({Expression<String>? key, Expression<String>? value, Expression<int>? rowid}) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (value != null) 'value': value,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalPrefsCompanion copyWith({Value<String>? key, Value<String>? value, Value<int>? rowid}) {
+    return LocalPrefsCompanion(key: key ?? this.key, value: value ?? this.value, rowid: rowid ?? this.rowid);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalPrefsCompanion(')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$ZanjirDatabase extends GeneratedDatabase {
   _$ZanjirDatabase(QueryExecutor e) : super(e);
   late final $OrganizationsTable organizations = $OrganizationsTable(this);
@@ -8086,6 +8697,8 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
   );
   late final $IsolationPlansTable isolationPlans = $IsolationPlansTable(this);
   late final $NormSetsTable normSets = $NormSetsTable(this);
+  late final $OrgSettingsTable orgSettings = $OrgSettingsTable(this);
+  late final $LocalPrefsTable localPrefs = $LocalPrefsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -8113,6 +8726,8 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     auditEventEntityIdx,
     isolationPlans,
     normSets,
+    orgSettings,
+    localPrefs,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([

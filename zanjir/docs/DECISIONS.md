@@ -156,3 +156,35 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   9. **Nusxalangan apparat** (QF1 → QF2) `verified = false` — dalada tekshirilmaguncha solver ogohlantiradi.
 - **Oqibat:** `k_corr` hozircha `EvalSettings` parametri; laboratoriya sozlamalarini saqlash — 5-fazada. Muddati o'tgan asbob bilan
   o'lchov yoziladi, lekin imzolash 6-fazada bloklanadi (CLAUDE.md, 6-qoida; `InstrumentRepository.isVerificationValid`).
+
+## ADR-0009: Ilova UI (5-faza) — sozlamalar, oflayn profil, kiritish qoidalari
+
+- **Sana:** 2026-10-26 · **Holat:** qabul qilingan (5-faza).
+- **Kontekst:** Prompt 8-bo'lim (ekranlar, ≤ 10 s kiritish, dala sharoiti) va 5.2 (`margin_pct` normalar to'plami darajasida),
+  shu bilan birga sozlamalarda `k_corr` va `margin_pct` — faqat LEAD. Server (auth) 7-fazada.
+- **Qaror:**
+  1. **Laboratoriya zaxirasi:** effektiv `margin_pct = max(norm_set.margin_pct, lab.margin_pct)` — sozlama chegarani faqat
+     qat'iylashtiradi. `k_corr` ∈ (0; 1]. Ikkalasi `org_setting` jadvalida, faqat LEAD/ADMIN o'zgartiradi, har o'zgarish —
+     `SETTINGS_CHANGED` audit hodisasi. O'lchov yozilganda repozitoriy sozlamani o'zi o'qiydi (UI uzatishni unutolmaydi).
+     `eval_detail` da `margin_pct` (effektiv), `norm_set_margin_pct`, `lab_margin_pct`, `k_corr`.
+  2. **Sxema v2:** `org_setting` (sinxronlanadi) va `local_pref` (qurilmaga xos: profil, til, katta shrift). v1 → v2 migratsiyasi
+     ma'lumot bilan testlangan (append-only triggerlar saqlanadi).
+  3. **Kirish:** `AuthGateway` interfeysi; server 7-fazada. Hozir "server mavjud emas" va **oflayn laboratoriya profili**:
+     tashkilot + foydalanuvchi (faqat LEAD/ADMIN — laboratoriyani yaratuvchi) + qurilma kaliti (32 bayt `Random.secure`,
+     `flutter_secure_storage`/Android Keystore; avval kalit, keyin baza) + ilova bilan kelgan normalar to'plami (faol versiya).
+     Muhandislar 7-fazada taklif kodi bilan qo'shiladi.
+  4. **Kiritish qoidalari (PASS hech qachon standart emas):** UZO "O'chdi/O'chmadi" va mavsumiy koeffitsient ψ oldindan
+     to'ldirilmaydi; bo'sh maydon qiymatlarga qo'shilmaydi (→ `value_missing`); tugun atributlari (masalan, `selective`)
+     uch holatli — "Kiritilmagan" tanlansa atribut yozilmaydi. Vergul va nuqta qabul qilinadi. Saqlangach natija rangi, sabab
+     va chegara ko'rsatiladi, keyingi nuqtaga avtomatik o'tiladi. Xato o'lchov — uzoq bosish → "Qayta o'lchash" (`supersedes_id`).
+  5. **Rang:** Myrep dark tokenlari + `success #7DBE8A` (paper 6,9:1, surface 6,1:1, ustida accentInk 7,6:1). Natija belgisi
+     rang + ikonka + matn (faqat rangga tayanmaydi, TalkBack uchun `Semantics`). Tugmalar ≥ 48 dp, katta shrift ×1,3.
+     Noto Sans ilova ichida (OFL).
+  6. **QR:** tugun QR kodi `zanjir://app/n/<id>` (Android intent-filter, go_router `/n/:id`); kodni qo'lda kiritish mavjud.
+     Kamera bilan skanerlash — keyingi fazalarda (native plagin, qurilmada sinov talab qiladi).
+  7. **Ajratish rejasi** ekrani hozircha faqat ko'rib chiqish (tavsiya, qadamlar, ogohlantirishlar); tasdiqlash va checklist — 9-faza.
+     Protokol ekrani — 6-faza.
+  8. **Testlar:** widget testlari + asosiy oqim (`test/flow/main_flow.dart`) — xuddi shu oqim `integration_test` da qurilmada
+     (`.github/workflows/zanjir-emulator.yml`). `assets/norms/v0.yaml` = `norms/v0.yaml` test bilan nazorat qilinadi.
+- **Oqibat:** Testlar uchta haqiqiy UI xatosini topdi va tuzatildi (tor ekranda dropdown va natija belgisining sig'masligi,
+  dialog yopilayotganda dispose qilingan controller). Android build va emulyator jobi bu muhitda tekshirilmagan (SDK yo'q).

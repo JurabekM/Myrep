@@ -55,6 +55,13 @@ void main() {
     expect((await org.repos.audit.verify()).ok, isTrue);
   });
 
+  test('tugun bo\'yicha tarix — eng yangisi birinchi, boshqa tashkilot ko\'rinmaydi', () async {
+    final a = await record({'pair': 'L1-PE', 'zs_ohm': 0.84});
+    final b = await record({'pair': 'L1-PE', 'zs_ohm': 0.9});
+    expect((await org.repos.measurements.forNode(s.sock1.id)).map((m) => m.id), [b.id, a.id]);
+    expect(await org.repos.measurements.forNode(s.cab1.id), isEmpty);
+  });
+
   test('FAIL va NEEDS_REVIEW ham saqlanadi (PASS standart emas)', () async {
     expect((await record({'pair': 'L1-PE', 'zs_ohm': 1.5})).verdict, Verdict.fail);
     expect((await record({'pair': 'L1-PE'})).verdict, Verdict.needsReview);

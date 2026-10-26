@@ -80,9 +80,16 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Golden testlar: `test/golden/*.cases.yaml` + `graphs.yaml`; har normaga ≥ 3 holat (meta-test tekshiradi).
 - Baholash semantikasi: ADR-0002, ADR-0005. Sabab kodlari (`reason`) — barqaror inglizcha kalitlar.
 
+## Ilova (`app/`) xaritasi
+- `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash; `lib/router.dart` — go_router.
+- `lib/features/*` — ekranlar; `lib/l10n/app_{uz,ru}.arb` + `labels.dart` (domen kodlari → matn).
+- Testlar: `test/support/harness.dart` (xotiradagi baza, `startWithSession`, `goTo`, `settle`, `reveal`); asosiy oqim —
+  `test/flow/main_flow.dart` (widget testi va `integration_test/`). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).
+
 ## UI
 - Standart mavzu — Myrep dark tokenlari (`../CLAUDE.md` jadvali), light — ixtiyoriy. Shrift: ilova ichidagi Noto Sans.
-- Tugmalar ≥ 48 dp, katta shrift rejimi, TalkBack; natija ranglari kontrasti WCAG AA.
+- Tugmalar ≥ 48 dp, katta shrift rejimi, TalkBack; natija ranglari kontrasti WCAG AA (`success #7DBE8A` — ADR-0009).
+- Kiritishda PASS ga olib keladigan standart qiymat yo'q (UZO natijasi, ψ, atributlar — tanlanmaguncha bo'sh).
 
 ## Git
 - Ishchi branch: `claude/new-session-2w6wwo` (sessiya bo'yicha belgilangan). PR faqat foydalanuvchi so'raganda.

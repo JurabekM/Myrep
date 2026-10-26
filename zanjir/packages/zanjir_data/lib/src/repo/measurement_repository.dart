@@ -8,6 +8,7 @@ import 'graph_repository.dart';
 import 'instrument_repository.dart';
 import 'norm_set_repository.dart';
 import 'session_repository.dart';
+import 'settings_repository.dart';
 import 'site_repository.dart';
 
 /// O'lchovlar — append-only (CLAUDE.md, 5-qoida). O'zgartirish yoki o'chirish metodlari yo'q:
@@ -19,7 +20,7 @@ class MeasurementRepository {
   final NormSetRepository _normSets;
   ZanjirDatabase get _db => _ctx.db;
 
-  /// O'lchovni normaga solishtiradi (`evaluate`), saqlaydi va `MEASUREMENT_ADDED` audit hodisasini yozadi — bitta tranzaksiyada.
+  /// O'lchovni normaga solishtiradi (`evaluate`, laboratoriya sozlamalari bilan), saqlaydi va `MEASUREMENT_ADDED` audit hodisasini yozadi — bitta tranzaksiyada.
   Future<MeasurementRow> record({
     required String sessionId,
     required String nodeId,
@@ -29,7 +30,6 @@ class MeasurementRepository {
     required EnteredVia enteredVia,
     required String normSetVersion,
     String? supersedesId,
-    EvalSettings settings = const EvalSettings(),
   }) => _db.transaction(() async {
     final session = await SessionRepository(_ctx).requireOpen(sessionId);
     final graphRepo = GraphRepository(_ctx);
@@ -66,7 +66,7 @@ class MeasurementRepository {
       ),
       normSet: normSet,
       graph: graph,
-      settings: settings,
+      settings: (await SettingsRepository(_ctx).current()).evalSettings,
     );
     final now = _ctx.now();
     final row = await _db
@@ -111,6 +111,13 @@ class MeasurementRepository {
         if (!replaced.contains(m.id)) m,
     ];
   }
+
+  /// Tugunning barcha o'lchovlari (barcha sessiyalar, eng yangisi birinchi), almashtirilganlari ham.
+  Future<List<MeasurementRow>> forNode(String nodeId) =>
+      (_db.select(_db.measurements)
+            ..where((m) => m.nodeId.equals(nodeId) & m.orgId.equals(_ctx.orgId))
+            ..orderBy([(m) => OrderingTerm.desc(m.createdAt), (m) => OrderingTerm.desc(m.id)]))
+          .get();
 
   Future<void> _checkSupersede(String oldId, String sessionId, String nodeId, MeasurementType type) async {
     final old = await get(oldId) ?? (throw NotFoundException('measurement', oldId));

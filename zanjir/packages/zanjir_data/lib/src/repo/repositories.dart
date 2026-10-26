@@ -9,6 +9,7 @@ import 'measurement_repository.dart';
 import 'norm_set_repository.dart';
 import 'protocol_repository.dart';
 import 'session_repository.dart';
+import 'settings_repository.dart';
 import 'site_repository.dart';
 import 'user_repository.dart';
 
@@ -25,6 +26,7 @@ class Repositories {
       audit = AuditRepository(ctx, signer: signer, deviceId: deviceId, actorId: actorId),
       isolationPlans = IsolationPlanRepository(ctx) {
     measurements = MeasurementRepository(ctx, audit: audit, normSets: normSets);
+    settings = SettingsRepository(ctx, audit: audit);
     protocols = ProtocolRepository(ctx, audit: audit);
   }
 
@@ -40,4 +42,5 @@ class Repositories {
   final IsolationPlanRepository isolationPlans;
   late final MeasurementRepository measurements;
   late final ProtocolRepository protocols;
+  late final SettingsRepository settings;
 }

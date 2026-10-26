@@ -13,10 +13,7 @@ class DisclaimerBanner extends StatelessWidget {
       child: Container(
         color: ZanjirColors.surface,
         padding: const EdgeInsets.all(12),
-        child: Text(
-          AppLocalizations.of(context).disclaimer,
-          style: const TextStyle(color: ZanjirColors.inkMuted),
-        ),
+        child: Text(AppLocalizations.of(context).disclaimer, style: const TextStyle(color: ZanjirColors.inkMuted)),
       ),
     );
   }

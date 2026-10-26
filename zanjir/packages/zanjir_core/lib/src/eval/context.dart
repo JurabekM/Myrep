@@ -15,6 +15,7 @@ class EvalContext {
     required this.graph,
     required this.settings,
     required this.values,
+    required this.marginPct,
   });
   final Node node;
   final Site site;
@@ -24,7 +25,8 @@ class EvalContext {
   final EvalSettings settings;
   final Map<String, Object?> values;
 
-  double get marginPct => normSet.marginPct;
+  /// Effektiv zaxira, %: max(normalar to'plami, laboratoriya).
+  final double marginPct;
 }
 
 /// Son o'qish natijasi: `value` yoki `reason` (`value_missing` / `invalid_value`).

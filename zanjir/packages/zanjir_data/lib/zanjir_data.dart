@@ -13,5 +13,6 @@ export 'src/repo/organization_repository.dart';
 export 'src/repo/protocol_repository.dart';
 export 'src/repo/repositories.dart';
 export 'src/repo/session_repository.dart';
+export 'src/repo/settings_repository.dart';
 export 'src/repo/site_repository.dart';
 export 'src/repo/user_repository.dart';

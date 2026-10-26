@@ -5,7 +5,7 @@ import '../db/database.dart';
 import 'context.dart';
 import 'graph_repository.dart';
 import 'site_repository.dart';
-import 'user_repository.dart';
+import 'settings_repository.dart';
 
 /// Ajratish rejalari: DRAFT → APPROVED → EXECUTED; DRAFT/APPROVED → CANCELLED; graf o'zgarsa → STALE.
 /// Reja — tavsiya; tasdiqlash LEAD/ADMIN zimmasida (CLAUDE.md, 1-qoida).
@@ -46,8 +46,7 @@ class IsolationPlanRepository {
   Future<IsolationPlanRow> approve(String id, {required String approvedBy}) async {
     final plan = await _require(id);
     _expectStatus(plan, const {'DRAFT'});
-    final user = await UserRepository(_ctx).require(approvedBy);
-    if (!_approverRoles.contains(user.role)) throw DataRuleException('forbidden_role', user.role);
+    await requireRole(_ctx, approvedBy, _approverRoles);
     await _ensureFresh(plan);
     return _setStatus(plan, 'APPROVED', approvedBy: Value(approvedBy));
   }

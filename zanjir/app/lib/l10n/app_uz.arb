@@ -1,11 +1,446 @@
 {
   "@@locale": "uz",
   "appTitle": "ZANJIR",
-  "@appTitle": { "description": "Ilova nomi" },
-  "homeTitle": "Obyektlar",
-  "@homeTitle": { "description": "Bosh ekran sarlavhasi" },
-  "homeEmpty": "Hozircha obyekt yo'q",
-  "@homeEmpty": { "description": "Obyektlar ro'yxati bo'sh" },
+  "@appTitle": {
+    "description": "Ilova nomi"
+  },
   "disclaimer": "Ilova faqat tavsiya beradi. Ishga ruxsat va xavfsizlik uchun javobgarlik naryad beruvchi va ish rahbari zimmasida.",
-  "@disclaimer": { "description": "O'zgarmas qoida 1: har doim ko'rinadigan ogohlantirish" }
+  "@disclaimer": {
+    "description": "O'zgarmas qoida 1: har doim ko'rinadigan ogohlantirish"
+  },
+  "save": "Saqlash",
+  "cancel": "Bekor qilish",
+  "delete": "O'chirish",
+  "edit": "Tahrirlash",
+  "close": "Yopish",
+  "retry": "Qayta urinish",
+  "yes": "Ha",
+  "no": "Yo'q",
+  "loadError": "Ma'lumotni yuklab bo'lmadi: {error}",
+  "@loadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "actionError": "Amal bajarilmadi: {error}",
+  "@actionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "requiredField": "Majburiy maydon",
+  "invalidNumber": "Son kiriting (masalan, 0,84)",
+  "invalidDate": "Sana YYYY-MM-DD formatida",
+  "notSet": "Kiritilmagan",
+  "loginTitle": "Kirish",
+  "phone": "Telefon raqami",
+  "password": "Parol",
+  "loginButton": "Kirish",
+  "serverUnavailable": "Server bilan aloqa yo'q. Oflayn profil bilan davom etishingiz mumkin.",
+  "createOfflineProfile": "Oflayn profil yaratish",
+  "onboardingTitle": "Laboratoriya profili",
+  "onboardingHint": "Qurilma kaliti shu telefonda yaratiladi va himoyalangan xotirada saqlanadi.",
+  "labName": "Laboratoriya nomi",
+  "fullName": "F.I.Sh.",
+  "role": "Rol",
+  "roleAdmin": "Administrator",
+  "roleLead": "Ish rahbari",
+  "roleEngineer": "Muhandis",
+  "roleViewer": "Kuzatuvchi",
+  "onboardingCreate": "Profilni yaratish",
+  "homeTitle": "Obyektlar",
+  "@homeTitle": {
+    "description": "Bosh ekran sarlavhasi"
+  },
+  "homeEmpty": "Hozircha obyekt yo'q",
+  "addSite": "Obyekt qo'shish",
+  "siteFormTitle": "Obyekt",
+  "siteName": "Obyekt nomi",
+  "address": "Manzil",
+  "customer": "Buyurtmachi",
+  "earthingSystem": "Yerga ulash tizimi",
+  "u0Volts": "U0, V",
+  "open": "Ochish",
+  "openByCode": "Kod bo'yicha ochish",
+  "nodeCode": "Tugun kodi (QR)",
+  "codeNotFound": "Bunday tugun topilmadi",
+  "settings": "Sozlamalar",
+  "treeMode": "Daraxt",
+  "graphMode": "Graf",
+  "addNode": "Tugun qo'shish",
+  "unconnected": "Manbaga ulanmagan",
+  "emptyGraph": "Grafda hali tugun yo'q",
+  "startSession": "O'lchovni boshlash",
+  "sessions": "Sessiyalar",
+  "isolationPlan": "Ajratish rejasi",
+  "unverified": "Tasdiqlanmagan",
+  "nodeFormTitle": "Tugun",
+  "nodeKind": "Turi",
+  "label": "Belgilanishi",
+  "connectTo": "Ulanadi",
+  "conductors": "O'tkazgichlar",
+  "verified": "Dalada tasdiqlangan",
+  "state": "Holati",
+  "stateClosed": "Yoqilgan",
+  "stateOpen": "O'chirilgan",
+  "duplicate": "Nusxalash",
+  "duplicated": "Nusxa yaratildi: {label}",
+  "@duplicated": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteNodeConfirm": "«{label}» tugunini o'chirasizmi? Ulanishlari ham o'chiriladi.",
+  "@deleteNodeConfirm": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "nodeCard": "Tugun kartasi",
+  "attributes": "Parametrlar",
+  "measurementsHistory": "O'lchovlar tarixi",
+  "noMeasurements": "O'lchov yo'q",
+  "qrHint": "Shitga yopishtirish uchun QR kod",
+  "attrInA": "Nominal tok In, A",
+  "attrCurve": "Xarakteristika",
+  "attrIdnMa": "IΔn, mA",
+  "attrRcdType": "UZO turi",
+  "attrSelective": "Selektiv",
+  "attrCores": "Tomirlar soni",
+  "attrCsaMm2": "Kesim, mm²",
+  "attrMaterial": "Material",
+  "attrLengthM": "Uzunlik, m",
+  "attrCircuitRole": "Zanjir turi",
+  "attrCircuitClass": "Kabel vazifasi",
+  "attrRole": "Yerga ulagich turi",
+  "attrAntiIslanding": "Anti-islanding himoyasi",
+  "circuitRoleFinal": "Oxirgi zanjir",
+  "circuitRoleDistribution": "Taqsimlovchi zanjir",
+  "circuitClassWiring": "Elektr simlari",
+  "circuitClassPower": "Kuch kabeli",
+  "circuitClassSecondary": "Ikkilamchi zanjir",
+  "electrodeNeutral": "Neytral yerga ulash",
+  "electrodeRepeat": "Takroriy yerga ulash",
+  "electrodeTt": "TT tizimi",
+  "kindSrcGrid": "Tarmoq (kirish)",
+  "kindSrcTransformer": "Transformator",
+  "kindSrcGenerator": "Generator",
+  "kindSrcPvInverter": "PV invertor",
+  "kindSrcUps": "UPS",
+  "kindSrcBattery": "Akkumulyator",
+  "kindSrcCapacitor": "Kondensator batareyasi",
+  "kindBreaker": "Avtomat",
+  "kindRcd": "UZO",
+  "kindRcbo": "Difavtomat",
+  "kindFuse": "Saqlagich",
+  "kindSwitch": "Ajratgich",
+  "kindAts": "AVR",
+  "kindContactor": "Kontaktor",
+  "kindBusbar": "Shina",
+  "kindPanel": "Shit",
+  "kindCable": "Kabel",
+  "kindLoad": "Iste'molchi",
+  "kindSocketGroup": "Rozetkalar guruhi",
+  "kindEarthElectrode": "Yerga ulagich",
+  "kindPeBar": "PE shina",
+  "sessionKind": "Sessiya turi",
+  "sessionKindQabul": "Qabul-topshirish",
+  "sessionKindDavriy": "Davriy",
+  "sessionKindNavbatdan": "Navbatdan tashqari",
+  "ambientTemp": "Havo harorati, °C",
+  "humidity": "Namlik, %",
+  "tempMissingHint": "Harorat kiritilmasa, izolyatsiya natijasi «Ko'rib chiqish kerak» bo'ladi.",
+  "start": "Boshlash",
+  "summaryTitle": "Sessiya xulosasi",
+  "closeSession": "Sessiyani yopish",
+  "closeSessionConfirm": "Sessiya yopilgach o'lchov qo'shib bo'lmaydi. Yopasizmi?",
+  "sessionClosed": "Sessiya yopilgan",
+  "continueMeasuring": "O'lchashni davom ettirish",
+  "protocol": "Protokol",
+  "protocolNotReady": "Protokol hali tuzilmagan. Imzolash uchun sessiya yopilgan va barcha asboblarning qiyoslash muddati amal qilayotgan bo'lishi kerak.",
+  "measurementCount": "{count} ta o'lchov",
+  "@measurementCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "measureTitle": "O'lchov kiritish",
+  "point": "Nuqta",
+  "previousPoint": "Oldingi nuqta",
+  "nextPoint": "Keyingi nuqta",
+  "measurementType": "O'lchov turi",
+  "typeInsulation": "Izolyatsiya",
+  "typeLoop": "Faza-nol sirtmog'i",
+  "typeRcd": "UZO",
+  "typeEarth": "Yerga ulash",
+  "typeBonding": "Metallik bog'lanish",
+  "instrument": "Asbob",
+  "noInstruments": "Asbob qo'shilmagan — sozlamalarda qo'shing",
+  "instrumentExpired": "Qiyoslash muddati o'tgan — bu o'lchov bilan protokol imzolanmaydi",
+  "testVoltage": "Sinov kuchlanishi",
+  "threePhase": "3 faza",
+  "pair": "Juftlik",
+  "zsOhm": "Zs, Ω",
+  "multiplier": "Tok karraligi",
+  "tripTime": "O'chish vaqti, ms",
+  "tripCurrent": "O'chish toki, mA",
+  "tripped": "UZO",
+  "trippedYes": "O'chdi",
+  "trippedNo": "O'chmadi",
+  "earthR": "R, Ω",
+  "seasonCoeff": "Mavsumiy koeffitsient ψ",
+  "method": "Usul",
+  "scope": "O'lchov",
+  "scopeSingle": "Alohida elektrod",
+  "scopeTotal": "Jami",
+  "bondR": "R, Ω",
+  "bondFrom": "Qayerdan",
+  "bondTo": "Qayergacha",
+  "notApplicable": "Qo'llanilmaydi",
+  "notApplicableReason": "Sabab",
+  "saveMeasurement": "Saqlash",
+  "lastResult": "Oxirgi natija: {label}",
+  "@lastResult": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "supersede": "Qayta o'lchash",
+  "supersedeHint": "Xato o'lchov o'chirilmaydi — yangisi bilan almashtiriladi",
+  "limitLabel": "Chegara: {limit}",
+  "@limitLabel": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "verdictPass": "Normada",
+  "verdictFail": "Normadan tashqari",
+  "verdictNeedsReview": "Ko'rib chiqish kerak",
+  "verdictNotApplicable": "Qo'llanilmaydi",
+  "reasonOutOfLimit": "Chegaradan tashqarida",
+  "reasonValueMissing": "Qiymat kiritilmagan",
+  "reasonInvalidValue": "Qiymat noto'g'ri",
+  "reasonMissingAmbientTemp": "Havo harorati kiritilmagan",
+  "reasonTestVoltageBelowNorm": "Asbob kuchlanishi normadagidan past",
+  "reasonNoPairs": "Juftliklar kiritilmagan",
+  "reasonNoMatchingNorm": "Mos norma yo'q",
+  "reasonNormApplicabilityUnknown": "Normani tanlash uchun tugun parametrlari yetishmaydi",
+  "reasonLoopPairNotPe": "Faqat L–PE (L–PEN) juftligi baholanadi",
+  "reasonUnprotectedPath": "Manbaga himoya apparatisiz yo'l bor",
+  "reasonNoProtectiveDevice": "Himoya apparati topilmadi",
+  "reasonFuseProtection": "Saqlagich — qo'lda tekshirish kerak",
+  "reasonDeviceAttrsMissing": "Apparat parametrlari (In, xarakteristika, IΔn) kiritilmagan",
+  "reasonCurveUnknown": "Noma'lum xarakteristika",
+  "reasonZsExceeded": "Zs ruxsat etilganidan katta",
+  "reasonZsExceededRcdPresent": "Zs katta, lekin yuqorida UZO bor",
+  "reasonZsAmbiguous": "Bir nechta kirish — himoya apparati aniq emas",
+  "reasonRcdMultiplierBelow1": "0,5·IΔn sinovi baholanmaydi",
+  "reasonRcdNotTripped": "UZO o'chmadi",
+  "reasonSeasonCoeffMissing": "Mavsumiy koeffitsient kiritilmagan",
+  "reasonSeasonCoeffBelow1": "Mavsumiy koeffitsient 1 dan kichik",
+  "reasonNoUpstreamRcd": "UZO topilmadi",
+  "reasonRcdIdnMissing": "UZO'da IΔn kiritilmagan",
+  "reasonFactorUnavailable": "Hisoblash uchun ma'lumot yetishmaydi",
+  "reasonMarkedNotApplicable": "Qo'llanilmaydi deb belgilangan",
+  "reasonOther": "Sabab: {code}",
+  "@reasonOther": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "isolationTitle": "Ajratish rejasi (tavsiya)",
+  "selectZone": "Ish zonasini tanlang",
+  "buildPlan": "Rejani tuzish",
+  "planBlocked": "Reja tuzib bo'lmadi",
+  "blockedNoSwitching": "Manbadan zonaga kommutatsiya apparatisiz yo'l bor:",
+  "blockedSourceInZone": "Zona ichida manba bor — reja avtomatik tuzilmaydi:",
+  "blockedVerification": "Ichki tekshiruv xatosi — rejadan foydalanmang:",
+  "warnings": "Ogohlantirishlar",
+  "steps": "Qadamlar",
+  "mandatory": "Majburiy",
+  "stepStopPvAc": "{label}: PV invertorni AC tomondan to'xtating",
+  "@stepStopPvAc": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepStopPvDc": "{label}: DC ajratgichni o'chiring",
+  "@stepStopPvDc": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepStopGenerator": "{label}: generatorni to'xtating",
+  "@stepStopGenerator": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepStopUps": "{label}: UPS ni o'chiring",
+  "@stepStopUps": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepStopBattery": "{label}: akkumulyatorni ajrating",
+  "@stepStopBattery": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepOpenDevice": "{label}: o'chiring",
+  "@stepOpenDevice": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepRemoveFuse": "{label}: saqlagichni olib qo'ying",
+  "@stepRemoveFuse": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepLockAndTag": "{label}: blokirovka va «Yoqilmasin! Odamlar ishlamoqda» plakati",
+  "@stepLockAndTag": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepVerifyNoVoltage": "{label}: kuchlanish yo'qligini tekshiring (ko'rsatkichni avval kuchlanish bor joyda sinang)",
+  "@stepVerifyNoVoltage": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepApplyEarthing": "{label}: yerga ulagich o'rnating",
+  "@stepApplyEarthing": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "stepFenceAndSign": "To'siq va «Shu yerda ishlang» plakati",
+  "warnUnverifiedNode": "Dalada tasdiqlanmagan tugunlar: {labels}",
+  "@warnUnverifiedNode": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "warnCapacitorInZone": "Zonada kondensator — zaryadsizlantiring: {labels}",
+  "@warnCapacitorInZone": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "warnCableDischarge": "Kabel sig'imi — zaryadsizlantiring: {labels}",
+  "@warnCableDischarge": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "warnPvDcSide": "PV ning DC tomonida kuchlanish qoladi: {labels}",
+  "@warnPvDcSide": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "warnPenConductor": "PEN o'tkazgichda potensial bo'lishi mumkin",
+  "warnContactorOrAts": "Kontaktor/AVR masofadan yoqilishi mumkin: {labels}",
+  "@warnContactorOrAts": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "warnNoSourceReachable": "Grafda manba topilmadi — graf to'liqligini tekshiring",
+  "warnEarthingUnknown": "Yerga ulash tizimi kiritilmagan",
+  "settingsTitle": "Sozlamalar",
+  "language": "Til",
+  "languageUz": "O'zbekcha",
+  "languageRu": "Русский",
+  "largeText": "Katta shrift",
+  "lab": "Laboratoriya",
+  "licenseNo": "Litsenziya raqami",
+  "licenseValidUntil": "Litsenziya muddati (YYYY-MM-DD)",
+  "instruments": "Asboblar",
+  "addInstrument": "Asbob qo'shish",
+  "instrumentKind": "Turi",
+  "model": "Model",
+  "serialNo": "Zavod raqami",
+  "certNo": "Qiyoslash guvohnomasi",
+  "verifiedUntil": "Qiyoslash muddati (YYYY-MM-DD)",
+  "normsVersion": "Normalar versiyasi: {version}",
+  "@normsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "normsNotReviewed": "Normalar hali litsenziyali muhandis tomonidan tekshirilmagan",
+  "normsReviewed": "Tekshirgan: {by}, {at}",
+  "@normsReviewed": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "at": {
+        "type": "String"
+      }
+    }
+  },
+  "evalSettings": "Baholash sozlamalari",
+  "kCorr": "k_corr — sirtmoq koeffitsienti (0; 1]",
+  "marginPct": "Zaxira, % (0–50)",
+  "leadOnly": "Faqat ish rahbari (LEAD) yoki administrator o'zgartiradi",
+  "settingsSaved": "Saqlandi",
+  "invalidKCorr": "k_corr (0; 1] oralig'ida bo'lishi kerak",
+  "invalidMargin": "Zaxira 0…50 oralig'ida bo'lishi kerak",
+  "profile": "Profil",
+  "errorForbidden": "Bu amal uchun ruxsat yo'q",
+  "errorSessionClosed": "Sessiya yopilgan"
 }

@@ -1,6 +1,6 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 4-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq. Keyingi — 5-faza (ilova UI, l10n).
+**Joriy holat:** 5-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq. Keyingi — 6-faza (PDF, QR, imzolash).
 **Oxirgi yangilanish:** 2026-10-26
 
 ## Fazalar
@@ -13,7 +13,7 @@
 | 2 | Ajratish solveri | ✅ Tayyor (7 stsenariy, 1000 tasodifiy graf brute force bilan, 2000 tugun ~22 ms) | 2026-10-26 | cd2b24d |
 | 3 | Kanonik JSON + hash-zanjir + imzo (Dart + Python) | ✅ Tayyor (umumiy vektorlar, RFC 8785/8032, har bir bayt/bit buzilishi aniqlanadi) | 2026-10-26 | 63bf546 |
 | 4 | Ilova ma'lumot qatlami (Drift) | ✅ Tayyor (`packages/zanjir_data`: migratsiya, repozitoriy, append-only, tashkilot testlari) | 2026-10-26 | c515956 |
-| 5 | Ilova UI, l10n uz/ru | ⏳ | | |
+| 5 | Ilova UI, l10n uz/ru | ✅ Tayyor (19 widget/oqim testi; emulyator jobi qo'shildi, lokal tekshirilmagan) | 2026-10-26 | _shu commit_ |
 | 6 | Deterministik PDF, QR, imzolash | ⏳ | | |
 | 7 | Server: auth, RBAC, RLS, sync, `/v/{qr_token}` | ⏳ | | |
 | 8 | Sinxronlash integratsiyasi (E2E) | ⏳ | | |
@@ -48,6 +48,6 @@ Muhandis uchun: M1–M10 (`docs/NORMS_REVIEW.md`). Ular hal bo'lguncha baholash 
 
 ## Eslatmalar
 - GitHub Actions bu branch uchun hali ishga tushmadi (workflow default branch'da yo'q) — lokal tekshiruvlar yashil; PR ochilganda CI ishlaydi.
-- Noto Sans shrifti ilovaga 5-fazada qo'shiladi (hozir tizim shrifti).
-- 5-fazada: ilovani `zanjir_data` ga ulash (Riverpod provayderlari, bazani ochish), laboratoriya sozlamalari (`k_corr`, `margin_pct`) saqlash.
+- Android build (`flutter build apk/appbundle`) va emulyator integration testi bu konteynerda tekshirilmagan — Android SDK yo'q; 12-fazagacha CI'da tekshiriladi.
+- QR kodni kamera bilan skanerlash hali yo'q (kod qo'lda kiritiladi, deep link ishlaydi) — keyingi fazalarda.
 - Release darvozasi `needs_verification` holatidagi normalarni ham yiqitadi (ADR-0004) — muhandis tekshiruvidan keyin holat `source_seen` ga o'zgartiriladi.

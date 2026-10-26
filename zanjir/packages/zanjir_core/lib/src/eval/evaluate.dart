@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../graph/graph.dart';
 import '../model/enums.dart';
 import '../model/frozen.dart';
@@ -18,11 +20,15 @@ import 'rule_check.dart';
 
 /// Laboratoriya sozlamalari (LEAD o'zgartiradi).
 class EvalSettings {
-  const EvalSettings({this.kCorr = 1.0});
+  const EvalSettings({this.kCorr = 1.0, this.marginPct = 0});
 
   /// Sirtmoq chegarasi koeffitsienti: Zs_max = k_corr · U0 / Ia. Oraliq (0; 1] —
   /// 1 dan katta qiymat chegarani yumshatadi, shuning uchun rad etiladi.
   final double kCorr;
+
+  /// Laboratoriya zaxirasi, % (0…50). Effektiv zaxira = max(normalar to'plami, laboratoriya) —
+  /// sozlama chegarani faqat qat'iylashtiradi (ADR-0009).
+  final double marginPct;
 }
 
 class EvalResult {
@@ -56,11 +62,18 @@ EvalResult evaluate({
   if (graph.node(node.id) == null) throw ArgumentError('Tugun grafda yo\'q');
   final k = settings.kCorr;
   if (!(k > 0 && k <= 1)) throw ArgumentError.value(k, 'kCorr', '(0; 1] oralig\'ida bo\'lishi kerak');
+  final labMargin = settings.marginPct;
+  if (!(labMargin >= 0 && labMargin <= 50)) {
+    throw ArgumentError.value(labMargin, 'marginPct', '[0; 50] oralig\'ida bo\'lishi kerak');
+  }
+  final margin = math.max(normSet.marginPct, labMargin);
 
   final values = measurement.values;
   final detail = <String, Object?>{
     'norm_set_version': normSet.version,
-    'margin_pct': normSet.marginPct,
+    'margin_pct': margin,
+    'norm_set_margin_pct': normSet.marginPct,
+    'lab_margin_pct': labMargin,
     'k_corr': k,
     'measurement_type': measurement.type.code,
     'node_kind': node.kind.code,
@@ -115,6 +128,7 @@ EvalResult evaluate({
     graph: graph,
     settings: settings,
     values: values,
+    marginPct: margin,
   );
   final checks = switch (measurement.type) {
     MeasurementType.insulation => evaluateInsulation(ctx, matched),

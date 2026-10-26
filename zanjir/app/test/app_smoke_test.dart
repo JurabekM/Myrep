@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zanjir_app/app.dart';
 import 'package:zanjir_app/theme/tokens.dart';
 
-void main() {
-  testWidgets('ilova dark mavzuda ochiladi va ogohlantirish ko\'rinadi', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const ProviderScope(child: ZanjirApp()));
-    await tester.pumpAndSettle();
+import 'support/harness.dart';
 
-    expect(find.text('Obyektlar'), findsOneWidget);
+void main() {
+  testWidgets('profil yo\'q — kirish ekrani, dark mavzu, ogohlantirish ko\'rinadi', (tester) async {
+    final env = TestEnv();
+    await tester.pumpWidget(env.app());
+    await settle(tester);
+
+    expect(find.text('Kirish'), findsWidgets);
     expect(find.textContaining('faqat tavsiya beradi'), findsOneWidget);
     expect(find.textContaining('ishlash xavfsiz'), findsNothing);
-
-    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-    final theme = Theme.of(tester.element(find.byWidget(scaffold)));
+    final theme = Theme.of(tester.element(find.byType(Scaffold).first));
     expect(theme.brightness, Brightness.dark);
     expect(theme.scaffoldBackgroundColor, ZanjirColors.paper);
+
+    // Server hali ulanmagan — oflayn profil taklif qilinadi.
+    await tester.enterText(find.byType(TextFormField).at(0), '+998901234567');
+    await tester.enterText(find.byType(TextFormField).at(1), 'parol');
+    await tester.tap(find.widgetWithText(FilledButton, 'Kirish'));
+    await settle(tester);
+    expect(find.textContaining('Server bilan aloqa yo\'q'), findsOneWidget);
+    await env.dispose(tester);
   });
 }
