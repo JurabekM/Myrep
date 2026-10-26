@@ -34,6 +34,7 @@ fun MapCanvas(plan: SitePlan, track: List<TrackPoint>, modifier: Modifier = Modi
     val p = LocalSvPalette.current
     val measurer = rememberTextMeasurer()
     val description = stringResource(R.string.live_map_description, track.size)
+    val north = stringResource(uz.sectorverify.ui.R.string.common_north).take(1)
     val polar = track.map { Geo.distanceM(plan.lat, plan.lon, it.lat, it.lon) to Geo.bearingDeg(plan.lat, plan.lon, it.lat, it.lon) }
     val extentM = max(OUTER_RING_M, polar.maxOfOrNull { it.first } ?: 0.0) * 1.1
     Canvas(modifier.fillMaxWidth().aspectRatio(1f).semantics { contentDescription = description }) {
@@ -62,7 +63,7 @@ fun MapCanvas(plan: SitePlan, track: List<TrackPoint>, modifier: Modifier = Modi
             },
             p.ink,
         )
-        drawText(measurer.measure("N", TextStyle(color = p.ink, fontSize = 14.sp)), topLeft = Offset(n.x - 6f, n.y + 4f))
+        drawText(measurer.measure(north, TextStyle(color = p.ink, fontSize = 14.sp)), topLeft = Offset(n.x - 6f, n.y + 4f))
         // Scale bar: 100 m.
         val bar = (SCALE_M * pxPerM).toFloat()
         val y = size.height - 30f

@@ -197,7 +197,7 @@ class PdfReportWriter(private val context: Context, private val locale: Locale) 
                 strokeWidth = 1f
             }
             for (f in listOf(1f, 0.66f, 0.33f)) canvas.drawCircle(cx, cy, r * f, grid)
-            canvas.drawText("N", cx - 4f, cy - r - 4f, small)
+            canvas.drawText(res.getString(UiR.string.common_north).take(1), cx - 4f, cy - r - 4f, small)
             list.forEachIndexed { idx, s ->
                 val color = PALETTE[idx % PALETTE.size]
                 s.planAzimuthDeg?.let { a ->

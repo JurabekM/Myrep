@@ -43,7 +43,6 @@ data class DebugUi(
 @HiltViewModel
 class DebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    plans: PlanRepository,
     private val starter: SurveyLauncher,
     private val exporter: SessionExporter,
     private val settings: SettingsRepository,
@@ -51,7 +50,7 @@ class DebugViewModel @Inject constructor(
     controller: SurveyController,
 ) : ViewModel() {
     val survey: StateFlow<SurveyState> = controller.state
-    val sites: StateFlow<List<SiteSummary>> = plans.observeSites().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val sites: StateFlow<List<SiteSummary>> = planRepo.observeSites().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     private val _ui = MutableStateFlow(DebugUi())
     val ui: StateFlow<DebugUi> = _ui.asStateFlow()
 
