@@ -15,4 +15,5 @@ dependencies {
     implementation(project(":core:format"))
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.core.ktx)
 }
