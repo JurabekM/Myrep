@@ -45,6 +45,7 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
 - Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest`
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
+- Kripto vektorlari: `cd server && uv run python -I ../tools/vectors/generate.py --check` (qo'lda tahrirlanmaydi, ADR-0007)
 - CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi.
 
 ## O'zgarmas qoidalar (hech qachon buzilmaydi)
@@ -70,7 +71,8 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - `lib/src/norms/` — normalar modeli, qat'iy YAML yuklovchi, qo'llanish sharti.
 - `lib/src/eval/` — `evaluate()`, `rule_check.dart` (umumiy qoida tekshiruvi), `evaluators/*` (o'lchov turlari bo'yicha).
 - `lib/src/solver/` — `planIsolation()`, Edmonds–Karp, qadamlar, ogohlantirishlar, `graph_snapshot_hash` (ADR-0006).
-- `lib/src/crypto/` — kanonik JSON (RFC 8785), SHA-256.
+- `lib/src/crypto/` — kanonik JSON (RFC 8785), SHA-256, Ed25519 `Signer`, hash-zanjir, protokol imzosi (ADR-0007).
+- Server kripto: `server/zanjir_server/crypto/` — Dart bilan bir xil; umumiy vektorlar `tools/vectors/`.
 - Benchmark: `dart run benchmark/solver_bench.dart` (2000 tugun < 500 ms Android talabi).
 - Golden testlar: `test/golden/*.cases.yaml` + `graphs.yaml`; har normaga ≥ 3 holat (meta-test tekshiradi).
 - Baholash semantikasi: ADR-0002, ADR-0005. Sabab kodlari (`reason`) — barqaror inglizcha kalitlar.

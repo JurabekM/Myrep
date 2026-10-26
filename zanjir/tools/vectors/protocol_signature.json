@@ -1,0 +1,61 @@
+{
+  "description": "Protokol imzosi (prompt 5.4): signature = Ed25519(payload_sha256 ‖ pdf_sha256), 32+32 xom bayt.",
+  "public_key": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+  "sig_alg": "Ed25519",
+  "payload": {
+    "session": {
+      "id": "01920000-0000-7000-8000-0000000005e1",
+      "kind": "DAVRIY",
+      "ambient_temp_c": 21.5,
+      "humidity_pct": 60
+    },
+    "site": {
+      "name": "«Baraka» savdo markazi",
+      "earthing_system": "TN-C-S",
+      "u0_volts": 220
+    },
+    "norm_set_version": "0.1.0",
+    "instruments": [
+      {
+        "serial_no": "MI3152-001",
+        "verification_cert_no": "QV-2026/123",
+        "verified_until": "2027-03-01"
+      }
+    ],
+    "measurements": [
+      {
+        "id": "01920000-0000-7000-8000-00000000000e",
+        "node": "SOCK1",
+        "type": "LOOP_IMPEDANCE",
+        "values": {
+          "pair": "L1-PE",
+          "zs_ohm": 0.84
+        },
+        "verdict": "PASS",
+        "norm_id": "LOOP-TN-FINAL"
+      },
+      {
+        "id": "01920000-0000-7000-8000-00000000000f",
+        "node": "CAB1",
+        "type": "INSULATION",
+        "values": {
+          "test_voltage_v": 1000,
+          "pairs": [
+            {
+              "pair": "L1-PE",
+              "mohm": 0.3
+            }
+          ]
+        },
+        "verdict": "FAIL",
+        "norm_id": "INS-WIRING"
+      }
+    ]
+  },
+  "payload_canonical": "{\"instruments\":[{\"serial_no\":\"MI3152-001\",\"verification_cert_no\":\"QV-2026/123\",\"verified_until\":\"2027-03-01\"}],\"measurements\":[{\"id\":\"01920000-0000-7000-8000-00000000000e\",\"node\":\"SOCK1\",\"norm_id\":\"LOOP-TN-FINAL\",\"type\":\"LOOP_IMPEDANCE\",\"values\":{\"pair\":\"L1-PE\",\"zs_ohm\":0.84},\"verdict\":\"PASS\"},{\"id\":\"01920000-0000-7000-8000-00000000000f\",\"node\":\"CAB1\",\"norm_id\":\"INS-WIRING\",\"type\":\"INSULATION\",\"values\":{\"pairs\":[{\"mohm\":0.3,\"pair\":\"L1-PE\"}],\"test_voltage_v\":1000},\"verdict\":\"FAIL\"}],\"norm_set_version\":\"0.1.0\",\"session\":{\"ambient_temp_c\":21.5,\"humidity_pct\":60,\"id\":\"01920000-0000-7000-8000-0000000005e1\",\"kind\":\"DAVRIY\"},\"site\":{\"earthing_system\":\"TN-C-S\",\"name\":\"«Baraka» savdo markazi\",\"u0_volts\":220}}",
+  "payload_sha256": "d833e680fecadd495e8f924955c10c01bbc47f7112a27ae42a4dbcae06c56989",
+  "pdf_hex": "255044462d312e370a000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff0a2525454f460a",
+  "pdf_sha256": "5c5169485479e6214e3b5f010689289166910f3cd32691774541ef7e7b65c5ce",
+  "message_hex": "d833e680fecadd495e8f924955c10c01bbc47f7112a27ae42a4dbcae06c569895c5169485479e6214e3b5f010689289166910f3cd32691774541ef7e7b65c5ce",
+  "signature": "4e12e589edc3faf13236d421cd6f409baf6a6ed78e7f84d701dac996669b2a4a7d9dd979df93fa75c0f00a2f131ab1d579b85566894d1a2cca9a3fe2e996c906"
+}

@@ -1,0 +1,14 @@
+# Server bilan bir xil qoidalar (generator `server` muhitida ishga tushadi).
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003", "S101"]
+
+[lint.isort]
+known-first-party = ["zanjir_server"]
+
+[lint.per-file-ignores]
+# RFC hex konstantalari va vektor ma'lumotlari bo'linmaydi.
+"generate.py" = ["E501"]

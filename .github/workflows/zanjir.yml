@@ -81,6 +81,13 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy .
       - run: uv run pytest
+      - name: Kripto vektorlari generatori — lint va tiplar
+        run: |
+          uv run ruff check ../tools/vectors
+          uv run ruff format --check ../tools/vectors
+          uv run mypy --strict ../tools/vectors/generate.py
+      - name: tools/vectors eskirmaganmi (Dart testlari ham shu fayllarni o'qiydi)
+        run: uv run python -I ../tools/vectors/generate.py --check
 
   norms:
     name: norms (schema + release darvozasi)

@@ -2,7 +2,11 @@
 library;
 
 export 'src/crypto/canonical_json.dart';
+export 'src/crypto/hash_chain.dart';
+export 'src/crypto/hex.dart';
+export 'src/crypto/protocol_signature.dart';
 export 'src/crypto/sha256.dart';
+export 'src/crypto/signer.dart';
 export 'src/eval/evaluate.dart' show EvalResult, EvalSettings, evaluate;
 export 'src/graph/graph.dart';
 export 'src/graph/traversal.dart';

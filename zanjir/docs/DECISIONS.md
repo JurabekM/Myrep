@@ -103,3 +103,25 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   10. Ilova "ishlash xavfsiz" demaydi: natija — **tavsiya** (`IsolationPlan`), tasdiqlash LEAD/ish rahbari zimmasida (9-faza).
 - **Oqibat:** `IsolationResult.toJson()` → `isolation_plan.steps` / `warnings` JSON. Qadam/ogohlantirish kodlari inglizcha,
   matnlari l10n'da. Unumdorlik: 2000 tugun — desktop AOT'da ~22 ms (`benchmark/solver_bench.dart`).
+
+## ADR-0007: Kanonik JSON, hash-zanjir va imzo formati
+
+- **Sana:** 2026-10-26 · **Holat:** qabul qilingan (3-faza).
+- **Kontekst:** Prompt 5.4: Dart (qurilma) va Python (server) bir xil baytlarni hosil qilishi va tekshirishi shart.
+- **Qaror:**
+  1. **Kanonik JSON** — RFC 8785 (JCS): kalitlar UTF-16 kod birliklari bo'yicha, sonlar ECMAScript formatida,
+     butun sonlar |n| ≤ 2^53 − 1, NaN/∞ va yolg'iz surrogatlar rad etiladi. Vaqt faqat UTC, `YYYY-MM-DDTHH:MM:SS.sssZ`
+     (mikrosekundlar tashlanadi); mahalliy vaqt — xato.
+  2. **Kodlash:** hash, ochiq kalit va imzo — kichik harfli hex. Imzo xom baytlar ustida: hodisa — `event_hash` ning 32 bayti,
+     protokol — `payload_sha256 ‖ pdf_sha256` (32 + 32 bayt).
+  3. **Zanjir:** qurilma bo'yicha alohida; `seq` 1 dan; birinchi `prev_hash` = 64 ta nol (`genesis`). Davom ettirish — server
+     saqlagan oxirgi hodisa (`anchor`) dan. Tekshiruv tartibi va sabab kodlari ikkala tomonda bir xil:
+     `invalid_format` → `unsupported_sig_alg` → `seq_gap` → `prev_hash_mismatch` → `event_hash_mismatch` → `bad_signature`.
+     Server `push` da birinchi xatoda butun paketni rad etadi (7-faza).
+  4. **`sig_alg`:** hozircha faqat `Ed25519`; noma'lum algoritm — rad. ML-DSA gibrid yoki E-IMZO — yangi qiymat qo'shish orqali.
+     O'zgaruvchan (S ≥ L) imzolar va egri chiziqda yotmaydigan kalitlar ikkala kutubxonada rad etiladi (vektor bilan qotirilgan).
+  5. **Vektorlar:** `tools/vectors/generate.py` Python implementatsiyasini RFC 8785 / RFC 8032 rasmiy natijalari bilan tekshirib,
+     vektorlarni yozadi; Dart ularni mustaqil tekshiradi va zanjir/imzoni **qayta quradi** (baytma-bayt tenglik). CI `--check`.
+  6. **Kalitlar:** `Signer` interfeysi; ilovada maxfiy kalit Android Keystore himoyasida (4/6-faza). Serverda maxfiy kalit yo'q —
+     Python `Ed25519Signer` faqat testlar va generator uchun. Dart kutubxonasi (`cryptography`) — sof Dart, API asinxron.
+- **Oqibat:** Format o'zgarishi — yangi ADR va vektorlarni ikkala tomonda bir vaqtda yangilash.

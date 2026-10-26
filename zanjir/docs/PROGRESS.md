@@ -1,6 +1,6 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 2-faza tayyor (foydalanuvchi qarori: 1-darvoza bilan parallel). 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) hali ochiq. Keyingi — 3-faza.
+**Joriy holat:** 3-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq. Keyingi — 4-faza (ilova ma'lumot qatlami).
 **Oxirgi yangilanish:** 2026-10-26
 
 ## Fazalar
@@ -11,7 +11,7 @@
 | 0 | Skelet: monorepo, docs, CI | ✅ Tayyor | 2026-10-26 | d7fefe8 |
 | 1 | `zanjir_core`: modellar, normalar, `evaluate()` | ✅ Tayyor (golden: 147, evaluator coverage 100% qator/branch) | 2026-10-26 | ba44045 |
 | 2 | Ajratish solveri | ✅ Tayyor (7 stsenariy, 1000 tasodifiy graf brute force bilan, 2000 tugun ~22 ms) | 2026-10-26 | cd2b24d |
-| 3 | Kanonik JSON + hash-zanjir + imzo (Dart + Python) | ⏳ | | |
+| 3 | Kanonik JSON + hash-zanjir + imzo (Dart + Python) | ✅ Tayyor (umumiy vektorlar, RFC 8785/8032, har bir bayt/bit buzilishi aniqlanadi) | 2026-10-26 | _shu commit_ |
 | 4 | Ilova ma'lumot qatlami (Drift) | ⏳ | | |
 | 5 | Ilova UI, l10n uz/ru | ⏳ | | |
 | 6 | Deterministik PDF, QR, imzolash | ⏳ | | |

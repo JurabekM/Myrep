@@ -29,8 +29,7 @@ void _write(StringBuffer out, Object? v) {
     case final double d:
       out.write(_number(d));
     case final DateTime t:
-      if (!t.isUtc) throw ArgumentError.value(t, 'value', 'vaqt UTC bo\'lishi kerak');
-      _string(out, _iso(t));
+      _string(out, isoUtcMillis(t));
     case final Map<Object?, Object?> m:
       final keys = [
         for (final k in m.keys)
@@ -136,7 +135,9 @@ String _number(double x) {
   return sign + body;
 }
 
-String _iso(DateTime t) {
+/// UTC vaqt → `YYYY-MM-DDTHH:MM:SS.sssZ` (millisekund aniqligida, mikrosekundlar tashlanadi).
+String isoUtcMillis(DateTime t) {
+  if (!t.isUtc) throw ArgumentError.value(t, 'value', 'vaqt UTC bo\'lishi kerak');
   String two(int v) => v.toString().padLeft(2, '0');
   final y = t.year;
   final year = y >= 0 && y <= 9999
