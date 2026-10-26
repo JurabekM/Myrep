@@ -45,7 +45,6 @@
     <string name="check_gps_ok">On</string>
     <string name="check_gps_bad">GPS is off — enable it in settings</string>
     <string name="check_gps_accuracy">GPS accuracy</string>
-    <string name="check_gps_accuracy_value">%1$s m (≤ 15 m needed)</string>
     <string name="check_capabilities">Device capabilities</string>
     <string name="check_capabilities_ok">Rate %1$s Hz, neighbours with RSRP</string>
     <string name="check_capabilities_bad">Rate %1$s Hz or no neighbour RSRP — run the probe in settings</string>
@@ -73,4 +72,5 @@
     <string name="live_stats">Samples: %1$d · GNSS: %2$d · %3$.2f Hz</string>
     <string name="live_samples">Samples: %1$d · bins: %2$d</string>
     <string name="live_map_description">Route map, points: %1$d</string>
+    <string name="check_gps_accuracy_value">%1$s m (≤ %2$s m needed)</string>
 </resources>

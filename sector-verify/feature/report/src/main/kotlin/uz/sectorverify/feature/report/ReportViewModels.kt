@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import uz.sectorverify.data.repo.PlanRepository
 import uz.sectorverify.data.repo.ReportRepository
 import uz.sectorverify.data.repo.SessionRepository
 import uz.sectorverify.data.repo.StoredResult
@@ -23,7 +22,6 @@ data class ResultUi(val loading: Boolean = true, val stored: StoredResult? = nul
 class ResultViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val sessions: SessionRepository,
-    private val plans: PlanRepository,
 ) : ViewModel() {
     val sessionId: String = checkNotNull(savedState.get<String>(ARG_SESSION_ID))
     private val _ui = MutableStateFlow(ResultUi())
@@ -32,8 +30,7 @@ class ResultViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val stored = sessions.result(sessionId)
-            val site = stored?.let { plans.site(it.session.siteId) }
-            _ui.value = ResultUi(false, stored, site?.plan, site?.id)
+            _ui.value = ResultUi(false, stored, sessions.plan(sessionId), stored?.session?.siteId)
         }
     }
 

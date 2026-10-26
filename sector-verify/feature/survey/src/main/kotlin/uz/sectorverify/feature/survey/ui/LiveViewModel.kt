@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import uz.sectorverify.data.repo.PlanRepository
 import uz.sectorverify.data.repo.SessionRepository
 import uz.sectorverify.feature.survey.SurveyController
 import uz.sectorverify.feature.survey.SurveyLauncher
@@ -23,7 +22,6 @@ class LiveViewModel @Inject constructor(
     controller: SurveyController,
     private val launcher: SurveyLauncher,
     private val sessions: SessionRepository,
-    private val plans: PlanRepository,
 ) : ViewModel() {
     val sessionId: String = checkNotNull(savedState.get<String>(ARG_SESSION_ID))
     val state: StateFlow<SurveyState> = controller.state
@@ -34,8 +32,7 @@ class LiveViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val s = sessions.session(sessionId) ?: return@launch
-            _plan.value = plans.site(s.siteId)?.plan
+            _plan.value = sessions.plan(sessionId)
         }
     }
 

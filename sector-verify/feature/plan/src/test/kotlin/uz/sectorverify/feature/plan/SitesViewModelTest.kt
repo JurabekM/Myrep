@@ -46,6 +46,10 @@ class SitesViewModelTest {
         override suspend fun abandon(sessionId: String) {
             abandoned += sessionId
         }
+
+        var recording = false
+
+        override fun isRecording(sessionId: String) = recording
     }
 
     @Before
@@ -89,6 +93,15 @@ class SitesViewModelTest {
         vm.resume() shouldBe id
         resumer.resumed shouldBe listOf(id)
         vm.resume.value shouldBe null
+        // A session the service is still recording is only opened, never abandoned.
+        resumer.recording = true
+        vm.checkRunning()
+        vm.resume.value!!.recording shouldBe true
+        vm.abandon()
+        resumer.abandoned shouldBe emptyList()
+        vm.resume() shouldBe id
+        resumer.resumed shouldBe listOf(id) // not started a second time
+        resumer.recording = false
         vm.checkRunning()
         vm.abandon()
         resumer.abandoned shouldBe listOf(id)

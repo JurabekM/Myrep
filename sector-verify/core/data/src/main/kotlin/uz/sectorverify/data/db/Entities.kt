@@ -82,6 +82,8 @@ data class SessionEntity(
     @ColumnInfo(name = "subscription_id") val subscriptionId: Int? = null,
     /** Full SessionResult of the final analysis (coverage bins, cleaning stats) for the report. */
     @ColumnInfo(name = "result_json") val resultJson: String? = null,
+    /** Sessiya boshlangandagi RF reja nusxasi: keyingi qayta import eski natijani o'zgartirmaydi. */
+    @ColumnInfo(name = "plan_json") val planJson: String? = null,
 )
 
 /** Raw table: rows are inserted once and never updated. */

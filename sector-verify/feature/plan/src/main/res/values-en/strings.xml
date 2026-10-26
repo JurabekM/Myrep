@@ -36,4 +36,6 @@
     <string name="sites_import_failed">Import failed. Errors: %1$d</string>
     <string name="resume_text">The survey at %1$s was interrupted (samples saved: %2$d). Continue?</string>
     <string name="resume_no_permission">No location permission — open the site and pass the pre-check first.</string>
+    <string name="resume_recording">The survey at %1$s is still recording (samples: %2$d).</string>
+    <string name="resume_open">Open survey</string>
 </resources>

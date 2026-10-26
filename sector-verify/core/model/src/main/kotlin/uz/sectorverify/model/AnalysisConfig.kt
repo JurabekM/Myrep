@@ -65,6 +65,8 @@ data class AnalysisConfig(
     val warnMaxCiHalfDeg: Double = 35.0,
     // 6.10 live
     val liveIntervalMs: Long = 5000,
+    // pre-check (§8.1): minimal CellInfo update rate of the device (AC-05)
+    val minDeviceRateHz: Double = 0.5,
     // reproducibility
     val seed: Long = DEFAULT_SEED,
 ) {

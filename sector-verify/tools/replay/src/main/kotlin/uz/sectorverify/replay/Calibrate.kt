@@ -68,6 +68,17 @@ object Calibrate {
 
     private data class Combo(val n: Double, val pass: Double, val warn: Double, val swap: Double, val cov: Double)
 
+    /** Grid qidirayotgan parametrlarni [from] dan oladi; qolganlari (preset, rMax, ...) sessiyaning o'zinikicha qoladi. */
+    fun AnalysisConfig.withSearched(from: AnalysisConfig) = copy(
+        pathLossExponent = from.pathLossExponent,
+        passMaxErrDeg = from.passMaxErrDeg,
+        warnMaxErrDeg = from.warnMaxErrDeg,
+        swapMaxErrDeg = from.swapMaxErrDeg,
+        minSectorCoverage = from.minSectorCoverage,
+        bootstrapIterations = from.bootstrapIterations,
+    )
+
+    /** Har sessiya o'zi yozilgan config bilan, faqat qidirilayotgan parametrlari [config] dan olinib tahlil qilinadi. */
     fun evaluate(config: AnalysisConfig, sessions: List<SessionExport>, truth: List<TruthRow>): Metrics {
         val byKey = truth.associateBy { it.siteCode to it.key }
         var swapCells = 0
@@ -76,16 +87,18 @@ object Calibrate {
         var falseFail = 0
         var healthyPass = 0
         val errors = ArrayList<Double>()
-        val analyzer = SessionAnalyzer(config)
         for (e in sessions) {
-            val r = analyzer.analyze(e.plan, e.samples, e.fixes)
+            val r = SessionAnalyzer(e.meta.config.withSearched(config)).analyze(e.plan, e.samples, e.fixes)
             for (s in r.sectors.filter { it.label != null }) {
                 val t = byKey[e.plan.code to s.key] ?: continue
                 if (t.isSwap) {
                     swapCells++
                     // Same definition as AC-01: the cell appears in a CRITICAL SWAP finding of its ARFCN.
                     val found = r.findings.any {
-                        it.type == FindingType.SWAP && it.detail["arfcn"] == s.key.arfcn.toString() && it.detail["pci.${s.key.pci}"] != null
+                        it.type == FindingType.SWAP &&
+                            it.detail["rat"] == s.key.rat.name &&
+                            it.detail["arfcn"] == s.key.arfcn.toString() &&
+                            it.detail["pci.${s.key.pci}"] != null
                     }
                     if (found || s.cause in SWAP_CAUSES) swapDetected++
                 }
@@ -125,7 +138,7 @@ object Calibrate {
         truthFile: File,
         out: File,
         quick: Boolean,
-        base: AnalysisConfig = AnalysisConfig(),
+        base: AnalysisConfig? = null,
         print: (String) -> Unit,
     ): CalibrationOutcome {
         val zips = dir.listFiles { f -> f.extension.equals("zip", ignoreCase = true) }.orEmpty().sortedBy { it.name }
@@ -133,6 +146,9 @@ object Calibrate {
         val sessions = zips.map { z -> z.inputStream().use { SessionZip.read(it) } }
         val truth = GroundTruth.parse(truthFile.readText())
         print("${sessions.size} ta sessiya, ground truth: ${truth.size} cell")
+        // Tavsiya eng ko'p ishlatilgan sessiya configi ustiga quriladi (preset va rMax saqlanadi).
+        val base = base ?: sessions.groupingBy { it.meta.config }.eachCount().maxBy { it.value }.key
+        print("Asos config: ${base.preset}, rMax ${base.rMaxM} m")
         val gridBase = base.copy(bootstrapIterations = GRID_BOOTSTRAP)
         val configs = grid(gridBase, quick)
         print("Grid: ${configs.size} ta konfiguratsiya…")

@@ -90,6 +90,11 @@ class RoomRepositoryTest {
             it.config shouldBe AnalysisConfig()
         }
         sessions.meta("missing", null).shouldBeNull()
+        // Re-import after the survey must not change the session's plan (ADR-016).
+        plans.importCsv(csv.replace("142,120", "142,200"))
+        sessions.plan(id)!!.sectors.first { it.pci == 142 }.azimuthDeg shouldBe 120.0
+        plans.siteByCode("NAV-1")!!.plan.sectors.first { it.pci == 142 }.azimuthDeg shouldBe 200.0
+        sessions.plan("missing").shouldBeNull()
         sessions.result("missing").shouldBeNull()
     }
 
@@ -133,7 +138,7 @@ class RoomRepositoryTest {
         val id = sessions.create(newSession(plans.siteByCode("NAV-1")!!.id))
         sessions.sink(id).write(listOf(CellSample(1, Rat.LTE, 1300, 141, true, -90.0)), listOf(GnssFix(1, 2, 40.1, 65.3, 4.0)))
         val dir = java.nio.file.Files.createTempDirectory("sv").toFile()
-        val zip = uz.sectorverify.data.repo.SessionExporter(sessions, plans).export(id, dir, "Ali", null, "{}", byteArrayOf(1))
+        val zip = uz.sectorverify.data.repo.SessionExporter(sessions).export(id, dir, "Ali", null, "{}", byteArrayOf(1))
         val back = zip.inputStream().use { uz.sectorverify.format.SessionZip.read(it) }
         back.plan.code shouldBe "NAV-1"
         back.samples.size shouldBe 1

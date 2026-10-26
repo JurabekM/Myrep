@@ -36,4 +36,6 @@
     <string name="sites_import_failed">Импорт не выполнен. Ошибок: %1$d</string>
     <string name="resume_text">На сайте %1$s измерение прервано (сохранено замеров: %2$d). Продолжить?</string>
     <string name="resume_no_permission">Нет разрешения на местоположение — откройте сайт и пройдите предпроверку.</string>
+    <string name="resume_recording">На сайте %1$s измерение ещё идёт (замеров: %2$d).</string>
+    <string name="resume_open">Открыть измерение</string>
 </resources>

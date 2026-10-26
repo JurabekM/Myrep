@@ -280,7 +280,7 @@ class PdfReportWriter(private val context: Context, private val locale: Locale) 
             line(head, paint(BODY, bold, verdictColor(s.verdict)), 2f)
             line(Recommendations.forSector(res, s, i.result.findings), body, 2f)
             if (s.missingBins.isNotEmpty() && s.verdict == Verdict.INCONCLUSIVE) {
-                line(res.getString(R.string.result_missing, Recommendations.directions(s.missingBins)), small, 2f)
+                line(res.getString(R.string.result_missing, Recommendations.directions(s.missingBins, i.meta.config.binDeg)), small, 2f)
             }
             y += 4f
         }

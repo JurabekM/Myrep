@@ -20,12 +20,16 @@ import uz.sectorverify.format.PlanError
 
 data class ImportOutcome(val imported: Int, val errors: List<PlanError>)
 
-data class ResumeOffer(val sessionId: String, val siteCode: String, val samples: Int)
+/** [recording]: foreground servis bu sessiyani hozir ham yozmoqda — faqat ochish taklif qilinadi, to'xtatish emas. */
+data class ResumeOffer(val sessionId: String, val siteCode: String, val samples: Int, val recording: Boolean = false)
 
 /** Resumes or abandons a RUNNING session; implemented by :feature:survey, bound in :app. */
 interface SessionResumer {
     /** False when the survey cannot start (location permission missing). */
     fun resume(sessionId: String): Boolean
+
+    /** Servis shu jarayonda bu sessiyani yozayotgan bo'lsa true (uzilgan sessiya emas). */
+    fun isRecording(sessionId: String): Boolean
 
     suspend fun abandon(sessionId: String)
 }
@@ -54,7 +58,7 @@ class SitesViewModel @Inject constructor(
     suspend fun checkRunning() {
         val s = sessions.running().firstOrNull() ?: return
         val code = plans.site(s.siteId)?.plan?.code ?: return
-        _resume.value = ResumeOffer(s.id, code, sessions.sampleCount(s.id))
+        _resume.value = ResumeOffer(s.id, code, sessions.sampleCount(s.id), resumer.isRecording(s.id))
     }
 
     fun setQuery(q: String) = _query.update { q }
@@ -74,6 +78,10 @@ class SitesViewModel @Inject constructor(
     /** Returns the resumed session id, or null when it could not start (the offer stays visible). */
     fun resume(): String? {
         val offer = _resume.value ?: return null
+        if (offer.recording) {
+            _resume.value = null
+            return offer.sessionId
+        }
         if (!resumer.resume(offer.sessionId)) {
             _resumeBlocked.value = true
             return null
@@ -84,7 +92,7 @@ class SitesViewModel @Inject constructor(
     }
 
     fun abandon() {
-        val offer = _resume.value ?: return
+        val offer = _resume.value?.takeUnless { it.recording } ?: return
         viewModelScope.launch {
             resumer.abandon(offer.sessionId)
             _resume.value = null

@@ -44,7 +44,7 @@ class SessionAnalysisTest {
         val id = sessions.create(NewSession(site.id, SessionMode.FULL, "sim", 35, null, "t", "1.0.0", config, 1))
         sessions.sink(id).write(sim.samples, sim.fixes)
         sessions.finish(id, SessionStatus.DONE)
-        val result = SessionAnalysis(sessions, plans, StandardTestDispatcher(testScheduler)).analyze(id)
+        val result = SessionAnalysis(sessions, StandardTestDispatcher(testScheduler)).analyze(id)
         result.verdict shouldBe Verdict.FAIL
         val stored = sessions.result(id)!!
         stored.session.verdict shouldBe Verdict.FAIL

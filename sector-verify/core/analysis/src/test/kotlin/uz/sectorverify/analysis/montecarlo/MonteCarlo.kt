@@ -69,7 +69,11 @@ object MonteCarlo {
     fun detected(run: Run): Boolean {
         val found = run.result.findings.filter { it.type == FindingType.SWAP }
         return run.sim.expected.swapMapping.all { (key, label) ->
-            found.any { it.detail["arfcn"] == key.arfcn.toString() && it.detail["pci.${key.pci}"] == label }
+            found.any {
+                it.detail["rat"] == key.rat.name &&
+                    it.detail["arfcn"] == key.arfcn.toString() &&
+                    it.detail["pci.${key.pci}"] == label
+            }
         }
     }
 

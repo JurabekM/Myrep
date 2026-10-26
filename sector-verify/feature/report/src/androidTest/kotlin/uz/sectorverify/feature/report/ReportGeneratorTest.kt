@@ -57,10 +57,9 @@ class ReportGeneratorTest {
         val generator = ReportGenerator(
             context,
             sessions,
-            plans,
             settings,
             RoomReportRepository(db.reportDao()),
-            SessionExporter(sessions, plans),
+            SessionExporter(sessions),
             KeystoreReportSigner(context, "sv_test_generator_key"),
             Clock.SYSTEM,
         )

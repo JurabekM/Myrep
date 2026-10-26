@@ -12,8 +12,6 @@ import uz.sectorverify.ui.R as UiR
 
 /** Recommended action per sector in the chosen language (§8.1 screen 5, §8.2). */
 object Recommendations {
-    private const val BIN_DEG = 10
-
     fun forSector(res: Resources, s: SectorResult, findings: List<Finding>): String {
         val err = s.errorDeg?.let { abs(it).roundToInt().toString() } ?: "—"
         return when (s.cause) {
@@ -42,8 +40,8 @@ object Recommendations {
         .firstOrNull { it.type == FindingType.SWAP && it.detail["arfcn"] == s.key.arfcn.toString() && it.detail["rat"] == s.key.rat.name }
         ?.detail?.get("pci.${s.key.pci}")
 
-    /** Missing bin indices → compact direction ranges, e.g. "20°–60°, 300°–320°". */
-    fun directions(bins: List<Int>): String {
+    /** Yetishmayotgan bin indekslari → yo'nalish oraliqlari, masalan "20°–60°, 300°–320°". [binDeg] — config'dagi bin kengligi. */
+    fun directions(bins: List<Int>, binDeg: Int): String {
         if (bins.isEmpty()) return "—"
         val sorted = bins.sorted()
         val ranges = ArrayList<IntRange>()
@@ -57,6 +55,6 @@ object Recommendations {
             prev = b
         }
         ranges += start..prev
-        return ranges.joinToString(", ") { "${it.first * BIN_DEG}°–${(it.last + 1) * BIN_DEG}°" }
+        return ranges.joinToString(", ") { "${it.first * binDeg}°–${(it.last + 1) * binDeg}°" }
     }
 }

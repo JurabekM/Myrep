@@ -21,6 +21,7 @@ import uz.sectorverify.model.SectorResult
 import uz.sectorverify.model.SessionMode
 import uz.sectorverify.model.SessionResult
 import uz.sectorverify.model.SessionStatus
+import uz.sectorverify.model.SitePlan
 
 data class NewSession(
     val siteId: Long,
@@ -53,6 +54,9 @@ interface SessionRepository {
 
     suspend fun session(sessionId: String): SessionEntity?
 
+    /** Sessiya yaratilgandagi reja (ADR-016); eski yozuvlar uchun saytning joriy rejasi. */
+    suspend fun plan(sessionId: String): SitePlan?
+
     fun observe(sessionId: String): Flow<SessionEntity?>
 
     fun observeForSite(siteId: Long): Flow<List<SessionEntity>>
@@ -79,6 +83,7 @@ class RoomSessionRepository @Inject constructor(
 ) : SessionRepository {
     override suspend fun create(s: NewSession): String {
         val id = UUID.randomUUID().toString()
+        val plan = currentPlan(s.siteId)
         sessions.insert(
             SessionEntity(
                 id = id,
@@ -95,6 +100,7 @@ class RoomSessionRepository @Inject constructor(
                 measuredRateHz = null,
                 status = SessionStatus.RUNNING,
                 subscriptionId = s.subscriptionId,
+                planJson = plan?.let { SvJson.compact.encodeToString(SitePlan.serializer(), it) },
             ),
         )
         return id
@@ -111,6 +117,13 @@ class RoomSessionRepository @Inject constructor(
     override suspend fun running(): List<SessionEntity> = sessions.running()
 
     override suspend fun session(sessionId: String): SessionEntity? = sessions.byId(sessionId)
+
+    override suspend fun plan(sessionId: String): SitePlan? {
+        val s = sessions.byId(sessionId) ?: return null
+        return s.planJson?.let { SvJson.compact.decodeFromString(SitePlan.serializer(), it) } ?: currentPlan(s.siteId)
+    }
+
+    private suspend fun currentPlan(siteId: Long): SitePlan? = sites.byId(siteId)?.toModel(sites.sectors(siteId))
 
     override fun observe(sessionId: String): Flow<SessionEntity?> = sessions.observe(sessionId)
 
@@ -139,10 +152,10 @@ class RoomSessionRepository @Inject constructor(
 
     override suspend fun meta(sessionId: String, engineer: String?): SessionMeta? {
         val s = sessions.byId(sessionId) ?: return null
-        val site = sites.byId(s.siteId) ?: return null
+        val plan = plan(sessionId) ?: return null
         return SessionMeta(
             id = s.id,
-            siteCode = site.code,
+            siteCode = plan.code,
             mode = s.mode,
             startedAtUtcMs = s.startedAt,
             endedAtUtcMs = s.endedAt,

@@ -7,7 +7,7 @@ import uz.sectorverify.format.SessionZip
 import uz.sectorverify.model.DeviceCapabilities
 
 /** Builds the session ZIP (§5.4) from stored data; [reportJson] and [reportPdf] are added once a report exists. */
-class SessionExporter @Inject constructor(private val sessions: SessionRepository, private val plans: PlanRepository) {
+class SessionExporter @Inject constructor(private val sessions: SessionRepository) {
     suspend fun export(
         sessionId: String,
         dir: File,
@@ -17,9 +17,9 @@ class SessionExporter @Inject constructor(private val sessions: SessionRepositor
         reportPdf: ByteArray? = null,
     ): File {
         val meta = requireNotNull(sessions.meta(sessionId, engineer)) { "unknown session $sessionId" }
-        val site = requireNotNull(plans.siteByCode(meta.siteCode)) { "unknown site ${meta.siteCode}" }
+        val plan = requireNotNull(sessions.plan(sessionId)) { "unknown site ${meta.siteCode}" }
         val export =
-            SessionExport(site.plan, sessions.samples(sessionId), sessions.fixes(sessionId), meta, reportJson, reportPdf, capabilities)
+            SessionExport(plan, sessions.samples(sessionId), sessions.fixes(sessionId), meta, reportJson, reportPdf, capabilities)
         dir.mkdirs()
         val file = File(dir, "${meta.siteCode}_${sessionId.take(SHORT_ID)}.zip")
         file.outputStream().buffered().use { SessionZip.write(export, it) }

@@ -2,6 +2,7 @@ package uz.sectorverify.feature.survey
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.CellKey
 import uz.sectorverify.model.DeviceCapabilities
 import uz.sectorverify.model.Rat
@@ -64,6 +65,12 @@ class PreCheckTest {
             CheckId.TRAFFIC,
         )
             .forEach { warn.status(it) shouldBe CheckStatus.WARN }
+        // Thresholds follow the config, not constants.
+        PreCheck.evaluate(
+            good.copy(gpsAccuracyM = 12.0, config = AnalysisConfig(maxAccuracyM = 10.0)),
+        ).status(CheckId.GPS_ACCURACY) shouldBe
+            CheckStatus.WARN
+        PreCheck.evaluate(good.copy(config = AnalysisConfig(minDeviceRateHz = 0.95))).status(CheckId.CAPABILITIES) shouldBe CheckStatus.WARN
         PreCheck.evaluate(good.copy(gpsAccuracyM = null, capabilities = null)).let {
             it.status(CheckId.GPS_ACCURACY) shouldBe CheckStatus.WARN
             it.status(CheckId.CAPABILITIES) shouldBe CheckStatus.WARN

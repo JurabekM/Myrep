@@ -66,4 +66,24 @@ class BufferedSampleWriterTest {
         sink.samples.size shouldBe 2
         writer.written shouldBe 2
     }
+
+    @Test
+    fun `stop while a timed write is in progress loses nothing`() = runTest {
+        val sink = object : BatchSink {
+            val samples = ArrayList<CellSample>()
+
+            override suspend fun write(samples: List<CellSample>, fixes: List<GnssFix>) {
+                kotlinx.coroutines.delay(500) // sekin tranzaksiya
+                this.samples += samples
+            }
+        }
+        val worker = TestScope(testScheduler)
+        val writer = BufferedSampleWriter(sink)
+        writer.start(worker)
+        writer.addSamples(listOf(sample(1)))
+        advanceTimeBy(1_200) // taymer yozuvi boshlandi, hali tugamadi
+        writer.addSamples(listOf(sample(2)))
+        writer.stop()
+        sink.samples.map { it.tNanos } shouldBe listOf(1_000_000L, 2_000_000L)
+    }
 }

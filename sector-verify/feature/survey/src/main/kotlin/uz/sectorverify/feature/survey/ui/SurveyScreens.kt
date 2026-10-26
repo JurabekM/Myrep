@@ -162,7 +162,7 @@ private fun checkDetail(item: CheckItem): String {
         CheckId.SIM -> if (ok) stringResource(R.string.check_sim_ok, item.args[1]) else stringResource(R.string.check_sim_bad, item.args[0])
         CheckId.NETWORK_MODE -> stringResource(if (ok) R.string.check_network_ok else R.string.check_network_bad)
         CheckId.GPS -> stringResource(if (ok) R.string.check_gps_ok else R.string.check_gps_bad)
-        CheckId.GPS_ACCURACY -> stringResource(R.string.check_gps_accuracy_value, item.args[0])
+        CheckId.GPS_ACCURACY -> stringResource(R.string.check_gps_accuracy_value, item.args[0], item.args[1])
         CheckId.CAPABILITIES -> stringResource(if (ok) R.string.check_capabilities_ok else R.string.check_capabilities_bad, item.args[0])
         CheckId.PLANNED_CELLS -> stringResource(R.string.check_planned_cells_value, item.args[0], item.args[1])
         CheckId.TRAFFIC -> stringResource(if (ok) R.string.check_traffic_ok else R.string.check_traffic_bad)

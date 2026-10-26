@@ -36,4 +36,6 @@
     <string name="sites_import_failed">Import qilinmadi. Xatolar: %1$d</string>
     <string name="resume_text">%1$s saytida o\'lchov to\'xtab qolgan (saqlangan namunalar: %2$d). Davom ettirasizmi?</string>
     <string name="resume_no_permission">Joylashuv ruxsati yo\'q — avval saytni oching va oldindan tekshiruvdan o\'ting.</string>
+    <string name="resume_recording">%1$s saytida o\'lchov hozir ham yozilmoqda (namunalar: %2$d).</string>
+    <string name="resume_open">O\'lchovni ochish</string>
 </resources>

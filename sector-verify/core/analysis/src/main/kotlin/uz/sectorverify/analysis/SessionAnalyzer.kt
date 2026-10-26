@@ -90,6 +90,7 @@ class SessionAnalyzer(private val config: AnalysisConfig) {
             val target = swapTarget[m.sector.key]?.let { label ->
                 measured.first {
                     it.sector.label == label &&
+                        it.sector.rat == m.sector.rat &&
                         it.sector.arfcn == m.sector.arfcn
                 }
             }

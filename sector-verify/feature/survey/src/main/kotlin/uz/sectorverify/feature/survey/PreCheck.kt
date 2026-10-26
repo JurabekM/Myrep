@@ -1,5 +1,6 @@
 package uz.sectorverify.feature.survey
 
+import uz.sectorverify.model.AnalysisConfig
 import uz.sectorverify.model.CellKey
 import uz.sectorverify.model.DeviceCapabilities
 import uz.sectorverify.model.SitePlan
@@ -25,6 +26,8 @@ data class PreCheckInput(
     val visibleCells: Set<CellKey>,
     val servingRatsLte: Boolean,
     val trafficUrl: String,
+    /** GPS aniqligi va qurilma chastotasi chegaralari shu config'dan (§11). */
+    val config: AnalysisConfig = AnalysisConfig(),
 )
 
 data class PreCheckResult(val items: List<CheckItem>, val subscription: SimInfo?) {
@@ -34,9 +37,6 @@ data class PreCheckResult(val items: List<CheckItem>, val subscription: SimInfo?
 
 /** §8.1 screen 3 logic: which problems block the survey and which only warn. */
 object PreCheck {
-    private const val GOOD_ACCURACY_M = 15.0
-    private const val MIN_RATE_HZ = 0.5
-
     fun evaluate(i: PreCheckInput): PreCheckResult {
         val sim = SubscriptionSelector.select(i.sims, i.plan.mccMnc)
         val planned = i.plan.sectors.map { it.key }.toSet()
@@ -50,15 +50,20 @@ object PreCheck {
             CheckItem(CheckId.SIM, block(sim != null), listOf(i.plan.mccMnc, sim?.carrierName.orEmpty())),
             CheckItem(CheckId.NETWORK_MODE, warn(i.servingRatsLte)),
             CheckItem(CheckId.GPS, block(i.gpsEnabled)),
-            CheckItem(CheckId.GPS_ACCURACY, warn(i.gpsAccuracyM != null && i.gpsAccuracyM <= GOOD_ACCURACY_M), listOf(accuracy)),
-            CheckItem(CheckId.CAPABILITIES, warn(capabilitiesOk(caps)), listOf(rate)),
+            CheckItem(
+                CheckId.GPS_ACCURACY,
+                warn(i.gpsAccuracyM != null && i.gpsAccuracyM <= i.config.maxAccuracyM),
+                listOf(accuracy, "%.0f".format(i.config.maxAccuracyM)),
+            ),
+            CheckItem(CheckId.CAPABILITIES, warn(capabilitiesOk(caps, i.config.minDeviceRateHz)), listOf(rate)),
             CheckItem(CheckId.PLANNED_CELLS, warn(seen.isNotEmpty()), listOf("${seen.size}", "${planned.size}")),
             CheckItem(CheckId.TRAFFIC, warn(TrafficGenerator.isValidUrl(i.trafficUrl))),
         )
         return PreCheckResult(items, sim)
     }
 
-    private fun capabilitiesOk(c: DeviceCapabilities?) = c != null && c.measuredRateHz >= MIN_RATE_HZ && c.neighborRsrpReported
+    private fun capabilitiesOk(c: DeviceCapabilities?, minRateHz: Double) =
+        c != null && c.measuredRateHz >= minRateHz && c.neighborRsrpReported
 
     private fun block(ok: Boolean) = if (ok) CheckStatus.OK else CheckStatus.BLOCK
 

@@ -68,14 +68,28 @@ fun SitesRoute(onOpenSite: (Long) -> Unit, onSettings: () -> Unit, onResumed: (S
             title = { Text(stringResource(R.string.resume_title)) },
             text = {
                 Column {
-                    Text(stringResource(R.string.resume_text, r.siteCode, r.samples))
+                    Text(
+                        if (r.recording) {
+                            stringResource(R.string.resume_recording, r.siteCode, r.samples)
+                        } else {
+                            stringResource(R.string.resume_text, r.siteCode, r.samples)
+                        },
+                    )
                     if (resumeBlocked) Text(stringResource(R.string.resume_no_permission), color = LocalSvPalette.current.danger)
                 }
             },
             confirmButton = {
-                TextButton(onClick = { vm.resume()?.let(onResumed) }) { Text(stringResource(R.string.resume_continue)) }
+                TextButton(onClick = { vm.resume()?.let(onResumed) }, modifier = Modifier.heightIn(min = MinTouch)) {
+                    Text(stringResource(if (r.recording) R.string.resume_open else R.string.resume_continue))
+                }
             },
-            dismissButton = { TextButton(onClick = vm::abandon) { Text(stringResource(R.string.resume_abandon)) } },
+            dismissButton = {
+                if (!r.recording) {
+                    TextButton(onClick = vm::abandon, modifier = Modifier.heightIn(min = MinTouch)) {
+                        Text(stringResource(R.string.resume_abandon))
+                    }
+                }
+            },
         )
     }
 }

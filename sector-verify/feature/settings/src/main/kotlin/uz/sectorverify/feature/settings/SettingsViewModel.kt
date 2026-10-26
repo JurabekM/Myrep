@@ -1,6 +1,9 @@
 package uz.sectorverify.feature.settings
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -123,15 +126,23 @@ class SettingsViewModel @Inject constructor(
 
     fun probe() {
         viewModelScope.launch {
-            val sim = runCatching { SubscriptionSelector.activeSims(context).firstOrNull() }.getOrNull()
+            // Probe CellInfo va SIM ro'yxatini o'qiydi: ikkala ruxsatsiz SecurityException beradi.
+            val granted = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE)
+                .all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
+            val sim = if (granted) runCatching { SubscriptionSelector.activeSims(context).firstOrNull() }.getOrNull() else null
             if (sim == null) {
                 _event.value = SettingsEvent.ProbeNoSim
                 return@launch
             }
             _probing.value = true
-            val caps = DeviceCapabilityProbe(context, sim.subscriptionId).run()
-            repo.update { it.copy(capabilities = caps) }
-            _probing.value = false
+            try {
+                val caps = DeviceCapabilityProbe(context, sim.subscriptionId).run()
+                repo.update { it.copy(capabilities = caps) }
+            } catch (e: SecurityException) {
+                _event.value = SettingsEvent.Error(e.message.orEmpty())
+            } finally {
+                _probing.value = false
+            }
         }
     }
 

@@ -85,6 +85,7 @@ class PreCheckViewModel @Inject constructor(
             visibleCells = visible.toSet(),
             servingRatsLte = servingLte,
             trafficUrl = s.trafficUrl,
+            config = s.effectiveConfig,
         )
         _ui.value = _ui.value.copy(result = PreCheck.evaluate(input))
     }

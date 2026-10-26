@@ -2,6 +2,12 @@ plugins {
     alias(libs.plugins.sv.android.library)
     alias(libs.plugins.sv.android.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.room)
+}
+
+// Room plagini sxemani variantlar bo'yicha to'g'ri eksport qiladi (debug va release KSP bitta faylga parallel yozmaydi).
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
@@ -17,7 +23,6 @@ android {
 }
 
 ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.generateKotlin", "true")
 }
 

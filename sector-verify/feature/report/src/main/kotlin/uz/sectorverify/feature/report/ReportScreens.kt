@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
 import uz.sectorverify.data.repo.StoredResult
+import uz.sectorverify.format.SvJson
 import uz.sectorverify.model.FindingType
 import uz.sectorverify.model.SectorResult
 import uz.sectorverify.ui.components.Card
@@ -53,6 +55,7 @@ fun ResultScreen(stored: StoredResult, siteCode: String, onRecheck: () -> Unit, 
     val p = LocalSvPalette.current
     val res = LocalContext.current.resources
     val planned = stored.sectors.filter { it.label != null }
+    val binDeg = remember(stored.session.configJson) { SvJson.parseConfig(stored.session.configJson).binDeg }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Text(stringResource(R.string.result_title, siteCode), style = MaterialTheme.typography.headlineSmall) }
         item {
@@ -101,7 +104,7 @@ fun ResultScreen(stored: StoredResult, siteCode: String, onRecheck: () -> Unit, 
                 Text(Recommendations.forSector(res, s, stored.findings))
                 if (s.missingBins.isNotEmpty()) {
                     Text(
-                        stringResource(R.string.result_missing, Recommendations.directions(s.missingBins)),
+                        stringResource(R.string.result_missing, Recommendations.directions(s.missingBins, binDeg)),
                         color = p.inkMuted,
                     )
                 }

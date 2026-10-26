@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import uz.sectorverify.data.BufferedSampleWriter
-import uz.sectorverify.data.repo.PlanRepository
 import uz.sectorverify.data.repo.SessionRepository
 import uz.sectorverify.data.settings.SettingsRepository
 import uz.sectorverify.feature.survey.R
@@ -44,8 +43,6 @@ import uz.sectorverify.ui.util.LocaleStore
 class SurveyForegroundService : LifecycleService() {
     @Inject lateinit var sessions: SessionRepository
 
-    @Inject lateinit var plans: PlanRepository
-
     @Inject lateinit var settings: SettingsRepository
 
     @Inject lateinit var controller: SurveyController
@@ -56,6 +53,13 @@ class SurveyForegroundService : LifecycleService() {
     private var pipeline: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var readyShown = false
+
+    /** Darhol (korutinadan oldin) o'rnatiladi: takroriy START ikkinchi engine yaratmaydi. */
+    private var activeSessionId: String? = null
+
+    /** Engine hali tayyor bo'lmaganda kelgan STOP — engine ishga tushgach bajariladi. */
+    private var stopRequested = false
+    private var finishing = false
 
     /** Notifications follow the app language, not the system one. */
     override fun attachBaseContext(newBase: Context) {
@@ -72,21 +76,23 @@ class SurveyForegroundService : LifecycleService() {
     }
 
     private fun begin(sessionId: String) {
-        if (engine != null) return
         createChannels()
         try {
+            // Har bir startForegroundService() chaqiruvidan keyin startForeground() majburiy — takroriy START uchun ham.
             ServiceCompat.startForeground(this, NOTIFICATION_ID, progressNotification(0, 0), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } catch (expected: SecurityException) {
-            // Location permission revoked since the pre-check: the session stays RUNNING and can be resumed later.
-            stopSelf()
+            // Joylashuv ruxsati oldindan tekshiruvdan keyin olib qo'yilgan: sessiya RUNNING qoladi, keyin tiklash mumkin.
+            if (activeSessionId == null) stopSelf()
             return
         }
+        if (activeSessionId != null) return
+        activeSessionId = sessionId
         wakeLock = getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SectorVerify:survey")
             .apply { acquire(MAX_WAKE_MS) }
         lifecycleScope.launch {
             val session = sessions.session(sessionId) ?: return@launch stopSelf()
-            val plan = plans.site(session.siteId)?.plan ?: return@launch stopSelf()
+            val plan = sessions.plan(sessionId) ?: return@launch stopSelf()
             val config = SvJson.parseConfig(session.configJson)
             val subId = session.subscriptionId ?: return@launch stopSelf()
             val e = SurveyEngine(sessionId, plan, config, BufferedSampleWriter(sessions.sink(sessionId)))
@@ -99,6 +105,7 @@ class SurveyForegroundService : LifecycleService() {
                 restoredSamples = sessions.samples(sessionId),
                 restoredFixes = sessions.fixes(sessionId),
             )
+            if (stopRequested) finish()
             e.state.collectLatest { s ->
                 controller.publish(s)
                 val pct = ((s.live?.overallCoverage ?: 0.0) * PERCENT).roundToInt()
@@ -112,7 +119,13 @@ class SurveyForegroundService : LifecycleService() {
     }
 
     private fun finish() {
-        val e = engine ?: return stopSelf()
+        val e = engine
+        if (e == null) {
+            if (activeSessionId != null) stopRequested = true else stopSelf()
+            return
+        }
+        if (finishing) return
+        finishing = true
         val sessionId = e.state.value.sessionId ?: return stopSelf()
         lifecycleScope.launch {
             withContext(NonCancellable) {

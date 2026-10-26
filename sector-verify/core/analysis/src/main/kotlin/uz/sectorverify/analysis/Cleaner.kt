@@ -81,7 +81,10 @@ class Cleaner(private val config: AnalysisConfig) {
     fun normalise(rsrp: Double, distanceM: Double): Double =
         rsrp + 10.0 * config.pathLossExponent * log10(distanceM / config.dRefM)
 
-    /** Linear interpolation between the neighbouring fixes; null when the nearest fix is too far in time. */
+    /**
+     * Qo'shni fix'lar orasida chiziqli interpolyatsiya. Eng yaqin fix > maxFixGap bo'lsa null. Ikkinchi qo'shni ham
+     * maxFixGap dan uzoq bo'lsa (GNSS uzilishi), interpolyatsiya qilinmaydi — faqat yaqin fix olinadi.
+     */
     internal fun interpolate(fixes: List<GnssFix>, times: LongArray, t: Long): LatLon? {
         if (fixes.isEmpty()) return null
         val maxGapNanos = config.maxFixGapMs * NANOS_PER_MS
@@ -94,8 +97,8 @@ class Cleaner(private val config: AnalysisConfig) {
         val gapBefore = before?.let { t - it.tNanos } ?: Long.MAX_VALUE
         val gapAfter = after?.let { it.tNanos - t } ?: Long.MAX_VALUE
         if (minOf(gapBefore, gapAfter) > maxGapNanos) return null
-        if (before == null || after == null) {
-            val only = before ?: after!!
+        if (before == null || after == null || maxOf(gapBefore, gapAfter) > maxGapNanos) {
+            val only = if (gapBefore <= gapAfter) before!! else after!!
             return LatLon(only.lat, only.lon)
         }
         val f = (t - before.tNanos).toDouble() / (after.tNanos - before.tNanos).toDouble()

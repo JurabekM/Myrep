@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "b27018ec108a18fac37a44ba43ed04ca",
+    "identityHash": "e03ae5c841b2824bb58cf669a8ae7243",
     "entities": [
       {
         "tableName": "site",
@@ -183,7 +183,7 @@
       },
       {
         "tableName": "session",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `site_id` INTEGER NOT NULL, `mode` TEXT NOT NULL, `started_at` INTEGER NOT NULL, `ended_at` INTEGER, `device_model` TEXT NOT NULL, `api_level` INTEGER NOT NULL, `baseband` TEXT, `app_version` TEXT NOT NULL, `algo_version` TEXT NOT NULL, `config_json` TEXT NOT NULL, `measured_rate_hz` REAL, `status` TEXT NOT NULL, `verdict` TEXT, `coverage_pct` REAL, `subscription_id` INTEGER, `result_json` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`site_id`) REFERENCES `site`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `site_id` INTEGER NOT NULL, `mode` TEXT NOT NULL, `started_at` INTEGER NOT NULL, `ended_at` INTEGER, `device_model` TEXT NOT NULL, `api_level` INTEGER NOT NULL, `baseband` TEXT, `app_version` TEXT NOT NULL, `algo_version` TEXT NOT NULL, `config_json` TEXT NOT NULL, `measured_rate_hz` REAL, `status` TEXT NOT NULL, `verdict` TEXT, `coverage_pct` REAL, `subscription_id` INTEGER, `result_json` TEXT, `plan_json` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`site_id`) REFERENCES `site`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -284,6 +284,12 @@
           {
             "fieldPath": "resultJson",
             "columnName": "result_json",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "planJson",
+            "columnName": "plan_json",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -853,7 +859,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b27018ec108a18fac37a44ba43ed04ca')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e03ae5c841b2824bb58cf669a8ae7243')"
     ]
   }
 }

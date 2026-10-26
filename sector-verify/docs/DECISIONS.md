@@ -86,3 +86,14 @@ Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyz
 - **Kontekst:** 18 cell'li eng og'ir holatda jonli yangilanish JVM'da 25–70 ms edi (tozalash ~60%); o'rta telefon ~5× sekin → 300 ms byudjetga yaqin/ortiq.
 - **Qaror:** `LiveAnalyzer` inkremental: GNSS oralig'i endi o'zgarmaydigan namunalar bir marta tozalanadi; natija to'liq qayta hisoblash bilan aynan teng (test). Natija: ~9 ms (JVM). Yakuniy tahlil ~0.5 s.
 - **Testlar:** `PerformanceTest` (`@Tag("perf")`) JVM'da byudjetning 1/5 qismini talab qiladi (telefon zaxirasi). Parallel `check` ichida vaqt shovqinli bo'lgani uchun u CI'da alohida qadamda (`-Pperf --no-parallel`) ishlaydi — o'chirilmagan, chegara yumshatilmagan. Haqiqiy telefondagi raqamlar H2 da tasdiqlanadi.
+
+## ADR-016 — PR #21 o'z-o'zini ko'rib chiqish tuzatishlari (2026-10-26)
+- **Sessiya rejasi nusxasi:** sessiya yaratilganda saytning o'sha paytdagi RF rejasi `session.plan_json` ga yoziladi (config kabi). Tahlil, hisobot, ZIP va jonli ekran shu nusxani ishlatadi — keyingi qayta import eski natijalarni o'zgartirmaydi. Eski yozuvlar uchun zaxira — saytning joriy rejasi.
+- **Bufer:** yozuv `NonCancellable` va ketma-ket; `stop()` boshlangan yozuvni kutadi (Tugatish paytida 1 soniyalik ma'lumot yo'qolmaydi).
+- **Servis:** sessiya id darhol band qilinadi (takroriy START ikkinchi engine yaratmaydi), engine tayyor bo'lmasdan kelgan STOP keyin bajariladi.
+- **Interpolyatsiya:** ikkinchi qo'shni fix ham `maxFixGap` dan uzoq bo'lsa (GNSS uzilishi) interpolyatsiya qilinmaydi — yaqin fix olinadi; bu jonli inkremental tahlilning "to'liq qayta hisoblash bilan teng" kafolatini ham saqlaydi.
+- **RAT:** almashinuv nishoni va kalibrlash/Monte-Karlo'dagi SWAP moslash RAT bo'yicha ham tekshiriladi.
+- **Kalibrlash:** har sessiya o'z yozilgan config'i bilan baholanadi (grid faqat 5 parametrni almashtiradi); tavsiya eng ko'p ishlatilgan config ustiga quriladi.
+- **Chegaralar faqat `AnalysisConfig` da:** `binDeg` (yo'nalish oraliqlari), `maxAccuracyM` (oldindan tekshiruv), yangi `minDeviceRateHz = 0.5`.
+- **Room Gradle plagini:** debug va release KSP bitta sxema fayliga parallel yozib uni buzardi.
+- **UI:** faol yozilayotgan sessiya "uzilgan" deb taklif qilinmaydi (faqat ochish); Sozlamalardagi probe ruxsatni tekshiradi; dialog tugmalari ≥ 56 dp.

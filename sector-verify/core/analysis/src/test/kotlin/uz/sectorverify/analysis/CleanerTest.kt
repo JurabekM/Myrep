@@ -71,6 +71,9 @@ class CleanerTest {
         cleaner.interpolate(list, times, 4 * SEC)!!.lat shouldBe b.lat
         cleaner.interpolate(list, times, 4 * SEC + 1).shouldBeNull()
         cleaner.interpolate(emptyList(), LongArray(0), 0).shouldBeNull()
+        // GNSS outage: the far neighbour (60 s) is not used for interpolation.
+        val far = fix(60 * SEC, 180.0, 300.0)
+        cleaner.interpolate(listOf(a, far), longArrayOf(0, 60 * SEC), SEC)!!.lat shouldBe a.lat
     }
 
     @Test

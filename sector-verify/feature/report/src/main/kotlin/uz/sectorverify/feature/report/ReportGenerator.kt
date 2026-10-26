@@ -13,7 +13,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import uz.sectorverify.data.db.ReportEntity
 import uz.sectorverify.data.repo.Clock
-import uz.sectorverify.data.repo.PlanRepository
 import uz.sectorverify.data.repo.ReportRepository
 import uz.sectorverify.data.repo.SessionExporter
 import uz.sectorverify.data.repo.SessionRepository
@@ -29,7 +28,6 @@ data class GeneratedReport(val pdf: File, val json: File, val zip: File, val sha
 class ReportGenerator @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sessions: SessionRepository,
-    private val plans: PlanRepository,
     private val settings: SettingsRepository,
     private val reports: ReportRepository,
     private val exporter: SessionExporter,
@@ -42,7 +40,7 @@ class ReportGenerator @Inject constructor(
         val stored = requireNotNull(sessions.result(sessionId)) { "no session $sessionId" }
         val result = requireNotNull(stored.full) { "session $sessionId has no analysis" }
         val meta = requireNotNull(sessions.meta(sessionId, s.engineerName))
-        val plan = requireNotNull(plans.siteByCode(meta.siteCode)).plan
+        val plan = requireNotNull(sessions.plan(sessionId)) { "no plan for $sessionId" }
         val sealed = ReportIntegrity.seal(ReportJson.build(plan, meta, result), signer)
         val integrity = sealed.getValue(ReportJson.INTEGRITY).jsonObject
         val sha = integrity.getValue("sha256").jsonPrimitive.content

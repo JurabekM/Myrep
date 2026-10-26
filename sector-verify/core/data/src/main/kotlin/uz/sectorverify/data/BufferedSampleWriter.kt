@@ -2,11 +2,14 @@ package uz.sectorverify.data
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import uz.sectorverify.model.CellSample
 import uz.sectorverify.model.GnssFix
 
@@ -25,6 +28,9 @@ class BufferedSampleWriter(private val sink: BatchSink, private val flushInterva
     private var fixes = ArrayList<GnssFix>()
     private var job: Job? = null
 
+    /** Yozuvlarni ketma-ket qiladi: taymer va stop() bir vaqtda yozmaydi. */
+    private val writeLock = Mutex()
+
     var written: Long = 0
         private set
 
@@ -41,21 +47,22 @@ class BufferedSampleWriter(private val sink: BatchSink, private val flushInterva
 
     suspend fun addFix(fix: GnssFix) = mutex.withLock { fixes.add(fix) }
 
-    suspend fun flush() {
+    suspend fun flush() = writeLock.withLock {
         val (s, f) = mutex.withLock {
             val out = samples to fixes
             samples = ArrayList()
             fixes = ArrayList()
             out
         }
-        if (s.isEmpty() && f.isEmpty()) return
-        sink.write(s, f)
+        if (s.isEmpty() && f.isEmpty()) return@withLock
+        // Bufer allaqachon olib qo'yilgan: bekor qilish tranzaksiyani orqaga qaytarib, ma'lumotni yo'qotmasligi kerak.
+        withContext(NonCancellable) { sink.write(s, f) }
         written += s.size
     }
 
-    /** Stops the timer and writes what is left. */
+    /** Taymerni to'xtatadi (boshlangan yozuv tugashini kutadi) va qolganini yozadi. */
     suspend fun stop() {
-        job?.cancel()
+        job?.cancelAndJoin()
         job = null
         flush()
     }
