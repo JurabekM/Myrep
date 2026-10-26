@@ -109,6 +109,7 @@ impl Sandbox {
             tls,
             force: false,
             keystore,
+            tls_names: Vec::new(),
         })
         .unwrap();
         let mut cfg = Config::load(&out.config_path).unwrap();

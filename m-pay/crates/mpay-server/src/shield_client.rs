@@ -150,6 +150,7 @@ impl IdvDecider for RemoteShield {
                 tracing::warn!(error = %e, "Shield roli javob bermadi — ID&V mahalliy zaxirada");
                 let mut a = self.local.decide(req).await?;
                 a.reasons.push(DEGRADED.into());
+                crate::metrics::shield_degraded();
                 Ok(a)
             }
         }
@@ -168,6 +169,7 @@ impl RiskScorer for RemoteShield {
                 tracing::warn!(error = %e, "Shield roli javob bermadi — risk mahalliy zaxirada");
                 let mut a = self.local.score(req).await?;
                 a.reasons.push(DEGRADED.into());
+                crate::metrics::shield_degraded();
                 Ok(a)
             }
         }

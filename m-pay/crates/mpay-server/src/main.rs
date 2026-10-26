@@ -36,6 +36,9 @@ enum Cmd {
         /// `memory` yoki `pkcs11`.
         #[arg(long, default_value = "memory")]
         keystore: String,
+        /// TLS sertifikatiga qo'shimcha nom (SAN), takrorlanadi: `--tls-san lb --tls-san api-1`.
+        #[arg(long = "tls-san")]
+        tls_san: Vec<String>,
     },
     /// Serverni ishga tushiradi.
     Serve {
@@ -46,6 +49,13 @@ enum Cmd {
     /// API instansiyalari `[shield] mode = "remote"` bilan murojaat qiladi. Faqat ichki API.
     Shield {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/shield.toml")]
+        config: PathBuf,
+    },
+    /// Bir martalik tayyorgarlik (2-faza P2.5): DB migratsiyalari va KeyStore/HSM kalitlari
+    /// (`ensure_key`) — so'ng chiqadi. Ko'p instansiyada API'lar ishga tushishidan oldin bir marta,
+    /// aks holda bir vaqtda yuklangan instansiyalar HSM'da bir xil yorliqli ikki kalit yaratishi mumkin.
+    Bootstrap {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
         config: PathBuf,
     },
     /// Audit log xesh-zanjirini tekshiradi.
@@ -128,6 +138,7 @@ async fn run(cli: Cli) -> Result<(), String> {
             tls,
             force,
             keystore,
+            tls_san,
         } => {
             let keystore = match keystore.as_str() {
                 "memory" => mpay_server::config::KeyStoreBackend::Memory,
@@ -140,6 +151,7 @@ async fn run(cli: Cli) -> Result<(), String> {
                 tls,
                 force,
                 keystore,
+                tls_names: tls_san,
             })?;
             println!("Sandbox tayyor: {}", out.config_path.display());
             println!("PQ Link server barmoq izi: {}", out.server_fingerprint);
@@ -153,8 +165,10 @@ async fn run(cli: Cli) -> Result<(), String> {
         Cmd::Serve { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
             let mut srv = mpay_server::start(&cfg).await?;
-            tokio::signal::ctrl_c().await.map_err(|e| e.to_string())?;
-            tracing::info!("to'xtatilmoqda");
+            shutdown_signal().await?;
+            tracing::info!(
+                "to'xtatilmoqda: yangi ulanishlar qabul qilinmaydi, ochiq so'rovlar tugatiladi"
+            );
             srv.shutdown();
             let _ = srv.handle.await;
             Ok(())
@@ -162,9 +176,22 @@ async fn run(cli: Cli) -> Result<(), String> {
         Cmd::Shield { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
             let mut srv = mpay_server::shield_role::start(&cfg).await?;
-            tokio::signal::ctrl_c().await.map_err(|e| e.to_string())?;
+            shutdown_signal().await?;
             tracing::info!("to'xtatilmoqda");
             srv.shutdown();
+            let _ = (&mut srv.handle).await;
+            Ok(())
+        }
+        Cmd::Bootstrap { config } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let st = mpay_server::state::build(&cfg)
+                .await
+                .map_err(|e| e.to_string())?;
+            println!(
+                "tayyor: migratsiyalar va kalitlar (keystore = {}, PQ Link barmoq izi {})",
+                st.keystore.backend_name(),
+                hex::encode(st.pqlink.identity().fingerprint())
+            );
             Ok(())
         }
         Cmd::AuditVerify { config } => {
@@ -337,5 +364,22 @@ async fn main() -> ExitCode {
             tracing::error!("{e}");
             ExitCode::FAILURE
         }
+    }
+}
+
+/// Ctrl+C yoki (Unix) SIGTERM — `docker stop` SIGTERM yuboradi.
+async fn shutdown_signal() -> Result<(), String> {
+    #[cfg(unix)]
+    {
+        let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .map_err(|e| e.to_string())?;
+        tokio::select! {
+            r = tokio::signal::ctrl_c() => r.map_err(|e| e.to_string()),
+            _ = term.recv() => Ok(()),
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        tokio::signal::ctrl_c().await.map_err(|e| e.to_string())
     }
 }

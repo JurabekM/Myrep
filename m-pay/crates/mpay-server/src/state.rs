@@ -131,6 +131,7 @@ impl AppState {
             ));
         }
         self.limits.api_key(&c.id).map_err(|l| {
+            crate::metrics::rate_limited(crate::metrics::Limit::ApiKey);
             tracing::warn!(key = %c.id, "rate-limit: API kaliti");
             crate::error::ApiError::rate_limited(l, false)
         })?;

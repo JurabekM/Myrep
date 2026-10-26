@@ -24,6 +24,7 @@ async fn start_shield() -> (tempfile::TempDir, mpay_server::shield_role::Running
         tls: false,
         force: false,
         keystore: mpay_server::config::KeyStoreBackend::Memory,
+        tls_names: Vec::new(),
     })
     .unwrap();
     let mut cfg = Config::load(&out.config_path).unwrap();

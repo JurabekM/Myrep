@@ -24,6 +24,8 @@ pub struct InitOptions {
     pub force: bool,
     /// `memory` (dev-urug') yoki `pkcs11` (`MPAY_PKCS11_*` muhit o'zgaruvchilari, `pkcs11` feature).
     pub keystore: KeyStoreBackend,
+    /// TLS sertifikatiga qo'shimcha nomlar (SAN): masalan load balancer yoki konteyner nomi.
+    pub tls_names: Vec<String>,
 }
 
 /// `init` natijasi (kalitlar faqat bir marta ko'rsatiladi va `dev-credentials.env` ga yoziladi).
@@ -55,6 +57,8 @@ pub const CLIENT_CA_FILE: &str = "mtls-client-ca.pem";
 /// Standart API kalitlari ID'lari — mTLS sertifikati CN'i shularga teng.
 pub const OPERATOR_ID: &str = "operator-1";
 pub const TERMINAL_ID: &str = "terminal-1";
+/// API instansiyasining Shield roliga mTLS identifikatori (2-faza P2.5; `[[auth.keys]] role = "shield"`).
+pub const SHIELD_CLIENT_ID: &str = "api-shield";
 
 /// Mijoz sertifikati fayllari: `<id>.crt.pem`, `<id>.key.pem`.
 pub fn client_cert_files(id: &str) -> (String, String) {
@@ -78,7 +82,7 @@ fn issue_client_certs(dir: &Path) -> Result<(), String> {
     write(dir, CLIENT_CA_FILE, ca_cert.pem().as_bytes())?;
     // CA kaliti saqlanmaydi: sandbox'da yangi mijoz kerak bo'lsa `init --force`.
     let issuer = Issuer::new(ca, ca_key);
-    for id in [OPERATOR_ID, TERMINAL_ID] {
+    for id in [OPERATOR_ID, TERMINAL_ID, SHIELD_CLIENT_ID] {
         let key = KeyPair::generate().map_err(err)?;
         let mut p = CertificateParams::new(Vec::<String>::new()).map_err(err)?;
         p.distinguished_name.push(DnType::CommonName, id);
@@ -185,11 +189,9 @@ pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
 
     let (tls_cert, tls_key) = if opts.tls {
         let key = rcgen::KeyPair::generate().map_err(|e| e.to_string())?;
-        let params = rcgen::CertificateParams::new(vec![
-            "localhost".to_owned(),
-            opts.listen.ip().to_string(),
-        ])
-        .map_err(|e| e.to_string())?;
+        let mut names = vec!["localhost".to_owned(), opts.listen.ip().to_string()];
+        names.extend(opts.tls_names.iter().cloned());
+        let params = rcgen::CertificateParams::new(names).map_err(|e| e.to_string())?;
         let cert = params.self_signed(&key).map_err(|e| e.to_string())?;
         write(dir, TLS_CERT_FILE, cert.pem().as_bytes())?;
         write(
@@ -224,6 +226,8 @@ sandbox = true
 listen = "{listen}"
 # Teskari proksi ortida: ishonchli proksilar (CIDR) — mijoz IP'si X-Forwarded-For dan.
 trusted_proxies = []
+# L4 load balancer (nginx stream) ortida: PROXY protocol v1 — mijoz IP'si ulanish sarlavhasidan.
+proxy_protocol = false
 {tls_cert}{tls_key}
 [database]
 # SQLite (sandbox, bitta instansiya). PostgreSQL uchun: `path` o'rniga `url_env = "MPAY_DATABASE_URL"`.
@@ -287,6 +291,10 @@ channel = "sandbox"
 # [otp.webhook]
 # url = "http://127.0.0.1:47700/send"
 # token_env = "MPAY_SMS_TOKEN"
+
+# Prometheus metrikalari (2-faza P2.5): alohida ichki port, kalitsiz — tashqariga ochilmaydi.
+[metrics]
+# listen = "127.0.0.1:9464"
 
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]

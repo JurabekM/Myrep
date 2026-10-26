@@ -37,6 +37,9 @@ pub struct Config {
     /// OTP yetkazish kanali (2-faza P2.1).
     #[serde(default)]
     pub otp: crate::otp::OtpConfig,
+    /// Prometheus metrikalari (2-faza P2.5).
+    #[serde(default)]
+    pub metrics: MetricsConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]
@@ -57,6 +60,18 @@ pub struct HttpConfig {
     /// Teskari proksilar (CIDR): ulanish shulardan kelsa mijoz IP'si `X-Forwarded-For` dan olinadi.
     #[serde(default)]
     pub trusted_proxies: Vec<crate::clientip::Cidr>,
+    /// PROXY protocol v1 (P2.5, ADR-0020): L4 load balancer (nginx `stream`) mijoz manzilini
+    /// ulanish boshida yuboradi. Faqat `trusted_proxies` dan kelgan ulanishlarda o'qiladi.
+    #[serde(default)]
+    pub proxy_protocol: bool,
+}
+
+/// `[metrics]`: Prometheus `/metrics` — alohida, ichki port (oddiy HTTP, kalitsiz). Berilmasa o'chiq.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MetricsConfig {
+    #[serde(default)]
+    pub listen: Option<SocketAddr>,
 }
 
 /// `[database]`: SQLite fayli (`path`, sandbox va bitta instansiya) **yoki** PostgreSQL (`url_env`,
@@ -392,6 +407,12 @@ impl Config {
             return Err(ConfigError::Invalid(format!(
                 "auth.revoked_client_certs: 64 hex kutilgan ({bad})"
             )));
+        }
+        if self.http.proxy_protocol && self.http.trusted_proxies.is_empty() {
+            return Err(ConfigError::Invalid(
+                "http.proxy_protocol uchun http.trusted_proxies kerak (sarlavha faqat proksidan)"
+                    .into(),
+            ));
         }
         if self.http.client_ca.is_some() && self.http.tls_cert.is_none() {
             return Err(ConfigError::Invalid(

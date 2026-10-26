@@ -51,6 +51,11 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
 * **Ko'p instansiya** (ADR-0019): `sessions.rs` — PQ Link sessiyalari DB'da (KEK bilan shifrlangan,
   `[pqlink] session_store`), ro'yxatdan o'tish nonce'lari umumiy; `shield_role.rs` — `mpay-server shield`
   (yagona belgilar ombori, ichki API), `shield_client.rs` — `[shield] mode = "remote"` (zaxira bilan).
+* **Deployment** (ADR-0020, `deploy/README.md`): `proxyproto.rs` — PROXY protocol v1
+  (`[http] proxy_protocol`, sarlavha faqat `trusted_proxies` dan; L4 load balancer ortida TLS/mTLS
+  end-to-end); `metrics.rs` — Prometheus `/metrics` alohida portda (`[metrics] listen`, yorliqlarda
+  PAN/ID yo'q); SIGTERM'da graceful to'xtatish; `mpay-server bootstrap` — migratsiyalar va HSM
+  kalitlari bir marta (ko'p instansiyadan oldin); `init --tls-san <nom>`.
 * **OTP kanali** (`otp.rs`, `[otp]`, ADR-0016): `sandbox` yoki `webhook` — kod karta egasining
   emitentdagi telefoniga SMS; `PENDING_IDV` da `otp_sent_to` (maskalangan), `POST /v1/tokens/{id}/idv/resend`
   (3 marta). Sinov shlyuzi — `mpay-smsgw`.

@@ -102,7 +102,9 @@ async fn health(State(s): St) -> Json<serde_json::Value> {
 /// Ishlayotgan Shield roli.
 pub struct RunningShield {
     pub addr: SocketAddr,
+    pub metrics_addr: Option<SocketAddr>,
     shutdown: Option<tokio::sync::oneshot::Sender<()>>,
+    metrics: Option<tokio::task::JoinHandle<()>>,
     pub handle: tokio::task::JoinHandle<std::io::Result<()>>,
 }
 
@@ -110,6 +112,9 @@ impl RunningShield {
     pub fn shutdown(&mut self) {
         if let Some(tx) = self.shutdown.take() {
             let _ = tx.send(());
+        }
+        if let Some(m) = self.metrics.take() {
+            m.abort();
         }
     }
 }
@@ -132,7 +137,8 @@ pub async fn start(cfg: &Config) -> Result<RunningShield, String> {
         .route("/internal/shield/idv", post(idv))
         .route("/internal/shield/txn", post(txn))
         .route("/healthz", get(health))
-        .with_state(st);
+        .route_layer(axum::middleware::from_fn(crate::metrics::track))
+        .with_state(st.clone());
     let tls = match (&cfg.http.tls_cert, &cfg.http.tls_key) {
         (Some(c), Some(k)) => Some(crate::serve::load_tls(
             &cfg.resolve(c),
@@ -153,19 +159,45 @@ pub async fn start(cfg: &Config) -> Result<RunningShield, String> {
         .map_err(|e| e.to_string())?;
     let addr = listener.local_addr().map_err(|e| e.to_string())?;
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
-    let handle = tokio::spawn(crate::serve::serve(
-        listener,
-        app,
-        tls,
-        Arc::new(std::collections::HashSet::new()),
-        async move {
-            let _ = rx.await;
-        },
-    ));
+    let (metrics_addr, metrics) = match cfg.metrics.listen {
+        Some(listen) => {
+            let gather: crate::metrics::Gather = Arc::new(move || {
+                let st = st.clone();
+                Box::pin(async move {
+                    let mut t = crate::metrics::Text::default();
+                    crate::metrics::render_common(&mut t, "shield");
+                    let (cards, devices, merchants, nodes) = st.shield.stats();
+                    for (kind, v) in [
+                        ("cards", cards),
+                        ("devices", devices),
+                        ("merchants", merchants),
+                        ("graph_nodes", nodes),
+                    ] {
+                        t.gauge(
+                            &format!("mpay_shield_{kind}"),
+                            "Shield belgilar omboridagi yozuvlar",
+                            "",
+                            v as f64,
+                        );
+                    }
+                    t.finish()
+                })
+            });
+            let (a, h) = crate::metrics::start(listen, gather).await?;
+            (Some(a), Some(h))
+        }
+        None => (None, None),
+    };
+    let opts = crate::accept_opts(cfg, tls, Arc::new(std::collections::HashSet::new()));
+    let handle = tokio::spawn(crate::serve::serve(listener, app, opts, async move {
+        let _ = rx.await;
+    }));
     tracing::info!(%addr, "mpay-server: Shield roli tinglayapti");
     Ok(RunningShield {
         addr,
+        metrics_addr,
         shutdown: Some(tx),
+        metrics,
         handle,
     })
 }

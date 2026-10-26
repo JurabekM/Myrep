@@ -116,6 +116,18 @@ fn credential(dir: &std::path::Path, name: &str) -> Result<String, String> {
         .ok_or_else(|| format!("{name} topilmadi"))
 }
 
+/// Server mijozi: `http://` — oddiy; `https://` — `dir` dagi TLS sertifikati va `id` mTLS identifikatori.
+fn client_for(dir: &std::path::Path, base: &str, id: &str) -> Result<ServerClient, String> {
+    if !base.starts_with("https://") {
+        return ServerClient::new(base, None).map_err(|e| e.to_string());
+    }
+    let read = |f: &str| std::fs::read(dir.join(f)).map_err(|e| format!("{f}: {e}"));
+    let root = read(mpay_server::init::TLS_CERT_FILE)?;
+    let (c, k) = mpay_server::init::client_cert_files(id);
+    let (c, k) = (read(&c)?, read(&k)?);
+    ServerClient::with_identity(base, Some(&root), Some((&c, &k))).map_err(|e| e.to_string())
+}
+
 fn pct(sorted: &[u32], p: f64) -> f64 {
     if sorted.is_empty() {
         return 0.0;
@@ -247,12 +259,16 @@ async fn run(
     let der = std::fs::read(dir.join("sandbox-attestation-root.der")).map_err(|e| e.to_string())?;
     let ca = Arc::new(SandboxAttestationCa::from_parts(&key, der).map_err(|e| e.to_string())?);
     // `--server` — vergul bilan bir nechta instansiya (round-robin: load balancer simulyatsiyasi).
-    let clients: Arc<Vec<ServerClient>> = Arc::new(
+    // `https://` — `init --tls` sandbox'i: server sertifikati pin, operator/terminal — mTLS.
+    let clients_as = |id: &str| -> Result<Arc<Vec<ServerClient>>, String> {
         server
             .split(',')
-            .map(|s| ServerClient::new(s.trim(), None).map_err(|e| e.to_string()))
-            .collect::<Result<_, _>>()?,
-    );
+            .map(|s| client_for(&dir, s.trim(), id))
+            .collect::<Result<Vec<_>, _>>()
+            .map(Arc::new)
+    };
+    let clients = clients_as(mpay_server::init::OPERATOR_ID)?;
+    let term_clients = clients_as(mpay_server::init::TERMINAL_ID)?;
     println!("Instansiyalar: {}", clients.len());
 
     // 1) Provisioning: concurrency ta parallel hamyon.
@@ -307,7 +323,7 @@ async fn run(
     let t1 = Instant::now();
     let mut set = tokio::task::JoinSet::new();
     for (w, mut cards) in buckets.into_iter().enumerate() {
-        let (clients, terminal, stan) = (clients.clone(), terminal.clone(), stan.clone());
+        let (clients, terminal, stan) = (term_clients.clone(), terminal.clone(), stan.clone());
         set.spawn(async move {
             let mut st = Stats::default();
             let merchant = format!("LOADSHOP{w:07}");

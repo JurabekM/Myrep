@@ -2,14 +2,13 @@
 
 use std::future::Future;
 use std::sync::Arc;
-use std::time::Instant;
 
 use axum::body::Bytes;
 use std::net::SocketAddr;
 
-use axum::extract::{ConnectInfo, DefaultBodyLimit, MatchedPath, Path, Request, State};
+use axum::extract::{ConnectInfo, DefaultBodyLimit, Path, State};
 use axum::http::{header, HeaderMap, HeaderValue, StatusCode};
-use axum::middleware::{self, Next};
+use axum::middleware;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -57,23 +56,9 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
         .route("/v1/authorizations", post(authorize))
         .route("/v1/terminal/ping", get(terminal_ping))
-        .route_layer(middleware::from_fn(log_requests))
+        .route_layer(middleware::from_fn(crate::metrics::track))
         .layer(DefaultBodyLimit::max(256 * 1024))
         .with_state(state)
-}
-
-/// Har so'rov: metod, marshrut shabloni, status, davomiylik. Tanalar hech qachon logga yozilmaydi.
-async fn log_requests(req: Request, next: Next) -> Response {
-    let method = req.method().clone();
-    let route = req
-        .extensions()
-        .get::<MatchedPath>()
-        .map(|p| p.as_str().to_owned())
-        .unwrap_or_default();
-    let start = Instant::now();
-    let resp = next.run(req).await;
-    tracing::info!(%method, route, status = resp.status().as_u16(), ms = start.elapsed().as_millis() as u64, "http");
-    resp
 }
 
 async fn health(State(s): St) -> impl IntoResponse {
@@ -140,10 +125,12 @@ fn handshake_guard(
 ) -> Result<Option<tokio::sync::OwnedSemaphorePermit>, ApiError> {
     let ip = s.client_ip(peer, headers);
     s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
+        crate::metrics::rate_limited(crate::metrics::Limit::Ip);
         tracing::warn!(%ip, "rate-limit: handshake IP");
         ApiError::rate_limited(l, false)
     })?;
     s.limits.handshake_permit().map_err(|l| {
+        crate::metrics::rate_limited(crate::metrics::Limit::Handshake);
         tracing::warn!("rate-limit: handshake navbati to'la");
         ApiError::rate_limited(l, true)
     })
@@ -250,6 +237,7 @@ async fn pq_enroll(
     };
     let ip = s.client_ip(peer, &headers);
     s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
+        crate::metrics::rate_limited(crate::metrics::Limit::Ip);
         tracing::warn!(%ip, "rate-limit: enroll IP");
         ApiError::rate_limited(l, false)
     })?;
@@ -348,6 +336,7 @@ where
             ),
         ),
         _ if limited.is_some() => {
+            crate::metrics::rate_limited(crate::metrics::Limit::Device);
             tracing::warn!(device = %info.device_id, "rate-limit: qurilma");
             (
                 StatusCode::TOO_MANY_REQUESTS,
@@ -480,6 +469,7 @@ async fn queue_otp(s: &Arc<AppState>, fpan: &Pan, challenge_id: &str, ttl: i64) 
     let (st, reference) = (s.clone(), challenge_id.to_owned());
     tokio::spawn(async move {
         if let Err(e) = st.otp.deliver(&phone, &otp, ttl, &reference).await {
+            crate::metrics::otp_failed();
             tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: SMS yuborilmadi");
         }
     });
@@ -535,6 +525,7 @@ async fn idv_resend(
             }
         };
         if let Err(e) = st.otp.deliver(&phone, &otp, ttl, &req.challenge_id).await {
+            crate::metrics::otp_failed();
             tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: qayta yuborilmadi");
             let err = ApiError::new(
                 StatusCode::BAD_GATEWAY,
@@ -702,6 +693,7 @@ async fn authorize(
             tracing::error!(error = %e, "acquirer: avtorizatsiya vazifasi");
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
         })??;
+    crate::metrics::observe_authorization(&out.response_code);
     Ok(Json(out).into_response())
 }
 
