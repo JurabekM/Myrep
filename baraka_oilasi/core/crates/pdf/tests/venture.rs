@@ -72,7 +72,7 @@ fn report(locale: PdfLocale) -> VentureReport {
         ],
         parties: vec![
             ReportParty {
-                name: "Otabek Qodirov".into(),
+                name: "Dilshod Tursunov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 share: "3 200 000 soʻm".into(),
                 recovered: "0 soʻm".into(),
@@ -91,7 +91,7 @@ fn report(locale: PdfLocale) -> VentureReport {
             },
         ],
         buyout: Some(ReportBuyout {
-            seller: "Otabek Qodirov".into(),
+            seller: "Dilshod Tursunov".into(),
             buyer: "Feruza Karimova".into(),
             paid: "1, 2".into(),
             unpaid: "—".into(),

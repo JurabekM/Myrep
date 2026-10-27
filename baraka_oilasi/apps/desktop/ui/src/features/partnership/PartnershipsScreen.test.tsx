@@ -25,7 +25,7 @@ const detail = {
   status: "SIGNED",
   currency: "UZS",
   parties: [
-    { id: "P1", fullName: "Otabek Qodirov", role: "CAPITAL_PROVIDER", profitShareBp: 5000, profitShare: "50%", isMe: true, capitalItems: [{ kind: "MONEY", description: "naqd", amount: money("30 000 000 soʻm", "3000000000") }], capital: money("30 000 000 soʻm", "3000000000"), lossShare: "100%" },
+    { id: "P1", fullName: "Dilshod Tursunov", role: "CAPITAL_PROVIDER", profitShareBp: 5000, profitShare: "50%", isMe: true, capitalItems: [{ kind: "MONEY", description: "naqd", amount: money("30 000 000 soʻm", "3000000000") }], capital: money("30 000 000 soʻm", "3000000000"), lossShare: "100%" },
     { id: "P2", fullName: "Feruza Karimova", role: "WORKER", profitShareBp: 5000, profitShare: "50%", isMe: false, capitalItems: [], capital: money("0 soʻm", "0"), lossShare: "0%" },
   ],
   capitalTotal: money("30 000 000 soʻm", "3000000000"),
@@ -41,7 +41,7 @@ const detail = {
   version: 1,
   signedVersion: 1,
   amendmentPending: false,
-  signers: [{ key: "party:P1", role: "PARTY", name: "Otabek Qodirov", signedAt: "15.10.2026", svg: null }],
+  signers: [{ key: "party:P1", role: "PARTY", name: "Dilshod Tursunov", signedAt: "15.10.2026", svg: null }],
   allSigned: true,
   meProvidesCapital: true,
   meReceivesCapital: false,

@@ -91,7 +91,7 @@ fn protocol(locale: PdfLocale) -> ReviewProtocol {
         incidents: vec![incident()],
         acks: vec![
             AckLine {
-                party: "Otabek Qodirov".into(),
+                party: "Dilshod Tursunov".into(),
                 verdict: "AGREE".into(),
                 note: String::new(),
             },
@@ -115,12 +115,12 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
         kind: "MUDARABA".into(),
         arbiter: "Hamid Yusupov".into(),
         opened_on: "03.01.2027".into(),
-        opened_by: "Otabek Qodirov".into(),
+        opened_by: "Dilshod Tursunov".into(),
         subject: "Dekabr foydasi taqsimoti".into(),
         clauses: "4, 5".into(),
         claims: vec![
             FolderClaim {
-                party: "Otabek Qodirov".into(),
+                party: "Dilshod Tursunov".into(),
                 claim: "Fors-major zarari mehnat egasining beparvoligidan".into(),
             },
             FolderClaim {
@@ -131,7 +131,7 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
         terms: vec![
             (
                 "folder.term.parties".into(),
-                "Otabek Qodirov 40%, Feruza Karimova 60%".into(),
+                "Dilshod Tursunov 40%, Feruza Karimova 60%".into(),
             ),
             ("folder.term.capital".into(), "30 000 000 soʻm".into()),
         ],
@@ -174,7 +174,7 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
             held_on: "02.01.2027".into(),
             acks: vec![
                 AckLine {
-                    party: "Otabek Qodirov".into(),
+                    party: "Dilshod Tursunov".into(),
                     verdict: "AGREE".into(),
                     note: String::new(),
                 },

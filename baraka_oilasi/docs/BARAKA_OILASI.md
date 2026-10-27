@@ -46,8 +46,9 @@ Har bir funksiya ikki savol bilan tekshiriladi: **(1) odamni amalga undayaptimi?
 
 #### Ilova nomi, ilhom manbasi va mustaqillik (mahsulot egasi qarori, 2026-10-23)
 - Android va desktop ilovalarining nomi — **«Baraka Dastur»**. Google Play'da «Baraka» nomli boshqa ilova bor; «Baraka daftari» nomi ham ishlatilmaydi. Loyiha va repozitoriy ichki nomi — «Baraka oilasi».
-- G'oya halol boylik haqidagi «7 qonun» suhbatlarining **ma'no-mazmunidan ilhomlangan** (muallif — Abdukarim Mirzayev, «Asaxiy Invest»). Ilova ularning moslashuvi yoki rasmiy davomi **emas**: qissa matnlari, personajlar (jumladan, Otabek hoji) va brend ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
-- Ilova mualliflar va «Asaxiy Invest» bilan **bog'liq emas**, ular tomonidan tasdiqlanmagan va ularning nomidan gapirmaydi. Mualliflar bilan aloqaga chiqishga urinildi, javob bo'lmadi — shuning uchun litsenziyaga tayanilmaydi.
+- G'oya halol boylik haqidagi «qonunlar» suhbatlari turkumining **ma'no-mazmunidan ilhomlangan**. Ilova ularning moslashuvi yoki rasmiy davomi **emas**: boshqa mualliflarning matnlari, personajlari va brendi ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
+- Ilova o'sha suhbatlar mualliflari va ularning tashkiloti bilan **bog'liq emas**, ular tomonidan tasdiqlanmagan va ularning nomidan gapirmaydi; litsenziyaga tayanilmaydi.
+- **Nomlar repoda yo'q** (mahsulot egasi qarori, 2026-10-27): suhbatlar mualliflari, ularning tashkiloti va qissa personajlarining nomlari kodda, hujjatlarda, testlarda, vektorlarda va commit xabarlarida yozilmaydi. Yangi qonun kelganda faqat uning ma'no-mazmuni o'z so'zlarimiz bilan tamoyil sifatida qo'shiladi.
 - Hujjatlarda «qonun» o'rniga **«tamoyil»** ishlatiladi: 7 tamoyil — ribosiz moliyaning keng ma'lum asoslari (o'zingizga avval to'lash, xarajatni yozish, qarzdan reja bilan chiqish, halol sheriklik, kelishuvni yozish va h.k.).
 - Ilova ichidagi yo'l ko'rsatuvchi ovoz — **«Moliyaviy maslahatchi»**: ismsiz, personaj emas. Segment personalari (taksichi, tikuvchi, migrant va h.k.) — o'zimizning mahsulot tahlilimiz.
 

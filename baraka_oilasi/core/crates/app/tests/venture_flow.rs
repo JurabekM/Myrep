@@ -58,7 +58,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Otabek Qodirov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
+/// Dilshod Tursunov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -66,7 +66,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Otabek Qodirov".into(),
+                full_name: "Dilshod Tursunov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -484,7 +484,7 @@ fn ideas_payback_draft_and_offer_check() {
             &uy,
             &idea.id,
             IdeaDraftInput {
-                capital_provider_name: "Otabek Qodirov".into(),
+                capital_provider_name: "Dilshod Tursunov".into(),
                 my_name: "Feruza Karimova".into(),
             },
         )

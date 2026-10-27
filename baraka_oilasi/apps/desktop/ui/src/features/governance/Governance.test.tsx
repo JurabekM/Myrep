@@ -61,7 +61,7 @@ const ledger = (inDispute: boolean) => ({
   entries: [],
   periods: [],
   balances: [
-    { partyId: "P1", name: "Otabek Qodirov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
+    { partyId: "P1", name: "Dilshod Tursunov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
     { partyId: "P2", name: "Feruza Karimova", role: "WORKER", isMe: true, capital: zero, carriedLoss: zero },
   ],
   buyout: null,
@@ -101,7 +101,7 @@ describe("LedgerView: «katta foyda» va nizo", () => {
     fns.partnership.mockResolvedValue(
       ok({
         parties: [
-          { id: "P1", fullName: "Otabek Qodirov", profitShare: "50%", lossShare: "100%" },
+          { id: "P1", fullName: "Dilshod Tursunov", profitShare: "50%", lossShare: "100%" },
           { id: "P2", fullName: "Feruza Karimova", profitShare: "50%", lossShare: "0%" },
         ],
         negligenceClause: "Uskunani boshqa ishga berish",
@@ -119,7 +119,7 @@ describe("LedgerView: «katta foyda» va nizo", () => {
     const alert = await screen.findByRole("alert");
     expect(within(alert).getByText("Katta foyda: 18 000 000 soʻm")).toBeInTheDocument();
     expect(await within(alert).findByText("Uskunani boshqa ishga berish")).toBeInTheDocument();
-    expect(within(alert).getByText("✓ Otabek Qodirov qayta oʻqidi")).toBeInTheDocument();
+    expect(within(alert).getByText("✓ Dilshod Tursunov qayta oʻqidi")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Davrni yopish" })).toBeDisabled();
     await user.click(within(alert).getByRole("button", { name: "Feruza Karimova 4–5-bandlarni qayta oʻqidi" }));
     expect(fns.acknowledgeSpikeReread).toHaveBeenCalledWith("uy", "p1", "P2");
@@ -146,7 +146,7 @@ const review = (integrity: string) => ({
   totals: { entries: 2, periodsClosed: 0, income: zero, expense: zero, forceMajeure: zero, corrections: zero, result: zero },
   openIncidents: 1,
   acks: [
-    { partyId: "P1", partyName: "Otabek Qodirov", verdict: "AGREE", note: null },
+    { partyId: "P1", partyName: "Dilshod Tursunov", verdict: "AGREE", note: null },
     { partyId: "P2", partyName: "Feruza Karimova", verdict: "OBJECT", note: "Mato narxi" },
   ],
   chainCode: "A765-1DD8-4DAD-994D",
@@ -162,7 +162,7 @@ const gov = {
   writable: true,
   readOnlyReason: null,
   parties: [
-    { partyId: "P1", name: "Otabek Qodirov" },
+    { partyId: "P1", name: "Dilshod Tursunov" },
     { partyId: "P2", name: "Feruza Karimova" },
   ],
   duties: [{ id: "d1", title: "Buyurtmalarni tikish", ownerPartyId: "P2", ownerName: "Feruza Karimova", breachClause: "1 kun ichida xabar beradi va oʻrniga yechim topadi" }],
@@ -239,7 +239,7 @@ describe("GovernanceView", () => {
     expect(fns.reviewDraft).toHaveBeenCalledWith("uy", "p1", "");
     const hold = within(dialog).getByRole("button", { name: "Bayonnomani yozish" });
     expect(hold).toBeDisabled();
-    await user.click(within(within(dialog).getByRole("radiogroup", { name: "Otabek Qodirov" })).getByLabelText("Koʻrdim, roziman"));
+    await user.click(within(within(dialog).getByRole("radiogroup", { name: "Dilshod Tursunov" })).getByLabelText("Koʻrdim, roziman"));
     await user.click(within(within(dialog).getByRole("radiogroup", { name: "Feruza Karimova" })).getByLabelText("Eʼtirozim bor"));
     expect(hold).toBeDisabled();
     await user.type(within(dialog).getByLabelText("Feruza Karimova: eʼtiroz mazmuni"), "Mato narxi");
