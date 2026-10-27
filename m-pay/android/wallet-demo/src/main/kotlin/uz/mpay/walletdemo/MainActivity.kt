@@ -97,6 +97,11 @@ class MainActivity : FragmentActivity() {
             tlsCertSha256 = BuildConfig.TLS_PIN.takeIf { it.isNotEmpty() }?.let(Hex::decode),
             allowTofu = pins.isEmpty(),
             rootFingerprint = BuildConfig.ROOT_FINGERPRINT.takeIf { it.isNotEmpty() },
+            // ADR-0029: build'ga joylangan ro'yxat (asset bo'lmasa — null) va mustaqil kanal manzillari.
+            bundledRevocations = runCatching {
+                assets.open("mpay-revocations.json").bufferedReader().use { it.readText() }
+            }.getOrNull(),
+            revocationUrls = BuildConfig.REVOCATION_URLS.split(',').map { it.trim() }.filter { it.isNotEmpty() },
         )
         wallet.addListener(listener)
         // P2.6: sandbox'da yaxlitlik tokeni server mock'idan — o'z PQ Link sessiyasi orqali (operator kaliti

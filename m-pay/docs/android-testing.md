@@ -221,3 +221,21 @@ kartasi va sozlamalarni yopardi. Endi:
 | Pastdagi maydon (Merchant ID) | klaviatura ustiga aylanadi, ko'rinib turadi |
 
 Tekshirilgan: Medium_Phone_API_36.0 emulyatori (1080×2400).
+
+## 10. Bekor qilish ro'yxati build'da (ADR-0029)
+
+Kalit oshkor bo'lgan va hujumchi serveri ro'yxatni bermaydigan holat:
+
+```bash
+mpay-server root-keygen --out root.json                      # root_fingerprint chiqadi
+mpay-server init --dir sb --listen 127.0.0.1:8080             # "PQ Link server barmoq izi: <SFP>"
+mpay-server revoke --root-key root.json --version 5 --fp <SFP> --out rev.json
+mpay-server revocations-check --file rev.json --root-fingerprint <ROOT>
+mpay-server serve --config sb/mpay.toml                       # [pqlink] revocations yo'q → 404
+cd android && ./gradlew :wallet-demo:assembleDebug -Pmpay.revocationsFile=../rev.json -Pmpay.rootFingerprint=<ROOT>
+```
+
+Ilovada "Ulanish" → **"Xato: server identifikatori bekor qilingan: <SFP>…"**, voqealarda
+"Bekor qilish ro'yxati yangilandi: versiya 5 (ilova)"; server logida faqat `/v1/pqlink/identity` va
+`/revocations` — handshake boshlanmaydi. Nazorat: boshqa barmoq izini bekor qiluvchi ro'yxat bilan
+build — handshake boshlanadi (2026-10-27, emulyator Medium_Phone_API_36.0).

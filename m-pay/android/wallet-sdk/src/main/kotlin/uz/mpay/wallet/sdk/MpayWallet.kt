@@ -9,7 +9,7 @@ import uz.mpay.core.CardProfile
 import uz.mpay.core.MpayClient
 import uz.mpay.core.ProvisionResult
 import uz.mpay.core.Hex
-import uz.mpay.core.Revocations
+import uz.mpay.core.RevocationSources
 import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.TlsConfig
 import uz.mpay.core.maskPan
@@ -26,8 +26,18 @@ class WalletConfig(
     val pinnedFingerprints: List<String> = emptyList(),
     val tlsCertSha256: ByteArray? = null,
     val allowTofu: Boolean = false,
-    /** Oflayn ildiz barmoq izi (ADR-0014): berilsa, serverdan bekor qilish ro'yxati olinib tekshiriladi. */
+    /** Oflayn ildiz barmoq izi (ADR-0014): berilsa, bekor qilish ro'yxati olinib tekshiriladi. */
     val rootFingerprint: String? = null,
+    /**
+     * Ilova build'iga joylangan imzolangan ro'yxat (ADR-0029) — yangi o'rnatilgan ilova ham oshkor
+     * kalitni darhol rad etadi. Ildiz imzosi baribir tekshiriladi.
+     */
+    val bundledRevocations: String? = null,
+    /**
+     * Mustaqil kanal (ADR-0029): PQ Link serveridan alohida statik fayllar (CDN), faqat `https://`.
+     * Hujumchi serveri ro'yxatni bermasa ham qurilma uni shu yerdan oladi.
+     */
+    val revocationUrls: List<String> = emptyList(),
 )
 
 /**
@@ -134,18 +144,30 @@ class MpayWallet private constructor(context: Context) {
     }
 
     /**
-     * Bekor qilish ro'yxati: ildiz pinlangan bo'lsa olinadi va tekshiriladi; faqat kattaroq versiya
-     * saqlanadi (orqaga qaytarib bo'lmaydi). Tarmoq yoki imzo xatosida saqlangan ro'yxat ishlatiladi.
+     * Bekor qilish ro'yxati (ADR-0014, ADR-0029): ildiz pinlangan bo'lsa build nusxasi, mustaqil kanallar
+     * va server — har biri ildiz imzosi bilan tekshiriladi, eng katta versiya olinadi. Faqat qurilmada
+     * saqlangandan kattasi saqlanadi (orqaga qaytarib bo'lmaydi). Hech biri yetmasa — saqlangani.
+     * Ro'yxat server identifikatori tekshirilishidan **oldin** yangilanadi.
      */
     private fun refreshRevocations(c: MpayClient, cfg: WalletConfig, prefs: android.content.SharedPreferences): Set<String> {
         val stored = prefs.getStringSet("revoked", emptySet())!!.toSet()
-        val root = cfg.rootFingerprint ?: return stored
-        val fresh = runCatching { c.revocationsJson()?.let { Revocations.verify(it, root) } }
-            .onFailure { emit("Bekor qilish ro'yxati rad etildi: ${it.message}") }
-            .getOrNull() ?: return stored
+        val root = cfg.rootFingerprint ?: run {
+            check(cfg.bundledRevocations == null && cfg.revocationUrls.isEmpty()) {
+                "bekor qilish ro'yxati manbalari uchun WalletConfig.rootFingerprint kerak"
+            }
+            return stored
+        }
+        val candidates = buildList {
+            add(RevocationSources.Candidate("ilova", cfg.bundledRevocations))
+            cfg.revocationUrls.forEach { add(RevocationSources.Candidate(it, RevocationSources.fetch(it))) }
+            add(RevocationSources.Candidate("server", runCatching { c.revocationsJson() }.getOrNull()))
+        }
+        val sel = RevocationSources.select(root, candidates)
+        sel.rejected.forEach { emit("Bekor qilish ro'yxati rad etildi ($it)") }
+        val fresh = sel.best ?: return stored
         if (fresh.version <= prefs.getLong("revoked_version", -1)) return stored
         prefs.edit().putStringSet("revoked", fresh.revoked).putLong("revoked_version", fresh.version).apply()
-        emit("Bekor qilish ro'yxati yangilandi: versiya ${fresh.version}, ${fresh.revoked.size} ta")
+        emit("Bekor qilish ro'yxati yangilandi: versiya ${fresh.version} (${sel.bestSource}), ${fresh.revoked.size} ta")
         return fresh.revoked
     }
 

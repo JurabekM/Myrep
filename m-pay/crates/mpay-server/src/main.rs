@@ -128,6 +128,15 @@ enum Cmd {
         #[arg(long, default_value = "revocations.json")]
         out: PathBuf,
     },
+    /// Bekor qilish ro'yxati faylini tekshiradi (ADR-0029): CDN'ga yuklash yoki ilova build'iga
+    /// joylashdan oldin — ildiz barmoq izi va gibrid imzo. Xato bo'lsa chiqish kodi 1.
+    RevocationsCheck {
+        #[arg(long)]
+        file: PathBuf,
+        /// Ilovaga joylangan oflayn ildiz barmoq izi (`root-keygen` chiqishi).
+        #[arg(long)]
+        root_fingerprint: String,
+    },
     /// mTLS mijoz sertifikati barmoq izi (SHA-256, hex) — `[auth] revoked_client_certs` uchun.
     CertFingerprint {
         #[arg(long)]
@@ -480,6 +489,30 @@ async fn run(cli: Cli) -> Result<(), String> {
                     .map(|f| f.to_string_lossy())
                     .unwrap_or_default()
             );
+            Ok(())
+        }
+        Cmd::RevocationsCheck {
+            file,
+            root_fingerprint,
+        } => {
+            let raw = std::fs::read(&file).map_err(|e| format!("{}: {e}", file.display()))?;
+            let dto: mpay_common::api::RevocationsDto =
+                serde_json::from_slice(&raw).map_err(|e| format!("JSON: {e}"))?;
+            let signed = mpay_server::revocations::from_dto(&dto)?;
+            let mut fp = [0u8; 32];
+            hex::decode_to_slice(root_fingerprint.trim(), &mut fp)
+                .map_err(|_| "--root-fingerprint: 64 hex".to_owned())?;
+            signed
+                .verify(&fp)
+                .map_err(|e| format!("imzo yoki ildiz mos emas: {e}"))?;
+            println!(
+                "to'g'ri: versiya {}, {} ta bekor qilingan identifikator",
+                signed.version,
+                signed.revoked.len()
+            );
+            for r in &signed.revoked {
+                println!("  {}", hex::encode(r));
+            }
             Ok(())
         }
         Cmd::CertFingerprint { cert } => {

@@ -39,6 +39,9 @@ Qurilmada sinash tartibi: `docs/android-testing.md`.
   `-Pmpay.tlsPin=<hex>` (`mpay-server identity` chiqishi). Pin berilmasa — TOFU, faqat sandbox
   (ekranda "Server pinlanmagan"). `https://` server faqat TLS pini bilan. `-Pmpay.rootFingerprint` —
   oflayn ildiz (ADR-0014): bekor qilish ro'yxati tekshiriladi, faqat kattaroq versiya saqlanadi.
+  `-Pmpay.revocationsFile=<mpay-server revoke chiqishi>` — ro'yxat build'ga (asset), `-Pmpay.revocationUrls=https://…`
+  — mustaqil kanal (CDN); manbalardan eng katta haqiqiy versiya olinadi (ADR-0029). Nashrdan oldin:
+  `mpay-server revocations-check --file … --root-fingerprint …`.
 * **Sandbox:** `network_security_config` cleartext HTTP'ga ruxsat beradi (emulyator va qo'lda rejim uchun).
 * **Virtual NFC (faqat debug):** `wallet-demo/src/debug` — emulyator uchun loopback APDU ko'prigi,
   `terminal-app` "Virtual tap" (`docs/android-testing.md` §5). Release'da yo'qligi —

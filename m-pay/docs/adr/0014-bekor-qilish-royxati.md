@@ -27,7 +27,8 @@ o'zi imzolagan bekor qilish xabari ham yordam bermaydi — hujumchi aynan o'sha 
 * Oshkor bo'lgan kalitni ilova yangilanishisiz o'chirish mumkin — qurilma haqiqiy serverdan (yoki
   boshqa kanaldan) yangi ro'yxatni bir marta olsa bas.
 * Cheklov: hali yangi ro'yxatni olmagan qurilma hujumchi serveriga ulanishi mumkin (hujumchi ro'yxatni
-  bermaydi). `TODO(spec):` ro'yxatni ilova build'iga ham joylash va boshqa kanal (CDN/push) orqali tarqatish.
+  bermaydi). Yopildi — ADR-0029 (2026-10-27): ro'yxat ilova build'ida va mustaqil kanalda (CDN) ham,
+  eng katta versiya yutadi; push kanali — ADR-0029 dagi ochiq band.
 * Ildiz kaliti — eng qimmatli sir: oflayn saqlash, zaxira va kalit marosimi (2-faza deployment).
 * Tekshirilgan: Rust unit (imzo, buzish, begona ildiz), e2e `p1_revocations.rs` (tarqatish, server o'z
   bekor qilingan kaliti bilan ishga tushmaydi, noto'g'ri imzo), Kotlin `RevocationsTest`, interop

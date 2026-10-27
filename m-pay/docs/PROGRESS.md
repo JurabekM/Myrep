@@ -1055,3 +1055,18 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   audit 1); falokatdan keyin o'sha token bilan `00`, ARPC to'g'ri; pinlangan server bilan PQ Link;
   solishtirish toza; loglarda PAN/sir yo'q (`docs/dr-report.md`). Ikki urinish mashq skriptidagi
   xatolar bilan yiqildi (Windows bind mount yo'li, faqat o'qish uchun papkadagi STAN hisoblagichi) — tuzatildi.
+
+### Bekor qilish ro'yxati build'da va mustaqil kanalda (2026-10-27, ADR-0029; checklist JM-6 ✅)
+
+* Muammo: qurilma ro'yxatni faqat PQ Link serveridan olardi — kalit oshkor bo'lsa hujumchi serveri
+  ro'yxatni bermaydi, yangi o'rnatilgan ilovada ro'yxat yo'q.
+* `uz.mpay.core.RevocationSources`: ilova build'i, mustaqil kanallar (CDN, faqat https, 64 KB, 3 s,
+  yo'naltirishsiz) va server — har biri ildiz imzosi bilan, eng katta versiya; saqlangandan kichigi
+  e'tiborsiz. `WalletConfig.bundledRevocations`, `revocationUrls`; ro'yxat pin tekshiruvidan oldin.
+* Demo: `-Pmpay.revocationsFile` → asset, `-Pmpay.revocationUrls`. Server: `mpay-server revocations-check`.
+* Tekshirildi: Kotlin `RevocationsTest` (manbalar, soxta/begona ildiz, lokal HTTP orqali yuklash
+  chegaralari), mpay-core 28/28; `revocations-check` 0/1/1; APK'dagi asset Rust imzolagan fayl bilan
+  bayt-bir xil; **emulyatorda**: ro'yxatni bermaydigan server, build'dagi ro'yxat (v5) uning barmoq
+  izini bekor qilgan → "server identifikatori bekor qilingan", handshake boshlanmadi; nazorat —
+  handshake boshlandi.
+* Ochiq: push-xabar kanali va eskirish siyosati (bank).

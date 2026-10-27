@@ -68,7 +68,7 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | JM-3 | **Avtomatik reversal (`0400`/`0401`):** emitent timeout'i, o'qilmaydigan javob, qotgan `PENDING` → `96` va navbatdan reversal (qayta urinish, instansiyalar orasida band qilish). Sxemaning reversal formati — SX-2 | ✅ | J | P | ADR-0024 |
 | JM-4 | **Shield yuqori mavjudligi:** DB ijarasi bilan yetakchi + zaxira, belgilar ombori snapshot'i (RPO ≤ snapshot oralig'i, o'tish ≈ ijara muddati), mijozda zaxira URL'lar. Katta hajmda inkremental snapshot kerak bo'ladi | ✅ | J | P | ADR-0026 |
 | JM-5 | PostgreSQL streaming replika, `pg` proksisi (faqat yetakchiga), almashinuv/qayta qo'shish skriptlari va to'siq; nginx zaxirasi (VRRP VIP) — compose'da, sinalgan. Avtomatik almashinuv va alohida host'lar — BK-16 | ✅ | J | P | ADR-0027 |
-| JM-6 | Bekor qilingan server identifikatorlari ro'yxatini ilova build'iga joylash, boshqa kanal (CDN/push) | ☐ | J | P | ADR-0014 |
+| JM-6 | Bekor qilish ro'yxati ilova build'ida va mustaqil kanalda (CDN), eng katta imzolangan versiya; `revocations-check`; emulyatorda sinalgan. Push kanali va eskirish siyosati — bank Google loyihasi va xavfsizlik siyosati bilan | ✅ | J | P | ADR-0029 |
 | JM-7 | Kotlin klienti uchun deterministik handshake test vektori (hozir faqat jonli interop) | ☐ | J | X | `docs/specs/pqlink.md` §9 |
 | JM-8 | Uzoq ulanishli terminal shlyuzlari uchun ulanish umri chegarasi (L4 balanslash) | ☐ | J | X | `docs/load-report.md` §10 |
 | JM-9 | Audit zanjirini bo'laklash yoki davriy muhrlash (auditor talabi bo'yicha) | ☐ | A, J | X | ADR-0018 |
@@ -130,6 +130,7 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 | Shield holatini saqlash va zaxira instansiya | ADR-0026 (2026-10-27): JM-4 ✅ |
 | PostgreSQL replikatsiyasi va almashinuvi, nginx zaxirasi | ADR-0027 (2026-10-27): JM-5 ✅ |
 | Runbook va falokatdan tiklash mashqi | ADR-0028 (2026-10-27): JM-11 ✅ |
+| Bekor qilish ro'yxati build'da va CDN'da | ADR-0029 (2026-10-27): JM-6 ✅ |
 | Token muddati UTC+5 va yangilash | ADR-0022 §4 (2026-10-26) |
 
 ## 8. Pilotga chiqish mezoni
@@ -138,7 +139,7 @@ Pilot **yopiq tizimda** (SX-1 — sxemasiz, faqat M-Pay terminali, bitta bank) b
 **P** belgili barcha bandlar bajarilgan bo'lishi kerak. Qisqasi:
 
 1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13, BK-15, BK-16.
-2. Jamoa tomoni: JM-6, MB-4 (JM-1 … JM-5, JM-11 ✅).
+2. Jamoa tomoni: MB-4 (JM-1 … JM-6, JM-11 ✅).
 3. Telefonlar: MB-1 … MB-3.
 4. Audit: AU-1, AU-2, AU-5.
 5. Huquqiy: RG-1 … RG-4.
@@ -180,7 +181,6 @@ real ma'lumotda o'qitish.
 * `deploy/docker-compose.yml` — BK-8
 * `docs/PROGRESS.md` — tarixiy jurnal; ochiq qolganlari: SX-3, BK-5, BK-6, BK-10, BK-11, BK-14, AU-3
 * `docs/adr/0011-mtls.md` — BK-5
-* `docs/adr/0014-bekor-qilish-royxati.md` — JM-6
 * `docs/adr/0016-otp-kanali.md` — BK-6, BK-7
 * `docs/adr/0017-hsm-sessiyalar.md` — BK-3
 * `docs/adr/0018-postgresql.md` — JM-9
@@ -192,6 +192,7 @@ real ma'lumotda o'qitish.
 * `docs/adr/0025-kliring-va-hisob-kitob.md` — SX-2, BK-15
 * `docs/adr/0027-postgres-replika-va-lb-zaxira.md` — BK-16
 * `docs/adr/0028-falokatdan-tiklash.md` — BK-4, BK-13
+* `docs/adr/0029-bekor-qilish-royxati-manbalari.md` — BK-11
 * `docs/android-testing.md` — BK-11, MB-4
 * `docs/architecture.md` — BK-5
 * `docs/load-report.md` — BK-3, BK-10, JM-8

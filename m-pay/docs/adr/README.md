@@ -30,5 +30,6 @@
 | [0026](0026-shield-yuqori-mavjudlik.md) | Shield: DB ijarasi bilan yetakchi + zaxira, belgilar ombori snapshot'i | qabul qilingan |
 | [0027](0027-postgres-replika-va-lb-zaxira.md) | PostgreSQL streaming replika, `pg` proksisi, almashinuv skriptlari; nginx zaxirasi (VRRP VIP) | qabul qilingan |
 | [0028](0028-falokatdan-tiklash.md) | Falokatdan tiklash (`dr-restore.sh`, CI'dagi mashq) va navbatchi runbook'i | qabul qilingan |
+| [0029](0029-bekor-qilish-royxati-manbalari.md) | Bekor qilish ro'yxati: ilova build'i + mustaqil kanal (CDN) + server, eng katta versiya | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.
