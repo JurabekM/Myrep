@@ -49,6 +49,9 @@ ZIP'larni `:tools:replay` bilan tahlil qilaman, haqiqiy chastota va maydonlarni 
 
 **Maqsad:** AC-08 (pilotda tasdiqlangan almashinuvlarni aniqlash — 100%), AC-09 (bitta sessiya ≤ 25 daqiqa),
 AC-06 (30 daqiqada batareya ≤ 15%), standart configni haqiqiy ma'lumot bilan kalibrlash.
+
+> **To'liq dala ko'rsatmasi:** [`docs/H2_PILOT_GUIDE.md`](H2_PILOT_GUIDE.md) — rollar (ko'r sinov), sayt tanlash va presetlar,
+> ground truth va azimut o'lchash, har saytdagi qadamlar, `log.csv`, qaytarish va baholash. Quyidagi ro'yxat — umumiy ko'rinish.
 Bu vaqtda men 5-bosqichni (release, xavfsizlik, hujjatlar) davom ettiraman.
 
 ### 1. Saytlarni tanlash (20 ta)
