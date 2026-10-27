@@ -30,7 +30,10 @@ mkdir -p "$ROOT/docs/load"
 cleanup() {
   if [ "${MPAY_KEEP:-}" != 1 ]; then
     "${DC[@]}" --profile test down -v --remove-orphans >/dev/null 2>&1 || true
-    rm -rf "$PHONE" "$BK"
+    # "Telefon" fayllarini konteyner (uid 10001) yozgan — Linux'da host foydalanuvchisi o'chira olmaydi.
+    docker run --rm --user 0 -v "$PHONE_HOST:/phone" --entrypoint sh mpay-server:local \
+      -c 'rm -rf /phone/sb /phone/wallet.json' >/dev/null 2>&1 || true
+    rm -rf "$PHONE" "$BK" || true
   fi
 }
 trap cleanup EXIT
