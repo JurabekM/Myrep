@@ -60,11 +60,12 @@ wait_api() {
 
 echo "== sirlar va image'lar"
 bash "$D/init-secrets.sh"
-bash "$D/backup-keygen.sh"
 docker build -q --target runtime -t mpay-server:local "$ROOT" >/dev/null
 docker build -q --target loadgen -t mpay-loadgen:local "$ROOT" >/dev/null
 docker build -q -t mpay-pgproxy:local "$D/pgproxy" >/dev/null
 docker build -q -t mpay-keepalived:local "$D/keepalived" >/dev/null
+# age kalitlari image ichida yaratiladi — image'lar yig'ilgandan keyin (toza runner'da image yo'q).
+bash "$D/backup-keygen.sh"
 
 echo "== 1. toza muhit"
 "${DC[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
