@@ -566,3 +566,22 @@ fn new_tables_are_synced() {
         Some(TableMode::Mutable)
     );
 }
+
+/// «Ilm zakoti» sanasi: bo'sh satr — bugun, kelajakdagi sana — `FUTURE_DATE` (uchala makonda bir xil).
+#[test]
+fn teaching_empty_date_is_today_and_future_is_rejected() {
+    let a = setup();
+    let input = |on: &str| KkTeachingInput {
+        occurred_on: Some(on.into()),
+        agreement_id: None,
+        learner: None,
+        topic: "Narx yorligʻi yozish".into(),
+        minutes: Some(20),
+    };
+    let t = a.app.kk_teaching_add(&a.kk, input("  ")).unwrap();
+    assert_eq!(t.occurred_on, "2026-12-02");
+    assert_eq!(
+        err(a.app.kk_teaching_add(&a.kk, input("2026-12-03"))),
+        "FUTURE_DATE"
+    );
+}

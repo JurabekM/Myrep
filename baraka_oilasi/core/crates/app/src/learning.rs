@@ -9,7 +9,7 @@ use baraka_domain_common::IncomeSourceType;
 use baraka_domain_common::{month_period, SpaceKind};
 use baraka_domain_uy::learning::{
     average_income, check_activation, hour_value, self_invest_share, HourInput, PathKind,
-    PlanStatus, AVG_MONTHS,
+    PlanStatus,
 };
 use baraka_money::{format_percent_bp, Money};
 use baraka_storage::repo::{expenses, household, incomes, learning as repo};
@@ -20,7 +20,7 @@ use crate::app::Ctx;
 use crate::events::Topic;
 use crate::learn_common::{
     bp32, closed, hour_err, max_chars, measure_plan, next_status, opt_amount, parse_paths,
-    paths_text, plan_status, u32_of, PlanFields,
+    paths_text, plan_status, stored_hour, u32_of, PlanFields, TOPIC_MAX_CHARS,
 };
 use crate::receipt::ymd;
 use crate::text::{clean, clean_opt};
@@ -28,10 +28,7 @@ use crate::*;
 
 /// Bitta o'qish yozuvi: ko'pi bilan bir hafta (10 080 daqiqa).
 const STUDY_MAX_MINUTES: u32 = 10_080;
-/// Bitta o'rgatish yozuvi: ko'pi bilan bir kun.
-const TEACH_MAX_MINUTES: u32 = 1_440;
-const TOPIC_MAX_CHARS: usize = 200;
-const LEARNER_MAX_CHARS: usize = 120;
+
 /// Rejalar kartasi uchun yig'ilgan qiymatlar: o'qish daqiqalari, (reja, valyuta) bo'yicha sarflangan
 /// summa va kerakli soat qiymati hisoblari (id bo'yicha).
 struct PlanTotals {
@@ -87,13 +84,7 @@ impl App {
         member_id: &str,
     ) -> Result<Vec<(NaiveDate, NaiveDate, Money)>, AppError> {
         let cur = ctx.currency;
-        let (mut cursor, _) = month_period(self.today(ctx), ctx.month_start_day)
-            .ok_or(AppError::new("INVALID_PERIOD"))?;
-        let mut out = Vec::new();
-        for _ in 0..AVG_MONTHS {
-            let Some(prev) = cursor.pred_opt() else { break };
-            let (start, end) =
-                month_period(prev, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
+        self.last_full_months(ctx, |start, end| {
             let rows: Vec<Money> = self
                 .db
                 .read(|c| incomes::list_between(c, scope, &ymd(start), &ymd(end)))?
@@ -102,22 +93,22 @@ impl App {
                 .filter(|r| r.source_type.as_deref() != Some(IncomeSourceType::Ribo.as_str()))
                 .map(|r| Money::new(r.amount_minor, cur))
                 .collect();
-            if !rows.is_empty() {
-                out.push((start, end, Money::sum(rows, cur)?));
-            }
-            cursor = start;
-        }
-        Ok(out)
+            Ok(if rows.is_empty() {
+                None
+            } else {
+                Some(Money::sum(rows, cur)?)
+            })
+        })
     }
 
     fn hour_dto(&self, ctx: &Ctx, r: &repo::HourValueRow) -> Result<HourValueDto, AppError> {
         // Saqlangan daromad va vaqtdan qayta hisob — «ikki barobar maqsad» va soat chegarasi uchun.
-        let h = hour_value(&HourInput {
-            income: Some(r.income_minor),
-            month_totals: &[],
-            minutes_per_day: r.minutes_per_day,
-            days: r.days,
-        })?;
+        let h = stored_hour(
+            r.income_minor,
+            r.minutes_per_day,
+            r.days,
+            r.hour_value_minor,
+        )?;
         let cur = baraka_money::Currency::from_code(&r.currency)?;
         let d = |v: i64| self.money_dto(ctx, Money::new(v, cur));
         Ok(HourValueDto {
@@ -125,14 +116,11 @@ impl App {
             member_id: r.member_id.clone(),
             income: d(r.income_minor),
             income_source: r.income_source.clone(),
-            minutes_per_day: u32_of(r.minutes_per_day)?,
-            days: u32_of(r.days)?,
+            minutes_per_day: h.minutes_per_day,
+            days: h.days,
             monthly_minutes: h.monthly_minutes,
             hour_value: d(r.hour_value_minor),
-            double_target: d(r
-                .hour_value_minor
-                .checked_mul(2)
-                .ok_or(AppError::new("OVERFLOW"))?),
+            double_target: d(h.double_target),
             over_ceiling: h.over_ceiling,
             computed_on: r.computed_on.clone(),
         })
@@ -400,11 +388,13 @@ impl App {
             hour_value_minor: h.hour_value,
             computed_on: ymd(self.today(&ctx)),
         };
+        // Javob yozuvdan oldin tayyorlanadi: xato bo'lsa o'zgarmas yozuv qolmaydi.
+        let dto = self.hour_dto(&ctx, &row)?;
         let meta = self.meta();
         self.db
             .write(|tx| repo::insert_hour_value(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Learning]);
-        self.hour_dto(&ctx, &row)
+        Ok(dto)
     }
 
     // ---- 2G.2 Bilim rejasi ----
@@ -432,10 +422,6 @@ impl App {
             },
         )?;
         let plan = checked.plan;
-        let others = self
-            .db
-            .read(|c| repo::other_active_plans(c, &scope, &input.member_id, None))?;
-        check_activation(others)?;
         let baseline = self
             .db
             .read(|c| repo::latest_hour_value(c, &scope, &input.member_id))?
@@ -456,8 +442,15 @@ impl App {
             result_hour_value_id: None,
         };
         let meta = self.meta();
-        self.db
-            .write(|tx| repo::insert_plan(tx, &scope, &row, &meta))?;
+        // Faol rejalar sanog'i va yozuv — bitta tranzaksiyada (ikki tez so'rov chegarani oshirmaydi).
+        self.db.write(|tx| {
+            let others = repo::other_active_plans(tx, &scope, &row.member_id, None)?;
+            if let Err(e) = check_activation(others) {
+                return Ok(Err(AppError::from(e)));
+            }
+            repo::insert_plan(tx, &scope, &row, &meta)?;
+            Ok(Ok(()))
+        })??;
         self.publish(Some(space_id), &[Topic::Learning]);
         self.one_learn_plan_dto(&ctx, &scope, &row.id)
     }
@@ -472,13 +465,17 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         let p = self.learn_plan(&scope, plan_id)?;
-        let others = self
-            .db
-            .read(|c| repo::other_active_plans(c, &scope, &p.member_id, Some(&p.id)))?;
-        let to = next_status(&p.status, status, others)?;
         let meta = self.meta();
-        self.db
-            .write(|tx| repo::set_plan_status(tx, &scope, &p.id, to.as_str(), &meta))?;
+        // Sanoq va o'zgarish — bitta tranzaksiyada (`PAUSED → ACTIVE` chegarasi poyga holatisiz).
+        self.db.write(|tx| {
+            let others = repo::other_active_plans(tx, &scope, &p.member_id, Some(&p.id))?;
+            let to = match next_status(&p.status, status, others) {
+                Ok(to) => to,
+                Err(e) => return Ok(Err(e)),
+            };
+            repo::set_plan_status(tx, &scope, &p.id, to.as_str(), &meta)?;
+            Ok(Ok(()))
+        })??;
         self.publish(Some(space_id), &[Topic::Learning]);
         self.one_learn_plan_dto(&ctx, &scope, &p.id)
     }
@@ -506,14 +503,11 @@ impl App {
             |id| Ok(self.db.read(|c| repo::hour_value(c, &scope, id))?),
         )?;
         let (baseline, current, change) = (m.baseline, m.current, m.change);
-        let meta = self.meta();
-        self.db
-            .write(|tx| repo::set_plan_result(tx, &scope, &p.id, &current.id, &meta))?;
-        self.publish(Some(space_id), &[Topic::Learning]);
+        // Javob avval tayyorlanadi: xato bo'lsa natija saqlanmaydi.
         let cur = baraka_money::Currency::from_code(&current.currency)?;
         let bp = change.and_then(|c| c.change_bp);
-        Ok(LearningResultDto {
-            plan_id: p.id,
+        let dto = LearningResultDto {
+            plan_id: p.id.clone(),
             baseline: baseline
                 .as_ref()
                 .map(|b| self.hour_dto(&ctx, b))
@@ -522,7 +516,12 @@ impl App {
             diff: change.map(|c| self.money_dto(&ctx, Money::new(c.diff, cur))),
             change_bp: bp.map(bp32),
             change_percent: bp.map(format_percent_bp),
-        })
+        };
+        let meta = self.meta();
+        self.db
+            .write(|tx| repo::set_plan_result(tx, &scope, &p.id, &current.id, &meta))?;
+        self.publish(Some(space_id), &[Topic::Learning]);
+        Ok(dto)
     }
 
     // ---- O'qish vaqti va «Ilm zakoti» ----
@@ -569,24 +568,20 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         self.learn_member(&ctx, &input.member_id)?;
-        let topic = crate::text::required(&input.topic, "topic")?;
-        max_chars(Some(&topic), TOPIC_MAX_CHARS, "topic")?;
-        let learner = clean_opt(input.learner.as_deref());
-        max_chars(learner.as_deref(), LEARNER_MAX_CHARS, "learner")?;
-        if input
-            .minutes
-            .is_some_and(|m| !(1..=TEACH_MAX_MINUTES).contains(&m))
-        {
-            return Err(AppError::on("INVALID_TIME", "minutes"));
-        }
-        let on = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        let t = self.check_teaching(
+            &ctx,
+            &input.topic,
+            input.learner.as_deref(),
+            input.minutes,
+            input.occurred_on.as_deref(),
+        )?;
         let row = repo::TeachingRow {
             id: self.new_id(),
             member_id: input.member_id,
-            occurred_on: ymd(on),
-            learner,
-            topic,
-            minutes: input.minutes.map(i64::from),
+            occurred_on: ymd(t.on),
+            learner: t.learner,
+            topic: t.topic,
+            minutes: t.minutes,
         };
         let meta = self.meta();
         self.db

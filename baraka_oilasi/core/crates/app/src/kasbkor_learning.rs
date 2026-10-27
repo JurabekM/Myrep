@@ -14,17 +14,13 @@ use baraka_storage::SpaceScope;
 
 use crate::app::Ctx;
 use crate::events::Topic;
-use crate::learn_common::{amount, hour_err, max_chars, u32_of};
+use crate::learn_common::{amount, hour_err, max_chars, stored_hour, u32_of};
 use crate::receipt::ymd;
-use crate::text::{clean, clean_opt};
+use crate::text::clean;
 use crate::*;
 
 const EMPLOYMENT: &str = "EMPLOYMENT";
 const TASK_MAX_CHARS: usize = 120;
-const TOPIC_MAX_CHARS: usize = 200;
-const LEARNER_MAX_CHARS: usize = 120;
-/// Bitta o'rgatish yozuvi: ko'pi bilan bir kun (Uy 2G.6 bilan bir xil).
-const TEACH_MAX_MINUTES: u32 = 1_440;
 
 /// Qaror kalkulyatorining daqiqa chegarasi (oyiga) va soat qiymati yo'qligi — aniq kodlar.
 fn delegate_err(e: baraka_domain_common::DomainError) -> AppError {
@@ -65,12 +61,12 @@ impl App {
 
     fn kk_hour_dto(&self, ctx: &Ctx, r: &repo::KkOwnerHourRow) -> Result<KkOwnerHourDto, AppError> {
         // Saqlangan daromad va vaqtdan qayta hisob — «ikki barobar maqsad» va soat chegarasi uchun.
-        let h = hour_value(&HourInput {
-            income: Some(r.income_minor),
-            month_totals: &[],
-            minutes_per_day: r.minutes_per_day,
-            days: r.days,
-        })?;
+        let h = stored_hour(
+            r.income_minor,
+            r.minutes_per_day,
+            r.days,
+            r.hour_value_minor,
+        )?;
         let cur = Currency::from_code(&r.currency)?;
         let d = |v: i64| self.money_dto(ctx, Money::new(v, cur));
         Ok(KkOwnerHourDto {
@@ -78,14 +74,11 @@ impl App {
             income: d(r.income_minor),
             income_source: r.income_source.clone(),
             months: u32_of(r.months)?,
-            minutes_per_day: u32_of(r.minutes_per_day)?,
-            days: u32_of(r.days)?,
+            minutes_per_day: h.minutes_per_day,
+            days: h.days,
             monthly_minutes: h.monthly_minutes,
             hour_value: d(r.hour_value_minor),
-            double_target: d(r
-                .hour_value_minor
-                .checked_mul(2)
-                .ok_or(AppError::new("OVERFLOW"))?),
+            double_target: d(h.double_target),
             over_ceiling: h.over_ceiling,
             computed_on: r.computed_on.clone(),
         })
@@ -286,11 +279,13 @@ impl App {
             hour_value_minor: h.hour_value,
             computed_on: ymd(self.today(&ctx)),
         };
+        // Javob yozuvdan oldin tayyorlanadi: xato bo'lsa o'zgarmas yozuv qolmaydi.
+        let dto = self.kk_hour_dto(&ctx, &row)?;
         let meta = self.meta();
         self.db
             .write(|tx| repo::insert_owner_hour(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Learning]);
-        self.kk_hour_dto(&ctx, &row)
+        Ok(dto)
     }
 
     // ---- 8A.2 «O'zim qilaymi yoki o'rgatib topshiraymi?» ----
@@ -362,34 +357,31 @@ impl App {
     ) -> Result<KkTeachingDto, AppError> {
         let ctx = self.ctx()?;
         let scope = self.kk_scope(&ctx, space_id)?;
-        let topic = crate::text::required(&input.topic, "topic")?;
-        max_chars(Some(&topic), TOPIC_MAX_CHARS, "topic")?;
+        // Mavzu, ism, vaqt va sana — uchala makonda bir xil (`check_teaching`); keyin xodim kartochkasi.
+        let t = self.check_teaching(
+            &ctx,
+            &input.topic,
+            input.learner.as_deref(),
+            input.minutes,
+            input.occurred_on.as_deref(),
+        )?;
         let agreement_id = self.kk_staff_link(&scope, input.agreement_id.as_deref())?;
-        let learner = clean_opt(input.learner.as_deref());
-        max_chars(learner.as_deref(), LEARNER_MAX_CHARS, "learner")?;
-        if agreement_id.is_some() && learner.is_some() {
+        if agreement_id.is_some() && t.learner.is_some() {
             return Err(AppError::on("LEARNER_TWICE", "learner"));
         }
-        if input
-            .minutes
-            .is_some_and(|m| !(1..=TEACH_MAX_MINUTES).contains(&m))
-        {
-            return Err(AppError::on("INVALID_TIME", "minutes"));
-        }
-        let on = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         let row = repo::KkTeachingRow {
             id: self.new_id(),
-            occurred_on: ymd(on),
+            occurred_on: ymd(t.on),
             agreement_id,
-            learner,
-            topic,
-            minutes: input.minutes.map(i64::from),
+            learner: t.learner,
+            topic: t.topic,
+            minutes: t.minutes,
         };
+        let staff = self.kk_staff_cards(&scope)?;
         let meta = self.meta();
         self.db
             .write(|tx| repo::insert_teaching(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Learning]);
-        let staff = self.kk_staff_cards(&scope)?;
         Ok(teaching_dto(&row, &staff))
     }
 

@@ -2,11 +2,12 @@
 //! umumiy yordamchilar: kiritmalarni o'qish, xato kodlari, bilim rejasi tekshiruvi va natijani
 //! o'lchash qoidalari. Qoidalarning o'zi `domain-uy::learning` da; bu yerda faqat bitta joyda
 //! yig'ilgan app qatlami (xato kodlari va tartibi makonlarda bir xil qolishi uchun).
+use baraka_domain_common::month_period;
 use baraka_domain_uy::learning::{
-    hour_value_change, transition, validate_plan, HourChange, PathKind, PlanDraft, PlanStatus,
-    ValidPlan,
+    hour_value, hour_value_change, transition, validate_plan, HourChange, HourInput, PathKind,
+    PlanDraft, PlanStatus, ValidPlan, AVG_MONTHS,
 };
-use baraka_money::{parse_amount, Currency};
+use baraka_money::{parse_amount, Currency, Money};
 use chrono::NaiveDate;
 
 use crate::app::Ctx;
@@ -15,6 +16,12 @@ use crate::{App, AppError};
 
 /// Reja maqsadi (`purpose`) matni chegarasi.
 const PURPOSE_MAX_CHARS: usize = 200;
+/// «Ilm zakoti»: bitta o'rgatish yozuvi ko'pi bilan bir kun (uchala makonda bir xil, Uy 2G.6).
+pub(crate) const TEACH_MAX_MINUTES: u32 = 1_440;
+/// Mavzu (o'rgatish, o'qish izohi) matni chegarasi.
+pub(crate) const TOPIC_MAX_CHARS: usize = 200;
+/// «Kimga» (ism) matni chegarasi.
+pub(crate) const LEARNER_MAX_CHARS: usize = 120;
 
 /// Bazadagi butun son DTO uchun (manfiy yoki juda katta — buzilgan yozuv).
 pub(crate) fn u32_of(v: i64) -> Result<u32, AppError> {
@@ -90,6 +97,47 @@ pub(crate) fn next_status(
 ) -> Result<PlanStatus, AppError> {
     let to = PlanStatus::parse(to).ok_or(AppError::on("INVALID_STATUS", "status"))?;
     Ok(transition(plan_status(from)?, to, other_active)?)
+}
+
+/// Saqlangan soat qiymati hisobidan ko'rsatish uchun qayta hisob (uchala makon): oylik daqiqalar, soat
+/// chegarasi va «ikki barobar maqsad» (saqlangan 1 soat qiymatining 2 hissasi).
+pub(crate) struct StoredHour {
+    pub minutes_per_day: u32,
+    pub days: u32,
+    pub monthly_minutes: u32,
+    pub double_target: i64,
+    pub over_ceiling: bool,
+}
+
+pub(crate) fn stored_hour(
+    income_minor: i64,
+    minutes_per_day: i64,
+    days: i64,
+    hour_value_minor: i64,
+) -> Result<StoredHour, AppError> {
+    let h = hour_value(&HourInput {
+        income: Some(income_minor),
+        month_totals: &[],
+        minutes_per_day,
+        days,
+    })?;
+    Ok(StoredHour {
+        minutes_per_day: u32_of(minutes_per_day)?,
+        days: u32_of(days)?,
+        monthly_minutes: h.monthly_minutes,
+        double_target: hour_value_minor
+            .checked_mul(2)
+            .ok_or(AppError::new("OVERFLOW"))?,
+        over_ceiling: h.over_ceiling,
+    })
+}
+
+/// Tekshirilgan «Ilm zakoti» yozuvi.
+pub(crate) struct TeachingChecked {
+    pub topic: String,
+    pub learner: Option<String>,
+    pub minutes: Option<i64>,
+    pub on: NaiveDate,
 }
 
 /// Bilim rejasi kiritmalari (Uy va Musofir formasi bir xil).
@@ -200,8 +248,73 @@ impl App {
         }
     }
 
+    /// Sana: yo'q yoki bo'sh satr — bugun.
+    pub(crate) fn day_or_today(
+        &self,
+        ctx: &Ctx,
+        s: Option<&str>,
+        field: &str,
+    ) -> Result<NaiveDate, AppError> {
+        Ok(self
+            .optional_date(ctx, s, field)?
+            .unwrap_or_else(|| self.today(ctx)))
+    }
+
+    /// «Ilm zakoti» yozuvi (uchala makon, bir xil kodlar va tartib): mavzu majburiy (`REQUIRED`) va
+    /// ≤ 200 belgi, «kimga» ≤ 120 belgi (`TOO_LONG`), vaqt 1–1 440 daqiqa (`INVALID_TIME`), sana — bo'sh
+    /// bo'lsa bugun, kelajakda emas (`FUTURE_DATE`).
+    pub(crate) fn check_teaching(
+        &self,
+        ctx: &Ctx,
+        topic: &str,
+        learner: Option<&str>,
+        minutes: Option<u32>,
+        occurred_on: Option<&str>,
+    ) -> Result<TeachingChecked, AppError> {
+        let topic = crate::text::required(topic, "topic")?;
+        max_chars(Some(&topic), TOPIC_MAX_CHARS, "topic")?;
+        let learner = clean_opt(learner);
+        max_chars(learner.as_deref(), LEARNER_MAX_CHARS, "learner")?;
+        if minutes.is_some_and(|m| !(1..=TEACH_MAX_MINUTES).contains(&m)) {
+            return Err(AppError::on("INVALID_TIME", "minutes"));
+        }
+        let on = self.day_or_today(ctx, occurred_on, "occurredOn")?;
+        if on > self.today(ctx) {
+            return Err(AppError::on("FUTURE_DATE", "occurredOn"));
+        }
+        Ok(TeachingChecked {
+            topic,
+            learner,
+            minutes: minutes.map(i64::from),
+            on,
+        })
+    }
+
+    /// Joriy oydan oldingi oxirgi ko'pi bilan 3 ta to'liq oy (xonadon oylik davri bo'yicha), yangisidan
+    /// eskisiga: `total(start, end)` — `[start, end)` oyining jami yoki yozuv yo'q bo'lsa `None` (bunday oy
+    /// o'tkazib yuboriladi). Uy (a'zo daromadi) va Musofir (maosh + boshqa daromad) uchun umumiy.
+    pub(crate) fn last_full_months(
+        &self,
+        ctx: &Ctx,
+        mut total: impl FnMut(NaiveDate, NaiveDate) -> Result<Option<Money>, AppError>,
+    ) -> Result<Vec<(NaiveDate, NaiveDate, Money)>, AppError> {
+        let (mut cursor, _) = month_period(self.today(ctx), ctx.month_start_day)
+            .ok_or(AppError::new("INVALID_PERIOD"))?;
+        let mut out = Vec::new();
+        for _ in 0..AVG_MONTHS {
+            let Some(prev) = cursor.pred_opt() else { break };
+            let (start, end) =
+                month_period(prev, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
+            if let Some(t) = total(start, end)? {
+                out.push((start, end, t));
+            }
+            cursor = start;
+        }
+        Ok(out)
+    }
+
     /// Reja kiritmalari tartibda: yo'llar (`INVALID_PATH`), byudjet (reja valyutasida), boshlanish
-    /// (bo'sh — bugun), ko'rik sanasi (yo'q yoki bo'sh — +3 oy), maqsad matni (`TOO_LONG`), keyin domen
+    /// (yo'q yoki bo'sh — bugun), ko'rik sanasi (yo'q yoki bo'sh — +3 oy), maqsad matni (`TOO_LONG`), keyin domen
     /// `validate_plan`.
     pub(crate) fn check_plan(
         &self,
@@ -215,7 +328,7 @@ impl App {
             .map(|p| PathKind::parse(p).ok_or(AppError::on("INVALID_PATH", "paths")))
             .collect::<Result<Vec<_>, _>>()?;
         let budget = opt_amount(f.budget, cur, "budget")?;
-        let start = self.date_or_today(ctx, f.start_on, "startOn")?;
+        let start = self.day_or_today(ctx, f.start_on, "startOn")?;
         let review = self.optional_date(ctx, f.review_on, "reviewOn")?;
         let purpose = clean_opt(f.purpose);
         max_chars(purpose.as_deref(), PURPOSE_MAX_CHARS, "purpose")?;

@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use baraka_domain_common::month_period;
 use baraka_domain_musofir::invest::{home_hour_value, RateAt};
 use baraka_domain_uy::learning::{
-    average_income, check_activation, hour_value, HourInput, PathKind, PlanStatus, AVG_MONTHS,
+    average_income, check_activation, hour_value, HourInput, PathKind, PlanStatus,
 };
 use baraka_money::{format_percent_bp, Currency, FxRate, Money};
 use baraka_storage::repo::{expenses, incomes, mf, mf_learning as repo, ventures};
@@ -24,8 +24,8 @@ use chrono::NaiveDate;
 use crate::app::Ctx;
 use crate::events::Topic;
 use crate::learn_common::{
-    bp32, closed, hour_err, max_chars, measure_plan, next_status, opt_amount, parse_paths,
-    paths_text, plan_status, u32_of, PlanFields,
+    bp32, closed, hour_err, measure_plan, next_status, opt_amount, parse_paths, paths_text,
+    plan_status, stored_hour, u32_of, PlanFields,
 };
 use crate::receipt::ymd;
 use crate::text::clean_opt;
@@ -33,30 +33,14 @@ use crate::*;
 
 const GOALS: [&str; 2] = ["ABROAD", "HOME"];
 const AREAS: [&str; 4] = ["WORK", "LANGUAGE", "DOCUMENTS", "OTHER"];
-/// Bitta o'rgatish yozuvi: ko'pi bilan bir kun (Uy 2G.6 bilan bir xil).
-const TEACH_MAX_MINUTES: u32 = 1_440;
-const TOPIC_MAX_CHARS: usize = 200;
-const LEARNER_MAX_CHARS: usize = 120;
 
 /// Amaldagi kurs (so'rovda bir marta o'qiladi).
 type Rate = Option<(FxRate, MfRateDto)>;
 
-/// Makonning soat qiymati hisoblari (id bo'yicha) va ish valyutasidagi oxirgisi — bitta so'rov bilan.
-struct Hours {
-    by_id: HashMap<String, repo::MfHourRow>,
-    latest: Option<repo::MfHourRow>,
-}
-
-impl Hours {
-    fn money(&self, app: &App, ctx: &Ctx, id: Option<&str>) -> Result<Option<MoneyDto>, AppError> {
-        let Some(r) = id.and_then(|i| self.by_id.get(i)) else {
-            return Ok(None);
-        };
-        let cur = Currency::from_code(&r.currency)?;
-        Ok(Some(
-            app.money_dto(ctx, Money::new(r.hour_value_minor, cur)),
-        ))
-    }
+/// Belgili chet el xarajati summasi (ish valyutasida) — oy hisobi (`mf_book`) va «O'zimga sarmoya»
+/// ekrani uchun bitta qoida.
+pub(crate) fn mf_invest_amount(r: &expenses::ExpenseRow, work: Currency) -> Option<i64> {
+    (r.self_investment && r.currency == work.code()).then_some(r.amount_minor)
 }
 
 impl App {
@@ -94,60 +78,29 @@ impl App {
         }
     }
 
-    /// Oxirgi 3 to'liq oy (xonadon oylik davri bo'yicha) — daromad yozuvi borlari, ish valyutasida,
-    /// yangisidan eskisiga: (boshi, oxiri `[start, end)`, jami).
+    /// Oxirgi 3 to'liq oy — daromad yozuvi borlari, ish valyutasida (umumiy davr yurishi Uy bilan bir
+    /// xil, `last_full_months`), yangisidan eskisiga: (boshi, oxiri `[start, end)`, jami).
     fn mf_income_months(
         &self,
         ctx: &Ctx,
         scope: &SpaceScope,
         work: Currency,
     ) -> Result<Vec<(NaiveDate, NaiveDate, Money)>, AppError> {
-        let (mut cursor, _) = month_period(self.today(ctx), ctx.month_start_day)
-            .ok_or(AppError::new("INVALID_PERIOD"))?;
-        let mut out = Vec::new();
-        for _ in 0..AVG_MONTHS {
-            let Some(prev) = cursor.pred_opt() else { break };
-            let (start, end) =
-                month_period(prev, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
-            if let Some(total) = self.mf_month_income(scope, work, &ymd(start), &ymd(end))? {
-                out.push((start, end, total));
-            }
-            cursor = start;
-        }
-        Ok(out)
+        self.last_full_months(ctx, |start, end| {
+            self.mf_month_income(scope, work, &ymd(start), &ymd(end))
+        })
     }
 
     /// Oy hisobidagi «Sarmoya» qatori (bosh sahifadagi oy hisobi va «O'zimga sarmoya» ekrani — bitta
-    /// manba): `[from, last]` dagi belgili xarajatlar ish valyutasida va oy daromadidagi ulushi. Belgi oy
-    /// hisobini o'zgartirmaydi — xarajat o'z toifasida qoladi.
+    /// yordamchi): belgili xarajatlar (`mf_invest_amount`) va oy daromadidagi ulushi. Belgi oy hisobini
+    /// o'zgartirmaydi — xarajat o'z toifasida qoladi.
     pub(crate) fn mf_self_investment(
         &self,
         ctx: &Ctx,
-        scope: &SpaceScope,
         income: Money,
-        from: &str,
-        last: &str,
+        amounts: &[i64],
     ) -> Result<SelfInvestmentDto, AppError> {
-        let cur = income.currency().code();
-        let amounts: Vec<i64> = self
-            .db
-            .read(|c| expenses::self_investment_between(c, scope, from, last))?
-            .into_iter()
-            .filter(|(_, c, _)| c == cur)
-            .map(|(_, _, v)| v)
-            .collect();
-        self.self_investment_of(ctx, income, &amounts)
-    }
-
-    /// Makonning hisoblari bitta so'rov bilan.
-    fn mf_hours(&self, scope: &SpaceScope, work: Currency) -> Result<Hours, AppError> {
-        // Saqlangan tartibda (yangisi birinchi): ish valyutasidagi birinchisi — oxirgi hisob.
-        let rows = self.db.read(|c| repo::hours(c, scope))?;
-        let latest = rows.iter().find(|h| h.currency == work.code()).cloned();
-        Ok(Hours {
-            by_id: rows.into_iter().map(|r| (r.id.clone(), r)).collect(),
-            latest,
-        })
+        self.self_investment_of(ctx, income, amounts)
     }
 
     /// Uy valyutasidagi ko'rinish — amaldagi kurs bilan (kurs yo'q — qiymat yo'q).
@@ -178,13 +131,13 @@ impl App {
         rate: &Rate,
         r: &repo::MfHourRow,
     ) -> Result<MfHourDto, AppError> {
-        // Saqlangan daromad va vaqtdan qayta hisob — «ikki barobar maqsad» va soat chegarasi uchun.
-        let h = hour_value(&HourInput {
-            income: Some(r.income_minor),
-            month_totals: &[],
-            minutes_per_day: r.minutes_per_day,
-            days: r.days,
-        })?;
+        // Saqlangan daromad va vaqtdan qayta hisob — uchala makonda bitta yordamchi.
+        let h = stored_hour(
+            r.income_minor,
+            r.minutes_per_day,
+            r.days,
+            r.hour_value_minor,
+        )?;
         let cur = Currency::from_code(&r.currency)?;
         let d = |v: i64| self.money_dto(ctx, Money::new(v, cur));
         Ok(MfHourDto {
@@ -192,8 +145,8 @@ impl App {
             income: d(r.income_minor),
             income_source: r.income_source.clone(),
             months: u32_of(r.months)?,
-            minutes_per_day: u32_of(r.minutes_per_day)?,
-            days: u32_of(r.days)?,
+            minutes_per_day: h.minutes_per_day,
+            days: h.days,
             monthly_minutes: h.monthly_minutes,
             hour_value: d(r.hour_value_minor),
             double_target: d(h.double_target),
@@ -201,6 +154,28 @@ impl App {
             computed_on: r.computed_on.clone(),
             home: self.mf_hour_home(ctx, rate, Money::new(r.hour_value_minor, cur))?,
         })
+    }
+
+    fn mf_hour_money(
+        &self,
+        ctx: &Ctx,
+        r: Option<&repo::MfHourRow>,
+    ) -> Result<Option<MoneyDto>, AppError> {
+        let Some(r) = r else { return Ok(None) };
+        let cur = Currency::from_code(&r.currency)?;
+        Ok(Some(
+            self.money_dto(ctx, Money::new(r.hour_value_minor, cur)),
+        ))
+    }
+
+    /// Hisob — id bo'yicha (bitta yozuv).
+    fn mf_hour_by_id(
+        &self,
+        scope: &SpaceScope,
+        id: Option<&str>,
+    ) -> Result<Option<repo::MfHourRow>, AppError> {
+        let Some(id) = id else { return Ok(None) };
+        Ok(self.db.read(|c| repo::hour(c, scope, id))?)
     }
 
     /// Uy makonidagi «Hunardan ishga» g'oyalari (Uy makoni bo'lmasa — bo'sh).
@@ -219,12 +194,26 @@ impl App {
             .collect())
     }
 
+    /// Bitta g'oya nomi (Uy makonida; topilmasa — `None`).
+    fn mf_idea_title(&self, ctx: &Ctx, id: Option<&str>) -> Result<Option<String>, AppError> {
+        let (Some(id), Some(uy)) = (id, self.uy_space(ctx)?) else {
+            return Ok(None);
+        };
+        Ok(self
+            .db
+            .read(|c| ventures::get_idea(c, &uy, id))?
+            .map(|i| i.title))
+    }
+
+    /// Reja kartasi: soat qiymatlari va g'oya nomi chaqiruvchidan (ekran — bitta yuklash, bitta karta —
+    /// nuqtali so'rovlar).
     fn mf_plan_dto(
         &self,
         ctx: &Ctx,
         p: &repo::MfPlanRow,
-        ideas: &[MfIdeaOptionDto],
-        hours: &Hours,
+        baseline: Option<&repo::MfHourRow>,
+        result: Option<&repo::MfHourRow>,
+        idea_title: Option<String>,
     ) -> Result<MfLearningPlanDto, AppError> {
         let cur = Currency::from_code(&p.currency)?;
         let paths = parse_paths(&p.paths);
@@ -244,13 +233,9 @@ impl App {
             start_on: p.start_on.clone(),
             review_on: p.review_on.clone(),
             status: p.status.clone(),
-            baseline_hour_value: hours.money(self, ctx, p.baseline_hour_value_id.as_deref())?,
-            result_hour_value: hours.money(self, ctx, p.result_hour_value_id.as_deref())?,
-            venture_idea_title: p
-                .venture_idea_id
-                .as_ref()
-                .and_then(|id| ideas.iter().find(|i| &i.id == id))
-                .map(|i| i.title.clone()),
+            baseline_hour_value: self.mf_hour_money(ctx, baseline)?,
+            result_hour_value: self.mf_hour_money(ctx, result)?,
+            venture_idea_title: idea_title,
             venture_idea_id: p.venture_idea_id.clone(),
         })
     }
@@ -261,17 +246,18 @@ impl App {
             .ok_or(AppError::on("NOT_FOUND", "planId"))
     }
 
-    /// O'zgarishdan keyingi bitta reja kartasi.
+    /// Bitta reja kartasi — nuqtali so'rovlar bilan (hisoblar va g'oya id bo'yicha).
     fn one_mf_plan_dto(
         &self,
         ctx: &Ctx,
         scope: &SpaceScope,
-        work: Currency,
         plan_id: &str,
     ) -> Result<MfLearningPlanDto, AppError> {
         let p = self.mf_plan(scope, plan_id)?;
-        let hours = self.mf_hours(scope, work)?;
-        self.mf_plan_dto(ctx, &p, &self.mf_ideas(ctx)?, &hours)
+        let baseline = self.mf_hour_by_id(scope, p.baseline_hour_value_id.as_deref())?;
+        let result = self.mf_hour_by_id(scope, p.result_hour_value_id.as_deref())?;
+        let idea = self.mf_idea_title(ctx, p.venture_idea_id.as_deref())?;
+        self.mf_plan_dto(ctx, &p, baseline.as_ref(), result.as_ref(), idea)
     }
 
     // ---- Soat qiymati ----
@@ -327,12 +313,14 @@ impl App {
             hour_value_minor: h.hour_value,
             computed_on: ymd(self.today(&ctx)),
         };
+        // Kurs, uy valyutasidagi ko'rinish va javob — yozuvdan oldin: xato bo'lsa o'zgarmas yozuv qolmaydi.
+        let rate = self.mf_rate(&ctx, &scope, work)?;
+        let dto = self.mf_hour_dto(&ctx, &rate, &row)?;
         let meta = self.meta();
         self.db
             .write(|tx| repo::insert_hour(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Learning, Topic::Musofir]);
-        let rate = self.mf_rate(&ctx, &scope, work)?;
-        self.mf_hour_dto(&ctx, &rate, &row)
+        Ok(dto)
     }
 
     // ---- Bilim rejasi (ikki maqsad) ----
@@ -365,20 +353,19 @@ impl App {
             },
         )?;
         let plan = checked.plan;
-        let ideas = self.mf_ideas(&ctx)?;
-        let idea = match clean_opt(input.venture_idea_id.as_deref()) {
-            None => None,
+        let (idea, idea_title) = match clean_opt(input.venture_idea_id.as_deref()) {
+            None => (None, None),
             Some(_) if goal != "HOME" => {
                 return Err(AppError::on("IDEA_HOME_ONLY", "ventureIdeaId"))
             }
-            Some(id) if ideas.iter().any(|i| i.id == id) => Some(id),
-            Some(_) => return Err(AppError::on("NOT_FOUND", "ventureIdeaId")),
+            Some(id) => match self.mf_idea_title(&ctx, Some(&id))? {
+                Some(title) => (Some(id), Some(title)),
+                None => return Err(AppError::on("NOT_FOUND", "ventureIdeaId")),
+            },
         };
-        check_activation(
-            self.db
-                .read(|c| repo::other_active_plans(c, &scope, None))?,
-        )?;
-        let hours = self.mf_hours(&scope, work)?;
+        let baseline = self
+            .db
+            .read(|c| repo::latest_hour(c, &scope, work.code()))?;
         let row = repo::MfPlanRow {
             id: self.new_id(),
             goal: goal.to_string(),
@@ -391,15 +378,24 @@ impl App {
             start_on: ymd(plan.start),
             review_on: ymd(plan.review),
             status: PlanStatus::Active.as_str().to_string(),
-            baseline_hour_value_id: hours.latest.as_ref().map(|h| h.id.clone()),
+            baseline_hour_value_id: baseline.as_ref().map(|h| h.id.clone()),
             result_hour_value_id: None,
             venture_idea_id: idea,
         };
+        // Javob avval; faol rejalar sanog'i va yozuv — bitta tranzaksiyada (ikki tez so'rov chegarani
+        // oshirmaydi).
+        let dto = self.mf_plan_dto(&ctx, &row, baseline.as_ref(), None, idea_title)?;
         let meta = self.meta();
-        self.db
-            .write(|tx| repo::insert_plan(tx, &scope, &row, &meta))?;
+        self.db.write(|tx| {
+            let others = repo::other_active_plans(tx, &scope, None)?;
+            if let Err(e) = check_activation(others) {
+                return Ok(Err(AppError::from(e)));
+            }
+            repo::insert_plan(tx, &scope, &row, &meta)?;
+            Ok(Ok(()))
+        })??;
         self.publish(Some(space_id), &[Topic::Learning, Topic::Musofir]);
-        self.mf_plan_dto(&ctx, &row, &ideas, &hours)
+        Ok(dto)
     }
 
     /// Holat o'zgarishi: yopilgan reja qayta ochilmaydi; `PAUSED → ACTIVE` da chegara qayta tekshiriladi.
@@ -410,17 +406,21 @@ impl App {
         status: &str,
     ) -> Result<MfLearningPlanDto, AppError> {
         let ctx = self.ctx()?;
-        let (scope, work) = self.mfl_scope(&ctx, space_id)?;
+        let (scope, _) = self.mfl_scope(&ctx, space_id)?;
         let p = self.mf_plan(&scope, plan_id)?;
-        let others = self
-            .db
-            .read(|c| repo::other_active_plans(c, &scope, Some(&p.id)))?;
-        let to = next_status(&p.status, status, others)?;
         let meta = self.meta();
-        self.db
-            .write(|tx| repo::set_plan_status(tx, &scope, &p.id, to.as_str(), &meta))?;
+        // Sanoq va o'zgarish — bitta tranzaksiyada (`PAUSED → ACTIVE` chegarasi poyga holatisiz).
+        self.db.write(|tx| {
+            let others = repo::other_active_plans(tx, &scope, Some(&p.id))?;
+            let to = match next_status(&p.status, status, others) {
+                Ok(to) => to,
+                Err(e) => return Ok(Err(e)),
+            };
+            repo::set_plan_status(tx, &scope, &p.id, to.as_str(), &meta)?;
+            Ok(Ok(()))
+        })??;
         self.publish(Some(space_id), &[Topic::Learning, Topic::Musofir]);
-        self.one_mf_plan_dto(&ctx, &scope, work, &p.id)
+        self.one_mf_plan_dto(&ctx, &scope, &p.id)
     }
 
     /// Natijani o'lchash (Uy 2G.5 bilan umumiy qoidalar): oxirgi soat qiymati boshlang'ich nuqta bilan,
@@ -433,23 +433,21 @@ impl App {
         let ctx = self.ctx()?;
         let (scope, work) = self.mfl_scope(&ctx, space_id)?;
         let p = self.mf_plan(&scope, plan_id)?;
-        let mut hours = self.mf_hours(&scope, work)?;
-        let latest = hours.latest.take();
+        let latest = self
+            .db
+            .read(|c| repo::latest_hour(c, &scope, work.code()))?;
         let m = measure_plan(
             plan_status(&p.status)?,
             p.result_hour_value_id.is_some(),
             p.baseline_hour_value_id.as_deref(),
             latest,
-            |id| Ok(hours.by_id.get(id).cloned()),
+            |id| self.mf_hour_by_id(&scope, Some(id)),
         )?;
-        let meta = self.meta();
-        self.db
-            .write(|tx| repo::set_plan_result(tx, &scope, &p.id, &m.current.id, &meta))?;
-        self.publish(Some(space_id), &[Topic::Learning, Topic::Musofir]);
+        // Kurs va javob — natijani saqlashdan oldin: xato bo'lsa reja o'zgarmaydi.
         let rate = self.mf_rate(&ctx, &scope, work)?;
         let bp = m.change.and_then(|c| c.change_bp);
-        Ok(MfLearningResultDto {
-            plan_id: p.id,
+        let dto = MfLearningResultDto {
+            plan_id: p.id.clone(),
             baseline: m
                 .baseline
                 .as_ref()
@@ -461,7 +459,12 @@ impl App {
                 .map(|c| self.money_dto(&ctx, Money::new(c.diff, work))),
             change_bp: bp.map(bp32),
             change_percent: bp.map(format_percent_bp),
-        })
+        };
+        let meta = self.meta();
+        self.db
+            .write(|tx| repo::set_plan_result(tx, &scope, &p.id, &m.current.id, &meta))?;
+        self.publish(Some(space_id), &[Topic::Learning, Topic::Musofir]);
+        Ok(dto)
     }
 
     // ---- «Ilm zakoti» ----
@@ -478,27 +481,20 @@ impl App {
         if !AREAS.contains(&area) {
             return Err(AppError::on("INVALID_AREA", "area"));
         }
-        let topic = crate::text::required(&input.topic, "topic")?;
-        max_chars(Some(&topic), TOPIC_MAX_CHARS, "topic")?;
-        let learner = clean_opt(input.learner.as_deref());
-        max_chars(learner.as_deref(), LEARNER_MAX_CHARS, "learner")?;
-        if input
-            .minutes
-            .is_some_and(|m| !(1..=TEACH_MAX_MINUTES).contains(&m))
-        {
-            return Err(AppError::on("INVALID_TIME", "minutes"));
-        }
-        let on = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
-        if on > self.today(&ctx) {
-            return Err(AppError::on("FUTURE_DATE", "occurredOn"));
-        }
+        let t = self.check_teaching(
+            &ctx,
+            &input.topic,
+            input.learner.as_deref(),
+            input.minutes,
+            input.occurred_on.as_deref(),
+        )?;
         let row = repo::MfTeachingRow {
             id: self.new_id(),
-            occurred_on: ymd(on),
+            occurred_on: ymd(t.on),
             area: area.to_string(),
-            learner,
-            topic,
-            minutes: input.minutes.map(i64::from),
+            learner: t.learner,
+            topic: t.topic,
+            minutes: t.minutes,
         };
         let meta = self.meta();
         self.db
@@ -528,19 +524,32 @@ impl App {
             .iter()
             .map(teaching_dto)
             .collect();
-        // Kurs va hisoblar — bir marta.
+        // Kurs va hisoblar — bir marta (hisoblar id bo'yicha, yangisi birinchi).
         let rate = self.mf_rate(&ctx, &scope, work)?;
-        let hours = self.mf_hours(&scope, work)?;
-        let hour = hours
-            .latest
-            .as_ref()
+        let rows = self.db.read(|c| repo::hours(c, &scope))?;
+        let latest = rows.iter().find(|h| h.currency == work.code());
+        let hours: HashMap<&str, &repo::MfHourRow> =
+            rows.iter().map(|r| (r.id.as_str(), r)).collect();
+        let hour = latest
             .map(|r| self.mf_hour_dto(&ctx, &rate, r))
             .transpose()?;
-        // «Sarmoya» qatori — bosh sahifadagi oy hisobi bilan bitta yordamchi.
+        // «Sarmoya» qatori — bosh sahifadagi oy hisobi bilan bitta qoida va yordamchi.
         let income = self
             .mf_month_income(&scope, work, &from, &to)?
             .unwrap_or(Money::zero(work));
-        let invest = self.mf_self_investment(&ctx, &scope, income, &from, &ymd(last))?;
+        let amounts: Vec<i64> = self
+            .db
+            .read(|c| expenses::list_between(c, &scope, &from, &to))?
+            .iter()
+            .filter_map(|r| mf_invest_amount(r, work))
+            .collect();
+        let invest = self.mf_self_investment(&ctx, income, &amounts)?;
+        let hour_of = |id: &Option<String>| id.as_deref().and_then(|i| hours.get(i).copied());
+        let idea_of = |id: &Option<String>| {
+            id.as_ref()
+                .and_then(|i| ideas.iter().find(|x| &x.id == i))
+                .map(|x| x.title.clone())
+        };
         let startup = self
             .db
             .read(|c| mf::plan_info(c, &scope))?
@@ -561,7 +570,15 @@ impl App {
             .unwrap_or(u32::MAX),
             plans: plans
                 .iter()
-                .map(|p| self.mf_plan_dto(&ctx, p, &ideas, &hours))
+                .map(|p| {
+                    self.mf_plan_dto(
+                        &ctx,
+                        p,
+                        hour_of(&p.baseline_hour_value_id),
+                        hour_of(&p.result_hour_value_id),
+                        idea_of(&p.venture_idea_id),
+                    )
+                })
                 .collect::<Result<_, _>>()?,
             startup_idea_id: startup,
             ideas,

@@ -65,6 +65,24 @@ pub fn hours(c: &Connection, s: &SpaceScope) -> Result<Vec<MfHourRow>, StorageEr
     Ok(rows.collect::<Result<_, _>>()?)
 }
 
+/// Valyutadagi oxirgi hisob (bitta yozuv).
+pub fn latest_hour(
+    c: &Connection,
+    s: &SpaceScope,
+    currency: &str,
+) -> Result<Option<MfHourRow>, StorageError> {
+    Ok(c.query_row(
+        &format!(
+            "SELECT {HOUR_COLS} FROM mf_hour_values
+             WHERE household_id = ?1 AND space_id = ?2 AND currency = ?3
+             ORDER BY created_at DESC, rowid DESC LIMIT 1"
+        ),
+        params![s.household_id, s.space_id, currency],
+        map_hour,
+    )
+    .optional()?)
+}
+
 pub fn hour(c: &Connection, s: &SpaceScope, id: &str) -> Result<Option<MfHourRow>, StorageError> {
     Ok(c.query_row(
         &format!(

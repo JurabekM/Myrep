@@ -17,6 +17,7 @@ use chrono::NaiveDate;
 use crate::access::Role;
 use crate::app::Ctx;
 use crate::events::Topic;
+use crate::musofir_learning::mf_invest_amount;
 use crate::receipt::{positive, ymd};
 use crate::text::clean_opt;
 use crate::uy::channel;
@@ -41,6 +42,8 @@ struct Setup {
 struct Book {
     moves: Vec<MfMove>,
     entries: Vec<MfEntryDto>,
+    /// «Sarmoya» belgili xarajatlar (ish valyutasida) — oy hisobidagi qator uchun (M6).
+    invest: Vec<i64>,
 }
 
 /// `"20"`, `"12,5"`, `"20 %"` → bp (0–100 %, ko'pi bilan 2 kasr xonasi).
@@ -128,6 +131,7 @@ impl App {
         let mut book = Book {
             moves: Vec::new(),
             entries: Vec::new(),
+            invest: Vec::new(),
         };
         for r in self
             .db
@@ -164,6 +168,7 @@ impl App {
             .into_iter()
             .filter(|r| r.currency == work.code())
         {
+            book.invest.extend(mf_invest_amount(&r, work));
             book.moves.push(MfMove {
                 kind: MfKind::Expense,
                 amount: m(r.amount_minor),
@@ -426,13 +431,7 @@ impl App {
             fund_percent: pct(r.fund_bp),
             reserve_percent: pct(r.reserve_bp),
             warnings: r.warnings.iter().map(|w| w.as_str().to_string()).collect(),
-            self_investment: self.mf_self_investment(
-                &ctx,
-                &scope,
-                r.income,
-                &ymd(start),
-                &ymd(last),
-            )?,
+            self_investment: self.mf_self_investment(&ctx, r.income, &book.invest)?,
         };
         let fund = MfFundDto {
             balance: d(r.fund_balance),

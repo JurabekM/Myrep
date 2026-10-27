@@ -718,3 +718,95 @@ fn empty_review_date_means_default_three_months() {
         Some("reviewOn")
     );
 }
+
+/// Bo'sh sanalar — bugun (reja boshlanishi va «Ilm zakoti»), Uy bilan bitta qoida.
+#[test]
+fn empty_start_and_teaching_dates_mean_today() {
+    let (app, mf, _) = setup();
+    let mut p = plan("ABROAD", "Ish joyidagi koreys tili", &["BOOK"], None);
+    p.start_on = Some("  ".into());
+    let a = app.mf_learning_plan_create(&mf, p).unwrap();
+    assert_eq!(
+        (a.start_on.as_str(), a.review_on.as_str()),
+        ("2026-10-20", "2027-01-20")
+    );
+    let t = app
+        .mf_teaching_add(
+            &mf,
+            MfTeachingInput {
+                occurred_on: Some(String::new()),
+                area: "WORK".into(),
+                learner: None,
+                topic: "Smena jadvali".into(),
+                minutes: None,
+            },
+        )
+        .unwrap();
+    assert_eq!(t.occurred_on, "2026-10-20");
+}
+
+/// Faol rejalar chegarasi bir vaqtdagi so'rovlarda ham: sanoq va yozuv bitta tranzaksiyada.
+#[test]
+fn concurrent_plan_creates_never_exceed_the_limit() {
+    let (app, mf, _) = setup();
+    let codes: Vec<Result<(), String>> = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..8)
+            .map(|i| {
+                let (app, mf) = (&app, &mf);
+                s.spawn(move || {
+                    app.mf_learning_plan_create(
+                        mf,
+                        plan("ABROAD", &format!("Koʻnikma {i}"), &["BOOK"], None),
+                    )
+                    .map(|_| ())
+                    .map_err(|e| e.code)
+                })
+            })
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap()).collect()
+    });
+    assert_eq!(codes.iter().filter(|c| c.is_ok()).count(), 2);
+    assert!(codes
+        .iter()
+        .filter_map(|c| c.as_ref().err())
+        .all(|c| c == "ACTIVE_PLAN_LIMIT"));
+    assert_eq!(app.mf_learning_overview(&mf, None).unwrap().active_plans, 2);
+}
+
+/// Javob tayyorlanmasa (bu yerda — buzilgan kurs yozuvi), o'zgarmas soat qiymati ham, reja natijasi
+/// ham saqlanmaydi.
+#[test]
+fn failed_save_or_result_leaves_nothing_behind() {
+    let dir = tempfile::tempdir().unwrap();
+    let dev = Device::new(dir.path(), "bobur", 3);
+    let app = dev.app();
+    let (mf, _) = bootstrap(&app);
+    three_months(&app, &mf);
+    app.mf_hour_save(&mf, hour(None)).unwrap();
+    let p = app
+        .mf_learning_plan_create(&mf, plan("ABROAD", "Til", &["BOOK"], None))
+        .unwrap();
+    app.mf_hour_save(&mf, hour(Some("2 915 000"))).unwrap();
+    // Sanasi o'qilmaydigan kurs (bugungacha eng so'nggisi bo'lib tanlanadi).
+    Database::open(&dev.path, &dev.key)
+        .unwrap()
+        .write(|tx| {
+            let hid: String = tx.query_row("SELECT id FROM households", [], |r| r.get(0))?;
+            tx.execute(
+                "INSERT INTO mf_rates (id, household_id, space_id, rate_on, from_currency, to_currency,
+                    rate_num, rate_den, created_at, origin_device_id)
+                 VALUES ('bad', ?1, ?2, '2026-0x-01', 'KRW', 'UZS', 91, 10, '2026-10-20T00:00:00Z', 'dev')",
+                [hid.as_str(), mf.as_str()],
+            )?;
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!(
+        err(app.mf_hour_save(&mf, hour(Some("1 000 000")))),
+        "CORRUPT_ROW"
+    );
+    assert_eq!(dev.rows("mf_hour_values").len(), 2);
+    assert_eq!(err(app.mf_learning_plan_result(&mf, &p.id)), "CORRUPT_ROW");
+    let plans = dev.rows("mf_learning_plans");
+    assert_eq!(plans[0]["result_hour_value_id"], Value::Null);
+}
