@@ -3,6 +3,9 @@
 ## H1 — real telefonlarda sinov (2-bosqichdan keyin) — KUTILMOQDA
 
 **Maqsad:** AC-05 (3 chipset oilasida ≥ 0.5 Hz barqaror yig'ish) va qurilmalar ro'yxati (`docs/DEVICES.md`).
+
+> **To'liq dala ko'rsatmasi (joriy UI bo'yicha):** [`docs/H1_DEVICE_TEST.md`](H1_DEVICE_TEST.md) — sinov holatlari T1–T5,
+> yozuv jadvali `devices.csv`, muammolar va baholash. Quyidagi qisqa ro'yxat — umumiy ko'rinish.
 Bu vaqtda men 3-bosqichni (UI, hisobot) davom ettiraman.
 
 ### Kerakli qurilmalar
