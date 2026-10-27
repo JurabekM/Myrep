@@ -23,6 +23,7 @@ const COMMANDS: &[&str] = &[
     "export_loan_receipt",
     "debts_overview",
     "preview_borrow_check",
+    "preview_study_debt",
     "add_debt",
     "add_receivable",
     "record_repayment",

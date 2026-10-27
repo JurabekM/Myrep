@@ -35,6 +35,7 @@ export const commands = {
 	exportLoanReceipt: (input: LoanReceiptInput) => typedError<boolean, AppError>(__TAURI_INVOKE("export_loan_receipt", { input })),
 	debtsOverview: (spaceId: string) => typedError<DebtsOverviewDto, AppError>(__TAURI_INVOKE("debts_overview", { spaceId })),
 	previewBorrowCheck: (spaceId: string, input: NewDebtInput) => typedError<BorrowCheckDto, AppError>(__TAURI_INVOKE("preview_borrow_check", { spaceId, input })),
+	previewStudyDebt: (input: StudyDebtInput) => typedError<string[], AppError>(__TAURI_INVOKE("preview_study_debt", { input })),
 	addDebt: (spaceId: string, input: NewDebtInput) => typedError<DebtDto, AppError>(__TAURI_INVOKE("add_debt", { spaceId, input })),
 	addReceivable: (spaceId: string, input: NewReceivableInput) => typedError<ReceivableDto, AppError>(__TAURI_INVOKE("add_receivable", { spaceId, input })),
 	recordRepayment: (spaceId: string, ownerType: string, id: string, input: RepaymentInput) => typedError<RepaymentResultDto, AppError>(__TAURI_INVOKE("record_repayment", { spaceId, ownerType, id, input })),
@@ -807,6 +808,11 @@ export type ExpenseDto = {
 	fundedByDebt: boolean,
 	selfInvestment: boolean,
 	learningPlanId: string | null,
+	/**
+	 *  O'qish puli qarzga bo'lsa — «to'xta va o'yla» ogohlantirishlari (`RIBO`, `LUXURY`,
+	 *  `ALTERNATIVE_AVAILABLE`); boshqa xarajatda bo'sh.
+	 */
+	borrowWarnings: string[],
 };
 
 export type ExportInput = {
@@ -3182,6 +3188,11 @@ export type NewExpenseInput = {
 	selfInvestment?: boolean,
 	/**  Bilim rejasiga havola — faqat `self_investment` bo'lsa. */
 	learningPlanId?: string | null,
+	/**
+	 *  «O'zimga sarmoya» qarzga (`funded_by_debt`) bo'lsa — «to'xta va o'yla» javoblari majburiy
+	 *  (uy/SPEC 2G.2, 2D.6); boshqa xarajatda e'tiborga olinmaydi.
+	 */
+	studyDebt?: StudyDebtInput | null,
 };
 
 export type NewGoalContributionInput = {
@@ -3233,11 +3244,14 @@ export type NewSellableItemInput = {
 
 /**
  *  Bosh sahifa eslatmasi: `INCOME_TODAY`, `INCOME_QUIET` (`days` — oxirgi daromaddan beri,
- *  `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri).
+ *  `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri);
+ *  juma ritmi (8-tamoyil): `STUDY_WEEK`, `TEACH_WEEK` (Uy), `KK_TEACH_WEEK`, `MF_TEACH_WEEK`.
  */
 export type NudgeDto = {
 	kind: string,
 	days: number | null,
+	/**  Juma ritmi eslatmalarida (Uy) — kimga tegishli: a'zolar ismi. Boshqalarida bo'sh. */
+	members: string[],
 };
 
 /**  Har bir javob: `YES`, `NO` yoki `UNKNOWN`. */
@@ -3818,6 +3832,19 @@ export type StreakDto = {
 
 /**  Bitta uzluksiz chiziq: `[x, y]` nuqtalar. */
 export type Stroke = ([number, number])[];
+
+/**
+ *  O'qish puli qarzga (uy/SPEC 2G.2): 2D.6 «to'xta va o'yla» javoblari va qarz foizlimi. Hammasiga
+ *  javob majburiy — UI oldindan tanlamaydi.
+ */
+export type StudyDebtInput = {
+	/**  `NECESSITY` yoki `LUXURY`; bo'sh — javob berilmagan (`BORROW_CHECK_REQUIRED`). */
+	need: string,
+	/**  Mavjud foizsiz muqobillar: `QOROVUL`, `RELATIVE`, `SELL_ITEM` (bo'sh — yo'q). */
+	alternatives: string[],
+	/**  Qarz foizli (ustama bilan)mi; `null` — javob berilmagan. */
+	withInterest: boolean | null,
+};
 
 export type StudyLogInput = {
 	/**  Bo'sh — bugun. */

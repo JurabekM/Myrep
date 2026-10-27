@@ -79,6 +79,7 @@ fn uy_expense(app: &App, uy: &str, amount: &str, on: &str) {
             note: None,
             self_investment: false,
             learning_plan_id: None,
+            study_debt: None,
         },
     )
     .unwrap();

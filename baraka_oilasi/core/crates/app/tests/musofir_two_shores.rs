@@ -415,6 +415,7 @@ fn home_device_receives_and_spends_without_seeing_private_data() {
             note: Some("Non".into()),
             self_investment: false,
             learning_plan_id: None,
+            study_debt: None,
         },
     )
     .unwrap();

@@ -10,6 +10,9 @@ use baraka_domain_uy::learning::{
 use baraka_money::{parse_amount, Currency, Money};
 use chrono::NaiveDate;
 
+use baraka_domain_common::SpaceKind;
+use baraka_storage::SpaceScope;
+
 use crate::app::Ctx;
 use crate::text::{clean, clean_opt};
 use crate::{App, AppError};
@@ -351,6 +354,33 @@ pub(crate) fn paths_text(plan: &ValidPlan) -> String {
         .map(|p| p.as_str())
         .collect::<Vec<_>>()
         .join(",")
+}
+
+impl App {
+    /// Shu qurilmada shu makonga 8-tamoyil yozuvi («Ilm zakoti», o'qish vaqti) qo'shib bo'ladimi —
+    /// `teaching_log_add` / `kk_teaching_add` / `mf_teaching_add` dagi bilan bir xil qoidalar: makon va
+    /// rol tekshiruvi (`learn_scope`, `kk_scope`, `mfl_scope`) hamda faqat o'qish rejimi (hisobchi
+    /// qurilmasi, `Database::write` rad etadi). Mumkin bo'lmasa — `None`.
+    pub(crate) fn learning_write_scope(
+        &self,
+        ctx: &Ctx,
+        space_id: &str,
+    ) -> Result<Option<SpaceScope>, AppError> {
+        if self.db.is_read_only() {
+            return Ok(None);
+        }
+        let scope = match self.space_kind(ctx, space_id)? {
+            Some(SpaceKind::Uy) => self.learn_scope(ctx, space_id),
+            Some(SpaceKind::Kasbkor) => self.kk_scope(ctx, space_id),
+            Some(SpaceKind::Musofir) => self.mfl_scope(ctx, space_id).map(|(s, _)| s),
+            None => return Ok(None),
+        };
+        match scope {
+            Ok(s) => Ok(Some(s)),
+            Err(e) if matches!(e.code.as_str(), "ROLE_FORBIDDEN" | "MF_NOT_CONFIGURED") => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
 }
 
 #[cfg(test)]

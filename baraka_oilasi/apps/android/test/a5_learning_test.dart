@@ -194,4 +194,62 @@ void main() {
     expect(find.textContaining('ayb emas'), findsNothing);
     expect(find.textContaining('qiymati oshdi'), findsNothing);
   });
+
+  testWidgets('oʻqish qarzga: «Toʻxta va oʻyla» savollari bilan saqlanadi, yadro javobsiz qabul qilmaydi (2G.2)', (
+    tester,
+  ) async {
+    phone(tester);
+    final device = (await tester.runAsync(Device.create))!;
+    final setup = (await tester.runAsync(device.bootstrap))!;
+    final uy = device.spaceId(setup, 'UY');
+    await tester.pumpWidget(device.app());
+    await waitFor(tester, find.byKey(const Key('kpi-paid-to-self')));
+    await goTo(tester, 'Xarajatlar');
+    await enter(tester, 'Summa', '900 000');
+    await choose(tester, 'Kategoriya', 'Boshqa');
+    expect(find.byKey(const Key('expense-study-debt')), findsNothing);
+    await tapText(tester, 'Oʻzimga sarmoya (bilim, malaka)');
+    await waitFor(tester, find.byKey(const Key('expense-study-debt')));
+    expect(find.text('Toʻxta va oʻyla'), findsNothing);
+    await tapText(tester, 'Bu pul qarzga olingan');
+    await waitFor(tester, find.text('Toʻxta va oʻyla'));
+    expect(find.textContaining('joriy byudjetdan yoki oʻsadigan pul ulushidan'), findsOneWidget);
+    // Javoblar oldindan tanlanmagan — javobsiz tekshirib bo'lmaydi.
+    FilledButton button(String text) => tester.widget<FilledButton>(find.widgetWithText(FilledButton, text));
+    expect(button('Tekshirish').onPressed, isNull);
+    await tapText(tester, 'Zarurat');
+    expect(button('Tekshirish').onPressed, isNull);
+    await tapText(tester, 'Ha, foizli');
+    await tapText(tester, 'Qarindoshdan foizsiz');
+    await tapText(tester, 'Tekshirish');
+    await waitFor(tester, find.byKey(const Key('study-debt-warnings')));
+    expect(find.textContaining('Bu qarz foizli (ribo)'), findsOneWidget);
+    expect(find.textContaining('Foizsiz muqobil bor ekan'), findsOneWidget);
+    await tapText(tester, 'Oʻyladim, saqlash');
+    await waitGone(tester, find.text('Toʻxta va oʻyla'));
+    final summary = (await tester.runAsync(() => device.core.monthlySummary(spaceId: uy)))!;
+    expect(summary.selfInvestment.total.minor, '90000000');
+    // Yadro: qarzga o'qish — javobsiz saqlanmaydi.
+    final categories = (await tester.runAsync(() => device.core.categories(spaceId: uy)))!;
+    Object? error;
+    await tester.runAsync(() async {
+      try {
+        await device.core.recordExpense(
+          spaceId: uy,
+          input: NewExpenseInput(
+            amount: '100 000',
+            categoryId: categories.first.id,
+            channel: 'CASH',
+            isGift: false,
+            isOstentation: false,
+            fundedByDebt: true,
+            selfInvestment: true,
+          ),
+        );
+      } on AppError catch (e) {
+        error = e;
+      }
+    });
+    expect(error, isA<AppError>().having((e) => e.code, 'code', 'BORROW_CHECK_REQUIRED'));
+  });
 }

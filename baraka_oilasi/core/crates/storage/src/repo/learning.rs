@@ -356,3 +356,69 @@ pub fn teaching_between(
     })?;
     Ok(rows.collect::<Result<_, _>>()?)
 }
+
+// ---- Juma ritmi eslatmalari (a'zolar ro'yxati, to'liq yozuvlarsiz) ----
+
+fn member_ids(
+    c: &Connection,
+    sql: &str,
+    args: &[&dyn rusqlite::ToSql],
+) -> Result<Vec<String>, StorageError> {
+    let mut st = c.prepare(sql)?;
+    let rows = st.query_map(args, |r| r.get(0))?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}
+
+/// `ACTIVE` bilim rejasi bor a'zolar.
+pub fn active_plan_members(c: &Connection, s: &SpaceScope) -> Result<Vec<String>, StorageError> {
+    member_ids(
+        c,
+        "SELECT DISTINCT member_id FROM learning_plans
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL AND status = 'ACTIVE'",
+        &[&s.household_id, &s.space_id],
+    )
+}
+
+/// Bilim rejasi (har qanday holatda) yoki soat qiymati hisobi bor a'zolar.
+pub fn started_members(c: &Connection, s: &SpaceScope) -> Result<Vec<String>, StorageError> {
+    member_ids(
+        c,
+        "SELECT member_id FROM learning_plans
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
+         UNION SELECT member_id FROM learning_hour_values WHERE household_id = ?1 AND space_id = ?2",
+        &[&s.household_id, &s.space_id],
+    )
+}
+
+/// `[from, to)` oralig'ida o'z rejasiga o'qish vaqti yozgan a'zolar.
+pub fn studied_members_between(
+    c: &Connection,
+    s: &SpaceScope,
+    from: &str,
+    to: &str,
+) -> Result<Vec<String>, StorageError> {
+    member_ids(
+        c,
+        "SELECT DISTINCT p.member_id FROM learning_study_logs l
+         JOIN learning_plans p ON p.id = l.plan_id
+         WHERE l.household_id = ?1 AND l.space_id = ?2 AND l.deleted_at IS NULL
+         AND l.occurred_on >= ?3 AND l.occurred_on < ?4",
+        &[&s.household_id, &s.space_id, &from, &to],
+    )
+}
+
+/// `[from, to)` oralig'ida o'rgatish yozuvi bor a'zolar (o'rgatuvchi).
+pub fn taught_members_between(
+    c: &Connection,
+    s: &SpaceScope,
+    from: &str,
+    to: &str,
+) -> Result<Vec<String>, StorageError> {
+    member_ids(
+        c,
+        "SELECT DISTINCT member_id FROM teaching_logs
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL
+         AND occurred_on >= ?3 AND occurred_on < ?4",
+        &[&s.household_id, &s.space_id, &from, &to],
+    )
+}

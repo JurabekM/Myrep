@@ -100,6 +100,7 @@ fn cash_expense(app: &App, kk: &str, amount: &str) -> String {
             note: Some("non".into()),
             self_investment: false,
             learning_plan_id: None,
+            study_debt: None,
         },
     )
     .unwrap()

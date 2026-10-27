@@ -41,7 +41,7 @@ struct PlanTotals {
 
 impl App {
     /// Uy makoni (bilim rejalari va soat qiymati shu yerda).
-    fn learn_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
+    pub(crate) fn learn_scope(&self, ctx: &Ctx, space_id: &str) -> Result<SpaceScope, AppError> {
         let scope = self.scope(ctx, space_id)?;
         if !self.is_uy_space(ctx, space_id)? {
             return Err(AppError::on("NOT_UY_SPACE", "spaceId"));
@@ -53,7 +53,11 @@ impl App {
         Ok(self.space_kind(ctx, space_id)? == Some(SpaceKind::Uy))
     }
 
-    fn space_kind(&self, ctx: &Ctx, space_id: &str) -> Result<Option<SpaceKind>, AppError> {
+    pub(crate) fn space_kind(
+        &self,
+        ctx: &Ctx,
+        space_id: &str,
+    ) -> Result<Option<SpaceKind>, AppError> {
         Ok(self
             .db
             .read(|c| household::list_spaces(c, &ctx.household_id))?

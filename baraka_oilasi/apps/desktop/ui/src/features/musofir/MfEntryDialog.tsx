@@ -96,6 +96,7 @@ export function MfEntryDialog({
           {t(`mf.action.${mode}`)}
         </h2>
         <p className="mb-4 text-sm text-ink-muted">{t(`mf.hint.${mode}`)}</p>
+        {(mode === "FUND_OUT" || mode === "RESERVE_OUT") && <p className="-mt-2 mb-4 text-sm text-ink-muted">{t("mf.notForStudy")}</p>}
         <form className="flex flex-col gap-4" onSubmit={submit}>
           <label>
             <span className="label">{t("mf.amountIn", { currency: workCurrency })}</span>

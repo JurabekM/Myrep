@@ -8,6 +8,7 @@ import '../../core/core.dart';
 import '../../core/query.dart';
 import '../../shared/format.dart';
 import '../../shared/widgets.dart';
+import '../home/home_screen.dart';
 import 'kk_common.dart';
 import 'kk_entry_sheet.dart';
 import 'kk_salary_sheet.dart';
@@ -26,6 +27,7 @@ class KkHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final q = ref.watch(kkOverviewQuery(spaceId));
     final d = q.valueOrNull;
+    final nudges = ref.watch(nudgesQuery(spaceId)).valueOrNull ?? [];
     final categories =
         ref.watch(query(['categories', spaceId], (c) => c.categories(spaceId: spaceId))).valueOrNull ?? <CategoryDto>[];
     final shell = ref.read(shellProvider.notifier);
@@ -43,6 +45,7 @@ class KkHomeScreen extends ConsumerWidget {
     return ScreenBody(
       mentorKey: 'mentor.kk',
       children: [
+        if (nudges.isNotEmpty) Nudges(spaceId: spaceId, items: nudges),
         if (d.closeDue != null)
           _Reminder(
             key: const Key('kk-close-due'),

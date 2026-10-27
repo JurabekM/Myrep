@@ -9,6 +9,7 @@ import { call } from "../../lib/api";
 import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
 import { useUi } from "../../state/ui";
+import { Nudges, useNudges } from "../home/HomeScreen";
 import { type EntryMode, KkEntryDialog } from "./KkEntryDialog";
 import { KkSalaryDialog } from "./KkSalaryDialog";
 
@@ -21,6 +22,7 @@ const ACTIONS: EntryMode[] = ["SALE", "EXPENSE", "OWNER_DRAW", "OWNER_CONTRIBUTI
 export function KkHomeScreen({ spaceId }: { spaceId: string }) {
   const { t } = useTranslation();
   const o = useQuery({ queryKey: keys.kk(spaceId), queryFn: () => call(commands.kkOverview(spaceId, null)) });
+  const nudges = useNudges(spaceId);
   const categories = useQuery({ queryKey: keys.categories(spaceId), queryFn: () => call(commands.categories(spaceId)) });
   const kkEntry = useUi((s) => s.kkEntry);
   const openKkEntry = useUi((s) => s.openKkEntry);
@@ -36,6 +38,7 @@ export function KkHomeScreen({ spaceId }: { spaceId: string }) {
   return (
     <section className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold">{t("space.KASBKOR")}</h1>
+      {(nudges.data ?? []).length > 0 && <Nudges items={nudges.data ?? []} />}
       {d?.closeDue && (
         <div data-testid="kk-close-due" className="card flex flex-wrap items-center justify-between gap-3 border-accent/60 py-3">
           <p>{t("kk.closeDue", { date: showDate(d.closeDue) })}</p>

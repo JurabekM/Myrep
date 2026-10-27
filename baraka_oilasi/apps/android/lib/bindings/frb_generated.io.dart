@@ -463,6 +463,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SkillInput dco_decode_box_autoadd_skill_input(dynamic raw);
 
   @protected
+  StudyDebtInput dco_decode_box_autoadd_study_debt_input(dynamic raw);
+
+  @protected
   StudyLogInput dco_decode_box_autoadd_study_log_input(dynamic raw);
 
   @protected
@@ -1646,6 +1649,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  StudyDebtInput? dco_decode_opt_box_autoadd_study_debt_input(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
@@ -1776,6 +1782,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StreakDto dco_decode_streak_dto(dynamic raw);
+
+  @protected
+  StudyDebtInput dco_decode_study_debt_input(dynamic raw);
 
   @protected
   StudyLogInput dco_decode_study_log_input(dynamic raw);
@@ -2466,6 +2475,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SkillInput sse_decode_box_autoadd_skill_input(SseDeserializer deserializer);
+
+  @protected
+  StudyDebtInput sse_decode_box_autoadd_study_debt_input(
+    SseDeserializer deserializer,
+  );
 
   @protected
   StudyLogInput sse_decode_box_autoadd_study_log_input(
@@ -3979,6 +3993,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  StudyDebtInput? sse_decode_opt_box_autoadd_study_debt_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
@@ -4119,6 +4138,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StreakDto sse_decode_streak_dto(SseDeserializer deserializer);
+
+  @protected
+  StudyDebtInput sse_decode_study_debt_input(SseDeserializer deserializer);
 
   @protected
   StudyLogInput sse_decode_study_log_input(SseDeserializer deserializer);
@@ -4968,6 +4990,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_skill_input(
     SkillInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_study_debt_input(
+    StudyDebtInput self,
     SseSerializer serializer,
   );
 
@@ -6955,6 +6983,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_study_debt_input(
+    StudyDebtInput? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
@@ -7139,6 +7173,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_streak_dto(StreakDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_study_debt_input(
+    StudyDebtInput self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_study_log_input(StudyLogInput self, SseSerializer serializer);

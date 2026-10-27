@@ -40,6 +40,7 @@ Avtomatik tekshiruvlar CI'da; qo'lda tekshiriladiganlar `(qo'lda)` deb belgilang
 ## 6. Ma'lumotlar
 - [ ] Eksport → yangi profil → «Mavjud xonadonga qo'shilish» (zaxira nusxa) → ma'lumotlar 1:1 (E2E `03-restore`).
 - [ ] Oldingi relizning bazasi yangi versiyada ochiladi (migratsiyalar), jurnal zanjiri butun. (qo'lda: eski profil nusxasi bilan)
+  - Avtomatik: `cargo test -p baraka-app --test upgrade_1_1` — 1.1.0 sxemasidagi (v22, 001–022) shifrlangan baza Uy, Kasb-kor (`v: 1` «Hisob kuni» bayonnomasi bilan), Musofir va jurnal yozuvlari bilan to'ldiriladi, hozirgi ilova ochadi (023–025): sxema versiyasi, eski jadvallardagi har bir qiymat, jurnal zanjiri, bo'sh yangi jadvallar, xarajatdagi yangi ustunlar (0 / NULL) va asosiy use-case'lar tekshiriladi. Keyingi relizda shu test yangi «oldingi» versiya uchun takrorlanadi (`Database::create_at_version`, `test-support`).
 - [ ] Tiklash kodi bilan ochish va PIN almashtirish ishlaydi. (qo'lda)
 
 ## 7. Android

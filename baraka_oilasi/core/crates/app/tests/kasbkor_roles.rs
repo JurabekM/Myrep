@@ -153,6 +153,7 @@ fn owner_setup(app: &App) -> (String, String, String, String) {
             note: None,
             self_investment: false,
             learning_plan_id: None,
+            study_debt: None,
         },
     )
     .unwrap();
@@ -488,6 +489,7 @@ fn seller_device_holds_no_profit_data_and_owner_accepts_only_its_records() {
                 note: None,
                 self_investment: false,
                 learning_plan_id: None,
+                study_debt: None,
             },
         )
         .unwrap();
@@ -658,4 +660,65 @@ fn accountant_reads_only_its_business_space() {
     assert_eq!(r.rejected, 0);
     let r = import(&acc, &incremental(&owner, &acc_dev.id).unwrap());
     assert!(r.inserted >= 1);
+}
+
+/// Juma ritmi (8A.3 «Ilm zakoti»): eslatma faqat egasining Kasb-kor bosh sahifasida. Hisobchi soat
+/// qiymati yozuvini o'qiydi, lekin o'rgatish yozuvini qo'sha olmaydi; sotuvchida bu bo'lim yo'q.
+#[test]
+fn friday_teaching_nudge_only_on_the_owner_device() {
+    let dir = tempfile::tempdir().unwrap();
+    let owner_dev = Device::new(dir.path(), "owner", 1);
+    let seller_dev = Device::new(dir.path(), "seller", 2);
+    let acc_dev = Device::new(dir.path(), "accountant", 3);
+    let owner = owner_dev.app();
+    let (kk, uy, _item, _sale) = owner_setup(&owner);
+    owner
+        .kk_owner_hour_save(
+            &kk,
+            KkOwnerHourInput {
+                income: Some("8 100 000".into()),
+                minutes_per_day: 480,
+                days: 26,
+            },
+        )
+        .unwrap();
+    let seller = pair(&owner, &seller_dev, "SELLER", &kk);
+    let acc = pair(&owner, &acc_dev, "ACCOUNTANT", &kk);
+    let kinds = |app: &App| {
+        app.home_nudges(&kk)
+            .unwrap()
+            .into_iter()
+            .map(|n| n.kind)
+            .collect::<Vec<_>>()
+    };
+    // 2026-12-02 — chorshanba: juma ritmi yo'q.
+    assert!(kinds(&owner).is_empty());
+    for d in [&owner_dev, &seller_dev, &acc_dev] {
+        d.clock.set(at("2026-12-04T09:00:00+05:00"));
+    }
+    assert_eq!(kinds(&owner), ["KK_TEACH_WEEK"]);
+    assert_eq!(acc_dev.rows("kk_owner_hours").len(), 1);
+    assert!(kinds(&acc).is_empty());
+    // Sotuvchi qurilmasida soat qiymati yo'q, bosh sahifa eslatmalari esa umuman yopiq.
+    assert!(seller_dev.rows("kk_owner_hours").is_empty());
+    assert_eq!(err(seller.home_nudges(&kk)), "ROLE_FORBIDDEN");
+    // Kasb-korning soat qiymati Uy a'zosiniki emas — Uy bosh sahifasida juma eslatmasi yo'q.
+    assert!(owner
+        .home_nudges(&uy)
+        .unwrap()
+        .iter()
+        .all(|n| !n.kind.ends_with("_WEEK")));
+    owner
+        .kk_teaching_add(
+            &kk,
+            KkTeachingInput {
+                occurred_on: None,
+                agreement_id: None,
+                learner: Some("Shogird".into()),
+                topic: "Kassani yopish".into(),
+                minutes: Some(30),
+            },
+        )
+        .unwrap();
+    assert!(kinds(&owner).is_empty());
 }

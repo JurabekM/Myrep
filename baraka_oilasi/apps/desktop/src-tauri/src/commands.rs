@@ -246,6 +246,15 @@ pub async fn preview_borrow_check(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn preview_study_debt(
+    state: State<'_, Desktop>,
+    input: StudyDebtInput,
+) -> R<Vec<String>> {
+    state.session.app()?.preview_study_debt(input)
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn add_debt(
     state: State<'_, Desktop>,
     space_id: String,

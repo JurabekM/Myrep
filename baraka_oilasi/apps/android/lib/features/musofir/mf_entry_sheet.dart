@@ -146,6 +146,10 @@ class _MfEntrySheetState extends ConsumerState<MfEntrySheet> with ActionState {
           ),
           const SizedBox(height: 4),
           Hint(context.t('mf.hint.$_kind')),
+          if (_kind == 'FUND_OUT' || _kind == 'RESERVE_OUT') ...[
+            const SizedBox(height: 4),
+            Hint(context.t('mf.notForStudy')),
+          ],
           const SizedBox(height: 16),
           AmountField(
             label: context.t('mf.amountIn', {'currency': work}),

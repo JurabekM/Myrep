@@ -1462,6 +1462,10 @@ class ExpenseDto {
   final bool selfInvestment;
   final String? learningPlanId;
 
+  /// O'qish puli qarzga bo'lsa — «to'xta va o'yla» ogohlantirishlari (`RIBO`, `LUXURY`,
+  /// `ALTERNATIVE_AVAILABLE`); boshqa xarajatda bo'sh.
+  final List<String> borrowWarnings;
+
   const ExpenseDto({
     required this.id,
     required this.amount,
@@ -1471,6 +1475,7 @@ class ExpenseDto {
     required this.fundedByDebt,
     required this.selfInvestment,
     this.learningPlanId,
+    required this.borrowWarnings,
   });
 
   @override
@@ -1482,7 +1487,8 @@ class ExpenseDto {
       occurredOn.hashCode ^
       fundedByDebt.hashCode ^
       selfInvestment.hashCode ^
-      learningPlanId.hashCode;
+      learningPlanId.hashCode ^
+      borrowWarnings.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1496,7 +1502,8 @@ class ExpenseDto {
           occurredOn == other.occurredOn &&
           fundedByDebt == other.fundedByDebt &&
           selfInvestment == other.selfInvestment &&
-          learningPlanId == other.learningPlanId;
+          learningPlanId == other.learningPlanId &&
+          borrowWarnings == other.borrowWarnings;
 }
 
 class ExportFileDto {
@@ -10034,6 +10041,10 @@ class NewExpenseInput {
   /// Bilim rejasiga havola — faqat `self_investment` bo'lsa.
   final String? learningPlanId;
 
+  /// «O'zimga sarmoya» qarzga (`funded_by_debt`) bo'lsa — «to'xta va o'yla» javoblari majburiy
+  /// (uy/SPEC 2G.2, 2D.6); boshqa xarajatda e'tiborga olinmaydi.
+  final StudyDebtInput? studyDebt;
+
   const NewExpenseInput({
     required this.amount,
     required this.categoryId,
@@ -10048,6 +10059,7 @@ class NewExpenseInput {
     this.note,
     required this.selfInvestment,
     this.learningPlanId,
+    this.studyDebt,
   });
 
   @override
@@ -10064,7 +10076,8 @@ class NewExpenseInput {
       fundedByDebt.hashCode ^
       note.hashCode ^
       selfInvestment.hashCode ^
-      learningPlanId.hashCode;
+      learningPlanId.hashCode ^
+      studyDebt.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -10083,7 +10096,8 @@ class NewExpenseInput {
           fundedByDebt == other.fundedByDebt &&
           note == other.note &&
           selfInvestment == other.selfInvestment &&
-          learningPlanId == other.learningPlanId;
+          learningPlanId == other.learningPlanId &&
+          studyDebt == other.studyDebt;
 }
 
 class NewGoalContributionInput {
@@ -10266,23 +10280,32 @@ class NewSellableItemInput {
 }
 
 /// Bosh sahifa eslatmasi: `INCOME_TODAY`, `INCOME_QUIET` (`days` — oxirgi daromaddan beri,
-/// `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri).
+/// `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri);
+/// juma ritmi (8-tamoyil): `STUDY_WEEK`, `TEACH_WEEK` (Uy), `KK_TEACH_WEEK`, `MF_TEACH_WEEK`.
 class NudgeDto {
   final String kind;
   final int? days;
 
+  /// Juma ritmi eslatmalarida (Uy) — kimga tegishli: a'zolar ismi. Boshqalarida bo'sh.
+  final List<String> members;
+
   const NudgeDto({
     required this.kind,
     this.days,
+    required this.members,
   });
 
   @override
-  int get hashCode => kind.hashCode ^ days.hashCode;
+  int get hashCode => kind.hashCode ^ days.hashCode ^ members.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NudgeDto && runtimeType == other.runtimeType && kind == other.kind && days == other.days;
+      other is NudgeDto &&
+          runtimeType == other.runtimeType &&
+          kind == other.kind &&
+          days == other.days &&
+          members == other.members;
 }
 
 /// Har bir javob: `YES`, `NO` yoki `UNKNOWN`.
@@ -11902,6 +11925,37 @@ class StreakDto {
           longestWeeks == other.longestWeeks &&
           totalWeeks == other.totalWeeks &&
           currentWeekDone == other.currentWeekDone;
+}
+
+/// O'qish puli qarzga (uy/SPEC 2G.2): 2D.6 «to'xta va o'yla» javoblari va qarz foizlimi. Hammasiga
+/// javob majburiy — UI oldindan tanlamaydi.
+class StudyDebtInput {
+  /// `NECESSITY` yoki `LUXURY`; bo'sh — javob berilmagan (`BORROW_CHECK_REQUIRED`).
+  final String need;
+
+  /// Mavjud foizsiz muqobillar: `QOROVUL`, `RELATIVE`, `SELL_ITEM` (bo'sh — yo'q).
+  final List<String> alternatives;
+
+  /// Qarz foizli (ustama bilan)mi; `null` — javob berilmagan.
+  final bool? withInterest;
+
+  const StudyDebtInput({
+    required this.need,
+    required this.alternatives,
+    this.withInterest,
+  });
+
+  @override
+  int get hashCode => need.hashCode ^ alternatives.hashCode ^ withInterest.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StudyDebtInput &&
+          runtimeType == other.runtimeType &&
+          need == other.need &&
+          alternatives == other.alternatives &&
+          withInterest == other.withInterest;
 }
 
 class StudyLogInput {

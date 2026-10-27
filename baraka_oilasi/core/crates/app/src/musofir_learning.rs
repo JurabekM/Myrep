@@ -45,7 +45,11 @@ pub(crate) fn mf_invest_amount(r: &expenses::ExpenseRow, work: Currency) -> Opti
 
 impl App {
     /// Musofir shaxsiy bo'limi va sozlangan ish valyutasi.
-    fn mfl_scope(&self, ctx: &Ctx, space_id: &str) -> Result<(SpaceScope, Currency), AppError> {
+    pub(crate) fn mfl_scope(
+        &self,
+        ctx: &Ctx,
+        space_id: &str,
+    ) -> Result<(SpaceScope, Currency), AppError> {
         let scope = self.mf_scope(ctx, space_id)?;
         let row = self
             .db

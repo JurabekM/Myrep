@@ -5,6 +5,7 @@ import '../../app/i18n.dart';
 import '../../app/theme.dart';
 import '../../core/core.dart';
 import '../../core/query.dart';
+import '../../shared/debt_widgets.dart';
 import '../../shared/widgets.dart';
 import '../learning/learning_screen.dart';
 
@@ -30,6 +31,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
   bool _selfInvestment = false;
   String? _memberId;
   String? _planId;
+  // O'qish puli qarzga bo'lsa — 2D.6 «To'xta va o'yla» (uy/SPEC 2G.2): javoblar oldindan tanlanmaydi,
+  // avval «Tekshirish» (ogohlantirishlar), keyin «O'yladim, saqlash» — qarz qo'shishdagi kabi.
+  bool _onDebt = false;
+  BorrowCheckInput _check = _noAnswers;
+  bool? _withInterest;
+  List<String>? _warnings;
+
+  static const _noAnswers = BorrowCheckInput(need: '', alternatives: []);
+
+  bool get _answered => _check.need.isNotEmpty && _withInterest != null;
+
+  StudyDebtInput get _studyDebt =>
+      StudyDebtInput(need: _check.need, alternatives: _check.alternatives, withInterest: _withInterest);
 
   @override
   void dispose() {
@@ -40,6 +54,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
   Future<void> _save(List<LearningPlanDto> plans) async {
     final plan = plans.where((p) => p.id == _planId).firstOrNull;
     final invest = _selfInvestment;
+    final studyDebt = invest && _onDebt;
+    if (studyDebt && _warnings == null) {
+      final w = await act(() => ref.read(coreProvider).previewStudyDebt(input: _studyDebt));
+      if (w != null) setState(() => _warnings = w);
+      return;
+    }
     final r = await act(
       () => ref
           .read(coreProvider)
@@ -54,9 +74,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
               memberId: invest ? _memberId ?? plan?.memberId : null,
               isGift: false,
               isOstentation: false,
-              fundedByDebt: false,
+              fundedByDebt: studyDebt,
               selfInvestment: invest,
               learningPlanId: invest ? plan?.id : null,
+              studyDebt: studyDebt ? _studyDebt : null,
             ),
           ),
     );
@@ -66,6 +87,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
         _necessity = null;
         _selfInvestment = false;
         _planId = null;
+        _onDebt = false;
+        _check = _noAnswers;
+        _withInterest = null;
+        _warnings = null;
       });
     }
   }
@@ -147,10 +172,52 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
                 value: _planId,
                 onChanged: (v) => setState(() => _planId = v),
               ),
+              CheckboxListTile(
+                key: const Key('expense-study-debt'),
+                contentPadding: EdgeInsets.zero,
+                value: _onDebt,
+                title: Text(context.t('expense.studyOnDebt')),
+                onChanged: (on) => setState(() => _onDebt = on ?? false),
+              ),
+              if (_onDebt) ...[
+                Hint(context.t('expense.studyOnDebtHint'), color: p.warn),
+                const SizedBox(height: 8),
+                BorrowCheckFields(
+                  value: _check,
+                  onChanged: (v) => setState(() {
+                    _check = v;
+                    _warnings = null;
+                  }),
+                ),
+                const SizedBox(height: 8),
+                SegmentedChoice<bool>(
+                  key: const Key('expense-study-interest'),
+                  label: context.t('expense.studyDebt.interest'),
+                  options: [
+                    (true, context.t('expense.studyDebt.interest.YES')),
+                    (false, context.t('expense.studyDebt.interest.NO')),
+                  ],
+                  value: _withInterest,
+                  onChanged: (v) => setState(() {
+                    _withInterest = v;
+                    _warnings = null;
+                  }),
+                ),
+                if (_warnings != null) ...[const SizedBox(height: 8), StudyDebtWarnings(_warnings!)],
+              ],
             ],
             ErrorText(error),
             const SizedBox(height: 12),
-            FilledButton(onPressed: busy ? null : () => _save(plans), child: Text(context.t('common.save'))),
+            FilledButton(
+              onPressed: busy || (_selfInvestment && _onDebt && !_answered) ? null : () => _save(plans),
+              child: Text(
+                !(_selfInvestment && _onDebt)
+                    ? context.t('common.save')
+                    : _warnings == null
+                    ? context.t('friction.check')
+                    : context.t('friction.confirm'),
+              ),
+            ),
           ],
         ),
         if (by != null)

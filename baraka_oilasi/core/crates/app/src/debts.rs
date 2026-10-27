@@ -7,8 +7,8 @@
 use baraka_domain_common::month_period;
 use baraka_domain_uy::debt::{
     build_plan, debt_load_bp, due_between, evaluate_borrow, goal_coverage_bp, plan_total,
-    status_of, true_cost, Alternative, BorrowNeed, CreditorType, PlanKind, PlanLine, PlanSpec,
-    PlanStatus, Receivable, TrueCost, TrueCostInput, LOAD_HIGH_BP,
+    status_of, true_cost, Alternative, BorrowNeed, BorrowWarning, CreditorType, PlanKind, PlanLine,
+    PlanSpec, PlanStatus, Receivable, TrueCost, TrueCostInput, LOAD_HIGH_BP,
 };
 use baraka_domain_uy::payoff::{
     payoff_plan, Amortizing, BankTerms, DebtState, Payment, PlanDebt, Scheduled,
@@ -580,17 +580,7 @@ impl App {
                 Ok(None)
             };
         };
-        let need =
-            BorrowNeed::parse(&check.need).ok_or(AppError::on("INVALID_NEED", "borrowCheck"))?;
-        let mut alternatives = check
-            .alternatives
-            .iter()
-            .map(|a| {
-                Alternative::parse(a).ok_or(AppError::on("INVALID_ALTERNATIVE", "borrowCheck"))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        alternatives.sort();
-        alternatives.dedup();
+        let (need, alternatives) = borrow_answers(check)?;
         let load = self.projected_load(ctx, scope, lines)?;
         let warnings = evaluate_borrow(need, &alternatives, spec.is_ribo(), load);
         Ok(Some(
@@ -603,6 +593,28 @@ impl App {
             })
             .to_string(),
         ))
+    }
+
+    /// «To'xta va o'yla» o'qish puli qarzga bo'lganda (uy/SPEC 2G.2, 2D.6): qarz qo'shishdagi bilan
+    /// bir xil baho (`evaluate_borrow`) — taqiqlamaydi, ogohlantirishlarni qaytaradi. Javoblar
+    /// majburiy: ehtiyoj va qarz foizlimi (`BORROW_CHECK_REQUIRED`). Oylik yuk bu yerda noma'lum
+    /// (to'lov rejasi qarzning o'zi inventarga kiritilganda tuziladi), shuning uchun `LOAD_UNKNOWN`
+    /// chiqarilmaydi. Hech narsa saqlanmaydi.
+    pub fn preview_study_debt(&self, input: StudyDebtInput) -> Result<Vec<String>, AppError> {
+        study_debt_warnings(&input)
+    }
+
+    /// Xarajat yozuvi uchun: «O'zimga sarmoya» qarzga bo'lsa — javoblar majburiy, ogohlantirishlar
+    /// xarajat javobida qaytadi; boshqa xarajatda — bo'sh.
+    pub(crate) fn study_debt_check(
+        self_investment: bool,
+        funded_by_debt: bool,
+        input: Option<&StudyDebtInput>,
+    ) -> Result<Vec<String>, AppError> {
+        if !(self_investment && funded_by_debt) {
+            return Ok(Vec::new());
+        }
+        study_debt_warnings(input.ok_or(AppError::on("BORROW_CHECK_REQUIRED", "studyDebt"))?)
     }
 
     fn validated_debt(
@@ -1129,4 +1141,35 @@ impl App {
             .first()
             .is_some_and(|e| e.entry.refs == plan_refs(lines)))
     }
+}
+
+/// «To'xta va o'yla» javoblari (2D.6): ehtiyoj va foizsiz muqobillar (saralangan, takrorsiz).
+fn borrow_answers(check: &BorrowCheckInput) -> Result<(BorrowNeed, Vec<Alternative>), AppError> {
+    let need = BorrowNeed::parse(&check.need).ok_or(AppError::on("INVALID_NEED", "borrowCheck"))?;
+    let mut alternatives = check
+        .alternatives
+        .iter()
+        .map(|a| Alternative::parse(a).ok_or(AppError::on("INVALID_ALTERNATIVE", "borrowCheck")))
+        .collect::<Result<Vec<_>, _>>()?;
+    alternatives.sort();
+    alternatives.dedup();
+    Ok((need, alternatives))
+}
+
+fn study_debt_warnings(input: &StudyDebtInput) -> Result<Vec<String>, AppError> {
+    if input.need.trim().is_empty() {
+        return Err(AppError::on("BORROW_CHECK_REQUIRED", "need"));
+    }
+    let with_interest = input
+        .with_interest
+        .ok_or(AppError::on("BORROW_CHECK_REQUIRED", "withInterest"))?;
+    let (need, alternatives) = borrow_answers(&BorrowCheckInput {
+        need: input.need.clone(),
+        alternatives: input.alternatives.clone(),
+    })?;
+    Ok(evaluate_borrow(need, &alternatives, with_interest, None)
+        .into_iter()
+        .filter(|w| *w != BorrowWarning::LoadUnknown)
+        .map(|w| w.as_str().to_string())
+        .collect())
 }

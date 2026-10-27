@@ -202,6 +202,24 @@ pub struct NewExpenseInput {
     /// Bilim rejasiga havola — faqat `self_investment` bo'lsa.
     #[serde(default)]
     pub learning_plan_id: Option<String>,
+    /// «O'zimga sarmoya» qarzga (`funded_by_debt`) bo'lsa — «to'xta va o'yla» javoblari majburiy
+    /// (uy/SPEC 2G.2, 2D.6); boshqa xarajatda e'tiborga olinmaydi.
+    #[serde(default)]
+    pub study_debt: Option<StudyDebtInput>,
+}
+
+/// O'qish puli qarzga (uy/SPEC 2G.2): 2D.6 «to'xta va o'yla» javoblari va qarz foizlimi. Hammasiga
+/// javob majburiy — UI oldindan tanlamaydi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct StudyDebtInput {
+    /// `NECESSITY` yoki `LUXURY`; bo'sh — javob berilmagan (`BORROW_CHECK_REQUIRED`).
+    pub need: String,
+    /// Mavjud foizsiz muqobillar: `QOROVUL`, `RELATIVE`, `SELL_ITEM` (bo'sh — yo'q).
+    pub alternatives: Vec<String>,
+    /// Qarz foizli (ustama bilan)mi; `null` — javob berilmagan.
+    pub with_interest: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -216,6 +234,9 @@ pub struct ExpenseDto {
     pub funded_by_debt: bool,
     pub self_investment: bool,
     pub learning_plan_id: Option<String>,
+    /// O'qish puli qarzga bo'lsa — «to'xta va o'yla» ogohlantirishlari (`RIBO`, `LUXURY`,
+    /// `ALTERNATIVE_AVAILABLE`); boshqa xarajatda bo'sh.
+    pub borrow_warnings: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2123,13 +2144,16 @@ pub struct SettingsInput {
 }
 
 /// Bosh sahifa eslatmasi: `INCOME_TODAY`, `INCOME_QUIET` (`days` — oxirgi daromaddan beri,
-/// `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri).
+/// `null` — hali yo'q), `PAYDAY`, `DEBT_INVENTORY`, `BACKUP` (`days` — oxirgi zaxiradan beri);
+/// juma ritmi (8-tamoyil): `STUDY_WEEK`, `TEACH_WEEK` (Uy), `KK_TEACH_WEEK`, `MF_TEACH_WEEK`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct NudgeDto {
     pub kind: String,
     pub days: Option<u32>,
+    /// Juma ritmi eslatmalarida (Uy) — kimga tegishli: a'zolar ismi. Boshqalarida bo'sh.
+    pub members: Vec<String>,
 }
 
 // ---- K1: Kasb-kor «ikki cho'ntak» ----

@@ -229,6 +229,7 @@ fn expense_in(
             note: None,
             self_investment,
             learning_plan_id: plan_id.map(Into::into),
+            study_debt: None,
         },
     )
 }
@@ -869,4 +870,234 @@ fn empty_start_and_teaching_dates_mean_today() {
             .code,
         "FUTURE_DATE"
     );
+}
+
+// ---- Juma ritmi (2G.2, 2G.6): bosh sahifa eslatmalari ----
+
+fn week_nudges(o: &Home) -> Vec<(String, Vec<String>)> {
+    o.app
+        .home_nudges(&o.uy)
+        .unwrap()
+        .into_iter()
+        .map(|n| (n.kind, n.members))
+        .collect()
+}
+
+fn nudge(kind: &str, members: &[&str]) -> (String, Vec<String>) {
+    (
+        kind.to_string(),
+        members.iter().map(|m| (*m).to_string()).collect(),
+    )
+}
+
+fn at(ts: &str) -> DateTime<Utc> {
+    DateTime::parse_from_rfc3339(ts)
+        .unwrap()
+        .with_timezone(&Utc)
+}
+
+fn study_on(o: &Home, plan: &str, on: &str) {
+    o.app
+        .study_log_add(
+            &o.uy,
+            plan,
+            StudyLogInput {
+                occurred_on: Some(on.into()),
+                minutes: 60,
+                note: None,
+            },
+        )
+        .unwrap();
+}
+
+/// Juma, shanba va yakshanba — bitta juma haftasi (dushanba–yakshanba): faol rejasi bor, shu hafta
+/// o'qish vaqti yozilmagan a'zoga — «Bu hafta necha soat o'qidingiz?»; rejasi yoki soat qiymati bor,
+/// o'rgatish yozuvi yo'q a'zoga — «Ilm zakoti». Yozilgach eslatma yo'qoladi; dushanba–payshanba — hech
+/// narsa. Haftalar ustma-ust emas: shanba yozuvi keyingi jumadagi eslatmani yashirmaydi.
+#[test]
+fn friday_nudges_ask_about_study_and_teaching() {
+    let dir = tempfile::tempdir().unwrap();
+    let dev = Device::new(dir.path(), "uy", 1);
+    let o = home(&dev);
+    // 2026-11-20 — juma, lekin hali reja ham, soat qiymati ham yo'q.
+    assert!(week_nudges(&o).is_empty());
+    o.app
+        .hour_value_save(&o.uy, hv(&o.bekzod, Some("9 000 000"), 480, 22))
+        .unwrap();
+    assert_eq!(week_nudges(&o), vec![nudge("TEACH_WEEK", &["Bekzod"])]);
+    let p = o
+        .app
+        .learning_plan_create(&o.uy, plan(&o.mohira, "Tikuvchilik", &["MENTOR"]))
+        .unwrap();
+    assert_eq!(
+        week_nudges(&o),
+        vec![
+            nudge("STUDY_WEEK", &["Mohira"]),
+            nudge("TEACH_WEEK", &["Bekzod", "Mohira"]),
+        ]
+    );
+    // O'tgan haftaning shanbasi (11-14) — o'tgan juma haftasiga (11-09…11-15) tegishli.
+    study_on(&o, &p.id, "2026-11-14");
+    assert_eq!(week_nudges(&o)[0], nudge("STUDY_WEEK", &["Mohira"]));
+    // Dushanba (11-16) — shu haftaning birinchi kuni.
+    study_on(&o, &p.id, "2026-11-16");
+    assert_eq!(
+        week_nudges(&o),
+        vec![nudge("TEACH_WEEK", &["Bekzod", "Mohira"])]
+    );
+    o.app
+        .teaching_log_add(&o.uy, teach(&o.mohira, "Bichish", "2026-11-20"))
+        .unwrap();
+    assert_eq!(week_nudges(&o), vec![nudge("TEACH_WEEK", &["Bekzod"])]);
+
+    // Xonadon mintaqasi (Toshkent): juma 00:30 — UTC bo'yicha hali payshanba, lekin eslatma bor.
+    dev.clock.set(at("2026-11-20T00:30:00+05:00"));
+    assert_eq!(week_nudges(&o), vec![nudge("TEACH_WEEK", &["Bekzod"])]);
+    dev.clock.set(at("2026-11-19T23:30:00+05:00"));
+    assert!(week_nudges(&o).is_empty());
+    // Shanba — o'sha hafta baholanadi; Bekzod shanba kuni o'rgatgani shu haftaga kiradi.
+    dev.clock.set(at("2026-11-21T10:00:00+05:00"));
+    assert_eq!(week_nudges(&o), vec![nudge("TEACH_WEEK", &["Bekzod"])]);
+    o.app
+        .teaching_log_add(&o.uy, teach(&o.bekzod, "Rozetka ulash", "2026-11-21"))
+        .unwrap();
+    assert!(week_nudges(&o).is_empty());
+    // Yakshanba — hali o'sha hafta (hammasi yozilgan); dushanba — eslatma kuni emas.
+    dev.clock.set(at("2026-11-22T20:00:00+05:00"));
+    assert!(week_nudges(&o).is_empty());
+    dev.clock.set(at("2026-11-23T09:00:00+05:00"));
+    assert!(week_nudges(&o).is_empty());
+    // Keyingi juma — yangi hafta (11-23…11-29): shanbadagi yozuvlar uni yashirmaydi.
+    dev.clock.set(at("2026-11-27T09:00:00+05:00"));
+    assert_eq!(
+        week_nudges(&o),
+        vec![
+            nudge("STUDY_WEEK", &["Mohira"]),
+            nudge("TEACH_WEEK", &["Bekzod", "Mohira"]),
+        ]
+    );
+    // To'xtatilgan reja o'qish vaqtini so'ramaydi, «Ilm zakoti» esa qoladi.
+    o.app
+        .learning_plan_set_status(&o.uy, &p.id, "PAUSED")
+        .unwrap();
+    assert_eq!(
+        week_nudges(&o),
+        vec![nudge("TEACH_WEEK", &["Bekzod", "Mohira"])]
+    );
+}
+
+fn debt_answers(need: &str, alts: &[&str], with_interest: Option<bool>) -> StudyDebtInput {
+    StudyDebtInput {
+        need: need.into(),
+        alternatives: alts.iter().map(|a| (*a).into()).collect(),
+        with_interest,
+    }
+}
+
+/// O'qish uchun qarz (2G.2): «Sarmoya» belgili xarajat qarzga bo'lsa, 2D.6 «to'xta va o'yla»
+/// javoblari (ehtiyoj, foizsiz muqobillar, qarz foizlimi) majburiy; baho qarz qo'shishdagi bilan bir
+/// xil va ogohlantirishlar oldindan ko'rish va xarajat javobida qaytadi (taqiqlanmaydi).
+#[test]
+fn study_on_debt_needs_the_borrow_check() {
+    let dir = tempfile::tempdir().unwrap();
+    let dev = Device::new(dir.path(), "uy", 1);
+    let o = home(&dev);
+    let cat = o.app.categories(&o.uy).unwrap()[0].id.clone();
+    let input = |invest: bool, debt: bool, check: Option<StudyDebtInput>| NewExpenseInput {
+        amount: "1 200 000".into(),
+        category_id: cat.clone(),
+        channel: "CARD".into(),
+        member_id: None,
+        occurred_on: Some("2026-11-20".into()),
+        necessity: None,
+        obligation_id: None,
+        is_gift: false,
+        is_ostentation: false,
+        funded_by_debt: debt,
+        note: None,
+        self_investment: invest,
+        learning_plan_id: None,
+        study_debt: check,
+    };
+    let code = |r: Result<ExpenseDto, AppError>| {
+        let e = r.unwrap_err();
+        (e.code, e.field)
+    };
+    let required = |field: &str| ("BORROW_CHECK_REQUIRED".to_string(), Some(field.to_string()));
+    assert_eq!(
+        code(o.app.record_expense(&o.uy, input(true, true, None))),
+        required("studyDebt")
+    );
+    // Javob berilmagan: ehtiyoj ham, foiz savoli ham oldindan tanlanmaydi.
+    assert_eq!(
+        code(o.app.record_expense(
+            &o.uy,
+            input(true, true, Some(debt_answers("", &[], Some(false))))
+        )),
+        required("need")
+    );
+    assert_eq!(
+        code(o.app.record_expense(
+            &o.uy,
+            input(true, true, Some(debt_answers("NECESSITY", &[], None)))
+        )),
+        required("withInterest")
+    );
+    assert_eq!(
+        err(o.app.record_expense(
+            &o.uy,
+            input(true, true, Some(debt_answers("MAYBE", &[], Some(false))))
+        )),
+        "INVALID_NEED"
+    );
+    assert_eq!(
+        err(o
+            .app
+            .preview_study_debt(debt_answers("NECESSITY", &["BANK"], Some(false)))),
+        "INVALID_ALTERNATIVE"
+    );
+    // Ogohlantirishlar: foizli — RIBO, hashamat — LUXURY, foizsiz muqobil bor — ALTERNATIVE_AVAILABLE;
+    // zarurat, muqobil yo'q, foizsiz — hech biri (oylik yuk bu yerda hisoblanmaydi — LOAD_UNKNOWN yo'q).
+    let warn = |need: &str, alts: &[&str], interest: bool| {
+        o.app
+            .preview_study_debt(debt_answers(need, alts, Some(interest)))
+            .unwrap()
+    };
+    assert_eq!(warn("NECESSITY", &[], true), ["RIBO"]);
+    assert_eq!(warn("LUXURY", &[], false), ["LUXURY"]);
+    assert_eq!(
+        warn("NECESSITY", &["RELATIVE", "SELL_ITEM"], false),
+        ["ALTERNATIVE_AVAILABLE"]
+    );
+    assert_eq!(
+        warn("LUXURY", &["QOROVUL"], true),
+        ["RIBO", "LUXURY", "ALTERNATIVE_AVAILABLE"]
+    );
+    assert!(warn("NECESSITY", &[], false).is_empty());
+    // Saqlanadi (taqiqlanmaydi), ogohlantirishlar javobda.
+    let saved = o
+        .app
+        .record_expense(
+            &o.uy,
+            input(
+                true,
+                true,
+                Some(debt_answers("LUXURY", &["RELATIVE"], Some(true))),
+            ),
+        )
+        .unwrap();
+    assert!(saved.self_investment && saved.funded_by_debt);
+    assert_eq!(
+        saved.borrow_warnings,
+        ["RIBO", "LUXURY", "ALTERNATIVE_AVAILABLE"]
+    );
+    // Qarzsiz o'qish va qarzga oddiy xarajat — so'rovsiz (qoida faqat o'qish puliga).
+    let plain = o
+        .app
+        .record_expense(&o.uy, input(true, false, None))
+        .unwrap();
+    assert!(plain.borrow_warnings.is_empty());
+    o.app
+        .record_expense(&o.uy, input(false, true, None))
+        .unwrap();
 }

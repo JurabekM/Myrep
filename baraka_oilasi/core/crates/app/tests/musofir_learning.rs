@@ -517,6 +517,7 @@ fn only_musofir_space_and_configured() {
                 note: None,
                 self_investment: true,
                 learning_plan_id: None,
+                study_debt: None,
             },
         )),
         "NOT_UY_SPACE"
@@ -549,6 +550,7 @@ struct Device {
     path: PathBuf,
     key: DbKey,
     id: String,
+    clock: Arc<FixedClock>,
 }
 
 impl Device {
@@ -557,6 +559,7 @@ impl Device {
             path: dir.join(format!("{name}.db")),
             key: DbKey::from_bytes([key; 32]),
             id: format!("dev-{name}"),
+            clock: clock(),
         }
     }
 
@@ -565,7 +568,7 @@ impl Device {
             &self.path,
             &self.key,
             &self.id,
-            clock(),
+            self.clock.clone(),
             Arc::new(UuidV7Gen),
         )
         .unwrap();
@@ -809,4 +812,69 @@ fn failed_save_or_result_leaves_nothing_behind() {
     assert_eq!(err(app.mf_learning_plan_result(&mf, &p.id)), "CORRUPT_ROW");
     let plans = dev.rows("mf_learning_plans");
     assert_eq!(plans[0]["result_hour_value_id"], Value::Null);
+}
+
+/// Juma ritmi (6A «Ilm zakoti»): rejasi yoki soat qiymati bor musofirga — shu hafta o'rgatish yozuvi
+/// bo'lmasa, juma eslatmasi (Musofir rejasida o'qish vaqti yozuvi yo'q — faqat «Ilm zakoti»). Shaxsiy:
+/// uydagi oila qurilmasida (HOME) Musofir bosh sahifasida eslatma yo'q.
+#[test]
+fn friday_teaching_nudge_is_private_to_the_musofir() {
+    let dir = tempfile::tempdir().unwrap();
+    let owner_dev = Device::new(dir.path(), "bobur", 1);
+    let home_dev = Device::new(dir.path(), "uy", 2);
+    let owner = owner_dev.app();
+    let (mf, uy) = bootstrap(&owner);
+    let kinds = |app: &App, space: &str| {
+        app.home_nudges(space)
+            .unwrap()
+            .into_iter()
+            .map(|n| n.kind)
+            .collect::<Vec<_>>()
+    };
+    let friday = DateTime::parse_from_rfc3339("2026-10-23T09:00:00+05:00")
+        .unwrap()
+        .with_timezone(&Utc);
+    owner_dev.clock.set(friday);
+    // Hali hech narsa boshlanmagan.
+    assert!(kinds(&owner, &mf).is_empty());
+    owner
+        .mf_learning_plan_create(&mf, plan("ABROAD", "Koreys tili", &["COURSE"], None))
+        .unwrap();
+    assert_eq!(kinds(&owner, &mf), ["MF_TEACH_WEEK"]);
+    // Musofir rejasi Uy a'zosiniki emas — Uy bosh sahifasida juma eslatmasi yo'q.
+    assert!(kinds(&owner, &uy).iter().all(|k| !k.ends_with("_WEEK")));
+
+    let offer = owner
+        .pairing_offer(PairingInput {
+            role: Some("HOME".into()),
+            space_id: Some(mf.clone()),
+        })
+        .unwrap();
+    let home = home_dev.app();
+    home.join_household(
+        &offer.bytes,
+        JoinInput {
+            secret: offer.code.clone(),
+            device_name: "Uydagi kompyuter".into(),
+            platform: "windows".into(),
+        },
+    )
+    .unwrap();
+    home_dev.clock.set(friday);
+    assert_eq!(home.device_role().unwrap().role, "HOME");
+    assert!(kinds(&home, &mf).is_empty());
+
+    owner
+        .mf_teaching_add(
+            &mf,
+            MfTeachingInput {
+                occurred_on: None,
+                area: "DOCUMENTS".into(),
+                learner: Some("yangi kelgan hamyurt".into()),
+                topic: "Ijara shartnomasini oʻqish".into(),
+                minutes: Some(40),
+            },
+        )
+        .unwrap();
+    assert!(kinds(&owner, &mf).is_empty());
 }
