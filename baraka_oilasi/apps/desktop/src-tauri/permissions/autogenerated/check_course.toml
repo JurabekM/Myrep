@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-check-course"
+description = "Enables the check_course command without any pre-configured scope."
+commands.allow = ["check_course"]
+
+[[permission]]
+identifier = "deny-check-course"
+description = "Denies the check_course command without any pre-configured scope."
+commands.deny = ["check_course"]

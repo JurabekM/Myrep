@@ -407,6 +407,8 @@ fn gate_applies_only_to_capital_provider() {
                 is_ostentation: false,
                 funded_by_debt: false,
                 note: None,
+                self_investment: false,
+                learning_plan_id: None,
             },
         )
         .unwrap();

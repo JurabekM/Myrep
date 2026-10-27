@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-study-log-add"
+description = "Enables the study_log_add command without any pre-configured scope."
+commands.allow = ["study_log_add"]
+
+[[permission]]
+identifier = "deny-study-log-add"
+description = "Denies the study_log_add command without any pre-configured scope."
+commands.deny = ["study_log_add"]

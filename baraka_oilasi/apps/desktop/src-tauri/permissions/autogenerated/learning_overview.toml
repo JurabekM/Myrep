@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-learning-overview"
+description = "Enables the learning_overview command without any pre-configured scope."
+commands.allow = ["learning_overview"]
+
+[[permission]]
+identifier = "deny-learning-overview"
+description = "Denies the learning_overview command without any pre-configured scope."
+commands.deny = ["learning_overview"]

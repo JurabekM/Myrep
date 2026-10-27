@@ -67,36 +67,41 @@ pub struct HourValue {
     pub over_ceiling: bool,
 }
 
+/// Oxirgi to'liq oylar (yozuvi borlari, ko'pi bilan 3 ta) o'rtachasi: `round_half_up(jami / n)`;
+/// bo'sh ro'yxat — `None`.
+pub fn average_income(month_totals: &[i64]) -> Result<Option<i64>, DomainError> {
+    if month_totals.len() > AVG_MONTHS {
+        return Err(DomainError::new("TOO_MANY_MONTHS"));
+    }
+    if month_totals.iter().any(|t| *t < 0) {
+        return Err(DomainError::new("AMOUNT_NEGATIVE"));
+    }
+    if month_totals.is_empty() {
+        return Ok(None);
+    }
+    let sum: i128 = month_totals.iter().map(|t| i128::from(*t)).sum();
+    let n = i128::try_from(month_totals.len()).map_err(|_| DomainError::new("OVERFLOW"))?;
+    Ok(Some(to_i64(round_half_up(sum, n)?)?))
+}
+
 /// 1 soat qiymati = `round_half_up(daromad × 60 / oylik daqiqalar)`; «ikki barobar maqsad» — 2 ×.
 pub fn hour_value(i: &HourInput<'_>) -> Result<HourValue, DomainError> {
-    match i.income {
+    let auto = match i.income {
         // Qo'lda kiritilgan daromad — avtomatik oylar ishlatilmaydi va tekshirilmaydi.
         Some(v) if v < 0 => return Err(DomainError::new("AMOUNT_NEGATIVE")),
-        Some(_) => {}
-        None => {
-            if i.month_totals.len() > AVG_MONTHS {
-                return Err(DomainError::new("TOO_MANY_MONTHS"));
-            }
-            if i.month_totals.iter().any(|t| *t < 0) {
-                return Err(DomainError::new("AMOUNT_NEGATIVE"));
-            }
-        }
-    }
+        Some(_) => None,
+        None => average_income(i.month_totals)?,
+    };
     if !(1..=1440).contains(&i.minutes_per_day) {
         return Err(DomainError::on("INVALID_TIME", "minutesPerDay"));
     }
     if !(1..=31).contains(&i.days) {
         return Err(DomainError::on("INVALID_DAYS", "days"));
     }
-    let (income, source) = match i.income {
-        Some(v) => (v, IncomeSource::Manual),
-        None if i.month_totals.is_empty() => return Err(DomainError::new("NO_INCOME")),
-        None => {
-            let sum: i128 = i.month_totals.iter().map(|t| i128::from(*t)).sum();
-            let n =
-                i128::try_from(i.month_totals.len()).map_err(|_| DomainError::new("OVERFLOW"))?;
-            (to_i64(round_half_up(sum, n)?)?, IncomeSource::Auto)
-        }
+    let (income, source) = match (i.income, auto) {
+        (Some(v), _) => (v, IncomeSource::Manual),
+        (None, Some(avg)) => (avg, IncomeSource::Auto),
+        (None, None) => return Err(DomainError::new("NO_INCOME")),
     };
     if income == 0 {
         return Err(DomainError::new("NO_INCOME"));
@@ -388,6 +393,21 @@ mod tests {
             ..none
         };
         assert_eq!(hour_value(&zero_time).unwrap_err().code, "INVALID_TIME");
+    }
+
+    #[test]
+    fn average_income_rules() {
+        assert_eq!(average_income(&[]), Ok(None));
+        assert_eq!(average_income(&[1, 2]), Ok(Some(2)));
+        assert_eq!(average_income(&[10, 10, 11]), Ok(Some(10)));
+        assert_eq!(
+            average_income(&[1, 2, 3, 4]).unwrap_err().code,
+            "TOO_MANY_MONTHS"
+        );
+        assert_eq!(
+            average_income(&[5, -1]).unwrap_err().code,
+            "AMOUNT_NEGATIVE"
+        );
     }
 
     #[test]

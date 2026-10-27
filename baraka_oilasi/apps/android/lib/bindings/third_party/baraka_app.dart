@@ -912,6 +912,66 @@ class ContributorDto {
           paid == other.paid;
 }
 
+/// Kurs yoki ustoz taklifi (2G.4). Har bir javob: `YES`, `NO` yoki `UNKNOWN`.
+class CourseAnswersInput {
+  final String fastRich;
+  final String secretFormula;
+  final String incomeGuarantee;
+
+  /// Dastur va amaliy natija yozilganmi.
+  final String syllabus;
+
+  /// O'qituvchining amaliy ishini tekshirib bo'ladimi.
+  final String teacherVerifiable;
+  final String urgency;
+  final String recruitment;
+
+  /// Sinov darsi yoki pulni qaytarish sharti bormi.
+  final String trialOrRefund;
+
+  /// Musofir: kursdan keyin chet elda ish kafolati (bo'sh — so'ralmagan).
+  final String? jobAbroad;
+
+  const CourseAnswersInput({
+    required this.fastRich,
+    required this.secretFormula,
+    required this.incomeGuarantee,
+    required this.syllabus,
+    required this.teacherVerifiable,
+    required this.urgency,
+    required this.recruitment,
+    required this.trialOrRefund,
+    this.jobAbroad,
+  });
+
+  @override
+  int get hashCode =>
+      fastRich.hashCode ^
+      secretFormula.hashCode ^
+      incomeGuarantee.hashCode ^
+      syllabus.hashCode ^
+      teacherVerifiable.hashCode ^
+      urgency.hashCode ^
+      recruitment.hashCode ^
+      trialOrRefund.hashCode ^
+      jobAbroad.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CourseAnswersInput &&
+          runtimeType == other.runtimeType &&
+          fastRich == other.fastRich &&
+          secretFormula == other.secretFormula &&
+          incomeGuarantee == other.incomeGuarantee &&
+          syllabus == other.syllabus &&
+          teacherVerifiable == other.teacherVerifiable &&
+          urgency == other.urgency &&
+          recruitment == other.recruitment &&
+          trialOrRefund == other.trialOrRefund &&
+          jobAbroad == other.jobAbroad;
+}
+
 class DebtDto {
   final String id;
   final String creditorType;
@@ -1399,6 +1459,8 @@ class ExpenseDto {
   final String? necessity;
   final String occurredOn;
   final bool fundedByDebt;
+  final bool selfInvestment;
+  final String? learningPlanId;
 
   const ExpenseDto({
     required this.id,
@@ -1407,6 +1469,8 @@ class ExpenseDto {
     this.necessity,
     required this.occurredOn,
     required this.fundedByDebt,
+    required this.selfInvestment,
+    this.learningPlanId,
   });
 
   @override
@@ -1416,7 +1480,9 @@ class ExpenseDto {
       categoryId.hashCode ^
       necessity.hashCode ^
       occurredOn.hashCode ^
-      fundedByDebt.hashCode;
+      fundedByDebt.hashCode ^
+      selfInvestment.hashCode ^
+      learningPlanId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1428,7 +1494,9 @@ class ExpenseDto {
           categoryId == other.categoryId &&
           necessity == other.necessity &&
           occurredOn == other.occurredOn &&
-          fundedByDebt == other.fundedByDebt;
+          fundedByDebt == other.fundedByDebt &&
+          selfInvestment == other.selfInvestment &&
+          learningPlanId == other.learningPlanId;
 }
 
 class ExportFileDto {
@@ -1877,6 +1945,134 @@ class HoldReviewInput {
           toOn == other.toOn &&
           reason == other.reason &&
           acks == other.acks;
+}
+
+/// Saqlangan soat qiymati hisobi.
+class HourValueDto {
+  final String id;
+  final String memberId;
+  final MoneyDto income;
+
+  /// `AUTO` yoki `MANUAL`.
+  final String incomeSource;
+  final int minutesPerDay;
+  final int days;
+  final int monthlyMinutes;
+  final MoneyDto hourValue;
+
+  /// «Ikki barobar maqsad».
+  final MoneyDto doubleTarget;
+
+  /// Kuniga 10 soat yoki oyiga 260 soatdan ko'p — soat qiymatini oshirish yo'li taklif qilinadi.
+  final bool overCeiling;
+  final String computedOn;
+
+  const HourValueDto({
+    required this.id,
+    required this.memberId,
+    required this.income,
+    required this.incomeSource,
+    required this.minutesPerDay,
+    required this.days,
+    required this.monthlyMinutes,
+    required this.hourValue,
+    required this.doubleTarget,
+    required this.overCeiling,
+    required this.computedOn,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      memberId.hashCode ^
+      income.hashCode ^
+      incomeSource.hashCode ^
+      minutesPerDay.hashCode ^
+      days.hashCode ^
+      monthlyMinutes.hashCode ^
+      hourValue.hashCode ^
+      doubleTarget.hashCode ^
+      overCeiling.hashCode ^
+      computedOn.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HourValueDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          memberId == other.memberId &&
+          income == other.income &&
+          incomeSource == other.incomeSource &&
+          minutesPerDay == other.minutesPerDay &&
+          days == other.days &&
+          monthlyMinutes == other.monthlyMinutes &&
+          hourValue == other.hourValue &&
+          doubleTarget == other.doubleTarget &&
+          overCeiling == other.overCeiling &&
+          computedOn == other.computedOn;
+}
+
+class HourValueInput {
+  final String memberId;
+
+  /// Qo'lda kiritilgan oylik daromad; bo'sh — oxirgi to'liq oylar o'rtachasi (`AUTO`).
+  final String? income;
+
+  /// Kuniga ish vaqti, daqiqada (1–1440).
+  final int minutesPerDay;
+
+  /// Oyda ish kunlari (1–31).
+  final int days;
+
+  const HourValueInput({
+    required this.memberId,
+    this.income,
+    required this.minutesPerDay,
+    required this.days,
+  });
+
+  @override
+  int get hashCode => memberId.hashCode ^ income.hashCode ^ minutesPerDay.hashCode ^ days.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HourValueInput &&
+          runtimeType == other.runtimeType &&
+          memberId == other.memberId &&
+          income == other.income &&
+          minutesPerDay == other.minutesPerDay &&
+          days == other.days;
+}
+
+/// «Bir soatim qancha?» uchun oylik daromad taklifi (2G.1).
+class HourValueSuggestionDto {
+  final String memberId;
+
+  /// Oxirgi 3 to'liq oydan daromad yozuvi borlari (yangisidan eskisiga).
+  final List<MonthIncomeDto> months;
+
+  /// Shu oylar o'rtachasi; yozuv yo'q bo'lsa — `null` (maydon bo'sh qoladi).
+  final MoneyDto? average;
+
+  const HourValueSuggestionDto({
+    required this.memberId,
+    required this.months,
+    this.average,
+  });
+
+  @override
+  int get hashCode => memberId.hashCode ^ months.hashCode ^ average.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HourValueSuggestionDto &&
+          runtimeType == other.runtimeType &&
+          memberId == other.memberId &&
+          months == other.months &&
+          average == other.average;
 }
 
 class HouseholdDto {
@@ -6319,6 +6515,272 @@ class KkZakatReceivableDto {
           hopeless == other.hopeless;
 }
 
+class LearningMemberDto {
+  final String memberId;
+  final String displayName;
+
+  /// Oxirgi saqlangan hisob.
+  final HourValueDto? hourValue;
+  final int activePlans;
+
+  const LearningMemberDto({
+    required this.memberId,
+    required this.displayName,
+    this.hourValue,
+    required this.activePlans,
+  });
+
+  @override
+  int get hashCode => memberId.hashCode ^ displayName.hashCode ^ hourValue.hashCode ^ activePlans.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LearningMemberDto &&
+          runtimeType == other.runtimeType &&
+          memberId == other.memberId &&
+          displayName == other.displayName &&
+          hourValue == other.hourValue &&
+          activePlans == other.activePlans;
+}
+
+/// «O'zimga sarmoya» ekrani: a'zolar soat qiymati, rejalar, shu oy «Ilm zakoti» va sarmoya qatori.
+class LearningOverviewDto {
+  final String periodStart;
+  final String periodEnd;
+  final List<LearningMemberDto> members;
+  final List<LearningPlanDto> plans;
+
+  /// Shu oydagi o'rgatish yozuvlari soni.
+  final int teachingCount;
+  final List<TeachingLogDto> teaching;
+  final SelfInvestmentDto selfInvestment;
+
+  const LearningOverviewDto({
+    required this.periodStart,
+    required this.periodEnd,
+    required this.members,
+    required this.plans,
+    required this.teachingCount,
+    required this.teaching,
+    required this.selfInvestment,
+  });
+
+  @override
+  int get hashCode =>
+      periodStart.hashCode ^
+      periodEnd.hashCode ^
+      members.hashCode ^
+      plans.hashCode ^
+      teachingCount.hashCode ^
+      teaching.hashCode ^
+      selfInvestment.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LearningOverviewDto &&
+          runtimeType == other.runtimeType &&
+          periodStart == other.periodStart &&
+          periodEnd == other.periodEnd &&
+          members == other.members &&
+          plans == other.plans &&
+          teachingCount == other.teachingCount &&
+          teaching == other.teaching &&
+          selfInvestment == other.selfInvestment;
+}
+
+/// Reja kartasi: jami o'qish vaqti va byudjetdan sarflangani bilan.
+class LearningPlanDto {
+  final String id;
+  final String memberId;
+  final String skill;
+  final String? purpose;
+  final List<String> paths;
+  final MoneyDto? budget;
+  final int weeklyMinutes;
+  final String startOn;
+  final String reviewOn;
+
+  /// `ACTIVE`, `PAUSED`, `DONE`, `DROPPED`.
+  final String status;
+
+  /// Reja ochilgandagi soat qiymati (boshlang'ich nuqta); hisob bo'lmagan bo'lsa — `null`.
+  final MoneyDto? baselineHourValue;
+
+  /// Oxirgi o'lchangan natija (2G.5).
+  final MoneyDto? resultHourValue;
+  final int studyMinutes;
+
+  /// Rejaga bog'langan «O'zimga sarmoya» xarajatlari.
+  final MoneyDto spent;
+
+  /// `COURSE` yo'li tanlangan — kurs tekshiruvi taklif qilinadi (2G.4).
+  final bool courseCheckSuggested;
+
+  /// Ko'rik sanasi keldi (reja yopilmagan).
+  final bool reviewDue;
+
+  const LearningPlanDto({
+    required this.id,
+    required this.memberId,
+    required this.skill,
+    this.purpose,
+    required this.paths,
+    this.budget,
+    required this.weeklyMinutes,
+    required this.startOn,
+    required this.reviewOn,
+    required this.status,
+    this.baselineHourValue,
+    this.resultHourValue,
+    required this.studyMinutes,
+    required this.spent,
+    required this.courseCheckSuggested,
+    required this.reviewDue,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      memberId.hashCode ^
+      skill.hashCode ^
+      purpose.hashCode ^
+      paths.hashCode ^
+      budget.hashCode ^
+      weeklyMinutes.hashCode ^
+      startOn.hashCode ^
+      reviewOn.hashCode ^
+      status.hashCode ^
+      baselineHourValue.hashCode ^
+      resultHourValue.hashCode ^
+      studyMinutes.hashCode ^
+      spent.hashCode ^
+      courseCheckSuggested.hashCode ^
+      reviewDue.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LearningPlanDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          memberId == other.memberId &&
+          skill == other.skill &&
+          purpose == other.purpose &&
+          paths == other.paths &&
+          budget == other.budget &&
+          weeklyMinutes == other.weeklyMinutes &&
+          startOn == other.startOn &&
+          reviewOn == other.reviewOn &&
+          status == other.status &&
+          baselineHourValue == other.baselineHourValue &&
+          resultHourValue == other.resultHourValue &&
+          studyMinutes == other.studyMinutes &&
+          spent == other.spent &&
+          courseCheckSuggested == other.courseCheckSuggested &&
+          reviewDue == other.reviewDue;
+}
+
+class LearningPlanInput {
+  final String memberId;
+  final String skill;
+
+  /// Bu ko'nikma qaysi ishni yoki soatni qimmatlashtiradi.
+  final String? purpose;
+
+  /// `BOOK`, `MENTOR`, `COURSE`, `PRACTICE` (bir nechtasi).
+  final List<String> paths;
+  final String? budget;
+  final int weeklyMinutes;
+
+  /// Bo'sh — bugun.
+  final String? startOn;
+
+  /// Bo'sh — boshlanishdan 3 oy keyin.
+  final String? reviewOn;
+
+  const LearningPlanInput({
+    required this.memberId,
+    required this.skill,
+    this.purpose,
+    required this.paths,
+    this.budget,
+    required this.weeklyMinutes,
+    this.startOn,
+    this.reviewOn,
+  });
+
+  @override
+  int get hashCode =>
+      memberId.hashCode ^
+      skill.hashCode ^
+      purpose.hashCode ^
+      paths.hashCode ^
+      budget.hashCode ^
+      weeklyMinutes.hashCode ^
+      startOn.hashCode ^
+      reviewOn.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LearningPlanInput &&
+          runtimeType == other.runtimeType &&
+          memberId == other.memberId &&
+          skill == other.skill &&
+          purpose == other.purpose &&
+          paths == other.paths &&
+          budget == other.budget &&
+          weeklyMinutes == other.weeklyMinutes &&
+          startOn == other.startOn &&
+          reviewOn == other.reviewOn;
+}
+
+/// Natijani o'lchash (2G.5): a'zoning oxirgi soat qiymati boshlang'ich nuqta bilan.
+class LearningResultDto {
+  final String planId;
+  final HourValueDto? baseline;
+  final HourValueDto current;
+
+  /// Farq; boshlang'ich nuqta bo'lmasa — `null`.
+  final MoneyDto? diff;
+
+  /// Boshlang'ich nuqta yo'q yoki 0 bo'lsa — `null` (faqat yangi qiymat ko'rsatiladi).
+  final int? changeBp;
+  final String? changePercent;
+
+  const LearningResultDto({
+    required this.planId,
+    this.baseline,
+    required this.current,
+    this.diff,
+    this.changeBp,
+    this.changePercent,
+  });
+
+  @override
+  int get hashCode =>
+      planId.hashCode ^
+      baseline.hashCode ^
+      current.hashCode ^
+      diff.hashCode ^
+      changeBp.hashCode ^
+      changePercent.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LearningResultDto &&
+          runtimeType == other.runtimeType &&
+          planId == other.planId &&
+          baseline == other.baseline &&
+          current == other.current &&
+          diff == other.diff &&
+          changeBp == other.changeBp &&
+          changePercent == other.changePercent;
+}
+
 /// Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan.
 class LoanReceiptInput {
   final String lender;
@@ -8240,6 +8702,31 @@ class MoneyDto {
           plain == other.plain;
 }
 
+/// Oxirgi to'liq oylardan biri (yozuvi borlari) — a'zoning daromadi jami.
+class MonthIncomeDto {
+  final String periodStart;
+  final String periodEnd;
+  final MoneyDto total;
+
+  const MonthIncomeDto({
+    required this.periodStart,
+    required this.periodEnd,
+    required this.total,
+  });
+
+  @override
+  int get hashCode => periodStart.hashCode ^ periodEnd.hashCode ^ total.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MonthIncomeDto &&
+          runtimeType == other.runtimeType &&
+          periodStart == other.periodStart &&
+          periodEnd == other.periodEnd &&
+          total == other.total;
+}
+
 /// Oylik audit va bosh ekran KPI'lari (uy/SPEC 2.3–2.4).
 class MonthlySummaryDto {
   final String periodStart;
@@ -8260,6 +8747,13 @@ class MonthlySummaryDto {
   /// Oy yakuni: daromad − majburiyatlar − xarajatlar.
   final MoneyDto monthResult;
 
+  /// Havas chegarasi (2B.3) bilan solishtiriladigan summa: `by_necessity.havas` dan «O'zimga sarmoya»
+  /// belgili xarajatlar chiqarilgan (2G.3); toifalar bo'yicha taqsimot o'zgarmaydi.
+  final MoneyDto havasForLimit;
+
+  /// «O'zimga sarmoya: X so'm — daromadning Y %» qatori (2G.3).
+  final SelfInvestmentDto selfInvestment;
+
   const MonthlySummaryDto({
     required this.periodStart,
     required this.periodEnd,
@@ -8272,6 +8766,8 @@ class MonthlySummaryDto {
     required this.balanceDelta,
     required this.unexplainedGap,
     required this.monthResult,
+    required this.havasForLimit,
+    required this.selfInvestment,
   });
 
   @override
@@ -8286,7 +8782,9 @@ class MonthlySummaryDto {
       vaultNet.hashCode ^
       balanceDelta.hashCode ^
       unexplainedGap.hashCode ^
-      monthResult.hashCode;
+      monthResult.hashCode ^
+      havasForLimit.hashCode ^
+      selfInvestment.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -8303,7 +8801,9 @@ class MonthlySummaryDto {
           vaultNet == other.vaultNet &&
           balanceDelta == other.balanceDelta &&
           unexplainedGap == other.unexplainedGap &&
-          monthResult == other.monthResult;
+          monthResult == other.monthResult &&
+          havasForLimit == other.havasForLimit &&
+          selfInvestment == other.selfInvestment;
 }
 
 class NecessityTotalsDto {
@@ -8558,6 +9058,12 @@ class NewExpenseInput {
   final bool fundedByDebt;
   final String? note;
 
+  /// «O'zimga sarmoya» belgisi (uy/SPEC 2G.3): toifa o'zgarmaydi, havas chegarasiga kirmaydi.
+  final bool selfInvestment;
+
+  /// Bilim rejasiga havola — faqat `self_investment` bo'lsa.
+  final String? learningPlanId;
+
   const NewExpenseInput({
     required this.amount,
     required this.categoryId,
@@ -8570,6 +9076,8 @@ class NewExpenseInput {
     required this.isOstentation,
     required this.fundedByDebt,
     this.note,
+    required this.selfInvestment,
+    this.learningPlanId,
   });
 
   @override
@@ -8584,7 +9092,9 @@ class NewExpenseInput {
       isGift.hashCode ^
       isOstentation.hashCode ^
       fundedByDebt.hashCode ^
-      note.hashCode;
+      note.hashCode ^
+      selfInvestment.hashCode ^
+      learningPlanId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -8601,7 +9111,9 @@ class NewExpenseInput {
           isGift == other.isGift &&
           isOstentation == other.isOstentation &&
           fundedByDebt == other.fundedByDebt &&
-          note == other.note;
+          note == other.note &&
+          selfInvestment == other.selfInvestment &&
+          learningPlanId == other.learningPlanId;
 }
 
 class NewGoalContributionInput {
@@ -10082,6 +10594,38 @@ class ScheduleRowDto {
           balance == other.balance;
 }
 
+/// «O'zimga sarmoya» qatori: davrdagi belgili xarajatlar jami va oy daromadidagi ulushi.
+class SelfInvestmentDto {
+  final MoneyDto total;
+  final MoneyDto income;
+
+  /// Oy daromadi 0 bo'lsa — `null`.
+  final int? shareBp;
+
+  /// Ko'rsatish uchun: `7,92` (foiz belgisisiz).
+  final String? sharePercent;
+
+  const SelfInvestmentDto({
+    required this.total,
+    required this.income,
+    this.shareBp,
+    this.sharePercent,
+  });
+
+  @override
+  int get hashCode => total.hashCode ^ income.hashCode ^ shareBp.hashCode ^ sharePercent.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SelfInvestmentDto &&
+          runtimeType == other.runtimeType &&
+          total == other.total &&
+          income == other.income &&
+          shareBp == other.shareBp &&
+          sharePercent == other.sharePercent;
+}
+
 class SellItemInput {
   final String price;
   final String? date;
@@ -10390,6 +10934,99 @@ class StreakDto {
           currentWeekDone == other.currentWeekDone;
 }
 
+class StudyLogInput {
+  /// Bo'sh — bugun.
+  final String? occurredOn;
+  final int minutes;
+  final String? note;
+
+  const StudyLogInput({
+    this.occurredOn,
+    required this.minutes,
+    this.note,
+  });
+
+  @override
+  int get hashCode => occurredOn.hashCode ^ minutes.hashCode ^ note.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StudyLogInput &&
+          runtimeType == other.runtimeType &&
+          occurredOn == other.occurredOn &&
+          minutes == other.minutes &&
+          note == other.note;
+}
+
+class TeachingLogDto {
+  final String id;
+  final String memberId;
+  final String occurredOn;
+  final String? learner;
+  final String topic;
+  final int? minutes;
+
+  const TeachingLogDto({
+    required this.id,
+    required this.memberId,
+    required this.occurredOn,
+    this.learner,
+    required this.topic,
+    this.minutes,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ memberId.hashCode ^ occurredOn.hashCode ^ learner.hashCode ^ topic.hashCode ^ minutes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TeachingLogDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          memberId == other.memberId &&
+          occurredOn == other.occurredOn &&
+          learner == other.learner &&
+          topic == other.topic &&
+          minutes == other.minutes;
+}
+
+class TeachingLogInput {
+  final String memberId;
+
+  /// Bo'sh — bugun.
+  final String? occurredOn;
+
+  /// Kimga (ixtiyoriy): ism yoki «qo'shni», «xodim».
+  final String? learner;
+  final String topic;
+  final int? minutes;
+
+  const TeachingLogInput({
+    required this.memberId,
+    this.occurredOn,
+    this.learner,
+    required this.topic,
+    this.minutes,
+  });
+
+  @override
+  int get hashCode => memberId.hashCode ^ occurredOn.hashCode ^ learner.hashCode ^ topic.hashCode ^ minutes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TeachingLogInput &&
+          runtimeType == other.runtimeType &&
+          memberId == other.memberId &&
+          occurredOn == other.occurredOn &&
+          learner == other.learner &&
+          topic == other.topic &&
+          minutes == other.minutes;
+}
+
 /// Grafik nuqtasi: oy oxiridagi umumiy qoldiq (odatiy va tezlashtirilgan).
 class TimelinePointDto {
   /// `YYYY-MM-01`.
@@ -10472,6 +11109,9 @@ enum Topic {
   sync_,
   kasbkor,
   musofir,
+
+  /// «O'zimga sarmoya»: soat qiymati, bilim rejalari, «Ilm zakoti».
+  learning,
 }
 
 /// Qarzning haqiqiy narxi (uy/SPEC 2D.3).

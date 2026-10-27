@@ -151,6 +151,8 @@ fn owner_setup(app: &App) -> (String, String, String, String) {
             is_ostentation: false,
             funded_by_debt: false,
             note: None,
+            self_investment: false,
+            learning_plan_id: None,
         },
     )
     .unwrap();
@@ -453,6 +455,8 @@ fn seller_device_holds_no_profit_data_and_owner_accepts_only_its_records() {
                 is_ostentation: false,
                 funded_by_debt: false,
                 note: None,
+                self_investment: false,
+                learning_plan_id: None,
             },
         )
         .unwrap();

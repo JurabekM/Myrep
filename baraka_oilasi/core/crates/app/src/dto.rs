@@ -196,6 +196,12 @@ pub struct NewExpenseInput {
     pub is_ostentation: bool,
     pub funded_by_debt: bool,
     pub note: Option<String>,
+    /// «O'zimga sarmoya» belgisi (uy/SPEC 2G.3): toifa o'zgarmaydi, havas chegarasiga kirmaydi.
+    #[serde(default)]
+    pub self_investment: bool,
+    /// Bilim rejasiga havola — faqat `self_investment` bo'lsa.
+    #[serde(default)]
+    pub learning_plan_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -208,6 +214,8 @@ pub struct ExpenseDto {
     pub necessity: Option<String>,
     pub occurred_on: String,
     pub funded_by_debt: bool,
+    pub self_investment: bool,
+    pub learning_plan_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -241,6 +249,24 @@ pub struct MonthlySummaryDto {
     pub unexplained_gap: MoneyDto,
     /// Oy yakuni: daromad − majburiyatlar − xarajatlar.
     pub month_result: MoneyDto,
+    /// Havas chegarasi (2B.3) bilan solishtiriladigan summa: `by_necessity.havas` dan «O'zimga sarmoya»
+    /// belgili xarajatlar chiqarilgan (2G.3); toifalar bo'yicha taqsimot o'zgarmaydi.
+    pub havas_for_limit: MoneyDto,
+    /// «O'zimga sarmoya: X so'm — daromadning Y %» qatori (2G.3).
+    pub self_investment: SelfInvestmentDto,
+}
+
+/// «O'zimga sarmoya» qatori: davrdagi belgili xarajatlar jami va oy daromadidagi ulushi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct SelfInvestmentDto {
+    pub total: MoneyDto,
+    pub income: MoneyDto,
+    /// Oy daromadi 0 bo'lsa — `null`.
+    pub share_bp: Option<i32>,
+    /// Ko'rsatish uchun: `7,92` (foiz belgisisiz).
+    pub share_percent: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -4036,4 +4062,206 @@ pub struct MfOutcomeDto {
     pub outcome: String,
     pub outcome_on: String,
     pub note: Option<String>,
+}
+
+// ---- U16: «O'zingizga sarmoya qiling» — soat qiymati, bilim rejasi, «Ilm zakoti» (uy/SPEC 2G) ----
+
+/// Oxirgi to'liq oylardan biri (yozuvi borlari) — a'zoning daromadi jami.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MonthIncomeDto {
+    pub period_start: String,
+    pub period_end: String,
+    pub total: MoneyDto,
+}
+
+/// «Bir soatim qancha?» uchun oylik daromad taklifi (2G.1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct HourValueSuggestionDto {
+    pub member_id: String,
+    /// Oxirgi 3 to'liq oydan daromad yozuvi borlari (yangisidan eskisiga).
+    pub months: Vec<MonthIncomeDto>,
+    /// Shu oylar o'rtachasi; yozuv yo'q bo'lsa — `null` (maydon bo'sh qoladi).
+    pub average: Option<MoneyDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct HourValueInput {
+    pub member_id: String,
+    /// Qo'lda kiritilgan oylik daromad; bo'sh — oxirgi to'liq oylar o'rtachasi (`AUTO`).
+    pub income: Option<String>,
+    /// Kuniga ish vaqti, daqiqada (1–1440).
+    pub minutes_per_day: u32,
+    /// Oyda ish kunlari (1–31).
+    pub days: u32,
+}
+
+/// Saqlangan soat qiymati hisobi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct HourValueDto {
+    pub id: String,
+    pub member_id: String,
+    pub income: MoneyDto,
+    /// `AUTO` yoki `MANUAL`.
+    pub income_source: String,
+    pub minutes_per_day: u32,
+    pub days: u32,
+    pub monthly_minutes: u32,
+    pub hour_value: MoneyDto,
+    /// «Ikki barobar maqsad».
+    pub double_target: MoneyDto,
+    /// Kuniga 10 soat yoki oyiga 260 soatdan ko'p — soat qiymatini oshirish yo'li taklif qilinadi.
+    pub over_ceiling: bool,
+    pub computed_on: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct LearningPlanInput {
+    pub member_id: String,
+    pub skill: String,
+    /// Bu ko'nikma qaysi ishni yoki soatni qimmatlashtiradi.
+    pub purpose: Option<String>,
+    /// `BOOK`, `MENTOR`, `COURSE`, `PRACTICE` (bir nechtasi).
+    pub paths: Vec<String>,
+    pub budget: Option<String>,
+    pub weekly_minutes: u32,
+    /// Bo'sh — bugun.
+    pub start_on: Option<String>,
+    /// Bo'sh — boshlanishdan 3 oy keyin.
+    pub review_on: Option<String>,
+}
+
+/// Reja kartasi: jami o'qish vaqti va byudjetdan sarflangani bilan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct LearningPlanDto {
+    pub id: String,
+    pub member_id: String,
+    pub skill: String,
+    pub purpose: Option<String>,
+    pub paths: Vec<String>,
+    pub budget: Option<MoneyDto>,
+    pub weekly_minutes: u32,
+    pub start_on: String,
+    pub review_on: String,
+    /// `ACTIVE`, `PAUSED`, `DONE`, `DROPPED`.
+    pub status: String,
+    /// Reja ochilgandagi soat qiymati (boshlang'ich nuqta); hisob bo'lmagan bo'lsa — `null`.
+    pub baseline_hour_value: Option<MoneyDto>,
+    /// Oxirgi o'lchangan natija (2G.5).
+    pub result_hour_value: Option<MoneyDto>,
+    pub study_minutes: u32,
+    /// Rejaga bog'langan «O'zimga sarmoya» xarajatlari.
+    pub spent: MoneyDto,
+    /// `COURSE` yo'li tanlangan — kurs tekshiruvi taklif qilinadi (2G.4).
+    pub course_check_suggested: bool,
+    /// Ko'rik sanasi keldi (reja yopilmagan).
+    pub review_due: bool,
+}
+
+/// Natijani o'lchash (2G.5): a'zoning oxirgi soat qiymati boshlang'ich nuqta bilan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct LearningResultDto {
+    pub plan_id: String,
+    pub baseline: Option<HourValueDto>,
+    pub current: HourValueDto,
+    /// Farq; boshlang'ich nuqta bo'lmasa — `null`.
+    pub diff: Option<MoneyDto>,
+    /// Boshlang'ich nuqta yo'q yoki 0 bo'lsa — `null` (faqat yangi qiymat ko'rsatiladi).
+    pub change_bp: Option<i32>,
+    pub change_percent: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct StudyLogInput {
+    /// Bo'sh — bugun.
+    pub occurred_on: Option<String>,
+    pub minutes: u32,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct TeachingLogInput {
+    pub member_id: String,
+    /// Bo'sh — bugun.
+    pub occurred_on: Option<String>,
+    /// Kimga (ixtiyoriy): ism yoki «qo'shni», «xodim».
+    pub learner: Option<String>,
+    pub topic: String,
+    pub minutes: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct TeachingLogDto {
+    pub id: String,
+    pub member_id: String,
+    pub occurred_on: String,
+    pub learner: Option<String>,
+    pub topic: String,
+    pub minutes: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct LearningMemberDto {
+    pub member_id: String,
+    pub display_name: String,
+    /// Oxirgi saqlangan hisob.
+    pub hour_value: Option<HourValueDto>,
+    pub active_plans: u32,
+}
+
+/// «O'zimga sarmoya» ekrani: a'zolar soat qiymati, rejalar, shu oy «Ilm zakoti» va sarmoya qatori.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct LearningOverviewDto {
+    pub period_start: String,
+    pub period_end: String,
+    pub members: Vec<LearningMemberDto>,
+    pub plans: Vec<LearningPlanDto>,
+    /// Shu oydagi o'rgatish yozuvlari soni.
+    pub teaching_count: u32,
+    pub teaching: Vec<TeachingLogDto>,
+    pub self_investment: SelfInvestmentDto,
+}
+
+/// Kurs yoki ustoz taklifi (2G.4). Har bir javob: `YES`, `NO` yoki `UNKNOWN`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct CourseAnswersInput {
+    pub fast_rich: String,
+    pub secret_formula: String,
+    pub income_guarantee: String,
+    /// Dastur va amaliy natija yozilganmi.
+    pub syllabus: String,
+    /// O'qituvchining amaliy ishini tekshirib bo'ladimi.
+    pub teacher_verifiable: String,
+    pub urgency: String,
+    pub recruitment: String,
+    /// Sinov darsi yoki pulni qaytarish sharti bormi.
+    pub trial_or_refund: String,
+    /// Musofir: kursdan keyin chet elda ish kafolati (bo'sh — so'ralmagan).
+    #[serde(default)]
+    pub job_abroad: Option<String>,
 }

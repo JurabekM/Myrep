@@ -2265,6 +2265,112 @@ pub async fn mf_set_outcome(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn check_course(
+    state: State<'_, Desktop>,
+    input: CourseAnswersInput,
+) -> R<OfferCheckDto> {
+    state.session.app()?.check_course(input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn hour_value_suggest(
+    state: State<'_, Desktop>,
+    space_id: String,
+    member_id: String,
+) -> R<HourValueSuggestionDto> {
+    state
+        .session
+        .app()?
+        .hour_value_suggest(&space_id, &member_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn hour_value_save(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: HourValueInput,
+) -> R<HourValueDto> {
+    state.session.app()?.hour_value_save(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn learning_plan_create(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: LearningPlanInput,
+) -> R<LearningPlanDto> {
+    state.session.app()?.learning_plan_create(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn learning_plan_set_status(
+    state: State<'_, Desktop>,
+    space_id: String,
+    plan_id: String,
+    status: String,
+) -> R<LearningPlanDto> {
+    state
+        .session
+        .app()?
+        .learning_plan_set_status(&space_id, &plan_id, &status)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn learning_plan_result(
+    state: State<'_, Desktop>,
+    space_id: String,
+    plan_id: String,
+) -> R<LearningResultDto> {
+    state
+        .session
+        .app()?
+        .learning_plan_result(&space_id, &plan_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn study_log_add(
+    state: State<'_, Desktop>,
+    space_id: String,
+    plan_id: String,
+    input: StudyLogInput,
+) -> R<LearningPlanDto> {
+    state
+        .session
+        .app()?
+        .study_log_add(&space_id, &plan_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn teaching_log_add(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: TeachingLogInput,
+) -> R<TeachingLogDto> {
+    state.session.app()?.teaching_log_add(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn learning_overview(
+    state: State<'_, Desktop>,
+    space_id: String,
+    date: Option<String>,
+) -> R<LearningOverviewDto> {
+    state
+        .session
+        .app()?
+        .learning_overview(&space_id, date.as_deref())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

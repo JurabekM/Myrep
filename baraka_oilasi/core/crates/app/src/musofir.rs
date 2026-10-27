@@ -619,6 +619,8 @@ impl App {
             is_gift: false,
             is_ostentation: false,
             funded_by_debt: false,
+            self_investment: false,
+            learning_plan_id: None,
             note: clean_opt(input.note.as_deref()),
         };
         let meta = self.meta();

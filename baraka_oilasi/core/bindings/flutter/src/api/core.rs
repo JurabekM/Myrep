@@ -1688,6 +1688,89 @@ impl BarakaCore {
             .mf_set_outcome(&space_id, &decision_id, input)
     }
 
+    // ---- U16: «O'zingizga sarmoya qiling» — soat qiymati, bilim rejasi, «Ilm zakoti» ----
+
+    /// Kurs yoki ustoz taklifini tekshirish (umumiy detektorning `COURSE` turi).
+    pub fn check_course(&self, input: CourseAnswersInput) -> Result<OfferCheckDto, AppError> {
+        self.session.app()?.check_course(input)
+    }
+
+    pub fn hour_value_suggest(
+        &self,
+        space_id: String,
+        member_id: String,
+    ) -> Result<HourValueSuggestionDto, AppError> {
+        self.session
+            .app()?
+            .hour_value_suggest(&space_id, &member_id)
+    }
+
+    pub fn hour_value_save(
+        &self,
+        space_id: String,
+        input: HourValueInput,
+    ) -> Result<HourValueDto, AppError> {
+        self.session.app()?.hour_value_save(&space_id, input)
+    }
+
+    pub fn learning_plan_create(
+        &self,
+        space_id: String,
+        input: LearningPlanInput,
+    ) -> Result<LearningPlanDto, AppError> {
+        self.session.app()?.learning_plan_create(&space_id, input)
+    }
+
+    pub fn learning_plan_set_status(
+        &self,
+        space_id: String,
+        plan_id: String,
+        status: String,
+    ) -> Result<LearningPlanDto, AppError> {
+        self.session
+            .app()?
+            .learning_plan_set_status(&space_id, &plan_id, &status)
+    }
+
+    pub fn learning_plan_result(
+        &self,
+        space_id: String,
+        plan_id: String,
+    ) -> Result<LearningResultDto, AppError> {
+        self.session
+            .app()?
+            .learning_plan_result(&space_id, &plan_id)
+    }
+
+    pub fn study_log_add(
+        &self,
+        space_id: String,
+        plan_id: String,
+        input: StudyLogInput,
+    ) -> Result<LearningPlanDto, AppError> {
+        self.session
+            .app()?
+            .study_log_add(&space_id, &plan_id, input)
+    }
+
+    pub fn teaching_log_add(
+        &self,
+        space_id: String,
+        input: TeachingLogInput,
+    ) -> Result<TeachingLogDto, AppError> {
+        self.session.app()?.teaching_log_add(&space_id, input)
+    }
+
+    pub fn learning_overview(
+        &self,
+        space_id: String,
+        date: Option<String>,
+    ) -> Result<LearningOverviewDto, AppError> {
+        self.session
+            .app()?
+            .learning_overview(&space_id, date.as_deref())
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

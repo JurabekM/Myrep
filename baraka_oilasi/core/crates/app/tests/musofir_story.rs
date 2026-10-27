@@ -77,6 +77,8 @@ fn uy_expense(app: &App, uy: &str, amount: &str, on: &str) {
             is_ostentation: false,
             funded_by_debt: false,
             note: None,
+            self_investment: false,
+            learning_plan_id: None,
         },
     )
     .unwrap();

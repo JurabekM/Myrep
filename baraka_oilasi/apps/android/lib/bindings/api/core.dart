@@ -149,6 +149,9 @@ abstract class BarakaCore implements RustOpaqueInterface {
     required String draftJson,
   });
 
+  /// Kurs yoki ustoz taklifini tekshirish (umumiy detektorning `COURSE` turi).
+  Future<OfferCheckDto> checkCourse({required CourseAnswersInput input});
+
   /// «Kafolatlangan foyda» detektori — ilovaning istalgan joyidan.
   Future<OfferCheckDto> checkOffer({required OfferAnswersInput input});
 
@@ -285,6 +288,16 @@ abstract class BarakaCore implements RustOpaqueInterface {
   });
 
   Future<List<NudgeDto>> homeNudges({required String spaceId});
+
+  Future<HourValueDto> hourValueSave({
+    required String spaceId,
+    required HourValueInput input,
+  });
+
+  Future<HourValueSuggestionDto> hourValueSuggest({
+    required String spaceId,
+    required String memberId,
+  });
 
   Future<HouseholdDto> household();
 
@@ -614,6 +627,27 @@ abstract class BarakaCore implements RustOpaqueInterface {
 
   Future<List<KkZakatCalcDto>> kkZakatHistory({required String spaceId});
 
+  Future<LearningOverviewDto> learningOverview({
+    required String spaceId,
+    String? date,
+  });
+
+  Future<LearningPlanDto> learningPlanCreate({
+    required String spaceId,
+    required LearningPlanInput input,
+  });
+
+  Future<LearningResultDto> learningPlanResult({
+    required String spaceId,
+    required String planId,
+  });
+
+  Future<LearningPlanDto> learningPlanSetStatus({
+    required String spaceId,
+    required String planId,
+    required String status,
+  });
+
   /// Saqlangan tilxat PDF'i (joriy tekshirish kodi bilan).
   Future<Uint8List> loanReceiptPdf({
     required String spaceId,
@@ -887,6 +921,17 @@ abstract class BarakaCore implements RustOpaqueInterface {
   Future<List<SkillDto>> skills({required String spaceId});
 
   Future<SessionStatus> status();
+
+  Future<LearningPlanDto> studyLogAdd({
+    required String spaceId,
+    required String planId,
+    required StudyLogInput input,
+  });
+
+  Future<TeachingLogDto> teachingLogAdd({
+    required String spaceId,
+    required TeachingLogInput input,
+  });
 
   Future<HouseholdDto> unlock({
     required List<int> platformSecret,

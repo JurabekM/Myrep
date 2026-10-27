@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-hour-value-suggest"
+description = "Enables the hour_value_suggest command without any pre-configured scope."
+commands.allow = ["hour_value_suggest"]
+
+[[permission]]
+identifier = "deny-hour-value-suggest"
+description = "Denies the hour_value_suggest command without any pre-configured scope."
+commands.deny = ["hour_value_suggest"]

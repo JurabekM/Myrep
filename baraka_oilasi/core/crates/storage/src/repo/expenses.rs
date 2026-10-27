@@ -18,11 +18,15 @@ pub struct ExpenseRow {
     pub is_ostentation: bool,
     pub funded_by_debt: bool,
     pub note: Option<String>,
+    /// «O'zimga sarmoya» belgisi (uy/SPEC 2G.3): toifa o'zgarmaydi, havas chegarasiga kirmaydi.
+    pub self_investment: bool,
+    /// Bilim rejasiga havola (faqat belgili xarajatda).
+    pub learning_plan_id: Option<String>,
 }
 
 const COLS: &str =
     "id, category_id, member_id, amount_minor, currency, channel, occurred_on, necessity,
-    obligation_id, is_gift, is_ostentation, funded_by_debt, note";
+    obligation_id, is_gift, is_ostentation, funded_by_debt, note, self_investment, learning_plan_id";
 
 fn map(r: &rusqlite::Row<'_>) -> rusqlite::Result<ExpenseRow> {
     Ok(ExpenseRow {
@@ -39,6 +43,8 @@ fn map(r: &rusqlite::Row<'_>) -> rusqlite::Result<ExpenseRow> {
         is_ostentation: opt_bool(r.get(10)?),
         funded_by_debt: opt_bool(r.get(11)?),
         note: r.get(12)?,
+        self_investment: opt_bool(r.get(13)?),
+        learning_plan_id: r.get(14)?,
     })
 }
 
@@ -51,11 +57,12 @@ pub fn insert(
     tx.execute(
         "INSERT INTO expenses (id, household_id, space_id, category_id, member_id, amount_minor, currency, channel,
             occurred_on, necessity, obligation_id, is_gift, is_ostentation, funded_by_debt, note,
-            created_at, updated_at, origin_device_id, updated_by_device_id)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?16, ?17, ?17)",
+            self_investment, learning_plan_id, created_at, updated_at, origin_device_id, updated_by_device_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?18, ?19, ?19)",
         params![e.id, s.household_id, s.space_id, e.category_id, e.member_id, e.amount_minor, e.currency,
             e.channel, e.occurred_on, e.necessity, e.obligation_id, i64::from(e.is_gift),
-            i64::from(e.is_ostentation), i64::from(e.funded_by_debt), e.note, m.now, m.device_id],
+            i64::from(e.is_ostentation), i64::from(e.funded_by_debt), e.note, i64::from(e.self_investment),
+            e.learning_plan_id, m.now, m.device_id],
     )?;
     Ok(())
 }

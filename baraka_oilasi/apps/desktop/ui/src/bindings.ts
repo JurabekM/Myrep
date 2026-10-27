@@ -240,6 +240,15 @@ export const commands = {
 	mfDecisionQuestions: (kind: string) => typedError<string[], AppError>(__TAURI_INVOKE("mf_decision_questions", { kind })),
 	mfSetPlan: (spaceId: string, input: MfPlanInput) => typedError<MfOverviewDto, AppError>(__TAURI_INVOKE("mf_set_plan", { spaceId, input })),
 	mfSetOutcome: (spaceId: string, decisionId: string, input: MfOutcomeInput) => typedError<MfDecisionDto[], AppError>(__TAURI_INVOKE("mf_set_outcome", { spaceId, decisionId, input })),
+	checkCourse: (input: CourseAnswersInput) => typedError<OfferCheckDto, AppError>(__TAURI_INVOKE("check_course", { input })),
+	hourValueSuggest: (spaceId: string, memberId: string) => typedError<HourValueSuggestionDto, AppError>(__TAURI_INVOKE("hour_value_suggest", { spaceId, memberId })),
+	hourValueSave: (spaceId: string, input: HourValueInput) => typedError<HourValueDto, AppError>(__TAURI_INVOKE("hour_value_save", { spaceId, input })),
+	learningPlanCreate: (spaceId: string, input: LearningPlanInput) => typedError<LearningPlanDto, AppError>(__TAURI_INVOKE("learning_plan_create", { spaceId, input })),
+	learningPlanSetStatus: (spaceId: string, planId: string, status: string) => typedError<LearningPlanDto, AppError>(__TAURI_INVOKE("learning_plan_set_status", { spaceId, planId, status })),
+	learningPlanResult: (spaceId: string, planId: string) => typedError<LearningResultDto, AppError>(__TAURI_INVOKE("learning_plan_result", { spaceId, planId })),
+	studyLogAdd: (spaceId: string, planId: string, input: StudyLogInput) => typedError<LearningPlanDto, AppError>(__TAURI_INVOKE("study_log_add", { spaceId, planId, input })),
+	teachingLogAdd: (spaceId: string, input: TeachingLogInput) => typedError<TeachingLogDto, AppError>(__TAURI_INVOKE("teaching_log_add", { spaceId, input })),
+	learningOverview: (spaceId: string, date: string | null) => typedError<LearningOverviewDto, AppError>(__TAURI_INVOKE("learning_overview", { spaceId, date })),
 };
 
 /** Events */
@@ -602,6 +611,23 @@ export type ContributorDto = {
 /**  Yadrodagi o'zgarish — UI tegishli so'rovlarni qayta o'qiydi. */
 export type CoreChanged = ChangeEvent;
 
+/**  Kurs yoki ustoz taklifi (2G.4). Har bir javob: `YES`, `NO` yoki `UNKNOWN`. */
+export type CourseAnswersInput = {
+	fastRich: string,
+	secretFormula: string,
+	incomeGuarantee: string,
+	/**  Dastur va amaliy natija yozilganmi. */
+	syllabus: string,
+	/**  O'qituvchining amaliy ishini tekshirib bo'ladimi. */
+	teacherVerifiable: string,
+	urgency: string,
+	recruitment: string,
+	/**  Sinov darsi yoki pulni qaytarish sharti bormi. */
+	trialOrRefund: string,
+	/**  Musofir: kursdan keyin chet elda ish kafolati (bo'sh — so'ralmagan). */
+	jobAbroad?: string | null,
+};
+
 export type Custody = {
 	/**  Pul qayerda turadi. */
 	location: string,
@@ -765,6 +791,8 @@ export type ExpenseDto = {
 	necessity: string | null,
 	occurredOn: string,
 	fundedByDebt: boolean,
+	selfInvestment: boolean,
+	learningPlanId: string | null,
 };
 
 export type ExportInput = {
@@ -884,6 +912,43 @@ export type HoldReviewInput = {
 	/**  `SCHEDULED`, `PROFIT_SPIKE`, `EXTRA`. */
 	reason: string,
 	acks: ReviewAckInput[],
+};
+
+/**  Saqlangan soat qiymati hisobi. */
+export type HourValueDto = {
+	id: string,
+	memberId: string,
+	income: MoneyDto,
+	/**  `AUTO` yoki `MANUAL`. */
+	incomeSource: string,
+	minutesPerDay: number,
+	days: number,
+	monthlyMinutes: number,
+	hourValue: MoneyDto,
+	/**  «Ikki barobar maqsad». */
+	doubleTarget: MoneyDto,
+	/**  Kuniga 10 soat yoki oyiga 260 soatdan ko'p — soat qiymatini oshirish yo'li taklif qilinadi. */
+	overCeiling: boolean,
+	computedOn: string,
+};
+
+export type HourValueInput = {
+	memberId: string,
+	/**  Qo'lda kiritilgan oylik daromad; bo'sh — oxirgi to'liq oylar o'rtachasi (`AUTO`). */
+	income: string | null,
+	/**  Kuniga ish vaqti, daqiqada (1–1440). */
+	minutesPerDay: number,
+	/**  Oyda ish kunlari (1–31). */
+	days: number,
+};
+
+/**  «Bir soatim qancha?» uchun oylik daromad taklifi (2G.1). */
+export type HourValueSuggestionDto = {
+	memberId: string,
+	/**  Oxirgi 3 to'liq oydan daromad yozuvi borlari (yangisidan eskisiga). */
+	months: MonthIncomeDto[],
+	/**  Shu oylar o'rtachasi; yozuv yo'q bo'lsa — `null` (maydon bo'sh qoladi). */
+	average: MoneyDto | null,
 };
 
 export type HouseholdDto = {
@@ -2096,6 +2161,79 @@ export type KkZakatReceivableDto = {
 	hopeless: boolean,
 };
 
+export type LearningMemberDto = {
+	memberId: string,
+	displayName: string,
+	/**  Oxirgi saqlangan hisob. */
+	hourValue: HourValueDto | null,
+	activePlans: number,
+};
+
+/**  «O'zimga sarmoya» ekrani: a'zolar soat qiymati, rejalar, shu oy «Ilm zakoti» va sarmoya qatori. */
+export type LearningOverviewDto = {
+	periodStart: string,
+	periodEnd: string,
+	members: LearningMemberDto[],
+	plans: LearningPlanDto[],
+	/**  Shu oydagi o'rgatish yozuvlari soni. */
+	teachingCount: number,
+	teaching: TeachingLogDto[],
+	selfInvestment: SelfInvestmentDto,
+};
+
+/**  Reja kartasi: jami o'qish vaqti va byudjetdan sarflangani bilan. */
+export type LearningPlanDto = {
+	id: string,
+	memberId: string,
+	skill: string,
+	purpose: string | null,
+	paths: string[],
+	budget: MoneyDto | null,
+	weeklyMinutes: number,
+	startOn: string,
+	reviewOn: string,
+	/**  `ACTIVE`, `PAUSED`, `DONE`, `DROPPED`. */
+	status: string,
+	/**  Reja ochilgandagi soat qiymati (boshlang'ich nuqta); hisob bo'lmagan bo'lsa — `null`. */
+	baselineHourValue: MoneyDto | null,
+	/**  Oxirgi o'lchangan natija (2G.5). */
+	resultHourValue: MoneyDto | null,
+	studyMinutes: number,
+	/**  Rejaga bog'langan «O'zimga sarmoya» xarajatlari. */
+	spent: MoneyDto,
+	/**  `COURSE` yo'li tanlangan — kurs tekshiruvi taklif qilinadi (2G.4). */
+	courseCheckSuggested: boolean,
+	/**  Ko'rik sanasi keldi (reja yopilmagan). */
+	reviewDue: boolean,
+};
+
+export type LearningPlanInput = {
+	memberId: string,
+	skill: string,
+	/**  Bu ko'nikma qaysi ishni yoki soatni qimmatlashtiradi. */
+	purpose: string | null,
+	/**  `BOOK`, `MENTOR`, `COURSE`, `PRACTICE` (bir nechtasi). */
+	paths: string[],
+	budget: string | null,
+	weeklyMinutes: number,
+	/**  Bo'sh — bugun. */
+	startOn: string | null,
+	/**  Bo'sh — boshlanishdan 3 oy keyin. */
+	reviewOn: string | null,
+};
+
+/**  Natijani o'lchash (2G.5): a'zoning oxirgi soat qiymati boshlang'ich nuqta bilan. */
+export type LearningResultDto = {
+	planId: string,
+	baseline: HourValueDto | null,
+	current: HourValueDto,
+	/**  Farq; boshlang'ich nuqta bo'lmasa — `null`. */
+	diff: MoneyDto | null,
+	/**  Boshlang'ich nuqta yo'q yoki 0 bo'lsa — `null` (faqat yangi qiymat ko'rsatiladi). */
+	changeBp: number | null,
+	changePercent: string | null,
+};
+
 /**  Qarz tilxati (uy/SPEC 2D.5): foizsiz, yozma, guvohli va to'lov rejasi bilan. */
 export type LoanReceiptInput = {
 	lender: string,
@@ -2636,6 +2774,13 @@ export type MoneyDto = {
 	plain: string,
 };
 
+/**  Oxirgi to'liq oylardan biri (yozuvi borlari) — a'zoning daromadi jami. */
+export type MonthIncomeDto = {
+	periodStart: string,
+	periodEnd: string,
+	total: MoneyDto,
+};
+
 /**  Oylik audit va bosh ekran KPI'lari (uy/SPEC 2.3–2.4). */
 export type MonthlySummaryDto = {
 	periodStart: string,
@@ -2652,6 +2797,13 @@ export type MonthlySummaryDto = {
 	unexplainedGap: MoneyDto,
 	/**  Oy yakuni: daromad − majburiyatlar − xarajatlar. */
 	monthResult: MoneyDto,
+	/**
+	 *  Havas chegarasi (2B.3) bilan solishtiriladigan summa: `by_necessity.havas` dan «O'zimga sarmoya»
+	 *  belgili xarajatlar chiqarilgan (2G.3); toifalar bo'yicha taqsimot o'zgarmaydi.
+	 */
+	havasForLimit: MoneyDto,
+	/**  «O'zimga sarmoya: X so'm — daromadning Y %» qatori (2G.3). */
+	selfInvestment: SelfInvestmentDto,
 };
 
 export type NecessityTotalsDto = {
@@ -2738,6 +2890,10 @@ export type NewExpenseInput = {
 	isOstentation: boolean,
 	fundedByDebt: boolean,
 	note: string | null,
+	/**  «O'zimga sarmoya» belgisi (uy/SPEC 2G.3): toifa o'zgarmaydi, havas chegarasiga kirmaydi. */
+	selfInvestment?: boolean,
+	/**  Bilim rejasiga havola — faqat `self_investment` bo'lsa. */
+	learningPlanId?: string | null,
 };
 
 export type NewGoalContributionInput = {
@@ -3249,6 +3405,16 @@ export type ScheduleRowDto = {
 	balance: MoneyDto,
 };
 
+/**  «O'zimga sarmoya» qatori: davrdagi belgili xarajatlar jami va oy daromadidagi ulushi. */
+export type SelfInvestmentDto = {
+	total: MoneyDto,
+	income: MoneyDto,
+	/**  Oy daromadi 0 bo'lsa — `null`. */
+	shareBp: number | null,
+	/**  Ko'rsatish uchun: `7,92` (foiz belgisisiz). */
+	sharePercent: string | null,
+};
+
 export type SellItemInput = {
 	price: string,
 	date: string | null,
@@ -3365,6 +3531,32 @@ export type StreakDto = {
 /**  Bitta uzluksiz chiziq: `[x, y]` nuqtalar. */
 export type Stroke = ([number, number])[];
 
+export type StudyLogInput = {
+	/**  Bo'sh — bugun. */
+	occurredOn: string | null,
+	minutes: number,
+	note: string | null,
+};
+
+export type TeachingLogDto = {
+	id: string,
+	memberId: string,
+	occurredOn: string,
+	learner: string | null,
+	topic: string,
+	minutes: number | null,
+};
+
+export type TeachingLogInput = {
+	memberId: string,
+	/**  Bo'sh — bugun. */
+	occurredOn: string | null,
+	/**  Kimga (ixtiyoriy): ism yoki «qo'shni», «xodim». */
+	learner: string | null,
+	topic: string,
+	minutes: number | null,
+};
+
 export type Term = {
 	/**  `YYYY-MM-DD`; o'tmishda bo'lishi mumkin (og'zaki kelishuvni yozish). */
 	effectiveFrom: string,
@@ -3392,7 +3584,9 @@ export type TimelineRowDto = {
 };
 
 /**  UI qaysi ma'lumotni qayta o'qishi kerakligini bildiradi (4.4). */
-export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync" | "kasbkor" | "musofir";
+export type Topic = "household" | "categories" | "incomes" | "expenses" | "vault" | "allocationRule" | "agreements" | "journal" | "debts" | "budget" | "ceremonies" | "partnerships" | "ventures" | "ideas" | "governance" | "devices" | "sync" | "kasbkor" | "musofir" | 
+/**  «O'zimga sarmoya»: soat qiymati, bilim rejalari, «Ilm zakoti». */
+"learning";
 
 /**  Qarzning haqiqiy narxi (uy/SPEC 2D.3). */
 export type TrueCostDto = {

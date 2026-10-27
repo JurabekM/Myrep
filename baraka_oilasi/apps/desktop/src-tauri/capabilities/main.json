@@ -210,6 +210,15 @@
     "allow-mf-decisions",
     "allow-mf-decision-questions",
     "allow-mf-set-plan",
-    "allow-mf-set-outcome"
+    "allow-mf-set-outcome",
+    "allow-check-course",
+    "allow-hour-value-suggest",
+    "allow-hour-value-save",
+    "allow-learning-plan-create",
+    "allow-learning-plan-set-status",
+    "allow-learning-plan-result",
+    "allow-study-log-add",
+    "allow-teaching-log-add",
+    "allow-learning-overview"
   ]
 }

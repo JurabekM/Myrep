@@ -204,6 +204,15 @@ const COMMANDS: &[&str] = &[
     "mf_decision_questions",
     "mf_set_plan",
     "mf_set_outcome",
+    "check_course",
+    "hour_value_suggest",
+    "hour_value_save",
+    "learning_plan_create",
+    "learning_plan_set_status",
+    "learning_plan_result",
+    "study_log_add",
+    "teaching_log_add",
+    "learning_overview",
 ];
 
 fn main() {

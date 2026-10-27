@@ -4388,5 +4388,22 @@
   "common_clear": "Tozalash",
   "agreements_sort": "Saralash",
   "error_PARSE_EMPTY": "Summani kiriting",
-  "error_PARSE_MISPLACED_SEPARATOR": "Kasr ajratuvchisi notoʻgʻri joyda"
+  "error_PARSE_MISPLACED_SEPARATOR": "Kasr ajratuvchisi notoʻgʻri joyda",
+  "error_NOT_UY_SPACE": "Bu amal faqat Uy makonida",
+  "error_INVALID_TIME": "Vaqt notoʻgʻri: kuniga 1–1440 daqiqa, haftasiga 1–10 080 daqiqa",
+  "error_INVALID_WORK_DAYS": "Oyda ish kunlari 1 dan 31 gacha boʻladi",
+  "error_NO_INCOME": "Oylik daromad yoʻq — soat qiymatini hisoblash uchun daromadni kiriting",
+  "error_SKILL_REQUIRED": "Qaysi koʻnikmani oʻrganishingizni yozing",
+  "error_SKILL_TOO_LONG": "Koʻnikma nomi koʻpi bilan 120 belgi",
+  "error_PATH_REQUIRED": "Kamida bitta yoʻlni tanlang: kitob, ustoz, kurs yoki amaliyot",
+  "error_INVALID_PATH": "Notoʻgʻri oʻqish yoʻli",
+  "error_ACTIVE_PLAN_LIMIT": "Bir aʼzoda bir vaqtda koʻpi bilan 2 ta faol reja — avval birini toʻxtating yoki yoping",
+  "error_INVALID_TRANSITION": "Rejani bu holatga oʻtkazib boʻlmaydi: yopilgan reja qayta ochilmaydi",
+  "error_INVALID_REVIEW_DATE": "Koʻrik sanasi boshlanish sanasidan keyin boʻlishi kerak",
+  "error_INVALID_STATUS": "Notoʻgʻri holat",
+  "error_NO_HOUR_VALUE": "Avval «Bir soatim qancha?» hisobini saqlang",
+  "error_PLAN_CLOSED": "Bu reja yopilgan — oʻqish vaqti yozilmaydi",
+  "error_SELF_INVESTMENT_REQUIRED": "Bilim rejasiga faqat «Oʻzimga sarmoya» belgili xarajat bogʻlanadi",
+  "error_NO_NEW_HOUR_VALUE": "Natijani oʻlchash uchun boshlangʻich nuqtadan keyin «Bir soatim qancha?» hisobini yangidan saqlang",
+  "error_PLAN_MEMBER_MISMATCH": "Xarajat boshqa aʼzoniki — uni faqat shu aʼzoning bilim rejasiga bogʻlash mumkin"
 }

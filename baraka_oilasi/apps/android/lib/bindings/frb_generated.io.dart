@@ -114,6 +114,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ClosePeriodInput dco_decode_box_autoadd_close_period_input(dynamic raw);
 
   @protected
+  CourseAnswersInput dco_decode_box_autoadd_course_answers_input(dynamic raw);
+
+  @protected
   DecisionDto dco_decode_box_autoadd_decision_dto(dynamic raw);
 
   @protected
@@ -135,6 +138,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HoldReviewInput dco_decode_box_autoadd_hold_review_input(dynamic raw);
+
+  @protected
+  HourValueDto dco_decode_box_autoadd_hour_value_dto(dynamic raw);
+
+  @protected
+  HourValueInput dco_decode_box_autoadd_hour_value_input(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_i_32(dynamic raw);
@@ -261,6 +270,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkZakatInput dco_decode_box_autoadd_kk_zakat_input(dynamic raw);
+
+  @protected
+  LearningPlanInput dco_decode_box_autoadd_learning_plan_input(dynamic raw);
 
   @protected
   LoanReceiptInput dco_decode_box_autoadd_loan_receipt_input(dynamic raw);
@@ -425,6 +437,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SkillInput dco_decode_box_autoadd_skill_input(dynamic raw);
 
   @protected
+  StudyLogInput dco_decode_box_autoadd_study_log_input(dynamic raw);
+
+  @protected
+  TeachingLogInput dco_decode_box_autoadd_teaching_log_input(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
@@ -480,6 +498,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ContributorDto dco_decode_contributor_dto(dynamic raw);
+
+  @protected
+  CourseAnswersInput dco_decode_course_answers_input(dynamic raw);
 
   @protected
   DebtDto dco_decode_debt_dto(dynamic raw);
@@ -552,6 +573,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HoldReviewInput dco_decode_hold_review_input(dynamic raw);
+
+  @protected
+  HourValueDto dco_decode_hour_value_dto(dynamic raw);
+
+  @protected
+  HourValueInput dco_decode_hour_value_input(dynamic raw);
+
+  @protected
+  HourValueSuggestionDto dco_decode_hour_value_suggestion_dto(dynamic raw);
 
   @protected
   HouseholdDto dco_decode_household_dto(dynamic raw);
@@ -848,6 +878,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkZakatReceivableDto dco_decode_kk_zakat_receivable_dto(dynamic raw);
 
   @protected
+  LearningMemberDto dco_decode_learning_member_dto(dynamic raw);
+
+  @protected
+  LearningOverviewDto dco_decode_learning_overview_dto(dynamic raw);
+
+  @protected
+  LearningPlanDto dco_decode_learning_plan_dto(dynamic raw);
+
+  @protected
+  LearningPlanInput dco_decode_learning_plan_input(dynamic raw);
+
+  @protected
+  LearningResultDto dco_decode_learning_result_dto(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
@@ -1031,6 +1076,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<LearningMemberDto> dco_decode_list_learning_member_dto(dynamic raw);
+
+  @protected
+  List<LearningPlanDto> dco_decode_list_learning_plan_dto(dynamic raw);
+
+  @protected
   List<MemberDto> dco_decode_list_member_dto(dynamic raw);
 
   @protected
@@ -1071,6 +1122,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<MoneyDto> dco_decode_list_money_dto(dynamic raw);
+
+  @protected
+  List<MonthIncomeDto> dco_decode_list_month_income_dto(dynamic raw);
 
   @protected
   List<NewMemberInput> dco_decode_list_new_member_input(dynamic raw);
@@ -1151,6 +1205,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<SpaceDto> dco_decode_list_space_dto(dynamic raw);
+
+  @protected
+  List<TeachingLogDto> dco_decode_list_teaching_log_dto(dynamic raw);
 
   @protected
   List<TimelinePointDto> dco_decode_list_timeline_point_dto(dynamic raw);
@@ -1315,6 +1372,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MoneyDto dco_decode_money_dto(dynamic raw);
 
   @protected
+  MonthIncomeDto dco_decode_month_income_dto(dynamic raw);
+
+  @protected
   MonthlySummaryDto dco_decode_monthly_summary_dto(dynamic raw);
 
   @protected
@@ -1400,6 +1460,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FamilyAgreementDto? dco_decode_opt_box_autoadd_family_agreement_dto(
     dynamic raw,
   );
+
+  @protected
+  HourValueDto? dco_decode_opt_box_autoadd_hour_value_dto(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
@@ -1554,6 +1617,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ScheduleRowDto dco_decode_schedule_row_dto(dynamic raw);
 
   @protected
+  SelfInvestmentDto dco_decode_self_investment_dto(dynamic raw);
+
+  @protected
   SellItemInput dco_decode_sell_item_input(dynamic raw);
 
   @protected
@@ -1591,6 +1657,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StreakDto dco_decode_streak_dto(dynamic raw);
+
+  @protected
+  StudyLogInput dco_decode_study_log_input(dynamic raw);
+
+  @protected
+  TeachingLogDto dco_decode_teaching_log_dto(dynamic raw);
+
+  @protected
+  TeachingLogInput dco_decode_teaching_log_input(dynamic raw);
 
   @protected
   TimelinePointDto dco_decode_timeline_point_dto(dynamic raw);
@@ -1751,6 +1826,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CourseAnswersInput sse_decode_box_autoadd_course_answers_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   DecisionDto sse_decode_box_autoadd_decision_dto(SseDeserializer deserializer);
 
   @protected
@@ -1778,6 +1858,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HoldReviewInput sse_decode_box_autoadd_hold_review_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HourValueDto sse_decode_box_autoadd_hour_value_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HourValueInput sse_decode_box_autoadd_hour_value_input(
     SseDeserializer deserializer,
   );
 
@@ -1964,6 +2054,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkZakatInput sse_decode_box_autoadd_kk_zakat_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LearningPlanInput sse_decode_box_autoadd_learning_plan_input(
     SseDeserializer deserializer,
   );
 
@@ -2216,6 +2311,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SkillInput sse_decode_box_autoadd_skill_input(SseDeserializer deserializer);
 
   @protected
+  StudyLogInput sse_decode_box_autoadd_study_log_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TeachingLogInput sse_decode_box_autoadd_teaching_log_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
@@ -2283,6 +2388,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ContributorDto sse_decode_contributor_dto(SseDeserializer deserializer);
+
+  @protected
+  CourseAnswersInput sse_decode_course_answers_input(
+    SseDeserializer deserializer,
+  );
 
   @protected
   DebtDto sse_decode_debt_dto(SseDeserializer deserializer);
@@ -2367,6 +2477,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HoldReviewInput sse_decode_hold_review_input(SseDeserializer deserializer);
+
+  @protected
+  HourValueDto sse_decode_hour_value_dto(SseDeserializer deserializer);
+
+  @protected
+  HourValueInput sse_decode_hour_value_input(SseDeserializer deserializer);
+
+  @protected
+  HourValueSuggestionDto sse_decode_hour_value_suggestion_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   HouseholdDto sse_decode_household_dto(SseDeserializer deserializer);
@@ -2705,6 +2826,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  LearningMemberDto sse_decode_learning_member_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LearningOverviewDto sse_decode_learning_overview_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LearningPlanDto sse_decode_learning_plan_dto(SseDeserializer deserializer);
+
+  @protected
+  LearningPlanInput sse_decode_learning_plan_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LearningResultDto sse_decode_learning_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
@@ -2972,6 +3116,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<LearningMemberDto> sse_decode_list_learning_member_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<LearningPlanDto> sse_decode_list_learning_plan_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<MemberDto> sse_decode_list_member_dto(SseDeserializer deserializer);
 
   @protected
@@ -3026,6 +3180,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<MoneyDto> sse_decode_list_money_dto(SseDeserializer deserializer);
+
+  @protected
+  List<MonthIncomeDto> sse_decode_list_month_income_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<NewMemberInput> sse_decode_list_new_member_input(
@@ -3132,6 +3291,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<SpaceDto> sse_decode_list_space_dto(SseDeserializer deserializer);
+
+  @protected
+  List<TeachingLogDto> sse_decode_list_teaching_log_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<TimelinePointDto> sse_decode_list_timeline_point_dto(
@@ -3320,6 +3484,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MoneyDto sse_decode_money_dto(SseDeserializer deserializer);
 
   @protected
+  MonthIncomeDto sse_decode_month_income_dto(SseDeserializer deserializer);
+
+  @protected
   MonthlySummaryDto sse_decode_monthly_summary_dto(
     SseDeserializer deserializer,
   );
@@ -3423,6 +3590,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FamilyAgreementDto? sse_decode_opt_box_autoadd_family_agreement_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HourValueDto? sse_decode_opt_box_autoadd_hour_value_dto(
     SseDeserializer deserializer,
   );
 
@@ -3621,6 +3793,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ScheduleRowDto sse_decode_schedule_row_dto(SseDeserializer deserializer);
 
   @protected
+  SelfInvestmentDto sse_decode_self_investment_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SellItemInput sse_decode_sell_item_input(SseDeserializer deserializer);
 
   @protected
@@ -3658,6 +3835,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StreakDto sse_decode_streak_dto(SseDeserializer deserializer);
+
+  @protected
+  StudyLogInput sse_decode_study_log_input(SseDeserializer deserializer);
+
+  @protected
+  TeachingLogDto sse_decode_teaching_log_dto(SseDeserializer deserializer);
+
+  @protected
+  TeachingLogInput sse_decode_teaching_log_input(SseDeserializer deserializer);
 
   @protected
   TimelinePointDto sse_decode_timeline_point_dto(SseDeserializer deserializer);
@@ -3851,6 +4037,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_course_answers_input(
+    CourseAnswersInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_decision_dto(
     DecisionDto self,
     SseSerializer serializer,
@@ -3889,6 +4081,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_hold_review_input(
     HoldReviewInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_hour_value_dto(
+    HourValueDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_hour_value_input(
+    HourValueInput self,
     SseSerializer serializer,
   );
 
@@ -4114,6 +4318,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_kk_zakat_input(
     KkZakatInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_learning_plan_input(
+    LearningPlanInput self,
     SseSerializer serializer,
   );
 
@@ -4430,6 +4640,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_study_log_input(
+    StudyLogInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_teaching_log_input(
+    TeachingLogInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -4516,6 +4738,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_contributor_dto(
     ContributorDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_course_answers_input(
+    CourseAnswersInput self,
     SseSerializer serializer,
   );
 
@@ -4612,6 +4840,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_hold_review_input(
     HoldReviewInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_hour_value_dto(HourValueDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_hour_value_input(
+    HourValueInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_hour_value_suggestion_dto(
+    HourValueSuggestionDto self,
     SseSerializer serializer,
   );
 
@@ -5093,6 +5336,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_learning_member_dto(
+    LearningMemberDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_learning_overview_dto(
+    LearningOverviewDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_learning_plan_dto(
+    LearningPlanDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_learning_plan_input(
+    LearningPlanInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_learning_result_dto(
+    LearningResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
@@ -5429,6 +5702,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_learning_member_dto(
+    List<LearningMemberDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_learning_plan_dto(
+    List<LearningPlanDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_member_dto(
     List<MemberDto> self,
     SseSerializer serializer,
@@ -5508,6 +5793,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_money_dto(List<MoneyDto> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_month_income_dto(
+    List<MonthIncomeDto> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_new_member_input(
@@ -5652,6 +5943,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_space_dto(List<SpaceDto> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_teaching_log_dto(
+    List<TeachingLogDto> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_timeline_point_dto(
@@ -5885,6 +6182,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_money_dto(MoneyDto self, SseSerializer serializer);
 
   @protected
+  void sse_encode_month_income_dto(
+    MonthIncomeDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_monthly_summary_dto(
     MonthlySummaryDto self,
     SseSerializer serializer,
@@ -6019,6 +6322,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_family_agreement_dto(
     FamilyAgreementDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_hour_value_dto(
+    HourValueDto? self,
     SseSerializer serializer,
   );
 
@@ -6275,6 +6584,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_self_investment_dto(
+    SelfInvestmentDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_sell_item_input(SellItemInput self, SseSerializer serializer);
 
   @protected
@@ -6318,6 +6633,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_streak_dto(StreakDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_study_log_input(StudyLogInput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_teaching_log_dto(
+    TeachingLogDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_teaching_log_input(
+    TeachingLogInput self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_timeline_point_dto(

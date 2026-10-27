@@ -233,6 +233,15 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::mf_decision_questions,
             commands::mf_set_plan,
             commands::mf_set_outcome,
+            commands::check_course,
+            commands::hour_value_suggest,
+            commands::hour_value_save,
+            commands::learning_plan_create,
+            commands::learning_plan_set_status,
+            commands::learning_plan_result,
+            commands::study_log_add,
+            commands::teaching_log_add,
+            commands::learning_overview,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }
