@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Release imzo kaliti — foydalanuvchi yaratadi (3-darvoza); `android/key.properties` (commit qilinmaydi).
+// Namuna: `android/key.properties.example`. Kalitsiz release build yiqiladi — debug kalit bilan imzolanmaydi.
+val keyProperties = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -15,7 +24,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "uz.zanjir.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -29,11 +37,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keyProperties.isNotEmpty()) {
+            create("release") {
+                storeFile = file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 }
@@ -46,4 +63,12 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+// Release vazifalari kalitsiz ishga tushmaydi (MASVS-CODE: debug kalit bilan imzolangan ilova tarqatilmaydi).
+gradle.taskGraph.whenReady {
+    val release = allTasks.any { it.name.contains("Release") && (it.name.startsWith("assemble") || it.name.startsWith("bundle")) }
+    if (release && keyProperties.isEmpty()) {
+        throw GradleException("android/key.properties yo'q — release faqat haqiqiy kalit bilan (docs/RELEASE.md).")
+    }
 }

@@ -6,6 +6,7 @@ va o'lchovlar faqat PDF ichida (protokolning o'zi, QR uni olgan kishiga mo'ljall
 
 from __future__ import annotations
 
+import hmac
 import json
 import re
 from dataclasses import dataclass
@@ -163,6 +164,12 @@ async def readyz(ctx: Ctx) -> dict[str, str]:
 
 
 @router.get("/metrics", tags=["ops"])
-async def metrics(ctx: Ctx) -> Response:
-    """Prometheus. Tashqariga Caddy orqali ochilmaydi (11-faza)."""
+async def metrics(request: Request, ctx: Ctx) -> Response:
+    """Prometheus — faqat `ZANJIR_METRICS_TOKEN` bilan (berilmasa o'chiq); Caddy ham tashqariga ochmaydi."""
+    token = ctx.settings.metrics_token
+    if token is None:
+        fail(404, "not_found")
+    given = request.headers.get("authorization", "").removeprefix("Bearer ")
+    if not hmac.compare_digest(given.encode(), token.get_secret_value().encode()):
+        fail(401, "metrics_token_required")
     return Response(generate_latest(ctx.metrics.registry), media_type=CONTENT_TYPE_LATEST)

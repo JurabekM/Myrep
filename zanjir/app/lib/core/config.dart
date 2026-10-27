@@ -10,3 +10,12 @@ const String verifyBaseUrl = String.fromEnvironment(
 
 /// Server manzili: `--dart-define=ZANJIR_SERVER_URL=https://<domen>/` (2-darvoza). Bo'sh — ilova faqat oflayn.
 const String serverUrl = String.fromEnvironment('ZANJIR_SERVER_URL');
+
+/// Server manzili ruxsat etilganmi: faqat `https`; `http` — faqat debug rejimida va faqat lokal manzillar
+/// (emulyator `10.0.2.2`, `localhost`). Android'da cleartext ham tizim darajasida taqiqlangan (ADR-0014).
+bool isAllowedServerUrl(String url, {required bool debug}) {
+  final u = Uri.tryParse(url);
+  if (u == null || u.host.isEmpty || u.userInfo.isNotEmpty) return false;
+  if (u.scheme == 'https') return true;
+  return debug && u.scheme == 'http' && const {'localhost', '127.0.0.1', '10.0.2.2'}.contains(u.host);
+}

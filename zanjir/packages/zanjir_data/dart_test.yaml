@@ -1,5 +1,7 @@
 # `e2e` — haqiqiy server bilan (tools/e2e/run.sh, ZANJIR_E2E_URL). Odatiy `dart test` da o'tkazib yuboriladi.
 tags:
+  perf:
+    timeout: 4x
   e2e:
     skip: "ZANJIR_E2E_URL kerak — zanjir/tools/e2e/run.sh orqali ishga tushiring"
     timeout: 3x

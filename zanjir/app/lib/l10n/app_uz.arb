@@ -676,5 +676,7 @@
   "errorPlanStale": "Graf o'zgargan — reja eskirdi",
   "errorStepOrder": "Qadamlar faqat ketma-ket bajariladi",
   "errorStepConfirmation": "Barcha tasdiqlarni belgilang",
-  "errorStepsIncomplete": "Hali barcha qadamlar bajarilmagan"
+  "errorStepsIncomplete": "Hali barcha qadamlar bajarilmagan",
+  "errorClockSkew": "Qurilma soati noto'g'ri (oldinda) — sana va vaqtni to'g'rilab, qayta sinxronlang",
+  "tooManyAttempts": "Juda ko'p noto'g'ri urinish — 15 daqiqadan keyin qayta urining"
 }

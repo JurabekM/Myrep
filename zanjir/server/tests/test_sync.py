@@ -125,7 +125,7 @@ async def test_last_writer_wins(env: Env) -> None:
     await env.ok([site])
     newer = copy.deepcopy(site)
     newer["client_op_id"] += "-2"
-    newer["row"].update(name="Yangi nom", updated_at="2026-10-27T09:00:00.000Z", rev=2)
+    newer["row"].update(name="Yangi nom", updated_at="2026-10-27T08:05:00.000Z", rev=2)
     older = copy.deepcopy(site)
     older["client_op_id"] += "-3"
     older["row"].update(name="Eski nom", updated_at="2026-10-26T00:00:00.000Z", rev=5)
@@ -265,7 +265,7 @@ async def test_organization_and_settings_by_lead(env: Env) -> None:
         **org,
         "license_no": "EL-42",
         "license_valid_until": "2027-12-31T00:00:00.000Z",
-        "updated_at": "2026-10-28T00:00:00.000Z",
+        "updated_at": "2026-10-27T08:05:00.000Z",
         "rev": org["rev"] + 1,
         "name": "Lab 2",
     }
@@ -281,7 +281,7 @@ async def test_session_cannot_reopen_and_plan_approval(env: Env) -> None:
     g = await graph(env)
     f = env.field
     reopen = f.op(
-        "measurement_session", {**g["ses"], "closed_at": None, "updated_at": "2026-10-28T00:00:00.000Z", "rev": 2}
+        "measurement_session", {**g["ses"], "closed_at": None, "updated_at": "2026-10-27T08:05:00.000Z", "rev": 2}
     )
     await env.rejected([reopen], "session_reopen")
     plan = f.base(
@@ -333,7 +333,7 @@ async def test_norm_set_review_is_bound_to_yaml(env: Env) -> None:
     other_content = NORMS.format(rb="X", ra="2026-10-01")
     changed = norm(other_content, "X", "2026-10-01")
     changed["row"]["id"] = first["row"]["id"]
-    changed["row"].update(updated_at="2026-10-28T00:00:00.000Z", rev=2)
+    changed["row"].update(updated_at="2026-10-27T08:05:00.000Z", rev=2)
     await env.rejected([changed], "norm_set_conflict")
     await env.rejected([norm(unreviewed, None) | {"client_op_id": "v"}], "constraint_violation")
 
@@ -486,3 +486,14 @@ async def test_audit_payload_helpers_match_app() -> None:
         "supersedes_id",
     }
     assert payload_hash(p) == payload_hash(dict(reversed(list(p.items()))))
+
+
+async def test_future_timestamps_rejected(env: Env) -> None:
+    """Soati oldinda qurilma LWW'ni "kelajak" vaqt bilan egallab ololmaydi (ADR-0014)."""
+    f = env.field
+    site = f.site()
+    site["row"]["updated_at"] = "2026-10-27T08:30:00.000Z"  # server soati 08:00, chegara +10 daqiqa
+    await env.rejected([site], "clock_skew")
+    ok = f.site()
+    ok["row"]["updated_at"] = "2026-10-27T08:09:00.000Z"
+    await env.ok([ok])

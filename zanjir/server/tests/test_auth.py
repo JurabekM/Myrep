@@ -226,3 +226,27 @@ async def test_auth_rate_limit(app_url: str) -> None:
         assert int(r.headers["retry-after"]) >= 1
         assert (await c.get("/healthz")).status_code == 200
     await app.state.ctx.db.dispose()
+
+
+async def test_per_account_login_guard(app_url: str, clock: Clock) -> None:
+    """Bitta telefonga turli IP lardan parol tanlash: 3 xatodan keyin to'g'ri parol ham 15 daqiqa rad (ADR-0014)."""
+    from httpx import ASGITransport, AsyncClient
+
+    app = create_app(make_settings(app_url, login_failures_max=3), clock=clock, rate_limiter=RateLimiter())
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
+        api = Api(c, app)
+        lead = await api.register()
+        other = await api.register()
+        bad = {"phone": lead.phone, "password": "Noto'g'ri-parol"}
+        assert [(await c.post("/auth/login", json=bad)).status_code for _ in range(3)] == [401, 401, 401]
+        r = await c.post("/auth/login", json={"phone": lead.phone, "password": PASSWORD})
+        assert (r.status_code, r.json()["detail"]["code"]) == (429, "too_many_attempts")
+        # Boshqa hisob ta'sirlanmaydi.
+        assert (await c.post("/auth/login", json={"phone": other.phone, "password": PASSWORD})).status_code == 200
+        clock.advance(minutes=16)
+        assert (await c.post("/auth/login", json={"phone": lead.phone, "password": PASSWORD})).status_code == 200
+        # Muvaffaqiyatli kirish hisobni tozalaydi.
+        for _ in range(2):
+            await c.post("/auth/login", json=bad)
+        assert (await c.post("/auth/login", json={"phone": lead.phone, "password": PASSWORD})).status_code == 200
+    await app.state.ctx.db.dispose()

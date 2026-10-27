@@ -132,11 +132,11 @@ jobs:
         env:
           TESTCONTAINERS_RYUK_DISABLED: "true"
         run: uv run pytest --cov=zanjir_server --cov-branch --cov-report=term-missing --cov-fail-under=95
-      - name: Kripto vektorlari generatori — lint va tiplar
+      - name: Kripto vektorlari generatori va audit vositasi — lint va tiplar
         run: |
-          uv run ruff check ../tools/vectors
-          uv run ruff format --check ../tools/vectors
-          uv run mypy --strict ../tools/vectors/generate.py
+          uv run ruff check ../tools/vectors ../tools/audit
+          uv run ruff format --check ../tools/vectors ../tools/audit
+          uv run mypy --strict ../tools/vectors/generate.py ../tools/audit/osv_audit.py
       - name: tools/vectors eskirmaganmi (Dart testlari ham shu fayllarni o'qiydi)
         run: uv run python -I ../tools/vectors/generate.py --check
 

@@ -95,16 +95,22 @@ async def register(body: RegisterIn, ctx: Ctx) -> TokensOut:
 @router.post("/login")
 async def login(body: LoginIn, ctx: Ctx) -> TokensOut:
     phone = normalize_phone(body.phone)
+    guard_key = phone or body.phone.strip()
+    if ctx.login_guard.blocked(guard_key):
+        fail(429, "too_many_attempts")
     org = await ctx.db.lookup_org("zanjir_org_of_phone", phone) if phone else None
     if org is None:
         ctx.passwords.verify(None, body.password)  # topilmasa ham hash tekshiriladi — javob vaqti bir xil
+        ctx.login_guard.failed(guard_key)
         fail(401, "invalid_credentials")
     async with ctx.db.org_session(org) as s:
         user = (
             await s.execute(select(AppUser).where(AppUser.phone == phone, AppUser.deleted.is_(False)))
         ).scalar_one_or_none()
         if not ctx.passwords.verify(user.password_hash if user else None, body.password) or user is None:
+            ctx.login_guard.failed(guard_key)
             fail(401, "invalid_credentials")
+        ctx.login_guard.succeeded(guard_key)
         if ctx.passwords.needs_rehash(user.password_hash):
             user.password_hash = ctx.passwords.hash(body.password)
         return await _issue(ctx, s, user)

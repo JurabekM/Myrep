@@ -34,15 +34,22 @@ class SettingsScreen extends ConsumerWidget {
               title: Text(profile.fullName),
               subtitle: Text('${l10n.profile} · ${l10n.roleName(profile.role)}'),
             ),
+          // Tanlov pastki qatorda — katta shriftda ham sig'adi (ADR-0014).
           ListTile(
             title: Text(l10n.language),
-            trailing: SegmentedButton<String>(
-              segments: [
-                ButtonSegment(value: 'uz', label: Text(l10n.languageUz)),
-                ButtonSegment(value: 'ru', label: Text(l10n.languageRu)),
-              ],
-              selected: {locale},
-              onSelectionChanged: (s) => ref.read(localeProvider.notifier).set(s.first),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SegmentedButton<String>(
+                  segments: [
+                    ButtonSegment(value: 'uz', label: Text(l10n.languageUz)),
+                    ButtonSegment(value: 'ru', label: Text(l10n.languageRu)),
+                  ],
+                  selected: {locale},
+                  onSelectionChanged: (s) => ref.read(localeProvider.notifier).set(s.first),
+                ),
+              ),
             ),
           ),
           SwitchListTile(

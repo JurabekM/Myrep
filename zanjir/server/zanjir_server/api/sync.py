@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
@@ -61,7 +62,9 @@ async def sync_push(body: PushIn, p: Engineer, ctx: Ctx) -> PushOut:
         fail(413, "too_many_ops")
     try:
         async with ctx.db.org_session(p.org_id) as s:
-            ops = await PushService(s, p, ctx.now()).run([o.model_dump() for o in body.ops])
+            ops = await PushService(s, p, ctx.now(), timedelta(seconds=ctx.settings.max_clock_skew_seconds)).run(
+                [o.model_dump() for o in body.ops]
+            )
             rev = (await s.execute(text("SELECT zanjir_org_rev()"))).scalar_one()
     except PushRejected as e:
         ctx.metrics.sync_rejected.labels(e.reason.split(":")[0]).inc()

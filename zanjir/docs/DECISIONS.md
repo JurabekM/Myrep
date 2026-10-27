@@ -349,3 +349,27 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
 - **Oqibat:** Qadamni bekor qilish (noto'g'ri belgilangan) imkoni yo'q — audit append-only; xato bo'lsa reja bekor qilinib,
   yangisi tuziladi. Apparat holatini (`state`) qadam bilan avtomatik o'zgartirish — yo'q (holat graf hash'iga kirmaydi;
   dalada qo'lda yangilanadi). S11–S14 (solver) hali ochiq — solver konservativ.
+
+## ADR-0014: Mustahkamlash (10-faza) — xavfsizlik ko'rigi, bog'liqliklar auditi, unumdorlik, accessibility
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (10-faza).
+- **Kontekst:** Prompt 9-bo'lim, 10-faza: `docs/SECURITY.md` (tahdid modeli, MASVS checklist, RBAC matritsasi),
+  bog'liqliklar auditi, unumdorlik, accessibility; mezon — barcha "yuqori" topilmalar yopilgan.
+- **Qaror:**
+  1. **Xavfsizlik ko'rigi:** ikki bosqich — o'z ko'rigim va mustaqil ko'rik (alohida agent, kod asosida, xulosalarimsiz).
+     Topilmalar `docs/SECURITY.md` reestrida: daraja (Y/O/P), holat; qabul qilingan qoldiq xavflar (R-*) sabab bilan.
+  2. **Mobil:** `allowBackup=false` + `dataExtractionRules` (zaxira/ko'chirishda ma'lumot chiqmaydi); faqat HTTPS
+     (`isAllowedServerUrl` + `network_security_config`, faqat tizim CA); release imzo faqat `key.properties` dan — kalitsiz
+     release build yiqiladi; obfuskatsiya release buyrug'ida (12-faza).
+  3. **Server:** `/metrics` standart o'chiq (token bilan); hisob bo'yicha kirish cheklovi (IP dan qat'i nazar); kelajak
+     vaqtli yozuvlar rad (`clock_skew`, LWW'ni egallab olmaslik); barcha javoblarga xavfsizlik sarlavhalari va `no-store`.
+  4. **Bog'liqliklar:** `tools/audit/osv_audit.py` — barcha `pubspec.lock` va `uv.lock` OSV.dev da (faqat standart
+     kutubxona); istisnolar `allowlist.json` da sabab va muddat bilan; CI `zanjir-audit` — haftalik va lock o'zgarganda.
+  5. **Unumdorlik byudjetlari (testlar):** 2000 tugunli obyekt: graf yuklash < 1,5 s, o'lchov yozish < 200 ms, reja < 1,5 s
+     (o'lchangan: 44 / 45 / 76 ms); 2900 yozuvli push/pull < 15 s (0,65 / 0,17 s); server: 480 op to'liq tekshiruvli push
+     < 10 s (~1,1 s); solver 2000 tugun < 500 ms (2-faza); PDF 250 o'lchov (6-faza).
+  6. **Accessibility:** barcha asosiy ekranlar va dialoglar Flutter guideline'lari bilan testlanadi (Android tugma ≥ 48 dp,
+     yorliqli tugmalar — TalkBack, matn kontrasti); tizim shrifti ×2 da toshib chiqish yo'q; rang juftliklari WCAG AA
+     (≥ 4,5:1) hisoblab tekshiriladi.
+- **Oqibat:** SQLite shifrlanmagan, sertifikat pinning va lokal PIN yo'q — qoldiq xavflar (R-01…R-07), pilotdan keyin
+  qayta ko'riladi. Android sozlamalari (zaxira, cleartext, imzo) bu muhitda build qilinmagan — 12-fazada tekshiriladi.

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -24,7 +25,7 @@ final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
 final httpClientProvider = Provider<http.Client?>((ref) => null);
 final serverApiProvider = Provider<ServerApi?>((ref) {
   final url = ref.watch(serverUrlProvider);
-  if (url.isEmpty) return null;
+  if (url.isEmpty || !isAllowedServerUrl(url, debug: kDebugMode)) return null;
   final api = ServerApi(url, tokens: ref.watch(tokenStoreProvider), client: ref.watch(httpClientProvider));
   ref.onDispose(api.close);
   return api;

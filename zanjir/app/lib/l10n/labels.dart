@@ -158,6 +158,8 @@ extension Labels on AppLocalizations {
     ServerException(code: 'conflict') => phoneTaken,
     ServerException(code: 'invalid_phone') => invalidPhone,
     ServerException(code: 'session_expired' || 'not_authenticated' || 'invalid_token') => sessionExpired,
+    ServerException(code: 'push_rejected', reason: 'clock_skew') => errorClockSkew,
+    ServerException(code: 'too_many_attempts') => tooManyAttempts,
     ServerException(code: 'push_rejected', :final reason) => syncRejected(reason ?? '—'),
     ServerException(:final code) => serverError(code),
     StateError(message: 'profile_mismatch' || 'profile_exists') => profileMismatch,

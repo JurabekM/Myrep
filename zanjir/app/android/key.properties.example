@@ -1,0 +1,6 @@
+# Namuna. Haqiqiy fayl: android/key.properties — commit qilinmaydi (.gitignore).
+# Keystore'ni foydalanuvchi yaratadi va saqlaydi (3-inson darvozasi); parollar faqat shu faylda yoki CI maxfiy o'zgaruvchilarida.
+storeFile=/xavfsiz/joy/zanjir-release.jks
+storePassword=<keystore paroli>
+keyAlias=zanjir
+keyPassword=<kalit paroli>

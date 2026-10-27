@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import yaml
@@ -93,10 +93,13 @@ def protocol_audit_payload(v: dict[str, Any]) -> dict[str, Any]:
 
 
 class PushService:
-    def __init__(self, s: AsyncSession, p: Principal, now: datetime) -> None:
+    def __init__(
+        self, s: AsyncSession, p: Principal, now: datetime, max_skew: timedelta = timedelta(minutes=10)
+    ) -> None:
         self.s = s
         self.p = p
         self.now = now
+        self.max_skew = max_skew
 
     async def run(self, raw_ops: list[dict[str, Any]]) -> list[Op]:
         ops = self._parse(raw_ops)
@@ -146,6 +149,10 @@ class PushService:
             org = values["id"] if table == "organization" else values["org_id"]
             if org != self.p.org_id:
                 raise PushRejected("wrong_org", op_id)
+            # Qurilma soati oldinda bo'lsa LWW'da "kelajak" vaqt abadiy yutib qolardi (ADR-0014).
+            latest = self.now + self.max_skew
+            if values["created_at"] > latest or values["updated_at"] > latest:
+                raise PushRejected("clock_skew", op_id)
             ops.append(Op(op_id, table, row, values))
         return ops
 

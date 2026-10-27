@@ -15,6 +15,7 @@ from zanjir_server.db.models import AppUser
 from zanjir_server.db.session import Database
 from zanjir_server.observability import Metrics
 from zanjir_server.otp import OtpSender
+from zanjir_server.security.login_guard import LoginGuard
 from zanjir_server.security.passwords import Passwords
 from zanjir_server.security.roles import Role
 from zanjir_server.security.tokens import AccessTokens, TokenError
@@ -29,6 +30,7 @@ class AppContext:
     otp: OtpSender
     metrics: Metrics
     clock: Callable[[], datetime]
+    login_guard: LoginGuard
 
     def now(self) -> datetime:
         return self.clock().astimezone(UTC)

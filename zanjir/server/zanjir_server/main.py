@@ -16,9 +16,16 @@ from zanjir_server.api import auth, org, public, sync
 from zanjir_server.api.deps import AppContext
 from zanjir_server.config import Settings, get_settings
 from zanjir_server.db.session import Database
-from zanjir_server.middleware import AccessLogMiddleware, BodyLimitMiddleware, RateLimiter, RateLimitMiddleware
+from zanjir_server.middleware import (
+    AccessLogMiddleware,
+    BodyLimitMiddleware,
+    RateLimiter,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from zanjir_server.observability import ErrorReporter, Metrics, NullErrorReporter, configure_logging
 from zanjir_server.otp import DisabledOtpSender
+from zanjir_server.security.login_guard import LoginGuard
 from zanjir_server.security.passwords import Passwords
 from zanjir_server.security.tokens import AccessTokens
 
@@ -54,6 +61,11 @@ def create_app(
         otp=DisabledOtpSender(),
         metrics=metrics,
         clock=clock,
+        login_guard=LoginGuard(
+            settings.login_failures_max,
+            settings.login_failures_window_seconds,
+            lambda: clock().timestamp(),
+        ),
     )
     for r in ROUTERS:
         app.include_router(r)
@@ -67,6 +79,7 @@ def create_app(
             allow_methods=["GET", "POST", "PATCH", "DELETE"],
             allow_headers=["authorization", "content-type"],
         )
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(BodyLimitMiddleware, max_bytes=settings.max_body_bytes)
     app.add_middleware(
         RateLimitMiddleware,

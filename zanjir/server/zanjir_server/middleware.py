@@ -165,3 +165,33 @@ def _route(scope: Scope) -> str:
     route = scope.get("route")
     path = getattr(route, "path", None)
     return path if isinstance(path, str) else "unmatched"
+
+
+class SecurityHeadersMiddleware:
+    """Barcha javoblarga: `nosniff`, `Referrer-Policy`, `X-Frame-Options`; statik fayllardan boshqasi keshlanmaydi
+    (token, shaxsiy ma'lumot oraliq keshlarda qolmasin). Tekshirish sahifasining CSP'si — o'z marshrutida."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        static = scope.get("path", "").startswith("/static/")
+
+        async def wrapped(msg: Message) -> None:
+            if msg["type"] == "http.response.start":
+                headers = list(msg.get("headers", []))
+                names = {k.lower() for k, _ in headers}
+                extra = [
+                    (b"x-content-type-options", b"nosniff"),
+                    (b"referrer-policy", b"no-referrer"),
+                    (b"x-frame-options", b"DENY"),
+                ]
+                if not static:
+                    extra.append((b"cache-control", b"no-store"))
+                msg["headers"] = headers + [(k, v) for k, v in extra if k not in names]
+            await send(msg)
+
+        await self.app(scope, receive, wrapped)

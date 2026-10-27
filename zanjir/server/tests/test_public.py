@@ -88,9 +88,8 @@ async def test_health_ready_metrics(env: Env) -> None:  # noqa: F811
     c = env.api.c
     assert (await c.get("/healthz")).json() == {"status": "ok"}
     assert (await c.get("/readyz")).json() == {"status": "ready"}
-    m = (await c.get("/metrics")).text
-    assert "zanjir_http_requests_total" in m
-    assert 'route="/v/{qr_token}"' not in m or "0" * 32 not in m
+    # Standart — o'chiq (token berilmagan).
+    assert (await c.get("/metrics")).status_code == 404
     assert (await c.get("/docs")).status_code == 404
     assert (await c.get("/openapi.json")).status_code == 404
 
@@ -170,3 +169,29 @@ async def test_unhandled_error_is_reported_without_details(app_url: str) -> None
     assert "ichki" not in r.text
     assert reported
     await app.state.ctx.db.dispose()
+
+
+async def test_metrics_only_with_token(app_url: str) -> None:
+    from pydantic import SecretStr
+
+    app = create_app(make_settings(app_url, metrics_token=SecretStr("m" * 40)))
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
+        await c.get("/healthz")
+        assert (await c.get("/metrics")).status_code == 401
+        assert (await c.get("/metrics", headers={"authorization": "Bearer " + "x" * 40})).status_code == 401
+        r = await c.get("/metrics", headers={"authorization": "Bearer " + "m" * 40})
+        assert r.status_code == 200
+        assert "zanjir_http_requests_total" in r.text
+        assert 'route="/healthz"' in r.text
+    await app.state.ctx.db.dispose()
+
+
+async def test_security_headers(env: Env) -> None:  # noqa: F811
+    r = await env.api.c.get("/me", headers=env.users["LEAD"].headers)
+    assert r.headers["x-content-type-options"] == "nosniff"
+    assert r.headers["cache-control"] == "no-store"
+    assert r.headers["x-frame-options"] == "DENY"
+    assert r.headers["referrer-policy"] == "no-referrer"
+    s = await env.api.c.get("/static/verify.css")
+    assert "no-store" not in s.headers.get("cache-control", "")
+    assert s.headers["x-content-type-options"] == "nosniff"

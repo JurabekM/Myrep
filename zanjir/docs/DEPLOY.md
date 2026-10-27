@@ -28,5 +28,16 @@ Ishga tushirish: `uv run alembic upgrade head` (migratsiya egasi roli bilan), so
 
 **Muhit o'zgaruvchilari** — `server/.env.example` (faqat `.env` orqali; maxfiy qiymatlar commit qilinmaydi).
 - `ZANJIR_REGISTRATION_OPEN=false` (prod): yangi laboratoriyani faqat operator ochadi (vaqtincha true qilib).
-- `/metrics` tashqariga ochilmaydi (Caddy'da yopiladi). Rate limiting bitta jarayon xotirasida — bir nechta nusxa bo'lsa
+- `/metrics` standart o'chiq; yoqish — `ZANJIR_METRICS_TOKEN` (Prometheus `Authorization: Bearer`), Caddy tashqariga ochmaydi.
+- Hisob bo'yicha kirish cheklovi: `ZANJIR_LOGIN_FAILURES_MAX` (10), `ZANJIR_LOGIN_FAILURES_WINDOW_SECONDS` (900);
+  qurilma soati chegarasi: `ZANJIR_MAX_CLOCK_SKEW_SECONDS` (600) — server soati NTP bilan sinxron bo'lishi shart. Rate limiting bitta jarayon xotirasida — bir nechta nusxa bo'lsa
   Redis'ga o'tkaziladi.
+
+## Mobil ilova build (10-faza talablari, 12-fazada yakunlanadi)
+
+- Release imzo: `app/android/key.properties` (namuna — `key.properties.example`, commit qilinmaydi); kalitsiz release build
+  ataylab yiqiladi (debug kalit bilan imzolanmaydi).
+- Release build: `flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
+  --dart-define=ZANJIR_SERVER_URL=https://<domen>/ --dart-define=ZANJIR_VERIFY_BASE_URL=https://<domen>/v/`
+  (simbollar fayli maxfiy saqlanadi — xato izlarini o'qish uchun).
+- Server manzili faqat `https://` (ilova `http` ni rad etadi; Android cleartext taqiqlangan).

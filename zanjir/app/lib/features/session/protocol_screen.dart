@@ -164,9 +164,12 @@ class _SignPanelState extends ConsumerState<_SignPanel> {
             children: [
               Text(l10n.protocolSignTitle, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              Row(
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Expanded(child: Text(l10n.protocolLanguage)),
+                  Text(l10n.protocolLanguage),
                   SegmentedButton<String>(
                     segments: [
                       ButtonSegment(value: 'uz', label: Text(l10n.languageUz)),

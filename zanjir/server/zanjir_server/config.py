@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     sync_pull_limit: int = 500
     argon2: Argon2Params = Field(default_factory=Argon2Params)
     sms_otp_enabled: bool = False
+    # `/metrics` faqat shu token bilan (`Authorization: Bearer ...`); berilmasa — o'chiq (404). ADR-0014.
+    metrics_token: SecretStr | None = None
+    # Bitta telefon raqamiga ketma-ket noto'g'ri parollar (IP dan qat'i nazar) — oyna ichida chegaradan keyin 429.
+    login_failures_max: int = 10
+    login_failures_window_seconds: int = 15 * 60
+    # Qurilma soati serverdan shuncha oldinda bo'lsa push rad etiladi (LWW'ni "kelajak" vaqt bilan egallab olmaslik).
+    max_clock_skew_seconds: int = 10 * 60
     log_level: str = "INFO"
 
 
