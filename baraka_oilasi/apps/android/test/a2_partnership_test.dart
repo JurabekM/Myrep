@@ -154,6 +154,8 @@ void main() {
     // 11. Boshlash: «bu qarz emas», oila roziligi → faol.
     await _step(tester, 11);
     await tapText(tester, 'Tushundim, bu qarz emas');
+    // Rozilik tugmasi «qarz emas» yozilguncha o'chiq (busy) — sekin CI'da bosish yo'qolmasin.
+    await waitFor(tester, find.textContaining('tushuntirish oʻqildi'));
     await waitFor(tester, find.text('Bekzod rozi'));
     await tapText(tester, 'Bekzod rozi');
     // «Boshlash» tugmasi rozilikdan oldin ham bor — rozilik yozilganini kutamiz.
