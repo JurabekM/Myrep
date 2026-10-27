@@ -89,6 +89,8 @@ class _VaultScreenState extends ConsumerState<VaultScreen> with ActionState {
           SectionCard(
             children: [
               Text(context.t('vault.withdrawHint'), style: TextStyle(color: p.warn)),
+              const SizedBox(height: 4),
+              Hint(context.t('vault.notForStudy')),
               const SizedBox(height: 12),
               AmountField(label: context.t('common.amount'), controller: _amount),
               const SizedBox(height: 12),

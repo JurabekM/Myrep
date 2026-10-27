@@ -58,6 +58,7 @@ export function VaultScreen({ spaceId }: { spaceId: string }) {
       {withdrawing ? (
         <form className="card flex flex-col gap-3" onSubmit={submit}>
           <p className="text-warn">{t("vault.withdrawHint")}</p>
+          <p className="text-sm text-ink-muted">{t("vault.notForStudy")}</p>
           <label>
             <span className="label">{t("common.amount")}</span>
             <AmountInput value={amount} onChange={(e) => setAmount(e.target.value)} required />

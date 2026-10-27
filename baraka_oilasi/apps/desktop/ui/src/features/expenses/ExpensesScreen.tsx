@@ -2,13 +2,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { commands } from "../../bindings";
+import { commands, type StudyDebtInput } from "../../bindings";
 import { AmountInput } from "../../components/AmountInput";
+import { BorrowCheckFields, StudyDebtWarnings } from "../../components/BorrowCheckFields";
 import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
 import { keys } from "../../lib/queryClient";
 
 const NECESSITIES = ["ZARUR", "KERAK", "HAVAS"] as const;
+const NO_ANSWERS: StudyDebtInput = { need: "", alternatives: [], withInterest: null };
 
 /** Tez xarajat kiritish: toifa kategoriyadan olinadi va oʻzgartirilishi mumkin (havas — neytral rangda). */
 export function ExpensesScreen({ spaceId }: { spaceId: string }) {
@@ -25,6 +27,17 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
   const learning = useQuery({ queryKey: keys.learning(spaceId), queryFn: () => call(commands.learningOverview(spaceId, null)), enabled: selfInvestment });
   const [memberId, setMemberId] = useState("");
   const [planId, setPlanId] = useState("");
+  // Oʻqish puli qarzga boʻlsa — 2D.6 «Toʻxta va oʻyla» (uy/SPEC 2G.2): javoblar oldindan tanlanmaydi,
+  // avval «Tekshirish» (ogohlantirishlar), keyin «Oʻyladim, saqlash» — qarz qoʻshishdagi kabi.
+  const [onDebt, setOnDebt] = useState(false);
+  const [debt, setDebtState] = useState<StudyDebtInput>(NO_ANSWERS);
+  const [warnings, setWarnings] = useState<string[] | null>(null);
+  const setDebt = (v: StudyDebtInput) => {
+    setDebtState(v);
+    setWarnings(null);
+  };
+  const studyDebt = selfInvestment && onDebt;
+  const answered = debt.need !== "" && debt.withInterest !== null;
   const members = learning.data?.members ?? [];
   const names = new Map(members.map((m) => [m.memberId, m.displayName]));
   // Faqat ochiq (`ACTIVE`/`PAUSED`) rejalar; a'zo tanlangan bo'lsa — uning rejalari.
@@ -32,8 +45,12 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
   const plan = plans.find((p) => p.id === planId);
 
   const save = useMutation({
-    mutationFn: () =>
-      call(
+    mutationFn: async () => {
+      if (studyDebt && warnings === null) {
+        setWarnings(await call(commands.previewStudyDebt(debt)));
+        return false;
+      }
+      await call(
         commands.recordExpense(spaceId, {
           amount,
           categoryId,
@@ -45,17 +62,23 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
           obligationId: null,
           isGift: false,
           isOstentation: false,
-          fundedByDebt: false,
+          fundedByDebt: studyDebt,
           note: null,
           selfInvestment,
           learningPlanId: selfInvestment && plan ? plan.id : null,
+          studyDebt: studyDebt ? debt : null,
         }),
-      ),
-    onSuccess: () => {
+      );
+      return true;
+    },
+    onSuccess: (saved) => {
+      if (!saved) return;
       setAmount("");
       setNecessity(null);
       setSelfInvestment(false);
       setPlanId("");
+      setOnDebt(false);
+      setDebt(NO_ANSWERS);
     },
   });
 
@@ -139,12 +162,38 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
                   ))}
                 </select>
               </label>
+              <label className="flex items-center gap-2 md:col-span-2">
+                <input type="checkbox" checked={onDebt} onChange={(e) => setOnDebt(e.target.checked)} />
+                {t("expense.studyOnDebt")}
+              </label>
+              {onDebt && (
+                <>
+                  <p role="note" className="text-sm text-warn md:col-span-2">
+                    {t("expense.studyOnDebtHint")}
+                  </p>
+                  <BorrowCheckFields value={debt} onChange={(v) => setDebt({ ...debt, ...v })} />
+                  <fieldset className="md:col-span-2">
+                    <legend className="label">{t("expense.studyDebt.interest")}</legend>
+                    <div className="flex flex-wrap gap-4">
+                      {([true, false] as const).map((v) => (
+                        <label key={String(v)} className="flex items-center gap-2">
+                          <input type="radio" name="withInterest" required checked={debt.withInterest === v} onChange={() => setDebt({ ...debt, withInterest: v })} />
+                          {t(`expense.studyDebt.interest.${v ? "YES" : "NO"}`)}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  {warnings && <StudyDebtWarnings warnings={warnings} />}
+                </>
+              )}
             </div>
           )}
         </fieldset>
         <div className="md:col-span-2"><ErrorText error={save.error} /></div>
         <div className="md:col-span-2">
-          <button className="btn-primary" disabled={save.isPending}>{t("common.save")}</button>
+          <button className="btn-primary" disabled={save.isPending || (studyDebt && !answered)}>
+            {!studyDebt ? t("common.save") : warnings === null ? t("friction.check") : t("friction.confirm")}
+          </button>
         </div>
       </form>
       {by && (

@@ -101,6 +101,7 @@ fn expense(category_id: &str, amount: &str, on: &str, invest: bool) -> NewExpens
         note: None,
         self_investment: invest,
         learning_plan_id: None,
+        study_debt: None,
     }
 }
 

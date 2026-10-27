@@ -293,7 +293,8 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 - **«Ilm zakoti»** — `kk_teaching_logs`: kimga — tugamagan xodim kartochkasi (`AGREEMENT_ENDED`) yoki boshqa kishining ismi (ikkalasi birga emas — `LEARNER_TWICE`), nimani, qancha vaqt (≤ 1 kun). Uy'dagi `teaching_logs` a'zoga (o'rgatuvchiga) bog'langan — Kasb-kor makonida o'rgatuvchi egasi, shuning uchun alohida jadval.
 - **Kurs tekshiruvi** — umumiy `check_course` (makonga bog'liq emas); ekranda «Kursni tekshirish» tugmasi «Taklifni tekshirish» oynasini `COURSE` turida ochadi.
 - **Rollar:** hammasi egasi bo'limi — sotuvchi qurilmasida yadro `ROLE_FORBIDDEN` qaytaradi, menyuda bo'lim yo'q, yangi jadvallar sotuvchiga yuborilmaydi (soat qiymati foydadan hisoblanadi). Hisobchi qurilmasi o'qiydi.
-- **Keyinga qoldi:** juma eslatmasi («…xodimingizga o'rgatdingizmi?»), qarorni xodim kartochkasida ko'rsatish, «natijani o'lchash» (Uy 2G.5) Kasb-kor uchun.
+- **Juma eslatmasi (1.2.0):** egasining soat qiymati hisoblangan bo'lsa va shu hafta (Uy 2G.9 dagi juma ritmi oralig'i) `kk_teaching_logs` da yozuv bo'lmasa, Kasb-kor bosh sahifasida `KK_TEACH_WEEK` — «…xodimingizga yoki shogirdingizga o'rgatdingizmi?», tugma «O'zimga sarmoya» ekranini ochadi. Kasb-korda bilim rejasi va o'qish vaqti yozuvi yo'q — o'qish eslatmasi ham yo'q. Faqat egasi qurilmasida: sotuvchida bosh sahifa eslatmalari yopiq (`ROLE_FORBIDDEN`), hisobchi (faqat o'qiydi) eslatmani ko'rmaydi.
+- **Keyinga qoldi:** qarorni xodim kartochkasida ko'rsatish, «natijani o'lchash» (Uy 2G.5) Kasb-kor uchun.
 
 ## 9. DOMEN MODELI VA VEKTOR SUITE'LARI
 ### 9.1. Yangi tushunchalar (taxminiy; aniq sxema — K1+ sessiyalarida, `BARAKA_OILASI.md` 8)

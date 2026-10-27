@@ -16,7 +16,7 @@ export function BorrowCheckFields({ value, onChange }: { value: BorrowCheckInput
       <div className="mb-3 flex flex-wrap gap-4" role="radiogroup" aria-label={t("friction.need")}>
         {(["NECESSITY", "LUXURY"] as const).map((n) => (
           <label key={n} className="flex items-center gap-2">
-            <input type="radio" name="need" checked={value.need === n} onChange={() => onChange({ ...value, need: n })} />
+            <input type="radio" name="need" required checked={value.need === n} onChange={() => onChange({ ...value, need: n })} />
             {t(`friction.need.${n}`)}
           </label>
         ))}
@@ -31,5 +31,22 @@ export function BorrowCheckFields({ value, onChange }: { value: BorrowCheckInput
         ))}
       </div>
     </fieldset>
+  );
+}
+
+/** Oʻqish puli qarzga: «Toʻxta va oʻyla» ogohlantirishlari (taqiqlamaydi; RIBO — qizil). */
+export function StudyDebtWarnings({ warnings }: { warnings: string[] }) {
+  const { t } = useTranslation();
+  return (
+    <div role="status" className="rounded-md border border-warn p-4 text-sm md:col-span-2">
+      <p className="mb-2 font-semibold text-accent-text">{t("mentor.name")}</p>
+      <ul className="mb-2 flex list-disc flex-col gap-1 pl-5">
+        {warnings.map((w) => (
+          <li key={w} className={w === "RIBO" ? "text-danger" : ""}>{t(`friction.warn.${w}`)}</li>
+        ))}
+        {warnings.length === 0 && <li>{t("friction.allClear")}</li>}
+      </ul>
+      <p className="text-ink-muted">{t("expense.studyDebt.notForbidden")}</p>
+    </div>
   );
 }

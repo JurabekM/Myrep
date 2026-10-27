@@ -61,13 +61,23 @@ fn apply_key(conn: &Connection, key: &DbKey) -> Result<(), StorageError> {
     Ok(())
 }
 
-fn prepare(mut conn: Connection, key: &DbKey, wal: bool) -> Result<Database, StorageError> {
+/// Kalit, PRAGMA'lar va migratsiyalar. `version` — `None`: oxirgisigacha (odatdagi ochish);
+/// `Some(n)`: faqat dastlabki `n` ta (eski reliz sxemasi, `test-support`).
+fn prepare(
+    mut conn: Connection,
+    key: &DbKey,
+    wal: bool,
+    version: Option<usize>,
+) -> Result<Database, StorageError> {
     apply_key(&conn, key)?;
     conn.execute_batch("PRAGMA foreign_keys = ON; PRAGMA secure_delete = ON;")?;
     if wal {
         conn.pragma_update(None, "journal_mode", "WAL")?;
     }
-    MIGRATIONS.to_latest(&mut conn)?;
+    match version {
+        None => MIGRATIONS.to_latest(&mut conn)?,
+        Some(v) => MIGRATIONS.to_version(&mut conn, v)?,
+    }
     Ok(Database {
         conn: Mutex::new(conn),
         read_only: AtomicBool::new(false),
@@ -76,11 +86,11 @@ fn prepare(mut conn: Connection, key: &DbKey, wal: bool) -> Result<Database, Sto
 
 impl Database {
     pub fn open(path: &Path, key: &DbKey) -> Result<Self, StorageError> {
-        prepare(Connection::open(path)?, key, true)
+        prepare(Connection::open(path)?, key, true, None)
     }
 
     pub fn open_in_memory(key: &DbKey) -> Result<Self, StorageError> {
-        prepare(Connection::open_in_memory()?, key, false)
+        prepare(Connection::open_in_memory()?, key, false, None)
     }
 
     /// Joriy sxema versiyasi (`user_version`).
@@ -125,6 +135,81 @@ impl Database {
         let out = f(&tx)?;
         tx.commit()?;
         Ok(out)
+    }
+}
+
+/// Faqat testlar uchun (`test-support`, R6): eski reliz bazasini yasash — relizlararo yangilanish
+/// testi (masalan, 1.1.0 → 1.2.0) shu bilan haqiqiy eski sxemada boshlanadi.
+#[cfg(any(test, feature = "test-support"))]
+impl Database {
+    /// Yangi bazani faqat dastlabki `version` ta migratsiya bilan yaratadi (1.1.0 — 22). Keyingi
+    /// `Database::open` qolgan migratsiyalarni odatdagidek qo'llaydi.
+    pub fn create_at_version(
+        path: &Path,
+        key: &DbKey,
+        version: usize,
+    ) -> Result<Self, StorageError> {
+        prepare(Connection::open(path)?, key, true, Some(version))
+    }
+
+    /// `src` dagi barcha yozuvlarni shu bazaga ko'chiradi — **shu bazaning** (eski) sxemasidagi jadval
+    /// va ustunlar bilan: keyingi migratsiyalarda qo'shilgan jadval va ustunlar tashlab ketiladi.
+    /// `map` har yozuvni yozishdan oldin o'zgartira oladi (masalan, eski reliz formatiga qaytarish).
+    /// Tashqi kalitlar tranzaksiya oxirida tekshiriladi. Qaytaradi: ko'chirilgan yozuvlar soni.
+    pub fn copy_rows_from(
+        &self,
+        src: &Database,
+        mut map: impl FnMut(&str, &mut baraka_interchange::canon::Row),
+    ) -> Result<usize, StorageError> {
+        use crate::repo::sync::{quoted, table_columns, to_json, to_sql};
+        assert!(
+            !std::ptr::eq(self, src),
+            "copy_rows_from: manba va maqsad bitta baza bo'lmasligi kerak"
+        );
+        let from = src.conn.lock().map_err(|_| StorageError::LockPoisoned)?;
+        let mut to = self.conn.lock().map_err(|_| StorageError::LockPoisoned)?;
+        let tx = to.transaction()?;
+        tx.execute_batch("PRAGMA defer_foreign_keys = ON;")?;
+        let tables: Vec<String> = {
+            let mut st = tx.prepare(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+                 ORDER BY rowid",
+            )?;
+            let names = st.query_map([], |r| r.get(0))?;
+            names.collect::<Result<_, _>>()?
+        };
+        let mut copied = 0;
+        for t in &tables {
+            let cols = table_columns(&tx, t)?;
+            let list = cols
+                .iter()
+                .map(|c| quoted(c))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let table = quoted(t);
+            let mut read = from.prepare(&format!("SELECT {list} FROM {table} ORDER BY rowid"))?;
+            let marks: Vec<String> = (1..=cols.len()).map(|i| format!("?{i}")).collect();
+            let mut write = tx.prepare(&format!(
+                "INSERT INTO {table} ({list}) VALUES ({})",
+                marks.join(", ")
+            ))?;
+            let mut rows = read.query([])?;
+            while let Some(r) = rows.next()? {
+                let mut row = baraka_interchange::canon::Row::new();
+                for (i, c) in cols.iter().enumerate() {
+                    row.insert(c.clone(), to_json(r.get_ref(i)?)?);
+                }
+                map(t, &mut row);
+                let values = cols
+                    .iter()
+                    .map(|c| row.get(c).map_or(Ok(rusqlite::types::Value::Null), to_sql))
+                    .collect::<Result<Vec<_>, _>>()?;
+                write.execute(rusqlite::params_from_iter(values))?;
+                copied += 1;
+            }
+        }
+        tx.commit()?;
+        Ok(copied)
     }
 }
 

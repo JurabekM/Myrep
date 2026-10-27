@@ -409,6 +409,7 @@ fn gate_applies_only_to_capital_provider() {
                 note: None,
                 self_investment: false,
                 learning_plan_id: None,
+                study_debt: None,
             },
         )
         .unwrap();

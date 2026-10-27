@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import i18n from "../../i18n";
 import { axeViolations } from "../../test/axe";
-import { HomeScreen } from "../home/HomeScreen";
+import { HomeScreen, Nudges } from "../home/HomeScreen";
 import { useUi } from "../../state/ui";
 import { SettingsScreen } from "./SettingsScreen";
 
@@ -127,9 +127,9 @@ describe("Bosh sahifa eslatmalari", () => {
   it("har biri o'z ekraniga olib boradi; qarz eslatmasini o'chirsa bo'ladi", async () => {
     fns.homeNudges.mockResolvedValue(
       ok([
-        { kind: "INCOME_TODAY", days: null },
-        { kind: "DEBT_INVENTORY", days: null },
-        { kind: "BACKUP", days: 31 },
+        { kind: "INCOME_TODAY", days: null, members: [] },
+        { kind: "DEBT_INVENTORY", days: null, members: [] },
+        { kind: "BACKUP", days: 31, members: [] },
       ]),
     );
     useUi.setState({ screen: "home", incomeOpen: false });
@@ -160,5 +160,46 @@ describe("Bosh sahifa eslatmalari", () => {
       within(debts).getByRole("button", { name: "Qarzlarni yozish" }),
     );
     expect(useUi.getState().screen).toBe("inventory");
+  });
+
+  it("juma ritmi: kim uchun ekani koʻrinadi, tugma shu makonning «Oʻzimga sarmoya» ekranini ochadi", async () => {
+    fns.homeNudges.mockResolvedValue(
+      ok([
+        { kind: "STUDY_WEEK", days: null, members: ["Mohira"] },
+        { kind: "TEACH_WEEK", days: null, members: ["Bekzod", "Mohira"] },
+      ]),
+    );
+    useUi.setState({ screen: "home" });
+    const user = userEvent.setup();
+    const { container } = wrap(<HomeScreen spaceId="uy" />);
+    const study = await screen.findByTestId("nudge-STUDY_WEEK");
+    expect(study).toHaveTextContent("bu hafta necha soat oʻqidingiz?");
+    expect(study).toHaveTextContent("Kim uchun: Mohira");
+    expect(screen.getByTestId("nudge-TEACH_WEEK")).toHaveTextContent("Kim uchun: Bekzod, Mohira");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(within(study).getByRole("button", { name: "Oʻqish vaqtini yozish" }));
+    expect(useUi.getState().screen).toBe("learning");
+  });
+
+  it("Kasb-kor va Musofir «Ilm zakoti» eslatmalari oʻz ekraniga olib boradi", async () => {
+    useUi.setState({ screen: "home" });
+    const user = userEvent.setup();
+    wrap(
+      <Nudges
+        items={[
+          { kind: "KK_TEACH_WEEK", days: null, members: [] },
+          { kind: "MF_TEACH_WEEK", days: null, members: [] },
+        ]}
+      />,
+    );
+    const kk = screen.getByTestId("nudge-KK_TEACH_WEEK");
+    expect(kk).toHaveTextContent("xodimingizga yoki shogirdingizga");
+    expect(kk).not.toHaveTextContent("Kim uchun");
+    await user.click(within(kk).getByRole("button", { name: "Oʻrgatganimni yozish" }));
+    expect(useUi.getState().screen).toBe("kkLearning");
+    const mf = screen.getByTestId("nudge-MF_TEACH_WEEK");
+    expect(mf).toHaveTextContent("yangi kelgan hamyurtga");
+    await user.click(within(mf).getByRole("button", { name: "Oʻrgatganimni yozish" }));
+    expect(useUi.getState().screen).toBe("mfLearning");
   });
 });

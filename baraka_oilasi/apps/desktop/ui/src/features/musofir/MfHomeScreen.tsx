@@ -9,6 +9,7 @@ import { call } from "../../lib/api";
 import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
 import { useUi } from "../../state/ui";
+import { Nudges, useNudges } from "../home/HomeScreen";
 import { MfEntryDialog, type MfEntryMode } from "./MfEntryDialog";
 import { MfTermsCard } from "./MfTermsCard";
 import { ReserveCard } from "./ReserveCard";
@@ -27,10 +28,12 @@ const CURRENCIES = ["KRW", "RUB", "KZT", "TRY", "USD", "EUR", "GBP", "UZS"] as c
 export function MfHomeScreen({ spaceId }: { spaceId: string }) {
   const { t } = useTranslation();
   const o = useQuery({ queryKey: keys.mf(spaceId), queryFn: () => call(commands.mfOverview(spaceId, null)) });
+  const nudges = useNudges(spaceId);
   const d = o.error ? undefined : o.data;
   return (
     <section className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold">{t("space.MUSOFIR")}</h1>
+      {(nudges.data ?? []).length > 0 && <Nudges items={nudges.data ?? []} />}
       <ErrorText error={o.error} />
       {d && !d.settings && <SetupCard spaceId={spaceId} overview={d} />}
       {d?.settings && <Dashboard spaceId={spaceId} d={d} s={d.settings} />}

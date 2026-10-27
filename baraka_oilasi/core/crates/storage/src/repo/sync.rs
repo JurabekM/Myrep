@@ -13,20 +13,31 @@ use serde_json::Value;
 
 use crate::{Meta, StorageError};
 
-/// Jadval ustunlari (mahalliy sxema bo'yicha), jadval nomi ro'yxatda bo'lishi shart.
-pub fn columns(c: &Connection, table: &str) -> Result<Vec<String>, StorageError> {
-    let spec = tables::table(table).ok_or(StorageError::SchemaMismatch)?;
-    let mut st = c.prepare(&format!("PRAGMA table_info({})", spec.name))?;
+/// SQL identifikatori qo'shtirnoqda (ichidagi `"` ikkilanadi).
+pub(crate) fn quoted(name: &str) -> String {
+    format!("\"{}\"", name.replace('"', "\"\""))
+}
+
+/// Mahalliy sxemadagi jadval ustunlari (`PRAGMA table_info`; jadval yo'q bo'lsa — bo'sh).
+pub(crate) fn table_columns(c: &Connection, table: &str) -> Result<Vec<String>, StorageError> {
+    let mut st = c.prepare(&format!("PRAGMA table_info({})", quoted(table)))?;
     let cols = st
         .query_map([], |r| r.get::<_, String>(1))?
         .collect::<Result<Vec<_>, _>>()?;
+    Ok(cols)
+}
+
+/// Jadval ustunlari (mahalliy sxema bo'yicha), jadval nomi ro'yxatda bo'lishi shart.
+pub fn columns(c: &Connection, table: &str) -> Result<Vec<String>, StorageError> {
+    let spec = tables::table(table).ok_or(StorageError::SchemaMismatch)?;
+    let cols = table_columns(c, &spec.name)?;
     if cols.is_empty() {
         return Err(StorageError::SchemaMismatch);
     }
     Ok(cols)
 }
 
-fn to_json(v: ValueRef<'_>) -> Result<Value, StorageError> {
+pub(crate) fn to_json(v: ValueRef<'_>) -> Result<Value, StorageError> {
     Ok(match v {
         ValueRef::Null => Value::Null,
         ValueRef::Integer(i) => Value::from(i),
@@ -41,7 +52,7 @@ fn to_json(v: ValueRef<'_>) -> Result<Value, StorageError> {
     })
 }
 
-fn to_sql(v: &Value) -> Result<SqlValue, StorageError> {
+pub(crate) fn to_sql(v: &Value) -> Result<SqlValue, StorageError> {
     Ok(match v {
         Value::Null => SqlValue::Null,
         Value::Number(n) => SqlValue::Integer(n.as_i64().ok_or(StorageError::CorruptRow)?),

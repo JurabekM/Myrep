@@ -194,3 +194,29 @@ pub fn teaching_between(
     })?;
     Ok(rows.collect::<Result<_, _>>()?)
 }
+
+// ---- Juma ritmi eslatmasi (bor-yo'qligi, yozuvlarsiz) ----
+
+/// Egasining soat qiymati kamida bir marta hisoblanganmi.
+pub fn has_owner_hours(c: &Connection, s: &SpaceScope) -> Result<bool, StorageError> {
+    Ok(c.query_row(
+        "SELECT EXISTS(SELECT 1 FROM kk_owner_hours WHERE household_id = ?1 AND space_id = ?2)",
+        params![s.household_id, s.space_id],
+        |r| r.get(0),
+    )?)
+}
+
+/// `[from, to)` oralig'ida o'rgatish yozuvi bormi.
+pub fn teaching_exists_between(
+    c: &Connection,
+    s: &SpaceScope,
+    from: &str,
+    to: &str,
+) -> Result<bool, StorageError> {
+    Ok(c.query_row(
+        "SELECT EXISTS(SELECT 1 FROM kk_teaching_logs WHERE household_id = ?1 AND space_id = ?2
+         AND deleted_at IS NULL AND occurred_on >= ?3 AND occurred_on < ?4)",
+        params![s.household_id, s.space_id, from, to],
+        |r| r.get(0),
+    )?)
+}

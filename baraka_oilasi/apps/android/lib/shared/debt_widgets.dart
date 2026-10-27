@@ -271,3 +271,41 @@ class _CelebrationState extends ConsumerState<_Celebration> with ActionState {
     );
   }
 }
+
+/// O'qish puli qarzga (uy/SPEC 2G.2): «To'xta va o'yla» ogohlantirishlari (taqiqlamaydi; RIBO — qizil).
+class StudyDebtWarnings extends StatelessWidget {
+  const StudyDebtWarnings(this.warnings, {super.key});
+
+  final List<String> warnings;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        key: const Key('study-debt-warnings'),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: p.warn),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.t('mentor.name'),
+              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            for (final w in warnings)
+              Text('• ${context.t('friction.warn.$w')}', style: TextStyle(color: w == 'RIBO' ? p.danger : null)),
+            if (warnings.isEmpty) Text('• ${context.t('friction.allClear')}'),
+            const SizedBox(height: 6),
+            Hint(context.t('expense.studyDebt.notForbidden')),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -1,8 +1,9 @@
 //! Bosh sahifadagi yumshoq eslatmalar (U15): daromad ritmiga mos «yozib qo'ying», qarzlarni
 //! inventarga kiritish taklifi va zaxira nusxa eslatmasi (`docs/BARAKA_OILASI.md` 7.2: «har oy
-//! eslatiladi»). Sof sana mantiqi — summa yo'q.
+//! eslatiladi»), 8-tamoyilning juma ritmi (uy/SPEC 2G.2, 2G.6). Sof sana mantiqi — summa yo'q.
 
-use chrono::{Days, NaiveDate};
+use baraka_domain_common::week_start;
+use chrono::{Days, NaiveDate, Weekday};
 
 /// Onboarding'da tanlangan daromad ritmi.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -40,6 +41,10 @@ pub const ORDERS_QUIET_DAYS: i64 = 14;
 pub const PAYDAY_WINDOW_DAYS: u64 = 3;
 /// Zaxira nusxa shuncha kundan eski bo'lsa (yoki hech olinmagan bo'lsa) — eslatma.
 pub const BACKUP_EVERY_DAYS: i64 = 30;
+
+/// Juma ritmi: eslatma haftaning (juma bilan boshlanadi) shuncha kunida ko'rinadi — juma, shanba,
+/// yakshanba. Jumada ochilmagan ilova dam olish kunlarida ham so'raydi, keyin hafta tinch o'tadi.
+pub const WEEKLY_CHECK_DAYS: i64 = 3;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IncomeNudge {
@@ -87,6 +92,21 @@ pub fn backup_due(
     let since = last_full_export.unwrap_or(created_on);
     let days = (today - since).num_days();
     (days >= BACKUP_EVERY_DAYS).then_some(days)
+}
+
+/// Juma ritmi haftasi (2G.2 «Bu hafta necha soat o'qidingiz?», 2G.6 «…kimgadir o'rgatdingizmi?»).
+/// Eslatma `anchor` (juma) kuni va undan keyingi kunlarda — jami [`WEEKLY_CHECK_DAYS`] kun — ko'rinadi
+/// va shu kunlarning hammasida **bitta** hafta baholanadi: eslatma kunlarining oxirgisi (yakshanba)
+/// bilan tugaydigan 7 kun, ya'ni dushanba–yakshanba. Haftalar ustma-ust tushmaydi: shanba yoki
+/// yakshanba yozilgani o'tayotgan haftaga kiradi va keyingi jumadagi eslatmani yashirmaydi.
+/// Qaytaradi: `(boshi, oxiri)` — ikkalasi ham kiradi; boshqa kunlari — `None`.
+pub fn weekly_check_window(today: NaiveDate, anchor: Weekday) -> Option<(NaiveDate, NaiveDate)> {
+    let friday = week_start(today, anchor);
+    if (today - friday).num_days() >= WEEKLY_CHECK_DAYS {
+        return None;
+    }
+    let last = friday.checked_add_days(Days::new(u64::try_from(WEEKLY_CHECK_DAYS - 1).ok()?))?;
+    Some((last.checked_sub_days(Days::new(6))?, last))
 }
 
 #[cfg(test)]
@@ -165,6 +185,30 @@ mod tests {
             income_nudge(m, d("2027-01-11"), Some(d("2027-01-10")), s),
             None
         );
+    }
+
+    #[test]
+    fn weekly_check_friday_to_sunday_on_one_week() {
+        use baraka_domain_common::WEEK_ANCHOR;
+        // 2026-11-20 — juma: juma, shanba va yakshanba bitta hafta — 11-16 (dushanba) … 11-22.
+        let week = Some((d("2026-11-16"), d("2026-11-22")));
+        for day in ["2026-11-20", "2026-11-21", "2026-11-22"] {
+            assert_eq!(weekly_check_window(d(day), WEEK_ANCHOR), week, "{day}");
+        }
+        // Dushanbadan payshanbagacha — eslatma yo'q.
+        for day in [
+            "2026-11-19",
+            "2026-11-23",
+            "2026-11-24",
+            "2026-11-25",
+            "2026-11-26",
+        ] {
+            assert_eq!(weekly_check_window(d(day), WEEK_ANCHOR), None, "{day}");
+        }
+        // Keyingi juma — keyingi hafta, oldingisi bilan ustma-ust emas.
+        let next = weekly_check_window(d("2026-11-27"), WEEK_ANCHOR);
+        assert_eq!(next, Some((d("2026-11-23"), d("2026-11-29"))));
+        assert!(next.is_some_and(|(from, _)| week.is_some_and(|(_, last)| from > last)));
     }
 
     #[test]

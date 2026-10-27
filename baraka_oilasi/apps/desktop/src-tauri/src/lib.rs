@@ -52,6 +52,7 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::export_loan_receipt,
             commands::debts_overview,
             commands::preview_borrow_check,
+            commands::preview_study_debt,
             commands::add_debt,
             commands::add_receivable,
             commands::record_repayment,

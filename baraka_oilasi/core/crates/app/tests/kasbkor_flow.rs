@@ -108,6 +108,7 @@ fn two_pockets_owner_salary_goes_to_uy_atomically() {
             note: None,
             self_investment: false,
             learning_plan_id: None,
+            study_debt: None,
         },
     )
     .unwrap();
@@ -306,6 +307,7 @@ fn expense(app: &App, kk: &str, key: &str, amount: &str) {
             note: None,
             self_investment: false,
             learning_plan_id: None,
+            study_debt: None,
         },
     )
     .unwrap();

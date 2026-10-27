@@ -859,6 +859,9 @@ abstract class BarakaCore implements RustOpaqueInterface {
     required NewDebtInput input,
   });
 
+  /// O'qish puli qarzga (uy/SPEC 2G.2): «to'xta va o'yla» ogohlantirishlari (hech narsa saqlanmaydi).
+  Future<List<String>> previewStudyDebt({required StudyDebtInput input});
+
   Future<GateDto> readinessGate({required String spaceId});
 
   Future<GovernanceDto> recordArbiterDecision({

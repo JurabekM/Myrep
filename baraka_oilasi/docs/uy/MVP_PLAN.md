@@ -528,7 +528,7 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 - [x] `hour_value`, `hour_value_change`, `self_invest_share` va `offer_check` (`COURSE` case'lari bilan) oracle va Rust'da yashil.
 - [x] «Sarmoya» belgili xarajat havas chegarasiga kirmaydi (test), toifasi o'zgarmaydi.
 - [x] Bir a'zoda 3-faol rejani ochib ham, `PAUSED` rejani qayta faollashtirib ham bo'lmaydi (test).
-- [ ] O'qish puli «Kelajagim» yoki zaxira puldan olinmaydi; o'qish uchun qarzda friction so'rovi chiqadi.
+- [ ] O'qish puli «Kelajagim» yoki zaxira puldan olinmaydi; o'qish uchun qarzda friction so'rovi chiqadi. — *qisman (1.2.0, SPEC 2G.9):* qarzga o'qishda friction so'rovi yadroda majburiy (test); «Kelajagim»/zaxira pul — xarajatni ulardan to'lash yo'li modelda yo'q, pul olish oynalarida ogohlantirish (yadro tekshiruvi emas — tuzilgan maqsad maydoni yo'q).
 - [x] Ilova daromad oshishini va'da qiladigan matn chiqarmaydi (i18n lint ro'yxati).
 - [ ] Diniy matnlar `APPROVED` bo'lmaguncha ko'rinmaydi.
 

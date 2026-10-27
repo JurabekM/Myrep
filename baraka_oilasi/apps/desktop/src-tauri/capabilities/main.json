@@ -30,6 +30,7 @@
     "allow-export-loan-receipt",
     "allow-debts-overview",
     "allow-preview-borrow-check",
+    "allow-preview-study-debt",
     "allow-add-debt",
     "allow-add-receivable",
     "allow-record-repayment",

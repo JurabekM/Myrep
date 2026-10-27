@@ -237,6 +237,11 @@ impl BarakaCore {
         self.session.app()?.preview_borrow_check(&space_id, input)
     }
 
+    /// O'qish puli qarzga (uy/SPEC 2G.2): «to'xta va o'yla» ogohlantirishlari (hech narsa saqlanmaydi).
+    pub fn preview_study_debt(&self, input: StudyDebtInput) -> Result<Vec<String>, AppError> {
+        self.session.app()?.preview_study_debt(input)
+    }
+
     pub fn add_debt(&self, space_id: String, input: NewDebtInput) -> Result<DebtDto, AppError> {
         self.session.app()?.add_debt(&space_id, input)
     }

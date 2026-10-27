@@ -24,6 +24,7 @@ const household = vi.fn();
 const categories = vi.fn();
 const monthlySummary = vi.fn();
 const recordExpense = vi.fn();
+const previewStudyDebt = vi.fn();
 vi.mock("../../bindings", () => ({
   commands: {
     learningOverview: (...a: unknown[]) => learningOverview(...a),
@@ -39,6 +40,7 @@ vi.mock("../../bindings", () => ({
     categories: (...a: unknown[]) => categories(...a),
     monthlySummary: (...a: unknown[]) => monthlySummary(...a),
     recordExpense: (...a: unknown[]) => recordExpense(...a),
+    previewStudyDebt: (...a: unknown[]) => previewStudyDebt(...a),
   },
 }));
 
@@ -97,7 +99,7 @@ function wrap(ui: ReactNode) {
 }
 
 beforeEach(() => {
-  for (const f of [learningOverview, hourValueSuggest, hourValueSave, learningPlanCreate, learningPlanSetStatus, learningPlanResult, studyLogAdd, teachingLogAdd, checkCourse, household, categories, monthlySummary, recordExpense]) f.mockReset();
+  for (const f of [learningOverview, hourValueSuggest, hourValueSave, learningPlanCreate, learningPlanSetStatus, learningPlanResult, studyLogAdd, teachingLogAdd, checkCourse, household, categories, monthlySummary, recordExpense, previewStudyDebt]) f.mockReset();
   learningOverview.mockResolvedValue(ok(overview));
   hourValueSuggest.mockImplementation((_s: string, m: string) => Promise.resolve(ok(m === "m1" ? suggestion : { memberId: m, months: [], average: null })));
   useUi.setState({ offerOpen: false, offerMode: "OFFER" });
@@ -343,6 +345,71 @@ describe("Xarajat formasi: «Oʻzimga sarmoya»", () => {
     await user.click(screen.getByRole("button", { name: "Saqlash" }));
     expect(recordExpense).toHaveBeenCalledWith("uy", expect.objectContaining({ selfInvestment: false, learningPlanId: null, memberId: null }));
     expect(learningOverview).not.toHaveBeenCalled();
+  });
+
+  it("oʻqish qarzga boʻlsa — javoblar oldindan tanlanmaydi, avval tekshiruv va ogohlantirishlar, keyin saqlash (2G.2)", async () => {
+    previewStudyDebt.mockResolvedValue(ok(["RIBO", "ALTERNATIVE_AVAILABLE"]));
+    const user = userEvent.setup();
+    const { container } = wrap(<ExpensesScreen spaceId="uy" />);
+    await screen.findByRole("option", { name: "Oʻqish" });
+    expect(screen.queryByLabelText("Bu pul qarzga olingan")).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("Oʻzimga sarmoya (bilim, malaka)"));
+    const onDebt = await screen.findByLabelText("Bu pul qarzga olingan");
+    expect(screen.queryByText("Toʻxta va oʻyla")).not.toBeInTheDocument();
+    await user.click(onDebt);
+    expect(screen.getByText("Toʻxta va oʻyla")).toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("joriy byudjetdan yoki oʻsadigan pul ulushidan");
+    // Hech narsa oldindan tanlanmagan; javobsiz tekshirib boʻlmaydi.
+    for (const label of ["Zarurat", "Hashamat", "Ha, foizli", "Yoʻq, foizsiz"]) {
+      expect(screen.getByLabelText(label)).not.toBeChecked();
+    }
+    await user.type(screen.getByLabelText("Summa"), "900 000");
+    await user.selectOptions(screen.getByLabelText("Kategoriya"), "c1");
+    const check = screen.getByRole("button", { name: "Tekshirish" });
+    expect(check).toBeDisabled();
+    await user.click(screen.getByLabelText("Zarurat"));
+    expect(check).toBeDisabled();
+    await user.click(screen.getByLabelText("Ha, foizli"));
+    await user.click(screen.getByLabelText("Qarindoshdan foizsiz"));
+    await user.click(check);
+    const answers = { need: "NECESSITY", alternatives: ["RELATIVE"], withInterest: true };
+    expect(previewStudyDebt).toHaveBeenCalledWith(answers);
+    expect(recordExpense).not.toHaveBeenCalled();
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent("Bu qarz foizli (ribo)");
+    expect(status).toHaveTextContent("Foizsiz muqobil bor ekan");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Oʻyladim, saqlash" }));
+    expect(recordExpense).toHaveBeenCalledWith("uy", expect.objectContaining({ selfInvestment: true, fundedByDebt: true, studyDebt: answers }));
+  });
+
+  it("javob oʻzgarsa — qayta tekshiriladi", async () => {
+    previewStudyDebt.mockResolvedValue(ok([]));
+    const user = userEvent.setup();
+    wrap(<ExpensesScreen spaceId="uy" />);
+    await screen.findByRole("option", { name: "Oʻqish" });
+    await user.click(screen.getByLabelText("Oʻzimga sarmoya (bilim, malaka)"));
+    await user.click(await screen.findByLabelText("Bu pul qarzga olingan"));
+    await user.type(screen.getByLabelText("Summa"), "300 000");
+    await user.selectOptions(screen.getByLabelText("Kategoriya"), "c1");
+    await user.click(screen.getByLabelText("Zarurat"));
+    await user.click(screen.getByLabelText("Yoʻq, foizsiz"));
+    await user.click(screen.getByRole("button", { name: "Tekshirish" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Xavotirli belgi yoʻq");
+    await user.click(screen.getByLabelText("Hashamat"));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tekshirish" })).toBeEnabled();
+  });
+
+  it("qarz belgisi faqat «Oʻzimga sarmoya» bilan; belgisiz xarajatda soʻrov yoʻq", async () => {
+    const user = userEvent.setup();
+    wrap(<ExpensesScreen spaceId="uy" />);
+    await screen.findByRole("option", { name: "Oʻqish" });
+    await user.type(screen.getByLabelText("Summa"), "50 000");
+    await user.selectOptions(screen.getByLabelText("Kategoriya"), "c1");
+    await user.click(screen.getByRole("button", { name: "Saqlash" }));
+    expect(recordExpense).toHaveBeenCalledWith("uy", expect.objectContaining({ fundedByDebt: false, studyDebt: null }));
+    expect(previewStudyDebt).not.toHaveBeenCalled();
   });
 
   it("oylik auditda «Oʻzimga sarmoya» qatori — jami va daromad ulushi", async () => {

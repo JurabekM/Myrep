@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../core/core.dart';
 import '../../shared/format.dart';
 import '../../shared/widgets.dart';
+import '../home/home_screen.dart';
 import 'mf_entry_sheet.dart';
 import 'mf_terms_card.dart';
 import 'purpose_shares.dart';
@@ -27,11 +28,13 @@ class MfHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final o = ref.watch(mfOverviewQuery(spaceId));
+    final nudges = ref.watch(nudgesQuery(spaceId)).valueOrNull ?? [];
     final d = o.hasError ? null : o.valueOrNull;
     final s = d?.settings;
     return ScreenBody(
       mentorKey: 'mentor.mf',
       children: [
+        if (nudges.isNotEmpty) Nudges(spaceId: spaceId, items: nudges),
         if (o.hasError) ErrorText(o.error),
         if (d == null && !o.hasError) const Center(child: CircularProgressIndicator()),
         if (d != null && s == null)

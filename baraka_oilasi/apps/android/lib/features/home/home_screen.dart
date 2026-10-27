@@ -21,7 +21,7 @@ class HomeScreen extends ConsumerWidget {
     final summary = ref.watch(query(['summary', spaceId, null], (c) => c.monthlySummary(spaceId: spaceId))).valueOrNull;
     final vault = ref.watch(query(['vault', spaceId], (c) => c.vault(spaceId: spaceId))).valueOrNull;
     final debts = ref.watch(query(['debts', spaceId], (c) => c.debtsOverview(spaceId: spaceId))).valueOrNull;
-    final nudges = ref.watch(query(['nudges', spaceId], (c) => c.homeNudges(spaceId: spaceId))).valueOrNull ?? [];
+    final nudges = ref.watch(nudgesQuery(spaceId)).valueOrNull ?? [];
     final reminders =
         ref.watch(query(['reminders', spaceId], (c) => c.agreementReminders(spaceId: spaceId))).valueOrNull ?? [];
     final shell = ref.read(shellProvider.notifier);
@@ -29,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
     return ScreenBody(
       mentorKey: 'mentor.home',
       children: [
-        if (nudges.isNotEmpty) _Nudges(spaceId: spaceId, items: nudges),
+        if (nudges.isNotEmpty) Nudges(spaceId: spaceId, items: nudges),
         Kpi(
           key: const Key('kpi-paid-to-self'),
           label: context.t('home.paidToSelf'),
@@ -93,9 +93,14 @@ class ReminderText extends StatelessWidget {
   );
 }
 
-/// Yumshoq eslatmalar (U15): daromad ritmi, qarzlarni yozish, oylik zaxira nusxa.
-class _Nudges extends ConsumerWidget {
-  const _Nudges({required this.spaceId, required this.items});
+/// Bosh sahifa eslatmalari (Uy, Kasb-kor, Musofir — turlari yadroda tanlanadi).
+ProviderListenable<AsyncValue<List<NudgeDto>>> nudgesQuery(String spaceId) =>
+    query(['nudges', spaceId], (c) => c.homeNudges(spaceId: spaceId));
+
+/// Yumshoq eslatmalar (U15): daromad ritmi, qarzlarni yozish, oylik zaxira nusxa; 8-tamoyilning juma
+/// ritmi (o'qish vaqti, «Ilm zakoti») — tugma shu makonning «O'zimga sarmoya» ekranini ochadi.
+class Nudges extends ConsumerWidget {
+  const Nudges({required this.spaceId, required this.items, super.key});
 
   final String spaceId;
   final List<NudgeDto> items;
@@ -107,6 +112,9 @@ class _Nudges extends ConsumerWidget {
     void action(String kind) => switch (kind) {
       'DEBT_INVENTORY' => shell.go('inventory'),
       'BACKUP' => shell.go('sync'),
+      'STUDY_WEEK' || 'TEACH_WEEK' => shell.go('learning'),
+      'KK_TEACH_WEEK' => shell.go('kkLearning'),
+      'MF_TEACH_WEEK' => shell.go('mfLearning'),
       _ => openIncome(context, spaceId),
     };
     return Semantics(
@@ -134,6 +142,7 @@ class _Nudges extends ConsumerWidget {
                           {'count': n.days ?? 0},
                         ),
                       ),
+                      if (n.members.isNotEmpty) Hint(context.t('nudge.members', {'names': n.members.join(', ')})),
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 8,

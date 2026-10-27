@@ -37,3 +37,5 @@ workspace = true
 
 [dev-dependencies]
 tempfile = "3"
+# R6: 1.1.0 sxemasidagi (v22) bazadan yangilanish testi.
+baraka-storage = { workspace = true, features = ["test-support"] }

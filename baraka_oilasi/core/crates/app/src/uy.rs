@@ -429,6 +429,12 @@ impl App {
             input.learning_plan_id.as_deref(),
             input.member_id.as_deref(),
         )?;
+        // 2G.2: o'qish uchun qarz — 2D.6 «to'xta va o'yla» javoblari majburiy, ogohlantirishlar javobda.
+        let borrow_warnings = Self::study_debt_check(
+            input.self_investment,
+            input.funded_by_debt,
+            input.study_debt.as_ref(),
+        )?;
         let row = expenses::ExpenseRow {
             id: self.new_id(),
             category_id: category.id,
@@ -459,6 +465,7 @@ impl App {
             funded_by_debt: row.funded_by_debt,
             self_investment: row.self_investment,
             learning_plan_id: row.learning_plan_id,
+            borrow_warnings,
         })
     }
 
