@@ -1,0 +1,185 @@
+{
+ "suite": "hourly_value",
+ "version": 1,
+ "description": "SPEC 2H.1: monthlyMinutes = minutesPerDay*daysPerMonth; hourly = half_up(income*60/monthlyMinutes); doubledHourly = 2*hourly; ceilingIncome = half_up(income*maxMinutesPerDay/minutesPerDay); loadBp = half_up(minutesPerDay*10000/maxMinutesPerDay); doubleByHoursFeasible = 2*minutesPerDay <= maxMinutesPerDay. Daqiqalar 1..1440, kunlar 1..31 dan tashqari: INVALID_HOURS; manfiy daromad: INVALID_AMOUNT. Minor birlik.",
+ "cases": [
+  {
+   "id": "hv-001",
+   "input": {
+    "income": "600000000",
+    "currency": "UZS",
+    "minutesPerDay": 540,
+    "daysPerMonth": 26,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 14040,
+    "hourly": "2564103",
+    "doubledHourly": "5128206",
+    "ceilingIncome": "800000000",
+    "loadBp": 7500,
+    "doubleByHoursFeasible": false
+   }
+  },
+  {
+   "id": "hv-002",
+   "input": {
+    "income": "300000000",
+    "currency": "UZS",
+    "minutesPerDay": 240,
+    "daysPerMonth": 22,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 5280,
+    "hourly": "3409091",
+    "doubledHourly": "6818182",
+    "ceilingIncome": "900000000",
+    "loadBp": 3333,
+    "doubleByHoursFeasible": true
+   }
+  },
+  {
+   "id": "hv-003",
+   "input": {
+    "income": "450000000",
+    "currency": "UZS",
+    "minutesPerDay": 720,
+    "daysPerMonth": 26,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 18720,
+    "hourly": "1442308",
+    "doubledHourly": "2884616",
+    "ceilingIncome": "450000000",
+    "loadBp": 10000,
+    "doubleByHoursFeasible": false
+   }
+  },
+  {
+   "id": "hv-004",
+   "input": {
+    "income": "700000000",
+    "currency": "UZS",
+    "minutesPerDay": 780,
+    "daysPerMonth": 30,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 23400,
+    "hourly": "1794872",
+    "doubledHourly": "3589744",
+    "ceilingIncome": "646153846",
+    "loadBp": 10833,
+    "doubleByHoursFeasible": false
+   }
+  },
+  {
+   "id": "hv-005",
+   "input": {
+    "income": "15",
+    "currency": "UZS",
+    "minutesPerDay": 60,
+    "daysPerMonth": 2,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 120,
+    "hourly": "8",
+    "doubledHourly": "16",
+    "ceilingIncome": "180",
+    "loadBp": 833,
+    "doubleByHoursFeasible": true
+   }
+  },
+  {
+   "id": "hv-006",
+   "input": {
+    "income": "0",
+    "currency": "UZS",
+    "minutesPerDay": 480,
+    "daysPerMonth": 22,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 10560,
+    "hourly": "0",
+    "doubledHourly": "0",
+    "ceilingIncome": "0",
+    "loadBp": 6667,
+    "doubleByHoursFeasible": false
+   }
+  },
+  {
+   "id": "hv-007",
+   "input": {
+    "income": "120000",
+    "currency": "USD",
+    "minutesPerDay": 480,
+    "daysPerMonth": 22,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "monthlyMinutes": 10560,
+    "hourly": "682",
+    "doubledHourly": "1364",
+    "ceilingIncome": "180000",
+    "loadBp": 6667,
+    "doubleByHoursFeasible": false
+   }
+  },
+  {
+   "id": "hv-008",
+   "input": {
+    "income": "500000000",
+    "currency": "UZS",
+    "minutesPerDay": 0,
+    "daysPerMonth": 22,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "error": "INVALID_HOURS"
+   }
+  },
+  {
+   "id": "hv-009",
+   "input": {
+    "income": "500000000",
+    "currency": "UZS",
+    "minutesPerDay": 480,
+    "daysPerMonth": 32,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "error": "INVALID_HOURS"
+   }
+  },
+  {
+   "id": "hv-010",
+   "input": {
+    "income": "500000000",
+    "currency": "UZS",
+    "minutesPerDay": 480,
+    "daysPerMonth": 22,
+    "maxMinutesPerDay": 1500
+   },
+   "expected": {
+    "error": "INVALID_HOURS"
+   }
+  },
+  {
+   "id": "hv-011",
+   "input": {
+    "income": "-1",
+    "currency": "UZS",
+    "minutesPerDay": 480,
+    "daysPerMonth": 22,
+    "maxMinutesPerDay": 720
+   },
+   "expected": {
+    "error": "INVALID_AMOUNT"
+   }
+  }
+ ]
+}

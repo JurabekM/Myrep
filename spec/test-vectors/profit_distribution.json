@@ -1,0 +1,112 @@
+{
+ "suite": "profit_distribution",
+ "version": 1,
+ "description": "Mudaraba / musharaka foyda va zarar taqsimoti; kafolatli summa taqiqlangan",
+ "cases": [
+  {
+   "id": "dist-001",
+   "description": "MUDARABA, foyda",
+   "input": {
+    "type": "MUDARABA",
+    "net": "300000000",
+    "currency": "UZS",
+    "parties": [
+     {
+      "role": "CAPITAL_PROVIDER",
+      "shareBp": 5000,
+      "capital": "1000000000"
+     },
+     {
+      "role": "WORKER",
+      "shareBp": 5000,
+      "capital": "0"
+     }
+    ]
+   },
+   "expected": {
+    "shares": [
+     "150000000",
+     "150000000"
+    ]
+   }
+  },
+  {
+   "id": "dist-002",
+   "description": "MUDARABA, zarar, beparvolik yo'q",
+   "input": {
+    "type": "MUDARABA",
+    "net": "-200000000",
+    "currency": "UZS",
+    "parties": [
+     {
+      "role": "CAPITAL_PROVIDER",
+      "shareBp": 5000,
+      "capital": "1000000000"
+     },
+     {
+      "role": "WORKER",
+      "shareBp": 5000,
+      "capital": "0"
+     }
+    ]
+   },
+   "expected": {
+    "shares": [
+     "-200000000",
+     "0"
+    ]
+   }
+  },
+  {
+   "id": "dist-003",
+   "description": "MUSHARAKA, zarar kapitalga mutanosib",
+   "input": {
+    "type": "MUSHARAKA",
+    "net": "-300000000",
+    "currency": "UZS",
+    "parties": [
+     {
+      "role": "BOTH",
+      "shareBp": 5000,
+      "capital": "600000000"
+     },
+     {
+      "role": "BOTH",
+      "shareBp": 5000,
+      "capital": "200000000"
+     }
+    ]
+   },
+   "expected": {
+    "shares": [
+     "-225000000",
+     "-75000000"
+    ]
+   }
+  },
+  {
+   "id": "dist-004",
+   "description": "Kafolatli summa",
+   "input": {
+    "type": "MUDARABA",
+    "net": "300000000",
+    "currency": "UZS",
+    "parties": [
+     {
+      "role": "CAPITAL_PROVIDER",
+      "fixedReturn": "50000000",
+      "capital": "1000000000"
+     },
+     {
+      "role": "WORKER",
+      "shareBp": 10000,
+      "capital": "0"
+     }
+    ]
+   },
+   "expected": {
+    "error": "GUARANTEED_RETURN_FORBIDDEN"
+   }
+  }
+ ]
+}

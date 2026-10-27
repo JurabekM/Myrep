@@ -1,0 +1,186 @@
+{
+ "suite": "course_check",
+ "version": 1,
+ "description": "SPEC 2H.5: belgilar (ScamSign tartibida, har biri bir marta): GUARANTEED_HIGH_RETURN (incomePromise = YES), URGENCY (pressure = YES), RECRUITMENT_INCOME (referralIncome = YES), NO_REAL_BUSINESS (secretMethod = YES yoki curriculumShown = NO yoki teacherPractices = NO), HARD_EXIT (refundTerms = NO). level: 0 NONE, 1 CAUTION, 2+ FLEE; verdict: NONE GREEN, CAUTION YELLOW, FLEE RED; javob yo'q = UNKNOWN, bahoni kamida YELLOW qiladi.",
+ "cases": [
+  {
+   "id": "cc-001",
+   "input": {
+    "answers": {
+     "incomePromise": "NO",
+     "pressure": "NO",
+     "referralIncome": "NO",
+     "secretMethod": "NO",
+     "curriculumShown": "YES",
+     "teacherPractices": "YES",
+     "refundTerms": "YES"
+    }
+   },
+   "expected": {
+    "signs": [],
+    "level": "NONE",
+    "verdict": "GREEN"
+   }
+  },
+  {
+   "id": "cc-002",
+   "input": {
+    "answers": {
+     "incomePromise": "NO",
+     "pressure": "YES",
+     "referralIncome": "NO",
+     "secretMethod": "NO",
+     "curriculumShown": "YES",
+     "teacherPractices": "YES",
+     "refundTerms": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "URGENCY"
+    ],
+    "level": "CAUTION",
+    "verdict": "YELLOW"
+   }
+  },
+  {
+   "id": "cc-003",
+   "input": {
+    "answers": {
+     "incomePromise": "NO",
+     "pressure": "YES",
+     "referralIncome": "NO",
+     "secretMethod": "NO",
+     "curriculumShown": "YES",
+     "teacherPractices": "YES",
+     "refundTerms": "NO"
+    }
+   },
+   "expected": {
+    "signs": [
+     "URGENCY",
+     "HARD_EXIT"
+    ],
+    "level": "FLEE",
+    "verdict": "RED"
+   }
+  },
+  {
+   "id": "cc-004",
+   "input": {
+    "answers": {
+     "incomePromise": "YES",
+     "pressure": "YES",
+     "referralIncome": "YES",
+     "secretMethod": "YES",
+     "curriculumShown": "NO",
+     "teacherPractices": "NO",
+     "refundTerms": "NO"
+    }
+   },
+   "expected": {
+    "signs": [
+     "GUARANTEED_HIGH_RETURN",
+     "URGENCY",
+     "RECRUITMENT_INCOME",
+     "NO_REAL_BUSINESS",
+     "HARD_EXIT"
+    ],
+    "level": "FLEE",
+    "verdict": "RED"
+   }
+  },
+  {
+   "id": "cc-005",
+   "input": {
+    "answers": {
+     "incomePromise": "NO",
+     "pressure": "NO",
+     "referralIncome": "NO",
+     "secretMethod": "YES",
+     "curriculumShown": "NO",
+     "teacherPractices": "NO",
+     "refundTerms": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "NO_REAL_BUSINESS"
+    ],
+    "level": "CAUTION",
+    "verdict": "YELLOW"
+   }
+  },
+  {
+   "id": "cc-006",
+   "input": {
+    "answers": {}
+   },
+   "expected": {
+    "signs": [],
+    "level": "NONE",
+    "verdict": "YELLOW"
+   }
+  },
+  {
+   "id": "cc-007",
+   "input": {
+    "answers": {
+     "incomePromise": "NO",
+     "pressure": "NO",
+     "referralIncome": "NO",
+     "secretMethod": "NO",
+     "curriculumShown": "YES",
+     "teacherPractices": "UNKNOWN",
+     "refundTerms": "YES"
+    }
+   },
+   "expected": {
+    "signs": [],
+    "level": "NONE",
+    "verdict": "YELLOW"
+   }
+  },
+  {
+   "id": "cc-008",
+   "input": {
+    "answers": {
+     "incomePromise": "YES",
+     "pressure": "NO",
+     "referralIncome": "NO",
+     "secretMethod": "NO",
+     "curriculumShown": "YES",
+     "teacherPractices": "YES",
+     "refundTerms": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "GUARANTEED_HIGH_RETURN"
+    ],
+    "level": "CAUTION",
+    "verdict": "YELLOW"
+   }
+  },
+  {
+   "id": "cc-009",
+   "input": {
+    "answers": {
+     "incomePromise": "NO",
+     "pressure": "NO",
+     "referralIncome": "YES",
+     "secretMethod": "NO",
+     "curriculumShown": "YES",
+     "refundTerms": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "RECRUITMENT_INCOME"
+    ],
+    "level": "CAUTION",
+    "verdict": "YELLOW"
+   }
+  }
+ ]
+}

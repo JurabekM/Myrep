@@ -1,0 +1,579 @@
+{
+  "schemaVersion": 1,
+  "chapters": [
+    {
+      "id": "ch01",
+      "order": 1,
+      "title": {
+        "uz": "1-bob. Avval oʻzingga toʻla",
+        "ru": "Глава 1. Сначала заплати себе"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Koʻpchilik oy oxirida nima qolsa, shuni jamgʻarishni rejalaydi — va koʻpincha hech narsa qolmaydi. Tartibni teskari qiling: daromad kelishi bilan uning bir qismini alohida qoʻying, qolganiga yashang. Qiyin boʻlsa, 5 % dan boshlang va asta-sekin oʻndan birga yetkazing: muhimi summa emas, har gal takrorlanadigan odat.",
+            "ru": "Многие планируют копить то, что останется в конце месяца, — и чаще всего не остаётся ничего. Поменяйте порядок: как только пришёл доход, отложите его часть, а на остальное живите. Если трудно, начните с 5 % и постепенно доведите до десятой части: важна не сумма, а привычка, которая повторяется каждый раз."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Ulushni daromad kelgan kuniyoq ajrating. Keyinga qoldirilgan ulush odatda boshqa xarajatga aylanib ketadi.",
+            "ru": "Откладывайте долю в день получения дохода. Отложенная «на потом» доля обычно уходит на другие траты."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 1,
+        "text": {
+          "uz": "Har bir halol daromaddan kamida oʻndan birini avval kelajagingiz uchun ajrating va unga tegmang.",
+          "ru": "С каждого честного дохода сначала откладывайте хотя бы десятую часть для своего будущего и не трогайте её."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch01.t1",
+          "text": {
+            "uz": "«Kelajagim» jamgʻarmangizni oching va ulushingizni belgilang.",
+            "ru": "Откройте фонд «Моё будущее» и выберите свою долю."
+          },
+          "autoComplete": "VAULT_OPENED"
+        },
+        {
+          "id": "ch01.t2",
+          "text": {
+            "uz": "Shu hafta daromaddan ulush ajrating — summasi emas, odati muhim.",
+            "ru": "На этой неделе отложите долю от дохода — важна привычка, а не сумма."
+          },
+          "autoComplete": "INCOME_SHARED"
+        },
+        {
+          "id": "ch01.t3",
+          "text": {
+            "uz": "Oʻtgan oy uchun «Pul qayerga ketdi?» auditini oʻtkazing.",
+            "ru": "Проведите аудит «Куда ушли деньги?» за прошлый месяц."
+          },
+          "autoComplete": "AUDIT_COMPLETED"
+        }
+      ]
+    },
+    {
+      "id": "ch02",
+      "order": 2,
+      "title": {
+        "uz": "2-bob. Xarajatni koʻr va boshqar",
+        "ru": "Глава 2. Видь расходы и управляй ими"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Pul koʻpincha katta xaridlarga emas, sezilmaydigan mayda toʻlovlarga ketadi. Bir hafta har bir xarajatni yozib borsangiz, pul qayerga sizib ketayotgani oʻzi koʻrinadi. Maqsad oʻzingizni cheklash emas — pulingiz qayerga ketayotganini bilish va ongli tanlash.",
+            "ru": "Деньги чаще уходят не на крупные покупки, а на незаметные мелкие траты. Если неделю записывать каждый расход, станет видно, куда утекают деньги. Цель — не ограничить себя, а знать, куда уходят деньги, и выбирать осознанно."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Xarajatni oilada birga koʻring. Yolgʻiz yuritilgan hisob tez tashlab qoʻyiladi, birga yuritilgani esa odatga aylanadi.",
+            "ru": "Смотрите расходы вместе с семьёй. Учёт, который ведут в одиночку, быстро забрасывают, а совместный становится привычкой."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 2,
+        "text": {
+          "uz": "Yozilmagan xarajatni boshqarib boʻlmaydi. Har xarajatni yozing va oilada birga koʻrib chiqing: isrof ham, baxillik ham emas — oʻrtacha yoʻl.",
+          "ru": "Нельзя управлять расходом, который не записан. Записывайте каждый расход и обсуждайте его в семье: ни расточительства, ни скупости — золотая середина."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch02.t1",
+          "text": {
+            "uz": "Bir hafta davomida har bir xarajatni yozib boring.",
+            "ru": "Неделю записывайте каждый расход."
+          },
+          "autoComplete": "EXPENSE_RECORDED"
+        },
+        {
+          "id": "ch02.t2",
+          "text": {
+            "uz": "Obunalaringizni koʻrib chiqing: qaysi biri haqiqatan kerak?",
+            "ru": "Пересмотрите подписки: какие действительно нужны?"
+          },
+          "autoComplete": "SUBSCRIPTIONS_REVIEWED"
+        },
+        {
+          "id": "ch02.t3",
+          "text": {
+            "uz": "Oilada havas xarajatlari uchun oylik chegarani kelishib oling.",
+            "ru": "Договоритесь в семье о месячном лимите на «хотелки»."
+          },
+          "autoComplete": "HAVAS_LIMIT_AGREED"
+        }
+      ]
+    },
+    {
+      "id": "ch03",
+      "order": 3,
+      "title": {
+        "uz": "3-bob. Avval zaxira, keyin oʻsish",
+        "ru": "Глава 3. Сначала запас, потом рост"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Narxlar har yili oshadi, shuning uchun bekor yotgan pulning qadri asta-sekin kamayadi. Shu bilan birga, kutilmagan holatlar uchun qoʻl ostida zaxira boʻlishi shart: kasallik, ishsiz qolgan oy yoki shoshilinch taʼmir. Avval zaxirani toʻldiring, soʻng ortiqchasini halol ishga soling.",
+            "ru": "Цены растут каждый год, поэтому ценность лежащих без дела денег постепенно уменьшается. При этом запас на непредвиденные случаи обязательно должен быть под рукой: болезнь, месяц без работы или срочный ремонт. Сначала наполните запас, затем излишек вложите в честное дело."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Zaxira miqdorini bir oylik zarur xarajatingizdan hisoblang: avval uch oylik, keyin olti oylik maqsad qoʻying.",
+            "ru": "Считайте размер запаса от месячных необходимых расходов: сначала цель — три месяца, затем шесть."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 3,
+        "text": {
+          "uz": "Pulni ikkiga ajrating: biri — kutilmagan kunlar uchun zaxira, ikkinchisi — halol ishda oʻsadigan pul. Pul puldan emas, mehnat, savdo va sheriklikdan koʻpaysin.",
+          "ru": "Разделите деньги на две части: одна — запас на непредвиденный случай, другая — деньги, которые растут в честном деле. Пусть деньги умножаются не от денег, а от труда, торговли и партнёрства."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch03.t1",
+          "text": {
+            "uz": "«Narx daftari»ga 5 ta asosiy mahsulot narxini yozing.",
+            "ru": "Запишите цены 5 основных продуктов в «Тетрадь цен»."
+          },
+          "autoComplete": "PRICE_COMPARISON_DONE"
+        },
+        {
+          "id": "ch03.t2",
+          "text": {
+            "uz": "Favqulodda holatlar uchun jamgʻarma maqsadini belgilang.",
+            "ru": "Поставьте цель резервного фонда на чёрный день."
+          },
+          "autoComplete": "EMERGENCY_TARGET_SET"
+        },
+        {
+          "id": "ch03.t3",
+          "text": {
+            "uz": "Bir xarajat turi uchun alohida konvert oching.",
+            "ru": "Заведите отдельный конверт для одного вида расходов."
+          },
+          "autoComplete": "ENVELOPE_CREATED"
+        }
+      ]
+    },
+    {
+      "id": "ch04",
+      "order": 4,
+      "title": {
+        "uz": "4-bob. Ribodan qoch, qarzdan reja bilan chiq",
+        "ru": "Глава 4. Избегай рибы, выходи из долга по плану"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Qarz bir kunlik muammoni hal qiladi, lekin uzoq vaqt daromadning bir qismini band qiladi. Ayniqsa toʻy va marosimlar uchun olingan qarz yillab choʻzilishi mumkin. Barcha qarzlaringizni bitta roʻyxatga yozing, eng kichigidan yoki eng ogʻiridan boshlab yopish rejasini tuzing va har toʻlovni belgilab boring.",
+            "ru": "Долг решает проблему одного дня, но надолго забирает часть дохода. Особенно долги на свадьбы и торжества могут тянуться годами. Запишите все долги в один список, составьте план погашения — начиная с самого маленького или самого тяжёлого — и отмечайте каждый платёж."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Yangi qarz olishdan oldin oʻzingizdan soʻrang: bu narsasiz bir oy yashay olamanmi? Koʻpincha javob «ha» boʻladi.",
+            "ru": "Прежде чем брать новый долг, спросите себя: смогу ли я прожить месяц без этой вещи? Чаще всего ответ — «да»."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 4,
+        "text": {
+          "uz": "Foizli qarzdan saqlaning: foizli qarz olinmaydi va berilmaydi. Zarurat boʻlsa — foizsiz, yozma va qaytarish rejasi bilan. Qarz boʻlsa — reja bilan chiqing.",
+          "ru": "Избегайте процентных долгов: их не берут и не дают. При необходимости — без процентов, письменно и с планом возврата. Если долг есть — выходите из него по плану."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch04.t1",
+          "text": {
+            "uz": "Barcha qarzlaringizni bitta roʻyxatga yozing.",
+            "ru": "Запишите все свои долги в один список."
+          },
+          "autoComplete": "DEBT_INVENTORY_COMPLETED"
+        },
+        {
+          "id": "ch04.t2",
+          "text": {
+            "uz": "Qarzdan chiqish rejasini tuzing.",
+            "ru": "Составьте план выхода из долгов."
+          },
+          "autoComplete": "PAYOFF_PLAN_CREATED"
+        },
+        {
+          "id": "ch04.t3",
+          "text": {
+            "uz": "Sizga kelgan bitta taklifni (kredit, muddatli toʻlov) tekshirib koʻring.",
+            "ru": "Проверьте одно полученное предложение (кредит, рассрочку)."
+          },
+          "autoComplete": "OFFER_CHECKED"
+        }
+      ]
+    },
+    {
+      "id": "ch05",
+      "order": 5,
+      "title": {
+        "uz": "5-bob. Pulni halol ishga sol",
+        "ru": "Глава 5. Вложи деньги в честное дело"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Zaxira toʻlgach, ortiqcha pulni ishlatish haqida oʻylash vaqti keladi. Islom moliyasida foyda kafolatlanmaydi: sherik pul yoki mehnat qoʻshadi, natija esa oldindan kelishilgan ulush boʻyicha boʻlinadi. Boshlashdan oldin hisob-kitobni uch xil — yomon, oʻrtacha va yaxshi holat uchun qiling.",
+            "ru": "Когда запас наполнен, пора думать, как использовать излишек. В исламских финансах прибыль не гарантируется: партнёр вкладывает деньги или труд, а результат делится по заранее оговорённой доле. Прежде чем начинать, посчитайте три варианта — плохой, средний и хороший."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Tushunmagan ishingizga pul qoʻymang. Avval kichik summadan boshlang va hisobni oyma-oy yuriting.",
+            "ru": "Не вкладывайте деньги в дело, которого не понимаете. Начните с небольшой суммы и ведите учёт помесячно."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 5,
+        "text": {
+          "uz": "Bekor yotgan pul kamayadi, halol ishga solingan pul egasini boqadi. Yoʻli — savdo va sheriklik; sheriklikda foyda ham, zarar ham boʻlishiladi.",
+          "ru": "Лежащие деньги уменьшаются, а вложенные в честное дело кормят хозяина. Путь — торговля и партнёрство; в партнёрстве делятся и прибылью, и убытком."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch05.t1",
+          "text": {
+            "uz": "Halol tadbirkorlik gʻoyangizni yozib qoʻying.",
+            "ru": "Запишите свою идею честного дела."
+          },
+          "autoComplete": "VENTURE_IDEA_CREATED"
+        },
+        {
+          "id": "ch05.t2",
+          "text": {
+            "uz": "Atrofingizda hunari bor, lekin sarmoyasi yoʻq bir odamni oʻylab koʻring.",
+            "ru": "Подумайте о человеке рядом, у которого есть ремесло, но нет капитала."
+          },
+          "autoComplete": null
+        },
+        {
+          "id": "ch05.t3",
+          "text": {
+            "uz": "5-qonunni «Daftar sahifasi»ga oʻz soʻzlaringiz bilan yozing.",
+            "ru": "Запишите 5-й закон своими словами на «Странице тетради»."
+          },
+          "autoComplete": "DAFTAR_PAGE_WRITTEN"
+        }
+      ]
+    },
+    {
+      "id": "ch06",
+      "order": 6,
+      "title": {
+        "uz": "6-bob. Kelishuvni yozma tuz",
+        "ru": "Глава 6. Оформляй договорённость письменно"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Ogʻzaki kelishuv vaqt oʻtishi bilan har kimning xotirasida boshqacha qoladi. Yozma kelishuvda kim nima qoʻshadi, kim nima qiladi, foyda va zarar qanday boʻlinadi, kelishmovchilik boʻlsa kim hakam boʻladi — hammasi aniq boʻladi. Oyiga bir marta hisobni birga koʻrib chiqish ishonchni asraydi.",
+            "ru": "Устная договорённость со временем у каждого запоминается по-своему. В письменной всё ясно: кто что вкладывает, кто что делает, как делятся прибыль и убыток, кто будет арбитром при разногласиях. Ежемесячная совместная проверка счетов сохраняет доверие."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Noqulay savollarni boshidayoq yozing: kimdir vazifasini bajara olmasa yoki sheriklikdan chiqmoqchi boʻlsa nima boʻladi.",
+            "ru": "Запишите неудобные вопросы с самого начала: что будет, если кто-то не сможет выполнять своё дело или захочет выйти из партнёрства."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 6,
+        "text": {
+          "uz": "Kelishuvni yozing va har oy birga koʻrib chiqing. Vazifani ochiq ayting, kelishilganni bir tomonlama oʻzgartirmang.",
+          "ru": "Записывайте договорённости и ежемесячно проверяйте их вместе. Называйте обязанности открыто и не меняйте договорённое в одностороннем порядке."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch06.t1",
+          "text": {
+            "uz": "Oilangizda bir uy ishini kelishib, yozib qoʻying.",
+            "ru": "Согласуйте в семье одну домашнюю обязанность и запишите её."
+          },
+          "autoComplete": "FAMILY_AGREEMENT_CREATED"
+        },
+        {
+          "id": "ch06.t2",
+          "text": {
+            "uz": "Oylik hisob koʻrigini birga oʻtkazing.",
+            "ru": "Проведите ежемесячную проверку счёта вместе."
+          },
+          "autoComplete": "ACCOUNT_REVIEW_COMPLETED"
+        },
+        {
+          "id": "ch06.t3",
+          "text": {
+            "uz": "Vazifani bajara olmasangiz, ayblamasdan xabar bering va yechim taklif qiling.",
+            "ru": "Если не получается выполнить обязанность, сообщите без упрёков и предложите решение."
+          },
+          "autoComplete": null
+        }
+      ]
+    },
+    {
+      "id": "ch07",
+      "order": 7,
+      "title": {
+        "uz": "7-bob. Tekshirmagan ishga pul tikma",
+        "ru": "Глава 7. Не вкладывай в непроверенное дело"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "«Oyiga katta foyda, kafolat bilan» degan takliflar koʻpincha yangi kirganlarning puli hisobidan toʻlanadi va oxir-oqibat qulaydi. Bunday taklifni besh savol bilan tekshiring: foyda kafolatlanganmi, shoshirishyaptimi, daromad yangi odam jalb qilishdanmi, ishning oʻzi koʻrinadimi, pulni istagan vaqtda qaytarish mumkinmi. Pulni ishlatishning eng ishonchli yoʻli koʻpincha oʻzingiz biladigan hunar va ish boʻladi.",
+            "ru": "Предложения «большая прибыль каждый месяц с гарантией» часто оплачиваются из денег новых участников и в итоге рушатся. Проверьте такое предложение пятью вопросами: гарантирована ли прибыль, торопят ли вас, идёт ли доход от привлечения людей, видно ли само дело, можно ли забрать деньги в любой момент. Самое надёжное применение денег часто — ремесло и дело, которые вы знаете сами."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Pul berishdan oldin bir kecha oʻylang va ishonchli odam bilan maslahatlashing. Halol taklif bir kunda yoʻqolib qolmaydi.",
+            "ru": "Прежде чем отдать деньги, подумайте одну ночь и посоветуйтесь с надёжным человеком. Честное предложение за один день не исчезнет."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 7,
+        "text": {
+          "uz": "Koʻrmagan ishingizga pul qoʻymang. Kafolatli katta foyda, shoshirish, yangi odam olib kelish talabi, koʻrinmaydigan ish va qiyin chiqish — xavf belgilari. Avval olti oylik zaxira, keyin oʻz hunaringizga sarmoya.",
+          "ru": "Не вкладывайте деньги в дело, которого не видели. Гарантированная большая прибыль, спешка, требование приводить новых людей, невидимое дело и трудный выход — признаки опасности. Сначала запас на полгода, затем вложение в своё ремесло."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch07.t1",
+          "text": {
+            "uz": "Sizga kelgan bitta taklifni besh xavf belgisi bilan tekshiring.",
+            "ru": "Проверьте одно полученное предложение по пяти признакам опасности."
+          },
+          "autoComplete": "OFFER_CHECKED"
+        },
+        {
+          "id": "ch07.t2",
+          "text": {
+            "uz": "Oilangizning olti oylik zaxirasi qancha boʻlishi kerakligini hisoblang.",
+            "ru": "Посчитайте, каким должен быть семейный запас на полгода."
+          },
+          "autoComplete": "EMERGENCY_TARGET_SET"
+        },
+        {
+          "id": "ch07.t3",
+          "text": {
+            "uz": "Hunaringizdan bitta gʻoya va uning boshlangʻich xarajatini yozing.",
+            "ru": "Запишите одну идею из вашего ремесла и её стартовые затраты."
+          },
+          "autoComplete": "VENTURE_IDEA_CREATED"
+        }
+      ]
+    },
+    {
+      "id": "ch08",
+      "order": 8,
+      "title": {
+        "uz": "8-bob. Bilimingizga sarmoya kiriting",
+        "ru": "Глава 8. Вкладывайте в свои знания"
+      },
+      "audioUrl": null,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Kunda soatlar soni oʻzgarmaydi, ularning hammasini ishga berib ham boʻlmaydi: dam olish, oila va sogʻliq uchun ham vaqt kerak. Shuning uchun faqat koʻproq soat ishlab daromadni cheksiz oshirib boʻlmaydi. Avval bir soatingiz qancha turishini hisoblang: oylik daromadni oydagi ish soatlariga boʻling. Keyin oʻylab koʻring: qaysi bilim yoki mahorat shu soatni qimmatroq qiladi — ishni tezroq, sifatliroq yoki koʻproq odamga qilish imkonini beradi?",
+            "ru": "Число часов в сутках не меняется, и отдать работе их все нельзя: время нужно и для отдыха, семьи и здоровья. Поэтому, только работая больше часов, доход бесконечно не увеличить. Сначала посчитайте, сколько стоит ваш час: разделите месячный доход на рабочие часы в месяце. Затем подумайте: какое знание или умение сделает этот час дороже — позволит работать быстрее, качественнее или для большего числа людей?"
+          }
+        },
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Oʻrganishning yoʻllari koʻp: kitob, shu ishni biladigan tajribali ustoz, amaliy kurs va oʻz ishingizda sinab koʻrish. Har bir yoʻlni boshlashdan oldin yozib qoʻying: buni oʻrgangach nimani qila olaman? Oʻqishga ketadigan pul va vaqt — sarmoya. Uni jamgʻarmadan toʻlang, qarzga emas. Qisqa vaqtda katta daromad vaʼda qiladigan kurslarni esa besh xavf belgisi bilan tekshiring.",
+            "ru": "Путей учиться много: книга, опытный наставник, который знает это дело, практический курс и проба в собственной работе. Прежде чем начать любой путь, запишите: что я смогу делать, когда научусь? Деньги и время на учёбу — это вложение. Оплачивайте его из сбережений, а не в долг. А курсы, обещающие большой доход за короткий срок, проверьте пятью признаками опасности."
+          }
+        },
+        {
+          "type": "paragraph",
+          "text": {
+            "uz": "Pul va mol yoʻqolishi mumkin, oʻrganilgan mahorat esa siz bilan qoladi: narxlar oshganda yoki ish oʻzgarganda u yangi yoʻl topishga yordam beradi. Bilganingizni boshqaga ham oʻrgating. Tushuntirgan odam oʻzi ham chuqurroq oʻrganadi, oilada va jamoada esa mahorat koʻpayadi.",
+            "ru": "Деньги и имущество можно потерять, а освоенное умение остаётся с вами: когда растут цены или меняется работа, оно помогает найти новый путь. Учите тому, что знаете, и других. Тот, кто объясняет, сам понимает глубже, а в семье и в коллективе умений становится больше."
+          }
+        },
+        {
+          "type": "quote",
+          "text": {
+            "uz": "Bitta bilimni tanlang va uni oxirigacha oʻrganing. Har oy soatingiz qiymatini qayta hisoblab, oʻzgarishni oʻzingiz koʻring.",
+            "ru": "Выберите одно знание и доведите его изучение до конца. Каждый месяц заново считайте стоимость своего часа и сами смотрите на перемены."
+          }
+        },
+        {
+          "type": "religious",
+          "text": {
+            "uz": "[Placeholder] Diniy matn — ulamo tekshiruvidan keyin qoʻshiladi.",
+            "ru": "[Заглушка] Религиозный текст — будет добавлен после проверки улемами."
+          },
+          "source": {
+            "uz": "[Manba koʻrsatiladi]",
+            "ru": "[Источник будет указан]"
+          },
+          "religiousReviewStatus": "PENDING"
+        }
+      ],
+      "law": {
+        "number": 8,
+        "text": {
+          "uz": "Kundagi soatlar koʻpaymaydi — koʻpayadigani bir soatga sigʻadigan bilim va mahorat. Soatingiz qancha turishini biling, uni qimmatlashtiradigan bilimni aniq maqsad bilan oʻrganing, oʻqishga faqat haqiqiy mahorat uchun pul toʻlang va bilganingizni boshqaga oʻrgating.",
+          "ru": "Часов в сутках не становится больше — больше становится знаний и умения, которые помещаются в один час. Знайте, сколько стоит ваш час, с ясной целью изучайте то, что делает его дороже, платите за учёбу только ради настоящего умения и учите других тому, что знаете."
+        }
+      },
+      "weeklyTasks": [
+        {
+          "id": "ch08.t1",
+          "text": {
+            "uz": "Bir soatingiz qancha turishini hisoblang va uni qimmatlashtiradigan bitta bilimni yozing.",
+            "ru": "Посчитайте, сколько стоит ваш час, и запишите одно знание, которое сделает его дороже."
+          },
+          "autoComplete": "LEARNING_GOAL_SET"
+        },
+        {
+          "id": "ch08.t2",
+          "text": {
+            "uz": "Shu bilimga olib boradigan bitta yoʻl qoʻshing: kitob, ustoz, kurs yoki amaliyot.",
+            "ru": "Добавьте один путь к этому знанию: книгу, наставника, курс или практику."
+          },
+          "autoComplete": "LEARNING_PATH_ADDED"
+        },
+        {
+          "id": "ch08.t3",
+          "text": {
+            "uz": "Shu hafta bilganingizdan bir narsani biror kishiga oʻrgating va yozib qoʻying.",
+            "ru": "На этой неделе научите кого-нибудь чему-то из того, что знаете, и запишите это."
+          },
+          "autoComplete": "TEACHING_LOGGED"
+        }
+      ]
+    }
+  ]
+}

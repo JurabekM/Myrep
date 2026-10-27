@@ -1,0 +1,181 @@
+{
+ "suite": "skill_payback",
+ "version": 1,
+ "description": "SPEC 2H.4: timeCost = half_up(currentHourly*studyMinutes/60); totalInvest = cost + timeCost; monthlyGain = half_up(max(0, targetHourly-currentHourly)*monthlyMinutes/60); paybackMonths = 0 (totalInvest = 0), null (monthlyGain = 0), aks holda ceil(totalInvest/monthlyGain). Valyuta farqli: CURRENCY_MISMATCH; manfiy: INVALID_AMOUNT. Minor birlik.",
+ "cases": [
+  {
+   "id": "sp-001",
+   "input": {
+    "cost": "300000000",
+    "costCurrency": "UZS",
+    "studyMinutes": 6000,
+    "currentHourly": "2564103",
+    "targetHourly": "5128206",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "256410300",
+    "totalInvest": "556410300",
+    "monthlyGain": "600000102",
+    "paybackMonths": 1
+   }
+  },
+  {
+   "id": "sp-002",
+   "input": {
+    "cost": "500000000",
+    "costCurrency": "UZS",
+    "studyMinutes": 3000,
+    "currentHourly": "2500000",
+    "targetHourly": "2800000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "125000000",
+    "totalInvest": "625000000",
+    "monthlyGain": "70200000",
+    "paybackMonths": 9
+   }
+  },
+  {
+   "id": "sp-003",
+   "input": {
+    "cost": "500000000",
+    "costCurrency": "UZS",
+    "studyMinutes": 3000,
+    "currentHourly": "2500000",
+    "targetHourly": "2500000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "125000000",
+    "totalInvest": "625000000",
+    "monthlyGain": "0",
+    "paybackMonths": null
+   }
+  },
+  {
+   "id": "sp-004",
+   "input": {
+    "cost": "500000000",
+    "costCurrency": "UZS",
+    "studyMinutes": 0,
+    "currentHourly": "2500000",
+    "targetHourly": "2000000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "0",
+    "totalInvest": "500000000",
+    "monthlyGain": "0",
+    "paybackMonths": null
+   }
+  },
+  {
+   "id": "sp-005",
+   "input": {
+    "cost": "0",
+    "costCurrency": "UZS",
+    "studyMinutes": 0,
+    "currentHourly": "2500000",
+    "targetHourly": "2800000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "0",
+    "totalInvest": "0",
+    "monthlyGain": "70200000",
+    "paybackMonths": 0
+   }
+  },
+  {
+   "id": "sp-006",
+   "input": {
+    "cost": "0",
+    "costCurrency": "UZS",
+    "studyMinutes": 0,
+    "currentHourly": "2500000",
+    "targetHourly": "2500000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "0",
+    "totalInvest": "0",
+    "monthlyGain": "0",
+    "paybackMonths": 0
+   }
+  },
+  {
+   "id": "sp-007",
+   "input": {
+    "cost": "140400000",
+    "costCurrency": "UZS",
+    "studyMinutes": 0,
+    "currentHourly": "2500000",
+    "targetHourly": "2800000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "0",
+    "totalInvest": "140400000",
+    "monthlyGain": "70200000",
+    "paybackMonths": 2
+   }
+  },
+  {
+   "id": "sp-008",
+   "input": {
+    "cost": "100",
+    "costCurrency": "UZS",
+    "studyMinutes": 30,
+    "currentHourly": "15",
+    "targetHourly": "22",
+    "monthlyMinutes": 50,
+    "currency": "UZS"
+   },
+   "expected": {
+    "timeCost": "8",
+    "totalInvest": "108",
+    "monthlyGain": "6",
+    "paybackMonths": 18
+   }
+  },
+  {
+   "id": "sp-009",
+   "input": {
+    "cost": "30000",
+    "costCurrency": "USD",
+    "studyMinutes": 600,
+    "currentHourly": "2500000",
+    "targetHourly": "2800000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "error": "CURRENCY_MISMATCH"
+   }
+  },
+  {
+   "id": "sp-010",
+   "input": {
+    "cost": "-1",
+    "costCurrency": "UZS",
+    "studyMinutes": 0,
+    "currentHourly": "2500000",
+    "targetHourly": "2800000",
+    "monthlyMinutes": 14040,
+    "currency": "UZS"
+   },
+   "expected": {
+    "error": "INVALID_AMOUNT"
+   }
+  }
+ ]
+}

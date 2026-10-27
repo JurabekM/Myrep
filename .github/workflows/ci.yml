@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Flutter versiyasini .fvmrc dan o'qish
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          cache: true
+
+      - name: Host SQLite va SQLCipher (Drift testlari uchun)
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev libsqlcipher-dev
+
+      - name: Paketlar
+        run: flutter pub get
+
+      - name: Generatsiya qilingan kod dolzarbligi
+        run: |
+          dart run pigeon --input pigeons/security_api.dart
+          dart run pigeon --input pigeons/reminder_api.dart
+          dart run pigeon --input pigeons/widget_api.dart
+          dart run build_runner build --delete-conflicting-outputs
+          flutter gen-l10n
+          dart run drift_dev make-migrations
+          git diff --exit-code -- lib android/app/src/main/kotlin drift_schemas test/drift
+          test -z "$(git status --porcelain -- drift_schemas test/drift)"
+
+      - name: Format
+        run: |
+          git ls-files '*.dart' \
+            | grep -v -E '\.(g|freezed|pigeon)\.dart$|^lib/app/l10n/gen/|/generated/' \
+            | xargs dart format --output=none --set-exit-if-changed
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Umumiy test vektorlari (spec/test-vectors, desktop bilan bir xil)
+        run: flutter test test/vectors
+
+      - name: Test (Dart) + qamrov
+        run: flutter test --coverage --timeout 60s
+
+      - name: core/money qamrovi ≥ 95 %
+        run: python3 tools/coverage_report.py lib/core/money --min 95
+
+      - name: Build APK (debug)
+        run: flutter build apk --debug
+
+      - name: Test (Kotlin, JUnit)
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
