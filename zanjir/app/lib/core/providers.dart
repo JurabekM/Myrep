@@ -204,6 +204,43 @@ final protocolDraftProvider = FutureProvider.family<ProtocolDraft, String>(
   (ref, sessionId) async => (await ref.watch(repositoriesProvider.future)).protocols.prepare(sessionId: sessionId),
 );
 
+/// Obyekt rejalari; ochilganda graf o'zgargan rejalar STALE qilinadi.
+final sitePlansProvider = FutureProvider.family<List<IsolationPlanRow>, String>((ref, siteId) async {
+  final repos = await ref.watch(repositoriesProvider.future);
+  await repos.isolationPlans.refreshStale(siteId);
+  return repos.isolationPlans.forSite(siteId);
+});
+
+/// Reja, qadamlar, ogohlantirishlar va bajarilgan qadamlar.
+typedef PlanView = ({
+  IsolationPlanRow plan,
+  List<PlanStep> steps,
+  List<PlanWarning> warnings,
+  Map<int, StepRecord> done,
+  Map<String, String> labels,
+  Map<String, String> users,
+});
+
+final planProvider = FutureProvider.family<PlanView?, String>((ref, id) async {
+  final repos = await ref.watch(repositoriesProvider.future);
+  var plan = await repos.isolationPlans.get(id);
+  if (plan == null) return null;
+  if ((await repos.isolationPlans.refreshStale(plan.siteId)).contains(id)) plan = await repos.isolationPlans.get(id);
+  final done = await repos.isolationPlans.doneSteps(id);
+  final users = <String, String>{};
+  for (final uid in {...done.values.map((r) => r.actorId), ?plan!.approvedBy}) {
+    users[uid] = (await repos.users.get(uid))?.fullName ?? uid;
+  }
+  return (
+    plan: plan,
+    steps: repos.isolationPlans.steps(plan),
+    warnings: repos.isolationPlans.warnings(plan),
+    done: done,
+    labels: {for (final n in await repos.graph.nodes(plan.siteId)) n.id: n.label},
+    users: users,
+  );
+});
+
 /// Faol normalar to'plami (sozlamalardagi versiya).
 final activeNormSetProvider = FutureProvider<NormSet>((ref) async {
   final repos = await ref.watch(repositoriesProvider.future);

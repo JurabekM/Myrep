@@ -50,6 +50,15 @@ extension Labels on AppLocalizations {
     SessionKind.navbatdanTashqari => sessionKindNavbatdan,
   };
 
+  String planStatusName(String status) => switch (status) {
+    'DRAFT' => planStatusDraft,
+    'APPROVED' => planStatusApproved,
+    'EXECUTED' => planStatusExecuted,
+    'CANCELLED' => planStatusCancelled,
+    'STALE' => planStatusStale,
+    _ => status,
+  };
+
   String roleName(String role) => switch (role) {
     'ADMIN' => roleAdmin,
     'LEAD' => roleLead,
@@ -162,6 +171,16 @@ extension Labels on AppLocalizations {
     final DataRuleException d when d.code == 'invalid_k_corr' => invalidKCorr,
     final DataRuleException d when d.code == 'invalid_margin' => invalidMargin,
     final DataRuleException d when d.code == 'draft_stale' => errorDraftStale,
+    final DataRuleException d when d.code == 'plan_stale' => errorPlanStale,
+    final DataRuleException d when d.code == 'out_of_order' => errorStepOrder,
+    final DataRuleException d when d.code == 'steps_incomplete' => errorStepsIncomplete,
+    final DataRuleException d
+        when const {
+          'confirmation_required',
+          'indicator_pretest_required',
+          'no_voltage_confirmation_required',
+        }.contains(d.code) =>
+      errorStepConfirmation,
     final DataRuleException d => actionError(d.code),
     _ => actionError('$e'),
   };

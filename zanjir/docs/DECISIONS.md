@@ -321,3 +321,31 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   Bitta yaroqsiz qator butun navbatni to'xtatadi (server "hammasi yoki hech narsa") — ataylab: audit zanjiri uzilmasin;
   bunday holat foydalanuvchiga sabab bilan ko'rsatiladi. LWW qurilma soatiga tayanadi (soat noto'g'ri bo'lsa, kechroq
   yozilgan o'zgarish yutqazishi mumkin) — 10-fazada server vaqti bilan tuzatish ko'rib chiqiladi.
+
+## ADR-0013: Ajratish rejasi — tasdiqlash, bajarish checklist'i, STALE (9-faza)
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (9-faza).
+- **Kontekst:** Prompt 5.3 (5 ta texnik tadbir, "kuchlanish yo'qligini tekshirish" — majburiy, ko'rsatkichni oldin kuchlanish
+  borligi ma'lum joyda sinash), 8-bo'lim (ajratish rejasi — qadamlar checklist'i), CLAUDE.md 1- va 2-qoidalar.
+  Mezon: integration test; majburiy qadamni o'tkazib bo'lmasligi testlangan.
+- **Qaror:**
+  1. **Yadro (`solver/execution.dart`, 100% qamrov):** `StepConfirmation` (barcha maydonlar standart `false`),
+     `checkStepCompletion` — qadamlar faqat ketma-ket (`out_of_order`), har biri aniq tasdiq bilan
+     (`confirmation_required`); kuchlanish yo'qligini tekshirish — ikki alohida tasdiq: ko'rsatkich oldin sinalgan
+     (`indicator_pretest_required`) va kuchlanish yo'q (`no_voltage_confirmation_required`). `PlanStep/PlanWarning.fromJson`;
+     JSON'dagi `mandatory: false` e'tiborga olinmaydi.
+  2. **Holatlar:** DRAFT → APPROVED (faqat LEAD/ADMIN — joriy foydalanuvchi) → qadamlar → EXECUTED (faqat barcha qadamlar
+     bajarilganda); DRAFT/APPROVED → CANCELLED; graf yoki yerga ulash tizimi o'zgarsa → STALE (ro'yxat/reja ochilganda va
+     har bir amaldan oldin tekshiriladi; STALE holati tranzaksiya bekor bo'lsa ham saqlanadi). Reja tuzish, qadam va
+     bekor qilish — ENGINEER/LEAD/ADMIN; VIEWER — faqat ko'radi.
+  3. **Bajarilgan qadam — imzolangan audit hodisasi** `PLAN_STEP_DONE` (`entity_id` = `<reja>#<tartib>`, payload: reja, tartib,
+     tur, tasdiq) — alohida jadval va sxema o'zgarishisiz: audit zanjiri bilan himoyalangan, sinxronlash orqali boshqa
+     qurilmalarga yetadi (kim, qachon). Boshqa o'tishlar ham hodisa: `PLAN_CREATED`, `PLAN_APPROVED` (serverda ham faqat
+     LEAD/ADMIN), `PLAN_EXECUTED`, `PLAN_CANCELLED`.
+  4. **UI:** obyekt → "Ajratish rejalari" ro'yxati (holat belgisi), yangi reja (zona → solver → "Qoralama sifatida saqlash"),
+     reja ekrani: ogohlantirishlar, qadamlar; faqat navbatdagi qadamda "Belgilash"; tasdiq dialogida hech narsa oldindan
+     belgilanmagan, tugma barcha kerakli bandlar belgilangach faol; tasdiqlash va yakunlash dialoglarida javobgarlik matni.
+     STALE — ogohlantirish va hech qanday amal yo'q (bajarilgan qadamlar tarixi ko'rinadi). "Ishlash xavfsiz" matni yo'q.
+- **Oqibat:** Qadamni bekor qilish (noto'g'ri belgilangan) imkoni yo'q — audit append-only; xato bo'lsa reja bekor qilinib,
+  yangisi tuziladi. Apparat holatini (`state`) qadam bilan avtomatik o'zgartirish — yo'q (holat graf hash'iga kirmaydi;
+  dalada qo'lda yangilanadi). S11–S14 (solver) hali ochiq — solver konservativ.

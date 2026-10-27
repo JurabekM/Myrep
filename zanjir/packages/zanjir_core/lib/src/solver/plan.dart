@@ -15,6 +15,8 @@ enum StepKind {
 
   const StepKind(this.code);
   final String code;
+
+  static StepKind parse(String code) => _parse(values, code, (v) => v.code, 'step.kind');
 }
 
 enum WarningKind {
@@ -29,7 +31,30 @@ enum WarningKind {
 
   const WarningKind(this.code);
   final String code;
+
+  static WarningKind parse(String code) => _parse(values, code, (v) => v.code, 'warning.kind');
 }
+
+T _parse<T extends Enum>(List<T> values, String code, String Function(T) codeOf, String what) {
+  for (final v in values) {
+    if (codeOf(v) == code) return v;
+  }
+  throw FormatException('Noma\'lum $what: $code');
+}
+
+/// Saqlangan JSON maydonlari (`isolation_plan.steps` / `warnings`).
+T _field<T>(Map<String, Object?> j, String key) {
+  final v = j[key];
+  if (v is! T) throw FormatException('Noto\'g\'ri maydon: $key', '$v');
+  return v;
+}
+
+List<String> _ids(Map<String, Object?> j) => [
+  for (final x in _field<List<Object?>>(j, 'node_ids'))
+    x is String ? x : throw FormatException('Noto\'g\'ri node_ids', '$x'),
+];
+
+Map<String, Object?> _params(Map<String, Object?> j) => (j['params'] as Map?)?.cast<String, Object?>() ?? const {};
 
 enum BlockReason {
   /// Manbadan zonaga kommutatsiya apparatisiz yo'l bor (oqim = ∞).
@@ -73,6 +98,14 @@ class PlanStep {
   final List<String> nodeIds;
   final Map<String, Object?> params;
 
+  /// Saqlangan qadam (`toJson`). `mandatory` maydoni o'qilmaydi — barcha qadamlar majburiy.
+  factory PlanStep.fromJson(Map<String, Object?> j) => PlanStep(
+    order: _field<int>(j, 'order'),
+    kind: StepKind.parse(_field<String>(j, 'kind')),
+    nodeIds: _ids(j),
+    params: _params(j),
+  );
+
   bool get mandatory => true;
 
   Map<String, Object?> toJson() => {
@@ -86,6 +119,9 @@ class PlanStep {
 
 class PlanWarning {
   const PlanWarning(this.kind, this.nodeIds, [this.params = const {}]);
+
+  factory PlanWarning.fromJson(Map<String, Object?> j) =>
+      PlanWarning(WarningKind.parse(_field<String>(j, 'kind')), _ids(j), _params(j));
   final WarningKind kind;
   final List<String> nodeIds;
   final Map<String, Object?> params;

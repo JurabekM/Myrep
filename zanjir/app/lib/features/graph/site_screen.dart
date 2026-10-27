@@ -29,7 +29,7 @@ class SiteScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.isolationPlan,
               icon: const Icon(Icons.power_off),
-              onPressed: () => context.push('/sites/$siteId/isolation'),
+              onPressed: () => context.push('/sites/$siteId/plans'),
             ),
             IconButton(
               tooltip: l10n.edit,

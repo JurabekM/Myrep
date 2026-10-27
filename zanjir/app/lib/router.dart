@@ -10,6 +10,8 @@ import 'features/graph/node_card_screen.dart';
 import 'features/graph/node_form_screen.dart';
 import 'features/graph/site_screen.dart';
 import 'features/isolation/isolation_screen.dart';
+import 'features/isolation/plan_screen.dart';
+import 'features/isolation/plans_screen.dart';
 import 'features/session/measure_screen.dart';
 import 'features/session/protocol_screen.dart';
 import 'features/session/start_session_screen.dart';
@@ -63,6 +65,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sites/:siteId/sessions/new',
         builder: (_, s) => StartSessionScreen(siteId: s.pathParameters['siteId']!),
+      ),
+      GoRoute(
+        path: '/sites/:siteId/plans',
+        builder: (_, s) => PlansScreen(siteId: s.pathParameters['siteId']!),
+      ),
+      GoRoute(
+        path: '/plans/:planId',
+        builder: (_, s) => PlanScreen(planId: s.pathParameters['planId']!),
       ),
       GoRoute(
         path: '/sites/:siteId/isolation',

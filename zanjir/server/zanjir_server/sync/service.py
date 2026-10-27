@@ -56,8 +56,8 @@ PUSH_ROLES: dict[str, Role] = {
     "norm_set": Role.LEAD,
     "org_setting": Role.LEAD,
 }
-# Muharrir rolini talab qiladigan audit hodisalari (ADR-0009, ADR-0010).
-EDITOR_EVENTS = {"PROTOCOL_REVOKED", "SETTINGS_CHANGED", "LAB_UPDATED"}
+# Muharrir rolini talab qiladigan audit hodisalari (ADR-0009, ADR-0010, ADR-0013).
+EDITOR_EVENTS = {"PROTOCOL_REVOKED", "SETTINGS_CHANGED", "LAB_UPDATED", "PLAN_APPROVED"}
 ORGANIZATION_FIELDS = ("name", "license_no", "license_valid_until")
 _PDF_ID = re.compile(rb"/ID\s*\[\s*<([0-9a-fA-F]{64})>\s*<([0-9a-fA-F]{64})>\s*\]")
 

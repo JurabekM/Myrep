@@ -44,7 +44,7 @@ Qo'shimcha qoidalar:
 - Taklif: ADMIN — istalgan rolga, LEAD — faqat ENGINEER/VIEWER. Kod 80 bit, bir martalik, muddatli; bazada hash'i.
 - `sync/push` jadval darajasida: `organization`, `org_setting`, `norm_set` — LEAD/ADMIN; `app_user`, `device` — push qilinmaydi
   (faqat API). Audit hodisalari: faqat o'z qurilmasi va o'z nomidan; `PROTOCOL_REVOKED`, `SETTINGS_CHANGED`,
-  `LAB_UPDATED` — LEAD/ADMIN. Protokolni imzolovchi — LEAD/ENGINEER (ADR-0010), NEEDS_REVIEW bo'lsa faqat LEAD izoh bilan.
+  `LAB_UPDATED`, `PLAN_APPROVED` — LEAD/ADMIN. Protokolni imzolovchi — LEAD/ENGINEER (ADR-0010), NEEDS_REVIEW bo'lsa faqat LEAD izoh bilan.
 - Ajratish rejasini APPROVED/EXECUTED holatiga faqat LEAD/ADMIN tasdiqlagan bo'lsa o'tkazish mumkin.
 
 ## Tahdid modeli

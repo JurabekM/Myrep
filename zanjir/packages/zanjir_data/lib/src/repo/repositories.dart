@@ -28,8 +28,8 @@ class Repositories {
        graph = GraphRepository(ctx),
        sessions = SessionRepository(ctx),
        normSets = NormSetRepository(ctx),
-       audit = AuditRepository(ctx, signer: signer, deviceId: deviceId, actorId: actorId),
-       isolationPlans = IsolationPlanRepository(ctx) {
+       audit = AuditRepository(ctx, signer: signer, deviceId: deviceId, actorId: actorId) {
+    isolationPlans = IsolationPlanRepository(ctx, audit: audit);
     measurements = MeasurementRepository(ctx, audit: audit, normSets: normSets);
     settings = SettingsRepository(ctx, audit: audit);
     protocols = ProtocolRepository(
@@ -51,7 +51,7 @@ class Repositories {
   final SessionRepository sessions;
   final NormSetRepository normSets;
   final AuditRepository audit;
-  final IsolationPlanRepository isolationPlans;
+  late final IsolationPlanRepository isolationPlans;
   late final MeasurementRepository measurements;
   late final ProtocolRepository protocols;
   late final SettingsRepository settings;

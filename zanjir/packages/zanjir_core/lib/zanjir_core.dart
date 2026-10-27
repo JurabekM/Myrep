@@ -22,6 +22,7 @@ export 'src/norms/norm.dart';
 export 'src/norms/norm_loader.dart' show NormFormatException;
 export 'src/norms/norm_set.dart';
 export 'src/solver/cut_costs.dart';
+export 'src/solver/execution.dart';
 export 'src/solver/plan.dart';
 export 'src/solver/plan_isolation.dart';
 export 'src/solver/snapshot.dart';

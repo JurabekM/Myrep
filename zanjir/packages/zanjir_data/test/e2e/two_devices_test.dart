@@ -304,6 +304,34 @@ void main() {
     );
   });
 
+  test('ajratish rejasi: A tasdiqlaydi → B qadamlarni bajaradi → A ko\'radi va yakunlaydi', () async {
+    final g = await a.repos.graph.loadGraph(site.site.id);
+    final iso = planIsolation(g, {site.sock1.id}, earthingSystem: EarthingSystem.tnCS) as IsolationPlan;
+    final draft = await a.repos.isolationPlans.save(siteId: site.site.id, plan: iso);
+    final plan = await a.repos.isolationPlans.approve(draft.id);
+    await a.engine.run();
+    await b.engine.run();
+    final steps = b.repos.isolationPlans.steps((await b.repos.isolationPlans.get(plan.id))!);
+    for (final st in steps) {
+      await b.repos.isolationPlans.completeStep(
+        plan.id,
+        st.order,
+        st.kind == StepKind.verifyNoVoltage
+            ? const StepConfirmation(done: true, indicatorTestedOnLive: true, noVoltageConfirmed: true)
+            : const StepConfirmation(done: true),
+      );
+    }
+    await b.engine.run();
+    await a.engine.run();
+    final done = await a.repos.isolationPlans.doneSteps(plan.id);
+    expect(done.keys.toSet(), {for (final st in steps) st.order});
+    expect(done.values.map((r) => r.actorId).toSet(), {b.userId});
+    expect((await a.repos.isolationPlans.execute(plan.id)).status, 'EXECUTED');
+    await a.engine.run();
+    await b.engine.run();
+    expect((await b.repos.isolationPlans.get(plan.id))!.status, 'EXECUTED');
+  });
+
   test('protokol: A imzolaydi → server qabul qiladi → ochiq sahifa va PDF → B tekshiradi', () async {
     final s = await a.repos.sessions.start(
       siteId: site.site.id,

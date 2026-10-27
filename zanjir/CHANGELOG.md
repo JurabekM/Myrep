@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 9-faza — ajratish rejasi (ADR-0013): yadroda bajarish qoidalari (`checkStepCompletion`, `StepConfirmation`,
+  `PlanStep/PlanWarning.fromJson`); `IsolationPlanRepository` — qadamlarni ketma-ket bajarish (`PLAN_STEP_DONE` audit
+  hodisalari), barcha qadamlar bajarilgandagina yakunlash, rollar, STALE; ilovada rejalar ro'yxati, qoralama saqlash,
+  reja ekrani (tasdiqlash, checklist, kuchlanish tekshiruvi uchun ikki tasdiq, yakunlash, bekor qilish, STALE);
+  `integration_test/isolation_flow_test.dart`; E2E: tasdiq bir qurilmada, qadamlar boshqasida.
 - 8-faza — ilova ↔ server sinxronlash (ADR-0012): `zanjir_data` sxemasi v4 (`sync_outbox`, SQLite triggerlari), `SyncEngine`
   (push paketlari, bitta tranzaksiyali pull, LWW, javob yo'qolsa takrorlanmaslik), `ServerApi` (HTTP, token refresh),
   `ServerAccount` (laboratoriyani ro'yxatdan o'tkazish, taklif bilan qo'shilish, yangi qurilmada kirish); sim formati
@@ -53,6 +58,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   normalar schema tekshiruvi, release darvozasi.
 
 ### O'zgardi
+- `IsolationPlanRepository.approve(id)` — tasdiqlovchi joriy foydalanuvchi (`approvedBy` parametri olib tashlandi);
+  serverda `PLAN_APPROVED` hodisasi faqat LEAD/ADMIN dan.
 - Ilovadagi vaqtinchalik `AuthGateway` (oflayn shlyuz) olib tashlandi — kirish `ServerAccount` orqali.
 - `ProtocolRepository.insert` olib tashlandi — protokol faqat `prepare` → `sign` orqali; bekor qilish faqat LEAD/ADMIN, sabab bilan.
 - `summarizeValues`, `formatDecimal` — `zanjir_protocol` ga ko'chirildi (ilova va PDF bir xil ko'rinish).

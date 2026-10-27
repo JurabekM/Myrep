@@ -623,5 +623,58 @@
       }
     }
   },
-  "invalidPhone": "Telefon raqami +998XXXXXXXXX formatida bo'lsin"
+  "invalidPhone": "Telefon raqami +998XXXXXXXXX formatida bo'lsin",
+  "plansTitle": "Ajratish rejalari",
+  "newPlan": "Yangi reja",
+  "noPlans": "Hali reja yo'q",
+  "saveDraft": "Qoralama sifatida saqlash",
+  "planStatusDraft": "Qoralama",
+  "planStatusApproved": "Tasdiqlangan",
+  "planStatusExecuted": "Bajarilgan",
+  "planStatusCancelled": "Bekor qilingan",
+  "planStatusStale": "Eskirgan",
+  "planZone": "Ish zonasi: {labels}",
+  "@planZone": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "approvePlan": "Rejani tasdiqlash",
+  "approvePlanConfirm": "Reja — ilovaning tavsiyasi. Tasdiqlash bilan siz uni joyida tekshirganingizni bildirasiz; ishga ruxsat va xavfsizlik uchun javobgarlik naryad beruvchi va ish rahbarida.",
+  "cancelPlan": "Rejani bekor qilish",
+  "cancelPlanConfirm": "Reja bekor qilinsinmi? Bu amalni qaytarib bo'lmaydi.",
+  "markStep": "Belgilash",
+  "stepDoneBy": "Bajarildi: {name} · {time}",
+  "@stepDoneBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stepConfirmTitle": "{order}-qadam",
+  "@stepConfirmTitle": {
+    "placeholders": {
+      "order": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmStepDone": "Qadam to'liq bajarildi",
+  "confirmIndicatorTested": "Kuchlanish ko'rsatkichi oldin kuchlanish borligi ma'lum joyda sinab ko'rildi va ishlayapti",
+  "confirmNoVoltage": "Ko'rsatilgan joyda kuchlanish yo'qligi ko'rsatkich bilan tekshirildi",
+  "verifyStepHint": "Bu qadamni o'tkazib yuborib bo'lmaydi. Ikkala bandni o'zingiz belgilang.",
+  "nextStepFirst": "Avval oldingi qadamlarni bajaring",
+  "executePlan": "Barcha qadamlar bajarildi — rejani yakunlash",
+  "executePlanConfirm": "Barcha qadamlar belgilangan. Reja \"Bajarilgan\" holatiga o'tkazilsinmi? Ishga ruxsatni naryad beruvchi va ish rahbari beradi.",
+  "planStaleBanner": "Obyekt grafi o'zgargan — reja eskirgan. Yangi reja tuzing.",
+  "errorPlanStale": "Graf o'zgargan — reja eskirdi",
+  "errorStepOrder": "Qadamlar faqat ketma-ket bajariladi",
+  "errorStepConfirmation": "Barcha tasdiqlarni belgilang",
+  "errorStepsIncomplete": "Hali barcha qadamlar bajarilmagan"
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 
 import '../../core/providers.dart';
@@ -9,8 +10,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/async_view.dart';
 import '../../widgets/disclaimer_banner.dart';
 
-/// Ajratish rejasi — tavsiya (ko'rib chiqish). Tasdiqlash va bajarish checklist'i — 9-faza.
-/// "Kuchlanish yo'qligini tekshirish" qadami doim ko'rsatiladi va belgilanmaydi (CLAUDE.md, 2-qoida).
+/// Ajratish rejasini tuzish (tavsiya): zona → solver → qadamlar va ogohlantirishlar → qoralama sifatida saqlash
+/// (tasdiqlash va bajarish — `PlanScreen`). "Kuchlanish yo'qligini tekshirish" qadami doim ko'rsatiladi (CLAUDE.md, 2-qoida).
 class IsolationScreen extends ConsumerStatefulWidget {
   const IsolationScreen({super.key, required this.siteId});
   final String siteId;
@@ -86,6 +87,26 @@ class _IsolationScreenState extends ConsumerState<IsolationScreen> {
                     subtitle: s.kind == StepKind.verifyNoVoltage ? Text(l10n.mandatory) : null,
                   ),
               ],
+              if (r is IsolationPlan && ref.watch(profileProvider).value?.role != 'VIEWER')
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FilledButton.icon(
+                    key: const Key('isolation.save'),
+                    icon: const Icon(Icons.save),
+                    label: Text(l10n.saveDraft),
+                    onPressed: () async {
+                      try {
+                        final repos = await ref.read(repositoriesProvider.future);
+                        final row = await repos.isolationPlans.save(siteId: widget.siteId, plan: r);
+                        if (context.mounted) context.pushReplacement('/plans/${row.id}');
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorText(e))));
+                        }
+                      }
+                    },
+                  ),
+                ),
               if (r != null && r.warnings.isNotEmpty) ...[
                 ListTile(title: Text(l10n.warnings, style: Theme.of(context).textTheme.titleMedium)),
                 for (final w in r.warnings)

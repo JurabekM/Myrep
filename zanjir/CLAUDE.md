@@ -104,6 +104,12 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Yangi endpoint → `tests/test_rbac_matrix.py` `MATRIX` va `docs/SECURITY.md` jadvali (aks holda test yiqiladi).
 - Testlar: `tests/support/api.py` (tashkilot/rollar), `tests/support/field.py` (dala qurilmasi taqlidi: audit zanjiri, imzo).
 
+## Ajratish rejasi (ADR-0006, ADR-0013)
+- Yadro: `solver/execution.dart` — qadamlar faqat ketma-ket, aniq tasdiq bilan; kuchlanish tekshiruvi — 2 tasdiq.
+- `IsolationPlanRepository`: `save` → `approve` (LEAD/ADMIN) → `completeStep` (audit `PLAN_STEP_DONE`, `<reja>#<tartib>`) →
+  `execute`; `refreshStale`. Ilova: `/sites/:id/plans`, `/plans/:id`, quruvchi `/sites/:id/isolation`; oqim testi
+  `test/flow/isolation_flow.dart` (widget + `integration_test`).
+
 ## Sinxronlash (ADR-0012)
 - `zanjir_data/lib/src/sync/`: `sync_engine.dart` (navbat → push, pull bitta tranzaksiyada, LWW), `wire.dart` (Drift ↔ sim
   formati), `server_api.dart` (HTTP, refresh), `account.dart` (ro'yxatdan o'tish, taklif, kirish). Navbat — SQLite triggerlari
