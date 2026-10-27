@@ -308,7 +308,7 @@ class ProtocolRepository {
     };
     final expired = [
       for (final m in measurements)
-        if (!_instrumentValid(instruments[m.instrumentId], m.createdAt)) m.id,
+        if (!_instrumentValid(instruments[m.instrumentId], m)) m.id,
     ];
     if (expired.isNotEmpty) blockers.add(ProtocolBlocker('instrument_expired', expired));
 
@@ -431,7 +431,15 @@ Map<String, Object?> _measurementPayload(MeasurementRow m, NodeRow? node) {
   };
 }
 
-bool _instrumentValid(InstrumentRow? i, DateTime at) => i != null && instrumentVerificationValid(i, at);
+/// Asbob o'lchov kuni amal qilganmi: hozirgi guvohnoma VA o'lchov paytida yozib qo'yilgan muddat bo'yicha (ikkalasi ham
+/// amal qilishi shart — keyingi qayta qiyoslash eski o'lchovni "tozalamaydi", 6-qoida).
+bool _instrumentValid(InstrumentRow? i, MeasurementRow m) {
+  if (i == null || !instrumentVerificationValid(i, m.createdAt)) return false;
+  if (!m.evalDetail.containsKey(instrumentVerifiedUntilKey)) return true; // eski yozuvlar (muddat saqlanmagan)
+  final at = m.evalDetail[instrumentVerifiedUntilKey];
+  final until = at is String ? DateTime.tryParse(at) : null;
+  return until != null && instrumentVerificationValid(i.copyWith(verifiedUntil: Value(until)), m.createdAt);
+}
 
 DateTime _day(DateTime t) {
   final u = t.toUtc();

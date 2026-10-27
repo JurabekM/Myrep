@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import yaml
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from zanjir_server.api.deps import Principal
@@ -64,6 +64,8 @@ PUSH_ROLES: dict[str, Role] = {
 EDITOR_EVENTS = {"PROTOCOL_REVOKED", "SETTINGS_CHANGED", "LAB_UPDATED", "PLAN_APPROVED"}
 ORGANIZATION_FIELDS = ("name", "license_no", "license_valid_until")
 SETTING_FIELDS = ("k_corr", "margin_pct", "active_norm_set_version")
+# LWW'da mazmun emas — identifikator va versiya ustunlari.
+META_FIELDS = ("id", "org_id", "created_at", "updated_at", "rev")
 _PDF_ID = re.compile(rb"/ID\s*\[\s*<([0-9a-fA-F]{64})>\s*<([0-9a-fA-F]{64})>\s*\]")
 # `YYYY-XXXXXX-NNN`: yil, qurilma ID sining oxirgi 6 belgisi, tartib raqami (ilovadagi `_nextNumber`).
 _NUMBER = re.compile(r"[0-9]{4}-([0-9A-F]{6})-[0-9]{3,9}")  # faqat ASCII (`\d` Unicode raqamlarni ham oladi)
@@ -406,11 +408,17 @@ class PushService:
         lab = _section(payload, "lab")
         return {
             **payload,
-            "lab": {**lab, "license_valid_until": _iso_or_none(org.license_valid_until)},
+            "lab": {**lab, "license_no": org.license_no, "license_valid_until": _iso_or_none(org.license_valid_until)},
             "norm_set": {"reviewed_by": norm.reviewed_by if norm else None},
             "instruments": [{"id": i.id, "verified_until": _iso_or_none(i.verified_until)} for i in instruments],
             "measurements": [
-                {"id": m.id, "instrument_id": m.instrument_id, "created_at": iso(m.created_at), "verdict": m.verdict}
+                {
+                    "id": m.id,
+                    "instrument_id": m.instrument_id,
+                    "created_at": iso(m.created_at),
+                    "verdict": m.verdict,
+                    **{k: m.eval_detail[k] for k in ("instrument_verified_until",) if k in m.eval_detail},
+                }
                 for m in current.values()
             ],
         }
@@ -435,8 +443,13 @@ class PushService:
             await self._check_audited_change(o, None)
             self.s.add(model(**v))
             return
+        fields = ORGANIZATION_FIELDS if o.table == "organization" else [k for k in v if k not in META_FIELDS]
         if (v["updated_at"], v["rev"]) <= (old.updated_at, old.rev):  # type: ignore[attr-defined]
             o.status = "stale"
+            if any(normalized(o.table, v)[k] != to_wire(o.table, old)[k] for k in fields):
+                # Qurilma yutqazdi (masalan, soati orqada), lekin o'z qiymatini ko'rsatib turibdi: server qatori qayta
+                # yuboriladi (`server_rev` oshadi) — pull'da qurilma server versiyasini oladi va ajralib qolmaydi.
+                await self.s.execute(update(model).where(model.id == v["id"]).values(rev=model.rev))  # type: ignore[attr-defined]
             return
         if o.table == "isolation_plan" and not await self._check_plan_status(o, old):  # type: ignore[arg-type]
             # Yakuniy holatdan chiqib bo'lmaydi: server versiyasi yutadi va pull'da qurilmaga qaytadi.
@@ -445,7 +458,6 @@ class PushService:
             o.status = "stale"
             return
         await self._check_audited_change(o, old)
-        fields = ORGANIZATION_FIELDS if o.table == "organization" else [k for k in v if k not in ("id", "org_id")]
         for k in (*fields, "updated_at", "rev"):
             setattr(old, k, v[k])
 

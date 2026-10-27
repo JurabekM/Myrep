@@ -57,7 +57,7 @@ shu faylning oxiriga yoziladi.
 
 | Holat | Amal |
 |---|---|
-| Telefon yo'qoldi / o'g'irlandi | LEAD/ADMIN ilovada (yoki `POST /devices/{id}/revoke`) qurilmani bekor qiladi — uning keyingi push'lari rad etiladi; foydalanuvchi parolini almashtiradi |
+| Telefon yo'qoldi / o'g'irlandi | ADMIN `POST /devices/{id}/revoke` bilan qurilmani bekor qiladi (ilovada bu ekran hali yo'q, F-25); tashkilotda ADMIN bo'lmasa — operator: `deploy/zanjir psql prod` → `UPDATE device SET revoked_at = now(), updated_at = now(), rev = rev + 1 WHERE id = '<id>';`. Bekor qilingan qurilmaning keyingi push'lari rad etiladi; foydalanuvchi parolini almashtiradi |
 | Xodim ketdi | `DELETE /users/{id}` (ADMIN) — refresh tokenlar va qurilmalar bekor qilinadi; imzolagan protokollari amalda qoladi |
 | JWT kaliti sizib chiqdi yoki rejali almashtirish (yiliga) | `prod.env` da `ZANJIR_JWT_SECRET` ni yangilash (`od -An -tx1 -N32 /dev/urandom \| tr -d ' \n'`) → `deploy/zanjir up prod`. Access tokenlar (15 daq) bekor bo'ladi, ilovalar refresh orqali avtomatik yangilaydi |
 | Baza parollari | `deploy/zanjir psql prod` → `ALTER ROLE zanjir_api PASSWORD '...'` (yoki `zanjir_owner`) → `prod.env` ni yangilash → `up` |

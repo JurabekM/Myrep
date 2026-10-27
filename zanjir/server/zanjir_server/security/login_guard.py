@@ -15,6 +15,7 @@ class LoginGuard:
         self._window = window_seconds
         self._clock = clock
         self._failures: dict[str, deque[float]] = defaultdict(deque)
+        self._next_sweep = float("-inf")
 
     def _prune(self, key: str) -> deque[float]:
         q = self._failures[key]
@@ -29,9 +30,12 @@ class LoginGuard:
         return len(self._prune(key)) >= self._max
 
     def failed(self, key: str) -> None:
-        self._prune(key).append(self._clock())
-        if len(self._failures) > 100_000:
-            # Xotira chegarasi: muddati o'tgan yozuvlar har bir kalitda tozalanadi (faqat bo'sh navbatlar emas).
+        now = self._clock()
+        self._prune(key).append(now)
+        if len(self._failures) > 100_000 and now >= self._next_sweep:
+            # Xotira chegarasi: muddati o'tgan yozuvlar har bir kalitda tozalanadi — daqiqasiga ko'pi bilan bir marta
+            # (har so'rovda O(n) aylanish hujumchiga CPU'ni band qilish imkonini berardi).
+            self._next_sweep = now + 60
             for k in [k for k in self._failures if not self._prune(k)]:
                 del self._failures[k]
 

@@ -165,6 +165,7 @@ class Field:
         verdict: str = "PASS",
         zs: float = 0.84,
         supersedes_id: str | None = None,
+        eval_detail: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         row = self.base(
             session_id=session_id,
@@ -176,7 +177,7 @@ class Field:
             verdict=verdict,
             norm_id="LOOP-TN-FINAL" if verdict != "NEEDS_REVIEW" else None,
             norm_set_version="0.1.1",
-            eval_detail={"reason": None},
+            eval_detail=eval_detail if eval_detail is not None else {"reason": None},
             supersedes_id=supersedes_id,
         )
         return [self.event("MEASUREMENT_ADDED", row["id"], measurement_audit_payload(row)), self.op("measurement", row)]

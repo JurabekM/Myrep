@@ -35,7 +35,8 @@ class MeasurementRepository {
     final graphRepo = GraphRepository(_ctx);
     final node = await graphRepo.getNode(nodeId);
     if (node == null || node.siteId != session.siteId) throw DataRuleException('node_not_in_site', nodeId);
-    await InstrumentRepository(_ctx).get(instrumentId) ?? (throw NotFoundException('instrument', instrumentId));
+    final instrument =
+        await InstrumentRepository(_ctx).get(instrumentId) ?? (throw NotFoundException('instrument', instrumentId));
     final normSet = await _normSets.load(normSetVersion);
     if (supersedesId != null) await _checkSupersede(supersedesId, sessionId, nodeId, type);
 
@@ -84,7 +85,9 @@ class MeasurementRepository {
             verdict: result.verdict,
             normId: Value(result.normId),
             normSetVersion: result.normSetVersion,
-            evalDetail: result.detail,
+            // O'lchov paytidagi qiyoslash muddati (6-qoida): asbob keyin qayta qiyoslansa ham bu o'lchov o'sha muddat
+            // bo'yicha baholanadi (ADR-0016).
+            evalDetail: {...result.detail, instrumentVerifiedUntilKey: _iso(instrument.verifiedUntil)},
             supersedesId: Value(supersedesId),
             createdAt: now,
             updatedAt: now,
@@ -145,3 +148,8 @@ Map<String, Object?> measurementAuditPayload(MeasurementRow m) => {
   'norm_set_version': m.normSetVersion,
   'supersedes_id': m.supersedesId,
 };
+
+/// `eval_detail` dagi o'lchov paytidagi asbob qiyoslash muddati (ISO UTC yoki null — guvohnomasiz).
+const instrumentVerifiedUntilKey = 'instrument_verified_until';
+
+String? _iso(DateTime? t) => t == null ? null : isoUtcMillis(t);

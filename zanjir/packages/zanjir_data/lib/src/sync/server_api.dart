@@ -48,6 +48,22 @@ class ServerUser {
   );
 }
 
+/// Serverdagi qurilma yozuvi.
+class ServerDevice {
+  const ServerDevice({required this.id, required this.userId, required this.publicKeyHex, required this.revoked});
+  final String id;
+  final String userId;
+  final String publicKeyHex;
+  final bool revoked;
+
+  factory ServerDevice.fromJson(Map<String, Object?> j) => ServerDevice(
+    id: j['id']! as String,
+    userId: j['user_id']! as String,
+    publicKeyHex: j['public_key_ed25519']! as String,
+    revoked: j['revoked_at'] != null,
+  );
+}
+
 /// ZANJIR server HTTP mijozi (ADR-0011/0012). Access token muddati o'tsa — bir marta refresh va qayta urinish;
 /// refresh ham o'tmasa — `ServerException(401, 'session_expired')` (qayta kirish kerak).
 class ServerApi implements SyncTransport {
@@ -129,6 +145,12 @@ class ServerApi implements SyncTransport {
       _json('POST', 'devices', body: {'id': id, 'public_key_ed25519': publicKeyHex, 'sig_alg': sigAlg});
 
   Future<void> revokeDevice(String id) => _json('POST', 'devices/$id/revoke');
+
+  /// Tashkilot qurilmalari (ochiq kalit va holat).
+  Future<List<ServerDevice>> devices() async => [
+    for (final d in (await _json('GET', 'devices'))['items']! as List)
+      ServerDevice.fromJson((d as Map).cast<String, Object?>()),
+  ];
 
   // --- sinxronlash ---
 

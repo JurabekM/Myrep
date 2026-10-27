@@ -129,7 +129,16 @@ Daraja: **Y** — yuqori, **O** — o'rta, **P** — past. Mezon: barcha "yuqori
 | F-18 | P | Telefon raqami o'chirilgan foydalanuvchilar bilan birga global yagona — o'chirilgan xodim raqamini qayta ishlatib bo'lmaydi | ⏳ R-09 (11-faza, OTP bilan birga) |
 | F-19 | P | Laboratoriya rekvizitlari va sozlamalari o'zgarishi audit hodisasini talab qilmasdi | ✅ tuzatildi: imzolangan `LAB_UPDATED` / `SETTINGS_CHANGED` hodisasi (payload hash) talab qilinadi |
 
-Ko'rik ikki bosqichda: F-01…F-08 — o'z ko'rigim, F-09…F-19 — mustaqil ko'rik (alohida agent, koddan; ADR-0014).
+| F-20 | Y | 6-qoida: protokol asbob guvohnomasini *hozirgi* muddat bo'yicha tekshirardi — muddati o'tgan asbob bilan olingan o'lchov asbob keyin qayta qiyoslangach imzolanib ketardi | ✅ tuzatildi: o'lchov paytidagi muddat `eval_detail.instrument_verified_until` ga yoziladi; ilova va server ikkalasini ham tekshiradi |
+| F-21 | O | `registerLab` o'rtada uzilsa (ro'yxatdan o'tdi, qurilma/push yo'q) — qayta urinish 409, kirish qurilmani ro'yxatdan o'tkazmasdi: laboratoriya umuman sinxronlanmasdi | ✅ tuzatildi: 409 da shu profil bilan kirish, qurilma har doim tekshiriladi (kirishda ham); E2E testi |
+| F-22 | O | LWW'da yutqazgan qurilma (soati orqada) o'z qiymatida qolib ketardi — server qatori qayta yuborilmasdi | ✅ tuzatildi: mazmuni farq qiladigan `stale` push'da server qatori qayta yuboriladi (`server_rev`) |
+| F-23 | P | Kirish cheklovi va rate limiter 100k kalitdan keyin har so'rovda butun lug'atni aylanardi (CPU) | ✅ tuzatildi: tozalash daqiqasiga/oynaga bir marta |
+| F-24 | P | Server protokol qoidasi litsenziya raqami yo'qligini tekshirmasdi (ilova tekshiradi) | ✅ tuzatildi: `license_no` bazadan, bo'sh bo'lsa `license_invalid` |
+| F-25 | O | Laboratoriyani LEAD yaratsa, tashkilotda ADMIN bo'lmaydi (LEAD ADMIN taklif qila olmaydi) — qurilmani bekor qilish, rol o'zgartirish, xodimni o'chirish faqat ADMIN'da; ilovada qurilmani bekor qilish ekrani yo'q | ⏳ foydalanuvchi qarori (LEAD'ga qurilma bekor qilishni berish yoki yaratuvchini doim ADMIN qilish); hozircha operator yo'li — RUNBOOK |
+| F-26 | O | Bir sessiyaga ikki oflayn qurilma ikkita amaldagi protokol imzolay oladi (ilova `already_signed` ni faqat lokal tekshiradi) | ⏳ foydalanuvchi qarori: rad etish qurilmani to'xtatadi (imzolangan hujjat allaqachon chop etilgan) — tavsiya: qabul qilish va `/v/` sahifasida "sessiyada boshqa protokol bor" ogohlantirishi |
+
+Ko'rik uch bosqichda: F-01…F-08 — o'z ko'rigim, F-09…F-19 — mustaqil ko'rik (alohida agent, koddan; ADR-0014),
+F-20…F-26 — PR'dagi code review (JurabekM/Myrep#33).
 Tasdiqlangan to'g'ri qismlar: tashkilotlar ajratilishi (RLS), append-only, `server_rev`, audit zanjiri, push atomarligi,
 taklif kodlari, refresh rotatsiyasi, JWT, ochiq sahifa, loglar, ilova xotirasi, HTTPS, zaxira.
 
@@ -148,3 +157,6 @@ taklif kodlari, refresh rotatsiyasi, JWT, ochiq sahifa, loglar, ilova xotirasi, 
   birga (11-faza); hozircha administrator yangi raqam bilan qo'shadi.
 - R-10 (P) Protokol raqamidagi qurilma belgisi 6 hex — shu tashkilotdagi ENGINEER ~16 mln qurilma ro'yxatdan o'tkazib
   boshqa qurilma raqamini band qilishi nazariy jihatdan mumkin (rate limiting bilan amalda yo'q).
+- R-11 (O) Asbob guvohnomasi muddati (`verified_until`) — oddiy LWW metadata: ENGINEER uni audit hodisasisiz o'zgartira
+  oladi. O'lchov paytidagi muddat qayd etiladi (F-20), lekin noto'g'ri muddat kiritishni texnik yo'l bilan to'xtatib
+  bo'lmaydi — guvohnoma raqami protokolda ko'rinadi; `INSTRUMENT_VERIFIED` audit hodisasi — keyingi bosqichda.

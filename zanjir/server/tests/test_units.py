@@ -24,7 +24,7 @@ def payload(**over: Any) -> dict[str, Any]:
         "measurements": [
             {"id": "m1", "instrument_id": "i1", "created_at": "2026-10-26T08:00:00.000Z", "verdict": "PASS"}
         ],
-        "lab": {"license_valid_until": "2027-12-31T00:00:00.000Z"},
+        "lab": {"license_no": "EL-1", "license_valid_until": "2027-12-31T00:00:00.000Z"},
         "signed_at": "2026-10-27T08:00:00.000Z",
         "lead_comment": None,
     }
@@ -46,13 +46,32 @@ def payload(**over: Any) -> dict[str, Any]:
         ({"instruments": [{"id": "i1", "verified_until": None}]}, "LEAD", "instrument_expired"),
         ({"instruments": [{"id": "i1", "verified_until": "yaroqsiz"}]}, "LEAD", "instrument_expired"),
         ({"instruments": []}, "LEAD", "instrument_expired"),
-        ({"lab": {"license_valid_until": "2026-10-26T00:00:00.000Z"}}, "LEAD", "license_invalid"),
+        ({"lab": {"license_no": "EL-1", "license_valid_until": "2026-10-26T00:00:00.000Z"}}, "LEAD", "license_invalid"),
+        ({"lab": {"license_no": " ", "license_valid_until": "2027-12-31T00:00:00.000Z"}}, "LEAD", "license_invalid"),
+        ({"lab": {"license_valid_until": "2027-12-31T00:00:00.000Z"}}, "LEAD", "license_invalid"),
         ({"lab": None}, "LEAD", "license_invalid"),
         ({"signed_at": None}, "LEAD", "license_invalid"),
     ],
 )
 def test_protocol_rules(over: dict[str, Any], role: str, expected: str | None) -> None:
     assert protocol_payload_violation(payload(**over), role) == expected
+
+
+@pytest.mark.parametrize(
+    ("at_record", "expected"),
+    [
+        (None, "instrument_expired"),
+        ("2026-10-25T00:00:00.000Z", "instrument_expired"),
+        ("2026-10-26T00:00:00.000Z", None),
+    ],
+)
+def test_protocol_rules_instrument_validity_at_record(at_record: str | None, expected: str | None) -> None:
+    """O'lchov paytida yozib qo'yilgan muddat ham tekshiriladi (asbob keyin qayta qiyoslangan bo'lsa ham)."""
+    m = {"id": "m1", "instrument_id": "i1", "created_at": "2026-10-26T08:00:00.000Z", "verdict": "PASS"}
+    assert (
+        protocol_payload_violation(payload(measurements=[{**m, "instrument_verified_until": at_record}]), "LEAD")
+        == expected
+    )
 
 
 def test_protocol_rules_needs_review() -> None:
@@ -237,3 +256,17 @@ def test_login_guard_memory_bounded() -> None:
     assert g.blocked("yangi")
     g.succeeded("yangi")
     assert not g.blocked("yangi")
+
+
+def test_rate_limiter_sweeps_once_per_window() -> None:
+    """Chegaradan oshganda tozalash oynaga bir marta (har so'rovda butun lug'at aylanmaydi)."""
+    now = [0.0]
+    r = RateLimiter(clock=lambda: now[0])
+    for i in range(100_001):
+        r.hit("b", f"ip{i}", 10)
+    swept = r._hits
+    r.hit("b", "yana", 10)
+    assert r._hits is swept  # shu oynada qayta tozalanmadi
+    now[0] = 61.0
+    r.hit("b", "keyingi", 10)
+    assert list(r._hits) == [("b", "keyingi")]

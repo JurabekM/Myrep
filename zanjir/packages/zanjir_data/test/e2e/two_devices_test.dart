@@ -85,6 +85,32 @@ class LossyTransport implements SyncTransport {
   }
 }
 
+/// Oflayn laboratoriya profili (ilovadagi kabi) — serverga hali hech narsa yuborilmagan.
+Future<Device> offlineLab(String phoneNo) async {
+  final d = await Device.create();
+  final orgId = await OrganizationRepository(d.db).create(name: 'Uzilgan laboratoriya');
+  final ctx = DataContext(db: d.db, orgId: orgId);
+  final lead = await UserRepository(ctx).create(fullName: 'Rahbar', phone: phoneNo, role: 'LEAD', safetyGroup: 'V');
+  final dev = await DeviceRepository(ctx)
+      .register(userId: lead.id, publicKeyHex: d.signer.publicKeyHex, sigAlg: d.signer.sigAlg);
+  d.bind(orgId, lead.id, dev.id);
+  final prefs = LocalPrefRepository(d.db);
+  await prefs.set(LocalPrefRepository.orgId, orgId);
+  await prefs.set(LocalPrefRepository.userId, lead.id);
+  await prefs.set(LocalPrefRepository.deviceId, dev.id);
+  // Birinchi urinish: ro'yxatdan o'tish serverga yetdi, keyin aloqa uzildi (qurilma va push bajarilmadi).
+  await d.api.register(
+    orgName: 'Uzilgan laboratoriya',
+    fullName: 'Rahbar',
+    phone: phoneNo,
+    password: password,
+    role: 'LEAD',
+    orgId: orgId,
+    userId: lead.id,
+  );
+  return d;
+}
+
 void main() {
   late Device a; // LEAD, laboratoriyani oflayn yaratgan
   late Device b; // ENGINEER, taklif bilan qo'shilgan
@@ -383,5 +409,40 @@ void main() {
     expect(revoked.body, contains('Bekor qilingan'));
     await b.engine.run();
     expect(await b.repos.protocols.status(signed.protocol.id), ProtocolStatus.revoked);
+  });
+
+  test('ro\'yxatdan o\'tish o\'rtada uzilsa: qayta urinish ham, kirish ham tiklaydi', () async {
+    final x = await offlineLab(phone());
+    addTearDown(x.close);
+    // Imzolangan audit hodisasi — qurilma serverda ro'yxatda bo'lmasa push rad etilardi (`unknown_device`).
+    await x.repos.settings.update(byUserId: x.userId, kCorr: 0.9);
+    final report = await ServerAccount(
+      x.db,
+      x.api,
+    ).registerLab(password: password, publicKeyHex: x.signer.publicKeyHex);
+    expect(report.pushed, greaterThan(0));
+    expect(await x.engine.pendingCount(), 0);
+
+    final y = await offlineLab(phone());
+    addTearDown(y.close);
+    await y.repos.settings.update(byUserId: y.userId, kCorr: 0.9);
+    await y.api.logout();
+    final ids = await ServerAccount(y.db, y.api).login(
+      phone: (await y.repos.users.require(y.userId)).phone,
+      password: password,
+      publicKeyHex: y.signer.publicKeyHex,
+    );
+    expect(ids.deviceId, y.deviceId);
+    await y.engine.run();
+    expect(await y.engine.pendingCount(), 0, reason: 'qurilma ro\'yxatda — audit hodisalari qabul qilindi');
+    // Boshqa kalit bilan o'sha qurilma ID si — rad.
+    await expectLater(
+      ServerAccount(y.db, y.api).login(
+        phone: (await y.repos.users.require(y.userId)).phone,
+        password: password,
+        publicKeyHex: a.signer.publicKeyHex,
+      ),
+      throwsA(isA<StateError>().having((e) => e.message, 'message', 'device_conflict')),
+    );
   });
 }

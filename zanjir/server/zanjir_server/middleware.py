@@ -70,6 +70,7 @@ class RateLimiter:
     def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._clock = clock
         self._hits: dict[tuple[str, str], tuple[int, int]] = defaultdict(lambda: (0, 0))
+        self._swept = -1
 
     def hit(self, bucket: str, key: str, limit: int) -> int | None:
         """Ruxsat bo'lsa None, aks holda keyingi oynagacha soniyalar."""
@@ -80,7 +81,9 @@ class RateLimiter:
             w, n = window, 0
         n += 1
         self._hits[(bucket, key)] = (w, n)
-        if len(self._hits) > 100_000:
+        # Xotira chegarasi: eski oynalar tozalanadi — oynaga ko'pi bilan bir marta (har so'rovda O(n) emas).
+        if len(self._hits) > 100_000 and self._swept != window:
+            self._swept = window
             self._hits = defaultdict(lambda: (0, 0), {k: v for k, v in self._hits.items() if v[0] == window})
         return None if n <= limit else max(1, int((window + 1) * 60 - now))
 

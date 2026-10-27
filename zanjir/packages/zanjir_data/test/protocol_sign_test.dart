@@ -194,6 +194,25 @@ void main() {
       ], containsAll([old.id, noCert.id]));
     });
 
+    test('muddati o\'tgan asbob keyin qayta qiyoslansa ham o\'sha o\'lchov imzolanmaydi (6-qoida)', () async {
+      final s = await SignableSession.create(org, close: false);
+      final inst = await org.repos.instruments.create(
+        kind: 'MULTIFUNCTION',
+        model: 'Qiyoslanadigan',
+        serialNo: 'SN-RE',
+        verifiedUntil: DateTime.utc(2026, 1, 1),
+      );
+      final m = await recordLoop(org, s.session.id, s.site, zs: 0.5, instrumentId: inst.id);
+      expect(m.evalDetail['instrument_verified_until'], '2026-01-01T00:00:00.000Z');
+      // Asbob o'lchovdan KEYIN qayta qiyoslandi — eski o'lchov baribir muddati o'tgan asbob bilan olingan.
+      await org.repos.instruments.update(inst.copyWith(verifiedUntil: Value(DateTime.utc(2027, 12, 31))));
+      await org.repos.sessions.close(s.session.id);
+      final draft = await (await reposAs()).protocols.prepare(sessionId: s.session.id);
+      expect(draft.blockers, [
+        ProtocolBlocker('instrument_expired', [m.id]),
+      ]);
+    });
+
     test('o\'lchov kuni amal qilgan guvohnoma — keyin muddati o\'tsa ham imzolanadi', () async {
       final s = await SignableSession.create(org);
       final later = steppingClock(DateTime.utc(2027, 6, 1));

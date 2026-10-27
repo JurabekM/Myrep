@@ -132,9 +132,20 @@ async def test_last_writer_wins(env: Env) -> None:
     older["row"].update(name="Eski nom", updated_at="2026-10-26T00:00:00.000Z", rev=5)
     st = await env.ok([newer])
     assert set(st.values()) == {"applied"}
+    before = (await env.pull())["server_rev"]
     st = await env.ok([older])
     assert set(st.values()) == {"stale"}
     assert (await env.all_rows("site"))[0]["name"] == "Yangi nom"
+    # Yutqazgan qurilma server versiyasini qayta oladi (o'z eski qiymatida qolib ketmaydi).
+    resent = [c["row"] for c in (await env.pull(since=before))["changes"] if c["table"] == "site"]
+    assert [r["name"] for r in resent] == ["Yangi nom"]
+    # Mazmuni bir xil eski push — qayta yuborish yo'q.
+    same = copy.deepcopy(newer)
+    same["client_op_id"] += "-4"
+    same["row"].update(updated_at="2026-10-26T00:00:00.000Z")
+    after = (await env.pull())["server_rev"]
+    assert set((await env.ok([same])).values()) == {"stale"}
+    assert (await env.pull(since=after))["changes"] == []
 
 
 async def test_measurement_requires_signed_audit_event(env: Env) -> None:
@@ -558,6 +569,21 @@ async def test_protocol_expired_instrument_and_tampered_payload(env: Env) -> Non
     # Payload'dagi natija serverdagidan farq qiladi (FAIL ni PASS qilib ko'rsatish urinishi).
     lie = f.protocol_payload(g["ses"], [{**ms[0], "values": {"pair": "L1-PE", "zs_ohm": 0.01}}], [inst])
     await env.rejected(f.protocol(g["ses"]["id"], lie), "payload_measurement_mismatch")
+
+
+async def test_protocol_instrument_validity_recorded_at_measurement(env: Env) -> None:
+    """6-qoida: o'lchov paytida muddati o'tgan asbob keyin qayta qiyoslangan bo'lsa ham — imzolanmaydi."""
+    g = await graph(env)
+    f = env.field
+    ops = f.measurement(
+        g["ses"]["id"],
+        g["node"]["id"],
+        g["inst"]["id"],
+        eval_detail={"instrument_verified_until": "2026-01-01T00:00:00.000Z"},
+    )
+    await env.ok(ops)
+    payload = f.protocol_payload(g["ses"], rows(ops, "measurement"), [g["inst"]])
+    await env.rejected(f.protocol(g["ses"]["id"], payload), "protocol_rule:instrument_expired")
 
 
 async def test_protocol_payload_must_cover_current_measurements(env: Env) -> None:

@@ -71,6 +71,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 - CI: `.github/workflows/zanjir.yml` — Dart analyze/test/coverage, Flutter analyze/test, ruff/mypy/pytest,
   normalar schema tekshiruvi, release darvozasi.
 
+### Tuzatildi
+- PR code review (F-20…F-24): o'lchov paytidagi asbob qiyoslash muddati saqlanadi va protokolda tekshiriladi (6-qoida —
+  keyingi qayta qiyoslash eski o'lchovni "tozalamaydi"); laboratoriyani ro'yxatdan o'tkazish o'rtada uzilsa qayta urinish va
+  kirish tiklaydi; LWW'da yutqazgan qurilma server versiyasini qayta oladi; cheklovlar tozalashi O(n) emas; serverda
+  litsenziya raqami tekshiriladi.
+
 ### O'zgardi
 - Xavfsizlik (10-faza): Android `allowBackup=false`, faqat HTTPS (`network_security_config`), release imzo faqat
   `key.properties` dan; server `/metrics` token bilan, hisob bo'yicha kirish cheklovi, xavfsizlik sarlavhalari, `clock_skew`

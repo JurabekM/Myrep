@@ -14,7 +14,7 @@
   serverda ro'yxatdan o'tkazish" (pilot operatori ro'yxatdan o'tishni vaqtincha ochadi). Keyin "Taklif kodi yaratish" —
   har xodimga alohida kod (rol: ENGINEER yoki VIEWER), kod 72 soat amal qiladi.
 - **Muhandis:** ilovada "Taklif kodi bilan qo'shilish" → kod, F.I.Sh., telefon, parol. Yangi telefonda — "Kirish".
-- Telefon yo'qolsa — darhol LEAD'ga ayting: u qurilmani bekor qiladi.
+- Telefon yo'qolsa — darhol LEAD'ga ayting: u pilot operatori orqali qurilmani bekor qildiradi (ilovada bu ekran hali yo'q).
 
 ## 3. Ish tartibi
 1. **Obyekt** → sxema: shchit, avtomat, UZO, kabel, rozetka guruhlari, yerga ulagich. Har tugunda QR yorliq (`zanjir://app/n/...`).

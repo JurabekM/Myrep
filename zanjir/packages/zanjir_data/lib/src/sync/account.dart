@@ -6,6 +6,7 @@ import '../repo/settings_repository.dart';
 import '../repo/user_repository.dart';
 import 'server_api.dart';
 import 'sync_engine.dart';
+import 'transport.dart';
 
 /// Qurilmadagi profil identifikatorlari (`local_pref`).
 typedef ProfileIds = ({String orgId, String userId, String deviceId});
@@ -27,25 +28,55 @@ class ServerAccount {
   }
 
   /// Oflayn yaratilgan laboratoriya (LEAD/ADMIN) serverda o'z ID lari bilan ro'yxatdan o'tadi, so'ng to'liq push.
+  /// Qayta urinish xavfsiz: oldingi urinish ro'yxatdan o'tib, keyingi qadamda uzilgan bo'lsa (409) — shu profil bilan
+  /// kiriladi va davom etiladi; qurilma ro'yxatda bo'lishi har doim tekshiriladi.
   Future<SyncReport> registerLab({required String password, required String publicKeyHex}) async {
     final ids = await localProfile() ?? (throw StateError('Lokal profil yo\'q'));
     final ctx = DataContext(db: db, orgId: ids.orgId);
     final org = await SettingsRepository(ctx).organization();
     final user = await UserRepository(ctx).require(ids.userId);
-    await api.register(
-      orgName: org.name,
-      fullName: user.fullName,
-      phone: user.phone,
-      password: password,
-      role: user.role,
-      orgId: org.id,
-      userId: user.id,
-      licenseNo: org.licenseNo,
-      licenseValidUntil: org.licenseValidUntil,
-      safetyGroup: user.safetyGroup,
-    );
-    await api.registerDevice(id: ids.deviceId, publicKeyHex: publicKeyHex);
+    try {
+      await api.register(
+        orgName: org.name,
+        fullName: user.fullName,
+        phone: user.phone,
+        password: password,
+        role: user.role,
+        orgId: org.id,
+        userId: user.id,
+        licenseNo: org.licenseNo,
+        licenseValidUntil: org.licenseValidUntil,
+        safetyGroup: user.safetyGroup,
+      );
+    } on ServerException catch (e) {
+      if (e.code != 'conflict') rethrow;
+      final ServerUser existing;
+      try {
+        existing = await api.login(phone: user.phone, password: password);
+      } on ServerException catch (le) {
+        if (le.code == 'invalid_credentials') throw e; // telefon boshqa hisobda — asl xato
+        rethrow;
+      }
+      if (existing.id != ids.userId || existing.orgId != ids.orgId) {
+        await api.logout();
+        throw StateError('profile_mismatch');
+      }
+    }
+    await _ensureDevice(ids, publicKeyHex);
     return SyncEngine(db, api).run();
+  }
+
+  /// Qurilma serverda shu foydalanuvchi va kalit bilan, bekor qilinmagan holda ro'yxatda bo'lishi (bo'lmasa — qo'shiladi).
+  Future<void> _ensureDevice(ProfileIds ids, String publicKeyHex) async {
+    try {
+      await api.registerDevice(id: ids.deviceId, publicKeyHex: publicKeyHex);
+    } on ServerException catch (e) {
+      if (e.code != 'conflict') rethrow;
+      final mine = (await api.devices()).where((d) => d.id == ids.deviceId).firstOrNull;
+      if (mine == null || mine.userId != ids.userId || mine.publicKeyHex != publicKeyHex || mine.revoked) {
+        throw StateError('device_conflict');
+      }
+    }
   }
 
   /// Taklif kodi bilan yangi qurilmada qo'shilish: foydalanuvchi, qurilma, to'liq pull, lokal profil.
@@ -82,6 +113,7 @@ class ServerAccount {
         if (previous != null) await api.tokens.write(previous);
         throw StateError('profile_mismatch');
       }
+      await _ensureDevice(local, publicKeyHex); // ro'yxatdan o'tish oldin uzilgan bo'lsa ham qurilma serverda bo'ladi
       return local;
     }
     await _requireEmpty();
