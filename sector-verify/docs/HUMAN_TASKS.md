@@ -105,3 +105,5 @@ Imzo kalitini faqat inson yaratadi va saqlaydi — u repoga, CI'ga va chatga tus
 **To'liq ko'rsatma:** [`docs/H3_RELEASE_SIGNING.md`](H3_RELEASE_SIGNING.md) — tarqatish yo'lini tanlash (APK / Play),
 kalit yaratish va zaxira, `keystore.properties`, versiya va tag, yig'ish, `apksigner` bilan tekshirish, arxiv,
 kalit yo'qolsa yoki oshkor bo'lsa nima qilish.
+Ixtiyoriy: CI'da imzolash (`sector-verify-release` workflow) — 10-bo'limdagi environment va secret'larni bir marta sozlang,
+keyin har reliz uchun faqat tag push qilasiz.
