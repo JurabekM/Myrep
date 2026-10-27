@@ -1,6 +1,8 @@
 package uz.sectorverify.buildlogic
 
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.HasHostTestsBuilder
+import com.android.build.api.variant.HostTestBuilder
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -19,7 +21,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         }
         // Host (unit) testlar faqat debug variantida ishlaydi — release faqat vaqt qo'shadi (ADR-012).
         extensions.configure<LibraryAndroidComponentsExtension> {
-            beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = false }
+            beforeVariants(selector().withBuildType("release")) {
+                (it as HasHostTestsBuilder).hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.enable = false
+            }
         }
         extensions.configure<KotlinAndroidProjectExtension> {
             compilerOptions { svDefaults() }

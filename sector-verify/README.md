@@ -6,7 +6,7 @@ nurlanayotganini baholaydi va RF rejaga solishtiradi. Sektor almashinuvi, yo'q P
 brigada saytdan ketmasidan oldin topadi. To'liq offline: ma'lumot qurilmadan chiqmaydi.
 
 ## Talablar
-- JDK 17, Android SDK (compileSdk 35), Android Studio yoki faqat buyruq qatori.
+- JDK 17, Android SDK (compileSdk 36), Android Studio yoki faqat buyruq qatori.
 - `local.properties` da `sdk.dir=...` (Android Studio o'zi yozadi).
 
 ## Imkoniyatlar

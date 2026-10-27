@@ -97,3 +97,10 @@ Promptdagi noaniq joylar uchun qabul qilingan talqinlar (barchasi `SessionAnalyz
 - **Chegaralar faqat `AnalysisConfig` da:** `binDeg` (yo'nalish oraliqlari), `maxAccuracyM` (oldindan tekshiruv), yangi `minDeviceRateHz = 0.5`.
 - **Room Gradle plagini:** debug va release KSP bitta sxema fayliga parallel yozib uni buzardi.
 - **UI:** faol yozilayotgan sessiya "uzilgan" deb taklif qilinmaydi (faqat ochish); Sozlamalardagi probe ruxsatni tekshiradi; dialog tugmalari ≥ 56 dp.
+
+## ADR-017 — targetSdk va compileSdk 36 (2026-10-27)
+- **Kontekst:** prompt §3 targetSdk/compileSdk 35 ni belgilagan, lekin Google Play 2026-08-31 dan yangi ilova va yangilanishlar uchun targetSdk 36 ni talab qiladi. Foydalanuvchi qarori: 36 ga ko'tarish.
+- **Qaror:** `Sdk.COMPILE = 36`, `Sdk.TARGET = 36` (`build-logic/.../Common.kt`); minSdk 29 o'zgarmaydi. API 36 ni AGP 8.7.3 bilmaydi → AGP 8.10.1 (Gradle 8.11.1 yetarli). AGP 8.10 da eskirgan `enableUnitTest` o'rniga `hostTests[UNIT_TEST_TYPE].enable`.
+- **Android 16 xatti-harakat o'zgarishlari tekshirildi:** edge-to-edge'dan voz kechish (`windowOptOutEdgeToEdgeEnforcement`) ishlatilmaydi; `onBackPressed`/`KEYCODE_BACK` yo'q (orqaga qaytish Navigation Compose orqali — predictive back bilan mos); `screenOrientation`/`resizeableActivity`/aspect ratio cheklovlari yo'q (katta ekranlarda e'tiborsiz qoldirilishi ta'sir qilmaydi); JobScheduler, ordered broadcast, `elegantTextHeight`, intent redirection ishlatilmaydi.
+- **16 KB sahifa:** release APK'dagi barcha 64-bitli `.so` (SQLCipher, DataStore, androidx.graphics) LOAD segmentlari 0x4000 ga tekislangan, `zipalign -c -P 16` OK.
+- **Testlar:** Robolectric 4.14.1 qoldirildi — host testlar SDK 34 (`@Config`) yoki kutubxona minSdk'ida ishlaydi, SDK 36 jar kerak emas. CI `instrumented` job'i endi API 34 va API 36 emulyatorlarida (matritsa) ishlaydi; release smoke test ham ikkalasida.
