@@ -23,8 +23,14 @@ put() {   # $1 fayl, $2 qiymat
 rand() { openssl rand -hex "$1"; }
 
 put pg_password "$(rand 24)"
-put database_url "postgres://mpay:$(cat "$DIR/pg_password")@postgres:5432/mpay"
+put pg_repl_password "$(rand 24)"
+put database_url "postgres://mpay:$(cat "$DIR/pg_password")@pg:5432/mpay"
 put hsm_pin "$(rand 8)"
 put shield_key "$(rand 24)"
 put sms_token "$(rand 24)"
+# ADR-0027: ilovalar endi `pg` proksisi orqali (yetakchiga) — eski `@postgres:` URL'i ko'chiriladi.
+if grep -q "@postgres:5432/" "$DIR/database_url"; then
+  sed -i 's#@postgres:5432/#@pg:5432/#' "$DIR/database_url"
+  echo "yangilandi: secrets/database_url (xost: pg)"
+fi
 echo "sirlar tayyor: $DIR (qiymatlar chop etilmadi)"

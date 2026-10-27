@@ -10,9 +10,15 @@
 #    Ogohlantirish Alertmanager orqali navbatchi kanaliga (virtual — smsgw `/alerts`) yetib boradi.
 # 3a. Shield almashinuvi (ADR-0026): yetakchi Shield SIGKILL bilan o'ldiriladi — zaxira snapshot'dan
 #     tiklab oladi, keyingi yukda API'lar mahalliy zaxiraga tushmaydi.
+# 3b. PostgreSQL almashinuvi (ADR-0027): replika yetib olgach yetakchi SIGKILL bilan o'ldiriladi,
+#     `pg-failover.sh` replikani ko'taradi (audit yozuvlari yo'qolmaydi), `pg-rejoin.sh` eski
+#     yetakchini yangi yetakchining replikasi qiladi; keyingi yuk yangi yetakchiga yoziladi.
+# 3c. nginx zaxirasi (ADR-0027): VIP egasi SIGKILL — VIP ikkinchi nginx'ga o'tadi, API VIP orqali
+#     javob beradi; qaytgan nginx VIP'ni tortib olmaydi.
 # 4. Shifrlangan zaxira (age): yukdan oldin asosiy nusxa (B1), keyin T lahza, yana faollik, ikkinchi
 #    zaxira (B2) → alohida bazaga tiklash + audit; PITR: B1 + B2 WAL → T lahza — audit yozuvlari soni
-#    T dagidek (keyingi faollik yo'q), audit xesh-zanjiri to'g'ri.
+#    T dagidek (keyingi faollik yo'q), audit xesh-zanjiri to'g'ri. B1 almashinuvdan oldin, T — keyin:
+#    PITR yangi timeline bo'ylab tiklaydi.
 # 5. Loglarda ochiq PAN va sirlar yo'qligi.
 # Natija: docs/load/p2.5-compose.json. MPAY_KEEP=1 — oxirida muhit o'chirilmaydi.
 set -euo pipefail
@@ -53,13 +59,17 @@ echo "== sirlar va image'lar"
 bash "$D/init-secrets.sh"
 docker build -q --target runtime -t mpay-server:local "$ROOT" >/dev/null
 docker build -q --target loadgen -t mpay-loadgen:local "$ROOT" >/dev/null
+docker build -q -t mpay-pgproxy:local "$D/pgproxy" >/dev/null
+docker build -q -t mpay-keepalived:local "$D/keepalived" >/dev/null
 docker run --rm --entrypoint promtool -v "$D/prometheus:/etc/prometheus:ro" prom/prometheus:v3.5.0 \
   check config /etc/prometheus/prometheus.yml
 docker run --rm --entrypoint amtool -v "$D/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.34.1 \
   check-config /etc/alertmanager/alertmanager.yml
 bash "$D/backup-keygen.sh"
-sql() {   # $1 SQL → qiymat (asosiy PostgreSQL)
-  "${DC[@]}" exec -T postgres psql -U mpay -d mpay -qAtc "$1" | tr -d '\r'
+# shellcheck source=../deploy/lib-pg.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../deploy/lib-pg.sh"
+sql() {   # $1 SQL → qiymat (joriy PostgreSQL yetakchisi — almashinuvdan keyin boshqa tugun)
+  "${DC[@]}" exec -T "$(pg_primary)" psql -U mpay -d mpay -qAtc "$1" | tr -d '\r'
 }
 navbatchi() {   # virtual navbatchi kanalidagi ogohlantirishlar: nomi=holati
   "${DC[@]}" exec -T smsgw sh -c \
@@ -172,7 +182,7 @@ echo "== Prometheus"
 sleep 12
 for q in 'sum(mpay_authorizations_total)' 'sum by (instance) (mpay_authorizations_total)' \
          'sum(mpay_shield_degraded_total)' 'sum(mpay_proxy_protocol_rejected_total)' \
-         'min(mpay_db_up)' 'max(mpay_shield_cards)' 'sum(mpay_shield_leader)' \
+         'min(mpay_db_up)' 'max(mpay_shield_cards)' 'sum(mpay_shield_leader)' 'max(mpay_db_replicas)' \
          'histogram_quantile(0.99, sum by (le) (rate(mpay_http_request_duration_seconds_bucket{route="/v1/authorizations"}[2m])))'; do
   echo "   $q = $(prom_q "$q")"
 done
@@ -188,6 +198,72 @@ done
 pi="$(prom_q 'sum(max_over_time(mpay_integrity_checks_total{result="ok"}[10m]))')"
 echo "   yaxlitlik tekshiruvlari (ok): $pi"
 [ -n "$pi" ] && [ "${pi%.*}" -ge "${MPAY_LOAD_CARDS:-200}" ] || { echo "XATO: yaxlitlik tokeni tekshirilmagan"; exit 1; }
+
+echo "== PostgreSQL almashinuvi: yetakchi o'ldiriladi (SIGKILL)"
+r="$(prom_q 'max(mpay_db_replicas)')"
+echo "   streaming replikalar (Prometheus): ${r:-0}"
+[ "${r%.*}" = 1 ] || { echo "XATO: replika yetakchiga ulanmagan"; exit 1; }
+PRIM="$(pg_primary)"
+lag=""
+for _ in $(seq 1 30); do
+  lag="$(sql "SELECT COALESCE(MAX(pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)), 0)::bigint FROM pg_stat_replication")"
+  [ "$lag" = 0 ] && break
+  sleep 1
+done
+A0="$(sql "SELECT count(*) FROM vault_audit")"
+echo "   yetakchi: $PRIM, replika kechikishi: $lag bayt, audit=$A0"
+t0=$(date +%s)
+"${DC[@]}" kill -s SIGKILL "$PRIM" >/dev/null
+bash "$D/pg-failover.sh" | sed 's/^/   /'
+NEWP="$(pg_primary)"
+A1="$(sql "SELECT count(*) FROM vault_audit")"
+echo "   yangi yetakchi: $NEWP ($(( $(date +%s) - t0 )) s), audit=$A1"
+[ "$NEWP" != "$PRIM" ] || { echo "XATO: yetakchi almashmadi"; exit 1; }
+[ "$A1" = "$A0" ] || { echo "XATO: almashinuvda audit yozuvlari yo'qoldi ($A0 → $A1)"; exit 1; }
+# Eski yetakchi qayta ishga tushirilsa — to'siq (ikkinchi yetakchi bo'lmaydi).
+"${DC[@]}" start "$PRIM" >/dev/null 2>&1 || true
+sleep 8
+[ "$(pg_role "$PRIM")" != f ] || { echo "XATO: eski yetakchi to'siqsiz ishga tushdi (ikki yetakchi)"; exit 1; }
+"${DC[@]}" logs --no-color --tail 5 "$PRIM" 2>&1 | grep -q "TO'SIQ" \
+  || { echo "XATO: eski yetakchi logida to'siq xabari yo'q"; exit 1; }
+echo "   eski yetakchi qayta ishga tushirilganda to'sildi"
+bash "$D/pg-rejoin.sh" "$PRIM" | sed 's/^/   /'
+[ "$(pg_role "$PRIM")" = t ] || { echo "XATO: $PRIM replika emas"; exit 1; }
+
+echo "== nginx zaxirasi: VIP egasi o'ldiriladi (SIGKILL)"
+# VIP orqali haqiqiy so'rov (TLS + PROXY protocol): lb-2 ham ishonchli proksi bo'lishi tekshiriladi.
+vip_health() {
+  "${DC[@]}" run --rm --no-deps -T --entrypoint sh loadgen -c \
+    'curl -sfk --max-time 3 --resolve lb:8443:10.88.0.100 https://lb:8443/healthz >/dev/null && echo ok' \
+    2>/dev/null || true
+}
+vip_holder() {
+  for s in lb lb-2; do
+    if "${DC[@]}" exec -T "$s" ip -4 addr show dev eth0 2>/dev/null | grep -q "10.88.0.100/"; then
+      echo "$s"
+    fi
+  done
+  return 0   # `set -e`: "VIP yo'q" — bo'sh natija, xato emas
+}
+H="$(vip_holder)"
+[ -n "$H" ] || { echo "XATO: VIP hech bir nginx'da yo'q"; exit 1; }
+[ "$(vip_health)" = ok ] || { echo "XATO: VIP orqali API javob bermadi"; exit 1; }
+OTHER=$([ "$H" = lb ] && echo lb-2 || echo lb)
+t0=$(date +%s)
+"${DC[@]}" kill -s SIGKILL "$H" >/dev/null
+MOVED=""
+for _ in $(seq 1 20); do
+  if [ "$(vip_holder)" = "$OTHER" ] && [ "$(vip_health)" = ok ]; then MOVED=1; break; fi
+  sleep 1
+done
+[ -n "$MOVED" ] || { echo "XATO: VIP $OTHER ga o'tmadi"; exit 1; }
+echo "   VIP: $H → $OTHER, $(( $(date +%s) - t0 )) s; API VIP orqali javob beradi"
+"${DC[@]}" up -d --no-deps "$H" >/dev/null 2>&1
+"${DC[@]}" restart "$H-vrrp" >/dev/null 2>&1
+sleep 8
+[ "$(vip_holder)" = "$OTHER" ] || { echo "XATO: qaytgan $H VIP'ni tortib oldi (nopreempt)"; exit 1; }
+[ "$(vip_health)" = ok ] || { echo "XATO: VIP orqali API javob bermadi"; exit 1; }
+echo "   $H qaytdi — zaxira (VIP $OTHER da qoldi)"
 
 echo "== T lahza, keyin qo'shimcha faollik"
 # Vaqt va soni bitta so'rovda (PostgreSQL soati — tiklash ham shu soat bo'yicha).

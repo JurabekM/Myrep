@@ -14,7 +14,7 @@ set -eu
 
 STATE=/var/lib/mpay/state
 CFG="$STATE/mpay.toml"
-LB_IP="${MPAY_LB_IP:?MPAY_LB_IP kerak}"
+LB_IP="${MPAY_LB_IP:?MPAY_LB_IP kerak}"   # bo'sh joy bilan ajratilgan: lb va lb-2 (ADR-0027)
 
 mkdir -p "$(dirname "$SOFTHSM2_CONF")" /var/lib/mpay/hsm/tokens
 [ -f "$SOFTHSM2_CONF" ] || echo "directories.tokendir = /var/lib/mpay/hsm/tokens" > "$SOFTHSM2_CONF"
@@ -32,9 +32,11 @@ if [ ! -f "$CFG" ]; then
   # Konsolga chiqqan API kalitlari yuqorida yutildi; ular faqat state/dev-credentials.env da (sandbox).
 
   # PostgreSQL: parolli URL faqat muhitda (secret).
-  sed -i 's|^path = "mpay.db"$|url_env = "MPAY_DATABASE_URL"|' "$CFG"
+  # Bitta streaming replika (ADR-0027) — kam bo'lsa `MpayDbReplicaDown`.
+  sed -i 's|^path = "mpay.db"$|url_env = "MPAY_DATABASE_URL"\nexpected_replicas = 1|' "$CFG"
   # PROXY protocol: sarlavha faqat nginx'dan (statik IP) qabul qilinadi.
-  sed -i "s|^trusted_proxies = \[\]$|trusted_proxies = [\"$LB_IP/32\"]|" "$CFG"
+  proxies="$(for ip in $LB_IP; do printf '"%s/32", ' "$ip"; done | sed 's/, $//')"
+  sed -i "s|^trusted_proxies = \[\]$|trusted_proxies = [$proxies]|" "$CFG"
   sed -i 's|^proxy_protocol = false$|proxy_protocol = true|' "$CFG"
   # Metrikalar: ichki tarmoqda (Prometheus), host'ga ochilmaydi.
   sed -i 's|^# listen = "127.0.0.1:9464"$|listen = "0.0.0.0:9464"|' "$CFG"

@@ -115,6 +115,20 @@ groups:
         annotations:
           summary: "Reversal 15 daqiqadan beri yuborilmayapti — emitent bilan aloqani tekshiring"
 
+      - alert: MpayDbReplicaDown
+        expr: max(mpay_db_replicas) < max(mpay_db_replicas_expected)
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "PostgreSQL replikasi ulanmagan — yetakchi yiqilsa almashinuv yo'q (deploy/pg-rejoin.sh)"
+
+      - alert: MpayDbReplicationLag
+        expr: max(mpay_db_replication_lag_bytes) > 16777216
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "PostgreSQL replikasi {{ $value }} bayt orqada — almashinuvda shuncha ma'lumot yo'qolishi mumkin"
+
       - alert: MpayDbPoolExhausted
         expr: |
           mpay_db_pool_connections{state="idle"} == 0

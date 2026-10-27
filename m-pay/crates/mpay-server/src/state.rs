@@ -87,6 +87,8 @@ pub struct AppState {
     pub acquirer: crate::config::AcquirerConfig,
     /// Kliring tariflari (ADR-0025).
     pub clearing: crate::config::ClearingConfig,
+    /// Kutilgan PostgreSQL replikalari (ADR-0027, metrika uchun).
+    pub expected_replicas: u32,
 }
 
 impl std::fmt::Debug for AppState {
@@ -513,5 +515,6 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         cvm_limit_minor: cfg.issuer.cvm_limit_minor,
         acquirer: cfg.acquirer.clone(),
         clearing: cfg.clearing.clone(),
+        expected_replicas: cfg.database.expected_replicas,
     })
 }

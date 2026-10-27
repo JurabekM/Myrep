@@ -56,6 +56,7 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | BK-12 | Qurilma siyosati: maxsus proshivka (`SelfSigned` + `verifiedBootKey` ro'yxati), `MEETS_VIRTUAL_INTEGRITY` | ☐ | B | P | `docs/specs/pqlink.md` §9, ADR-0021 |
 | BK-13 | Zaxira: offsite joy (WAL uzluksiz), saqlash muddati, bank HSM'ining zaxira tartibi | ◐ | B, J | P | ADR-0023, `deploy/backup.sh` |
 | BK-14 | Shield uchun MCC va terminal geo-koordinatalari (bankning ISO 8583 maydonlari) | ☐ | B, J | X | `docs/shield-report.md` |
+| BK-16 | Infratuzilma HA: alohida host'lar, avtomatik PostgreSQL almashinuvi (Patroni + etcd yoki bank standarti), RPO — sinxron replikatsiya (2 replika) yoki asinxron, tashqi VIP/balansir | ☐ | B | P | ADR-0027, `deploy/pg-failover.sh` |
 | BK-15 | Kliring: fayl almashinuvi kanali (SFTP/API) va arxiv, haqiqiy tariflar (MDR, interchange — toifa va karta turi bo'yicha), emitentlar BIN/bank bo'yicha, savdo nuqtasi reyestri va bank rekvizitlari, to'lovlarni o'tkazish | ☐ | B, S | P | ADR-0025, `crates/mpay-server/src/clearing.rs` |
 
 ## 3. Kodda yo'q — jamoa hozir qila oladi
@@ -66,7 +67,7 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | JM-2 | **Solishtirish (reconciliation)** va tafovut hisoboti: acquirer jurnali ↔ emitent ↔ kliring (`GET /v1/recon`, `mpay-server recon`). Real bankda emitent tomoni — bank fayli (BK-1) | ✅ | J | P | ADR-0024, ADR-0025 |
 | JM-3 | **Avtomatik reversal (`0400`/`0401`):** emitent timeout'i, o'qilmaydigan javob, qotgan `PENDING` → `96` va navbatdan reversal (qayta urinish, instansiyalar orasida band qilish). Sxemaning reversal formati — SX-2 | ✅ | J | P | ADR-0024 |
 | JM-4 | **Shield yuqori mavjudligi:** DB ijarasi bilan yetakchi + zaxira, belgilar ombori snapshot'i (RPO ≤ snapshot oralig'i, o'tish ≈ ijara muddati), mijozda zaxira URL'lar. Katta hajmda inkremental snapshot kerak bo'ladi | ✅ | J | P | ADR-0026 |
-| JM-5 | PostgreSQL replikatsiyasi va failover, nginx zaxirasi (keepalived/VIP) — compose'da namuna | ☐ | J, B | P | ADR-0020, ADR-0023, `deploy/README.md` |
+| JM-5 | PostgreSQL streaming replika, `pg` proksisi (faqat yetakchiga), almashinuv/qayta qo'shish skriptlari va to'siq; nginx zaxirasi (VRRP VIP) — compose'da, sinalgan. Avtomatik almashinuv va alohida host'lar — BK-16 | ✅ | J | P | ADR-0027 |
 | JM-6 | Bekor qilingan server identifikatorlari ro'yxatini ilova build'iga joylash, boshqa kanal (CDN/push) | ☐ | J | P | ADR-0014 |
 | JM-7 | Kotlin klienti uchun deterministik handshake test vektori (hozir faqat jonli interop) | ☐ | J | X | `docs/specs/pqlink.md` §9 |
 | JM-8 | Uzoq ulanishli terminal shlyuzlari uchun ulanish umri chegarasi (L4 balanslash) | ☐ | J | X | `docs/load-report.md` §10 |
@@ -127,6 +128,7 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 | Avtomatik reversal (`0400`) va tafovut hisoboti | ADR-0024 (2026-10-27): JM-3 ✅, JM-2 — acquirer ↔ emitent |
 | Kunlik kliring va hisob-kitob; solishtirish kliring bilan | ADR-0025 (2026-10-27): JM-1 ✅, JM-2 ✅ |
 | Shield holatini saqlash va zaxira instansiya | ADR-0026 (2026-10-27): JM-4 ✅ |
+| PostgreSQL replikatsiyasi va almashinuvi, nginx zaxirasi | ADR-0027 (2026-10-27): JM-5 ✅ |
 | Token muddati UTC+5 va yangilash | ADR-0022 §4 (2026-10-26) |
 
 ## 8. Pilotga chiqish mezoni
@@ -134,8 +136,8 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 Pilot **yopiq tizimda** (SX-1 — sxemasiz, faqat M-Pay terminali, bitta bank) boshlanishi uchun
 **P** belgili barcha bandlar bajarilgan bo'lishi kerak. Qisqasi:
 
-1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13, BK-15.
-2. Jamoa tomoni: JM-5, JM-6, JM-11, MB-4 (JM-1 … JM-4 ✅).
+1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13, BK-15, BK-16.
+2. Jamoa tomoni: JM-6, JM-11, MB-4 (JM-1 … JM-5 ✅).
 3. Telefonlar: MB-1 … MB-3.
 4. Audit: AU-1, AU-2, AU-5.
 5. Huquqiy: RG-1 … RG-4.
@@ -169,7 +171,8 @@ real ma'lumotda o'qitish.
 * `crates/mpay-server/src/reversal.rs` — SX-2
 * `crates/mpay-vault/src/model.rs` — BK-9
 * `crates/mpay-vault/src/vault.rs` — BK-6
-* `deploy/README.md` — BK-8, BK-13, JM-5
+* `deploy/README.md` — BK-8, BK-13, BK-16
+* `deploy/pg-failover.sh` — BK-16
 * `deploy/alertmanager/alertmanager.yml` — BK-8
 * `deploy/backup.sh` — BK-13
 * `deploy/docker-compose.yml` — BK-8
@@ -179,12 +182,13 @@ real ma'lumotda o'qitish.
 * `docs/adr/0016-otp-kanali.md` — BK-6, BK-7
 * `docs/adr/0017-hsm-sessiyalar.md` — BK-3
 * `docs/adr/0018-postgresql.md` — JM-9
-* `docs/adr/0020-deployment.md` — JM-5, BK-8
+* `docs/adr/0020-deployment.md` — BK-8
 * `docs/adr/0021-play-integrity.md` — BK-11, BK-12
 * `docs/adr/0022-mahsulot-siyosatlari.md` — BK-9, SX-3, SX-4, SX-6
-* `docs/adr/0023-zaxira-pitr-ogohlantirish.md` — BK-4, BK-13, JM-5
+* `docs/adr/0023-zaxira-pitr-ogohlantirish.md` — BK-4, BK-13
 * `docs/adr/0024-reversal-va-solishtirish.md` — SX-2, BK-1
 * `docs/adr/0025-kliring-va-hisob-kitob.md` — SX-2, BK-15
+* `docs/adr/0027-postgres-replika-va-lb-zaxira.md` — BK-16
 * `docs/android-testing.md` — BK-11, MB-4
 * `docs/architecture.md` — BK-5
 * `docs/load-report.md` — BK-3, BK-10, JM-8

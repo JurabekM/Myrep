@@ -55,4 +55,5 @@ ADR-0020 dagi zaxira (`pg_dump` + holat arxivi) uchta bo'shliq bilan qolgan edi:
 * **pgBackRest / WAL-G:** to'liq PITR vositalari (siqish, parallel, S3). Pilot bankning saqlash
   infratuzilmasi ma'lum bo'lganda o'tish oson; hozir qo'shimcha xizmatsiz, ko'rinadigan skriptlar.
 * **Streaming replica:** yuqori mavjudlik beradi, lekin noto'g'ri amal ham replikaga o'tadi — PITR
-  o'rnini bosmaydi (`TODO(spec)`: replika pilot SLA bo'yicha, PITR bilan birga).
+  o'rnini bosmaydi. Replika PITR bilan birga qo'shildi — ADR-0027 (WAL arxivi umumiy, PITR
+  almashinuvdan keyingi timeline bo'ylab ham tiklaydi).

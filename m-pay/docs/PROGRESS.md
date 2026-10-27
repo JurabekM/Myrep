@@ -1013,3 +1013,31 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 * `scripts/compose-test.sh` (Docker Desktop): yetakchi `shield-2` SIGKILL → `shield` 8 s da oldi, 200
   karta snapshot'dan, keyingi yukda `SHIELD_DEGRADED` = 0, qaytgan instansiya zaxira, `sum(mpay_shield_leader)`
   = 1; p99 72 ms; PITR va loglar — OK. `promtool` — 19 qoida.
+
+### PostgreSQL replikatsiyasi va almashinuvi, nginx zaxirasi (2026-10-27, ADR-0027; checklist JM-5 ✅)
+
+* Muammo: compose'da PostgreSQL va nginx bittadan — baza yiqilsa faqat zaxiradan tiklash (soatlab),
+  nginx yiqilsa API'ga kirish yo'q.
+* PostgreSQL: `postgres` + `postgres-replica` (asinxron streaming, `deploy/postgres/pg-node.sh`):
+  bo'sh papkada yetakchidan `pg_basebackup`, `replicator` roli (faqat REPLICATION), umumiy WAL arxivi;
+  to'siq — boshqa yetakchi bo'lsa eski yetakchi ishga tushmaydi.
+* `pg` proksisi (HAProxy + `pg-primary-check`): ilovalar faqat yozish uchun ochiq tugunga, almashinuvda
+  qayta ishga tushirishsiz. `deploy/pg-failover.sh` (yiqilish / `--planned`), `deploy/pg-rejoin.sh`,
+  `deploy/lib-pg.sh` (zaxira/tiklash skriptlari joriy yetakchini topadi).
+* nginx: `lb` + `lb-2`, keepalived (VRRP unicast, `nopreempt`), VIP 10.88.0.100; ikkala nginx ishonchli
+  proksi.
+* Metrikalar `mpay_db_replicas`, `mpay_db_replicas_expected`, `mpay_db_replication_lag_bytes`;
+  ogohlantirishlar `MpayDbReplicaDown`, `MpayDbReplicationLag` (jami 21).
+* Tekshirildi:
+  * alohida loyihalarda: yiqilish → 1000/1000 qator, to'siq, qayta qo'shish, `--planned` 2001/2001;
+    VRRP: VIP 5 s da o'tdi, qaytgan lb — BACKUP;
+  * `scripts/compose-test.sh` (Docker Desktop) — `COMPOSE TEST OK`:
+    * PostgreSQL yetakchisi SIGKILL → 7 s da `postgres-replica` (timeline 2), audit 13712 → 13712;
+    * qayta yoqilgan eski yetakchi to'sildi, `pg-rejoin.sh` bilan replika;
+    * nginx VIP egasi SIGKILL → 5 s da `lb-2`, API VIP orqali (TLS + PROXY protocol);
+    * keyingi yuk yangi yetakchiga yozildi, `SHIELD_DEGRADED` = 0;
+    * PITR: almashinuvdan oldingi asosiy nusxa + WAL → almashinuvdan keyingi T, audit aynan 13712;
+    * loglarda PAN/sir yo'q.
+  * Birinchi yugurishlarda sinov skriptidagi ikki xato topildi va tuzatildi (`set -e` ostida bo'sh
+    natija; timeline checkpoint'dan oldin o'qilgani).
+* Ochiq (bank): alohida host'lar, avtomatik almashinuv, RPO (sinxron replika), tashqi VIP — BK-16.

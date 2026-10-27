@@ -21,6 +21,9 @@ IMG="${MPAY_IMAGE:-mpay-server:local}"
 IDENTITY="${MPAY_BACKUP_IDENTITY:-$HERE/secrets/backup_identity}"
 export MSYS_NO_PATHCONV=1
 [ -f "$IDENTITY" ] || { echo "XATO: maxfiy kalit yo'q: $IDENTITY (MPAY_BACKUP_IDENTITY)" >&2; exit 1; }
+# shellcheck source=lib-pg.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib-pg.sh"
+PGP="$(pg_primary)"   # joriy yetakchi (ADR-0027)
 
 (cd "$SRC" && sha256sum -c --quiet SHA256SUMS)
 echo "== SHA256SUMS to'g'ri"
@@ -44,8 +47,8 @@ if [ "$MODE" = --replace ]; then
 fi
 
 echo "== $DB bazasiga tiklanmoqda"
-"${DC[@]}" exec -T postgres sh -c "dropdb -U mpay --if-exists --force $DB && createdb -U mpay $DB"
-dec "$SRC/mpay.dump.age" | "${DC[@]}" exec -T postgres pg_restore -U mpay -d "$DB" --no-owner --exit-on-error
+"${DC[@]}" exec -T "$PGP" sh -c "dropdb -U mpay --if-exists --force $DB && createdb -U mpay $DB"
+dec "$SRC/mpay.dump.age" | "${DC[@]}" exec -T "$PGP" pg_restore -U mpay -d "$DB" --no-owner --exit-on-error
 
 echo "== audit xesh-zanjiri ($DB)"
 # Parolli URL host'da ko'rinmaydi: konteyner ichida secret'dan, faqat baza nomi almashtiriladi.
@@ -57,6 +60,6 @@ if [ "$MODE" = --replace ]; then
   echo "== API instansiyalari ishga tushirilmoqda"
   "${DC[@]}" start api-1 api-2
 else
-  "${DC[@]}" exec -T postgres dropdb -U mpay "$DB"
+  "${DC[@]}" exec -T "$PGP" dropdb -U mpay "$DB"
 fi
 echo "tiklash OK ($MODE)"

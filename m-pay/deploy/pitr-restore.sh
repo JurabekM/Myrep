@@ -76,7 +76,7 @@ docker logs "$NAME" 2>&1 | grep -E "recovery stopping|archive recovery complete|
 
 echo "== audit xesh-zanjiri (tiklangan holat)"
 "${DC[@]}" run --rm --no-deps -T --entrypoint sh bootstrap -c \
-  "MPAY_DATABASE_URL=\"\$(sed 's#@postgres:#@$NAME:#' /run/secrets/database_url)\" \
+  "MPAY_DATABASE_URL=\"\$(sed 's#@[^:/]*:5432/#@$NAME:5432/#' /run/secrets/database_url)\" \
    exec mpay-entrypoint mpay-server audit-verify --config /var/lib/mpay/state/mpay.toml" 2>/dev/null
 echo "pitr_audit_rows=$(docker exec "$NAME" psql -U mpay -d mpay -qAtc 'SELECT count(*) FROM vault_audit')"
 echo "pitr_last_audit_ts=$(docker exec "$NAME" psql -U mpay -d mpay -qAtc 'SELECT max(ts) FROM vault_audit')"

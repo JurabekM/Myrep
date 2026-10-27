@@ -132,6 +132,13 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
                     let mut t = metrics::Text::default();
                     metrics::render_common(&mut t, "api");
                     metrics::render_db(&mut t, st.vault.pool()).await;
+                    metrics::render_replication(
+                        &mut t,
+                        st.vault.pool(),
+                        st.vault.db().dialect(),
+                        st.expected_replicas,
+                    )
+                    .await;
                     t.gauge(
                         "mpay_pqlink_sessions",
                         "PQ Link sessiyalari (umumiy ombor bo'lsa — klaster bo'yicha)",

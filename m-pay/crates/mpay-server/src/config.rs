@@ -187,6 +187,10 @@ pub struct DatabaseConfig {
     /// Ulanishlar hovuzi hajmi (standart: SQLite 1, PostgreSQL 32).
     #[serde(default)]
     pub max_connections: Option<u32>,
+    /// PostgreSQL: kutilgan streaming replikalar soni (ADR-0027) — `mpay_db_replicas_expected`,
+    /// kam bo'lsa `MpayDbReplicaDown`. 0 — replikatsiyasiz.
+    #[serde(default)]
+    pub expected_replicas: u32,
 }
 
 impl std::fmt::Debug for DatabaseConfig {

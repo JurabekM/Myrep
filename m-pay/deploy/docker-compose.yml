@@ -4,7 +4,7 @@
 #   bash deploy/init-secrets.sh          # bir marta: tasodifiy sirlar deploy/secrets/ ga (git'ga tushmaydi)
 #   docker compose -f deploy/docker-compose.yml up -d --build
 #
-# Tarkib: PostgreSQL (WAL arxivi) · bootstrap (bir martalik) · 2 ta Shield roli (yetakchi + zaxira, ADR-0026) ·
+# Tarkib: PostgreSQL yetakchi + streaming replika (WAL arxivi) va `pg` proksisi (ADR-0027) · bootstrap (bir martalik) · 2 ta Shield roli (yetakchi + zaxira, ADR-0026) ·
 # 2 ta API instansiyasi · nginx (L4,
 # TLS end-to-end, PROXY protocol) · virtual SMS shlyuzi · Prometheus (+ alerts.yml).
 # Host'ga faqat 127.0.0.1:8443 (API) va 127.0.0.1:9090 (Prometheus) ochiladi.
@@ -30,7 +30,10 @@ x-mpay: &mpay
   secrets: [hsm_pin, database_url, shield_key, sms_token]
 
 services:
-  postgres:
+  # Ikki PostgreSQL tuguni (ADR-0027): bir xil `pg-node.sh` — bo'sh papkada yetakchidan nusxa (replika),
+  # boshqa yetakchi bo'lsa eski yetakchi ishga tushmaydi (to'siq). WAL arxivi (PITR) umumiy hajmda —
+  # almashinuvdan keyin yangi yetakchi ham shu yerga arxivlaydi.
+  postgres: &pgnode
     image: postgres:17-alpine
     restart: unless-stopped
     networks: [mpay]
@@ -38,22 +41,50 @@ services:
       POSTGRES_USER: mpay
       POSTGRES_DB: mpay
       POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
-    # WAL arxivi (PITR): har to'lgan segment /wal ga (`walarchive` hajmi), `backup.sh` uni shifrlab oladi.
-    command:
-      - sh
-      - -c
-      - >-
-        mkdir -p /wal && chown postgres:postgres /wal &&
-        exec docker-entrypoint.sh postgres -c max_connections=200
-        -c wal_level=replica -c archive_mode=on -c archive_timeout=300
-        -c "archive_command=test ! -f /wal/%f && cp %p /wal/%f"
-    secrets: [pg_password]
-    volumes: [pgdata:/var/lib/postgresql/data, walarchive:/wal]
+      PG_BOOTSTRAP: primary
+      PG_PEERS: postgres-replica
+      PG_SLOT: node_postgres
+    command: ["sh", "/usr/local/bin/pg-node.sh"]
+    secrets: [pg_password, pg_repl_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - walarchive:/wal
+      - ./postgres/pg-node.sh:/usr/local/bin/pg-node.sh:ro
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "mpay", "-d", "mpay"]
       interval: 2s
       timeout: 3s
-      retries: 30
+      retries: 60
+
+  postgres-replica:
+    <<: *pgnode
+    environment:
+      POSTGRES_USER: mpay
+      POSTGRES_DB: mpay
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+      PG_PEERS: postgres
+      PG_SLOT: node_postgres_replica
+    volumes:
+      - pgdata-replica:/var/lib/postgresql/data
+      - walarchive:/wal
+      - ./postgres/pg-node.sh:/usr/local/bin/pg-node.sh:ro
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+
+  # Ilovalar bazaga shu orqali (`database_url` → `pg:5432`): faqat yozish uchun ochiq yetakchiga.
+  pg:
+    image: ${MPAY_PGPROXY_IMAGE:-mpay-pgproxy:local}
+    build: ./pgproxy
+    restart: unless-stopped
+    networks: [mpay]
+    secrets: [pg_repl_password]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "pg-primary-check", "-", "-", "127.0.0.1", "5432"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
 
   bootstrap:
     <<: *mpay
@@ -61,10 +92,11 @@ services:
     command: ["mpay-bootstrap"]
     environment:
       <<: *mpay-env
-      MPAY_LB_IP: 10.88.0.10
+      # PROXY protocol sarlavhasi faqat ikkala nginx'dan (ADR-0027).
+      MPAY_LB_IP: "10.88.0.10 10.88.0.11"
     volumes: [state:/var/lib/mpay/state, hsm:/var/lib/mpay/hsm]
     depends_on:
-      postgres: { condition: service_healthy }
+      pg: { condition: service_healthy }
 
   # Ikkalasi bir xil: DB ijarasini olgani yetakchi, ikkinchisi zaxira (`503 SHIELD_STANDBY`).
   shield: &shield
@@ -103,7 +135,10 @@ services:
     environment:
       MPAY_SMS_TOKEN_FILE: /run/secrets/sms_token
 
-  lb:
+  # Ikki nginx (ADR-0027) va VRRP (keepalived) bilan umumiy virtual IP 10.88.0.100: biri tushsa VIP
+  # ikkinchisiga o'tadi. Ichki mijozlar VIP orqali; host porti — faqat `lb` (sandbox; production'da VIP
+  # tashqi tarmoqda yoki bulut balansiri).
+  lb: &lb
     image: nginx:1.27.5-alpine
     restart: unless-stopped
     networks:
@@ -113,6 +148,29 @@ services:
     depends_on:
       api-1: { condition: service_healthy }
       api-2: { condition: service_healthy }
+
+  lb-2:
+    <<: *lb
+    networks:
+      mpay: { ipv4_address: 10.88.0.11 }
+    ports: []
+
+  # keepalived — nginx konteyneri tarmog'ida (VIP o'sha interfeysga qo'shiladi). nginx konteyneri qayta
+  # yaratilsa, yonidagi keepalived ham qayta ishga tushiriladi (`docker compose restart lb-vrrp`).
+  lb-vrrp: &vrrp
+    image: ${MPAY_KEEPALIVED_IMAGE:-mpay-keepalived:local}
+    build: ./keepalived
+    restart: unless-stopped
+    network_mode: "service:lb"
+    cap_add: [NET_ADMIN]
+    environment: { VIP: 10.88.0.100, SELF_IP: 10.88.0.10, PEER_IP: 10.88.0.11, PRIORITY: "150" }
+    depends_on: [lb]
+
+  lb-2-vrrp:
+    <<: *vrrp
+    network_mode: "service:lb-2"
+    environment: { VIP: 10.88.0.100, SELF_IP: 10.88.0.11, PEER_IP: 10.88.0.10, PRIORITY: "100" }
+    depends_on: [lb-2]
 
   # Ogohlantirishlarni yo'naltirish: sandbox'da virtual navbatchi kanali (smsgw `/alerts`).
   # TODO(spec): bankning navbatchilik kanali (SMS/Telegram/e-pochta/PagerDuty) — alertmanager.yml.
@@ -141,10 +199,12 @@ services:
 networks:
   mpay:
     ipam:
-      config: [{ subnet: 10.88.0.0/24 }]
+      # Dinamik manzillar .128–.255: statik lb (.10, .11) va VIP (.100) bilan to'qnashmaydi.
+      config: [{ subnet: 10.88.0.0/24, ip_range: 10.88.0.128/25 }]
 
 volumes:
   pgdata:
+  pgdata-replica:
   walarchive:
   state:
   hsm:
@@ -152,6 +212,7 @@ volumes:
 
 secrets:
   pg_password: { file: ./secrets/pg_password }
+  pg_repl_password: { file: ./secrets/pg_repl_password }
   database_url: { file: ./secrets/database_url }
   hsm_pin: { file: ./secrets/hsm_pin }
   shield_key: { file: ./secrets/shield_key }

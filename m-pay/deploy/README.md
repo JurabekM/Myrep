@@ -185,6 +185,35 @@ yetakchi, ikkinchisi zaxira (`/healthz` → `"leader": false`, ichki API → `50
 * Kim yetakchi: `docker compose exec shield curl -sk https://localhost:8600/healthz`.
 * Instansiyalar soati sinxron bo'lsin (NTP); `instance_id` noyob (standart — konteyner nomi).
 
+## PostgreSQL replikasi va almashinuv ([ADR-0027](../docs/adr/0027-postgres-replika-va-lb-zaxira.md))
+
+`postgres` (yetakchi) va `postgres-replica` (streaming, asinxron); ilovalar `pg` proksisi orqali —
+u faqat yozish uchun ochiq tugunga yo'naltiradi. Holat: Prometheus `mpay_db_replicas`,
+`mpay_db_replication_lag_bytes`; `MpayDbReplicaDown`, `MpayDbReplicationLag`, `MpayDbDown`.
+
+* **Yetakchi yiqildi** (`MpayDbDown`):
+
+  ```bash
+  bash deploy/pg-failover.sh               # to'siq (eski yetakchi to'xtatiladi) → pg_promote → proksi
+  bash deploy/pg-rejoin.sh postgres        # eski yetakchi — yangi yetakchining replikasi (papka qayta)
+  ```
+
+  Ilovalar qayta ishga tushirilmaydi. Replikaga yetmagan oxirgi tranzaksiyalar (kechikish) yo'qolishi
+  mumkin — almashinuvdan keyin `mpay-server recon` (ADR-0024) bilan solishtiring.
+* **Rejali almashinuv** (texnik xizmat, yo'qotishsiz): `bash deploy/pg-failover.sh --planned`, keyin
+  `pg-rejoin.sh`.
+* Eski yetakchi papkasi bilan qayta yoqilsa — boshqa yetakchi bor bo'lsa ishga tushmaydi (`TO'SIQ`
+  logi): `pg-rejoin.sh` bilan qo'shing.
+* Ikkala tugun o'chgan bo'lsa — avval oxirgi yetakchini yoqing.
+
+## nginx zaxirasi (VRRP)
+
+`lb` va `lb-2`, yonida `lb-vrrp`/`lb-2-vrrp` (keepalived): VIP `10.88.0.100` ishlab turgan nginx'da,
+biri tushsa ~3 s da ikkinchisiga o'tadi, qaytgani tortib olmaydi (`nopreempt`). nginx konteyneri qayta
+yaratilsa yonidagi keepalived ham: `docker compose restart lb-vrrp`. Kimda:
+`docker compose exec lb ip -4 addr show dev eth0`. Host porti `127.0.0.1:8443` — faqat `lb`
+(sandbox); production'da VIP tashqi tarmoqda.
+
 ## To'xtatish va yangilash
 
 * `docker compose stop api-1` — SIGTERM: yangi ulanishlar qabul qilinmaydi, ochiq so'rovlar
@@ -197,4 +226,6 @@ yetakchi, ikkinchisi zaxira (`/healthz` → `"leader": false`, ichki API → `50
 * `sandbox = true`: `/v1/sandbox/*` va OTP'ni API orqali olish yoqilgan; SoftHSM o'rniga bank HSM'i.
 * O'z-o'zini imzolagan TLS va mTLS CA'si (`init`); production'da bankning PKI'si.
 * Ichki SMS shlyuzi shifrsiz `http://` (`insecure_http`) — faqat izolyatsiyalangan tarmoq.
-* Bitta host: PostgreSQL replikatsiyasi va nginx zaxirasi yo'q (`TODO(spec)`: pilot SLA bo'yicha).
+* Bitta host: replika va ikkinchi nginx ham shu host'da (ADR-0027) — host yiqilsa hammasi to'xtaydi;
+  almashinuv qo'lda (`pg-failover.sh`), VIP faqat ichki tarmoqda. `TODO(spec):` alohida host'lar,
+  avtomatik almashinuv (Patroni + etcd), tashqi VIP — bank infratuzilmasi va pilot SLA bo'yicha.

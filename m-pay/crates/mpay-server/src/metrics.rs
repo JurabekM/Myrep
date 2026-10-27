@@ -410,6 +410,44 @@ pub async fn render_db(out: &mut Text, pool: &sqlx::AnyPool) {
     );
 }
 
+/// PostgreSQL replikatsiyasi (ADR-0027): yetakchidagi streaming replikalar va eng katta kechikish
+/// (bayt, `pg_stat_replication.replay_lsn` bo'yicha). SQLite yoki so'rov xatosi — faqat kutilgan son.
+pub async fn render_replication(
+    out: &mut Text,
+    pool: &sqlx::AnyPool,
+    dialect: mpay_vault::db::Dialect,
+    expected: u32,
+) {
+    out.gauge(
+        "mpay_db_replicas_expected",
+        "Kutilgan streaming replikalar ([database] expected_replicas)",
+        "",
+        f64::from(expected),
+    );
+    if dialect != mpay_vault::db::Dialect::Postgres {
+        return;
+    }
+    let q = sqlx::query_as::<_, (i64, i64)>(
+        "SELECT count(*), COALESCE(MAX(pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)), 0)::bigint \
+         FROM pg_stat_replication WHERE state = 'streaming'",
+    )
+    .fetch_one(pool);
+    if let Ok(Ok((n, lag))) = tokio::time::timeout(Duration::from_secs(1), q).await {
+        out.gauge(
+            "mpay_db_replicas",
+            "Yetakchiga ulangan streaming replikalar",
+            "",
+            n as f64,
+        );
+        out.gauge(
+            "mpay_db_replication_lag_bytes",
+            "Eng sekin replikaning kechikishi (WAL baytlari)",
+            "",
+            lag as f64,
+        );
+    }
+}
+
 /// `/metrics` matnini yig'uvchi.
 pub type Gather = Arc<dyn Fn() -> Pin<Box<dyn Future<Output = String> + Send>> + Send + Sync>;
 

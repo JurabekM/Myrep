@@ -25,6 +25,10 @@ export MSYS_NO_PATHCONV=1
 REC="$HERE/secrets/backup_recipient"
 [ -f "$REC" ] || { echo "XATO: $REC yo'q — avval: bash deploy/backup-keygen.sh" >&2; exit 1; }
 RECIPIENT="$(cat "$REC")"
+# shellcheck source=lib-pg.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib-pg.sh"
+PGP="$(pg_primary)"   # almashinuvdan keyin yetakchi boshqa tugun bo'lishi mumkin (ADR-0027)
+echo "== yetakchi: $PGP"
 mkdir -p "$OUT"
 
 enc() {   # stdin → age (ochiq kalit) → $1
@@ -32,25 +36,25 @@ enc() {   # stdin → age (ochiq kalit) → $1
 }
 
 echo "== PostgreSQL dump → mpay.dump.age"
-"${DC[@]}" exec -T postgres pg_dump -U mpay -d mpay -Fc | enc "$OUT/mpay.dump.age"
+"${DC[@]}" exec -T "$PGP" pg_dump -U mpay -d mpay -Fc | enc "$OUT/mpay.dump.age"
 
 echo "== asosiy nusxa (pg_basebackup) → base.tar.age"
-"${DC[@]}" exec -T postgres pg_basebackup -U mpay -D - -Ft -X fetch --checkpoint=fast | enc "$OUT/base.tar.age"
+"${DC[@]}" exec -T "$PGP" pg_basebackup -U mpay -D - -Ft -X fetch --checkpoint=fast | enc "$OUT/base.tar.age"
 
 echo "== WAL arxivi → wal.tar.age"
 # Joriy segment ham arxivga tushsin (oxirgi tranzaksiyalargacha tiklash uchun).
 # Avval kichik WAL yozuvi: oxirgi almashtirishdan beri yozuv bo'lmasa `pg_switch_wal()` hech narsa
 # qilmaydi va joriy (arxivlanmagan) segmentni ko'rsatadi. Yopilgan segment — `switch_lsn - 1` niki.
-"${DC[@]}" exec -T postgres psql -U mpay -d mpay -qAtc \
+"${DC[@]}" exec -T "$PGP" psql -U mpay -d mpay -qAtc \
   "SELECT pg_logical_emit_message(false, 'mpay-backup', now()::text)" > /dev/null
-seg="$("${DC[@]}" exec -T postgres psql -U mpay -d mpay -qAtc "SELECT pg_walfile_name(pg_switch_wal() - 1)" | tr -d '\r')"
+seg="$("${DC[@]}" exec -T "$PGP" psql -U mpay -d mpay -qAtc "SELECT pg_walfile_name(pg_switch_wal() - 1)" | tr -d '\r')"
 archived=""
 for _ in $(seq 1 40); do
-  if "${DC[@]}" exec -T postgres test -f "/wal/$seg"; then archived=1; break; fi
+  if "${DC[@]}" exec -T "$PGP" test -f "/wal/$seg"; then archived=1; break; fi
   sleep 0.5
 done
 [ -n "$archived" ] || { echo "XATO: WAL segmenti $seg arxivlanmadi (archive_command?)" >&2; exit 1; }
-"${DC[@]}" exec -T postgres tar -C /wal -cf - . | enc "$OUT/wal.tar.age"
+"${DC[@]}" exec -T "$PGP" tar -C /wal -cf - . | enc "$OUT/wal.tar.age"
 
 echo "== holat va HSM tokeni → state-hsm.tar.gz.age"
 "${DC[@]}" run --rm --no-deps -T --entrypoint tar bootstrap \
