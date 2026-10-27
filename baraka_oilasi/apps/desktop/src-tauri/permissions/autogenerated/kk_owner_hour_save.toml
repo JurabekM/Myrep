@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-owner-hour-save"
+description = "Enables the kk_owner_hour_save command without any pre-configured scope."
+commands.allow = ["kk_owner_hour_save"]
+
+[[permission]]
+identifier = "deny-kk-owner-hour-save"
+description = "Denies the kk_owner_hour_save command without any pre-configured scope."
+commands.deny = ["kk_owner_hour_save"]

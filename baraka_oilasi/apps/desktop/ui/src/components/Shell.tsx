@@ -25,6 +25,7 @@ import { KkZakatScreen } from "../features/kasbkor/KkZakatScreen";
 import { KkEquipmentScreen } from "../features/kasbkor/KkEquipmentScreen";
 import { KkHomeScreen } from "../features/kasbkor/KkHomeScreen";
 import { KkLaborScreen } from "../features/kasbkor/KkLaborScreen";
+import { KkLearningScreen } from "../features/kasbkor/KkLearningScreen";
 import { KkQuoteScreen } from "../features/kasbkor/KkQuoteScreen";
 import { KkSellerCreditScreen, KkSellerScreen } from "../features/kasbkor/KkSellerScreen";
 import { KkShiftScreen } from "../features/kasbkor/KkShiftScreen";
@@ -74,6 +75,7 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "kkGate", label: "nav.kkGate" },
   { screen: "kkZakat", label: "nav.kkZakat" },
   { screen: "kkMeasure", label: "nav.kkMeasure" },
+  { screen: "kkLearning", label: "nav.kkLearning" },
   { screen: "sync", label: "nav.sync" },
   { screen: "settings", label: "nav.settings" },
 ];
@@ -119,6 +121,7 @@ const MENTOR: Record<Screen, string> = {
   kkGate: "mentor.kkGate",
   kkZakat: "mentor.kkZakat",
   kkMeasure: "mentor.kkMeasure",
+  kkLearning: "mentor.kkLearning",
   kkSellerCredit: "mentor.kkSellerCredit",
   kkShift: "mentor.kkShift",
   twoShores: "mentor.twoShores",
@@ -259,6 +262,7 @@ export function Shell() {
         {active && kasbkor && screen === "kkGate" && <KkGateScreen spaceId={active} />}
         {active && kasbkor && screen === "kkZakat" && <KkZakatScreen spaceId={active} />}
         {active && kasbkor && screen === "kkMeasure" && <KkMeasureScreen spaceId={active} />}
+        {active && kasbkor && !seller && screen === "kkLearning" && <KkLearningScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>

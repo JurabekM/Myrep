@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-delegate-calc"
+description = "Enables the kk_delegate_calc command without any pre-configured scope."
+commands.allow = ["kk_delegate_calc"]
+
+[[permission]]
+identifier = "deny-kk-delegate-calc"
+description = "Denies the kk_delegate_calc command without any pre-configured scope."
+commands.deny = ["kk_delegate_calc"]

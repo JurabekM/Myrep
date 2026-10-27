@@ -4676,5 +4676,128 @@
   "offer_flag_TRIAL_UNKNOWN": "Sinov darsi yoki pulni qaytarish sharti bormi — soʻrang.",
   "offer_flag_JOB_ABROAD_PROMISE": "Kursdan keyin chet elda ish vaʼda qilinmoqda — bu aldashning keng tarqalgan usuli. Pul toʻlamang.",
   "offer_flag_JOB_ABROAD_UNKNOWN": "Chet elda ish vaʼdasi bormi — aniqlang.",
-  "learn_result_noBaseline": "Reja ochilganda boshlangʻich nuqta yozilmagan edi, shuning uchun solishtirib boʻlmaydi — bu hozirgi qiymatingiz. Keyingi rejani ochishdan oldin «Bir soatim qancha?» hisobini saqlang."
+  "learn_result_noBaseline": "Reja ochilganda boshlangʻich nuqta yozilmagan edi, shuning uchun solishtirib boʻlmaydi — bu hozirgi qiymatingiz. Keyingi rejani ochishdan oldin «Bir soatim qancha?» hisobini saqlang.",
+  "error_PLAN_LINK_UY_ONLY": "Bilim rejasiga havola faqat Uy makonida — Kasb-kor chiqimiga faqat «Sarmoya (oʻqish)» belgisi qoʻyiladi",
+  "error_INVALID_TASK_TIME": "Vaqt notoʻgʻri: ishga oyiga 1–44 640 daqiqa, oʻrgatishga 0–44 640 daqiqa",
+  "error_KK_NO_HOUR_VALUE": "Avval egasining bir soati qiymatini saqlang yoki uni shu yerga kiriting",
+  "error_NOT_EMPLOYMENT": "Faqat xodim kartochkasini tanlash mumkin",
+  "error_LEARNER_TWICE": "Kimga oʻrgatilganini bitta usulda belgilang: xodim kartochkasi yoki ism",
+  "pdf_kkclose_selfInvestment": "Chiqimlar ichida «Sarmoya (oʻqish)»",
+  "nav_kkLearning": "Oʻzimga sarmoya",
+  "mentor_kkLearning": "Egasining bir soati ham pul turadi. Oʻzingiz qilayotgan ishni oʻrgatib topshirsangiz, vaqtingiz muhimroq ishga qoladi; biznes uchun oʻqish — isrof emas, sarmoya.",
+  "kkl_title": "Oʻzimga sarmoya — biznesda",
+  "kkl_intro": "Biznesda ham soat chegaralangan: egasi hamma ishni oʻzi qilsa, biznes uning kuniga sigʻib qoladi. Bir soatingiz qancha turishini bilsangiz, qaysi ishni oʻzingiz qilishni, qaysini oʻrgatib topshirishni va qaysi bilimga pul toʻlashni hisob bilan tanlaysiz.",
+  "kkl_example": "Masalan, Bahodir aka har kuni ertalab bir soat narx yorliqlarini oʻzi yozardi. U bir soatining qiymatini hisoblab, yorliq yozishni sotuvchisiga oʻrgatdi va boʻshagan vaqtini taʼminotchilar bilan kelishuvga ajratdi. Qarorni taxmin bilan emas, hisob bilan qildi.",
+  "kkl_tasks_1": "Yopilgan oylardan bir soatingiz qiymatini hisoblang.",
+  "kkl_tasks_2": "Oʻzingiz qilayotgan bitta ishni «Oʻzim qilaymi yoki oʻrgatib topshiraymi?» hisobidan oʻtkazing.",
+  "kkl_tasks_3": "Bilganingizdan bir narsani shu hafta xodimingizga oʻrgating va yozib qoʻying.",
+  "kkl_hour_title": "Egasining bir soati",
+  "kkl_hour_none": "Hali hisoblanmagan. Ish vaqtingizni kiriting — oylik topganingiz yopilgan oylardan olinadi.",
+  "kkl_hour_months": "Yopilgan oylar («Hisob kuni»)",
+  "kkl_hour_monthLine": "{period}: oʻz mehnati {labor} + haqiqiy foyda {profit} → topgani {earned}",
+  "@kkl_hour_monthLine": {
+    "placeholders": {
+      "earned": {},
+      "labor": {},
+      "period": {},
+      "profit": {}
+    }
+  },
+  "kkl_hour_noMonths": "Hali yopilgan oy yoʻq — oylik topganingizni qoʻlda kiriting yoki oyni «Hisob kuni»da yoping.",
+  "kkl_hour_salaryNote": "Egasiga toʻlangan maosh qoʻshilmaydi: haqiqiy foydadan oʻz mehnati bahosi ayirilgan, topganingizga u qaytib qoʻshiladi. Zarar boʻlgan oy — 0.",
+  "kkl_hour_incomeField": "Oylik topganim (boʻsh — yopilgan oylar oʻrtachasi)",
+  "kkl_hour_suggest": "Boʻsh qoldirsangiz — oxirgi {count} oy oʻrtachasi: {average}",
+  "@kkl_hour_suggest": {
+    "placeholders": {
+      "average": {},
+      "count": {}
+    }
+  },
+  "kkl_hour_income": "Oylik topgani: {amount} — {source}",
+  "@kkl_hour_income": {
+    "placeholders": {
+      "amount": {},
+      "source": {}
+    }
+  },
+  "kkl_hour_source_AUTO": "yopilgan oylar oʻrtachasi ({count} oy)",
+  "@kkl_hour_source_AUTO": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kkl_hour_source_MANUAL": "qoʻlda kiritilgan",
+  "kkl_del_title": "Oʻzim qilaymi yoki oʻrgatib topshiraymi?",
+  "kkl_del_hint": "Ilova ish haqi miqdorini tavsiya qilmaydi — yordamchining soat narxini oʻzingiz kiriting.",
+  "kkl_del_task": "Ish turi",
+  "kkl_del_taskPlaceholder": "Masalan: tovar qabul qilish, narx yorligʻi yozish",
+  "kkl_del_owner": "Egasining 1 soati (boʻsh — oxirgi hisob)",
+  "kkl_del_taskHours": "Bu ishga oyiga, soat",
+  "kkl_del_minutes": "daqiqa",
+  "kkl_del_helper": "Yordamchi yoki xodimning 1 soati narxi",
+  "kkl_del_trainingMoney": "Bir martalik oʻrgatish xarajati (ixtiyoriy)",
+  "kkl_del_trainingHours": "Oʻrgatishga ketadigan vaqtingiz, soat",
+  "kkl_del_staff": "Xodim kartochkasi (ixtiyoriy)",
+  "kkl_del_noStaff": "— tanlanmagan —",
+  "kkl_del_calc": "Hisoblash",
+  "kkl_del_save": "Qarorni saqlash",
+  "kkl_del_result": "Hisob natijasi",
+  "kkl_del_benefit": "Oylik naf (boʻshagan vaqtingiz qiymati)",
+  "kkl_del_fullCost": "Oʻrgatishning toʻliq narxi",
+  "kkl_del_timeCost": "shundan vaqtingiz: {amount}",
+  "@kkl_del_timeCost": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "kkl_del_payback": "Qoplanish muddati",
+  "kkl_del_months": "{count} oy",
+  "@kkl_del_months": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "kkl_del_now": "darhol — oʻrgatish xarajati yoʻq",
+  "kkl_del_verdict_DELEGATE": "Oʻrgatib topshirish oʻzini qoplaydi: keyin har oy vaqtingizdan {benefit} qiymatidagi qismi boshqa ishga qoladi.",
+  "@kkl_del_verdict_DELEGATE": {
+    "placeholders": {
+      "benefit": {}
+    }
+  },
+  "kkl_del_verdict_SELF_CHEAPER": "Hozircha oʻzingiz qilganingiz arzon: yordamchining soati sizning soatingizdan arzon emas.",
+  "kkl_del_saved": "Saqlangan qarorlar",
+  "kkl_del_empty": "Hali saqlangan qaror yoʻq.",
+  "kkl_del_label": "Qaror: {task}",
+  "@kkl_del_label": {
+    "placeholders": {
+      "task": {}
+    }
+  },
+  "kkl_del_line": "Oyiga {time} · yordamchi soati {helper} · {date}",
+  "@kkl_del_line": {
+    "placeholders": {
+      "date": {},
+      "helper": {},
+      "time": {}
+    }
+  },
+  "kkl_del_delete": "Oʻchirish",
+  "kkl_teach_hint": "Xodimga hunar oʻrgatish — ilmning zakoti: oʻrgatganning oʻz bilimi ham mustahkamlanadi, ish esa bitta odamga bogʻlanib qolmaydi.",
+  "kkl_teach_staff": "Kimga: xodim",
+  "kkl_teach_other": "boshqa kishi",
+  "kkl_teach_learner": "Ism (ixtiyoriy)",
+  "kkl_course_title": "Kurs yoki ustoz taklifi",
+  "kkl_course_hint": "Biznes uchun pullik kurs yoki ustoz — pul toʻlashdan oldin taklifni tekshiring.",
+  "kkl_invest_title": "Sarmoya (oʻqish) — shu oy",
+  "kkl_invest_hint": "Chiqim kiritishda «Sarmoya (oʻqish)» belgisini qoʻying: chiqim haqiqiy foydani baribir kamaytiradi va «Hisob kuni»da alohida qator boʻlib koʻrinadi.",
+  "kk_selfInvestment": "Sarmoya (oʻqish)",
+  "kk_selfInvestmentHint": "Biznes uchun oʻqish yoki oʻrgatish — haqiqiy foydaga kiradi, «Hisob kuni»da alohida koʻrinadi.",
+  "kk_close_selfInvestment": "shundan «Sarmoya (oʻqish)»",
+  "kkl_del_confirm": "«{task}» qarorini oʻchirasizmi?",
+  "@kkl_del_confirm": {
+    "placeholders": {
+      "task": {}
+    }
+  },
+  "kkl_del_confirmYes": "Ha, oʻchirish"
 }

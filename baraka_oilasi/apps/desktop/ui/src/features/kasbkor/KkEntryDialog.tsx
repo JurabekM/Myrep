@@ -26,6 +26,8 @@ export function KkEntryDialog({ spaceId, mode, onClose }: { spaceId: string; mod
   const [categoryId, setCategoryId] = useState("");
   const [occurredOn, setOccurredOn] = useState("");
   const [note, setNote] = useState("");
+  /** «Sarmoya (o'qish)» (K9, kasbkor/SPEC 8A.3): chiqim haqiqiy foydaga kiradi, «Hisob kuni»da alohida qator. */
+  const [selfInvestment, setSelfInvestment] = useState(false);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -35,7 +37,7 @@ export function KkEntryDialog({ spaceId, mode, onClose }: { spaceId: string; mod
       if (mode === "EXPENSE") {
         const id = categoryId || categories.data?.[0]?.id || "";
         return void (await call(
-          commands.recordExpense(spaceId, { amount, categoryId: id, channel: wallet, memberId: null, occurredOn: date, necessity: null, obligationId: null, isGift: false, isOstentation: false, fundedByDebt: false, note: text }),
+          commands.recordExpense(spaceId, { amount, categoryId: id, channel: wallet, memberId: null, occurredOn: date, necessity: null, obligationId: null, isGift: false, isOstentation: false, fundedByDebt: false, note: text, selfInvestment }),
         ));
       }
       await call(commands.kkRecordMove(spaceId, { kind: mode, wallet, toWallet: mode === "TRANSFER" ? toWallet : null, amount, occurredOn: date, note: text }));
@@ -83,6 +85,17 @@ export function KkEntryDialog({ spaceId, mode, onClose }: { spaceId: string; mod
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+          {mode === "EXPENSE" && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-1" checked={selfInvestment} onChange={(e) => setSelfInvestment(e.target.checked)} aria-describedby="kk-self-investment-hint" />
+              <span>
+                {t("kk.selfInvestment")}
+                <span id="kk-self-investment-hint" className="block text-xs text-ink-muted">
+                  {t("kk.selfInvestmentHint")}
+                </span>
+              </span>
             </label>
           )}
           {walletPicker(mode === "TRANSFER" ? t("kk.fromWallet") : t("kk.walletLabel"), wallet, setWallet)}

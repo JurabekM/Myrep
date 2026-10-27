@@ -8,7 +8,7 @@ use baraka_domain_kasbkor::close::{month_close, CloseInput, SplitRule, TaxRule};
 use baraka_journal::{short_code, GENESIS_HASH};
 use baraka_money::{format_percent_bp, parse_amount, Money};
 use baraka_pdf::KkCloseReport;
-use baraka_storage::repo::{household, kk};
+use baraka_storage::repo::{expenses, household, kk};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -50,6 +50,10 @@ struct CloseRecord {
     allocation: Option<[i64; 4]>,
     reserve_below_depreciation: bool,
     explanation: Option<String>,
+    /// K9 (v2): o'z mehnati bahosi — egasi topgani `max(0, o'z mehnati + haqiqiy foyda)` shu qotirilgan
+    /// raqamlardan olinadi. v1 bayonnomalarda yo'q.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    owner_labor: Option<i64>,
 }
 
 fn rules_or_default(row: Option<kk::KkCloseRulesRow>) -> kk::KkCloseRulesRow {
@@ -269,7 +273,7 @@ impl App {
             carry_overdraw: carry,
         })?;
         Ok(CloseRecord {
-            v: 1,
+            v: 2,
             period_start: ymd(p.start),
             period_end: ymd(p.last),
             currency: ctx.currency.code().to_string(),
@@ -304,6 +308,7 @@ impl App {
             }),
             reserve_below_depreciation: c.reserve_below_depreciation,
             explanation,
+            owner_labor: Some(p.owner_labor.minor()),
         })
     }
 
@@ -333,7 +338,81 @@ impl App {
         Ok(out)
     }
 
-    fn draft_dto(&self, ctx: &Ctx, r: &CloseRecord) -> KkCloseDraftDto {
+    /// «Sarmoya (o'qish)» belgili chiqimlar jami (K9, 8A.3) har davr `[boshi, oxirgi kun]` uchun —
+    /// barcha davrlar bitta so'rov bilan. Yopilgan oy yozuvlari o'zgarmaydi, shuning uchun qator
+    /// bayonnoma xeshiga kirmaydi va har safar hisoblanadi.
+    pub(crate) fn kk_self_investment_totals(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        periods: &[(String, String)],
+    ) -> Result<Vec<Money>, AppError> {
+        let cur = ctx.currency;
+        let (Some(from), Some(last)) = (
+            periods.iter().map(|p| p.0.as_str()).min(),
+            periods.iter().map(|p| p.1.as_str()).max(),
+        ) else {
+            return Ok(Vec::new());
+        };
+        let rows = self
+            .db
+            .read(|c| expenses::self_investment_between(c, scope, from, last))?;
+        periods
+            .iter()
+            .map(|(start, end)| {
+                Money::sum(
+                    rows.iter()
+                        .filter(|(on, c, _)| c == cur.code() && on >= start && on <= end)
+                        .map(|(_, _, v)| Money::new(*v, cur)),
+                    cur,
+                )
+                .map_err(AppError::from)
+            })
+            .collect()
+    }
+
+    fn kk_self_investment(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        r: &CloseRecord,
+    ) -> Result<Money, AppError> {
+        let one = [(r.period_start.clone(), r.period_end.clone())];
+        Ok(self.kk_self_investment_totals(ctx, scope, &one)?[0])
+    }
+
+    /// Oxirgi ko'pi bilan `n` ta yopilgan oy (yangisidan eskisiga): qotirilgan bayonnoma raqamlari —
+    /// (boshi, oxirgi kun, o'z mehnati bahosi, haqiqiy foyda). v1 bayonnomada o'z mehnati saqlanmagan —
+    /// hozirgi sozlama olinadi (kasbkor/SPEC 8A.4).
+    pub(crate) fn kk_closed_owner_months(
+        &self,
+        ctx: &Ctx,
+        scope: &SpaceScope,
+        n: usize,
+    ) -> Result<Vec<(String, String, Money, Money)>, AppError> {
+        let cur = ctx.currency;
+        let current_labor = self
+            .db
+            .read(|c| kk::settings(c, scope))?
+            .map_or(0, |s| s.owner_labor_minor);
+        self.db
+            .read(|c| kk::closes(c, scope))?
+            .iter()
+            .filter(|r| r.currency == cur.code())
+            .take(n)
+            .map(|row| {
+                let r = Self::close_record(row)?;
+                Ok((
+                    r.period_start,
+                    r.period_end,
+                    Money::new(r.owner_labor.unwrap_or(current_labor), cur),
+                    Money::new(r.true_profit, cur),
+                ))
+            })
+            .collect()
+    }
+
+    fn draft_dto(&self, ctx: &Ctx, r: &CloseRecord, self_investment: Money) -> KkCloseDraftDto {
         let m = |minor: i64| self.money_dto(ctx, Money::new(minor, ctx.currency));
         let rules = kk::KkCloseRulesRow {
             tax_base: r.tax_base.clone(),
@@ -367,20 +446,29 @@ impl App {
                 sadaqa: m(a[3]),
             }),
             reserve_below_depreciation: r.reserve_below_depreciation,
+            self_investment: self.money_dto(ctx, self_investment),
         }
     }
 
-    fn close_dto(&self, ctx: &Ctx, row: &kk::KkCloseRow) -> Result<KkMonthCloseDto, AppError> {
-        let r: CloseRecord =
-            serde_json::from_str(&row.result_json).map_err(|_| AppError::new("CORRUPT_ROW"))?;
-        Ok(KkMonthCloseDto {
+    fn close_record(row: &kk::KkCloseRow) -> Result<CloseRecord, AppError> {
+        serde_json::from_str(&row.result_json).map_err(|_| AppError::new("CORRUPT_ROW"))
+    }
+
+    fn close_dto(
+        &self,
+        ctx: &Ctx,
+        row: &kk::KkCloseRow,
+        r: &CloseRecord,
+        self_investment: Money,
+    ) -> KkMonthCloseDto {
+        KkMonthCloseDto {
             id: row.id.clone(),
             closed_at: row.closed_at.clone(),
-            summary: self.draft_dto(ctx, &r),
+            summary: self.draft_dto(ctx, r, self_investment),
             carry_forward: self.money_dto(ctx, Money::new(row.carry_minor, ctx.currency)),
             explanation: row.explanation.clone(),
             short_code: short_code(&row.content_hash),
-        })
+        }
     }
 
     /// «Hisob kuni» hisobi (hech narsa saqlanmaydi). `period_start` bo'lmasa — o'tgan oy.
@@ -393,7 +481,8 @@ impl App {
         let scope = self.kk_scope(&ctx, space_id)?;
         let start = self.kk_close_period(&ctx, &scope, period_start.as_deref())?;
         let r = self.kk_close_record(&ctx, &scope, start, false, None)?;
-        Ok(self.draft_dto(&ctx, &r))
+        let invested = self.kk_self_investment(&ctx, &scope, &r)?;
+        Ok(self.draft_dto(&ctx, &r, invested))
     }
 
     /// Oyni yopish: bayonnoma yoziladi va o'zgarmaydi. Qolgan pul manfiy bo'lsa — izoh majburiy.
@@ -447,19 +536,36 @@ impl App {
         self.db
             .write(|tx| kk::insert_close(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Kasbkor]);
-        self.close_dto(&ctx, &row)
+        let invested = self.kk_self_investment(&ctx, &scope, &r)?;
+        Ok(self.close_dto(&ctx, &row, &r, invested))
     }
 
     /// Bayonnomalar (yangisi birinchi).
     pub fn kk_month_closes(&self, space_id: &str) -> Result<Vec<KkMonthCloseDto>, AppError> {
         let ctx = self.ctx()?;
         let scope = self.kk_scope(&ctx, space_id)?;
-        self.db
+        let rows: Vec<kk::KkCloseRow> = self
+            .db
             .read(|c| kk::closes(c, &scope))?
-            .iter()
+            .into_iter()
             .filter(|r| r.currency == ctx.currency.code())
-            .map(|r| self.close_dto(&ctx, r))
-            .collect()
+            .collect();
+        let records = rows
+            .iter()
+            .map(Self::close_record)
+            .collect::<Result<Vec<_>, _>>()?;
+        // «Sarmoya (o'qish)» qatori — barcha bayonnomalar uchun bitta so'rov.
+        let periods: Vec<(String, String)> = records
+            .iter()
+            .map(|r| (r.period_start.clone(), r.period_end.clone()))
+            .collect();
+        let invested = self.kk_self_investment_totals(&ctx, &scope, &periods)?;
+        Ok(rows
+            .iter()
+            .zip(&records)
+            .zip(invested)
+            .map(|((row, r), m)| self.close_dto(&ctx, row, r, m))
+            .collect())
     }
 
     /// Bayonnoma PDF'i (chop etish uchun oq fonda). Zanjir boshi QR va qisqa kod bilan.
@@ -472,9 +578,9 @@ impl App {
             .into_iter()
             .find(|r| r.id == close_id)
             .ok_or(AppError::on("NOT_FOUND", "id"))?;
-        let r: CloseRecord =
-            serde_json::from_str(&row.result_json).map_err(|_| AppError::new("CORRUPT_ROW"))?;
-        let d = self.draft_dto(&ctx, &r);
+        let r = Self::close_record(&row)?;
+        let invested = self.kk_self_investment(&ctx, &scope, &r)?;
+        let d = self.draft_dto(&ctx, &r, invested);
         let business = self
             .db
             .read(household::get_household)?
@@ -499,6 +605,12 @@ impl App {
                 d.depreciation.formatted.clone(),
             ),
         ];
+        if d.self_investment.minor != "0" {
+            totals.push((
+                "kkclose.selfInvestment".to_string(),
+                d.self_investment.formatted.clone(),
+            ));
+        }
         if let Some(o) = &d.overdrawn {
             totals.push(("kkclose.overdrawn".to_string(), o.formatted.clone()));
         }
@@ -570,6 +682,25 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// v1 bayonnoma (K9 dan oldin) o'z mehnatisiz o'qiladi va qayta yozilmaydi (xesh — saqlangan matndan).
+    #[test]
+    fn v1_record_has_no_owner_labor() {
+        let v1 = r#"{"v":1,"period_start":"2026-11-01","period_end":"2026-11-30","currency":"UZS",
+            "revenue":1,"expenses":0,"depreciation":0,"true_profit":1,"owner_salary":null,"owner_paid":0,
+            "salary_remaining":null,"tax_base":"NONE","tax_bp":0,"tax_fixed":0,"tax":0,"owner_pay":0,
+            "overdrawn":0,"carry_forward":0,"remaining":1,"rule":[10000,0,0,0],"allocation":null,
+            "reserve_below_depreciation":false,"explanation":null}"#;
+        let r: CloseRecord = serde_json::from_str(v1).unwrap();
+        assert_eq!(r.owner_labor, None);
+        let v2 = serde_json::to_string(&CloseRecord {
+            v: 2,
+            owner_labor: Some(5),
+            ..r
+        })
+        .unwrap();
+        assert!(v2.ends_with(r#""owner_labor":5}"#));
+    }
 
     #[test]
     fn hash_chains_previous() {

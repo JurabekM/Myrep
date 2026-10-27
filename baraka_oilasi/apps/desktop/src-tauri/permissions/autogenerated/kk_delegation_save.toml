@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-delegation-save"
+description = "Enables the kk_delegation_save command without any pre-configured scope."
+commands.allow = ["kk_delegation_save"]
+
+[[permission]]
+identifier = "deny-kk-delegation-save"
+description = "Denies the kk_delegation_save command without any pre-configured scope."
+commands.deny = ["kk_delegation_save"]

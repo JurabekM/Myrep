@@ -4,7 +4,7 @@ import type { RepaymentResultDto } from "../bindings";
 import type { EntryMode } from "../features/kasbkor/KkEntryDialog";
 import type { MfEntryMode } from "../features/musofir/MfEntryDialog";
 
-export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "kkCash" | "kkCredit" | "kkStock" | "kkStaff" | "kkSuppliers" | "kkGate" | "kkZakat" | "kkMeasure" | "kkSellerCredit" | "kkShift" | "twoShores" | "learning" | "sync" | "settings";
+export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "kkCash" | "kkCredit" | "kkStock" | "kkStaff" | "kkSuppliers" | "kkGate" | "kkZakat" | "kkMeasure" | "kkLearning" | "kkSellerCredit" | "kkShift" | "twoShores" | "learning" | "sync" | "settings";
 
 export type OfferMode = "OFFER" | "COURSE";
 

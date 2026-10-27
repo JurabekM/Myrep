@@ -311,5 +311,6 @@
   "kkslip.kind.WAGE": "Haq toʻlovi",
   "kkslip.noPenalty": "Avans foizsiz; kechikish uchun jarima yoʻq.",
   "kkslip.signatures": "Tanishdik",
-  "kkslip.signer.employee": "Xodim (tanishdim)"
+  "kkslip.signer.employee": "Xodim (tanishdim)",
+  "kkclose.selfInvestment": "Chiqimlar ichida «Sarmoya (oʻqish)»"
 }

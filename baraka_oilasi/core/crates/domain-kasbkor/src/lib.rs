@@ -8,6 +8,7 @@ pub mod credit;
 pub mod equipment;
 pub mod funds;
 pub mod gate;
+pub mod invest;
 pub mod owner;
 pub mod payroll;
 pub mod profit;

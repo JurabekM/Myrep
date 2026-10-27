@@ -787,3 +787,69 @@ fn shifts_and_device_roles_are_checked() {
     ));
     assert!(db.write_sync(|_| Ok(())).is_ok());
 }
+
+/// K9: egasining soat qiymati o'zgarmas; qaror va o'rgatish yozuvlari qoidalari DB darajasida.
+#[test]
+fn kk_learning_rows_are_checked() {
+    use baraka_storage::repo::kk_learning as kl;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let hour = kl::KkOwnerHourRow {
+        id: "o1".into(),
+        income_minor: 810_000_000,
+        currency: "UZS".into(),
+        income_source: "AUTO".into(),
+        months: 1,
+        minutes_per_day: 600,
+        days: 26,
+        hour_value_minor: 3_115_385,
+        computed_on: "2026-12-02".into(),
+    };
+    db.write(|tx| kl::insert_owner_hour(tx, &s, &hour, &m))
+        .unwrap();
+    // AUTO — kamida bitta yopilgan oy; MANUAL — 0.
+    let bad = kl::KkOwnerHourRow {
+        id: "o2".into(),
+        months: 0,
+        ..hour.clone()
+    };
+    assert!(db
+        .write(|tx| kl::insert_owner_hour(tx, &s, &bad, &m))
+        .is_err());
+    let d = kl::KkDelegationRow {
+        id: "d1".into(),
+        task: "Tovar qabul qilish".into(),
+        agreement_id: None,
+        currency: "UZS".into(),
+        owner_hour_value_minor: 3_115_385,
+        task_minutes: 1_200,
+        helper_hour_cost_minor: 1_500_000,
+        training_money_minor: 0,
+        training_minutes: 0,
+        decided_on: "2026-12-02".into(),
+    };
+    db.write(|tx| kl::insert_delegation(tx, &s, &d, &m))
+        .unwrap();
+    let zero = kl::KkDelegationRow {
+        id: "d2".into(),
+        task_minutes: 0,
+        ..d
+    };
+    assert!(db
+        .write(|tx| kl::insert_delegation(tx, &s, &zero, &m))
+        .is_err());
+    db.write(|tx| kl::delete_delegation(tx, &s, "d1", &m))
+        .unwrap();
+    assert!(db.read(|c| kl::delegations(c, &s)).unwrap().is_empty());
+    assert!(matches!(
+        db.write(|tx| kl::delete_delegation(tx, &s, "d1", &m)),
+        Err(StorageError::NotFound)
+    ));
+    for sql in [
+        "UPDATE kk_owner_hours SET hour_value_minor = 1",
+        "DELETE FROM kk_owner_hours",
+    ] {
+        let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
+        assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
+    }
+}

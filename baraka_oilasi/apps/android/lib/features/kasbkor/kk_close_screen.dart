@@ -249,6 +249,12 @@ class _DraftState extends ConsumerState<_Draft> with ActionState {
             children: [
               ValueRow(context.t('kk.profit.revenue'), d.revenue.formatted),
               ValueRow(context.t('kk.close.expenses'), d.expenses.formatted),
+              if (d.selfInvestment.minor != '0')
+                ValueRow(
+                  '· ${context.t('kk.close.selfInvestment')}',
+                  d.selfInvestment.formatted,
+                  key: const Key('kk-close-self-investment'),
+                ),
               ValueRow(context.t('kk.trueProfitShort'), d.trueProfit.formatted),
               ValueRow(context.t('kk.profit.depreciation'), d.depreciation.formatted),
             ],
@@ -376,6 +382,8 @@ class _HistoryState extends ConsumerState<_History> with ActionState {
                       context.t('kk.close.col.reserve'),
                       c.summary.allocation?.reserve.formatted ?? '—',
                     ),
+                    if (c.summary.selfInvestment.minor != '0')
+                      ValueRow(context.t('kk.selfInvestment'), c.summary.selfInvestment.formatted),
                     Row(
                       children: [
                         Expanded(

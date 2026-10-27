@@ -6,6 +6,7 @@ use baraka_domain_kasbkor::credit::{CreditEvent, CreditTerms};
 use baraka_domain_kasbkor::equipment::{Disposal, Equipment};
 use baraka_domain_kasbkor::funds::{funds, Fund, FundEvent};
 use baraka_domain_kasbkor::gate::{expansion_gate, GateInput as KkGateInput};
+use baraka_domain_kasbkor::invest::{delegate, owner_month_earnings, DelegateInput};
 use baraka_domain_kasbkor::owner::{month_report, Move, MoveKind, Wallet};
 use baraka_domain_kasbkor::payroll::{payroll, Advance, PayMonth};
 use baraka_domain_kasbkor::profit::{true_profit, FamilyLabor, ProfitInput};
@@ -33,7 +34,7 @@ use baraka_domain_uy::{
     gate::{evaluate_gate, GateInput, GatePolicy, InterestDebtPolicy},
     inflation::{personal_index, BasketPoint},
     learning::{
-        hour_value as learn_hour_value, hour_value_change, self_invest_share,
+        average_income, hour_value as learn_hour_value, hour_value_change, self_invest_share,
         transition as plan_transition, validate_plan, validate_skill, HourInput, PathKind,
         PlanDraft, PlanStatus,
     },
@@ -180,6 +181,8 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "hour_value_change" => hour_change(input),
         "self_invest_share" => invest_share(input),
         "learning_plan" => learning_plan(input),
+        "kk_owner_hour" => kk_owner_hour(input),
+        "kk_delegate" => kk_delegate(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1083,6 +1086,62 @@ fn hour(v: &Value) -> R {
         "hourValue": h.hour_value.to_string(),
         "doubleTarget": h.double_target.to_string(),
         "overCeiling": h.over_ceiling,
+    }))
+}
+
+/// K9: egasining soat qiymati — yopilgan oylar topgani (Kasb-kor) va umumiy `hour_value` (Uy).
+fn kk_owner_hour(v: &Value) -> R {
+    let c = Currency::Uzs;
+    let months = arr(v, "months")?
+        .iter()
+        .map(|m| Ok((money(m, "ownerLabor", c)?, money(m, "trueProfit", c)?)))
+        .collect::<Result<Vec<_>, E>>()?;
+    let earnings: Vec<i64> = owner_month_earnings(&months)?
+        .iter()
+        .map(|m| m.minor())
+        .collect();
+    let suggested = average_income(&earnings)?;
+    let income = if v["income"].is_null() {
+        None
+    } else {
+        Some(int_str(&v["income"])?)
+    };
+    let h = learn_hour_value(&HourInput {
+        income,
+        month_totals: &earnings,
+        minutes_per_day: i(v, "minutesPerDay")?,
+        days: i(v, "days")?,
+    })?;
+    Ok(json!({
+        "earnings": earnings.iter().map(i64::to_string).collect::<Vec<_>>(),
+        "suggested": suggested.map(|x| x.to_string()),
+        "income": h.income.to_string(),
+        "incomeSource": h.source.as_str(),
+        "monthlyMinutes": h.monthly_minutes,
+        "hourValue": h.hour_value.to_string(),
+        "doubleTarget": h.double_target.to_string(),
+        "overCeiling": h.over_ceiling,
+    }))
+}
+
+fn kk_delegate(v: &Value) -> R {
+    let minutes = |k: &str| -> Result<u32, E> {
+        // Manfiy daqiqa — domen chegarasidan tashqari (u32 ga sig'maydi).
+        u32::try_from(i(v, k)?).map_err(|_| E("INVALID_TIME".into()))
+    };
+    let r = delegate(&DelegateInput {
+        owner_hour_value: int_str(&v["ownerHourValue"])?,
+        task_minutes: minutes("taskMinutes")?,
+        helper_hour_cost: int_str(&v["helperHourCost"])?,
+        training_money: int_str(&v["trainingMoney"])?,
+        training_minutes: minutes("trainingMinutes")?,
+    })?;
+    Ok(json!({
+        "monthlyBenefit": r.monthly_benefit.to_string(),
+        "trainingTimeCost": r.training_time_cost.to_string(),
+        "fullCost": r.full_cost.to_string(),
+        "paybackMonths": r.payback_months,
+        "verdict": r.verdict.as_str(),
     }))
 }
 

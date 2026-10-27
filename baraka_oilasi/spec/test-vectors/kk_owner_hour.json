@@ -1,0 +1,347 @@
+{
+  "suite": "kk_owner_hour",
+  "version": 1,
+  "description": "Kasb-kor: egasining soat qiymati — har yopilgan oy uchun topgani max(0, o'z mehnati + haqiqiy foyda) (to'langan maosh qo'shilmaydi), oxirgi ≤3 oy o'rtachasi taklif (AUTO), soat qiymati — umumiy hour_value (kasbkor/SPEC 8A.1)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "koh-001-spec-example",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "310000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "earnings": [
+          "810000000"
+        ],
+        "suggested": "810000000",
+        "income": "810000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 15600,
+        "hourValue": "3115385",
+        "doubleTarget": "6230770",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-002-three-months",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "310000000"
+          },
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "150000000"
+          },
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "420000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 540,
+        "days": 26
+      },
+      "expected": {
+        "earnings": [
+          "810000000",
+          "650000000",
+          "920000000"
+        ],
+        "suggested": "793333333",
+        "income": "793333333",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 14040,
+        "hourValue": "3390313",
+        "doubleTarget": "6780626",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-003-loss-floored",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "-620000000"
+          },
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "100000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 480,
+        "days": 24
+      },
+      "expected": {
+        "earnings": [
+          "0",
+          "600000000"
+        ],
+        "suggested": "300000000",
+        "income": "300000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 11520,
+        "hourValue": "1562500",
+        "doubleTarget": "3125000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-004-owner-labor-not-set",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "0",
+            "trueProfit": "240000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 480,
+        "days": 26
+      },
+      "expected": {
+        "earnings": [
+          "240000000"
+        ],
+        "suggested": "240000000",
+        "income": "240000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 12480,
+        "hourValue": "1153846",
+        "doubleTarget": "2307692",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-005-auto-rounding",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "100000000",
+            "trueProfit": "1"
+          },
+          {
+            "ownerLabor": "100000000",
+            "trueProfit": "1"
+          },
+          {
+            "ownerLabor": "100000000",
+            "trueProfit": "0"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 480,
+        "days": 25
+      },
+      "expected": {
+        "earnings": [
+          "100000001",
+          "100000001",
+          "100000000"
+        ],
+        "suggested": "100000001",
+        "income": "100000001",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 12000,
+        "hourValue": "500000",
+        "doubleTarget": "1000000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-006-manual-override",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "310000000"
+          }
+        ],
+        "income": "700000000",
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "earnings": [
+          "810000000"
+        ],
+        "suggested": "810000000",
+        "income": "700000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 15600,
+        "hourValue": "2692308",
+        "doubleTarget": "5384616",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-007-manual-no-months",
+      "input": {
+        "months": [],
+        "income": "650000000",
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "earnings": [],
+        "suggested": null,
+        "income": "650000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 15600,
+        "hourValue": "2500000",
+        "doubleTarget": "5000000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "koh-008-over-ceiling",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "310000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 720,
+        "days": 26
+      },
+      "expected": {
+        "earnings": [
+          "810000000"
+        ],
+        "suggested": "810000000",
+        "income": "810000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 18720,
+        "hourValue": "2596154",
+        "doubleTarget": "5192308",
+        "overCeiling": true
+      }
+    },
+    {
+      "id": "koh-neg-001-no-closed-months",
+      "input": {
+        "months": [],
+        "income": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "error": "NO_INCOME"
+      }
+    },
+    {
+      "id": "koh-neg-002-all-loss",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "300000000",
+            "trueProfit": "-400000000"
+          },
+          {
+            "ownerLabor": "0",
+            "trueProfit": "-5"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "error": "NO_INCOME"
+      }
+    },
+    {
+      "id": "koh-neg-003-four-months",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "1",
+            "trueProfit": "0"
+          },
+          {
+            "ownerLabor": "1",
+            "trueProfit": "0"
+          },
+          {
+            "ownerLabor": "1",
+            "trueProfit": "0"
+          },
+          {
+            "ownerLabor": "1",
+            "trueProfit": "0"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "error": "TOO_MANY_MONTHS"
+      }
+    },
+    {
+      "id": "koh-neg-004-negative-owner-labor",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "-1",
+            "trueProfit": "500000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "koh-neg-005-time",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "310000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 0,
+        "days": 26
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "koh-neg-006-days",
+      "input": {
+        "months": [
+          {
+            "ownerLabor": "500000000",
+            "trueProfit": "310000000"
+          }
+        ],
+        "income": null,
+        "minutesPerDay": 600,
+        "days": 32
+      },
+      "expected": {
+        "error": "INVALID_DAYS"
+      }
+    }
+  ]
+}

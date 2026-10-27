@@ -630,18 +630,30 @@ fn self_investment_is_outside_havas_limit_and_has_its_own_row() {
         )),
         "PLAN_CLOSED"
     );
-    // Hozircha belgi faqat Uy makonida; Kasb-kor audit o'zgarmaydi.
+    // K9: Kasb-kor chiqimida ham «Sarmoya (o'qish)» belgisi bor, lekin bilim rejasiga bog'lanmaydi.
     assert_eq!(
-        err(expense_in(&o, &o.kk, "10 000", None, true, None, None)),
-        "NOT_UY_SPACE"
+        err(expense_in(
+            &o,
+            &o.kk,
+            "10 000",
+            None,
+            true,
+            Some(&p.id),
+            None
+        )),
+        "PLAN_LINK_UY_ONLY"
     );
-    expense_in(&o, &o.kk, "70 000", None, false, None, None).unwrap();
+    assert!(
+        expense_in(&o, &o.kk, "10 000", None, true, None, None)
+            .unwrap()
+            .self_investment
+    );
+    expense_in(&o, &o.kk, "60 000", None, false, None, None).unwrap();
     let kk = o
         .app
         .monthly_summary(&o.kk, Some("2026-11-20"), None)
         .unwrap();
-    assert_eq!(minor(&kk.self_investment.total), 0);
-    assert_eq!(kk.havas_for_limit, kk.by_necessity.havas);
+    assert_eq!(minor(&kk.self_investment.total), 1_000_000);
     assert_eq!(minor(&kk.expenses), 7_000_000);
 
     let s = o

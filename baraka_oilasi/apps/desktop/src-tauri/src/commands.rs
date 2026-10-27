@@ -2371,6 +2371,78 @@ pub async fn learning_overview(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn kk_owner_hour_suggest(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<KkOwnerHourSuggestionDto> {
+    state.session.app()?.kk_owner_hour_suggest(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_owner_hour_save(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkOwnerHourInput,
+) -> R<KkOwnerHourDto> {
+    state.session.app()?.kk_owner_hour_save(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delegate_calc(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkDelegateInput,
+) -> R<KkDelegateResultDto> {
+    state.session.app()?.kk_delegate_calc(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delegation_save(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkDelegateInput,
+) -> R<KkDelegationDto> {
+    state.session.app()?.kk_delegation_save(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_delegation_delete(
+    state: State<'_, Desktop>,
+    space_id: String,
+    id: String,
+) -> R<()> {
+    state.session.app()?.kk_delegation_delete(&space_id, &id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_teaching_add(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: KkTeachingInput,
+) -> R<KkTeachingDto> {
+    state.session.app()?.kk_teaching_add(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn kk_learning_overview(
+    state: State<'_, Desktop>,
+    space_id: String,
+    date: Option<String>,
+) -> R<KkLearningOverviewDto> {
+    state
+        .session
+        .app()?
+        .kk_learning_overview(&space_id, date.as_deref())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

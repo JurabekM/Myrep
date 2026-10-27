@@ -311,5 +311,6 @@
   "kkslip.kind.WAGE": "Ҳақ тўлови",
   "kkslip.noPenalty": "Аванс фоизсиз; кечикиш учун жарима йўқ.",
   "kkslip.signatures": "Танишдик",
-  "kkslip.signer.employee": "Ходим (танишдим)"
+  "kkslip.signer.employee": "Ходим (танишдим)",
+  "kkclose.selfInvestment": "Чиқимлар ичида «Сармоя (ўқиш)»"
 }

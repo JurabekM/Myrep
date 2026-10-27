@@ -199,6 +199,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkCustomerInput dco_decode_box_autoadd_kk_customer_input(dynamic raw);
 
   @protected
+  KkDelegateInput dco_decode_box_autoadd_kk_delegate_input(dynamic raw);
+
+  @protected
   KkDeliveryInput dco_decode_box_autoadd_kk_delivery_input(dynamic raw);
 
   @protected
@@ -234,6 +237,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkNextDueDto dco_decode_box_autoadd_kk_next_due_dto(dynamic raw);
 
   @protected
+  KkOwnerHourDto dco_decode_box_autoadd_kk_owner_hour_dto(dynamic raw);
+
+  @protected
+  KkOwnerHourInput dco_decode_box_autoadd_kk_owner_hour_input(dynamic raw);
+
+  @protected
   KkQuoteInput dco_decode_box_autoadd_kk_quote_input(dynamic raw);
 
   @protected
@@ -264,6 +273,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkSupplyPaymentInput dco_decode_box_autoadd_kk_supply_payment_input(
     dynamic raw,
   );
+
+  @protected
+  KkTeachingInput dco_decode_box_autoadd_kk_teaching_input(dynamic raw);
 
   @protected
   KkWageInput dco_decode_box_autoadd_kk_wage_input(dynamic raw);
@@ -698,6 +710,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkCustomerInput dco_decode_kk_customer_input(dynamic raw);
 
   @protected
+  KkDelegateInput dco_decode_kk_delegate_input(dynamic raw);
+
+  @protected
+  KkDelegateResultDto dco_decode_kk_delegate_result_dto(dynamic raw);
+
+  @protected
+  KkDelegationDto dco_decode_kk_delegation_dto(dynamic raw);
+
+  @protected
   KkDeliveryDto dco_decode_kk_delivery_dto(dynamic raw);
 
   @protected
@@ -764,6 +785,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkItemInput dco_decode_kk_item_input(dynamic raw);
 
   @protected
+  KkLearningOverviewDto dco_decode_kk_learning_overview_dto(dynamic raw);
+
+  @protected
   KkMonthCloseDto dco_decode_kk_month_close_dto(dynamic raw);
 
   @protected
@@ -774,6 +798,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkOverviewDto dco_decode_kk_overview_dto(dynamic raw);
+
+  @protected
+  KkOwnerHourDto dco_decode_kk_owner_hour_dto(dynamic raw);
+
+  @protected
+  KkOwnerHourInput dco_decode_kk_owner_hour_input(dynamic raw);
+
+  @protected
+  KkOwnerHourSuggestionDto dco_decode_kk_owner_hour_suggestion_dto(dynamic raw);
+
+  @protected
+  KkOwnerMonthDto dco_decode_kk_owner_month_dto(dynamic raw);
 
   @protected
   KkPayMonthDto dco_decode_kk_pay_month_dto(dynamic raw);
@@ -833,6 +869,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkStaffEventDto dco_decode_kk_staff_event_dto(dynamic raw);
 
   @protected
+  KkStaffOptionDto dco_decode_kk_staff_option_dto(dynamic raw);
+
+  @protected
   KkStockCountDto dco_decode_kk_stock_count_dto(dynamic raw);
 
   @protected
@@ -861,6 +900,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkSupplyTermsDto dco_decode_kk_supply_terms_dto(dynamic raw);
+
+  @protected
+  KkTeachingDto dco_decode_kk_teaching_dto(dynamic raw);
+
+  @protected
+  KkTeachingInput dco_decode_kk_teaching_input(dynamic raw);
 
   @protected
   KkWageInput dco_decode_kk_wage_input(dynamic raw);
@@ -1003,6 +1048,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<KkCustomerDto> dco_decode_list_kk_customer_dto(dynamic raw);
 
   @protected
+  List<KkDelegationDto> dco_decode_list_kk_delegation_dto(dynamic raw);
+
+  @protected
   List<KkDeliveryDto> dco_decode_list_kk_delivery_dto(dynamic raw);
 
   @protected
@@ -1041,6 +1089,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<KkNextDueDto> dco_decode_list_kk_next_due_dto(dynamic raw);
 
   @protected
+  List<KkOwnerMonthDto> dco_decode_list_kk_owner_month_dto(dynamic raw);
+
+  @protected
   List<KkPayMonthDto> dco_decode_list_kk_pay_month_dto(dynamic raw);
 
   @protected
@@ -1056,6 +1107,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<KkStaffEventDto> dco_decode_list_kk_staff_event_dto(dynamic raw);
 
   @protected
+  List<KkStaffOptionDto> dco_decode_list_kk_staff_option_dto(dynamic raw);
+
+  @protected
   List<KkStockCountDto> dco_decode_list_kk_stock_count_dto(dynamic raw);
 
   @protected
@@ -1066,6 +1120,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<KkSupplyPaymentDto> dco_decode_list_kk_supply_payment_dto(dynamic raw);
+
+  @protected
+  List<KkTeachingDto> dco_decode_list_kk_teaching_dto(dynamic raw);
 
   @protected
   List<KkZakatCalcDto> dco_decode_list_kk_zakat_calc_dto(dynamic raw);
@@ -1472,6 +1529,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkNextDueDto? dco_decode_opt_box_autoadd_kk_next_due_dto(dynamic raw);
+
+  @protected
+  KkOwnerHourDto? dco_decode_opt_box_autoadd_kk_owner_hour_dto(dynamic raw);
 
   @protected
   MfCoolingDto? dco_decode_opt_box_autoadd_mf_cooling_dto(dynamic raw);
@@ -1943,6 +2003,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  KkDelegateInput sse_decode_box_autoadd_kk_delegate_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   KkDeliveryInput sse_decode_box_autoadd_kk_delivery_input(
     SseDeserializer deserializer,
   );
@@ -1998,6 +2063,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  KkOwnerHourDto sse_decode_box_autoadd_kk_owner_hour_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  KkOwnerHourInput sse_decode_box_autoadd_kk_owner_hour_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   KkQuoteInput sse_decode_box_autoadd_kk_quote_input(
     SseDeserializer deserializer,
   );
@@ -2044,6 +2119,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkSupplyPaymentInput sse_decode_box_autoadd_kk_supply_payment_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  KkTeachingInput sse_decode_box_autoadd_kk_teaching_input(
     SseDeserializer deserializer,
   );
 
@@ -2624,6 +2704,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkCustomerInput sse_decode_kk_customer_input(SseDeserializer deserializer);
 
   @protected
+  KkDelegateInput sse_decode_kk_delegate_input(SseDeserializer deserializer);
+
+  @protected
+  KkDelegateResultDto sse_decode_kk_delegate_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  KkDelegationDto sse_decode_kk_delegation_dto(SseDeserializer deserializer);
+
+  @protected
   KkDeliveryDto sse_decode_kk_delivery_dto(SseDeserializer deserializer);
 
   @protected
@@ -2702,6 +2793,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkItemInput sse_decode_kk_item_input(SseDeserializer deserializer);
 
   @protected
+  KkLearningOverviewDto sse_decode_kk_learning_overview_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   KkMonthCloseDto sse_decode_kk_month_close_dto(SseDeserializer deserializer);
 
   @protected
@@ -2712,6 +2808,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkOverviewDto sse_decode_kk_overview_dto(SseDeserializer deserializer);
+
+  @protected
+  KkOwnerHourDto sse_decode_kk_owner_hour_dto(SseDeserializer deserializer);
+
+  @protected
+  KkOwnerHourInput sse_decode_kk_owner_hour_input(SseDeserializer deserializer);
+
+  @protected
+  KkOwnerHourSuggestionDto sse_decode_kk_owner_hour_suggestion_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  KkOwnerMonthDto sse_decode_kk_owner_month_dto(SseDeserializer deserializer);
 
   @protected
   KkPayMonthDto sse_decode_kk_pay_month_dto(SseDeserializer deserializer);
@@ -2775,6 +2885,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KkStaffEventDto sse_decode_kk_staff_event_dto(SseDeserializer deserializer);
 
   @protected
+  KkStaffOptionDto sse_decode_kk_staff_option_dto(SseDeserializer deserializer);
+
+  @protected
   KkStockCountDto sse_decode_kk_stock_count_dto(SseDeserializer deserializer);
 
   @protected
@@ -2807,6 +2920,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkSupplyTermsDto sse_decode_kk_supply_terms_dto(SseDeserializer deserializer);
+
+  @protected
+  KkTeachingDto sse_decode_kk_teaching_dto(SseDeserializer deserializer);
+
+  @protected
+  KkTeachingInput sse_decode_kk_teaching_input(SseDeserializer deserializer);
 
   @protected
   KkWageInput sse_decode_kk_wage_input(SseDeserializer deserializer);
@@ -3007,6 +3126,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<KkDelegationDto> sse_decode_list_kk_delegation_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KkDeliveryDto> sse_decode_list_kk_delivery_dto(
     SseDeserializer deserializer,
   );
@@ -3061,6 +3185,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<KkOwnerMonthDto> sse_decode_list_kk_owner_month_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KkPayMonthDto> sse_decode_list_kk_pay_month_dto(
     SseDeserializer deserializer,
   );
@@ -3086,6 +3215,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<KkStaffOptionDto> sse_decode_list_kk_staff_option_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KkStockCountDto> sse_decode_list_kk_stock_count_dto(
     SseDeserializer deserializer,
   );
@@ -3102,6 +3236,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<KkSupplyPaymentDto> sse_decode_list_kk_supply_payment_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<KkTeachingDto> sse_decode_list_kk_teaching_dto(
     SseDeserializer deserializer,
   );
 
@@ -3608,6 +3747,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KkNextDueDto? sse_decode_opt_box_autoadd_kk_next_due_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  KkOwnerHourDto? sse_decode_opt_box_autoadd_kk_owner_hour_dto(
     SseDeserializer deserializer,
   );
 
@@ -4184,6 +4328,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_kk_delegate_input(
+    KkDelegateInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_kk_delivery_input(
     KkDeliveryInput self,
     SseSerializer serializer,
@@ -4250,6 +4400,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_kk_owner_hour_dto(
+    KkOwnerHourDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_kk_owner_hour_input(
+    KkOwnerHourInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_kk_quote_input(
     KkQuoteInput self,
     SseSerializer serializer,
@@ -4306,6 +4468,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_kk_supply_payment_input(
     KkSupplyPaymentInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_kk_teaching_input(
+    KkTeachingInput self,
     SseSerializer serializer,
   );
 
@@ -5051,6 +5219,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_kk_delegate_input(
+    KkDelegateInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_kk_delegate_result_dto(
+    KkDelegateResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_kk_delegation_dto(
+    KkDelegationDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_kk_delivery_dto(KkDeliveryDto self, SseSerializer serializer);
 
   @protected
@@ -5162,6 +5348,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_kk_item_input(KkItemInput self, SseSerializer serializer);
 
   @protected
+  void sse_encode_kk_learning_overview_dto(
+    KkLearningOverviewDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_kk_month_close_dto(
     KkMonthCloseDto self,
     SseSerializer serializer,
@@ -5175,6 +5367,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_kk_overview_dto(KkOverviewDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_kk_owner_hour_dto(
+    KkOwnerHourDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_kk_owner_hour_input(
+    KkOwnerHourInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_kk_owner_hour_suggestion_dto(
+    KkOwnerHourSuggestionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_kk_owner_month_dto(
+    KkOwnerMonthDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_kk_pay_month_dto(
@@ -5261,6 +5477,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_kk_staff_option_dto(
+    KkStaffOptionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_kk_stock_count_dto(
     KkStockCountDto self,
     SseSerializer serializer,
@@ -5311,6 +5533,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_kk_supply_terms_dto(
     KkSupplyTermsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_kk_teaching_dto(KkTeachingDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_kk_teaching_input(
+    KkTeachingInput self,
     SseSerializer serializer,
   );
 
@@ -5564,6 +5795,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_kk_delegation_dto(
+    List<KkDelegationDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_kk_delivery_dto(
     List<KkDeliveryDto> self,
     SseSerializer serializer,
@@ -5636,6 +5873,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_kk_owner_month_dto(
+    List<KkOwnerMonthDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_kk_pay_month_dto(
     List<KkPayMonthDto> self,
     SseSerializer serializer,
@@ -5666,6 +5909,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_kk_staff_option_dto(
+    List<KkStaffOptionDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_kk_stock_count_dto(
     List<KkStockCountDto> self,
     SseSerializer serializer,
@@ -5686,6 +5935,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_kk_supply_payment_dto(
     List<KkSupplyPaymentDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_kk_teaching_dto(
+    List<KkTeachingDto> self,
     SseSerializer serializer,
   );
 
@@ -6343,6 +6598,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_kk_next_due_dto(
     KkNextDueDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_kk_owner_hour_dto(
+    KkOwnerHourDto? self,
     SseSerializer serializer,
   );
 

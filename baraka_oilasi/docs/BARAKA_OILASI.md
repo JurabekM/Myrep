@@ -668,7 +668,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | K6 | Xodimlar va avans; `EMPLOYMENT`, `SUPPLY` kelishuvlari |
 | K7 | Kengayish darvozasi va savdo mollari zakoti |
 | K8 | Ko'p qurilma va rollar (sotuvchi foydani ko'rmaydi) — avval ADR (LAN/fayl yoki relay) |
-| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?» (`kasbkor/SPEC.md` 8A) |
+| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?» (`kasbkor/SPEC.md` 8A; ✅ — vektorlar `kk_owner_hour`, `kk_delegate`, farqlar 8A.4) |
 
 ### M. MUSOFIR MAKONI
 **M0 — `docs/musofir/SPEC.md` + relay ADR loyihasi (kod yo'q).** **Qabul:** mahsulot egasi tasdiqlagan.

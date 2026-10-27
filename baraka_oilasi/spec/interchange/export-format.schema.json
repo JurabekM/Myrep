@@ -277,7 +277,10 @@
             "learning_hour_values",
             "learning_plans",
             "learning_study_logs",
-            "teaching_logs"
+            "teaching_logs",
+            "kk_owner_hours",
+            "kk_delegations",
+            "kk_teaching_logs"
           ]
         },
         "data": {
@@ -811,6 +814,24 @@
       },
       {
         "name": "teaching_logs",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_owner_hours",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_delegations",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "kk_teaching_logs",
         "mode": "MUTABLE",
         "primaryKey": "id",
         "blobColumns": []

@@ -286,6 +286,29 @@ fn seller_device_holds_no_profit_data_and_owner_accepts_only_its_records() {
     let seller_dev = Device::new(dir.path(), "seller", 2);
     let owner = owner_dev.app();
     let (kk, uy, item, sale) = owner_setup(&owner);
+    // K9: egasining soat qiymati foydadan hisoblanadi — sotuvchiga yuborilmaydi.
+    owner
+        .kk_owner_hour_save(
+            &kk,
+            KkOwnerHourInput {
+                income: Some("8 100 000".into()),
+                minutes_per_day: 600,
+                days: 26,
+            },
+        )
+        .unwrap();
+    owner
+        .kk_teaching_add(
+            &kk,
+            KkTeachingInput {
+                occurred_on: None,
+                agreement_id: None,
+                learner: Some("Sotuvchi".into()),
+                topic: "Narx yorligʻi yozish".into(),
+                minutes: Some(30),
+            },
+        )
+        .unwrap();
     let seller = pair(&owner, &seller_dev, "SELLER", &kk);
 
     // Rol: ulash faylidan.
@@ -304,6 +327,9 @@ fn seller_device_holds_no_profit_data_and_owner_accepts_only_its_records() {
         "kk_family_labor",
         "kk_agreements",
         "kk_growth_settings",
+        "kk_owner_hours",
+        "kk_delegations",
+        "kk_teaching_logs",
         "journal_entries",
         "members",
         "categories",
@@ -333,6 +359,11 @@ fn seller_device_holds_no_profit_data_and_owner_accepts_only_its_records() {
     assert_eq!(err(seller.kk_cash_draft(&kk, None, None)), "ROLE_FORBIDDEN");
     assert_eq!(err(seller.categories(&kk)), "ROLE_FORBIDDEN");
     assert_eq!(err(seller.kk_gate(&kk)), "ROLE_FORBIDDEN");
+    assert_eq!(
+        err(seller.kk_learning_overview(&kk, None)),
+        "ROLE_FORBIDDEN"
+    );
+    assert_eq!(err(seller.kk_owner_hour_suggest(&kk)), "ROLE_FORBIDDEN");
     assert_eq!(err(seller.vault(&uy)), "ROLE_FORBIDDEN");
     assert_eq!(
         err(seller.pairing_offer(PairingInput {

@@ -1771,6 +1771,61 @@ impl BarakaCore {
             .learning_overview(&space_id, date.as_deref())
     }
 
+    // ---- K9: Kasb-kor «O'zingizga sarmoya qiling» — egasining soat qiymati, qarorlar, «Ilm zakoti» ----
+
+    pub fn kk_owner_hour_suggest(
+        &self,
+        space_id: String,
+    ) -> Result<KkOwnerHourSuggestionDto, AppError> {
+        self.session.app()?.kk_owner_hour_suggest(&space_id)
+    }
+
+    pub fn kk_owner_hour_save(
+        &self,
+        space_id: String,
+        input: KkOwnerHourInput,
+    ) -> Result<KkOwnerHourDto, AppError> {
+        self.session.app()?.kk_owner_hour_save(&space_id, input)
+    }
+
+    pub fn kk_delegate_calc(
+        &self,
+        space_id: String,
+        input: KkDelegateInput,
+    ) -> Result<KkDelegateResultDto, AppError> {
+        self.session.app()?.kk_delegate_calc(&space_id, input)
+    }
+
+    pub fn kk_delegation_save(
+        &self,
+        space_id: String,
+        input: KkDelegateInput,
+    ) -> Result<KkDelegationDto, AppError> {
+        self.session.app()?.kk_delegation_save(&space_id, input)
+    }
+
+    pub fn kk_delegation_delete(&self, space_id: String, id: String) -> Result<(), AppError> {
+        self.session.app()?.kk_delegation_delete(&space_id, &id)
+    }
+
+    pub fn kk_teaching_add(
+        &self,
+        space_id: String,
+        input: KkTeachingInput,
+    ) -> Result<KkTeachingDto, AppError> {
+        self.session.app()?.kk_teaching_add(&space_id, input)
+    }
+
+    pub fn kk_learning_overview(
+        &self,
+        space_id: String,
+        date: Option<String>,
+    ) -> Result<KkLearningOverviewDto, AppError> {
+        self.session
+            .app()?
+            .kk_learning_overview(&space_id, date.as_deref())
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

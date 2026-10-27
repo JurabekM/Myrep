@@ -34,6 +34,9 @@ class _KkEntrySheetState extends ConsumerState<KkEntrySheet> with ActionState {
   String? _categoryId;
   String? _date;
 
+  /// «Sarmoya (o'qish)» (K9, kasbkor/SPEC 8A.3): chiqim haqiqiy foydaga kiradi, «Hisob kuni»da alohida qator.
+  bool _selfInvestment = false;
+
   @override
   void dispose() {
     _amount.dispose();
@@ -63,7 +66,7 @@ class _KkEntrySheetState extends ConsumerState<KkEntrySheet> with ActionState {
               isGift: false,
               isOstentation: false,
               fundedByDebt: false,
-              selfInvestment: false,
+              selfInvestment: _selfInvestment,
               note: note,
             ),
           );
@@ -106,6 +109,14 @@ class _KkEntrySheetState extends ConsumerState<KkEntrySheet> with ActionState {
               items: [for (final c in categories) (c.id, c.customName ?? context.t(c.nameKey))],
               value: _categoryId ?? categories.firstOrNull?.id,
               onChanged: (v) => setState(() => _categoryId = v),
+            ),
+            CheckboxListTile(
+              key: const Key('kk-self-investment'),
+              contentPadding: EdgeInsets.zero,
+              value: _selfInvestment,
+              title: Text(context.t('kk.selfInvestment')),
+              subtitle: Text(context.t('kk.selfInvestmentHint')),
+              onChanged: (v) => setState(() => _selfInvestment = v ?? false),
             ),
           ],
           const SizedBox(height: 12),
