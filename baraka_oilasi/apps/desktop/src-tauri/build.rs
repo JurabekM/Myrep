@@ -213,6 +213,13 @@ const COMMANDS: &[&str] = &[
     "study_log_add",
     "teaching_log_add",
     "learning_overview",
+    "kk_owner_hour_suggest",
+    "kk_owner_hour_save",
+    "kk_delegate_calc",
+    "kk_delegation_save",
+    "kk_delegation_delete",
+    "kk_teaching_add",
+    "kk_learning_overview",
 ];
 
 fn main() {

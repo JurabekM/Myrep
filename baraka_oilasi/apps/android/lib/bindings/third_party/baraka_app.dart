@@ -3088,6 +3088,9 @@ class KkCloseDraftDto {
   /// Zaxira ulushi shu oy eskirishidan kam («uskunani almashtirish puli» yetmaydi).
   final bool reserveBelowDepreciation;
 
+  /// Chiqimlar ichidagi «Sarmoya (o'qish)» belgili qismi (K9, alohida qator; chiqimga kiradi).
+  final MoneyDto selfInvestment;
+
   const KkCloseDraftDto({
     required this.periodStart,
     required this.periodEnd,
@@ -3106,6 +3109,7 @@ class KkCloseDraftDto {
     required this.needsExplanation,
     this.allocation,
     required this.reserveBelowDepreciation,
+    required this.selfInvestment,
   });
 
   @override
@@ -3126,7 +3130,8 @@ class KkCloseDraftDto {
       remaining.hashCode ^
       needsExplanation.hashCode ^
       allocation.hashCode ^
-      reserveBelowDepreciation.hashCode;
+      reserveBelowDepreciation.hashCode ^
+      selfInvestment.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -3149,7 +3154,8 @@ class KkCloseDraftDto {
           remaining == other.remaining &&
           needsExplanation == other.needsExplanation &&
           allocation == other.allocation &&
-          reserveBelowDepreciation == other.reserveBelowDepreciation;
+          reserveBelowDepreciation == other.reserveBelowDepreciation &&
+          selfInvestment == other.selfInvestment;
 }
 
 class KkCloseInput {
@@ -3641,6 +3647,166 @@ class KkCustomerInput {
           phone == other.phone &&
           phoneConsent == other.phoneConsent &&
           note == other.note;
+}
+
+/// «O'zim qilaymi yoki o'rgatib topshiraymi?» kiritmalari (8A.2).
+class KkDelegateInput {
+  /// Ish turi (saqlashda majburiy).
+  final String task;
+
+  /// Xodim kartochkasi (ixtiyoriy, faqat saqlashda).
+  final String? agreementId;
+
+  /// Egasining 1 soati; bo'sh — oxirgi saqlangan soat qiymati.
+  final String? ownerHourValue;
+
+  /// Ishga oyiga ketadigan egasining daqiqalari (1–44 640).
+  final int taskMinutes;
+
+  /// Yordamchi yoki xodimning 1 soati narxi.
+  final String helperHourCost;
+
+  /// Bir martalik o'rgatish xarajati; bo'sh — 0.
+  final String? trainingMoney;
+
+  /// O'rgatishga ketadigan egasining daqiqalari (0–44 640).
+  final int trainingMinutes;
+
+  const KkDelegateInput({
+    required this.task,
+    this.agreementId,
+    this.ownerHourValue,
+    required this.taskMinutes,
+    required this.helperHourCost,
+    this.trainingMoney,
+    required this.trainingMinutes,
+  });
+
+  @override
+  int get hashCode =>
+      task.hashCode ^
+      agreementId.hashCode ^
+      ownerHourValue.hashCode ^
+      taskMinutes.hashCode ^
+      helperHourCost.hashCode ^
+      trainingMoney.hashCode ^
+      trainingMinutes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkDelegateInput &&
+          runtimeType == other.runtimeType &&
+          task == other.task &&
+          agreementId == other.agreementId &&
+          ownerHourValue == other.ownerHourValue &&
+          taskMinutes == other.taskMinutes &&
+          helperHourCost == other.helperHourCost &&
+          trainingMoney == other.trainingMoney &&
+          trainingMinutes == other.trainingMinutes;
+}
+
+class KkDelegateResultDto {
+  final MoneyDto ownerHourValue;
+
+  /// Manfiy bo'lishi mumkin (yordamchi qimmatroq).
+  final MoneyDto monthlyBenefit;
+  final MoneyDto trainingTimeCost;
+  final MoneyDto fullCost;
+
+  /// `SELF_CHEAPER` da `null`; 0 — darhol.
+  final int? paybackMonths;
+
+  /// `DELEGATE` yoki `SELF_CHEAPER` («hozircha o'zingiz qilganingiz arzon»).
+  final String verdict;
+
+  const KkDelegateResultDto({
+    required this.ownerHourValue,
+    required this.monthlyBenefit,
+    required this.trainingTimeCost,
+    required this.fullCost,
+    this.paybackMonths,
+    required this.verdict,
+  });
+
+  @override
+  int get hashCode =>
+      ownerHourValue.hashCode ^
+      monthlyBenefit.hashCode ^
+      trainingTimeCost.hashCode ^
+      fullCost.hashCode ^
+      paybackMonths.hashCode ^
+      verdict.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkDelegateResultDto &&
+          runtimeType == other.runtimeType &&
+          ownerHourValue == other.ownerHourValue &&
+          monthlyBenefit == other.monthlyBenefit &&
+          trainingTimeCost == other.trainingTimeCost &&
+          fullCost == other.fullCost &&
+          paybackMonths == other.paybackMonths &&
+          verdict == other.verdict;
+}
+
+/// Saqlangan qaror (xodim kartochkasiga bog'lanishi mumkin).
+class KkDelegationDto {
+  final String id;
+  final String task;
+  final String? agreementId;
+
+  /// Xodim ismi (kartochka o'chirilgan bo'lsa — `null`).
+  final String? staffName;
+  final int taskMinutes;
+  final MoneyDto helperHourCost;
+  final MoneyDto trainingMoney;
+  final int trainingMinutes;
+  final String decidedOn;
+  final KkDelegateResultDto result;
+
+  const KkDelegationDto({
+    required this.id,
+    required this.task,
+    this.agreementId,
+    this.staffName,
+    required this.taskMinutes,
+    required this.helperHourCost,
+    required this.trainingMoney,
+    required this.trainingMinutes,
+    required this.decidedOn,
+    required this.result,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      task.hashCode ^
+      agreementId.hashCode ^
+      staffName.hashCode ^
+      taskMinutes.hashCode ^
+      helperHourCost.hashCode ^
+      trainingMoney.hashCode ^
+      trainingMinutes.hashCode ^
+      decidedOn.hashCode ^
+      result.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkDelegationDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          task == other.task &&
+          agreementId == other.agreementId &&
+          staffName == other.staffName &&
+          taskMinutes == other.taskMinutes &&
+          helperHourCost == other.helperHourCost &&
+          trainingMoney == other.trainingMoney &&
+          trainingMinutes == other.trainingMinutes &&
+          decidedOn == other.decidedOn &&
+          result == other.result;
 }
 
 /// `state`: `PAID`, `DUE`, `OVERDUE`.
@@ -4752,6 +4918,58 @@ class KkItemInput {
           note == other.note;
 }
 
+/// Kasb-kor «O'zimga sarmoya» ekrani: soat qiymati, qarorlar, shu oy «Ilm zakoti» va sarmoya qatori.
+class KkLearningOverviewDto {
+  final String periodStart;
+  final String periodEnd;
+
+  /// Oxirgi saqlangan hisob.
+  final KkOwnerHourDto? hourValue;
+  final List<KkDelegationDto> delegations;
+  final List<KkStaffOptionDto> staff;
+  final int teachingCount;
+  final List<KkTeachingDto> teaching;
+
+  /// Shu oy «Sarmoya (o'qish)» belgili chiqimlar jami (haqiqiy foydaga kiradi).
+  final MoneyDto selfInvestment;
+
+  const KkLearningOverviewDto({
+    required this.periodStart,
+    required this.periodEnd,
+    this.hourValue,
+    required this.delegations,
+    required this.staff,
+    required this.teachingCount,
+    required this.teaching,
+    required this.selfInvestment,
+  });
+
+  @override
+  int get hashCode =>
+      periodStart.hashCode ^
+      periodEnd.hashCode ^
+      hourValue.hashCode ^
+      delegations.hashCode ^
+      staff.hashCode ^
+      teachingCount.hashCode ^
+      teaching.hashCode ^
+      selfInvestment.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkLearningOverviewDto &&
+          runtimeType == other.runtimeType &&
+          periodStart == other.periodStart &&
+          periodEnd == other.periodEnd &&
+          hourValue == other.hourValue &&
+          delegations == other.delegations &&
+          staff == other.staff &&
+          teachingCount == other.teachingCount &&
+          teaching == other.teaching &&
+          selfInvestment == other.selfInvestment;
+}
+
 /// Yopilgan oy bayonnomasi (o'zgarmas).
 class KkMonthCloseDto {
   final String id;
@@ -5035,6 +5253,155 @@ class KkOverviewDto {
           cashClosedUntil == other.cashClosedUntil &&
           receivables == other.receivables &&
           receivablesOverdue == other.receivablesOverdue;
+}
+
+/// Saqlangan egasining soat qiymati.
+class KkOwnerHourDto {
+  final String id;
+  final MoneyDto income;
+
+  /// `AUTO` yoki `MANUAL`.
+  final String incomeSource;
+
+  /// `AUTO` da — nechta yopilgan oy o'rtachasi; `MANUAL` da 0.
+  final int months;
+  final int minutesPerDay;
+  final int days;
+  final int monthlyMinutes;
+  final MoneyDto hourValue;
+  final MoneyDto doubleTarget;
+  final bool overCeiling;
+  final String computedOn;
+
+  const KkOwnerHourDto({
+    required this.id,
+    required this.income,
+    required this.incomeSource,
+    required this.months,
+    required this.minutesPerDay,
+    required this.days,
+    required this.monthlyMinutes,
+    required this.hourValue,
+    required this.doubleTarget,
+    required this.overCeiling,
+    required this.computedOn,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      income.hashCode ^
+      incomeSource.hashCode ^
+      months.hashCode ^
+      minutesPerDay.hashCode ^
+      days.hashCode ^
+      monthlyMinutes.hashCode ^
+      hourValue.hashCode ^
+      doubleTarget.hashCode ^
+      overCeiling.hashCode ^
+      computedOn.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkOwnerHourDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          income == other.income &&
+          incomeSource == other.incomeSource &&
+          months == other.months &&
+          minutesPerDay == other.minutesPerDay &&
+          days == other.days &&
+          monthlyMinutes == other.monthlyMinutes &&
+          hourValue == other.hourValue &&
+          doubleTarget == other.doubleTarget &&
+          overCeiling == other.overCeiling &&
+          computedOn == other.computedOn;
+}
+
+class KkOwnerHourInput {
+  /// Qo'lda kiritilgan oylik topgani; bo'sh — yopilgan oylar o'rtachasi (`AUTO`).
+  final String? income;
+
+  /// Kuniga ish vaqti, daqiqada (1–1440).
+  final int minutesPerDay;
+
+  /// Oyda ish kunlari (1–31).
+  final int days;
+
+  const KkOwnerHourInput({
+    this.income,
+    required this.minutesPerDay,
+    required this.days,
+  });
+
+  @override
+  int get hashCode => income.hashCode ^ minutesPerDay.hashCode ^ days.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkOwnerHourInput &&
+          runtimeType == other.runtimeType &&
+          income == other.income &&
+          minutesPerDay == other.minutesPerDay &&
+          days == other.days;
+}
+
+/// Egasining oylik topgani taklifi (8A.1): oxirgi 3 yopilgan oy (yangisidan eskisiga) va o'rtachasi.
+class KkOwnerHourSuggestionDto {
+  final List<KkOwnerMonthDto> months;
+
+  /// Yopilgan oy yo'q yoki hammasida topgani 0 — `null` (qo'lda kiritiladi).
+  final MoneyDto? average;
+
+  const KkOwnerHourSuggestionDto({
+    required this.months,
+    this.average,
+  });
+
+  @override
+  int get hashCode => months.hashCode ^ average.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkOwnerHourSuggestionDto &&
+          runtimeType == other.runtimeType &&
+          months == other.months &&
+          average == other.average;
+}
+
+/// Bitta yopilgan oy («Hisob kuni»): egasi topgani = max(0, o'z mehnati + haqiqiy foyda).
+class KkOwnerMonthDto {
+  final String periodStart;
+  final String periodEnd;
+  final MoneyDto ownerLabor;
+  final MoneyDto trueProfit;
+  final MoneyDto earnings;
+
+  const KkOwnerMonthDto({
+    required this.periodStart,
+    required this.periodEnd,
+    required this.ownerLabor,
+    required this.trueProfit,
+    required this.earnings,
+  });
+
+  @override
+  int get hashCode =>
+      periodStart.hashCode ^ periodEnd.hashCode ^ ownerLabor.hashCode ^ trueProfit.hashCode ^ earnings.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkOwnerMonthDto &&
+          runtimeType == other.runtimeType &&
+          periodStart == other.periodStart &&
+          periodEnd == other.periodEnd &&
+          ownerLabor == other.ownerLabor &&
+          trueProfit == other.trueProfit &&
+          earnings == other.earnings;
 }
 
 /// Oylik hisob: `balance` — oy oxirida xodimga qarzimiz (manfiy — ortiq to'langan).
@@ -5794,6 +6161,25 @@ class KkStaffEventDto {
           note == other.note;
 }
 
+/// Xodim tanlovi uchun (faqat `EMPLOYMENT`, tugamaganlari).
+class KkStaffOptionDto {
+  final String id;
+  final String name;
+
+  const KkStaffOptionDto({
+    required this.id,
+    required this.name,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkStaffOptionDto && runtimeType == other.runtimeType && id == other.id && name == other.name;
+}
+
 class KkStockCountDto {
   final String id;
   final String countedOn;
@@ -6252,6 +6638,77 @@ class KkSupplyTermsDto {
           returns == other.returns &&
           arbiter == other.arbiter &&
           note == other.note;
+}
+
+class KkTeachingDto {
+  final String id;
+  final String occurredOn;
+  final String? agreementId;
+
+  /// Xodim ismi yoki kiritilgan ism.
+  final String? learner;
+  final String topic;
+  final int? minutes;
+
+  const KkTeachingDto({
+    required this.id,
+    required this.occurredOn,
+    this.agreementId,
+    this.learner,
+    required this.topic,
+    this.minutes,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ occurredOn.hashCode ^ agreementId.hashCode ^ learner.hashCode ^ topic.hashCode ^ minutes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkTeachingDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          occurredOn == other.occurredOn &&
+          agreementId == other.agreementId &&
+          learner == other.learner &&
+          topic == other.topic &&
+          minutes == other.minutes;
+}
+
+class KkTeachingInput {
+  /// Bo'sh — bugun.
+  final String? occurredOn;
+
+  /// Kimga: xodim kartochkasi (`learner` bilan birga emas).
+  final String? agreementId;
+
+  /// Kimga: boshqa kishi (ixtiyoriy).
+  final String? learner;
+  final String topic;
+  final int? minutes;
+
+  const KkTeachingInput({
+    this.occurredOn,
+    this.agreementId,
+    this.learner,
+    required this.topic,
+    this.minutes,
+  });
+
+  @override
+  int get hashCode => occurredOn.hashCode ^ agreementId.hashCode ^ learner.hashCode ^ topic.hashCode ^ minutes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KkTeachingInput &&
+          runtimeType == other.runtimeType &&
+          occurredOn == other.occurredOn &&
+          agreementId == other.agreementId &&
+          learner == other.learner &&
+          topic == other.topic &&
+          minutes == other.minutes;
 }
 
 class KkWageInput {

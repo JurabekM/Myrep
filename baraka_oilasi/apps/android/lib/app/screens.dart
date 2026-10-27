@@ -17,6 +17,7 @@ import '../features/kasbkor/kk_equipment_screen.dart';
 import '../features/kasbkor/kk_gate_screen.dart';
 import '../features/kasbkor/kk_home_screen.dart';
 import '../features/kasbkor/kk_labor_screen.dart';
+import '../features/kasbkor/kk_learning_screen.dart';
 import '../features/kasbkor/kk_measure_screen.dart';
 import '../features/kasbkor/kk_quote_screen.dart';
 import '../features/kasbkor/kk_seller_screen.dart';
@@ -136,6 +137,7 @@ const _kkNav = [
   'kkGate',
   'kkZakat',
   'kkMeasure',
+  'kkLearning',
   'sync',
   'settings',
 ];
@@ -170,6 +172,7 @@ final Map<String, ScreenDef> screenDefs = {
   'kkGate': ScreenDef('kkGate', 'nav.kkGate', (c) => KkGateScreen(spaceId: c.spaceId)),
   'kkZakat': ScreenDef('kkZakat', 'nav.kkZakat', (c) => KkZakatScreen(spaceId: c.spaceId)),
   'kkMeasure': ScreenDef('kkMeasure', 'nav.kkMeasure', (c) => KkMeasureScreen(spaceId: c.spaceId)),
+  'kkLearning': ScreenDef('kkLearning', 'nav.kkLearning', (c) => KkLearningScreen(spaceId: c.spaceId)),
   'kkSellerCredit': ScreenDef('kkSellerCredit', 'nav.kkSellerCredit', (c) => KkSellerCreditScreen(spaceId: c.spaceId)),
   'kkShift': ScreenDef('kkShift', 'nav.kkShift', (c) => KkShiftScreen(spaceId: c.spaceId)),
   'twoShores': ScreenDef(

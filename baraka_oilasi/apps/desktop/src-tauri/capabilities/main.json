@@ -219,6 +219,13 @@
     "allow-learning-plan-result",
     "allow-study-log-add",
     "allow-teaching-log-add",
-    "allow-learning-overview"
+    "allow-learning-overview",
+    "allow-kk-owner-hour-suggest",
+    "allow-kk-owner-hour-save",
+    "allow-kk-delegate-calc",
+    "allow-kk-delegation-save",
+    "allow-kk-delegation-delete",
+    "allow-kk-teaching-add",
+    "allow-kk-learning-overview"
   ]
 }

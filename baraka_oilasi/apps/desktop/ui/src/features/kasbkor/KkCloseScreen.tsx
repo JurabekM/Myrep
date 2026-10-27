@@ -176,6 +176,7 @@ function Draft({ spaceId, d }: { spaceId: string; d: KkCloseDraftDto }) {
           <tbody>
             <Row label={t("kk.profit.revenue")} value={d.revenue.formatted} />
             <Row label={t("kk.close.expenses")} value={d.expenses.formatted} />
+            {d.selfInvestment.minor !== "0" && <Row label={`· ${t("kk.close.selfInvestment")}`} value={d.selfInvestment.formatted} testId="kk-close-self-investment" />}
             <Row label={t("kk.trueProfitShort")} value={d.trueProfit.formatted} />
             <Row label={t("kk.profit.depreciation")} value={d.depreciation.formatted} />
           </tbody>
@@ -264,6 +265,7 @@ function History({ spaceId }: { spaceId: string }) {
             <th className="py-1 pr-3 font-normal">{t("kk.close.col.period")}</th>
             <th className="py-1 pr-3 text-right font-normal">{t("kk.close.col.remaining")}</th>
             <th className="py-1 pr-3 text-right font-normal">{t("kk.close.col.reserve")}</th>
+            <th className="py-1 pr-3 text-right font-normal">{t("kk.selfInvestment")}</th>
             <th className="py-1 pr-3 font-normal">{t("kk.close.col.code")}</th>
             <th className="py-1 font-normal">
               <span className="sr-only">{t("kk.eq.actions")}</span>
@@ -278,6 +280,7 @@ function History({ spaceId }: { spaceId: string }) {
                 <td className="py-1 pr-3">{period}</td>
                 <td className="py-1 pr-3 text-right tabular-nums">{c.summary.remaining.formatted}</td>
                 <td className="py-1 pr-3 text-right tabular-nums">{c.summary.allocation?.reserve.formatted ?? "—"}</td>
+                <td className="py-1 pr-3 text-right tabular-nums">{c.summary.selfInvestment.formatted}</td>
                 <td className="py-1 pr-3 font-mono text-xs">{c.shortCode}</td>
                 <td className="py-1 text-right">
                   <button className="btn-ghost px-2 py-1 text-sm" aria-label={t("kk.close.pdfNamed", { period })} onClick={() => pdf.mutate(c.id)}>

@@ -92,11 +92,16 @@ impl App {
     }
 
     fn is_uy_space(&self, ctx: &Ctx, space_id: &str) -> Result<bool, AppError> {
+        Ok(self.space_kind(ctx, space_id)? == Some(SpaceKind::Uy))
+    }
+
+    fn space_kind(&self, ctx: &Ctx, space_id: &str) -> Result<Option<SpaceKind>, AppError> {
         Ok(self
             .db
             .read(|c| household::list_spaces(c, &ctx.household_id))?
             .iter()
-            .any(|s| s.id == space_id && s.kind == SpaceKind::Uy.as_str()))
+            .find(|s| s.id == space_id)
+            .and_then(|s| SpaceKind::parse(&s.kind)))
     }
 
     fn learn_member(&self, ctx: &Ctx, member_id: &str) -> Result<(), AppError> {
@@ -292,9 +297,11 @@ impl App {
             .ok_or(AppError::on("NOT_FOUND", "planId"))
     }
 
-    /// Xarajatdagi «O'zimga sarmoya» belgisi va bilim rejasiga havola (uy/SPEC 2G.3). Hozircha faqat
-    /// Uy makonida (Kasb-kor K9 va Musofir M6 da kengaytiriladi). Havola — faqat belgi bilan, shu
-    /// makondagi ochiq (`ACTIVE`/`PAUSED`) rejaga; xarajat a'zosi ko'rsatilgan bo'lsa — reja a'zosi.
+    /// Xarajatdagi «O'zimga sarmoya» belgisi va bilim rejasiga havola (uy/SPEC 2G.3). Belgi — Uy va
+    /// Kasb-kor makonlarida (K9: «Sarmoya (o'qish)», kasbkor/SPEC 8A.3; Musofir M6 da kengaytiriladi).
+    /// Bilim rejalari faqat Uy makonida, shuning uchun Kasb-kor chiqimi rejaga bog'lanmaydi. Havola —
+    /// faqat belgi bilan, shu makondagi ochiq (`ACTIVE`/`PAUSED`) rejaga; xarajat a'zosi ko'rsatilgan
+    /// bo'lsa — reja a'zosi.
     pub(crate) fn expense_plan_link(
         &self,
         ctx: &Ctx,
@@ -304,8 +311,17 @@ impl App {
         member_id: Option<&str>,
     ) -> Result<Option<String>, AppError> {
         let id = plan_id.map(clean).filter(|s| !s.is_empty());
-        if (self_investment || id.is_some()) && !self.is_uy_space(ctx, &scope.space_id)? {
-            return Err(AppError::on("NOT_UY_SPACE", "selfInvestment"));
+        if !self_investment && id.is_none() {
+            return Ok(None);
+        }
+        match self.space_kind(ctx, &scope.space_id)? {
+            Some(SpaceKind::Uy) => {}
+            // Kasb-kor: belgi bor, bilim rejalari yo'q (K9).
+            Some(SpaceKind::Kasbkor) if id.is_none() => return Ok(None),
+            Some(SpaceKind::Kasbkor) => {
+                return Err(AppError::on("PLAN_LINK_UY_ONLY", "learningPlanId"))
+            }
+            _ => return Err(AppError::on("NOT_UY_SPACE", "selfInvestment")),
         }
         let Some(id) = id else { return Ok(None) };
         if !self_investment {

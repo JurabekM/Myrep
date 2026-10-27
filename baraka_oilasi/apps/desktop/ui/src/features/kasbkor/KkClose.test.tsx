@@ -47,6 +47,7 @@ const draft = {
   needsExplanation: false,
   allocation: { reserve: m("774 000 soʻm"), working: m("1 290 000 soʻm"), expansion: m("516 000 soʻm"), sadaqa: m("0 soʻm", "0") },
   reserveBelowDepreciation: false,
+  selfInvestment: m("300 000 soʻm", "30000000"),
 };
 
 function wrap(ui: ReactNode) {
@@ -67,6 +68,8 @@ describe("Kasb-kor: Hisob kuni (K3)", () => {
     const user = userEvent.setup();
     const { container } = wrap(<KkCloseScreen spaceId="s-kk" />);
     expect(await screen.findByTestId("kk-close-remaining")).toHaveTextContent("2 580 000 soʻm");
+    // K9: «Sarmoya (o'qish)» — chiqimlar ichidagi alohida qator.
+    expect(screen.getByTestId("kk-close-self-investment")).toHaveTextContent("300 000 soʻm");
     expect(screen.getByTestId("kk-close-tax")).toHaveTextContent("− 720 000 soʻm");
     expect(screen.getByTestId("kk-close-reserve")).toHaveTextContent("774 000 soʻm");
     expect(screen.getByTestId("kk-close-working")).toHaveTextContent("1 290 000 soʻm");

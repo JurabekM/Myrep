@@ -2455,6 +2455,8 @@ pub struct KkCloseDraftDto {
     pub allocation: Option<KkAllocationDto>,
     /// Zaxira ulushi shu oy eskirishidan kam («uskunani almashtirish puli» yetmaydi).
     pub reserve_below_depreciation: bool,
+    /// Chiqimlar ichidagi «Sarmoya (o'qish)» belgili qismi (K9, alohida qator; chiqimga kiradi).
+    pub self_investment: MoneyDto,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -4264,4 +4266,167 @@ pub struct CourseAnswersInput {
     /// Musofir: kursdan keyin chet elda ish kafolati (bo'sh — so'ralmagan).
     #[serde(default)]
     pub job_abroad: Option<String>,
+}
+
+// ---- K9: Kasb-kor «O'zingizga sarmoya qiling» (kasbkor/SPEC 8A) ----
+
+/// Bitta yopilgan oy («Hisob kuni»): egasi topgani = max(0, o'z mehnati + haqiqiy foyda).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkOwnerMonthDto {
+    pub period_start: String,
+    pub period_end: String,
+    pub owner_labor: MoneyDto,
+    pub true_profit: MoneyDto,
+    pub earnings: MoneyDto,
+}
+
+/// Egasining oylik topgani taklifi (8A.1): oxirgi 3 yopilgan oy (yangisidan eskisiga) va o'rtachasi.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkOwnerHourSuggestionDto {
+    pub months: Vec<KkOwnerMonthDto>,
+    /// Yopilgan oy yo'q yoki hammasida topgani 0 — `null` (qo'lda kiritiladi).
+    pub average: Option<MoneyDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkOwnerHourInput {
+    /// Qo'lda kiritilgan oylik topgani; bo'sh — yopilgan oylar o'rtachasi (`AUTO`).
+    pub income: Option<String>,
+    /// Kuniga ish vaqti, daqiqada (1–1440).
+    pub minutes_per_day: u32,
+    /// Oyda ish kunlari (1–31).
+    pub days: u32,
+}
+
+/// Saqlangan egasining soat qiymati.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkOwnerHourDto {
+    pub id: String,
+    pub income: MoneyDto,
+    /// `AUTO` yoki `MANUAL`.
+    pub income_source: String,
+    /// `AUTO` da — nechta yopilgan oy o'rtachasi; `MANUAL` da 0.
+    pub months: u32,
+    pub minutes_per_day: u32,
+    pub days: u32,
+    pub monthly_minutes: u32,
+    pub hour_value: MoneyDto,
+    pub double_target: MoneyDto,
+    pub over_ceiling: bool,
+    pub computed_on: String,
+}
+
+/// «O'zim qilaymi yoki o'rgatib topshiraymi?» kiritmalari (8A.2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkDelegateInput {
+    /// Ish turi (saqlashda majburiy).
+    pub task: String,
+    /// Xodim kartochkasi (ixtiyoriy, faqat saqlashda).
+    pub agreement_id: Option<String>,
+    /// Egasining 1 soati; bo'sh — oxirgi saqlangan soat qiymati.
+    pub owner_hour_value: Option<String>,
+    /// Ishga oyiga ketadigan egasining daqiqalari (1–44 640).
+    pub task_minutes: u32,
+    /// Yordamchi yoki xodimning 1 soati narxi.
+    pub helper_hour_cost: String,
+    /// Bir martalik o'rgatish xarajati; bo'sh — 0.
+    pub training_money: Option<String>,
+    /// O'rgatishga ketadigan egasining daqiqalari (0–44 640).
+    pub training_minutes: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkDelegateResultDto {
+    pub owner_hour_value: MoneyDto,
+    /// Manfiy bo'lishi mumkin (yordamchi qimmatroq).
+    pub monthly_benefit: MoneyDto,
+    pub training_time_cost: MoneyDto,
+    pub full_cost: MoneyDto,
+    /// `SELF_CHEAPER` da `null`; 0 — darhol.
+    pub payback_months: Option<u32>,
+    /// `DELEGATE` yoki `SELF_CHEAPER` («hozircha o'zingiz qilganingiz arzon»).
+    pub verdict: String,
+}
+
+/// Saqlangan qaror (xodim kartochkasiga bog'lanishi mumkin).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkDelegationDto {
+    pub id: String,
+    pub task: String,
+    pub agreement_id: Option<String>,
+    /// Xodim ismi (kartochka o'chirilgan bo'lsa — `null`).
+    pub staff_name: Option<String>,
+    pub task_minutes: u32,
+    pub helper_hour_cost: MoneyDto,
+    pub training_money: MoneyDto,
+    pub training_minutes: u32,
+    pub decided_on: String,
+    pub result: KkDelegateResultDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkTeachingInput {
+    /// Bo'sh — bugun.
+    pub occurred_on: Option<String>,
+    /// Kimga: xodim kartochkasi (`learner` bilan birga emas).
+    pub agreement_id: Option<String>,
+    /// Kimga: boshqa kishi (ixtiyoriy).
+    pub learner: Option<String>,
+    pub topic: String,
+    pub minutes: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkTeachingDto {
+    pub id: String,
+    pub occurred_on: String,
+    pub agreement_id: Option<String>,
+    /// Xodim ismi yoki kiritilgan ism.
+    pub learner: Option<String>,
+    pub topic: String,
+    pub minutes: Option<u32>,
+}
+
+/// Xodim tanlovi uchun (faqat `EMPLOYMENT`, tugamaganlari).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkStaffOptionDto {
+    pub id: String,
+    pub name: String,
+}
+
+/// Kasb-kor «O'zimga sarmoya» ekrani: soat qiymati, qarorlar, shu oy «Ilm zakoti» va sarmoya qatori.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct KkLearningOverviewDto {
+    pub period_start: String,
+    pub period_end: String,
+    /// Oxirgi saqlangan hisob.
+    pub hour_value: Option<KkOwnerHourDto>,
+    pub delegations: Vec<KkDelegationDto>,
+    pub staff: Vec<KkStaffOptionDto>,
+    pub teaching_count: u32,
+    pub teaching: Vec<KkTeachingDto>,
+    /// Shu oy «Sarmoya (o'qish)» belgili chiqimlar jami (haqiqiy foydaga kiradi).
+    pub self_investment: MoneyDto,
 }

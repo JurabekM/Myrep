@@ -112,3 +112,22 @@ pub fn date_channel(
     )
     .optional()?)
 }
+
+/// «Sarmoya» belgili xarajatlar `[from, last]` oralig'ida (ikkala chet ham kiradi): (sana, valyuta,
+/// summa). Bir nechta davr jami bitta so'rov bilan yig'iladi (K9 «Hisob kuni» qatori).
+pub fn self_investment_between(
+    c: &Connection,
+    s: &SpaceScope,
+    from: &str,
+    last: &str,
+) -> Result<Vec<(String, String, i64)>, StorageError> {
+    let mut st = c.prepare(
+        "SELECT occurred_on, currency, amount_minor FROM expenses
+         WHERE household_id = ?1 AND space_id = ?2 AND deleted_at IS NULL AND self_investment = 1
+         AND occurred_on >= ?3 AND occurred_on <= ?4",
+    )?;
+    let rows = st.query_map(params![s.household_id, s.space_id, from, last], |r| {
+        Ok((r.get(0)?, r.get(1)?, r.get(2)?))
+    })?;
+    Ok(rows.collect::<Result<_, _>>()?)
+}

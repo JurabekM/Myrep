@@ -1,0 +1,222 @@
+{
+  "suite": "kk_delegate",
+  "version": 1,
+  "description": "Kasb-kor «O'zim qilaymi yoki o'rgatib topshiraymi?»: oylik naf = round_half_up(daqiqa × (egasining soat qiymati − yordamchi soat narxi) / 60), to'liq narx = pul + round_half_up(o'rgatish daqiqalari × egasining soat qiymati / 60), qoplanish ⌈to'liq narx / naf⌉ oy (narx 0 — 0 oy); naf ≤ 0 — SELF_CHEAPER (kasbkor/SPEC 8A.2)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "kd-001-delegate",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 1200,
+        "helperHourCost": "1500000",
+        "trainingMoney": "50000000",
+        "trainingMinutes": 600
+      },
+      "expected": {
+        "monthlyBenefit": "32307700",
+        "trainingTimeCost": "31153850",
+        "fullCost": "81153850",
+        "paybackMonths": 3,
+        "verdict": "DELEGATE"
+      }
+    },
+    {
+      "id": "kd-002-rounding",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 7,
+        "helperHourCost": "1500000",
+        "trainingMoney": "0",
+        "trainingMinutes": 1
+      },
+      "expected": {
+        "monthlyBenefit": "188462",
+        "trainingTimeCost": "51923",
+        "fullCost": "51923",
+        "paybackMonths": 1,
+        "verdict": "DELEGATE"
+      }
+    },
+    {
+      "id": "kd-003-no-training-cost",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 600,
+        "helperHourCost": "1500000",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "monthlyBenefit": "16153850",
+        "trainingTimeCost": "0",
+        "fullCost": "0",
+        "paybackMonths": 0,
+        "verdict": "DELEGATE"
+      }
+    },
+    {
+      "id": "kd-004-equal-rates",
+      "input": {
+        "ownerHourValue": "2000000",
+        "taskMinutes": 1200,
+        "helperHourCost": "2000000",
+        "trainingMoney": "30000000",
+        "trainingMinutes": 300
+      },
+      "expected": {
+        "monthlyBenefit": "0",
+        "trainingTimeCost": "10000000",
+        "fullCost": "40000000",
+        "paybackMonths": null,
+        "verdict": "SELF_CHEAPER"
+      }
+    },
+    {
+      "id": "kd-005-helper-dearer",
+      "input": {
+        "ownerHourValue": "2000000",
+        "taskMinutes": 1200,
+        "helperHourCost": "2500000",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "monthlyBenefit": "-10000000",
+        "trainingTimeCost": "0",
+        "fullCost": "0",
+        "paybackMonths": null,
+        "verdict": "SELF_CHEAPER"
+      }
+    },
+    {
+      "id": "kd-006-tiny-benefit-rounds-to-zero",
+      "input": {
+        "ownerHourValue": "2000000",
+        "taskMinutes": 1,
+        "helperHourCost": "1999999",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "monthlyBenefit": "0",
+        "trainingTimeCost": "0",
+        "fullCost": "0",
+        "paybackMonths": null,
+        "verdict": "SELF_CHEAPER"
+      }
+    },
+    {
+      "id": "kd-007-exact-payback",
+      "input": {
+        "ownerHourValue": "3000000",
+        "taskMinutes": 600,
+        "helperHourCost": "1000000",
+        "trainingMoney": "40000000",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "monthlyBenefit": "20000000",
+        "trainingTimeCost": "0",
+        "fullCost": "40000000",
+        "paybackMonths": 2,
+        "verdict": "DELEGATE"
+      }
+    },
+    {
+      "id": "kd-008-long-payback",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 120,
+        "helperHourCost": "2800000",
+        "trainingMoney": "150000000",
+        "trainingMinutes": 1200
+      },
+      "expected": {
+        "monthlyBenefit": "630770",
+        "trainingTimeCost": "62307700",
+        "fullCost": "212307700",
+        "paybackMonths": 337,
+        "verdict": "DELEGATE"
+      }
+    },
+    {
+      "id": "kd-neg-001-no-hour-value",
+      "input": {
+        "ownerHourValue": "0",
+        "taskMinutes": 600,
+        "helperHourCost": "0",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "error": "NO_HOUR_VALUE"
+      }
+    },
+    {
+      "id": "kd-neg-002-negative-helper",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 600,
+        "helperHourCost": "-1",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "kd-neg-003-negative-money",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 600,
+        "helperHourCost": "1500000",
+        "trainingMoney": "-1",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "kd-neg-004-task-time",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 0,
+        "helperHourCost": "1500000",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "kd-neg-005-task-over-month",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 44641,
+        "helperHourCost": "1500000",
+        "trainingMoney": "0",
+        "trainingMinutes": 0
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "kd-neg-006-training-time",
+      "input": {
+        "ownerHourValue": "3115385",
+        "taskMinutes": 600,
+        "helperHourCost": "1500000",
+        "trainingMoney": "0",
+        "trainingMinutes": -1
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    }
+  ]
+}

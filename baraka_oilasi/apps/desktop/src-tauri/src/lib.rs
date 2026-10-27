@@ -242,6 +242,13 @@ pub fn specta_builder() -> Builder<tauri::Wry> {
             commands::study_log_add,
             commands::teaching_log_add,
             commands::learning_overview,
+            commands::kk_owner_hour_suggest,
+            commands::kk_owner_hour_save,
+            commands::kk_delegate_calc,
+            commands::kk_delegation_save,
+            commands::kk_delegation_delete,
+            commands::kk_teaching_add,
+            commands::kk_learning_overview,
         ])
         .events(collect_events![CoreChanged, SessionLocked])
 }

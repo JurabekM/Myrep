@@ -995,6 +995,56 @@ def self_invest_share(income, amounts):
     return {"total": _s(total), "shareBp": None if income == 0 else bp_of(total, income)}
 
 
+# --- K9 (8-tamoyil, Kasb-kor): egasining soat qiymati, «O'zim qilaymi yoki o'rgatib topshiraymi?» ---
+KK_OWNER_AVG_MONTHS = 3        # oxirgi ko'pi bilan 3 ta yopilgan oy («Hisob kuni»)
+KK_DELEGATE_MAX_MINUTES = 44640  # 31 kun × 24 soat — bir oydagi daqiqalar chegarasi
+
+
+def kk_owner_earnings(owner_labor, true_profit):
+    """Egasi topgani (kasbkor/SPEC 8A.1) = max(0, o'z mehnati bahosi + haqiqiy foyda), ya'ni ko'rinadigan
+    foyda − oilaviy mehnat − eskirish (− uskuna chiqib ketishi), manfiy bo'lsa 0. Haqiqiy foydadan o'z mehnati
+    bahosi ayirilgan, egasiga haqiqatda to'langan maosh emas — shuning uchun maosh qo'shilmaydi."""
+    if owner_labor < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    return max(0, owner_labor + true_profit)
+
+
+def kk_owner_hour(months, income, minutes_per_day, days):
+    """Egasining soat qiymati: har yopilgan oy uchun topgani (kk_owner_earnings); taklif — ularning o'rtachasi
+    (round_half_up, 0 li oylar ham kiradi); soat qiymati — umumiy `hour_value` (qo'lda kiritilgan daromad
+    ustun, MANUAL)."""
+    if len(months) > KK_OWNER_AVG_MONTHS:
+        raise OracleError("TOO_MANY_MONTHS")
+    earnings = [kk_owner_earnings(int(m["ownerLabor"]), int(m["trueProfit"])) for m in months]
+    suggested = round_half_up(Fraction(sum(earnings), len(earnings))) if earnings else None
+    r = hour_value(income, earnings, minutes_per_day, days)
+    return {"earnings": [_s(e) for e in earnings], "suggested": None if suggested is None else _s(suggested), **r}
+
+
+def kk_delegate(owner_hour, task_minutes, helper_hour, training_money, training_minutes):
+    """«O'zim qilaymi yoki o'rgatib topshiraymi?» (kasbkor/SPEC 8A.2):
+    oylik naf = round_half_up(daqiqa × (egasining soat qiymati − yordamchi soat narxi) / 60);
+    o'rgatish vaqti narxi = round_half_up(o'rgatish daqiqalari × egasining soat qiymati / 60);
+    to'liq narx = pul + o'rgatish vaqti narxi; naf > 0 — qoplanish ⌈to'liq narx / naf⌉ oy (narx 0 — 0 oy,
+    darhol), aks holda SELF_CHEAPER («hozircha o'zingiz qilganingiz arzon»), qoplanish yo'q."""
+    for v in (owner_hour, helper_hour, training_money):
+        if v < 0:
+            raise OracleError("AMOUNT_NEGATIVE")
+    if owner_hour == 0:
+        raise OracleError("NO_HOUR_VALUE")
+    if not 1 <= task_minutes <= KK_DELEGATE_MAX_MINUTES:
+        raise OracleError("INVALID_TIME")
+    if not 0 <= training_minutes <= KK_DELEGATE_MAX_MINUTES:
+        raise OracleError("INVALID_TIME")
+    benefit = round_half_up(Fraction(task_minutes * (owner_hour - helper_hour), 60))
+    time_cost = round_half_up(Fraction(training_minutes * owner_hour, 60))
+    full = training_money + time_cost
+    delegate = benefit > 0
+    return {"monthlyBenefit": _s(benefit), "trainingTimeCost": _s(time_cost), "fullCost": _s(full),
+            "paybackMonths": ceil_div(full, benefit) if delegate else None,
+            "verdict": "DELEGATE" if delegate else "SELF_CHEAPER"}
+
+
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
 KK_WALLETS = ("CASH", "CARD")
 KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1,
@@ -2536,6 +2586,47 @@ def build_suites():
         for cid, (sk, pa, b, wm, st, rv) in lp] + [
         _case(cid, {"op": "transition", "from": f, "to": t, "otherActive": n}, lambda f=f, t=t, n=n: plan_transition(f, t, n))
         for cid, f, t, n in tr])
+    # K9: egasining soat qiymati (kasbkor/SPEC 8A.1). Feruza (3.1): o'z mehnati 5 mln + haqiqiy foyda 3,1 mln.
+    M = lambda ol, tp: {"ownerLabor": _s(ol), "trueProfit": _s(tp)}  # noqa: E731
+    oh = [("koh-001-spec-example", [M(500000000, 310000000)], None, 600, 26),
+          ("koh-002-three-months", [M(500000000, 310000000), M(500000000, 150000000), M(500000000, 420000000)], None, 540, 26),
+          # Zarar o'z mehnatidan katta — topgani 0 (manfiy emas), o'rtachaga 0 bo'lib kiradi.
+          ("koh-003-loss-floored", [M(500000000, -620000000), M(500000000, 100000000)], None, 480, 24),
+          ("koh-004-owner-labor-not-set", [M(0, 240000000)], None, 480, 26),
+          ("koh-005-auto-rounding", [M(100000000, 1), M(100000000, 1), M(100000000, 0)], None, 480, 25),
+          ("koh-006-manual-override", [M(500000000, 310000000)], 700000000, 600, 26),
+          ("koh-007-manual-no-months", [], 650000000, 600, 26),
+          ("koh-008-over-ceiling", [M(500000000, 310000000)], None, 720, 26),
+          ("koh-neg-001-no-closed-months", [], None, 600, 26),
+          ("koh-neg-002-all-loss", [M(300000000, -400000000), M(0, -5)], None, 600, 26),
+          ("koh-neg-003-four-months", [M(1, 0)] * 4, None, 600, 26),
+          ("koh-neg-004-negative-owner-labor", [M(-1, 500000000)], None, 600, 26),
+          ("koh-neg-005-time", [M(500000000, 310000000)], None, 0, 26),
+          ("koh-neg-006-days", [M(500000000, 310000000)], None, 600, 32)]
+    suites["kk_owner_hour"] = _suite("kk_owner_hour", "Kasb-kor: egasining soat qiymati — har yopilgan oy uchun topgani max(0, o'z mehnati + haqiqiy foyda) (to'langan maosh qo'shilmaydi), oxirgi ≤3 oy o'rtachasi taklif (AUTO), soat qiymati — umumiy hour_value (kasbkor/SPEC 8A.1)", [
+        _case(cid, {"months": ms, "income": None if inc is None else _s(inc), "minutesPerDay": mpd, "days": d},
+              lambda ms=ms, inc=inc, mpd=mpd, d=d: kk_owner_hour(ms, inc, mpd, d))
+        for cid, ms, inc, mpd, d in oh])
+    # K9: «O'zim qilaymi yoki o'rgatib topshiraymi?» (8A.2). Egasining 1 soati 31 153,85 so'm (8,1 mln / 260 soat).
+    dg = [("kd-001-delegate", 3115385, 1200, 1500000, 50000000, 600),
+          ("kd-002-rounding", 3115385, 7, 1500000, 0, 1),
+          ("kd-003-no-training-cost", 3115385, 600, 1500000, 0, 0),
+          ("kd-004-equal-rates", 2000000, 1200, 2000000, 30000000, 300),
+          ("kd-005-helper-dearer", 2000000, 1200, 2500000, 0, 0),
+          ("kd-006-tiny-benefit-rounds-to-zero", 2000000, 1, 1999999, 0, 0),
+          ("kd-007-exact-payback", 3000000, 600, 1000000, 40000000, 0),
+          ("kd-008-long-payback", 3115385, 120, 2800000, 150000000, 1200),
+          ("kd-neg-001-no-hour-value", 0, 600, 0, 0, 0),
+          ("kd-neg-002-negative-helper", 3115385, 600, -1, 0, 0),
+          ("kd-neg-003-negative-money", 3115385, 600, 1500000, -1, 0),
+          ("kd-neg-004-task-time", 3115385, 0, 1500000, 0, 0),
+          ("kd-neg-005-task-over-month", 3115385, 44641, 1500000, 0, 0),
+          ("kd-neg-006-training-time", 3115385, 600, 1500000, 0, -1)]
+    suites["kk_delegate"] = _suite("kk_delegate", "Kasb-kor «O'zim qilaymi yoki o'rgatib topshiraymi?»: oylik naf = round_half_up(daqiqa × (egasining soat qiymati − yordamchi soat narxi) / 60), to'liq narx = pul + round_half_up(o'rgatish daqiqalari × egasining soat qiymati / 60), qoplanish ⌈to'liq narx / naf⌉ oy (narx 0 — 0 oy); naf ≤ 0 — SELF_CHEAPER (kasbkor/SPEC 8A.2)", [
+        _case(cid, {"ownerHourValue": _s(o), "taskMinutes": tm, "helperHourCost": _s(h), "trainingMoney": _s(mo),
+                    "trainingMinutes": trm},
+              lambda o=o, tm=tm, h=h, mo=mo, trm=trm: kk_delegate(o, tm, h, mo, trm))
+        for cid, o, tm, h, mo, trm in dg])
     # U13 — ko'rik bayonnomasi yaxlitligi
     def tamper(i, minor):
         t = json.loads(json.dumps(CHAIN_ENTRIES))
@@ -3236,7 +3327,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
                  "mf_month", "mf_return_fund", "mf_remittance",
                  "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup", "mf_wall",
-                 "hour_value", "hour_value_change", "self_invest_share", "learning_plan")
+                 "hour_value", "hour_value_change", "self_invest_share", "learning_plan", "kk_owner_hour", "kk_delegate")
 
 
 def generate(directory: str) -> None:
@@ -3493,6 +3584,16 @@ def selftest() -> None:
     assert verify_chain(t1, chain(t1)) is None
     assert review_protocol(t1, chain(t1), 2, CHAIN_HASHES[1])["status"] == "HEAD_MISMATCH"
     assert review_protocol(CHAIN_ENTRIES, CHAIN_HASHES, 3, CHAIN_HASHES[2]) == {"status": "INTACT", "firstBroken": None, "entriesAfter": 0}
+    # K9 (kasbkor/SPEC 8A): Feruza — 5 mln + 3,1 mln = 8,1 mln (2 mln maosh olgan bo'lsa ham qo'shilmaydi).
+    assert kk_owner_earnings(500000000, 310000000) == 810000000 and kk_owner_earnings(500000000, -600000000) == 0
+    o = kk_owner_hour([{"ownerLabor": "500000000", "trueProfit": "310000000"}], None, 600, 26)
+    assert (o["suggested"], o["income"], o["incomeSource"], o["hourValue"]) == ("810000000", "810000000", "AUTO", "3115385")
+    d = kk_delegate(3115385, 1200, 1500000, 50000000, 600)
+    assert (d["monthlyBenefit"], d["fullCost"], d["paybackMonths"], d["verdict"]) == ("32307700", "81153850", 3, "DELEGATE")
+    assert kk_delegate(3115385, 600, 1500000, 0, 0)["paybackMonths"] == 0
+    assert kk_delegate(2000000, 1200, 2000000, 0, 0) == {"monthlyBenefit": "0", "trainingTimeCost": "0", "fullCost": "0",
+                                                        "paybackMonths": None, "verdict": "SELF_CHEAPER"}
+    _expect_error("NO_HOUR_VALUE", kk_delegate, 0, 600, 0, 0, 0)
     # K1 (kasbkor/SPEC 2.2, 5.1): «egasi oldi» foydani (pul oqimini) kamaytirmaydi, maoshdan hisoblanadi.
     r = kk_month_report(0, 0, 500000000, [{"kind": "SALE", "wallet": "CASH", "amount": "1800000000"},
                                           {"kind": "EXPENSE", "wallet": "CASH", "amount": "850000000"},

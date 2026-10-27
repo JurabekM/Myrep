@@ -17,6 +17,7 @@ mod governance;
 mod kasbkor;
 mod kasbkor_close;
 mod kasbkor_growth;
+mod kasbkor_learning;
 mod kasbkor_ledger;
 mod kasbkor_profit;
 mod kasbkor_seller;

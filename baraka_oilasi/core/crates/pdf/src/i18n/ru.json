@@ -311,5 +311,6 @@
   "kkslip.kind.WAGE": "Выплата оплаты",
   "kkslip.noPenalty": "Аванс без процентов; штрафов за задержку нет.",
   "kkslip.signatures": "Ознакомлены",
-  "kkslip.signer.employee": "Работник (ознакомлен)"
+  "kkslip.signer.employee": "Работник (ознакомлен)",
+  "kkclose.selfInvestment": "В расходах — «Вложение (учёба)»"
 }

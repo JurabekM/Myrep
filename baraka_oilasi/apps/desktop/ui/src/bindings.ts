@@ -249,6 +249,13 @@ export const commands = {
 	studyLogAdd: (spaceId: string, planId: string, input: StudyLogInput) => typedError<LearningPlanDto, AppError>(__TAURI_INVOKE("study_log_add", { spaceId, planId, input })),
 	teachingLogAdd: (spaceId: string, input: TeachingLogInput) => typedError<TeachingLogDto, AppError>(__TAURI_INVOKE("teaching_log_add", { spaceId, input })),
 	learningOverview: (spaceId: string, date: string | null) => typedError<LearningOverviewDto, AppError>(__TAURI_INVOKE("learning_overview", { spaceId, date })),
+	kkOwnerHourSuggest: (spaceId: string) => typedError<KkOwnerHourSuggestionDto, AppError>(__TAURI_INVOKE("kk_owner_hour_suggest", { spaceId })),
+	kkOwnerHourSave: (spaceId: string, input: KkOwnerHourInput) => typedError<KkOwnerHourDto, AppError>(__TAURI_INVOKE("kk_owner_hour_save", { spaceId, input })),
+	kkDelegateCalc: (spaceId: string, input: KkDelegateInput) => typedError<KkDelegateResultDto, AppError>(__TAURI_INVOKE("kk_delegate_calc", { spaceId, input })),
+	kkDelegationSave: (spaceId: string, input: KkDelegateInput) => typedError<KkDelegationDto, AppError>(__TAURI_INVOKE("kk_delegation_save", { spaceId, input })),
+	kkDelegationDelete: (spaceId: string, id: string) => typedError<null, AppError>(__TAURI_INVOKE("kk_delegation_delete", { spaceId, id })),
+	kkTeachingAdd: (spaceId: string, input: KkTeachingInput) => typedError<KkTeachingDto, AppError>(__TAURI_INVOKE("kk_teaching_add", { spaceId, input })),
+	kkLearningOverview: (spaceId: string, date: string | null) => typedError<KkLearningOverviewDto, AppError>(__TAURI_INVOKE("kk_learning_overview", { spaceId, date })),
 };
 
 /** Events */
@@ -1236,6 +1243,8 @@ export type KkCloseDraftDto = {
 	allocation: KkAllocationDto | null,
 	/**  Zaxira ulushi shu oy eskirishidan kam («uskunani almashtirish puli» yetmaydi). */
 	reserveBelowDepreciation: boolean,
+	/**  Chiqimlar ichidagi «Sarmoya (o'qish)» belgili qismi (K9, alohida qator; chiqimga kiradi). */
+	selfInvestment: MoneyDto,
 };
 
 export type KkCloseInput = {
@@ -1365,6 +1374,51 @@ export type KkCustomerInput = {
 	/**  Telefon saqlansa — mijoz roziligi belgisi majburiy (OQ-Y3). */
 	phoneConsent: boolean,
 	note: string | null,
+};
+
+/**  «O'zim qilaymi yoki o'rgatib topshiraymi?» kiritmalari (8A.2). */
+export type KkDelegateInput = {
+	/**  Ish turi (saqlashda majburiy). */
+	task: string,
+	/**  Xodim kartochkasi (ixtiyoriy, faqat saqlashda). */
+	agreementId: string | null,
+	/**  Egasining 1 soati; bo'sh — oxirgi saqlangan soat qiymati. */
+	ownerHourValue: string | null,
+	/**  Ishga oyiga ketadigan egasining daqiqalari (1–44 640). */
+	taskMinutes: number,
+	/**  Yordamchi yoki xodimning 1 soati narxi. */
+	helperHourCost: string,
+	/**  Bir martalik o'rgatish xarajati; bo'sh — 0. */
+	trainingMoney: string | null,
+	/**  O'rgatishga ketadigan egasining daqiqalari (0–44 640). */
+	trainingMinutes: number,
+};
+
+export type KkDelegateResultDto = {
+	ownerHourValue: MoneyDto,
+	/**  Manfiy bo'lishi mumkin (yordamchi qimmatroq). */
+	monthlyBenefit: MoneyDto,
+	trainingTimeCost: MoneyDto,
+	fullCost: MoneyDto,
+	/**  `SELF_CHEAPER` da `null`; 0 — darhol. */
+	paybackMonths: number | null,
+	/**  `DELEGATE` yoki `SELF_CHEAPER` («hozircha o'zingiz qilganingiz arzon»). */
+	verdict: string,
+};
+
+/**  Saqlangan qaror (xodim kartochkasiga bog'lanishi mumkin). */
+export type KkDelegationDto = {
+	id: string,
+	task: string,
+	agreementId: string | null,
+	/**  Xodim ismi (kartochka o'chirilgan bo'lsa — `null`). */
+	staffName: string | null,
+	taskMinutes: number,
+	helperHourCost: MoneyDto,
+	trainingMoney: MoneyDto,
+	trainingMinutes: number,
+	decidedOn: string,
+	result: KkDelegateResultDto,
 };
 
 /**  `state`: `PAID`, `DUE`, `OVERDUE`. */
@@ -1675,6 +1729,20 @@ export type KkItemInput = {
 	note: string | null,
 };
 
+/**  Kasb-kor «O'zimga sarmoya» ekrani: soat qiymati, qarorlar, shu oy «Ilm zakoti» va sarmoya qatori. */
+export type KkLearningOverviewDto = {
+	periodStart: string,
+	periodEnd: string,
+	/**  Oxirgi saqlangan hisob. */
+	hourValue: KkOwnerHourDto | null,
+	delegations: KkDelegationDto[],
+	staff: KkStaffOptionDto[],
+	teachingCount: number,
+	teaching: KkTeachingDto[],
+	/**  Shu oy «Sarmoya (o'qish)» belgili chiqimlar jami (haqiqiy foydaga kiradi). */
+	selfInvestment: MoneyDto,
+};
+
 /**  Yopilgan oy bayonnomasi (o'zgarmas). */
 export type KkMonthCloseDto = {
 	id: string,
@@ -1756,6 +1824,48 @@ export type KkOverviewDto = {
 	/**  Mijozlardagi pul (nasiya qoldig'i) va undan muddati o'tgani. */
 	receivables: MoneyDto,
 	receivablesOverdue: MoneyDto,
+};
+
+/**  Saqlangan egasining soat qiymati. */
+export type KkOwnerHourDto = {
+	id: string,
+	income: MoneyDto,
+	/**  `AUTO` yoki `MANUAL`. */
+	incomeSource: string,
+	/**  `AUTO` da — nechta yopilgan oy o'rtachasi; `MANUAL` da 0. */
+	months: number,
+	minutesPerDay: number,
+	days: number,
+	monthlyMinutes: number,
+	hourValue: MoneyDto,
+	doubleTarget: MoneyDto,
+	overCeiling: boolean,
+	computedOn: string,
+};
+
+export type KkOwnerHourInput = {
+	/**  Qo'lda kiritilgan oylik topgani; bo'sh — yopilgan oylar o'rtachasi (`AUTO`). */
+	income: string | null,
+	/**  Kuniga ish vaqti, daqiqada (1–1440). */
+	minutesPerDay: number,
+	/**  Oyda ish kunlari (1–31). */
+	days: number,
+};
+
+/**  Egasining oylik topgani taklifi (8A.1): oxirgi 3 yopilgan oy (yangisidan eskisiga) va o'rtachasi. */
+export type KkOwnerHourSuggestionDto = {
+	months: KkOwnerMonthDto[],
+	/**  Yopilgan oy yo'q yoki hammasida topgani 0 — `null` (qo'lda kiritiladi). */
+	average: MoneyDto | null,
+};
+
+/**  Bitta yopilgan oy («Hisob kuni»): egasi topgani = max(0, o'z mehnati + haqiqiy foyda). */
+export type KkOwnerMonthDto = {
+	periodStart: string,
+	periodEnd: string,
+	ownerLabor: MoneyDto,
+	trueProfit: MoneyDto,
+	earnings: MoneyDto,
 };
 
 /**  Oylik hisob: `balance` — oy oxirida xodimga qarzimiz (manfiy — ortiq to'langan). */
@@ -1966,6 +2076,12 @@ export type KkStaffEventDto = {
 	note: string | null,
 };
 
+/**  Xodim tanlovi uchun (faqat `EMPLOYMENT`, tugamaganlari). */
+export type KkStaffOptionDto = {
+	id: string,
+	name: string,
+};
+
 export type KkStockCountDto = {
 	id: string,
 	countedOn: string,
@@ -2088,6 +2204,27 @@ export type KkSupplyTermsDto = {
 	returns: string | null,
 	arbiter: string | null,
 	note: string | null,
+};
+
+export type KkTeachingDto = {
+	id: string,
+	occurredOn: string,
+	agreementId: string | null,
+	/**  Xodim ismi yoki kiritilgan ism. */
+	learner: string | null,
+	topic: string,
+	minutes: number | null,
+};
+
+export type KkTeachingInput = {
+	/**  Bo'sh — bugun. */
+	occurredOn: string | null,
+	/**  Kimga: xodim kartochkasi (`learner` bilan birga emas). */
+	agreementId: string | null,
+	/**  Kimga: boshqa kishi (ixtiyoriy). */
+	learner: string | null,
+	topic: string,
+	minutes: number | null,
 };
 
 export type KkWageInput = {

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-kk-delegation-delete"
+description = "Enables the kk_delegation_delete command without any pre-configured scope."
+commands.allow = ["kk_delegation_delete"]
+
+[[permission]]
+identifier = "deny-kk-delegation-delete"
+description = "Denies the kk_delegation_delete command without any pre-configured scope."
+commands.deny = ["kk_delegation_delete"]

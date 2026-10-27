@@ -421,6 +421,21 @@ abstract class BarakaCore implements RustOpaqueInterface {
 
   Future<List<KkCustomerDto>> kkCustomers({required String spaceId});
 
+  Future<KkDelegateResultDto> kkDelegateCalc({
+    required String spaceId,
+    required KkDelegateInput input,
+  });
+
+  Future<void> kkDelegationDelete({
+    required String spaceId,
+    required String id,
+  });
+
+  Future<KkDelegationDto> kkDelegationSave({
+    required String spaceId,
+    required KkDelegateInput input,
+  });
+
   Future<void> kkDeleteAgreement({required String spaceId, required String id});
 
   Future<KkCreditBookDto> kkDeleteCreditSale({
@@ -471,6 +486,11 @@ abstract class BarakaCore implements RustOpaqueInterface {
     required KkInventoryInput input,
   });
 
+  Future<KkLearningOverviewDto> kkLearningOverview({
+    required String spaceId,
+    String? date,
+  });
+
   Future<Uint8List> kkMonthClosePdf({
     required String spaceId,
     required String closeId,
@@ -484,6 +504,15 @@ abstract class BarakaCore implements RustOpaqueInterface {
   });
 
   Future<KkOverviewDto> kkOverview({required String spaceId, String? date});
+
+  Future<KkOwnerHourDto> kkOwnerHourSave({
+    required String spaceId,
+    required KkOwnerHourInput input,
+  });
+
+  Future<KkOwnerHourSuggestionDto> kkOwnerHourSuggest({
+    required String spaceId,
+  });
 
   /// Maosh Uy makoniga: Kasb-kor va Uy yozuvlari bitta tranzaksiyada.
   Future<KkSalaryPaidDto> kkPayOwnerSalary({
@@ -595,6 +624,11 @@ abstract class BarakaCore implements RustOpaqueInterface {
     required String spaceId,
     required String id,
     required KkSupplyPaymentInput input,
+  });
+
+  Future<KkTeachingDto> kkTeachingAdd({
+    required String spaceId,
+    required KkTeachingInput input,
   });
 
   Future<KkStaffDto> kkUpdateEmployee({

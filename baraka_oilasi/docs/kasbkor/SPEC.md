@@ -1,7 +1,7 @@
 # «KASB-KOR» MAKONI — SPETSIFIKATSIYA
 ### O'zini o'zi band qilganlar, kichik va o'rta biznes egalari uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim), K7 (6, 8-bo'limlar) va K8 (12-bo'lim, ADR-0003) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3, 8.5 va 12.1 da. Android UI — A3 da qilindi (1.0.0). Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
+> Versiya: **v0.1 — QORALAMA (K0)**; K1 (2-bo'lim), K2 (3-bo'lim), K3 (4.5), K4 (5-bo'lim), K5 (4.1–4.4), K6 (7-bo'lim), K7 (6, 8-bo'limlar) K8 (12-bo'lim, ADR-0003) va K9 (8A) amalga oshirildi — farqlari 2.4, 3.4, 4.6, 4.7, 5.4, 6.3, 7.3, 8.5, 8A.4 va 12.1 da. Android UI — A3 da qilindi (1.0.0). Holat: mahsulot egasi tasdig'i kutilmoqda; ulamo va yurist savollari `docs/OPEN_QUESTIONS.md` da (OQ-K*, OQ-D5, OQ-D7, OQ-Y3, OQ-Y6, OQ-Y7).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Kasb-kor — qisqa karta»). Format — `docs/uy/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar); bu yerda ularga faqat havola qilinadi.
 
@@ -285,6 +285,16 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 - Xodimga hunar o'rgatish — «Ilm zakoti» yozuvi (Uy 2G.6) bilan bir xil, «kimga» maydoni xodim kartochkasidan tanlanadi.
 - Kurs tekshiruvi — Uy 2G.4: umumiy `offer_check` dvigatelidagi `COURSE` turi.
 
+### 8A.4. K9 da qanday qilindi (farqlar)
+- **Egasining topgani** — har yopilgan oy uchun `max(0, o'z mehnati bahosi + haqiqiy foyda)` (`domain-kasbkor::invest`, vektor `kk_owner_hour`), **qotirilgan bayonnoma raqamlaridan** (daftar qayta o'ynalmaydi): yopilgandan keyin o'z mehnati, oilaviy mehnat, uskuna yoki oy boshi kuni o'zgarsa ham natija o'zgarmaydi. Shu uchun K9 dan boshlab bayonnoma (`result_json`, `v: 2`) o'z mehnati bahosini ham saqlaydi (`owner_labor`); xesh yangi matndan olinadi, eski bayonnomalar o'zgarmaydi. **K9 dan oldingi (`v: 1`) bayonnomalarda** o'z mehnati saqlanmagan, oilaviy mehnat va uskuna chiqib ketishi ham yo'q — ulardan topganini aniq tiklab bo'lmaydi, shuning uchun hozirgi o'z mehnati sozlamasi + saqlangan haqiqiy foyda olinadi (sozlama yopilgandan keyin o'zgarmagan bo'lsa — aniq). Taklif — oxirgi ko'pi bilan 3 ta yopilgan oy («Hisob kuni», asosiy valyutada) o'rtachasi; zarar bo'lgan oy 0 bo'lib o'rtachaga kiradi; hammasi 0 yoki yopilgan oy yo'q — taklif yo'q, egasi qo'lda kiritadi (`NO_INCOME`).
+- **Soat qiymati** — umumiy `hour_value` (Uy 2G.1 bilan bitta funksiya va vektor; o'rtacha ham umumiy `average_income`). Hisoblar `kk_owner_hours` jadvalida o'zgarmas tarix: Uy'dagi `learning_hour_values` a'zoga bog'langan, Kasb-kor makonida esa egasi a'zo emas (makonning o'zi). `AUTO` hisobda nechta oy o'rtachasi olingani saqlanadi. Ekrandagi va kalkulyatordagi «oxirgi hisob» — bitta qoida: xonadonning hozirgi valyutasidagi eng so'nggi hisob.
+- **«O'zim qilaymi yoki o'rgatib topshiraymi?»** (vektor `kk_delegate`): oylik naf = `round_half_up(daqiqa × (egasi − yordamchi) / 60)`, o'rgatish vaqti narxi = `round_half_up(o'rgatish daqiqalari × egasi / 60)`, qoplanish = ⌈to'liq narx / naf⌉ oy; o'rgatish xarajati 0 bo'lsa — **0 oy** («darhol»), naf ≤ 0 (teng narx yoki yordamchi qimmatroq, yoki naf tiyingacha yaxlitlanib 0) — `SELF_CHEAPER`, qoplanish yo'q. Daqiqalar: ishga oyiga 1–44 640, o'rgatishga 0–44 640 (`INVALID_TASK_TIME`). Egasining soati maydoni bo'sh — oxirgi saqlangan hisob (`KK_NO_HOUR_VALUE`). Hisob saqlanmaydi; «Qarorni saqlash» — `kk_delegations` (kiritmalar va qaror paytidagi soat qiymati; natija har safar yadroda qayta hisoblanadi), ixtiyoriy xodim kartochkasi (faqat tugamagan `EMPLOYMENT` — tanlov ro'yxati bilan bir xil; aks holda `NOT_EMPLOYMENT` yoki `AGREEMENT_ENDED`); qarorni o'chirish mumkin (tasdiqdan keyin, yumshoq o'chirish). Qarorlar hozircha «O'zimga sarmoya» ekranida ko'rinadi, xodim kartochkasining o'zida emas.
+- **«Sarmoya (o'qish)»** — mavjud `expenses.self_investment` belgisi Kasb-kor chiqimida ham; chiqim haqiqiy foydani va «Hisob kuni» chiqimini baribir kamaytiradi, «Hisob kuni» qoralamasi, bayonnomalar ro'yxati va PDF'da «shundan «Sarmoya (o'qish)»» qatori. Qator bayonnoma xeshiga kirmaydi — yopilgan oy yozuvlaridan har safar hisoblanadi (ular o'zgarmaydi); bayonnomalar ro'yxati uchun barcha oylar bitta so'rov bilan. Bilim rejalari faqat Uy makonida, shuning uchun Kasb-kor chiqimi rejaga bog'lanmaydi (`PLAN_LINK_UY_ONLY`).
+- **«Ilm zakoti»** — `kk_teaching_logs`: kimga — tugamagan xodim kartochkasi (`AGREEMENT_ENDED`) yoki boshqa kishining ismi (ikkalasi birga emas — `LEARNER_TWICE`), nimani, qancha vaqt (≤ 1 kun). Uy'dagi `teaching_logs` a'zoga (o'rgatuvchiga) bog'langan — Kasb-kor makonida o'rgatuvchi egasi, shuning uchun alohida jadval.
+- **Kurs tekshiruvi** — umumiy `check_course` (makonga bog'liq emas); ekranda «Kursni tekshirish» tugmasi «Taklifni tekshirish» oynasini `COURSE` turida ochadi.
+- **Rollar:** hammasi egasi bo'limi — sotuvchi qurilmasida yadro `ROLE_FORBIDDEN` qaytaradi, menyuda bo'lim yo'q, yangi jadvallar sotuvchiga yuborilmaydi (soat qiymati foydadan hisoblanadi). Hisobchi qurilmasi o'qiydi.
+- **Keyinga qoldi:** juma eslatmasi («…xodimingizga o'rgatdingizmi?»), qarorni xodim kartochkasida ko'rsatish, «natijani o'lchash» (Uy 2G.5) Kasb-kor uchun.
+
 ## 9. DOMEN MODELI VA VEKTOR SUITE'LARI
 ### 9.1. Yangi tushunchalar (taxminiy; aniq sxema — K1+ sessiyalarida, `BARAKA_OILASI.md` 8)
 | Tushuncha | Mazmun | Mavjud asos |
@@ -316,6 +326,8 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 | `kk_payroll` | avans teng ulushlarda (qoldiq tiyinlar); haqsiz oy — ushlanmagani keyingi oyga, ustamasiz; ikki avans; qisman va ortiq to'lov |
 | `kk_supplier_balance` | to'lov eng erta muddatdan; kechikish jarimasiz; qoldiqdan ko'p to'lov — xato; 7 kun ichida to'lanadigani |
 | `kk_zakat` | 8.3 misoli; nisobdan past; umidsiz nasiya chiqarilgan; qarzlar bazadan katta (baza ≤ 0) |
+| `kk_owner_hour` | 8A.1 misoli (5 000 000 + 3 100 000); 3 oy o'rtachasi; zarar oyi 0; o'z mehnati kiritilmagan; qo'lda kiritilgani ustun; yopilgan oy yo'q; hammasi zarar |
+| `kk_delegate` | 8A.2: qoplanish (yuqoriga yaxlitlash); yaxlitlash; o'rgatish xarajati 0 — 0 oy; teng narx va yordamchi qimmat — `SELF_CHEAPER`; xatolar |
 
 ## 10. UI/UX
 - **Desktop — asosiy ish stoli** (`BARAKA_OILASI.md` 11.2): kunlik kassa jadvali, nasiya jadvali (filtr, yosh guruhlari), tovar qoldig'i, «Hisob kuni» ustasi, inventarizatsiya. Klaviatura bilan to'liq ishlash.
@@ -354,7 +366,7 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 | K6 | Xodimlar va avans, `EMPLOYMENT`, `SUPPLY` | 7 | shablonlar `reviewStatus` bilan; avansda jarima yo'q |
 | K7 | Kengayish darvozasi, soliq zaxirasi, zakot, inventarizatsiya, tarozi | 6, 8 | `kk_expansion_gate`, `kk_zakat`; diniy matnlar `APPROVED` siz ko'rinmaydi |
 | K8 | Ko'p qurilma va rollar | 12 | avval ADR; sotuvchi qurilmasida foyda ma'lumoti yo'q (test) |
-| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?», biznes o'qish xarajati | 8A | `hour_value`, `kk_delegate` yashil; Uy U16 bilan umumiy formula va `offer_check` (`COURSE`) |
+| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?», biznes o'qish xarajati | 8A | `hour_value`, `kk_owner_hour`, `kk_delegate` yashil; Uy U16 bilan umumiy formula va `offer_check` (`COURSE`) — ✅ (8A.4) |
 
 Har bir K-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar), Uy vazifalari kabi.
 
