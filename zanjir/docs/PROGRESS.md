@@ -15,7 +15,7 @@ ilovada protokol imzolash bloklangan (`norms_not_reviewed`). Keyingi — 7-faza 
 | 3 | Kanonik JSON + hash-zanjir + imzo (Dart + Python) | ✅ Tayyor (umumiy vektorlar, RFC 8785/8032, har bir bayt/bit buzilishi aniqlanadi) | 2026-10-26 | 63bf546 |
 | 4 | Ilova ma'lumot qatlami (Drift) | ✅ Tayyor (`packages/zanjir_data`: migratsiya, repozitoriy, append-only, tashkilot testlari) | 2026-10-26 | c515956 |
 | 5 | Ilova UI, l10n uz/ru | ✅ Tayyor (19 widget/oqim testi; emulyator jobi qo'shildi, lokal tekshirilmagan) | 2026-10-26 | 35727eb |
-| 6 | Deterministik PDF, QR, imzolash | ✅ Tayyor (baytma-bayt bir xil PDF, 12 ta bloklash sharti testlangan, sxema v3) | 2026-10-27 | _commit_ |
+| 6 | Deterministik PDF, QR, imzolash | ✅ Tayyor (baytma-bayt bir xil PDF, 12 ta bloklash sharti testlangan, sxema v3) | 2026-10-27 | 9c7738b |
 | 7 | Server: auth, RBAC, RLS, sync, `/v/{qr_token}` | ⏳ | | |
 | 8 | Sinxronlash integratsiyasi (E2E) | ⏳ | | |
 | 9 | Ajratish rejasi UI, tasdiqlash, STALE | ⏳ | | |
