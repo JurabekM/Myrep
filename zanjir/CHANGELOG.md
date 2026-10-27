@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 11-faza — deploy (ADR-0015): `deploy/` — server Dockerfile (root emas, faqat o'qiladigan FS), `compose.yaml` (PostgreSQL 16,
+  bir martalik Alembic migratsiyasi, API, Caddy TLS/HSTS, kunlik zaxira), staging/prod muhit namunalari, `deploy/zanjir`
+  boshqaruv skripti (bitta buyruq bilan ko'tarish, zaxira, tiklash, kalit yaratish), baza rollari (`zanjir_owner`,
+  `zanjir_api`), `age` bilan shifrlangan `pg_dump` va tiklash; `deploy/check-staging.sh` qabul sinovi va CI `zanjir-deploy`;
+  `docs/DEPLOY.md`, `docs/RUNBOOK.md`; E2E testlari TLS bilan staging'ga qarshi ishlay oladi (`ZANJIR_E2E_CA`).
 - 10-faza — mustahkamlash (ADR-0014): `docs/SECURITY.md` (STRIDE tahdid modeli, OWASP MASVS L1, topilmalar reestri F-01…F-19,
   qoldiq xavflar R-01…R-10); bog'liqliklar auditi `tools/audit/osv_audit.py` (OSV.dev, istisnolar muddat bilan) va CI
   `zanjir-audit`; unumdorlik testlari (2000 tugunli obyekt, 2900 yozuvli sync, server push); accessibility testlari

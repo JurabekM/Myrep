@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# ZANJIR deploy boshqaruvi (11-faza, ADR-0015). Faqat bash + Docker Compose v2.
+#
+#   deploy/zanjir init <muhit>              environments/<muhit>.env ni namunadan yaratadi (maxfiy qiymatlar tasodifiy)
+#   deploy/zanjir up <muhit>                build → migratsiya → api → caddy → zaxira (bitta buyruq; staging'da init ham)
+#   deploy/zanjir down <muhit>              to'xtatadi (ma'lumot volume'lari saqlanadi)
+#   deploy/zanjir ps|logs <muhit> [xizmat]  holat / loglar
+#   deploy/zanjir migrate <muhit>           faqat migratsiya (alembic upgrade head)
+#   deploy/zanjir backup <muhit>            hozir shifrlangan zaxira
+#   deploy/zanjir restore <muhit> <fayl> <age-kalit> --confirm <muhit>
+#                                           bazani o'chirib, zaxiradan tiklaydi (RUNBOOK)
+#   deploy/zanjir psql <muhit>              baza konsoli (superuser, faqat lokal socket)
+#   deploy/zanjir keygen <chiqish-fayli>    zaxira uchun age kalit juftligi (operator kompyuterida)
+#
+# Muhit: staging | prod. Maxfiy qiymatlar faqat environments/<muhit>.env da (0600, commit qilinmaydi).
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+die() { echo "xato: $*" >&2; exit 1; }
+need_env() { [[ "${1:-}" == staging || "${1:-}" == prod ]] || die "muhit: staging yoki prod"; }
+env_file() { echo "$DIR/environments/$1.env"; }
+compose() {
+  local e="$1"; shift
+  ZANJIR_BUILD_CA="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" \
+    docker compose --project-directory "$DIR" -f "$DIR/compose.yaml" -p "zanjir-$e" --env-file "$(env_file "$e")" "$@"
+}
+random_hex() { od -An -tx1 -N32 /dev/urandom | tr -d ' \n'; }
+get_var() { grep -E "^$2=" "$(env_file "$1")" | tail -1 | cut -d= -f2-; }
+
+backup_dir() {
+  local d; d="$(get_var "$1" ZANJIR_BACKUP_DIR)"
+  [[ "$d" = /* ]] || d="$DIR/${d#./}"
+  echo "$d"
+}
+
+cmd_init() {
+  local e="$1" f; f="$(env_file "$e")"
+  [[ -f "$f" ]] && { echo "$f mavjud — o'zgartirilmadi"; return; }
+  umask 077
+  local tmp="$f.tmp"
+  while IFS= read -r line; do
+    if [[ "$line" == *=@random ]]; then line="${line%@random}$(random_hex)"; fi
+    echo "$line"
+  done < "$DIR/environments/$e.env.example" > "$tmp"
+  if grep -q '=@age$' "$tmp"; then
+    [[ "$e" == staging ]] || die "prod uchun zaxira kaliti operator kompyuterida yaratiladi (keygen)"
+    local key="$DIR/environments/$e.age-key"
+    compose_tmp_build "$e" "$tmp"
+    ZANJIR_BUILD_CA="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" docker compose --project-directory "$DIR" -f "$DIR/compose.yaml" \
+      -p "zanjir-$e" --env-file "$tmp" run --rm --no-deps -T backup age-keygen 2>/dev/null > "$key"
+    chmod 0600 "$key"
+    local pub; pub="$(grep -o 'age1[0-9a-z]*' "$key" | head -1)"
+    [[ -n "$pub" ]] || die "age kaliti yaratilmadi"
+    sed -i "s|=@age\$|=$pub|" "$tmp"
+    echo "staging zaxira maxfiy kaliti: $key (faqat sinov muhiti uchun)"
+  fi
+  mv "$tmp" "$f"
+  echo "yaratildi: $f"
+}
+
+compose_tmp_build() {
+  # init paytida backup image'i (age-keygen uchun); env fayli hali vaqtinchalik.
+  sed 's/=@age$/=age1placeholder/' "$2" > "$2.build"
+  ZANJIR_BUILD_CA="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" docker compose --project-directory "$DIR" -f "$DIR/compose.yaml" \
+    -p "zanjir-$1" --env-file "$2.build" build --quiet backup
+  rm -f "$2.build"
+}
+
+validate() {
+  local f; f="$(env_file "$1")"
+  [[ -f "$f" ]] || die "$f yo'q — avval: deploy/zanjir init $1"
+  if grep -nE '=(<|@)' "$f"; then die "$f da to'ldirilmagan qiymatlar bor (yuqorida)"; fi
+  [[ "$(stat -c %a "$f")" == 600 ]] || chmod 0600 "$f"
+}
+
+cmd_up() {
+  local e="$1"
+  [[ -f "$(env_file "$e")" || "$e" != staging ]] || cmd_init "$e"
+  validate "$e"
+  local b; b="$(backup_dir "$e")"
+  mkdir -p "$b" && chmod 0700 "$b"
+  compose "$e" build
+  compose "$e" up -d --remove-orphans --wait --wait-timeout 240
+  compose "$e" ps
+  echo "tayyor: https://$(get_var "$e" ZANJIR_DOMAIN):$(get_var "$e" ZANJIR_HTTPS_PORT)/"
+}
+
+cmd_restore() {
+  local e="$1" file="$2" key="$3"
+  [[ "${4:-}" == --confirm && "${5:-}" == "$e" ]] || die "bazani o'chiradi: --confirm $e qo'shing"
+  [[ -f "$file" && -f "$key" ]] || die "zaxira yoki kalit fayli topilmadi"
+  validate "$e"
+  local b; b="$(backup_dir "$e")"
+  [[ "$(cd "$(dirname "$file")" && pwd)" == "$b" ]] || die "zaxira fayli $b ichida bo'lishi kerak"
+  compose "$e" stop caddy api backup
+  compose "$e" exec -T -u postgres db psql -v ON_ERROR_STOP=1 -d postgres \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'zanjir' AND pid <> pg_backend_pid()" \
+    -c "DROP DATABASE zanjir" -c "CREATE DATABASE zanjir OWNER zanjir_owner" \
+    -c "REVOKE ALL ON DATABASE zanjir FROM PUBLIC" -c "GRANT CONNECT ON DATABASE zanjir TO zanjir_api"
+  compose "$e" run --rm --no-deps -T -v "$(cd "$(dirname "$key")" && pwd)/$(basename "$key"):/run/age-key:ro" \
+    backup restore.sh "/backups/$(basename "$file")" /run/age-key
+  compose "$e" up -d --wait --wait-timeout 240
+  echo "tiklash tugadi; tekshiring: deploy/zanjir ps $e"
+}
+
+main() {
+  local c="${1:-}"; shift || true
+  case "$c" in
+    init) need_env "${1:-}"; cmd_init "$1" ;;
+    up) need_env "${1:-}"; cmd_up "$1" ;;
+    down) need_env "${1:-}"; compose "$1" down ;;
+    ps) need_env "${1:-}"; compose "$1" ps ;;
+    logs) need_env "${1:-}"; local e="$1"; shift; compose "$e" logs --tail 200 "$@" ;;
+    migrate) need_env "${1:-}"; validate "$1"; compose "$1" run --rm migrate ;;
+    backup) need_env "${1:-}"; validate "$1"; compose "$1" exec -T backup backup.sh ;;
+    restore) need_env "${1:-}"; [[ $# -ge 3 ]] || die "restore <muhit> <fayl> <age-kalit> --confirm <muhit>"; cmd_restore "$@" ;;
+    psql) need_env "${1:-}"; compose "$1" exec -u postgres db psql -d zanjir ;;
+    keygen)
+      [[ -n "${1:-}" && ! -e "$1" ]] || die "keygen <yangi-fayl> (mavjud fayl ustiga yozilmaydi)"
+      umask 077
+      (cd "$DIR" && ZANJIR_BUILD_CA="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" docker build -q -t zanjir-backup:keygen \
+        --build-arg REGISTRY="${ZANJIR_REGISTRY:-docker.io/library}" \
+        --secret id=build_ca,src="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" backup >/dev/null)
+      docker run --rm --entrypoint age-keygen zanjir-backup:keygen > "$1"
+      echo "maxfiy kalit: $1 — serverda saqlamang. Ochiq kalit (env'ga): $(grep -o 'age1[0-9a-z]*' "$1")" ;;
+    *) sed -n '2,17p' "${BASH_SOURCE[0]}"; exit 2 ;;
+  esac
+}
+main "$@"

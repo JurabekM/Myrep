@@ -67,7 +67,7 @@ obyektlar sxemasi va ajratish rejalari (xavfsizlikka ta'sir qiladi), normalar to
 | T6 | I — boshqa tashkilot ma'lumoti | ID ni taxmin qilish, SQL | RLS + kodda `org_id` filtri; ilova imtiyozsiz rol; kompozit FK; ORM/parametrlangan SQL | — |
 | T7 | I — ochiq sahifa orqali shaxsiy ma'lumot | QR token | 128 bit token, qurilma imzosidan (oldindan bilinmaydi, boshqa tashkilot band qila olmaydi); sahifada faqat imzolovchi F.I.Sh. va tashkilot; `noindex`, `no-store` | PDF (QR egasi uchun hujjatning o'zi) manzil va ismlarni o'z ichiga oladi — qabul qilingan |
 | T8 | I — qurilmadagi ma'lumot sizishi | zaxira nusxa, ekranshot, log | `allowBackup=false` + `dataExtractionRules`; FLAG_SECURE imzolash ekranida; logda sir yo'q | SQLite shifrlanmagan (Android FBE ga tayanadi) — M-xavf, reestrda |
-| T9 | I — tarmoqda tinglash | ochiq Wi-Fi | faqat HTTPS (ilova URL tekshiruvi + `cleartextTrafficPermitted=false`, faqat tizim CA); serverda HSTS — Caddy (11-faza) | sertifikat pinning yo'q (L2) |
+| T9 | I — tarmoqda tinglash | ochiq Wi-Fi | faqat HTTPS (ilova URL tekshiruvi + `cleartextTrafficPermitted=false`, faqat tizim CA); serverda HSTS — Caddy (ADR-0015) | sertifikat pinning yo'q (L2) |
 | T10 | D — serverni band qilish | ko'p so'rov, katta paket | rate limiting, 5 MB chegara, push ≤ 500 op, pull sahifalari | bitta jarayon xotirasidagi cheklovlar (ko'p nusxada Redis) |
 | T11 | E — rolni oshirish | ENGINEER sozlama/tasdiq yuboradi, rejani o'zi "tasdiqlaydi" | API rol talablari (matritsa testi), sync jadval/hodisa rollari, rol bazadan har so'rovda; reja tasdig'i — LEAD/ADMIN ning aynan shu qadamlarga imzolangan hodisasi, holat o'tishlari va mazmun serverda qulflangan | — |
 | T12 | E — xavfli ish ruxsati | reja qadamini o'tkazib yuborish | qadamlar ketma-ket, kuchlanish tekshiruvi — 2 aniq tasdiq (yadro + repozitoriy + UI testlari); ilova "xavfsiz" demaydi | javobgarlik — naryad beruvchi va ish rahbarida (1-qoida) |
@@ -94,6 +94,14 @@ obyektlar sxemasi va ajratish rejalari (xavfsizlikka ta'sir qiladi), normalar to
 | MASVS-CODE-4 kiritishni tekshirish | ✅ | raqamlar qat'iy tahlil, normalar qat'iy YAML yuklovchi, server Pydantic `extra=forbid`, sim formati turlari |
 | MASVS-RESILIENCE-* | ➖ | L2/R — obfuskatsiya release build'da (`--obfuscate --split-debug-info`, 12-faza) |
 | MASVS-PRIVACY-1..4 | ✅ | minimal ma'lumot (F.I.Sh., telefon); tashqi analitika/xato xizmatlari yo'q; ma'lumot lokalizatsiyasi — DEPLOY.md (huquqshunos) |
+
+## Deploy (11-faza, ADR-0015)
+
+- Tashqariga faqat Caddy (80 → 443, HSTS); `api` va baza — ichki Docker tarmoqlarida, baza tarmog'i internetsiz.
+- Konteynerlar: root emas (`api` uid 10001), faqat o'qiladigan FS, `cap_drop: ALL`, `no-new-privileges`; image'lar digest bilan.
+- Baza rollari: superuser faqat lokal socket; migratsiya — `zanjir_owner`; ilova — `zanjir_api` (faqat `zanjir_app`, RLS).
+- Maxfiy qiymatlar — `deploy/environments/<muhit>.env` (0600, `.gitignore`); zaxira — `age` bilan shifrlangan, ochish
+  kaliti serverda yo'q. Kirish logi Caddy'da o'chiq (QR token URL'da).
 
 ## Topilmalar reestri (10-faza xavfsizlik ko'rigi)
 
@@ -127,10 +135,10 @@ taklif kodlari, refresh rotatsiyasi, JWT, ochiq sahifa, loglar, ilova xotirasi, 
 
 **Qabul qilingan qoldiq xavflar (R):**
 - R-01 (O) Sertifikat pinning yo'q — L2; domen va sertifikat siyosati 11-fazada ko'rib chiqiladi.
-- R-02 (O) Rate limiting va hisob cheklovi bitta jarayon xotirasida — bitta server nusxasi (11-faza); ko'p nusxada Redis.
+- R-02 (O) Rate limiting va hisob cheklovi bitta jarayon xotirasida — `api` bitta jarayon (ADR-0015); ko'p nusxada Redis.
 - R-03 (O) Lokal SQLite shifrlanmagan — Android FBE (qurilma qulflangan bo'lsa shifrlangan), zaxira o'chirilgan; SQLCipher —
   pilotdan keyin baholanadi (unumdorlik va kalit tiklash).
-- R-04 (P) JWT HS256 bitta kalit, rotatsiya qo'lda — RUNBOOK (11-faza).
+- R-04 (P) JWT HS256 bitta kalit, rotatsiya qo'lda — `RUNBOOK.md` "Kalitlar va kirish" (yiliga yoki sizishda).
 - R-05 (P) Ilovaga kirishda lokal PIN/biometrik yo'q — qurilma qulfi tashkilot siyosati.
 - R-06 (P) Majburiy yangilash yo'q — Play in-app update keyingi bosqichda.
 - R-07 (P) Ochiq PDF QR egasiga hujjatdagi shaxsiy ma'lumotni ko'rsatadi — protokolning maqsadi (buyurtmachiga beriladi).

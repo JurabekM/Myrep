@@ -21,3 +21,9 @@ key.properties
 # Python qamrov hisobotlari
 .coverage
 .coverage.*
+
+# Deploy: muhit fayllari, staging zaxira kaliti, zaxiralar — commit qilinmaydi
+deploy/environments/*.env
+deploy/environments/*.env.tmp
+deploy/environments/*.age-key
+deploy/backups/

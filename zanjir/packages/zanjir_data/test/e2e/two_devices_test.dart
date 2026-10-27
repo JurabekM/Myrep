@@ -5,6 +5,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Variable;
+import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'package:test/test.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 import 'package:zanjir_data/zanjir_data.dart';
@@ -13,7 +15,16 @@ import '../support/harness.dart';
 
 /// E2E (8-faza mezoni): ikki qurilma oflayn ishlaydi → sinxronlash → o'lchovlar yo'qolmaydi va takrorlanmaydi;
 /// audit zanjiri buzilsa server rad etadi. Haqiqiy FastAPI + PostgreSQL (`tools/e2e/run.sh`).
+/// Staging'ga qarshi (11-faza, `deploy/check-staging.sh`): `ZANJIR_E2E_URL=https://...` va `ZANJIR_E2E_CA` — Caddy ichki
+/// CA sertifikati (faqat shu CA ga ishoniladi).
 final String baseUrl = Platform.environment['ZANJIR_E2E_URL'] ?? 'http://127.0.0.1:18080';
+
+http.Client _client() {
+  final ca = Platform.environment['ZANJIR_E2E_CA'];
+  if (ca == null) return http.Client();
+  return IOClient(HttpClient(context: SecurityContext(withTrustedRoots: false)..setTrustedCertificates(ca)));
+}
+
 const password = 'E2e-maxfiy-parol-1';
 final _rnd = Random.secure();
 
@@ -32,7 +43,7 @@ class Device {
 
   static Future<Device> create() async {
     final signer = await Ed25519Signer.fromSeed(List.generate(32, (_) => _rnd.nextInt(256)));
-    return Device._(memoryDb(), ServerApi(baseUrl, tokens: MemoryTokenStore()), signer);
+    return Device._(memoryDb(), ServerApi(baseUrl, tokens: MemoryTokenStore(), client: _client()), signer);
   }
 
   void bind(String orgId, String user, String device) {

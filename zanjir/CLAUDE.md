@@ -56,7 +56,10 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - E2E (ilova sync ↔ server): `tools/e2e/run.sh` (Docker'da PostgreSQL yoki `ZANJIR_E2E_OWNER_URL`; `dart test -P e2e-run test/e2e`).
   Sinxronlash sxemasi shartnomasi: `ZANJIR_UPDATE_SYNC_SCHEMA=1 uv run pytest tests/test_sync_schema.py` → `tools/vectors/sync_schema.json`.
 - Kripto vektorlari: `cd server && uv run python -I ../tools/vectors/generate.py --check` (qo'lda tahrirlanmaydi, ADR-0007)
-- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi.
+- Deploy (ADR-0015): `deploy/zanjir up staging` (bitta buyruq), `deploy/check-staging.sh` (smoke + E2E TLS orqali + zaxira →
+  tiklash); bu konteynerda: `ZANJIR_REGISTRY=mirror.gcr.io/library` (Docker Hub/ECR cheklovi) va
+  `ZANJIR_BUILD_CA=./environments/build-ca.pem` (`/root/.ccr/ca-bundle.crt` nusxasi, commit qilinmaydi). Prod — `docs/DEPLOY.md`.
+- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi; `zanjir-deploy.yml` — staging qabul sinovi.
 
 ## O'zgarmas qoidalar (hech qachon buzilmaydi)
 1. Ilova hech qachon "ishlash xavfsiz" demaydi — faqat **tavsiya**; javobgarlik naryad beruvchi va ish rahbarida. Bu matn UI'da va PDF'da ko'rinadi.
@@ -130,6 +133,12 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - `lib/features/*` — ekranlar; `lib/l10n/app_{uz,ru}.arb` + `labels.dart` (domen kodlari → matn).
 - Testlar: `test/support/harness.dart` (xotiradagi baza, `startWithSession`, `goTo`, `settle`, `reveal`); asosiy oqim —
   `test/flow/main_flow.dart` (widget testi va `integration_test/`). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).
+
+## Deploy (ADR-0015)
+- `deploy/`: bitta `compose.yaml` (db, migrate, api, caddy, backup), muhit — `deploy/environments/<muhit>.env` (commit
+  qilinmaydi). Yangi `ZANJIR_*` sozlama → `compose.yaml` `api.environment`, ikkala `*.env.example`, `DEPLOY.md`.
+- Yangi migratsiya `zanjir_owner` (superuser emas) bilan ishlashi shart — `check-staging.sh` buni tekshiradi.
+- Prod amallari — `docs/RUNBOOK.md`; prod'ga chiqarish faqat 2-darvozadan keyin, operator bilan.
 
 ## Xavfsizlik (ADR-0014)
 - `docs/SECURITY.md` — tahdid modeli, MASVS, RBAC, topilmalar reestri (F-*) va qoldiq xavflar (R-*). Yangi topilma yoki

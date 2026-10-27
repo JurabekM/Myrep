@@ -1,0 +1,137 @@
+# ZANJIR — Docker Compose (11-faza, ADR-0015). Staging va prod — bitta fayl, farqi muhit faylida
+# (`environments/<muhit>.env`, commit qilinmaydi). To'g'ridan-to'g'ri emas, `deploy/zanjir` orqali ishlatiladi:
+#   deploy/zanjir up staging
+# Tarmoqlar: `backend` (ichki, internetsiz) — db, migrate, api, backup; `frontend` — caddy ↔ api. Baza porti ochilmaydi.
+
+x-server-build: &server-build
+  context: ../server
+  dockerfile: ../deploy/server/Dockerfile
+  args:
+    REGISTRY: ${ZANJIR_REGISTRY:-docker.io/library}
+  secrets: [build_ca]
+
+x-hardening: &hardening
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+
+# Docker loglari aylanadi (disk to'lmasin): xizmat boshiga 5 × 10 MB.
+x-logging: &logging
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: "5"}
+
+services:
+  db:
+    <<: *logging
+    image: ${ZANJIR_REGISTRY:-docker.io/library}/postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=peer
+      ZANJIR_OWNER_PASSWORD: ${ZANJIR_OWNER_PASSWORD:?}
+      ZANJIR_API_PASSWORD: ${ZANJIR_API_PASSWORD:?}
+      TZ: UTC
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "zanjir"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    shm_size: 256m
+    restart: unless-stopped
+    networks: [backend]
+
+  migrate:
+    <<: [*logging, *hardening]
+    image: zanjir-server:${ZANJIR_VERSION:-local}
+    build: *server-build
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      ZANJIR_DATABASE_URL: postgresql+asyncpg://zanjir_owner:${ZANJIR_OWNER_PASSWORD}@db:5432/zanjir
+    depends_on:
+      db: {condition: service_healthy}
+    restart: "no"
+    networks: [backend]
+
+  api:
+    <<: [*logging, *hardening]
+    image: zanjir-server:${ZANJIR_VERSION:-local}
+    build: *server-build
+    read_only: true
+    tmpfs: [/tmp]
+    environment:
+      ZANJIR_DATABASE_URL: postgresql+asyncpg://zanjir_api:${ZANJIR_API_PASSWORD}@db:5432/zanjir
+      ZANJIR_JWT_SECRET: ${ZANJIR_JWT_SECRET:?}
+      ZANJIR_METRICS_TOKEN: ${ZANJIR_METRICS_TOKEN:-}
+      ZANJIR_REGISTRATION_OPEN: ${ZANJIR_REGISTRATION_OPEN:-false}
+      ZANJIR_CORS_ORIGINS: ${ZANJIR_CORS_ORIGINS:-[]}
+      ZANJIR_RATE_LIMIT_AUTH_PER_MINUTE: ${ZANJIR_RATE_LIMIT_AUTH_PER_MINUTE:-10}
+      ZANJIR_RATE_LIMIT_DEFAULT_PER_MINUTE: ${ZANJIR_RATE_LIMIT_DEFAULT_PER_MINUTE:-300}
+      ZANJIR_LOGIN_FAILURES_MAX: ${ZANJIR_LOGIN_FAILURES_MAX:-10}
+      ZANJIR_SMS_OTP_ENABLED: "false"
+      ZANJIR_LOG_LEVEL: ${ZANJIR_LOG_LEVEL:-INFO}
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    restart: unless-stopped
+    networks: [backend, frontend]
+
+  caddy:
+    <<: [*logging, *hardening]
+    image: ${ZANJIR_REGISTRY:-docker.io/library}/caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
+    cap_add: [NET_BIND_SERVICE]
+    environment:
+      ZANJIR_DOMAIN: ${ZANJIR_DOMAIN:?}
+      ZANJIR_TLS: ${ZANJIR_TLS:?}
+    ports:
+      - "${ZANJIR_HTTP_PORT:-80}:80"
+      - "${ZANJIR_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+    networks: [frontend]
+
+  backup:
+    <<: *logging
+    image: zanjir-backup:${ZANJIR_VERSION:-local}
+    build:
+      context: ./backup
+      args:
+        REGISTRY: ${ZANJIR_REGISTRY:-docker.io/library}
+      secrets: [build_ca]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      PGHOST: db
+      PGUSER: zanjir_owner
+      PGPASSWORD: ${ZANJIR_OWNER_PASSWORD}
+      PGDATABASE: zanjir
+      ZANJIR_BACKUP_AGE_RECIPIENT: ${ZANJIR_BACKUP_AGE_RECIPIENT:?}
+      ZANJIR_BACKUP_AT: ${ZANJIR_BACKUP_AT:-21:30}
+      ZANJIR_BACKUP_KEEP_DAYS: ${ZANJIR_BACKUP_KEEP_DAYS:-30}
+      TZ: UTC
+    volumes:
+      - ${ZANJIR_BACKUP_DIR:?}:/backups
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+    networks: [backend]
+
+networks:
+  backend:
+    internal: true
+  frontend: {}
+
+volumes:
+  db-data: {}
+  caddy-data: {}
+  caddy-config: {}
+
+secrets:
+  build_ca:
+    file: ${ZANJIR_BUILD_CA:-./environments/build-ca.empty}

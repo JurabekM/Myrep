@@ -393,3 +393,34 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
 - **Oqibat:** SQLite shifrlanmagan, sertifikat pinning va lokal PIN yo'q — qoldiq xavflar (R-01…R-10), pilotdan keyin
   qayta ko'riladi. Android sozlamalari (zaxira, cleartext, imzo) bu muhitda build qilinmagan — 12-fazada tekshiriladi.
   QR token formati o'zgardi (tasodifiy → imzodan) — ilova va server bir vaqtda yangilanadi (hali production yo'q).
+
+## ADR-0015: Deploy (11-faza) — Docker Compose, Caddy, rollar, shifrlangan zaxira
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (11-faza).
+- **Kontekst:** Prompt 9-bo'lim, 11-faza: Dockerfile'lar, compose (staging + prod), Caddy, deploy'da Alembic, shifrlangan
+  kunlik `pg_dump` + tiklash, `DEPLOY.md`, `RUNBOOK.md`; mezon — staging bitta buyruq bilan ko'tariladi, zaxiradan tiklash
+  sinovdan o'tgan. 2-inson darvozasi (domen, server, SMTP/SMS) hali yopilmagan — prod faqat tayyorlanadi.
+- **Qaror:**
+  1. **Bitta `compose.yaml`, muhit — env faylda.** Staging va prod farqi (domen, TLS, portlar, ro'yxatdan o'tish,
+     chegaralar, zaxira muddati) `deploy/environments/<muhit>.env` da; har muhit alohida Compose loyihasi. Compose
+     "profillari" o'rniga shu: ikki muhitda xizmatlar tarkibi bir xil, prod'ga staging'da sinalmagan narsa kirmaydi.
+  2. **`deploy/zanjir` CLI** — `up` (build → `migrate` → `api` → `caddy` → `backup`, `--wait` sog'liq tekshiruvlari bilan),
+     `backup`, `restore --confirm`, `keygen`. Staging'da birinchi `up` maxfiy qiymatlarni (`od /dev/urandom`) va sinov age
+     kalitini o'zi yaratadi; prod'da `<...>` qolsa ishga tushmaydi.
+  3. **Migratsiya deploy'da** — alohida bir martalik `migrate` xizmati `zanjir_owner` bilan (superuser emas); `api` faqat
+     u muvaffaqiyatli tugagach. Rollar `db/init/10-roles.sh` da: `zanjir_owner` (egasi), `zanjir_app` (NOLOGIN, RLS),
+     `zanjir_api` (login, faqat `zanjir_app` a'zosi); `postgres` superuser'i tarmoqdan yopiq (`peer`).
+  4. **Caddy** — TLS (prod: ACME, staging: ichki CA), HSTS, `Server` sarlavhasi yo'q, `/metrics` tashqariga 404, kirish
+     logi o'chiq (URL'da QR token; ilovaning JSON logi tokenni yashiradi). `api` faqat ichki tarmoqlarda, bitta jarayon
+     (R-02), root emas, faqat o'qiladigan FS, `cap_drop: ALL`, `no-new-privileges`. Baza `internal` tarmoqda (internetsiz).
+  5. **Zaxira — `pg_dump -Fc | age -r <ochiq kalit>`**: serverda faqat ochiq kalit (server buzilsa ham zaxira ochilmaydi),
+     maxfiy kalit operatorda. O'z kriptografiyamiz yo'q — `age` (X25519 + ChaCha20-Poly1305). Kunlik 21:30 UTC, muddat
+     bo'yicha tozalash, `.sha256`. `restore.sh` faqat bo'sh bazaga.
+  6. **Image'lar digest bilan qotirilgan**, registry `ZANJIR_REGISTRY` bilan almashtiriladi (ko'zgu boshqa image bera
+     olmaydi). TLS'ni tekshiruvchi proksi ortida build — ixtiyoriy BuildKit secret `build_ca` (image'ga kirmaydi).
+  7. **Qabul sinovi** — `deploy/check-staging.sh` (CI `zanjir-deploy`): bitta buyruq bilan ko'tarish, HTTPS smoke, Dart E2E
+     (7 stsenariy) staging'ga TLS orqali, shifrlangan zaxira (ochiq matn yo'qligi tekshiriladi), yangi PostgreSQL'ga tiklash
+     va `zanjir restore` — har jadval soni, mazmun md5 va sxema bir xil.
+- **Oqibat:** Bitta server, bitta `api` jarayoni (rate limiting xotirada); gorizontal kengayish — Redis va ko'p nusxa
+  (keyingi bosqich). Zaxira tashqi nusxasi va monitoring (Prometheus/alerting) — operator qarori, RUNBOOK'da tavsiya.
+  Prod deploy, SMTP/SMS provayderi — 2-darvozadan keyin.

@@ -1,7 +1,7 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 10-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq — 1-darvoza yopilmaguncha
-protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 11-faza (deploy), 🛑 2-darvozadan keyin (domen, server, SMTP/SMS — `.env`).
+**Joriy holat:** 11-faza tayyor (staging; prod — 🛑 2-darvozadan keyin operator bilan). 🛑 1-darvoza (`docs/NORMS_REVIEW.md`)
+va S11–S14 hali ochiq — 1-darvoza yopilmaguncha protokol imzolash bloklangan. Keyingi — 12-faza (release), 🛑 3-darvozadan keyin (keystore).
 **Oxirgi yangilanish:** 2026-10-27
 
 ## Fazalar
@@ -20,7 +20,7 @@ protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 11-faza (d
 | 8 | Sinxronlash integratsiyasi (E2E) | ✅ Tayyor (E2E 6 stsenariy: Dart ↔ FastAPI + PostgreSQL; ilova 30, data 74 test) | 2026-10-27 | 7793f63 |
 | 9 | Ajratish rejasi UI, tasdiqlash, STALE | ✅ Tayyor (oqim testi + integration_test, ketma-ket qadamlar, kuchlanish tekshiruvi — 2 tasdiq, E2E 7) | 2026-10-27 | 5f62aa4 |
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ✅ Tayyor (SECURITY.md: STRIDE, MASVS, F-01…F-19 — "yuqori"lar yopilgan; OSV auditi 0; unumdorlik byudjetlari; a11y testlari) | 2026-10-27 | 7040f69, e418b79 |
-| 11 | Deploy (staging + prod) | ⏳ | | |
+| 11 | Deploy (staging + prod) | ✅ Tayyor (staging bitta buyruq; E2E 7/7 TLS orqali; zaxira → tiklash: 20 jadval + sxema bir xil; prod tayyor, 2-darvozani kutadi) | 2026-10-27 | |
 | 12 | Release (AAB, Play internal) | ⏳ | | |
 
 ## 🛑 Inson darvozalari
@@ -29,7 +29,7 @@ protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 11-faza (d
 |---|---|---|---|
 | R | Boshlashdan oldin | Reja va `zanjir_core` tuzilmasini tasdiqlash; ochiq savollarga javob | ✅ 2026-10-26: barcha takliflar qabul qilindi |
 | 1 | 1-fazadan keyin | Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni tekshirib imzolaydi (M1–M10 savollarga javob) | 🛑 Kutilmoqda |
-| 2 | 11-fazadan oldin | Domen, O'zbekistondagi server (IP, SSH user), SMTP/SMS — faqat `.env` orqali | ⏳ |
+| 2 | 11-fazadan oldin | Domen, O'zbekistondagi server (IP, SSH user), SMTP/SMS — faqat `.env` orqali | 🛑 Kutilmoqda: staging tayyor; prod — `DEPLOY.md` "Prod" (operator `prod.env` ni serverda to'ldiradi) |
 | 3 | 12-fazadan oldin | Release keystore (foydalanuvchi yaratadi), Play Console yuklash | ⏳ |
 | 4 | Pilotdan keyin | Fikr-mulohazalar asosida keyingi reja | ⏳ |
 
@@ -55,6 +55,7 @@ Muhandis uchun: M1–M10 (`docs/NORMS_REVIEW.md`). Ular hal bo'lguncha baholash 
   `https://<domen>/v/<token>` — 7-faza (server) va 2-darvoza (domen), build'da `--dart-define=ZANJIR_VERIFY_BASE_URL`.
 - `printing` (ulashish/chop etish) va FLAG_SECURE Android'da tekshirilmagan (SDK yo'q).
 - Ilova serverga `--dart-define=ZANJIR_SERVER_URL=...` bilan ulanadi (domen — 2-darvoza); usiz faqat oflayn.
+- Deploy image'lari bu konteynerda `mirror.gcr.io` orqali (Docker Hub 429, ECR "data limit"); CI'da Docker Hub.
 - Server testlari Docker talab qiladi: bu konteynerda `dockerd` qo'lda ishga tushirildi, image ECR ko'zgusidan
   (Docker Hub 429). Ilova ↔ server haqiqiy sinxronlash — 8-faza.
 - Release darvozasi `needs_verification` holatidagi normalarni ham yiqitadi (ADR-0004) — muhandis tekshiruvidan keyin holat `source_seen` ga o'zgartiriladi.
