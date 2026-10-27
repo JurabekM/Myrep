@@ -4,7 +4,9 @@ import type { RepaymentResultDto } from "../bindings";
 import type { EntryMode } from "../features/kasbkor/KkEntryDialog";
 import type { MfEntryMode } from "../features/musofir/MfEntryDialog";
 
-export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "kkCash" | "kkCredit" | "kkStock" | "kkStaff" | "kkSuppliers" | "kkGate" | "kkZakat" | "kkMeasure" | "kkSellerCredit" | "kkShift" | "twoShores" | "sync" | "settings";
+export type Screen = "home" | "vault" | "expenses" | "audit" | "inventory" | "debts" | "ceremonies" | "partnerships" | "ideas" | "agreements" | "receipt" | "kkEquipment" | "kkLabor" | "kkQuote" | "kkClose" | "kkCash" | "kkCredit" | "kkStock" | "kkStaff" | "kkSuppliers" | "kkGate" | "kkZakat" | "kkMeasure" | "kkSellerCredit" | "kkShift" | "twoShores" | "learning" | "sync" | "settings";
+
+export type OfferMode = "OFFER" | "COURSE";
 
 type UiState = {
   screen: Screen;
@@ -16,6 +18,8 @@ type UiState = {
   mfEntry: MfEntryMode | null;
   /** «Taklifni tekshirish» oynasi — ilovaning istalgan joyidan (uy/SPEC 2E.5). */
   offerOpen: boolean;
+  /** Oyna qaysi turda ochiladi: sarmoya taklifi yoki kurs/ustoz (uy/SPEC 2G.4). */
+  offerMode: OfferMode;
   /** Qarz yopilganda nishonlash oynasi (uy/SPEC 2D.9). */
   celebration: RepaymentResultDto | null;
   /** Eslatma yoki kelishuvlar markazidan ochiladigan sheriklik (va uning bo'limi). */
@@ -29,6 +33,8 @@ type UiState = {
   openMfEntry: (mode: MfEntryMode) => void;
   closeMfEntry: () => void;
   openOffer: () => void;
+  /** «Taklifni tekshirish» — darhol kurs turi bilan (bilim rejasidan). */
+  openCourseCheck: () => void;
   closeOffer: () => void;
   /** Toʻlov natijasi: qarz yopilgan boʻlsa, nishonlash oynasi ochiladi. */
   afterRepayment: (r: RepaymentResultDto) => void;
@@ -45,6 +51,7 @@ export const useUi = create<UiState>((set) => ({
   kkEntry: null,
   mfEntry: null,
   offerOpen: false,
+  offerMode: "OFFER",
   celebration: null,
   partnershipFocus: null,
   setScreen: (screen) => set({ screen }),
@@ -55,7 +62,8 @@ export const useUi = create<UiState>((set) => ({
   closeKkEntry: () => set({ kkEntry: null }),
   openMfEntry: (mode) => set({ mfEntry: mode }),
   closeMfEntry: () => set({ mfEntry: null }),
-  openOffer: () => set({ offerOpen: true }),
+  openOffer: () => set({ offerOpen: true, offerMode: "OFFER" }),
+  openCourseCheck: () => set({ offerOpen: true, offerMode: "COURSE" }),
   closeOffer: () => set({ offerOpen: false }),
   afterRepayment: (r) => set(r.closed ? { celebration: r } : {}),
   closeCelebration: () => set({ celebration: null }),

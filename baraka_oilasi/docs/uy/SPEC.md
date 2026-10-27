@@ -613,7 +613,7 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 | 5 | Pulni halol ishga soling — savdo va sheriklik | ✅ Spetsifikatsiya yozildi |
 | 6 | Kelishuvni yozing — 9 savollik shartnoma | ✅ Spetsifikatsiya yozildi |
 | 7 | Firibgarlik va shoshilinch katta qarorlardan saqlaning | ✅ Musofir makonida (M3, M5): sovutish davri, besh xavf belgisi; Uy U12 «Taklifni tekshirish» bilan umumiy |
-| 8 | O'zingizga sarmoya qiling — soat qiymatini bilim bilan oshiring | 📝 Spetsifikatsiya yozildi (2G); reja: U16a/b/c, K9, M6 |
+| 8 | O'zingizga sarmoya qiling — soat qiymatini bilim bilan oshiring | ✅ Uy makonida (U16): «Bir soatim qancha?», bilim rejalari, «Sarmoya» belgisi, kurs tekshiruvi, natijani o'lchash, «Ilm zakoti» (desktop + Android); juma eslatmalari — keyin; Kasb-kor K9, Musofir M6 — reja |
 
 ## 11. ISHLAB CHIQISH BOSQICHLARI
 - **MVP-1:** daromad va xarajatni kiritish, «Kelajagim» virtual jamg'armasi va avto-ulush, «Kimning puli?», oylik audit, 1-bob kontenti va haftalik vazifalar.

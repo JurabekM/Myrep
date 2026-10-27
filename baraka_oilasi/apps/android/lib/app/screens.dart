@@ -25,6 +25,7 @@ import '../features/kasbkor/kk_staff_screen.dart';
 import '../features/kasbkor/kk_stock_screen.dart';
 import '../features/kasbkor/kk_suppliers_screen.dart';
 import '../features/kasbkor/kk_zakat_screen.dart';
+import '../features/learning/learning_screen.dart';
 import '../features/musofir/mf_entry_sheet.dart';
 import '../features/musofir/mf_home_screen.dart';
 import '../features/musofir/two_shores_screen.dart';
@@ -114,6 +115,7 @@ const _uyNav = [
   'ceremonies',
   'partnerships',
   'ideas',
+  'learning',
   'agreements',
   'receipt',
   'sync',
@@ -154,6 +156,7 @@ final Map<String, ScreenDef> screenDefs = {
   'receipt': ScreenDef('receipt', 'nav.receipt', (c) => ReceiptScreen(spaceId: c.spaceId)),
   'partnerships': ScreenDef('partnerships', 'nav.partnerships', (c) => PartnershipsScreen(spaceId: c.spaceId)),
   'ideas': ScreenDef('ideas', 'nav.ideas', (c) => IdeasScreen(spaceId: c.spaceId)),
+  'learning': ScreenDef('learning', 'nav.learning', (c) => LearningScreen(spaceId: c.spaceId)),
   'agreements': ScreenDef('agreements', 'nav.agreements', (c) => AgreementsScreen(spaceId: c.spaceId)),
   'kkCash': ScreenDef('kkCash', 'nav.kkCash', (c) => KkCashScreen(spaceId: c.spaceId)),
   'kkCredit': ScreenDef('kkCredit', 'nav.kkCredit', (c) => KkCreditScreen(spaceId: c.spaceId)),

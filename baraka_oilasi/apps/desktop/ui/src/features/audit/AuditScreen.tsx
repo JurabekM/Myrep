@@ -22,6 +22,13 @@ export function AuditScreen({ spaceId }: { spaceId: string }) {
         [t("audit.expenses"), s.data.expenses.formatted],
         [t("audit.vaultNet"), s.data.vaultNet.formatted],
         [t("audit.balanceDelta"), s.data.balanceDelta.formatted],
+        // «O'zimga sarmoya: X — daromadning Y %» (uy/SPEC 2G.3); foiz yadrodan.
+        [
+          t("audit.selfInvestment"),
+          s.data.selfInvestment.sharePercent == null
+            ? s.data.selfInvestment.total.formatted
+            : t("learn.selfInvestment.line", { total: s.data.selfInvestment.total.formatted, percent: s.data.selfInvestment.sharePercent }),
+        ],
       ]
     : [];
 
