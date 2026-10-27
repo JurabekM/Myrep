@@ -4,14 +4,23 @@ Sector Verify baza stansiyasi sektorlari RF rejaga mos nurlanayotganini **oddiy 
 sektor almashinuvi, yo'q PCI va antenna burilishini brigada saytdan ketmasidan oldin topadi. Ilova to'liq
 offline ishlaydi — ma'lumot telefondan chiqmaydi.
 
+**Talablar:** Android 10 yoki yangiroq (Android 16 ham), GPS, LTE yoki 5G (NR) tarmog'i, rejadagi operatorning SIM kartasi.
+Tavsiya etilgan telefonlar — `docs/DEVICES.md`.
+
 ## 1. Tayyorgarlik (bir marta)
 1. Ilovani o'rnating (APK yoki Google Play).
-2. **Sozlamalar** (yuqori o'ng burchakdagi tishli g'ildirak):
+2. **Batareya tejashni ilova uchun o'chiring**, aks holda ekran o'chganda ba'zi telefonlar yig'ishni to'xtatadi:
+   - Samsung: Sozlamalar → Ilovalar → Sector Verify → Batareya → **Cheklanmagan**;
+   - Xiaomi / Redmi / POCO: ilova ma'lumoti → Batareya tejash → **Cheklovlar yo'q**, **Avto-ishga tushirish** yoqilgan;
+   - Tecno / Infinix / Realme: ilova → Batareya → **Fonda ishlashga ruxsat**.
+3. **Sozlamalar** (yuqori o'ng burchakdagi tishli g'ildirak):
    - **Muhandis ismi** — hisobotga yoziladi.
    - **Tahlil preseti:** *Shahar* (zich bino, 600 m gacha), *Shahar atrofi* (standart), *Qishloq*.
    - **Trafik URL** (ixtiyoriy, faqat `https://`): telefon tarmoqqa ulangan holatda qolishi va TA (timing advance)
      kelishi uchun har 2 s da HEAD so'rov yuboriladi. Bo'sh qoldirsangiz, oldindan tekshiruv ogohlantiradi.
-   - **Qurilma probe (60 s)** — telefon haqiqatda nimalarni beradi (chastota, qo'shni RSRP, TA). Har telefonda bir marta.
+   - **Qurilma probe (60 s)** — telefon haqiqatda nimalarni beradi (chastota, qo'shni RSRP, TA). Har telefonda bir marta,
+     ochiq joyda. Avval joylashuv va telefon holati ruxsatlari kerak (birinchi oldindan tekshiruvda beriladi) —
+     aks holda «SIM topilmadi yoki ruxsat yo'q» chiqadi.
    - **Ilova tili** va **hisobot tili** (o'zbek, rus, ingliz) — alohida tanlanadi.
    - **Mavzu:** qorong'i (standart), yorug', **quyosh** (to'g'ri quyosh nurida yuqori kontrast).
 
@@ -22,7 +31,8 @@ site_code,site_name,lat,lon,mcc_mnc,sector,rat,band,arfcn,pci,azimuth_deg,hpbw_d
 NAV-0123,Navoiy Markaz,40.1032,65.3685,43405,S1,LTE,B3,1300,141,0,65,2,4,30
 ```
 Xatolar qator raqami bilan ko'rsatiladi; fayl to'liq to'g'ri bo'lmaguncha hech narsa saqlanmaydi.
-Mavjud sayt qayta import qilinsa, sektorlari yangilanadi (eski natijalar saqlanadi).
+Mavjud sayt qayta import qilinsa, sektorlari yangilanadi. Har o'lchov **o'sha paytdagi rejani** o'zi bilan saqlaydi:
+qayta import eski natija, hisobot va ZIP'larni o'zgartirmaydi — yangi reja faqat keyingi o'lchovlarga ta'sir qiladi.
 
 ## 3. Saytda o'lchov
 1. **Saytlar** → saytni tanlang → **Oldindan tekshiruv**.
@@ -31,6 +41,10 @@ Mavjud sayt qayta import qilinsa, sektorlari yangilanadi (eski natijalar saqlana
      «Ilova sozlamalarini ochish».
    - *Operator/SIM* — rejadagi MCC/MNC ga mos SIM kerak (dual-SIM telefonda o'zi tanlanadi).
    - *GPS* — yoqilgan bo'lishi kerak.
+
+   **Sariq** (ogohlantirish) bilan boshlash mumkin, lekin natija sifati pasayishi mumkin: bildirishnomalar o'chiq,
+   2G/3G rejimi, *GPS aniqligi* chegaradan yomon (standart ≤ 15 m — ochiq joyga chiqing), qurilma probe o'tkazilmagan,
+   rejadagi PCI'lar hali ko'rinmagan, trafik URL bo'sh.
 3. **Boshlash** → sayt atrofida **150–400 m** radiusda, iloji boricha **to'liq halqa** bo'ylab piyoda yuring
    (taxminan 15–20 daqiqa). Telefonni qo'lda, ekran o'chiq bo'lsa ham yig'ish davom etadi.
 4. **Jonli o'lchov** ekranida: xarita (iz rangi = serving PCI), **qamrov radari** (36 ta 10° li yo'nalish),
@@ -60,5 +74,8 @@ Mavjud sayt qayta import qilinsa, sektorlari yangilanadi (eski natijalar saqlana
 | «Mos SIM yo'q» | SIM operatori rejadagi MCC/MNC dan farq qiladi — to'g'ri SIM qo'ying |
 | Chastota < 0.5 Hz | Ba'zi telefonlar CellInfo'ni kam yangilaydi — `docs/DEVICES.md` dagi tavsiya etilgan telefonlardan foydalaning |
 | Hamma sektor INCONCLUSIVE | Halqa to'liq emas — radardagi bo'sh yo'nalishlarda yuring |
-| Ilova to'xtab qoldi | Qayta oching: «Tugallanmagan o'lchov» oynasida **Davom ettirish** — yig'ilgan ma'lumot saqlangan |
+| Ilova yopildi yoki yiqildi | Qayta oching. «Tugallanmagan o'lchov» oynasi: o'lchov to'xtab qolgan bo'lsa — **Davom ettirish** (yig'ilgan ma'lumot saqlangan) yoki **To'xtatish**; o'lchov hali yozilayotgan bo'lsa — **O'lchovni ochish** |
+| «Joylashuv ruxsati yo'q» (tiklashda) | Saytni oching va oldindan tekshiruvdan o'ting — ruxsat berilgach davom ettirish mumkin |
+| Ekran o'chganda namunalar ko'paymaydi | Batareya tejash yoqilgan — 1-bo'lim, 2-band |
+| GPS aniqligi yomon (sariq) | Bino ichida yoki osmon yopiq — ochiq joyga chiqib 1–2 daqiqa kuting |
 | Xato haqida xabar berish | Sozlamalar → **Crash loglarini eksport** — ZIP'ni dasturchiga yuboring (joylashuv yo'q) |
