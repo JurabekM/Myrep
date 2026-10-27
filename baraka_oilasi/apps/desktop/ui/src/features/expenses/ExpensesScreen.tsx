@@ -19,6 +19,17 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
   const [categoryId, setCategoryId] = useState("");
   const [necessity, setNecessity] = useState<string | null>(null);
   const [channel, setChannel] = useState<"CASH" | "CARD">("CASH");
+  // «O'zimga sarmoya» belgisi (uy/SPEC 2G.3). Bu ekran faqat Uy menyusida (Kasb-kor, Musofir va
+  // sotuvchi menyularida yo'q); K9, M6 da kengayadi. Rejalar faqat belgi qo'yilganda o'qiladi.
+  const [selfInvestment, setSelfInvestment] = useState(false);
+  const learning = useQuery({ queryKey: keys.learning(spaceId), queryFn: () => call(commands.learningOverview(spaceId, null)), enabled: selfInvestment });
+  const [memberId, setMemberId] = useState("");
+  const [planId, setPlanId] = useState("");
+  const members = learning.data?.members ?? [];
+  const names = new Map(members.map((m) => [m.memberId, m.displayName]));
+  // Faqat ochiq (`ACTIVE`/`PAUSED`) rejalar; a'zo tanlangan bo'lsa — uning rejalari.
+  const plans = (learning.data?.plans ?? []).filter((p) => (p.status === "ACTIVE" || p.status === "PAUSED") && (memberId === "" || p.memberId === memberId));
+  const plan = plans.find((p) => p.id === planId);
 
   const save = useMutation({
     mutationFn: () =>
@@ -27,7 +38,8 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
           amount,
           categoryId,
           channel,
-          memberId: null,
+          // Reja tanlansa — xarajat reja a'zosiniki (yadro mosligini tekshiradi).
+          memberId: selfInvestment ? memberId || plan?.memberId || null : null,
           occurredOn: null,
           necessity,
           obligationId: null,
@@ -35,11 +47,15 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
           isOstentation: false,
           fundedByDebt: false,
           note: null,
+          selfInvestment,
+          learningPlanId: selfInvestment && plan ? plan.id : null,
         }),
       ),
     onSuccess: () => {
       setAmount("");
       setNecessity(null);
+      setSelfInvestment(false);
+      setPlanId("");
     },
   });
 
@@ -84,6 +100,48 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
             </button>
           ))}
         </div>
+        <fieldset className="flex flex-col gap-3 md:col-span-2">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={selfInvestment} onChange={(e) => setSelfInvestment(e.target.checked)} />
+            {t("expense.selfInvestment")}
+          </label>
+          <p className="text-sm text-ink-muted">{t("expense.selfInvestmentHint")}</p>
+          {selfInvestment && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {members.length > 1 && (
+                <label>
+                  <span className="label">{t("expense.member")}</span>
+                  <select
+                    className="field"
+                    value={memberId}
+                    onChange={(e) => {
+                      setMemberId(e.target.value);
+                      setPlanId("");
+                    }}
+                  >
+                    <option value="">—</option>
+                    {members.map((m) => (
+                      <option key={m.memberId} value={m.memberId}>
+                        {m.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label>
+                <span className="label">{t("expense.plan")}</span>
+                <select className="field" value={planId} onChange={(e) => setPlanId(e.target.value)}>
+                  <option value="">—</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {members.length > 1 ? `${p.skill} · ${names.get(p.memberId) ?? ""}` : p.skill}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+        </fieldset>
         <div className="md:col-span-2"><ErrorText error={save.error} /></div>
         <div className="md:col-span-2">
           <button className="btn-primary" disabled={save.isPending}>{t("common.save")}</button>
@@ -95,6 +153,7 @@ export function ExpensesScreen({ spaceId }: { spaceId: string }) {
           <Total label={t("necessity.KERAK")} value={by.kerak.formatted} tone="text-kerak" />
           <Total label={t("necessity.HAVAS")} value={by.havas.formatted} tone="text-havas" />
           <Total label={t("audit.sadaqa")} value={by.sadaqa.formatted} tone="text-accent-text" />
+          {summary.data && <Total label={t("expense.selfInvestmentTotal")} value={summary.data.selfInvestment.total.formatted} tone="text-accent-text" />}
         </div>
       )}
     </section>

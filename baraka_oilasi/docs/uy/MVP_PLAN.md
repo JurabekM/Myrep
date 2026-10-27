@@ -525,11 +525,11 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
 - **U16c — UI, E2E, hujjatlar:** desktop va Android: «O'zimga sarmoya» ekrani (soat qiymati kartasi, rejalar, «Ilm zakoti»), xarajat formasida «Sarmoya» belgisi, kurs tekshiruvi (Taklifni tekshirish ichida `COURSE` turi), juma eslatmalari, 8-bob kontenti (o'zimiz yozgan), i18n (uz, uz-Cyrl, ru), E2E ssenariy, skrinshotlar, CHANGELOG.
 
 **Qabul mezonlari:**
-- [ ] `hour_value`, `hour_value_change`, `self_invest_share` va `offer_check` (`COURSE` case'lari bilan) oracle va Rust'da yashil.
-- [ ] «Sarmoya» belgili xarajat havas chegarasiga kirmaydi (test), toifasi o'zgarmaydi.
-- [ ] Bir a'zoda 3-faol rejani ochib ham, `PAUSED` rejani qayta faollashtirib ham bo'lmaydi (test).
+- [x] `hour_value`, `hour_value_change`, `self_invest_share` va `offer_check` (`COURSE` case'lari bilan) oracle va Rust'da yashil.
+- [x] «Sarmoya» belgili xarajat havas chegarasiga kirmaydi (test), toifasi o'zgarmaydi.
+- [x] Bir a'zoda 3-faol rejani ochib ham, `PAUSED` rejani qayta faollashtirib ham bo'lmaydi (test).
 - [ ] O'qish puli «Kelajagim» yoki zaxira puldan olinmaydi; o'qish uchun qarzda friction so'rovi chiqadi.
-- [ ] Ilova daromad oshishini va'da qiladigan matn chiqarmaydi (i18n lint ro'yxati).
+- [x] Ilova daromad oshishini va'da qiladigan matn chiqarmaydi (i18n lint ro'yxati).
 - [ ] Diniy matnlar `APPROVED` bo'lmaguncha ko'rinmaydi.
 
 ---

@@ -4405,5 +4405,276 @@
   "error_PLAN_CLOSED": "Bu reja yopilgan — oʻqish vaqti yozilmaydi",
   "error_SELF_INVESTMENT_REQUIRED": "Bilim rejasiga faqat «Oʻzimga sarmoya» belgili xarajat bogʻlanadi",
   "error_NO_NEW_HOUR_VALUE": "Natijani oʻlchash uchun boshlangʻich nuqtadan keyin «Bir soatim qancha?» hisobini yangidan saqlang",
-  "error_PLAN_MEMBER_MISMATCH": "Xarajat boshqa aʼzoniki — uni faqat shu aʼzoning bilim rejasiga bogʻlash mumkin"
+  "error_PLAN_MEMBER_MISMATCH": "Xarajat boshqa aʼzoniki — uni faqat shu aʼzoning bilim rejasiga bogʻlash mumkin",
+  "nav_learning": "Oʻzimga sarmoya",
+  "mentor_learning": "Ish soatini cheksiz koʻpaytirib boʻlmaydi — bir soatingiz qiymatini oshiring. Bilimga sarflangan pul — isteʼmol emas, oʻzingizga sarmoya.",
+  "learn_title": "Oʻzimga sarmoya",
+  "learn_intro": "Ish soatlarini cheksiz koʻpaytirib boʻlmaydi — kun ham, kuch ham chegaralangan. Daromadning chegarasi yoʻq yoʻli — bir soat mehnatingiz qiymatini bilim va malaka bilan oshirish. Oʻqishga sarflangan pul — isrof emas, oʻzingizga sarmoya: oʻrgangan malakangiz qayerga borsangiz ham siz bilan qoladi.",
+  "learn_example": "Masalan, dasturchi Sherzod koʻproq buyurtma olish uchun kechalari ham ishlay boshlagan edi. U bir soatining qiymatini hisoblab, maʼlumotlar xavfsizligi boʻyicha malakasini oshirish rejasini tuzdi, pullik kursni avval tekshiruvdan oʻtkazdi va oʻrganganini yosh hamkasbiga tushuntirdi. Natijani vaʼdaga qarab emas, koʻrik sanasidagi hisobga qarab baholaydi.",
+  "learn_tasks_title": "Bu haftaning 3 vazifasi",
+  "learn_tasks_1": "Bir soatingiz qiymatini hisoblang va uni ikki barobar qila oladigan bitta koʻnikmani yozing.",
+  "learn_tasks_2": "Shu koʻnikmaga olib boradigan bitta yoʻlni tanlang; pullik kurs boʻlsa — avval tekshiruvdan oʻtkazing.",
+  "learn_tasks_3": "Bilganingizdan bir narsani shu hafta bir kishiga oʻrgating va yozib qoʻying.",
+  "learn_selfInvestment_title": "Oʻzimga sarmoya (shu oy)",
+  "learn_selfInvestment_line": "{total} — daromadning {percent} %",
+  "@learn_selfInvestment_line": {
+    "placeholders": {
+      "percent": {},
+      "total": {}
+    }
+  },
+  "learn_selfInvestment_noIncome": "{total} — bu oy daromad hali yozilmagan",
+  "@learn_selfInvestment_noIncome": {
+    "placeholders": {
+      "total": {}
+    }
+  },
+  "learn_selfInvestment_hint": "Xarajat kiritishda «Oʻzimga sarmoya» belgisini qoʻying: toifa oʻzgarmaydi va xarajat havas chegarasiga kirmaydi. Majburiy foiz yoʻq.",
+  "learn_hour_title": "Bir soatim qancha?",
+  "learn_hour_cardLabel": "Bir soatim qancha? — {name}",
+  "@learn_hour_cardLabel": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "learn_hour_value": "1 soat qiymati",
+  "learn_hour_double": "Ikki barobar maqsad",
+  "learn_hour_income": "Oylik daromad: {amount} — {source}",
+  "@learn_hour_income": {
+    "placeholders": {
+      "amount": {},
+      "source": {}
+    }
+  },
+  "learn_hour_source_AUTO": "oxirgi oylar oʻrtachasi (avtomatik)",
+  "learn_hour_source_MANUAL": "qoʻlda kiritilgan",
+  "learn_hour_monthly": "Oyiga ish vaqti: {time}",
+  "@learn_hour_monthly": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "learn_hour_computedOn": "Hisoblangan: {date}",
+  "@learn_hour_computedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "learn_hour_none": "Hali hisoblanmagan. Oylik daromad va ish vaqtini kiriting.",
+  "learn_hour_ceiling": "Siz koʻp ishlayapsiz — kuniga 10 soatdan yoki oyiga 260 soatdan ortiq. Soatni yana koʻpaytirish oʻrniga bir soatingiz qiymatini oshirish yoʻlini birga oʻylab koʻraylik: qaysi bilim ishingizni qimmatroq qiladi?",
+  "learn_hour_incomeField": "Oylik daromad (boʻsh — avtomatik)",
+  "learn_hour_suggest": "Boʻsh qoldirsangiz — oxirgi {count} oy oʻrtachasi: {average}",
+  "@learn_hour_suggest": {
+    "placeholders": {
+      "average": {},
+      "count": {}
+    }
+  },
+  "learn_hour_noSuggest": "Oxirgi oylarda bu aʼzoning daromad yozuvi yoʻq — oylik daromadni kiriting.",
+  "learn_hour_hours": "Kuniga soat",
+  "learn_hour_minutes": "Kuniga daqiqa",
+  "learn_hour_days": "Oyda ish kunlari",
+  "learn_hour_save": "Hisoblash va saqlash",
+  "learn_duration_hm": "{h} soat {m} daqiqa",
+  "@learn_duration_hm": {
+    "placeholders": {
+      "h": {},
+      "m": {}
+    }
+  },
+  "learn_duration_h": "{h} soat",
+  "@learn_duration_h": {
+    "placeholders": {
+      "h": {}
+    }
+  },
+  "learn_duration_m": "{m} daqiqa",
+  "@learn_duration_m": {
+    "placeholders": {
+      "m": {}
+    }
+  },
+  "learn_plans_title": "Bilim rejalari",
+  "learn_plans_new": "Yangi reja",
+  "learn_plans_empty": "Hali reja yoʻq. Bitta koʻnikmadan boshlang: diqqat tarqalmasligi uchun bir aʼzoda bir vaqtda koʻpi bilan 2 ta faol reja.",
+  "learn_plan_cardLabel": "Bilim rejasi: {skill}",
+  "@learn_plan_cardLabel": {
+    "placeholders": {
+      "skill": {}
+    }
+  },
+  "learn_plan_dialog": "Yangi bilim rejasi",
+  "learn_plan_member": "Aʼzo",
+  "learn_plan_skill": "Koʻnikma",
+  "learn_plan_skillPlaceholder": "Masalan: avtomobilga xizmat koʻrsatish, bichish-tikish, buxgalteriya",
+  "learn_plan_purpose": "Qaysi ishni yoki soatni qimmatlashtiradi (ixtiyoriy)",
+  "learn_plan_paths": "Yoʻl (bir nechtasi mumkin)",
+  "learn_path_BOOK": "Kitob",
+  "learn_path_MENTOR": "Ustoz",
+  "learn_path_COURSE": "Kurs",
+  "learn_path_PRACTICE": "Amaliyot",
+  "learn_plan_budget": "Byudjet (ixtiyoriy)",
+  "learn_plan_weeklyHours": "Haftasiga soat",
+  "learn_plan_weeklyMinutes": "Haftasiga daqiqa",
+  "learn_plan_start": "Boshlanish sanasi (boʻsh — bugun)",
+  "learn_plan_review": "Koʻrik sanasi (boʻsh — 3 oydan keyin)",
+  "learn_plan_create": "Rejani ochish",
+  "learn_plan_courseHint": "Pullik kurs boʻlsa — toʻlashdan oldin uni tekshiring.",
+  "learn_plan_money": "Oʻqish puli joriy byudjetdan yoki «oʻsadigan pul» ulushidan olinadi; «Kelajagim» va zaxira pulga tegilmaydi. Oʻqish uchun qarz olmaslikka harakat qiling.",
+  "learn_status_ACTIVE": "Faol",
+  "learn_status_PAUSED": "Toʻxtatilgan",
+  "learn_status_DONE": "Tugatildi",
+  "learn_status_DROPPED": "Voz kechildi",
+  "learn_action_PAUSED": "Toʻxtatish",
+  "learn_action_ACTIVE": "Davom ettirish",
+  "learn_action_DONE": "Tugatdim",
+  "learn_action_DROPPED": "Voz kechish",
+  "learn_plan_weeklyTarget": "Haftalik reja: {time}",
+  "@learn_plan_weeklyTarget": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "learn_plan_studied": "Jami oʻqildi: {time}",
+  "@learn_plan_studied": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "learn_plan_budgetLine": "Byudjet: {budget} · sarflandi: {spent}",
+  "@learn_plan_budgetLine": {
+    "placeholders": {
+      "budget": {},
+      "spent": {}
+    }
+  },
+  "learn_plan_spentLine": "Sarflandi: {spent}",
+  "@learn_plan_spentLine": {
+    "placeholders": {
+      "spent": {}
+    }
+  },
+  "learn_plan_dates": "{start} — koʻrik {review}",
+  "@learn_plan_dates": {
+    "placeholders": {
+      "review": {},
+      "start": {}
+    }
+  },
+  "learn_plan_reviewDue": "Koʻrik sanasi keldi — natijani oʻlchab koʻring.",
+  "learn_plan_baseline": "Boshlangʻich nuqta: {value} / soat",
+  "@learn_plan_baseline": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "learn_plan_noBaseline": "Boshlangʻich nuqta yoʻq: reja ochilganda soat qiymati hisoblanmagan edi.",
+  "learn_plan_lastResult": "Oxirgi oʻlchov: {value} / soat",
+  "@learn_plan_lastResult": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "learn_plan_checkCourse": "Kursni tekshirish",
+  "learn_study_title": "Bu hafta necha soat oʻqidingiz?",
+  "learn_study_hours": "Oʻqish, soat",
+  "learn_study_minutes": "Oʻqish, daqiqa",
+  "learn_study_add": "Vaqtni yozish",
+  "learn_result_measure": "Natijani oʻlchash",
+  "learn_result_line": "{baseline} → {current} / soat",
+  "@learn_result_line": {
+    "placeholders": {
+      "baseline": {},
+      "current": {}
+    }
+  },
+  "learn_result_currentOnly": "Hozirgi qiymat: {current} / soat",
+  "@learn_result_currentOnly": {
+    "placeholders": {
+      "current": {}
+    }
+  },
+  "learn_result_diff": "Farq: {diff} ({percent} %)",
+  "@learn_result_diff": {
+    "placeholders": {
+      "diff": {},
+      "percent": {}
+    }
+  },
+  "learn_result_diffOnly": "Farq: {diff}",
+  "@learn_result_diffOnly": {
+    "placeholders": {
+      "diff": {}
+    }
+  },
+  "learn_result_up": "Bir soatingiz qiymati oshdi. Oʻrganganingizni ishda qoʻllashda davom eting.",
+  "learn_result_flat": "Hozircha oʻsish koʻrinmadi — bu ayb emas. Rejani davom ettirish, oʻzgartirish yoki yopish mumkin.",
+  "learn_teach_title": "Ilm zakoti",
+  "learn_teach_hint": "Bu hafta bilganingizdan biror narsani kimgadir oʻrgatdingizmi? Oʻrgatgan odamning oʻz bilimi ham mustahkamlanadi.",
+  "learn_teach_count": "Shu oy: {count} marta oʻrgatildi",
+  "@learn_teach_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "learn_teach_add": "Oʻrgatganimni yozish",
+  "learn_teach_dialog": "Ilm zakoti: oʻrgatish yozuvi",
+  "learn_teach_member": "Kim oʻrgatdi",
+  "learn_teach_date": "Sana (boʻsh — bugun)",
+  "learn_teach_learner": "Kimga (ixtiyoriy): ism yoki «qoʻshni», «xodim»",
+  "learn_teach_topic": "Nimani oʻrgatdi",
+  "learn_teach_minutes": "Qancha vaqt, daqiqa (ixtiyoriy)",
+  "learn_teach_empty": "Bu oy hali yozuv yoʻq.",
+  "learn_teach_to": "kimga: {learner}",
+  "@learn_teach_to": {
+    "placeholders": {
+      "learner": {}
+    }
+  },
+  "expense_selfInvestment": "Oʻzimga sarmoya (bilim, malaka)",
+  "expense_selfInvestmentHint": "Toifa oʻzgarmaydi; bu xarajat havas chegarasiga kirmaydi.",
+  "expense_member": "Kimning oʻqishi (ixtiyoriy)",
+  "expense_plan": "Bilim rejasi (ixtiyoriy)",
+  "expense_selfInvestmentTotal": "Oʻzimga sarmoya",
+  "audit_selfInvestment": "Oʻzimga sarmoya",
+  "offer_mode": "Nimani tekshiramiz?",
+  "offer_mode_OFFER": "Sarmoya yoki sheriklik taklifi",
+  "offer_mode_COURSE": "Kurs yoki ustoz taklifi",
+  "offer_course_intro": "Pul faqat haqiqiy hunar va bilim uchun toʻlanadi. Har bir savolga halol javob bering; bilmasangiz — «Bilmayman».",
+  "offer_course_q_fastRich": "Qisqa muddatda boylik yoki katta daromad vaʼda qilinyaptimi?",
+  "offer_course_q_secretFormula": "«Sir», «hech kim aytmaydigan usul» deyishyaptimi?",
+  "offer_course_q_incomeGuarantee": "Kursdan keyin daromad yoki ish kafolatlanyaptimi?",
+  "offer_course_q_syllabus": "Dastur va amaliy natija (oxirida nimani qila olishingiz) yozib berilganmi?",
+  "offer_course_q_teacherVerifiable": "Oʻqituvchining amaliy ishini koʻrib, tekshirib boʻladimi?",
+  "offer_course_q_urgency": "Shoshiltirishyaptimi («bugun oxirgi kun», «chegirma tugayapti»)?",
+  "offer_course_q_recruitment": "«Boshqalarni olib kelsangiz, pulingiz qaytadi» deyishyaptimi?",
+  "offer_course_q_trialOrRefund": "Sinov darsi yoki pulni qaytarish sharti bormi?",
+  "offer_course_verdict_GREEN": "Yashil: jiddiy xavf belgisi topilmadi",
+  "offer_course_verdict_YELLOW": "Sariq: aniqlashtiring",
+  "offer_course_verdict_RED": "Qizil: pul toʻlamang",
+  "offer_course_advice_GREEN": "Baribir avval sinov darsiga boring yoki kichik qismidan boshlang; toʻlovni yozib qoʻying.",
+  "offer_course_advice_YELLOW": "Javobsiz savollarga aniq javob olmaguncha pul toʻlamang. Shu hunarni biladigan odam bilan maslahatlashing.",
+  "offer_course_advice_RED": "Bu kursdan uzoq turing. Bilimni kitob, ustoz yoki amaliyot orqali ham olish mumkin.",
+  "offer_course_signs": "Xavf belgilari: {count}",
+  "@offer_course_signs": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "offer_course_twoSigns": "Ikki va undan koʻp xavf belgisi bor — bu kursga pul toʻlamang.",
+  "offer_flag_FAST_RICH": "Qisqa muddatda boylik vaʼda qilinmoqda. Haqiqiy hunar vaqt va mashq bilan oʻrganiladi — «tez boyish» orzusini sotadiganlarga pul toʻlamang.",
+  "offer_flag_FAST_RICH_UNKNOWN": "Qanday natija vaʼda qilinayotgani aniq emas — yozma soʻrang.",
+  "offer_flag_SECRET_FORMULA": "«Sir» yoki «hech kim aytmaydigan usul» — halol bilim ochiq oʻrgatiladi. Bu reklama usuli.",
+  "offer_flag_SECRET_FORMULA_UNKNOWN": "Kursda aynan nima oʻrgatilishi ochiq aytilmagan — soʻrang.",
+  "offer_flag_INCOME_GUARANTEE": "Kursdan keyin daromad yoki ish kafolatlanmoqda. Hech kim kelajakdagi daromadingizni kafolatlay olmaydi — pul toʻlamang.",
+  "offer_flag_INCOME_GUARANTEE_UNKNOWN": "Daromad yoki ish kafolati vaʼda qilinyaptimi — aniqlang.",
+  "offer_flag_NO_SYLLABUS": "Dastur va amaliy natija yozilmagan — nima uchun pul toʻlayotganingiz nomaʼlum.",
+  "offer_flag_SYLLABUS_UNKNOWN": "Dastur bormi — aniq emas. Darslar roʻyxatini va oxirida nimani qila olishingizni yozma soʻrang.",
+  "offer_flag_UNVERIFIABLE_TEACHER": "Oʻqituvchining amaliy ishini koʻrib boʻlmaydi — u oʻzi qilmagan ishni oʻrgatayotgan boʻlishi mumkin.",
+  "offer_flag_TEACHER_UNKNOWN": "Oʻqituvchining ishini hali koʻrmadingiz — namunalarini yoki shogirdlarini soʻrang.",
+  "offer_flag_NO_TRIAL_OR_REFUND": "Sinov darsi ham, pulni qaytarish sharti ham yoʻq — avval kichik qadam bilan sinab koʻrish imkoni boʻlsin.",
+  "offer_flag_TRIAL_UNKNOWN": "Sinov darsi yoki pulni qaytarish sharti bormi — soʻrang.",
+  "offer_flag_JOB_ABROAD_PROMISE": "Kursdan keyin chet elda ish vaʼda qilinmoqda — bu aldashning keng tarqalgan usuli. Pul toʻlamang.",
+  "offer_flag_JOB_ABROAD_UNKNOWN": "Chet elda ish vaʼdasi bormi — aniqlang.",
+  "learn_result_noBaseline": "Reja ochilganda boshlangʻich nuqta yozilmagan edi, shuning uchun solishtirib boʻlmaydi — bu hozirgi qiymatingiz. Keyingi rejani ochishdan oldin «Bir soatim qancha?» hisobini saqlang."
 }

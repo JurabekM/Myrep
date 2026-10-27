@@ -61,6 +61,8 @@ export const keys = {
   kkSellerDay: (spaceId: string) => ["kkSellerDay", spaceId] as const,
   kkShiftDraft: (spaceId: string, input: string) => ["kkShiftDraft", spaceId, input] as const,
   kkShifts: (spaceId: string) => ["kkShifts", spaceId] as const,
+  learning: (spaceId: string) => ["learning", spaceId] as const,
+  hourSuggest: (spaceId: string, memberId: string) => ["hourSuggest", spaceId, memberId] as const,
   summary: (spaceId: string, balanceDelta: string | null) => ["summary", spaceId, balanceDelta] as const,
 };
 

@@ -8,6 +8,7 @@ import { CeremoniesScreen } from "../features/ceremony/CeremoniesScreen";
 import { ExpensesScreen } from "../features/expenses/ExpensesScreen";
 import { AgreementsScreen } from "../features/governance/AgreementsScreen";
 import { HomeScreen } from "../features/home/HomeScreen";
+import { LearningScreen } from "../features/learning/LearningScreen";
 import { DebtsScreen } from "../features/inventory/DebtsScreen";
 import { PartnershipsScreen } from "../features/partnership/PartnershipsScreen";
 import { PayoffScreen } from "../features/payoff/PayoffScreen";
@@ -51,6 +52,7 @@ const NAV: { screen: Screen; label: string }[] = [
   { screen: "ceremonies", label: "nav.ceremonies" },
   { screen: "partnerships", label: "nav.partnerships" },
   { screen: "ideas", label: "nav.ideas" },
+  { screen: "learning", label: "nav.learning" },
   { screen: "agreements", label: "nav.agreements" },
   { screen: "receipt", label: "nav.receipt" },
   { screen: "sync", label: "nav.sync" },
@@ -102,6 +104,7 @@ const MENTOR: Record<Screen, string> = {
   ceremonies: "mentor.ceremonies",
   partnerships: "mentor.partnerships",
   ideas: "mentor.ideas",
+  learning: "mentor.learning",
   agreements: "mentor.agreements",
   receipt: "mentor.receipt",
   kkEquipment: "mentor.kkEquipment",
@@ -127,7 +130,7 @@ const MENTOR: Record<Screen, string> = {
 export function Shell() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-  const { screen: picked, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, openKkEntry, openMfEntry, celebration, closeCelebration, offerOpen, openOffer, closeOffer } = useUi();
+  const { screen: picked, setScreen, spaceId, setSpace, incomeOpen, openIncome, closeIncome, openKkEntry, openMfEntry, celebration, closeCelebration, offerOpen, offerMode, openOffer, closeOffer } = useUi();
   const household = useQuery({ queryKey: keys.household, queryFn: () => call(commands.household()) });
   const settings = useQuery({ queryKey: keys.settings, queryFn: () => call(commands.settings()) });
   const lock = useMutation({ mutationFn: () => call(commands.lock()), onSettled: () => resetAfterLock(qc) });
@@ -241,6 +244,7 @@ export function Shell() {
         {active && screen === "ceremonies" && <CeremoniesScreen spaceId={active} />}
         {active && screen === "partnerships" && <PartnershipsScreen spaceId={active} />}
         {active && screen === "ideas" && <IdeasScreen spaceId={active} />}
+        {active && screen === "learning" && <LearningScreen spaceId={active} />}
         {active && screen === "agreements" && <AgreementsScreen spaceId={active} />}
         {active && screen === "receipt" && <ReceiptScreen spaceId={active} />}
         {active && kasbkor && screen === "kkEquipment" && <KkEquipmentScreen spaceId={active} />}
@@ -260,7 +264,7 @@ export function Shell() {
       </main>
       <Mentor tipKey={seller && screen === "home" ? "mentor.kkSeller" : kasbkor && screen === "home" ? "mentor.kk" : musofir && screen === "home" ? "mentor.mf" : MENTOR[screen]} />
       {incomeOpen && active && !kasbkor && !musofir && <IncomeDialog spaceId={active} onClose={closeIncome} />}
-      {offerOpen && <OfferCheckDialog onClose={closeOffer} />}
+      {offerOpen && <OfferCheckDialog initialMode={offerMode} onClose={closeOffer} />}
       {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}
     </div>
   );

@@ -47,6 +47,16 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
               ValueRow(context.t('audit.expenses'), d.expenses.formatted),
               ValueRow(context.t('audit.vaultNet'), d.vaultNet.formatted),
               ValueRow(context.t('audit.balanceDelta'), d.balanceDelta.formatted),
+              // «O'zimga sarmoya: X — daromadning Y %» (uy/SPEC 2G.3); foiz yadrodan.
+              ValueRow(
+                context.t('audit.selfInvestment'),
+                d.selfInvestment.sharePercent == null
+                    ? d.selfInvestment.total.formatted
+                    : context.t('learn.selfInvestment.line', {
+                        'total': d.selfInvestment.total.formatted,
+                        'percent': d.selfInvestment.sharePercent,
+                      }),
+              ),
             ],
           ),
         AmountField(label: context.t('audit.balanceDelta'), controller: _delta),
