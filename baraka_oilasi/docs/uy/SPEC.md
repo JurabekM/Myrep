@@ -10,7 +10,7 @@
 Sen — senior mobil va backend dasturchisan, FinTech, xavfsizlik va Android platformasi bo'yicha chuqur tajribaga egasan. Kodni production-sifatda, testlar bilan, xavfsizlikni birinchi o'ringa qo'ygan holda yozasan.
 
 ## 1. MAHSULOT MOHIYATI
-**«Baraka Dastur»** (Uy makoni) — ta'lim va amaliyotni birlashtirgan ilova. Foydalanuvchi qisqa darslar orqali **halol boylikning 7 tamoyili**ni o'rganadi va har birini shu haftaning o'zida ilovadagi vositalar bilan amalda bajaradi.
+**«Baraka Dastur»** (Uy makoni) — ta'lim va amaliyotni birlashtirgan ilova. Foydalanuvchi qisqa darslar orqali **halol boylikning 8 tamoyili**ni o'rganadi va har birini shu haftaning o'zida ilovadagi vositalar bilan amalda bajaradi.
 
 - **Asosiy muammo:** odamlar halol va ko'p ishlaydi, lekin oy oxirida pul qolmaydi. Sababi daromad kamligida emas. Xarajatlar hisobi yuritilmaydi va «o'zingga to'lash» odati yo'q.
 - **Falsafa:** ribo (foiz) yo'q. Boylik jamg'arish, xarajatni jilovlash, qarzdan qochish, sherikchilik (mudoraba/mushoraka) va zakot orqali keladi.
@@ -454,7 +454,7 @@ Tamoyilning mazmuni: mehnat soatlarini cheksiz ko'paytirib bo'lmaydi — kunda s
 ### 2G.2. «Bilim rejasi» (`LearningPlan`)
 - Maydonlar: a'zo; ko'nikma; u qaysi ishni yoki soatni qimmatlashtirishi; yo'l (`BOOK` kitob, `MENTOR` ustoz, `COURSE` kurs, `PRACTICE` amaliyot — bir nechtasi); byudjet (`Money`, ixtiyoriy); haftalik o'qish vaqti; boshlanish sanasi; ko'rik sanasi (standart: +3 oy); holat (`ACTIVE`, `PAUSED`, `DONE`, `DROPPED`).
 - Reja ochilganda 2G.1 dagi soat qiymati **boshlang'ich nuqta** sifatida saqlanadi (2G.5 uchun).
-- Diqqat tarqalmasligi uchun bir a'zoda bir vaqtda ko'pi bilan **2 ta faol reja**.
+- Diqqat tarqalmasligi uchun bir a'zoda bir vaqtda ko'pi bilan **2 ta `ACTIVE` reja**. `PAUSED` rejalar hisobga kirmaydi, lekin `PAUSED → ACTIVE` o'tishida chegara qayta tekshiriladi (3-rejani ochib ham, qayta faollashtirib ham bo'lmaydi).
 - Juma ritmi: «Bu hafta necha soat o'qidingiz?» — o'qish vaqti yozuvi (daqiqa). Reja kartasida jami vaqt va byudjetdan sarflangani ko'rinadi.
 - Pul manbasi: «Kelajagim» va zaxira pulga tegilmaydi; o'qish puli joriy byudjetdan yoki «o'sadigan pul» ulushidan (2C.3). O'qish uchun qarz olish rag'batlantirilmaydi — 2D.6 friction so'rovi amal qiladi.
 
@@ -465,7 +465,7 @@ Tamoyilning mazmuni: mehnat soatlarini cheksiz ko'paytirib bo'lmaydi — kunda s
 - Tavsiya qilingan majburiy foiz yo'q; ilova o'qishdan keyin daromad oshishini **va'da qilmaydi**.
 
 ### 2G.4. Kurs yoki ustoz taklifini tekshirish
-- 2E.5 taklif detektorining kurs turi (`COURSE`). Tekshiruv belgilari:
+- Alohida jadval emas: **umumiy `offer_check` dvigateliga** (2E.5, Uy U12, Musofir «besh xavf belgisi» bilan bitta jadval va paritet testi) yangi tur — `COURSE` qo'shiladi. Mavjud belgilar (kafolatlangan foyda, shoshiltirish, yangi odam olib kelish, `TWO_SIGNS`) qayta ishlatiladi, kursga xos belgilar qo'shiladi. Kurs turidagi belgilar:
   - `FAST_RICH` — qisqa muddatda boylik yoki katta daromad va'dasi;
   - `SECRET_FORMULA` — «sir», «hech kim aytmaydigan usul» kabi da'vo;
   - `INCOME_GUARANTEE` — kursdan keyin daromad yoki ish kafolati;
@@ -474,7 +474,7 @@ Tamoyilning mazmuni: mehnat soatlarini cheksiz ko'paytirib bo'lmaydi — kunda s
   - `PRESSURE` — «bugun oxirgi kun», shoshiltiruvchi chegirma;
   - `RECRUIT` — boshqalarni olib kelsangiz pulingiz qaytadi;
   - `NO_TRIAL_OR_REFUND` — sinov darsi ham, pulni qaytarish sharti ham yo'q.
-- Natija: belgi yo'q — yashil; bitta belgi — sariq («aniqlashtiring»); 2 va undan ko'p belgi yoki `INCOME_GUARANTEE` / `RECRUIT` ning o'zi — qizil («pul to'lamang»). Har bir belgi izohlanadi. Qaror jadvali vektor bilan qotiriladi.
+- Natija: belgi yo'q — yashil; bitta belgi — sariq («aniqlashtiring»); 2 va undan ko'p belgi (`TWO_SIGNS`) yoki `INCOME_GUARANTEE` / `RECRUIT` ning o'zi — qizil («pul to'lamang»). Har bir belgi izohlanadi. Jadval `offer_check` vektoriga `COURSE` case'lari qo'shilib qotiriladi (Musofir `JOB_ABROAD_PROMISE` ham shu yerda).
 - Bilim rejasida `COURSE` yo'li tanlansa, tekshiruv taklif qilinadi.
 
 ### 2G.5. Natijani o'lchash

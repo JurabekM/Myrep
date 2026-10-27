@@ -519,15 +519,15 @@ Kod, identifikatorlar va commit xabarlari inglizcha. Izohlar, hujjatlar va UI ma
   - `hour_value`: oylik daromad (tiyin) va oylik ish daqiqalari → 1 soat qiymati va «ikki barobar maqsad»; 3 oylik o'rtacha taklifi (kamroq oy, bo'sh oylar); soat chegarasi bayrog'i; 0 qiymatlar va yaxlitlash chegaralari;
   - `hour_value_change`: boshlang'ich va yangi qiymat → farq (tiyin va bazis punkt), boshlang'ich 0;
   - `self_invest_share`: oy daromadi va «Sarmoya» belgili xarajatlar → ulush (bp); daromad 0;
-  - `course_check`: 8 belgi bo'yicha qaror jadvali (yashil / sariq / qizil), `INCOME_GUARANTEE` va `RECRUIT` ning o'zi qizil;
+  - `offer_check` ga `COURSE` turi: kursga xos 8 belgi umumiy jadvalga qo'shiladi (`TWO_SIGNS` qayta ishlatiladi; `INCOME_GUARANTEE` va `RECRUIT` ning o'zi qizil); Uy va Musofir paritet testi saqlanadi;
   - `domain-uy` da `learning` moduli: `LearningPlan` validatsiyasi (2 tadan ko'p faol reja yo'q, sanalar, holat o'tishlari).
 - **U16b — saqlash va use-case'lar:** migratsiya (bilim rejalari, o'qish vaqti yozuvlari, o'rgatish yozuvlari, xarajatda `self_investment` va reja havolasi); use-case'lar: soat qiymatini hisoblash va saqlash, reja ochish/yangilash/yopish, haftalik vaqt, ko'rik natijasi, o'rgatish yozuvi, oylik hisobotga «Sarmoya» qatori, havas chegarasidan chiqarish; FRB va Tauri bog'lamalari; `.baraka` sinxronlash jadvallari.
 - **U16c — UI, E2E, hujjatlar:** desktop va Android: «O'zimga sarmoya» ekrani (soat qiymati kartasi, rejalar, «Ilm zakoti»), xarajat formasida «Sarmoya» belgisi, kurs tekshiruvi (Taklifni tekshirish ichida `COURSE` turi), juma eslatmalari, 8-bob kontenti (o'zimiz yozgan), i18n (uz, uz-Cyrl, ru), E2E ssenariy, skrinshotlar, CHANGELOG.
 
 **Qabul mezonlari:**
-- [ ] `hour_value`, `hour_value_change`, `self_invest_share`, `course_check` oracle va Rust'da yashil.
+- [ ] `hour_value`, `hour_value_change`, `self_invest_share` va `offer_check` (`COURSE` case'lari bilan) oracle va Rust'da yashil.
 - [ ] «Sarmoya» belgili xarajat havas chegarasiga kirmaydi (test), toifasi o'zgarmaydi.
-- [ ] Bir a'zoda 3-faol rejani ochib bo'lmaydi (test).
+- [ ] Bir a'zoda 3-faol rejani ochib ham, `PAUSED` rejani qayta faollashtirib ham bo'lmaydi (test).
 - [ ] O'qish puli «Kelajagim» yoki zaxira puldan olinmaydi; o'qish uchun qarzda friction so'rovi chiqadi.
 - [ ] Ilova daromad oshishini va'da qiladigan matn chiqarmaydi (i18n lint ro'yxati).
 - [ ] Diniy matnlar `APPROVED` bo'lmaguncha ko'rinmaydi.

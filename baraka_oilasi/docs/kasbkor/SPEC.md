@@ -29,7 +29,7 @@
 **Bu makon nima EMAS:** ERP, buxgalteriya yoki 1C o'rnini bosuvchi tizim; onlayn (fiskal) kassa; soliq hisobotini tayyorlovchi yoki topshiruvchi; «ikkinchi daftar» — daromadni yashirish vositasi; kredit, investor yoki sheriklar bozori; bank yoki to'lov integratsiyasi (CSV importdan tashqari). Ilova **boshqaruv hisobi** (egasi o'zi uchun) yuritadi; qonun talab qiladigan fiskal qurilmalar va hisobotlar o'rnini bosmaydi.
 
 ### 1.1. Kontent tuzilmasi
-- Kasb-kor darslari 7 tamoyilni ochadi (har tamoyil — 1–2 bob). Bob tuzilmasi Uy makonidagidek: o'zimiz yozgan qisqa hikoya yoki misol, «Daftar sahifasi», 3 ta haftalik amaliy vazifa (`docs/uy/SPEC.md` 1.1). Kontent dvigateli — U3.
+- Kasb-kor darslari 8 tamoyilni ochadi (har tamoyil — 1–2 bob). Bob tuzilmasi Uy makonidagidek: o'zimiz yozgan qisqa hikoya yoki misol, «Daftar sahifasi», 3 ta haftalik amaliy vazifa (`docs/uy/SPEC.md` 1.1). Kontent dvigateli — U3.
 - Kontent: faqat o'zimiz yozgan matnlar; boshqa mualliflarning qissalari, personajlari va brendi ishlatilmaydi (`BARAKA_OILASI.md` 2.1).
 - Har bir ta'limiy ekranda: «Ta'limiy material. Fatvo, moliyaviy, soliq yoki yuridik maslahat emas».
 
@@ -271,7 +271,8 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 > Mahsulot egasi qarori, 2026-10-27. Umumiy mazmun — `docs/uy/SPEC.md` 2G.
 
 ### 8A.1. Egasining soat qiymati
-- Egasi topgani = egasiga to'langan maosh + haqiqiy foyda (3.1; manfiy bo'lsa 0). Oxirgi 3 yopilgan oy («Hisob kuni») o'rtachasi taklif qilinadi, egasi o'zgartira oladi.
+- Egasi topgani = o'z mehnati bahosi + haqiqiy foyda (3.1), ya'ni ko'rinadigan foyda − oilaviy mehnat bahosi − eskirish; manfiy bo'lsa 0. Haqiqiy foydada egasiga **haqiqatda to'langan** maosh (2.2) emas, o'z mehnati bahosi ayiriladi — shuning uchun maosh qo'shilmaydi. Oxirgi 3 yopilgan oy («Hisob kuni») o'rtachasi taklif qilinadi, egasi o'zgartira oladi.
+- *Misol (3.1 dagi Feruza):* 5 000 000 + 3 100 000 = **8 100 000** so'm (egasi oyiga 2 mln maosh olgan bo'lsa ham).
 - Egasining oylik ish vaqti (kuniga soat × kun) kiritiladi. Natija — egasining 1 soati qiymati va «ikki barobar maqsad» (Uy 2G.1 bilan bir xil formula va yaxlitlash).
 
 ### 8A.2. «O'zim qilaymi yoki o'rgatib topshiraymi?»
@@ -282,7 +283,7 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 ### 8A.3. Biznes uchun o'qish va o'rgatish
 - Biznes chiqimiga «Sarmoya (o'qish)» belgisi: chiqim haqiqiy foydani baribir kamaytiradi, lekin «Hisob kuni»da alohida qator bo'lib ko'rinadi.
 - Xodimga hunar o'rgatish — «Ilm zakoti» yozuvi (Uy 2G.6) bilan bir xil, «kimga» maydoni xodim kartochkasidan tanlanadi.
-- Kurs tekshiruvi — Uy 2G.4 bilan umumiy jadval.
+- Kurs tekshiruvi — Uy 2G.4: umumiy `offer_check` dvigatelidagi `COURSE` turi.
 
 ## 9. DOMEN MODELI VA VEKTOR SUITE'LARI
 ### 9.1. Yangi tushunchalar (taxminiy; aniq sxema — K1+ sessiyalarida, `BARAKA_OILASI.md` 8)
@@ -353,7 +354,7 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 | K6 | Xodimlar va avans, `EMPLOYMENT`, `SUPPLY` | 7 | shablonlar `reviewStatus` bilan; avansda jarima yo'q |
 | K7 | Kengayish darvozasi, soliq zaxirasi, zakot, inventarizatsiya, tarozi | 6, 8 | `kk_expansion_gate`, `kk_zakat`; diniy matnlar `APPROVED` siz ko'rinmaydi |
 | K8 | Ko'p qurilma va rollar | 12 | avval ADR; sotuvchi qurilmasida foyda ma'lumoti yo'q (test) |
-| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?», biznes o'qish xarajati | 8A | `hour_value`, `kk_delegate` yashil; Uy U16 bilan umumiy formula va kurs tekshiruvi |
+| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?», biznes o'qish xarajati | 8A | `hour_value`, `kk_delegate` yashil; Uy U16 bilan umumiy formula va `offer_check` (`COURSE`) |
 
 Har bir K-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar), Uy vazifalari kabi.
 
