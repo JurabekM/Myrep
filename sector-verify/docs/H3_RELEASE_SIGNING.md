@@ -79,7 +79,9 @@ keyPassword=<o'sha parol>
 `versionName` eng so'nggi `sector-verify/v*` tag'dan, `versionCode` — `HEAD` dagi commitlar sonidan olinadi.
 
 1. Reliz commit'i `master` da, CI yashil. To'liq klon kerak (`git clone` — `--depth` siz), aks holda `versionCode` kichik chiqadi.
-2. `CHANGELOG.md` da `[Unreleased]` → `[1.0.0] — YYYY-MM-DD` (alohida PR bilan).
+2. `CHANGELOG.md` dagi `## [1.0.0] — chiqarilmagan` sarlavhasida "chiqarilmagan" o'rniga reliz sanasini yozing
+   (`— YYYY-MM-DD`), bo'lim boshidagi yashirin izohdagi ro'yxatni bajaring (H2 kalibrlashi, H1 natijasi) — alohida PR bilan.
+   Bu bo'lim GitHub Release izohiga aylanadi.
 3. Tag'ni **build'dan oldin**, aynan shu commit'ga qo'ying:
    ```
    git checkout master && git pull
