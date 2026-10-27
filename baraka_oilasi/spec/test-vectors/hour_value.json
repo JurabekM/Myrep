@@ -170,6 +170,47 @@
       }
     },
     {
+      "id": "hv-010-manual-ignores-auto",
+      "input": {
+        "income": "400000000",
+        "monthTotals": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "minutesPerDay": 480,
+        "days": 20
+      },
+      "expected": {
+        "income": "400000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 9600,
+        "hourValue": "2500000",
+        "doubleTarget": "5000000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-011-manual-ignores-negative-auto",
+      "input": {
+        "income": "400000000",
+        "monthTotals": [
+          "-5"
+        ],
+        "minutesPerDay": 480,
+        "days": 20
+      },
+      "expected": {
+        "income": "400000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 9600,
+        "hourValue": "2500000",
+        "doubleTarget": "5000000",
+        "overCeiling": false
+      }
+    },
+    {
       "id": "hv-neg-001-no-income",
       "input": {
         "income": null,
@@ -256,6 +297,35 @@
       },
       "expected": {
         "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "hv-neg-008-negative-and-bad-time",
+      "input": {
+        "income": "-1",
+        "monthTotals": null,
+        "minutesPerDay": -5,
+        "days": 22
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "hv-neg-009-many-months-and-bad-days",
+      "input": {
+        "income": null,
+        "monthTotals": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "minutesPerDay": 480,
+        "days": -1
+      },
+      "expected": {
+        "error": "TOO_MANY_MONTHS"
       }
     }
   ]

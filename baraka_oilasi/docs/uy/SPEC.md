@@ -471,10 +471,10 @@ Tamoyilning mazmuni: mehnat soatlarini cheksiz ko'paytirib bo'lmaydi — kunda s
   - `INCOME_GUARANTEE` — kursdan keyin daromad yoki ish kafolati;
   - `NO_SYLLABUS` — dastur va amaliy natija (nimani qila olishingiz) yozilmagan;
   - `UNVERIFIABLE_TEACHER` — o'qituvchining amaliy ishini ko'rib, tekshirib bo'lmaydi;
-  - `PRESSURE` — «bugun oxirgi kun», shoshiltiruvchi chegirma;
-  - `RECRUIT` — boshqalarni olib kelsangiz pulingiz qaytadi;
+  - `URGENCY` — «bugun oxirgi kun», shoshiltiruvchi chegirma (umumiy detektordagi kod);
+  - `RECRUITMENT_REQUIRED` — boshqalarni olib kelsangiz pulingiz qaytadi (umumiy detektordagi kod);
   - `NO_TRIAL_OR_REFUND` — sinov darsi ham, pulni qaytarish sharti ham yo'q.
-- Natija: belgi yo'q — yashil; bitta belgi — sariq («aniqlashtiring»); 2 va undan ko'p belgi (`TWO_SIGNS`) yoki `INCOME_GUARANTEE` / `RECRUIT` ning o'zi — qizil («pul to'lamang»). Har bir belgi izohlanadi. Jadval `offer_check` vektoriga `COURSE` case'lari qo'shilib qotiriladi (Musofir `JOB_ABROAD_PROMISE` ham shu yerda).
+- Natija: belgi yo'q — yashil; bitta belgi — sariq («aniqlashtiring»); 2 va undan ko'p belgi (`TWO_SIGNS`) yoki `INCOME_GUARANTEE` / `RECRUITMENT_REQUIRED` ning o'zi — qizil («pul to'lamang»). Har bir belgi izohlanadi. «Bilmayman» javobi — sariq `…_UNKNOWN` bayrog'i, belgi hisoblanmaydi. Jadval `offer_check` vektoriga `COURSE` case'lari qo'shilib qotiriladi (Musofir `JOB_ABROAD_PROMISE` ham shu yerda).
 - Bilim rejasida `COURSE` yo'li tanlansa, tekshiruv taklif qilinadi.
 
 ### 2G.5. Natijani o'lchash

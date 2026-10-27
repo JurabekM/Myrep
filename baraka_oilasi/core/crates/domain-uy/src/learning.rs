@@ -51,10 +51,10 @@ impl IncomeSource {
 pub struct HourInput<'a> {
     /// Qo'lda kiritilgan oylik daromad; `None` — `month_totals` o'rtachasi.
     pub income: Option<i64>,
-    /// Oxirgi to'liq oylardan yozuvi borlarining jami (ko'pi bilan 3 ta).
+    /// Oxirgi to'liq oylardan yozuvi borlarining jami (ko'pi bilan 3 ta); `income` bo'lsa ishlatilmaydi.
     pub month_totals: &'a [i64],
-    pub minutes_per_day: u32,
-    pub days: u32,
+    pub minutes_per_day: i64,
+    pub days: i64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -69,11 +69,18 @@ pub struct HourValue {
 
 /// 1 soat qiymati = `round_half_up(daromad × 60 / oylik daqiqalar)`; «ikki barobar maqsad» — 2 ×.
 pub fn hour_value(i: &HourInput<'_>) -> Result<HourValue, DomainError> {
-    if i.month_totals.len() > AVG_MONTHS {
-        return Err(DomainError::new("TOO_MANY_MONTHS"));
-    }
-    if i.month_totals.iter().any(|t| *t < 0) || i.income.is_some_and(|v| v < 0) {
-        return Err(DomainError::new("AMOUNT_NEGATIVE"));
+    match i.income {
+        // Qo'lda kiritilgan daromad — avtomatik oylar ishlatilmaydi va tekshirilmaydi.
+        Some(v) if v < 0 => return Err(DomainError::new("AMOUNT_NEGATIVE")),
+        Some(_) => {}
+        None => {
+            if i.month_totals.len() > AVG_MONTHS {
+                return Err(DomainError::new("TOO_MANY_MONTHS"));
+            }
+            if i.month_totals.iter().any(|t| *t < 0) {
+                return Err(DomainError::new("AMOUNT_NEGATIVE"));
+            }
+        }
     }
     if !(1..=1440).contains(&i.minutes_per_day) {
         return Err(DomainError::on("INVALID_TIME", "minutesPerDay"));
@@ -94,7 +101,9 @@ pub fn hour_value(i: &HourInput<'_>) -> Result<HourValue, DomainError> {
     if income == 0 {
         return Err(DomainError::new("NO_INCOME"));
     }
-    let minutes = i.minutes_per_day * i.days;
+    // 1 440 × 31 — u32 ga sig'adi.
+    let minutes =
+        u32::try_from(i.minutes_per_day * i.days).map_err(|_| DomainError::new("OVERFLOW"))?;
     let hv = to_i64(round_half_up(i128::from(income) * 60, i128::from(minutes))?)?;
     Ok(HourValue {
         income,
@@ -102,7 +111,8 @@ pub fn hour_value(i: &HourInput<'_>) -> Result<HourValue, DomainError> {
         monthly_minutes: minutes,
         hour_value: hv,
         double_target: hv.checked_mul(2).ok_or(DomainError::new("OVERFLOW"))?,
-        over_ceiling: i.minutes_per_day > CEIL_DAY_MINUTES || minutes > CEIL_MONTH_MINUTES,
+        over_ceiling: i.minutes_per_day > i64::from(CEIL_DAY_MINUTES)
+            || minutes > CEIL_MONTH_MINUTES,
     })
 }
 
@@ -252,14 +262,20 @@ pub struct ValidPlan {
     pub review: NaiveDate,
 }
 
-pub fn validate_plan(d: &PlanDraft) -> Result<ValidPlan, DomainError> {
-    let skill = d.skill.trim();
+/// Ko'nikma nomi: chetlari kesiladi, bo'sh emas, ≤120 belgi.
+pub fn validate_skill(skill: &str) -> Result<String, DomainError> {
+    let skill = skill.trim();
     if skill.is_empty() {
         return Err(DomainError::on("SKILL_REQUIRED", "skill"));
     }
     if skill.chars().count() > SKILL_MAX_CHARS {
         return Err(DomainError::on("SKILL_TOO_LONG", "skill"));
     }
+    Ok(skill.to_owned())
+}
+
+pub fn validate_plan(d: &PlanDraft) -> Result<ValidPlan, DomainError> {
+    let skill = validate_skill(&d.skill)?;
     let mut paths = d.paths.clone();
     paths.sort_unstable();
     paths.dedup();
@@ -283,7 +299,7 @@ pub fn validate_plan(d: &PlanDraft) -> Result<ValidPlan, DomainError> {
         return Err(DomainError::on("INVALID_REVIEW_DATE", "review"));
     }
     Ok(ValidPlan {
-        skill: skill.to_owned(),
+        skill,
         paths,
         budget: d.budget,
         weekly_minutes: d.weekly_minutes,

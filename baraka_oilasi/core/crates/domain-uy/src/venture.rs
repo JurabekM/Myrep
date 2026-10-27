@@ -570,7 +570,7 @@ pub fn offer_signs(flags: &mut Vec<OfferFlag>) -> u8 {
 /// Qaror jadvali: (javob → bayroq) har savol uchun; xavfsiz javob bayroqsiz.
 pub fn offer_check(a: &OfferAnswers) -> OfferVerdict {
     use Level::{Red, Yellow};
-    use Reply::{No, Unknown, Yes};
+    use Reply::{No, Yes};
     let table: [(Reply, Reply, &'static str, Level, &'static str); 9] = [
         (
             a.guaranteed,
@@ -618,18 +618,35 @@ pub fn offer_check(a: &OfferAnswers) -> OfferVerdict {
         ),
         (a.exit_easy, No, "EXIT_HARD", Red, "EXIT_UNKNOWN"),
     ];
+    let (mut flags, _) = collect_flags(table);
+    let signs = offer_signs(&mut flags);
+    finish(flags, signs)
+}
+
+/// Detektor jadvali qatori: (javob, yomon javob, bayroq, daraja, «bilmayman» bayrog'i).
+type Row = (Reply, Reply, &'static str, Level, &'static str);
+
+/// Umumiy qoida (barcha turlar uchun): yomon javob — o'z bayrog'i, `UNKNOWN` — sariq «_UNKNOWN»
+/// bayrog'i, xavfsiz javob — bayroqsiz. Ikkinchi qiymat — aniq (yomon javobli) bayroqlar soni.
+fn collect_flags(rows: impl IntoIterator<Item = Row>) -> (Vec<OfferFlag>, usize) {
     let mut flags = Vec::new();
-    for (reply, bad, code, level, unknown) in table {
+    let mut definite = 0;
+    for (reply, bad, code, level, unknown) in rows {
         if reply == bad {
             flags.push(OfferFlag { code, level });
-        } else if reply == Unknown {
+            definite += 1;
+        } else if reply == Reply::Unknown {
             flags.push(OfferFlag {
                 code: unknown,
-                level: Yellow,
+                level: Level::Yellow,
             });
         }
     }
-    let signs = offer_signs(&mut flags);
+    (flags, definite)
+}
+
+/// Xulosa: biror qizil — qizil, aks holda biror sariq — sariq, bayroqsiz — yashil.
+fn finish(flags: Vec<OfferFlag>, signs: u8) -> OfferVerdict {
     let verdict = flags.iter().map(|f| f.level).max().unwrap_or(Level::Green);
     OfferVerdict {
         verdict,
@@ -662,25 +679,13 @@ pub struct CourseAnswers {
     pub job_abroad: Option<Reply>,
 }
 
-/// Kursda har bir aniq bayroq — alohida belgi; ikki va undan ortiq — `TWO_SIGNS` (qizil).
-pub const COURSE_SIGNS: [&str; 9] = [
-    "FAST_RICH",
-    "SECRET_FORMULA",
-    "INCOME_GUARANTEE",
-    "NO_SYLLABUS",
-    "UNVERIFIABLE_TEACHER",
-    "URGENCY",
-    "RECRUITMENT_REQUIRED",
-    "NO_TRIAL_OR_REFUND",
-    "JOB_ABROAD_PROMISE",
-];
-
 /// Belgi yo'q — yashil; bitta belgi — sariq; ikki belgi yoki `INCOME_GUARANTEE`,
-/// `RECRUITMENT_REQUIRED`, `JOB_ABROAD_PROMISE` ning o'zi — qizil. `UNKNOWN` — sariq, belgi emas.
+/// `RECRUITMENT_REQUIRED`, `JOB_ABROAD_PROMISE` ning o'zi — qizil. Kursda har bir aniq bayroq —
+/// alohida belgi; `UNKNOWN` — sariq, belgi emas.
 pub fn course_check(a: &CourseAnswers) -> OfferVerdict {
     use Level::{Red, Yellow};
-    use Reply::{No, Unknown, Yes};
-    let mut table: Vec<(Reply, Reply, &'static str, Level, &'static str)> = vec![
+    use Reply::{No, Yes};
+    let table: [Row; 8] = [
         (a.fast_rich, Yes, "FAST_RICH", Yellow, "FAST_RICH_UNKNOWN"),
         (
             a.secret_formula,
@@ -720,37 +725,18 @@ pub fn course_check(a: &CourseAnswers) -> OfferVerdict {
             "TRIAL_UNKNOWN",
         ),
     ];
-    if let Some(r) = a.job_abroad {
-        table.push((r, Yes, "JOB_ABROAD_PROMISE", Red, "JOB_ABROAD_UNKNOWN"));
-    }
-    let mut flags = Vec::new();
-    for (reply, bad, code, level, unknown) in table {
-        if reply == bad {
-            flags.push(OfferFlag { code, level });
-        } else if reply == Unknown {
-            flags.push(OfferFlag {
-                code: unknown,
-                level: Yellow,
-            });
-        }
-    }
-    let n = flags
-        .iter()
-        .filter(|f| COURSE_SIGNS.contains(&f.code))
-        .count();
-    let signs = u8::try_from(n).unwrap_or(u8::MAX);
+    let abroad = a
+        .job_abroad
+        .map(|r| (r, Yes, "JOB_ABROAD_PROMISE", Red, "JOB_ABROAD_UNKNOWN"));
+    let (mut flags, definite) = collect_flags(table.into_iter().chain(abroad));
+    let signs = u8::try_from(definite).unwrap_or(u8::MAX);
     if signs >= 2 {
         flags.push(OfferFlag {
             code: "TWO_SIGNS",
             level: Red,
         });
     }
-    let verdict = flags.iter().map(|f| f.level).max().unwrap_or(Level::Green);
-    OfferVerdict {
-        verdict,
-        flags,
-        signs,
-    }
+    finish(flags, signs)
 }
 
 #[cfg(test)]

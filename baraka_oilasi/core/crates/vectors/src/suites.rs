@@ -32,7 +32,11 @@ use baraka_domain_uy::{
     emergency::emergency_target,
     gate::{evaluate_gate, GateInput, GatePolicy, InterestDebtPolicy},
     inflation::{personal_index, BasketPoint},
-    learning::{hour_value as learn_hour_value, hour_value_change, self_invest_share, HourInput},
+    learning::{
+        hour_value as learn_hour_value, hour_value_change, self_invest_share,
+        transition as plan_transition, validate_plan, validate_skill, HourInput, PathKind,
+        PlanDraft, PlanStatus,
+    },
     partnership::{
         buyout_schedule, check_rules, distribute, BuyoutInput, CapitalItem, CapitalKind,
         DistributionInput, LossRule, Negligence, Partner, PartnerRole, PartnerTerms,
@@ -175,6 +179,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "hour_value" => hour(input),
         "hour_value_change" => hour_change(input),
         "self_invest_share" => invest_share(input),
+        "learning_plan" => learning_plan(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1007,7 +1012,11 @@ fn offer(v: &Value) -> R {
         let t = a[k].as_str().ok_or_else(|| E("MISSING_ANSWER".into()))?;
         Reply::parse(t).ok_or_else(|| E("INVALID_ANSWER".into()))
     };
-    let r = match v["kind"].as_str().unwrap_or("INVESTMENT") {
+    let kind = match v.get("kind") {
+        None => "INVESTMENT",
+        Some(k) => k.as_str().ok_or_else(|| E("INVALID_KIND".into()))?,
+    };
+    let r = match kind {
         "INVESTMENT" => offer_investment(&q)?,
         "COURSE" => course_check(&CourseAnswers {
             fast_rich: q("fastRich")?,
@@ -1056,16 +1065,16 @@ fn hour(v: &Value) -> R {
     } else {
         Some(int_str(&v["income"])?)
     };
-    let totals: Vec<i64> = match v["monthTotals"].as_array() {
-        Some(a) => a.iter().map(int_str).collect::<Result<_, _>>()?,
-        None => Vec::new(),
+    let totals: Vec<i64> = match &v["monthTotals"] {
+        Value::Null => Vec::new(),
+        Value::Array(a) => a.iter().map(int_str).collect::<Result<_, _>>()?,
+        _ => return Err(bad("monthTotals")),
     };
     let h = learn_hour_value(&HourInput {
         income,
         month_totals: &totals,
-        minutes_per_day: u32::try_from(i(v, "minutesPerDay")?)
-            .map_err(|_| E("INVALID_TIME".into()))?,
-        days: u32::try_from(i(v, "days")?).map_err(|_| E("INVALID_DAYS".into()))?,
+        minutes_per_day: i(v, "minutesPerDay")?,
+        days: i(v, "days")?,
     })?;
     Ok(json!({
         "income": h.income.to_string(),
@@ -1075,6 +1084,62 @@ fn hour(v: &Value) -> R {
         "doubleTarget": h.double_target.to_string(),
         "overCeiling": h.over_ceiling,
     }))
+}
+
+fn learning_plan(v: &Value) -> R {
+    let s = |k: &str| v[k].as_str().ok_or_else(|| bad(k));
+    match s("op")? {
+        "validate" => {
+            // Xato tartibi oracle bilan bir xil: avval ko'nikma, keyin yo'llar.
+            validate_skill(s("skill")?)?;
+            let paths = arr(v, "paths")?
+                .iter()
+                .map(|p| {
+                    p.as_str()
+                        .and_then(PathKind::parse)
+                        .ok_or_else(|| E("INVALID_PATH".into()))
+                })
+                .collect::<Result<Vec<_>, E>>()?;
+            let opt_date = |k: &str| -> Result<Option<NaiveDate>, E> {
+                match &v[k] {
+                    Value::Null => Ok(None),
+                    Value::String(t) => NaiveDate::parse_from_str(t, "%Y-%m-%d")
+                        .map(Some)
+                        .map_err(|_| bad(k)),
+                    _ => Err(bad(k)),
+                }
+            };
+            let p = validate_plan(&PlanDraft {
+                skill: s("skill")?.to_owned(),
+                paths,
+                budget: if v["budget"].is_null() {
+                    None
+                } else {
+                    Some(int_str(&v["budget"])?)
+                },
+                weekly_minutes: u32::try_from(i(v, "weeklyMinutes")?)
+                    .map_err(|_| E("INVALID_TIME".into()))?,
+                start: opt_date("start")?.ok_or_else(|| bad("start"))?,
+                review: opt_date("review")?,
+            })?;
+            Ok(json!({
+                "skill": p.skill,
+                "paths": p.paths.iter().map(|k| k.as_str()).collect::<Vec<_>>(),
+                "budget": p.budget.map(|b| b.to_string()),
+                "weeklyMinutes": p.weekly_minutes,
+                "review": p.review.format("%Y-%m-%d").to_string(),
+            }))
+        }
+        "transition" => {
+            let st = |k: &str| -> Result<PlanStatus, E> {
+                PlanStatus::parse(s(k)?).ok_or_else(|| E("INVALID_STATUS".into()))
+            };
+            let (from, to) = (st("from")?, st("to")?);
+            let other = usize::try_from(i(v, "otherActive")?).map_err(|_| bad("otherActive"))?;
+            Ok(json!({ "status": plan_transition(from, to, other)?.as_str() }))
+        }
+        _ => Err(bad("op")),
+    }
 }
 
 fn hour_change(v: &Value) -> R {

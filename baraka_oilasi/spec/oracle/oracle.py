@@ -855,14 +855,12 @@ COURSE_TABLE = {
     "jobAbroad": ("YES", "JOB_ABROAD_PROMISE", "RED", "JOB_ABROAD_UNKNOWN"),
 }
 # Kursda har bir aniq bayroq — alohida belgi; ikki va undan ortiq — TWO_SIGNS (qizil).
-COURSE_SIGNS = ("FAST_RICH", "SECRET_FORMULA", "INCOME_GUARANTEE", "NO_SYLLABUS", "UNVERIFIABLE_TEACHER",
-                "URGENCY", "RECRUITMENT_REQUIRED", "NO_TRIAL_OR_REFUND", "JOB_ABROAD_PROMISE")
 
 
 def course_check(answers):
     """Kurs taklifi: belgi yo'q — YASHIL; bitta belgi — SARIQ; ikki belgi (TWO_SIGNS) yoki
     INCOME_GUARANTEE / RECRUITMENT_REQUIRED / JOB_ABROAD_PROMISE ning o'zi — QIZIL."""
-    flags = []
+    flags, signs = [], 0
     asked = COURSE_QUESTIONS + (("jobAbroad",) if "jobAbroad" in answers else ())
     for q in asked:
         a = answers.get(q)
@@ -873,9 +871,9 @@ def course_check(answers):
         bad, code, level, unknown = COURSE_TABLE[q]
         if a == bad:
             flags.append({"code": code, "level": level})
+            signs += 1
         elif a == "UNKNOWN":
             flags.append({"code": unknown, "level": "YELLOW"})
-    signs = len({f["code"] for f in flags if f["code"] in COURSE_SIGNS})
     if signs >= 2:
         flags.append({"code": "TWO_SIGNS", "level": "RED"})
     levels = {f["level"] for f in flags}
@@ -900,12 +898,15 @@ HOUR_CEIL_MONTH_MIN = 15600   # oyiga 260 soatdan ko'p
 def hour_value(income, month_totals, minutes_per_day, days):
     """1 soat qiymati = round_half_up(oylik daromad × 60 / oylik daqiqalar); «ikki barobar maqsad» = 2 ×.
     `income` berilmasa (None) — oxirgi to'liq oylardan yozuvi borlari (ko'pi bilan 3 ta) o'rtachasi
-    (`AUTO`, round_half_up). Daromad 0 yoki yo'q — NO_INCOME."""
-    if month_totals is None:
-        month_totals = []
-    if len(month_totals) > 3:
-        raise OracleError("TOO_MANY_MONTHS")
-    if any(t < 0 for t in month_totals) or (income is not None and income < 0):
+    (`AUTO`, round_half_up); qo'lda kiritilgan daromad bo'lsa oylar ishlatilmaydi va tekshirilmaydi.
+    Daromad 0 yoki yo'q — NO_INCOME."""
+    if income is None:
+        month_totals = month_totals or []
+        if len(month_totals) > 3:
+            raise OracleError("TOO_MANY_MONTHS")
+        if any(t < 0 for t in month_totals):
+            raise OracleError("AMOUNT_NEGATIVE")
+    elif income < 0:
         raise OracleError("AMOUNT_NEGATIVE")
     if not 1 <= minutes_per_day <= 1440:
         raise OracleError("INVALID_TIME")
@@ -924,6 +925,56 @@ def hour_value(income, month_totals, minutes_per_day, days):
     return {"income": _s(income), "incomeSource": source, "monthlyMinutes": minutes, "hourValue": _s(hv),
             "doubleTarget": _s(hv * 2),
             "overCeiling": minutes_per_day > HOUR_CEIL_DAY_MIN or minutes > HOUR_CEIL_MONTH_MIN}
+
+
+# Bilim rejasi (2G.2): holatlar, yo'llar, ko'rik sanasi (standart +3 oy, oy oxiriga qisiladi).
+PLAN_STATUSES = ("ACTIVE", "PAUSED", "DONE", "DROPPED")
+PLAN_PATHS = ("BOOK", "MENTOR", "COURSE", "PRACTICE")
+PLAN_MOVES = {("ACTIVE", "PAUSED"), ("ACTIVE", "DONE"), ("ACTIVE", "DROPPED"),
+              ("PAUSED", "ACTIVE"), ("PAUSED", "DONE"), ("PAUSED", "DROPPED")}
+MAX_ACTIVE_PLANS = 2
+
+
+def add_months(d, n):
+    y, m = divmod(d.month - 1 + n, 12)
+    y, m = d.year + y, m + 1
+    last = (date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)).day
+    return date(y, m, min(d.day, last))
+
+
+def plan_validate(skill, paths, budget, weekly_minutes, start, review):
+    """Ko'nikma majburiy (≤120 belgi, chetlari kesiladi); yo'llar takrorsiz va tartiblangan (BOOK, MENTOR,
+    COURSE, PRACTICE); byudjet ≥ 0 yoki yo'q; haftalik vaqt 1–10 080 daqiqa; ko'rik > boshlanish."""
+    skill = skill.strip()
+    if not skill:
+        raise OracleError("SKILL_REQUIRED")
+    if len(skill) > 120:
+        raise OracleError("SKILL_TOO_LONG")
+    if any(p not in PLAN_PATHS for p in paths):
+        raise OracleError("INVALID_PATH")
+    paths = [p for p in PLAN_PATHS if p in paths]
+    if not paths:
+        raise OracleError("PATH_REQUIRED")
+    if budget is not None and budget < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    if not 1 <= weekly_minutes <= 10080:
+        raise OracleError("INVALID_TIME")
+    rv = add_months(start, 3) if review is None else review
+    if rv <= start:
+        raise OracleError("INVALID_REVIEW_DATE")
+    return {"skill": skill, "paths": paths, "budget": None if budget is None else _s(budget),
+            "weeklyMinutes": weekly_minutes, "review": rv.isoformat()}
+
+
+def plan_transition(frm, to, other_active):
+    """Holat o'tishi: DONE/DROPPED yopiq; ACTIVE ga o'tishda boshqa faol rejalar < 2 bo'lishi kerak."""
+    if frm not in PLAN_STATUSES or to not in PLAN_STATUSES:
+        raise OracleError("INVALID_STATUS")
+    if (frm, to) not in PLAN_MOVES:
+        raise OracleError("INVALID_TRANSITION")
+    if to == "ACTIVE" and other_active >= MAX_ACTIVE_PLANS:
+        raise OracleError("ACTIVE_PLAN_LIMIT")
+    return {"status": to}
 
 
 def hour_value_change(base, new):
@@ -2431,13 +2482,18 @@ def build_suites():
           ("hv-007-at-ceiling", 900000000, None, 600, 26),
           ("hv-008-manual-wins", 400000000, [900000000], 300, 20),
           ("hv-009-auto-rounding", None, [100000000, 100000001, 100000001], 540, 25),
+          # Qo'lda kiritilgan daromad — avtomatik oylar (hatto noto'g'ri bo'lsa ham) ishlatilmaydi.
+          ("hv-010-manual-ignores-auto", 400000000, [1, 2, 3, 4], 480, 20),
+          ("hv-011-manual-ignores-negative-auto", 400000000, [-5], 480, 20),
           ("hv-neg-001-no-income", None, [], 480, 22),
           ("hv-neg-002-zero-income", 0, None, 480, 22),
           ("hv-neg-003-time", 500000000, None, 0, 22),
           ("hv-neg-004-days", 500000000, None, 480, 32),
           ("hv-neg-005-negative", -1, None, 480, 22),
           ("hv-neg-006-four-months", None, [1, 2, 3, 4], 480, 22),
-          ("hv-neg-007-day-over-24h", 500000000, None, 1441, 22)]
+          ("hv-neg-007-day-over-24h", 500000000, None, 1441, 22),
+          ("hv-neg-008-negative-and-bad-time", -1, None, -5, 22),
+          ("hv-neg-009-many-months-and-bad-days", None, [1, 2, 3, 4], 480, -1)]
     suites["hour_value"] = _suite("hour_value", "«Bir soatim qancha?»: round_half_up(daromad × 60 / (kunlik daqiqa × kun)), ikki barobar maqsad, soat chegarasi (kuniga > 600 daqiqa yoki oyiga > 15 600 daqiqa); daromad berilmasa — oxirgi ≤3 oy o'rtachasi (AUTO)", [
         _case(cid, {"income": None if inc is None else _s(inc), "monthTotals": None if mt is None else [_s(x) for x in mt],
                     "minutesPerDay": mpd, "days": d},
@@ -2455,6 +2511,31 @@ def build_suites():
     suites["self_invest_share"] = _suite("self_invest_share", "«O'zimga sarmoya» oylik qatori: belgili xarajatlar yig'indisi va bp_of(yig'indi, oy daromadi); daromad 0 — ulush yo'q", [
         _case(cid, {"income": _s(i), "amounts": [_s(a) for a in am]}, lambda i=i, am=am: self_invest_share(i, am))
         for cid, i, am in si])
+    P = lambda skill="Buxgalteriya dasturi", paths=("COURSE", "BOOK", "COURSE"), budget=150000000, wm=240, start="2026-11-30", review=None: (  # noqa: E731
+        skill, list(paths), budget, wm, start, review)
+    lp = [("plan-001-default-review-month-end", P()),
+          ("plan-002-explicit-review", P(review="2027-01-15")),
+          ("plan-003-trim-and-no-budget", P(skill="  Ingliz tili  ", budget=None, paths=("MENTOR",))),
+          ("plan-004-leap-year", P(start="2027-11-29")),
+          ("plan-neg-001-skill", P(skill="   ")),
+          ("plan-neg-002-skill-long", P(skill="a" * 121)),
+          ("plan-neg-003-paths", P(paths=())),
+          ("plan-neg-004-path-invalid", P(paths=("TIKTOK",))),
+          ("plan-neg-005-budget", P(budget=-1)),
+          ("plan-neg-006-time", P(wm=0)),
+          ("plan-neg-007-review", P(review="2026-11-30"))]
+    tr = [("move-001-pause", "ACTIVE", "PAUSED", 5), ("move-002-resume", "PAUSED", "ACTIVE", 1),
+          ("move-003-resume-limit", "PAUSED", "ACTIVE", 2), ("move-004-done", "PAUSED", "DONE", 0),
+          ("move-005-reopen-done", "DONE", "ACTIVE", 0), ("move-006-reopen-dropped", "DROPPED", "PAUSED", 0),
+          ("move-007-same", "ACTIVE", "ACTIVE", 0), ("move-008-invalid", "ACTIVE", "ARCHIVED", 0)]
+    suites["learning_plan"] = _suite("learning_plan", "Bilim rejasi: tekshiruv (ko'nikma, yo'llar takrorsiz va tartibli, byudjet ≥ 0, haftalik daqiqa 1–10 080, ko'rik standart +3 oy — oy oxiriga qisiladi) va holat o'tishlari (DONE/DROPPED yopiq, faol rejalar chegarasi 2 — qayta faollashtirishda ham)", [
+        _case(cid, {"op": "validate", "skill": sk, "paths": pa, "budget": None if b is None else _s(b), "weeklyMinutes": wm,
+                    "start": st, "review": rv},
+              lambda sk=sk, pa=pa, b=b, wm=wm, st=st, rv=rv: plan_validate(sk, pa, b, wm, date.fromisoformat(st),
+                                                                            None if rv is None else date.fromisoformat(rv)))
+        for cid, (sk, pa, b, wm, st, rv) in lp] + [
+        _case(cid, {"op": "transition", "from": f, "to": t, "otherActive": n}, lambda f=f, t=t, n=n: plan_transition(f, t, n))
+        for cid, f, t, n in tr])
     # U13 — ko'rik bayonnomasi yaxlitligi
     def tamper(i, minor):
         t = json.loads(json.dumps(CHAIN_ENTRIES))
@@ -3155,7 +3236,7 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
                  "mf_month", "mf_return_fund", "mf_remittance",
                  "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup", "mf_wall",
-                 "hour_value", "hour_value_change", "self_invest_share")
+                 "hour_value", "hour_value_change", "self_invest_share", "learning_plan")
 
 
 def generate(directory: str) -> None:
