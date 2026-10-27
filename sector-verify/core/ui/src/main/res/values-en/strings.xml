@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="verdict_pass">PASS — matches</string>
+    <string name="verdict_warn">WARN — warning</string>
+    <string name="verdict_fail">FAIL — fault</string>
+    <string name="verdict_inconclusive">INCONCLUSIVE — undetermined</string>
+    <string name="cause_none">No cause</string>
+    <string name="cause_band_port_swap">Port swap on one band</string>
+    <string name="cause_cell_config_swap">Sector swap (configuration/CPRI)</string>
+    <string name="cause_antenna_rotated">Antenna rotated</string>
+    <string name="cause_pci_missing">PCI missing</string>
+    <string name="cause_pci_unexpected">Unplanned PCI</string>
+    <string name="cause_low_coverage">Insufficient coverage</string>
+    <string name="action_ok">No problem found.</string>
+    <string name="action_cell_config_swap">PCI %1$s actually radiates towards sector %2$s. Check the cell-to-sector configuration and the CPRI/fibre connections.</string>
+    <string name="action_band_port_swap">PCI %1$s radiates into sector %2$s on this band only. Check the RRU-to-antenna feeders/jumpers of this band.</string>
+    <string name="action_antenna_rotated">The antenna is rotated by %1$s°. Check the azimuth with a compass and set it to the planned %2$s°.</string>
+    <string name="action_pci_missing">The sector was not heard. Check the cell state (off/locked), RRU, feeder and configuration.</string>
+    <string name="action_pci_unexpected">An unplanned PCI was serving near the site. Check the plan or the neighbour site PCI (does not affect the verdict).</string>
+    <string name="action_low_coverage">Coverage is insufficient. Walk the indicated directions and re-check.</string>
+    <string name="action_large_error">Large azimuth error (%1$s°). Check the antenna direction and the plan.</string>
+    <string name="action_unreliable">The estimate is unreliable (methods A and B disagree). A re-check is recommended.</string>
+    <string name="common_back">Back</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_ok">OK</string>
+    <string name="common_north">North</string>
+    <string name="radar_title">Coverage radar</string>
+    <string name="radar_description">Coverage %1$d%%, missing directions: %2$s</string>
+    <string name="polar_description">Polar diagram: %1$s</string>
+</resources>

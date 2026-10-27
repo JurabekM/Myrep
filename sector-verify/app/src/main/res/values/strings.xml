@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="uz">
+    <string name="app_name" translatable="false">Sector Verify</string>
+    <string name="debug_open">Debug: yig\'ish ekrani</string>
+</resources>

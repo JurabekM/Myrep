@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Oyna oq bo'lib "chaqnamasligi" uchun fon darhol paper (#262624). -->
+    <style name="Theme.SectorVerify" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/sv_paper</item>
+        <item name="android:statusBarColor">@color/sv_sidebar</item>
+        <item name="android:navigationBarColor">@color/sv_sidebar</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

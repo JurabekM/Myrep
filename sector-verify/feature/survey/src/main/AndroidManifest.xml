@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- §7: ACCESS_BACKGROUND_LOCATION kerak emas — o'lchov UI'dan ishga tushirilgan foreground service sifatida ishlaydi. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Ilova GPS va uyali modemsiz ishlay olmaydi: planshet va faqat Wi-Fi qurilmalarga o'rnatilmasin. -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="true" tools:ignore="UnnecessaryRequiredFeature" />
+    <uses-feature android:name="android.hardware.telephony" android:required="true" tools:ignore="UnnecessaryRequiredFeature" />
+
+    <application>
+        <service
+            android:name=".service.SurveyForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+    </application>
+</manifest>

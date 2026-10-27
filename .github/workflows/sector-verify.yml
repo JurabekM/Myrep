@@ -1,0 +1,118 @@
+# Sector Verify (Android/Kotlin): ./gradlew check, Kover hisoboti, test hisobotlari artefakt sifatida.
+name: sector-verify
+
+on:
+  push:
+    paths:
+      - "sector-verify/**"
+      - ".github/workflows/sector-verify.yml"
+  pull_request:
+    paths:
+      - "sector-verify/**"
+      - ".github/workflows/sector-verify.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sector-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: sector-verify
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # versionCode = commit soni, versionName = git tag
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: check
+        run: ./gradlew check --continue
+      - name: Ishlash testlari (yuklamasiz, ADR-015)
+        run: ./gradlew :core:analysis:test -Pperf --no-parallel
+      - name: Kover hisoboti
+        if: always()
+        run: ./gradlew koverXmlReport koverHtmlReport :core:analysis:koverHtmlReport
+      - name: Test va sifat hisobotlari
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sector-verify-reports
+          path: |
+            sector-verify/**/build/reports/
+            sector-verify/**/build/test-results/
+          if-no-files-found: ignore
+
+  # Instrumental testlar (SQLCipher, Room migratsiya, AC-07, Keystore) — KVM'li emulyatorda.
+  instrumented:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: sector-verify
+    steps:
+      - uses: actions/checkout@v4
+      - name: KVM
+        working-directory: .
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Instrumental testlar
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          working-directory: sector-verify
+          script: |
+            ./gradlew connectedDebugAndroidTest --continue
+            ./scripts/smoke-release.sh
+      - name: Instrumental hisobotlar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sector-verify-instrumented
+          path: sector-verify/**/build/outputs/androidTest-results/
+          if-no-files-found: ignore
+
+  # Release (§5): R8 + shrinkResources, AAB va APK (imzosiz — imzolash H3 da inson tomonidan), lintRelease.
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: sector-verify
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Release build
+        run: ./gradlew :app:bundleRelease :app:assembleRelease :app:lintRelease
+      - name: Release artefaktlari
+        uses: actions/upload-artifact@v4
+        with:
+          name: sector-verify-release
+          path: |
+            sector-verify/app/build/outputs/bundle/release/
+            sector-verify/app/build/outputs/apk/release/
+            sector-verify/app/build/outputs/mapping/release/mapping.txt
+            sector-verify/app/build/reports/lint-results-release.*
+          if-no-files-found: error

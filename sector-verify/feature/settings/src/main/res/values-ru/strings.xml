@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_preset">Пресет анализа</string>
+    <string name="preset_urban">Город (rMax 600 м)</string>
+    <string name="preset_suburban">Пригород (стандарт)</string>
+    <string name="preset_rural">Сельская местность (n = 3.0)</string>
+    <string name="settings_thresholds">Ручные пороги</string>
+    <string name="settings_override_active">Используется ручной/импортированный config</string>
+    <string name="settings_reset">Вернуть пресет</string>
+    <string name="th_rmax">rMax, м</string>
+    <string name="th_n">Показатель потерь n</string>
+    <string name="th_cov">Общее покрытие, мин</string>
+    <string name="th_sector_cov">Покрытие сектора, мин</string>
+    <string name="th_pass">PASS: |δ| ≤, °</string>
+    <string name="th_warn">WARN: |δ| ≤, °</string>
+    <string name="th_apply">Применить пороги</string>
+    <string name="th_invalid">Неверное значение: %1$s</string>
+    <string name="settings_import_config">Импорт config JSON (калибровка)</string>
+    <string name="settings_config_imported">Config импортирован</string>
+    <string name="settings_config_error">Ошибка config: %1$s</string>
+    <string name="settings_traffic">URL трафика (HTTPS, необязательно)</string>
+    <string name="settings_traffic_invalid">Только https://, без параметров запроса</string>
+    <string name="settings_engineer">Имя инженера (в отчёте)</string>
+    <string name="settings_app_language">Язык приложения</string>
+    <string name="settings_report_language">Язык отчёта</string>
+    <string name="lang_uz">Узбекский</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_en">Английский</string>
+    <string name="settings_theme">Тема</string>
+    <string name="theme_dark">Тёмная (по умолчанию)</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_sun">Солнце (высокий контраст)</string>
+    <string name="settings_probe">Проверка устройства (60 с)</string>
+    <string name="settings_probe_running">Идёт проверка…</string>
+    <string name="settings_probe_result">%1$s · %2$s Гц · RSRP соседей: %3$s · TA: %4$s · NR SA: %5$s</string>
+    <string name="settings_probe_no_sim">SIM не найдена или нет разрешения</string>
+    <string name="settings_save">Сохранить</string>
+    <string name="settings_saved">Сохранено</string>
+    <string name="yes">да</string>
+    <string name="no">нет</string>
+    <string name="settings_crash_export">Экспорт журналов сбоев (%1$d)</string>
+    <string name="settings_crash_none">Журналов сбоев нет</string>
+    <string name="settings_privacy">Данные не покидают устройство: нет телеметрии и аналитики. В сеть уходит только HEAD-запрос на необязательный URL трафика.</string>
+</resources>

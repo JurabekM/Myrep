@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sites_title">Сайты</string>
+    <string name="sites_search">Поиск (код или название)</string>
+    <string name="sites_import">Импорт плана CSV</string>
+    <string name="sites_empty">Сайтов пока нет. Импортируйте CSV-файл RF-плана.</string>
+    <string name="sites_imported">Импортировано сайтов: %1$d</string>
+    <string name="sites_settings">Настройки</string>
+    <string name="resume_title">Незавершённое измерение</string>
+    <string name="resume_continue">Продолжить</string>
+    <string name="resume_abandon">Прервать</string>
+    <string name="card_plan">RF-план</string>
+    <string name="card_precheck">Предварительная проверка</string>
+    <string name="card_history">История измерений</string>
+    <string name="card_no_history">Измерений пока нет</string>
+    <string name="card_col_sector">Сектор</string>
+    <string name="card_col_cell">RAT/ARFCN/PCI</string>
+    <string name="card_col_az">Азимут</string>
+    <string name="card_arfcn">%1$s %2$d (%3$s)</string>
+    <string name="plan_error_line">Строка %1$d: %2$s</string>
+    <string name="plan_err_empty_file">файл пуст</string>
+    <string name="plan_err_missing_column">в заголовке нет столбца «%1$s»</string>
+    <string name="plan_err_wrong_column_count">число столбцов не совпадает с заголовком</string>
+    <string name="plan_err_empty_value">«%1$s» пусто</string>
+    <string name="plan_err_not_a_number">«%1$s» не число (%2$s)</string>
+    <string name="plan_err_lat_range">широта должна быть в диапазоне −90..90 (%1$s)</string>
+    <string name="plan_err_lon_range">долгота должна быть в диапазоне −180..180 (%1$s)</string>
+    <string name="plan_err_bad_rat">rat должен быть LTE или NR (%1$s)</string>
+    <string name="plan_err_pci_range">PCI вне диапазона: LTE 0..503, NR 0..1007 (%1$s)</string>
+    <string name="plan_err_azimuth_range">азимут должен быть в диапазоне 0..359.9 (%1$s)</string>
+    <string name="plan_err_hpbw_range">HPBW должен быть в диапазоне 20..120 (%1$s)</string>
+    <string name="plan_err_arfcn_range">ARFCN не может быть отрицательным (%1$s)</string>
+    <string name="plan_err_duplicate_cell">на сайте повторяется (rat, arfcn, pci) (%1$s)</string>
+    <string name="plan_err_site_coords_mismatch">координаты сайта отличаются от других строк (%1$s)</string>
+    <string name="sites_sectors">Секторов: %1$d</string>
+    <string name="sites_import_failed">Импорт не выполнен. Ошибок: %1$d</string>
+    <string name="resume_text">На сайте %1$s измерение прервано (сохранено замеров: %2$d). Продолжить?</string>
+    <string name="resume_no_permission">Нет разрешения на местоположение — откройте сайт и пройдите предпроверку.</string>
+    <string name="resume_recording">На сайте %1$s измерение ещё идёт (замеров: %2$d).</string>
+    <string name="resume_open">Открыть измерение</string>
+</resources>

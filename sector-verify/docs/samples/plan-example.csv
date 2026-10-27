@@ -1,0 +1,4 @@
+site_code,site_name,lat,lon,mcc_mnc,sector,rat,band,arfcn,pci,azimuth_deg,hpbw_deg,mech_tilt_deg,elec_tilt_deg,height_m
+NAV-0123,Navoiy Markaz,40.1032,65.3685,43405,S1,LTE,B3,1300,141,0,65,2,4,30
+NAV-0123,Navoiy Markaz,40.1032,65.3685,43405,S2,LTE,B3,1300,142,120,65,2,4,30
+NAV-0123,Navoiy Markaz,40.1032,65.3685,43405,S3,LTE,B3,1300,143,240,65,2,4,30

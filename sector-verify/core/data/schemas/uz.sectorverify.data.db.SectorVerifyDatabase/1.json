@@ -1,0 +1,865 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "e03ae5c841b2824bb58cf669a8ae7243",
+    "entities": [
+      {
+        "tableName": "site",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `code` TEXT NOT NULL, `name` TEXT NOT NULL, `lat` REAL NOT NULL, `lon` REAL NOT NULL, `mcc_mnc` TEXT NOT NULL, `imported_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mccMnc",
+            "columnName": "mcc_mnc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importedAt",
+            "columnName": "imported_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_site_code",
+            "unique": true,
+            "columnNames": [
+              "code"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_site_code` ON `${TABLE_NAME}` (`code`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "sector",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `site_id` INTEGER NOT NULL, `label` TEXT NOT NULL, `rat` TEXT NOT NULL, `band` TEXT NOT NULL, `arfcn` INTEGER NOT NULL, `pci` INTEGER NOT NULL, `azimuth_deg` REAL NOT NULL, `hpbw_deg` REAL NOT NULL, `mech_tilt_deg` REAL, `elec_tilt_deg` REAL, `height_m` REAL, FOREIGN KEY(`site_id`) REFERENCES `site`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "siteId",
+            "columnName": "site_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rat",
+            "columnName": "rat",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "band",
+            "columnName": "band",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "arfcn",
+            "columnName": "arfcn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pci",
+            "columnName": "pci",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "azimuthDeg",
+            "columnName": "azimuth_deg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hpbwDeg",
+            "columnName": "hpbw_deg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mechTiltDeg",
+            "columnName": "mech_tilt_deg",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "elecTiltDeg",
+            "columnName": "elec_tilt_deg",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "heightM",
+            "columnName": "height_m",
+            "affinity": "REAL",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sector_site_id_rat_arfcn_pci",
+            "unique": true,
+            "columnNames": [
+              "site_id",
+              "rat",
+              "arfcn",
+              "pci"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sector_site_id_rat_arfcn_pci` ON `${TABLE_NAME}` (`site_id`, `rat`, `arfcn`, `pci`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "site",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "site_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "session",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `site_id` INTEGER NOT NULL, `mode` TEXT NOT NULL, `started_at` INTEGER NOT NULL, `ended_at` INTEGER, `device_model` TEXT NOT NULL, `api_level` INTEGER NOT NULL, `baseband` TEXT, `app_version` TEXT NOT NULL, `algo_version` TEXT NOT NULL, `config_json` TEXT NOT NULL, `measured_rate_hz` REAL, `status` TEXT NOT NULL, `verdict` TEXT, `coverage_pct` REAL, `subscription_id` INTEGER, `result_json` TEXT, `plan_json` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`site_id`) REFERENCES `site`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "siteId",
+            "columnName": "site_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mode",
+            "columnName": "mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "started_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "ended_at",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "deviceModel",
+            "columnName": "device_model",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "apiLevel",
+            "columnName": "api_level",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "baseband",
+            "columnName": "baseband",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "appVersion",
+            "columnName": "app_version",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "algoVersion",
+            "columnName": "algo_version",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "configJson",
+            "columnName": "config_json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measuredRateHz",
+            "columnName": "measured_rate_hz",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "verdict",
+            "columnName": "verdict",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "coveragePct",
+            "columnName": "coverage_pct",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "subscriptionId",
+            "columnName": "subscription_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "resultJson",
+            "columnName": "result_json",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "planJson",
+            "columnName": "plan_json",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_session_site_id",
+            "unique": false,
+            "columnNames": [
+              "site_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_session_site_id` ON `${TABLE_NAME}` (`site_id`)"
+          },
+          {
+            "name": "index_session_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_session_status` ON `${TABLE_NAME}` (`status`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "site",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "site_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "gnss_fix",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` TEXT NOT NULL, `t_nanos` INTEGER NOT NULL, `utc_ms` INTEGER NOT NULL, `lat` REAL NOT NULL, `lon` REAL NOT NULL, `acc_m` REAL NOT NULL, `speed_mps` REAL, `bearing_deg` REAL, FOREIGN KEY(`session_id`) REFERENCES `session`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tNanos",
+            "columnName": "t_nanos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "utcMs",
+            "columnName": "utc_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lon",
+            "columnName": "lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accM",
+            "columnName": "acc_m",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speedMps",
+            "columnName": "speed_mps",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bearingDeg",
+            "columnName": "bearing_deg",
+            "affinity": "REAL",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_gnss_fix_session_id_t_nanos",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "t_nanos"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_gnss_fix_session_id_t_nanos` ON `${TABLE_NAME}` (`session_id`, `t_nanos`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "session",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "cell_sample",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` TEXT NOT NULL, `t_nanos` INTEGER NOT NULL, `rx_nanos` INTEGER, `rat` TEXT NOT NULL, `arfcn` INTEGER NOT NULL, `pci` INTEGER NOT NULL, `registered` INTEGER NOT NULL, `rsrp` REAL, `rsrq` REAL, `sinr` REAL, `ta` INTEGER, `ci` INTEGER, `tac` INTEGER, FOREIGN KEY(`session_id`) REFERENCES `session`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tNanos",
+            "columnName": "t_nanos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rxNanos",
+            "columnName": "rx_nanos",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rat",
+            "columnName": "rat",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "arfcn",
+            "columnName": "arfcn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pci",
+            "columnName": "pci",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "registered",
+            "columnName": "registered",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rsrp",
+            "columnName": "rsrp",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rsrq",
+            "columnName": "rsrq",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "sinr",
+            "columnName": "sinr",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "ta",
+            "columnName": "ta",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "ci",
+            "columnName": "ci",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tac",
+            "columnName": "tac",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_cell_sample_session_id_arfcn_pci",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "arfcn",
+              "pci"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_cell_sample_session_id_arfcn_pci` ON `${TABLE_NAME}` (`session_id`, `arfcn`, `pci`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "session",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sector_result",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` TEXT NOT NULL, `sector_id` INTEGER, `rat` TEXT NOT NULL, `arfcn` INTEGER NOT NULL, `pci` INTEGER NOT NULL, `azimuth_est` REAL, `ci_low` REAL, `ci_high` REAL, `azimuth_b` REAL, `error_deg` REAL, `n_samples` INTEGER NOT NULL, `n_bins` INTEGER NOT NULL, `rmse_db` REAL, `verdict` TEXT NOT NULL, `cause_code` TEXT NOT NULL, `detail_json` TEXT NOT NULL, FOREIGN KEY(`session_id`) REFERENCES `session`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`sector_id`) REFERENCES `sector`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sectorId",
+            "columnName": "sector_id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rat",
+            "columnName": "rat",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "arfcn",
+            "columnName": "arfcn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pci",
+            "columnName": "pci",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "azimuthEst",
+            "columnName": "azimuth_est",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "ciLow",
+            "columnName": "ci_low",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "ciHigh",
+            "columnName": "ci_high",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "azimuthB",
+            "columnName": "azimuth_b",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "errorDeg",
+            "columnName": "error_deg",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "nSamples",
+            "columnName": "n_samples",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nBins",
+            "columnName": "n_bins",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rmseDb",
+            "columnName": "rmse_db",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "verdict",
+            "columnName": "verdict",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "causeCode",
+            "columnName": "cause_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "detailJson",
+            "columnName": "detail_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sector_result_session_id",
+            "unique": false,
+            "columnNames": [
+              "session_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sector_result_session_id` ON `${TABLE_NAME}` (`session_id`)"
+          },
+          {
+            "name": "index_sector_result_sector_id",
+            "unique": false,
+            "columnNames": [
+              "sector_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sector_result_sector_id` ON `${TABLE_NAME}` (`sector_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "session",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "sector",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "sector_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "finding",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` TEXT NOT NULL, `type` TEXT NOT NULL, `severity` TEXT NOT NULL, `detail_json` TEXT NOT NULL, FOREIGN KEY(`session_id`) REFERENCES `session`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "severity",
+            "columnName": "severity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "detailJson",
+            "columnName": "detail_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_finding_session_id",
+            "unique": false,
+            "columnNames": [
+              "session_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_finding_session_id` ON `${TABLE_NAME}` (`session_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "session",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "report",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` TEXT NOT NULL, `pdf_path` TEXT NOT NULL, `json_path` TEXT NOT NULL, `zip_path` TEXT NOT NULL, `sha256` TEXT NOT NULL, `signature_b64` TEXT NOT NULL, `created_at` INTEGER NOT NULL, FOREIGN KEY(`session_id`) REFERENCES `session`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pdfPath",
+            "columnName": "pdf_path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jsonPath",
+            "columnName": "json_path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zipPath",
+            "columnName": "zip_path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sha256",
+            "columnName": "sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "signatureB64",
+            "columnName": "signature_b64",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_report_session_id",
+            "unique": false,
+            "columnNames": [
+              "session_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_report_session_id` ON `${TABLE_NAME}` (`session_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "session",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e03ae5c841b2824bb58cf669a8ae7243')"
+    ]
+  }
+}
