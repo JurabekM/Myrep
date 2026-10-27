@@ -13,10 +13,11 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/cargo-target \
     CARGO_TARGET_DIR=/cargo-target CARGO_INCREMENTAL=0 \
     cargo build --locked --release \
-      -p mpay-server --features mpay-server/pkcs11 -p mpay-smsgw -p mpay-e2e \
-      --bin mpay-server --bin mpay-smsgw --bin mpay-load \
+      -p mpay-server --features mpay-server/pkcs11 -p mpay-smsgw -p mpay-e2e -p mpay-terminal-sim \
+      --bin mpay-server --bin mpay-smsgw --bin mpay-load --bin mpay-tsim \
  && mkdir /out \
- && cp /cargo-target/release/mpay-server /cargo-target/release/mpay-smsgw /cargo-target/release/mpay-load /out/
+ && cp /cargo-target/release/mpay-server /cargo-target/release/mpay-smsgw /cargo-target/release/mpay-load \
+       /cargo-target/release/mpay-tsim /out/
 
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update \
@@ -38,5 +39,6 @@ WORKDIR /var/lib/mpay
 ENTRYPOINT ["mpay-entrypoint"]
 CMD ["mpay-server", "serve", "--config", "/var/lib/mpay/state/mpay.toml"]
 
+# Sinov: yuk generatori va dasturiy terminal/hamyon (falokatdan tiklash mashqi, ADR-0028).
 FROM runtime AS loadgen
-COPY --from=build /out/mpay-load /usr/local/bin/
+COPY --from=build /out/mpay-load /out/mpay-tsim /usr/local/bin/

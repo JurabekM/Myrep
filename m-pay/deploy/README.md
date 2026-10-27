@@ -135,6 +135,18 @@ tushirilsa to'xtagan joydan davom etadi. Chiqish kodi 1 — emitent yozuvlarni r
 `409 CLEARING_NOT_READY` — kun ichida javobi noma'lum avtorizatsiya qolgan (reversal ishchisi yopadi),
 keyinroq qayta ishga tushiring. Fayllar: `MPAY<kun>.clr`, `.ack`, `-payouts.csv`, `-settlement.json`.
 
+## Falokatdan tiklash ([ADR-0028](../docs/adr/0028-falokatdan-tiklash.md))
+
+Host butunlay yo'qolsa — yangi host'da (Docker, repo, sirlar nusxasi `deploy/secrets/`, maxfiy zaxira
+kaliti, image'lar):
+
+```bash
+bash deploy/dr-restore.sh <zaxira papkasi>   # holat + HSM → PostgreSQL → xizmatlar → audit zanjiri
+```
+
+Mashq (alohida loyiha, CI'da ham): `bash scripts/dr-drill.sh` — falokatdan keyin xuddi shu karta (token
+va LUK) bilan to'lov `00`. Navbatchi uchun to'liq tartib — [`docs/runbook.md`](../docs/runbook.md).
+
 ## Zaxira va tiklash ([ADR-0023](../docs/adr/0023-zaxira-pitr-ogohlantirish.md))
 
 Bir marta — shifrlash kalitlari (age, X25519):

@@ -1041,3 +1041,17 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   * Birinchi yugurishlarda sinov skriptidagi ikki xato topildi va tuzatildi (`set -e` ostida bo'sh
     natija; timeline checkpoint'dan oldin o'qilgani).
 * Ochiq (bank): alohida host'lar, avtomatik almashinuv, RPO (sinxron replika), tashqi VIP — BK-16.
+
+### Runbook va falokatdan tiklash (2026-10-27, ADR-0028; checklist JM-11 ✅)
+
+* `docs/runbook.md` — navbatchi qo'llanmasi: 21 ogohlantirish → birinchi qadam; hodisalar (API,
+  PostgreSQL almashinuvi/replika/kechikish/hovuz/PITR, Shield, nginx/VIP, `96`/reversal/solishtirish,
+  kechikish va 5xx, Integrity/OTP, xavfsizlik va kalit oshkor bo'lishi, HSM, kliring, host yo'qolishi);
+  muntazam ishlar; o'lchangan tiklash vaqtlari.
+* `deploy/dr-restore.sh` — bo'sh muhitga to'liq tiklash (holat + HSM → PostgreSQL → xizmatlar → audit).
+* `scripts/dr-drill.sh` (CI `dr` job'i): karta va to'lov → zaxira → barcha hajmlar o'chiriladi →
+  tiklash → o'sha token bilan to'lov va LUK to'ldirish. `mpay-tsim` loadgen image'ida.
+* Tekshirildi (Docker Desktop): `DR DRILL OK` — tiklash 24 s (holat/HSM 1, PostgreSQL 5, xizmatlar 17,
+  audit 1); falokatdan keyin o'sha token bilan `00`, ARPC to'g'ri; pinlangan server bilan PQ Link;
+  solishtirish toza; loglarda PAN/sir yo'q (`docs/dr-report.md`). Ikki urinish mashq skriptidagi
+  xatolar bilan yiqildi (Windows bind mount yo'li, faqat o'qish uchun papkadagi STAN hisoblagichi) — tuzatildi.

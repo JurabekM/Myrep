@@ -73,7 +73,7 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | JM-8 | Uzoq ulanishli terminal shlyuzlari uchun ulanish umri chegarasi (L4 balanslash) | ☐ | J | X | `docs/load-report.md` §10 |
 | JM-9 | Audit zanjirini bo'laklash yoki davriy muhrlash (auditor talabi bo'yicha) | ☐ | A, J | X | ADR-0018 |
 | JM-10 | Nizolar (chargeback) va qo'llab-quvvatlash operatori vositalari (CLI/API) | ☐ | J | X | — |
-| JM-11 | Runbook'lar va DR mashqi: instansiya, DB, HSM, Shield yiqilishi; zaxiradan tiklash vaqtini o'lchash | ◐ | J, B | P | `deploy/README.md` |
+| JM-11 | Runbook (`docs/runbook.md`: 21 ogohlantirish, hodisalar, muntazam ishlar) va falokatdan tiklash: `dr-restore.sh`, CI'dagi mashq (o'sha karta bilan to'lov), RTO o'lchangan (`docs/dr-report.md`). Bank jarayonlariga moslash — BK-8 | ✅ | J | P | ADR-0028 |
 | JM-12 | Telefon raqamini maskalashda boshqa mamlakat kodlari (roaming) | ☐ | J | X | `crates/mpay-common/src/phone.rs` |
 
 ## 4. Mobil ilovalar
@@ -129,6 +129,7 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 | Kunlik kliring va hisob-kitob; solishtirish kliring bilan | ADR-0025 (2026-10-27): JM-1 ✅, JM-2 ✅ |
 | Shield holatini saqlash va zaxira instansiya | ADR-0026 (2026-10-27): JM-4 ✅ |
 | PostgreSQL replikatsiyasi va almashinuvi, nginx zaxirasi | ADR-0027 (2026-10-27): JM-5 ✅ |
+| Runbook va falokatdan tiklash mashqi | ADR-0028 (2026-10-27): JM-11 ✅ |
 | Token muddati UTC+5 va yangilash | ADR-0022 §4 (2026-10-26) |
 
 ## 8. Pilotga chiqish mezoni
@@ -137,7 +138,7 @@ Pilot **yopiq tizimda** (SX-1 — sxemasiz, faqat M-Pay terminali, bitta bank) b
 **P** belgili barcha bandlar bajarilgan bo'lishi kerak. Qisqasi:
 
 1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13, BK-15, BK-16.
-2. Jamoa tomoni: JM-6, JM-11, MB-4 (JM-1 … JM-5 ✅).
+2. Jamoa tomoni: JM-6, MB-4 (JM-1 … JM-5, JM-11 ✅).
 3. Telefonlar: MB-1 … MB-3.
 4. Audit: AU-1, AU-2, AU-5.
 5. Huquqiy: RG-1 … RG-4.
@@ -172,6 +173,7 @@ real ma'lumotda o'qitish.
 * `crates/mpay-vault/src/model.rs` — BK-9
 * `crates/mpay-vault/src/vault.rs` — BK-6
 * `deploy/README.md` — BK-8, BK-13, BK-16
+* `deploy/dr-restore.sh` — BK-4, BK-13
 * `deploy/pg-failover.sh` — BK-16
 * `deploy/alertmanager/alertmanager.yml` — BK-8
 * `deploy/backup.sh` — BK-13
@@ -189,10 +191,12 @@ real ma'lumotda o'qitish.
 * `docs/adr/0024-reversal-va-solishtirish.md` — SX-2, BK-1
 * `docs/adr/0025-kliring-va-hisob-kitob.md` — SX-2, BK-15
 * `docs/adr/0027-postgres-replika-va-lb-zaxira.md` — BK-16
+* `docs/adr/0028-falokatdan-tiklash.md` — BK-4, BK-13
 * `docs/android-testing.md` — BK-11, MB-4
 * `docs/architecture.md` — BK-5
 * `docs/load-report.md` — BK-3, BK-10, JM-8
 * `docs/roadmap.md` — BK-9, BK-10, BK-11
+* `docs/runbook.md` — BK-3, BK-4, BK-8, BK-13
 * `docs/specs/emv-profile.md` — SX-2
 * `docs/specs/pqlink.md` — BK-12, JM-7
 * `docs/threat-model.md` — BK-3

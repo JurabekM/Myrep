@@ -112,6 +112,14 @@ jobs:
       # Yuk nginx orqali, api-1 o'rtada to'xtatiladi, ogohlantirish, zaxira → tiklash → audit.
       - run: bash scripts/compose-test.sh 60 16
 
+  dr:
+    name: Falokatdan tiklash mashqi (zaxira → bo'sh muhit → o'sha karta bilan to'lov)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # ADR-0028: barcha hajmlar o'chiriladi, dr-restore.sh, o'sha token va LUK bilan to'lov 00.
+      - run: bash scripts/dr-drill.sh
+
   kotlin:
     name: Kotlin (mpay-core testlari + Jazzer fuzzing)
     runs-on: ubuntu-24.04

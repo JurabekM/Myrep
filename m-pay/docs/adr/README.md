@@ -29,5 +29,6 @@
 | [0025](0025-kliring-va-hisob-kitob.md) | Kunlik kliring (fayl, emitent tasdig'i) va hisob-kitob (MDR, interchange, pozitsiyalar) | qabul qilingan |
 | [0026](0026-shield-yuqori-mavjudlik.md) | Shield: DB ijarasi bilan yetakchi + zaxira, belgilar ombori snapshot'i | qabul qilingan |
 | [0027](0027-postgres-replika-va-lb-zaxira.md) | PostgreSQL streaming replika, `pg` proksisi, almashinuv skriptlari; nginx zaxirasi (VRRP VIP) | qabul qilingan |
+| [0028](0028-falokatdan-tiklash.md) | Falokatdan tiklash (`dr-restore.sh`, CI'dagi mashq) va navbatchi runbook'i | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.
