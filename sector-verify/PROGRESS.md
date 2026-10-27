@@ -1,8 +1,9 @@
 # PROGRESS — Sector Verify
 
 ## Joriy holat
-- **Bosqich:** 6 — yakuniy audit tugadi; release-kandidat tag `sector-verify/v1.0.0-rc1`.
-- **Kutilmoqda:** **H1** (real telefonlar), **H2** (20 saytlik pilot), **H3** (imzolash va tarqatish) — `docs/HUMAN_TASKS.md`, `docs/RELEASE_CHECKLIST.md`.
+- **Bosqich:** 6 — yakuniy audit tugadi; `master` da (PR #21–#28 merge qilingan), CI yashil. Release-kandidat: `sector-verify/v1.0.0-rc1` → `44cf963` (tag hali GitHub'da emas, pastda 2-savol).
+- **Kutilmoqda:** **H1** (real telefonlar), **H2** (20 saytlik pilot), **H3** (imzolash va tarqatish). Har biri uchun dala ko'rsatmasi tayyor:
+  `docs/H1_DEVICE_TEST.md`, `docs/H2_PILOT_GUIDE.md`, `docs/H3_RELEASE_SIGNING.md` (umumiy: `docs/HUMAN_TASKS.md`, `docs/RELEASE_CHECKLIST.md`).
 
 ## Bajarilgan
 ### 0-bosqich
@@ -73,6 +74,13 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 - ✅ 1–9-topilmalar tuzatildi (`74ba232`, ADR-016): `BufferedSampleWriter` stop/flush poygasi, servisda takroriy START/erta STOP, sessiyaga plan snapshot'i (`plan_json`), sozlamalar probe ruxsat tekshiruvi, tiklash dialogi (yozilayotgan sessiya), swap qidiruvida RAT mosligi, Cleaner interpolatsiya chegarasi, `calibrate` sessiya config'idan, PreCheck chegaralari `AnalysisConfig` dan, `binDeg` hisobot/ekranda config'dan.
 - ✅ 10-topilma: barcha Kotlin/Gradle/XML/skript izohlari o'zbekchaga o'tkazildi (faqat izohlar; kod bayt-baayt o'zgarmagan).
 
+### Reliz oldidan (2026-10-27)
+- ✅ **targetSdk/compileSdk 36** (PR #22, ADR-017): AGP 8.10.1; Android 16 xatti-harakat o'zgarishlari tekshirildi; CI `instrumented` API 34 va 36 matritsasi; `.so` 16 KB tekislangan.
+- ✅ **Lint ↔ KSP poygasi** (PR #24, ADR-018): `lintAnalyze*UnitTest` KSP'ning vaqtinchalik `byRounds/` fayllarini o'qib yiqilardi (`master` PR #23 dan keyin qizil edi) → `sv.android.hilt` lint'ni `ksp<Variant>Kotlin` ga bog'laydi.
+- ✅ **Inson darvozalari uchun dala ko'rsatmalari:** H1 (PR #23), H2 (PR #24), H3 (PR #26) — joriy UI va kod bilan solishtirilgan.
+- ✅ **CI'da imzolangan reliz** (PR #28, ADR-019): `sector-verify-release` workflow, `sector-verify/v*` tag'ida; kalit himoyalangan environment'da; `scripts/verify-release.sh` (v3 imzo, sertifikat, versiya, targetSdk); draft GitHub Release. Bir martalik test kaliti bilan lokal sinaldi.
+- ✅ **Codex ishlatilmaydi** — ildiz `CLAUDE.md` da qat'iy qoida (PR #26): review va barcha ishni Claude bajaradi.
+
 ## Oxirgi test natijalari
 - 2026-10-26: `./gradlew check` — BUILD SUCCESSFUL (1-bosqich: model 5 test, analysis 34 test, koverVerify 99.7%).
 - 2026-10-26: `./gradlew :core:analysis:test -Pslow` — Monte-Karlo 1000: barcha AC ✅.
@@ -80,12 +88,20 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 - 2026-10-26: `./gradlew check` lokal ✅ (barcha modullar, Robolectric UI testlari bilan).
 - 2026-10-26: CI run #8 (`046a49e`) to'liq yashil (release smoke: OK); self-review tuzatishlaridan keyin `./gradlew check` lokal ✅.
 - 2026-10-27: targetSdk 36 — `./gradlew check :app:assembleRelease :app:bundleRelease :app:lintRelease` lokal ✅; APK `targetSdkVersion:'36'`, `.so` 16 KB tekislangan.
+- 2026-10-27: PR #22–#28 CI: `check`, `release`, `instrumented (34)`, `instrumented (36)` ✅ (kesh bilan ham — ADR-018 dan keyin); `master` push run'lari PR #24 dan beri yashil (#24, #26, #28).
+- 2026-10-27: `verify-release.sh` — test kaliti bilan imzolangan APK/AAB OK; boshqa sertifikat / versiya / debug kalit → rad; `actionlint` toza.
 
 ## Ochiq savollar
 1. **targetSdk:** ✅ 36 ga ko'tarildi (2026-10-27, foydalanuvchi qarori, ADR-017): AGP 8.10.1, CI'da API 34 va 36 emulyatorlari.
-2. **Tag push:** bulut sessiyasining git proksisi faqat ishchi branch'ga push qilishga ruxsat beradi; `sector-verify/phase-N-done` tag'lari lokal yaratilgan, lekin GitHub'ga chiqmadi. Inson: `git push origin --tags` (yoki tag'larni PR merge'dan keyin qo'ying).
-3. **Instrumental testlar:** bu muhitda emulyator yo'q (KVM yo'q) — CI'dagi emulyator job'ida yoki H1 da ishga tushiriladi.
+2. **Tag push:** bulut sessiyasining git proksisi tag push qilishni rad etadi (HTTP 403), shuning uchun `sector-verify/phase-0..4-done` va `v1.0.0-rc1` GitHub'da yo'q. Inson (commit'lar `master` da):
+   `phase-0-done e6606c3`, `phase-1-done caa4f7d`, `phase-2-done d766d4b`, `phase-3-done 20209e6`, `phase-4-done 97861d7`, `v1.0.0-rc1 44cf963` → `git tag <nom> <sha>` va `git push origin 'refs/tags/sector-verify/*'`.
+   Eslatma: `v1.0.0` tag'i push qilinsa `sector-verify-release` workflow ishga tushadi — avval H3 ning 10-bo'limini sozlang.
+3. **Instrumental testlar:** bu muhitda emulyator yo'q (KVM yo'q) — CI'dagi emulyator job'ida (API 34 va 36) yoki H1 da ishga tushiriladi.
+4. **Simulyatsiyada sayt PASS ≈ 40%** (xatosiz saytlar, qolgani INCONCLUSIVE) — H2 kalibrlashi hal qiladi.
+5. **Attestation zanjiri** Google root sertifikatiga nisbatan tekshirilmaydi (hisobot imzosi qurilma kaliti bilan tekshiriladi).
+6. **Codex izohlari** PR'larda hali chiqadi — Codex connector'ni foydalanuvchi o'chirishi kerak (chatgpt.com sozlamalari yoki GitHub App).
 
 ## Kutilayotgan inson darvozasi
 - **H1** — 3 chipsetli telefonda probe + 10–15 daqiqalik sessiya → `field-data/h1/` (AC-05).
 - **H2** — 20 saytlik pilot + ground truth → `field-data/pilot/` (AC-06, AC-08, AC-09, kalibrlash).
+- **H3** — release kaliti, `sector-verify/v1.0.0` tag'i, imzolangan APK/AAB (qo'lda yoki CI), arxiv va tarqatish.
