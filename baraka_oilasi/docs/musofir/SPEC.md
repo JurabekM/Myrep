@@ -1,7 +1,7 @@
 # «MUSOFIR» MAKONI — SPETSIFIKATSIYA
 ### Chet elda ishlaydigan migrant va uning uydagi oilasi uchun ribosiz hisob va odatlar daftari
 
-> Versiya: **v1.0 — mahsulot egasi tasdiqladi (2026-10-19)**; M1 (2–4-bo'limlar), M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim) amalga oshirildi — farqlari 4.4, 5.1, 6.5 va 6.7 da. Mahsulot savollari OQ-MF1…OQ-MF8 yopildi (OQ-MF5 — relay keyinga qoldirildi); ulamo savoli — OQ-D3 (`docs/OPEN_QUESTIONS.md`). Android UI — A4 da qilindi (1.0.0).
+> Versiya: **v1.0 — mahsulot egasi tasdiqladi (2026-10-19)**; M1 (2–4-bo'limlar), M2 (5, 8-bo'limlar, ADR-0004), M3 va M4 (6-bo'lim), M5 (6.8) va M6 (6A) amalga oshirildi — farqlari 4.4, 5.1, 6.5, 6.7 va 6A.1 da. Mahsulot savollari OQ-MF1…OQ-MF8 yopildi (OQ-MF5 — relay keyinga qoldirildi); ulamo savoli — OQ-D3 (`docs/OPEN_QUESTIONS.md`). Android UI — A4 da qilindi (1.0.0).
 > Manba: `docs/BARAKA_OILASI.md` 2.2 («Musofir — qisqa karta») va `docs/uy/SPEC.md` 10-bo'limidagi 7-tamoyil ishorasi. Format — `docs/uy/SPEC.md` va `docs/kasbkor/SPEC.md` kabi.
 > Bu hujjat **mahsulot va qoidalarni** belgilaydi. Texnik qarorlar (stek, saqlash, shifrlash, sinxronlash, PDF, i18n) — `docs/BARAKA_OILASI.md` (3–13-bo'limlar).
 
@@ -172,6 +172,16 @@ Umumiy mazmun — `docs/uy/SPEC.md` 2G.
 - **Kurs tekshiruvi:** umumiy `offer_check` dvigatelidagi `COURSE` turi (Uy 2G.4) va «besh xavf belgisi» (6.8) bitta jadvalda; qo'shimcha belgi `JOB_ABROAD_PROMISE` — «kursdan keyin chet elda ish kafolati» (o'zi qizil). Uning `TWO_SIGNS` bilan birikishi `offer_check` vektoridagi `COURSE` case'lari bilan qotiriladi.
 - **«Ilm zakoti»:** yangi kelgan hamyurtlarga ish, til yoki hujjat bo'yicha yordam ham o'rgatish yozuvi sifatida qayd etiladi.
 
+### 6A.1. M6 da qanday qilindi (farqlar)
+- **Soat qiymati ish valyutasida** — umumiy `hour_value` (Uy 2G.1 bilan bitta funksiya, yaxlitlash va soat chegarasi). Oylik daromad — `mf_month` ta'rifidagidek **maosh + boshqa daromad** (ish valyutasidagi barcha `incomes` yozuvlari), taklif — joriy oydan oldingi oxirgi ko'pi bilan 3 ta to'liq oydan **daromad yozuvi borlari** o'rtachasi (Uy 2G.1 kabi; faqat xarajati bor oy o'rtachani 0 bilan tushirmaydi); bo'sh bo'lsa — qo'lda (`NO_INCOME`). Hisoblar `mf_hour_values` da o'zgarmas tarix (`AUTO` da nechta oy).
+- **Uy valyutasida — faqat kurs bilan** (vektor `mf_hour_value`, `domain-musofir::invest`): `convert(ish valyutasidagi 1 soat)` — daromad emas, soat qiymatining o'zi aylantiriladi; «ikki barobar maqsad» = 2 × shu (yaxlitlangan qiymatning ikki hissasi, `convert(2 × soat)` emas — vektorda qotirilgan). Holatlar: `FRESH`, `STALE` (kurs 30 kundan eski — qiymat ko'rsatiladi, «yangilang»; 30 kun — hali yangi; kurs sanasi kelajakda yoki noma'lum — `FUTURE_DATE`), `NO_RATE` (uy valyutasidagi qiymat umuman yo'q, taxmin qilinmaydi), `SAME_CURRENCY` (ichki migratsiya, kurs kerak emas). Uy valyutasidagi ko'rinish saqlanmaydi — har safar amaldagi kurs (bosh sahifadagi kurs kartasi bilan bir xil) va qaysi kurs bilan hisoblangani ko'rsatiladi. Yangi pul funksiyasi aslida yo'q (`hour_value` + `convert`), lekin hisob tartibi va holatlar alohida suite bilan qotirildi.
+- **Bilim rejasi** — Uy 2G.2 qoidalari (`validate_plan`, `transition`, faol rejalar chegarasi 2 — yangi ochishda va `PAUSED → ACTIVE` da) + **maqsad** `ABROAD` / `HOME`. Chegara musofir uchun **ikkala maqsad birga** (bitta odam). Ko'rik sanasi bo'sh satr bo'lsa — standart +3 oy (Uy bilan bitta qoida). Byudjet — ish valyutasida. `HOME` reja ixtiyoriy ravishda Uy makonidagi «Hunardan ishga» g'oyasiga bog'lanadi (faqat `HOME` — `IDEA_HOME_ONLY`); yangi reja oynasida standart tanlov — ish boshlash summasiga (6.6) bog'langan g'oya. Natijani o'lchash (2G.5) — boshlang'ich va oxirgi soat qiymati ish valyutasida. Jadval `mf_learning_plans`: Uy'dagi `learning_plans` a'zoga bog'langan (`member_id NOT NULL`), Musofir makonida esa daromad yozuvlarida a'zo yo'q — musofirning o'zi makon (Kasb-kor K9 kabi alohida jadvallar).
+- **«Sarmoya (o'qish)»** — mavjud `expenses.self_investment` belgisi chet eldagi xarajatda (`MfExpenseInput.selfInvestment`). Xarajat o'z toifasida qoladi va oy hisobida odatdagidek xarajat (qo'ldagi pulni kamaytiradi); «o'z ulushi» maqsadi, qaytish jamg'armasi va zaxira pulga tegilmaydi. Oy hisobida «shundan «Sarmoya (o'qish)»» qatori — jami va oy daromadidagi ulushi (`self_invest_share`), «O'zimga sarmoya» ekranida ham shu qiymat. Belgi faqat Musofir yozuv oynasi orqali (`mf_record_expense`, ish valyutasida); umumiy (Uy) xarajat yo'lida Musofir makonida belgi rad (`NOT_UY_SPACE`). Musofir xarajati rejaga bog'lanmaydi. Qator bosh sahifa va «O'zimga sarmoya» ekranida bitta yordamchidan (belgili xarajatlar — bitta so'rov, oy daromadi).
+- **«Ilm zakoti»** — `mf_teaching_logs`: soha (`WORK` ish, `LANGUAGE` til, `DOCUMENTS` hujjatlar, `OTHER`), nimani, kimga (ixtiyoriy, masalan «yangi kelgan hamyurt»), qancha vaqt (≤ 1 kun); kelajakdagi sana yo'q. Pul hisobi yo'q.
+- **Kurs tekshiruvi** — umumiy `check_course`; Musofir makonida (bo'lim tugmasi, reja kartasi va yon menyudagi «Taklifni tekshirish») `COURSE` turi 9-savolni — «Kursdan keyin chet elda ish kafolatlanyaptimi?» (`jobAbroad`) — so'raydi va yuboradi; Uy va Kasb-kor — so'ramaydi (`null`).
+- **Maxfiylik (ADR-0004):** soat qiymati chet eldagi maoshdan hisoblanadi, rejalar va «Ilm zakoti» ham musofirning shaxsiy hisobi — uchala jadval `space_id = Musofir`, shuning uchun mavjud `HOME` filtri ularni oila qurilmasiga **umuman yubormaydi**; use-case'lar u yerda `ROLE_FORBIDDEN`, menyuda bo'lim yo'q (ikki qurilmali test). Uy makonidagi g'oya — oilaga umumiy.
+- **Qilinmagan:** o'qish vaqti yozuvi (juma ritmi) va reja kartasida byudjetdan sarflangani (xarajatni Musofir rejasiga bog'lash), juma eslatmalari, bob matni va diniy matnlar (2G.8).
+
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.
 - Kurs prognozi, «qachon ayirboshlash foydali», o'tkazma xizmatlarini reklama qilish yoki reytingi yo'q.
@@ -195,6 +205,7 @@ Umumiy mazmun — `docs/uy/SPEC.md` 2G.
 - `mf_travel_debt`, `mf_cooling` — M3.
 - `mf_reserve`, `mf_startup` (M4); `mf_month` zaxira pul harakatlari bilan kengayadi.
 - `mf_wall` (M5); `offer_check` va `mf_cooling` — «besh xavf belgisi», `TWO_SIGNS`, `FORTRESS_WALL`, va'da hisobi.
+- `mf_hour_value` (M6): KRW kurs bilan, kurssiz (`NO_RATE`), eski kurs (31 kun — `STALE`, 30 kun — yangi), bir xil valyuta (kurs e'tiborsiz), RUB qo'lda, uy valyutasidagi yaxlitlash va «ikki barobar» = 2 × yaxlitlangan, KZT soat chegarasi, TRY bitta oy; xatolar — daromad yo'q (kurs bo'lsa ham), noto'g'ri kurs, kelajakdagi kurs, sanasi noma'lum kurs, avval soat qiymati tekshiriladi, 4 oy. `offer_check` `COURSE` + `JOB_ABROAD_PROMISE` — U16a da.
 
 ## 10. ISH REJASI
 | # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |
@@ -204,7 +215,7 @@ Umumiy mazmun — `docs/uy/SPEC.md` 2G.
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori | 6 | 90 kunlik sovutish; detektor vektorlari |
 | M4 | Zaxira pul (OQ-MF3), ish boshlash summasi va «Hunardan ishga» havolasi, qaror natijasi | 6.4, 6.6 | `mf_month` (zaxira harakatlari), `mf_reserve`, `mf_startup` yashil; ulush avval zaxiraga |
 | M5 | Firibgarlik belgilari va qaytish xavfsizligi: «besh xavf belgisi», qal'a devori, valyutada olib kelingan summa | 6.8 | `offer_check`, `mf_cooling`, `mf_wall` yashil; namunaviy «kafolatli foyda» taklifi — qizil |
-| M6 | 8-tamoyil: soat qiymati ish valyutasida, ikki maqsadli bilim rejasi, «Sarmoya» belgisi, kurs tekshiruvi | 6A | `hour_value` (valyuta va kurs bilan), `offer_check` (`COURSE` + `JOB_ABROAD_PROMISE` case'lari) yashil; kurssiz uy valyutasidagi qiymat yo'q |
+| M6 | 8-tamoyil: soat qiymati ish valyutasida, ikki maqsadli bilim rejasi, «Sarmoya» belgisi, kurs tekshiruvi | 6A | `hour_value` (valyuta va kurs bilan), `offer_check` (`COURSE` + `JOB_ABROAD_PROMISE` case'lari) yashil; kurssiz uy valyutasidagi qiymat yo'q — ✅ (`mf_hour_value`, 6A.1) |
 
 Har bir M-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar).
 

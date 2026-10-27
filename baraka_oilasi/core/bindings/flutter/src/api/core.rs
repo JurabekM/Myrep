@@ -1826,6 +1826,69 @@ impl BarakaCore {
             .kk_learning_overview(&space_id, date.as_deref())
     }
 
+    // ---- M6: Musofir «O'zingizga sarmoya qiling» — soat qiymati, ikki maqsadli reja, «Ilm zakoti» ----
+
+    pub fn mf_hour_suggest(&self, space_id: String) -> Result<MfHourSuggestionDto, AppError> {
+        self.session.app()?.mf_hour_suggest(&space_id)
+    }
+
+    pub fn mf_hour_save(
+        &self,
+        space_id: String,
+        input: MfHourInput,
+    ) -> Result<MfHourDto, AppError> {
+        self.session.app()?.mf_hour_save(&space_id, input)
+    }
+
+    pub fn mf_learning_plan_create(
+        &self,
+        space_id: String,
+        input: MfLearningPlanInput,
+    ) -> Result<MfLearningPlanDto, AppError> {
+        self.session
+            .app()?
+            .mf_learning_plan_create(&space_id, input)
+    }
+
+    pub fn mf_learning_plan_set_status(
+        &self,
+        space_id: String,
+        plan_id: String,
+        status: String,
+    ) -> Result<MfLearningPlanDto, AppError> {
+        self.session
+            .app()?
+            .mf_learning_plan_set_status(&space_id, &plan_id, &status)
+    }
+
+    pub fn mf_learning_plan_result(
+        &self,
+        space_id: String,
+        plan_id: String,
+    ) -> Result<MfLearningResultDto, AppError> {
+        self.session
+            .app()?
+            .mf_learning_plan_result(&space_id, &plan_id)
+    }
+
+    pub fn mf_teaching_add(
+        &self,
+        space_id: String,
+        input: MfTeachingInput,
+    ) -> Result<MfTeachingDto, AppError> {
+        self.session.app()?.mf_teaching_add(&space_id, input)
+    }
+
+    pub fn mf_learning_overview(
+        &self,
+        space_id: String,
+        date: Option<String>,
+    ) -> Result<MfLearningOverviewDto, AppError> {
+        self.session
+            .app()?
+            .mf_learning_overview(&space_id, date.as_deref())
+    }
+
     // ---- U15: sozlamalar va bosh sahifa eslatmalari ----
 
     pub fn settings(&self) -> Result<SettingsDto, AppError> {

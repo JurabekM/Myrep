@@ -181,6 +181,7 @@ fn owner_setup(dev: &Device) -> Owner {
             channel: "CARD".into(),
             occurred_on: None,
             note: Some("Ijara".into()),
+            self_investment: false,
         },
     )
     .unwrap();

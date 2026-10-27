@@ -26,7 +26,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
   String? _necessity;
   String _channel = 'CASH';
   // «O'zimga sarmoya» belgisi (uy/SPEC 2G.3). Bu ekran faqat Uy menyusida (Kasb-kor, Musofir va
-  // sotuvchi menyularida yo'q); K9, M6 da kengayadi. Rejalar faqat belgi qo'yilganda o'qiladi.
+  // sotuvchi menyularida yo'q; Kasb-kor va Musofir belgisi — o'z yozuv oynalarida). Rejalar faqat belgi qo'yilganda o'qiladi.
   bool _selfInvestment = false;
   String? _memberId;
   String? _planId;

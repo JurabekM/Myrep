@@ -708,6 +708,34 @@ abstract class BarakaCore implements RustOpaqueInterface {
 
   Future<List<MfDecisionDto>> mfDecisions({required String spaceId});
 
+  Future<MfHourDto> mfHourSave({
+    required String spaceId,
+    required MfHourInput input,
+  });
+
+  Future<MfHourSuggestionDto> mfHourSuggest({required String spaceId});
+
+  Future<MfLearningOverviewDto> mfLearningOverview({
+    required String spaceId,
+    String? date,
+  });
+
+  Future<MfLearningPlanDto> mfLearningPlanCreate({
+    required String spaceId,
+    required MfLearningPlanInput input,
+  });
+
+  Future<MfLearningResultDto> mfLearningPlanResult({
+    required String spaceId,
+    required String planId,
+  });
+
+  Future<MfLearningPlanDto> mfLearningPlanSetStatus({
+    required String spaceId,
+    required String planId,
+    required String status,
+  });
+
   Future<MfOverviewDto> mfOverview({required String spaceId, String? date});
 
   Future<MfTwoShoresDto> mfPayDebt({
@@ -774,6 +802,11 @@ abstract class BarakaCore implements RustOpaqueInterface {
   Future<MfTravelDebtDto> mfSetTravelDebt({
     required String spaceId,
     required MfTravelDebtInput input,
+  });
+
+  Future<MfTeachingDto> mfTeachingAdd({
+    required String spaceId,
+    required MfTeachingInput input,
   });
 
   Future<MfTermsDto> mfTerms({required String spaceId});

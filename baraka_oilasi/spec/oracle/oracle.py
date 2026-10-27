@@ -1045,6 +1045,33 @@ def kk_delegate(owner_hour, task_minutes, helper_hour, training_money, training_
             "verdict": "DELEGATE" if delegate else "SELF_CHEAPER"}
 
 
+# --- M6 (8-tamoyil, Musofir): soat qiymati ish valyutasida va kurs bilan uy valyutasida (musofir/SPEC 6A) ---
+MF_STALE_RATE_DAYS = 30        # kurs shu kundan eski bo'lsa — «kursni yangilang» (SPEC 4.4)
+
+
+def mf_hour_value(cur, home, income, month_totals, minutes_per_day, days, rate, rate_age_days):
+    """Musofir soat qiymati (SPEC 6A): ish valyutasida — umumiy `hour_value` (oylik daromad = maosh + boshqa daromad,
+    oxirgi ≤3 to'liq oy o'rtachasi yoki qo'lda). Uy valyutasida — faqat kiritilgan kurs bilan: 1 soat =
+    convert(ish valyutasidagi 1 soat), ikki barobar maqsad = 2 × shu (daromad emas, soat qiymati aylantiriladi).
+    Kurs yo'q — NO_RATE (uy valyutasidagi qiymat yo'q, taxmin qilinmaydi); ish valyutasi = uy valyutasi —
+    SAME_CURRENCY (kurs kerak emas); kurs 30 kundan eski — STALE (qiymat ko'rsatiladi, «yangilang»), aks holda FRESH."""
+    r = hour_value(income, month_totals, minutes_per_day, days)
+    hv = int(r["hourValue"])
+    if cur == home:
+        status, h = "SAME_CURRENCY", hv
+    elif rate is None:
+        status, h = "NO_RATE", None
+    else:
+        if rate[0] <= 0 or rate[1] <= 0:
+            raise OracleError("INVALID_RATE")
+        if rate_age_days is None or rate_age_days < 0:
+            raise OracleError("FUTURE_DATE")
+        h = convert(hv, cur, home, rate[0], rate[1])
+        status = "STALE" if rate_age_days > MF_STALE_RATE_DAYS else "FRESH"
+    return {**r, "rateStatus": status, "hourValueHome": None if h is None else _s(h),
+            "doubleTargetHome": None if h is None else _s(h * 2)}
+
+
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
 KK_WALLETS = ("CASH", "CARD")
 KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1,
@@ -2627,6 +2654,38 @@ def build_suites():
                     "trainingMinutes": trm},
               lambda o=o, tm=tm, h=h, mo=mo, trm=trm: kk_delegate(o, tm, h, mo, trm))
         for cid, o, tm, h, mo, trm in dg])
+    # M6: Musofir soat qiymati (SPEC 6A). Bobur aka (KRW, 0 kasr): 3 oy o'rtachasi 2 650 000 von, 10 soat × 22 kun.
+    BT = [2600000, 2750000, 2600000]
+    mh = [("mhv-001-krw-rate", "KRW", "UZS", None, BT, 600, 22, (91, 10), 5),
+          ("mhv-002-no-rate", "KRW", "UZS", None, BT, 600, 22, None, None),
+          ("mhv-003-stale-rate", "KRW", "UZS", None, BT, 600, 22, (91, 10), 31),
+          ("mhv-004-rate-30-days-fresh", "KRW", "UZS", None, BT, 600, 22, (91, 10), 30),
+          # Ichki migratsiya: ish valyutasi = uy valyutasi — kurs kerak emas (berilsa ham e'tiborsiz).
+          ("mhv-005-same-currency", "UZS", "UZS", None, [650000000], 540, 24, None, None),
+          ("mhv-006-same-currency-rate-ignored", "UZS", "UZS", 650000000, None, 540, 24, (2, 1), 90),
+          # Dilnoza (RUB, 2 kasr): qo'lda 95 000 rubl, 1 RUB = 152,35 so'm.
+          ("mhv-007-rub-manual", "RUB", "UZS", 9500000, None, 600, 26, (15235, 100), 2),
+          # Yaxlitlash: 1 KRW = 9,125 so'm — uy valyutasidagi soat 0,5 tiyindan yuqoriga; ikki barobar = 2 × shu.
+          ("mhv-008-home-rounding", "KRW", "UZS", None, BT, 600, 22, (73, 8), 0),
+          # Farrux (KZT): 12 soat × 26 kun — soat chegarasi; 1 KZT = 24,6 so'm.
+          ("mhv-009-kzt-over-ceiling", "KZT", "UZS", None, [45000000, 52000000], 720, 26, (246, 10), 12),
+          # Jahongir (TRY): bitta oy yozuvi bor; 1 TRY = 370,5 so'm.
+          ("mhv-010-try-one-month", "TRY", "UZS", None, [3150000], 540, 26, (3705, 10), 7),
+          ("mhv-neg-001-no-income-with-rate", "KRW", "UZS", None, [], 600, 22, (91, 10), 5),
+          ("mhv-neg-002-zero-income", "KRW", "UZS", 0, None, 600, 22, (91, 10), 5),
+          ("mhv-neg-003-invalid-rate", "KRW", "UZS", None, BT, 600, 22, (0, 10), 5),
+          ("mhv-neg-004-future-rate", "KRW", "UZS", None, BT, 600, 22, (91, 10), -1),
+          # Avval soat qiymati tekshiriladi, keyin kurs.
+          ("mhv-neg-005-time-before-rate", "KRW", "UZS", None, BT, 0, 22, (0, 10), -1),
+          ("mhv-neg-006-four-months", "KRW", "UZS", None, BT + [1], 600, 22, None, None),
+          # Kurs bor, sanasi (yoshi) noma'lum — kelajakdagi emasligini bilib bo'lmaydi.
+          ("mhv-neg-007-rate-without-age", "KRW", "UZS", None, BT, 600, 22, (91, 10), None)]
+    suites["mf_hour_value"] = _suite("mf_hour_value", "Musofir soat qiymati: ish valyutasida umumiy hour_value (maosh + boshqa daromad, oxirgi ≤3 to'liq oy o'rtachasi yoki qo'lda); uy valyutasida — faqat kurs bilan convert(1 soat), ikki barobar = 2 × shu; kurs yo'q — NO_RATE (qiymat yo'q), bir xil valyuta — SAME_CURRENCY, kurs 30 kundan eski — STALE (musofir/SPEC 6A, 4.4)", [
+        _case(cid, {"currency": c, "homeCurrency": hc, "income": None if inc is None else _s(inc),
+                    "monthTotals": None if mt is None else [_s(x) for x in mt], "minutesPerDay": mpd, "days": d,
+                    "rate": None if rt is None else {"num": rt[0], "den": rt[1]}, "rateAgeDays": age},
+              lambda c=c, hc=hc, inc=inc, mt=mt, mpd=mpd, d=d, rt=rt, age=age: mf_hour_value(c, hc, inc, mt, mpd, d, rt, age))
+        for cid, c, hc, inc, mt, mpd, d, rt, age in mh])
     # U13 — ko'rik bayonnomasi yaxlitligi
     def tamper(i, minor):
         t = json.loads(json.dumps(CHAIN_ENTRIES))
@@ -3327,7 +3386,8 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
                  "mf_month", "mf_return_fund", "mf_remittance",
                  "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup", "mf_wall",
-                 "hour_value", "hour_value_change", "self_invest_share", "learning_plan", "kk_owner_hour", "kk_delegate")
+                 "hour_value", "hour_value_change", "self_invest_share", "learning_plan", "kk_owner_hour", "kk_delegate",
+                 "mf_hour_value")
 
 
 def generate(directory: str) -> None:
@@ -3594,6 +3654,11 @@ def selftest() -> None:
     assert kk_delegate(2000000, 1200, 2000000, 0, 0) == {"monthlyBenefit": "0", "trainingTimeCost": "0", "fullCost": "0",
                                                         "paybackMonths": None, "verdict": "SELF_CHEAPER"}
     _expect_error("NO_HOUR_VALUE", kk_delegate, 0, 600, 0, 0, 0)
+    # M6 (musofir/SPEC 6A): Bobur aka — 2 650 000 von / 220 soat = 12 045 von; 1 KRW = 9,1 so'm → 109 609,50 so'm.
+    m6 = mf_hour_value("KRW", "UZS", None, [2600000, 2750000, 2600000], 600, 22, (91, 10), 5)
+    assert (m6["income"], m6["hourValue"], m6["hourValueHome"], m6["rateStatus"]) == ("2650000", "12045", "10960950", "FRESH")
+    assert mf_hour_value("KRW", "UZS", None, [2650000], 600, 22, None, None)["hourValueHome"] is None
+    assert mf_hour_value("KRW", "UZS", None, [2650000], 600, 22, (91, 10), 31)["rateStatus"] == "STALE"
     # K1 (kasbkor/SPEC 2.2, 5.1): «egasi oldi» foydani (pul oqimini) kamaytirmaydi, maoshdan hisoblanadi.
     r = kk_month_report(0, 0, 500000000, [{"kind": "SALE", "wallet": "CASH", "amount": "1800000000"},
                                           {"kind": "EXPENSE", "wallet": "CASH", "amount": "850000000"},

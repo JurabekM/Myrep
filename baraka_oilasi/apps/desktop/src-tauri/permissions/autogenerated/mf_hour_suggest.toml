@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-hour-suggest"
+description = "Enables the mf_hour_suggest command without any pre-configured scope."
+commands.allow = ["mf_hour_suggest"]
+
+[[permission]]
+identifier = "deny-mf-hour-suggest"
+description = "Denies the mf_hour_suggest command without any pre-configured scope."
+commands.deny = ["mf_hour_suggest"]

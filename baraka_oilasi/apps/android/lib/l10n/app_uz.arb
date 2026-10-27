@@ -4799,5 +4799,110 @@
       "task": {}
     }
   },
-  "kkl_del_confirmYes": "Ha, oʻchirish"
+  "kkl_del_confirmYes": "Ha, oʻchirish",
+  "nav_mfLearning": "Oʻzimga sarmoya",
+  "mentor_mfLearning": "Chet eldagi soatingiz ham, uydagi kelajagingiz ham bilimga bogʻliq. Oʻqishga sarflangan pul — oʻzingizga sarmoya; u joriy xarajatdan, qaytish jamgʻarmasiga tegilmaydi.",
+  "mfl_title": "Oʻzimga sarmoya — chet elda",
+  "mfl_intro": "Chet elda ish soati koʻpincha oldindan belgilangan: smena va dam olish kuni oʻzgarmaydi. Bir soatingiz qiymatini oshirishning yoʻli — bilim: ish joyidagi til, malaka toifasi, guvohnoma. Ikkinchi maqsad — qaytgandan keyin uyda daromad beradigan hunar. Ikkalasi ham oʻzingizga sarmoya.",
+  "mfl_example": "Masalan, Bobur aka zavodda toʻrtinchi yil ishlaydi. U bir soatining qiymatini vonda va kurs bilan soʻmda hisobladi, ikki reja tuzdi: sexdagi koreys tilini mustahkamlash va uyga qaytgach payvandlash ustaxonasi uchun hunar. Pullik kursni avval tekshirdi, yangi kelgan hamyurtiga yashash kartasi hujjatlarini tushuntirib berdi. Natijani vaʼdaga emas, koʻrik sanasidagi hisobga qarab baholaydi.",
+  "mfl_tasks_1": "Bir soatingiz qiymatini ish valyutasida hisoblang va kurs bilan soʻmda ham koʻring.",
+  "mfl_tasks_2": "Ikki maqsaddan biriga — chet eldagi ish yoki uydagi hunar — bitta koʻnikma tanlang; pullik kurs boʻlsa, avval tekshiring.",
+  "mfl_tasks_3": "Shu hafta yangi kelgan bir hamyurtingizga ish, til yoki hujjat boʻyicha yordam bering va yozib qoʻying.",
+  "mfl_hour_title": "Bir soatim qancha? — chet elda",
+  "mfl_hour_none": "Hali hisoblanmagan. Ish vaqtingizni kiriting — oylik daromad oxirgi oylardagi maosh va boshqa daromaddan olinadi.",
+  "mfl_hour_months": "Oxirgi toʻliq oylar (maosh + boshqa daromad)",
+  "mfl_hour_monthLine": "{period}: {total}",
+  "@mfl_hour_monthLine": {
+    "placeholders": {
+      "period": {},
+      "total": {}
+    }
+  },
+  "mfl_hour_noMonths": "Oxirgi oylarda daromad yozuvi yoʻq — oylik daromadni qoʻlda kiriting.",
+  "mfl_hour_incomeField": "Oylik daromad, {currency} (boʻsh — avtomatik)",
+  "@mfl_hour_incomeField": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mfl_hour_income": "Oylik daromad: {amount} — {source}",
+  "@mfl_hour_income": {
+    "placeholders": {
+      "amount": {},
+      "source": {}
+    }
+  },
+  "mfl_hour_source_AUTO": "oxirgi oylar oʻrtachasi ({count} oy)",
+  "@mfl_hour_source_AUTO": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "mfl_hour_home": "Uy valyutasida",
+  "mfl_hour_homeValue": "≈ {value} / soat · ikki barobar maqsad ≈ {double}",
+  "@mfl_hour_homeValue": {
+    "placeholders": {
+      "double": {},
+      "value": {}
+    }
+  },
+  "mfl_hour_rate_NO_RATE": "Kurs kiritilmagan — uy valyutasidagi qiymat koʻrsatilmaydi (taxmin qilinmaydi). Kursni bosh sahifadagi «Kurs» kartasida kiriting.",
+  "mfl_hour_rate_STALE": "Kurs 30 kundan eski — bosh sahifada yangilang.",
+  "mfl_hour_rate_SAME_CURRENCY": "Ish valyutasi uy valyutasi bilan bir xil — kurs kerak emas.",
+  "mfl_plans_title": "Bilim rejalari — ikki maqsad",
+  "mfl_plans_hint": "Bir vaqtda koʻpi bilan 2 ta faol reja — ikkala maqsad birga. Oʻqish puli joriy xarajatdan: «oʻz ulushi», qaytish jamgʻarmasi va zaxira pulga tegilmaydi.",
+  "mfl_plans_empty": "Hali reja yoʻq. Bitta koʻnikmadan boshlang.",
+  "mfl_goal_ABROAD": "Chet eldagi soatimni qimmatlashtirish",
+  "mfl_goal_HOME": "Qaytgandan keyin uyda daromad beradigan hunar",
+  "mfl_goalShort_ABROAD": "Chet elda",
+  "mfl_goalShort_HOME": "Uyda",
+  "mfl_goalHint_ABROAD": "Masalan: ish joyidagi til, malaka toifasi, guvohnoma.",
+  "mfl_goalHint_HOME": "Uy makonidagi «Hunardan ishga» gʻoyasiga bogʻlash mumkin — ish boshlash summasi bilan bitta reja boʻladi.",
+  "mfl_plan_goal": "Maqsad",
+  "mfl_plan_skillPlaceholder": "Masalan: ish joyidagi koreys tili, forklift guvohnomasi, payvandlash",
+  "mfl_plan_idea": "«Hunardan ishga» gʻoyasi (ixtiyoriy)",
+  "mfl_plan_noIdea": "— bogʻlanmagan —",
+  "mfl_plan_ideaLine": "Gʻoya: {title}",
+  "@mfl_plan_ideaLine": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "mfl_plan_budget": "Byudjet, {currency} (ixtiyoriy)",
+  "@mfl_plan_budget": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "mfl_plan_label": "Bilim rejasi: {skill}",
+  "@mfl_plan_label": {
+    "placeholders": {
+      "skill": {}
+    }
+  },
+  "mfl_teach_hint": "Yangi kelgan hamyurtga ish, til yoki hujjatlar boʻyicha yordam — bu ham ilm zakoti. Oʻrgatganning oʻz bilimi ham mustahkamlanadi.",
+  "mfl_teach_area": "Soha",
+  "mfl_area_WORK": "Ish",
+  "mfl_area_LANGUAGE": "Til",
+  "mfl_area_DOCUMENTS": "Hujjatlar",
+  "mfl_area_OTHER": "Boshqa",
+  "mfl_teach_learner": "Kimga (ixtiyoriy): ism yoki «yangi kelgan hamyurt»",
+  "mfl_course_title": "Kurs yoki ustoz taklifi",
+  "mfl_course_hint": "Chet elda kurs taklif qilinsa — ayniqsa «kursdan keyin ish» vaʼdasi bilan — pul toʻlashdan oldin tekshiring. Bu yerda qoʻshimcha savol bor: chet elda ish vaʼdasi.",
+  "mfl_invest_title": "Oʻzimga sarmoya — shu oy",
+  "mfl_invest_hint": "Chet eldagi xarajatni kiritishda «Sarmoya (oʻqish)» belgisini qoʻying: xarajat oʻz toifasida qoladi, oy hisobida alohida qator boʻlib koʻrinadi. Majburiy foiz yoʻq; ilova oʻqishdan keyin daromad oshishini vaʼda qilmaydi.",
+  "offer_course_q_jobAbroad": "Kursdan keyin chet elda ish kafolatlanyaptimi?",
+  "mf_selfInvestment": "Sarmoya (oʻqish)",
+  "mf_selfInvestmentHint": "Bilim uchun xarajat: oʻz toifasida qoladi, «oʻz ulushi», qaytish jamgʻarmasi va zaxira pulga tegilmaydi; oy hisobida alohida qator.",
+  "mf_selfInvestmentTag": "Sarmoya",
+  "mf_flow_selfInvestment": "shundan «Sarmoya (oʻqish)»",
+  "error_INVALID_GOAL": "Maqsadni tanlang: chet eldagi ish yoki uydagi hunar",
+  "error_IDEA_HOME_ONLY": "«Hunardan ishga» gʻoyasi faqat uyda daromad beradigan hunar rejasiga bogʻlanadi",
+  "error_INVALID_AREA": "Sohani tanlang: ish, til, hujjatlar yoki boshqa",
+  "mfl_plan_budgetLine": "Byudjet: {budget}",
+  "@mfl_plan_budgetLine": {
+    "placeholders": {
+      "budget": {}
+    }
+  }
 }

@@ -59,6 +59,7 @@ Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.
 | M3: Musofir — yo'l qarzidan chiqish («Qarz to'lovi» maqsadidan uyda to'lanadi, necha oyda yopilishi), «Qaytdim» va 90 kunlik sovutish davri, katta qaror oldidan tekshiruv va qarorlar jurnali | ✅ yadro + desktop + Linux E2E + Android |
 | M4: Musofir — zaxira pul (o'z ulushi avval zaxiraga, keyin jamg'armaga), ish boshlash summasi («Hunardan ishga» g'oyasi bilan), qaror natijasi | ✅ yadro + desktop + Linux E2E + Android |
 | M5: Musofir — firibgarlik belgilari va qaytish xavfsizligi: «besh xavf belgisi» (3 yangi savol, «ikki belgi — qoching»), qal'a devori (6 oylik ro'zg'or, erkin pul), valyutada olib kelingan summa, va'daning yillik hisobi | ✅ yadro + desktop + Linux E2E + Android |
+| M6: Musofir 8-tamoyil — soat qiymati ish valyutasida (maosh + boshqa daromad, uy valyutasida faqat kurs bilan), ikki maqsadli bilim rejasi (chet elda / uyda, «Hunardan ishga» g'oyasiga bog'lanadi), «Sarmoya (o'qish)» belgisi va oy hisobi qatori, hamyurtlarga yordam — «Ilm zakoti», kurs tekshiruvida «chet elda ish kafolati»; hammasi oila qurilmasiga yuborilmaydi | ✅ yadro + desktop + Linux E2E + Android |
 | Android (A0–A4): Flutter ilova — FRB (DTO'lar yadrodan), Keystore platforma siri, `FLAG_SECURE`, onboarding, qulf va avto-qulf; uchala makonning barcha ekranlari desktop bilan bir xil (Uy, Kasb-kor va sotuvchi qurilmasi, Musofir va «Ikki qirg'oq»); oqim testlari haqiqiy yadro bilan, vektorlar Dart'dan; release APK arm64 ≈ 31 MB yuklab olish | ✅ |
 
 ## Ishga tushirish

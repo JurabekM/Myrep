@@ -853,3 +853,94 @@ fn kk_learning_rows_are_checked() {
         assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
     }
 }
+
+/// M6: Musofir soat qiymati o'zgarmas; reja maqsadi va «Hunardan ishga» havolasi, o'rgatish sohasi —
+/// DB darajasida (makon turi storage'da tekshirilmaydi — sinov uchun shu baza yetarli).
+#[test]
+fn mf_learning_rows_are_checked() {
+    use baraka_storage::repo::mf_learning as ml;
+    let (db, s) = db_with_kk();
+    let m = meta();
+    let hour = ml::MfHourRow {
+        id: "h1".into(),
+        income_minor: 2_650_000,
+        currency: "KRW".into(),
+        income_source: "AUTO".into(),
+        months: 3,
+        minutes_per_day: 600,
+        days: 22,
+        hour_value_minor: 12_045,
+        computed_on: "2026-11-20".into(),
+    };
+    db.write(|tx| ml::insert_hour(tx, &s, &hour, &m)).unwrap();
+    // AUTO — kamida bitta oy; MANUAL — 0 oy.
+    let bad = ml::MfHourRow {
+        id: "h2".into(),
+        months: 0,
+        ..hour.clone()
+    };
+    assert!(db.write(|tx| ml::insert_hour(tx, &s, &bad, &m)).is_err());
+    let plan = ml::MfPlanRow {
+        id: "p1".into(),
+        goal: "ABROAD".into(),
+        skill: "Koreys tili, TOPIK 3".into(),
+        purpose: None,
+        paths: "BOOK,COURSE".into(),
+        budget_minor: Some(300_000),
+        currency: "KRW".into(),
+        weekly_minutes: 240,
+        start_on: "2026-11-20".into(),
+        review_on: "2027-02-20".into(),
+        status: "ACTIVE".into(),
+        baseline_hour_value_id: Some("h1".into()),
+        result_hour_value_id: None,
+        venture_idea_id: None,
+    };
+    db.write(|tx| ml::insert_plan(tx, &s, &plan, &m)).unwrap();
+    for wrong in [
+        ml::MfPlanRow {
+            id: "p2".into(),
+            goal: "ELSEWHERE".into(),
+            ..plan.clone()
+        },
+        // «Hunardan ishga» g'oyasi faqat HOME maqsadida.
+        ml::MfPlanRow {
+            id: "p3".into(),
+            venture_idea_id: Some("idea".into()),
+            ..plan.clone()
+        },
+    ] {
+        assert!(db.write(|tx| ml::insert_plan(tx, &s, &wrong, &m)).is_err());
+    }
+    assert_eq!(db.read(|c| ml::other_active_plans(c, &s, None)).unwrap(), 1);
+    assert_eq!(
+        db.read(|c| ml::other_active_plans(c, &s, Some("p1")))
+            .unwrap(),
+        0
+    );
+    let teach = ml::MfTeachingRow {
+        id: "t1".into(),
+        occurred_on: "2026-11-20".into(),
+        area: "DOCUMENTS".into(),
+        learner: Some("Yangi kelgan hamyurt".into()),
+        topic: "Yashash kartasi uchun hujjatlar".into(),
+        minutes: Some(40),
+    };
+    db.write(|tx| ml::insert_teaching(tx, &s, &teach, &m))
+        .unwrap();
+    let odd = ml::MfTeachingRow {
+        id: "t2".into(),
+        area: "MONEY".into(),
+        ..teach
+    };
+    assert!(db
+        .write(|tx| ml::insert_teaching(tx, &s, &odd, &m))
+        .is_err());
+    for sql in [
+        "UPDATE mf_hour_values SET hour_value_minor = 1",
+        "DELETE FROM mf_hour_values",
+    ] {
+        let err = db.write(|tx| Ok(tx.execute(sql, [])?)).unwrap_err();
+        assert_eq!(err.code(), "EVIDENCE_IMMUTABLE", "{sql}");
+    }
+}

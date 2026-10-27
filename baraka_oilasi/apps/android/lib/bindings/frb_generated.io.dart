@@ -311,7 +311,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MfFundDto dco_decode_box_autoadd_mf_fund_dto(dynamic raw);
 
   @protected
+  MfHourDto dco_decode_box_autoadd_mf_hour_dto(dynamic raw);
+
+  @protected
+  MfHourInput dco_decode_box_autoadd_mf_hour_input(dynamic raw);
+
+  @protected
   MfIncomeInput dco_decode_box_autoadd_mf_income_input(dynamic raw);
+
+  @protected
+  MfLearningPlanInput dco_decode_box_autoadd_mf_learning_plan_input(
+    dynamic raw,
+  );
 
   @protected
   MfMonthDto dco_decode_box_autoadd_mf_month_dto(dynamic raw);
@@ -357,6 +368,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MfStartupDto dco_decode_box_autoadd_mf_startup_dto(dynamic raw);
+
+  @protected
+  MfTeachingInput dco_decode_box_autoadd_mf_teaching_input(dynamic raw);
 
   @protected
   MfTermsInput dco_decode_box_autoadd_mf_terms_input(dynamic raw);
@@ -1160,6 +1174,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<MfFlagDto> dco_decode_list_mf_flag_dto(dynamic raw);
 
   @protected
+  List<MfIdeaOptionDto> dco_decode_list_mf_idea_option_dto(dynamic raw);
+
+  @protected
+  List<MfLearningPlanDto> dco_decode_list_mf_learning_plan_dto(dynamic raw);
+
+  @protected
   List<MfPurposeAmountDto> dco_decode_list_mf_purpose_amount_dto(dynamic raw);
 
   @protected
@@ -1176,6 +1196,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<MfSpendDto> dco_decode_list_mf_spend_dto(dynamic raw);
+
+  @protected
+  List<MfTeachingDto> dco_decode_list_mf_teaching_dto(dynamic raw);
 
   @protected
   List<MoneyDto> dco_decode_list_money_dto(dynamic raw);
@@ -1336,10 +1359,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MfFundDto dco_decode_mf_fund_dto(dynamic raw);
 
   @protected
+  MfHourDto dco_decode_mf_hour_dto(dynamic raw);
+
+  @protected
+  MfHourHomeDto dco_decode_mf_hour_home_dto(dynamic raw);
+
+  @protected
+  MfHourInput dco_decode_mf_hour_input(dynamic raw);
+
+  @protected
+  MfHourSuggestionDto dco_decode_mf_hour_suggestion_dto(dynamic raw);
+
+  @protected
+  MfIdeaOptionDto dco_decode_mf_idea_option_dto(dynamic raw);
+
+  @protected
   MfIncomeInput dco_decode_mf_income_input(dynamic raw);
 
   @protected
   MfIncomeRecordedDto dco_decode_mf_income_recorded_dto(dynamic raw);
+
+  @protected
+  MfLearningOverviewDto dco_decode_mf_learning_overview_dto(dynamic raw);
+
+  @protected
+  MfLearningPlanDto dco_decode_mf_learning_plan_dto(dynamic raw);
+
+  @protected
+  MfLearningPlanInput dco_decode_mf_learning_plan_input(dynamic raw);
+
+  @protected
+  MfLearningResultDto dco_decode_mf_learning_result_dto(dynamic raw);
 
   @protected
   MfMonthDto dco_decode_mf_month_dto(dynamic raw);
@@ -1406,6 +1456,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MfStartupDto dco_decode_mf_startup_dto(dynamic raw);
+
+  @protected
+  MfTeachingDto dco_decode_mf_teaching_dto(dynamic raw);
+
+  @protected
+  MfTeachingInput dco_decode_mf_teaching_input(dynamic raw);
 
   @protected
   MfTermsDto dco_decode_mf_terms_dto(dynamic raw);
@@ -1541,6 +1597,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MfFundDto? dco_decode_opt_box_autoadd_mf_fund_dto(dynamic raw);
+
+  @protected
+  MfHourDto? dco_decode_opt_box_autoadd_mf_hour_dto(dynamic raw);
 
   @protected
   MfMonthDto? dco_decode_opt_box_autoadd_mf_month_dto(dynamic raw);
@@ -2181,7 +2240,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MfFundDto sse_decode_box_autoadd_mf_fund_dto(SseDeserializer deserializer);
 
   @protected
+  MfHourDto sse_decode_box_autoadd_mf_hour_dto(SseDeserializer deserializer);
+
+  @protected
+  MfHourInput sse_decode_box_autoadd_mf_hour_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MfIncomeInput sse_decode_box_autoadd_mf_income_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfLearningPlanInput sse_decode_box_autoadd_mf_learning_plan_input(
     SseDeserializer deserializer,
   );
 
@@ -2253,6 +2325,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MfStartupDto sse_decode_box_autoadd_mf_startup_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfTeachingInput sse_decode_box_autoadd_mf_teaching_input(
     SseDeserializer deserializer,
   );
 
@@ -3292,6 +3369,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<MfFlagDto> sse_decode_list_mf_flag_dto(SseDeserializer deserializer);
 
   @protected
+  List<MfIdeaOptionDto> sse_decode_list_mf_idea_option_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MfLearningPlanDto> sse_decode_list_mf_learning_plan_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<MfPurposeAmountDto> sse_decode_list_mf_purpose_amount_dto(
     SseDeserializer deserializer,
   );
@@ -3316,6 +3403,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<MfSpendDto> sse_decode_list_mf_spend_dto(SseDeserializer deserializer);
+
+  @protected
+  List<MfTeachingDto> sse_decode_list_mf_teaching_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<MoneyDto> sse_decode_list_money_dto(SseDeserializer deserializer);
@@ -3524,10 +3616,47 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MfFundDto sse_decode_mf_fund_dto(SseDeserializer deserializer);
 
   @protected
+  MfHourDto sse_decode_mf_hour_dto(SseDeserializer deserializer);
+
+  @protected
+  MfHourHomeDto sse_decode_mf_hour_home_dto(SseDeserializer deserializer);
+
+  @protected
+  MfHourInput sse_decode_mf_hour_input(SseDeserializer deserializer);
+
+  @protected
+  MfHourSuggestionDto sse_decode_mf_hour_suggestion_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfIdeaOptionDto sse_decode_mf_idea_option_dto(SseDeserializer deserializer);
+
+  @protected
   MfIncomeInput sse_decode_mf_income_input(SseDeserializer deserializer);
 
   @protected
   MfIncomeRecordedDto sse_decode_mf_income_recorded_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfLearningOverviewDto sse_decode_mf_learning_overview_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfLearningPlanDto sse_decode_mf_learning_plan_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfLearningPlanInput sse_decode_mf_learning_plan_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfLearningResultDto sse_decode_mf_learning_result_dto(
     SseDeserializer deserializer,
   );
 
@@ -3598,6 +3727,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MfStartupDto sse_decode_mf_startup_dto(SseDeserializer deserializer);
+
+  @protected
+  MfTeachingDto sse_decode_mf_teaching_dto(SseDeserializer deserializer);
+
+  @protected
+  MfTeachingInput sse_decode_mf_teaching_input(SseDeserializer deserializer);
 
   @protected
   MfTermsDto sse_decode_mf_terms_dto(SseDeserializer deserializer);
@@ -3767,6 +3902,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MfFundDto? sse_decode_opt_box_autoadd_mf_fund_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MfHourDto? sse_decode_opt_box_autoadd_mf_hour_dto(
     SseDeserializer deserializer,
   );
 
@@ -4544,8 +4684,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_mf_hour_dto(
+    MfHourDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_mf_hour_input(
+    MfHourInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_mf_income_input(
     MfIncomeInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_mf_learning_plan_input(
+    MfLearningPlanInput self,
     SseSerializer serializer,
   );
 
@@ -4636,6 +4794,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_mf_startup_dto(
     MfStartupDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_mf_teaching_input(
+    MfTeachingInput self,
     SseSerializer serializer,
   );
 
@@ -6011,6 +6175,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_mf_idea_option_dto(
+    List<MfIdeaOptionDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_mf_learning_plan_dto(
+    List<MfLearningPlanDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_mf_purpose_amount_dto(
     List<MfPurposeAmountDto> self,
     SseSerializer serializer,
@@ -6043,6 +6219,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_mf_spend_dto(
     List<MfSpendDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_mf_teaching_dto(
+    List<MfTeachingDto> self,
     SseSerializer serializer,
   );
 
@@ -6314,11 +6496,59 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_mf_fund_dto(MfFundDto self, SseSerializer serializer);
 
   @protected
+  void sse_encode_mf_hour_dto(MfHourDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mf_hour_home_dto(
+    MfHourHomeDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_mf_hour_input(MfHourInput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mf_hour_suggestion_dto(
+    MfHourSuggestionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_mf_idea_option_dto(
+    MfIdeaOptionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_mf_income_input(MfIncomeInput self, SseSerializer serializer);
 
   @protected
   void sse_encode_mf_income_recorded_dto(
     MfIncomeRecordedDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_mf_learning_overview_dto(
+    MfLearningOverviewDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_mf_learning_plan_dto(
+    MfLearningPlanDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_mf_learning_plan_input(
+    MfLearningPlanInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_mf_learning_result_dto(
+    MfLearningResultDto self,
     SseSerializer serializer,
   );
 
@@ -6402,6 +6632,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_mf_startup_dto(MfStartupDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mf_teaching_dto(MfTeachingDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mf_teaching_input(
+    MfTeachingInput self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_mf_terms_dto(MfTermsDto self, SseSerializer serializer);
@@ -6622,6 +6861,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_mf_fund_dto(
     MfFundDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_mf_hour_dto(
+    MfHourDto? self,
     SseSerializer serializer,
   );
 

@@ -47,6 +47,8 @@ export function MfEntryDialog({
   const [received, setReceived] = useState("");
   const [occurredOn, setOccurredOn] = useState("");
   const [note, setNote] = useState("");
+  // «Sarmoya» belgisi (M6): o'qish xarajati — toifa, ulush va jamg'arma o'zgarmaydi.
+  const [selfInvestment, setSelfInvestment] = useState(false);
   // Uyga yuborish: maqsadlar — kelishuv shartlaridan taklif, o'zgartirish mumkin (M2).
   const terms = useQuery({ queryKey: keys.mfTerms(spaceId), queryFn: () => call(commands.mfTerms(spaceId)), enabled: mode === "SENT_HOME" });
   const [shares, setShares] = useState<SharesDraft | null>(null);
@@ -63,7 +65,7 @@ export function MfEntryDialog({
       }
       if (mode === "EXPENSE") {
         const id = categoryId || categories.data?.[0]?.id || "";
-        await call(commands.mfRecordExpense(spaceId, { amount, categoryId: id, channel, occurredOn: date, note: text }));
+        await call(commands.mfRecordExpense(spaceId, { amount, categoryId: id, channel, occurredOn: date, note: text, selfInvestment }));
         return;
       }
       const sent = mode === "SENT_HOME";
@@ -109,6 +111,17 @@ export function MfEntryDialog({
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+          {mode === "EXPENSE" && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-1" checked={selfInvestment} onChange={(e) => setSelfInvestment(e.target.checked)} aria-describedby="mf-self-investment-hint" />
+              <span>
+                {t("mf.selfInvestment")}
+                <span id="mf-self-investment-hint" className="block text-xs text-ink-muted">
+                  {t("mf.selfInvestmentHint")}
+                </span>
+              </span>
             </label>
           )}
           {mode === "SENT_HOME" && (

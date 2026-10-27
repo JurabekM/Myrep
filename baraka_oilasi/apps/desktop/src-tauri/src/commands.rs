@@ -2443,6 +2443,85 @@ pub async fn kk_learning_overview(
 
 #[tauri::command]
 #[specta::specta]
+pub async fn mf_hour_suggest(
+    state: State<'_, Desktop>,
+    space_id: String,
+) -> R<MfHourSuggestionDto> {
+    state.session.app()?.mf_hour_suggest(&space_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_hour_save(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfHourInput,
+) -> R<MfHourDto> {
+    state.session.app()?.mf_hour_save(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_learning_plan_create(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfLearningPlanInput,
+) -> R<MfLearningPlanDto> {
+    state.session.app()?.mf_learning_plan_create(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_learning_plan_set_status(
+    state: State<'_, Desktop>,
+    space_id: String,
+    plan_id: String,
+    status: String,
+) -> R<MfLearningPlanDto> {
+    state
+        .session
+        .app()?
+        .mf_learning_plan_set_status(&space_id, &plan_id, &status)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_learning_plan_result(
+    state: State<'_, Desktop>,
+    space_id: String,
+    plan_id: String,
+) -> R<MfLearningResultDto> {
+    state
+        .session
+        .app()?
+        .mf_learning_plan_result(&space_id, &plan_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_teaching_add(
+    state: State<'_, Desktop>,
+    space_id: String,
+    input: MfTeachingInput,
+) -> R<MfTeachingDto> {
+    state.session.app()?.mf_teaching_add(&space_id, input)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn mf_learning_overview(
+    state: State<'_, Desktop>,
+    space_id: String,
+    date: Option<String>,
+) -> R<MfLearningOverviewDto> {
+    state
+        .session
+        .app()?
+        .mf_learning_overview(&space_id, date.as_deref())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn settings(state: State<'_, Desktop>) -> R<SettingsDto> {
     state.session.app()?.settings()
 }

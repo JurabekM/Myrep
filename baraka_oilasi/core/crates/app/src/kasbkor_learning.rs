@@ -8,12 +8,13 @@
 use baraka_domain_common::month_period;
 use baraka_domain_kasbkor::invest::{delegate, owner_earnings, DelegateInput, OWNER_AVG_MONTHS};
 use baraka_domain_uy::learning::{average_income, hour_value, HourInput};
-use baraka_money::{parse_amount, Currency, Money};
+use baraka_money::{Currency, Money};
 use baraka_storage::repo::{kk_learning as repo, kk_staff};
 use baraka_storage::SpaceScope;
 
 use crate::app::Ctx;
 use crate::events::Topic;
+use crate::learn_common::{amount, hour_err, max_chars, u32_of};
 use crate::receipt::ymd;
 use crate::text::{clean, clean_opt};
 use crate::*;
@@ -25,40 +26,12 @@ const LEARNER_MAX_CHARS: usize = 120;
 /// Bitta o'rgatish yozuvi: ko'pi bilan bir kun (Uy 2G.6 bilan bir xil).
 const TEACH_MAX_MINUTES: u32 = 1_440;
 
-fn u32_of(v: i64) -> Result<u32, AppError> {
-    u32::try_from(v).map_err(|_| AppError::new("CORRUPT_ROW"))
-}
-
-/// Ish kunlari va daromad kodlari — Uy «Bir soatim qancha?» bilan bir xil.
-fn hour_err(e: baraka_domain_common::DomainError) -> AppError {
-    match e.code {
-        "INVALID_DAYS" => AppError::on("INVALID_WORK_DAYS", "days"),
-        "NO_INCOME" => AppError::on("NO_INCOME", "income"),
-        _ => e.into(),
-    }
-}
-
 /// Qaror kalkulyatorining daqiqa chegarasi (oyiga) va soat qiymati yo'qligi — aniq kodlar.
 fn delegate_err(e: baraka_domain_common::DomainError) -> AppError {
     match e.code {
         "INVALID_TIME" => AppError::on("INVALID_TASK_TIME", e.field.unwrap_or("taskMinutes")),
         "NO_HOUR_VALUE" => AppError::on("KK_NO_HOUR_VALUE", "ownerHourValue"),
         _ => e.into(),
-    }
-}
-
-fn amount(s: &str, cur: Currency, field: &str) -> Result<i64, AppError> {
-    Ok(parse_amount(s.trim(), cur)
-        .map_err(|e| AppError::on(e.code(), field))?
-        .minor())
-}
-
-/// Matn uzunligi chegarasi (ish turi, mavzu, ism) — bitta qoida va bitta kod.
-fn max_chars(s: Option<&str>, max: usize, field: &str) -> Result<(), AppError> {
-    if s.is_some_and(|t| t.chars().count() > max) {
-        Err(AppError::on("TOO_LONG", field))
-    } else {
-        Ok(())
     }
 }
 

@@ -280,7 +280,10 @@
             "teaching_logs",
             "kk_owner_hours",
             "kk_delegations",
-            "kk_teaching_logs"
+            "kk_teaching_logs",
+            "mf_hour_values",
+            "mf_learning_plans",
+            "mf_teaching_logs"
           ]
         },
         "data": {
@@ -832,6 +835,24 @@
       },
       {
         "name": "kk_teaching_logs",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_hour_values",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_learning_plans",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "mf_teaching_logs",
         "mode": "MUTABLE",
         "primaryKey": "id",
         "blobColumns": []

@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { commands, type HourValueDto, type LearningMemberDto, type LearningOverviewDto, type LearningPlanDto, type LearningResultDto } from "../../bindings";
+import { commands, type HourValueDto, type LearningMemberDto, type LearningOverviewDto, type LearningPlanDto, type LearningResultDto, type MoneyDto } from "../../bindings";
 import { AmountInput } from "../../components/AmountInput";
 import { ErrorText } from "../../components/ErrorText";
 import { call } from "../../lib/api";
@@ -10,14 +10,9 @@ import { showDate } from "../../lib/date";
 import { keys } from "../../lib/queryClient";
 import { useUi } from "../../state/ui";
 import { PlanDialog, TeachingDialog } from "./LearningDialogs";
+import { NEXT, STATUS_TONE } from "./planStatus";
 import { parseCount, showMinutes, toMinutes } from "./time";
 
-/** Holat o'tishlari tugmalari (yadro `transition` qoidasi bilan bir xil; yopilgan reja — tugmasiz). */
-const NEXT: Record<string, string[]> = {
-  ACTIVE: ["PAUSED", "DONE", "DROPPED"],
-  PAUSED: ["ACTIVE", "DONE", "DROPPED"],
-};
-const STATUS_TONE: Record<string, string> = { ACTIVE: "border-accent text-accent-text", PAUSED: "border-warn text-warn" };
 
 /**
  * «O'zimga sarmoya» (8-tamoyil, uy/SPEC 2G): «Bir soatim qancha?», bilim rejalari, «Ilm zakoti» va
@@ -268,8 +263,14 @@ function PlanCard({ spaceId, plan: p, memberName }: { spaceId: string; plan: Lea
   );
 }
 
+/** Natija ko'rinishi uchun yetarli maydonlar (Uy va Musofir natijasi — bir xil shakl). */
+type ResultLike = Pick<LearningResultDto, "diff" | "changeBp" | "changePercent"> & {
+  baseline: { hourValue: MoneyDto } | null;
+  current: { hourValue: MoneyDto };
+};
+
 /** Natija (2G.5): pasaysa yoki o'zgarmasa ham uyaltirilmaydi — davom ettirish, o'zgartirish yoki yopish. */
-function ResultView({ r }: { r: LearningResultDto }) {
+export function ResultView({ r }: { r: ResultLike }) {
   const { t } = useTranslation();
   // Boshlang'ich nuqta yo'q — solishtirib bo'lmaydi: faqat hozirgi qiymat va betaraf izoh.
   if (!r.baseline) {

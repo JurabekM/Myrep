@@ -17,6 +17,7 @@ use baraka_domain_kasbkor::supply::{supplier_balance, Delivery, SupplyPayment};
 use baraka_domain_kasbkor::zakat::{zakat, ZakatInput};
 use baraka_domain_musofir::cooling::{cooling_check, CoolingExtra, DecisionKind, Reply as MfReply};
 use baraka_domain_musofir::fund::{return_fund, startup_split};
+use baraka_domain_musofir::invest::{home_hour_value, RateAt};
 use baraka_domain_musofir::month::{month_report as mf_month_report, MfKind, MfMove};
 use baraka_domain_musofir::remittance::{remittance_book, Purpose, Remittance, Share};
 use baraka_domain_musofir::reserve::reserve_plan;
@@ -183,6 +184,7 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "learning_plan" => learning_plan(input),
         "kk_owner_hour" => kk_owner_hour(input),
         "kk_delegate" => kk_delegate(input),
+        "mf_hour_value" => mf_hour_value(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1086,6 +1088,55 @@ fn hour(v: &Value) -> R {
         "hourValue": h.hour_value.to_string(),
         "doubleTarget": h.double_target.to_string(),
         "overCeiling": h.over_ceiling,
+    }))
+}
+
+/// M6: Musofir soat qiymati — ish valyutasida umumiy `hour_value`, uy valyutasida faqat kurs bilan.
+fn mf_hour_value(v: &Value) -> R {
+    let (work, home) = (cur(v, "currency")?, cur(v, "homeCurrency")?);
+    let income = if v["income"].is_null() {
+        None
+    } else {
+        Some(int_str(&v["income"])?)
+    };
+    let totals: Vec<i64> = match &v["monthTotals"] {
+        Value::Null => Vec::new(),
+        Value::Array(a) => a.iter().map(int_str).collect::<Result<_, _>>()?,
+        _ => return Err(bad("monthTotals")),
+    };
+    let h = learn_hour_value(&HourInput {
+        income,
+        month_totals: &totals,
+        minutes_per_day: i(v, "minutesPerDay")?,
+        days: i(v, "days")?,
+    })?;
+    let rate = match &v["rate"] {
+        Value::Null => None,
+        r => Some(RateAt {
+            rate: FxRate {
+                from: work,
+                to: home,
+                rate_num: i(r, "num")?,
+                rate_den: i(r, "den")?,
+            },
+            // `null` — kurs sanasi noma'lum (oracle: FUTURE_DATE).
+            age_days: match &v["rateAgeDays"] {
+                Value::Null => None,
+                x => Some(x.as_i64().ok_or_else(|| bad("rateAgeDays"))?),
+            },
+        }),
+    };
+    let hh = home_hour_value(Money::new(h.hour_value, work), home, rate.as_ref())?;
+    Ok(json!({
+        "income": h.income.to_string(),
+        "incomeSource": h.source.as_str(),
+        "monthlyMinutes": h.monthly_minutes,
+        "hourValue": h.hour_value.to_string(),
+        "doubleTarget": h.double_target.to_string(),
+        "overCeiling": h.over_ceiling,
+        "rateStatus": hh.status.as_str(),
+        "hourValueHome": hh.hour_value.map(|m| m.minor().to_string()),
+        "doubleTargetHome": hh.double_target.map(|m| m.minor().to_string()),
     }))
 }
 

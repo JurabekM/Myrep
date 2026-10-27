@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-learning-plan-create"
+description = "Enables the mf_learning_plan_create command without any pre-configured scope."
+commands.allow = ["mf_learning_plan_create"]
+
+[[permission]]
+identifier = "deny-mf-learning-plan-create"
+description = "Denies the mf_learning_plan_create command without any pre-configured scope."
+commands.deny = ["mf_learning_plan_create"]
