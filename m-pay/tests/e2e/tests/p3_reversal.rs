@@ -220,8 +220,11 @@ async fn crashed_authorization_is_swept_and_reversed() {
     assert_eq!(out.code.as_str(), "00");
     assert_eq!(sb.balance(&fpan).await, before - 7_000 * 100);
 
+    // Emitent pulni qaytarishni commit qiladi, acquirer esa navbat yozuvini javobdan keyin yopadi —
+    // ikkalasini ham kutamiz (faqat balansni kutish poyga edi: yozuv hali PENDING bo'lishi mumkin).
     eventually("qotgan yozuv yopildi va pul qaytdi", || async {
         sb.balance(&fpan).await == before
+            && matches!(reversal_row(&sb, 5).await, Some((s, _, _)) if s == "DONE")
     })
     .await;
     let (state, result, _) = reversal_row(&sb, 5).await.unwrap();
