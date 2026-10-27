@@ -12,5 +12,15 @@ class AndroidHiltConventionPlugin : Plugin<Project> {
             add("implementation", libs.lib("hilt-android"))
             add("ksp", libs.lib("hilt-compiler"))
         }
+        // Lint test manbalari bilan KSP chiqishini ham o'qiydi, lekin AGP 8.10 ksp<Variant>Kotlin ga bog'liqlik qo'ymaydi:
+        // parallel build'da lint KSP'ning vaqtinchalik byRounds/ fayllarini ko'rib, ular o'chganda yiqiladi (ADR-018).
+        tasks.configureEach {
+            val variant = LINT_ANALYZE.matchEntire(name)?.groupValues?.get(1) ?: return@configureEach
+            dependsOn(tasks.matching { it.name == "ksp${variant}Kotlin" })
+        }
+    }
+
+    private companion object {
+        val LINT_ANALYZE = Regex("lint(?:Vital)?Analyze(\\w+)")
     }
 }
