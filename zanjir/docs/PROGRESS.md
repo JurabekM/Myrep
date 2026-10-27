@@ -1,7 +1,8 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 11-faza tayyor (staging; prod — 🛑 2-darvozadan keyin operator bilan). 🛑 1-darvoza (`docs/NORMS_REVIEW.md`)
-va S11–S14 hali ochiq — 1-darvoza yopilmaguncha protokol imzolash bloklangan. Keyingi — 12-faza (release), 🛑 3-darvozadan keyin (keystore).
+**Joriy holat:** 12-faza tayyor — rejadagi barcha fazalar (0–12) bajarildi. Ochiq inson darvozalari: 🛑 1 (normalar —
+litsenziyali muhandis), 🛑 2 (prod server/domen), 🛑 3 (upload keystore, Play Console), keyin pilot va 4-darvoza.
+Birinchi haqiqiy release faqat 1 va 3-darvozadan keyin (`build_release.sh` normalar darvozasida to'xtaydi).
 **Oxirgi yangilanish:** 2026-10-27
 
 ## Fazalar
@@ -21,7 +22,7 @@ va S11–S14 hali ochiq — 1-darvoza yopilmaguncha protokol imzolash bloklangan
 | 9 | Ajratish rejasi UI, tasdiqlash, STALE | ✅ Tayyor (oqim testi + integration_test, ketma-ket qadamlar, kuchlanish tekshiruvi — 2 tasdiq, E2E 7) | 2026-10-27 | 5f62aa4 |
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ✅ Tayyor (SECURITY.md: STRIDE, MASVS, F-01…F-19 — "yuqori"lar yopilgan; OSV auditi 0; unumdorlik byudjetlari; a11y testlari) | 2026-10-27 | 7040f69, e418b79 |
 | 11 | Deploy (staging + prod) | ✅ Tayyor (staging bitta buyruq; E2E 7/7 TLS orqali; zaxira → tiklash: 20 jadval + sxema bir xil; prod tayyor, 2-darvozani kutadi) | 2026-10-27 | 519f1d2 |
-| 12 | Release (AAB, Play internal) | ⏳ | | |
+| 12 | Release (AAB, Play internal) | ✅ Tayyor (`flutter build appbundle --release` — texnik kalit bilan; AAB tekshiruvi 20/20; checklist, pilot yo'riqnomasi, Play qoralamalari) | 2026-10-27 | |
 
 ## 🛑 Inson darvozalari
 
@@ -30,7 +31,7 @@ va S11–S14 hali ochiq — 1-darvoza yopilmaguncha protokol imzolash bloklangan
 | R | Boshlashdan oldin | Reja va `zanjir_core` tuzilmasini tasdiqlash; ochiq savollarga javob | ✅ 2026-10-26: barcha takliflar qabul qilindi |
 | 1 | 1-fazadan keyin | Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni tekshirib imzolaydi (M1–M10 savollarga javob) | 🛑 Kutilmoqda |
 | 2 | 11-fazadan oldin | Domen, O'zbekistondagi server (IP, SSH user), SMTP/SMS — faqat `.env` orqali | 🛑 Kutilmoqda: staging tayyor; prod — `DEPLOY.md` "Prod" (operator `prod.env` ni serverda to'ldiradi) |
-| 3 | 12-fazadan oldin | Release keystore (foydalanuvchi yaratadi), Play Console yuklash | ⏳ |
+| 3 | 12-fazadan oldin | Release keystore (foydalanuvchi yaratadi), Play Console yuklash | 🛑 Kutilmoqda: `docs/RELEASE.md` (upload kaliti, `build_release.sh`, Play internal testing) |
 | 4 | Pilotdan keyin | Fikr-mulohazalar asosida keyingi reja | ⏳ |
 
 ## Ochiq savollar
@@ -49,7 +50,8 @@ Muhandis uchun: M1–M10 (`docs/NORMS_REVIEW.md`). Ular hal bo'lguncha baholash 
 
 ## Eslatmalar
 - GitHub Actions bu branch uchun hali ishga tushmadi (workflow default branch'da yo'q) — lokal tekshiruvlar yashil; PR ochilganda CI ishlaydi.
-- Android build (`flutter build apk/appbundle`) va emulyator integration testi bu konteynerda tekshirilmagan — Android SDK yo'q; 12-fazagacha CI'da tekshiriladi.
+- Android SDK bu konteynerga 12-fazada o'rnatildi (`/opt/android-sdk`, yangi konteynerda qayta); AAB build tekshirildi. Emulyator
+  integration testi — CI (`zanjir-emulator`); haqiqiy qurilmada qo'lda sinov — release checklist.
 - QR kodni kamera bilan skanerlash hali yo'q (kod qo'lda kiritiladi, deep link ishlaydi) — keyingi fazalarda.
 - Protokol QR havolasi hozircha `zanjir://app/v/<token>` (faqat ilova o'rnatilgan telefonda ochiladi); ochiq tekshirish sahifasi
   `https://<domen>/v/<token>` — 7-faza (server) va 2-darvoza (domen), build'da `--dart-define=ZANJIR_VERIFY_BASE_URL`.

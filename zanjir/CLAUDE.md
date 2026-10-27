@@ -59,7 +59,12 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Deploy (ADR-0015): `deploy/zanjir up staging` (bitta buyruq), `deploy/check-staging.sh` (smoke + E2E TLS orqali + zaxira →
   tiklash); bu konteynerda: `ZANJIR_REGISTRY=mirror.gcr.io/library` (Docker Hub/ECR cheklovi) va
   `ZANJIR_BUILD_CA=./environments/build-ca.pem` (`/root/.ccr/ca-bundle.crt` nusxasi, commit qilinmaydi). Prod — `docs/DEPLOY.md`.
-- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi; `zanjir-deploy.yml` — staging qabul sinovi.
+- Android (ADR-0016): `app/tool/build_check.sh` (texnik release build, bir martalik kalit — tarqatilmaydi; AAB tekshiruvi),
+  `app/tool/build_release.sh` (haqiqiy release — foydalanuvchi kaliti + barcha darvozalar), `python3 -I app/tool/gen_icons.py`.
+  Bu konteynerda: `ANDROID_HOME=/opt/android-sdk` (qayta o'rnatiladi) va `~/.gradle/init.d/maven-mirror.gradle`
+  (Maven Central 429 — Google ko'zgusi; repoda emas).
+- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi; `zanjir-deploy.yml` — staging qabul sinovi;
+  `zanjir-release.yml` — PR'da texnik AAB, qo'lda — release.
 
 ## O'zgarmas qoidalar (hech qachon buzilmaydi)
 1. Ilova hech qachon "ishlash xavfsiz" demaydi — faqat **tavsiya**; javobgarlik naryad beruvchi va ish rahbarida. Bu matn UI'da va PDF'da ko'rinadi.
@@ -139,6 +144,12 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
   qilinmaydi). Yangi `ZANJIR_*` sozlama → `compose.yaml` `api.environment`, ikkala `*.env.example`, `DEPLOY.md`.
 - Yangi migratsiya `zanjir_owner` (superuser emas) bilan ishlashi shart — `check-staging.sh` buni tekshiradi.
 - Prod amallari — `docs/RUNBOOK.md`; prod'ga chiqarish faqat 2-darvozadan keyin, operator bilan.
+
+## Release (ADR-0016)
+- Release kalitini Claude yaratmaydi va ishlatmaydi (3-darvoza); `build_check.sh` dagi bir martalik kalit faqat texnik
+  tekshiruv uchun, AAB tarqatilmaydi. `build_release.sh` darvozalarini chetlab o'tadigan parametr qo'shilmaydi.
+- Yangi Android ruxsati yoki manifest o'zgarishi → `verify_aab.sh` ruxsatlar ro'yxati, `docs/PLAY_LISTING.md` (Data safety).
+- Hujjatlar: `docs/RELEASE.md` (checklist), `docs/PILOT.md`, `docs/PLAY_LISTING.md`, `docs/PRIVACY.md` (qoralama).
 
 ## Xavfsizlik (ADR-0014)
 - `docs/SECURITY.md` — tahdid modeli, MASVS, RBAC, topilmalar reestri (F-*) va qoldiq xavflar (R-*). Yangi topilma yoki

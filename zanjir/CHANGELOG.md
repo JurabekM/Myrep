@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 12-faza — release (ADR-0016): `app/tool/build_release.sh` (foydalanuvchi upload kaliti, normalar release darvozasi,
+  testlar, R8 + Dart obfuskatsiyasi, simbollar alohida), `build_check.sh` (texnik release build, bir martalik kalit),
+  `verify_aab.sh` (imzo, manifest, SDK, ruxsatlar, obfuskatsiya); ilova ikonkasi (`gen_icons.py`, adaptive + Play 512 px);
+  CI `zanjir-release`; `docs/RELEASE.md` (versiyalash, checklist, Play internal testing), `docs/PILOT.md`,
+  `docs/PLAY_LISTING.md`, `docs/PRIVACY.md` (qoralamalar).
 - 11-faza — deploy (ADR-0015): `deploy/` — server Dockerfile (root emas, faqat o'qiladigan FS), `compose.yaml` (PostgreSQL 16,
   bir martalik Alembic migratsiyasi, API, Caddy TLS/HSTS, kunlik zaxira), staging/prod muhit namunalari, `deploy/zanjir`
   boshqaruv skripti (bitta buyruq bilan ko'tarish, zaxira, tiklash, kalit yaratish), baza rollari (`zanjir_owner`,

@@ -88,11 +88,11 @@ obyektlar sxemasi va ajratish rejalari (xavfsizlikka ta'sir qiladi), normalar to
 | MASVS-PLATFORM-1 IPC xavfsiz | ✅ | deep link `zanjir://app/n|v/...` faqat ekranni ochadi, amal bajarmaydi; `MethodChannel` faqat FLAG_SECURE |
 | MASVS-PLATFORM-2 WebView | ➖ | WebView yo'q |
 | MASVS-PLATFORM-3 UI orqali sizish | ✅ | FLAG_SECURE imzolash ekranida (talab bo'yicha faqat shu ekranda); parol maydonlari yashirin |
-| MASVS-CODE-1 yangilangan platforma | ✅ | Flutter stable, `targetSdk` Flutter standart (eng yangi) |
+| MASVS-CODE-1 yangilangan platforma | ✅ | Flutter stable, `minSdk 24`, `targetSdk 36` (AAB tekshiruvi `verify_aab.sh`) |
 | MASVS-CODE-2 yangilanish mexanizmi | ⚠️ | Play orqali; majburiy yangilash yo'q (R-06) |
 | MASVS-CODE-3 zaif bog'liqliklar yo'q | ✅ | `tools/audit/osv_audit.py` (OSV.dev) — CI'da har push va haftalik; 2026-10-27: 379 paket, zaiflik yo'q |
 | MASVS-CODE-4 kiritishni tekshirish | ✅ | raqamlar qat'iy tahlil, normalar qat'iy YAML yuklovchi, server Pydantic `extra=forbid`, sim formati turlari |
-| MASVS-RESILIENCE-* | ➖ | L2/R — obfuskatsiya release build'da (`--obfuscate --split-debug-info`, 12-faza) |
+| MASVS-RESILIENCE-* | ➖ | L2/R; baribir: R8 + Dart obfuskatsiyasi, `libapp.so` da DWARF yo'q, `debuggable` yo'q — har AAB'da tekshiriladi (ADR-0016) |
 | MASVS-PRIVACY-1..4 | ✅ | minimal ma'lumot (F.I.Sh., telefon); tashqi analitika/xato xizmatlari yo'q; ma'lumot lokalizatsiyasi — DEPLOY.md (huquqshunos) |
 
 ## Deploy (11-faza, ADR-0015)

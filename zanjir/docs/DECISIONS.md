@@ -424,3 +424,30 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
 - **Oqibat:** Bitta server, bitta `api` jarayoni (rate limiting xotirada); gorizontal kengayish — Redis va ko'p nusxa
   (keyingi bosqich). Zaxira tashqi nusxasi va monitoring (Prometheus/alerting) — operator qarori, RUNBOOK'da tavsiya.
   Prod deploy, SMTP/SMS provayderi — 2-darvozadan keyin.
+
+## ADR-0016: Release (12-faza) — AAB, imzo, versiyalash, AAB tekshiruvi, Play internal testing
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (12-faza).
+- **Kontekst:** Prompt 9-bo'lim, 12-faza: Android imzolash konfiguratsiyasi, AAB, versiyalash, Play internal testing
+  tayyorgarligi, pilot yo'riqnomasi; mezon — `flutter build appbundle --release` muvaffaqiyatli, release checklist to'liq.
+  3-darvoza: keystore'ni foydalanuvchi yaratadi, Play'ga u yuklaydi.
+- **Qaror:**
+  1. **Ikki skript.** `app/tool/build_release.sh` — haqiqiy release: faqat foydalanuvchi `key.properties` bilan, toza git
+     daraxti, teg = pubspec versiyasi, **normalar release darvozasi** (`check_norms.py --release`), analyze + testlar, https
+     server; chetlab o'tish parametri yo'q. `app/tool/build_check.sh` — texnik tekshiruv: vaqtinchalik papkada bir martalik
+     kalit (`CN=ZANJIR build check - NOT FOR RELEASE`), oxirida o'chiriladi; haqiqiy `key.properties` bo'lsa ishlamaydi;
+     natija tarqatilmaydi (Play'ga yuklansa, o'sha kalit upload kaliti bo'lib qolardi — shu sababli CI artefakt saqlamaydi).
+  2. **Play App Signing + upload kaliti.** Ilova imzo kalitini Google saqlaydi; foydalanuvchi upload kaliti yo'qolsa ham
+     ilova yo'qolmaydi (Play orqali almashtiriladi).
+  3. **AAB tekshiruvi** (`verify_aab.sh`, har build'da): imzo va sertifikat (debug emas), manifest (`allowBackup=false`,
+     cleartext yo'q, `networkSecurityConfig`, `debuggable` yo'q, SDK 24/36, versiya), ruxsatlar ro'yxati (faqat
+     ruxsat etilganlar; har bir `uses-permission` o'qilganini tekshiradi), R8 mapping, uchta ABI, `libapp.so` da DWARF yo'q,
+     Dart nomlari ochiq emas. Tekshiruvlarning o'zi salbiy holatda sinalgan (debug sertifikat → ❌).
+  4. **Versiyalash:** `X.Y.Z+N` (SemVer + qat'iy oshuvchi `versionCode`), teg `zanjir-vX.Y.Z`; server avval yangilanadi.
+  5. **Ikonka** — `app/tool/gen_icons.py` (bitta geometriya → adaptive vector, eski PNG'lar, Play 512 px), Myrep dark
+     ranglari, Anthropic brend belgilarisiz.
+  6. **CI `zanjir-release`:** har PR'da `build_check.sh` (shellcheck, ikonkalar); `release` — faqat qo'lda, `zanjir-v*` teg
+     ustida, himoyalangan `release` muhiti va `ZANJIR_UPLOAD_*` secrets bilan (foydalanuvchi xohlasa; lokal build ham teng).
+- **Oqibat:** Birinchi haqiqiy release 1-darvoza (normalar tekshiruvi) va 3-darvoza (kalit) yopilgach mumkin — hozir
+  `build_release.sh` normalar darvozasida ataylab to'xtaydi. Play listing va maxfiylik siyosati — qoralama (`docs/PLAY_LISTING.md`,
+  `docs/PRIVACY.md`), huquqshunos tekshiradi. Haqiqiy qurilmada qo'lda sinov — checklist'da (emulyator testi CI'da).
