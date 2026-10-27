@@ -44,6 +44,9 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | DELETE | `/v1/tokens/{token_id}` | operator | — | → DELETED (LUK'lar bekor qilinadi, qaytarib bo'lmaydi) |
 | GET | `/v1/audit/verify` | operator | — | audit xesh-zanjirini tekshirish |
 | GET | `/v1/recon?date=YYYY-MM-DD` | operator | — | solishtirish hisoboti: acquirer jurnali ↔ emitent (ADR-0024) |
+| POST | `/v1/clearing/run` | operator | `{"date"?}` | kunlik kliring → emitent → hisob-kitob (ADR-0025) |
+| GET | `/v1/clearing/{date}` | operator | — | paket hisoboti (pozitsiyalar, rad etilganlar) |
+| GET | `/v1/clearing/{date}/{clearing.txt\|ack.txt\|payouts.csv}` | operator | — | kliring fayli, emitent tasdig'i, to'lovlar CSV |
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
 | GET | `/v1/pqlink/revocations` | — | — | oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014; sozlanmagan — 404) |
@@ -225,8 +228,35 @@ Solishtirish (ADR-0024): `?date=YYYY-MM-DD` — sxema vaqti bo'yicha kun (UTC+5;
 ```
 
 `kind`: `ISSUER_ONLY_APPROVED`, `ACQUIRER_ONLY_APPROVED`, `AMOUNT_MISMATCH`, `REVERSAL_FAILED`
-(tafovutlar); `REVERSAL_PENDING`, `IN_FLIGHT` (`notes` — vaqtinchalik). PAN yo'q. CLI:
-`mpay-server recon --date … [--out report.json]` (tafovut bo'lsa chiqish kodi 1).
+(tafovutlar); `CLEARING_REJECTED` — kliringda rad etilgan (ADR-0025); `REVERSAL_PENDING`, `IN_FLIGHT`
+(`notes` — vaqtinchalik). Har qatorda `clearing` (`ACCEPTED`, `REJECTED:<sabab>`), hisobotda `cleared`.
+PAN yo'q. CLI: `mpay-server recon --date … [--out report.json]` (tafovut bo'lsa chiqish kodi 1).
+
+### 3.12 Kliring (operator, ADR-0025)
+
+`POST /v1/clearing/run` `{"date": "2026-10-26"}` (berilmasa — kecha, UTC+5): paket yaratiladi →
+emitentga → hisob-kitob. Qayta chaqirish xavfsiz (o'sha natija). Kun tugagach `[clearing]
+cutoff_grace_secs` o'tmagan yoki kun ichida javobi noma'lum avtorizatsiya bor — `409
+CLEARING_NOT_READY`; jurnal muddatidan (3 kun) eski — `400`; emitent ishlamadi — `502 ISSUER_ERROR`.
+
+```json
+{ "batch_id": "MPAY20261026", "business_date": "2026-10-26", "state": "SETTLED",
+  "period_from": 1792954800, "period_to": 1793041200, "records": 3, "accepted": 2, "rejected": 1,
+  "totals": [{ "currency": 860, "count": 3, "amount_minor": 1750000 }],
+  "file_sha256": "<64 hex>", "merchant_fee_bps": 150, "interchange_bps": 100,
+  "rejected_items": [{ "seq": 3, "terminal_id": "TERM0001", "merchant_id": "SHOP0000000001",
+    "stan": "000003", "rrn": "630014000003", "dpan_masked": "990077******1234",
+    "amount_minor": 250000, "currency": 860, "code": "12", "reason": "NOT_APPROVED" }],
+  "positions": [
+    { "party": "ACQUIRER", "party_id": "mpay", "currency": 860, "count": 2, "gross_minor": 22500, "fee_minor": 15000, "net_minor": 7500 },
+    { "party": "ISSUER", "party_id": "issuer", "currency": 860, "count": 2, "gross_minor": 1500000, "fee_minor": 15000, "net_minor": 1485000 },
+    { "party": "MERCHANT", "party_id": "SHOP0000000001", "currency": 860, "count": 1, "gross_minor": 1000000, "fee_minor": 15000, "net_minor": 985000 },
+    { "party": "MERCHANT", "party_id": "SHOP0000000002", "currency": 860, "count": 1, "gross_minor": 500000, "fee_minor": 7500, "net_minor": 492500 } ] }
+```
+
+`state`: `BUILT` → `ACKED` → `SETTLED`. `GET /v1/clearing/{date}` — o'sha hisobot (paket yo'q — 404);
+`…/clearing.txt` va `…/ack.txt` — `text/plain` (format: `crates/mpay-common/src/clearing.rs`),
+`…/payouts.csv` — `text/csv` (faqat `SETTLED`).
 
 ### 3.9 `GET /v1/sandbox/accounts` (operator, faqat sandbox)
 

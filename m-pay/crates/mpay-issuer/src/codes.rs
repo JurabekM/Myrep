@@ -155,6 +155,8 @@ pub enum ReversalReason {
     AmountMismatch,
     /// Tasdiqlangan, lekin yechilgan hisob yozilmagan (eski yozuv).
     AccountUnknown,
+    /// Kliringdan o'tgan (yakuniy) — reversal bilan emas, qaytarish (refund) bilan (ADR-0025).
+    AlreadyCleared,
     /// Majburiy maydon yo'q yoki maydon 90 noto'g'ri.
     FormatError,
 }
@@ -168,6 +170,7 @@ impl ReversalReason {
             OriginalNotFound | AmbiguousOriginal => "25",
             AmountMismatch => "13",
             AccountUnknown => "96",
+            AlreadyCleared => "12",
             FormatError => "30",
         }
     }
@@ -182,6 +185,7 @@ impl ReversalReason {
             AmbiguousOriginal => "AMBIGUOUS_ORIGINAL",
             AmountMismatch => "AMOUNT_MISMATCH",
             AccountUnknown => "ACCOUNT_UNKNOWN",
+            AlreadyCleared => "ALREADY_CLEARED",
             FormatError => "FORMAT_ERROR",
         }
     }

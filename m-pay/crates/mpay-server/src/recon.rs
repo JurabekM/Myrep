@@ -10,6 +10,7 @@
 //! | `ACQUIRER_ONLY_APPROVED` | terminal tasdiq olgan, emitentda yechim yo'q yoki qaytarilgan — savdo nuqtasiga pul tushmaydi |
 //! | `AMOUNT_MISMATCH` | ikkalasi tasdiqlagan, summa yoki valyuta farqli |
 //! | `REVERSAL_FAILED` | emitent reversal'ni rad etdi — qo'lda ko'rib chiqish |
+//! | `CLEARING_REJECTED` | ikki tomon tasdiqlagan, lekin emitent kliringda rad etdi (ADR-0025) — savdo nuqtasiga to'lanmaydi |
 //!
 //! Izohlar (tafovut emas, vaqtinchalik): `REVERSAL_PENDING` — reversal hali yuborilmoqda,
 //! `IN_FLIGHT` — avtorizatsiya hali ishlanmoqda.
@@ -42,6 +43,7 @@ pub enum ReconKind {
     AcquirerOnlyApproved,
     AmountMismatch,
     ReversalFailed,
+    ClearingRejected,
     ReversalPending,
     InFlight,
 }
@@ -72,6 +74,8 @@ pub struct ReconItem {
     pub currency: u16,
     /// Reversal holati: `PENDING`, `DONE:REVERSED`, `FAILED:AMOUNT_MISMATCH` …
     pub reversal: Option<String>,
+    /// Kliring natijasi (ADR-0025): `PENDING`, `ACCEPTED`, `REJECTED:ORIGINAL_NOT_FOUND` …
+    pub clearing: Option<String>,
 }
 
 /// Valyuta bo'yicha tasdiqlangan (ikki tomon mos) avtorizatsiyalar.
@@ -93,6 +97,8 @@ pub struct ReconReport {
     pub issuer_records: usize,
     /// Ikki tomon mos kelgan acquirer yozuvlari.
     pub matched: usize,
+    /// Kliringda emitent qabul qilgan acquirer yozuvlari (kliring hali bo'lmagan kun — 0).
+    pub cleared: usize,
     pub approved: Vec<ApprovedTotal>,
     pub discrepancies: Vec<ReconItem>,
     pub notes: Vec<ReconItem>,
@@ -130,6 +136,17 @@ pub struct ReversalRecord {
     pub result: Option<String>,
 }
 
+/// Kliring paketi yozuvi (ADR-0025).
+#[derive(Debug, Clone)]
+pub struct ClearingItemRecord {
+    pub terminal_ref: String,
+    pub stan: i64,
+    pub rrn: String,
+    /// `PENDING`, `ACCEPTED`, `REJECTED`.
+    pub status: String,
+    pub reason: Option<String>,
+}
+
 type Key = (String, String, String);
 
 fn key(terminal: &str, stan: &str, rrn: &str) -> Key {
@@ -145,10 +162,16 @@ pub fn reconcile(
     acquirer: &[AcquirerRecord],
     reversals: &[ReversalRecord],
     issuer: &[IssuerRecord],
+    clearing: &[ClearingItemRecord],
     from: i64,
     to: i64,
     now: i64,
 ) -> ReconReport {
+    let clr: HashMap<Key, &ClearingItemRecord> = clearing
+        .iter()
+        .map(|c| (key(&c.terminal_ref, &format!("{:06}", c.stan), &c.rrn), c))
+        .collect();
+    let mut cleared = 0;
     let mut iss: HashMap<Key, Vec<&IssuerRecord>> = HashMap::new();
     for r in issuer {
         iss.entry(key(&r.terminal_id, &r.stan, &r.rrn))
@@ -177,6 +200,7 @@ pub fn reconcile(
         let approved_iss = pair.iter().copied().find(|r| effective_approved(r));
         let shown_iss = approved_iss.or_else(|| pair.first().copied());
         let rev = revs.get(&k);
+        let clr_item = clr.get(&k);
         let item = |kind| ReconItem {
             kind,
             terminal_id: a.terminal_ref.clone(),
@@ -195,7 +219,14 @@ pub fn reconcile(
                 Some(x) => format!("{}:{x}", r.state),
                 None => r.state.clone(),
             }),
+            clearing: clr_item.map(|c| match &c.reason {
+                Some(x) if c.status == "REJECTED" => format!("{}:{x}", c.status),
+                _ => c.status.clone(),
+            }),
         };
+        if clr_item.is_some_and(|c| c.status == "ACCEPTED") {
+            cleared += 1;
+        }
         if a.state == "PENDING" {
             items.push(item(ReconKind::InFlight));
             continue;
@@ -206,6 +237,13 @@ pub fn reconcile(
         }
         let acq_approved = a.response_code.as_deref() == Some("00");
         match (acq_approved, approved_iss) {
+            (true, Some(i))
+                if i.amount_minor == a.amount_minor
+                    && i.currency == a.currency
+                    && clr_item.is_some_and(|c| c.status == "REJECTED") =>
+            {
+                items.push(item(ReconKind::ClearingRejected));
+            }
             (true, Some(i)) if i.amount_minor == a.amount_minor && i.currency == a.currency => {
                 matched += 1;
                 let t = totals.entry(a.currency).or_default();
@@ -242,6 +280,7 @@ pub fn reconcile(
                 issuer_reversed: false,
                 currency: r.currency,
                 reversal: None,
+                clearing: None,
             });
         }
     }
@@ -262,6 +301,7 @@ pub fn reconcile(
         acquirer_records,
         issuer_records,
         matched,
+        cleared,
         approved: totals
             .into_iter()
             .map(|(currency, (count, amount_minor))| ApprovedTotal {
@@ -342,6 +382,33 @@ pub async fn reversal_records(
         .collect()
 }
 
+/// Kliring yozuvlari (avtorizatsiya vaqti `[from, to)`).
+pub async fn clearing_records(
+    db: &Db,
+    from: i64,
+    to: i64,
+) -> Result<Vec<ClearingItemRecord>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT terminal_ref, stan, rrn, status, reason FROM clearing_items \
+         WHERE txn_at >= $1 AND txn_at < $2 ORDER BY txn_at, batch_id, seq",
+    )
+    .bind(from)
+    .bind(to)
+    .fetch_all(db.pool())
+    .await?;
+    rows.iter()
+        .map(|r| {
+            Ok(ClearingItemRecord {
+                terminal_ref: r.try_get("terminal_ref")?,
+                stan: r.try_get("stan")?,
+                rrn: r.try_get("rrn")?,
+                status: r.try_get("status")?,
+                reason: r.try_get("reason")?,
+            })
+        })
+        .collect()
+}
+
 /// Solishtirish xatosi.
 #[derive(Debug, thiserror::Error)]
 pub enum ReconError {
@@ -374,7 +441,8 @@ pub async fn run(state: &AppState, from: i64, to: i64) -> Result<ReconReport, Re
     let revs = reversal_records(db, lo, hi).await?;
     // `TODO(spec):` real bankda emitent qaydnomasi — bankning kunlik fayli (format kelishiladi).
     let iss = state.issuer.report(lo, hi).await?;
-    Ok(reconcile(&acq, &revs, &iss, from, to, now))
+    let clr = clearing_records(db, lo, hi).await?;
+    Ok(reconcile(&acq, &revs, &iss, &clr, from, to, now))
 }
 
 /// `YYYY-MM-DD` — sxema vaqti bo'yicha kun (UTC+5) → `[from, to)`.
@@ -491,7 +559,27 @@ mod tests {
             rev(7, "PENDING", None),
             rev(8, "FAILED", Some("AMOUNT_MISMATCH")),
         ];
-        let rep = reconcile(&a, &r, &i, from, to, 5_000);
+        let clr = vec![
+            ClearingItemRecord {
+                terminal_ref: "TERM0001".into(),
+                stan: 1,
+                rrn: "630014000001".into(),
+                status: "ACCEPTED".into(),
+                reason: Some("ACCEPTED".into()),
+            },
+            ClearingItemRecord {
+                terminal_ref: "TERM0001".into(),
+                stan: 10,
+                rrn: "630014000010".into(),
+                status: "REJECTED".into(),
+                reason: Some("ORIGINAL_NOT_FOUND".into()),
+            },
+        ];
+        let mut a = a;
+        let mut i = i;
+        a.push(acq(10, "00", 1_000, 1_110)); // ikki tomon mos, kliringda rad
+        i.push(iss(10, "00", 1_000, 1_110));
+        let rep = reconcile(&a, &r, &i, &clr, from, to, 5_000);
         let kinds: Vec<(String, ReconKind)> = rep
             .discrepancies
             .iter()
@@ -504,6 +592,7 @@ mod tests {
                 ("000004".into(), ReconKind::AcquirerOnlyApproved),
                 ("000005".into(), ReconKind::AmountMismatch),
                 ("000008".into(), ReconKind::ReversalFailed),
+                ("000010".into(), ReconKind::ClearingRejected),
                 ("000030".into(), ReconKind::IssuerOnlyApproved),
             ]
         );
@@ -517,8 +606,13 @@ mod tests {
             ]
         );
         assert_eq!(rep.matched, 3, "1 (tasdiq), 2 (rad), 6 (qaytarilgan)");
-        assert_eq!(rep.acquirer_records, 9);
-        assert_eq!(rep.issuer_records, 10);
+        assert_eq!(rep.acquirer_records, 10);
+        assert_eq!(rep.issuer_records, 11);
+        assert_eq!(rep.cleared, 1);
+        assert_eq!(
+            rep.discrepancies[4].clearing.as_deref(),
+            Some("REJECTED:ORIGINAL_NOT_FOUND")
+        );
         assert_eq!(
             rep.approved,
             vec![ApprovedTotal {
@@ -544,7 +638,7 @@ mod tests {
 
     #[test]
     fn empty_period_is_clean() {
-        let rep = reconcile(&[], &[], &[], 0, 10, 10);
+        let rep = reconcile(&[], &[], &[], &[], 0, 10, 10);
         assert!(rep.is_clean());
         assert_eq!(rep.matched, 0);
     }

@@ -70,6 +70,18 @@ enum Cmd {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Kunlik kliring va hisob-kitob (ADR-0025): paket → emitent → pozitsiyalar. Qayta ishga
+    /// tushirish xavfsiz. Emitent yozuvlarni rad etsa — chiqish kodi 1.
+    Clearing {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Kun `YYYY-MM-DD` — sxema vaqti (UTC+5); standart — kecha.
+        #[arg(long)]
+        date: Option<String>,
+        /// Shu papkaga: kliring fayli, emitent tasdig'i, to'lovlar CSV va hisobot JSON.
+        #[arg(long)]
+        out_dir: Option<PathBuf>,
+    },
     /// Audit log xesh-zanjirini tekshiradi.
     AuditVerify {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -217,6 +229,87 @@ async fn run(cli: Cli) -> Result<(), String> {
                 r.entries, r.head_hash
             );
             Ok(())
+        }
+        Cmd::Clearing {
+            config,
+            date,
+            out_dir,
+        } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let st = mpay_server::state::build_offline(&cfg)
+                .await
+                .map_err(|e| e.to_string())?;
+            let date = date.unwrap_or_else(|| mpay_server::clearing::yesterday(st.clock.now()));
+            mpay_server::recon::business_day(&date)?;
+            let r = mpay_server::clearing::run(&st, &date)
+                .await
+                .map_err(|e| e.to_string())?;
+            if let Some(dir) = &out_dir {
+                std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+                let write = |name: String, body: &[u8]| {
+                    let p = dir.join(name);
+                    std::fs::write(&p, body).map_err(|e| format!("{}: {e}", p.display()))
+                };
+                if let Some((file, ack)) = mpay_server::clearing::files(st.vault.db(), &date)
+                    .await
+                    .map_err(|e| e.to_string())?
+                {
+                    write(format!("{}.clr", r.batch_id), file.as_bytes())?;
+                    if let Some(ack) = ack {
+                        write(format!("{}.ack", r.batch_id), ack.as_bytes())?;
+                    }
+                }
+                write(
+                    format!("{}-payouts.csv", r.batch_id),
+                    mpay_server::clearing::payouts_csv(&r).as_bytes(),
+                )?;
+                write(
+                    format!("{}-settlement.json", r.batch_id),
+                    &serde_json::to_vec_pretty(&r).map_err(|e| e.to_string())?,
+                )?;
+            }
+            println!(
+                "Paket {} ({}): {} — {} yozuv, qabul {}, rad {}",
+                r.batch_id,
+                r.business_date,
+                r.state,
+                r.records,
+                r.accepted.unwrap_or(0),
+                r.rejected.unwrap_or(0)
+            );
+            for p in &r.positions {
+                println!(
+                    "  {:<8} {:<15} {} — {} ta, yalpi {}, komissiya {}, sof {}",
+                    p.party,
+                    p.party_id,
+                    p.currency,
+                    p.count,
+                    p.gross_minor,
+                    p.fee_minor,
+                    p.net_minor
+                );
+            }
+            for i in &r.rejected_items {
+                println!(
+                    "  RAD: #{} terminal {} STAN {} RRN {} {} {} — {:?} {:?}",
+                    i.seq,
+                    i.terminal_id,
+                    i.stan,
+                    i.rrn,
+                    i.dpan_masked,
+                    i.amount_minor,
+                    i.code,
+                    i.reason
+                );
+            }
+            if r.rejected_items.is_empty() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "emitent {} ta yozuvni rad etdi",
+                    r.rejected_items.len()
+                ))
+            }
         }
         Cmd::Recon { config, date, out } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;

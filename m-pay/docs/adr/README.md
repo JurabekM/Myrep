@@ -26,5 +26,6 @@
 | [0022](0022-mahsulot-siyosatlari.md) | Mahsulot siyosatlari: REVIEW `step_up`, CVM chegarasi (`Q2`), token muddati (`54`), karta–qurilma | qabul qilingan |
 | [0023](0023-zaxira-pitr-ogohlantirish.md) | Shifrlangan zaxira (age), PITR (WAL arxivi), Alertmanager | qabul qilingan |
 | [0024](0024-reversal-va-solishtirish.md) | Avtomatik reversal (`0400`/`0401`) va solishtirish: acquirer jurnali ↔ emitent | qabul qilingan |
+| [0025](0025-kliring-va-hisob-kitob.md) | Kunlik kliring (fayl, emitent tasdig'i) va hisob-kitob (MDR, interchange, pozitsiyalar) | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

@@ -6,6 +6,7 @@
 
 pub mod acquirer;
 pub mod auth;
+pub mod clearing;
 pub mod clientip;
 pub mod config;
 pub mod dedup;

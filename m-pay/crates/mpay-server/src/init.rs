@@ -317,6 +317,13 @@ issuer_timeout_ms = 10000
 # reversal_delay_secs = 10         # birinchi 0400 dan oldin (kechikkan asl xabar emitentga yetsin)
 # reversal_max_backoff_secs = 600  # emitentga yetib bo'lmasa qayta urinishlar orasidagi eng katta oraliq
 
+# Kunlik kliring va hisob-kitob (ADR-0025): `mpay-server clearing --date …` yoki POST /v1/clearing/run.
+# Tariflar — faraz (TODO(spec): bank va sxema tariflari), bazis punktda.
+[clearing]
+merchant_fee_bps = 150           # savdo nuqtasi komissiyasi (MDR), 1,5 %
+interchange_bps = 100            # emitentga, 1,0 %
+# cutoff_grace_secs = 900        # kun tugagach kutish (javobi kutilayotganlar yopilsin)
+
 # Prometheus metrikalari (2-faza P2.5): alohida ichki port, kalitsiz — tashqariga ochilmaydi.
 [metrics]
 # listen = "127.0.0.1:9464"

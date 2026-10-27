@@ -21,6 +21,7 @@ thiserror.workspace = true
 tracing.workspace = true
 time.workspace = true
 hex.workspace = true
+sha2.workspace = true
 zeroize.workspace = true
 
 [dev-dependencies]

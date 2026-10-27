@@ -479,3 +479,102 @@ async fn concurrent_reversals_credit_once() {
     assert_eq!(reasons, ["ALREADY_REVERSED", "REVERSED"]);
     assert_eq!(balance(&e).await, start);
 }
+
+fn clearing_rec(seq: u32, stan: u32, amount: u64) -> mpay_common::clearing::ClearingRecord {
+    mpay_common::clearing::ClearingRecord {
+        seq,
+        terminal_id: "TERM0001".into(),
+        merchant_id: "SHOP0000000001".into(),
+        stan,
+        rrn: "629612000001".into(),
+        amount_minor: amount,
+        currency: 860,
+        txn_at: 1_793_050_000,
+        dpan_masked: "990077******0001".into(),
+    }
+}
+
+#[tokio::test]
+async fn clearing_matches_each_record_once() {
+    use mpay_common::clearing::{ClearingAck, ClearingFile};
+    let e = env().await;
+    for (atc, amount) in [(1u16, 1_000u64), (2, 2_000), (3, 3_000)] {
+        assert_eq!(code(&e, &valid_0100(&e, atc, amount)).await.0, "00");
+    }
+    assert_eq!(code(&e, &valid_0100(&e, 4, 200_000_000)).await.0, "Q2");
+    let rev = reversal_for(&valid_0100(&e, 2, 2_000), Mti::REVERSAL_REQUEST);
+    assert_eq!(reverse(&e, &rev).await.1, "REVERSED");
+    let before = balance(&e).await;
+
+    let file = ClearingFile {
+        batch_id: "MPAY20261027".into(),
+        business_date: "20261027".into(),
+        created_at: 1_793_128_000,
+        records: vec![
+            clearing_rec(1, 1, 1_000),
+            clearing_rec(2, 2, 2_000),
+            clearing_rec(3, 3, 3_001),
+            clearing_rec(4, 4, 200_000_000),
+            clearing_rec(5, 9, 500),
+        ],
+    };
+    let bytes = file.encode().unwrap();
+    let (ack_bytes, ack) = e.issuer.process_clearing(&bytes).await.unwrap();
+    let got: Vec<(&str, &str)> = ack
+        .records
+        .iter()
+        .map(|r| (r.code.as_str(), r.reason.as_str()))
+        .collect();
+    assert_eq!(
+        got,
+        [
+            ("00", "ACCEPTED"),
+            ("12", "REVERSED"),
+            ("13", "AMOUNT_MISMATCH"),
+            ("12", "NOT_APPROVED"),
+            ("25", "ORIGINAL_NOT_FOUND"),
+        ]
+    );
+    assert_eq!(ClearingAck::parse(&ack_bytes).unwrap(), ack);
+    // Kliring balansni o'zgartirmaydi (emulyator avtorizatsiyada yechgan).
+    assert_eq!(balance(&e).await, before);
+
+    // O'sha paket qayta — o'sha tasdiq; o'sha ID boshqa mazmun bilan — xato.
+    let (again, _) = e.issuer.process_clearing(&bytes).await.unwrap();
+    assert_eq!(again, ack_bytes);
+    let mut other = file.clone();
+    other.records.truncate(1);
+    assert!(e
+        .issuer
+        .process_clearing(&other.encode().unwrap())
+        .await
+        .is_err());
+
+    // Boshqa paketda o'sha tranzaksiya — 94.
+    let second = ClearingFile {
+        batch_id: "MPAY20261028".into(),
+        business_date: "20261028".into(),
+        records: vec![clearing_rec(1, 1, 1_000)],
+        ..file
+    };
+    let (_, ack2) = e
+        .issuer
+        .process_clearing(&second.encode().unwrap())
+        .await
+        .unwrap();
+    assert_eq!(ack2.records[0].reason, "ALREADY_CLEARED");
+
+    // Kliringdan o'tgan tranzaksiyani reversal bilan qaytarib bo'lmaydi.
+    let late = reversal_for(&valid_0100(&e, 1, 1_000), Mti::REVERSAL_REQUEST);
+    assert_eq!(
+        reverse(&e, &late).await,
+        ("12".into(), "ALREADY_CLEARED".into())
+    );
+    assert_eq!(balance(&e).await, before);
+
+    // Buzilgan fayl — butun paket rad.
+    let mut broken = bytes.clone();
+    let n = broken.len();
+    broken[n - 2] ^= 1;
+    assert!(e.issuer.process_clearing(&broken).await.is_err());
+}

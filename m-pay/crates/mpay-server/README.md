@@ -20,6 +20,7 @@ cargo run -p mpay-server -- serve --config .mpay/mpay.toml
 ```bash
 cargo run -p mpay-server -- audit-verify --config .mpay/mpay.toml
 cargo run -p mpay-server -- recon --config .mpay/mpay.toml --date 2026-10-27 --out recon.json
+cargo run -p mpay-server -- clearing --config .mpay/mpay.toml --date 2026-10-26 --out-dir clearing/
 ```
 
 ## Konfiguratsiya
@@ -28,7 +29,7 @@ cargo run -p mpay-server -- recon --config .mpay/mpay.toml --date 2026-10-27 --o
 `url_env` — PostgreSQL URL'i turgan muhit o'zgaruvchisi, ADR-0018), `[keystore]`
 (`memory` — faqat sandbox; `pkcs11` — `--features pkcs11` va `MPAY_PKCS11_*` muhit o'zgaruvchilari),
 `[pqlink]` (ML-DSA blob, attestatsiya ildizlari, minimal xavfsizlik darajasi), `[vault]`,
-`[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[acquirer]`, `[sandbox_api]`, `[rate_limit]`,
+`[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[acquirer]`, `[clearing]`, `[sandbox_api]`, `[rate_limit]`,
 `[[auth.keys]]` (faqat SHA-256 xesh). `[database]`: `synchronous`, `max_connections` (ADR-0009).
 Nisbiy yo'llar konfiguratsiya fayli papkasiga nisbatan.
 
@@ -78,4 +79,8 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   Fon ishchisi `0400`/`0401` ni emitentga yuboradi (kutish bilan qayta urinish, instansiyalar orasida
   band qilish); `00`/`25` — `DONE`, boshqa kod — `FAILED` (qo'lda). Metrikalar `mpay_reversals*`.
 * **Solishtirish** (`recon.rs`, ADR-0024): acquirer jurnali ↔ emitent qaydnomasi — `GET /v1/recon`
-  (operator) va `mpay-server recon` (tafovut bo'lsa chiqish kodi 1).
+  (operator) va `mpay-server recon` (tafovut bo'lsa chiqish kodi 1); kliring natijasi bilan.
+* **Kliring va hisob-kitob** (`clearing.rs`, `[clearing]`, migratsiya `3006`, ADR-0025): kunlik paket
+  (acquirer `00` bergan yozuvlar) → emitent tasdig'i → pozitsiyalar (MERCHANT, ISSUER, ACQUIRER;
+  MDR va interchange). `POST /v1/clearing/run`, `GET /v1/clearing/{date}[/clearing.txt|ack.txt|payouts.csv]`,
+  `mpay-server clearing` (rad etilgan yozuv bo'lsa chiqish kodi 1). Bosqichlar idempotent.

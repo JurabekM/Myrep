@@ -1,10 +1,12 @@
 //! `mpay-issuer` — emitent emulyatori: ISO 8583 `0100`/`0110` subset, ARQC tekshiruvi va ARPC,
 //! Shield risk skori, UZS test hisoblari, javob kodlari `00`/`05`/`51`/`59`/`91`/`Q1` (ADR-0007),
-//! reversal `0400`/`0401` → `0410` va solishtirish uchun avtorizatsiyalar hisoboti (ADR-0024).
+//! reversal `0400`/`0401` → `0410` va solishtirish uchun avtorizatsiyalar hisoboti (ADR-0024),
+//! kliring fayli → tasdiq (ADR-0025).
 //!
 //! Vault va Shield'ni faqat port trait'lari (`Detokenizer`, `RiskScorer`) orqali ko'radi.
 #![forbid(unsafe_code)]
 
+pub mod clearing;
 pub mod codes;
 pub mod issuer;
 pub mod reversal;
@@ -32,6 +34,8 @@ pub enum IssuerError {
     Crypto(#[from] mpay_crypto::CryptoError),
     #[error("ma'lumotlar bazasi: {0}")]
     Db(String),
+    #[error("kliring: {0}")]
+    Clearing(#[from] mpay_common::clearing::ClearingError),
 }
 
 impl From<sqlx::Error> for IssuerError {

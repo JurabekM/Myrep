@@ -46,6 +46,9 @@ pub struct Config {
     /// Emitent bilan aloqa: timeout va reversal (ADR-0024).
     #[serde(default)]
     pub acquirer: AcquirerConfig,
+    /// Kliring va hisob-kitob (ADR-0025).
+    #[serde(default)]
+    pub clearing: ClearingConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]
@@ -93,6 +96,29 @@ impl Default for AcquirerConfig {
             reversal_interval_ms: 5_000,
             reversal_delay_secs: 10,
             reversal_max_backoff_secs: 600,
+        }
+    }
+}
+
+/// `[clearing]`: kunlik kliring va hisob-kitob (ADR-0025). Tariflar — faraz, `TODO(spec):` bank va
+/// sxema tariflari (savdo nuqtasi toifasi, karta turi bo'yicha).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct ClearingConfig {
+    /// Savdo nuqtasidan olinadigan komissiya (MDR), bazis punkt (150 = 1,5 %).
+    pub merchant_fee_bps: u32,
+    /// Emitentga interchange, bazis punkt.
+    pub interchange_bps: u32,
+    /// Kun tugagach paket yaratishdan oldin kutish (s): javobi kutilayotgan avtorizatsiyalar yopilsin.
+    pub cutoff_grace_secs: i64,
+}
+
+impl Default for ClearingConfig {
+    fn default() -> Self {
+        Self {
+            merchant_fee_bps: 150,
+            interchange_bps: 100,
+            cutoff_grace_secs: 900,
         }
     }
 }
@@ -537,6 +563,12 @@ impl Config {
             return Err(ConfigError::Invalid(
                 "acquirer: reversal_interval_ms ≥ 50, reversal_delay_secs ≥ 0, reversal_max_backoff_secs ≥ 1"
                     .into(),
+            ));
+        }
+        let c = &self.clearing;
+        if c.merchant_fee_bps > 10_000 || c.interchange_bps > 10_000 || c.cutoff_grace_secs < 0 {
+            return Err(ConfigError::Invalid(
+                "clearing: *_bps 0 … 10000, cutoff_grace_secs ≥ 0".into(),
             ));
         }
         let pi = &self.integrity;

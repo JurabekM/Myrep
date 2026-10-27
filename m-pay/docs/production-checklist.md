@@ -56,13 +56,14 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | BK-12 | Qurilma siyosati: maxsus proshivka (`SelfSigned` + `verifiedBootKey` ro'yxati), `MEETS_VIRTUAL_INTEGRITY` | ☐ | B | P | `docs/specs/pqlink.md` §9, ADR-0021 |
 | BK-13 | Zaxira: offsite joy (WAL uzluksiz), saqlash muddati, bank HSM'ining zaxira tartibi | ◐ | B, J | P | ADR-0023, `deploy/backup.sh` |
 | BK-14 | Shield uchun MCC va terminal geo-koordinatalari (bankning ISO 8583 maydonlari) | ☐ | B, J | X | `docs/shield-report.md` |
+| BK-15 | Kliring: fayl almashinuvi kanali (SFTP/API) va arxiv, haqiqiy tariflar (MDR, interchange — toifa va karta turi bo'yicha), emitentlar BIN/bank bo'yicha, savdo nuqtasi reyestri va bank rekvizitlari, to'lovlarni o'tkazish | ☐ | B, S | P | ADR-0025, `crates/mpay-server/src/clearing.rs` |
 
 ## 3. Kodda yo'q — jamoa hozir qila oladi
 
 | ID | Ish | Holat | Kim | Qachon | Manba |
 |---|---|---|---|---|---|
-| JM-1 | **Kliring va hisob-kitob (settlement):** kunlik yopilish, kliring fayli (sandbox formati, almashtiriladigan) | ☐ | J | P | — |
-| JM-2 | **Solishtirish (reconciliation)** va tafovut hisoboti: acquirer jurnali ↔ emitent ✅ (`GET /v1/recon`, `mpay-server recon`); kliring bilan — JM-1 dan keyin; real bankda emitent tomoni — bank fayli (BK-1) | ◐ | J, B | P | ADR-0024, `crates/mpay-server/src/recon.rs` |
+| JM-1 | **Kliring va hisob-kitob (settlement):** kunlik paket (sandbox formati, almashtiriladigan kodek), emitent tasdig'i, pozitsiyalar (MDR, interchange), to'lovlar CSV; idempotent bosqichlar. Real format — SX-2, tariflar va kanal — BK-15 | ✅ | J | P | ADR-0025 |
+| JM-2 | **Solishtirish (reconciliation)** va tafovut hisoboti: acquirer jurnali ↔ emitent ↔ kliring (`GET /v1/recon`, `mpay-server recon`). Real bankda emitent tomoni — bank fayli (BK-1) | ✅ | J | P | ADR-0024, ADR-0025 |
 | JM-3 | **Avtomatik reversal (`0400`/`0401`):** emitent timeout'i, o'qilmaydigan javob, qotgan `PENDING` → `96` va navbatdan reversal (qayta urinish, instansiyalar orasida band qilish). Sxemaning reversal formati — SX-2 | ✅ | J | P | ADR-0024 |
 | JM-4 | **Shield yuqori mavjudligi:** holatni davriy saqlash (snapshot) va zaxira instansiya. Hozir bitta Shield roli, holat xotirada; yiqilsa to'lov to'xtamaydi, aniqlash zaiflashadi | ☐ | J | P | ADR-0019, `crates/mpay-shield/src/graph.rs` |
 | JM-5 | PostgreSQL replikatsiyasi va failover, nginx zaxirasi (keepalived/VIP) — compose'da namuna | ☐ | J, B | P | ADR-0020, ADR-0023, `deploy/README.md` |
@@ -124,6 +125,7 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 | LUK/ATC iste'moli va emitent bitta tranzaksiyada | ADR-0018 da ataylab rad etildi: emitent alohida tizim |
 | Kalit almashtirilganda Shield tarixi | ADR-0015 (2026-10-26) |
 | Avtomatik reversal (`0400`) va tafovut hisoboti | ADR-0024 (2026-10-27): JM-3 ✅, JM-2 — acquirer ↔ emitent |
+| Kunlik kliring va hisob-kitob; solishtirish kliring bilan | ADR-0025 (2026-10-27): JM-1 ✅, JM-2 ✅ |
 | Token muddati UTC+5 va yangilash | ADR-0022 §4 (2026-10-26) |
 
 ## 8. Pilotga chiqish mezoni
@@ -131,8 +133,8 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 Pilot **yopiq tizimda** (SX-1 — sxemasiz, faqat M-Pay terminali, bitta bank) boshlanishi uchun
 **P** belgili barcha bandlar bajarilgan bo'lishi kerak. Qisqasi:
 
-1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13.
-2. Jamoa tomoni: JM-1, JM-2 (kliring bilan), JM-4 … JM-6, JM-11, MB-4 (JM-3 ✅).
+1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13, BK-15.
+2. Jamoa tomoni: JM-4 … JM-6, JM-11, MB-4 (JM-1 … JM-3 ✅).
 3. Telefonlar: MB-1 … MB-3.
 4. Audit: AU-1, AU-2, AU-5.
 5. Huquqiy: RG-1 … RG-4.
@@ -148,16 +150,20 @@ real ma'lumotda o'qitish.
 <!-- todo-index:start -->
 * `android/README.md` — BK-11
 * `android/wallet-sdk/src/main/kotlin/uz/mpay/wallet/sdk/IntegrityTokenProvider.kt` — BK-11, MB-4
+* `crates/mpay-common/src/clearing.rs` — SX-2
 * `crates/mpay-common/src/pan.rs` — SX-3
 * `crates/mpay-common/src/phone.rs` — JM-12
 * `crates/mpay-integrity/README.md` — BK-11
 * `crates/mpay-integrity/src/google.rs` — BK-11
 * `crates/mpay-integrity/src/lib.rs` — BK-11
 * `crates/mpay-integrity/src/service_account.rs` — BK-11
+* `crates/mpay-issuer/src/clearing.rs` — SX-2
 * `crates/mpay-issuer/src/issuer.rs` — BK-9
 * `crates/mpay-issuer/src/reversal.rs` — SX-2
 * `crates/mpay-pqlink/src/attestation.rs` — BK-12
-* `crates/mpay-server/src/init.rs` — BK-9
+* `crates/mpay-server/src/clearing.rs` — BK-15
+* `crates/mpay-server/src/config.rs` — BK-15
+* `crates/mpay-server/src/init.rs` — BK-9, BK-15
 * `crates/mpay-server/src/recon.rs` — BK-1
 * `crates/mpay-server/src/reversal.rs` — SX-2
 * `crates/mpay-shield/src/graph.rs` — JM-4
@@ -179,6 +185,7 @@ real ma'lumotda o'qitish.
 * `docs/adr/0022-mahsulot-siyosatlari.md` — BK-9, SX-3, SX-4, SX-6
 * `docs/adr/0023-zaxira-pitr-ogohlantirish.md` — BK-4, BK-13, JM-5
 * `docs/adr/0024-reversal-va-solishtirish.md` — SX-2, BK-1
+* `docs/adr/0025-kliring-va-hisob-kitob.md` — SX-2, BK-15
 * `docs/android-testing.md` — BK-11, MB-4
 * `docs/architecture.md` — BK-5
 * `docs/load-report.md` — BK-3, BK-10, JM-8

@@ -117,6 +117,21 @@ Navbatchi uchun:
 * **`MpayReversalBacklog`** — emitent reversal'larga javob bermayapti; navbat saqlanadi va emitent
   tiklangach o'zi yuboriladi (kutish ≤ 10 daqiqa).
 
+## Kunlik kliring va hisob-kitob ([ADR-0025](../docs/adr/0025-kliring-va-hisob-kitob.md))
+
+Kun (UTC+5) tugagach, `[clearing] cutoff_grace_secs` (15 daqiqa) o'tgach va **3 kun ichida** — cron:
+
+```bash
+docker compose run --rm --no-deps -T --entrypoint mpay-entrypoint bootstrap \
+  mpay-server clearing --config /var/lib/mpay/state/mpay.toml --out-dir /var/lib/mpay/state/clearing
+```
+
+`--date` berilmasa — kecha. Bosqichlar (paket → emitent tasdig'i → pozitsiyalar) qayta ishga
+tushirilsa to'xtagan joydan davom etadi. Chiqish kodi 1 — emitent yozuvlarni rad etgan: hisobotdagi
+`rejected_items` bo'yicha emitent bilan tekshiring (savdo nuqtasiga ular uchun to'lanmaydi).
+`409 CLEARING_NOT_READY` — kun ichida javobi noma'lum avtorizatsiya qolgan (reversal ishchisi yopadi),
+keyinroq qayta ishga tushiring. Fayllar: `MPAY<kun>.clr`, `.ack`, `-payouts.csv`, `-settlement.json`.
+
 ## Zaxira va tiklash ([ADR-0023](../docs/adr/0023-zaxira-pitr-ogohlantirish.md))
 
 Bir marta — shifrlash kalitlari (age, X25519):

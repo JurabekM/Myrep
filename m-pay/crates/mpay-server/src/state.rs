@@ -85,6 +85,8 @@ pub struct AppState {
     pub cvm_limit_minor: u64,
     /// Emitent timeout'i va reversal (ADR-0024).
     pub acquirer: crate::config::AcquirerConfig,
+    /// Kliring tariflari (ADR-0025).
+    pub clearing: crate::config::ClearingConfig,
 }
 
 impl std::fmt::Debug for AppState {
@@ -510,5 +512,6 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         integrity_mock,
         cvm_limit_minor: cfg.issuer.cvm_limit_minor,
         acquirer: cfg.acquirer.clone(),
+        clearing: cfg.clearing.clone(),
     })
 }

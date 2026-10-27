@@ -9,7 +9,8 @@
 //! * avval qaytarilgan → `00 ALREADY_REVERSED`; rad etilgan asl → `00 NOTHING_TO_REVERSE`;
 //! * topilmadi → `25` (emitent `0100` ni ko'rmagan — acquirer uchun yakuniy natija);
 //! * bir nechta mos yozuv → `25 AMBIGUOUS_ORIGINAL` (avtomatik qaytarilmaydi, solishtirishda chiqadi);
-//! * summa/valyuta mos emas → `13`; majburiy maydon yoki maydon 90 noto'g'ri → `30`.
+//! * summa/valyuta mos emas → `13`; majburiy maydon yoki maydon 90 noto'g'ri → `30`;
+//! * kliringdan o'tgan (ADR-0025) → `12 ALREADY_CLEARED` (yakuniy: faqat qaytarish/refund).
 //!
 //! Har reversal xabari `issuer_reversals` ga yoziladi. Maydon 2 (PAN) reversal'da yo'q — acquirer
 //! karta raqamini saqlamaydi; asl yozuv RRN/STAN/terminal bo'yicha topiladi (M-Pay Test Scheme
@@ -198,8 +199,8 @@ async fn apply(
         currency: p.currency,
     };
     let rows = sqlx::query(
-        "SELECT auth_id, amount_minor, currency, response_code, account_id, reversed_at \
-         FROM issuer_authorizations \
+        "SELECT auth_id, amount_minor, currency, response_code, account_id, reversed_at, \
+         cleared_batch FROM issuer_authorizations \
          WHERE rrn = $1 AND stan = $2 AND terminal_id = $3 AND merchant_id = $4 \
          ORDER BY ts, auth_id",
     )
@@ -227,6 +228,10 @@ async fn apply(
     }
     if row.try_get::<Option<i64>, _>("reversed_at")?.is_some() {
         out.reason = ReversalReason::AlreadyReversed;
+        return Ok(out);
+    }
+    if row.try_get::<Option<String>, _>("cleared_batch")?.is_some() {
+        out.reason = ReversalReason::AlreadyCleared;
         return Ok(out);
     }
     if row.try_get::<String, _>("response_code")? != "00" {

@@ -50,6 +50,14 @@ Har xabar `issuer_reversals` ga yoziladi (migratsiya `2003`). `report(from, to)`
 uchun avtorizatsiyalar (maskalangan DPAN, kod, `reversed_at`). Sandbox: `response_delay_ms` — `0110`
 ni commit'dan keyin kechiktiradi (acquirer timeout'ini sinash).
 
+## Kliring (ADR-0025)
+
+`process_clearing(fayl)` — har yozuv asl avtorizatsiyaga moslanadi: `00 ACCEPTED` (paket ID'si
+`cleared_batch` ga), `25` topilmadi, `13` summa farqli, `12` rad etilgan yoki qaytarilgan, `94` boshqa
+paketda o'tgan. Natija — tasdiq (ack) fayli. Bir paket ID — bitta natija (`issuer_clearing_batches`,
+migratsiya `2004`). Kliringdan o'tgan tranzaksiyaga reversal — `12 ALREADY_CLEARED`. Emulyator
+avtorizatsiyada yechadi, kliring balansni o'zgartirmaydi.
+
 `validate_request(&IsoMessage)` — `0100` ni DB va kalitlarsiz tahlil qiladi (majburiy maydonlar,
 Track 2 ↔ maydon 2/14, ICC teglari, PDOL ↔ maydon 4/49); `fuzz/fuzz_targets/issuer_parse.rs` ishlatadi.
 

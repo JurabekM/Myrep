@@ -54,6 +54,9 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens/{id}/resume", post(resume))
         .route("/v1/audit/verify", get(audit_verify))
         .route("/v1/recon", get(recon))
+        .route("/v1/clearing/run", post(clearing_run))
+        .route("/v1/clearing/{date}", get(clearing_get))
+        .route("/v1/clearing/{date}/{file}", get(clearing_file))
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
         .route("/v1/sandbox/integrity-token", post(sandbox_integrity))
@@ -800,6 +803,111 @@ async fn recon(
             ))
         }
     }
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ClearingRunDto {
+    /// `YYYY-MM-DD` (sxema vaqti); berilmasa — kecha.
+    date: Option<String>,
+}
+
+fn clearing_err(e: crate::clearing::ClearingError) -> ApiError {
+    use crate::clearing::ClearingError as E;
+    match e {
+        E::Period(m) => ApiError::bad_request(m),
+        E::NotReady(m) => ApiError::new(StatusCode::CONFLICT, "CLEARING_NOT_READY", m),
+        E::Issuer(m) => {
+            tracing::error!(error = %m, "kliring: emitent");
+            ApiError::new(
+                StatusCode::BAD_GATEWAY,
+                "ISSUER_ERROR",
+                "emitent kliring paketini qayta ishlay olmadi",
+            )
+        }
+        e => {
+            tracing::error!(error = %e, "kliring");
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+        }
+    }
+}
+
+fn clearing_date(date: &str) -> Result<(), ApiError> {
+    crate::recon::business_day(date)
+        .map(|_| ())
+        .map_err(ApiError::bad_request)
+}
+
+/// Kunlik kliring (ADR-0025): paket → emitent → hisob-kitob. Qayta chaqirish xavfsiz (to'xtagan
+/// bosqichdan davom etadi). Faqat operator.
+async fn clearing_run(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    Json(req): Json<ClearingRunDto>,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    let date = req
+        .date
+        .unwrap_or_else(|| crate::clearing::yesterday(s.clock.now()));
+    clearing_date(&date)?;
+    let r = crate::clearing::run(&s, &date)
+        .await
+        .map_err(clearing_err)?;
+    Ok(Json(r).into_response())
+}
+
+async fn clearing_get(
+    State(s): St,
+    Path(date): Path<String>,
+    headers: HeaderMap,
+    mtls: Mtls,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    clearing_date(&date)?;
+    match crate::clearing::report(s.vault.db(), &date).await {
+        Ok(Some(r)) => Ok(Json(r).into_response()),
+        Ok(None) => Err(ApiError::not_found()),
+        Err(e) => Err(clearing_err(e.into())),
+    }
+}
+
+/// `clearing.txt` (kliring fayli), `ack.txt` (emitent tasdig'i), `payouts.csv` (savdo nuqtalariga to'lov).
+async fn clearing_file(
+    State(s): St,
+    Path((date, file)): Path<(String, String)>,
+    headers: HeaderMap,
+    mtls: Mtls,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    clearing_date(&date)?;
+    let db = s.vault.db();
+    let (body, ctype) = match file.as_str() {
+        "clearing.txt" | "ack.txt" => {
+            let Some((f, ack)) = crate::clearing::files(db, &date)
+                .await
+                .map_err(|e| clearing_err(e.into()))?
+            else {
+                return Err(ApiError::not_found());
+            };
+            let body = if file == "ack.txt" {
+                ack.ok_or_else(ApiError::not_found)?
+            } else {
+                f
+            };
+            (body, "text/plain; charset=utf-8")
+        }
+        "payouts.csv" => {
+            let r = crate::clearing::report(db, &date)
+                .await
+                .map_err(|e| clearing_err(e.into()))?
+                .filter(|r| r.state == "SETTLED")
+                .ok_or_else(ApiError::not_found)?;
+            (crate::clearing::payouts_csv(&r), "text/csv; charset=utf-8")
+        }
+        _ => return Err(ApiError::not_found()),
+    };
+    Ok(([(header::CONTENT_TYPE, ctype)], body).into_response())
 }
 
 async fn sandbox_otp(

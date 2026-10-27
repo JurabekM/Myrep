@@ -974,3 +974,22 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   uch xil tafovut, API ruxsatlari. Ishchi o'chirilganda ikkala reversal testi yiqildi. `promtool` — 16
   qoida; `mpay-server init` + `recon` haqiqiy binar bilan.
 * Ochiq: kliring/settlement (JM-1), real bankning emitent fayli (BK-1), sxemaning reversal formati (SX-2).
+
+### Kunlik kliring va hisob-kitob (2026-10-27, ADR-0025; checklist JM-1 ✅, JM-2 ✅)
+
+* Kliring fayli (M-Pay Test Scheme v1, `mpay-common/src/clearing.rs`): qat'iy uzunlikli `H`/`D`/`S`/`T`
+  qatorlar, valyuta bo'yicha nazorat yig'indilari, SHA-256; emitent tasdig'i `A`/`R`/`Z`; faqat
+  maskalangan DPAN, qat'iy tahlil.
+* Emitent: har yozuv asl avtorizatsiyaga — `00`/`25`/`13`/`12`/`94`; `cleared_batch`; bir paket ID —
+  bitta natija; kliringdan o'tganga reversal — `12 ALREADY_CLEARED`.
+* Acquirer: kun (UTC+5) — bitta paket, `BUILT` → `ACKED` → `SETTLED` (idempotent): `00` yozuvlar
+  doimiy `clearing_items` ga, emitent tasdig'i, pozitsiyalar MERCHANT/ISSUER/ACQUIRER (MDR 1,5 %,
+  interchange 1,0 % — faraz), muvozanat tekshiruvi. `POST /v1/clearing/run`, `GET /v1/clearing/{date}`
+  va fayllar, `mpay-server clearing` (rad etilgan bo'lsa chiqish kodi 1).
+* Solishtirish kliring bilan: `clearing` maydoni, `cleared`, tafovut `CLEARING_REJECTED`.
+* Tekshirildi: `cargo test --workspace` — 259 (SQLite); e2e/vault/server PostgreSQL'da — 107; e2e
+  `p3_clearing` (kun tugamaguncha 409, 2 qabul/1 rad, aniq pozitsiyalar, takror — o'sha natija,
+  fayllar va CSV, solishtirish); paketga rad etilganlar tushadigan qilib buzilganda test yiqildi;
+  haqiqiy binar bilan `init` → `clearing --out-dir`; smoke OK.
+* Ochiq: haqiqiy kliring formati (SX-2), tariflar, fayl kanali, savdo nuqtasi reyestri (BK-15),
+  refund/chargeback (JM-10).
