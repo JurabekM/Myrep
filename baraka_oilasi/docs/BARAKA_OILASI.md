@@ -46,9 +46,10 @@ Har bir funksiya ikki savol bilan tekshiriladi: **(1) odamni amalga undayaptimi?
 
 #### Ilova nomi, ilhom manbasi va mustaqillik (mahsulot egasi qarori, 2026-10-23)
 - Android va desktop ilovalarining nomi — **«Baraka Dastur»**. Google Play'da «Baraka» nomli boshqa ilova bor; «Baraka daftari» nomi ham ishlatilmaydi. Loyiha va repozitoriy ichki nomi — «Baraka oilasi».
-- G'oya halol boylik haqidagi «7 qonun» suhbatlarining **ma'no-mazmunidan ilhomlangan** (muallif — Abdukarim Mirzayev, «Asaxiy Invest»). Ilova ularning moslashuvi yoki rasmiy davomi **emas**: qissa matnlari, personajlar (jumladan, Otabek hoji) va brend ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
-- Ilova mualliflar va «Asaxiy Invest» bilan **bog'liq emas**, ular tomonidan tasdiqlanmagan va ularning nomidan gapirmaydi. Mualliflar bilan aloqaga chiqishga urinildi, javob bo'lmadi — shuning uchun litsenziyaga tayanilmaydi.
-- Hujjatlarda «qonun» o'rniga **«tamoyil»** ishlatiladi: 7 tamoyil — ribosiz moliyaning keng ma'lum asoslari (o'zingizga avval to'lash, xarajatni yozish, qarzdan reja bilan chiqish, halol sheriklik, kelishuvni yozish va h.k.).
+- G'oya halol boylik haqidagi «qonunlar» suhbatlari turkumining **ma'no-mazmunidan ilhomlangan**. Ilova ularning moslashuvi yoki rasmiy davomi **emas**: boshqa mualliflarning matnlari, personajlari va brendi ishlatilmaydi; ilovadagi barcha matnlar — o'zimiz yozganlari.
+- Ilova o'sha suhbatlar mualliflari va ularning tashkiloti bilan **bog'liq emas**, ular tomonidan tasdiqlanmagan va ularning nomidan gapirmaydi; litsenziyaga tayanilmaydi.
+- **Nomlar repoda yo'q** (mahsulot egasi qarori, 2026-10-27): suhbatlar mualliflari, ularning tashkiloti va qissa personajlarining nomlari kodda, hujjatlarda, testlarda, vektorlarda va commit xabarlarida yozilmaydi. Yangi qonun kelganda faqat uning ma'no-mazmuni o'z so'zlarimiz bilan tamoyil sifatida qo'shiladi.
+- Hujjatlarda «qonun» o'rniga **«tamoyil»** ishlatiladi: 8 tamoyil — ribosiz moliyaning keng ma'lum asoslari (o'zingizga avval to'lash, xarajatni yozish, qarzdan reja bilan chiqish, halol sheriklik, kelishuvni yozish, o'zingizga — bilim va malakaga sarmoya qilish va h.k.).
 - Ilova ichidagi yo'l ko'rsatuvchi ovoz — **«Moliyaviy maslahatchi»**: ismsiz, personaj emas. Segment personalari (taksichi, tikuvchi, migrant va h.k.) — o'zimizning mahsulot tahlilimiz.
 
 ### 2.2. Uchta makon (bitta ilova ichida)
@@ -61,14 +62,14 @@ Android va desktopda **bitta «Baraka Dastur» ilovasi** bo'ladi. Ilova ichida u
 | **Musofir** | `MUSOFIR` | Chet elda ishlaydigan migrant va uning uydagi oilasi | «Yillar ishlaydi, qaytganda qo'lida hech narsa yo'q»: hammasi uyga ketadi, kelishuv og'zaki, qaytishda «kalxatlar» | `docs/musofir/SPEC.md` (M0) |
 
 #### Kasb-kor — qisqa karta (K0 uchun manba)
-- **7 tamoyil:** (1) Ikki cho'ntak — biznes puli omonat, egasiga qat'iy maosh; (2) Haqiqiy foydani bil — o'z mehnati, eskirish va oilaviy mehnat tannarxda; (3) Tovar ham pul, u ham yotadi — taqsimot qoidasi, qayta tiklash narxi, muzlagan tovar; (4) Nasiyani adolat bilan yurit — narx kelishuvda qotiriladi, kechikish uchun ustama yo'q; (5) Kengayishga reja bilan chiq — kengayish darvozasi, foizli kreditga halol muqobil; (6) Kelishuvni yozing — sherik, xodim, yetkazib beruvchi, mijoz; (7) Tarozingni to'g'ri tut — halol o'lchov, soliq zaxirasi, savdo mollari zakoti.
+- **8 tamoyil:** (1) Ikki cho'ntak — biznes puli omonat, egasiga qat'iy maosh; (2) Haqiqiy foydani bil — o'z mehnati, eskirish va oilaviy mehnat tannarxda; (3) Tovar ham pul, u ham yotadi — taqsimot qoidasi, qayta tiklash narxi, muzlagan tovar; (4) Nasiyani adolat bilan yurit — narx kelishuvda qotiriladi, kechikish uchun ustama yo'q; (5) Kengayishga reja bilan chiq — kengayish darvozasi, foizli kreditga halol muqobil; (6) Kelishuvni yozing — sherik, xodim, yetkazib beruvchi, mijoz; (7) Tarozingni to'g'ri tut — halol o'lchov, soliq zaxirasi, savdo mollari zakoti; (8) O'zingizga sarmoya qiling — egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?» (K9).
 - **Odat ritmi:** har kuni kassa yopish (5 daqiqa) → har hafta nasiya ko'rigi → har oy «Hisob kuni» → har yil inventarizatsiya va zakot.
 - **Bosh ekrandagi 1-raqam:** «Haqiqiy foyda (shu oy)», 2-raqam: «Egasiga to'langan maosh».
 - **Personajlar:** Feruza (atelye), Bahodir aka (mahalla do'koni), Jasur (usta), Malika (Instagram do'kon), aka-uka choyxonasi. Maslahat ovozi — moliyaviy maslahatchi.
 - **EMAS:** ERP, buxgalteriya yoki 1C o'rnini bosuvchi, onlayn kassa (fiskal), soliq hisobotini topshiruvchi, «ikkinchi daftar» (daromadni yashirish vositasi), kredit yoki investor bozori.
 
 #### Musofir — qisqa karta (M0 uchun manba)
-- **Tamoyillar:** o'z ulushi (uyga yuborilmaydigan «qaytish jamg'armasi»); chet eldagi xarajatlar; valyutada saqlanish va zaxira pul; yo'l qarzidan chiqish; qaytgandan keyingi ish rejasi; **oila bilan pul kelishuvi** («Ikki qirg'oq»: har bir o'tkazmaning maqsadi, uyda shu maqsad bo'yicha xarajat yoziladi); **sovutish davri** (katta pul bilan qaytgandan keyin 90 kun katta qarorlar uchun tekshiruv) — bu `docs/uy/SPEC.md` 10-bo'limdagi 7-tamoyil ishorasining amaliy ko'rinishi.
+- **Tamoyillar:** o'z ulushi (uyga yuborilmaydigan «qaytish jamg'armasi»); chet eldagi xarajatlar; valyutada saqlanish va zaxira pul; yo'l qarzidan chiqish; qaytgandan keyingi ish rejasi; **oila bilan pul kelishuvi** («Ikki qirg'oq»: har bir o'tkazmaning maqsadi, uyda shu maqsad bo'yicha xarajat yoziladi); **sovutish davri** (katta pul bilan qaytgandan keyin 90 kun katta qarorlar uchun tekshiruv) — bu `docs/uy/SPEC.md` 10-bo'limdagi 7-tamoyil ishorasining amaliy ko'rinishi; **o'zingizga sarmoya** (soat qiymati ish valyutasida, til va hunar rejasi — M6).
 - **EMAS:** pul o'tkazish xizmati, valyuta ayirboshlash, ish topib beruvchi agentlik, o'tkazma kompaniyalari reklamasi.
 
 ### 2.3. Butun oila uchun qat'iy mahsulot cheklovlari
@@ -585,6 +586,7 @@ Makonlarning o'z suite'lari (tannarx, kassa farqi, nasiya muddatlari, zakot, sov
 ```
 Y1 → Y2 → Y3 → Y4 → Y5 → Y6                     (poydevor)
 U1 → … → U15                                     (Uy makoni — 1-reliz)
+U16 → K9 → M6                                    (8-tamoyil — uchala makon; 1.2.0)
 K0 (U-vazifalar bilan parallel, faqat hujjat) → K1 → … → K5   (Kasb-kor MVP — 2-reliz)
 M0 (parallel, faqat hujjat) → M1 → M2 → M3       (Musofir MVP — 3-reliz)
 K6 → K7 → K8, R1, G0 → G1                        (kengaytmalar)
@@ -651,6 +653,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | U13 | V14A | D13A | Vazifalar, oylik ko'rik, «katta foyda», nizo va hakam, oilaviy kelishuvlar | bayonnomada 6.5 bloki |
 | U14 | V15 (eksport) | D14 | `.baraka` eksport/import, pairing | **8.3–8.5**; telefon ↔ desktop round-trip testi |
 | U15 | V15 | D15 | Onboarding, accessibility, reliz | onboarding'da makon tanlash va tiklash kodi; yakuniy E2E ikkala platformada |
+| U16 | V16 | D16 | 8-tamoyil: «Bir soatim qancha?», bilim rejasi, «Sarmoya» belgisi, kurs tekshiruvi, natija, «Ilm zakoti» | `docs/uy/SPEC.md` 2G; vektorlar `hour_value`, `hour_value_change`, `self_invest_share`, `offer_check` (`COURSE`) |
 
 ### K. KASB-KOR MAKONI
 **K0 — `docs/kasbkor/SPEC.md` yozish (kod yo'q).** 2.2 dagi karta asosida, `docs/uy/SPEC.md` formatida: personajlar, 7 tamoyilning funksional talablari, domen modeli, vektor suite'lari (tannarx — FIFO yoki o'rtacha tortilgan, kassa farqi, nasiya muddatlari, qayta tiklash narxi, zakot), cheklovlar, mijozlarning shaxsiy ma'lumotlari (operator sifatida rozilik). **Qabul:** mahsulot egasi tasdiqlagan; ulamo va yurist savollari `OPEN_QUESTIONS.md` da.
@@ -665,6 +668,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | K6 | Xodimlar va avans; `EMPLOYMENT`, `SUPPLY` kelishuvlari |
 | K7 | Kengayish darvozasi va savdo mollari zakoti |
 | K8 | Ko'p qurilma va rollar (sotuvchi foydani ko'rmaydi) — avval ADR (LAN/fayl yoki relay) |
+| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?» (`kasbkor/SPEC.md` 8A) |
 
 ### M. MUSOFIR MAKONI
 **M0 — `docs/musofir/SPEC.md` + relay ADR loyihasi (kod yo'q).** **Qabul:** mahsulot egasi tasdiqlagan.
@@ -674,6 +678,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | M1 | Ko'p valyuta (KRW va b.), chet eldagi maosh va xarajatlar, o'z ulushi, qaytish jamg'armasi |
 | M2 | «Ikki qirg'oq»: o'tkazma maqsadlari, `REMITTANCE` kelishuvi, uydagi xarajatni maqsad bo'yicha yozish (`.baraka` fayl orqali) |
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori |
+| M6 | 8-tamoyil: soat qiymati ish valyutasida, ikki maqsadli bilim rejasi (`musofir/SPEC.md` 6A) |
 | R1 | E2E shifrlangan relay server (axum) — ADR tasdiqlangandan keyin |
 
 ### G. «GUVOH» QURILMASI (keyinroq)

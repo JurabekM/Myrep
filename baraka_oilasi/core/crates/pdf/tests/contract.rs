@@ -37,7 +37,7 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
         review_pending: true,
         parties: vec![
             ContractParty {
-                name: "Otabek Qodirov".into(),
+                name: "Laziz Tursunov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 capital: "30 000 000 soʻm".into(),
                 profit_share: "50%".into(),
@@ -52,7 +52,7 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
             },
         ],
         capital: vec![ContractCapital {
-            party: "Otabek Qodirov".into(),
+            party: "Laziz Tursunov".into(),
             kind: "EQUIPMENT".into(),
             description: "Tikuv mashinasi (2 ta)".into(),
             amount: "24 000 000 soʻm".into(),
@@ -73,10 +73,10 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
             ("contract.exit.notice", "30"),
             ("contract.exit.valuation", "Bozor narxi"),
             ("contract.exit.payout", "3 oy ichida"),
-            ("contract.exit.assets", "Uskuna Otabek akaga qaytadi"),
+            ("contract.exit.assets", "Uskuna Laziz akaga qaytadi"),
         ]),
         buyout: Some(ContractBuyout {
-            seller: "Otabek Qodirov".into(),
+            seller: "Laziz Tursunov".into(),
             buyer: "Feruza Karimova".into(),
             rows: (1..=10)
                 .map(|i| ContractBuyoutRow {
@@ -102,7 +102,7 @@ fn contract(locale: PdfLocale) -> PartnershipContract {
         signers: vec![
             ContractSigner {
                 role: "PARTY".into(),
-                name: "Otabek Qodirov".into(),
+                name: "Laziz Tursunov".into(),
                 signed_at: Some("15.10.2026".into()),
                 svg: Some(svg.clone()),
             },

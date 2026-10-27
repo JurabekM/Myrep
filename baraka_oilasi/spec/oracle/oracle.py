@@ -1819,7 +1819,7 @@ def _entry_json(e):
 UTF8_ENTRIES = [
     {"id": "0192a000-0000-7000-8000-000000000011", "agreementId": "0192a000-0000-7000-8000-0000000000b1",
      "kind": "OPENING_BALANCE", "partyId": "P1", "amount": {"minor": "50000000", "currency": "UZS"},
-     "date": "2026-09-01", "note": "Gʻayrat va Oʻgʻiloyning qarzi — boshlangʻich holat; маъно ʼ"},
+     "date": "2026-09-01", "note": "Ulugʻbek va Oʻgʻiloyning qarzi — boshlangʻich holat; маъно ʼ"},
     {"id": "0192a000-0000-7000-8000-000000000012", "agreementId": "0192a000-0000-7000-8000-0000000000b1",
      "kind": "DUTY_INCIDENT", "partyId": "P2", "date": "2026-09-15", "note": "Kasal boʻldi, \"bot\" toʻxtadi\n1 kun"},
     {"id": "0192a000-0000-7000-8000-000000000013", "agreementId": "0192a000-0000-7000-8000-0000000000b1",
@@ -2160,7 +2160,7 @@ def build_suites():
                             for p in partners]}
         return _case(cid, inp, lambda: partnership_rules(kind, partners, fixed, loss, months))
 
-    otabek = partner("P1", "CAPITAL_PROVIDER", 5000, ("EQUIPMENT", "Tikuv mashinasi (2 ta)", 2400000000),
+    laziz = partner("P1", "CAPITAL_PROVIDER", 5000, ("EQUIPMENT", "Tikuv mashinasi (2 ta)", 2400000000),
                     ("MONEY", "Mato uchun", 600000000))
     feruza = partner("P2", "WORKER", 5000)
     bekzod = partner("P1", "BOTH", 5000, ("MONEY", "naqd", 3000000000))
@@ -2168,13 +2168,13 @@ def build_suites():
     silent = partner("P1", "CAPITAL_PROVIDER", 7000, ("MONEY", "naqd", 4000000000))
     working = partner("P2", "BOTH", 3000, ("MONEY", "naqd", 6000000000))
     suites["partnership_rules"] = _suite("partnership_rules", "Sheriklik shartlari: mudoraba/musharaka rollari, kapital, ulushlar 100%, kafolatli daromad taqiqi, zarar qoidasi, muddat; zarar ulushlari (bp)", [
-        rules_case("rules-001-mudaraba-ok", "MUDARABA", [otabek, feruza]),
+        rules_case("rules-001-mudaraba-ok", "MUDARABA", [laziz, feruza]),
         rules_case("rules-002-musharaka-ok", "MUSHARAKA", [bekzod, sherzod]),
-        rules_case("rules-003-guaranteed-return", "MUDARABA", [otabek, feruza], fixed=50000000),
-        rules_case("rules-004-shares-not-100", "MUDARABA", [dict(otabek, profitShareBp=6000), feruza]),
+        rules_case("rules-003-guaranteed-return", "MUDARABA", [laziz, feruza], fixed=50000000),
+        rules_case("rules-004-shares-not-100", "MUDARABA", [dict(laziz, profitShareBp=6000), feruza]),
         rules_case("rules-005-one-partner", "MUSHARAKA", [dict(bekzod, profitShareBp=10000)]),
-        rules_case("rules-006-mudaraba-no-worker", "MUDARABA", [otabek, dict(otabek, id="P2", capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
-        rules_case("rules-007-mudaraba-both-and-worker-capital", "MUDARABA", [dict(otabek, role="BOTH"), dict(feruza, capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
+        rules_case("rules-006-mudaraba-no-worker", "MUDARABA", [laziz, dict(laziz, id="P2", capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
+        rules_case("rules-007-mudaraba-both-and-worker-capital", "MUDARABA", [dict(laziz, role="BOTH"), dict(feruza, capitalItems=[{"kind": "MONEY", "description": "naqd", "amount": 100}])]),
         rules_case("rules-008-provider-without-capital", "MUDARABA", [partner("P1", "CAPITAL_PROVIDER", 5000), feruza]),
         rules_case("rules-009-musharaka-one-capital", "MUSHARAKA", [bekzod, partner("P2", "WORKER", 5000)]),
         rules_case("rules-010-loss-mismatch", "MUSHARAKA", [bekzod, sherzod], loss="CAPITAL_PROVIDER_BEARS"),
@@ -3211,7 +3211,7 @@ def selftest() -> None:
     # U10: 20 mln qarz oyiga 2,4 mln bilan: 9 oy (8×2,4 = 19,2 mln), oxirgi oy 0,8 mln
     assert informal_debt_payoff(2000000000, date(2027, 5, 20), 240000000) == (9, date(2028, 1, 1))
     assert informal_debt_payoff(0, date(2027, 5, 20), 0) == (0, None)
-    # U11: Feruza Otabek Qodirovning 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
+    # U11: Feruza Laziz Tursunovning 30 mln ulushini oyiga 3 mln dan sotib oladi — 10 oyda mustaqil.
     b = buyout_schedule(3000000000, 3000000000, 0, 10, 1, date(2026, 11, 30), 1, 800000000, 5000)
     assert (b["periods"], b["endDate"], b["rows"][1]["date"], b["rows"][-1]["buyerBp"]) == (10, "2027-08-30", "2026-12-30", 10000)
     assert [r["payment"] for r in buyout_schedule(100000001, 300000001, 200000000, 3, 2, date(2027, 1, 31), 3, None, 0)["rows"]] == ["66666668", "33333333"]

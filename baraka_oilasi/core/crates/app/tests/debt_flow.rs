@@ -284,7 +284,7 @@ fn receipt(direction: &str) -> IssueLoanReceiptInput {
         creditor_type: Some("RELATIVE".into()),
         reason: Some("davolanish".into()),
         receipt: LoanReceiptInput {
-            lender: "Gʻayrat Oʻgʻilov".into(),
+            lender: "Ulugʻbek Oʻgʻilov".into(),
             borrower: "Karim Rahmonov".into(),
             amount: "2 000 000".into(),
             currency: "UZS".into(),
@@ -318,7 +318,7 @@ fn receipt_links_agreement_journal_and_debt() {
     assert_eq!(issued.record_type, "DEBT");
     let o = app.debts_overview(&uy).unwrap();
     let d = &o.debts[0];
-    assert_eq!(d.creditor, "Gʻayrat Oʻgʻilov");
+    assert_eq!(d.creditor, "Ulugʻbek Oʻgʻilov");
     assert_eq!(
         d.agreement_id.as_deref(),
         Some(issued.agreement_id.as_str())

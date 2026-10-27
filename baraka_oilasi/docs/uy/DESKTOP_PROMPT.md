@@ -12,7 +12,7 @@ Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptogr
 
 ## 1. MAHSULOT VA DESKTOPNING O'RNI
 - **«Baraka Dastur»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
-- U ta'lim va amaliyotni birlashtiradi: 12 ta qisqa dars orqali **halol boylikning 7 tamoyili** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–6-tamoyillar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2F bo'limlarida.
+- U ta'lim va amaliyotni birlashtiradi: qisqa darslar orqali **halol boylikning 8 tamoyili** o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Uy makonida 1–6 va 8-tamoyillar spetsifikatsiya qilingan (7-tamoyil — Musofir makonida). Ularning batafsil tavsifi `docs/uy/SPEC.md` ning 1, 2, 2B–2G bo'limlarida.
 - Mobil ilova (Flutter + Kotlin) kundalik tez kiritish uchun mo'ljallangan. **Desktop esa uning nusxasi emas, «Oila kengashi va biznes stoli»**:
   - katta ekranda oylik audit va oila kengashi (havas chegarasi, marosim stsenariylari);
   - qarzdan chiqish rejasini chuqur tahlil qilish va amortizatsiya jadvallari;

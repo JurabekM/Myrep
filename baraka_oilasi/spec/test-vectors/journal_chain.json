@@ -119,7 +119,7 @@
               "currency": "UZS"
             },
             "date": "2026-09-01",
-            "note": "Gʻayrat va Oʻgʻiloyning qarzi — boshlangʻich holat; маъно ʼ"
+            "note": "Ulugʻbek va Oʻgʻiloyning qarzi — boshlangʻich holat; маъно ʼ"
           },
           {
             "id": "0192a000-0000-7000-8000-000000000012",
@@ -149,14 +149,14 @@
       },
       "expected": {
         "hashes": [
-          "ce7101ad943debd72664d6308a5867dd82d1dfc5464ba0f44b03743e857e59a0",
-          "5dab5ae492e1f95a5e042bb78bc26a95b2a289aedaa49b8551883a95f26d691b",
-          "7655f08d9337da13013ac7816b3ca5ec0bc275cc17be8f91accbf61553015485"
+          "4b5f1c38433301a63c0a8aee7b767910a61a088bd1740b7442fdffa5c4922446",
+          "b1413a1ccab6dc955162ff26770e49849ad23926a9020cf22ce2f89031306797",
+          "5a069cf3447c119887802debfa1be9a6ed425df124b6dd895b4591adb1649a5f"
         ],
         "shortCodes": [
-          "CE71-01AD-943D-EBD7",
-          "5DAB-5AE4-92E1-F95A",
-          "7655-F08D-9337-DA13"
+          "4B5F-1C38-4333-01A6",
+          "B141-3A1C-CAB6-DC95",
+          "5A06-9CF3-447C-1198"
         ]
       }
     }

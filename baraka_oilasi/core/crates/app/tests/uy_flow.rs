@@ -397,7 +397,7 @@ fn loan_receipt_rules_and_pdf() {
         amount: amount.into(),
     };
     let mut input = LoanReceiptInput {
-        lender: "Gʻayrat".into(),
+        lender: "Ulugʻbek".into(),
         borrower: "Karim".into(),
         amount: "2 000 000".into(),
         currency: "UZS".into(),
@@ -431,7 +431,7 @@ fn loan_receipt_rules_and_pdf() {
     input.schedule.swap(0, 1);
     let pdf = app.render_loan_receipt(input.clone()).unwrap();
     assert!(pdf.starts_with(b"%PDF-"));
-    input.borrower = "Gʻayrat".into();
+    input.borrower = "Ulugʻbek".into();
     assert_eq!(
         app.render_loan_receipt(input).unwrap_err().code,
         "SAME_PARTY"
