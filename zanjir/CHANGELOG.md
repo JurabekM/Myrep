@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 7-faza — server (ADR-0011): PostgreSQL 16 sxemasi (Alembic), RLS + imtiyozsiz ilova roli, append-only va `server_rev`
+  triggerlari, kompozit FK; auth (argon2id, JWT 15 daqiqa, refresh rotatsiya va qayta ishlatishni aniqlash, taklif kodlari,
+  laboratoriyani ro'yxatdan o'tkazish, SMS OTP interfeysi — o'chiq); foydalanuvchilar, rollar, qurilmalar; `/sync/pull`,
+  `/sync/push` (idempotent, LWW, append-only, audit zanjiri, o'lchov/protokol ↔ audit hodisasi, protokolni qayta tekshirish);
+  ochiq tekshirish sahifasi `/v/{qr_token}` (uz/ru, PDF yuklash va brauzerda hash tekshiruvi); rate limiting, so'rov hajmi,
+  CORS, JSON log, Prometheus, `/healthz`, `/readyz`; RBAC matritsasi (`docs/SECURITY.md`) testlari; CI: testcontainers,
+  qamrov ≥ 95%.
 - 6-faza — protokol (ADR-0010): `packages/zanjir_protocol` — payload `zanjir.protocol/1` → deterministik PDF (metama'lumotsiz,
   `/ID` = payload hash, Noto Sans + NotoSansMath, QR, har sahifada ogohlantirish, uz/ru matnlar ARB'dan generatsiya);
   `ProtocolRepository.prepare/sign/verify/revoke` — 12 ta bloklash sharti (ochiq sessiya, muddati o'tgan asbob, tekshirilmagan

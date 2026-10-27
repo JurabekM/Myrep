@@ -49,7 +49,9 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Protokol PDF: `cd packages/zanjir_protocol && python3 -I tool/gen_strings.py --check && dart analyze --fatal-infos && dart test`
   (PDF matnlari ARB'dan generatsiya qilinadi — ARB o'zgarsa `python3 -I tool/gen_strings.py`; mazmun testlari `pdftotext` talab qiladi)
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
-- Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest`
+- Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest --cov=zanjir_server --cov-branch`
+  (Docker kerak — testcontainers PostgreSQL 16; Docker o'rniga `ZANJIR_TEST_DATABASE_URL`; konteynerda `dockerd &` va
+  `TESTCONTAINERS_RYUK_DISABLED=true`). Migratsiya: `uv run alembic upgrade head` (`ZANJIR_DATABASE_URL`).
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
 - Kripto vektorlari: `cd server && uv run python -I ../tools/vectors/generate.py --check` (qo'lda tahrirlanmaydi, ADR-0007)
 - CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi.
@@ -90,6 +92,15 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Bloklash kodlari (`ProtocolBlocker.code`) — barqaror inglizcha; UI matni `labels.dart` `blockerText`. Yangi shart qo'shilsa —
   ARB, `labels_test.dart` `blockerCodes`, ADR.
 - Testlarda tekshirilgan normalar faqat test nusxasi ("TEST FIXTURE", versiya `0.1.1`); `norms/v0.yaml` ga tegilmaydi.
+
+## Server (`server/`, ADR-0011) xaritasi
+- `zanjir_server/db/` — modellar (ustunlar ilova bilan bir xil), `session.py` (`org_session` — RLS, `lookup_org`),
+  `migrations/` (Alembic; RLS, append-only va `server_rev` triggerlari, `zanjir_app` roli).
+- `api/` — `auth` (kirish, refresh rotatsiya, taklif, ro'yxatdan o'tish), `org` (takliflar, foydalanuvchilar, qurilmalar),
+  `sync`, `public` (`/v/{qr_token}`, health, metrics); `deps.py` — `Viewer/Engineer/Lead/Admin` rol talablari.
+- `sync/` — `wire.py` (sim formati), `service.py` (push qoidalari, pull), `protocol_rules.py` (6-qoida serverda).
+- Yangi endpoint → `tests/test_rbac_matrix.py` `MATRIX` va `docs/SECURITY.md` jadvali (aks holda test yiqiladi).
+- Testlar: `tests/support/api.py` (tashkilot/rollar), `tests/support/field.py` (dala qurilmasi taqlidi: audit zanjiri, imzo).
 
 ## Ilova (`app/`) xaritasi
 - `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash, `platform.dart` (FLAG_SECURE,

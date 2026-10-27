@@ -128,7 +128,10 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy .
-      - run: uv run pytest
+      - name: Testlar (PostgreSQL 16 testcontainers, RLS, RBAC matritsasi, sync) + qamrov ≥ 95%
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+        run: uv run pytest --cov=zanjir_server --cov-branch --cov-report=term-missing --cov-fail-under=95
       - name: Kripto vektorlari generatori — lint va tiplar
         run: |
           uv run ruff check ../tools/vectors

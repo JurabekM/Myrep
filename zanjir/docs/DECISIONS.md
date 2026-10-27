@@ -240,3 +240,50 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   nusxalangan, "TEST FIXTURE" deb belgilangan normalar bilan ishlaydi (`norms/v0.yaml` o'zgarmaydi). ADMIN imzolamaydi
   (tashkilot boshqaruvchisi; kerak bo'lsa — foydalanuvchi qarori bilan o'zgartiriladi). Android'da `printing` va FLAG_SECURE
   bu muhitda tekshirilmagan (SDK yo'q) — emulyator jobi va 12-fazada.
+
+## ADR-0011: Server (7-faza) — auth, RBAC, RLS, sinxronlash, ochiq tekshirish sahifasi
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (7-faza).
+- **Kontekst:** Prompt 7-bo'lim (auth, RBAC, sync, `/v/{qr_token}`, himoya, kuzatuv), 6-qoida (protokol), 7-qoida (RLS),
+  8-qoida (log). Mezon: pytest + testcontainers; RBAC matritsasi to'liq qoplangan.
+- **Qaror:**
+  1. **Sxema:** ilovadagi Drift jadvallari bilan bir xil ustunlar (sim formati = ustun nomlari) + faqat serverdagi
+     `refresh_token`, `invite`, `sync_op`, `org_sync_rev`. Bitta Alembic migratsiyasi (`0001`); modellar bilan mosligi
+     testda tekshiriladi (`compare_metadata`), head → base → head ham.
+  2. **Tashkilot ajratilishi:** RLS (`org_id = current_setting('app.org_id')`) + kodda `org_id` filtri. Ilova imtiyozsiz
+     login roli bilan ulanadi va har tranzaksiyada `SET LOCAL ROLE zanjir_app`. Tashkilot noma'lum yo'llar uchun faqat
+     to'rtta `SECURITY DEFINER` funksiya (telefon / refresh hash / taklif hash / `qr_token` → `org_id`). Havolalar
+     `(org_id, id)` kompozit FK (DEFERRABLE) — boshqa tashkilot yozuviga bog'lanib bo'lmaydi.
+  3. **Append-only:** `measurement`, `protocol`, `protocol_document`, `audit_event` — UPDATE/DELETE/TRUNCATE trigger bilan
+     taqiqlangan (egasi uchun ham), ilova roliga UPDATE huquqi berilmagan; boshqa jadvallarda DELETE huquqi yo'q (soft delete).
+  4. **Auth:** telefon (`+998XXXXXXXXX`) + parol (argon2id, RFC 9106: t=3, 64 MiB, p=4; eski parametrli hash kirishda
+     yangilanadi). Access JWT HS256, 15 daqiqa, muddat ilova soati bilan tekshiriladi; rol har so'rovda bazadan.
+     Refresh — 256 bit, bazada SHA-256, 30 kun, rotatsiya; ishlatilgan token qayta kelsa butun oila bekor. Taklif kodi
+     16 belgi (~80 bit), bir martalik (shartli UPDATE), ≤ 7 kun; ADMIN — har rolga, LEAD — ENGINEER/VIEWER.
+     **Laboratoriyani ro'yxatdan o'tkazish** (`/auth/register`, ixtiyoriy oflayn `org_id`/`user_id` bilan) —
+     `ZANJIR_REGISTRATION_OPEN` (prod'da standart yopiq). SMS OTP — interfeys, o'chiq (404).
+  5. **Sinxronlash:** `server_rev` — tashkilot hisoblagichi (`org_sync_rev`, trigger; qator qulfi tufayli bir tashkilot
+     o'zgarishlari commit tartibida raqamlanadi — pull hech narsani o'tkazib yubormaydi). `GET /sync/pull?since=&limit=`
+     (`password_hash`, `phone` chiqmaydi). `POST /sync/push` — bitta tranzaksiya, birorta xato bo'lsa butun paket rad
+     (`422 push_rejected {reason, op_id}`); `client_op_id` takrori o'tkazib yuboriladi; metadata — LWW (`updated_at`,
+     keyin `rev`), append-only — bir xil qayta yuborish takror, farqli — xato. Qo'shimcha tekshiruvlar:
+     audit zanjiri (seq, prev_hash, hash, Ed25519; faqat o'z qurilmasi va o'z nomidan; bekor qilingan qurilma — rad);
+     o'lchov va protokol tegishli imzolangan audit hodisasi (`MEASUREMENT_ADDED` / `PROTOCOL_SIGNED`, payload hash) bilan
+     bog'langan; protokol — imzo, imzolovchi roli, qurilma egasi, hujjat majburiy; hujjat — payload/PDF hash, `/ID`,
+     payload ↔ protokol, 6-qoida (normalar tekshirilgan, asbob guvohnomasi, NEEDS_REVIEW → LEAD izoh bilan, litsenziya),
+     payload'dagi natijalar serverdagi o'lchovlar bilan bir xil, sessiya yopilgan; normalar to'plami — `sha256(yaml)` va
+     `reviewed_by/at` YAML ichidagisi bilan bir xil (alohida soxtalashtirib bo'lmaydi); sessiyani qayta ochib bo'lmaydi;
+     ajratish rejasi APPROVED/EXECUTED — faqat LEAD/ADMIN tasdig'i bilan.
+  6. **Ochiq sahifa:** `/v/{qr_token}` (Jinja2, uz/ru, Myrep dark tokenlari, ilova shrifti), holat (bekor qilish — audit
+     hodisasi), raqam, laboratoriya, imzolovchi F.I.Sh., vaqt, hash'lar, serverda imzo tekshiruvi; PDF yuklash; faylni
+     brauzerda SHA-256 bilan solishtirish (fayl yuborilmaydi). Manzil, buyurtmachi, telefon sahifada yo'q. Qat'iy CSP,
+     `no-store`, `noindex`.
+  7. **Himoya va kuzatuv:** rate limiting (jarayon xotirasida; `/auth/*` 10/daq, qolganlari 300/daq IP bo'yicha — bir necha
+     nusxada Redis), so'rov hajmi 5 MB (chunked ham), CORS faqat ro'yxat, OpenAPI/docs o'chiq, JSON log (faqat marshrut
+     shabloni, token/telefon/parol yo'q), Prometheus `/metrics`, `/healthz`, `/readyz`, xato hisobotlari adapteri (o'chiq).
+  8. **Testlar:** testcontainers (PostgreSQL 16, image ECR ko'zgusidan — Docker Hub limitlari) yoki
+     `ZANJIR_TEST_DATABASE_URL`; API testlari imtiyozsiz login roli bilan; qamrov ≥ 95% (CI darvozasi).
+- **Oqibat:** Ilova bilan haqiqiy sinxronlash (Dart → server, bir xil audit va protokol baytlari) — 8-faza (E2E).
+  `org_setting` bir tashkilotda bitta: ikki qurilma turli ID bilan yaratsa — `constraint_violation` (8-fazada ilova
+  serverdagini oladi). Asbob guvohnomasi muddatini muhandis o'z qurilmasida soxtalashtirsa, server buni payload'dan
+  aniqlay olmaydi — protsessual nazorat (audit izi saqlanadi).

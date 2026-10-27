@@ -17,3 +17,7 @@ key.properties
 *.jks
 *.keystore
 *.pem
+
+# Python qamrov hisobotlari
+.coverage
+.coverage.*
