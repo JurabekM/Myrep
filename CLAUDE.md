@@ -5,7 +5,16 @@ Bu fayl Myrep ichidagi **barcha** loyihalarga tegishli. Loyiha papkasidagi o'z `
 ## Foydalanuvchi afzalliklari
 - Muloqot tili: o'zbekcha (lotin). Kod, identifikatorlar, commit xabarlari — inglizcha; izohlar, hujjatlar va UI matnlari — o'zbekcha.
 - Yo'nalish: vibe coding va mikrokontroller elektronikasi.
-- Har PR ochilgach Claude o'zi code review qiladi (Codex o'rniga, foydalanuvchi qarori 2026-10-25): haqiqiy xatolar shu PR'da tuzatiladi, qolganlari foydalanuvchiga aytiladi.
+- Har PR ochilgach Claude o'zi code review qiladi: haqiqiy xatolar shu PR'da tuzatiladi, qolganlari foydalanuvchiga aytiladi.
+
+## Codex ishlatilmaydi — QAT'IY QOIDA (foydalanuvchi qarori, 2026-10-25, 2026-10-27 da kuchaytirildi)
+Bu repoda Codex (OpenAI Codex, `chatgpt-codex-connector[bot]` va boshqa OpenAI agentlari) **umuman kerak emas**.
+Barcha ishni — kod, code review, CI tuzatish, hujjat — **Claude o'zi bajaradi**.
+- Hech qachon `@codex`, `@codex review`, `@codex security review` yozmang; Codex'ga vazifa bermang, uni taklif qilmang.
+- Codex natijasini kutmang va unga tayanmang: PR tayyorligi faqat CI, Claude'ning o'z review'i va foydalanuvchi qaroriga bog'liq.
+- Codex bot izohlari (review summary, "usage limits", "couldn't complete this review" va h.k.) e'tiborsiz qoldiriladi:
+  javob yozilmaydi, ular asosida ish qilinmaydi va foydalanuvchiga alohida xabar qilinmaydi.
+- Codex review qiladigan joyda (PR ochilganda) Claude o'zi review qiladi — bu qoida yuqoridagi self-review bandini almashtirmaydi, uni majburiy qiladi.
 
 ## UI dizayn qoidasi (foydalanuvchi qarori, 2026-10-15) — har bir yangi ilova uchun
 Barcha ilovalar (desktop, mobil, web, dashboard) **standart holda Claude Code dark theme uslubida** bo'ladi.

@@ -94,3 +94,14 @@ sv-replay calibrate field-data/pilot field-data/pilot/ground_truth.csv --out fie
 Natija: `recommended-config.json` va `calibration-report.md`. Agar shart (noto'g'ri FAIL ≤ 3%) bajarilsa — standart
 `AnalysisConfig` ni yangilayman (ADR bilan), AC-08/AC-09 hisobotini `docs/PILOT_REPORT.md` ga yozaman.
 Tavsiya etilgan configni ilovaga **Sozlamalar → Config JSON import** orqali ham yuklash mumkin.
+
+---
+
+## H3 — release imzolash va tarqatish (5-bosqichdan keyin) — KUTILMOQDA
+
+**Maqsad:** imzolangan release (APK yoki Play AAB), `sector-verify/v1.0.0` tag'i, arxiv va tarqatish.
+Imzo kalitini faqat inson yaratadi va saqlaydi — u repoga, CI'ga va chatga tushmaydi.
+
+**To'liq ko'rsatma:** [`docs/H3_RELEASE_SIGNING.md`](H3_RELEASE_SIGNING.md) — tarqatish yo'lini tanlash (APK / Play),
+kalit yaratish va zaxira, `keystore.properties`, versiya va tag, yig'ish, `apksigner` bilan tekshirish, arxiv,
+kalit yo'qolsa yoki oshkor bo'lsa nima qilish.

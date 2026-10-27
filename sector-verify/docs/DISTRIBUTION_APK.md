@@ -1,11 +1,13 @@
 # APK orqali to'g'ridan-to'g'ri tarqatish
 
+> To'liq bosqichma-bosqich ko'rsatma (kalit, zaxira, versiya, tekshirish, arxiv): [`docs/H3_RELEASE_SIGNING.md`](H3_RELEASE_SIGNING.md).
+
 1. **Release kaliti (faqat bir marta, inson):**
-   `keytool -genkeypair -v -keystore sv-release.jks -alias sectorverify -keyalg EC -groupname secp256r1 -validity 10000`
+   `keytool -genkeypair -v -storetype PKCS12 -keystore C:\keys\sv-release.p12 -alias sectorverify -keyalg RSA -keysize 4096 -validity 10000`
    Kalit va parollarni xavfsiz joyda saqlang (yo'qotsangiz yangilanish chiqarib bo'lmaydi). **Commit qilmang.**
 2. `sector-verify/keystore.properties` (gitignore qilingan):
    ```
-   storeFile=C:/keys/sv-release.jks
+   storeFile=C:/keys/sv-release.p12
    storePassword=...
    keyAlias=sectorverify
    keyPassword=...

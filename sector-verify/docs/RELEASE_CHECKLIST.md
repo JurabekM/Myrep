@@ -36,6 +36,9 @@
 4. Xatosiz simulyatsiyalarda sayt PASS ≈ 40% (sektor PASS ≈ 81%) — qolganlari INCONCLUSIVE; pilotda kuzatish kerak.
 
 ## 4. H3 — imzolash va tarqatish (faqat inson)
+
+> To'liq ko'rsatma: [`docs/H3_RELEASE_SIGNING.md`](H3_RELEASE_SIGNING.md). Release sertifikati SHA-256: _(H3 da yoziladi)_
+
 1. Release kalitini yarating va saqlang (`docs/DISTRIBUTION_APK.md` 1-qadam).
 2. `keystore.properties` → `.\gradlew.bat clean check :app:bundleRelease :app:assembleRelease`.
 3. `apksigner verify --print-certs app\build\outputs\apk\release\app-release.apk`; R8 `mapping.txt` ni arxivlang.
