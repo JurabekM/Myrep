@@ -5490,6 +5490,437 @@ class ProtocolsCompanion extends UpdateCompanion<ProtocolRow> {
   }
 }
 
+class $ProtocolDocumentsTable extends ProtocolDocuments with TableInfo<$ProtocolDocumentsTable, ProtocolDocumentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProtocolDocumentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revMeta = const VerificationMeta('rev');
+  @override
+  late final GeneratedColumn<int> rev = GeneratedColumn<int>(
+    'rev',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _orgIdMeta = const VerificationMeta('orgId');
+  @override
+  late final GeneratedColumn<String> orgId = GeneratedColumn<String>(
+    'org_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES organization (id)'),
+  );
+  static const VerificationMeta _protocolIdMeta = const VerificationMeta('protocolId');
+  @override
+  late final GeneratedColumn<String> protocolId = GeneratedColumn<String>(
+    'protocol_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE REFERENCES protocol (id)'),
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta('payloadJson');
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pdfMeta = const VerificationMeta('pdf');
+  @override
+  late final GeneratedColumn<Uint8List> pdf = GeneratedColumn<Uint8List>(
+    'pdf',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, createdAt, updatedAt, rev, orgId, protocolId, payloadJson, pdf];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'protocol_document';
+  @override
+  VerificationContext validateIntegrity(Insertable<ProtocolDocumentRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('rev')) {
+      context.handle(_revMeta, rev.isAcceptableOrUnknown(data['rev']!, _revMeta));
+    }
+    if (data.containsKey('org_id')) {
+      context.handle(_orgIdMeta, orgId.isAcceptableOrUnknown(data['org_id']!, _orgIdMeta));
+    } else if (isInserting) {
+      context.missing(_orgIdMeta);
+    }
+    if (data.containsKey('protocol_id')) {
+      context.handle(_protocolIdMeta, protocolId.isAcceptableOrUnknown(data['protocol_id']!, _protocolIdMeta));
+    } else if (isInserting) {
+      context.missing(_protocolIdMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(_payloadJsonMeta, payloadJson.isAcceptableOrUnknown(data['payload_json']!, _payloadJsonMeta));
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('pdf')) {
+      context.handle(_pdfMeta, pdf.isAcceptableOrUnknown(data['pdf']!, _pdfMeta));
+    } else if (isInserting) {
+      context.missing(_pdfMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProtocolDocumentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProtocolDocumentRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      rev: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}rev'])!,
+      orgId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}org_id'])!,
+      protocolId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}protocol_id'])!,
+      payloadJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      pdf: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}pdf'])!,
+    );
+  }
+
+  @override
+  $ProtocolDocumentsTable createAlias(String alias) {
+    return $ProtocolDocumentsTable(attachedDatabase, alias);
+  }
+}
+
+class ProtocolDocumentRow extends DataClass implements Insertable<ProtocolDocumentRow> {
+  final String id;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  /// Mahalliy o'zgarish hisoblagichi (sinxronlash uchun; server reviziyasi alohida saqlanadi — 8-faza).
+  final int rev;
+  final String orgId;
+  final String protocolId;
+  final String payloadJson;
+  final Uint8List pdf;
+  const ProtocolDocumentRow({
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.rev,
+    required this.orgId,
+    required this.protocolId,
+    required this.payloadJson,
+    required this.pdf,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['rev'] = Variable<int>(rev);
+    map['org_id'] = Variable<String>(orgId);
+    map['protocol_id'] = Variable<String>(protocolId);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['pdf'] = Variable<Uint8List>(pdf);
+    return map;
+  }
+
+  ProtocolDocumentsCompanion toCompanion(bool nullToAbsent) {
+    return ProtocolDocumentsCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      rev: Value(rev),
+      orgId: Value(orgId),
+      protocolId: Value(protocolId),
+      payloadJson: Value(payloadJson),
+      pdf: Value(pdf),
+    );
+  }
+
+  factory ProtocolDocumentRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProtocolDocumentRow(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      rev: serializer.fromJson<int>(json['rev']),
+      orgId: serializer.fromJson<String>(json['orgId']),
+      protocolId: serializer.fromJson<String>(json['protocolId']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      pdf: serializer.fromJson<Uint8List>(json['pdf']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'rev': serializer.toJson<int>(rev),
+      'orgId': serializer.toJson<String>(orgId),
+      'protocolId': serializer.toJson<String>(protocolId),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'pdf': serializer.toJson<Uint8List>(pdf),
+    };
+  }
+
+  ProtocolDocumentRow copyWith({
+    String? id,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? rev,
+    String? orgId,
+    String? protocolId,
+    String? payloadJson,
+    Uint8List? pdf,
+  }) => ProtocolDocumentRow(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    rev: rev ?? this.rev,
+    orgId: orgId ?? this.orgId,
+    protocolId: protocolId ?? this.protocolId,
+    payloadJson: payloadJson ?? this.payloadJson,
+    pdf: pdf ?? this.pdf,
+  );
+  ProtocolDocumentRow copyWithCompanion(ProtocolDocumentsCompanion data) {
+    return ProtocolDocumentRow(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      rev: data.rev.present ? data.rev.value : this.rev,
+      orgId: data.orgId.present ? data.orgId.value : this.orgId,
+      protocolId: data.protocolId.present ? data.protocolId.value : this.protocolId,
+      payloadJson: data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      pdf: data.pdf.present ? data.pdf.value : this.pdf,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProtocolDocumentRow(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rev: $rev, ')
+          ..write('orgId: $orgId, ')
+          ..write('protocolId: $protocolId, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('pdf: $pdf')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, createdAt, updatedAt, rev, orgId, protocolId, payloadJson, $driftBlobEquality.hash(pdf));
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProtocolDocumentRow &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.rev == this.rev &&
+          other.orgId == this.orgId &&
+          other.protocolId == this.protocolId &&
+          other.payloadJson == this.payloadJson &&
+          $driftBlobEquality.equals(other.pdf, this.pdf));
+}
+
+class ProtocolDocumentsCompanion extends UpdateCompanion<ProtocolDocumentRow> {
+  final Value<String> id;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rev;
+  final Value<String> orgId;
+  final Value<String> protocolId;
+  final Value<String> payloadJson;
+  final Value<Uint8List> pdf;
+  final Value<int> rowid;
+  const ProtocolDocumentsCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rev = const Value.absent(),
+    this.orgId = const Value.absent(),
+    this.protocolId = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.pdf = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProtocolDocumentsCompanion.insert({
+    required String id,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rev = const Value.absent(),
+    required String orgId,
+    required String protocolId,
+    required String payloadJson,
+    required Uint8List pdf,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       orgId = Value(orgId),
+       protocolId = Value(protocolId),
+       payloadJson = Value(payloadJson),
+       pdf = Value(pdf);
+  static Insertable<ProtocolDocumentRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rev,
+    Expression<String>? orgId,
+    Expression<String>? protocolId,
+    Expression<String>? payloadJson,
+    Expression<Uint8List>? pdf,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rev != null) 'rev': rev,
+      if (orgId != null) 'org_id': orgId,
+      if (protocolId != null) 'protocol_id': protocolId,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (pdf != null) 'pdf': pdf,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProtocolDocumentsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rev,
+    Value<String>? orgId,
+    Value<String>? protocolId,
+    Value<String>? payloadJson,
+    Value<Uint8List>? pdf,
+    Value<int>? rowid,
+  }) {
+    return ProtocolDocumentsCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rev: rev ?? this.rev,
+      orgId: orgId ?? this.orgId,
+      protocolId: protocolId ?? this.protocolId,
+      payloadJson: payloadJson ?? this.payloadJson,
+      pdf: pdf ?? this.pdf,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rev.present) {
+      map['rev'] = Variable<int>(rev.value);
+    }
+    if (orgId.present) {
+      map['org_id'] = Variable<String>(orgId.value);
+    }
+    if (protocolId.present) {
+      map['protocol_id'] = Variable<String>(protocolId.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (pdf.present) {
+      map['pdf'] = Variable<Uint8List>(pdf.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProtocolDocumentsCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rev: $rev, ')
+          ..write('orgId: $orgId, ')
+          ..write('protocolId: $protocolId, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('pdf: $pdf, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AuditEventsTable extends AuditEvents with TableInfo<$AuditEventsTable, AuditEventRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -8675,6 +9106,15 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     'CREATE TRIGGER protocol_append_only_delete BEFORE DELETE ON protocol BEGIN SELECT RAISE (ABORT, \'append_only: protocol\');END',
     'protocol_append_only_delete',
   );
+  late final $ProtocolDocumentsTable protocolDocuments = $ProtocolDocumentsTable(this);
+  late final Trigger protocolDocumentAppendOnlyUpdate = Trigger(
+    'CREATE TRIGGER protocol_document_append_only_update BEFORE UPDATE ON protocol_document BEGIN SELECT RAISE (ABORT, \'append_only: protocol_document\');END',
+    'protocol_document_append_only_update',
+  );
+  late final Trigger protocolDocumentAppendOnlyDelete = Trigger(
+    'CREATE TRIGGER protocol_document_append_only_delete BEFORE DELETE ON protocol_document BEGIN SELECT RAISE (ABORT, \'append_only: protocol_document\');END',
+    'protocol_document_append_only_delete',
+  );
   late final $AuditEventsTable auditEvents = $AuditEventsTable(this);
   late final Trigger auditEventAppendOnlyUpdate = Trigger(
     'CREATE TRIGGER audit_event_append_only_update BEFORE UPDATE ON audit_event BEGIN SELECT RAISE (ABORT, \'append_only: audit_event\');END',
@@ -8716,6 +9156,9 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     protocols,
     protocolAppendOnlyUpdate,
     protocolAppendOnlyDelete,
+    protocolDocuments,
+    protocolDocumentAppendOnlyUpdate,
+    protocolDocumentAppendOnlyDelete,
     auditEvents,
     auditEventAppendOnlyUpdate,
     auditEventAppendOnlyDelete,
@@ -8745,6 +9188,14 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName('protocol', limitUpdateKind: UpdateKind.delete),
+      result: [],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('protocol_document', limitUpdateKind: UpdateKind.update),
+      result: [],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('protocol_document', limitUpdateKind: UpdateKind.delete),
       result: [],
     ),
     WritePropagation(

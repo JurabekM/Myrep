@@ -163,6 +163,17 @@ class Protocols extends Table with _Base, _OrgScoped {
   ];
 }
 
+/// Imzolangan protokolning payload'i (kanonik JSON) va PDF fayli — append-only (ADR-0010).
+/// PDF qayta render qilinmaydi: shrift yoki kutubxona yangilansa ham imzolangan baytlar o'zgarmaydi.
+@DataClassName('ProtocolDocumentRow')
+class ProtocolDocuments extends Table with _Base, _OrgScoped {
+  @override
+  String get tableName => 'protocol_document';
+  TextColumn get protocolId => text().unique().references(Protocols, #id)();
+  TextColumn get payloadJson => text()();
+  BlobColumn get pdf => blob()();
+}
+
 /// Append-only audit hash-zanjiri (ADR-0007). Qurilma bo'yicha `seq` yagona.
 @DataClassName('AuditEventRow')
 class AuditEvents extends Table with _Base, _OrgScoped {

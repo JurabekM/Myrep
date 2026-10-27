@@ -13,6 +13,11 @@ BEGIN SELECT RAISE(ABORT, 'append_only: protocol'); END;
 CREATE TRIGGER protocol_append_only_delete BEFORE DELETE ON protocol
 BEGIN SELECT RAISE(ABORT, 'append_only: protocol'); END;
 
+CREATE TRIGGER protocol_document_append_only_update BEFORE UPDATE ON protocol_document
+BEGIN SELECT RAISE(ABORT, 'append_only: protocol_document'); END;
+CREATE TRIGGER protocol_document_append_only_delete BEFORE DELETE ON protocol_document
+BEGIN SELECT RAISE(ABORT, 'append_only: protocol_document'); END;
+
 CREATE TRIGGER audit_event_append_only_update BEFORE UPDATE ON audit_event
 BEGIN SELECT RAISE(ABORT, 'append_only: audit_event'); END;
 CREATE TRIGGER audit_event_append_only_delete BEFORE DELETE ON audit_event

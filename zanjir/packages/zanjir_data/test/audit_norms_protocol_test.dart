@@ -95,43 +95,37 @@ void main() {
   });
 
   group('ProtocolRepository', () {
-    late SmallSite s;
-    late MeasurementSessionRow session;
-    setUp(() async {
-      s = await SmallSite.create(org);
-      session = await org.repos.sessions.start(siteId: s.site.id, kind: SessionKind.davriy, engineerId: org.user.id);
-    });
-
-    Future<ProtocolRow> insert(String number, String qr) => org.repos.protocols.insert(
-      sessionId: session.id,
-      number: number,
-      payloadSha256: 'a' * 64,
-      pdfSha256: 'b' * 64,
-      signedBy: org.user.id,
-      signature: 'c' * 128,
-      sigAlg: sigAlgEd25519,
-      qrToken: qr,
-    );
-
-    test('qo\'shiladi, holat faqat audit hodisasi orqali bekor qilinadi', () async {
-      final p = await insert('P-1', 'qr-1');
-      expect(p.deviceId, org.device.id);
-      expect(await org.repos.protocols.status(p.id), ProtocolStatus.active);
-      await org.repos.protocols.revoke(p.id, reason: 'Asbob muddati o\'tgan');
-      expect(await org.repos.protocols.status(p.id), ProtocolStatus.revoked);
-      await expectLater(
-        org.repos.protocols.revoke(p.id, reason: 'x'),
-        throwsA(isA<DataRuleException>().having((e) => e.code, 'code', 'already_revoked')),
+    // Imzolash va bloklash shartlari — protocol_sign_test.dart.
+    test('raqam tashkilot ichida yagona (DB cheklovi)', () async {
+      final s = await SmallSite.create(org);
+      final session = await org.repos.sessions.start(
+        siteId: s.site.id,
+        kind: SessionKind.davriy,
+        engineerId: org.user.id,
       );
-      final types = (await org.repos.audit.events()).map((e) => e.eventType).toList();
-      expect(types, containsAllInOrder(['PROTOCOL_SIGNED', 'PROTOCOL_REVOKED']));
-      expect(await org.repos.protocols.get(p.id), isNotNull);
-      await expectLater(org.repos.protocols.status('yoq'), throwsA(isA<NotFoundException>()));
-    });
-
-    test('raqam tashkilot ichida yagona', () async {
+      Future<void> insert(String number, String qr) => db
+          .into(db.protocols)
+          .insert(
+            ProtocolsCompanion.insert(
+              id: qr,
+              orgId: org.ctx.orgId,
+              sessionId: session.id,
+              number: number,
+              payloadSha256: 'a' * 64,
+              pdfSha256: 'b' * 64,
+              signedBy: org.user.id,
+              deviceId: org.device.id,
+              signature: 'c' * 128,
+              sigAlg: sigAlgEd25519,
+              qrToken: qr,
+              createdAt: DateTime.utc(2026),
+              updatedAt: DateTime.utc(2026),
+            ),
+          );
       await insert('P-1', 'qr-1');
       await expectLater(insert('P-1', 'qr-2'), throwsA(anything));
+      await expectLater(insert('P-2', 'qr-1'), throwsA(anything), reason: 'qr_token ham yagona');
+      await expectLater(org.repos.protocols.status('yoq'), throwsA(isA<NotFoundException>()));
     });
   });
 }

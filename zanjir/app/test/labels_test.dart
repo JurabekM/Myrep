@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zanjir_app/l10n/gen/app_localizations.dart';
 import 'package:zanjir_app/l10n/labels.dart';
 import 'package:zanjir_core/zanjir_core.dart';
+import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker;
 
 /// Baholovchi qaytaradigan barcha sabab kodlari (ADR-0005) tarjimaga ega.
 const reasonCodes = [
@@ -32,6 +33,22 @@ const reasonCodes = [
   'marked_not_applicable',
 ]; // fmt: skip
 
+/// `ProtocolRepository.prepare` qaytaradigan barcha shartlar.
+const blockerCodes = [
+  'session_open',
+  'no_measurements',
+  'forbidden_role',
+  'device_not_trusted',
+  'license_missing',
+  'license_expired',
+  'already_signed',
+  'instrument_expired',
+  'mixed_norm_sets',
+  'norms_not_reviewed',
+  'needs_review_requires_lead',
+  'lead_comment_required',
+];
+
 void main() {
   for (final locale in AppLocalizations.supportedLocales) {
     final l = lookupAppLocalizations(locale);
@@ -50,6 +67,16 @@ void main() {
         expect(l.typeName(t), isNotEmpty);
       }
       expect(l.disclaimer, isNot(contains('xavfsiz.')));
+    });
+
+    test('${locale.languageCode}: imzolash shartlari (ADR-0010)', () {
+      for (final c in blockerCodes) {
+        expect(l.blockerText(ProtocolBlocker(c, const ['id-1', 'id-2'])), isNot(l.blockerOther(c)), reason: c);
+      }
+      expect(l.blockerText(const ProtocolBlocker('instrument_expired', ['a', 'b', 'c'])), contains('3'));
+      expect(l.blockerText(const ProtocolBlocker('forbidden_role', ['VIEWER'])), contains(l.roleViewer));
+      expect(l.blockerText(const ProtocolBlocker('yangi')), l.blockerOther('yangi'));
+      expect(l.errorText(const DataRuleException('draft_stale', 'changed')), l.errorDraftStale);
     });
   }
 }

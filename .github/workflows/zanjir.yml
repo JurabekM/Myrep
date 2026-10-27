@@ -46,6 +46,29 @@ jobs:
       - name: Evaluator, solver, crypto — 100% qator va branch coverage
         run: dart run tool/check_coverage.dart
 
+  protocol:
+    name: zanjir_protocol (pdf)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/packages/zanjir_protocol
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: pdftotext (PDF mazmuni testlari uchun)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: PDF matnlari ARB bilan mos (tool/gen_strings.py)
+        run: python3 -I tool/gen_strings.py --check
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - name: Testlar (deterministik PDF — ADR-0010)
+        run: dart test
+
   data:
     name: zanjir_data (drift)
     runs-on: ubuntu-latest
@@ -68,7 +91,7 @@ jobs:
           git diff --exit-code -- .
       - run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze --fatal-infos
-      - name: Testlar (migratsiya, repozitoriylar, append-only, tashkilotlar ajratilganligi)
+      - name: Testlar (migratsiya, repozitoriylar, append-only, tashkilotlar, imzolash shartlari)
         run: dart test
 
   app:

@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 6-faza — protokol (ADR-0010): `packages/zanjir_protocol` — payload `zanjir.protocol/1` → deterministik PDF (metama'lumotsiz,
+  `/ID` = payload hash, Noto Sans + NotoSansMath, QR, har sahifada ogohlantirish, uz/ru matnlar ARB'dan generatsiya);
+  `ProtocolRepository.prepare/sign/verify/revoke` — 12 ta bloklash sharti (ochiq sessiya, muddati o'tgan asbob, tekshirilmagan
+  normalar, litsenziya, NEEDS_REVIEW → faqat LEAD izoh bilan, rol, qurilma, amaldagi protokol...), eskirgan qoralama himoyasi;
+  sxema v3 (`protocol_document`, append-only); ilova protokol ekrani (shartlar, izoh, tasdiqlash, QR, hash'lar, tekshiruv,
+  ulashish/chop etish, bekor qilish), FLAG_SECURE, `/v/:token` havolasi, laboratoriya litsenziyasini tahrirlash; CI `protocol` jobi.
 - 5-faza — ilova UI (ADR-0009): oflayn laboratoriya profili, kirish ekrani (server 7-fazada), obyektlar, graf (daraxt/graf),
   tugun formasi va kartasi (QR `zanjir://app/n/<id>`, nusxalash), sessiya, tez o'lchov kiritish (rangli natija, avtomatik
   keyingi nuqta, qayta o'lchash), sessiya xulosasi va yopish, ajratish rejasi ko'rinishi, sozlamalar (til uz/ru, katta shrift,
@@ -35,4 +41,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   normalar schema tekshiruvi, release darvozasi.
 
 ### O'zgardi
+- `ProtocolRepository.insert` olib tashlandi — protokol faqat `prepare` → `sign` orqali; bekor qilish faqat LEAD/ADMIN, sabab bilan.
+- `summarizeValues`, `formatDecimal` — `zanjir_protocol` ga ko'chirildi (ilova va PDF bir xil ko'rinish).
 - `norms/v0.yaml`: izolyatsiya normasini tanlash uchun yagona `circuit_class` atributi; INS-SECONDARY faqat CABLE uchun.

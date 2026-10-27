@@ -53,7 +53,19 @@ class SettingsScreen extends ConsumerWidget {
           AsyncView(
             value: ref.watch(organizationProvider),
             builder: (org) => ListTile(
+              key: const Key('settings.lab'),
               leading: const Icon(Icons.science),
+              trailing: canEdit
+                  ? IconButton(
+                      key: const Key('settings.editLab'),
+                      tooltip: l10n.editLab,
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (_) => _LabDialog(org: org),
+                      ),
+                    )
+                  : null,
               title: Text('${l10n.lab}: ${org.name}'),
               subtitle: Text(
                 [
@@ -206,6 +218,92 @@ class _EvalSettingsFormState extends ConsumerState<_EvalSettingsForm> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Laboratoriya rekvizitlari: nomi, litsenziya raqami va muddati (protokol imzolash sharti) — faqat LEAD/ADMIN.
+class _LabDialog extends ConsumerStatefulWidget {
+  const _LabDialog({required this.org});
+  final OrganizationRow org;
+
+  @override
+  ConsumerState<_LabDialog> createState() => _LabDialogState();
+}
+
+class _LabDialogState extends ConsumerState<_LabDialog> {
+  final _form = GlobalKey<FormState>();
+  late final _name = TextEditingController(text: widget.org.name);
+  late final _license = TextEditingController(text: widget.org.licenseNo ?? '');
+  late final _until = TextEditingController(
+    text: widget.org.licenseValidUntil == null ? '' : formatIsoDate(widget.org.licenseValidUntil!),
+  );
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _license.dispose();
+    _until.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_form.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      final repos = await ref.read(repositoriesProvider.future);
+      final profile = (await ref.read(profileProvider.future))!;
+      await repos.settings.updateLab(
+        byUserId: profile.userId,
+        name: _name.text.trim(),
+        licenseNo: _license.text.trim().isEmpty ? null : _license.text.trim(),
+        licenseValidUntil: parseIsoDate(_until.text),
+      );
+      ref.invalidate(organizationProvider);
+      ref.invalidate(protocolDraftProvider);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorText(e))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.editLab),
+      content: Form(
+        key: _form,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                key: const Key('lab.name'),
+                controller: _name,
+                decoration: InputDecoration(labelText: l10n.labName),
+                validator: (v) => (v ?? '').trim().isEmpty ? l10n.requiredField : null,
+              ),
+              TextFormField(
+                key: const Key('lab.license'),
+                controller: _license,
+                decoration: InputDecoration(labelText: l10n.licenseNo),
+              ),
+              TextFormField(
+                key: const Key('lab.until'),
+                controller: _until,
+                decoration: InputDecoration(labelText: l10n.licenseValidUntil),
+                keyboardType: TextInputType.datetime,
+                validator: (v) => (v ?? '').trim().isEmpty || parseIsoDate(v) != null ? null : l10n.invalidDate,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        FilledButton(key: const Key('lab.save'), onPressed: _save, child: Text(l10n.save)),
+      ],
     );
   }
 }

@@ -31,7 +31,8 @@ Ildizdagi `../CLAUDE.md` (Myrep umumiy qoidalari) ham amal qiladi.
 zanjir/
   app/                  # Flutter ilova
   packages/zanjir_core/ # graf, baholash, solver, kanonik JSON, hash-zanjir
-  packages/zanjir_data/ # lokal baza (Drift), repozitoriylar, migratsiyalar
+  packages/zanjir_data/ # lokal baza (Drift), repozitoriylar, migratsiyalar, protokol imzolash
+  packages/zanjir_protocol/ # protokol payload'i → deterministik PDF (QR bilan)
   server/               # FastAPI
   norms/                # normalar YAML + JSON Schema
   tools/vectors/        # Dart va Python uchun umumiy kripto test vektorlari
@@ -45,6 +46,8 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Coverage: `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage && dart run tool/check_coverage.dart` (eval/solver/crypto — 100% qator va branch)
 - Ma'lumot qatlami: `cd packages/zanjir_data && dart run build_runner build && dart analyze --fatal-infos && dart test`
   (sxema o'zgarsa: `schemaVersion` + `dart run drift_dev make-migrations`, ADR-0008)
+- Protokol PDF: `cd packages/zanjir_protocol && python3 -I tool/gen_strings.py --check && dart analyze --fatal-infos && dart test`
+  (PDF matnlari ARB'dan generatsiya qilinadi — ARB o'zgarsa `python3 -I tool/gen_strings.py`; mazmun testlari `pdftotext` talab qiladi)
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
 - Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest`
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
@@ -80,8 +83,17 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Golden testlar: `test/golden/*.cases.yaml` + `graphs.yaml`; har normaga ≥ 3 holat (meta-test tekshiradi).
 - Baholash semantikasi: ADR-0002, ADR-0005. Sabab kodlari (`reason`) — barqaror inglizcha kalitlar.
 
+## Protokol (ADR-0010)
+- `zanjir_protocol`: `renderProtocolPdf(payload, fonts)` — metama'lumotsiz, `/ID` = `payload_sha256`; `ProtocolTexts`, `summarizeValues`.
+- `zanjir_data` `ProtocolRepository`: `prepare` → `ProtocolDraft{payload, blockers}` → `sign(draft, fonts)` → `protocol` +
+  `protocol_document` (PDF saqlanadi) + `PROTOCOL_SIGNED`; `verify`, `revoke` (LEAD/ADMIN, sabab bilan).
+- Bloklash kodlari (`ProtocolBlocker.code`) — barqaror inglizcha; UI matni `labels.dart` `blockerText`. Yangi shart qo'shilsa —
+  ARB, `labels_test.dart` `blockerCodes`, ADR.
+- Testlarda tekshirilgan normalar faqat test nusxasi ("TEST FIXTURE", versiya `0.1.1`); `norms/v0.yaml` ga tegilmaydi.
+
 ## Ilova (`app/`) xaritasi
-- `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash; `lib/router.dart` — go_router.
+- `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash, `platform.dart` (FLAG_SECURE,
+  PDF ulashish — testlarda soxtasi), `config.dart` (`ZANJIR_VERIFY_BASE_URL`); `lib/router.dart` — go_router (`/n/:id`, `/v/:token`).
 - `lib/features/*` — ekranlar; `lib/l10n/app_{uz,ru}.arb` + `labels.dart` (domen kodlari → matn).
 - Testlar: `test/support/harness.dart` (xotiradagi baza, `startWithSession`, `goTo`, `settle`, `reveal`); asosiy oqim —
   `test/flow/main_flow.dart` (widget testi va `integration_test/`). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).

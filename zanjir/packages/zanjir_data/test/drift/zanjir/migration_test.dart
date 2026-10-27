@@ -7,7 +7,7 @@ import 'package:zanjir_data/zanjir_data.dart';
 
 import 'generated/schema.dart';
 
-/// v1 → v2 migratsiyasi: mavjud ma'lumot (append-only jadvallar ham) o'zgarmaydi, triggerlar ishlaydi,
+/// Migratsiyalar: mavjud ma'lumot (append-only jadvallar ham) o'zgarmaydi, triggerlar ishlaydi,
 /// yangi jadvallar ishlatiladi.
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -48,5 +48,48 @@ void main() {
     expect((await SettingsRepository(ctx).current()).kCorr, 1.0);
     await LocalPrefRepository(db).set('ui.locale', 'ru');
     expect(await LocalPrefRepository(db).get('ui.locale'), 'ru');
+  });
+
+  test('v2 (imzolangan protokol bilan) → v3: protocol_document qo\'shiladi, append-only', () async {
+    final schema = await verifier.schemaAt(2);
+    const t = "'2026-10-26T07:00:00.000Z'";
+    for (final sql in [
+      "insert into organization (id, name, created_at, updated_at) values ('org', 'Lab', $t, $t)",
+      "insert into app_user (id, org_id, full_name, phone, role, created_at, updated_at) values ('u', 'org', 'M', '+998', 'LEAD', $t, $t)",
+      "insert into device (id, org_id, user_id, public_key_ed25519, sig_alg, registered_at, created_at, updated_at) values ('d', 'org', 'u', 'aa', 'Ed25519', $t, $t, $t)",
+      "insert into site (id, org_id, name, created_at, updated_at) values ('s', 'org', 'Obyekt', $t, $t)",
+      "insert into measurement_session (id, org_id, site_id, kind, engineer_id, started_at, created_at, updated_at) values ('ms', 'org', 's', 'DAVRIY', 'u', $t, $t, $t)",
+      "insert into protocol (id, org_id, session_id, number, payload_sha256, pdf_sha256, signed_by, device_id, signature, sig_alg, qr_token, created_at, updated_at) values ('p', 'org', 'ms', '2026-AAAAAA-001', 'ph', 'fh', 'u', 'd', 'sig', 'Ed25519', 'qr', $t, $t)",
+      "insert into org_setting (id, org_id, k_corr, margin_pct, created_at, updated_at) values ('os', 'org', 0.8, 5, $t, $t)",
+    ]) {
+      schema.rawDatabase.execute(sql);
+    }
+
+    final db = ZanjirDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 3);
+
+    final p = await db.select(db.protocols).getSingle();
+    expect((p.id, p.number, p.payloadSha256), ('p', '2026-AAAAAA-001', 'ph'));
+    expect((await SettingsRepository(DataContext(db: db, orgId: 'org')).current()).kCorr, 0.8);
+    await db
+        .into(db.protocolDocuments)
+        .insert(
+          ProtocolDocumentsCompanion.insert(
+            id: 'doc',
+            orgId: 'org',
+            protocolId: 'p',
+            payloadJson: '{}',
+            pdf: Uint8List.fromList([1, 2, 3]),
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+    await expectLater(
+      db.customUpdate("update protocol_document set payload_json = '[]'"),
+      throwsA(isA<SqliteException>()),
+    );
+    await expectLater(db.customUpdate('delete from protocol_document'), throwsA(isA<SqliteException>()));
+    await expectLater(db.customUpdate("delete from protocol where id = 'p'"), throwsA(isA<SqliteException>()));
   });
 }

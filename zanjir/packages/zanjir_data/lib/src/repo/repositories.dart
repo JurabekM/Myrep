@@ -15,19 +15,31 @@ import 'user_repository.dart';
 
 /// Bitta tashkilot + qurilma + foydalanuvchi uchun barcha repozitoriylar.
 class Repositories {
-  Repositories(this.ctx, {required Signer signer, required String deviceId, required String actorId})
-    : users = UserRepository(ctx),
-      devices = DeviceRepository(ctx),
-      instruments = InstrumentRepository(ctx),
-      sites = SiteRepository(ctx),
-      graph = GraphRepository(ctx),
-      sessions = SessionRepository(ctx),
-      normSets = NormSetRepository(ctx),
-      audit = AuditRepository(ctx, signer: signer, deviceId: deviceId, actorId: actorId),
-      isolationPlans = IsolationPlanRepository(ctx) {
+  Repositories(
+    this.ctx, {
+    required Signer signer,
+    required String deviceId,
+    required String actorId,
+    String Function()? newQrToken,
+  }) : users = UserRepository(ctx),
+       devices = DeviceRepository(ctx),
+       instruments = InstrumentRepository(ctx),
+       sites = SiteRepository(ctx),
+       graph = GraphRepository(ctx),
+       sessions = SessionRepository(ctx),
+       normSets = NormSetRepository(ctx),
+       audit = AuditRepository(ctx, signer: signer, deviceId: deviceId, actorId: actorId),
+       isolationPlans = IsolationPlanRepository(ctx) {
     measurements = MeasurementRepository(ctx, audit: audit, normSets: normSets);
     settings = SettingsRepository(ctx, audit: audit);
-    protocols = ProtocolRepository(ctx, audit: audit);
+    protocols = ProtocolRepository(
+      ctx,
+      audit: audit,
+      signer: signer,
+      normSets: normSets,
+      measurements: measurements,
+      newQrToken: newQrToken,
+    );
   }
 
   final DataContext ctx;

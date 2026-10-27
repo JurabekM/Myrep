@@ -17,11 +17,14 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   go_router: ^18.1.1
   intl: ^0.20.3
+  printing: ^5.15.1
   qr_flutter: ^4.1.0
   zanjir_core:
     path: ../packages/zanjir_core
   zanjir_data:
     path: ../packages/zanjir_data
+  zanjir_protocol:
+    path: ../packages/zanjir_protocol
 
 dev_dependencies:
   flutter_test:
@@ -42,3 +45,7 @@ flutter:
         - asset: assets/fonts/NotoSans-Regular.ttf
         - asset: assets/fonts/NotoSans-Bold.ttf
           weight: 700
+    # ≤ ≥ √ va boshqa matematik belgilar (NotoSans'da yo'q) — UI va PDF uchun zaxira shrift.
+    - family: NotoSansMath
+      fonts:
+        - asset: assets/fonts/NotoSansMath-Regular.ttf

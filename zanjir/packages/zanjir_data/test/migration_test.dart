@@ -52,7 +52,7 @@ void main() {
         .map((r) => r.read<String>('name'))
         .get();
     expect(triggers, [
-      for (final t in ['audit_event', 'measurement', 'protocol']) ...[
+      for (final t in ['audit_event', 'measurement', 'protocol', 'protocol_document']) ...[
         '${t}_append_only_delete',
         '${t}_append_only_update',
       ],

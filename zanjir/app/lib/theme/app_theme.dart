@@ -26,6 +26,7 @@ ThemeData buildDarkTheme() {
   return ThemeData(
     colorScheme: scheme,
     fontFamily: 'NotoSans',
+    fontFamilyFallback: const ['NotoSansMath'],
     scaffoldBackgroundColor: ZanjirColors.paper,
     materialTapTargetSize: MaterialTapTargetSize.padded,
     appBarTheme: const AppBarTheme(backgroundColor: ZanjirColors.sidebar, foregroundColor: ZanjirColors.ink),

@@ -165,7 +165,7 @@
   "sessionClosed": "Sessiya yopilgan",
   "continueMeasuring": "O'lchashni davom ettirish",
   "protocol": "Protokol",
-  "protocolNotReady": "Protokol hali tuzilmagan. Imzolash uchun sessiya yopilgan va barcha asboblarning qiyoslash muddati amal qilayotgan bo'lishi kerak.",
+  "protocolNotReady": "Protokol tayyorlanmoqda…",
   "measurementCount": "{count} ta o'lchov",
   "@measurementCount": {
     "placeholders": {
@@ -442,5 +442,117 @@
   "invalidMargin": "Zaxira 0…50 oralig'ida bo'lishi kerak",
   "profile": "Profil",
   "errorForbidden": "Bu amal uchun ruxsat yo'q",
-  "errorSessionClosed": "Sessiya yopilgan"
+  "errorSessionClosed": "Sessiya yopilgan",
+  "protocolSignTitle": "Protokolni imzolash",
+  "protocolLanguage": "Protokol tili",
+  "leadComment": "Ish rahbari izohi",
+  "leadCommentHint": "Ko'rib chiqish kerak bo'lgan natijalar bo'yicha qaror va sabab",
+  "blockersTitle": "Imzolash mumkin emas:",
+  "readyToSign": "Bloklovchi shart yo'q — imzolash mumkin.",
+  "sign": "Imzolash",
+  "signConfirm": "Imzolangan protokolni o'zgartirib bo'lmaydi — faqat sabab bilan bekor qilinadi. Ma'lumotlar to'g'riligini tasdiqlaysizmi?",
+  "protocolSigned": "Protokol imzolandi",
+  "protocolNumber": "№ {number}",
+  "@protocolNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "protocolActive": "Amalda",
+  "protocolRevoked": "Bekor qilingan",
+  "signedByAt": "{name} · {time} (UTC)",
+  "@signedByAt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "payloadHash": "Ma'lumotlar hash'i (SHA-256)",
+  "pdfHash": "PDF hash'i (SHA-256)",
+  "sharePdf": "PDF ni ulashish",
+  "printPdf": "Ko'rish / chop etish",
+  "revokeProtocol": "Protokolni bekor qilish",
+  "revokeReason": "Bekor qilish sababi",
+  "verifyOk": "Imzo va hash'lar to'g'ri",
+  "verifyFailed": "Tekshiruv o'tmadi: {reason}",
+  "@verifyFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyTitle": "Protokolni tekshirish",
+  "protocolNotFound": "Bu qurilmada bunday protokol topilmadi. Server orqali tekshirish 7-fazada qo'shiladi.",
+  "blockerSessionOpen": "Sessiya yopilmagan",
+  "blockerNoMeasurements": "Sessiyada o'lchov yo'q",
+  "blockerForbiddenRole": "Sizning rolingiz ({role}) protokolni imzolay olmaydi",
+  "@blockerForbiddenRole": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "blockerDeviceNotTrusted": "Qurilma kaliti bekor qilingan yoki mos emas",
+  "blockerLicenseMissing": "Laboratoriya litsenziyasi (raqam va muddat) kiritilmagan — Sozlamalar",
+  "blockerLicenseExpired": "Laboratoriya litsenziyasi muddati o'tgan",
+  "blockerAlreadySigned": "Sessiya bo'yicha amaldagi protokol bor — avval uni bekor qiling",
+  "blockerInstrumentExpired": "{count} ta o'lchov qiyoslash muddati o'tgan (yoki guvohnomasiz) asbob bilan olingan",
+  "@blockerInstrumentExpired": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blockerMixedNormSets": "Sessiyada turli normalar to'plamlari ishlatilgan: {versions}",
+  "@blockerMixedNormSets": {
+    "placeholders": {
+      "versions": {
+        "type": "String"
+      }
+    }
+  },
+  "blockerNormsNotReviewed": "Normalar to'plami {version} litsenziyali muhandis tomonidan tekshirilmagan",
+  "@blockerNormsNotReviewed": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "blockerNeedsReviewLead": "{count} ta natija ko'rib chiqishni talab qiladi — faqat ish rahbari (LEAD) imzolaydi",
+  "@blockerNeedsReviewLead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blockerLeadComment": "{count} ta natija ko'rib chiqishni talab qiladi — ish rahbari izohi majburiy",
+  "@blockerLeadComment": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "blockerOther": "Bloklovchi shart: {code}",
+  "@blockerOther": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDraftStale": "Ma'lumotlar o'zgardi — protokolni qayta tayyorlang",
+  "editLab": "Laboratoriya rekvizitlari",
+  "verifyUrlLabel": "Tekshirish havolasi"
 }

@@ -188,3 +188,55 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
      (`.github/workflows/zanjir-emulator.yml`). `assets/norms/v0.yaml` = `norms/v0.yaml` test bilan nazorat qilinadi.
 - **Oqibat:** Testlar uchta haqiqiy UI xatosini topdi va tuzatildi (tor ekranda dropdown va natija belgisining sig'masligi,
   dialog yopilayotganda dispose qilingan controller). Android build va emulyator jobi bu muhitda tekshirilmagan (SDK yo'q).
+
+## ADR-0010: Deterministik PDF, protokol payload'i va imzolashni bloklash shartlari (6-faza)
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (6-faza).
+- **Kontekst:** Prompt 5.4 (`signature = Ed25519(payload_sha256 ‖ pdf_sha256)`), 6-faza mezoni "bir xil payload → baytma-bayt
+  bir xil PDF; imzolashni bloklash testlari", CLAUDE.md 1- va 6-qoidalar, 8-bo'lim ("ekranshotdan himoya faqat imzolash ekranida").
+- **Qaror:**
+  1. **Paket:** `packages/zanjir_protocol` — sof Dart (`pdf`, `barcode`), Flutter'ga bog'liq emas: payload → PDF.
+     `zanjir_data` unga bog'liq (imzolashda PDF repozitoriy ichida render qilinadi — imzolangan PDF aynan imzolangan payload'dan).
+  2. **Determinizm:** `pdf` paketi faqat ikki joyda tasodifiy/vaqtga bog'liq: `/ID` (tasodifiy) va metama'lumot (`/CreationDate`).
+     Metama'lumot umuman berilmaydi; render qilingan fayldagi yagona `/ID[<a><b>]` bir xil uzunlikdagi `<sha><sha>` bilan
+     almashtiriladi (`sha = payload_sha256`, xref ofsetlari o'zgarmaydi; `/ID` aynan bitta bo'lmasa — xato). Shriftlar —
+     ilova ichidagi Noto Sans (+ `NotoSansMath` ≤ ≥ uchun zaxira), subset qilinadi. QR — `BarcodeWidget(drawText: false)`
+     (aks holda Courier qo'shiladi). Testlar: ikki render, boshqa isolate, kalitlar tartibi teskari payload, 250 o'lchovli
+     ko'p sahifali protokol — baytma-bayt teng; `/ID` = payload hash; metama'lumot va Courier yo'q; yetishmagan glif haqida
+     ogohlantirish yo'q (uz/ru); `pdftotext` bilan mazmun (ogohlantirish matni bor, "ishlash xavfsiz" yo'q).
+     Kafolat chegarasi: bir xil `pdf` paketi versiyasi, shriftlar va zlib — boshqa ilova versiyasi boshqa bayt berishi mumkin.
+     Shuning uchun imzolangan PDF **saqlanadi** (`protocol_document`), qayta render qilinmaydi.
+  3. **Payload `zanjir.protocol/1`** (kanonik JSON, RFC 8785): `protocol{number, qr_token, verify_url, language}`,
+     `lab{org_id, name, license_no, license_valid_until}`, `site{...}`, `session{id, kind, started_at, closed_at, harorat, namlik}`,
+     `engineer{id, full_name, safety_group}`, `signer{id, full_name, role, device_id, public_key}`, `signed_at`, `lead_comment`,
+     `norm_set{version, sha256, reviewed_by, reviewed_at}`, `instruments[]` (guvohnoma raqami va muddati),
+     `measurements[]` (amaldagilari, yaratilish tartibida: qiymatlar, verdikt, `norm_id`, sabab, hal qiluvchi chegara va formula,
+     `margin_pct`, `k_corr`, `supersedes_id`), `summary` (barcha verdikt kalitlari, PASS standart emas). PDF faqat payload'dan
+     chiziladi — PDF dagi har bir ma'lumot imzolangan. Matnlar ilova ARB fayllaridan generatsiya qilinadi
+     (`tool/gen_strings.py`, CI `--check`) — ilova va PDF bir xil tarjimadan foydalanadi.
+  4. **Raqam:** `YYYY-XXXXXX-NNN` — yil, qurilma ID sining oxirgi 6 hex belgisi, shu prefiks bo'yicha keyingi tartib raqami
+     (oflayn qurilmalar to'qnashmaydi; `(org_id, number)` yagona). `qr_token` — 128 bit `Random.secure`.
+     QR: `<verify_base><qr_token>`; asos `--dart-define=ZANJIR_VERIFY_BASE_URL` (domen 2-darvozada), berilmasa
+     `zanjir://app/v/<token>` (ilova ichida `/v/:token` — shu qurilmadagi protokol holati va tekshiruvi).
+  5. **Bloklash shartlari** (`ProtocolRepository.prepare` → `ProtocolBlocker`; imzolashda qayta tekshiriladi):
+     `session_open`, `no_measurements`, `forbidden_role` (imzolaydi faqat LEAD va ENGINEER), `device_not_trusted`
+     (bekor qilingan yoki kalit mos emas), `license_missing` / `license_expired` (oxirgi kun amal qiladi), `already_signed`
+     (amaldagi protokol bor — avval sabab bilan bekor qilinadi), `instrument_expired` (o'lchov kuni guvohnoma amal qilmagan
+     yoki muddati yo'q; o'chirilgan asbob ham hisobga olinadi), `mixed_norm_sets`, `norms_not_reviewed` (muhandis
+     tekshirmagan normalar bilan **imzolanmaydi** — 1-darvoza yopilmaguncha ilovada imzolash bloklangan),
+     `needs_review_requires_lead`, `lead_comment_required` (NEEDS_REVIEW — faqat LEAD va izoh bilan).
+     FAIL natija bloklamaydi — protokol uni qayd etadi.
+  6. **Imzolash:** `prepare` (qoralama, `signed_at` = tayyorlash vaqti) → `sign(draft, fonts)`: PDF render → tranzaksiyada
+     payload qayta quriladi va kanonik tengligi tekshiriladi (aks holda `draft_stale`; 15 daqiqadan eski qoralama ham),
+     imzo, `protocol` + `protocol_document` + `PROTOCOL_SIGNED` audit — birga. `verify(id)`: `/ID`, payload hash, PDF hash,
+     protokolni yaratgan qurilma kaliti bilan imzo. Bekor qilish — faqat LEAD/ADMIN, sabab majburiy (`PROTOCOL_REVOKED`).
+  7. **Sxema v3:** `protocol_document(protocol_id, payload_json, pdf)` — append-only (trigger), v2 → v3 migratsiyasi
+     ma'lumot bilan testlangan.
+  8. **Ilova:** protokol ekrani — shartlar ro'yxati (l10n), til (uz/ru), ish rahbari izohi, tasdiqlash dialogi, imzolangan
+     protokol kartasi (QR, hash'lar, tekshiruv natijasi, ulashish/chop etish — `printing`, bekor qilish). Ekran ochiq
+     turganda `FLAG_SECURE` (`MethodChannel('zanjir/secure_screen')`, `MainActivity`). Sozlamalarda laboratoriya rekvizitlari
+     (litsenziya) — LEAD/ADMIN.
+- **Oqibat:** 1-darvoza (muhandis tekshiruvi) yopilmaguncha haqiqiy protokol imzolanmaydi — testlar faqat test uchun
+  nusxalangan, "TEST FIXTURE" deb belgilangan normalar bilan ishlaydi (`norms/v0.yaml` o'zgarmaydi). ADMIN imzolamaydi
+  (tashkilot boshqaruvchisi; kerak bo'lsa — foydalanuvchi qarori bilan o'zgartiriladi). Android'da `printing` va FLAG_SECURE
+  bu muhitda tekshirilmagan (SDK yo'q) — emulyator jobi va 12-fazada.

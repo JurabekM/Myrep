@@ -7,6 +7,10 @@
 - Tashkilotlar ajratilgan: `org_id` filtri + Postgres RLS.
 - Maxfiy kalitlar Android Keystore'da; serverga faqat ochiq kalit yuboriladi.
 - Logga parol, token, kalit va shaxsiy ma'lumot yozilmaydi.
+- Protokol: payload (kanonik JSON) va PDF hash'lari Ed25519 bilan imzolanadi; imzolangan PDF saqlanadi, `/ID` = payload hash
+  (ADR-0010). Imzolash ekranida ekranshot va ekran yozuvi taqiqlangan (Android `FLAG_SECURE`).
+- Imzolash bloklanadi: muddati o'tgan asbob, tekshirilmagan normalar, litsenziya yo'q/muddati o'tgan, NEEDS_REVIEW (faqat LEAD
+  izoh bilan), bekor qilingan qurilma, VIEWER/ADMIN roli (ADR-0010, 5-band).
 
 ## RBAC matritsasi
 _7-fazada._

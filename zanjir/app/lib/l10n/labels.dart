@@ -1,5 +1,5 @@
 import 'package:zanjir_core/zanjir_core.dart';
-import 'package:zanjir_data/zanjir_data.dart' show DataRuleException;
+import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker;
 
 import 'gen/app_localizations.dart';
 
@@ -124,12 +124,30 @@ extension Labels on AppLocalizations {
     };
   }
 
+  /// Imzolashni to'xtatuvchi shart (ADR-0010).
+  String blockerText(ProtocolBlocker b) => switch (b.code) {
+    'session_open' => blockerSessionOpen,
+    'no_measurements' => blockerNoMeasurements,
+    'forbidden_role' => blockerForbiddenRole(roleName(b.ids.firstOrNull ?? '')),
+    'device_not_trusted' => blockerDeviceNotTrusted,
+    'license_missing' => blockerLicenseMissing,
+    'license_expired' => blockerLicenseExpired,
+    'already_signed' => blockerAlreadySigned,
+    'instrument_expired' => blockerInstrumentExpired(b.ids.length),
+    'mixed_norm_sets' => blockerMixedNormSets(b.ids.join(', ')),
+    'norms_not_reviewed' => blockerNormsNotReviewed(b.ids.join(', ')),
+    'needs_review_requires_lead' => blockerNeedsReviewLead(b.ids.length),
+    'lead_comment_required' => blockerLeadComment(b.ids.length),
+    _ => blockerOther(b.code),
+  };
+
   /// Repozitoriy xatolari foydalanuvchiga.
   String errorText(Object e) => switch (e) {
     final DataRuleException d when d.code == 'forbidden_role' => errorForbidden,
     final DataRuleException d when d.code == 'session_closed' => errorSessionClosed,
     final DataRuleException d when d.code == 'invalid_k_corr' => invalidKCorr,
     final DataRuleException d when d.code == 'invalid_margin' => invalidMargin,
+    final DataRuleException d when d.code == 'draft_stale' => errorDraftStale,
     final DataRuleException d => actionError(d.code),
     _ => actionError('$e'),
   };

@@ -2,9 +2,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 import 'package:zanjir_data/zanjir_data.dart';
+import 'package:zanjir_protocol/zanjir_protocol.dart';
 
 import 'auth.dart';
 import 'key_store.dart';
+import 'platform.dart';
 import 'profile.dart';
 
 /// `main.dart` va testlarda override qilinadi.
@@ -18,6 +20,19 @@ final bundledNormsProvider = Provider<Future<String> Function()>(
   (ref) =>
       () => rootBundle.loadString('assets/norms/v0.yaml'),
 );
+
+/// PDF shriftlari — UI bilan bir xil fayllar (`assets/fonts`, ADR-0010).
+final protocolFontsProvider = FutureProvider<ProtocolFonts>((ref) async {
+  Future<Uint8List> load(String name) async => (await rootBundle.load('assets/fonts/$name')).buffer.asUint8List();
+  return ProtocolFonts(
+    regular: await load('NotoSans-Regular.ttf'),
+    bold: await load('NotoSans-Bold.ttf'),
+    symbols: await load('NotoSansMath-Regular.ttf'),
+  );
+});
+
+final secureScreenProvider = Provider<SecureScreen>((ref) => const MethodChannelSecureScreen());
+final pdfActionsProvider = Provider<PdfActions>((ref) => const PrintingPdfActions());
 
 final prefsProvider = Provider((ref) => LocalPrefRepository(ref.watch(databaseProvider)));
 
@@ -129,6 +144,19 @@ final labSettingsProvider = FutureProvider(
 
 final organizationProvider = FutureProvider(
   (ref) async => (await ref.watch(repositoriesProvider.future)).settings.organization(),
+);
+
+final sessionProtocolsProvider = FutureProvider.family<List<(ProtocolRow, ProtocolStatus)>, String>((
+  ref,
+  sessionId,
+) async {
+  final repos = await ref.watch(repositoriesProvider.future);
+  return [for (final p in await repos.protocols.forSession(sessionId)) (p, await repos.protocols.status(p.id))];
+});
+
+/// Imzolash shartlari (izohsiz qoralama; izoh UI'da kiritiladi, imzolashda qoralama qayta tuziladi).
+final protocolDraftProvider = FutureProvider.family<ProtocolDraft, String>(
+  (ref, sessionId) async => (await ref.watch(repositoriesProvider.future)).protocols.prepare(sessionId: sessionId),
 );
 
 /// Faol normalar to'plami (sozlamalardagi versiya).

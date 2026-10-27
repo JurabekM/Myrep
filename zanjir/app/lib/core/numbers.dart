@@ -1,15 +1,10 @@
+export 'package:zanjir_protocol/zanjir_protocol.dart' show formatDecimal;
+
 /// Dala klaviaturasi uchun: vergul ham, nuqta ham qabul qilinadi ("0,84" = "0.84").
 double? parseDecimal(String? text) {
   final t = text?.trim().replaceAll(',', '.') ?? '';
   if (t.isEmpty || !RegExp(r'^-?\d+(\.\d+)?$').hasMatch(t)) return null;
   return double.tryParse(t);
-}
-
-/// Sonni o'nlik vergul bilan ko'rsatadi, ortiqcha nollarsiz: 0.84 → "0,84", 16.0 → "16".
-String formatDecimal(num value, {int maxFraction = 4}) {
-  var s = value.toStringAsFixed(maxFraction);
-  if (s.contains('.')) s = s.replaceFirst(RegExp(r'\.?0+$'), '');
-  return s.replaceAll('.', ',');
 }
 
 /// `YYYY-MM-DD` → UTC sana.

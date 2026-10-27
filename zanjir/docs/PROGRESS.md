@@ -1,7 +1,8 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 5-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq. Keyingi — 6-faza (PDF, QR, imzolash).
-**Oxirgi yangilanish:** 2026-10-26
+**Joriy holat:** 6-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq — 1-darvoza yopilmaguncha
+ilovada protokol imzolash bloklangan (`norms_not_reviewed`). Keyingi — 7-faza (server).
+**Oxirgi yangilanish:** 2026-10-27
 
 ## Fazalar
 
@@ -14,7 +15,7 @@
 | 3 | Kanonik JSON + hash-zanjir + imzo (Dart + Python) | ✅ Tayyor (umumiy vektorlar, RFC 8785/8032, har bir bayt/bit buzilishi aniqlanadi) | 2026-10-26 | 63bf546 |
 | 4 | Ilova ma'lumot qatlami (Drift) | ✅ Tayyor (`packages/zanjir_data`: migratsiya, repozitoriy, append-only, tashkilot testlari) | 2026-10-26 | c515956 |
 | 5 | Ilova UI, l10n uz/ru | ✅ Tayyor (19 widget/oqim testi; emulyator jobi qo'shildi, lokal tekshirilmagan) | 2026-10-26 | 35727eb |
-| 6 | Deterministik PDF, QR, imzolash | ⏳ | | |
+| 6 | Deterministik PDF, QR, imzolash | ✅ Tayyor (baytma-bayt bir xil PDF, 12 ta bloklash sharti testlangan, sxema v3) | 2026-10-27 | _commit_ |
 | 7 | Server: auth, RBAC, RLS, sync, `/v/{qr_token}` | ⏳ | | |
 | 8 | Sinxronlash integratsiyasi (E2E) | ⏳ | | |
 | 9 | Ajratish rejasi UI, tasdiqlash, STALE | ⏳ | | |
@@ -50,4 +51,7 @@ Muhandis uchun: M1–M10 (`docs/NORMS_REVIEW.md`). Ular hal bo'lguncha baholash 
 - GitHub Actions bu branch uchun hali ishga tushmadi (workflow default branch'da yo'q) — lokal tekshiruvlar yashil; PR ochilganda CI ishlaydi.
 - Android build (`flutter build apk/appbundle`) va emulyator integration testi bu konteynerda tekshirilmagan — Android SDK yo'q; 12-fazagacha CI'da tekshiriladi.
 - QR kodni kamera bilan skanerlash hali yo'q (kod qo'lda kiritiladi, deep link ishlaydi) — keyingi fazalarda.
+- Protokol QR havolasi hozircha `zanjir://app/v/<token>` (faqat ilova o'rnatilgan telefonda ochiladi); ochiq tekshirish sahifasi
+  `https://<domen>/v/<token>` — 7-faza (server) va 2-darvoza (domen), build'da `--dart-define=ZANJIR_VERIFY_BASE_URL`.
+- `printing` (ulashish/chop etish) va FLAG_SECURE Android'da tekshirilmagan (SDK yo'q).
 - Release darvozasi `needs_verification` holatidagi normalarni ham yiqitadi (ADR-0004) — muhandis tekshiruvidan keyin holat `source_seen` ga o'zgartiriladi.

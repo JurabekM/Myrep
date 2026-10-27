@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 import 'package:zanjir_data/zanjir_data.dart';
+import 'package:zanjir_protocol/zanjir_protocol.dart';
 
 final String v0Yaml = File('../../norms/v0.yaml').readAsStringSync();
 
@@ -90,3 +91,66 @@ class SmallSite {
     return SmallSite(site, grid, qf1, cab1, sock1, instrument);
   }
 }
+
+/// Faqat testlar uchun: v0 normalari boshqa versiya nomi va **soxta** tekshiruvchi bilan.
+/// `norms/v0.yaml` dagi `reviewed_by` ga tegilmaydi (CLAUDE.md, 11-qoida).
+final String reviewedTestYaml = v0Yaml
+    .replaceFirst('version: "0.1.0"', 'version: "0.1.1"')
+    .replaceFirst('reviewed_by: ""', 'reviewed_by: "TEST FIXTURE — haqiqiy tekshiruv emas"')
+    .replaceFirst('reviewed_at: ""', 'reviewed_at: "2026-10-01"');
+const reviewedTestVersion = '0.1.1';
+
+ProtocolFonts testFonts() {
+  const dir = '../../app/assets/fonts';
+  return ProtocolFonts(
+    regular: File('$dir/NotoSans-Regular.ttf').readAsBytesSync(),
+    bold: File('$dir/NotoSans-Bold.ttf').readAsBytesSync(),
+    symbols: File('$dir/NotoSansMath-Regular.ttf').readAsBytesSync(),
+  );
+}
+
+/// Imzolashga tayyor sessiya: litsenziya, tekshirilgan (test) normalar, yaroqli asbob, PASS o'lchov, yopilgan.
+class SignableSession {
+  SignableSession(this.site, this.session, this.measurement);
+  final SmallSite site;
+  final MeasurementSessionRow session;
+  final MeasurementRow measurement;
+
+  static Future<SignableSession> create(Org org, {bool close = true}) async {
+    final r = org.repos;
+    final s = await SmallSite.create(org);
+    await r.normSets.import(reviewedTestYaml);
+    await r.settings.updateLab(
+      byUserId: org.user.id,
+      name: 'Lab ${org.ctx.orgId.substring(0, 4)}',
+      licenseNo: 'EL-0042',
+      licenseValidUntil: DateTime.utc(2027, 12, 31),
+    );
+    final session = await r.sessions.start(
+      siteId: s.site.id,
+      kind: SessionKind.davriy,
+      engineerId: org.user.id,
+      ambientTempC: 18,
+    );
+    final m = await recordLoop(org, session.id, s, zs: 0.84);
+    return SignableSession(s, close ? await r.sessions.close(session.id) : session, m);
+  }
+}
+
+Future<MeasurementRow> recordLoop(
+  Org org,
+  String sessionId,
+  SmallSite s, {
+  required double zs,
+  String pair = 'L1-PE',
+  String? instrumentId,
+  String normSetVersion = reviewedTestVersion,
+}) => org.repos.measurements.record(
+  sessionId: sessionId,
+  nodeId: s.sock1.id,
+  type: MeasurementType.loopImpedance,
+  instrumentId: instrumentId ?? s.instrument.id,
+  values: {'pair': pair, 'zs_ohm': zs},
+  enteredVia: EnteredVia.manual,
+  normSetVersion: normSetVersion,
+);

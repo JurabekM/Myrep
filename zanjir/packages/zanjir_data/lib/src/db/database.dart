@@ -15,6 +15,12 @@ final OnUpgrade _steps = stepByStep(
     await m.createTable(schema.orgSetting);
     await m.createTable(schema.localPref);
   },
+  from2To3: (m, schema) async {
+    // 6-faza: imzolangan protokol hujjati (payload + PDF), append-only (ADR-0010).
+    await m.createTable(schema.protocolDocument);
+    await m.createTrigger(schema.protocolDocumentAppendOnlyUpdate);
+    await m.createTrigger(schema.protocolDocumentAppendOnlyDelete);
+  },
 );
 
 /// ZANJIR lokal bazasi — qurilmadagi asosiy manba (offline-first).
@@ -31,6 +37,7 @@ final OnUpgrade _steps = stepByStep(
     MeasurementSessions,
     Measurements,
     Protocols,
+    ProtocolDocuments,
     AuditEvents,
     IsolationPlans,
     NormSets,
@@ -43,7 +50,7 @@ class ZanjirDatabase extends _$ZanjirDatabase {
   ZanjirDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

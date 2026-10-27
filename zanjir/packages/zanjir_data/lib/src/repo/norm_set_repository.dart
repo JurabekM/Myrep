@@ -47,6 +47,9 @@ class NormSetRepository {
     return _parsed[row.sha256] ??= NormSet.fromYaml(row.yaml);
   }
 
+  /// Bazadagi yozuv (YAML, sha256, `reviewed_by`) — yo'q bo'lsa `null`.
+  Future<NormSetRow?> row(String version) => _byVersion(version);
+
   Future<NormSetRow?> _byVersion(String version) => (_db.select(
     _db.normSets,
   )..where((n) => n.version.equals(version) & n.orgId.equals(_ctx.orgId) & n.deleted.equals(false))).getSingleOrNull();

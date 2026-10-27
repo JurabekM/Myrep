@@ -72,6 +72,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // QR deep link: zanjir://app/n/<id>
       GoRoute(path: '/n/:nodeId', redirect: (_, s) => '/nodes/${s.pathParameters['nodeId']}'),
+      // Protokol QR havolasi: zanjir://app/v/<qr_token> (server domeni bo'lmaganda)
+      GoRoute(
+        path: '/v/:token',
+        builder: (_, s) => ProtocolVerifyScreen(token: s.pathParameters['token']!),
+      ),
       GoRoute(
         path: '/sessions/:sessionId',
         builder: (_, s) => SummaryScreen(sessionId: s.pathParameters['sessionId']!),

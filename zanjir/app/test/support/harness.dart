@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zanjir_app/app.dart';
 import 'package:zanjir_app/core/key_store.dart';
+import 'package:zanjir_app/core/platform.dart';
 import 'package:zanjir_app/core/profile.dart';
 import 'package:zanjir_app/core/providers.dart';
 import 'package:zanjir_app/router.dart';
@@ -15,6 +16,8 @@ import 'package:zanjir_data/zanjir_data.dart';
 
 /// Ilova bilan birga keladigan normalar (host testida ham, qurilmada ham asset orqali).
 Future<String> loadNorms() => rootBundle.loadString('assets/norms/v0.yaml');
+
+Future<Uint8List> assetBytes(String path) async => (await rootBundle.load(path)).buffer.asUint8List();
 
 /// Qat'iy soat: asbob qiyoslash muddati va vaqtlar deterministik.
 final DateTime testNow = DateTime.utc(2026, 10, 26, 8);
@@ -26,6 +29,8 @@ class TestEnv {
 
   final ZanjirDatabase db;
   final keys = MemoryDeviceKeyStore();
+  final secureScreen = FakeSecureScreen();
+  final pdfActions = FakePdfActions();
   Profile? profile;
 
   Widget app() => ProviderScope(
@@ -34,6 +39,8 @@ class TestEnv {
       databaseProvider.overrideWithValue(db),
       keyStoreProvider.overrideWithValue(keys),
       clockProvider.overrideWithValue(() => testNow),
+      secureScreenProvider.overrideWithValue(secureScreen),
+      pdfActionsProvider.overrideWithValue(pdfActions),
     ],
     child: const ZanjirApp(),
   );
@@ -154,3 +161,39 @@ Future<(TestEnv, DemoSite, String)> startWithSession(
 /// Dangasa `ListView` ichidagi elementni ko'rinadigan qilish (birinchi Scrollable bo'yicha).
 Future<void> reveal(WidgetTester tester, Finder f) =>
     tester.scrollUntilVisible(f, 200, scrollable: find.byType(Scrollable).first);
+
+/// FLAG_SECURE holati (Android kanali o'rniga).
+class FakeSecureScreen implements SecureScreen {
+  bool enabled = false;
+  final calls = <String>[];
+
+  @override
+  Future<void> enable() async {
+    enabled = true;
+    calls.add('enable');
+  }
+
+  @override
+  Future<void> disable() async {
+    enabled = false;
+    calls.add('disable');
+  }
+}
+
+class FakePdfActions implements PdfActions {
+  final shared = <(String, Uint8List)>[];
+  final printed = <String>[];
+
+  @override
+  Future<void> share(Uint8List pdf, String filename) async => shared.add((filename, pdf));
+
+  @override
+  Future<void> print(Uint8List pdf, String name) async => printed.add(name);
+}
+
+/// Faqat testlar uchun: v0 normalari `0.1.1` versiyasi va **soxta** tekshiruvchi bilan
+/// (`norms/v0.yaml` ga tegilmaydi — CLAUDE.md, 11-qoida).
+Future<String> reviewedTestNorms() async => (await loadNorms())
+    .replaceFirst('version: "0.1.0"', 'version: "0.1.1"')
+    .replaceFirst('reviewed_by: ""', 'reviewed_by: "TEST FIXTURE — haqiqiy tekshiruv emas"')
+    .replaceFirst('reviewed_at: ""', 'reviewed_at: "2026-10-01"');

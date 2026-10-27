@@ -20,7 +20,7 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
-            <!-- Tugun QR kodi: zanjir://app/n/<id> -->
+            <!-- QR havolalar: zanjir://app/n/<tugun id>, zanjir://app/v/<protokol qr_token> -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
