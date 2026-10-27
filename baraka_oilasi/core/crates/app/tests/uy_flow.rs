@@ -219,6 +219,8 @@ fn monthly_audit_counts_cash_left_and_excludes_sadaqa_from_havas() {
         is_ostentation: false,
         funded_by_debt: false,
         note: None,
+        self_investment: false,
+        learning_plan_id: None,
     };
     app.record_expense(&uy, exp("5 000 000", "category.rent"))
         .unwrap();

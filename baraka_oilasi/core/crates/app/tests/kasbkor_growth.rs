@@ -79,6 +79,8 @@ fn expense(app: &App, kk: &str, key: &str, amount: &str, on: &str) {
             is_ostentation: false,
             funded_by_debt: false,
             obligation_id: None,
+            self_investment: false,
+            learning_plan_id: None,
         },
     )
     .unwrap();

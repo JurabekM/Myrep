@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 729468809;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1728233340;
 
 // Section: executor
 
@@ -1425,6 +1425,57 @@ fn wire__crate__api__core__BarakaCore_check_agreement_impl(
                         api_agreement_type,
                         api_draft_json,
                     )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_check_course_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_check_course",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_input = <baraka_app::CourseAnswersInput>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok =
+                        crate::api::core::BarakaCore::check_course(&*api_that_guard, api_input)?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -3014,6 +3065,116 @@ fn wire__crate__api__core__BarakaCore_home_nudges_impl(
                     let api_that_guard = api_that_guard.unwrap();
                     let output_ok =
                         crate::api::core::BarakaCore::home_nudges(&*api_that_guard, api_space_id)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_hour_value_save_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_hour_value_save",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_input = <baraka_app::HourValueInput>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::hour_value_save(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_input,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_hour_value_suggest_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_hour_value_suggest",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_member_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::hour_value_suggest(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_member_id,
+                    )?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -7013,6 +7174,228 @@ fn wire__crate__api__core__BarakaCore_kk_zakat_history_impl(
         },
     )
 }
+fn wire__crate__api__core__BarakaCore_learning_overview_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_learning_overview",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_date = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::learning_overview(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_date,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_learning_plan_create_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_learning_plan_create",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_input = <baraka_app::LearningPlanInput>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::learning_plan_create(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_input,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_learning_plan_result_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_learning_plan_result",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_plan_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::learning_plan_result(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_plan_id,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_learning_plan_set_status_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_learning_plan_set_status",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_plan_id = <String>::sse_decode(&mut deserializer);
+            let api_status = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::learning_plan_set_status(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_plan_id,
+                        api_status,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__core__BarakaCore_loan_receipt_pdf_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -10318,6 +10701,118 @@ fn wire__crate__api__core__BarakaCore_status_impl(
         },
     )
 }
+fn wire__crate__api__core__BarakaCore_study_log_add_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_study_log_add",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_plan_id = <String>::sse_decode(&mut deserializer);
+            let api_input = <baraka_app::StudyLogInput>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::study_log_add(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_plan_id,
+                        api_input,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__core__BarakaCore_teaching_log_add_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BarakaCore_teaching_log_add",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BarakaCore>,
+            >>::sse_decode(&mut deserializer);
+            let api_space_id = <String>::sse_decode(&mut deserializer);
+            let api_input = <baraka_app::TeachingLogInput>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, baraka_app::AppError>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::core::BarakaCore::teaching_log_add(
+                        &*api_that_guard,
+                        api_space_id,
+                        api_input,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__core__BarakaCore_unlock_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -11563,6 +12058,18 @@ const _: fn() = || {
         let _: baraka_app::MoneyDto = ContributorDto.paid;
     }
     {
+        let CourseAnswersInput = None::<baraka_app::CourseAnswersInput>.unwrap();
+        let _: String = CourseAnswersInput.fast_rich;
+        let _: String = CourseAnswersInput.secret_formula;
+        let _: String = CourseAnswersInput.income_guarantee;
+        let _: String = CourseAnswersInput.syllabus;
+        let _: String = CourseAnswersInput.teacher_verifiable;
+        let _: String = CourseAnswersInput.urgency;
+        let _: String = CourseAnswersInput.recruitment;
+        let _: String = CourseAnswersInput.trial_or_refund;
+        let _: Option<String> = CourseAnswersInput.job_abroad;
+    }
+    {
         let DebtDto = None::<baraka_app::DebtDto>.unwrap();
         let _: String = DebtDto.id;
         let _: String = DebtDto.creditor_type;
@@ -11680,6 +12187,8 @@ const _: fn() = || {
         let _: Option<String> = ExpenseDto.necessity;
         let _: String = ExpenseDto.occurred_on;
         let _: bool = ExpenseDto.funded_by_debt;
+        let _: bool = ExpenseDto.self_investment;
+        let _: Option<String> = ExpenseDto.learning_plan_id;
     }
     {
         let ExportFileDto = None::<baraka_app::ExportFileDto>.unwrap();
@@ -11784,6 +12293,33 @@ const _: fn() = || {
         let _: String = HoldReviewInput.to_on;
         let _: String = HoldReviewInput.reason;
         let _: Vec<baraka_app::ReviewAckInput> = HoldReviewInput.acks;
+    }
+    {
+        let HourValueDto = None::<baraka_app::HourValueDto>.unwrap();
+        let _: String = HourValueDto.id;
+        let _: String = HourValueDto.member_id;
+        let _: baraka_app::MoneyDto = HourValueDto.income;
+        let _: String = HourValueDto.income_source;
+        let _: u32 = HourValueDto.minutes_per_day;
+        let _: u32 = HourValueDto.days;
+        let _: u32 = HourValueDto.monthly_minutes;
+        let _: baraka_app::MoneyDto = HourValueDto.hour_value;
+        let _: baraka_app::MoneyDto = HourValueDto.double_target;
+        let _: bool = HourValueDto.over_ceiling;
+        let _: String = HourValueDto.computed_on;
+    }
+    {
+        let HourValueInput = None::<baraka_app::HourValueInput>.unwrap();
+        let _: String = HourValueInput.member_id;
+        let _: Option<String> = HourValueInput.income;
+        let _: u32 = HourValueInput.minutes_per_day;
+        let _: u32 = HourValueInput.days;
+    }
+    {
+        let HourValueSuggestionDto = None::<baraka_app::HourValueSuggestionDto>.unwrap();
+        let _: String = HourValueSuggestionDto.member_id;
+        let _: Vec<baraka_app::MonthIncomeDto> = HourValueSuggestionDto.months;
+        let _: Option<baraka_app::MoneyDto> = HourValueSuggestionDto.average;
     }
     {
         let HouseholdDto = None::<baraka_app::HouseholdDto>.unwrap();
@@ -12795,6 +13331,62 @@ const _: fn() = || {
         let _: bool = KkZakatReceivableDto.hopeless;
     }
     {
+        let LearningMemberDto = None::<baraka_app::LearningMemberDto>.unwrap();
+        let _: String = LearningMemberDto.member_id;
+        let _: String = LearningMemberDto.display_name;
+        let _: Option<baraka_app::HourValueDto> = LearningMemberDto.hour_value;
+        let _: u32 = LearningMemberDto.active_plans;
+    }
+    {
+        let LearningOverviewDto = None::<baraka_app::LearningOverviewDto>.unwrap();
+        let _: String = LearningOverviewDto.period_start;
+        let _: String = LearningOverviewDto.period_end;
+        let _: Vec<baraka_app::LearningMemberDto> = LearningOverviewDto.members;
+        let _: Vec<baraka_app::LearningPlanDto> = LearningOverviewDto.plans;
+        let _: u32 = LearningOverviewDto.teaching_count;
+        let _: Vec<baraka_app::TeachingLogDto> = LearningOverviewDto.teaching;
+        let _: baraka_app::SelfInvestmentDto = LearningOverviewDto.self_investment;
+    }
+    {
+        let LearningPlanDto = None::<baraka_app::LearningPlanDto>.unwrap();
+        let _: String = LearningPlanDto.id;
+        let _: String = LearningPlanDto.member_id;
+        let _: String = LearningPlanDto.skill;
+        let _: Option<String> = LearningPlanDto.purpose;
+        let _: Vec<String> = LearningPlanDto.paths;
+        let _: Option<baraka_app::MoneyDto> = LearningPlanDto.budget;
+        let _: u32 = LearningPlanDto.weekly_minutes;
+        let _: String = LearningPlanDto.start_on;
+        let _: String = LearningPlanDto.review_on;
+        let _: String = LearningPlanDto.status;
+        let _: Option<baraka_app::MoneyDto> = LearningPlanDto.baseline_hour_value;
+        let _: Option<baraka_app::MoneyDto> = LearningPlanDto.result_hour_value;
+        let _: u32 = LearningPlanDto.study_minutes;
+        let _: baraka_app::MoneyDto = LearningPlanDto.spent;
+        let _: bool = LearningPlanDto.course_check_suggested;
+        let _: bool = LearningPlanDto.review_due;
+    }
+    {
+        let LearningPlanInput = None::<baraka_app::LearningPlanInput>.unwrap();
+        let _: String = LearningPlanInput.member_id;
+        let _: String = LearningPlanInput.skill;
+        let _: Option<String> = LearningPlanInput.purpose;
+        let _: Vec<String> = LearningPlanInput.paths;
+        let _: Option<String> = LearningPlanInput.budget;
+        let _: u32 = LearningPlanInput.weekly_minutes;
+        let _: Option<String> = LearningPlanInput.start_on;
+        let _: Option<String> = LearningPlanInput.review_on;
+    }
+    {
+        let LearningResultDto = None::<baraka_app::LearningResultDto>.unwrap();
+        let _: String = LearningResultDto.plan_id;
+        let _: Option<baraka_app::HourValueDto> = LearningResultDto.baseline;
+        let _: baraka_app::HourValueDto = LearningResultDto.current;
+        let _: Option<baraka_app::MoneyDto> = LearningResultDto.diff;
+        let _: Option<i32> = LearningResultDto.change_bp;
+        let _: Option<String> = LearningResultDto.change_percent;
+    }
+    {
         let LoanReceiptInput = None::<baraka_app::LoanReceiptInput>.unwrap();
         let _: String = LoanReceiptInput.lender;
         let _: String = LoanReceiptInput.borrower;
@@ -13224,6 +13816,12 @@ const _: fn() = || {
         let _: String = MoneyDto.plain;
     }
     {
+        let MonthIncomeDto = None::<baraka_app::MonthIncomeDto>.unwrap();
+        let _: String = MonthIncomeDto.period_start;
+        let _: String = MonthIncomeDto.period_end;
+        let _: baraka_app::MoneyDto = MonthIncomeDto.total;
+    }
+    {
         let MonthlySummaryDto = None::<baraka_app::MonthlySummaryDto>.unwrap();
         let _: String = MonthlySummaryDto.period_start;
         let _: String = MonthlySummaryDto.period_end;
@@ -13236,6 +13834,8 @@ const _: fn() = || {
         let _: baraka_app::MoneyDto = MonthlySummaryDto.balance_delta;
         let _: baraka_app::MoneyDto = MonthlySummaryDto.unexplained_gap;
         let _: baraka_app::MoneyDto = MonthlySummaryDto.month_result;
+        let _: baraka_app::MoneyDto = MonthlySummaryDto.havas_for_limit;
+        let _: baraka_app::SelfInvestmentDto = MonthlySummaryDto.self_investment;
     }
     {
         let NecessityTotalsDto = None::<baraka_app::NecessityTotalsDto>.unwrap();
@@ -13303,6 +13903,8 @@ const _: fn() = || {
         let _: bool = NewExpenseInput.is_ostentation;
         let _: bool = NewExpenseInput.funded_by_debt;
         let _: Option<String> = NewExpenseInput.note;
+        let _: bool = NewExpenseInput.self_investment;
+        let _: Option<String> = NewExpenseInput.learning_plan_id;
     }
     {
         let NewGoalContributionInput = None::<baraka_app::NewGoalContributionInput>.unwrap();
@@ -13651,6 +14253,13 @@ const _: fn() = || {
         let _: baraka_app::MoneyDto = ScheduleRowDto.balance;
     }
     {
+        let SelfInvestmentDto = None::<baraka_app::SelfInvestmentDto>.unwrap();
+        let _: baraka_app::MoneyDto = SelfInvestmentDto.total;
+        let _: baraka_app::MoneyDto = SelfInvestmentDto.income;
+        let _: Option<i32> = SelfInvestmentDto.share_bp;
+        let _: Option<String> = SelfInvestmentDto.share_percent;
+    }
+    {
         let SellItemInput = None::<baraka_app::SellItemInput>.unwrap();
         let _: String = SellItemInput.price;
         let _: Option<String> = SellItemInput.date;
@@ -13735,6 +14344,29 @@ const _: fn() = || {
         let _: u32 = StreakDto.longest_weeks;
         let _: u32 = StreakDto.total_weeks;
         let _: bool = StreakDto.current_week_done;
+    }
+    {
+        let StudyLogInput = None::<baraka_app::StudyLogInput>.unwrap();
+        let _: Option<String> = StudyLogInput.occurred_on;
+        let _: u32 = StudyLogInput.minutes;
+        let _: Option<String> = StudyLogInput.note;
+    }
+    {
+        let TeachingLogDto = None::<baraka_app::TeachingLogDto>.unwrap();
+        let _: String = TeachingLogDto.id;
+        let _: String = TeachingLogDto.member_id;
+        let _: String = TeachingLogDto.occurred_on;
+        let _: Option<String> = TeachingLogDto.learner;
+        let _: String = TeachingLogDto.topic;
+        let _: Option<u32> = TeachingLogDto.minutes;
+    }
+    {
+        let TeachingLogInput = None::<baraka_app::TeachingLogInput>.unwrap();
+        let _: String = TeachingLogInput.member_id;
+        let _: Option<String> = TeachingLogInput.occurred_on;
+        let _: Option<String> = TeachingLogInput.learner;
+        let _: String = TeachingLogInput.topic;
+        let _: Option<u32> = TeachingLogInput.minutes;
     }
     {
         let TimelinePointDto = None::<baraka_app::TimelinePointDto>.unwrap();
@@ -14404,6 +15036,32 @@ impl SseDecode for baraka_app::ContributorDto {
     }
 }
 
+impl SseDecode for baraka_app::CourseAnswersInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fastRich = <String>::sse_decode(deserializer);
+        let mut var_secretFormula = <String>::sse_decode(deserializer);
+        let mut var_incomeGuarantee = <String>::sse_decode(deserializer);
+        let mut var_syllabus = <String>::sse_decode(deserializer);
+        let mut var_teacherVerifiable = <String>::sse_decode(deserializer);
+        let mut var_urgency = <String>::sse_decode(deserializer);
+        let mut var_recruitment = <String>::sse_decode(deserializer);
+        let mut var_trialOrRefund = <String>::sse_decode(deserializer);
+        let mut var_jobAbroad = <Option<String>>::sse_decode(deserializer);
+        return baraka_app::CourseAnswersInput {
+            fast_rich: var_fastRich,
+            secret_formula: var_secretFormula,
+            income_guarantee: var_incomeGuarantee,
+            syllabus: var_syllabus,
+            teacher_verifiable: var_teacherVerifiable,
+            urgency: var_urgency,
+            recruitment: var_recruitment,
+            trial_or_refund: var_trialOrRefund,
+            job_abroad: var_jobAbroad,
+        };
+    }
+}
+
 impl SseDecode for baraka_app::DebtDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -14655,6 +15313,8 @@ impl SseDecode for baraka_app::ExpenseDto {
         let mut var_necessity = <Option<String>>::sse_decode(deserializer);
         let mut var_occurredOn = <String>::sse_decode(deserializer);
         let mut var_fundedByDebt = <bool>::sse_decode(deserializer);
+        let mut var_selfInvestment = <bool>::sse_decode(deserializer);
+        let mut var_learningPlanId = <Option<String>>::sse_decode(deserializer);
         return baraka_app::ExpenseDto {
             id: var_id,
             amount: var_amount,
@@ -14662,6 +15322,8 @@ impl SseDecode for baraka_app::ExpenseDto {
             necessity: var_necessity,
             occurred_on: var_occurredOn,
             funded_by_debt: var_fundedByDebt,
+            self_investment: var_selfInvestment,
+            learning_plan_id: var_learningPlanId,
         };
     }
 }
@@ -14895,6 +15557,66 @@ impl SseDecode for baraka_app::HoldReviewInput {
             to_on: var_toOn,
             reason: var_reason,
             acks: var_acks,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::HourValueDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_income = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_incomeSource = <String>::sse_decode(deserializer);
+        let mut var_minutesPerDay = <u32>::sse_decode(deserializer);
+        let mut var_days = <u32>::sse_decode(deserializer);
+        let mut var_monthlyMinutes = <u32>::sse_decode(deserializer);
+        let mut var_hourValue = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_doubleTarget = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_overCeiling = <bool>::sse_decode(deserializer);
+        let mut var_computedOn = <String>::sse_decode(deserializer);
+        return baraka_app::HourValueDto {
+            id: var_id,
+            member_id: var_memberId,
+            income: var_income,
+            income_source: var_incomeSource,
+            minutes_per_day: var_minutesPerDay,
+            days: var_days,
+            monthly_minutes: var_monthlyMinutes,
+            hour_value: var_hourValue,
+            double_target: var_doubleTarget,
+            over_ceiling: var_overCeiling,
+            computed_on: var_computedOn,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::HourValueInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_income = <Option<String>>::sse_decode(deserializer);
+        let mut var_minutesPerDay = <u32>::sse_decode(deserializer);
+        let mut var_days = <u32>::sse_decode(deserializer);
+        return baraka_app::HourValueInput {
+            member_id: var_memberId,
+            income: var_income,
+            minutes_per_day: var_minutesPerDay,
+            days: var_days,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::HourValueSuggestionDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_months = <Vec<baraka_app::MonthIncomeDto>>::sse_decode(deserializer);
+        let mut var_average = <Option<baraka_app::MoneyDto>>::sse_decode(deserializer);
+        return baraka_app::HourValueSuggestionDto {
+            member_id: var_memberId,
+            months: var_months,
+            average: var_average,
         };
     }
 }
@@ -17120,6 +17842,128 @@ impl SseDecode for baraka_app::KkZakatReceivableDto {
     }
 }
 
+impl SseDecode for baraka_app::LearningMemberDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_displayName = <String>::sse_decode(deserializer);
+        let mut var_hourValue = <Option<baraka_app::HourValueDto>>::sse_decode(deserializer);
+        let mut var_activePlans = <u32>::sse_decode(deserializer);
+        return baraka_app::LearningMemberDto {
+            member_id: var_memberId,
+            display_name: var_displayName,
+            hour_value: var_hourValue,
+            active_plans: var_activePlans,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::LearningOverviewDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_periodStart = <String>::sse_decode(deserializer);
+        let mut var_periodEnd = <String>::sse_decode(deserializer);
+        let mut var_members = <Vec<baraka_app::LearningMemberDto>>::sse_decode(deserializer);
+        let mut var_plans = <Vec<baraka_app::LearningPlanDto>>::sse_decode(deserializer);
+        let mut var_teachingCount = <u32>::sse_decode(deserializer);
+        let mut var_teaching = <Vec<baraka_app::TeachingLogDto>>::sse_decode(deserializer);
+        let mut var_selfInvestment = <baraka_app::SelfInvestmentDto>::sse_decode(deserializer);
+        return baraka_app::LearningOverviewDto {
+            period_start: var_periodStart,
+            period_end: var_periodEnd,
+            members: var_members,
+            plans: var_plans,
+            teaching_count: var_teachingCount,
+            teaching: var_teaching,
+            self_investment: var_selfInvestment,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::LearningPlanDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_skill = <String>::sse_decode(deserializer);
+        let mut var_purpose = <Option<String>>::sse_decode(deserializer);
+        let mut var_paths = <Vec<String>>::sse_decode(deserializer);
+        let mut var_budget = <Option<baraka_app::MoneyDto>>::sse_decode(deserializer);
+        let mut var_weeklyMinutes = <u32>::sse_decode(deserializer);
+        let mut var_startOn = <String>::sse_decode(deserializer);
+        let mut var_reviewOn = <String>::sse_decode(deserializer);
+        let mut var_status = <String>::sse_decode(deserializer);
+        let mut var_baselineHourValue = <Option<baraka_app::MoneyDto>>::sse_decode(deserializer);
+        let mut var_resultHourValue = <Option<baraka_app::MoneyDto>>::sse_decode(deserializer);
+        let mut var_studyMinutes = <u32>::sse_decode(deserializer);
+        let mut var_spent = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_courseCheckSuggested = <bool>::sse_decode(deserializer);
+        let mut var_reviewDue = <bool>::sse_decode(deserializer);
+        return baraka_app::LearningPlanDto {
+            id: var_id,
+            member_id: var_memberId,
+            skill: var_skill,
+            purpose: var_purpose,
+            paths: var_paths,
+            budget: var_budget,
+            weekly_minutes: var_weeklyMinutes,
+            start_on: var_startOn,
+            review_on: var_reviewOn,
+            status: var_status,
+            baseline_hour_value: var_baselineHourValue,
+            result_hour_value: var_resultHourValue,
+            study_minutes: var_studyMinutes,
+            spent: var_spent,
+            course_check_suggested: var_courseCheckSuggested,
+            review_due: var_reviewDue,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::LearningPlanInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_skill = <String>::sse_decode(deserializer);
+        let mut var_purpose = <Option<String>>::sse_decode(deserializer);
+        let mut var_paths = <Vec<String>>::sse_decode(deserializer);
+        let mut var_budget = <Option<String>>::sse_decode(deserializer);
+        let mut var_weeklyMinutes = <u32>::sse_decode(deserializer);
+        let mut var_startOn = <Option<String>>::sse_decode(deserializer);
+        let mut var_reviewOn = <Option<String>>::sse_decode(deserializer);
+        return baraka_app::LearningPlanInput {
+            member_id: var_memberId,
+            skill: var_skill,
+            purpose: var_purpose,
+            paths: var_paths,
+            budget: var_budget,
+            weekly_minutes: var_weeklyMinutes,
+            start_on: var_startOn,
+            review_on: var_reviewOn,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::LearningResultDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_planId = <String>::sse_decode(deserializer);
+        let mut var_baseline = <Option<baraka_app::HourValueDto>>::sse_decode(deserializer);
+        let mut var_current = <baraka_app::HourValueDto>::sse_decode(deserializer);
+        let mut var_diff = <Option<baraka_app::MoneyDto>>::sse_decode(deserializer);
+        let mut var_changeBp = <Option<i32>>::sse_decode(deserializer);
+        let mut var_changePercent = <Option<String>>::sse_decode(deserializer);
+        return baraka_app::LearningResultDto {
+            plan_id: var_planId,
+            baseline: var_baseline,
+            current: var_current,
+            diff: var_diff,
+            change_bp: var_changeBp,
+            change_percent: var_changePercent,
+        };
+    }
+}
+
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -17830,6 +18674,30 @@ impl SseDecode for Vec<baraka_app::KkZakatReceivableDto> {
     }
 }
 
+impl SseDecode for Vec<baraka_app::LearningMemberDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<baraka_app::LearningMemberDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<baraka_app::LearningPlanDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<baraka_app::LearningPlanDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<baraka_app::MemberDto> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -17993,6 +18861,18 @@ impl SseDecode for Vec<baraka_app::MoneyDto> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<baraka_app::MoneyDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<baraka_app::MonthIncomeDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<baraka_app::MonthIncomeDto>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -18295,6 +19175,18 @@ impl SseDecode for Vec<baraka_app::SpaceDto> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<baraka_app::SpaceDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<baraka_app::TeachingLogDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<baraka_app::TeachingLogDto>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -19337,6 +20229,20 @@ impl SseDecode for baraka_app::MoneyDto {
     }
 }
 
+impl SseDecode for baraka_app::MonthIncomeDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_periodStart = <String>::sse_decode(deserializer);
+        let mut var_periodEnd = <String>::sse_decode(deserializer);
+        let mut var_total = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        return baraka_app::MonthIncomeDto {
+            period_start: var_periodStart,
+            period_end: var_periodEnd,
+            total: var_total,
+        };
+    }
+}
+
 impl SseDecode for baraka_app::MonthlySummaryDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -19351,6 +20257,8 @@ impl SseDecode for baraka_app::MonthlySummaryDto {
         let mut var_balanceDelta = <baraka_app::MoneyDto>::sse_decode(deserializer);
         let mut var_unexplainedGap = <baraka_app::MoneyDto>::sse_decode(deserializer);
         let mut var_monthResult = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_havasForLimit = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_selfInvestment = <baraka_app::SelfInvestmentDto>::sse_decode(deserializer);
         return baraka_app::MonthlySummaryDto {
             period_start: var_periodStart,
             period_end: var_periodEnd,
@@ -19363,6 +20271,8 @@ impl SseDecode for baraka_app::MonthlySummaryDto {
             balance_delta: var_balanceDelta,
             unexplained_gap: var_unexplainedGap,
             month_result: var_monthResult,
+            havas_for_limit: var_havasForLimit,
+            self_investment: var_selfInvestment,
         };
     }
 }
@@ -19499,6 +20409,8 @@ impl SseDecode for baraka_app::NewExpenseInput {
         let mut var_isOstentation = <bool>::sse_decode(deserializer);
         let mut var_fundedByDebt = <bool>::sse_decode(deserializer);
         let mut var_note = <Option<String>>::sse_decode(deserializer);
+        let mut var_selfInvestment = <bool>::sse_decode(deserializer);
+        let mut var_learningPlanId = <Option<String>>::sse_decode(deserializer);
         return baraka_app::NewExpenseInput {
             amount: var_amount,
             category_id: var_categoryId,
@@ -19511,6 +20423,8 @@ impl SseDecode for baraka_app::NewExpenseInput {
             is_ostentation: var_isOstentation,
             funded_by_debt: var_fundedByDebt,
             note: var_note,
+            self_investment: var_selfInvestment,
+            learning_plan_id: var_learningPlanId,
         };
     }
 }
@@ -19786,6 +20700,17 @@ impl SseDecode for Option<baraka_app::FamilyAgreementDto> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<baraka_app::FamilyAgreementDto>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<baraka_app::HourValueDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<baraka_app::HourValueDto>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -20607,6 +21532,22 @@ impl SseDecode for baraka_app::ScheduleRowDto {
     }
 }
 
+impl SseDecode for baraka_app::SelfInvestmentDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_total = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_income = <baraka_app::MoneyDto>::sse_decode(deserializer);
+        let mut var_shareBp = <Option<i32>>::sse_decode(deserializer);
+        let mut var_sharePercent = <Option<String>>::sse_decode(deserializer);
+        return baraka_app::SelfInvestmentDto {
+            total: var_total,
+            income: var_income,
+            share_bp: var_shareBp,
+            share_percent: var_sharePercent,
+        };
+    }
+}
+
 impl SseDecode for baraka_app::SellItemInput {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -20805,6 +21746,58 @@ impl SseDecode for baraka_app::StreakDto {
     }
 }
 
+impl SseDecode for baraka_app::StudyLogInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_occurredOn = <Option<String>>::sse_decode(deserializer);
+        let mut var_minutes = <u32>::sse_decode(deserializer);
+        let mut var_note = <Option<String>>::sse_decode(deserializer);
+        return baraka_app::StudyLogInput {
+            occurred_on: var_occurredOn,
+            minutes: var_minutes,
+            note: var_note,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::TeachingLogDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_occurredOn = <String>::sse_decode(deserializer);
+        let mut var_learner = <Option<String>>::sse_decode(deserializer);
+        let mut var_topic = <String>::sse_decode(deserializer);
+        let mut var_minutes = <Option<u32>>::sse_decode(deserializer);
+        return baraka_app::TeachingLogDto {
+            id: var_id,
+            member_id: var_memberId,
+            occurred_on: var_occurredOn,
+            learner: var_learner,
+            topic: var_topic,
+            minutes: var_minutes,
+        };
+    }
+}
+
+impl SseDecode for baraka_app::TeachingLogInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_memberId = <String>::sse_decode(deserializer);
+        let mut var_occurredOn = <Option<String>>::sse_decode(deserializer);
+        let mut var_learner = <Option<String>>::sse_decode(deserializer);
+        let mut var_topic = <String>::sse_decode(deserializer);
+        let mut var_minutes = <Option<u32>>::sse_decode(deserializer);
+        return baraka_app::TeachingLogInput {
+            member_id: var_memberId,
+            occurred_on: var_occurredOn,
+            learner: var_learner,
+            topic: var_topic,
+            minutes: var_minutes,
+        };
+    }
+}
+
 impl SseDecode for baraka_app::TimelinePointDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -20863,6 +21856,7 @@ impl SseDecode for baraka_app::Topic {
             16 => baraka_app::Topic::Sync,
             17 => baraka_app::Topic::Kasbkor,
             18 => baraka_app::Topic::Musofir,
+            19 => baraka_app::Topic::Learning,
             _ => unreachable!("Invalid variant for Topic: {}", inner),
         };
     }
@@ -21264,871 +22258,919 @@ fn pde_ffi_dispatcher_primary_impl(
             data_len,
         ),
         26 => {
+            wire__crate__api__core__BarakaCore_check_course_impl(port, ptr, rust_vec_len, data_len)
+        }
+        27 => {
             wire__crate__api__core__BarakaCore_check_offer_impl(port, ptr, rust_vec_len, data_len)
         }
-        27 => wire__crate__api__core__BarakaCore_close_partnership_impl(
+        28 => wire__crate__api__core__BarakaCore_close_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        28 => wire__crate__api__core__BarakaCore_close_venture_period_impl(
+        29 => wire__crate__api__core__BarakaCore_close_venture_period_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        29 => wire__crate__api__core__BarakaCore_confirm_ceremony_impl(
+        30 => wire__crate__api__core__BarakaCore_confirm_ceremony_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        30 => wire__crate__api__core__BarakaCore_confirm_family_agreement_impl(
+        31 => wire__crate__api__core__BarakaCore_confirm_family_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        31 => wire__crate__api__core__BarakaCore_consent_partnership_impl(
+        32 => wire__crate__api__core__BarakaCore_consent_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        32 => wire__crate__api__core__BarakaCore_create_ceremony_impl(
+        33 => wire__crate__api__core__BarakaCore_create_ceremony_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        33 => wire__crate__api__core__BarakaCore_create_family_agreement_impl(
+        34 => wire__crate__api__core__BarakaCore_create_family_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        34 => wire__crate__api__core__BarakaCore_create_partnership_impl(
+        35 => wire__crate__api__core__BarakaCore_create_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        35 => wire__crate__api__core__BarakaCore_create_venture_idea_impl(
+        36 => wire__crate__api__core__BarakaCore_create_venture_idea_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        36 => wire__crate__api__core__BarakaCore_debts_overview_impl(
+        37 => wire__crate__api__core__BarakaCore_debts_overview_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        37 => wire__crate__api__core__BarakaCore_delete_ceremony_impl(
+        38 => wire__crate__api__core__BarakaCore_delete_ceremony_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        38 => wire__crate__api__core__BarakaCore_delete_ceremony_line_impl(
+        39 => wire__crate__api__core__BarakaCore_delete_ceremony_line_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        39 => wire__crate__api__core__BarakaCore_delete_family_agreement_impl(
+        40 => wire__crate__api__core__BarakaCore_delete_family_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => {
+        41 => {
             wire__crate__api__core__BarakaCore_delete_goal_impl(port, ptr, rust_vec_len, data_len)
         }
-        41 => wire__crate__api__core__BarakaCore_delete_partnership_impl(
+        42 => wire__crate__api__core__BarakaCore_delete_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        42 => wire__crate__api__core__BarakaCore_delete_scenario_impl(
+        43 => wire__crate__api__core__BarakaCore_delete_scenario_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        43 => {
+        44 => {
             wire__crate__api__core__BarakaCore_delete_skill_impl(port, ptr, rust_vec_len, data_len)
         }
-        44 => wire__crate__api__core__BarakaCore_delete_venture_idea_impl(
+        45 => wire__crate__api__core__BarakaCore_delete_venture_idea_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        45 => wire__crate__api__core__BarakaCore_deposit_to_vault_impl(
+        46 => wire__crate__api__core__BarakaCore_deposit_to_vault_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        46 => {
+        47 => {
             wire__crate__api__core__BarakaCore_device_role_impl(port, ptr, rust_vec_len, data_len)
         }
-        47 => wire__crate__api__core__BarakaCore_devices_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__api__core__BarakaCore_dispute_folder_pdf_impl(
+        48 => wire__crate__api__core__BarakaCore_devices_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__api__core__BarakaCore_dispute_folder_pdf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        49 => wire__crate__api__core__BarakaCore_draft_partnership_from_idea_impl(
+        50 => wire__crate__api__core__BarakaCore_draft_partnership_from_idea_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        50 => {
+        51 => {
             wire__crate__api__core__BarakaCore_export_baraka_impl(port, ptr, rust_vec_len, data_len)
         }
-        51 => wire__crate__api__core__BarakaCore_family_agreements_impl(
+        52 => wire__crate__api__core__BarakaCore_family_agreements_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        52 => wire__crate__api__core__BarakaCore_governance_impl(port, ptr, rust_vec_len, data_len),
-        53 => {
+        53 => wire__crate__api__core__BarakaCore_governance_impl(port, ptr, rust_vec_len, data_len),
+        54 => {
             wire__crate__api__core__BarakaCore_hold_review_impl(port, ptr, rust_vec_len, data_len)
         }
-        54 => {
+        55 => {
             wire__crate__api__core__BarakaCore_home_nudges_impl(port, ptr, rust_vec_len, data_len)
         }
-        55 => wire__crate__api__core__BarakaCore_household_impl(port, ptr, rust_vec_len, data_len),
-        56 => wire__crate__api__core__BarakaCore_inspect_baraka_impl(
+        56 => wire__crate__api__core__BarakaCore_hour_value_save_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        57 => wire__crate__api__core__BarakaCore_issue_loan_receipt_impl(
+        57 => wire__crate__api__core__BarakaCore_hour_value_suggest_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        58 => wire__crate__api__core__BarakaCore_join_household_impl(
+        58 => wire__crate__api__core__BarakaCore_household_impl(port, ptr, rust_vec_len, data_len),
+        59 => wire__crate__api__core__BarakaCore_inspect_baraka_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        59 => wire__crate__api__core__BarakaCore_kk_add_credit_sale_impl(
+        60 => wire__crate__api__core__BarakaCore_issue_loan_receipt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        60 => wire__crate__api__core__BarakaCore_kk_add_customer_impl(
+        61 => wire__crate__api__core__BarakaCore_join_household_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        61 => wire__crate__api__core__BarakaCore_kk_add_employee_impl(
+        62 => wire__crate__api__core__BarakaCore_kk_add_credit_sale_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        62 => wire__crate__api__core__BarakaCore_kk_add_equipment_impl(
+        63 => wire__crate__api__core__BarakaCore_kk_add_customer_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        63 => wire__crate__api__core__BarakaCore_kk_add_family_labor_impl(
+        64 => wire__crate__api__core__BarakaCore_kk_add_employee_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        64 => {
-            wire__crate__api__core__BarakaCore_kk_add_item_impl(port, ptr, rust_vec_len, data_len)
-        }
-        65 => wire__crate__api__core__BarakaCore_kk_add_supplier_impl(
+        65 => wire__crate__api__core__BarakaCore_kk_add_equipment_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        66 => wire__crate__api__core__BarakaCore_kk_agreement_pdf_impl(
+        66 => wire__crate__api__core__BarakaCore_kk_add_family_labor_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
         67 => {
+            wire__crate__api__core__BarakaCore_kk_add_item_impl(port, ptr, rust_vec_len, data_len)
+        }
+        68 => wire__crate__api__core__BarakaCore_kk_add_supplier_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        69 => wire__crate__api__core__BarakaCore_kk_agreement_pdf_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        70 => {
             wire__crate__api__core__BarakaCore_kk_cash_days_impl(port, ptr, rust_vec_len, data_len)
         }
-        68 => {
+        71 => {
             wire__crate__api__core__BarakaCore_kk_cash_draft_impl(port, ptr, rust_vec_len, data_len)
         }
-        69 => wire__crate__api__core__BarakaCore_kk_catalog_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__api__core__BarakaCore_kk_close_cash_day_impl(
+        72 => wire__crate__api__core__BarakaCore_kk_catalog_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__api__core__BarakaCore_kk_close_cash_day_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        71 => wire__crate__api__core__BarakaCore_kk_close_draft_impl(
+        74 => wire__crate__api__core__BarakaCore_kk_close_draft_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        72 => wire__crate__api__core__BarakaCore_kk_close_month_impl(
+        75 => wire__crate__api__core__BarakaCore_kk_close_month_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        73 => wire__crate__api__core__BarakaCore_kk_close_rules_impl(
+        76 => wire__crate__api__core__BarakaCore_kk_close_rules_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        74 => wire__crate__api__core__BarakaCore_kk_close_shift_impl(
+        77 => wire__crate__api__core__BarakaCore_kk_close_shift_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        75 => wire__crate__api__core__BarakaCore_kk_credit_book_impl(
+        78 => wire__crate__api__core__BarakaCore_kk_credit_book_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        76 => wire__crate__api__core__BarakaCore_kk_credit_extend_impl(
+        79 => wire__crate__api__core__BarakaCore_kk_credit_extend_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        77 => wire__crate__api__core__BarakaCore_kk_credit_forgive_impl(
+        80 => wire__crate__api__core__BarakaCore_kk_credit_forgive_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        78 => wire__crate__api__core__BarakaCore_kk_credit_mark_impl(
+        81 => wire__crate__api__core__BarakaCore_kk_credit_mark_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        79 => wire__crate__api__core__BarakaCore_kk_credit_payment_impl(
+        82 => wire__crate__api__core__BarakaCore_kk_credit_payment_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        80 => {
+        83 => {
             wire__crate__api__core__BarakaCore_kk_customers_impl(port, ptr, rust_vec_len, data_len)
         }
-        81 => wire__crate__api__core__BarakaCore_kk_delete_agreement_impl(
+        84 => wire__crate__api__core__BarakaCore_kk_delete_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        82 => wire__crate__api__core__BarakaCore_kk_delete_credit_sale_impl(
+        85 => wire__crate__api__core__BarakaCore_kk_delete_credit_sale_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        83 => wire__crate__api__core__BarakaCore_kk_delete_equipment_impl(
+        86 => wire__crate__api__core__BarakaCore_kk_delete_equipment_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        84 => wire__crate__api__core__BarakaCore_kk_delete_family_labor_impl(
+        87 => wire__crate__api__core__BarakaCore_kk_delete_family_labor_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        85 => wire__crate__api__core__BarakaCore_kk_delete_item_impl(
+        88 => wire__crate__api__core__BarakaCore_kk_delete_item_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        86 => wire__crate__api__core__BarakaCore_kk_dispose_equipment_impl(
+        89 => wire__crate__api__core__BarakaCore_kk_dispose_equipment_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        87 => wire__crate__api__core__BarakaCore_kk_end_agreement_impl(
+        90 => wire__crate__api__core__BarakaCore_kk_end_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        88 => {
+        91 => {
             wire__crate__api__core__BarakaCore_kk_equipment_impl(port, ptr, rust_vec_len, data_len)
         }
-        89 => wire__crate__api__core__BarakaCore_kk_family_labor_impl(
+        92 => wire__crate__api__core__BarakaCore_kk_family_labor_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        90 => wire__crate__api__core__BarakaCore_kk_gate_impl(port, ptr, rust_vec_len, data_len),
-        91 => wire__crate__api__core__BarakaCore_kk_growth_settings_impl(
+        93 => wire__crate__api__core__BarakaCore_kk_gate_impl(port, ptr, rust_vec_len, data_len),
+        94 => wire__crate__api__core__BarakaCore_kk_growth_settings_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        92 => {
+        95 => {
             wire__crate__api__core__BarakaCore_kk_inventory_impl(port, ptr, rust_vec_len, data_len)
         }
-        93 => wire__crate__api__core__BarakaCore_kk_month_close_pdf_impl(
+        96 => wire__crate__api__core__BarakaCore_kk_month_close_pdf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        94 => wire__crate__api__core__BarakaCore_kk_month_closes_impl(
+        97 => wire__crate__api__core__BarakaCore_kk_month_closes_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        95 => wire__crate__api__core__BarakaCore_kk_order_quote_impl(
+        98 => wire__crate__api__core__BarakaCore_kk_order_quote_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        96 => {
+        99 => {
             wire__crate__api__core__BarakaCore_kk_overview_impl(port, ptr, rust_vec_len, data_len)
         }
-        97 => wire__crate__api__core__BarakaCore_kk_pay_owner_salary_impl(
+        100 => wire__crate__api__core__BarakaCore_kk_pay_owner_salary_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        98 => wire__crate__api__core__BarakaCore_kk_payslip_pdf_impl(
+        101 => wire__crate__api__core__BarakaCore_kk_payslip_pdf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        99 => wire__crate__api__core__BarakaCore_kk_record_move_impl(
+        102 => wire__crate__api__core__BarakaCore_kk_record_move_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        100 => wire__crate__api__core__BarakaCore_kk_record_sale_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        101 => {
-            wire__crate__api__core__BarakaCore_kk_save_zakat_impl(port, ptr, rust_vec_len, data_len)
-        }
-        102 => wire__crate__api__core__BarakaCore_kk_scale_impl(port, ptr, rust_vec_len, data_len),
-        103 => wire__crate__api__core__BarakaCore_kk_scale_check_impl(
+        103 => wire__crate__api__core__BarakaCore_kk_record_sale_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
         104 => {
+            wire__crate__api__core__BarakaCore_kk_save_zakat_impl(port, ptr, rust_vec_len, data_len)
+        }
+        105 => wire__crate__api__core__BarakaCore_kk_scale_impl(port, ptr, rust_vec_len, data_len),
+        106 => wire__crate__api__core__BarakaCore_kk_scale_check_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        107 => {
             wire__crate__api__core__BarakaCore_kk_seller_day_impl(port, ptr, rust_vec_len, data_len)
         }
-        105 => wire__crate__api__core__BarakaCore_kk_seller_sale_impl(
+        108 => wire__crate__api__core__BarakaCore_kk_seller_sale_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        106 => wire__crate__api__core__BarakaCore_kk_set_close_rules_impl(
+        109 => wire__crate__api__core__BarakaCore_kk_set_close_rules_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        107 => wire__crate__api__core__BarakaCore_kk_set_growth_settings_impl(
+        110 => wire__crate__api__core__BarakaCore_kk_set_growth_settings_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        108 => wire__crate__api__core__BarakaCore_kk_set_owner_labor_impl(
+        111 => wire__crate__api__core__BarakaCore_kk_set_owner_labor_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        109 => wire__crate__api__core__BarakaCore_kk_set_owner_salary_impl(
+        112 => wire__crate__api__core__BarakaCore_kk_set_owner_salary_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        110 => wire__crate__api__core__BarakaCore_kk_shift_draft_impl(
+        113 => wire__crate__api__core__BarakaCore_kk_shift_draft_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        111 => wire__crate__api__core__BarakaCore_kk_shifts_impl(port, ptr, rust_vec_len, data_len),
-        112 => wire__crate__api__core__BarakaCore_kk_sign_agreement_impl(
+        114 => wire__crate__api__core__BarakaCore_kk_shifts_impl(port, ptr, rust_vec_len, data_len),
+        115 => wire__crate__api__core__BarakaCore_kk_sign_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        113 => wire__crate__api__core__BarakaCore_kk_staff_impl(port, ptr, rust_vec_len, data_len),
-        114 => wire__crate__api__core__BarakaCore_kk_staff_advance_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        115 => {
-            wire__crate__api__core__BarakaCore_kk_staff_pay_impl(port, ptr, rust_vec_len, data_len)
-        }
-        116 => wire__crate__api__core__BarakaCore_kk_stock_impl(port, ptr, rust_vec_len, data_len),
-        117 => wire__crate__api__core__BarakaCore_kk_stock_counts_impl(
+        116 => wire__crate__api__core__BarakaCore_kk_staff_impl(port, ptr, rust_vec_len, data_len),
+        117 => wire__crate__api__core__BarakaCore_kk_staff_advance_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
         118 => {
+            wire__crate__api__core__BarakaCore_kk_staff_pay_impl(port, ptr, rust_vec_len, data_len)
+        }
+        119 => wire__crate__api__core__BarakaCore_kk_stock_impl(port, ptr, rust_vec_len, data_len),
+        120 => wire__crate__api__core__BarakaCore_kk_stock_counts_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        121 => {
             wire__crate__api__core__BarakaCore_kk_stock_move_impl(port, ptr, rust_vec_len, data_len)
         }
-        119 => {
+        122 => {
             wire__crate__api__core__BarakaCore_kk_suppliers_impl(port, ptr, rust_vec_len, data_len)
         }
-        120 => wire__crate__api__core__BarakaCore_kk_supply_delivery_impl(
+        123 => wire__crate__api__core__BarakaCore_kk_supply_delivery_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        121 => wire__crate__api__core__BarakaCore_kk_supply_payment_impl(
+        124 => wire__crate__api__core__BarakaCore_kk_supply_payment_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        122 => wire__crate__api__core__BarakaCore_kk_update_employee_impl(
+        125 => wire__crate__api__core__BarakaCore_kk_update_employee_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        123 => wire__crate__api__core__BarakaCore_kk_update_item_impl(
+        126 => wire__crate__api__core__BarakaCore_kk_update_item_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        124 => wire__crate__api__core__BarakaCore_kk_update_supplier_impl(
+        127 => wire__crate__api__core__BarakaCore_kk_update_supplier_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        125 => {
+        128 => {
             wire__crate__api__core__BarakaCore_kk_use_fund_impl(port, ptr, rust_vec_len, data_len)
         }
-        126 => wire__crate__api__core__BarakaCore_kk_zakat_draft_impl(
+        129 => wire__crate__api__core__BarakaCore_kk_zakat_draft_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        127 => wire__crate__api__core__BarakaCore_kk_zakat_history_impl(
+        130 => wire__crate__api__core__BarakaCore_kk_zakat_history_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        128 => wire__crate__api__core__BarakaCore_loan_receipt_pdf_impl(
+        131 => wire__crate__api__core__BarakaCore_learning_overview_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        129 => wire__crate__api__core__BarakaCore_lock_impl(port, ptr, rust_vec_len, data_len),
-        130 => {
+        132 => wire__crate__api__core__BarakaCore_learning_plan_create_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        133 => wire__crate__api__core__BarakaCore_learning_plan_result_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        134 => wire__crate__api__core__BarakaCore_learning_plan_set_status_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        135 => wire__crate__api__core__BarakaCore_loan_receipt_pdf_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        136 => wire__crate__api__core__BarakaCore_lock_impl(port, ptr, rust_vec_len, data_len),
+        137 => {
             wire__crate__api__core__BarakaCore_lock_if_idle_impl(port, ptr, rust_vec_len, data_len)
         }
-        131 => wire__crate__api__core__BarakaCore_mf_check_decision_impl(
+        138 => wire__crate__api__core__BarakaCore_mf_check_decision_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        132 => wire__crate__api__core__BarakaCore_mf_confirm_receipt_impl(
+        139 => wire__crate__api__core__BarakaCore_mf_confirm_receipt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        133 => wire__crate__api__core__BarakaCore_mf_decision_questions_impl(
+        140 => wire__crate__api__core__BarakaCore_mf_decision_questions_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        134 => {
+        141 => {
             wire__crate__api__core__BarakaCore_mf_decisions_impl(port, ptr, rust_vec_len, data_len)
         }
-        135 => {
+        142 => {
             wire__crate__api__core__BarakaCore_mf_overview_impl(port, ptr, rust_vec_len, data_len)
         }
-        136 => {
+        143 => {
             wire__crate__api__core__BarakaCore_mf_pay_debt_impl(port, ptr, rust_vec_len, data_len)
         }
-        137 => wire__crate__api__core__BarakaCore_mf_record_decision_impl(
+        144 => wire__crate__api__core__BarakaCore_mf_record_decision_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        138 => wire__crate__api__core__BarakaCore_mf_record_expense_impl(
+        145 => wire__crate__api__core__BarakaCore_mf_record_expense_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        139 => wire__crate__api__core__BarakaCore_mf_record_income_impl(
+        146 => wire__crate__api__core__BarakaCore_mf_record_income_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        140 => wire__crate__api__core__BarakaCore_mf_record_move_impl(
+        147 => wire__crate__api__core__BarakaCore_mf_record_move_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        141 => wire__crate__api__core__BarakaCore_mf_record_spend_impl(
+        148 => wire__crate__api__core__BarakaCore_mf_record_spend_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        142 => wire__crate__api__core__BarakaCore_mf_set_outcome_impl(
+        149 => wire__crate__api__core__BarakaCore_mf_set_outcome_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        143 => {
+        150 => {
             wire__crate__api__core__BarakaCore_mf_set_plan_impl(port, ptr, rust_vec_len, data_len)
         }
-        144 => {
+        151 => {
             wire__crate__api__core__BarakaCore_mf_set_rate_impl(port, ptr, rust_vec_len, data_len)
         }
-        145 => {
+        152 => {
             wire__crate__api__core__BarakaCore_mf_set_return_impl(port, ptr, rust_vec_len, data_len)
         }
-        146 => wire__crate__api__core__BarakaCore_mf_set_settings_impl(
+        153 => wire__crate__api__core__BarakaCore_mf_set_settings_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        147 => {
+        154 => {
             wire__crate__api__core__BarakaCore_mf_set_terms_impl(port, ptr, rust_vec_len, data_len)
         }
-        148 => wire__crate__api__core__BarakaCore_mf_set_travel_debt_impl(
+        155 => wire__crate__api__core__BarakaCore_mf_set_travel_debt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        149 => wire__crate__api__core__BarakaCore_mf_terms_impl(port, ptr, rust_vec_len, data_len),
-        150 => wire__crate__api__core__BarakaCore_mf_travel_debt_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        151 => {
-            wire__crate__api__core__BarakaCore_mf_two_shores_impl(port, ptr, rust_vec_len, data_len)
-        }
-        152 => wire__crate__api__core__BarakaCore_monthly_summary_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        153 => wire__crate__api__core__BarakaCore_new_impl(port, ptr, rust_vec_len, data_len),
-        154 => wire__crate__api__core__BarakaCore_open_partnership_dispute_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        155 => {
-            wire__crate__api__core__BarakaCore_pairing_offer_impl(port, ptr, rust_vec_len, data_len)
-        }
-        156 => {
-            wire__crate__api__core__BarakaCore_partnership_impl(port, ptr, rust_vec_len, data_len)
-        }
-        157 => wire__crate__api__core__BarakaCore_partnership_pdf_impl(
+        156 => wire__crate__api__core__BarakaCore_mf_terms_impl(port, ptr, rust_vec_len, data_len),
+        157 => wire__crate__api__core__BarakaCore_mf_travel_debt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
         158 => {
+            wire__crate__api__core__BarakaCore_mf_two_shores_impl(port, ptr, rust_vec_len, data_len)
+        }
+        159 => wire__crate__api__core__BarakaCore_monthly_summary_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        160 => wire__crate__api__core__BarakaCore_new_impl(port, ptr, rust_vec_len, data_len),
+        161 => wire__crate__api__core__BarakaCore_open_partnership_dispute_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        162 => {
+            wire__crate__api__core__BarakaCore_pairing_offer_impl(port, ptr, rust_vec_len, data_len)
+        }
+        163 => {
+            wire__crate__api__core__BarakaCore_partnership_impl(port, ptr, rust_vec_len, data_len)
+        }
+        164 => wire__crate__api__core__BarakaCore_partnership_pdf_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        165 => {
             wire__crate__api__core__BarakaCore_partnerships_impl(port, ptr, rust_vec_len, data_len)
         }
-        159 => wire__crate__api__core__BarakaCore_payoff_planner_impl(
+        166 => wire__crate__api__core__BarakaCore_payoff_planner_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        160 => wire__crate__api__core__BarakaCore_preview_borrow_check_impl(
+        167 => wire__crate__api__core__BarakaCore_preview_borrow_check_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        161 => wire__crate__api__core__BarakaCore_readiness_gate_impl(
+        168 => wire__crate__api__core__BarakaCore_readiness_gate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        162 => wire__crate__api__core__BarakaCore_record_arbiter_decision_impl(
+        169 => wire__crate__api__core__BarakaCore_record_arbiter_decision_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        163 => wire__crate__api__core__BarakaCore_record_expense_impl(
+        170 => wire__crate__api__core__BarakaCore_record_expense_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        164 => {
+        171 => {
             wire__crate__api__core__BarakaCore_record_income_impl(port, ptr, rust_vec_len, data_len)
         }
-        165 => wire__crate__api__core__BarakaCore_record_initial_balance_impl(
+        172 => wire__crate__api__core__BarakaCore_record_initial_balance_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        166 => wire__crate__api__core__BarakaCore_record_repayment_impl(
+        173 => wire__crate__api__core__BarakaCore_record_repayment_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        167 => wire__crate__api__core__BarakaCore_render_loan_receipt_impl(
+        174 => wire__crate__api__core__BarakaCore_render_loan_receipt_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        168 => wire__crate__api__core__BarakaCore_renew_partnership_impl(
+        175 => wire__crate__api__core__BarakaCore_renew_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        169 => wire__crate__api__core__BarakaCore_reopen_ceremony_impl(
+        176 => wire__crate__api__core__BarakaCore_reopen_ceremony_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        170 => wire__crate__api__core__BarakaCore_report_duty_incident_impl(
+        177 => wire__crate__api__core__BarakaCore_report_duty_incident_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        171 => wire__crate__api__core__BarakaCore_reset_debt_order_impl(
+        178 => wire__crate__api__core__BarakaCore_reset_debt_order_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        172 => wire__crate__api__core__BarakaCore_resolve_duty_incident_impl(
+        179 => wire__crate__api__core__BarakaCore_resolve_duty_incident_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        173 => {
+        180 => {
             wire__crate__api__core__BarakaCore_review_draft_impl(port, ptr, rust_vec_len, data_len)
         }
-        174 => {
+        181 => {
             wire__crate__api__core__BarakaCore_review_pdf_impl(port, ptr, rust_vec_len, data_len)
         }
-        175 => {
+        182 => {
             wire__crate__api__core__BarakaCore_revoke_device_impl(port, ptr, rust_vec_len, data_len)
         }
-        176 => wire__crate__api__core__BarakaCore_save_discussion_impl(
+        183 => wire__crate__api__core__BarakaCore_save_discussion_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        177 => wire__crate__api__core__BarakaCore_select_scenario_impl(
+        184 => wire__crate__api__core__BarakaCore_select_scenario_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        178 => wire__crate__api__core__BarakaCore_sell_item_impl(port, ptr, rust_vec_len, data_len),
-        179 => wire__crate__api__core__BarakaCore_sellable_items_impl(
+        185 => wire__crate__api__core__BarakaCore_sell_item_impl(port, ptr, rust_vec_len, data_len),
+        186 => wire__crate__api__core__BarakaCore_sellable_items_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        180 => wire__crate__api__core__BarakaCore_set_allocation_rule_impl(
+        187 => wire__crate__api__core__BarakaCore_set_allocation_rule_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        181 => wire__crate__api__core__BarakaCore_set_budget_mode_impl(
+        188 => wire__crate__api__core__BarakaCore_set_budget_mode_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        182 => wire__crate__api__core__BarakaCore_set_debt_order_impl(
+        189 => wire__crate__api__core__BarakaCore_set_debt_order_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        183 => wire__crate__api__core__BarakaCore_settings_impl(port, ptr, rust_vec_len, data_len),
-        184 => wire__crate__api__core__BarakaCore_setup_impl(port, ptr, rust_vec_len, data_len),
-        185 => wire__crate__api__core__BarakaCore_sign_partnership_impl(
+        190 => wire__crate__api__core__BarakaCore_settings_impl(port, ptr, rust_vec_len, data_len),
+        191 => wire__crate__api__core__BarakaCore_setup_impl(port, ptr, rust_vec_len, data_len),
+        192 => wire__crate__api__core__BarakaCore_sign_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        186 => {
+        193 => {
             wire__crate__api__core__BarakaCore_simulate_loan_impl(port, ptr, rust_vec_len, data_len)
         }
-        187 => wire__crate__api__core__BarakaCore_skills_impl(port, ptr, rust_vec_len, data_len),
-        188 => wire__crate__api__core__BarakaCore_status_impl(port, ptr, rust_vec_len, data_len),
-        189 => wire__crate__api__core__BarakaCore_unlock_impl(port, ptr, rust_vec_len, data_len),
-        190 => wire__crate__api__core__BarakaCore_unlock_with_recovery_impl(
+        194 => wire__crate__api__core__BarakaCore_skills_impl(port, ptr, rust_vec_len, data_len),
+        195 => wire__crate__api__core__BarakaCore_status_impl(port, ptr, rust_vec_len, data_len),
+        196 => {
+            wire__crate__api__core__BarakaCore_study_log_add_impl(port, ptr, rust_vec_len, data_len)
+        }
+        197 => wire__crate__api__core__BarakaCore_teaching_log_add_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        191 => wire__crate__api__core__BarakaCore_update_ceremony_impl(
+        198 => wire__crate__api__core__BarakaCore_unlock_impl(port, ptr, rust_vec_len, data_len),
+        199 => wire__crate__api__core__BarakaCore_unlock_with_recovery_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        192 => wire__crate__api__core__BarakaCore_update_family_agreement_impl(
+        200 => wire__crate__api__core__BarakaCore_update_ceremony_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        193 => wire__crate__api__core__BarakaCore_update_partnership_impl(
+        201 => wire__crate__api__core__BarakaCore_update_family_agreement_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        194 => wire__crate__api__core__BarakaCore_update_scenario_impl(
+        202 => wire__crate__api__core__BarakaCore_update_partnership_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        195 => wire__crate__api__core__BarakaCore_update_settings_impl(
+        203 => wire__crate__api__core__BarakaCore_update_scenario_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        196 => wire__crate__api__core__BarakaCore_update_venture_idea_impl(
+        204 => wire__crate__api__core__BarakaCore_update_settings_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        197 => wire__crate__api__core__BarakaCore_vault_impl(port, ptr, rust_vec_len, data_len),
-        198 => wire__crate__api__core__BarakaCore_venture_attachment_impl(
+        205 => wire__crate__api__core__BarakaCore_update_venture_idea_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        199 => {
+        206 => wire__crate__api__core__BarakaCore_vault_impl(port, ptr, rust_vec_len, data_len),
+        207 => wire__crate__api__core__BarakaCore_venture_attachment_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        208 => {
             wire__crate__api__core__BarakaCore_venture_ideas_impl(port, ptr, rust_vec_len, data_len)
         }
-        200 => wire__crate__api__core__BarakaCore_venture_ledger_impl(
+        209 => wire__crate__api__core__BarakaCore_venture_ledger_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        201 => wire__crate__api__core__BarakaCore_venture_period_pdf_impl(
+        210 => wire__crate__api__core__BarakaCore_venture_period_pdf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        202 => wire__crate__api__core__BarakaCore_venture_period_preview_impl(
+        211 => wire__crate__api__core__BarakaCore_venture_period_preview_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        203 => {
+        212 => {
             wire__crate__api__core__BarakaCore_watch_changes_impl(port, ptr, rust_vec_len, data_len)
         }
-        204 => wire__crate__api__core__BarakaCore_withdraw_from_vault_impl(
+        213 => wire__crate__api__core__BarakaCore_withdraw_from_vault_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        205 => wire__baraka_app__app_error_new_impl(port, ptr, rust_vec_len, data_len),
-        206 => wire__baraka_app__app_error_on_impl(port, ptr, rust_vec_len, data_len),
-        207 => wire__crate__api__core__core_version_impl(port, ptr, rust_vec_len, data_len),
-        208 => wire__crate__api__core__run_vector_impl(port, ptr, rust_vec_len, data_len),
+        214 => wire__baraka_app__app_error_new_impl(port, ptr, rust_vec_len, data_len),
+        215 => wire__baraka_app__app_error_on_impl(port, ptr, rust_vec_len, data_len),
+        216 => wire__crate__api__core__core_version_impl(port, ptr, rust_vec_len, data_len),
+        217 => wire__crate__api__core__run_vector_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -22786,6 +23828,34 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::ContributorDto>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::CourseAnswersInput> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.fast_rich.into_into_dart().into_dart(),
+            self.0.secret_formula.into_into_dart().into_dart(),
+            self.0.income_guarantee.into_into_dart().into_dart(),
+            self.0.syllabus.into_into_dart().into_dart(),
+            self.0.teacher_verifiable.into_into_dart().into_dart(),
+            self.0.urgency.into_into_dart().into_dart(),
+            self.0.recruitment.into_into_dart().into_dart(),
+            self.0.trial_or_refund.into_into_dart().into_dart(),
+            self.0.job_abroad.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::CourseAnswersInput>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::CourseAnswersInput>>
+    for baraka_app::CourseAnswersInput
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::CourseAnswersInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::DebtDto> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -23077,6 +24147,8 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::ExpenseDto> {
             self.0.necessity.into_into_dart().into_dart(),
             self.0.occurred_on.into_into_dart().into_dart(),
             self.0.funded_by_debt.into_into_dart().into_dart(),
+            self.0.self_investment.into_into_dart().into_dart(),
+            self.0.learning_plan_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -23379,6 +24451,81 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::HoldReviewInput>>
     for baraka_app::HoldReviewInput
 {
     fn into_into_dart(self) -> FrbWrapper<baraka_app::HoldReviewInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::HourValueDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.id.into_into_dart().into_dart(),
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.income.into_into_dart().into_dart(),
+            self.0.income_source.into_into_dart().into_dart(),
+            self.0.minutes_per_day.into_into_dart().into_dart(),
+            self.0.days.into_into_dart().into_dart(),
+            self.0.monthly_minutes.into_into_dart().into_dart(),
+            self.0.hour_value.into_into_dart().into_dart(),
+            self.0.double_target.into_into_dart().into_dart(),
+            self.0.over_ceiling.into_into_dart().into_dart(),
+            self.0.computed_on.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::HourValueDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::HourValueDto>>
+    for baraka_app::HourValueDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::HourValueDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::HourValueInput> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.income.into_into_dart().into_dart(),
+            self.0.minutes_per_day.into_into_dart().into_dart(),
+            self.0.days.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::HourValueInput>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::HourValueInput>>
+    for baraka_app::HourValueInput
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::HourValueInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::HourValueSuggestionDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.months.into_into_dart().into_dart(),
+            self.0.average.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::HourValueSuggestionDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::HourValueSuggestionDto>>
+    for baraka_app::HourValueSuggestionDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::HourValueSuggestionDto> {
         self.into()
     }
 }
@@ -25953,6 +27100,142 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::KkZakatReceivableD
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::LearningMemberDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.display_name.into_into_dart().into_dart(),
+            self.0.hour_value.into_into_dart().into_dart(),
+            self.0.active_plans.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::LearningMemberDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::LearningMemberDto>>
+    for baraka_app::LearningMemberDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::LearningMemberDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::LearningOverviewDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.period_start.into_into_dart().into_dart(),
+            self.0.period_end.into_into_dart().into_dart(),
+            self.0.members.into_into_dart().into_dart(),
+            self.0.plans.into_into_dart().into_dart(),
+            self.0.teaching_count.into_into_dart().into_dart(),
+            self.0.teaching.into_into_dart().into_dart(),
+            self.0.self_investment.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::LearningOverviewDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::LearningOverviewDto>>
+    for baraka_app::LearningOverviewDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::LearningOverviewDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::LearningPlanDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.id.into_into_dart().into_dart(),
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.skill.into_into_dart().into_dart(),
+            self.0.purpose.into_into_dart().into_dart(),
+            self.0.paths.into_into_dart().into_dart(),
+            self.0.budget.into_into_dart().into_dart(),
+            self.0.weekly_minutes.into_into_dart().into_dart(),
+            self.0.start_on.into_into_dart().into_dart(),
+            self.0.review_on.into_into_dart().into_dart(),
+            self.0.status.into_into_dart().into_dart(),
+            self.0.baseline_hour_value.into_into_dart().into_dart(),
+            self.0.result_hour_value.into_into_dart().into_dart(),
+            self.0.study_minutes.into_into_dart().into_dart(),
+            self.0.spent.into_into_dart().into_dart(),
+            self.0.course_check_suggested.into_into_dart().into_dart(),
+            self.0.review_due.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::LearningPlanDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::LearningPlanDto>>
+    for baraka_app::LearningPlanDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::LearningPlanDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::LearningPlanInput> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.skill.into_into_dart().into_dart(),
+            self.0.purpose.into_into_dart().into_dart(),
+            self.0.paths.into_into_dart().into_dart(),
+            self.0.budget.into_into_dart().into_dart(),
+            self.0.weekly_minutes.into_into_dart().into_dart(),
+            self.0.start_on.into_into_dart().into_dart(),
+            self.0.review_on.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::LearningPlanInput>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::LearningPlanInput>>
+    for baraka_app::LearningPlanInput
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::LearningPlanInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::LearningResultDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.plan_id.into_into_dart().into_dart(),
+            self.0.baseline.into_into_dart().into_dart(),
+            self.0.current.into_into_dart().into_dart(),
+            self.0.diff.into_into_dart().into_dart(),
+            self.0.change_bp.into_into_dart().into_dart(),
+            self.0.change_percent.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::LearningResultDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::LearningResultDto>>
+    for baraka_app::LearningResultDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::LearningResultDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::LoanReceiptInput> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -27135,6 +28418,28 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::MoneyDto>> for bar
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::MonthIncomeDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.period_start.into_into_dart().into_dart(),
+            self.0.period_end.into_into_dart().into_dart(),
+            self.0.total.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::MonthIncomeDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::MonthIncomeDto>>
+    for baraka_app::MonthIncomeDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::MonthIncomeDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::MonthlySummaryDto> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -27149,6 +28454,8 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::MonthlySummaryDto>
             self.0.balance_delta.into_into_dart().into_dart(),
             self.0.unexplained_gap.into_into_dart().into_dart(),
             self.0.month_result.into_into_dart().into_dart(),
+            self.0.havas_for_limit.into_into_dart().into_dart(),
+            self.0.self_investment.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -27328,6 +28635,8 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::NewExpenseInput> {
             self.0.is_ostentation.into_into_dart().into_dart(),
             self.0.funded_by_debt.into_into_dart().into_dart(),
             self.0.note.into_into_dart().into_dart(),
+            self.0.self_investment.into_into_dart().into_dart(),
+            self.0.learning_plan_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -28325,6 +29634,29 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::ScheduleRowDto>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::SelfInvestmentDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.total.into_into_dart().into_dart(),
+            self.0.income.into_into_dart().into_dart(),
+            self.0.share_bp.into_into_dart().into_dart(),
+            self.0.share_percent.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::SelfInvestmentDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::SelfInvestmentDto>>
+    for baraka_app::SelfInvestmentDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::SelfInvestmentDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::SellItemInput> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -28615,6 +29947,77 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::StreakDto>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::StudyLogInput> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.occurred_on.into_into_dart().into_dart(),
+            self.0.minutes.into_into_dart().into_dart(),
+            self.0.note.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::StudyLogInput>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::StudyLogInput>>
+    for baraka_app::StudyLogInput
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::StudyLogInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::TeachingLogDto> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.id.into_into_dart().into_dart(),
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.occurred_on.into_into_dart().into_dart(),
+            self.0.learner.into_into_dart().into_dart(),
+            self.0.topic.into_into_dart().into_dart(),
+            self.0.minutes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::TeachingLogDto>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::TeachingLogDto>>
+    for baraka_app::TeachingLogDto
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::TeachingLogDto> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::TeachingLogInput> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.member_id.into_into_dart().into_dart(),
+            self.0.occurred_on.into_into_dart().into_dart(),
+            self.0.learner.into_into_dart().into_dart(),
+            self.0.topic.into_into_dart().into_dart(),
+            self.0.minutes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<baraka_app::TeachingLogInput>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<baraka_app::TeachingLogInput>>
+    for baraka_app::TeachingLogInput
+{
+    fn into_into_dart(self) -> FrbWrapper<baraka_app::TeachingLogInput> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::TimelinePointDto> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -28684,6 +30087,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<baraka_app::Topic> {
             baraka_app::Topic::Sync => 16.into_dart(),
             baraka_app::Topic::Kasbkor => 17.into_dart(),
             baraka_app::Topic::Musofir => 18.into_dart(),
+            baraka_app::Topic::Learning => 19.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -29289,6 +30693,21 @@ impl SseEncode for baraka_app::ContributorDto {
     }
 }
 
+impl SseEncode for baraka_app::CourseAnswersInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.fast_rich, serializer);
+        <String>::sse_encode(self.secret_formula, serializer);
+        <String>::sse_encode(self.income_guarantee, serializer);
+        <String>::sse_encode(self.syllabus, serializer);
+        <String>::sse_encode(self.teacher_verifiable, serializer);
+        <String>::sse_encode(self.urgency, serializer);
+        <String>::sse_encode(self.recruitment, serializer);
+        <String>::sse_encode(self.trial_or_refund, serializer);
+        <Option<String>>::sse_encode(self.job_abroad, serializer);
+    }
+}
+
 impl SseEncode for baraka_app::DebtDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -29441,6 +30860,8 @@ impl SseEncode for baraka_app::ExpenseDto {
         <Option<String>>::sse_encode(self.necessity, serializer);
         <String>::sse_encode(self.occurred_on, serializer);
         <bool>::sse_encode(self.funded_by_debt, serializer);
+        <bool>::sse_encode(self.self_investment, serializer);
+        <Option<String>>::sse_encode(self.learning_plan_id, serializer);
     }
 }
 
@@ -29581,6 +31002,42 @@ impl SseEncode for baraka_app::HoldReviewInput {
         <String>::sse_encode(self.to_on, serializer);
         <String>::sse_encode(self.reason, serializer);
         <Vec<baraka_app::ReviewAckInput>>::sse_encode(self.acks, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::HourValueDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.member_id, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.income, serializer);
+        <String>::sse_encode(self.income_source, serializer);
+        <u32>::sse_encode(self.minutes_per_day, serializer);
+        <u32>::sse_encode(self.days, serializer);
+        <u32>::sse_encode(self.monthly_minutes, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.hour_value, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.double_target, serializer);
+        <bool>::sse_encode(self.over_ceiling, serializer);
+        <String>::sse_encode(self.computed_on, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::HourValueInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.member_id, serializer);
+        <Option<String>>::sse_encode(self.income, serializer);
+        <u32>::sse_encode(self.minutes_per_day, serializer);
+        <u32>::sse_encode(self.days, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::HourValueSuggestionDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.member_id, serializer);
+        <Vec<baraka_app::MonthIncomeDto>>::sse_encode(self.months, serializer);
+        <Option<baraka_app::MoneyDto>>::sse_encode(self.average, serializer);
     }
 }
 
@@ -30891,6 +32348,77 @@ impl SseEncode for baraka_app::KkZakatReceivableDto {
     }
 }
 
+impl SseEncode for baraka_app::LearningMemberDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.member_id, serializer);
+        <String>::sse_encode(self.display_name, serializer);
+        <Option<baraka_app::HourValueDto>>::sse_encode(self.hour_value, serializer);
+        <u32>::sse_encode(self.active_plans, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::LearningOverviewDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.period_start, serializer);
+        <String>::sse_encode(self.period_end, serializer);
+        <Vec<baraka_app::LearningMemberDto>>::sse_encode(self.members, serializer);
+        <Vec<baraka_app::LearningPlanDto>>::sse_encode(self.plans, serializer);
+        <u32>::sse_encode(self.teaching_count, serializer);
+        <Vec<baraka_app::TeachingLogDto>>::sse_encode(self.teaching, serializer);
+        <baraka_app::SelfInvestmentDto>::sse_encode(self.self_investment, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::LearningPlanDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.member_id, serializer);
+        <String>::sse_encode(self.skill, serializer);
+        <Option<String>>::sse_encode(self.purpose, serializer);
+        <Vec<String>>::sse_encode(self.paths, serializer);
+        <Option<baraka_app::MoneyDto>>::sse_encode(self.budget, serializer);
+        <u32>::sse_encode(self.weekly_minutes, serializer);
+        <String>::sse_encode(self.start_on, serializer);
+        <String>::sse_encode(self.review_on, serializer);
+        <String>::sse_encode(self.status, serializer);
+        <Option<baraka_app::MoneyDto>>::sse_encode(self.baseline_hour_value, serializer);
+        <Option<baraka_app::MoneyDto>>::sse_encode(self.result_hour_value, serializer);
+        <u32>::sse_encode(self.study_minutes, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.spent, serializer);
+        <bool>::sse_encode(self.course_check_suggested, serializer);
+        <bool>::sse_encode(self.review_due, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::LearningPlanInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.member_id, serializer);
+        <String>::sse_encode(self.skill, serializer);
+        <Option<String>>::sse_encode(self.purpose, serializer);
+        <Vec<String>>::sse_encode(self.paths, serializer);
+        <Option<String>>::sse_encode(self.budget, serializer);
+        <u32>::sse_encode(self.weekly_minutes, serializer);
+        <Option<String>>::sse_encode(self.start_on, serializer);
+        <Option<String>>::sse_encode(self.review_on, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::LearningResultDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.plan_id, serializer);
+        <Option<baraka_app::HourValueDto>>::sse_encode(self.baseline, serializer);
+        <baraka_app::HourValueDto>::sse_encode(self.current, serializer);
+        <Option<baraka_app::MoneyDto>>::sse_encode(self.diff, serializer);
+        <Option<i32>>::sse_encode(self.change_bp, serializer);
+        <Option<String>>::sse_encode(self.change_percent, serializer);
+    }
+}
+
 impl SseEncode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -31481,6 +33009,26 @@ impl SseEncode for Vec<baraka_app::KkZakatReceivableDto> {
     }
 }
 
+impl SseEncode for Vec<baraka_app::LearningMemberDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <baraka_app::LearningMemberDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<baraka_app::LearningPlanDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <baraka_app::LearningPlanDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<baraka_app::MemberDto> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -31617,6 +33165,16 @@ impl SseEncode for Vec<baraka_app::MoneyDto> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <baraka_app::MoneyDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<baraka_app::MonthIncomeDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <baraka_app::MonthIncomeDto>::sse_encode(item, serializer);
         }
     }
 }
@@ -31867,6 +33425,16 @@ impl SseEncode for Vec<baraka_app::SpaceDto> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <baraka_app::SpaceDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<baraka_app::TeachingLogDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <baraka_app::TeachingLogDto>::sse_encode(item, serializer);
         }
     }
 }
@@ -32511,6 +34079,15 @@ impl SseEncode for baraka_app::MoneyDto {
     }
 }
 
+impl SseEncode for baraka_app::MonthIncomeDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.period_start, serializer);
+        <String>::sse_encode(self.period_end, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.total, serializer);
+    }
+}
+
 impl SseEncode for baraka_app::MonthlySummaryDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -32525,6 +34102,8 @@ impl SseEncode for baraka_app::MonthlySummaryDto {
         <baraka_app::MoneyDto>::sse_encode(self.balance_delta, serializer);
         <baraka_app::MoneyDto>::sse_encode(self.unexplained_gap, serializer);
         <baraka_app::MoneyDto>::sse_encode(self.month_result, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.havas_for_limit, serializer);
+        <baraka_app::SelfInvestmentDto>::sse_encode(self.self_investment, serializer);
     }
 }
 
@@ -32613,6 +34192,8 @@ impl SseEncode for baraka_app::NewExpenseInput {
         <bool>::sse_encode(self.is_ostentation, serializer);
         <bool>::sse_encode(self.funded_by_debt, serializer);
         <Option<String>>::sse_encode(self.note, serializer);
+        <bool>::sse_encode(self.self_investment, serializer);
+        <Option<String>>::sse_encode(self.learning_plan_id, serializer);
     }
 }
 
@@ -32806,6 +34387,16 @@ impl SseEncode for Option<baraka_app::FamilyAgreementDto> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <baraka_app::FamilyAgreementDto>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<baraka_app::HourValueDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <baraka_app::HourValueDto>::sse_encode(value, serializer);
         }
     }
 }
@@ -33372,6 +34963,16 @@ impl SseEncode for baraka_app::ScheduleRowDto {
     }
 }
 
+impl SseEncode for baraka_app::SelfInvestmentDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <baraka_app::MoneyDto>::sse_encode(self.total, serializer);
+        <baraka_app::MoneyDto>::sse_encode(self.income, serializer);
+        <Option<i32>>::sse_encode(self.share_bp, serializer);
+        <Option<String>>::sse_encode(self.share_percent, serializer);
+    }
+}
+
 impl SseEncode for baraka_app::SellItemInput {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -33497,6 +35098,38 @@ impl SseEncode for baraka_app::StreakDto {
     }
 }
 
+impl SseEncode for baraka_app::StudyLogInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.occurred_on, serializer);
+        <u32>::sse_encode(self.minutes, serializer);
+        <Option<String>>::sse_encode(self.note, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::TeachingLogDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.member_id, serializer);
+        <String>::sse_encode(self.occurred_on, serializer);
+        <Option<String>>::sse_encode(self.learner, serializer);
+        <String>::sse_encode(self.topic, serializer);
+        <Option<u32>>::sse_encode(self.minutes, serializer);
+    }
+}
+
+impl SseEncode for baraka_app::TeachingLogInput {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.member_id, serializer);
+        <Option<String>>::sse_encode(self.occurred_on, serializer);
+        <Option<String>>::sse_encode(self.learner, serializer);
+        <String>::sse_encode(self.topic, serializer);
+        <Option<u32>>::sse_encode(self.minutes, serializer);
+    }
+}
+
 impl SseEncode for baraka_app::TimelinePointDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -33542,6 +35175,7 @@ impl SseEncode for baraka_app::Topic {
                 baraka_app::Topic::Sync => 16,
                 baraka_app::Topic::Kasbkor => 17,
                 baraka_app::Topic::Musofir => 18,
+                baraka_app::Topic::Learning => 19,
                 _ => {
                     unimplemented!("");
                 }

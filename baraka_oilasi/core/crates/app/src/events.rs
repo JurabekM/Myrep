@@ -27,6 +27,8 @@ pub enum Topic {
     Sync,
     Kasbkor,
     Musofir,
+    /// «O'zimga sarmoya»: soat qiymati, bilim rejalari, «Ilm zakoti».
+    Learning,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

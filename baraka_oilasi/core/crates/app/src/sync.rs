@@ -824,6 +824,8 @@ impl App {
             "title",
             "name",
             "display_name",
+            "skill",
+            "topic",
             "source",
             "subject",
             "creditor",

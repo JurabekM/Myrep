@@ -273,7 +273,11 @@
             "mf_debt_payments",
             "mf_decisions",
             "mf_reserve_moves",
-            "mf_decision_outcomes"
+            "mf_decision_outcomes",
+            "learning_hour_values",
+            "learning_plans",
+            "learning_study_logs",
+            "teaching_logs"
           ]
         },
         "data": {
@@ -784,6 +788,30 @@
       {
         "name": "mf_decision_outcomes",
         "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "learning_hour_values",
+        "mode": "APPEND_ONLY",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "learning_plans",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "learning_study_logs",
+        "mode": "MUTABLE",
+        "primaryKey": "id",
+        "blobColumns": []
+      },
+      {
+        "name": "teaching_logs",
+        "mode": "MUTABLE",
         "primaryKey": "id",
         "blobColumns": []
       }

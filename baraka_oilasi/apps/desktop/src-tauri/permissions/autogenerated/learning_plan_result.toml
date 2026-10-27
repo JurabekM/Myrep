@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-learning-plan-result"
+description = "Enables the learning_plan_result command without any pre-configured scope."
+commands.allow = ["learning_plan_result"]
+
+[[permission]]
+identifier = "deny-learning-plan-result"
+description = "Denies the learning_plan_result command without any pre-configured scope."
+commands.deny = ["learning_plan_result"]

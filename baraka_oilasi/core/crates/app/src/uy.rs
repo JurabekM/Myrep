@@ -422,6 +422,13 @@ impl App {
         let date = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         self.kk_ensure_open(&scope, &ymd(date), "occurredOn")?;
         self.kk_ensure_cash_open(&scope, &ymd(date), ch.as_str() == "CASH")?;
+        let learning_plan_id = self.expense_plan_link(
+            &ctx,
+            &scope,
+            input.self_investment,
+            input.learning_plan_id.as_deref(),
+            input.member_id.as_deref(),
+        )?;
         let row = expenses::ExpenseRow {
             id: self.new_id(),
             category_id: category.id,
@@ -436,6 +443,8 @@ impl App {
             is_ostentation: input.is_ostentation,
             funded_by_debt: input.funded_by_debt,
             note: clean_opt(input.note.as_deref()),
+            self_investment: input.self_investment,
+            learning_plan_id,
         };
         let meta = self.meta();
         self.db
@@ -448,6 +457,8 @@ impl App {
             necessity: row.necessity,
             occurred_on: row.occurred_on,
             funded_by_debt: row.funded_by_debt,
+            self_investment: row.self_investment,
+            learning_plan_id: row.learning_plan_id,
         })
     }
 
@@ -538,6 +549,17 @@ impl App {
                 cur,
             )
         };
+        // Havas chegarasiga «O'zimga sarmoya» belgili xarajat kirmaydi (2G.3); toifasi o'zgarmaydi.
+        let havas_for_limit = sum(
+            others
+                .iter()
+                .filter(|e| !sadaqa_ids.contains(&e.category_id.as_str()))
+                .filter(|e| e.necessity.as_deref() == Some(Necessity::Havas.as_str()))
+                .filter(|e| !e.self_investment)
+                .map(|e| e.amount_minor),
+            cur,
+        )?;
+        let self_investment = self.self_investment_dto(&ctx, income, &exp)?;
         let sadaqa = sum(
             others
                 .iter()
@@ -581,6 +603,8 @@ impl App {
             balance_delta: d(delta),
             unexplained_gap: d(gap),
             month_result: d(month_result),
+            havas_for_limit: d(havas_for_limit),
+            self_investment,
         })
     }
 

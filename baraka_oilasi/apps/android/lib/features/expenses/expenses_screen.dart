@@ -45,6 +45,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> with ActionStat
               isGift: false,
               isOstentation: false,
               fundedByDebt: false,
+              selfInvestment: false,
             ),
           ),
     );

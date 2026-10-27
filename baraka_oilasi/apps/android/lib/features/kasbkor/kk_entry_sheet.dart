@@ -63,6 +63,7 @@ class _KkEntrySheetState extends ConsumerState<KkEntrySheet> with ActionState {
               isGift: false,
               isOstentation: false,
               fundedByDebt: false,
+              selfInvestment: false,
               note: note,
             ),
           );

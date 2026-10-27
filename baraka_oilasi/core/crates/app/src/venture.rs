@@ -12,9 +12,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use baraka_domain_uy::partnership::{Negligence, Partner, PartnerRole, PartnershipKind};
 use baraka_domain_uy::spike::{profit_spike, SpikePolicy};
 use baraka_domain_uy::venture::{
-    close_period, offer_check, venture_idea, BuyoutDue, EntryKind as VKind, IdeaInput,
-    IdeaScenario, Installment, LossPolicy, OfferAnswers, PeriodEntry, PeriodInput, PeriodResult,
-    Reply, ScenarioName,
+    close_period, course_check, offer_check, venture_idea, BuyoutDue, CourseAnswers,
+    EntryKind as VKind, IdeaInput, IdeaScenario, Installment, LossPolicy, OfferAnswers,
+    OfferVerdict, PeriodEntry, PeriodInput, PeriodResult, Reply, ScenarioName,
 };
 use baraka_journal::{
     short_code, verify_chain, EntryKind, JournalAmount, JournalEntry, GENESIS_HASH,
@@ -1658,17 +1658,45 @@ impl App {
             inspection: q(&input.inspection, "inspection")?,
             exit_easy: q(&input.exit_easy, "exitEasy")?,
         });
-        Ok(OfferCheckDto {
-            verdict: r.verdict.as_str().into(),
-            flags: r
-                .flags
-                .iter()
-                .map(|f| OfferFlagDto {
-                    code: f.code.into(),
-                    level: f.level.as_str().into(),
-                })
-                .collect(),
-            signs: u32::from(r.signs),
-        })
+        Ok(offer_dto(&r))
+    }
+
+    /// Kurs yoki ustoz taklifini tekshirish (8-tamoyil, SPEC 2G.4): umumiy detektorning `COURSE`
+    /// turi; sof funksiya, hech narsa saqlanmaydi.
+    pub fn check_course(&self, input: CourseAnswersInput) -> Result<OfferCheckDto, AppError> {
+        let q = |v: &str, field: &str| {
+            Reply::parse(v).ok_or_else(|| AppError::on("INVALID_ANSWER", field))
+        };
+        let r = course_check(&CourseAnswers {
+            fast_rich: q(&input.fast_rich, "fastRich")?,
+            secret_formula: q(&input.secret_formula, "secretFormula")?,
+            income_guarantee: q(&input.income_guarantee, "incomeGuarantee")?,
+            syllabus: q(&input.syllabus, "syllabus")?,
+            teacher_verifiable: q(&input.teacher_verifiable, "teacherVerifiable")?,
+            urgency: q(&input.urgency, "urgency")?,
+            recruitment: q(&input.recruitment, "recruitment")?,
+            trial_or_refund: q(&input.trial_or_refund, "trialOrRefund")?,
+            job_abroad: input
+                .job_abroad
+                .as_deref()
+                .map(|v| q(v, "jobAbroad"))
+                .transpose()?,
+        });
+        Ok(offer_dto(&r))
+    }
+}
+
+fn offer_dto(r: &OfferVerdict) -> OfferCheckDto {
+    OfferCheckDto {
+        verdict: r.verdict.as_str().into(),
+        flags: r
+            .flags
+            .iter()
+            .map(|f| OfferFlagDto {
+                code: f.code.into(),
+                level: f.level.as_str().into(),
+            })
+            .collect(),
+        signs: u32::from(r.signs),
     }
 }

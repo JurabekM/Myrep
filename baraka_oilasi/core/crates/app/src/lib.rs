@@ -22,6 +22,7 @@ mod kasbkor_profit;
 mod kasbkor_seller;
 mod kasbkor_staff;
 mod kasbkor_stock;
+mod learning;
 mod musofir;
 mod musofir_remit;
 mod musofir_return;
