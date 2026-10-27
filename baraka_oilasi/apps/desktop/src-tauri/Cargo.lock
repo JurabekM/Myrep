@@ -301,7 +301,7 @@ checksum = "be5eb007b7cacc6c660343e96f650fedf4b5a77512399eb952ca6642cf8d13f7"
 
 [[package]]
 name = "baraka-agreements"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "serde",
  "specta",
@@ -309,7 +309,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-app"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-agreements",
  "baraka-domain-common",
@@ -334,7 +334,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-desktop"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-agreements",
  "baraka-app",
@@ -353,7 +353,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-common"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-money",
  "chrono",
@@ -364,7 +364,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-kasbkor"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-money",
@@ -373,7 +373,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-musofir"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-money",
@@ -382,7 +382,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-domain-uy"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-journal",
@@ -395,7 +395,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-interchange"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "argon2",
  "baraka-journal",
@@ -412,18 +412,18 @@ dependencies = [
 
 [[package]]
 name = "baraka-journal"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "sha2 0.11.1",
 ]
 
 [[package]]
 name = "baraka-money"
-version = "1.1.0"
+version = "1.2.0"
 
 [[package]]
 name = "baraka-pdf"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "chrono",
  "qrcode",
@@ -436,7 +436,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-security"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -452,7 +452,7 @@ dependencies = [
 
 [[package]]
 name = "baraka-storage"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "baraka-domain-common",
  "baraka-interchange",

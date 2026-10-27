@@ -26,7 +26,7 @@ Hamma makon bitta Rust yadroga tayanadi. Android ilovasi Flutter va Kotlin'da, d
 
 Mustaqil oracle'ni tekshirish: `python3 -I spec/oracle/oracle.py --selftest`; `.baraka` formati — `python3 -I spec/interchange/oracle.py --check spec/interchange/vectors.json` (`cryptography` kerak).
 
-## Holat (1.1.0)
+## Holat (1.2.0)
 | Qism | Holat |
 |---|---|
 | Rust yadro: `money`, `journal`, `security`, `storage`, `domain-uy`, `agreements`, `app` (sessiya va use-case'lar) | ✅ testlar bilan |
