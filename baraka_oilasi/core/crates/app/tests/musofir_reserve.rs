@@ -98,6 +98,7 @@ fn expense(app: &App, mf: &str, amount: &str, on: &str) {
             channel: "CARD".into(),
             occurred_on: Some(on.into()),
             note: None,
+            self_investment: false,
         },
     )
     .unwrap();

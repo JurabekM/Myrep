@@ -271,6 +271,7 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
             <tbody>
               <Line label={t("mf.flow.income")} value={m.income.formatted} testId="mf-income" />
               <Line label={t("mf.flow.expenses")} value={`− ${m.expenses.formatted}`} hint={pct(m.expensesPercent)} />
+              {m.selfInvestment.total.minor !== "0" && <Line label={`· ${t("mf.flow.selfInvestment")}`} value={m.selfInvestment.total.formatted} hint={pct(m.selfInvestment.sharePercent)} testId="mf-self-investment" />}
               <Line label={t("mf.flow.sentHome")} value={`− ${m.sentHome.formatted}`} hint={pct(m.sentPercent)} testId="mf-sent" />
               {m.fees.minor !== "0" && <Line label={t("mf.flow.fees")} value={`− ${m.fees.formatted}`} />}
               <Line label={t("mf.flow.fund")} value={`− ${m.fundNet.formatted}`} hint={pct(m.fundPercent)} />
@@ -360,6 +361,7 @@ function Dashboard({ spaceId, d, s }: { spaceId: string; d: MfOverviewDto; s: Mf
                     <td className="py-1 pr-3 text-ink-muted">
                       {[
                         category(e.categoryId),
+                        e.selfInvestment ? t("mf.selfInvestmentTag") : "",
                         e.fee ? t("mf.feeShort", { amount: e.fee.formatted }) : "",
                         e.received ? t("mf.receivedShort", { amount: e.received.formatted }) : "",
                         e.note,

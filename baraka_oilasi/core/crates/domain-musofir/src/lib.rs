@@ -4,6 +4,7 @@
 
 pub mod cooling;
 pub mod fund;
+pub mod invest;
 pub mod month;
 pub mod rate;
 pub mod remittance;

@@ -9,8 +9,9 @@ import { useDialog } from "../../lib/useDialog";
 import type { OfferMode } from "../../state/ui";
 
 const OFFER_QUESTIONS = ["guaranteed", "lossShared", "realActivity", "recruitment", "urgency", "written", "licensed", "inspection", "exitEasy"] as const;
-/** Kurs yoki ustoz taklifi (uy/SPEC 2G.4): 8 savol. Musofirning `jobAbroad` savoli — M6 da. */
+/** Kurs yoki ustoz taklifi (uy/SPEC 2G.4): 8 savol; Musofir makonida (M6) — 9-savol `jobAbroad`. */
 const COURSE_QUESTIONS = ["fastRich", "secretFormula", "incomeGuarantee", "syllabus", "teacherVerifiable", "urgency", "recruitment", "trialOrRefund"] as const;
+const MF_COURSE_QUESTIONS = [...COURSE_QUESTIONS, "jobAbroad"] as const;
 const MODES = ["OFFER", "COURSE"] as const;
 const REPLIES = ["YES", "NO", "UNKNOWN"] as const;
 const TONE: Record<string, string> = { GREEN: "border-accent", YELLOW: "border-warn", RED: "border-danger" };
@@ -21,7 +22,7 @@ const TEXT: Record<string, string> = { GREEN: "text-accent-text", YELLOW: "text-
  * u yerda yo ribo, yo firibgarlik bor. `COURSE` turi — kurs yoki ustoz taklifi (2G.4): pul faqat
  * haqiqiy hunar va bilim uchun. Qaror jadvali yadroda; hech narsa saqlanmaydi.
  */
-export function OfferCheckDialog({ onClose, initialMode = "OFFER" }: { onClose: () => void; initialMode?: OfferMode }) {
+export function OfferCheckDialog({ onClose, initialMode = "OFFER", askJobAbroad = false }: { onClose: () => void; initialMode?: OfferMode; askJobAbroad?: boolean }) {
   const { t } = useTranslation();
   const dialog = useDialog<HTMLDivElement>(onClose);
   const [mode, setMode] = useState<OfferMode>(initialMode);
@@ -40,7 +41,8 @@ export function OfferCheckDialog({ onClose, initialMode = "OFFER" }: { onClose: 
             urgency: v("urgency"),
             recruitment: v("recruitment"),
             trialOrRefund: v("trialOrRefund"),
-            jobAbroad: null,
+            // Uy va Kasb-kor — so'ralmaydi (`null`); Musofir — «kursdan keyin chet elda ish kafolati».
+            jobAbroad: askJobAbroad ? v("jobAbroad") : null,
           }),
         );
       }
@@ -60,7 +62,7 @@ export function OfferCheckDialog({ onClose, initialMode = "OFFER" }: { onClose: 
     },
   });
   const course = mode === "COURSE";
-  const questions: readonly string[] = course ? COURSE_QUESTIONS : OFFER_QUESTIONS;
+  const questions: readonly string[] = course ? (askJobAbroad ? MF_COURSE_QUESTIONS : COURSE_QUESTIONS) : OFFER_QUESTIONS;
   const qKey = (q: string) => (course ? `offer.course.q.${q}` : `offer.q.${q}`);
   const complete = questions.every((q) => a[q]);
   const submit = (e: FormEvent) => {

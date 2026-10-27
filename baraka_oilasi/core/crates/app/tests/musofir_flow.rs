@@ -155,6 +155,7 @@ fn bobur_share_and_return_fund() {
                 channel: "CARD".into(),
                 occurred_on: Some("2026-10-12".into()),
                 note: None,
+                self_investment: false,
             },
         )
         .unwrap();

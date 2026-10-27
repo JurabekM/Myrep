@@ -5,6 +5,7 @@
 //! saqlash va DTO. Maosh — `incomes` (`source_type = TER`), xarajat — `expenses`, qolgani — `mf_moves`.
 use baraka_domain_common::{month_period, SpaceKind};
 use baraka_domain_musofir::fund::{return_fund, ReturnFund};
+use baraka_domain_musofir::invest::STALE_RATE_DAYS;
 use baraka_domain_musofir::month::{month_report, MfKind, MfMonth, MfMove};
 use baraka_domain_musofir::rate::{format_rate, parse_rate};
 use baraka_domain_musofir::reserve::reserve_plan;
@@ -16,6 +17,7 @@ use chrono::NaiveDate;
 use crate::access::Role;
 use crate::app::Ctx;
 use crate::events::Topic;
+use crate::musofir_learning::mf_invest_amount;
 use crate::receipt::{positive, ymd};
 use crate::text::clean_opt;
 use crate::uy::channel;
@@ -25,8 +27,6 @@ use crate::*;
 const SALARY_SOURCE_TYPE: &str = "TER";
 const BEGINNING: &str = "0000-01-01";
 const END_OF_TIME: &str = "9999-12-31";
-/// Kurs shu kundan eski bo'lsa — «yangilang» (OQ-MF4).
-const STALE_RATE_DAYS: i64 = 30;
 /// Prognoz uchun oxirgi to'liq oylar (yozuvi borlari).
 pub(crate) const PROGNOSIS_MONTHS: usize = 3;
 /// Standart o'z ulushi — 20 % (OQ-MF1).
@@ -42,6 +42,8 @@ struct Setup {
 struct Book {
     moves: Vec<MfMove>,
     entries: Vec<MfEntryDto>,
+    /// «Sarmoya» belgili xarajatlar (ish valyutasida) — oy hisobidagi qator uchun (M6).
+    invest: Vec<i64>,
 }
 
 /// `"20"`, `"12,5"`, `"20 %"` → bp (0–100 %, ko'pi bilan 2 kasr xonasi).
@@ -129,6 +131,7 @@ impl App {
         let mut book = Book {
             moves: Vec::new(),
             entries: Vec::new(),
+            invest: Vec::new(),
         };
         for r in self
             .db
@@ -156,6 +159,7 @@ impl App {
                 category_id: None,
                 occurred_on: r.occurred_on,
                 note: clean_opt(r.note.as_deref()).or_else(|| clean_opt(Some(&r.source))),
+                self_investment: false,
             });
         }
         for r in self
@@ -164,6 +168,7 @@ impl App {
             .into_iter()
             .filter(|r| r.currency == work.code())
         {
+            book.invest.extend(mf_invest_amount(&r, work));
             book.moves.push(MfMove {
                 kind: MfKind::Expense,
                 amount: m(r.amount_minor),
@@ -179,6 +184,7 @@ impl App {
                 category_id: Some(r.category_id),
                 occurred_on: r.occurred_on,
                 note: r.note,
+                self_investment: r.self_investment,
             });
         }
         // Jamg'arma va zaxira pul alohida qoldiqlar: har biri o'z jadvalida sana tartibida.
@@ -212,6 +218,7 @@ impl App {
                 category_id: None,
                 occurred_on: r.occurred_on,
                 note: r.note,
+                self_investment: false,
             });
         }
         book.entries
@@ -270,7 +277,7 @@ impl App {
     }
 
     /// Ish valyutasidan uy valyutasiga amaldagi kurs (bir xil valyutada — 1).
-    fn mf_rate(
+    pub(crate) fn mf_rate(
         &self,
         ctx: &Ctx,
         scope: &SpaceScope,
@@ -424,6 +431,7 @@ impl App {
             fund_percent: pct(r.fund_bp),
             reserve_percent: pct(r.reserve_bp),
             warnings: r.warnings.iter().map(|w| w.as_str().to_string()).collect(),
+            self_investment: self.mf_self_investment(&ctx, r.income, &book.invest)?,
         };
         let fund = MfFundDto {
             balance: d(r.fund_balance),
@@ -619,7 +627,8 @@ impl App {
             is_gift: false,
             is_ostentation: false,
             funded_by_debt: false,
-            self_investment: false,
+            // «Sarmoya» belgisi (M6): toifa va oy hisobi o'zgarmaydi; Uy bilim rejasiga bog'lanmaydi.
+            self_investment: input.self_investment,
             learning_plan_id: None,
             note: clean_opt(input.note.as_deref()),
         };

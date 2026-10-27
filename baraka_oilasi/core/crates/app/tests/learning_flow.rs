@@ -822,3 +822,51 @@ fn export_import_round_trip_keeps_learning_data() {
         );
     }
 }
+
+/// Ko'rik sanasi: yo'q yoki bo'sh satr — standart +3 oy (Musofir bilan bitta qoida); noto'g'ri sana —
+/// `INVALID_DATE`.
+#[test]
+fn empty_review_date_means_default_three_months() {
+    let dir = tempfile::tempdir().unwrap();
+    let o = home(&Device::new(dir.path(), "desk", 1));
+    let mut p = plan(&o.bekzod, "Buxgalteriya dasturi", &["BOOK"]);
+    p.review_on = Some("  ".into());
+    let a = o.app.learning_plan_create(&o.uy, p.clone()).unwrap();
+    assert_eq!(a.review_on, "2027-02-20");
+    p.review_on = Some("20-02-2027".into());
+    assert_eq!(
+        o.app
+            .learning_plan_create(&o.uy, p)
+            .unwrap_err()
+            .field
+            .as_deref(),
+        Some("reviewOn")
+    );
+}
+
+/// Bo'sh sanalar — bugun (boshlanish va «Ilm zakoti»); kelajakdagi o'rgatish sanasi — `FUTURE_DATE`.
+#[test]
+fn empty_start_and_teaching_dates_mean_today() {
+    let dir = tempfile::tempdir().unwrap();
+    let o = home(&Device::new(dir.path(), "desk", 1));
+    let mut p = plan(&o.bekzod, "Buxgalteriya dasturi", &["BOOK"]);
+    p.start_on = Some(String::new());
+    p.review_on = Some(" ".into());
+    let a = o.app.learning_plan_create(&o.uy, p).unwrap();
+    assert_eq!(
+        (a.start_on.as_str(), a.review_on.as_str()),
+        ("2026-11-20", "2027-02-20")
+    );
+    let t = o
+        .app
+        .teaching_log_add(&o.uy, teach(&o.bekzod, "Smeta tuzish", " "))
+        .unwrap();
+    assert_eq!(t.occurred_on, "2026-11-20");
+    assert_eq!(
+        o.app
+            .teaching_log_add(&o.uy, teach(&o.bekzod, "Smeta tuzish", "2026-11-21"))
+            .unwrap_err()
+            .code,
+        "FUTURE_DATE"
+    );
+}

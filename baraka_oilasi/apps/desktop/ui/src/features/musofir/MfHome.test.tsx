@@ -12,6 +12,7 @@ const mfSetSettings = vi.fn();
 const mfSetRate = vi.fn();
 const mfRecordIncome = vi.fn();
 const mfRecordMove = vi.fn();
+const mfRecordExpense = vi.fn();
 const categories = vi.fn();
 const mfTerms = vi.fn();
 const mfSetTerms = vi.fn();
@@ -27,7 +28,7 @@ vi.mock("../../bindings", () => ({
     mfSetRate: (...a: unknown[]) => mfSetRate(...a),
     mfRecordIncome: (...a: unknown[]) => mfRecordIncome(...a),
     mfRecordMove: (...a: unknown[]) => mfRecordMove(...a),
-    mfRecordExpense: vi.fn(),
+    mfRecordExpense: (...a: unknown[]) => mfRecordExpense(...a),
     categories: (...a: unknown[]) => categories(...a),
     mfTerms: (...a: unknown[]) => mfTerms(...a),
     mfSetTerms: (...a: unknown[]) => mfSetTerms(...a),
@@ -85,6 +86,7 @@ const overview = (over: Record<string, unknown> = {}) => ({
     fundPercent: "0",
     reservePercent: "0",
     warnings: ["NO_SHARE"],
+    selfInvestment: { total: m("0 KRW", "0"), income: m("2 600 000 KRW", "2600000"), shareBp: 0, sharePercent: "0" },
   },
   fund: {
     balance: m("6 000 000 KRW"),
@@ -103,7 +105,7 @@ const overview = (over: Record<string, unknown> = {}) => ({
     status: "BEHIND",
   },
   rate: { fromCurrency: "KRW", toCurrency: "UZS", rate: "9,1", rateOn: "2026-10-15", source: "Bank", stale: false, identity: false },
-  entries: [{ id: "e1", kind: "SENT_HOME", amount: m("1 200 000 KRW"), fee: m("5 000 KRW"), received: m("10 900 000 soʻm", "1090000000", "UZS"), channel: null, categoryId: null, occurredOn: "2026-10-12", note: null }],
+  entries: [{ id: "e1", kind: "SENT_HOME", amount: m("1 200 000 KRW"), fee: m("5 000 KRW"), received: m("10 900 000 soʻm", "1090000000", "UZS"), channel: null, categoryId: null, occurredOn: "2026-10-12", note: null, selfInvestment: false }],
   ...over,
 });
 
@@ -140,7 +142,7 @@ const members = [
 ];
 
 beforeEach(() => {
-  [mfOverview, mfSetSettings, mfSetRate, mfRecordIncome, mfRecordMove, categories, mfTerms, mfSetTerms, mfTwoShores, mfConfirmReceipt, mfRecordSpend, household].forEach((f) => f.mockReset());
+  [mfOverview, mfSetSettings, mfSetRate, mfRecordIncome, mfRecordMove, mfRecordExpense, categories, mfTerms, mfSetTerms, mfTwoShores, mfConfirmReceipt, mfRecordSpend, household].forEach((f) => f.mockReset());
   categories.mockResolvedValue(ok([{ id: "c1", nameKey: "category.food", customName: null, defaultNecessity: null, isSystem: true }]));
   mfTerms.mockResolvedValue(ok({ shares: [share("HOUSEHOLD", 5000), share("DEBT", 3000), share("BUILD", 2000)], receiverMemberId: null, agreement: null, uySpaceId: "uy" }));
   mfTwoShores.mockResolvedValue(ok(shores({ remittances: [] })));
@@ -312,6 +314,26 @@ describe("Musofir bosh sahifasi", () => {
     ]);
     expect(input.receiverMemberId).toBe("m2");
     expect(input.items[1]).toBe("Pulni uyda Mohira qabul qiladi va ilovaga yozadi.");
+  });
+
+  it("M6: «Sarmoya» belgisi — xarajat oynasida; oy hisobida alohida qator (summa va ulush yadrodan)", async () => {
+    const month = { ...overview().month, selfInvestment: { total: m("135 000 KRW", "135000"), income: m("2 600 000 KRW", "2600000"), shareBp: 519, sharePercent: "5,19" } };
+    const entries = [{ id: "e2", kind: "EXPENSE", amount: m("135 000 KRW", "135000"), fee: null, received: null, channel: "CARD", categoryId: "c1", occurredOn: "2026-10-12", note: "Til kursi", selfInvestment: true }];
+    mfOverview.mockResolvedValue(ok(overview({ month, entries })));
+    mfRecordExpense.mockResolvedValue(ok(overview()));
+    const user = userEvent.setup();
+    wrap(<MfHomeScreen spaceId="mf" />);
+    const row = await screen.findByTestId("mf-self-investment");
+    expect(row).toHaveTextContent("135 000 KRW");
+    expect(row.closest("tr")).toHaveTextContent("5,19 %");
+    expect(screen.getByTestId("mf-entry")).toHaveTextContent("Sarmoya");
+    await user.click(screen.getByRole("button", { name: "Xarajat" }));
+    const dialog = screen.getByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Summa (KRW)"), "60 000");
+    await user.click(within(dialog).getByRole("checkbox", { name: /Sarmoya \(oʻqish\)/ }));
+    expect(await axeViolations(dialog)).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    expect(mfRecordExpense).toHaveBeenCalledWith("mf", { amount: "60 000", categoryId: "c1", channel: "CARD", occurredOn: null, note: null, selfInvestment: true });
   });
 });
 

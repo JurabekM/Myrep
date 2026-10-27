@@ -226,6 +226,13 @@
     "allow-kk-delegation-save",
     "allow-kk-delegation-delete",
     "allow-kk-teaching-add",
-    "allow-kk-learning-overview"
+    "allow-kk-learning-overview",
+    "allow-mf-hour-suggest",
+    "allow-mf-hour-save",
+    "allow-mf-learning-plan-create",
+    "allow-mf-learning-plan-set-status",
+    "allow-mf-learning-plan-result",
+    "allow-mf-teaching-add",
+    "allow-mf-learning-overview"
   ]
 }

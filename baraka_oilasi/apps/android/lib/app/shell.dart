@@ -211,7 +211,7 @@ class _Drawer extends ConsumerWidget {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    offerCheckOpener?.call(context);
+                    offerCheckOpener?.call(context, musofir: ctx.musofir);
                   },
                   child: Text(context.t('offer.open')),
                 ),

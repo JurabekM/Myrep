@@ -30,6 +30,7 @@ import { KkQuoteScreen } from "../features/kasbkor/KkQuoteScreen";
 import { KkSellerCreditScreen, KkSellerScreen } from "../features/kasbkor/KkSellerScreen";
 import { KkShiftScreen } from "../features/kasbkor/KkShiftScreen";
 import { MfHomeScreen } from "../features/musofir/MfHomeScreen";
+import { MfLearningScreen } from "../features/musofir/MfLearningScreen";
 import { TwoShoresScreen } from "../features/musofir/TwoShoresScreen";
 import { ReceiptScreen } from "../features/receipt/ReceiptScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
@@ -80,9 +81,10 @@ const KK_NAV: { screen: Screen; label: string }[] = [
   { screen: "settings", label: "nav.settings" },
 ];
 
-/** Musofir makoni (M1): bosh sahifa — hamma narsa shu yerda. */
+/** Musofir makoni (M1): bosh sahifa — hamma narsa shu yerda; M6 — «Oʻzimga sarmoya». */
 const MF_NAV: { screen: Screen; label: string }[] = [
   { screen: "home", label: "nav.home" },
+  { screen: "mfLearning", label: "nav.mfLearning" },
   { screen: "sync", label: "nav.sync" },
   { screen: "settings", label: "nav.settings" },
 ];
@@ -107,6 +109,7 @@ const MENTOR: Record<Screen, string> = {
   partnerships: "mentor.partnerships",
   ideas: "mentor.ideas",
   learning: "mentor.learning",
+  mfLearning: "mentor.mfLearning",
   agreements: "mentor.agreements",
   receipt: "mentor.receipt",
   kkEquipment: "mentor.kkEquipment",
@@ -263,12 +266,14 @@ export function Shell() {
         {active && kasbkor && screen === "kkZakat" && <KkZakatScreen spaceId={active} />}
         {active && kasbkor && screen === "kkMeasure" && <KkMeasureScreen spaceId={active} />}
         {active && kasbkor && !seller && screen === "kkLearning" && <KkLearningScreen spaceId={active} />}
+        {active && musofir && screen === "mfLearning" && <MfLearningScreen spaceId={active} />}
         {screen === "sync" && <SyncScreen />}
         {screen === "settings" && <SettingsScreen />}
       </main>
       <Mentor tipKey={seller && screen === "home" ? "mentor.kkSeller" : kasbkor && screen === "home" ? "mentor.kk" : musofir && screen === "home" ? "mentor.mf" : MENTOR[screen]} />
       {incomeOpen && active && !kasbkor && !musofir && <IncomeDialog spaceId={active} onClose={closeIncome} />}
-      {offerOpen && <OfferCheckDialog initialMode={offerMode} onClose={closeOffer} />}
+      {/* Musofir makonida kurs tekshiruvi «chet elda ish kafolati» savolini ham so'raydi (M6). */}
+      {offerOpen && <OfferCheckDialog initialMode={offerMode} askJobAbroad={musofir} onClose={closeOffer} />}
       {celebration && active && <CelebrationDialog spaceId={active} result={celebration} onClose={closeCelebration} />}
     </div>
   );

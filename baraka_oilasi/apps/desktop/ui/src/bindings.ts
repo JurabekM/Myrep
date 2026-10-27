@@ -256,6 +256,13 @@ export const commands = {
 	kkDelegationDelete: (spaceId: string, id: string) => typedError<null, AppError>(__TAURI_INVOKE("kk_delegation_delete", { spaceId, id })),
 	kkTeachingAdd: (spaceId: string, input: KkTeachingInput) => typedError<KkTeachingDto, AppError>(__TAURI_INVOKE("kk_teaching_add", { spaceId, input })),
 	kkLearningOverview: (spaceId: string, date: string | null) => typedError<KkLearningOverviewDto, AppError>(__TAURI_INVOKE("kk_learning_overview", { spaceId, date })),
+	mfHourSuggest: (spaceId: string) => typedError<MfHourSuggestionDto, AppError>(__TAURI_INVOKE("mf_hour_suggest", { spaceId })),
+	mfHourSave: (spaceId: string, input: MfHourInput) => typedError<MfHourDto, AppError>(__TAURI_INVOKE("mf_hour_save", { spaceId, input })),
+	mfLearningPlanCreate: (spaceId: string, input: MfLearningPlanInput) => typedError<MfLearningPlanDto, AppError>(__TAURI_INVOKE("mf_learning_plan_create", { spaceId, input })),
+	mfLearningPlanSetStatus: (spaceId: string, planId: string, status: string) => typedError<MfLearningPlanDto, AppError>(__TAURI_INVOKE("mf_learning_plan_set_status", { spaceId, planId, status })),
+	mfLearningPlanResult: (spaceId: string, planId: string) => typedError<MfLearningResultDto, AppError>(__TAURI_INVOKE("mf_learning_plan_result", { spaceId, planId })),
+	mfTeachingAdd: (spaceId: string, input: MfTeachingInput) => typedError<MfTeachingDto, AppError>(__TAURI_INVOKE("mf_teaching_add", { spaceId, input })),
+	mfLearningOverview: (spaceId: string, date: string | null) => typedError<MfLearningOverviewDto, AppError>(__TAURI_INVOKE("mf_learning_overview", { spaceId, date })),
 };
 
 /** Events */
@@ -2534,6 +2541,8 @@ export type MfEntryDto = {
 	categoryId: string | null,
 	occurredOn: string,
 	note: string | null,
+	/**  «Sarmoya» belgili chet el xarajati (M6). */
+	selfInvestment: boolean,
 };
 
 export type MfExpenseInput = {
@@ -2542,6 +2551,8 @@ export type MfExpenseInput = {
 	channel: string,
 	occurredOn: string | null,
 	note: string | null,
+	/**  «Sarmoya» belgisi (M6, SPEC 6A): o'qish xarajati; toifa o'zgarmaydi, ulush va jamg'armaga tegilmaydi. */
+	selfInvestment?: boolean,
 };
 
 export type MfFlagDto = {
@@ -2571,6 +2582,59 @@ export type MfFundDto = {
 	status: string,
 };
 
+/**  Saqlangan soat qiymati (ish valyutasida) va uning uy valyutasidagi ko'rinishi (amaldagi kurs bilan). */
+export type MfHourDto = {
+	id: string,
+	income: MoneyDto,
+	/**  `AUTO` yoki `MANUAL`. */
+	incomeSource: string,
+	/**  `AUTO` da — nechta to'liq oy o'rtachasi; `MANUAL` da 0. */
+	months: number,
+	minutesPerDay: number,
+	days: number,
+	monthlyMinutes: number,
+	hourValue: MoneyDto,
+	doubleTarget: MoneyDto,
+	overCeiling: boolean,
+	computedOn: string,
+	home: MfHourHomeDto,
+};
+
+/**  Uy valyutasidagi ko'rinish — faqat kiritilgan kurs bilan (SPEC 4.1). */
+export type MfHourHomeDto = {
+	/**  `FRESH`, `STALE` (kurs 30 kundan eski), `NO_RATE` (qiymat yo'q), `SAME_CURRENCY`. */
+	rateStatus: string,
+	hourValue: MoneyDto | null,
+	doubleTarget: MoneyDto | null,
+	/**  Qaysi kurs bilan hisoblangani; `NO_RATE` da `null`. */
+	rate: MfRateDto | null,
+};
+
+export type MfHourInput = {
+	/**  Qo'lda kiritilgan oylik daromad (ish valyutasida); bo'sh — oxirgi to'liq oylar o'rtachasi (`AUTO`). */
+	income: string | null,
+	/**  Kuniga ish vaqti, daqiqada (1–1440). */
+	minutesPerDay: number,
+	/**  Oyda ish kunlari (1–31). */
+	days: number,
+};
+
+/**
+ *  Soat qiymati taklifi: oxirgi to'liq oylardagi (daromad yozuvi borlari, ko'pi bilan 3 ta) maosh + boshqa
+ *  daromad, ish valyutasida.
+ */
+export type MfHourSuggestionDto = {
+	months: MonthIncomeDto[],
+	/**  Oy yo'q — `null` (qo'lda kiritiladi). */
+	average: MoneyDto | null,
+};
+
+/**  «Hunardan ishga» g'oyasi tanlovi (Uy makonidan). */
+export type MfIdeaOptionDto = {
+	id: string,
+	title: string,
+};
+
 export type MfIncomeInput = {
 	/**  `SALARY` yoki `OTHER_INCOME`. */
 	kind: string,
@@ -2586,6 +2650,71 @@ export type MfIncomeRecordedDto = {
 	suggestedShare: MoneyDto,
 	suggestedReserve: MoneyDto,
 	suggestedFund: MoneyDto,
+};
+
+/**  Musofir «O'zimga sarmoya» ekrani (shaxsiy — oila qurilmasida yopiq). */
+export type MfLearningOverviewDto = {
+	periodStart: string,
+	periodEnd: string,
+	workCurrency: string,
+	homeCurrency: string,
+	/**  Oxirgi saqlangan hisob (ish valyutasida). */
+	hourValue: MfHourDto | null,
+	plans: MfLearningPlanDto[],
+	activePlans: number,
+	ideas: MfIdeaOptionDto[],
+	/**  Ish boshlash summasiga bog'langan g'oya (M4) — `HOME` rejada standart tanlov. */
+	startupIdeaId: string | null,
+	teachingCount: number,
+	teaching: MfTeachingDto[],
+	/**  Shu oy «Sarmoya» belgili chet el xarajatlari va oy daromadidagi ulushi (ish valyutasida). */
+	selfInvestment: SelfInvestmentDto,
+};
+
+export type MfLearningPlanDto = {
+	id: string,
+	goal: string,
+	skill: string,
+	purpose: string | null,
+	paths: string[],
+	budget: MoneyDto | null,
+	weeklyMinutes: number,
+	startOn: string,
+	reviewOn: string,
+	status: string,
+	baselineHourValue: MoneyDto | null,
+	resultHourValue: MoneyDto | null,
+	ventureIdeaId: string | null,
+	/**  G'oya nomi (o'chirilgan bo'lsa — `null`). */
+	ventureIdeaTitle: string | null,
+	courseCheckSuggested: boolean,
+	reviewDue: boolean,
+};
+
+export type MfLearningPlanInput = {
+	/**  `ABROAD` — chet eldagi soatni qimmatlashtirish; `HOME` — qaytgandan keyin uyda daromad beradigan hunar. */
+	goal: string,
+	skill: string,
+	purpose: string | null,
+	/**  `BOOK`, `MENTOR`, `COURSE`, `PRACTICE` (bir nechtasi). */
+	paths: string[],
+	/**  Ish valyutasida (ixtiyoriy). */
+	budget: string | null,
+	weeklyMinutes: number,
+	startOn: string | null,
+	reviewOn: string | null,
+	/**  Faqat `HOME`: Uy makonidagi «Hunardan ishga» g'oyasi (U12). */
+	ventureIdeaId: string | null,
+};
+
+/**  Natijani o'lchash: oxirgi soat qiymati boshlang'ich nuqta bilan (ish valyutasida). */
+export type MfLearningResultDto = {
+	planId: string,
+	baseline: MfHourDto | null,
+	current: MfHourDto,
+	diff: MoneyDto | null,
+	changeBp: number | null,
+	changePercent: string | null,
 };
 
 export type MfMonthDto = {
@@ -2611,6 +2740,8 @@ export type MfMonthDto = {
 	reservePercent: string | null,
 	/**  `POCKET_NEGATIVE`, `NO_SHARE`, `SHARE_BELOW_TARGET`, `FUND_WITHDRAWN`. */
 	warnings: string[],
+	/**  «Oʻzimga sarmoya» qatori (M6): belgili xarajatlar jami va oy daromadidagi ulushi. */
+	selfInvestment: SelfInvestmentDto,
 };
 
 export type MfMoveInput = {
@@ -2837,6 +2968,26 @@ export type MfStartupDto = {
 	/**  «Hunardan ishga» g'oyasi (Uy makonida). */
 	ideaId: string | null,
 	ideaTitle: string | null,
+};
+
+export type MfTeachingDto = {
+	id: string,
+	occurredOn: string,
+	area: string,
+	learner: string | null,
+	topic: string,
+	minutes: number | null,
+};
+
+export type MfTeachingInput = {
+	/**  Bo'sh — bugun. */
+	occurredOn: string | null,
+	/**  `WORK` (ish), `LANGUAGE` (til), `DOCUMENTS` (hujjatlar), `OTHER`. */
+	area: string,
+	/**  Kimga (ixtiyoriy): ism yoki «yangi kelgan hamyurt». */
+	learner: string | null,
+	topic: string,
+	minutes: number | null,
 };
 
 export type MfTermsDto = {

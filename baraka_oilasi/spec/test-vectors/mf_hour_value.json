@@ -1,0 +1,450 @@
+{
+  "suite": "mf_hour_value",
+  "version": 1,
+  "description": "Musofir soat qiymati: ish valyutasida umumiy hour_value (maosh + boshqa daromad, oxirgi ≤3 to'liq oy o'rtachasi yoki qo'lda); uy valyutasida — faqat kurs bilan convert(1 soat), ikki barobar = 2 × shu; kurs yo'q — NO_RATE (qiymat yo'q), bir xil valyuta — SAME_CURRENCY, kurs 30 kundan eski — STALE (musofir/SPEC 6A, 4.4)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "mhv-001-krw-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": 5
+      },
+      "expected": {
+        "income": "2650000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 13200,
+        "hourValue": "12045",
+        "doubleTarget": "24090",
+        "overCeiling": false,
+        "rateStatus": "FRESH",
+        "hourValueHome": "10960950",
+        "doubleTargetHome": "21921900"
+      }
+    },
+    {
+      "id": "mhv-002-no-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": null,
+        "rateAgeDays": null
+      },
+      "expected": {
+        "income": "2650000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 13200,
+        "hourValue": "12045",
+        "doubleTarget": "24090",
+        "overCeiling": false,
+        "rateStatus": "NO_RATE",
+        "hourValueHome": null,
+        "doubleTargetHome": null
+      }
+    },
+    {
+      "id": "mhv-003-stale-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": 31
+      },
+      "expected": {
+        "income": "2650000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 13200,
+        "hourValue": "12045",
+        "doubleTarget": "24090",
+        "overCeiling": false,
+        "rateStatus": "STALE",
+        "hourValueHome": "10960950",
+        "doubleTargetHome": "21921900"
+      }
+    },
+    {
+      "id": "mhv-004-rate-30-days-fresh",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": 30
+      },
+      "expected": {
+        "income": "2650000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 13200,
+        "hourValue": "12045",
+        "doubleTarget": "24090",
+        "overCeiling": false,
+        "rateStatus": "FRESH",
+        "hourValueHome": "10960950",
+        "doubleTargetHome": "21921900"
+      }
+    },
+    {
+      "id": "mhv-005-same-currency",
+      "input": {
+        "currency": "UZS",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "650000000"
+        ],
+        "minutesPerDay": 540,
+        "days": 24,
+        "rate": null,
+        "rateAgeDays": null
+      },
+      "expected": {
+        "income": "650000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 12960,
+        "hourValue": "3009259",
+        "doubleTarget": "6018518",
+        "overCeiling": false,
+        "rateStatus": "SAME_CURRENCY",
+        "hourValueHome": "3009259",
+        "doubleTargetHome": "6018518"
+      }
+    },
+    {
+      "id": "mhv-006-same-currency-rate-ignored",
+      "input": {
+        "currency": "UZS",
+        "homeCurrency": "UZS",
+        "income": "650000000",
+        "monthTotals": null,
+        "minutesPerDay": 540,
+        "days": 24,
+        "rate": {
+          "num": 2,
+          "den": 1
+        },
+        "rateAgeDays": 90
+      },
+      "expected": {
+        "income": "650000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 12960,
+        "hourValue": "3009259",
+        "doubleTarget": "6018518",
+        "overCeiling": false,
+        "rateStatus": "SAME_CURRENCY",
+        "hourValueHome": "3009259",
+        "doubleTargetHome": "6018518"
+      }
+    },
+    {
+      "id": "mhv-007-rub-manual",
+      "input": {
+        "currency": "RUB",
+        "homeCurrency": "UZS",
+        "income": "9500000",
+        "monthTotals": null,
+        "minutesPerDay": 600,
+        "days": 26,
+        "rate": {
+          "num": 15235,
+          "den": 100
+        },
+        "rateAgeDays": 2
+      },
+      "expected": {
+        "income": "9500000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 15600,
+        "hourValue": "36538",
+        "doubleTarget": "73076",
+        "overCeiling": false,
+        "rateStatus": "FRESH",
+        "hourValueHome": "5566564",
+        "doubleTargetHome": "11133128"
+      }
+    },
+    {
+      "id": "mhv-008-home-rounding",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 73,
+          "den": 8
+        },
+        "rateAgeDays": 0
+      },
+      "expected": {
+        "income": "2650000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 13200,
+        "hourValue": "12045",
+        "doubleTarget": "24090",
+        "overCeiling": false,
+        "rateStatus": "FRESH",
+        "hourValueHome": "10991063",
+        "doubleTargetHome": "21982126"
+      }
+    },
+    {
+      "id": "mhv-009-kzt-over-ceiling",
+      "input": {
+        "currency": "KZT",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "45000000",
+          "52000000"
+        ],
+        "minutesPerDay": 720,
+        "days": 26,
+        "rate": {
+          "num": 246,
+          "den": 10
+        },
+        "rateAgeDays": 12
+      },
+      "expected": {
+        "income": "48500000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 18720,
+        "hourValue": "155449",
+        "doubleTarget": "310898",
+        "overCeiling": true,
+        "rateStatus": "FRESH",
+        "hourValueHome": "3824045",
+        "doubleTargetHome": "7648090"
+      }
+    },
+    {
+      "id": "mhv-010-try-one-month",
+      "input": {
+        "currency": "TRY",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "3150000"
+        ],
+        "minutesPerDay": 540,
+        "days": 26,
+        "rate": {
+          "num": 3705,
+          "den": 10
+        },
+        "rateAgeDays": 7
+      },
+      "expected": {
+        "income": "3150000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 14040,
+        "hourValue": "13462",
+        "doubleTarget": "26924",
+        "overCeiling": false,
+        "rateStatus": "FRESH",
+        "hourValueHome": "4987671",
+        "doubleTargetHome": "9975342"
+      }
+    },
+    {
+      "id": "mhv-neg-001-no-income-with-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": 5
+      },
+      "expected": {
+        "error": "NO_INCOME"
+      }
+    },
+    {
+      "id": "mhv-neg-002-zero-income",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": "0",
+        "monthTotals": null,
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": 5
+      },
+      "expected": {
+        "error": "NO_INCOME"
+      }
+    },
+    {
+      "id": "mhv-neg-003-invalid-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 0,
+          "den": 10
+        },
+        "rateAgeDays": 5
+      },
+      "expected": {
+        "error": "INVALID_RATE"
+      }
+    },
+    {
+      "id": "mhv-neg-004-future-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": -1
+      },
+      "expected": {
+        "error": "FUTURE_DATE"
+      }
+    },
+    {
+      "id": "mhv-neg-005-time-before-rate",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 0,
+        "days": 22,
+        "rate": {
+          "num": 0,
+          "den": 10
+        },
+        "rateAgeDays": -1
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "mhv-neg-006-four-months",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000",
+          "1"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": null,
+        "rateAgeDays": null
+      },
+      "expected": {
+        "error": "TOO_MANY_MONTHS"
+      }
+    },
+    {
+      "id": "mhv-neg-007-rate-without-age",
+      "input": {
+        "currency": "KRW",
+        "homeCurrency": "UZS",
+        "income": null,
+        "monthTotals": [
+          "2600000",
+          "2750000",
+          "2600000"
+        ],
+        "minutesPerDay": 600,
+        "days": 22,
+        "rate": {
+          "num": 91,
+          "den": 10
+        },
+        "rateAgeDays": null
+      },
+      "expected": {
+        "error": "FUTURE_DATE"
+      }
+    }
+  ]
+}

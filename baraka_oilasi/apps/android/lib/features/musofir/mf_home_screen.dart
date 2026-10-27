@@ -441,6 +441,14 @@ class _Flow extends StatelessWidget {
       Hint(context.t('kk.period', {'from': showDate(d.periodStart), 'to': showDate(d.periodEnd)})),
       _row(context, context.t('mf.flow.income'), m.income.formatted, key: const Key('mf-income')),
       _row(context, context.t('mf.flow.expenses'), '− ${m.expenses.formatted}', hint: pct(m.expensesPercent)),
+      if (m.selfInvestment.total.minor != '0')
+        _row(
+          context,
+          '· ${context.t('mf.flow.selfInvestment')}',
+          m.selfInvestment.total.formatted,
+          hint: pct(m.selfInvestment.sharePercent),
+          key: const Key('mf-self-investment'),
+        ),
       _row(
         context,
         context.t('mf.flow.sentHome'),
@@ -614,6 +622,7 @@ class _Entries extends ConsumerWidget {
                       Hint(
                         [
                           categoryName(context, categories, e.categoryId),
+                          if (e.selfInvestment) context.t('mf.selfInvestmentTag'),
                           if (e.fee != null) context.t('mf.feeShort', {'amount': e.fee!.formatted}),
                           if (e.received != null) context.t('mf.receivedShort', {'amount': e.received!.formatted}),
                           ?e.note,

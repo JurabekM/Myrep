@@ -678,7 +678,7 @@ Har bir U-vazifaning **funksional mazmuni va qabul mezonlari** — ko'rsatilgan 
 | M1 | Ko'p valyuta (KRW va b.), chet eldagi maosh va xarajatlar, o'z ulushi, qaytish jamg'armasi |
 | M2 | «Ikki qirg'oq»: o'tkazma maqsadlari, `REMITTANCE` kelishuvi, uydagi xarajatni maqsad bo'yicha yozish (`.baraka` fayl orqali) |
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori |
-| M6 | 8-tamoyil: soat qiymati ish valyutasida, ikki maqsadli bilim rejasi (`musofir/SPEC.md` 6A) |
+| M6 | 8-tamoyil: soat qiymati ish valyutasida, ikki maqsadli bilim rejasi (`musofir/SPEC.md` 6A; ✅ — vektor `mf_hour_value`, farqlar 6A.1) |
 | R1 | E2E shifrlangan relay server (axum) — ADR tasdiqlangandan keyin |
 
 ### G. «GUVOH» QURILMASI (keyinroq)

@@ -17,6 +17,7 @@ pub mod kk_staff;
 pub mod kk_stock;
 pub mod learning;
 pub mod mf;
+pub mod mf_learning;
 pub mod partnerships;
 pub mod recovery;
 pub mod roles;

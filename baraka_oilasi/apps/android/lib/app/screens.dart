@@ -29,6 +29,7 @@ import '../features/kasbkor/kk_zakat_screen.dart';
 import '../features/learning/learning_screen.dart';
 import '../features/musofir/mf_entry_sheet.dart';
 import '../features/musofir/mf_home_screen.dart';
+import '../features/musofir/mf_learning_screen.dart';
 import '../features/musofir/two_shores_screen.dart';
 import '../features/partnership/partnerships_screen.dart';
 import '../features/payoff/payoff_screen.dart';
@@ -142,7 +143,7 @@ const _kkNav = [
   'settings',
 ];
 
-const _mfNav = ['home', 'sync', 'settings'];
+const _mfNav = ['home', 'mfLearning', 'sync', 'settings'];
 
 const _sellerNav = ['home', 'kkSellerCredit', 'kkShift', 'sync', 'settings'];
 
@@ -173,6 +174,7 @@ final Map<String, ScreenDef> screenDefs = {
   'kkZakat': ScreenDef('kkZakat', 'nav.kkZakat', (c) => KkZakatScreen(spaceId: c.spaceId)),
   'kkMeasure': ScreenDef('kkMeasure', 'nav.kkMeasure', (c) => KkMeasureScreen(spaceId: c.spaceId)),
   'kkLearning': ScreenDef('kkLearning', 'nav.kkLearning', (c) => KkLearningScreen(spaceId: c.spaceId)),
+  'mfLearning': ScreenDef('mfLearning', 'nav.mfLearning', (c) => MfLearningScreen(spaceId: c.spaceId)),
   'kkSellerCredit': ScreenDef('kkSellerCredit', 'nav.kkSellerCredit', (c) => KkSellerCreditScreen(spaceId: c.spaceId)),
   'kkShift': ScreenDef('kkShift', 'nav.kkShift', (c) => KkShiftScreen(spaceId: c.spaceId)),
   'twoShores': ScreenDef(
@@ -222,4 +224,6 @@ Widget _home(ShellContext ctx) => ctx.seller
     : HomeScreen(spaceId: ctx.spaceId);
 
 /// «Taklifni tekshirish» (uy/SPEC 2E.5) — ilovaning istalgan joyidan; `null` — ekran hali yo'q.
-void Function(BuildContext context)? get offerCheckOpener => openOfferCheck;
+/// `musofir` — Musofir makonida kurs turi «chet elda ish kafolati» savolini ham so'raydi (M6).
+void Function(BuildContext context, {bool musofir})? get offerCheckOpener =>
+    (context, {musofir = false}) => openOfferCheck(context, askJobAbroad: musofir);

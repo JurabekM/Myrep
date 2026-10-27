@@ -70,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -20571861;
+  int get rustContentHash => -846540951;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'baraka_bindings_flutter',
@@ -968,6 +968,42 @@ abstract class RustLibApi extends BaseApi {
     required String spaceId,
   });
 
+  Future<MfHourDto> crateApiCoreBarakaCoreMfHourSave({
+    required BarakaCore that,
+    required String spaceId,
+    required MfHourInput input,
+  });
+
+  Future<MfHourSuggestionDto> crateApiCoreBarakaCoreMfHourSuggest({
+    required BarakaCore that,
+    required String spaceId,
+  });
+
+  Future<MfLearningOverviewDto> crateApiCoreBarakaCoreMfLearningOverview({
+    required BarakaCore that,
+    required String spaceId,
+    String? date,
+  });
+
+  Future<MfLearningPlanDto> crateApiCoreBarakaCoreMfLearningPlanCreate({
+    required BarakaCore that,
+    required String spaceId,
+    required MfLearningPlanInput input,
+  });
+
+  Future<MfLearningResultDto> crateApiCoreBarakaCoreMfLearningPlanResult({
+    required BarakaCore that,
+    required String spaceId,
+    required String planId,
+  });
+
+  Future<MfLearningPlanDto> crateApiCoreBarakaCoreMfLearningPlanSetStatus({
+    required BarakaCore that,
+    required String spaceId,
+    required String planId,
+    required String status,
+  });
+
   Future<MfOverviewDto> crateApiCoreBarakaCoreMfOverview({
     required BarakaCore that,
     required String spaceId,
@@ -1051,6 +1087,12 @@ abstract class RustLibApi extends BaseApi {
     required BarakaCore that,
     required String spaceId,
     required MfTravelDebtInput input,
+  });
+
+  Future<MfTeachingDto> crateApiCoreBarakaCoreMfTeachingAdd({
+    required BarakaCore that,
+    required String spaceId,
+    required MfTeachingInput input,
   });
 
   Future<MfTermsDto> crateApiCoreBarakaCoreMfTerms({
@@ -7217,6 +7259,240 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<MfHourDto> crateApiCoreBarakaCoreMfHourSave({
+    required BarakaCore that,
+    required String spaceId,
+    required MfHourInput input,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          sse_encode_box_autoadd_mf_hour_input(input, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 149,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_hour_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfHourSaveConstMeta,
+        argValues: [that, spaceId, input],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfHourSaveConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_hour_save",
+    argNames: ["that", "spaceId", "input"],
+  );
+
+  @override
+  Future<MfHourSuggestionDto> crateApiCoreBarakaCoreMfHourSuggest({
+    required BarakaCore that,
+    required String spaceId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 150,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_hour_suggestion_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfHourSuggestConstMeta,
+        argValues: [that, spaceId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfHourSuggestConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_hour_suggest",
+    argNames: ["that", "spaceId"],
+  );
+
+  @override
+  Future<MfLearningOverviewDto> crateApiCoreBarakaCoreMfLearningOverview({
+    required BarakaCore that,
+    required String spaceId,
+    String? date,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          sse_encode_opt_String(date, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 151,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_learning_overview_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfLearningOverviewConstMeta,
+        argValues: [that, spaceId, date],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfLearningOverviewConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_learning_overview",
+    argNames: ["that", "spaceId", "date"],
+  );
+
+  @override
+  Future<MfLearningPlanDto> crateApiCoreBarakaCoreMfLearningPlanCreate({
+    required BarakaCore that,
+    required String spaceId,
+    required MfLearningPlanInput input,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          sse_encode_box_autoadd_mf_learning_plan_input(input, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 152,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_learning_plan_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfLearningPlanCreateConstMeta,
+        argValues: [that, spaceId, input],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfLearningPlanCreateConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_learning_plan_create",
+    argNames: ["that", "spaceId", "input"],
+  );
+
+  @override
+  Future<MfLearningResultDto> crateApiCoreBarakaCoreMfLearningPlanResult({
+    required BarakaCore that,
+    required String spaceId,
+    required String planId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          sse_encode_String(planId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 153,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_learning_result_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfLearningPlanResultConstMeta,
+        argValues: [that, spaceId, planId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfLearningPlanResultConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_learning_plan_result",
+    argNames: ["that", "spaceId", "planId"],
+  );
+
+  @override
+  Future<MfLearningPlanDto> crateApiCoreBarakaCoreMfLearningPlanSetStatus({
+    required BarakaCore that,
+    required String spaceId,
+    required String planId,
+    required String status,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          sse_encode_String(planId, serializer);
+          sse_encode_String(status, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 154,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_learning_plan_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfLearningPlanSetStatusConstMeta,
+        argValues: [that, spaceId, planId, status],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfLearningPlanSetStatusConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_learning_plan_set_status",
+    argNames: ["that", "spaceId", "planId", "status"],
+  );
+
+  @override
   Future<MfOverviewDto> crateApiCoreBarakaCoreMfOverview({
     required BarakaCore that,
     required String spaceId,
@@ -7235,7 +7511,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 149,
+            funcId: 155,
             port: port_,
           );
         },
@@ -7274,7 +7550,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 150,
+            funcId: 156,
             port: port_,
           );
         },
@@ -7313,7 +7589,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 151,
+            funcId: 157,
             port: port_,
           );
         },
@@ -7352,7 +7628,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 152,
+            funcId: 158,
             port: port_,
           );
         },
@@ -7391,7 +7667,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 153,
+            funcId: 159,
             port: port_,
           );
         },
@@ -7430,7 +7706,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 154,
+            funcId: 160,
             port: port_,
           );
         },
@@ -7469,7 +7745,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 155,
+            funcId: 161,
             port: port_,
           );
         },
@@ -7510,7 +7786,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 156,
+            funcId: 162,
             port: port_,
           );
         },
@@ -7549,7 +7825,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 157,
+            funcId: 163,
             port: port_,
           );
         },
@@ -7588,7 +7864,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 158,
+            funcId: 164,
             port: port_,
           );
         },
@@ -7627,7 +7903,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 159,
+            funcId: 165,
             port: port_,
           );
         },
@@ -7666,7 +7942,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 160,
+            funcId: 166,
             port: port_,
           );
         },
@@ -7705,7 +7981,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 161,
+            funcId: 167,
             port: port_,
           );
         },
@@ -7744,7 +8020,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 162,
+            funcId: 168,
             port: port_,
           );
         },
@@ -7765,6 +8041,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<MfTeachingDto> crateApiCoreBarakaCoreMfTeachingAdd({
+    required BarakaCore that,
+    required String spaceId,
+    required MfTeachingInput input,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBarakaCore(
+            that,
+            serializer,
+          );
+          sse_encode_String(spaceId, serializer);
+          sse_encode_box_autoadd_mf_teaching_input(input, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 169,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_mf_teaching_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiCoreBarakaCoreMfTeachingAddConstMeta,
+        argValues: [that, spaceId, input],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoreBarakaCoreMfTeachingAddConstMeta => const TaskConstMeta(
+    debugName: "BarakaCore_mf_teaching_add",
+    argNames: ["that", "spaceId", "input"],
+  );
+
+  @override
   Future<MfTermsDto> crateApiCoreBarakaCoreMfTerms({
     required BarakaCore that,
     required String spaceId,
@@ -7781,7 +8096,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 163,
+            funcId: 170,
             port: port_,
           );
         },
@@ -7818,7 +8133,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 164,
+            funcId: 171,
             port: port_,
           );
         },
@@ -7855,7 +8170,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 165,
+            funcId: 172,
             port: port_,
           );
         },
@@ -7896,7 +8211,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 166,
+            funcId: 173,
             port: port_,
           );
         },
@@ -7926,7 +8241,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 167,
+            funcId: 174,
             port: port_,
           );
         },
@@ -7968,7 +8283,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 168,
+            funcId: 175,
             port: port_,
           );
         },
@@ -8005,7 +8320,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 169,
+            funcId: 176,
             port: port_,
           );
         },
@@ -8044,7 +8359,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 170,
+            funcId: 177,
             port: port_,
           );
         },
@@ -8083,7 +8398,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 171,
+            funcId: 178,
             port: port_,
           );
         },
@@ -8120,7 +8435,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 172,
+            funcId: 179,
             port: port_,
           );
         },
@@ -8159,7 +8474,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 173,
+            funcId: 180,
             port: port_,
           );
         },
@@ -8198,7 +8513,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 174,
+            funcId: 181,
             port: port_,
           );
         },
@@ -8235,7 +8550,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 175,
+            funcId: 182,
             port: port_,
           );
         },
@@ -8278,7 +8593,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 176,
+            funcId: 183,
             port: port_,
           );
         },
@@ -8317,7 +8632,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 177,
+            funcId: 184,
             port: port_,
           );
         },
@@ -8356,7 +8671,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 178,
+            funcId: 185,
             port: port_,
           );
         },
@@ -8395,7 +8710,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 179,
+            funcId: 186,
             port: port_,
           );
         },
@@ -8438,7 +8753,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 180,
+            funcId: 187,
             port: port_,
           );
         },
@@ -8475,7 +8790,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 181,
+            funcId: 188,
             port: port_,
           );
         },
@@ -8514,7 +8829,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 182,
+            funcId: 189,
             port: port_,
           );
         },
@@ -8553,7 +8868,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 183,
+            funcId: 190,
             port: port_,
           );
         },
@@ -8594,7 +8909,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 184,
+            funcId: 191,
             port: port_,
           );
         },
@@ -8631,7 +8946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 185,
+            funcId: 192,
             port: port_,
           );
         },
@@ -8674,7 +8989,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 186,
+            funcId: 193,
             port: port_,
           );
         },
@@ -8715,7 +9030,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 187,
+            funcId: 194,
             port: port_,
           );
         },
@@ -8756,7 +9071,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 188,
+            funcId: 195,
             port: port_,
           );
         },
@@ -8793,7 +9108,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 189,
+            funcId: 196,
             port: port_,
           );
         },
@@ -8834,7 +9149,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 190,
+            funcId: 197,
             port: port_,
           );
         },
@@ -8875,7 +9190,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 191,
+            funcId: 198,
             port: port_,
           );
         },
@@ -8916,7 +9231,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 192,
+            funcId: 199,
             port: port_,
           );
         },
@@ -8953,7 +9268,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 193,
+            funcId: 200,
             port: port_,
           );
         },
@@ -8992,7 +9307,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 194,
+            funcId: 201,
             port: port_,
           );
         },
@@ -9031,7 +9346,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 195,
+            funcId: 202,
             port: port_,
           );
         },
@@ -9070,7 +9385,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 196,
+            funcId: 203,
             port: port_,
           );
         },
@@ -9105,7 +9420,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 197,
+            funcId: 204,
             port: port_,
           );
         },
@@ -9146,7 +9461,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 198,
+            funcId: 205,
             port: port_,
           );
         },
@@ -9187,7 +9502,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 199,
+            funcId: 206,
             port: port_,
           );
         },
@@ -9224,7 +9539,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 200,
+            funcId: 207,
             port: port_,
           );
         },
@@ -9261,7 +9576,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 201,
+            funcId: 208,
             port: port_,
           );
         },
@@ -9296,7 +9611,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 202,
+            funcId: 209,
             port: port_,
           );
         },
@@ -9337,7 +9652,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 203,
+            funcId: 210,
             port: port_,
           );
         },
@@ -9376,7 +9691,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 204,
+            funcId: 211,
             port: port_,
           );
         },
@@ -9415,7 +9730,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 205,
+            funcId: 212,
             port: port_,
           );
         },
@@ -9456,7 +9771,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 206,
+            funcId: 213,
             port: port_,
           );
         },
@@ -9497,7 +9812,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 207,
+            funcId: 214,
             port: port_,
           );
         },
@@ -9538,7 +9853,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 208,
+            funcId: 215,
             port: port_,
           );
         },
@@ -9579,7 +9894,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 209,
+            funcId: 216,
             port: port_,
           );
         },
@@ -9622,7 +9937,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 210,
+            funcId: 217,
             port: port_,
           );
         },
@@ -9659,7 +9974,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 211,
+            funcId: 218,
             port: port_,
           );
         },
@@ -9700,7 +10015,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 212,
+            funcId: 219,
             port: port_,
           );
         },
@@ -9737,7 +10052,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 213,
+            funcId: 220,
             port: port_,
           );
         },
@@ -9778,7 +10093,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 214,
+            funcId: 221,
             port: port_,
           );
         },
@@ -9815,7 +10130,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 215,
+            funcId: 222,
             port: port_,
           );
         },
@@ -9854,7 +10169,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 216,
+            funcId: 223,
             port: port_,
           );
         },
@@ -9895,7 +10210,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 217,
+            funcId: 224,
             port: port_,
           );
         },
@@ -9936,7 +10251,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 218,
+            funcId: 225,
             port: port_,
           );
         },
@@ -9974,7 +10289,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 219,
+              funcId: 226,
               port: port_,
             );
           },
@@ -10021,7 +10336,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 220,
+            funcId: 227,
             port: port_,
           );
         },
@@ -10058,7 +10373,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 221,
+            funcId: 228,
             port: port_,
           );
         },
@@ -10092,7 +10407,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 222,
+            funcId: 229,
             port: port_,
           );
         },
@@ -10121,7 +10436,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 223,
+            funcId: 230,
             port: port_,
           );
         },
@@ -10155,7 +10470,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 224,
+            funcId: 231,
             port: port_,
           );
         },
@@ -10807,9 +11122,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MfHourDto dco_decode_box_autoadd_mf_hour_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_mf_hour_dto(raw);
+  }
+
+  @protected
+  MfHourInput dco_decode_box_autoadd_mf_hour_input(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_mf_hour_input(raw);
+  }
+
+  @protected
   MfIncomeInput dco_decode_box_autoadd_mf_income_input(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_mf_income_input(raw);
+  }
+
+  @protected
+  MfLearningPlanInput dco_decode_box_autoadd_mf_learning_plan_input(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_mf_learning_plan_input(raw);
   }
 
   @protected
@@ -10900,6 +11235,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MfStartupDto dco_decode_box_autoadd_mf_startup_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_mf_startup_dto(raw);
+  }
+
+  @protected
+  MfTeachingInput dco_decode_box_autoadd_mf_teaching_input(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_mf_teaching_input(raw);
   }
 
   @protected
@@ -14061,6 +14402,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<MfIdeaOptionDto> dco_decode_list_mf_idea_option_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_mf_idea_option_dto).toList();
+  }
+
+  @protected
+  List<MfLearningPlanDto> dco_decode_list_mf_learning_plan_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_mf_learning_plan_dto).toList();
+  }
+
+  @protected
   List<MfPurposeAmountDto> dco_decode_list_mf_purpose_amount_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_mf_purpose_amount_dto).toList();
@@ -14094,6 +14447,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<MfSpendDto> dco_decode_list_mf_spend_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_mf_spend_dto).toList();
+  }
+
+  @protected
+  List<MfTeachingDto> dco_decode_list_mf_teaching_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_mf_teaching_dto).toList();
   }
 
   @protected
@@ -14508,7 +14867,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MfEntryDto dco_decode_mf_entry_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return MfEntryDto(
       id: dco_decode_String(arr[0]),
       kind: dco_decode_String(arr[1]),
@@ -14519,6 +14878,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       categoryId: dco_decode_opt_String(arr[6]),
       occurredOn: dco_decode_String(arr[7]),
       note: dco_decode_opt_String(arr[8]),
+      selfInvestment: dco_decode_bool(arr[9]),
     );
   }
 
@@ -14526,13 +14886,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MfExpenseInput dco_decode_mf_expense_input(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return MfExpenseInput(
       amount: dco_decode_String(arr[0]),
       categoryId: dco_decode_String(arr[1]),
       channel: dco_decode_String(arr[2]),
       occurredOn: dco_decode_opt_String(arr[3]),
       note: dco_decode_opt_String(arr[4]),
+      selfInvestment: dco_decode_bool(arr[5]),
     );
   }
 
@@ -14571,6 +14932,74 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MfHourDto dco_decode_mf_hour_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return MfHourDto(
+      id: dco_decode_String(arr[0]),
+      income: dco_decode_money_dto(arr[1]),
+      incomeSource: dco_decode_String(arr[2]),
+      months: dco_decode_u_32(arr[3]),
+      minutesPerDay: dco_decode_u_32(arr[4]),
+      days: dco_decode_u_32(arr[5]),
+      monthlyMinutes: dco_decode_u_32(arr[6]),
+      hourValue: dco_decode_money_dto(arr[7]),
+      doubleTarget: dco_decode_money_dto(arr[8]),
+      overCeiling: dco_decode_bool(arr[9]),
+      computedOn: dco_decode_String(arr[10]),
+      home: dco_decode_mf_hour_home_dto(arr[11]),
+    );
+  }
+
+  @protected
+  MfHourHomeDto dco_decode_mf_hour_home_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MfHourHomeDto(
+      rateStatus: dco_decode_String(arr[0]),
+      hourValue: dco_decode_opt_box_autoadd_money_dto(arr[1]),
+      doubleTarget: dco_decode_opt_box_autoadd_money_dto(arr[2]),
+      rate: dco_decode_opt_box_autoadd_mf_rate_dto(arr[3]),
+    );
+  }
+
+  @protected
+  MfHourInput dco_decode_mf_hour_input(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return MfHourInput(
+      income: dco_decode_opt_String(arr[0]),
+      minutesPerDay: dco_decode_u_32(arr[1]),
+      days: dco_decode_u_32(arr[2]),
+    );
+  }
+
+  @protected
+  MfHourSuggestionDto dco_decode_mf_hour_suggestion_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MfHourSuggestionDto(
+      months: dco_decode_list_month_income_dto(arr[0]),
+      average: dco_decode_opt_box_autoadd_money_dto(arr[1]),
+    );
+  }
+
+  @protected
+  MfIdeaOptionDto dco_decode_mf_idea_option_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MfIdeaOptionDto(
+      id: dco_decode_String(arr[0]),
+      title: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
   MfIncomeInput dco_decode_mf_income_input(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -14598,10 +15027,89 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MfLearningOverviewDto dco_decode_mf_learning_overview_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return MfLearningOverviewDto(
+      periodStart: dco_decode_String(arr[0]),
+      periodEnd: dco_decode_String(arr[1]),
+      workCurrency: dco_decode_String(arr[2]),
+      homeCurrency: dco_decode_String(arr[3]),
+      hourValue: dco_decode_opt_box_autoadd_mf_hour_dto(arr[4]),
+      plans: dco_decode_list_mf_learning_plan_dto(arr[5]),
+      activePlans: dco_decode_u_32(arr[6]),
+      ideas: dco_decode_list_mf_idea_option_dto(arr[7]),
+      startupIdeaId: dco_decode_opt_String(arr[8]),
+      teachingCount: dco_decode_u_32(arr[9]),
+      teaching: dco_decode_list_mf_teaching_dto(arr[10]),
+      selfInvestment: dco_decode_self_investment_dto(arr[11]),
+    );
+  }
+
+  @protected
+  MfLearningPlanDto dco_decode_mf_learning_plan_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 16) throw Exception('unexpected arr length: expect 16 but see ${arr.length}');
+    return MfLearningPlanDto(
+      id: dco_decode_String(arr[0]),
+      goal: dco_decode_String(arr[1]),
+      skill: dco_decode_String(arr[2]),
+      purpose: dco_decode_opt_String(arr[3]),
+      paths: dco_decode_list_String(arr[4]),
+      budget: dco_decode_opt_box_autoadd_money_dto(arr[5]),
+      weeklyMinutes: dco_decode_u_32(arr[6]),
+      startOn: dco_decode_String(arr[7]),
+      reviewOn: dco_decode_String(arr[8]),
+      status: dco_decode_String(arr[9]),
+      baselineHourValue: dco_decode_opt_box_autoadd_money_dto(arr[10]),
+      resultHourValue: dco_decode_opt_box_autoadd_money_dto(arr[11]),
+      ventureIdeaId: dco_decode_opt_String(arr[12]),
+      ventureIdeaTitle: dco_decode_opt_String(arr[13]),
+      courseCheckSuggested: dco_decode_bool(arr[14]),
+      reviewDue: dco_decode_bool(arr[15]),
+    );
+  }
+
+  @protected
+  MfLearningPlanInput dco_decode_mf_learning_plan_input(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    return MfLearningPlanInput(
+      goal: dco_decode_String(arr[0]),
+      skill: dco_decode_String(arr[1]),
+      purpose: dco_decode_opt_String(arr[2]),
+      paths: dco_decode_list_String(arr[3]),
+      budget: dco_decode_opt_String(arr[4]),
+      weeklyMinutes: dco_decode_u_32(arr[5]),
+      startOn: dco_decode_opt_String(arr[6]),
+      reviewOn: dco_decode_opt_String(arr[7]),
+      ventureIdeaId: dco_decode_opt_String(arr[8]),
+    );
+  }
+
+  @protected
+  MfLearningResultDto dco_decode_mf_learning_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return MfLearningResultDto(
+      planId: dco_decode_String(arr[0]),
+      baseline: dco_decode_opt_box_autoadd_mf_hour_dto(arr[1]),
+      current: dco_decode_mf_hour_dto(arr[2]),
+      diff: dco_decode_opt_box_autoadd_money_dto(arr[3]),
+      changeBp: dco_decode_opt_box_autoadd_i_32(arr[4]),
+      changePercent: dco_decode_opt_String(arr[5]),
+    );
+  }
+
+  @protected
   MfMonthDto dco_decode_mf_month_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 18) throw Exception('unexpected arr length: expect 18 but see ${arr.length}');
+    if (arr.length != 19) throw Exception('unexpected arr length: expect 19 but see ${arr.length}');
     return MfMonthDto(
       income: dco_decode_money_dto(arr[0]),
       expenses: dco_decode_money_dto(arr[1]),
@@ -14621,6 +15129,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       fundPercent: dco_decode_opt_String(arr[15]),
       reservePercent: dco_decode_opt_String(arr[16]),
       warnings: dco_decode_list_String(arr[17]),
+      selfInvestment: dco_decode_self_investment_dto(arr[18]),
     );
   }
 
@@ -14924,6 +15433,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       exceedsTarget: dco_decode_bool(arr[3]),
       ideaId: dco_decode_opt_String(arr[4]),
       ideaTitle: dco_decode_opt_String(arr[5]),
+    );
+  }
+
+  @protected
+  MfTeachingDto dco_decode_mf_teaching_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return MfTeachingDto(
+      id: dco_decode_String(arr[0]),
+      occurredOn: dco_decode_String(arr[1]),
+      area: dco_decode_String(arr[2]),
+      learner: dco_decode_opt_String(arr[3]),
+      topic: dco_decode_String(arr[4]),
+      minutes: dco_decode_opt_box_autoadd_u_32(arr[5]),
+    );
+  }
+
+  @protected
+  MfTeachingInput dco_decode_mf_teaching_input(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return MfTeachingInput(
+      occurredOn: dco_decode_opt_String(arr[0]),
+      area: dco_decode_String(arr[1]),
+      learner: dco_decode_opt_String(arr[2]),
+      topic: dco_decode_String(arr[3]),
+      minutes: dco_decode_opt_box_autoadd_u_32(arr[4]),
     );
   }
 
@@ -15424,6 +15962,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MfFundDto? dco_decode_opt_box_autoadd_mf_fund_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_mf_fund_dto(raw);
+  }
+
+  @protected
+  MfHourDto? dco_decode_opt_box_autoadd_mf_hour_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_mf_hour_dto(raw);
   }
 
   @protected
@@ -17167,11 +17711,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MfHourDto sse_decode_box_autoadd_mf_hour_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_mf_hour_dto(deserializer));
+  }
+
+  @protected
+  MfHourInput sse_decode_box_autoadd_mf_hour_input(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_mf_hour_input(deserializer));
+  }
+
+  @protected
   MfIncomeInput sse_decode_box_autoadd_mf_income_input(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_mf_income_input(deserializer));
+  }
+
+  @protected
+  MfLearningPlanInput sse_decode_box_autoadd_mf_learning_plan_input(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_mf_learning_plan_input(deserializer));
   }
 
   @protected
@@ -17288,6 +17854,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_mf_startup_dto(deserializer));
+  }
+
+  @protected
+  MfTeachingInput sse_decode_box_autoadd_mf_teaching_input(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_mf_teaching_input(deserializer));
   }
 
   @protected
@@ -21914,6 +22488,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<MfIdeaOptionDto> sse_decode_list_mf_idea_option_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MfIdeaOptionDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_mf_idea_option_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<MfLearningPlanDto> sse_decode_list_mf_learning_plan_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MfLearningPlanDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_mf_learning_plan_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<MfPurposeAmountDto> sse_decode_list_mf_purpose_amount_dto(
     SseDeserializer deserializer,
   ) {
@@ -21989,6 +22591,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <MfSpendDto>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_mf_spend_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<MfTeachingDto> sse_decode_list_mf_teaching_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MfTeachingDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_mf_teaching_dto(deserializer));
     }
     return ans_;
   }
@@ -22716,6 +23332,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_categoryId = sse_decode_opt_String(deserializer);
     var var_occurredOn = sse_decode_String(deserializer);
     var var_note = sse_decode_opt_String(deserializer);
+    var var_selfInvestment = sse_decode_bool(deserializer);
     return MfEntryDto(
       id: var_id,
       kind: var_kind,
@@ -22726,6 +23343,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       categoryId: var_categoryId,
       occurredOn: var_occurredOn,
       note: var_note,
+      selfInvestment: var_selfInvestment,
     );
   }
 
@@ -22737,12 +23355,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_channel = sse_decode_String(deserializer);
     var var_occurredOn = sse_decode_opt_String(deserializer);
     var var_note = sse_decode_opt_String(deserializer);
+    var var_selfInvestment = sse_decode_bool(deserializer);
     return MfExpenseInput(
       amount: var_amount,
       categoryId: var_categoryId,
       channel: var_channel,
       occurredOn: var_occurredOn,
       note: var_note,
+      selfInvestment: var_selfInvestment,
     );
   }
 
@@ -22792,6 +23412,83 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MfHourDto sse_decode_mf_hour_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_income = sse_decode_money_dto(deserializer);
+    var var_incomeSource = sse_decode_String(deserializer);
+    var var_months = sse_decode_u_32(deserializer);
+    var var_minutesPerDay = sse_decode_u_32(deserializer);
+    var var_days = sse_decode_u_32(deserializer);
+    var var_monthlyMinutes = sse_decode_u_32(deserializer);
+    var var_hourValue = sse_decode_money_dto(deserializer);
+    var var_doubleTarget = sse_decode_money_dto(deserializer);
+    var var_overCeiling = sse_decode_bool(deserializer);
+    var var_computedOn = sse_decode_String(deserializer);
+    var var_home = sse_decode_mf_hour_home_dto(deserializer);
+    return MfHourDto(
+      id: var_id,
+      income: var_income,
+      incomeSource: var_incomeSource,
+      months: var_months,
+      minutesPerDay: var_minutesPerDay,
+      days: var_days,
+      monthlyMinutes: var_monthlyMinutes,
+      hourValue: var_hourValue,
+      doubleTarget: var_doubleTarget,
+      overCeiling: var_overCeiling,
+      computedOn: var_computedOn,
+      home: var_home,
+    );
+  }
+
+  @protected
+  MfHourHomeDto sse_decode_mf_hour_home_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_rateStatus = sse_decode_String(deserializer);
+    var var_hourValue = sse_decode_opt_box_autoadd_money_dto(deserializer);
+    var var_doubleTarget = sse_decode_opt_box_autoadd_money_dto(deserializer);
+    var var_rate = sse_decode_opt_box_autoadd_mf_rate_dto(deserializer);
+    return MfHourHomeDto(
+      rateStatus: var_rateStatus,
+      hourValue: var_hourValue,
+      doubleTarget: var_doubleTarget,
+      rate: var_rate,
+    );
+  }
+
+  @protected
+  MfHourInput sse_decode_mf_hour_input(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_income = sse_decode_opt_String(deserializer);
+    var var_minutesPerDay = sse_decode_u_32(deserializer);
+    var var_days = sse_decode_u_32(deserializer);
+    return MfHourInput(
+      income: var_income,
+      minutesPerDay: var_minutesPerDay,
+      days: var_days,
+    );
+  }
+
+  @protected
+  MfHourSuggestionDto sse_decode_mf_hour_suggestion_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_months = sse_decode_list_month_income_dto(deserializer);
+    var var_average = sse_decode_opt_box_autoadd_money_dto(deserializer);
+    return MfHourSuggestionDto(months: var_months, average: var_average);
+  }
+
+  @protected
+  MfIdeaOptionDto sse_decode_mf_idea_option_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    return MfIdeaOptionDto(id: var_id, title: var_title);
+  }
+
+  @protected
   MfIncomeInput sse_decode_mf_income_input(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_kind = sse_decode_String(deserializer);
@@ -22826,6 +23523,132 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MfLearningOverviewDto sse_decode_mf_learning_overview_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_periodStart = sse_decode_String(deserializer);
+    var var_periodEnd = sse_decode_String(deserializer);
+    var var_workCurrency = sse_decode_String(deserializer);
+    var var_homeCurrency = sse_decode_String(deserializer);
+    var var_hourValue = sse_decode_opt_box_autoadd_mf_hour_dto(deserializer);
+    var var_plans = sse_decode_list_mf_learning_plan_dto(deserializer);
+    var var_activePlans = sse_decode_u_32(deserializer);
+    var var_ideas = sse_decode_list_mf_idea_option_dto(deserializer);
+    var var_startupIdeaId = sse_decode_opt_String(deserializer);
+    var var_teachingCount = sse_decode_u_32(deserializer);
+    var var_teaching = sse_decode_list_mf_teaching_dto(deserializer);
+    var var_selfInvestment = sse_decode_self_investment_dto(deserializer);
+    return MfLearningOverviewDto(
+      periodStart: var_periodStart,
+      periodEnd: var_periodEnd,
+      workCurrency: var_workCurrency,
+      homeCurrency: var_homeCurrency,
+      hourValue: var_hourValue,
+      plans: var_plans,
+      activePlans: var_activePlans,
+      ideas: var_ideas,
+      startupIdeaId: var_startupIdeaId,
+      teachingCount: var_teachingCount,
+      teaching: var_teaching,
+      selfInvestment: var_selfInvestment,
+    );
+  }
+
+  @protected
+  MfLearningPlanDto sse_decode_mf_learning_plan_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_goal = sse_decode_String(deserializer);
+    var var_skill = sse_decode_String(deserializer);
+    var var_purpose = sse_decode_opt_String(deserializer);
+    var var_paths = sse_decode_list_String(deserializer);
+    var var_budget = sse_decode_opt_box_autoadd_money_dto(deserializer);
+    var var_weeklyMinutes = sse_decode_u_32(deserializer);
+    var var_startOn = sse_decode_String(deserializer);
+    var var_reviewOn = sse_decode_String(deserializer);
+    var var_status = sse_decode_String(deserializer);
+    var var_baselineHourValue = sse_decode_opt_box_autoadd_money_dto(
+      deserializer,
+    );
+    var var_resultHourValue = sse_decode_opt_box_autoadd_money_dto(
+      deserializer,
+    );
+    var var_ventureIdeaId = sse_decode_opt_String(deserializer);
+    var var_ventureIdeaTitle = sse_decode_opt_String(deserializer);
+    var var_courseCheckSuggested = sse_decode_bool(deserializer);
+    var var_reviewDue = sse_decode_bool(deserializer);
+    return MfLearningPlanDto(
+      id: var_id,
+      goal: var_goal,
+      skill: var_skill,
+      purpose: var_purpose,
+      paths: var_paths,
+      budget: var_budget,
+      weeklyMinutes: var_weeklyMinutes,
+      startOn: var_startOn,
+      reviewOn: var_reviewOn,
+      status: var_status,
+      baselineHourValue: var_baselineHourValue,
+      resultHourValue: var_resultHourValue,
+      ventureIdeaId: var_ventureIdeaId,
+      ventureIdeaTitle: var_ventureIdeaTitle,
+      courseCheckSuggested: var_courseCheckSuggested,
+      reviewDue: var_reviewDue,
+    );
+  }
+
+  @protected
+  MfLearningPlanInput sse_decode_mf_learning_plan_input(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_goal = sse_decode_String(deserializer);
+    var var_skill = sse_decode_String(deserializer);
+    var var_purpose = sse_decode_opt_String(deserializer);
+    var var_paths = sse_decode_list_String(deserializer);
+    var var_budget = sse_decode_opt_String(deserializer);
+    var var_weeklyMinutes = sse_decode_u_32(deserializer);
+    var var_startOn = sse_decode_opt_String(deserializer);
+    var var_reviewOn = sse_decode_opt_String(deserializer);
+    var var_ventureIdeaId = sse_decode_opt_String(deserializer);
+    return MfLearningPlanInput(
+      goal: var_goal,
+      skill: var_skill,
+      purpose: var_purpose,
+      paths: var_paths,
+      budget: var_budget,
+      weeklyMinutes: var_weeklyMinutes,
+      startOn: var_startOn,
+      reviewOn: var_reviewOn,
+      ventureIdeaId: var_ventureIdeaId,
+    );
+  }
+
+  @protected
+  MfLearningResultDto sse_decode_mf_learning_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_planId = sse_decode_String(deserializer);
+    var var_baseline = sse_decode_opt_box_autoadd_mf_hour_dto(deserializer);
+    var var_current = sse_decode_mf_hour_dto(deserializer);
+    var var_diff = sse_decode_opt_box_autoadd_money_dto(deserializer);
+    var var_changeBp = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_changePercent = sse_decode_opt_String(deserializer);
+    return MfLearningResultDto(
+      planId: var_planId,
+      baseline: var_baseline,
+      current: var_current,
+      diff: var_diff,
+      changeBp: var_changeBp,
+      changePercent: var_changePercent,
+    );
+  }
+
+  @protected
   MfMonthDto sse_decode_mf_month_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_income = sse_decode_money_dto(deserializer);
@@ -22846,6 +23669,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_fundPercent = sse_decode_opt_String(deserializer);
     var var_reservePercent = sse_decode_opt_String(deserializer);
     var var_warnings = sse_decode_list_String(deserializer);
+    var var_selfInvestment = sse_decode_self_investment_dto(deserializer);
     return MfMonthDto(
       income: var_income,
       expenses: var_expenses,
@@ -22865,6 +23689,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       fundPercent: var_fundPercent,
       reservePercent: var_reservePercent,
       warnings: var_warnings,
+      selfInvestment: var_selfInvestment,
     );
   }
 
@@ -23228,6 +24053,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       exceedsTarget: var_exceedsTarget,
       ideaId: var_ideaId,
       ideaTitle: var_ideaTitle,
+    );
+  }
+
+  @protected
+  MfTeachingDto sse_decode_mf_teaching_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_occurredOn = sse_decode_String(deserializer);
+    var var_area = sse_decode_String(deserializer);
+    var var_learner = sse_decode_opt_String(deserializer);
+    var var_topic = sse_decode_String(deserializer);
+    var var_minutes = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return MfTeachingDto(
+      id: var_id,
+      occurredOn: var_occurredOn,
+      area: var_area,
+      learner: var_learner,
+      topic: var_topic,
+      minutes: var_minutes,
+    );
+  }
+
+  @protected
+  MfTeachingInput sse_decode_mf_teaching_input(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_occurredOn = sse_decode_opt_String(deserializer);
+    var var_area = sse_decode_String(deserializer);
+    var var_learner = sse_decode_opt_String(deserializer);
+    var var_topic = sse_decode_String(deserializer);
+    var var_minutes = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return MfTeachingInput(
+      occurredOn: var_occurredOn,
+      area: var_area,
+      learner: var_learner,
+      topic: var_topic,
+      minutes: var_minutes,
     );
   }
 
@@ -23920,6 +24781,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_mf_fund_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  MfHourDto? sse_decode_opt_box_autoadd_mf_hour_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_mf_hour_dto(deserializer));
     } else {
       return null;
     }
@@ -26026,12 +26900,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_mf_hour_dto(
+    MfHourDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_mf_hour_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_mf_hour_input(
+    MfHourInput self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_mf_hour_input(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_mf_income_input(
     MfIncomeInput self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_mf_income_input(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_mf_learning_plan_input(
+    MfLearningPlanInput self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_mf_learning_plan_input(self, serializer);
   }
 
   @protected
@@ -26167,6 +27068,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_mf_startup_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_mf_teaching_input(
+    MfTeachingInput self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_mf_teaching_input(self, serializer);
   }
 
   @protected
@@ -29521,6 +30431,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_mf_idea_option_dto(
+    List<MfIdeaOptionDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_mf_idea_option_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_mf_learning_plan_dto(
+    List<MfLearningPlanDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_mf_learning_plan_dto(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_mf_purpose_amount_dto(
     List<MfPurposeAmountDto> self,
     SseSerializer serializer,
@@ -29589,6 +30523,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_mf_spend_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_mf_teaching_dto(
+    List<MfTeachingDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_mf_teaching_dto(item, serializer);
     }
   }
 
@@ -30195,6 +31141,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.categoryId, serializer);
     sse_encode_String(self.occurredOn, serializer);
     sse_encode_opt_String(self.note, serializer);
+    sse_encode_bool(self.selfInvestment, serializer);
   }
 
   @protected
@@ -30208,6 +31155,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.channel, serializer);
     sse_encode_opt_String(self.occurredOn, serializer);
     sse_encode_opt_String(self.note, serializer);
+    sse_encode_bool(self.selfInvestment, serializer);
   }
 
   @protected
@@ -30237,6 +31185,63 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_mf_hour_dto(MfHourDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_money_dto(self.income, serializer);
+    sse_encode_String(self.incomeSource, serializer);
+    sse_encode_u_32(self.months, serializer);
+    sse_encode_u_32(self.minutesPerDay, serializer);
+    sse_encode_u_32(self.days, serializer);
+    sse_encode_u_32(self.monthlyMinutes, serializer);
+    sse_encode_money_dto(self.hourValue, serializer);
+    sse_encode_money_dto(self.doubleTarget, serializer);
+    sse_encode_bool(self.overCeiling, serializer);
+    sse_encode_String(self.computedOn, serializer);
+    sse_encode_mf_hour_home_dto(self.home, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_hour_home_dto(
+    MfHourHomeDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.rateStatus, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.hourValue, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.doubleTarget, serializer);
+    sse_encode_opt_box_autoadd_mf_rate_dto(self.rate, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_hour_input(MfHourInput self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.income, serializer);
+    sse_encode_u_32(self.minutesPerDay, serializer);
+    sse_encode_u_32(self.days, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_hour_suggestion_dto(
+    MfHourSuggestionDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_month_income_dto(self.months, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.average, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_idea_option_dto(
+    MfIdeaOptionDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.title, serializer);
+  }
+
+  @protected
   void sse_encode_mf_income_input(
     MfIncomeInput self,
     SseSerializer serializer,
@@ -30262,6 +31267,81 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_mf_learning_overview_dto(
+    MfLearningOverviewDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.periodStart, serializer);
+    sse_encode_String(self.periodEnd, serializer);
+    sse_encode_String(self.workCurrency, serializer);
+    sse_encode_String(self.homeCurrency, serializer);
+    sse_encode_opt_box_autoadd_mf_hour_dto(self.hourValue, serializer);
+    sse_encode_list_mf_learning_plan_dto(self.plans, serializer);
+    sse_encode_u_32(self.activePlans, serializer);
+    sse_encode_list_mf_idea_option_dto(self.ideas, serializer);
+    sse_encode_opt_String(self.startupIdeaId, serializer);
+    sse_encode_u_32(self.teachingCount, serializer);
+    sse_encode_list_mf_teaching_dto(self.teaching, serializer);
+    sse_encode_self_investment_dto(self.selfInvestment, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_learning_plan_dto(
+    MfLearningPlanDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.goal, serializer);
+    sse_encode_String(self.skill, serializer);
+    sse_encode_opt_String(self.purpose, serializer);
+    sse_encode_list_String(self.paths, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.budget, serializer);
+    sse_encode_u_32(self.weeklyMinutes, serializer);
+    sse_encode_String(self.startOn, serializer);
+    sse_encode_String(self.reviewOn, serializer);
+    sse_encode_String(self.status, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.baselineHourValue, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.resultHourValue, serializer);
+    sse_encode_opt_String(self.ventureIdeaId, serializer);
+    sse_encode_opt_String(self.ventureIdeaTitle, serializer);
+    sse_encode_bool(self.courseCheckSuggested, serializer);
+    sse_encode_bool(self.reviewDue, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_learning_plan_input(
+    MfLearningPlanInput self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.goal, serializer);
+    sse_encode_String(self.skill, serializer);
+    sse_encode_opt_String(self.purpose, serializer);
+    sse_encode_list_String(self.paths, serializer);
+    sse_encode_opt_String(self.budget, serializer);
+    sse_encode_u_32(self.weeklyMinutes, serializer);
+    sse_encode_opt_String(self.startOn, serializer);
+    sse_encode_opt_String(self.reviewOn, serializer);
+    sse_encode_opt_String(self.ventureIdeaId, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_learning_result_dto(
+    MfLearningResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.planId, serializer);
+    sse_encode_opt_box_autoadd_mf_hour_dto(self.baseline, serializer);
+    sse_encode_mf_hour_dto(self.current, serializer);
+    sse_encode_opt_box_autoadd_money_dto(self.diff, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.changeBp, serializer);
+    sse_encode_opt_String(self.changePercent, serializer);
+  }
+
+  @protected
   void sse_encode_mf_month_dto(MfMonthDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_money_dto(self.income, serializer);
@@ -30282,6 +31362,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.fundPercent, serializer);
     sse_encode_opt_String(self.reservePercent, serializer);
     sse_encode_list_String(self.warnings, serializer);
+    sse_encode_self_investment_dto(self.selfInvestment, serializer);
   }
 
   @protected
@@ -30525,6 +31606,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.exceedsTarget, serializer);
     sse_encode_opt_String(self.ideaId, serializer);
     sse_encode_opt_String(self.ideaTitle, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_teaching_dto(
+    MfTeachingDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.occurredOn, serializer);
+    sse_encode_String(self.area, serializer);
+    sse_encode_opt_String(self.learner, serializer);
+    sse_encode_String(self.topic, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.minutes, serializer);
+  }
+
+  @protected
+  void sse_encode_mf_teaching_input(
+    MfTeachingInput self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.occurredOn, serializer);
+    sse_encode_String(self.area, serializer);
+    sse_encode_opt_String(self.learner, serializer);
+    sse_encode_String(self.topic, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.minutes, serializer);
   }
 
   @protected
@@ -31064,6 +32172,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_mf_fund_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_mf_hour_dto(
+    MfHourDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_mf_hour_dto(self, serializer);
     }
   }
 
@@ -33285,6 +34406,59 @@ class BarakaCoreImpl extends RustOpaque implements BarakaCore {
   Future<List<MfDecisionDto>> mfDecisions({required String spaceId}) =>
       RustLib.instance.api.crateApiCoreBarakaCoreMfDecisions(that: this, spaceId: spaceId);
 
+  Future<MfHourDto> mfHourSave({
+    required String spaceId,
+    required MfHourInput input,
+  }) => RustLib.instance.api.crateApiCoreBarakaCoreMfHourSave(
+    that: this,
+    spaceId: spaceId,
+    input: input,
+  );
+
+  Future<MfHourSuggestionDto> mfHourSuggest({required String spaceId}) =>
+      RustLib.instance.api.crateApiCoreBarakaCoreMfHourSuggest(
+        that: this,
+        spaceId: spaceId,
+      );
+
+  Future<MfLearningOverviewDto> mfLearningOverview({
+    required String spaceId,
+    String? date,
+  }) => RustLib.instance.api.crateApiCoreBarakaCoreMfLearningOverview(
+    that: this,
+    spaceId: spaceId,
+    date: date,
+  );
+
+  Future<MfLearningPlanDto> mfLearningPlanCreate({
+    required String spaceId,
+    required MfLearningPlanInput input,
+  }) => RustLib.instance.api.crateApiCoreBarakaCoreMfLearningPlanCreate(
+    that: this,
+    spaceId: spaceId,
+    input: input,
+  );
+
+  Future<MfLearningResultDto> mfLearningPlanResult({
+    required String spaceId,
+    required String planId,
+  }) => RustLib.instance.api.crateApiCoreBarakaCoreMfLearningPlanResult(
+    that: this,
+    spaceId: spaceId,
+    planId: planId,
+  );
+
+  Future<MfLearningPlanDto> mfLearningPlanSetStatus({
+    required String spaceId,
+    required String planId,
+    required String status,
+  }) => RustLib.instance.api.crateApiCoreBarakaCoreMfLearningPlanSetStatus(
+    that: this,
+    spaceId: spaceId,
+    planId: planId,
+    status: status,
+  );
+
   Future<MfOverviewDto> mfOverview({required String spaceId, String? date}) =>
       RustLib.instance.api.crateApiCoreBarakaCoreMfOverview(
         that: this,
@@ -33406,6 +34580,15 @@ class BarakaCoreImpl extends RustOpaque implements BarakaCore {
     required String spaceId,
     required MfTravelDebtInput input,
   }) => RustLib.instance.api.crateApiCoreBarakaCoreMfSetTravelDebt(
+    that: this,
+    spaceId: spaceId,
+    input: input,
+  );
+
+  Future<MfTeachingDto> mfTeachingAdd({
+    required String spaceId,
+    required MfTeachingInput input,
+  }) => RustLib.instance.api.crateApiCoreBarakaCoreMfTeachingAdd(
     that: this,
     spaceId: spaceId,
     input: input,

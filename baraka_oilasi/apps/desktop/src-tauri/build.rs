@@ -220,6 +220,13 @@ const COMMANDS: &[&str] = &[
     "kk_delegation_delete",
     "kk_teaching_add",
     "kk_learning_overview",
+    "mf_hour_suggest",
+    "mf_hour_save",
+    "mf_learning_plan_create",
+    "mf_learning_plan_set_status",
+    "mf_learning_plan_result",
+    "mf_teaching_add",
+    "mf_learning_overview",
 ];
 
 fn main() {

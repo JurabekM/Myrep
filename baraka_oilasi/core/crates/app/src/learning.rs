@@ -8,68 +8,26 @@ use std::collections::HashMap;
 use baraka_domain_common::IncomeSourceType;
 use baraka_domain_common::{month_period, SpaceKind};
 use baraka_domain_uy::learning::{
-    average_income, check_activation, hour_value, hour_value_change, self_invest_share, transition,
-    HourInput, PathKind, PlanDraft, PlanStatus, AVG_MONTHS,
+    average_income, check_activation, hour_value, self_invest_share, HourInput, PathKind,
+    PlanStatus,
 };
-use baraka_money::{format_percent_bp, parse_amount, Money};
+use baraka_money::{format_percent_bp, Money};
 use baraka_storage::repo::{expenses, household, incomes, learning as repo};
 use baraka_storage::SpaceScope;
 use chrono::NaiveDate;
 
 use crate::app::Ctx;
 use crate::events::Topic;
+use crate::learn_common::{
+    bp32, closed, hour_err, max_chars, measure_plan, next_status, opt_amount, parse_paths,
+    paths_text, plan_status, stored_hour, u32_of, PlanFields, TOPIC_MAX_CHARS,
+};
 use crate::receipt::ymd;
 use crate::text::{clean, clean_opt};
 use crate::*;
 
 /// Bitta o'qish yozuvi: ko'pi bilan bir hafta (10 080 daqiqa).
 const STUDY_MAX_MINUTES: u32 = 10_080;
-/// Bitta o'rgatish yozuvi: ko'pi bilan bir kun.
-const TEACH_MAX_MINUTES: u32 = 1_440;
-const TOPIC_MAX_CHARS: usize = 200;
-const LEARNER_MAX_CHARS: usize = 120;
-const PURPOSE_MAX_CHARS: usize = 200;
-
-fn u32_of(v: i64) -> Result<u32, AppError> {
-    u32::try_from(v).map_err(|_| AppError::new("CORRUPT_ROW"))
-}
-
-/// Bazis punkt DTO uchun (i32 ga sig'masa — chegarada; matn ko'rinishi aniq qoladi).
-fn bp32(v: i64) -> i32 {
-    i32::try_from(v).unwrap_or(if v < 0 { i32::MIN } else { i32::MAX })
-}
-
-/// Domen kodi `INVALID_DAYS` boshqa bo'limlarda ham bor — bu yerda ish kunlari uchun aniq kod.
-fn domain_err(e: baraka_domain_common::DomainError) -> AppError {
-    match e.code {
-        "INVALID_DAYS" => AppError::on("INVALID_WORK_DAYS", "days"),
-        "NO_INCOME" => AppError::on("NO_INCOME", "income"),
-        _ => e.into(),
-    }
-}
-
-fn parse_paths(s: &str) -> Vec<String> {
-    s.split(',')
-        .filter(|p| !p.is_empty())
-        .map(str::to_string)
-        .collect()
-}
-
-fn too_long(s: &Option<String>, max: usize, field: &str) -> Result<(), AppError> {
-    if s.as_ref().is_some_and(|t| t.chars().count() > max) {
-        Err(AppError::on("TOO_LONG", field))
-    } else {
-        Ok(())
-    }
-}
-
-fn closed(status: PlanStatus) -> bool {
-    matches!(status, PlanStatus::Done | PlanStatus::Dropped)
-}
-
-fn plan_status(p: &repo::PlanRow) -> Result<PlanStatus, AppError> {
-    PlanStatus::parse(&p.status).ok_or(AppError::new("CORRUPT_ROW"))
-}
 
 /// Rejalar kartasi uchun yig'ilgan qiymatlar: o'qish daqiqalari, (reja, valyuta) bo'yicha sarflangan
 /// summa va kerakli soat qiymati hisoblari (id bo'yicha).
@@ -126,13 +84,7 @@ impl App {
         member_id: &str,
     ) -> Result<Vec<(NaiveDate, NaiveDate, Money)>, AppError> {
         let cur = ctx.currency;
-        let (mut cursor, _) = month_period(self.today(ctx), ctx.month_start_day)
-            .ok_or(AppError::new("INVALID_PERIOD"))?;
-        let mut out = Vec::new();
-        for _ in 0..AVG_MONTHS {
-            let Some(prev) = cursor.pred_opt() else { break };
-            let (start, end) =
-                month_period(prev, ctx.month_start_day).ok_or(AppError::new("INVALID_PERIOD"))?;
+        self.last_full_months(ctx, |start, end| {
             let rows: Vec<Money> = self
                 .db
                 .read(|c| incomes::list_between(c, scope, &ymd(start), &ymd(end)))?
@@ -141,22 +93,22 @@ impl App {
                 .filter(|r| r.source_type.as_deref() != Some(IncomeSourceType::Ribo.as_str()))
                 .map(|r| Money::new(r.amount_minor, cur))
                 .collect();
-            if !rows.is_empty() {
-                out.push((start, end, Money::sum(rows, cur)?));
-            }
-            cursor = start;
-        }
-        Ok(out)
+            Ok(if rows.is_empty() {
+                None
+            } else {
+                Some(Money::sum(rows, cur)?)
+            })
+        })
     }
 
     fn hour_dto(&self, ctx: &Ctx, r: &repo::HourValueRow) -> Result<HourValueDto, AppError> {
         // Saqlangan daromad va vaqtdan qayta hisob — «ikki barobar maqsad» va soat chegarasi uchun.
-        let h = hour_value(&HourInput {
-            income: Some(r.income_minor),
-            month_totals: &[],
-            minutes_per_day: r.minutes_per_day,
-            days: r.days,
-        })?;
+        let h = stored_hour(
+            r.income_minor,
+            r.minutes_per_day,
+            r.days,
+            r.hour_value_minor,
+        )?;
         let cur = baraka_money::Currency::from_code(&r.currency)?;
         let d = |v: i64| self.money_dto(ctx, Money::new(v, cur));
         Ok(HourValueDto {
@@ -164,14 +116,11 @@ impl App {
             member_id: r.member_id.clone(),
             income: d(r.income_minor),
             income_source: r.income_source.clone(),
-            minutes_per_day: u32_of(r.minutes_per_day)?,
-            days: u32_of(r.days)?,
+            minutes_per_day: h.minutes_per_day,
+            days: h.days,
             monthly_minutes: h.monthly_minutes,
             hour_value: d(r.hour_value_minor),
-            double_target: d(r
-                .hour_value_minor
-                .checked_mul(2)
-                .ok_or(AppError::new("OVERFLOW"))?),
+            double_target: d(h.double_target),
             over_ceiling: h.over_ceiling,
             computed_on: r.computed_on.clone(),
         })
@@ -249,7 +198,7 @@ impl App {
         // Byudjet va sarflangan — rejaning o'z valyutasida.
         let cur = baraka_money::Currency::from_code(&p.currency)?;
         let paths = parse_paths(&p.paths);
-        let open = !closed(plan_status(p)?);
+        let open = !closed(plan_status(&p.status)?);
         let hour = |id: &Option<String>| id.as_ref().and_then(|i| totals.hours.get(i));
         let spent = totals
             .spent
@@ -298,8 +247,9 @@ impl App {
     }
 
     /// Xarajatdagi «O'zimga sarmoya» belgisi va bilim rejasiga havola (uy/SPEC 2G.3). Belgi — Uy va
-    /// Kasb-kor makonlarida (K9: «Sarmoya (o'qish)», kasbkor/SPEC 8A.3; Musofir M6 da kengaytiriladi).
-    /// Bilim rejalari faqat Uy makonida, shuning uchun Kasb-kor chiqimi rejaga bog'lanmaydi. Havola —
+    /// Kasb-kor makonlarida (K9: «Sarmoya (o'qish)», kasbkor/SPEC 8A.3); Musofir makonida belgi faqat
+    /// `mf_record_expense` orqali (M6, musofir/SPEC 6A.1). Bilim rejalari faqat Uy makonida, shuning
+    /// uchun Kasb-kor chiqimi rejaga bog'lanmaydi. Havola —
     /// faqat belgi bilan, shu makondagi ochiq (`ACTIVE`/`PAUSED`) rejaga; xarajat a'zosi ko'rsatilgan
     /// bo'lsa — reja a'zosi.
     pub(crate) fn expense_plan_link(
@@ -321,6 +271,8 @@ impl App {
             Some(SpaceKind::Kasbkor) => {
                 return Err(AppError::on("PLAN_LINK_UY_ONLY", "learningPlanId"))
             }
+            // Musofir belgisi faqat `mf_record_expense` orqali (ish valyutasida, M6) — umumiy xarajat
+            // yo'lida rad.
             _ => return Err(AppError::on("NOT_UY_SPACE", "selfInvestment")),
         }
         let Some(id) = id else { return Ok(None) };
@@ -331,7 +283,7 @@ impl App {
             .db
             .read(|c| repo::plan(c, scope, &id))?
             .ok_or(AppError::on("NOT_FOUND", "learningPlanId"))?;
-        if closed(plan_status(&p)?) {
+        if closed(plan_status(&p.status)?) {
             return Err(AppError::on("PLAN_CLOSED", "learningPlanId"));
         }
         if member_id.is_some_and(|m| m != p.member_id) {
@@ -349,12 +301,22 @@ impl App {
     ) -> Result<SelfInvestmentDto, AppError> {
         let amounts: Vec<i64> = rows
             .iter()
-            .filter(|e| e.self_investment && e.currency == ctx.currency.code())
+            .filter(|e| e.self_investment && e.currency == income.currency().code())
             .map(|e| e.amount_minor)
             .collect();
-        let s = self_invest_share(income.minor(), &amounts)?;
+        self.self_investment_of(ctx, income, &amounts)
+    }
+
+    /// «Sarmoya» qatori daromad valyutasida (Uy — xonadon valyutasi, Musofir — ish valyutasi).
+    pub(crate) fn self_investment_of(
+        &self,
+        ctx: &Ctx,
+        income: Money,
+        amounts: &[i64],
+    ) -> Result<SelfInvestmentDto, AppError> {
+        let s = self_invest_share(income.minor(), amounts)?;
         Ok(SelfInvestmentDto {
-            total: self.money_dto(ctx, Money::new(s.total, ctx.currency)),
+            total: self.money_dto(ctx, Money::new(s.total, income.currency())),
             income: self.money_dto(ctx, income),
             share_bp: s.share_bp.map(bp32),
             share_percent: s.share_bp.map(format_percent_bp),
@@ -399,14 +361,7 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         self.learn_member(&ctx, &input.member_id)?;
-        let income = match input.income.as_deref().map(str::trim) {
-            None | Some("") => None,
-            Some(s) => Some(
-                parse_amount(s, ctx.currency)
-                    .map_err(|e| AppError::on(e.code(), "income"))?
-                    .minor(),
-            ),
-        };
+        let income = opt_amount(input.income.as_deref(), ctx.currency, "income")?;
         let totals: Vec<i64> = if income.is_none() {
             self.member_month_totals(&ctx, &scope, &input.member_id)?
                 .iter()
@@ -421,7 +376,7 @@ impl App {
             minutes_per_day: i64::from(input.minutes_per_day),
             days: i64::from(input.days),
         })
-        .map_err(domain_err)?;
+        .map_err(hour_err)?;
         let row = repo::HourValueRow {
             id: self.new_id(),
             member_id: input.member_id,
@@ -433,11 +388,13 @@ impl App {
             hour_value_minor: h.hour_value,
             computed_on: ymd(self.today(&ctx)),
         };
+        // Javob yozuvdan oldin tayyorlanadi: xato bo'lsa o'zgarmas yozuv qolmaydi.
+        let dto = self.hour_dto(&ctx, &row)?;
         let meta = self.meta();
         self.db
             .write(|tx| repo::insert_hour_value(tx, &scope, &row, &meta))?;
         self.publish(Some(space_id), &[Topic::Learning]);
-        self.hour_dto(&ctx, &row)
+        Ok(dto)
     }
 
     // ---- 2G.2 Bilim rejasi ----
@@ -451,38 +408,20 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         self.learn_member(&ctx, &input.member_id)?;
-        let paths = input
-            .paths
-            .iter()
-            .map(|p| PathKind::parse(p).ok_or(AppError::on("INVALID_PATH", "paths")))
-            .collect::<Result<Vec<_>, _>>()?;
-        let budget = match input.budget.as_deref().map(str::trim) {
-            None | Some("") => None,
-            Some(s) => Some(
-                parse_amount(s, ctx.currency)
-                    .map_err(|e| AppError::on(e.code(), "budget"))?
-                    .minor(),
-            ),
-        };
-        let start = self.date_or_today(&ctx, input.start_on.as_deref(), "startOn")?;
-        let review = match input.review_on.as_deref() {
-            None => None,
-            Some(s) => Some(self.date_or_today(&ctx, Some(s), "reviewOn")?),
-        };
-        let purpose = clean_opt(input.purpose.as_deref());
-        too_long(&purpose, PURPOSE_MAX_CHARS, "purpose")?;
-        let plan = baraka_domain_uy::learning::validate_plan(&PlanDraft {
-            skill: clean(&input.skill),
-            paths,
-            budget,
-            weekly_minutes: input.weekly_minutes,
-            start,
-            review,
-        })?;
-        let others = self
-            .db
-            .read(|c| repo::other_active_plans(c, &scope, &input.member_id, None))?;
-        check_activation(others)?;
+        let checked = self.check_plan(
+            &ctx,
+            ctx.currency,
+            &PlanFields {
+                skill: &input.skill,
+                purpose: input.purpose.as_deref(),
+                paths: &input.paths,
+                budget: input.budget.as_deref(),
+                weekly_minutes: input.weekly_minutes,
+                start_on: input.start_on.as_deref(),
+                review_on: input.review_on.as_deref(),
+            },
+        )?;
+        let plan = checked.plan;
         let baseline = self
             .db
             .read(|c| repo::latest_hour_value(c, &scope, &input.member_id))?
@@ -490,14 +429,9 @@ impl App {
         let row = repo::PlanRow {
             id: self.new_id(),
             member_id: input.member_id,
+            paths: paths_text(&plan),
             skill: plan.skill,
-            purpose,
-            paths: plan
-                .paths
-                .iter()
-                .map(|p| p.as_str())
-                .collect::<Vec<_>>()
-                .join(","),
+            purpose: checked.purpose,
             budget_minor: plan.budget,
             currency: ctx.currency.code().to_string(),
             weekly_minutes: i64::from(plan.weekly_minutes),
@@ -508,8 +442,15 @@ impl App {
             result_hour_value_id: None,
         };
         let meta = self.meta();
-        self.db
-            .write(|tx| repo::insert_plan(tx, &scope, &row, &meta))?;
+        // Faol rejalar sanog'i va yozuv — bitta tranzaksiyada (ikki tez so'rov chegarani oshirmaydi).
+        self.db.write(|tx| {
+            let others = repo::other_active_plans(tx, &scope, &row.member_id, None)?;
+            if let Err(e) = check_activation(others) {
+                return Ok(Err(AppError::from(e)));
+            }
+            repo::insert_plan(tx, &scope, &row, &meta)?;
+            Ok(Ok(()))
+        })??;
         self.publish(Some(space_id), &[Topic::Learning]);
         self.one_learn_plan_dto(&ctx, &scope, &row.id)
     }
@@ -524,15 +465,17 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         let p = self.learn_plan(&scope, plan_id)?;
-        let to = PlanStatus::parse(status).ok_or(AppError::on("INVALID_STATUS", "status"))?;
-        let from = PlanStatus::parse(&p.status).ok_or(AppError::new("CORRUPT_ROW"))?;
-        let others = self
-            .db
-            .read(|c| repo::other_active_plans(c, &scope, &p.member_id, Some(&p.id)))?;
-        let to = transition(from, to, others)?;
         let meta = self.meta();
-        self.db
-            .write(|tx| repo::set_plan_status(tx, &scope, &p.id, to.as_str(), &meta))?;
+        // Sanoq va o'zgarish — bitta tranzaksiyada (`PAUSED → ACTIVE` chegarasi poyga holatisiz).
+        self.db.write(|tx| {
+            let others = repo::other_active_plans(tx, &scope, &p.member_id, Some(&p.id))?;
+            let to = match next_status(&p.status, status, others) {
+                Ok(to) => to,
+                Err(e) => return Ok(Err(e)),
+            };
+            repo::set_plan_status(tx, &scope, &p.id, to.as_str(), &meta)?;
+            Ok(Ok(()))
+        })??;
         self.publish(Some(space_id), &[Topic::Learning]);
         self.one_learn_plan_dto(&ctx, &scope, &p.id)
     }
@@ -548,44 +491,23 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         let p = self.learn_plan(&scope, plan_id)?;
-        // Yopilgan reja natijasi bir marta o'lchanadi; ochiq reja — istalgan paytda qayta.
-        if closed(plan_status(&p)?) && p.result_hour_value_id.is_some() {
-            return Err(AppError::on("PLAN_CLOSED", "planId"));
-        }
+        // Qoidalar (yopilgan reja, yangi hisob yo'qligi, valyuta) — Musofir bilan umumiy.
         let current = self
             .db
-            .read(|c| repo::latest_hour_value(c, &scope, &p.member_id))?
-            .ok_or(AppError::new("NO_HOUR_VALUE"))?;
-        // Boshlang'ich nuqtadan keyin yangi hisob saqlanmagan bo'lsa — o'lchanadigan narsa yo'q.
-        if p.baseline_hour_value_id.as_deref() == Some(current.id.as_str()) {
-            return Err(AppError::new("NO_NEW_HOUR_VALUE"));
-        }
-        let baseline = match p.baseline_hour_value_id.as_deref() {
-            None => None,
-            Some(id) => Some(
-                self.db
-                    .read(|c| repo::hour_value(c, &scope, id))?
-                    .ok_or(AppError::new("CORRUPT_ROW"))?,
-            ),
-        };
-        let change = match &baseline {
-            Some(b) if b.currency != current.currency => {
-                return Err(AppError::new("CURRENCY_MISMATCH"))
-            }
-            Some(b) => Some(hour_value_change(
-                b.hour_value_minor,
-                current.hour_value_minor,
-            )?),
-            None => None,
-        };
-        let meta = self.meta();
-        self.db
-            .write(|tx| repo::set_plan_result(tx, &scope, &p.id, &current.id, &meta))?;
-        self.publish(Some(space_id), &[Topic::Learning]);
+            .read(|c| repo::latest_hour_value(c, &scope, &p.member_id))?;
+        let m = measure_plan(
+            plan_status(&p.status)?,
+            p.result_hour_value_id.is_some(),
+            p.baseline_hour_value_id.as_deref(),
+            current,
+            |id| Ok(self.db.read(|c| repo::hour_value(c, &scope, id))?),
+        )?;
+        let (baseline, current, change) = (m.baseline, m.current, m.change);
+        // Javob avval tayyorlanadi: xato bo'lsa natija saqlanmaydi.
         let cur = baraka_money::Currency::from_code(&current.currency)?;
         let bp = change.and_then(|c| c.change_bp);
-        Ok(LearningResultDto {
-            plan_id: p.id,
+        let dto = LearningResultDto {
+            plan_id: p.id.clone(),
             baseline: baseline
                 .as_ref()
                 .map(|b| self.hour_dto(&ctx, b))
@@ -594,7 +516,12 @@ impl App {
             diff: change.map(|c| self.money_dto(&ctx, Money::new(c.diff, cur))),
             change_bp: bp.map(bp32),
             change_percent: bp.map(format_percent_bp),
-        })
+        };
+        let meta = self.meta();
+        self.db
+            .write(|tx| repo::set_plan_result(tx, &scope, &p.id, &current.id, &meta))?;
+        self.publish(Some(space_id), &[Topic::Learning]);
+        Ok(dto)
     }
 
     // ---- O'qish vaqti va «Ilm zakoti» ----
@@ -609,7 +536,7 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         let p = self.learn_plan(&scope, plan_id)?;
-        if closed(plan_status(&p)?) {
+        if closed(plan_status(&p.status)?) {
             return Err(AppError::on("PLAN_CLOSED", "planId"));
         }
         if !(1..=STUDY_MAX_MINUTES).contains(&input.minutes) {
@@ -617,7 +544,7 @@ impl App {
         }
         let on = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
         let note = clean_opt(input.note.as_deref());
-        too_long(&note, TOPIC_MAX_CHARS, "note")?;
+        max_chars(note.as_deref(), TOPIC_MAX_CHARS, "note")?;
         let row = repo::StudyLogRow {
             id: self.new_id(),
             plan_id: p.id.clone(),
@@ -641,26 +568,20 @@ impl App {
         let ctx = self.ctx()?;
         let scope = self.learn_scope(&ctx, space_id)?;
         self.learn_member(&ctx, &input.member_id)?;
-        let topic = crate::text::required(&input.topic, "topic")?;
-        if topic.chars().count() > TOPIC_MAX_CHARS {
-            return Err(AppError::on("TOO_LONG", "topic"));
-        }
-        let learner = clean_opt(input.learner.as_deref());
-        too_long(&learner, LEARNER_MAX_CHARS, "learner")?;
-        if input
-            .minutes
-            .is_some_and(|m| !(1..=TEACH_MAX_MINUTES).contains(&m))
-        {
-            return Err(AppError::on("INVALID_TIME", "minutes"));
-        }
-        let on = self.date_or_today(&ctx, input.occurred_on.as_deref(), "occurredOn")?;
+        let t = self.check_teaching(
+            &ctx,
+            &input.topic,
+            input.learner.as_deref(),
+            input.minutes,
+            input.occurred_on.as_deref(),
+        )?;
         let row = repo::TeachingRow {
             id: self.new_id(),
             member_id: input.member_id,
-            occurred_on: ymd(on),
-            learner,
-            topic,
-            minutes: input.minutes.map(i64::from),
+            occurred_on: ymd(t.on),
+            learner: t.learner,
+            topic: t.topic,
+            minutes: t.minutes,
         };
         let meta = self.meta();
         self.db
@@ -746,19 +667,5 @@ fn teaching_dto(r: &repo::TeachingRow) -> TeachingLogDto {
         learner: r.learner.clone(),
         topic: r.topic.clone(),
         minutes: r.minutes.and_then(|m| u32::try_from(m).ok()),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn paths_round_trip_and_bp_saturates() {
-        assert_eq!(parse_paths("BOOK,COURSE"), vec!["BOOK", "COURSE"]);
-        assert!(parse_paths("").is_empty());
-        assert_eq!(bp32(10_000), 10_000);
-        assert_eq!(bp32(i64::MAX), i32::MAX);
-        assert_eq!(bp32(i64::MIN), i32::MIN);
     }
 }

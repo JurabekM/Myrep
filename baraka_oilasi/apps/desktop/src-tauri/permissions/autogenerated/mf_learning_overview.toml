@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mf-learning-overview"
+description = "Enables the mf_learning_overview command without any pre-configured scope."
+commands.allow = ["mf_learning_overview"]
+
+[[permission]]
+identifier = "deny-mf-learning-overview"
+description = "Denies the mf_learning_overview command without any pre-configured scope."
+commands.deny = ["mf_learning_overview"]

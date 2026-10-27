@@ -3535,6 +3535,9 @@ pub struct MfExpenseInput {
     pub channel: String,
     pub occurred_on: Option<String>,
     pub note: Option<String>,
+    /// «Sarmoya» belgisi (M6, SPEC 6A): o'qish xarajati; toifa o'zgarmaydi, ulush va jamg'armaga tegilmaydi.
+    #[serde(default)]
+    pub self_investment: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -3570,6 +3573,8 @@ pub struct MfEntryDto {
     pub category_id: Option<String>,
     pub occurred_on: String,
     pub note: Option<String>,
+    /// «Sarmoya» belgili chet el xarajati (M6).
+    pub self_investment: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -3598,6 +3603,8 @@ pub struct MfMonthDto {
     pub reserve_percent: Option<String>,
     /// `POCKET_NEGATIVE`, `NO_SHARE`, `SHARE_BELOW_TARGET`, `FUND_WITHDRAWN`.
     pub warnings: Vec<String>,
+    /// «Oʻzimga sarmoya» qatori (M6): belgili xarajatlar jami va oy daromadidagi ulushi.
+    pub self_investment: SelfInvestmentDto,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -4429,4 +4436,175 @@ pub struct KkLearningOverviewDto {
     pub teaching: Vec<KkTeachingDto>,
     /// Shu oy «Sarmoya (o'qish)» belgili chiqimlar jami (haqiqiy foydaga kiradi).
     pub self_investment: MoneyDto,
+}
+
+// ---- M6: Musofir «O'zimga sarmoya» (docs/musofir/SPEC.md 6A) ----
+
+/// Soat qiymati taklifi: oxirgi to'liq oylardagi (daromad yozuvi borlari, ko'pi bilan 3 ta) maosh + boshqa
+/// daromad, ish valyutasida.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfHourSuggestionDto {
+    pub months: Vec<MonthIncomeDto>,
+    /// Oy yo'q — `null` (qo'lda kiritiladi).
+    pub average: Option<MoneyDto>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfHourInput {
+    /// Qo'lda kiritilgan oylik daromad (ish valyutasida); bo'sh — oxirgi to'liq oylar o'rtachasi (`AUTO`).
+    pub income: Option<String>,
+    /// Kuniga ish vaqti, daqiqada (1–1440).
+    pub minutes_per_day: u32,
+    /// Oyda ish kunlari (1–31).
+    pub days: u32,
+}
+
+/// Uy valyutasidagi ko'rinish — faqat kiritilgan kurs bilan (SPEC 4.1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfHourHomeDto {
+    /// `FRESH`, `STALE` (kurs 30 kundan eski), `NO_RATE` (qiymat yo'q), `SAME_CURRENCY`.
+    pub rate_status: String,
+    pub hour_value: Option<MoneyDto>,
+    pub double_target: Option<MoneyDto>,
+    /// Qaysi kurs bilan hisoblangani; `NO_RATE` da `null`.
+    pub rate: Option<MfRateDto>,
+}
+
+/// Saqlangan soat qiymati (ish valyutasida) va uning uy valyutasidagi ko'rinishi (amaldagi kurs bilan).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfHourDto {
+    pub id: String,
+    pub income: MoneyDto,
+    /// `AUTO` yoki `MANUAL`.
+    pub income_source: String,
+    /// `AUTO` da — nechta to'liq oy o'rtachasi; `MANUAL` da 0.
+    pub months: u32,
+    pub minutes_per_day: u32,
+    pub days: u32,
+    pub monthly_minutes: u32,
+    pub hour_value: MoneyDto,
+    pub double_target: MoneyDto,
+    pub over_ceiling: bool,
+    pub computed_on: String,
+    pub home: MfHourHomeDto,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfLearningPlanInput {
+    /// `ABROAD` — chet eldagi soatni qimmatlashtirish; `HOME` — qaytgandan keyin uyda daromad beradigan hunar.
+    pub goal: String,
+    pub skill: String,
+    pub purpose: Option<String>,
+    /// `BOOK`, `MENTOR`, `COURSE`, `PRACTICE` (bir nechtasi).
+    pub paths: Vec<String>,
+    /// Ish valyutasida (ixtiyoriy).
+    pub budget: Option<String>,
+    pub weekly_minutes: u32,
+    pub start_on: Option<String>,
+    pub review_on: Option<String>,
+    /// Faqat `HOME`: Uy makonidagi «Hunardan ishga» g'oyasi (U12).
+    pub venture_idea_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfLearningPlanDto {
+    pub id: String,
+    pub goal: String,
+    pub skill: String,
+    pub purpose: Option<String>,
+    pub paths: Vec<String>,
+    pub budget: Option<MoneyDto>,
+    pub weekly_minutes: u32,
+    pub start_on: String,
+    pub review_on: String,
+    pub status: String,
+    pub baseline_hour_value: Option<MoneyDto>,
+    pub result_hour_value: Option<MoneyDto>,
+    pub venture_idea_id: Option<String>,
+    /// G'oya nomi (o'chirilgan bo'lsa — `null`).
+    pub venture_idea_title: Option<String>,
+    pub course_check_suggested: bool,
+    pub review_due: bool,
+}
+
+/// Natijani o'lchash: oxirgi soat qiymati boshlang'ich nuqta bilan (ish valyutasida).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfLearningResultDto {
+    pub plan_id: String,
+    pub baseline: Option<MfHourDto>,
+    pub current: MfHourDto,
+    pub diff: Option<MoneyDto>,
+    pub change_bp: Option<i32>,
+    pub change_percent: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTeachingInput {
+    /// Bo'sh — bugun.
+    pub occurred_on: Option<String>,
+    /// `WORK` (ish), `LANGUAGE` (til), `DOCUMENTS` (hujjatlar), `OTHER`.
+    pub area: String,
+    /// Kimga (ixtiyoriy): ism yoki «yangi kelgan hamyurt».
+    pub learner: Option<String>,
+    pub topic: String,
+    pub minutes: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfTeachingDto {
+    pub id: String,
+    pub occurred_on: String,
+    pub area: String,
+    pub learner: Option<String>,
+    pub topic: String,
+    pub minutes: Option<u32>,
+}
+
+/// «Hunardan ishga» g'oyasi tanlovi (Uy makonidan).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfIdeaOptionDto {
+    pub id: String,
+    pub title: String,
+}
+
+/// Musofir «O'zimga sarmoya» ekrani (shaxsiy — oila qurilmasida yopiq).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct MfLearningOverviewDto {
+    pub period_start: String,
+    pub period_end: String,
+    pub work_currency: String,
+    pub home_currency: String,
+    /// Oxirgi saqlangan hisob (ish valyutasida).
+    pub hour_value: Option<MfHourDto>,
+    pub plans: Vec<MfLearningPlanDto>,
+    pub active_plans: u32,
+    pub ideas: Vec<MfIdeaOptionDto>,
+    /// Ish boshlash summasiga bog'langan g'oya (M4) — `HOME` rejada standart tanlov.
+    pub startup_idea_id: Option<String>,
+    pub teaching_count: u32,
+    pub teaching: Vec<MfTeachingDto>,
+    /// Shu oy «Sarmoya» belgili chet el xarajatlari va oy daromadidagi ulushi (ish valyutasida).
+    pub self_investment: SelfInvestmentDto,
 }

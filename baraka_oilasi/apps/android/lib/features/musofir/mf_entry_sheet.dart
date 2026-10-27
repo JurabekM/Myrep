@@ -56,6 +56,9 @@ class _MfEntrySheetState extends ConsumerState<MfEntrySheet> with ActionState {
   String? _date;
   SharesDraft? _shares;
 
+  /// «Sarmoya» belgisi (M6): o'qish xarajati — toifa, ulush va jamg'arma o'zgarmaydi.
+  bool _selfInvestment = false;
+
   String get _kind => widget.kind;
   bool get _income => _kind == 'SALARY' || _kind == 'OTHER_INCOME';
   bool get _withdrawal => _kind == 'FUND_OUT' || _kind == 'RESERVE_OUT';
@@ -91,6 +94,7 @@ class _MfEntrySheetState extends ConsumerState<MfEntrySheet> with ActionState {
             channel: _channel,
             occurredOn: _date,
             note: note,
+            selfInvestment: _selfInvestment,
           ),
         );
       } else {
@@ -155,6 +159,14 @@ class _MfEntrySheetState extends ConsumerState<MfEntrySheet> with ActionState {
               items: [for (final c in categories) (c.id, c.customName ?? context.t(c.nameKey))],
               value: _categoryId ?? categories.firstOrNull?.id,
               onChanged: (v) => setState(() => _categoryId = v),
+            ),
+            CheckboxListTile(
+              key: const Key('mf-self-investment'),
+              contentPadding: EdgeInsets.zero,
+              value: _selfInvestment,
+              title: Text(context.t('mf.selfInvestment')),
+              subtitle: Text(context.t('mf.selfInvestmentHint')),
+              onChanged: (v) => setState(() => _selfInvestment = v ?? false),
             ),
           ],
           if (_kind == 'SENT_HOME') ...[

@@ -19,7 +19,7 @@ const offerQuestions = [
 ];
 const offerReplies = ['YES', 'NO', 'UNKNOWN'];
 
-/// Kurs yoki ustoz taklifi (uy/SPEC 2G.4): 8 savol. Musofirning `jobAbroad` savoli — M6 da.
+/// Kurs yoki ustoz taklifi (uy/SPEC 2G.4): 8 savol; Musofir makonida (M6) — 9-savol `jobAbroad`.
 const courseQuestions = [
   'fastRich',
   'secretFormula',
@@ -30,6 +30,7 @@ const courseQuestions = [
   'recruitment',
   'trialOrRefund',
 ];
+const List<String> mfCourseQuestions = [...courseQuestions, 'jobAbroad'];
 const offerModes = ['OFFER', 'COURSE'];
 
 /// Bayroq yoki xulosa rangi: yashil — aksent, sariq — ogohlantirish, qizil — xavf.
@@ -39,17 +40,21 @@ Color verdictColor(BuildContext context, String level) => switch (level) {
   _ => context.palette.accentText,
 };
 
-/// `mode` — `OFFER` (sarmoya taklifi) yoki `COURSE` (kurs/ustoz, bilim rejasidan).
-void openOfferCheck(BuildContext context, {String mode = 'OFFER'}) =>
-    showSheet<void>(context, (_) => OfferCheckSheet(initialMode: mode));
+/// `mode` — `OFFER` (sarmoya taklifi) yoki `COURSE` (kurs/ustoz, bilim rejasidan). `askJobAbroad` —
+/// Musofir makonida kursdan keyin chet elda ish kafolati so'raladi (M6).
+void openOfferCheck(BuildContext context, {String mode = 'OFFER', bool askJobAbroad = false}) =>
+    showSheet<void>(context, (_) => OfferCheckSheet(initialMode: mode, askJobAbroad: askJobAbroad));
 
 /// «Kafolatlangan foyda» detektori (uy/SPEC 2E.5): tavakkalsiz, kafolatlangan foyda va'da qilinsa —
 /// u yerda yo ribo, yo firibgarlik bor. `COURSE` turi — kurs yoki ustoz taklifi (2G.4): pul faqat
 /// haqiqiy hunar va bilim uchun. Qaror jadvali yadroda; hech narsa saqlanmaydi.
 class OfferCheckSheet extends ConsumerStatefulWidget {
-  const OfferCheckSheet({this.initialMode = 'OFFER', super.key});
+  const OfferCheckSheet({this.initialMode = 'OFFER', this.askJobAbroad = false, super.key});
 
   final String initialMode;
+
+  /// Musofir makoni: `COURSE` turida 9-savol — «kursdan keyin chet elda ish kafolati».
+  final bool askJobAbroad;
 
   @override
   ConsumerState<OfferCheckSheet> createState() => _OfferCheckSheetState();
@@ -89,6 +94,8 @@ class _OfferCheckSheetState extends ConsumerState<OfferCheckSheet> with ActionSt
                 urgency: v('urgency'),
                 recruitment: v('recruitment'),
                 trialOrRefund: v('trialOrRefund'),
+                // Uy va Kasb-kor — so'ralmaydi (`null`).
+                jobAbroad: widget.askJobAbroad ? v('jobAbroad') : null,
               ),
             )
           : core.checkOffer(
@@ -117,7 +124,7 @@ class _OfferCheckSheetState extends ConsumerState<OfferCheckSheet> with ActionSt
   @override
   Widget build(BuildContext context) {
     final r = _r;
-    final questions = _course ? courseQuestions : offerQuestions;
+    final questions = _course ? (widget.askJobAbroad ? mfCourseQuestions : courseQuestions) : offerQuestions;
     final complete = questions.every(_a.containsKey);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
