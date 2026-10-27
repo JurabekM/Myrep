@@ -41,7 +41,7 @@ yoki APK faylni telefonga yuborib, "Noma'lum manbalardan o'rnatish"ga ruxsat ber
 
 - Rejadagi operatorning LTE (imkoni bo'lsa NR ham) sayti, **3 sektorli**.
 - Atrofida **150–400 m radiusda aylanib yurish mumkin** bo'lgan yo'l (to'liq halqa ideal; kamida 270°).
-- Ochiq osmon (GPS aniqligi ≤ 15 m — oldindan tekshiruv shuni talab qiladi). Baland binolar orasida emas.
+- Ochiq osmon (GPS aniqligi ≤ 15 m — bundan yomon bo'lsa oldindan tekshiruv sariq ogohlantiradi). Baland binolar orasida emas.
 
 ## 4. Har bir telefonda — tayyorgarlik (saytga yetmasdan)
 
