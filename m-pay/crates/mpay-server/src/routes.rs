@@ -53,6 +53,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens/{id}/suspend", post(suspend))
         .route("/v1/tokens/{id}/resume", post(resume))
         .route("/v1/audit/verify", get(audit_verify))
+        .route("/v1/recon", get(recon))
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
         .route("/v1/sandbox/integrity-token", post(sandbox_integrity))
@@ -768,6 +769,39 @@ async fn audit_verify(State(s): St, headers: HeaderMap, mtls: Mtls) -> Result<Re
     Ok(Json(s.vault.verify_audit().await?).into_response())
 }
 
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReconQuery {
+    date: Option<String>,
+    from: Option<i64>,
+    to: Option<i64>,
+}
+
+/// Solishtirish hisoboti (ADR-0024): `?date=YYYY-MM-DD` (sxema vaqti; standart — bugun) yoki
+/// `?from=&to=` (unix). Faqat operator.
+async fn recon(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    axum::extract::Query(q): axum::extract::Query<ReconQuery>,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    let (from, to) = crate::recon::period(q.date.as_deref(), q.from, q.to, s.clock.now())
+        .map_err(ApiError::bad_request)?;
+    match crate::recon::run(&s, from, to).await {
+        Ok(r) => Ok(Json(r).into_response()),
+        Err(crate::recon::ReconError::Period(m)) => Err(ApiError::bad_request(m)),
+        Err(e) => {
+            tracing::error!(error = %e, "solishtirish");
+            Err(ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "INTERNAL",
+                "ichki xato",
+            ))
+        }
+    }
+}
+
 async fn sandbox_otp(
     State(s): St,
     Path(challenge_id): Path<String>,
@@ -838,7 +872,8 @@ async fn authorize(
     Ok(Json(out).into_response())
 }
 
-/// Takroriy so'rov tekshiruvi → emitent → javobni saqlash (ADR-0010).
+/// Takroriy so'rov tekshiruvi → emitent → javobni saqlash (ADR-0010). Natija noma'lum bo'lsa
+/// (timeout, o'qib bo'lmaydigan javob, qotgan yozuv) — `96` va reversal navbatga (ADR-0024).
 async fn process_authorization(
     s: &AppState,
     key_id: &str,
@@ -851,17 +886,13 @@ async fn process_authorization(
         tracing::error!(error = %e, "acquirer: takroriy so'rovlar jadvali");
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
     };
+    use crate::reversal::{self, RowKey};
     let key = dedup::RequestKey::new(req, key_id, built.txn_date.clone());
-    let sys_err = |reason: &str| {
-        dedup::system_error_response(
-            req,
-            built.dpan_masked.clone(),
-            built.amount_minor,
-            built.currency,
-            reason,
-        )
+    let row = RowKey::from(&key);
+    let unknown = |cause: &'static str| {
+        reversal::settle_unknown(s.vault.db(), &row, cause, &s.acquirer, s.clock.unix())
     };
-    match dedup::begin(pool, &key, s.clock.unix())
+    match dedup::begin(pool, &key, &dedup::Journal::new(req, built), s.clock.unix())
         .await
         .map_err(db_err)?
     {
@@ -891,15 +922,20 @@ async fn process_authorization(
         Begin::Stale => {
             // Avvalgi ishlov tugamagan: emitent pul yechgan bo'lishi mumkin — qayta yuborilmaydi.
             tracing::error!(terminal = %key_id, stan = req.stan, "acquirer: natija noma'lum (qotib qolgan PENDING) — 96");
-            let r = sys_err("OUTCOME_UNKNOWN");
-            dedup::finish(pool, &key, &r).await.map_err(db_err)?;
-            return Ok(r);
+            return unknown(reversal::CAUSE_UNKNOWN).await.map_err(db_err);
         }
     }
     let bytes = built.msg.pack();
-    let (resp, outcome) = match s.issuer.process_bytes(&bytes).await {
-        Ok(x) => x,
-        Err(e) => {
+    let timeout = std::time::Duration::from_millis(s.acquirer.issuer_timeout_ms);
+    let (resp, outcome) = match tokio::time::timeout(timeout, s.issuer.process_bytes(&bytes)).await
+    {
+        Ok(Ok(x)) => x,
+        Err(_) => {
+            // Javob yo'q: emitent yechgan bo'lishi mumkin — terminalga 96, emitentga reversal.
+            tracing::error!(terminal = %key_id, stan = req.stan, "acquirer: emitent javob bermadi — 96");
+            return unknown(reversal::CAUSE_TIMEOUT).await.map_err(db_err);
+        }
+        Ok(Err(e)) => {
             // Emitent so'rovni qayta ishlamadi — yozuv o'chiriladi, terminal qayta urinishi mumkin.
             tracing::warn!(error = %e, "issuer 0100 ni qayta ishlay olmadi");
             dedup::abort(pool, &key).await.map_err(db_err)?;
@@ -922,7 +958,7 @@ async fn process_authorization(
         Ok(o) => o,
         Err(e) => {
             tracing::error!(code = e.code, error = %e.message, stan = req.stan, "acquirer: emitent javobini o'qib bo'lmadi — 96");
-            sys_err("ISSUER_RESPONSE_UNREADABLE")
+            return unknown(reversal::CAUSE_UNREADABLE).await.map_err(db_err);
         }
     };
     dedup::finish(pool, &key, &out).await.map_err(db_err)?;

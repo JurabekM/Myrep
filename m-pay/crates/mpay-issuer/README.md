@@ -36,6 +36,20 @@ balance_minor = 500000000   # tiyin
 label = "GREEN, 5 000 000 UZS"
 ```
 
+## Reversal (`0400`/`0401` → `0410`, ADR-0024)
+
+`process_reversal_bytes` — asl avtorizatsiya `(terminal, STAN, RRN, merchant)` bo'yicha topiladi
+(maydon 2 yo'q), summa va valyuta mos kelishi shart:
+
+* tasdiqlangan va qaytarilmagan — summa yechilgan hisobga (`issuer_authorizations.account_id`)
+  qaytadi, `reversed_at` yoziladi; shartli `UPDATE` — parallel xabarlar ikki marta qaytarmaydi → `00`;
+* avval qaytarilgan / asl rad etilgan → `00`; topilmadi yoki bir nechta mos → `25`; summa farqli → `13`;
+  maydon 90 noto'g'ri → `30`.
+
+Har xabar `issuer_reversals` ga yoziladi (migratsiya `2003`). `report(from, to)` — solishtirish
+uchun avtorizatsiyalar (maskalangan DPAN, kod, `reversed_at`). Sandbox: `response_delay_ms` — `0110`
+ni commit'dan keyin kechiktiradi (acquirer timeout'ini sinash).
+
 `validate_request(&IsoMessage)` — `0100` ni DB va kalitlarsiz tahlil qiladi (majburiy maydonlar,
 Track 2 ↔ maydon 2/14, ICC teglari, PDOL ↔ maydon 4/49); `fuzz/fuzz_targets/issuer_parse.rs` ishlatadi.
 

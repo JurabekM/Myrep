@@ -671,7 +671,7 @@ PR #17 topilmalari:
   javobi saqlanadi (avval yozuv `PENDING` da qotib qolardi). Kalit — autentifikatsiya qilingan terminal
   kaliti + `terminal_id` va **kartadagi** sana (ICC `9A`; qayta urinish yarim tundan o'tsa ham o'sha
   kalit). Emitent ishlagandan keyingi xatoda yozuv o'chirilmaydi — `96` saqlanadi (qayta yuborish ATC
-  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. `TODO(spec):` avtomatik reversal.
+  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. ~~Avtomatik reversal~~ — ✅ ADR-0024.
 * **Rate-limit:** IPv6 kaliti `/64`; faol kalitlar ko'p bo'lsa eng eskilari yarmigacha chiqariladi
   (xarita chegaralangan, skanerlash amortizatsiyalangan).
 * **Ro'yxatdan o'tish nonce'lari** holatsiz (HMAC, muddat ichida): `/v1/pqlink/enroll` ni ko'p chaqirib
@@ -955,3 +955,22 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   egallagan).
 * `scripts/check-todo-spec.sh` (CI `check` job'i): belgisi bor fayllar va ro'yxat indeksi ikki tomonlama
   solishtiriladi. Tekshirildi: yangi belgi va yopilgan belgi ikkalasi ham xato beradi.
+
+### Avtomatik reversal va solishtirish (2026-10-27, ADR-0024; checklist JM-3 ✅, JM-2 ◐)
+
+* Muammo: emitent pul yechgan, terminal esa `96` ko'rgan holatlar (emitent javob bermadi, `0110`
+  o'qilmadi, jarayon to'xtadi) — pul qaytmasdi; ikki tomonni taqqoslash vositasi yo'q edi.
+* ISO 8583: `0400`/`0401`/`0410`, maydon 90 (asl ma'lumot, ikkilamchi bitmap); reversal'da PAN yo'q —
+  asl yozuv terminal, STAN, RRN bo'yicha.
+* Emitent: summa yechilgan hisobga bir marta qaytadi (shartli `UPDATE`), `00`/`25`/`13`/`30`;
+  avtorizatsiyada yechilgan hisob yoziladi; `issuer_reversals`; `report()`; sandbox `response_delay_ms`.
+* Acquirer: `[acquirer] issuer_timeout_ms`; natija noma'lum → bitta tranzaksiyada `96` va navbat;
+  `acquirer_requests` jurnal ustunlari bilan; fon ishchisi qotgan `PENDING` larni yopadi va
+  `0400`/`0401` ni kutish bilan qayta yuboradi; metrikalar va 2 ta ogohlantirish (jami 16 qoida).
+* Solishtirish: `GET /v1/recon`, `mpay-server recon` (tafovut — chiqish kodi 1); `ISSUER_ONLY_APPROVED`,
+  `ACQUIRER_ONLY_APPROVED`, `AMOUNT_MISMATCH`, `REVERSAL_FAILED`; kun — UTC+5.
+* Tekshirildi: `cargo test --workspace` (SQLite) va e2e/vault/server PostgreSQL'da; e2e `p3_reversal` —
+  timeout → emitent vaqtincha ishlamaganda qayta urinishlar → `0401` bilan qaytarish; qotgan yozuv;
+  uch xil tafovut, API ruxsatlari. Ishchi o'chirilganda ikkala reversal testi yiqildi. `promtool` — 16
+  qoida; `mpay-server init` + `recon` haqiqiy binar bilan.
+* Ochiq: kliring/settlement (JM-1), real bankning emitent fayli (BK-1), sxemaning reversal formati (SX-2).

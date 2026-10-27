@@ -64,6 +64,10 @@ struct Registry {
     rate_limited: Mutex<BTreeMap<&'static str, u64>>,
     /// Yaxlitlik tekshiruvi natijasi → soni.
     integrity: Mutex<BTreeMap<&'static str, u64>>,
+    /// Reversal navbatga qo'yilishi sababi → soni (ADR-0024).
+    reversals_enqueued: Mutex<BTreeMap<String, u64>>,
+    /// Reversal yuborish natijasi (`done`, `failed`, `retry`) → soni.
+    reversals: Mutex<BTreeMap<&'static str, u64>>,
     shield_degraded: AtomicU64,
     otp_failed: AtomicU64,
     proxy_rejected: AtomicU64,
@@ -128,6 +132,24 @@ pub fn integrity_check(result: &'static str) {
     *lock(&REG.integrity).entry(result).or_default() += 1;
 }
 
+/// Natijasi noma'lum avtorizatsiya — reversal navbatga qo'yildi (`cause`: `ISSUER_TIMEOUT` …).
+pub fn reversal_enqueued(cause: &str) {
+    let cause = match cause {
+        crate::reversal::CAUSE_TIMEOUT => "timeout",
+        crate::reversal::CAUSE_UNREADABLE => "unreadable",
+        crate::reversal::CAUSE_UNKNOWN => "unknown",
+        _ => "other",
+    };
+    *lock(&REG.reversals_enqueued)
+        .entry(cause.to_owned())
+        .or_default() += 1;
+}
+
+/// Reversal yuborish natijasi: `done`, `failed`, `retry`.
+pub fn reversal_result(result: &'static str) {
+    *lock(&REG.reversals).entry(result).or_default() += 1;
+}
+
 /// Shield roli javob bermadi — mahalliy zaxira ishladi.
 pub fn shield_degraded() {
     REG.shield_degraded.fetch_add(1, Ordering::Relaxed);
@@ -181,7 +203,8 @@ impl Text {
         self.sample(name, labels, v);
     }
 
-    fn sample(&mut self, name: &str, labels: &str, v: f64) {
+    /// Oldingi `gauge`/sarlavhaga yana bitta qator (boshqa yorliq bilan).
+    pub fn sample(&mut self, name: &str, labels: &str, v: f64) {
         if labels.is_empty() {
             let _ = writeln!(self.0, "{name} {v}");
         } else {
@@ -275,6 +298,30 @@ pub fn render_common(out: &mut Text, role: &str) {
     for (r, n) in lock(&REG.integrity).iter() {
         out.sample(
             "mpay_integrity_checks_total",
+            &format!("result=\"{r}\""),
+            *n as f64,
+        );
+    }
+    out.head(
+        "mpay_reversals_enqueued_total",
+        "counter",
+        "Natijasi noma'lum avtorizatsiyalar — reversal navbatga (sabab)",
+    );
+    for (c, n) in lock(&REG.reversals_enqueued).iter() {
+        out.sample(
+            "mpay_reversals_enqueued_total",
+            &format!("cause=\"{c}\""),
+            *n as f64,
+        );
+    }
+    out.head(
+        "mpay_reversals_total",
+        "counter",
+        "Reversal yuborish natijalari (done, failed, retry)",
+    );
+    for (r, n) in lock(&REG.reversals).iter() {
+        out.sample(
+            "mpay_reversals_total",
             &format!("result=\"{r}\""),
             *n as f64,
         );

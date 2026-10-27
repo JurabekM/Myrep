@@ -17,6 +17,8 @@ pub mod metrics;
 pub mod otp;
 pub mod proxyproto;
 pub mod ratelimit;
+pub mod recon;
+pub mod reversal;
 pub mod revocations;
 pub mod routes;
 pub mod serve;
@@ -41,6 +43,8 @@ pub struct RunningServer {
     pub state: Arc<state::AppState>,
     shutdown: Option<tokio::sync::oneshot::Sender<()>>,
     metrics: Option<tokio::task::JoinHandle<()>>,
+    /// Reversal ishchisi (ADR-0024).
+    reversals: Option<tokio::task::AbortHandle>,
     pub handle: tokio::task::JoinHandle<std::io::Result<()>>,
 }
 
@@ -60,6 +64,9 @@ impl RunningServer {
         }
         if let Some(m) = self.metrics.take() {
             m.abort();
+        }
+        if let Some(r) = self.reversals.take() {
+            r.abort();
         }
     }
 }
@@ -129,6 +136,24 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
                         "",
                         st.pqlink.session_count().await as f64,
                     );
+                    // Navbat umumiy (DB) — qiymat klaster bo'yicha, har instansiyada bir xil.
+                    if let Ok((pending, failed, oldest)) =
+                        reversal::queue_stats(st.vault.db(), st.clock.unix()).await
+                    {
+                        t.gauge(
+                            "mpay_reversals",
+                            "Reversal navbati (pending — yuborilmoqda, failed — qo'lda ko'rib chiqish)",
+                            "state=\"pending\"",
+                            pending as f64,
+                        );
+                        t.sample("mpay_reversals", "state=\"failed\"", failed as f64);
+                        t.gauge(
+                            "mpay_reversal_oldest_pending_seconds",
+                            "Eng eski yakunlanmagan reversal yoshi",
+                            "",
+                            oldest as f64,
+                        );
+                    }
                     t.finish()
                 })
             });
@@ -137,6 +162,7 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
         }
         None => (None, None),
     };
+    let reversals = Some(reversal::spawn_worker(state.clone()));
     let opts = accept_opts(cfg, tls, revoked);
     let handle = tokio::spawn(serve::serve(listener, app, opts, async move {
         let _ = rx.await;
@@ -148,6 +174,7 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
         state,
         shutdown: Some(tx),
         metrics,
+        reversals,
         handle,
     })
 }

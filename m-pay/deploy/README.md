@@ -78,6 +78,9 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 | `mpay_integrity_checks_total{result}` | counter | Play Integrity: `ok`, `missing`, `invalid`, `unavailable`, `absent` (ADR-0021) |
 | `mpay_proxy_protocol_rejected_total` | counter | proksidan yaroqsiz PROXY sarlavhasi |
 | `mpay_rate_limit_store_errors_total` | counter | umumiy chegara ombori xatosi (so'rov o'tkazildi) |
+| `mpay_reversals_enqueued_total{cause}` | counter | natijasi noma'lum avtorizatsiya → reversal: `timeout`, `unreadable`, `unknown` (ADR-0024) |
+| `mpay_reversals_total{result}` | counter | reversal yuborish: `done`, `failed`, `retry` |
+| `mpay_reversals{state}`, `mpay_reversal_oldest_pending_seconds` | gauge | reversal navbati (klaster bo'yicha): `pending`, `failed`; eng eskisi yoshi |
 | `mpay_db_up`, `mpay_db_pool_connections{state}`, `mpay_db_pool_max_connections` | gauge | baza |
 | `mpay_pqlink_sessions` | gauge | PQ Link sessiyalari (klaster bo'yicha) |
 | `mpay_shield_{cards,devices,merchants,graph_nodes}` | gauge | Shield belgilar ombori |
@@ -86,10 +89,33 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 Qoidalar — [`prometheus/alerts.yml`](prometheus/alerts.yml): instansiya yo'q, sig'im kamaydi, DB
 yo'q, avtorizatsiya p99 > 300 ms, 5xx > 1 %, `96` javoblari, Shield zaxirada, Play Integrity javob
 bermayapti yoki yaroqsiz tokenlar ko'paydi, OTP yetkazilmayapti,
-DB hovuzi to'la, chegara portlashi, umumiy chegara ombori xatosi, PROXY sarlavhasi rad etildi. Ogohlantirishlar Alertmanager
+DB hovuzi to'la, chegara portlashi, umumiy chegara ombori xatosi, PROXY sarlavhasi rad etildi,
+reversal rad etildi yoki 15 daqiqadan beri yuborilmayapti. Ogohlantirishlar Alertmanager
 ([`alertmanager/alertmanager.yml`](alertmanager/alertmanager.yml)) orqali navbatchiga yuboriladi —
 sandbox'da virtual kanal `mpay-smsgw` `POST /alerts`. `TODO(spec):` bankning haqiqiy navbatchilik
 kanali (SMS, Telegram, e-pochta) va eskalatsiya.
+
+## Reversal va kunlik solishtirish ([ADR-0024](../docs/adr/0024-reversal-va-solishtirish.md))
+
+Natijasi noma'lum avtorizatsiyalar (`96`) avtomatik qaytariladi — API instansiyalaridagi fon ishchisi.
+Navbatchi uchun:
+
+* **Kunlik solishtirish** (cron, kun tugagach, 3 kun ichida — acquirer jurnali shuncha saqlanadi):
+
+  ```bash
+  docker compose run --rm --no-deps -T --entrypoint mpay-entrypoint bootstrap \
+    mpay-server recon --config /var/lib/mpay/state/mpay.toml \
+    --date "$(TZ=Asia/Tashkent date -d yesterday +%F)" > recon.txt
+  ```
+
+  Chiqish kodi 1 — tafovut bor. `ISSUER_ONLY_APPROVED` (mijozdan pul ketgan, terminal tasdiq olmagan)
+  va `REVERSAL_FAILED` — bank bilan qo'lda qaytarish; `ACQUIRER_ONLY_APPROVED` — savdo nuqtasi bilan
+  hisob-kitob; `AMOUNT_MISMATCH` — emitent qaydnomasini tekshirish.
+* **`MpayReversalFailed`** — emitent reversal'ni rad etdi (`13` summa farqli, `96`, `30`): `recon`
+  hisobotidagi `REVERSAL_FAILED` qatori bo'yicha emitent bilan tekshiring. `FAILED` yozuvlar
+  o'chirilmaydi.
+* **`MpayReversalBacklog`** — emitent reversal'larga javob bermayapti; navbat saqlanadi va emitent
+  tiklangach o'zi yuboriladi (kutish ≤ 10 daqiqa).
 
 ## Zaxira va tiklash ([ADR-0023](../docs/adr/0023-zaxira-pitr-ogohlantirish.md))
 

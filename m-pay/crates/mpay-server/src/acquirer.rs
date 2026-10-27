@@ -51,6 +51,18 @@ pub struct Built {
     pub txn_date: String,
 }
 
+/// Maydon 7 — uzatish vaqti `MMDDhhmmss` (UTC).
+pub fn transmission_time(now: OffsetDateTime) -> String {
+    format!(
+        "{:02}{:02}{:02}{:02}{:02}",
+        now.month() as u8,
+        now.day(),
+        now.hour(),
+        now.minute(),
+        now.second()
+    )
+}
+
 /// Terminal so'rovidan `0100` yig'adi.
 pub fn build_0100(req: &AuthorizationRequest, now: OffsetDateTime) -> Result<Built, ApiError> {
     if req.stan > 999_999 {
@@ -101,18 +113,7 @@ pub fn build_0100(req: &AuthorizationRequest, now: OffsetDateTime) -> Result<Bui
     m.set_str(2, t2.pan.expose_digits()).map_err(iso)?;
     m.set_str(3, "000000").map_err(iso)?;
     m.set_num(4, amount).map_err(iso)?;
-    m.set_str(
-        7,
-        &format!(
-            "{:02}{:02}{:02}{:02}{:02}",
-            now.month() as u8,
-            now.day(),
-            now.hour(),
-            now.minute(),
-            now.second()
-        ),
-    )
-    .map_err(iso)?;
+    m.set_str(7, &transmission_time(now)).map_err(iso)?;
     m.set_num(11, u64::from(req.stan)).map_err(iso)?;
     m.set_str(14, &t2.expiry.to_yymm()).map_err(iso)?;
     m.set_str(22, "071").map_err(iso)?;

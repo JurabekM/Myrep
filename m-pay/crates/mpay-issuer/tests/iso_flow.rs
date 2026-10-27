@@ -361,3 +361,121 @@ async fn product_policies() {
         assert_eq!((c.as_str(), r.as_str()), want, "{action:?}");
     }
 }
+
+/// Asl `0100` uchun reversal (ADR-0024): maydonlar asldan, maydon 90 — asl MTI, STAN, vaqt.
+fn reversal_for(m: &IsoMessage, mti: Mti) -> IsoMessage {
+    let mut r = IsoMessage::new(mti);
+    for f in [3u8, 4, 7, 11, 37, 41, 42, 49] {
+        r.set(f, m.get(f).unwrap().to_vec()).unwrap();
+    }
+    let orig = format!(
+        "0100{}{}{:011}{:011}",
+        m.require_str(11).unwrap(),
+        m.require_str(7).unwrap(),
+        0,
+        0
+    );
+    r.set_str(90, &orig).unwrap();
+    r
+}
+
+async fn reverse(e: &Env, m: &IsoMessage) -> (String, String) {
+    let (resp, out) = e.issuer.process_reversal_bytes(&m.pack()).await.unwrap();
+    let r = IsoMessage::unpack(&resp).unwrap();
+    assert_eq!(r.mti, Mti::REVERSAL_RESPONSE);
+    assert_eq!(r.get(37), m.get(37), "RRN aks ettirilishi kerak");
+    assert_eq!(r.require_str(39).unwrap(), out.code());
+    (out.code().to_owned(), out.reason.as_str().to_owned())
+}
+
+async fn balance(e: &Env) -> i64 {
+    e.issuer.accounts().await.unwrap()[0].balance_minor
+}
+
+#[tokio::test]
+async fn reversal_returns_funds_exactly_once() {
+    let e = env().await;
+    let start = balance(&e).await;
+    let m = valid_0100(&e, 1, 5_000);
+    assert_eq!(code(&e, &m).await.0, "00");
+    assert_eq!(balance(&e).await, start - 5_000);
+
+    // Emitent ko'rmagan so'rov — 25 (acquirer uchun yakuniy).
+    let unseen = reversal_for(&valid_0100(&e, 9, 5_000), Mti::REVERSAL_REQUEST);
+    assert_eq!(
+        reverse(&e, &unseen).await,
+        ("25".into(), "ORIGINAL_NOT_FOUND".into())
+    );
+    // Summa mos emas — 13, pul qaytmaydi.
+    let mut bad = reversal_for(&m, Mti::REVERSAL_REQUEST);
+    bad.set_num(4, 4_999).unwrap();
+    assert_eq!(
+        reverse(&e, &bad).await,
+        ("13".into(), "AMOUNT_MISMATCH".into())
+    );
+    // Maydon 90 boshqa STAN'ni ko'rsatadi yoki yo'q — 30.
+    let mut bad = reversal_for(&m, Mti::REVERSAL_REQUEST);
+    bad.set_str(90, &format!("0100000002{}{:022}", "1023120000", 0))
+        .unwrap();
+    assert_eq!(
+        reverse(&e, &bad).await,
+        ("30".into(), "FORMAT_ERROR".into())
+    );
+    let mut bad = reversal_for(&m, Mti::REVERSAL_REQUEST);
+    bad.remove(90);
+    assert_eq!(
+        reverse(&e, &bad).await,
+        ("30".into(), "FORMAT_ERROR".into())
+    );
+    assert_eq!(balance(&e).await, start - 5_000);
+
+    // To'g'ri reversal — pul qaytadi; takror (0401) — ikkinchi marta qaytmaydi.
+    let rev = reversal_for(&m, Mti::REVERSAL_REQUEST);
+    assert_eq!(reverse(&e, &rev).await, ("00".into(), "REVERSED".into()));
+    assert_eq!(balance(&e).await, start);
+    let rep = reversal_for(&m, Mti::REVERSAL_REPEAT);
+    assert_eq!(
+        reverse(&e, &rep).await,
+        ("00".into(), "ALREADY_REVERSED".into())
+    );
+    assert_eq!(balance(&e).await, start);
+
+    // Rad etilgan asl (CVM chegarasi, Q2) — qaytariladigan pul yo'q.
+    let declined = valid_0100(&e, 2, 200_000_000);
+    assert_eq!(code(&e, &declined).await.0, "Q2");
+    assert_eq!(
+        reverse(&e, &reversal_for(&declined, Mti::REVERSAL_REQUEST)).await,
+        ("00".into(), "NOTHING_TO_REVERSE".into())
+    );
+
+    // Hisobot: tasdiqlangani qaytarilgan deb belgilangan; har reversal xabari qayd etilgan.
+    let report = e.issuer.report(0, i64::MAX).await.unwrap();
+    let orig = report.iter().find(|r| r.stan == "000001").unwrap();
+    assert_eq!(orig.response_code, "00");
+    assert!(orig.reversed_at.is_some());
+    assert_eq!(orig.terminal_id, "TERM0001");
+    assert!(orig.dpan_masked.as_deref().unwrap().contains("******"));
+    let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM issuer_reversals")
+        .fetch_one(&e.pool)
+        .await
+        .unwrap();
+    assert_eq!(n, 7);
+
+    // Avtorizatsiya MTI'si reversal yo'lida — xato.
+    assert!(e.issuer.process_reversal_bytes(&m.pack()).await.is_err());
+}
+
+#[tokio::test]
+async fn concurrent_reversals_credit_once() {
+    let e = env().await;
+    let start = balance(&e).await;
+    let m = valid_0100(&e, 1, 7_000);
+    assert_eq!(code(&e, &m).await.0, "00");
+    let a = reversal_for(&m, Mti::REVERSAL_REQUEST);
+    let b = reversal_for(&m, Mti::REVERSAL_REPEAT);
+    let (ra, rb) = tokio::join!(reverse(&e, &a), reverse(&e, &b));
+    let mut reasons = [ra.1, rb.1];
+    reasons.sort();
+    assert_eq!(reasons, ["ALREADY_REVERSED", "REVERSED"]);
+    assert_eq!(balance(&e).await, start);
+}

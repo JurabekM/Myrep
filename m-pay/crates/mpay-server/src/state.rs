@@ -83,6 +83,8 @@ pub struct AppState {
     pub integrity_mock: Option<Arc<crate::integrity::SandboxIssuer>>,
     /// CVM chegarasi (`[issuer] cvm_limit_minor`) — token profilida qurilmaga beriladi (ADR-0022).
     pub cvm_limit_minor: u64,
+    /// Emitent timeout'i va reversal (ADR-0024).
+    pub acquirer: crate::config::AcquirerConfig,
 }
 
 impl std::fmt::Debug for AppState {
@@ -507,5 +509,6 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         integrity,
         integrity_mock,
         cvm_limit_minor: cfg.issuer.cvm_limit_minor,
+        acquirer: cfg.acquirer.clone(),
     })
 }

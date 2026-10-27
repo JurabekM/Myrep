@@ -58,6 +58,18 @@ enum Cmd {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
         config: PathBuf,
     },
+    /// Solishtirish (ADR-0024): acquirer jurnali ↔ emitent qaydnomasi. Tafovut bo'lsa — chiqish kodi 1
+    /// (cron/navbatchi uchun).
+    Recon {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Kun `YYYY-MM-DD` — sxema vaqti (UTC+5); standart — bugun.
+        #[arg(long)]
+        date: Option<String>,
+        /// To'liq hisobot (JSON) fayli.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
     /// Audit log xesh-zanjirini tekshiradi.
     AuditVerify {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
@@ -205,6 +217,55 @@ async fn run(cli: Cli) -> Result<(), String> {
                 r.entries, r.head_hash
             );
             Ok(())
+        }
+        Cmd::Recon { config, date, out } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let st = mpay_server::state::build_offline(&cfg)
+                .await
+                .map_err(|e| e.to_string())?;
+            let (from, to) =
+                mpay_server::recon::period(date.as_deref(), None, None, st.clock.now())?;
+            let r = mpay_server::recon::run(&st, from, to)
+                .await
+                .map_err(|e| e.to_string())?;
+            if let Some(out) = &out {
+                std::fs::write(
+                    out,
+                    serde_json::to_vec_pretty(&r).map_err(|e| e.to_string())?,
+                )
+                .map_err(|e| format!("{}: {e}", out.display()))?;
+            }
+            println!(
+                "Davr [{from}, {to}): acquirer {} yozuv, emitent {}, mos {}",
+                r.acquirer_records, r.issuer_records, r.matched
+            );
+            for t in &r.approved {
+                println!(
+                    "  tasdiqlangan ({}): {} ta, {} (minor)",
+                    t.currency, t.count, t.amount_minor
+                );
+            }
+            for i in r.discrepancies.iter().chain(&r.notes) {
+                println!(
+                    "  {:?}: terminal {} STAN {} RRN {} {} acquirer {:?}/{:?} emitent {:?}/{:?} reversal {:?}",
+                    i.kind,
+                    i.terminal_id,
+                    i.stan,
+                    i.rrn,
+                    i.dpan_masked.as_deref().unwrap_or("-"),
+                    i.acquirer_code,
+                    i.acquirer_amount_minor,
+                    i.issuer_code,
+                    i.issuer_amount_minor,
+                    i.reversal
+                );
+            }
+            if r.is_clean() {
+                println!("Tafovut yo'q ({} izoh)", r.notes.len());
+                Ok(())
+            } else {
+                Err(format!("{} ta tafovut", r.discrepancies.len()))
+            }
         }
         Cmd::TerminalBundle {
             config,

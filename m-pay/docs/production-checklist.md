@@ -62,8 +62,8 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | ID | Ish | Holat | Kim | Qachon | Manba |
 |---|---|---|---|---|---|
 | JM-1 | **Kliring va hisob-kitob (settlement):** kunlik yopilish, kliring fayli (sandbox formati, almashtiriladigan) | ☐ | J | P | — |
-| JM-2 | **Solishtirish (reconciliation)** va tafovut hisoboti: M-Pay jurnali ↔ emitent ↔ kliring | ☐ | J | P | `crates/mpay-server/src/dedup.rs` |
-| JM-3 | **Avtomatik reversal (`0400`):** `96` va javobi noma'lum (`PENDING` > 120 s) avtorizatsiyalar uchun | ☐ | J | P | `crates/mpay-server/src/dedup.rs`, ADR-0010 |
+| JM-2 | **Solishtirish (reconciliation)** va tafovut hisoboti: acquirer jurnali ↔ emitent ✅ (`GET /v1/recon`, `mpay-server recon`); kliring bilan — JM-1 dan keyin; real bankda emitent tomoni — bank fayli (BK-1) | ◐ | J, B | P | ADR-0024, `crates/mpay-server/src/recon.rs` |
+| JM-3 | **Avtomatik reversal (`0400`/`0401`):** emitent timeout'i, o'qilmaydigan javob, qotgan `PENDING` → `96` va navbatdan reversal (qayta urinish, instansiyalar orasida band qilish). Sxemaning reversal formati — SX-2 | ✅ | J | P | ADR-0024 |
 | JM-4 | **Shield yuqori mavjudligi:** holatni davriy saqlash (snapshot) va zaxira instansiya. Hozir bitta Shield roli, holat xotirada; yiqilsa to'lov to'xtamaydi, aniqlash zaiflashadi | ☐ | J | P | ADR-0019, `crates/mpay-shield/src/graph.rs` |
 | JM-5 | PostgreSQL replikatsiyasi va failover, nginx zaxirasi (keepalived/VIP) — compose'da namuna | ☐ | J, B | P | ADR-0020, ADR-0023, `deploy/README.md` |
 | JM-6 | Bekor qilingan server identifikatorlari ro'yxatini ilova build'iga joylash, boshqa kanal (CDN/push) | ☐ | J | P | ADR-0014 |
@@ -123,6 +123,7 @@ Avvalgi bosqichlarda ochiq deb belgilangan, keyin bajarilgan ishlar. Belgilar o'
 | HTTP API fuzzing, Kotlin Jazzer | `docs/fuzz-report.md` §5 |
 | LUK/ATC iste'moli va emitent bitta tranzaksiyada | ADR-0018 da ataylab rad etildi: emitent alohida tizim |
 | Kalit almashtirilganda Shield tarixi | ADR-0015 (2026-10-26) |
+| Avtomatik reversal (`0400`) va tafovut hisoboti | ADR-0024 (2026-10-27): JM-3 ✅, JM-2 — acquirer ↔ emitent |
 | Token muddati UTC+5 va yangilash | ADR-0022 §4 (2026-10-26) |
 
 ## 8. Pilotga chiqish mezoni
@@ -131,7 +132,7 @@ Pilot **yopiq tizimda** (SX-1 — sxemasiz, faqat M-Pay terminali, bitta bank) b
 **P** belgili barcha bandlar bajarilgan bo'lishi kerak. Qisqasi:
 
 1. Bank tomoni: BK-1 … BK-6, BK-8 … BK-13.
-2. Jamoa tomoni: JM-1 … JM-6, JM-11, MB-4.
+2. Jamoa tomoni: JM-1, JM-2 (kliring bilan), JM-4 … JM-6, JM-11, MB-4 (JM-3 ✅).
 3. Telefonlar: MB-1 … MB-3.
 4. Audit: AU-1, AU-2, AU-5.
 5. Huquqiy: RG-1 … RG-4.
@@ -154,9 +155,11 @@ real ma'lumotda o'qitish.
 * `crates/mpay-integrity/src/lib.rs` — BK-11
 * `crates/mpay-integrity/src/service_account.rs` — BK-11
 * `crates/mpay-issuer/src/issuer.rs` — BK-9
+* `crates/mpay-issuer/src/reversal.rs` — SX-2
 * `crates/mpay-pqlink/src/attestation.rs` — BK-12
-* `crates/mpay-server/src/dedup.rs` — JM-2, JM-3
 * `crates/mpay-server/src/init.rs` — BK-9
+* `crates/mpay-server/src/recon.rs` — BK-1
+* `crates/mpay-server/src/reversal.rs` — SX-2
 * `crates/mpay-shield/src/graph.rs` — JM-4
 * `crates/mpay-vault/src/model.rs` — BK-9
 * `crates/mpay-vault/src/vault.rs` — BK-6
@@ -164,7 +167,7 @@ real ma'lumotda o'qitish.
 * `deploy/alertmanager/alertmanager.yml` — BK-8
 * `deploy/backup.sh` — BK-13
 * `deploy/docker-compose.yml` — BK-8
-* `docs/PROGRESS.md` — tarixiy jurnal; ochiq qolganlari: SX-3, BK-5, BK-6, BK-10, BK-11, BK-14, JM-3, AU-3
+* `docs/PROGRESS.md` — tarixiy jurnal; ochiq qolganlari: SX-3, BK-5, BK-6, BK-10, BK-11, BK-14, AU-3
 * `docs/adr/0011-mtls.md` — BK-5
 * `docs/adr/0014-bekor-qilish-royxati.md` — JM-6
 * `docs/adr/0016-otp-kanali.md` — BK-6, BK-7
@@ -175,6 +178,7 @@ real ma'lumotda o'qitish.
 * `docs/adr/0021-play-integrity.md` — BK-11, BK-12
 * `docs/adr/0022-mahsulot-siyosatlari.md` — BK-9, SX-3, SX-4, SX-6
 * `docs/adr/0023-zaxira-pitr-ogohlantirish.md` — BK-4, BK-13, JM-5
+* `docs/adr/0024-reversal-va-solishtirish.md` — SX-2, BK-1
 * `docs/android-testing.md` — BK-11, MB-4
 * `docs/architecture.md` — BK-5
 * `docs/load-report.md` — BK-3, BK-10, JM-8

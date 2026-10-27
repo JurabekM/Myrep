@@ -310,6 +310,13 @@ channel = "sandbox"
 # url = "http://127.0.0.1:47700/send"
 # token_env = "MPAY_SMS_TOKEN"
 
+# Emitent bilan aloqa (ADR-0024): javob kutish va natijasi noma'lum avtorizatsiyalar reversal'i.
+[acquirer]
+issuer_timeout_ms = 10000
+# reversal_interval_ms = 5000      # ishchi: qotgan PENDING'lar va navbat
+# reversal_delay_secs = 10         # birinchi 0400 dan oldin (kechikkan asl xabar emitentga yetsin)
+# reversal_max_backoff_secs = 600  # emitentga yetib bo'lmasa qayta urinishlar orasidagi eng katta oraliq
+
 # Prometheus metrikalari (2-faza P2.5): alohida ichki port, kalitsiz — tashqariga ochilmaydi.
 [metrics]
 # listen = "127.0.0.1:9464"

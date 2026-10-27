@@ -43,6 +43,9 @@ pub struct Config {
     /// Ilova/qurilma yaxlitligi — Play Integrity (2-faza P2.6, ADR-0021).
     #[serde(default)]
     pub integrity: IntegrityConfig,
+    /// Emitent bilan aloqa: timeout va reversal (ADR-0024).
+    #[serde(default)]
+    pub acquirer: AcquirerConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]
@@ -67,6 +70,31 @@ pub struct HttpConfig {
     /// ulanish boshida yuboradi. Faqat `trusted_proxies` dan kelgan ulanishlarda o'qiladi.
     #[serde(default)]
     pub proxy_protocol: bool,
+}
+
+/// `[acquirer]`: emitentga yuborish va reversal ishchisi (ADR-0024).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct AcquirerConfig {
+    /// Emitent `0110` ini kutish (ms). O'tsa — terminalga `96 ISSUER_TIMEOUT`, reversal navbatga.
+    pub issuer_timeout_ms: u64,
+    /// Reversal ishchisi tekshiruvi oralig'i (ms): qotgan `PENDING` lar va navbatdagi reversal'lar.
+    pub reversal_interval_ms: u64,
+    /// Birinchi `0400` dan oldin kutish (s) — kechikkan asl xabar emitentga reversal'dan oldin yetsin.
+    pub reversal_delay_secs: i64,
+    /// Emitentga yetib bo'lmasa qayta urinishlar orasidagi eng katta oraliq (s).
+    pub reversal_max_backoff_secs: i64,
+}
+
+impl Default for AcquirerConfig {
+    fn default() -> Self {
+        Self {
+            issuer_timeout_ms: 10_000,
+            reversal_interval_ms: 5_000,
+            reversal_delay_secs: 10,
+            reversal_max_backoff_secs: 600,
+        }
+    }
 }
 
 /// `[metrics]`: Prometheus `/metrics` — alohida, ichki port (oddiy HTTP, kalitsiz). Berilmasa o'chiq.
@@ -490,6 +518,26 @@ impl Config {
             return Err(ConfigError::Invalid(format!(
                 "auth.revoked_client_certs: 64 hex kutilgan ({bad})"
             )));
+        }
+        let a = &self.acquirer;
+        // Timeout qotgan `PENDING` chegarasidan qisqa bo'lsin: aks holda ishlov tugamay turib ishchi
+        // yozuvni "natija noma'lum" deb yopadi.
+        if a.issuer_timeout_ms == 0
+            || a.issuer_timeout_ms >= crate::dedup::STALE_PENDING_SECS as u64 * 1000 / 2
+        {
+            return Err(ConfigError::Invalid(format!(
+                "acquirer.issuer_timeout_ms: 1 … {} ms",
+                crate::dedup::STALE_PENDING_SECS * 1000 / 2 - 1
+            )));
+        }
+        if a.reversal_interval_ms < 50
+            || a.reversal_delay_secs < 0
+            || a.reversal_max_backoff_secs < 1
+        {
+            return Err(ConfigError::Invalid(
+                "acquirer: reversal_interval_ms ≥ 50, reversal_delay_secs ≥ 0, reversal_max_backoff_secs ≥ 1"
+                    .into(),
+            ));
         }
         let pi = &self.integrity;
         if pi.mode != IntegrityMode::Off {

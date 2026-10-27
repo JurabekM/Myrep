@@ -1,12 +1,12 @@
 //! ISO 8583 subset packer/unpacker (M-Pay sandbox profili).
 //!
 //! Kodlash qoidalari (`docs/specs/api.md` va ADR-0007 ga qarang):
-//! * MTI — 4 ta ASCII raqam (`0100`, `0110`);
+//! * MTI — 4 ta ASCII raqam (`0100`/`0110` avtorizatsiya, `0400`/`0401`/`0410` reversal — ADR-0024);
 //! * bitmap — ikkilik (8 bayt birlamchi; bit 1 = ikkilamchi bitmap mavjud);
 //! * raqamli va matnli maydonlar ASCII; LLVAR/LLLVAR uzunlik prefikslari ASCII raqamlar;
 //! * maydon 55 — ikkilik LLLVAR (uzunlik baytlarda).
 //!
-//! Qo'llab-quvvatlanadigan maydonlar: 2, 3, 4, 7, 11, 14, 22, 35, 37, 39, 41, 42, 49, 55.
+//! Qo'llab-quvvatlanadigan maydonlar: 2, 3, 4, 7, 11, 14, 22, 35, 37, 39, 41, 42, 49, 55, 90.
 //! Spetsifikatsiyasi yo'q maydon bitmap'da bo'lsa — xato (uzunligini bilib bo'lmaydi).
 //!
 //! `Debug` maydon qiymatlarini chiqarmaydi: 2 va 35 maydonlarda PAN, 55 da kriptogramma bor.
@@ -105,6 +105,8 @@ pub const FIELDS: &[FieldSpec] = &[
     f(42, "Merchant ID", Charset::Ans, LenKind::Fixed(15)),
     f(49, "Currency code", Charset::N, LenKind::Fixed(3)),
     f(55, "ICC data", Charset::B, LenKind::Lllvar(255)),
+    // Asl xabar: MTI(4) ‖ STAN(6) ‖ maydon 7(10) ‖ acquirer ID(11) ‖ forwarding ID(11).
+    f(90, "Original data elements", Charset::N, LenKind::Fixed(42)),
 ];
 
 const fn f(field: u8, name: &'static str, charset: Charset, len: LenKind) -> FieldSpec {
@@ -122,7 +124,7 @@ pub fn spec(field: u8) -> Option<&'static FieldSpec> {
 }
 
 /// Maydonlar soni qisqa bo'lgan yorliqlar (log uchun maxfiy bo'lmagan maydonlar).
-const PUBLIC_FIELDS: &[u8] = &[3, 4, 7, 11, 22, 37, 39, 41, 42, 49];
+const PUBLIC_FIELDS: &[u8] = &[3, 4, 7, 11, 22, 37, 39, 41, 42, 49, 90];
 
 /// Message Type Indicator.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -131,6 +133,12 @@ pub struct Mti(pub [u8; 4]);
 impl Mti {
     pub const AUTH_REQUEST: Mti = Mti(*b"0100");
     pub const AUTH_RESPONSE: Mti = Mti(*b"0110");
+    /// Acquirer reversal'i — avtorizatsiya natijasi noma'lum, emitent yechimni qaytarsin (ADR-0024).
+    pub const REVERSAL_REQUEST: Mti = Mti(*b"0400");
+    /// Reversal'ning takroriy yuborilishi (birinchisiga javob kelmagan).
+    pub const REVERSAL_REPEAT: Mti = Mti(*b"0401");
+    /// Reversal javobi (`0400` va `0401` ga).
+    pub const REVERSAL_RESPONSE: Mti = Mti(*b"0410");
 
     /// Satrdan (4 ta ASCII raqam).
     pub fn parse(s: &[u8]) -> Result<Self, Iso8583Error> {
@@ -441,6 +449,27 @@ mod tests {
     #[test]
     fn response_mti() {
         assert_eq!(Mti::AUTH_REQUEST.response(), Mti::AUTH_RESPONSE);
+        assert_eq!(Mti::REVERSAL_REQUEST.response(), Mti::REVERSAL_RESPONSE);
+    }
+
+    #[test]
+    fn reversal_with_original_data_uses_secondary_bitmap() {
+        let mut m = IsoMessage::new(Mti::REVERSAL_REQUEST);
+        m.set_num(4, 1_250_000).unwrap();
+        m.set_num(11, 42).unwrap();
+        let orig = format!("0100{:06}{}{:011}{:011}", 42, "1023153000", 0, 0);
+        m.set_str(90, &orig).unwrap();
+        let bytes = m.pack();
+        assert_eq!(&bytes[..4], b"0400");
+        // Bit 1 — ikkilamchi bitmap; maydon 90 — ikkilamchi bitmap'ning 26-biti (bayt 3, 0x40).
+        assert_eq!(bytes[4] & 0x80, 0x80);
+        assert_eq!(bytes[12 + 3], 0x40);
+        assert_eq!(IsoMessage::unpack(&bytes).unwrap(), m);
+        assert!(format!("{m:?}").contains(&orig), "maydon 90 maxfiy emas");
+        assert_eq!(
+            m.set_str(90, "0100").unwrap_err(),
+            Iso8583Error::BadLength { field: 90, len: 4 }
+        );
     }
 
     fn arb_value(s: &'static FieldSpec) -> BoxedStrategy<Vec<u8>> {

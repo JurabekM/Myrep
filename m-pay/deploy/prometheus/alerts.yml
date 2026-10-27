@@ -82,6 +82,18 @@ groups:
         annotations:
           summary: "OTP SMS yetkazilmayapti ({{ $value }} ta / 10 daqiqa)"
 
+      - alert: MpayReversalFailed
+        expr: max(mpay_reversals{state="failed"}) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "Emitent {{ $value }} ta reversal'ni rad etdi — mijoz puli qaytmagan bo'lishi mumkin, qo'lda ko'rib chiqing (mpay-server recon)"
+
+      - alert: MpayReversalBacklog
+        expr: max(mpay_reversal_oldest_pending_seconds) > 900
+        labels: { severity: warning }
+        annotations:
+          summary: "Reversal 15 daqiqadan beri yuborilmayapti — emitent bilan aloqani tekshiring"
+
       - alert: MpayDbPoolExhausted
         expr: |
           mpay_db_pool_connections{state="idle"} == 0

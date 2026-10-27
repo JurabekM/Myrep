@@ -43,6 +43,7 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | POST | `/v1/tokens/{token_id}/resume` | operator | — | SUSPENDED → ACTIVE |
 | DELETE | `/v1/tokens/{token_id}` | operator | — | → DELETED (LUK'lar bekor qilinadi, qaytarib bo'lmaydi) |
 | GET | `/v1/audit/verify` | operator | — | audit xesh-zanjirini tekshirish |
+| GET | `/v1/recon?date=YYYY-MM-DD` | operator | — | solishtirish hisoboti: acquirer jurnali ↔ emitent (ADR-0024) |
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
 | GET | `/v1/pqlink/revocations` | — | — | oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014; sozlanmagan — 404) |
@@ -200,6 +201,32 @@ Javob:
 (Q2). `issuer_auth_data` faqat ARQC to'g'ri bo'lganda
 (replay'da — yo'q). Xatolar: `BAD_REQUEST` (ICC hex/TLV, Track 2, maydon uzunliklari),
 `ISSUER_ERROR` / `ISSUER_FORMAT` (502).
+
+`96` — natija noma'lum (ADR-0024): `ISSUER_TIMEOUT` (emitent `[acquirer] issuer_timeout_ms` ichida
+javob bermadi), `ISSUER_RESPONSE_UNREADABLE`, `OUTCOME_UNKNOWN` (avvalgi ishlov tugamagan). Emitent pul
+yechgan bo'lsa, server uni avtomatik reversal (`0400`/`0401`) bilan qaytaradi. Terminal o'sha so'rovni
+qayta yuborsa — o'sha `96`; xaridni davom ettirish uchun yangi tap (yangi STAN).
+
+### 3.11 `GET /v1/recon` (operator)
+
+Solishtirish (ADR-0024): `?date=YYYY-MM-DD` — sxema vaqti bo'yicha kun (UTC+5; berilmasa — bugun) yoki
+`?from=<unix>&to=<unix>` (≤ 7 kun). Acquirer jurnali 3 kun saqlanadi — undan eski davr `BAD_REQUEST`.
+
+```json
+{ "from": 1793041200, "to": 1793127600, "generated_at": 1793090000,
+  "acquirer_records": 120, "issuer_records": 121, "matched": 119,
+  "approved": [{ "currency": 860, "count": 101, "amount_minor": 125000000 }],
+  "discrepancies": [{ "kind": "ISSUER_ONLY_APPROVED", "terminal_id": "TERM0001",
+    "merchant_id": "SHOP0000000001", "stan": "000011", "rrn": "630014000011",
+    "dpan_masked": "990077******1234", "at": 1793050000, "acquirer_code": null,
+    "acquirer_amount_minor": null, "issuer_code": "00", "issuer_amount_minor": 200000,
+    "issuer_reversed": false, "currency": 860, "reversal": null }],
+  "notes": [] }
+```
+
+`kind`: `ISSUER_ONLY_APPROVED`, `ACQUIRER_ONLY_APPROVED`, `AMOUNT_MISMATCH`, `REVERSAL_FAILED`
+(tafovutlar); `REVERSAL_PENDING`, `IN_FLIGHT` (`notes` — vaqtinchalik). PAN yo'q. CLI:
+`mpay-server recon --date … [--out report.json]` (tafovut bo'lsa chiqish kodi 1).
 
 ### 3.9 `GET /v1/sandbox/accounts` (operator, faqat sandbox)
 

@@ -136,6 +136,57 @@ impl Reason {
     }
 }
 
+/// Reversal natijasi (`0410` maydon 39, ADR-0024). Acquirer `00` va `25` ni yakuniy deb oladi,
+/// qolganlari — qo'lda ko'rib chiqish (`FAILED`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ReversalReason {
+    /// Yechilgan summa hisobga qaytarildi.
+    Reversed,
+    /// Asl avtorizatsiya rad etilgan edi — qaytariladigan pul yo'q.
+    NothingToReverse,
+    /// Avval qaytarilgan (takroriy `0401`) — ikkinchi marta qaytarilmaydi.
+    AlreadyReversed,
+    /// Asl avtorizatsiya topilmadi — emitent `0100` ni ko'rmagan.
+    OriginalNotFound,
+    /// Bir nechta mos yozuv — avtomatik qaytarilmaydi (solishtirish hisobotida chiqadi).
+    AmbiguousOriginal,
+    /// Summa yoki valyuta asl avtorizatsiyaga mos emas.
+    AmountMismatch,
+    /// Tasdiqlangan, lekin yechilgan hisob yozilmagan (eski yozuv).
+    AccountUnknown,
+    /// Majburiy maydon yo'q yoki maydon 90 noto'g'ri.
+    FormatError,
+}
+
+impl ReversalReason {
+    /// Maydon 39 qiymati.
+    pub fn code(self) -> &'static str {
+        use ReversalReason::*;
+        match self {
+            Reversed | NothingToReverse | AlreadyReversed => "00",
+            OriginalNotFound | AmbiguousOriginal => "25",
+            AmountMismatch => "13",
+            AccountUnknown => "96",
+            FormatError => "30",
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        use ReversalReason::*;
+        match self {
+            Reversed => "REVERSED",
+            NothingToReverse => "NOTHING_TO_REVERSE",
+            AlreadyReversed => "ALREADY_REVERSED",
+            OriginalNotFound => "ORIGINAL_NOT_FOUND",
+            AmbiguousOriginal => "AMBIGUOUS_ORIGINAL",
+            AmountMismatch => "AMOUNT_MISMATCH",
+            AccountUnknown => "ACCOUNT_UNKNOWN",
+            FormatError => "FORMAT_ERROR",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

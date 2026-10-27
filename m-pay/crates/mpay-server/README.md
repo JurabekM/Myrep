@@ -19,6 +19,7 @@ cargo run -p mpay-server -- serve --config .mpay/mpay.toml
 
 ```bash
 cargo run -p mpay-server -- audit-verify --config .mpay/mpay.toml
+cargo run -p mpay-server -- recon --config .mpay/mpay.toml --date 2026-10-27 --out recon.json
 ```
 
 ## Konfiguratsiya
@@ -27,7 +28,7 @@ cargo run -p mpay-server -- audit-verify --config .mpay/mpay.toml
 `url_env` — PostgreSQL URL'i turgan muhit o'zgaruvchisi, ADR-0018), `[keystore]`
 (`memory` — faqat sandbox; `pkcs11` — `--features pkcs11` va `MPAY_PKCS11_*` muhit o'zgaruvchilari),
 `[pqlink]` (ML-DSA blob, attestatsiya ildizlari, minimal xavfsizlik darajasi), `[vault]`,
-`[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[sandbox_api]`, `[rate_limit]`,
+`[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[acquirer]`, `[sandbox_api]`, `[rate_limit]`,
 `[[auth.keys]]` (faqat SHA-256 xesh). `[database]`: `synchronous`, `max_connections` (ADR-0009).
 Nisbiy yo'llar konfiguratsiya fayli papkasiga nisbatan.
 
@@ -70,4 +71,11 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   instansiyada IP va qurilma chelaklari DB'da umumiy (`shared_limits.rs`, `migrations/3004_rate_buckets.sql`,
   ADR-0019 §4); ombor xatosida fail-open.
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):
-  bir xil so'rov — avvalgi javob; shu STAN boshqa mazmun bilan — `94`.
+  bir xil so'rov — avvalgi javob; shu STAN boshqa mazmun bilan — `94`. Jadval acquirer jurnali ham
+  (RRN, summa, maskalangan DPAN, javob kodi; migratsiya `3005`).
+* **Reversal** (`reversal.rs`, `[acquirer]`, ADR-0024): emitent javob bermasa (`issuer_timeout_ms`),
+  `0110` o'qilmasa yoki yozuv qotib qolsa — terminalga `96`, navbatga reversal (bitta tranzaksiyada).
+  Fon ishchisi `0400`/`0401` ni emitentga yuboradi (kutish bilan qayta urinish, instansiyalar orasida
+  band qilish); `00`/`25` — `DONE`, boshqa kod — `FAILED` (qo'lda). Metrikalar `mpay_reversals*`.
+* **Solishtirish** (`recon.rs`, ADR-0024): acquirer jurnali ↔ emitent qaydnomasi — `GET /v1/recon`
+  (operator) va `mpay-server recon` (tafovut bo'lsa chiqish kodi 1).

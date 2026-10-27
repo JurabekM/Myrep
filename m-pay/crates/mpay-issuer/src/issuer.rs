@@ -80,6 +80,9 @@ pub struct IssuerConfig {
     pub cvm_limit_minor: u64,
     /// Ishga tushganda yaratiladigan test hisoblar (mavjudlari o'zgartirilmaydi).
     pub accounts: Vec<TestAccount>,
+    /// Sandbox: `0110` javobini shuncha ms kechiktirish (yechim commit qilingandan keyin) — sekin
+    /// tarmoqni va acquirer timeout'i → reversal yo'lini sinash uchun (ADR-0024). 0 — kechikishsiz.
+    pub response_delay_ms: u64,
 }
 
 impl Default for IssuerConfig {
@@ -89,6 +92,7 @@ impl Default for IssuerConfig {
             review_action: ReviewAction::default(),
             cvm_limit_minor: DEFAULT_CVM_LIMIT_MINOR,
             accounts: Vec::new(),
+            response_delay_ms: 0,
         }
     }
 }
@@ -135,12 +139,12 @@ struct Parsed {
 
 /// Emitent emulyatori.
 pub struct Issuer {
-    db: Db,
+    pub(crate) db: Db,
     ks: Arc<dyn KeyStore>,
     scheme: Arc<dyn CryptogramScheme>,
     detok: Arc<dyn Detokenizer>,
     risk: Arc<dyn RiskScorer>,
-    clock: Arc<dyn Clock>,
+    pub(crate) clock: Arc<dyn Clock>,
     cfg: IssuerConfig,
     imk: KeyLabel,
     pan_idx: KeyLabel,
@@ -304,6 +308,9 @@ impl Issuer {
     ) -> Result<(Vec<u8>, AuthOutcome), IssuerError> {
         let msg = IsoMessage::unpack(request)?;
         let (resp, out) = self.authorize(&msg).await?;
+        if self.cfg.response_delay_ms > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(self.cfg.response_delay_ms)).await;
+        }
         Ok((resp.pack(), out))
     }
 
@@ -348,7 +355,7 @@ impl Issuer {
                 out.reason = reason;
                 out.code = reason.code();
                 let mut tx = self.db.begin_write().await?;
-                self.finish(&mut tx, &mut resp, &out, None).await?;
+                self.finish(&mut tx, &mut resp, &out, None, None).await?;
                 tx.commit().await?;
                 return Ok((resp, out));
             }
@@ -363,6 +370,8 @@ impl Issuer {
         // qolmasin (aks holda pul yechilgan-u, yozuv yo'q yoki aksincha). `BEGIN IMMEDIATE` — SQLite'da
         // o'qishdan yozishga o'tishdagi `SQLITE_BUSY` bo'lmasin.
         let mut tx = self.db.begin_write().await?;
+        // Yechilgan hisob avtorizatsiya qatoriga yoziladi — reversal shu hisobga qaytaradi (ADR-0024).
+        let mut debited: Option<&str> = None;
         if let Some((account_id, amount)) = &debit {
             let n = sqlx::query(
                 "UPDATE issuer_accounts SET balance_minor = balance_minor - $1, updated_at = $2 \
@@ -375,7 +384,9 @@ impl Issuer {
             .execute(&mut *tx)
             .await?
             .rows_affected();
-            if n != 1 {
+            if n == 1 {
+                debited = Some(account_id.as_str());
+            } else {
                 reason = Reason::InsufficientFunds;
             }
         }
@@ -387,7 +398,8 @@ impl Issuer {
             iad91.extend_from_slice(&out.code.arc());
             out.issuer_auth_data = Some(hex::encode(&iad91));
         }
-        self.finish(&mut tx, &mut resp, &out, Some(&parsed)).await?;
+        self.finish(&mut tx, &mut resp, &out, Some(&parsed), debited)
+            .await?;
         tx.commit().await?;
         tracing::info!(
             token_id = ?out.token_id.as_ref().map(TokenId::as_str),
@@ -547,6 +559,7 @@ impl Issuer {
         resp: &mut IsoMessage,
         out: &AuthOutcome,
         p: Option<&Parsed>,
+        account_id: Option<&str>,
     ) -> Result<(), IssuerError> {
         resp.set_str(39, out.code.as_str())?;
         if let Some(iad) = &out.issuer_auth_data {
@@ -561,13 +574,14 @@ impl Issuer {
         sqlx::query(
             "INSERT INTO issuer_authorizations (auth_id, ts, stan, rrn, token_id, account_id, dpan_masked, amount_minor, currency, \
              terminal_id, merchant_id, atc, luk_seq, response_code, reason, risk_score, risk_decision) \
-             VALUES ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NULL)",
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NULL)",
         )
         .bind(&auth_id)
         .bind(self.clock.unix())
         .bind(p.map(|p| p.stan.as_str()).unwrap_or(""))
         .bind(p.map(|p| p.rrn.as_str()).unwrap_or(""))
         .bind(out.token_id.as_ref().map(TokenId::as_str))
+        .bind(account_id)
         .bind(out.dpan_masked.as_deref())
         .bind(out.amount_minor as i64)
         .bind(i64::from(out.currency))
